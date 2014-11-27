@@ -64,7 +64,7 @@ function ifTestingSupported() {
   let toolbox = yield gDevTools.getToolbox(target);
   let { panelWin: { DebuggerView: view } } = toolbox.getPanel("jsdebugger");
 
-  is(view.Sources.selectedValue, SIMPLE_CANVAS_DEEP_STACK_URL,
+  is(view.Sources.selectedValue, getSourceActor(view.Sources, SIMPLE_CANVAS_DEEP_STACK_URL),
     "The expected source was shown in the debugger.");
   is(view.editor.getCursor().line, 25,
     "The expected source line is highlighted in the debugger.");

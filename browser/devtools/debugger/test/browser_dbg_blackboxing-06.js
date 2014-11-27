@@ -30,15 +30,15 @@ function test() {
 }
 
 function testBlackBox() {
-  const selectedUrl = gSources.selectedValue;
+  const selectedActor = gSources.selectedValue;
 
   let finished = waitForSourceShown(gPanel, "blackboxme.js").then(() => {
-    const newSelectedUrl = gSources.selectedValue;
-    isnot(selectedUrl, newSelectedUrl,
+    const newSelectedActor = gSources.selectedValue;
+    isnot(selectedActor, newSelectedActor,
       "Should not have the same url selected.");
 
     return toggleBlackBoxing(gPanel).then(() => {
-      is(gSources.selectedValue, newSelectedUrl,
+      is(gSources.selectedValue, newSelectedActor,
         "The selected source did not change.");
     });
   });

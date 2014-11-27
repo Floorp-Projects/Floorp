@@ -246,7 +246,7 @@ let DebuggerView = {
     this.editor.on("gutterClick", (ev, line, button) => {
       // A right-click shouldn't do anything but keep track of where
       // it was clicked.
-      if(button == 2) {
+      if (button == 2) {
         this.clickedLine = line;
       }
       else {
@@ -390,7 +390,7 @@ let DebuggerView = {
    */
   _setEditorSource: function(aSource, aFlags={}) {
     // Avoid setting the same source text in the editor again.
-    if (this._editorSource.url == aSource.url && !aFlags.force) {
+    if (this._editorSource.actor == aSource.actor && !aFlags.force) {
       return this._editorSource.promise;
     }
     let transportType = gClient.localTransport ? "_LOCAL" : "_REMOTE";
@@ -401,20 +401,21 @@ let DebuggerView = {
     let deferred = promise.defer();
 
     this._setEditorText(L10N.getStr("loadingText"));
-    this._editorSource = { url: aSource.url, promise: deferred.promise };
+    this._editorSource = { actor: aSource.actor, promise: deferred.promise };
 
     DebuggerController.SourceScripts.getText(aSource).then(([, aText, aContentType]) => {
       // Avoid setting an unexpected source. This may happen when switching
       // very fast between sources that haven't been fetched yet.
-      if (this._editorSource.url != aSource.url) {
+      if (this._editorSource.actor != aSource.actor) {
         return;
       }
 
       this._setEditorText(aText);
       this._setEditorMode(aSource.url, aContentType, aText);
 
-      // Synchronize any other components with the currently displayed source.
-      DebuggerView.Sources.selectedValue = aSource.url;
+      // Synchronize any other components with the currently displayed
+      // source.
+      DebuggerView.Sources.selectedValue = aSource.actor;
       DebuggerController.Breakpoints.updateEditorBreakpoints();
       DebuggerController.HitCounts.updateEditorHitCounts();
 
@@ -442,8 +443,8 @@ let DebuggerView = {
    * Update the source editor's current caret and debug location based on
    * a requested url and line.
    *
-   * @param string aUrl
-   *        The target source url.
+   * @param string aActor
+   *        The target actor id.
    * @param number aLine [optional]
    *        The target line in the source.
    * @param object aFlags [optional]
@@ -459,9 +460,9 @@ let DebuggerView = {
    * @return object
    *         A promise that is resolved after the source text has been set.
    */
-  setEditorLocation: function(aUrl, aLine = 0, aFlags = {}) {
+  setEditorLocation: function(aActor, aLine = 0, aFlags = {}) {
     // Avoid trying to set a source for a url that isn't known yet.
-    if (!this.Sources.containsValue(aUrl)) {
+    if (!this.Sources.containsValue(aActor)) {
       return promise.reject(new Error("Unknown source for the specified URL."));
     }
 
@@ -471,17 +472,23 @@ let DebuggerView = {
       let cachedFrames = DebuggerController.activeThread.cachedFrames;
       let currentDepth = DebuggerController.StackFrames.currentFrameDepth;
       let frame = cachedFrames[currentDepth];
-      if (frame && frame.where.url == aUrl) {
+      if (frame && frame.source.actor == aActor) {
         aLine = frame.where.line;
       }
     }
 
-    let sourceItem = this.Sources.getItemByValue(aUrl);
+    let sourceItem = this.Sources.getItemByValue(aActor);
     let sourceForm = sourceItem.attachment.source;
+
+    this._editorLoc = { actor: sourceForm.actor };
 
     // Make sure the requested source client is shown in the editor, then
     // update the source editor's caret position and debug location.
     return this._setEditorSource(sourceForm, aFlags).then(([,, aContentType]) => {
+      if (this._editorLoc.actor !== sourceForm.actor) {
+        return;
+      }
+
       // Record the contentType learned from fetching
       sourceForm.contentType = aContentType;
       // Line numbers in the source editor should start from 1. If invalid

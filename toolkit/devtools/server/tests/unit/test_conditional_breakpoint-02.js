@@ -26,27 +26,27 @@ function run_test()
 function test_simple_breakpoint()
 {
   gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-    gThreadClient.setBreakpoint({
-        url: "test.js",
+    let source = gThreadClient.source(aPacket.frame.where.source);
+    source.setBreakpoint({
         line: 3,
         condition: "a === 2"
-      }, function (aResponse, bpClient) {
-        gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-          // Check the return value.
-          do_check_eq(aPacket.why.type, "debuggerStatement");
-          do_check_eq(aPacket.frame.where.line, 4);
+    }, function (aResponse, bpClient) {
+      gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
+        // Check the return value.
+        do_check_eq(aPacket.why.type, "debuggerStatement");
+        do_check_eq(aPacket.frame.where.line, 4);
 
-          // Remove the breakpoint.
-          bpClient.remove(function (aResponse) {
-            gThreadClient.resume(function () {
-              finishClient(gClient);
-            });
+        // Remove the breakpoint.
+        bpClient.remove(function (aResponse) {
+          gThreadClient.resume(function () {
+            finishClient(gClient);
           });
-
         });
-        // Continue until the breakpoint is hit.
-        gThreadClient.resume();
+
       });
+      // Continue until the breakpoint is hit.
+      gThreadClient.resume();
+    });
   });
 
   Components.utils.evalInSandbox("debugger;\n" +   // 1

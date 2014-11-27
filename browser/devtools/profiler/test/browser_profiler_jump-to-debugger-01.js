@@ -18,8 +18,9 @@ let test = Task.async(function*() {
   ok(debuggerPanel, "The debugger panel was opened.");
 
   let { DebuggerView } = debuggerPanel.panelWin;
+  let Sources = DebuggerView.Sources;
 
-  is(DebuggerView.Sources.selectedValue, SIMPLE_URL,
+  is(Sources.selectedValue, getSourceActor(Sources, SIMPLE_URL),
     "The correct source is shown in the debugger.");
   is(DebuggerView.editor.getCursor().line + 1, 14,
     "The correct line is highlighted in the debugger's source editor.");

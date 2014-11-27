@@ -59,6 +59,7 @@ function setup_code() {
 function test_initial_sources() {
   gThreadClient.getSources(function ({ error, sources }) {
     do_check_true(!error);
+    sources = sources.filter(source => source.url);
     do_check_eq(sources.length, 1);
     do_check_eq(sources[0].url, getFileUrl(TEMP_FILE_1, true));
     reload(gTabClient).then(setup_new_code);
@@ -87,6 +88,7 @@ function setup_new_code() {
 function test_new_sources() {
   gThreadClient.getSources(function ({ error, sources }) {
     do_check_true(!error);
+    sources = sources.filter(source => source.url);
 
     // Should now have TEMP_FILE_2 as a source.
     do_check_eq(sources.length, 1);

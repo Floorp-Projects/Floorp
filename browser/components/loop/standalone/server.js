@@ -25,9 +25,9 @@ function getConfigFile(req, res) {
     //     uploaded to the marketplace bug 1053424
     "loop.config.marketplaceUrl = 'http://fake-market.herokuapp.com/iframe-install.html'",
     "loop.config.brandWebsiteUrl = 'https://www.mozilla.org/firefox/';",
-    "loop.config.privacyWebsiteUrl = 'https://www.mozilla.org/privacy';",
+    "loop.config.privacyWebsiteUrl = 'https://www.mozilla.org/privacy/firefox-hello/';",
     "loop.config.learnMoreUrl = 'https://www.mozilla.org/hello/';",
-    "loop.config.legalWebsiteUrl = '/legal/terms';",
+    "loop.config.legalWebsiteUrl = 'https://www.mozilla.org/about/legal/terms/firefox-hello/';",
     "loop.config.fxosApp = loop.config.fxosApp || {};",
     "loop.config.fxosApp.name = 'Loop';",
     "loop.config.fxosApp.manifestUrl = 'http://fake-market.herokuapp.com/apps/packagedApp/manifest.webapp';",

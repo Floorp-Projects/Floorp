@@ -36,44 +36,54 @@ function run_test_with_server(aServer, aCallback)
 function test_child_skip_breakpoint()
 {
   gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-    let path = getFilePath('test_breakpoint-08.js');
-    let location = { url: path, line: gDebuggee.line0 + 3};
-    gThreadClient.setBreakpoint(location, function (aResponse, bpClient) {
-      // Check that the breakpoint has properly skipped forward one line.
-      do_check_eq(aResponse.actualLocation.url, location.url);
-      do_check_eq(aResponse.actualLocation.line, location.line + 1);
-      gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-        // Check the return value.
-        do_check_eq(aPacket.type, "paused");
-        do_check_eq(aPacket.frame.where.url, path);
-        do_check_eq(aPacket.frame.where.line, location.line + 1);
-        do_check_eq(aPacket.why.type, "breakpoint");
-        do_check_eq(aPacket.why.actors[0], bpClient.actor);
-        // Check that the breakpoint worked.
-        do_check_eq(gDebuggee.a, 1);
-        do_check_eq(gDebuggee.b, undefined);
+    gThreadClient.eval(aPacket.frame.actor, "foo", function(aResponse) {
+      gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+        let obj = gThreadClient.pauseGrip(aPacket.why.frameFinished.return);
+        obj.getDefinitionSite(runWithBreakpoint);
+      });
+    });
 
-        // Remove the breakpoint.
-        bpClient.remove(function (aResponse) {
-          gThreadClient.resume(function () {
-            gClient.close(gCallback);
+    function runWithBreakpoint(aPacket) {
+      let source = gThreadClient.source(aPacket.source);
+      let location = { line: gDebuggee.line0 + 3 };
+
+      source.setBreakpoint(location, function (aResponse, bpClient) {
+        // Check that the breakpoint has properly skipped forward one
+        // line.
+        do_check_eq(aResponse.actualLocation.source.actor, source.actor);
+        do_check_eq(aResponse.actualLocation.line, location.line + 1);
+
+        gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
+          // Check the return value.
+          do_check_eq(aPacket.type, "paused");
+          do_check_eq(aPacket.frame.where.source.actor, source.actor);
+          do_check_eq(aPacket.frame.where.line, location.line + 1);
+          do_check_eq(aPacket.why.type, "breakpoint");
+          do_check_eq(aPacket.why.actors[0], bpClient.actor);
+          // Check that the breakpoint worked.
+          do_check_eq(gDebuggee.a, 1);
+          do_check_eq(gDebuggee.b, undefined);
+
+          // Remove the breakpoint.
+          bpClient.remove(function (aResponse) {
+            gThreadClient.resume(function () {
+              gClient.close(gCallback);
+            });
           });
         });
 
+        // Continue until the breakpoint is hit.
+        gThreadClient.resume();
       });
-      // Continue until the breakpoint is hit.
-      gThreadClient.resume();
-
-    });
-
+    }
   });
 
   gDebuggee.eval("var line0 = Error().lineNumber;\n" +
                  "function foo() {\n" + // line0 + 1
                  "  this.a = 1;\n" +    // line0 + 2
                  "  // A comment.\n" +  // line0 + 3
-                 "  this.b = 2;\n" +    // line0 + 4
-                 "}\n");                // line0 + 5
+                 "  this.b = 2;\n" +    // line0 + 3
+                 "}\n");                // line0 + 4
   gDebuggee.eval("var line1 = Error().lineNumber;\n" +
                  "debugger;\n" +        // line1 + 1
                  "foo();\n");           // line1 + 2
