@@ -812,7 +812,7 @@ PluginModuleChromeParent::FinishHangUI()
         /* If we cancelled the UI or if the user issued a response,
            we need to reset the child process timeout. */
         if (needsCancel ||
-            !mIsTimerReset && mHangUIParent->WasShown()) {
+            (!mIsTimerReset && mHangUIParent->WasShown())) {
             /* We changed the timeout to kChildTimeoutPref when the plugin hang
                UI was displayed. Now that we're finishing the UI, we need to 
                switch it back to kHangUITimeoutPref. */

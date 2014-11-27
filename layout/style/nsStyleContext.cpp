@@ -22,6 +22,7 @@
 #include "mozilla/StyleAnimationValue.h"
 #include "GeckoProfiler.h"
 #include "nsIDocument.h"
+#include "nsPrintfCString.h"
 
 #ifdef DEBUG
 // #define NOISY_DEBUG
@@ -858,22 +859,26 @@ nsStyleContext::Mark()
 }
 
 #ifdef DEBUG
-void nsStyleContext::List(FILE* out, int32_t aIndent)
+void nsStyleContext::List(FILE* out, int32_t aIndent, bool aListDescendants)
 {
+  nsAutoCString str;
   // Indent
   int32_t ix;
-  for (ix = aIndent; --ix >= 0; ) fputs("  ", out);
-  fprintf(out, "%p(%d) parent=%p ",
-          (void*)this, mRefCnt, (void *)mParent);
+  for (ix = aIndent; --ix >= 0; ) {
+    str.AppendLiteral("  ");
+  }
+  str.Append(nsPrintfCString("%p(%d) parent=%p ",
+                             (void*)this, mRefCnt, (void *)mParent));
   if (mPseudoTag) {
     nsAutoString  buffer;
     mPseudoTag->ToString(buffer);
-    fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-    fputs(" ", out);
+    AppendUTF16toUTF8(buffer, str);
+    str.Append(' ');
   }
 
   if (mRuleNode) {
-    fputs("{\n", out);
+    fprintf_stderr(out, "%s{\n", str.get());
+    str.Truncate();
     nsRuleNode* ruleNode = mRuleNode;
     while (ruleNode) {
       nsIStyleRule *styleRule = ruleNode->GetRule();
@@ -882,26 +887,30 @@ void nsStyleContext::List(FILE* out, int32_t aIndent)
       }
       ruleNode = ruleNode->GetParent();
     }
-    for (ix = aIndent; --ix >= 0; ) fputs("  ", out);
-    fputs("}\n", out);
+    for (ix = aIndent; --ix >= 0; ) {
+      str.AppendLiteral("  ");
+    }
+    fprintf_stderr(out, "%s}\n", str.get());
   }
   else {
-    fputs("{}\n", out);
+    fprintf_stderr(out, "%s{}\n", str.get());
   }
 
-  if (nullptr != mChild) {
-    nsStyleContext* child = mChild;
-    do {
-      child->List(out, aIndent + 1);
-      child = child->mNextSibling;
-    } while (mChild != child);
-  }
-  if (nullptr != mEmptyChild) {
-    nsStyleContext* child = mEmptyChild;
-    do {
-      child->List(out, aIndent + 1);
-      child = child->mNextSibling;
-    } while (mEmptyChild != child);
+  if (aListDescendants) {
+    if (nullptr != mChild) {
+      nsStyleContext* child = mChild;
+      do {
+        child->List(out, aIndent + 1, aListDescendants);
+        child = child->mNextSibling;
+      } while (mChild != child);
+    }
+    if (nullptr != mEmptyChild) {
+      nsStyleContext* child = mEmptyChild;
+      do {
+        child->List(out, aIndent + 1, aListDescendants);
+        child = child->mNextSibling;
+      } while (mEmptyChild != child);
+    }
   }
 }
 #endif

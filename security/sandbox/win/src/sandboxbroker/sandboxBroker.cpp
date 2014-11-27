@@ -149,13 +149,8 @@ SandboxBroker::SetSecurityLevelForGMPlugin()
   result = mPolicy->SetAlternateDesktop(true);
   ret = ret && (sandbox::SBOX_ALL_OK == result);
 
-  // We can't use an alternate desktop/window station AND initially
-  // set the process to low integrity. Upstream changes have been
-  // made to allow this and we should uncomment this section once
-  // we've rolled forward.
-  // result =
-  //   mPolicy->SetIntegrityLevel(sandbox::INTEGRITY_LEVEL_LOW);
-  // ret = ret && (sandbox::SBOX_ALL_OK == result);
+  result = mPolicy->SetIntegrityLevel(sandbox::INTEGRITY_LEVEL_LOW);
+  ret = ret && (sandbox::SBOX_ALL_OK == result);
 
   result =
     mPolicy->SetDelayedIntegrityLevel(sandbox::INTEGRITY_LEVEL_UNTRUSTED);
