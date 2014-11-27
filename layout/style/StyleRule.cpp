@@ -978,7 +978,9 @@ ImportantRule::MapRuleInfoInto(nsRuleData* aRuleData)
 ImportantRule::List(FILE* out, int32_t aIndent) const
 {
   // Indent
-  for (int32_t index = aIndent; --index >= 0; ) fputs("  ", out);
+  for (int32_t index = aIndent; --index >= 0; ) {
+    fputs("  ", out);
+  }
 
   fprintf(out, "! Important declaration=%p\n",
           static_cast<void*>(mDeclaration));
@@ -1472,7 +1474,9 @@ StyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
 StyleRule::List(FILE* out, int32_t aIndent) const
 {
   // Indent
-  for (int32_t index = aIndent; --index >= 0; ) fputs("  ", out);
+  for (int32_t index = aIndent; --index >= 0; ) {
+    fputs("  ", out);
+  }
 
   nsAutoString buffer;
   if (mSelector)

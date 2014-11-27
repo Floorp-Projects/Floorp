@@ -192,8 +192,9 @@ nsMappedAttributes::List(FILE* out, int32_t aIndent) const
 
   for (i = 0; i < mAttrCount; ++i) {
     int32_t indent;
-    for (indent = aIndent; indent > 0; --indent)
+    for (indent = aIndent; indent > 0; --indent) {
       fputs("  ", out);
+    }
 
     Attrs()[i].mName.GetQualifiedName(buffer);
     fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);

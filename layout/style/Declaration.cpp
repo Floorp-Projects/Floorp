@@ -1357,7 +1357,9 @@ Declaration::ToString(nsAString& aString) const
 void
 Declaration::List(FILE* out, int32_t aIndent) const
 {
-  for (int32_t index = aIndent; --index >= 0; ) fputs("  ", out);
+  for (int32_t index = aIndent; --index >= 0; ) {
+    fputs("  ", out);
+  }
 
   fputs("{ ", out);
   nsAutoString s;

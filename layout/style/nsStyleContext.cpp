@@ -862,7 +862,9 @@ void nsStyleContext::List(FILE* out, int32_t aIndent)
 {
   // Indent
   int32_t ix;
-  for (ix = aIndent; --ix >= 0; ) fputs("  ", out);
+  for (ix = aIndent; --ix >= 0; ) {
+    fputs("  ", out);
+  }
   fprintf(out, "%p(%d) parent=%p ",
           (void*)this, mRefCnt, (void *)mParent);
   if (mPseudoTag) {
@@ -882,7 +884,9 @@ void nsStyleContext::List(FILE* out, int32_t aIndent)
       }
       ruleNode = ruleNode->GetParent();
     }
-    for (ix = aIndent; --ix >= 0; ) fputs("  ", out);
+    for (ix = aIndent; --ix >= 0; ) {
+      fputs("  ", out);
+    }
     fputs("}\n", out);
   }
   else {
