@@ -14,6 +14,7 @@
 <?xml-stylesheet
   href="chrome://browser/content/preferences/handlers.css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/applications.css"?>
+<?xml-stylesheet href="chrome://browser/content/preferences/in-content/search.css"?>
 
 <!DOCTYPE page [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
@@ -22,6 +23,7 @@
   "chrome://browser/locale/preferences/preferences.dtd">
 <!ENTITY % privacyDTD SYSTEM "chrome://browser/locale/preferences/privacy.dtd">
 <!ENTITY % tabsDTD SYSTEM "chrome://browser/locale/preferences/tabs.dtd">
+<!ENTITY % searchDTD SYSTEM "chrome://browser/locale/preferences/search.dtd">
 <!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
 <!ENTITY % syncDTD SYSTEM "chrome://browser/locale/preferences/sync.dtd">
 <!ENTITY % securityDTD SYSTEM
@@ -39,6 +41,7 @@
 %preferencesDTD;
 %privacyDTD;
 %tabsDTD;
+%searchDTD;
 %syncBrandDTD;
 %syncDTD;
 %securityDTD;
@@ -94,6 +97,16 @@
                     align="center">
         <image class="category-icon"/>
         <label class="category-name" flex="1">&paneGeneral.title;</label>
+      </richlistitem>
+
+      <richlistitem id="category-search"
+                    class="category"
+                    value="paneSearch"
+                    helpTopic="prefs-main"
+                    tooltiptext="&paneSearch.title;"
+                    align="center">
+        <image class="category-icon"/>
+        <label class="category-name" flex="1">&paneSearch.title;</label>
       </richlistitem>
 
       <richlistitem id="category-content"
@@ -162,6 +175,7 @@
     <vbox class="main-content" flex="1">
       <prefpane id="mainPrefPane">
 #include main.xul
+#include search.xul
 #include privacy.xul
 #include advanced.xul
 #include applications.xul

@@ -1,7 +1,7 @@
 
 /* pngrutil.c - utilities to read a PNG file
  *
- * Last changed in libpng 1.6.14 [October 23, 2014]
+ * Last changed in libpng 1.6.15 [November 20, 2014]
  * Copyright (c) 1998-2014 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -108,7 +108,7 @@ png_get_uint_16)(png_const_bytep buf)
    return (png_uint_16)val;
 }
 
-#endif /* PNG_READ_INT_FUNCTIONS_SUPPORTED */
+#endif /* READ_INT_FUNCTIONS */
 
 /* Read and check the PNG file signature */
 void /* PRIVATE */
@@ -131,7 +131,7 @@ png_read_sig(png_structrp png_ptr, png_inforp info_ptr)
    png_read_data(png_ptr, &(info_ptr->signature[num_checked]), num_to_check);
    png_ptr->sig_bytes = 8;
 
-   if (png_sig_cmp(info_ptr->signature, num_checked, num_to_check))
+   if (png_sig_cmp(info_ptr->signature, num_checked, num_to_check) != 0)
    {
       if (num_checked < 4 &&
           png_sig_cmp(info_ptr->signature, num_checked, num_to_check - 4))
@@ -217,11 +217,11 @@ png_crc_finish(png_structrp png_ptr, png_uint_32 skip)
       png_crc_read(png_ptr, tmpbuf, len);
    }
 
-   if (png_crc_error(png_ptr))
+   if (png_crc_error(png_ptr) != 0)
    {
-      if (PNG_CHUNK_ANCILLARY(png_ptr->chunk_name) ?
-          !(png_ptr->flags & PNG_FLAG_CRC_ANCILLARY_NOWARN) :
-          (png_ptr->flags & PNG_FLAG_CRC_CRITICAL_USE))
+      if (PNG_CHUNK_ANCILLARY(png_ptr->chunk_name) != 0 ?
+          (png_ptr->flags & PNG_FLAG_CRC_ANCILLARY_NOWARN) == 0 :
+          (png_ptr->flags & PNG_FLAG_CRC_CRITICAL_USE) != 0)
       {
          png_chunk_warning(png_ptr, "CRC error");
       }
@@ -245,7 +245,7 @@ png_crc_error(png_structrp png_ptr)
    png_uint_32 crc;
    int need_crc = 1;
 
-   if (PNG_CHUNK_ANCILLARY(png_ptr->chunk_name))
+   if (PNG_CHUNK_ANCILLARY(png_ptr->chunk_name) != 0)
    {
       if ((png_ptr->flags & PNG_FLAG_CRC_ANCILLARY_MASK) ==
           (PNG_FLAG_CRC_ANCILLARY_USE | PNG_FLAG_CRC_ANCILLARY_NOWARN))
@@ -254,7 +254,7 @@ png_crc_error(png_structrp png_ptr)
 
    else /* critical */
    {
-      if (png_ptr->flags & PNG_FLAG_CRC_CRITICAL_IGNORE)
+      if ((png_ptr->flags & PNG_FLAG_CRC_CRITICAL_IGNORE) != 0)
          need_crc = 0;
    }
 
@@ -321,7 +321,7 @@ png_read_buffer(png_structrp png_ptr, png_alloc_size_t new_size, int warn)
 
    return buffer;
 }
-#endif /* PNG_READ_iCCP|iTXt|pCAL|sCAL|sPLT|tEXt|zTXt|SEQUENTIAL_READ */
+#endif /* READ_iCCP|iTXt|pCAL|sCAL|sPLT|tEXt|zTXt|SEQUENTIAL_READ */
 
 /* png_inflate_claim: claim the zstream for some nefarious purpose that involves
  * decompression.  Returns Z_OK on success, else a zlib error code.  It checks
@@ -388,7 +388,7 @@ png_inflate_claim(png_structrp png_ptr, png_uint_32 owner)
       png_ptr->zstream.next_out = NULL;
       png_ptr->zstream.avail_out = 0;
 
-      if (png_ptr->flags & PNG_FLAG_ZSTREAM_INITIALIZED)
+      if ((png_ptr->flags & PNG_FLAG_ZSTREAM_INITIALIZED) != 0)
       {
 #if PNG_ZLIB_VERNUM < 0x1240
          ret = inflateReset(&png_ptr->zstream);
@@ -670,6 +670,7 @@ png_decompress_chunk(png_structrp png_ptr,
                    * success)
                    */
                   png_free(png_ptr, text);
+                  text = NULL;
 
                   /* This really is very benign, but it's still an error because
                    * the extra space may otherwise be used as a Trojan Horse.
@@ -717,7 +718,7 @@ png_decompress_chunk(png_structrp png_ptr,
       return Z_MEM_ERROR;
    }
 }
-#endif /* PNG_READ_COMPRESSED_TEXT_SUPPORTED */
+#endif /* READ_COMPRESSED_TEXT */
 
 #ifdef PNG_READ_iCCP_SUPPORTED
 /* Perform a partial read and decompress, producing 'avail_out' bytes and
@@ -797,7 +798,7 @@ png_handle_IHDR(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_debug(1, "in png_handle_IHDR");
 
-   if (png_ptr->mode & PNG_HAVE_IHDR)
+   if ((png_ptr->mode & PNG_HAVE_IHDR) != 0)
       png_chunk_error(png_ptr, "out of place");
 
    /* Check the length */
@@ -878,7 +879,7 @@ png_handle_PLTE(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_debug(1, "in png_handle_PLTE");
 
-   if (!(png_ptr->mode & PNG_HAVE_IHDR))
+   if ((png_ptr->mode & PNG_HAVE_IHDR) == 0)
       png_chunk_error(png_ptr, "missing IHDR");
 
    /* Moved to before the 'after IDAT' check below because otherwise duplicate
@@ -886,10 +887,10 @@ png_handle_PLTE(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
     * than one PLTE, the error is not treated as benign, so this check trumps
     * the requirement that PLTE appears before IDAT.)
     */
-   else if (png_ptr->mode & PNG_HAVE_PLTE)
+   else if ((png_ptr->mode & PNG_HAVE_PLTE) != 0)
       png_chunk_error(png_ptr, "duplicate");
 
-   else if (png_ptr->mode & PNG_HAVE_IDAT)
+   else if ((png_ptr->mode & PNG_HAVE_IDAT) != 0)
    {
       /* This is benign because the non-benign error happened before, when an
        * IDAT was encountered in a color-mapped image with no PLTE.
@@ -901,7 +902,7 @@ png_handle_PLTE(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_ptr->mode |= PNG_HAVE_PLTE;
 
-   if (!(png_ptr->color_type & PNG_COLOR_MASK_COLOR))
+   if ((png_ptr->color_type & PNG_COLOR_MASK_COLOR) == 0)
    {
       png_crc_finish(png_ptr, length);
       png_chunk_benign_error(png_ptr, "ignored in grayscale PNG");
@@ -968,7 +969,7 @@ png_handle_PLTE(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
    }
 
 #ifndef PNG_READ_OPT_PLTE_SUPPORTED
-   else if (png_crc_error(png_ptr))  /* Only if we have a CRC error */
+   else if (png_crc_error(png_ptr) != 0)  /* Only if we have a CRC error */
    {
       /* If we don't want to use the data from an ancillary chunk,
        * we have two options: an error abort, or a warning and we
@@ -979,9 +980,9 @@ png_handle_PLTE(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
        * chunk type to determine whether to check the ancillary or the critical
        * flags.
        */
-      if (!(png_ptr->flags & PNG_FLAG_CRC_ANCILLARY_USE))
+      if ((png_ptr->flags & PNG_FLAG_CRC_ANCILLARY_USE) == 0)
       {
-         if (png_ptr->flags & PNG_FLAG_CRC_ANCILLARY_NOWARN)
+         if ((png_ptr->flags & PNG_FLAG_CRC_ANCILLARY_NOWARN) != 0)
             return;
 
          else
@@ -989,7 +990,7 @@ png_handle_PLTE(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
       }
 
       /* Otherwise, we (optionally) emit a warning and use the chunk. */
-      else if (!(png_ptr->flags & PNG_FLAG_CRC_ANCILLARY_NOWARN))
+      else if ((png_ptr->flags & PNG_FLAG_CRC_ANCILLARY_NOWARN) == 0)
          png_chunk_warning(png_ptr, "CRC error");
    }
 #endif
@@ -1046,7 +1047,8 @@ png_handle_IEND(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 {
    png_debug(1, "in png_handle_IEND");
 
-   if (!(png_ptr->mode & PNG_HAVE_IHDR) || !(png_ptr->mode & PNG_HAVE_IDAT))
+   if ((png_ptr->mode & PNG_HAVE_IHDR) == 0 ||
+       (png_ptr->mode & PNG_HAVE_IDAT) == 0)
       png_chunk_error(png_ptr, "out of place");
 
    png_ptr->mode |= (PNG_AFTER_IDAT | PNG_HAVE_IEND);
@@ -1068,10 +1070,10 @@ png_handle_gAMA(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_debug(1, "in png_handle_gAMA");
 
-   if (!(png_ptr->mode & PNG_HAVE_IHDR))
+   if ((png_ptr->mode & PNG_HAVE_IHDR) == 0)
       png_chunk_error(png_ptr, "missing IHDR");
 
-   else if (png_ptr->mode & (PNG_HAVE_IDAT|PNG_HAVE_PLTE))
+   else if ((png_ptr->mode & (PNG_HAVE_IDAT|PNG_HAVE_PLTE)) != 0)
    {
       png_crc_finish(png_ptr, length);
       png_chunk_benign_error(png_ptr, "out of place");
@@ -1087,7 +1089,7 @@ png_handle_gAMA(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_crc_read(png_ptr, buf, 4);
 
-   if (png_crc_finish(png_ptr, 0))
+   if (png_crc_finish(png_ptr, 0) != 0)
       return;
 
    igamma = png_get_fixed_point(NULL, buf);
@@ -1107,17 +1109,17 @@ png_handle_sBIT(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_debug(1, "in png_handle_sBIT");
 
-   if (!(png_ptr->mode & PNG_HAVE_IHDR))
+   if ((png_ptr->mode & PNG_HAVE_IHDR) == 0)
       png_chunk_error(png_ptr, "missing IHDR");
 
-   else if (png_ptr->mode & (PNG_HAVE_IDAT|PNG_HAVE_PLTE))
+   else if ((png_ptr->mode & (PNG_HAVE_IDAT|PNG_HAVE_PLTE)) != 0)
    {
       png_crc_finish(png_ptr, length);
       png_chunk_benign_error(png_ptr, "out of place");
       return;
    }
 
-   if (info_ptr != NULL && (info_ptr->valid & PNG_INFO_sBIT))
+   if (info_ptr != NULL && (info_ptr->valid & PNG_INFO_sBIT) != 0)
    {
       png_crc_finish(png_ptr, length);
       png_chunk_benign_error(png_ptr, "duplicate");
@@ -1146,7 +1148,7 @@ png_handle_sBIT(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
    buf[0] = buf[1] = buf[2] = buf[3] = sample_depth;
    png_crc_read(png_ptr, buf, truelen);
 
-   if (png_crc_finish(png_ptr, 0))
+   if (png_crc_finish(png_ptr, 0) != 0)
       return;
 
    for (i=0; i<truelen; ++i)
@@ -1156,7 +1158,7 @@ png_handle_sBIT(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
          return;
       }
 
-   if (png_ptr->color_type & PNG_COLOR_MASK_COLOR)
+   if ((png_ptr->color_type & PNG_COLOR_MASK_COLOR) != 0)
    {
       png_ptr->sig_bit.red = buf[0];
       png_ptr->sig_bit.green = buf[1];
@@ -1186,10 +1188,10 @@ png_handle_cHRM(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_debug(1, "in png_handle_cHRM");
 
-   if (!(png_ptr->mode & PNG_HAVE_IHDR))
+   if ((png_ptr->mode & PNG_HAVE_IHDR) == 0)
       png_chunk_error(png_ptr, "missing IHDR");
 
-   else if (png_ptr->mode & (PNG_HAVE_IDAT|PNG_HAVE_PLTE))
+   else if ((png_ptr->mode & (PNG_HAVE_IDAT|PNG_HAVE_PLTE)) != 0)
    {
       png_crc_finish(png_ptr, length);
       png_chunk_benign_error(png_ptr, "out of place");
@@ -1205,7 +1207,7 @@ png_handle_cHRM(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_crc_read(png_ptr, buf, 32);
 
-   if (png_crc_finish(png_ptr, 0))
+   if (png_crc_finish(png_ptr, 0) != 0)
       return;
 
    xy.whitex = png_get_fixed_point(NULL, buf);
@@ -1231,10 +1233,10 @@ png_handle_cHRM(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
    }
 
    /* If a colorspace error has already been output skip this chunk */
-   if (png_ptr->colorspace.flags & PNG_COLORSPACE_INVALID)
+   if ((png_ptr->colorspace.flags & PNG_COLORSPACE_INVALID) != 0)
       return;
 
-   if (png_ptr->colorspace.flags & PNG_COLORSPACE_FROM_cHRM)
+   if ((png_ptr->colorspace.flags & PNG_COLORSPACE_FROM_cHRM) != 0)
    {
       png_ptr->colorspace.flags |= PNG_COLORSPACE_INVALID;
       png_colorspace_sync(png_ptr, info_ptr);
@@ -1257,10 +1259,10 @@ png_handle_sRGB(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_debug(1, "in png_handle_sRGB");
 
-   if (!(png_ptr->mode & PNG_HAVE_IHDR))
+   if ((png_ptr->mode & PNG_HAVE_IHDR) == 0)
       png_chunk_error(png_ptr, "missing IHDR");
 
-   else if (png_ptr->mode & (PNG_HAVE_IDAT|PNG_HAVE_PLTE))
+   else if ((png_ptr->mode & (PNG_HAVE_IDAT|PNG_HAVE_PLTE)) != 0)
    {
       png_crc_finish(png_ptr, length);
       png_chunk_benign_error(png_ptr, "out of place");
@@ -1276,17 +1278,17 @@ png_handle_sRGB(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_crc_read(png_ptr, &intent, 1);
 
-   if (png_crc_finish(png_ptr, 0))
+   if (png_crc_finish(png_ptr, 0) != 0)
       return;
 
    /* If a colorspace error has already been output skip this chunk */
-   if (png_ptr->colorspace.flags & PNG_COLORSPACE_INVALID)
+   if ((png_ptr->colorspace.flags & PNG_COLORSPACE_INVALID) != 0)
       return;
 
    /* Only one sRGB or iCCP chunk is allowed, use the HAVE_INTENT flag to detect
     * this.
     */
-   if (png_ptr->colorspace.flags & PNG_COLORSPACE_HAVE_INTENT)
+   if ((png_ptr->colorspace.flags & PNG_COLORSPACE_HAVE_INTENT) != 0)
    {
       png_ptr->colorspace.flags |= PNG_COLORSPACE_INVALID;
       png_colorspace_sync(png_ptr, info_ptr);
@@ -1297,7 +1299,7 @@ png_handle_sRGB(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
    (void)png_colorspace_set_sRGB(png_ptr, &png_ptr->colorspace, intent);
    png_colorspace_sync(png_ptr, info_ptr);
 }
-#endif /* PNG_READ_sRGB_SUPPORTED */
+#endif /* READ_sRGB */
 
 #ifdef PNG_READ_iCCP_SUPPORTED
 void /* PRIVATE */
@@ -1309,10 +1311,10 @@ png_handle_iCCP(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_debug(1, "in png_handle_iCCP");
 
-   if (!(png_ptr->mode & PNG_HAVE_IHDR))
+   if ((png_ptr->mode & PNG_HAVE_IHDR) == 0)
       png_chunk_error(png_ptr, "missing IHDR");
 
-   else if (png_ptr->mode & (PNG_HAVE_IDAT|PNG_HAVE_PLTE))
+   else if ((png_ptr->mode & (PNG_HAVE_IDAT|PNG_HAVE_PLTE)) != 0)
    {
       png_crc_finish(png_ptr, length);
       png_chunk_benign_error(png_ptr, "out of place");
@@ -1335,7 +1337,7 @@ png_handle_iCCP(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
    }
 
    /* If a colorspace error has already been output skip this chunk */
-   if (png_ptr->colorspace.flags & PNG_COLORSPACE_INVALID)
+   if ((png_ptr->colorspace.flags & PNG_COLORSPACE_INVALID) != 0)
    {
       png_crc_finish(png_ptr, length);
       return;
@@ -1395,14 +1397,14 @@ png_handle_iCCP(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
                      png_get_uint_32(profile_header);
 
                   if (png_icc_check_length(png_ptr, &png_ptr->colorspace,
-                     keyword, profile_length))
+                     keyword, profile_length) != 0)
                   {
                      /* The length is apparently ok, so we can check the 132
                       * byte header.
                       */
                      if (png_icc_check_header(png_ptr, &png_ptr->colorspace,
                         keyword, profile_length, profile_header,
-                        png_ptr->color_type))
+                        png_ptr->color_type) != 0)
                      {
                         /* Now read the tag table; a variable size buffer is
                          * needed at this point, allocate one for the whole
@@ -1432,7 +1434,7 @@ png_handle_iCCP(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
                            {
                               if (png_icc_check_tag_table(png_ptr,
                                  &png_ptr->colorspace, keyword, profile_length,
-                                 profile))
+                                 profile) != 0)
                               {
                                  /* The profile has been validated for basic
                                   * security issues, so read the whole thing in.
@@ -1570,7 +1572,7 @@ png_handle_iCCP(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
    if (errmsg != NULL) /* else already output */
       png_chunk_benign_error(png_ptr, errmsg);
 }
-#endif /* PNG_READ_iCCP_SUPPORTED */
+#endif /* READ_iCCP */
 
 #ifdef PNG_READ_sPLT_SUPPORTED
 void /* PRIVATE */
@@ -1606,10 +1608,10 @@ png_handle_sPLT(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
    }
 #endif
 
-   if (!(png_ptr->mode & PNG_HAVE_IHDR))
+   if ((png_ptr->mode & PNG_HAVE_IHDR) == 0)
       png_chunk_error(png_ptr, "missing IHDR");
 
-   else if (png_ptr->mode & PNG_HAVE_IDAT)
+   else if ((png_ptr->mode & PNG_HAVE_IDAT) != 0)
    {
       png_crc_finish(png_ptr, length);
       png_chunk_benign_error(png_ptr, "out of place");
@@ -1640,7 +1642,7 @@ png_handle_sPLT(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
     */
    png_crc_read(png_ptr, buffer, length);
 
-   if (png_crc_finish(png_ptr, skip))
+   if (png_crc_finish(png_ptr, skip) != 0)
       return;
 
    buffer[length] = 0;
@@ -1665,7 +1667,7 @@ png_handle_sPLT(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
    data_length = length - (png_uint_32)(entry_start - buffer);
 
    /* Integrity-check the data length */
-   if (data_length % entry_size)
+   if ((data_length % entry_size) != 0)
    {
       png_warning(png_ptr, "sPLT chunk has bad length");
       return;
@@ -1747,7 +1749,7 @@ png_handle_sPLT(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_free(png_ptr, new_palette.entries);
 }
-#endif /* PNG_READ_sPLT_SUPPORTED */
+#endif /* READ_sPLT */
 
 #ifdef PNG_READ_tRNS_SUPPORTED
 void /* PRIVATE */
@@ -1757,17 +1759,17 @@ png_handle_tRNS(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_debug(1, "in png_handle_tRNS");
 
-   if (!(png_ptr->mode & PNG_HAVE_IHDR))
+   if ((png_ptr->mode & PNG_HAVE_IHDR) == 0)
       png_chunk_error(png_ptr, "missing IHDR");
 
-   else if (png_ptr->mode & PNG_HAVE_IDAT)
+   else if ((png_ptr->mode & PNG_HAVE_IDAT) != 0)
    {
       png_crc_finish(png_ptr, length);
       png_chunk_benign_error(png_ptr, "out of place");
       return;
    }
 
-   else if (info_ptr != NULL && (info_ptr->valid & PNG_INFO_tRNS))
+   else if (info_ptr != NULL && (info_ptr->valid & PNG_INFO_tRNS) != 0)
    {
       png_crc_finish(png_ptr, length);
       png_chunk_benign_error(png_ptr, "duplicate");
@@ -1810,7 +1812,7 @@ png_handle_tRNS(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    else if (png_ptr->color_type == PNG_COLOR_TYPE_PALETTE)
    {
-      if (!(png_ptr->mode & PNG_HAVE_PLTE))
+      if ((png_ptr->mode & PNG_HAVE_PLTE) == 0)
       {
          /* TODO: is this actually an error in the ISO spec? */
          png_crc_finish(png_ptr, length);
@@ -1837,7 +1839,7 @@ png_handle_tRNS(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
       return;
    }
 
-   if (png_crc_finish(png_ptr, 0))
+   if (png_crc_finish(png_ptr, 0) != 0)
    {
       png_ptr->num_trans = 0;
       return;
@@ -1862,19 +1864,19 @@ png_handle_bKGD(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_debug(1, "in png_handle_bKGD");
 
-   if (!(png_ptr->mode & PNG_HAVE_IHDR))
+   if ((png_ptr->mode & PNG_HAVE_IHDR) == 0)
       png_chunk_error(png_ptr, "missing IHDR");
 
-   else if ((png_ptr->mode & PNG_HAVE_IDAT) ||
-      (png_ptr->color_type == PNG_COLOR_TYPE_PALETTE &&
-       !(png_ptr->mode & PNG_HAVE_PLTE)))
+   else if ((png_ptr->mode & PNG_HAVE_IDAT) != 0 ||
+       (png_ptr->color_type == PNG_COLOR_TYPE_PALETTE &&
+       (png_ptr->mode & PNG_HAVE_PLTE) == 0))
    {
       png_crc_finish(png_ptr, length);
       png_chunk_benign_error(png_ptr, "out of place");
       return;
    }
 
-   else if (info_ptr != NULL && (info_ptr->valid & PNG_INFO_bKGD))
+   else if (info_ptr != NULL && (info_ptr->valid & PNG_INFO_bKGD) != 0)
    {
       png_crc_finish(png_ptr, length);
       png_chunk_benign_error(png_ptr, "duplicate");
@@ -1884,7 +1886,7 @@ png_handle_bKGD(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
    if (png_ptr->color_type == PNG_COLOR_TYPE_PALETTE)
       truelen = 1;
 
-   else if (png_ptr->color_type & PNG_COLOR_MASK_COLOR)
+   else if ((png_ptr->color_type & PNG_COLOR_MASK_COLOR) != 0)
       truelen = 6;
 
    else
@@ -1899,7 +1901,7 @@ png_handle_bKGD(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_crc_read(png_ptr, buf, truelen);
 
-   if (png_crc_finish(png_ptr, 0))
+   if (png_crc_finish(png_ptr, 0) != 0)
       return;
 
    /* We convert the index value into RGB components so that we can allow
@@ -1911,7 +1913,7 @@ png_handle_bKGD(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
    {
       background.index = buf[0];
 
-      if (info_ptr && info_ptr->num_palette)
+      if (info_ptr != NULL && info_ptr->num_palette != 0)
       {
          if (buf[0] >= info_ptr->num_palette)
          {
@@ -1930,7 +1932,7 @@ png_handle_bKGD(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
       background.gray = 0;
    }
 
-   else if (!(png_ptr->color_type & PNG_COLOR_MASK_COLOR)) /* GRAY */
+   else if ((png_ptr->color_type & PNG_COLOR_MASK_COLOR) == 0) /* GRAY */
    {
       background.index = 0;
       background.red =
@@ -1961,17 +1963,18 @@ png_handle_hIST(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_debug(1, "in png_handle_hIST");
 
-   if (!(png_ptr->mode & PNG_HAVE_IHDR))
+   if ((png_ptr->mode & PNG_HAVE_IHDR) == 0)
       png_chunk_error(png_ptr, "missing IHDR");
 
-   else if ((png_ptr->mode & PNG_HAVE_IDAT) || !(png_ptr->mode & PNG_HAVE_PLTE))
+   else if ((png_ptr->mode & PNG_HAVE_IDAT) != 0 ||
+       (png_ptr->mode & PNG_HAVE_PLTE) == 0)
    {
       png_crc_finish(png_ptr, length);
       png_chunk_benign_error(png_ptr, "out of place");
       return;
    }
 
-   else if (info_ptr != NULL && (info_ptr->valid & PNG_INFO_hIST))
+   else if (info_ptr != NULL && (info_ptr->valid & PNG_INFO_hIST) != 0)
    {
       png_crc_finish(png_ptr, length);
       png_chunk_benign_error(png_ptr, "duplicate");
@@ -1995,7 +1998,7 @@ png_handle_hIST(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
       readbuf[i] = png_get_uint_16(buf);
    }
 
-   if (png_crc_finish(png_ptr, 0))
+   if (png_crc_finish(png_ptr, 0) != 0)
       return;
 
    png_set_hIST(png_ptr, info_ptr, readbuf);
@@ -2012,17 +2015,17 @@ png_handle_pHYs(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_debug(1, "in png_handle_pHYs");
 
-   if (!(png_ptr->mode & PNG_HAVE_IHDR))
+   if ((png_ptr->mode & PNG_HAVE_IHDR) == 0)
       png_chunk_error(png_ptr, "missing IHDR");
 
-   else if (png_ptr->mode & PNG_HAVE_IDAT)
+   else if ((png_ptr->mode & PNG_HAVE_IDAT) != 0)
    {
       png_crc_finish(png_ptr, length);
       png_chunk_benign_error(png_ptr, "out of place");
       return;
    }
 
-   else if (info_ptr != NULL && (info_ptr->valid & PNG_INFO_pHYs))
+   else if (info_ptr != NULL && (info_ptr->valid & PNG_INFO_pHYs) != 0)
    {
       png_crc_finish(png_ptr, length);
       png_chunk_benign_error(png_ptr, "duplicate");
@@ -2038,7 +2041,7 @@ png_handle_pHYs(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_crc_read(png_ptr, buf, 9);
 
-   if (png_crc_finish(png_ptr, 0))
+   if (png_crc_finish(png_ptr, 0) != 0)
       return;
 
    res_x = png_get_uint_32(buf);
@@ -2058,17 +2061,17 @@ png_handle_oFFs(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_debug(1, "in png_handle_oFFs");
 
-   if (!(png_ptr->mode & PNG_HAVE_IHDR))
+   if ((png_ptr->mode & PNG_HAVE_IHDR) == 0)
       png_chunk_error(png_ptr, "missing IHDR");
 
-   else if (png_ptr->mode & PNG_HAVE_IDAT)
+   else if ((png_ptr->mode & PNG_HAVE_IDAT) != 0)
    {
       png_crc_finish(png_ptr, length);
       png_chunk_benign_error(png_ptr, "out of place");
       return;
    }
 
-   else if (info_ptr != NULL && (info_ptr->valid & PNG_INFO_oFFs))
+   else if (info_ptr != NULL && (info_ptr->valid & PNG_INFO_oFFs) != 0)
    {
       png_crc_finish(png_ptr, length);
       png_chunk_benign_error(png_ptr, "duplicate");
@@ -2084,7 +2087,7 @@ png_handle_oFFs(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_crc_read(png_ptr, buf, 9);
 
-   if (png_crc_finish(png_ptr, 0))
+   if (png_crc_finish(png_ptr, 0) != 0)
       return;
 
    offset_x = png_get_int_32(buf);
@@ -2107,17 +2110,17 @@ png_handle_pCAL(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_debug(1, "in png_handle_pCAL");
 
-   if (!(png_ptr->mode & PNG_HAVE_IHDR))
+   if ((png_ptr->mode & PNG_HAVE_IHDR) == 0)
       png_chunk_error(png_ptr, "missing IHDR");
 
-   else if (png_ptr->mode & PNG_HAVE_IDAT)
+   else if ((png_ptr->mode & PNG_HAVE_IDAT) != 0)
    {
       png_crc_finish(png_ptr, length);
       png_chunk_benign_error(png_ptr, "out of place");
       return;
    }
 
-   else if (info_ptr != NULL && (info_ptr->valid & PNG_INFO_pCAL))
+   else if (info_ptr != NULL && (info_ptr->valid & PNG_INFO_pCAL) != 0)
    {
       png_crc_finish(png_ptr, length);
       png_chunk_benign_error(png_ptr, "duplicate");
@@ -2138,7 +2141,7 @@ png_handle_pCAL(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_crc_read(png_ptr, buffer, length);
 
-   if (png_crc_finish(png_ptr, 0))
+   if (png_crc_finish(png_ptr, 0) != 0)
       return;
 
    buffer[length] = 0; /* Null terminate the last string */
@@ -2234,17 +2237,17 @@ png_handle_sCAL(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_debug(1, "in png_handle_sCAL");
 
-   if (!(png_ptr->mode & PNG_HAVE_IHDR))
+   if ((png_ptr->mode & PNG_HAVE_IHDR) == 0)
       png_chunk_error(png_ptr, "missing IHDR");
 
-   else if (png_ptr->mode & PNG_HAVE_IDAT)
+   else if ((png_ptr->mode & PNG_HAVE_IDAT) != 0)
    {
       png_crc_finish(png_ptr, length);
       png_chunk_benign_error(png_ptr, "out of place");
       return;
    }
 
-   else if (info_ptr != NULL && (info_ptr->valid & PNG_INFO_sCAL))
+   else if (info_ptr != NULL && (info_ptr->valid & PNG_INFO_sCAL) != 0)
    {
       png_crc_finish(png_ptr, length);
       png_chunk_benign_error(png_ptr, "duplicate");
@@ -2274,7 +2277,7 @@ png_handle_sCAL(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
    png_crc_read(png_ptr, buffer, length);
    buffer[length] = 0; /* Null terminate the last string */
 
-   if (png_crc_finish(png_ptr, 0))
+   if (png_crc_finish(png_ptr, 0) != 0)
       return;
 
    /* Validate the unit. */
@@ -2290,11 +2293,11 @@ png_handle_sCAL(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
    i = 1;
    state = 0;
 
-   if (!png_check_fp_number((png_const_charp)buffer, length, &state, &i) ||
+   if (png_check_fp_number((png_const_charp)buffer, length, &state, &i) == 0 ||
        i >= length || buffer[i++] != 0)
       png_chunk_benign_error(png_ptr, "bad width format");
 
-   else if (!PNG_FP_IS_POSITIVE(state))
+   else if (PNG_FP_IS_POSITIVE(state) == 0)
       png_chunk_benign_error(png_ptr, "non-positive width");
 
    else
@@ -2302,11 +2305,11 @@ png_handle_sCAL(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
       png_size_t heighti = i;
 
       state = 0;
-      if (!png_check_fp_number((png_const_charp)buffer, length, &state, &i) ||
-         i != length)
+      if (png_check_fp_number((png_const_charp)buffer, length,
+          &state, &i) == 0 || i != length)
          png_chunk_benign_error(png_ptr, "bad height format");
 
-      else if (!PNG_FP_IS_POSITIVE(state))
+      else if (PNG_FP_IS_POSITIVE(state) == 0)
          png_chunk_benign_error(png_ptr, "non-positive height");
 
       else
@@ -2326,17 +2329,17 @@ png_handle_tIME(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_debug(1, "in png_handle_tIME");
 
-   if (!(png_ptr->mode & PNG_HAVE_IHDR))
+   if ((png_ptr->mode & PNG_HAVE_IHDR) == 0)
       png_chunk_error(png_ptr, "missing IHDR");
 
-   else if (info_ptr != NULL && (info_ptr->valid & PNG_INFO_tIME))
+   else if (info_ptr != NULL && (info_ptr->valid & PNG_INFO_tIME) != 0)
    {
       png_crc_finish(png_ptr, length);
       png_chunk_benign_error(png_ptr, "duplicate");
       return;
    }
 
-   if (png_ptr->mode & PNG_HAVE_IDAT)
+   if ((png_ptr->mode & PNG_HAVE_IDAT) != 0)
       png_ptr->mode |= PNG_AFTER_IDAT;
 
    if (length != 7)
@@ -2348,7 +2351,7 @@ png_handle_tIME(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_crc_read(png_ptr, buf, 7);
 
-   if (png_crc_finish(png_ptr, 0))
+   if (png_crc_finish(png_ptr, 0) != 0)
       return;
 
    mod_time.second = buf[6];
@@ -2393,10 +2396,10 @@ png_handle_tEXt(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
    }
 #endif
 
-   if (!(png_ptr->mode & PNG_HAVE_IHDR))
+   if ((png_ptr->mode & PNG_HAVE_IHDR) == 0)
       png_chunk_error(png_ptr, "missing IHDR");
 
-   if (png_ptr->mode & PNG_HAVE_IDAT)
+   if ((png_ptr->mode & PNG_HAVE_IDAT) != 0)
       png_ptr->mode |= PNG_AFTER_IDAT;
 
 #ifdef PNG_MAX_MALLOC_64K
@@ -2418,7 +2421,7 @@ png_handle_tEXt(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_crc_read(png_ptr, buffer, length);
 
-   if (png_crc_finish(png_ptr, skip))
+   if (png_crc_finish(png_ptr, skip) != 0)
       return;
 
    key = (png_charp)buffer;
@@ -2438,7 +2441,7 @@ png_handle_tEXt(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
    text_info.text = text;
    text_info.text_length = strlen(text);
 
-   if (png_set_text_2(png_ptr, info_ptr, &text_info, 1))
+   if (png_set_text_2(png_ptr, info_ptr, &text_info, 1) != 0)
       png_warning(png_ptr, "Insufficient memory to process text chunk");
 }
 #endif
@@ -2472,10 +2475,10 @@ png_handle_zTXt(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
    }
 #endif
 
-   if (!(png_ptr->mode & PNG_HAVE_IHDR))
+   if ((png_ptr->mode & PNG_HAVE_IHDR) == 0)
       png_chunk_error(png_ptr, "missing IHDR");
 
-   if (png_ptr->mode & PNG_HAVE_IDAT)
+   if ((png_ptr->mode & PNG_HAVE_IDAT) != 0)
       png_ptr->mode |= PNG_AFTER_IDAT;
 
    buffer = png_read_buffer(png_ptr, length, 2/*silent*/);
@@ -2489,7 +2492,7 @@ png_handle_zTXt(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_crc_read(png_ptr, buffer, length);
 
-   if (png_crc_finish(png_ptr, 0))
+   if (png_crc_finish(png_ptr, 0) != 0)
       return;
 
    /* TODO: also check that the keyword contents match the spec! */
@@ -2539,7 +2542,7 @@ png_handle_zTXt(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
          text.lang = NULL;
          text.lang_key = NULL;
 
-         if (png_set_text_2(png_ptr, info_ptr, &text, 1))
+         if (png_set_text_2(png_ptr, info_ptr, &text, 1) != 0)
             errmsg = "insufficient memory";
       }
 
@@ -2581,10 +2584,10 @@ png_handle_iTXt(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
    }
 #endif
 
-   if (!(png_ptr->mode & PNG_HAVE_IHDR))
+   if ((png_ptr->mode & PNG_HAVE_IHDR) == 0)
       png_chunk_error(png_ptr, "missing IHDR");
 
-   if (png_ptr->mode & PNG_HAVE_IDAT)
+   if ((png_ptr->mode & PNG_HAVE_IDAT) != 0)
       png_ptr->mode |= PNG_AFTER_IDAT;
 
    buffer = png_read_buffer(png_ptr, length+1, 1/*warn*/);
@@ -2598,7 +2601,7 @@ png_handle_iTXt(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
    png_crc_read(png_ptr, buffer, length);
 
-   if (png_crc_finish(png_ptr, 0))
+   if (png_crc_finish(png_ptr, 0) != 0)
       return;
 
    /* First the keyword. */
@@ -2648,10 +2651,10 @@ png_handle_iTXt(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
        */
       ++prefix_length;
 
-      if (!compressed && prefix_length <= length)
+      if (compressed == 0 && prefix_length <= length)
          uncompressed_length = length - prefix_length;
 
-      else if (compressed && prefix_length < length)
+      else if (compressed != 0 && prefix_length < length)
       {
          uncompressed_length = PNG_SIZE_MAX;
 
@@ -2689,7 +2692,7 @@ png_handle_iTXt(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
          text.text_length = 0;
          text.itxt_length = uncompressed_length;
 
-         if (png_set_text_2(png_ptr, info_ptr, &text, 1))
+         if (png_set_text_2(png_ptr, info_ptr, &text, 1) != 0)
             errmsg = "insufficient memory";
       }
    }
@@ -2713,17 +2716,17 @@ png_handle_acTL(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
 
     png_debug(1, "in png_handle_acTL");
 
-    if (!(png_ptr->mode & PNG_HAVE_IHDR))
+    if ((png_ptr->mode & PNG_HAVE_IHDR) == 0)
     {
         png_error(png_ptr, "Missing IHDR before acTL");
     }
-    else if (png_ptr->mode & PNG_HAVE_IDAT)
+    else if ((png_ptr->mode & PNG_HAVE_IDAT) != 0)
     {
         png_warning(png_ptr, "Invalid acTL after IDAT skipped");
         png_crc_finish(png_ptr, length);
         return;
     }
-    else if (png_ptr->mode & PNG_HAVE_acTL)
+    else if ((png_ptr->mode & PNG_HAVE_acTL) != 0)
     {
         png_warning(png_ptr, "Duplicate acTL skipped");
         png_crc_finish(png_ptr, length);
@@ -2744,7 +2747,7 @@ png_handle_acTL(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
 
     /* the set function will do error checking on num_frames */
     didSet = png_set_acTL(png_ptr, info_ptr, num_frames, num_plays);
-    if(didSet)
+    if (didSet != 0)
         png_ptr->mode |= PNG_HAVE_acTL;
 }
 
@@ -2765,11 +2768,11 @@ png_handle_fcTL(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
 
     png_ensure_sequence_number(png_ptr, length);
 
-    if (!(png_ptr->mode & PNG_HAVE_IHDR))
+    if ((png_ptr->mode & PNG_HAVE_IHDR) == 0)
     {
         png_error(png_ptr, "Missing IHDR before fcTL");
     }
-    else if (png_ptr->mode & PNG_HAVE_IDAT)
+    else if ((png_ptr->mode & PNG_HAVE_IDAT) != 0)
     {
         /* for any frames other then the first this message may be misleading,
         * but correct. PNG_HAVE_IDAT is unset before the frame head is read
@@ -2778,7 +2781,7 @@ png_handle_fcTL(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
         png_crc_finish(png_ptr, length-4);
         return;
     }
-    else if (png_ptr->mode & PNG_HAVE_fcTL)
+    else if ((png_ptr->mode & PNG_HAVE_fcTL) != 0)
     {
         png_warning(png_ptr, "Duplicate fcTL within one frame skipped");
         png_crc_finish(png_ptr, length-4);
@@ -2833,7 +2836,8 @@ png_handle_fcTL(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
 void /* PRIVATE */
 png_have_info(png_structp png_ptr, png_infop info_ptr)
 {
-    if((info_ptr->valid & PNG_INFO_acTL) && !(info_ptr->valid & PNG_INFO_fcTL))
+    if ((info_ptr->valid & PNG_INFO_acTL) != 0 &&
+        (info_ptr->valid & PNG_INFO_fcTL) == 0)
     {
         png_ptr->apng_flags |= PNG_FIRST_FRAME_HIDDEN;
         info_ptr->num_frames++;
@@ -2873,7 +2877,7 @@ png_ensure_sequence_number(png_structp png_ptr, png_uint_32 length)
 
     png_ptr->next_seq_num++;
 }
-#endif /* PNG_READ_APNG_SUPPORTED */
+#endif /* READ_APNG */
 
 #ifdef PNG_READ_UNKNOWN_CHUNKS_SUPPORTED
 /* Utility function for png_handle_unknown; set up png_ptr::unknown_chunk */
@@ -2890,7 +2894,7 @@ png_cache_unknown_chunk(png_structrp png_ptr, png_uint_32 length)
 
 #  ifdef PNG_SET_CHUNK_MALLOC_LIMIT_SUPPORTED
       if (png_ptr->user_chunk_malloc_max > 0 &&
-         png_ptr->user_chunk_malloc_max < limit)
+          png_ptr->user_chunk_malloc_max < limit)
          limit = png_ptr->user_chunk_malloc_max;
 
 #  elif PNG_USER_CHUNK_MALLOC_MAX > 0
@@ -2933,7 +2937,7 @@ png_cache_unknown_chunk(png_structrp png_ptr, png_uint_32 length)
       return 1;
    }
 }
-#endif /* PNG_READ_UNKNOWN_CHUNKS_SUPPORTED */
+#endif /* READ_UNKNOWN_CHUNKS */
 
 /* Handle an unknown, or known but disabled, chunk */
 void /* PRIVATE */
@@ -2972,7 +2976,7 @@ png_handle_unknown(png_structrp png_ptr, png_inforp info_ptr,
        */
       if (png_ptr->read_user_chunk_fn != NULL)
       {
-         if (png_cache_unknown_chunk(png_ptr, length))
+         if (png_cache_unknown_chunk(png_ptr, length) != 0)
          {
             /* Callback to user unknown chunk handler */
             int ret = (*(png_ptr->read_user_chunk_fn))(png_ptr,
@@ -3033,7 +3037,7 @@ png_handle_unknown(png_structrp png_ptr, png_inforp info_ptr,
 
       else
          /* Use the SAVE_UNKNOWN_CHUNKS code or skip the chunk */
-#  endif /* PNG_READ_USER_CHUNKS_SUPPORTED */
+#  endif /* READ_USER_CHUNKS */
 
 #  ifdef PNG_SAVE_UNKNOWN_CHUNKS_SUPPORTED
       {
@@ -3049,7 +3053,7 @@ png_handle_unknown(png_structrp png_ptr, png_inforp info_ptr,
             (keep == PNG_HANDLE_CHUNK_IF_SAFE &&
              PNG_CHUNK_ANCILLARY(png_ptr->chunk_name)))
          {
-            if (!png_cache_unknown_chunk(png_ptr, length))
+            if (png_cache_unknown_chunk(png_ptr, length) == 0)
                keep = PNG_HANDLE_CHUNK_NEVER;
          }
 
@@ -3100,7 +3104,7 @@ png_handle_unknown(png_structrp png_ptr, png_inforp info_ptr,
                --(png_ptr->user_chunk_cache_max);
                /* FALL THROUGH */
             case 0: /* no limit */
-#     endif /* PNG_USER_LIMITS_SUPPORTED */
+#     endif /* USER_LIMITS */
                /* Here when the limit isn't reached or when limits are compiled
                 * out; store the chunk.
                 */
@@ -3129,10 +3133,10 @@ png_handle_unknown(png_structrp png_ptr, png_inforp info_ptr,
    png_crc_finish(png_ptr, length);
    PNG_UNUSED(info_ptr)
    PNG_UNUSED(keep)
-#endif /* !PNG_READ_UNKNOWN_CHUNKS_SUPPORTED */
+#endif /* !READ_UNKNOWN_CHUNKS */
 
    /* Check for unhandled critical chunks */
-   if (!handled && PNG_CHUNK_CRITICAL(png_ptr->chunk_name))
+   if (handled == 0 && PNG_CHUNK_CRITICAL(png_ptr->chunk_name))
       png_chunk_error(png_ptr, "unhandled critical chunk");
 }
 
@@ -3215,7 +3219,8 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
       end_ptr = dp + PNG_ROWBYTES(pixel_depth, row_width) - 1;
       end_byte = *end_ptr;
 #     ifdef PNG_READ_PACKSWAP_SUPPORTED
-         if (png_ptr->transformations & PNG_PACKSWAP) /* little-endian byte */
+         if ((png_ptr->transformations & PNG_PACKSWAP) != 0)
+            /* little-endian byte */
             end_mask = 0xff << end_mask;
 
          else /* big-endian byte */
@@ -3231,10 +3236,11 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
     * pass.
     */
 #ifdef PNG_READ_INTERLACING_SUPPORTED
-   if (png_ptr->interlaced && (png_ptr->transformations & PNG_INTERLACE) &&
-      pass < 6 && (display == 0 ||
-      /* The following copies everything for 'display' on passes 0, 2 and 4. */
-      (display == 1 && (pass & 1) != 0)))
+   if (png_ptr->interlaced != 0 &&
+       (png_ptr->transformations & PNG_INTERLACE) != 0 &&
+       pass < 6 && (display == 0 ||
+       /* The following copies everything for 'display' on passes 0, 2 and 4. */
+       (display == 1 && (pass & 1) != 0)))
    {
       /* Narrow images may have no bits in a pass; the caller should handle
        * this, but this test is cheap:
@@ -3366,7 +3372,7 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
           */
 #        define MASK(pass,depth,display,png)\
             ((display)?B_MASK(pass,depth,png):S_MASK(pass,depth,png))
-#endif /* !PNG_USE_COMPILE_TIME_MASKS */
+#endif /* !USE_COMPILE_TIME_MASKS */
 
          /* Use the appropriate mask to copy the required bits.  In some cases
           * the byte mask will be 0 or 0xff; optimize these cases.  row_width is
@@ -3377,7 +3383,7 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
          png_uint_32 mask;
 
 #        ifdef PNG_READ_PACKSWAP_SUPPORTED
-            if (png_ptr->transformations & PNG_PACKSWAP)
+            if ((png_ptr->transformations & PNG_PACKSWAP) != 0)
                mask = MASK(pass, pixel_depth, display, 0);
 
             else
@@ -3528,24 +3534,24 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
                 * wide bytes_to_copy either - use the memcpy there.
                 */
                if (bytes_to_copy < 16 /*else use memcpy*/ &&
-                  png_isaligned(dp, png_uint_16) &&
-                  png_isaligned(sp, png_uint_16) &&
-                  bytes_to_copy % (sizeof (png_uint_16)) == 0 &&
-                  bytes_to_jump % (sizeof (png_uint_16)) == 0)
+                   png_isaligned(dp, png_uint_16) &&
+                   png_isaligned(sp, png_uint_16) &&
+                   bytes_to_copy % (sizeof (png_uint_16)) == 0 &&
+                   bytes_to_jump % (sizeof (png_uint_16)) == 0)
                {
                   /* Everything is aligned for png_uint_16 copies, but try for
                    * png_uint_32 first.
                    */
-                  if (png_isaligned(dp, png_uint_32) &&
-                     png_isaligned(sp, png_uint_32) &&
-                     bytes_to_copy % (sizeof (png_uint_32)) == 0 &&
-                     bytes_to_jump % (sizeof (png_uint_32)) == 0)
+                  if (png_isaligned(dp, png_uint_32) != 0 &&
+                      png_isaligned(sp, png_uint_32) != 0 &&
+                      bytes_to_copy % (sizeof (png_uint_32)) == 0 &&
+                      bytes_to_jump % (sizeof (png_uint_32)) == 0)
                   {
                      png_uint_32p dp32 = png_aligncast(png_uint_32p,dp);
                      png_const_uint_32p sp32 = png_aligncastconst(
-                        png_const_uint_32p, sp);
+                         png_const_uint_32p, sp);
                      size_t skip = (bytes_to_jump-bytes_to_copy) /
-                        (sizeof (png_uint_32));
+                         (sizeof (png_uint_32));
 
                      do
                      {
@@ -3617,7 +3623,7 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
                      return;
                   }
                }
-#endif /* PNG_ALIGN_ code */
+#endif /* ALIGN_TYPE code */
 
                /* The true default - use a memcpy: */
                for (;;)
@@ -3641,7 +3647,7 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
       /* Here if pixel_depth < 8 to check 'end_ptr' below. */
    }
    else
-#endif /* PNG_READ_INTERLACING_SUPPORTED */
+#endif /* READ_INTERLACING */
 
    /* If here then the switch above wasn't used so just memcpy the whole row
     * from the temporary row buffer (notice that this overwrites the end of the
@@ -3684,7 +3690,7 @@ png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
             int j;
 
 #ifdef PNG_READ_PACKSWAP_SUPPORTED
-            if (transformations & PNG_PACKSWAP)
+            if ((transformations & PNG_PACKSWAP) != 0)
             {
                 sshift = (int)((row_info->width + 7) & 0x07);
                 dshift = (int)((final_width + 7) & 0x07);
@@ -3744,7 +3750,7 @@ png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
             png_uint_32 i;
 
 #ifdef PNG_READ_PACKSWAP_SUPPORTED
-            if (transformations & PNG_PACKSWAP)
+            if ((transformations & PNG_PACKSWAP) != 0)
             {
                sshift = (int)(((row_info->width + 3) & 0x03) << 1);
                dshift = (int)(((final_width + 3) & 0x03) << 1);
@@ -3807,7 +3813,7 @@ png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
             int jstop = png_pass_inc[pass];
 
 #ifdef PNG_READ_PACKSWAP_SUPPORTED
-            if (transformations & PNG_PACKSWAP)
+            if ((transformations & PNG_PACKSWAP) != 0)
             {
                sshift = (int)(((row_info->width + 1) & 0x01) << 2);
                dshift = (int)(((final_width + 1) & 0x01) << 2);
@@ -3897,7 +3903,7 @@ png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
    PNG_UNUSED(transformations)  /* Silence compiler warning */
 #endif
 }
-#endif /* PNG_READ_INTERLACING_SUPPORTED */
+#endif /* READ_INTERLACING */
 
 static void
 png_read_filter_row_sub(png_row_infop row_info, png_bytep row,
@@ -4175,7 +4181,7 @@ png_read_IDAT_data(png_structrp png_ptr, png_bytep output,
             if (png_ptr->chunk_name != png_IDAT)
                png_error(png_ptr, "Not enough image data");
          }
-#endif /* PNG_READ_APNG_SUPPORTED */
+#endif /* READ_APNG */
 
          avail_in = png_ptr->IDAT_read_size;
 
@@ -4284,7 +4290,7 @@ png_read_finish_IDAT(png_structrp png_ptr)
     * read it otherwise stray unread IDAT data or, more likely, an IDAT chunk
     * may still remain to be consumed.
     */
-   if (!(png_ptr->flags & PNG_FLAG_ZSTREAM_ENDED))
+   if ((png_ptr->flags & PNG_FLAG_ZSTREAM_ENDED) == 0)
    {
       /* The NULL causes png_read_IDAT_data to swallow any remaining bytes in
        * the compressed stream, but the stream may be damaged too, so even after
@@ -4296,7 +4302,7 @@ png_read_finish_IDAT(png_structrp png_ptr)
       /* Now clear everything out for safety; the following may not have been
        * done.
        */
-      if (!(png_ptr->flags & PNG_FLAG_ZSTREAM_ENDED))
+      if ((png_ptr->flags & PNG_FLAG_ZSTREAM_ENDED) == 0)
       {
          png_ptr->mode |= PNG_AFTER_IDAT;
          png_ptr->flags |= PNG_FLAG_ZSTREAM_ENDED;
@@ -4346,7 +4352,7 @@ png_read_finish_row(png_structrp png_ptr)
    if (png_ptr->row_number < png_ptr->num_rows)
       return;
 
-   if (png_ptr->interlaced)
+   if (png_ptr->interlaced != 0)
    {
       png_ptr->row_number = 0;
 
@@ -4367,7 +4373,7 @@ png_read_finish_row(png_structrp png_ptr)
             png_pass_start[png_ptr->pass]) /
             png_pass_inc[png_ptr->pass];
 
-         if (!(png_ptr->transformations & PNG_INTERLACE))
+         if ((png_ptr->transformations & PNG_INTERLACE) == 0)
          {
             png_ptr->num_rows = (png_ptr->height +
                 png_pass_yinc[png_ptr->pass] - 1 -
@@ -4387,7 +4393,7 @@ png_read_finish_row(png_structrp png_ptr)
    /* Here after at the end of the last row of the last pass. */
    png_read_finish_IDAT(png_ptr);
 }
-#endif /* PNG_SEQUENTIAL_READ_SUPPORTED */
+#endif /* SEQUENTIAL_READ */
 
 void /* PRIVATE */
 png_read_start_row(png_structrp png_ptr)
@@ -4414,9 +4420,9 @@ png_read_start_row(png_structrp png_ptr)
 #ifdef PNG_READ_TRANSFORMS_SUPPORTED
    png_init_read_transformations(png_ptr);
 #endif
-   if (png_ptr->interlaced)
+   if (png_ptr->interlaced != 0)
    {
-      if (!(png_ptr->transformations & PNG_INTERLACE))
+      if ((png_ptr->transformations & PNG_INTERLACE) == 0)
          png_ptr->num_rows = (png_ptr->height + png_pass_yinc[0] - 1 -
              png_pass_ystart[0]) / png_pass_yinc[0];
 
@@ -4448,16 +4454,16 @@ png_read_start_row(png_structrp png_ptr)
     * TODO: fix this.
     */
 #ifdef PNG_READ_PACK_SUPPORTED
-   if ((png_ptr->transformations & PNG_PACK) && png_ptr->bit_depth < 8)
+   if ((png_ptr->transformations & PNG_PACK) != 0 && png_ptr->bit_depth < 8)
       max_pixel_depth = 8;
 #endif
 
 #ifdef PNG_READ_EXPAND_SUPPORTED
-   if (png_ptr->transformations & PNG_EXPAND)
+   if ((png_ptr->transformations & PNG_EXPAND) != 0)
    {
       if (png_ptr->color_type == PNG_COLOR_TYPE_PALETTE)
       {
-         if (png_ptr->num_trans)
+         if (png_ptr->num_trans != 0)
             max_pixel_depth = 32;
 
          else
@@ -4469,13 +4475,13 @@ png_read_start_row(png_structrp png_ptr)
          if (max_pixel_depth < 8)
             max_pixel_depth = 8;
 
-         if (png_ptr->num_trans)
+         if (png_ptr->num_trans != 0)
             max_pixel_depth *= 2;
       }
 
       else if (png_ptr->color_type == PNG_COLOR_TYPE_RGB)
       {
-         if (png_ptr->num_trans)
+         if (png_ptr->num_trans != 0)
          {
             max_pixel_depth *= 4;
             max_pixel_depth /= 3;
@@ -4485,13 +4491,13 @@ png_read_start_row(png_structrp png_ptr)
 #endif
 
 #ifdef PNG_READ_EXPAND_16_SUPPORTED
-   if (png_ptr->transformations & PNG_EXPAND_16)
+   if ((png_ptr->transformations & PNG_EXPAND_16) != 0)
    {
 #     ifdef PNG_READ_EXPAND_SUPPORTED
          /* In fact it is an error if it isn't supported, but checking is
           * the safe way.
           */
-         if (png_ptr->transformations & PNG_EXPAND)
+         if ((png_ptr->transformations & PNG_EXPAND) != 0)
          {
             if (png_ptr->bit_depth < 16)
                max_pixel_depth *= 2;
@@ -4503,7 +4509,7 @@ png_read_start_row(png_structrp png_ptr)
 #endif
 
 #ifdef PNG_READ_FILLER_SUPPORTED
-   if (png_ptr->transformations & (PNG_FILLER))
+   if ((png_ptr->transformations & (PNG_FILLER)) != 0)
    {
       if (png_ptr->color_type == PNG_COLOR_TYPE_GRAY)
       {
@@ -4527,14 +4533,15 @@ png_read_start_row(png_structrp png_ptr)
 #endif
 
 #ifdef PNG_READ_GRAY_TO_RGB_SUPPORTED
-   if (png_ptr->transformations & PNG_GRAY_TO_RGB)
+   if ((png_ptr->transformations & PNG_GRAY_TO_RGB) != 0)
    {
       if (
 #ifdef PNG_READ_EXPAND_SUPPORTED
-          (png_ptr->num_trans && (png_ptr->transformations & PNG_EXPAND)) ||
+          (png_ptr->num_trans != 0 &&
+          (png_ptr->transformations & PNG_EXPAND) != 0) ||
 #endif
 #ifdef PNG_READ_FILLER_SUPPORTED
-          (png_ptr->transformations & (PNG_FILLER)) ||
+          (png_ptr->transformations & (PNG_FILLER)) != 0 ||
 #endif
           png_ptr->color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
       {
@@ -4567,7 +4574,7 @@ png_read_start_row(png_structrp png_ptr)
 
 #if defined(PNG_READ_USER_TRANSFORM_SUPPORTED) && \
 defined(PNG_USER_TRANSFORM_PTR_SUPPORTED)
-   if (png_ptr->transformations & PNG_USER_TRANSFORM)
+   if ((png_ptr->transformations & PNG_USER_TRANSFORM) != 0)
    {
       int user_pixel_depth = png_ptr->user_transform_depth *
          png_ptr->user_transform_channels;
@@ -4603,7 +4610,7 @@ defined(PNG_USER_TRANSFORM_PTR_SUPPORTED)
      png_free(png_ptr, png_ptr->big_row_buf);
      png_free(png_ptr, png_ptr->big_prev_row);
 
-     if (png_ptr->interlaced)
+     if (png_ptr->interlaced != 0)
         png_ptr->big_row_buf = (png_bytep)png_calloc(png_ptr,
             row_bytes + 48);
 
@@ -4660,7 +4667,7 @@ defined(PNG_USER_TRANSFORM_PTR_SUPPORTED)
     * does not, so free the read buffer now regardless; the sequential reader
     * reallocates it on demand.
     */
-   if (png_ptr->read_buffer)
+   if (png_ptr->read_buffer != 0)
    {
       png_bytep buffer = png_ptr->read_buffer;
 
@@ -4701,7 +4708,7 @@ png_read_reinit(png_structp png_ptr, png_infop info_ptr)
     png_ptr->rowbytes = PNG_ROWBYTES(png_ptr->pixel_depth,png_ptr->width);
     png_ptr->info_rowbytes = PNG_ROWBYTES(info_ptr->pixel_depth,
         png_ptr->width);
-    if (png_ptr->prev_row)
+    if (png_ptr->prev_row != NULL)
         memset(png_ptr->prev_row, 0, png_ptr->rowbytes + 1);
 }
 
@@ -4725,9 +4732,9 @@ png_progressive_read_reset(png_structp png_ptr)
     /* Offset to next interlace block in the y direction */
     static PNG_CONST png_byte png_pass_yinc[] = {8, 8, 8, 4, 4, 2, 2};
 
-    if (png_ptr->interlaced)
+    if (png_ptr->interlaced != 0)
     {
-        if (!(png_ptr->transformations & PNG_INTERLACE))
+        if ((png_ptr->transformations & PNG_INTERLACE) == 0)
             png_ptr->num_rows = (png_ptr->height + png_pass_yinc[0] - 1 -
                                 png_pass_ystart[0]) / png_pass_yinc[0];
         else
@@ -4739,7 +4746,7 @@ png_progressive_read_reset(png_structp png_ptr)
                            png_pass_inc[png_ptr->pass];
     }
     else
-#endif /* PNG_READ_INTERLACING_SUPPORTED */
+#endif /* READ_INTERLACING */
     {
         png_ptr->num_rows = png_ptr->height;
         png_ptr->iwidth = png_ptr->width;
@@ -4753,6 +4760,6 @@ png_progressive_read_reset(png_structp png_ptr)
     png_ptr->zstream.avail_out = (uInt)PNG_ROWBYTES(png_ptr->pixel_depth,
         png_ptr->iwidth) + 1;
 }
-#endif /* PNG_PROGRESSIVE_READ_SUPPORTED */
-#endif /* PNG_READ_APNG_SUPPORTED */
-#endif /* PNG_READ_SUPPORTED */
+#endif /* PROGRESSIVE_READ */
+#endif /* READ_APNG */
+#endif /* READ */

@@ -131,6 +131,7 @@
     locale/browser/preferences/sync.dtd               (%chrome/browser/preferences/sync.dtd)
 #endif
     locale/browser/preferences/tabs.dtd               (%chrome/browser/preferences/tabs.dtd)
+    locale/browser/preferences/search.dtd             (%chrome/browser/preferences/search.dtd)
     locale/browser/preferences/translation.dtd        (%chrome/browser/preferences/translation.dtd)
 #ifdef MOZ_SERVICES_SYNC
     locale/browser/syncBrand.dtd                (%chrome/browser/syncBrand.dtd)
