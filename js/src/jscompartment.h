@@ -241,6 +241,9 @@ struct JSCompartment
      */
     bool                         globalWriteBarriered;
 
+    // Non-zero if any typed objects in this compartment might be neutered.
+    int32_t                      neuteredTypedObjects;
+
   public:
     void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                 size_t *tiAllocationSiteTables,
