@@ -140,6 +140,9 @@
     <!-- for search and content formfill/pw manager -->
     <panel type="autocomplete" id="PopupAutoComplete" noautofocus="true" hidden="true"/>
 
+    <!-- for search with one-off buttons -->
+    <panel type="autocomplete" id="PopupSearchAutoComplete" noautofocus="true" hidden="true"/>
+
     <!-- for url bar autocomplete -->
     <panel type="autocomplete-richlistbox" id="PopupAutoCompleteRichResult" noautofocus="true" hidden="true"/>
 
