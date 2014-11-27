@@ -3569,14 +3569,17 @@ pref("font.name.monospace.x-western", "Fira Mono");
 pref("font.name.serif.zh-CN", "Charis SIL Compact");
 pref("font.name.sans-serif.zh-CN", "Fira Sans");
 pref("font.name.monospace.zh-CN", "Fira Mono");
+pref("font.name-list.sans-serif.zh-CN", "Fira Sans,Droid Sans Fallback");
 
 pref("font.name.serif.zh-HK", "Charis SIL Compact");
 pref("font.name.sans-serif.zh-HK", "Fira Sans");
 pref("font.name.monospace.zh-HK", "Fira Mono");
+pref("font.name-list.sans-serif.zh-HK", "Fira Sans,Droid Sans Fallback");
 
 pref("font.name.serif.zh-TW", "Charis SIL Compact");
 pref("font.name.sans-serif.zh-TW", "Fira Sans");
 pref("font.name.monospace.zh-TW", "Fira Mono");
+pref("font.name-list.sans-serif.zh-TW", "Fira Sans,Droid Sans Fallback");
 
 #elif defined(ANDROID)
 // We use the bundled fonts for Firefox for Android
