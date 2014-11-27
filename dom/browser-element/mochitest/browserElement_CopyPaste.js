@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the public domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Test that "cut, copy, paste, selectall" and selectionchange event works from inside an <iframe mozbrowser>.
+// Test that "cut, copy, paste, selectall" and selectionstatechanged event works from inside an <iframe mozbrowser>.
 "use strict";
 
 SimpleTest.waitForExplicitFinish();
@@ -142,9 +142,9 @@ function dispatchTest(e) {
 }
 
 function testSelectAll(e) {
-  iframe.addEventListener("mozbrowserselectionchange", function selectchangeforselectall(e) {
-    iframe.removeEventListener("mozbrowserselectionchange", selectchangeforselectall, true);
-    ok(true, "got mozbrowserselectionchange event." + stateMeaning);
+  iframe.addEventListener("mozbrowserselectionstatechanged", function selectchangeforselectall(e) {
+    iframe.removeEventListener("mozbrowserselectionstatechanged", selectchangeforselectall, true);
+    ok(true, "got mozbrowserselectionstatechanged event." + stateMeaning);
     ok(e.detail, "event.detail is not null." + stateMeaning);
     ok(e.detail.width != 0, "event.detail.width is not zero" + stateMeaning);
     ok(e.detail.height != 0, "event.detail.height is not zero" + stateMeaning);
@@ -153,7 +153,7 @@ function testSelectAll(e) {
 
   mm.addMessageListener('content-focus', function messageforfocus(msg) {
     mm.removeMessageListener('content-focus', messageforfocus);
-    // test selectall command, after calling this the selectionchange event should be fired.
+    // test selectall command, after calling this the selectionstatechanged event should be fired.
     doCommand('selectall');
   });
 
