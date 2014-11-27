@@ -22,6 +22,7 @@
 #include "mozilla/StyleAnimationValue.h"
 #include "GeckoProfiler.h"
 #include "nsIDocument.h"
+#include "nsPrintfCString.h"
 
 #ifdef DEBUG
 // #define NOISY_DEBUG
