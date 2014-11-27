@@ -101,6 +101,7 @@ add_task(function*() {
   ok(!isPanelUIOpen(), "Panel should no longer be open");
 
   Services.prefs.setBoolPref("browser.search.suggest.enabled", suggestEnabled);
+  CustomizableUI.reset();
 });
 
 add_task(function*() {
