@@ -1,41 +1,51 @@
 default-preferences test-pref(layout.css.object-fit-and-position.enabled,true)
 # Tests for 'object-fit' / 'object-position' with a PNG image
+== object-fit-fill-png-001c.html object-fit-fill-png-001-ref.html
 == object-fit-fill-png-001e.html object-fit-fill-png-001-ref.html
 == object-fit-fill-png-001i.html object-fit-fill-png-001-ref.html
 == object-fit-fill-png-001o.html object-fit-fill-png-001-ref.html
 == object-fit-fill-png-001p.html object-fit-fill-png-001-ref.html
+== object-fit-fill-png-002c.html object-fit-fill-png-002-ref.html
 == object-fit-fill-png-002e.html object-fit-fill-png-002-ref.html
 == object-fit-fill-png-002i.html object-fit-fill-png-002-ref.html
 == object-fit-fill-png-002o.html object-fit-fill-png-002-ref.html
 == object-fit-fill-png-002p.html object-fit-fill-png-002-ref.html
+== object-fit-contain-png-001c.html object-fit-contain-png-001-ref.html
 == object-fit-contain-png-001e.html object-fit-contain-png-001-ref.html
 == object-fit-contain-png-001i.html object-fit-contain-png-001-ref.html
 == object-fit-contain-png-001o.html object-fit-contain-png-001-ref.html
 == object-fit-contain-png-001p.html object-fit-contain-png-001-ref.html
+== object-fit-contain-png-002c.html object-fit-contain-png-002-ref.html
 == object-fit-contain-png-002e.html object-fit-contain-png-002-ref.html
 == object-fit-contain-png-002i.html object-fit-contain-png-002-ref.html
 == object-fit-contain-png-002o.html object-fit-contain-png-002-ref.html
 == object-fit-contain-png-002p.html object-fit-contain-png-002-ref.html
+== object-fit-cover-png-001c.html object-fit-cover-png-001-ref.html
 == object-fit-cover-png-001e.html object-fit-cover-png-001-ref.html
 == object-fit-cover-png-001i.html object-fit-cover-png-001-ref.html
 == object-fit-cover-png-001o.html object-fit-cover-png-001-ref.html
 == object-fit-cover-png-001p.html object-fit-cover-png-001-ref.html
+== object-fit-cover-png-002c.html object-fit-cover-png-002-ref.html
 == object-fit-cover-png-002e.html object-fit-cover-png-002-ref.html
 == object-fit-cover-png-002i.html object-fit-cover-png-002-ref.html
 == object-fit-cover-png-002o.html object-fit-cover-png-002-ref.html
 == object-fit-cover-png-002p.html object-fit-cover-png-002-ref.html
+== object-fit-none-png-001c.html object-fit-none-png-001-ref.html
 == object-fit-none-png-001e.html object-fit-none-png-001-ref.html
 == object-fit-none-png-001i.html object-fit-none-png-001-ref.html
 == object-fit-none-png-001o.html object-fit-none-png-001-ref.html
 == object-fit-none-png-001p.html object-fit-none-png-001-ref.html
+== object-fit-none-png-002c.html object-fit-none-png-002-ref.html
 == object-fit-none-png-002e.html object-fit-none-png-002-ref.html
 == object-fit-none-png-002i.html object-fit-none-png-002-ref.html
 == object-fit-none-png-002o.html object-fit-none-png-002-ref.html
 == object-fit-none-png-002p.html object-fit-none-png-002-ref.html
+== object-fit-scale-down-png-001c.html object-fit-scale-down-png-001-ref.html
 == object-fit-scale-down-png-001e.html object-fit-scale-down-png-001-ref.html
 == object-fit-scale-down-png-001i.html object-fit-scale-down-png-001-ref.html
 == object-fit-scale-down-png-001o.html object-fit-scale-down-png-001-ref.html
 == object-fit-scale-down-png-001p.html object-fit-scale-down-png-001-ref.html
+== object-fit-scale-down-png-002c.html object-fit-scale-down-png-002-ref.html
 == object-fit-scale-down-png-002e.html object-fit-scale-down-png-002-ref.html
 == object-fit-scale-down-png-002i.html object-fit-scale-down-png-002-ref.html
 == object-fit-scale-down-png-002o.html object-fit-scale-down-png-002-ref.html
@@ -162,10 +172,12 @@ fails == object-fit-fill-svg-006p.html object-fit-fill-svg-006-ref.html # bug 10
 == object-fit-scale-down-svg-006i.html object-fit-scale-down-svg-006-ref.html
 == object-fit-scale-down-svg-006o.html object-fit-scale-down-svg-006-ref.html
 == object-fit-scale-down-svg-006p.html object-fit-scale-down-svg-006-ref.html
+fails == object-position-png-001c.html object-position-png-001-ref.html # bug 1105150
 == object-position-png-001e.html object-position-png-001-ref.html
 == object-position-png-001i.html object-position-png-001-ref.html
 == object-position-png-001o.html object-position-png-001-ref.html
 == object-position-png-001p.html object-position-png-001-ref.html
+fails == object-position-png-002c.html object-position-png-002-ref.html # bug 1105150
 == object-position-png-002e.html object-position-png-002-ref.html
 == object-position-png-002i.html object-position-png-002-ref.html
 == object-position-png-002o.html object-position-png-002-ref.html

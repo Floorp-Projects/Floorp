@@ -3902,6 +3902,10 @@ class MOZ_STACK_CLASS JS_FRIEND_API(CompileOptions) : public ReadOnlyCompileOpti
         hasIntroductionInfo = true;
         return *this;
     }
+    CompileOptions &maybeMakeStrictMode(bool strict) {
+        strictOption = strictOption || strict;
+        return *this;
+    }
 
   private:
     void operator=(const CompileOptions &rhs) MOZ_DELETE;

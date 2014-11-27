@@ -6,9 +6,9 @@
 
 #ifndef _NSKEYGENHANDLER_H_
 #define _NSKEYGENHANDLER_H_
-// Form Processor 
-#include "nsIFormProcessor.h" 
-#include "nsTArray.h" 
+// Form Processor
+#include "nsIFormProcessor.h"
+#include "nsTArray.h"
 
 nsresult GetSlotWithMechanism(uint32_t mechanism,
                               nsIInterfaceRequestor *ctx,
@@ -19,28 +19,39 @@ nsresult GetSlotWithMechanism(uint32_t mechanism,
 
 SECKEYECParams *decode_ec_params(const char *curve);
 
-class nsKeygenFormProcessor : public nsIFormProcessor { 
-public: 
-  nsKeygenFormProcessor(); 
+class nsKeygenFormProcessor : public nsIFormProcessor {
+public:
+  nsKeygenFormProcessor();
   nsresult Init();
 
-  NS_IMETHOD ProcessValue(nsIDOMHTMLElement *aElement, 
-                          const nsAString& aName, 
-                          nsAString& aValue); 
+  virtual nsresult ProcessValue(nsIDOMHTMLElement* aElement,
+                                const nsAString& aName,
+                                nsAString& aValue) MOZ_OVERRIDE;
 
-  NS_IMETHOD ProvideContent(const nsAString& aFormType, 
-                            nsTArray<nsString>& aContent, 
-                            nsAString& aAttribute); 
+  virtual nsresult ProcessValueIPC(const nsAString& aOldValue,
+                                   const nsAString& aChallenge,
+                                   const nsAString& aKeyType,
+                                   const nsAString& aKeyParams,
+                                   nsAString& aNewValue) MOZ_OVERRIDE;
+
+  virtual nsresult ProvideContent(const nsAString& aFormType,
+                                  nsTArray<nsString>& aContent,
+                                  nsAString& aAttribute) MOZ_OVERRIDE;
   NS_DECL_THREADSAFE_ISUPPORTS
 
   static nsresult Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
 
+  static void ExtractParams(nsIDOMHTMLElement* aElement,
+                            nsAString& challengeValue,
+                            nsAString& keyTypeValue,
+                            nsAString& keyParamsValue);
+
 protected:
   virtual ~nsKeygenFormProcessor();
 
-  nsresult GetPublicKey(nsAString& aValue, nsAString& aChallenge, 
-			nsAFlatString& akeyType, nsAString& aOutPublicKey,
-			nsAString& aPqg);
+  nsresult GetPublicKey(const nsAString& aValue, const nsAString& aChallenge,
+                        const nsAFlatString& akeyType, nsAString& aOutPublicKey,
+                        const nsAString& aPqg);
   nsresult GetSlot(uint32_t aMechanism, PK11SlotInfo** aSlot);
 private:
   nsCOMPtr<nsIInterfaceRequestor> m_ctx;
