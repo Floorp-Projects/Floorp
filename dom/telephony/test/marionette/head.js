@@ -273,7 +273,7 @@ let emulator = (function() {
     let numberInfo = prefix + number + padding.substr(number.length);
 
     let info = {};
-    let states = ['ringing', 'incoming', 'active', 'held'];
+    let states = ["ringing", "incoming", "waiting", "active", "held"];
     for (let state of states) {
       info[state] = numberInfo + state;
     }
@@ -911,7 +911,7 @@ let emulator = (function() {
       .then(() => remoteDial(inNumber))
       .then(call => { inCall = call; })
       .then(() => checkAll(outCall, [outCall, inCall], '', [],
-                           [outInfo.active, inInfo.incoming]))
+                           [outInfo.active, inInfo.waiting]))
       .then(() => answer(inCall))
       .then(() => checkAll(inCall, [outCall, inCall], '', [],
                            [outInfo.held, inInfo.active]))
@@ -951,7 +951,7 @@ let emulator = (function() {
       });
     }
 
-    for (let state of ['ringing', 'incoming', 'active', 'held']) {
+    for (let state of ["ringing", "incoming", "waiting", "active", "held"]) {
       addInfoState(allInfo, state);
     }
 
@@ -961,7 +961,7 @@ let emulator = (function() {
     return remoteDial(inNumber)
       .then(call => { newCall = call; })
       .then(() => checkAll(conference, [newCall], 'connected', conferenceCalls,
-                           allInfo.active.concat(newInfo.incoming)))
+                           allInfo.active.concat(newInfo.waiting)))
       .then(() => answer(newCall, function() {
         checkState(newCall, [newCall], 'held', conferenceCalls);
       }))
