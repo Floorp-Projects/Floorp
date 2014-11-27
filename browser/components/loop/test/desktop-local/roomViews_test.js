@@ -330,5 +330,20 @@ describe("loop.roomViews", function () {
             loop.shared.views.FeedbackView);
         });
     });
+
+    describe("Mute", function() {
+      it("should render local media as audio-only if video is muted",
+        function() {
+          activeRoomStore.setStoreState({
+            roomState: ROOM_STATES.SESSION_CONNECTED,
+            videoMuted: true
+          });
+
+          view = mountTestComponent();
+
+          expect(view.getDOMNode().querySelector(".local-stream-audio"))
+            .not.eql(null);
+        });
+    });
   });
 });

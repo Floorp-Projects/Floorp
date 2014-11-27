@@ -342,7 +342,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
         hide: !this._roomIsActive(),
         local: true,
         "local-stream": true,
-        "local-stream-audio": false
+        "local-stream-audio": this.state.videoMuted
       });
 
       return (
