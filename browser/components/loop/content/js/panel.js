@@ -759,6 +759,17 @@ loop.panel = (function(_, mozL10n) {
       });
     },
 
+    _UIActionHandler: function(e) {
+      switch (e.detail.action) {
+        case "selectTab":
+          this.selectTab(e.detail.tab);
+          break;
+        default:
+          console.error("Invalid action", e.detail.action);
+          break;
+      }
+    },
+
     /**
      * The rooms feature is hidden by default for now. Once it gets mainstream,
      * this method can be simplified.
@@ -803,11 +814,13 @@ loop.panel = (function(_, mozL10n) {
     componentDidMount: function() {
       window.addEventListener("LoopStatusChanged", this._onStatusChanged);
       window.addEventListener("GettingStartedSeen", this._gettingStartedSeen);
+      window.addEventListener("UIAction", this._UIActionHandler);
     },
 
     componentWillUnmount: function() {
       window.removeEventListener("LoopStatusChanged", this._onStatusChanged);
       window.removeEventListener("GettingStartedSeen", this._gettingStartedSeen);
+      window.removeEventListener("UIAction", this._UIActionHandler);
     },
 
     _getUserDisplayName: function() {
