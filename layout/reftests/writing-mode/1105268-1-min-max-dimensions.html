@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+.wrapper {
+  display: inline-block;
+  vertical-align: top;
+  margin: 20px;
+}
+.outer {
+  height: 250px;
+  width: 200px;
+  border: 10px solid #ddd;
+}
+.inner {
+  font: 12px monospace;
+  background: yellow;
+  overflow: hidden;
+}
+.test1 {
+  min-width: 180px;
+  max-width: 180px;
+  min-height: 150px;
+  max-height: 150px;
+}
+.test2 {
+  min-width: 150px;
+  max-width: 150px;
+  min-height: 200px;
+  max-height: 200px;
+}
+.lr {
+  writing-mode: vertical-lr;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="wrapper">
+<div class="outer">
+<div class="inner test1 lr">
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+</div>
+</div>
+</div>
+
+<br>
+
+<div class="wrapper">
+<div class="outer">
+<div class="inner test2 lr">
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+</div>
+</div>
+</div>
+
+</body>
+</html>

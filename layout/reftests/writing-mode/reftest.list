@@ -25,3 +25,5 @@ random-if(gtk2Widget) == 1094434-2.html 1094434-2-ref.html # bug 1094845
 == 1096224-1a.html 1096224-1-ref.html
 == 1096224-1b.html 1096224-1-ref.html
 == 1103613-1.html 1103613-1-ref.html
+== 1105268-1-min-max-dimensions.html 1105268-1-min-max-dimensions-ref.html
+== 1105268-2-min-max-dimensions.html 1105268-2-min-max-dimensions-ref.html

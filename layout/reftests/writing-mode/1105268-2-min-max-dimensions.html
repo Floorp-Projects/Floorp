@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+.wrapper {
+  display: inline-block;
+  vertical-align: top;
+  margin: 20px;
+}
+.outer {
+  height: 250px;
+  width: 200px;
+  border: 10px solid #ddd;
+}
+.inner {
+  overflow: hidden;
+  background: yellow;
+}
+.test1 {
+  min-width: 100px;
+  max-width: 100px;
+  min-height: 150px;
+  max-height: 150px;
+}
+.test2 {
+  min-width: 150px;
+  max-width: 150px;
+  min-height: 100px;
+  max-height: 100px;
+}
+.lr {
+  writing-mode: vertical-lr;
+}
+.rl {
+  writing-mode: vertical-rl;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="wrapper">
+<div class="outer">
+<img class="inner test1 lr" src="foo">
+</div>
+</div>
+
+<div class="wrapper">
+<div class="outer">
+<img class="inner test1 rl" src="foo">
+</div>
+</div>
+
+<br>
+
+<div class="wrapper">
+<div class="outer">
+<img class="inner test2 lr" src="foo">
+</div>
+</div>
+
+<div class="wrapper">
+<div class="outer">
+<img class="inner test2 rl" src="foo">
+</div>
+</div>
+
+</body>
+</html>
