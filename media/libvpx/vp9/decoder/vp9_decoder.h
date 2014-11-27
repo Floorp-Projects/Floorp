@@ -58,6 +58,7 @@ typedef struct VP9Decoder {
 
   int max_threads;
   int inv_tile_order;
+  int need_resync;  // wait for key/intra-only frame
 } VP9Decoder;
 
 int vp9_receive_compressed_data(struct VP9Decoder *pbi,

@@ -19,7 +19,7 @@ extern "C" {
 #endif
 
 #define SUM_DIFF_THRESHOLD (16 * 16 * 2)
-#define SUM_DIFF_THRESHOLD_HIGH (16 * 16 * 3)
+#define SUM_DIFF_THRESHOLD_HIGH (600)
 #define MOTION_MAGNITUDE_THRESHOLD (8*3)
 
 #define SUM_DIFF_THRESHOLD_UV (96)   // (8 * 8 * 1.5)
@@ -67,6 +67,8 @@ typedef struct {
   unsigned int qp_thresh;
   // Threshold for number of consecutive frames for blocks coded as ZEROMV-LAST.
   unsigned int consec_zerolast;
+  // Threshold for amount of spatial blur on Y channel. 0 means no spatial blur.
+  unsigned int spatial_blur;
 } denoise_params;
 
 typedef struct vp8_denoiser
@@ -81,6 +83,10 @@ typedef struct vp8_denoiser
     int threshold_aggressive_mode;
     int nmse_source_diff;
     int nmse_source_diff_count;
+    int qp_avg;
+    int qp_threshold_up;
+    int qp_threshold_down;
+    int bitrate_threshold;
     denoise_params denoise_pars;
 } VP8_DENOISER;
 

@@ -93,8 +93,6 @@ typedef struct {
   double modified_error_min;
   double modified_error_max;
   double modified_error_left;
-  double kf_intra_err_min;
-  double gf_intra_err_min;
 
 #if CONFIG_FP_MB_STATS
   uint8_t *frame_mb_stats_buf;
@@ -110,6 +108,7 @@ typedef struct {
   int sr_update_lag;
 
   int kf_zeromotion_pct;
+  int last_kfgroup_zeromotion_pct;
   int gf_zeromotion_pct;
 
   int active_worst_quality;

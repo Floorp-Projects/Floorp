@@ -30,10 +30,6 @@ struct lookahead_entry {
   int64_t             ts_start;
   int64_t             ts_end;
   unsigned int        flags;
-
-#if CONFIG_SPATIAL_SVC
-  vpx_svc_parameters_t svc_params[VPX_SS_MAX_LAYERS];
-#endif
 };
 
 // The max of past frames we want to keep in the queue.
