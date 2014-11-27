@@ -318,7 +318,13 @@ this.SearchSuggestionController.prototype = {
    * @return {Object}
    */
   _dedupeAndReturnResults: function(suggestResults) {
-    NS_ASSERT(this._searchString !== null, "this._searchString shouldn't be null when returning results");
+    if (this._searchString === null) {
+      // _searchString can be null if stop() was called and remote suggestions
+      // were disabled (stopping if we are fetching remote suggestions will
+      // cause a promise rejection before we reach _dedupeAndReturnResults).
+      return null;
+    }
+
     let results = {
       term: this._searchString,
       remote: [],
