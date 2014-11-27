@@ -11,7 +11,8 @@ enum SelectionState {
   "keypress",
   "selectall",
   "collapsetostart",
-  "collapsetoend"
+  "collapsetoend",
+  "blur"
 };
 
 dictionary SelectionStateChangedEventInit : EventInit {

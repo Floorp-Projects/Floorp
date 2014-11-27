@@ -1029,6 +1029,16 @@ DispatchSelectionStateChangedEvent(nsIPresShell* aPresShell,
   doc->DispatchEvent(event, &ret);
 }
 
+void
+SelectionCarets::NotifyBlur()
+{
+  SetVisibility(false);
+
+  dom::Sequence<SelectionState> state;
+  state.AppendElement(dom::SelectionState::Blur);
+  DispatchSelectionStateChangedEvent(mPresShell, nullptr, state);
+}
+
 nsresult
 SelectionCarets::NotifySelectionChanged(nsIDOMDocument* aDoc,
                                         nsISelection* aSel,

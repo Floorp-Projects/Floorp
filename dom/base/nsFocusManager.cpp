@@ -1612,7 +1612,7 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
 
   nsRefPtr<SelectionCarets> selectionCarets = presShell->GetSelectionCarets();
   if (selectionCarets) {
-    selectionCarets->SetVisibility(false);
+    selectionCarets->NotifyBlur();
   }
 
   bool clearFirstBlurEvent = false;
