@@ -858,7 +858,7 @@ nsStyleContext::Mark()
 }
 
 #ifdef DEBUG
-void nsStyleContext::List(FILE* out, int32_t aIndent)
+void nsStyleContext::List(FILE* out, int32_t aIndent, bool aListDescendants)
 {
   nsAutoCString str;
   // Indent
@@ -895,19 +895,21 @@ void nsStyleContext::List(FILE* out, int32_t aIndent)
     fprintf_stderr(out, "%s{}\n", str.get());
   }
 
-  if (nullptr != mChild) {
-    nsStyleContext* child = mChild;
-    do {
-      child->List(out, aIndent + 1);
-      child = child->mNextSibling;
-    } while (mChild != child);
-  }
-  if (nullptr != mEmptyChild) {
-    nsStyleContext* child = mEmptyChild;
-    do {
-      child->List(out, aIndent + 1);
-      child = child->mNextSibling;
-    } while (mEmptyChild != child);
+  if (aListDescendants) {
+    if (nullptr != mChild) {
+      nsStyleContext* child = mChild;
+      do {
+        child->List(out, aIndent + 1, aListDescendants);
+        child = child->mNextSibling;
+      } while (mChild != child);
+    }
+    if (nullptr != mEmptyChild) {
+      nsStyleContext* child = mEmptyChild;
+      do {
+        child->List(out, aIndent + 1, aListDescendants);
+        child = child->mNextSibling;
+      } while (mEmptyChild != child);
+    }
   }
 }
 #endif
