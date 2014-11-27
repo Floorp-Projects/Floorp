@@ -4499,10 +4499,11 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(WritingMode aWM,
   const nsStylePosition* stylePos = aFrame->StylePosition();
 
   // If we're a flex item, we'll compute our size a bit differently.
+  bool isVertical = aWM.IsVertical();
   const nsStyleCoord* inlineStyleCoord =
-    aWM.IsVertical() ? &stylePos->mHeight : &stylePos->mWidth;
+    isVertical ? &stylePos->mHeight : &stylePos->mWidth;
   const nsStyleCoord* blockStyleCoord =
-    aWM.IsVertical() ? &stylePos->mWidth : &stylePos->mHeight;
+    isVertical ? &stylePos->mWidth : &stylePos->mHeight;
 
   bool isFlexItem = aFrame->IsFlexItem();
   bool isInlineFlexItem = false;
@@ -4548,7 +4549,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(WritingMode aWM,
   // or (a * b) / c (which are equivalent).
 
   const bool isAutoISize = inlineStyleCoord->GetUnit() == eStyleUnit_Auto;
-  const bool isAutoBSize = IsAutoHeight(*blockStyleCoord, aCBSize.BSize(aWM));
+  const bool isAutoBSize = IsAutoBSize(*blockStyleCoord, aCBSize.BSize(aWM));
 
   LogicalSize boxSizingAdjust(aWM);
   switch (stylePos->mBoxSizing) {
@@ -4565,16 +4566,19 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(WritingMode aWM,
   nscoord iSize, minISize, maxISize, bSize, minBSize, maxBSize;
 
   if (!isAutoISize) {
-    iSize = nsLayoutUtils::ComputeWidthValue(aRenderingContext,
+    iSize = nsLayoutUtils::ComputeISizeValue(aRenderingContext,
               aFrame, aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM),
               boxSizingToMarginEdgeISize, *inlineStyleCoord);
   }
 
-  if (stylePos->mMaxWidth.GetUnit() != eStyleUnit_None &&
+  const nsStyleCoord& maxISizeCoord =
+    isVertical ? stylePos->mMaxHeight : stylePos->mMaxWidth;
+
+  if (maxISizeCoord.GetUnit() != eStyleUnit_None &&
       !(isFlexItem && isInlineFlexItem)) {
-    maxISize = nsLayoutUtils::ComputeWidthValue(aRenderingContext,
+    maxISize = nsLayoutUtils::ComputeISizeValue(aRenderingContext,
                  aFrame, aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM),
-                 boxSizingToMarginEdgeISize, stylePos->mMaxWidth);
+                 boxSizingToMarginEdgeISize, maxISizeCoord);
   } else {
     maxISize = nscoord_MAX;
   }
@@ -4582,11 +4586,15 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(WritingMode aWM,
   // NOTE: Flex items ignore their min & max sizing properties in their
   // flex container's main-axis.  (Those properties get applied later in
   // the flexbox algorithm.)
-  if (stylePos->mMinWidth.GetUnit() != eStyleUnit_Auto &&
+
+  const nsStyleCoord& minISizeCoord =
+    isVertical ? stylePos->mMinHeight : stylePos->mMinWidth;
+
+  if (minISizeCoord.GetUnit() != eStyleUnit_Auto &&
       !(isFlexItem && isInlineFlexItem)) {
-    minISize = nsLayoutUtils::ComputeWidthValue(aRenderingContext,
+    minISize = nsLayoutUtils::ComputeISizeValue(aRenderingContext,
                  aFrame, aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM),
-                 boxSizingToMarginEdgeISize, stylePos->mMinWidth);
+                 boxSizingToMarginEdgeISize, minISizeCoord);
   } else {
     // Treat "min-width: auto" as 0.
     // NOTE: Technically, "auto" is supposed to behave like "min-content" on
@@ -4597,25 +4605,29 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(WritingMode aWM,
   }
 
   if (!isAutoBSize) {
-    bSize = nsLayoutUtils::ComputeHeightValue(aCBSize.BSize(aWM),
+    bSize = nsLayoutUtils::ComputeBSizeValue(aCBSize.BSize(aWM),
                 boxSizingAdjust.BSize(aWM),
                 *blockStyleCoord);
   }
 
-  if (!IsAutoHeight(stylePos->mMaxHeight, aCBSize.BSize(aWM)) &&
+  const nsStyleCoord& maxBSizeCoord =
+    isVertical ? stylePos->mMaxWidth : stylePos->mMaxHeight;
+
+  if (!IsAutoBSize(maxBSizeCoord, aCBSize.BSize(aWM)) &&
       !(isFlexItem && !isInlineFlexItem)) {
-    maxBSize = nsLayoutUtils::ComputeHeightValue(aCBSize.BSize(aWM),
-                  boxSizingAdjust.BSize(aWM),
-                  stylePos->mMaxHeight);
+    maxBSize = nsLayoutUtils::ComputeBSizeValue(aCBSize.BSize(aWM),
+                  boxSizingAdjust.BSize(aWM), maxBSizeCoord);
   } else {
     maxBSize = nscoord_MAX;
   }
 
-  if (!IsAutoHeight(stylePos->mMinHeight, aCBSize.BSize(aWM)) &&
+  const nsStyleCoord& minBSizeCoord =
+    isVertical ? stylePos->mMinWidth : stylePos->mMinHeight;
+
+  if (!IsAutoBSize(minBSizeCoord, aCBSize.BSize(aWM)) &&
       !(isFlexItem && !isInlineFlexItem)) {
-    minBSize = nsLayoutUtils::ComputeHeightValue(aCBSize.BSize(aWM),
-                  boxSizingAdjust.BSize(aWM),
-                  stylePos->mMinHeight);
+    minBSize = nsLayoutUtils::ComputeBSizeValue(aCBSize.BSize(aWM),
+                  boxSizingAdjust.BSize(aWM), minBSizeCoord);
   } else {
     minBSize = 0;
   }
@@ -4625,10 +4637,10 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(WritingMode aWM,
   NS_ASSERTION(aCBSize.ISize(aWM) != NS_UNCONSTRAINEDSIZE,
                "Our containing block must not have unconstrained inline-size!");
 
-  const nsStyleCoord& isizeCoord(aWM.IsVertical() ?
-    aIntrinsicSize.height : aIntrinsicSize.width);
-  const nsStyleCoord& bsizeCoord(aWM.IsVertical() ?
-    aIntrinsicSize.width : aIntrinsicSize.height);
+  const nsStyleCoord& isizeCoord =
+    isVertical ? aIntrinsicSize.height : aIntrinsicSize.width;
+  const nsStyleCoord& bsizeCoord =
+    isVertical ? aIntrinsicSize.width : aIntrinsicSize.height;
 
   bool hasIntrinsicISize, hasIntrinsicBSize;
   nscoord intrinsicISize, intrinsicBSize;
