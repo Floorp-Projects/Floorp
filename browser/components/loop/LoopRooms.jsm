@@ -93,7 +93,7 @@ const checkForParticipantsUpdate = function(room, updatedRoom) {
   // Check for participants that joined.
   for (participant of updatedRoom.participants) {
     if (!containsParticipant(room, participant)) {
-      eventEmitter.emit("joined", room.roomToken, participant);
+      eventEmitter.emit("joined", room, participant);
       eventEmitter.emit("joined:" + room.roomToken, participant);
     }
   }
@@ -101,7 +101,7 @@ const checkForParticipantsUpdate = function(room, updatedRoom) {
   // Check for participants that left.
   for (participant of room.participants) {
     if (!containsParticipant(updatedRoom, participant)) {
-      eventEmitter.emit("left", room.roomToken, participant);
+      eventEmitter.emit("left", room, participant);
       eventEmitter.emit("left:" + room.roomToken, participant);
     }
   }
