@@ -964,7 +964,7 @@ RasterImage::UpdateImageContainer()
 }
 
 size_t
-RasterImage::HeapSizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const
+RasterImage::SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const
 {
   // n == 0 is possible for two reasons.
   // - This is a zero-length image.
@@ -978,37 +978,15 @@ RasterImage::HeapSizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) co
 }
 
 size_t
-RasterImage::SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation aLocation,
-                                                     MallocSizeOf aMallocSizeOf) const
+RasterImage::SizeOfDecoded(gfxMemoryLocation aLocation,
+                           MallocSizeOf aMallocSizeOf) const
 {
   size_t n = 0;
   n += SurfaceCache::SizeOfSurfaces(ImageKey(this), aLocation, aMallocSizeOf);
   if (mFrameBlender) {
-    n += mFrameBlender->SizeOfDecodedWithComputedFallbackIfHeap(aLocation,
-                                                                aMallocSizeOf);
+    n += mFrameBlender->SizeOfDecoded(aLocation, aMallocSizeOf);
   }
   return n;
-}
-
-size_t
-RasterImage::HeapSizeOfDecodedWithComputedFallback(MallocSizeOf aMallocSizeOf) const
-{
-  return SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation::IN_PROCESS_HEAP,
-                                                 aMallocSizeOf);
-}
-
-size_t
-RasterImage::NonHeapSizeOfDecoded() const
-{
-  return SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation::IN_PROCESS_NONHEAP,
-                                                 nullptr);
-}
-
-size_t
-RasterImage::OutOfProcessSizeOfDecoded() const
-{
-  return SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation::OUT_OF_PROCESS,
-                                                 nullptr);
 }
 
 RawAccessFrameRef
