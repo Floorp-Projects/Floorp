@@ -205,6 +205,38 @@ public class TabStripView extends TwoWayView {
         });
     }
 
+    private void animateRestoredTabs() {
+        getViewTreeObserver().addOnPreDrawListener(new OnPreDrawListener() {
+            @Override
+            public boolean onPreDraw() {
+                getViewTreeObserver().removeOnPreDrawListener(this);
+
+                final List<Animator> childAnimators = new ArrayList<Animator>();
+
+                final int tabHeight = getHeight() - getPaddingTop() - getPaddingBottom();
+                final int childCount = getChildCount();
+                for (int i = 0; i < childCount; i++) {
+                    final View child = getChildAt(i);
+
+                    childAnimators.add(
+                        ObjectAnimator.ofFloat(child, "translationY", tabHeight, 0));
+                }
+
+                final AnimatorSet animatorSet = new AnimatorSet();
+                animatorSet.playTogether(childAnimators);
+                animatorSet.setDuration(ANIM_TIME_MS);
+                animatorSet.setInterpolator(ANIM_INTERPOLATOR);
+                animatorSet.addListener(animatorListener);
+
+                TransitionsTracker.track(animatorSet);
+
+                animatorSet.start();
+
+                return true;
+            }
+        });
+    }
+
     private void ensurePositionIsVisible(final int position) {
         getViewTreeObserver().addOnPreDrawListener(new OnPreDrawListener() {
             @Override
@@ -242,6 +274,11 @@ public class TabStripView extends TwoWayView {
 
     void clearTabs() {
         adapter.clear();
+    }
+
+    void restoreTabs() {
+        refreshTabs();
+        animateRestoredTabs();
     }
 
     void addTab(Tab tab) {
