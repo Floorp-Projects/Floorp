@@ -51,7 +51,7 @@ const cloneErrorObject = function(error, targetWindow) {
     if (typeof value != "string" && typeof value != "number") {
       value = String(value);
     }
-    
+
     Object.defineProperty(Cu.waiveXrays(obj), prop, {
       configurable: false,
       enumerable: true,
@@ -115,6 +115,8 @@ const injectObjectAPI = function(api, targetWindow) {
     injectedAPI[func] = function(...params) {
       let lastParam = params.pop();
       let callbackIsFunction = (typeof lastParam == "function");
+      // Clone params coming from content to the current scope.
+      params = [cloneValueInto(p, api) for (p of params)];
 
       // If the last parameter is a function, assume its a callback
       // and wrap it differently.
@@ -134,6 +136,7 @@ const injectObjectAPI = function(api, targetWindow) {
         });
       } else {
         try {
+          lastParam = cloneValueInto(lastParam, api);
           return cloneValueInto(api[func](...params, lastParam), targetWindow);
         } catch (ex) {
           return cloneValueInto(ex, targetWindow);
