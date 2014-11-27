@@ -44,6 +44,8 @@ public class TabStripView extends TwoWayView {
 
     private final TabAnimatorListener animatorListener;
 
+    private boolean isRestoringTabs;
+
     // Filled by calls to ShapeDrawable.getPadding();
     // saved to prevent allocation in draw().
     private final Rect dividerPadding = new Rect();
@@ -238,6 +240,13 @@ public class TabStripView extends TwoWayView {
     }
 
     private void ensurePositionIsVisible(final int position) {
+        // We just want to move the strip to the right position
+        // when restoring tabs on startup.
+        if (isRestoringTabs) {
+            setSelection(position);
+            return;
+        }
+
         getViewTreeObserver().addOnPreDrawListener(new OnPreDrawListener() {
             @Override
             public boolean onPreDraw() {
@@ -277,8 +286,10 @@ public class TabStripView extends TwoWayView {
     }
 
     void restoreTabs() {
+        isRestoringTabs = true;
         refreshTabs();
         animateRestoredTabs();
+        isRestoringTabs = false;
     }
 
     void addTab(Tab tab) {
