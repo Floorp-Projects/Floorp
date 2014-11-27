@@ -55,10 +55,11 @@ nsHTMLStyleSheet::HTMLColorRule::MapRuleInfoInto(nsRuleData* aRuleData)
 /* virtual */ void
 nsHTMLStyleSheet::HTMLColorRule::List(FILE* out, int32_t aIndent) const
 {
+  nsAutoCString indentStr;
   for (int32_t index = aIndent; --index >= 0; ) {
-    fputs("  ", out);
+    indentStr.AppendLiteral("  ");
   }
-  fputs("[html color rule] {}\n", out);
+  fprintf_stderr(out, "%s[html color rule] {}\n", indentStr.get());
 }
 #endif
 
@@ -69,10 +70,11 @@ NS_IMPL_ISUPPORTS(nsHTMLStyleSheet::GenericTableRule, nsIStyleRule)
 /* virtual */ void
 nsHTMLStyleSheet::GenericTableRule::List(FILE* out, int32_t aIndent) const
 {
+  nsAutoCString indentStr;
   for (int32_t index = aIndent; --index >= 0; ) {
-    fputs("  ", out);
+    indentStr.AppendLiteral("  ");
   }
-  fputs("[generic table rule] {}\n", out);
+  fprintf_stderr(out, "%s[generic table rule] {}\n", indentStr.get());
 }
 #endif
 
@@ -119,12 +121,14 @@ nsHTMLStyleSheet::LangRule::MapRuleInfoInto(nsRuleData* aRuleData)
 /* virtual */ void
 nsHTMLStyleSheet::LangRule::List(FILE* out, int32_t aIndent) const
 {
+  nsAutoCString str;
   for (int32_t index = aIndent; --index >= 0; ) {
-    fputs("  ", out);
+    str.AppendLiteral("  ");
   }
-  fputs("[lang rule] { language: \"", out);
-  fputs(NS_ConvertUTF16toUTF8(mLang).get(), out);
-  fputs("\" }\n", out);
+  str.AppendLiteral("[lang rule] { language: \"");
+  AppendUTF16toUTF8(mLang, str);
+  str.AppendLiteral("\" }\n");
+  fprintf_stderr(out, "%s", str.get());
 }
 #endif
 
