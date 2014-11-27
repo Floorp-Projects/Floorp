@@ -133,11 +133,13 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    *        - staged: true to stage the item to be appended later
    */
   addSource: function(aSource, aOptions = {}) {
-    let fullUrl = aSource.url;
-    let url = fullUrl.split(" -> ").pop();
-    let label = aSource.addonPath ? aSource.addonPath : SourceUtils.getSourceLabel(url);
-    let group = aSource.addonID ? aSource.addonID : SourceUtils.getSourceGroup(url);
-    let unicodeUrl = NetworkHelper.convertToUnicode(unescape(fullUrl));
+    if (!(aSource.url || aSource.introductionUrl)) {
+      // These would be most likely eval scripts introduced in inline
+      // JavaScript in HTML, and we don't show those yet (bug 1097873)
+      return;
+    }
+
+    let { label, group, unicodeUrl } = this._parseUrl(aSource);
 
     let contents = document.createElement("label");
     contents.className = "plain dbg-source-item";
@@ -152,7 +154,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     }
 
     // Append a source item to this container.
-    this.push([contents, fullUrl], {
+    this.push([contents, aSource.actor], {
       staged: aOptions.staged, /* stage the item to be appended later? */
       attachment: {
         label: label,
@@ -164,20 +166,32 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     });
   },
 
+  _parseUrl: function(aSource) {
+    let fullUrl = aSource.url || aSource.introductionUrl;
+    let url = fullUrl.split(" -> ").pop();
+    let label = aSource.addonPath ? aSource.addonPath : SourceUtils.getSourceLabel(url);
+
+    if (aSource.introductionUrl) {
+      label += ' > eval';
+    }
+
+    return {
+      label: label,
+      group: aSource.addonID ? aSource.addonID : SourceUtils.getSourceGroup(url),
+      unicodeUrl: NetworkHelper.convertToUnicode(unescape(fullUrl))
+    };
+  },
+
   /**
    * Adds a breakpoint to this sources container.
    *
-   * @param object aBreakpointData
-   *        Information about the breakpoint to be shown.
-   *        This object must have the following properties:
-   *          - location: the breakpoint's source location and line number
-   *          - disabled: the breakpoint's disabled state, boolean
-   *          - text: the breakpoint's line text to be displayed
+   * @param object aBreakpointClient
+   *               See Breakpoints.prototype._showBreakpoint
    * @param object aOptions [optional]
    *        @see DebuggerController.Breakpoints.addBreakpoint
    */
-  addBreakpoint: function(aBreakpointData, aOptions = {}) {
-    let { location, disabled } = aBreakpointData;
+  addBreakpoint: function(aBreakpointClient, aOptions = {}) {
+    let { location, disabled } = aBreakpointClient;
 
     // Make sure we're not duplicating anything. If a breakpoint at the
     // specified source url and line already exists, just toggle it.
@@ -187,17 +201,17 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     }
 
     // Get the source item to which the breakpoint should be attached.
-    let sourceItem = this.getItemByValue(location.url);
+    let sourceItem = this.getItemByValue(this.getActorForLocation(location));
 
     // Create the element node and menu popup for the breakpoint item.
-    let breakpointArgs = Heritage.extend(aBreakpointData, aOptions);
+    let breakpointArgs = Heritage.extend(aBreakpointClient, aOptions);
     let breakpointView = this._createBreakpointView.call(this, breakpointArgs);
     let contextMenu = this._createContextMenu.call(this, breakpointArgs);
 
     // Append a breakpoint child item to the corresponding source item.
     sourceItem.append(breakpointView.container, {
       attachment: Heritage.extend(breakpointArgs, {
-        url: location.url,
+        actor: location.actor,
         line: location.line,
         view: breakpointView,
         popup: contextMenu
@@ -210,7 +224,8 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
       finalize: this._onBreakpointRemoved
     });
 
-    // Highlight the newly appended breakpoint child item if necessary.
+    // Highlight the newly appended breakpoint child item if
+    // necessary.
     if (aOptions.openPopup || !aOptions.noEditorUpdate) {
       this.highlightBreakpoint(location, aOptions);
     }
@@ -228,7 +243,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   removeBreakpoint: function(aLocation) {
     // When a parent source item is removed, all the child breakpoint items are
     // also automagically removed.
-    let sourceItem = this.getItemByValue(aLocation.url);
+    let sourceItem = this.getItemByValue(aLocation.actor);
     if (!sourceItem) {
       return;
     }
@@ -253,7 +268,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    */
   getBreakpoint: function(aLocation) {
     return this.getItemForPredicate(aItem =>
-      aItem.attachment.url == aLocation.url &&
+      aItem.attachment.actor == aLocation.actor &&
       aItem.attachment.line == aLocation.line);
   },
 
@@ -280,8 +295,8 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   getOtherBreakpoints: function(aLocation = {}, aStore = []) {
     for (let source of this) {
       for (let breakpointItem of source) {
-        let { url, line } = breakpointItem.attachment;
-        if (url != aLocation.url || line != aLocation.line) {
+        let { actor, line } = breakpointItem.attachment;
+        if (actor != aLocation.actor || line != aLocation.line) {
           aStore.push(breakpointItem);
         }
       }
@@ -404,7 +419,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
 
     // Update the editor location if necessary.
     if (!aOptions.noEditorUpdate) {
-      DebuggerView.setEditorLocation(aLocation.url, aLocation.line, { noDebug: true });
+      DebuggerView.setEditorLocation(aLocation.actor, aLocation.line, { noDebug: true });
     }
 
     // If the breakpoint requires a new conditional expression, display
@@ -421,9 +436,10 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    * if it exists.
    */
   highlightBreakpointAtCursor: function() {
-    let url = DebuggerView.Sources.selectedValue;
+    let actor = DebuggerView.Sources.selectedValue;
     let line = DebuggerView.editor.getCursor().line + 1;
-    let location = { url: url, line: line };
+
+    let location = { actor: actor, line: line };
     this.highlightBreakpoint(location, { noEditorUpdate: true });
   },
 
@@ -466,10 +482,10 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
       return;
     }
 
-    const resetEditor = ([{ url }]) => {
+    const resetEditor = ([{ actor }]) => {
       // Only set the text when the source is still selected.
-      if (url == this.selectedValue) {
-        DebuggerView.setEditorLocation(url, 0, { force: true });
+      if (actor == this.selectedValue) {
+        DebuggerView.setEditorLocation(actor, 0, { force: true });
       }
     };
 
@@ -565,6 +581,31 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
+   * Look up a source actor id for a location. This is necessary for
+   * backwards compatibility; otherwise we could just use the `actor`
+   * property. Older servers don't use the same actor ids for sources
+   * across reloads, so we resolve a url to the current actor if a url
+   * exists.
+   *
+   * @param object aLocation
+   *        An object with the following properties:
+   *        - actor: the source actor id
+   *        - url: a url (might be null)
+   */
+  getActorForLocation: function(aLocation) {
+    if (aLocation.url) {
+      for (var item of this) {
+        let source = item.attachment.source;
+
+        if (aLocation.url === source.url) {
+          return source.actor;
+        }
+      }
+    }
+    return aLocation.actor;
+  },
+
+  /**
    * Marks a breakpoint as selected in this sources container.
    *
    * @param object aItem
@@ -575,6 +616,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
       return;
     }
     this._unselectBreakpoint();
+
     this._selectedBreakpointItem = aItem;
     this._selectedBreakpointItem.target.classList.add("selected");
 
@@ -820,9 +862,9 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     let editor = DebuggerView.editor;
     let start  = editor.getCursor("start").line + 1;
     let end    = editor.getCursor().line + 1;
-    let url    = this.selectedValue;
+    let actor    = this.selectedValue;
 
-    let location = { url: url, line: start };
+    let location = { actor: actor, line: start };
 
     if (this.getBreakpoint(location) && start == end) {
       this.highlightBreakpoint(location, { noEditorUpdate: true });
@@ -854,7 +896,8 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
 
     // Set window title. No need to split the url by " -> " here, because it was
     // already sanitized when the source was added.
-    document.title = L10N.getFormatStr("DebuggerWindowScriptTitle", sourceItem.value);
+    document.title = L10N.getFormatStr("DebuggerWindowScriptTitle",
+                                       sourceItem.attachment.source.url);
 
     DebuggerView.maybeShowBlackBoxMessage();
     this.updateToolbarButtonsState();
@@ -974,11 +1017,11 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    * Called when the add breakpoint key sequence was pressed.
    */
   _onCmdAddBreakpoint: function(e) {
-    let url = DebuggerView.Sources.selectedValue;
+    let actor = DebuggerView.Sources.selectedValue;
     let line = (e && e.sourceEvent.target.tagName == 'menuitem' ?
                 DebuggerView.clickedLine + 1 :
                 DebuggerView.editor.getCursor().line + 1);
-    let location = { url: url, line: line };
+    let location = { actor, line };
     let breakpointItem = this.getBreakpoint(location);
 
     // If a breakpoint already existed, remove it now.
@@ -995,11 +1038,11 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    * Called when the add conditional breakpoint key sequence was pressed.
    */
   _onCmdAddConditionalBreakpoint: function(e) {
-    let url =  DebuggerView.Sources.selectedValue;
+    let actor = DebuggerView.Sources.selectedValue;
     let line = (e && e.sourceEvent.target.tagName == 'menuitem' ?
                 DebuggerView.clickedLine + 1 :
                 DebuggerView.editor.getCursor().line + 1);
-    let location = { url: url, line: line };
+    let location = { actor, line };
     let breakpointItem = this.getBreakpoint(location);
 
     // If a breakpoint already existed or wasn't a conditional, morph it now.
@@ -1313,7 +1356,11 @@ TracerView.prototype = Heritage.extend(WidgetMethods, {
 
     const data = traceItem.attachment.trace;
     const { location: { url, line } } = data;
-    DebuggerView.setEditorLocation(url, line, { noDebug: true });
+    DebuggerView.setEditorLocation(
+      DebuggerView.Sources.getActorForLocation({ url }),
+      line,
+      { noDebug: true }
+    );
 
     DebuggerView.Variables.empty();
     const scope = DebuggerView.Variables.addScope();
@@ -1538,7 +1585,7 @@ let SourceUtils = {
    *         True if the source is likely javascript.
    */
   isJavaScript: function(aUrl, aContentType = "") {
-    return /\.jsm?$/.test(this.trimUrlQuery(aUrl)) ||
+    return (aUrl && /\.jsm?$/.test(this.trimUrlQuery(aUrl))) ||
            aContentType.contains("javascript");
   },
 
@@ -2744,8 +2791,8 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
     // Allow requests to settle down first.
     setNamedTimeout("global-search", delay, () => {
       // Start fetching as many sources as possible, then perform the search.
-      let urls = DebuggerView.Sources.values;
-      let sourcesFetched = DebuggerController.SourceScripts.getTextForSources(urls);
+      let actors = DebuggerView.Sources.values;
+      let sourcesFetched = DebuggerController.SourceScripts.getTextForSources(actors);
       sourcesFetched.then(aSources => this._doSearch(aToken, aSources));
     });
   },
@@ -2774,13 +2821,19 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
     let globalResults = new GlobalResults();
 
     // Search for the specified token in each source's text.
-    for (let [url, text] of aSources) {
+    for (let [actor, text] of aSources) {
+      let item = DebuggerView.Sources.getItemByValue(actor);
+      let url = item.attachment.source.url;
+      if (!url) {
+        continue;
+      }
+
       // Verify that the search token is found anywhere in the source.
       if (!text.toLowerCase().contains(lowerCaseToken)) {
         continue;
       }
       // ...and if so, create a Map containing search details for each line.
-      let sourceResults = new SourceResults(url, globalResults);
+      let sourceResults = new SourceResults(actor, globalResults);
 
       // Search for the specified token in each line's text.
       text.split("\n").forEach((aString, aLine) => {
@@ -2917,10 +2970,10 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
     this._scrollMatchIntoViewIfNeeded(target);
     this._bounceMatch(target);
 
-    let url = sourceResultsItem.instance.url;
+    let actor = sourceResultsItem.instance.actor;
     let line = lineResultsItem.instance.line;
 
-    DebuggerView.setEditorLocation(url, line + 1, { noDebug: true });
+    DebuggerView.setEditorLocation(actor, line + 1, { noDebug: true });
 
     let range = lineResultsItem.lineData.range;
     let cursor = DebuggerView.editor.getOffset({ line: line, ch: 0 });
@@ -2995,13 +3048,15 @@ GlobalResults.prototype = {
  * An object containing all the matched lines for a specific source.
  * Iterable via "for (let [lineNumber, lineResults] of sourceResults) { }".
  *
- * @param string aUrl
- *        The target source url.
+ * @param string aActor
+ *        The target source actor id.
  * @param GlobalResults aGlobalResults
  *        An object containing all source results, grouped by source location.
  */
-function SourceResults(aUrl, aGlobalResults) {
-  this.url = aUrl;
+function SourceResults(aActor, aGlobalResults) {
+  let item = DebuggerView.Sources.getItemByValue(aActor);
+  this.actor = aActor;
+  this.label = item.attachment.source.url;
   this._globalResults = aGlobalResults;
   this._store = [];
 }
@@ -3083,7 +3138,7 @@ SourceResults.prototype = {
 
     let locationNode = document.createElement("label");
     locationNode.className = "plain dbg-results-header-location";
-    locationNode.setAttribute("value", this.url);
+    locationNode.setAttribute("value", this.label);
 
     let matchCountNode = document.createElement("label");
     matchCountNode.className = "plain dbg-results-header-match-count";
@@ -3116,14 +3171,14 @@ SourceResults.prototype = {
     resultsBox.appendChild(resultsHeader);
     resultsBox.appendChild(resultsContainer);
 
-    aElementNode.id = "source-results-" + this.url;
+    aElementNode.id = "source-results-" + this.actor;
     aElementNode.className = "dbg-source-results";
     aElementNode.appendChild(resultsBox);
 
     SourceResults._itemsByElement.set(aElementNode, { instance: this });
   },
 
-  url: "",
+  actor: "",
   _globalResults: null,
   _store: null,
   _target: null,

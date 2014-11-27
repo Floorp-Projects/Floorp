@@ -55,8 +55,7 @@ var tests = [
     func: function(test) {
       function onSuccess(d) {
         ok(true, "onSuccess called correctly");
-        d.camera.release();
-        test.next();
+        d.camera.release().then(test.next);
       }
       function onError(error) {
         ok(false, "onError called incorrectly: " + error);
@@ -65,11 +64,66 @@ var tests = [
       info("Running test: init-success");
       navigator.mozCameras.getCamera(whichCamera, initialConfig).then(onSuccess, onError)
     }
-  }
+  },
+  /* Test for bug 1099390 to make sure events related to the underlying
+     platform failing are generated and handled properly. */
+  {
+    name: "post-init-system-failure",
+    key: "post-init-system-failure",
+    func: function(test) {
+      var gotReleasePromise = false;
+      var gotCloseEvent = false;
+
+      function gotAll() {
+        var all = gotReleasePromise && gotCloseEvent;
+        if (all) {
+          info("Got all expected notifications");
+        }
+        return all;
+      }
+
+      function onSuccess(d) {
+        var onClosedEvent = function(e) {
+          d.camera.removeEventListener('close', onClosedEvent);
+
+          ok(e.reason === "SystemFailure", "reason is: " + e.reason);
+          ok(!gotCloseEvent, "gotCloseEvent was " + gotCloseEvent);
+          gotCloseEvent = true;
+          if (gotAll()) {
+            test.next();
+          }
+
+          d.camera.release().then(
+            function resolve(e) {
+              ok(true, "release() promise resolved");
+              ok(!gotReleasePromise, "gotReleasePromise was " + gotReleasePromise);
+              gotReleasePromise = true;
+              if (gotAll()) {
+                test.next();
+              }
+            },
+            function reject(e) {
+              ok(false, "release() promise unexpected rejected: " + e);
+            }
+          );
+        };
+
+        d.camera.addEventListener('close', onClosedEvent);
+      }
+
+      function onError(error) {
+        ok(false, "onError called incorrectly: " + error);
+        test.next();
+      }
+
+      info("Running test: post-init-system-failure");
+      navigator.mozCameras.getCamera(whichCamera, initialConfig).then(onSuccess, onError)
+    }
+  },
 ];
 
 var testGenerator = function() {
-  for (var i = 0; i < tests.length; ++i ) {
+  for (var i = 0; i < tests.length; ++i) {
     yield tests[i];
   }
 }();

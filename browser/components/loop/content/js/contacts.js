@@ -635,7 +635,7 @@ loop.contacts = (function(_, mozL10n) {
           React.DOM.input({ref: "email", type: "email", required: phoneOrEmailRequired, 
                  className: cx({pristine: this.state.pristine}), 
                  valueLink: this.linkState("email")}), 
-          React.DOM.label(null, mozL10n.get("new_contact_phone_placeholder")), 
+          React.DOM.label(null, mozL10n.get("new_contact_fxos_phone_placeholder")), 
           React.DOM.input({ref: "tel", type: "tel", required: phoneOrEmailRequired, 
                  className: cx({pristine: this.state.pristine}), 
                  valueLink: this.linkState("tel")}), 

@@ -125,8 +125,8 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
     private final SiteIdentityPopup mSiteIdentityPopup;
     private int mSecurityImageLevel;
 
-    private final int LEVEL_SHIELD = 3;
-    private final int LEVEL_WARNING = 4;
+    private final int LEVEL_SHIELD_ENABLED = 3;
+    private final int LEVEL_SHIELD_DISABLED = 4;
 
     private PropertyAnimator mForwardAnim;
 
@@ -446,10 +446,10 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
         // Check to see if any protection was overridden first
         if (trackingMode == TrackingMode.TRACKING_CONTENT_LOADED ||
             mixedMode == MixedMode.MIXED_CONTENT_LOADED) {
-          imageLevel = LEVEL_WARNING;
+          imageLevel = LEVEL_SHIELD_DISABLED;
         } else if (trackingMode == TrackingMode.TRACKING_CONTENT_BLOCKED ||
                    mixedMode == MixedMode.MIXED_CONTENT_BLOCKED) {
-          imageLevel = LEVEL_SHIELD;
+          imageLevel = LEVEL_SHIELD_ENABLED;
         }
 
         if (mSecurityImageLevel != imageLevel) {

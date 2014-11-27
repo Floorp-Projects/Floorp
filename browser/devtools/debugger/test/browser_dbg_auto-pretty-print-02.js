@@ -68,12 +68,14 @@ function testSourceIsUgly() {
 }
 
 function testFirstSourceLabel(){
-  ok(gSources.containsValue(EXAMPLE_URL + gFirstSourceLabel),
+  let source = gSources.selectedItem.attachment.source;
+  ok(source.url === EXAMPLE_URL + gFirstSourceLabel,
     "First source url is correct.");
 }
 
 function testSecondSourceLabel(){
-  ok(gSources.containsValue(EXAMPLE_URL + gSecondSourceLabel),
+  let source = gSources.selectedItem.attachment.source;
+  ok(source.url === EXAMPLE_URL + gSecondSourceLabel,
     "Second source url is correct.");
 }
 

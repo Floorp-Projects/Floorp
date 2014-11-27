@@ -19,7 +19,7 @@ function test() {
     gSources = gDebugger.DebuggerView.Sources;
     gBreakpoints = gDebugger.DebuggerController.Breakpoints;
 
-    gLocation = { url: gSources.selectedValue, line: 18 };
+    gLocation = { actor: gSources.selectedValue, line: 18 };
 
     waitForSourceAndCaretAndScopes(gPanel, ".html", 17)
       .then(addBreakpoint)

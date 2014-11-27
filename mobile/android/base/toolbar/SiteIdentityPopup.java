@@ -49,6 +49,7 @@ public class SiteIdentityPopup extends ArrowPopup {
     private LinearLayout mIdentityUnknownContainer;
 
     private TextView mHost;
+    private TextView mOwnerLabel;
     private TextView mOwner;
     private TextView mVerifier;
 
@@ -81,6 +82,7 @@ public class SiteIdentityPopup extends ArrowPopup {
                 (LinearLayout) mIdentity.findViewById(R.id.site_identity_unknown_container);
 
         mHost = (TextView) mIdentityKnownContainer.findViewById(R.id.host);
+        mOwnerLabel = (TextView) mIdentityKnownContainer.findViewById(R.id.owner_label);
         mOwner = (TextView) mIdentityKnownContainer.findViewById(R.id.owner);
         mVerifier = (TextView) mIdentityKnownContainer.findViewById(R.id.verifier);
     }
@@ -89,20 +91,6 @@ public class SiteIdentityPopup extends ArrowPopup {
         if (!mInflated) {
             init();
         }
-
-        final MixedMode mixedMode = siteIdentity.getMixedMode();
-        final TrackingMode trackingMode = siteIdentity.getTrackingMode();
-        if (mixedMode != MixedMode.UNKNOWN || trackingMode != TrackingMode.UNKNOWN) {
-            // Hide the identity data if there isn't valid site identity data.
-            // Set some top padding on the popup content to create a of light blue
-            // between the popup arrow and the mixed content notification.
-            mContent.setPadding(0, (int) mContext.getResources().getDimension(R.dimen.identity_padding_top), 0, 0);
-            mIdentity.setVisibility(View.GONE);
-            return;
-        }
-
-        mIdentity.setVisibility(View.VISIBLE);
-        mContent.setPadding(0, 0, 0, 0);
 
         final boolean isIdentityKnown = (siteIdentity.getSecurityMode() != SecurityMode.UNKNOWN);
         toggleIdentityKnownContainerVisibility(isIdentityKnown);
@@ -126,13 +114,20 @@ public class SiteIdentityPopup extends ArrowPopup {
         mHost.setText(siteIdentity.getHost());
 
         String owner = siteIdentity.getOwner();
+        if (owner == null) {
+            mOwnerLabel.setVisibility(View.GONE);
+            mOwner.setVisibility(View.GONE);
+        } else {
+            mOwnerLabel.setVisibility(View.VISIBLE);
+            mOwner.setVisibility(View.VISIBLE);
 
-        // Supplemental data is optional.
-        final String supplemental = siteIdentity.getSupplemental();
-        if (!TextUtils.isEmpty(supplemental)) {
-            owner += "\n" + supplemental;
+            // Supplemental data is optional.
+            final String supplemental = siteIdentity.getSupplemental();
+            if (!TextUtils.isEmpty(supplemental)) {
+                owner += "\n" + supplemental;
+            }
+            mOwner.setText(owner);
         }
-        mOwner.setText(owner);
 
         final String verifier = siteIdentity.getVerifier();
         final String encrypted = siteIdentity.getEncrypted();
@@ -147,11 +142,11 @@ public class SiteIdentityPopup extends ArrowPopup {
         int icon;
         String message;
         if (blocked) {
-            icon = R.drawable.shield_doorhanger;
+            icon = R.drawable.shield_enabled_doorhanger;
             message = mContext.getString(R.string.blocked_mixed_content_message_top) + "\n\n" +
                       mContext.getString(R.string.blocked_mixed_content_message_bottom);
         } else {
-            icon = R.drawable.warning_doorhanger;
+            icon = R.drawable.shield_disabled_doorhanger;
             message = mContext.getString(R.string.loaded_mixed_content_message);
         }
 
@@ -179,12 +174,13 @@ public class SiteIdentityPopup extends ArrowPopup {
         int icon;
         String message;
         if (blocked) {
-            icon = R.drawable.shield_doorhanger;
+            icon = R.drawable.shield_enabled_doorhanger;
             message = mContext.getString(R.string.blocked_tracking_content_message_top) + "\n\n" +
                       mContext.getString(R.string.blocked_tracking_content_message_bottom);
         } else {
-            icon = R.drawable.warning_doorhanger;
-            message = mContext.getString(R.string.loaded_tracking_content_message);
+            icon = R.drawable.shield_disabled_doorhanger;
+            message = mContext.getString(R.string.loaded_tracking_content_message_top) + "\n\n" +
+                      mContext.getString(R.string.loaded_tracking_content_message_bottom);
         }
 
         mTrackingContentNotification.setIcon(icon);

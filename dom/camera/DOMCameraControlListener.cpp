@@ -64,28 +64,31 @@ protected:
 
 // Specific callback handlers
 void
-DOMCameraControlListener::OnHardwareStateChange(HardwareState aState)
+DOMCameraControlListener::OnHardwareStateChange(HardwareState aState,
+                                                nsresult aReason)
 {
   class Callback : public DOMCallback
   {
   public:
     Callback(nsMainThreadPtrHandle<nsDOMCameraControl> aDOMCameraControl,
-             HardwareState aState)
+             HardwareState aState, nsresult aReason)
       : DOMCallback(aDOMCameraControl)
       , mState(aState)
+      , mReason(aReason)
     { }
 
     void
     RunCallback(nsDOMCameraControl* aDOMCameraControl) MOZ_OVERRIDE
     {
-      aDOMCameraControl->OnHardwareStateChange(mState);
+      aDOMCameraControl->OnHardwareStateChange(mState, mReason);
     }
 
   protected:
     HardwareState mState;
+    nsresult mReason;
   };
 
-  NS_DispatchToMainThread(new Callback(mDOMCameraControl, aState));
+  NS_DispatchToMainThread(new Callback(mDOMCameraControl, aState, aReason));
 }
 
 void
@@ -137,6 +140,7 @@ DOMCameraControlListener::OnPreviewStateChange(PreviewState aState)
       MOZ_ASSERT_UNREACHABLE("Invalid preview state");
       return;
   }
+  mStream->OnPreviewStateChange(aState == kPreviewStarted);
   NS_DispatchToMainThread(new Callback(mDOMCameraControl, aState));
 }
 

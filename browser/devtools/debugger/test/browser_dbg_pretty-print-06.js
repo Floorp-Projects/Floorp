@@ -43,7 +43,7 @@ function test() {
         ok(false, "The source editor text shouldn't have changed.");
       });
 
-      is(gSources.selectedValue, JS_URL,
+      is(getSelectedSourceURL(gSources), JS_URL,
         "The correct source is currently selected.");
       ok(gEditor.getText().contains("myFunction"),
         "The source shouldn't be pretty printed yet.");
@@ -61,7 +61,7 @@ function test() {
 
       let text;
       [source, text] = yield gControllerSources.getText(source);
-      is(gSources.selectedValue, JS_URL,
+      is(getSelectedSourceURL(gSources), JS_URL,
         "The correct source is still selected.");
       ok(gEditor.getText().contains("myFunction"),
         "The displayed source hasn't changed.");

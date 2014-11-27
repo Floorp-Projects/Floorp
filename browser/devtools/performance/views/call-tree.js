@@ -13,8 +13,11 @@ let CallTreeView = {
   initialize: function () {
     this.el = $(".call-tree");
     this._graphEl = $(".call-tree-cells-container");
+    this._onRangeChange = this._onRangeChange.bind(this);
     this._stop = this._stop.bind(this);
 
+    OverviewView.on(EVENTS.OVERVIEW_RANGE_SELECTED, this._onRangeChange);
+    OverviewView.on(EVENTS.OVERVIEW_RANGE_CLEARED, this._onRangeChange);
     PerformanceController.on(EVENTS.RECORDING_STOPPED, this._stop);
   },
 
@@ -22,18 +25,44 @@ let CallTreeView = {
    * Unbinds events.
    */
   destroy: function () {
+    OverviewView.off(EVENTS.OVERVIEW_RANGE_SELECTED, this._onRangeChange);
+    OverviewView.off(EVENTS.OVERVIEW_RANGE_CLEARED, this._onRangeChange);
     PerformanceController.off(EVENTS.RECORDING_STOPPED, this._stop);
   },
 
+  /**
+   * Method for handling all the set up for rendering a new
+   * call tree.
+   */
+  render: function (profilerData, beginAt, endAt, options={}) {
+    let threadNode = this._prepareCallTree(profilerData, beginAt, endAt, options);
+    this._populateCallTree(threadNode, options);
+    this.emit(EVENTS.CALL_TREE_RENDERED);
+  },
+
+  /**
+   * Called when recording is stopped.
+   */
   _stop: function (_, { profilerData }) {
-    this._prepareCallTree(profilerData);
+    this._profilerData = profilerData;
+    this.render(profilerData);
+  },
+
+  /**
+   * Fired when a range is selected or cleared in the OverviewView.
+   */
+  _onRangeChange: function (_, params) {
+    // When a range is cleared, we'll have no beginAt/endAt data,
+    // so the rebuild will just render all the data again.
+    let { beginAt, endAt } = params || {};
+    this.render(this._profilerData, beginAt, endAt);
   },
 
   /**
    * Called when the recording is stopped and prepares data to
    * populate the call tree.
    */
-  _prepareCallTree: function (profilerData, beginAt, endAt, options={}) {
+  _prepareCallTree: function (profilerData, beginAt, endAt, options) {
     let threadSamples = profilerData.profile.threads[0].samples;
     let contentOnly = !Prefs.showPlatformData;
     // TODO handle inverted tree bug 1102347
@@ -42,7 +71,7 @@ let CallTreeView = {
     let threadNode = new ThreadNode(threadSamples, contentOnly, beginAt, endAt, invertTree);
     options.inverted = invertTree && threadNode.samples > 0;
 
-    this._populateCallTree(threadNode, options);
+    return threadNode;
   },
 
   /**
@@ -62,8 +91,6 @@ let CallTreeView = {
 
     let contentOnly = !Prefs.showPlatformData;
     root.toggleCategories(!contentOnly);
-
-    this.emit(EVENTS.CALL_TREE_RENDERED);
   }
 };
 

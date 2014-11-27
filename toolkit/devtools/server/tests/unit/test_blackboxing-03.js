@@ -29,9 +29,9 @@ const SOURCE_URL = "http://example.com/source.js";
 
 function test_black_box()
 {
-  gClient.addOneTimeListener("paused", function () {
-    gThreadClient.setBreakpoint({
-      url: SOURCE_URL,
+  gClient.addOneTimeListener("paused", function  (aEvent, aPacket) {
+    let source = gThreadClient.source(aPacket.frame.where.source);
+    source.setBreakpoint({
       line: 4
     }, function ({error}, bpClient) {
       gBpClient = bpClient;

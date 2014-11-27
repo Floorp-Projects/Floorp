@@ -8,13 +8,14 @@ package org.mozilla.gecko.tabs;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
+import android.graphics.LinearGradient;
+import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.animation.DecelerateInterpolator;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.view.ViewTreeObserver.OnPreDrawListener;
 
 import com.nineoldandroids.animation.Animator;
@@ -49,6 +50,9 @@ public class TabStripView extends TwoWayView {
 
     private boolean isPrivate;
 
+    private final Paint fadingEdgePaint;
+    private final int fadingEdgeSize;
+
     public TabStripView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
@@ -68,6 +72,10 @@ public class TabStripView extends TwoWayView {
         setItemMargin(itemMargin);
 
         animatorListener = new TabAnimatorListener();
+
+        fadingEdgePaint = new Paint();
+        fadingEdgeSize =
+                resources.getDimensionPixelOffset(R.dimen.new_tablet_tab_strip_fading_edge_size);
 
         adapter = new TabStripAdapter(context);
         setAdapter(adapter);
@@ -265,6 +273,35 @@ public class TabStripView extends TwoWayView {
         }
     }
 
+    private float getFadingEdgeStrength() {
+        final int childCount = getChildCount();
+        if (childCount == 0) {
+            return 0.0f;
+        } else {
+            if (getFirstVisiblePosition() + childCount - 1 < adapter.getCount() - 1) {
+                return 1.0f;
+            }
+
+            final int right = getChildAt(childCount - 1).getRight();
+            final int paddingRight = getPaddingRight();
+            final int width = getWidth();
+
+            final float strength = (right > width - paddingRight ?
+                    (float) (right - width + paddingRight) / fadingEdgeSize : 0.0f);
+
+            return Math.max(0.0f, Math.min(strength, 1.0f));
+        }
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+
+        fadingEdgePaint.setShader(new LinearGradient(w - fadingEdgeSize, 0, w, 0,
+                new int[] { 0x0, 0x11292C29, 0xDD292C29 },
+                new float[] { 0, 0.4f, 1.0f }, Shader.TileMode.CLAMP));
+    }
+
     @Override
     protected int getChildDrawingOrder(int childCount, int i) {
         final int checkedIndex = getCheckedIndex(childCount);
@@ -283,10 +320,7 @@ public class TabStripView extends TwoWayView {
         }
     }
 
-    @Override
-    public void draw(Canvas canvas) {
-        super.draw(canvas);
-
+    private void drawDividers(Canvas canvas) {
         final int bottom = getHeight() - getPaddingBottom() - dividerPadding.bottom;
         final int top = bottom - divider.getIntrinsicHeight();
 
@@ -314,6 +348,22 @@ public class TabStripView extends TwoWayView {
             divider.setBounds(left, top, right, bottom);
             divider.draw(canvas);
         }
+    }
+
+    private void drawFadingEdge(Canvas canvas) {
+        final float strength = getFadingEdgeStrength();
+        if (strength > 0.0f) {
+            final int r = getRight();
+            canvas.drawRect(r - fadingEdgeSize, getTop(), r, getBottom(), fadingEdgePaint);
+            fadingEdgePaint.setAlpha((int) (strength * 255));
+        }
+    }
+
+    @Override
+    public void draw(Canvas canvas) {
+        super.draw(canvas);
+        drawDividers(canvas);
+        drawFadingEdge(canvas);
     }
 
     private class TabAnimatorListener implements AnimatorListener {

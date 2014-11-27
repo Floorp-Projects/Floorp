@@ -870,6 +870,10 @@ var BrowserApp = {
       Services.prefs.setBoolPref("searchActivity.default.migrated", true);
       SearchEngines.migrateSearchActivityDefaultPref();
     }
+
+    if (this._startupStatus === "upgrade") {
+      Reader.migrateCache().catch(e => Cu.reportError("Error migrating Reader cache: " + e));
+    }
   },
 
   // This function returns false during periods where the browser displayed document is
@@ -6810,9 +6814,6 @@ var IdentityHandler = {
 
       return result;
     }
-    
-    // Otherwise, we don't know the cert owner
-    result.owner = Strings.browser.GetStringFromName("identity.ownerUnknown3");
 
     // Cache the override service the first time we need to check it
     if (!this._overrideService)
