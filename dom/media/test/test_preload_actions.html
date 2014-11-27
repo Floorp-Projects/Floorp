@@ -22,6 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=548523
 
 /** Test for Bug 548523 **/
 
+SimpleTest.requestCompleteLog();
 var manager = new MediaTestManager;
 
 manager.onFinished = function() {
@@ -472,6 +473,18 @@ var tests = [
       v.addEventListener("ended", this.ended, false);
       v.src = test.name; // Causes implicit load.
       document.body.appendChild(v);
+
+      // Log events for debugging.
+      var events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+                    "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
+                    "waiting", "pause"];
+      function logEvent(e) {
+        var v = e.target;
+        info(e.target.token + ": got " + e.type);
+      }
+      events.forEach(function(e) {
+        v.addEventListener(e, logEvent, false);
+      });
     },
 
     name: "test15",

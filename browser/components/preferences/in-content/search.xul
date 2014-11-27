@@ -1,0 +1,47 @@
+    <preferences id="searchPreferences">
+
+      <!-- Suggest -->
+      <preference id="browser.search.suggest.enabled"
+                  name="browser.search.suggest.enabled"
+                  type="bool"/>
+
+      <!-- One off providers -->
+      <preference id="browser.search.hiddenOneOffs"
+                  name="browser.search.hiddenOneOffs"
+                  type="string"/>
+
+    </preferences>
+
+    <script type="application/javascript"
+            src="chrome://browser/content/preferences/in-content/search.js"/>
+
+    <hbox id="header-search"
+          class="header"
+          hidden="true"
+          data-category="paneSearch">
+      <label class="header-name">&paneSearch.title;</label>
+    </hbox>
+
+    <!-- Default Search Engine -->
+    <groupbox id="defaultEngineGroup" align="start" data-category="paneSearch">
+      <caption label="&defaultSearchEngine.label;"/>
+      <label>&chooseYourDefaultSearchEngine.label;</label>
+      <menulist id="defaultEngine" oncommand="gSearchPane.setDefaultEngine();">
+        <menupopup/>
+      </menulist>
+      <checkbox id="suggestionsInSearchFieldsCheckbox"
+                label="&provideSearchSuggestions.label;"
+                accesskey="&provideSearchSuggestions.accesskey;"
+                preference="browser.search.suggest.enabled"/>
+    </groupbox>
+
+    <groupbox id="oneClickSearchProvidersGroup" data-category="paneSearch">
+      <caption label="&oneClickSearchEngines.label;"/>
+      <label>&chooseWhichOneToDisplay.label;</label>
+
+      <richlistbox id="oneClickProvidersList"/>
+      <hbox pack="end">
+        <label id="addEngines" class="text-link" value="&addMoreSearchEngines.label;"
+               onclick="if (event.button == 0) { Services.wm.getMostRecentWindow('navigator:browser').BrowserSearch.loadAddEngines(); }"/>
+      </hbox>
+    </groupbox>
