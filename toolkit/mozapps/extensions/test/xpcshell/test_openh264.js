@@ -183,13 +183,13 @@ add_task(function* test_pluginRegistration() {
   file.append(OPENH264_PLUGIN_ID);
   file.append(TEST_VERSION);
 
-  let addedPath = null
-  let removedPath = null;
-  let clearPaths = () => addedPath = removedPath = null;
+  let addedPaths = [];
+  let removedPaths = [];
+  let clearPaths = () => { addedPaths = []; removedPaths = []; }
 
   let MockGMPService = {
-    addPluginDirectory: path => addedPath = path,
-    removePluginDirectory: path => removedPath = path,
+    addPluginDirectory: path => addedPaths.push(path),
+    removePluginDirectory: path => removedPaths.push(path),
   };
 
   let OpenH264Scope = Cu.import("resource://gre/modules/addons/OpenH264Provider.jsm");
@@ -200,20 +200,20 @@ add_task(function* test_pluginRegistration() {
   Services.prefs.setCharPref(OPENH264_PREF_VERSION, TEST_VERSION);
   clearPaths();
   yield promiseRestartManager();
-  Assert.equal(addedPath, file.path);
-  Assert.equal(removedPath, null);
+  Assert.notEqual(addedPaths.indexOf(file.path), -1);
+  Assert.deepEqual(removedPaths, []);
 
   // Check that clearing the version doesn't trigger registration.
   clearPaths();
   Services.prefs.clearUserPref(OPENH264_PREF_VERSION);
-  Assert.equal(addedPath, null);
-  Assert.equal(removedPath, file.path);
+  Assert.deepEqual(addedPaths, []);
+  Assert.deepEqual(removedPaths, [file.path]);
 
   // Restarting with no version set should not trigger registration.
   clearPaths();
   yield promiseRestartManager();
-  Assert.equal(addedPath, null);
-  Assert.equal(removedPath, null);
+  Assert.equal(addedPaths.indexOf(file.path), -1);
+  Assert.equal(removedPaths.indexOf(file.path), -1);
 
   // Changing the pref mid-session should cause unregistration and registration.
   Services.prefs.setCharPref(OPENH264_PREF_VERSION, TEST_VERSION);
@@ -223,27 +223,27 @@ add_task(function* test_pluginRegistration() {
   file2.append(OPENH264_PLUGIN_ID);
   file2.append(TEST_VERSION_2);
   Services.prefs.setCharPref(OPENH264_PREF_VERSION, TEST_VERSION_2);
-  Assert.equal(addedPath, file2.path);
-  Assert.equal(removedPath, file.path);
+  Assert.deepEqual(addedPaths, [file2.path]);
+  Assert.deepEqual(removedPaths, [file.path]);
 
   // Disabling OpenH264 should cause unregistration.
   Services.prefs.setCharPref(OPENH264_PREF_VERSION, TEST_VERSION);
   clearPaths();
   Services.prefs.setBoolPref(OPENH264_PREF_ENABLED, false);
-  Assert.equal(addedPath, null);
-  Assert.equal(removedPath, file.path);
+  Assert.deepEqual(addedPaths, []);
+  Assert.deepEqual(removedPaths, [file.path]);
 
   // Restarting with OpenH264 disabled should not cause registration.
   clearPaths();
   yield promiseRestartManager();
-  Assert.equal(addedPath, null);
-  Assert.equal(removedPath, null);
+  Assert.equal(addedPaths.indexOf(file.path), -1);
+  Assert.equal(removedPaths.indexOf(file.path), -1);
 
   // Re-enabling OpenH264 should cause registration.
   clearPaths();
   Services.prefs.setBoolPref(OPENH264_PREF_ENABLED, true);
-  Assert.equal(addedPath, file.path);
-  Assert.equal(removedPath, null);
+  Assert.deepEqual(addedPaths, [file.path]);
+  Assert.deepEqual(removedPaths, []);
 });
 
 add_task(function* test_periodicUpdate() {
