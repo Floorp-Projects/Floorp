@@ -391,21 +391,6 @@ RTCPeerConnection.prototype = {
     return this._pc;
   },
 
-  callCB: function(callback, arg) {
-    if (callback) {
-      this._win.setTimeout(() => {
-        try {
-          callback(arg);
-        } catch(e) {
-          // A content script (user-provided) callback threw an error. We don't
-          // want this to take down peerconnection, but we still want the user
-          // to see it, so we catch it, report it, and move on.
-          this.logErrorAndCallOnError(e.message, e.fileName, e.lineNumber);
-        }
-      }, 0);
-    }
-  },
-
   _initIdp: function() {
     let prefName = "media.peerconnection.identity.timeout";
     let idpTimeout = Services.prefs.getIntPref(prefName);
@@ -766,7 +751,7 @@ RTCPeerConnection.prototype = {
       }
       // May be null if the user didn't supply success/failure callbacks.
       // Violation of spec, but we allow it for now
-      this.callCB(onSuccess);
+      onSuccess();
       isDone = true;
       this._executeNext();
     };
@@ -790,7 +775,7 @@ RTCPeerConnection.prototype = {
           // call the error callback directly and then close
           idpError = "Peer Identity mismatch, expected: " +
             this._impl.peerIdentity;
-          this.callCB(onError, idpError);
+          onError(idpError);
           this.close();
         } else {
           idpComplete = true;
@@ -1164,15 +1149,14 @@ PeerConnectionObserver.prototype = {
       if (assertion) {
         pc._gotIdentityAssertion(assertion);
       }
-      pc.callCB(pc._onCreateOfferSuccess,
-                new pc._win.mozRTCSessionDescription({ type: "offer",
-                                                       sdp: sdp }));
+      pc._onCreateOfferSuccess(new pc._win.mozRTCSessionDescription({ type: "offer",
+                                                                      sdp: sdp }));
       pc._executeNext();
     }.bind(this));
   },
 
   onCreateOfferError: function(code, message) {
-    this._dompc.callCB(this._dompc._onCreateOfferFailure, this.newError(code, message));
+    this._dompc._onCreateOfferFailure(this.newError(code, message));
     this._dompc._executeNext();
   },
 
@@ -1184,21 +1168,19 @@ PeerConnectionObserver.prototype = {
       if (assertion) {
         pc._gotIdentityAssertion(assertion);
       }
-      pc.callCB(pc._onCreateAnswerSuccess,
-                new pc._win.mozRTCSessionDescription({ type: "answer",
-                                                       sdp: sdp }));
+      pc._onCreateAnswerSuccess(new pc._win.mozRTCSessionDescription({ type: "answer",
+                                                                       sdp: sdp }));
       pc._executeNext();
     }.bind(this));
   },
 
   onCreateAnswerError: function(code, message) {
-    this._dompc.callCB(this._dompc._onCreateAnswerFailure,
-                       this.newError(code, message));
+    this._dompc._onCreateAnswerFailure(this.newError(code, message));
     this._dompc._executeNext();
   },
 
   onSetLocalDescriptionSuccess: function() {
-    this._dompc.callCB(this._dompc._onSetLocalDescriptionSuccess);
+    this._dompc._onSetLocalDescriptionSuccess();
     this._dompc._executeNext();
   },
 
@@ -1209,26 +1191,23 @@ PeerConnectionObserver.prototype = {
 
   onSetLocalDescriptionError: function(code, message) {
     this._localType = null;
-    this._dompc.callCB(this._dompc._onSetLocalDescriptionFailure,
-                       this.newError(code, message));
+    this._dompc._onSetLocalDescriptionFailure(this.newError(code, message));
     this._dompc._executeNext();
   },
 
   onSetRemoteDescriptionError: function(code, message) {
     this._remoteType = null;
-    this._dompc.callCB(this._dompc._onSetRemoteDescriptionFailure,
-                       this.newError(code, message));
+    this._dompc._onSetRemoteDescriptionFailure(this.newError(code, message));
     this._dompc._executeNext();
   },
 
   onAddIceCandidateSuccess: function() {
-    this._dompc.callCB(this._dompc._onAddIceCandidateSuccess);
+    this._dompc._onAddIceCandidateSuccess();
     this._dompc._executeNext();
   },
 
   onAddIceCandidateError: function(code, message) {
-    this._dompc.callCB(this._dompc._onAddIceCandidateError,
-                       this.newError(code, message));
+    this._dompc._onAddIceCandidateError(this.newError(code, message));
     this._dompc._executeNext();
   },
 
@@ -1353,20 +1332,19 @@ PeerConnectionObserver.prototype = {
     let webidlobj = this._dompc._win.RTCStatsReport._create(this._dompc._win,
                                                             chromeobj);
     chromeobj.makeStatsPublic();
-    this._dompc.callCB(this._dompc._onGetStatsSuccess, webidlobj);
+    this._dompc._onGetStatsSuccess(webidlobj);
     this._dompc._executeNext();
   },
 
   onGetStatsError: function(code, message) {
-    this._dompc.callCB(this._dompc._onGetStatsFailure,
-                       this.newError(code, message));
+    this._dompc._onGetStatsFailure(this.newError(code, message));
     this._dompc._executeNext();
   },
 
   onAddStream: function(stream) {
     let ev = new this._dompc._win.MediaStreamEvent("addstream",
                                                    { stream: stream });
-    this._dompc.dispatchEvent(ev);
+    this.dispatchEvent(ev);
   },
 
   onRemoveStream: function(stream, type) {
@@ -1377,7 +1355,7 @@ PeerConnectionObserver.prototype = {
   onAddTrack: function(track) {
     let ev = new this._dompc._win.MediaStreamTrackEvent("addtrack",
                                                         { track: track });
-    this._dompc.dispatchEvent(ev);
+    this.dispatchEvent(ev);
   },
 
   onRemoveTrack: function(track, type) {
@@ -1390,14 +1368,14 @@ PeerConnectionObserver.prototype = {
     pc._onReplaceTrackSender.track = pc._onReplaceTrackWithTrack;
     pc._onReplaceTrackWithTrack = null;
     pc._onReplaceTrackSender = null;
-    pc.callCB(pc._onReplaceTrackSuccess);
+    pc._onReplaceTrackSuccess();
   },
 
   onReplaceTrackError: function(code, message) {
     var pc = this._dompc;
     pc._onReplaceTrackWithTrack = null;
     pc._onReplaceTrackSender = null;
-    pc.callCB(pc._onReplaceTrackError, this.newError(code, message));
+    pc._onReplaceTrackError(this.newError(code, message));
   },
 
   foundIceCandidate: function(cand) {
