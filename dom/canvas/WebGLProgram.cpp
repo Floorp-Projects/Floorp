@@ -3,32 +3,38 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "WebGLProgram.h"
+
+#include "GLContext.h"
+#include "mozilla/dom/WebGLRenderingContextBinding.h"
+#include "MurmurHash3.h"
 #include "WebGLContext.h"
 #include "WebGLShader.h"
-#include "WebGLProgram.h"
-#include "mozilla/dom/WebGLRenderingContextBinding.h"
-#include "GLContext.h"
 
-#include "MurmurHash3.h"
+namespace mozilla {
 
-using namespace mozilla;
-
-/** Takes an ASCII string like "foo[i]", turns it into "foo" and returns "[i]" in bracketPart
+/** Takes an ASCII string like "foo[i]", turns it into "foo" and returns "[i]"
+  * in bracketPart.
   *
-  * \param string input/output: the string to split, becomes the string without the bracket part
-  * \param bracketPart output: gets the bracket part.
+  * \param string input/output: The string to split, becomes the string without
+  *                             the bracket part.
+  * \param bracketPart output: Gets the bracket part.
   *
-  * Notice that if there are multiple brackets like "foo[i].bar[j]", only the last bracket is split.
+  * Notice that if there are multiple brackets like "foo[i].bar[j]", only the
+  * last bracket is split.
   */
-static bool SplitLastSquareBracket(nsACString& string, nsCString& bracketPart)
+static bool
+SplitLastSquareBracket(nsACString& string, nsCString& bracketPart)
 {
-    MOZ_ASSERT(bracketPart.IsEmpty(), "SplitLastSquareBracket must be called with empty bracketPart string");
+    MOZ_ASSERT(bracketPart.IsEmpty(),
+               "SplitLastSquareBracket must be called with empty bracketPart"
+               " string.");
 
     if (string.IsEmpty())
         return false;
 
-    char *string_start = string.BeginWriting();
-    char *s = string_start + string.Length() - 1;
+    char* string_start = string.BeginWriting();
+    char* s = string_start + string.Length() - 1;
 
     if (*s != ']')
         return false;
@@ -47,12 +53,12 @@ static bool SplitLastSquareBracket(nsACString& string, nsCString& bracketPart)
 }
 
 JSObject*
-WebGLProgram::WrapObject(JSContext *cx) {
+WebGLProgram::WrapObject(JSContext* cx) {
     return dom::WebGLProgramBinding::Wrap(cx, this);
 }
 
-WebGLProgram::WebGLProgram(WebGLContext *context)
-    : WebGLContextBoundObject(context)
+WebGLProgram::WebGLProgram(WebGLContext* webgl)
+    : WebGLContextBoundObject(webgl)
     , mLinkStatus(false)
     , mGeneration(0)
     , mIdentifierMap(new CStringMap)
@@ -66,7 +72,8 @@ WebGLProgram::WebGLProgram(WebGLContext *context)
 }
 
 void
-WebGLProgram::Delete() {
+WebGLProgram::Delete()
+{
     DetachShaders();
     mContext->MakeContextCurrent();
     mContext->gl->fDeleteProgram(mGLName);
@@ -74,9 +81,11 @@ WebGLProgram::Delete() {
 }
 
 bool
-WebGLProgram::AttachShader(WebGLShader *shader) {
+WebGLProgram::AttachShader(WebGLShader* shader)
+{
     if (ContainsShader(shader))
         return false;
+
     mAttachedShaders.AppendElement(shader);
 
     mContext->MakeContextCurrent();
@@ -86,7 +95,8 @@ WebGLProgram::AttachShader(WebGLShader *shader) {
 }
 
 bool
-WebGLProgram::DetachShader(WebGLShader *shader) {
+WebGLProgram::DetachShader(WebGLShader* shader)
+{
     if (!mAttachedShaders.RemoveElement(shader))
         return false;
 
@@ -97,32 +107,37 @@ WebGLProgram::DetachShader(WebGLShader *shader) {
 }
 
 bool
-WebGLProgram::HasAttachedShaderOfType(GLenum shaderType) {
+WebGLProgram::HasAttachedShaderOfType(GLenum shaderType)
+{
     for (uint32_t i = 0; i < mAttachedShaders.Length(); ++i) {
-        if (mAttachedShaders[i] && mAttachedShaders[i]->ShaderType() == shaderType) {
+        if (mAttachedShaders[i] && mAttachedShaders[i]->ShaderType() == shaderType)
             return true;
-        }
     }
+
     return false;
 }
 
 bool
-WebGLProgram::HasBadShaderAttached() {
+WebGLProgram::HasBadShaderAttached()
+{
     for (uint32_t i = 0; i < mAttachedShaders.Length(); ++i) {
-        if (mAttachedShaders[i] && !mAttachedShaders[i]->CompileStatus()) {
+        if (mAttachedShaders[i] && !mAttachedShaders[i]->CompileStatus())
             return true;
-        }
     }
+
     return false;
 }
 
 size_t
-WebGLProgram::UpperBoundNumSamplerUniforms() {
+WebGLProgram::UpperBoundNumSamplerUniforms()
+{
     size_t numSamplerUniforms = 0;
+
     for (size_t i = 0; i < mAttachedShaders.Length(); ++i) {
-        const WebGLShader *shader = mAttachedShaders[i];
+        const WebGLShader* shader = mAttachedShaders[i];
         if (!shader)
             continue;
+
         for (size_t j = 0; j < shader->mUniformInfos.Length(); ++j) {
             WebGLUniformInfo u = shader->mUniformInfos[j];
             if (u.type == LOCAL_GL_SAMPLER_2D ||
@@ -132,11 +147,14 @@ WebGLProgram::UpperBoundNumSamplerUniforms() {
             }
         }
     }
+
     return numSamplerUniforms;
 }
 
 void
-WebGLProgram::MapIdentifier(const nsACString& name, nsCString *mappedName) {
+WebGLProgram::MapIdentifier(const nsACString& name,
+                            nsCString* const out_mappedName)
+{
     MOZ_ASSERT(mIdentifierMap);
 
     nsCString mutableName(name);
@@ -145,30 +163,36 @@ WebGLProgram::MapIdentifier(const nsACString& name, nsCString *mappedName) {
     if (hadBracketPart)
         mutableName.AppendLiteral("[0]");
 
-    if (mIdentifierMap->Get(mutableName, mappedName)) {
+    if (mIdentifierMap->Get(mutableName, out_mappedName)) {
         if (hadBracketPart) {
             nsCString mappedBracketPart;
-            bool mappedHadBracketPart = SplitLastSquareBracket(*mappedName, mappedBracketPart);
+            bool mappedHadBracketPart = SplitLastSquareBracket(*out_mappedName,
+                                                               mappedBracketPart);
             if (mappedHadBracketPart)
-                mappedName->Append(bracketPart);
+                out_mappedName->Append(bracketPart);
         }
         return;
     }
 
-    // not found? We might be in the situation we have a uniform array name and the GL's glGetActiveUniform
-    // returned its name without [0], as is allowed by desktop GL but not in ES. Let's then try with [0].
+    // Not found? We might be in the situation we have a uniform array name and
+    // the GL's glGetActiveUniform returned its name without [0], as is allowed
+    // by desktop GL but not in ES. Let's then try with [0].
     mutableName.AppendLiteral("[0]");
-    if (mIdentifierMap->Get(mutableName, mappedName))
+    if (mIdentifierMap->Get(mutableName, out_mappedName))
         return;
 
-    // not found? return name unchanged. This case happens e.g. on bad user input, or when
-    // we're not using identifier mapping, or if we didn't store an identifier in the map because
-    // e.g. its mapping is trivial (as happens for short identifiers)
-    mappedName->Assign(name);
+    /* Not found? Return name unchanged. This case happens e.g. on bad user
+     * input, or when we're not using identifier mapping, or if we didn't store
+     * an identifier in the map because e.g. its mapping is trivial. (as happens
+     * for short identifiers)
+     */
+    out_mappedName->Assign(name);
 }
 
 void
-WebGLProgram::ReverseMapIdentifier(const nsACString& name, nsCString *reverseMappedName) {
+WebGLProgram::ReverseMapIdentifier(const nsACString& name,
+                                   nsCString* const out_reverseMappedName)
+{
     MOZ_ASSERT(mIdentifierReverseMap);
 
     nsCString mutableName(name);
@@ -177,42 +201,48 @@ WebGLProgram::ReverseMapIdentifier(const nsACString& name, nsCString *reverseMap
     if (hadBracketPart)
         mutableName.AppendLiteral("[0]");
 
-    if (mIdentifierReverseMap->Get(mutableName, reverseMappedName)) {
+    if (mIdentifierReverseMap->Get(mutableName, out_reverseMappedName)) {
         if (hadBracketPart) {
             nsCString reverseMappedBracketPart;
-            bool reverseMappedHadBracketPart = SplitLastSquareBracket(*reverseMappedName, reverseMappedBracketPart);
+            bool reverseMappedHadBracketPart = SplitLastSquareBracket(*out_reverseMappedName,
+                                                                      reverseMappedBracketPart);
             if (reverseMappedHadBracketPart)
-                reverseMappedName->Append(bracketPart);
+                out_reverseMappedName->Append(bracketPart);
         }
         return;
     }
 
-    // not found? We might be in the situation we have a uniform array name and the GL's glGetActiveUniform
-    // returned its name without [0], as is allowed by desktop GL but not in ES. Let's then try with [0].
+    // Not found? We might be in the situation we have a uniform array name and
+    // the GL's glGetActiveUniform returned its name without [0], as is allowed
+    // by desktop GL but not in ES. Let's then try with [0].
     mutableName.AppendLiteral("[0]");
-    if (mIdentifierReverseMap->Get(mutableName, reverseMappedName))
+    if (mIdentifierReverseMap->Get(mutableName, out_reverseMappedName))
         return;
 
-    // not found? return name unchanged. This case happens e.g. on bad user input, or when
-    // we're not using identifier mapping, or if we didn't store an identifier in the map because
-    // e.g. its mapping is trivial (as happens for short identifiers)
-    reverseMappedName->Assign(name);
+    /* Not found? Return name unchanged. This case happens e.g. on bad user
+     * input, or when we're not using identifier mapping, or if we didn't store
+     * an identifier in the map because e.g. its mapping is trivial. (as happens
+     * for short identifiers)
+     */
+    out_reverseMappedName->Assign(name);
 }
 
 WebGLUniformInfo
-WebGLProgram::GetUniformInfoForMappedIdentifier(const nsACString& name) {
+WebGLProgram::GetUniformInfoForMappedIdentifier(const nsACString& name)
+{
     MOZ_ASSERT(mUniformInfoMap);
 
     nsCString mutableName(name);
     nsCString bracketPart;
     bool hadBracketPart = SplitLastSquareBracket(mutableName, bracketPart);
-    // if there is a bracket, we're either an array or an entry in an array.
+    // If there is a bracket, we're either an array or an entry in an array.
     if (hadBracketPart)
         mutableName.AppendLiteral("[0]");
 
     WebGLUniformInfo info;
     mUniformInfoMap->Get(mutableName, &info);
-    // we don't check if that Get failed, as if it did, it left info with default values
+    // We don't check if that Get failed, as if it did, it left info with
+    // default values.
 
     return info;
 }
@@ -221,14 +251,17 @@ bool
 WebGLProgram::UpdateInfo()
 {
     mAttribMaxNameLength = 0;
-    for (size_t i = 0; i < mAttachedShaders.Length(); i++)
-        mAttribMaxNameLength = std::max(mAttribMaxNameLength, mAttachedShaders[i]->mAttribMaxNameLength);
+    for (size_t i = 0; i < mAttachedShaders.Length(); i++) {
+        mAttribMaxNameLength = std::max(mAttribMaxNameLength,
+                                        mAttachedShaders[i]->mAttribMaxNameLength);
+    }
 
     GLint attribCount;
     mContext->gl->fGetProgramiv(mGLName, LOCAL_GL_ACTIVE_ATTRIBUTES, &attribCount);
 
     if (!mAttribsInUse.SetLength(mContext->mGLMaxVertexAttribs)) {
-        mContext->ErrorOutOfMemory("updateInfo: out of memory to allocate %d attribs", mContext->mGLMaxVertexAttribs);
+        mContext->ErrorOutOfMemory("updateInfo: Out of memory to allocate %d"
+                                   " attribs.", mContext->mGLMaxVertexAttribs);
         return false;
     }
 
@@ -241,14 +274,17 @@ WebGLProgram::UpdateInfo()
         GLint attrnamelen;
         GLint attrsize;
         GLenum attrtype;
-        mContext->gl->fGetActiveAttrib(mGLName, i, mAttribMaxNameLength, &attrnamelen, &attrsize, &attrtype, nameBuf);
+        mContext->gl->fGetActiveAttrib(mGLName, i, mAttribMaxNameLength,
+                                       &attrnamelen, &attrsize, &attrtype,
+                                       nameBuf);
         if (attrnamelen > 0) {
             GLint loc = mContext->gl->fGetAttribLocation(mGLName, nameBuf);
-            MOZ_ASSERT(loc >= 0, "major oops in managing the attributes of a WebGL program");
+            MOZ_ASSERT(loc >= 0, "Major oops in managing the attributes of a"
+                                 " WebGL program.");
             if (loc < mContext->mGLMaxVertexAttribs) {
                 mAttribsInUse[loc] = true;
             } else {
-                mContext->GenerateWarning("program exceeds MAX_VERTEX_ATTRIBS");
+                mContext->GenerateWarning("Program exceeds MAX_VERTEX_ATTRIBS.");
                 return false;
             }
         }
@@ -262,16 +298,22 @@ WebGLProgram::UpdateInfo()
         // Loop through ATTRIBUTES
         for (size_t j = 0; j < mAttachedShaders[i]->mAttributes.Length(); j++) {
             const WebGLMappedIdentifier& attrib = mAttachedShaders[i]->mAttributes[j];
-            mIdentifierMap->Put(attrib.original, attrib.mapped); // FORWARD MAPPING
-            mIdentifierReverseMap->Put(attrib.mapped, attrib.original); // REVERSE MAPPING
+
+            // FORWARD MAPPING
+            mIdentifierMap->Put(attrib.original, attrib.mapped);
+            // REVERSE MAPPING
+            mIdentifierReverseMap->Put(attrib.mapped, attrib.original);
         }
 
         // Loop through UNIFORMS
         for (size_t j = 0; j < mAttachedShaders[i]->mUniforms.Length(); j++) {
             // Add the uniforms name mapping to mIdentifier[Reverse]Map
             const WebGLMappedIdentifier& uniform = mAttachedShaders[i]->mUniforms[j];
-            mIdentifierMap->Put(uniform.original, uniform.mapped); // FOWARD MAPPING
-            mIdentifierReverseMap->Put(uniform.mapped, uniform.original); // REVERSE MAPPING
+
+            // FOWARD MAPPING
+            mIdentifierMap->Put(uniform.original, uniform.mapped);
+            // REVERSE MAPPING
+            mIdentifierReverseMap->Put(uniform.mapped, uniform.original);
 
             // Add uniform info to mUniformInfoMap
             const WebGLUniformInfo& info = mAttachedShaders[i]->mUniformInfos[j];
@@ -301,8 +343,8 @@ WebGLProgram::UpdateInfo()
     return true;
 }
 
-/* static */ uint64_t
-WebGLProgram::IdentifierHashFunction(const char *ident, size_t size)
+/*static*/ uint64_t
+WebGLProgram::IdentifierHashFunction(const char* ident, size_t size)
 {
     uint64_t outhash[2];
     // NB: we use the x86 function everywhere, even though it's suboptimal perf
@@ -311,16 +353,20 @@ WebGLProgram::IdentifierHashFunction(const char *ident, size_t size)
     return outhash[0];
 }
 
-/* static */ void
-WebGLProgram::HashMapIdentifier(const nsACString& name, nsCString *hashedName)
+/*static*/ void
+WebGLProgram::HashMapIdentifier(const nsACString& name,
+                                nsCString* const out_hashedName)
 {
     uint64_t hash = IdentifierHashFunction(name.BeginReading(), name.Length());
-    hashedName->Truncate();
-    // This MUST MATCH angle/src/compiler/translator/HashNames.h HASHED_NAME_PREFIX
-    hashedName->AppendPrintf("webgl_%llx", hash);
+    out_hashedName->Truncate();
+    // This MUST MATCH HASHED_NAME_PREFIX from
+    // angle/src/compiler/translator/HashNames.h .
+    out_hashedName->AppendPrintf("webgl_%llx", hash);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebGLProgram, mAttachedShaders)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLProgram, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLProgram, Release)
+
+} // namespace mozilla

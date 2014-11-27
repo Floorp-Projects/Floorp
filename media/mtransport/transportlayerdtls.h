@@ -45,7 +45,7 @@ class TransportLayerNSPRAdapter {
   std::queue<Packet *> input_;
 };
 
-class TransportLayerDtls : public TransportLayer {
+class TransportLayerDtls MOZ_FINAL : public TransportLayer {
  public:
   TransportLayerDtls() :
       role_(CLIENT),

@@ -11,16 +11,16 @@ using namespace mozilla;
 NS_IMPL_ISUPPORTS(WebGLObserver, nsIObserver)
 
 NS_IMETHODIMP
-WebGLMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
-                                   nsISupports* aData, bool aAnonymize)
+WebGLMemoryTracker::CollectReports(nsIHandleReportCallback* handleReport,
+                                   nsISupports* data, bool)
 {
-#define REPORT(_path, _kind, _units, _amount, _desc)                          \
-    do {                                                                      \
-      nsresult rv;                                                            \
-      rv = aHandleReport->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path), \
-                                   _kind, _units, _amount,                    \
-                                   NS_LITERAL_CSTRING(_desc), aData);         \
-      NS_ENSURE_SUCCESS(rv, rv);                                              \
+#define REPORT(_path, _kind, _units, _amount, _desc)                         \
+    do {                                                                     \
+      nsresult rv;                                                           \
+      rv = handleReport->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path), \
+                                   _kind, _units, _amount,                   \
+                                   NS_LITERAL_CSTRING(_desc), data);         \
+      NS_ENSURE_SUCCESS(rv, rv);                                             \
     } while (0)
 
     REPORT("webgl-texture-memory",
@@ -89,7 +89,8 @@ NS_IMPL_ISUPPORTS(WebGLMemoryTracker, nsIMemoryReporter)
 
 StaticRefPtr<WebGLMemoryTracker> WebGLMemoryTracker::sUniqueInstance;
 
-WebGLMemoryTracker* WebGLMemoryTracker::UniqueInstance()
+WebGLMemoryTracker*
+WebGLMemoryTracker::UniqueInstance()
 {
     if (!sUniqueInstance) {
         sUniqueInstance = new WebGLMemoryTracker;
@@ -116,11 +117,12 @@ WebGLMemoryTracker::~WebGLMemoryTracker()
 MOZ_DEFINE_MALLOC_SIZE_OF(WebGLBufferMallocSizeOf)
 
 int64_t
-WebGLMemoryTracker::GetBufferCacheMemoryUsed() {
-    const ContextsArrayType & contexts = Contexts();
+WebGLMemoryTracker::GetBufferCacheMemoryUsed()
+{
+    const ContextsArrayType& contexts = Contexts();
     int64_t result = 0;
     for(size_t i = 0; i < contexts.Length(); ++i) {
-        for (const WebGLBuffer *buffer = contexts[i]->mBuffers.getFirst();
+        for (const WebGLBuffer* buffer = contexts[i]->mBuffers.getFirst();
              buffer;
              buffer = buffer->getNext())
         {
@@ -134,11 +136,12 @@ WebGLMemoryTracker::GetBufferCacheMemoryUsed() {
 MOZ_DEFINE_MALLOC_SIZE_OF(WebGLShaderMallocSizeOf)
 
 int64_t
-WebGLMemoryTracker::GetShaderSize() {
-    const ContextsArrayType & contexts = Contexts();
+WebGLMemoryTracker::GetShaderSize()
+{
+    const ContextsArrayType& contexts = Contexts();
     int64_t result = 0;
     for(size_t i = 0; i < contexts.Length(); ++i) {
-        for (const WebGLShader *shader = contexts[i]->mShaders.getFirst();
+        for (const WebGLShader* shader = contexts[i]->mShaders.getFirst();
              shader;
              shader = shader->getNext())
         {

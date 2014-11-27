@@ -20,6 +20,7 @@
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidSurfaceTexture.h"
 #include "GLImages.h"
+#include "GLLibraryEGL.h"
 #endif
 
 using mozilla::layers::PlanarYCbCrImage;
@@ -305,6 +306,7 @@ GLBlitHelper::InitTexQuadProgram(BlitType target)
     GLuint *fragShaderPtr;
     const char* fragShaderSource;
     switch (target) {
+    case ConvertEGLImage:
     case BlitTex2D:
         programPtr = &mTex2DBlit_Program;
         fragShaderPtr = &mTex2DBlit_FragShader;
@@ -451,6 +453,7 @@ GLBlitHelper::InitTexQuadProgram(BlitType target)
         switch (target) {
             case BlitTex2D:
             case BlitTexRect:
+            case ConvertEGLImage:
             case ConvertSurfaceTexture:
             case ConvertGralloc: {
 #ifdef ANDROID
@@ -666,24 +669,25 @@ GLBlitHelper::BindAndUploadYUVTexture(Channel which,
     }
 }
 
-#ifdef MOZ_WIDGET_GONK
 void
-GLBlitHelper::BindAndUploadExternalTexture(EGLImage image)
+GLBlitHelper::BindAndUploadEGLImage(EGLImage image, GLuint target)
 {
     MOZ_ASSERT(image != EGL_NO_IMAGE, "Bad EGLImage");
 
     if (!mSrcTexEGL) {
         mGL->fGenTextures(1, &mSrcTexEGL);
-        mGL->fBindTexture(LOCAL_GL_TEXTURE_EXTERNAL_OES, mSrcTexEGL);
-        mGL->fTexParameteri(LOCAL_GL_TEXTURE_EXTERNAL_OES, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
-        mGL->fTexParameteri(LOCAL_GL_TEXTURE_EXTERNAL_OES, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
-        mGL->fTexParameteri(LOCAL_GL_TEXTURE_EXTERNAL_OES, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_NEAREST);
-        mGL->fTexParameteri(LOCAL_GL_TEXTURE_EXTERNAL_OES, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_NEAREST);
+        mGL->fBindTexture(target, mSrcTexEGL);
+        mGL->fTexParameteri(target, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+        mGL->fTexParameteri(target, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
+        mGL->fTexParameteri(target, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_NEAREST);
+        mGL->fTexParameteri(target, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_NEAREST);
     } else {
-        mGL->fBindTexture(LOCAL_GL_TEXTURE_EXTERNAL_OES, mSrcTexEGL);
+        mGL->fBindTexture(target, mSrcTexEGL);
     }
-    mGL->fEGLImageTargetTexture2D(LOCAL_GL_TEXTURE_EXTERNAL_OES, image);
+    mGL->fEGLImageTargetTexture2D(target, image);
 }
+
+#ifdef MOZ_WIDGET_GONK
 
 bool
 GLBlitHelper::BlitGrallocImage(layers::GrallocImage* grallocImage, bool yFlip)
@@ -705,7 +709,7 @@ GLBlitHelper::BlitGrallocImage(layers::GrallocImage* grallocImage, bool yFlip)
     int oldBinding = 0;
     mGL->fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_EXTERNAL_OES, &oldBinding);
 
-    BindAndUploadExternalTexture(image);
+    BindAndUploadEGLImage(image, LOCAL_GL_TEXTURE_EXTERNAL_OES);
 
     mGL->fUniform1f(mYFlipLoc, yFlip ? (float)1.0f : (float)0.0f);
 
@@ -720,13 +724,14 @@ GLBlitHelper::BlitGrallocImage(layers::GrallocImage* grallocImage, bool yFlip)
 #ifdef MOZ_WIDGET_ANDROID
 
 bool
-GLBlitHelper::BlitSurfaceTextureImage(layers::SurfaceTextureImage* stImage)
+GLBlitHelper::BlitSurfaceTextureImage(layers::SurfaceTextureImage* stImage, bool yFlip)
 {
     AndroidSurfaceTexture* surfaceTexture = stImage->GetData()->mSurfTex;
-    bool yFlip = stImage->GetData()->mInverted;
+    if (stImage->GetData()->mInverted) {
+        yFlip = !yFlip;
+    }
 
     ScopedBindTextureUnit boundTU(mGL, LOCAL_GL_TEXTURE0);
-    mGL->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
 
     if (NS_FAILED(surfaceTexture->Attach(mGL))) {
         return false;
@@ -751,6 +756,39 @@ GLBlitHelper::BlitSurfaceTextureImage(layers::SurfaceTextureImage* stImage)
     mGL->fBindTexture(LOCAL_GL_TEXTURE_EXTERNAL, oldBinding);
     return true;
 }
+
+bool
+GLBlitHelper::BlitEGLImageImage(layers::EGLImageImage* image, bool yFlip)
+{
+    EGLImage eglImage = image->GetData()->mImage;
+    EGLSync eglSync = image->GetData()->mSync;
+
+    if (image->GetData()->mInverted) {
+        yFlip = !yFlip;
+    }
+
+    if (eglSync) {
+        EGLint status = sEGLLibrary.fClientWaitSync(EGL_DISPLAY(), eglSync, 0, LOCAL_EGL_FOREVER);
+        if (status != LOCAL_EGL_CONDITION_SATISFIED) {
+            return false;
+        }
+    }
+
+    ScopedBindTextureUnit boundTU(mGL, LOCAL_GL_TEXTURE0);
+
+    int oldBinding = 0;
+    mGL->fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_2D, &oldBinding);
+
+    BindAndUploadEGLImage(eglImage, LOCAL_GL_TEXTURE_2D);
+
+    mGL->fUniform1f(mYFlipLoc, yFlip ? 1.0f : 0.0f);
+
+    mGL->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+
+    mGL->fBindTexture(LOCAL_GL_TEXTURE_EXTERNAL_OES, oldBinding);
+    return true;
+}
+
 #endif
 
 bool
@@ -816,6 +854,9 @@ GLBlitHelper::BlitImageToFramebuffer(layers::Image* srcImage,
     case ImageFormat::SURFACE_TEXTURE:
         type = ConvertSurfaceTexture;
         break;
+    case ImageFormat::EGLIMAGE:
+        type = ConvertEGLImage;
+        break;
 #endif
     default:
         return false;
@@ -848,7 +889,11 @@ GLBlitHelper::BlitImageToFramebuffer(layers::Image* srcImage,
 #ifdef MOZ_WIDGET_ANDROID
     if (type == ConvertSurfaceTexture) {
         layers::SurfaceTextureImage* stImage = static_cast<layers::SurfaceTextureImage*>(srcImage);
-        return BlitSurfaceTextureImage(stImage);
+        return BlitSurfaceTextureImage(stImage, yFlip);
+    }
+    if (type == ConvertEGLImage) {
+        layers::EGLImageImage* eglImage = static_cast<layers::EGLImageImage*>(srcImage);
+        return BlitEGLImageImage(eglImage, yFlip);
     }
 #endif
 

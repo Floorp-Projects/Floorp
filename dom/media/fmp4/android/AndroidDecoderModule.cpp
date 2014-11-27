@@ -4,7 +4,12 @@
 
 #include "AndroidDecoderModule.h"
 #include "AndroidBridge.h"
+#include "GLBlitHelper.h"
+#include "GLContext.h"
+#include "GLContextEGL.h"
+#include "GLContextProvider.h"
 #include "GLImages.h"
+#include "GLLibraryEGL.h"
 
 #include "MediaData.h"
 
@@ -56,18 +61,18 @@ public:
     return InitDecoder(mSurfaceTexture->JavaSurface());
   }
 
+  void Cleanup() MOZ_OVERRIDE {
+    mGLContext = nullptr;
+  }
+
   virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE {
     mp4_demuxer::AnnexB::ConvertSample(aSample);
     return MediaCodecDataDecoder::Input(aSample);
   }
 
-  virtual nsresult PostOutput(BufferInfo* aInfo, MediaFormat* aFormat, Microseconds aDuration) MOZ_OVERRIDE {
-    VideoInfo videoInfo;
-    videoInfo.mDisplay = nsIntSize(mConfig.display_width, mConfig.display_height);
-
-    bool isSync = false;
-    if (MediaCodec::getBUFFER_FLAG_SYNC_FRAME() & aInfo->getFlags()) {
-      isSync = true;
+  EGLImage CopySurface() {
+    if (!EnsureGLContext()) {
+      return nullptr;
     }
 
     nsRefPtr<layers::Image> img = mImageContainer->CreateImage(ImageFormat::SURFACE_TEXTURE);
@@ -76,8 +81,69 @@ public:
     data.mSize = gfx::IntSize(mConfig.display_width, mConfig.display_height);
     data.mInverted = true;
 
-    layers::SurfaceTextureImage* typedImg = static_cast<layers::SurfaceTextureImage*>(img.get());
+    layers::SurfaceTextureImage* stImg = static_cast<layers::SurfaceTextureImage*>(img.get());
+    stImg->SetData(data);
+
+    mGLContext->MakeCurrent();
+
+    GLuint tex = CreateTextureForOffscreen(mGLContext, mGLContext->GetGLFormats(), data.mSize);
+
+    GLBlitHelper helper(mGLContext);
+    if (!helper.BlitImageToTexture(img, data.mSize, tex, LOCAL_GL_TEXTURE_2D)) {
+      mGLContext->fDeleteTextures(1, &tex);
+      return nullptr;
+    }
+
+    EGLint attribs[] = {
+      LOCAL_EGL_IMAGE_PRESERVED_KHR, LOCAL_EGL_TRUE,
+      LOCAL_EGL_NONE, LOCAL_EGL_NONE
+    };
+
+    EGLContext eglContext = static_cast<GLContextEGL*>(mGLContext.get())->GetEGLContext();
+    EGLImage eglImage = sEGLLibrary.fCreateImage(EGL_DISPLAY(), eglContext,
+                                                 LOCAL_EGL_GL_TEXTURE_2D_KHR,
+                                                 (EGLClientBuffer)tex, attribs);
+    mGLContext->fDeleteTextures(1, &tex);
+
+    return eglImage;
+  }
+
+  virtual nsresult PostOutput(BufferInfo* aInfo, MediaFormat* aFormat, Microseconds aDuration) MOZ_OVERRIDE {
+    VideoInfo videoInfo;
+    videoInfo.mDisplay = nsIntSize(mConfig.display_width, mConfig.display_height);
+
+    EGLImage eglImage = CopySurface();
+    if (!eglImage) {
+      return NS_ERROR_FAILURE;
+    }
+
+    EGLSync eglSync = nullptr;
+    if (sEGLLibrary.IsExtensionSupported(GLLibraryEGL::KHR_fence_sync) &&
+        mGLContext->IsExtensionSupported(GLContext::OES_EGL_sync))
+    {
+      MOZ_ASSERT(mGLContext->IsCurrent());
+      eglSync = sEGLLibrary.fCreateSync(EGL_DISPLAY(),
+                                        LOCAL_EGL_SYNC_FENCE,
+                                        nullptr);
+      if (eglSync) {
+          mGLContext->fFlush();
+      }
+    } else {
+      NS_WARNING("No EGL fence support detected, rendering artifacts may occur!");
+    }
+
+    nsRefPtr<layers::Image> img = mImageContainer->CreateImage(ImageFormat::EGLIMAGE);
+    layers::EGLImageImage::Data data;
+    data.mImage = eglImage;
+    data.mSync = eglSync;
+    data.mOwns = true;
+    data.mSize = gfx::IntSize(mConfig.display_width, mConfig.display_height);
+    data.mInverted = false;
+
+    layers::EGLImageImage* typedImg = static_cast<layers::EGLImageImage*>(img.get());
     typedImg->SetData(data);
+
+    bool isSync = !!(MediaCodec::getBUFFER_FLAG_SYNC_FRAME() & aInfo->getFlags());
 
     nsRefPtr<VideoData> v = VideoData::CreateFromImage(videoInfo, mImageContainer, aInfo->getOffset(),
                                                        aInfo->getPresentationTimeUs(),
@@ -92,9 +158,19 @@ public:
   }
 
 protected:
+  bool EnsureGLContext() {
+    if (mGLContext) {
+      return true;
+    }
+
+    mGLContext = GLContextProvider::CreateHeadless();
+    return mGLContext;
+  }
+
   layers::ImageContainer* mImageContainer;
   const mp4_demuxer::VideoDecoderConfig& mConfig;
   RefPtr<AndroidSurfaceTexture> mSurfaceTexture;
+  nsRefPtr<GLContext> mGLContext;
 };
 
 class AudioDataDecoder : public MediaCodecDataDecoder {
@@ -453,6 +529,8 @@ void MediaCodecDataDecoder::DecoderLoop()
       }
     }
   }
+
+  Cleanup();
 
   // We're done
   mMonitor.Lock();

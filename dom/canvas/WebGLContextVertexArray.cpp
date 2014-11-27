@@ -4,15 +4,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebGLContext.h"
-#include "WebGLBuffer.h"
-#include "WebGLVertexAttribData.h"
-#include "WebGLVertexArray.h"
-#include "GLContext.h"
 
-using namespace mozilla;
+#include "GLContext.h"
+#include "WebGLBuffer.h"
+#include "WebGLVertexArray.h"
+#include "WebGLVertexAttribData.h"
+
+namespace mozilla {
 
 void
-WebGLContext::BindVertexArray(WebGLVertexArray *array)
+WebGLContext::BindVertexArray(WebGLVertexArray* array)
 {
     if (IsContextLost())
         return;
@@ -59,7 +60,7 @@ WebGLContext::CreateVertexArray()
 }
 
 void
-WebGLContext::DeleteVertexArray(WebGLVertexArray *array)
+WebGLContext::DeleteVertexArray(WebGLVertexArray* array)
 {
     if (IsContextLost())
         return;
@@ -77,7 +78,7 @@ WebGLContext::DeleteVertexArray(WebGLVertexArray *array)
 }
 
 bool
-WebGLContext::IsVertexArray(WebGLVertexArray *array)
+WebGLContext::IsVertexArray(WebGLVertexArray* array)
 {
     if (IsContextLost())
         return false;
@@ -89,3 +90,5 @@ WebGLContext::IsVertexArray(WebGLVertexArray *array)
            !array->IsDeleted() &&
            array->HasEverBeenBound();
 }
+
+} // namespace mozilla

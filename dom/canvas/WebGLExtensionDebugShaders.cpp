@@ -3,14 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "WebGLContext.h"
 #include "WebGLExtensions.h"
+
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
+#include "WebGLContext.h"
 
-using namespace mozilla;
+namespace mozilla {
 
-WebGLExtensionDebugShaders::WebGLExtensionDebugShaders(WebGLContext* context)
-    : WebGLExtensionBase(context)
+WebGLExtensionDebugShaders::WebGLExtensionDebugShaders(WebGLContext* webgl)
+    : WebGLExtensionBase(webgl)
 {
 }
 
@@ -18,24 +19,25 @@ WebGLExtensionDebugShaders::~WebGLExtensionDebugShaders()
 {
 }
 
-/* If no source has been defined, compileShader() has not been called,
- * or the translation has failed for shader, an empty string is
- * returned; otherwise, return the translated source.
- */
+// If no source has been defined, compileShader() has not been called, or the
+// translation has failed for shader, an empty string is returned; otherwise,
+// return the translated source.
 void
 WebGLExtensionDebugShaders::GetTranslatedShaderSource(WebGLShader* shader,
                                                       nsAString& retval)
 {
+    retval.SetIsVoid(true);
+
     if (mIsLost) {
-        return mContext->ErrorInvalidOperation("getTranslatedShaderSource: "
-                                               "Extension is lost.");
+        mContext->ErrorInvalidOperation("%s: Extension is lost.",
+                                        "getTranslatedShaderSource");
+        return;
     }
 
+    retval.SetIsVoid(false);
     mContext->GetShaderTranslatedSource(shader, retval);
-
-    if (retval.IsVoid()) {
-        CopyASCIItoUTF16("", retval);
-    }
 }
 
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionDebugShaders)
+
+} // namespace mozilla

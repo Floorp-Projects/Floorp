@@ -23,8 +23,8 @@ class HTMLImageElement;
 class OwningRadioNodeListOrElement;
 template<typename> struct Nullable;
 
-class HTMLFormControlsCollection : public nsIHTMLCollection
-                                 , public nsWrapperCache
+class HTMLFormControlsCollection MOZ_FINAL : public nsIHTMLCollection
+                                           , public nsWrapperCache
 {
 public:
   explicit HTMLFormControlsCollection(HTMLFormElement* aForm);
