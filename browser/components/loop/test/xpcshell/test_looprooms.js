@@ -146,25 +146,25 @@ const onRoomDeleted = function(e, room) {
   gExpectedDeletes.splice(idx, 1);
 }
 
-const onRoomJoined = function(e, roomToken, participant) {
-  let participants = gExpectedJoins[roomToken];
+const onRoomJoined = function(e, room, participant) {
+  let participants = gExpectedJoins[room.roomToken];
   Assert.ok(participants, "Participant should be expected to join");
   let idx = participants.indexOf(participant.roomConnectionId);
   Assert.ok(idx > -1, "Participant should be expected to join");
   participants.splice(idx, 1);
   if (!participants.length) {
-    delete gExpectedJoins[roomToken];
+    delete gExpectedJoins[room.roomToken];
   }
 };
 
-const onRoomLeft = function(e, roomToken, participant) {
-  let participants = gExpectedLeaves[roomToken];
+const onRoomLeft = function(e, room, participant) {
+  let participants = gExpectedLeaves[room.roomToken];
   Assert.ok(participants, "Participant should be expected to leave");
   let idx = participants.indexOf(participant.roomConnectionId);
   Assert.ok(idx > -1, "Participant should be expected to leave");
   participants.splice(idx, 1);
   if (!participants.length) {
-    delete gExpectedLeaves[roomToken];
+    delete gExpectedLeaves[room.roomToken];
   }
 };
 
