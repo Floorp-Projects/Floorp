@@ -2968,11 +2968,11 @@ MobileMessageDB.prototype = {
         // save it into the segmentRecord.
         if (aSmsSegment.teleservice === RIL.PDU_CDMA_MSG_TELESERIVCIE_ID_WAP
             && seq === 1) {
-          if (aSmsSegment.originatorPort) {
+          if (aSmsSegment.originatorPort === Ci.nsIGonkSmsService.SMS_APPLICATION_PORT_INVALID) {
             segmentRecord.originatorPort = aSmsSegment.originatorPort;
           }
 
-          if (aSmsSegment.destinationPort) {
+          if (aSmsSegment.destinationPort === Ci.nsIGonkSmsService.SMS_APPLICATION_PORT_INVALID) {
             segmentRecord.destinationPort = aSmsSegment.destinationPort;
           }
         }
