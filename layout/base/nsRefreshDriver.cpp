@@ -50,7 +50,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsDocShell.h"
 #include "nsISimpleEnumerator.h"
-
+#include "nsJSEnvironment.h"
 #include "mozilla/Telemetry.h"
 
 using namespace mozilla;
@@ -1369,6 +1369,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
 
     if (nsContentUtils::XPConnect()) {
       nsContentUtils::XPConnect()->NotifyDidPaint();
+      nsJSContext::NotifyDidPaint();
     }
   }
 
