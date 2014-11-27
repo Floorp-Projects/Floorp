@@ -1696,7 +1696,7 @@ gfxWindowsPlatform::InitD3D11Devices()
   }
 
   HRESULT hr = E_INVALIDARG;
-  __try {
+  MOZ_SEH_TRY {
     hr = d3d11CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
                            // Use
                            // D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS
@@ -1706,7 +1706,7 @@ gfxWindowsPlatform::InitD3D11Devices()
                            featureLevels.Elements(), featureLevels.Length(),
                            D3D11_SDK_VERSION, byRef(mD3D11Device),
                            nullptr, nullptr);
-  } __except (EXCEPTION_EXECUTE_HANDLER) {
+  } MOZ_SEH_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
     mD3D11Device = nullptr;
     return;
   }
@@ -1721,13 +1721,13 @@ gfxWindowsPlatform::InitD3D11Devices()
 #ifdef USE_D2D1_1
   if (Factory::SupportsD2D1()) {
     hr = E_INVALIDARG;
-    __try {
+    MOZ_SEH_TRY {
       hr = d3d11CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
                              D3D11_CREATE_DEVICE_BGRA_SUPPORT,
                              featureLevels.Elements(), featureLevels.Length(),
                              D3D11_SDK_VERSION, byRef(mD3D11ContentDevice),
                              nullptr, nullptr);
-    } __except(EXCEPTION_EXECUTE_HANDLER) {
+    } MOZ_SEH_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
       mD3D11Device = nullptr;
       return;
     }
