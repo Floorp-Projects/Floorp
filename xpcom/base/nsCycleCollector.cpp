@@ -1312,7 +1312,8 @@ public:
 
   bool Collect(ccType aCCType,
                SliceBudget& aBudget,
-               nsICycleCollectorListener* aManualListener);
+               nsICycleCollectorListener* aManualListener,
+               bool aPreferShorterSlices = false);
   void Shutdown();
 
   void SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
@@ -3600,7 +3601,8 @@ PrintPhase(const char* aPhase)
 bool
 nsCycleCollector::Collect(ccType aCCType,
                           SliceBudget& aBudget,
-                          nsICycleCollectorListener* aManualListener)
+                          nsICycleCollectorListener* aManualListener,
+                          bool aPreferShorterSlices)
 {
   CheckThreadSafety();
 
@@ -3623,7 +3625,7 @@ nsCycleCollector::Collect(ccType aCCType,
 
   ++mResults.mNumSlices;
 
-  bool continueSlice = true;
+  bool continueSlice = aBudget.isUnlimited() || !aPreferShorterSlices;
   do {
     switch (mIncrementalPhase) {
       case IdlePhase:
@@ -3640,7 +3642,8 @@ nsCycleCollector::Collect(ccType aCCType,
         // (There's no need to check if we've finished graph building, because
         // if we haven't, we've already exceeded our budget, and will finish
         // this slice anyways.)
-        continueSlice = aBudget.isUnlimited() || mResults.mNumSlices < 3;
+        continueSlice = aBudget.isUnlimited() ||
+          (mResults.mNumSlices < 3 && !aPreferShorterSlices);
         break;
       case ScanAndCollectWhitePhase:
         // We do ScanRoots and CollectWhite in a single slice to ensure
@@ -4225,7 +4228,8 @@ nsCycleCollector_collect(nsICycleCollectorListener* aManualListener)
 }
 
 void
-nsCycleCollector_collectSlice(SliceBudget& budget)
+nsCycleCollector_collectSlice(SliceBudget& budget,
+                              bool aPreferShorterSlices)
 {
   CollectorData* data = sCollectorData.get();
 
@@ -4236,7 +4240,7 @@ nsCycleCollector_collectSlice(SliceBudget& budget)
   PROFILER_LABEL("nsCycleCollector", "collectSlice",
                  js::ProfileEntry::Category::CC);
 
-  data->mCollector->Collect(SliceCC, budget, nullptr);
+  data->mCollector->Collect(SliceCC, budget, nullptr, aPreferShorterSlices);
 }
 
 void
