@@ -154,6 +154,10 @@ class TypedProto : public NativeObject
     }
 
     inline type::Kind kind() const;
+
+    static int32_t offsetOfTypeDescr() {
+        return getFixedSlotOffset(JS_TYPROTO_SLOT_DESCR);
+    }
 };
 
 class TypeDescr : public NativeObject
@@ -431,6 +435,10 @@ class ArrayTypeDescr : public ComplexTypeDescr
 
     int32_t length() const {
         return getReservedSlot(JS_DESCR_SLOT_ARRAY_LENGTH).toInt32();
+    }
+
+    static int32_t offsetOfLength() {
+        return getFixedSlotOffset(JS_DESCR_SLOT_ARRAY_LENGTH);
     }
 };
 
