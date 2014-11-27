@@ -105,10 +105,10 @@ private:
 #define NS_NAVHISTORYRESULT_IID \
   { 0x455d1d40, 0x1b9b, 0x40e6, { 0xa6, 0x41, 0x8b, 0xb7, 0xe8, 0x82, 0x23, 0x87 } }
 
-class nsNavHistoryResult : public nsSupportsWeakReference,
-                           public nsINavHistoryResult,
-                           public nsINavBookmarkObserver,
-                           public nsINavHistoryObserver
+class nsNavHistoryResult MOZ_FINAL : public nsSupportsWeakReference,
+                                     public nsINavHistoryResult,
+                                     public nsINavBookmarkObserver,
+                                     public nsINavHistoryObserver
 {
 public:
   static nsresult NewHistoryResult(nsINavHistoryQuery** aQueries,
@@ -619,9 +619,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryContainerResultNode,
 //    bookmarks. This keeps itself in sync by listening to history and
 //    bookmark notifications.
 
-class nsNavHistoryQueryResultNode : public nsNavHistoryContainerResultNode,
-                                    public nsINavHistoryQueryResultNode,
-                                    public nsINavBookmarkObserver
+class nsNavHistoryQueryResultNode MOZ_FINAL : public nsNavHistoryContainerResultNode,
+                                              public nsINavHistoryQueryResultNode,
+                                              public nsINavBookmarkObserver
 {
 public:
   nsNavHistoryQueryResultNode(const nsACString& aTitle,
@@ -700,10 +700,10 @@ protected:
 //    Overridden container type for bookmark folders. It will keep the contents
 //    of the folder in sync with the bookmark service.
 
-class nsNavHistoryFolderResultNode : public nsNavHistoryContainerResultNode,
-                                     public nsINavHistoryQueryResultNode,
-                                     public nsINavBookmarkObserver,
-                                     public mozilla::places::AsyncStatementCallback
+class nsNavHistoryFolderResultNode MOZ_FINAL : public nsNavHistoryContainerResultNode,
+                                               public nsINavHistoryQueryResultNode,
+                                               public nsINavBookmarkObserver,
+                                               public mozilla::places::AsyncStatementCallback
 {
 public:
   nsNavHistoryFolderResultNode(const nsACString& aTitle,

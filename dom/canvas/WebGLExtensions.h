@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WEBGLEXTENSIONS_H_
-#define WEBGLEXTENSIONS_H_
+#ifndef WEBGL_EXTENSIONS_H_
+#define WEBGL_EXTENSIONS_H_
 
 #include "jsapi.h"
 #include "mozilla/Attributes.h"
@@ -23,9 +23,9 @@ class WebGLExtensionBase
     , public WebGLContextBoundObject
 {
 public:
-    explicit WebGLExtensionBase(WebGLContext* aValue);
+    explicit WebGLExtensionBase(WebGLContext* webgl);
 
-    WebGLContext *GetParentObject() const {
+    WebGLContext* GetParentObject() const {
         return Context();
     }
 
@@ -40,12 +40,12 @@ protected:
     bool mIsLost;
 };
 
-#define DECL_WEBGL_EXTENSION_GOOP                                           \
-    virtual JSObject* WrapObject(JSContext *cx) MOZ_OVERRIDE;
+#define DECL_WEBGL_EXTENSION_GOOP \
+    virtual JSObject* WrapObject(JSContext* cx) MOZ_OVERRIDE;
 
-#define IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionType) \
-    JSObject* \
-    WebGLExtensionType::WrapObject(JSContext *cx) { \
+#define IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionType)            \
+    JSObject*                                                    \
+    WebGLExtensionType::WrapObject(JSContext* cx) {              \
         return dom::WebGLExtensionType##Binding::Wrap(cx, this); \
     }
 
@@ -273,8 +273,8 @@ public:
 
     static bool IsSupported(const WebGLContext*);
 
-    static const size_t sMinColorAttachments = 4;
-    static const size_t sMinDrawBuffers = 4;
+    static const size_t kMinColorAttachments = 4;
+    static const size_t kMinDrawBuffers = 4;
     /*
      WEBGL_draw_buffers does not give a minal value for GL_MAX_DRAW_BUFFERS. But, we request
      for GL_MAX_DRAW_BUFFERS = 4 at least to be able to use all requested color attachments.
@@ -288,15 +288,13 @@ class WebGLExtensionVertexArray
     : public WebGLExtensionBase
 {
 public:
-    explicit WebGLExtensionVertexArray(WebGLContext* aValue);
+    explicit WebGLExtensionVertexArray(WebGLContext* webgl);
     virtual ~WebGLExtensionVertexArray();
 
     already_AddRefed<WebGLVertexArray> CreateVertexArrayOES();
     void DeleteVertexArrayOES(WebGLVertexArray* array);
     bool IsVertexArrayOES(WebGLVertexArray* array);
     void BindVertexArrayOES(WebGLVertexArray* array);
-
-    static bool IsSupported(const WebGLContext* context);
 
     DECL_WEBGL_EXTENSION_GOOP
 };
@@ -305,17 +303,16 @@ class WebGLExtensionInstancedArrays
     : public WebGLExtensionBase
 {
 public:
-    explicit WebGLExtensionInstancedArrays(WebGLContext* aContext);
+    explicit WebGLExtensionInstancedArrays(WebGLContext* webgl);
     virtual ~WebGLExtensionInstancedArrays();
 
-    void DrawArraysInstancedANGLE(GLenum mode, GLint first,
-                                  GLsizei count, GLsizei primcount);
-    void DrawElementsInstancedANGLE(GLenum mode, GLsizei count,
-                                    GLenum type, WebGLintptr offset,
-                                    GLsizei primcount);
+    void DrawArraysInstancedANGLE(GLenum mode, GLint first, GLsizei count,
+                                  GLsizei primcount);
+    void DrawElementsInstancedANGLE(GLenum mode, GLsizei count, GLenum type,
+                                    WebGLintptr offset, GLsizei primcount);
     void VertexAttribDivisorANGLE(GLuint index, GLuint divisor);
 
-    static bool IsSupported(const WebGLContext* context);
+    static bool IsSupported(const WebGLContext* webgl);
 
     DECL_WEBGL_EXTENSION_GOOP
 };
@@ -324,7 +321,7 @@ class WebGLExtensionBlendMinMax
     : public WebGLExtensionBase
 {
 public:
-    explicit WebGLExtensionBlendMinMax(WebGLContext* aValue);
+    explicit WebGLExtensionBlendMinMax(WebGLContext* webgl);
     virtual ~WebGLExtensionBlendMinMax();
 
     static bool IsSupported(const WebGLContext*);
@@ -334,4 +331,4 @@ public:
 
 } // namespace mozilla
 
-#endif // WEBGLEXTENSIONS_H_
+#endif // WEBGL_EXTENSIONS_H_

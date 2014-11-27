@@ -14,6 +14,8 @@
 
 #include "vm/ScopeObject.h"
 
+#include "jsscriptinlines.h"
+
 namespace js {
 namespace jit {
 
@@ -72,6 +74,13 @@ BaselineFrame::callObj() const
     while (!obj->is<CallObject>())
         obj = obj->enclosingScope();
     return obj->as<CallObject>();
+}
+
+inline void
+BaselineFrame::unsetIsDebuggee()
+{
+    MOZ_ASSERT(!script()->isDebuggee());
+    flags_ &= ~DEBUGGEE;
 }
 
 } // namespace jit

@@ -14,9 +14,11 @@
 #include "jsgc.h"
 #include "jsopcode.h"
 
+#include "builtin/TypedObject.h"
 #include "jit/BaselineJIT.h"
 #include "jit/BaselineRegisters.h"
 #include "vm/ArrayObject.h"
+#include "vm/TypedArrayCommon.h"
 
 namespace js {
 
@@ -229,7 +231,9 @@ class ICEntry
         // A fake IC entry for returning from a callVM to
         // Debug{Prologue,Epilogue}.
         Kind_DebugPrologue,
-        Kind_DebugEpilogue
+        Kind_DebugEpilogue,
+
+        Kind_Invalid
     };
 
   private:
@@ -238,6 +242,7 @@ class ICEntry
 
     // Set the kind and asserts that it's sane.
     void setKind(Kind kind) {
+        MOZ_ASSERT(kind < Kind_Invalid);
         kind_ = kind;
         MOZ_ASSERT(this->kind() == kind);
     }
@@ -421,6 +426,7 @@ class ICEntry
     _(GetProp_Native)           \
     _(GetProp_NativeDoesNotExist) \
     _(GetProp_NativePrototype)  \
+    _(GetProp_TypedObject)      \
     _(GetProp_CallScripted)     \
     _(GetProp_CallNative)       \
     _(GetProp_CallNativePrototype)\
@@ -434,6 +440,7 @@ class ICEntry
     _(SetProp_Fallback)         \
     _(SetProp_Native)           \
     _(SetProp_NativeAdd)        \
+    _(SetProp_TypedObject)      \
     _(SetProp_CallScripted)     \
     _(SetProp_CallNative)       \
                                 \
@@ -3406,6 +3413,26 @@ class ICGetElem_Dense : public ICMonitoredStub
     };
 };
 
+// Enum for stubs handling a combination of typed arrays and typed objects.
+enum TypedThingLayout {
+    Layout_TypedArray,
+    Layout_OutlineTypedObject,
+    Layout_InlineTypedObject
+};
+
+static inline TypedThingLayout
+GetTypedThingLayout(const Class *clasp)
+{
+    if (IsAnyTypedArrayClass(clasp))
+        return Layout_TypedArray;
+    if (IsOutlineTypedObjectClass(clasp))
+        return Layout_OutlineTypedObject;
+    if (IsInlineTypedObjectClass(clasp))
+        return Layout_InlineTypedObject;
+    MOZ_CRASH("Bad object class");
+}
+
+// Accesses scalar elements of a typed array or typed object.
 class ICGetElem_TypedArray : public ICStub
 {
     friend class ICStubSpace;
@@ -3435,19 +3462,23 @@ class ICGetElem_TypedArray : public ICStub
     class Compiler : public ICStubCompiler {
       RootedShape shape_;
       Scalar::Type type_;
+      TypedThingLayout layout_;
 
       protected:
         bool generateStubCode(MacroAssembler &masm);
 
         virtual int32_t getKey() const {
-            return static_cast<int32_t>(kind) | (static_cast<int32_t>(type_) << 16);
+            return static_cast<int32_t>(kind) |
+                   (static_cast<int32_t>(type_) << 16) |
+                   (static_cast<int32_t>(layout_) << 24);
         }
 
       public:
         Compiler(JSContext *cx, Shape *shape, Scalar::Type type)
           : ICStubCompiler(cx, ICStub::GetElem_TypedArray),
             shape_(cx, shape),
-            type_(type)
+            type_(type),
+            layout_(GetTypedThingLayout(shape->getObjectClass()))
         {}
 
         ICStub *getStub(ICStubSpace *space) {
@@ -3721,6 +3752,7 @@ class ICSetElemDenseAddCompiler : public ICStubCompiler {
     ICUpdatedStub *getStub(ICStubSpace *space);
 };
 
+// Accesses scalar elements of a typed array or typed object.
 class ICSetElem_TypedArray : public ICStub
 {
     friend class ICStubSpace;
@@ -3760,14 +3792,17 @@ class ICSetElem_TypedArray : public ICStub
     class Compiler : public ICStubCompiler {
         RootedShape shape_;
         Scalar::Type type_;
+        TypedThingLayout layout_;
         bool expectOutOfBounds_;
 
       protected:
         bool generateStubCode(MacroAssembler &masm);
 
         virtual int32_t getKey() const {
-            return static_cast<int32_t>(kind) | (static_cast<int32_t>(type_) << 16) |
-                   (static_cast<int32_t>(expectOutOfBounds_) << 24);
+            return static_cast<int32_t>(kind) |
+                   (static_cast<int32_t>(type_) << 16) |
+                   (static_cast<int32_t>(layout_) << 24) |
+                   (static_cast<int32_t>(expectOutOfBounds_) << 28);
         }
 
       public:
@@ -3775,6 +3810,7 @@ class ICSetElem_TypedArray : public ICStub
           : ICStubCompiler(cx, ICStub::SetElem_TypedArray),
             shape_(cx, shape),
             type_(type),
+            layout_(GetTypedThingLayout(shape->getObjectClass())),
             expectOutOfBounds_(expectOutOfBounds)
         {}
 
@@ -4569,6 +4605,84 @@ class ICGetPropNativeDoesNotExistCompiler : public ICStubCompiler
     }
 
     ICStub *getStub(ICStubSpace *space);
+};
+
+static uint32_t
+SimpleTypeDescrKey(SimpleTypeDescr *descr)
+{
+    if (descr->is<ScalarTypeDescr>())
+        return uint32_t(descr->as<ScalarTypeDescr>().type()) << 1;
+    return (uint32_t(descr->as<ReferenceTypeDescr>().type()) << 1) | 1;
+}
+
+class ICGetProp_TypedObject : public ICMonitoredStub
+{
+    friend class ICStubSpace;
+
+    HeapPtrShape shape_;
+    uint32_t fieldOffset_;
+
+    ICGetProp_TypedObject(JitCode *stubCode, ICStub *firstMonitorStub, HandleShape shape,
+                          uint32_t fieldOffset)
+      : ICMonitoredStub(ICStub::GetProp_TypedObject, stubCode, firstMonitorStub),
+        shape_(shape), fieldOffset_(fieldOffset)
+    {
+        (void) fieldOffset_; // Silence clang warning
+    }
+
+  public:
+    static inline ICGetProp_TypedObject *New(ICStubSpace *space, JitCode *code,
+                                             ICStub *firstMonitorStub, HandleShape shape,
+                                             uint32_t fieldOffset)
+    {
+        if (!code)
+            return nullptr;
+        return space->allocate<ICGetProp_TypedObject>(code, firstMonitorStub, shape, fieldOffset);
+    }
+
+    HeapPtrShape &shape() {
+        return shape_;
+    }
+
+    static size_t offsetOfShape() {
+        return offsetof(ICGetProp_TypedObject, shape_);
+    }
+    static size_t offsetOfFieldOffset() {
+        return offsetof(ICGetProp_TypedObject, fieldOffset_);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        ICStub *firstMonitorStub_;
+        RootedShape shape_;
+        uint32_t fieldOffset_;
+        TypedThingLayout layout_;
+        Rooted<SimpleTypeDescr *> fieldDescr_;
+
+        bool generateStubCode(MacroAssembler &masm);
+
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind) |
+                   (static_cast<int32_t>(SimpleTypeDescrKey(fieldDescr_)) << 16) |
+                   (static_cast<int32_t>(layout_) << 24);
+        }
+
+      public:
+        Compiler(JSContext *cx, ICStub *firstMonitorStub,
+                 Shape *shape, uint32_t fieldOffset, SimpleTypeDescr *fieldDescr)
+          : ICStubCompiler(cx, ICStub::GetProp_TypedObject),
+            firstMonitorStub_(firstMonitorStub),
+            shape_(cx, shape),
+            fieldOffset_(fieldOffset),
+            layout_(GetTypedThingLayout(shape->getObjectClass())),
+            fieldDescr_(cx, fieldDescr)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICGetProp_TypedObject::New(space, getStubCode(), firstMonitorStub_,
+                                              shape_, fieldOffset_);
+        }
+    };
 };
 
 class ICGetPropCallGetter : public ICMonitoredStub
@@ -5411,6 +5525,102 @@ class ICSetPropNativeAddCompiler : public ICStubCompiler
     }
 
     ICUpdatedStub *getStub(ICStubSpace *space);
+};
+
+class ICSetProp_TypedObject : public ICUpdatedStub
+{
+    friend class ICStubSpace;
+
+    HeapPtrShape shape_;
+    HeapPtrTypeObject type_;
+    uint32_t fieldOffset_;
+    bool isObjectReference_;
+
+    ICSetProp_TypedObject(JitCode *stubCode, HandleShape shape, HandleTypeObject type,
+                          uint32_t fieldOffset, bool isObjectReference)
+      : ICUpdatedStub(ICStub::SetProp_TypedObject, stubCode),
+        shape_(shape),
+        type_(type),
+        fieldOffset_(fieldOffset),
+        isObjectReference_(isObjectReference)
+    {
+        (void) fieldOffset_; // Silence clang warning
+    }
+
+  public:
+    static inline ICSetProp_TypedObject *New(ICStubSpace *space, JitCode *code,
+                                             HandleShape shape, HandleTypeObject type,
+                                             uint32_t fieldOffset, bool isObjectReference)
+    {
+        if (!code)
+            return nullptr;
+        return space->allocate<ICSetProp_TypedObject>(code, shape, type,
+                                                      fieldOffset, isObjectReference);
+    }
+
+    HeapPtrShape &shape() {
+        return shape_;
+    }
+    HeapPtrTypeObject &type() {
+        return type_;
+    }
+    bool isObjectReference() {
+        return isObjectReference_;
+    }
+
+    static size_t offsetOfShape() {
+        return offsetof(ICSetProp_TypedObject, shape_);
+    }
+    static size_t offsetOfType() {
+        return offsetof(ICSetProp_TypedObject, type_);
+    }
+    static size_t offsetOfFieldOffset() {
+        return offsetof(ICSetProp_TypedObject, fieldOffset_);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        RootedShape shape_;
+        RootedTypeObject type_;
+        uint32_t fieldOffset_;
+        TypedThingLayout layout_;
+        Rooted<SimpleTypeDescr *> fieldDescr_;
+
+        bool generateStubCode(MacroAssembler &masm);
+
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind) |
+                   (static_cast<int32_t>(SimpleTypeDescrKey(fieldDescr_)) << 16) |
+                   (static_cast<int32_t>(layout_) << 24);
+        }
+
+      public:
+        Compiler(JSContext *cx, Shape *shape, types::TypeObject *type, uint32_t fieldOffset,
+                 SimpleTypeDescr *fieldDescr)
+          : ICStubCompiler(cx, ICStub::SetProp_TypedObject),
+            shape_(cx, shape),
+            type_(cx, type),
+            fieldOffset_(fieldOffset),
+            layout_(GetTypedThingLayout(shape->getObjectClass())),
+            fieldDescr_(cx, fieldDescr)
+        {}
+
+        ICUpdatedStub *getStub(ICStubSpace *space) {
+            bool isObjectReference =
+                fieldDescr_->is<ReferenceTypeDescr>() &&
+                fieldDescr_->as<ReferenceTypeDescr>().type() == ReferenceTypeDescr::TYPE_OBJECT;
+            ICUpdatedStub *stub = ICSetProp_TypedObject::New(space, getStubCode(), shape_, type_,
+                                                             fieldOffset_, isObjectReference);
+            if (!stub || !stub->initUpdatingChain(cx, space))
+                return nullptr;
+            return stub;
+        }
+
+        bool needsUpdateStubs() {
+            return fieldDescr_->is<ReferenceTypeDescr>() &&
+                   fieldDescr_->as<ReferenceTypeDescr>().type() != ReferenceTypeDescr::TYPE_STRING;
+        }
+    };
 };
 
 // Base stub for calling a setters on a native object.

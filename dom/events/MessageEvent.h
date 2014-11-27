@@ -27,8 +27,8 @@ class OwningWindowProxyOrMessagePort;
  * See http://www.whatwg.org/specs/web-apps/current-work/#messageevent for
  * further details.
  */
-class MessageEvent : public Event,
-                     public nsIDOMMessageEvent
+class MessageEvent MOZ_FINAL : public Event,
+                               public nsIDOMMessageEvent
 {
 public:
   MessageEvent(EventTarget* aOwner,

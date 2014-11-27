@@ -249,6 +249,9 @@ class MochiRemote(Mochitest):
         self.remoteNSPR = os.path.join(options.remoteTestRoot, "nspr")
         self._dm.removeDir(self.remoteNSPR);
         self._dm.mkDir(self.remoteNSPR);
+        self.remoteChromeTestDir = os.path.join(options.remoteTestRoot, "chrome")
+        self._dm.removeDir(self.remoteChromeTestDir);
+        self._dm.mkDir(self.remoteChromeTestDir);
 
     def cleanup(self, options):
         if self._dm.fileExists(self.remoteLog):
@@ -257,6 +260,7 @@ class MochiRemote(Mochitest):
         else:
             self.log.warning("Unable to retrieve log file (%s) from remote device" % self.remoteLog)
         self._dm.removeDir(self.remoteProfile)
+        self._dm.removeDir(self.remoteChromeTestDir);
         # Don't leave an old robotium.config hanging around; the
         # profile it references was just deleted!
         deviceRoot = self._dm.getDeviceRoot()
@@ -413,19 +417,14 @@ class MochiRemote(Mochitest):
         else:
             return super(MochiRemote, self).buildTestPath(options, testsToFilter)
 
-    def installChromeFile(self, filename, options):
-        parts = options.app.split('/')
-        if (parts[0] == options.app):
-          return "NO_CHROME_ON_DROID"
-        path = '/'.join(parts[:-1])
-        manifest = path + "/chrome/" + os.path.basename(filename)
-        try:
-            self._dm.pushFile(filename, manifest)
-        except devicemanager.DMError:
-            self.log.error("Automation Error: Unable to install Chrome files on device.")
-            raise
-
-        return manifest
+    def getChromeTestDir(self, options):
+        local = super(MochiRemote, self).getChromeTestDir(options)
+        local = os.path.join(local, "chrome")
+        remote = self.remoteChromeTestDir
+        if options.chrome:
+            self.log.info("pushing %s to %s on device..." % (local, remote))
+            self._dm.pushDir(local, remote)
+        return remote
 
     def getLogFilePath(self, logFile):
         return logFile

@@ -36,11 +36,11 @@ class ConcurrentStatementsHolder;
 // Max size of History::mRecentlyVisitedURIs
 #define RECENTLY_VISITED_URI_SIZE 8
 
-class History : public IHistory
-              , public nsIDownloadHistory
-              , public mozIAsyncHistory
-              , public nsIObserver
-              , public nsIMemoryReporter
+class History MOZ_FINAL : public IHistory
+                        , public nsIDownloadHistory
+                        , public mozIAsyncHistory
+                        , public nsIObserver
+                        , public nsIMemoryReporter
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

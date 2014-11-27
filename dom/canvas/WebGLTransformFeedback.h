@@ -3,15 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WEBGLTRANSFORMFEEDBACK_H_
-#define WEBGLTRANSFORMFEEDBACK_H_
-
-#include "WebGLBindableName.h"
-#include "WebGLObjectModel.h"
-
-#include "nsWrapperCache.h"
+#ifndef WEBGL_TRANSFORM_FEEDBACK_H_
+#define WEBGL_TRANSFORM_FEEDBACK_H_
 
 #include "mozilla/LinkedList.h"
+#include "nsWrapperCache.h"
+#include "WebGLBindableName.h"
+#include "WebGLObjectModel.h"
 
 namespace mozilla {
 
@@ -25,24 +23,19 @@ class WebGLTransformFeedback MOZ_FINAL
     friend class WebGLContext;
 
 public:
-
-    explicit WebGLTransformFeedback(WebGLContext* aContext);
+    explicit WebGLTransformFeedback(WebGLContext* webgl);
 
     void Delete();
     WebGLContext* GetParentObject() const;
-
-    // -------------------------------------------------------------------------
-    // IMPLEMENT NS
     virtual JSObject* WrapObject(JSContext* cx) MOZ_OVERRIDE;
 
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLTransformFeedback)
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLTransformFeedback)
 
 private:
-
     ~WebGLTransformFeedback();
 };
 
-}
+} // namespace mozilla
 
-#endif // !WEBGLTRANSFORMFEEDBACK_H_
+#endif // WEBGL_TRANSFORM_FEEDBACK_H_
