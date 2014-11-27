@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-enum SelectionChangeReason {
+enum SelectionState {
   "drag",
   "mousedown",
   "mouseup",
@@ -14,16 +14,16 @@ enum SelectionChangeReason {
   "collapsetoend"
 };
 
-dictionary SelectionChangeEventInit : EventInit {
+dictionary SelectionStateChangedEventInit : EventInit {
   DOMString selectedText = "";
   DOMRectReadOnly? boundingClientRect = null;
-  sequence<SelectionChangeReason> reasons = [];
+  sequence<SelectionState> states = [];
 };
 
-[Constructor(DOMString type, optional SelectionChangeEventInit eventInit),
+[Constructor(DOMString type, optional SelectionStateChangedEventInit eventInit),
  ChromeOnly]
-interface SelectionChangeEvent : Event {
+interface SelectionStateChangedEvent : Event {
   readonly attribute DOMString selectedText;
   readonly attribute DOMRectReadOnly? boundingClientRect;
-  [Cached, Pure] readonly attribute sequence<SelectionChangeReason> reasons;
+  [Cached, Pure] readonly attribute sequence<SelectionState> states;
 };

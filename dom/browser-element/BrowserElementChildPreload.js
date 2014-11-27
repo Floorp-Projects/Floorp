@@ -94,7 +94,7 @@ function BrowserElementChild() {
 
   this._isContentWindowCreated = false;
   this._pendingSetInputMethodActive = [];
-  this._forceDispatchSelectionChange = false;
+  this._forceDispatchSelectionStateChanged = false;
 
   this._init();
 };
@@ -162,8 +162,8 @@ BrowserElementChild.prototype = {
                      /* useCapture = */ true,
                      /* wantsUntrusted = */ false);
 
-    addEventListener('mozselectionchange',
-                     this._selectionChangeHandler.bind(this),
+    addEventListener('mozselectionstatechanged',
+                     this._selectionStateChangedHandler.bind(this),
                      /* useCapture = */ false,
                      /* wantsUntrusted = */ false);
 
@@ -592,7 +592,7 @@ BrowserElementChild.prototype = {
     sendAsyncMsg('scrollviewchange', detail);
   },
 
-  _selectionChangeHandler: function(e) {
+  _selectionStateChangedHandler: function(e) {
     e.stopPropagation();
     let boundingClientRect = e.boundingClientRect;
     if (!boundingClientRect) {
@@ -600,22 +600,22 @@ BrowserElementChild.prototype = {
     }
 
     let isCollapsed = (e.selectedText.length == 0);
-    let isMouseUp = (e.reasons.indexOf('mouseup') == 0);
+    let isMouseUp = (e.states.indexOf('mouseup') == 0);
     let canPaste = this._isCommandEnabled("paste");
 
-    if (!this._forceDispatchSelectionChange) {
-      // SelectionChange events with the following reasons are not
+    if (!this._forceDispatchSelectionStateChanged) {
+      // SelectionStateChanged events with the following states are not
       // necessary to trigger the text dialog, bypass these events
       // by default.
       //
-      if(e.reasons.length == 0 ||
-         e.reasons.indexOf('drag') == 0 ||
-         e.reasons.indexOf('keypress') == 0 ||
-         e.reasons.indexOf('mousedown') == 0) {
+      if(e.states.length == 0 ||
+         e.states.indexOf('drag') == 0 ||
+         e.states.indexOf('keypress') == 0 ||
+         e.states.indexOf('mousedown') == 0) {
         return;
       }
 
-      // The collapsed SelectionChange event is unnecessary to dispatch,
+      // The collapsed SelectionStateChanged event is unnecessary to dispatch,
       // bypass this event by default. But there is one exception to support
       // the shortcut mode which can paste previous copied content easily
       if (isCollapsed) {
@@ -631,13 +631,13 @@ BrowserElementChild.prototype = {
     // mousedown/mouseup, no matter touch or long tap on the screen. When there is
     // is a non-collapsed selection change event which comes with mouseup reason,
     // it implies some texts are selected. In order to hide the text dialog during next
-    // touch, here sets the forceDispatchSelectionChange flag as true to dispatch the
+    // touch, here sets the forceDispatchSelectionStateChanged flag as true to dispatch the
     // next SelecitonChange event(with the mousedown) so that the parent side can
     // hide the text dialog.
     if (isMouseUp && !isCollapsed) {
-      this._forceDispatchSelectionChange = true;
+      this._forceDispatchSelectionStateChanged = true;
     } else {
-      this._forceDispatchSelectionChange = false;
+      this._forceDispatchSelectionStateChanged = false;
     }
 
     let zoomFactor = content.screen.width / content.innerWidth;
@@ -658,7 +658,7 @@ BrowserElementChild.prototype = {
         canPaste: this._isCommandEnabled("paste"),
       },
       zoomFactor: zoomFactor,
-      reasons: e.reasons,
+      states: e.states,
       isCollapsed: (e.selectedText.length == 0),
     };
 
@@ -673,7 +673,7 @@ BrowserElementChild.prototype = {
       currentWindow = currentWindow.parent;
     }
 
-    sendAsyncMsg('selectionchange', detail);
+    sendAsyncMsg('selectionstatechanged', detail);
   },
 
   _themeColorChangedHandler: function(eventType, target) {
