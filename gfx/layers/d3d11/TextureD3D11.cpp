@@ -291,7 +291,14 @@ TextureClientD3D11::Unlock()
     HRESULT hr = device->CreateTexture2D(&desc, nullptr, byRef(tex));
 
     if (FAILED(hr)) {
-      gfx::gfxCriticalError() << "[D3D11] CreateTexture2D failure " << mSize << " Code: " << gfx::hexa(hr);
+      // Temporary patch; see bug 1095289 before bug 1074952 is fixed
+      static int limitDueTo1095289 = 0;
+      if (limitDueTo1095289 < 5) {
+        gfx::gfxCriticalError() << "[D3D11] CreateTexture2D failure (1) " << mSize << " Code: " << gfx::hexa(hr);
+      } else if (limitDueTo1095289 == 5) {
+        gfx::gfxCriticalError() << "[D3D11] CreateTexture2D failure (1-stopping further reports after 5+ occurences) " << mSize << " Code: " << gfx::hexa(hr);
+      }
+      limitDueTo1095289 += 1;
       return;
     }
 
@@ -378,7 +385,14 @@ TextureClientD3D11::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlag
   }
 
   if (FAILED(hr)) {
-    gfx::gfxCriticalError() << "[D3D11] CreateTexture2D failure " << aSize << " Code: " << gfx::hexa(hr);
+    // Temporary patch; see bug 1095289 before bug 1074952 is fixed
+    static int limitDueTo1095289 = 0;
+    if (limitDueTo1095289 < 5) {
+      gfx::gfxCriticalError() << "[D3D11] CreateTexture2D failure (2) " << aSize << " Code: " << gfx::hexa(hr);
+    } else if (limitDueTo1095289 == 5) {
+      gfx::gfxCriticalError() << "[D3D11] CreateTexture2D failure (2-stopping further reports after 5+ occurences) " << aSize << " Code: " << gfx::hexa(hr);
+    }
+    limitDueTo1095289 += 1;
     return false;
   }
 
