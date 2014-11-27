@@ -595,9 +595,6 @@ BrowserElementChild.prototype = {
   _selectionStateChangedHandler: function(e) {
     e.stopPropagation();
     let boundingClientRect = e.boundingClientRect;
-    if (!boundingClientRect) {
-      return;
-    }
 
     let isCollapsed = (e.selectedText.length == 0);
     let isMouseUp = (e.states.indexOf('mouseup') == 0);
@@ -644,12 +641,12 @@ BrowserElementChild.prototype = {
 
     let detail = {
       rect: {
-        width: boundingClientRect.width,
-        height: boundingClientRect.height,
-        top: boundingClientRect.top,
-        bottom: boundingClientRect.bottom,
-        left: boundingClientRect.left,
-        right: boundingClientRect.right,
+        width: boundingClientRect ? boundingClientRect.width : 0,
+        height: boundingClientRect ? boundingClientRect.height : 0,
+        top: boundingClientRect ? boundingClientRect.top : 0,
+        bottom: boundingClientRect ? boundingClientRect.bottom : 0,
+        left: boundingClientRect ? boundingClientRect.left : 0,
+        right: boundingClientRect ? boundingClientRect.right : 0,
       },
       commands: {
         canSelectAll: this._isCommandEnabled("selectall"),
