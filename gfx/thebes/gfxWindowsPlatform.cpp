@@ -199,7 +199,7 @@ class GPUAdapterReporter : public nsIMemoryReporter
         IDXGIDevice *DXGIDevice;
         bool result = false;
 
-        if (D2D10Device = mozilla::gfx::Factory::GetDirect3D10Device()) {
+        if ((D2D10Device = mozilla::gfx::Factory::GetDirect3D10Device())) {
             if (D2D10Device->QueryInterface(__uuidof(IDXGIDevice), (void **)&DXGIDevice) == S_OK) {
                 result = (DXGIDevice->GetAdapter(DXGIAdapter) == S_OK);
                 DXGIDevice->Release();
@@ -232,7 +232,7 @@ public:
         if (!IsWin7OrLater())
             return NS_OK;
 
-        if (gdi32Handle = LoadLibrary(TEXT("gdi32.dll")))
+        if ((gdi32Handle = LoadLibrary(TEXT("gdi32.dll"))))
             queryD3DKMTStatistics = (PFND3DKMTQS)GetProcAddress(gdi32Handle, "D3DKMTQueryStatistics");
 
         if (queryD3DKMTStatistics && GetDXGIAdapter(&DXGIAdapter)) {
@@ -619,11 +619,13 @@ gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
         mozilla::gfx::Factory::SetDirect3D10Device(cairo_d2d_device_get_device(mD2DDevice));
     }
 
+#ifdef USE_D2D1_1
     ScopedGfxFeatureReporter reporter1_1("D2D1.1");
 
     if (Factory::SupportsD2D1()) {
       reporter1_1.SetSuccessful();
     }
+#endif
 #endif
 }
 
@@ -1694,7 +1696,7 @@ gfxWindowsPlatform::InitD3D11Devices()
   }
 
   HRESULT hr = E_INVALIDARG;
-  __try {
+  MOZ_SEH_TRY {
     hr = d3d11CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
                            // Use
                            // D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS
@@ -1704,7 +1706,7 @@ gfxWindowsPlatform::InitD3D11Devices()
                            featureLevels.Elements(), featureLevels.Length(),
                            D3D11_SDK_VERSION, byRef(mD3D11Device),
                            nullptr, nullptr);
-  } __except (EXCEPTION_EXECUTE_HANDLER) {
+  } MOZ_SEH_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
     mD3D11Device = nullptr;
     return;
   }
@@ -1719,13 +1721,13 @@ gfxWindowsPlatform::InitD3D11Devices()
 #ifdef USE_D2D1_1
   if (Factory::SupportsD2D1()) {
     hr = E_INVALIDARG;
-    __try {
+    MOZ_SEH_TRY {
       hr = d3d11CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
                              D3D11_CREATE_DEVICE_BGRA_SUPPORT,
                              featureLevels.Elements(), featureLevels.Length(),
                              D3D11_SDK_VERSION, byRef(mD3D11ContentDevice),
                              nullptr, nullptr);
-    } __except(EXCEPTION_EXECUTE_HANDLER) {
+    } MOZ_SEH_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
       mD3D11Device = nullptr;
       return;
     }
