@@ -35,7 +35,7 @@ function test() {
       "No breakpoints currently shown in the editor.");
 
     gEditor.on("breakpointAdded", onEditorBreakpointAdd);
-    gPanel.addBreakpoint({ url: gSources.selectedValue, line: 4 }).then(onBreakpointAdd);
+    gPanel.addBreakpoint({ actor: gSources.selectedValue, line: 4 }).then(onBreakpointAdd);
   }
 
   let onBpDebuggerAdd = false;
@@ -44,12 +44,12 @@ function test() {
   function onBreakpointAdd(aBreakpointClient) {
     ok(aBreakpointClient,
       "Breakpoint added, client received.");
-    is(aBreakpointClient.location.url, gSources.selectedValue,
+    is(aBreakpointClient.location.actor, gSources.selectedValue,
       "Breakpoint client url is the same.");
     is(aBreakpointClient.location.line, 6,
       "Breakpoint client line is new.");
 
-    is(aBreakpointClient.requestedLocation.url, gSources.selectedValue,
+    is(aBreakpointClient.requestedLocation.actor, gSources.selectedValue,
       "Requested location url is correct");
     is(aBreakpointClient.requestedLocation.line, 4,
       "Requested location line is correct");
@@ -64,19 +64,19 @@ function test() {
     is(gEditor.getBreakpoints().length, 1,
       "There is only one breakpoint in the editor");
 
-    ok(!gBreakpoints._getAdded({ url: gSources.selectedValue, line: 4 }),
+    ok(!gBreakpoints._getAdded({ actor: gSources.selectedValue, line: 4 }),
       "There isn't any breakpoint added on an invalid line.");
-    ok(!gBreakpoints._getRemoving({ url: gSources.selectedValue, line: 4 }),
+    ok(!gBreakpoints._getRemoving({ actor: gSources.selectedValue, line: 4 }),
       "There isn't any breakpoint removed from an invalid line.");
 
-    ok(gBreakpoints._getAdded({ url: gSources.selectedValue, line: 6 }),
+    ok(gBreakpoints._getAdded({ actor: gSources.selectedValue, line: 6 }),
       "There is a breakpoint added on the actual line.");
-    ok(!gBreakpoints._getRemoving({ url: gSources.selectedValue, line: 6 }),
+    ok(!gBreakpoints._getRemoving({ actor: gSources.selectedValue, line: 6 }),
       "There isn't any breakpoint removed from the actual line.");
 
-    gBreakpoints._getAdded({ url: gSources.selectedValue, line: 6 }).then(aBreakpointClient => {
-      is(aBreakpointClient.location.url, gSources.selectedValue,
-        "Breakpoint client location url is correct.");
+    gBreakpoints._getAdded({ actor: gSources.selectedValue, line: 6 }).then(aBreakpointClient => {
+      is(aBreakpointClient.location.actor, gSources.selectedValue,
+        "Breakpoint client location actor is correct.");
       is(aBreakpointClient.location.line, 6,
         "Breakpoint client location line is correct.");
 

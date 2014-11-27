@@ -95,7 +95,7 @@ xul|*.tabs-right {
 xul|tab {
   -moz-appearance: none;
   margin-top: 0;
-  padding: 0 20px;
+  padding: 4px 20px;
   min-height: 44px;
   color: #424f5a;
   background-color: #fbfbfb;
@@ -109,7 +109,8 @@ xul|tab:hover {
 
 xul|tab[selected] {
   background-color: #ebebeb;
-  box-shadow: inset 0 -4px 0 0 #ff9500;
+  padding-bottom: 0; /* compensate the 4px border */
+  border-bottom: 4px solid #ff9500;
 }
 
 xul|*.tab-text {
@@ -291,10 +292,10 @@ xul|menulist > xul|menupopup xul|menuitem,
 xul|button[type="menu"] > xul|menupopup xul|menu,
 xul|button[type="menu"] > xul|menupopup xul|menuitem {
   -moz-appearance: none;
-  font-size: 1.25rem;
-  line-height: 22px;
-  height: 30px;
+  font-size: 1em;
   color: #333;
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
   -moz-padding-start: 10px;
   -moz-padding-end: 30px;
 }
@@ -485,7 +486,8 @@ xul|*.category:hover {
 xul|*.category[selected] {
   background-color: #343f48;
   color: #f2f2f2;
-  box-shadow: inset 4px 0 0 0 #ff9500;
+  -moz-padding-start: 11px; /* compensate the 4px border */
+  -moz-border-start: solid 4px #ff9500;
 }
 
 xul|*#categories[keyboard-navigation="true"]:-moz-focusring > xul|*.category[current] {

@@ -61,7 +61,7 @@ const object = require("sdk/util/object");
 const events = require("sdk/event/core");
 const {Unknown} = require("sdk/platform/xpcom");
 const {Class} = require("sdk/core/heritage");
-const {PageStyleActor} = require("devtools/server/actors/styles");
+const {PageStyleActor, getFontPreviewData} = require("devtools/server/actors/styles");
 const {
   HighlighterActor,
   CustomHighlighterActor,
@@ -663,28 +663,14 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
    */
   getFontFamilyDataURL: method(function(font, fillStyle="black") {
     let doc = this.rawNode.ownerDocument;
-    let canvas = doc.createElementNS(XHTML_NS, "canvas");
-    let ctx = canvas.getContext("2d");
-    let fontValue = FONT_FAMILY_PREVIEW_TEXT_SIZE + "px " + font + ", serif";
+    let options = {
+      previewText: FONT_FAMILY_PREVIEW_TEXT,
+      previewFontSize: FONT_FAMILY_PREVIEW_TEXT_SIZE,
+      fillStyle: fillStyle
+    }
+    let { dataURL, size } = getFontPreviewData(font, doc, options);
 
-    // Get the correct preview text measurements and set the canvas dimensions
-    ctx.font = fontValue;
-    let textWidth = ctx.measureText(FONT_FAMILY_PREVIEW_TEXT).width;
-    canvas.width = textWidth * 2;
-    canvas.height = FONT_FAMILY_PREVIEW_TEXT_SIZE * 3;
-
-    ctx.font = fontValue;
-    ctx.fillStyle = fillStyle;
-
-    // Align the text to be vertically center in the tooltip and
-    // oversample the canvas for better text quality
-    ctx.textBaseline = "top";
-    ctx.scale(2, 2);
-    ctx.fillText(FONT_FAMILY_PREVIEW_TEXT, 0, Math.round(FONT_FAMILY_PREVIEW_TEXT_SIZE / 3));
-
-    let dataURL = canvas.toDataURL("image/png");
-
-    return { data: LongStringActor(this.conn, dataURL), size: textWidth };
+    return { data: LongStringActor(this.conn, dataURL), size: size };
   }, {
     request: {font: Arg(0, "string"), fillStyle: Arg(1, "nullable:string")},
     response: RetVal("imageData")

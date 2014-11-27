@@ -8,6 +8,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/devtools/Loader.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+Cu.import("resource://gre/modules/devtools/Console.jsm");
 
 let require = devtools.require;
 devtools.lazyRequireGetter(this, "Services");
@@ -41,6 +42,10 @@ const EVENTS = {
 
   // Emitted by the OverviewView when more data has been rendered
   OVERVIEW_RENDERED: "Performance:UI:OverviewRendered",
+  // Emitted by the OverviewView when a range has been selected in the graphs
+  OVERVIEW_RANGE_SELECTED: "Performance:UI:OverviewRangeSelected",
+  // Emitted by the OverviewView when a selection range has been removed
+  OVERVIEW_RANGE_CLEARED: "Performance:UI:OverviewRangeCleared",
 
   // Emitted by the CallTreeView when a call tree has been rendered
   CALL_TREE_RENDERED: "Performance:UI:CallTreeRendered"

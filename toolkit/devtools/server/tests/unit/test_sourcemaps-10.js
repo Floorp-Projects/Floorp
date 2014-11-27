@@ -66,8 +66,8 @@ function run_code() {
   return d.promise;
 }
 
-function test_frame_location({ frame: { where: { url, line, column } } }) {
-  do_check_eq(url, "http://example.com/www/js/c.js");
+function test_frame_location({ frame: { where: { source, line, column } } }) {
+  do_check_eq(source.url, "http://example.com/www/js/c.js");
   do_check_eq(line, 2);
   do_check_eq(column, 0);
 }

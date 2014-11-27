@@ -342,22 +342,37 @@ exports.dbg_assert = function dbg_assert(cond, e) {
 
 
 /**
- * Utility function for updating an object with the properties of another
- * object.
+ * Utility function for updating an object with the properties of
+ * other objects.
  *
  * @param aTarget Object
  *        The object being updated.
  * @param aNewAttrs Object
- *        The new attributes being set on the target.
+ *        The rest params are objects to update aTarget with. You
+ *        can pass as many as you like.
  */
-exports.update = function update(aTarget, aNewAttrs) {
-  for (let key in aNewAttrs) {
-    let desc = Object.getOwnPropertyDescriptor(aNewAttrs, key);
+exports.update = function update(aTarget, ...aArgs) {
+  for (let attrs of aArgs) {
+    for (let key in attrs) {
+      let desc = Object.getOwnPropertyDescriptor(attrs, key);
 
-    if (desc) {
-      Object.defineProperty(aTarget, key, desc);
+      if (desc) {
+        Object.defineProperty(aTarget, key, desc);
+      }
     }
   }
+
+  return aTarget;
+}
+
+/**
+ * Utility function for getting the values from an object as an array
+ *
+ * @param aObject Object
+ *        The object to iterate over
+ */
+exports.values = function values(aObject) {
+  return Object.keys(aObject).map(k => aObject[k]);
 }
 
 /**
@@ -443,8 +458,6 @@ exports.fetch = function fetch(aURL, aOptions={ loadFromCache: true }) {
     url = "file://" + url;
     scheme = Services.io.extractScheme(url);
   }
-
-  dump('scheme: ' + scheme);
 
   switch (scheme) {
     case "file":

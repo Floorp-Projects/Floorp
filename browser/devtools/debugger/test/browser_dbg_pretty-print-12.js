@@ -21,8 +21,8 @@ function test() {
 
     waitForSourceShown(gPanel, "")
       .then(() => {
-        let shown = ensureSourceIs(gPanel, TAB_URL, true)
-        gSources.selectedValue = TAB_URL;
+        let shown = ensureSourceIs(gPanel, TAB_URL, true);
+        gSources.selectedValue = getSourceActor(gSources, TAB_URL);
         return shown;
       })
       .then(clickPrettyPrintButton)
