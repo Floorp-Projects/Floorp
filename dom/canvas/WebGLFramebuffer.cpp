@@ -223,25 +223,6 @@ WebGLFramebuffer::Attachment::RectangleObject() const
 // The following IsValidFBOTextureXXX functions check the internal format that
 // is used by GL or GL ES texture formats.  This corresponds to the state that
 // is stored in WebGLTexture::ImageInfo::InternalFormat()
-static inline bool
-IsValidFBOTextureColorFormat(TexInternalFormat internalformat)
-{
-    /* These formats are internal formats for each texture -- the actual low
-     * level format, which we might have to do conversions for when running
-     * against desktop GL (e.g. GL_RGBA + GL_FLOAT -> GL_RGBA32F).
-     *
-     * This function just handles all of them whether desktop GL or ES.
-     */
-
-    TexInternalFormat unsizedformat = UnsizedInternalFormatFromInternalFormat(internalformat);
-    return unsizedformat == LOCAL_GL_ALPHA ||
-           unsizedformat == LOCAL_GL_LUMINANCE ||
-           unsizedformat == LOCAL_GL_LUMINANCE_ALPHA ||
-           unsizedformat == LOCAL_GL_RGB ||
-           unsizedformat == LOCAL_GL_RGBA ||
-           unsizedformat == LOCAL_GL_SRGB ||
-           unsizedformat == LOCAL_GL_SRGB_ALPHA;
-}
 
 static inline bool
 IsValidFBOTextureDepthFormat(GLenum internalformat)
@@ -258,14 +239,6 @@ IsValidFBOTextureDepthStencilFormat(GLenum internalformat)
 // The following IsValidFBORenderbufferXXX functions check the internal format
 // that is stored by WebGLRenderbuffer::InternalFormat(). Valid values can be
 // found in WebGLContext::RenderbufferStorage.
-static inline bool
-IsValidFBORenderbufferColorFormat(GLenum internalFormat)
-{
-    return  internalFormat == LOCAL_GL_RGB565 ||
-            internalFormat == LOCAL_GL_RGB5_A1 ||
-            internalFormat == LOCAL_GL_RGBA4 ||
-            internalFormat == LOCAL_GL_SRGB8_ALPHA8_EXT;
-}
 
 static inline bool
 IsValidFBORenderbufferDepthFormat(GLenum internalFormat)
@@ -702,7 +675,6 @@ WebGLFramebuffer::HasDefinedAttachments() const
     return hasAttachments;
 }
 
-
 static bool
 IsIncomplete(const WebGLFramebuffer::Attachment& cur)
 {
@@ -781,7 +753,6 @@ WebGLFramebuffer::AllImageRectsMatch() const
 
     return imageRectsMatch;
 }
-
 
 const WebGLRectangleObject&
 WebGLFramebuffer::RectangleObject() const
