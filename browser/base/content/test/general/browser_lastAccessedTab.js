@@ -5,7 +5,7 @@ let originalTab;
 let newTab;
 
 function isCurrent(tab, msg) {
-  const tolerance = 1;
+  const tolerance = 5;
   const difference = Math.abs(Date.now() - tab.lastAccessed);
   ok(difference <= tolerance, msg + " (difference: " + difference + ")");
 }
