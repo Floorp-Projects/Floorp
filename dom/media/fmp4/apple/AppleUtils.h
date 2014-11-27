@@ -7,9 +7,7 @@
 #ifndef mozilla_AppleUtils_h
 #define mozilla_AppleUtils_h
 
-#include <AudioToolbox/AudioToolbox.h>
 #include "mozilla/Attributes.h"
-#include "nsError.h"
 
 namespace mozilla {
 
