@@ -165,8 +165,7 @@ int wmain(int argc, wchar_t *argv[])
   int i;
   int rv = 0;
 
-  if (argc > 1 && (_wcsicmp(argv[1], L"-check-one") != 0 ||
-                   _wcsicmp(argv[1], L"-check-one") == 0 && argc != 3)) {
+  if (argc > 1 && (_wcsicmp(argv[1], L"-check-one") != 0 || argc != 3)) {
     fwprintf(stderr, L"Displays and validates output from MakeCommandLine.\n\n");
     fwprintf(stderr, L"Usage: %s -check-one <test number>\n\n", argv[0]);
     fwprintf(stderr, L"  <test number>\tSpecifies the test number to run from the\n");
@@ -206,7 +205,7 @@ int wmain(int argc, wchar_t *argv[])
 
     if (!GetPrivateProfileStringW(L"MakeCommandLineTests", sInputKey, nullptr,
                                   sInputVal, MAXPATHLEN, inifile)) {
-      if (i == 0 || argc > 2 && _wcsicmp(argv[1], L"-check-one") == 0) {
+      if (i == 0 || (argc > 2 && _wcsicmp(argv[1], L"-check-one") == 0)) {
         wprintf(L"TEST-UNEXPECTED-FAIL | %s | see following explanation:\n", TEST_NAME);
         wprintf(L"ERROR: Either the TestXREMakeCommandLineWin.ini file doesn't exist\n");
         if (argc > 1 && _wcsicmp(argv[1], L"-check-one") == 0 && argc == 3) {

@@ -395,7 +395,7 @@ public:
   void ClearCachedInheritedStyleDataOnDescendants(uint32_t aStructs);
 
 #ifdef DEBUG
-  void List(FILE* out, int32_t aIndent);
+  void List(FILE* out, int32_t aIndent, bool aListDescendants = true);
   static void AssertStyleStructMaxDifferenceValid();
   static const char* StructName(nsStyleStructID aSID);
   static bool LookupStruct(const nsACString& aName, nsStyleStructID& aResult);
