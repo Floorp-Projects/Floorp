@@ -82,9 +82,9 @@ nsMenuBarFrame::Init(nsIContent*       aContent,
   mTarget->AddSystemEventListener(NS_LITERAL_STRING("keyup"), mMenuBarListener, false);
 
   // mousedown event should be handled in all phase
-  mTarget->AddSystemEventListener(NS_LITERAL_STRING("mousedown"), mMenuBarListener, true);
-  mTarget->AddSystemEventListener(NS_LITERAL_STRING("mousedown"), mMenuBarListener, false);
-  mTarget->AddSystemEventListener(NS_LITERAL_STRING("blur"), mMenuBarListener, true);
+  mTarget->AddEventListener(NS_LITERAL_STRING("mousedown"), mMenuBarListener, true);
+  mTarget->AddEventListener(NS_LITERAL_STRING("mousedown"), mMenuBarListener, false);
+  mTarget->AddEventListener(NS_LITERAL_STRING("blur"), mMenuBarListener, true);
 }
 
 NS_IMETHODIMP
@@ -416,9 +416,9 @@ nsMenuBarFrame::DestroyFrom(nsIFrame* aDestructRoot)
   mTarget->RemoveSystemEventListener(NS_LITERAL_STRING("keydown"), mMenuBarListener, false);
   mTarget->RemoveSystemEventListener(NS_LITERAL_STRING("keyup"), mMenuBarListener, false);
 
-  mTarget->RemoveSystemEventListener(NS_LITERAL_STRING("mousedown"), mMenuBarListener, true);
-  mTarget->RemoveSystemEventListener(NS_LITERAL_STRING("mousedown"), mMenuBarListener, false);
-  mTarget->RemoveSystemEventListener(NS_LITERAL_STRING("blur"), mMenuBarListener, true);
+  mTarget->RemoveEventListener(NS_LITERAL_STRING("mousedown"), mMenuBarListener, true);
+  mTarget->RemoveEventListener(NS_LITERAL_STRING("mousedown"), mMenuBarListener, false);
+  mTarget->RemoveEventListener(NS_LITERAL_STRING("blur"), mMenuBarListener, true);
 
   NS_IF_RELEASE(mMenuBarListener);
 
