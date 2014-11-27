@@ -130,8 +130,8 @@ UpdateProcess.prototype = {
  */
 function CssHtmlTree(aStyleInspector, aPageStyle)
 {
-  this.styleWindow = aStyleInspector.window;
-  this.styleDocument = aStyleInspector.window.document;
+  this.styleWindow = aStyleInspector.doc.defaultView;
+  this.styleDocument = aStyleInspector.doc;
   this.styleInspector = aStyleInspector;
   this.inspector = this.styleInspector.inspector;
   this.pageStyle = aPageStyle;
@@ -284,12 +284,12 @@ CssHtmlTree.prototype = {
   },
 
   /**
-   * Update the highlighted element. The CssHtmlTree panel will show the style
-   * information for the given element.
+   * Update the view with a new selected element.
+   * The CssHtmlTree panel will show the style information for the given element.
    * @param {NodeFront} aElement The highlighted node to get styles for.
    * @returns a promise that will be resolved when highlighting is complete.
    */
-  highlight: function(aElement) {
+  selectElement: function(aElement) {
     if (!aElement) {
       this.viewedElement = null;
       this.noResults.hidden = false;

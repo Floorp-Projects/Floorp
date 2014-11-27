@@ -36,11 +36,13 @@ function run_test_with_server(aServer, aCallback)
 function test_child_breakpoint()
 {
   gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-    let path = getFilePath('test_breakpoint-11.js');
-    let location = { url: path, line: gDebuggee.line0 + 2};
-    gThreadClient.setBreakpoint(location, function (aResponse, bpClient) {
+    let source = gThreadClient.source(aPacket.frame.where.source);
+    let location = { line: gDebuggee.line0 + 2 };
+
+    source.setBreakpoint(location, function (aResponse, bpClient) {
       // actualLocation is not returned when breakpoints don't skip forward.
       do_check_eq(aResponse.actualLocation, undefined);
+
       gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
         // Check the return value.
         do_check_eq(aPacket.type, "paused");

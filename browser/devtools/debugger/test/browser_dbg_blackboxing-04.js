@@ -10,7 +10,7 @@ const TAB_URL = EXAMPLE_URL + "doc_blackboxing.html";
 const BLACKBOXME_URL = EXAMPLE_URL + "code_blackboxing_blackboxme.js"
 
 let gTab, gPanel, gDebugger;
-let gFrames;
+let gFrames, gSources;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
@@ -18,6 +18,7 @@ function test() {
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gFrames = gDebugger.DebuggerView.StackFrames;
+    gSources = gDebugger.DebuggerView.Sources;
 
     waitForSourceShown(gPanel, BLACKBOXME_URL)
       .then(blackBoxSources)
@@ -31,9 +32,10 @@ function test() {
 
 function blackBoxSources() {
   let finished = waitForThreadEvents(gPanel, "blackboxchange", 3);
-  toggleBlackBoxing(gPanel, EXAMPLE_URL + "code_blackboxing_one.js");
-  toggleBlackBoxing(gPanel, EXAMPLE_URL + "code_blackboxing_two.js");
-  toggleBlackBoxing(gPanel, EXAMPLE_URL + "code_blackboxing_three.js");
+
+  toggleBlackBoxing(gPanel, getSourceActor(gSources, EXAMPLE_URL + "code_blackboxing_one.js"));
+  toggleBlackBoxing(gPanel, getSourceActor(gSources, EXAMPLE_URL + "code_blackboxing_two.js"));
+  toggleBlackBoxing(gPanel, getSourceActor(gSources, EXAMPLE_URL + "code_blackboxing_three.js"));
   return finished;
 }
 
@@ -54,4 +56,5 @@ registerCleanupFunction(function() {
   gPanel = null;
   gDebugger = null;
   gFrames = null;
+  gSources = null;
 });

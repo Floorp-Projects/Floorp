@@ -34,26 +34,31 @@ function run_test_with_server(aServer, aCallback)
 
 function test_breakpoint_running()
 {
-  gDebuggee.eval("var line0 = Error().lineNumber;\n" +
-                 "var a = 1;\n" +  // line0 + 1
-                 "var b = 2;\n");  // line0 + 2
-
-  let path = getFilePath('test_breakpoint-02.js');
-  let location = { url: path, line: gDebuggee.line0 + 2};
-
-  // Setting the breakpoint later should interrupt the debuggee.
   gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-    do_check_eq(aPacket.type, "paused");
-    do_check_eq(aPacket.why.type, "interrupted");
-  });
+    let location = { line: gDebuggee.line0 + 3 };
 
-  gThreadClient.setBreakpoint(location, function(aResponse) {
-    // Eval scripts don't stick around long enough for the breakpoint to be set,
-    // so just make sure we got the expected response from the actor.
-    do_check_neq(aResponse.error, "noScript");
+    gThreadClient.resume();
 
-    do_execute_soon(function() {
-      gClient.close(gCallback);
+    // Setting the breakpoint later should interrupt the debuggee.
+    gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
+      do_check_eq(aPacket.type, "paused");
+      do_check_eq(aPacket.why.type, "interrupted");
+    });
+
+    let source = gThreadClient.source(aPacket.frame.where.source);
+    source.setBreakpoint(location, function(aResponse) {
+      // Eval scripts don't stick around long enough for the breakpoint to be set,
+      // so just make sure we got the expected response from the actor.
+      do_check_neq(aResponse.error, "noScript");
+
+      do_execute_soon(function() {
+        gClient.close(gCallback);
+      });
     });
   });
+
+  gDebuggee.eval("var line0 = Error().lineNumber;\n" +
+                 "debugger;\n" +
+                 "var a = 1;\n" +  // line0 + 2
+                 "var b = 2;\n");  // line0 + 3
 }

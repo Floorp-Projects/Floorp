@@ -635,7 +635,7 @@ loop.contacts = (function(_, mozL10n) {
           <input ref="email" type="email" required={phoneOrEmailRequired}
                  className={cx({pristine: this.state.pristine})}
                  valueLink={this.linkState("email")} />
-          <label>{mozL10n.get("new_contact_phone_placeholder")}</label>
+          <label>{mozL10n.get("new_contact_fxos_phone_placeholder")}</label>
           <input ref="tel" type="tel" required={phoneOrEmailRequired}
                  className={cx({pristine: this.state.pristine})}
                  valueLink={this.linkState("tel")} />

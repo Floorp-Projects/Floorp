@@ -35,13 +35,13 @@ function addBreakpoint() {
     testResume();
   });
 
-  gPanel.addBreakpoint({ url: SOURCE_URL, line: 5 });
+  gPanel.addBreakpoint({ actor: getSourceActor(gSources, SOURCE_URL), line: 5 });
 }
 
 function testResume() {
   is(gDebugger.gThreadClient.state, "paused",
     "The breakpoint wasn't hit yet (1).");
-  is(gSources.selectedValue, SOURCE_URL,
+  is(getSelectedSourceURL(gSources), SOURCE_URL,
     "The currently shown source is incorrect (1).");
   ok(isCaretPos(gPanel, 5),
     "The source editor caret position is incorrect (1).");
@@ -52,7 +52,7 @@ function testResume() {
 function testClick() {
   isnot(gDebugger.gThreadClient.state, "paused",
     "The breakpoint wasn't hit yet (2).");
-  is(gSources.selectedValue, SOURCE_URL,
+  is(getSelectedSourceURL(gSources), SOURCE_URL,
     "The currently shown source is incorrect (2).");
   ok(isCaretPos(gPanel, 5),
     "The source editor caret position is incorrect (2).");
@@ -73,8 +73,8 @@ function testClick() {
 
 function afterBreakpointHit() {
   is(gDebugger.gThreadClient.state, "paused",
-    "The breakpoint was hit (3).");
-  is(gSources.selectedValue, SOURCE_URL,
+     "The breakpoint was hit (3).");
+  is(getSelectedSourceURL(gSources), SOURCE_URL,
     "The currently shown source is incorrect (3).");
   ok(isCaretPos(gPanel, 5),
     "The source editor caret position is incorrect (3).");
@@ -94,7 +94,7 @@ function afterBreakpointHit() {
 function afterDebuggerStatementHit() {
   is(gDebugger.gThreadClient.state, "paused",
     "The debugger statement was hit (4).");
-  is(gSources.selectedValue, SOURCE_URL,
+  is(getSelectedSourceURL(gSources), SOURCE_URL,
     "The currently shown source is incorrect (4).");
   ok(isCaretPos(gPanel, 6),
     "The source editor caret position is incorrect (4).");
@@ -111,7 +111,7 @@ function afterDebuggerStatementHit() {
 function testClickAgain() {
   isnot(gDebugger.gThreadClient.state, "paused",
     "The breakpoint wasn't hit yet (5).");
-  is(gSources.selectedValue, SOURCE_URL,
+  is(getSelectedSourceURL(gSources), SOURCE_URL,
     "The currently shown source is incorrect (5).");
   ok(isCaretPos(gPanel, 1),
     "The source editor caret position is incorrect (5).");
@@ -133,7 +133,7 @@ function testClickAgain() {
 function afterBreakpointHitAgain() {
   is(gDebugger.gThreadClient.state, "paused",
     "The breakpoint was hit (6).");
-  is(gSources.selectedValue, SOURCE_URL,
+  is(getSelectedSourceURL(gSources), SOURCE_URL,
     "The currently shown source is incorrect (6).");
   ok(isCaretPos(gPanel, 5),
     "The source editor caret position is incorrect (6).");
@@ -153,7 +153,7 @@ function afterBreakpointHitAgain() {
 function afterDebuggerStatementHitAgain() {
   is(gDebugger.gThreadClient.state, "paused",
     "The debugger statement was hit (7).");
-  is(gSources.selectedValue, SOURCE_URL,
+  is(getSelectedSourceURL(gSources), SOURCE_URL,
     "The currently shown source is incorrect (7).");
   ok(isCaretPos(gPanel, 6),
     "The source editor caret position is incorrect (7).");

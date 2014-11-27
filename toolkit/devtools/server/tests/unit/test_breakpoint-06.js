@@ -36,16 +36,18 @@ function run_test_with_server(aServer, aCallback)
 function test_nested_breakpoint()
 {
   gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-    let path = getFilePath('test_breakpoint-06.js');
-    let location = { url: path, line: gDebuggee.line0 + 5};
-    gThreadClient.setBreakpoint(location, function (aResponse, bpClient) {
+    let source = gThreadClient.source(aPacket.frame.where.source);
+    let location = { line: gDebuggee.line0 + 5 };
+
+    source.setBreakpoint(location, function (aResponse, bpClient) {
       // Check that the breakpoint has properly skipped forward one line.
-      do_check_eq(aResponse.actualLocation.url, location.url);
+      do_check_eq(aResponse.actualLocation.source.actor, source.actor);
       do_check_eq(aResponse.actualLocation.line, location.line + 1);
+
       gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
         // Check the return value.
         do_check_eq(aPacket.type, "paused");
-        do_check_eq(aPacket.frame.where.url, path);
+        do_check_eq(aPacket.frame.where.source.actor, source.actor);
         do_check_eq(aPacket.frame.where.line, location.line + 1);
         do_check_eq(aPacket.why.type, "breakpoint");
         do_check_eq(aPacket.why.actors[0], bpClient.actor);
@@ -59,11 +61,10 @@ function test_nested_breakpoint()
             gClient.close(gCallback);
           });
         });
-
       });
+
       // Continue until the breakpoint is hit.
       gThreadClient.resume();
-
     });
 
   });

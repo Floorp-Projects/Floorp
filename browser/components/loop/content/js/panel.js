@@ -214,7 +214,7 @@ loop.panel = (function(_, mozL10n) {
             )
           ),
         });
-        return React.DOM.div(null, 
+        return React.DOM.div({id: "powered-by-wrapper"}, 
           React.DOM.p({id: "powered-by"}, 
             mozL10n.get("powered_by_beforeLogo"), 
             React.DOM.img({id: "powered-by-logo", className: locale}), 
