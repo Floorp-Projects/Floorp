@@ -318,7 +318,7 @@
           var text = this._stringBundle.getFormattedString("searchtip", [name]);
 
           if (Services.prefs.getBoolPref("browser.search.showOneOffButtons"))
-            this._textbox.placeholder = "Search";
+            this._textbox.placeholder = this._stringBundle.getString("searchPlaceholder");
           else
             this._textbox.placeholder = name;
 
