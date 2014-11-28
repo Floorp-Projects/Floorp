@@ -4,14 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // This file makes some assumptions about the versions of OS X.
-// Instead of making it work major version 11 right now,
-// we will wait until that happens and worry about it then.
-// There are MOZ_ASSERTs to remind us to do that.
-// We are assuming that the minor version is less than 16.
-// There are MOZ_ASSERTs for that as well.
+// We are assuming that the minor and bugfix versions are less than 16.
+// There are MOZ_ASSERTs for that.
 
 // The formula for the version integer based on OS X version 10.minor.bugfix is
-// 0x1000 + (minor << 4) + bugifix.  See AssembleVersion() below.
+// 0x1000 + (minor << 4) + bugifix.  See AssembleVersion() below for major > 10.
+// Major version < 10 is not allowed.
 
 #define MAC_OS_X_VERSION_MASK      0x0000FFFF
 #define MAC_OS_X_VERSION_10_0_HEX  0x00001000
@@ -30,26 +28,26 @@
 
 int32_t nsCocoaFeatures::mOSXVersion = 0;
 
+// This should not be called with unchecked aMajor, which should be >= 10.
 inline int32_t AssembleVersion(int32_t aMajor, int32_t aMinor, int32_t aBugFix)
 {
-    MOZ_ASSERT(aMajor == 10);
-    return MAC_OS_X_VERSION_10_0_HEX + (aMinor << 4) + aBugFix;
+    MOZ_ASSERT(aMajor >= 10);
+    return MAC_OS_X_VERSION_10_0_HEX + (aMajor-10) * 0x100 + (aMinor << 4) + aBugFix;
 }
 
-inline int32_t ExtractMajorVersion(int32_t aVersion)
+int32_t nsCocoaFeatures::ExtractMajorVersion(int32_t aVersion)
 {
     MOZ_ASSERT((aVersion & MAC_OS_X_VERSION_MASK) == aVersion);
-    MOZ_ASSERT((aVersion & MAC_OS_X_VERSION_10_0_HEX) == MAC_OS_X_VERSION_10_0_HEX);
-    return 10;
+    return ((aVersion & 0xFF00) - 0x1000) / 0x100 + 10;
 }
 
-inline int32_t ExtractMinorVersion(int32_t aVersion)
+int32_t nsCocoaFeatures::ExtractMinorVersion(int32_t aVersion)
 {
     MOZ_ASSERT((aVersion & MAC_OS_X_VERSION_MASK) == aVersion);
     return (aVersion & 0xF0) >> 4;
 }
 
-inline int32_t ExtractBugFixVersion(int32_t aVersion)
+int32_t nsCocoaFeatures::ExtractBugFixVersion(int32_t aVersion)
 {
     MOZ_ASSERT((aVersion & MAC_OS_X_VERSION_MASK) == aVersion);
     return aVersion & 0x0F;
@@ -60,10 +58,10 @@ static int intAtStringIndex(NSArray *array, int index)
     return [(NSString *)[array objectAtIndex:index] integerValue];
 }
 
-static void GetSystemVersion(int &major, int &minor, int &bugfix)
+void nsCocoaFeatures::GetSystemVersion(int &major, int &minor, int &bugfix)
 {
     major = minor = bugfix = 0;
-    
+
     NSString* versionString = [[NSDictionary dictionaryWithContentsOfFile:
                                 @"/System/Library/CoreServices/SystemVersion.plist"] objectForKey:@"ProductVersion"];
     NSArray* versions = [versionString componentsSeparatedByString:@"."];
@@ -79,7 +77,7 @@ static void GetSystemVersion(int &major, int &minor, int &bugfix)
     }
 }
 
-static int32_t GetFullVersion(int32_t aMajor, int32_t aMinor, int32_t aBugFix)
+int32_t nsCocoaFeatures::GetVersion(int32_t aMajor, int32_t aMinor, int32_t aBugFix)
 {
     int32_t osxVersion;
     if (aMajor < 10) {
@@ -91,7 +89,7 @@ static int32_t GetFullVersion(int32_t aMajor, int32_t aMinor, int32_t aBugFix)
         NS_ERROR("OS X version too old, assuming 10.6");
         osxVersion = MAC_OS_X_VERSION_10_6_HEX;
     } else {
-        MOZ_ASSERT(aMajor == 10);
+        MOZ_ASSERT(aMajor == 10); // For now, even though we're ready...
         MOZ_ASSERT(aMinor < 16);
         MOZ_ASSERT(aBugFix >= 0);
         MOZ_ASSERT(aBugFix < 16);
@@ -114,7 +112,7 @@ nsCocoaFeatures::InitializeVersionNumbers()
 
     int major, minor, bugfix;
     GetSystemVersion(major, minor, bugfix);
-    mOSXVersion = GetFullVersion(major, minor, bugfix);
+    mOSXVersion = GetVersion(major, minor, bugfix);
 
     NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -191,5 +189,5 @@ nsCocoaFeatures::AccelerateByDefault()
 /* static */ bool
 nsCocoaFeatures::IsAtLeastVersion(int32_t aMajor, int32_t aMinor, int32_t aBugFix)
 {
-    return OSXVersion() >= GetFullVersion(aMajor, aMinor, aBugFix);
+    return OSXVersion() >= GetVersion(aMajor, aMinor, aBugFix);
 }

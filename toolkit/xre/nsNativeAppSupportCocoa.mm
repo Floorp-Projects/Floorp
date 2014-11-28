@@ -9,6 +9,7 @@
 #import <Cocoa/Cocoa.h>
 
 #include "nsCOMPtr.h"
+#include "nsCocoaFeatures.h"
 #include "nsNativeAppSupportBase.h"
 
 #include "nsIAppShellService.h"
@@ -76,22 +77,19 @@ nsNativeAppSupportCocoa::Enable()
   return NS_OK;
 }
 
-#define MAC_OS_X_VERSION_10_6_HEX 0x00001060
-
 NS_IMETHODIMP nsNativeAppSupportCocoa::Start(bool *_retval)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  int major, minor, bugfix;
+  nsCocoaFeatures::GetSystemVersion(major, minor, bugfix);
 
-  SInt32 response = 0;
-  OSErr err = ::Gestalt (gestaltSystemVersion, &response);
-  response &= 0xFFFF; // The system version is in the low order word
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   // Check that the OS version is supported, if not return false,
   // which will make the browser quit.  In principle we could display an
   // alert here.  But the alert's message and buttons would require custom
   // localization.  So (for now at least) we just log an English message
   // to the console before quitting.
-  if ((err != noErr) || response < MAC_OS_X_VERSION_10_6_HEX) {
+  if (major < 10 || minor < 6) {
     NSLog(@"Minimum OS version requirement not met!");
     return NS_OK;
   }
