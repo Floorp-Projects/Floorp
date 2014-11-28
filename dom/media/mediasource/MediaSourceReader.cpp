@@ -180,7 +180,8 @@ void
 MediaSourceReader::OnNotDecoded(MediaData::Type aType, RequestSampleCallback::NotDecodedReason aReason)
 {
   MSE_DEBUG("MediaSourceReader(%p)::OnNotDecoded aType=%u aReason=%u IsEnded: %d", this, aType, aReason, IsEnded());
-  if (aReason == RequestSampleCallback::DECODE_ERROR) {
+  if (aReason == RequestSampleCallback::DECODE_ERROR ||
+      aReason == RequestSampleCallback::CANCELED) {
     GetCallback()->OnNotDecoded(aType, aReason);
     return;
   }
