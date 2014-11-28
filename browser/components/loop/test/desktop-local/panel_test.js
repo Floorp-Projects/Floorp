@@ -714,6 +714,42 @@ describe("loop.panel", function() {
       return TestUtils.renderIntoDocument(loop.panel.RoomEntry(props));
     }
 
+    describe("Edit room name", function() {
+      var roomEntry, domNode;
+
+      beforeEach(function() {
+        roomEntry = mountRoomEntry({
+          dispatcher: dispatcher,
+          deleteRoom: sandbox.stub(),
+          room: new loop.store.Room(roomData)
+        });
+        domNode = roomEntry.getDOMNode();
+
+        TestUtils.Simulate.click(domNode.querySelector(".edit-in-place"));
+      });
+
+      it("should render an edit form on room name click", function() {
+        expect(domNode.querySelector("form")).not.eql(null);
+        expect(domNode.querySelector("input").value).eql(roomData.roomName);
+      });
+
+      it("should dispatch a RenameRoom action when submitting the form",
+        function() {
+          var dispatch = sandbox.stub(dispatcher, "dispatch");
+
+          TestUtils.Simulate.change(domNode.querySelector("input"), {
+            target: {value: "New name"}
+          });
+          TestUtils.Simulate.submit(domNode.querySelector("form"));
+
+          sinon.assert.calledOnce(dispatch);
+          sinon.assert.calledWithExactly(dispatch, new sharedActions.RenameRoom({
+            roomToken: roomData.roomToken,
+            newRoomName: "New name"
+          }));
+        });
+    });
+
     describe("Copy button", function() {
       var roomEntry, copyButton;
 
