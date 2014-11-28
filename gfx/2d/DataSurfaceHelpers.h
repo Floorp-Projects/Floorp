@@ -70,6 +70,36 @@ BufferSizeFromStrideAndHeight(int32_t aStride,
                               int32_t aHeight,
                               int32_t aExtraBytes = 0);
 
+/**
+ * Copy aSrcRect from aSrc to aDest starting at aDestPoint.
+ */
+void
+CopyRect(DataSourceSurface* aSrc, DataSourceSurface* aDest,
+         IntRect aSrcRect, IntPoint aDestPoint);
+
+/**
+ * Create a non aliasing copy of aSource. This creates a new DataSourceSurface
+ * using the factory and copies the bits.
+ *
+ * @return a dss allocated by Factory that contains a copy a aSource.
+ */
+TemporaryRef<DataSourceSurface>
+CreateDataSourceSurfaceByCloning(DataSourceSurface* aSource);
+
+/**
+ * Return the byte at aPoint.
+ */
+uint8_t*
+DataAtOffset(DataSourceSurface* aSurface, IntPoint aPoint);
+
+/**
+ * Check if aPoint is contained by the surface.
+ *
+ * @returns true if and only if aPoint is inside the surface.
+ */
+bool
+SurfaceContainsPoint(SourceSurface* aSurface, const IntPoint& aPoint);
+
 }
 }
 
