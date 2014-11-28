@@ -208,6 +208,21 @@ MP4Sample::MP4Sample()
 {
 }
 
+MP4Sample::MP4Sample(const MP4Sample& copy)
+  : mMediaBuffer(nullptr)
+  , decode_timestamp(copy.decode_timestamp)
+  , composition_timestamp(copy.composition_timestamp)
+  , duration(copy.duration)
+  , byte_offset(copy.byte_offset)
+  , is_sync_point(copy.is_sync_point)
+  , size(copy.size)
+  , crypto(copy.crypto)
+  , prefix_data(copy.prefix_data)
+{
+  extra_buffer = data = new uint8_t[size];
+  memcpy(data, copy.data, size);
+}
+
 MP4Sample::~MP4Sample()
 {
   if (mMediaBuffer) {
