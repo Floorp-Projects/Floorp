@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BluetoothDaemonInterface.h"
+#include "BluetoothDaemonHandsfreeInterface.h"
 #include "BluetoothDaemonHelpers.h"
 #include "BluetoothDaemonSetupInterface.h"
 #include "BluetoothDaemonSocketInterface.h"
@@ -1456,9 +1457,16 @@ class BluetoothDaemonProtocol MOZ_FINAL
   , public BluetoothDaemonSetupModule
   , public BluetoothDaemonCoreModule
   , public BluetoothDaemonSocketModule
+  , public BluetoothDaemonHandsfreeModule
 {
 public:
   BluetoothDaemonProtocol(BluetoothDaemonConnection* aConnection);
+
+  nsresult RegisterModule(uint8_t aId, uint8_t aMode,
+                          BluetoothSetupResultHandler* aRes) MOZ_OVERRIDE;
+
+  nsresult UnregisterModule(uint8_t aId,
+                            BluetoothSetupResultHandler* aRes) MOZ_OVERRIDE;
 
   // Outgoing PDUs
   //
@@ -1481,6 +1489,8 @@ private:
                      BluetoothDaemonPDU& aPDU, void* aUserData);
   void HandleSocketSvc(const BluetoothDaemonPDUHeader& aHeader,
                        BluetoothDaemonPDU& aPDU, void* aUserData);
+  void HandleHandsfreeSvc(const BluetoothDaemonPDUHeader& aHeader,
+                          BluetoothDaemonPDU& aPDU, void* aUserData);
 
   BluetoothDaemonConnection* mConnection;
   nsTArray<void*> mUserDataQ;
@@ -1491,6 +1501,20 @@ BluetoothDaemonProtocol::BluetoothDaemonProtocol(
   : mConnection(aConnection)
 {
   MOZ_ASSERT(mConnection);
+}
+
+nsresult
+BluetoothDaemonProtocol::RegisterModule(uint8_t aId, uint8_t aMode,
+                                        BluetoothSetupResultHandler* aRes)
+{
+  return BluetoothDaemonSetupModule::RegisterModuleCmd(aId, aMode, aRes);
+}
+
+nsresult
+BluetoothDaemonProtocol::UnregisterModule(uint8_t aId,
+                                          BluetoothSetupResultHandler* aRes)
+{
+  return BluetoothDaemonSetupModule::UnregisterModuleCmd(aId, aRes);
 }
 
 nsresult
@@ -1528,6 +1552,14 @@ BluetoothDaemonProtocol::HandleSocketSvc(
 }
 
 void
+BluetoothDaemonProtocol::HandleHandsfreeSvc(
+  const BluetoothDaemonPDUHeader& aHeader, BluetoothDaemonPDU& aPDU,
+  void* aUserData)
+{
+  BluetoothDaemonHandsfreeModule::HandleSvc(aHeader, aPDU, aUserData);
+}
+
+void
 BluetoothDaemonProtocol::Handle(BluetoothDaemonPDU& aPDU)
 {
   static void (BluetoothDaemonProtocol::* const HandleSvc[])(
@@ -1537,7 +1569,11 @@ BluetoothDaemonProtocol::Handle(BluetoothDaemonPDU& aPDU)
     INIT_ARRAY_AT(BluetoothDaemonCoreModule::SERVICE_ID,
       &BluetoothDaemonProtocol::HandleCoreSvc),
     INIT_ARRAY_AT(BluetoothDaemonSocketModule::SERVICE_ID,
-      &BluetoothDaemonProtocol::HandleSocketSvc)
+      &BluetoothDaemonProtocol::HandleSocketSvc),
+    INIT_ARRAY_AT(0x03, nullptr), // HID host
+    INIT_ARRAY_AT(0x04, nullptr), // PAN
+    INIT_ARRAY_AT(BluetoothDaemonHandsfreeModule::SERVICE_ID,
+      &BluetoothDaemonProtocol::HandleHandsfreeSvc)
   };
 
   BluetoothDaemonPDUHeader header;
@@ -2110,7 +2146,13 @@ BluetoothDaemonInterface::GetBluetoothSocketInterface()
 BluetoothHandsfreeInterface*
 BluetoothDaemonInterface::GetBluetoothHandsfreeInterface()
 {
-  return nullptr;
+  if (mHandsfreeInterface) {
+    return mHandsfreeInterface;
+  }
+
+  mHandsfreeInterface = new BluetoothDaemonHandsfreeInterface(mProtocol);
+
+  return mHandsfreeInterface;
 }
 
 BluetoothA2dpInterface*

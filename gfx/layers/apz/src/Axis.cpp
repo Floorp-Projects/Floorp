@@ -83,7 +83,8 @@ void Axis::UpdateWithTouchAtDevicePoint(ParentLayerCoord aPos, uint32_t aTimesta
         float funcInput = (newVelocity - curveThreshold) / scale;
         float funcOutput = gVelocityCurveFunction->GetValue(funcInput);
         float curvedVelocity = (funcOutput * scale) + curveThreshold;
-        AXIS_LOG("Curving up velocity from %f to %f\n", newVelocity, curvedVelocity);
+        AXIS_LOG("%p|%s curving up velocity from %f to %f\n",
+          mAsyncPanZoomController, Name(), newVelocity, curvedVelocity);
         newVelocity = curvedVelocity;
       }
     }
@@ -93,6 +94,8 @@ void Axis::UpdateWithTouchAtDevicePoint(ParentLayerCoord aPos, uint32_t aTimesta
     }
   }
 
+  AXIS_LOG("%p|%s updating velocity to %f with touch\n",
+    mAsyncPanZoomController, Name(), newVelocity);
   mVelocity = newVelocity;
   mPos = aPos;
   mPosTimeMs = aTimestampMs;
@@ -139,6 +142,8 @@ bool Axis::AdjustDisplacement(ParentLayerCoord aDisplacement,
   if (aOverscrollAmountOut != 0.0f) {
     // No need to have a velocity along this axis anymore; it won't take us
     // anywhere, so we're just spinning needlessly.
+    AXIS_LOG("%p|%s has overscrolled, clearing velocity\n",
+      mAsyncPanZoomController, Name());
     mVelocity = 0.0f;
     displacement -= aOverscrollAmountOut;
   }
@@ -217,6 +222,8 @@ bool Axis::SampleOverscrollAnimation(const TimeDuration& aDelta) {
 
   // Apply dampening.
   mVelocity *= pow(double(1 - kSpringFriction), aDelta.ToMilliseconds());
+  AXIS_LOG("%p|%s sampled overscroll animation, leaving velocity at %f\n",
+    mAsyncPanZoomController, Name(), mVelocity);
 
   // Adjust the amount of overscroll based on the velocity.
   // Note that we allow for oscillations. mInUnderscroll tracks whether
@@ -238,6 +245,8 @@ bool Axis::SampleOverscrollAnimation(const TimeDuration& aDelta) {
       fabs(mVelocity) < gfxPrefs::APZOverscrollStopVelocityThreshold()) {
     // "Jump" to the at-rest state. The jump shouldn't be noticeable as the
     // velocity and overscroll are already low.
+    AXIS_LOG("%p|%s oscillation dropped below threshold, going to rest\n",
+      mAsyncPanZoomController, Name());
     mOverscroll = 0;
     mVelocity = 0;
     mInUnderscroll = false;
@@ -285,12 +294,16 @@ void Axis::EndTouch(uint32_t aTimestampMs) {
   if (count > 1) {
     mVelocity /= count;
   }
+  AXIS_LOG("%p|%s ending touch, computed velocity %f\n",
+    mAsyncPanZoomController, Name(), mVelocity);
 }
 
 void Axis::CancelTouch() {
   // mVelocityQueue is controller-thread only
   AsyncPanZoomController::AssertOnControllerThread();
 
+  AXIS_LOG("%p|%s cancelling touch, clearing velocity queue\n",
+    mAsyncPanZoomController, Name());
   mVelocity = 0.0f;
   while (!mVelocityQueue.IsEmpty()) {
     mVelocityQueue.RemoveElementAt(0);
@@ -317,6 +330,8 @@ bool Axis::FlingApplyFrictionOrCancel(const TimeDuration& aDelta,
   } else {
     mVelocity *= pow(1.0f - aFriction, float(aDelta.ToMilliseconds()));
   }
+  AXIS_LOG("%p|%s reduced velocity to %f due to friction\n",
+    mAsyncPanZoomController, Name(), mVelocity);
   return true;
 }
 
@@ -373,6 +388,8 @@ float Axis::GetVelocity() const {
 }
 
 void Axis::SetVelocity(float aVelocity) {
+  AXIS_LOG("%p|%s direct-setting velocity to %f\n",
+    mAsyncPanZoomController, Name(), aVelocity);
   mVelocity = aVelocity;
 }
 
@@ -441,6 +458,11 @@ ScreenPoint AxisX::MakePoint(ScreenCoord aCoord) const
   return ScreenPoint(aCoord, 0);
 }
 
+const char* AxisX::Name() const
+{
+  return "X";
+}
+
 AxisY::AxisY(AsyncPanZoomController* aAsyncPanZoomController)
   : Axis(aAsyncPanZoomController)
 {
@@ -465,6 +487,11 @@ ParentLayerCoord AxisY::GetRectOffset(const ParentLayerRect& aRect) const
 ScreenPoint AxisY::MakePoint(ScreenCoord aCoord) const
 {
   return ScreenPoint(0, aCoord);
+}
+
+const char* AxisY::Name() const
+{
+  return "Y";
 }
 
 }

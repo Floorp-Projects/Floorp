@@ -238,6 +238,8 @@ public:
 
   virtual ScreenPoint MakePoint(ScreenCoord aCoord) const = 0;
 
+  virtual const char* Name() const = 0;
+
 protected:
   ParentLayerCoord mPos;
   uint32_t mPosTimeMs;
@@ -270,6 +272,7 @@ public:
   virtual ParentLayerCoord GetRectLength(const ParentLayerRect& aRect) const MOZ_OVERRIDE;
   virtual ParentLayerCoord GetRectOffset(const ParentLayerRect& aRect) const MOZ_OVERRIDE;
   virtual ScreenPoint MakePoint(ScreenCoord aCoord) const MOZ_OVERRIDE;
+  virtual const char* Name() const MOZ_OVERRIDE;
 };
 
 class AxisY : public Axis {
@@ -279,6 +282,7 @@ public:
   virtual ParentLayerCoord GetRectLength(const ParentLayerRect& aRect) const MOZ_OVERRIDE;
   virtual ParentLayerCoord GetRectOffset(const ParentLayerRect& aRect) const MOZ_OVERRIDE;
   virtual ScreenPoint MakePoint(ScreenCoord aCoord) const MOZ_OVERRIDE;
+  virtual const char* Name() const MOZ_OVERRIDE;
 };
 
 }
