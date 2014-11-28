@@ -17,7 +17,7 @@ function test() {
   let previouslySelectedEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
 
-  let base = "https://search.yahoo.com/search?p=foo&ei=UTF-8&fr=moz35";
+  let base = "https://search.yahoo.com/yhs/search?p=foo&ei=UTF-8&hspart=mozilla&hsimp=yhs-001";
   let url;
 
   // Test search URLs (including purposes).
