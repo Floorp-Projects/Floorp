@@ -54,7 +54,8 @@ describe("loop.panel", function() {
           callback(null, []);
         },
         on: sandbox.stub()
-      }
+      },
+      confirm: sandbox.stub()
     };
 
     document.mozL10n.initialize(navigator.mozLoop);
@@ -815,14 +816,26 @@ describe("loop.panel", function() {
         expect(deleteButton).to.not.equal(null);
       });
 
-      it("should call the delete function when clicked", function() {
+      it("should dispatch a delete action when confirmation is granted", function() {
         sandbox.stub(dispatcher, "dispatch");
 
+        navigator.mozLoop.confirm.callsArgWith(1, null, true);
         TestUtils.Simulate.click(deleteButton);
 
+        sinon.assert.calledOnce(navigator.mozLoop.confirm);
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           new sharedActions.DeleteRoom({roomToken: roomData.roomToken}));
+      });
+
+      it("should not dispatch an action when the confirmation is cancelled", function() {
+        sandbox.stub(dispatcher, "dispatch");
+
+        navigator.mozLoop.confirm.callsArgWith(1, null, false);
+        TestUtils.Simulate.click(deleteButton);
+
+        sinon.assert.calledOnce(navigator.mozLoop.confirm);
+        sinon.assert.notCalled(dispatcher.dispatch);
       });
     });
 
