@@ -354,7 +354,10 @@ TouchCaret::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* aSel,
 
   // Update touch caret position and visibility.
   // Hide touch caret while key event causes selection change.
-  if (aReason & nsISelectionListener::KEYPRESS_REASON) {
+  // Also hide touch caret when gecko or javascript collapse the selection.
+  if (aReason & nsISelectionListener::KEYPRESS_REASON ||
+      aReason & nsISelectionListener::COLLAPSETOSTART_REASON ||
+      aReason & nsISelectionListener::COLLAPSETOEND_REASON) {
     TOUCHCARET_LOG("KEYPRESS_REASON");
     SetVisibility(false);
   } else {

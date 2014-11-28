@@ -21,6 +21,7 @@
 #include "gfxPlatform.h"
 #include "gfxPrefs.h"
 #include "imgFrame.h"
+#include "Image.h"
 #include "nsAutoPtr.h"
 #include "nsExpirationTracker.h"
 #include "nsHashKeys.h"
@@ -351,10 +352,15 @@ public:
   void Remove(CachedSurface* aSurface)
   {
     MOZ_ASSERT(aSurface, "Should have a surface");
-    const ImageKey imageKey = aSurface->GetImageKey();
+    ImageKey imageKey = aSurface->GetImageKey();
 
     nsRefPtr<ImageSurfaceCache> cache = GetImageCache(imageKey);
     MOZ_ASSERT(cache, "Shouldn't try to remove a surface with no image cache");
+
+    // If the surface was persistent, tell its image that we discarded it.
+    if (aSurface->GetLifetime() == Lifetime::Persistent) {
+      static_cast<Image*>(imageKey)->OnSurfaceDiscarded();
+    }
 
     StopTracking(aSurface);
     cache->Remove(aSurface);

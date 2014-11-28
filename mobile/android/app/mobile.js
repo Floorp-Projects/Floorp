@@ -574,7 +574,6 @@ pref("media.fragmented-mp4.android-media-codec.preferred", true);
 
 // optimize images memory usage
 pref("image.mem.decodeondraw", true);
-pref("image.mem.min_discard_timeout_ms", 10000);
 
 #ifdef NIGHTLY_BUILD
 // Shumway component (SWF player) is disabled by default. Also see bug 904346.
