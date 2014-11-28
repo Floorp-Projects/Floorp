@@ -12,7 +12,7 @@ function test()
   waitForExplicitFinish();
   // We want the prompt.
   PopupNotifications.transitionsEnabled = false;
-  setPermission(testPageURL, "indexedDB", "allow");
+  removePermission(testPageURL, "indexedDB");
   executeSoon(test1);
 }
 

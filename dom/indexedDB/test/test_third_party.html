@@ -62,6 +62,9 @@
 
     function runTest() {
       SimpleTest.waitForExplicitFinish();
+
+      SpecialPowers.addPermission("indexedDB", true, document);
+
       window.addEventListener("message", messageListener, false);
       setiframe();
     }

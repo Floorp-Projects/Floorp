@@ -14,6 +14,7 @@
     {
       const name = window.location.pathname;
       const version = 1;
+      const storages = ["persistent", "temporary", "default"];
 
       const objectStoreName = "Foo";
       const data = { key: 1, value: "bar" };
@@ -27,84 +28,44 @@
         is(e.name, "TypeError", "Good error name.");
       }
 
-      let request = indexedDB.open(name, { version: version,
-                                           storage: "persistent" });
-      request.onerror = grabEventAndContinueHandler;
-      request.onupgradeneeded = unexpectedSuccessHandler;
-      request.onsuccess = unexpectedSuccessHandler;
-      let event = yield undefined;
+      for (let storage of storages) {
+        let request = indexedDB.open(name, { version: version,
+                                             storage: storage });
+        request.onerror = errorHandler;
+        request.onupgradeneeded = grabEventAndContinueHandler;
+        request.onsuccess = grabEventAndContinueHandler;
+        let event = yield undefined;
 
-      is(event.type, "error", "Got error event");
-      is(event.target, request, "Got correct target");
-      is(event.target.error.name, "UnknownError", "Got correct error name");
-      event.preventDefault();
+        is(event.type, "upgradeneeded", "Got correct event type");
 
-      request = indexedDB.open(name, { version: version });
-      request.onerror = errorHandler;
-      request.onupgradeneeded = grabEventAndContinueHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      event = yield undefined;
+        let db = event.target.result;
+        db.onerror = errorHandler;
 
-      is(event.type, "upgradeneeded", "Got correct event type");
+        let objectStore = db.createObjectStore(objectStoreName, { });
 
-      let db = event.target.result;
-      db.onerror = errorHandler;
+        event = yield undefined;
 
-      let objectStore = db.createObjectStore(objectStoreName, { });
+        is(event.type, "success", "Got correct event type");
 
-      event = yield undefined;
+        is(db.name, name, "Correct name");
+        is(db.version, version, "Correct version");
+        is(db.storage, storage, "Correct persistence type");
 
-      is(event.type, "success", "Got correct event type");
+        objectStore = db.transaction([objectStoreName], "readwrite")
+                        .objectStore(objectStoreName);
 
-      is(db.name, name, "Correct name");
-      is(db.version, version, "Correct version");
-      is(db.storage, "persistent", "Correct persistence type");
+        request = objectStore.get(data.key);
+        request.onsuccess = grabEventAndContinueHandler;
+        event = yield undefined;
 
-      objectStore = db.transaction([objectStoreName], "readwrite")
-                      .objectStore(objectStoreName);
+        is(event.target.result, null, "Got no data");
 
-      request = objectStore.get(data.key);
-      request.onsuccess = grabEventAndContinueHandler;
-      event = yield undefined;
+        request = objectStore.add(data.value, data.key);
+        request.onsuccess = grabEventAndContinueHandler;
+        event = yield undefined;
 
-      is(event.target.result, null, "Got no data");
-
-      request = objectStore.add(data.value, data.key);
-      request.onsuccess = grabEventAndContinueHandler;
-      event = yield undefined;
-
-      is(event.target.result, data.key, "Got correct key");
-
-      request = indexedDB.open(name, { version: version,
-                                       storage: "temporary" });
-      request.onerror = errorHandler;
-      request.onupgradeneeded = grabEventAndContinueHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      event = yield undefined;
-
-      is(event.type, "upgradeneeded", "Got correct event type");
-
-      db = event.target.result;
-      db.onerror = errorHandler;
-
-      objectStore = db.createObjectStore(objectStoreName, { });
-
-      event = yield undefined;
-
-      is(event.type, "success", "Got correct event type");
-
-      is(db.name, name, "Correct name");
-      is(db.version, version, "Correct version");
-      is(db.storage, "temporary", "Correct persistence type");
-
-      objectStore = db.transaction([objectStoreName])
-                      .objectStore(objectStoreName);
-
-      request = objectStore.get(data.key);
-      request.onsuccess = grabEventAndContinueHandler;
-      event = yield undefined;
-
-      is(event.target.result, null, "Got no data");
+        is(event.target.result, data.key, "Got correct key");
+      }
 
       finishTest();
       yield undefined;
