@@ -12,7 +12,7 @@ export MOZILLA_OFFICIAL=1
 export MOZ_TELEMETRY_REPORTING=1
 export MOZ_PKG_SPECIAL=armv6
 
-ac_add_options --with-branding=mobile/android/branding/nightly
+ac_add_options --with-branding=mobile/android/branding/aurora
 
 # Treat warnings as errors in directories with FAIL_ON_WARNINGS.
 ac_add_options --enable-warnings-as-errors
