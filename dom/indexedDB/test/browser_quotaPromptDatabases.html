@@ -13,7 +13,8 @@
       function onAddMore() {
         const name = window.location.pathname + i++;
 
-        let request = indexedDB.open(name, 1);
+        let request = indexedDB.open(name, { version: 1,
+                                             storage: "persistent" });
         request.onerror = errorHandler;
         request.onsuccess = grabEventAndContinueHandler;
 

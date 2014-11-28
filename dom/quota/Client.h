@@ -97,7 +97,7 @@ public:
 
   virtual void
   OnOriginClearCompleted(PersistenceType aPersistenceType,
-                         const OriginOrPatternString& aOriginOrPattern) = 0;
+                         const nsACString& aOrigin) = 0;
 
   virtual void
   ReleaseIOThreadObjects() = 0;
