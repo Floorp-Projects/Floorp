@@ -527,31 +527,18 @@ private:
 void
 TrackBuffer::RemoveDecoder(SourceBufferDecoder* aDecoder)
 {
-  RefPtr<nsIRunnable> task;
-  nsRefPtr<MediaTaskQueue> taskQueue;
+  RefPtr<nsIRunnable> task = new DelayedDispatchToMainThread(aDecoder);
+
   {
     ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
-    if (mInitializedDecoders.RemoveElement(aDecoder)) {
-      taskQueue = aDecoder->GetReader()->GetTaskQueue();
-      task = new DelayedDispatchToMainThread(aDecoder);
-    } else {
-      task = new ReleaseDecoderTask(aDecoder);
-    }
+    mInitializedDecoders.RemoveElement(aDecoder);
     mDecoders.RemoveElement(aDecoder);
 
     if (mCurrentDecoder == aDecoder) {
       DiscardDecoder();
     }
   }
-  // At this point, task should be holding the only reference to aDecoder.
-  if (taskQueue) {
-    // If we were initialized, post the task via the reader's
-    // task queue to ensure that the reader isn't in the middle
-    // of an existing task.
-    taskQueue->Dispatch(task);
-  } else {
-    NS_DispatchToMainThread(task);
-  }
+  aDecoder->GetReader()->GetTaskQueue()->Dispatch(task);
 }
 
 } // namespace mozilla

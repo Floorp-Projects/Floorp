@@ -18,8 +18,8 @@ class HTMLInputElement;
 }
 
 #define NS_IRADIOGROUPCONTAINER_IID   \
-{ 0x22924a01, 0x4360, 0x401b, \
-  { 0xb1, 0xd1, 0x56, 0x8d, 0xf5, 0xa3, 0xda, 0x71 } }
+{ 0x800320a0, 0x733f, 0x11e4, \
+  { 0x82, 0xf8, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66 } }
 
 /**
  * A container that has multiple radio groups in it, defined by name.
@@ -91,8 +91,8 @@ public:
   virtual void RemoveFromRadioGroup(const nsAString& aName, nsIFormControl* aRadio) = 0;
 
   virtual uint32_t GetRequiredRadioCount(const nsAString& aName) const = 0;
-  virtual void RadioRequiredChanged(const nsAString& aName,
-                                    nsIFormControl* aRadio) = 0;
+  virtual void RadioRequiredWillChange(const nsAString& aName,
+                                       bool aRequiredAdded) = 0;
   virtual bool GetValueMissingState(const nsAString& aName) const = 0;
   virtual void SetValueMissingState(const nsAString& aName, bool aValue) = 0;
 };
