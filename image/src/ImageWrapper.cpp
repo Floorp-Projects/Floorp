@@ -103,6 +103,12 @@ ImageWrapper::OnNewSourceData()
 }
 
 void
+ImageWrapper::OnSurfaceDiscarded()
+{
+  return mInnerImage->OnSurfaceDiscarded();
+}
+
+void
 ImageWrapper::SetInnerWindowID(uint64_t aInnerWindowId)
 {
   mInnerImage->SetInnerWindowID(aInnerWindowId);

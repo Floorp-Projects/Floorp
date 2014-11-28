@@ -458,8 +458,6 @@ SECStatus PK11_SetPrivateKeyNickname(SECKEYPrivateKey *privKey,
 							const char *nickname);
 SECStatus PK11_SetPublicKeyNickname(SECKEYPublicKey *pubKey, 
 							const char *nickname);
-SECStatus PK11_SetCertificateNickname(CERTCertificate *cert,
-                                      const char *nickname);
 
 /* size to hold key in bytes */
 unsigned int PK11_GetKeyLength(PK11SymKey *key);
