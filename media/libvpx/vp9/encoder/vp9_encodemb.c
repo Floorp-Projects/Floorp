@@ -103,13 +103,13 @@ static int optimize_b(MACROBLOCK *mb, int plane, int block,
   MACROBLOCKD *const xd = &mb->e_mbd;
   struct macroblock_plane *const p = &mb->plane[plane];
   struct macroblockd_plane *const pd = &xd->plane[plane];
-  const int ref = is_inter_block(&xd->mi[0]->mbmi);
+  const int ref = is_inter_block(&xd->mi[0].src_mi->mbmi);
   vp9_token_state tokens[1025][2];
   unsigned best_index[1025][2];
   uint8_t token_cache[1024];
-  const int16_t *const coeff = BLOCK_OFFSET(mb->plane[plane].coeff, block);
-  int16_t *const qcoeff = BLOCK_OFFSET(p->qcoeff, block);
-  int16_t *const dqcoeff = BLOCK_OFFSET(pd->dqcoeff, block);
+  const tran_low_t *const coeff = BLOCK_OFFSET(mb->plane[plane].coeff, block);
+  tran_low_t *const qcoeff = BLOCK_OFFSET(p->qcoeff, block);
+  tran_low_t *const dqcoeff = BLOCK_OFFSET(pd->dqcoeff, block);
   const int eob = p->eobs[block];
   const PLANE_TYPE type = pd->plane_type;
   const int default_eob = 16 << (tx_size << 1);
@@ -294,12 +294,23 @@ static int optimize_b(MACROBLOCK *mb, int plane, int block,
 }
 
 static INLINE void fdct32x32(int rd_transform,
-                             const int16_t *src, int16_t *dst, int src_stride) {
+                             const int16_t *src, tran_low_t *dst,
+                             int src_stride) {
   if (rd_transform)
     vp9_fdct32x32_rd(src, dst, src_stride);
   else
     vp9_fdct32x32(src, dst, src_stride);
 }
+
+#if CONFIG_VP9_HIGHBITDEPTH
+static INLINE void high_fdct32x32(int rd_transform, const int16_t *src,
+                                  tran_low_t *dst, int src_stride) {
+  if (rd_transform)
+    vp9_high_fdct32x32_rd(src, dst, src_stride);
+  else
+    vp9_high_fdct32x32(src, dst, src_stride);
+}
+#endif
 
 void vp9_xform_quant_fp(MACROBLOCK *x, int plane, int block,
                         BLOCK_SIZE plane_bsize, TX_SIZE tx_size) {
@@ -307,9 +318,9 @@ void vp9_xform_quant_fp(MACROBLOCK *x, int plane, int block,
   const struct macroblock_plane *const p = &x->plane[plane];
   const struct macroblockd_plane *const pd = &xd->plane[plane];
   const scan_order *const scan_order = &vp9_default_scan_orders[tx_size];
-  int16_t *const coeff = BLOCK_OFFSET(p->coeff, block);
-  int16_t *const qcoeff = BLOCK_OFFSET(p->qcoeff, block);
-  int16_t *const dqcoeff = BLOCK_OFFSET(pd->dqcoeff, block);
+  tran_low_t *const coeff = BLOCK_OFFSET(p->coeff, block);
+  tran_low_t *const qcoeff = BLOCK_OFFSET(p->qcoeff, block);
+  tran_low_t *const dqcoeff = BLOCK_OFFSET(pd->dqcoeff, block);
   uint16_t *const eob = &p->eobs[block];
   const int diff_stride = 4 * num_4x4_blocks_wide_lookup[plane_bsize];
   int i, j;
@@ -357,9 +368,9 @@ void vp9_xform_quant_dc(MACROBLOCK *x, int plane, int block,
   MACROBLOCKD *const xd = &x->e_mbd;
   const struct macroblock_plane *const p = &x->plane[plane];
   const struct macroblockd_plane *const pd = &xd->plane[plane];
-  int16_t *const coeff = BLOCK_OFFSET(p->coeff, block);
-  int16_t *const qcoeff = BLOCK_OFFSET(p->qcoeff, block);
-  int16_t *const dqcoeff = BLOCK_OFFSET(pd->dqcoeff, block);
+  tran_low_t *const coeff = BLOCK_OFFSET(p->coeff, block);
+  tran_low_t *const qcoeff = BLOCK_OFFSET(p->qcoeff, block);
+  tran_low_t *const dqcoeff = BLOCK_OFFSET(pd->dqcoeff, block);
   uint16_t *const eob = &p->eobs[block];
   const int diff_stride = 4 * num_4x4_blocks_wide_lookup[plane_bsize];
   int i, j;
@@ -405,9 +416,9 @@ void vp9_xform_quant(MACROBLOCK *x, int plane, int block,
   const struct macroblock_plane *const p = &x->plane[plane];
   const struct macroblockd_plane *const pd = &xd->plane[plane];
   const scan_order *const scan_order = &vp9_default_scan_orders[tx_size];
-  int16_t *const coeff = BLOCK_OFFSET(p->coeff, block);
-  int16_t *const qcoeff = BLOCK_OFFSET(p->qcoeff, block);
-  int16_t *const dqcoeff = BLOCK_OFFSET(pd->dqcoeff, block);
+  tran_low_t *const coeff = BLOCK_OFFSET(p->coeff, block);
+  tran_low_t *const qcoeff = BLOCK_OFFSET(p->qcoeff, block);
+  tran_low_t *const dqcoeff = BLOCK_OFFSET(pd->dqcoeff, block);
   uint16_t *const eob = &p->eobs[block];
   const int diff_stride = 4 * num_4x4_blocks_wide_lookup[plane_bsize];
   int i, j;
@@ -458,7 +469,7 @@ static void encode_block(int plane, int block, BLOCK_SIZE plane_bsize,
   struct optimize_ctx *const ctx = args->ctx;
   struct macroblock_plane *const p = &x->plane[plane];
   struct macroblockd_plane *const pd = &xd->plane[plane];
-  int16_t *const dqcoeff = BLOCK_OFFSET(pd->dqcoeff, block);
+  tran_low_t *const dqcoeff = BLOCK_OFFSET(pd->dqcoeff, block);
   int i, j;
   uint8_t *dst;
   ENTROPY_CONTEXT *a, *l;
@@ -538,7 +549,7 @@ static void encode_block_pass1(int plane, int block, BLOCK_SIZE plane_bsize,
   MACROBLOCKD *const xd = &x->e_mbd;
   struct macroblock_plane *const p = &x->plane[plane];
   struct macroblockd_plane *const pd = &xd->plane[plane];
-  int16_t *const dqcoeff = BLOCK_OFFSET(pd->dqcoeff, block);
+  tran_low_t *const dqcoeff = BLOCK_OFFSET(pd->dqcoeff, block);
   int i, j;
   uint8_t *dst;
   txfrm_block_to_raster_xy(plane_bsize, tx_size, block, &i, &j);
@@ -559,9 +570,14 @@ void vp9_encode_sby_pass1(MACROBLOCK *x, BLOCK_SIZE bsize) {
 void vp9_encode_sb(MACROBLOCK *x, BLOCK_SIZE bsize) {
   MACROBLOCKD *const xd = &x->e_mbd;
   struct optimize_ctx ctx;
-  MB_MODE_INFO *mbmi = &xd->mi[0]->mbmi;
+  MB_MODE_INFO *mbmi = &xd->mi[0].src_mi->mbmi;
   struct encode_b_args arg = {x, &ctx, &mbmi->skip};
   int plane;
+
+  mbmi->skip = 1;
+
+  if (x->skip)
+    return;
 
   for (plane = 0; plane < MAX_MB_PLANE; ++plane) {
     if (!x->skip_recode)
@@ -584,12 +600,12 @@ static void encode_block_intra(int plane, int block, BLOCK_SIZE plane_bsize,
   struct encode_b_args* const args = arg;
   MACROBLOCK *const x = args->x;
   MACROBLOCKD *const xd = &x->e_mbd;
-  MB_MODE_INFO *mbmi = &xd->mi[0]->mbmi;
+  MB_MODE_INFO *mbmi = &xd->mi[0].src_mi->mbmi;
   struct macroblock_plane *const p = &x->plane[plane];
   struct macroblockd_plane *const pd = &xd->plane[plane];
-  int16_t *coeff = BLOCK_OFFSET(p->coeff, block);
-  int16_t *qcoeff = BLOCK_OFFSET(p->qcoeff, block);
-  int16_t *dqcoeff = BLOCK_OFFSET(pd->dqcoeff, block);
+  tran_low_t *coeff = BLOCK_OFFSET(p->coeff, block);
+  tran_low_t *qcoeff = BLOCK_OFFSET(p->qcoeff, block);
+  tran_low_t *dqcoeff = BLOCK_OFFSET(pd->dqcoeff, block);
   const scan_order *scan_order;
   TX_TYPE tx_type;
   PREDICTION_MODE mode;
@@ -669,7 +685,7 @@ static void encode_block_intra(int plane, int block, BLOCK_SIZE plane_bsize,
     case TX_4X4:
       tx_type = get_tx_type_4x4(pd->plane_type, xd, block);
       scan_order = &vp9_scan_orders[TX_4X4][tx_type];
-      mode = plane == 0 ? get_y_mode(xd->mi[0], block) : mbmi->uv_mode;
+      mode = plane == 0 ? get_y_mode(xd->mi[0].src_mi, block) : mbmi->uv_mode;
       vp9_predict_intra_block(xd, block, bwl, TX_4X4, mode,
                               x->skip_encode ? src : dst,
                               x->skip_encode ? src_stride : dst_stride,
@@ -716,7 +732,7 @@ void vp9_encode_block_intra(MACROBLOCK *x, int plane, int block,
 
 void vp9_encode_intra_block_plane(MACROBLOCK *x, BLOCK_SIZE bsize, int plane) {
   const MACROBLOCKD *const xd = &x->e_mbd;
-  struct encode_b_args arg = {x, NULL, &xd->mi[0]->mbmi.skip};
+  struct encode_b_args arg = {x, NULL, &xd->mi[0].src_mi->mbmi.skip};
 
   vp9_foreach_transformed_block_in_plane(xd, bsize, plane, encode_block_intra,
                                          &arg);

@@ -10,6 +10,7 @@
 
 #include <arm_neon.h>
 #include "./vpx_config.h"
+#include "vpx_ports/arm.h"
 
 static INLINE void vp8_loop_filter_neon(
         uint8x16_t qblimit,  // flimit
@@ -253,23 +254,7 @@ void vp8_loop_filter_horizontal_edge_uv_neon(
 
 static INLINE void write_4x8(unsigned char *dst, int pitch,
                              const uint8x8x4_t result) {
-#if (__GNUC__ == 4 && (__GNUC_MINOR__ >= 7))
-    vst4_lane_u8(dst, result, 0);
-    dst += pitch;
-    vst4_lane_u8(dst, result, 1);
-    dst += pitch;
-    vst4_lane_u8(dst, result, 2);
-    dst += pitch;
-    vst4_lane_u8(dst, result, 3);
-    dst += pitch;
-    vst4_lane_u8(dst, result, 4);
-    dst += pitch;
-    vst4_lane_u8(dst, result, 5);
-    dst += pitch;
-    vst4_lane_u8(dst, result, 6);
-    dst += pitch;
-    vst4_lane_u8(dst, result, 7);
-#else
+#ifdef VPX_INCOMPATIBLE_GCC
     /*
      * uint8x8x4_t result
     00 01 02 03 | 04 05 06 07
@@ -316,7 +301,23 @@ static INLINE void write_4x8(unsigned char *dst, int pitch,
     vst1_lane_u32((uint32_t *)dst, x_2_6, 1);
     dst += pitch;
     vst1_lane_u32((uint32_t *)dst, x_3_7, 1);
-#endif
+#else
+    vst4_lane_u8(dst, result, 0);
+    dst += pitch;
+    vst4_lane_u8(dst, result, 1);
+    dst += pitch;
+    vst4_lane_u8(dst, result, 2);
+    dst += pitch;
+    vst4_lane_u8(dst, result, 3);
+    dst += pitch;
+    vst4_lane_u8(dst, result, 4);
+    dst += pitch;
+    vst4_lane_u8(dst, result, 5);
+    dst += pitch;
+    vst4_lane_u8(dst, result, 6);
+    dst += pitch;
+    vst4_lane_u8(dst, result, 7);
+#endif  // VPX_INCOMPATIBLE_GCC
 }
 
 void vp8_loop_filter_vertical_edge_y_neon(

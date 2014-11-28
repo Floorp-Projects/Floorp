@@ -12,10 +12,6 @@
 #include "vpx_ports/mem.h"
 #include "vpx/vpx_integer.h"
 
-#ifdef _MSC_VER
-#define __builtin_prefetch(x)
-#endif
-
 static const uint16_t bilinear_taps_coeff[8][2] = {
     {128,   0},
     {112,  16},

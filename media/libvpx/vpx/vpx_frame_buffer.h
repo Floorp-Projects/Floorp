@@ -43,15 +43,15 @@ typedef struct vpx_codec_frame_buffer {
  *
  * This callback is invoked by the decoder to retrieve data for the frame
  * buffer in order for the decode call to complete. The callback must
- * allocate at least min_size in bytes and assign it to fb->data. Then the
- * callback must set fb->size to the allocated size. The application does not
- * need to align the allocated data. The callback is triggered when the
- * decoder needs a frame buffer to decode a compressed image into. This
- * function may be called more than once for every call to vpx_codec_decode.
- * The application may set fb->priv to some data which will be passed
- * back in the ximage and the release function call. |fb| is guaranteed to
- * not be NULL. On success the callback must return 0. Any failure the
- * callback must return a value less than 0.
+ * allocate at least min_size in bytes and assign it to fb->data. The callback
+ * must zero out all the data allocated. Then the callback must set fb->size
+ * to the allocated size. The application does not need to align the allocated
+ * data. The callback is triggered when the decoder needs a frame buffer to
+ * decode a compressed image into. This function may be called more than once
+ * for every call to vpx_codec_decode. The application may set fb->priv to
+ * some data which will be passed back in the ximage and the release function
+ * call. |fb| is guaranteed to not be NULL. On success the callback must
+ * return 0. Any failure the callback must return a value less than 0.
  *
  * \param[in] priv         Callback's private data
  * \param[in] new_size     Size in bytes needed by the buffer

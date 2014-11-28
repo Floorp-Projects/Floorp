@@ -3119,6 +3119,12 @@ nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName, int64_t aId,
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
+  nsCString origin;
+  nsresult rv =
+    quota::QuotaManager::GetInfoFromWindow(window, nullptr, &origin, nullptr,
+                                           nullptr);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   IDBOpenDBOptions options;
   JS::Rooted<JS::Value> optionsVal(aCx, aOptions);
   if (!options.Init(aCx, optionsVal)) {
@@ -3127,12 +3133,6 @@ nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName, int64_t aId,
 
   quota::PersistenceType persistenceType =
     quota::PersistenceTypeFromStorage(options.mStorage);
-
-  nsCString origin;
-  nsresult rv =
-    quota::QuotaManager::GetInfoFromWindow(window, persistenceType, nullptr,
-                                           &origin, nullptr, nullptr);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<indexedDB::IndexedDatabaseManager> mgr =
     indexedDB::IndexedDatabaseManager::Get();
