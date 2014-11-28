@@ -14,6 +14,8 @@
   %newTabDTD;
   <!ENTITY % searchBarDTD SYSTEM "chrome://browser/locale/searchbar.dtd">
   %searchBarDTD;
+  <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
+  %browserDTD;
 ]>
 
 <xul:window id="newtab-window" xmlns="http://www.w3.org/1999/xhtml"
@@ -28,7 +30,7 @@
   <xul:panel id="newtab-search-panel" orient="vertical" type="arrow"
              noautohide="true" hidden="true">
     <xul:hbox id="newtab-search-manage" class="newtab-search-panel-engine">
-      <xul:label>&cmd_engineManager.label;</xul:label>
+      <xul:label>&changeSearchSettings.button;</xul:label>
     </xul:hbox>
   </xul:panel>
 
