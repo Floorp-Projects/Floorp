@@ -887,11 +887,15 @@ protected:
   /**
    * Start timer to update download progress.
    */
-  nsresult StartProgress();
+  void StartProgressTimer();
   /**
-   * Stop progress information timer.
+   * Start sending progress and/or stalled events.
    */
-  nsresult StopProgress();
+  void StartProgress();
+  /**
+   * Stop progress information timer and events.
+   */
+  void StopProgress();
 
   /**
    * Dispatches an error event to a child source element.
@@ -1087,9 +1091,8 @@ protected:
 
   // Time that data was last read from the media resource. Used for
   // computing if the download has stalled and to rate limit progress events
-  // when data is arriving slower than PROGRESS_MS. A value of null indicates
-  // that a stall event has already fired and not to fire another one until
-  // more data is received. Read/Write from the main thread only.
+  // when data is arriving slower than PROGRESS_MS.
+  // Read/Write from the main thread only.
   TimeStamp mDataTime;
 
   // Media 'currentTime' value when the last timeupdate event occurred.
