@@ -479,24 +479,18 @@ IDBFactory::OpenInternal(nsIPrincipal* aPrincipal,
     return nullptr;
   }
 
-  // XXX We need a bug to switch to temporary storage by default.
-
   PersistenceType persistenceType;
-  bool persistenceTypeIsExplicit;
 
   if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
     // Chrome privilege always gets persistent storage.
     persistenceType = PERSISTENCE_TYPE_PERSISTENT;
-    persistenceTypeIsExplicit = false;
   } else {
     persistenceType = PersistenceTypeFromStorage(aStorageType);
-    persistenceTypeIsExplicit = aStorageType.WasPassed();
   }
 
   DatabaseMetadata& metadata = commonParams.metadata();
   metadata.name() = aName;
   metadata.persistenceType() = persistenceType;
-  metadata.persistenceTypeIsExplicit() = persistenceTypeIsExplicit;
 
   FactoryRequestParams params;
   if (aDeleting) {
