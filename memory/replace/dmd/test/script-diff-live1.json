@@ -1,7 +1,7 @@
 {
- "version": 2,
+ "version": 3,
  "invocation": {
-  "dmdEnvVar": "--sample-below=127",
+  "dmdEnvVar": "--mode=live --sample-below=127",
   "mode": "live",
   "sampleBelowSize": 127
  },

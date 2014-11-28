@@ -1,7 +1,7 @@
 {
- "version": 2,
+ "version": 3,
  "invocation": {
-  "dmdEnvVar": "--sample-below=127",
+  "dmdEnvVar": "--mode=dark-matter --sample-below=127",
   "mode": "dark-matter",
   "sampleBelowSize": 127
  },
