@@ -80,7 +80,8 @@ static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sUnbondingRunnableArray;
  *  Classes only used in this file
  */
 
-class SetupAfterEnabledTask MOZ_FINAL : public nsRunnable
+class BluetoothServiceBluedroid::SetupAfterEnabledTask MOZ_FINAL
+  : public nsRunnable
 {
 public:
   class SetAdapterPropertyResultHandler MOZ_FINAL
@@ -128,12 +129,12 @@ public:
  * result handlers and calls |Proceed| after all results handlers
  * have been run.
  */
-class ProfileDeinitResultHandler MOZ_FINAL
-: public BluetoothProfileResultHandler
+class BluetoothServiceBluedroid::ProfileDeinitResultHandler MOZ_FINAL
+  : public BluetoothProfileResultHandler
 {
 public:
   ProfileDeinitResultHandler(unsigned char aNumProfiles)
-  : mNumProfiles(aNumProfiles)
+    : mNumProfiles(aNumProfiles)
   {
     MOZ_ASSERT(mNumProfiles);
   }
@@ -161,7 +162,7 @@ private:
   unsigned char mNumProfiles;
 };
 
-class CleanupTask MOZ_FINAL : public nsRunnable
+class BluetoothServiceBluedroid::CleanupTask MOZ_FINAL : public nsRunnable
 {
 public:
   NS_IMETHOD
@@ -214,8 +215,9 @@ public:
 /**
  *  Static callback functions
  */
-static ControlPlayStatus
-PlayStatusStringToControlPlayStatus(const nsAString& aPlayStatus)
+ControlPlayStatus
+BluetoothServiceBluedroid::PlayStatusStringToControlPlayStatus(
+  const nsAString& aPlayStatus)
 {
   ControlPlayStatus playStatus = ControlPlayStatus::PLAYSTATUS_UNKNOWN;
   if (aPlayStatus.EqualsLiteral("STOPPED")) {
@@ -238,8 +240,8 @@ PlayStatusStringToControlPlayStatus(const nsAString& aPlayStatus)
 /**
  *  Static functions
  */
-static bool
-EnsureBluetoothHalLoad()
+bool
+BluetoothServiceBluedroid::EnsureBluetoothHalLoad()
 {
   sBtInterface = BluetoothInterface::GetInstance();
   NS_ENSURE_TRUE(sBtInterface, false);
@@ -247,7 +249,8 @@ EnsureBluetoothHalLoad()
   return true;
 }
 
-class EnableResultHandler MOZ_FINAL : public BluetoothResultHandler
+class BluetoothServiceBluedroid::EnableResultHandler MOZ_FINAL
+  : public BluetoothResultHandler
 {
 public:
   void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
@@ -267,12 +270,12 @@ public:
  * result handlers and calls |Proceed| after all results handlers
  * have been run.
  */
-class ProfileInitResultHandler MOZ_FINAL
-: public BluetoothProfileResultHandler
+class BluetoothServiceBluedroid::ProfileInitResultHandler MOZ_FINAL
+  : public BluetoothProfileResultHandler
 {
 public:
   ProfileInitResultHandler(unsigned char aNumProfiles)
-  : mNumProfiles(aNumProfiles)
+    : mNumProfiles(aNumProfiles)
   {
     MOZ_ASSERT(mNumProfiles);
   }
@@ -300,7 +303,8 @@ private:
   unsigned char mNumProfiles;
 };
 
-class InitResultHandler MOZ_FINAL : public BluetoothResultHandler
+class BluetoothServiceBluedroid::InitResultHandler MOZ_FINAL
+  : public BluetoothResultHandler
 {
 public:
   void Init() MOZ_OVERRIDE
@@ -339,8 +343,8 @@ public:
   }
 };
 
-static nsresult
-StartGonkBluetooth()
+nsresult
+BluetoothServiceBluedroid::StartGonkBluetooth()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -364,7 +368,8 @@ StartGonkBluetooth()
   return NS_OK;
 }
 
-class DisableResultHandler MOZ_FINAL : public BluetoothResultHandler
+class BluetoothServiceBluedroid::DisableResultHandler MOZ_FINAL
+  : public BluetoothResultHandler
 {
 public:
   void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
@@ -380,8 +385,8 @@ public:
   }
 };
 
-static nsresult
-StopGonkBluetooth()
+nsresult
+BluetoothServiceBluedroid::StopGonkBluetooth()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -404,9 +409,10 @@ StopGonkBluetooth()
   return NS_OK;
 }
 
-static void
-ReplyStatusError(BluetoothReplyRunnable* aBluetoothReplyRunnable,
-                 BluetoothStatus aStatusCode, const nsAString& aCustomMsg)
+void
+BluetoothServiceBluedroid::ReplyStatusError(
+  BluetoothReplyRunnable* aBluetoothReplyRunnable,
+  BluetoothStatus aStatusCode, const nsAString& aCustomMsg)
 {
   MOZ_ASSERT(aBluetoothReplyRunnable, "Reply runnable is nullptr");
 
@@ -554,8 +560,9 @@ BluetoothServiceBluedroid::GetAdaptersInternal(
   return NS_OK;
 }
 
-class GetRemoteDevicePropertiesResultHandler MOZ_FINAL
-: public BluetoothResultHandler
+class BluetoothServiceBluedroid::GetRemoteDevicePropertiesResultHandler
+  MOZ_FINAL
+  : public BluetoothResultHandler
 {
 public:
   GetRemoteDevicePropertiesResultHandler(const nsAString& aDeviceAddress)
@@ -653,7 +660,8 @@ BluetoothServiceBluedroid::GetPairedDevicePropertiesInternal(
   return NS_OK;
 }
 
-class StartDiscoveryResultHandler MOZ_FINAL : public BluetoothResultHandler
+class BluetoothServiceBluedroid::StartDiscoveryResultHandler MOZ_FINAL
+  : public BluetoothResultHandler
 {
 public:
   StartDiscoveryResultHandler(BluetoothReplyRunnable* aRunnable)
@@ -685,7 +693,8 @@ BluetoothServiceBluedroid::StartDiscoveryInternal(
   return NS_OK;
 }
 
-class CancelDiscoveryResultHandler MOZ_FINAL : public BluetoothResultHandler
+class BluetoothServiceBluedroid::CancelDiscoveryResultHandler MOZ_FINAL
+  : public BluetoothResultHandler
 {
 public:
   CancelDiscoveryResultHandler(BluetoothReplyRunnable* aRunnable)
@@ -717,7 +726,8 @@ BluetoothServiceBluedroid::StopDiscoveryInternal(
   return NS_OK;
 }
 
-class GetRemoteServicesResultHandler MOZ_FINAL : public BluetoothResultHandler
+class BluetoothServiceBluedroid::GetRemoteServicesResultHandler MOZ_FINAL
+  : public BluetoothResultHandler
 {
 public:
   GetRemoteServicesResultHandler(BluetoothReplyRunnable* aRunnable)
@@ -759,7 +769,8 @@ BluetoothServiceBluedroid::FetchUuidsInternal(
   return NS_OK;
 }
 
-class SetAdapterPropertyResultHandler MOZ_FINAL : public BluetoothResultHandler
+class BluetoothServiceBluedroid::SetAdapterPropertyResultHandler MOZ_FINAL
+  : public BluetoothResultHandler
 {
 public:
   SetAdapterPropertyResultHandler(BluetoothReplyRunnable* aRunnable)
@@ -810,7 +821,8 @@ BluetoothServiceBluedroid::UpdateSdpRecords(
   return true;
 }
 
-class CreateBondResultHandler MOZ_FINAL : public BluetoothResultHandler
+class BluetoothServiceBluedroid::CreateBondResultHandler MOZ_FINAL
+  : public BluetoothResultHandler
 {
 public:
   CreateBondResultHandler(BluetoothReplyRunnable* aRunnable)
@@ -845,7 +857,8 @@ BluetoothServiceBluedroid::CreatePairedDeviceInternal(
   return NS_OK;
 }
 
-class RemoveBondResultHandler MOZ_FINAL : public BluetoothResultHandler
+class BluetoothServiceBluedroid::RemoveBondResultHandler MOZ_FINAL
+  : public BluetoothResultHandler
 {
 public:
   RemoveBondResultHandler(BluetoothReplyRunnable* aRunnable)
@@ -880,7 +893,8 @@ BluetoothServiceBluedroid::RemoveDeviceInternal(
   return NS_OK;
 }
 
-class PinReplyResultHandler MOZ_FINAL : public BluetoothResultHandler
+class BluetoothServiceBluedroid::PinReplyResultHandler MOZ_FINAL
+  : public BluetoothResultHandler
 {
 public:
   PinReplyResultHandler(BluetoothReplyRunnable* aRunnable)
@@ -922,7 +936,8 @@ BluetoothServiceBluedroid::SetPasskeyInternal(
   return;
 }
 
-class SspReplyResultHandler MOZ_FINAL : public BluetoothResultHandler
+class BluetoothServiceBluedroid::SspReplyResultHandler MOZ_FINAL
+  : public BluetoothResultHandler
 {
 public:
   SspReplyResultHandler(BluetoothReplyRunnable* aRunnable)
@@ -958,8 +973,8 @@ BluetoothServiceBluedroid::SetPairingConfirmationInternal(
                          aConfirm, 0, new SspReplyResultHandler(aRunnable));
 }
 
-static void
-NextBluetoothProfileController()
+void
+BluetoothServiceBluedroid::NextBluetoothProfileController()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -973,10 +988,11 @@ NextBluetoothProfileController()
   }
 }
 
-static void
-ConnectDisconnect(bool aConnect, const nsAString& aDeviceAddress,
-                  BluetoothReplyRunnable* aRunnable,
-                  uint16_t aServiceUuid, uint32_t aCod = 0)
+void
+BluetoothServiceBluedroid::ConnectDisconnect(
+  bool aConnect, const nsAString& aDeviceAddress,
+  BluetoothReplyRunnable* aRunnable,
+  uint16_t aServiceUuid, uint32_t aCod)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aRunnable);
