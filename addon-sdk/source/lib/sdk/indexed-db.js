@@ -36,10 +36,42 @@ let principal = Cc["@mozilla.org/scriptsecuritymanager;1"].
 	               getService(Ci.nsIScriptSecurityManager).
 	               getCodebasePrincipal(principaluri);
 
+function toArray(args) {
+  return Array.prototype.slice.call(args);
+}
+
+function openInternal(args, forPrincipal, deleting) {
+  if (forPrincipal) {
+    args = toArray(args);
+  } else {
+    args = [principal].concat(toArray(args));
+  }
+  if (args.length == 2) {
+    args.push({ storage: "persistent" });
+  } else if (!deleting && args.length >= 3 && typeof args[2] === "number") {
+    args[2] = { version: args[2], storage: "persistent" };
+  }
+
+  if (deleting) {
+    return indexedDB.deleteForPrincipal.apply(indexedDB, args);
+  }
+
+  return indexedDB.openForPrincipal.apply(indexedDB, args);
+}
+
 exports.indexedDB = Object.freeze({
-  open: indexedDB.openForPrincipal.bind(indexedDB, principal),
-  openForPrincipal: indexedDB.openForPrincipal.bind(indexedDB),
-  deleteDatabase: indexedDB.deleteForPrincipal.bind(indexedDB, principal),
+  open: function () {
+    return openInternal(arguments, false, false);
+  },
+  deleteDatabase: function () {
+    return openInternal(arguments, false, true);
+  },
+  openForPrincipal: function () {
+    return openInternal(arguments, true, false);
+  },
+  deleteForPrincipal: function () {
+    return openInternal(arguments, true, true);
+  },
   cmp: indexedDB.cmp.bind(indexedDB)
 });
 

@@ -80,7 +80,8 @@ public:
     AssertIsOnIOThread();
 
     return !mPersistentStorageFileManagers.IsEmpty() ||
-           !mTemporaryStorageFileManagers.IsEmpty();
+           !mTemporaryStorageFileManagers.IsEmpty() ||
+           !mDefaultStorageFileManagers.IsEmpty();
   }
 
   void
@@ -105,6 +106,7 @@ private:
 
   nsTArray<nsRefPtr<FileManager> > mPersistentStorageFileManagers;
   nsTArray<nsRefPtr<FileManager> > mTemporaryStorageFileManagers;
+  nsTArray<nsRefPtr<FileManager> > mDefaultStorageFileManagers;
 };
 
 namespace {
@@ -176,16 +178,6 @@ private:
   int32_t mSliceRefCnt;
   bool mResult;
   bool mWaiting;
-};
-
-struct MOZ_STACK_CLASS InvalidateInfo
-{
-  InvalidateInfo(PersistenceType aPersistenceType, const nsACString& aPattern)
-  : persistenceType(aPersistenceType), pattern(aPattern)
-  { }
-
-  PersistenceType persistenceType;
-  const nsACString& pattern;
 };
 
 void
@@ -554,66 +546,49 @@ IndexedDatabaseManager::AddFileManager(FileManager* aFileManager)
   info->AddFileManager(aFileManager);
 }
 
-// static
-PLDHashOperator
-IndexedDatabaseManager::InvalidateAndRemoveFileManagers(
-                                             const nsACString& aKey,
-                                             nsAutoPtr<FileManagerInfo>& aValue,
-                                             void* aUserArg)
-{
-  AssertIsOnIOThread();
-  NS_ASSERTION(!aKey.IsEmpty(), "Empty key!");
-  NS_ASSERTION(aValue, "Null pointer!");
-
-  if (!aUserArg) {
-    aValue->InvalidateAllFileManagers();
-    return PL_DHASH_REMOVE;
-  }
-
-  InvalidateInfo* info = static_cast<InvalidateInfo*>(aUserArg);
-
-  if (PatternMatchesOrigin(info->pattern, aKey)) {
-    aValue->InvalidateAndRemoveFileManagers(info->persistenceType);
-
-    if (!aValue->HasFileManagers()) {
-      return PL_DHASH_REMOVE;
-    }
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 void
 IndexedDatabaseManager::InvalidateAllFileManagers()
 {
   AssertIsOnIOThread();
 
-  mFileManagerInfos.Enumerate(InvalidateAndRemoveFileManagers, nullptr);
+  class MOZ_STACK_CLASS Helper MOZ_FINAL
+  {
+  public:
+    static PLDHashOperator
+    Enumerate(const nsACString& aKey,
+              FileManagerInfo* aValue,
+              void* aUserArg)
+    {
+      AssertIsOnIOThread();
+      MOZ_ASSERT(!aKey.IsEmpty());
+      MOZ_ASSERT(aValue);
+
+      aValue->InvalidateAllFileManagers();
+      return PL_DHASH_NEXT;
+    }
+  };
+
+  mFileManagerInfos.EnumerateRead(Helper::Enumerate, nullptr);
+  mFileManagerInfos.Clear();
 }
 
 void
 IndexedDatabaseManager::InvalidateFileManagers(
                                   PersistenceType aPersistenceType,
-                                  const OriginOrPatternString& aOriginOrPattern)
+                                  const nsACString& aOrigin)
 {
   AssertIsOnIOThread();
-  NS_ASSERTION(!aOriginOrPattern.IsEmpty(), "Empty pattern!");
+  MOZ_ASSERT(!aOrigin.IsEmpty());
 
-  if (aOriginOrPattern.IsOrigin()) {
-    FileManagerInfo* info;
-    if (!mFileManagerInfos.Get(aOriginOrPattern, &info)) {
-      return;
-    }
-
-    info->InvalidateAndRemoveFileManagers(aPersistenceType);
-
-    if (!info->HasFileManagers()) {
-      mFileManagerInfos.Remove(aOriginOrPattern);
-    }
+  FileManagerInfo* info;
+  if (!mFileManagerInfos.Get(aOrigin, &info)) {
+    return;
   }
-  else {
-    InvalidateInfo info(aPersistenceType, aOriginOrPattern);
-    mFileManagerInfos.Enumerate(InvalidateAndRemoveFileManagers, &info);
+
+  info->InvalidateAndRemoveFileManagers(aPersistenceType);
+
+  if (!info->HasFileManagers()) {
+    mFileManagerInfos.Remove(aOrigin);
   }
 }
 
@@ -792,6 +767,10 @@ FileManagerInfo::InvalidateAllFileManagers() const
   for (i = 0; i < mTemporaryStorageFileManagers.Length(); i++) {
     mTemporaryStorageFileManagers[i]->Invalidate();
   }
+
+  for (i = 0; i < mDefaultStorageFileManagers.Length(); i++) {
+    mDefaultStorageFileManagers[i]->Invalidate();
+  }
 }
 
 void
@@ -836,11 +815,12 @@ FileManagerInfo::GetArray(PersistenceType aPersistenceType)
       return mPersistentStorageFileManagers;
     case PERSISTENCE_TYPE_TEMPORARY:
       return mTemporaryStorageFileManagers;
+    case PERSISTENCE_TYPE_DEFAULT:
+      return mDefaultStorageFileManagers;
 
     case PERSISTENCE_TYPE_INVALID:
     default:
       MOZ_CRASH("Bad storage type value!");
-      return mPersistentStorageFileManagers;
   }
 }
 

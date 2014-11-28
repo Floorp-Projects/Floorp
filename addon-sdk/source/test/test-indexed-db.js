@@ -28,16 +28,82 @@ exports["test db variables"] = function(assert) {
 }
 
 exports["test open"] = function(assert, done) {
-  let request = indexedDB.open("MyTestDatabase");
+  testOpen(0, assert, done);
+}
+
+function testOpen(step, assert, done) {
+  const dbName = "MyTestDatabase";
+  const openParams = [
+    { dbName: "MyTestDatabase", dbVersion: 10 },
+    { dbName: "MyTestDatabase" },
+    { dbName: "MyTestDatabase", dbOptions: { storage: "temporary" } },
+    { dbName: "MyTestDatabase", dbOptions: { version: 20, storage: "default" } }
+  ];
+
+  let params = openParams[step];
+
+  let request;
+  let expectedStorage;
+  let expectedVersion;
+  let upgradeNeededCalled = false;
+  if ("dbVersion" in params) {
+    request = indexedDB.open(params.dbName, params.dbVersion);
+    expectedVersion = params.dbVersion;
+    expectedStorage = "persistent";
+  } else if ("dbOptions" in params) {
+    request = indexedDB.open(params.dbName, params.dbOptions);
+    if ("version" in params.dbOptions) {
+      expectedVersion = params.dbOptions.version;
+    } else {
+      expectedVersion = 1;
+    }
+    if ("storage" in params.dbOptions) {
+      expectedStorage = params.dbOptions.storage;
+    } else {
+      expectedStorage = "persistent";
+    }
+  } else {
+    request = indexedDB.open(params.dbName);
+    expectedVersion = 1;
+    expectedStorage = "persistent";
+  }
   request.onerror = function(event) {
     assert.fail("Failed to open indexedDB")
     done();
-  };
+  }
+  request.onupgradeneeded = function(event) {
+    upgradeNeededCalled = true;
+    assert.equal(event.oldVersion, 0, "Correct old version");
+  }
   request.onsuccess = function(event) {
     assert.pass("IndexedDB was open");
-    done();
-  };
-};
+    assert.equal(upgradeNeededCalled, true, "Upgrade needed called");
+    let db = request.result;
+    assert.equal(db.storage, expectedStorage, "Storage is correct");
+    db.onversionchange = function(event) {
+      assert.equal(event.oldVersion, expectedVersion, "Old version is correct");
+      db.close();
+    }
+    if ("dbOptions" in params) {
+      request = indexedDB.deleteDatabase(params.dbName, params.dbOptions);
+    } else {
+      request = indexedDB.deleteDatabase(params.dbName);
+    }
+    request.onerror = function(event) {
+      assert.fail("Failed to delete indexedDB")
+      done();
+    }
+    request.onsuccess = function(event) {
+      assert.pass("IndexedDB was deleted");
+
+      if (++step == openParams.length) {
+        done();
+      } else {
+        testOpen(step, assert, done);
+      }
+    }
+  }
+}
 
 exports["test dbname is unprefixed"] = function(assert, done) {
   // verify fixes in https://bugzilla.mozilla.org/show_bug.cgi?id=786688

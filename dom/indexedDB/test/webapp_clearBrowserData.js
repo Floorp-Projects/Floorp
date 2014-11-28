@@ -120,6 +120,8 @@ function start()
   SpecialPowers.addPermission("browser", true, { manifestURL: manifestURL,
                                                  isInBrowserElement: false });
   SpecialPowers.addPermission("embed-apps", true, document);
+  SpecialPowers.addPermission("indexedDB", true, { manifestURL: manifestURL,
+                                                   isInBrowserElement: false });
 
   SpecialPowers.setAllAppsLaunchable(true);
 
@@ -131,6 +133,8 @@ function start()
       SpecialPowers.removePermission("browser",
                                      location.protocol + "//" + appDomain);
       SpecialPowers.removePermission("embed-apps", location.href);
+      SpecialPowers.removePermission("indexedDB",
+                                     location.protocol + "//" + appDomain);
     }
   }, false);
 

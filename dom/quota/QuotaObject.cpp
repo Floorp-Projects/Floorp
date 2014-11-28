@@ -157,7 +157,7 @@ QuotaObject::MaybeAllocateMoreSpace(int64_t aOffset, int32_t aCount)
   }
 
   nsRefPtr<GroupInfo> complementaryGroupInfo =
-    groupInfo->mGroupInfoPair->LockedGetGroupInfo(
+    groupInfo->mGroupInfoTriple->LockedGetGroupInfo(
       ComplementaryPersistenceType(groupInfo->mPersistenceType));
 
   uint64_t delta = end - mSize;
@@ -222,13 +222,14 @@ QuotaObject::MaybeAllocateMoreSpace(int64_t aOffset, int32_t aCount)
         originInfo->mGroupInfo->mPersistenceType;
       nsCString group = originInfo->mGroupInfo->mGroup;
       nsCString origin = originInfo->mOrigin;
+      bool isApp = originInfo->mIsApp;
       quotaManager->LockedRemoveQuotaForOrigin(persistenceType, group, origin);
 
 #ifdef DEBUG
       originInfos[i] = nullptr;
 #endif
 
-      origins.AppendElement(OriginParams(persistenceType, origin));
+      origins.AppendElement(OriginParams(persistenceType, origin, isApp));
     }
 
     // We unlocked and relocked several times so we need to recompute all the
@@ -296,14 +297,14 @@ bool
 OriginInfo::IsTreatedAsPersistent() const
 {
   return QuotaManager::IsTreatedAsPersistent(mGroupInfo->mPersistenceType,
-                                             mOrigin, mIsApp);
+                                             mIsApp);
 }
 
 bool
 OriginInfo::IsTreatedAsTemporary() const
 {
   return QuotaManager::IsTreatedAsTemporary(mGroupInfo->mPersistenceType,
-                                            mOrigin, mIsApp);
+                                            mIsApp);
 }
 
 void
@@ -417,27 +418,6 @@ GroupInfo::LockedRemoveOriginInfos()
   }
 }
 
-void
-GroupInfo::LockedRemoveOriginInfosForPattern(const nsACString& aPattern)
-{
-  AssertCurrentThreadOwnsQuotaMutex();
-
-  for (uint32_t index = mOriginInfos.Length(); index > 0; index--) {
-    if (PatternMatchesOrigin(aPattern, mOriginInfos[index - 1]->mOrigin)) {
-      mUsage -= mOriginInfos[index - 1]->mUsage;
-
-      if (mOriginInfos[index - 1]->IsTreatedAsTemporary()) {
-        QuotaManager* quotaManager = QuotaManager::Get();
-        NS_ASSERTION(quotaManager, "Shouldn't be null!");
-
-        quotaManager->mTemporaryStorageUsage -= mOriginInfos[index - 1]->mUsage;
-      }
-
-      mOriginInfos.RemoveElementAt(index - 1);
-    }
-  }
-}
-
 uint64_t
 GroupInfo::LockedGetTemporaryUsage()
 {
@@ -495,13 +475,16 @@ GroupInfo::LockedRemoveTemporaryOriginInfos()
 }
 
 nsRefPtr<GroupInfo>&
-GroupInfoPair::GetGroupInfoForPersistenceType(PersistenceType aPersistenceType)
+GroupInfoTriple::GetGroupInfoForPersistenceType(
+                                               PersistenceType aPersistenceType)
 {
   switch (aPersistenceType) {
     case PERSISTENCE_TYPE_PERSISTENT:
       return mPersistentStorageGroupInfo;
     case PERSISTENCE_TYPE_TEMPORARY:
       return mTemporaryStorageGroupInfo;
+    case PERSISTENCE_TYPE_DEFAULT:
+      return mDefaultStorageGroupInfo;
 
     case PERSISTENCE_TYPE_INVALID:
     default:
