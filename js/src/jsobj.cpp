@@ -2394,7 +2394,7 @@ JSObject::reportNotExtensible(JSContext* cx, unsigned report)
 // immutable-prototype behavior is enforced; if it's false, behavior is not
 // enforced, and immutable-prototype bits stored on objects are completely
 // ignored.
-static const bool ImmutablePrototypesEnabled = true;
+static const bool ImmutablePrototypesEnabled = false;
 
 JS_FRIEND_API(bool)
 JS_ImmutablePrototypesEnabled()
@@ -3340,6 +3340,7 @@ JSObject::dump()
     if (obj->hasUncacheableProto()) fprintf(stderr, " has_uncacheable_proto");
     if (obj->hadElementsAccess()) fprintf(stderr, " had_elements_access");
     if (obj->wasNewScriptCleared()) fprintf(stderr, " new_script_cleared");
+    if (!obj->hasLazyPrototype() && obj->nonLazyPrototypeIsImmutable()) fprintf(stderr, " immutable_prototype");
 
     if (obj->isNative()) {
         NativeObject* nobj = &obj->as<NativeObject>();
