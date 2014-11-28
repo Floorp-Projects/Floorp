@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-#define MOTION_MAGNITUDE_THRESHOLD (8*3)
+#define MOTION_MAGNITUDE_THRESHOLD (8 * 3)
 
 typedef enum vp9_denoiser_decision {
   COPY_BLOCK,

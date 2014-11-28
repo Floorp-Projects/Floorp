@@ -17,6 +17,44 @@
 extern "C" {
 #endif
 
+enum {
+  INTRA_ALL       = (1 << DC_PRED) |
+                    (1 << V_PRED) | (1 << H_PRED) |
+                    (1 << D45_PRED) | (1 << D135_PRED) |
+                    (1 << D117_PRED) | (1 << D153_PRED) |
+                    (1 << D207_PRED) | (1 << D63_PRED) |
+                    (1 << TM_PRED),
+  INTRA_DC        = (1 << DC_PRED),
+  INTRA_DC_TM     = (1 << DC_PRED) | (1 << TM_PRED),
+  INTRA_DC_H_V    = (1 << DC_PRED) | (1 << V_PRED) | (1 << H_PRED),
+  INTRA_DC_TM_H_V = (1 << DC_PRED) | (1 << TM_PRED) | (1 << V_PRED) |
+                    (1 << H_PRED)
+};
+
+enum {
+  INTER_ALL = (1 << NEARESTMV) | (1 << NEARMV) | (1 << ZEROMV) | (1 << NEWMV),
+  INTER_NEAREST = (1 << NEARESTMV),
+  INTER_NEAREST_NEAR_NEW = (1 << NEARESTMV) | (1 << NEARMV) | (1 << NEWMV),
+  INTER_NEAREST_NEAR_ZERO = (1 << NEARESTMV) | (1 << NEARMV) | (1 << ZEROMV),
+};
+
+enum {
+  DISABLE_ALL_INTER_SPLIT   = (1 << THR_COMP_GA) |
+                              (1 << THR_COMP_LA) |
+                              (1 << THR_ALTR) |
+                              (1 << THR_GOLD) |
+                              (1 << THR_LAST),
+
+  DISABLE_ALL_SPLIT         = (1 << THR_INTRA) | DISABLE_ALL_INTER_SPLIT,
+
+  DISABLE_COMPOUND_SPLIT    = (1 << THR_COMP_GA) | (1 << THR_COMP_LA),
+
+  LAST_AND_INTRA_SPLIT_ONLY = (1 << THR_COMP_GA) |
+                              (1 << THR_COMP_LA) |
+                              (1 << THR_ALTR) |
+                              (1 << THR_GOLD)
+};
+
 typedef enum {
   DIAMOND = 0,
   NSTEP = 1,
@@ -86,11 +124,6 @@ typedef enum {
 
   // Skips comp inter modes if the best so far is an intra mode.
   FLAG_SKIP_COMP_BESTINTRA = 1 << 1,
-
-  // Skips comp inter modes if the best single intermode so far does
-  // not have the same reference as one of the two references being
-  // tested.
-  FLAG_SKIP_COMP_REFMISMATCH = 1 << 2,
 
   // Skips oblique intra modes if the best so far is an inter mode.
   FLAG_SKIP_INTRA_BESTINTER = 1 << 3,
@@ -284,6 +317,8 @@ typedef struct SPEED_FEATURES {
   // This allows us to use motion search at other sizes as a starting
   // point for this motion search and limits the search range around it.
   int adaptive_motion_search;
+
+  int schedule_mode_search;
 
   // Allows sub 8x8 modes to use the prediction filter that was determined
   // best for 8x8 mode. If set to 0 we always re check all the filters for

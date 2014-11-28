@@ -242,7 +242,7 @@ static void inc_mvs(const MB_MODE_INFO *mbmi, const int_mv mvs[2],
 }
 
 void vp9_update_mv_count(VP9_COMMON *cm, const MACROBLOCKD *xd) {
-  const MODE_INFO *mi = xd->mi[0];
+  const MODE_INFO *mi = xd->mi[0].src_mi;
   const MB_MODE_INFO *const mbmi = &mi->mbmi;
 
   if (mbmi->sb_type < BLOCK_8X8) {

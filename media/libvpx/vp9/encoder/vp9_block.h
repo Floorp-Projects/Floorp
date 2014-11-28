@@ -28,8 +28,8 @@ typedef struct {
 
 struct macroblock_plane {
   DECLARE_ALIGNED(16, int16_t, src_diff[64 * 64]);
-  int16_t *qcoeff;
-  int16_t *coeff;
+  tran_low_t *qcoeff;
+  tran_low_t *coeff;
   uint16_t *eobs;
   struct buf_2d src;
 
@@ -119,8 +119,12 @@ struct macroblock {
   // Used to store sub partition's choices.
   MV pred_mv[MAX_REF_FRAMES];
 
-  void (*fwd_txm4x4)(const int16_t *input, int16_t *output, int stride);
-  void (*itxm_add)(const int16_t *input, uint8_t *dest, int stride, int eob);
+  void (*fwd_txm4x4)(const int16_t *input, tran_low_t *output, int stride);
+  void (*itxm_add)(const tran_low_t *input, uint8_t *dest, int stride, int eob);
+#if CONFIG_VP9_HIGHBITDEPTH
+  void (*high_itxm_add)(const tran_low_t *input, uint8_t *dest, int stride,
+                        int eob, int bd);
+#endif
 };
 
 #ifdef __cplusplus

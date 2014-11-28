@@ -185,6 +185,16 @@ aria::MapToState(EStateRule aRule, dom::Element* aElement, uint64_t* aState)
       return true;
     }
 
+    case eARIAModal:
+    {
+      static const TokenTypeData data(
+        nsGkAtoms::aria_modal, eBoolType,
+        0, states::MODAL);
+
+      MapTokenType(aElement, aState, data);
+      return true;
+    }
+
     case eARIAMultiline:
     {
       static const TokenTypeData data(

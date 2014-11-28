@@ -193,6 +193,28 @@ Observable.prototype = {
 };
 
 /**
+ * The LayouChangesObserver will observe reflows as soon as it is started.
+ * Some devtools actors may cause reflows and it may be wanted to "hide" these
+ * reflows from the LayouChangesObserver consumers.
+ * If this is the case, such actors should require this module and use this
+ * global function to turn the ignore mode on and off temporarily.
+ *
+ * Note that if a node is provided, it will be used to force a sync reflow to
+ * make sure all reflows which occurred before switching the mode on or off are
+ * either observed or ignored depending on the current mode.
+ *
+ * @param {Boolean} ignore
+ * @param {DOMNode} syncReflowNode The node to use to force a sync reflow
+ */
+let gIgnoreLayoutChanges = false;
+exports.setIgnoreLayoutChanges = function(ignore, syncReflowNode) {
+  if (syncReflowNode) {
+    let forceSyncReflow = syncReflowNode.offsetWidth;
+  }
+  gIgnoreLayoutChanges = ignore;
+}
+
+/**
  * The LayoutChangesObserver class is instantiated only once per given tab
  * and is used to track reflows and dom and style changes in that tab.
  * The LayoutActor uses this class to send reflow events to its clients.
@@ -302,6 +324,10 @@ LayoutChangesObserver.prototype = Heritage.extend(Observable.prototype, {
    * @param {Boolean} isInterruptible
    */
   _onReflow: function(start, end, isInterruptible) {
+    if (gIgnoreLayoutChanges) {
+      return;
+    }
+
     // XXX: when/if bug 997092 gets fixed, we will be able to know which
     // elements have been reflowed, which would be a nice thing to add here.
     this.reflows.push({

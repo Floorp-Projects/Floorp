@@ -6,6 +6,7 @@ import os
 import StringIO
 import sys
 import unittest
+import xml.etree.ElementTree as ET
 
 import mozfile
 
@@ -653,6 +654,58 @@ class TestMachFormatter(FormatterTest):
         self.assertIn("OK", self.loglines)
         self.assertIn("Expected results: 5", self.loglines)
         self.assertIn("Unexpected results: 0", self.loglines)
+
+
+class TestXUnitFormatter(FormatterTest):
+
+    def get_formatter(self):
+        return formatters.XUnitFormatter()
+
+    def log_as_xml(self):
+        return ET.fromstring('\n'.join(self.loglines))
+
+    def test_stacktrace_is_present(self):
+        self.logger.suite_start([])
+        self.logger.test_start("test1")
+        self.logger.test_end("test1", "fail", message="Test message", stack='this\nis\na\nstack')
+        self.logger.suite_end()
+
+        root = self.log_as_xml()
+        self.assertIn('this\nis\na\nstack', root.find('testcase/failure').text)
+
+    def test_failure_message(self):
+        self.logger.suite_start([])
+        self.logger.test_start("test1")
+        self.logger.test_end("test1", "fail", message="Test message")
+        self.logger.suite_end()
+
+        root = self.log_as_xml()
+        self.assertEquals('Expected OK, got FAIL', root.find('testcase/failure').get('message'))
+
+    def test_suite_attrs(self):
+        self.logger.suite_start([])
+        self.logger.test_start("test1")
+        self.logger.test_end("test1", "ok", message="Test message")
+        self.logger.suite_end()
+
+        root = self.log_as_xml()
+        self.assertEqual(root.get('skips'), '0')
+        self.assertEqual(root.get('failures'), '0')
+        self.assertEqual(root.get('errors'), '0')
+        self.assertEqual(root.get('tests'), '1')
+        self.assertEqual(root.get('time'), '0.00')
+
+    def test_time_is_not_rounded(self):
+        # call formatter directly, it is easier here
+        formatter = self.get_formatter()
+        formatter.suite_start(dict(time=55000))
+        formatter.test_start(dict(time=55100))
+        formatter.test_end(dict(time=55558, test='id', message='message', status='PASS'))
+        xml_string = formatter.suite_end(dict(time=55559))
+
+        root = ET.fromstring(xml_string)
+        self.assertEqual(root.get('time'), '0.56')
+        self.assertEqual(root.find('testcase').get('time'), '0.46')
 
 
 class TestCommandline(unittest.TestCase):

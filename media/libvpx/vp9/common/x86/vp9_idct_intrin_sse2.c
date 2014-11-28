@@ -3573,6 +3573,7 @@ void vp9_idct32x32_1024_add_sse2(const int16_t *input, uint8_t *dest,
                                  int stride) {
   const __m128i rounding = _mm_set1_epi32(DCT_CONST_ROUNDING);
   const __m128i final_rounding = _mm_set1_epi16(1<<5);
+  const __m128i zero = _mm_setzero_si128();
 
   // idct constants for each stage
   const __m128i stg1_0 = pair_set_epi16(cospi_31_64, -cospi_1_64);
@@ -3635,7 +3636,6 @@ void vp9_idct32x32_1024_add_sse2(const int16_t *input, uint8_t *dest,
           stp2_30, stp2_31;
   __m128i tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
   int i, j, i32;
-  int zero_flag[2];
 
   for (i = 0; i < 4; i++) {
     i32 = (i << 5);
@@ -3710,13 +3710,7 @@ void vp9_idct32x32_1024_add_sse2(const int16_t *input, uint8_t *dest,
       zero_idx[13] = _mm_or_si128(zero_idx[10], zero_idx[11]);
       zero_idx[14] = _mm_or_si128(zero_idx[12], zero_idx[13]);
 
-      zero_idx[0] = _mm_unpackhi_epi64(zero_idx[14], zero_idx[14]);
-      zero_idx[1] = _mm_or_si128(zero_idx[0], zero_idx[14]);
-      zero_idx[2] = _mm_srli_epi64(zero_idx[1], 32);
-      zero_flag[0] = _mm_cvtsi128_si32(zero_idx[1]);
-      zero_flag[1] = _mm_cvtsi128_si32(zero_idx[2]);
-
-      if (!zero_flag[0] && !zero_flag[1]) {
+      if (_mm_movemask_epi8(_mm_cmpeq_epi32(zero_idx[14], zero)) == 0xFFFF) {
         col[i32 + 0] = _mm_setzero_si128();
         col[i32 + 1] = _mm_setzero_si128();
         col[i32 + 2] = _mm_setzero_si128();
@@ -3795,7 +3789,6 @@ void vp9_idct32x32_1024_add_sse2(const int16_t *input, uint8_t *dest,
       col[i32 + 31] = _mm_sub_epi16(stp1_0, stp1_31);
     }
   for (i = 0; i < 4; i++) {
-      const __m128i zero = _mm_setzero_si128();
       // Second 1-D idct
       j = i << 3;
 

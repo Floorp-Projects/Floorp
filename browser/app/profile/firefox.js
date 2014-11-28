@@ -1825,7 +1825,7 @@ pref("privacy.trackingprotection.ui.enabled", false);
 #endif
 
 #ifdef NIGHTLY_BUILD
-pref("browser.tabs.remote.autostart.1", false);
+pref("browser.tabs.remote.autostart.1", true);
 #endif
 
 // Temporary pref to allow printing in e10s windows on some platforms.
