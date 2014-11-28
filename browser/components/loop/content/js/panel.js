@@ -617,10 +617,23 @@ loop.panel = (function(_, mozL10n) {
     handleDeleteButtonClick: function(event) {
       event.stopPropagation();
       event.preventDefault();
-      // XXX We should prompt end user for confirmation; see bug 1092953.
-      this.props.dispatcher.dispatch(new sharedActions.DeleteRoom({
-        roomToken: this.props.room.roomToken
-      }));
+      navigator.mozLoop.confirm({
+        message: mozL10n.get("rooms_list_deleteConfirmation_label"),
+        okButton: null,
+        cancelButton: null
+      }, function(err, result) {
+        if (err) {
+          throw err;
+        }
+
+        if (!result) {
+          return;
+        }
+
+        this.props.dispatcher.dispatch(new sharedActions.DeleteRoom({
+          roomToken: this.props.room.roomToken
+        }));
+      }.bind(this));
     },
 
     renameRoom: function(newRoomName) {
