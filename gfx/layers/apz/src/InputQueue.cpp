@@ -70,6 +70,7 @@ InputQueue::ReceiveInputEvent(const nsRefPtr<AsyncPanZoomController>& aTarget,
       waitForMainThread |= aTarget->NeedToWaitForContent();
     }
     if (block->IsDuringFastMotion()) {
+      block->SetConfirmedTargetApzc(aTarget);
       waitForMainThread = false;
     }
     if (waitForMainThread) {
