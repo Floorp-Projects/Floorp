@@ -108,7 +108,7 @@ interface mozRTCPeerConnection : EventTarget  {
   readonly attribute RTCIdentityAssertion? peerIdentity;
 
   [ChromeOnly]
-  readonly attribute DOMString id;
+  attribute DOMString id;
 
   RTCConfiguration      getConfiguration ();
   sequence<MediaStream> getLocalStreams ();

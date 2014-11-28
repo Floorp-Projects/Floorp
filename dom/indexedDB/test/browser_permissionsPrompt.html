@@ -11,7 +11,8 @@
       {
         const name = window.location.pathname;
 
-        let request = indexedDB.open(name, 1);
+        let request = indexedDB.open(name, { version: 1,
+                                             storage: "persistent" });
         request.onerror = grabEventAndContinueHandler;
         request.onsuccess = grabEventAndContinueHandler;
         let event = yield undefined;

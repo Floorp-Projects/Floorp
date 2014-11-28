@@ -253,6 +253,7 @@ class MachCommands(MachCommandBase):
             'executed.')
 
     def run_cppunit_test(self, **params):
+        import mozinfo
         from mozlog.structured import commandline
         import runcppunittests as cppunittests
 
@@ -262,9 +263,9 @@ class MachCommands(MachCommandBase):
 
         if len(params['test_files']) == 0:
             testdir = os.path.join(self.distdir, 'cppunittests')
-            progs = cppunittests.extract_unittests_from_args([testdir], None)
+            tests = cppunittests.extract_unittests_from_args([testdir], mozinfo.info)
         else:
-            progs = cppunittests.extract_unittests_from_args(params['test_files'], None)
+            tests = cppunittests.extract_unittests_from_args(params['test_files'], mozinfo.info)
 
         # See if we have crash symbols
         symbols_path = os.path.join(self.distdir, 'crashreporter-symbols')
@@ -273,7 +274,7 @@ class MachCommands(MachCommandBase):
 
         tester = cppunittests.CPPUnitTests()
         try:
-            result = tester.run_tests(progs, self.bindir, symbols_path, interactive=True)
+            result = tester.run_tests(tests, self.bindir, symbols_path, interactive=True)
         except Exception as e:
             log.error("Caught exception running cpp unit tests: %s" % str(e))
             result = False

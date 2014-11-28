@@ -111,7 +111,7 @@ static int cost_segmap(int *segcounts, vp9_prob *probs) {
 }
 
 static void count_segs(const VP9_COMMON *cm, MACROBLOCKD *xd,
-                       const TileInfo *tile, MODE_INFO **mi,
+                       const TileInfo *tile, MODE_INFO *mi,
                        int *no_pred_segcounts,
                        int (*temporal_predictor_count)[2],
                        int *t_unpred_seg_counts,
@@ -122,7 +122,7 @@ static void count_segs(const VP9_COMMON *cm, MACROBLOCKD *xd,
     return;
 
   xd->mi = mi;
-  segment_id = xd->mi[0]->mbmi.segment_id;
+  segment_id = xd->mi[0].src_mi->mbmi.segment_id;
 
   set_mi_row_col(xd, tile, mi_row, bh, mi_col, bw, cm->mi_rows, cm->mi_cols);
 
@@ -131,7 +131,7 @@ static void count_segs(const VP9_COMMON *cm, MACROBLOCKD *xd,
 
   // Temporal prediction not allowed on key frames
   if (cm->frame_type != KEY_FRAME) {
-    const BLOCK_SIZE bsize = xd->mi[0]->mbmi.sb_type;
+    const BLOCK_SIZE bsize = xd->mi[0].src_mi->mbmi.sb_type;
     // Test to see if the segment id matches the predicted value.
     const int pred_segment_id = vp9_get_segment_id(cm, cm->last_frame_seg_map,
                                                    bsize, mi_row, mi_col);
@@ -140,7 +140,7 @@ static void count_segs(const VP9_COMMON *cm, MACROBLOCKD *xd,
 
     // Store the prediction status for this mb and update counts
     // as appropriate
-    xd->mi[0]->mbmi.seg_id_predicted = pred_flag;
+    xd->mi[0].src_mi->mbmi.seg_id_predicted = pred_flag;
     temporal_predictor_count[pred_context][pred_flag]++;
 
     // Update the "unpredicted" segment count
@@ -150,7 +150,7 @@ static void count_segs(const VP9_COMMON *cm, MACROBLOCKD *xd,
 }
 
 static void count_segs_sb(const VP9_COMMON *cm, MACROBLOCKD *xd,
-                          const TileInfo *tile, MODE_INFO **mi,
+                          const TileInfo *tile, MODE_INFO *mi,
                           int *no_pred_segcounts,
                           int (*temporal_predictor_count)[2],
                           int *t_unpred_seg_counts,
@@ -163,8 +163,8 @@ static void count_segs_sb(const VP9_COMMON *cm, MACROBLOCKD *xd,
   if (mi_row >= cm->mi_rows || mi_col >= cm->mi_cols)
     return;
 
-  bw = num_8x8_blocks_wide_lookup[mi[0]->mbmi.sb_type];
-  bh = num_8x8_blocks_high_lookup[mi[0]->mbmi.sb_type];
+  bw = num_8x8_blocks_wide_lookup[mi[0].src_mi->mbmi.sb_type];
+  bh = num_8x8_blocks_high_lookup[mi[0].src_mi->mbmi.sb_type];
 
   if (bw == bs && bh == bs) {
     count_segs(cm, xd, tile, mi, no_pred_segcounts, temporal_predictor_count,
@@ -224,13 +224,13 @@ void vp9_choose_segmap_coding_method(VP9_COMMON *cm, MACROBLOCKD *xd) {
   // predicts this one
   for (tile_col = 0; tile_col < 1 << cm->log2_tile_cols; tile_col++) {
     TileInfo tile;
-    MODE_INFO **mi_ptr;
+    MODE_INFO *mi_ptr;
     vp9_tile_init(&tile, cm, 0, tile_col);
 
-    mi_ptr = cm->mi_grid_visible + tile.mi_col_start;
+    mi_ptr = cm->mi + tile.mi_col_start;
     for (mi_row = 0; mi_row < cm->mi_rows;
          mi_row += 8, mi_ptr += 8 * cm->mi_stride) {
-      MODE_INFO **mi = mi_ptr;
+      MODE_INFO *mi = mi_ptr;
       for (mi_col = tile.mi_col_start; mi_col < tile.mi_col_end;
            mi_col += 8, mi += 8)
         count_segs_sb(cm, xd, &tile, mi, no_pred_segcounts,

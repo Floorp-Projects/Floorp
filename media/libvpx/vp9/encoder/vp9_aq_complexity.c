@@ -23,9 +23,9 @@ static const double aq_c_q_adj_factor[AQ_C_STRENGTHS][AQ_C_SEGMENTS] =
 static const double aq_c_transitions[AQ_C_STRENGTHS][AQ_C_SEGMENTS] =
   {{1.0, 1.0, 1.0}, {1.0, 0.25, 0.0}, {1.0, 0.5, 0.25}};
 
-static int get_aq_c_strength(int q_index) {
+static int get_aq_c_strength(int q_index, vpx_bit_depth_t bit_depth) {
   // Approximate base quatizer (truncated to int)
-  int base_quant = vp9_ac_quant(q_index, 0) / 4;
+  const int base_quant = vp9_ac_quant(q_index, 0, bit_depth) / 4;
   return (base_quant > 20) + (base_quant > 45);
 }
 
@@ -40,7 +40,7 @@ void vp9_setup_in_frame_q_adj(VP9_COMP *cpi) {
       cpi->refresh_alt_ref_frame ||
       (cpi->refresh_golden_frame && !cpi->rc.is_src_frame_alt_ref)) {
     int segment;
-    const int aq_strength = get_aq_c_strength(cm->base_qindex);
+    const int aq_strength = get_aq_c_strength(cm->base_qindex, cm->bit_depth);
     const int active_segments = aq_c_active_segments[aq_strength];
 
     // Clear down the segment map.
@@ -70,7 +70,8 @@ void vp9_setup_in_frame_q_adj(VP9_COMP *cpi) {
     for (segment = 1; segment < active_segments; ++segment) {
       int qindex_delta =
           vp9_compute_qdelta_by_rate(&cpi->rc, cm->frame_type, cm->base_qindex,
-                                     aq_c_q_adj_factor[aq_strength][segment]);
+                                     aq_c_q_adj_factor[aq_strength][segment],
+                                     cm->bit_depth);
 
       // For AQ complexity mode, we dont allow Q0 in a segment if the base
       // Q is not 0. Q0 (lossless) implies 4x4 only and in AQ mode 2 a segment
@@ -115,7 +116,7 @@ void vp9_select_in_frame_q_segment(VP9_COMP *cpi,
     // It is converted to bits * 256 units.
     const int target_rate = (cpi->rc.sb64_target_rate * xmis * ymis * 256) /
                             (bw * bh);
-    const int aq_strength = get_aq_c_strength(cm->base_qindex);
+    const int aq_strength = get_aq_c_strength(cm->base_qindex, cm->bit_depth);
     const int active_segments = aq_c_active_segments[aq_strength];
 
     // The number of segments considered and the transition points used to

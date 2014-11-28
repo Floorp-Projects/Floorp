@@ -9,7 +9,17 @@
  */
 
 #include <arm_neon.h>
+#include "vpx_ports/arm.h"
 
+#ifdef VPX_INCOMPATIBLE_GCC
+#include "./vp8_rtcd.h"
+void vp8_short_walsh4x4_neon(
+        int16_t *input,
+        int16_t *output,
+        int pitch) {
+  vp8_short_walsh4x4_c(input, output, pitch);
+}
+#else
 void vp8_short_walsh4x4_neon(
         int16_t *input,
         int16_t *output,
@@ -116,3 +126,4 @@ void vp8_short_walsh4x4_neon(
     vst1q_s16(output + 8, q1s16);
     return;
 }
+#endif  // VPX_INCOMPATIBLE_GCC

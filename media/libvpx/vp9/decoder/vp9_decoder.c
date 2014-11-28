@@ -60,6 +60,7 @@ VP9Decoder *vp9_decoder_create() {
   }
 
   cm->error.setjmp = 1;
+  pbi->need_resync = 1;
   initialize_dec();
 
   // Initialize the references to not point to any frame buffers.
@@ -238,6 +239,7 @@ int vp9_receive_compressed_data(VP9Decoder *pbi,
   cm->new_fb_idx = get_free_fb(cm);
 
   if (setjmp(cm->error.jmp)) {
+    pbi->need_resync = 1;
     cm->error.setjmp = 0;
     vp9_clear_system_state();
 

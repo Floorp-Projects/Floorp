@@ -65,6 +65,18 @@ static INLINE int get_unsigned_bits(unsigned int num_values) {
 }
 
 #if CONFIG_VP9_HIGHBITDEPTH
+static INLINE uint16_t clip_pixel_high(int val, int bd) {
+  switch (bd) {
+    case 8:
+    default:
+      return (uint16_t)clamp(val, 0, 255);
+    case 10:
+      return (uint16_t)clamp(val, 0, 1023);
+    case 12:
+      return (uint16_t)clamp(val, 0, 4095);
+  }
+}
+
 #define CONVERT_TO_SHORTPTR(x) ((uint16_t*)(((uintptr_t)x) << 1))
 #define CONVERT_TO_BYTEPTR(x) ((uint8_t*)(((uintptr_t)x) >> 1 ))
 #endif  // CONFIG_VP9_HIGHBITDEPTH

@@ -329,7 +329,7 @@ var shell = {
     window.addEventListener('sizemodechange', this);
     window.addEventListener('unload', this);
     this.contentBrowser.addEventListener('mozbrowserloadstart', this, true);
-    this.contentBrowser.addEventListener('mozbrowserselectionchange', this, true);
+    this.contentBrowser.addEventListener('mozbrowserselectionstatechanged', this, true);
     this.contentBrowser.addEventListener('mozbrowserscrollviewchange', this, true);
     this.contentBrowser.addEventListener('mozbrowsertouchcarettap', this, true);
 
@@ -357,7 +357,7 @@ var shell = {
     window.removeEventListener('mozfullscreenchange', this);
     window.removeEventListener('sizemodechange', this);
     this.contentBrowser.removeEventListener('mozbrowserloadstart', this, true);
-    this.contentBrowser.removeEventListener('mozbrowserselectionchange', this, true);
+    this.contentBrowser.removeEventListener('mozbrowserselectionstatechanged', this, true);
     this.contentBrowser.removeEventListener('mozbrowserscrollviewchange', this, true);
     this.contentBrowser.removeEventListener('mozbrowsertouchcarettap', this, true);
     ppmm.removeMessageListener("content-handler", this);
@@ -505,8 +505,8 @@ var shell = {
           detail: evt.detail,
         });
         break;
-      case 'mozbrowserselectionchange':
-        // The mozbrowserselectionchange event, may have crossed the chrome-content boundary.
+      case 'mozbrowserselectionstatechanged':
+        // The mozbrowserselectionstatechanged event, may have crossed the chrome-content boundary.
         // This event always dispatch to shell.js. But the offset we got from this event is
         // based on tab's coordinate. So get the actual offsets between shell and evt.target.
         let elt = evt.target;
@@ -524,7 +524,7 @@ var shell = {
 
         DoCommandHelper.setEvent(evt);
         shell.sendChromeEvent({
-          type: 'selectionchange',
+          type: 'selectionstatechanged',
           detail: data,
         });
         break;

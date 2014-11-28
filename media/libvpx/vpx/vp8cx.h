@@ -148,7 +148,12 @@ enum vp8e_enc_control_id {
    */
   VP8E_SET_CPUUSED           = 13,
   VP8E_SET_ENABLEAUTOALTREF,       /**< control function to enable vp8 to automatic set and use altref frame */
-  VP8E_SET_NOISE_SENSITIVITY,      /**< control function to set noise sensitivity */
+  /*!\brief control function to set noise sensitivity
+   *
+   * 0: off, 1: OnYOnly, 2: OnYUV,
+   * 3: OnYUVAggressive, 4: Adaptive
+   */
+  VP8E_SET_NOISE_SENSITIVITY,
   VP8E_SET_SHARPNESS,              /**< control function to set sharpness */
   VP8E_SET_STATIC_THRESHOLD,       /**< control function to set the threshold for macroblocks treated static */
   VP8E_SET_TOKEN_PARTITIONS,       /**< control function to set the number of token partitions  */
@@ -197,6 +202,11 @@ enum vp8e_enc_control_id {
   VP9E_SET_FRAME_PARALLEL_DECODING,
   VP9E_SET_AQ_MODE,
   VP9E_SET_FRAME_PERIODIC_BOOST,
+  /*!\brief control function to set noise sensitivity
+   *
+   *  0: off, 1: OnYOnly
+   */
+  VP9E_SET_NOISE_SENSITIVITY,
 
   VP9E_SET_SVC,
   VP9E_SET_SVC_PARAMETERS,
@@ -295,24 +305,6 @@ typedef enum {
   VP8_TUNE_SSIM
 } vp8e_tuning;
 
-/*!\brief  vp9 svc parameters
- *
- * This defines parameters for svc encoding.
- *
- */
-typedef struct vpx_svc_parameters {
-  unsigned int width;         /**< width of current spatial layer */
-  unsigned int height;        /**< height of current spatial layer */
-  int spatial_layer;          /**< current spatial layer number - 0 = base */
-  int temporal_layer;         /**< current temporal layer number - 0 = base */
-  int max_quantizer;          /**< max quantizer for current layer */
-  int min_quantizer;          /**< min quantizer for current layer */
-  int distance_from_i_frame;  /**< frame number within current gop */
-  int lst_fb_idx;             /**< last frame frame buffer index */
-  int gld_fb_idx;             /**< golden frame frame buffer index */
-  int alt_fb_idx;             /**< alt reference frame frame buffer index */
-} vpx_svc_parameters_t;
-
 /*!\brief  vp9 svc layer parameters
  *
  * This defines the spatial and temporal layer id numbers for svc encoding.
@@ -345,7 +337,7 @@ VPX_CTRL_USE_TYPE(VP8E_SET_ACTIVEMAP,          vpx_active_map_t *)
 VPX_CTRL_USE_TYPE(VP8E_SET_SCALEMODE,          vpx_scaling_mode_t *)
 
 VPX_CTRL_USE_TYPE(VP9E_SET_SVC,                int)
-VPX_CTRL_USE_TYPE(VP9E_SET_SVC_PARAMETERS,     vpx_svc_parameters_t *)
+VPX_CTRL_USE_TYPE(VP9E_SET_SVC_PARAMETERS,     void *)
 VPX_CTRL_USE_TYPE(VP9E_SET_SVC_LAYER_ID,       vpx_svc_layer_id_t *)
 
 VPX_CTRL_USE_TYPE(VP8E_SET_CPUUSED,            int)
@@ -376,6 +368,8 @@ VPX_CTRL_USE_TYPE(VP9E_SET_FRAME_PARALLEL_DECODING, unsigned int)
 VPX_CTRL_USE_TYPE(VP9E_SET_AQ_MODE, unsigned int)
 
 VPX_CTRL_USE_TYPE(VP9E_SET_FRAME_PERIODIC_BOOST, unsigned int)
+
+VPX_CTRL_USE_TYPE(VP9E_SET_NOISE_SENSITIVITY,  unsigned int)
 
 VPX_CTRL_USE_TYPE(VP9E_SET_TUNE_CONTENT, int) /* vp9e_tune_content */
 /*! @} - end defgroup vp8_encoder */
