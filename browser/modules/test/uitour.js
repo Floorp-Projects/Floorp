@@ -207,4 +207,36 @@ if (typeof Mozilla == 'undefined') {
 		});
 	};
 
+	Mozilla.UITour.setDefaultSearchEngine = function(identifier) {
+		_sendEvent('setDefaultSearchEngine', {
+			identifier: identifier,
+		});
+	};
+
+	Mozilla.UITour.setTreatmentTag = function(name, value) {
+		_sendEvent('setTreatmentTag', {
+			name: name,
+			value: value
+		});
+	};
+
+	Mozilla.UITour.getTreatmentTag = function(name, callback) {
+		_sendEvent('getTreatmentTag', {
+			name: name,
+			callbackID: _waitForCallback(callback)
+		});
+	};
+
+	Mozilla.UITour.setSearchTerm = function(term) {
+		_sendEvent('setSearchTerm', {
+			term: term
+		});
+	};
+
+	Mozilla.UITour.openSearchPanel = function(callback) {
+		_sendEvent('openSearchPanel', {
+			callbackID: _waitForCallback(callback)
+		});
+	};
+
 })();

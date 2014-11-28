@@ -205,8 +205,8 @@ let SimulatorScanner = {
 
   _updateRuntimes() {
     this._runtimes = [];
-    for (let version of Simulator.availableVersions()) {
-      this._runtimes.push(new SimulatorRuntime(version));
+    for (let name of Simulator.availableNames()) {
+      this._runtimes.push(new SimulatorRuntime(name));
     }
     this._emitUpdated();
   },
@@ -463,15 +463,15 @@ WiFiRuntime.prototype = {
 // For testing use only
 exports._WiFiRuntime = WiFiRuntime;
 
-function SimulatorRuntime(version) {
-  this.version = version;
+function SimulatorRuntime(name) {
+  this.name = name;
 }
 
 SimulatorRuntime.prototype = {
   type: RuntimeTypes.SIMULATOR,
   connect: function(connection) {
     let port = ConnectionManager.getFreeTCPPort();
-    let simulator = Simulator.getByVersion(this.version);
+    let simulator = Simulator.getByName(this.name);
     if (!simulator || !simulator.launch) {
       return promise.reject("Can't find simulator: " + this.name);
     }
@@ -484,14 +484,7 @@ SimulatorRuntime.prototype = {
     });
   },
   get id() {
-    return this.version;
-  },
-  get name() {
-    let simulator = Simulator.getByVersion(this.version);
-    if (!simulator) {
-      return "Unknown";
-    }
-    return Simulator.getByVersion(this.version).appinfo.label;
+    return this.name;
   },
 };
 

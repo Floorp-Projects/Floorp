@@ -59,7 +59,7 @@ const OBSERVED_EVENTS = [
 
 const COMMAND_MAP = {
   'cut': 'cmd_cut',
-  'copy': 'cmd_copy',
+  'copy': 'cmd_copyAndCollapseToEnd',
   'paste': 'cmd_paste',
   'selectall': 'cmd_selectAll'
 };

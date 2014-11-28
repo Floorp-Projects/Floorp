@@ -28,10 +28,14 @@
           adbAddonsInstalled.resolve();
         });
 
-        function onSimulatorInstalled(version) {
+        function getVersion(name) {
+          return name.match(/(\d+\.\d+)/)[0];
+        }
+
+        function onSimulatorInstalled(name) {
           let deferred = promise.defer();
           Simulator.on("register", function onUpdate() {
-            if (Simulator.getByVersion(version)) {
+            if (Simulator.getByName(name)) {
               Simulator.off("register", onUpdate);
               nextTick().then(deferred.resolve);
             }
@@ -39,17 +43,17 @@
           return deferred.promise;
         }
 
-        function installSimulatorFromUI(doc, version) {
-          let li = doc.querySelector('[addon="simulator-' + version + '"]');
+        function installSimulatorFromUI(doc, name) {
+          let li = doc.querySelector('[addon="simulator-' + getVersion(name) + '"]');
           li.querySelector(".install-button").click();
-          return onSimulatorInstalled(version);
+          return onSimulatorInstalled(name);
         }
 
-        function uninstallSimulatorFromUI(doc, version) {
+        function uninstallSimulatorFromUI(doc, name) {
           let deferred = promise.defer();
           Simulator.on("unregister", function onUpdate() {
             nextTick().then(() => {
-              let li = doc.querySelector('[status="uninstalled"][addon="simulator-' + version + '"]');
+              let li = doc.querySelector('[status="uninstalled"][addon="simulator-' + getVersion(name) + '"]');
               if (li) {
                 Simulator.off("unregister", onUpdate);
                 deferred.resolve();
@@ -58,7 +62,7 @@
               }
             })
           });
-          let li = doc.querySelector('[status="installed"][addon="simulator-' + version + '"]');
+          let li = doc.querySelector('[status="installed"][addon="simulator-' + getVersion(name) + '"]');
           li.querySelector(".uninstall-button").click();
           return deferred.promise;
         }
@@ -100,7 +104,7 @@
           let sim10 = addons.simulators.filter(a => a.version == "1.0")[0];
           sim10.install();
 
-          yield onSimulatorInstalled("1.0");
+          yield onSimulatorInstalled("Firefox OS 1.0");
 
           win.Cmds.showAddons();
 
@@ -119,11 +123,11 @@
 
           info("Uninstalling Simulator 2.0");
 
-          yield installSimulatorFromUI(addonDoc, "2.0");
+          yield installSimulatorFromUI(addonDoc, "Firefox OS 2.0");
 
           info("Uninstalling Simulator 3.0");
 
-          yield installSimulatorFromUI(addonDoc, "3.0");
+          yield installSimulatorFromUI(addonDoc, "Firefox OS 3.0");
 
           yield nextTick();
 
@@ -136,9 +140,9 @@
           items = panelNode.querySelectorAll(".runtime-panel-item-simulator");
           is(items.length, 3, "Found 3 simulators button");
 
-          yield uninstallSimulatorFromUI(addonDoc, "1.0");
-          yield uninstallSimulatorFromUI(addonDoc, "2.0");
-          yield uninstallSimulatorFromUI(addonDoc, "3.0");
+          yield uninstallSimulatorFromUI(addonDoc, "Firefox OS 1.0");
+          yield uninstallSimulatorFromUI(addonDoc, "Firefox OS 2.0");
+          yield uninstallSimulatorFromUI(addonDoc, "Firefox OS 3.0");
 
           items = panelNode.querySelectorAll(".runtime-panel-item-simulator");
           is(items.length, 0, "No simulator listed");
