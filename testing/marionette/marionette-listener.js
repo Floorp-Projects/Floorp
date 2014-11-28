@@ -188,7 +188,6 @@ function startListeners() {
   addMessageListenerId("Marionette:getCookies", getCookies);
   addMessageListenerId("Marionette:deleteAllCookies", deleteAllCookies);
   addMessageListenerId("Marionette:deleteCookie", deleteCookie);
-  addMessageListenerId("Marionette:ping", ping);
 }
 
 /**
@@ -291,7 +290,6 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:getCookies", getCookies);
   removeMessageListenerId("Marionette:deleteAllCookies", deleteAllCookies);
   removeMessageListenerId("Marionette:deleteCookie", deleteCookie);
-  removeMessageListenerId("Marionette:ping", ping);
   if (isB2G) {
     content.removeEventListener("mozbrowsershowmodalprompt", modalHandler, false);
   }
@@ -1289,8 +1287,6 @@ function get(msg) {
       if (curFrame.document.readyState == "complete") {
         removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
         sendOk(command_id);
-        // Restart the OOP frame heartbeat now that the URL is loaded
-        sendToServer("Marionette:startHeartbeat");
       }
       else if (curFrame.document.readyState == "interactive" &&
                errorRegex.exec(curFrame.document.baseURI)) {
@@ -1920,13 +1916,6 @@ function getVisibleCookies(location) {
 function getAppCacheStatus(msg) {
   sendResponse({ value: curFrame.applicationCache.status },
                msg.json.command_id);
-}
-
-/**
- * Received heartbeat ping
- */
-function ping(msg) {
-  sendToServer("Marionette:pong", {}, msg.json.command_id);
 }
 
 // emulator callbacks
