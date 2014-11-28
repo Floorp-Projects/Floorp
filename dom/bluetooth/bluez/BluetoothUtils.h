@@ -21,13 +21,6 @@ SetJsObject(JSContext* aContext,
             const BluetoothValue& aValue,
             JS::Handle<JSObject*> aObj);
 
-nsString
-GetObjectPathFromAddress(const nsAString& aAdapterPath,
-                         const nsAString& aDeviceAddress);
-
-nsString
-GetAddressFromObjectPath(const nsAString& aObjectPath);
-
 bool
 BroadcastSystemMessage(const nsAString& aType,
                        const InfallibleTArray<BluetoothNamedValue>& aData);
@@ -36,10 +29,6 @@ void
 DispatchBluetoothReply(BluetoothReplyRunnable* aRunnable,
                        const BluetoothValue& aValue,
                        const nsAString& aErrorStr);
-
-void
-ParseAtCommand(const nsACString& aAtCommand, const int aStart,
-               nsTArray<nsCString>& aRetValues);
 
 void
 DispatchStatusChangedEvent(const nsAString& aType,
