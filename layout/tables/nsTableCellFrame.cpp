@@ -955,7 +955,7 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
     // We need to force the kid to have mVResize set if we've had a
     // special reflow in the past, since the non-special reflow needs to
     // resize back to what it was without the special height reflow.
-    kidReflowState.mFlags.mVResize = true;
+    kidReflowState.SetVResize(true);
   }
 
   nsPoint kidOrigin(leftInset, topInset);
