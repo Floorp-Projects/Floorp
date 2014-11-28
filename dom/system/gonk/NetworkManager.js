@@ -997,7 +997,7 @@ NetworkManager.prototype = {
     } else {
       let mobile = this.getNetworkInterface(
         Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE, this._dataDefaultServiceId);
-      if (mobile) {
+      if (mobile && mobile.name) {
         this._tetheringInterface[TETHERING_TYPE_USB].externalInterface = mobile.name;
       }
     }
@@ -1142,7 +1142,7 @@ NetworkManager.prototype = {
     let mobile = this.getNetworkInterface(
       Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE, this._dataDefaultServiceId);
     // Update the real interface name
-    if (mobile) {
+    if (mobile && mobile.name) {
       this._tetheringInterface[TETHERING_TYPE_WIFI].externalInterface = mobile.name;
     }
 
