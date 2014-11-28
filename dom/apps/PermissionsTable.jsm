@@ -306,8 +306,7 @@ this.PermissionsTable =  { geolocation: {
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION,
                              substitute: [
-                               "indexedDB-unlimited",
-                               "default-persistent-storage"
+                               "indexedDB-unlimited"
                              ]
                            },
                            "background-sensors": {
@@ -645,7 +644,7 @@ this.AllPossiblePermissions = [];
     }
   }
   AllPossiblePermissions =
-    AllPossiblePermissions.concat(["offline-app", "pin-app"]);
+    AllPossiblePermissions.concat(["indexedDB", "offline-app", "pin-app"]);
 })();
 
 this.isExplicitInPermissionsTable = function(aPermName, aIntStatus) {

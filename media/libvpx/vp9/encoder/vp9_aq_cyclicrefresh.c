@@ -200,7 +200,7 @@ void vp9_cyclic_refresh_setup(VP9_COMP *const cpi) {
 
     // Rate target ratio to set q delta.
     const float rate_ratio_qdelta = 2.0;
-    const double q = vp9_convert_qindex_to_q(cm->base_qindex);
+    const double q = vp9_convert_qindex_to_q(cm->base_qindex, cm->bit_depth);
     vp9_clear_system_state();
     // Some of these parameters may be set via codec-control function later.
     cr->max_sbs_perframe = 10;
@@ -242,7 +242,8 @@ void vp9_cyclic_refresh_setup(VP9_COMP *const cpi) {
     // Set the q delta for segment 1.
     qindex_delta = vp9_compute_qdelta_by_rate(rc, cm->frame_type,
                                               cm->base_qindex,
-                                              rate_ratio_qdelta);
+                                              rate_ratio_qdelta,
+                                              cm->bit_depth);
     // TODO(marpan): Incorporate the actual-vs-target rate over/undershoot from
     // previous encoded frame.
     if (-qindex_delta > cr->max_qdelta_perc * cm->base_qindex / 100)

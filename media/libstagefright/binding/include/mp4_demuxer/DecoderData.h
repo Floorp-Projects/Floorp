@@ -144,6 +144,7 @@ class MP4Sample
 {
 public:
   MP4Sample();
+  MP4Sample(const MP4Sample& copy);
   ~MP4Sample();
   void Update(int64_t& aMediaTime);
   void Pad(size_t aPaddingBytes);
@@ -165,7 +166,7 @@ public:
   void Prepend(const uint8_t* aData, size_t aSize);
 
 private:
-  nsAutoPtr<uint8_t> extra_buffer;
+  nsAutoArrayPtr<uint8_t> extra_buffer;
 };
 }
 

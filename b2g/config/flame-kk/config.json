@@ -18,6 +18,7 @@
     ],
     "zip_files": [
         ["{workdir}/out/target/product/flame/*.img", "out/target/product/flame/"],
+        ["{workdir}/out/target/product/flame/bootloader", "out/target/product/flame/"],
         ["{workdir}/boot.img", "out/target/product/flame/"],
         "{workdir}/flash.sh",
         "{workdir}/load-config.sh",

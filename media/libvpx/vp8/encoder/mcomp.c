@@ -393,8 +393,8 @@ int vp8_find_best_sub_pixel_step(MACROBLOCK *x, BLOCK *b, BLOCKD *d,
 #endif
 
     /* central mv */
-    bestmv->as_mv.row <<= 3;
-    bestmv->as_mv.col <<= 3;
+    bestmv->as_mv.row *= 8;
+    bestmv->as_mv.col *= 8;
     startmv = *bestmv;
 
     /* calculate central point error */
