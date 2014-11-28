@@ -67,7 +67,6 @@ struct DatabaseMetadata
   nsString name;
   uint64_t version;
   PersistenceType persistenceType;
-  bool persistenceTypeIsExplicit;
 };
 
 struct ObjectStoreMetadata
