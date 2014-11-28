@@ -189,7 +189,7 @@ static void write_segment_id(vp9_writer *w, const struct segmentation *seg,
 // This function encodes the reference frame
 static void write_ref_frames(const VP9_COMMON *cm, const MACROBLOCKD *xd,
                              vp9_writer *w) {
-  const MB_MODE_INFO *const mbmi = &xd->mi[0]->mbmi;
+  const MB_MODE_INFO *const mbmi = &xd->mi[0].src_mi->mbmi;
   const int is_compound = has_second_ref(mbmi);
   const int segment_id = mbmi->segment_id;
 
@@ -329,11 +329,12 @@ static void pack_inter_mode_mvs(VP9_COMP *cpi, const MODE_INFO *mi,
 }
 
 static void write_mb_modes_kf(const VP9_COMMON *cm, const MACROBLOCKD *xd,
-                              MODE_INFO **mi_8x8, vp9_writer *w) {
+                              MODE_INFO *mi_8x8, vp9_writer *w) {
   const struct segmentation *const seg = &cm->seg;
-  const MODE_INFO *const mi = mi_8x8[0];
-  const MODE_INFO *const above_mi = mi_8x8[-xd->mi_stride];
-  const MODE_INFO *const left_mi = xd->left_available ? mi_8x8[-1] : NULL;
+  const MODE_INFO *const mi = mi_8x8;
+  const MODE_INFO *const above_mi = mi_8x8[-xd->mi_stride].src_mi;
+  const MODE_INFO *const left_mi =
+      xd->left_available ? mi_8x8[-1].src_mi : NULL;
   const MB_MODE_INFO *const mbmi = &mi->mbmi;
   const BLOCK_SIZE bsize = mbmi->sb_type;
 
@@ -372,8 +373,8 @@ static void write_modes_b(VP9_COMP *cpi, const TileInfo *const tile,
   MACROBLOCKD *const xd = &cpi->mb.e_mbd;
   MODE_INFO *m;
 
-  xd->mi = cm->mi_grid_visible + (mi_row * cm->mi_stride + mi_col);
-  m = xd->mi[0];
+  xd->mi = cm->mi + (mi_row * cm->mi_stride + mi_col);
+  m = xd->mi;
 
   set_mi_row_col(xd, tile,
                  mi_row, num_8x8_blocks_high_lookup[m->mbmi.sb_type],
@@ -427,7 +428,7 @@ static void write_modes_sb(VP9_COMP *cpi,
   if (mi_row >= cm->mi_rows || mi_col >= cm->mi_cols)
     return;
 
-  m = cm->mi_grid_visible[mi_row * cm->mi_stride + mi_col];
+  m = cm->mi[mi_row * cm->mi_stride + mi_col].src_mi;
 
   partition = partition_lookup[bsl][m->mbmi.sb_type];
   write_partition(cm, xd, bs, mi_row, mi_col, partition, bsize, w);

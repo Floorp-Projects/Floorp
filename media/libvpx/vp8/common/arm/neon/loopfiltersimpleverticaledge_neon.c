@@ -10,45 +10,9 @@
 
 #include <arm_neon.h>
 #include "./vpx_config.h"
+#include "vpx_ports/arm.h"
 
-#if (__GNUC__ == 4 && (__GNUC_MINOR__ >= 7))
-static INLINE void write_2x8(unsigned char *dst, int pitch,
-                             const uint8x8x2_t result,
-                             const uint8x8x2_t result2) {
-  vst2_lane_u8(dst, result, 0);
-  dst += pitch;
-  vst2_lane_u8(dst, result, 1);
-  dst += pitch;
-  vst2_lane_u8(dst, result, 2);
-  dst += pitch;
-  vst2_lane_u8(dst, result, 3);
-  dst += pitch;
-  vst2_lane_u8(dst, result, 4);
-  dst += pitch;
-  vst2_lane_u8(dst, result, 5);
-  dst += pitch;
-  vst2_lane_u8(dst, result, 6);
-  dst += pitch;
-  vst2_lane_u8(dst, result, 7);
-  dst += pitch;
-
-  vst2_lane_u8(dst, result2, 0);
-  dst += pitch;
-  vst2_lane_u8(dst, result2, 1);
-  dst += pitch;
-  vst2_lane_u8(dst, result2, 2);
-  dst += pitch;
-  vst2_lane_u8(dst, result2, 3);
-  dst += pitch;
-  vst2_lane_u8(dst, result2, 4);
-  dst += pitch;
-  vst2_lane_u8(dst, result2, 5);
-  dst += pitch;
-  vst2_lane_u8(dst, result2, 6);
-  dst += pitch;
-  vst2_lane_u8(dst, result2, 7);
-}
-#else
+#ifdef VPX_INCOMPATIBLE_GCC
 static INLINE void write_2x4(unsigned char *dst, int pitch,
                              const uint8x8x2_t result) {
     /*
@@ -88,30 +52,47 @@ static INLINE void write_2x8(unsigned char *dst, int pitch,
   dst += pitch * 8;
   write_2x4(dst, pitch, result2);
 }
-#endif
-
-
-#if (__GNUC__ == 4 && (__GNUC_MINOR__ >= 7))
-static INLINE
-uint8x8x4_t read_4x8(unsigned char *src, int pitch, uint8x8x4_t x) {
-    x = vld4_lane_u8(src, x, 0);
-    src += pitch;
-    x = vld4_lane_u8(src, x, 1);
-    src += pitch;
-    x = vld4_lane_u8(src, x, 2);
-    src += pitch;
-    x = vld4_lane_u8(src, x, 3);
-    src += pitch;
-    x = vld4_lane_u8(src, x, 4);
-    src += pitch;
-    x = vld4_lane_u8(src, x, 5);
-    src += pitch;
-    x = vld4_lane_u8(src, x, 6);
-    src += pitch;
-    x = vld4_lane_u8(src, x, 7);
-    return x;
-}
 #else
+static INLINE void write_2x8(unsigned char *dst, int pitch,
+                             const uint8x8x2_t result,
+                             const uint8x8x2_t result2) {
+  vst2_lane_u8(dst, result, 0);
+  dst += pitch;
+  vst2_lane_u8(dst, result, 1);
+  dst += pitch;
+  vst2_lane_u8(dst, result, 2);
+  dst += pitch;
+  vst2_lane_u8(dst, result, 3);
+  dst += pitch;
+  vst2_lane_u8(dst, result, 4);
+  dst += pitch;
+  vst2_lane_u8(dst, result, 5);
+  dst += pitch;
+  vst2_lane_u8(dst, result, 6);
+  dst += pitch;
+  vst2_lane_u8(dst, result, 7);
+  dst += pitch;
+
+  vst2_lane_u8(dst, result2, 0);
+  dst += pitch;
+  vst2_lane_u8(dst, result2, 1);
+  dst += pitch;
+  vst2_lane_u8(dst, result2, 2);
+  dst += pitch;
+  vst2_lane_u8(dst, result2, 3);
+  dst += pitch;
+  vst2_lane_u8(dst, result2, 4);
+  dst += pitch;
+  vst2_lane_u8(dst, result2, 5);
+  dst += pitch;
+  vst2_lane_u8(dst, result2, 6);
+  dst += pitch;
+  vst2_lane_u8(dst, result2, 7);
+}
+#endif  // VPX_INCOMPATIBLE_GCC
+
+
+#ifdef VPX_INCOMPATIBLE_GCC
 static INLINE
 uint8x8x4_t read_4x8(unsigned char *src, int pitch, uint8x8x4_t x) {
     const uint8x8_t a = vld1_u8(src);
@@ -169,7 +150,27 @@ uint8x8x4_t read_4x8(unsigned char *src, int pitch, uint8x8x4_t x) {
 
     return x;
 }
-#endif
+#else
+static INLINE
+uint8x8x4_t read_4x8(unsigned char *src, int pitch, uint8x8x4_t x) {
+    x = vld4_lane_u8(src, x, 0);
+    src += pitch;
+    x = vld4_lane_u8(src, x, 1);
+    src += pitch;
+    x = vld4_lane_u8(src, x, 2);
+    src += pitch;
+    x = vld4_lane_u8(src, x, 3);
+    src += pitch;
+    x = vld4_lane_u8(src, x, 4);
+    src += pitch;
+    x = vld4_lane_u8(src, x, 5);
+    src += pitch;
+    x = vld4_lane_u8(src, x, 6);
+    src += pitch;
+    x = vld4_lane_u8(src, x, 7);
+    return x;
+}
+#endif  // VPX_INCOMPATIBLE_GCC
 
 static INLINE void vp8_loop_filter_simple_vertical_edge_neon(
         unsigned char *s,

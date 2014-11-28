@@ -70,6 +70,7 @@ int vp9_init_search_range(int size);
 int vp9_full_pixel_diamond(const struct VP9_COMP *cpi, MACROBLOCK *x,
                            MV *mvp_full, int step_param,
                            int sadpb, int further_steps, int do_refine,
+                           int *cost_list,
                            const vp9_variance_fn_ptr_t *fn_ptr,
                            const MV *ref_mv, MV *dst_mv);
 

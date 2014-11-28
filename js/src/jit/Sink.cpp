@@ -59,6 +59,12 @@ Sink(MIRGenerator *mir, MIRGraph &graph)
             if (ins->isGuard() || ins->isRecoveredOnBailout() || !ins->canRecoverOnBailout())
                 continue;
 
+            // To move effectful instruction, we would have to verify that the
+            // side-effect is not observed. In the mean time, we just inhibit
+            // this optimization on effectful instructions.
+            if (ins->isEffectful())
+                continue;
+
             // Compute a common dominator for all uses of the current
             // instruction.
             bool hasLiveUses = false;
@@ -186,6 +192,12 @@ Sink(MIRGenerator *mir, MIRGraph &graph)
 
                 use->replaceProducer(clone);
             }
+
+            // As we move this instruction in a different block, we should
+            // verify that we do not carry over a resume point which would refer
+            // to an outdated state of the control flow.
+            if (ins->resumePoint())
+                ins->clearResumePoint();
 
             // Now, that all uses which are not dominated by usesDominator are
             // using the cloned instruction, we can safely move the instruction

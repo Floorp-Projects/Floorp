@@ -170,6 +170,9 @@ loop.store.ConversationStore = (function() {
             sessionId: this.get("sessionId"),
             sessionToken: this.get("sessionToken")
           });
+          navigator.mozLoop.addConversationContext(this.get("windowId"),
+                                                   this.get("sessionId"),
+                                                   this.get("callId"));
           this.set({callState: CALL_STATES.ONGOING});
           break;
         }

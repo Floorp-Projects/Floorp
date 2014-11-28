@@ -97,6 +97,10 @@
       // disabled, too. See bug 429285.
       testAriaDisabledTree("group");
 
+      // aria-modal
+      testStates("aria_modal", 0, EXT_STATE_MODAL);
+      testStates("aria_modal_false", 0, 0, 0, EXT_STATE_MODAL);
+
       // aria-multiline
       testStates("aria_multiline_textbox", 0, EXT_STATE_MULTI_LINE);
 
@@ -379,6 +383,8 @@
   <div id="aria_mixed_checkbox" role="checkbox" aria-checked="mixed">
     I might agree
   </div>
+  <div id="aria_modal" aria-modal="true">modal stuff</div>
+  <div id="aria_modal_false" aria-modal="false">non modal stuff</div>div>
   <div id="aria_multiline_textbox" role="textbox" aria-multiline="true"></div>
   <div id="aria_multiselectable_listbox" role="listbox" aria-multiselectable="true"></div>
   <div id="aria_pressed_button" role="button" aria-pressed="true">Button</div>
