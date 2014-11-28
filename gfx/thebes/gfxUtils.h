@@ -281,6 +281,8 @@ public:
     static inline void DumpAsDataURI(DrawTarget* aDT) {
         DumpAsDataURI(aDT, stdout);
     }
+    static nsCString GetAsDataURI(SourceSurface* aSourceSurface);
+    static nsCString GetAsDataURI(DrawTarget* aDT);
 
     /**
      * Copy to the clipboard as a PNG encoded Data URL.

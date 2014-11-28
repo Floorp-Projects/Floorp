@@ -606,6 +606,14 @@ TiledContentHost::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   aStream << aPrefix;
   aStream << nsPrintfCString("TiledContentHost (0x%p)", this).get();
 
+#ifdef MOZ_DUMP_PAINTING
+  if (gfxPrefs::LayersDumpTexture()) {
+    nsAutoCString pfx(aPrefix);
+    pfx += "  ";
+
+    Dump(aStream, pfx.get(), false);
+  }
+#endif
 }
 
 #ifdef MOZ_DUMP_PAINTING
@@ -614,24 +622,37 @@ TiledContentHost::Dump(std::stringstream& aStream,
                        const char* aPrefix,
                        bool aDumpHtml)
 {
-  TiledLayerBufferComposite::Iterator it = mTiledBuffer.TilesBegin();
-  TiledLayerBufferComposite::Iterator stop = mTiledBuffer.TilesEnd();
-  if (aDumpHtml) {
-    aStream << "<ul>";
-  }
-  for (;it != stop; ++it) {
-    aStream << aPrefix;
-    aStream << (aDumpHtml ? "<li> <a href=" : "Tile ");
-    if (it->IsPlaceholderTile()) {
-      aStream << "empty tile";
-    } else {
-      DumpTextureHost(aStream, it->mTextureHost);
-      DumpTextureHost(aStream, it->mTextureHostOnWhite);
+  nsIntRect visibleRect = mTiledBuffer.GetValidRegion().GetBounds();
+  gfx::IntSize scaledTileSize = mTiledBuffer.GetScaledTileSize();
+  for (int32_t x = visibleRect.x; x < visibleRect.x + visibleRect.width;) {
+    int32_t tileStartX = mTiledBuffer.GetTileStart(x, scaledTileSize.width);
+    int32_t w = scaledTileSize.width - tileStartX;
+    if (x + w > visibleRect.x + visibleRect.width) {
+      w = visibleRect.x + visibleRect.width - x;
     }
-    aStream << (aDumpHtml ? " >Tile</a></li>" : " ");
-  }
-  if (aDumpHtml) {
-    aStream << "</ul>";
+
+    for (int32_t y = visibleRect.y; y < visibleRect.y + visibleRect.height;) {
+      int32_t tileStartY = mTiledBuffer.GetTileStart(y, scaledTileSize.height);
+      TileHost tileTexture = mTiledBuffer.
+        GetTile(nsIntPoint(mTiledBuffer.RoundDownToTileEdge(x, scaledTileSize.width),
+                           mTiledBuffer.RoundDownToTileEdge(y, scaledTileSize.height)));
+      int32_t h = scaledTileSize.height - tileStartY;
+      if (y + h > visibleRect.y + visibleRect.height) {
+        h = visibleRect.y + visibleRect.height - y;
+      }
+
+      aStream << "\n" << aPrefix << "Tile (x=" <<
+        mTiledBuffer.RoundDownToTileEdge(x, scaledTileSize.width) << ", y=" <<
+        mTiledBuffer.RoundDownToTileEdge(y, scaledTileSize.height) << "): ";
+      if (tileTexture != mTiledBuffer.GetPlaceholderTile()) {
+        DumpTextureHost(aStream, tileTexture.mTextureHost);
+        // TODO We should combine the OnWhite/OnBlack here an just output a single image.
+      } else {
+        aStream << "empty tile";
+      }
+      y += h;
+    }
+    x += w;
   }
 }
 #endif
