@@ -16,9 +16,6 @@ class BluetoothNamedValue;
 class BluetoothValue;
 class BluetoothReplyRunnable;
 
-uint16_t
-UuidToServiceClassInt(const BluetoothUuid& mUuid);
-
 bool
 SetJsObject(JSContext* aContext,
             const BluetoothValue& aValue,
