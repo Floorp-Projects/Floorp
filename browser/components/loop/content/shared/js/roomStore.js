@@ -239,11 +239,16 @@ loop.store = loop.store || {};
         expiresIn: this.defaultExpiresIn
       };
 
-      this._mozLoop.rooms.create(roomCreationData, function(err) {
+      this._mozLoop.rooms.create(roomCreationData, function(err, createdRoom) {
         this.setStoreState({pendingCreation: false});
         if (err) {
           this.dispatchAction(new sharedActions.CreateRoomError({error: err}));
+          return;
         }
+        // Opens the newly created room
+        this.dispatchAction(new sharedActions.OpenRoom({
+          roomToken: createdRoom.roomToken
+        }));
       }.bind(this));
     },
 

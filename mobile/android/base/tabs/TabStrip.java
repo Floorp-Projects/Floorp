@@ -103,6 +103,9 @@ public class TabStrip extends ThemedLinearLayout {
         public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
             switch (msg) {
                 case RESTORED:
+                    tabStripView.restoreTabs();
+                    break;
+
                 case ADDED:
                     tabStripView.addTab(tab);
                     break;
