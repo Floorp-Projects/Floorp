@@ -127,6 +127,12 @@ public:
    */
   virtual nsresult OnNewSourceData() = 0;
 
+  /**
+   * Called when the SurfaceCache discards a persistent surface belonging to
+   * this image.
+   */
+  virtual void OnSurfaceDiscarded() = 0;
+
   virtual void SetInnerWindowID(uint64_t aInnerWindowId) = 0;
   virtual uint64_t InnerWindowID() const = 0;
 
@@ -155,6 +161,8 @@ public:
 #ifdef DEBUG
   virtual uint32_t GetAnimationConsumers() MOZ_OVERRIDE { return mAnimationConsumers; }
 #endif
+
+  virtual void OnSurfaceDiscarded() MOZ_OVERRIDE { }
 
   virtual void SetInnerWindowID(uint64_t aInnerWindowId) MOZ_OVERRIDE {
     mInnerWindowId = aInnerWindowId;

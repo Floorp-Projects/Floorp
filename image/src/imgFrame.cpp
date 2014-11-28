@@ -6,7 +6,6 @@
 
 #include "imgFrame.h"
 #include "ImageRegion.h"
-#include "DiscardTracker.h"
 #include "ShutdownTracker.h"
 
 #include "prenv.h"
@@ -20,6 +19,7 @@ static bool gDisableOptimize = false;
 
 #include "GeckoProfiler.h"
 #include "mozilla/Likely.h"
+#include "MainThreadUtils.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsMargin.h"
 #include "mozilla/CheckedInt.h"
@@ -140,8 +140,7 @@ imgFrame::imgFrame() :
   mCompositingFailed(false),
   mHasNoAlpha(false),
   mNonPremult(false),
-  mOptimizable(false),
-  mInformedDiscardTracker(false)
+  mOptimizable(false)
 {
   static bool hasCheckedOptimize = false;
   if (!hasCheckedOptimize) {
@@ -156,10 +155,6 @@ imgFrame::~imgFrame()
 {
   moz_free(mPalettedImageData);
   mPalettedImageData = nullptr;
-
-  if (mInformedDiscardTracker) {
-    DiscardTracker::InformDeallocation(4 * mSize.height * mSize.width);
-  }
 }
 
 nsresult
@@ -198,13 +193,6 @@ imgFrame::InitForDecoder(const nsIntSize& aImageSize,
   } else {
     MOZ_ASSERT(!mImageSurface, "Called imgFrame::InitForDecoder() twice?");
 
-    // Inform the discard tracker that we are going to allocate some memory.
-    mInformedDiscardTracker =
-      DiscardTracker::TryAllocation(4 * mSize.width * mSize.height);
-    if (!mInformedDiscardTracker) {
-      NS_WARNING("Exceeded the image decode size hard limit");
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
     mVBuf = AllocateBufferForImage(mSize, mFormat);
     if (!mVBuf) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -245,14 +233,6 @@ imgFrame::InitWithDrawable(gfxDrawable* aDrawable,
 
   mFormat = aFormat;
   mPaletteDepth = 0;
-
-  // Inform the discard tracker that we are going to allocate some memory.
-  mInformedDiscardTracker =
-    DiscardTracker::TryAllocation(4 * mSize.width * mSize.height);
-  if (!mInformedDiscardTracker) {
-    NS_WARNING("Exceed the image decode size hard limit");
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   RefPtr<DrawTarget> target;
 
@@ -367,13 +347,6 @@ nsresult imgFrame::Optimize()
         mVBufPtr = nullptr;
         mImageSurface = nullptr;
         mOptSurface = nullptr;
-
-        // We just dumped most of our allocated memory, so tell the discard
-        // tracker that we're not using any at all.
-        if (mInformedDiscardTracker) {
-          DiscardTracker::InformDeallocation(4 * mSize.width * mSize.height);
-          mInformedDiscardTracker = false;
-        }
 
         return NS_OK;
       }
