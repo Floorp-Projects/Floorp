@@ -392,8 +392,9 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
       InitChildReflowState(*aPresContext, borderCollapse, kidReflowState);
 
       // This can indicate that columns were resized.
-      if (aReflowState.reflowState.mFlags.mHResize)
-        kidReflowState.mFlags.mHResize = true;
+      if (aReflowState.reflowState.IsHResize()) {
+        kidReflowState.SetHResize(true);
+      }
      
       NS_ASSERTION(kidFrame == mFrames.FirstChild() || prevKidFrame, 
                    "If we're not on the first frame, we should have a "

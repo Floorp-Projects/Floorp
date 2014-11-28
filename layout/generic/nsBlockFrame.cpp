@@ -1130,7 +1130,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // If we're not dirty (which means we'll mark everything dirty later)
   // and our width has changed, mark the lines dirty that we need to
   // mark dirty for a resize reflow.
-  if (!(GetStateBits() & NS_FRAME_IS_DIRTY) && reflowState->mFlags.mHResize) {
+  if (!(GetStateBits() & NS_FRAME_IS_DIRTY) && reflowState->IsHResize()) {
     PrepareResizeReflow(state);
   }
 
@@ -2026,7 +2026,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 #endif
 
   bool selfDirty = (GetStateBits() & NS_FRAME_IS_DIRTY) ||
-                     (aState.mReflowState.mFlags.mVResize &&
+                     (aState.mReflowState.IsVResize() &&
                       (GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT));
 
   // Reflow our last line if our availableBSize has increased
@@ -2145,7 +2145,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     // push lines?  Why does that work?
     if (!line->IsDirty() &&
         aState.mReflowState.AvailableBSize() != NS_UNCONSTRAINEDSIZE &&
-        (deltaBCoord != 0 || aState.mReflowState.mFlags.mVResize ||
+        (deltaBCoord != 0 || aState.mReflowState.IsVResize() ||
          aState.mReflowState.mFlags.mMustReflowPlaceholders) &&
         (line->IsBlock() || line->HasFloats() || line->HadFloatPushed())) {
       line->MarkDirty();
