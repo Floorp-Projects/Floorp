@@ -21,6 +21,7 @@
 #include "vp9/common/vp9_common_data.h"
 #include "vp9/common/vp9_enums.h"
 #include "vp9/common/vp9_filter.h"
+#include "vp9/common/vp9_idct.h"
 #include "vp9/common/vp9_mv.h"
 #include "vp9/common/vp9_scale.h"
 #include "vp9/common/vp9_seg_common.h"
@@ -98,6 +99,9 @@ typedef struct {
   int_mv as_mv[2];  // first, second inter predictor motion vectors
 } b_mode_info;
 
+// Note that the rate-distortion optimization loop, bit-stream writer, and
+// decoder implementation modules critically rely on the enum entry values
+// specified herein. They should be refactored concurrently.
 typedef enum {
   NONE = -1,
   INTRA_FRAME = 0,
@@ -139,7 +143,8 @@ typedef struct {
   INTERP_FILTER interp_filter;
 } MB_MODE_INFO;
 
-typedef struct {
+typedef struct MODE_INFO {
+  struct MODE_INFO *src_mi;
   MB_MODE_INFO mbmi;
   b_mode_info bmi[4];
 } MODE_INFO;
@@ -176,7 +181,7 @@ struct buf_2d {
 };
 
 struct macroblockd_plane {
-  int16_t *dqcoeff;
+  tran_low_t *dqcoeff;
   PLANE_TYPE plane_type;
   int subsampling_x;
   int subsampling_y;
@@ -202,8 +207,7 @@ typedef struct macroblockd {
 
   int mi_stride;
 
-  // A NULL indicates that the 8x8 is not part of the image
-  MODE_INFO **mi;
+  MODE_INFO *mi;
 
   int up_available;
   int left_available;
@@ -223,11 +227,17 @@ typedef struct macroblockd {
   /* mc buffer */
   DECLARE_ALIGNED(16, uint8_t, mc_buf[80 * 2 * 80 * 2]);
 
+#if CONFIG_VP9_HIGHBITDEPTH
+  /* Bit depth: 8, 10, 12 */
+  int bd;
+  DECLARE_ALIGNED(16, uint16_t, mc_buf_high[80 * 2 * 80 * 2]);
+#endif
+
   int lossless;
 
   int corrupted;
 
-  DECLARE_ALIGNED(16, int16_t, dqcoeff[MAX_MB_PLANE][64 * 64]);
+  DECLARE_ALIGNED(16, tran_low_t, dqcoeff[MAX_MB_PLANE][64 * 64]);
 
   ENTROPY_CONTEXT *above_context[MAX_MB_PLANE];
   ENTROPY_CONTEXT left_context[MAX_MB_PLANE][16];
@@ -245,7 +255,7 @@ extern const TX_TYPE intra_mode_to_tx_type_lookup[INTRA_MODES];
 
 static INLINE TX_TYPE get_tx_type(PLANE_TYPE plane_type,
                                   const MACROBLOCKD *xd) {
-  const MB_MODE_INFO *const mbmi = &xd->mi[0]->mbmi;
+  const MB_MODE_INFO *const mbmi = &xd->mi[0].src_mi->mbmi;
 
   if (plane_type != PLANE_TYPE_Y || is_inter_block(mbmi))
     return DCT_DCT;
@@ -254,7 +264,7 @@ static INLINE TX_TYPE get_tx_type(PLANE_TYPE plane_type,
 
 static INLINE TX_TYPE get_tx_type_4x4(PLANE_TYPE plane_type,
                                       const MACROBLOCKD *xd, int ib) {
-  const MODE_INFO *const mi = xd->mi[0];
+  const MODE_INFO *const mi = xd->mi[0].src_mi;
 
   if (plane_type != PLANE_TYPE_Y || xd->lossless || is_inter_block(&mi->mbmi))
     return DCT_DCT;

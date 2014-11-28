@@ -3559,8 +3559,6 @@ NS_IMETHODIMP nsDocViewerSelectionListener::NotifySelectionChanged(nsIDOMDocumen
     mSelectionWasCollapsed = selectionCollapsed;
   }
 
-  domWindow->UpdateCommands(NS_LITERAL_STRING("selectionchange"), selection, aReason);
-
   return NS_OK;
 }
 

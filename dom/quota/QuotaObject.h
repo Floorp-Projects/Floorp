@@ -16,7 +16,7 @@
 BEGIN_QUOTA_NAMESPACE
 
 class GroupInfo;
-class GroupInfoPair;
+class GroupInfoTriple;
 class OriginInfo;
 class QuotaManager;
 
@@ -156,15 +156,15 @@ public:
 
 class GroupInfo MOZ_FINAL
 {
-  friend class GroupInfoPair;
+  friend class GroupInfoTriple;
   friend class OriginInfo;
   friend class QuotaManager;
   friend class QuotaObject;
 
 public:
-  GroupInfo(GroupInfoPair* aGroupInfoPair, PersistenceType aPersistenceType,
+  GroupInfo(GroupInfoTriple* aGroupInfoTriple, PersistenceType aPersistenceType,
             const nsACString& aGroup)
-  : mGroupInfoPair(aGroupInfoPair), mPersistenceType(aPersistenceType),
+  : mGroupInfoTriple(aGroupInfoTriple), mPersistenceType(aPersistenceType),
     mGroup(aGroup), mUsage(0)
   {
     MOZ_COUNT_CTOR(GroupInfo);
@@ -191,9 +191,6 @@ private:
   void
   LockedRemoveOriginInfos();
 
-  void
-  LockedRemoveOriginInfosForPattern(const nsACString& aPattern);
-
   bool
   LockedHasOriginInfos()
   {
@@ -213,26 +210,26 @@ private:
 
   nsTArray<nsRefPtr<OriginInfo> > mOriginInfos;
 
-  GroupInfoPair* mGroupInfoPair;
+  GroupInfoTriple* mGroupInfoTriple;
   PersistenceType mPersistenceType;
   nsCString mGroup;
   uint64_t mUsage;
 };
 
-class GroupInfoPair
+class GroupInfoTriple
 {
   friend class QuotaManager;
   friend class QuotaObject;
 
 public:
-  GroupInfoPair()
+  GroupInfoTriple()
   {
-    MOZ_COUNT_CTOR(GroupInfoPair);
+    MOZ_COUNT_CTOR(GroupInfoTriple);
   }
 
-  ~GroupInfoPair()
+  ~GroupInfoTriple()
   {
-    MOZ_COUNT_DTOR(GroupInfoPair);
+    MOZ_COUNT_DTOR(GroupInfoTriple);
   }
 
 private:
@@ -279,6 +276,7 @@ private:
 
   nsRefPtr<GroupInfo> mPersistentStorageGroupInfo;
   nsRefPtr<GroupInfo> mTemporaryStorageGroupInfo;
+  nsRefPtr<GroupInfo> mDefaultStorageGroupInfo;
 };
 
 END_QUOTA_NAMESPACE
