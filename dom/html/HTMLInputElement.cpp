@@ -1332,6 +1332,16 @@ HTMLInputElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                AttrValueIs(kNameSpaceID_None, nsGkAtoms::dir,
                            nsGkAtoms::_auto, eIgnoreCase)) {
       SetDirectionIfAuto(false, aNotify);
+    } else if (mType == NS_FORM_INPUT_RADIO && aName == nsGkAtoms::required) {
+      nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
+
+      if (container &&
+          ((aValue && !HasAttr(aNameSpaceID, aName)) ||
+           (!aValue && HasAttr(aNameSpaceID, aName)))) {
+        nsAutoString name;
+        GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
+        container->RadioRequiredWillChange(name, !!aValue);
+      }
     }
   }
 
@@ -1402,16 +1412,6 @@ HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
         if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
           LoadImage(src, false, aNotify, eImageLoadType_Normal);
         }
-      }
-    }
-
-    if (mType == NS_FORM_INPUT_RADIO && aName == nsGkAtoms::required) {
-      nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
-
-      if (container) {
-        nsAutoString name;
-        GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
-        container->RadioRequiredChanged(name, this);
       }
     }
 
