@@ -930,8 +930,8 @@ public:
   virtual void RemoveFromRadioGroup(const nsAString& aName,
                                     nsIFormControl* aRadio) MOZ_OVERRIDE;
   virtual uint32_t GetRequiredRadioCount(const nsAString& aName) const MOZ_OVERRIDE;
-  virtual void RadioRequiredChanged(const nsAString& aName,
-                                    nsIFormControl* aRadio) MOZ_OVERRIDE;
+  virtual void RadioRequiredWillChange(const nsAString& aName,
+                                       bool aRequiredAdded) MOZ_OVERRIDE;
   virtual bool GetValueMissingState(const nsAString& aName) const MOZ_OVERRIDE;
   virtual void SetValueMissingState(const nsAString& aName, bool aValue) MOZ_OVERRIDE;
 

@@ -2503,7 +2503,7 @@ static bool ValidInputSize(int32_t size) {
   // Reject compressed samples larger than an uncompressed UHD
   // frame. This is a reasonable cut-off for a lossy codec,
   // combined with the current Firefox limit to 5k video.
-  return (size > 0 && size < 4 * (1920 * 1080) * 3 / 2);
+  return (size > 0 && size <= 4 * (1920 * 1080) * 3 / 2);
 }
 
 status_t MPEG4Source::start(MetaData *params) {
