@@ -93,7 +93,7 @@ function goUpdateConsoleCommands() {
                          accesskeyMacOSX="&btnPageNet.accesskeyMacOSX;"
                          accesskey="&btnPageNet.accesskey;"
                          tabindex="3">
-            <menupopup>
+            <menupopup id="net-contextmenu">
               <menuitem label="&btnConsoleErrors;" type="checkbox" autocheck="false"
                         prefKey="network"/>
               <menuitem label="&btnConsoleWarnings;" type="checkbox" autocheck="false"
@@ -110,7 +110,7 @@ function goUpdateConsoleCommands() {
                          tooltiptext="&btnPageCSS.tooltip2;"
                          accesskey="&btnPageCSS.accesskey;"
                          tabindex="4">
-            <menupopup>
+            <menupopup id="css-contextmenu">
               <menuitem label="&btnConsoleErrors;" type="checkbox" autocheck="false"
                         prefKey="csserror"/>
               <menuitem label="&btnConsoleWarnings;" type="checkbox"
@@ -124,7 +124,7 @@ function goUpdateConsoleCommands() {
                          tooltiptext="&btnPageJS.tooltip;"
                          accesskey="&btnPageJS.accesskey;"
                          tabindex="5">
-            <menupopup>
+            <menupopup id="js-contextmenu">
               <menuitem label="&btnConsoleErrors;" type="checkbox"
                         autocheck="false" prefKey="exception"/>
               <menuitem label="&btnConsoleWarnings;" type="checkbox"
@@ -138,7 +138,7 @@ function goUpdateConsoleCommands() {
                          tooltiptext="&btnPageSecurity.tooltip;"
                          accesskey="&btnPageSecurity.accesskey;"
                          tabindex="6">
-            <menupopup>
+            <menupopup id="security-contextmenu">
               <menuitem label="&btnConsoleErrors;" type="checkbox"
                         autocheck="false" prefKey="secerror"/>
               <menuitem label="&btnConsoleWarnings;" type="checkbox"
@@ -150,7 +150,7 @@ function goUpdateConsoleCommands() {
                          tooltiptext="&btnPageLogging.tooltip;"
                          accesskey="&btnPageLogging.accesskey3;"
                          tabindex="7">
-            <menupopup>
+            <menupopup id="logging-contextmenu">
               <menuitem label="&btnConsoleErrors;" type="checkbox"
                         autocheck="false" prefKey="error"/>
               <menuitem label="&btnConsoleWarnings;" type="checkbox"
