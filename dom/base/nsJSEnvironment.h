@@ -136,6 +136,8 @@ public:
     JSObject* global = GetWindowProxy();
     return global ? mGlobalObjectRef.get() : nullptr;
   }
+
+  static void NotifyDidPaint();
 protected:
   virtual ~nsJSContext();
 

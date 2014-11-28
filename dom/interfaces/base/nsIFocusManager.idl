@@ -8,7 +8,7 @@
 interface nsIDocument;
 interface nsIContent;
 
-[scriptable, uuid(51db277b-7ee7-4bce-9b84-fd2efcd2c8bd)]
+[scriptable, uuid(c0716002-5602-4002-a0de-cc69b924b2c6)]
 /**
  * The focus manager deals with all focus related behaviour. Only one element
  * in the entire application may have the focus at a time; this element
@@ -250,4 +250,10 @@ interface nsIFocusManager : nsISupports
    * widget focus state is the responsibility of the caller.
    */
   [noscript] void focusPlugin(in nsIContent aPlugin);
+
+  /**
+   * Used in a child process to indicate that the parent window is now
+   * active or deactive.
+   */
+  [noscript] void parentActivated(in nsIDOMWindow aWindow, in bool active);
 };

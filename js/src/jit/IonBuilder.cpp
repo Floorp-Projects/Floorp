@@ -3438,6 +3438,7 @@ IonBuilder::improveTypesAtTest(MDefinition *ins, bool trueBranch, MTest *test)
         if (!ins->resultTypeSet() || ins->resultTypeSet()->unknown())
             return true;
 
+        types::TemporaryTypeSet *oldType = ins->resultTypeSet();
         types::TemporaryTypeSet *type;
 
         // Decide either to set or filter.
@@ -3448,27 +3449,30 @@ IonBuilder::improveTypesAtTest(MDefinition *ins, bool trueBranch, MTest *test)
             {
                 return true;
             }
-            type = ins->resultTypeSet()->filter(alloc_->lifoAlloc(), true, true);
+            type = oldType->filter(alloc_->lifoAlloc(), true, true);
         } else {
-            // According to the standards, we cannot filter out:
-            // Strings, Int32, Double, Booleans, Objects (if they emulate undefined)
+            // According to the standards, we cannot filter out: Strings,
+            // Int32, Double, Booleans, Objects (if they emulate undefined)
             uint32_t flags = types::TYPE_FLAG_PRIMITIVE;
 
-            // If the typeset does not emulate undefined. Then we can filter out objects.
-            if (!ins->resultTypeSet()->maybeEmulatesUndefined())
-                flags &= ~types::TYPE_FLAG_ANYOBJECT;
+            // If the typeset does emulate undefined, then we cannot filter out
+            // objects.
+            if (oldType->maybeEmulatesUndefined())
+                flags |= types::TYPE_FLAG_ANYOBJECT;
 
-            // Only intersect the typesets if it will generate a more narrow typeset.
-            if (!ins->resultTypeSet()->hasAnyFlag(~flags & types::TYPE_FLAG_BASE_MASK) &&
-                ins->resultTypeSet()->getObjectCount() == 0)
+            // Only intersect the typesets if it will generate a more narrow
+            // typeset. The first part takes care of primitives and AnyObject,
+            // while the second line specific (type)objects.
+            if (!oldType->hasAnyFlag(~flags & types::TYPE_FLAG_BASE_MASK) &&
+                (oldType->maybeEmulatesUndefined() || !oldType->maybeObject()))
             {
                 return true;
             }
 
             types::TemporaryTypeSet base(flags, static_cast<types::TypeObjectKey**>(nullptr));
-            type = types::TypeSet::intersectSets(&base, ins->resultTypeSet(), alloc_->lifoAlloc());
-            replaceTypeSet(ins, type, test);
+            type = types::TypeSet::intersectSets(&base, oldType, alloc_->lifoAlloc());
         }
+        replaceTypeSet(ins, type, test);
       }
 
     }

@@ -1210,9 +1210,9 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
       .forgetIntolerance(socketInfo->GetHostName(), socketInfo->GetPort());
 
     return false;
-  } else if ((err == SSL_ERROR_NO_CYPHER_OVERLAP ||
-              err == PR_END_OF_FILE_ERROR) &&
-             nsNSSComponent::AreAnyWeakCiphersEnabled()) {
+  }
+  if ((err == SSL_ERROR_NO_CYPHER_OVERLAP || err == PR_END_OF_FILE_ERROR) &&
+      nsNSSComponent::AreAnyWeakCiphersEnabled()) {
     if (socketInfo->SharedState().IOLayerHelpers()
                   .rememberStrongCiphersFailed(socketInfo->GetHostName(),
                                                socketInfo->GetPort(), err)) {
