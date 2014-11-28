@@ -2686,14 +2686,3 @@ PK11_GetAllSlotsForCert(CERTCertificate *cert, void *arg)
     nssCryptokiObjectArray_Destroy(instances);
     return slotList;
 }
-
-SECStatus
-PK11_SetCertificateNickname(CERTCertificate *cert, const char *nickname)
-{
-    /* Can't set nickname of temp cert. */
-    if (!cert->slot || cert->pkcs11ID == CK_INVALID_HANDLE) {
-        return SEC_ERROR_INVALID_ARGS;
-    }
-    return PK11_SetObjectNickname(cert->slot, cert->pkcs11ID, nickname);
-}
-
