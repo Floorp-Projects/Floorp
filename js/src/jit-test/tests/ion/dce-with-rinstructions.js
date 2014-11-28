@@ -1050,6 +1050,25 @@ function rhypot_object(i) {
     return i;
 }
 
+var uceFault_sin_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_sin_number'));
+function rsin_number(i) {
+    var x = Math.sin(i);
+    if (uceFault_sin_number(i) || uceFault_sin_number(i))
+        assertEq(x, Math.sin(i));
+    return i;
+}
+
+var uceFault_sin_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_sin_object'));
+function rsin_object(i) {
+    var t = i;
+    var o = { valueOf: function() { return t; } };
+    var x = Math.sin(o);
+    t = 777;
+    if (uceFault_sin_object(i) || uceFault_sin_object(i))
+        assertEq(x, Math.sin(i));
+    return i;
+}
+
 for (i = 0; i < 100; i++) {
     rbitnot_number(i);
     rbitnot_object(i);
@@ -1150,6 +1169,8 @@ for (i = 0; i < 100; i++) {
     rtofloat32_object(i);
     rhypot_number(i);
     rhypot_object(i);
+    rsin_number(i);
+    rsin_object(i);
 }
 
 // Test that we can refer multiple time to the same recover instruction, as well

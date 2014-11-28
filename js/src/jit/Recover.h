@@ -47,6 +47,7 @@ namespace jit {
     _(Sqrt)                                     \
     _(Atan2)                                    \
     _(Hypot)                                    \
+    _(MathFunction)                             \
     _(StringSplit)                              \
     _(RegExpExec)                               \
     _(RegExpTest)                               \
@@ -469,6 +470,21 @@ class RHypot MOZ_FINAL : public RInstruction
      }
 
      bool recover(JSContext *cx, SnapshotIterator &iter) const;
+};
+
+class RMathFunction MOZ_FINAL : public RInstruction
+{
+  private:
+    uint8_t function_;
+
+  public:
+    RINSTRUCTION_HEADER_(MathFunction)
+
+    virtual uint32_t numOperands() const {
+        return 1;
+    }
+
+    bool recover(JSContext *cx, SnapshotIterator &iter) const;
 };
 
 class RStringSplit MOZ_FINAL : public RInstruction

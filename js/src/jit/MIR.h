@@ -5590,7 +5590,13 @@ class MMathFunction
     void computeRange(TempAllocator &alloc);
     bool writeRecoverData(CompactBufferWriter &writer) const;
     bool canRecoverOnBailout() const {
-        return function_ == Round;
+        switch(function_) {
+          case Sin:
+          case Round:
+            return true;
+          default:
+            return false;
+        }
     }
 
     ALLOW_CLONE(MMathFunction)
