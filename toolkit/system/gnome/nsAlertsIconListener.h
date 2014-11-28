@@ -34,7 +34,8 @@ public:
                           const nsAString & aAlertText,
                           bool aAlertTextClickable,
                           const nsAString & aAlertCookie,
-                          nsIObserver * aAlertListener);
+                          nsIObserver * aAlertListener,
+                          bool aInPrivateBrowsing);
 
   void SendCallback();
   void SendClosed();
@@ -82,7 +83,7 @@ protected:
   NotifyNotification* mNotification;
   gulong mClosureHandler;
 
-  nsresult StartRequest(const nsAString & aImageUrl);
+  nsresult StartRequest(const nsAString & aImageUrl, bool aInPrivateBrowsing);
   nsresult ShowAlert(GdkPixbuf* aPixbuf);
 };
 

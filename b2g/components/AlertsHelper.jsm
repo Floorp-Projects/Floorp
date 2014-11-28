@@ -270,7 +270,7 @@ let AlertsHelper = {
     this.registerListener(data.name, data.cookie, data.alertListener);
     this.showNotification(data.imageURL, data.title, data.text,
                           data.textClickable, data.cookie, data.name, data.bidi,
-                          data.lang, dataObj, null);
+                          data.lang, dataObj, null, data.inPrivateBrowsing);
   },
 
   showAppNotification: function(aMessage) {

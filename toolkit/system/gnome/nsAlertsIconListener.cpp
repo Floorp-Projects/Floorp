@@ -200,7 +200,7 @@ nsAlertsIconListener::ShowAlert(GdkPixbuf* aPixbuf)
 }
 
 nsresult
-nsAlertsIconListener::StartRequest(const nsAString & aImageUrl)
+nsAlertsIconListener::StartRequest(const nsAString & aImageUrl, bool aInPrivateBrowsing)
 {
   if (mIconRequest) {
     // Another icon request is already in flight.  Kill it.
@@ -219,8 +219,11 @@ nsAlertsIconListener::StartRequest(const nsAString & aImageUrl)
 
   nsresult rv = il->LoadImageXPCOM(imageUri, nullptr, nullptr,
                                    NS_LITERAL_STRING("default"), nullptr, nullptr,
-                                   this, nullptr, nsIRequest::LOAD_NORMAL, nullptr,
-                                   0 /* use default */, getter_AddRefs(mIconRequest));
+                                   this, nullptr,
+                                   aInPrivateBrowsing ? nsIRequest::LOAD_ANONYMOUS :
+                                                        nsIRequest::LOAD_NORMAL,
+                                   nullptr, 0 /* use default */,
+                                   getter_AddRefs(mIconRequest));
   if (NS_FAILED(rv))
     return rv;
 
@@ -267,7 +270,8 @@ nsAlertsIconListener::InitAlertAsync(const nsAString & aImageUrl,
                                      const nsAString & aAlertText,
                                      bool aAlertTextClickable,
                                      const nsAString & aAlertCookie,
-                                     nsIObserver * aAlertListener)
+                                     nsIObserver * aAlertListener,
+                                     bool aInPrivateBrowsing)
 {
   if (!libNotifyHandle)
     return NS_ERROR_FAILURE;
@@ -341,5 +345,5 @@ nsAlertsIconListener::InitAlertAsync(const nsAString & aImageUrl,
   mAlertListener = aAlertListener;
   mAlertCookie = aAlertCookie;
 
-  return StartRequest(aImageUrl);
+  return StartRequest(aImageUrl, aInPrivateBrowsing);
 }
