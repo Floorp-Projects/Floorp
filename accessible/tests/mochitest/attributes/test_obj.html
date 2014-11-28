@@ -28,16 +28,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAbsentAttrs(getNode("atomic_false").firstChild, {"container-atomic" : "false"});
 
       testAttrs("autocomplete", {"autocomplete" : "true"}, true);
-      testAttrs("checkbox", {"checkable" : "true"}, true); 
-      testAttrs("checkedCheckbox", {"checkable" : "true"}, true); 
-      testAttrs("checkedMenuitem", {"checkable" : "true"}, true); 
-      testAttrs("checkedOption", {"checkable" : "true"}, true); 
-      testAttrs("checkedRadio", {"checkable" : "true"}, true); 
-      testAttrs("checkedTreeitem", {"checkable" : "true"}, true); 
+      testAttrs("checkbox", {"checkable" : "true"}, true);
+      testAttrs("checkedCheckbox", {"checkable" : "true"}, true);
+      testAttrs("checkedMenuitem", {"checkable" : "true"}, true);
+      testAttrs("checkedOption", {"checkable" : "true"}, true);
+      testAttrs("checkedRadio", {"checkable" : "true"}, true);
+      testAttrs("checkedTreeitem", {"checkable" : "true"}, true);
       testAttrs("dropeffect", {"dropeffect" : "copy"}, true);
       testAttrs("grabbed", {"grabbed" : "true"}, true);
+      testAbsentAttrs("haspopup", { "haspopup": "false" });
       testAttrs("hidden", {"hidden" : "true"}, true);
       testAbsentAttrs("hidden_false", { "hidden": "false" });
+      testAbsentAttrs("modal", {"modal" : "true"});
       testAttrs("sortAscending", {"sort" : "ascending"}, true);
       testAttrs("sortDescending", {"sort" : "descending"}, true);
       testAttrs("sortNone", {"sort" : "none"}, true);
@@ -198,8 +200,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
   <div id="checkedTreeitem" role="treeitem" aria-checked="true"></div>
   <div id="dropeffect" aria-dropeffect="copy"></div>
   <div id="grabbed" aria-grabbed="true"></div>
+  <div id="haspopup" aria-haspopup="true"></div>
   <div id="hidden" aria-hidden="true"></div>
   <div id="hidden_false" aria-hidden="false"></div>
+  <div id="modal" aria-modal="true"></div>
   <div id="sortAscending" role="columnheader" aria-sort="ascending"></div>
   <div id="sortDescending" role="columnheader" aria-sort="descending"></div>
   <div id="sortNone" role="columnheader" aria-sort="none"></div>

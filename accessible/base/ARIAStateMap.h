@@ -33,6 +33,7 @@ enum EStateRule
   eARIAExpanded,
   eARIAHasPopup,
   eARIAInvalid,
+  eARIAModal,
   eARIAMultiline,
   eARIAMultiSelectable,
   eARIAOrientation,

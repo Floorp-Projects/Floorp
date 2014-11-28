@@ -75,7 +75,7 @@ void vp9_vaq_init() {
 void vp9_vaq_frame_setup(VP9_COMP *cpi) {
   VP9_COMMON *cm = &cpi->common;
   struct segmentation *seg = &cm->seg;
-  const double base_q = vp9_convert_qindex_to_q(cm->base_qindex);
+  const double base_q = vp9_convert_qindex_to_q(cm->base_qindex, cm->bit_depth);
   const int base_rdmult = vp9_compute_rd_mult(cpi, cm->base_qindex +
                                               cm->y_dc_delta_q);
   int i;
@@ -99,7 +99,8 @@ void vp9_vaq_frame_setup(VP9_COMP *cpi) {
         continue;
       }
 
-      qindex_delta = vp9_compute_qdelta(&cpi->rc, base_q, base_q * Q_RATIO(i));
+      qindex_delta = vp9_compute_qdelta(&cpi->rc, base_q, base_q * Q_RATIO(i),
+                                        cm->bit_depth);
       vp9_set_segdata(seg, SEGMENT_ID(i), SEG_LVL_ALT_Q, qindex_delta);
       vp9_enable_segfeature(seg, SEGMENT_ID(i), SEG_LVL_ALT_Q);
 

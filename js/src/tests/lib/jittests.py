@@ -177,10 +177,10 @@ class Test:
                         test.tz_pacific = True
                     elif name == 'ion-eager':
                         test.jitflags.append('--ion-eager')
-                    elif name == 'no-ion':
-                        test.jitflags.append('--no-ion')
                     elif name == 'dump-bytecode':
                         test.jitflags.append('--dump-bytecode')
+                    elif name.startswith('--'): # // |jit-test| --ion-gvn=off; --no-sse4
+                        test.jitflags.append(name)
                     else:
                         print('%s: warning: unrecognized |jit-test| attribute %s' % (path, part))
 

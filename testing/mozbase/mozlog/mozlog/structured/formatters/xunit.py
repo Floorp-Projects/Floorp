@@ -63,7 +63,7 @@ class XUnitFormatter(base.BaseFormatter):
             else:
                 test_name = name
             test.attrib["name"] = test_name
-            test.attrib["time"] = "%.2f" % ((data["time"] - self.test_start_time) / 1000)
+            test.attrib["time"] = "%.2f" % ((data["time"] - self.test_start_time) / 1000.0)
 
         if ("expected" in data and data["expected"] != data["status"]):
             if data["status"] in ("NOTRUN", "ASSERT", "ERROR"):
@@ -73,8 +73,8 @@ class XUnitFormatter(base.BaseFormatter):
                 result = ElementTree.SubElement(test, "failure")
                 self.failures += 1
 
-            result.attrib["message"] = "Expected %s, got %s" % (data["status"], data["message"])
-            result.text = data["message"]
+            result.attrib["message"] = "Expected %s, got %s" % (data["expected"], data["status"])
+            result.text = '%s\n%s' % (data.get('stack', ''), data.get('message', ''))
 
         elif data["status"] == "SKIP":
             result = ElementTree.SubElement(test, "skipped")
@@ -90,7 +90,10 @@ class XUnitFormatter(base.BaseFormatter):
         self.root.attrib.update({"tests": str(self.tests_run),
                                  "errors": str(self.errors),
                                  "failures": str(self.failures),
-                                 "skiped": str(self.skips),
+                                 "skips": str(self.skips),
                                  "time":   "%.2f" % (
-                                     (data["time"] - self.suite_start_time) / 1000)})
-        return ElementTree.tostring(self.root, encoding="utf8")
+                                     (data["time"] - self.suite_start_time) / 1000.0)})
+        xml_string = ElementTree.tostring(self.root, encoding="utf8")
+        # pretty printing can not be done from xml.etree
+        from xml.dom import minidom
+        return minidom.parseString(xml_string).toprettyxml(encoding="utf8")

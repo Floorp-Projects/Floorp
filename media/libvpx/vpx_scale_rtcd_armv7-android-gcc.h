@@ -7,11 +7,11 @@
 #define RTCD_EXTERN extern
 #endif
 
+struct yv12_buffer_config;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-struct yv12_buffer_config;
 
 void vp8_horizontal_line_2_1_scale_c(const unsigned char *source, unsigned int source_width, unsigned char *dest, unsigned int dest_width);
 #define vp8_horizontal_line_2_1_scale vp8_horizontal_line_2_1_scale_c

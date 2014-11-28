@@ -4,4 +4,4 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-enum StorageType { "persistent", "temporary" };
+enum StorageType { "persistent", "temporary", "default" };
