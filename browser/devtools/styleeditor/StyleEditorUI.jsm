@@ -123,8 +123,15 @@ StyleEditorUI.prototype = {
 
       let hUtils = toolbox.highlighterUtils;
       if (hUtils.hasCustomHighlighter(SELECTOR_HIGHLIGHTER_TYPE)) {
-        this._highlighter =
-          yield hUtils.getHighlighterByType(SELECTOR_HIGHLIGHTER_TYPE);
+        try {
+          this._highlighter =
+            yield hUtils.getHighlighterByType(SELECTOR_HIGHLIGHTER_TYPE);
+        } catch (e) {
+          // The selectorHighlighter can't always be instantiated, for example
+          // it doesn't work with XUL windows (until bug 1094959 gets fixed).
+          console.warn("The selectorHighlighter couldn't be instantiated, " +
+            "elements matching hovered selectors will not be highlighted");
+        }
       }
     }.bind(this)).then(() => {
       this.createUI();

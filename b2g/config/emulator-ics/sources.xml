@@ -19,7 +19,7 @@
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="7cc460af0f6f491d1afa6b6043cdea5025f0e15f"/>
+  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="47111fd2bbe8b0055c8a596959d701391d2a9953"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="50ad16a280fe9cfa0716f8c6ba16afdf7f266b49"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="d5d3f93914558b6f168447b805cd799c8233e300"/>
@@ -97,7 +97,7 @@
   <project name="platform/system/netd" path="system/netd" revision="3d298fde142bee3fc4f07f63f16f2d8ce42339c0"/>
   <project name="platform/system/vold" path="system/vold" revision="919829940468066a32f403980b43f6ebfee5d314"/>
   <!-- Emulator specific things -->
-  <project name="android-development" path="development" remote="b2g" revision="c99e41d49f0b98eade30814e52c1de9e818def68"/>
+  <project name="android-development" path="development" remote="b2g" revision="2bdf22305b523af644e1891b4ddfd9229336d0ce"/>
   <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="0d5c43228006bae775c4cb57a6d3908484d41718"/>
   <project name="platform/external/iproute2" path="external/iproute2" revision="c66c5716d5335e450f7a7b71ccc6a604fb2f41d2"/>
   <project name="platform/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" revision="d2685281e2e54ca14d1df304867aa82c37b27162"/>

@@ -586,7 +586,8 @@ public:
     SCROLLABLE_ONLY_ASYNC_SCROLLABLE = 0x04,
     /**
      * If the SCROLLABLE_ALWAYS_MATCH_ROOT flag is set, then return the
-     * root scrollable frame for the root content document if we hit it.
+     * root scrollable frame for the root content document if we don't hit
+     * anything else.
      */
     SCROLLABLE_ALWAYS_MATCH_ROOT = 0x08,
   };
