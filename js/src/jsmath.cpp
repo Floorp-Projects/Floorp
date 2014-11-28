@@ -894,6 +894,22 @@ js::math_sin_uncached(double x)
 }
 
 bool
+js::math_sin_handle(JSContext *cx, HandleValue val, MutableHandleValue res)
+{
+    double in;
+    if (!ToNumber(cx, val, &in))
+        return false;
+
+    MathCache *mathCache = cx->runtime()->getMathCache(cx);
+    if (!mathCache)
+        return false;
+
+    double out = math_sin_impl(mathCache, in);
+    res.setDouble(out);
+    return true;
+}
+
+bool
 js::math_sin(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -903,17 +919,7 @@ js::math_sin(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    double x;
-    if (!ToNumber(cx, args[0], &x))
-        return false;
-
-    MathCache *mathCache = cx->runtime()->getMathCache(cx);
-    if (!mathCache)
-        return false;
-
-    double z = math_sin_impl(mathCache, x);
-    args.rval().setDouble(z);
-    return true;
+    return math_sin_handle(cx, args[0], args.rval());
 }
 
 bool

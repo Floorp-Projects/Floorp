@@ -180,6 +180,9 @@ extern double
 math_sin_uncached(double x);
 
 extern bool
+math_sin_handle(JSContext *cx, HandleValue val, MutableHandleValue res);
+
+extern bool
 math_cos(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern double
