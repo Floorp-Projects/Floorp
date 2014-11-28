@@ -25,9 +25,6 @@ if CONFIG['MOZ_VORBIS']:
 if CONFIG['MOZ_TREMOR']:
     external_dirs += ['media/libtremor']
 
-if CONFIG['MOZ_OPUS']:
-    external_dirs += ['media/libopus']
-
 if CONFIG['MOZ_WEBM']:
     external_dirs += ['media/libnestegg']
 
@@ -44,6 +41,7 @@ external_dirs += [
     'media/kiss_fft',
     'media/libcubeb',
     'media/libogg',
+    'media/libopus',
     'media/libtheora',
     'media/libspeex_resampler',
     'media/libstagefright',
