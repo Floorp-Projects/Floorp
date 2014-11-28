@@ -37,14 +37,15 @@ NS_IMETHODIMP nsSystemAlertsService::ShowAlertNotification(const nsAString & aIm
                                                            const nsAString & aBidi,
                                                            const nsAString & aLang,
                                                            const nsAString & aData,
-                                                           nsIPrincipal * aPrincipal)
+                                                           nsIPrincipal * aPrincipal,
+                                                           bool aInPrivateBrowsing)
 {
   nsRefPtr<nsAlertsIconListener> alertListener = new nsAlertsIconListener();
   if (!alertListener)
     return NS_ERROR_OUT_OF_MEMORY;
 
   return alertListener->InitAlertAsync(aImageUrl, aAlertTitle, aAlertText, aAlertTextClickable,
-                                       aAlertCookie, aAlertListener);
+                                       aAlertCookie, aAlertListener, aInPrivateBrowsing);
 }
 
 NS_IMETHODIMP nsSystemAlertsService::CloseAlert(const nsAString& aAlertName,

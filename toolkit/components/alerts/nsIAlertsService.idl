@@ -9,7 +9,7 @@
 
 interface nsIPrincipal;
 
-[scriptable, uuid(d446bede-fcf7-403d-b6b6-5fd67b19ba58)]
+[scriptable, uuid(9d0284bf-db40-42da-8f0d-c2769dbde7aa)]
 interface nsIAlertsService : nsISupports
 {
    /**
@@ -37,6 +37,8 @@ interface nsIAlertsService : nsISupports
     *                       platforms.
     * @param lang           Language of title and text of the alert. Only available
     *                       on supported platforms.
+    * @param inPrivateBrowsing If set to true, imageUrl will be loaded in private
+    *                          browsing mode.
     * @throws NS_ERROR_NOT_AVAILABLE If the notification cannot be displayed.
     *
     * The following arguments will be passed to the alertListener's observe() 
@@ -62,7 +64,8 @@ interface nsIAlertsService : nsISupports
                               [optional] in AString dir,
                               [optional] in AString lang,
                               [optional] in AString data,
-                              [optional] in nsIPrincipal principal);
+                              [optional] in nsIPrincipal principal,
+                              [optional] in boolean inPrivateBrowsing);
 
    /**
     * Close alerts created by the service.
