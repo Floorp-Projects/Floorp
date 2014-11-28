@@ -7,44 +7,12 @@
 
 "use strict";
 
-const BROWSER_SEARCH_PREF      = "browser.search.";
-
-const MOZ_PARAM_LOCALE_REGEX   = /\{moz:locale\}/g;
-const MOZ_PARAM_DIST_ID_REGEX  = /\{moz:distributionID\}/g;
-const MOZ_PARAM_OFFICIAL_REGEX = /\{moz:official\}/g;
-
-// Custom search parameters
-const MOZ_OFFICIAL = Services.appinfo.isOfficialBranding ? "official" : "unofficial";
-
-XPCOMUtils.defineLazyGetter(this, "distributionID", () => {
-  try {
-    return Services.prefs.getCharPref(BROWSER_SEARCH_PREF + "distributionID");
-  } catch (ex) {
-    return Services.appinfo.distributionID;
-  }
-});
-
-XPCOMUtils.defineLazyGetter(this, "GOOGLE_CLIENT", () => {
-  switch (Services.appinfo.defaultUpdateChannel) {
-    case "beta":
-      return "firefox-beta";
-    case "aurora":
-      return "firefox-aurora";
-    case "nightly":
-      return "firefox-nightly";
-    default:
-      return "firefox-a";
-  }
-});
-
 function test() {
   // Bug 992270: Ignore uncaught about:home exceptions (related to snippets from IndexedDB)
   ignoreAllUncaughtExceptions(true);
 
   function replaceUrl(base) {
-    return base.replace(MOZ_PARAM_LOCALE_REGEX, getLocale())
-               .replace(MOZ_PARAM_DIST_ID_REGEX, distributionID)
-               .replace(MOZ_PARAM_OFFICIAL_REGEX, MOZ_OFFICIAL);
+    return base;
   }
 
   let gMutationObserver = null;
@@ -115,7 +83,7 @@ function test() {
     },
     {
       name: "Search with Google from about:home",
-      searchURL: replaceUrl("https://www.google.com/search?q=foo&ie=utf-8&oe=utf-8&aq=t&rls={moz:distributionID}:{moz:locale}:{moz:official}&client=" + GOOGLE_CLIENT + "&channel=np&source=hp"),
+      searchURL: replaceUrl("https://www.google.com/search?q=foo&ie=utf-8&oe=utf-8"),
       run: function () {
         verify_about_home_search("Google");
       }
