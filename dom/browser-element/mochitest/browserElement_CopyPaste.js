@@ -190,6 +190,7 @@ function testPaste1(e) {
   // Then paste it to child side.
   copyToClipboard(pasteData);
 
+  doCommand('selectall');
   doCommand("paste");
   SimpleTest.executeSoon(function() { testPaste2(e); });
 }
