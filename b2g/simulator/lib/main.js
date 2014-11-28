@@ -34,20 +34,22 @@ function close() {
   return p.kill();
 }
 
-let appinfo = {};
+let name;
 
 AddonManager.getAddonByID(require("addon").id, function (addon) {
-  appinfo.label = addon.name.replace(" Simulator", "");
+  name = addon.name.replace(" Simulator", "");
 
-  Simulator.register(appinfo.label, {
-    appinfo: appinfo,
+  Simulator.register(name, {
+    // We keep the deprecated `appinfo` object so that recent simulator addons
+    // remain forward-compatible with older Firefox.
+    appinfo: { label: name },
     launch: launch,
     close: close
   });
 });
 
 exports.shutdown = function () {
-  Simulator.unregister(appinfo.label);
+  Simulator.unregister(name);
   close();
 }
 
