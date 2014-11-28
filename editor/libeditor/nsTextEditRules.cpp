@@ -1154,7 +1154,7 @@ nsTextEditRules::CreateBogusNodeIfNeeded(Selection* aSelection)
        bodyChild = bodyChild->GetNextSibling()) {
     if (mEditor->IsMozEditorBogusNode(bodyChild) ||
         !mEditor->IsEditable(body) || // XXX hoist out of the loop?
-        mEditor->IsEditable(bodyChild)) {
+        mEditor->IsEditable(bodyChild) || mEditor->IsBlockNode(bodyChild)) {
       return NS_OK;
     }
   }
