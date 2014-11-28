@@ -51,9 +51,12 @@ navigator.mozLoop = {
   ensureRegistered: function() {},
   getAudioBlob: function(){},
   getLoopPref: function(pref) {
-    // Ensure UI for rooms is displayed in the showcase.
-    if (pref === "rooms.enabled") {
-      return true;
+    switch(pref) {
+      // Ensure UI for rooms is displayed in the showcase.
+      case "rooms.enabled":
+      // Ensure we skip FTE completely.
+      case "gettingStarted.seen":
+        return true;
     }
   },
   setLoopPref: function(){},
