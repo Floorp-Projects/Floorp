@@ -259,10 +259,7 @@ public:
 
     BT_LOGR("BluetoothInterface::Enable failed: %d", aStatus);
 
-    nsRefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(false);
-    if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
-      BT_WARNING("Failed to dispatch to main thread!");
-    }
+    BluetoothService::AcknowledgeToggleBt(false);
   }
 };
 
@@ -336,10 +333,7 @@ public:
 
     sBtInterface = nullptr;
 
-    nsRefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(false);
-    if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
-      BT_WARNING("Failed to dispatch to main thread!");
-    }
+    BluetoothService::AcknowledgeToggleBt(false);
   }
 };
 
@@ -355,10 +349,7 @@ BluetoothServiceBluedroid::StartGonkBluetooth()
 
   if (bs->IsEnabled()) {
     // Keep current enable status
-    nsRefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(true);
-    if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
-      BT_WARNING("Failed to dispatch to main thread!");
-    }
+    BluetoothService::AcknowledgeToggleBt(true);
     return NS_OK;
   }
 
@@ -378,10 +369,7 @@ public:
 
     BT_LOGR("BluetoothInterface::Disable failed: %d", aStatus);
 
-    nsRefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(true);
-    if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
-      BT_WARNING("Failed to dispatch to main thread!");
-    }
+    BluetoothService::AcknowledgeToggleBt(true);
   }
 };
 
@@ -397,10 +385,7 @@ BluetoothServiceBluedroid::StopGonkBluetooth()
 
   if (!bs->IsEnabled()) {
     // Keep current enable status
-    nsRefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(false);
-    if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
-      BT_WARNING("Failed to dispatch to main thread!");
-    }
+    BluetoothService::AcknowledgeToggleBt(false);
     return NS_OK;
   }
 
@@ -466,12 +451,7 @@ BluetoothServiceBluedroid::StartInternal(BluetoothReplyRunnable* aRunnable)
 
   nsresult ret = StartGonkBluetooth();
   if (NS_FAILED(ret)) {
-    nsRefPtr<nsRunnable> runnable =
-      new BluetoothService::ToggleBtAck(false);
-
-    if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
-      BT_WARNING("Failed to dispatch to main thread!");
-    }
+    BluetoothService::AcknowledgeToggleBt(false);
 
     // Reject Promise
     if(aRunnable) {
@@ -498,12 +478,7 @@ BluetoothServiceBluedroid::StopInternal(BluetoothReplyRunnable* aRunnable)
 
   nsresult ret = StopGonkBluetooth();
   if (NS_FAILED(ret)) {
-    nsRefPtr<nsRunnable> runnable =
-      new BluetoothService::ToggleBtAck(true);
-
-    if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
-      BT_WARNING("Failed to dispatch to main thread!");
-    }
+    BluetoothService::AcknowledgeToggleBt(true);
 
     // Reject Promise
     if(aRunnable) {
