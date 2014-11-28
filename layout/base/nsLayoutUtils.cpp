@@ -1805,8 +1805,8 @@ nsLayoutUtils::GetNearestScrollableFrame(nsIFrame* aFrame, uint32_t aFlags)
     }
     if (aFlags & SCROLLABLE_ALWAYS_MATCH_ROOT) {
       nsPresContext* pc = f->PresContext();
-      if (pc->IsRootContentDocument() && pc->PresShell()->GetRootScrollFrame() == f) {
-        return scrollableFrame;
+      if (pc->IsRootContentDocument() && pc->PresShell()->GetRootFrame() == f) {
+        return pc->PresShell()->GetRootScrollFrameAsScrollable();
       }
     }
   }

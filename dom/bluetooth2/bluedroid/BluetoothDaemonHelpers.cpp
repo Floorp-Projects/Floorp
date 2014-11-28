@@ -46,6 +46,18 @@ Convert(bool aIn, BluetoothScanMode& aOut)
 }
 
 nsresult
+Convert(int aIn, uint8_t& aOut)
+{
+  if (NS_WARN_IF(aIn < std::numeric_limits<uint8_t>::min()) ||
+      NS_WARN_IF(aIn > std::numeric_limits<uint8_t>::max())) {
+    aOut = 0; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = static_cast<uint8_t>(aIn);
+  return NS_OK;
+}
+
+nsresult
 Convert(int aIn, int16_t& aOut)
 {
   if (NS_WARN_IF(aIn < std::numeric_limits<int16_t>::min()) ||
@@ -68,6 +80,20 @@ Convert(uint8_t aIn, bool& aOut)
     return NS_ERROR_ILLEGAL_VALUE;
   }
   aOut = sBool[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(uint8_t aIn, char& aOut)
+{
+  aOut = static_cast<char>(aIn);
+  return NS_OK;
+}
+
+nsresult
+Convert(uint8_t aIn, int& aOut)
+{
+  aOut = static_cast<int>(aIn);
   return NS_OK;
 }
 
@@ -97,6 +123,97 @@ Convert(uint8_t aIn, BluetoothBondState& aOut)
     return NS_ERROR_ILLEGAL_VALUE;
   }
   aOut = sBondState[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(uint8_t aIn, BluetoothHandsfreeAudioState& aOut)
+{
+  static const BluetoothHandsfreeAudioState sAudioState[] = {
+    CONVERT(0x00, HFP_AUDIO_STATE_DISCONNECTED),
+    CONVERT(0x01, HFP_AUDIO_STATE_CONNECTING),
+    CONVERT(0x02, HFP_AUDIO_STATE_CONNECTED),
+    CONVERT(0x03, HFP_AUDIO_STATE_DISCONNECTING)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sAudioState))) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sAudioState[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(uint8_t aIn, BluetoothHandsfreeCallHoldType& aOut)
+{
+  static const BluetoothHandsfreeCallHoldType sCallHoldType[] = {
+    CONVERT(0x00, HFP_CALL_HOLD_RELEASEHELD),
+    CONVERT(0x01, HFP_CALL_HOLD_RELEASEACTIVE_ACCEPTHELD),
+    CONVERT(0x02, HFP_CALL_HOLD_HOLDACTIVE_ACCEPTHELD),
+    CONVERT(0x03, HFP_CALL_HOLD_ADDHELDTOCONF)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sCallHoldType))) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sCallHoldType[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(uint8_t aIn, BluetoothHandsfreeConnectionState& aOut)
+{
+  static const BluetoothHandsfreeConnectionState sConnectionState[] = {
+    CONVERT(0x00, HFP_CONNECTION_STATE_DISCONNECTED),
+    CONVERT(0x01, HFP_CONNECTION_STATE_CONNECTING),
+    CONVERT(0x02, HFP_CONNECTION_STATE_CONNECTED),
+    CONVERT(0x03, HFP_CONNECTION_STATE_SLC_CONNECTED),
+    CONVERT(0x04, HFP_CONNECTION_STATE_DISCONNECTING)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sConnectionState))) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sConnectionState[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(uint8_t aIn, BluetoothHandsfreeNRECState& aOut)
+{
+  static const BluetoothHandsfreeNRECState sNRECState[] = {
+    CONVERT(0x00, HFP_NREC_STOPPED),
+    CONVERT(0x01, HFP_NREC_STARTED)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sNRECState))) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sNRECState[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(uint8_t aIn, BluetoothHandsfreeVoiceRecognitionState& aOut)
+{
+  static const BluetoothHandsfreeVoiceRecognitionState sState[] = {
+    CONVERT(0x00, HFP_VOICE_RECOGNITION_STOPPED),
+    CONVERT(0x01, HFP_VOICE_RECOGNITION_STOPPED)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sState))) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sState[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(uint8_t aIn, BluetoothHandsfreeVolumeType& aOut)
+{
+  static const BluetoothHandsfreeVolumeType sVolumeType[] = {
+    CONVERT(0x00, HFP_VOLUME_TYPE_SPEAKER),
+    CONVERT(0x01, HFP_VOLUME_TYPE_MICROPHONE)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sVolumeType))) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sVolumeType[aIn];
   return NS_OK;
 }
 
@@ -374,6 +491,147 @@ Convert(const BluetoothAddress& aIn, nsAString& aOut)
 }
 
 nsresult
+Convert(BluetoothHandsfreeAtResponse aIn, uint8_t& aOut)
+{
+  static const uint8_t sAtResponse[] = {
+    CONVERT(HFP_AT_RESPONSE_ERROR, 0x00),
+    CONVERT(HFP_AT_RESPONSE_OK, 0x01)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sAtResponse))) {
+    aOut = 0x00; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sAtResponse[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(BluetoothHandsfreeCallAddressType aIn, uint8_t& aOut)
+{
+  static const uint8_t sCallAddressType[] = {
+    CONVERT(HFP_CALL_ADDRESS_TYPE_UNKNOWN, 0x81),
+    CONVERT(HFP_CALL_ADDRESS_TYPE_INTERNATIONAL, 0x91)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sCallAddressType))) {
+    aOut = 0x00; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sCallAddressType[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(BluetoothHandsfreeCallDirection aIn, uint8_t& aOut)
+{
+  static const uint8_t sCallDirection[] = {
+    CONVERT(HFP_CALL_DIRECTION_OUTGOING, 0x00),
+    CONVERT(HFP_CALL_DIRECTION_INCOMING, 0x01)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sCallDirection))) {
+    aOut = 0x00; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sCallDirection[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(BluetoothHandsfreeCallState aIn, uint8_t& aOut)
+{
+  static const uint8_t sCallState[] = {
+    CONVERT(HFP_CALL_STATE_ACTIVE, 0x00),
+    CONVERT(HFP_CALL_STATE_HELD, 0x01),
+    CONVERT(HFP_CALL_STATE_DIALING, 0x02),
+    CONVERT(HFP_CALL_STATE_ALERTING, 0x03),
+    CONVERT(HFP_CALL_STATE_INCOMING, 0x04),
+    CONVERT(HFP_CALL_STATE_WAITING, 0x05),
+    CONVERT(HFP_CALL_STATE_IDLE, 0x06)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sCallState))) {
+    aOut = 0x00; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sCallState[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(BluetoothHandsfreeCallMode aIn, uint8_t& aOut)
+{
+  static const uint8_t sCallMode[] = {
+    CONVERT(HFP_CALL_MODE_VOICE, 0x00),
+    CONVERT(HFP_CALL_MODE_DATA, 0x01),
+    CONVERT(HFP_CALL_MODE_FAX, 0x02)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sCallMode))) {
+    aOut = 0x00; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sCallMode[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(BluetoothHandsfreeCallMptyType aIn, uint8_t& aOut)
+{
+  static const uint8_t sCallMptyType[] = {
+    CONVERT(HFP_CALL_MPTY_TYPE_SINGLE, 0x00),
+    CONVERT(HFP_CALL_MPTY_TYPE_MULTI, 0x01)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sCallMptyType))) {
+    aOut = 0x00; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sCallMptyType[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(BluetoothHandsfreeNetworkState aIn, uint8_t& aOut)
+{
+  static const uint8_t sNetworkState[] = {
+    CONVERT(HFP_NETWORK_STATE_NOT_AVAILABLE, 0x00),
+    CONVERT(HFP_NETWORK_STATE_AVAILABLE, 0x01)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sNetworkState))) {
+    aOut = 0x00; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sNetworkState[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(BluetoothHandsfreeServiceType aIn, uint8_t& aOut)
+{
+  static const uint8_t sServiceType[] = {
+    CONVERT(HFP_SERVICE_TYPE_HOME, 0x00),
+    CONVERT(HFP_SERVICE_TYPE_ROAMING, 0x01)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sServiceType))) {
+    aOut = 0x00; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sServiceType[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(BluetoothHandsfreeVolumeType aIn, uint8_t& aOut)
+{
+  static const uint8_t sVolumeType[] = {
+    CONVERT(HFP_VOLUME_TYPE_SPEAKER, 0x00),
+    CONVERT(HFP_VOLUME_TYPE_MICROPHONE, 0x01)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sVolumeType))) {
+    aOut = 0x00; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sVolumeType[aIn];
+  return NS_OK;
+}
+
+nsresult
 Convert(BluetoothPropertyType aIn, uint8_t& aOut)
 {
   static const uint8_t sPropertyType[] = {
@@ -507,6 +765,69 @@ PackPDU(const BluetoothDaemonPDUHeader& aIn, BluetoothDaemonPDU& aPDU)
 }
 
 nsresult
+PackPDU(const BluetoothHandsfreeAtResponse& aIn, BluetoothDaemonPDU& aPDU)
+{
+  return PackPDU(
+    PackConversion<BluetoothHandsfreeAtResponse, uint8_t>(aIn), aPDU);
+}
+
+nsresult
+PackPDU(const BluetoothHandsfreeCallAddressType& aIn, BluetoothDaemonPDU& aPDU)
+{
+  return PackPDU(
+    PackConversion<BluetoothHandsfreeCallAddressType, uint8_t>(aIn), aPDU);
+}
+
+nsresult
+PackPDU(const BluetoothHandsfreeCallDirection& aIn, BluetoothDaemonPDU& aPDU)
+{
+  return PackPDU(
+    PackConversion<BluetoothHandsfreeCallDirection, uint8_t>(aIn), aPDU);
+}
+
+nsresult
+PackPDU(const BluetoothHandsfreeCallMode& aIn, BluetoothDaemonPDU& aPDU)
+{
+  return PackPDU(
+    PackConversion<BluetoothHandsfreeCallMode, uint8_t>(aIn), aPDU);
+}
+
+nsresult
+PackPDU(const BluetoothHandsfreeCallMptyType& aIn, BluetoothDaemonPDU& aPDU)
+{
+  return PackPDU(
+    PackConversion<BluetoothHandsfreeCallMptyType, uint8_t>(aIn), aPDU);
+}
+
+nsresult
+PackPDU(const BluetoothHandsfreeCallState& aIn, BluetoothDaemonPDU& aPDU)
+{
+  return PackPDU(
+    PackConversion<BluetoothHandsfreeCallState, uint8_t>(aIn), aPDU);
+}
+
+nsresult
+PackPDU(const BluetoothHandsfreeNetworkState& aIn, BluetoothDaemonPDU& aPDU)
+{
+  return PackPDU(
+    PackConversion<BluetoothHandsfreeNetworkState, uint8_t>(aIn), aPDU);
+}
+
+nsresult
+PackPDU(const BluetoothHandsfreeServiceType& aIn, BluetoothDaemonPDU& aPDU)
+{
+  return PackPDU(
+    PackConversion<BluetoothHandsfreeServiceType, uint8_t>(aIn), aPDU);
+}
+
+nsresult
+PackPDU(const BluetoothHandsfreeVolumeType& aIn, BluetoothDaemonPDU& aPDU)
+{
+  return PackPDU(
+    PackConversion<BluetoothHandsfreeVolumeType, uint8_t>(aIn), aPDU);
+}
+
+nsresult
 PackPDU(const BluetoothNamedValue& aIn, BluetoothDaemonPDU& aPDU)
 {
   nsresult rv = PackPDU(
@@ -592,6 +913,12 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, bool& aOut)
 }
 
 nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, char& aOut)
+{
+  return UnpackPDU(aPDU, UnpackConversion<uint8_t, char>(aOut));
+}
+
+nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothAclState& aOut)
 {
   return UnpackPDU(aPDU, UnpackConversion<uint8_t, BluetoothAclState>(aOut));
@@ -608,6 +935,50 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothTypeOfDevice& aOut)
 {
   return UnpackPDU(
     aPDU, UnpackConversion<int32_t, BluetoothTypeOfDevice>(aOut));
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothHandsfreeAudioState& aOut)
+{
+  return UnpackPDU(
+    aPDU, UnpackConversion<uint8_t, BluetoothHandsfreeAudioState>(aOut));
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothHandsfreeCallHoldType& aOut)
+{
+  return UnpackPDU(
+    aPDU, UnpackConversion<uint8_t, BluetoothHandsfreeCallHoldType>(aOut));
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothHandsfreeConnectionState& aOut)
+{
+  return UnpackPDU(
+    aPDU, UnpackConversion<uint8_t, BluetoothHandsfreeConnectionState>(aOut));
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothHandsfreeNRECState& aOut)
+{
+  return UnpackPDU(
+    aPDU, UnpackConversion<uint8_t, BluetoothHandsfreeNRECState>(aOut));
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU,
+          BluetoothHandsfreeVoiceRecognitionState& aOut)
+{
+  return UnpackPDU(
+    aPDU,
+    UnpackConversion<uint8_t, BluetoothHandsfreeVoiceRecognitionState>(aOut));
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothHandsfreeVolumeType& aOut)
+{
+  return UnpackPDU(
+    aPDU, UnpackConversion<uint8_t, BluetoothHandsfreeVolumeType>(aOut));
 }
 
 nsresult
@@ -751,6 +1122,66 @@ nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothStatus& aOut)
 {
   return UnpackPDU(aPDU, UnpackConversion<uint8_t, BluetoothStatus>(aOut));
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, nsDependentCString& aOut)
+{
+  // We get a pointer to the first character in the PDU, a length
+  // of 1 ensures we consume the \0 byte. With 'str' pointing to
+  // the string in the PDU, we can copy the actual bytes.
+
+  const char* str = reinterpret_cast<const char*>(aPDU.Consume(1));
+  if (NS_WARN_IF(!str)) {
+    return NS_ERROR_ILLEGAL_VALUE; // end of PDU
+  }
+
+  const char* end = static_cast<char*>(memchr(str, '\0', aPDU.GetSize()));
+  if (NS_WARN_IF(!end)) {
+    return NS_ERROR_ILLEGAL_VALUE; // no string terminator
+  }
+
+  ptrdiff_t len = end - str;
+
+  const uint8_t* rest = aPDU.Consume(len);
+  if (NS_WARN_IF(!rest)) {
+    // We couldn't consume bytes that should have been there.
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  aOut.Rebind(str, len);
+
+  return NS_OK;
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, const UnpackCString0& aOut)
+{
+  nsDependentCString cstring;
+
+  nsresult rv = UnpackPDU(aPDU, cstring);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  aOut.mString->AssignASCII(cstring.get(), cstring.Length());
+
+  return NS_OK;
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, const UnpackString0& aOut)
+{
+  nsDependentCString cstring;
+
+  nsresult rv = UnpackPDU(aPDU, cstring);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  *aOut.mString = NS_ConvertUTF8toUTF16(cstring);
+
+  return NS_OK;
 }
 
 END_BLUETOOTH_NAMESPACE
