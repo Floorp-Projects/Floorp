@@ -6895,7 +6895,12 @@ MOZ_ARG_ENABLE_BOOL(mobile-optimize,
 AC_SUBST(MOZ_GFX_OPTIMIZE_MOBILE)
 
 if test "$MOZ_GFX_OPTIMIZE_MOBILE"; then
+    # We ignore paint will resample on mobile for performance.
+    # We may want to revisit this later.
+    MOZ_IGNORE_PAINT_WILL_RESAMPLE=1
+
     AC_DEFINE(MOZ_GFX_OPTIMIZE_MOBILE)
+    AC_DEFINE(MOZ_IGNORE_PAINT_WILL_RESAMPLE)
 fi
 
 dnl ========================================================
