@@ -957,7 +957,7 @@
       <stylesheet src="chrome://browser/skin/searchbar.css"/>
     </resources>
     <content ignorekeys="true" level="top" consumeoutsideclicks="false">
-      <xul:hbox xbl:inherits="collapsed=showonlysettings"
+      <xul:hbox xbl:inherits="collapsed=showonlysettings" anonid="searchbar-engine"
                 class="search-panel-header search-panel-current-engine">
         <xul:image class="searchbar-engine-image" xbl:inherits="src"/>
         <xul:label anonid="searchbar-engine-name" flex="1" crop="end"/>
