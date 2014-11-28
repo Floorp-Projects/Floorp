@@ -1098,6 +1098,15 @@ BluetoothServiceBluedroid::ToggleCalls(BluetoothReplyRunnable* aRunnable)
 {
 }
 
+uint16_t
+BluetoothServiceBluedroid::UuidToServiceClassInt(const BluetoothUuid& mUuid)
+{
+  // extract short UUID 0000xxxx-0000-1000-8000-00805f9b34fb
+  uint16_t shortUuid;
+  memcpy(&shortUuid, mUuid.mUuid + 2, sizeof(uint16_t));
+  return ntohs(shortUuid);
+}
+
 //
 // Bluetooth notifications
 //
