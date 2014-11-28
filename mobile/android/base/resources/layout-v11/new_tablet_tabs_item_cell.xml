@@ -11,8 +11,7 @@
                                            android:layout_width="wrap_content"
                                            android:layout_height="wrap_content"
                                            android:gravity="center"
-                                           android:orientation="vertical"
-                                           android:paddingBottom="@dimen/new_tablet_tab_panel_grid_padding">
+                                           android:orientation="vertical">
 
     <LinearLayout android:layout_width="fill_parent"
                   android:layout_height="wrap_content"
