@@ -145,34 +145,7 @@ BluetoothService::ToggleBtAck::ToggleBtAck(bool aEnabled)
 NS_METHOD
 BluetoothService::ToggleBtAck::Run()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // This is requested in Bug 836516. With settings this property, WLAN
-  // firmware could be aware of Bluetooth has been turned on/off, so that the
-  // mecahnism of handling coexistence of WIFI and Bluetooth could be started.
-  //
-  // In the future, we may have our own way instead of setting a system
-  // property to let firmware developers be able to sense that Bluetooth has
-  // been toggled.
-#if defined(MOZ_WIDGET_GONK)
-  if (property_set(PROP_BLUETOOTH_ENABLED, mEnabled ? "true" : "false") != 0) {
-    BT_WARNING("Failed to set bluetooth enabled property");
-  }
-#endif
-
-  NS_ENSURE_TRUE(sBluetoothService, NS_OK);
-
-  if (sInShutdown) {
-    sBluetoothService = nullptr;
-    return NS_OK;
-  }
-
-  // Update mEnabled of BluetoothService object since
-  // StartInternal/StopInternal have been already done.
-  sBluetoothService->SetEnabled(mEnabled);
-  sToggleInProgress = false;
-
-  sBluetoothService->FireAdapterStateChanged(mEnabled);
+  BluetoothService::AcknowledgeToggleBt(mEnabled);
 
   return NS_OK;
 }
@@ -708,4 +681,46 @@ BluetoothService::FireAdapterStateChanged(bool aEnable)
   BluetoothSignal signal(NS_LITERAL_STRING("PropertyChanged"),
                          NS_LITERAL_STRING(KEY_ADAPTER), value);
   DistributeSignal(signal);
+}
+
+void
+BluetoothService::AcknowledgeToggleBt(bool aEnabled)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+#if defined(MOZ_WIDGET_GONK)
+  // This is requested in Bug 836516. With settings this property, WLAN
+  // firmware could be aware of Bluetooth has been turned on/off, so that the
+  // mecahnism of handling coexistence of WIFI and Bluetooth could be started.
+  //
+  // In the future, we may have our own way instead of setting a system
+  // property to let firmware developers be able to sense that Bluetooth has
+  // been toggled.
+  if (property_set(PROP_BLUETOOTH_ENABLED, aEnabled ? "true" : "false") != 0) {
+    BT_WARNING("Failed to set bluetooth enabled property");
+  }
+#endif
+
+  if (sInShutdown) {
+    sBluetoothService = nullptr;
+    return;
+  }
+
+  NS_ENSURE_TRUE_VOID(sBluetoothService);
+
+  sBluetoothService->CompleteToggleBt(aEnabled);
+}
+
+void
+BluetoothService::CompleteToggleBt(bool aEnabled)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Update |mEnabled| of |BluetoothService| object since
+  // |StartInternal| and |StopInternal| have been already
+  // done.
+  SetEnabled(aEnabled);
+  sToggleInProgress = false;
+
+  FireAdapterStateChanged(aEnabled);
 }
