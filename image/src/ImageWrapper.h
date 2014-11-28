@@ -47,6 +47,8 @@ public:
                                        bool aLastPart) MOZ_OVERRIDE;
   virtual nsresult OnNewSourceData() MOZ_OVERRIDE;
 
+  virtual void OnSurfaceDiscarded() MOZ_OVERRIDE;
+
   virtual void SetInnerWindowID(uint64_t aInnerWindowId) MOZ_OVERRIDE;
   virtual uint64_t InnerWindowID() const MOZ_OVERRIDE;
 

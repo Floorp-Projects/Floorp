@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1101392
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1101392</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1101392 **/
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.waitForFocus(runTests);
+
+  function runCopyCommand(element, compareText, nextTest)
+  {
+    element.focus();
+    if (element.editor) {
+      var sel = element.editor.selection;
+      element.select();
+    } else {
+      var sel = window.getSelection();
+      sel.selectAllChildren(element.parentNode);
+    }
+
+    var expectedEndpoint = [
+      sel.getRangeAt(0).endContainer,
+      sel.getRangeAt(0).endOffset
+    ];
+
+    function checkCollapse() {
+      is(sel.isCollapsed, true, "collapsed after cmd_copyAndCollapseToEnd");
+      is(sel.anchorNode, expectedEndpoint[0], "node after cmd_copyAndCollapseToEnd");
+      is(sel.anchorOffset, expectedEndpoint[1], "offset after cmd_copyAndCollapseToEnd");
+
+      nextTest();
+    }
+
+    const kCmd = "cmd_copyAndCollapseToEnd";
+    var controller = top.document.commandDispatcher
+                     .getControllerForCommand(kCmd);
+    ok((controller && controller.isCommandEnabled(kCmd)), "have cmd_copyAndCollapseToEnd command");
+    SimpleTest.waitForClipboard(compareText,
+        () => { controller.doCommand(kCmd); },
+        checkCollapse, checkCollapse);
+  }
+
+  function testDiv()
+  {
+    var content = document.getElementById("content");
+    runCopyCommand(content, 'abc', testTextarea);
+  }
+
+  function testTextarea()
+  {
+    var textarea = document.getElementById("textarea");
+    runCopyCommand(textarea, 'def', SimpleTest.finish);
+  }
+
+  function runTests()
+  {
+    testDiv();
+  }
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1101392">Mozilla Bug 1101392</a>
+<div><div id="content">abc</div></div>
+
+<textarea id="textarea">def</textarea>
+
+<pre id="test">
+</pre>
+</body>
+</html>

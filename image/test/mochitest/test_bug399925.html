@@ -19,25 +19,35 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=399925
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 399925. **/
+var triggerDiscardingManually = false;
 var pngResults = new Array();
 SimpleTest.waitForExplicitFinish();
 
 window.onload = function() {
-  // 1. Enable Discarding
-  // 2. Sets the discard timer to 500ms so we don't have to wait so long. The
-  //    actual time is nondeterministic, but is bounded by 2 * timer = 1 second.
+  // It'd be nice to reduce the discard timer here, but unfortunately we only
+  // read that pref on startup. We instead manually trigger discarding on
+  // platforms where the discard timer is too long (which we'll somewhat
+  // arbitrarily define as 'longer than 60 seconds').
+  var expirationMs =
+    SpecialPowers.getIntPref('image.mem.surfacecache.min_expiration_ms');
+  if (expirationMs > 60000) {
+    ok(true, 'Triggering discarding manually because SurfaceCache expiration ' +
+             'is ' + expirationMs + ' ms');
+    triggerDiscardingManually = true;
+  } else {
+    ok(true, 'Using normal discarding because SurfaceCache expiration ' +
+             'is ' + expirationMs + ' ms');
+  }
+
+  // Enable discarding for the test.
   SpecialPowers.pushPrefEnv({
-    'set':[['image.mem.discardable',true],
-           ['image.mem.min_discard_timeout_ms',1000]]
+    'set':[['image.mem.discardable',true]]
   }, runTest);
 }
 
 function runTest() {
-  // Create the image _after_ setting the discard timer pref
   var image = new Image();
   image.setAttribute("id", "gif");
-  image.src = "bug399925.gif";
-  document.getElementById("content").appendChild(image);
 
   // 1. Draw the canvas once on loadComplete
   // 2. Redraw the canvas and compare the results right on discard
@@ -46,6 +56,16 @@ function runTest() {
     is(pngResults[0], pngResults[1], "got different rendered results");
     SimpleTest.finish();
   });
+
+  image.src = "bug399925.gif";
+  document.getElementById("content").appendChild(image);
+
+  if (triggerDiscardingManually) {
+    var request = SpecialPowers.wrap(image)
+        .QueryInterface(SpecialPowers.Ci.nsIImageLoadingContent)
+        .getRequest(SpecialPowers.Ci.nsIImageLoadingContent.CURRENT_REQUEST);
+    setTimeout(() => request.requestDiscard(), 1000);
+  }
 }
 
 function addCallbacks(anImage, loadCompleteCallback, discardCallback) {
