@@ -1,5 +1,6 @@
 Please add a link to the bugzilla bug and patch name that should be re-applied.
 Also, please update any existing links to their actual mozilla-central changeset.
 
-https://bugzilla.mozilla.org/show_bug.cgi?id=1041775 bug1041775part3.patch
-https://bugzilla.mozilla.org/show_bug.cgi?id=928044  bug928044part3.patch
+https://hg.mozilla.org/mozilla-central/rev/365d1073111a
+https://hg.mozilla.org/mozilla-central/rev/0f763c186855
+https://bugzilla.mozilla.org/show_bug.cgi?id=1105729 bug1105729.patch
