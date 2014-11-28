@@ -119,41 +119,12 @@ let runTaskifiedTests = Task.async(function* () {
     promiseClick(logoImg()),
   ]);
 
-  // In the search panel, click the no-logo engine.  It should become the
-  // current engine.
-  let noLogoBox = null;
-  for (let box of panel.childNodes) {
-    if (box.getAttribute("engine") == noLogoEngine.name) {
-      noLogoBox = box;
-      break;
-    }
-  }
-  ok(noLogoBox, "Search panel should contain the no-logo engine");
-  yield Promise.all([
-    promiseSearchEvents(["CurrentEngine"]),
-    promiseClick(noLogoBox),
-  ]);
-
-  yield checkCurrentEngine(ENGINE_NO_LOGO);
-
-  // Switch back to the 1x-and-2x logo engine.
-  Services.search.currentEngine = logo1x2xEngine;
-  yield promiseSearchEvents(["CurrentEngine"]);
-  yield checkCurrentEngine(ENGINE_1X_2X_LOGO);
-
-  // Open the panel again.
-  yield Promise.all([
-    promisePanelShown(panel),
-    promiseClick(logoImg()),
-  ]);
-
-  // In the search panel, click the Manage Engines box.
   let manageBox = $("manage");
   ok(!!manageBox, "The Manage Engines box should be present in the document");
-  yield Promise.all([
-    promiseManagerOpen(),
-    promiseClick(manageBox),
-  ]);
+  is(panel.childNodes.length, 1, "Search panel should only contain the Manage Engines entry");
+  is(panel.childNodes[0], manageBox, "Search panel should contain the Manage Engines entry");
+
+  panel.hidePopup();
 
   // Add the engine that provides search suggestions and switch to it.
   let suggestionEngine = yield promiseNewSearchEngine(ENGINE_SUGGESTIONS);
@@ -340,42 +311,6 @@ let checkCurrentEngine = Task.async(function* ({name: basename, logoPrefix1x, lo
   // gSearch.currentEngineName
   is(gSearch().currentEngineName, engine.name,
      "currentEngineName: " + engine.name);
-
-  let expectedLogoPrefix = window.devicePixelRatio >= 2 ? logoPrefix2x : logoPrefix1x;
-
-  // Check that the right logo is set.
-  let logo = logoImg();
-  if (expectedLogoPrefix) {
-    let objectURL = logo.style.backgroundImage.match(/^url\("([^"]*)"\)$/)[1];
-    ok(objectURL, "ObjectURL should be there.");
-
-    let blob = yield objectURLToBlob(objectURL);
-    let base64 = yield blobToBase64(blob);
-
-    ok(base64.startsWith(expectedLogoPrefix), "Checking image prefix.");
-
-    logo.click();
-    let panel = searchPanel();
-    yield promisePanelShown(panel);
-
-    panel.hidePopup();
-    for (let engineBox of panel.childNodes) {
-      let engineName = engineBox.getAttribute("engine");
-      if (engineName == engine.name) {
-        is(engineBox.getAttribute("selected"), "true",
-           "Engine box's selected attribute should be true for " +
-           "selected engine: " + engineName);
-      }
-      else {
-        ok(!engineBox.hasAttribute("selected"),
-           "Engine box's selected attribute should be absent for " +
-           "non-selected engine: " + engineName);
-      }
-    }
-  }
-  else {
-    is(logo.style.backgroundImage, "", "backgroundImage should be empty");
-  }
 });
 
 function promisePanelShown(panel) {
@@ -396,31 +331,6 @@ function promiseClick(node) {
     EventUtils.synthesizeMouseAtCenter(node, {}, win);
     deferred.resolve();
   }, win);
-  return deferred.promise;
-}
-
-function promiseManagerOpen() {
-  info("Waiting for the search manager window to open...");
-  let deferred = Promise.defer();
-  let winWatcher = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-                   getService(Ci.nsIWindowWatcher);
-  winWatcher.registerNotification(function onWin(subj, topic, data) {
-    if (topic == "domwindowopened" && subj instanceof Ci.nsIDOMWindow) {
-      subj.addEventListener("load", function onLoad() {
-        subj.removeEventListener("load", onLoad);
-        if (subj.document.documentURI ==
-            "chrome://browser/content/search/engineManager.xul") {
-          winWatcher.unregisterNotification(onWin);
-          ok(true, "Observed search manager window opened");
-          is(subj.opener, gWindow,
-             "Search engine manager opener should be the chrome browser " +
-             "window containing the newtab page");
-          subj.close();
-          deferred.resolve();
-        }
-      });
-    }
-  });
   return deferred.promise;
 }
 

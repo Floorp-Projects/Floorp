@@ -1221,6 +1221,29 @@ toolbarpaletteitem[place="palette"][hidden] {
   animation-duration: 2s;
 }
 
+#abouthome-search-panel .panel-arrowcontent {
+  -moz-padding-start: 0;
+  -moz-padding-end: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  background: rgb(248, 250, 251);
+  font-size: 110%;
+}
+
+.abouthome-search-panel-item {
+  -moz-box-align: center;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  -moz-padding-start: 24px;
+  -moz-padding-end: 24px;
+}
+
+.abouthome-search-panel-item > label {
+  -moz-padding-start: 0;
+  -moz-margin-start: 0;
+  color: rgb(130, 132, 133);
+}
+
 /* Combined context-menu items */
 #context-navigation > .menuitem-iconic > .menu-iconic-text,
 #context-navigation > .menuitem-iconic > .menu-accel-container {
