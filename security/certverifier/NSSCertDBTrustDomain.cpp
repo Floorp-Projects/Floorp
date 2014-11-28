@@ -9,13 +9,12 @@
 #include <stdint.h>
 
 #include "ExtendedValidation.h"
+#include "nsNSSCertificate.h"
+#include "NSSErrorsService.h"
 #include "OCSPRequestor.h"
 #include "certdb.h"
 #include "mozilla/Telemetry.h"
-#include "nsNSSCertificate.h"
 #include "nss.h"
-#include "NSSErrorsService.h"
-#include "nsServiceManagerUtils.h"
 #include "pk11pub.h"
 #include "pkix/pkix.h"
 #include "pkix/pkixnss.h"
@@ -69,7 +68,6 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
   , mMinimumNonECCBits(forEV ? MINIMUM_NON_ECC_BITS_EV : MINIMUM_NON_ECC_BITS_DV)
   , mHostname(hostname)
   , mBuiltChain(builtChain)
-  , mCertBlocklist(do_GetService(NS_CERTBLOCKLIST_CONTRACTID))
 {
 }
 
@@ -338,27 +336,6 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
   uint16_t maxOCSPLifetimeInDays = 10;
   if (endEntityOrCA == EndEntityOrCA::MustBeCA) {
     maxOCSPLifetimeInDays = 365;
-  }
-
-  if (!mCertBlocklist) {
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
-  }
-
-  bool isCertRevoked;
-  nsresult nsrv = mCertBlocklist->IsCertRevoked(
-                    certID.issuer.UnsafeGetData(),
-                    certID.issuer.GetLength(),
-                    certID.serialNumber.UnsafeGetData(),
-                    certID.serialNumber.GetLength(),
-                    &isCertRevoked);
-  if (NS_FAILED(nsrv)) {
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
-  }
-
-  if (isCertRevoked) {
-    PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
-           ("NSSCertDBTrustDomain: certificate is in blocklist"));
-    return Result::ERROR_REVOKED_CERTIFICATE;
   }
 
   // If we have a stapled OCSP response then the verification of that response
