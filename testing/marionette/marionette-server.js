@@ -98,14 +98,18 @@ function FrameSendNotInitializedError(frame) {
   this.code = 54;
   this.frame = frame;
   this.message = "Error sending message to frame (NS_ERROR_NOT_INITIALIZED)";
-  this.errMsg = this.message + " " + this.frame + "; frame has closed.";
+  this.toString = function() {
+    return this.message + " " + this.frame + "; frame has closed.";
+  }
 }
 
 function FrameSendFailureError(frame) {
   this.code = 55;
   this.frame = frame;
   this.message = "Error sending message to frame (NS_ERROR_FAILURE)";
-  this.errMsg = this.message + " " + this.frame + "; frame not responding.";
+  this.toString = function() {
+    return this.message + " " + this.frame + "; frame not responding.";
+  }
 }
 
 /**
@@ -151,11 +155,6 @@ function MarionetteServerConnection(aPrefix, aTransport, aServer)
   this.currentFrameElement = null;
   this.testName = null;
   this.mozBrowserClose = null;
-  this.frameHeartbeatTimer = null;
-  this.frameHeartbeatLastPong = null;
-  this.frameHeartbeatLastApp = null;
-  this.frameHeartbeatExceptionPending = false;
-  this.frameTimeout = 5000; // default, set with setFrameTimeout
   this.oopFrameId = null; // frame ID of current remote frame, used for mozbrowserclose events
   this.sessionCapabilities = {
     // Mandated capabilities
@@ -244,20 +243,10 @@ MarionetteServerConnection.prototype = {
    * @param object values
    *        Object to send to the listener
    */
-  sendAsync: function MDA_sendAsync(name, values, commandId, ignoreFailure, throwError) {
+  sendAsync: function MDA_sendAsync(name, values, commandId, ignoreFailure) {
     let success = true;
     if (commandId) {
       values.command_id = commandId;
-    }
-    if (typeof(throwError) !== "boolean") {
-      throwError = false;
-    }
-    if (this.frameHeartbeatExceptionPending) {
-      // Previous frame was not responding; send exception indicating have switched to system frame
-      this.frameHeartbeatExceptionPending = false;
-      let errorTxt = "Frame not responding (" + this.frameHeartbeatLastApp + "), switching to root frame";
-      this.sendError(errorTxt, 56, null, this.command_id);
-      return false;
     }
     if (this.curBrowser.frameManager.currentRemoteFrame !== null) {
       try {
@@ -279,12 +268,7 @@ MarionetteServerConnection.prototype = {
               break;
           }
           let code = error.hasOwnProperty('code') ? e.code : 500;
-          if (throwError == false) {
-            this.sendError(error.toString(), code, error.stack, commandId);
-          }
-          else {
-            throw {message:"sendAsync failed: " + error.hasOwnProperty('type'), code, stack:null};
-          }
+          this.sendError(error.toString(), code, error.stack, commandId);
         }
       }
     }
@@ -740,10 +724,6 @@ MarionetteServerConnection.prototype = {
     else {
       this.context = context;
       this.sendOk(this.command_id);
-      // Stop the OOP frame heartbeat if switched into chrome
-      if (context == "chrome") {
-        this.stopHeartbeat();
-      }
     }
   },
 
@@ -1199,8 +1179,6 @@ MarionetteServerConnection.prototype = {
     if (this.context != "chrome") {
       aRequest.command_id = command_id;
       aRequest.parameters.pageTimeout = this.pageTimeout;
-      // stop OOP frame heartbeat if it's running, so it won't timeout during URL load
-      this.stopHeartbeat();
       this.sendAsync("get", aRequest.parameters, command_id);
       return;
     }
@@ -1493,6 +1471,7 @@ MarionetteServerConnection.prototype = {
         this.sendError("Error loading page", 13, null, command_id);
         return;
       }
+
       checkTimer.initWithCallback(checkLoad.bind(this), 100, Ci.nsITimer.TYPE_ONE_SHOT);
     }
     if (this.context == "chrome") {
@@ -2348,7 +2327,6 @@ MarionetteServerConnection.prototype = {
    */
   deleteSession: function MDA_deleteSession() {
     let command_id = this.command_id = this.getCommandId();
-    this.stopHeartbeat();
     try {
       this.sessionTearDown();
     }
@@ -2664,76 +2642,12 @@ MarionetteServerConnection.prototype = {
   },
 
   /**
-   * Sets the OOP frame timeout value (ms)
-   */
-  setFrameTimeout: function MDA_setFrameTimeout(aRequest) {
-    this.command_id = this.getCommandId();
-    let timeout = parseInt(aRequest.parameters.ms);
-    if (isNaN(timeout)) {
-      this.sendError("Not a number", 500, null, this.command_id);
-      return;
-    }
-    else {
-      this.frameTimeout = timeout;
-    }
-    this.sendOk(this.command_id);
-  },
-
-  /**
    * Helper function to convert an outerWindowID into a UID that Marionette
    * tracks.
    */
   generateFrameId: function MDA_generateFrameId(id) {
     let uid = id + (appName == "B2G" ? "-b2g" : "");
     return uid;
-  },
-
-  /**
-   * Start the OOP frame heartbeat
-   */
-  startHeartbeat: function MDA_startHeartbeat() {
-    this.frameHeartbeatLastPong = new Date().getTime();
-    function pulse() {
-      let noResponse = false;
-      let now = new Date().getTime();
-      let elapsed = now - this.frameHeartbeatLastPong;
-      try {
-        if (elapsed > this.frameTimeout) {
-          throw {message:null, code:56, stack:null};
-        }
-        let result = this.sendAsync("ping", {}, this.command_id, false, true);
-        if (result == false) {
-          throw {message:null, code:56, stack:null};
-        }
-      }
-      catch (e) {
-        let lastApp = this.frameHeartbeatLastApp ? this.frameHeartbeatLastApp : "undefined";
-        this.stopHeartbeat();
-        this.curBrowser.frameManager.removeRemoteFrame(this.curBrowser.frameManager.currentRemoteFrame.frameId);
-        this.switchToGlobalMessageManager();
-        // If there is an active request, send back an exception now, otherwise wait until next request
-        if (this.command_id) {
-          let errorTxt = "Frame not responding (" + lastApp + "), switching to root frame";
-          this.sendError(errorTxt, e.code, e.stack, this.command_id);
-        }
-        else {
-          this.frameHeartbeatExceptionPending = true;
-        }
-        return;
-      }
-    }
-    this.frameHeartbeatTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    this.frameHeartbeatTimer.initWithCallback(pulse.bind(this), 500, Ci.nsITimer.TYPE_REPEATING_PRECISE_CAN_SKIP);
-  },
-
-  /**
-   * Stop the OOP frame heartbeat
-   */
-  stopHeartbeat: function MDA_stopHeartbeat() {
-    if (this.frameHeartbeatTimer !== null) {
-      this.frameHeartbeatTimer.cancel();
-      this.frameHeartbeatTimer = null;
-    }
   },
 
   /**
@@ -2772,7 +2686,7 @@ MarionetteServerConnection.prototype = {
         this.sendToClient(message.json, -1);
         break;
       case "Marionette:switchToFrame":
-        [this.oopFrameId, this.frameHeartbeatLastApp] = this.curBrowser.frameManager.switchToFrame(message);
+        this.oopFrameId = this.curBrowser.frameManager.switchToFrame(message);
         this.messageManager = this.curBrowser.frameManager.currentRemoteFrame.messageManager.get();
         break;
       case "Marionette:switchToModalOrigin":
@@ -2793,7 +2707,6 @@ MarionetteServerConnection.prototype = {
           }
           this.currentFrameElement = message.json.frameValue;
         }
-        this.stopHeartbeat();
         break;
       case "Marionette:getVisibleCookies":
         let [currentPath, host] = message.json.value;
@@ -2857,7 +2770,6 @@ MarionetteServerConnection.prototype = {
           // is from a remote frame.
           this.curBrowser.frameManager.currentRemoteFrame.targetFrameId = this.generateFrameId(message.json.value);
           this.sendOk(this.command_id);
-          this.startHeartbeat();
         }
 
         let browserType;
@@ -2908,12 +2820,6 @@ MarionetteServerConnection.prototype = {
         globalMessageManager.broadcastAsyncMessage(
           "MarionetteMainListener:emitTouchEvent", message.json);
         return;
-      case "Marionette:pong":
-        this.frameHeartbeatLastPong = new Date().getTime();
-        break;
-      case "Marionette:startHeartbeat":
-        this.startHeartbeat();
-        break;
     }
   }
 };
@@ -2997,8 +2903,7 @@ MarionetteServerConnection.prototype.requestTypes = {
   "setScreenOrientation": MarionetteServerConnection.prototype.setScreenOrientation,
   "getWindowSize": MarionetteServerConnection.prototype.getWindowSize,
   "setWindowSize": MarionetteServerConnection.prototype.setWindowSize,
-  "maximizeWindow": MarionetteServerConnection.prototype.maximizeWindow,
-  "setFrameTimeout": MarionetteServerConnection.prototype.setFrameTimeout
+  "maximizeWindow": MarionetteServerConnection.prototype.maximizeWindow
 };
 
 /**
