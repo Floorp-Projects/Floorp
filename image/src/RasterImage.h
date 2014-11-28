@@ -176,7 +176,7 @@ public:
                                MallocSizeOf aMallocSizeOf) const;
 
   /* Triggers discarding. */
-  void Discard(bool aNotify = true);
+  void Discard();
 
   /* Callbacks for decoders */
   /** Sets the size and inherent orientation of the container. This should only
@@ -317,8 +317,6 @@ private:
                                      uint8_t aPaletteDepth,
                                      imgFrame* aPreviousFrame);
   nsresult DoImageDataComplete();
-
-  bool ApplyDecodeFlags(uint32_t aNewFlags);
 
   already_AddRefed<layers::Image> GetCurrentImage();
   void UpdateImageContainer();
