@@ -70,7 +70,8 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
                                                      const nsAString & aBidi,
                                                      const nsAString & aLang,
                                                      const nsAString & aData,
-                                                     nsIPrincipal * aPrincipal)
+                                                     nsIPrincipal * aPrincipal,
+                                                     bool aInPrivateBrowsing)
 {
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     ContentChild* cpc = ContentChild::GetSingleton();
@@ -87,7 +88,8 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
                                    PromiseFlatString(aBidi),
                                    PromiseFlatString(aLang),
                                    PromiseFlatString(aData),
-                                   IPC::Principal(aPrincipal));
+                                   IPC::Principal(aPrincipal),
+                                   aInPrivateBrowsing);
     return NS_OK;
   }
 
@@ -103,7 +105,8 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
     rv = sysAlerts->ShowAlertNotification(aImageUrl, aAlertTitle, aAlertText, aAlertTextClickable,
                                           aAlertCookie, aAlertListener, aAlertName,
                                           aBidi, aLang, aData,
-                                          IPC::Principal(aPrincipal));
+                                          IPC::Principal(aPrincipal),
+                                          aInPrivateBrowsing);
     if (NS_SUCCEEDED(rv))
       return NS_OK;
   }
@@ -118,7 +121,7 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
   // Use XUL notifications as a fallback if above methods have failed.
   rv = mXULAlerts.ShowAlertNotification(aImageUrl, aAlertTitle, aAlertText, aAlertTextClickable,
                                         aAlertCookie, aAlertListener, aAlertName,
-                                        aBidi, aLang);
+                                        aBidi, aLang, aInPrivateBrowsing);
   return rv;
 #endif // !MOZ_WIDGET_ANDROID
 }
