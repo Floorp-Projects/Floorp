@@ -270,6 +270,7 @@ private:
   DECL_GFX_PREF(Live, "layers.flash-borders",                  FlashLayerBorders, bool, false);
   DECL_GFX_PREF(Live, "layers.draw-layer-info",                DrawLayerInfo, bool, false);
   DECL_GFX_PREF(Live, "layers.dump",                           LayersDump, bool, false);
+  DECL_GFX_PREF(Live, "layers.dump-texture",                   LayersDumpTexture, bool, false);
 
   // 0 is "no change" for contrast, positive values increase it, negative values
   // decrease it until we hit mid gray at -1 contrast, after that it gets weird.
