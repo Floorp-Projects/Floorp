@@ -169,11 +169,9 @@ WebMReader::WebMReader(AbstractMediaDecoder* aDecoder)
   : MediaDecoderReader(aDecoder)
   , mContext(nullptr)
   , mPacketCount(0)
-#ifdef MOZ_OPUS
   , mOpusDecoder(nullptr)
   , mSkip(0)
   , mSeekPreroll(0)
-#endif
   , mVideoTrack(0)
   , mAudioTrack(0)
   , mAudioStartUsec(-1)
@@ -184,9 +182,7 @@ WebMReader::WebMReader(AbstractMediaDecoder* aDecoder)
   , mLayersBackendType(layers::LayersBackend::LAYERS_NONE)
   , mHasVideo(false)
   , mHasAudio(false)
-#ifdef MOZ_OPUS
   , mPaddingDiscarded(false)
-#endif
 {
   MOZ_COUNT_CTOR(WebMReader);
 #ifdef PR_LOGGING
@@ -304,7 +300,6 @@ nsresult WebMReader::ResetDecode()
     // aren't fatal and it fails when ResetDecode is called at a
     // time when no vorbis data has been read.
     vorbis_synthesis_restart(&mVorbisDsp);
-#ifdef MOZ_OPUS
   } else if (mAudioCodec == NESTEGG_CODEC_OPUS) {
     if (mOpusDecoder) {
       // Reset the decoder.
@@ -312,7 +307,6 @@ nsresult WebMReader::ResetDecode()
       mSkip = mOpusParser->mPreSkip;
       mPaddingDiscarded = false;
     }
-#endif
   }
 
   mVideoPackets.Reset();
@@ -514,7 +508,6 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
 
         mInfo.mAudio.mRate = mVorbisDsp.vi->rate;
         mInfo.mAudio.mChannels = mVorbisDsp.vi->channels;
-#ifdef MOZ_OPUS
       } else if (mAudioCodec == NESTEGG_CODEC_OPUS) {
         unsigned char* data = 0;
         size_t length = 0;
@@ -547,7 +540,6 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
 
         mInfo.mAudio.mChannels = mOpusParser->mChannels;
         mSeekPreroll = params.seek_preroll;
-#endif
       } else {
         Cleanup();
         return NS_ERROR_FAILURE;
@@ -568,7 +560,6 @@ WebMReader::IsMediaSeekable()
   return mContext && nestegg_has_cues(mContext);
 }
 
-#ifdef MOZ_OPUS
 bool WebMReader::InitOpusDecoder()
 {
   int r;
@@ -586,7 +577,6 @@ bool WebMReader::InitOpusDecoder()
 
   return r == OPUS_OK;
 }
-#endif
 
 bool WebMReader::DecodeAudioPacket(nestegg_packet* aPacket, int64_t aOffset)
 {
@@ -653,11 +643,9 @@ bool WebMReader::DecodeAudioPacket(nestegg_packet* aPacket, int64_t aOffset)
         return false;
       }
     } else if (mAudioCodec == NESTEGG_CODEC_OPUS) {
-#ifdef MOZ_OPUS
       if (!DecodeOpus(data, length, aOffset, tstamp_usecs, aPacket)) {
         return false;
       }
-#endif
     }
   }
 
@@ -739,7 +727,6 @@ bool WebMReader::DecodeVorbis(const unsigned char* aData, size_t aLength,
   return true;
 }
 
-#ifdef MOZ_OPUS
 bool WebMReader::DecodeOpus(const unsigned char* aData, size_t aLength,
                             int64_t aOffset, uint64_t aTstampUsecs,
                             nestegg_packet* aPacket)
@@ -876,7 +863,6 @@ bool WebMReader::DecodeOpus(const unsigned char* aData, size_t aLength,
 
   return true;
 }
-#endif /* MOZ_OPUS */
 
 nsReturnRef<NesteggPacketHolder> WebMReader::NextPacket(TrackType aTrackType)
 {
