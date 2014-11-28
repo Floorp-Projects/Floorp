@@ -136,22 +136,6 @@ static int num_discardable_containers;
 static int64_t total_source_bytes;
 static int64_t discardable_source_bytes;
 
-/* Are we globally disabling image discarding? */
-static bool
-DiscardingEnabled()
-{
-  static bool inited;
-  static bool enabled;
-
-  if (!inited) {
-    inited = true;
-
-    enabled = (PR_GetEnv("MOZ_DISABLE_IMAGE_DISCARD") == nullptr);
-  }
-
-  return enabled;
-}
-
 class ScaleRunner : public nsRunnable
 {
   enum ScaleState
@@ -328,8 +312,6 @@ RasterImage::RasterImage(ProgressTracker* aProgressTracker,
 {
   mProgressTrackerInit = new ProgressTrackerInit(this, aProgressTracker);
 
-  // Set up the discard tracker node.
-  mDiscardTrackerNode.img = this;
   Telemetry::GetHistogramById(Telemetry::IMAGE_DECODE_COUNT)->Add(0);
 
   // Statistics
@@ -371,10 +353,6 @@ RasterImage::~RasterImage()
   // Total statistics
   num_containers--;
   total_source_bytes -= mSourceData.Length();
-
-  if (NS_IsMainThread()) {
-    DiscardTracker::Remove(&mDiscardTrackerNode);
-  }
 }
 
 /* static */ void
@@ -603,8 +581,8 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
   if (!ref) {
     // The OS threw this frame away. We need to discard and redecode.
     MOZ_ASSERT(!mAnim, "Animated frames should be locked");
-    if (CanForciblyDiscardAndRedecode()) {
-      Discard(/* aForce = */ true, /* aNotify = */ false);
+    if (CanDiscard()) {
+      Discard(/* aNotify = */ false);
       ApplyDecodeFlags(aFlags);
       WantDecodedFrames(aFlags, aShouldSyncNotify);
 
@@ -704,6 +682,14 @@ RasterImage::FrameRect(uint32_t aWhichFrame)
   // dirty rectangles to send out batched observer updates). This should
   // probably be revisited when we fix bug 503973.
   return nsIntRect();
+}
+
+void
+RasterImage::OnSurfaceDiscarded()
+{
+  if (mProgressTracker) {
+    mProgressTracker->OnDiscard();
+  }
 }
 
 uint32_t
@@ -940,7 +926,7 @@ RasterImage::GetImageContainer(LayerManager* aManager, ImageContainer **_retval)
   NS_ADDREF(*_retval);
   // We only need to be careful about holding on to the image when it is
   // discardable by the OS.
-  if (CanForciblyDiscardAndRedecode()) {
+  if (CanDiscard()) {
     mImageContainerCache = mImageContainer;
     mImageContainer = nullptr;
   }
@@ -1120,11 +1106,13 @@ RasterImage::ApplyDecodeFlags(uint32_t aNewFlags)
     // if we can't discard, then we're screwed; we have no way
     // to re-decode.  Similarly if we aren't allowed to do a sync
     // decode.
-    if (!(aNewFlags & FLAG_SYNC_DECODE))
+    if (!(aNewFlags & FLAG_SYNC_DECODE)) {
       return false;
-    if (!CanForciblyDiscardAndRedecode())
+    }
+    if (!CanDiscard()) {
       return false;
-    ForceDiscard();
+    }
+    Discard();
   }
 
   mFrameDecodeFlags = aNewFlags & DECODE_FLAGS_MASK;
@@ -1236,13 +1224,6 @@ RasterImage::DecodingComplete(imgFrame* aFinalFrame)
   // discarding with bug 500402.
   mDecoded = true;
   mHasBeenDecoded = true;
-
-  // We now have one of the qualifications for discarding. Re-evaluate.
-  if (CanDiscard()) {
-    NS_ABORT_IF_FALSE(!DiscardingActive(),
-                      "We shouldn't have been discardable before this");
-    DiscardTracker::Reset(&mDiscardTrackerNode);
-  }
 
   bool singleFrame = GetNumFrames() == 1;
 
@@ -1572,11 +1553,6 @@ RasterImage::DoImageDataComplete()
              mSourceData.Length()));
   }
 
-  // We now have one of the qualifications for discarding. Re-evaluate.
-  if (CanDiscard()) {
-    nsresult rv = DiscardTracker::Reset(&mDiscardTrackerNode);
-    CONTAINER_ENSURE_SUCCESS(rv);
-  }
   return NS_OK;
 }
 
@@ -1737,12 +1713,11 @@ RasterImage::GetKeys(uint32_t *count, char ***keys)
 }
 
 void
-RasterImage::Discard(bool aForce, bool aNotify)
+RasterImage::Discard(bool aNotify)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  // We should be ok for discard
-  NS_ABORT_IF_FALSE(aForce ? CanForciblyDiscard() : CanDiscard(), "Asked to discard but can't!");
+  MOZ_ASSERT(CanDiscard(), "Asked to discard but can't");
 
   // We should never discard when we have an active decoder
   NS_ABORT_IF_FALSE(!mDecoder, "Asked to discard with open decoder!");
@@ -1772,10 +1747,6 @@ RasterImage::Discard(bool aForce, bool aNotify)
 
   mDecodeStatus = DecodeStatus::INACTIVE;
 
-  if (aForce) {
-    DiscardTracker::Remove(&mDiscardTrackerNode);
-  }
-
   // Log
   PR_LOG(GetCompressedImageAccountingLog(), PR_LOG_DEBUG,
          ("CompressedImageAccounting: discarded uncompressed image "
@@ -1792,33 +1763,11 @@ RasterImage::Discard(bool aForce, bool aNotify)
           discardable_source_bytes));
 }
 
-// Helper method to determine if we can discard an image
 bool
 RasterImage::CanDiscard() {
-  return (DiscardingEnabled() && // Globally enabled...
-          mDiscardable &&        // ...Enabled at creation time...
-          (mLockCount == 0) &&   // ...not temporarily disabled...
-          mHasSourceData &&      // ...have the source data...
-          mDecoded);             // ...and have something to discard.
-}
-
-bool
-RasterImage::CanForciblyDiscard() {
-  return mHasSourceData;         // ...have the source data...
-}
-
-bool
-RasterImage::CanForciblyDiscardAndRedecode() {
   return mHasSourceData &&       // ...have the source data...
          !mDecoder &&            // Can't discard with an open decoder
          !mAnim;                 // Can never discard animated images
-}
-
-// Helper method to tell us whether the clock is currently running for
-// discarding this image. Mainly for assertions.
-bool
-RasterImage::DiscardingActive() {
-  return mDiscardTrackerNode.isInList();
 }
 
 // Helper method to determine if we're storing the source data in a buffer
@@ -1839,9 +1788,6 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
 
   // We shouldn't be firing up a decoder if we already have the frames decoded
   NS_ABORT_IF_FALSE(!mDecoded, "Calling InitDecoder() but already decoded!");
-
-  // Since we're not decoded, we should not have a discard timer active
-  NS_ABORT_IF_FALSE(!DiscardingActive(), "Discard Timer active in InitDecoder()!");
 
   // Make sure we actually get size before doing a full decode.
   if (!aDoSizeDecode) {
@@ -1995,16 +1941,6 @@ RasterImage::WriteToDecoder(const char *aBuffer, uint32_t aCount, DecodeStrategy
 nsresult
 RasterImage::WantDecodedFrames(uint32_t aFlags, bool aShouldSyncNotify)
 {
-  nsresult rv;
-
-  // If we can discard, the clock should be running. Reset it.
-  if (CanDiscard()) {
-    NS_ABORT_IF_FALSE(DiscardingActive(),
-                      "Decoded and discardable but discarding not activated!");
-    rv = DiscardTracker::Reset(&mDiscardTrackerNode);
-    CONTAINER_ENSURE_SUCCESS(rv);
-  }
-
   // Request a decode, which does nothing if we're already decoded.
   if (aShouldSyncNotify) {
     // We can sync notify, which means we can also sync decode.
@@ -2230,9 +2166,10 @@ RasterImage::SyncDecode()
       // If we've finished decoding we need to discard so we can re-decode
       // with the new flags. If we can't discard then there isn't
       // anything we can do.
-      if (!CanForciblyDiscardAndRedecode())
+      if (!CanDiscard()) {
         return NS_ERROR_NOT_AVAILABLE;
-      ForceDiscard();
+      }
+      Discard();
     }
   }
 
@@ -2452,23 +2389,13 @@ RasterImage::Draw(gfxContext* aContext,
     (mFrameDecodeFlags == FLAG_DECODE_NO_PREMULTIPLY_ALPHA) && IsOpaque();
 
   if (!(haveDefaultFlags || haveSafeAlphaFlags)) {
-    if (!CanForciblyDiscardAndRedecode())
+    if (!CanDiscard()) {
       return NS_ERROR_NOT_AVAILABLE;
-    ForceDiscard();
+    }
+    Discard();
 
     mFrameDecodeFlags = DECODE_FLAGS_DEFAULT;
   }
-
-  // If this image is a candidate for discarding, reset its position in the
-  // discard tracker so we're less likely to discard it right away.
-  //
-  // (We don't normally draw unlocked images, so this conditition will usually
-  // be false.  But we will draw unlocked images if image locking is globally
-  // disabled via the image.mem.allow_locking_in_content_processes pref.)
-  if (DiscardingActive()) {
-    DiscardTracker::Reset(&mDiscardTrackerNode);
-  }
-
 
   if (IsUnlocked() && mProgressTracker) {
     mProgressTracker->OnUnlockedDraw();
@@ -2520,9 +2447,6 @@ RasterImage::LockImage()
   if (mError)
     return NS_ERROR_FAILURE;
 
-  // Cancel the discard timer if it's there
-  DiscardTracker::Remove(&mDiscardTrackerNode);
-
   // Increment the lock count
   mLockCount++;
 
@@ -2550,9 +2474,6 @@ RasterImage::UnlockImage()
   if (mLockCount == 0)
     return NS_ERROR_ABORT;
 
-  // We're locked, so discarding should not be active
-  NS_ABORT_IF_FALSE(!DiscardingActive(), "Locked, but discarding activated");
-
   // Decrement our lock count
   mLockCount--;
 
@@ -2566,21 +2487,14 @@ RasterImage::UnlockImage()
   // decoded data around), try to cancel the decode and throw away whatever
   // we've decoded.
   if (mHasBeenDecoded && mDecoder &&
-      mLockCount == 0 && CanForciblyDiscard()) {
+      mLockCount == 0 && CanDiscard()) {
     PR_LOG(GetCompressedImageAccountingLog(), PR_LOG_DEBUG,
            ("RasterImage[0x%p] canceling decode because image "
             "is now unlocked.", this));
     ReentrantMonitorAutoEnter lock(mDecodingMonitor);
     FinishedSomeDecoding(ShutdownReason::NOT_NEEDED);
-    ForceDiscard();
+    Discard();
     return NS_OK;
-  }
-
-  // Otherwise, we might still be a candidate for discarding in the future.  If
-  // we are, add ourselves to the discard tracker.
-  if (CanDiscard()) {
-    nsresult rv = DiscardTracker::Reset(&mDiscardTrackerNode);
-    CONTAINER_ENSURE_SUCCESS(rv);
   }
 
   return NS_OK;
@@ -2591,8 +2505,11 @@ RasterImage::UnlockImage()
 NS_IMETHODIMP
 RasterImage::RequestDiscard()
 {
-  if (CanDiscard() && CanForciblyDiscardAndRedecode()) {
-    ForceDiscard();
+  if (mDiscardable &&      // Enabled at creation time...
+      mLockCount == 0 &&   // ...not temporarily disabled...
+      mDecoded &&          // ...and have something to discard.
+      CanDiscard()) {          
+    Discard();
   }
 
   return NS_OK;

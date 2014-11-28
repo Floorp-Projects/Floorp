@@ -26,7 +26,6 @@
 #include "imgFrame.h"
 #include "nsThreadUtils.h"
 #include "DecodePool.h"
-#include "DiscardTracker.h"
 #include "Orientation.h"
 #include "nsIObserver.h"
 #include "mozilla/Maybe.h"
@@ -161,6 +160,7 @@ public:
   nsresult Init(const char* aMimeType,
                 uint32_t aFlags);
   virtual nsIntRect FrameRect(uint32_t aWhichFrame) MOZ_OVERRIDE;
+  virtual void OnSurfaceDiscarded() MOZ_OVERRIDE;
 
   // Raster-specific methods
   static NS_METHOD WriteToRasterImage(nsIInputStream* aIn, void* aClosure,
@@ -176,8 +176,7 @@ public:
                                MallocSizeOf aMallocSizeOf) const;
 
   /* Triggers discarding. */
-  void Discard(bool aForce = false, bool aNotify = true);
-  void ForceDiscard() { Discard(/* aForce = */ true); }
+  void Discard(bool aNotify = true);
 
   /* Callbacks for decoders */
   /** Sets the size and inherent orientation of the container. This should only
@@ -364,14 +363,11 @@ private: // data
   // we maybe decoding on draw).
   UniquePtr<FrameAnimator> mAnim;
 
-  // Discard members
+  // Image locking.
   uint32_t                   mLockCount;
-  DiscardTracker::Node       mDiscardTrackerNode;
 
   // Source data members
   nsCString                  mSourceDataMimeType;
-
-  friend class DiscardTracker;
 
   // How many times we've decoded this image.
   // This is currently only used for statistics
@@ -497,9 +493,6 @@ private: // data
 
   // Helpers
   bool CanDiscard();
-  bool CanForciblyDiscard();
-  bool CanForciblyDiscardAndRedecode();
-  bool DiscardingActive();
   bool StoringSourceData() const;
 
 protected:
