@@ -1110,14 +1110,15 @@ gfxUtils::GetColorForFrameNumber(uint64_t aFrameNumber)
     return colors[aFrameNumber % sNumFrameColors];
 }
 
-/* static */ nsresult
-gfxUtils::EncodeSourceSurface(SourceSurface* aSurface,
-                              const nsACString& aMimeType,
-                              const nsAString& aOutputOptions,
-                              BinaryOrData aBinaryOrData,
-                              FILE* aFile)
+static nsresult
+EncodeSourceSurfaceInternal(SourceSurface* aSurface,
+                           const nsACString& aMimeType,
+                           const nsAString& aOutputOptions,
+                           gfxUtils::BinaryOrData aBinaryOrData,
+                           FILE* aFile,
+                           nsCString* aStrOut)
 {
-  MOZ_ASSERT(aBinaryOrData == eDataURIEncode || aFile,
+  MOZ_ASSERT(aBinaryOrData == gfxUtils::eDataURIEncode || aFile || aStrOut,
              "Copying binary encoding to clipboard not currently supported");
 
   const IntSize size = aSurface->GetSize();
@@ -1130,8 +1131,8 @@ gfxUtils::EncodeSourceSurface(SourceSurface* aSurface,
   if (aSurface->GetFormat() != SurfaceFormat::B8G8R8A8) {
     // FIXME bug 995807 (B8G8R8X8), bug 831898 (R5G6B5)
     dataSurface =
-      CopySurfaceToDataSourceSurfaceWithFormat(aSurface,
-                                               SurfaceFormat::B8G8R8A8);
+      gfxUtils::CopySurfaceToDataSourceSurfaceWithFormat(aSurface,
+                                                         SurfaceFormat::B8G8R8A8);
   } else {
     dataSurface = aSurface->GetDataSurface();
   }
@@ -1214,7 +1215,7 @@ gfxUtils::EncodeSourceSurface(SourceSurface* aSurface,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(!imgData.empty(), NS_ERROR_FAILURE);
 
-  if (aBinaryOrData == eBinaryEncode) {
+  if (aBinaryOrData == gfxUtils::eBinaryEncode) {
     if (aFile) {
       fwrite(imgData.begin(), 1, imgSize, aFile);
     }
@@ -1247,6 +1248,8 @@ gfxUtils::EncodeSourceSurface(SourceSurface* aSurface,
     }
 #endif
     fprintf(aFile, "%s", string.BeginReading());
+  } else if (aStrOut) {
+    *aStrOut = string;
   } else {
     nsCOMPtr<nsIClipboardHelper> clipboard(do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));
     if (clipboard) {
@@ -1254,6 +1257,27 @@ gfxUtils::EncodeSourceSurface(SourceSurface* aSurface,
     }
   }
   return NS_OK;
+}
+
+static nsCString
+EncodeSourceSurfaceAsPNGURI(SourceSurface* aSurface)
+{
+  nsCString string;
+  EncodeSourceSurfaceInternal(aSurface, NS_LITERAL_CSTRING("image/png"),
+                              EmptyString(), gfxUtils::eDataURIEncode,
+                              nullptr, &string);
+  return string;
+}
+
+/* static */ nsresult
+gfxUtils::EncodeSourceSurface(SourceSurface* aSurface,
+                              const nsACString& aMimeType,
+                              const nsAString& aOutputOptions,
+                              BinaryOrData aBinaryOrData,
+                              FILE* aFile)
+{
+  return EncodeSourceSurfaceInternal(aSurface, aMimeType, aOutputOptions,
+                                     aBinaryOrData, aFile, nullptr);
 }
 
 /* static */ void
@@ -1337,6 +1361,12 @@ gfxUtils::DumpAsDataURI(SourceSurface* aSurface, FILE* aFile)
                       EmptyString(), eDataURIEncode, aFile);
 }
 
+/* static */ nsCString
+gfxUtils::GetAsDataURI(SourceSurface* aSurface)
+{
+  return EncodeSourceSurfaceAsPNGURI(aSurface);
+}
+
 /* static */ void
 gfxUtils::DumpAsDataURI(DrawTarget* aDT, FILE* aFile)
 {
@@ -1345,6 +1375,18 @@ gfxUtils::DumpAsDataURI(DrawTarget* aDT, FILE* aFile)
     DumpAsDataURI(surface, aFile);
   } else {
     NS_WARNING("Failed to get surface!");
+  }
+}
+
+/* static */ nsCString
+gfxUtils::GetAsDataURI(DrawTarget* aDT)
+{
+  RefPtr<SourceSurface> surface = aDT->Snapshot();
+  if (surface) {
+    return EncodeSourceSurfaceAsPNGURI(surface);
+  } else {
+    NS_WARNING("Failed to get surface!");
+    return nsCString("");
   }
 }
 
