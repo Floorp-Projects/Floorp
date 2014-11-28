@@ -84,16 +84,43 @@ nsresult
 Convert(bool aIn, BluetoothScanMode& aOut);
 
 nsresult
+Convert(int aIn, uint8_t& aOut);
+
+nsresult
 Convert(int aIn, int16_t& aOut);
 
 nsresult
 Convert(uint8_t aIn, bool& aOut);
 
 nsresult
+Convert(uint8_t aIn, char& aOut);
+
+nsresult
+Convert(uint8_t aIn, int& aOut);
+
+nsresult
 Convert(uint8_t aIn, BluetoothAclState& aOut);
 
 nsresult
 Convert(uint8_t aIn, BluetoothBondState& aOut);
+
+nsresult
+Convert(uint8_t aIn, BluetoothHandsfreeAudioState& aOut);
+
+nsresult
+Convert(uint8_t aIn, BluetoothHandsfreeCallHoldType& aOut);
+
+nsresult
+Convert(uint8_t aIn, BluetoothHandsfreeConnectionState& aOut);
+
+nsresult
+Convert(uint8_t aIn, BluetoothHandsfreeNRECState& aOut);
+
+nsresult
+Convert(uint8_t aIn, BluetoothHandsfreeVoiceRecognitionState& aOut);
+
+nsresult
+Convert(uint8_t aIn, BluetoothHandsfreeVolumeType& aOut);
 
 nsresult
 Convert(uint8_t aIn, BluetoothTypeOfDevice& aOut);
@@ -136,6 +163,33 @@ Convert(BluetoothAclState aIn, bool& aOut);
 
 nsresult
 Convert(const BluetoothAddress& aIn, nsAString& aOut);
+
+nsresult
+Convert(BluetoothHandsfreeAtResponse aIn, uint8_t& aOut);
+
+nsresult
+Convert(BluetoothHandsfreeCallAddressType aIn, uint8_t& aOut);
+
+nsresult
+Convert(BluetoothHandsfreeCallDirection aIn, uint8_t& aOut);
+
+nsresult
+Convert(BluetoothHandsfreeCallState aIn, uint8_t& aOut);
+
+nsresult
+Convert(BluetoothHandsfreeCallMode aIn, uint8_t& aOut);
+
+nsresult
+Convert(BluetoothHandsfreeCallMptyType aIn, uint8_t& aOut);
+
+nsresult
+Convert(BluetoothHandsfreeNetworkState aIn, uint8_t& aOut);
+
+nsresult
+Convert(BluetoothHandsfreeServiceType aIn, uint8_t& aOut);
+
+nsresult
+Convert(BluetoothHandsfreeVolumeType aIn, uint8_t& aOut);
 
 nsresult
 Convert(BluetoothPropertyType aIn, uint8_t& aOut);
@@ -191,6 +245,33 @@ PackPDU(const BluetoothConfigurationParameter& aIn, BluetoothDaemonPDU& aPDU);
 
 nsresult
 PackPDU(const BluetoothDaemonPDUHeader& aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
+PackPDU(const BluetoothHandsfreeAtResponse& aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
+PackPDU(const BluetoothHandsfreeCallAddressType& aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
+PackPDU(const BluetoothHandsfreeCallDirection& aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
+PackPDU(const BluetoothHandsfreeCallMode& aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
+PackPDU(const BluetoothHandsfreeCallMptyType& aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
+PackPDU(const BluetoothHandsfreeCallState& aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
+PackPDU(const BluetoothHandsfreeNetworkState& aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
+PackPDU(const BluetoothHandsfreeServiceType& aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
+PackPDU(const BluetoothHandsfreeVolumeType& aIn, BluetoothDaemonPDU& aPDU);
 
 nsresult
 PackPDU(const BluetoothNamedValue& aIn, BluetoothDaemonPDU& aPDU);
@@ -279,6 +360,29 @@ PackPDU<uint8_t>(const PackArray<uint8_t>& aIn, BluetoothDaemonPDU& aPDU)
   return aPDU.Write(aIn.mData, aIn.mLength);
 }
 
+/* |PackCString0| is a helper for packing 0-terminated C string,
+ * including the \0 character. Pass an instance of this structure
+ * as the first argument to |PackPDU| to pack a string.
+ */
+struct PackCString0
+{
+  PackCString0(const nsCString& aString)
+  : mString(aString)
+  { }
+
+  const nsCString& mString;
+};
+
+/* This implementation of |PackPDU| packs a 0-terminated C string.
+ */
+inline nsresult
+PackPDU(const PackCString0& aIn, BluetoothDaemonPDU& aPDU)
+{
+  return PackPDU(
+    PackArray<uint8_t>(reinterpret_cast<const uint8_t*>(aIn.mString.get()),
+                       aIn.mString.Length() + 1), aPDU);
+}
+
 template <typename T1, typename T2>
 inline nsresult
 PackPDU(const T1& aIn1, const T2& aIn2, BluetoothDaemonPDU& aPDU)
@@ -352,6 +456,41 @@ PackPDU(const T1& aIn1, const T2& aIn2, const T3& aIn3,
   return PackPDU(aIn5, aPDU);
 }
 
+template <typename T1, typename T2, typename T3,
+          typename T4, typename T5, typename T6,
+          typename T7>
+inline nsresult
+PackPDU(const T1& aIn1, const T2& aIn2, const T3& aIn3,
+        const T4& aIn4, const T5& aIn5, const T6& aIn6,
+        const T7& aIn7, BluetoothDaemonPDU& aPDU)
+{
+  nsresult rv = PackPDU(aIn1, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = PackPDU(aIn2, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = PackPDU(aIn3, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = PackPDU(aIn4, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = PackPDU(aIn5, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = PackPDU(aIn6, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  return PackPDU(aIn7, aPDU);
+}
+
 //
 // Unpacking
 //
@@ -390,6 +529,9 @@ nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, bool& aOut);
 
 nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, char& aOut);
+
+nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothAclState& aOut);
 
 inline nsresult
@@ -417,6 +559,25 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothDaemonPDUHeader& aOut)
 
 nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothTypeOfDevice& aOut);
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothHandsfreeAudioState& aOut);
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothHandsfreeCallHoldType& aOut);
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothHandsfreeConnectionState& aOut);
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothHandsfreeNRECState& aOut);
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU,
+          BluetoothHandsfreeVoiceRecognitionState& aOut);
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothHandsfreeVolumeType& aOut);
 
 nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothRemoteInfo& aOut);
@@ -450,6 +611,9 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothUuid& aOut)
 {
   return aPDU.Read(aOut.mUuid, sizeof(aOut.mUuid));
 }
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, nsDependentCString& aOut);
 
 /* |UnpackConversion| is a helper for convering unpacked values. Pass
  * an instance of this structure to |UnpackPDU| to read a value from
@@ -541,6 +705,44 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, nsTArray<T>& aOut)
   }
   return NS_OK;
 }
+
+/* |UnpackCString0| is a helper for unpacking 0-terminated C string,
+ * including the \0 character. Pass an instance of this structure
+ * as the first argument to |UnpackPDU| to unpack a string.
+ */
+struct UnpackCString0
+{
+  UnpackCString0(nsCString& aString)
+    : mString(&aString)
+  { }
+
+  nsCString* mString; // non-null by construction
+};
+
+/* This implementation of |UnpackPDU| unpacks a 0-terminated C string.
+ */
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, const UnpackCString0& aOut);
+
+/* |UnpackString0| is a helper for unpacking 0-terminated C string,
+ * including the \0 character. Pass an instance of this structure
+ * as the first argument to |UnpackPDU| to unpack a C string and convert
+ * it to wide-character encoding.
+ */
+struct UnpackString0
+{
+  UnpackString0(nsString& aString)
+    : mString(&aString)
+  { }
+
+  nsString* mString; // non-null by construction
+};
+
+/* This implementation of |UnpackPDU| unpacks a 0-terminated C string
+ * and converts it to wide-character encoding.
+ */
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, const UnpackString0& aOut);
 
 //
 // Init operators
