@@ -978,10 +978,22 @@ class RunProgram(MachCommandBase):
             if show_dump_stats:
                 dmd_params.append('--show-dump-stats=yes')
 
+            env_vars = {
+                "Darwin": {
+                    "DYLD_INSERT_LIBRARIES": dmd_lib,
+                    "LD_LIBRARY_PATH": bin_dir,
+                },
+                "Linux": {
+                    "LD_PRELOAD": dmd_lib,
+                    "LD_LIBRARY_PATH": bin_dir,
+                },
+                "WINNT": {
+                    "MOZ_REPLACE_MALLOC_LIB": dmd_lib,
+                },
+            }
+
             if dmd_params:
-                dmd_env_var = " ".join(dmd_params)
-            else:
-                dmd_env_var = "1"
+                env_vars["DMD"] = " ".join(dmd_params)
 
             bin_dir = os.path.dirname(binpath)
             lib_name = self.substs['DLL_PREFIX'] + 'dmd' + self.substs['DLL_SUFFIX']
@@ -990,22 +1002,6 @@ class RunProgram(MachCommandBase):
                 print("Please build with |--enable-dmd| to use DMD.")
                 return 1
 
-            env_vars = {
-                "Darwin": {
-                    "DYLD_INSERT_LIBRARIES": dmd_lib,
-                    "LD_LIBRARY_PATH": bin_dir,
-                    "DMD": dmd_env_var,
-                },
-                "Linux": {
-                    "LD_PRELOAD": dmd_lib,
-                    "LD_LIBRARY_PATH": bin_dir,
-                    "DMD": dmd_env_var,
-                },
-                "WINNT": {
-                    "MOZ_REPLACE_MALLOC_LIB": dmd_lib,
-                    "DMD": dmd_env_var,
-                },
-            }
             extra_env.update(env_vars.get(self.substs['OS_ARCH'], {}))
 
         return self.run_process(args=args, ensure_exit_code=False,

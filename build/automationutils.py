@@ -389,7 +389,6 @@ def environment(xrePath, env=None, crashreporter=True, debugger=False, dmdPath=N
     env[envVar] = os.path.pathsep.join([path for path in envValue if path])
 
   if dmdPath and dmdLibrary and preloadEnvVar:
-    env['DMD'] = '1'
     env[preloadEnvVar] = os.path.join(dmdPath, dmdLibrary)
 
   # crashreporter
