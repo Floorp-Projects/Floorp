@@ -267,6 +267,9 @@ user_pref("loop.CSP","default-src 'self' about: file: chrome: data: wss://* http
 user_pref("browser.uitour.pinnedTabUrl", "http://%(server)s/uitour-dummy/pinnedTab");
 user_pref("browser.uitour.url", "http://%(server)s/uitour-dummy/tour");
 
+// Don't show the search first run UI by default
+user_pref("browser.search.highlightCount", 0);
+
 user_pref("media.eme.enabled", true);
 
 // Don't prompt about e10s
