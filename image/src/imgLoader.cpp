@@ -36,7 +36,6 @@
 
 #include "nsIMemoryReporter.h"
 #include "Image.h"
-#include "DiscardTracker.h"
 #include "gfxPrefs.h"
 
 // we want to explore making the document own the load group
@@ -955,27 +954,6 @@ nsresult imgLoader::CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup 
   return NS_OK;
 }
 
-class imgCacheObserver MOZ_FINAL : public nsIObserver
-{
-  ~imgCacheObserver() {}
-
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-};
-
-NS_IMPL_ISUPPORTS(imgCacheObserver, nsIObserver)
-
-NS_IMETHODIMP
-imgCacheObserver::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aSomeData)
-{
-  if (strcmp(aTopic, "memory-pressure") == 0 ||
-      strcmp(aTopic, "app-theme-changed") == 0) {
-    DiscardTracker::DiscardAll();
-  }
-  return NS_OK;
-}
-
 class imgCacheExpirationTracker MOZ_FINAL
   : public nsExpirationTracker<imgCacheEntry, 3>
 {
@@ -1015,8 +993,6 @@ void imgCacheExpirationTracker::NotifyExpired(imgCacheEntry *entry)
 
   entry->Loader()->VerifyCacheSizes();
 }
-
-imgCacheObserver *gCacheObserver;
 
 double imgLoader::sCacheTimeWeight;
 uint32_t imgLoader::sCacheMaxSize;
@@ -1138,15 +1114,6 @@ imgCacheQueue & imgLoader::GetCacheQueue(ImageURL *aURI)
 
 void imgLoader::GlobalInit()
 {
-  gCacheObserver = new imgCacheObserver();
-  NS_ADDREF(gCacheObserver);
-
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (os) {
-    os->AddObserver(gCacheObserver, "memory-pressure", false);
-    os->AddObserver(gCacheObserver, "app-theme-changed", false);
-  }
-
   sCacheTimeWeight = gfxPrefs::ImageCacheTimeWeight() / 1000.0;
   int32_t cachesize = gfxPrefs::ImageCacheSize();
   sCacheMaxSize = cachesize > 0 ? cachesize : 0;
@@ -1284,7 +1251,6 @@ void imgLoader::Shutdown()
 {
   NS_IF_RELEASE(gSingleton);
   NS_IF_RELEASE(gPBSingleton);
-  NS_RELEASE(gCacheObserver);
 }
 
 nsresult imgLoader::ClearChromeImageCache()
