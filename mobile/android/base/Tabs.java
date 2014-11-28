@@ -87,7 +87,6 @@ public class Tabs implements GeckoEventListener {
 
     private Tabs() {
         EventDispatcher.getInstance().registerGeckoThreadListener(this,
-            "Session:RestoreEnd",
             "Tab:Added",
             "Tab:Close",
             "Tab:Select",
@@ -410,11 +409,6 @@ public class Tabs implements GeckoEventListener {
     public void handleMessage(String event, JSONObject message) {
         Log.d(LOGTAG, "handleMessage: " + event);
         try {
-            if (event.equals("Session:RestoreEnd")) {
-                notifyListeners(null, TabEvents.RESTORED);
-                return;
-            }
-
             // All other events handled below should contain a tabID property
             int id = message.getInt("tabID");
             Tab tab = getTab(id);
