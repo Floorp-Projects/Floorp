@@ -521,6 +521,65 @@ loop.panel = (function(_, mozL10n) {
     }
   });
 
+  var EditInPlace = React.createClass({
+    mixins: [React.addons.LinkedStateMixin],
+
+    propTypes: {
+      onChange: React.PropTypes.func.isRequired,
+      text: React.PropTypes.string,
+    },
+
+    getDefaultProps: function() {
+      return {text: ""};
+    },
+
+    getInitialState: function() {
+      return {edit: false, text: this.props.text};
+    },
+
+    handleTextClick: function(event) {
+      event.stopPropagation();
+      event.preventDefault();
+      this.setState({edit: true}, function() {
+        this.getDOMNode().querySelector("input").select();
+      }.bind(this));
+    },
+
+    handleInputClick: function(event) {
+      event.stopPropagation();
+    },
+
+    handleFormSubmit: function(event) {
+      event.preventDefault();
+      this.props.onChange(this.state.text);
+      this.setState({edit: false});
+    },
+
+    cancelEdit: function(event) {
+      event.stopPropagation();
+      event.preventDefault();
+      this.setState({edit: false, text: this.props.text});
+    },
+
+    render: function() {
+      if (!this.state.edit) {
+        return (
+          <span className="edit-in-place" onClick={this.handleTextClick}
+                title={mozL10n.get("rooms_name_this_room_tooltip2")}>
+            {this.state.text}
+          </span>
+        );
+      }
+      return (
+        <form onSubmit={this.handleFormSubmit}>
+          <input type="text" valueLink={this.linkState("text")}
+                 onClick={this.handleInputClick}
+                 onBlur={this.cancelEdit} />
+        </form>
+      );
+    }
+  });
+
   /**
    * Room list entry.
    */
@@ -539,7 +598,7 @@ loop.panel = (function(_, mozL10n) {
         (nextState.urlCopied !== this.state.urlCopied);
     },
 
-    handleClickRoomUrl: function(event) {
+    handleClickEntry: function(event) {
       event.preventDefault();
       this.props.dispatcher.dispatch(new sharedActions.OpenRoom({
         roomToken: this.props.room.roomToken
@@ -547,6 +606,7 @@ loop.panel = (function(_, mozL10n) {
     },
 
     handleCopyButtonClick: function(event) {
+      event.stopPropagation();
       event.preventDefault();
       this.props.dispatcher.dispatch(new sharedActions.CopyRoomUrl({
         roomUrl: this.props.room.roomUrl
@@ -555,10 +615,18 @@ loop.panel = (function(_, mozL10n) {
     },
 
     handleDeleteButtonClick: function(event) {
+      event.stopPropagation();
       event.preventDefault();
       // XXX We should prompt end user for confirmation; see bug 1092953.
       this.props.dispatcher.dispatch(new sharedActions.DeleteRoom({
         roomToken: this.props.room.roomToken
+      }));
+    },
+
+    renameRoom: function(newRoomName) {
+      this.props.dispatcher.dispatch(new sharedActions.RenameRoom({
+        roomToken: this.props.room.roomToken,
+        newRoomName: newRoomName
       }));
     },
 
@@ -582,10 +650,11 @@ loop.panel = (function(_, mozL10n) {
       });
 
       return (
-        <div className={roomClasses} onMouseLeave={this.handleMouseLeave}>
+        <div className={roomClasses} onMouseLeave={this.handleMouseLeave}
+             onClick={this.handleClickEntry}>
           <h2>
             <span className="room-notification" />
-            {room.roomName}
+            <EditInPlace text={room.roomName} onChange={this.renameRoom} />
             <button className={copyButtonClasses}
               title={mozL10n.get("rooms_list_copy_url_tooltip")}
               onClick={this.handleCopyButtonClick} />
@@ -593,11 +662,7 @@ loop.panel = (function(_, mozL10n) {
               title={mozL10n.get("rooms_list_delete_tooltip")}
               onClick={this.handleDeleteButtonClick} />
           </h2>
-          <p>
-            <a href="#" onClick={this.handleClickRoomUrl}>
-              {room.roomUrl}
-            </a>
-          </p>
+          <p><a href="#">{room.roomUrl}</a></p>
         </div>
       );
     }

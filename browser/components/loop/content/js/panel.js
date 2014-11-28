@@ -521,6 +521,65 @@ loop.panel = (function(_, mozL10n) {
     }
   });
 
+  var EditInPlace = React.createClass({displayName: 'EditInPlace',
+    mixins: [React.addons.LinkedStateMixin],
+
+    propTypes: {
+      onChange: React.PropTypes.func.isRequired,
+      text: React.PropTypes.string,
+    },
+
+    getDefaultProps: function() {
+      return {text: ""};
+    },
+
+    getInitialState: function() {
+      return {edit: false, text: this.props.text};
+    },
+
+    handleTextClick: function(event) {
+      event.stopPropagation();
+      event.preventDefault();
+      this.setState({edit: true}, function() {
+        this.getDOMNode().querySelector("input").select();
+      }.bind(this));
+    },
+
+    handleInputClick: function(event) {
+      event.stopPropagation();
+    },
+
+    handleFormSubmit: function(event) {
+      event.preventDefault();
+      this.props.onChange(this.state.text);
+      this.setState({edit: false});
+    },
+
+    cancelEdit: function(event) {
+      event.stopPropagation();
+      event.preventDefault();
+      this.setState({edit: false, text: this.props.text});
+    },
+
+    render: function() {
+      if (!this.state.edit) {
+        return (
+          React.DOM.span({className: "edit-in-place", onClick: this.handleTextClick, 
+                title: mozL10n.get("rooms_name_this_room_tooltip2")}, 
+            this.state.text
+          )
+        );
+      }
+      return (
+        React.DOM.form({onSubmit: this.handleFormSubmit}, 
+          React.DOM.input({type: "text", valueLink: this.linkState("text"), 
+                 onClick: this.handleInputClick, 
+                 onBlur: this.cancelEdit})
+        )
+      );
+    }
+  });
+
   /**
    * Room list entry.
    */
@@ -539,7 +598,7 @@ loop.panel = (function(_, mozL10n) {
         (nextState.urlCopied !== this.state.urlCopied);
     },
 
-    handleClickRoomUrl: function(event) {
+    handleClickEntry: function(event) {
       event.preventDefault();
       this.props.dispatcher.dispatch(new sharedActions.OpenRoom({
         roomToken: this.props.room.roomToken
@@ -547,6 +606,7 @@ loop.panel = (function(_, mozL10n) {
     },
 
     handleCopyButtonClick: function(event) {
+      event.stopPropagation();
       event.preventDefault();
       this.props.dispatcher.dispatch(new sharedActions.CopyRoomUrl({
         roomUrl: this.props.room.roomUrl
@@ -555,10 +615,18 @@ loop.panel = (function(_, mozL10n) {
     },
 
     handleDeleteButtonClick: function(event) {
+      event.stopPropagation();
       event.preventDefault();
       // XXX We should prompt end user for confirmation; see bug 1092953.
       this.props.dispatcher.dispatch(new sharedActions.DeleteRoom({
         roomToken: this.props.room.roomToken
+      }));
+    },
+
+    renameRoom: function(newRoomName) {
+      this.props.dispatcher.dispatch(new sharedActions.RenameRoom({
+        roomToken: this.props.room.roomToken,
+        newRoomName: newRoomName
       }));
     },
 
@@ -582,10 +650,11 @@ loop.panel = (function(_, mozL10n) {
       });
 
       return (
-        React.DOM.div({className: roomClasses, onMouseLeave: this.handleMouseLeave}, 
+        React.DOM.div({className: roomClasses, onMouseLeave: this.handleMouseLeave, 
+             onClick: this.handleClickEntry}, 
           React.DOM.h2(null, 
             React.DOM.span({className: "room-notification"}), 
-            room.roomName, 
+            EditInPlace({text: room.roomName, onChange: this.renameRoom}), 
             React.DOM.button({className: copyButtonClasses, 
               title: mozL10n.get("rooms_list_copy_url_tooltip"), 
               onClick: this.handleCopyButtonClick}), 
@@ -593,11 +662,7 @@ loop.panel = (function(_, mozL10n) {
               title: mozL10n.get("rooms_list_delete_tooltip"), 
               onClick: this.handleDeleteButtonClick})
           ), 
-          React.DOM.p(null, 
-            React.DOM.a({href: "#", onClick: this.handleClickRoomUrl}, 
-              room.roomUrl
-            )
-          )
+          React.DOM.p(null, React.DOM.a({href: "#"}, room.roomUrl))
         )
       );
     }
