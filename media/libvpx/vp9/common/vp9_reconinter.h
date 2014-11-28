@@ -39,6 +39,17 @@ void vp9_build_inter_predictor(const uint8_t *src, int src_stride,
                                enum mv_precision precision,
                                int x, int y);
 
+#if CONFIG_VP9_HIGHBITDEPTH
+void vp9_high_build_inter_predictor(const uint8_t *src, int src_stride,
+                                    uint8_t *dst, int dst_stride,
+                                    const MV *mv_q3,
+                                    const struct scale_factors *sf,
+                                    int w, int h, int do_avg,
+                                    const InterpKernel *kernel,
+                                    enum mv_precision precision,
+                                    int x, int y, int bd);
+#endif
+
 static INLINE int scaled_buffer_offset(int x_offset, int y_offset, int stride,
                                        const struct scale_factors *sf) {
   const int x = sf ? sf->scale_value_x(x_offset, sf) : x_offset;

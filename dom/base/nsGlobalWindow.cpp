@@ -40,8 +40,6 @@
 #include "nsWindowMemoryReporter.h"
 #include "WindowNamedPropertiesHandler.h"
 #include "nsFrameSelection.h"
-#include "nsISelectionListener.h"
-#include "nsCaret.h"
 
 // Helper Classes
 #include "nsJSUtils.h"
@@ -194,8 +192,6 @@
 
 #include "nsRefreshDriver.h"
 
-#include "mozilla/dom/SelectionChangeEvent.h"
-
 #include "mozilla/AddonPathService.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
@@ -275,7 +271,6 @@ static PopupControlState    gPopupControlState         = openAbused;
 static int32_t              gRunningTimeoutDepth       = 0;
 static bool                 gMouseDown                 = false;
 static bool                 gDragServiceDisabled       = false;
-static bool                 gSelectionCaretPrefEnabled = false;
 static FILE                *gDumpFile                  = nullptr;
 static uint64_t             gNextWindowID              = 0;
 static uint32_t             gSerialCounter             = 0;
@@ -1190,9 +1185,6 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
                                 DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE);
     Preferences::AddBoolVarCache(&sIdleObserversAPIFuzzTimeDisabled, 
                                  "dom.idle-observers-api.fuzz_time.disabled",
-                                 false);
-    Preferences::AddBoolVarCache(&gSelectionCaretPrefEnabled,
-                                 "selectioncaret.enabled",
                                  false);
   }
 
@@ -9293,61 +9285,6 @@ public:
   nsString                             mAction;
 };
 
-static bool
-CheckReason(int16_t aReason, SelectionChangeReason aReasonType)
-{
-  switch (aReasonType) {
-    case SelectionChangeReason::Drag:
-      return aReason & nsISelectionListener::DRAG_REASON;
-    case SelectionChangeReason::Mousedown:
-      return aReason & nsISelectionListener::MOUSEDOWN_REASON;
-    case SelectionChangeReason::Mouseup:
-      return aReason & nsISelectionListener::MOUSEUP_REASON;
-    case SelectionChangeReason::Keypress:
-      return aReason & nsISelectionListener::KEYPRESS_REASON;
-    case SelectionChangeReason::Selectall:
-      return aReason & nsISelectionListener::SELECTALL_REASON;
-    case SelectionChangeReason::Collapsetostart:
-      return aReason & nsISelectionListener::COLLAPSETOSTART_REASON;
-    case SelectionChangeReason::Collapsetoend:
-      return aReason & nsISelectionListener::COLLAPSETOEND_REASON;
-    default:
-      return false;
-  }
-}
-
-static nsRect
-GetSelectionBoundingRect(Selection* aSel, nsIPresShell* aShell)
-{
-  nsRect res;
-  // Bounding client rect may be empty after calling GetBoundingClientRect
-  // when range is collapsed. So we get caret's rect when range is
-  // collapsed.
-  if (aSel->IsCollapsed()) {
-    aShell->FlushPendingNotifications(Flush_Layout);
-    nsIFrame* frame = nsCaret::GetGeometry(aSel, &res);
-    if (frame) {
-      nsIFrame* relativeTo =
-        nsLayoutUtils::GetContainingBlockForClientRect(frame);
-      res = nsLayoutUtils::TransformFrameRectToAncestor(frame, res, relativeTo);
-    }
-  } else {
-    int32_t rangeCount = aSel->GetRangeCount();
-    nsLayoutUtils::RectAccumulator accumulator;
-    for (int32_t idx = 0; idx < rangeCount; ++idx) {
-      nsRange* range = aSel->GetRangeAt(idx);
-      nsRange::CollectClientRects(&accumulator, range,
-                                  range->GetStartParent(), range->StartOffset(),
-                                  range->GetEndParent(), range->EndOffset(),
-                                  true, false);
-    }
-    res = accumulator.mResultRect.IsEmpty() ? accumulator.mFirstRect :
-      accumulator.mResultRect;
-  }
-
-  return res;
-}
-
 NS_IMETHODIMP
 nsGlobalWindow::UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason)
 {
@@ -9367,55 +9304,6 @@ nsGlobalWindow::UpdateCommands(const nsAString& anAction, nsISelection* aSel, in
     if (xulCommandDispatcher) {
       nsContentUtils::AddScriptRunner(new CommandDispatcher(xulCommandDispatcher,
                                                             anAction));
-    }
-  }
-
-  if (gSelectionCaretPrefEnabled && mDoc && anAction.EqualsLiteral("selectionchange")) {
-    SelectionChangeEventInit init;
-    init.mBubbles = true;
-    if (aSel) {
-      bool isTouchCaretVisible = false;
-      bool isCollapsed = aSel->Collapsed();
-
-      nsIPresShell *shell = mDoc->GetShell();
-      if (shell) {
-        nsRefPtr<TouchCaret> touchCaret = shell->GetTouchCaret();
-        if (touchCaret) {
-          isTouchCaretVisible = touchCaret->GetVisibility();
-        }
-      }
-
-      // Dispatch selection change events when touch caret is visible even if selection
-      // is collapsed because it could be the shortcut mode, otherwise ignore this
-      // UpdateCommands
-      if (isCollapsed && !isTouchCaretVisible) {
-        return NS_OK;
-      }
-
-      Selection* selection = static_cast<Selection*>(aSel);
-      nsRect rect = GetSelectionBoundingRect(selection, mDoc->GetShell());
-      nsRefPtr<DOMRect> domRect = new DOMRect(ToSupports(this));
-      domRect->SetLayoutRect(rect);
-      init.mBoundingClientRect = domRect;
-
-      selection->Stringify(init.mSelectedText);
-      for (uint32_t reasonType = 0;
-           reasonType < static_cast<uint32_t>(SelectionChangeReason::EndGuard_);
-           ++reasonType) {
-        SelectionChangeReason strongReasonType =
-          static_cast<SelectionChangeReason>(reasonType);
-        if (CheckReason(aReason, strongReasonType)) {
-          init.mReasons.AppendElement(strongReasonType);
-        }
-      }
-
-      nsRefPtr<SelectionChangeEvent> event =
-        SelectionChangeEvent::Constructor(mDoc, NS_LITERAL_STRING("mozselectionchange"), init);
-
-      event->SetTrusted(true);
-      event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
-      bool ret;
-      mDoc->DispatchEvent(event, &ret);
     }
   }
 

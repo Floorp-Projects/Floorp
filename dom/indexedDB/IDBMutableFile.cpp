@@ -157,21 +157,20 @@ IDBMutableFile::Create(IDBDatabase* aDatabase,
     return nullptr;
   }
 
-  const DatabaseSpec* spec = aDatabase->Spec();
-  MOZ_ASSERT(spec);
-
-  PersistenceType persistenceType = spec->metadata().persistenceType();
-
   nsCString group;
   nsCString origin;
   if (NS_WARN_IF(NS_FAILED(QuotaManager::GetInfoFromPrincipal(principal,
-                                                              persistenceType,
                                                               &group,
                                                               &origin,
                                                               nullptr,
                                                               nullptr)))) {
     return nullptr;
   }
+
+  const DatabaseSpec* spec = aDatabase->Spec();
+  MOZ_ASSERT(spec);
+
+  PersistenceType persistenceType = spec->metadata().persistenceType();
 
   nsCString storageId;
   QuotaManager::GetStorageId(persistenceType,

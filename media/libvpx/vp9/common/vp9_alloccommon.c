@@ -44,14 +44,8 @@ void vp9_set_mb_mi(VP9_COMMON *cm, int width, int height) {
 static void setup_mi(VP9_COMMON *cm) {
   cm->mi = cm->mip + cm->mi_stride + 1;
   cm->prev_mi = cm->prev_mip + cm->mi_stride + 1;
-  cm->mi_grid_visible = cm->mi_grid_base + cm->mi_stride + 1;
-  cm->prev_mi_grid_visible = cm->prev_mi_grid_base + cm->mi_stride + 1;
 
   vpx_memset(cm->mip, 0, cm->mi_stride * (cm->mi_rows + 1) * sizeof(*cm->mip));
-
-  vpx_memset(cm->mi_grid_base, 0, cm->mi_stride * (cm->mi_rows + 1) *
-                                      sizeof(*cm->mi_grid_base));
-
   clear_mi_border(cm, cm->prev_mip);
 }
 
@@ -63,11 +57,6 @@ static int alloc_mi(VP9_COMMON *cm, int mi_size) {
         (MODE_INFO *)vpx_calloc(mi_size, sizeof(MODE_INFO));
     if (cm->mip_array[i] == NULL)
       return 1;
-
-    cm->mi_grid_base_array[i] =
-        (MODE_INFO **)vpx_calloc(mi_size, sizeof(MODE_INFO*));
-    if (cm->mi_grid_base_array[i] == NULL)
-      return 1;
   }
 
   cm->mi_alloc_size = mi_size;
@@ -78,8 +67,6 @@ static int alloc_mi(VP9_COMMON *cm, int mi_size) {
 
   cm->mip = cm->mip_array[cm->mi_idx];
   cm->prev_mip = cm->mip_array[cm->prev_mi_idx];
-  cm->mi_grid_base = cm->mi_grid_base_array[cm->mi_idx];
-  cm->prev_mi_grid_base = cm->mi_grid_base_array[cm->prev_mi_idx];
 
   return 0;
 }
@@ -90,14 +77,10 @@ static void free_mi(VP9_COMMON *cm) {
   for (i = 0; i < 2; ++i) {
     vpx_free(cm->mip_array[i]);
     cm->mip_array[i] = NULL;
-    vpx_free(cm->mi_grid_base_array[i]);
-    cm->mi_grid_base_array[i] = NULL;
   }
 
   cm->mip = NULL;
   cm->prev_mip = NULL;
-  cm->mi_grid_base = NULL;
-  cm->prev_mi_grid_base = NULL;
 }
 
 void vp9_free_ref_frame_buffers(VP9_COMMON *cm) {
@@ -224,12 +207,8 @@ void vp9_swap_mi_and_prev_mi(VP9_COMMON *cm) {
   // Current mip will be the prev_mip for the next frame.
   cm->mip = cm->mip_array[cm->mi_idx];
   cm->prev_mip = cm->mip_array[cm->prev_mi_idx];
-  cm->mi_grid_base = cm->mi_grid_base_array[cm->mi_idx];
-  cm->prev_mi_grid_base = cm->mi_grid_base_array[cm->prev_mi_idx];
 
   // Update the upper left visible macroblock ptrs.
   cm->mi = cm->mip + cm->mi_stride + 1;
   cm->prev_mi = cm->prev_mip + cm->mi_stride + 1;
-  cm->mi_grid_visible = cm->mi_grid_base + cm->mi_stride + 1;
-  cm->prev_mi_grid_visible = cm->prev_mi_grid_base + cm->mi_stride + 1;
 }

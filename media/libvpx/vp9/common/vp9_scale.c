@@ -43,9 +43,16 @@ MV32 vp9_scale_mv(const MV *mv, int x, int y, const struct scale_factors *sf) {
   return res;
 }
 
+#if CONFIG_VP9_HIGHBITDEPTH
+void vp9_setup_scale_factors_for_frame(struct scale_factors *sf,
+                                       int other_w, int other_h,
+                                       int this_w, int this_h,
+                                       int use_high) {
+#else
 void vp9_setup_scale_factors_for_frame(struct scale_factors *sf,
                                        int other_w, int other_h,
                                        int this_w, int this_h) {
+#endif
   if (!valid_ref_frame_size(other_w, other_h, this_w, this_h)) {
     sf->x_scale_fp = REF_INVALID_SCALE;
     sf->y_scale_fp = REF_INVALID_SCALE;
@@ -111,4 +118,48 @@ void vp9_setup_scale_factors_for_frame(struct scale_factors *sf,
   // 2D subpel motion always gets filtered in both directions
   sf->predict[1][1][0] = vp9_convolve8;
   sf->predict[1][1][1] = vp9_convolve8_avg;
+#if CONFIG_VP9_HIGHBITDEPTH
+  if (use_high) {
+    if (sf->x_step_q4 == 16) {
+      if (sf->y_step_q4 == 16) {
+        // No scaling in either direction.
+        sf->high_predict[0][0][0] = vp9_high_convolve_copy;
+        sf->high_predict[0][0][1] = vp9_high_convolve_avg;
+        sf->high_predict[0][1][0] = vp9_high_convolve8_vert;
+        sf->high_predict[0][1][1] = vp9_high_convolve8_avg_vert;
+        sf->high_predict[1][0][0] = vp9_high_convolve8_horiz;
+        sf->high_predict[1][0][1] = vp9_high_convolve8_avg_horiz;
+      } else {
+        // No scaling in x direction. Must always scale in the y direction.
+        sf->high_predict[0][0][0] = vp9_high_convolve8_vert;
+        sf->high_predict[0][0][1] = vp9_high_convolve8_avg_vert;
+        sf->high_predict[0][1][0] = vp9_high_convolve8_vert;
+        sf->high_predict[0][1][1] = vp9_high_convolve8_avg_vert;
+        sf->high_predict[1][0][0] = vp9_high_convolve8;
+        sf->high_predict[1][0][1] = vp9_high_convolve8_avg;
+      }
+    } else {
+      if (sf->y_step_q4 == 16) {
+        // No scaling in the y direction. Must always scale in the x direction.
+        sf->high_predict[0][0][0] = vp9_high_convolve8_horiz;
+        sf->high_predict[0][0][1] = vp9_high_convolve8_avg_horiz;
+        sf->high_predict[0][1][0] = vp9_high_convolve8;
+        sf->high_predict[0][1][1] = vp9_high_convolve8_avg;
+        sf->high_predict[1][0][0] = vp9_high_convolve8_horiz;
+        sf->high_predict[1][0][1] = vp9_high_convolve8_avg_horiz;
+      } else {
+        // Must always scale in both directions.
+        sf->high_predict[0][0][0] = vp9_high_convolve8;
+        sf->high_predict[0][0][1] = vp9_high_convolve8_avg;
+        sf->high_predict[0][1][0] = vp9_high_convolve8;
+        sf->high_predict[0][1][1] = vp9_high_convolve8_avg;
+        sf->high_predict[1][0][0] = vp9_high_convolve8;
+        sf->high_predict[1][0][1] = vp9_high_convolve8_avg;
+      }
+    }
+    // 2D subpel motion always gets filtered in both directions.
+    sf->high_predict[1][1][0] = vp9_high_convolve8;
+    sf->high_predict[1][1][1] = vp9_high_convolve8_avg;
+  }
+#endif
 }

@@ -99,7 +99,7 @@ static void loop_filter_rows_mt(const YV12_BUFFER_CONFIG *const frame_buffer,
 
   for (r = start; r < stop; r += num_lf_workers) {
     const int mi_row = r << MI_BLOCK_SIZE_LOG2;
-    MODE_INFO **const mi = cm->mi_grid_visible + mi_row * cm->mi_stride;
+    MODE_INFO *const mi = cm->mi + mi_row * cm->mi_stride;
 
     for (c = 0; c < sb_cols; ++c) {
       const int mi_col = c << MI_BLOCK_SIZE_LOG2;
@@ -121,10 +121,10 @@ static void loop_filter_rows_mt(const YV12_BUFFER_CONFIG *const frame_buffer,
 }
 
 // Row-based multi-threaded loopfilter hook
-static int loop_filter_row_worker(void *arg1, void *arg2) {
-  TileWorkerData *const tile_data = (TileWorkerData*)arg1;
+static int loop_filter_row_worker(TileWorkerData *const tile_data,
+                                  void *unused) {
   LFWorkerData *const lf_data = &tile_data->lfdata;
-  (void) arg2;
+  (void)unused;
   loop_filter_rows_mt(lf_data->frame_buffer, lf_data->cm, lf_data->planes,
                       lf_data->start, lf_data->stop, lf_data->y_only,
                       lf_data->lf_sync, lf_data->num_lf_workers);
@@ -145,14 +145,12 @@ void vp9_loop_filter_frame_mt(YV12_BUFFER_CONFIG *frame,
   const int num_workers = MIN(pbi->max_threads & ~1, tile_cols);
   int i;
 
-  // Allocate memory used in thread synchronization.
-  // This always needs to be done even if frame_filter_level is 0.
+  if (!frame_filter_level) return;
+
   if (!lf_sync->sync_range || cm->last_height != cm->height) {
     vp9_loop_filter_dealloc(lf_sync);
-    vp9_loop_filter_alloc(cm, lf_sync, sb_rows, cm->width);
+    vp9_loop_filter_alloc(lf_sync, cm, sb_rows, cm->width);
   }
-
-  if (!frame_filter_level) return;
 
   vp9_loop_filter_frame_init(cm, frame_filter_level);
 
@@ -216,7 +214,7 @@ static int get_sync_range(int width) {
 }
 
 // Allocate memory for lf row synchronization
-void vp9_loop_filter_alloc(VP9_COMMON *cm, VP9LfSync *lf_sync, int rows,
+void vp9_loop_filter_alloc(VP9LfSync *lf_sync, VP9_COMMON *cm, int rows,
                            int width) {
   lf_sync->rows = rows;
 #if CONFIG_MULTITHREAD
