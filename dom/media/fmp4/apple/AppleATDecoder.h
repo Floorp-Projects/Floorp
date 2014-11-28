@@ -11,6 +11,7 @@
 #include "PlatformDecoderModule.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ReentrantMonitor.h"
+#include "mozilla/Vector.h"
 #include "nsIThread.h"
 
 namespace mozilla {
@@ -34,15 +35,29 @@ public:
   // Callbacks also need access to the config.
   const mp4_demuxer::AudioDecoderConfig& mConfig;
 
+  // Use to extract magic cookie for HE-AAC detection.
+  mozilla::Vector<uint8_t> mMagicCookie;
+  // Will be set to true should an error occurred while attempting to retrieve
+  // the magic cookie property.
+  bool mFileStreamError;
+
 private:
   RefPtr<MediaTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
   AudioConverterRef mConverter;
   AudioStreamBasicDescription mOutputFormat;
   UInt32 mFormatID;
+  AudioFileStreamID mStream;
+  nsTArray<nsAutoPtr<mp4_demuxer::MP4Sample>> mQueuedSamples;
 
   void SubmitSample(nsAutoPtr<mp4_demuxer::MP4Sample> aSample);
-  nsresult GetInputAudioDescription(AudioStreamBasicDescription& aDesc);
+  nsresult DecodeSample(mp4_demuxer::MP4Sample* aSample);
+  nsresult GetInputAudioDescription(AudioStreamBasicDescription& aDesc,
+                                    const mozilla::Vector<uint8_t>& aExtraData);
+  // Setup AudioConverter once all information required has been gathered.
+  // Will return NS_ERROR_NOT_INITIALIZED if more data is required.
+  nsresult SetupDecoder(mp4_demuxer::MP4Sample* aSample);
+  nsresult GetImplicitAACMagicCookie(const mp4_demuxer::MP4Sample* aSample);
 };
 
 } // namespace mozilla
