@@ -88,6 +88,7 @@
 .equ CONFIG_SPATIAL_SVC ,  0
 .equ CONFIG_VP9_TEMPORAL_DENOISING ,  0
 .equ CONFIG_FP_MB_STATS ,  0
+.equ CONFIG_EMULATE_HARDWARE_HIGHBITDEPTH ,  0
 	.section	.note.GNU-stack,"",%progbits
 @ This file was created from a .asm file
 @  using the ads2gas.pl script.

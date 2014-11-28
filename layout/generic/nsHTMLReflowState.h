@@ -518,10 +518,10 @@ public:
     uint16_t mAssumingVScrollbar:1;  // parent frame is an nsIScrollableFrame and it
                                      // is assuming a vertical scrollbar
 
-    uint16_t mHResize:1;             // Is frame (a) not dirty and (b) a
+    uint16_t mIsHResize:1;           // Is frame (a) not dirty and (b) a
                                      // different width than before?
 
-    uint16_t mVResize:1;             // Is frame (a) not dirty and (b) a
+    uint16_t mIsVResize:1;           // Is frame (a) not dirty and (b) a
                                      // different height than before or
                                      // (potentially) in a context where
                                      // percent heights have a different
@@ -544,6 +544,42 @@ public:
                                         // (e.g. columns), it should always
                                         // reflow its placeholder children.
   } mFlags;
+
+  // Logical and physical accessors for the resize flags. All users should go
+  // via these accessors, so that in due course we can change the storage from
+  // physical to logical.
+  bool IsHResize() const {
+    return mFlags.mIsHResize;
+  }
+  bool IsVResize() const {
+    return mFlags.mIsVResize;
+  }
+  bool IsIResize() const {
+    return mWritingMode.IsVertical() ? mFlags.mIsVResize : mFlags.mIsHResize;
+  }
+  bool IsBResize() const {
+    return mWritingMode.IsVertical() ? mFlags.mIsHResize : mFlags.mIsVResize;
+  }
+  void SetHResize(bool aValue) {
+    mFlags.mIsHResize = aValue;
+  }
+  void SetVResize(bool aValue) {
+    mFlags.mIsVResize = aValue;
+  }
+  void SetIResize(bool aValue) {
+    if (mWritingMode.IsVertical()) {
+      mFlags.mIsVResize = aValue;
+    } else {
+      mFlags.mIsHResize = aValue;
+    }
+  }
+  void SetBResize(bool aValue) {
+    if (mWritingMode.IsVertical()) {
+      mFlags.mIsHResize = aValue;
+    } else {
+      mFlags.mIsVResize = aValue;
+    }
+  }
 
   // Note: The copy constructor is written by the compiler automatically. You
   // can use that and then override specific values if you want, or you can
@@ -688,8 +724,8 @@ public:
     // This would need to be combined with a slight change in which
     // frames NS_FRAME_CONTAINS_RELATIVE_HEIGHT is marked on.
     return (frame->GetStateBits() & NS_FRAME_IS_DIRTY) ||
-           mFlags.mHResize ||
-           (mFlags.mVResize && 
+           IsHResize() ||
+           (IsVResize() && 
             (frame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT));
   }
 

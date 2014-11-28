@@ -21,6 +21,7 @@ describe("loop.store.ActiveRoomStore", function () {
 
     fakeMozLoop = {
       setLoopPref: sandbox.stub(),
+      addConversationContext: sandbox.stub(),
       rooms: {
         get: sinon.stub(),
         join: sinon.stub(),
@@ -398,6 +399,7 @@ describe("loop.store.ActiveRoomStore", function () {
         apiKey: "9876543210",
         sessionToken: "12563478",
         sessionId: "15263748",
+        windowId: "42",
         expires: 20
       };
 
@@ -429,6 +431,21 @@ describe("loop.store.ActiveRoomStore", function () {
       sinon.assert.calledOnce(fakeSdkDriver.connectSession);
       sinon.assert.calledWithExactly(fakeSdkDriver.connectSession,
         actionData);
+    });
+
+    it("should call mozLoop.addConversationContext", function() {
+      var actionData = new sharedActions.JoinedRoom(fakeJoinedData);
+
+      store.setupWindowData(new sharedActions.SetupWindowData({
+        windowId: "42",
+        type: "room",
+      }));
+
+      store.joinedRoom(actionData);
+
+      sinon.assert.calledOnce(fakeMozLoop.addConversationContext);
+      sinon.assert.calledWithExactly(fakeMozLoop.addConversationContext,
+                                     "42", "15263748", "");
     });
 
     it("should call mozLoop.rooms.get to get the room data if the roomName" +

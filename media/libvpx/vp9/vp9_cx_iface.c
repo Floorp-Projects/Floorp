@@ -178,8 +178,6 @@ static vpx_codec_err_t validate_config(vpx_codec_alg_priv_t *ctx,
   }
 
 #if CONFIG_SPATIAL_SVC
-  if (cfg->ss_number_layers * cfg->ts_number_layers > REF_FRAMES)
-    ERROR("Too many layers. Maximum 8 layers could be set");
 
   if ((cfg->ss_number_layers > 1 || cfg->ts_number_layers > 1) &&
       cfg->g_pass == VPX_RC_LAST_PASS) {
@@ -188,8 +186,7 @@ static vpx_codec_err_t validate_config(vpx_codec_alg_priv_t *ctx,
       if (cfg->ss_enable_auto_alt_ref[i])
         ++alt_ref_sum;
     }
-    if (alt_ref_sum >
-        REF_FRAMES - cfg->ss_number_layers * cfg->ts_number_layers)
+    if (alt_ref_sum > REF_FRAMES - cfg->ss_number_layers)
       ERROR("Not enough ref buffers for svc alt ref frames");
     if ((cfg->ss_number_layers > 3 ||
          cfg->ss_number_layers * cfg->ts_number_layers > 4) &&
@@ -555,7 +552,7 @@ static vpx_codec_err_t ctrl_set_enable_auto_alt_ref(vpx_codec_alg_priv_t *ctx,
 static vpx_codec_err_t ctrl_set_noise_sensitivity(vpx_codec_alg_priv_t *ctx,
                                                   va_list args) {
   struct vp9_extracfg extra_cfg = ctx->extra_cfg;
-  extra_cfg.noise_sensitivity = CAST(VP8E_SET_NOISE_SENSITIVITY, args);
+  extra_cfg.noise_sensitivity = CAST(VP9E_SET_NOISE_SENSITIVITY, args);
   return update_extra_cfg(ctx, &extra_cfg);
 }
 
@@ -686,6 +683,10 @@ static vpx_codec_err_t encoder_init(vpx_codec_ctx_t *ctx,
 
     if (res == VPX_CODEC_OK) {
       set_encoder_config(&priv->oxcf, &priv->cfg, &priv->extra_cfg);
+#if CONFIG_VP9_HIGHBITDEPTH
+      priv->oxcf.use_highbitdepth =
+          (ctx->init_flags & VPX_CODEC_USE_HIGHBITDEPTH) ? 1 : 0;
+#endif
       priv->cpi = vp9_create_compressor(&priv->oxcf);
       if (priv->cpi == NULL)
         res = VPX_CODEC_MEM_ERROR;
@@ -981,15 +982,20 @@ static vpx_codec_err_t encoder_encode(vpx_codec_alg_priv_t  *ctx,
         cx_data_sz -= size;
 #if CONFIG_SPATIAL_SVC
         if (is_two_pass_svc(cpi)) {
-          vpx_codec_cx_pkt_t pkt;
+          vpx_codec_cx_pkt_t pkt_sizes, pkt_psnr;
           int i;
-          vp9_zero(pkt);
-          pkt.kind = VPX_CODEC_SPATIAL_SVC_LAYER_SIZES;
+          vp9_zero(pkt_sizes);
+          vp9_zero(pkt_psnr);
+          pkt_sizes.kind = VPX_CODEC_SPATIAL_SVC_LAYER_SIZES;
+          pkt_psnr.kind = VPX_CODEC_SPATIAL_SVC_LAYER_PSNR;
           for (i = 0; i < cpi->svc.number_spatial_layers; ++i) {
-            pkt.data.layer_sizes[i] = cpi->svc.layer_context[i].layer_size;
-            cpi->svc.layer_context[i].layer_size = 0;
+            LAYER_CONTEXT *lc = &cpi->svc.layer_context[i];
+            pkt_sizes.data.layer_sizes[i] = lc->layer_size;
+            pkt_psnr.data.layer_psnr[i] = lc->psnr_pkt;
+            lc->layer_size = 0;
           }
-          vpx_codec_pkt_list_add(&ctx->pkt_list.head, &pkt);
+          vpx_codec_pkt_list_add(&ctx->pkt_list.head, &pkt_sizes);
+          vpx_codec_pkt_list_add(&ctx->pkt_list.head, &pkt_psnr);
         }
 #endif
       }
@@ -1192,21 +1198,17 @@ static vpx_codec_err_t ctrl_set_svc_layer_id(vpx_codec_alg_priv_t *ctx,
 static vpx_codec_err_t ctrl_set_svc_parameters(vpx_codec_alg_priv_t *ctx,
                                                va_list args) {
   VP9_COMP *const cpi = ctx->cpi;
-  vpx_svc_parameters_t *const params = va_arg(args, vpx_svc_parameters_t *);
+  vpx_svc_extra_cfg_t *const params = va_arg(args, vpx_svc_extra_cfg_t *);
+  int i;
 
-  if (params == NULL || params->spatial_layer < 0 ||
-      params->spatial_layer >= cpi->svc.number_spatial_layers)
-    return VPX_CODEC_INVALID_PARAM;
+  for (i = 0; i < cpi->svc.number_spatial_layers; ++i) {
+    LAYER_CONTEXT *lc = &cpi->svc.layer_context[i];
 
-  if (params->spatial_layer == 0) {
-    int i;
-    for (i = 0; i < cpi->svc.number_spatial_layers; ++i) {
-      cpi->svc.layer_context[i].svc_params_received.spatial_layer = -1;
-    }
+    lc->max_q = params->max_quantizers[i];
+    lc->min_q = params->min_quantizers[i];
+    lc->scaling_factor_num = params->scaling_factor_num[i];
+    lc->scaling_factor_den = params->scaling_factor_den[i];
   }
-
-  cpi->svc.layer_context[params->spatial_layer].svc_params_received =
-      *params;
 
   return VPX_CODEC_OK;
 }
@@ -1231,7 +1233,6 @@ static vpx_codec_ctrl_fn_map_t encoder_ctrl_maps[] = {
   {VP8E_SET_ACTIVEMAP,                ctrl_set_active_map},
   {VP8E_SET_SCALEMODE,                ctrl_set_scale_mode},
   {VP8E_SET_CPUUSED,                  ctrl_set_cpuused},
-  {VP8E_SET_NOISE_SENSITIVITY,        ctrl_set_noise_sensitivity},
   {VP8E_SET_ENABLEAUTOALTREF,         ctrl_set_enable_auto_alt_ref},
   {VP8E_SET_SHARPNESS,                ctrl_set_sharpness},
   {VP8E_SET_STATIC_THRESHOLD,         ctrl_set_static_thresh},
@@ -1251,6 +1252,7 @@ static vpx_codec_ctrl_fn_map_t encoder_ctrl_maps[] = {
   {VP9E_SET_SVC_PARAMETERS,           ctrl_set_svc_parameters},
   {VP9E_SET_SVC_LAYER_ID,             ctrl_set_svc_layer_id},
   {VP9E_SET_TUNE_CONTENT,             ctrl_set_tune_content},
+  {VP9E_SET_NOISE_SENSITIVITY,        ctrl_set_noise_sensitivity},
 
   // Getters
   {VP8E_GET_LAST_QUANTIZER,           ctrl_get_quantizer},
@@ -1333,6 +1335,9 @@ static vpx_codec_enc_cfg_map_t encoder_usage_cfg_map[] = {
 CODEC_INTERFACE(vpx_codec_vp9_cx) = {
   "WebM Project VP9 Encoder" VERSION_STRING,
   VPX_CODEC_INTERNAL_ABI_VERSION,
+#if CONFIG_VP9_HIGHBITDEPTH
+  VPX_CODEC_CAP_HIGHBITDEPTH |
+#endif
   VPX_CODEC_CAP_ENCODER | VPX_CODEC_CAP_PSNR,  // vpx_codec_caps_t
   encoder_init,       // vpx_codec_init_fn_t
   encoder_destroy,    // vpx_codec_destroy_fn_t
