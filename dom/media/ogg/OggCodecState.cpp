@@ -49,10 +49,8 @@ OggCodecState::Create(ogg_page* aPage)
     codecState = new TheoraState(aPage);
   } else if (aPage->body_len > 6 && memcmp(aPage->body+1, "vorbis", 6) == 0) {
     codecState = new VorbisState(aPage);
-#ifdef MOZ_OPUS
   } else if (aPage->body_len > 8 && memcmp(aPage->body, "OpusHead", 8) == 0) {
     codecState = new OpusState(aPage);
-#endif
   } else if (aPage->body_len > 8 && memcmp(aPage->body, "fishead\0", 8) == 0) {
     codecState = new SkeletonState(aPage);
   } else {
@@ -795,7 +793,6 @@ nsresult VorbisState::ReconstructVorbisGranulepos()
   return NS_OK;
 }
 
-#ifdef MOZ_OPUS
 OpusState::OpusState(ogg_page* aBosPage) :
   OggCodecState(aBosPage, true),
   mParser(nullptr),
@@ -1078,7 +1075,6 @@ bool OpusState::ReconstructOpusGranulepos(void)
   mPrevPageGranulepos = last->granulepos;
   return true;
 }
-#endif /* MOZ_OPUS */
 
 SkeletonState::SkeletonState(ogg_page* aBosPage) :
   OggCodecState(aBosPage, true),

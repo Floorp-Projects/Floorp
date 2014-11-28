@@ -13,14 +13,12 @@
 #else
 #include <vorbis/codec.h>
 #endif
-#ifdef MOZ_OPUS
 #include <opus/opus.h>
 #include "opus/opus_multistream.h"
 // For MOZ_SAMPLE_TYPE_*
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaDecoderReader.h"
-#endif
 #include <nsAutoRef.h>
 #include <nsDeque.h>
 #include <nsTArray.h>
@@ -323,7 +321,6 @@ private:
 };
 
 class OpusState : public OggCodecState {
-#ifdef MOZ_OPUS
 public:
   explicit OpusState(ogg_page* aBosPage);
   virtual ~OpusState();
@@ -375,7 +372,6 @@ private:
   // where we may need to trim some samples from the end.
   int64_t mPrevPageGranulepos;
 
-#endif /* MOZ_OPUS */
 };
 
 // Constructs a 32bit version number out of two 16 bit major,minor
