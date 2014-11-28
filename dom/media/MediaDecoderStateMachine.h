@@ -826,10 +826,6 @@ protected:
   // in microseconds. Accessed from the state machine thread.
   int64_t mVideoFrameEndTime;
 
-  // The end time of the last decoded video frame. Used to check if we are low
-  // on decoded video data.
-  int64_t mDecodedVideoEndTime;
-
   // Volume of playback. 0.0 = muted. 1.0 = full volume. Read/Written
   // from the state machine and main threads. Synchronised via decoder
   // monitor.

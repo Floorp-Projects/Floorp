@@ -109,13 +109,6 @@ const int64_t NO_VIDEO_AMPLE_AUDIO_DIVISOR = 8;
 // which is at or after the current playback position.
 static const uint32_t LOW_VIDEO_FRAMES = 1;
 
-// Threshold in usecs that used to check if we are low on decoded video.
-// If the last video frame's end time |mDecodedVideoEndTime| doesn't exceed
-// |clock time + LOW_VIDEO_THRESHOLD_USECS*mPlaybackRate| calculation in
-// Advanceframe(), we are low on decoded video frames and trying to skip to next
-// keyframe.
-static const int32_t LOW_VIDEO_THRESHOLD_USECS = 16000;
-
 // Arbitrary "frame duration" when playing only audio.
 static const int AUDIO_DURATION_USECS = 40000;
 
@@ -196,7 +189,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mAudioEndTime(-1),
   mDecodedAudioEndTime(-1),
   mVideoFrameEndTime(-1),
-  mDecodedVideoEndTime(-1),
   mVolume(1.0),
   mPlaybackRate(1.0),
   mPreservesPitch(true),
@@ -614,10 +606,11 @@ MediaDecoderStateMachine::DecodeVideo()
         ((!mIsAudioPrerolling && IsAudioDecoding() &&
           GetDecodedAudioDuration() < mLowAudioThresholdUsecs * mPlaybackRate) ||
           (!mIsVideoPrerolling && IsVideoDecoding() &&
-           // Don't skip when we still have enough decoded data beyond
-           // current playback position.
-           ((mDecodedVideoEndTime - GetClock()) <
-            (LOW_VIDEO_THRESHOLD_USECS * mPlaybackRate)))) &&
+           // don't skip frame when |clock time| <= |mVideoFrameEndTime| for
+           // we are still in the safe range without underrunning video frames
+           GetClock() > mVideoFrameEndTime &&
+          (static_cast<uint32_t>(VideoQueue().GetSize())
+            < LOW_VIDEO_FRAMES * mPlaybackRate))) &&
         !HasLowUndecodedData())
     {
       skipToNextKeyFrame = true;
@@ -926,7 +919,6 @@ MediaDecoderStateMachine::OnVideoDecoded(VideoData* aVideoSample)
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   nsRefPtr<VideoData> video(aVideoSample);
   mVideoRequestPending = false;
-  mDecodedVideoEndTime = video ? video->GetEndTime() : mDecodedVideoEndTime;
 
   SAMPLE_LOG("OnVideoDecoded [%lld,%lld] disc=%d",
              (video ? video->mTime : -1),
@@ -1499,7 +1491,6 @@ void MediaDecoderStateMachine::ResetPlayback()
   MOZ_ASSERT(!mAudioSink);
 
   mVideoFrameEndTime = -1;
-  mDecodedVideoEndTime = -1;
   mAudioStartTime = -1;
   mAudioEndTime = -1;
   mDecodedAudioEndTime = -1;
