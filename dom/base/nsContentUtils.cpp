@@ -41,6 +41,7 @@
 #include "mozilla/dom/HTMLShadowElement.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/TextDecoder.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/dom/ShadowRoot.h"
@@ -98,6 +99,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
+#include "nsIDOMChromeWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMEvent.h"
@@ -179,6 +181,11 @@
 #include "nsContentTypeParser.h"
 
 #include "nsIBidiKeyboard.h"
+
+#if defined(XP_WIN)
+// Undefine LoadImage to prevent naming conflict with Windows.
+#undef LoadImage
+#endif
 
 extern "C" int MOZ_XMLTranslateEntity(const char* ptr, const char* end,
                                       const char** next, char16_t* result);
@@ -7067,3 +7074,54 @@ nsContentUtils::GetHostOrIPv6WithBrackets(nsIURI* aURI, nsAString& aHost)
 
   CopyUTF8toUTF16(hostname, aHost);
 }
+
+void
+nsContentUtils::CallOnAllRemoteChildren(nsIMessageBroadcaster* aManager,
+                                        CallOnRemoteChildFunction aCallback,
+                                        void* aArg)
+{
+  uint32_t tabChildCount = 0;
+  aManager->GetChildCount(&tabChildCount);
+  for (uint32_t j = 0; j < tabChildCount; ++j) {
+    nsCOMPtr<nsIMessageListenerManager> childMM;
+    aManager->GetChildAt(j, getter_AddRefs(childMM));
+    if (!childMM) {
+      continue;
+    }
+
+    nsCOMPtr<nsIMessageBroadcaster> nonLeafMM = do_QueryInterface(childMM);
+    if (nonLeafMM) {
+      CallOnAllRemoteChildren(nonLeafMM, aCallback, aArg);
+      continue;
+    }
+
+    nsCOMPtr<nsIMessageSender> tabMM = do_QueryInterface(childMM);
+
+    mozilla::dom::ipc::MessageManagerCallback* cb =
+     static_cast<nsFrameMessageManager*>(tabMM.get())->GetCallback();
+    if (cb) {
+      nsFrameLoader* fl = static_cast<nsFrameLoader*>(cb);
+      PBrowserParent* remoteBrowser = fl->GetRemoteBrowser();
+      TabParent* remote = static_cast<TabParent*>(remoteBrowser);
+      if (remote && aCallback) {
+        aCallback(remote, aArg);
+      }
+    }
+  }
+}
+
+void
+nsContentUtils::CallOnAllRemoteChildren(nsIDOMWindow* aWindow,
+                                        CallOnRemoteChildFunction aCallback,
+                                        void* aArg)
+{
+  nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(aWindow));
+  if (chromeWindow) {
+    nsCOMPtr<nsIMessageBroadcaster> windowMM;
+    chromeWindow->GetMessageManager(getter_AddRefs(windowMM));
+    if (windowMM) {
+      CallOnAllRemoteChildren(windowMM, aCallback, aArg);
+    }
+  }
+}
+
