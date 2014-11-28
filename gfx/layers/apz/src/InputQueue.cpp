@@ -60,6 +60,7 @@ InputQueue::ReceiveInputEvent(const nsRefPtr<AsyncPanZoomController>& aTarget,
         // If we're already in a fast fling, then we want the touch event to stop the fling
         // and to disallow the touch event from being used as part of a fling.
         block->SetDuringFastMotion();
+        INPQ_LOG("block %p tagged as fast-motion\n", block);
       }
       block->GetOverscrollHandoffChain()->CancelAnimations();
     }
