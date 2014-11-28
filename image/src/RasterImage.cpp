@@ -578,17 +578,26 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
 
   DrawableFrameRef ref = LookupFrameInternal(aFrameNum, aSize, aFlags);
 
-  if (!ref) {
-    // The OS threw this frame away. We need to discard and redecode.
-    MOZ_ASSERT(!mAnim, "Animated frames should be locked");
-    if (CanDiscard()) {
-      Discard(/* aNotify = */ false);
-      ApplyDecodeFlags(aFlags);
-      WantDecodedFrames(aFlags, aShouldSyncNotify);
+  if (!ref && IsOpaque()) {
+    // We can use non-premultiplied alpha frames when premultipled alpha is
+    // requested, or vice versa, if this image is opaque. Try again with the bit
+    // toggled.
+    ref = LookupFrameInternal(aFrameNum, aSize,
+                              aFlags ^ FLAG_DECODE_NO_PREMULTIPLY_ALPHA);
+  }
 
-      // See if we managed to redecode enough to get the frame we want.
-      ref = LookupFrameInternal(aFrameNum, aSize, aFlags);
-    }
+  if (!ref) {
+    // The OS threw this frame away. We need to redecode if we can.
+    MOZ_ASSERT(!mAnim, "Animated frames should be locked");
+
+    // Update our state so the decoder knows what to do.
+    mFrameDecodeFlags = aFlags & DECODE_FLAGS_MASK;
+    mDecoded = false;
+    mHasFirstFrame = false;
+    WantDecodedFrames(aFlags, aShouldSyncNotify);
+
+    // See if we managed to redecode enough to get the frame we want.
+    ref = LookupFrameInternal(aFrameNum, aSize, aFlags);
 
     if (!ref) {
       // We didn't successfully redecode, so just fail.
@@ -755,9 +764,6 @@ RasterImage::CopyFrame(uint32_t aWhichFrame,
   if (mError)
     return nullptr;
 
-  if (!ApplyDecodeFlags(aFlags))
-    return nullptr;
-
   // Get the frame. If it's not there, it's probably the caller's fault for
   // not waiting for the data to be loaded from the network or not passing
   // FLAG_SYNC_DECODE
@@ -830,9 +836,6 @@ RasterImage::GetFrameInternal(uint32_t aWhichFrame,
     return nullptr;
 
   if (mError)
-    return nullptr;
-
-  if (!ApplyDecodeFlags(aFlags))
     return nullptr;
 
   // Get the frame. If it's not there, it's probably the caller's fault for
@@ -1083,40 +1086,6 @@ RasterImage::InternalAddFrame(uint32_t aFrameNum,
   mFrameBlender->InsertFrame(aFrameNum, frame->RawAccessRef());
 
   return ref;
-}
-
-bool
-RasterImage::ApplyDecodeFlags(uint32_t aNewFlags)
-{
-  if (mFrameDecodeFlags == (aNewFlags & DECODE_FLAGS_MASK))
-    return true; // Not asking very much of us here.
-
-  if (mDecoded) {
-    // If the requested frame is opaque and the current and new decode flags
-    // only differ in the premultiply alpha bit then we can use the existing
-    // frame, we don't need to discard and re-decode.
-    uint32_t currentNonAlphaFlags =
-      (mFrameDecodeFlags & DECODE_FLAGS_MASK) & ~FLAG_DECODE_NO_PREMULTIPLY_ALPHA;
-    uint32_t newNonAlphaFlags =
-      (aNewFlags & DECODE_FLAGS_MASK) & ~FLAG_DECODE_NO_PREMULTIPLY_ALPHA;
-    if (currentNonAlphaFlags == newNonAlphaFlags && IsOpaque()) {
-      return true;
-    }
-
-    // if we can't discard, then we're screwed; we have no way
-    // to re-decode.  Similarly if we aren't allowed to do a sync
-    // decode.
-    if (!(aNewFlags & FLAG_SYNC_DECODE)) {
-      return false;
-    }
-    if (!CanDiscard()) {
-      return false;
-    }
-    Discard();
-  }
-
-  mFrameDecodeFlags = aNewFlags & DECODE_FLAGS_MASK;
-  return true;
 }
 
 nsresult
@@ -1713,7 +1682,7 @@ RasterImage::GetKeys(uint32_t *count, char ***keys)
 }
 
 void
-RasterImage::Discard(bool aNotify)
+RasterImage::Discard()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1741,7 +1710,7 @@ RasterImage::Discard(bool aNotify)
   mHasFirstFrame = false;
 
   // Notify that we discarded
-  if (aNotify && mProgressTracker) {
+  if (mProgressTracker) {
     mProgressTracker->OnDiscard();
   }
 
@@ -2162,14 +2131,9 @@ RasterImage::SyncDecode()
     nsresult rv = FinishedSomeDecoding(ShutdownReason::NOT_NEEDED);
     CONTAINER_ENSURE_SUCCESS(rv);
 
-    if (mDecoded) {
-      // If we've finished decoding we need to discard so we can re-decode
-      // with the new flags. If we can't discard then there isn't
-      // anything we can do.
-      if (!CanDiscard()) {
-        return NS_ERROR_NOT_AVAILABLE;
-      }
-      Discard();
+    if (mDecoded && mAnim) {
+      // We can't redecode animated images, so we'll have to give up.
+      return NS_ERROR_NOT_AVAILABLE;
     }
   }
 
@@ -2380,23 +2344,6 @@ RasterImage::Draw(gfxContext* aContext,
 
   NS_ENSURE_ARG_POINTER(aContext);
 
-  // We can only draw without discarding and redecoding in these cases:
-  //  * We have the default decode flags.
-  //  * We have exactly FLAG_DECODE_NO_PREMULTIPLY_ALPHA and the current frame
-  //    is opaque.
-  bool haveDefaultFlags = (mFrameDecodeFlags == DECODE_FLAGS_DEFAULT);
-  bool haveSafeAlphaFlags =
-    (mFrameDecodeFlags == FLAG_DECODE_NO_PREMULTIPLY_ALPHA) && IsOpaque();
-
-  if (!(haveDefaultFlags || haveSafeAlphaFlags)) {
-    if (!CanDiscard()) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-    Discard();
-
-    mFrameDecodeFlags = DECODE_FLAGS_DEFAULT;
-  }
-
   if (IsUnlocked() && mProgressTracker) {
     mProgressTracker->OnUnlockedDraw();
   }
@@ -2486,14 +2433,12 @@ RasterImage::UnlockImage()
   // and our lock count is now zero (so nothing is forcing us to keep the
   // decoded data around), try to cancel the decode and throw away whatever
   // we've decoded.
-  if (mHasBeenDecoded && mDecoder &&
-      mLockCount == 0 && CanDiscard()) {
+  if (mHasBeenDecoded && mDecoder && mLockCount == 0 && !mAnim) {
     PR_LOG(GetCompressedImageAccountingLog(), PR_LOG_DEBUG,
            ("RasterImage[0x%p] canceling decode because image "
             "is now unlocked.", this));
     ReentrantMonitorAutoEnter lock(mDecodingMonitor);
     FinishedSomeDecoding(ShutdownReason::NOT_NEEDED);
-    Discard();
     return NS_OK;
   }
 
@@ -2508,7 +2453,7 @@ RasterImage::RequestDiscard()
   if (mDiscardable &&      // Enabled at creation time...
       mLockCount == 0 &&   // ...not temporarily disabled...
       mDecoded &&          // ...and have something to discard.
-      CanDiscard()) {          
+      CanDiscard()) {
     Discard();
   }
 
