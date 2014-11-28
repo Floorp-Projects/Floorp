@@ -8376,13 +8376,11 @@ nsDocument::GetRequiredRadioCount(const nsAString& aName) const
 }
 
 void
-nsDocument::RadioRequiredChanged(const nsAString& aName, nsIFormControl* aRadio)
+nsDocument::RadioRequiredWillChange(const nsAString& aName, bool aRequiredAdded)
 {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
 
-  nsCOMPtr<nsIContent> element = do_QueryInterface(aRadio);
-  NS_ASSERTION(element, "radio controls have to be content elements");
-  if (element->HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
+  if (aRequiredAdded) {
     radioGroup->mRequiredRadioCount++;
   } else {
     NS_ASSERTION(radioGroup->mRequiredRadioCount != 0,

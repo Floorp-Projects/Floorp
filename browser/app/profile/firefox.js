@@ -429,6 +429,9 @@ pref("browser.search.showOneOffButtons", true);
 pref("browser.search.official", true);
 #endif
 
+// How many times to show the new search highlight
+pref("browser.search.highlightCount", 5);
+
 pref("browser.sessionhistory.max_entries", 50);
 
 // handle links targeting new windows
