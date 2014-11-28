@@ -20,7 +20,7 @@ import sys
 import tempfile
 
 # The DMD output version this script handles.
-outputVersion = 2
+outputVersion = 3
 
 # If --ignore-alloc-fns is specified, stack frames containing functions that
 # match these strings will be removed from the *start* of stack traces. (Once
@@ -615,7 +615,10 @@ def printDigest(args, digest):
 
     def printInvocation(n, dmdEnvVar, sampleBelowSize):
         out('Invocation{:} {{'.format(n))
-        out('  $DMD = \'' + dmdEnvVar + '\'')
+        if dmdEnvVar == None:
+            out('  $DMD is undefined')
+        else:
+            out('  $DMD = \'' + dmdEnvVar + '\'')
         out('  Sample-below size = ' + str(sampleBelowSize))
         out('}\n')
 

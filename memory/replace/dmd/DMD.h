@@ -148,13 +148,16 @@ ClearReports()
 //   //
 //   // Version history:
 //   // - 1: The original format. Implemented in bug 1044709.
-//   // - 2: Added the "mode" field under "invocation". Added in bug 1094552.
-//   "version": 2,
+//   // - 2: Added the "mode" property under "invocation". Added in bug 1094552.
+//   // - 3: The "dmdEnvVar" property under "invocation" can now be |null| if
+//   //      the |DMD| environment variable is not defined. Done in bug 1100851.
+//   "version": 3,
 //
 //   // Information about how DMD was invoked. A mandatory object.
 //   "invocation": {
-//     // The contents of the $DMD environment variable. A mandatory string.
-//     "dmdEnvVar": "1",
+//     // The contents of the $DMD environment variable. A string, or |null| is
+//     // $DMD is undefined.
+//     "dmdEnvVar": "--mode=dark-matter",
 //
 //     // The profiling mode. A mandatory string taking one of the following
 //     // values: "live", "dark-matter", "cumulative".
