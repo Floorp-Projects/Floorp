@@ -1234,6 +1234,12 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
   if (sWindowsById) {
     sWindowsById->Put(mWindowID, this);
   }
+
+  // Ensure that the current active state is initialized for child process windows.
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (fm) {
+    mIsActive = fm->IsParentActivated();
+  }
 }
 
 /* static */
@@ -9821,17 +9827,21 @@ nsGlobalWindow::ActivateOrDeactivate(bool aActivate)
 {
   MOZ_ASSERT(IsOuterWindow());
 
+  if (!mDoc) {
+    return;
+  }
+
   // Set / unset mIsActive on the top level window, which is used for the
   // :-moz-window-inactive pseudoclass, and its sheet (if any).
   nsCOMPtr<nsIWidget> mainWidget = GetMainWidget();
-  if (!mainWidget)
-    return;
-
-  // Get the top level widget (if the main widget is a sheet, this will
-  // be the sheet's top (non-sheet) parent).
-  nsCOMPtr<nsIWidget> topLevelWidget = mainWidget->GetSheetWindowParent();
-  if (!topLevelWidget) {
-    topLevelWidget = mainWidget;
+  nsCOMPtr<nsIWidget> topLevelWidget;
+  if (mainWidget) {
+    // Get the top level widget (if the main widget is a sheet, this will
+    // be the sheet's top (non-sheet) parent).
+    topLevelWidget = mainWidget->GetSheetWindowParent();
+    if (!topLevelWidget) {
+      topLevelWidget = mainWidget;
+    }
   }
 
   nsCOMPtr<nsPIDOMWindow> piMainWindow(

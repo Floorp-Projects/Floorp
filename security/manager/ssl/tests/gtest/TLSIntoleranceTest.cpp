@@ -33,7 +33,11 @@ TEST_F(TLSIntoleranceTest, Test_Full_Fallback_Process)
     ASSERT_EQ(SSL_LIBRARY_VERSION_TLS_1_2, range.max);
     ASSERT_EQ(StrongCipherStatusUnknown, strongCipherStatus);
 
-    ASSERT_TRUE(helpers.rememberStrongCiphersFailed(HOST, PORT, 0));
+    ASSERT_TRUE(
+      helpers.rememberStrongCiphersFailed(
+        HOST, PORT, SSL_ERROR_NO_CYPHER_OVERLAP));
+    ASSERT_EQ(SSL_ERROR_NO_CYPHER_OVERLAP,
+              helpers.getIntoleranceReason(HOST, PORT));
   }
 
   {

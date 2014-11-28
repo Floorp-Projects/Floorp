@@ -47,6 +47,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/unused.h"
 #include <algorithm>
 
 #ifdef MOZ_XUL
@@ -172,6 +173,7 @@ static const char* kObservedPrefs[] = {
 };
 
 nsFocusManager::nsFocusManager()
+  : mParentFocusType(ParentFocusType_Ignore)
 { }
 
 nsFocusManager::~nsFocusManager()
@@ -706,15 +708,12 @@ nsFocusManager::WindowRaised(nsIDOMWindow* aWindow)
     }
   }
 
-  // inform the DOM window that it has activated, so that the active attribute
-  // is updated on the window
-  window->ActivateOrDeactivate(true);
-
-  // send activate event
-  nsContentUtils::DispatchTrustedEvent(window->GetExtantDoc(),
-                                       window,
-                                       NS_LITERAL_STRING("activate"),
-                                       true, true, nullptr);
+  // If this is a parent or single process window, send the activate event.
+  // Events for child process windows will be sent when ParentActivated
+  // is called.
+  if (mParentFocusType == ParentFocusType_Ignore) {
+    ActivateOrDeactivate(window, true);
+  }
 
   // retrieve the last focused element within the window that was raised
   nsCOMPtr<nsPIDOMWindow> currentWindow;
@@ -771,15 +770,12 @@ nsFocusManager::WindowLowered(nsIDOMWindow* aWindow)
   // clear the mouse capture as the active window has changed
   nsIPresShell::SetCapturingContent(nullptr, 0);
 
-  // inform the DOM window that it has deactivated, so that the active
-  // attribute is updated on the window
-  window->ActivateOrDeactivate(false);
-
-  // send deactivate event
-  nsContentUtils::DispatchTrustedEvent(window->GetExtantDoc(),
-                                       window,
-                                       NS_LITERAL_STRING("deactivate"),
-                                       true, true, nullptr);
+  // If this is a parent or single process window, send the deactivate event.
+  // Events for child process windows will be sent when ParentActivated
+  // is called.
+  if (mParentFocusType == ParentFocusType_Ignore) {
+    ActivateOrDeactivate(window, false);
+  }
 
   // keep track of the window being lowered, so that attempts to raise the
   // window can be prevented until we return. Otherwise, focus can get into
@@ -904,6 +900,10 @@ nsFocusManager::WindowShown(nsIDOMWindow* aWindow, bool aNeedsFocus)
     // visible, which would mean that the widget may not be properly focused.
     // When the window becomes visible, make sure the right widget is focused.
     EnsureCurrentWidgetFocused();
+  }
+
+  if (mParentFocusType == ParentFocusType_Active) {
+    ActivateOrDeactivate(window, true);
   }
 
   return NS_OK;
@@ -1065,6 +1065,19 @@ nsFocusManager::FocusPlugin(nsIContent* aContent)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFocusManager::ParentActivated(nsIDOMWindow* aWindow, bool aActive)
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
+  NS_ENSURE_TRUE(window, NS_ERROR_INVALID_ARG);
+
+  window = window->GetOuterWindow();
+
+  mParentFocusType = aActive ? ParentFocusType_Active : ParentFocusType_Inactive;
+  ActivateOrDeactivate(window, aActive);
+  return NS_OK;
+}
+
 /* static */
 void
 nsFocusManager::NotifyFocusStateChange(nsIContent* aContent,
@@ -1107,6 +1120,36 @@ nsFocusManager::EnsureCurrentWidgetFocused()
       }
     }
   }
+}
+
+void
+ActivateOrDeactivateChild(TabParent* aParent, void* aArg)
+{
+  bool active = static_cast<bool>(aArg);
+  unused << aParent->SendParentActivated(active);
+}
+
+void
+nsFocusManager::ActivateOrDeactivate(nsPIDOMWindow* aWindow, bool aActive)
+{
+  if (!aWindow) {
+    return;
+  }
+
+  // Inform the DOM window that it has activated or deactivated, so that
+  // the active attribute is updated on the window.
+  aWindow->ActivateOrDeactivate(aActive);
+
+  // Send the activate event.
+  nsContentUtils::DispatchTrustedEvent(aWindow->GetExtantDoc(),
+                                       aWindow,
+                                       aActive ? NS_LITERAL_STRING("activate") :
+                                                 NS_LITERAL_STRING("deactivate"),
+                                       true, true, nullptr);
+
+  // Look for any remote child frames, iterate over them and send the activation notification.
+  nsContentUtils::CallOnAllRemoteChildren(aWindow, ActivateOrDeactivateChild,
+                                          (void *)aActive);
 }
 
 void

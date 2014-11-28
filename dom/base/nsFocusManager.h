@@ -22,8 +22,15 @@
 class nsIContent;
 class nsIDocShellTreeItem;
 class nsPIDOMWindow;
+class nsIMessageBroadcaster;
 
 struct nsDelayedBlurOrFocusEvent;
+
+enum ParentFocusType {
+  ParentFocusType_Ignore, // Parent or single process window or unknown
+  ParentFocusType_Active, // Child process window in active parent
+  ParentFocusType_Inactive, // Child process window in inactive parent
+};
 
 /**
  * The focus manager keeps track of where the focus is, that is, the node
@@ -90,6 +97,15 @@ public:
    */
   void UpdateCaretForCaretBrowsingMode();
 
+  bool IsParentActivated()
+  {
+    if (mParentFocusType == ParentFocusType_Ignore) {
+      return mActiveWindow != nullptr;
+    }
+
+    return mParentFocusType == ParentFocusType_Active;
+  }
+
   /**
    * Returns the content node that would be focused if aWindow was in an
    * active window. This will traverse down the frame hierarchy, starting at
@@ -133,6 +149,17 @@ protected:
    * focused at the widget level.
    */
   void EnsureCurrentWidgetFocused();
+
+  /**
+   * Iterate over the children of the message broadcaster and notify them
+   * of the activation change.
+   */
+  void ActivateOrDeactivateChildren(nsIMessageBroadcaster* aManager, bool aActive);
+
+  /**
+   * Activate or deactivate the window and send the activate/deactivate events.
+   */
+  void ActivateOrDeactivate(nsPIDOMWindow* aWindow, bool aActive);
 
   /**
    * Blur whatever is currently focused and focus aNewContent. aFlags is a
@@ -525,6 +552,9 @@ private:
   // and the caller can access the document node, the caller should succeed in
   // moving focus.
   nsCOMPtr<nsIDocument> mMouseButtonEventHandlingDocument;
+
+  // Indicates a child process that is in an active window.
+  ParentFocusType mParentFocusType;
 
   static bool sTestMode;
 
