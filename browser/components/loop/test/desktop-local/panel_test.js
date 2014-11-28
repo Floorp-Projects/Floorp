@@ -54,7 +54,8 @@ describe("loop.panel", function() {
           callback(null, []);
         },
         on: sandbox.stub()
-      }
+      },
+      confirm: sandbox.stub()
     };
 
     document.mozL10n.initialize(navigator.mozLoop);
@@ -714,6 +715,42 @@ describe("loop.panel", function() {
       return TestUtils.renderIntoDocument(loop.panel.RoomEntry(props));
     }
 
+    describe("Edit room name", function() {
+      var roomEntry, domNode;
+
+      beforeEach(function() {
+        roomEntry = mountRoomEntry({
+          dispatcher: dispatcher,
+          deleteRoom: sandbox.stub(),
+          room: new loop.store.Room(roomData)
+        });
+        domNode = roomEntry.getDOMNode();
+
+        TestUtils.Simulate.click(domNode.querySelector(".edit-in-place"));
+      });
+
+      it("should render an edit form on room name click", function() {
+        expect(domNode.querySelector("form")).not.eql(null);
+        expect(domNode.querySelector("input").value).eql(roomData.roomName);
+      });
+
+      it("should dispatch a RenameRoom action when submitting the form",
+        function() {
+          var dispatch = sandbox.stub(dispatcher, "dispatch");
+
+          TestUtils.Simulate.change(domNode.querySelector("input"), {
+            target: {value: "New name"}
+          });
+          TestUtils.Simulate.submit(domNode.querySelector("form"));
+
+          sinon.assert.calledOnce(dispatch);
+          sinon.assert.calledWithExactly(dispatch, new sharedActions.RenameRoom({
+            roomToken: roomData.roomToken,
+            newRoomName: "New name"
+          }));
+        });
+    });
+
     describe("Copy button", function() {
       var roomEntry, copyButton;
 
@@ -779,14 +816,26 @@ describe("loop.panel", function() {
         expect(deleteButton).to.not.equal(null);
       });
 
-      it("should call the delete function when clicked", function() {
+      it("should dispatch a delete action when confirmation is granted", function() {
         sandbox.stub(dispatcher, "dispatch");
 
+        navigator.mozLoop.confirm.callsArgWith(1, null, true);
         TestUtils.Simulate.click(deleteButton);
 
+        sinon.assert.calledOnce(navigator.mozLoop.confirm);
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           new sharedActions.DeleteRoom({roomToken: roomData.roomToken}));
+      });
+
+      it("should not dispatch an action when the confirmation is cancelled", function() {
+        sandbox.stub(dispatcher, "dispatch");
+
+        navigator.mozLoop.confirm.callsArgWith(1, null, false);
+        TestUtils.Simulate.click(deleteButton);
+
+        sinon.assert.calledOnce(navigator.mozLoop.confirm);
+        sinon.assert.notCalled(dispatcher.dispatch);
       });
     });
 

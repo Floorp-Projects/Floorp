@@ -3310,7 +3310,11 @@
 
             let timeoutPromise = new Promise((aResolve, aReject) => {
               timeoutId = setTimeout(() => {
-                this._showBusySpinnerRemoteBrowser(toBrowser);
+                if (toBrowser.isRemoteBrowser) {
+                  // The browser's remoteness could have changed since we
+                  // setTimeout so only show the spinner if it's still remote.
+                  this._showBusySpinnerRemoteBrowser(toBrowser);
+                }
                 attemptTabSwitch(aResolve, aReject);
               }, kTabSwitchTimeout);
             });

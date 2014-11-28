@@ -690,6 +690,9 @@ WebConsoleFrame.prototype = {
     let categories = this.document
                      .querySelectorAll(".webconsole-filter-button[category]");
     Array.forEach(categories, function(aButton) {
+      aButton.addEventListener("contextmenu", (aEvent) => {
+        aButton.open = true;
+      }, false);
       aButton.addEventListener("click", this._toggleFilter, false);
 
       let someChecked = false;
@@ -811,7 +814,9 @@ WebConsoleFrame.prototype = {
   {
     let target = aEvent.target;
     let tagName = target.tagName;
-    if (tagName != aEvent.currentTarget.tagName) {
+    // Prevent toggle if generated from a contextmenu event (right click)
+    let isRightClick = (aEvent.button === 2); // right click is button 2;
+    if (tagName != aEvent.currentTarget.tagName || isRightClick) {
       return;
     }
 
@@ -5395,4 +5400,3 @@ ConsoleContextMenu.prototype = {
     this.lastClickedMessage = null;
   },
 };
-
