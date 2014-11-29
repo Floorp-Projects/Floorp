@@ -9,7 +9,6 @@ task:
     - 'docker-worker:cache:sources-gecko'
     - 'docker-worker:cache:build-mulet-linux-objects'
     - 'docker-worker:cache:tooltool-cache'
-    - 'docker-worker:image:{{#docker_image}}builder{{/docker_image}}'
 
   payload:
     cache:
