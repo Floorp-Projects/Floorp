@@ -770,4 +770,46 @@ public class FxAccountClient10 {
     };
     post(resource, new JSONObject(), delegate);
   }
+
+  /**
+   * Request a fresh unlock code be sent to the account email.
+   * <p>
+   * Since the account can be locked before the device can connect to it, the
+   * only reasonable identifier is the account email. Since the account is
+   * locked out, this request is un-authenticated.
+   *
+   * @param emailUTF8
+   *          identifying account.
+   * @param delegate
+   *          to invoke callbacks.
+   */
+  @SuppressWarnings("unchecked")
+  public void resendUnlockCode(final byte[] emailUTF8, final RequestDelegate<Void> delegate) {
+    final BaseResource resource;
+    final JSONObject body = new JSONObject();
+    try {
+      resource = new BaseResource(new URI(serverURI + "account/unlock/resend_code"));
+      body.put("email", new String(emailUTF8, "UTF-8"));
+    } catch (URISyntaxException e) {
+      invokeHandleError(delegate, e);
+      return;
+    } catch (UnsupportedEncodingException e) {
+      invokeHandleError(delegate, e);
+      return;
+    }
+
+    resource.delegate = new ResourceDelegate<Void>(resource, delegate) {
+      @Override
+      public void handleSuccess(int status, HttpResponse response, ExtendedJSONObject body) {
+        try {
+          delegate.handleSuccess(null);
+          return;
+        } catch (Exception e) {
+          delegate.handleError(e);
+          return;
+        }
+      }
+    };
+    post(resource, body, delegate);
+  }
 }

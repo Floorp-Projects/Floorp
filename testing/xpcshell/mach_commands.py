@@ -65,6 +65,7 @@ class XPCShellRunner(MozbuildObject):
     def run_test(self, test_paths, interactive=False,
                  keep_going=False, sequential=False, shuffle=False,
                  debugger=None, debuggerArgs=None, debuggerInteractive=None,
+                 jsDebugger=False, jsDebuggerPort=None,
                  rerun_failures=False, test_objects=None, verbose=False,
                  log=None,
                  # ignore parameters from other platforms' options
@@ -83,6 +84,7 @@ class XPCShellRunner(MozbuildObject):
                            keep_going=keep_going, shuffle=shuffle, sequential=sequential,
                            debugger=debugger, debuggerArgs=debuggerArgs,
                            debuggerInteractive=debuggerInteractive,
+                           jsDebugger=jsDebugger, jsDebuggerPort=jsDebuggerPort,
                            rerun_failures=rerun_failures,
                            verbose=verbose, log=log)
             return
@@ -113,6 +115,8 @@ class XPCShellRunner(MozbuildObject):
             'debugger': debugger,
             'debuggerArgs': debuggerArgs,
             'debuggerInteractive': debuggerInteractive,
+            'jsDebugger': jsDebugger,
+            'jsDebuggerPort': jsDebuggerPort,
             'rerun_failures': rerun_failures,
             'manifest': manifest,
             'verbose': verbose,
@@ -125,6 +129,7 @@ class XPCShellRunner(MozbuildObject):
                               test_path=None, shuffle=False, interactive=False,
                               keep_going=False, sequential=False,
                               debugger=None, debuggerArgs=None, debuggerInteractive=None,
+                              jsDebugger=False, jsDebuggerPort=None,
                               rerun_failures=False, verbose=False, log=None):
 
         # Obtain a reference to the xpcshell test runner.
@@ -161,6 +166,8 @@ class XPCShellRunner(MozbuildObject):
             'debugger': debugger,
             'debuggerArgs': debuggerArgs,
             'debuggerInteractive': debuggerInteractive,
+            'jsDebugger': jsDebugger,
+            'jsDebuggerPort': jsDebuggerPort,
         }
 
         if test_path is not None:
@@ -417,6 +424,13 @@ class MachCommands(MachCommandBase):
                      dest = "debuggerInteractive",
                      help = "prevents the test harness from redirecting "
                             "stdout and stderr for interactive debuggers")
+    @CommandArgument("--jsdebugger", dest="jsDebugger", action="store_true",
+                     help="Waits for a devtools JS debugger to connect before "
+                          "starting the test.")
+    @CommandArgument("--jsdebugger-port", dest="jsDebuggerPort",
+                     type=int, default=6000,
+                     help="The port to listen on for a debugger connection if "
+                          "--jsdebugger is specified (default=6000).")
     @CommandArgument('--interactive', '-i', action='store_true',
         help='Open an xpcshell prompt before running tests.')
     @CommandArgument('--keep-going', '-k', action='store_true',
