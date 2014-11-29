@@ -17,6 +17,7 @@ task:
     # Nearly all of our build tasks use tc-vcs so just include the scope across
     # the board.
     - 'docker-worker:cache:tc-vcs'
+    - 'docker-worker:image:{{#docker_image}}builder{{/docker_image}}'
 
   payload:
     image: '{{#docker_image}}builder{{/docker_image}}'
