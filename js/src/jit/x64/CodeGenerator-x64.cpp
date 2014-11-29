@@ -87,11 +87,10 @@ CodeGeneratorX64::visitBox(LBox *box)
 bool
 CodeGeneratorX64::visitUnbox(LUnbox *unbox)
 {
-    const ValueOperand value = ToValue(unbox, LUnbox::Input);
-    const LDefinition *result = unbox->output();
     MUnbox *mir = unbox->mir();
 
     if (mir->fallible()) {
+        const ValueOperand value = ToValue(unbox, LUnbox::Input);
         Assembler::Condition cond;
         switch (mir->type()) {
           case MIRType_Int32:
@@ -116,21 +115,23 @@ CodeGeneratorX64::visitUnbox(LUnbox *unbox)
             return false;
     }
 
+    Operand input = ToOperand(unbox->getOperand(LUnbox::Input));
+    Register result = ToRegister(unbox->output());
     switch (mir->type()) {
       case MIRType_Int32:
-        masm.unboxInt32(value, ToRegister(result));
+        masm.unboxInt32(input, result);
         break;
       case MIRType_Boolean:
-        masm.unboxBoolean(value, ToRegister(result));
+        masm.unboxBoolean(input, result);
         break;
       case MIRType_Object:
-        masm.unboxObject(value, ToRegister(result));
+        masm.unboxObject(input, result);
         break;
       case MIRType_String:
-        masm.unboxString(value, ToRegister(result));
+        masm.unboxString(input, result);
         break;
       case MIRType_Symbol:
-        masm.unboxSymbol(value, ToRegister(result));
+        masm.unboxSymbol(input, result);
         break;
       default:
         MOZ_CRASH("Given MIRType cannot be unboxed.");

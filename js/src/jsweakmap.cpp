@@ -527,7 +527,7 @@ WeakMap_construct(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     // ES6 23.3.1.1 steps 5-6, 11.
-    if (args.hasDefined(0)) {
+    if (!args.get(0).isNullOrUndefined()) {
         // Steps 7d-e.
         JS::ForOfIterator iter(cx);
         if (!iter.init(args[0]))
