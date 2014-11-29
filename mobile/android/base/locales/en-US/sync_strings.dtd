@@ -170,6 +170,9 @@
 <!ENTITY fxaccount_confirm_account_change_email 'Forget this email address?'>
 <!ENTITY fxaccount_confirm_account_verification_link_sent2 'Verification email sent'>
 <!ENTITY fxaccount_confirm_account_verification_link_not_sent2 'Couldn\&apos;t send verification email'>
+<!ENTITY fxaccount_resend_unlock_code_button_label 'Resend unlock email'>
+<!ENTITY fxaccount_unlock_code_sent 'Account unlock email sent'>
+<!ENTITY fxaccount_unlock_code_not_sent 'Couldn\&apos;t send account unlock email'>
 
 <!ENTITY fxaccount_sign_in_sub_header 'Sign in'>
 <!ENTITY fxaccount_sign_in_button_label 'Sign in'>
@@ -180,9 +183,15 @@
 <!ENTITY fxaccount_account_verified_sub_header 'Account verified'>
 <!ENTITY fxaccount_account_verified_description2 'Your data will begin syncing momentarily.'>
 
+<!ENTITY fxaccount_migration_finished_header 'Upgrade finished'>
+
 <!ENTITY fxaccount_update_credentials_header 'Sign in'>
 <!ENTITY fxaccount_update_credentials_button_label 'Sign in'>
 <!ENTITY fxaccount_update_credentials_unknown_error 'Could not sign in'>
+
+<!ENTITY fxaccount_finish_migrating_header 'Sign in to finish upgrading'>
+<!ENTITY fxaccount_finish_migrating_button_label 'Finish upgrading'>
+<!ENTITY fxaccount_finish_migrating_description 'Upgrading can transfer a lot of data. It\&apos;s best to be on a WiFi network.'>
 
 <!ENTITY fxaccount_status_header2 'Firefox Account'>
 <!ENTITY fxaccount_status_signed_in_as 'Signed in as'>
@@ -198,6 +207,7 @@
 <!ENTITY fxaccount_status_needs_upgrade 'You need to upgrade &brandShortName; to sign in.'>
 <!ENTITY fxaccount_status_needs_master_sync_automatically_enabled '&syncBrand.shortName.label; is set up, but not syncing automatically. Toggle “Auto-sync data” in Android Settings &gt; Data Usage.'>
 <!ENTITY fxaccount_status_needs_account_enabled '&syncBrand.shortName.label; is set up, but not syncing automatically. Tap to start syncing.'>
+<!ENTITY fxaccount_status_needs_finish_migrating 'Tap to sign in to your new Firefox Account.'>
 <!ENTITY fxaccount_status_bookmarks 'Bookmarks'>
 <!ENTITY fxaccount_status_history 'History'>
 <!ENTITY fxaccount_status_passwords 'Passwords'>
@@ -245,8 +255,14 @@
 <!ENTITY fxaccount_remote_error_SERVICE_TEMPORARILY_UNAVAILABLE_TO_DUE_HIGH_LOAD 'Server busy, try again soon'>
 <!ENTITY fxaccount_remote_error_UNKNOWN_ERROR 'There was a problem'>
 <!ENTITY fxaccount_remote_error_COULD_NOT_CONNECT 'Cannot connect to network'>
+<!ENTITY fxaccount_remote_error_ACCOUNT_LOCKED 'Account is locked. &formatS1;'>
 
 <!ENTITY fxaccount_sync_sign_in_error_notification_title2 '&syncBrand.shortName.label; is not connected'>
 <!-- Localization note: the format string below will be replaced
      with the Firefox Account's email address. -->
 <!ENTITY fxaccount_sync_sign_in_error_notification_text2 'Tap to sign in as &formatS;'>
+
+<!ENTITY fxaccount_sync_finish_migrating_notification_title 'Finish upgrading &syncBrand.shortName.label;?'>
+<!-- Localization note: the format string below will be replaced
+     with the Firefox Account's email address. -->
+<!ENTITY fxaccount_sync_finish_migrating_notification_text 'Tap to sign in as &formatS;'>
