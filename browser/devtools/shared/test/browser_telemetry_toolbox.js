@@ -8,29 +8,14 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>browser_telemetry_toolbox.js</
 const TOOL_DELAY = 200;
 
 let {Promise: promise} = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
-let {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
-
-let require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
-let Telemetry = require("devtools/shared/telemetry");
 
 function init() {
-  Telemetry.prototype.telemetryInfo = {};
-  Telemetry.prototype._oldlog = Telemetry.prototype.log;
-  Telemetry.prototype.log = function(histogramId, value) {
-    if (histogramId) {
-      if (!this.telemetryInfo[histogramId]) {
-        this.telemetryInfo[histogramId] = [];
-      }
-
-      this.telemetryInfo[histogramId].push(value);
-    }
-  };
-
-  openToolboxThreeTimes();
+  startTelemetry();
+  openToolboxFourTimes();
 }
 
 let pass = 0;
-function openToolboxThreeTimes() {
+function openToolboxFourTimes() {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
 
   gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
@@ -40,7 +25,7 @@ function openToolboxThreeTimes() {
       if (pass++ === 3) {
         checkResults();
       } else {
-        openToolboxThreeTimes();
+        openToolboxFourTimes();
       }
     });
     // We use a timeout to check the toolbox's active time
@@ -51,30 +36,23 @@ function openToolboxThreeTimes() {
 }
 
 function checkResults() {
-  let result = Telemetry.prototype.telemetryInfo;
+  // For help generating these tests use generateTelemetryTests("DEVTOOLS_")
+  // here.
+  checkTelemetry("DEVTOOLS_DEBUGGER_RDP_LOCAL_LISTTABS_MS", null, "hasentries");
+  checkTelemetry("DEVTOOLS_DEBUGGER_RDP_LOCAL_RECONFIGURETAB_MS", null, "hasentries");
+  checkTelemetry("DEVTOOLS_DEBUGGER_RDP_LOCAL_TABDETACH_MS", null, "hasentries");
 
-  for (let [histId, value] of Iterator(result)) {
-    if (histId.endsWith("OPENED_PER_USER_FLAG")) {
-      ok(value.length === 1 && value[0] === true,
-         "Per user value " + histId + " has a single value of true");
-    } else if (histId.endsWith("OPENED_BOOLEAN")) {
-      ok(value.length > 1, histId + " has more than one entry");
+  checkTelemetry("DEVTOOLS_INSPECTOR_OPENED_BOOLEAN", [0,4,0]);
+  checkTelemetry("DEVTOOLS_INSPECTOR_OPENED_PER_USER_FLAG", [0,1,0]);
+  checkTelemetry("DEVTOOLS_INSPECTOR_TIME_ACTIVE_SECONDS", null, "hasentries");
 
-      let okay = value.every(function(element) {
-        return element === true;
-      });
+  checkTelemetry("DEVTOOLS_RULEVIEW_OPENED_BOOLEAN", [0,4,0]);
+  checkTelemetry("DEVTOOLS_RULEVIEW_OPENED_PER_USER_FLAG", [0,1,0]);
+  checkTelemetry("DEVTOOLS_RULEVIEW_TIME_ACTIVE_SECONDS", null, "hasentries");
 
-      ok(okay, "All " + histId + " entries are === true");
-    } else if (histId.endsWith("TIME_ACTIVE_SECONDS")) {
-      ok(value.length > 1, histId + " has more than one entry");
-
-      let okay = value.every(function(element) {
-        return element > 0;
-      });
-
-      ok(okay, "All " + histId + " entries have time > 0");
-    }
-  }
+  checkTelemetry("DEVTOOLS_TOOLBOX_OPENED_BOOLEAN", [0,4,0]);
+  checkTelemetry("DEVTOOLS_TOOLBOX_OPENED_PER_USER_FLAG", [0,1,0]);
+  checkTelemetry("DEVTOOLS_TOOLBOX_TIME_ACTIVE_SECONDS", null, "hasentries");
 
   finishUp();
 }
@@ -82,11 +60,7 @@ function checkResults() {
 function finishUp() {
   gBrowser.removeCurrentTab();
 
-  Telemetry.prototype.log = Telemetry.prototype._oldlog;
-  delete Telemetry.prototype._oldlog;
-  delete Telemetry.prototype.telemetryInfo;
-
-  TargetFactory = Services = promise = require = null;
+  TargetFactory = promise = null;
 
   finish();
 }
