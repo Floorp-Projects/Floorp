@@ -12,11 +12,13 @@ task:
   provisionerId: aws-provisioner
 
   scopes:
+    - 'docker-worker:cache:tc-vcs'
     - 'docker-worker:cache:build-emulator-objects'
     - 'docker-worker:image:{{#docker_image}}builder{{/docker_image}}'
 
   payload:
     cache:
+      tc-vcs: '/home/worker/.tc-vcs'
       build-emulator-objects: '/home/worker/object-folder-{{b2g-config}}-{{debug}}'
 
     env:
@@ -24,8 +26,10 @@ task:
       B2G_DEBUG: '{{debug}}'
       B2G_CONFIG: '{{b2g-config}}'
       # revision/project params defined originally here https://github.com/taskcluster/taskcluster-try/blob/master/try/instantiate.js
-      REVISION: '{{revision}}'
-      REPOSITORY: '{{repository}}'
+      GECKO_BASE_REPOSITORY: '{{base_repository}}'
+      GECKO_HEAD_REPOSITORY: '{{head_repository}}'
+      GECKO_HEAD_REV: '{{head_rev}}'
+      GECKO_HEAD_REF: '{{head_ref}}'
 
     image: '{{#docker_image}}builder{{/docker_image}}'
     maxRunTime: 14400

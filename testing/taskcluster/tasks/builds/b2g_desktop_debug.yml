@@ -12,22 +12,26 @@ task:
   provisionerId: aws-provisioner
 
   scopes:
-    - 'docker-worker:cache:sources-mozilla-central'
+    - 'docker-worker:cache:tc-vcs'
+    - 'docker-worker:cache:sources-gecko'
     - 'docker-worker:cache:sources-gaia'
     - 'docker-worker:cache:build-b2g-desktop-objects'
     - 'docker-worker:image:{{#docker_image}}builder{{/docker_image}}'
 
   payload:
     cache:
+      tc-vcs: '/home/worker/.tc-vcs'
       sources-gaia: '/home/worker/gaia'
-      sources-mozilla-central: '/home/worker/mozilla-central'
+      sources-gecko: '/home/worker/gecko'
       build-b2g-desktop-objects: '/home/worker/object-folder'
 
     env:
-      MOZCONFIG: '/home/worker/mozilla-central/source/b2g/config/mozconfigs/linux64_gecko/debug'
+      MOZCONFIG: 'b2g/config/mozconfigs/linux64_gecko/debug'
       # revision/project params defined originally here https://github.com/taskcluster/taskcluster-try/blob/master/try/instantiate.js
-      REVISION: '{{revision}}'
-      REPOSITORY: '{{repository}}'
+      GECKO_BASE_REPOSITORY: '{{base_repository}}'
+      GECKO_HEAD_REPOSITORY: '{{head_repository}}'
+      GECKO_HEAD_REV: '{{head_rev}}'
+      GECKO_HEAD_REF: '{{head_ref}}'
       MOZTT_GIT_URL: '{{moztt_git_url}}'
       MOZTT_REVISION: '{{moztt_revision}}'
 
