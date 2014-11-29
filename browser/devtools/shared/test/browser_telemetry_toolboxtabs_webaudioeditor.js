@@ -8,12 +8,31 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>browser_telemetry_toolboxtabs_
 const TOOL_DELAY = 200;
 
 let {Promise: promise} = Cu.import("resource://gre/modules/devtools/deprecated-sync-thenables.js", {});
+let {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
+
+let require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
+let Telemetry = require("devtools/shared/telemetry");
 
 let originalPref = Services.prefs.getBoolPref("devtools.webaudioeditor.enabled");
 Services.prefs.setBoolPref("devtools.webaudioeditor.enabled", true);
 
 function init() {
-  startTelemetry();
+  Telemetry.prototype.telemetryInfo = {};
+  Telemetry.prototype._oldlog = Telemetry.prototype.log;
+  Telemetry.prototype.log = function(histogramId, value) {
+    if (!this.telemetryInfo) {
+      // Can be removed when Bug 992911 lands (see Bug 1011652 Comment 10)
+      return;
+    }
+    if (histogramId) {
+      if (!this.telemetryInfo[histogramId]) {
+        this.telemetryInfo[histogramId] = [];
+      }
+
+      this.telemetryInfo[histogramId].push(value);
+    }
+  }
+
   openToolboxTabTwice("webaudioeditor", false);
 }
 
@@ -38,28 +57,51 @@ function openToolboxTabTwice(id, secondPass) {
 }
 
 function checkResults() {
-  // For help generating these tests use generateTelemetryTests("DEVTOOLS_")
-  // here.
-  checkTelemetry("DEVTOOLS_DEBUGGER_RDP_LOCAL_LISTTABS_MS", null, "hasentries");
-  checkTelemetry("DEVTOOLS_DEBUGGER_RDP_LOCAL_RECONFIGURETAB_MS", null, "hasentries");
-  checkTelemetry("DEVTOOLS_DEBUGGER_RDP_LOCAL_TABDETACH_MS", null, "hasentries");
+  let result = Telemetry.prototype.telemetryInfo;
 
-  checkTelemetry("DEVTOOLS_TOOLBOX_OPENED_BOOLEAN", [0,2,0]);
-  checkTelemetry("DEVTOOLS_TOOLBOX_OPENED_PER_USER_FLAG", [0,1,0]);
-  checkTelemetry("DEVTOOLS_TOOLBOX_TIME_ACTIVE_SECONDS", null, "hasentries");
+  for (let [histId, value] of Iterator(result)) {
+    if (histId.endsWith("OPENED_PER_USER_FLAG")) {
+      ok(value.length === 1 && value[0] === true,
+         "Per user value " + histId + " has a single value of true");
+    } else if (histId.endsWith("OPENED_BOOLEAN")) {
+      ok(value.length > 1, histId + " has more than one entry");
 
-  checkTelemetry("DEVTOOLS_WEBAUDIOEDITOR_OPENED_BOOLEAN", [0,2,0]);
-  checkTelemetry("DEVTOOLS_WEBAUDIOEDITOR_OPENED_PER_USER_FLAG", [0,1,0]);
-  checkTelemetry("DEVTOOLS_WEBAUDIOEDITOR_TIME_ACTIVE_SECONDS", null, "hasentries");
+      let okay = value.every(function(element) {
+        return element === true;
+      });
 
+      ok(okay, "All " + histId + " entries are === true");
+    } else if (histId.endsWith("TIME_ACTIVE_SECONDS")) {
+      ok(value.length > 1, histId + " has more than one entry");
+
+      let okay = value.every(function(element) {
+        return element > 0;
+      });
+
+      ok(okay, "All " + histId + " entries have time > 0");
+    }
+  }
+
+  finishUp();
+}
+
+function reportError(error) {
+  let stack = "    " + error.stack.replace(/\n?.*?@/g, "\n    JS frame :: ");
+
+  ok(false, "ERROR: " + error + " at " + error.fileName + ":" +
+            error.lineNumber + "\n\nStack trace:" + stack);
   finishUp();
 }
 
 function finishUp() {
   gBrowser.removeCurrentTab();
 
+  Telemetry.prototype.log = Telemetry.prototype._oldlog;
+  delete Telemetry.prototype._oldlog;
+  delete Telemetry.prototype.telemetryInfo;
+
   Services.prefs.setBoolPref("devtools.webaudioeditor.enabled", originalPref);
-  TargetFactory = promise = null;
+  TargetFactory = Services = promise = require = null;
 
   finish();
 }
