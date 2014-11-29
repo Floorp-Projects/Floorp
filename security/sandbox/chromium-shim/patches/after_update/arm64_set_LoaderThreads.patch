@@ -31,31 +31,30 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/nt_internals.h b/security
 diff --git a/security/sandbox/chromium/sandbox/win/src/win_utils.cc b/security/sandbox/chromium/sandbox/win/src/win_utils.cc
 --- a/security/sandbox/chromium/sandbox/win/src/win_utils.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/win_utils.cc
-@@ -453,21 +453,22 @@ bool GetNtPathFromWin32Path(const base::
-   if (file == INVALID_HANDLE_VALUE)
-     return false;
+@@ -453,20 +453,21 @@ bool GetNtPathFromWin32Path(const base::
    bool rv = GetPathFromHandle(file, nt_path);
    ::CloseHandle(file);
    return rv;
  }
  
- bool WriteProtectedChildMemory(HANDLE child_process, void* address,
--                               const void* buffer, size_t length) {
-+                               const void* buffer, size_t length,
+ bool WriteProtectedChildMemory(HANDLE child_process,
+                                void* address,
+                                const void* buffer,
+-                               size_t length) {
++                               size_t length,
 +                               DWORD writeProtection) {
    // First, remove the protections.
    DWORD old_protection;
-   if (!::VirtualProtectEx(child_process, address, length,
--                          PAGE_WRITECOPY, &old_protection))
-+                          writeProtection, &old_protection))
+-  if (!::VirtualProtectEx(child_process, address, length, PAGE_WRITECOPY,
++  if (!::VirtualProtectEx(child_process, address, length, writeProtection,
+                           &old_protection))
      return false;
  
    SIZE_T written;
-   bool ok = ::WriteProcessMemory(child_process, address, buffer, length,
-                                  &written) && (length == written);
+   bool ok =
+       ::WriteProcessMemory(child_process, address, buffer, length, &written) &&
+       (length == written);
  
-   // Always attempt to restore the original protection.
-   if (!::VirtualProtectEx(child_process, address, length,
 @@ -511,16 +512,40 @@ void* GetProcessBaseAddress(HANDLE proce
                             &bytes_read) ||
        (sizeof(magic) != bytes_read)) {
@@ -101,16 +100,16 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/win_utils.h b/security/sa
 --- a/security/sandbox/chromium/sandbox/win/src/win_utils.h
 +++ b/security/sandbox/chromium/sandbox/win/src/win_utils.h
 @@ -102,17 +102,18 @@ HKEY GetReservedKeyFromName(const base::
- // \\registry\\machine\\software\\microsoft. Returns false if the path
- // cannot be resolved.
  bool ResolveRegistryName(base::string16 name, base::string16* resolved_name);
  
  // Writes |length| bytes from the provided |buffer| into the address space of
  // |child_process|, at the specified |address|, preserving the original write
  // protection attributes. Returns true on success.
- bool WriteProtectedChildMemory(HANDLE child_process, void* address,
--                               const void* buffer, size_t length);
-+                               const void* buffer, size_t length,
+ bool WriteProtectedChildMemory(HANDLE child_process,
+                                void* address,
+                                const void* buffer,
+-                               size_t length);
++                               size_t length,
 +                               DWORD writeProtection = PAGE_WRITECOPY);
  
  // Returns true if the provided path points to a pipe.

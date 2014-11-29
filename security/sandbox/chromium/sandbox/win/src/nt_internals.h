@@ -319,6 +319,8 @@ typedef struct _PEB {
   BYTE SpareBool;
   PVOID Mutant;
   PVOID ImageBaseAddress;
+  PVOID Ldr;
+  PVOID ProcessParameters;
 } PEB, *PPEB;
 
 typedef LONG KPRIORITY;
