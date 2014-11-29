@@ -1,0 +1,17 @@
+#! /bin/bash -ex
+
+DEST=/home/worker/source
+
+base=$1
+head=$2
+ref=$3
+rev=$4
+
+commands=${@:5}
+
+tc-vcs clone $base $DEST
+tc-vcs checkout-revision $DEST $head $ref $rev
+tc-vcs revision $DEST
+
+cd $DEST
+eval $commands
