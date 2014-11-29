@@ -5,20 +5,17 @@
 . build-setup.sh
 
 ### Check that require variables are defined
-test $REPOSITORY  # Should be an hg repository url to pull from
-test $REVISION    # Should be an hg revision to pull down
-test $MOZCONFIG   # Should be a mozconfig file from mozconfig/ folder
+test $MOZCONFIG
 
-### Pull and update mozilla-central
-cd $gecko_dir
-hg pull -r $REVISION $REPOSITORY;
-hg update $REVISION;
+# Ensure gecko is at the correct revision
+pull-gecko.sh $gecko_dir
 
 ### Install package dependencies
-. install_packages.sh
+install-packages.sh $gecko_dir
 
 export MOZ_OBJDIR=$(get-objdir.py $gecko_dir)
 
+cd $gecko_dir
 ./mach build;
 
 ### Make package

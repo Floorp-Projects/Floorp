@@ -1,8 +1,8 @@
 #! /bin/bash -vex
 
 ### Check that require variables are defined
-test $REPOSITORY  # Should be an hg repository url to pull from
-test $REVISION    # Should be an hg revision to pull down
+test $GECKO_HEAD_REPOSITORY # Should be an hg repository url to pull from
+test $GECKO_HEAD_REV # Should be an hg revision to pull down
 test $TARGET
 test $B2G_CONFIG
 
@@ -38,8 +38,8 @@ fi
   --log-level=debug \
   --target=$TARGET \
   --b2g-config-dir=$B2G_CONFIG \
-  --checkout-revision=$REVISION \
-  --repo=$REPOSITORY
+  --checkout-revision=$GECKO_HEAD_REV \
+  --repo=$GECKO_HEAD_REPOSITORY
 
 # Move files into artifact locations!
 mkdir -p artifacts
