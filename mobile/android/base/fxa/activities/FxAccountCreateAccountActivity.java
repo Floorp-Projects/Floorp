@@ -22,6 +22,7 @@ import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClient
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.background.fxa.PasswordStretcher;
 import org.mozilla.gecko.fxa.tasks.FxAccountCreateAccountTask;
+import org.mozilla.gecko.sync.Utils;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -30,7 +31,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.text.Spannable;
-import android.text.Spanned;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
 import android.view.View;
@@ -124,13 +124,10 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
     // This horrible bit of special-casing is because we want this error message to
     // contain a clickable, extra chunk of text, but we don't want to pollute
     // the exception class with Android specifics.
-    final String clickablePart = getString(R.string.fxaccount_sign_in_button_label);
-    final String message = getString(e.getErrorMessageStringResource(), clickablePart);
-    final int clickableStart = message.lastIndexOf(clickablePart);
-    final int clickableEnd = clickableStart + clickablePart.length();
+    final int messageId = e.getErrorMessageStringResource();
+    final int clickableId = R.string.fxaccount_sign_in_button_label;
 
-    final Spannable span = Spannable.Factory.getInstance().newSpannable(message);
-    span.setSpan(new ClickableSpan() {
+    final Spannable span = Utils.interpolateClickableSpan(this, messageId, clickableId, new ClickableSpan() {
       @Override
       public void onClick(View widget) {
         // Pass through the email address that already existed.
@@ -143,7 +140,7 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
         final Bundle extras = makeExtrasBundle(email, password);
         startActivityInstead(FxAccountSignInActivity.class, CHILD_REQUEST_CODE, extras);
       }
-    }, clickableStart, clickableEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+    });
     remoteErrorTextView.setMovementMethod(LinkMovementMethod.getInstance());
     remoteErrorTextView.setText(span);
   }

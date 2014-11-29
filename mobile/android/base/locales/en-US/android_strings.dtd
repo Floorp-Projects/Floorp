@@ -429,6 +429,8 @@ size. -->
 <!ENTITY home_remote_tabs_empty "Your tabs from other devices show up here.">
 <!ENTITY home_remote_tabs_unable_to_connect "Unable to connect">
 <!ENTITY home_remote_tabs_need_to_sign_in "Please sign in to reconnect your Firefox Account and continue syncing.">
+<!ENTITY home_remote_tabs_need_to_finish_migrating "Your new Firefox Account is ready!">
+
 <!ENTITY home_remote_tabs_trouble_verifying "Trouble verifying your account?">
 <!ENTITY home_remote_tabs_need_to_verify "Please verify your Firefox Account to start syncing.">
 
