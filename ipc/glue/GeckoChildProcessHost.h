@@ -168,10 +168,9 @@ protected:
 #ifdef MOZ_SANDBOX
   SandboxBroker mSandboxBroker;
   std::vector<std::wstring> mAllowedFilesRead;
-
+  bool mEnableSandboxLogging;
 #if defined(MOZ_CONTENT_SANDBOX)
-  bool mEnableContentSandbox;
-  bool mWarnOnlyContentSandbox;
+  bool mMoreStrictContentSandbox;
 #endif
 #endif
 #endif // XP_WIN
