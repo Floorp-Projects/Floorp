@@ -4,16 +4,11 @@ task:
   metadata:
     description: |
       Android emulators + b2g environment used in full stack testing.
-  scopes:
-    - 'docker-worker:cache:build-emulator-objects'
-
   payload:
-    cache:
-      build-emulator-objects: '/home/worker/object-folder-{{b2g-config}}-{{debug}}'
-
     env:
       TARGET: 'emulator'
       B2G_DEBUG: 0
+      REPO_TRACE: 1
 
     # Emulators can take a very long time to build!
     maxRunTime: 14400

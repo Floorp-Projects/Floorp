@@ -1,8 +1,13 @@
 $inherits:
-  from: 'tasks/builds/b2g_emulator_kk_opt.yml'
+  from: 'tasks/builds/b2g_emulator_base.yml'
 task:
+  scopes:
+    - 'docker-worker:cache:build-emulator-kk-debug'
   metadata:
     name: B2G Emulator KK Debug
   payload:
+    cache:
+      build-emulator-jb-debug: /home/worker/object-folder-emulator-kk-1/
     env:
+      B2G_CONFIG: 'emulator-kk'
       B2G_DEBUG: 1
