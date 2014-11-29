@@ -2,9 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function test() {
-  let tmp = {};
-  Cu.import("resource://gre/modules/devtools/Loader.jsm", tmp);
-  let ObservableObject = tmp.devtools.require("devtools/shared/observable-object");
+  let ObservableObject = devtools.require("devtools/shared/observable-object");
 
   let rawObject = {};
   let oe = new ObservableObject(rawObject);

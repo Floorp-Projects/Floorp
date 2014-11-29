@@ -19,8 +19,6 @@ const { Class } = require("sdk/core/heritage");
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const STRINGS_URI = "chrome://browser/locale/devtools/webaudioeditor.properties"
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
-const Telemetry = require("devtools/shared/telemetry");
-const telemetry = new Telemetry();
 
 // Override DOM promises with Promise.jsm helpers
 const { defer, all } = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
