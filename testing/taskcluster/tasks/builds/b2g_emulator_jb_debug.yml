@@ -1,9 +1,14 @@
 $inherits:
-  from: 'tasks/builds/b2g_emulator_jb_opt.yml'
+  from: 'tasks/builds/b2g_emulator_base.yml'
 task:
+  scopes:
+    - 'docker-worker:cache:build-emulator-jb-debug'
   metadata:
     name: B2G Emulator JB Debug
   payload:
+    cache:
+      build-emulator-jb-debug: /home/worker/object-folder-emulator-jb-1/
     env:
+      B2G_CONFIG: 'emulator-jb'
       B2G_DEBUG: 1
 

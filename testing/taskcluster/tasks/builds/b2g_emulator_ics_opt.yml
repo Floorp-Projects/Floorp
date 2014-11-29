@@ -1,9 +1,15 @@
 $inherits:
   from: 'tasks/builds/b2g_emulator_base.yml'
 task:
+  scopes:
+    - 'docker-worker:cache:build-emulator-ics-opt'
   metadata:
     name: B2G Emulator ICS Opt
+
   payload:
+    cache:
+      build-emulator-ics-opt: /home/worker/object-folder-emulator-ics-0/
+
     env:
       B2G_CONFIG: 'emulator-ics'
 
