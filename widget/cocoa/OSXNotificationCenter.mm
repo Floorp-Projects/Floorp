@@ -204,7 +204,8 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
                                              const nsAString & aBidi,
                                              const nsAString & aLang,
                                              const nsAString & aData,
-                                             nsIPrincipal * aPrincipal)
+                                             nsIPrincipal * aPrincipal,
+                                             bool aInPrivateBrowsing)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -246,8 +247,11 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
         nsresult rv = il->LoadImage(imageUri, nullptr, nullptr,
                                     mozilla::net::RP_Default,
                                     aPrincipal, nullptr,
-                                    this, nullptr, nsIRequest::LOAD_NORMAL, nullptr,
-                                    nsIContentPolicy::TYPE_IMAGE, EmptyString(),
+                                    this, nullptr,
+                                    aInPrivateBrowsing ? nsIRequest::LOAD_ANONYMOUS :
+                                                         nsIRequest::LOAD_NORMAL,
+                                    nullptr, nsIContentPolicy::TYPE_IMAGE,
+                                    EmptyString(),
                                     getter_AddRefs(osxni->mIconRequest));
         if (NS_SUCCEEDED(rv)) {
           // Set a timer for six seconds. If we don't have an icon by the time this

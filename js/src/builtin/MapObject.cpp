@@ -1236,7 +1236,7 @@ MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.hasDefined(0)) {
+    if (!args.get(0).isNullOrUndefined()) {
         ForOfIterator iter(cx);
         if (!iter.init(args[0]))
             return false;
@@ -1800,7 +1800,7 @@ SetObject::construct(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.hasDefined(0)) {
+    if (!args.get(0).isNullOrUndefined()) {
         RootedValue keyVal(cx);
         ForOfIterator iter(cx);
         if (!iter.init(args[0]))
