@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1416506840000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1417038570000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -51,6 +51,12 @@
     </emItem>
       <emItem  blockID="i529" id="/^(torntv@torntv\.com|trtv3@trtv\.com|torntv2@torntv\.com|e2fd07a6-e282-4f2e-8965-85565fcb6384@b69158e6-3c3b-476c-9d98-ae5838c5b707\.com)$/">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i792" id="{8f894ed3-0bf2-498e-a103-27ef6e88899f}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -1611,6 +1617,12 @@
     </emItem>
       <emItem  blockID="i535" id="/^ext@WebexpEnhancedV1alpha[0-9]+\.net$/">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i790" id="JMLv@njMaHh.org">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
