@@ -2,8 +2,8 @@
 # User Bob Owen <bobowencode@gmail.com>
 # Date 1417281138 0
 #      Sat Nov 29 17:12:18 2014 +0000
-# Node ID 6f0003647b90c4196fa349813baaaaf425900bf5
-# Parent  4cf17a52d84ad44e38c91c9f4106241f85f7bf9e
+# Node ID 4ea2e332affe4b74bd37fbf2fee8da0b1c94e115
+# Parent  5eec91873c96c2cbfc856ba86335fa068c89d6ce
 Re-apply - Logging changes to the Chromium interception code. r=tabraldes
 
 Originally landed as changset:
@@ -12,8 +12,8 @@ https://hg.mozilla.org/mozilla-central/rev/0f763c186855
 diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.cc b/security/sandbox/chromium/sandbox/win/src/filesystem_interception.cc
 --- a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/filesystem_interception.cc
-@@ -9,16 +9,17 @@
- #include "sandbox/win/src/crosscall_client.h"
+@@ -10,16 +10,17 @@
+ #include "sandbox/win/src/filesystem_policy.h"
  #include "sandbox/win/src/ipc_tags.h"
  #include "sandbox/win/src/policy_params.h"
  #include "sandbox/win/src/policy_target.h"
@@ -30,11 +30,11 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.c
  namespace sandbox {
  
  NTSTATUS WINAPI TargetNtCreateFile(NtCreateFileFunction orig_CreateFile,
-@@ -33,16 +34,20 @@ NTSTATUS WINAPI TargetNtCreateFile(NtCre
-   NTSTATUS status = orig_CreateFile(file, desired_access, object_attributes,
-                                     io_status, allocation_size,
-                                     file_attributes, sharing, disposition,
-                                     options, ea_buffer, ea_length);
+@@ -37,16 +38,20 @@ NTSTATUS WINAPI TargetNtCreateFile(NtCre
+   // Check if the process can open it first.
+   NTSTATUS status = orig_CreateFile(
+       file, desired_access, object_attributes, io_status, allocation_size,
+       file_attributes, sharing, disposition, options, ea_buffer, ea_length);
    if (STATUS_ACCESS_DENIED != status &&
        STATUS_NETWORK_OPEN_RESTRICTION != status)
      return status;
@@ -47,17 +47,17 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.c
    if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
      return status;
  
-   wchar_t* name = NULL;
    do {
      if (!ValidParameter(file, sizeof(HANDLE), WRITE))
        break;
-@@ -90,16 +95,19 @@ NTSTATUS WINAPI TargetNtCreateFile(NtCre
+     if (!ValidParameter(io_status, sizeof(IO_STATUS_BLOCK), WRITE))
+@@ -96,16 +101,19 @@ NTSTATUS WINAPI TargetNtCreateFile(NtCre
  
      __try {
        *file = answer.handle;
        io_status->Status = answer.nt_status;
        io_status->Information = answer.extended[0].ulong_ptr;
-     } __except(EXCEPTION_EXECUTE_HANDLER) {
+     } __except (EXCEPTION_EXECUTE_HANDLER) {
        break;
      }
 +    mozilla::sandboxing::LogAllowed("NtCreateFile",
@@ -65,13 +65,13 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.c
 +                                    object_attributes->ObjectName->Length);
    } while (false);
  
-   if (name)
-     operator delete(name, NT_ALLOC);
- 
    return status;
  }
  
-@@ -110,16 +118,20 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenF
+ NTSTATUS WINAPI TargetNtOpenFile(NtOpenFileFunction orig_OpenFile,
+                                  PHANDLE file,
+                                  ACCESS_MASK desired_access,
+@@ -115,16 +123,20 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenF
                                   ULONG options) {
    // Check if the process can open it first.
    NTSTATUS status = orig_OpenFile(file, desired_access, object_attributes,
@@ -88,17 +88,17 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.c
    if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
      return status;
  
-   wchar_t* name = NULL;
    do {
      if (!ValidParameter(file, sizeof(HANDLE), WRITE))
        break;
-@@ -165,16 +177,19 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenF
+     if (!ValidParameter(io_status, sizeof(IO_STATUS_BLOCK), WRITE))
+@@ -171,31 +183,38 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenF
  
      __try {
        *file = answer.handle;
        io_status->Status = answer.nt_status;
        io_status->Information = answer.extended[0].ulong_ptr;
-     } __except(EXCEPTION_EXECUTE_HANDLER) {
+     } __except (EXCEPTION_EXECUTE_HANDLER) {
        break;
      }
 +    mozilla::sandboxing::LogAllowed("NtOpenFile",
@@ -106,15 +106,13 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.c
 +                                    object_attributes->ObjectName->Length);
    } while (false);
  
-   if (name)
-     operator delete(name, NT_ALLOC);
- 
    return status;
  }
  
-@@ -183,16 +198,20 @@ NTSTATUS WINAPI TargetNtQueryAttributesF
-     POBJECT_ATTRIBUTES object_attributes,
-     PFILE_BASIC_INFORMATION file_attributes) {
+ NTSTATUS WINAPI
+ TargetNtQueryAttributesFile(NtQueryAttributesFileFunction orig_QueryAttributes,
+                             POBJECT_ATTRIBUTES object_attributes,
+                             PFILE_BASIC_INFORMATION file_attributes) {
    // Check if the process can query it first.
    NTSTATUS status = orig_QueryAttributes(object_attributes, file_attributes);
    if (STATUS_ACCESS_DENIED != status &&
@@ -129,12 +127,12 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.c
    if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
      return status;
  
-   wchar_t* name = NULL;
    do {
      if (!ValidParameter(file_attributes, sizeof(FILE_BASIC_INFORMATION), WRITE))
        break;
-@@ -223,16 +242,19 @@ NTSTATUS WINAPI TargetNtQueryAttributesF
-     ResultCode code = CrossCall(ipc, IPC_NTQUERYATTRIBUTESFILE_TAG, name,
+ 
+@@ -227,32 +246,39 @@ TargetNtQueryAttributesFile(NtQueryAttri
+     ResultCode code = CrossCall(ipc, IPC_NTQUERYATTRIBUTESFILE_TAG, name.get(),
                                  attributes, file_info, &answer);
  
      if (SBOX_ALL_OK != code)
@@ -147,17 +145,16 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.c
 +                                    object_attributes->ObjectName->Length);
    } while (false);
  
-   if (name)
-     operator delete(name, NT_ALLOC);
- 
    return status;
  }
  
-@@ -242,16 +264,20 @@ NTSTATUS WINAPI TargetNtQueryFullAttribu
+ NTSTATUS WINAPI TargetNtQueryFullAttributesFile(
+     NtQueryFullAttributesFileFunction orig_QueryFullAttributes,
+     POBJECT_ATTRIBUTES object_attributes,
      PFILE_NETWORK_OPEN_INFORMATION file_attributes) {
    // Check if the process can query it first.
-   NTSTATUS status = orig_QueryFullAttributes(object_attributes,
-                                              file_attributes);
+   NTSTATUS status =
+       orig_QueryFullAttributes(object_attributes, file_attributes);
    if (STATUS_ACCESS_DENIED != status &&
        STATUS_NETWORK_OPEN_RESTRICTION != status)
      return status;
@@ -170,14 +167,14 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.c
    if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
      return status;
  
-   wchar_t* name = NULL;
    do {
      if (!ValidParameter(file_attributes, sizeof(FILE_NETWORK_OPEN_INFORMATION),
                          WRITE))
-@@ -282,16 +308,20 @@ NTSTATUS WINAPI TargetNtQueryFullAttribu
+       break;
+@@ -284,16 +310,20 @@ NTSTATUS WINAPI TargetNtQueryFullAttribu
      CrossCallReturn answer = {0};
-     ResultCode code = CrossCall(ipc, IPC_NTQUERYFULLATTRIBUTESFILE_TAG, name,
-                                 attributes, file_info, &answer);
+     ResultCode code = CrossCall(ipc, IPC_NTQUERYFULLATTRIBUTESFILE_TAG,
+                                 name.get(), attributes, file_info, &answer);
  
      if (SBOX_ALL_OK != code)
        break;
@@ -189,15 +186,15 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.c
 +                                    object_attributes->ObjectName->Length);
    } while (false);
  
-   if (name)
-     operator delete(name, NT_ALLOC);
- 
    return status;
  }
  
-@@ -300,16 +330,18 @@ NTSTATUS WINAPI TargetNtSetInformationFi
-     PIO_STATUS_BLOCK io_status, PVOID file_info, ULONG length,
-     FILE_INFORMATION_CLASS file_info_class) {
+ NTSTATUS WINAPI
+ TargetNtSetInformationFile(NtSetInformationFileFunction orig_SetInformationFile,
+                            HANDLE file,
+@@ -302,16 +332,18 @@ TargetNtSetInformationFile(NtSetInformat
+                            ULONG length,
+                            FILE_INFORMATION_CLASS file_info_class) {
    // Check if the process can open it first.
    NTSTATUS status = orig_SetInformationFile(file, io_status, file_info, length,
                                              file_info_class);
@@ -210,14 +207,14 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.c
    if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
      return status;
  
-   wchar_t* name = NULL;
    do {
      void* memory = GetGlobalIPCMemory();
-     if (NULL == memory)
-@@ -361,16 +393,17 @@ NTSTATUS WINAPI TargetNtSetInformationFi
-     ResultCode code = CrossCall(ipc, IPC_NTSETINFO_RENAME_TAG, file,
-                                 io_status_buffer, file_info_buffer, length,
-                                 file_info_class, &answer);
+     if (!memory)
+       break;
+@@ -366,14 +398,15 @@ TargetNtSetInformationFile(NtSetInformat
+     ResultCode code =
+         CrossCall(ipc, IPC_NTSETINFO_RENAME_TAG, file, io_status_buffer,
+                   file_info_buffer, length, file_info_class, &answer);
  
      if (SBOX_ALL_OK != code)
        break;
@@ -226,12 +223,10 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.c
 +    mozilla::sandboxing::LogAllowed("NtSetInformationFile");
    } while (false);
  
-   if (name)
-     operator delete(name, NT_ALLOC);
- 
    return status;
  }
  
+ }  // namespace sandbox
 diff --git a/security/sandbox/chromium/sandbox/win/src/handle_interception.cc b/security/sandbox/chromium/sandbox/win/src/handle_interception.cc
 --- a/security/sandbox/chromium/sandbox/win/src/handle_interception.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/handle_interception.cc
@@ -276,7 +271,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/handle_interception.cc b/
 diff --git a/security/sandbox/chromium/sandbox/win/src/named_pipe_interception.cc b/security/sandbox/chromium/sandbox/win/src/named_pipe_interception.cc
 --- a/security/sandbox/chromium/sandbox/win/src/named_pipe_interception.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/named_pipe_interception.cc
-@@ -7,31 +7,34 @@
+@@ -7,16 +7,17 @@
  #include "sandbox/win/src/crosscall_client.h"
  #include "sandbox/win/src/ipc_tags.h"
  #include "sandbox/win/src/policy_params.h"
@@ -289,15 +284,17 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/named_pipe_interception.c
  
  namespace sandbox {
  
- HANDLE WINAPI TargetCreateNamedPipeW(
-     CreateNamedPipeWFunction orig_CreateNamedPipeW, LPCWSTR pipe_name,
-     DWORD open_mode, DWORD pipe_mode, DWORD max_instance, DWORD out_buffer_size,
-     DWORD in_buffer_size, DWORD default_timeout,
-     LPSECURITY_ATTRIBUTES security_attributes) {
-   HANDLE pipe = orig_CreateNamedPipeW(pipe_name, open_mode, pipe_mode,
-                                       max_instance, out_buffer_size,
-                                       in_buffer_size, default_timeout,
-                                       security_attributes);
+ HANDLE WINAPI
+ TargetCreateNamedPipeW(CreateNamedPipeWFunction orig_CreateNamedPipeW,
+                        LPCWSTR pipe_name,
+                        DWORD open_mode,
+                        DWORD pipe_mode,
+@@ -26,16 +27,18 @@ TargetCreateNamedPipeW(CreateNamedPipeWF
+                        DWORD default_timeout,
+                        LPSECURITY_ATTRIBUTES security_attributes) {
+   HANDLE pipe = orig_CreateNamedPipeW(
+       pipe_name, open_mode, pipe_mode, max_instance, out_buffer_size,
+       in_buffer_size, default_timeout, security_attributes);
    if (INVALID_HANDLE_VALUE != pipe)
      return pipe;
  
@@ -311,7 +308,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/named_pipe_interception.c
  
    // We don't support specific Security Attributes.
    if (security_attributes)
-@@ -57,16 +60,17 @@ HANDLE WINAPI TargetCreateNamedPipeW(
+@@ -61,16 +64,17 @@ TargetCreateNamedPipeW(CreateNamedPipeWF
      if (SBOX_ALL_OK != code)
        break;
  
@@ -332,7 +329,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/named_pipe_interception.c
 diff --git a/security/sandbox/chromium/sandbox/win/src/process_thread_interception.cc b/security/sandbox/chromium/sandbox/win/src/process_thread_interception.cc
 --- a/security/sandbox/chromium/sandbox/win/src/process_thread_interception.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/process_thread_interception.cc
-@@ -9,32 +9,34 @@
+@@ -10,16 +10,17 @@
  #include "sandbox/win/src/crosscall_client.h"
  #include "sandbox/win/src/ipc_tags.h"
  #include "sandbox/win/src/policy_params.h"
@@ -350,11 +347,12 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/process_thread_intercepti
  // Hooks NtOpenThread and proxy the call to the broker if it's trying to
  // open a thread in the same process.
  NTSTATUS WINAPI TargetNtOpenThread(NtOpenThreadFunction orig_OpenThread,
-                                    PHANDLE thread, ACCESS_MASK desired_access,
+@@ -27,16 +28,17 @@ NTSTATUS WINAPI TargetNtOpenThread(NtOpe
+                                    ACCESS_MASK desired_access,
                                     POBJECT_ATTRIBUTES object_attributes,
                                     PCLIENT_ID client_id) {
-   NTSTATUS status = orig_OpenThread(thread, desired_access, object_attributes,
-                                     client_id);
+   NTSTATUS status =
+       orig_OpenThread(thread, desired_access, object_attributes, client_id);
    if (NT_SUCCESS(status))
      return status;
  
@@ -367,12 +365,12 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/process_thread_intercepti
  
      uint32_t thread_id = 0;
      bool should_break = false;
-@@ -90,16 +92,17 @@ NTSTATUS WINAPI TargetNtOpenThread(NtOpe
+@@ -91,16 +93,17 @@ NTSTATUS WINAPI TargetNtOpenThread(NtOpe
  
      __try {
        // Write the output parameters.
        *thread = answer.handle;
-     } __except(EXCEPTION_EXECUTE_HANDLER) {
+     } __except (EXCEPTION_EXECUTE_HANDLER) {
        break;
      }
  
@@ -385,11 +383,11 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/process_thread_intercepti
  
  // Hooks NtOpenProcess and proxy the call to the broker if it's trying to
  // open the current process.
-@@ -174,16 +177,17 @@ NTSTATUS WINAPI TargetNtOpenProcess(NtOp
- 
- NTSTATUS WINAPI TargetNtOpenProcessToken(
-     NtOpenProcessTokenFunction orig_OpenProcessToken, HANDLE process,
-     ACCESS_MASK desired_access, PHANDLE token) {
+@@ -176,16 +179,17 @@ NTSTATUS WINAPI
+ TargetNtOpenProcessToken(NtOpenProcessTokenFunction orig_OpenProcessToken,
+                          HANDLE process,
+                          ACCESS_MASK desired_access,
+                          PHANDLE token) {
    NTSTATUS status = orig_OpenProcessToken(process, desired_access, token);
    if (NT_SUCCESS(status))
      return status;
@@ -403,12 +401,12 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/process_thread_intercepti
        break;
  
      if (!ValidParameter(token, sizeof(HANDLE), WRITE))
-@@ -205,30 +209,32 @@ NTSTATUS WINAPI TargetNtOpenProcessToken
+@@ -207,16 +211,17 @@ TargetNtOpenProcessToken(NtOpenProcessTo
  
      __try {
        // Write the output parameters.
        *token = answer.handle;
-     } __except(EXCEPTION_EXECUTE_HANDLER) {
+     } __except (EXCEPTION_EXECUTE_HANDLER) {
        break;
      }
  
@@ -419,9 +417,12 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/process_thread_intercepti
    return status;
  }
  
- NTSTATUS WINAPI TargetNtOpenProcessTokenEx(
-     NtOpenProcessTokenExFunction orig_OpenProcessTokenEx, HANDLE process,
-     ACCESS_MASK desired_access, ULONG handle_attributes, PHANDLE token) {
+ NTSTATUS WINAPI
+ TargetNtOpenProcessTokenEx(NtOpenProcessTokenExFunction orig_OpenProcessTokenEx,
+@@ -224,16 +229,17 @@ TargetNtOpenProcessTokenEx(NtOpenProcess
+                            ACCESS_MASK desired_access,
+                            ULONG handle_attributes,
+                            PHANDLE token) {
    NTSTATUS status = orig_OpenProcessTokenEx(process, desired_access,
                                              handle_attributes, token);
    if (NT_SUCCESS(status))
@@ -436,12 +437,12 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/process_thread_intercepti
        break;
  
      if (!ValidParameter(token, sizeof(HANDLE), WRITE))
-@@ -250,16 +256,17 @@ NTSTATUS WINAPI TargetNtOpenProcessToken
+@@ -255,16 +261,17 @@ TargetNtOpenProcessTokenEx(NtOpenProcess
  
      __try {
        // Write the output parameters.
        *token = answer.handle;
-     } __except(EXCEPTION_EXECUTE_HANDLER) {
+     } __except (EXCEPTION_EXECUTE_HANDLER) {
        break;
      }
  
@@ -453,85 +454,85 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/process_thread_intercepti
  }
  
  BOOL WINAPI TargetCreateProcessW(CreateProcessWFunction orig_CreateProcessW,
-                                  LPCWSTR application_name, LPWSTR command_line,
-@@ -272,16 +279,18 @@ BOOL WINAPI TargetCreateProcessW(CreateP
+                                  LPCWSTR application_name,
+@@ -280,16 +287,18 @@ BOOL WINAPI TargetCreateProcessW(CreateP
    if (SandboxFactory::GetTargetServices()->GetState()->IsCsrssConnected() &&
        orig_CreateProcessW(application_name, command_line, process_attributes,
                            thread_attributes, inherit_handles, flags,
                            environment, current_directory, startup_info,
                            process_information)) {
-     return TRUE;
+     return true;
    }
  
 +  mozilla::sandboxing::LogBlocked("CreateProcessW", application_name);
 +
    // We don't trust that the IPC can work this early.
    if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
-     return FALSE;
+     return false;
  
    // Don't call GetLastError before InitCalled() succeeds because kernel32 may
    // not be mapped yet.
    DWORD original_error = ::GetLastError();
  
-@@ -312,16 +321,17 @@ BOOL WINAPI TargetCreateProcessW(CreateP
-                                 proc_info, &answer);
+@@ -320,16 +329,17 @@ BOOL WINAPI TargetCreateProcessW(CreateP
+                   cur_dir, current_directory, proc_info, &answer);
      if (SBOX_ALL_OK != code)
        break;
  
      ::SetLastError(answer.win32_result);
      if (ERROR_SUCCESS != answer.win32_result)
-       return FALSE;
+       return false;
  
 +    mozilla::sandboxing::LogAllowed("CreateProcessW", application_name);
-     return TRUE;
+     return true;
    } while (false);
  
    ::SetLastError(original_error);
-   return FALSE;
+   return false;
  }
  
  BOOL WINAPI TargetCreateProcessA(CreateProcessAFunction orig_CreateProcessA,
-@@ -335,16 +345,18 @@ BOOL WINAPI TargetCreateProcessA(CreateP
+@@ -346,16 +356,18 @@ BOOL WINAPI TargetCreateProcessA(CreateP
    if (SandboxFactory::GetTargetServices()->GetState()->IsCsrssConnected() &&
        orig_CreateProcessA(application_name, command_line, process_attributes,
                            thread_attributes, inherit_handles, flags,
                            environment, current_directory, startup_info,
                            process_information)) {
-     return TRUE;
+     return true;
    }
  
 +  mozilla::sandboxing::LogBlocked("CreateProcessA", application_name);
 +
    // We don't trust that the IPC can work this early.
    if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
-     return FALSE;
+     return false;
  
    // Don't call GetLastError before InitCalled() succeeds because kernel32 may
    // not be mapped yet.
    DWORD original_error = ::GetLastError();
  
-@@ -409,16 +421,17 @@ BOOL WINAPI TargetCreateProcessA(CreateP
+@@ -420,16 +432,17 @@ BOOL WINAPI TargetCreateProcessA(CreateP
  
      if (SBOX_ALL_OK != code)
        break;
  
      ::SetLastError(answer.win32_result);
      if (ERROR_SUCCESS != answer.win32_result)
-       return FALSE;
+       return false;
  
 +    mozilla::sandboxing::LogAllowed("CreateProcessA", application_name);
-     return TRUE;
+     return true;
    } while (false);
  
    ::SetLastError(original_error);
-   return FALSE;
+   return false;
  }
  
  HANDLE WINAPI TargetCreateThread(CreateThreadFunction orig_CreateThread,
 diff --git a/security/sandbox/chromium/sandbox/win/src/registry_interception.cc b/security/sandbox/chromium/sandbox/win/src/registry_interception.cc
 --- a/security/sandbox/chromium/sandbox/win/src/registry_interception.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/registry_interception.cc
-@@ -9,31 +9,38 @@
+@@ -9,16 +9,17 @@
  #include "sandbox/win/src/crosscall_client.h"
  #include "sandbox/win/src/ipc_tags.h"
  #include "sandbox/win/src/policy_params.h"
@@ -545,14 +546,16 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/registry_interception.cc 
  namespace sandbox {
  
  NTSTATUS WINAPI TargetNtCreateKey(NtCreateKeyFunction orig_CreateKey,
-                                   PHANDLE key, ACCESS_MASK desired_access,
+                                   PHANDLE key,
+                                   ACCESS_MASK desired_access,
                                    POBJECT_ATTRIBUTES object_attributes,
-                                   ULONG title_index, PUNICODE_STRING class_name,
-                                   ULONG create_options, PULONG disposition) {
+                                   ULONG title_index,
+@@ -27,16 +28,22 @@ NTSTATUS WINAPI TargetNtCreateKey(NtCrea
+                                   PULONG disposition) {
    // Check if the process can create it first.
-   NTSTATUS status = orig_CreateKey(key, desired_access, object_attributes,
-                                    title_index, class_name, create_options,
-                                    disposition);
+   NTSTATUS status =
+       orig_CreateKey(key, desired_access, object_attributes, title_index,
+                      class_name, create_options, disposition);
    if (NT_SUCCESS(status))
      return status;
  
@@ -570,13 +573,13 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/registry_interception.cc 
      if (!ValidParameter(key, sizeof(HANDLE), WRITE))
        break;
  
-@@ -109,16 +116,19 @@ NTSTATUS WINAPI TargetNtCreateKey(NtCrea
+@@ -114,16 +121,19 @@ NTSTATUS WINAPI TargetNtCreateKey(NtCrea
  
        if (disposition)
-        *disposition = answer.extended[0].unsigned_int;
+         *disposition = answer.extended[0].unsigned_int;
  
        status = answer.nt_status;
-     } __except(EXCEPTION_EXECUTE_HANDLER) {
+     } __except (EXCEPTION_EXECUTE_HANDLER) {
        break;
      }
 +    mozilla::sandboxing::LogAllowed("NtCreateKey",
@@ -587,16 +590,16 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/registry_interception.cc 
    return status;
  }
  
- NTSTATUS WINAPI CommonNtOpenKey(NTSTATUS status, PHANDLE key,
+ NTSTATUS WINAPI CommonNtOpenKey(NTSTATUS status,
+                                 PHANDLE key,
                                  ACCESS_MASK desired_access,
-                                 POBJECT_ATTRIBUTES object_attributes) {
-@@ -185,29 +195,38 @@ NTSTATUS WINAPI CommonNtOpenKey(NTSTATUS
-         break;
+@@ -193,30 +203,39 @@ NTSTATUS WINAPI CommonNtOpenKey(NTSTATUS
+       break;
  
      __try {
        *key = answer.handle;
        status = answer.nt_status;
-     } __except(EXCEPTION_EXECUTE_HANDLER) {
+     } __except (EXCEPTION_EXECUTE_HANDLER) {
        break;
      }
 +    mozilla::sandboxing::LogAllowed("NtOpenKey[Ex]",
@@ -607,7 +610,8 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/registry_interception.cc 
    return status;
  }
  
- NTSTATUS WINAPI TargetNtOpenKey(NtOpenKeyFunction orig_OpenKey, PHANDLE key,
+ NTSTATUS WINAPI TargetNtOpenKey(NtOpenKeyFunction orig_OpenKey,
+                                 PHANDLE key,
                                  ACCESS_MASK desired_access,
                                  POBJECT_ATTRIBUTES object_attributes) {
    // Check if the process can open it first.
@@ -625,12 +629,12 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/registry_interception.cc 
  }
  
  NTSTATUS WINAPI TargetNtOpenKeyEx(NtOpenKeyExFunction orig_OpenKeyEx,
-                                   PHANDLE key, ACCESS_MASK desired_access,
+                                   PHANDLE key,
+                                   ACCESS_MASK desired_access,
                                    POBJECT_ATTRIBUTES object_attributes,
                                    ULONG open_options) {
-   // Check if the process can open it first.
-@@ -215,12 +234,18 @@ NTSTATUS WINAPI TargetNtOpenKeyEx(NtOpen
-                                    open_options);
+@@ -225,12 +244,18 @@ NTSTATUS WINAPI TargetNtOpenKeyEx(NtOpen
+       orig_OpenKeyEx(key, desired_access, object_attributes, open_options);
  
    // We do not support open_options at this time. The 2 current known values
    // are REG_OPTION_CREATE_LINK, to open a symbolic link, and
@@ -672,9 +676,9 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/sync_interception.cc b/se
 @@ -59,16 +60,20 @@ NTSTATUS WINAPI TargetNtCreateEvent(NtCr
                                      EVENT_TYPE event_type,
                                      BOOLEAN initial_state) {
-   NTSTATUS status = orig_CreateEvent(event_handle, desired_access,
-                                      object_attributes, event_type,
-                                      initial_state);
+   NTSTATUS status =
+       orig_CreateEvent(event_handle, desired_access, object_attributes,
+                        event_type, initial_state);
    if (status != STATUS_ACCESS_DENIED || !object_attributes)
      return status;
  
@@ -690,13 +694,13 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/sync_interception.cc b/se
      if (!ValidParameter(event_handle, sizeof(HANDLE), WRITE))
        break;
  
-@@ -98,30 +103,37 @@ NTSTATUS WINAPI TargetNtCreateEvent(NtCr
+@@ -97,30 +102,37 @@ NTSTATUS WINAPI TargetNtCreateEvent(NtCr
        break;
      }
      __try {
        *event_handle = answer.handle;
        status = STATUS_SUCCESS;
-     } __except(EXCEPTION_EXECUTE_HANDLER) {
+     } __except (EXCEPTION_EXECUTE_HANDLER) {
        break;
      }
 +    mozilla::sandboxing::LogAllowed("NtCreateEvent",
@@ -711,15 +715,15 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/sync_interception.cc b/se
                                    PHANDLE event_handle,
                                    ACCESS_MASK desired_access,
                                    POBJECT_ATTRIBUTES object_attributes) {
-   NTSTATUS status = orig_OpenEvent(event_handle, desired_access,
-                                    object_attributes);
+   NTSTATUS status =
+       orig_OpenEvent(event_handle, desired_access, object_attributes);
    if (status != STATUS_ACCESS_DENIED || !object_attributes)
      return status;
  
 +  mozilla::sandboxing::LogBlocked("NtOpenEvent",
 +                                  object_attributes->ObjectName->Buffer,
 +                                  object_attributes->ObjectName->Length);
-+  //
++
    // We don't trust that the IPC can work this early.
    if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
      return status;
@@ -728,13 +732,13 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/sync_interception.cc b/se
      if (!ValidParameter(event_handle, sizeof(HANDLE), WRITE))
        break;
  
-@@ -150,14 +162,17 @@ NTSTATUS WINAPI TargetNtOpenEvent(NtOpen
+@@ -149,14 +161,17 @@ NTSTATUS WINAPI TargetNtOpenEvent(NtOpen
        break;
      }
      __try {
        *event_handle = answer.handle;
        status = STATUS_SUCCESS;
-     } __except(EXCEPTION_EXECUTE_HANDLER) {
+     } __except (EXCEPTION_EXECUTE_HANDLER) {
        break;
      }
 +    mozilla::sandboxing::LogAllowed("NtOpenEvent",
