@@ -369,6 +369,7 @@
   <string name="home_remote_tabs_empty">&home_remote_tabs_empty;</string>
   <string name="home_remote_tabs_unable_to_connect">&home_remote_tabs_unable_to_connect;</string>
   <string name="home_remote_tabs_need_to_sign_in">&home_remote_tabs_need_to_sign_in;</string>
+  <string name="home_remote_tabs_need_to_finish_migrating">&home_remote_tabs_need_to_finish_migrating;</string>
   <string name="home_remote_tabs_trouble_verifying">&home_remote_tabs_trouble_verifying;</string>
   <string name="home_remote_tabs_need_to_verify">&home_remote_tabs_need_to_verify;</string>
   <string name="home_remote_tabs_one_hidden_device">&home_remote_tabs_one_hidden_device;</string>

@@ -35,6 +35,9 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.Spanned;
+import android.text.style.ClickableSpan;
 
 public class Utils {
 
@@ -613,5 +616,27 @@ public class Utils {
       return language;
     }
     return language + "-" + country;
+  }
+
+  /**
+   * Make a span with a clickable chunk of text interpolated in.
+   *
+   * @param context Android context.
+   * @param messageId of string containing clickable chunk.
+   * @param clickableId of string to make clickable.
+   * @param clickableSpan to activate on click.
+   * @return Spannable.
+   */
+  public static Spannable interpolateClickableSpan(Context context, int messageId, int clickableId, ClickableSpan clickableSpan) {
+    // This horrible bit of special-casing is because we want this error message to
+    // contain a clickable, extra chunk of text, but we don't want to pollute
+    // the exception class with Android specifics.
+    final String clickablePart = context.getString(clickableId);
+    final String message = context.getString(messageId, clickablePart);
+    final int clickableStart = message.lastIndexOf(clickablePart);
+    final int clickableEnd = clickableStart + clickablePart.length();
+    final Spannable span = Spannable.Factory.getInstance().newSpannable(message);
+    span.setSpan(clickableSpan, clickableStart, clickableEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+    return span;
   }
 }
