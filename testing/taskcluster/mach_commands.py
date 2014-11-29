@@ -13,9 +13,6 @@ import subprocess
 import sys
 import urllib2
 
-import pystache
-import yaml
-
 from mach.decorators import (
     CommandArgument,
     CommandProvider,
@@ -25,6 +22,7 @@ from mach.decorators import (
 from taskcluster_graph.commit_parser import parse_commit
 from taskcluster_graph.slugid import slugid
 from taskcluster_graph.from_now import json_time_from_now, current_json_time
+from taskcluster_graph.templates import Templates
 
 import taskcluster_graph.build_task
 
@@ -70,14 +68,6 @@ def get_latest_hg_revision(repository):
 
     return revision
 
-def import_yaml(path, variables=None):
-    ''' Load a yml file relative to the root of this file'''
-    content = open(os.path.join(ROOT, path)).read()
-    if variables is not None:
-        content = pystache.render(content, variables)
-    task = yaml.load(content)
-    return task
-
 def docker_image(name):
     ''' Determine the docker tag/revision from an in tree docker file '''
     repository_path = os.path.join(DOCKER_ROOT, name, 'REPOSITORY')
@@ -94,35 +84,50 @@ def get_task(task_id):
     return json.load(urllib2.urlopen("https://queue.taskcluster.net/v1/task/" + task_id))
 
 @CommandProvider
+class InheritTryme(object):
+    @Command('taskcluster-inherit', category="ci",
+        description="Create taskcluster try server graph")
+    def tryme(self):
+        yaml.add_platform
+        print('meme')
+
+
+
+@CommandProvider
 class TryGraph(object):
     @Command('taskcluster-trygraph', category="ci",
         description="Create taskcluster try server graph")
-    @CommandArgument('--revision',
-        help='revision in gecko to use in sub tasks')
+    @CommandArgument('--base-repository',
+        help='URL for "base" repository to clone')
+    @CommandArgument('--head-repository',
+        required=True,
+        help='URL for "base" repository to clone')
+    @CommandArgument('--head-ref',
+        help='Reference (this is same as rev usually for hg)')
+    @CommandArgument('--head-rev',
+        required=True,
+        help='Commit revision to use')
     @CommandArgument('--message',
         required=True,
         help='Commit message to be parsed')
-    @CommandArgument('--repository',
-        help='full path to hg repository to use in sub tasks')
     @CommandArgument('--owner',
+        required=True,
         help='email address of who owns this graph')
     @CommandArgument('--extend-graph',
         action="store_true", dest="ci", help='Omit create graph arguments')
-    def create_graph(self, revision="", message="", repository="", owner="",
-            ci=False):
-        """ Create the taskcluster graph from the try commit message.
-
-        :param args: commit message (ex: "– try: -b o -p linux64_gecko -u gaia-unit -t none")
-        """
-        jobs = import_yaml('job_flags.yml')
-        job_graph = parse_commit(message, jobs)
-
+    def create_graph(self, **params):
+        templates = Templates(ROOT)
+        jobs = templates.load('job_flags.yml', {})
+        job_graph = parse_commit(params['message'], jobs)
         # Template parameters used when expanding the graph
         parameters = {
             'docker_image': docker_image,
-            'repository': repository,
-            'revision': revision,
-            'owner': owner,
+            'base_repository': params['base_repository'] or \
+                params['head_repository'],
+            'head_repository': params['head_repository'],
+            'head_ref': params['head_ref'] or params['head_rev'],
+            'head_rev': params['head_rev'],
+            'owner': params['owner'],
             'from_now': json_time_from_now,
             'now': datetime.datetime.now().isoformat()
         }
@@ -133,10 +138,10 @@ class TryGraph(object):
             'scopes': []
         }
 
-        if ci is False:
+        if params['ci'] is False:
             graph['metadata'] = {
                 'source': 'http://todo.com/what/goes/here',
-                'owner': owner,
+                'owner': params['owner'],
                 # TODO: Add full mach commands to this example?
                 'description': 'Try task graph generated via ./mach trygraph',
                 'name': 'trygraph local'
@@ -145,7 +150,7 @@ class TryGraph(object):
         for build in job_graph:
             build_parameters = dict(parameters, **build['additional-parameters'])
             build_parameters['build_slugid'] = slugid()
-            build_task = import_yaml(build['task'], build_parameters)
+            build_task = templates.load(build['task'], build_parameters)
 
             # Ensure each build graph is valid after construction.
             taskcluster_graph.build_task.validate(build_task)
@@ -178,7 +183,7 @@ class TryGraph(object):
 
                 for chunk in range(1, test_parameters['total_chunks'] + 1):
                     test_parameters['chunk'] = chunk
-                    test_task = import_yaml(test['task'], test_parameters)
+                    test_task = templates.load(test['task'], test_parameters)
                     test_task['taskId'] = slugid()
 
                     if 'requires' not in test_task:
@@ -196,49 +201,60 @@ class TryGraph(object):
                     graph['scopes'].extend(test_task['task'].get('scopes', []))
 
         graph['scopes'] = list(set(graph['scopes']))
-
         print(json.dumps(graph, indent=4))
 
 @CommandProvider
 class CIBuild(object):
     @Command('taskcluster-build', category='ci',
         description="Create taskcluster try server build task")
-    @CommandArgument('--revision',
-        help='revision in gecko to use in sub tasks')
-    @CommandArgument('--repository',
-        help='full path to hg repository to use in sub tasks')
     @CommandArgument('--b2g-config',
         help='(emulators/phones only) in tree build configuration directory')
     @CommandArgument('--debug', action='store_true',
         help='(emulators/phones only) build debug images')
+    @CommandArgument('--base-repository',
+        help='URL for "base" repository to clone')
+    @CommandArgument('--head-repository',
+        required=True,
+        help='URL for "base" repository to clone')
+    @CommandArgument('--head-ref',
+        help='Reference (this is same as rev usually for hg)')
+    @CommandArgument('--head-rev',
+        required=True,
+        help='Commit revision to use')
     @CommandArgument('--owner',
         help='email address of who owns this graph')
     @CommandArgument('build_task',
         help='path to build task definition')
-    def create_ci_build(self, build_task, revision="", repository="", b2g_config="", debug=False, owner=""):
+    def create_ci_build(self, **params):
+        templates = Templates(ROOT)
         # TODO handle git repos
-        if not repository:
-            repository = get_hg_url()
+        head_repository = params['head_repository']
+        if not head_repository:
+            head_repository = get_hg_url()
 
-        if not revision:
-            revision = get_latest_hg_revision(repository)
+        head_rev = params['head_rev']
+        if not head_rev:
+            head_rev = get_latest_hg_revision(head_repository)
 
-        debug = 1 if debug else 0
+        head_ref = params['head_ref'] or head_rev
+        debug = 1 if params.get('debug') else 0
 
         build_parameters = {
             'docker_image': docker_image,
-            'repository': repository,
-            'revision': revision,
-            'b2g-config': b2g_config,
+            'b2g-config': params['b2g_config'],
             'debug': debug,
             'build-type': 'Debug' if debug else 'Opt',
-            'owner': owner,
+            'owner': params['owner'],
             'from_now': json_time_from_now,
-            'now': current_json_time()
+            'now': current_json_time(),
+            'base_repository': params['base_repository'] or head_repository,
+            'head_repository': head_repository,
+            'head_rev': head_rev,
+            'head_ref': head_ref
         }
 
         try:
-            build_task = import_yaml(build_task, build_parameters)
+            build_task = templates.load(params['build_task'], build_parameters)
         except IOError:
             sys.stderr.write(
                 "Could not load build task file.  Ensure path is a relative " \

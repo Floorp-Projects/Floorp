@@ -12,24 +12,26 @@ task:
   provisionerId: aws-provisioner
 
   scopes:
-    - 'docker-worker:cache:sources-mozilla-central'
+    - 'docker-worker:cache:tc-vcs'
+    - 'docker-worker:cache:sources-gecko'
     - 'docker-worker:cache:build-mulet-linux-objects'
     - 'docker-worker:cache:tooltool-cache'
     - 'docker-worker:image:{{#docker_image}}builder{{/docker_image}}'
 
   payload:
     cache:
-      sources-mozilla-central: '/home/worker/mozilla-central'
+      tc-vcs: '/home/worker/.tc-vcs'
+      sources-gecko: '/home/worker/gecko'
       build-mulet-linux-objects: '/home/worker/object-folder'
       tooltool-cache: '/home/worker/tools/tooltool-cache'
 
     env:
       MOZCONFIG: 'b2g/dev/config/mozconfigs/linux64/mulet'
       # revision/project params defined originally here https://github.com/taskcluster/taskcluster-try/blob/master/try/instantiate.js
-      REVISION: '{{revision}}'
-      REPOSITORY: '{{repository}}'
-      MOZTT_GIT_URL: '{{moztt_git_url}}'
-      MOZTT_REVISION: '{{moztt_revision}}'
+      GECKO_BASE_REPOSITORY: '{{base_repository}}'
+      GECKO_HEAD_REPOSITORY: '{{head_repository}}'
+      GECKO_HEAD_REV: '{{head_rev}}'
+      GECKO_HEAD_REF: '{{head_ref}}'
 
     image: '{{#docker_image}}builder{{/docker_image}}'
     maxRunTime: 3600
