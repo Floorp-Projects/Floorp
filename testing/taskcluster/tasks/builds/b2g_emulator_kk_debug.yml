@@ -1,0 +1,8 @@
+$inherits:
+  from: 'tasks/builds/b2g_emulator_kk_opt.yml'
+task:
+  metadata:
+    name: B2G Emulator KK Debug
+  payload:
+    env:
+      B2G_DEBUG: 1

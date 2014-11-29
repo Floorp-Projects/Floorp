@@ -60,7 +60,7 @@ builds:
       - b2g
     types:
       opt:
-        task: tasks/builds/b2g_desktop.yml
+        task: tasks/builds/b2g_desktop_opt.yml
       debug:
         task: tasks/builds/b2g_desktop_debug.yml
   linux64-mulet:
@@ -74,49 +74,25 @@ builds:
       - b2g
     types:
       opt:
-        task: tasks/builds/b2g_emulator.yml
-        additional-parameters:
-          debug: 0
-          b2g-config: 'emulator-kk'
-          build-type: Opt
+        task: tasks/builds/b2g_emulator_kk_opt.yml
       debug:
-        task: tasks/builds/b2g_emulator.yml
-        additional-parameters:
-          debug: 1
-          b2g-config: 'emulator-kk'
-          build-type: Debug
+        task: tasks/builds/b2g_emulator_kk_debug.yml
   emulator-jb:
     platfoms:
       - b2g
     types:
       opt:
-        task: tasks/builds/b2g_emulator.yml
-        additional-parameters:
-          debug: 0
-          b2g-config: 'emulator-jb'
-          build-type: Opt
+        task: tasks/builds/b2g_emulator_jb_opt.yml
       debug:
-        task: tasks/builds/b2g_emulator.yml
-        additional-parameters:
-          debug: 1
-          b2g-config: 'emulator-jb'
-          build-type: Debug
+        task: tasks/builds/b2g_emulator_jb_debug.yml
   emulator:
     platfoms:
       - b2g
     types:
       opt:
-        task: tasks/builds/b2g_emulator.yml
-        additional-parameters:
-          debug: 0
-          b2g-config: 'emulator-ics'
-          build-type: Opt
+        task: tasks/builds/b2g_emulator_ics_opt.yml
       debug:
-        task: tasks/builds/b2g_emulator.yml
-        additional-parameters:
-          debug: 1
-          b2g-config: 'emulator-ics'
-          build-type: Debug
+        task: tasks/builds/b2g_emulator_ics_debug.yml
 
 # Test section covers the -u options in the try flags
 tests:
@@ -131,23 +107,23 @@ tests:
   #   # tests on all build variants so we use "allowed tasks" instead of
   #   # "allowed platforms" here.
   #   allowed_build_tasks:
-  #     - builds/b2g_desktop.yml
+  #     - builds/b2g_desktop_opt.yml
   cppunit:
     allowed_build_tasks:
-      tasks/builds/b2g_emulator.yml:
+      tasks/builds/b2g_emulator_ics_opt.yml:
         task: tasks/tests/b2g_emulator_cpp_unit.yml
   crashtest:
     allowed_build_tasks:
-      tasks/builds/b2g_emulator.yml:
+      tasks/builds/b2g_emulator_ics_opt.yml:
         task: tasks/tests/b2g_emulator_crashtest.yml
         chunks: 3
   gaia-build-unit:
     allowed_build_tasks:
-      tasks/builds/b2g_desktop.yml:
+      tasks/builds/b2g_desktop_opt.yml:
         task: tasks/tests/b2g_build_unit.yml
   gaia-js-integration:
     allowed_build_tasks:
-      tasks/builds/b2g_desktop.yml:
+      tasks/builds/b2g_desktop_opt.yml:
         task: tasks/tests/b2g_gaia_js_integration_tests.yml
         chunks: 4
       tasks/builds/b2g_desktop_debug.yml:
@@ -155,37 +131,37 @@ tests:
         chunks: 4
   gaia-linter:
     allowed_build_tasks:
-      tasks/builds/b2g_desktop.yml:
+      tasks/builds/b2g_desktop_opt.yml:
         task: tasks/tests/b2g_linter.yml
   gaia-ui-test-accessibility:
     allowed_build_tasks:
-      tasks/builds/b2g_desktop.yml:
+      tasks/builds/b2g_desktop_opt.yml:
         task: tasks/tests/b2g_gaia_ui_test_accessibility.yml
   gaia-ui-test-functional:
     allowed_build_tasks:
-      tasks/builds/b2g_desktop.yml:
+      tasks/builds/b2g_desktop_opt.yml:
         task: tasks/tests/b2g_gaia_ui_test_functional.yml
         chunks: 3
   gaia-ui-test-unit:
     allowed_build_tasks:
-      tasks/builds/b2g_desktop.yml:
+      tasks/builds/b2g_desktop_opt.yml:
         task: tasks/tests/b2g_gaia_ui_test_unit.yml
   jsreftest:
     allowed_build_tasks:
-      tasks/builds/b2g_emulator.yml:
+      tasks/builds/b2g_emulator_ics_opt.yml:
         task: tasks/tests/b2g_emulator_js_reftest.yml
         chunks: 3
   marionette:
     allowed_build_tasks:
-      tasks/builds/b2g_emulator.yml:
+      tasks/builds/b2g_emulator_ics_opt.yml:
         task: tasks/tests/b2g_emulator_marionette.yml
   marionette-webapi:
     allowed_build_tasks:
-      tasks/builds/b2g_emulator.yml:
+      tasks/builds/b2g_emulator_ics_opt.yml:
         task: tasks/tests/b2g_emulator_marionette_webapi.yml
   mochitests:
     allowed_build_tasks:
-      tasks/builds/b2g_desktop.yml:
+      tasks/builds/b2g_desktop_opt.yml:
         task: tasks/tests/b2g_mochitest.yml
         chunks: 5
       tasks/builds/b2g_desktop_debug.yml:
@@ -194,16 +170,16 @@ tests:
       tasks/builds/mulet_linux.yml:
         task: tasks/tests/mulet_mochitests.yml
         chunks: 5
-      tasks/builds/b2g_emulator.yml:
+      tasks/builds/b2g_emulator_ics_opt.yml:
         task: tasks/tests/b2g_emulator_mochitest.yml
         chunks: 9
   mochitest-media:
     allowed_build_tasks:
-      tasks/builds/b2g_emulator.yml:
+      tasks/builds/b2g_emulator_ics_opt.yml:
         task: tasks/tests/b2g_emulator_mochitest_media.yml
   mochitest-oop:
     allowed_build_tasks:
-      tasks/builds/b2g_desktop.yml:
+      tasks/builds/b2g_desktop_opt.yml:
         task: tasks/tests/b2g_mochitest_oop.yml
         chunks: 1
   reftest:
@@ -211,18 +187,18 @@ tests:
       tasks/builds/mulet_linux.yml:
         task: tasks/tests/mulet_reftests.yml
         chunks: 6
-      tasks/builds/b2g_desktop.yml:
+      tasks/builds/b2g_desktop_opt.yml:
         task: tasks/tests/b2g_reftests.yml
         chunks: 10
-      tasks/builds/b2g_emulator.yml:
+      tasks/builds/b2g_emulator_ics_opt.yml:
         task: tasks/tests/b2g_emulator_reftest.yml
         chunks: 20
   reftest-sanity-oop:
     allowed_build_tasks:
-      tasks/builds/b2g_desktop.yml:
+      tasks/builds/b2g_desktop_opt.yml:
         task: tasks/tests/b2g_reftests_sanity_oop.yml
         chunks: 1
   xpcshell:
     allowed_build_tasks:
-      tasks/builds/b2g_emulator.yml:
+      tasks/builds/b2g_emulator_ics_opt.yml:
         task: tasks/tests/b2g_emulator_xpcshell.yml

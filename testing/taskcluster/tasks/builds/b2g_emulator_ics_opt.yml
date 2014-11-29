@@ -1,0 +1,9 @@
+$inherits:
+  from: 'tasks/builds/b2g_emulator_base.yml'
+task:
+  metadata:
+    name: B2G Emulator ICS Opt
+  payload:
+    env:
+      B2G_CONFIG: 'emulator-ics'
+

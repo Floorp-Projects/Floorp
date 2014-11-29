@@ -1,0 +1,47 @@
+# This is the "base" task which contains the common values all builds must
+# provide.
+---
+taskId: {{build_slugid}}
+
+task:
+  created: '{{now}}'
+  deadline: '{{#from_now}}24 hours{{/from_now}}'
+  metadata:
+    source: http://todo.com/soon
+    owner: {{owner}}
+
+  workerType: b2gbuild
+  provisionerId: aws-provisioner
+
+  scopes:
+    # Nearly all of our build tasks use tc-vcs so just include the scope across
+    # the board.
+    - 'docker-worker:cache:tc-vcs'
+
+  payload:
+    image: '{{#docker_image}}builder{{/docker_image}}'
+
+    # One hour is a good value for most builds
+    maxRunTime: 3600
+
+    cache:
+      tc-vcs: '/home/worker/.tc-vcs'
+
+    # All builds share a common artifact directory for ease of uploading.
+    artifacts:
+      'public/build':
+        type: directory
+        path: '/home/worker/artifacts/'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+
+
+    env:
+      # Common environment variables for checking out gecko
+      GECKO_BASE_REPOSITORY: '{{base_repository}}'
+      GECKO_HEAD_REPOSITORY: '{{head_repository}}'
+      GECKO_HEAD_REV: '{{head_rev}}'
+      GECKO_HEAD_REF: '{{head_ref}}'
+
+  extra:
+    treeherder:
+      symbol: B
