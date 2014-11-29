@@ -4,56 +4,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "warnOnlySandbox.h"
+#include "sandboxLogging.h"
 
 #include "base/strings/utf_string_conversions.h"
 #include "sandbox/win/src/sandbox_policy.h"
 
 namespace mozilla {
-namespace warnonlysandbox {
+namespace sandboxing {
 
 void
-ApplyWarnOnlyPolicy(sandbox::TargetPolicy& aPolicy)
+ApplyLoggingPolicy(sandbox::TargetPolicy& aPolicy)
 {
-  // Add rules to allow everything that we can, so that we can add logging to
-  // warn when we would be blocked by the sandbox.
-  aPolicy.AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
-                  sandbox::TargetPolicy::FILES_ALLOW_ANY, L"*");
+  // Add dummy rules, so that we can log in the interception code.
+  // We already have a file interception set up for the client side of pipes.
+  // Also, passing just "dummy" for file system policy causes win_utils.cc
+  // IsReparsePoint() to loop.
   aPolicy.AddRule(sandbox::TargetPolicy::SUBSYS_NAMED_PIPES,
-                  sandbox::TargetPolicy::NAMEDPIPES_ALLOW_ANY, L"*");
+                  sandbox::TargetPolicy::NAMEDPIPES_ALLOW_ANY, L"dummy");
   aPolicy.AddRule(sandbox::TargetPolicy::SUBSYS_PROCESS,
-                  sandbox::TargetPolicy::PROCESS_ALL_EXEC, L"*");
+                  sandbox::TargetPolicy::PROCESS_MIN_EXEC, L"dummy");
   aPolicy.AddRule(sandbox::TargetPolicy::SUBSYS_REGISTRY,
-                  sandbox::TargetPolicy::REG_ALLOW_ANY,
-                  L"HKEY_CLASSES_ROOT\\*");
-  aPolicy.AddRule(sandbox::TargetPolicy::SUBSYS_REGISTRY,
-                  sandbox::TargetPolicy::REG_ALLOW_ANY,
-                  L"HKEY_CURRENT_USER\\*");
-  aPolicy.AddRule(sandbox::TargetPolicy::SUBSYS_REGISTRY,
-                  sandbox::TargetPolicy::REG_ALLOW_ANY,
-                  L"HKEY_LOCAL_MACHINE\\*");
-  aPolicy.AddRule(sandbox::TargetPolicy::SUBSYS_REGISTRY,
-                  sandbox::TargetPolicy::REG_ALLOW_ANY,
-                  L"HKEY_USERS\\*");
-  aPolicy.AddRule(sandbox::TargetPolicy::SUBSYS_REGISTRY,
-                  sandbox::TargetPolicy::REG_ALLOW_ANY,
-                  L"HKEY_PERFORMANCE_DATA\\*");
-  aPolicy.AddRule(sandbox::TargetPolicy::SUBSYS_REGISTRY,
-                  sandbox::TargetPolicy::REG_ALLOW_ANY,
-                  L"HKEY_PERFORMANCE_TEXT\\*");
-  aPolicy.AddRule(sandbox::TargetPolicy::SUBSYS_REGISTRY,
-                  sandbox::TargetPolicy::REG_ALLOW_ANY,
-                  L"HKEY_PERFORMANCE_NLSTEXT\\*");
-  aPolicy.AddRule(sandbox::TargetPolicy::SUBSYS_REGISTRY,
-                  sandbox::TargetPolicy::REG_ALLOW_ANY,
-                  L"HKEY_CURRENT_CONFIG\\*");
-  aPolicy.AddRule(sandbox::TargetPolicy::SUBSYS_REGISTRY,
-                  sandbox::TargetPolicy::REG_ALLOW_ANY,
-                  L"HKEY_DYN_DATA\\*");
+                  sandbox::TargetPolicy::REG_ALLOW_READONLY,
+                  L"HKEY_CURRENT_USER\\dummy");
   aPolicy.AddRule(sandbox::TargetPolicy::SUBSYS_SYNC,
-                  sandbox::TargetPolicy::EVENTS_ALLOW_ANY, L"*");
+                  sandbox::TargetPolicy::EVENTS_ALLOW_READONLY, L"dummy");
   aPolicy.AddRule(sandbox::TargetPolicy::SUBSYS_HANDLES,
-                  sandbox::TargetPolicy::HANDLES_DUP_ANY, L"*");
+                  sandbox::TargetPolicy::HANDLES_DUP_BROKER, L"dummy");
 }
 
 static LogFunction sLogFunction = nullptr;
@@ -122,5 +98,5 @@ LogAllowed(const char* aFunctionName, const wchar_t* aContext,
   }
 }
 
-} // warnonlysandbox
+} // sandboxing
 } // mozilla
