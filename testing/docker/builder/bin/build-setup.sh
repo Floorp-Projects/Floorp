@@ -1,6 +1,6 @@
 #!/bin/bash -vex
 
-gecko_dir=/home/worker/mozilla-central/source
+gecko_dir=/home/worker/gecko/source
 gaia_dir=/home/worker/gaia/source
 
 create_parent_dir() {
@@ -10,12 +10,8 @@ create_parent_dir() {
   fi
 }
 
-### Firefox Build Setup
-# Clone mozilla-central
-if [ ! -d "$gecko_dir" ]; then
-  create_parent_dir $gecko_dir
-  hg clone https://hg.mozilla.org/mozilla-central/ $gecko_dir
-fi
+# Ensure we always have the parent directory for gecko
+create_parent_dir $gecko_dir
 
 # Create .mozbuild so mach doesn't complain about this
 mkdir -p /home/worker/.mozbuild/

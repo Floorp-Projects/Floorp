@@ -5,36 +5,22 @@
 . build-setup.sh
 
 ### Check that require variables are defined
-test $REPOSITORY  # Should be an hg repository url to pull from
-test $REVISION    # Should be an hg revision to pull down
-test $MOZCONFIG   # Should be a mozconfig file from mozconfig/ folder
+test $MOZCONFIG
 
-### Pull and update mozilla-central
-cd $gecko_dir
-hg pull -r $REVISION $REPOSITORY;
-hg update $REVISION;
+# Ensure gecko is at the correct revision
+pull-gecko.sh $gecko_dir
 
 ### Install package dependencies
-. install_packages.sh
+install-packages.sh $gecko_dir
 
 ### Clone gaia
-if [ ! -d "$gaia_dir" ]; then
-  create_parent_dir $gaia_dir
-  hg clone https://hg.mozilla.org/integration/gaia-central/ $gaia_dir
-fi
-
-### Pull and update gaia
-cd $gaia_dir
-GAIA_REV=$(get_gaia_revision.js)
-GAIA_REPO="$(get_gaia_repo.js)"
-hg pull -r $GAIA_REV $GAIA_REPO;
-hg update $GAIA_REV;
+pull-gaia.sh $gecko_dir $gaia_dir
 
 cd $gecko_dir
 
 # Nightly mozconfig expects gaia repo be inside mozilla-central tree
 if [ ! -d "gaia" ]; then
-  ln -s ../../gaia/source gaia
+  ln -s $gaia_dir gaia
 fi
 
 export MOZ_OBJDIR=$(get-objdir.py $gecko_dir)
@@ -50,7 +36,6 @@ make package package-tests;
 cd $MOZ_OBJDIR/dist
 
 ls -lah $MOZ_OBJDIR/dist/
-
 
 # Target names are cached so make sure we discard them first if found.
 rm -f target.linux-x86_64.tar.bz2 target.linux-x86_64.json target.tests.zip
