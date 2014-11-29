@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef security_sandbox_wosTypes_h__
-#define security_sandbox_wosTypes_h__
+#ifndef security_sandbox_loggingTypes_h__
+#define security_sandbox_loggingTypes_h__
 
 #include <stdint.h>
 
 namespace mozilla {
-namespace warnonlysandbox {
+namespace sandboxing {
 
 // We are using callbacks here that are passed in from the core code to prevent
 // a circular dependency in the linking during the build.
@@ -21,7 +21,7 @@ typedef void (*LogFunction) (const char* aMessageType,
                              uint32_t aFramesToSkip);
 typedef void (*ProvideLogFunctionCb) (LogFunction aLogFunction);
 
-} // warnonlysandbox
+} // sandboxing
 } // mozilla
 
-#endif // security_sandbox_wosTypes_h__
+#endif // security_sandbox_loggingTypes_h__
