@@ -95,7 +95,7 @@ WeakSetObject::construct(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    if (args.hasDefined(0)) {
+    if (!args.get(0).isNullOrUndefined()) {
         RootedObject map(cx, &obj->getReservedSlot(WEAKSET_MAP_SLOT).toObject());
 
         JS::ForOfIterator iter(cx);

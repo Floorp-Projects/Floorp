@@ -602,7 +602,8 @@ private:
                                            const nsString& aCookie, const nsString& aName,
                                            const nsString& aBidi, const nsString& aLang,
                                            const nsString& aData,
-                                           const IPC::Principal& aPrincipal) MOZ_OVERRIDE;
+                                           const IPC::Principal& aPrincipal,
+                                           const bool& aInPrivateBrowsing) MOZ_OVERRIDE;
 
     virtual bool RecvCloseAlert(const nsString& aName,
                                 const IPC::Principal& aPrincipal) MOZ_OVERRIDE;

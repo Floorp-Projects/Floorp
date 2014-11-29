@@ -8,7 +8,6 @@ var misc = [
     {}, {x: 1}, Math, isNaN,
     Object.create(null),
     argsobj(0, 1, 2),
-    null,
     true, 0, 3.1416,
     new Boolean(true), new Number(0),
     {iterator: function () { return undefined; }},

@@ -28,7 +28,7 @@ function test()
     // Cause an exception in a script loaded with the addon-sdk loader.
     let toolbox = gDevTools.getToolbox(webconsole.target);
     let oldPanels = toolbox._toolPanels;
-    toolbox._toolPanels = null;
+    toolbox._toolPanels = {}; // non-iterable
 
     function fixToolbox() {
       toolbox._toolPanels = oldPanels;
@@ -45,7 +45,7 @@ function test()
     let [result] = yield waitForMessages({
       webconsole: browserconsole,
       messages: [{
-        text: "TypeError: can't convert null to object",
+        text: "TypeError: this._toolPanels is not iterable",
         category: CATEGORY_JS,
         severity: SEVERITY_ERROR,
       }],
