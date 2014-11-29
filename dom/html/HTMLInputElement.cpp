@@ -7287,7 +7287,8 @@ HTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
   nsTArray<nsFilePickerFilter> filters;
   nsString allExtensionsList;
 
-  bool allFiltersAreValid = true;
+  bool allMimeTypeFiltersAreValid = true;
+  bool atLeastOneFileExtensionFilter = false;
 
   // Retrieve all filters
   while (tokenizer.hasMoreTokens()) {
@@ -7314,6 +7315,10 @@ HTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
       filterMask = nsIFilePicker::filterVideo;
       filterBundle->GetStringFromName(MOZ_UTF16("videoFilter"),
                                       getter_Copies(extensionListStr));
+    } else if (token.First() == '.') {
+      extensionListStr = NS_LITERAL_STRING("*") + token;
+      filterName = extensionListStr + NS_LITERAL_STRING("; ");
+      atLeastOneFileExtensionFilter = true;
     } else {
       //... if no image/audio/video filter is found, check mime types filters
       nsCOMPtr<nsIMIMEInfo> mimeInfo;
@@ -7322,7 +7327,7 @@ HTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
                       EmptyCString(), // No extension
                       getter_AddRefs(mimeInfo))) ||
           !mimeInfo) {
-        allFiltersAreValid =  false;
+        allMimeTypeFiltersAreValid =  false;
         continue;
       }
 
@@ -7355,7 +7360,7 @@ HTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
 
     if (!filterMask && (extensionListStr.IsEmpty() || filterName.IsEmpty())) {
       // No valid filter found
-      allFiltersAreValid = false;
+      allMimeTypeFiltersAreValid = false;
       continue;
     }
 
@@ -7395,9 +7400,8 @@ HTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
     }
   }
 
-  // If all filters are known/valid, select the first filter as default;
-  // otherwise filterAll will remain the default filter
-  if (filters.Length() >= 1 && allFiltersAreValid) {
+  if (filters.Length() >= 1 &&
+      (allMimeTypeFiltersAreValid || atLeastOneFileExtensionFilter)) {
     // |filterAll| will always use index=0 so we need to set index=1 as the
     // current filter.
     filePicker->SetFilterIndex(1);

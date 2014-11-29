@@ -27,6 +27,8 @@
   <input id='l' type="file" accept="image/*,image/gif,image/png">
   <input id='m' type="file" accept="image/gif,image/gif">
   <input id='n' type="file" accept="">
+  <input id='o' type="file" accept=".test">
+  <input id='p' type="file" accept="image/gif,.csv">
   <input id='z' type='file' accept="i/am,a,pathological,;,,,,test/case">
   <input id='hidden' hidden type='file'>
   <input id='untrusted-click' type='file'>
@@ -82,6 +84,8 @@ var testData = [["a", 1, MockFilePicker.filterImages, 1],
                 ["l", 4, imageExtensionList + "; " + "*.gif; *.png", 1],
                 ["m", 1, "*.gif", 1],
                 ["n", 0, undefined, 0],
+                ["o", 1, "*.test", 1],
+                ["p", 3, "*.gif; *.csv", 1],
                 ["z", 0, undefined, 0],
                 ["hidden", 0, undefined, 0],
                 ["untrusted-click", 0, undefined, 0],
