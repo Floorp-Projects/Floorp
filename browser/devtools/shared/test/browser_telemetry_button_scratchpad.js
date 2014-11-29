@@ -15,11 +15,29 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>browser_telemetry_button_scrat
 const TOOL_DELAY = 200;
 
 let promise = Cu.import("resource://gre/modules/devtools/deprecated-sync-thenables.js", {}).Promise;
+let {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
+
+let require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
+let Telemetry = require("devtools/shared/telemetry");
 
 let numScratchpads = 0;
 
 function init() {
-  startTelemetry();
+  Telemetry.prototype.telemetryInfo = {};
+  Telemetry.prototype._oldlog = Telemetry.prototype.log;
+  Telemetry.prototype.log = function(histogramId, value) {
+    if (!this.telemetryInfo) {
+      // Can be removed when Bug 992911 lands (see Bug 1011652 Comment 10)
+      return;
+    }
+    if (histogramId) {
+      if (!this.telemetryInfo[histogramId]) {
+        this.telemetryInfo[histogramId] = [];
+      }
+
+      this.telemetryInfo[histogramId].push(value);
+    }
+  };
 
   Services.ww.registerNotification(windowObserver);
   testButton("command-button-scratchpad");
@@ -58,7 +76,7 @@ function windowObserver(aSubject, aTopic, aData) {
             if (numScratchpads === 4) {
               Services.ww.unregisterNotification(windowObserver);
               info("4 scratchpads have been opened and closed, checking results");
-              checkResults();
+              checkResults("_SCRATCHPAD_");
             }
           },
         });
@@ -87,23 +105,39 @@ function delayedClicks(node, clicks) {
   return deferred.promise;
 }
 
-function checkResults() {
-  // For help generating these tests use generateTelemetryTests("DEVTOOLS_")
-  // here.
-  checkTelemetry("DEVTOOLS_DEBUGGER_RDP_LOCAL_LISTTABS_MS", null, "hasentries");
-  checkTelemetry("DEVTOOLS_DEBUGGER_RDP_LOCAL_RECONFIGURETAB_MS", null, "hasentries");
+function checkResults(histIdFocus) {
+  let result = Telemetry.prototype.telemetryInfo;
 
-  checkTelemetry("DEVTOOLS_INSPECTOR_OPENED_BOOLEAN", [0,1,0]);
-  checkTelemetry("DEVTOOLS_INSPECTOR_OPENED_PER_USER_FLAG", [0,1,0]);
+  for (let [histId, value] of Iterator(result)) {
+    if (histId.startsWith("DEVTOOLS_INSPECTOR_") ||
+        !histId.contains(histIdFocus)) {
+      // Inspector stats are tested in
+      // browser_telemetry_toolboxtabs_{toolname}.js so we skip them here
+      // because we only open the inspector once for this test.
+      continue;
+    }
 
-  checkTelemetry("DEVTOOLS_RULEVIEW_OPENED_BOOLEAN", [0,1,0]);
-  checkTelemetry("DEVTOOLS_RULEVIEW_OPENED_PER_USER_FLAG", [0,1,0]);
+    if (histId.endsWith("OPENED_PER_USER_FLAG")) {
+      ok(value.length === 1 && value[0] === true,
+         "Per user value " + histId + " has a single value of true");
+    } else if (histId.endsWith("OPENED_BOOLEAN")) {
+      ok(value.length > 1, histId + " has more than one entry");
 
-  checkTelemetry("DEVTOOLS_SCRATCHPAD_OPENED_BOOLEAN", [0,4,0]);
-  checkTelemetry("DEVTOOLS_SCRATCHPAD_OPENED_PER_USER_FLAG", [0,1,0]);
+      let okay = value.every(function(element) {
+        return element === true;
+      });
 
-  checkTelemetry("DEVTOOLS_TOOLBOX_OPENED_BOOLEAN", [0,1,0]);
-  checkTelemetry("DEVTOOLS_TOOLBOX_OPENED_PER_USER_FLAG", [0,1,0]);
+      ok(okay, "All " + histId + " entries are === true");
+    } else if (histId.endsWith("TIME_ACTIVE_SECONDS")) {
+      ok(value.length > 1, histId + " has more than one entry");
+
+      let okay = value.every(function(element) {
+        return element > 0;
+      });
+
+      ok(okay, "All " + histId + " entries have time > 0");
+    }
+  }
 
   finishUp();
 }
@@ -111,7 +145,11 @@ function checkResults() {
 function finishUp() {
   gBrowser.removeCurrentTab();
 
-  TargetFactory = promise = numScratchpads = null;
+  Telemetry.prototype.log = Telemetry.prototype._oldlog;
+  delete Telemetry.prototype._oldlog;
+  delete Telemetry.prototype.telemetryInfo;
+
+  TargetFactory = Services = promise = require = numScratchpads = null;
 
   finish();
 }
