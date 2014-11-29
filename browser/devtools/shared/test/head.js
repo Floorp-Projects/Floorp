@@ -5,6 +5,8 @@
 let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 let {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
+let {CustomizableUI} = Cu.import("resource:///modules/CustomizableUI.jsm", {});
+
 let TargetFactory = devtools.TargetFactory;
 let Telemetry = devtools.require("devtools/shared/telemetry");
 let oldCanRecord = Services.telemetry.canRecord;

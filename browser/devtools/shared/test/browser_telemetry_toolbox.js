@@ -7,6 +7,9 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>browser_telemetry_toolbox.js</
 // opened we make use of setTimeout() to create tool active times.
 const TOOL_DELAY = 200;
 
+const TOOLBOX_THEME_PREF = "devtools.theme";
+const DEVEDITION_BROWSER_THEME_PREF = "browser.devedition.theme.enabled";
+
 let {Promise: promise} = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
 
 function init() {
@@ -23,7 +26,9 @@ function openToolboxFourTimes() {
 
     toolbox.once("destroyed", function() {
       if (pass++ === 3) {
+        switchThemes();
         checkResults();
+        finishUp();
       } else {
         openToolboxFourTimes();
       }
@@ -33,6 +38,24 @@ function openToolboxFourTimes() {
       gDevTools.closeToolbox(target);
     }, TOOL_DELAY);
   }).then(null, console.error);
+}
+
+function switchThemes() {
+  let currentToolboxTheme = Services.prefs.getCharPref(TOOLBOX_THEME_PREF);
+  let usingDevEditionTheme = Services.prefs.getBoolPref(DEVEDITION_BROWSER_THEME_PREF);
+  let toolboxThemeArray =
+    currentToolboxTheme === "light" ? ["dark", "light"] : ["light", "dark"];
+  let usingBrowserThemeArray =[!usingDevEditionTheme, usingDevEditionTheme];
+
+  for (let i = 0; i < 3; i++) {
+    for (let theme of toolboxThemeArray) {
+      Services.prefs.setCharPref(TOOLBOX_THEME_PREF, theme);
+    }
+
+    for (let using of usingBrowserThemeArray) {
+      Services.prefs.setBoolPref(DEVEDITION_BROWSER_THEME_PREF, using);
+    }
+  }
 }
 
 function checkResults() {
@@ -50,15 +73,18 @@ function checkResults() {
   checkTelemetry("DEVTOOLS_RULEVIEW_OPENED_PER_USER_FLAG", [0,1,0]);
   checkTelemetry("DEVTOOLS_RULEVIEW_TIME_ACTIVE_SECONDS", null, "hasentries");
 
+  checkTelemetry("DEVTOOLS_SELECTED_BROWSER_THEME_BOOLEAN", [3,3,0]);
+  checkTelemetry("DEVTOOLS_SELECTED_TOOLBOX_THEME_ENUMERATED", [3,3,0,0]);
+
   checkTelemetry("DEVTOOLS_TOOLBOX_OPENED_BOOLEAN", [0,4,0]);
   checkTelemetry("DEVTOOLS_TOOLBOX_OPENED_PER_USER_FLAG", [0,1,0]);
   checkTelemetry("DEVTOOLS_TOOLBOX_TIME_ACTIVE_SECONDS", null, "hasentries");
-
-  finishUp();
 }
 
 function finishUp() {
   gBrowser.removeCurrentTab();
+
+  Services.prefs.clearUserPref(TOOLBOX_THEME_PREF);
 
   TargetFactory = promise = null;
 
