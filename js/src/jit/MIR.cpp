@@ -577,22 +577,6 @@ MDefinition::optimizeOutAllUses(TempAllocator &alloc)
     this->uses_.clear();
 }
 
-void
-MDefinition::replaceAllLiveUsesWith(MDefinition *dom)
-{
-    for (MUseIterator i(usesBegin()), e(usesEnd()); i != e; ++i) {
-        MUse *use = *i++;
-        MNode *consumer = use->consumer();
-        if (consumer->isResumePoint())
-            continue;
-        if (consumer->isDefinition() && consumer->toDefinition()->isRecoveredOnBailout())
-            continue;
-
-        // Update the operand to use the dominating definition.
-        use->replaceProducer(dom);
-    }
-}
-
 bool
 MDefinition::emptyResultTypeSet() const
 {
