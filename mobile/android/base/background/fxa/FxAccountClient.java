@@ -17,4 +17,5 @@ public interface FxAccountClient {
   public void keys(byte[] keyFetchToken, RequestDelegate<TwoKeys> requestDelegate);
   public void sign(byte[] sessionToken, ExtendedJSONObject publicKey, long certificateDurationInMilliseconds, RequestDelegate<String> requestDelegate);
   public void resendCode(byte[] sessionToken, RequestDelegate<Void> delegate);
+  public void resendUnlockCode(byte[] emailUTF8, RequestDelegate<Void> delegate);
 }

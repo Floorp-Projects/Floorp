@@ -13,10 +13,19 @@ const { Cc, Ci } = require("chrome");
 Object.defineProperty(this, "addonManager", {
   get: (function () {
     let cached;
-    return () => cached
-      ? cached
-      : (cached = Cc["@mozilla.org/addons/integration;1"]
-                    .getService(Ci.amIAddonManager))
+    return () => {
+      if (cached === undefined) {
+        // catch errors as the addonManager might not exist in this environment
+        // (eg, xpcshell)
+        try {
+          cached = Cc["@mozilla.org/addons/integration;1"]
+                      .getService(Ci.amIAddonManager);
+        } catch (ex) {
+          cached = null;
+        }
+      }
+      return cached;
+    }
   }())
 });
 

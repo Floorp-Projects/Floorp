@@ -118,6 +118,7 @@ public class FxAccountSchedulePolicy implements SchedulePolicy {
     switch (needed) {
     case NeedsPassword:
     case NeedsUpgrade:
+    case NeedsFinishMigrating:
       requestPeriodicSync(POLL_INTERVAL_ERROR_STATE_SEC);
       break;
     case NeedsVerification:

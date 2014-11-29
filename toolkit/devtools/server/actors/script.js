@@ -602,6 +602,9 @@ function ThreadActor(aParent, aGlobal)
   this.uncaughtExceptionHook = this.uncaughtExceptionHook.bind(this);
   this.onDebuggerStatement = this.onDebuggerStatement.bind(this);
   this.onNewScript = this.onNewScript.bind(this);
+  // Set a wrappedJSObject property so |this| can be sent via the observer svc
+  // for the xpcshell harness.
+  this.wrappedJSObject = this;
 }
 
 ThreadActor.prototype = {
@@ -1178,6 +1181,11 @@ ThreadActor.prototype = {
 
       let packet = this._resumed();
       this._popThreadPause();
+      // Tell anyone who cares of the resume (as of now, that's the xpcshell
+      // harness)
+      if (Services.obs) {
+        Services.obs.notifyObservers(this, "devtools-thread-resumed", null);
+      }
       return packet;
     }, error => {
       return error instanceof Error
@@ -1322,7 +1330,7 @@ ThreadActor.prototype = {
     for (let line = 0, n = offsets.length; line < n; line++) {
       if (offsets[line]) {
         let location = { line: line };
-        let resp = sourceActor._createAndStoreBreakpoint(location);
+        let resp = sourceActor.createAndStoreBreakpoint(location);
         dbg_assert(!resp.actualLocation, "No actualLocation should be returned");
         if (resp.error) {
           reportError(new Error("Unable to set breakpoint on event listener"));
@@ -2516,11 +2524,10 @@ SourceActor.prototype = {
         let sourceFetched = fetch(this.url, { loadFromCache: !this.source });
 
         // Record the contentType we just learned during fetching
-        sourceFetched.then(({ contentType }) => {
-          this._contentType = contentType;
+        return sourceFetched.then(result => {
+          this._contentType = result.contentType;
+          return result;
         });
-
-        return sourceFetched;
       }
     });
   },
@@ -2848,7 +2855,7 @@ SourceActor.prototype = {
 
   _createBreakpoint: function(loc, originalLoc, condition) {
     return resolve(null).then(() => {
-      return this._createAndStoreBreakpoint({
+      return this.createAndStoreBreakpoint({
         line: loc.line,
         column: loc.column,
         condition: condition
@@ -2915,12 +2922,14 @@ SourceActor.prototype = {
    * Create a breakpoint at the specified location and store it in the
    * cache. Takes ownership of `aRequest`. This is the
    * generated location if this source is sourcemapped.
+   * Used by the XPCShell test harness to set breakpoints in a script before
+   * it has loaded.
    *
    * @param Object aRequest
    *        An object of the form { line[, column, condition] }. The
    *        location is in the generated source, if sourcemapped.
    */
-  _createAndStoreBreakpoint: function (aRequest) {
+  createAndStoreBreakpoint: function (aRequest) {
     let bp = update({}, aRequest, { source: this.form() });
     this.breakpointStore.addBreakpoint(bp);
     return this._setBreakpoint(aRequest);
