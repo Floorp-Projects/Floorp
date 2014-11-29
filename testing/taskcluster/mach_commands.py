@@ -148,7 +148,7 @@ class TryGraph(object):
             }
 
         for build in job_graph:
-            build_parameters = dict(parameters, **build['additional-parameters'])
+            build_parameters = dict(parameters)
             build_parameters['build_slugid'] = slugid()
             build_task = templates.load(build['task'], build_parameters)
 
@@ -207,10 +207,6 @@ class TryGraph(object):
 class CIBuild(object):
     @Command('taskcluster-build', category='ci',
         description="Create taskcluster try server build task")
-    @CommandArgument('--b2g-config',
-        help='(emulators/phones only) in tree build configuration directory')
-    @CommandArgument('--debug', action='store_true',
-        help='(emulators/phones only) build debug images')
     @CommandArgument('--base-repository',
         help='URL for "base" repository to clone')
     @CommandArgument('--head-repository',
@@ -237,13 +233,9 @@ class CIBuild(object):
             head_rev = get_latest_hg_revision(head_repository)
 
         head_ref = params['head_ref'] or head_rev
-        debug = 1 if params.get('debug') else 0
 
         build_parameters = {
             'docker_image': docker_image,
-            'b2g-config': params['b2g_config'],
-            'debug': debug,
-            'build-type': 'Debug' if debug else 'Opt',
             'owner': params['owner'],
             'from_now': json_time_from_now,
             'now': current_json_time(),

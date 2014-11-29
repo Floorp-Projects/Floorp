@@ -1,0 +1,9 @@
+$inherits:
+  from: 'tasks/builds/b2g_emulator_jb_opt.yml'
+task:
+  metadata:
+    name: B2G Emulator JB Debug
+  payload:
+    env:
+      B2G_DEBUG: 1
+

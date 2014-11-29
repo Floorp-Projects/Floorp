@@ -4,4 +4,4 @@ $inherits:
 task:
   payload:
     env:
-      MOZCONFIG: 'b2g/config/mozconfigs/linux64_gecko/debug'
+      MOZCONFIG: 'b2g/config/mozconfigs/linux64_gecko/nightly'

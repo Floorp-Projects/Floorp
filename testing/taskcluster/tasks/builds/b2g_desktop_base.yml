@@ -2,28 +2,27 @@ $inherits:
   from: 'tasks/build.yml'
 task:
   metadata:
-    name: Mulet Linux x64 Opt
-    description: Mulet Linux x64 Opt
+    name: B2G Desktop Opt
+    description: B2G Desktop Opt
 
   scopes:
     - 'docker-worker:cache:sources-gecko'
-    - 'docker-worker:cache:build-mulet-linux-objects'
-    - 'docker-worker:cache:tooltool-cache'
-    - 'docker-worker:image:{{#docker_image}}builder{{/docker_image}}'
+    - 'docker-worker:cache:sources-gaia'
+    - 'docker-worker:cache:build-b2g-desktop-objects'
 
   payload:
     cache:
+      sources-gaia: '/home/worker/gaia'
       sources-gecko: '/home/worker/gecko'
-      build-mulet-linux-objects: '/home/worker/object-folder'
-      tooltool-cache: '/home/worker/tools/tooltool-cache'
+      build-b2g-desktop-objects: '/home/worker/object-folder'
 
     env:
-      MOZCONFIG: 'b2g/dev/config/mozconfigs/linux64/mulet'
-
-    maxRunTime: 3600
+      MOZCONFIG: 'b2g/config/mozconfigs/linux64_gecko/nightly'
+      MOZTT_GIT_URL: '{{moztt_git_url}}'
+      MOZTT_REVISION: '{{moztt_revision}}'
 
     command:
-      - bin/build-mulet-linux.sh
+      - bin/build-b2g-desktop.sh
 
   extra:
     # Rather then enforcing particular conventions we require that all build
