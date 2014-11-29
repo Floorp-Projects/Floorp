@@ -27,13 +27,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "DebuggerClient",
                                   "resource://gre/modules/devtools/dbg-client.jsm");
 
 const EventEmitter = devtools.require("devtools/toolkit/event-emitter");
-const Telemetry = devtools.require("devtools/shared/telemetry");
-
-const THEME_BROWSER_PREFNAME = "browser.devedition.theme.enabled";
-const THEME_TOOLBOX_PREFNAME = "devtools.theme";
-const THEME_HISTOGRAM_TOOLBOX = "DEVTOOLS_SELECTED_TOOLBOX_THEME_ENUMERATED";
-const THEME_HISTOGRAM_BROWSER = "DEVTOOLS_SELECTED_BROWSER_THEME_BOOLEAN";
-
 const FORBIDDEN_IDS = new Set(["toolbox", ""]);
 const MAX_ORDINAL = 99;
 
@@ -54,7 +47,6 @@ this.DevTools = function DevTools() {
   this._tools = new Map();     // Map<toolId, tool>
   this._themes = new Map();    // Map<themeId, theme>
   this._toolboxes = new Map(); // Map<target, toolbox>
-  this._telemetry = new Telemetry();
 
   // destroy() is an observer's handler so we need to preserve context.
   this.destroy = this.destroy.bind(this);
@@ -69,8 +61,6 @@ this.DevTools = function DevTools() {
 };
 
 DevTools.prototype = {
-  _telemetry: null,
-
   /**
    * When the testing flag is set we take appropriate action to prevent race
    * conditions in our testing environment. This means setting
@@ -483,19 +473,6 @@ DevTools.prototype = {
   },
 
   /**
-   * Send telemetry pings that show whether the developer browser was in use and
-   * which toolbox theme is in use.
-   */
-  _pingTelemetry: function() {
-    let toolboxTheme = Services.prefs.getCharPref(THEME_TOOLBOX_PREFNAME);
-    this._telemetry.log(THEME_HISTOGRAM_TOOLBOX,
-                        getToolboxThemeIndex(toolboxTheme));
-
-    let deveditionThemeEnabled = Services.prefs.getBoolPref(THEME_BROWSER_PREFNAME);
-    this._telemetry.log(THEME_HISTOGRAM_BROWSER, deveditionThemeEnabled);
-  },
-
-  /**
    * Called to tear down a tools provider.
    */
   _teardown: function DT_teardown() {
@@ -514,9 +491,6 @@ DevTools.prototype = {
     for (let [key, tool] of this.getToolDefinitionMap()) {
       this.unregisterTool(key, true);
     }
-
-    this._pingTelemetry();
-    this._telemetry = null;
 
     // Cleaning down the toolboxes: i.e.
     //   for (let [target, toolbox] of this._toolboxes) toolbox.destroy();
@@ -552,8 +526,6 @@ let gDevToolsBrowser = {
    * as the window is closed
    */
   _trackedBrowserWindows: new Set(),
-
-  _telemetry: new Telemetry(),
 
   /**
    * This function is for the benefit of Tools:DevToolbox in
@@ -639,20 +611,9 @@ let gDevToolsBrowser = {
   },
 
   observe: function(subject, topic, prefName) {
-    if (topic === "nsPref:changed") {
-      if (prefName.startsWith("devtools.") && prefName.endsWith("enabled")) {
-        for (let win of this._trackedBrowserWindows) {
-          this.updateCommandAvailability(win);
-        }
-      }
-
-      if (prefName === THEME_TOOLBOX_PREFNAME) {
-        let toolboxTheme = Services.prefs.getCharPref(prefName);
-        this._telemetry.log(THEME_HISTOGRAM_TOOLBOX,
-                            getToolboxThemeIndex(toolboxTheme));
-      } else if (prefName === THEME_BROWSER_PREFNAME) {
-        let deveditionThemeEnabled = Services.prefs.getBoolPref(prefName);
-        this._telemetry.log(THEME_HISTOGRAM_BROWSER, deveditionThemeEnabled);
+    if (prefName.endsWith("enabled")) {
+      for (let win of this._trackedBrowserWindows) {
+        this.updateCommandAvailability(win);
       }
     }
   },
@@ -663,7 +624,6 @@ let gDevToolsBrowser = {
     if (!this._prefObserverRegistered) {
       this._prefObserverRegistered = true;
       Services.prefs.addObserver("devtools.", this, false);
-      Services.prefs.addObserver(THEME_BROWSER_PREFNAME, this, false);
     }
   },
 
@@ -1282,33 +1242,13 @@ let gDevToolsBrowser = {
    * All browser windows have been closed, tidy up remaining objects.
    */
   destroy: function() {
-    this._telemetry = null;
-
     gDevTools.off("toolbox-ready", gDevToolsBrowser._connectToProfiler);
     Services.prefs.removeObserver("devtools.", gDevToolsBrowser);
-    Services.prefs.removeObserver(THEME_BROWSER_PREFNAME, gDevToolsBrowser);
     Services.obs.removeObserver(gDevToolsBrowser.destroy, "quit-application");
   },
 }
 
 this.gDevToolsBrowser = gDevToolsBrowser;
-
-/**
- * Return the theme index for a given toolbox theme.
- *
- * @param  {String} themeName
- *                  Theme name
- */
-function getToolboxThemeIndex(themeName) {
-  switch (themeName) {
-    case "light":
-      return 0;
-    case "dark":
-      return 1;
-    default:
-      return 2;
-  }
-}
 
 gDevTools.on("tool-registered", function(ev, toolId) {
   let toolDefinition = gDevTools._tools.get(toolId);

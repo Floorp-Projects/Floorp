@@ -38,6 +38,7 @@ let WebAudioEditorController = {
    * Listen for events emitted by the current tab target.
    */
   initialize: function() {
+    telemetry.toolOpened("webaudioeditor");
     this._onTabNavigated = this._onTabNavigated.bind(this);
     this._onThemeChange = this._onThemeChange.bind(this);
 
@@ -61,6 +62,7 @@ let WebAudioEditorController = {
    * Remove events emitted by the current tab target.
    */
   destroy: function() {
+    telemetry.toolClosed("webaudioeditor");
     gTarget.off("will-navigate", this._onTabNavigated);
     gTarget.off("navigate", this._onTabNavigated);
     gFront.off("start-context", this._onStartContext);

@@ -11,16 +11,11 @@ let DevEdition = {
   _themePrefName: "general.skins.selectedSkin",
   _lwThemePrefName: "lightweightThemes.isThemeSelected",
   _devtoolsThemePrefName: "devtools.theme",
-  _telemetry: null,
 
   styleSheetLocation: "chrome://browser/skin/devedition.css",
   styleSheet: null,
 
   init: function () {
-    let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-    let Telemetry = devtools.require("devtools/shared/telemetry");
-    this._telemetry = new Telemetry();
-
     this._updateDevtoolsThemeAttribute();
     this._updateStyleSheetFromPrefs();
 
@@ -132,8 +127,5 @@ let DevEdition = {
       this.styleSheet.removeEventListener("load", this);
     }
     this.styleSheet = null;
-
-    this._telemetry.destroy();
-    this._telemetry = null;
   }
 };

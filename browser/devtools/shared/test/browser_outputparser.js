@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+let {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
+let {Loader} = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
 let {OutputParser} = devtools.require("devtools/output-parser");
 
 let parser;
@@ -94,7 +96,7 @@ function testParseNonCssHTMLAttribute() {
 
 
 function finishUp() {
-  OutputParser = parser = doc = null;
+  Services = Loader = OutputParser = parser = doc = null;
   gBrowser.removeCurrentTab();
   finish();
 }

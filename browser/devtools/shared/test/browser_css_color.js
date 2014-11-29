@@ -4,6 +4,8 @@
 const COLOR_UNIT_PREF = "devtools.defaultColorUnit";
 
 let origColorUnit;
+let {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
+let {Loader} = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
 let {colorUtils} = devtools.require("devtools/css-color");
 
 function test() {
@@ -137,7 +139,7 @@ function testProcessCSSString() {
 }
 
 function finishUp() {
-  colorUtils = null;
+  Services = colorUtils = Loader = null;
   gBrowser.removeCurrentTab();
   finish();
 }
