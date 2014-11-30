@@ -20,10 +20,6 @@ INCLUDED_RULES_MK = 1
 # overwritten after including config.mk.
 _eval_for_side_effects := $(CHECK_MOZBUILD_VARIABLES)
 
-ifndef MOZILLA_DIR
-MOZILLA_DIR = $(topsrcdir)
-endif
-
 ifndef INCLUDED_CONFIG_MK
 include $(topsrcdir)/config/config.mk
 endif
