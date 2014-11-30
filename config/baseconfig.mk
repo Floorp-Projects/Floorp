@@ -131,3 +131,10 @@ $(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES) $(_DEPRECATED_VARIABLES),$(eval $(
 
 TIERS := export $(if $(COMPILE_ENVIRONMENT),compile )misc libs tools
 endif
+
+# These defines are used to support the twin-topsrcdir model for comm-central.
+ifdef MOZILLA_SRCDIR
+  MOZILLA_DIR = $(MOZILLA_SRCDIR)
+else
+  MOZILLA_DIR = $(topsrcdir)
+endif
