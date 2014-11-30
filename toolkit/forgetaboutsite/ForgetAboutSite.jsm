@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
@@ -48,50 +50,46 @@ this.ForgetAboutSite = {
     PlacesUtils.history.removePagesFromHost(aDomain, true);
 
     // Cache
-    let (cs = Cc["@mozilla.org/netwerk/cache-storage-service;1"].
-              getService(Ci.nsICacheStorageService)) {
-      // NOTE: there is no way to clear just that domain, so we clear out
-      //       everything)
-      try {
-        cs.clear();
-      } catch (ex) {
-        Cu.reportError("Exception thrown while clearing the cache: " +
-          ex.toString());
-      }
+    let cs = Cc["@mozilla.org/netwerk/cache-storage-service;1"].
+             getService(Ci.nsICacheStorageService);
+    // NOTE: there is no way to clear just that domain, so we clear out
+    //       everything)
+    try {
+      cs.clear();
+    } catch (ex) {
+      Cu.reportError("Exception thrown while clearing the cache: " +
+        ex.toString());
     }
 
     // Image Cache
-    let (imageCache = Cc["@mozilla.org/image/tools;1"].
-                      getService(Ci.imgITools).getImgCacheForDocument(null)) {
-      try {
-        imageCache.clearCache(false); // true=chrome, false=content
-      } catch (ex) {
-        Cu.reportError("Exception thrown while clearing the image cache: " +
-          ex.toString());
-      }
+    let imageCache = Cc["@mozilla.org/image/tools;1"].
+                     getService(Ci.imgITools).getImgCacheForDocument(null);
+    try {
+      imageCache.clearCache(false); // true=chrome, false=content
+    } catch (ex) {
+      Cu.reportError("Exception thrown while clearing the image cache: " +
+        ex.toString());
     }
 
     // Cookies
-    let (cm = Cc["@mozilla.org/cookiemanager;1"].
-              getService(Ci.nsICookieManager2)) {
-      let enumerator = cm.getCookiesFromHost(aDomain);
-      while (enumerator.hasMoreElements()) {
-        let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
-        cm.remove(cookie.host, cookie.name, cookie.path, false);
-      }
+    let cm = Cc["@mozilla.org/cookiemanager;1"].
+             getService(Ci.nsICookieManager2);
+    let enumerator = cm.getCookiesFromHost(aDomain);
+    while (enumerator.hasMoreElements()) {
+      let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
+      cm.remove(cookie.host, cookie.name, cookie.path, false);
     }
 
     // Plugin data
     const phInterface = Ci.nsIPluginHost;
     const FLAG_CLEAR_ALL = phInterface.FLAG_CLEAR_ALL;
-    let (ph = Cc["@mozilla.org/plugin/host;1"].getService(phInterface)) {
-      let tags = ph.getPluginTags();
-      for (let i = 0; i < tags.length; i++) {
-        try {
-          ph.clearSiteData(tags[i], aDomain, FLAG_CLEAR_ALL, -1);
-        } catch (e) {
-          // Ignore errors from the plugin
-        }
+    let ph = Cc["@mozilla.org/plugin/host;1"].getService(phInterface);
+    let tags = ph.getPluginTags();
+    for (let i = 0; i < tags.length; i++) {
+      try {
+        ph.clearSiteData(tags[i], aDomain, FLAG_CLEAR_ALL, -1);
+      } catch (e) {
+        // Ignore errors from the plugin
       }
     }
 
@@ -112,20 +110,19 @@ this.ForgetAboutSite = {
       }).then(null, Cu.reportError);
     }
     else {
-      let (dm = Cc["@mozilla.org/download-manager;1"].
-                getService(Ci.nsIDownloadManager)) {
-        // Active downloads
-        for (let enumerator of [dm.activeDownloads, dm.activePrivateDownloads]) {
-          while (enumerator.hasMoreElements()) {
-            let dl = enumerator.getNext().QueryInterface(Ci.nsIDownload);
-            if (hasRootDomain(dl.source.host, aDomain)) {
-              dl.cancel();
-              dl.remove();
-            }
+      let dm = Cc["@mozilla.org/download-manager;1"].
+               getService(Ci.nsIDownloadManager);
+      // Active downloads
+      for (let enumerator of [dm.activeDownloads, dm.activePrivateDownloads]) {
+        while (enumerator.hasMoreElements()) {
+          let dl = enumerator.getNext().QueryInterface(Ci.nsIDownload);
+          if (hasRootDomain(dl.source.host, aDomain)) {
+            dl.cancel();
+            dl.remove();
           }
         }
 
-        function deleteAllLike(db) {
+        const deleteAllLike = function(db) {
           // NOTE: This is lossy, but we feel that it is OK to be lossy here and not
           //       invoke the cost of creating a URI for each download entry and
           //       ensure that the hostname matches.
@@ -160,52 +157,49 @@ this.ForgetAboutSite = {
     }
 
     // Passwords
-    let (lm = Cc["@mozilla.org/login-manager;1"].
-              getService(Ci.nsILoginManager)) {
-      // Clear all passwords for domain
-      try {
-        let logins = lm.getAllLogins();
-        for (let i = 0; i < logins.length; i++)
-          if (hasRootDomain(logins[i].hostname, aDomain))
-            lm.removeLogin(logins[i]);
-      }
-      // XXXehsan: is there a better way to do this rather than this
-      // hacky comparison?
-      catch (ex if ex.message.indexOf("User canceled Master Password entry") != -1) { }
-
-      // Clear any "do not save for this site" for this domain
-      let disabledHosts = lm.getAllDisabledHosts();
-      for (let i = 0; i < disabledHosts.length; i++)
-        if (hasRootDomain(disabledHosts[i], aDomain))
-          lm.setLoginSavingEnabled(disabledHosts, true);
+    let lm = Cc["@mozilla.org/login-manager;1"].
+             getService(Ci.nsILoginManager);
+    // Clear all passwords for domain
+    try {
+      let logins = lm.getAllLogins();
+      for (let i = 0; i < logins.length; i++)
+        if (hasRootDomain(logins[i].hostname, aDomain))
+          lm.removeLogin(logins[i]);
     }
+    // XXXehsan: is there a better way to do this rather than this
+    // hacky comparison?
+    catch (ex if ex.message.indexOf("User canceled Master Password entry") != -1) { }
+
+    // Clear any "do not save for this site" for this domain
+    let disabledHosts = lm.getAllDisabledHosts();
+    for (let i = 0; i < disabledHosts.length; i++)
+      if (hasRootDomain(disabledHosts[i], aDomain))
+        lm.setLoginSavingEnabled(disabledHosts, true);
 
     // Permissions
-    let (pm = Cc["@mozilla.org/permissionmanager;1"].
-              getService(Ci.nsIPermissionManager)) {
-      // Enumerate all of the permissions, and if one matches, remove it
-      let enumerator = pm.enumerator;
-      while (enumerator.hasMoreElements()) {
-        let perm = enumerator.getNext().QueryInterface(Ci.nsIPermission);
-        if (hasRootDomain(perm.host, aDomain))
-          pm.remove(perm.host, perm.type);
-      }
+    let pm = Cc["@mozilla.org/permissionmanager;1"].
+             getService(Ci.nsIPermissionManager);
+    // Enumerate all of the permissions, and if one matches, remove it
+    enumerator = pm.enumerator;
+    while (enumerator.hasMoreElements()) {
+      let perm = enumerator.getNext().QueryInterface(Ci.nsIPermission);
+      if (hasRootDomain(perm.host, aDomain))
+        pm.remove(perm.host, perm.type);
     }
 
     // Offline Storages
-    let (qm = Cc["@mozilla.org/dom/quota/manager;1"].
-              getService(Ci.nsIQuotaManager)) {
-      // delete data from both HTTP and HTTPS sites
-      let caUtils = {};
-      let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
-                         getService(Ci.mozIJSSubScriptLoader);
-      scriptLoader.loadSubScript("chrome://global/content/contentAreaUtils.js",
-                                 caUtils);
-      let httpURI = caUtils.makeURI("http://" + aDomain);
-      let httpsURI = caUtils.makeURI("https://" + aDomain);
-      qm.clearStoragesForURI(httpURI);
-      qm.clearStoragesForURI(httpsURI);
-    }
+    let qm = Cc["@mozilla.org/dom/quota/manager;1"].
+             getService(Ci.nsIQuotaManager);
+    // delete data from both HTTP and HTTPS sites
+    let caUtils = {};
+    let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
+                       getService(Ci.mozIJSSubScriptLoader);
+    scriptLoader.loadSubScript("chrome://global/content/contentAreaUtils.js",
+                               caUtils);
+    let httpURI = caUtils.makeURI("http://" + aDomain);
+    let httpsURI = caUtils.makeURI("https://" + aDomain);
+    qm.clearStoragesForURI(httpURI);
+    qm.clearStoragesForURI(httpsURI);
 
     function onContentPrefsRemovalFinished() {
       // Everybody else (including extensions)
