@@ -94,7 +94,7 @@ check-variable = $(if $(filter-out 0 1,$(words $($(x))z)),$(error Spaces are not
 $(foreach x,$(CHECK_VARS),$(check-variable))
 
 ifndef INCLUDED_FUNCTIONS_MK
-include $(MOZILLA_DIR)/config/makefiles/functions.mk
+include $(topsrcdir)/config/makefiles/functions.mk
 endif
 
 RM = rm -f
@@ -122,23 +122,15 @@ endif
 VERSION_NUMBER		= 50
 
 ifeq ($(HOST_OS_ARCH),WINNT)
-  ifeq ($(MOZILLA_DIR),$(topsrcdir))
-    win_srcdir := $(subst $(topsrcdir),$(WIN_TOP_SRC),$(srcdir))
-  else
-    # This means we're in comm-central's topsrcdir, so we need to adjust
-    # WIN_TOP_SRC (which points to mozilla's topsrcdir) for the substitution
-    # to win_srcdir.
-		cc_WIN_TOP_SRC := $(WIN_TOP_SRC:%/mozilla=%)
-    win_srcdir := $(subst $(topsrcdir),$(cc_WIN_TOP_SRC),$(srcdir))
-  endif
-  BUILD_TOOLS = $(WIN_TOP_SRC)/build/unix
+win_srcdir	:= $(subst $(topsrcdir),$(WIN_TOP_SRC),$(srcdir))
+BUILD_TOOLS	= $(WIN_TOP_SRC)/build/unix
 else
-  win_srcdir := $(srcdir)
-  BUILD_TOOLS = $(MOZILLA_DIR)/build/unix
+win_srcdir	:= $(srcdir)
+BUILD_TOOLS	= $(topsrcdir)/build/unix
 endif
 
 CONFIG_TOOLS	= $(MOZ_BUILD_ROOT)/config
-AUTOCONF_TOOLS	= $(MOZILLA_DIR)/build/autoconf
+AUTOCONF_TOOLS	= $(topsrcdir)/build/autoconf
 
 #
 # Strip off the excessively long version numbers on these platforms,
@@ -337,7 +329,7 @@ OS_INCLUDES := \
   $(NULL)
 endif
 
-include $(MOZILLA_DIR)/config/static-checking-config.mk
+include $(topsrcdir)/config/static-checking-config.mk
 
 CFLAGS		= $(OS_CPPFLAGS) $(OS_CFLAGS)
 CXXFLAGS	= $(OS_CPPFLAGS) $(OS_CXXFLAGS)
@@ -528,7 +520,7 @@ endif
 PWD := $(CURDIR)
 endif
 
-NSINSTALL_PY := $(PYTHON) $(abspath $(MOZILLA_DIR)/config/nsinstall.py)
+NSINSTALL_PY := $(PYTHON) $(abspath $(topsrcdir)/config/nsinstall.py)
 # For Pymake, wherever we use nsinstall.py we're also going to try to make it
 # a native command where possible. Since native commands can't be used outside
 # of single-line commands, we continue to provide INSTALL for general use.
@@ -629,13 +621,13 @@ ifdef MOZ_DEBUG
 JAVAC_FLAGS += -g
 endif
 
-CREATE_PRECOMPLETE_CMD = $(PYTHON) $(abspath $(MOZILLA_DIR)/config/createprecomplete.py)
+CREATE_PRECOMPLETE_CMD = $(PYTHON) $(abspath $(topsrcdir)/config/createprecomplete.py)
 
 # MDDEPDIR is the subdirectory where dependency files are stored
 MDDEPDIR := .deps
 
-EXPAND_LIBS_EXEC = $(PYTHON) $(MOZILLA_DIR)/config/expandlibs_exec.py
-EXPAND_LIBS_GEN = $(PYTHON) $(MOZILLA_DIR)/config/expandlibs_gen.py
+EXPAND_LIBS_EXEC = $(PYTHON) $(topsrcdir)/config/expandlibs_exec.py
+EXPAND_LIBS_GEN = $(PYTHON) $(topsrcdir)/config/expandlibs_gen.py
 EXPAND_AR = $(EXPAND_LIBS_EXEC) --extract -- $(AR)
 EXPAND_CC = $(EXPAND_LIBS_EXEC) --uselist -- $(CC)
 EXPAND_CCC = $(EXPAND_LIBS_EXEC) --uselist -- $(CCC)
@@ -689,7 +681,7 @@ endif
 endif
 endif
 
-PLY_INCLUDE = -I$(MOZILLA_DIR)/other-licenses/ply
+PLY_INCLUDE = -I$(topsrcdir)/other-licenses/ply
 
 export CL_INCLUDES_PREFIX
 # Make sure that the build system can handle non-ASCII characters
