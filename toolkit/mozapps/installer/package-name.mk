@@ -139,7 +139,7 @@ endif
 
 ifndef INCLUDED_RCS_MK
   USE_RCS_MK := 1
-  include $(topsrcdir)/config/makefiles/makeutils.mk
+  include $(MOZILLA_DIR)/config/makefiles/makeutils.mk
 endif
 
 MOZ_SOURCE_STAMP = $(firstword $(shell hg -R $(MOZILLA_DIR) parent --template="{node|short}\n" 2>/dev/null))

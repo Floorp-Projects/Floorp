@@ -7,26 +7,9 @@
 #ifndef mozilla_AppleUtils_h
 #define mozilla_AppleUtils_h
 
-#include <AudioToolbox/AudioToolbox.h>
 #include "mozilla/Attributes.h"
-#include "nsError.h"
 
 namespace mozilla {
-
-struct AppleUtils {
-  // Helper to set a string, string pair on a CFMutableDictionaryRef.
-  static void SetCFDict(CFMutableDictionaryRef dict,
-                        const char* key,
-                        const char* value);
-  // Helper to set a string, int32_t pair on a CFMutableDictionaryRef.
-  static void SetCFDict(CFMutableDictionaryRef dict,
-                        const char* key,
-                        int32_t value);
-  // Helper to set a string, bool pair on a CFMutableDictionaryRef.
-  static void SetCFDict(CFMutableDictionaryRef dict,
-                        const char* key,
-                        bool value);
-};
 
 // Wrapper class to call CFRelease on reference types
 // when they go out of scope.

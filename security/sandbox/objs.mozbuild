@@ -60,6 +60,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'win/src/interception.cc',
         'win/src/interception_agent.cc',
         'win/src/job.cc',
+        'win/src/logging/sandboxLogging.cpp',
         'win/src/named_pipe_dispatcher.cc',
         'win/src/named_pipe_interception.cc',
         'win/src/named_pipe_policy.cc',
@@ -101,11 +102,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'win/src/win_utils.cc',
         'win/src/window.cc',
     ]
-
-    if CONFIG['MOZ_CONTENT_SANDBOX']:
-        security_sandbox_lcppsrcs += [
-            'win/src/warnonlysandbox/warnOnlySandbox.cpp',
-        ]
 
     if CONFIG['CPU_ARCH'] == 'x86_64':
         security_sandbox_lcppsrcs += [
