@@ -107,7 +107,11 @@ endif #}
 ###########################################################################
 ## Common makefile library loader
 ###########################################################################
-topORerr =$(if $(topsrcdir),$(topsrcdir),$(error topsrcdir is not defined))
+ifdef MOZILLA_DIR
+topORerr = $(MOZILLA_DIR)
+else
+topORerr = $(if $(topsrcdir),$(topsrcdir),$(error topsrcdir is not defined))
+endif
 
 ifdef USE_AUTOTARGETS_MK # mkdir_deps
   include $(topORerr)/config/makefiles/autotargets.mk
