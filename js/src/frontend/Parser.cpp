@@ -3660,7 +3660,10 @@ Parser<ParseHandler>::letBlock(LetContext letContext)
         if (!expr)
             return null();
         MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_LET);
+
         sawDeprecatedLetBlock = true;
+        if (!report(ParseWarning, pc->sc->strict, expr, JSMSG_DEPRECATED_LET_BLOCK))
+            return null();
     } else {
         MOZ_ASSERT(letContext == LetExpression);
         expr = assignExpr();

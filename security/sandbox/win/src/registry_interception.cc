@@ -10,9 +10,7 @@
 #include "sandbox/win/src/sandbox_nt_util.h"
 #include "sandbox/win/src/sharedmem_ipc_client.h"
 #include "sandbox/win/src/target_services.h"
-#ifdef MOZ_CONTENT_SANDBOX
-#include "mozilla/warnonlysandbox/warnOnlySandbox.h"
-#endif
+#include "mozilla/sandboxing/sandboxLogging.h"
 
 namespace sandbox {
 
@@ -28,13 +26,11 @@ NTSTATUS WINAPI TargetNtCreateKey(NtCreateKeyFunction orig_CreateKey,
   if (NT_SUCCESS(status))
     return status;
 
-#ifdef MOZ_CONTENT_SANDBOX
   if (STATUS_OBJECT_NAME_NOT_FOUND != status) {
-    mozilla::warnonlysandbox::LogBlocked("NtCreateKey",
-                                         object_attributes->ObjectName->Buffer,
-                                         object_attributes->ObjectName->Length);
+    mozilla::sandboxing::LogBlocked("NtCreateKey",
+                                    object_attributes->ObjectName->Buffer,
+                                    object_attributes->ObjectName->Length);
   }
-#endif
 
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
@@ -98,11 +94,9 @@ NTSTATUS WINAPI TargetNtCreateKey(NtCreateKeyFunction orig_CreateKey,
     } __except(EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
-#ifdef MOZ_CONTENT_SANDBOX
-    mozilla::warnonlysandbox::LogAllowed("NtCreateKey",
-                                         object_attributes->ObjectName->Buffer,
-                                         object_attributes->ObjectName->Length);
-#endif
+    mozilla::sandboxing::LogAllowed("NtCreateKey",
+                                    object_attributes->ObjectName->Buffer,
+                                    object_attributes->ObjectName->Length);
   } while (false);
 
   return status;
@@ -156,11 +150,9 @@ NTSTATUS WINAPI CommonNtOpenKey(NTSTATUS status, PHANDLE key,
     } __except(EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
-#ifdef MOZ_CONTENT_SANDBOX
-    mozilla::warnonlysandbox::LogAllowed("NtOpenKey[Ex]",
-                                         object_attributes->ObjectName->Buffer,
-                                         object_attributes->ObjectName->Length);
-#endif
+    mozilla::sandboxing::LogAllowed("NtOpenKey[Ex]",
+                                    object_attributes->ObjectName->Buffer,
+                                    object_attributes->ObjectName->Length);
   } while (false);
 
   return status;
@@ -174,13 +166,11 @@ NTSTATUS WINAPI TargetNtOpenKey(NtOpenKeyFunction orig_OpenKey, PHANDLE key,
   if (NT_SUCCESS(status))
     return status;
 
-#ifdef MOZ_CONTENT_SANDBOX
   if (STATUS_OBJECT_NAME_NOT_FOUND != status) {
-    mozilla::warnonlysandbox::LogBlocked("NtOpenKey",
-                                         object_attributes->ObjectName->Buffer,
-                                         object_attributes->ObjectName->Length);
+    mozilla::sandboxing::LogBlocked("NtOpenKey",
+                                    object_attributes->ObjectName->Buffer,
+                                    object_attributes->ObjectName->Length);
   }
-#endif
 
   return CommonNtOpenKey(status, key, desired_access, object_attributes);
 }
@@ -199,13 +189,11 @@ NTSTATUS WINAPI TargetNtOpenKeyEx(NtOpenKeyExFunction orig_OpenKeyEx,
   if (NT_SUCCESS(status) || open_options != 0)
     return status;
 
-#ifdef MOZ_CONTENT_SANDBOX
   if (STATUS_OBJECT_NAME_NOT_FOUND != status) {
-    mozilla::warnonlysandbox::LogBlocked("NtOpenKeyEx",
-                                         object_attributes->ObjectName->Buffer,
-                                         object_attributes->ObjectName->Length);
+    mozilla::sandboxing::LogBlocked("NtOpenKeyEx",
+                                    object_attributes->ObjectName->Buffer,
+                                    object_attributes->ObjectName->Length);
   }
-#endif
 
   return CommonNtOpenKey(status, key, desired_access, object_attributes);
 }

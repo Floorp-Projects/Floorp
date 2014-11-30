@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef security_sandbox_wosEnableCallbacks_h__
-#define security_sandbox_wosEnableCallbacks_h__
+#ifndef security_sandbox_loggingCallbacks_h__
+#define security_sandbox_loggingCallbacks_h__
 
-#include "mozilla/warnonlysandbox/wosTypes.h"
-#include "mozilla/warnonlysandbox/warnOnlySandbox.h"
+#include "mozilla/sandboxing/loggingTypes.h"
+#include "mozilla/sandboxing/sandboxLogging.h"
 
 #ifdef TARGET_SANDBOX_EXPORTS
 #include <sstream>
@@ -27,20 +27,20 @@
 #endif
 
 namespace mozilla {
-namespace warnonlysandbox {
+namespace sandboxing {
 
 // We need to use a callback to work around the fact that sandbox_s lib is
 // linked into plugin-container.exe directly and also via xul.dll via
 // sandboxbroker.dll. This causes problems with holding the state required to
-// work the warn only sandbox.
+// implement sandbox logging.
 // So, we provide a callback from plugin-container.exe that the code in xul.dll
 // can call to make sure we hit the right version of the code.
 void TARGET_SANDBOX_EXPORT
 SetProvideLogFunctionCb(ProvideLogFunctionCb aProvideLogFunctionCb);
 
-// Initialize the warn only sandbox if required.
+// Provide a call back so a pointer to a logging function can be passed later.
 static void
-PrepareForInit()
+PrepareForLogging()
 {
   SetProvideLogFunctionCb(ProvideLogFunction);
 }
@@ -67,7 +67,7 @@ StackFrameToOStringStream(uint32_t aFrameNumber, void* aPC, void* aSP,
   char buf[1024];
   NS_DescribeCodeAddress(aPC, &details);
   NS_FormatCodeAddressDetails(buf, sizeof(buf), aFrameNumber, aPC, &details);
-  *stream << "--" << buf << '\n';
+  *stream << std::endl << "--" << buf;
   stream->flush();
 }
 #endif
@@ -85,12 +85,11 @@ Log(const char* aMessageType,
   if (aContext) {
     msgStream << " for : " << aContext;
   }
-  msgStream << std::endl;
 
 #ifdef MOZ_STACKWALKING
   if (aShouldLogStackTrace) {
     if (sStackTraceDepth) {
-      msgStream << "Stack Trace:" << std::endl;
+      msgStream << std::endl << "Stack Trace:";
       NS_StackWalk(StackFrameToOStringStream, aFramesToSkip, sStackTraceDepth,
                    &msgStream, 0, nullptr);
     }
@@ -98,29 +97,39 @@ Log(const char* aMessageType,
 #endif
 
   std::string msg = msgStream.str();
-#ifdef DEBUG
-  std::cerr << msg;
+#if defined(DEBUG)
+  // Use NS_DebugBreak directly as we want child process prefix, but not source
+  // file or line number.
+  NS_DebugBreak(NS_DEBUG_WARNING, nullptr, msg.c_str(), nullptr, -1);
 #endif
 
   nsContentUtils::LogMessageToConsole(msg.c_str());
 }
 
-// Initialize the warn only sandbox if required.
+// Initialize sandbox logging if required.
 static void
-InitIfRequired()
+InitLoggingIfRequired()
 {
-  if (XRE_GetProcessType() == GeckoProcessType_Content
-      && Preferences::GetString("browser.tabs.remote.sandbox").EqualsLiteral("warn")
-      && sProvideLogFunctionCb) {
-#ifdef MOZ_STACKWALKING
-    Preferences::AddUintVarCache(&sStackTraceDepth,
-      "browser.tabs.remote.sandbox.warnOnlyStackTraceDepth");
-#endif
+  if (!sProvideLogFunctionCb) {
+    return;
+  }
+
+  if (Preferences::GetBool("security.sandbox.windows.log") ||
+      PR_GetEnv("MOZ_WIN_SANDBOX_LOGGING")) {
     sProvideLogFunctionCb(Log);
+
+#if defined(MOZ_CONTENT_SANDBOX) && defined(MOZ_STACKWALKING)
+    // We can only log the stack trace on process types where we know that the
+    // sandbox won't prevent it.
+    if (XRE_GetProcessType() == GeckoProcessType_Content) {
+      Preferences::AddUintVarCache(&sStackTraceDepth,
+        "security.sandbox.windows.log.stackTraceDepth");
+    }
+#endif
   }
 }
 #endif
-} // warnonlysandbox
+} // sandboxing
 } // mozilla
 
-#endif // security_sandbox_wosEnableCallbacks_h__
+#endif // security_sandbox_loggingCallbacks_h__
