@@ -1248,12 +1248,14 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // therefore block-dir coordinate conversion depends on knowing the width
   // of the coordinate space in order to translate between the logical and
   // physical origins.
-  if (wm.GetBlockDir() == WritingMode::BlockDir::eBlockRL) {
-    nscoord deltaX = aMetrics.Width() - state.mContainerWidth;
+  if (wm.IsVerticalRL()) {
+    nscoord containerWidth = aMetrics.Width();
+    nscoord deltaX = containerWidth - state.mContainerWidth;
     if (deltaX) {
       for (line_iterator line = begin_lines(), end = end_lines();
            line != end; line++) {
         SlideLine(state, line, -deltaX);
+        line->mContainerWidth = containerWidth;
       }
       for (nsIFrame* f = mFloats.FirstChild(); f; f = f->GetNextSibling()) {
         nsPoint physicalDelta(deltaX, 0);
