@@ -20,16 +20,20 @@ INCLUDED_RULES_MK = 1
 # overwritten after including config.mk.
 _eval_for_side_effects := $(CHECK_MOZBUILD_VARIABLES)
 
+ifndef MOZILLA_DIR
+MOZILLA_DIR = $(topsrcdir)
+endif
+
 ifndef INCLUDED_CONFIG_MK
 include $(topsrcdir)/config/config.mk
 endif
 
 ifndef INCLUDED_VERSION_MK
-include $(MOZILLA_DIR)/config/version.mk
+include $(topsrcdir)/config/version.mk
 endif
 
 USE_AUTOTARGETS_MK = 1
-include $(MOZILLA_DIR)/config/makefiles/makeutils.mk
+include $(topsrcdir)/config/makefiles/makeutils.mk
 
 ifdef REBUILD_CHECK
 REPORT_BUILD = $(info $(shell $(PYTHON) $(MOZILLA_DIR)/config/rebuild_check.py $@ $^))
@@ -87,12 +91,12 @@ INSTALL_TARGETS += CPP_UNIT_TESTS
 endif
 
 run-cppunittests::
-	@$(PYTHON) $(MOZILLA_DIR)/testing/runcppunittests.py --xre-path=$(DIST)/bin --symbols-path=$(DIST)/crashreporter-symbols $(CPP_UNIT_TESTS)
+	@$(PYTHON) $(topsrcdir)/testing/runcppunittests.py --xre-path=$(DIST)/bin --symbols-path=$(DIST)/crashreporter-symbols $(CPP_UNIT_TESTS)
 
 cppunittests-remote: DM_TRANS?=adb
 cppunittests-remote:
 	@if [ '${TEST_DEVICE}' != '' -o '$(DM_TRANS)' = 'adb' ]; then \
-		$(PYTHON) -u $(MOZILLA_DIR)/testing/remotecppunittests.py \
+		$(PYTHON) -u $(topsrcdir)/testing/remotecppunittests.py \
 			--xre-path=$(DEPTH)/dist/bin \
 			--localLib=$(DEPTH)/dist/$(MOZ_APP_NAME) \
 			--dm_trans=$(DM_TRANS) \
@@ -220,7 +224,7 @@ endif # WINNT
 
 ifeq ($(SOLARIS_SUNPRO_CXX),1)
 ifeq (86,$(findstring 86,$(OS_TEST)))
-OS_LDFLAGS += -M $(MOZILLA_DIR)/config/solaris_ia32.map
+OS_LDFLAGS += -M $(topsrcdir)/config/solaris_ia32.map
 endif # x86
 endif # Solaris Sun Studio C++
 
@@ -557,7 +561,7 @@ STATIC_LIB_DEP = $(if $(wildcard $(1).$(LIBS_DESC_SUFFIX)),$(1).$(LIBS_DESC_SUFF
 STATIC_LIBS_DEPS := $(foreach l,$(STATIC_LIBS),$(call STATIC_LIB_DEP,$(l)))
 
 # Dependencies which, if modified, should cause everything to rebuild
-GLOBAL_DEPS += Makefile $(addprefix $(DEPTH)/config/,$(INCLUDED_AUTOCONF_MK)) $(MOZILLA_DIR)/config/config.mk
+GLOBAL_DEPS += Makefile $(addprefix $(DEPTH)/config/,$(INCLUDED_AUTOCONF_MK)) $(topsrcdir)/config/config.mk
 
 ##############################################
 ifdef COMPILE_ENVIRONMENT
@@ -569,7 +573,7 @@ host:: $(HOST_LIBRARY) $(HOST_PROGRAM) $(HOST_SIMPLE_PROGRAMS)
 
 target:: $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS)
 
-include $(MOZILLA_DIR)/config/makefiles/target_binaries.mk
+include $(topsrcdir)/config/makefiles/target_binaries.mk
 endif
 
 ##############################################
@@ -594,11 +598,11 @@ endif
 ifneq (,$(SHARED_LIBRARY)$(PROGRAM))
 export::
 ifdef PROGRAM
-	$(PYTHON) $(MOZILLA_DIR)/build/win32/pgomerge.py \
+	$(PYTHON) $(topsrcdir)/build/win32/pgomerge.py \
 	  $(PROGRAM:$(BIN_SUFFIX)=) $(DIST)/bin
 endif
 ifdef SHARED_LIBRARY
-	$(PYTHON) $(MOZILLA_DIR)/build/win32/pgomerge.py \
+	$(PYTHON) $(topsrcdir)/build/win32/pgomerge.py \
 	  $(patsubst $(DLL_PREFIX)%$(DLL_SUFFIX),%,$(SHARED_LIBRARY)) $(DIST)/bin
 endif
 endif # SHARED_LIBRARY || PROGRAM
@@ -852,14 +856,14 @@ define MAKE_DEPS_AUTO_CC
 if test -d $(@D); then \
 	echo 'Building deps for $< using Sun Studio cc'; \
 	$(CC) $(COMPILE_CFLAGS) -xM  $< >$(_MDDEPFILE) ; \
-	$(PYTHON) $(MOZILLA_DIR)/build/unix/add_phony_targets.py $(_MDDEPFILE) ; \
+	$(PYTHON) $(topsrcdir)/build/unix/add_phony_targets.py $(_MDDEPFILE) ; \
 fi
 endef
 define MAKE_DEPS_AUTO_CXX
 if test -d $(@D); then \
 	echo 'Building deps for $< using Sun Studio CC'; \
 	$(CXX) $(COMPILE_CXXFLAGS) -xM $< >$(_MDDEPFILE) ; \
-	$(PYTHON) $(MOZILLA_DIR)/build/unix/add_phony_targets.py $(_MDDEPFILE) ; \
+	$(PYTHON) $(topsrcdir)/build/unix/add_phony_targets.py $(_MDDEPFILE) ; \
 fi
 endef
 endif # Sun Studio on Solaris
@@ -1097,7 +1101,7 @@ endif
 # Java rules
 ###############################################################################
 ifneq (,$(JAVAFILES)$(ANDROID_RESFILES)$(ANDROID_APKNAME)$(JAVA_JAR_TARGETS))
-  include $(MOZILLA_DIR)/config/makefiles/java-build.mk
+  include $(topsrcdir)/config/makefiles/java-build.mk
 endif
 
 ###############################################################################
@@ -1543,7 +1547,7 @@ endif
 
 # Pull in non-recursive targets if this is a partial tree build.
 ifndef TOPLEVEL_BUILD
-include $(MOZILLA_DIR)/config/makefiles/nonrecursive.mk
+include $(topsrcdir)/config/makefiles/nonrecursive.mk
 endif
 
 ################################################################################
@@ -1578,7 +1582,7 @@ TAGS: $(CSRCS) $(CPPSRCS) $(wildcard *.h)
 ifndef INCLUDED_DEBUGMAKE_MK #{
   ## Only parse when an echo* or show* target is requested
   ifneq (,$(call isTargetStem,echo,show))
-    include $(MOZILLA_DIR)/config/makefiles/debugmake.mk
+    include $(topsrcdir)/config/makefiles/debugmake.mk
   endif #}
 endif #}
 
@@ -1628,7 +1632,7 @@ $(PURGECACHES_FILES):
 #############################################################################
 # Derived targets and dependencies
 
-include $(MOZILLA_DIR)/config/makefiles/autotargets.mk
+include $(topsrcdir)/config/makefiles/autotargets.mk
 ifneq ($(NULL),$(AUTO_DEPS))
   default all libs tools export:: $(AUTO_DEPS)
 endif
