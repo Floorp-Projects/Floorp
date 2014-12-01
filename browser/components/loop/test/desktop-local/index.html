@@ -14,6 +14,13 @@
   </div>
   <div id="messages"></div>
   <div id="fixtures"></div>
+  <script>
+    var uncaughtError;
+    window.addEventListener("error", function(error) {
+      uncaughtError = error;
+    });
+  </script>
+
   <!-- libs -->
   <script src="../../content/libs/l10n.js"></script>
   <script src="../../content/shared/libs/react-0.11.2.js"></script>
@@ -68,6 +75,13 @@
     // Stop the default init functions running to avoid conflicts in tests
     document.removeEventListener('DOMContentLoaded', loop.panel.init);
     document.removeEventListener('DOMContentLoaded', loop.conversation.init);
+
+    describe("Uncaught Error Check", function() {
+      it("should load the tests without errors", function() {
+        expect(uncaughtError && uncaughtError.message).to.be.undefined;
+      });
+    });
+
     mocha.run(function () {
       $("#mocha").append("<p id='complete'>Complete.</p>");
     });
