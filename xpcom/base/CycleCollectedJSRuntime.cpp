@@ -582,24 +582,10 @@ CycleCollectedJSRuntime::DescribeGCThing(bool aIsMarked, void* aThing,
         JS_snprintf(name, sizeof(name), "JS Object (Function)");
       }
     } else {
-      JS_snprintf(name, sizeof(name), "JS Object (%s)",
-                  clasp->name);
+      JS_snprintf(name, sizeof(name), "JS Object (%s)", clasp->name);
     }
   } else {
-    static const char trace_types[][11] = {
-      "Object",
-      "String",
-      "Symbol",
-      "Script",
-      "LazyScript",
-      "IonCode",
-      "Shape",
-      "BaseShape",
-      "TypeObject",
-    };
-    static_assert(MOZ_ARRAY_LENGTH(trace_types) == JSTRACE_LAST + 1,
-                  "JSTRACE_LAST enum must match trace_types count.");
-    JS_snprintf(name, sizeof(name), "JS %s", trace_types[aTraceKind]);
+    JS_snprintf(name, sizeof(name), "JS %s", JS::GCTraceKindToAscii(aTraceKind));
   }
 
   // Disable printing global for objects while we figure out ObjShrink fallout.

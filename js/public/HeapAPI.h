@@ -11,6 +11,7 @@
 
 #include "jspubtd.h"
 
+#include "js/TracingAPI.h"
 #include "js/Utility.h"
 
 /* These values are private to the JS engine. */
