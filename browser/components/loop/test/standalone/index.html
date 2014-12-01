@@ -15,6 +15,13 @@
  </div>
   <div id="messages"></div>
   <div id="fixtures"></div>
+  <script>
+    var uncaughtError;
+    window.addEventListener("error", function(error) {
+      uncaughtError = error;
+    });
+  </script>
+
   <!-- libs -->
   <script src="../../content/shared/libs/react-0.11.2.js"></script>
   <script src="../../content/shared/libs/jquery-2.1.0.js"></script>
@@ -59,6 +66,12 @@
   <script src="webapp_test.js"></script>
   <script src="multiplexGum_test.js"></script>
   <script>
+    describe("Uncaught Error Check", function() {
+      it("should load the tests without errors", function() {
+        expect(uncaughtError && uncaughtError.message).to.be.undefined;
+      });
+    });
+
     mocha.run(function () {
       $("#mocha").append("<p id='complete'>Complete.</p>");
     });
