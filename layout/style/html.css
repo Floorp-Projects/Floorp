@@ -599,7 +599,6 @@ li {
  */
 hr {
   display: block;
-  height: 2px;
   border: 1px inset;
   margin: 0.5em auto 0.5em auto;
   color: gray;
