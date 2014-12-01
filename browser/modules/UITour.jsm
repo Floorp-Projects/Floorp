@@ -111,15 +111,15 @@ this.UITour = {
       },
       widgetName: "PanelUI-customize",
     }],
+    ["devtools",    {query: "#developer-button"}],
     ["help",        {query: "#PanelUI-help"}],
     ["home",        {query: "#home-button"}],
-    ["loop",        {query: "#loop-button"}],
-    ["devtools",    {query: "#developer-button"}],
-    ["webide",      {query: "#webide-button"}],
     ["forget", {
       query: "#panic-button",
       widgetName: "panic-button",
-      allowAdd: true }],
+      allowAdd: true,
+    }],
+    ["loop",        {query: "#loop-button"}],
     ["privateWindow",  {query: "#privatebrowsing-button"}],
     ["quit",        {query: "#PanelUI-quit"}],
     ["search",      {
@@ -188,6 +188,7 @@ this.UITour = {
       query: "#urlbar",
       widgetName: "urlbar-container",
     }],
+    ["webide",      {query: "#webide-button"}],
   ]),
 
   init: function() {
@@ -714,8 +715,6 @@ this.UITour = {
   teardownTour: function(aWindow, aWindowClosing = false) {
     log.debug("teardownTour: aWindowClosing = " + aWindowClosing);
     aWindow.gBrowser.tabContainer.removeEventListener("TabSelect", this);
-    aWindow.PanelUI.panel.removeEventListener("popuphiding", this.hidePanelAnnotations);
-    aWindow.PanelUI.panel.removeEventListener("ViewShowing", this.hidePanelAnnotations);
     aWindow.removeEventListener("SSWindowClosing", this);
 
     let originTabs = this.originTabs.get(aWindow);
@@ -732,7 +731,14 @@ this.UITour = {
       this.hideInfo(aWindow);
       // Ensure the menu panel is hidden before calling recreatePopup so popup events occur.
       this.hideMenu(aWindow, "appMenu");
+      this.hideMenu(aWindow, "loop");
     }
+
+    // Clean up panel listeners after we may have called hideMenu above.
+    aWindow.PanelUI.panel.removeEventListener("popuphiding", this.hidePanelAnnotations);
+    aWindow.PanelUI.panel.removeEventListener("ViewShowing", this.hidePanelAnnotations);
+    let loopPanel = aWindow.document.getElementById("loop-notification-panel");
+    loopPanel.removeEventListener("popuphidden", this.onLoopPanelHidden);
 
     this.endUrlbarCapture(aWindow);
     this.removePinnedTab(aWindow);
@@ -867,7 +873,7 @@ this.UITour = {
    */
   _setAppMenuStateForAnnotation: function(aWindow, aAnnotationType, aShouldOpenForHighlight, aCallback = null) {
     log.debug("_setAppMenuStateForAnnotation:", aAnnotationType);
-    log.debug("_setAppMenuStateForAnnotation: Menu is exptected to be:", aShouldOpenForHighlight ? "open" : "closed");
+    log.debug("_setAppMenuStateForAnnotation: Menu is expected to be:", aShouldOpenForHighlight ? "open" : "closed");
 
     // If the panel is in the desired state, we're done.
     let panelIsOpen = aWindow.PanelUI.panel.state != "closed";
@@ -1238,6 +1244,26 @@ this.UITour = {
     } else if (aMenuName == "bookmarks") {
       let menuBtn = aWindow.document.getElementById("bookmarks-menu-button");
       openMenuButton(menuBtn);
+    } else if (aMenuName == "loop") {
+      let toolbarButton = aWindow.LoopUI.toolbarButton;
+      if (!toolbarButton || !toolbarButton.node) {
+        return;
+      }
+
+      let panel = aWindow.document.getElementById("loop-notification-panel");
+      panel.setAttribute("noautohide", true);
+      if (panel.state != "open") {
+        this.recreatePopup(panel);
+      }
+
+      // An event object is expected but we don't want to toggle the panel with a click if the panel
+      // is already open.
+      aWindow.LoopUI.openCallPanel({ target: toolbarButton.node, }).then(() => {
+        if (aOpenCallback) {
+          aOpenCallback();
+        }
+      });
+      panel.addEventListener("popuphidden", this.onLoopPanelHidden);
     } else if (aMenuName == "searchEngines") {
       this.getTarget(aWindow, "searchProvider").then(target => {
         openMenuButton(target.node);
@@ -1258,6 +1284,9 @@ this.UITour = {
     } else if (aMenuName == "bookmarks") {
       let menuBtn = aWindow.document.getElementById("bookmarks-menu-button");
       closeMenuButton(menuBtn);
+    } else if (aMenuName == "loop") {
+      let panel = aWindow.document.getElementById("loop-notification-panel");
+      panel.hidePopup();
     } else if (aMenuName == "searchEngines") {
       let menuBtn = this.targets.get("searchProvider").query(aWindow.document);
       closeMenuButton(menuBtn);
@@ -1287,6 +1316,11 @@ this.UITour = {
       }
     });
     UITour.appMenuOpenForAnnotation.clear();
+  },
+
+  onLoopPanelHidden: function(aEvent) {
+    aEvent.target.removeAttribute("noautohide");
+    UITour.recreatePopup(aEvent.target);
   },
 
   recreatePopup: function(aPanel) {
