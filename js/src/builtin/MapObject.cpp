@@ -1827,6 +1827,18 @@ SetObject::construct(JSContext *cx, unsigned argc, Value *vp)
 
     CallArgs args = CallArgsFromVp(argc, vp);
     if (!args.get(0).isNullOrUndefined()) {
+        RootedValue adderVal(cx);
+        if (!JSObject::getProperty(cx, obj, obj, cx->names().add, &adderVal))
+            return false;
+
+        if (!IsCallable(adderVal))
+            return ReportIsNotFunction(cx, adderVal);
+
+        bool isOriginalAdder = IsNativeFunction(adderVal, SetObject::add);
+        RootedValue setVal(cx, ObjectValue(*obj));
+        FastInvokeGuard fig(cx, adderVal);
+        InvokeArgs &args2 = fig.args();
+
         RootedValue keyVal(cx);
         ForOfIterator iter(cx);
         if (!iter.init(args[0]))
@@ -1839,13 +1851,26 @@ SetObject::construct(JSContext *cx, unsigned argc, Value *vp)
                 return false;
             if (done)
                 break;
-            if (!key.setValue(cx, keyVal))
-                return false;
-            if (!set->put(key)) {
-                js_ReportOutOfMemory(cx);
-                return false;
+
+            if (isOriginalAdder) {
+                if (!key.setValue(cx, keyVal))
+                    return false;
+                if (!set->put(key)) {
+                    js_ReportOutOfMemory(cx);
+                    return false;
+                }
+                WriteBarrierPost(cx->runtime(), set, keyVal);
+            } else {
+                if (!args2.init(1))
+                    return false;
+
+                args2.setCallee(adderVal);
+                args2.setThis(setVal);
+                args2[0].set(keyVal);
+
+                if (!fig.invoke(cx))
+                    return false;
             }
-            WriteBarrierPost(cx->runtime(), set, keyVal);
         }
     }
 

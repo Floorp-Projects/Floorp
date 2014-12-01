@@ -12,6 +12,7 @@
 #include "jsprototypes.h"
 
 #define FOR_EACH_COMMON_PROPERTYNAME(macro) \
+    macro(add, add, "add") \
     macro(anonymous, anonymous, "anonymous") \
     macro(Any, Any, "Any") \
     macro(apply, apply, "apply") \
