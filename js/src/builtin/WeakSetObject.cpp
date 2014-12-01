@@ -12,6 +12,7 @@
 
 #include "builtin/SelfHostingDefines.h"
 #include "vm/GlobalObject.h"
+#include "vm/SelfHosting.h"
 
 #include "jsobjinlines.h"
 
@@ -98,6 +99,20 @@ WeakSetObject::construct(JSContext *cx, unsigned argc, Value *vp)
     if (!args.get(0).isNullOrUndefined()) {
         RootedObject map(cx, &obj->getReservedSlot(WEAKSET_MAP_SLOT).toObject());
 
+        RootedValue adderVal(cx);
+        if (!JSObject::getProperty(cx, obj, obj, cx->names().add, &adderVal))
+            return false;
+
+        if (!IsCallable(adderVal))
+            return ReportIsNotFunction(cx, adderVal);
+
+        JSFunction *adder;
+        bool isOriginalAdder = IsFunctionObject(adderVal, &adder) &&
+                               IsSelfHostedFunctionWithName(adder, cx->names().WeakSet_add);
+        RootedValue setVal(cx, ObjectValue(*obj));
+        FastInvokeGuard fig(cx, adderVal);
+        InvokeArgs &args2 = fig.args();
+
         JS::ForOfIterator iter(cx);
         if (!iter.init(args[0]))
             return false;
@@ -112,14 +127,26 @@ WeakSetObject::construct(JSContext *cx, unsigned argc, Value *vp)
             if (done)
                 break;
 
-            if (keyVal.isPrimitive()) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT);
-                return false;
-            }
+            if (isOriginalAdder) {
+                if (keyVal.isPrimitive()) {
+                    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT);
+                    return false;
+                }
 
-            keyObject = &keyVal.toObject();
-            if (!SetWeakMapEntry(cx, map, keyObject, placeholder))
-                return false;
+                keyObject = &keyVal.toObject();
+                if (!SetWeakMapEntry(cx, map, keyObject, placeholder))
+                    return false;
+            } else {
+                if (!args2.init(1))
+                    return false;
+
+                args2.setCallee(adderVal);
+                args2.setThis(setVal);
+                args2[0].set(keyVal);
+
+                if (!fig.invoke(cx))
+                    return false;
+            }
         }
     }
 
