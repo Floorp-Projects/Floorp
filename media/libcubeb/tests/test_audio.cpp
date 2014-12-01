@@ -114,15 +114,15 @@ int supports_channel_count(const char* backend_id, int nchannels)
 
 int run_test(int num_channels, int sampling_rate, int is_float)
 {
-  int ret = CUBEB_OK;
+  int r = CUBEB_OK;
 
   cubeb *ctx = NULL;
   synth_state* synth = NULL;
   cubeb_stream *stream = NULL;
   const char * backend_id = NULL;
 
-  ret = cubeb_init(&ctx, "Cubeb audio test");
-  if (ret != CUBEB_OK) {
+  r = cubeb_init(&ctx, "Cubeb audio test: channels");
+  if (r != CUBEB_OK) {
     fprintf(stderr, "Error initializing cubeb library\n");
     goto cleanup;
   }
@@ -148,10 +148,10 @@ int run_test(int num_channels, int sampling_rate, int is_float)
     goto cleanup;
   }
 
-  ret = cubeb_stream_init(ctx, &stream, "test tone", params,
-                          100, is_float ? data_cb_float : data_cb_short, state_cb, synth);
-  if (ret != CUBEB_OK) {
-    fprintf(stderr, "Error initializing cubeb stream: %d\n", ret);
+  r = cubeb_stream_init(ctx, &stream, "test tone", params,
+                        100, is_float ? data_cb_float : data_cb_short, state_cb, synth);
+  if (r != CUBEB_OK) {
+    fprintf(stderr, "Error initializing cubeb stream: %d\n", r);
     goto cleanup;
   }
 
@@ -164,10 +164,74 @@ cleanup:
   cubeb_destroy(ctx);
   synth_destroy(synth);
 
-  return ret;
+  return r;
 }
 
-int main(int argc, char *argv[])
+int run_panning_volume_test()
+{
+  int r = CUBEB_OK;
+
+  cubeb *ctx = NULL;
+  synth_state* synth = NULL;
+  cubeb_stream *stream = NULL;
+
+  r = cubeb_init(&ctx, "Cubeb audio test");
+  if (r != CUBEB_OK) {
+    fprintf(stderr, "Error initializing cubeb library\n");
+    goto cleanup;
+  }
+
+  cubeb_stream_params params;
+  params.format = CUBEB_SAMPLE_S16NE;
+  params.rate = 44100;
+  params.channels = 2;
+
+  synth = synth_create(params.channels, params.rate);
+  if (synth == NULL) {
+    fprintf(stderr, "Out of memory\n");
+    goto cleanup;
+  }
+
+  r = cubeb_stream_init(ctx, &stream, "test tone", params,
+                        100, data_cb_short, state_cb, synth);
+  if (r != CUBEB_OK) {
+    fprintf(stderr, "Error initializing cubeb stream: %d\n", r);
+    goto cleanup;
+  }
+
+  fprintf(stderr, "Testing: volume\n");
+  for(int i=0;i <= 4; ++i)
+  {
+    fprintf(stderr, "Volume: %d%%\n", i*25);
+
+    cubeb_stream_set_volume(stream, i/4.0f);
+    cubeb_stream_start(stream);
+    delay(400);
+    cubeb_stream_stop(stream);
+    delay(100);
+  }
+
+  fprintf(stderr, "Testing: panning\n");
+  for(int i=-4;i <= 4; ++i)
+  {
+    fprintf(stderr, "Panning: %.2f%%\n", i/4.0f);
+
+    cubeb_stream_set_panning(stream, i/4.0f);
+    cubeb_stream_start(stream);
+    delay(400);
+    cubeb_stream_stop(stream);
+    delay(100);
+  }
+
+cleanup:
+  cubeb_stream_destroy(stream);
+  cubeb_destroy(ctx);
+  synth_destroy(synth);
+
+  return r;
+}
+
+void run_channel_rate_test()
 {
   int channel_values[] = {
     1,
@@ -192,8 +256,13 @@ int main(int argc, char *argv[])
       assert(run_test(channel_values[j], freq_values[i], 1) == CUBEB_OK);
     }
   }
-
-  return CUBEB_OK;
 }
 
 
+int main(int argc, char *argv[])
+{
+  assert(run_panning_volume_test() == CUBEB_OK);
+  run_channel_rate_test();
+
+  return CUBEB_OK;
+}
