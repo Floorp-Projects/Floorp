@@ -328,23 +328,6 @@ const uint32_t Arena::FirstThingOffsets[] = {
 
 #undef OFFSET
 
-const char *
-js::gc::TraceKindAsAscii(JSGCTraceKind kind)
-{
-    switch(kind) {
-      case JSTRACE_OBJECT: return "JSTRACE_OBJECT";
-      case JSTRACE_STRING: return "JSTRACE_STRING";
-      case JSTRACE_SYMBOL: return "JSTRACE_SYMBOL";
-      case JSTRACE_SCRIPT: return "JSTRACE_SCRIPT";
-      case JSTRACE_LAZY_SCRIPT: return "JSTRACE_SCRIPT";
-      case JSTRACE_JITCODE: return "JSTRACE_JITCODE";
-      case JSTRACE_SHAPE: return "JSTRACE_SHAPE";
-      case JSTRACE_BASE_SHAPE: return "JSTRACE_BASE_SHAPE";
-      case JSTRACE_TYPE_OBJECT: return "JSTRACE_TYPE_OBJECT";
-      default: return "INVALID";
-    }
-}
-
 struct js::gc::FinalizePhase
 {
     size_t length;
@@ -7044,6 +7027,23 @@ JS::AutoAssertGCCallback::AutoAssertGCCallback(JSObject *obj)
   : AutoSuppressGCAnalysis()
 {
     MOZ_ASSERT(obj->runtimeFromMainThread()->isHeapMajorCollecting());
+}
+
+JS_FRIEND_API(const char *)
+JS::GCTraceKindToAscii(JSGCTraceKind kind)
+{
+    switch(kind) {
+      case JSTRACE_OBJECT: return "Object";
+      case JSTRACE_SCRIPT: return "Script";
+      case JSTRACE_STRING: return "String";
+      case JSTRACE_SYMBOL: return "Symbol";
+      case JSTRACE_SHAPE: return "Shape";
+      case JSTRACE_BASE_SHAPE: return "BaseShape";
+      case JSTRACE_LAZY_SCRIPT: return "LazyScript";
+      case JSTRACE_JITCODE: return "JitCode";
+      case JSTRACE_TYPE_OBJECT: return "TypeObject";
+      default: return "Invalid";
+    }
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS
