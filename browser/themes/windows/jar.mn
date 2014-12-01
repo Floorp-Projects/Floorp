@@ -747,6 +747,7 @@ browser.jar:
         skin/classic/aero/browser/devtools/eyedropper.css            (../shared/devtools/eyedropper.css)
 *       skin/classic/aero/browser/devtools/netmonitor.css            (devtools/netmonitor.css)
 *       skin/classic/aero/browser/devtools/profiler.css              (devtools/profiler.css)
+*       skin/classic/aero/browser/devtools/performance.css           (devtools/performance.css)
 *       skin/classic/aero/browser/devtools/timeline.css              (devtools/timeline.css)
 *       skin/classic/aero/browser/devtools/scratchpad.css            (devtools/scratchpad.css)
 *       skin/classic/aero/browser/devtools/shadereditor.css          (devtools/shadereditor.css)

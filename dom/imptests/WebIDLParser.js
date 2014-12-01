@@ -31,7 +31,7 @@
         return tokens;
     };
     
-    var parse = function (tokens) {
+    var parse = function (tokens, opt) {
         var line = 1;
         tokens = tokens.slice();
         
@@ -82,14 +82,41 @@
             }
         };
         
-        var all_ws = function () {
+        var all_ws = function (store, pea) { // pea == post extended attribute, tpea = same for types
             var t = { type: "whitespace", value: "" };
             while (true) {
                 var w = ws();
                 if (!w) break;
                 t.value += w.value;
             }
-            if (t.value.length > 0) return t;
+            if (t.value.length > 0) {
+                if (store) {
+                    var w = t.value
+                    ,   re = {
+                            "ws":                   /^([\t\n\r ]+)/
+                        ,   "line-comment":         /^\/\/(.*)\n?/m
+                        ,   "multiline-comment":    /^\/\*((?:.|\n|\r)*?)\*\//
+                        }
+                    ,   wsTypes = []
+                    ;
+                    for (var k in re) wsTypes.push(k);
+                    while (w.length) {
+                        var matched = false;
+                        for (var i = 0, n = wsTypes.length; i < n; i++) {
+                            var type = wsTypes[i];
+                            w = w.replace(re[type], function (tok, m1) {
+                                store.push({ type: type + (pea ? ("-" + pea) : ""), value: m1 });
+                                matched = true;
+                                return "";
+                            });
+                            if (matched) break;
+                        }
+                        if (matched) continue;
+                        throw new Error("Surprising white space construct."); // this shouldn't happen
+                    }
+                }
+                return t;
+            }
         };
         
         var integer_type = function () {
@@ -151,8 +178,15 @@
                 else if (consume(OTHER, "[")) {
                     all_ws();
                     consume(OTHER, "]") || error("Unterminated array type");
-                    if (!obj.array) obj.array = 1;
-                    else obj.array++;
+                    if (!obj.array) {
+                        obj.array = 1;
+                        obj.nullableArray = [obj.nullable];
+                    }
+                    else {
+                        obj.array++;
+                        obj.nullableArray.push(obj.nullable);
+                    }
+                    obj.nullable = false;
                 }
                 else return;
             }
@@ -160,40 +194,46 @@
         
         var single_type = function () {
             var prim = primitive_type()
-            ,   ret = { sequence: false, nullable: false, array: false, union: false }
+            ,   ret = { sequence: false, generic: null, nullable: false, array: false, union: false }
+            ,   name
+            ,   value
             ;
             if (prim) {
                 ret.idlType = prim;
             }
-            else if (consume(ID, "sequence")) {
+            else if (name = consume(ID)) {
+                value = name.value;
                 all_ws();
-                if (!consume(OTHER, "<")) {
-                    ret.idlType = "sequence";
-                }
-                else {
-                    ret.sequence = true;
-                    ret.idlType = type() || error("Error parsing sequence type");
+                // Generic types
+                if (consume(OTHER, "<")) {
+                    // backwards compat
+                    if (value === "sequence") {
+                        ret.sequence = true;
+                    }
+                    ret.generic = value;
+                    ret.idlType = type() || error("Error parsing generic type " + value);
                     all_ws();
-                    if (!consume(OTHER, ">")) error("Unterminated sequence");
+                    if (!consume(OTHER, ">")) error("Unterminated generic type " + value);
                     all_ws();
                     if (consume(OTHER, "?")) ret.nullable = true;
                     return ret;
                 }
+                else {
+                    ret.idlType = value;
+                }
             }
             else {
-                var name = consume(ID);
-                if (!name) return;
-                ret.idlType = name.value;
+                return;
             }
             type_suffix(ret);
-            if (ret.nullable && ret.idlType === "any") error("Type any cannot be made nullable");
+            if (ret.nullable && !ret.array && ret.idlType === "any") error("Type any cannot be made nullable");
             return ret;
         };
         
         var union_type = function () {
             all_ws();
             if (!consume(OTHER, "(")) return;
-            var ret = { sequence: false, nullable: false, array: false, union: true, idlType: [] };
+            var ret = { sequence: false, generic: null, nullable: false, array: false, union: true, idlType: [] };
             var fst = type() || error("Union type with no content");
             ret.idlType.push(fst);
             while (true) {
@@ -211,16 +251,21 @@
             return single_type() || union_type();
         };
         
-        var argument = function () {
+        var argument = function (store) {
             var ret = { optional: false, variadic: false };
-            ret.extAttrs = extended_attrs();
-            all_ws();
-            if (consume(ID, "optional")) {
+            ret.extAttrs = extended_attrs(store);
+            all_ws(store, "pea");
+            var opt_token = consume(ID, "optional");
+            if (opt_token) {
                 ret.optional = true;
                 all_ws();
             }
             ret.idlType = type();
-            if (!ret.idlType) return;
+            if (!ret.idlType) {
+                if (opt_token) tokens.unshift(opt_token);
+                return;
+            }
+            var type_token = last_token;
             if (!ret.optional) {
                 all_ws();
                 if (tokens.length >= 3 &&
@@ -235,7 +280,12 @@
                 }
             }
             all_ws();
-            var name = consume(ID) || error("No name in argument");
+            var name = consume(ID);
+            if (!name) {
+                if (opt_token) tokens.unshift(opt_token);
+                tokens.unshift(type_token);
+                return;
+            }
             ret.name = name.value;
             if (ret.optional) {
                 all_ws();
@@ -244,20 +294,33 @@
             return ret;
         };
         
-        var argument_list = function () {
-            var arg = argument(), ret = [];
-            if (!arg) return ret;
+        var argument_list = function (store) {
+            var ret = []
+            ,   arg = argument(store ? ret : null)
+            ;
+            if (!arg) return;
             ret.push(arg);
             while (true) {
-                all_ws();
+                all_ws(store ? ret : null);
                 if (!consume(OTHER, ",")) return ret;
-                all_ws();
-                var nxt = argument() || error("Trailing comma in arguments list");
+                var nxt = argument(store ? ret : null) || error("Trailing comma in arguments list");
                 ret.push(nxt);
             }
         };
         
-        var simple_extended_attr = function () {
+        var type_pair = function () {
+            all_ws();
+            var k = type();
+            if (!k) return;
+            all_ws()
+            if (!consume(OTHER, ",")) return;
+            all_ws();
+            var v = type();
+            if (!v) return;
+            return [k, v];
+        };
+        
+        var simple_extended_attr = function (store) {
             all_ws();
             var name = consume(ID);
             if (!name) return;
@@ -274,24 +337,35 @@
             }
             all_ws();
             if (consume(OTHER, "(")) {
-                ret["arguments"] = argument_list();
+                var args, pair;
+                // [Constructor(DOMString str)]
+                if (args = argument_list(store)) {
+                    ret["arguments"] = args;
+                }
+                // [MapClass(DOMString, DOMString)]
+                else if (pair = type_pair()) {
+                    ret.typePair = pair;
+                }
+                // [Constructor()]
+                else {
+                    ret["arguments"] = [];
+                }
                 all_ws();
-                consume(OTHER, ")") || error("Unclosed argument in extended attribute");
+                consume(OTHER, ")") || error("Unexpected token in extended attribute argument list or type pair");
             }
             return ret;
         };
         
         // Note: we parse something simpler than the official syntax. It's all that ever
         // seems to be used
-        var extended_attrs = function () {
+        var extended_attrs = function (store) {
             var eas = [];
-            all_ws();
+            all_ws(store);
             if (!consume(OTHER, "[")) return eas;
-            eas[0] = simple_extended_attr() || error("Extended attribute with not content");
+            eas[0] = simple_extended_attr(store) || error("Extended attribute with not content");
             all_ws();
             while (consume(OTHER, ",")) {
-                all_ws();
-                eas.push(simple_extended_attr() || error("Trailing comma in extended attribute"));
+                eas.push(simple_extended_attr(store) || error("Trailing comma in extended attribute"));
                 all_ws();
             }
             consume(OTHER, "]") || error("No end of extended attribute");
@@ -314,8 +388,8 @@
             }
         };
         
-        var const_ = function () {
-            all_ws();
+        var const_ = function (store) {
+            all_ws(store, "pea");
             if (!consume(ID, "const")) return;
             var ret = { type: "const", nullable: false };
             all_ws();
@@ -352,14 +426,14 @@
             }
         };
         
-        var operation_rest = function (ret) {
+        var operation_rest = function (ret, store) {
             all_ws();
             if (!ret) ret = {};
             var name = consume(ID);
             ret.name = name ? name.value : null;
             all_ws();
             consume(OTHER, "(") || error("Invalid operation");
-            ret["arguments"] = argument_list();
+            ret["arguments"] = argument_list(store) || [];
             all_ws();
             consume(OTHER, ")") || error("Unterminated operation");
             all_ws();
@@ -367,8 +441,8 @@
             return ret;
         };
         
-        var callback = function () {
-            all_ws();
+        var callback = function (store) {
+            all_ws(store, "pea");
             var ret;
             if (!consume(ID, "callback")) return;
             all_ws();
@@ -387,7 +461,7 @@
             ret.idlType = return_type();
             all_ws();
             consume(OTHER, "(") || error("No arguments in callback");
-            ret["arguments"] = argument_list();
+            ret["arguments"] = argument_list(store) || [];
             all_ws();
             consume(OTHER, ")") || error("Unterminated callback");
             all_ws();
@@ -395,8 +469,8 @@
             return ret;
         };
 
-        var attribute = function () {
-            all_ws();
+        var attribute = function (store) {
+            all_ws(store, "pea");
             var grabbed = []
             ,   ret = {
                 type:           "attribute"
@@ -454,8 +528,8 @@
             return typ;
         };
         
-        var operation = function () {
-            all_ws();
+        var operation = function (store) {
+            all_ws(store, "pea");
             var ret = {
                 type:           "operation"
             ,   getter:         false
@@ -478,13 +552,13 @@
             if (ret.getter || ret.setter || ret.creator || ret.deleter || ret.legacycaller) {
                 all_ws();
                 ret.idlType = return_type();
-                operation_rest(ret);
+                operation_rest(ret, store);
                 return ret;
             }
             if (consume(ID, "static")) {
                 ret["static"] = true;
                 ret.idlType = return_type();
-                operation_rest(ret);
+                operation_rest(ret, store);
                 return ret;
             }
             else if (consume(ID, "stringifier")) {
@@ -492,7 +566,7 @@
                 all_ws();
                 if (consume(OTHER, ";")) return ret;
                 ret.idlType = return_type();
-                operation_rest(ret);
+                operation_rest(ret, store);
                 return ret;
             }
             ret.idlType = return_type();
@@ -513,7 +587,7 @@
                 return ret;
             }
             else {
-                operation_rest(ret);
+                operation_rest(ret, store);
                 return ret;
             }
         };
@@ -530,8 +604,8 @@
             }
         };
         
-        var serialiser = function () {
-            all_ws();
+        var serialiser = function (store) {
+            all_ws(store, "pea");
             if (!consume(ID, "serializer")) return;
             var ret = { type: "serializer" };
             all_ws();
@@ -589,77 +663,84 @@
             else {
                 ret.idlType = return_type();
                 all_ws();
-                ret.operation = operation_rest();
+                ret.operation = operation_rest(null, store);
             }
             return ret;
         };
         
-        var interface_ = function (isPartial) {
-            all_ws();
+        var interface_ = function (isPartial, store) {
+            all_ws(isPartial ? null : store, "pea");
             if (!consume(ID, "interface")) return;
             all_ws();
             var name = consume(ID) || error("No name for interface");
-            var ret = {
+            var mems = []
+            ,   ret = {
                 type:   "interface"
             ,   name:   name.value
             ,   partial:    false
-            ,   members:    []
+            ,   members:    mems
             };
             if (!isPartial) ret.inheritance = inheritance() || null;
             all_ws();
             consume(OTHER, "{") || error("Bodyless interface");
             while (true) {
-                all_ws();
+                all_ws(store ? mems : null);
                 if (consume(OTHER, "}")) {
                     all_ws();
                     consume(OTHER, ";") || error("Missing semicolon after interface");
                     return ret;
                 }
-                var ea = extended_attrs();
+                var ea = extended_attrs(store ? mems : null);
                 all_ws();
-                var cnt = const_();
+                var cnt = const_(store ? mems : null);
                 if (cnt) {
                     cnt.extAttrs = ea;
                     ret.members.push(cnt);
                     continue;
                 }
-                var mem = serialiser() || attribute() || operation() || error("Unknown member");
+                var mem = serialiser(store ? mems : null) ||
+                          attribute(store ? mems : null) ||
+                          operation(store ? mems : null) ||
+                          error("Unknown member");
                 mem.extAttrs = ea;
                 ret.members.push(mem);
             }
         };
         
-        var partial = function () {
-            all_ws();
+        var partial = function (store) {
+            all_ws(store, "pea");
             if (!consume(ID, "partial")) return;
-            var thing = dictionary(true) || interface_(true) || error("Partial doesn't apply to anything");
+            var thing = dictionary(true, store) ||
+                        interface_(true, store) ||
+                        error("Partial doesn't apply to anything");
             thing.partial = true;
             return thing;
         };
         
-        var dictionary = function (isPartial) {
-            all_ws();
+        var dictionary = function (isPartial, store) {
+            all_ws(isPartial ? null : store, "pea");
             if (!consume(ID, "dictionary")) return;
             all_ws();
             var name = consume(ID) || error("No name for dictionary");
-            var ret = {
+            var mems = []
+            ,   ret = {
                 type:   "dictionary"
             ,   name:   name.value
             ,   partial:    false
-            ,   members:    []
+            ,   members:    mems
             };
             if (!isPartial) ret.inheritance = inheritance() || null;
             all_ws();
             consume(OTHER, "{") || error("Bodyless dictionary");
             while (true) {
-                all_ws();
+                all_ws(store ? mems : null);
                 if (consume(OTHER, "}")) {
                     all_ws();
                     consume(OTHER, ";") || error("Missing semicolon after dictionary");
                     return ret;
                 }
-                var ea = extended_attrs();
-                all_ws();
+                var ea = extended_attrs(store ? mems : null);
+                all_ws(store ? mems : null, "pea");
                 var typ = type() || error("No type for dictionary member");
                 all_ws();
                 var name = consume(ID) || error("No name for dictionary member");
@@ -675,28 +756,29 @@
             }
         };
         
-        var exception = function () {
-            all_ws();
+        var exception = function (store) {
+            all_ws(store, "pea");
             if (!consume(ID, "exception")) return;
             all_ws();
             var name = consume(ID) || error("No name for exception");
-            var ret = {
+            var mems = []
+            ,   ret = {
                 type:   "exception"
             ,   name:   name.value
-            ,   members:    []
+            ,   members:    mems
             };
             ret.inheritance = inheritance() || null;
             all_ws();
             consume(OTHER, "{") || error("Bodyless exception");
             while (true) {
-                all_ws();
+                all_ws(store ? mems : null);
                 if (consume(OTHER, "}")) {
                     all_ws();
                     consume(OTHER, ";") || error("Missing semicolon after exception");
                     return ret;
                 }
-                var ea = extended_attrs();
-                all_ws();
+                var ea = extended_attrs(store ? mems : null);
+                all_ws(store ? mems : null, "pea");
                 var cnt = const_();
                 if (cnt) {
                     cnt.extAttrs = ea;
@@ -718,21 +800,22 @@
             }
         };
         
-        var enum_ = function () {
-            all_ws();
+        var enum_ = function (store) {
+            all_ws(store, "pea");
             if (!consume(ID, "enum")) return;
             all_ws();
             var name = consume(ID) || error("No name for enum");
-            var ret = {
+            var vals = []
+            ,   ret = {
                 type:   "enum"
             ,   name:   name.value
-            ,   values: []
+            ,   values: vals
             };
             all_ws();
             consume(OTHER, "{") || error("No curly for enum");
             var saw_comma = false;
             while (true) {
-                all_ws();
+                all_ws(store ? vals : null);
                 if (consume(OTHER, "}")) {
                     all_ws();
                     if (saw_comma) error("Trailing comma in enum");
@@ -741,9 +824,10 @@
                 }
                 var val = consume(STR) || error("Unexpected value in enum");
                 ret.values.push(val.value.replace(/"/g, ""));
-                all_ws();
+                all_ws(store ? vals : null);
                 if (consume(OTHER, ",")) {
-                    all_ws();
+                    if (store) vals.push({ type: "," });
+                    all_ws(store ? vals : null);
                     saw_comma = true;
                 }
                 else {
@@ -752,15 +836,15 @@
             }
         };
         
-        var typedef = function () {
-            all_ws();
+        var typedef = function (store) {
+            all_ws(store, "pea");
             if (!consume(ID, "typedef")) return;
             var ret = {
                 type:   "typedef"
             };
             all_ws();
             ret.typeExtAttrs = extended_attrs();
-            all_ws();
+            all_ws(store, "tpea");
             ret.idlType = type() || error("No type in typedef");
             all_ws();
             var name = consume(ID) || error("No name in typedef");
@@ -770,8 +854,8 @@
             return ret;
         };
         
-        var implements_ = function () {
-            all_ws();
+        var implements_ = function (store) {
+            all_ws(store, "pea");
             var target = consume(ID);
             if (!target) return;
             var w = all_ws();
@@ -794,24 +878,24 @@
             }
         };
         
-        var definition = function () {
-            return  callback()      ||
-                    interface_()    ||
-                    partial()       ||
-                    dictionary()    ||
-                    exception()     ||
-                    enum_()         ||
-                    typedef()       ||
-                    implements_()
+        var definition = function (store) {
+            return  callback(store)             ||
+                    interface_(false, store)    ||
+                    partial(store)              ||
+                    dictionary(false, store)    ||
+                    exception(store)            ||
+                    enum_(store)                ||
+                    typedef(store)              ||
+                    implements_(store)
                     ;
         };
         
-        var definitions = function () {
+        var definitions = function (store) {
             if (!tokens.length) return [];
             var defs = [];
             while (true) {
-                var ea = extended_attrs()
-                ,   def = definition();
+                var ea = extended_attrs(store ? defs : null)
+                ,   def = definition(store ? defs : null);
                 if (!def) {
                     if (ea.length) error("Stray extended attributes");
                     break;
@@ -821,21 +905,20 @@
             }
             return defs;
         };
-        var res = definitions();
+        var res = definitions(opt.ws);
         if (tokens.length) error("Unrecognised tokens");
         return res;
     };
 
-    var obj = {
-        parse:  function (str) {
-            var tokens = tokenise(str);
-            return parse(tokens);
-        }
+    var inNode = typeof module !== "undefined" && module.exports
+    ,   obj = {
+            parse:  function (str, opt) {
+                if (!opt) opt = {};
+                var tokens = tokenise(str);
+                return parse(tokens, opt);
+            }
     };
-    if (typeof module !== "undefined" && module.exports) {
-        module.exports = obj;
-    }
-    else {
-        window.WebIDL2 = obj;
-    }
+
+    if (inNode) module.exports = obj;
+    else        window.WebIDL2 = obj;
 }());

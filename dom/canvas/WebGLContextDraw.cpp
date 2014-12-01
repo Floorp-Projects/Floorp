@@ -621,12 +621,20 @@ WebGLContext::UndoFakeVertexAttrib0()
     if (mBoundVertexArray->HasAttrib(0) && mBoundVertexArray->mAttribs[0].buf) {
         const WebGLVertexAttribData& attrib0 = mBoundVertexArray->mAttribs[0];
         gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, attrib0.buf->GLName());
-        gl->fVertexAttribPointer(0,
-                                 attrib0.size,
-                                 attrib0.type,
-                                 attrib0.normalized,
-                                 attrib0.stride,
-                                 reinterpret_cast<const GLvoid *>(attrib0.byteOffset));
+        if (attrib0.integer) {
+            gl->fVertexAttribIPointer(0,
+                                      attrib0.size,
+                                      attrib0.type,
+                                      attrib0.stride,
+                                      reinterpret_cast<const GLvoid*>(attrib0.byteOffset));
+        } else {
+            gl->fVertexAttribPointer(0,
+                                     attrib0.size,
+                                     attrib0.type,
+                                     attrib0.normalized,
+                                     attrib0.stride,
+                                     reinterpret_cast<const GLvoid*>(attrib0.byteOffset));
+        }
     } else {
         gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
     }

@@ -3852,7 +3852,6 @@ MOZ_TREMOR=
 MOZ_WAVE=1
 MOZ_SAMPLE_TYPE_FLOAT32=
 MOZ_SAMPLE_TYPE_S16=
-MOZ_OPUS=1
 MOZ_WEBM=1
 MOZ_GSTREAMER=
 MOZ_DIRECTSHOW=
@@ -5225,14 +5224,6 @@ if test "${ac_cv_c_attribute_aligned}" != "0"; then
 fi
 
 dnl ========================================================
-dnl = Disable Opus audio codec support
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(opus,
-[  --disable-opus          Disable support for Opus audio],
-    MOZ_OPUS=,
-    MOZ_OPUS=1)
-
-dnl ========================================================
 dnl = Disable VP8 decoder support
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(webm,
@@ -5567,10 +5558,6 @@ if test -n "$MOZ_VORBIS" -a -n "$MOZ_TREMOR"; then
     AC_MSG_ERROR([MOZ_VORBIS and MOZ_TREMOR are mutually exclusive!  The build system should not allow them both to be set, but they are.  Please file a bug at https://bugzilla.mozilla.org/])
 fi
 
-if test -n "$MOZ_WEBRTC" -a -z "$MOZ_OPUS"; then
-    AC_MSG_ERROR([MOZ_WEBRTC requires MOZ_OPUS which is disabled.])
-fi
-
 if test -n "$MOZ_VORBIS"; then
     AC_DEFINE(MOZ_VORBIS)
 fi
@@ -5579,10 +5566,6 @@ if test -n "$MOZ_TREMOR"; then
     AC_DEFINE(MOZ_TREMOR)
     # Tremor doesn't have an encoder.
     MOZ_WEBM_ENCODER=
-fi
-
-if test -n "$MOZ_OPUS"; then
-    AC_DEFINE(MOZ_OPUS)
 fi
 
 if test -n "$MOZ_WEBM_ENCODER"; then
@@ -8877,7 +8860,6 @@ AC_SUBST(WIN32_GUI_EXE_LDFLAGS)
 AC_SUBST(MOZ_WAVE)
 AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_TREMOR)
-AC_SUBST(MOZ_OPUS)
 AC_SUBST(MOZ_WEBM)
 AC_SUBST(MOZ_WMF)
 AC_SUBST(MOZ_FFMPEG)

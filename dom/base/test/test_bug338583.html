@@ -644,7 +644,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
         setTimeout(f, 10 + 10*f.i);
       } else {
         stress_factor = ((new Date()).getTime()-begin_time)*1/589;
-        stress_factor *= 1.10; // also, a margin of 10%
+        stress_factor *= 1.50; // also, a margin of 50%
 
         runAllTests();
       }
