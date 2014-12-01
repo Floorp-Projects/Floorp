@@ -1178,43 +1178,40 @@ JS::IncrementalObjectBarrier(JSObject *obj)
 }
 
 JS_FRIEND_API(void)
-JS::IncrementalReferenceBarrier(void *ptr, JSGCTraceKind kind)
+JS::IncrementalReferenceBarrier(GCCellPtr thing)
 {
-    if (!ptr)
+    if (!thing)
         return;
 
-    if (kind == JSTRACE_STRING && StringIsPermanentAtom(static_cast<JSString *>(ptr)))
+    if (thing.isString() && StringIsPermanentAtom(thing.toString()))
         return;
-
-    gc::Cell *cell = static_cast<gc::Cell *>(ptr);
 
 #ifdef DEBUG
-    Zone *zone = kind == JSTRACE_OBJECT
-                 ? static_cast<JSObject *>(cell)->zone()
-                 : cell->asTenured().zone();
+    Zone *zone = thing.isObject()
+                 ? thing.toObject()->zone()
+                 : thing->asTenured().zone();
     MOZ_ASSERT(!zone->runtimeFromMainThread()->isHeapMajorCollecting());
 #endif
 
-    if (kind == JSTRACE_OBJECT)
-        JSObject::writeBarrierPre(static_cast<JSObject*>(cell));
-    else if (kind == JSTRACE_STRING)
-        JSString::writeBarrierPre(static_cast<JSString*>(cell));
-    else if (kind == JSTRACE_SYMBOL)
-        JS::Symbol::writeBarrierPre(static_cast<JS::Symbol*>(cell));
-    else if (kind == JSTRACE_SCRIPT)
-        JSScript::writeBarrierPre(static_cast<JSScript*>(cell));
-    else if (kind == JSTRACE_LAZY_SCRIPT)
-        LazyScript::writeBarrierPre(static_cast<LazyScript*>(cell));
-    else if (kind == JSTRACE_JITCODE)
-        jit::JitCode::writeBarrierPre(static_cast<jit::JitCode*>(cell));
-    else if (kind == JSTRACE_SHAPE)
-        Shape::writeBarrierPre(static_cast<Shape*>(cell));
-    else if (kind == JSTRACE_BASE_SHAPE)
-        BaseShape::writeBarrierPre(static_cast<BaseShape*>(cell));
-    else if (kind == JSTRACE_TYPE_OBJECT)
-        types::TypeObject::writeBarrierPre(static_cast<types::TypeObject *>(cell));
-    else
-        MOZ_CRASH("invalid trace kind");
+    gc::Cell *cell = static_cast<gc::Cell *>(thing);
+    switch(thing.kind()) {
+      case JSTRACE_OBJECT: return JSObject::writeBarrierPre(thing.toObject());
+      case JSTRACE_STRING: return JSString::writeBarrierPre(thing.toString());
+      case JSTRACE_SCRIPT: return JSScript::writeBarrierPre(thing.toScript());
+      case JSTRACE_SYMBOL: return JS::Symbol::writeBarrierPre(thing.toSymbol());
+      case JSTRACE_LAZY_SCRIPT:
+        return LazyScript::writeBarrierPre(static_cast<LazyScript*>(cell));
+      case JSTRACE_JITCODE:
+        return jit::JitCode::writeBarrierPre(static_cast<jit::JitCode*>(cell));
+      case JSTRACE_SHAPE:
+        return Shape::writeBarrierPre(static_cast<Shape*>(cell));
+      case JSTRACE_BASE_SHAPE:
+        return BaseShape::writeBarrierPre(static_cast<BaseShape*>(cell));
+      case JSTRACE_TYPE_OBJECT:
+        return types::TypeObject::writeBarrierPre(static_cast<types::TypeObject *>(cell));
+      default:
+        MOZ_CRASH("Invalid trace kind in IncrementalReferenceBarrier.");
+    }
 }
 
 JS_FRIEND_API(void)

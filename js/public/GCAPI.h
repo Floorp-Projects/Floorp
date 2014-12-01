@@ -308,7 +308,7 @@ IsIncrementalBarrierNeeded(JSContext *cx);
  * These methods must be called if IsIncrementalBarrierNeeded.
  */
 extern JS_FRIEND_API(void)
-IncrementalReferenceBarrier(void *ptr, JSGCTraceKind kind);
+IncrementalReferenceBarrier(GCCellPtr thing);
 
 extern JS_FRIEND_API(void)
 IncrementalValueBarrier(const Value &v);
@@ -494,7 +494,7 @@ ExposeGCThingToActiveJS(JS::GCCellPtr thing)
         return;
 #endif
     if (IsIncrementalBarrierNeededOnTenuredGCThing(rt, thing))
-        JS::IncrementalReferenceBarrier(thing, thing.kind());
+        JS::IncrementalReferenceBarrier(thing);
     else if (JS::GCThingIsMarkedGray(thing))
         JS::UnmarkGrayGCThingRecursively(thing, thing.kind());
 }
@@ -511,7 +511,7 @@ MarkGCThingAsLive(JSRuntime *aRt, JS::GCCellPtr thing)
         return;
 #endif
     if (IsIncrementalBarrierNeededOnTenuredGCThing(rt, thing))
-        JS::IncrementalReferenceBarrier(thing, thing.kind());
+        JS::IncrementalReferenceBarrier(thing);
 }
 
 } /* namespace gc */
