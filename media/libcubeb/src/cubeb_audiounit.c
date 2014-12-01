@@ -223,15 +223,15 @@ audiounit_property_listener_callback(AudioObjectID id, UInt32 address_count,
 
   for (UInt32 i = 0; i < address_count; i++) {
     switch(addresses[i].mSelector) {
-      case kAudioHardwarePropertyDefaultOutputDevice:
-        /* fall through */
-      case kAudioDevicePropertyDataSource:
-        pthread_mutex_lock(&stm->mutex);
-        if (stm->device_changed_callback) {
-          stm->device_changed_callback(stm->user_ptr);
-        }
-        pthread_mutex_unlock(&stm->mutex);
-        break;
+    case kAudioHardwarePropertyDefaultOutputDevice:
+      /* fall through */
+    case kAudioDevicePropertyDataSource:
+      pthread_mutex_lock(&stm->mutex);
+      if (stm->device_changed_callback) {
+        stm->device_changed_callback(stm->user_ptr);
+      }
+      pthread_mutex_unlock(&stm->mutex);
+      break;
     }
   }
 
@@ -494,7 +494,7 @@ audiounit_stream_init(cubeb * context, cubeb_stream ** stream, char const * stre
   case CUBEB_SAMPLE_S16BE:
     ss.mBitsPerChannel = 16;
     ss.mFormatFlags |= kAudioFormatFlagIsSignedInteger |
-                       kAudioFormatFlagIsBigEndian;
+      kAudioFormatFlagIsBigEndian;
     break;
   case CUBEB_SAMPLE_FLOAT32LE:
     ss.mBitsPerChannel = 32;
@@ -503,7 +503,7 @@ audiounit_stream_init(cubeb * context, cubeb_stream ** stream, char const * stre
   case CUBEB_SAMPLE_FLOAT32BE:
     ss.mBitsPerChannel = 32;
     ss.mFormatFlags |= kAudioFormatFlagIsFloat |
-                       kAudioFormatFlagIsBigEndian;
+      kAudioFormatFlagIsBigEndian;
     break;
   default:
     return CUBEB_ERROR_INVALID_FORMAT;
@@ -911,7 +911,7 @@ int audiounit_stream_device_destroy(cubeb_stream * stream,
 }
 
 int audiounit_stream_register_device_changed_callback(cubeb_stream * stream,
-                                                  cubeb_device_changed_callback  device_changed_callback)
+                                                      cubeb_device_changed_callback  device_changed_callback)
 {
   pthread_mutex_lock(&stream->mutex);
   stream->device_changed_callback = device_changed_callback;
