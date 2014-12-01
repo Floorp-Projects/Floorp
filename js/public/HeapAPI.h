@@ -237,6 +237,12 @@ class JS_FRIEND_API(GCCellPtr)
     operator js::gc::Cell *() const { return asCell(); }
     js::gc::Cell *operator->() const { return asCell(); }
 
+    // Simplify checks to the kind.
+    bool isObject() const { return kind() == JSTRACE_OBJECT; }
+    bool isScript() const { return kind() == JSTRACE_SCRIPT; }
+    bool isString() const { return kind() == JSTRACE_STRING; }
+    bool isSymbol() const { return kind() == JSTRACE_SYMBOL; }
+
     // Conversions to more specific types must match the kind. Access to
     // further refined types is not allowed directly from a GCCellPtr.
     JSObject *toObject() const {
@@ -250,6 +256,10 @@ class JS_FRIEND_API(GCCellPtr)
     JSScript *toScript() const {
         MOZ_ASSERT(kind() == JSTRACE_SCRIPT);
         return reinterpret_cast<JSScript *>(asCell());
+    }
+    Symbol *toSymbol() const {
+        MOZ_ASSERT(kind() == JSTRACE_SYMBOL);
+        return reinterpret_cast<Symbol *>(asCell());
     }
 
     // The CC's trace logger needs an identity that is XPIDL serializable.
