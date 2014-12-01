@@ -93,6 +93,11 @@ enum {
     JSSLOT_DEBUGSOURCE_COUNT
 };
 
+static void DebuggerObject_trace(JSTracer *trc, JSObject *obj);
+static void DebuggerEnv_trace(JSTracer *trc, JSObject *obj);
+static void DebuggerScript_trace(JSTracer *trc, JSObject *obj);
+static void DebuggerSource_trace(JSTracer *trc, JSObject *obj);
+
 
 /*** Utils ***************************************************************************************/
 
@@ -2073,17 +2078,12 @@ Debugger::setObservesAllExecution(JSContext *cx, IsObserving observing)
 /*** Debugger JSObjects **************************************************************************/
 
 void
-Debugger::markKeysInCompartment(JSTracer *trc)
+Debugger::markCrossCompartmentEdges(JSTracer *trc)
 {
-    /*
-     * WeakMap::Range is deliberately private, to discourage C++ code from
-     * enumerating WeakMap keys. However in this case we need access, so we
-     * make a base-class reference. Range is public in HashMap.
-     */
-    objects.markKeys(trc);
-    environments.markKeys(trc);
-    scripts.markKeys(trc);
-    sources.markKeys(trc);
+    objects.markCrossCompartmentEdges<DebuggerObject_trace>(trc);
+    environments.markCrossCompartmentEdges<DebuggerEnv_trace>(trc);
+    scripts.markCrossCompartmentEdges<DebuggerScript_trace>(trc);
+    sources.markCrossCompartmentEdges<DebuggerSource_trace>(trc);
 }
 
 /*
@@ -2091,35 +2091,30 @@ Debugger::markKeysInCompartment(JSTracer *trc)
  * discovered that the WeakMap was live; that is, some object containing the
  * WeakMap was marked during mark phase.
  *
- * However, during compartment GC, we have to do something about
- * cross-compartment WeakMaps in non-GC'd compartments. If their keys and values
- * might need to be marked, we have to do it manually.
+ * However, during zone GC, we have to do something about cross-compartment
+ * edges in non-GC'd compartments. Since the source may be live, we
+ * conservatively assume it is and mark the edge.
  *
- * Each Debugger object keeps found cross-compartment WeakMaps: objects, scripts,
- * script source objects, and environments. They have the nice property that all
- * their values are in the same compartment as the Debugger object, so we only
- * need to mark the keys. We must simply mark all keys that are in a compartment
- * being GC'd.
+ * Each Debugger object keeps four cross-compartment WeakMaps: objects, scripts,
+ * script source objects, and environments. They have the property that all
+ * their values are in the same compartment as the Debugger object, but we have
+ * to mark the keys and the private pointer in the wrapper object.
  *
- * We must scan all Debugger objects regardless of whether they *currently*
- * have any debuggees in a compartment being GC'd, because the WeakMap
- * entries persist even when debuggees are removed.
+ * We must scan all Debugger objects regardless of whether they *currently* have
+ * any debuggees in a compartment being GC'd, because the WeakMap entries
+ * persist even when debuggees are removed.
  *
  * This happens during the initial mark phase, not iterative marking, because
  * all the edges being reported here are strong references.
  */
 /* static */ void
-Debugger::markCrossCompartmentDebuggerObjectReferents(JSTracer *trc)
+Debugger::markAllCrossCompartmentEdges(JSTracer *trc)
 {
     JSRuntime *rt = trc->runtime();
 
-    /*
-     * Mark all objects in comp that are referents of Debugger.Objects in other
-     * compartments.
-     */
     for (Debugger *dbg = rt->debuggerList.getFirst(); dbg; dbg = dbg->getNext()) {
         if (!dbg->object->zone()->isCollecting())
-            dbg->markKeysInCompartment(trc);
+            dbg->markCrossCompartmentEdges(trc);
     }
 }
 
@@ -2213,7 +2208,6 @@ Debugger::markAll(JSTracer *trc)
         GlobalObjectSet &debuggees = dbg->debuggees;
         for (GlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
             GlobalObject *global = e.front();
-
             MarkObjectUnbarriered(trc, &global, "Global Object");
             if (global != e.front())
                 e.rekeyFront(global);
