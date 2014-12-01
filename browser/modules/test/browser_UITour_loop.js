@@ -61,6 +61,17 @@ function checkLoopPanelIsHidden() {
 
 if (Services.prefs.getBoolPref("loop.enabled")) {
   loopButton = window.LoopUI.toolbarButton.node;
+  registerCleanupFunction(() => {
+    // Copied from browser/components/loop/test/mochitest/head.js
+    // Remove the iframe after each test. This also avoids mochitest complaining
+    // about leaks on shutdown as we intentionally hold the iframe open for the
+    // life of the application.
+    let frameId = loopButton.getAttribute("notificationFrameId");
+    let frame = document.getElementById(frameId);
+    if (frame) {
+      frame.remove();
+    }
+  });
 } else {
   ok(true, "Loop is disabled so skip the UITour Loop tests");
   tests = [];
