@@ -2401,14 +2401,7 @@ GetRequestBody(nsIDOMDocument* aDoc, nsIInputStream** aResult,
                nsACString& aCharset)
 {
   aContentType.AssignLiteral("application/xml");
-  nsAutoString inputEncoding;
-  aDoc->GetInputEncoding(inputEncoding);
-  if (!DOMStringIsNull(inputEncoding)) {
-    CopyUTF16toUTF8(inputEncoding, aCharset);
-  }
-  else {
-    aCharset.AssignLiteral("UTF-8");
-  }
+  aCharset = aDoc->GetDocumentCharacterSet();
 
   // Serialize to a stream so that the encoding used will
   // match the document's.
