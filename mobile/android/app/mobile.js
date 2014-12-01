@@ -855,3 +855,6 @@ pref("home.sync.checkIntervalSecs", 3600);
 
 // Enable device storage API
 pref("device.storage.enabled", true);
+
+// Enable meta-viewport support for font inflation code
+pref("dom.meta-viewport.enabled", true);
