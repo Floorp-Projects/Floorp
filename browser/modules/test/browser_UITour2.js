@@ -89,7 +89,7 @@ let tests = [
     yield addPinnedTabPromise();
     is(gBrowser.tabs[1].pinned, false, "After multiple calls of addPinnedTab, should still only have one pinned tab");
   }),
-  taskify(function* test_menu() {
+  taskify(function* test_bookmarks_menu() {
     let bookmarksMenuButton = document.getElementById("bookmarks-menu-button");
 
     ise(bookmarksMenuButton.open, false, "Menu should initially be closed");
