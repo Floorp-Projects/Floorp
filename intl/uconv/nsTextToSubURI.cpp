@@ -35,14 +35,9 @@ static const char16_t sNetworkIDNBlacklistChars[] =
   0x3014, 0x3015, 0x3033, 0x3164, 0x321D, 0x321E, 0x33AE, 0x33AF,
   0x33C6, 0x33DF, 0xA789, 0xFE14, 0xFE15, 0xFE3F, 0xFE5D, 0xFE5E,
   0xFEFF, 0xFF0E, 0xFF0F, 0xFF61, 0xFFA0, 0xFFF9, 0xFFFA, 0xFFFB,
-  0xFFFC, 0xFFFD,
-  '\0'
+  0xFFFC, 0xFFFD
 };
 
-nsTextToSubURI::nsTextToSubURI()
-{
-  mUnsafeChars.SetIsVoid(true);
-}
 nsTextToSubURI::~nsTextToSubURI()
 {
 }
@@ -246,29 +241,30 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeURIForUI(const nsACString & aCharset,
   }
 
   // if there are any characters that are unsafe for IRIs, reescape.
-  if (mUnsafeChars.IsVoid()) {
+  if (mUnsafeChars.IsEmpty()) {
     nsCOMPtr<nsISupportsString> blacklist;
     nsresult rv = mozilla::Preferences::GetComplex("network.IDN.blacklist_chars",
                                                    NS_GET_IID(nsISupportsString),
                                                    getter_AddRefs(blacklist));
     if (NS_SUCCEEDED(rv)) {
-      blacklist->ToString(getter_Copies(mUnsafeChars));
-      mUnsafeChars.StripChars(" "); // we allow SPACE in this method
-      MOZ_ASSERT(!mUnsafeChars.IsVoid());
+      nsString chars;
+      blacklist->ToString(getter_Copies(chars));
+      chars.StripChars(" "); // we allow SPACE in this method
+      mUnsafeChars.AppendElements(chars.Data(), chars.Length());
     } else {
       NS_WARNING("Failed to get the 'network.IDN.blacklist_chars' preference");
     }
+    // We check IsEmpty() intentionally here because an empty (or just spaces)
+    // pref value is likely a mistake/error of some sort.
+    if (mUnsafeChars.IsEmpty()) {
+      mUnsafeChars.AppendElements(sNetworkIDNBlacklistChars,
+                                  mozilla::ArrayLength(sNetworkIDNBlacklistChars));
+    }
+    mUnsafeChars.Sort();
   }
-  // We check IsEmpty() intentionally here instead of IsVoid() because an
-  // empty (or just spaces) pref value is likely a mistake/error of some sort.
-  const char16_t* unsafeChars =
-    mUnsafeChars.IsEmpty() ? sNetworkIDNBlacklistChars : mUnsafeChars;
-  if (PromiseFlatString(_retval).FindCharInSet(unsafeChars) != kNotFound) {
-    // Note that this reescapes all non-ASCII characters in the URI, not just
-    // the unsafe characters.
-    nsString reescapedSpec;
-    _retval = NS_EscapeURL(_retval, esc_OnlyNonASCII, reescapedSpec);
-  }
+  const nsPromiseFlatString& unescapedResult = PromiseFlatString(_retval);
+  nsString reescapedSpec;
+  _retval = NS_EscapeURL(unescapedResult, mUnsafeChars, reescapedSpec);
 
   return NS_OK;
 }

@@ -7,14 +7,12 @@
 
 #include "nsITextToSubURI.h"
 #include "nsString.h"
+#include "nsTArray.h"
 
 //==============================================================
 class nsTextToSubURI: public nsITextToSubURI {
   NS_DECL_ISUPPORTS
   NS_DECL_NSITEXTTOSUBURI
-
-public:
-  nsTextToSubURI();
 
 private:
   virtual ~nsTextToSubURI();
@@ -33,8 +31,9 @@ private:
                                bool aIRI, 
                                nsAString &_retval);
 
-  // Void until we get the pref "network.IDN.blacklist_chars" successfully.
-  nsXPIDLString mUnsafeChars;
+  // Characters from the pref "network.IDN.blacklist_chars", or a built-in
+  // fallback if reading the pref fails.
+  nsTArray<char16_t> mUnsafeChars;
 };
 
 #endif // nsTextToSubURI_h__
