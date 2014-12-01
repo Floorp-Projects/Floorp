@@ -64,7 +64,7 @@ function promiseGetMozLoopAPI() {
       let frameId = btn.getAttribute("notificationFrameId");
       let frame = document.getElementById(frameId);
       if (frame) {
-        loopPanel.removeChild(frame);
+        frame.remove();
       }
     });
   });
