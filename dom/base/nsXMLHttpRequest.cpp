@@ -2401,7 +2401,9 @@ GetRequestBody(nsIDOMDocument* aDoc, nsIInputStream** aResult,
                nsACString& aCharset)
 {
   aContentType.AssignLiteral("application/xml");
-  aCharset = aDoc->GetDocumentCharacterSet();
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDoc));
+  NS_ENSURE_STATE(doc);
+  aCharset = doc->GetDocumentCharacterSet();
 
   // Serialize to a stream so that the encoding used will
   // match the document's.
