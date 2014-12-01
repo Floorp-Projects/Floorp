@@ -20,6 +20,10 @@ for documentation.
 <script>
 "use strict";
 
+if (W3CTest.runner) {
+	W3CTest.runner.requestLongerTimeout(2);
+}
+
 runTests();
 
 function runTests() {

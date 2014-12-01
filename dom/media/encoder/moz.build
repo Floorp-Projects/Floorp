@@ -11,22 +11,20 @@ EXPORTS += [
     'ContainerWriter.h',
     'EncodedFrameContainer.h',
     'MediaEncoder.h',
+    'OpusTrackEncoder.h',
     'TrackEncoder.h',
     'TrackMetadataBase.h',
 ]
 
 UNIFIED_SOURCES += [
     'MediaEncoder.cpp',
+    'OpusTrackEncoder.cpp',
     'TrackEncoder.cpp',
 ]
 
 if CONFIG['MOZ_OMX_ENCODER']:
     EXPORTS += ['OmxTrackEncoder.h']
     UNIFIED_SOURCES += ['OmxTrackEncoder.cpp']
-
-if CONFIG['MOZ_OPUS']:
-    EXPORTS += ['OpusTrackEncoder.h']
-    UNIFIED_SOURCES += ['OpusTrackEncoder.cpp']
 
 if CONFIG['MOZ_WEBM_ENCODER']:
     EXPORTS += ['VorbisTrackEncoder.h',
