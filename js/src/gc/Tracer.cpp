@@ -203,6 +203,10 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
         break;
       }
 
+      case JSTRACE_SCRIPT:
+        name = "script";
+        break;
+
       case JSTRACE_STRING:
         name = ((JSString *)thing)->isDependent()
                ? "substring"
@@ -213,28 +217,28 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
         name = "symbol";
         break;
 
-      case JSTRACE_SCRIPT:
-        name = "script";
-        break;
-
-      case JSTRACE_LAZY_SCRIPT:
-        name = "lazyscript";
+      case JSTRACE_BASE_SHAPE:
+        name = "base_shape";
         break;
 
       case JSTRACE_JITCODE:
         name = "jitcode";
         break;
 
+      case JSTRACE_LAZY_SCRIPT:
+        name = "lazyscript";
+        break;
+
       case JSTRACE_SHAPE:
         name = "shape";
         break;
 
-      case JSTRACE_BASE_SHAPE:
-        name = "base_shape";
-        break;
-
       case JSTRACE_TYPE_OBJECT:
         name = "type_object";
+        break;
+
+      default:
+        name = "INVALID";
         break;
     }
 
@@ -263,6 +267,13 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
             } else {
                 JS_snprintf(buf, bufsize, " <no private>");
             }
+            break;
+          }
+
+          case JSTRACE_SCRIPT:
+          {
+            JSScript *script = static_cast<JSScript *>(thing);
+            JS_snprintf(buf, bufsize, " %s:%u", script->filename(), unsigned(script->lineno()));
             break;
           }
 
@@ -306,18 +317,7 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
             break;
           }
 
-          case JSTRACE_SCRIPT:
-          {
-            JSScript *script = static_cast<JSScript *>(thing);
-            JS_snprintf(buf, bufsize, " %s:%u", script->filename(), unsigned(script->lineno()));
-            break;
-          }
-
-          case JSTRACE_LAZY_SCRIPT:
-          case JSTRACE_JITCODE:
-          case JSTRACE_SHAPE:
-          case JSTRACE_BASE_SHAPE:
-          case JSTRACE_TYPE_OBJECT:
+          default:
             break;
         }
     }

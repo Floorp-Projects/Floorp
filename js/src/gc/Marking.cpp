@@ -689,14 +689,20 @@ gc::MarkKind(JSTracer *trc, void **thingp, JSGCTraceKind kind)
       case JSTRACE_OBJECT:
         MarkInternal(trc, reinterpret_cast<JSObject **>(thingp));
         break;
+      case JSTRACE_SCRIPT:
+        MarkInternal(trc, reinterpret_cast<JSScript **>(thingp));
+        break;
       case JSTRACE_STRING:
         MarkInternal(trc, reinterpret_cast<JSString **>(thingp));
         break;
       case JSTRACE_SYMBOL:
         MarkInternal(trc, reinterpret_cast<JS::Symbol **>(thingp));
         break;
-      case JSTRACE_SCRIPT:
-        MarkInternal(trc, reinterpret_cast<JSScript **>(thingp));
+      case JSTRACE_BASE_SHAPE:
+        MarkInternal(trc, reinterpret_cast<BaseShape **>(thingp));
+        break;
+      case JSTRACE_JITCODE:
+        MarkInternal(trc, reinterpret_cast<jit::JitCode **>(thingp));
         break;
       case JSTRACE_LAZY_SCRIPT:
         MarkInternal(trc, reinterpret_cast<LazyScript **>(thingp));
@@ -704,15 +710,11 @@ gc::MarkKind(JSTracer *trc, void **thingp, JSGCTraceKind kind)
       case JSTRACE_SHAPE:
         MarkInternal(trc, reinterpret_cast<Shape **>(thingp));
         break;
-      case JSTRACE_BASE_SHAPE:
-        MarkInternal(trc, reinterpret_cast<BaseShape **>(thingp));
-        break;
       case JSTRACE_TYPE_OBJECT:
         MarkInternal(trc, reinterpret_cast<types::TypeObject **>(thingp));
         break;
-      case JSTRACE_JITCODE:
-        MarkInternal(trc, reinterpret_cast<jit::JitCode **>(thingp));
-        break;
+      default:
+        MOZ_CRASH("Invalid trace kind in MarkKind.");
     }
 }
 
@@ -1542,6 +1544,10 @@ gc::PushArena(GCMarker *gcmarker, ArenaHeader *aheader)
         PushArenaTyped<JSObject>(gcmarker, aheader);
         break;
 
+      case JSTRACE_SCRIPT:
+        PushArenaTyped<JSScript>(gcmarker, aheader);
+        break;
+
       case JSTRACE_STRING:
         PushArenaTyped<JSString>(gcmarker, aheader);
         break;
@@ -1550,8 +1556,12 @@ gc::PushArena(GCMarker *gcmarker, ArenaHeader *aheader)
         PushArenaTyped<JS::Symbol>(gcmarker, aheader);
         break;
 
-      case JSTRACE_SCRIPT:
-        PushArenaTyped<JSScript>(gcmarker, aheader);
+      case JSTRACE_BASE_SHAPE:
+        PushArenaTyped<js::BaseShape>(gcmarker, aheader);
+        break;
+
+      case JSTRACE_JITCODE:
+        PushArenaTyped<js::jit::JitCode>(gcmarker, aheader);
         break;
 
       case JSTRACE_LAZY_SCRIPT:
@@ -1562,17 +1572,12 @@ gc::PushArena(GCMarker *gcmarker, ArenaHeader *aheader)
         PushArenaTyped<js::Shape>(gcmarker, aheader);
         break;
 
-      case JSTRACE_BASE_SHAPE:
-        PushArenaTyped<js::BaseShape>(gcmarker, aheader);
-        break;
-
       case JSTRACE_TYPE_OBJECT:
         PushArenaTyped<js::types::TypeObject>(gcmarker, aheader);
         break;
 
-      case JSTRACE_JITCODE:
-        PushArenaTyped<js::jit::JitCode>(gcmarker, aheader);
-        break;
+      default:
+        MOZ_CRASH("Invalid trace kind in PushArena.");
     }
 }
 
@@ -1946,6 +1951,10 @@ js::TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
         MarkChildren(trc, static_cast<JSObject *>(thing));
         break;
 
+      case JSTRACE_SCRIPT:
+        MarkChildren(trc, static_cast<JSScript *>(thing));
+        break;
+
       case JSTRACE_STRING:
         MarkChildren(trc, static_cast<JSString *>(thing));
         break;
@@ -1954,8 +1963,12 @@ js::TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
         MarkChildren(trc, static_cast<JS::Symbol *>(thing));
         break;
 
-      case JSTRACE_SCRIPT:
-        MarkChildren(trc, static_cast<JSScript *>(thing));
+      case JSTRACE_BASE_SHAPE:
+        MarkChildren(trc, static_cast<BaseShape *>(thing));
+        break;
+
+      case JSTRACE_JITCODE:
+        MarkChildren(trc, (js::jit::JitCode *)thing);
         break;
 
       case JSTRACE_LAZY_SCRIPT:
@@ -1966,17 +1979,12 @@ js::TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
         MarkChildren(trc, static_cast<Shape *>(thing));
         break;
 
-      case JSTRACE_JITCODE:
-        MarkChildren(trc, (js::jit::JitCode *)thing);
-        break;
-
-      case JSTRACE_BASE_SHAPE:
-        MarkChildren(trc, static_cast<BaseShape *>(thing));
-        break;
-
       case JSTRACE_TYPE_OBJECT:
         MarkChildren(trc, (types::TypeObject *)thing);
         break;
+
+      default:
+        MOZ_CRASH("Invalid trace kind in TraceChildren.");
     }
 }
 

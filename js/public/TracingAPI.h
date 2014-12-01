@@ -10,7 +10,6 @@
 #include "mozilla/NullPtr.h"
 
 #include "jsalloc.h"
-#include "jspubtd.h"
 
 #include "js/HashTable.h"
 
@@ -19,6 +18,49 @@ class JS_PUBLIC_API(JSTracer);
 namespace JS {
 template <typename T> class Heap;
 template <typename T> class TenuredHeap;
+}
+
+// When tracing a thing, the GC needs to know about the layout of the object it
+// is looking at. There are a fixed number of different layouts that the GC
+// knows about. The "trace kind" is a static map which tells which layout a GC
+// thing has.
+//
+// Although this map is public, the details are completely hidden. Not all of
+// the matching C++ types are exposed, and those that are, are opaque.
+//
+// See Value::gcKind() and JSTraceCallback in Tracer.h for more details.
+enum JSGCTraceKind
+{
+    // These trace kinds have a publicly exposed, although opaque, C++ type.
+    // Note: The order here is determined by our Value packing. Other users
+    //       should sort alphabetically, for consistency.
+    JSTRACE_OBJECT = 0x00,
+    JSTRACE_STRING = 0x01,
+    JSTRACE_SYMBOL = 0x02,
+    JSTRACE_SCRIPT = 0x03,
+
+    // Shape details are exposed through JS_TraceShapeCycleCollectorChildren.
+    JSTRACE_SHAPE = 0x04,
+
+    // The kind associated with a nullptr.
+    JSTRACE_NULL = 0x06,
+
+    // A kind that indicates the real kind should be looked up in the arena.
+    JSTRACE_OUTOFLINE = 0x07,
+
+    // The following kinds do not have an exposed C++ idiom.
+    JSTRACE_BASE_SHAPE = 0x0F,
+    JSTRACE_JITCODE = 0x1F,
+    JSTRACE_LAZY_SCRIPT = 0x2F,
+    JSTRACE_TYPE_OBJECT = 0x3F,
+
+    JSTRACE_LAST = JSTRACE_TYPE_OBJECT
+};
+
+namespace JS {
+// Returns a static string equivalent of |kind|.
+JS_FRIEND_API(const char *)
+GCTraceKindToAscii(JSGCTraceKind kind);
 }
 
 // Tracer callback, called for each traceable thing directly referenced by a
