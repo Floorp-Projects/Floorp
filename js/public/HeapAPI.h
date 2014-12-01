@@ -9,8 +9,6 @@
 
 #include <limits.h>
 
-#include "jspubtd.h"
-
 #include "js/TracingAPI.h"
 #include "js/Utility.h"
 
@@ -205,6 +203,81 @@ struct Zone
 };
 
 } /* namespace shadow */
+
+// A GC pointer, tagged with the trace kind.
+//
+// In general, a GC pointer should be stored with an exact type. This class
+// is for use when that is not possible because a single pointer must point
+// to several kinds of GC thing.
+class JS_FRIEND_API(GCCellPtr)
+{
+  public:
+    // Construction from a void* and trace kind.
+    GCCellPtr(void *gcthing, JSGCTraceKind traceKind) : ptr(checkedCast(gcthing, traceKind)) {}
+
+    // Construction from an explicit type.
+    explicit GCCellPtr(JSObject *obj) : ptr(checkedCast(obj, JSTRACE_OBJECT)) { }
+    explicit GCCellPtr(JSFunction *fun) : ptr(checkedCast(fun, JSTRACE_OBJECT)) { }
+    explicit GCCellPtr(JSString *str) : ptr(checkedCast(str, JSTRACE_STRING)) { }
+    explicit GCCellPtr(JSFlatString *str) : ptr(checkedCast(str, JSTRACE_STRING)) { }
+    explicit GCCellPtr(JSScript *script) : ptr(checkedCast(script, JSTRACE_SCRIPT)) { }
+    explicit GCCellPtr(const Value &v);
+
+    // Not all compilers have nullptr_t yet, so use this instead of GCCellPtr(nullptr).
+    static GCCellPtr NullPtr() { return GCCellPtr(nullptr, JSTRACE_NULL); }
+
+    JSGCTraceKind kind() const {
+        JSGCTraceKind traceKind = JSGCTraceKind(ptr & JSTRACE_OUTOFLINE);
+        if (traceKind != JSTRACE_OUTOFLINE)
+            return traceKind;
+        return outOfLineKind();
+    }
+
+    // Allow CellPtr to be used as a js::gc::Cell.
+    operator js::gc::Cell *() const { return asCell(); }
+    js::gc::Cell *operator->() const { return asCell(); }
+
+    // Conversions to more specific types must match the kind. Access to
+    // further refined types is not allowed directly from a GCCellPtr.
+    JSObject *toObject() const {
+        MOZ_ASSERT(kind() == JSTRACE_OBJECT);
+        return reinterpret_cast<JSObject *>(asCell());
+    }
+    JSString *toString() const {
+        MOZ_ASSERT(kind() == JSTRACE_STRING);
+        return reinterpret_cast<JSString *>(asCell());
+    }
+    JSScript *toScript() const {
+        MOZ_ASSERT(kind() == JSTRACE_SCRIPT);
+        return reinterpret_cast<JSScript *>(asCell());
+    }
+
+    // The CC's trace logger needs an identity that is XPIDL serializable.
+    void *unsafeGetUntypedPtr() const {
+        return reinterpret_cast<void *>(asCell());
+    }
+
+  private:
+    uintptr_t checkedCast(void *p, JSGCTraceKind traceKind) {
+        js::gc::Cell *cell = static_cast<js::gc::Cell *>(p);
+        MOZ_ASSERT((uintptr_t(p) & JSTRACE_OUTOFLINE) == 0);
+        AssertGCThingHasType(cell, traceKind);
+        // Note: the JSTRACE_OUTOFLINE bits are set on all out-of-line kinds
+        // so that we can mask instead of branching.
+        MOZ_ASSERT_IF(traceKind >= JSTRACE_OUTOFLINE,
+                      (traceKind & JSTRACE_OUTOFLINE) == JSTRACE_OUTOFLINE);
+        return uintptr_t(p) | (traceKind & JSTRACE_OUTOFLINE);
+    }
+
+    js::gc::Cell *asCell() const {
+        return reinterpret_cast<js::gc::Cell *>(ptr & ~JSTRACE_OUTOFLINE);
+    }
+
+    JSGCTraceKind outOfLineKind() const;
+
+    uintptr_t ptr;
+};
+
 } /* namespace JS */
 
 namespace js {

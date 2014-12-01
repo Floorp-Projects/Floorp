@@ -10,6 +10,7 @@
 #include "mozilla/NullPtr.h"
 
 #include "jsalloc.h"
+#include "jspubtd.h"
 
 #include "js/HashTable.h"
 

@@ -6939,8 +6939,9 @@ JS::AssertGCThingMustBeTenured(JSObject *obj)
 JS_FRIEND_API(void)
 js::gc::AssertGCThingHasType(js::gc::Cell *cell, JSGCTraceKind kind)
 {
-    MOZ_ASSERT(cell);
-    if (IsInsideNursery(cell))
+    if (!cell)
+        MOZ_ASSERT(kind == JSTRACE_NULL);
+    else if (IsInsideNursery(cell))
         MOZ_ASSERT(kind == JSTRACE_OBJECT);
     else
         MOZ_ASSERT(MapAllocToTraceKind(cell->asTenured().getAllocKind()) == kind);
@@ -7044,6 +7045,27 @@ JS::GCTraceKindToAscii(JSGCTraceKind kind)
       case JSTRACE_TYPE_OBJECT: return "TypeObject";
       default: return "Invalid";
     }
+}
+
+JS::GCCellPtr::GCCellPtr(const Value &v)
+  : ptr(0)
+{
+    if (v.isString())
+        ptr = checkedCast(v.toString(), JSTRACE_STRING);
+    else if (v.isObject())
+        ptr = checkedCast(&v.toObject(), JSTRACE_OBJECT);
+    else if (v.isSymbol())
+        ptr = checkedCast(v.toSymbol(), JSTRACE_SYMBOL);
+    else
+        ptr = checkedCast(nullptr, JSTRACE_NULL);
+}
+
+JSGCTraceKind
+JS::GCCellPtr::outOfLineKind() const
+{
+    MOZ_ASSERT(JSGCTraceKind(ptr & JSTRACE_OUTOFLINE) == JSTRACE_OUTOFLINE);
+    MOZ_ASSERT(asCell()->isTenured());
+    return MapAllocToTraceKind(asCell()->asTenured().getAllocKind());
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS
