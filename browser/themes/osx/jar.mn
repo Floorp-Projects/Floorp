@@ -101,7 +101,7 @@ browser.jar:
   skin/classic/browser/reload-stop-go@2x.png
   skin/classic/browser/searchbar-dropmarker.png
   skin/classic/browser/searchbar-dropmarker@2x.png
-  skin/classic/browser/searchbar.css
+* skin/classic/browser/searchbar.css
   skin/classic/browser/Search.png
   skin/classic/browser/Search@2x.png
   skin/classic/browser/search-pref.png                         (../shared/search/search-pref.png)
