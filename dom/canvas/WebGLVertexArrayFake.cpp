@@ -29,8 +29,13 @@ WebGLVertexArrayFake::BindVertexArrayImpl()
 
         mContext->BindBuffer(LOCAL_GL_ARRAY_BUFFER, vd.buf);
 
-        gl->fVertexAttribPointer(i, vd.size, vd.type, vd.normalized, vd.stride,
-                                 reinterpret_cast<void*>(vd.byteOffset));
+        if (vd.integer) {
+            gl->fVertexAttribIPointer(i, vd.size, vd.type, vd.stride,
+                                      reinterpret_cast<const GLvoid*>(vd.byteOffset));
+        } else {
+            gl->fVertexAttribPointer(i, vd.size, vd.type, vd.normalized, vd.stride,
+                                     reinterpret_cast<const GLvoid*>(vd.byteOffset));
+        }
 
         if (vd.enabled)
             gl->fEnableVertexAttribArray(i);

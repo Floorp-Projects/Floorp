@@ -74,6 +74,7 @@ protected:
 
     friend class WebGLContext;
     friend class WebGLVertexArrayFake;
+    friend class WebGL2Context;
 };
 
 } // namespace mozilla

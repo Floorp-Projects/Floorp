@@ -3220,10 +3220,10 @@ nsTreeBodyFrame::PaintCell(int32_t              aRowIndex,
           srcX = currX + remainingWidth - (srcX - cellRect.x);
           destX = currX + remainingWidth - (destX - cellRect.x);
         }
-        Point p1(pc->CSSPixelsToDevPixels(srcX),
-                 pc->CSSPixelsToDevPixels(lineY + mRowHeight / 2));
-        Point p2(pc->CSSPixelsToDevPixels(destX),
-                 pc->CSSPixelsToDevPixels(lineY + mRowHeight / 2));
+        Point p1(pc->AppUnitsToGfxUnits(srcX),
+                 pc->AppUnitsToGfxUnits(lineY + mRowHeight / 2));
+        Point p2(pc->AppUnitsToGfxUnits(destX),
+                 pc->AppUnitsToGfxUnits(lineY + mRowHeight / 2));
         SnapLineToDevicePixelsForStroking(p1, p2, *drawTarget);
         drawTarget->StrokeLine(p1, p2, colorPatt, strokeOptions);
       }
@@ -3234,15 +3234,15 @@ nsTreeBodyFrame::PaintCell(int32_t              aRowIndex,
           // Paint full vertical line only if we have next sibling.
           bool hasNextSibling;
           mView->HasNextSibling(currentParent, aRowIndex, &hasNextSibling);
-          Point p1(pc->CSSPixelsToDevPixels(srcX),
-                   pc->CSSPixelsToDevPixels(lineY));
+          Point p1(pc->AppUnitsToGfxUnits(srcX),
+                   pc->AppUnitsToGfxUnits(lineY));
           Point p2;
-          p2.x = pc->CSSPixelsToDevPixels(srcX);
+          p2.x = pc->AppUnitsToGfxUnits(srcX);
 
           if (hasNextSibling)
-            p2.y = pc->CSSPixelsToDevPixels(lineY + mRowHeight);
+            p2.y = pc->AppUnitsToGfxUnits(lineY + mRowHeight);
           else if (i == level)
-            p2.y = pc->CSSPixelsToDevPixels(lineY + mRowHeight / 2);
+            p2.y = pc->AppUnitsToGfxUnits(lineY + mRowHeight / 2);
 
           SnapLineToDevicePixelsForStroking(p1, p2, *drawTarget);
           drawTarget->StrokeLine(p1, p2, colorPatt, strokeOptions);

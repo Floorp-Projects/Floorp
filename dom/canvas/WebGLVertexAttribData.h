@@ -25,6 +25,7 @@ struct WebGLVertexAttribData
         , type(LOCAL_GL_FLOAT)
         , enabled(false)
         , normalized(false)
+        , integer(false)
     {}
 
     WebGLRefPtr<WebGLBuffer> buf;
@@ -35,6 +36,7 @@ struct WebGLVertexAttribData
     GLenum type;
     bool enabled;
     bool normalized;
+    bool integer;
 
     GLuint componentSize() const {
         switch(type) {

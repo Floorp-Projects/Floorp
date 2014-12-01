@@ -1719,6 +1719,78 @@ WebGLContext::ValidateUniformMatrixArraySetter(WebGLUniformLocation* loc,
 }
 
 bool
+WebGLContext::ValidateAttribIndex(GLuint index, const char* info)
+{
+    bool valid = (index < MaxVertexAttribs());
+
+    if (!valid) {
+        if (index == GLuint(-1)) {
+            ErrorInvalidValue("%s: -1 is not a valid `index`. This value"
+                              " probably comes from a getAttribLocation()"
+                              " call, where this return value -1 means"
+                              " that the passed name didn't correspond to"
+                              " an active attribute in the specified"
+                              " program.", info);
+        } else {
+            ErrorInvalidValue("%s: `index` must be less than"
+                              " MAX_VERTEX_ATTRIBS.", info);
+        }
+    }
+
+    return valid;
+}
+
+bool
+WebGLContext::ValidateAttribPointer(bool integerMode, GLuint index, GLint size, GLenum type,
+                                    WebGLboolean normalized, GLsizei stride,
+                                    WebGLintptr byteOffset, const char* info)
+{
+    WebGLBuffer* buffer = mBoundArrayBuffer;
+    if (!buffer) {
+        ErrorInvalidOperation("%s: must have valid GL_ARRAY_BUFFER binding", info);
+        return false;
+    }
+
+    GLsizei requiredAlignment = 0;
+    if (!ValidateAttribPointerType(integerMode, type, &requiredAlignment, info))
+        return false;
+
+    // requiredAlignment should always be a power of two
+    MOZ_ASSERT(IsPOTAssumingNonnegative(requiredAlignment));
+    GLsizei requiredAlignmentMask = requiredAlignment - 1;
+
+    if (size < 1 || size > 4) {
+        ErrorInvalidValue("%s: invalid element size", info);
+        return false;
+    }
+
+    // see WebGL spec section 6.6 "Vertex Attribute Data Stride"
+    if (stride < 0 || stride > 255) {
+        ErrorInvalidValue("%s: negative or too large stride", info);
+        return false;
+    }
+
+    if (byteOffset < 0) {
+        ErrorInvalidValue("%s: negative offset", info);
+        return false;
+    }
+
+    if (stride & requiredAlignmentMask) {
+        ErrorInvalidOperation("%s: stride doesn't satisfy the alignment "
+                              "requirement of given type", info);
+        return false;
+    }
+
+    if (byteOffset & requiredAlignmentMask) {
+        ErrorInvalidOperation("%s: byteOffset doesn't satisfy the alignment "
+                              "requirement of given type", info);
+        return false;
+    }
+
+    return true;
+}
+
+bool
 WebGLContext::ValidateStencilParamsForDrawCall()
 {
     const char msg[] = "%s set different front and back stencil %s. Drawing in"

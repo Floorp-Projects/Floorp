@@ -90,3 +90,18 @@ table#results span.actual {
     white-space:pre;
 }
 
+span.ok {
+    color:green;
+}
+
+tr.error {
+    color:red;
+}
+
+span.timeout {
+    color:red;
+}
+
+span.ok, span.timeout, span.error {
+    font-variant:small-caps;
+}
