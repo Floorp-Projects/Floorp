@@ -170,23 +170,19 @@ static bool statefulCharset(const char *charset)
 
 nsresult nsTextToSubURI::convertURItoUnicode(const nsAFlatCString &aCharset,
                                              const nsAFlatCString &aURI, 
-                                             bool aIRI, 
                                              nsAString &_retval)
 {
-  nsresult rv = NS_OK;
-
   // check for 7bit encoding the data may not be ASCII after we decode
   bool isStatefulCharset = statefulCharset(aCharset.get());
 
-  if (!isStatefulCharset && IsASCII(aURI)) {
-    CopyASCIItoUTF16(aURI, _retval);
-    return rv;
-  }
-
-  if (!isStatefulCharset && aIRI) {
+  if (!isStatefulCharset) {
+    if (IsASCII(aURI)) {
+      CopyASCIItoUTF16(aURI, _retval);
+      return NS_OK;
+    }
     if (IsUTF8(aURI)) {
       CopyUTF8toUTF16(aURI, _retval);
-      return rv;
+      return NS_OK;
     }
   }
 
@@ -200,12 +196,11 @@ nsresult nsTextToSubURI::convertURItoUnicode(const nsAFlatCString &aCharset,
   nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder =
     EncodingUtils::DecoderForEncoding(encoding);
 
-  NS_ENSURE_SUCCESS(rv, rv);
   unicodeDecoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Signal);
 
   int32_t srcLen = aURI.Length();
   int32_t dstLen;
-  rv = unicodeDecoder->GetMaxLength(aURI.get(), srcLen, &dstLen);
+  nsresult rv = unicodeDecoder->GetMaxLength(aURI.get(), srcLen, &dstLen);
   NS_ENSURE_SUCCESS(rv, rv);
 
   char16_t *ustr = (char16_t *) NS_Alloc(dstLen * sizeof(char16_t));
@@ -234,13 +229,13 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeURIForUI(const nsACString & aCharset,
   // Test for != NS_OK rather than NS_FAILED, because incomplete multi-byte
   // sequences are also considered failure in this context
   if (convertURItoUnicode(
-                PromiseFlatCString(aCharset), unescapedSpec, true, _retval)
+                PromiseFlatCString(aCharset), unescapedSpec, _retval)
       != NS_OK) {
     // assume UTF-8 instead of ASCII  because hostname (IDN) may be in UTF-8
     CopyUTF8toUTF16(aURIFragment, _retval);
   }
 
-  // if there are any characters that are unsafe for IRIs, reescape.
+  // If there are any characters that are unsafe for URIs, reescape those.
   if (mUnsafeChars.IsEmpty()) {
     nsCOMPtr<nsISupportsString> blacklist;
     nsresult rv = mozilla::Preferences::GetComplex("network.IDN.blacklist_chars",
@@ -289,7 +284,7 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeNonAsciiURI(const nsACString & aCharset,
     return NS_OK;
   }
 
-  return convertURItoUnicode(PromiseFlatCString(aCharset), unescapedSpec, true, _retval);
+  return convertURItoUnicode(PromiseFlatCString(aCharset), unescapedSpec, _retval);
 }
 
 //----------------------------------------------------------------------
