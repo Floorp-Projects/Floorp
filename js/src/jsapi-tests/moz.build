@@ -33,6 +33,7 @@ UNIFIED_SOURCES += [
     'testFreshGlobalEvalRedefinition.cpp',
     'testFunctionProperties.cpp',
     'testGCAllocator.cpp',
+    'testGCCellPtr.cpp',
     'testGCChunkPool.cpp',
     'testGCExactRooting.cpp',
     'testGCFinalizeCallback.cpp',
