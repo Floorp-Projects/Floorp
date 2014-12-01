@@ -52,23 +52,43 @@ function test_getAllTabs() {
   let store = getMockStore();
   let tabs;
 
-  store.getWindowEnumerator = mockGetWindowEnumerator.bind(this, "http://foo.com", 1, 1);
+  let threeUrls = ["http://foo.com", "http://fuubar.com", "http://barbar.com"];
+
+  store.getWindowEnumerator = mockGetWindowEnumerator.bind(this, "http://bar.com", 1, 1, () => 2, () => threeUrls);
 
   _("Get all tabs.");
   tabs = store.getAllTabs();
   _("Tabs: " + JSON.stringify(tabs));
   do_check_eq(tabs.length, 1);
   do_check_eq(tabs[0].title, "title");
-  do_check_eq(tabs[0].urlHistory.length, 1);
-  do_check_eq(tabs[0].urlHistory[0], ["http://foo.com"]);
+  do_check_eq(tabs[0].urlHistory.length, 2);
+  do_check_eq(tabs[0].urlHistory[0], "http://foo.com");
+  do_check_eq(tabs[0].urlHistory[1], "http://bar.com");
   do_check_eq(tabs[0].icon, "image");
   do_check_eq(tabs[0].lastUsed, 1);
 
   _("Get all tabs, and check that filtering works.");
-  store.getWindowEnumerator = mockGetWindowEnumerator.bind(this, "about:foo", 1, 1);
+  let twoUrls = ["about:foo", "http://fuubar.com"];
+  store.getWindowEnumerator = mockGetWindowEnumerator.bind(this, "http://foo.com", 1, 1, () => 2, () => twoUrls);
   tabs = store.getAllTabs(true);
   _("Filtered: " + JSON.stringify(tabs));
   do_check_eq(tabs.length, 0);
+
+  _("Get all tabs, and check that the entries safety limit works.");
+  let allURLs = [];
+  for (let i = 0; i < 50; i++) {
+    allURLs.push("http://foo" + i + ".bar");
+  }
+  allURLs.splice(35, 0, "about:foo", "about:bar", "about:foobar");
+
+  store.getWindowEnumerator = mockGetWindowEnumerator.bind(this, "http://bar.com", 1, 1, () => 45, () => allURLs);
+  tabs = store.getAllTabs((url) => url.startsWith("about"));
+
+  _("Sliced: " + JSON.stringify(tabs));
+  do_check_eq(tabs.length, 1);
+  do_check_eq(tabs[0].urlHistory.length, 25);
+  do_check_eq(tabs[0].urlHistory[0], "http://foo40.bar");
+  do_check_eq(tabs[0].urlHistory[24], "http://foo16.bar");
 }
 
 function test_createRecord() {
