@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=830260
         'Passing null as a color to setProperty should remove the property');
 
     div.style.color = "green";
-    ise(div.style.color, "green", 'Assigning "green" as a color should not parse');
+    ise(div.style.color, "green", 'Assigning "green" as a color should parse');
 
     div.style.color = null;
     ise(div.style.color, "",
