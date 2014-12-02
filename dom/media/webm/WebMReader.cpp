@@ -223,7 +223,8 @@ void WebMReader::Shutdown()
 {
 #if defined(MOZ_PDM_VPX)
   if (mTaskQueue) {
-    mTaskQueue->Shutdown();
+    mTaskQueue->BeginShutdown();
+    mTaskQueue->AwaitShutdownAndIdle();
   }
 #endif
 
