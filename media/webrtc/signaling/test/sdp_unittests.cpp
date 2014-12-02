@@ -1126,7 +1126,8 @@ const std::string kBasicAudioVideoOffer =
 "a=ice-pwd:e4cc12a910f106a0a744719425510e17" CRLF
 "a=ice-lite" CRLF
 "a=ice-options:trickle foo" CRLF
-"a=msid-semantic:WMS plus" CRLF
+"a=msid-semantic:WMS stream streama" CRLF
+"a=msid-semantic:foo stream" CRLF
 "a=fingerprint:sha-256 DF:2E:AC:8A:FD:0A:8E:99:BF:5D:E8:3C:E7:FA:FB:08:3B:3C:54:1D:D7:D4:05:77:A0:72:9B:14:08:6D:0F:4C" CRLF
 "a=identity:blahblahblah foo;bar" CRLF
 "a=group:BUNDLE first second" CRLF
@@ -1149,7 +1150,7 @@ const std::string kBasicAudioVideoOffer =
 "a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level" CRLF
 "a=setup:actpass" CRLF
 "a=rtcp-mux" CRLF
-"a=msid:track stream" CRLF
+"a=msid:stream track" CRLF
 "a=candidate:0 1 UDP 2130379007 10.0.0.36 62453 typ host" CRLF
 "a=candidate:2 1 UDP 1694236671 24.6.134.204 62453 typ srflx raddr 10.0.0.36 rport 62453" CRLF
 "a=candidate:3 1 UDP 100401151 162.222.183.171 49761 typ relay raddr 162.222.183.171 rport 49761" CRLF
@@ -1171,8 +1172,8 @@ const std::string kBasicAudioVideoOffer =
 "a=rtcp-fb:120 ccm fir" CRLF
 "a=setup:active" CRLF
 "a=rtcp-mux" CRLF
-"a=msid:tracka streama" CRLF
-"a=msid:trackb streamb" CRLF
+"a=msid:streama tracka" CRLF
+"a=msid:streamb trackb" CRLF
 "a=candidate:0 1 UDP 2130379007 10.0.0.36 59530 typ host" CRLF
 "a=candidate:0 2 UDP 2130379006 10.0.0.36 64378 typ host" CRLF
 "a=candidate:2 2 UDP 1694236670 24.6.134.204 64378 typ srflx raddr 10.0.0.36 rport 64378" CRLF
@@ -1426,7 +1427,7 @@ const std::string kH264AudioVideoOffer =
 "a=ice-ufrag:4a799b2e" CRLF
 "a=ice-pwd:e4cc12a910f106a0a744719425510e17" CRLF
 "a=ice-lite" CRLF
-"a=msid-semantic:WMS plus" CRLF
+"a=msid-semantic:WMS stream streama" CRLF
 "a=fingerprint:sha-256 DF:2E:AC:8A:FD:0A:8E:99:BF:5D:E8:3C:E7:FA:FB:08:3B:3C:54:1D:D7:D4:05:77:A0:72:9B:14:08:6D:0F:4C" CRLF
 "a=group:BUNDLE first second" CRLF
 "a=group:BUNDLE third" CRLF
@@ -1448,7 +1449,7 @@ const std::string kH264AudioVideoOffer =
 "a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level" CRLF
 "a=setup:actpass" CRLF
 "a=rtcp-mux" CRLF
-"a=msid:track stream" CRLF
+"a=msid:stream track" CRLF
 "a=candidate:0 1 UDP 2130379007 10.0.0.36 62453 typ host" CRLF
 "a=candidate:2 1 UDP 1694236671 24.6.134.204 62453 typ srflx raddr 10.0.0.36 rport 62453" CRLF
 "a=candidate:3 1 UDP 100401151 162.222.183.171 49761 typ relay raddr 162.222.183.171 rport 49761" CRLF
@@ -1469,8 +1470,8 @@ const std::string kH264AudioVideoOffer =
 "a=recvonly" CRLF
 "a=setup:active" CRLF
 "a=rtcp-mux" CRLF
-"a=msid:tracka streama" CRLF
-"a=msid:trackb streamb" CRLF
+"a=msid:streama tracka" CRLF
+"a=msid:streamb trackb" CRLF
 "a=candidate:0 1 UDP 2130379007 10.0.0.36 59530 typ host" CRLF
 "a=candidate:0 2 UDP 2130379006 10.0.0.36 64378 typ host" CRLF
 "a=candidate:2 2 UDP 1694236670 24.6.134.204 64378 typ srflx raddr 10.0.0.36 rport 64378" CRLF
@@ -1672,22 +1673,29 @@ TEST_P(NewSdpTest, CheckMsid) {
   ParseSdp(kBasicAudioVideoOffer);
   ASSERT_TRUE(mSdp->GetAttributeList().HasAttribute(
       SdpAttribute::kMsidSemanticAttribute));
-  // note that we lose the extra pieces here
-  // it's not worth it to save them until they mean something
-  ASSERT_EQ("WMS", mSdp->GetAttributeList().GetMsidSemantic());
+  auto semantics = mSdp->GetAttributeList().GetMsidSemantic().mMsidSemantics;
+  ASSERT_EQ(2U, semantics.size());
+  ASSERT_EQ("WMS", semantics[0].semantic);
+  ASSERT_EQ(2U, semantics[0].msids.size());
+  ASSERT_EQ("stream", semantics[0].msids[0]);
+  ASSERT_EQ("streama", semantics[0].msids[1]);
+  ASSERT_EQ("foo", semantics[1].semantic);
+  ASSERT_EQ(1U, semantics[1].msids.size());
+  ASSERT_EQ("stream", semantics[1].msids[0]);
+
 
   const SdpMsidAttributeList& msids1 =
       mSdp->GetMediaSection(0).GetAttributeList().GetMsid();
   ASSERT_EQ(1U, msids1.mMsids.size());
-  ASSERT_EQ("track", msids1.mMsids[0].identifier);
-  ASSERT_EQ("stream", msids1.mMsids[0].appdata);
+  ASSERT_EQ("stream", msids1.mMsids[0].identifier);
+  ASSERT_EQ("track", msids1.mMsids[0].appdata);
   const SdpMsidAttributeList& msids2 =
       mSdp->GetMediaSection(1).GetAttributeList().GetMsid();
   ASSERT_EQ(2U, msids2.mMsids.size());
-  ASSERT_EQ("tracka", msids2.mMsids[0].identifier);
-  ASSERT_EQ("streama", msids2.mMsids[0].appdata);
-  ASSERT_EQ("trackb", msids2.mMsids[1].identifier);
-  ASSERT_EQ("streamb", msids2.mMsids[1].appdata);
+  ASSERT_EQ("streama", msids2.mMsids[0].identifier);
+  ASSERT_EQ("tracka", msids2.mMsids[0].appdata);
+  ASSERT_EQ("streamb", msids2.mMsids[1].identifier);
+  ASSERT_EQ("trackb", msids2.mMsids[1].appdata);
   const SdpMsidAttributeList& msids3 =
       mSdp->GetMediaSection(2).GetAttributeList().GetMsid();
   ASSERT_EQ(1U, msids3.mMsids.size());

@@ -631,6 +631,36 @@ public:
 };
 
 ///////////////////////////////////////////////////////////////////////////
+// a=msid-semantic, draft-ietf-mmusic-msid
+//-------------------------------------------------------------------------
+//   msid-semantic-attr = "msid-semantic:" msid-semantic msid-list
+//   msid-semantic = token ; see RFC 4566
+//   msid-list = *(" " msid-id) / " *"
+class SdpMsidSemanticAttributeList : public SdpAttribute
+{
+public:
+  SdpMsidSemanticAttributeList() : SdpAttribute(kMsidSemanticAttribute) {}
+
+  struct MsidSemantic
+  {
+    // TODO: Once we have some more of these, we might want to make an enum
+    std::string semantic;
+    std::vector<std::string> msids;
+  };
+
+  void
+  PushEntry(const std::string& semantic, const std::vector<std::string>& msids)
+  {
+    MsidSemantic value = {semantic, msids};
+    mMsidSemantics.push_back(value);
+  }
+
+  virtual void Serialize(std::ostream& os) const MOZ_OVERRIDE;
+
+  std::vector<MsidSemantic> mMsidSemantics;
+};
+
+///////////////////////////////////////////////////////////////////////////
 // a=remote-candiate, RFC5245
 //-------------------------------------------------------------------------
 //   remote-candidate-att = "remote-candidates" ":" remote-candidate

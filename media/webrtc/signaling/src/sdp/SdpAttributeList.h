@@ -70,7 +70,7 @@ public:
   virtual const std::string& GetLabel() const = 0;
   virtual unsigned int GetMaxptime() const = 0;
   virtual const std::string& GetMid() const = 0;
-  virtual const std::string& GetMsidSemantic() const = 0;
+  virtual const SdpMsidSemanticAttributeList& GetMsidSemantic() const = 0;
   virtual unsigned int GetPtime() const = 0;
 
   // This is "special", because it's multiple things
