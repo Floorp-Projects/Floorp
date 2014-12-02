@@ -343,3 +343,7 @@ GMPDecryptorChild::RecvDecryptingComplete()
 
 } // namespace gmp
 } // namespace mozilla
+
+// avoid redefined macro in unified build
+#undef ON_GMP_THREAD
+#undef CALL_ON_GMP_THREAD

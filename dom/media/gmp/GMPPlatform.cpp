@@ -158,12 +158,6 @@ CreateRecord(const char* aRecordName,
              GMPRecord** aOutRecord,
              GMPRecordClient* aClient)
 {
-  MOZ_ASSERT(IsOnChildMainThread());
-
-  if (sMainLoop != MessageLoop::current()) {
-    MOZ_ASSERT(false, "GMP called CreateRecord() on non-main thread!");
-    return GMPGenericErr;
-  }
   if (aRecordNameSize > GMP_MAX_RECORD_NAME_SIZE) {
     NS_WARNING("GMP tried to CreateRecord with too long record name");
     return GMPGenericErr;
@@ -200,10 +194,6 @@ GMPErr
 CreateRecordIterator(RecvGMPRecordIteratorPtr aRecvIteratorFunc,
                      void* aUserArg)
 {
-  if (sMainLoop != MessageLoop::current()) {
-    MOZ_ASSERT(false, "GMP called CreateRecord() on non-main thread!");
-    return GMPGenericErr;
-  }
   if (!aRecvIteratorFunc) {
     return GMPInvalidArgErr;
   }

@@ -167,6 +167,19 @@ const nsSubstring&
 NS_EscapeURL(const nsSubstring& aStr, uint32_t aFlags, nsSubstring& aResult);
 
 /**
+ * Percent-escapes all characters in aStr that occurs in aForbidden.
+ * @param aStr the input URL string
+ * @param aForbidden the characters that should be escaped if found in aStr
+ * @note that aForbidden MUST be sorted (low to high)
+ * @param aResult the result if some characters were escaped
+ * @return aResult if some characters were escaped, or aStr otherwise (aResult
+ *         is unmodified in that case)
+ */
+const nsSubstring&
+NS_EscapeURL(const nsAFlatString& aStr, const nsTArray<char16_t>& aForbidden,
+             nsSubstring& aResult);
+
+/**
  * CString version of nsEscape. Returns true on success, false
  * on out of memory. To reverse this function, use NS_UnescapeURL.
  */

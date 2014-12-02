@@ -51,6 +51,7 @@
 #include "nsIHTMLEditor.h"
 #include "nsIDocShell.h"
 #include "mozilla/dom/EncodingUtils.h"
+#include "nsComputedDOMStyle.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1389,19 +1390,23 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
       mIsTextWidget = true;
       break;
     }
-    else if (atom == nsGkAtoms::body)
-    {
-      // check for moz prewrap style on body.  If it's there we are 
-      // in a plaintext editor.  This is pretty cheezy but I haven't 
-      // found a good way to tell if we are in a plaintext editor.
-      nsCOMPtr<nsIDOMElement> bodyElem = do_QueryInterface(selContent);
-      nsAutoString wsVal;
-      rv = bodyElem->GetAttribute(NS_LITERAL_STRING("style"), wsVal);
-      if (NS_SUCCEEDED(rv) && (kNotFound != wsVal.Find(NS_LITERAL_STRING("pre-wrap"))))
-      {
-        mIsTextWidget = true;
-        break;
+    else if (selContent->IsElement()) {
+      nsRefPtr<nsStyleContext> styleContext =
+        nsComputedDOMStyle::GetStyleContextForElementNoFlush(selContent->AsElement(),
+                                                             nullptr, nullptr);
+      if (styleContext) {
+        const nsStyleText* textStyle = styleContext->StyleText();
+        switch (textStyle->mWhiteSpace) {
+        case NS_STYLE_WHITESPACE_PRE:
+        case NS_STYLE_WHITESPACE_PRE_WRAP:
+        case NS_STYLE_WHITESPACE_PRE_LINE:
+        case NS_STYLE_WHITESPACE_PRE_SPACE:
+          // Copy as plaintext for all preformatted elements
+          mIsTextWidget = true;
+          break;
+        }
       }
+      break;
     }
   }
   
