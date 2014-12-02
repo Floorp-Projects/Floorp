@@ -266,6 +266,7 @@ private:
   // "discontinuity" in the stream. For example after a seek.
   bool mAudioDiscontinuity;
   bool mVideoDiscontinuity;
+  bool mShutdown;
 };
 
 // Interface that callers to MediaDecoderReader::Request{Audio,Video}Data()
