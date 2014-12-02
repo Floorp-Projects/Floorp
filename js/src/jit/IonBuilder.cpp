@@ -8038,9 +8038,14 @@ IonBuilder::addTypedArrayLengthAndData(MDefinition *obj,
                                        MInstruction **length, MInstruction **elements)
 {
     MOZ_ASSERT((index != nullptr) == (elements != nullptr));
+    JSObject *tarr = nullptr;
 
-    if (obj->isConstant() && obj->toConstant()->value().isObject()) {
-        JSObject *tarr = &obj->toConstant()->value().toObject();
+    if (obj->isConstant() && obj->toConstant()->value().isObject())
+        tarr = &obj->toConstant()->value().toObject();
+    else if (obj->resultTypeSet())
+        tarr = obj->resultTypeSet()->getSingleton();
+
+    if (tarr) {
         void *data = AnyTypedArrayViewData(tarr);
         // Bug 979449 - Optimistically embed the elements and use TI to
         //              invalidate if we move them.
