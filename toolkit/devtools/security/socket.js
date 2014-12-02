@@ -68,13 +68,11 @@ function socketConnect(host, port) {
 }
 
 /**
- * Creates a new socket listener for remote connections to a given
- * DebuggerServer.  This helps contain and organize the parts of the server that
- * may differ or are particular to one given listener mechanism vs. another.
+ * Creates a new socket listener for remote connections to the DebuggerServer.
+ * This helps contain and organize the parts of the server that may differ or
+ * are particular to one given listener mechanism vs. another.
  */
-function SocketListener(server) {
-  this._server = server;
-}
+function SocketListener() {}
 
 /**
  * Prompt the user to accept or decline the incoming connection. This is the
@@ -147,8 +145,7 @@ SocketListener.prototype = {
    */
   close: function() {
     this._socket.close();
-    this._server._removeListener(this);
-    this._server = null;
+    DebuggerServer._removeListener(this);
   },
 
   /**
@@ -185,7 +182,7 @@ SocketListener.prototype = {
     let input = socketTransport.openInputStream(0, 0, 0);
     let output = socketTransport.openOutputStream(0, 0, 0);
     let transport = new DebuggerTransport(input, output);
-    this._server._onConnection(transport);
+    DebuggerServer._onConnection(transport);
   }, "SocketListener.onSocketAccepted"),
 
   onStopListening: function(socket, status) {
@@ -197,8 +194,8 @@ SocketListener.prototype = {
 // TODO: These high-level entry points will branch based on TLS vs. bare TCP as
 // part of bug 1059001.
 exports.DebuggerSocket = {
-  createListener(server) {
-    return new SocketListener(server);
+  createListener() {
+    return new SocketListener();
   },
   connect(host, port) {
     return socketConnect(host, port);

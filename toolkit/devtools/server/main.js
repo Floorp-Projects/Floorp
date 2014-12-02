@@ -560,7 +560,7 @@ var DebuggerServer = {
     }
     this._checkInit();
 
-    let listener = DebuggerSocket.createListener(this);
+    let listener = DebuggerSocket.createListener();
     listener.open(portOrPath);
     this._listeners.push(listener);
     return listener;
