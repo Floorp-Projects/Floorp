@@ -96,6 +96,8 @@ private:
   ~OriginInfo()
   {
     MOZ_COUNT_DTOR(OriginInfo);
+
+    MOZ_ASSERT(!mQuotaObjects.Count());
   }
 
   void
@@ -108,18 +110,6 @@ private:
 
     mAccessTime = aAccessTime;
   }
-
-  void
-  LockedClearOriginInfos()
-  {
-    AssertCurrentThreadOwnsQuotaMutex();
-
-    mQuotaObjects.EnumerateRead(ClearOriginInfoCallback, nullptr);
-  }
-
-  static PLDHashOperator
-  ClearOriginInfoCallback(const nsAString& aKey,
-                          QuotaObject* aValue, void* aUserArg);
 
   nsDataHashtable<nsStringHashKey, QuotaObject*> mQuotaObjects;
 
