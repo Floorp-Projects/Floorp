@@ -15,7 +15,7 @@ function test() {
     // Since we test the connections set below, destroy the server in case it
     // was left open.
     DebuggerServer.destroy();
-    DebuggerServer.init(function () { return true; });
+    DebuggerServer.init();
     DebuggerServer.addBrowserActors();
 
     let tab = yield addTab(TEST_URI);
