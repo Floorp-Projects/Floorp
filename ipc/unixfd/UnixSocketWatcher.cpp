@@ -53,13 +53,16 @@ UnixSocketWatcher::Listen(const struct sockaddr* aAddr, socklen_t aAddrLen)
   MOZ_ASSERT(IsOpen());
   MOZ_ASSERT(aAddr || !aAddrLen);
 
-  if (bind(GetFd(), aAddr, aAddrLen) < 0) {
-    OnError("bind", errno);
-    return NS_ERROR_FAILURE;
-  }
-  if (listen(GetFd(), 1) < 0) {
-    OnError("listen", errno);
-    return NS_ERROR_FAILURE;
+  if (mConnectionStatus == SOCKET_IS_DISCONNECTED) {
+    // We init the socket descriptor when we listen for the first time.
+    if (bind(GetFd(), aAddr, aAddrLen) < 0) {
+      OnError("bind", errno);
+      return NS_ERROR_FAILURE;
+    }
+    if (listen(GetFd(), 1) < 0) {
+      OnError("listen", errno);
+      return NS_ERROR_FAILURE;
+    }
   }
   mConnectionStatus = SOCKET_IS_LISTENING;
   OnListening();
