@@ -483,20 +483,20 @@ ExposeGCThingToActiveJS(JS::GCCellPtr thing)
 {
     MOZ_ASSERT(thing.kind() != JSTRACE_SHAPE);
 
-    JS::shadow::Runtime *rt = GetGCThingRuntime(thing);
+    JS::shadow::Runtime *rt = GetGCThingRuntime(thing.asCell());
 #ifdef JSGC_GENERATIONAL
     /*
      * GC things residing in the nursery cannot be gray: they have no mark bits.
      * All live objects in the nursery are moved to tenured at the beginning of
      * each GC slice, so the gray marker never sees nursery things.
      */
-    if (IsInsideNursery(thing))
+    if (IsInsideNursery(thing.asCell()))
         return;
 #endif
     if (IsIncrementalBarrierNeededOnTenuredGCThing(rt, thing))
         JS::IncrementalReferenceBarrier(thing);
-    else if (JS::GCThingIsMarkedGray(thing))
-        JS::UnmarkGrayGCThingRecursively(thing, thing.kind());
+    else if (JS::GCThingIsMarkedGray(thing.asCell()))
+        JS::UnmarkGrayGCThingRecursively(thing.asCell(), thing.kind());
 }
 
 static MOZ_ALWAYS_INLINE void
@@ -507,7 +507,7 @@ MarkGCThingAsLive(JSRuntime *aRt, JS::GCCellPtr thing)
     /*
      * Any object in the nursery will not be freed during any GC running at that time.
      */
-    if (IsInsideNursery(thing))
+    if (IsInsideNursery(thing.asCell()))
         return;
 #endif
     if (IsIncrementalBarrierNeededOnTenuredGCThing(rt, thing))

@@ -1189,26 +1189,25 @@ JS::IncrementalReferenceBarrier(GCCellPtr thing)
 #ifdef DEBUG
     Zone *zone = thing.isObject()
                  ? thing.toObject()->zone()
-                 : thing->asTenured().zone();
+                 : thing.asCell()->asTenured().zone();
     MOZ_ASSERT(!zone->runtimeFromMainThread()->isHeapMajorCollecting());
 #endif
 
-    gc::Cell *cell = static_cast<gc::Cell *>(thing);
     switch(thing.kind()) {
       case JSTRACE_OBJECT: return JSObject::writeBarrierPre(thing.toObject());
       case JSTRACE_STRING: return JSString::writeBarrierPre(thing.toString());
       case JSTRACE_SCRIPT: return JSScript::writeBarrierPre(thing.toScript());
       case JSTRACE_SYMBOL: return JS::Symbol::writeBarrierPre(thing.toSymbol());
       case JSTRACE_LAZY_SCRIPT:
-        return LazyScript::writeBarrierPre(static_cast<LazyScript*>(cell));
+        return LazyScript::writeBarrierPre(static_cast<LazyScript*>(thing.asCell()));
       case JSTRACE_JITCODE:
-        return jit::JitCode::writeBarrierPre(static_cast<jit::JitCode*>(cell));
+        return jit::JitCode::writeBarrierPre(static_cast<jit::JitCode*>(thing.asCell()));
       case JSTRACE_SHAPE:
-        return Shape::writeBarrierPre(static_cast<Shape*>(cell));
+        return Shape::writeBarrierPre(static_cast<Shape*>(thing.asCell()));
       case JSTRACE_BASE_SHAPE:
-        return BaseShape::writeBarrierPre(static_cast<BaseShape*>(cell));
+        return BaseShape::writeBarrierPre(static_cast<BaseShape*>(thing.asCell()));
       case JSTRACE_TYPE_OBJECT:
-        return types::TypeObject::writeBarrierPre(static_cast<types::TypeObject *>(cell));
+        return types::TypeObject::writeBarrierPre(static_cast<types::TypeObject *>(thing.asCell()));
       default:
         MOZ_CRASH("Invalid trace kind in IncrementalReferenceBarrier.");
     }

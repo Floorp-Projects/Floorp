@@ -186,9 +186,9 @@ TraceWeakMapping(js::WeakMapTracer* aTrc, JSObject* aMap,
   NoteWeakMapsTracer* tracer = static_cast<NoteWeakMapsTracer*>(aTrc);
 
   // If nothing that could be held alive by this entry is marked gray, return.
-  if ((!aKey || !xpc_IsGrayGCThing(aKey)) &&
+  if ((!aKey || !xpc_IsGrayGCThing(aKey.asCell())) &&
       MOZ_LIKELY(!tracer->mCb.WantAllTraces())) {
-    if (!aValue || !xpc_IsGrayGCThing(aValue) || aValue.isString()) {
+    if (!aValue || !xpc_IsGrayGCThing(aValue.asCell()) || aValue.isString()) {
       return;
     }
   }
@@ -213,22 +213,22 @@ TraceWeakMapping(js::WeakMapTracer* aTrc, JSObject* aMap,
   }
 
   if (AddToCCKind(aValue.kind())) {
-    tracer->mCb.NoteWeakMapping(aMap, aKey, kdelegate, aValue);
+    tracer->mCb.NoteWeakMapping(aMap, aKey.asCell(), kdelegate, aValue.asCell());
   } else {
     tracer->mChildTracer.mTracedAny = false;
     tracer->mChildTracer.mMap = aMap;
-    tracer->mChildTracer.mKey = aKey;
+    tracer->mChildTracer.mKey = aKey.asCell();
     tracer->mChildTracer.mKeyDelegate = kdelegate;
 
     if (aValue.isString()) {
-      JS_TraceChildren(&tracer->mChildTracer, aValue, aValue.kind());
+      JS_TraceChildren(&tracer->mChildTracer, aValue.asCell(), aValue.kind());
     }
 
     // The delegate could hold alive the key, so report something to the CC
     // if we haven't already.
     if (!tracer->mChildTracer.mTracedAny &&
-        aKey && xpc_IsGrayGCThing(aKey) && kdelegate) {
-      tracer->mCb.NoteWeakMapping(aMap, aKey, kdelegate, nullptr);
+        aKey && xpc_IsGrayGCThing(aKey.asCell()) && kdelegate) {
+      tracer->mCb.NoteWeakMapping(aMap, aKey.asCell(), kdelegate, nullptr);
     }
   }
 }
@@ -260,8 +260,8 @@ private:
       static_cast<FixWeakMappingGrayBitsTracer*>(aTrc);
 
     // If nothing that could be held alive by this entry is marked gray, return.
-    bool delegateMightNeedMarking = aKey && xpc_IsGrayGCThing(aKey);
-    bool valueMightNeedMarking = aValue && xpc_IsGrayGCThing(aValue) &&
+    bool delegateMightNeedMarking = aKey && xpc_IsGrayGCThing(aKey.asCell());
+    bool valueMightNeedMarking = aValue && xpc_IsGrayGCThing(aValue.asCell()) &&
                                  aValue.kind() != JSTRACE_STRING;
     if (!delegateMightNeedMarking && !valueMightNeedMarking) {
       return;
@@ -274,17 +274,17 @@ private:
     if (delegateMightNeedMarking && aKey.isObject()) {
       JSObject* kdelegate = js::GetWeakmapKeyDelegate(aKey.toObject());
       if (kdelegate && !xpc_IsGrayGCThing(kdelegate)) {
-        if (JS::UnmarkGrayGCThingRecursively(aKey, JSTRACE_OBJECT)) {
+        if (JS::UnmarkGrayGCThingRecursively(aKey.asCell(), JSTRACE_OBJECT)) {
           tracer->mAnyMarked = true;
         }
       }
     }
 
-    if (aValue && xpc_IsGrayGCThing(aValue) &&
-        (!aKey || !xpc_IsGrayGCThing(aKey)) &&
+    if (aValue && xpc_IsGrayGCThing(aValue.asCell()) &&
+        (!aKey || !xpc_IsGrayGCThing(aKey.asCell())) &&
         (!aMap || !xpc_IsGrayGCThing(aMap)) &&
         aValue.kind() != JSTRACE_SHAPE) {
-      if (JS::UnmarkGrayGCThingRecursively(aValue, aValue.kind())) {
+      if (JS::UnmarkGrayGCThingRecursively(aValue.asCell(), aValue.kind())) {
         tracer->mAnyMarked = true;
       }
     }
