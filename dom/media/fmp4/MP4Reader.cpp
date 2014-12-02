@@ -150,7 +150,8 @@ MP4Reader::Shutdown()
     mAudio.mDecoder = nullptr;
   }
   if (mAudio.mTaskQueue) {
-    mAudio.mTaskQueue->Shutdown();
+    mAudio.mTaskQueue->BeginShutdown();
+    mAudio.mTaskQueue->AwaitShutdownAndIdle();
     mAudio.mTaskQueue = nullptr;
   }
   if (mVideo.mDecoder) {
@@ -159,7 +160,8 @@ MP4Reader::Shutdown()
     mVideo.mDecoder = nullptr;
   }
   if (mVideo.mTaskQueue) {
-    mVideo.mTaskQueue->Shutdown();
+    mVideo.mTaskQueue->BeginShutdown();
+    mVideo.mTaskQueue->AwaitShutdownAndIdle();
     mVideo.mTaskQueue = nullptr;
   }
   // Dispose of the queued sample before shutting down the demuxer
@@ -169,6 +171,8 @@ MP4Reader::Shutdown()
     mPlatform->Shutdown();
     mPlatform = nullptr;
   }
+
+  MediaDecoderReader::Shutdown();
 }
 
 void

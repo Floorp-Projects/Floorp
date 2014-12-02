@@ -778,11 +778,7 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
 
   // Create a next-in-flow if needed.
   if (!NS_FRAME_IS_FULLY_COMPLETE(aStatus)) {
-    nsIFrame* newFrame;
-    nsresult rv = CreateNextInFlow(aFrame, newFrame);
-    if (NS_FAILED(rv)) {
-      return;
-    }
+    CreateNextInFlow(aFrame);
   }
 
   if (NS_INLINE_IS_BREAK_AFTER(aStatus)) {

@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsPlaintextEditor.h"
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Preferences.h"
@@ -46,7 +47,6 @@
 #include "nsIWeakReferenceUtils.h"
 #include "nsInternetCiter.h"
 #include "nsLiteralString.h"
-#include "nsPlaintextEditor.h"
 #include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"

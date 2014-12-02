@@ -215,14 +215,13 @@ public:
     already_AddRefed<WebGLTransformFeedback> CreateTransformFeedback();
     void DeleteTransformFeedback(WebGLTransformFeedback* tf);
     bool IsTransformFeedback(WebGLTransformFeedback* tf);
-    void BindTransformFeedback(GLenum target, GLuint id);
+    void BindTransformFeedback(GLenum target, WebGLTransformFeedback* tf);
     void BeginTransformFeedback(GLenum primitiveMode);
     void EndTransformFeedback();
-    void TransformFeedbackVaryings(WebGLProgram* program, GLsizei count,
-                                   const dom::Sequence<nsString>& varyings, GLenum bufferMode);
-    already_AddRefed<WebGLActiveInfo> GetTransformFeedbackVarying(WebGLProgram* program, GLuint index);
     void PauseTransformFeedback();
     void ResumeTransformFeedback();
+    void TransformFeedbackVaryings(WebGLProgram* program, const dom::Sequence<nsString>& varyings, GLenum bufferMode);
+    already_AddRefed<WebGLActiveInfo> GetTransformFeedbackVarying(WebGLProgram* program, GLuint index);
 
 
     // -------------------------------------------------------------------------
@@ -263,6 +262,8 @@ private:
                                 const char* info);
 
     virtual bool ValidateAttribPointerType(bool integerMode, GLenum type, GLsizei* alignment, const char* info) MOZ_OVERRIDE;
+    virtual bool ValidateBufferTarget(GLenum target, const char* info) MOZ_OVERRIDE;
+    virtual bool ValidateBufferIndexedTarget(GLenum target, const char* info) MOZ_OVERRIDE;
 };
 
 } // namespace mozilla

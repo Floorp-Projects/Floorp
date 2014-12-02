@@ -30,7 +30,7 @@ function testBuffered(e) {
   var b = v.buffered;
   is(b.length, 1, v._name + ": Should be buffered in one range");
   is(b.start(0), 0, v._name + ": First range start should be media start");
-  is(b.end(0), v.duration, v._name + ": First range end should be media end");
+  ok(Math.abs(b.end(0) - v.duration) < 0.1, v._name + ": First range end should be media end");
 
   // Ensure INDEX_SIZE_ERR is thrown when we access outside the range
   var caught = false;

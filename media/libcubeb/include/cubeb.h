@@ -122,8 +122,8 @@ typedef enum {
 typedef struct {
   cubeb_sample_format format; /**< Requested sample format.  One of
                                    #cubeb_sample_format. */
-  unsigned int rate;          /**< Requested sample rate.  Valid range is [1, 192000]. */
-  unsigned int channels;      /**< Requested channel count.  Valid range is [1, 32]. */
+  unsigned int rate;          /**< Requested sample rate.  Valid range is [1000, 192000]. */
+  unsigned int channels;      /**< Requested channel count.  Valid range is [1, 8]. */
 #if defined(__ANDROID__)
   cubeb_stream_type stream_type; /**< Used to map Android audio stream types */
 #endif
@@ -148,7 +148,8 @@ enum {
   CUBEB_OK = 0,                       /**< Success. */
   CUBEB_ERROR = -1,                   /**< Unclassified error. */
   CUBEB_ERROR_INVALID_FORMAT = -2,    /**< Unsupported #cubeb_stream_params requested. */
-  CUBEB_ERROR_INVALID_PARAMETER = -3  /**< Invalid parameter specified. */
+  CUBEB_ERROR_INVALID_PARAMETER = -3, /**< Invalid parameter specified. */
+  CUBEB_ERROR_NOT_SUPPORTED = -4      /**< Optional function not implemented in current backend. */
 };
 
 /** User supplied data callback.
@@ -156,7 +157,8 @@ enum {
     @param user_ptr
     @param buffer
     @param nframes
-    @retval Number of frames written to buffer, which must equal nframes except at end of stream.
+    @retval Number of frames written to buffer, which must equal nframes except
+            at end of stream.
     @retval CUBEB_ERROR on error, in which case the data callback will stop
             and the stream will enter a shutdown state. */
 typedef long (* cubeb_data_callback)(cubeb_stream * stream,
@@ -195,6 +197,7 @@ char const * cubeb_get_backend_id(cubeb * context);
     @param max_channels The maximum number of channels.
     @retval CUBEB_OK
     @retval CUBEB_ERROR_INVALID_PARAMETER
+    @retval CUBEB_ERROR_NOT_SUPPORTED
     @retval CUBEB_ERROR */
 int cubeb_get_max_channel_count(cubeb * context, uint32_t * max_channels);
 
@@ -205,16 +208,20 @@ int cubeb_get_max_channel_count(cubeb * context, uint32_t * max_channels);
     @param params On some backends, the minimum achievable latency depends on
                   the characteristics of the stream.
     @param latency_ms The latency value, in ms, to pass to cubeb_stream_init.
+    @retval CUBEB_OK
     @retval CUBEB_ERROR_INVALID_PARAMETER
-    @retval CUBEB_OK */
-int cubeb_get_min_latency(cubeb * context, cubeb_stream_params params, uint32_t * latency_ms);
+    @retval CUBEB_ERROR_NOT_SUPPORTED */
+int cubeb_get_min_latency(cubeb * context,
+                          cubeb_stream_params params,
+                          uint32_t * latency_ms);
 
-/** Get the preferred sample rate for this backend: this is hardware and platform
-   dependant, and can avoid resampling, and/or trigger fastpaths.
-   @param context
-   @param rate The samplerate (in Hz) the current configuration prefers.
-   @return CUBEB_ERROR_INVALID_PARAMETER
-   @return CUBEB_OK */
+/** Get the preferred sample rate for this backend: this is hardware and
+    platform dependant, and can avoid resampling, and/or trigger fastpaths.
+    @param context
+    @param rate The samplerate (in Hz) the current configuration prefers.
+    @retval CUBEB_OK
+    @retval CUBEB_ERROR_INVALID_PARAMETER
+    @retval CUBEB_ERROR_NOT_SUPPORTED */
 int cubeb_get_preferred_sample_rate(cubeb * context, uint32_t * rate);
 
 /** Destroy an application context.
@@ -226,16 +233,20 @@ void cubeb_destroy(cubeb * context);
     @param stream
     @param stream_name
     @param stream_params
-    @param latency Approximate stream latency in milliseconds.  Valid range is [1, 2000].
+    @param latency Approximate stream latency in milliseconds.  Valid range
+                   is [1, 2000].
     @param data_callback Will be called to preroll data before playback is
-                          started by cubeb_stream_start.
+                         started by cubeb_stream_start.
     @param state_callback
     @param user_ptr
     @retval CUBEB_OK
     @retval CUBEB_ERROR
     @retval CUBEB_ERROR_INVALID_FORMAT */
-int cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_name,
-                      cubeb_stream_params stream_params, unsigned int latency,
+int cubeb_stream_init(cubeb * context,
+                      cubeb_stream ** stream,
+                      char const * stream_name,
+                      cubeb_stream_params stream_params,
+                      unsigned int latency,
                       cubeb_data_callback data_callback,
                       cubeb_state_callback state_callback,
                       void * user_ptr);
@@ -269,63 +280,60 @@ int cubeb_stream_get_position(cubeb_stream * stream, uint64_t * position);
     @param stream
     @param latency Current approximate stream latency in frames.
     @retval CUBEB_OK
+    @retval CUBEB_ERROR_NOT_SUPPORTED
     @retval CUBEB_ERROR */
 int cubeb_stream_get_latency(cubeb_stream * stream, uint32_t * latency);
 
-/**
- * Set the volume for a stream.
- * @param stream the stream for which to adjust the volume.
- * @param volume a float between 0.0 (muted) and 1.0 (maximum volume)
- * @return CUBEB_ERROR_INVALID_PARAMETER if volume is outside [0.0; 1.0]
- * @return CUBEB_ERROR_INVALID_PARAMETER if stream is an invalid pointer
- * @return CUBEB_OK otherwise
- */
+/** Set the volume for a stream.
+    @param stream the stream for which to adjust the volume.
+    @param volume a float between 0.0 (muted) and 1.0 (maximum volume)
+    @retval CUBEB_OK
+    @retval CUBEB_ERROR_INVALID_PARAMETER volume is outside [0.0, 1.0] or
+            stream is an invalid pointer
+    @retval CUBEB_ERROR_NOT_SUPPORTED */
 int cubeb_stream_set_volume(cubeb_stream * stream, float volume);
 
-/**
- * If the stream is stereo, set the left/right panning. If the stream is mono,
- * this has no effect.
- * @param stream the stream for which to change the panning
- * @param panning a number from -1.0 to 1.0. -1.0 means that the stream is fully
- * mixed in the left channel, 1.0 means the stream is fully mixed in the right
- * channel. 0.0 is equal power in the right and left channel (default).
- * @return CUBEB_ERROR_INVALID_PARAMETER if stream is null or if panning is outside
- * the [-1.0; 1.0] range.
- * @return CUBEB_ERROR if this stream is not mono nor stereo.
- * @return CUBEB_OK otherwise.
- */
+/** If the stream is stereo, set the left/right panning. If the stream is mono,
+    this has no effect.
+    @param stream the stream for which to change the panning
+    @param panning a number from -1.0 to 1.0. -1.0 means that the stream is
+           fully mixed in the left channel, 1.0 means the stream is fully
+           mixed in the right channel. 0.0 is equal power in the right and
+           left channel (default).
+    @retval CUBEB_OK
+    @retval CUBEB_ERROR_INVALID_PARAMETER if stream is null or if panning is
+            outside the [-1.0, 1.0] range.
+    @retval CUBEB_ERROR_NOT_SUPPORTED
+    @retval CUBEB_ERROR stream is not mono nor stereo */
 int cubeb_stream_set_panning(cubeb_stream * stream, float panning);
 
-/**
- * Get the current output device for this stream.
- * @param stm the stream for which to query the current output device
- * @param device a pointer in which the current output device will be stored.
- * @return CUBEB_OK in case of success
- * @return CUBEB_ERROR_INVALID_PARAMETER if either stm, device or count are
- *         invalid pointers
- */
+/** Get the current output device for this stream.
+    @param stm the stream for which to query the current output device
+    @param device a pointer in which the current output device will be stored.
+    @retval CUBEB_OK in case of success
+    @retval CUBEB_ERROR_INVALID_PARAMETER if either stm, device or count are
+            invalid pointers
+    @retval CUBEB_ERROR_NOT_SUPPORTED */
 int cubeb_stream_get_current_device(cubeb_stream * stm,
                                     cubeb_device ** const device);
 
-/**
- * Destroy a cubeb_device structure.
- * @param stream the stream passed in cubeb_stream_get_current_device
- * @param devices the devices to destroy
- * @return CUBEB_OK in case of success
- * @return CUBEB_ERROR_INVALID_PARAMETER if devices is an invalid pointer
- */
+/** Destroy a cubeb_device structure.
+    @param stream the stream passed in cubeb_stream_get_current_device
+    @param devices the devices to destroy
+    @retval CUBEB_OK in case of success
+    @retval CUBEB_ERROR_INVALID_PARAMETER if devices is an invalid pointer
+    @retval CUBEB_ERROR_NOT_SUPPORTED */
 int cubeb_stream_device_destroy(cubeb_stream * stream,
                                 cubeb_device * devices);
 
-/**
- * Set a callback to be notified when the output device changes.
- * @param stream the stream for which to set the callback.
- * @param device_changed_callback a function called whenever the device has
- *        changed. Passing NULL allow to unregister a function
- * @return CUBEB_ERROR_INVALID_PARAMETER if either stream or
- *         device_changed_callback are invalid pointers.
- * @return CUBEB_OK
- */
+/** Set a callback to be notified when the output device changes.
+    @param stream the stream for which to set the callback.
+    @param device_changed_callback a function called whenever the device has
+           changed. Passing NULL allow to unregister a function
+    @retval CUBEB_OK
+    @retval CUBEB_ERROR_INVALID_PARAMETER if either stream or
+            device_changed_callback are invalid pointers.
+    @retval CUBEB_ERROR_NOT_SUPPORTED */
 int cubeb_stream_register_device_changed_callback(cubeb_stream * stream,
                                                   cubeb_device_changed_callback  device_changed_callback);
 

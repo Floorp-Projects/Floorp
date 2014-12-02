@@ -61,7 +61,19 @@ public:
   virtual void Shutdown();
 
   virtual void SetCallback(RequestSampleCallback* aDecodedSampleCallback);
-  virtual void SetTaskQueue(MediaTaskQueue* aTaskQueue);
+  MediaTaskQueue* EnsureTaskQueue();
+
+  virtual bool OnDecodeThread()
+  {
+    return !GetTaskQueue() || GetTaskQueue()->IsCurrentThreadIn();
+  }
+
+  void SetBorrowedTaskQueue(MediaTaskQueue* aTaskQueue)
+  {
+    MOZ_ASSERT(!mTaskQueue && aTaskQueue);
+    mTaskQueue = aTaskQueue;
+    mTaskQueueIsBorrowed = true;
+  }
 
   // Resets all state related to decoding, emptying all buffers etc.
   // Cancels all pending Request*Data() request callbacks, and flushes the
@@ -261,11 +273,13 @@ private:
   nsRefPtr<RequestSampleCallback> mSampleDecodedCallback;
 
   nsRefPtr<MediaTaskQueue> mTaskQueue;
+  bool mTaskQueueIsBorrowed;
 
   // Flags whether a the next audio/video sample comes after a "gap" or
   // "discontinuity" in the stream. For example after a seek.
   bool mAudioDiscontinuity;
   bool mVideoDiscontinuity;
+  bool mShutdown;
 };
 
 // Interface that callers to MediaDecoderReader::Request{Audio,Video}Data()

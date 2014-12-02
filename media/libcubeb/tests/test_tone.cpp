@@ -57,14 +57,14 @@ void state_cb(cubeb_stream *stream, void *user, cubeb_state state)
     return;
 
   switch (state) {
-    case CUBEB_STATE_STARTED:
-      printf("stream started\n"); break;
-    case CUBEB_STATE_STOPPED:
-      printf("stream stopped\n"); break;
-    case CUBEB_STATE_DRAINED:
-      printf("stream drained\n"); break;
-    default:
-      printf("unknown stream state %d\n", state);
+  case CUBEB_STATE_STARTED:
+    printf("stream started\n"); break;
+  case CUBEB_STATE_STOPPED:
+    printf("stream stopped\n"); break;
+  case CUBEB_STATE_DRAINED:
+    printf("stream drained\n"); break;
+  default:
+    printf("unknown stream state %d\n", state);
   }
 
   return;
@@ -76,12 +76,12 @@ int main(int argc, char *argv[])
   cubeb_stream *stream;
   cubeb_stream_params params;
   struct cb_user_data *user_data;
-  int ret;
+  int r;
 
-  ret = cubeb_init(&ctx, "Cubeb tone example");
-  if (ret != CUBEB_OK) {
+  r = cubeb_init(&ctx, "Cubeb tone example");
+  if (r != CUBEB_OK) {
     fprintf(stderr, "Error initializing cubeb library\n");
-    return ret;
+    return r;
   }
 
   params.format = CUBEB_SAMPLE_S16NE;
@@ -95,11 +95,11 @@ int main(int argc, char *argv[])
   }
   user_data->position = 0;
 
-  ret = cubeb_stream_init(ctx, &stream, "Cubeb tone (mono)", params,
-                          250, data_cb, state_cb, user_data);
-  if (ret != CUBEB_OK) {
+  r = cubeb_stream_init(ctx, &stream, "Cubeb tone (mono)", params,
+                        250, data_cb, state_cb, user_data);
+  if (r != CUBEB_OK) {
     fprintf(stderr, "Error initializing cubeb stream\n");
-    return ret;
+    return r;
   }
 
   cubeb_stream_start(stream);

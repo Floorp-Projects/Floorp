@@ -2,6 +2,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsHTMLEditorEventListener.h"
+
 #include "mozilla/dom/Selection.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
@@ -10,7 +13,6 @@
 #include "nsError.h"
 #include "nsHTMLEditUtils.h"
 #include "nsHTMLEditor.h"
-#include "nsHTMLEditorEventListener.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"

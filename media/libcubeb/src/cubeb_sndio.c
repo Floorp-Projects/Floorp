@@ -342,13 +342,6 @@ sndio_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
   return CUBEB_OK;
 }
 
-int
-sndio_stream_set_panning(cubeb_stream * stm, float panning)
-{
-  assert(false && "not implemented");
-  return CUBEB_OK;
-}
-
 static struct cubeb_ops const sndio_ops = {
   .init = sndio_init,
   .get_backend_id = sndio_get_backend_id,
@@ -363,7 +356,7 @@ static struct cubeb_ops const sndio_ops = {
   .stream_get_position = sndio_stream_get_position,
   .stream_get_latency = sndio_stream_get_latency,
   .stream_set_volume = sndio_stream_set_volume,
-  .stream_set_panning = sndio_stream_set_panning,
+  .stream_set_panning = NULL,
   .stream_get_current_device = NULL,
   .stream_device_destroy = NULL,
   .stream_register_device_changed_callback = NULL

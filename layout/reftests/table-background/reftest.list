@@ -56,3 +56,5 @@ skip-if(B2G) == border-separate-opacity-table.html border-separate-opacity-table
 != scrollable-rowgroup-collapse-border.html scrollable-rowgroup-collapse-notref.html     
 != scrollable-rowgroup-separate-background.html scrollable-rowgroup-separate-notref.html
 == scrollable-rowgroup-separate-border.html scrollable-rowgroup-separate-notref.html # scrolling rowgroups were removed in bug 28800
+== empty-cells-default-1.html empty-cells-default-1-ref.html
+== empty-cells-default-2.html empty-cells-default-2-ref.html

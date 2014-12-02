@@ -443,10 +443,10 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     WebGLTransformFeedback? createTransformFeedback();
     void deleteTransformFeedback(WebGLTransformFeedback? tf);
     [WebGLHandlesContextLoss] GLboolean isTransformFeedback(WebGLTransformFeedback? tf);
-    void bindTransformFeedback(GLenum target, GLuint id);
+    void bindTransformFeedback(GLenum target, WebGLTransformFeedback? tf);
     void beginTransformFeedback(GLenum primitiveMode);
     void endTransformFeedback();
-    void transformFeedbackVaryings(WebGLProgram? program, GLsizei count, sequence<DOMString> varyings, GLenum bufferMode);
+    void transformFeedbackVaryings(WebGLProgram? program, sequence<DOMString> varyings, GLenum bufferMode);
     [NewObject] WebGLActiveInfo? getTransformFeedbackVarying(WebGLProgram? program, GLuint index);
     void pauseTransformFeedback();
     void resumeTransformFeedback();

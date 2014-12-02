@@ -54,16 +54,23 @@ test_init_destroy_context(void)
 {
   int r;
   cubeb * ctx;
+  char const* backend_id;
 
   BEGIN_TEST
 
-  r = cubeb_init(&ctx, "test_sanity");
+    r = cubeb_init(&ctx, "test_sanity");
   assert(r == 0 && ctx);
+
+
+  backend_id = cubeb_get_backend_id(ctx);
+  assert(backend_id);
+
+  fprintf(stderr, "Backend: %s\n", backend_id);
 
   cubeb_destroy(ctx);
 
   END_TEST
-}
+    }
 
 static void
 test_init_destroy_multiple_contexts(void)
@@ -76,10 +83,10 @@ test_init_destroy_multiple_contexts(void)
 
   BEGIN_TEST
 
-  for (i = 0; i < ARRAY_LENGTH(ctx); ++i) {
-    r = cubeb_init(&ctx[i], NULL);
-    assert(r == 0 && ctx[i]);
-  }
+    for (i = 0; i < ARRAY_LENGTH(ctx); ++i) {
+      r = cubeb_init(&ctx[i], NULL);
+      assert(r == 0 && ctx[i]);
+    }
 
   /* destroy in a different order */
   for (i = 0; i < ARRAY_LENGTH(ctx); ++i) {
@@ -87,7 +94,40 @@ test_init_destroy_multiple_contexts(void)
   }
 
   END_TEST
-}
+    }
+
+static void
+test_context_variables(void)
+{
+  int r;
+  cubeb * ctx;
+  uint32_t value;
+  cubeb_stream_params params;
+
+  BEGIN_TEST
+
+    r = cubeb_init(&ctx, "test_context_variables");
+  assert(r == 0 && ctx);
+
+  params.channels = 2;
+  params.format = CUBEB_SAMPLE_S16LE;
+  params.rate = 44100;
+  r = cubeb_get_min_latency(ctx, params, &value);
+  assert(r == CUBEB_OK || r == CUBEB_ERROR_NOT_SUPPORTED);
+  if (r == CUBEB_OK) {
+    assert(value > 0);
+  }
+
+  r = cubeb_get_preferred_sample_rate(ctx, &value);
+  assert(r == CUBEB_OK || r == CUBEB_ERROR_NOT_SUPPORTED);
+  if (r == CUBEB_OK) {
+    assert(value > 0);
+  }
+
+  cubeb_destroy(ctx);
+
+  END_TEST
+    }
 
 static void
 test_init_destroy_stream(void)
@@ -99,7 +139,7 @@ test_init_destroy_stream(void)
 
   BEGIN_TEST
 
-  r = cubeb_init(&ctx, "test_sanity");
+    r = cubeb_init(&ctx, "test_sanity");
   assert(r == 0 && ctx);
 
   params.format = STREAM_FORMAT;
@@ -114,7 +154,7 @@ test_init_destroy_stream(void)
   cubeb_destroy(ctx);
 
   END_TEST
-}
+    }
 
 static void
 test_init_destroy_multiple_streams(void)
@@ -127,7 +167,7 @@ test_init_destroy_multiple_streams(void)
 
   BEGIN_TEST
 
-  r = cubeb_init(&ctx, "test_sanity");
+    r = cubeb_init(&ctx, "test_sanity");
   assert(r == 0 && ctx);
 
   params.format = STREAM_FORMAT;
@@ -148,7 +188,39 @@ test_init_destroy_multiple_streams(void)
   cubeb_destroy(ctx);
 
   END_TEST
-}
+    }
+
+static void
+test_configure_stream(void)
+{
+  int r;
+  cubeb * ctx;
+  cubeb_stream * stream;
+  cubeb_stream_params params;
+
+  BEGIN_TEST
+
+    r = cubeb_init(&ctx, "test_sanity");
+  assert(r == 0 && ctx);
+
+  params.format = STREAM_FORMAT;
+  params.rate = STREAM_RATE;
+  params.channels = 2; // panning
+
+  r = cubeb_stream_init(ctx, &stream, "test", params, STREAM_LATENCY,
+                        test_data_callback, test_state_callback, &dummy);
+  assert(r == 0 && stream);
+
+  r = cubeb_stream_set_volume(stream, 1.0f);
+  assert(r == 0 || r == CUBEB_ERROR_NOT_SUPPORTED);
+
+  r = cubeb_stream_set_panning(stream, 0.0f);
+  assert(r == 0 || r == CUBEB_ERROR_NOT_SUPPORTED);
+
+  cubeb_stream_destroy(stream);
+  cubeb_destroy(ctx);
+  END_TEST
+    }
 
 static void
 test_init_start_stop_destroy_multiple_streams(int early, int delay_ms)
@@ -161,7 +233,7 @@ test_init_start_stop_destroy_multiple_streams(int early, int delay_ms)
 
   BEGIN_TEST
 
-  r = cubeb_init(&ctx, "test_sanity");
+    r = cubeb_init(&ctx, "test_sanity");
   assert(r == 0 && ctx);
 
   params.format = STREAM_FORMAT;
@@ -209,7 +281,7 @@ test_init_start_stop_destroy_multiple_streams(int early, int delay_ms)
   cubeb_destroy(ctx);
 
   END_TEST
-}
+    }
 
 static void
 test_init_destroy_multiple_contexts_and_streams(void)
@@ -224,7 +296,7 @@ test_init_destroy_multiple_contexts_and_streams(void)
 
   BEGIN_TEST
 
-  params.format = STREAM_FORMAT;
+    params.format = STREAM_FORMAT;
   params.rate = STREAM_RATE;
   params.channels = STREAM_CHANNELS;
 
@@ -248,7 +320,7 @@ test_init_destroy_multiple_contexts_and_streams(void)
   }
 
   END_TEST
-}
+    }
 
 static void
 test_basic_stream_operations(void)
@@ -261,7 +333,7 @@ test_basic_stream_operations(void)
 
   BEGIN_TEST
 
-  r = cubeb_init(&ctx, "test_sanity");
+    r = cubeb_init(&ctx, "test_sanity");
   assert(r == 0 && ctx);
 
   params.format = STREAM_FORMAT;
@@ -294,7 +366,7 @@ test_basic_stream_operations(void)
   cubeb_destroy(ctx);
 
   END_TEST
-}
+    }
 
 static void
 test_stream_position(void)
@@ -308,7 +380,7 @@ test_stream_position(void)
 
   BEGIN_TEST
 
-  total_frames_written = 0;
+    total_frames_written = 0;
 
   r = cubeb_init(&ctx, "test_sanity");
   assert(r == 0 && ctx);
@@ -384,7 +456,7 @@ test_stream_position(void)
   cubeb_destroy(ctx);
 
   END_TEST
-}
+    }
 
 static int do_drain;
 static int got_drain;
@@ -424,7 +496,7 @@ test_drain(void)
 
   BEGIN_TEST
 
-  total_frames_written = 0;
+    total_frames_written = 0;
 
   r = cubeb_init(&ctx, "test_sanity");
   assert(r == 0 && ctx);
@@ -467,30 +539,30 @@ test_drain(void)
   cubeb_destroy(ctx);
 
   END_TEST
-}
+    }
 
 int is_windows_7()
 {
 #ifdef __MINGW32__
-   printf("Warning: this test was built with MinGW.\n"
-   "MinGW does not contain necessary version checking infrastructure. Claiming to be Windows 7, even if we're not.\n");
-   return 1;
+  printf("Warning: this test was built with MinGW.\n"
+         "MinGW does not contain necessary version checking infrastructure. Claiming to be Windows 7, even if we're not.\n");
+  return 1;
 #endif
 #if (defined(_WIN32) || defined(__WIN32__)) && ( !defined(__MINGW32__))
-   OSVERSIONINFOEX osvi;
-   DWORDLONG condition_mask = 0;
+  OSVERSIONINFOEX osvi;
+  DWORDLONG condition_mask = 0;
 
-   ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
-   osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+  ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
+  osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
 
-   // NT 6.1 is Windows 7
-   osvi.dwMajorVersion = 6;
-   osvi.dwMinorVersion = 1;
+  // NT 6.1 is Windows 7
+  osvi.dwMajorVersion = 6;
+  osvi.dwMinorVersion = 1;
 
-   VER_SET_CONDITION(condition_mask, VER_MAJORVERSION, VER_EQUAL);
-   VER_SET_CONDITION(condition_mask, VER_MINORVERSION, VER_GREATER_EQUAL);
+  VER_SET_CONDITION(condition_mask, VER_MAJORVERSION, VER_EQUAL);
+  VER_SET_CONDITION(condition_mask, VER_MINORVERSION, VER_GREATER_EQUAL);
 
-   return VerifyVersionInfo(&osvi, VER_MAJORVERSION | VER_MINORVERSION, condition_mask);
+  return VerifyVersionInfo(&osvi, VER_MAJORVERSION | VER_MINORVERSION, condition_mask);
 #else
   return 0;
 #endif
@@ -501,8 +573,10 @@ main(int argc, char * argv[])
 {
   test_init_destroy_context();
   test_init_destroy_multiple_contexts();
+  test_context_variables();
   test_init_destroy_stream();
   test_init_destroy_multiple_streams();
+  test_configure_stream();
   test_basic_stream_operations();
   test_stream_position();
 

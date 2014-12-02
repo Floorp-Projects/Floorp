@@ -5,9 +5,10 @@
 
 #ifdef DEBUG
 
+#include "TextEditorTest.h"
+
 #include <stdio.h>
 
-#include "TextEditorTest.h"
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"

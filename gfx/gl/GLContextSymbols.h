@@ -487,7 +487,7 @@ struct GLContextSymbols
 
     typedef void (GLAPIENTRY * PFNGLGENTRANSFORMFEEDBACKSPROC) (GLsizei n, GLuint* ids);
     PFNGLGENTRANSFORMFEEDBACKSPROC fGenTransformFeedbacks;
-    typedef void (GLAPIENTRY * PFNGLDELETETRANSFORMFEEDBACKSPROC) (GLsizei n, GLuint* ids);
+    typedef void (GLAPIENTRY * PFNGLDELETETRANSFORMFEEDBACKSPROC) (GLsizei n, const GLuint* ids);
     PFNGLDELETETRANSFORMFEEDBACKSPROC fDeleteTransformFeedbacks;
     typedef realGLboolean (GLAPIENTRY * PFNGLISTRANSFORMFEEDBACKPROC) (GLuint id);
     PFNGLISTRANSFORMFEEDBACKPROC fIsTransformFeedback;
