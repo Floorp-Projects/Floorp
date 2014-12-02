@@ -13,12 +13,17 @@
 let { Ci, Cc, CC, Cu, Cr } = require("chrome");
 let Services = require("Services");
 let { ActorPool, RegisteredActorFactory, ObservedActorFactory } = require("devtools/server/actors/common");
-let { DebuggerTransport, LocalDebuggerTransport, ChildDebuggerTransport } =
+let { LocalDebuggerTransport, ChildDebuggerTransport } =
   require("devtools/toolkit/transport/transport");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 let { dumpn, dumpv, dbg_assert } = DevToolsUtils;
 let EventEmitter = require("devtools/toolkit/event-emitter");
 let Debugger = require("Debugger");
+
+DevToolsUtils.defineLazyGetter(this, "DebuggerSocket", () => {
+  let { DebuggerSocket } = require("devtools/toolkit/security/socket");
+  return DebuggerSocket;
+});
 
 // On B2G, `this` != Global scope, so `Ci` won't be binded on `this`
 // (i.e. this.Ci is undefined) Then later, when using loadSubScript,
@@ -43,10 +48,6 @@ Object.defineProperty(this, "Components", {
 });
 
 const DBG_STRINGS_URI = "chrome://global/locale/devtools/debugger.properties";
-
-DevToolsUtils.defineLazyGetter(this, "nsFile", () => {
-  return CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
-});
 
 if (isWorker) {
   dumpn.wantLogging = true;
@@ -83,19 +84,6 @@ this.defer = defer;
 this.resolve = resolve;
 this.reject = reject;
 this.all = all;
-
-// XPCOM constructors
-DevToolsUtils.defineLazyGetter(this, "ServerSocket", () => {
-  return CC("@mozilla.org/network/server-socket;1",
-            "nsIServerSocket",
-            "initSpecialConnection");
-});
-
-DevToolsUtils.defineLazyGetter(this, "UnixDomainServerSocket", () => {
-  return CC("@mozilla.org/network/server-socket;1",
-            "nsIServerSocket",
-            "initWithFilename");
-});
 
 var gRegisteredModules = Object.create(null);
 
@@ -621,7 +609,7 @@ var DebuggerServer = {
     }
     this._checkInit();
 
-    let listener = new SocketListener(this);
+    let listener = DebuggerSocket.createListener(this);
     listener.open(portOrPath);
     this._listeners.push(listener);
     return listener;
@@ -1087,94 +1075,6 @@ includes.forEach(name => {
 if (this.exports) {
   exports.ActorPool = ActorPool;
 }
-
-/**
- * Creates a new socket listener for remote connections to a given
- * DebuggerServer.  This helps contain and organize the parts of the server that
- * may differ or are particular to one given listener mechanism vs. another.
- */
-function SocketListener(server) {
-  this._server = server;
-}
-
-SocketListener.prototype = {
-
-  /**
-   * Listens on the given port or socket file for remote debugger connections.
-   *
-   * @param portOrPath int, string
-   *        If given an integer, the port to listen on.
-   *        Otherwise, the path to the unix socket domain file to listen on.
-   */
-  open: function(portOrPath) {
-    let flags = Ci.nsIServerSocket.KeepWhenOffline;
-    // A preference setting can force binding on the loopback interface.
-    if (Services.prefs.getBoolPref("devtools.debugger.force-local")) {
-      flags |= Ci.nsIServerSocket.LoopbackOnly;
-    }
-
-    try {
-      let backlog = 4;
-      let port = Number(portOrPath);
-      if (port) {
-        this._socket = new ServerSocket(port, flags, backlog);
-      } else {
-        let file = nsFile(portOrPath);
-        if (file.exists())
-          file.remove(false);
-        this._socket = new UnixDomainServerSocket(file, parseInt("666", 8),
-                                                  backlog);
-      }
-      this._socket.asyncListen(this);
-    } catch (e) {
-      dumpn("Could not start debugging listener on '" + portOrPath + "': " + e);
-      throw Cr.NS_ERROR_NOT_AVAILABLE;
-    }
-  },
-
-  /**
-   * Closes the SocketListener.  Notifies the server to remove the listener from
-   * the set of active SocketListeners.
-   */
-  close: function() {
-    this._socket.close();
-    this._server._removeListener(this);
-    this._server = null;
-  },
-
-  /**
-   * Gets the port that a TCP socket listener is listening on, or null if this
-   * is not a TCP socket (so there is no port).
-   */
-  get port() {
-    if (!this._socket) {
-      return null;
-    }
-    return this._socket.port;
-  },
-
-  // nsIServerSocketListener implementation
-
-  onSocketAccepted:
-  DevToolsUtils.makeInfallible(function(aSocket, aTransport) {
-    if (Services.prefs.getBoolPref("devtools.debugger.prompt-connection") &&
-        !this._server._allowConnection()) {
-      return;
-    }
-    dumpn("New debugging connection on " +
-          aTransport.host + ":" + aTransport.port);
-
-    let input = aTransport.openInputStream(0, 0, 0);
-    let output = aTransport.openOutputStream(0, 0, 0);
-    let transport = new DebuggerTransport(input, output);
-    this._server._onConnection(transport);
-  }, "SocketListener.onSocketAccepted"),
-
-  onStopListening: function(aSocket, status) {
-    dumpn("onStopListening, status: " + status);
-  }
-
-};
 
 /**
  * Creates a DebuggerServerConnection.

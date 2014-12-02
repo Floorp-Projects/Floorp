@@ -264,7 +264,7 @@ function socket_transport() {
   }
   let port = DebuggerServer._listeners[0].port;
   do_print("Debugger server port is " + port);
-  return debuggerSocketConnect("127.0.0.1", port);
+  return DebuggerClient.socketConnect("127.0.0.1", port);
 }
 
 function local_transport() {

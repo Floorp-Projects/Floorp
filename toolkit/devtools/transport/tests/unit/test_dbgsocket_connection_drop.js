@@ -49,7 +49,7 @@ function test_socket_conn_drops_after_too_long_header() {
 function test_helper(payload) {
   let listener = DebuggerServer.openListener(-1);
 
-  let transport = debuggerSocketConnect("127.0.0.1", listener.port);
+  let transport = DebuggerClient.socketConnect("127.0.0.1", listener.port);
   transport.hooks = {
     onPacket: function(aPacket) {
       this.onPacket = function(aPacket) {
