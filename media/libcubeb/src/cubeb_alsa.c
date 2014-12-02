@@ -5,6 +5,7 @@
  * accompanying file LICENSE for details.
  */
 #undef NDEBUG
+#define _DEFAULT_SOURCE
 #define _BSD_SOURCE
 #define _XOPEN_SOURCE 500
 #include <pthread.h>
@@ -920,7 +921,7 @@ alsa_stream_destroy(cubeb_stream * stm)
 static int
 alsa_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
 {
-  int rv;
+  int r;
   cubeb_stream * stm;
   snd_pcm_hw_params_t* hw_params;
   cubeb_stream_params params;
@@ -932,18 +933,18 @@ alsa_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
 
   assert(ctx);
 
-  rv = alsa_stream_init(ctx, &stm, "", params, 100, NULL, NULL, NULL);
-  if (rv != CUBEB_OK) {
+  r = alsa_stream_init(ctx, &stm, "", params, 100, NULL, NULL, NULL);
+  if (r != CUBEB_OK) {
     return CUBEB_ERROR;
   }
 
-  rv = snd_pcm_hw_params_any(stm->pcm, hw_params);
-  if (rv < 0) {
+  r = snd_pcm_hw_params_any(stm->pcm, hw_params);
+  if (r < 0) {
     return CUBEB_ERROR;
   }
 
-  rv = snd_pcm_hw_params_get_channels_max(hw_params, max_channels);
-  if (rv < 0) {
+  r = snd_pcm_hw_params_get_channels_max(hw_params, max_channels);
+  if (r < 0) {
     return CUBEB_ERROR;
   }
 
@@ -954,7 +955,7 @@ alsa_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
 
 static int
 alsa_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate) {
-  int rv, dir;
+  int r, dir;
   snd_pcm_t * pcm;
   snd_pcm_hw_params_t * hw_params;
 
@@ -962,19 +963,19 @@ alsa_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate) {
 
   /* get a pcm, disabling resampling, so we get a rate the
    * hardware/dmix/pulse/etc. supports. */
-  rv = snd_pcm_open(&pcm, "", SND_PCM_STREAM_PLAYBACK | SND_PCM_NO_AUTO_RESAMPLE, 0);
-  if (rv < 0) {
+  r = snd_pcm_open(&pcm, "default", SND_PCM_STREAM_PLAYBACK | SND_PCM_NO_AUTO_RESAMPLE, 0);
+  if (r < 0) {
     return CUBEB_ERROR;
   }
 
-  rv = snd_pcm_hw_params_any(pcm, hw_params);
-  if (rv < 0) {
+  r = snd_pcm_hw_params_any(pcm, hw_params);
+  if (r < 0) {
     snd_pcm_close(pcm);
     return CUBEB_ERROR;
   }
 
-  rv = snd_pcm_hw_params_get_rate(hw_params, rate, &dir);
-  if (rv >= 0) {
+  r = snd_pcm_hw_params_get_rate(hw_params, rate, &dir);
+  if (r >= 0) {
     /* There is a default rate: use it. */
     snd_pcm_close(pcm);
     return CUBEB_OK;
@@ -983,8 +984,8 @@ alsa_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate) {
   /* Use a common rate, alsa may adjust it based on hw/etc. capabilities. */
   *rate = 44100;
 
-  rv = snd_pcm_hw_params_set_rate_near(pcm, hw_params, rate, NULL);
-  if (rv < 0) {
+  r = snd_pcm_hw_params_set_rate_near(pcm, hw_params, rate, NULL);
+  if (r < 0) {
     snd_pcm_close(pcm);
     return CUBEB_ERROR;
   }
@@ -998,7 +999,7 @@ static int
 alsa_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latency_ms)
 {
   /* This is found to be an acceptable minimum, even on a super low-end
-  * machine. */
+   * machine. */
   *latency_ms = 40;
 
   return CUBEB_OK;
@@ -1109,13 +1110,6 @@ alsa_stream_set_volume(cubeb_stream * stm, float volume)
   return CUBEB_OK;
 }
 
-int
-alsa_stream_set_panning(cubeb_stream * stream, float panning)
-{
-  assert(0 && "not implemented");
-  return CUBEB_OK;
-}
-
 static struct cubeb_ops const alsa_ops = {
   .init = alsa_init,
   .get_backend_id = alsa_get_backend_id,
@@ -1130,7 +1124,7 @@ static struct cubeb_ops const alsa_ops = {
   .stream_get_position = alsa_stream_get_position,
   .stream_get_latency = alsa_stream_get_latency,
   .stream_set_volume = alsa_stream_set_volume,
-  .stream_set_panning = alsa_stream_set_panning,
+  .stream_set_panning = NULL,
   .stream_get_current_device = NULL,
   .stream_device_destroy = NULL,
   .stream_register_device_changed_callback = NULL

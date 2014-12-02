@@ -1663,17 +1663,12 @@ nsChangeHint nsStyleTable::CalcDifference(const nsStyleTable& aOther) const
 // -----------------------
 // nsStyleTableBorder
 
-nsStyleTableBorder::nsStyleTableBorder(nsPresContext* aPresContext) 
+nsStyleTableBorder::nsStyleTableBorder()
 { 
   MOZ_COUNT_CTOR(nsStyleTableBorder);
   mBorderCollapse = NS_STYLE_BORDER_SEPARATE;
 
-  nsCompatibility compatMode = eCompatibility_FullStandards;
-  if (aPresContext)
-    compatMode = aPresContext->CompatibilityMode();
-  mEmptyCells = (compatMode == eCompatibility_NavQuirks)
-                  ? NS_STYLE_TABLE_EMPTY_CELLS_SHOW_BACKGROUND     
-                  : NS_STYLE_TABLE_EMPTY_CELLS_SHOW;
+  mEmptyCells = NS_STYLE_TABLE_EMPTY_CELLS_SHOW;
   mCaptionSide = NS_STYLE_CAPTION_SIDE_TOP;
   mBorderSpacingX = 0;
   mBorderSpacingY = 0;
