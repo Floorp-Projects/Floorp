@@ -54,7 +54,7 @@ BEGIN_TEST(testGCCellPtr)
     JS::GCCellPtr copy = objcell;
     CHECK(copy == objcell);
 
-    CHECK(js::gc::GetGCThingRuntime(scriptcell) == rt);
+    CHECK(js::gc::GetGCThingRuntime(scriptcell.asCell()) == rt);
 
     return true;
 }
