@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=116083
+-->
+<head>
+  <title>Test for Bug 116083</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=116083">Mozilla Bug 116083</a>
+<div id="content">
+<div style="white-space: pre">foo  bar</div>
+<div style="white-space: pre-wrap">foo  bar</div>
+<div style="white-space: pre-line">foo  bar</div>
+<div style="white-space: -moz-pre-space">foo  bar</div>
+<div data-result="&#10;foo bar&#10;">foo  bar</div>
+</div>
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function nextTest() {
+  var div = document.querySelector("#content>div");
+  if (!div) {
+    SimpleTest.finish();
+    return;
+  }
+  getSelection().selectAllChildren(div);
+  var expected = div.hasAttribute("data-result") ?
+                 div.getAttribute("data-result") :
+                 div.textContent;
+  SimpleTest.waitForClipboard(expected, function() {
+    synthesizeKey("C", {accelKey: true});
+  }, function() {
+    ok(true, div.getAttribute("style") + " passed");
+    div.parentNode.removeChild(div);
+    nextTest();
+  }, function() {
+    ok(false, "failed to copy the expected content to the clipboard");
+    SimpleTest.finish();
+  });
+});
+
+</script>
+</body>
+</html>
