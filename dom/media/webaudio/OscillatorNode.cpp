@@ -23,40 +23,6 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 NS_IMPL_ADDREF_INHERITED(OscillatorNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(OscillatorNode, AudioNode)
 
-static const float sLeakTriangle = 0.995f;
-static const float sLeak = 0.999f;
-
-class DCBlocker
-{
-public:
-  // These are sane defauts when the initial mPhase is zero
-  explicit DCBlocker(float aLastInput = 0.0f,
-            float aLastOutput = 0.0f,
-            float aPole = 0.995)
-    :mLastInput(aLastInput),
-     mLastOutput(aLastOutput),
-     mPole(aPole)
-  {
-    MOZ_ASSERT(aPole > 0);
-  }
-
-  inline float Process(float aInput)
-  {
-    float out;
-
-    out = mLastOutput * mPole + aInput - mLastInput;
-    mLastOutput = out;
-    mLastInput = aInput;
-
-    return out;
-  }
-private:
-  float mLastInput;
-  float mLastOutput;
-  float mPole;
-};
-
-
 class OscillatorNodeEngine : public AudioNodeEngine
 {
 public:
@@ -71,12 +37,6 @@ public:
     , mDetune(0.f)
     , mType(OscillatorType::Sine)
     , mPhase(0.)
-    // mSquare, mTriangle, and mSaw are not used for default type "sine".
-    // They are initialized if and when switching to the OscillatorTypes that
-    // use them.
-    // mFinalFrequency, mNumberOfHarmonics, mSignalPeriod, mAmplitudeAtZero,
-    // mPhaseIncrement, and mPhaseWrap are initialized in
-    // UpdateParametersIfNeeded() when mRecomputeParameters is set.
     , mRecomputeParameters(true)
     , mCustomLength(0)
   {
@@ -132,41 +92,27 @@ public:
       case TYPE:
         // Set the new type.
         mType = static_cast<OscillatorType>(aParam);
-        if (mType != OscillatorType::Custom) {
+        if (mType == OscillatorType::Sine) {
           // Forget any previous custom data.
           mCustomLength = 0;
           mCustom = nullptr;
           mPeriodicWave = nullptr;
           mRecomputeParameters = true;
         }
-        // Update BLIT integrators with the new initial conditions.
         switch (mType) {
           case OscillatorType::Sine:
             mPhase = 0.0;
             break;
           case OscillatorType::Square:
-            mPhase = 0.0;
-            // Initial integration condition is -0.5, because our
-            // square has 50% duty cycle.
-            mSquare = -0.5;
+            mPeriodicWave = WebCore::PeriodicWave::createSquare(mSource->SampleRate());
             break;
           case OscillatorType::Triangle:
-            // Initial mPhase and related integration condition so the
-            // triangle is in the middle of the first upward slope.
-            // XXX actually do the maths and put the right number here.
-            mPhase = (float)(M_PI / 2);
-            mSquare = 0.5;
-            mTriangle = 0.0;
+            mPeriodicWave = WebCore::PeriodicWave::createTriangle(mSource->SampleRate());
             break;
           case OscillatorType::Sawtooth:
-            // Initial mPhase so the oscillator starts at the
-            // middle of the ramp, per spec.
-            mPhase = (float)(M_PI / 2);
-            // mSaw = 0 when mPhase = pi/2.
-            mSaw = 0.0;
+            mPeriodicWave = WebCore::PeriodicWave::createSawtooth(mSource->SampleRate());
             break;
           case OscillatorType::Custom:
-            // Custom waveforms don't use BLIT.
             break;
           default:
             NS_ERROR("Bad OscillatorNodeEngine type parameter.");
@@ -201,12 +147,6 @@ public:
     }
   }
 
-  // Square and triangle are using a bipolar band-limited impulse train, saw is
-  // using a normal band-limited impulse train.
-  bool UsesBipolarBLIT() {
-    return mType == OscillatorType::Square || mType == OscillatorType::Triangle;
-  }
-
   void UpdateParametersIfNeeded(StreamTime ticks, size_t count)
   {
     double frequency, detune;
@@ -231,22 +171,12 @@ public:
       detune = mDetune.GetValueAtTime(ticks, count);
     }
 
+    float signalPeriod = mSource->SampleRate() / mFinalFrequency;
     mFinalFrequency = frequency * pow(2., detune / 1200.);
     mRecomputeParameters = false;
 
-    // When using bipolar BLIT, we divide the signal period by two, because we
-    // are using two BLIT out of phase.
-    mSignalPeriod = UsesBipolarBLIT() ? 0.5 * mSource->SampleRate() / mFinalFrequency
-                                      : mSource->SampleRate() / mFinalFrequency;
-    // Wrap the phase accordingly:
-    mPhaseWrap = UsesBipolarBLIT() || mType == OscillatorType::Sine ? 2 * M_PI
-                                   : M_PI;
-    // Even number of harmonics for bipolar blit, odd otherwise.
-    mNumberOfHarmonics = UsesBipolarBLIT() ? 2 * floor(0.5 * mSignalPeriod)
-                                           : 2 * floor(0.5 * mSignalPeriod) + 1;
-    mPhaseIncrement = mType == OscillatorType::Sine ? 2 * M_PI / mSignalPeriod
-                                                    : M_PI / mSignalPeriod;
-    mAmplitudeAtZero = mNumberOfHarmonics / mSignalPeriod;
+    mPhaseWrap = 2 * M_PI;
+    mPhaseIncrement = 2 * M_PI / signalPeriod;
   }
 
   void FillBounds(float* output, StreamTime ticks,
@@ -271,95 +201,12 @@ public:
     }
   }
 
-  float BipolarBLIT()
-  {
-    float blit;
-    float denom = sin(mPhase);
-
-    if (fabs(denom) < std::numeric_limits<float>::epsilon()) {
-      if (mPhase < 0.1f || mPhase > 2 * M_PI - 0.1f) {
-        blit = mAmplitudeAtZero;
-      } else {
-        blit = -mAmplitudeAtZero;
-      }
-    } else {
-      blit = sin(mNumberOfHarmonics * mPhase);
-      blit /= mSignalPeriod * denom;
-    }
-    return blit;
-  }
-
-  float UnipolarBLIT()
-  {
-    float blit;
-    float denom = sin(mPhase);
-
-    if (fabs(denom) <= std::numeric_limits<float>::epsilon()) {
-      blit = mAmplitudeAtZero;
-    } else {
-      blit = sin(mNumberOfHarmonics * mPhase);
-      blit /= mSignalPeriod * denom;
-    }
-
-    return blit;
-  }
-
   void ComputeSine(float * aOutput, StreamTime ticks, uint32_t aStart, uint32_t aEnd)
   {
     for (uint32_t i = aStart; i < aEnd; ++i) {
       UpdateParametersIfNeeded(ticks, i);
 
       aOutput[i] = sin(mPhase);
-
-      IncrementPhase();
-    }
-  }
-
-  void ComputeSquare(float * aOutput, StreamTime ticks, uint32_t aStart, uint32_t aEnd)
-  {
-    for (uint32_t i = aStart; i < aEnd; ++i) {
-      UpdateParametersIfNeeded(ticks, i);
-      // Integration to get us a square. It turns out we can have a
-      // pure integrator here.
-      mSquare = mSquare * sLeak + BipolarBLIT();
-      aOutput[i] = mSquare;
-      // maybe we want to apply a gain, the wg has not decided yet
-      aOutput[i] *= 1.5;
-      IncrementPhase();
-    }
-  }
-
-  void ComputeSawtooth(float * aOutput, StreamTime ticks, uint32_t aStart, uint32_t aEnd)
-  {
-    float dcoffset;
-    for (uint32_t i = aStart; i < aEnd; ++i) {
-      UpdateParametersIfNeeded(ticks, i);
-      // DC offset so the Saw does not ramp up to infinity when integrating.
-      dcoffset = mFinalFrequency / mSource->SampleRate();
-      // Integrate and offset so we get mAmplitudeAtZero sawtooth. We have a
-      // very low frequency component somewhere here, but I'm not sure where.
-      mSaw = mSaw * sLeak + (UnipolarBLIT() - dcoffset);
-      // reverse the saw so we are spec compliant
-      aOutput[i] = -mSaw * 1.5;
-
-      IncrementPhase();
-    }
-  }
-
-  void ComputeTriangle(float * aOutput, StreamTime ticks, uint32_t aStart, uint32_t aEnd)
-  {
-    for (uint32_t i = aStart; i < aEnd; ++i) {
-      UpdateParametersIfNeeded(ticks, i);
-      // Integrate to get a square
-      mSquare += BipolarBLIT();
-      // Leaky integrate to get a triangle. We get too much dc offset if we don't
-      // leaky integrate here.
-      // C6 = k0 / period
-      // (period is samplingrate / frequency, k0 = (PI/2)/(2*PI)) = 0.25
-      float C6 = 0.25 / (mSource->SampleRate() / mFinalFrequency);
-      mTriangle = mTriangle * sLeakTriangle + mSquare + C6;
-      // DC Block, and scale back to [-1.0; 1.0]
-      aOutput[i] = mDCBlocker.Process(mTriangle) / (mSignalPeriod/2) * 1.5;
 
       IncrementPhase();
     }
@@ -382,8 +229,7 @@ public:
     float tableInterpolationFactor;
     // Phase increment at frequency of 1 Hz.
     // mPhase runs [0,periodicWaveSize) here instead of [0,2*M_PI).
-    float basePhaseIncrement =
-      static_cast<float>(periodicWaveSize) / mSource->SampleRate();
+    float basePhaseIncrement = mPeriodicWave->rateScale();
 
     for (uint32_t i = aStart; i < aEnd; ++i) {
       UpdateParametersIfNeeded(ticks, i);
@@ -457,14 +303,8 @@ public:
         ComputeSine(output, ticks, start, end);
         break;
       case OscillatorType::Square:
-        ComputeSquare(output, ticks, start, end);
-        break;
       case OscillatorType::Triangle:
-        ComputeTriangle(output, ticks, start, end);
-        break;
       case OscillatorType::Sawtooth:
-        ComputeSawtooth(output, ticks, start, end);
-        break;
       case OscillatorType::Custom:
         ComputeCustom(output, ticks, start, end);
         break;
@@ -500,7 +340,6 @@ public:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  DCBlocker mDCBlocker;
   AudioNodeStream* mSource;
   AudioNodeStream* mDestination;
   StreamTime mStart;
@@ -510,13 +349,7 @@ public:
   OscillatorType mType;
   float mPhase;
   float mFinalFrequency;
-  uint32_t mNumberOfHarmonics;
-  float mSignalPeriod;
-  float mAmplitudeAtZero;
   float mPhaseIncrement;
-  float mSquare;
-  float mTriangle;
-  float mSaw;
   float mPhaseWrap;
   bool mRecomputeParameters;
   nsRefPtr<ThreadSharedFloatArrayBufferList> mCustom;
