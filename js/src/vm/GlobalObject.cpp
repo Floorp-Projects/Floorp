@@ -229,7 +229,7 @@ GlobalObject::initBuiltinConstructor(JSContext *cx, Handle<GlobalObject*> global
 }
 
 GlobalObject *
-GlobalObject::createInternal(JSContext *cx, const Class *clasp)
+GlobalObject::create(JSContext *cx, const Class *clasp)
 {
     MOZ_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
     MOZ_ASSERT(clasp->trace == JS_GlobalObjectTraceHook);
@@ -253,48 +253,6 @@ GlobalObject::createInternal(JSContext *cx, const Class *clasp)
         return nullptr;
     if (!global->setDelegate(cx))
         return nullptr;
-
-    return global;
-}
-
-GlobalObject *
-GlobalObject::new_(JSContext *cx, const Class *clasp, JSPrincipals *principals,
-                   JS::OnNewGlobalHookOption hookOption,
-                   const JS::CompartmentOptions &options)
-{
-    MOZ_ASSERT(!cx->isExceptionPending());
-    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
-
-    JSRuntime *rt = cx->runtime();
-
-    Zone *zone;
-    if (options.zoneSpecifier() == JS::SystemZone)
-        zone = rt->gc.systemZone;
-    else if (options.zoneSpecifier() == JS::FreshZone)
-        zone = nullptr;
-    else
-        zone = static_cast<Zone *>(options.zonePointer());
-
-    JSCompartment *compartment = NewCompartment(cx, zone, principals, options);
-    if (!compartment)
-        return nullptr;
-
-    // Lazily create the system zone.
-    if (!rt->gc.systemZone && options.zoneSpecifier() == JS::SystemZone) {
-        rt->gc.systemZone = compartment->zone();
-        rt->gc.systemZone->isSystem = true;
-    }
-
-    Rooted<GlobalObject*> global(cx);
-    {
-        AutoCompartment ac(cx, compartment);
-        global = GlobalObject::createInternal(cx, clasp);
-        if (!global)
-            return nullptr;
-    }
-
-    if (hookOption == JS::FireOnNewGlobalHook)
-        JS_FireOnNewGlobalObject(cx, global);
 
     return global;
 }

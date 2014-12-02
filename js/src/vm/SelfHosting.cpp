@@ -49,6 +49,16 @@ selfHosting_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep
     PrintError(cx, stderr, message, report, true);
 }
 
+static const JSClass self_hosting_global_class = {
+    "self-hosting-global", JSCLASS_GLOBAL_FLAGS,
+    JS_PropertyStub,  JS_DeletePropertyStub,
+    JS_PropertyStub,  JS_StrictPropertyStub,
+    JS_EnumerateStub, JS_ResolveStub,
+    JS_ConvertStub,   nullptr,
+    nullptr, nullptr, nullptr,
+    JS_GlobalObjectTraceHook
+};
+
 bool
 js::intrinsic_ToObject(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -1223,47 +1233,6 @@ js::FillSelfHostingCompileOptions(CompileOptions &options)
 #endif
 }
 
-GlobalObject *
-JSRuntime::createSelfHostingGlobal(JSContext *cx)
-{
-    MOZ_ASSERT(!cx->isExceptionPending());
-    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
-
-    JS::CompartmentOptions options;
-    options.setDiscardSource(true);
-    options.setZone(JS::FreshZone);
-
-    JSCompartment *compartment = NewCompartment(cx, nullptr, nullptr, options);
-    if (!compartment)
-        return nullptr;
-
-    static const Class shgClass = {
-        "self-hosting-global", JSCLASS_GLOBAL_FLAGS,
-        JS_PropertyStub,  JS_DeletePropertyStub,
-        JS_PropertyStub,  JS_StrictPropertyStub,
-        JS_EnumerateStub, JS_ResolveStub,
-        JS_ConvertStub,   nullptr,
-        nullptr, nullptr, nullptr,
-        JS_GlobalObjectTraceHook
-    };
-
-    AutoCompartment ac(cx, compartment);
-    Rooted<GlobalObject*> shg(cx, GlobalObject::createInternal(cx, &shgClass));
-    if (!shg)
-        return nullptr;
-
-    cx->runtime()->selfHostingGlobal_ = shg;
-    compartment->isSelfHosting = true;
-    compartment->isSystem = true;
-
-    if (!GlobalObject::initSelfHostingBuiltins(cx, shg, intrinsic_functions))
-        return nullptr;
-
-    JS_FireOnNewGlobalObject(cx, shg);
-
-    return shg;
-}
-
 bool
 JSRuntime::initSelfHosting(JSContext *cx)
 {
@@ -1280,11 +1249,24 @@ JSRuntime::initSelfHosting(JSContext *cx)
      */
     JS::AutoDisableGenerationalGC disable(cx->runtime());
 
-    Rooted<GlobalObject*> shg(cx, JSRuntime::createSelfHostingGlobal(cx));
-    if (!shg)
+    JS::CompartmentOptions compartmentOptions;
+    compartmentOptions.setDiscardSource(true);
+    if (!(selfHostingGlobal_ = MaybeNativeObject(JS_NewGlobalObject(cx, &self_hosting_global_class,
+                                                                    nullptr, JS::DontFireOnNewGlobalHook,
+                                                                    compartmentOptions))))
+    {
+        return false;
+    }
+
+    JSAutoCompartment ac(cx, selfHostingGlobal_);
+    Rooted<GlobalObject*> shg(cx, &selfHostingGlobal_->as<GlobalObject>());
+    selfHostingGlobal_->compartment()->isSelfHosting = true;
+    selfHostingGlobal_->compartment()->isSystem = true;
+
+    if (!GlobalObject::initSelfHostingBuiltins(cx, shg, intrinsic_functions))
         return false;
 
-    JSAutoCompartment ac(cx, shg);
+    JS_FireOnNewGlobalObject(cx, shg);
 
     CompileOptions options(cx);
     FillSelfHostingCompileOptions(options);
@@ -1296,7 +1278,7 @@ JSRuntime::initSelfHosting(JSContext *cx)
      */
     JSErrorReporter oldReporter = JS_SetErrorReporter(cx->runtime(), selfHosting_ErrorReporter);
     RootedValue rv(cx);
-    bool ok = true;
+    bool ok = false;
 
     char *filename = getenv("MOZ_SELFHOSTEDJS");
     if (filename) {
@@ -1312,10 +1294,10 @@ JSRuntime::initSelfHosting(JSContext *cx)
         if (!src || !DecompressString(compressed, compressedLen,
                                       reinterpret_cast<unsigned char *>(src.get()), srcLen))
         {
-            ok = false;
+            return false;
         }
 
-        ok = ok && Evaluate(cx, shg, options, src, srcLen, &rv);
+        ok = Evaluate(cx, shg, options, src, srcLen, &rv);
     }
     JS_SetErrorReporter(cx->runtime(), oldReporter);
     return ok;

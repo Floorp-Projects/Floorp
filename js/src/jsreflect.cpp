@@ -2112,7 +2112,7 @@ ASTSerializer::importDeclaration(ParseNode *pn, MutableHandleValue dst)
     MOZ_ASSERT(pn->pn_right->isKind(PNK_STRING));
 
     NodeVector elts(cx);
-    if (!elts.reserve(pn->pn_left->pn_count))
+    if (!elts.reserve(pn->pn_count))
         return false;
 
     for (ParseNode *next = pn->pn_left->pn_head; next; next = next->pn_next) {
@@ -2151,7 +2151,7 @@ ASTSerializer::exportDeclaration(ParseNode *pn, MutableHandleValue dst)
     ParseNode *kid = pn->isKind(PNK_EXPORT) ? pn->pn_kid : pn->pn_left;
     switch (ParseNodeKind kind = kid->getKind()) {
       case PNK_EXPORT_SPEC_LIST:
-        if (!elts.reserve(pn->pn_left->pn_count))
+        if (!elts.reserve(pn->pn_count))
             return false;
 
         for (ParseNode *next = pn->pn_left->pn_head; next; next = next->pn_next) {

@@ -30,7 +30,6 @@ CppUnitTests([
     'TestTypedEnum',
     'TestTypeTraits',
     'TestUniquePtr',
-    'TestVector',
     'TestWeakPtr',
 ])
 
