@@ -22,12 +22,15 @@ function run_test()
 function test_socket_conn()
 {
   do_check_eq(DebuggerServer.listeningSockets, 0);
-  do_check_true(DebuggerServer.openListener(-1));
+  let listener = DebuggerServer.openListener(-1);
+  listener.allowConnection = () => true;
+  do_check_true(listener);
   do_check_eq(DebuggerServer.listeningSockets, 1);
   gPort = DebuggerServer._listeners[0].port;
   do_print("Debugger server port is " + gPort);
   // Open a second, separate listener
   gExtraListener = DebuggerServer.openListener(-1);
+  gExtraListener.allowConnection = () => true;
   do_check_eq(DebuggerServer.listeningSockets, 2);
 
   do_print("Starting long and unicode tests at " + new Date().toTimeString());
