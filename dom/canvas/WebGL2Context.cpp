@@ -6,6 +6,8 @@
 #include "WebGL2Context.h"
 
 #include "GLContext.h"
+#include "WebGLBuffer.h"
+#include "WebGLTransformFeedback.h"
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
@@ -116,6 +118,11 @@ WebGLContext::InitWebGL2()
     // we initialise WebGL 2 related stuff.
     gl->GetUIntegerv(LOCAL_GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS,
                      &mGLMaxTransformFeedbackSeparateAttribs);
+
+    mDefaultTransformFeedback = new WebGLTransformFeedback(this, 0);
+    mBoundTransformFeedback = mDefaultTransformFeedback;
+    auto xfBuffers = new WebGLRefPtr<WebGLBuffer>[mGLMaxTransformFeedbackSeparateAttribs];
+    mBoundTransformFeedbackBuffers.reset(xfBuffers);
 
     return true;
 }

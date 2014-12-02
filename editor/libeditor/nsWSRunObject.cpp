@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsWSRunObject.h"
+
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/mozalloc.h"
@@ -24,7 +26,6 @@
 #include "nsString.h"
 #include "nsTextEditUtils.h"
 #include "nsTextFragment.h"
-#include "nsWSRunObject.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
