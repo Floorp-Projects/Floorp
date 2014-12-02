@@ -200,15 +200,6 @@ var tests = [
 }
 ];
 
-function rangeCheck(n1, n2) {
-  var THRESHOLD = 0.35;
-  var diff = Math.abs(n1 - n2);
-  if (diff < THRESHOLD) {
-    return true;
-  }
-  return false;
-}
-
 function createTestArray() {
   var A = [];
   for (var i=0; i<tests.length; i++) {
