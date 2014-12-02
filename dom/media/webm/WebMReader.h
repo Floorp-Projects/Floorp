@@ -187,7 +187,7 @@ public:
   uint64_t GetLastVideoFrameTime();
   void SetLastVideoFrameTime(uint64_t aFrameTime);
   layers::LayersBackend GetLayersBackendType() { return mLayersBackendType; }
-  MediaTaskQueue* GetTaskQueue() { return mTaskQueue; }
+  MediaTaskQueue* GetVideoTaskQueue() { return mVideoTaskQueue; }
 
 protected:
 #ifdef MOZ_OPUS
@@ -282,7 +282,9 @@ private:
   int mVideoCodec;
 
   layers::LayersBackend mLayersBackendType;
-  nsRefPtr<MediaTaskQueue> mTaskQueue;
+
+  // For hardware video decoding.
+  nsRefPtr<MediaTaskQueue> mVideoTaskQueue;
 
   // Booleans to indicate if we have audio and/or video data
   bool mHasVideo;
