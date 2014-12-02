@@ -353,20 +353,6 @@ OriginInfo::LockedDecreaseUsage(int64_t aSize)
   quotaManager->mTemporaryStorageUsage -= aSize;
 }
 
-// static
-PLDHashOperator
-OriginInfo::ClearOriginInfoCallback(const nsAString& aKey,
-                                    QuotaObject* aValue,
-                                    void* aUserArg)
-{
-  NS_ASSERTION(!aKey.IsEmpty(), "Empty key!");
-  NS_ASSERTION(aValue, "Null pointer!");
-
-  aValue->mOriginInfo = nullptr;
-
-  return PL_DHASH_NEXT;
-}
-
 already_AddRefed<OriginInfo>
 GroupInfo::LockedGetOriginInfo(const nsACString& aOrigin)
 {
