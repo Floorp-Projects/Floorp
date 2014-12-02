@@ -239,18 +239,6 @@ gfxContext::Fill(const Pattern& aPattern)
 }
 
 void
-gfxContext::FillWithOpacity(gfxFloat aOpacity)
-{
-  FillWithOpacity(PatternFromState(this), aOpacity);
-}
-
-void
-gfxContext::FillWithOpacity(const Pattern& aPattern, gfxFloat aOpacity)
-{
-  FillAzure(aPattern, Float(aOpacity));
-}
-
-void
 gfxContext::MoveTo(const gfxPoint& pt)
 {
   EnsurePathBuilder();
