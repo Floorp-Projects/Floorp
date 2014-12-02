@@ -367,13 +367,22 @@ MediaSourceReader::CreateSubDecoder(const nsACString& aType)
     reader->SetStartTime(0);
   }
 
+  // This part is icky. It would be nicer to just give each subreader its own
+  // task queue. Unfortunately though, Request{Audio,Video}Data implementations
+  // currently assert that they're on "the decode thread", and so having
+  // separate task queues makes MediaSource stuff unnecessarily cumbersome. We
+  // should remove the need for these assertions (which probably involves making
+  // all Request*Data implementations fully async), and then get rid of the
+  // borrowing.
+  reader->SetBorrowedTaskQueue(GetTaskQueue());
+
   // Set a callback on the subreader that forwards calls to this reader.
   // This reader will then forward them onto the state machine via this
   // reader's callback.
   RefPtr<MediaDataDecodedListener<MediaSourceReader>> callback =
-    new MediaDataDecodedListener<MediaSourceReader>(this, GetTaskQueue());
+    new MediaDataDecodedListener<MediaSourceReader>(this, reader->GetTaskQueue());
   reader->SetCallback(callback);
-  reader->SetTaskQueue(GetTaskQueue());
+
 #ifdef MOZ_FMP4
   reader->SetSharedDecoderManager(mSharedDecoderManager);
 #endif
