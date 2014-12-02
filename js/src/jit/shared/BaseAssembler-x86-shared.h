@@ -269,7 +269,7 @@ private:
         OP_GROUP1_EvIb                  = 0x83,
         OP_TEST_EbGb                    = 0x84,
         OP_TEST_EvGv                    = 0x85,
-        OP_XCHG_EvGv                    = 0x87,
+        OP_XCHG_GvEv                    = 0x87,
         OP_MOV_EbGv                     = 0x88,
         OP_MOV_EvGv                     = 0x89,
         OP_MOV_GvEb                     = 0x8A,
@@ -594,7 +594,7 @@ public:
     void addl_rr(RegisterID src, RegisterID dst)
     {
         spew("addl       %s, %s", nameIReg(4,src), nameIReg(4,dst));
-        m_formatter.oneByteOp(OP_ADD_EvGv, src, dst);
+        m_formatter.oneByteOp(OP_ADD_GvEv, dst, src);
     }
 
     void addl_mr(int offset, RegisterID base, RegisterID dst)
@@ -647,7 +647,7 @@ public:
     void addq_rr(RegisterID src, RegisterID dst)
     {
         spew("addq       %s, %s", nameIReg(8,src), nameIReg(8,dst));
-        m_formatter.oneByteOp64(OP_ADD_EvGv, src, dst);
+        m_formatter.oneByteOp64(OP_ADD_GvEv, dst, src);
     }
 
     void addq_mr(int offset, RegisterID base, RegisterID dst)
@@ -891,7 +891,7 @@ public:
     void andl_rr(RegisterID src, RegisterID dst)
     {
         spew("andl       %s, %s", nameIReg(4,src), nameIReg(4,dst));
-        m_formatter.oneByteOp(OP_AND_EvGv, src, dst);
+        m_formatter.oneByteOp(OP_AND_GvEv, dst, src);
     }
 
     void andl_mr(int offset, RegisterID base, RegisterID dst)
@@ -937,7 +937,7 @@ public:
     void andq_rr(RegisterID src, RegisterID dst)
     {
         spew("andq       %s, %s", nameIReg(8,src), nameIReg(8,dst));
-        m_formatter.oneByteOp64(OP_AND_EvGv, src, dst);
+        m_formatter.oneByteOp64(OP_AND_GvEv, dst, src);
     }
 
     void andq_mr(int offset, RegisterID base, RegisterID dst)
@@ -1052,7 +1052,7 @@ public:
     void orl_rr(RegisterID src, RegisterID dst)
     {
         spew("orl        %s, %s", nameIReg(4,src), nameIReg(4,dst));
-        m_formatter.oneByteOp(OP_OR_EvGv, src, dst);
+        m_formatter.oneByteOp(OP_OR_GvEv, dst, src);
     }
 
     void orl_mr(int offset, RegisterID base, RegisterID dst)
@@ -1104,7 +1104,7 @@ public:
     void orq_rr(RegisterID src, RegisterID dst)
     {
         spew("orq        %s, %s", nameIReg(8,src), nameIReg(8,dst));
-        m_formatter.oneByteOp64(OP_OR_EvGv, src, dst);
+        m_formatter.oneByteOp64(OP_OR_GvEv, dst, src);
     }
 
     void orq_ir(int imm, RegisterID dst)
@@ -1141,7 +1141,7 @@ public:
     void subl_rr(RegisterID src, RegisterID dst)
     {
         spew("subl       %s, %s", nameIReg(4,src), nameIReg(4,dst));
-        m_formatter.oneByteOp(OP_SUB_EvGv, src, dst);
+        m_formatter.oneByteOp(OP_SUB_GvEv, dst, src);
     }
 
     void subl_mr(int offset, RegisterID base, RegisterID dst)
@@ -1187,7 +1187,7 @@ public:
     void subq_rr(RegisterID src, RegisterID dst)
     {
         spew("subq       %s, %s", nameIReg(8,src), nameIReg(8,dst));
-        m_formatter.oneByteOp64(OP_SUB_EvGv, src, dst);
+        m_formatter.oneByteOp64(OP_SUB_GvEv, dst, src);
     }
 
     void subq_rm(RegisterID src, int offset, RegisterID base)
@@ -1238,7 +1238,7 @@ public:
     void xorl_rr(RegisterID src, RegisterID dst)
     {
         spew("xorl       %s, %s", nameIReg(4,src), nameIReg(4,dst));
-        m_formatter.oneByteOp(OP_XOR_EvGv, src, dst);
+        m_formatter.oneByteOp(OP_XOR_GvEv, dst, src);
     }
 
     void xorl_mr(int offset, RegisterID base, RegisterID dst)
@@ -1284,7 +1284,7 @@ public:
     void xorq_rr(RegisterID src, RegisterID dst)
     {
         spew("xorq       %s, %s", nameIReg(8,src), nameIReg(8, dst));
-        m_formatter.oneByteOp64(OP_XOR_EvGv, src, dst);
+        m_formatter.oneByteOp64(OP_XOR_GvEv, dst, src);
     }
 
     void xorq_ir(int imm, RegisterID dst)
@@ -1509,7 +1509,7 @@ public:
     void cmpl_rr(RegisterID src, RegisterID dst)
     {
         spew("cmpl       %s, %s", nameIReg(4, src), nameIReg(4, dst));
-        m_formatter.oneByteOp(OP_CMP_EvGv, src, dst);
+        m_formatter.oneByteOp(OP_CMP_GvEv, dst, src);
     }
 
     void cmpl_rm(RegisterID src, int offset, RegisterID base)
@@ -1600,7 +1600,7 @@ public:
     void cmpq_rr(RegisterID src, RegisterID dst)
     {
         spew("cmpq       %s, %s", nameIReg(8, src), nameIReg(8, dst));
-        m_formatter.oneByteOp64(OP_CMP_EvGv, src, dst);
+        m_formatter.oneByteOp64(OP_CMP_GvEv, dst, src);
     }
 
     void cmpq_rm(RegisterID src, int offset, RegisterID base)
@@ -1701,7 +1701,7 @@ public:
     {
         spew("cmpw       %s, %s", nameIReg(2, src), nameIReg(2, dst));
         m_formatter.prefix(PRE_OPERAND_SIZE);
-        m_formatter.oneByteOp(OP_CMP_EvGv, src, dst);
+        m_formatter.oneByteOp(OP_CMP_GvEv, dst, src);
     }
 
     void cmpw_rm(RegisterID src, int offset, RegisterID base, RegisterID index, int scale)
@@ -1888,21 +1888,21 @@ public:
     void xchgl_rr(RegisterID src, RegisterID dst)
     {
         spew("xchgl      %s, %s", nameIReg(4,src), nameIReg(4,dst));
-        m_formatter.oneByteOp(OP_XCHG_EvGv, src, dst);
+        m_formatter.oneByteOp(OP_XCHG_GvEv, dst, src);
     }
 
 #ifdef JS_CODEGEN_X64
     void xchgq_rr(RegisterID src, RegisterID dst)
     {
         spew("xchgq      %s, %s", nameIReg(8,src), nameIReg(8,dst));
-        m_formatter.oneByteOp64(OP_XCHG_EvGv, src, dst);
+        m_formatter.oneByteOp64(OP_XCHG_GvEv, dst, src);
     }
 #endif
 
     void movl_rr(RegisterID src, RegisterID dst)
     {
         spew("movl       %s, %s", nameIReg(4,src), nameIReg(4,dst));
-        m_formatter.oneByteOp(OP_MOV_EvGv, src, dst);
+        m_formatter.oneByteOp(OP_MOV_GvEv, dst, src);
     }
 
     void movw_rm(RegisterID src, int offset, RegisterID base)
@@ -2102,7 +2102,7 @@ public:
     void movq_rr(RegisterID src, RegisterID dst)
     {
         spew("movq       %s, %s", nameIReg(8,src), nameIReg(8,dst));
-        m_formatter.oneByteOp64(OP_MOV_EvGv, src, dst);
+        m_formatter.oneByteOp64(OP_MOV_GvEv, dst, src);
     }
 
     void movq_rm(RegisterID src, int offset, RegisterID base)
