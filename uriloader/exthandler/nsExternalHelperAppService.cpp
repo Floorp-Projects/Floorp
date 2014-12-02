@@ -542,6 +542,7 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
   { AUDIO_OGG, "opus", "Opus Audio" },
 #ifdef MOZ_WIDGET_GONK
   { AUDIO_AMR, "amr", "Adaptive Multi-Rate Audio" },
+  { AUDIO_FLAC, "flac", "FLAC Audio" },
   { VIDEO_AVI, "avi", "Audio Video Interleave" },
   { VIDEO_AVI, "divx", "Audio Video Interleave" },
   { VIDEO_MPEG_TS, "ts", "MPEG Transport Stream" },
