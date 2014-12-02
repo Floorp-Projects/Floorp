@@ -109,15 +109,6 @@ public:
     void Fill(const Pattern& aPattern);
 
     /**
-     * Fill the current path according to the current settings and
-     * with |aOpacity|.
-     *
-     * Does not consume the current path.
-     */
-    void FillWithOpacity(gfxFloat aOpacity);
-    void FillWithOpacity(const Pattern& aPattern, gfxFloat aOpacity);
-
-    /**
      * Forgets the current path.
      */
     void NewPath();
