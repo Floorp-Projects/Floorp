@@ -231,6 +231,8 @@ void WebMReader::Shutdown()
     mVideoDecoder->Shutdown();
     mVideoDecoder = nullptr;
   }
+
+  MediaDecoderReader::Shutdown();
 }
 
 nsresult WebMReader::Init(MediaDecoderReader* aCloneDonor)
