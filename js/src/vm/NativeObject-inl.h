@@ -536,7 +536,13 @@ LookupOwnPropertyInline(ExclusiveContext *cx,
     }
 
     // id was not found in obj. Try obj's resolve hook, if any.
-    if (obj->getClass()->resolve != JS_ResolveStub) {
+    if (obj->getClass()->resolve
+#if defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 4
+        // Workaround. See the comment on JS_ResolveStub in jsapi.h.
+        && obj->getClass()->resolve != JS_ResolveStub
+#endif
+        )
+    {
         if (!cx->shouldBeJSContext() || !allowGC)
             return false;
 

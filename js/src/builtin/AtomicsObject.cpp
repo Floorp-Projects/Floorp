@@ -146,18 +146,10 @@ MSC_FETCHBITOP(uint32_t, long, _InterlockedAnd, _InterlockedOr, _InterlockedXor)
 const Class AtomicsObject::class_ = {
     "Atomics",
     JSCLASS_HAS_CACHED_PROTO(JSProto_Atomics),
+    nullptr,                 // addProperty
+    nullptr,                 // delProperty
     JS_PropertyStub,
-    JS_DeletePropertyStub,
-    JS_PropertyStub,
-    JS_StrictPropertyStub,
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub,
-    nullptr,                 // finalize
-    nullptr,                 // call
-    nullptr,                 // hasInstance
-    nullptr,                 // construct
-    nullptr                  // trace
+    JS_StrictPropertyStub
 };
 
 static bool

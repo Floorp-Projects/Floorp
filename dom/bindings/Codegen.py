@@ -425,8 +425,8 @@ class CGDOMJSClass(CGThing):
             resolveHook = "mozilla::dom::ResolveGlobal"
             enumerateHook = "mozilla::dom::EnumerateGlobal"
         else:
-            resolveHook = "JS_ResolveStub"
-            enumerateHook = "JS_EnumerateStub"
+            resolveHook = "nullptr"
+            enumerateHook = "nullptr"
 
         return fill(
             """
@@ -434,12 +434,12 @@ class CGDOMJSClass(CGThing):
               { "${name}",
                 ${flags},
                 ${addProperty}, /* addProperty */
-                JS_DeletePropertyStub, /* delProperty */
+                nullptr,               /* delProperty */
                 JS_PropertyStub,       /* getProperty */
                 JS_StrictPropertyStub, /* setProperty */
                 ${enumerate}, /* enumerate */
                 ${resolve}, /* resolve */
-                JS_ConvertStub,
+                nullptr,               /* convert */
                 ${finalize}, /* finalize */
                 ${call}, /* call */
                 nullptr,               /* hasInstance */
@@ -457,7 +457,7 @@ class CGDOMJSClass(CGThing):
             """,
             name=self.descriptor.interface.identifier.name,
             flags=classFlags,
-            addProperty=ADDPROPERTY_HOOK_NAME if wantsAddProperty(self.descriptor) else 'JS_PropertyStub',
+            addProperty=ADDPROPERTY_HOOK_NAME if wantsAddProperty(self.descriptor) else 'nullptr',
             enumerate=enumerateHook,
             resolve=resolveHook,
             finalize=FINALIZE_HOOK_NAME,
@@ -649,13 +649,13 @@ class CGPrototypeJSClass(CGThing):
               {
                 "${name}Prototype",
                 JSCLASS_IS_DOMIFACEANDPROTOJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(${slotCount}),
-                JS_PropertyStub,       /* addProperty */
-                JS_DeletePropertyStub, /* delProperty */
+                nullptr,               /* addProperty */
+                nullptr,               /* delProperty */
                 JS_PropertyStub,       /* getProperty */
                 JS_StrictPropertyStub, /* setProperty */
-                JS_EnumerateStub,
-                JS_ResolveStub,
-                JS_ConvertStub,
+                nullptr,               /* enumerate */
+                nullptr,               /* resolve */
+                nullptr,               /* convert */
                 nullptr,               /* finalize */
                 nullptr,               /* call */
                 nullptr,               /* hasInstance */
@@ -745,13 +745,13 @@ class CGInterfaceObjectJSClass(CGThing):
               {
                 "Function",
                 JSCLASS_IS_DOMIFACEANDPROTOJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(${slotCount}),
-                JS_PropertyStub,       /* addProperty */
-                JS_DeletePropertyStub, /* delProperty */
+                nullptr,               /* addProperty */
+                nullptr,               /* delProperty */
                 JS_PropertyStub,       /* getProperty */
                 JS_StrictPropertyStub, /* setProperty */
-                JS_EnumerateStub,
-                JS_ResolveStub,
-                JS_ConvertStub,
+                nullptr,               /* enumerate */
+                nullptr,               /* resolve */
+                nullptr,               /* convert */
                 nullptr,               /* finalize */
                 ${ctorname}, /* call */
                 ${hasInstance}, /* hasInstance */

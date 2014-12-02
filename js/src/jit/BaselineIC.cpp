@@ -3390,7 +3390,7 @@ CheckHasNoSuchProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
             return false;
 
         // Don't handle proto chains with resolve hooks.
-        if (curObj->getClass()->resolve != JS_ResolveStub)
+        if (curObj->getClass()->resolve)
             return false;
 
         Shape *shape = curObj->as<NativeObject>().lookup(cx, NameToId(name));
@@ -3539,8 +3539,8 @@ IsCacheableSetPropAddSlot(JSContext *cx, HandleObject obj, HandleShape oldShape,
         return false;
     }
 
-    // If object has a non-default resolve hook, don't inline
-    if (obj->getClass()->resolve != JS_ResolveStub)
+    // If object has a resolve hook, don't inline
+    if (obj->getClass()->resolve)
         return false;
 
     size_t chainDepth = 0;
@@ -3559,7 +3559,7 @@ IsCacheableSetPropAddSlot(JSContext *cx, HandleObject obj, HandleShape oldShape,
 
         // Otherise, if there's no such property, watch out for a resolve hook that would need
         // to be invoked and thus prevent inlining of property addition.
-        if (proto->getClass()->resolve != JS_ResolveStub)
+        if (proto->getClass()->resolve)
              return false;
     }
 
