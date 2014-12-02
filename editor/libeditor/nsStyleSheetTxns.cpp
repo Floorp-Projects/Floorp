@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsStyleSheetTxns.h"
 
 #include <stddef.h>                     // for nullptr
 
@@ -15,7 +16,6 @@
 #include "nsIDocument.h"                // for nsIDocument
 #include "nsIDocumentObserver.h"        // for UPDATE_STYLE
 #include "nsIEditor.h"                  // for nsIEditor
-#include "nsStyleSheetTxns.h"
 
 using namespace mozilla;
 
