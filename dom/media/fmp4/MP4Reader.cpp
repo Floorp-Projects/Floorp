@@ -169,6 +169,8 @@ MP4Reader::Shutdown()
     mPlatform->Shutdown();
     mPlatform = nullptr;
   }
+
+  MediaDecoderReader::Shutdown();
 }
 
 void
