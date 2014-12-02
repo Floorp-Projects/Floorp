@@ -291,8 +291,12 @@ void PeriodicWave::generateBasicWaveform(OscillatorType shape)
         case OscillatorType::Triangle:
             // Triangle-shaped waveform going from its maximum value to
             // its minimum value then back to the maximum value.
-            a = (4 - 4 * cos(0.5 * omega)) / (n * n * piFloat * piFloat);
-            b = 0;
+            a = 0;
+            if (n & 1) {
+              b = 2 * (2 / (n * piFloat) * 2 / (n * piFloat)) * ((((n - 1) >> 1) & 1) ? -1 : 1);
+            } else {
+              b = 0;
+            }
             break;
         default:
             NS_NOTREACHED("invalid oscillator type");
