@@ -298,21 +298,6 @@ gfxContext::Rectangle(const gfxRect& rect, bool snapToPixels)
 }
 
 void
-gfxContext::Polygon(const gfxPoint *points, uint32_t numPoints)
-{
-  if (numPoints == 0) {
-    return;
-  }
-
-  EnsurePathBuilder();
-
-  mPathBuilder->MoveTo(ToPoint(points[0]));
-  for (uint32_t i = 1; i < numPoints; i++) {
-    mPathBuilder->LineTo(ToPoint(points[i]));
-  }
-}
-
-void
 gfxContext::DrawSurface(gfxASurface *surface, const gfxSize& size)
 {
   // Lifetime needs to be limited here since we may wrap surface's data.
