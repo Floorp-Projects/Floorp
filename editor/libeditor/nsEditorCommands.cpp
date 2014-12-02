@@ -3,13 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsEditorCommands.h"
+
 #include "mozFlushType.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsDebug.h"
-#include "nsEditorCommands.h"
 #include "nsError.h"
 #include "nsIClipboard.h"
 #include "nsICommandParams.h"
