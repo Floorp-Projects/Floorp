@@ -24,19 +24,33 @@
 using namespace mozilla;
 using namespace android;
 
-#define DEF_GONK_RECORDER_PROFILE(e, n) e##_INDEX,
-enum {
-  #include "GonkRecorderProfiles.def"
-  PROFILE_COUNT
+namespace mozilla {
+
+struct ProfileConfig {
+  const char* name;
+  int quality;
 };
 
 #define DEF_GONK_RECORDER_PROFILE(e, n) { n, e },
-static struct {
-  const char* name;
-  int quality;
-} ProfileList[] = {
+static const ProfileConfig ProfileList[] = {
   #include "GonkRecorderProfiles.def"
-  { nullptr, 0 }
+};
+
+static const size_t ProfileListSize = MOZ_ARRAY_LENGTH(ProfileList);
+
+struct ProfileConfigDetect {
+  const char* name;
+  uint32_t width;
+  uint32_t height;
+};
+
+#define DEF_GONK_RECORDER_PROFILE_DETECT(n, w, h) { n, w, h },
+static const ProfileConfigDetect ProfileListDetect[] = {
+  #include "GonkRecorderProfiles.def"
+};
+
+static const size_t ProfileListDetectSize = MOZ_ARRAY_LENGTH(ProfileListDetect);
+
 };
 
 /* static */ nsClassHashtable<nsUint32HashKey, ProfileHashtable> GonkRecorderProfile::sProfiles;
@@ -53,19 +67,19 @@ GetMediaProfiles()
 }
 
 static bool
-IsProfileSupported(uint32_t aCameraId, uint32_t aProfileIndex)
+IsProfileSupported(uint32_t aCameraId, int aQuality)
 {
   MediaProfiles* profiles = GetMediaProfiles();
-  camcorder_quality q = static_cast<camcorder_quality>(ProfileList[aProfileIndex].quality);
-  return profiles->hasCamcorderProfile(static_cast<int>(aCameraId), q);
+  return profiles->hasCamcorderProfile(static_cast<int>(aCameraId),
+                                       static_cast<camcorder_quality>(aQuality));
 }
 
 static int
-GetProfileParameter(uint32_t aCameraId, uint32_t aProfileIndex, const char* aParameter)
+GetProfileParameter(uint32_t aCameraId, int aQuality, const char* aParameter)
 {
   MediaProfiles* profiles = GetMediaProfiles();
-  camcorder_quality q = static_cast<camcorder_quality>(ProfileList[aProfileIndex].quality);
-  return profiles->getCamcorderProfileParamByName(aParameter, static_cast<int>(aCameraId), q);
+  return profiles->getCamcorderProfileParamByName(aParameter, static_cast<int>(aCameraId),
+                                                  static_cast<camcorder_quality>(aQuality));
 }
 
 /* static */ bool
@@ -94,12 +108,12 @@ GonkRecorderVideo::Translate(video_encoder aCodec, nsAString& aCodecName)
 int
 GonkRecorderVideo::GetProfileParameter(const char* aParameter)
 {
-  return ::GetProfileParameter(mCameraId, mProfileIndex, aParameter);
+  return ::GetProfileParameter(mCameraId, mQuality, aParameter);
 }
 
-GonkRecorderVideo::GonkRecorderVideo(uint32_t aCameraId, uint32_t aProfileIndex)
+GonkRecorderVideo::GonkRecorderVideo(uint32_t aCameraId, int aQuality)
   : mCameraId(aCameraId)
-  , mProfileIndex(aProfileIndex)
+  , mQuality(aQuality)
   , mIsValid(false)
 {
   mPlatformEncoder = static_cast<video_encoder>(GetProfileParameter("vid.codec"));
@@ -159,12 +173,12 @@ GonkRecorderAudio::Translate(audio_encoder aCodec, nsAString& aCodecName)
 int
 GonkRecorderAudio::GetProfileParameter(const char* aParameter)
 {
-  return ::GetProfileParameter(mCameraId, mProfileIndex, aParameter);
+  return ::GetProfileParameter(mCameraId, mQuality, aParameter);
 }
 
-GonkRecorderAudio::GonkRecorderAudio(uint32_t aCameraId, uint32_t aProfileIndex)
+GonkRecorderAudio::GonkRecorderAudio(uint32_t aCameraId, int aQuality)
   : mCameraId(aCameraId)
-  , mProfileIndex(aProfileIndex)
+  , mQuality(aQuality)
   , mIsValid(false)
 {
   mPlatformEncoder = static_cast<audio_encoder>(GetProfileParameter("aud.codec"));
@@ -233,16 +247,15 @@ GonkRecorderProfile::GetMimeType(output_format aContainer, nsAString& aMimeType)
 int
 GonkRecorderProfile::GetProfileParameter(const char* aParameter)
 {
-  return ::GetProfileParameter(mCameraId, mProfileIndex, aParameter);
+  return ::GetProfileParameter(mCameraId, mQuality, aParameter);
 }
 
 GonkRecorderProfile::GonkRecorderProfile(uint32_t aCameraId,
-                                         uint32_t aProfileIndex,
-                                         const nsAString& aName)
+                                         int aQuality)
   : GonkRecorderProfileBase<GonkRecorderAudio, GonkRecorderVideo>(aCameraId,
-                                                                  aProfileIndex, aName)
+                                                                  aQuality)
   , mCameraId(aCameraId)
-  , mProfileIndex(aProfileIndex)
+  , mQuality(aQuality)
   , mIsValid(false)
 {
   mOutputFormat = static_cast<output_format>(GetProfileParameter("file.format"));
@@ -265,27 +278,85 @@ GonkRecorderProfile::Enumerate(const nsAString& aProfileName,
 }
 
 /* static */
+already_AddRefed<GonkRecorderProfile>
+GonkRecorderProfile::CreateProfile(uint32_t aCameraId, int aQuality)
+{
+  if (!IsProfileSupported(aCameraId, aQuality)) {
+    DOM_CAMERA_LOGI("Profile %d not supported by platform\n", aQuality);
+    return nullptr;
+  }
+
+  nsRefPtr<GonkRecorderProfile> profile = new GonkRecorderProfile(aCameraId, aQuality);
+  if (!profile->IsValid()) {
+    DOM_CAMERA_LOGE("Profile %d is not valid\n", aQuality);
+    return nullptr;
+  }
+
+  return profile.forget();
+}
+
+/* static */
 ProfileHashtable*
 GonkRecorderProfile::GetProfileHashtable(uint32_t aCameraId)
 {
   ProfileHashtable* profiles = sProfiles.Get(aCameraId);
   if (!profiles) {
-    profiles = new ProfileHashtable;
+    profiles = new ProfileHashtable();
     sProfiles.Put(aCameraId, profiles);
 
-    for (uint32_t i = 0; ProfileList[i].name; ++i) {
-      if (IsProfileSupported(aCameraId, i)) {
-        DOM_CAMERA_LOGI("Profile %d '%s' supported by platform\n", i, ProfileList[i].name);
-        nsAutoString name;
-        name.AssignASCII(ProfileList[i].name);
-        nsRefPtr<GonkRecorderProfile> profile = new GonkRecorderProfile(aCameraId, i, name);
-        if (!profile->IsValid()) {
-          DOM_CAMERA_LOGE("Profile %d '%s' is not valid\n", i, ProfileList[i].name);
-          continue;
+    /* First handle the profiles with a known enum. We can process those
+       efficently because MediaProfiles indexes their profiles that way. */
+    int highestKnownQuality = CAMCORDER_QUALITY_LIST_START - 1;
+    for (size_t i = 0; i < ProfileListSize; ++i) {
+      const ProfileConfig& p = ProfileList[i];
+      if (p.quality > highestKnownQuality) {
+        highestKnownQuality = p.quality;
+      }
+
+      nsRefPtr<GonkRecorderProfile> profile = CreateProfile(aCameraId, p.quality);
+      if (!profile) {
+        continue;
+      }
+
+      DOM_CAMERA_LOGI("Profile %d '%s' supported by platform\n", p.quality, p.name);
+      profile->mName.AssignASCII(p.name);
+      profiles->Put(profile->GetName(), profile);
+    }
+
+    /* However not all of the potentially supported profiles have a known
+       enum on all of our supported platforms because some entries may
+       be missing from MediaProfiles.h. As such, we can't rely upon
+       having the CAMCORDER_QUALITY_* enums for those profiles. We need
+       to map the profiles to a name by matching the width and height of
+       the video resolution to our configured values.
+
+       In theory there may be collisions given that there can be multiple
+       resolutions sharing the same name (e.g. 800x480 and 768x480 are both
+       wvga). In practice this should not happen because there should be
+       only one WVGA profile given there is only one enum for it. In the
+       situation there is a collision, it will merely select the last
+       detected profile. */
+    for (int q = highestKnownQuality + 1; q <= CAMCORDER_QUALITY_LIST_END; ++q) {
+      nsRefPtr<GonkRecorderProfile> profile = CreateProfile(aCameraId, q);
+      if (!profile) {
+        continue;
+      }
+
+      const ICameraControl::Size& s = profile->GetVideo().GetSize();
+      size_t match;
+      for (match = 0; match < ProfileListDetectSize; ++match) {
+        const ProfileConfigDetect& p = ProfileListDetect[match];
+        if (s.width == p.width && s.height == p.height) {
+          DOM_CAMERA_LOGI("Profile %d '%s' supported by platform\n", q, p.name);
+          profile->mName.AssignASCII(p.name);
+          profiles->Put(profile->GetName(), profile);
+          break;
         }
-        profiles->Put(name, profile);
-      } else {
-        DOM_CAMERA_LOGI("Profile %d '%s' not supported by platform\n", i, ProfileList[i].name);
+      }
+
+      if (match == ProfileListDetectSize) {
+        DOM_CAMERA_LOGW("Profile %d size %u x %u is not recognized\n",
+                        q, s.width, s.height);
       }
     }
   }
