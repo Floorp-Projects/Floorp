@@ -946,12 +946,6 @@ int wasapi_stream_set_volume(cubeb_stream * stm, float volume)
   return CUBEB_OK;
 }
 
-int wasapi_stream_set_panning(cubeb_stream * stream, float panning)
-{
-  assert(false && "not implemented");
-  return CUBEB_OK;
-}
-
 cubeb_ops const wasapi_ops = {
   /*.init =*/ wasapi_init,
   /*.get_backend_id =*/ wasapi_get_backend_id,
@@ -966,7 +960,7 @@ cubeb_ops const wasapi_ops = {
   /*.stream_get_position =*/ wasapi_stream_get_position,
   /*.stream_get_latency =*/ wasapi_stream_get_latency,
   /*.stream_set_volume =*/ wasapi_stream_set_volume,
-  /*.stream_set_panning =*/ wasapi_stream_set_panning,
+  /*.stream_set_panning =*/ NULL,
   /*.stream_get_current_device =*/ NULL,
   /*.stream_device_destroy =*/ NULL,
   /*.stream_register_device_changed_callback =*/ NULL

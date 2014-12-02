@@ -2502,7 +2502,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     }
     case eStyleStruct_TableBorder:
     {
-      nsStyleTableBorder* table = new (mPresContext) nsStyleTableBorder(mPresContext);
+      nsStyleTableBorder* table = new (mPresContext) nsStyleTableBorder();
       aContext->SetStyle(eStyleStruct_TableBorder, table);
       return table;
     }
@@ -7872,7 +7872,7 @@ nsRuleNode::ComputeTableBorderData(void* aStartStruct,
                                    const RuleDetail aRuleDetail,
                                    const bool aCanStoreInRuleTree)
 {
-  COMPUTE_START_INHERITED(TableBorder, (mPresContext), table, parentTable)
+  COMPUTE_START_INHERITED(TableBorder, (), table, parentTable)
 
   // border-collapse: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForBorderCollapse(), table->mBorderCollapse,
@@ -7916,9 +7916,7 @@ nsRuleNode::ComputeTableBorderData(void* aStartStruct,
               table->mEmptyCells, canStoreInRuleTree,
               SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
               parentTable->mEmptyCells,
-              (mPresContext->CompatibilityMode() == eCompatibility_NavQuirks)
-              ? NS_STYLE_TABLE_EMPTY_CELLS_SHOW_BACKGROUND
-              : NS_STYLE_TABLE_EMPTY_CELLS_SHOW,
+              NS_STYLE_TABLE_EMPTY_CELLS_SHOW,
               0, 0, 0, 0);
 
   COMPUTE_END_INHERITED(TableBorder, table)

@@ -34,8 +34,8 @@ struct cubeb_ops {
                                     cubeb_device ** const device);
   int (* stream_device_destroy)(cubeb_stream * stream,
                                 cubeb_device * device);
-  int (*stream_register_device_changed_callback)(cubeb_stream * stream,
-                                                 cubeb_device_changed_callback device_changed_callback);
+  int (* stream_register_device_changed_callback)(cubeb_stream * stream,
+                                                  cubeb_device_changed_callback device_changed_callback);
 
 };
 

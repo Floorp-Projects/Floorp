@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsEditor.h"
+
 #include "mozilla/DebugOnly.h"          // for DebugOnly
 
 #include <stdio.h>                      // for nullptr, stdout
@@ -43,7 +45,6 @@
 #include "nsContentUtils.h"             // for nsContentUtils
 #include "nsDOMString.h"                // for DOMStringIsNull
 #include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
-#include "nsEditor.h"
 #include "nsEditorEventListener.h"      // for nsEditorEventListener
 #include "nsEditorUtils.h"              // for nsAutoRules, etc
 #include "nsError.h"                    // for NS_OK, etc

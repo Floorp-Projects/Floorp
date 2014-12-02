@@ -3,6 +3,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsEditorEventListener.h"
+
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/EventListenerManager.h" // for EventListenerManager
 #include "mozilla/IMEStateManager.h"    // for IMEStateManager
@@ -15,7 +18,6 @@
 #include "nsCaret.h"                    // for nsCaret
 #include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
 #include "nsEditor.h"                   // for nsEditor, etc
-#include "nsEditorEventListener.h"
 #include "nsFocusManager.h"             // for nsFocusManager
 #include "nsGkAtoms.h"                  // for nsGkAtoms, nsGkAtoms::input
 #include "nsIClipboard.h"               // for nsIClipboard, etc
