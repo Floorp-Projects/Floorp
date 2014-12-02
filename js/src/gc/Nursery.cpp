@@ -764,6 +764,8 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
 
     AutoStopVerifyingBarriers av(rt, false);
 
+    gcstats::AutoPhase ap(rt->gc.stats, gcstats::PHASE_MINOR_GC);
+
     // Move objects pointed to by roots from the nursery to the major heap.
     MinorCollectionTracer trc(rt, this);
 
