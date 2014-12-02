@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsSelectionState.h"
+
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/dom/Selection.h"      // for Selection
 #include "nsAString.h"                  // for nsAString_internal::Length
@@ -17,7 +19,6 @@
 #include "nsIDOMNode.h"                 // for nsIDOMNode
 #include "nsISupportsImpl.h"            // for nsRange::Release
 #include "nsRange.h"                    // for nsRange
-#include "nsSelectionState.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

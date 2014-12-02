@@ -204,7 +204,7 @@ class IDLObject(object):
             deps.add(self.filename())
 
         for d in self._getDependentObjects():
-            deps = deps.union(d.getDeps(visited))
+            deps.update(d.getDeps(visited))
 
         return deps
 
@@ -1366,7 +1366,7 @@ class IDLInterface(IDLObjectWithScope):
 
     def _getDependentObjects(self):
         deps = set(self.members)
-        deps.union(self.implementedInterfaces)
+        deps.update(self.implementedInterfaces)
         if self.parent:
             deps.add(self.parent)
         return deps
@@ -2541,6 +2541,13 @@ class IDLWrapperType(IDLType):
         #     Bindings.conf, which is still a global dependency.
         #  2) Changing an interface to a dictionary (or vice versa) with the
         #     same identifier should be incredibly rare.
+        #
+        # On the other hand, if our type is a dictionary, we should
+        # depend on it, because the member types of a dictionary
+        # affect whether a method taking the dictionary as an argument
+        # takes a JSContext* argument or not.
+        if self.isDictionary():
+            return set([self.inner])
         return set()
 
 class IDLBuiltinType(IDLType):
@@ -3999,7 +4006,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
     def _getDependentObjects(self):
         deps = set()
         for overload in self._overloads:
-            deps.union(overload._getDependentObjects())
+            deps.update(overload._getDependentObjects())
         return deps
 
 class IDLImplementsStatement(IDLObject):

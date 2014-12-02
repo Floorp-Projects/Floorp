@@ -430,6 +430,7 @@ var gSeekTests = [
   { name:"seek.ogv", type:"video/ogg", duration:3.966 },
   { name:"320x240.ogv", type:"video/ogg", duration:0.266 },
   { name:"seek.webm", type:"video/webm", duration:3.966 },
+  { name:"sine.webm", type:"audio/webm", duration:4.001 },
   { name:"bug516323.indexed.ogv", type:"video/ogg", duration:4.208333 },
   { name:"split.webm", type:"video/webm", duration:1.967 },
   { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 },
@@ -718,9 +719,7 @@ function removeNodeAndSource(n) {
   }
 }
 
-// Number of tests to run in parallel. Warning: Each media element requires
-// at least 3 threads (4 on Linux), and on Linux each thread uses 10MB of
-// virtual address space. Beware!
+// Number of tests to run in parallel.
 var PARALLEL_TESTS = 2;
 
 // When true, we'll loop forever on whatever test we run. Use this to debug
