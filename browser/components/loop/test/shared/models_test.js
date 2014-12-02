@@ -42,7 +42,9 @@ describe("loop.shared.models", function() {
       initPublisher: sandbox.spy(),
       initSession: sandbox.stub().returns(fakeSession)
     };
-    fakeMozLoop = {};
+    fakeMozLoop = {
+      addConversationContext: sinon.spy()
+    };
   });
 
   afterEach(function() {
@@ -63,7 +65,7 @@ describe("loop.shared.models", function() {
 
       beforeEach(function() {
         conversation = new sharedModels.ConversationModel({}, {
-          sdk: fakeSDK
+          sdk: fakeSDK,
           mozLoop: fakeMozLoop
         });
         conversation.set("loopToken", "fakeToken");
