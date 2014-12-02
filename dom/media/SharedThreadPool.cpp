@@ -54,8 +54,27 @@ public:
 static void
 DestroySharedThreadPoolHashTable()
 {
+  // We have to guard against a lot of funny business here - see the comments
+  // below. It would make more sense to just manually initialize/destroy the
+  // hashtable on startup/shutdown.
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(sMonitor && sPools);
+
+  // Check that the pool still exists to guard against this scenario:
+  // (1) sPools becomes empty, and we dispatch ShutdownPoolsEvent.
+  // (2) A new call to ::Get occurs and sPools becomes non-empty.
+  // (3) The new pool is immediately released, causing us to dispatch a second
+  //     ShutdownPoolsEvent.
+  // (4) The first ShutdownPoolsEvent runs, and deletes sPools.
+  // (5) The second ShutdownPoolsEvent runs.
+  if (!sPools) {
+    MOZ_ASSERT(!sMonitor);
+    return;
+  }
+
+  // Check that the pool is still empty to guard against this scenario:
+  // (1) sPools becomes empty, and we dispatch ShutdownPoolsEvent
+  // (2) A new call to ::Get occurs and sPools becomes non-empty.
+  // (3) The ShutdownPoolsEvent runs, with sPools now non-empty.
   if (!sPools->Count()) {
     // No more SharedThreadPool singletons. Delete the hash table.
     // Note we don't need to lock sMonitor, since we only modify the
