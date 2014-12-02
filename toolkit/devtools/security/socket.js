@@ -36,14 +36,13 @@ DevToolsUtils.defineLazyGetter(this, "socketTransportService", () => {
 /**
  * Connects to a debugger server socket and returns a DebuggerTransport.
  *
- * @param aHost string
+ * @param host string
  *        The host name or IP address of the debugger server.
- * @param aPort number
+ * @param port number
  *        The port number of the debugger server.
  */
-function socketConnect(aHost, aPort)
-{
-  let s = socketTransportService.createTransport(null, 0, aHost, aPort, null);
+function socketConnect(host, port) {
+  let s = socketTransportService.createTransport(null, 0, host, port, null);
   // By default the CONNECT socket timeout is very long, 65535 seconds,
   // so that if we race to be in CONNECT state while the server socket is still
   // initializing, the connection is stuck in connecting state for 18.20 hours!
@@ -131,21 +130,21 @@ SocketListener.prototype = {
   // nsIServerSocketListener implementation
 
   onSocketAccepted:
-  DevToolsUtils.makeInfallible(function(aSocket, aTransport) {
+  DevToolsUtils.makeInfallible(function(socket, socketTransport) {
     if (Services.prefs.getBoolPref("devtools.debugger.prompt-connection") &&
         !this._server._allowConnection()) {
       return;
     }
     dumpn("New debugging connection on " +
-          aTransport.host + ":" + aTransport.port);
+          socketTransport.host + ":" + socketTransport.port);
 
-    let input = aTransport.openInputStream(0, 0, 0);
-    let output = aTransport.openOutputStream(0, 0, 0);
+    let input = socketTransport.openInputStream(0, 0, 0);
+    let output = socketTransport.openOutputStream(0, 0, 0);
     let transport = new DebuggerTransport(input, output);
     this._server._onConnection(transport);
   }, "SocketListener.onSocketAccepted"),
 
-  onStopListening: function(aSocket, status) {
+  onStopListening: function(socket, status) {
     dumpn("onStopListening, status: " + status);
   }
 
