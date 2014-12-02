@@ -1249,11 +1249,13 @@ void
 MediaCodecReader::ShutdownTaskQueues()
 {
   if(mAudioTrack.mTaskQueue) {
-    mAudioTrack.mTaskQueue->Shutdown();
+    mAudioTrack.mTaskQueue->BeginShutdown();
+    mAudioTrack.mTaskQueue->AwaitShutdownAndIdle();
     mAudioTrack.mTaskQueue = nullptr;
   }
   if(mVideoTrack.mTaskQueue) {
-    mVideoTrack.mTaskQueue->Shutdown();
+    mVideoTrack.mTaskQueue->BeginShutdown();
+    mVideoTrack.mTaskQueue->AwaitShutdownAndIdle();
     mVideoTrack.mTaskQueue = nullptr;
   }
 }
