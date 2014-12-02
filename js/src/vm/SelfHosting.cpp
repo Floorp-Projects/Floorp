@@ -1325,7 +1325,7 @@ JSRuntime::isSelfHostingCompartment(JSCompartment *comp)
 bool
 JSRuntime::isSelfHostingZone(JS::Zone *zone)
 {
-    return selfHostingGlobal_->zoneFromAnyThread() == zone;
+    return selfHostingGlobal_ && selfHostingGlobal_->zoneFromAnyThread() == zone;
 }
 
 static bool
