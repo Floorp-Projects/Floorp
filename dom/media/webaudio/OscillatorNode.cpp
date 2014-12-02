@@ -142,8 +142,10 @@ public:
   void IncrementPhase()
   {
     mPhase += mPhaseIncrement;
-    if (mPhase > mPhaseWrap) {
-      mPhase -= mPhaseWrap;
+    if (mPhase > 2 * M_PI) {
+      mPhase -= 2 * M_PI;
+    } else if (mPhase < -2 * M_PI) {
+      mPhase += 2 * M_PI;
     }
   }
 
@@ -171,11 +173,10 @@ public:
       detune = mDetune.GetValueAtTime(ticks, count);
     }
 
-    float signalPeriod = mSource->SampleRate() / mFinalFrequency;
     mFinalFrequency = frequency * pow(2., detune / 1200.);
+    float signalPeriod = mSource->SampleRate() / mFinalFrequency;
     mRecomputeParameters = false;
 
-    mPhaseWrap = 2 * M_PI;
     mPhaseIncrement = 2 * M_PI / signalPeriod;
   }
 
@@ -367,7 +368,6 @@ public:
   float mPhase;
   float mFinalFrequency;
   float mPhaseIncrement;
-  float mPhaseWrap;
   bool mRecomputeParameters;
   nsRefPtr<ThreadSharedFloatArrayBufferList> mCustom;
   uint32_t mCustomLength;
