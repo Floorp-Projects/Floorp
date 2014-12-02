@@ -224,7 +224,7 @@ loop.conversationViews = (function(mozL10n) {
     },
 
     _onEmailLinkReceived: function() {
-      var emailLink = this.props.store.get("emailLink");
+      var emailLink = this.props.store.getStoreState("emailLink");
       var contactEmail = _getPreferredEmail(this.props.contact).value;
       sharedUtils.composeCallUrlEmail(emailLink, contactEmail);
       window.close();
@@ -428,7 +428,10 @@ loop.conversationViews = (function(mozL10n) {
    * the different views that need displaying.
    */
   var OutgoingConversationView = React.createClass({displayName: 'OutgoingConversationView',
-    mixins: [sharedMixins.AudioMixin],
+    mixins: [
+      sharedMixins.AudioMixin,
+      Backbone.Events
+    ],
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
@@ -438,12 +441,18 @@ loop.conversationViews = (function(mozL10n) {
     },
 
     getInitialState: function() {
-      return this.props.store.attributes;
+      return this.props.store.getStoreState();
     },
 
     componentWillMount: function() {
-      this.props.store.on("change", function() {
-        this.setState(this.props.store.attributes);
+      this.listenTo(this.props.store, "change", function() {
+        this.setState(this.props.store.getStoreState());
+      }, this);
+    },
+
+    componentWillUnmount: function() {
+      this.stopListening(this.props.store, "change", function() {
+        this.setState(this.props.store.getStoreState());
       }, this);
     },
 
