@@ -690,7 +690,7 @@ public:
 
     void addq_im(int imm, const void* addr)
     {
-        spew("addq       %d, %p", imm, addr);
+        spew("addq       $%d, %p", imm, addr);
         if (CAN_SIGN_EXTEND_8_32(imm)) {
             m_formatter.oneByteOp64(OP_GROUP1_EvIb, GROUP1_OP_ADD, addr);
             m_formatter.immediate8(imm);
@@ -702,7 +702,7 @@ public:
 #endif
     void addl_im(int imm, const void* addr)
     {
-        spew("addl       %d, %p", imm, addr);
+        spew("addl       $%d, %p", imm, addr);
         if (CAN_SIGN_EXTEND_8_32(imm)) {
             m_formatter.oneByteOp(OP_GROUP1_EvIb, GROUP1_OP_ADD, addr);
             m_formatter.immediate8(imm);
@@ -2040,7 +2040,7 @@ public:
 
     void movb_i8m(int imm, const void* addr)
     {
-        spew("movb       %d, %p", imm, addr);
+        spew("movb       $%d, %p", imm, addr);
         m_formatter.oneByteOp_disp32(OP_GROUP11_EvIb, GROUP11_MOV, addr);
         m_formatter.immediate8(imm);
     }
@@ -2056,7 +2056,7 @@ public:
 
     void movw_i16m(int imm, const void* addr)
     {
-        spew("movw       %d, %p", imm, addr);
+        spew("movw       $%d, %p", imm, addr);
         m_formatter.prefix(PRE_OPERAND_SIZE);
         m_formatter.oneByteOp_disp32(OP_GROUP11_EvIz, GROUP11_MOV, addr);
         m_formatter.immediate16(imm);
@@ -2205,7 +2205,7 @@ public:
     }
     void movq_i32m(int imm, const void* addr)
     {
-        spew("movq       %d, %p", imm, addr);
+        spew("movq       $%d, %p", imm, addr);
         m_formatter.oneByteOp64(OP_GROUP11_EvIz, GROUP11_MOV, addr);
         m_formatter.immediate32(imm);
     }
@@ -2269,7 +2269,7 @@ public:
 
     void movl_i32m(int imm, const void* addr)
     {
-        spew("movl       %d, %p", imm, addr);
+        spew("movl       $%d, %p", imm, addr);
         m_formatter.oneByteOp(OP_GROUP11_EvIz, GROUP11_MOV, addr);
         m_formatter.immediate32(imm);
     }
@@ -2691,24 +2691,24 @@ public:
         m_formatter.twoByteOp(OP2_PCMPGTD_VdqWdq, (RegisterID)dst, address);
     }
 
-    void cmpps_rr(XMMRegisterID src, XMMRegisterID dst, uint8_t order)
+    void cmpps_rr(uint8_t order, XMMRegisterID src, XMMRegisterID dst)
     {
-        spew("cmpps      %s, %s, %u", nameFPReg(src), nameFPReg(dst), order);
+        spew("cmpps      $%u, %s, %s", order, nameFPReg(src), nameFPReg(dst));
         m_formatter.twoByteOp(OP2_CMPPS_VpsWps, (RegisterID)dst, (RegisterID)src);
         m_formatter.immediate8(order);
     }
 
-    void cmpps_mr(int offset, RegisterID base, XMMRegisterID dst, uint8_t order)
+    void cmpps_mr(uint8_t order, int offset, RegisterID base, XMMRegisterID dst)
     {
-        spew("cmpps      %s0x%x(%s), %s, %u",
-             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst), order);
+        spew("cmpps      $%u, %s0x%x(%s), %s",
+             order, PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
         m_formatter.twoByteOp(OP2_CMPPS_VpsWps, (RegisterID)dst, base, offset);
         m_formatter.immediate8(order);
     }
 
-    void cmpps_mr(const void* address, XMMRegisterID dst, uint8_t order)
+    void cmpps_mr(uint8_t order, const void* address, XMMRegisterID dst)
     {
-        spew("cmpps      %p, %s, %u", address, nameFPReg(dst), order);
+        spew("cmpps      $%u, %p, %s", order, address, nameFPReg(dst));
         m_formatter.twoByteOp(OP2_CMPPS_VpsWps, (RegisterID)dst, address);
         m_formatter.immediate8(order);
     }
@@ -3757,17 +3757,17 @@ public:
         m_formatter.twoByteOp(OP2_SQRTSS_VssWss, (RegisterID)dst, (RegisterID)src);
     }
 
-    void roundsd_rr(XMMRegisterID src, XMMRegisterID dst, RoundingMode mode)
+    void roundsd_rr(RoundingMode mode, XMMRegisterID src, XMMRegisterID dst)
     {
-        spew("roundsd    %s, %s, %d", nameFPReg(src), nameFPReg(dst), (int)mode);
+        spew("roundsd    $%d, %s, %s", (int)mode, nameFPReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.threeByteOp(OP3_ROUNDSD_VsdWsd, ESCAPE_ROUNDSD, (RegisterID)dst, (RegisterID)src);
         m_formatter.immediate8(mode);
     }
 
-    void roundss_rr(XMMRegisterID src, XMMRegisterID dst, RoundingMode mode)
+    void roundss_rr(RoundingMode mode, XMMRegisterID src, XMMRegisterID dst)
     {
-        spew("roundss    %s, %s, %d", nameFPReg(src), nameFPReg(dst), (int)mode);
+        spew("roundss    $%d, %s, %s", (int)mode, nameFPReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.threeByteOp(OP3_ROUNDSS_VsdWsd, ESCAPE_ROUNDSD, (RegisterID)dst, (RegisterID)src);
         m_formatter.immediate8(mode); // modes are the same for roundsd and roundss
