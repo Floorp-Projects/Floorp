@@ -161,11 +161,6 @@ public:
     void SnappedRectangle(const gfxRect& rect) { return Rectangle(rect, true); }
 
     /**
-     * Draw a polygon from the given points
-     */
-    void Polygon(const gfxPoint *points, uint32_t numPoints);
-
-    /**
      ** Transformation Matrix manipulation
      **/
 
