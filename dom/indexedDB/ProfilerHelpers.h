@@ -278,7 +278,7 @@ LoggingHelper(bool aUseProfiler, const char* aFmt, ...)
   PRLogModuleInfo* logModule = IndexedDatabaseManager::GetLoggingModule();
   MOZ_ASSERT(logModule);
 
-  static const PRLogModuleLevel logLevel = PR_LOG_DEBUG;
+  static const PRLogModuleLevel logLevel = PR_LOG_WARNING;
 
   if (PR_LOG_TEST(logModule, logLevel) ||
       (aUseProfiler && profiler_is_active())) {
