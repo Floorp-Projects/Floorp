@@ -1065,7 +1065,9 @@ CallAddPropertyHook(typename ExecutionModeTraits<mode>::ExclusiveContextType cxA
                     const Class *clasp, HandleNativeObject obj, HandleShape shape,
                     HandleValue nominal)
 {
-    if (clasp->addProperty != JS_PropertyStub) {
+    if (clasp->addProperty) {
+        MOZ_ASSERT(clasp->addProperty != JS_PropertyStub);
+
         if (mode == ParallelExecution)
             return false;
 
@@ -1112,7 +1114,9 @@ CallAddPropertyHookDense(typename ExecutionModeTraits<mode>::ExclusiveContextTyp
         return true;
     }
 
-    if (clasp->addProperty != JS_PropertyStub) {
+    if (clasp->addProperty) {
+        MOZ_ASSERT(clasp->addProperty != JS_PropertyStub);
+
         if (mode == ParallelExecution)
             return false;
 

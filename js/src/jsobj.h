@@ -686,7 +686,7 @@ class JSObject : public js::gc::Cell
     {
         JSConvertOp op = obj->getClass()->convert;
         bool ok;
-        if (op == JS_ConvertStub)
+        if (!op)
             ok = js::DefaultValue(cx, obj, hint, vp);
         else
             ok = op(cx, obj, hint, vp);
