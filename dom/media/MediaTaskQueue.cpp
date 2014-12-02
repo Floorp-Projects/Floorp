@@ -118,11 +118,21 @@ MediaTaskQueue::AwaitIdleLocked()
 }
 
 void
-MediaTaskQueue::Shutdown()
+MediaTaskQueue::AwaitShutdownAndIdle()
+{
+  MonitorAutoLock mon(mQueueMonitor);
+  while (!mIsShutdown) {
+    mQueueMonitor.Wait();
+  }
+  AwaitIdleLocked();
+}
+
+void
+MediaTaskQueue::BeginShutdown()
 {
   MonitorAutoLock mon(mQueueMonitor);
   mIsShutdown = true;
-  AwaitIdleLocked();
+  mon.NotifyAll();
 }
 
 nsresult
