@@ -827,9 +827,7 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
         return false;
 
     AutoNameVector formals(cx);
-    if (!formals.reserve(3))
-        return false;
-
+    formals.reserve(3);
     if (module.globalArgumentName())
         formals.infallibleAppend(module.globalArgumentName());
     if (module.importArgumentName())
