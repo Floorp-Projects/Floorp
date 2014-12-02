@@ -77,8 +77,13 @@ AudioOffloadPlayer::AudioOffloadPlayer(MediaOmxCommonDecoder* aObserver) :
 #endif
 
   CHECK(aObserver);
+#if ANDROID_VERSION >= 21
+  mSessionId = AudioSystem::newAudioUniqueId();
+  AudioSystem::acquireAudioSessionId(mSessionId, -1);
+#else
   mSessionId = AudioSystem::newAudioSessionId();
   AudioSystem::acquireAudioSessionId(mSessionId);
+#endif
   mAudioSink = new AudioOutput(mSessionId,
       IPCThreadState::self()->getCallingUid());
 }
@@ -86,7 +91,11 @@ AudioOffloadPlayer::AudioOffloadPlayer(MediaOmxCommonDecoder* aObserver) :
 AudioOffloadPlayer::~AudioOffloadPlayer()
 {
   Reset();
+#if ANDROID_VERSION >= 21
+  AudioSystem::releaseAudioSessionId(mSessionId, -1);
+#else
   AudioSystem::releaseAudioSessionId(mSessionId);
+#endif
 }
 
 void AudioOffloadPlayer::SetSource(const sp<MediaSource> &aSource)
