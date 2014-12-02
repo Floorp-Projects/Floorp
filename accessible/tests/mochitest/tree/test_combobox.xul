@@ -24,6 +24,15 @@
       //////////////////////////////////////////////////////////////////////////
       // menulist
 
+      var selectedOptionChildren = [];
+      if (MAC) {
+        // checkmark is part of the Mac menu styling
+        selectedOptionChildren = [{
+          role: ROLE_STATICTEXT,
+          children: []
+        }];
+      }
+
       var accTree = {
         role: ROLE_COMBOBOX,
         children: [
@@ -32,7 +41,7 @@
             children: [
               {
                 role: ROLE_COMBOBOX_OPTION,
-                children: []
+                children: selectedOptionChildren
               },
               {
                 role: ROLE_COMBOBOX_OPTION,
@@ -43,11 +52,7 @@
         ]
       };
 
-      if (!MAC) {
-        testAccessibleTree("menulist", accTree);
-      } else {
-        todo(false, "Make this test pass on OSX (bug 650366)");
-      }
+      testAccessibleTree("menulist", accTree);
 
       //////////////////////////////////////////////////////////////////////////
       // editable menulist
