@@ -28,7 +28,7 @@ function connect(onDone) {
     let observer = {
       observe: function (subject, topic, data) {
         Services.obs.removeObserver(observer, "debugger-server-started");
-        let transport = debuggerSocketConnect("127.0.0.1", 6000);
+        let transport = DebuggerClient.socketConnect("127.0.0.1", 6000);
         startClient(transport, onDone);
       }
     };

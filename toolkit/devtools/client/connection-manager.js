@@ -231,10 +231,10 @@ Connection.prototype = {
         transport = DebuggerServer.connectPipe();
       } else {
         try {
-          transport = debuggerSocketConnect(this.host, this.port);
+          transport = DebuggerClient.socketConnect(this.host, this.port);
         } catch (e) {
           // In some cases, especially on Mac, the openOutputStream call in
-          // debuggerSocketConnect may throw NS_ERROR_NOT_INITIALIZED.
+          // DebuggerClient.socketConnect may throw NS_ERROR_NOT_INITIALIZED.
           // It occurs when we connect agressively to the simulator,
           // and keep trying to open a socket to the server being started in
           // the simulator.
@@ -299,4 +299,3 @@ Connection.prototype = {
 
 exports.ConnectionManager = ConnectionManager;
 exports.Connection = Connection;
-

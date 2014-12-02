@@ -32,7 +32,7 @@ function test_socket_conn()
 
   do_print("Starting long and unicode tests at " + new Date().toTimeString());
   let unicodeString = "(╯°□°）╯︵ ┻━┻";
-  let transport = debuggerSocketConnect("127.0.0.1", gPort);
+  let transport = DebuggerClient.socketConnect("127.0.0.1", gPort);
   transport.hooks = {
     onPacket: function(aPacket) {
       this.onPacket = function(aPacket) {
@@ -66,7 +66,7 @@ function test_socket_shutdown()
   do_check_eq(DebuggerServer.listeningSockets, 0);
 
   do_print("Connecting to a server socket at " + new Date().toTimeString());
-  let transport = debuggerSocketConnect("127.0.0.1", gPort);
+  let transport = DebuggerClient.socketConnect("127.0.0.1", gPort);
   transport.hooks = {
     onPacket: function(aPacket) {
       // Shouldn't reach this, should never connect.
