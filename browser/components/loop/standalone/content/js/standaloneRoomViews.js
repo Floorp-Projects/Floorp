@@ -127,6 +127,10 @@ loop.standaloneRoomViews = (function(mozL10n) {
             React.DOM.div({className: "room-inner-info-area"}, 
               React.DOM.p({className: "failed-room-message"}, 
                 this._getFailureString()
+              ), 
+              React.DOM.button({className: "btn btn-join btn-info", 
+                      onClick: this.props.joinRoom}, 
+                mozL10n.get("retry_call_button")
               )
             )
           );
