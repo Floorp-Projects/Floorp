@@ -47,8 +47,6 @@ Object.defineProperty(this, "Components", {
   get: function () require("chrome").components
 });
 
-const DBG_STRINGS_URI = "chrome://global/locale/devtools/debugger.properties";
-
 if (isWorker) {
   dumpn.wantLogging = true;
   dumpv.wantVerbose = true;
@@ -159,12 +157,6 @@ var DebuggerServer = {
   LONG_STRING_READ_LENGTH: 65 * 1024,
 
   /**
-   * A handler function that prompts the user to accept or decline the incoming
-   * connection.
-   */
-  _allowConnection: null,
-
-  /**
    * The windowtype of the chrome window to use for actors that use the global
    * window (i.e the global style editor). Set this to your main window type,
    * for example "navigator:browser".
@@ -172,47 +164,14 @@ var DebuggerServer = {
   chromeWindowType: null,
 
   /**
-   * Prompt the user to accept or decline the incoming connection. This is the
-   * default implementation that products embedding the debugger server may
-   * choose to override.
-   *
-   * @return true if the connection should be permitted, false otherwise
-   */
-  _defaultAllowConnection: function DS__defaultAllowConnection() {
-    let bundle = Services.strings.createBundle(DBG_STRINGS_URI)
-    let title = bundle.GetStringFromName("remoteIncomingPromptTitle");
-    let msg = bundle.GetStringFromName("remoteIncomingPromptMessage");
-    let disableButton = bundle.GetStringFromName("remoteIncomingPromptDisable");
-    let prompt = Services.prompt;
-    let flags = prompt.BUTTON_POS_0 * prompt.BUTTON_TITLE_OK +
-                prompt.BUTTON_POS_1 * prompt.BUTTON_TITLE_CANCEL +
-                prompt.BUTTON_POS_2 * prompt.BUTTON_TITLE_IS_STRING +
-                prompt.BUTTON_POS_1_DEFAULT;
-    let result = prompt.confirmEx(null, title, msg, flags, null, null,
-                                  disableButton, null, { value: false });
-    if (result == 0) {
-      return true;
-    }
-    if (result == 2) {
-      DebuggerServer.closeAllListeners();
-      Services.prefs.setBoolPref("devtools.debugger.remote-enabled", false);
-    }
-    return false;
-  },
-
-  /**
    * Initialize the debugger server.
-   *
-   * @param function aAllowConnectionCallback
-   *        The embedder-provider callback, that decides whether an incoming
-   *        remote protocol conection should be allowed or refused.
    */
-  init: function DS_init(aAllowConnectionCallback) {
+  init: function DS_init() {
     if (this.initialized) {
       return;
     }
 
-    this.initTransport(aAllowConnectionCallback);
+    this.initTransport();
 
     this._initialized = true;
   },
@@ -222,12 +181,8 @@ var DebuggerServer = {
   /**
    * Initialize the debugger server's transport variables.  This can be
    * in place of init() for cases where the jsdebugger isn't needed.
-   *
-   * @param function aAllowConnectionCallback
-   *        The embedder-provider callback, that decides whether an incoming
-   *        remote protocol conection should be allowed or refused.
    */
-  initTransport: function DS_initTransport(aAllowConnectionCallback) {
+  initTransport: function DS_initTransport() {
     if (this._transportInitialized) {
       return;
     }
@@ -235,9 +190,6 @@ var DebuggerServer = {
     this._connections = {};
     this._nextConnID = 0;
     this._transportInitialized = true;
-    this._allowConnection = aAllowConnectionCallback ?
-                            aAllowConnectionCallback :
-                            this._defaultAllowConnection;
   },
 
   get initialized() this._initialized,
@@ -266,7 +218,6 @@ var DebuggerServer = {
     this.closeAllListeners();
     this.globalActorFactories = {};
     this.tabActorFactories = {};
-    this._allowConnection = null;
     this._transportInitialized = false;
     this._initialized = false;
 
