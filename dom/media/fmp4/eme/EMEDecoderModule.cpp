@@ -152,7 +152,8 @@ public:
         mDecoder,
         &MediaDataDecoder::Shutdown));
     mDecoder = nullptr;
-    mTaskQueue->Shutdown();
+    mTaskQueue->BeginShutdown();
+    mTaskQueue->AwaitShutdownAndIdle();
     mTaskQueue = nullptr;
     mProxy = nullptr;
     return NS_OK;
@@ -189,7 +190,8 @@ EMEDecoderModule::Shutdown()
   if (mPDM) {
     return mPDM->Shutdown();
   }
-  mTaskQueue->Shutdown();
+  mTaskQueue->BeginShutdown();
+  mTaskQueue->AwaitShutdownAndIdle();
   return NS_OK;
 }
 

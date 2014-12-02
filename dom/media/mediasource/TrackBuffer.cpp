@@ -103,7 +103,8 @@ TrackBuffer::Shutdown()
   // Shutdown waits for any pending events, which may require the monitor,
   // so we must not hold the monitor during this call.
   mParentDecoder->GetReentrantMonitor().AssertNotCurrentThreadIn();
-  mTaskQueue->Shutdown();
+  mTaskQueue->BeginShutdown();
+  mTaskQueue->AwaitShutdownAndIdle();
   mTaskQueue = nullptr;
 
   ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
