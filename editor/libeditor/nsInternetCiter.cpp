@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsInternetCiter.h"
 
 #include "nsAString.h"
 #include "nsCOMPtr.h"
@@ -11,7 +12,6 @@
 #include "nsDependentSubstring.h"
 #include "nsError.h"
 #include "nsILineBreaker.h"
-#include "nsInternetCiter.h"
 #include "nsLWBrkCIID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"

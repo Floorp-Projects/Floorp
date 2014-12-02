@@ -3,9 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "InsertNodeTxn.h"
+
 #include "mozilla/dom/Selection.h"      // for Selection
 
-#include "InsertNodeTxn.h"
 #include "nsAString.h"
 #include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
 #include "nsEditor.h"                   // for nsEditor
