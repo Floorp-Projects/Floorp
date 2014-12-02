@@ -65,12 +65,14 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
   , mStartTime(-1)
   , mAudioDiscontinuity(false)
   , mVideoDiscontinuity(false)
+  , mShutdown(false)
 {
   MOZ_COUNT_CTOR(MediaDecoderReader);
 }
 
 MediaDecoderReader::~MediaDecoderReader()
 {
+  MOZ_ASSERT(mShutdown);
   ResetDecode();
   MOZ_COUNT_DTOR(MediaDecoderReader);
 }
@@ -265,6 +267,7 @@ void
 MediaDecoderReader::Shutdown()
 {
   MOZ_ASSERT(mDecoder->OnDecodeThread());
+  mShutdown = true;
   ReleaseMediaResources();
 }
 

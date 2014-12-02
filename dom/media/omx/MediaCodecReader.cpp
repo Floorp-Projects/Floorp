@@ -348,6 +348,7 @@ void
 MediaCodecReader::Shutdown()
 {
   ReleaseResources();
+  MediaDecoderReader::Shutdown();
 }
 
 void
