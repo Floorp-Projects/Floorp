@@ -196,7 +196,7 @@ function initTestDebuggerServer() {
   });
   DebuggerServer.registerModule("xpcshell-test/testactors");
   // Allow incoming connections.
-  DebuggerServer.init(function () { return true; });
+  DebuggerServer.init();
 }
 
 function finishClient(aClient) {

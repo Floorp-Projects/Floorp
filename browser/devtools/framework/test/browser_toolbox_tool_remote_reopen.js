@@ -66,7 +66,7 @@ function getClient() {
   let deferred = promise.defer();
 
   if (!DebuggerServer.initialized) {
-    DebuggerServer.init(() => true);
+    DebuggerServer.init();
     DebuggerServer.addBrowserActors();
   }
 

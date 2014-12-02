@@ -91,7 +91,7 @@ let RootFront = protocol.FrontClass(RootActor, {
 function run_test()
 {
   DebuggerServer.createRootActor = RootActor;
-  DebuggerServer.init(() => true);
+  DebuggerServer.init();
 
   let trace = connectPipeTracing();
   let client = new DebuggerClient(trace);
