@@ -80,6 +80,12 @@ extern sdp_result_e sdp_parse_attr_msid(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                         const char *ptr);
 extern sdp_result_e sdp_build_attr_msid(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                         flex_string *fs);
+extern sdp_result_e sdp_parse_attr_msid_semantic(sdp_t *sdp_p,
+                                                 sdp_attr_t *attr_p,
+                                                 const char *ptr);
+extern sdp_result_e sdp_build_attr_msid_semantic(sdp_t *sdp_p,
+                                                 sdp_attr_t *attr_p,
+                                                 flex_string *fs);
 extern sdp_result_e sdp_parse_attr_ssrc(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                         const char *ptr);
 extern sdp_result_e sdp_build_attr_ssrc(sdp_t *sdp_p, sdp_attr_t *attr_p,

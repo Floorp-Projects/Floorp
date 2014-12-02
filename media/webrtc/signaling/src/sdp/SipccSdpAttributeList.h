@@ -69,7 +69,8 @@ public:
   virtual const std::string& GetLabel() const MOZ_OVERRIDE;
   virtual unsigned int GetMaxptime() const MOZ_OVERRIDE;
   virtual const std::string& GetMid() const MOZ_OVERRIDE;
-  virtual const std::string& GetMsidSemantic() const MOZ_OVERRIDE;
+  virtual const SdpMsidSemanticAttributeList& GetMsidSemantic()
+    const MOZ_OVERRIDE;
   virtual unsigned int GetPtime() const MOZ_OVERRIDE;
 
   virtual SdpDirectionAttribute::Direction GetDirection() const MOZ_OVERRIDE;
@@ -105,6 +106,9 @@ private:
   void LoadSetup(sdp_t* sdp, uint16_t level);
   void LoadSsrc(sdp_t* sdp, uint16_t level);
   bool LoadGroups(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
+  bool LoadMsidSemantics(sdp_t* sdp,
+                         uint16_t level,
+                         SdpErrorHolder& errorHolder);
   void LoadFmtp(sdp_t* sdp, uint16_t level);
   void LoadMsids(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
   void LoadExtmap(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);

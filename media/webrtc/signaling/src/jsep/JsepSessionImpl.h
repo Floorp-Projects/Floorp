@@ -210,6 +210,7 @@ private:
   void AddExtmap(SdpMediaSection* msection) const;
   void AddMid(const std::string& mid, SdpMediaSection* msection) const;
   void AddLocalSsrcs(const JsepTrack& track, SdpMediaSection* msection) const;
+  void AddLocalIds(const JsepTrack& track, SdpMediaSection* msection) const;
   JsepCodecDescription* FindMatchingCodec(
       const std::string& pt,
       const SdpMediaSection& msection) const;
@@ -231,7 +232,9 @@ private:
   nsresult ValidateLocalDescription(const Sdp& description);
   nsresult SetRemoteTracksFromDescription(const Sdp& remoteDescription);
   // Non-const because we use our Uuid generator
-  nsresult CreateReceivingTrack(size_t mline, const SdpMediaSection& msection);
+  nsresult CreateReceivingTrack(size_t mline,
+                                const Sdp& sdp,
+                                const SdpMediaSection& msection);
   nsresult HandleNegotiatedSession(const UniquePtr<Sdp>& local,
                                    const UniquePtr<Sdp>& remote);
   nsresult DetermineSendingDirection(SdpDirectionAttribute::Direction offer,
@@ -244,6 +247,13 @@ private:
                                    Maybe<size_t> offerToReceive,
                                    Sdp* sdp);
   void SetupBundle(Sdp* sdp) const;
+  void SetupMsidSemantic(const std::vector<std::string>& msids, Sdp* sdp) const;
+  nsresult GetIdsFromMsid(const Sdp& sdp,
+                          const SdpMediaSection& msection,
+                          std::string* streamId,
+                          std::string* trackId);
+  nsresult GetMsids(const SdpMediaSection& msection,
+                    std::vector<SdpMsidAttributeList::Msid>* msids);
   nsresult CreateOfferMSection(SdpMediaSection::MediaType type,
                                SdpDirectionAttribute::Direction direction,
                                SdpMediaSection::Protocol proto,
