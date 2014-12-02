@@ -64,7 +64,6 @@ UNIFIED_SOURCES += [
     'KeyPath.cpp',
     'PermissionRequestBase.cpp',
     'ReportInternalError.cpp',
-    'TransactionThreadPool.cpp',
 ]
 
 SOURCES += [
