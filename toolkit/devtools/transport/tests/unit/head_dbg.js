@@ -260,7 +260,8 @@ function writeTestTempFile(aFileName, aContent) {
 
 function socket_transport() {
   if (!DebuggerServer.listeningSockets) {
-    DebuggerServer.openListener(-1);
+    let listener = DebuggerServer.openListener(-1);
+    listener.allowConnection = () => true;
   }
   let port = DebuggerServer._listeners[0].port;
   do_print("Debugger server port is " + port);
