@@ -59,7 +59,8 @@ private:
   {
     reader->GetTaskQueue()->Dispatch(NS_NewRunnableMethod(reader,
                                                           &MP4Reader::Shutdown));
-    reader->GetTaskQueue()->Shutdown();
+    reader->GetTaskQueue()->BeginShutdown();
+    reader->GetTaskQueue()->AwaitShutdownAndIdle();
 
     decoder = nullptr;
     resource = nullptr;
