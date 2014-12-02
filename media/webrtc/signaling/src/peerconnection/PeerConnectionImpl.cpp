@@ -200,12 +200,14 @@ public:
     for (uint32_t i = 0; i < tracks.Length(); i++) {
       JSErrorResult rv;
       mObserver->OnAddTrack(*tracks[i], rv);
+      CSFLogInfo(logTag, "Calling OnAddTrack");
       if (rv.Failed()) {
         CSFLogError(logTag, ": OnAddTrack(%d) failed! Error: %u", i,
                     static_cast<uint32_t>(rv.ErrorCode()));
       }
     }
     JSErrorResult rv;
+    CSFLogInfo(logTag, "Calling OnAddStream");
     mObserver->OnAddStream(*aStream, rv);
     if (rv.Failed()) {
       CSFLogError(logTag, ": OnAddStream() failed! Error: %u", static_cast<uint32_t>(rv.ErrorCode()));
