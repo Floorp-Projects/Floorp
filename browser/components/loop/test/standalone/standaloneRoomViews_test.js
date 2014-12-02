@@ -203,6 +203,14 @@ describe("loop.standaloneRoomViews", function() {
             expect(view.getDOMNode().querySelector(".failed-room-message"))
               .not.eql(null);
           });
+
+        it("should display a retry button",
+          function() {
+            activeRoomStore.setStoreState({roomState: ROOM_STATES.FAILED});
+
+            expect(view.getDOMNode().querySelector(".btn-info"))
+              .not.eql(null);
+          });
       });
 
       describe("Join button", function() {
