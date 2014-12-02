@@ -10,6 +10,7 @@
 #include <queue>
 #include "mozilla/RefPtr.h"
 #include "mozilla/Monitor.h"
+#include "SharedThreadPool.h"
 #include "nsThreadUtils.h"
 
 class nsIRunnable;
@@ -41,12 +42,18 @@ public:
   // the currently running task (if any) finishes.
   void Flush();
 
-  // Blocks until all tasks finish executing, then shuts down the task queue
-  // and exits.
-  void Shutdown();
+  // Puts the queue in a shutdown state and returns immediately. The queue will
+  // remain alive at least until all the events are drained, because the Runners
+  // hold a strong reference to the task queue, and one of them is always held
+  // by the threadpool event queue when the task queue is non-empty.
+  void BeginShutdown();
 
   // Blocks until all task finish executing.
   void AwaitIdle();
+
+  // Blocks until the queue is flagged for shutdown and all tasks have finished
+  // executing.
+  void AwaitShutdownAndIdle();
 
   bool IsEmpty();
 

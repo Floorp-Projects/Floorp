@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <stdio.h>                      // for printf
-
 #include "JoinNodeTxn.h"
 #include "nsAString.h"
 #include "nsDebug.h"                    // for NS_ASSERTION, etc
