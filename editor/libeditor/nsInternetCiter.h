@@ -7,6 +7,7 @@
 #define nsInternetCiter_h__
 
 #include "nscore.h"
+#include "nsStringFwd.h"
 
 /** Mail citations using standard Internet style.
   */

@@ -2236,7 +2236,7 @@ struct nsStyleTable {
 };
 
 struct nsStyleTableBorder {
-  explicit nsStyleTableBorder(nsPresContext* aContext);
+  nsStyleTableBorder();
   nsStyleTableBorder(const nsStyleTableBorder& aOther);
   ~nsStyleTableBorder(void);
 

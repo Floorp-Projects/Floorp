@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=830260
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 830260</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 830260 **/
+    var div = document.createElement("div");
+    div.style.color = "green";
+    div.style.color = "null";
+    ise(div.style.color, "green", 'Assigning "null" as a color should not parse');
+    div.style.setProperty("color", "null");
+    ise(div.style.color, "green",
+        'Passing "null" as a color to setProperty should not parse');
+
+    div.style.setProperty("color", null);
+    ise(div.style.color, "",
+        'Passing null as a color to setProperty should remove the property');
+
+    div.style.color = "green";
+    ise(div.style.color, "green", 'Assigning "green" as a color should parse');
+
+    div.style.color = null;
+    ise(div.style.color, "",
+        'Assigning null as a color should remove the property');
+
+
+
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=830260">Mozilla Bug 830260</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

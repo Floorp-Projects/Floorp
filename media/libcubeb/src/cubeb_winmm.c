@@ -200,11 +200,11 @@ winmm_buffer_thread(void * user_ptr)
   assert(ctx);
 
   for (;;) {
-    DWORD rv;
+    DWORD r;
     PSLIST_ENTRY item;
 
-    rv = WaitForSingleObject(ctx->event, INFINITE);
-    assert(rv == WAIT_OBJECT_0);
+    r = WaitForSingleObject(ctx->event, INFINITE);
+    assert(r == WAIT_OBJECT_0);
 
     /* Process work items in batches so that a single stream can't
        starve the others by continuously adding new work to the top of
@@ -323,7 +323,7 @@ winmm_get_backend_id(cubeb * ctx)
 static void
 winmm_destroy(cubeb * ctx)
 {
-  DWORD rv;
+  DWORD r;
 
   assert(ctx->active_streams == 0);
   assert(!InterlockedPopEntrySList(ctx->work));
@@ -333,8 +333,8 @@ winmm_destroy(cubeb * ctx)
   if (ctx->thread) {
     ctx->shutdown = 1;
     SetEvent(ctx->event);
-    rv = WaitForSingleObject(ctx->thread, INFINITE);
-    assert(rv == WAIT_OBJECT_0);
+    r = WaitForSingleObject(ctx->thread, INFINITE);
+    assert(r == WAIT_OBJECT_0);
     CloseHandle(ctx->thread);
   }
 
@@ -488,7 +488,7 @@ winmm_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
 static void
 winmm_stream_destroy(cubeb_stream * stm)
 {
-  DWORD rv;
+  DWORD r;
   int i;
   int enqueued;
 
@@ -503,8 +503,8 @@ winmm_stream_destroy(cubeb_stream * stm)
 
     /* Wait for all blocks to complete. */
     while (enqueued > 0) {
-      rv = WaitForSingleObject(stm->event, INFINITE);
-      assert(rv == WAIT_OBJECT_0);
+      r = WaitForSingleObject(stm->event, INFINITE);
+      assert(r == WAIT_OBJECT_0);
 
       EnterCriticalSection(&stm->lock);
       enqueued = NBUFS - stm->free_buffers;
@@ -668,13 +668,6 @@ winmm_stream_set_volume(cubeb_stream * stm, float volume)
   return CUBEB_OK;
 }
 
-static int
-winmm_stream_set_panning(cubeb_stream * stream, float panning)
-{
-  assert(0 && "not implemented");
-  return CUBEB_OK;
-}
-
 static struct cubeb_ops const winmm_ops = {
   /*.init =*/ winmm_init,
   /*.get_backend_id =*/ winmm_get_backend_id,
@@ -689,7 +682,7 @@ static struct cubeb_ops const winmm_ops = {
   /*.stream_get_position =*/ winmm_stream_get_position,
   /*.stream_get_latency = */ winmm_stream_get_latency,
   /*.stream_set_volume =*/ winmm_stream_set_volume,
-  /*.stream_set_panning =*/ winmm_stream_set_panning,
+  /*.stream_set_panning =*/ NULL,
   /*.stream_get_current_device =*/ NULL,
   /*.stream_device_destroy =*/ NULL,
   /*.stream_register_device_changed_callback=*/ NULL
