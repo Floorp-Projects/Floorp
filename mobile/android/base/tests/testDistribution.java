@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.util.Locale;
 import java.util.jar.JarInputStream;
 
 import org.json.JSONArray;
@@ -15,6 +16,8 @@ import org.json.JSONObject;
 
 import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.BrowserLocaleManager;
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.SuggestedSites;
@@ -129,7 +132,14 @@ public class testDistribution extends ContentProviderTest {
         Distribution dist = initDistribution(mockPackagePath);
         SuggestedSites suggestedSites = new SuggestedSites(mActivity, dist);
         BrowserDB.setSuggestedSites(suggestedSites);
-        checkTilesReporting();
+
+        // Test tiles uploading for an en-US OS locale with no app locale.
+        setOSLocale(Locale.US);
+        checkTilesReporting("en-US");
+
+        // Test tiles uploading for an es-MX OS locale with no app locale.
+        setOSLocale(new Locale("es", "MX"));
+        checkTilesReporting("es-MX");
 
         // Pre-clear distribution pref, run basic preferences and en-US localized preferences Tests
         clearDistributionPref();
@@ -152,6 +162,11 @@ public class testDistribution extends ContentProviderTest {
 
         clearDistributionPref();
         doTestInvalidReferrerIntent();
+    }
+
+    private void setOSLocale(Locale locale) {
+        Locale.setDefault(locale);
+        BrowserLocaleManager.storeAndNotifyOSLocale(GeckoSharedPrefs.forProfile(mActivity), locale);
     }
 
     private void doReferrerTest(String ref, final TestableDistribution distribution, final Runnable distributionReady) throws InterruptedException {
@@ -330,37 +345,9 @@ public class testDistribution extends ContentProviderTest {
         }
     }
 
-    // Sets the distribution locale preference for the test
-    private void setTestLocale(String aLocale) {
-        String prefUseragentLocale = "general.useragent.locale";
-
-        JSONObject jsonPref = new JSONObject();
-        try {
-            // Request the pref change to the locale.
-            jsonPref.put("name", prefUseragentLocale);
-            jsonPref.put("type", "string");
-            jsonPref.put("value", aLocale);
-            mActions.sendGeckoEvent("Preferences:Set", jsonPref.toString());
-
-            // Wait for confirmation of the pref change.
-            final String[] prefNames = { prefUseragentLocale };
-
-            Actions.RepeatedEventExpecter eventExpecter = mActions.expectGeckoEvent("Preferences:Data");
-            mActions.sendPreferencesGetEvent(PREF_REQUEST_ID, prefNames);
-
-            JSONObject data = null;
-            int requestId = -1;
-
-            // Wait until we get the correct "Preferences:Data" event
-            while (requestId != PREF_REQUEST_ID) {
-                data = new JSONObject(eventExpecter.blockForEventData());
-                requestId = data.getInt("requestId");
-            }
-            eventExpecter.unregisterListener();
-
-        } catch (Exception e) {
-            mAsserter.ok(false, "exception setting test locale", e.toString());
-        }
+    // Sets the distribution locale preference for the test.
+    private void setTestLocale(String locale) {
+        BrowserLocaleManager.getInstance().setSelectedLocale(mActivity, locale);
     }
 
     // Test localized distribution and preferences values stored in preferences.json
@@ -454,32 +441,31 @@ public class testDistribution extends ContentProviderTest {
         TestableDistribution.clearReferrerDescriptorForTesting();
     }
 
-    public void checkTilesReporting() throws JSONException {
+    public void checkTilesReporting(String localeCode) throws JSONException {
         // Slight hack: Force top sites grid to reload.
         inputAndLoadUrl(StringHelper.ABOUT_BLANK_URL);
         inputAndLoadUrl(StringHelper.ABOUT_HOME_URL);
 
         // Click the first tracking tile and verify the posted data.
         JSONObject response = clickTrackingTile(StringHelper.DISTRIBUTION1_LABEL);
-        mAsserter.is(0, response.getInt("click"), "JSON click index matched");
-        mAsserter.is("[{\"id\":123},{\"id\":456},{},{},{},{}]", response.getString("tiles"), "JSON tiles data matched");
+        mAsserter.is(response.getInt("click"), 0, "JSON click index matched");
+        mAsserter.is(response.getString("locale"), localeCode, "JSON locale code matched");
+        mAsserter.is(response.getString("tiles"), "[{\"id\":123},{\"id\":456},{},{},{},{}]", "JSON tiles data matched");
 
         inputAndLoadUrl(StringHelper.ABOUT_HOME_URL);
 
         // Pin the second tracking tile.
-        verifyPinned(false, StringHelper.DISTRIBUTION2_LABEL);
-        mSolo.clickLongOnText(StringHelper.DISTRIBUTION2_LABEL);
-        boolean dialogOpened = mSolo.waitForDialogToOpen();
-        mAsserter.ok(dialogOpened, "Pin site dialog opened", null);
-        boolean pinSiteFound = waitForText(StringHelper.CONTEXT_MENU_PIN_SITE);
-        mAsserter.ok(pinSiteFound, "Found pin site menu item", null);
-        mSolo.clickOnText(StringHelper.CONTEXT_MENU_PIN_SITE);
-        verifyPinned(true, StringHelper.DISTRIBUTION2_LABEL);
+        pinTopSite(StringHelper.DISTRIBUTION2_LABEL);
 
         // Click the second tracking tile and verify the posted data.
         response = clickTrackingTile(StringHelper.DISTRIBUTION2_LABEL);
-        mAsserter.is(1, response.getInt("click"), "JSON click index matched");
-        mAsserter.is("[{\"id\":123},{\"id\":456,\"pin\":true},{},{},{},{}]", response.getString("tiles"), "JSON tiles data matched");
+        mAsserter.is(response.getInt("click"), 1, "JSON click index matched");
+        mAsserter.is(response.getString("tiles"), "[{\"id\":123},{\"id\":456,\"pin\":true},{},{},{},{}]", "JSON tiles data matched");
+
+        inputAndLoadUrl(StringHelper.ABOUT_HOME_URL);
+
+        // Unpin the second tracking tile.
+        unpinTopSite(StringHelper.DISTRIBUTION2_LABEL);
     }
 
     private JSONObject clickTrackingTile(String text) throws JSONException {
