@@ -69,13 +69,6 @@ union MaybeNativeKeyBinding
   void_t;
 };
 
-struct ShowInfo
-{
-  nsString name;
-  bool fullscreenAllowed;
-  bool isPrivate;
-};
-
 prio(normal upto urgent) intr protocol PBrowser
 {
     manager PContent or PContentBridge;
@@ -418,7 +411,6 @@ child:
      * point.
      */
     Show(nsIntSize size,
-         ShowInfo info,
          ScrollingBehavior scrolling,
          TextureFactoryIdentifier textureFactoryIdentifier,
          uint64_t layersId,

@@ -52,5 +52,14 @@ if (!('BrowserElementIsPreloaded' in this)) {
 
 var BrowserElementIsReady = true;
 
-
-sendAsyncMessage('browser-element-api:call', { 'msg_name': 'hello' });
+let infos = sendSyncMessage('browser-element-api:call',
+                            { 'msg_name': 'hello' })[0];
+docShell.QueryInterface(Ci.nsIDocShellTreeItem).name = infos.name;
+docShell.setFullscreenAllowed(infos.fullscreenAllowed);
+if (infos.isPrivate) {
+  if (docShell.hasLoadedNonBlankURI) {
+    Cu.reportError("We should not switch to Private Browsing after loading a document.");
+  } else {
+    docShell.QueryInterface(Ci.nsILoadContext).usePrivateBrowsing = true;
+  }
+}
