@@ -28,7 +28,7 @@ Bug 901519 - [app manager] data store for connections
       Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
 
       if (!DebuggerServer.initialized) {
-        DebuggerServer.init(function () { return true; });
+        DebuggerServer.init();
         DebuggerServer.addBrowserActors();
       }
 

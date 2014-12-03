@@ -12,7 +12,7 @@ function test() {
   let gClient;
 
   if (!DebuggerServer.initialized) {
-    DebuggerServer.init(() => true);
+    DebuggerServer.init();
     DebuggerServer.addBrowserActors();
   }
 
