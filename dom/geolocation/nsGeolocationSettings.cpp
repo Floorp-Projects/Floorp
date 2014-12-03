@@ -236,7 +236,7 @@ nsGeolocationSettings::HandleGeolocationPerOriginSettingsChange(const JS::Value&
 
   // enumerate the array
   AutoJSAPI jsapi;
-  jsapi.Init(&aVal.toObject());
+  jsapi.Init();
   JSContext* cx = jsapi.cx();
   JS::Rooted<JSObject*> obj(cx, &aVal.toObject());
   JS::AutoIdArray ids(cx, JS_Enumerate(cx, obj));
@@ -312,7 +312,7 @@ nsGeolocationSettings::HandleGeolocationAlwaysPreciseChange(const JS::Value& aVa
   mAlwaysPreciseApps.Clear();
 
   AutoJSAPI jsapi;
-  jsapi.Init(&aVal.toObject());
+  jsapi.Init();
   JSContext* cx = jsapi.cx();
   JS::Rooted<JSObject*> obj(cx, &aVal.toObject());
   if (!JS_IsArrayObject(cx, obj)) {
@@ -351,7 +351,7 @@ void
 GeolocationSetting::HandleTypeChange(const JS::Value& aVal)
 {
   AutoJSAPI jsapi;
-  jsapi.Init(&aVal.toObject());
+  jsapi.Init();
   JSContext* cx = jsapi.cx();
   nsString str;
   if (!aVal.isString() || !AssignJSString(cx, str, aVal.toString())) {
@@ -429,7 +429,7 @@ void
 GeolocationSetting::HandleFixedCoordsChange(const JS::Value& aVal)
 {
   AutoJSAPI jsapi;
-  jsapi.Init(&aVal.toObject());
+  jsapi.Init();
   JSContext* cx = jsapi.cx();
   nsString str;
   if (!aVal.isString() || !AssignJSString(cx, str, aVal.toString()) || str.IsEmpty()) {
