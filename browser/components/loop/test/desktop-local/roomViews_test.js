@@ -206,15 +206,6 @@ describe("loop.roomViews", function () {
         }));
     }
 
-    it("should dispatch a setupStreamElements action when the view is created",
-      function() {
-        view = mountTestComponent();
-
-        sinon.assert.calledOnce(dispatcher.dispatch);
-        sinon.assert.calledWithMatch(dispatcher.dispatch,
-          sinon.match.hasOwn("name", "setupStreamElements"));
-    });
-
     it("should dispatch a setMute action when the audio mute button is pressed",
       function() {
         view = mountTestComponent();
@@ -269,6 +260,44 @@ describe("loop.roomViews", function () {
       var muteBtn = view.getDOMNode().querySelector('.btn-mute-audio');
 
       expect(muteBtn.classList.contains("muted")).eql(true);
+    });
+
+    describe("#componentWillUpdate", function() {
+      function expectActionDispatched(view) {
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          sinon.match.instanceOf(sharedActions.SetupStreamElements));
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          sinon.match(function(value) {
+            return value.getLocalElementFunc() ===
+                   view.getDOMNode().querySelector(".local");
+          }));
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          sinon.match(function(value) {
+            return value.getRemoteElementFunc() ===
+                   view.getDOMNode().querySelector(".remote");
+          }));
+      }
+
+      it("should dispatch a `SetupStreamElements` action when the MEDIA_WAIT state " +
+        "is entered", function() {
+          activeRoomStore.setStoreState({roomState: ROOM_STATES.READY});
+          var view = mountTestComponent();
+
+          activeRoomStore.setStoreState({roomState: ROOM_STATES.MEDIA_WAIT});
+
+          expectActionDispatched(view);
+        });
+
+      it("should dispatch a `SetupStreamElements` action on MEDIA_WAIT state is " +
+        "re-entered", function() {
+          activeRoomStore.setStoreState({roomState: ROOM_STATES.ENDED});
+          var view = mountTestComponent();
+
+          activeRoomStore.setStoreState({roomState: ROOM_STATES.MEDIA_WAIT});
+
+          expectActionDispatched(view);
+        });
     });
 
     describe("#render", function() {
