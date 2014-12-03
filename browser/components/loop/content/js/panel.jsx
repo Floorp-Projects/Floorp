@@ -752,7 +752,7 @@ loop.panel = (function(_, mozL10n) {
             }, this)
           }</div>
           <p>
-            <button className="btn btn-info"
+            <button className="btn btn-info new-room-button"
                     onClick={this.handleCreateButtonClick}
                     disabled={this._hasPendingOperation()}>
               {mozL10n.get("rooms_new_room_button_label")}
