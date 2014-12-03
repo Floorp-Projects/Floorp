@@ -148,7 +148,7 @@ BytecodeAnalysis::init(TempAllocator &alloc, GSNCache &gsn)
             }
             break;
 
-          case JSOP_NAME:
+          case JSOP_GETNAME:
           case JSOP_BINDNAME:
           case JSOP_SETNAME:
           case JSOP_DELNAME:

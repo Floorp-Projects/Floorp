@@ -1688,7 +1688,7 @@ IonBuilder::inspectOpcode(JSOp op)
         return setStaticName(obj, name);
       }
 
-      case JSOP_NAME:
+      case JSOP_GETNAME:
       {
         PropertyName *name = info().getAtom(pc)->asPropertyName();
         return jsop_getname(name);
