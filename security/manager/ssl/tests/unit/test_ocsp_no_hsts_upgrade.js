@@ -26,7 +26,7 @@ function run_test() {
     response.setHeader("Content-Type", "application/ocsp-response");
     response.write(goodOCSPResponse);
   });
-  ocspResponder.start(8080);
+  ocspResponder.start(8888);
 
   // ocsp-stapling-none.example.com does not staple an OCSP response in the
   // handshake, so the revocation checking code will attempt to fetch one.

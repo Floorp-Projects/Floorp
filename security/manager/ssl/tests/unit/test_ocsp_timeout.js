@@ -9,8 +9,8 @@
 // ocsp-stapling-none.example.com doesn't staple an OCSP response, so
 // connecting to it will cause a request to the OCSP responder. As with all of
 // these tests, the OCSP AIA (i.e. the url of the responder) in the certificate
-// is http://localhost:8080. Since this test opens a TCP socket listening on
-// port 8080 that just accepts connections and then ignores them (with
+// is http://localhost:8888. Since this test opens a TCP socket listening on
+// port 8888 that just accepts connections and then ignores them (with
 // connect/read/write timeouts of 30 seconds), the OCSP requests should cancel
 // themselves. When OCSP hard-fail is enabled, connections will be terminated.
 // Otherwise, they will succeed.
@@ -31,7 +31,7 @@ function run_test() {
 
   let socket = Cc["@mozilla.org/network/server-socket;1"]
                  .createInstance(Ci.nsIServerSocket);
-  socket.init(8080, true, -1);
+  socket.init(8888, true, -1);
   socket.asyncListen(gSocketListener);
 
   add_tests_in_mode(true);
