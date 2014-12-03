@@ -325,6 +325,14 @@ BrowserElementParent.prototype = {
       this._domRequestReady = true;
       this._runPendingAPICall();
     }
+
+    return {
+      name: this._frameElement.getAttribute('name'),
+      fullscreenAllowed:
+        this._frameElement.hasAttribute('allowfullscreen') ||
+        this._frameElement.hasAttribute('mozallowfullscreen'),
+      isPrivate: this._frameElement.hasAttribute('mozprivatebrowsing')
+    };
   },
 
   _fireCtxMenuEvent: function(data) {

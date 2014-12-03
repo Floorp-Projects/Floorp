@@ -317,7 +317,6 @@ public:
                                          const FileDescriptor& aFileDescriptor)
                                          MOZ_OVERRIDE;
     virtual bool RecvShow(const nsIntSize& aSize,
-                          const ShowInfo& aInfo,
                           const ScrollingBehavior& aScrolling,
                           const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                           const uint64_t& aLayersId,
@@ -552,8 +551,6 @@ private:
                     const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                     const uint64_t& aLayersId,
                     PRenderFrameChild* aRenderFrame);
-
-    void ApplyShowInfo(const ShowInfo& aInfo);
 
     // These methods are used for tracking synthetic mouse events
     // dispatched for compatibility.  On each touch event, we
