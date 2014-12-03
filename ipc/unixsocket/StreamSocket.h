@@ -4,30 +4,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_ipc_unixsocket_h
-#define mozilla_ipc_unixsocket_h
+#ifndef mozilla_ipc_streamsocket_h
+#define mozilla_ipc_streamsocket_h
 
-#include <stdlib.h>
-#include "nsAutoPtr.h"
-#include "nsString.h"
-#include "nsThreadUtils.h"
 #include "mozilla/ipc/SocketBase.h"
-#include "mozilla/ipc/UnixSocketWatcher.h"
-#include "mozilla/RefPtr.h"
-#include "UnixSocketConnector.h"
+#include "ConnectionOrientedSocket.h"
 
 namespace mozilla {
 namespace ipc {
 
-class UnixSocketConsumerIO;
+class StreamSocketIO;
+class UnixSocketConnector;
 
-class UnixSocketConsumer : public SocketConsumerBase
+class StreamSocket : public SocketConsumerBase
+                   , public ConnectionOrientedSocket
 {
-protected:
-  virtual ~UnixSocketConsumer();
-
 public:
-  UnixSocketConsumer();
+  StreamSocket();
 
   /**
    * Queue data to be sent to the socket on the IO thread. Can only be called on
@@ -60,36 +53,41 @@ public:
    *
    * @return true on connect task started, false otherwise.
    */
-  bool ConnectSocket(UnixSocketConnector* aConnector,
-                     const char* aAddress,
-                     int aDelayMs = 0);
-
-  /**
-   * Starts a task on the socket that will try to accept a new connection in a
-   * non-blocking manner.
-   *
-   * @param aConnector Connector object for socket type specific functions
-   *
-   * @return true on listen started, false otherwise
-   */
-  bool ListenSocket(UnixSocketConnector* aConnector);
+  bool Connect(UnixSocketConnector* aConnector,
+               const char* aAddress,
+               int aDelayMs = 0);
 
   /**
    * Queues the internal representation of socket for deletion. Can be called
    * from main thread.
    */
-  void CloseSocket();
+  void Close();
 
   /**
    * Get the current sockaddr for the socket
    */
   void GetSocketAddr(nsAString& aAddrStr);
 
+protected:
+  virtual ~StreamSocket();
+
+  // Prepares an instance of |StreamSocket| in DISCONNECTED state
+  // for accepting a connection. Subclasses implementing |GetIO|
+  // need to call this method.
+  ConnectionOrientedSocketIO* PrepareAccept(UnixSocketConnector* aConnector);
+
 private:
-  UnixSocketConsumerIO* mIO;
+
+  // Legacy interface from |SocketBase|; should be replaced by |Close|.
+  void CloseSocket() MOZ_OVERRIDE
+  {
+    Close();
+  }
+
+  StreamSocketIO* mIO;
 };
 
 } // namespace ipc
 } // namepsace mozilla
 
-#endif // mozilla_ipc_unixsocket_h
+#endif // mozilla_ipc_streamsocket_h
