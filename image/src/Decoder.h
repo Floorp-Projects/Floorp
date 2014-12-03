@@ -194,7 +194,8 @@ public:
 
   RawAccessFrameRef GetCurrentFrameRef()
   {
-    return mCurrentFrame->RawAccessRef();
+    return mCurrentFrame ? mCurrentFrame->RawAccessRef()
+                         : RawAccessFrameRef();
   }
 
 protected:
