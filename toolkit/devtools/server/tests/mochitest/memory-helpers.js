@@ -20,7 +20,7 @@ let { require } = devtools;
 let { MemoryFront } = require("devtools/server/actors/memory");
 
 function startServerAndGetSelectedTabMemory() {
-  DebuggerServer.init(() => true);
+  DebuggerServer.init();
   DebuggerServer.addBrowserActors();
   var client = new DebuggerClient(DebuggerServer.connectPipe());
 

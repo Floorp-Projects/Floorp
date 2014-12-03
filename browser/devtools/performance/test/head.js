@@ -139,7 +139,7 @@ function initBackend(aUrl) {
   info("Initializing a performance front.");
 
   if (!DebuggerServer.initialized) {
-    DebuggerServer.init(() => true);
+    DebuggerServer.init();
     DebuggerServer.addBrowserActors();
   }
 

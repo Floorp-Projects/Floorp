@@ -161,7 +161,7 @@ function run_test()
   DebuggerServer.createRootActor = (conn => {
     return RootActor(conn);
   });
-  DebuggerServer.init(() => true);
+  DebuggerServer.init();
 
   check_except(() => {
     let badActor = ActorClass({

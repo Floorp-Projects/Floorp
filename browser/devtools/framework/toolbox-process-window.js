@@ -8,7 +8,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-let { debuggerSocketConnect, DebuggerClient } =
+let { DebuggerClient } =
   Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
 let { ViewHelpers } =
   Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
@@ -26,7 +26,7 @@ let gToolbox, gClient;
 function connect() {
   window.removeEventListener("load", connect);
   // Initiate the connection
-  let transport = debuggerSocketConnect(
+  let transport = DebuggerClient.socketConnect(
     Prefs.chromeDebuggingHost,
     Prefs.chromeDebuggingPort
   );

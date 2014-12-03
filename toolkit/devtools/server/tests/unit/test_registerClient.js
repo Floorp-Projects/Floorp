@@ -53,7 +53,7 @@ function run_test()
 {
   DebuggerServer.addGlobalActor(TestActor);
 
-  DebuggerServer.init(function () { return true; });
+  DebuggerServer.init();
   DebuggerServer.addBrowserActors();
 
   add_test(init);

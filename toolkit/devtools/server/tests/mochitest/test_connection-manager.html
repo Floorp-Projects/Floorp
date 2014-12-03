@@ -23,7 +23,7 @@ window.onload = function() {
   Cu.import("resource://gre/modules/Services.jsm");
 
   if (!DebuggerServer.initialized) {
-    DebuggerServer.init(function () { return true; });
+    DebuggerServer.init();
     DebuggerServer.addBrowserActors();
   }
 
