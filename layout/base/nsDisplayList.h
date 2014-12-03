@@ -2600,12 +2600,12 @@ public:
   nsDisplayLayerEventRegions(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
     : nsDisplayItem(aBuilder, aFrame)
   {
-    MOZ_COUNT_CTOR(nsDisplayEventReceiver);
+    MOZ_COUNT_CTOR(nsDisplayLayerEventRegions);
     AddFrame(aBuilder, aFrame);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayLayerEventRegions() {
-    MOZ_COUNT_DTOR(nsDisplayEventReceiver);
+    MOZ_COUNT_DTOR(nsDisplayLayerEventRegions);
   }
 #endif
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) MOZ_OVERRIDE
