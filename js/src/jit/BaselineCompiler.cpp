@@ -2265,7 +2265,7 @@ BaselineCompiler::emit_JSOP_SETALIASEDVAR()
 }
 
 bool
-BaselineCompiler::emit_JSOP_NAME()
+BaselineCompiler::emit_JSOP_GETNAME()
 {
     frame.syncStack(0);
 
