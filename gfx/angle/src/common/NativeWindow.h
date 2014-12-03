@@ -16,12 +16,14 @@
 #include "common/debug.h"
 #include "common/platform.h"
 
+#ifdef ANGLE_ENABLE_D3D11
 // DXGISwapChain and DXGIFactory are typedef'd to specific required
 // types. The HWND NativeWindow implementation requires IDXGISwapChain
 // and IDXGIFactory and the Windows Store NativeWindow
 // implementation requires IDXGISwapChain1 and IDXGIFactory2.
 typedef IDXGISwapChain DXGISwapChain;
 typedef IDXGIFactory DXGIFactory;
+#endif
 
 namespace rx
 {
@@ -37,9 +39,11 @@ class NativeWindow
     inline bool getClientRect(LPRECT rect) { return GetClientRect(mWindow, rect) == TRUE; }
     inline bool isIconic() { return IsIconic(mWindow) == TRUE; }
 
+#ifdef ANGLE_ENABLE_D3D11
     HRESULT createSwapChain(ID3D11Device* device, DXGIFactory* factory,
                             DXGI_FORMAT format, UINT width, UINT height,
                             DXGISwapChain** swapChain);
+#endif
 
     inline EGLNativeWindowType getNativeWindow() const { return mWindow; }
 
