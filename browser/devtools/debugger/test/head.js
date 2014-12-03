@@ -551,7 +551,7 @@ AddonDebugger.prototype = {
     info("Initializing an addon debugger panel.");
 
     if (!DebuggerServer.initialized) {
-      DebuggerServer.init(() => true);
+      DebuggerServer.init();
       DebuggerServer.addBrowserActors();
     }
 

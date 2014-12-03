@@ -26,7 +26,7 @@ function run_test()
   // happen if the MOZ_PROFILER_STARTUP environment variable is set).
   Profiler.StopProfiler();
 
-  DebuggerServer.init(() => true);
+  DebuggerServer.init();
   DebuggerServer.addBrowserActors();
 
   connect_client((client1, actor1) => {

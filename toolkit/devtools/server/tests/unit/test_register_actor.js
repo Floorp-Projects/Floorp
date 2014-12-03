@@ -16,7 +16,7 @@ function check_actors(expect) {
 function run_test()
 {
   // Allow incoming connections.
-  DebuggerServer.init(function () { return true; });
+  DebuggerServer.init();
   DebuggerServer.addBrowserActors();
 
   add_test(test_deprecated_api);

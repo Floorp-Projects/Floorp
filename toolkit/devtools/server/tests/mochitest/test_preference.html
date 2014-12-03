@@ -27,7 +27,7 @@ function runTests() {
 
   var {getPreferenceFront} = devtools.require("devtools/server/actors/preference");
 
-  DebuggerServer.init(function () { return true; });
+  DebuggerServer.init();
   DebuggerServer.addBrowserActors();
 
   var client = new DebuggerClient(DebuggerServer.connectPipe());

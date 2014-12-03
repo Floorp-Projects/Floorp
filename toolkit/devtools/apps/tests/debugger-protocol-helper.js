@@ -28,14 +28,14 @@ function connect(onDone) {
     let observer = {
       observe: function (subject, topic, data) {
         Services.obs.removeObserver(observer, "debugger-server-started");
-        let transport = debuggerSocketConnect("127.0.0.1", 6000);
+        let transport = DebuggerClient.socketConnect("127.0.0.1", 6000);
         startClient(transport, onDone);
       }
     };
     Services.obs.addObserver(observer, "debugger-server-started", false);
   } else {
     // Initialize a loopback remote protocol connection
-    DebuggerServer.init(function () { return true; });
+    DebuggerServer.init();
     // We need to register browser actors to have `listTabs` working
     // and also have a root actor
     DebuggerServer.addBrowserActors();
