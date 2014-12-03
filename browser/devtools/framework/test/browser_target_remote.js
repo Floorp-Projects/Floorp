@@ -13,7 +13,7 @@ function test() {
   waitForExplicitFinish();
 
   if (!DebuggerServer.initialized) {
-    DebuggerServer.init(function () { return true; });
+    DebuggerServer.init();
     DebuggerServer.addBrowserActors();
   }
 

@@ -8,6 +8,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 do_get_profile();
 
 Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/PromiseUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -1041,23 +1042,28 @@ add_task(function* test_forget_witness_on_close() {
 
 add_task(function* test_close_database_on_gc() {
   failTestsOnAutoClose(false);
-  let deferred = Promise.defer();
+  let finalPromise;
 
-  for (let i = 0; i < 100; ++i) {
-    let c = yield getDummyDatabase("gc_" + i);
-    c._connectionData._deferredClose.promise.then(deferred.resolve);
+  {
+    let collectedPromises = [];
+    for (let i = 0; i < 100; ++i) {
+      let deferred = PromiseUtils.defer();
+      let c = yield getDummyDatabase("gc_" + i);
+      c._connectionData._deferredClose.promise.then(deferred.resolve);
+      collectedPromises.push(deferred.promise);
+    }
+    finalPromise = Promise.all(collectedPromises);
   }
 
   // Call getDummyDatabase once more to clear any remaining
   // references. This is needed at the moment, otherwise
   // garbage-collection takes place after the shutdown barrier and the
   // test will timeout. Once that is fixed, we can remove this line
-  // and be fine as long as at least one connection is
-  // garbage-collected.
+  // and be fine as long as the connections are garbage-collected.
   let last = yield getDummyDatabase("gc_last");
   yield last.close();
 
   Components.utils.forceGC();
-  yield deferred.promise;
+  yield finalPromise;
   failTestsOnAutoClose(true);
 });

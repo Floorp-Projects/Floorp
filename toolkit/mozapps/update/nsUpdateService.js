@@ -1215,23 +1215,37 @@ function writeVersionFile(dir, version) {
 }
 
 /**
- * Removes the MozUpdater folders that bgupdates/staged updates creates.
+ * Removes the MozUpdater directory that is created when replacing an install
+ * with a staged update and leftover MozUpdater-i folders in the tmp directory.
  */
 function cleanUpMozUpdaterDirs() {
+  try {
+    // Remove the MozUpdater directory in the updates/0 directory.
+    var mozUpdaterDir = getUpdatesDir();
+    mozUpdaterDir.append("MozUpdater");
+    if (mozUpdaterDir.exists()) {
+      LOG("cleanUpMozUpdaterDirs - removing MozUpdater directory");
+      mozUpdaterDir.remove(true);
+    }
+  } catch (e) {
+    LOG("cleanUpMozUpdaterDirs - Exception: " + e);
+  }
+
   try {
     var tmpDir = Cc["@mozilla.org/file/directory_service;1"].
                  getService(Ci.nsIProperties).
                  get("TmpD", Ci.nsIFile);
 
-    // We used to store MozUpdater-i folders directly inside the temp directory.
-    // We need to cleanup these directories if we detect that they still exist.
+    // We used to store MozUpdater-i directories in the temp directory.
+    // We need to remove these directories if we detect that they still exist.
     // To check if they still exist, we simply check for MozUpdater-1.
     var mozUpdaterDir1 = tmpDir.clone();
     mozUpdaterDir1.append("MozUpdater-1");
-    // Only try to delete the left over folders in "$Temp/MozUpdater-i/*" if
+    // Only try to delete the left over directories in "$Temp/MozUpdater-i/*" if
     // MozUpdater-1 exists.
     if (mozUpdaterDir1.exists()) {
-      LOG("cleanUpMozUpdaterDirs - Cleaning top level MozUpdater-i folders");
+      LOG("cleanUpMozUpdaterDirs - Removing top level tmp MozUpdater-i " +
+          "directories");
       let i = 0;
       let dirEntries = tmpDir.directoryEntries;
       while (dirEntries.hasMoreElements() && i < 10) {
@@ -1246,15 +1260,6 @@ function cleanUpMozUpdaterDirs() {
       if (i < 10) {
         mozUpdaterDir1.remove(true);
       }
-    }
-
-    // If we reach here, we simply need to clean the MozUpdater folder.  In our
-    // new way of storing these files, the unique subfolders are inside MozUpdater
-    var mozUpdaterDir = tmpDir.clone();
-    mozUpdaterDir.append("MozUpdater");
-    if (mozUpdaterDir.exists()) {
-      LOG("cleanUpMozUpdaterDirs - Cleaning MozUpdater folder");
-      mozUpdaterDir.remove(true);
     }
   } catch (e) {
     LOG("cleanUpMozUpdaterDirs - Exception: " + e);
@@ -2298,7 +2303,8 @@ UpdateService.prototype = {
       prompter.showUpdateError(update);
     }
 
-    // Now trash the MozUpdater folders which staged/bgupdates uses.
+    // Now trash the MozUpdater directory created when replacing an install with
+    // a staged update.
     cleanUpMozUpdaterDirs();
   },
 
