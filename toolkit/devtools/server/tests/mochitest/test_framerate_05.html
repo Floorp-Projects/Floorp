@@ -34,7 +34,7 @@ window.onload = function() {
 
   var {FramerateFront} = devtools.require("devtools/server/actors/framerate");
 
-  DebuggerServer.init(function () { return true; });
+  DebuggerServer.init();
   DebuggerServer.addBrowserActors();
 
   var client = new DebuggerClient(DebuggerServer.connectPipe());

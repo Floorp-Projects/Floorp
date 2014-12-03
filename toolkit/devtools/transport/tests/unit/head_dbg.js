@@ -196,7 +196,7 @@ function initTestDebuggerServer() {
   });
   DebuggerServer.registerModule("xpcshell-test/testactors");
   // Allow incoming connections.
-  DebuggerServer.init(function () { return true; });
+  DebuggerServer.init();
 }
 
 function finishClient(aClient) {
@@ -260,11 +260,12 @@ function writeTestTempFile(aFileName, aContent) {
 
 function socket_transport() {
   if (!DebuggerServer.listeningSockets) {
-    DebuggerServer.openListener(-1);
+    let listener = DebuggerServer.openListener(-1);
+    listener.allowConnection = () => true;
   }
   let port = DebuggerServer._listeners[0].port;
   do_print("Debugger server port is " + port);
-  return debuggerSocketConnect("127.0.0.1", port);
+  return DebuggerClient.socketConnect("127.0.0.1", port);
 }
 
 function local_transport() {
