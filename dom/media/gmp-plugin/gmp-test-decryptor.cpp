@@ -85,6 +85,20 @@ public:
   ReadContinuation* mThen;
 };
 
+class SendMessageTask : public GMPTask {
+public:
+  SendMessageTask(const string& aMessage)
+    : mMessage(aMessage)
+  {}
+  void Run() MOZ_OVERRIDE {
+    FakeDecryptor::Message(mMessage);
+  }
+  void Destroy() MOZ_OVERRIDE {
+    delete this;
+  }
+  string mMessage;
+};
+
 class TestEmptyContinuation : public ReadContinuation {
 public:
   void ReadComplete(GMPErr aErr, const std::string& aData) MOZ_OVERRIDE {
@@ -104,7 +118,8 @@ public:
       FakeDecryptor::Message("FAIL TruncateContinuation read data doesn't match written data");
     }
     WriteRecord(TruncateRecordId, nullptr, 0,
-                new ReadThenTask(TruncateRecordId, new TestEmptyContinuation()));
+                new ReadThenTask(TruncateRecordId, new TestEmptyContinuation()),
+                new SendMessageTask("FAIL in TruncateContinuation write."));
     delete this;
   }
 };
@@ -136,7 +151,10 @@ public:
     if (aData != mValue) {
       FakeDecryptor::Message("FAIL VerifyAndOverwriteContinuation read data doesn't match expected data");
     }
-    WriteRecord(mId, mOverwrite, new ReadThenTask(mId, new VerifyAndFinishContinuation(mOverwrite)));
+    WriteRecord(mId,
+                mOverwrite,
+                new ReadThenTask(mId, new VerifyAndFinishContinuation(mOverwrite)),
+                new SendMessageTask("FAIL in VerifyAndOverwriteContinuation write."));
     delete this;
   }
   string mId;
@@ -202,7 +220,8 @@ FakeDecryptor::TestStorage()
   // set sFinishedTruncateTest=true and MaybeFinish().
   WriteRecord(TruncateRecordId,
               TruncateRecordData,
-              new ReadThenTask(TruncateRecordId, new TruncateContinuation()));
+              new ReadThenTask(TruncateRecordId, new TruncateContinuation()),
+              new SendMessageTask("FAIL in TestStorage writing TruncateRecord."));
 
   // Test 2: Test that overwriting a record with a shorter record truncates
   // the record to the shorter record.
@@ -217,7 +236,8 @@ FakeDecryptor::TestStorage()
   string overwrite = "A shorter record";
   WriteRecord(id,
               record1,
-              new ReadThenTask(id, new VerifyAndOverwriteContinuation(id, record1, overwrite)));
+              new ReadThenTask(id, new VerifyAndOverwriteContinuation(id, record1, overwrite)),
+              new SendMessageTask("FAIL in TestStorage writing record1."));
 
   // Test 3: Test that opening a record while it's already open fails.
   //
@@ -351,7 +371,8 @@ FakeDecryptor::UpdateSession(uint32_t aPromiseId,
     const string& value = tokens[2];
     WriteRecord(id,
                 value,
-                new ReportWritten(id, value));
+                new ReportWritten(id, value),
+                new SendMessageTask("FAIL in writing record."));
   } else if (task == "retrieve") {
     const string& id = tokens[1];
     ReadRecord(id, new ReportReadStatusContinuation(id));
@@ -406,7 +427,8 @@ TestAsyncShutdown::BeginShutdown() {
       // Store message, then shutdown.
       WriteRecord("shutdown-token",
                   sShutdownToken,
-                  new CompleteShutdownTask(mHost));
+                  new CompleteShutdownTask(mHost),
+                  new SendMessageTask("FAIL writing shutdown-token."));
       break;
   }
 }
