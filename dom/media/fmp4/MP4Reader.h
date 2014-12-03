@@ -156,7 +156,6 @@ private:
       , mInputExhausted(false)
       , mError(false)
       , mIsFlushing(false)
-      , mDrainComplete(false)
       , mOutputRequested(false)
       , mUpdateScheduled(false)
       , mEOS(false)
@@ -186,7 +185,6 @@ private:
     bool mInputExhausted;
     bool mError;
     bool mIsFlushing;
-    bool mDrainComplete;
     bool mOutputRequested;
     bool mUpdateScheduled;
     bool mEOS;

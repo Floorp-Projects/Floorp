@@ -28,10 +28,9 @@ function startTest(test, token)
   var v1 = SetupEME(test, case1token,  { onSetKeysFail: setKeysFailed });
   var context = new AudioContext();
   var node = context.createMediaElementSource(v1);
-  v1.preload = "auto"; // Required due to "canplay" not firing for MSE unless we do this.
   v1.addEventListener("error", bail(case1token + " got error event"));
-  v1.addEventListener("canplay", function(ev) {
-    ok(false, TimeStamp(case1token) + " should never reach canplay, as setMediaKeys should fail");
+  v1.addEventListener("loadeddata", function(ev) {
+    ok(false, TimeStamp(case1token) + " should never reach loadeddata, as setMediaKeys should fail");
   });
   manager.started(case1token);
   LoadTest(test, v1, case1token);
@@ -40,10 +39,9 @@ function startTest(test, token)
   // Case 2. creating a MediaElementSource on a media element with a MediaKeys should fail.
   var case2token = token + "_case2";
   var v2 = SetupEME(test, case2token);
-  v2.preload = "auto"; // Required due to "canplay" not firing for MSE unless we do this.
   v2.addEventListener("error", bail(case2token + " got error event"));
-  v2.addEventListener("canplay", function(ev) {
-    ok(true, case2token + " should reach canplay");
+  v2.addEventListener("loadeddata", function(ev) {
+    ok(true, case2token + " should reach loadeddata");
     var threw = false;
     try {
       var context = new AudioContext();
@@ -61,10 +59,9 @@ function startTest(test, token)
   // Case 3. capturing a media element with mozCaptureStream that has a MediaKeys should fail.
   var case3token = token + "_case3";
   var v3 = SetupEME(test, case3token);
-  v3.preload = "auto"; // Required due to "canplay" not firing for MSE unless we do this.
   v3.addEventListener("error", bail(case3token + " got error event"));
-  v3.addEventListener("canplay", function(ev) {
-    ok(true, TimeStamp(case3token) + " should reach canplay");
+  v3.addEventListener("loadeddata", function(ev) {
+    ok(true, TimeStamp(case3token) + " should reach loadeddata");
     var threw = false;
     try {
       var stream = v3.mozCaptureStreamUntilEnded();
