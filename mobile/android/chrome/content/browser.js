@@ -7295,7 +7295,7 @@ var RemoteDebugger = {
   _start: function rd_start() {
     try {
       if (!DebuggerServer.initialized) {
-        DebuggerServer.init(this._showConnectionPrompt.bind(this));
+        DebuggerServer.init();
         DebuggerServer.addBrowserActors();
         DebuggerServer.registerModule("resource://gre/modules/dbg-browser-actors.js");
       }
@@ -7303,7 +7303,8 @@ var RemoteDebugger = {
       let pathOrPort = this._getPath();
       if (!pathOrPort)
         pathOrPort = this._getPort();
-      DebuggerServer.openListener(pathOrPort);
+      let listener = DebuggerServer.openListener(pathOrPort);
+      listener.allowConnection = this._showConnectionPrompt.bind(this);
       dump("Remote debugger listening at path " + pathOrPort);
     } catch(e) {
       dump("Remote debugger didn't start: " + e);

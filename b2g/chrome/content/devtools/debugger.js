@@ -74,7 +74,7 @@ let RemoteDebugger = {
     }
 
     // Ask for remote connections.
-    DebuggerServer.init(this.prompt.bind(this));
+    DebuggerServer.init();
 
     // /!\ Be careful when adding a new actor, especially global actors.
     // Any new global actor will be exposed and returned by the root actor.
@@ -119,6 +119,8 @@ let RemoteDebugger = {
   }
 };
 
+RemoteDebugger.prompt = RemoteDebugger.prompt.bind(RemoteDebugger);
+
 let USBRemoteDebugger = {
 
   get isDebugging() {
@@ -144,6 +146,7 @@ let USBRemoteDebugger = {
     try {
       debug("Starting USB debugger on " + portOrPath);
       this._listener = DebuggerServer.openListener(portOrPath);
+      this._listener.allowConnection = RemoteDebugger.prompt;
       // Temporary event, until bug 942756 lands and offers a way to know
       // when the server is up and running.
       Services.obs.notifyObservers(null, "debugger-server-started", null);
@@ -179,6 +182,7 @@ let WiFiRemoteDebugger = {
     try {
       debug("Starting WiFi debugger");
       this._listener = DebuggerServer.openListener(-1);
+      this._listener.allowConnection = RemoteDebugger.prompt;
       let port = this._listener.port;
       debug("Started WiFi debugger on " + port);
       discovery.addService("devtools", { port: port });

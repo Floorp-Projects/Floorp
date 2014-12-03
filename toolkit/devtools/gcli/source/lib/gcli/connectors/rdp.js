@@ -18,7 +18,6 @@
 
 var Cu = require('chrome').Cu;
 
-var debuggerSocketConnect = Cu.import('resource://gre/modules/devtools/dbg-client.jsm', {}).debuggerSocketConnect;
 var DebuggerClient = Cu.import('resource://gre/modules/devtools/dbg-client.jsm', {}).DebuggerClient;
 
 var Promise = require('../util/promise').Promise;
@@ -72,7 +71,7 @@ RdpConnection.create = function(url) {
   this._emit = this._emit.bind(this);
 
   return new Promise(function(resolve, reject) {
-    this.transport = debuggerSocketConnect(this.host, this.port);
+    this.transport = DebuggerClient.socketConnect(this.host, this.port);
     this.client = new DebuggerClient(this.transport);
     this.client.connect(function() {
       this.client.listTabs(function(response) {

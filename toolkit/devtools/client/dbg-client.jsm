@@ -21,7 +21,6 @@ this.CC = CC;
 this.EXPORTED_SYMBOLS = ["DebuggerTransport",
                          "DebuggerClient",
                          "RootClient",
-                         "debuggerSocketConnect",
                          "LongStringClient",
                          "EnvironmentClient",
                          "ObjectClient"];
@@ -32,10 +31,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 let promise = Cu.import("resource://gre/modules/devtools/deprecated-sync-thenables.js").Promise;
 const { defer, resolve, reject } = promise;
-
-XPCOMUtils.defineLazyServiceGetter(this, "socketTransportService",
-                                   "@mozilla.org/network/socket-transport-service;1",
-                                   "nsISocketTransportService");
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
                                   "resource://gre/modules/devtools/Console.jsm");
@@ -83,6 +78,11 @@ function dumpv(msg) {
 let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Ci.mozIJSSubScriptLoader);
 loader.loadSubScript("resource://gre/modules/devtools/transport/transport.js", this);
+
+DevToolsUtils.defineLazyGetter(this, "DebuggerSocket", () => {
+  let { DebuggerSocket } = devtools.require("devtools/toolkit/security/socket");
+  return DebuggerSocket;
+});
 
 /**
  * TODO: Get rid of this API in favor of EventTarget (bug 1042642)
@@ -369,6 +369,12 @@ DebuggerClient.Argument.prototype.getArgument = function (aParams) {
     throw new Error("Bad index into params: " + this.position);
   }
   return aParams[this.position];
+};
+
+// Expose this to save callers the trouble of importing DebuggerSocket
+DebuggerClient.socketConnect = function(host, port) {
+  // Defined here instead of just copying the function to allow lazy-load
+  return DebuggerSocket.connect(host, port);
 };
 
 DebuggerClient.prototype = {
@@ -2578,33 +2584,3 @@ EnvironmentClient.prototype = {
 };
 
 eventSource(EnvironmentClient.prototype);
-
-/**
- * Connects to a debugger server socket and returns a DebuggerTransport.
- *
- * @param aHost string
- *        The host name or IP address of the debugger server.
- * @param aPort number
- *        The port number of the debugger server.
- */
-this.debuggerSocketConnect = function (aHost, aPort)
-{
-  let s = socketTransportService.createTransport(null, 0, aHost, aPort, null);
-  // By default the CONNECT socket timeout is very long, 65535 seconds,
-  // so that if we race to be in CONNECT state while the server socket is still
-  // initializing, the connection is stuck in connecting state for 18.20 hours!
-  s.setTimeout(Ci.nsISocketTransport.TIMEOUT_CONNECT, 2);
-
-  // openOutputStream may throw NS_ERROR_NOT_INITIALIZED if we hit some race
-  // where the nsISocketTransport gets shutdown in between its instantiation and
-  // the call to this method.
-  let transport;
-  try {
-    transport = new DebuggerTransport(s.openInputStream(0, 0, 0),
-                                      s.openOutputStream(0, 0, 0));
-  } catch(e) {
-    DevToolsUtils.reportException("debuggerSocketConnect", e);
-    throw e;
-  }
-  return transport;
-}

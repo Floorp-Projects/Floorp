@@ -11,7 +11,7 @@ function run_test()
 {
   let {EventLoopLagFront} = devtools.require("devtools/server/actors/eventlooplag");
 
-  DebuggerServer.init(function () { return true; });
+  DebuggerServer.init();
   DebuggerServer.addBrowserActors();
 
   // As seen in EventTracer.cpp

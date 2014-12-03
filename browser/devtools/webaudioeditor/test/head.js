@@ -129,7 +129,7 @@ function initBackend(aUrl) {
   info("Initializing a web audio editor front.");
 
   if (!DebuggerServer.initialized) {
-    DebuggerServer.init(() => true);
+    DebuggerServer.init();
     DebuggerServer.addBrowserActors();
   }
 

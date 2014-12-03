@@ -4,96 +4,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_ipc_UnixSocket_h
-#define mozilla_ipc_UnixSocket_h
+#ifndef mozilla_ipc_unixsocket_h
+#define mozilla_ipc_unixsocket_h
 
 #include <stdlib.h>
 #include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
-#include "mozilla/ipc/UnixSocketWatcher.h"
 #include "mozilla/ipc/SocketBase.h"
+#include "mozilla/ipc/UnixSocketWatcher.h"
 #include "mozilla/RefPtr.h"
+#include "UnixSocketConnector.h"
 
 namespace mozilla {
 namespace ipc {
 
 class UnixSocketConsumerIO;
-
-/**
- * UnixSocketConnector defines the socket creation and connection/listening
- * functions for a UnixSocketConsumer. Due to the fact that socket setup can
- * vary between protocols (unix sockets, tcp sockets, bluetooth sockets, etc),
- * this allows the user to create whatever connection mechanism they need while
- * still depending on libevent for non-blocking communication handling.
- *
- * FIXME/Bug 793980: Currently only virtual, since we only support bluetooth.
- * Should make connection functions for other unix sockets so we can support
- * things like RIL.
- */
-class UnixSocketConnector
-{
-public:
-  UnixSocketConnector()
-  {}
-
-  virtual ~UnixSocketConnector()
-  {}
-
-  /**
-   * Establishs a file descriptor for a socket.
-   *
-   * @return File descriptor for socket
-   */
-  virtual int Create() = 0;
-
-  /**
-   * Since most socket specifics are related to address formation into a
-   * sockaddr struct, this function is defined by subclasses and fills in the
-   * structure as needed for whatever connection it is trying to build
-   *
-   * @param aIsServer True is we are acting as a server socket
-   * @param aAddrSize Size of the struct
-   * @param aAddr Struct to fill
-   * @param aAddress If aIsServer is false, Address to connect to. nullptr otherwise.
-   *
-   * @return True if address is filled correctly, false otherwise
-   */
-  virtual bool CreateAddr(bool aIsServer,
-                          socklen_t& aAddrSize,
-                          sockaddr_any& aAddr,
-                          const char* aAddress) = 0;
-
-  /**
-   * Does any socket type specific setup that may be needed, only for socket
-   * created by ConnectSocket()
-   *
-   * @param aFd File descriptor for opened socket
-   *
-   * @return true is successful, false otherwise
-   */
-  virtual bool SetUp(int aFd) = 0;
-
-  /**
-   * Perform socket setup for socket created by ListenSocket(), after listen().
-   *
-   * @param aFd File descriptor for opened socket
-   *
-   * @return true is successful, false otherwise
-   */
-  virtual bool SetUpListenSocket(int aFd) = 0;
-
-  /**
-   * Get address of socket we're currently connected to. Return null string if
-   * not connected.
-   *
-   * @param aAddr Address struct
-   * @param aAddrStr String to store address to
-   */
-  virtual void GetSocketAddr(const sockaddr_any& aAddr,
-                             nsAString& aAddrStr) = 0;
-
-};
 
 class UnixSocketConsumer : public SocketConsumerBase
 {
@@ -166,4 +92,4 @@ private:
 } // namespace ipc
 } // namepsace mozilla
 
-#endif // mozilla_ipc_Socket_h
+#endif // mozilla_ipc_unixsocket_h

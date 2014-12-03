@@ -25,7 +25,7 @@ function check_footprint(step, max) {
 }
 
 function init_server() {
-  DebuggerServer.init(function () { return true; });
+  DebuggerServer.init();
   check_footprint("DebuggerServer.init()", 500);
 }
 

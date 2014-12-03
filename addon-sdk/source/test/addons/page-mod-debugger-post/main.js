@@ -29,7 +29,7 @@ exports.testDebugger = function(assert, done) {
   set('devtools.debugger.log', true);
 
   if (!DebuggerServer.initialized) {
-    DebuggerServer.init(() => true);
+    DebuggerServer.init();
     DebuggerServer.addBrowserActors();
   }
 

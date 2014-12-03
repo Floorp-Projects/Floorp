@@ -22,7 +22,7 @@ Bug 901520 - [app manager] data store for device
       Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
 
       if (!DebuggerServer.initialized) {
-        DebuggerServer.init(function () { return true; });
+        DebuggerServer.init();
         DebuggerServer.addBrowserActors();
       }
 
