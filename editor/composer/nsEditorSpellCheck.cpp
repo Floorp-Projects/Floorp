@@ -106,6 +106,23 @@ GetLoadContext(nsIEditor* aEditor)
 }
 
 /**
+ * Helper function for converting underscore to dash in dictionary name,
+ * ie. en_CA to en-CA. This is required for some Linux distributions which
+ * use underscore as separator in system-wide installed dictionaries.
+ * We use it for nsStyleUtil::DashMatchCompare.
+ */
+static nsString
+GetDictNameWithDash(const nsAString& aDictName)
+{
+  nsString dictNameWithDash(aDictName);
+  int32_t underScore = dictNameWithDash.FindChar('_');
+  if (underScore != -1) {
+    dictNameWithDash.Replace(underScore, 1, '-');
+  }
+  return dictNameWithDash;
+}
+
+/**
  * Fetches the dictionary stored in content prefs and maintains state during the
  * fetch, which is asynchronous.
  */
@@ -603,8 +620,8 @@ nsEditorSpellCheck::SetCurrentDictionary(const nsAString& aDictionary)
     } else {
       langCode.Assign(aDictionary);
     }
-
-    if (mPreferredLang.IsEmpty() || !nsStyleUtil::DashMatchCompare(mPreferredLang, langCode, comparator)) {
+    if (mPreferredLang.IsEmpty() ||
+        !nsStyleUtil::DashMatchCompare(GetDictNameWithDash(mPreferredLang), langCode, comparator)) {
       // When user sets dictionary manually, we store this value associated
       // with editor url.
       StoreCurrentDictionary(mEditor, aDictionary);
@@ -750,12 +767,6 @@ nsEditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher)
 
   // otherwise, get language from preferences
   nsAutoString preferedDict(Preferences::GetLocalizedString("spellchecker.dictionary"));
-  // Replace '_' with '-' in case the user has an underscore stored in their
-  // pref, see bug 992118 for how this could have happened.
-  int32_t underScore = preferedDict.FindChar('_');
-  if (underScore != -1) {
-    preferedDict.Replace(underScore, 1, '-');
-  }
   if (dictName.IsEmpty()) {
     dictName.Assign(preferedDict);
   }
@@ -794,8 +805,8 @@ nsEditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher)
 
       // try dictionary.spellchecker preference if it starts with langCode (and
       // if we haven't tried it already)
-      if (!preferedDict.IsEmpty() && !dictName.Equals(preferedDict) && 
-          nsStyleUtil::DashMatchCompare(preferedDict, langCode, comparator)) {
+      if (!preferedDict.IsEmpty() && !dictName.Equals(preferedDict) &&
+          nsStyleUtil::DashMatchCompare(GetDictNameWithDash(preferedDict), langCode, comparator)) {
         rv = SetCurrentDictionary(preferedDict);
       }
 
@@ -823,8 +834,7 @@ nsEditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher)
             // We have already tried it
             continue;
           }
-
-          if (nsStyleUtil::DashMatchCompare(dictStr, langCode, comparator) &&
+          if (nsStyleUtil::DashMatchCompare(GetDictNameWithDash(dictStr), langCode, comparator) &&
               NS_SUCCEEDED(SetCurrentDictionary(dictStr))) {
               break;
           }
