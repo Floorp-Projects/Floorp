@@ -53,20 +53,6 @@ FrameBlender::RawGetFrame(uint32_t aFrameNum)
   return frame.forget();
 }
 
-int32_t
-FrameBlender::GetFrameDisposalMethod(uint32_t aFrameNum) const
-{
-  if (!mAnim) {
-    NS_ASSERTION(aFrameNum == 0,
-                 "Don't ask for a frame > 0 if we're not animated!");
-    aFrameNum = 0;
-  }
-  if (aFrameNum >= mFrames.Length()) {
-    return FrameBlender::kDisposeNotSpecified;
-  }
-  return mFrames[aFrameNum]->GetFrameDisposalMethod();
-}
-
 uint32_t
 FrameBlender::GetNumFrames() const
 {
@@ -149,12 +135,12 @@ FrameBlender::DoBlend(nsIntRect* aDirtyRect,
                       uint32_t aPrevFrameIndex,
                       uint32_t aNextFrameIndex)
 {
-  nsRefPtr<imgFrame> prevFrame = GetFrame(aPrevFrameIndex);
-  nsRefPtr<imgFrame> nextFrame = GetFrame(aNextFrameIndex);
+  nsRefPtr<imgFrame> prevFrame = RawGetFrame(aPrevFrameIndex);
+  nsRefPtr<imgFrame> nextFrame = RawGetFrame(aNextFrameIndex);
 
   MOZ_ASSERT(prevFrame && nextFrame, "Should have frames here");
 
-  int32_t prevFrameDisposalMethod = GetFrameDisposalMethod(aPrevFrameIndex);
+  int32_t prevFrameDisposalMethod = prevFrame->GetFrameDisposalMethod();
   if (prevFrameDisposalMethod == FrameBlender::kDisposeRestorePrevious &&
       !mAnim->compositingPrevFrame) {
     prevFrameDisposalMethod = FrameBlender::kDisposeClear;
@@ -172,7 +158,7 @@ FrameBlender::DoBlend(nsIntRect* aDirtyRect,
     prevFrameDisposalMethod = FrameBlender::kDisposeClearAll;
   }
 
-  int32_t nextFrameDisposalMethod = GetFrameDisposalMethod(aNextFrameIndex);
+  int32_t nextFrameDisposalMethod = nextFrame->GetFrameDisposalMethod();
   nsIntRect nextFrameRect = nextFrame->GetRect();
   bool isFullNextFrame = (nextFrameRect.x == 0 && nextFrameRect.y == 0 &&
                           nextFrameRect.width == mSize.width &&

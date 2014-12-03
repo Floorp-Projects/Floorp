@@ -107,15 +107,6 @@ public:
 
 private:
 
-  /**
-   * Get the disposal method of the @aIndex-th frame.
-   *
-   * Note that it's not safe to use GetFrame(aIndex)->GetFrameDisposalMethod()
-   * instead, because the frame GetFrame() returns may be a blended frame which
-   * does not have the correct disposal method set.
-   */
-  int32_t GetFrameDisposalMethod(uint32_t aIndex) const;
-
   struct Anim
   {
     //! Track the last composited frame for Optimizations (See DoComposite code)
