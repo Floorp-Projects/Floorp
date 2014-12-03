@@ -475,7 +475,6 @@ class Marionette(object):
         self.host = host
         self.port = self.local_port = port
         self.bin = bin
-        self.profile = profile
         self.instance = None
         self.session = None
         self.session_id = None
@@ -513,7 +512,7 @@ class Marionette(object):
                         KeyError):
                     instance_class = geckoinstance.GeckoInstance
             self.instance = instance_class(host=self.host, port=self.port,
-                                           bin=self.bin, profile=self.profile,
+                                           bin=self.bin, profile=profile,
                                            app_args=app_args, symbols_path=symbols_path,
                                            gecko_log=gecko_log)
             self.instance.start()
@@ -529,7 +528,7 @@ class Marionette(object):
                                             binary=emulator_binary,
                                             userdata=emulator_img,
                                             resolution=emulator_res,
-                                            profile=self.profile,
+                                            profile=profile,
                                             adb_path=adb_path,
                                             process_args=process_args)
             self.emulator = self.runner.device
@@ -774,20 +773,20 @@ class Marionette(object):
             self.start_session()
             self._reset_timeouts()
 
-    def restart(self, clean=False):
+    def restart_with_clean_profile(self):
         """
         This will terminate the currently running instance, and spawn a new instance
-        with the same profile and then reuse the session id when creating a session again.
+        with a clean profile.
 
         : param prefs: A dictionary whose keys are preference names.
         """
         if not self.instance:
-            raise errors.MarionetteException("restart can only be called " \
+            raise errors.MarionetteException("enforce_gecko_prefs can only be called " \
                                              "on gecko instances launched by Marionette")
         self.delete_session()
-        self.instance.restart(clean=clean)
+        self.instance.restart()
         assert(self.wait_for_port()), "Timed out waiting for port!"
-        self.start_session(session_id=self.session_id)
+        self.start_session()
         self._reset_timeouts()
 
     def absolute_url(self, relative_url):
