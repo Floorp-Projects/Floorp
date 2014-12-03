@@ -29,7 +29,7 @@ window.onload = function() {
   var {getDeviceFront} = devtools.require("devtools/server/actors/device");
 
   if (!DebuggerServer.initialized) {
-    DebuggerServer.init(function () { return true; });
+    DebuggerServer.init();
     DebuggerServer.addBrowserActors();
   }
 
