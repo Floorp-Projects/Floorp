@@ -1688,7 +1688,7 @@ CodeGeneratorX86Shared::visitFloor(LFloor *lir)
             return false;
 
         // Round toward -Infinity.
-        masm.roundsd(input, scratch, X86Assembler::RoundDown);
+        masm.roundsd(X86Assembler::RoundDown, input, scratch);
 
         if (!bailoutCvttsd2si(scratch, output, lir->snapshot()))
             return false;
@@ -1751,7 +1751,7 @@ CodeGeneratorX86Shared::visitFloorF(LFloorF *lir)
             return false;
 
         // Round toward -Infinity.
-        masm.roundss(input, scratch, X86Assembler::RoundDown);
+        masm.roundss(X86Assembler::RoundDown, input, scratch);
 
         if (!bailoutCvttss2si(scratch, output, lir->snapshot()))
             return false;
@@ -1822,7 +1822,7 @@ CodeGeneratorX86Shared::visitCeil(LCeil *lir)
         // x <= -1 or x > -0
         masm.bind(&lessThanMinusOne);
         // Round toward +Infinity.
-        masm.roundsd(input, scratch, X86Assembler::RoundUp);
+        masm.roundsd(X86Assembler::RoundUp, input, scratch);
         return bailoutCvttsd2si(scratch, output, lir->snapshot());
     }
 
@@ -1878,7 +1878,7 @@ CodeGeneratorX86Shared::visitCeilF(LCeilF *lir)
         // x <= -1 or x > -0
         masm.bind(&lessThanMinusOne);
         // Round toward +Infinity.
-        masm.roundss(input, scratch, X86Assembler::RoundUp);
+        masm.roundss(X86Assembler::RoundUp, input, scratch);
         return bailoutCvttss2si(scratch, output, lir->snapshot());
     }
 
@@ -1958,7 +1958,7 @@ CodeGeneratorX86Shared::visitRound(LRound *lir)
         // Add 0.5 and round toward -Infinity. The result is stored in the temp
         // register (currently contains 0.5).
         masm.addsd(input, temp);
-        masm.roundsd(temp, scratch, X86Assembler::RoundDown);
+        masm.roundsd(X86Assembler::RoundDown, temp, scratch);
 
         // Truncate.
         if (!bailoutCvttsd2si(scratch, output, lir->snapshot()))
@@ -2049,7 +2049,7 @@ CodeGeneratorX86Shared::visitRoundF(LRoundF *lir)
         // Add 0.5 and round toward -Infinity. The result is stored in the temp
         // register (currently contains 0.5).
         masm.addss(input, temp);
-        masm.roundss(temp, scratch, X86Assembler::RoundDown);
+        masm.roundss(X86Assembler::RoundDown, temp, scratch);
 
         // Truncate.
         if (!bailoutCvttss2si(scratch, output, lir->snapshot()))
