@@ -59,7 +59,7 @@ public class testBrowserProvider extends ContentProviderTest {
                                         BrowserContract.Bookmarks.UNFILED_FOLDER_GUID });
 
         c = mProvider.query(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, BrowserContract.PARAM_SHOW_DELETED, "1"), null, null, null, null);
-        assertCountIsAndClose(c, 7, "All non-special bookmarks and folders were deleted");
+        assertCountIsAndClose(c, 6, "All non-special bookmarks and folders were deleted");
 
         mProvider.delete(appendUriParam(BrowserContract.History.CONTENT_URI, BrowserContract.PARAM_IS_SYNC, "1"), null, null);
         c = mProvider.query(appendUriParam(BrowserContract.History.CONTENT_URI, BrowserContract.PARAM_SHOW_DELETED, "1"), null, null, null, null);
