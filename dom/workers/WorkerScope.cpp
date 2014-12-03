@@ -225,10 +225,11 @@ WorkerGlobalScope::SetInterval(JSContext* aCx,
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
+  bool isInterval = aTimeout.WasPassed();
   int32_t timeout = aTimeout.WasPassed() ? aTimeout.Value() : 0;
 
   return mWorkerPrivate->SetTimeout(aCx, &aHandler, EmptyString(), timeout,
-                                    aArguments, !!timeout, aRv);
+                                    aArguments, isInterval, aRv);
 }
 
 int32_t
@@ -242,10 +243,11 @@ WorkerGlobalScope::SetInterval(JSContext* /* unused */,
 
   Sequence<JS::Value> dummy;
 
+  bool isInterval = aTimeout.WasPassed();
   int32_t timeout = aTimeout.WasPassed() ? aTimeout.Value() : 0;
 
   return mWorkerPrivate->SetTimeout(GetCurrentThreadJSContext(), nullptr,
-                                    aHandler, timeout, dummy, !!timeout, aRv);
+                                    aHandler, timeout, dummy, isInterval, aRv);
 }
 
 void
