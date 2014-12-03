@@ -2598,7 +2598,7 @@ RemoveReferencedNames(JSContext *cx, HandleScript script, PropertyNameSet &remai
         PropertyName *name;
 
         switch (JSOp(*pc)) {
-          case JSOP_NAME:
+          case JSOP_GETNAME:
           case JSOP_SETNAME:
             name = script->getName(pc);
             break;

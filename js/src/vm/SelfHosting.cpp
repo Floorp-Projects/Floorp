@@ -1207,10 +1207,10 @@ void
 js::FillSelfHostingCompileOptions(CompileOptions &options)
 {
     /*
-     * In self-hosting mode, scripts emit JSOP_GETINTRINSIC instead of
-     * JSOP_NAME or JSOP_GNAME to access unbound variables. JSOP_GETINTRINSIC
-     * does a name lookup in a special object, whose properties are filled in
-     * lazily upon first access for a given global.
+     * In self-hosting mode, scripts use JSOP_GETINTRINSIC instead of
+     * JSOP_GETNAME or JSOP_GETGNAME to access unbound variables.
+     * JSOP_GETINTRINSIC does a name lookup on a special object, whose
+     * properties are filled in lazily upon first access for a given global.
      *
      * As that object is inaccessible to client code, the lookups are
      * guaranteed to return the original objects, ensuring safe implementation

@@ -1533,7 +1533,7 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
 
     switch (op) {
       case JSOP_GETGNAME:
-      case JSOP_NAME:
+      case JSOP_GETNAME:
       case JSOP_GETINTRINSIC:
         return write(loadAtom(pc));
       case JSOP_GETARG: {

@@ -3854,7 +3854,7 @@ class ICIn_Fallback : public ICFallbackStub
 };
 
 // GetName
-//      JSOP_NAME
+//      JSOP_GETNAME
 //      JSOP_GETGNAME
 class ICGetName_Fallback : public ICMonitoredFallbackStub
 {
