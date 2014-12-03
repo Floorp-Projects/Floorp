@@ -126,7 +126,7 @@ const run_test = Test(function*() {
   DebuggerServer.createRootActor = (conn => {
     return RootActor(conn);
   });
-  DebuggerServer.init(() => true);
+  DebuggerServer.init();
 
   const connection = DebuggerServer.connectPipe();
   const conn = new DebuggerClient(connection);

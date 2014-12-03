@@ -22,7 +22,7 @@ Bug 912646 - Closing app toolbox causes phone to disconnect
       Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
 
       if (!DebuggerServer.initialized) {
-        DebuggerServer.init(function () { return true; });
+        DebuggerServer.init();
         DebuggerServer.addBrowserActors();
       }
 

@@ -81,6 +81,9 @@ function OptionsPanel(iframeWindow, toolbox) {
   this._prefChanged = this._prefChanged.bind(this);
   this._themeRegistered = this._themeRegistered.bind(this);
   this._themeUnregistered = this._themeUnregistered.bind(this);
+  this._disableJSClicked = this._disableJSClicked.bind(this);
+
+  this.disableJSNode = this.panelDoc.getElementById("devtools-disable-javascript");
 
   this._addListeners();
 
@@ -112,11 +115,6 @@ OptionsPanel.prototype = {
       this.setupBrowserThemeButton();
       this.populatePreferences();
       this.updateDefaultTheme();
-
-      this._disableJSClicked = this._disableJSClicked.bind(this);
-
-      let disableJSNode = this.panelDoc.getElementById("devtools-disable-javascript");
-      disableJSNode.addEventListener("click", this._disableJSClicked, false);
     }).then(() => {
       this.isReady = true;
       this.emit("ready");
@@ -369,11 +367,15 @@ OptionsPanel.prototype = {
       }.bind(menulist));
     }
 
-    this.target.client.attachTab(this.target.activeTab._actor, (response) => {
-      this._origJavascriptEnabled = response.javascriptEnabled;
-
-      this._populateDisableJSCheckbox();
-    });
+    if (this.target.activeTab) {
+      this.target.client.attachTab(this.target.activeTab._actor, (response) => {
+        this._origJavascriptEnabled = response.javascriptEnabled;
+        this.disableJSNode.checked = !this._origJavascriptEnabled
+        this.disableJSNode.addEventListener("click", this._disableJSClicked, false);
+      });
+    } else {
+      this.disableJSNode.hidden = true;
+    }
   },
 
   updateDefaultTheme: function() {
@@ -393,11 +395,6 @@ OptionsPanel.prototype = {
     if (themeOption) {
       themeBox.selectedItem = themeOption;
     }
-  },
-
-  _populateDisableJSCheckbox: function() {
-    let cbx = this.panelDoc.getElementById("devtools-disable-javascript");
-    cbx.checked = !this._origJavascriptEnabled;
   },
 
   /**
@@ -447,23 +444,21 @@ OptionsPanel.prototype = {
     let deferred = promise.defer();
 
     this.destroyPromise = deferred.promise;
-
-    let disableJSNode = this.panelDoc.getElementById("devtools-disable-javascript");
-    disableJSNode.removeEventListener("click", this._disableJSClicked, false);
-
     this._removeListeners();
 
-    this.panelWin = this.panelDoc = null;
-    this._disableJSClicked = null;
+    if (this.target.activeTab) {
+      this.disableJSNode.removeEventListener("click", this._disableJSClicked, false);
+      // If JavaScript is disabled we need to revert it to it's original value.
+      let options = {
+        "javascriptEnabled": this._origJavascriptEnabled
+      };
+      this.target.activeTab.reconfigure(options, () => {
+        this.toolbox = null;
+        deferred.resolve();
+      }, true);
+    }
 
-    // If JavaScript is disabled we need to revert it to it's original value.
-    let options = {
-      "javascriptEnabled": this._origJavascriptEnabled
-    };
-    this.target.activeTab.reconfigure(options, () => {
-      this.toolbox = null;
-      deferred.resolve();
-    }, true);
+    this.panelWin = this.panelDoc = this.disableJSNode = null;
 
     Services.obs.removeObserver(this, kDeveditionChangedNotification);
 

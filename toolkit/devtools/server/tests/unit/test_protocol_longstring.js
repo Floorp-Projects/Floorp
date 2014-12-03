@@ -83,7 +83,7 @@ function run_test()
     return RootActor(conn);
   });
 
-  DebuggerServer.init(() => true);
+  DebuggerServer.init();
   let trace = connectPipeTracing();
   let client = new DebuggerClient(trace);
   let rootClient;
