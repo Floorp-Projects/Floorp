@@ -1249,11 +1249,7 @@ InFreeList(ArenaHeader *aheader, void *thing)
 
 /* static */ MOZ_ALWAYS_INLINE bool
 Cell::needWriteBarrierPre(JS::Zone *zone) {
-#ifdef JSGC_INCREMENTAL
     return JS::shadow::Zone::asShadowZone(zone)->needsIncrementalBarrier();
-#else
-    return false;
-#endif
 }
 
 /* static */ MOZ_ALWAYS_INLINE TenuredCell *
@@ -1339,7 +1335,6 @@ TenuredCell::isInsideZone(JS::Zone *zone) const
 /* static */ MOZ_ALWAYS_INLINE void
 TenuredCell::readBarrier(TenuredCell *thing)
 {
-#ifdef JSGC_INCREMENTAL
     MOZ_ASSERT(!CurrentThreadIsIonCompiling());
     MOZ_ASSERT(!isNullLike(thing));
     JS::shadow::Zone *shadowZone = thing->shadowZoneFromAnyThread();
@@ -1353,12 +1348,11 @@ TenuredCell::readBarrier(TenuredCell *thing)
     }
     if (JS::GCThingIsMarkedGray(thing))
         JS::UnmarkGrayGCThingRecursively(thing, MapAllocToTraceKind(thing->getAllocKind()));
-#endif
 }
 
 /* static */ MOZ_ALWAYS_INLINE void
-TenuredCell::writeBarrierPre(TenuredCell *thing) {
-#ifdef JSGC_INCREMENTAL
+TenuredCell::writeBarrierPre(TenuredCell *thing)
+{
     MOZ_ASSERT(!CurrentThreadIsIonCompiling());
     if (isNullLike(thing) || !thing->shadowRuntimeFromAnyThread()->needsIncrementalBarrier())
         return;
@@ -1372,7 +1366,6 @@ TenuredCell::writeBarrierPre(TenuredCell *thing) {
                          MapAllocToTraceKind(thing->getAllocKind()));
         MOZ_ASSERT(tmp == thing);
     }
-#endif
 }
 
 static MOZ_ALWAYS_INLINE void

@@ -3133,17 +3133,6 @@ MOZ_ARG_WITH_STRING(wrap-malloc,
     WRAP_LDFLAGS="${WRAP_LDFLAGS} $withval")
 
 dnl ========================================================
-dnl = Use incremental GC
-dnl ========================================================
-JSGC_INCREMENTAL=1
-MOZ_ARG_DISABLE_BOOL(gcincremental,
-[  --disable-gcincremental Disable incremental GC],
-    JSGC_INCREMENTAL= )
-if test -n "$JSGC_INCREMENTAL"; then
-    AC_DEFINE(JSGC_INCREMENTAL)
-fi
-
-dnl ========================================================
 dnl = Use generational GC
 dnl ========================================================
 dnl Use generational GC by default in all shell builds. The top-level mozilla
