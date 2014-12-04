@@ -753,14 +753,6 @@ typedef bool
 typedef void
 (* JSErrorReporter)(JSContext *cx, const char *message, JSErrorReport *report);
 
-#ifdef MOZ_TRACE_JSCALLS
-typedef void
-(* JSFunctionCallback)(const JSFunction *fun,
-                       const JSScript *scr,
-                       const JSContext *cx,
-                       int entering);
-#endif
-
 /*
  * Possible exception types. These types are part of a JSErrorFormatString
  * structure. They define which error to throw in case of a runtime error.
@@ -4190,23 +4182,6 @@ JS_SaveFrameChain(JSContext *cx);
 
 extern JS_PUBLIC_API(void)
 JS_RestoreFrameChain(JSContext *cx);
-
-#ifdef MOZ_TRACE_JSCALLS
-/*
- * The callback is expected to be quick and noninvasive. It should not
- * request interrupts, turn on debugging, or produce uncaught JS
- * exceptions. The state of the stack and registers in the context
- * cannot be relied upon, since this callback may be invoked directly
- * from either JIT. The 'entering' field means we are entering a
- * function if it is positive, leaving a function if it is zero or
- * negative.
- */
-extern JS_PUBLIC_API(void)
-JS_SetFunctionCallback(JSContext *cx, JSFunctionCallback fcb);
-
-extern JS_PUBLIC_API(JSFunctionCallback)
-JS_GetFunctionCallback(JSContext *cx);
-#endif /* MOZ_TRACE_JSCALLS */
 
 /************************************************************************/
 

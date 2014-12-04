@@ -534,19 +534,6 @@ struct JSContext : public js::ExclusiveContext,
     inline JSScript *currentScript(jsbytecode **pc = nullptr,
                                    MaybeAllowCrossCompartment = DONT_ALLOW_CROSS_COMPARTMENT) const;
 
-#ifdef MOZ_TRACE_JSCALLS
-    /* Function entry/exit debugging callback. */
-    JSFunctionCallback    functionCallback;
-
-    void doFunctionCallback(const JSFunction *fun,
-                            const JSScript *scr,
-                            int entering) const
-    {
-        if (functionCallback)
-            functionCallback(fun, scr, this, entering);
-    }
-#endif
-
     // The generational GC nursery may only be used on the main thread.
 #ifdef JSGC_GENERATIONAL
     inline js::Nursery &nursery() {

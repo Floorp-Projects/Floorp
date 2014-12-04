@@ -25,10 +25,6 @@ probes::CallTrackingActive(JSContext *cx)
     if (JAVASCRIPT_FUNCTION_ENTRY_ENABLED() || JAVASCRIPT_FUNCTION_RETURN_ENABLED())
         return true;
 #endif
-#ifdef MOZ_TRACE_JSCALLS
-    if (cx->functionCallback)
-        return true;
-#endif
     return false;
 }
 
@@ -46,9 +42,6 @@ probes::EnterScript(JSContext *cx, JSScript *script, JSFunction *maybeFun,
 #ifdef INCLUDE_MOZILLA_DTRACE
     if (JAVASCRIPT_FUNCTION_ENTRY_ENABLED())
         DTraceEnterJSFun(cx, maybeFun, script);
-#endif
-#ifdef MOZ_TRACE_JSCALLS
-    cx->doFunctionCallback(maybeFun, script, 1);
 #endif
 
     JSRuntime *rt = cx->runtime();
@@ -68,9 +61,6 @@ probes::ExitScript(JSContext *cx, JSScript *script, JSFunction *maybeFun, bool p
 #ifdef INCLUDE_MOZILLA_DTRACE
     if (JAVASCRIPT_FUNCTION_RETURN_ENABLED())
         DTraceExitJSFun(cx, maybeFun, script);
-#endif
-#ifdef MOZ_TRACE_JSCALLS
-    cx->doFunctionCallback(maybeFun, script, 0);
 #endif
 
     if (popSPSFrame)
