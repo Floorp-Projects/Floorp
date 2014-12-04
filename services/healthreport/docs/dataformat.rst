@@ -1638,6 +1638,45 @@ desktop
 mobile
    Corresponds to a Fennec client.
 
+org.mozilla.sync.migration
+--------------------------
+
+This daily measurement contains information about sync migration (that is, the
+semi-automated process of migrating a legacy sync account to an FxA account.)
+
+Measurements will start being recorded after a migration is offered by the
+sync server and stop after migration is complete or the user elects to "unlink"
+their sync account.  In other words, it is expected that users with Sync setup
+for FxA or with sync unconfigured will not collect data, and that for users
+where data is collected, the collection will only be for a relatively short
+period.
+
+Version 1
+^^^^^^^^^
+
+Version 1 was introduced with Firefox 37 and includes the following properties:
+
+state
+   Corresponds to either a STATE_USER_* string or a STATE_INTERNAL_* string in
+   FxaMigration.jsm.  This reflects a state where we are waiting for the user,
+   or waiting for some internal process to complete on the way to completing
+   the migration.
+
+declined
+    Corresponds to the number of times the user closed the migration infobar.
+
+unlinked
+    Set if the user declined to migrate and instead "unlinked" Sync from the
+    browser.
+
+accepted
+    Corresponds to the number of times the user explicitly elected to start or
+    continue the migration - it counts how often the user clicked on any UI
+    created specifically for migration. The "ideal" UX for migration would see
+    this at exactly 1, some known edge-cases (eg, browser restart required to
+    finish) could expect this to be 2, and anything more means we are doing
+    something wrong.
+
 org.mozilla.sysinfo.sysinfo
 ---------------------------
 

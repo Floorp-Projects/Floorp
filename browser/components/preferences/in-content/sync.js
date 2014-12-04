@@ -403,6 +403,7 @@ let gSyncPane = {
     if (buttonChoice == 1)
       return;
 
+    fxaMigrator.recordTelemetry(fxaMigrator.TELEMETRY_UNLINKED);
     Weave.Service.startOver();
     this.updateWeavePrefs();
   },

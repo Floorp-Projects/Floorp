@@ -10,6 +10,11 @@ let gFxAccounts = {
 
   _initialized: false,
   _inCustomizationMode: false,
+  // _expectingNotifyClose is a hack that helps us determine if the
+  // migration notification was closed due to being "dismissed" vs closed
+  // due to one of the migration buttons being clicked.  It's ugly and somewhat
+  // fragile, so bug 1119020 exists to help us do this better.
+  _expectingNotifyClose: false,
 
   get weave() {
     delete this.weave;
@@ -28,7 +33,8 @@ let gFxAccounts = {
       "weave:service:setup-complete",
       "fxa-migration:state-changed",
       this.FxAccountsCommon.ONVERIFIED_NOTIFICATION,
-      this.FxAccountsCommon.ONLOGOUT_NOTIFICATION
+      this.FxAccountsCommon.ONLOGOUT_NOTIFICATION,
+      "weave:notification:removed",
     ];
   },
 
@@ -109,6 +115,16 @@ let gFxAccounts = {
         break;
       case "fxa-migration:state-changed":
         this.onMigrationStateChanged(data, subject);
+        break;
+      case "weave:notification:removed":
+        // this exists just so we can tell the difference between "box was
+        // closed due to button press" vs "was closed due to click on [x]"
+        let notif = subject.wrappedJSObject.object;
+        if (notif.title == this.SYNC_MIGRATION_NOTIFICATION_TITLE &&
+            !this._expectingNotifyClose) {
+          // it's an [x] on our notification, so record telemetry.
+          this.fxaMigrator.recordTelemetry(this.fxaMigrator.TELEMETRY_DECLINED);
+        }
         break;
       default:
         this.updateUI();
@@ -263,7 +279,13 @@ let gFxAccounts = {
 
   updateMigrationNotification: Task.async(function* () {
     if (!this._migrationInfo) {
+      this._expectingNotifyClose = true;
       Weave.Notifications.removeAll(this.SYNC_MIGRATION_NOTIFICATION_TITLE);
+      // because this is called even when there is no such notification, we
+      // set _expectingNotifyClose back to false as we may yet create a new
+      // notification (but in general, once we've created a migration
+      // notification once in a session, we don't create one again)
+      this._expectingNotifyClose = false;
       return;
     }
     let note = null;
@@ -288,6 +310,7 @@ let gFxAccounts = {
         note = new Weave.Notification(
           undefined, msg, undefined, Weave.Notifications.PRIORITY_WARNING, [
             new Weave.NotificationButton(upgradeLabel, upgradeAccessKey, () => {
+              this._expectingNotifyClose = true;
               this.fxaMigrator.createFxAccount(window);
             }),
           ]
@@ -305,6 +328,7 @@ let gFxAccounts = {
         note = new Weave.Notification(
           undefined, msg, undefined, Weave.Notifications.PRIORITY_INFO, [
             new Weave.NotificationButton(resendLabel, resendAccessKey, () => {
+              this._expectingNotifyClose = true;
               this.fxaMigrator.resendVerificationMail();
             }),
           ]
