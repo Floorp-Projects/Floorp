@@ -79,6 +79,10 @@ public:
   virtual dom::AnimationPlayState PlayStateFromJS() const MOZ_OVERRIDE;
   virtual void PlayFromJS() MOZ_OVERRIDE;
 
+  // A variant of Play() that avoids posting style updates since this method
+  // is expected to be called whilst already updating style.
+  void PlayFromStyle() { DoPlay(); }
+
 protected:
   virtual ~CSSTransitionPlayer() { }
 
