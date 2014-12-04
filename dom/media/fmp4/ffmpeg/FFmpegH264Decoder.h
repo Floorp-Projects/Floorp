@@ -40,6 +40,7 @@ public:
   virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
   virtual nsresult Drain() MOZ_OVERRIDE;
   virtual nsresult Flush() MOZ_OVERRIDE;
+  static AVCodecID GetCodecId(const char* aMimeType);
 
 private:
   void DecodeFrame(mp4_demuxer::MP4Sample* aSample);

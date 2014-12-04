@@ -52,6 +52,11 @@ public:
   {
     return FFmpegAudioDecoder<V>::GetCodecId(aMimeType) != AV_CODEC_ID_NONE;
   }
+
+  virtual bool SupportsVideoMimeType(const char* aMimeType) MOZ_OVERRIDE
+  {
+    return FFmpegH264Decoder<V>::GetCodecId(aMimeType) != AV_CODEC_ID_NONE;
+  }
 };
 
 } // namespace mozilla
