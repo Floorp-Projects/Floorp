@@ -247,6 +247,9 @@ p.standalone-btn-label {
   border-radius: 3px;
   z-index: 1002; /* ensures the form is always on top of the control bar */
 }
+.standalone .room-conversation-wrapper .ended-conversation .feedback {
+  right: 35%;
+}
 
 .standalone .ended-conversation .local-stream {
   /* Hide  local media stream when feedback form is shown. */
