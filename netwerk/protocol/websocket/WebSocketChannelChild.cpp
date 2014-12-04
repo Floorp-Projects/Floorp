@@ -205,7 +205,7 @@ WebSocketChannelChild::OnStart(const nsCString& aProtocol,
   mEncrypted = aEncrypted;
 
   if (mListener) {
-    AutoEventEnqueuer ensureSerialDispatch(mEventQ);;
+    AutoEventEnqueuer ensureSerialDispatch(mEventQ);
     mListener->OnStart(mContext);
   }
 }
@@ -247,7 +247,7 @@ WebSocketChannelChild::OnStop(const nsresult& aStatusCode)
 {
   LOG(("WebSocketChannelChild::RecvOnStop() %p\n", this));
   if (mListener) {
-    AutoEventEnqueuer ensureSerialDispatch(mEventQ);;
+    AutoEventEnqueuer ensureSerialDispatch(mEventQ);
     mListener->OnStop(mContext, aStatusCode);
   }
 }
@@ -296,7 +296,7 @@ WebSocketChannelChild::OnMessageAvailable(const nsCString& aMsg)
 {
   LOG(("WebSocketChannelChild::RecvOnMessageAvailable() %p\n", this));
   if (mListener) {
-    AutoEventEnqueuer ensureSerialDispatch(mEventQ);;
+    AutoEventEnqueuer ensureSerialDispatch(mEventQ);
     mListener->OnMessageAvailable(mContext, aMsg);
   }
 }
@@ -320,7 +320,7 @@ WebSocketChannelChild::OnBinaryMessageAvailable(const nsCString& aMsg)
 {
   LOG(("WebSocketChannelChild::RecvOnBinaryMessageAvailable() %p\n", this));
   if (mListener) {
-    AutoEventEnqueuer ensureSerialDispatch(mEventQ);;
+    AutoEventEnqueuer ensureSerialDispatch(mEventQ);
     mListener->OnBinaryMessageAvailable(mContext, aMsg);
   }
 }
@@ -362,7 +362,7 @@ WebSocketChannelChild::OnAcknowledge(const uint32_t& aSize)
 {
   LOG(("WebSocketChannelChild::RecvOnAcknowledge() %p\n", this));
   if (mListener) {
-    AutoEventEnqueuer ensureSerialDispatch(mEventQ);;
+    AutoEventEnqueuer ensureSerialDispatch(mEventQ);
     mListener->OnAcknowledge(mContext, aSize);
   }
 }
@@ -410,7 +410,7 @@ WebSocketChannelChild::OnServerClose(const uint16_t& aCode,
 {
   LOG(("WebSocketChannelChild::RecvOnServerClose() %p\n", this));
   if (mListener) {
-    AutoEventEnqueuer ensureSerialDispatch(mEventQ);;
+    AutoEventEnqueuer ensureSerialDispatch(mEventQ);
     mListener->OnServerClose(mContext, aCode, aReason);
   }
 }
