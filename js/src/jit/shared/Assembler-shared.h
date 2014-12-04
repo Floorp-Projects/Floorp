@@ -926,6 +926,10 @@ class AssemblerShared
         enoughMemory_ &= success;
     }
 
+    void setOOM() {
+        enoughMemory_ = false;
+    }
+
     bool oom() const {
         return !enoughMemory_;
     }
