@@ -55,7 +55,7 @@ AnimationPlayer::PlayState() const
     return AnimationPlayState::Idle;
   }
 
-  if (mIsPaused) {
+  if (mStartTime.IsNull()) {
     return AnimationPlayState::Paused;
   }
 
@@ -164,14 +164,17 @@ AnimationPlayer::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
 void
 AnimationPlayer::DoPlay()
 {
-  // FIXME: When we implement finishing behavior (bug 1074630) we should
-  // not return early if mIsPaused is false since we may still need to seek.
-  // (However, we will need to pass a flag so that when we start playing due to
-  //  a change in animation-play-state we *don't* trigger finishing behavior.)
-  if (!mIsPaused) {
+  // FIXME: When we implement finishing behavior (bug 1074630) we will
+  // need to pass a flag so that when we start playing due to a change in
+  // animation-play-state we *don't* trigger finishing behavior.
+
+  Nullable<TimeDuration> currentTime = GetCurrentTime();
+  if (currentTime.IsNull()) {
+    mHoldTime.SetValue(TimeDuration(0));
+  } else if (mHoldTime.IsNull()) {
+    // If the hold time is null, we are already playing normally
     return;
   }
-  mIsPaused = false;
 
   Nullable<TimeDuration> timelineTime = mTimeline->GetCurrentTime();
   if (timelineTime.IsNull()) {
@@ -181,7 +184,6 @@ AnimationPlayer::DoPlay()
   }
 
   // Update start time to an appropriate offset from the current timeline time
-  MOZ_ASSERT(!mHoldTime.IsNull(), "Hold time should not be null when paused");
   mStartTime.SetValue(timelineTime.Value() - mHoldTime.Value());
   mHoldTime.SetNull();
 }
@@ -189,10 +191,12 @@ AnimationPlayer::DoPlay()
 void
 AnimationPlayer::DoPause()
 {
-  if (mIsPaused) {
+  if (IsPaused()) {
     return;
   }
-  mIsPaused = true;
+  // Mark this as no longer running on the compositor so that next time
+  // we update animations we won't throttle them and will have a chance
+  // to remove the animation from any layer it might be on.
   mIsRunningOnCompositor = false;
 
   // Bug 927349 - check for null result here and go to pending state
