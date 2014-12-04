@@ -330,15 +330,12 @@ struct InternalGCMethods<Value>
     static bool isMarkable(Value v) { return v.isMarkable(); }
 
     static void preBarrier(Value v) {
-#ifdef JSGC_INCREMENTAL
         MOZ_ASSERT(!CurrentThreadIsIonCompiling());
         if (v.isMarkable() && shadowRuntimeFromAnyThread(v)->needsIncrementalBarrier())
             preBarrier(ZoneOfValueFromAnyThread(v), v);
-#endif
     }
 
     static void preBarrier(Zone *zone, Value v) {
-#ifdef JSGC_INCREMENTAL
         MOZ_ASSERT(!CurrentThreadIsIonCompiling());
         if (v.isString() && StringIsPermanentAtom(v.toString()))
             return;
@@ -349,7 +346,6 @@ struct InternalGCMethods<Value>
             js::gc::MarkValueUnbarriered(shadowZone->barrierTracer(), &tmp, "write barrier");
             MOZ_ASSERT(tmp == v);
         }
-#endif
     }
 
     static void postBarrier(Value *vp) {
@@ -394,7 +390,6 @@ struct InternalGCMethods<jsid>
     static bool isMarkable(jsid id) { return JSID_IS_STRING(id) || JSID_IS_SYMBOL(id); }
 
     static void preBarrier(jsid id) {
-#ifdef JSGC_INCREMENTAL
         if (JSID_IS_STRING(id)) {
             JSString *str = JSID_TO_STRING(id);
             JS::shadow::Zone *shadowZone = ShadowZoneOfStringFromAnyThread(str);
@@ -410,7 +405,6 @@ struct InternalGCMethods<jsid>
                 MOZ_ASSERT(sym == JSID_TO_SYMBOL(id));
             }
         }
-#endif
     }
     static void preBarrier(Zone *zone, jsid id) { preBarrier(id); }
 

@@ -1303,14 +1303,12 @@ TypeObject::getProperty(unsigned i)
 inline void
 TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
 {
-#ifdef JSGC_INCREMENTAL
     if (!newScript || !newScript->fun->runtimeFromAnyThread()->needsIncrementalBarrier())
         return;
 
     JS::Zone *zone = newScript->fun->zoneFromAnyThread();
     if (zone->needsIncrementalBarrier())
         newScript->trace(zone->barrierTracer());
-#endif
 }
 
 } } /* namespace js::types */

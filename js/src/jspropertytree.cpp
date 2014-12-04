@@ -151,7 +151,6 @@ PropertyTree::getChild(ExclusiveContext *cx, Shape *parentArg, StackShape &unroo
         /* If kidp->isNull(), we always insert. */
     }
 
-#ifdef JSGC_INCREMENTAL
     if (existingShape) {
         JS::Zone *zone = existingShape->zone();
         if (zone->needsIncrementalBarrier()) {
@@ -176,7 +175,6 @@ PropertyTree::getChild(ExclusiveContext *cx, Shape *parentArg, StackShape &unroo
             JS::UnmarkGrayGCThingRecursively(existingShape, JSTRACE_SHAPE);
         }
     }
-#endif
 
     if (existingShape)
         return existingShape;
@@ -211,14 +209,12 @@ PropertyTree::lookupChild(ThreadSafeContext *cx, Shape *parent, const StackShape
         return nullptr;
     }
 
-#if defined(JSGC_INCREMENTAL) && defined(DEBUG)
     if (shape) {
         JS::Zone *zone = shape->arenaHeader()->zone;
         MOZ_ASSERT(!zone->needsIncrementalBarrier());
         MOZ_ASSERT(!(zone->isGCSweeping() && !shape->isMarked() &&
                      !shape->arenaHeader()->allocatedDuringIncremental));
     }
-#endif
 
     return shape;
 }
