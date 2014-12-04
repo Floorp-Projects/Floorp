@@ -290,15 +290,6 @@ add_task(function* test_createRoom() {
   compareRooms(room, kCreateRoomProps);
 });
 
-// Test if deleting a room works as expected.
-add_task(function* test_deleteRoom() {
-  let roomToken = "QzBbvGmIZWU";
-  let deletedRoom = yield LoopRooms.promise("delete", roomToken);
-  Assert.equal(deletedRoom.roomToken, roomToken);
-  let rooms = yield LoopRooms.promise("getAll");
-  Assert.ok(!rooms.some((room) => room.roomToken == roomToken));
-});
-
 // Test if opening a new room window works correctly.
 add_task(function* test_openRoom() {
   let openedUrl;
@@ -401,6 +392,16 @@ add_task(function* test_roomDeleteNotifications() {
   gExpectedDeletes.push("_nxD4V4FflQ");
   roomsPushNotification("5");
   yield waitForCondition(() => gExpectedDeletes.length === 0);
+});
+
+// Test if deleting a room works as expected.
+add_task(function* test_deleteRoom() {
+  let roomToken = "QzBbvGmIZWU";
+  gExpectedDeletes.push(roomToken);
+  let deletedRoom = yield LoopRooms.promise("delete", roomToken);
+  Assert.equal(deletedRoom.roomToken, roomToken);
+  let rooms = yield LoopRooms.promise("getAll");
+  Assert.ok(!rooms.some((room) => room.roomToken == roomToken));
 });
 
 // Test if the event emitter implementation doesn't leak and is working as expected.
