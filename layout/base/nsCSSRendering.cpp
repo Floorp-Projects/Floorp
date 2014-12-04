@@ -4202,7 +4202,7 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
 
   // The block-direction position should be set to the middle of the line.
   if (aVertical) {
-    rect.x -= lineThickness / 2;
+    rect.x += lineThickness / 2;
   } else {
     rect.y += lineThickness / 2;
   }
@@ -4404,7 +4404,7 @@ nsCSSRendering::DecorationLineToPath(nsIFrame* aFrame,
 
   // The block-direction position should be set to the middle of the line.
   if (aVertical) {
-    rect.x -= lineThickness / 2;
+    rect.x += lineThickness / 2;
     aGfxContext->Rectangle
       (gfxRect(gfxPoint(rect.TopLeft() - gfxPoint(lineThickness / 2, 0.0)),
                gfxSize(lineThickness, rect.Height())));
