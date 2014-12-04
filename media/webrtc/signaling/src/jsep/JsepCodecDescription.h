@@ -131,7 +131,7 @@ struct JsepCodecDescription {
       if (attrs.HasAttribute(SdpAttribute::kRtcpFbAttribute)) {
         auto& rtcpfbs = attrs.GetRtcpFb().mFeedbacks;
         for (auto i = rtcpfbs.begin(); i != rtcpfbs.end(); ++i) {
-          if (i->pt == negotiated->mDefaultPt) {
+          if (i->pt == negotiated->mDefaultPt || i->pt == "*") {
             if (!negotiated->LoadRtcpFbs(*i)) {
               // Remote parameters were invalid
               return nullptr;
