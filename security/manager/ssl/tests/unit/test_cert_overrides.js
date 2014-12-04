@@ -74,7 +74,7 @@ function run_test() {
   fakeOCSPResponder.registerPrefixHandler("/", function (request, response) {
     response.setStatusLine(request.httpVersion, 500, "Internal Server Error");
   });
-  fakeOCSPResponder.start(8080);
+  fakeOCSPResponder.start(8888);
 
   add_simple_tests();
   add_combo_tests();

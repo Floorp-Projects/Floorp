@@ -641,6 +641,48 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
     TestGetRecordNames(false);
   }
 
+  void TestLongRecordNames() {
+    NS_NAMED_LITERAL_CSTRING(longRecordName,
+      "A_"
+      "very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_"
+      "very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_"
+      "very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_"
+      "very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_"
+      "very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_"
+      "very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_"
+      "very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_"
+      "very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_"
+      "very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_"
+      "very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_"
+      "very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_"
+      "very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_"
+      "very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_"
+      "very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_"
+      "very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_"
+      "long_record_name");
+
+    NS_NAMED_LITERAL_CSTRING(data, "Just_some_arbitrary_data.");
+
+    MOZ_ASSERT(longRecordName.Length() < GMP_MAX_RECORD_NAME_SIZE);
+    MOZ_ASSERT(longRecordName.Length() > 260); // Windows MAX_PATH
+
+    CreateDecryptor(NS_LITERAL_STRING("fuz.com"),
+                    NS_LITERAL_STRING("baz.com"),
+                    false);
+
+    nsCString response("stored ");
+    response.Append(longRecordName);
+    response.AppendLiteral(" ");
+    response.Append(data);
+    Expect(response, NS_NewRunnableMethod(this, &GMPStorageTest::SetFinished));
+
+    nsCString update("store ");
+    update.Append(longRecordName);
+    update.AppendLiteral(" ");
+    update.Append(data);
+    Update(update);
+  }
+
   void Expect(const nsCString& aMessage, nsIRunnable* aContinuation) {
     mExpected.AppendElement(ExpectedMessage(aMessage, aContinuation));
   }
@@ -821,4 +863,9 @@ TEST(GeckoMediaPlugins, GMPStorageGetRecordNamesInMemoryStorage) {
 TEST(GeckoMediaPlugins, GMPStorageGetRecordNamesPersistentStorage) {
   nsRefPtr<GMPStorageTest> runner = new GMPStorageTest();
   runner->DoTest(&GMPStorageTest::GetRecordNamesPersistentStorage);
+}
+
+TEST(GeckoMediaPlugins, GMPStorageLongRecordNames) {
+  nsRefPtr<GMPStorageTest> runner = new GMPStorageTest();
+  runner->DoTest(&GMPStorageTest::TestLongRecordNames);
 }

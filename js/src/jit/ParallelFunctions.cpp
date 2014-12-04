@@ -280,20 +280,20 @@ do {                                                                            
         double l = lhs.toNumber(), r = rhs.toNumber();                          \
         *res = (l OP r) == EXPECTED;                                            \
     } else if (lhs.isBoolean() && rhs.isBoolean()) {                            \
-        bool l = lhs.toBoolean();                                               \
-        bool r = rhs.toBoolean();                                               \
+        int l = lhs.toBoolean() ? 1 : 0;                                        \
+        int r = rhs.toBoolean() ? 1 : 0;                                        \
         *res = (l OP r) == EXPECTED;                                            \
     } else if (lhs.isBoolean() && rhs.isNumber()) {                             \
-        bool l = lhs.toBoolean();                                               \
+        double l = lhs.toBoolean() ? 1.0 : 0.0;                                 \
         double r = rhs.toNumber();                                              \
         *res = (l OP r) == EXPECTED;                                            \
     } else if (lhs.isNumber() && rhs.isBoolean()) {                             \
         double l = lhs.toNumber();                                              \
-        bool r = rhs.toBoolean();                                               \
+        double r = lhs.toBoolean() ? 1.0 : 0.0;                                 \
         *res = (l OP r) == EXPECTED;                                            \
     } else {                                                                    \
         int32_t vsZero;                                                         \
-        if (!CompareMaybeStringsPar(cx, lhs, rhs, &vsZero))                  \
+        if (!CompareMaybeStringsPar(cx, lhs, rhs, &vsZero))                     \
             return false;                                                       \
         *res = (vsZero OP 0) == EXPECTED;                                       \
     }                                                                           \

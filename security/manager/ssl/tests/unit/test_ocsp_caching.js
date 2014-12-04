@@ -38,7 +38,7 @@ function run_test() {
     response.setHeader("Content-Type", "application/ocsp-response");
     response.write(gGoodOCSPResponse);
   });
-  ocspResponder.start(8080);
+  ocspResponder.start(8888);
 
   add_tests();
 

@@ -656,9 +656,9 @@ loop.conversation = (function(mozL10n) {
       dispatcher: dispatcher,
       mozLoop: navigator.mozLoop
     });
-    var conversationStore = new loop.store.ConversationStore({}, {
+    var conversationStore = new loop.store.ConversationStore(dispatcher, {
       client: client,
-      dispatcher: dispatcher,
+      mozLoop: navigator.mozLoop,
       sdkDriver: sdkDriver
     });
     var activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, {

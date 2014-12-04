@@ -107,7 +107,7 @@ BreakpointStore.prototype = {
    * @returns Object aBreakpoint
    *          The new or existing breakpoint.
    */
-  addBreakpoint: function (aBreakpoint) {
+  addBreakpoint: function (aBreakpoint, aActor) {
     let { source: { actor }, line, column } = aBreakpoint;
 
     if (column != null) {
@@ -119,7 +119,7 @@ BreakpointStore.prototype = {
       }
 
       if (!this._breakpoints[actor][line][column]) {
-        this._breakpoints[actor][line][column] = aBreakpoint;
+        this._breakpoints[actor][line][column] = aActor;
         this._size++;
       }
       return this._breakpoints[actor][line][column];
@@ -130,7 +130,7 @@ BreakpointStore.prototype = {
       }
 
       if (!this._wholeLineBreakpoints[actor][line]) {
-        this._wholeLineBreakpoints[actor][line] = aBreakpoint;
+        this._wholeLineBreakpoints[actor][line] = aActor;
         this._size++;
       }
       return this._wholeLineBreakpoints[actor][line];
@@ -179,53 +179,6 @@ BreakpointStore.prototype = {
   },
 
   /**
-   * Move the breakpoint to the new location.
-   *
-   * @param Object aBreakpoint
-   *        The breakpoint being moved. See `addBreakpoint` for a description of
-   *        its expected properties.
-   * @param Object aNewLocation
-   *        The location to move the breakpoint to. Properties:
-   *          - line
-   *          - column (optional; omission implies whole line breakpoint)
-   */
-  moveBreakpoint: function (aBreakpoint, aNewLocation) {
-    const existingBreakpoint = this.getBreakpoint(aBreakpoint);
-    this.removeBreakpoint(existingBreakpoint);
-
-    const { line, column } = aNewLocation;
-    existingBreakpoint.line = line;
-    existingBreakpoint.column = column;
-    this.addBreakpoint(existingBreakpoint);
-  },
-
-  /**
-   * Get a breakpoint from the breakpoint store. Will throw an error if the
-   * breakpoint is not found.
-   *
-   * @param Object aLocation
-   *        The location of the breakpoint you are retrieving. It is an object
-   *        with the following properties:
-   *          - source
-   *          - line
-   *          - column (optional)
-   */
-  getBreakpoint: function (aLocation) {
-    let { source: { actor, url }, line, column } = aLocation;
-    dbg_assert(actor != null);
-    dbg_assert(line != null);
-
-    var foundBreakpoint = this.hasBreakpoint(aLocation);
-    if (foundBreakpoint == null) {
-      throw new Error("No breakpoint at = " + (url || actor)
-          + ", line = " + line
-          + ", column = " + column);
-    }
-
-    return foundBreakpoint;
-  },
-
-  /**
    * Checks if the breakpoint store has a requested breakpoint.
    *
    * @param Object aLocation
@@ -236,16 +189,16 @@ BreakpointStore.prototype = {
    *          - column (optional)
    * @returns The stored breakpoint if it exists, null otherwise.
    */
-  hasBreakpoint: function (aLocation) {
+  getBreakpoint: function (aLocation) {
     let { source: { actor }, line, column } = aLocation;
     dbg_assert(actor != null);
     dbg_assert(line != null);
-    for (let bp of this.findBreakpoints(aLocation)) {
+    for (let actor of this.findBreakpoints(aLocation)) {
       // We will get whole line breakpoints before individual columns, so just
       // return the first one and if they didn't specify a column then they will
       // get the whole line breakpoint, and otherwise we will find the correct
       // one.
-      return bp;
+      return actor;
     }
 
     return null;
@@ -275,7 +228,7 @@ BreakpointStore.prototype = {
     for (let actor of this._iterActors(actor)) {
       for (let line of this._iterLines(actor, aSearchParams.line)) {
         // Always yield whole line breakpoints first. See comment in
-        // |BreakpointStore.prototype.hasBreakpoint|.
+        // |BreakpointStore.prototype.getBreakpoint|.
         if (aSearchParams.column == null
             && this._wholeLineBreakpoints[actor]
             && this._wholeLineBreakpoints[actor][line]) {
@@ -1330,18 +1283,16 @@ ThreadActor.prototype = {
     for (let line = 0, n = offsets.length; line < n; line++) {
       if (offsets[line]) {
         let location = { line: line };
-        let resp = sourceActor.createAndStoreBreakpoint(location);
+        let resp = sourceActor._setBreakpoint(location);
         dbg_assert(!resp.actualLocation, "No actualLocation should be returned");
         if (resp.error) {
           reportError(new Error("Unable to set breakpoint on event listener"));
           return;
         }
-        let bp = this.breakpointStore.getBreakpoint({
+        let bpActor = this.breakpointStore.getBreakpoint({
           source: sourceActor.form(),
           line: location.line
         });
-        let bpActor = bp.actor;
-        dbg_assert(bp, "Breakpoint must exist");
         dbg_assert(bpActor, "Breakpoint actor must be created");
         this._hiddenBreakpoints.set(bpActor.actorID, bpActor);
         break;
@@ -1496,10 +1447,8 @@ ThreadActor.prototype = {
    * caches won't hold on to the Debugger.Script objects leaking memory.
    */
   disableAllBreakpoints: function () {
-    for (let bp of this.breakpointStore.findBreakpoints()) {
-      if (bp.actor) {
-        bp.actor.removeScripts();
-      }
+    for (let bpActor of this.breakpointStore.findBreakpoints()) {
+      bpActor.removeScripts();
     }
   },
 
@@ -2153,11 +2102,11 @@ ThreadActor.prototype = {
 
     let endLine = aScript.startLine + aScript.lineCount - 1;
     let source = this.sources.source({ source: aScript.source });
-    for (let bp of this.breakpointStore.findBreakpoints(source.form())) {
+    for (let bpActor of this.breakpointStore.findBreakpoints({ source: source.form() })) {
       // Limit the search to the line numbers contained in the new script.
-      if (bp.line >= aScript.startLine
-          && bp.line <= endLine) {
-        source._setBreakpoint(bp, aScript);
+      if (bpActor.location.line >= aScript.startLine
+          && bpActor.location.line <= endLine) {
+        source._setBreakpoint(bpActor.location, aScript);
       }
     }
 
@@ -2841,7 +2790,7 @@ SourceActor.prototype = {
 
   _createBreakpoint: function(loc, originalLoc, condition) {
     return resolve(null).then(() => {
-      return this.createAndStoreBreakpoint({
+      return this._setBreakpoint({
         line: loc.line,
         column: loc.column,
         condition: condition
@@ -2904,23 +2853,6 @@ SourceActor.prototype = {
     });
   },
 
-  /**
-   * Create a breakpoint at the specified location and store it in the
-   * cache. Takes ownership of `aRequest`. This is the
-   * generated location if this source is sourcemapped.
-   * Used by the XPCShell test harness to set breakpoints in a script before
-   * it has loaded.
-   *
-   * @param Object aRequest
-   *        An object of the form { line[, column, condition] }. The
-   *        location is in the generated source, if sourcemapped.
-   */
-  createAndStoreBreakpoint: function (aRequest) {
-    let bp = update({}, aRequest, { source: this.form() });
-    this.breakpointStore.addBreakpoint(bp);
-    return this._setBreakpoint(aRequest);
-  },
-
   /** Get or create the BreakpointActor for the breakpoint at the given location.
    *
    * NB: This will override a pre-existing BreakpointActor's condition with
@@ -2932,22 +2864,20 @@ SourceActor.prototype = {
    * @returns BreakpointActor
    */
   _getOrCreateBreakpointActor: function (location) {
-    let actor;
-    const storedBp = this.breakpointStore.getBreakpoint(location);
-
-    if (storedBp.actor) {
-      actor = storedBp.actor;
-      actor.condition = location.condition;
+    let actor = this.breakpointStore.getBreakpoint(location);
+    if (!actor) {
+      actor = new BreakpointActor(this.threadActor, {
+        sourceActor: this,
+        line: location.line,
+        column: location.column,
+        condition: location.condition
+      });
+      this.threadActor.threadLifetimePool.addActor(actor);
+      this.breakpointStore.addBreakpoint(location, actor);
       return actor;
     }
 
-    storedBp.actor = actor = new BreakpointActor(this.threadActor, {
-      sourceActor: this,
-      line: location.line,
-      column: location.column,
-      condition: location.condition
-    });
-    this.threadActor.threadLifetimePool.addActor(actor);
+    actor.condition = location.condition;
     return actor;
   },
 
@@ -3112,12 +3042,12 @@ SourceActor.prototype = {
       // above is redundant and must be destroyed. If we do not have an existing
       // actor, we need to update the breakpoint store with the new location.
 
-      const existingBreakpoint = this.breakpointStore.hasBreakpoint(actualLocation);
-      if (existingBreakpoint && existingBreakpoint.actor) {
+      let existingActor = this.breakpointStore.getBreakpoint(actualLocation);
+      if (existingActor) {
         actor.onDelete();
         this.breakpointStore.removeBreakpoint(location);
         return {
-          actor: existingBreakpoint.actor.actorID,
+          actor: existingActor.actorID,
           actualLocation
         };
       } else {
@@ -3126,7 +3056,8 @@ SourceActor.prototype = {
           sourceActor: this,
           line: actualLocation.line
         };
-        this.breakpointStore.moveBreakpoint(location, actualLocation);
+        this.breakpointStore.removeBreakpoint(location);
+        this.breakpointStore.addBreakpoint(actualLocation, actor);
       }
     }
 

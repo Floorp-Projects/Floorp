@@ -749,28 +749,26 @@ Statistics::endGC()
     for (int i = 0; i < PHASE_LIMIT; i++)
         phaseTotals[i] += phaseTimes[i];
 
-    if (JSAccumulateTelemetryDataCallback cb = runtime->telemetryCallback) {
-        int64_t total, longest;
-        gcDuration(&total, &longest);
+    int64_t total, longest;
+    gcDuration(&total, &longest);
 
-        int64_t sccTotal, sccLongest;
-        sccDurations(&sccTotal, &sccLongest);
+    int64_t sccTotal, sccLongest;
+    sccDurations(&sccTotal, &sccLongest);
 
-        (*cb)(JS_TELEMETRY_GC_IS_COMPARTMENTAL, !zoneStats.isCollectingAllZones());
-        (*cb)(JS_TELEMETRY_GC_MS, t(total));
-        (*cb)(JS_TELEMETRY_GC_MAX_PAUSE_MS, t(longest));
-        (*cb)(JS_TELEMETRY_GC_MARK_MS, t(phaseTimes[PHASE_MARK]));
-        (*cb)(JS_TELEMETRY_GC_SWEEP_MS, t(phaseTimes[PHASE_SWEEP]));
-        (*cb)(JS_TELEMETRY_GC_MARK_ROOTS_MS, t(phaseTimes[PHASE_MARK_ROOTS]));
-        (*cb)(JS_TELEMETRY_GC_MARK_GRAY_MS, t(phaseTimes[PHASE_SWEEP_MARK_GRAY]));
-        (*cb)(JS_TELEMETRY_GC_NON_INCREMENTAL, !!nonincrementalReason);
-        (*cb)(JS_TELEMETRY_GC_INCREMENTAL_DISABLED, !runtime->gc.isIncrementalGCAllowed());
-        (*cb)(JS_TELEMETRY_GC_SCC_SWEEP_TOTAL_MS, t(sccTotal));
-        (*cb)(JS_TELEMETRY_GC_SCC_SWEEP_MAX_PAUSE_MS, t(sccLongest));
-
-        double mmu50 = computeMMU(50 * PRMJ_USEC_PER_MSEC);
-        (*cb)(JS_TELEMETRY_GC_MMU_50, mmu50 * 100);
-    }
+    runtime->addTelemetry(JS_TELEMETRY_GC_IS_COMPARTMENTAL, !zoneStats.isCollectingAllZones());
+    runtime->addTelemetry(JS_TELEMETRY_GC_MS, t(total));
+    runtime->addTelemetry(JS_TELEMETRY_GC_MAX_PAUSE_MS, t(longest));
+    runtime->addTelemetry(JS_TELEMETRY_GC_MARK_MS, t(phaseTimes[PHASE_MARK]));
+    runtime->addTelemetry(JS_TELEMETRY_GC_SWEEP_MS, t(phaseTimes[PHASE_SWEEP]));
+    runtime->addTelemetry(JS_TELEMETRY_GC_MARK_ROOTS_MS, t(phaseTimes[PHASE_MARK_ROOTS]));
+    runtime->addTelemetry(JS_TELEMETRY_GC_MARK_GRAY_MS, t(phaseTimes[PHASE_SWEEP_MARK_GRAY]));
+    runtime->addTelemetry(JS_TELEMETRY_GC_NON_INCREMENTAL, !!nonincrementalReason);
+    runtime->addTelemetry(JS_TELEMETRY_GC_INCREMENTAL_DISABLED, !runtime->gc.isIncrementalGCAllowed());
+    runtime->addTelemetry(JS_TELEMETRY_GC_SCC_SWEEP_TOTAL_MS, t(sccTotal));
+    runtime->addTelemetry(JS_TELEMETRY_GC_SCC_SWEEP_MAX_PAUSE_MS, t(sccLongest));
+ 
+    double mmu50 = computeMMU(50 * PRMJ_USEC_PER_MSEC);
+    runtime->addTelemetry(JS_TELEMETRY_GC_MMU_50, mmu50 * 100);
 
     if (fp)
         printStats();
@@ -795,8 +793,7 @@ Statistics::beginSlice(const ZoneGCStats &zoneStats, JSGCInvocationKind gckind,
     if (!slices.append(data))
         CrashAtUnhandlableOOM("Failed to allocate statistics slice.");
 
-    if (JSAccumulateTelemetryDataCallback cb = runtime->telemetryCallback)
-        (*cb)(JS_TELEMETRY_GC_REASON, reason);
+    runtime->addTelemetry(JS_TELEMETRY_GC_REASON, reason);
 
     // Slice callbacks should only fire for the outermost level
     if (++gcDepth == 1) {
@@ -813,10 +810,8 @@ Statistics::endSlice()
     slices.back().end = PRMJ_Now();
     slices.back().endFaults = GetPageFaultCount();
 
-    if (JSAccumulateTelemetryDataCallback cb = runtime->telemetryCallback) {
-        (*cb)(JS_TELEMETRY_GC_SLICE_MS, t(slices.back().end - slices.back().start));
-        (*cb)(JS_TELEMETRY_GC_RESET, !!slices.back().resetReason);
-    }
+    runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_MS, t(slices.back().end - slices.back().start));
+    runtime->addTelemetry(JS_TELEMETRY_GC_RESET, !!slices.back().resetReason);
 
     bool last = runtime->gc.state() == gc::NO_INCREMENTAL;
     if (last)

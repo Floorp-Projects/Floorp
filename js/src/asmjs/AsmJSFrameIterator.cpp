@@ -111,11 +111,15 @@ AsmJSFrameIterator::computeLine(uint32_t *column) const
 // prologue/epilogue. The offsets are dynamically asserted during code
 // generation.
 #if defined(JS_CODEGEN_X64)
+# if defined(DEBUG)
 static const unsigned PushedRetAddr = 0;
+# endif
 static const unsigned PushedFP = 10;
 static const unsigned StoredFP = 14;
 #elif defined(JS_CODEGEN_X86)
+# if defined(DEBUG)
 static const unsigned PushedRetAddr = 0;
+# endif
 static const unsigned PushedFP = 8;
 static const unsigned StoredFP = 11;
 #elif defined(JS_CODEGEN_ARM)
@@ -127,7 +131,9 @@ static const unsigned PushedRetAddr = 8;
 static const unsigned PushedFP = 24;
 static const unsigned StoredFP = 28;
 #elif defined(JS_CODEGEN_NONE)
+# if defined(DEBUG)
 static const unsigned PushedRetAddr = 0;
+# endif
 static const unsigned PushedFP = 1;
 static const unsigned StoredFP = 1;
 #else
@@ -702,4 +708,3 @@ AsmJSProfilingFrameIterator::label() const
 
     MOZ_CRASH("Bad exit kind");
 }
-

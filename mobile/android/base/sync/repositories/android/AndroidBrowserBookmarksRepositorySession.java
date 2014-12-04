@@ -203,8 +203,6 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
    */
   public static boolean forbiddenGUID(final String recordGUID) {
     return recordGUID == null ||
-           // Temporarily exclude reading list items (Bug 762118; re-enable in Bug 762109.)
-           BrowserContract.Bookmarks.READING_LIST_FOLDER_GUID.equals(recordGUID) ||
            BrowserContract.Bookmarks.PINNED_FOLDER_GUID.equals(recordGUID) ||
            BrowserContract.Bookmarks.PLACES_FOLDER_GUID.equals(recordGUID) ||
            BrowserContract.Bookmarks.TAGS_FOLDER_GUID.equals(recordGUID);
@@ -221,8 +219,6 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
    */
   public static boolean forbiddenParent(final String parentGUID) {
     return parentGUID == null ||
-           // Temporarily exclude reading list items (Bug 762118; re-enable in Bug 762109.)
-           BrowserContract.Bookmarks.READING_LIST_FOLDER_GUID.equals(parentGUID) ||
            BrowserContract.Bookmarks.PINNED_FOLDER_GUID.equals(parentGUID);
   }
 

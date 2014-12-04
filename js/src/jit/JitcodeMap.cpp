@@ -313,7 +313,7 @@ JitcodeRegionEntry::ReadDelta(CompactBufferReader &reader,
 
         uint32_t pcDeltaU = (encVal & ENC3_PC_DELTA_MASK) >> ENC3_PC_DELTA_SHIFT;
         // Fix sign if necessary.
-        if (pcDeltaU > ENC3_PC_DELTA_MAX)
+        if (pcDeltaU > static_cast<uint32_t>(ENC3_PC_DELTA_MAX))
             pcDeltaU |= ~ENC3_PC_DELTA_MAX;
         *pcDelta = pcDeltaU;
         MOZ_ASSERT(*pcDelta != 0);
@@ -329,7 +329,7 @@ JitcodeRegionEntry::ReadDelta(CompactBufferReader &reader,
 
     uint32_t pcDeltaU = (encVal & ENC4_PC_DELTA_MASK) >> ENC4_PC_DELTA_SHIFT;
     // fix sign if necessary
-    if (pcDeltaU > ENC4_PC_DELTA_MAX)
+    if (pcDeltaU > static_cast<uint32_t>(ENC4_PC_DELTA_MAX))
         pcDeltaU |= ~ENC4_PC_DELTA_MAX;
     *pcDelta = pcDeltaU;
 
