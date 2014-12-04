@@ -32,7 +32,7 @@ enum NFCTagType {
   "mifare_classic"
 };
 
-[JSImplementation="@mozilla.org/nfc/NFCTag;1", AvailableIn="CertifiedApps"]
+[JSImplementation="@mozilla.org/nfc/NFCTag;1", AvailableIn="PrivilegedApps"]
 interface MozNFCTag {
   /**
    * The supported technologies of this tag, null if unknown.
