@@ -3920,7 +3920,7 @@ nsNavHistoryFolderResultNode::OnItemMoved(int64_t aItemId,
     }
     if (aNewParent == mTargetFolderItemId) {
       OnItemAdded(aItemId, aNewParent, aNewIndex, aItemType, itemURI, itemTitle,
-                  PR_Now(), // This is a dummy dateAdded, not the real value.
+                  RoundedPRNow(), // This is a dummy dateAdded, not the real value.
                   aGUID, aNewParentGUID);
     }
   }
