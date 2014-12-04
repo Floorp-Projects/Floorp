@@ -146,11 +146,11 @@ let tests = [
 /**
  * nfc-manager for mozNfc.checkP2PRegistration(manifestUrl)
  *  -> "NFC:CheckP2PRegistration" IPC
- * nfc-write to set/unset onpeerready
+ * nfc-share to set/unset onpeerready
  *  -> "NFC:RegisterPeerTarget", "NFC:UnregisterPeerTarget" IPC
  */
 SpecialPowers.pushPermissions(
   [
     {'type': 'nfc-manager', 'allow': true, context: document},
-    {'type': 'nfc-write', 'allow': true, context: document}
+    {'type': 'nfc-share', 'allow': true, context: document}
   ], runTests);
