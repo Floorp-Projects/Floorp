@@ -90,6 +90,7 @@
 #include "nsIAppsService.h"
 #include "nsNetUtil.h"
 #include "nsIPermissionManager.h"
+#include "nsIScriptError.h"
 
 #define BROWSER_ELEMENT_CHILD_SCRIPT \
     NS_LITERAL_STRING("chrome://global/content/BrowserElementChild.js")
@@ -1881,8 +1882,34 @@ TabChild::DoFakeShow(const ScrollingBehavior& aScrolling,
                      const uint64_t& aLayersId,
                      PRenderFrameChild* aRenderFrame)
 {
-  RecvShow(nsIntSize(0, 0), aScrolling, aTextureFactoryIdentifier, aLayersId, aRenderFrame);
+  ShowInfo info(EmptyString(), false, false);
+  RecvShow(nsIntSize(0, 0), info, aScrolling, aTextureFactoryIdentifier, aLayersId, aRenderFrame);
   mDidFakeShow = true;
+}
+
+void
+TabChild::ApplyShowInfo(const ShowInfo& aInfo)
+{
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+  if (docShell) {
+    nsCOMPtr<nsIDocShellTreeItem> item = do_GetInterface(docShell);
+    item->SetName(aInfo.name());
+    docShell->SetFullscreenAllowed(aInfo.fullscreenAllowed());
+    if (aInfo.isPrivate()) {
+      bool nonBlank;
+      docShell->GetHasLoadedNonBlankURI(&nonBlank);
+      if (nonBlank) {
+        nsContentUtils::ReportToConsoleNonLocalized(
+          NS_LITERAL_STRING("We should not switch to Private Browsing after loading a document."),
+          nsIScriptError::warningFlag,
+          NS_LITERAL_CSTRING("mozprivatebrowsing"),
+          nullptr);
+      } else {
+        nsCOMPtr<nsILoadContext> context = do_GetInterface(docShell);
+        context->SetUsePrivateBrowsing(true);
+      }
+    }
+  }
 }
 
 #ifdef MOZ_WIDGET_GONK
@@ -1945,6 +1972,7 @@ TabChild::MaybeRequestPreinitCamera()
 
 bool
 TabChild::RecvShow(const nsIntSize& aSize,
+                   const ShowInfo& aInfo,
                    const ScrollingBehavior& aScrolling,
                    const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                    const uint64_t& aLayersId,
@@ -1953,6 +1981,7 @@ TabChild::RecvShow(const nsIntSize& aSize,
     MOZ_ASSERT((!mDidFakeShow && aRenderFrame) || (mDidFakeShow && !aRenderFrame));
 
     if (mDidFakeShow) {
+        ApplyShowInfo(aInfo);
         return true;
     }
 
@@ -1976,7 +2005,9 @@ TabChild::RecvShow(const nsIntSize& aSize,
     MaybeRequestPreinitCamera();
 #endif
 
-    return InitTabChildGlobal();
+    bool res = InitTabChildGlobal();
+    ApplyShowInfo(aInfo);
+    return res;
 }
 
 bool
