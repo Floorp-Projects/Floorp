@@ -404,8 +404,13 @@ let Bookmarks = Object.freeze({
     let info = guidOrInfo;
     if (!info)
       throw new Error("Input should be a valid object");
-    if (typeof(guidOrInfo) != "object") {
+    if (typeof(guidOrInfo) != "object")
       info = { guid: guidOrInfo };
+
+    // Disallow removing the root folders.
+    if ([this.rootGuid, this.menuGuid, this.toolbarGuid, this.unfiledGuid,
+         this.tagsGuid].indexOf(info.guid) != -1) {
+      throw new Error("It's not possible to remove Places root folders.");
     }
 
     // Even if we ignore any other unneeded property, we still validate any
@@ -416,10 +421,6 @@ let Bookmarks = Object.freeze({
       let item = yield fetchBookmark(removeInfo);
       if (!item)
         throw new Error("No bookmarks found for the provided GUID.");
-
-      // Disallow removing the root folders.
-      if (!item._parentId || item._parentId == PlacesUtils.placesRootId)
-        throw new Error("It's not possible to remove Places root folders.");
 
       item = yield removeBookmark(item);
 
