@@ -50,6 +50,41 @@ let tests = [
     // Test that the open menu from above was torn down fully.
     checkLoopPanelIsHidden();
   }),
+  function test_availableTargets(done) {
+    gContentAPI.showMenu("loop");
+    gContentAPI.getConfiguration("availableTargets", (data) => {
+      for (let targetName of ["loop-newRoom", "loop-roomList", "loop-signInUpLink"]) {
+        isnot(data.targets.indexOf(targetName), -1, targetName + " should exist");
+      }
+      done();
+    });
+  },
+  function test_hideMenuHidesAnnotations(done) {
+    let infoPanel = document.getElementById("UITourTooltip");
+    let highlightPanel = document.getElementById("UITourHighlightContainer");
+
+    gContentAPI.showMenu("loop", function menuCallback() {
+      gContentAPI.showHighlight("loop-roomList");
+      gContentAPI.showInfo("loop-newRoom", "Make a new room", "AKA. conversation");
+      UITour.getTarget(window, "loop-newRoom").then((target) => {
+        waitForPopupAtAnchor(infoPanel, target.node, Task.async(function* checkPanelIsOpen() {
+          isnot(loopPanel.state, "closed", "Loop panel should still be open");
+          ok(loopPanel.hasAttribute("noautohide"), "@noautohide should still be on the loop panel");
+          is(highlightPanel.getAttribute("targetName"), "loop-roomList", "Check highlight @targetname");
+          is(infoPanel.getAttribute("targetName"), "loop-newRoom", "Check info panel @targetname");
+
+          info("Close the loop menu and make sure the annotations inside disappear");
+          let hiddenPromises = [promisePanelElementHidden(window, infoPanel),
+                                promisePanelElementHidden(window, highlightPanel)];
+          gContentAPI.hideMenu("loop");
+          yield Promise.all(hiddenPromises);
+          isnot(infoPanel.state, "open", "Info panel should have automatically hid");
+          isnot(highlightPanel.state, "open", "Highlight panel should have automatically hid");
+          done();
+        }), "Info panel should be anchored to the new room button");
+      });
+    });
+  },
 ];
 
 function checkLoopPanelIsHidden() {
@@ -61,7 +96,16 @@ function checkLoopPanelIsHidden() {
 
 if (Services.prefs.getBoolPref("loop.enabled")) {
   loopButton = window.LoopUI.toolbarButton.node;
+  // The targets to highlight only appear after getting started is launched.
+  Services.prefs.setBoolPref("loop.gettingStarted.seen", true);
+  Services.prefs.setCharPref("loop.server", "http://localhost");
+  Services.prefs.setCharPref("services.push.serverURL", "ws://localhost/");
+
   registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("loop.gettingStarted.seen");
+    Services.prefs.clearUserPref("loop.server");
+    Services.prefs.clearUserPref("services.push.serverURL");
+
     // Copied from browser/components/loop/test/mochitest/head.js
     // Remove the iframe after each test. This also avoids mochitest complaining
     // about leaks on shutdown as we intentionally hold the iframe open for the
