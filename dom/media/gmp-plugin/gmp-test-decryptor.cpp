@@ -192,8 +192,10 @@ private:
 
 class TruncateContinuation : public ReadContinuation {
 public:
-  TruncateContinuation(TestManager* aTestManager, const string& aTestID)
-    : mTestmanager(aTestManager), mTestID(aTestID) {}
+  TruncateContinuation(const string& aID,
+                       TestManager* aTestManager,
+                       const string& aTestID)
+    : mID(aID), mTestmanager(aTestManager), mTestID(aTestID) {}
 
   void ReadComplete(GMPErr aErr, const std::string& aData) MOZ_OVERRIDE {
     if (aData != TruncateRecordData) {
@@ -202,13 +204,12 @@ public:
     auto cont = new TestEmptyContinuation(mTestmanager, mTestID);
     auto msg = "FAIL in TruncateContinuation write.";
     auto failTask = new SendMessageTask(msg, mTestmanager, mTestID);
-    WriteRecord(TruncateRecordId, nullptr, 0,
-                new ReadThenTask(TruncateRecordId, cont),
-                failTask);
+    WriteRecord(mID, nullptr, 0, new ReadThenTask(mID, cont), failTask);
     delete this;
   }
 
 private:
+  const string mID;
   TestManager* const mTestmanager;
   const string mTestID;
 };
@@ -292,8 +293,10 @@ private:
 
 class OpenedFirstTimeContinuation : public OpenContinuation {
 public:
-  OpenedFirstTimeContinuation(TestManager* aTestManager, const string& aTestID)
-    : mTestmanager(aTestManager), mTestID(aTestID) {}
+  OpenedFirstTimeContinuation(const string& aID,
+                              TestManager* aTestManager,
+                              const string& aTestID)
+    : mID(aID), mTestmanager(aTestManager), mTestID(aTestID) {}
 
   virtual void OpenComplete(GMPErr aStatus, GMPRecord* aRecord) MOZ_OVERRIDE {
     if (GMP_FAILED(aStatus)) {
@@ -303,20 +306,19 @@ public:
     }
 
     auto cont = new OpenedSecondTimeContinuation(aRecord, mTestmanager, mTestID);
-    GMPOpenRecord(OpenAgainRecordId, cont);
+    GMPOpenRecord(mID, cont);
     delete this;
   }
 
 private:
+  const string mID;
   TestManager* const mTestmanager;
   const string mTestID;
 };
 
-void
-FakeDecryptor::TestStorage()
+static void
+DoTestStorage(const string& aPrefix, TestManager* aTestManager)
 {
-  TestManager* testManager = new TestManager();
-
   // Basic I/O tests. We run three cases concurrently. The tests, like
   // GMPStorage run asynchronously. When they've all passed, we send
   // a message back to the parent process, or a failure message if not.
@@ -328,15 +330,14 @@ FakeDecryptor::TestStorage()
   // read data, verify that we read what we wrote, then
   // write 0 bytes to truncate record, then
   // read data, verify that 0 bytes was read
-  const string testID1 = "write-test-1";
-  testManager->BeginTest(testID1);
-  auto cont1 = new TruncateContinuation(testManager, testID1);
+  const string id1 = aPrefix + TruncateRecordId;
+  const string testID1 = aPrefix + "write-test-1";
+  aTestManager->BeginTest(testID1);
+  auto cont1 = new TruncateContinuation(id1, aTestManager, testID1);
   auto msg1 = "FAIL in TestStorage writing TruncateRecord.";
-  auto failTask1 = new SendMessageTask(msg1, testManager, testID1);
-  WriteRecord(TruncateRecordId,
-              TruncateRecordData,
-              new ReadThenTask(TruncateRecordId, cont1),
-              failTask1);
+  auto failTask1 = new SendMessageTask(msg1, aTestManager, testID1);
+  WriteRecord(id1, TruncateRecordData,
+              new ReadThenTask(id1, cont1), failTask1);
 
   // Test 2: Test that overwriting a record with a shorter record truncates
   // the record to the shorter record.
@@ -345,26 +346,73 @@ FakeDecryptor::TestStorage()
   // read and verify record, then
   // write a shorter record to same record.
   // read and verify
-  string id = "record1";
+  string id2 = aPrefix + "record1";
   string record1 = "This is the first write to a record.";
   string overwrite = "A shorter record";
-  const string testID2 = "write-test-2";
-  testManager->BeginTest(testID2);
-  auto task2 = new VerifyAndOverwriteContinuation(id, record1, overwrite,
-                                                  testManager, testID2);
+  const string testID2 = aPrefix + "write-test-2";
+  aTestManager->BeginTest(testID2);
+  auto task2 = new VerifyAndOverwriteContinuation(id2, record1, overwrite,
+                                                  aTestManager, testID2);
   auto msg2 = "FAIL in TestStorage writing record1.";
-  auto failTask2 = new SendMessageTask(msg2, testManager, testID2);
-  WriteRecord(id, record1, new ReadThenTask(id, task2), failTask2);
+  auto failTask2 = new SendMessageTask(msg2, aTestManager, testID2);
+  WriteRecord(id2, record1, new ReadThenTask(id2, task2), failTask2);
 
   // Test 3: Test that opening a record while it's already open fails.
   //
   // Open record1, then
   // open record1, should fail.
   // close record1
-  const string testID3 = "open-test-1";
-  testManager->BeginTest(testID3);
-  auto task3 = new OpenedFirstTimeContinuation(testManager, testID3);
-  GMPOpenRecord(OpenAgainRecordId, task3);
+  const string id3 = aPrefix + OpenAgainRecordId;
+  const string testID3 = aPrefix + "open-test-1";
+  aTestManager->BeginTest(testID3);
+  auto task3 = new OpenedFirstTimeContinuation(id3, aTestManager, testID3);
+  GMPOpenRecord(id3, task3);
+}
+
+class TestStorageTask : public GMPTask {
+public:
+  TestStorageTask(const string& aPrefix, TestManager* aTestManager)
+    : mPrefix(aPrefix), mTestManager(aTestManager) {}
+  virtual void Destroy() { delete this; }
+  virtual void Run() {
+    DoTestStorage(mPrefix, mTestManager);
+  }
+private:
+  const string mPrefix;
+  TestManager* const mTestManager;
+};
+
+void
+FakeDecryptor::TestStorage()
+{
+  TestManager* testManager = new TestManager();
+  GMPThread* thread1 = nullptr;
+  GMPThread* thread2 = nullptr;
+
+  // Main thread tests.
+  DoTestStorage("mt1-", testManager);
+  DoTestStorage("mt2-", testManager);
+
+  // Off-main-thread tests.
+  if (GMP_SUCCEEDED(g_platform_api->createthread(&thread1))) {
+    thread1->Post(new TestStorageTask("thread1-", testManager));
+  } else {
+    FakeDecryptor::Message("FAIL to create thread1 for storage tests");
+  }
+
+  if (GMP_SUCCEEDED(g_platform_api->createthread(&thread2))) {
+    thread2->Post(new TestStorageTask("thread2-", testManager));
+  } else {
+    FakeDecryptor::Message("FAIL to create thread2 for storage tests");
+  }
+
+  if (thread1) {
+    thread1->Join();
+  }
+
+  if (thread2) {
+    thread2->Join();
+  }
 
   // Note: Once all tests finish, TestManager will dispatch "test-pass" message,
   // which ends the test for the parent.
