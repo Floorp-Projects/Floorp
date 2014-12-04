@@ -1888,10 +1888,8 @@ UpdateExecutionObservabilityOfScriptsInZone(JSContext *cx, Zone *zone,
 {
     using namespace js::jit;
 
-#ifdef JSGC_GENERATIONAL
     // See note in js::ReleaseAllJITCode.
     cx->runtime()->gc.evictNursery();
-#endif
 
     AutoSuppressProfilerSampling suppressProfilerSampling(cx);
 

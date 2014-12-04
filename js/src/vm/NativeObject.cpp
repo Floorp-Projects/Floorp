@@ -412,10 +412,8 @@ NativeObject::setSlotSpan(ThreadSafeContext *cx, HandleNativeObject obj, uint32_
 static HeapSlot *
 AllocateSlots(ThreadSafeContext *cx, JSObject *obj, uint32_t nslots)
 {
-#ifdef JSGC_GENERATIONAL
     if (cx->isJSContext())
         return cx->asJSContext()->runtime()->gc.nursery.allocateSlots(obj, nslots);
-#endif
 #ifdef JSGC_FJGENERATIONAL
     if (cx->isForkJoinContext())
         return cx->asForkJoinContext()->nursery().allocateSlots(obj, nslots);
@@ -431,12 +429,10 @@ static HeapSlot *
 ReallocateSlots(ThreadSafeContext *cx, JSObject *obj, HeapSlot *oldSlots,
                 uint32_t oldCount, uint32_t newCount)
 {
-#ifdef JSGC_GENERATIONAL
     if (cx->isJSContext()) {
         return cx->asJSContext()->runtime()->gc.nursery.reallocateSlots(obj, oldSlots,
                                                                         oldCount, newCount);
     }
-#endif
 #ifdef JSGC_FJGENERATIONAL
     if (cx->isForkJoinContext()) {
         return cx->asForkJoinContext()->nursery().reallocateSlots(obj, oldSlots,
@@ -483,11 +479,9 @@ NativeObject::growSlots(ThreadSafeContext *cx, HandleNativeObject obj, uint32_t 
 static void
 FreeSlots(ThreadSafeContext *cx, HeapSlot *slots)
 {
-#ifdef JSGC_GENERATIONAL
     // Note: threads without a JSContext do not have access to GGC nursery allocated things.
     if (cx->isJSContext())
         return cx->asJSContext()->runtime()->gc.nursery.freeSlots(slots);
-#endif
 #ifdef JSGC_FJGENERATIONAL
     if (cx->isForkJoinContext())
         return cx->asForkJoinContext()->nursery().freeSlots(slots);
@@ -722,10 +716,8 @@ NativeObject::maybeDensifySparseElements(js::ExclusiveContext *cx, HandleNativeO
 static ObjectElements *
 AllocateElements(ThreadSafeContext *cx, JSObject *obj, uint32_t nelems)
 {
-#ifdef JSGC_GENERATIONAL
     if (cx->isJSContext())
         return cx->asJSContext()->runtime()->gc.nursery.allocateElements(obj, nelems);
-#endif
 #ifdef JSGC_FJGENERATIONAL
     if (cx->isForkJoinContext())
         return cx->asForkJoinContext()->nursery().allocateElements(obj, nelems);
@@ -740,12 +732,10 @@ static ObjectElements *
 ReallocateElements(ThreadSafeContext *cx, JSObject *obj, ObjectElements *oldHeader,
                    uint32_t oldCount, uint32_t newCount)
 {
-#ifdef JSGC_GENERATIONAL
     if (cx->isJSContext()) {
         return cx->asJSContext()->runtime()->gc.nursery.reallocateElements(obj, oldHeader,
                                                                            oldCount, newCount);
     }
-#endif
 #ifdef JSGC_FJGENERATIONAL
     if (cx->isForkJoinContext()) {
         return cx->asForkJoinContext()->nursery().reallocateElements(obj, oldHeader,

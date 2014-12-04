@@ -1168,10 +1168,8 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         call(target);
     }
 
-#ifdef JSGC_GENERATIONAL
     void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label *label);
     void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp, Label *label);
-#endif
 };
 
 typedef MacroAssemblerX86 MacroAssemblerSpecific;

@@ -1152,10 +1152,8 @@ class ICStubCompiler
         return regs;
     }
 
-#ifdef JSGC_GENERATIONAL
     inline bool emitPostWriteBarrierSlot(MacroAssembler &masm, Register obj, ValueOperand val,
                                          Register scratch, GeneralRegisterSet saveRegs);
-#endif
 
   public:
     virtual ICStub *getStub(ICStubSpace *space) = 0;

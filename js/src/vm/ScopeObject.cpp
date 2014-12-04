@@ -1879,13 +1879,10 @@ js_IsDebugScopeSlow(ProxyObject *proxy)
 DebugScopes::proxiedScopesPostWriteBarrier(JSRuntime *rt, ObjectWeakMap *map,
                                            const PreBarrieredObject &key)
 {
-#ifdef JSGC_GENERATIONAL
     if (key && IsInsideNursery(key))
         rt->gc.storeBuffer.putGeneric(UnbarrieredRef(map, key.get()));
-#endif
 }
 
-#ifdef JSGC_GENERATIONAL
 class DebugScopes::MissingScopesRef : public gc::BufferableRef
 {
     MissingScopeMap *map;
@@ -1904,22 +1901,18 @@ class DebugScopes::MissingScopesRef : public gc::BufferableRef
         map->rekeyIfMoved(prior, key);
     }
 };
-#endif
 
 /* static */ MOZ_ALWAYS_INLINE void
 DebugScopes::missingScopesPostWriteBarrier(JSRuntime *rt, MissingScopeMap *map,
                                            const ScopeIterKey &key)
 {
-#ifdef JSGC_GENERATIONAL
     if (key.enclosingScope() && IsInsideNursery(key.enclosingScope()))
         rt->gc.storeBuffer.putGeneric(MissingScopesRef(map, key));
-#endif
 }
 
 /* static */ MOZ_ALWAYS_INLINE void
 DebugScopes::liveScopesPostWriteBarrier(JSRuntime *rt, LiveScopeMap *map, ScopeObject *key)
 {
-#ifdef JSGC_GENERATIONAL
     // As above.  Otherwise, barriers could fire during GC when moving the
     // value.
     typedef HashMap<ScopeObject *,
@@ -1929,7 +1922,6 @@ DebugScopes::liveScopesPostWriteBarrier(JSRuntime *rt, LiveScopeMap *map, ScopeO
     typedef gc::HashKeyRef<UnbarrieredLiveScopeMap, ScopeObject *> Ref;
     if (key && IsInsideNursery(key))
         rt->gc.storeBuffer.putGeneric(Ref(reinterpret_cast<UnbarrieredLiveScopeMap *>(map), key));
-#endif
 }
 
 DebugScopes::DebugScopes(JSContext *cx)

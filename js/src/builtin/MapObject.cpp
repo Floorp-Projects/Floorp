@@ -1113,7 +1113,6 @@ MapObject::mark(JSTracer *trc, JSObject *obj)
     }
 }
 
-#ifdef JSGC_GENERATIONAL
 struct UnbarrieredHashPolicy {
     typedef Value Lookup;
     static HashNumber hash(const Lookup &v) { return v.asRawBits(); }
@@ -1139,30 +1138,25 @@ class OrderedHashTableRef : public gc::BufferableRef
         table->rekeyOneEntry(prior, key);
     }
 };
-#endif
 
 inline static void
 WriteBarrierPost(JSRuntime *rt, ValueMap *map, const Value &key)
 {
-#ifdef JSGC_GENERATIONAL
     typedef OrderedHashMap<Value, Value, UnbarrieredHashPolicy, RuntimeAllocPolicy> UnbarrieredMap;
     if (MOZ_UNLIKELY(key.isObject() && IsInsideNursery(&key.toObject()))) {
         rt->gc.storeBuffer.putGeneric(OrderedHashTableRef<UnbarrieredMap>(
                     reinterpret_cast<UnbarrieredMap *>(map), key));
     }
-#endif
 }
 
 inline static void
 WriteBarrierPost(JSRuntime *rt, ValueSet *set, const Value &key)
 {
-#ifdef JSGC_GENERATIONAL
     typedef OrderedHashSet<Value, UnbarrieredHashPolicy, RuntimeAllocPolicy> UnbarrieredSet;
     if (MOZ_UNLIKELY(key.isObject() && IsInsideNursery(&key.toObject()))) {
         rt->gc.storeBuffer.putGeneric(OrderedHashTableRef<UnbarrieredSet>(
                     reinterpret_cast<UnbarrieredSet *>(set), key));
     }
-#endif
 }
 
 bool

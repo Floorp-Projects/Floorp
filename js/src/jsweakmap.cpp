@@ -353,12 +353,10 @@ TryPreserveReflector(JSContext *cx, HandleObject obj)
 static inline void
 WeakMapPostWriteBarrier(JSRuntime *rt, ObjectValueMap *weakMap, JSObject *key)
 {
-#ifdef JSGC_GENERATIONAL
     // Strip the barriers from the type before inserting into the store buffer.
     // This will automatically ensure that barriers do not fire during GC.
     if (key && IsInsideNursery(key))
         rt->gc.storeBuffer.putGeneric(UnbarrieredRef(weakMap, key));
-#endif
 }
 
 static MOZ_ALWAYS_INLINE bool

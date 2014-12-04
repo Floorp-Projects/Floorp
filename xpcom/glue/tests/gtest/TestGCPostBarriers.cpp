@@ -55,11 +55,7 @@ RunTest(JSRuntime* rt, JSContext* cx, ArrayT* array)
   const char* property = "foo";
   for (size_t i = 0; i < ElementCount; ++i) {
     RootedObject obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
-#ifdef JSGC_GENERATIONAL
     ASSERT_TRUE(js::gc::IsInsideNursery(AsCell(obj)));
-#else
-    ASSERT_FALSE(js::gc::IsInsideNursery(AsCell(obj)));
-#endif
     value = Int32Value(i);
     ASSERT_TRUE(JS_SetProperty(cx, obj, property, value));
     array->AppendElement(obj);
