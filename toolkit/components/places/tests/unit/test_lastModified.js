@@ -23,11 +23,11 @@ function run_test() {
   // to the new dateAdded.
   // This could randomly fail on virtual machines due to timing issues, so
   // we manually increase the time value.  See bug 500640 for details.
-  bs.setItemLastModified(itemId, dateAdded + 1);
-  do_check_true(bs.getItemLastModified(itemId) === dateAdded + 1);
+  bs.setItemLastModified(itemId, dateAdded + 1000);
+  do_check_true(bs.getItemLastModified(itemId) === dateAdded + 1000);
   do_check_true(bs.getItemDateAdded(itemId) < bs.getItemLastModified(itemId));
-  bs.setItemDateAdded(itemId, dateAdded + 2);
-  do_check_true(bs.getItemDateAdded(itemId) === dateAdded + 2);
+  bs.setItemDateAdded(itemId, dateAdded + 2000);
+  do_check_true(bs.getItemDateAdded(itemId) === dateAdded + 2000);
   do_check_eq(bs.getItemDateAdded(itemId), bs.getItemLastModified(itemId));
 
   bs.removeItem(itemId);

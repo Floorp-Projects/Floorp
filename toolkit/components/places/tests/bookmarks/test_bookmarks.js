@@ -149,8 +149,10 @@ add_task(function test_bookmarks() {
 
   // Workaround possible VM timers issues moving lastModified and dateAdded
   // to the past.
-  bs.setItemLastModified(newId, --lastModified);
-  bs.setItemDateAdded(newId, --dateAdded);
+  lastModified -= 1000;
+  bs.setItemLastModified(newId, lastModified);
+  dateAdded -= 1000;
+  bs.setItemDateAdded(newId, dateAdded);
 
   // set bookmark title
   bs.setItemTitle(newId, "Google");
@@ -327,8 +329,10 @@ add_task(function test_bookmarks() {
 
     // Workaround possible VM timers issues moving lastModified and dateAdded
     // to the past.
+    lastModified -= 1000;
     bs.setItemLastModified(kwTestItemId, --lastModified);
-    bs.setItemDateAdded(kwTestItemId, --dateAdded);
+    dateAdded -= 1000;
+    bs.setItemDateAdded(kwTestItemId, dateAdded);
 
     bs.setKeywordForBookmark(kwTestItemId, "bar");
 
@@ -454,8 +458,10 @@ add_task(function test_bookmarks() {
 
   // Workaround possible VM timers issues moving lastModified and dateAdded
   // to the past.
-  bs.setItemLastModified(newId10, --lastModified);
-  bs.setItemDateAdded(newId10, --dateAdded);
+  lastModified -= 1000;
+  bs.setItemLastModified(newId10, lastModified);
+  dateAdded -= 1000;
+  bs.setItemDateAdded(newId10, dateAdded);
 
   bs.changeBookmarkURI(newId10, uri("http://foo11.com/"));
 
@@ -596,12 +602,12 @@ add_task(function test_bookmarks() {
   dateAdded = bs.getItemDateAdded(newId14);
   lastModified = bs.getItemLastModified(newId14);
   do_check_eq(lastModified, dateAdded);
-  bs.setItemLastModified(newId14, 1234);
+  bs.setItemLastModified(newId14, 1234000000000000);
   let fakeLastModified = bs.getItemLastModified(newId14);
-  do_check_eq(fakeLastModified, 1234);
-  bs.setItemDateAdded(newId14, 4321);
+  do_check_eq(fakeLastModified, 1234000000000000);
+  bs.setItemDateAdded(newId14, 4321000000000000);
   let fakeDateAdded = bs.getItemDateAdded(newId14);
-  do_check_eq(fakeDateAdded, 4321);
+  do_check_eq(fakeDateAdded, 4321000000000000);
   
   // ensure that removing an item removes its annotations
   do_check_true(anno.itemHasAnnotation(newId3, "test-annotation"));
