@@ -158,7 +158,8 @@ private:
       , mIsFlushing(false)
       , mOutputRequested(false)
       , mUpdateScheduled(false)
-      , mEOS(false)
+      , mDemuxEOS(false)
+      , mDrainComplete(false)
       , mDiscontinuity(false)
     {
     }
@@ -187,7 +188,8 @@ private:
     bool mIsFlushing;
     bool mOutputRequested;
     bool mUpdateScheduled;
-    bool mEOS;
+    bool mDemuxEOS;
+    bool mDrainComplete;
     bool mDiscontinuity;
   };
   DecoderData mAudio;
