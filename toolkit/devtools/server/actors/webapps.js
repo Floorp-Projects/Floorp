@@ -613,7 +613,9 @@ WebappsActor.prototype = {
     }
 
     // Check that we are not overriding a preinstalled application.
-    if (appId in reg.webapps && reg.webapps[appId].removable === false) {
+    if (appId in reg.webapps &&
+        reg.webapps[appId].removable === false &&
+        !this._isUnrestrictedAccessAllowed()) {
       return { error: "installationFailed",
                message: "The application " + appId + " can't be overridden."
              };
