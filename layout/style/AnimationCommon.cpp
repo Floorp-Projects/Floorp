@@ -711,8 +711,8 @@ AnimationPlayerCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
   // If we're performing animations on the compositor thread, then we can skip
   // most of the work in this method. But even if we are throttled, then we
   // have to do the work if an animation is ending in order to get correct end
-  // of animation behaviour (the styles of the animation disappear, or the fill
-  // mode behaviour). CanThrottle returns false for any finishing animations
+  // of animation behavior (the styles of the animation disappear, or the fill
+  // mode behavior). CanThrottle returns false for any finishing animations
   // so we can force style recalculation in that case.
   if (aFlags == EnsureStyleRule_IsThrottled) {
     for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
