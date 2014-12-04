@@ -942,6 +942,9 @@ setReq.onerror = function() {
         if self.httpd:
             self.httpd.stop()
 
+        if self.marionette:
+            self.marionette.cleanup()
+
     __del__ = cleanup
 
     def generate_xml(self, results_list):
