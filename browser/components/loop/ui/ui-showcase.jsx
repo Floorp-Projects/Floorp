@@ -621,6 +621,17 @@
               </div>
             </Example>
 
+            <Example summary="Standalone room conversation (feedback)">
+              <div className="standalone">
+                <StandaloneRoomView
+                  dispatcher={dispatcher}
+                  activeRoomStore={activeRoomStore}
+                  feedbackStore={feedbackStore}
+                  roomState={ROOM_STATES.ENDED}
+                  helper={{isFirefox: returnFalse}} />
+              </div>
+            </Example>
+
             <Example summary="Standalone room conversation (failed)">
               <div className="standalone">
                 <StandaloneRoomView
