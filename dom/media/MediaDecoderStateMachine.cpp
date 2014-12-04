@@ -1221,6 +1221,17 @@ void MediaDecoderStateMachine::SetSyncPointForMediaStream()
               mSyncPointInMediaStream, mSyncPointInDecodedStream);
 }
 
+void MediaDecoderStateMachine::ResyncMediaStreamClock()
+{
+  AssertCurrentThreadInMonitor();
+  MOZ_ASSERT(mDecoder->GetDecodedStream());
+
+  if (IsPlaying()) {
+    SetPlayStartTime(TimeStamp::Now());
+    mPlayDuration = GetCurrentTimeViaMediaStreamSync() - mStartTime;
+  }
+}
+
 int64_t MediaDecoderStateMachine::GetCurrentTimeViaMediaStreamSync() const
 {
   AssertCurrentThreadInMonitor();
