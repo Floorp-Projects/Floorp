@@ -785,6 +785,8 @@ TypedArrayObject::protoFunctions[] = {
     JS_FN("subarray", TypedArrayObject::subarray, 2, 0),
     JS_FN("set", TypedArrayObject::set, 2, 0),
     JS_FN("copyWithin", TypedArrayObject::copyWithin, 2, 0),
+    JS_SELF_HOSTED_FN("find", "TypedArrayFind", 2, 0),
+    JS_SELF_HOSTED_FN("findIndex", "TypedArrayFindIndex", 2, 0),
     JS_FS_END
 };
 
