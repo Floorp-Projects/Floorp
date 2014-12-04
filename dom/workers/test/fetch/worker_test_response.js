@@ -118,12 +118,11 @@ function testBodyExtraction() {
       is(fs.readAsText(v), text, "Decoded Blob should match original");
     });
   }).then(function() {
-    // FIXME(nsm): Enable once Bug 1107777 and Bug 1072144 have been fixed.
-    //return newRes().json().then(function(v) {
-    //  ok(false, "Invalid json should reject");
-    //}, function(e) {
-    //  ok(true, "Invalid json should reject");
-    //})
+    return newRes().json().then(function(v) {
+      ok(false, "Invalid json should reject");
+    }, function(e) {
+      ok(true, "Invalid json should reject");
+    })
   }).then(function() {
     return newRes().arrayBuffer().then(function(v) {
       ok(v instanceof ArrayBuffer, "Should resolve to ArrayBuffer");
