@@ -106,6 +106,24 @@ AnimationPlayer::Tick()
   }
 }
 
+void
+AnimationPlayer::ResolveStartTime()
+{
+  // Currently we only expect this method to be called when we are in the
+  // middle of initiating/resuming playback so we should have an unresolved
+  // start time to update and a fixed current time to seek to.
+  MOZ_ASSERT(mStartTime.IsNull() && !mHoldTime.IsNull(),
+             "Resolving the start time but we don't appear to be waiting"
+             " to begin playback");
+
+  Nullable<TimeDuration> readyTime = mTimeline->GetCurrentTime();
+  // Bug 1096776: Once we support disappearing or inactive timelines we
+  // will need special handling here.
+  MOZ_ASSERT(!readyTime.IsNull(), "Missing or inactive timeline");
+  mStartTime.SetValue(readyTime.Value() - mHoldTime.Value());
+  mHoldTime.SetNull();
+}
+
 bool
 AnimationPlayer::IsRunning() const
 {
@@ -176,16 +194,7 @@ AnimationPlayer::DoPlay()
     return;
   }
 
-  Nullable<TimeDuration> timelineTime = mTimeline->GetCurrentTime();
-  if (timelineTime.IsNull()) {
-    // FIXME: We should just sit in the pending state in this case.
-    // We will introduce the pending state in Bug 927349.
-    return;
-  }
-
-  // Update start time to an appropriate offset from the current timeline time
-  mStartTime.SetValue(timelineTime.Value() - mHoldTime.Value());
-  mHoldTime.SetNull();
+  ResolveStartTime();
 }
 
 void
