@@ -109,21 +109,20 @@ function testResponses() {
       resolve(p);
     }),
 
-    // FIXME(nsm): Enable once Bug 1107777 and Bug 1072144 have been fixed.
-    //new Promise((resolve, reject) => {
-    //  var req = new Request(path + 'responseIdentical.sjs', {
-    //                          method: 'POST',
-    //                          body: '{',
-    //                        });
-    //  var p = fetch(req).then((res) => {
-    //    is(res.status, 200, "wrong status");
-    //    return res.json().then(
-    //      (v) => ok(false, "expected json parse failure"),
-    //      (e) => ok(true, "expected json parse failure")
-    //    );
-    //  });
-    //  resolve(p);
-    //}),
+    new Promise((resolve, reject) => {
+      var req = new Request(path + 'responseIdentical.sjs', {
+                              method: 'POST',
+                              body: '{',
+                            });
+      var p = fetch(req).then((res) => {
+        is(res.status, 200, "wrong status");
+        return res.json().then(
+          (v) => ok(false, "expected json parse failure"),
+          (e) => ok(true, "expected json parse failure")
+        );
+      });
+      resolve(p);
+    }),
   ];
 
   return Promise.all(fetches);
