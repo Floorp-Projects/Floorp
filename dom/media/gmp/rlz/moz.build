@@ -19,3 +19,6 @@ UNIFIED_SOURCES += [
 LOCAL_INCLUDES += [
     '..',
 ]
+
+if CONFIG['GNU_CXX']:
+    FAIL_ON_WARNINGS = True
