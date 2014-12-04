@@ -3621,7 +3621,7 @@ GCRuntime::queueZonesForBackgroundSweep(ZoneList &zones)
 {
     AutoLockHelperThreadState helperLock;
     AutoLockGC lock(rt);
-    backgroundSweepZones.append(zones);
+    backgroundSweepZones.transferFrom(zones);
     helperState.maybeStartBackgroundSweep(lock);
 }
 
@@ -4618,8 +4618,10 @@ GCRuntime::getNextZoneGroup()
         return;
     }
 
-    for (Zone *zone = currentZoneGroup; zone; zone = zone->nextNodeInGroup())
+    for (Zone *zone = currentZoneGroup; zone; zone = zone->nextNodeInGroup()) {
         MOZ_ASSERT(zone->isGCMarking());
+        MOZ_ASSERT(!zone->isQueuedForBackgroundSweep());
+    }
 
     if (!isIncremental)
         ComponentFinder<Zone>::mergeGroups(currentZoneGroup);
