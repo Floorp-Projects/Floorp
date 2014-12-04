@@ -118,9 +118,6 @@ public:
                     nsCSSPropertySet& aSetProperties,
                     bool& aNeedsRefreshes);
 
-  // The beginning of the delay period.
-  Nullable<TimeDuration> mStartTime; // Timeline timescale
-
 protected:
   void DoPlay();
   void DoPause();
@@ -136,6 +133,8 @@ protected:
 
   nsRefPtr<AnimationTimeline> mTimeline;
   nsRefPtr<Animation> mSource;
+  // The beginning of the delay period.
+  Nullable<TimeDuration> mStartTime; // Timeline timescale
   Nullable<TimeDuration> mHoldTime;  // Player timescale
   bool mIsRunningOnCompositor;
   // Indicates whether we were in the finished state during our
