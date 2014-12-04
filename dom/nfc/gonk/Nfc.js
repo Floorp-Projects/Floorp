@@ -359,14 +359,14 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
 let SessionHelper = {
   tokenMap: {},
 
-  registerSession: function registerSession(id, techList) {
+  registerSession: function registerSession(id, isP2P) {
     if (this.tokenMap[id]) {
       return this.tokenMap[id].token;
     }
 
     this.tokenMap[id] = {
       token: UUIDGenerator.generateUUID().toString(),
-      isP2P: techList.indexOf("P2P") != -1
+      isP2P: isP2P
     };
 
     return this.tokenMap[id].token;
@@ -500,8 +500,7 @@ Nfc.prototype = {
         message.type = "techDiscovered";
         // Update the upper layers with a session token (alias)
         message.sessionToken =
-          SessionHelper.registerSession(message.sessionId, message.techList);
-
+          SessionHelper.registerSession(message.sessionId, message.isP2P);
         // Do not expose the actual session to the content
         let sessionId = message.sessionId;
         delete message.sessionId;
