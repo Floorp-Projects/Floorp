@@ -2768,8 +2768,7 @@ JSObject::fixupAfterMovingGC()
     if (is<NativeObject>() && as<NativeObject>().hasDynamicElements()) {
         ObjectElements *header = as<NativeObject>().getElementsHeader();
         if (header->isCopyOnWrite()) {
-            HeapPtrNativeObject &owner = header->ownerObject();
-            owner = MaybeForwarded(owner.get());
+            NativeObject *owner = MaybeForwarded(header->ownerObject().get());
             as<NativeObject>().elements_ = owner->getElementsHeader()->elements();
         }
     }
