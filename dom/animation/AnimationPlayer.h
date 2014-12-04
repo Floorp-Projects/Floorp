@@ -45,7 +45,6 @@ protected:
 public:
   explicit AnimationPlayer(AnimationTimeline* aTimeline)
     : mTimeline(aTimeline)
-    , mIsPaused(false)
     , mIsRunningOnCompositor(false)
     , mIsPreviousStateFinished(false)
   {
@@ -89,7 +88,7 @@ public:
     return mSource ? mSource->Name() : EmptyString();
   }
 
-  bool IsPaused() const { return mIsPaused; }
+  bool IsPaused() const { return PlayState() == AnimationPlayState::Paused; }
   bool IsRunning() const;
 
   bool HasCurrentSource() const {
@@ -137,7 +136,6 @@ protected:
   nsRefPtr<AnimationTimeline> mTimeline;
   nsRefPtr<Animation> mSource;
   Nullable<TimeDuration> mHoldTime;  // Player timescale
-  bool mIsPaused;
   bool mIsRunningOnCompositor;
   // Indicates whether we were in the finished state during our
   // most recent unthrottled sample (our last ComposeStyle call).
