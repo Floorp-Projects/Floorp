@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef JSGC_GENERATIONAL
-
 #include "gc/StoreBuffer.h"
 
 #include "mozilla/Assertions.h"
@@ -256,5 +254,3 @@ template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::ValueEdge>;
 template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::CellPtrEdge>;
 template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::SlotsEdge>;
 template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::WholeCellEdges>;
-
-#endif /* JSGC_GENERATIONAL */

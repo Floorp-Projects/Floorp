@@ -1630,12 +1630,10 @@ SameType(const Value &lhs, const Value &rhs)
 
 /************************************************************************/
 
-#ifdef JSGC_GENERATIONAL
 namespace JS {
 JS_PUBLIC_API(void) HeapValuePostBarrier(Value *valuep);
 JS_PUBLIC_API(void) HeapValueRelocate(Value *valuep);
 }
-#endif
 
 namespace js {
 
@@ -1659,10 +1657,8 @@ template <> struct GCMethods<JS::Value>
     static bool needsPostBarrier(const JS::Value &v) {
         return v.isObject() && gc::IsInsideNursery(reinterpret_cast<gc::Cell*>(&v.toObject()));
     }
-#ifdef JSGC_GENERATIONAL
     static void postBarrier(JS::Value *v) { JS::HeapValuePostBarrier(v); }
     static void relocate(JS::Value *v) { JS::HeapValueRelocate(v); }
-#endif
 };
 
 template <class Outer> class MutableValueOperations;

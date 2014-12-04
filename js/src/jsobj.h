@@ -828,14 +828,12 @@ JSObject::writeBarrierPre(JSObject *obj)
 JSObject::writeBarrierPost(JSObject *obj, void *cellp)
 {
     MOZ_ASSERT(cellp);
-#ifdef JSGC_GENERATIONAL
     if (IsNullTaggedPointer(obj))
         return;
     MOZ_ASSERT(obj == *static_cast<JSObject **>(cellp));
     js::gc::StoreBuffer *storeBuffer = obj->storeBuffer();
     if (storeBuffer)
         storeBuffer->putCellFromAnyThread(static_cast<js::gc::Cell **>(cellp));
-#endif
 }
 
 /* static */ MOZ_ALWAYS_INLINE void
@@ -844,11 +842,9 @@ JSObject::writeBarrierPostRelocate(JSObject *obj, void *cellp)
     MOZ_ASSERT(cellp);
     MOZ_ASSERT(obj);
     MOZ_ASSERT(obj == *static_cast<JSObject **>(cellp));
-#ifdef JSGC_GENERATIONAL
     js::gc::StoreBuffer *storeBuffer = obj->storeBuffer();
     if (storeBuffer)
         storeBuffer->putRelocatableCellFromAnyThread(static_cast<js::gc::Cell **>(cellp));
-#endif
 }
 
 /* static */ MOZ_ALWAYS_INLINE void
@@ -857,10 +853,8 @@ JSObject::writeBarrierPostRemove(JSObject *obj, void *cellp)
     MOZ_ASSERT(cellp);
     MOZ_ASSERT(obj);
     MOZ_ASSERT(obj == *static_cast<JSObject **>(cellp));
-#ifdef JSGC_GENERATIONAL
     obj->shadowRuntimeFromAnyThread()->gcStoreBufferPtr()->removeRelocatableCellFromAnyThread(
         static_cast<js::gc::Cell **>(cellp));
-#endif
 }
 
 namespace js {

@@ -1453,11 +1453,9 @@ public:
         as_movs(dest, src);
     }
 
-#ifdef JSGC_GENERATIONAL
     void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label *label);
     void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp,
                                     Label *label);
-#endif
 
     void loadAsmJSActivation(Register dest) {
         loadPtr(Address(GlobalReg, AsmJSActivationGlobalDataOffset - AsmJSGlobalRegBias), dest);

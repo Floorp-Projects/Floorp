@@ -2294,11 +2294,9 @@ JSObject::swap(JSContext *cx, HandleObject a, HandleObject b)
      * Neither object may be in the nursery, but ensure we update any embedded
      * nursery pointers in either object.
      */
-#ifdef JSGC_GENERATIONAL
     MOZ_ASSERT(!IsInsideNursery(a) && !IsInsideNursery(b));
     cx->runtime()->gc.storeBuffer.putWholeCellFromMainThread(a);
     cx->runtime()->gc.storeBuffer.putWholeCellFromMainThread(b);
-#endif
 
     unsigned r = NotifyGCPreSwap(a, b);
 

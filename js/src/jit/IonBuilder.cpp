@@ -7065,10 +7065,8 @@ jit::TypeSetIncludes(types::TypeSet *types, MIRType input, types::TypeSet *input
 bool
 jit::NeedsPostBarrier(CompileInfo &info, MDefinition *value)
 {
-#ifdef JSGC_GENERATIONAL
     if (!GetJitContext()->runtime->gcNursery().exists())
         return false;
-#endif
     return info.executionMode() != ParallelExecution && value->mightBeType(MIRType_Object);
 }
 
@@ -8049,11 +8047,7 @@ IonBuilder::addTypedArrayLengthAndData(MDefinition *obj,
         void *data = AnyTypedArrayViewData(tarr);
         // Bug 979449 - Optimistically embed the elements and use TI to
         //              invalidate if we move them.
-#ifdef JSGC_GENERATIONAL
         bool isTenured = !tarr->runtimeFromMainThread()->gc.nursery.isInside(data);
-#else
-        bool isTenured = true;
-#endif
         if (isTenured && tarr->hasSingletonType()) {
             // The 'data' pointer of TypedArrayObject can change in rare circumstances
             // (ArrayBufferObject::changeContents).
@@ -8397,10 +8391,8 @@ IonBuilder::setElemTryTypedStatic(bool *emitted, MDefinition *object,
     if (!tarrObj)
         return true;
 
-#ifdef JSGC_GENERATIONAL
     if (tarrObj->runtimeFromMainThread()->gc.nursery.isInside(AnyTypedArrayViewData(tarrObj)))
         return true;
-#endif
 
     types::TypeObjectKey *tarrType = types::TypeObjectKey::get(tarrObj);
     if (tarrType->unknownProperties())

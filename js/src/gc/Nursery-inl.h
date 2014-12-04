@@ -8,8 +8,6 @@
 #ifndef gc_Nursery_inl_h
 #define gc_Nursery_inl_h
 
-#ifdef JSGC_GENERATIONAL
-
 #include "gc/Nursery.h"
 
 #include "gc/Heap.h"
@@ -35,7 +33,5 @@ js::Nursery::forwardBufferPointer(JSTracer* trc, HeapSlot **pSlotElems)
 {
     trc->runtime()->gc.nursery.forwardBufferPointer(pSlotElems);
 }
-
-#endif /* JSGC_GENERATIONAL */
 
 #endif /* gc_Nursery_inl_h */
