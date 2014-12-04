@@ -62,7 +62,7 @@ public:
   // AnimationPlayer methods
   Animation* GetSource() const { return mSource; }
   AnimationTimeline* Timeline() const { return mTimeline; }
-  Nullable<double> GetStartTime() const;
+  Nullable<TimeDuration> GetStartTime() const { return mStartTime; }
   Nullable<TimeDuration> GetCurrentTime() const;
   AnimationPlayState PlayState() const;
   virtual void Play();
@@ -73,6 +73,7 @@ public:
   // from script. We often use the same methods internally and from
   // script but when called from script we (or one of our subclasses) perform
   // extra steps such as flushing style or converting the return type.
+  Nullable<double> GetStartTimeAsDouble() const;
   Nullable<double> GetCurrentTimeAsDouble() const;
   virtual AnimationPlayState PlayStateFromJS() const { return PlayState(); }
   virtual void PlayFromJS() { Play(); }
