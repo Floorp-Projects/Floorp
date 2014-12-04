@@ -845,18 +845,18 @@ CallSelfHostedNonGenericMethod(JSContext *cx, CallArgs args)
 }
 
 template<typename T>
-MOZ_ALWAYS_INLINE bool
-IsObjectOfType(HandleValue v)
+bool
+Is(HandleValue v)
 {
     return v.isObject() && v.toObject().is<T>();
 }
 
-template<typename T, NativeImpl Impl>
+template<IsAcceptableThis Test>
 static bool
-NativeMethod(JSContext *cx, unsigned argc, Value *vp)
+CallNonGenericSelfhostedMethod(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsObjectOfType<T>, Impl>(cx, args);
+    return CallNonGenericMethod<Test, CallSelfHostedNonGenericMethod>(cx, args);
 }
 
 static bool
@@ -1109,10 +1109,13 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("TypedArrayLength",        intrinsic_TypedArrayLength,        1,0),
     JS_FN("IsTypedArray",            intrinsic_IsTypedArray,            1,0),
 
+    JS_FN("CallTypedArrayMethodIfWrapped",
+          CallNonGenericSelfhostedMethod<Is<TypedArrayObject>>, 2, 0),
+
     JS_FN("CallLegacyGeneratorMethodIfWrapped",
-          (NativeMethod<LegacyGeneratorObject, CallSelfHostedNonGenericMethod>), 2, 0),
+          CallNonGenericSelfhostedMethod<Is<LegacyGeneratorObject>>, 2, 0),
     JS_FN("CallStarGeneratorMethodIfWrapped",
-          (NativeMethod<StarGeneratorObject, CallSelfHostedNonGenericMethod>), 2, 0),
+          CallNonGenericSelfhostedMethod<Is<StarGeneratorObject>>, 2, 0),
 
     JS_FN("IsWeakSet",               intrinsic_IsWeakSet,               1,0),
 
