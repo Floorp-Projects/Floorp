@@ -1414,6 +1414,19 @@ Navigator::GetFeature(const nsAString& aName, ErrorResult& aRv)
   } // hardware.memory
 #endif
 
+  p->MaybeResolve(JS::UndefinedHandleValue);
+  return p.forget();
+}
+
+already_AddRefed<Promise>
+Navigator::HasFeature(const nsAString& aName, ErrorResult& aRv)
+{
+  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
+  nsRefPtr<Promise> p = Promise::Create(go, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
   // Hardcoded manifest features. Some are still b2g specific.
   const char manifestFeatures[][64] = {
     "manifest.origin"
@@ -1430,19 +1443,6 @@ Navigator::GetFeature(const nsAString& aName, ErrorResult& aRv)
       p->MaybeResolve(true);
       return p.forget();
     }
-  }
-
-  p->MaybeResolve(JS::UndefinedHandleValue);
-  return p.forget();
-}
-
-already_AddRefed<Promise>
-Navigator::HasFeature(const nsAString& aName, ErrorResult& aRv)
-{
-  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
-  nsRefPtr<Promise> p = Promise::Create(go, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
   }
 
   NS_NAMED_LITERAL_STRING(apiWindowPrefix, "api.window.");

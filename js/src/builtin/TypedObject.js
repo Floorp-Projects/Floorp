@@ -1135,6 +1135,9 @@ function MapTypedParImplDepth1(inArray, inArrayType, outArrayType, func) {
   if (length === 0)
     return outArray;
 
+  if (outArray.length != length)
+    ThrowError(JSMSG_TYPEDOBJECT_ARRAYTYPE_BAD_ARGS);
+
   const outGrainTypeIsTransparent = ObjectIsTransparentTypedObject(outArray);
 
   // Construct the slices and initial pointers for each worker:

@@ -226,9 +226,8 @@ LIRGeneratorX86::visitAsmJSLoadHeap(MAsmJSLoadHeap *ins)
 
     // For the x86 it is best to keep the 'ptr' in a register if a bounds check is needed.
     if (ptr->isConstant() && !ins->needsBoundsCheck()) {
-        int32_t ptrValue = ptr->toConstant()->value().toInt32();
         // A bounds check is only skipped for a positive index.
-        MOZ_ASSERT(ptrValue >= 0);
+        MOZ_ASSERT(ptr->toConstant()->value().toInt32() >= 0);
         ptrAlloc = LAllocation(ptr->toConstant()->vp());
     } else {
         ptrAlloc = useRegisterAtStart(ptr);
@@ -245,8 +244,7 @@ LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
     MOZ_ASSERT(ptr->type() == MIRType_Int32);
 
     if (ptr->isConstant() && !ins->needsBoundsCheck()) {
-        int32_t ptrValue = ptr->toConstant()->value().toInt32();
-        MOZ_ASSERT(ptrValue >= 0);
+        MOZ_ASSERT(ptr->toConstant()->value().toInt32() >= 0);
         LAllocation ptrAlloc = LAllocation(ptr->toConstant()->vp());
         switch (ins->viewType()) {
           case AsmJSHeapAccess::Int8: case AsmJSHeapAccess::Uint8:

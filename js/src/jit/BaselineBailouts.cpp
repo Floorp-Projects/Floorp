@@ -415,12 +415,14 @@ class SnapshotIteratorForBailout : public SnapshotIterator
     }
 };
 
+#ifdef DEBUG
 static inline bool
 IsInlinableFallback(ICFallbackStub *icEntry)
 {
     return icEntry->isCall_Fallback() || icEntry->isGetProp_Fallback() ||
            icEntry->isSetProp_Fallback();
 }
+#endif
 
 static inline void*
 GetStubReturnAddress(JSContext *cx, jsbytecode *pc)

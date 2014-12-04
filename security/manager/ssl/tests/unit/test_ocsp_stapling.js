@@ -175,7 +175,7 @@ function run_test() {
     response.setStatusLine(request.httpVersion, 500, "Internal Server Error");
     do_check_true(gExpectOCSPRequest);
   });
-  fakeOCSPResponder.start(8080);
+  fakeOCSPResponder.start(8888);
 
   add_tls_server_setup("OCSPStaplingServer");
 

@@ -363,7 +363,9 @@ function _setupTLSServerTest(serverBinName)
                  .getService(Ci.nsIEnvironment);
   let greBinDir = directoryService.get("GreBinD", Ci.nsIFile);
   envSvc.set("DYLD_LIBRARY_PATH", greBinDir.path);
-  envSvc.set("LD_LIBRARY_PATH", greBinDir.path);
+  // Android libraries are in /data/local/xpcb, but "GreBinD" does not return
+  // this path on Android, so hard code it here.
+  envSvc.set("LD_LIBRARY_PATH", greBinDir.path + ":/data/local/xpcb");
   envSvc.set("MOZ_TLS_SERVER_DEBUG_LEVEL", "3");
   envSvc.set("MOZ_TLS_SERVER_CALLBACK_PORT", CALLBACK_PORT);
 
