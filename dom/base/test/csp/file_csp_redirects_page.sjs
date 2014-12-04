@@ -76,4 +76,21 @@ function handleRequest(request, response)
     response.write('<script src="'+resource+'?res=xhr"></script>');
     return;
   }
+
+  // for bug949706
+  if (query["testid"] == "img-src-from-css") {
+    // loads a stylesheet, which in turn loads an image that redirects.
+    response.write('<link rel="stylesheet" type="text/css" href="'+resource+'?res=cssLoader&id=img-src-redir-from-css">');
+    return;
+  }
+
+  if (query["testid"] == "script-src-from-worker") {
+    // loads a script; launches a worker; that worker uses importscript; which then gets redirected
+    // So it's:
+    // <script "res=loadWorkerThatImports">
+    //   .. loads Worker("res=importScriptWorker")
+    //         .. calls importScript("res=script")
+    response.write('<script src="'+resource+'?res=loadWorkerThatImports&id=script-src-redir-from-worker"></script>');
+    return;
+  }
 }
