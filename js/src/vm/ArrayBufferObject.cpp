@@ -1205,7 +1205,7 @@ ArrayBufferViewObject::trace(JSTracer *trc, JSObject *objArg)
 
             void *srcData = obj->getPrivate();
             void *dstData = view->as<InlineTypedObject>().inlineTypedMem() + offset;
-            obj->setPrivate(dstData);
+            obj->setPrivateUnbarriered(dstData);
 
             // We can't use a direct forwarding pointer here, as there might
             // not be enough bytes available, and other views might have data
