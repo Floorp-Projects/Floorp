@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=4 ts=8 et ft=cpp: */
+/* vim: set sw=2 ts=2 et ft=cpp: tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -369,7 +369,92 @@ KeyStoreConnector::GetSocketAddr(const sockaddr_any& aAddr,
   MOZ_CRASH("This should never be called!");
 }
 
+//
+// KeyStore::ListenSocket
+//
+
+KeyStore::ListenSocket::ListenSocket(KeyStore* aKeyStore)
+: mKeyStore(aKeyStore)
+{
+  MOZ_ASSERT(mKeyStore);
+
+  MOZ_COUNT_CTOR(KeyStore::ListenSocket);
+}
+
+void
+KeyStore::ListenSocket::OnConnectSuccess()
+{
+  mKeyStore->OnConnectSuccess(LISTEN_SOCKET);
+
+  MOZ_COUNT_DTOR(KeyStore::ListenSocket);
+}
+
+void
+KeyStore::ListenSocket::OnConnectError()
+{
+  mKeyStore->OnConnectError(LISTEN_SOCKET);
+}
+
+void
+KeyStore::ListenSocket::OnDisconnect()
+{
+  mKeyStore->OnDisconnect(LISTEN_SOCKET);
+}
+
+//
+// KeyStore::StreamSocket
+//
+
+KeyStore::StreamSocket::StreamSocket(KeyStore* aKeyStore)
+: mKeyStore(aKeyStore)
+{
+  MOZ_ASSERT(mKeyStore);
+
+  MOZ_COUNT_CTOR(KeyStore::StreamSocket);
+}
+
+KeyStore::StreamSocket::~StreamSocket()
+{
+  MOZ_COUNT_DTOR(KeyStore::StreamSocket);
+}
+
+void
+KeyStore::StreamSocket::OnConnectSuccess()
+{
+  mKeyStore->OnConnectSuccess(STREAM_SOCKET);
+}
+
+void
+KeyStore::StreamSocket::OnConnectError()
+{
+  mKeyStore->OnConnectError(STREAM_SOCKET);
+}
+
+void
+KeyStore::StreamSocket::OnDisconnect()
+{
+  mKeyStore->OnDisconnect(STREAM_SOCKET);
+}
+
+void
+KeyStore::StreamSocket::ReceiveSocketData(
+  nsAutoPtr<UnixSocketRawData>& aMessage)
+{
+  mKeyStore->ReceiveSocketData(aMessage);
+}
+
+ConnectionOrientedSocketIO*
+KeyStore::StreamSocket::GetIO()
+{
+  return PrepareAccept(new KeyStoreConnector());
+}
+
+//
+// KeyStore
+//
+
 KeyStore::KeyStore()
+: mShutdown(false)
 {
   MOZ_COUNT_CTOR(KeyStore);
   ::startKeyStoreService();
@@ -379,19 +464,45 @@ KeyStore::KeyStore()
 KeyStore::~KeyStore()
 {
   MOZ_COUNT_DTOR(KeyStore);
+
+  MOZ_ASSERT(!mListenSocket);
+  MOZ_ASSERT(!mStreamSocket);
 }
 
 void
 KeyStore::Shutdown()
 {
+  // We set mShutdown first, so that |OnDisconnect| won't try to reconnect.
   mShutdown = true;
-  CloseSocket();
+
+  if (mStreamSocket) {
+    mStreamSocket->Close();
+    mStreamSocket = nullptr;
+  }
+  if (mListenSocket) {
+    mListenSocket->Close();
+    mListenSocket = nullptr;
+  }
 }
 
 void
 KeyStore::Listen()
 {
-  ListenSocket(new KeyStoreConnector());
+  // We only allocate one |StreamSocket|, but re-use it for every connection.
+  if (mStreamSocket) {
+    mStreamSocket->Close();
+  } else {
+    mStreamSocket = new StreamSocket(this);
+  }
+
+  if (!mListenSocket) {
+    // We only ever allocate one |ListenSocket|...
+    mListenSocket = new ListenSocket(this);
+    mListenSocket->Listen(new KeyStoreConnector(), mStreamSocket);
+  } else {
+    // ... but keep it open.
+    mListenSocket->Listen(mStreamSocket);
+  }
 
   ResetHandlerInfo();
 }
@@ -512,25 +623,29 @@ KeyStore::ReadData(UnixSocketRawData *aMessage)
 void
 KeyStore::SendResponse(ResponseCode aResponse)
 {
+  MOZ_ASSERT(mStreamSocket);
+
   if (aResponse == NO_RESPONSE)
     return;
 
   uint8_t response = (uint8_t)aResponse;
   UnixSocketRawData* data = new UnixSocketRawData((const void *)&response, 1);
-  SendSocketData(data);
+  mStreamSocket->SendSocketData(data);
 }
 
 // Data response
 void
 KeyStore::SendData(const uint8_t *aData, int aLength)
 {
+  MOZ_ASSERT(mStreamSocket);
+
   unsigned short dataLength = htons(aLength);
 
   UnixSocketRawData* length = new UnixSocketRawData((const void *)&dataLength, 2);
-  SendSocketData(length);
+  mStreamSocket->SendSocketData(length);
 
   UnixSocketRawData* data = new UnixSocketRawData((const void *)aData, aLength);
-  SendSocketData(data);
+  mStreamSocket->SendSocketData(data);
 }
 
 void
@@ -583,24 +698,43 @@ KeyStore::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage)
 }
 
 void
-KeyStore::OnConnectSuccess()
+KeyStore::OnConnectSuccess(SocketType aSocketType)
 {
-  mShutdown = false;
+  if (aSocketType == STREAM_SOCKET) {
+    mShutdown = false;
+  }
 }
 
 void
-KeyStore::OnConnectError()
+KeyStore::OnConnectError(SocketType aSocketType)
 {
-  if (!mShutdown) {
+  if (mShutdown) {
+    return;
+  }
+
+  if (aSocketType == STREAM_SOCKET) {
+    // Stream socket error; start listening again
     Listen();
   }
 }
 
 void
-KeyStore::OnDisconnect()
+KeyStore::OnDisconnect(SocketType aSocketType)
 {
-  if (!mShutdown) {
-    Listen();
+  if (mShutdown) {
+    return;
+  }
+
+  switch (aSocketType) {
+    case LISTEN_SOCKET:
+      // Listen socket disconnected; start anew.
+      mListenSocket = nullptr;
+      Listen();
+      break;
+    case STREAM_SOCKET:
+      // Stream socket disconnected; start listening again.
+      Listen();
+      break;
   }
 }
 

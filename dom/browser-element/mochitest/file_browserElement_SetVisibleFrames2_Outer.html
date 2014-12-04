@@ -15,10 +15,6 @@ iframe.addEventListener('mozbrowsershowmodalprompt', function(e) {
       }, 0);
     }, 0);
   }
-  else {
-    // Pass the message up to our parent.
-    alert(e.detail.message);
-  }
 });
 
 document.body.appendChild(iframe);

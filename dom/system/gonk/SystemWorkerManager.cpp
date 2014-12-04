@@ -130,7 +130,7 @@ SystemWorkerManager::Shutdown()
   mWifiWorker = nullptr;
 
   if (mKeyStore) {
-    mKeyStore->CloseSocket();
+    mKeyStore->Shutdown();
     mKeyStore = nullptr;
   }
 
