@@ -187,7 +187,7 @@ FeedConverter.prototype = {
     // types.
     //
     // If this is just a feed, not some kind of specialized application, then
-    // auto-handlers can be set and we should obey them. 
+    // auto-handlers can be set and we should obey them.
     try {
       var feedService = 
           Cc["@mozilla.org/browser/feeds/result-service;1"].
