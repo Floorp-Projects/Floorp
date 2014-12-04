@@ -157,7 +157,6 @@ public class BrowserContract {
         public static final String TAGS_FOLDER_GUID = "tags";
         public static final String TOOLBAR_FOLDER_GUID = "toolbar";
         public static final String UNFILED_FOLDER_GUID = "unfiled";
-        public static final String READING_LIST_FOLDER_GUID = "readinglist";
         public static final String FAKE_DESKTOP_FOLDER_GUID = "desktop";
         public static final String PINNED_FOLDER_GUID = "pinned";
 
@@ -340,53 +339,6 @@ public class BrowserContract {
 
         public static final String[] DEFAULT_PROJECTION =
             new String[] { _ID, DATASET_ID, URL, TITLE, DESCRIPTION, IMAGE_URL, FILTER };
-    }
-
-    /*
-     * Contains names and schema definitions for tables and views
-     * no longer being used by current ContentProviders. These values are used
-     * to make incremental updates to the schema during a database upgrade. Will be
-     * removed with bug 947018.
-     */
-    static final class Obsolete {
-        public static final String TABLE_IMAGES = "images";
-        public static final String VIEW_BOOKMARKS_WITH_IMAGES = "bookmarks_with_images";
-        public static final String VIEW_HISTORY_WITH_IMAGES = "history_with_images";
-        public static final String VIEW_COMBINED_WITH_IMAGES = "combined_with_images";
-
-        public static final class Images implements CommonColumns, SyncColumns {
-            private Images() {}
-
-            public static final String URL = "url_key";
-            public static final String FAVICON_URL = "favicon_url";
-            public static final String FAVICON = "favicon";
-            public static final String THUMBNAIL = "thumbnail";
-            public static final String _ID = "_id";
-            public static final String GUID = "guid";
-            public static final String DATE_CREATED = "created";
-            public static final String DATE_MODIFIED = "modified";
-            public static final String IS_DELETED = "deleted";
-        }
-
-        public static final class Combined {
-            private Combined() {}
-
-            public static final String THUMBNAIL = "thumbnail";
-            public static final String DISPLAY = "display";
-
-            public static final int DISPLAY_NORMAL = 0;
-            public static final int DISPLAY_READER = 1;
-        }
-
-        static final String TABLE_BOOKMARKS_JOIN_IMAGES = Bookmarks.TABLE_NAME + " LEFT OUTER JOIN " +
-                Obsolete.TABLE_IMAGES + " ON " + Bookmarks.TABLE_NAME + "." + Bookmarks.URL + " = " +
-                Obsolete.TABLE_IMAGES + "." + Obsolete.Images.URL;
-
-        static final String TABLE_HISTORY_JOIN_IMAGES = History.TABLE_NAME + " LEFT OUTER JOIN " +
-                Obsolete.TABLE_IMAGES + " ON " + Bookmarks.TABLE_NAME + "." + History.URL + " = " +
-                Obsolete.TABLE_IMAGES + "." + Obsolete.Images.URL;
-
-        static final String FAVICON_DB = "favicon_urls.db";
     }
 
     @RobocopTarget

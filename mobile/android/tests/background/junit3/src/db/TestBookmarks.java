@@ -50,7 +50,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
   protected static final String LOG_TAG = "BookmarksTest";
 
   /**
-   * Trivial test that forbidden records (reading list prior to Bug 762109, pinned items…)
+   * Trivial test that forbidden records such as pinned items
    * will be ignored if processed.
    */
   public void testForbiddenItemsAreIgnored() {
@@ -58,32 +58,25 @@ public class TestBookmarks extends AndroidSyncTestCase {
     final long now = System.currentTimeMillis();
     final String bookmarksCollection = "bookmarks";
 
-    final BookmarkRecord toRead = new BookmarkRecord("daaaaaaaaaaa", "bookmarks", now - 1, false);
     final BookmarkRecord pinned = new BookmarkRecord("pinpinpinpin", "bookmarks", now - 1, false);
     final BookmarkRecord normal = new BookmarkRecord("baaaaaaaaaaa", "bookmarks", now - 2, false);
 
-    final BookmarkRecord readingList  = new BookmarkRecord(Bookmarks.READING_LIST_FOLDER_GUID,
-                                                           bookmarksCollection, now - 3, false);
     final BookmarkRecord pinnedItems  = new BookmarkRecord(Bookmarks.PINNED_FOLDER_GUID,
                                                            bookmarksCollection, now - 4, false);
 
-    toRead.type = normal.type = pinned.type = "bookmark";
-    readingList.type = "folder";
+    normal.type = "bookmark";
+    pinned.type = "bookmark";
     pinnedItems.type = "folder";
 
-    toRead.parentID = Bookmarks.READING_LIST_FOLDER_GUID;
     pinned.parentID = Bookmarks.PINNED_FOLDER_GUID;
     normal.parentID = Bookmarks.TOOLBAR_FOLDER_GUID;
 
-    readingList.parentID = Bookmarks.PLACES_FOLDER_GUID;
     pinnedItems.parentID = Bookmarks.PLACES_FOLDER_GUID;
 
     inBegunSession(repo, new SimpleSuccessBeginDelegate() {
       @Override
       public void onBeginSucceeded(RepositorySession session) {
-        assertTrue(((AndroidBrowserBookmarksRepositorySession) session).shouldIgnore(toRead));
         assertTrue(((AndroidBrowserBookmarksRepositorySession) session).shouldIgnore(pinned));
-        assertTrue(((AndroidBrowserBookmarksRepositorySession) session).shouldIgnore(readingList));
         assertTrue(((AndroidBrowserBookmarksRepositorySession) session).shouldIgnore(pinnedItems));
         assertFalse(((AndroidBrowserBookmarksRepositorySession) session).shouldIgnore(normal));
         finishAndNotify(session);
@@ -113,24 +106,6 @@ public class TestBookmarks extends AndroidSyncTestCase {
     final ArrayList<String> guids = fetchGUIDs(repo);
     assertFalse(guids.contains(Bookmarks.PINNED_FOLDER_GUID));
     assertFalse(guids.contains("dapinneditem"));
-  }
-
-  /**
-   * Trivial test that reading list records will be skipped if present in the DB.
-   */
-  public void testReadingListIsNotRetrieved() {
-    final AndroidBrowserBookmarksRepository repo = new AndroidBrowserBookmarksRepository();
-
-    // Ensure that it exists.
-    setUpFennecReadingListRecord();
-
-    // It's there in the DB…
-    final ArrayList<String> roots = fetchChildrenDirect(BrowserContract.Bookmarks.FIXED_ROOT_ID);
-    Logger.info(LOG_TAG, "Roots: " + roots);
-    assertTrue(roots.contains(Bookmarks.READING_LIST_FOLDER_GUID));
-
-    // … but not when we fetch.
-    assertFalse(fetchGUIDs(repo).contains(Bookmarks.READING_LIST_FOLDER_GUID));
   }
 
   public void testRetrieveFolderHasAccurateChildren() {
@@ -864,17 +839,6 @@ public class TestBookmarks extends AndroidSyncTestCase {
     return values;
   }
 
-  protected ContentValues fennecReadingListRecord() {
-    final ContentValues values = specialFolder();
-    final String title = getApplicationContext().getResources().getString(R.string.bookmarks_folder_reading_list);
-
-    values.put(BrowserContract.SyncColumns.GUID, Bookmarks.READING_LIST_FOLDER_GUID);
-    values.put(Bookmarks._ID, Bookmarks.FIXED_READING_LIST_ID);
-    values.put(Bookmarks.PARENT, Bookmarks.FIXED_ROOT_ID);
-    values.put(Bookmarks.TITLE, title);
-    return values;
-  }
-
   protected long setUpFennecMobileRecordWithoutTitle() {
     ContentResolver cr = getApplicationContext().getContentResolver();
     ContentValues values = fennecMobileRecordWithoutTitle();
@@ -895,10 +859,6 @@ public class TestBookmarks extends AndroidSyncTestCase {
   protected void setUpFennecPinnedItemsRecord() {
     insertRow(fennecPinnedItemsRecord());
     insertRow(fennecPinnedChildItemRecord());
-  }
-
-  protected void setUpFennecReadingListRecord() {
-    insertRow(fennecReadingListRecord());
   }
 
   //
