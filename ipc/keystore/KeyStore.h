@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et ft=cpp: */
+/* vim: set sw=2 ts=2 et ft=cpp: tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,11 +7,12 @@
 #ifndef mozilla_ipc_KeyStore_h
 #define mozilla_ipc_KeyStore_h 1
 
-#include "mozilla/ipc/UnixSocket.h"
 #include <sys/socket.h>
 #include <sys/un.h>
-
 #include "cert.h"
+#include "mozilla/ipc/ListenSocket.h"
+#include "mozilla/ipc/StreamSocket.h"
+#include "mozilla/ipc/UnixSocketConnector.h"
 
 namespace mozilla {
 namespace ipc {
@@ -94,21 +95,69 @@ public:
                              nsAString& aAddrStr);
 };
 
-class KeyStore : public mozilla::ipc::UnixSocketConsumer
+class KeyStore MOZ_FINAL
 {
 public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(KeyStore)
+
   KeyStore();
 
   void Shutdown();
 
 private:
-  virtual ~KeyStore();
+  enum SocketType {
+    LISTEN_SOCKET,
+    STREAM_SOCKET
+  };
 
-  virtual void ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage);
+  class ListenSocket MOZ_FINAL : public mozilla::ipc::ListenSocket
+  {
+  public:
+    ListenSocket(KeyStore* aKeyStore);
+    ListenSocket();
 
-  virtual void OnConnectSuccess();
-  virtual void OnConnectError();
-  virtual void OnDisconnect();
+    // SocketBase
+    //
+
+    void OnConnectSuccess() MOZ_OVERRIDE;
+    void OnConnectError() MOZ_OVERRIDE;
+    void OnDisconnect() MOZ_OVERRIDE;
+
+  private:
+    KeyStore* mKeyStore;
+  };
+
+  class StreamSocket MOZ_FINAL : public mozilla::ipc::StreamSocket
+  {
+  public:
+    StreamSocket(KeyStore* aKeyStore);
+    ~StreamSocket();
+
+    // SocketConsumerBase
+    //
+
+    void OnConnectSuccess() MOZ_OVERRIDE;
+    void OnConnectError() MOZ_OVERRIDE;
+    void OnDisconnect() MOZ_OVERRIDE;
+
+    void ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage) MOZ_OVERRIDE;
+
+    // ConnectionOrientedSocket
+    //
+
+    ConnectionOrientedSocketIO* GetIO() MOZ_OVERRIDE;
+
+  private:
+    KeyStore* mKeyStore;
+  };
+
+  ~KeyStore();
+
+  void ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage);
+
+  void OnConnectSuccess(enum SocketType aSocketType);
+  void OnConnectError(enum SocketType aSocketType);
+  void OnDisconnect(enum SocketType aSocketType);
 
   struct {
     ProtocolHandlerState          state;
@@ -128,6 +177,9 @@ private:
   void SendData(const uint8_t *data, int length);
 
   bool mShutdown;
+
+  nsRefPtr<ListenSocket> mListenSocket;
+  nsRefPtr<StreamSocket> mStreamSocket;
 };
 
 } // namespace ipc
