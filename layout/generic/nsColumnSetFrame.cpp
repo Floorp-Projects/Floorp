@@ -168,7 +168,6 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState,
                                        bool aForceAuto = false,
                                        nscoord aFeasibleBSize = NS_INTRINSICSIZE,
                                        nscoord aInfeasibleBSize = 0)
-
 {
   nscoord knownFeasibleBSize = aFeasibleBSize;
   nscoord knownInfeasibleBSize = aInfeasibleBSize;
@@ -215,6 +214,8 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState,
   }
 
   nscoord colISize;
+  // In vertical writing-mode, "column-width" (inline size) will actually be
+  // physical height, but its CSS name is still column-width.
   if (colStyle->mColumnWidth.GetUnit() == eStyleUnit_Coord) {
     colISize = colStyle->mColumnWidth.GetCoordValue();
     NS_ASSERTION(colISize >= 0, "negative column width");
@@ -228,12 +229,12 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState,
       // want
       int32_t maxColumns =
         std::min(nscoord(nsStyleColumn::kMaxColumnCount),
-                 (availContentISize + colGap)/(colGap + colISize));
+                 (availContentISize + colGap) / (colGap + colISize));
       numColumns = std::max(1, std::min(numColumns, maxColumns));
     }
   } else if (numColumns > 0 && availContentISize != NS_INTRINSICSIZE) {
-    nscoord iSizeMinusGaps = availContentISize - colGap*(numColumns - 1);
-    colISize = iSizeMinusGaps/numColumns;
+    nscoord iSizeMinusGaps = availContentISize - colGap * (numColumns - 1);
+    colISize = iSizeMinusGaps / numColumns;
   } else {
     colISize = NS_INTRINSICSIZE;
   }
@@ -253,7 +254,7 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState,
       // colISize*nominalColumnCount is nearly availContentISize
       // make sure to round down
       if (colGap + colISize > 0) {
-        numColumns = (availContentISize + colGap)/(colGap + colISize);
+        numColumns = (availContentISize + colGap) / (colGap + colISize);
         // The number of columns should never exceed kMaxColumnCount.
         numColumns = std::min(nscoord(nsStyleColumn::kMaxColumnCount),
                               numColumns);
@@ -265,10 +266,11 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState,
 
     // Compute extra space and divide it among the columns
     nscoord extraSpace =
-      std::max(0, availContentISize - (colISize*numColumns + colGap*(numColumns - 1)));
-    nscoord extraToColumns = extraSpace/numColumns;
+      std::max(0, availContentISize - (colISize * numColumns +
+                                       colGap * (numColumns - 1)));
+    nscoord extraToColumns = extraSpace / numColumns;
     colISize += extraToColumns;
-    expectedISizeLeftOver = extraSpace - (extraToColumns*numColumns);
+    expectedISizeLeftOver = extraSpace - (extraToColumns * numColumns);
   }
 
   if (isBalancing) {
@@ -295,7 +297,8 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState,
   }
 
 #ifdef DEBUG_roc
-  printf("*** nsColumnSetFrame::ChooseColumnStrategy: numColumns=%d, colISize=%d, expectedISizeLeftOver=%d, colBSize=%d, colGap=%d\n",
+  printf("*** nsColumnSetFrame::ChooseColumnStrategy: numColumns=%d, colISize=%d,"
+         " expectedISizeLeftOver=%d, colBSize=%d, colGap=%d\n",
          numColumns, colISize, expectedISizeLeftOver, colBSize, colGap);
 #endif
   ReflowConfig config = { numColumns, colISize, expectedISizeLeftOver, colGap,
@@ -331,7 +334,8 @@ nsColumnSetFrame::ReflowColumns(nsHTMLReflowMetrics& aDesiredSize,
   return feasible;
 }
 
-static void MoveChildTo(nsIFrame* aParent, nsIFrame* aChild, nsPoint aOrigin) {
+static void MoveChildTo(nsIFrame* aParent, nsIFrame* aChild, nsPoint aOrigin)
+{
   if (aChild->GetPosition() == aOrigin) {
     return;
   }
@@ -341,7 +345,8 @@ static void MoveChildTo(nsIFrame* aParent, nsIFrame* aChild, nsPoint aOrigin) {
 }
 
 nscoord
-nsColumnSetFrame::GetMinISize(nsRenderingContext *aRenderingContext) {
+nsColumnSetFrame::GetMinISize(nsRenderingContext *aRenderingContext)
+{
   nscoord width = 0;
   DISPLAY_MIN_WIDTH(this, width);
   if (mFrames.FirstChild()) {
@@ -372,7 +377,8 @@ nsColumnSetFrame::GetMinISize(nsRenderingContext *aRenderingContext) {
 }
 
 nscoord
-nsColumnSetFrame::GetPrefISize(nsRenderingContext *aRenderingContext) {
+nsColumnSetFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
+{
   // Our preferred width is our desired column width, if specified, otherwise
   // the child's preferred width, times the number of columns, plus the width
   // of any required column gaps
@@ -779,14 +785,14 @@ nsColumnSetFrame::DrainOverflowColumns()
 
 void
 nsColumnSetFrame::FindBestBalanceBSize(const nsHTMLReflowState& aReflowState,
-                                        nsPresContext* aPresContext,
-                                        ReflowConfig& aConfig,
-                                        ColumnBalanceData& aColData,
-                                        nsHTMLReflowMetrics& aDesiredSize,
-                                        nsCollapsingMargin& aOutMargin,
-                                        bool& aUnboundedLastColumn,
-                                        bool& aRunWasFeasible,
-                                        nsReflowStatus& aStatus)
+                                       nsPresContext* aPresContext,
+                                       ReflowConfig& aConfig,
+                                       ColumnBalanceData& aColData,
+                                       nsHTMLReflowMetrics& aDesiredSize,
+                                       nsCollapsingMargin& aOutMargin,
+                                       bool& aUnboundedLastColumn,
+                                       bool& aRunWasFeasible,
+                                       nsReflowStatus& aStatus)
 {
   bool feasible = aRunWasFeasible;
 
@@ -811,7 +817,7 @@ nsColumnSetFrame::FindBestBalanceBSize(const nsHTMLReflowState& aReflowState,
 
     // Record what we learned from the last reflow
     if (feasible) {
-      // maxHeight is feasible. Also, mLastBalanceBSize is feasible.
+      // maxBSize is feasible. Also, mLastBalanceBSize is feasible.
       aConfig.mKnownFeasibleBSize = std::min(aConfig.mKnownFeasibleBSize,
                                               aColData.mMaxBSize);
       aConfig.mKnownFeasibleBSize = std::min(aConfig.mKnownFeasibleBSize,
@@ -1032,7 +1038,8 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
 void
 nsColumnSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                    const nsRect&           aDirtyRect,
-                                   const nsDisplayListSet& aLists) {
+                                   const nsDisplayListSet& aLists)
+{
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
   if (IsVisibleForPainting(aBuilder)) {
