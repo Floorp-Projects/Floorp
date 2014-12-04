@@ -54,6 +54,7 @@
 #include "nsICanvasRenderingContextInternal.h"
 #include "gfxPlatform.h"
 #include <algorithm>
+#include <limits>
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/DOMRect.h"
@@ -552,13 +553,20 @@ GetMinAndMaxScaleForAnimationProperty(nsIContent* aContent,
 gfxSize
 nsLayoutUtils::ComputeSuitableScaleForAnimation(nsIContent* aContent)
 {
-  gfxSize maxScale(1.0f, 1.0f);
-  gfxSize minScale(1.0f, 1.0f);
+  gfxSize maxScale(std::numeric_limits<gfxFloat>::min(),
+                   std::numeric_limits<gfxFloat>::min());
+  gfxSize minScale(std::numeric_limits<gfxFloat>::max(),
+                   std::numeric_limits<gfxFloat>::max());
 
   GetMinAndMaxScaleForAnimationProperty(aContent,
     nsGkAtoms::animationsProperty, maxScale, minScale);
   GetMinAndMaxScaleForAnimationProperty(aContent,
     nsGkAtoms::transitionsProperty, maxScale, minScale);
+
+  if (maxScale.width == std::numeric_limits<gfxFloat>::min()) {
+    // We didn't encounter a transform
+    aMaxScale = aMinScale = gfxSize(1.0, 1.0);
+  }
 
   return gfxSize(GetSuitableScale(maxScale.width, minScale.width),
                  GetSuitableScale(maxScale.height, minScale.height));
