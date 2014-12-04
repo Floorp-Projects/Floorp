@@ -29,7 +29,7 @@ function peerLostCb(evt) {
 function handleTechnologyDiscoveredRE0(msg) {
   log("Received \'nfc-manager-tech-discovered\'");
   is(msg.type, "techDiscovered", "check for correct message type");
-  is(msg.techList[0], "P2P", "check for correct tech type");
+  is(msg.isP2P, "P2P", "check for correct tech type");
 
   nfc.onpeerready = peerReadyCb;
   nfc.onpeerlost = peerLostCb;
@@ -40,7 +40,7 @@ function handleTechnologyDiscoveredRE0(msg) {
 function handleTechnologyDiscoveredRE0ForP2PRegFailure(msg) {
   log("Received \'nfc-manager-tech-discovered\'");
   is(msg.type, "techDiscovered", "check for correct message type");
-  is(msg.techList[0], "P2P", "check for correct tech type");
+  is(msg.isP2P, "P2P", "check for correct tech type");
 
   nfc.onpeerready = peerReadyCb;
 

@@ -13,7 +13,6 @@ let ndef = null;
 
 function handleSnep(msg) {
   ok(msg.records != null, "msg.records should have values");
-  isnot(msg.techList.indexOf("NDEF"), -1, "check for correct tech type");
   // validate received NDEF message against reference
   let ndef = [new MozNDEFRecord({tnf: tnf,
                                  type: NfcUtils.fromUTF8(type),
@@ -25,7 +24,7 @@ function handleSnep(msg) {
 function handleTechnologyDiscoveredRE0(msg) {
   log("Received 'nfc-manager-tech-discovered'");
   is(msg.type, "techDiscovered", "check for correct message type");
-  is(msg.techList[0], "P2P", "check for correct tech type");
+  is(msg.isP2P, "P2P", "check for correct tech type");
 
   sysMsgHelper.waitForTechDiscovered(handleSnep);
   SNEP.put(SNEP.SAP_NDEF, SNEP.SAP_NDEF, 0, tnf, btoa(type), btoa(id), btoa(payload));
