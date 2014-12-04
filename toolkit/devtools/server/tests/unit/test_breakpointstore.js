@@ -11,15 +11,14 @@ function run_test()
   Cu.import("resource://gre/modules/jsdebugger.jsm");
   addDebuggerToGlobal(this);
 
-  test_has_breakpoint();
+  test_get_breakpoint();
   test_add_breakpoint();
   test_remove_breakpoint();
   test_find_breakpoints();
   test_duplicate_breakpoints();
-  test_move_breakpoint();
 }
 
-function test_has_breakpoint() {
+function test_get_breakpoint() {
   let bpStore = new BreakpointStore();
   let location = {
     source: { actor: 'actor1' },
@@ -32,27 +31,27 @@ function test_has_breakpoint() {
   };
 
   // Shouldn't have breakpoint
-  do_check_eq(null, bpStore.hasBreakpoint(location),
+  do_check_eq(null, bpStore.getBreakpoint(location),
               "Breakpoint not added and shouldn't exist.");
 
-  bpStore.addBreakpoint(location);
-  do_check_true(!!bpStore.hasBreakpoint(location),
+  bpStore.addBreakpoint(location, {});
+  do_check_true(!!bpStore.getBreakpoint(location),
                 "Breakpoint added but not found in Breakpoint Store.");
 
   bpStore.removeBreakpoint(location);
-  do_check_eq(null, bpStore.hasBreakpoint(location),
+  do_check_eq(null, bpStore.getBreakpoint(location),
               "Breakpoint removed but still exists.");
 
   // Same checks for breakpoint with a column
-  do_check_eq(null, bpStore.hasBreakpoint(columnLocation),
+  do_check_eq(null, bpStore.getBreakpoint(columnLocation),
               "Breakpoint with column not added and shouldn't exist.");
 
-  bpStore.addBreakpoint(columnLocation);
-  do_check_true(!!bpStore.hasBreakpoint(columnLocation),
+  bpStore.addBreakpoint(columnLocation, {});
+  do_check_true(!!bpStore.getBreakpoint(columnLocation),
                 "Breakpoint with column added but not found in Breakpoint Store.");
 
   bpStore.removeBreakpoint(columnLocation);
-  do_check_eq(null, bpStore.hasBreakpoint(columnLocation),
+  do_check_eq(null, bpStore.getBreakpoint(columnLocation),
               "Breakpoint with column removed but still exists in Breakpoint Store.");
 }
 
@@ -64,8 +63,8 @@ function test_add_breakpoint() {
     line: 10,
     column: 9
   };
-  bpStore.addBreakpoint(location);
-  do_check_true(!!bpStore.hasBreakpoint(location),
+  bpStore.addBreakpoint(location, {});
+  do_check_true(!!bpStore.getBreakpoint(location),
                 "We should have the column breakpoint we just added");
 
   // Breakpoint without column (whole line breakpoint)
@@ -73,8 +72,8 @@ function test_add_breakpoint() {
     source: { actor: 'actor2' },
     line: 103
   };
-  bpStore.addBreakpoint(location);
-  do_check_true(!!bpStore.hasBreakpoint(location),
+  bpStore.addBreakpoint(location, {});
+  do_check_true(!!bpStore.getBreakpoint(location),
                 "We should have the whole line breakpoint we just added");
 }
 
@@ -86,9 +85,9 @@ function test_remove_breakpoint() {
     line: 10,
     column: 9
   };
-  bpStore.addBreakpoint(location);
+  bpStore.addBreakpoint(location, {});
   bpStore.removeBreakpoint(location);
-  do_check_eq(bpStore.hasBreakpoint(location), null,
+  do_check_eq(bpStore.getBreakpoint(location), null,
               "We should not have the column breakpoint anymore");
 
   // Breakpoint without column (whole line breakpoint)
@@ -96,9 +95,9 @@ function test_remove_breakpoint() {
     source: { actor: 'actor2' },
     line: 103
   };
-  bpStore.addBreakpoint(location);
+  bpStore.addBreakpoint(location, {});
   bpStore.removeBreakpoint(location);
-  do_check_eq(bpStore.hasBreakpoint(location), null,
+  do_check_eq(bpStore.getBreakpoint(location), null,
               "We should not have the whole line breakpoint anymore");
 }
 
@@ -117,7 +116,7 @@ function test_find_breakpoints() {
   let bpStore = new BreakpointStore();
 
   for (let bp of bps) {
-    bpStore.addBreakpoint(bp);
+    bpStore.addBreakpoint(bp, bp);
   }
 
   // All breakpoints
@@ -166,8 +165,8 @@ function test_duplicate_breakpoints() {
     line: 10,
     column: 9
   };
-  bpStore.addBreakpoint(location);
-  bpStore.addBreakpoint(location);
+  bpStore.addBreakpoint(location, {});
+  bpStore.addBreakpoint(location, {});
   do_check_eq(bpStore.size, 1, "We should have only 1 column breakpoint");
   bpStore.removeBreakpoint(location);
 
@@ -176,36 +175,8 @@ function test_duplicate_breakpoints() {
     source: { actor: "foo-actor" },
     line: 15
   };
-  bpStore.addBreakpoint(location);
-  bpStore.addBreakpoint(location);
+  bpStore.addBreakpoint(location, {});
+  bpStore.addBreakpoint(location, {});
   do_check_eq(bpStore.size, 1, "We should have only 1 whole line breakpoint");
   bpStore.removeBreakpoint(location);
-}
-
-function test_move_breakpoint() {
-  let bpStore = new BreakpointStore();
-
-  let oldLocation = {
-    source: { actor: "foo-actor" },
-    line: 10
-  };
-
-  let newLocation = {
-    source: { actor: "foo-actor" },
-    line: 12
-  };
-
-  bpStore.addBreakpoint(oldLocation);
-  bpStore.moveBreakpoint(oldLocation, newLocation);
-
-  equal(bpStore.size, 1, "Moving a breakpoint maintains the correct size.");
-
-  let bp = bpStore.getBreakpoint(newLocation);
-  ok(bp, "We should be able to get a breakpoint at the new location.");
-  equal(bp.line, newLocation.line,
-        "We should get the moved line.");
-
-  equal(bpStore.hasBreakpoint({ source: { actor: "foo-actor" }, line: 10 }),
-        null,
-        "And we shouldn't be able to get any BP at the old location.");
 }

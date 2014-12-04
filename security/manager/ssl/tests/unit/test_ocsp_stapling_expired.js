@@ -58,7 +58,7 @@ function run_test() {
     }
     gOCSPRequestCount++;
   });
-  ocspResponder.start(8080);
+  ocspResponder.start(8888);
   add_tls_server_setup("OCSPStaplingServer");
 
   // In these tests, the OCSP stapling server gives us a stapled
