@@ -752,7 +752,7 @@ loop.panel = (function(_, mozL10n) {
             }, this)
           ), 
           React.DOM.p(null, 
-            React.DOM.button({className: "btn btn-info new-room-button", 
+            React.DOM.button({className: "btn btn-info", 
                     onClick: this.handleCreateButtonClick, 
                     disabled: this._hasPendingOperation()}, 
               mozL10n.get("rooms_new_room_button_label")
