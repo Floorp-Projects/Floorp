@@ -19,6 +19,7 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/FetchDriver.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/Headers.h"
@@ -1078,9 +1079,9 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
   // Finish successfully consuming body according to type.
   MOZ_ASSERT(aResult);
 
-  AutoJSAPI api;
-  api.Init(DerivedClass()->GetParentObject());
-  JSContext* cx = api.cx();
+  AutoJSAPI jsapi;
+  jsapi.Init(DerivedClass()->GetParentObject());
+  JSContext* cx = jsapi.cx();
 
   switch (mConsumeType) {
     case CONSUME_ARRAYBUFFER: {
@@ -1127,13 +1128,20 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
         return;
       }
 
+      AutoForceSetExceptionOnContext forceExn(cx);
       JS::Rooted<JS::Value> json(cx);
       if (!JS_ParseJSON(cx, decoded.get(), decoded.Length(), &json)) {
-        JS::Rooted<JS::Value> exn(cx);
-        if (JS_GetPendingException(cx, &exn)) {
-          JS_ClearPendingException(cx);
-          localPromise->MaybeReject(cx, exn);
+        if (!JS_IsExceptionPending(cx)) {
+          localPromise->MaybeReject(NS_ERROR_DOM_UNKNOWN_ERR);
+          return;
         }
+
+        JS::Rooted<JS::Value> exn(cx);
+        DebugOnly<bool> gotException = JS_GetPendingException(cx, &exn);
+        MOZ_ASSERT(gotException);
+
+        JS_ClearPendingException(cx);
+        localPromise->MaybeReject(cx, exn);
         return;
       }
 
