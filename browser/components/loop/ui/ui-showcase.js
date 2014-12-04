@@ -621,6 +621,17 @@
               )
             ), 
 
+            Example({summary: "Standalone room conversation (feedback)"}, 
+              React.DOM.div({className: "standalone"}, 
+                StandaloneRoomView({
+                  dispatcher: dispatcher, 
+                  activeRoomStore: activeRoomStore, 
+                  feedbackStore: feedbackStore, 
+                  roomState: ROOM_STATES.ENDED, 
+                  helper: {isFirefox: returnFalse}})
+              )
+            ), 
+
             Example({summary: "Standalone room conversation (failed)"}, 
               React.DOM.div({className: "standalone"}, 
                 StandaloneRoomView({
