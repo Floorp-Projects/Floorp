@@ -104,6 +104,52 @@ static const uint8_t PERMIT_FRANCE_GOV_NAME_CONSTRAINTS_DATA[] =
                        "\x30\x05\x82\x03" ".nc"
                        "\x30\x05\x82\x03" ".tf";
 
+static Result
+FindIssuerInner(ScopedCERTCertList& candidates, bool isRoot,
+                Input encodedIssuerName, TrustDomain::IssuerChecker& checker,
+                /*out*/ bool& keepGoing)
+{
+  keepGoing = true;
+  for (CERTCertListNode* n = CERT_LIST_HEAD(candidates);
+       !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
+    if (n->cert->isRoot != isRoot) {
+      continue;
+    }
+    Input certDER;
+    Result rv = certDER.Init(n->cert->derCert.data, n->cert->derCert.len);
+    if (rv != Success) {
+      continue; // probably too big
+    }
+
+    Input anssiSubject;
+    rv = anssiSubject.Init(ANSSI_SUBJECT_DATA, sizeof(ANSSI_SUBJECT_DATA) - 1);
+    if (rv != Success) {
+      return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    }
+    // TODO: Use CERT_CompareName or equivalent
+    if (InputsAreEqual(encodedIssuerName, anssiSubject)) {
+      Input anssiNameConstraints;
+      if (anssiNameConstraints.Init(
+              PERMIT_FRANCE_GOV_NAME_CONSTRAINTS_DATA,
+              sizeof(PERMIT_FRANCE_GOV_NAME_CONSTRAINTS_DATA) - 1)
+            != Success) {
+        return Result::FATAL_ERROR_LIBRARY_FAILURE;
+      }
+      rv = checker.Check(certDER, &anssiNameConstraints, keepGoing);
+    } else {
+      rv = checker.Check(certDER, nullptr, keepGoing);
+    }
+    if (rv != Success) {
+      return rv;
+    }
+    if (!keepGoing) {
+      break;
+    }
+  }
+
+  return Success;
+}
+
 Result
 NSSCertDBTrustDomain::FindIssuer(Input encodedIssuerName,
                                  IssuerChecker& checker, Time)
@@ -116,39 +162,18 @@ NSSCertDBTrustDomain::FindIssuer(Input encodedIssuerName,
                                           &encodedIssuerNameSECItem, 0,
                                           false));
   if (candidates) {
-    for (CERTCertListNode* n = CERT_LIST_HEAD(candidates);
-         !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
-      Input certDER;
-      Result rv = certDER.Init(n->cert->derCert.data, n->cert->derCert.len);
-      if (rv != Success) {
-        continue; // probably too big
-      }
-
-      bool keepGoing;
-      Input anssiSubject;
-      rv = anssiSubject.Init(ANSSI_SUBJECT_DATA,
-                             sizeof(ANSSI_SUBJECT_DATA) - 1);
-      if (rv != Success) {
-        return Result::FATAL_ERROR_LIBRARY_FAILURE;
-      }
-      // TODO: Use CERT_CompareName or equivalent
-      if (InputsAreEqual(encodedIssuerName, anssiSubject)) {
-        Input anssiNameConstraints;
-        if (anssiNameConstraints.Init(
-                PERMIT_FRANCE_GOV_NAME_CONSTRAINTS_DATA,
-                sizeof(PERMIT_FRANCE_GOV_NAME_CONSTRAINTS_DATA) - 1)
-              != Success) {
-          return Result::FATAL_ERROR_LIBRARY_FAILURE;
-        }
-        rv = checker.Check(certDER, &anssiNameConstraints, keepGoing);
-      } else {
-        rv = checker.Check(certDER, nullptr, keepGoing);
-      }
+    // First, try all the root certs; then try all the non-root certs.
+    bool keepGoing;
+    Result rv = FindIssuerInner(candidates, true, encodedIssuerName, checker,
+                                keepGoing);
+    if (rv != Success) {
+      return rv;
+    }
+    if (keepGoing) {
+      rv = FindIssuerInner(candidates, false, encodedIssuerName, checker,
+                           keepGoing);
       if (rv != Success) {
         return rv;
-      }
-      if (!keepGoing) {
-        break;
       }
     }
   }
