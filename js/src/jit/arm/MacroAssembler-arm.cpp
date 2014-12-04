@@ -1766,7 +1766,7 @@ MacroAssemblerARM::ma_vstr(VFPRegister src, Register base, Register index, int32
     return ma_vstr(src, Operand(ScratchRegister, 0), cc);
 }
 
-bool
+void
 MacroAssemblerARMCompat::buildFakeExitFrame(Register scratch, uint32_t *offset)
 {
     DebugOnly<uint32_t> initialDepth = framePushed();
@@ -1789,7 +1789,6 @@ MacroAssemblerARMCompat::buildFakeExitFrame(Register scratch, uint32_t *offset)
     MOZ_ASSERT(pseudoReturnOffset - offsetBeforePush == 8);
 
     *offset = pseudoReturnOffset;
-    return true;
 }
 
 bool
