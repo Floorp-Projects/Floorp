@@ -1248,13 +1248,11 @@ class PlainObject : public NativeObject
 inline void
 NativeObject::privateWriteBarrierPre(void **oldval)
 {
-#ifdef JSGC_INCREMENTAL
     JS::shadow::Zone *shadowZone = this->shadowZoneFromAnyThread();
     if (shadowZone->needsIncrementalBarrier()) {
         if (*oldval && getClass()->trace)
             getClass()->trace(shadowZone->barrierTracer(), this);
     }
-#endif
 }
 
 #ifdef DEBUG

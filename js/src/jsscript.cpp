@@ -2183,7 +2183,6 @@ SaveSharedScriptData(ExclusiveContext *cx, Handle<JSScript *> script, SharedScri
         }
     }
 
-#ifdef JSGC_INCREMENTAL
     /*
      * During the IGC we need to ensure that bytecode is marked whenever it is
      * accessed even if the bytecode was already in the table: at this point
@@ -2195,7 +2194,6 @@ SaveSharedScriptData(ExclusiveContext *cx, Handle<JSScript *> script, SharedScri
         if (JS::IsIncrementalGCInProgress(rt) && rt->gc.isFullGc())
             ssd->marked = true;
     }
-#endif
 
     script->setCode(ssd->data);
     script->atoms = ssd->atoms();

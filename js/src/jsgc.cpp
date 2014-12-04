@@ -6271,8 +6271,6 @@ GCRuntime::collect(bool incremental, SliceBudget &budget, JSGCInvocationKind gck
         return;
 #endif
 
-    MOZ_ASSERT_IF(!incremental || !budget.isUnlimited(), JSGC_INCREMENTAL);
-
     AutoStopVerifyingBarriers av(rt, reason == JS::gcreason::SHUTDOWN_CC ||
                                      reason == JS::gcreason::DESTROY_RUNTIME);
 
