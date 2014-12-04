@@ -27,7 +27,11 @@
 #include <sys/syscall.h>
 #include <sys/resource.h>
 #include <time.h>
+#if ANDROID_VERSION >= 21
+#include <limits.h>
+#else
 #include <asm/page.h>
+#endif
 
 #include "mozilla/DebugOnly.h"
 
