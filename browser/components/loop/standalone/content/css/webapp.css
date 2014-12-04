@@ -22,7 +22,18 @@ body,
  * Note: the is-standalone-room class is dynamically set by the StandaloneRoomView.
  */
 .standalone.is-standalone-room {
-  background-color: #000;
+  background: #000;
+}
+
+.standalone .beta-logo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 50px;
+  height: 50px;
+  background: transparent url(../shared/img/beta-ribbon.svg) no-repeat;
+  background-size: 50px;
+  z-index: 1000;
 }
 
 .standalone-header {
