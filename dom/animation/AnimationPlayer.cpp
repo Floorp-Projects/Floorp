@@ -32,9 +32,12 @@ AnimationPlayer::GetCurrentTime() const
   Nullable<TimeDuration> result;
   if (!mHoldTime.IsNull()) {
     result = mHoldTime;
-  } else {
+    return result;
+  }
+
+  if (!mStartTime.IsNull()) {
     Nullable<TimeDuration> timelineTime = mTimeline->GetCurrentTime();
-    if (!timelineTime.IsNull() && !mStartTime.IsNull()) {
+    if (!timelineTime.IsNull()) {
       result.SetValue(timelineTime.Value() - mStartTime.Value());
     }
   }
