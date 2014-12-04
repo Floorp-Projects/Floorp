@@ -10,9 +10,7 @@
 #include "NamespaceImports.h"
 
 #include "gc/Heap.h"
-#ifdef JSGC_GENERATIONAL
-# include "gc/StoreBuffer.h"
-#endif
+#include "gc/StoreBuffer.h"
 #include "js/HashTable.h"
 #include "js/Id.h"
 #include "js/RootingAPI.h"
@@ -349,36 +347,30 @@ struct InternalGCMethods<Value>
     }
 
     static void postBarrier(Value *vp) {
-#ifdef JSGC_GENERATIONAL
         MOZ_ASSERT(!CurrentThreadIsIonCompiling());
         if (vp->isObject()) {
             gc::StoreBuffer *sb = reinterpret_cast<gc::Cell *>(&vp->toObject())->storeBuffer();
             if (sb)
                 sb->putValueFromAnyThread(vp);
         }
-#endif
     }
 
     static void postBarrierRelocate(Value *vp) {
-#ifdef JSGC_GENERATIONAL
         MOZ_ASSERT(!CurrentThreadIsIonCompiling());
         if (vp->isObject()) {
             gc::StoreBuffer *sb = reinterpret_cast<gc::Cell *>(&vp->toObject())->storeBuffer();
             if (sb)
                 sb->putRelocatableValueFromAnyThread(vp);
         }
-#endif
     }
 
     static void postBarrierRemove(Value *vp) {
-#ifdef JSGC_GENERATIONAL
         MOZ_ASSERT(vp);
         MOZ_ASSERT(vp->isMarkable());
         MOZ_ASSERT(!CurrentThreadIsIonCompiling());
         JSRuntime *rt = static_cast<js::gc::Cell *>(vp->toGCThing())->runtimeFromAnyThread();
         JS::shadow::Runtime *shadowRuntime = JS::shadow::Runtime::asShadowRuntime(rt);
         shadowRuntime->gcStoreBufferPtr()->removeRelocatableValueFromAnyThread(vp);
-#endif
     }
 
     static void readBarrier(const Value &v) { ValueReadBarrier(v); }
@@ -672,17 +664,13 @@ class RelocatablePtr : public BarrieredBase<T>
 
   protected:
     void post() {
-#ifdef JSGC_GENERATIONAL
         MOZ_ASSERT(GCMethods<T>::needsPostBarrier(this->value));
         InternalGCMethods<T>::postBarrierRelocate(&this->value);
-#endif
     }
 
     void relocate() {
-#ifdef JSGC_GENERATIONAL
         MOZ_ASSERT(GCMethods<T>::needsPostBarrier(this->value));
         InternalGCMethods<T>::postBarrierRemove(&this->value);
-#endif
     }
 };
 
@@ -916,13 +904,11 @@ class HeapSlot : public BarrieredBase<Value>
   private:
     void post(NativeObject *owner, Kind kind, uint32_t slot, const Value &target) {
         MOZ_ASSERT(preconditionForWriteBarrierPost(owner, kind, slot, target));
-#ifdef JSGC_GENERATIONAL
         if (this->value.isObject()) {
             gc::Cell *cell = reinterpret_cast<gc::Cell *>(&this->value.toObject());
             if (cell->storeBuffer())
                 cell->storeBuffer()->putSlotFromAnyThread(owner, kind, slot, 1);
         }
-#endif
     }
 };
 

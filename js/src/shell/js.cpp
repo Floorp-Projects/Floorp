@@ -5853,9 +5853,7 @@ main(int argc, char **argv, char **envp)
         || !op.addBoolOption('\0', "dump-entrained-variables", "Print variables which are "
                              "unnecessarily entrained by inner functions")
 #endif
-#ifdef JSGC_GENERATIONAL
         || !op.addBoolOption('\0', "no-ggc", "Disable Generational GC")
-#endif
         || !op.addBoolOption('\0', "no-incremental-gc", "Disable Incremental GC")
         || !op.addIntOption('\0', "available-memory", "SIZE",
                             "Select GC settings based on available memory (MB)", 0)
@@ -5878,9 +5876,7 @@ main(int argc, char **argv, char **envp)
         || !op.addIntOption('\0', "mips-sim-stop-at", "NUMBER", "Stop the MIPS simulator after the given "
                             "NUMBER of instructions.", -1)
 #endif
-#ifdef JSGC_GENERATIONAL
         || !op.addIntOption('\0', "nursery-size", "SIZE-MB", "Set the maximum nursery size in MB", 16)
-#endif
 #ifdef JS_GC_ZEAL
         || !op.addStringOption('z', "gc-zeal", "LEVEL[,N]",
                                "Specifies zealous garbage collection, overriding the environement "
@@ -5951,9 +5947,7 @@ main(int argc, char **argv, char **envp)
         return 1;
 
     size_t nurseryBytes = JS::DefaultNurseryBytes;
-#ifdef JSGC_GENERATIONAL
     nurseryBytes = op.getIntOption("nursery-size") * 1024L * 1024L;
-#endif
 
     /* Use the same parameters as the browser in xpcjsruntime.cpp. */
     rt = JS_NewRuntime(JS::DefaultHeapMaxBytes, nurseryBytes);
@@ -5968,11 +5962,9 @@ main(int argc, char **argv, char **envp)
     gInterruptFunc.emplace(rt, NullValue());
 
     JS_SetGCParameter(rt, JSGC_MAX_BYTES, 0xffffffff);
-#ifdef JSGC_GENERATIONAL
     Maybe<JS::AutoDisableGenerationalGC> noggc;
     if (op.getBoolOption("no-ggc"))
         noggc.emplace(rt);
-#endif
 
     size_t availMem = op.getIntOption("available-memory");
     if (availMem > 0)
@@ -6036,9 +6028,7 @@ main(int argc, char **argv, char **envp)
     for (size_t i = 0; i < workerThreads.length(); i++)
         PR_JoinThread(workerThreads[i]);
 
-#ifdef JSGC_GENERATIONAL
     noggc.reset();
-#endif
 
     JS_DestroyRuntime(rt);
     JS_ShutDown();

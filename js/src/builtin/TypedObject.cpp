@@ -2398,7 +2398,6 @@ LazyArrayBufferTable::addBuffer(JSContext *cx, InlineTransparentTypedObject *obj
         return false;
     }
 
-#ifdef JSGC_GENERATIONAL
     MOZ_ASSERT(!IsInsideNursery(buffer));
     if (IsInsideNursery(obj)) {
         // Strip the barriers from the type before inserting into the store
@@ -2415,7 +2414,6 @@ LazyArrayBufferTable::addBuffer(JSContext *cx, InlineTransparentTypedObject *obj
         // updated after the typed object moves.
         cx->runtime()->gc.storeBuffer.putWholeCellFromMainThread(buffer);
     }
-#endif
 
     return true;
 }

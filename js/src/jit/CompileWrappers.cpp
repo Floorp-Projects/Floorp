@@ -176,13 +176,11 @@ CompileRuntime::maybeGetMathCache()
     return runtime()->maybeGetMathCache();
 }
 
-#ifdef JSGC_GENERATIONAL
 const Nursery &
 CompileRuntime::gcNursery()
 {
     return runtime()->gc.nursery;
 }
-#endif
 
 Zone *
 CompileZone::zone()

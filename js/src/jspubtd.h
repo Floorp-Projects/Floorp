@@ -21,7 +21,7 @@
 
 #include "js/TypeDecls.h"
 
-#if (defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)) || \
+#if (defined(JS_GC_ZEAL)) || \
     (defined(JSGC_COMPACTING) && defined(DEBUG))
 # define JSGC_HASH_TABLE_CHECKS
 #endif
@@ -160,30 +160,20 @@ struct Runtime
     /* Restrict zone access during Minor GC. */
     bool needsIncrementalBarrier_;
 
-#ifdef JSGC_GENERATIONAL
   private:
     js::gc::StoreBuffer *gcStoreBufferPtr_;
-#endif
 
   public:
-    explicit Runtime(
-#ifdef JSGC_GENERATIONAL
-        js::gc::StoreBuffer *storeBuffer
-#endif
-    )
+    explicit Runtime(js::gc::StoreBuffer *storeBuffer)
       : needsIncrementalBarrier_(false)
-#ifdef JSGC_GENERATIONAL
       , gcStoreBufferPtr_(storeBuffer)
-#endif
     {}
 
     bool needsIncrementalBarrier() const {
         return needsIncrementalBarrier_;
     }
 
-#ifdef JSGC_GENERATIONAL
     js::gc::StoreBuffer *gcStoreBufferPtr() { return gcStoreBufferPtr_; }
-#endif
 
     static JS::shadow::Runtime *asShadowRuntime(JSRuntime *rt) {
         return reinterpret_cast<JS::shadow::Runtime*>(rt);
