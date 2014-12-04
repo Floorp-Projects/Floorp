@@ -1467,18 +1467,17 @@ class ZoneList
 
   public:
     ZoneList();
-    explicit ZoneList(Zone *singleZone);
+    ~ZoneList();
 
     bool isEmpty() const;
     Zone *front() const;
 
     void append(Zone *zone);
-    void append(ZoneList& list);
-    Zone *removeFront();
-
     void transferFrom(ZoneList &other);
+    void removeFront();
 
   private:
+    explicit ZoneList(Zone *singleZone);
     void check() const;
 
     ZoneList(const ZoneList &other) MOZ_DELETE;
