@@ -338,8 +338,8 @@ public:
 
   MediaStream* GetSrcMediaStream() const
   {
-    NS_ASSERTION(mSrcStream, "Don't call this when not playing a stream");
-    return mSrcStream->GetStream();
+    NS_ASSERTION(mPlaybackStream, "Don't call this when not playing a stream");
+    return mPlaybackStream->GetStream();
   }
 
   // WebIDL
@@ -996,6 +996,14 @@ protected:
   // actually playing.
   // At most one of mDecoder and mSrcStream can be non-null.
   nsRefPtr<DOMMediaStream> mSrcStream;
+
+  // Holds a reference to a MediaInputPort connecting mSrcStream to mPlaybackStream.
+  nsRefPtr<MediaInputPort> mPlaybackStreamInputPort;
+
+  // Holds a reference to a stream with mSrcStream as input but intended for
+  // playback. Used so we don't block playback of other video elements
+  // playing the same mSrcStream.
+  nsRefPtr<DOMMediaStream> mPlaybackStream;
 
   // Holds references to the DOM wrappers for the MediaStreams that we're
   // writing to.
