@@ -11,7 +11,7 @@ describe("loop.store.ConversationStore", function () {
   var sharedActions = loop.shared.actions;
   var sharedUtils = loop.shared.utils;
   var sandbox, dispatcher, client, store, fakeSessionData, sdkDriver;
-  var contact;
+  var contact, fakeMozLoop;
   var connectPromise, resolveConnectPromise, rejectConnectPromise;
   var wsCancelSpy, wsCloseSpy, wsMediaUpSpy, fakeWebsocket;
 
@@ -36,7 +36,7 @@ describe("loop.store.ConversationStore", function () {
       }]
     };
 
-    navigator.mozLoop = {
+    fakeMozLoop = {
       getLoopPref: sandbox.stub(),
       addConversationContext: sandbox.stub(),
       calls: {
@@ -65,9 +65,9 @@ describe("loop.store.ConversationStore", function () {
       mediaUp: wsMediaUpSpy
     };
 
-    store = new loop.store.ConversationStore({}, {
+    store = new loop.store.ConversationStore(dispatcher, {
       client: client,
-      dispatcher: dispatcher,
+      mozLoop: fakeMozLoop,
       sdkDriver: sdkDriver
     });
     fakeSessionData = {
@@ -99,19 +99,9 @@ describe("loop.store.ConversationStore", function () {
   });
 
   describe("#initialize", function() {
-    it("should throw an error if the dispatcher is missing", function() {
-      expect(function() {
-        new loop.store.ConversationStore({}, {
-          client: client,
-          sdkDriver: sdkDriver
-        });
-      }).to.Throw(/dispatcher/);
-    });
-
     it("should throw an error if the client is missing", function() {
       expect(function() {
-        new loop.store.ConversationStore({}, {
-          dispatcher: dispatcher,
+        new loop.store.ConversationStore(dispatcher, {
           sdkDriver: sdkDriver
         });
       }).to.Throw(/client/);
@@ -119,18 +109,26 @@ describe("loop.store.ConversationStore", function () {
 
     it("should throw an error if the sdkDriver is missing", function() {
       expect(function() {
-        new loop.store.ConversationStore({}, {
-          client: client,
-          dispatcher: dispatcher
+        new loop.store.ConversationStore(dispatcher, {
+          client: client
         });
       }).to.Throw(/sdkDriver/);
+    });
+
+    it("should throw an error if mozLoop is missing", function() {
+      expect(function() {
+        new loop.store.ConversationStore(dispatcher, {
+          sdkDriver: sdkDriver,
+          client: client
+        });
+      }).to.Throw(/mozLoop/);
     });
   });
 
   describe("#connectionFailure", function() {
     beforeEach(function() {
       store._websocket = fakeWebsocket;
-      store.set({windowId: "42"});
+      store.setStoreState({windowId: "42"});
     });
 
     it("should disconnect the session", function() {
@@ -148,71 +146,71 @@ describe("loop.store.ConversationStore", function () {
     });
 
     it("should set the state to 'terminated'", function() {
-      store.set({callState: CALL_STATES.ALERTING});
+      store.setStoreState({callState: CALL_STATES.ALERTING});
 
       store.connectionFailure(
         new sharedActions.ConnectionFailure({reason: "fake"}));
 
-      expect(store.get("callState")).eql(CALL_STATES.TERMINATED);
-      expect(store.get("callStateReason")).eql("fake");
+      expect(store.getStoreState("callState")).eql(CALL_STATES.TERMINATED);
+      expect(store.getStoreState("callStateReason")).eql("fake");
     });
 
     it("should release mozLoop callsData", function() {
       store.connectionFailure(
         new sharedActions.ConnectionFailure({reason: "fake"}));
 
-      sinon.assert.calledOnce(navigator.mozLoop.calls.clearCallInProgress);
+      sinon.assert.calledOnce(fakeMozLoop.calls.clearCallInProgress);
       sinon.assert.calledWithExactly(
-        navigator.mozLoop.calls.clearCallInProgress, "42");
+        fakeMozLoop.calls.clearCallInProgress, "42");
     });
   });
 
   describe("#connectionProgress", function() {
     describe("progress: init", function() {
       it("should change the state from 'gather' to 'connecting'", function() {
-        store.set({callState: CALL_STATES.GATHER});
+        store.setStoreState({callState: CALL_STATES.GATHER});
 
         store.connectionProgress(
           new sharedActions.ConnectionProgress({wsState: WS_STATES.INIT}));
 
-        expect(store.get("callState")).eql(CALL_STATES.CONNECTING);
+        expect(store.getStoreState("callState")).eql(CALL_STATES.CONNECTING);
       });
     });
 
     describe("progress: alerting", function() {
       it("should change the state from 'gather' to 'alerting'", function() {
-        store.set({callState: CALL_STATES.GATHER});
+        store.setStoreState({callState: CALL_STATES.GATHER});
 
         store.connectionProgress(
           new sharedActions.ConnectionProgress({wsState: WS_STATES.ALERTING}));
 
-        expect(store.get("callState")).eql(CALL_STATES.ALERTING);
+        expect(store.getStoreState("callState")).eql(CALL_STATES.ALERTING);
       });
 
       it("should change the state from 'init' to 'alerting'", function() {
-        store.set({callState: CALL_STATES.INIT});
+        store.setStoreState({callState: CALL_STATES.INIT});
 
         store.connectionProgress(
           new sharedActions.ConnectionProgress({wsState: WS_STATES.ALERTING}));
 
-        expect(store.get("callState")).eql(CALL_STATES.ALERTING);
+        expect(store.getStoreState("callState")).eql(CALL_STATES.ALERTING);
       });
     });
 
     describe("progress: connecting", function() {
       beforeEach(function() {
-        store.set({callState: CALL_STATES.ALERTING});
+        store.setStoreState({callState: CALL_STATES.ALERTING});
       });
 
       it("should change the state to 'ongoing'", function() {
         store.connectionProgress(
           new sharedActions.ConnectionProgress({wsState: WS_STATES.CONNECTING}));
 
-        expect(store.get("callState")).eql(CALL_STATES.ONGOING);
+        expect(store.getStoreState("callState")).eql(CALL_STATES.ONGOING);
       });
 
       it("should connect the session", function() {
-        store.set(fakeSessionData);
+        store.setStoreState(fakeSessionData);
 
         store.connectionProgress(
           new sharedActions.ConnectionProgress({wsState: WS_STATES.CONNECTING}));
@@ -226,13 +224,13 @@ describe("loop.store.ConversationStore", function () {
       });
 
       it("should call mozLoop.addConversationContext", function() {
-        store.set(fakeSessionData);
+        store.setStoreState(fakeSessionData);
 
         store.connectionProgress(
           new sharedActions.ConnectionProgress({wsState: WS_STATES.CONNECTING}));
 
-        sinon.assert.calledOnce(navigator.mozLoop.addConversationContext);
-        sinon.assert.calledWithExactly(navigator.mozLoop.addConversationContext,
+        sinon.assert.calledOnce(fakeMozLoop.addConversationContext);
+        sinon.assert.calledWithExactly(fakeMozLoop.addConversationContext,
                                        "28", "321456", "142536");
       });
     });
@@ -242,7 +240,7 @@ describe("loop.store.ConversationStore", function () {
     var fakeSetupWindowData;
 
     beforeEach(function() {
-      store.set({callState: CALL_STATES.INIT});
+      store.setStoreState({callState: CALL_STATES.INIT});
       fakeSetupWindowData = {
         windowId: "123456",
         type: "outgoing",
@@ -255,23 +253,24 @@ describe("loop.store.ConversationStore", function () {
       dispatcher.dispatch(
         new sharedActions.SetupWindowData(fakeSetupWindowData));
 
-      expect(store.get("callState")).eql(CALL_STATES.GATHER);
+      expect(store.getStoreState("callState")).eql(CALL_STATES.GATHER);
     });
 
     it("should save the basic call information", function() {
       dispatcher.dispatch(
         new sharedActions.SetupWindowData(fakeSetupWindowData));
 
-      expect(store.get("windowId")).eql("123456");
-      expect(store.get("outgoing")).eql(true);
+      expect(store.getStoreState("windowId")).eql("123456");
+      expect(store.getStoreState("outgoing")).eql(true);
     });
 
     it("should save the basic information from the mozLoop api", function() {
       dispatcher.dispatch(
         new sharedActions.SetupWindowData(fakeSetupWindowData));
 
-      expect(store.get("contact")).eql(contact);
-      expect(store.get("callType")).eql(sharedUtils.CALL_TYPES.AUDIO_VIDEO);
+      expect(store.getStoreState("contact")).eql(contact);
+      expect(store.getStoreState("callType"))
+        .eql(sharedUtils.CALL_TYPES.AUDIO_VIDEO);
     });
 
     describe("outgoing calls", function() {
@@ -402,12 +401,12 @@ describe("loop.store.ConversationStore", function () {
       store.connectCall(
         new sharedActions.ConnectCall({sessionData: fakeSessionData}));
 
-      expect(store.get("apiKey")).eql("fakeKey");
-      expect(store.get("callId")).eql("142536");
-      expect(store.get("sessionId")).eql("321456");
-      expect(store.get("sessionToken")).eql("341256");
-      expect(store.get("websocketToken")).eql("543216");
-      expect(store.get("progressURL")).eql("fakeURL");
+      expect(store.getStoreState("apiKey")).eql("fakeKey");
+      expect(store.getStoreState("callId")).eql("142536");
+      expect(store.getStoreState("sessionId")).eql("321456");
+      expect(store.getStoreState("sessionToken")).eql("341256");
+      expect(store.getStoreState("websocketToken")).eql("543216");
+      expect(store.getStoreState("progressURL")).eql("fakeURL");
     });
 
     it("should initialize the websocket", function() {
@@ -488,8 +487,8 @@ describe("loop.store.ConversationStore", function () {
         mediaFail: wsMediaFailSpy,
         close: wsCloseSpy
       };
-      store.set({callState: CALL_STATES.ONGOING});
-      store.set({windowId: "42"});
+      store.setStoreState({callState: CALL_STATES.ONGOING});
+      store.setStoreState({windowId: "42"});
     });
 
     it("should disconnect the session", function() {
@@ -513,15 +512,15 @@ describe("loop.store.ConversationStore", function () {
     it("should set the callState to finished", function() {
       store.hangupCall(new sharedActions.HangupCall());
 
-      expect(store.get("callState")).eql(CALL_STATES.FINISHED);
+      expect(store.getStoreState("callState")).eql(CALL_STATES.FINISHED);
     });
 
     it("should release mozLoop callsData", function() {
       store.hangupCall(new sharedActions.HangupCall());
 
-      sinon.assert.calledOnce(navigator.mozLoop.calls.clearCallInProgress);
+      sinon.assert.calledOnce(fakeMozLoop.calls.clearCallInProgress);
       sinon.assert.calledWithExactly(
-        navigator.mozLoop.calls.clearCallInProgress, "42");
+        fakeMozLoop.calls.clearCallInProgress, "42");
     });
   });
 
@@ -535,8 +534,8 @@ describe("loop.store.ConversationStore", function () {
         mediaFail: wsMediaFailSpy,
         close: wsCloseSpy
       };
-      store.set({callState: CALL_STATES.ONGOING});
-      store.set({windowId: "42"});
+      store.setStoreState({callState: CALL_STATES.ONGOING});
+      store.setStoreState({windowId: "42"});
     });
 
     it("should disconnect the session", function() {
@@ -560,9 +559,9 @@ describe("loop.store.ConversationStore", function () {
         peerHungup: true
       }));
 
-      sinon.assert.calledOnce(navigator.mozLoop.calls.clearCallInProgress);
+      sinon.assert.calledOnce(fakeMozLoop.calls.clearCallInProgress);
       sinon.assert.calledWithExactly(
-        navigator.mozLoop.calls.clearCallInProgress, "42");
+        fakeMozLoop.calls.clearCallInProgress, "42");
     });
 
     it("should set the callState to finished if the peer hungup", function() {
@@ -570,7 +569,7 @@ describe("loop.store.ConversationStore", function () {
         peerHungup: true
       }));
 
-      expect(store.get("callState")).eql(CALL_STATES.FINISHED);
+      expect(store.getStoreState("callState")).eql(CALL_STATES.FINISHED);
     });
 
     it("should set the callState to terminated if the peer was disconnected" +
@@ -579,7 +578,7 @@ describe("loop.store.ConversationStore", function () {
           peerHungup: false
         }));
 
-        expect(store.get("callState")).eql(CALL_STATES.TERMINATED);
+        expect(store.getStoreState("callState")).eql(CALL_STATES.TERMINATED);
       });
 
     it("should set the reason to peerNetworkDisconnected if the peer was" +
@@ -588,7 +587,8 @@ describe("loop.store.ConversationStore", function () {
           peerHungup: false
         }));
 
-        expect(store.get("callStateReason")).eql("peerNetworkDisconnected");
+        expect(store.getStoreState("callStateReason"))
+          .eql("peerNetworkDisconnected");
     });
   });
 
@@ -596,8 +596,8 @@ describe("loop.store.ConversationStore", function () {
     beforeEach(function() {
       store._websocket = fakeWebsocket;
 
-      store.set({callState: CALL_STATES.CONNECTING});
-      store.set({windowId: "42"});
+      store.setStoreState({callState: CALL_STATES.CONNECTING});
+      store.setStoreState({windowId: "42"});
     });
 
     it("should disconnect the session", function() {
@@ -621,37 +621,38 @@ describe("loop.store.ConversationStore", function () {
     it("should set the state to close if the call is connecting", function() {
       store.cancelCall(new sharedActions.CancelCall());
 
-      expect(store.get("callState")).eql(CALL_STATES.CLOSE);
+      expect(store.getStoreState("callState")).eql(CALL_STATES.CLOSE);
     });
 
     it("should set the state to close if the call has terminated already", function() {
-      store.set({callState: CALL_STATES.TERMINATED});
+      store.setStoreState({callState: CALL_STATES.TERMINATED});
 
       store.cancelCall(new sharedActions.CancelCall());
 
-      expect(store.get("callState")).eql(CALL_STATES.CLOSE);
+      expect(store.getStoreState("callState")).eql(CALL_STATES.CLOSE);
     });
 
     it("should release mozLoop callsData", function() {
       store.cancelCall(new sharedActions.CancelCall());
 
-      sinon.assert.calledOnce(navigator.mozLoop.calls.clearCallInProgress);
+      sinon.assert.calledOnce(fakeMozLoop.calls.clearCallInProgress);
       sinon.assert.calledWithExactly(
-        navigator.mozLoop.calls.clearCallInProgress, "42");
+        fakeMozLoop.calls.clearCallInProgress, "42");
     });
   });
 
   describe("#retryCall", function() {
     it("should set the state to gather", function() {
-      store.set({callState: CALL_STATES.TERMINATED});
+      store.setStoreState({callState: CALL_STATES.TERMINATED});
 
       store.retryCall(new sharedActions.RetryCall());
 
-      expect(store.get("callState")).eql(CALL_STATES.GATHER);
+      expect(store.getStoreState("callState"))
+        .eql(CALL_STATES.GATHER);
     });
 
     it("should request the outgoing call data", function() {
-      store.set({
+      store.setStoreState({
         callState: CALL_STATES.TERMINATED,
         outgoing: true,
         callType: sharedUtils.CALL_TYPES.AUDIO_VIDEO,
@@ -678,25 +679,25 @@ describe("loop.store.ConversationStore", function () {
 
   describe("#setMute", function() {
     it("should save the mute state for the audio stream", function() {
-      store.set({"audioMuted": false});
+      store.setStoreState({"audioMuted": false});
 
       dispatcher.dispatch(new sharedActions.SetMute({
         type: "audio",
         enabled: true
       }));
 
-      expect(store.get("audioMuted")).eql(false);
+      expect(store.getStoreState("audioMuted")).eql(false);
     });
 
     it("should save the mute state for the video stream", function() {
-      store.set({"videoMuted": true});
+      store.setStoreState({"videoMuted": true});
 
       dispatcher.dispatch(new sharedActions.SetMute({
         type: "video",
         enabled: false
       }));
 
-      expect(store.get("videoMuted")).eql(true);
+      expect(store.getStoreState("videoMuted")).eql(true);
     });
   });
 
@@ -715,7 +716,7 @@ describe("loop.store.ConversationStore", function () {
         };
         store.fetchEmailLink(new sharedActions.FetchEmailLink());
 
-        expect(store.get("emailLink")).eql("http://fake.invalid/");
+        expect(store.getStoreState("emailLink")).eql("http://fake.invalid/");
       });
 
     it("should trigger an error:emailLink event in case of failure",

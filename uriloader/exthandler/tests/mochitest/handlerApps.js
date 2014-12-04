@@ -37,7 +37,7 @@ function test() {
     getInterface(SpecialPowers.Ci.nsIWebNavigation).
     QueryInterface(SpecialPowers.Ci.nsIDocShell);
  
-  webHandler.launchWithURI(uri, windowContext); 
+  webHandler.launchWithURI(uri, windowContext);
 
   // if we get this far without an exception, we've at least partly passed
   // (remaining check in handlerApp.xhtml)

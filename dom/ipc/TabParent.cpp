@@ -600,7 +600,19 @@ TabParent::Show(const nsIntSize& size)
           unused << SendPRenderFrameConstructor(renderFrame);
         }
     }
-    unused << SendShow(size, scrolling, textureFactoryIdentifier, layersId, renderFrame);
+
+    ShowInfo info(EmptyString(), false, false);
+    if (mFrameElement) {
+      nsAutoString name;
+      mFrameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
+      bool allowFullscreen =
+        mFrameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::allowfullscreen) ||
+        mFrameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::mozallowfullscreen);
+      bool isPrivate = mFrameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::mozprivatebrowsing);
+      info = ShowInfo(name, allowFullscreen, isPrivate);
+    }
+
+    unused << SendShow(size, info, scrolling, textureFactoryIdentifier, layersId, renderFrame);
 }
 
 void

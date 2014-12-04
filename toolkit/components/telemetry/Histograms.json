@@ -4509,6 +4509,12 @@
     "n_values": 100,
     "description": "Security UI Telemetry"
   },
+  "JS_TELEMETRY_ADDON_EXCEPTIONS" : {
+    "expires_in_version" : "never",
+    "kind": "count",
+    "keyed" : true,
+    "description" : "Exceptions thrown by add-ons"
+  },
   "SEARCH_COUNTS": {
     "expires_in_version": "never",
     "kind": "count",
