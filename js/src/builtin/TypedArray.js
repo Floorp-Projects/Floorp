@@ -5,8 +5,10 @@
 // ES6 draft rev28 (2014/10/14) 22.2.3.10 %TypedArray%.prototype.find(predicate [,thisArg]).
 function TypedArrayFind(predicate, thisArg = undefined) {
     // This function is not generic.
-    if (!IsObject(this) || !IsTypedArray(this))
-        ThrowError(JSMSG_INCOMPATIBLE_PROTO, "%TypedArray%", "find", typeof this);
+    if (!IsObject(this) || !IsTypedArray(this)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, this, predicate, thisArg,
+                            "TypedArrayFind");
+    }
 
     // Steps 1-2.
     var O = this;
@@ -40,8 +42,10 @@ function TypedArrayFind(predicate, thisArg = undefined) {
 // ES6 draft rev28 (2014/10/14) 22.2.3.11 %TypedArray%.prototype.findIndex(predicate [,thisArg]).
 function TypedArrayFindIndex(predicate, thisArg = undefined) {
     // This function is not generic.
-    if (!IsObject(this) || !IsTypedArray(this))
-        ThrowError(JSMSG_INCOMPATIBLE_PROTO, "%TypedArray%", "findIndex", typeof this);
+    if (!IsObject(this) || !IsTypedArray(this)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, this, predicate, thisArg,
+                            "TypedArrayFindIndex");
+    }
 
     // Steps 1-2.
     var O = this;
