@@ -777,7 +777,11 @@ SipccSdpAttributeList::LoadRtcpFb(sdp_t* sdp, uint16_t level,
     }
 
     std::stringstream osPayloadType;
-    osPayloadType << rtcpfb->payload_num;
+    if (rtcpfb->payload_num == UINT16_MAX) {
+      osPayloadType << "*";
+    } else {
+      osPayloadType << rtcpfb->payload_num;
+    }
 
     std::string pt(osPayloadType.str());
     std::string extra(rtcpfb->extra);
