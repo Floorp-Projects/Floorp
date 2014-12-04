@@ -47,10 +47,10 @@ function* testBodyFonts(inspector) {
   ok(s[0].classList.contains("is-remote"),
      "font 0: is remote");
   is(s[0].querySelector(".font-url").value,
-     "http://mochi.test:8888/browser/browser/devtools/fontinspector/test/ostrich-regular.woff",
+     "http://mochi.test:8888/browser/browser/devtools/fontinspector/test/ostrich-regular.ttf",
      "font 0: right url");
   is(s[0].querySelector(".font-format").textContent,
-     "woff", "font 0: right font format");
+     "truetype", "font 0: right font format");
   is(s[0].querySelector(".font-css-name").textContent,
      "bar", "font 0: right css name");
 
