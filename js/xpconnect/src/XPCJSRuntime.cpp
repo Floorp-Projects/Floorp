@@ -2963,7 +2963,7 @@ DiagnosticMemoryCallback(void *ptr, size_t size)
 #endif
 
 static void
-AccumulateTelemetryCallback(int id, uint32_t sample)
+AccumulateTelemetryCallback(int id, uint32_t sample, const char *key)
 {
     switch (id) {
       case JS_TELEMETRY_GC_REASON:
@@ -3014,6 +3014,9 @@ AccumulateTelemetryCallback(int id, uint32_t sample)
       case JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT:
         MOZ_ASSERT(sample <= 5);
         Telemetry::Accumulate(Telemetry::JS_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, sample);
+        break;
+      case JS_TELEMETRY_ADDON_EXCEPTIONS:
+        Telemetry::Accumulate(Telemetry::JS_TELEMETRY_ADDON_EXCEPTIONS, nsDependentCString(key), sample);
         break;
       default:
         MOZ_ASSERT_UNREACHABLE("Unexpected JS_TELEMETRY id");

@@ -110,11 +110,12 @@ enum {
     JS_TELEMETRY_GC_NON_INCREMENTAL,
     JS_TELEMETRY_GC_SCC_SWEEP_TOTAL_MS,
     JS_TELEMETRY_GC_SCC_SWEEP_MAX_PAUSE_MS,
-    JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT
+    JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT,
+    JS_TELEMETRY_ADDON_EXCEPTIONS
 };
 
 typedef void
-(* JSAccumulateTelemetryDataCallback)(int id, uint32_t sample);
+(*JSAccumulateTelemetryDataCallback)(int id, uint32_t sample, const char *key);
 
 extern JS_FRIEND_API(void)
 JS_SetAccumulateTelemetryCallback(JSRuntime *rt, JSAccumulateTelemetryDataCallback callback);

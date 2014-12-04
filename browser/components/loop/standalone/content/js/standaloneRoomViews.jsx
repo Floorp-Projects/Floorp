@@ -128,6 +128,10 @@ loop.standaloneRoomViews = (function(mozL10n) {
               <p className="failed-room-message">
                 {this._getFailureString()}
               </p>
+              <button className="btn btn-join btn-info"
+                      onClick={this.props.joinRoom}>
+                {mozL10n.get("retry_call_button")}
+              </button>
             </div>
           );
         }
