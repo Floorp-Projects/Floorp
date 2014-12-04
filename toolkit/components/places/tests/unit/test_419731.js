@@ -38,7 +38,7 @@ function run_test() {
 
   // Workaround timers resolution and time skews.
   let bookmark2LastMod = PlacesUtils.bookmarks.getItemLastModified(bookmark2id);
-  PlacesUtils.bookmarks.setItemLastModified(bookmark1id, bookmark2LastMod + 1);
+  PlacesUtils.bookmarks.setItemLastModified(bookmark1id, bookmark2LastMod + 1000);
 
   // Query the tag.
   options = PlacesUtils.history.getNewQueryOptions();
@@ -76,7 +76,7 @@ function run_test() {
 
   // Workaround timers resolution and time skews.
   let bookmark1LastMod = PlacesUtils.bookmarks.getItemLastModified(bookmark1id);
-  PlacesUtils.bookmarks.setItemLastModified(bookmark2id, bookmark1LastMod + 1);
+  PlacesUtils.bookmarks.setItemLastModified(bookmark2id, bookmark1LastMod + 1000);
 
   // Check that tag container contains new title
   options = PlacesUtils.history.getNewQueryOptions();
