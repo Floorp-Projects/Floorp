@@ -26,12 +26,6 @@ AnimationPlayer::WrapObject(JSContext* aCx)
   return dom::AnimationPlayerBinding::Wrap(aCx, this);
 }
 
-Nullable<double>
-AnimationPlayer::GetStartTime() const
-{
-  return AnimationUtils::TimeDurationToDouble(mStartTime);
-}
-
 Nullable<TimeDuration>
 AnimationPlayer::GetCurrentTime() const
 {
@@ -78,6 +72,12 @@ AnimationPlayer::Pause()
 {
   DoPause();
   PostUpdate();
+}
+
+Nullable<double>
+AnimationPlayer::GetStartTimeAsDouble() const
+{
+  return AnimationUtils::TimeDurationToDouble(mStartTime);
 }
 
 Nullable<double>
