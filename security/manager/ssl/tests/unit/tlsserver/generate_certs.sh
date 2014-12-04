@@ -121,7 +121,7 @@ function make_CA {
 SERIALNO=$RANDOM
 
 function make_INT {
-  INT_RESPONSES="y\n0\ny\n2\n7\nhttp://localhost:8080/\n\nn\nn\n"
+  INT_RESPONSES="y\n0\ny\n2\n7\nhttp://localhost:8888/\n\nn\nn\n"
   NICKNAME="${1}"
   SUBJECT="${2}"
   CA="${3}"
@@ -171,7 +171,7 @@ function make_V1 {
 }
 
 function make_EE {
-  CERT_RESPONSES="n\n\ny\n2\n7\nhttp://localhost:8080/\n\nn\nn\n"
+  CERT_RESPONSES="n\n\ny\n2\n7\nhttp://localhost:8888/\n\nn\nn\n"
   NICKNAME="${1}"
   SUBJECT="${2}"
   CA="${3}"

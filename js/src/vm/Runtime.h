@@ -707,7 +707,16 @@ struct JSRuntime : public JS::shadow::Runtime,
   private:
     mozilla::Atomic<uint32_t, mozilla::Relaxed> interrupt_;
     mozilla::Atomic<uint32_t, mozilla::Relaxed> interruptPar_;
+
+    /* Call this to accumulate telemetry data. */
+    JSAccumulateTelemetryDataCallback telemetryCallback;
   public:
+    // Accumulates data for Firefox telemetry. |id| is the ID of a JS_TELEMETRY_*
+    // histogram. |key| provides an additional key to identify the histogram.
+    // |sample| is the data to add to the histogram.
+    void addTelemetry(int id, uint32_t sample, const char *key = nullptr);
+
+    void setTelemetryCallback(JSRuntime *rt, JSAccumulateTelemetryDataCallback callback);
 
     enum InterruptMode {
         RequestInterruptUrgent,
@@ -1089,9 +1098,6 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     /* Structured data callbacks are runtime-wide. */
     const JSStructuredCloneCallbacks *structuredCloneCallbacks;
-
-    /* Call this to accumulate telemetry data. */
-    JSAccumulateTelemetryDataCallback telemetryCallback;
 
     /* Optional error reporter. */
     JSErrorReporter     errorReporter;
