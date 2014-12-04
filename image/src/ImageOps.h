@@ -38,7 +38,8 @@ public:
    * @param aClip          The rectangle to clip the image against.
    */
   static already_AddRefed<Image> Clip(Image* aImage, nsIntRect aClip);
-  static already_AddRefed<imgIContainer> Clip(imgIContainer* aImage, nsIntRect aClip);
+  static already_AddRefed<imgIContainer> Clip(imgIContainer* aImage,
+                                              nsIntRect aClip);
 
   /**
    * Creates a version of an existing image which is rotated and/or flipped to
@@ -47,15 +48,18 @@ public:
    * @param aImage         The existing image.
    * @param aOrientation   The desired orientation.
    */
-  static already_AddRefed<Image> Orient(Image* aImage, Orientation aOrientation);
-  static already_AddRefed<imgIContainer> Orient(imgIContainer* aImage, Orientation aOrientation);
+  static already_AddRefed<Image> Orient(Image* aImage,
+                                        Orientation aOrientation);
+  static already_AddRefed<imgIContainer> Orient(imgIContainer* aImage,
+                                                Orientation aOrientation);
 
   /**
    * Creates an image from a gfxDrawable.
    *
    * @param aDrawable      The gfxDrawable.
    */
-  static already_AddRefed<imgIContainer> CreateFromDrawable(gfxDrawable* aDrawable);
+  static already_AddRefed<imgIContainer>
+  CreateFromDrawable(gfxDrawable* aDrawable);
 
 private:
   // This is a static utility class, so disallow instantiation.
