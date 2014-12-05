@@ -334,8 +334,8 @@ class AssemblerX86Shared : public AssemblerShared
     void copyDataRelocationTable(uint8_t *dest);
     void copyPreBarrierTable(uint8_t *dest);
 
-    bool addCodeLabel(CodeLabel label) {
-        return codeLabels_.append(label);
+    void addCodeLabel(CodeLabel label) {
+        propagateOOM(codeLabels_.append(label));
     }
     size_t numCodeLabels() const {
         return codeLabels_.length();

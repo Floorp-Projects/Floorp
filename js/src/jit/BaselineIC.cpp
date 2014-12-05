@@ -6145,7 +6145,7 @@ DoGetNameFallback(JSContext *cx, BaselineFrame *frame, ICGetName_Fallback *stub_
     mozilla::DebugOnly<JSOp> op = JSOp(*pc);
     FallbackICSpew(cx, stub, "GetName(%s)", js_CodeName[JSOp(*pc)]);
 
-    MOZ_ASSERT(op == JSOP_NAME || op == JSOP_GETGNAME);
+    MOZ_ASSERT(op == JSOP_GETNAME || op == JSOP_GETGNAME);
 
     RootedPropertyName name(cx, script->getName(pc));
 

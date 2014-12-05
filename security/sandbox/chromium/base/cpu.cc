@@ -51,6 +51,16 @@ CPU::CPU()
 namespace {
 
 #if defined(ARCH_CPU_X86_FAMILY)
+#if defined(_MSC_VER) && (_MSC_FULL_VER < 160040219)
+// Prior to VS2010 SP1, _xgetbv is not defined in immintrin.h, so we need to
+// define our own version using the assembly operation.
+// By using __fastcall we ensure that xcr is already in register ecx for xgetbv
+// and xgetbv populates the correct registers (eax edx) for our return value.
+uint64_t __fastcall _xgetbv(uint32_t xcr) {
+  __asm xgetbv;
+}
+#endif
+
 #ifndef _MSC_VER
 
 #if defined(__pic__) && defined(__i386__)

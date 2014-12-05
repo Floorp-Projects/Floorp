@@ -197,6 +197,13 @@ DNSName(const char (&bytes)[L])
                             L - 1));
 }
 
+inline ByteString
+IPAddress()
+{
+  // (2 << 6) means "context-specific", 7 is the GeneralName tag.
+  return TLV((2 << 6) | 7, ByteString());
+}
+
 template <size_t L>
 inline ByteString
 IPAddress(const uint8_t (&bytes)[L])
