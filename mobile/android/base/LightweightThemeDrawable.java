@@ -21,8 +21,8 @@ import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
 
 /**
- * A special drawable used with lightweight themes. This draws a color 
- * (with an optional color-filter) and a bitmap (with a linear gradient 
+ * A special drawable used with lightweight themes. This draws a color
+ * (with an optional color-filter) and a bitmap (with a linear gradient
  * to specify the alpha) in order.
  */
 public class LightweightThemeDrawable extends Drawable {
@@ -81,6 +81,8 @@ public class LightweightThemeDrawable extends Drawable {
     /**
      * Creates a paint that paint a particular color.
      *
+     * Note that the given color should include an alpha value.
+     *
      * @param color The color to be painted.
      */
     public void setColor(int color) {
@@ -90,6 +92,8 @@ public class LightweightThemeDrawable extends Drawable {
 
     /**
      * Creates a paint that paint a particular color, and a filter for the color.
+     *
+     * Note that the given color should include an alpha value.
      *
      * @param color The color to be painted.
      * @param filter The filter color to be applied using SRC_OVER mode.
