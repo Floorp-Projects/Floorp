@@ -246,6 +246,11 @@ nsLineLayout::EndLineReflow()
   printf(": EndLineReflow: width=%d\n", mRootSpan->mICoord - mRootSpan->mIStart);
 #endif
 
+  NS_ASSERTION(mBaseLineLayout == this ||
+               (!mSpansAllocated && !mSpansFreed && !mSpanFreeList &&
+                !mFramesAllocated && !mFramesFreed && !mFrameFreeList),
+               "Allocated frames or spans on non-base line layout?");
+
   FreeSpan(mRootSpan);
   mCurrentSpan = mRootSpan = nullptr;
 
@@ -364,18 +369,18 @@ nsLineLayout::UpdateBand(WritingMode aWM,
 nsLineLayout::PerSpanData*
 nsLineLayout::NewPerSpanData()
 {
-  PerSpanData* psd = mSpanFreeList;
+  PerSpanData* psd = mBaseLineLayout->mSpanFreeList;
   if (!psd) {
     void *mem;
     size_t sz = sizeof(PerSpanData);
-    PL_ARENA_ALLOCATE(mem, &mArena, sz);
+    PL_ARENA_ALLOCATE(mem, &mBaseLineLayout->mArena, sz);
     if (!mem) {
       NS_ABORT_OOM(sz);
     }
     psd = reinterpret_cast<PerSpanData*>(mem);
   }
   else {
-    mSpanFreeList = psd->mNextFreeSpan;
+    mBaseLineLayout->mSpanFreeList = psd->mNextFreeSpan;
   }
   psd->mParent = nullptr;
   psd->mFrame = nullptr;
@@ -386,7 +391,7 @@ nsLineLayout::NewPerSpanData()
   psd->mHasNonemptyContent = false;
 
 #ifdef DEBUG
-  mSpansAllocated++;
+  mBaseLineLayout->mSpansAllocated++;
 #endif
   return psd;
 }
@@ -483,10 +488,10 @@ nsLineLayout::SplitLineTo(int32_t aNewCount)
       pfd = next;
       while (nullptr != pfd) {
         next = pfd->mNext;
-        pfd->mNext = mFrameFreeList;
-        mFrameFreeList = pfd;
+        pfd->mNext = mBaseLineLayout->mFrameFreeList;
+        mBaseLineLayout->mFrameFreeList = pfd;
 #ifdef DEBUG
-        mFramesFreed++;
+        mBaseLineLayout->mFramesFreed++;
 #endif
         if (nullptr != pfd->mSpan) {
           FreeSpan(pfd->mSpan);
@@ -530,10 +535,10 @@ nsLineLayout::PushFrame(nsIFrame* aFrame)
   }
 
   // Now free it, and if it has a span, free that too
-  pfd->mNext = mFrameFreeList;
-  mFrameFreeList = pfd;
+  pfd->mNext = mBaseLineLayout->mFrameFreeList;
+  mBaseLineLayout->mFrameFreeList = pfd;
 #ifdef DEBUG
-  mFramesFreed++;
+  mBaseLineLayout->mFramesFreed++;
 #endif
   if (nullptr != pfd->mSpan) {
     FreeSpan(pfd->mSpan);
@@ -555,19 +560,19 @@ nsLineLayout::FreeSpan(PerSpanData* psd)
       FreeSpan(pfd->mSpan);
     }
     PerFrameData* next = pfd->mNext;
-    pfd->mNext = mFrameFreeList;
-    mFrameFreeList = pfd;
+    pfd->mNext = mBaseLineLayout->mFrameFreeList;
+    mBaseLineLayout->mFrameFreeList = pfd;
 #ifdef DEBUG
-    mFramesFreed++;
+    mBaseLineLayout->mFramesFreed++;
 #endif
     pfd = next;
   }
 
   // Now put the span on the free list since it's free too
-  psd->mNextFreeSpan = mSpanFreeList;
-  mSpanFreeList = psd;
+  psd->mNextFreeSpan = mBaseLineLayout->mSpanFreeList;
+  mBaseLineLayout->mSpanFreeList = psd;
 #ifdef DEBUG
-  mSpansFreed++;
+  mBaseLineLayout->mSpansFreed++;
 #endif
 }
 
@@ -588,18 +593,18 @@ nsLineLayout::IsZeroBSize()
 nsLineLayout::PerFrameData*
 nsLineLayout::NewPerFrameData(nsIFrame* aFrame)
 {
-  PerFrameData* pfd = mFrameFreeList;
+  PerFrameData* pfd = mBaseLineLayout->mFrameFreeList;
   if (!pfd) {
     void *mem;
     size_t sz = sizeof(PerFrameData);
-    PL_ARENA_ALLOCATE(mem, &mArena, sz);
+    PL_ARENA_ALLOCATE(mem, &mBaseLineLayout->mArena, sz);
     if (!mem) {
       NS_ABORT_OOM(sz);
     }
     pfd = reinterpret_cast<PerFrameData*>(mem);
   }
   else {
-    mFrameFreeList = pfd->mNext;
+    mBaseLineLayout->mFrameFreeList = pfd->mNext;
   }
   pfd->mSpan = nullptr;
   pfd->mNext = nullptr;
@@ -619,7 +624,7 @@ nsLineLayout::NewPerFrameData(nsIFrame* aFrame)
 
 #ifdef DEBUG
   pfd->mBlockDirAlign = 0xFF;
-  mFramesAllocated++;
+  mBaseLineLayout->mFramesAllocated++;
 #endif
   return pfd;
 }
