@@ -12,7 +12,6 @@
 #include "jsprototypes.h"
 
 #define FOR_EACH_COMMON_PROPERTYNAME(macro) \
-    macro(add, add, "add") \
     macro(anonymous, anonymous, "anonymous") \
     macro(Any, Any, "Any") \
     macro(apply, apply, "apply") \
@@ -214,7 +213,6 @@
     macro(variable, variable, "variable") \
     macro(void0, void0, "(void 0)") \
     macro(watch, watch, "watch") \
-    macro(WeakSet_add, WeakSet_add, "WeakSet_add") \
     macro(writable, writable, "writable") \
     macro(w, w, "w") \
     macro(x, x, "x") \
