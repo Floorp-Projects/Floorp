@@ -1,17 +1,24 @@
 #! /bin/bash -ex
 
-DEST=/home/worker/source
+DEST=/home/worker/source/gecko
 
-base=$1
-head=$2
-ref=$3
-rev=$4
+test $GECKO_BASE_REPOSITORY
+test $GECKO_HEAD_REPOSITORY
+test $GECKO_HEAD_REF
+test $GECKO_HEAD_REV
 
-commands=${@:5}
+mkdir -p $(dirname $DEST)
 
-tc-vcs clone $base $DEST
-tc-vcs checkout-revision $DEST $head $ref $rev
-tc-vcs revision $DEST
+if [ ! -d $DEST ];
+then
+  tc-vcs clone $GECKO_BASE_REPOSITORY $DEST
+fi
 
+tc-vcs checkout-revision \
+  $DEST \
+  $GECKO_HEAD_REPOSITORY \
+  $GECKO_HEAD_REV \
+  $GECKO_HEAD_REF
+
+echo "At revision: $(tc-vcs revision $DEST)"
 cd $DEST
-eval $commands

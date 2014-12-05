@@ -25,7 +25,7 @@ task:
 
     # Note: This task is built server side without the context or tooling that
     # exist in tree so we must hard code the version
-    image: 'quay.io/mozilla/decision:0.0.1'
+    image: 'quay.io/mozilla/decision:0.0.3'
 
     # Virtually no network or other potentially risky operations happen as part
     # of the task timeout aside from the initial clone. We intentionally have
@@ -34,17 +34,17 @@ task:
     maxRunTime: 1800
 
     command:
-      - entrypoint
+      - /bin/bash
+      - -c
       - >
-        https://hg.mozilla.com/mozilla-central
-        https://hg.mozilla.com/try
-        '{{revision}}'
-        '{{revision}}'
-        "mach taskcluster-trygraph
+        source $(which entrypoint) &&
+        mach taskcluster-trygraph
          --message='{{comment}}'
-         --revision='{{revision}}'
-         --repository='{{repository}}'
          --owner='{{owner}}'"
+         --extend-graph > /home/worker/graph.json
+    graphs:
+      - /home/worker/graph.json
+
   extra:
     treeherder:
       symbol: D

@@ -15,7 +15,7 @@ if [ ! -d mozharness ]; then
   hg clone https://hg.mozilla.org/build/mozharness mozharness
 fi
 
-OBJDIR="$HOME/object-folder-$B2G_CONFIG-$B2G_DEBUG"
+OBJDIR="$HOME/object-folder"
 
 if [ ! -d $OBJDIR ]; then
   mkdir -p $OBJDIR
