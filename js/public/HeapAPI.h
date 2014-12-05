@@ -282,6 +282,10 @@ class JS_FRIEND_API(GCCellPtr)
     uint64_t unsafeAsInteger() const {
         return reinterpret_cast<uint64_t>(unsafeGetUntypedPtr());
     }
+    // Inline mark bitmap access requires direct pointer arithmetic.
+    uintptr_t unsafeAsUIntPtr() const {
+        return reinterpret_cast<uintptr_t>(unsafeGetUntypedPtr());
+    }
 
   private:
     uintptr_t checkedCast(void *p, JSGCTraceKind traceKind) {
@@ -304,47 +308,45 @@ class JS_FRIEND_API(GCCellPtr)
 
 namespace js {
 namespace gc {
+namespace detail {
 
 static MOZ_ALWAYS_INLINE uintptr_t *
-GetGCThingMarkBitmap(const void *thing)
+GetGCThingMarkBitmap(const uintptr_t addr)
 {
-    MOZ_ASSERT(thing);
-    uintptr_t addr = uintptr_t(thing);
-    addr &= ~js::gc::ChunkMask;
-    addr |= js::gc::ChunkMarkBitmapOffset;
-    return reinterpret_cast<uintptr_t *>(addr);
+    MOZ_ASSERT(addr);
+    const uintptr_t bmap_addr = (addr & ~ChunkMask) | ChunkMarkBitmapOffset;
+    return reinterpret_cast<uintptr_t *>(bmap_addr);
 }
 
 static MOZ_ALWAYS_INLINE JS::shadow::Runtime *
-GetGCThingRuntime(const void *thing)
+GetGCThingRuntime(const uintptr_t addr)
 {
-    MOZ_ASSERT(thing);
-    uintptr_t addr = uintptr_t(thing);
-    addr &= ~js::gc::ChunkMask;
-    addr |= js::gc::ChunkRuntimeOffset;
-    return *reinterpret_cast<JS::shadow::Runtime **>(addr);
+    MOZ_ASSERT(addr);
+    const uintptr_t rt_addr = (addr & ~ChunkMask) | ChunkRuntimeOffset;
+    return *reinterpret_cast<JS::shadow::Runtime **>(rt_addr);
 }
 
 static MOZ_ALWAYS_INLINE void
-GetGCThingMarkWordAndMask(const void *thing, uint32_t color,
+GetGCThingMarkWordAndMask(const uintptr_t addr, uint32_t color,
                           uintptr_t **wordp, uintptr_t *maskp)
 {
-    uintptr_t addr = uintptr_t(thing);
-    size_t bit = (addr & js::gc::ChunkMask) / js::gc::CellSize + color;
+    MOZ_ASSERT(addr);
+    const size_t bit = (addr & js::gc::ChunkMask) / js::gc::CellSize + color;
     MOZ_ASSERT(bit < js::gc::ChunkMarkBitmapBits);
-    uintptr_t *bitmap = GetGCThingMarkBitmap(thing);
+    uintptr_t *bitmap = GetGCThingMarkBitmap(addr);
     const uintptr_t nbits = sizeof(*bitmap) * CHAR_BIT;
     *maskp = uintptr_t(1) << (bit % nbits);
     *wordp = &bitmap[bit / nbits];
 }
 
 static MOZ_ALWAYS_INLINE JS::shadow::ArenaHeader *
-GetGCThingArena(void *thing)
+GetGCThingArena(const uintptr_t addr)
 {
-    uintptr_t addr = uintptr_t(thing);
-    addr &= ~js::gc::ArenaMask;
-    return reinterpret_cast<JS::shadow::ArenaHeader *>(addr);
+    MOZ_ASSERT(addr);
+    return reinterpret_cast<JS::shadow::ArenaHeader *>(addr & ~ArenaMask);
 }
+
+} /* namespace detail */
 
 MOZ_ALWAYS_INLINE bool
 IsInsideNursery(const js::gc::Cell *cell)
@@ -369,7 +371,7 @@ GetTenuredGCThingZone(void *thing)
 {
     MOZ_ASSERT(thing);
     MOZ_ASSERT(!js::gc::IsInsideNursery((js::gc::Cell *)thing));
-    return js::gc::GetGCThingArena(thing)->zone;
+    return js::gc::detail::GetGCThingArena(uintptr_t(thing))->zone;
 }
 
 extern JS_PUBLIC_API(Zone *)
@@ -387,7 +389,7 @@ GCThingIsMarkedGray(void *thing)
     if (js::gc::IsInsideNursery((js::gc::Cell *)thing))
         return false;
     uintptr_t *word, mask;
-    js::gc::GetGCThingMarkWordAndMask(thing, js::gc::GRAY, &word, &mask);
+    js::gc::detail::GetGCThingMarkWordAndMask(uintptr_t(thing), js::gc::GRAY, &word, &mask);
     return *word & mask;
 }
 
