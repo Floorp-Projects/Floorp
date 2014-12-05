@@ -2925,6 +2925,17 @@ nsCSSRuleProcessor::MediumFeaturesChanged(nsPresContext* aPresContext)
   return (old != mRuleCascades);
 }
 
+UniquePtr<nsMediaQueryResultCacheKey>
+nsCSSRuleProcessor::CloneMQCacheKey()
+{
+  RuleCascadeData* c = mRuleCascades;
+  if (!c || !c->mCacheKey.HasFeatureConditions()) {
+    return nullptr;
+  }
+
+  return MakeUnique<nsMediaQueryResultCacheKey>(c->mCacheKey);
+}
+
 /* virtual */ size_t
 nsCSSRuleProcessor::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
