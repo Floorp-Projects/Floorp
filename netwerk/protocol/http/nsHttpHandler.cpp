@@ -1562,22 +1562,47 @@ nsHttpHandler::TimerCallback(nsITimer * aTimer, void * aClosure)
         thisObject->mCapabilities &= ~NS_HTTP_ALLOW_PIPELINING;
 }
 
+/**
+ * Currently, only regularizes the case of subtags.
+ */
 static void
-NormalizeLanguageTag(char *code)
+CanonicalizeLanguageTag(char *languageTag)
 {
-    bool is_region = false;
-    while (*code != '\0')
-    {
-        if (*code == '-') {
-            is_region = true;
+    char *s = languageTag;
+    while (*s != '\0') {
+        *s = nsCRT::ToLower(*s);
+        s++;
+    }
+
+    s = languageTag;
+    bool isFirst = true;
+    bool seenSingleton = false;
+    while (*s != '\0') {
+        char *subTagEnd = strchr(s, '-');
+        if (subTagEnd == nullptr) {
+            subTagEnd = strchr(s, '\0');
+        }
+
+        if (isFirst) {
+            isFirst = false;
+        } else if (seenSingleton) {
+            // Do nothing
         } else {
-            if (is_region) {
-                *code = nsCRT::ToUpper(*code);
-            } else {
-                *code = nsCRT::ToLower(*code);
+            size_t subTagLength = subTagEnd - s;
+            if (subTagLength == 1) {
+                seenSingleton = true;
+            } else if (subTagLength == 2) {
+                *s = nsCRT::ToUpper(*s);
+                *(s + 1) = nsCRT::ToUpper(*(s + 1));
+            } else if (subTagLength == 4) {
+                *s = nsCRT::ToUpper(*s);
             }
         }
-        code++;
+
+        s = subTagEnd;
+        if (*s != '\0') {
+            s++;
+        }
     }
 }
 
@@ -1636,7 +1661,7 @@ PrepareAcceptLanguages(const char *i_AcceptLanguages, nsACString &o_AcceptLangua
             *trim = '\0';
 
         if (*token != '\0') {
-            NormalizeLanguageTag(token);
+            CanonicalizeLanguageTag(token);
 
             comma = count_n++ != 0 ? "," : ""; // delimiter if not first item
             uint32_t u = QVAL_TO_UINT(q);
