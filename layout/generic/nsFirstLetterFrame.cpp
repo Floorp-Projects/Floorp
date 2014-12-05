@@ -194,7 +194,7 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
     WritingMode kidWritingMode = GetWritingMode(kid);
     LogicalSize kidAvailSize = availSize.ConvertTo(kidWritingMode, wm);
     nsHTMLReflowState rs(aPresContext, aReflowState, kid, kidAvailSize);
-    nsLineLayout ll(aPresContext, nullptr, &aReflowState, nullptr);
+    nsLineLayout ll(aPresContext, nullptr, &aReflowState, nullptr, nullptr);
 
     ll.BeginLineReflow(bp.IStart(wm), bp.BStart(wm),
                        availSize.ISize(wm), NS_UNCONSTRAINEDSIZE,
