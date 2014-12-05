@@ -1092,6 +1092,9 @@ nsCSSRuleProcessor::nsCSSRuleProcessor(const sheet_array_type& aSheets,
                                          aPreviousCSSRuleProcessor)
   : mSheets(aSheets)
   , mRuleCascades(nullptr)
+  , mPreviousCacheKey(aPreviousCSSRuleProcessor
+                       ? aPreviousCSSRuleProcessor->CloneMQCacheKey()
+                       : nullptr)
   , mLastPresContext(nullptr)
   , mScopeElement(aScopeElement)
   , mSheetType(aSheetType)
@@ -3036,6 +3039,10 @@ nsCSSRuleProcessor::AppendFontFeatureValuesRules(
 nsresult
 nsCSSRuleProcessor::ClearRuleCascades()
 {
+  if (!mPreviousCacheKey) {
+    mPreviousCacheKey = CloneMQCacheKey();
+  }
+
   // We rely on our caller (perhaps indirectly) to do something that
   // will rebuild style data and the user font set (either
   // nsIPresShell::ReconstructStyleData or
@@ -3560,6 +3567,11 @@ nsCSSRuleProcessor::RefreshRuleCascade(nsPresContext* aPresContext)
       return;
     }
   }
+
+  // We're going to make a new rule cascade; this means that we should
+  // now stop using the previous cache key that we're holding on to from
+  // the last time we had rule cascades.
+  mPreviousCacheKey = nullptr;
 
   if (mSheets.Length() != 0) {
     nsAutoPtr<RuleCascadeData> newCascade(
