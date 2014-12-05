@@ -21,7 +21,7 @@ namespace mozilla {
 template <typename T>
 struct IsPixel : FalseType {};
 
-// See struct decleration for a description of each unit type
+// See struct declaration for a description of each unit type.
 struct CSSPixel;
 struct LayoutDevicePixel;
 struct LayerPixel;
