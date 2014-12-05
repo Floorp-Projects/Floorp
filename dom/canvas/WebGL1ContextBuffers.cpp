@@ -34,3 +34,19 @@ WebGL1Context::ValidateBufferIndexedTarget(GLenum target, const char* info)
     ErrorInvalidEnumInfo(info, target);
     return false;
 }
+
+/** Buffer and Target validation for BindBuffer */
+bool
+WebGL1Context::ValidateBufferForTarget(GLenum target, WebGLBuffer* buffer,
+                                       const char* info)
+{
+    if (!buffer)
+        return true;
+
+    if (buffer->HasEverBeenBound() && target != buffer->Target()) {
+        ErrorInvalidOperation("%s: buffer already bound to a different target", info);
+        return false;
+    }
+
+    return true;
+}
