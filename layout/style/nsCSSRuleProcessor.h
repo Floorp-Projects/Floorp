@@ -207,6 +207,11 @@ private:
   // active first, then cached (most recent first)
   RuleCascadeData* mRuleCascades;
 
+  // If we cleared our mRuleCascades or replaced a previous rule
+  // processor, this is the media query result cache key that was used
+  // before we lost the old rule cascades.
+  mozilla::UniquePtr<nsMediaQueryResultCacheKey> mPreviousCacheKey;
+
   // The last pres context for which GetRuleCascades was called.
   nsPresContext *mLastPresContext;
 
