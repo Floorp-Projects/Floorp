@@ -141,12 +141,13 @@ OrientedImage::GetFrame(uint32_t aWhichFrame,
   gfxUtils::DrawPixelSnapped(ctx, drawable, size,
                              ImageRegion::Create(size),
                              surfaceFormat, GraphicsFilter::FILTER_FAST);
-  
+
   return target->Snapshot();
 }
 
 NS_IMETHODIMP
-OrientedImage::GetImageContainer(LayerManager* aManager, ImageContainer** _retval)
+OrientedImage::GetImageContainer(LayerManager* aManager,
+                                 ImageContainer** _retval)
 {
   // XXX(seth): We currently don't have a way of orienting the result of
   // GetImageContainer. We work around this by always returning null, but if it
@@ -168,7 +169,8 @@ struct MatrixBuilder
 
   gfxMatrix Build() { return mMatrix; }
 
-  void Scale(gfxFloat aX, gfxFloat aY) {
+  void Scale(gfxFloat aX, gfxFloat aY)
+  {
     if (mInvert) {
       mMatrix *= gfxMatrix::Scaling(1.0 / aX, 1.0 / aY);
     } else {
@@ -176,7 +178,8 @@ struct MatrixBuilder
     }
   }
 
-  void Rotate(gfxFloat aPhi) {
+  void Rotate(gfxFloat aPhi)
+  {
     if (mInvert) {
       mMatrix *= gfxMatrix::Rotation(-aPhi);
     } else {
@@ -184,7 +187,8 @@ struct MatrixBuilder
     }
   }
 
-  void Translate(gfxPoint aDelta) {
+  void Translate(gfxPoint aDelta)
+  {
     if (mInvert) {
       mMatrix *= gfxMatrix::Translation(-aDelta);
     } else {
@@ -310,11 +314,13 @@ OrientedImage::Draw(gfxContext* aContext,
 }
 
 nsIntSize
-OrientedImage::OptimalImageSizeForDest(const gfxSize& aDest, uint32_t aWhichFrame,
+OrientedImage::OptimalImageSizeForDest(const gfxSize& aDest,
+                                       uint32_t aWhichFrame,
                                        GraphicsFilter aFilter, uint32_t aFlags)
 {
   if (!mOrientation.SwapsWidthAndHeight()) {
-    return InnerImage()->OptimalImageSizeForDest(aDest, aWhichFrame, aFilter, aFlags);
+    return InnerImage()->OptimalImageSizeForDest(aDest, aWhichFrame, aFilter,
+                                                 aFlags);
   }
 
   // Swap the size for the calculation, then swap it back for the caller.
