@@ -565,7 +565,7 @@ nsLayoutUtils::ComputeSuitableScaleForAnimation(nsIContent* aContent)
 
   if (maxScale.width == std::numeric_limits<gfxFloat>::min()) {
     // We didn't encounter a transform
-    aMaxScale = aMinScale = gfxSize(1.0, 1.0);
+    maxScale = minScale = gfxSize(1.0, 1.0);
   }
 
   return gfxSize(GetSuitableScale(maxScale.width, minScale.width),
