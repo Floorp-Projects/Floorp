@@ -1087,7 +1087,9 @@ RuleCascadeData::AttributeListFor(nsIAtom* aAttribute)
 
 nsCSSRuleProcessor::nsCSSRuleProcessor(const sheet_array_type& aSheets,
                                        uint8_t aSheetType,
-                                       Element* aScopeElement)
+                                       Element* aScopeElement,
+                                       nsCSSRuleProcessor*
+                                         aPreviousCSSRuleProcessor)
   : mSheets(aSheets)
   , mRuleCascades(nullptr)
   , mLastPresContext(nullptr)
