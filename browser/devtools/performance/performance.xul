@@ -38,13 +38,10 @@
                        label="&profilerUI.importButton;"/>
       </hbox>
     </toolbar>
-    <splitter class="devtools-horizontal-splitter" />
     <box id="overview-pane"
-         class="devtools-responsive-container"
-         flex="1">
+         class="devtools-responsive-container">
       <vbox id="time-framerate" flex="1"/>
     </box>
-    <splitter class="devtools-horizontal-splitter" />
     <toolbar id="details-toolbar" class="devtools-toolbar">
       <hbox class="devtools-toolbarbutton-group">
         <toolbarbutton id="select-waterfall-view"
