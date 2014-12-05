@@ -391,8 +391,7 @@ loop.store.ActiveRoomStore = (function() {
       this._leaveRoom(ROOM_STATES.CLOSING);
 
       // If we're closing the window, we can stop listening to updates.
-      this._mozLoop.rooms.off("update:" + this.getStoreState().roomToken,
-        this._handleRoomUpdate.bind(this));
+      this._mozLoop.rooms.off("update:" + this.getStoreState().roomToken);
     },
 
     /**
