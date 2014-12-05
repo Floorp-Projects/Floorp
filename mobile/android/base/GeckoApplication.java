@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.home.HomePanelsManager;
+import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.HardwareUtils;

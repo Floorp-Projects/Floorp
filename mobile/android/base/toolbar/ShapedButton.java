@@ -5,9 +5,9 @@
 package org.mozilla.gecko.toolbar;
 
 import org.mozilla.gecko.GeckoApplication;
-import org.mozilla.gecko.LightweightTheme;
-import org.mozilla.gecko.LightweightThemeDrawable;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.lwt.LightweightTheme;
+import org.mozilla.gecko.lwt.LightweightThemeDrawable;
 import org.mozilla.gecko.tabs.TabCurve;
 import org.mozilla.gecko.widget.ThemedImageButton;
 
