@@ -610,6 +610,9 @@ pref("app.update.log", true);
 pref("shutdown.watchdog.timeoutSecs", -1);
 #endif
 
+// Allow webapps update checking
+pref("webapps.update.enabled", true);
+
 // Check daily for apps updates.
 pref("webapps.update.interval", 86400);
 
