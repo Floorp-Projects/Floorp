@@ -19,8 +19,6 @@
 
 #include "jsobjinlines.h"
 
-#include "vm/Interpreter-inl.h"
-
 using namespace js;
 using namespace js::gc;
 
@@ -530,20 +528,6 @@ WeakMap_construct(JSContext *cx, unsigned argc, Value *vp)
 
     // ES6 23.3.1.1 steps 5-6, 11.
     if (!args.get(0).isNullOrUndefined()) {
-        // Steps 7a-b.
-        RootedValue adderVal(cx);
-        if (!JSObject::getProperty(cx, obj, obj, cx->names().set, &adderVal))
-            return false;
-
-        // Step 7c.
-        if (!IsCallable(adderVal))
-            return ReportIsNotFunction(cx, adderVal);
-
-        bool isOriginalAdder = IsNativeFunction(adderVal, WeakMap_set);
-        RootedValue mapVal(cx, ObjectValue(*obj));
-        FastInvokeGuard fig(cx, adderVal);
-        InvokeArgs &args2 = fig.args();
-
         // Steps 7d-e.
         JS::ForOfIterator iter(cx);
         if (!iter.init(args[0]))
@@ -582,27 +566,14 @@ WeakMap_construct(JSContext *cx, unsigned argc, Value *vp)
                 return false;
 
             // Steps 12k-l.
-            if (isOriginalAdder) {
-                if (keyVal.isPrimitive()) {
-                    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT);
-                    return false;
-                }
-
-                keyObject = &keyVal.toObject();
-                if (!SetWeakMapEntry(cx, obj, keyObject, val))
-                    return false;
-            } else {
-                if (!args2.init(2))
-                    return false;
-
-                args2.setCallee(adderVal);
-                args2.setThis(mapVal);
-                args2[0].set(keyVal);
-                args2[1].set(val);
-
-                if (!fig.invoke(cx))
-                    return false;
+            if (keyVal.isPrimitive()) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT);
+                return false;
             }
+
+            keyObject = &keyVal.toObject();
+            if (!SetWeakMapEntry(cx, obj, keyObject, val))
+                return false;
         }
     }
 
