@@ -37,16 +37,7 @@ struct nsMediaExpression {
 
   // aActualValue must be obtained from mFeature->mGetter
   bool Matches(nsPresContext* aPresContext,
-               const nsCSSValue& aActualValue) const;
-
-  bool operator==(const nsMediaExpression& aOther) const {
-    return mFeature == aOther.mFeature && // pointer equality fine (atom-like)
-           mRange == aOther.mRange &&
-           mValue == aOther.mValue;
-  }
-  bool operator!=(const nsMediaExpression& aOther) const {
-    return !(*this == aOther);
-  }
+                 const nsCSSValue& aActualValue) const;
 };
 
 /**
@@ -82,21 +73,6 @@ public:
   void AddExpression(const nsMediaExpression* aExpression,
                      bool aExpressionMatches);
   bool Matches(nsPresContext* aPresContext) const;
-  bool HasFeatureConditions() const {
-    return !mFeatureCache.IsEmpty();
-  }
-
-  /**
-   * An operator== that implements list equality, which isn't quite as
-   * good as set equality, but catches the trivial equality cases.
-   */
-  bool operator==(const nsMediaQueryResultCacheKey& aOther) const {
-    return mMedium == aOther.mMedium &&
-           mFeatureCache == aOther.mFeatureCache;
-  }
-  bool operator!=(const nsMediaQueryResultCacheKey& aOther) const {
-    return !(*this == aOther);
-  }
 private:
   struct ExpressionEntry {
     // FIXME: if we were better at maintaining invariants about clearing
@@ -104,26 +80,10 @@ private:
     // nsMediaExpression*| instead.
     nsMediaExpression mExpression;
     bool mExpressionMatches;
-
-    bool operator==(const ExpressionEntry& aOther) const {
-      return mExpression == aOther.mExpression &&
-             mExpressionMatches == aOther.mExpressionMatches;
-    }
-    bool operator!=(const ExpressionEntry& aOther) const {
-      return !(*this == aOther);
-    }
   };
   struct FeatureEntry {
     const nsMediaFeature *mFeature;
     InfallibleTArray<ExpressionEntry> mExpressions;
-
-    bool operator==(const FeatureEntry& aOther) const {
-      return mFeature == aOther.mFeature &&
-             mExpressions == aOther.mExpressions;
-    }
-    bool operator!=(const FeatureEntry& aOther) const {
-      return !(*this == aOther);
-    }
   };
   nsCOMPtr<nsIAtom> mMedium;
   nsTArray<FeatureEntry> mFeatureCache;
