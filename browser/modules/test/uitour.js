@@ -43,23 +43,54 @@ if (typeof Mozilla == 'undefined') {
 		var id = _generateCallbackID();
 
 		function listener(event) {
-			if (typeof event.detail != "object")
+			if (typeof event.detail != 'object')
 				return;
 			if (event.detail.callbackID != id)
 				return;
 
-			document.removeEventListener("mozUITourResponse", listener);
+			document.removeEventListener('mozUITourResponse', listener);
 			callback(event.detail.data);
 		}
-		document.addEventListener("mozUITourResponse", listener);
+		document.addEventListener('mozUITourResponse', listener);
 
 		return id;
 	}
 
+  var notificationListener = null;
+  function _notificationListener(event) {
+    if (typeof event.detail != 'object')
+      return;
+    if (typeof notificationListener != 'function')
+      return;
+
+    notificationListener(event.detail.event, event.detail.params);
+  }
+
 	Mozilla.UITour.DEFAULT_THEME_CYCLE_DELAY = 10 * 1000;
 
-	Mozilla.UITour.CONFIGNAME_SYNC = "sync";
-	Mozilla.UITour.CONFIGNAME_AVAILABLETARGETS = "availableTargets";
+	Mozilla.UITour.CONFIGNAME_SYNC = 'sync';
+	Mozilla.UITour.CONFIGNAME_AVAILABLETARGETS = 'availableTargets';
+
+  Mozilla.UITour.ping = function(callback) {
+    var data = {};
+    if (callback) {
+      data.callbackID = _waitForCallback(callback);
+    }
+    _sendEvent('ping', data);
+  };
+
+  Mozilla.UITour.observe = function(listener, callback) {
+    notificationListener = listener;
+
+    if (listener) {
+      document.addEventListener('mozUITourNotification',
+                                _notificationListener);
+      Mozilla.UITour.ping(callback);
+    } else {
+      document.removeEventListener('mozUITourNotification',
+                                   _notificationListener);
+    }
+  };
 
 	Mozilla.UITour.registerPageID = function(pageID) {
 		_sendEvent('registerPageID', {
