@@ -160,8 +160,9 @@ TraceWeakMappingChild(JSTracer* aTrc, void** aThingp, JSGCTraceKind aKind)
   }
 
   if (AddToCCKind(aKind)) {
-    tracer->mCb.NoteWeakMapping(tracer->mMap, tracer->mKey.asCell(),
-                                tracer->mKeyDelegate, thing);
+    tracer->mCb.NoteWeakMapping(tracer->mMap, tracer->mKey,
+                                tracer->mKeyDelegate,
+                                JS::GCCellPtr(thing, aKind));
     tracer->mTracedAny = true;
   } else {
     JS_TraceChildren(aTrc, thing, aKind);
@@ -214,7 +215,7 @@ TraceWeakMapping(js::WeakMapTracer* aTrc, JSObject* aMap,
   }
 
   if (AddToCCKind(aValue.kind())) {
-    tracer->mCb.NoteWeakMapping(aMap, aKey.asCell(), kdelegate, aValue.asCell());
+    tracer->mCb.NoteWeakMapping(aMap, aKey, kdelegate, aValue);
   } else {
     tracer->mChildTracer.mTracedAny = false;
     tracer->mChildTracer.mMap = aMap;
@@ -229,7 +230,8 @@ TraceWeakMapping(js::WeakMapTracer* aTrc, JSObject* aMap,
     // if we haven't already.
     if (!tracer->mChildTracer.mTracedAny &&
         aKey && xpc_IsGrayGCThing(aKey.asCell()) && kdelegate) {
-      tracer->mCb.NoteWeakMapping(aMap, aKey.asCell(), kdelegate, nullptr);
+      tracer->mCb.NoteWeakMapping(aMap, aKey, kdelegate,
+                                  JS::GCCellPtr::NullPtr());
     }
   }
 }
