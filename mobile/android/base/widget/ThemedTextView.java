@@ -152,4 +152,8 @@ public class ThemedTextView extends android.widget.TextView
     public ColorDrawable getColorDrawable(int id) {
         return new ColorDrawable(getResources().getColor(id));
     }
+
+    protected LightweightTheme getTheme() {
+        return mTheme;
+    }
 }

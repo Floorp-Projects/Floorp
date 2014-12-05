@@ -147,4 +147,8 @@ public class ThemedLinearLayout extends android.widget.LinearLayout
     public ColorDrawable getColorDrawable(int id) {
         return new ColorDrawable(getResources().getColor(id));
     }
+
+    protected LightweightTheme getTheme() {
+        return mTheme;
+    }
 }
