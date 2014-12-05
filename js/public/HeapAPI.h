@@ -346,6 +346,16 @@ GetGCThingArena(const uintptr_t addr)
     return reinterpret_cast<JS::shadow::ArenaHeader *>(addr & ~ArenaMask);
 }
 
+static MOZ_ALWAYS_INLINE bool
+CellIsMarkedGray(const Cell *cell)
+{
+    MOZ_ASSERT(cell);
+    MOZ_ASSERT(!js::gc::IsInsideNursery(cell));
+    uintptr_t *word, mask;
+    js::gc::detail::GetGCThingMarkWordAndMask(uintptr_t(cell), js::gc::GRAY, &word, &mask);
+    return *word & mask;
+}
+
 } /* namespace detail */
 
 MOZ_ALWAYS_INLINE bool
@@ -378,31 +388,30 @@ extern JS_PUBLIC_API(Zone *)
 GetObjectZone(JSObject *obj);
 
 static MOZ_ALWAYS_INLINE bool
-GCThingIsMarkedGray(void *thing)
+ObjectIsMarkedGray(JSObject *obj)
 {
-    MOZ_ASSERT(thing);
     /*
      * GC things residing in the nursery cannot be gray: they have no mark bits.
      * All live objects in the nursery are moved to tenured at the beginning of
      * each GC slice, so the gray marker never sees nursery things.
      */
-    if (js::gc::IsInsideNursery((js::gc::Cell *)thing))
+    if (js::gc::IsInsideNursery(reinterpret_cast<js::gc::Cell *>(obj)))
         return false;
-    uintptr_t *word, mask;
-    js::gc::detail::GetGCThingMarkWordAndMask(uintptr_t(thing), js::gc::GRAY, &word, &mask);
-    return *word & mask;
-}
-
-static MOZ_ALWAYS_INLINE bool
-ObjectIsMarkedGray(JSObject *obj)
-{
-    return GCThingIsMarkedGray(obj);
+    return js::gc::detail::CellIsMarkedGray(reinterpret_cast<js::gc::Cell *>(obj));
 }
 
 static MOZ_ALWAYS_INLINE bool
 ScriptIsMarkedGray(JSScript *script)
 {
-    return GCThingIsMarkedGray(script);
+    return js::gc::detail::CellIsMarkedGray(reinterpret_cast<js::gc::Cell *>(script));
+}
+
+static MOZ_ALWAYS_INLINE bool
+GCThingIsMarkedGray(GCCellPtr thing)
+{
+    if (js::gc::IsInsideNursery(thing.asCell()))
+        return false;
+    return js::gc::detail::CellIsMarkedGray(thing.asCell());
 }
 
 } /* namespace JS */

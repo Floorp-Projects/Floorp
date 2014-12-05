@@ -1251,6 +1251,10 @@ class Value
         return JSVAL_TO_GCTHING_IMPL(data);
     }
 
+    GCCellPtr toGCCellPtr() const {
+        return GCCellPtr(toGCThing(), gcKind());
+    }
+
     bool toBoolean() const {
         MOZ_ASSERT(isBoolean());
         return JSVAL_TO_BOOLEAN_IMPL(data);
