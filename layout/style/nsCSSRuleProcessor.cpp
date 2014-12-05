@@ -2917,17 +2917,39 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
 /* virtual */ bool
 nsCSSRuleProcessor::MediumFeaturesChanged(nsPresContext* aPresContext)
 {
-  RuleCascadeData *old = mRuleCascades;
   // We don't want to do anything if there aren't any sets of rules
-  // cached yet (or somebody cleared them and is thus responsible for
-  // rebuilding things), since we should not build the rule cascade too
-  // early (e.g., before we know whether the quirk style sheet should be
+  // cached yet, since we should not build the rule cascade too early
+  // (e.g., before we know whether the quirk style sheet should be
   // enabled).  And if there's nothing cached, it doesn't matter if
-  // anything changed.  See bug 448281.
+  // anything changed.  But in the cases where it does matter, we've
+  // cached a previous cache key to test against, instead of our current
+  // rule cascades.  See bug 448281 and bug 1089417.
+  MOZ_ASSERT(!(mRuleCascades && mPreviousCacheKey));
+  RuleCascadeData *old = mRuleCascades;
   if (old) {
     RefreshRuleCascade(aPresContext);
+    return (old != mRuleCascades);
   }
-  return (old != mRuleCascades);
+
+  if (mPreviousCacheKey) {
+    // RefreshRuleCascade will get rid of mPreviousCacheKey anyway to
+    // maintain the invariant that we can't have both an mRuleCascades
+    // and an mPreviousCacheKey.  But we need to hold it a little
+    // longer.
+    UniquePtr<nsMediaQueryResultCacheKey> previousCacheKey(
+      Move(mPreviousCacheKey));
+    RefreshRuleCascade(aPresContext);
+
+    // This test is a bit pessimistic since the cache key's operator==
+    // just does list comparison rather than set comparison, but it
+    // should catch all the cases we care about (i.e., where the cascade
+    // order hasn't changed).  Other cases will do a restyle anyway, so
+    // we shouldn't need to worry about posting a second.
+    return !mRuleCascades || // all sheets gone, but we had sheets before
+           mRuleCascades->mCacheKey != *previousCacheKey;
+  }
+
+  return false;
 }
 
 UniquePtr<nsMediaQueryResultCacheKey>
