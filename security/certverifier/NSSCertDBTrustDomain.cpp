@@ -104,15 +104,18 @@ static const uint8_t PERMIT_FRANCE_GOV_NAME_CONSTRAINTS_DATA[] =
                        "\x30\x05\x82\x03" ".nc"
                        "\x30\x05\x82\x03" ".tf";
 
+// If useRoots is true, we only use root certificates in the candidate list.
+// If useRoots is false, we only use non-root certificates in the list.
 static Result
-FindIssuerInner(ScopedCERTCertList& candidates, bool isRoot,
+FindIssuerInner(ScopedCERTCertList& candidates, bool useRoots,
                 Input encodedIssuerName, TrustDomain::IssuerChecker& checker,
                 /*out*/ bool& keepGoing)
 {
   keepGoing = true;
   for (CERTCertListNode* n = CERT_LIST_HEAD(candidates);
        !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
-    if (n->cert->isRoot != isRoot) {
+    bool candidateIsRoot = !!n->cert->isRoot;
+    if (candidateIsRoot != useRoots) {
       continue;
     }
     Input certDER;
