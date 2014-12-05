@@ -102,7 +102,22 @@ add_test(function test_parseMMI_USSD() {
   equal(mmi.sib, undefined);
   equal(mmi.sic, undefined);
   equal(mmi.pwd, undefined);
-  equal(mmi.dialNumber, "");
+  equal(mmi.dialNumber, undefined);
+
+  run_next_test();
+});
+
+add_test(function test_parseMMI_USSD_with_two_sharps() {
+  let mmi = parseMMI("*225#4384903113430962#");
+
+  equal(mmi.fullMMI, "*225#4384903113430962#");
+  equal(mmi.procedure, undefined);
+  equal(mmi.serviceCode, undefined);
+  equal(mmi.sia, undefined);
+  equal(mmi.sib, undefined);
+  equal(mmi.sic, undefined);
+  equal(mmi.pwd, undefined);
+  equal(mmi.dialNumber, undefined);
 
   run_next_test();
 });
@@ -117,7 +132,7 @@ add_test(function test_parseMMI_sia() {
   equal(mmi.sib, undefined);
   equal(mmi.sic, undefined);
   equal(mmi.pwd, undefined);
-  equal(mmi.dialNumber, "");
+  equal(mmi.dialNumber, undefined);
 
   run_next_test();
 });
@@ -132,7 +147,7 @@ add_test(function test_parseMMI_sib() {
   equal(mmi.sib, "1");
   equal(mmi.sic, undefined);
   equal(mmi.pwd, undefined);
-  equal(mmi.dialNumber, "");
+  equal(mmi.dialNumber, undefined);
 
   run_next_test();
 });
@@ -147,7 +162,7 @@ add_test(function test_parseMMI_sic() {
   equal(mmi.sib, "");
   equal(mmi.sic, "1");
   equal(mmi.pwd, undefined);
-  equal(mmi.dialNumber, "");
+  equal(mmi.dialNumber, undefined);
 
   run_next_test();
 });
@@ -162,7 +177,7 @@ add_test(function test_parseMMI_sia_sib() {
   equal(mmi.sib, "1");
   equal(mmi.sic, undefined);
   equal(mmi.pwd, undefined);
-  equal(mmi.dialNumber, "");
+  equal(mmi.dialNumber, undefined);
 
   run_next_test();
 });
@@ -177,7 +192,7 @@ add_test(function test_parseMMI_sia_sic() {
   equal(mmi.sib, "");
   equal(mmi.sic, "1");
   equal(mmi.pwd, undefined);
-  equal(mmi.dialNumber, "");
+  equal(mmi.dialNumber, undefined);
 
   run_next_test();
 });
@@ -192,7 +207,7 @@ add_test(function test_parseMMI_sib_sic() {
   equal(mmi.sib, "1");
   equal(mmi.sic, "1");
   equal(mmi.pwd, undefined);
-  equal(mmi.dialNumber, "");
+  equal(mmi.dialNumber, undefined);
 
   run_next_test();
 });
@@ -207,7 +222,7 @@ add_test(function test_parseMMI_pwd() {
   equal(mmi.sib, "");
   equal(mmi.sic, "");
   equal(mmi.pwd, "1");
-  equal(mmi.dialNumber, "");
+  equal(mmi.dialNumber, undefined);
 
   run_next_test();
 });
@@ -242,7 +257,7 @@ add_test(function test_parseMMI_activation() {
   equal(mmi.sib, "34");
   equal(mmi.sic, "56");
   equal(mmi.pwd, undefined);
-  equal(mmi.dialNumber, "");
+  equal(mmi.dialNumber, undefined);
 
   run_next_test();
 });
@@ -257,7 +272,7 @@ add_test(function test_parseMMI_deactivation() {
   equal(mmi.sib, "34");
   equal(mmi.sic, "56");
   equal(mmi.pwd, undefined);
-  equal(mmi.dialNumber, "");
+  equal(mmi.dialNumber, undefined);
 
   run_next_test();
 });
@@ -272,7 +287,7 @@ add_test(function test_parseMMI_interrogation() {
   equal(mmi.sib, "34");
   equal(mmi.sic, "56");
   equal(mmi.pwd, undefined);
-  equal(mmi.dialNumber, "");
+  equal(mmi.dialNumber, undefined);
 
   run_next_test();
 });
@@ -287,7 +302,7 @@ add_test(function test_parseMMI_registration() {
   equal(mmi.sib, "34");
   equal(mmi.sic, "56");
   equal(mmi.pwd, undefined);
-  equal(mmi.dialNumber, "");
+  equal(mmi.dialNumber, undefined);
 
   run_next_test();
 });
@@ -302,7 +317,7 @@ add_test(function test_parseMMI_erasure() {
   equal(mmi.sib, "34");
   equal(mmi.sic, "56");
   equal(mmi.pwd, undefined);
-  equal(mmi.dialNumber, "");
+  equal(mmi.dialNumber, undefined);
 
   run_next_test();
 });
