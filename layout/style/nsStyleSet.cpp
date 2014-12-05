@@ -352,6 +352,9 @@ SortStyleSheetsByScope(nsTArray<CSSStyleSheet*>& aSheets)
 nsresult
 nsStyleSet::GatherRuleProcessors(sheetType aType)
 {
+  nsCOMPtr<nsIStyleRuleProcessor> oldRuleProcessor(mRuleProcessors[aType]);
+  nsTArray<nsCOMPtr<nsIStyleRuleProcessor>> oldScopedDocRuleProcessors;
+
   mRuleProcessors[aType] = nullptr;
   if (aType == eScopedDocSheet) {
     for (uint32_t i = 0; i < mScopedDocSheetRuleProcessors.Length(); i++) {
@@ -360,7 +363,9 @@ nsStyleSet::GatherRuleProcessors(sheetType aType)
         static_cast<nsCSSRuleProcessor*>(processor)->GetScopeElement();
       scope->ClearIsScopedStyleRoot();
     }
-    mScopedDocSheetRuleProcessors.Clear();
+
+    // Clear mScopedDocSheetRuleProcessors, but save it.
+    oldScopedDocRuleProcessors.SwapElements(mScopedDocSheetRuleProcessors);
   }
   if (mAuthorStyleDisabled && (aType == eDocSheet || 
                                aType == eScopedDocSheet ||
@@ -420,6 +425,21 @@ nsStyleSet::GatherRuleProcessors(sheetType aType)
       // adjacent and that ancestor scopes come before descendent scopes.
       SortStyleSheetsByScope(sheets);
 
+      // Put the old scoped rule processors in a hashtable so that we
+      // can retrieve them efficiently, even in edge cases like the
+      // simultaneous removal and addition of a large number of elements
+      // with scoped sheets.
+      nsDataHashtable<nsPtrHashKey<Element>,
+                      nsCSSRuleProcessor*> oldScopedRuleProcessorHash;
+      for (size_t i = oldScopedDocRuleProcessors.Length(); i-- != 0; ) {
+        nsCSSRuleProcessor* oldRP =
+          static_cast<nsCSSRuleProcessor*>(oldScopedDocRuleProcessors[i].get());
+        Element* scope = oldRP->GetScopeElement();
+        MOZ_ASSERT(!oldScopedRuleProcessorHash.Get(scope),
+                   "duplicate rule processors for same scope element?");
+        oldScopedRuleProcessorHash.Put(scope, oldRP);
+      }
+
       uint32_t start = 0, end;
       do {
         // Find the range of style sheets with the same scope.
@@ -434,8 +454,10 @@ nsStyleSet::GatherRuleProcessors(sheetType aType)
         // Create a rule processor for the scope.
         nsTArray<nsRefPtr<CSSStyleSheet>> sheetsForScope;
         sheetsForScope.AppendElements(sheets.Elements() + start, end - start);
+        nsCSSRuleProcessor* oldRP = oldScopedRuleProcessorHash.Get(scope);
         mScopedDocSheetRuleProcessors.AppendElement
-          (new nsCSSRuleProcessor(sheetsForScope, uint8_t(aType), scope));
+          (new nsCSSRuleProcessor(sheetsForScope, uint8_t(aType), scope,
+                                  oldRP));
 
         start = end;
       } while (start < count);
@@ -457,7 +479,9 @@ nsStyleSet::GatherRuleProcessors(sheetType aType)
           cssSheets.AppendElement(cssSheet);
         }
         mRuleProcessors[aType] =
-          new nsCSSRuleProcessor(cssSheets, uint8_t(aType), nullptr);
+          new nsCSSRuleProcessor(cssSheets, uint8_t(aType), nullptr,
+                                 static_cast<nsCSSRuleProcessor*>(
+                                   oldRuleProcessor.get()));
       } break;
 
       default:

@@ -52,9 +52,12 @@ public:
 
   // aScopeElement must be non-null iff aSheetType is
   // nsStyleSet::eScopedDocSheet.
+  // aPreviousCSSRuleProcessor is the rule processor (if any) that this
+  // one is replacing.
   nsCSSRuleProcessor(const sheet_array_type& aSheets,
                      uint8_t aSheetType,
-                     mozilla::dom::Element* aScopeElement);
+                     mozilla::dom::Element* aScopeElement,
+                     nsCSSRuleProcessor* aPreviousCSSRuleProcessor);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsCSSRuleProcessor)
