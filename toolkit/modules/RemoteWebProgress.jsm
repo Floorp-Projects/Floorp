@@ -76,7 +76,6 @@ function RemoteWebProgressManager (aBrowser) {
   this._browser.messageManager.addMessageListener("Content:LocationChange", this);
   this._browser.messageManager.addMessageListener("Content:SecurityChange", this);
   this._browser.messageManager.addMessageListener("Content:StatusChange", this);
-  this._browser.messageManager.addMessageListener("Content:ProgressChange", this);
 }
 
 RemoteWebProgressManager.prototype = {
@@ -208,10 +207,6 @@ RemoteWebProgressManager.prototype = {
 
     case "Content:StatusChange":
       this._callProgressListeners("onStatusChange", webProgress, request, json.status, json.message);
-      break;
-
-    case "Content:ProgressChange":
-      this._callProgressListeners("onProgressChange", webProgress, request, json.curSelf, json.maxSelf, json.curTotal, json.maxTotal);
       break;
     }
   }
