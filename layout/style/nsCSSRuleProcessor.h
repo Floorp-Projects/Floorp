@@ -19,7 +19,6 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "nsRuleWalker.h"
-#include "mozilla/UniquePtr.h"
 
 struct CascadeEnumData;
 struct nsCSSSelector;
@@ -52,12 +51,9 @@ public:
 
   // aScopeElement must be non-null iff aSheetType is
   // nsStyleSet::eScopedDocSheet.
-  // aPreviousCSSRuleProcessor is the rule processor (if any) that this
-  // one is replacing.
   nsCSSRuleProcessor(const sheet_array_type& aSheets,
                      uint8_t aSheetType,
-                     mozilla::dom::Element* aScopeElement,
-                     nsCSSRuleProcessor* aPreviousCSSRuleProcessor);
+                     mozilla::dom::Element* aScopeElement);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsCSSRuleProcessor)
@@ -123,12 +119,6 @@ public:
     HasAttributeDependentStyle(AttributeRuleProcessorData* aData) MOZ_OVERRIDE;
 
   virtual bool MediumFeaturesChanged(nsPresContext* aPresContext) MOZ_OVERRIDE;
-
-  /**
-   * If this rule processor currently has a substantive media query
-   * result cache key, return a copy of it.
-   */
-  mozilla::UniquePtr<nsMediaQueryResultCacheKey> CloneMQCacheKey();
 
   virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
     const MOZ_MUST_OVERRIDE MOZ_OVERRIDE;
@@ -206,11 +196,6 @@ private:
 
   // active first, then cached (most recent first)
   RuleCascadeData* mRuleCascades;
-
-  // If we cleared our mRuleCascades or replaced a previous rule
-  // processor, this is the media query result cache key that was used
-  // before we lost the old rule cascades.
-  mozilla::UniquePtr<nsMediaQueryResultCacheKey> mPreviousCacheKey;
 
   // The last pres context for which GetRuleCascades was called.
   nsPresContext *mLastPresContext;
