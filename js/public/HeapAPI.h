@@ -90,6 +90,8 @@ inline void
 AssertGCThingHasType(js::gc::Cell *cell, JSGCTraceKind kind) {}
 #endif
 
+MOZ_ALWAYS_INLINE bool IsInsideNursery(const js::gc::Cell *cell);
+
 } /* namespace gc */
 } /* namespace js */
 
@@ -270,9 +272,15 @@ class JS_FRIEND_API(GCCellPtr)
         return reinterpret_cast<js::gc::Cell *>(ptr & ~JSTRACE_OUTOFLINE);
     }
 
-    // The CC's trace logger needs an identity that is XPIDL serializable.
+    // The CC stores nodes as void* internally.
     void *unsafeGetUntypedPtr() const {
+        MOZ_ASSERT(asCell());
+        MOZ_ASSERT(!js::gc::IsInsideNursery(asCell()));
         return reinterpret_cast<void *>(asCell());
+    }
+    // The CC's trace logger needs an identity that is XPIDL serializable.
+    uint64_t unsafeAsInteger() const {
+        return reinterpret_cast<uint64_t>(unsafeGetUntypedPtr());
     }
 
   private:
