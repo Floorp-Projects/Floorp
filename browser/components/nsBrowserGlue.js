@@ -53,6 +53,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
 XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
                                   "resource://gre/modules/NewTabUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserNewTabPreloader",
+                                  "resource:///modules/BrowserNewTabPreloader.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizationTabPreloader",
                                   "resource:///modules/CustomizationTabPreloader.jsm");
 
@@ -788,6 +791,7 @@ BrowserGlue.prototype = {
       Cu.reportError("Could not end startup crash tracking in quit-application-granted: " + e);
     }
 
+    BrowserNewTabPreloader.uninit();
     CustomizationTabPreloader.uninit();
     WebappManager.uninit();
 #ifdef NIGHTLY_BUILD
