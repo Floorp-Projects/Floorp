@@ -72,10 +72,8 @@ bool
 MoofParser::BlockingReadNextMoof()
 {
   nsTArray<MediaByteRange> byteRanges;
-  int64_t size;
-  bool hasSize = mSource->Length(&size);
   byteRanges.AppendElement(
-    MediaByteRange(0,hasSize ? size : std::numeric_limits<int64_t>::max()));
+    MediaByteRange(0, std::numeric_limits<int64_t>::max()));
   mp4_demuxer::BlockingStream* stream = new BlockingStream(mSource);
 
   BoxContext context(stream, byteRanges);
