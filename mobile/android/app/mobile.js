@@ -114,6 +114,7 @@ pref("browser.display.remotetabs.timeout", 10);
 /* session history */
 pref("browser.sessionhistory.max_total_viewers", 1);
 pref("browser.sessionhistory.max_entries", 50);
+pref("browser.sessionhistory.contentViewerTimeout", 360);
 
 /* session store */
 pref("browser.sessionstore.resume_session_once", false);

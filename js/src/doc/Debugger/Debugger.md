@@ -151,6 +151,9 @@ compartment.
     `continue`, or `break` statement, or a new exception. In those cases the
     old exception does not continue to propagate; it is discarded.)
 
+    This handler is not called when unwinding a frame due to an over-recursion
+    or out-of-memory exception.
+
 <code>sourceHandler(<i>ASuffusionOfYellow</i>)</code>
 :   This method is never called. If it is ever called, a contradiction has
     been proven, and the debugger is free to assume that everything is true.

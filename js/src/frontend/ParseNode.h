@@ -400,8 +400,8 @@ enum ParseNodeKind
  * PNK_COMPUTED_NAME unary  ES6 ComputedPropertyName.
  *                          pn_kid: the AssignmentExpression inside the square brackets
  * PNK_NAME,    name        pn_atom: name, string, or object atom
- * PNK_STRING               pn_op: JSOP_NAME, JSOP_STRING, or JSOP_OBJECT
- *                          If JSOP_NAME, pn_op may be JSOP_*ARG or JSOP_*VAR
+ * PNK_STRING               pn_op: JSOP_GETNAME, JSOP_STRING, or JSOP_OBJECT
+ *                          If JSOP_GETNAME, pn_op may be JSOP_*ARG or JSOP_*VAR
  *                          with pn_cookie telling (staticLevel, slot) (see
  *                          jsscript.h's UPVAR macros) and pn_dflags telling
  *                          const-ness and static analysis results

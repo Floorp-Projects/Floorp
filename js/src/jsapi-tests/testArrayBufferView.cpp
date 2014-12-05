@@ -65,7 +65,7 @@ BEGIN_TEST(testArrayBufferView_type)
     CHECK((TestViewType<uint8_t,
                         CreateDataView,
                         JS_GetObjectAsArrayBufferView,
-                        js::Scalar::TypeMax,
+                        js::Scalar::MaxTypedArrayViewType,
                         8, 8>(cx)));
 
     JS::Rooted<JS::Value> hasTypedObject(cx);

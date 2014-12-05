@@ -13,6 +13,7 @@
 #include <istream>
 #include <iterator>
 #include <sstream>
+#include <set>
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -21,18 +22,80 @@
 using namespace std;
 
 FakeDecryptor* FakeDecryptor::sInstance = nullptr;
+extern GMPPlatformAPI* g_platform_api; // Defined in gmp-fake.cpp
 
-static bool sFinishedTruncateTest = false;
-static bool sFinishedReplaceTest = false;
-static bool sMultiClientTest = false;
-
-void
-MaybeFinish()
+class GMPMutexAutoLock
 {
-  if (sFinishedTruncateTest && sFinishedReplaceTest && sMultiClientTest) {
+public:
+  explicit GMPMutexAutoLock(GMPMutex* aMutex) : mMutex(aMutex) {
+    mMutex->Acquire();
+  }
+  ~GMPMutexAutoLock() {
+    mMutex->Release();
+  }
+private:
+  GMPMutex* const mMutex;
+};
+
+class TestManager {
+public:
+  TestManager() : mMutex(CreateMutex()) {}
+
+  // Register a test with the test manager.
+  void BeginTest(const string& aTestID) {
+    GMPMutexAutoLock lock(mMutex);
+    auto found = mTestIDs.find(aTestID);
+    if (found == mTestIDs.end()) {
+      mTestIDs.insert(aTestID);
+    } else {
+      Error("FAIL BeginTest test already existed: " + aTestID);
+    }
+  }
+
+  // Notify the test manager that the test is finished. If all tests are done,
+  // test manager will send "test-storage complete" to notify the parent that
+  // all tests are finished and also delete itself.
+  void EndTest(const string& aTestID) {
+    bool isEmpty = false;
+    {
+      GMPMutexAutoLock lock(mMutex);
+      auto found = mTestIDs.find(aTestID);
+      if (found != mTestIDs.end()) {
+        mTestIDs.erase(aTestID);
+        isEmpty = mTestIDs.empty();
+      } else {
+        Error("FAIL EndTest test not existed: " + aTestID);
+        return;
+      }
+    }
+    if (isEmpty) {
+      Finish();
+      delete this;
+    }
+  }
+
+private:
+  ~TestManager() {
+    mMutex->Destroy();
+  }
+
+  static void Error(const string& msg) {
+    FakeDecryptor::Message(msg);
+  }
+
+  static void Finish() {
     FakeDecryptor::Message("test-storage complete");
   }
-}
+
+  static GMPMutex* CreateMutex() {
+    GMPMutex* mutex = nullptr;
+    g_platform_api->createmutex(&mutex);
+    return mutex;
+  }
+
+  GMPMutex* const mMutex;
+  set<string> mTestIDs;
+};
 
 FakeDecryptor::FakeDecryptor(GMPDecryptorHost* aHost)
   : mCallback(nullptr)
@@ -87,89 +150,129 @@ public:
 
 class SendMessageTask : public GMPTask {
 public:
-  SendMessageTask(const string& aMessage)
-    : mMessage(aMessage)
-  {}
+  SendMessageTask(const string& aMessage,
+                  TestManager* aTestManager = nullptr,
+                  const string& aTestID = "")
+    : mMessage(aMessage), mTestmanager(aTestManager), mTestID(aTestID) {}
+
   void Run() MOZ_OVERRIDE {
     FakeDecryptor::Message(mMessage);
+    if (mTestmanager) {
+      mTestmanager->EndTest(mTestID);
+    }
   }
+
   void Destroy() MOZ_OVERRIDE {
     delete this;
   }
+
+private:
   string mMessage;
+  TestManager* const mTestmanager;
+  const string mTestID;
 };
 
 class TestEmptyContinuation : public ReadContinuation {
 public:
+  TestEmptyContinuation(TestManager* aTestManager, const string& aTestID)
+    : mTestmanager(aTestManager), mTestID(aTestID) {}
+
   void ReadComplete(GMPErr aErr, const std::string& aData) MOZ_OVERRIDE {
     if (aData != "") {
       FakeDecryptor::Message("FAIL TestEmptyContinuation record was not truncated");
     }
-    sFinishedTruncateTest = true;
-    MaybeFinish();
+    mTestmanager->EndTest(mTestID);
     delete this;
   }
+
+private:
+  TestManager* const mTestmanager;
+  const string mTestID;
 };
 
 class TruncateContinuation : public ReadContinuation {
 public:
+  TruncateContinuation(const string& aID,
+                       TestManager* aTestManager,
+                       const string& aTestID)
+    : mID(aID), mTestmanager(aTestManager), mTestID(aTestID) {}
+
   void ReadComplete(GMPErr aErr, const std::string& aData) MOZ_OVERRIDE {
     if (aData != TruncateRecordData) {
       FakeDecryptor::Message("FAIL TruncateContinuation read data doesn't match written data");
     }
-    WriteRecord(TruncateRecordId, nullptr, 0,
-                new ReadThenTask(TruncateRecordId, new TestEmptyContinuation()),
-                new SendMessageTask("FAIL in TruncateContinuation write."));
+    auto cont = new TestEmptyContinuation(mTestmanager, mTestID);
+    auto msg = "FAIL in TruncateContinuation write.";
+    auto failTask = new SendMessageTask(msg, mTestmanager, mTestID);
+    WriteRecord(mID, nullptr, 0, new ReadThenTask(mID, cont), failTask);
     delete this;
   }
+
+private:
+  const string mID;
+  TestManager* const mTestmanager;
+  const string mTestID;
 };
 
 class VerifyAndFinishContinuation : public ReadContinuation {
 public:
-  explicit VerifyAndFinishContinuation(string aValue)
-    : mValue(aValue)
-  {}
+  explicit VerifyAndFinishContinuation(string aValue,
+                                       TestManager* aTestManager,
+                                       const string& aTestID)
+  : mValue(aValue), mTestmanager(aTestManager), mTestID(aTestID) {}
+
   void ReadComplete(GMPErr aErr, const std::string& aData) MOZ_OVERRIDE {
     if (aData != mValue) {
       FakeDecryptor::Message("FAIL VerifyAndFinishContinuation read data doesn't match expected data");
     }
-    sFinishedReplaceTest = true;
-    MaybeFinish();
+    mTestmanager->EndTest(mTestID);
     delete this;
   }
+
+private:
   string mValue;
+  TestManager* const mTestmanager;
+  const string mTestID;
 };
 
 class VerifyAndOverwriteContinuation : public ReadContinuation {
 public:
-  VerifyAndOverwriteContinuation(string aId, string aValue, string aOverwrite)
+  VerifyAndOverwriteContinuation(string aId, string aValue, string aOverwrite,
+                                 TestManager* aTestManager, const string& aTestID)
     : mId(aId)
     , mValue(aValue)
     , mOverwrite(aOverwrite)
+    , mTestmanager(aTestManager)
+    , mTestID(aTestID)
   {}
+
   void ReadComplete(GMPErr aErr, const std::string& aData) MOZ_OVERRIDE {
     if (aData != mValue) {
       FakeDecryptor::Message("FAIL VerifyAndOverwriteContinuation read data doesn't match expected data");
     }
-    WriteRecord(mId,
-                mOverwrite,
-                new ReadThenTask(mId, new VerifyAndFinishContinuation(mOverwrite)),
-                new SendMessageTask("FAIL in VerifyAndOverwriteContinuation write."));
+    auto cont = new VerifyAndFinishContinuation(mOverwrite, mTestmanager, mTestID);
+    auto msg = "FAIL in VerifyAndOverwriteContinuation write.";
+    auto failTask = new SendMessageTask(msg, mTestmanager, mTestID);
+    WriteRecord(mId, mOverwrite, new ReadThenTask(mId, cont), failTask);
     delete this;
   }
+
+private:
   string mId;
   string mValue;
   string mOverwrite;
+  TestManager* const mTestmanager;
+  const string mTestID;
 };
 
 static const string OpenAgainRecordId = "open-again-record-id";
 
 class OpenedSecondTimeContinuation : public OpenContinuation {
 public:
-  explicit OpenedSecondTimeContinuation(GMPRecord* aRecord)
-    : mRecord(aRecord)
-  {
-  }
+  explicit OpenedSecondTimeContinuation(GMPRecord* aRecord,
+                                        TestManager* aTestManager,
+                                        const string& aTestID)
+    : mRecord(aRecord), mTestmanager(aTestManager), mTestID(aTestID) {}
 
   virtual void OpenComplete(GMPErr aStatus, GMPRecord* aRecord) MOZ_OVERRIDE {
     if (GMP_SUCCEEDED(aStatus)) {
@@ -177,34 +280,44 @@ public:
     }
 
     // Succeeded, open should have failed.
-    sMultiClientTest = true;
-    MaybeFinish();
-
+    mTestmanager->EndTest(mTestID);
     mRecord->Close();
-
     delete this;
   }
+
+private:
   GMPRecord* mRecord;
+  TestManager* const mTestmanager;
+  const string mTestID;
 };
 
 class OpenedFirstTimeContinuation : public OpenContinuation {
 public:
+  OpenedFirstTimeContinuation(const string& aID,
+                              TestManager* aTestManager,
+                              const string& aTestID)
+    : mID(aID), mTestmanager(aTestManager), mTestID(aTestID) {}
+
   virtual void OpenComplete(GMPErr aStatus, GMPRecord* aRecord) MOZ_OVERRIDE {
     if (GMP_FAILED(aStatus)) {
       FakeDecryptor::Message("FAIL OpenAgainContinuation to open record initially.");
-      sMultiClientTest = true;
-      MaybeFinish();
+      mTestmanager->EndTest(mTestID);
       return;
     }
 
-    GMPOpenRecord(OpenAgainRecordId, new OpenedSecondTimeContinuation(aRecord));
-
+    auto cont = new OpenedSecondTimeContinuation(aRecord, mTestmanager, mTestID);
+    GMPOpenRecord(mID, cont);
     delete this;
   }
+
+private:
+  const string mID;
+  TestManager* const mTestmanager;
+  const string mTestID;
 };
 
-void
-FakeDecryptor::TestStorage()
+static void
+DoTestStorage(const string& aPrefix, TestManager* aTestManager)
 {
   // Basic I/O tests. We run three cases concurrently. The tests, like
   // GMPStorage run asynchronously. When they've all passed, we send
@@ -217,11 +330,14 @@ FakeDecryptor::TestStorage()
   // read data, verify that we read what we wrote, then
   // write 0 bytes to truncate record, then
   // read data, verify that 0 bytes was read
-  // set sFinishedTruncateTest=true and MaybeFinish().
-  WriteRecord(TruncateRecordId,
-              TruncateRecordData,
-              new ReadThenTask(TruncateRecordId, new TruncateContinuation()),
-              new SendMessageTask("FAIL in TestStorage writing TruncateRecord."));
+  const string id1 = aPrefix + TruncateRecordId;
+  const string testID1 = aPrefix + "write-test-1";
+  aTestManager->BeginTest(testID1);
+  auto cont1 = new TruncateContinuation(id1, aTestManager, testID1);
+  auto msg1 = "FAIL in TestStorage writing TruncateRecord.";
+  auto failTask1 = new SendMessageTask(msg1, aTestManager, testID1);
+  WriteRecord(id1, TruncateRecordData,
+              new ReadThenTask(id1, cont1), failTask1);
 
   // Test 2: Test that overwriting a record with a shorter record truncates
   // the record to the shorter record.
@@ -230,25 +346,75 @@ FakeDecryptor::TestStorage()
   // read and verify record, then
   // write a shorter record to same record.
   // read and verify
-  // set sFinishedReplaceTest=true and MaybeFinish().
-  string id = "record1";
+  string id2 = aPrefix + "record1";
   string record1 = "This is the first write to a record.";
   string overwrite = "A shorter record";
-  WriteRecord(id,
-              record1,
-              new ReadThenTask(id, new VerifyAndOverwriteContinuation(id, record1, overwrite)),
-              new SendMessageTask("FAIL in TestStorage writing record1."));
+  const string testID2 = aPrefix + "write-test-2";
+  aTestManager->BeginTest(testID2);
+  auto task2 = new VerifyAndOverwriteContinuation(id2, record1, overwrite,
+                                                  aTestManager, testID2);
+  auto msg2 = "FAIL in TestStorage writing record1.";
+  auto failTask2 = new SendMessageTask(msg2, aTestManager, testID2);
+  WriteRecord(id2, record1, new ReadThenTask(id2, task2), failTask2);
 
   // Test 3: Test that opening a record while it's already open fails.
   //
   // Open record1, then
   // open record1, should fail.
-  // close record1,
-  // set sMultiClientTest=true and MaybeFinish().
+  // close record1
+  const string id3 = aPrefix + OpenAgainRecordId;
+  const string testID3 = aPrefix + "open-test-1";
+  aTestManager->BeginTest(testID3);
+  auto task3 = new OpenedFirstTimeContinuation(id3, aTestManager, testID3);
+  GMPOpenRecord(id3, task3);
+}
 
-  GMPOpenRecord(OpenAgainRecordId, new OpenedFirstTimeContinuation());
+class TestStorageTask : public GMPTask {
+public:
+  TestStorageTask(const string& aPrefix, TestManager* aTestManager)
+    : mPrefix(aPrefix), mTestManager(aTestManager) {}
+  virtual void Destroy() { delete this; }
+  virtual void Run() {
+    DoTestStorage(mPrefix, mTestManager);
+  }
+private:
+  const string mPrefix;
+  TestManager* const mTestManager;
+};
 
-  // Note: Once all tests finish, dispatch "test-pass" message,
+void
+FakeDecryptor::TestStorage()
+{
+  TestManager* testManager = new TestManager();
+  GMPThread* thread1 = nullptr;
+  GMPThread* thread2 = nullptr;
+
+  // Main thread tests.
+  DoTestStorage("mt1-", testManager);
+  DoTestStorage("mt2-", testManager);
+
+  // Off-main-thread tests.
+  if (GMP_SUCCEEDED(g_platform_api->createthread(&thread1))) {
+    thread1->Post(new TestStorageTask("thread1-", testManager));
+  } else {
+    FakeDecryptor::Message("FAIL to create thread1 for storage tests");
+  }
+
+  if (GMP_SUCCEEDED(g_platform_api->createthread(&thread2))) {
+    thread2->Post(new TestStorageTask("thread2-", testManager));
+  } else {
+    FakeDecryptor::Message("FAIL to create thread2 for storage tests");
+  }
+
+  if (thread1) {
+    thread1->Join();
+  }
+
+  if (thread2) {
+    thread2->Join();
+  }
+
+  // Note: Once all tests finish, TestManager will dispatch "test-pass" message,
   // which ends the test for the parent.
 }
 

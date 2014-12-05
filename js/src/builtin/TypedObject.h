@@ -267,6 +267,10 @@ class ScalarTypeDescr : public SimpleTypeDescr
                       "TypedObjectConstants.h must be consistent with Scalar::Type");
         static_assert(Scalar::Uint8Clamped == JS_SCALARTYPEREPR_UINT8_CLAMPED,
                       "TypedObjectConstants.h must be consistent with Scalar::Type");
+        static_assert(Scalar::Float32x4 == JS_SCALARTYPEREPR_FLOAT32X4,
+                      "TypedObjectConstants.h must be consistent with Scalar::Type");
+        static_assert(Scalar::Int32x4 == JS_SCALARTYPEREPR_INT32X4,
+                      "TypedObjectConstants.h must be consistent with Scalar::Type");
 
         return Type(getReservedSlot(JS_DESCR_SLOT_TYPE).toInt32());
     }

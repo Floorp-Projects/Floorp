@@ -38,15 +38,6 @@ using mozilla::ArrayLength;
 using mozilla::PodCopy;
 using mozilla::PodZero;
 
-//#define PROFILE_NURSERY
-
-#ifdef PROFILE_NURSERY
-/*
- * Print timing information for minor GCs that take longer than this time in microseconds.
- */
-static int64_t GCReportThreshold = INT64_MAX;
-#endif
-
 bool
 js::Nursery::init(uint32_t maxNurseryBytes)
 {
@@ -72,11 +63,16 @@ js::Nursery::init(uint32_t maxNurseryBytes)
     setCurrentChunk(0);
     updateDecommittedRegion();
 
-#ifdef PROFILE_NURSERY
-    char *env = getenv("JS_MINORGC_TIME");
-    if (env)
-        GCReportThreshold = atoi(env);
-#endif
+    char *env = getenv("JS_GC_PROFILE_NURSERY");
+    if (env) {
+        if (0 == strcmp(env, "help")) {
+            fprintf(stderr, "JS_GC_PROFILE_NURSERY=N\n\n"
+                    "\tReport minor GC's taking more than N microseconds.");
+            exit(0);
+        }
+        enableProfiling_ = true;
+        profileThreshold_ = atoi(env);
+    }
 
     MOZ_ASSERT(isEnabled());
     return true;
@@ -726,15 +722,9 @@ js::Nursery::MinorGCCallback(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
         *thingp = trc->nursery->moveToTenured(trc, static_cast<JSObject *>(*thingp));
 }
 
-#ifdef PROFILE_NURSERY
-#define TIME_START(name) int64_t timstampStart_##name = PRMJ_Now()
-#define TIME_END(name) int64_t timstampEnd_##name = PRMJ_Now()
+#define TIME_START(name) int64_t timstampStart_##name = enableProfiling_ ? PRMJ_Now() : 0
+#define TIME_END(name) int64_t timstampEnd_##name = enableProfiling_ ? PRMJ_Now() : 0
 #define TIME_TOTAL(name) (timstampEnd_##name - timstampStart_##name)
-#else
-#define TIME_START(name)
-#define TIME_END(name)
-#define TIME_TOTAL(name)
-#endif
 
 void
 js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList *pretenureTypes)
@@ -886,10 +876,8 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
 
     TraceMinorGCEnd();
 
-#ifdef PROFILE_NURSERY
     int64_t totalTime = TIME_TOTAL(total);
-
-    if (totalTime >= GCReportThreshold) {
+    if (enableProfiling_ && totalTime >= profileThreshold_) {
         static bool printedHeader = false;
         if (!printedHeader) {
             fprintf(stderr,
@@ -925,7 +913,6 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
                 TIME_TOTAL(sweep));
 #undef FMT
     }
-#endif
 }
 
 #undef TIME_START

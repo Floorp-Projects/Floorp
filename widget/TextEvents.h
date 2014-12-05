@@ -447,6 +447,13 @@ public:
     return mReply.mOffset + (mReply.mReversed ? 0 : mReply.mString.Length());
   }
 
+  mozilla::WritingMode GetWritingMode(void) const
+  {
+    NS_ASSERTION(message == NS_QUERY_SELECTED_TEXT,
+                 "not querying selection");
+    return mReply.mWritingMode;
+  }
+
   bool mSucceeded;
   bool mWasAsync;
   bool mUseNativeLineBreak;

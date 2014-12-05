@@ -697,13 +697,12 @@ RecoverWriter::startRecover(uint32_t instructionCount, bool resumeAfter)
     return recoverOffset;
 }
 
-bool
+void
 RecoverWriter::writeInstruction(const MNode *rp)
 {
     if (!rp->writeRecoverData(writer_))
-        return false;
+        writer_.setOOM();
     instructionsWritten_++;
-    return true;
 }
 
 void

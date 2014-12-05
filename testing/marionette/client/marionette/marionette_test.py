@@ -82,7 +82,8 @@ def expectedFailure(func):
 
 def skip_if_b2g(target):
     def wrapper(self, *args, **kwargs):
-        if not self.marionette.session_capabilities['device'] == 'qemu':
+        if self.marionette.session_capabilities.has_key('b2g') and \
+            not self.marionette.session_capabilities['b2g'] == True:
             return target(self, *args, **kwargs)
         else:
             raise SkipTest('skipping due to b2g')

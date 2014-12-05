@@ -8487,7 +8487,7 @@ class MLoadTypedArrayElement
             setMovable();
         MOZ_ASSERT(IsValidElementsType(elements, offsetAdjustment));
         MOZ_ASSERT(index->type() == MIRType_Int32);
-        MOZ_ASSERT(arrayType >= 0 && arrayType < Scalar::TypeMax);
+        MOZ_ASSERT(arrayType >= 0 && arrayType < Scalar::MaxTypedArrayViewType);
     }
 
   public:
@@ -8565,7 +8565,7 @@ class MLoadTypedArrayElementHole
         setResultType(MIRType_Value);
         setMovable();
         MOZ_ASSERT(index->type() == MIRType_Int32);
-        MOZ_ASSERT(arrayType >= 0 && arrayType < Scalar::TypeMax);
+        MOZ_ASSERT(arrayType >= 0 && arrayType < Scalar::MaxTypedArrayViewType);
     }
 
   public:
@@ -8689,7 +8689,7 @@ class MStoreTypedArrayElement
             setMovable();
         MOZ_ASSERT(IsValidElementsType(elements, offsetAdjustment));
         MOZ_ASSERT(index->type() == MIRType_Int32);
-        MOZ_ASSERT(arrayType >= 0 && arrayType < Scalar::TypeMax);
+        MOZ_ASSERT(arrayType >= 0 && arrayType < Scalar::MaxTypedArrayViewType);
     }
 
   public:
@@ -8767,7 +8767,7 @@ class MStoreTypedArrayElementHole
         MOZ_ASSERT(elements->type() == MIRType_Elements);
         MOZ_ASSERT(length->type() == MIRType_Int32);
         MOZ_ASSERT(index->type() == MIRType_Int32);
-        MOZ_ASSERT(arrayType >= 0 && arrayType < Scalar::TypeMax);
+        MOZ_ASSERT(arrayType >= 0 && arrayType < Scalar::MaxTypedArrayViewType);
     }
 
   public:
@@ -12151,19 +12151,15 @@ class MAsmJSNeg : public MUnaryInstruction
 
 class MAsmJSHeapAccess
 {
-  protected:
-    typedef AsmJSHeapAccess::ViewType ViewType;
-
-  private:
-    ViewType viewType_;
+    Scalar::Type viewType_;
     bool needsBoundsCheck_;
 
   public:
-    MAsmJSHeapAccess(ViewType vt, bool needsBoundsCheck)
+    MAsmJSHeapAccess(Scalar::Type vt, bool needsBoundsCheck)
       : viewType_(vt), needsBoundsCheck_(needsBoundsCheck)
     {}
 
-    ViewType viewType() const { return viewType_; }
+    Scalar::Type viewType() const { return viewType_; }
     bool needsBoundsCheck() const { return needsBoundsCheck_; }
     void removeBoundsCheck() { needsBoundsCheck_ = false; }
 };
@@ -12173,7 +12169,7 @@ class MAsmJSLoadHeap : public MUnaryInstruction, public MAsmJSHeapAccess
     MemoryBarrierBits barrierBefore_;
     MemoryBarrierBits barrierAfter_;
 
-    MAsmJSLoadHeap(ViewType vt, MDefinition *ptr, bool needsBoundsCheck,
+    MAsmJSLoadHeap(Scalar::Type vt, MDefinition *ptr, bool needsBoundsCheck,
                    MemoryBarrierBits before, MemoryBarrierBits after)
       : MUnaryInstruction(ptr),
         MAsmJSHeapAccess(vt, needsBoundsCheck),
@@ -12186,27 +12182,28 @@ class MAsmJSLoadHeap : public MUnaryInstruction, public MAsmJSHeapAccess
             setMovable();
 
         switch (vt) {
-          case AsmJSHeapAccess::Int8:
-          case AsmJSHeapAccess::Uint8:
-          case AsmJSHeapAccess::Int16:
-          case AsmJSHeapAccess::Uint16:
-          case AsmJSHeapAccess::Int32:
-          case AsmJSHeapAccess::Uint32:
+          case Scalar::Int8:
+          case Scalar::Uint8:
+          case Scalar::Int16:
+          case Scalar::Uint16:
+          case Scalar::Int32:
+          case Scalar::Uint32:
             setResultType(MIRType_Int32);
             break;
-          case AsmJSHeapAccess::Float32:
+          case Scalar::Float32:
             setResultType(MIRType_Float32);
             break;
-          case AsmJSHeapAccess::Float64:
+          case Scalar::Float64:
             setResultType(MIRType_Double);
             break;
-          case AsmJSHeapAccess::Float32x4:
+          case Scalar::Float32x4:
             setResultType(MIRType_Float32x4);
             break;
-          case AsmJSHeapAccess::Int32x4:
+          case Scalar::Int32x4:
             setResultType(MIRType_Int32x4);
             break;
-          case AsmJSHeapAccess::Uint8Clamped:
+          case Scalar::Uint8Clamped:
+          case Scalar::MaxTypedArrayViewType:
             MOZ_CRASH("unexpected uint8clamped load heap in asm.js");
         }
     }
@@ -12214,7 +12211,7 @@ class MAsmJSLoadHeap : public MUnaryInstruction, public MAsmJSHeapAccess
   public:
     INSTRUCTION_HEADER(AsmJSLoadHeap);
 
-    static MAsmJSLoadHeap *New(TempAllocator &alloc, ViewType vt,
+    static MAsmJSLoadHeap *New(TempAllocator &alloc, Scalar::Type vt,
                                MDefinition *ptr, bool needsBoundsCheck,
                                MemoryBarrierBits barrierBefore = MembarNobits,
                                MemoryBarrierBits barrierAfter = MembarNobits)
@@ -12238,7 +12235,7 @@ class MAsmJSStoreHeap : public MBinaryInstruction, public MAsmJSHeapAccess
     MemoryBarrierBits barrierBefore_;
     MemoryBarrierBits barrierAfter_;
 
-    MAsmJSStoreHeap(ViewType vt, MDefinition *ptr, MDefinition *v, bool needsBoundsCheck,
+    MAsmJSStoreHeap(Scalar::Type vt, MDefinition *ptr, MDefinition *v, bool needsBoundsCheck,
                     MemoryBarrierBits before, MemoryBarrierBits after)
       : MBinaryInstruction(ptr, v),
         MAsmJSHeapAccess(vt, needsBoundsCheck),
@@ -12252,7 +12249,7 @@ class MAsmJSStoreHeap : public MBinaryInstruction, public MAsmJSHeapAccess
   public:
     INSTRUCTION_HEADER(AsmJSStoreHeap);
 
-    static MAsmJSStoreHeap *New(TempAllocator &alloc, ViewType vt,
+    static MAsmJSStoreHeap *New(TempAllocator &alloc, Scalar::Type vt,
                                 MDefinition *ptr, MDefinition *v, bool needsBoundsCheck,
                                 MemoryBarrierBits barrierBefore = MembarNobits,
                                 MemoryBarrierBits barrierAfter = MembarNobits)
@@ -12273,7 +12270,7 @@ class MAsmJSStoreHeap : public MBinaryInstruction, public MAsmJSHeapAccess
 
 class MAsmJSCompareExchangeHeap : public MTernaryInstruction, public MAsmJSHeapAccess
 {
-    MAsmJSCompareExchangeHeap(ViewType vt, MDefinition *ptr, MDefinition *oldv, MDefinition *newv,
+    MAsmJSCompareExchangeHeap(Scalar::Type vt, MDefinition *ptr, MDefinition *oldv, MDefinition *newv,
                               bool needsBoundsCheck)
         : MTernaryInstruction(ptr, oldv, newv),
           MAsmJSHeapAccess(vt, needsBoundsCheck)
@@ -12285,7 +12282,7 @@ class MAsmJSCompareExchangeHeap : public MTernaryInstruction, public MAsmJSHeapA
   public:
     INSTRUCTION_HEADER(AsmJSCompareExchangeHeap);
 
-    static MAsmJSCompareExchangeHeap *New(TempAllocator &alloc, ViewType vt,
+    static MAsmJSCompareExchangeHeap *New(TempAllocator &alloc, Scalar::Type vt,
                                           MDefinition *ptr, MDefinition *oldv,
                                           MDefinition *newv, bool needsBoundsCheck)
     {
@@ -12305,7 +12302,7 @@ class MAsmJSAtomicBinopHeap : public MBinaryInstruction, public MAsmJSHeapAccess
 {
     AtomicOp op_;
 
-    MAsmJSAtomicBinopHeap(AtomicOp op, ViewType vt, MDefinition *ptr, MDefinition *v,
+    MAsmJSAtomicBinopHeap(AtomicOp op, Scalar::Type vt, MDefinition *ptr, MDefinition *v,
                           bool needsBoundsCheck)
         : MBinaryInstruction(ptr, v),
           MAsmJSHeapAccess(vt, needsBoundsCheck),
@@ -12318,7 +12315,7 @@ class MAsmJSAtomicBinopHeap : public MBinaryInstruction, public MAsmJSHeapAccess
   public:
     INSTRUCTION_HEADER(AsmJSAtomicBinopHeap);
 
-    static MAsmJSAtomicBinopHeap *New(TempAllocator &alloc, AtomicOp op, ViewType vt,
+    static MAsmJSAtomicBinopHeap *New(TempAllocator &alloc, AtomicOp op, Scalar::Type vt,
                                       MDefinition *ptr, MDefinition *v, bool needsBoundsCheck)
     {
         return new(alloc) MAsmJSAtomicBinopHeap(op, vt, ptr, v, needsBoundsCheck);

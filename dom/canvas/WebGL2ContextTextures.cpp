@@ -217,7 +217,7 @@ WebGL2Context::TexImage3D(GLenum target, GLint level, GLenum internalformat,
     if (pixels.IsNull()) {
         data = nullptr;
         dataLength = 0;
-        jsArrayType = js::Scalar::TypeMax;
+        jsArrayType = js::Scalar::MaxTypedArrayViewType;
     } else {
         const ArrayBufferView& view = pixels.Value();
         view.ComputeLengthAndData();

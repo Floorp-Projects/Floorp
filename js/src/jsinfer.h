@@ -798,10 +798,10 @@ class TemporaryTypeSet : public TypeSet
     /* Get the prototype shared by all objects in this set, or nullptr. */
     JSObject *getCommonPrototype();
 
-    /* Get the typed array type of all objects in this set, or Scalar::TypeMax. */
+    /* Get the typed array type of all objects in this set, or Scalar::MaxTypedArrayViewType. */
     Scalar::Type getTypedArrayType();
 
-    /* Get the shared typed array type of all objects in this set, or Scalar::TypeMax. */
+    /* Get the shared typed array type of all objects in this set, or Scalar::MaxTypedArrayViewType. */
     Scalar::Type getSharedTypedArrayType();
 
     /* Whether clasp->isCallable() is true for one or more objects in this set. */

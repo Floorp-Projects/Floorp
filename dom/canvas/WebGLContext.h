@@ -597,7 +597,7 @@ public:
         return TexImage2D_base(texImageTarget, level, internalFormat,
                                size.width, size.height, data->Stride(), 0,
                                format, type, data->GetData(), byteLength,
-                               js::Scalar::TypeMax, srcFormat,
+                               js::Scalar::MaxTypedArrayViewType, srcFormat,
                                mPixelStorePremultiplyAlpha);
     }
 
@@ -672,7 +672,7 @@ public:
         return TexSubImage2D_base(texImageTarget.get(), level, xoffset, yoffset,
                                   size.width, size.height, data->Stride(),
                                   format, type, data->GetData(), byteLength,
-                                  js::Scalar::TypeMax, srcFormat,
+                                  js::Scalar::MaxTypedArrayViewType, srcFormat,
                                   mPixelStorePremultiplyAlpha);
     }
 
@@ -1255,7 +1255,7 @@ protected:
 
     // helpers
 
-    // If `isArrayType is TypeMax, it means no array.
+    // If jsArrayType is MaxTypedArrayViewType, it means no array.
     void TexImage2D_base(TexImageTarget texImageTarget, GLint level,
                          GLenum internalFormat, GLsizei width,
                          GLsizei height, GLsizei srcStrideOrZero, GLint border,

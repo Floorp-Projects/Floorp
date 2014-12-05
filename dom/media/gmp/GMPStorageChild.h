@@ -23,7 +23,7 @@ class GMPStorageChild;
 class GMPRecordImpl : public GMPRecord
 {
 public:
-  NS_INLINE_DECL_REFCOUNTING(GMPRecordImpl)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPRecordImpl)
 
   GMPRecordImpl(GMPStorageChild* aOwner,
                 const nsCString& aName,
@@ -52,7 +52,7 @@ private:
 class GMPStorageChild : public PGMPStorageChild
 {
 public:
-  NS_INLINE_DECL_REFCOUNTING(GMPStorageChild)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPStorageChild)
 
   explicit GMPStorageChild(GMPChild* aPlugin);
 

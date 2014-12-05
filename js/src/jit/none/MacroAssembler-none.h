@@ -418,7 +418,7 @@ class MacroAssemblerNone : public Assembler
     void branchValueIsNurseryObject(Condition, ValueOperand, Register, Label *) { MOZ_CRASH(); }
 #endif
 
-    bool buildFakeExitFrame(Register, uint32_t *) { MOZ_CRASH(); }
+    void buildFakeExitFrame(Register, uint32_t *) { MOZ_CRASH(); }
     bool buildOOLFakeExitFrame(void *) { MOZ_CRASH(); }
     void loadAsmJSActivation(Register) { MOZ_CRASH(); }
     void loadAsmJSHeapRegisterFromGlobalData() { MOZ_CRASH(); }

@@ -27,6 +27,7 @@
 #include "DynamicsCompressorNode.h"
 #include "BiquadFilterNode.h"
 #include "ScriptProcessorNode.h"
+#include "StereoPannerNode.h"
 #include "ChannelMergerNode.h"
 #include "ChannelSplitterNode.h"
 #include "MediaStreamAudioDestinationNode.h"
@@ -276,6 +277,13 @@ AudioContext::CreateAnalyser()
 {
   nsRefPtr<AnalyserNode> analyserNode = new AnalyserNode(this);
   return analyserNode.forget();
+}
+
+already_AddRefed<StereoPannerNode>
+AudioContext::CreateStereoPanner()
+{
+  nsRefPtr<StereoPannerNode> stereoPannerNode = new StereoPannerNode(this);
+  return stereoPannerNode.forget();
 }
 
 already_AddRefed<MediaElementAudioSourceNode>

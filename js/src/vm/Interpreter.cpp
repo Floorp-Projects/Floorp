@@ -299,7 +299,7 @@ NameOperation(JSContext *cx, InterpreterFrame *fp, jsbytecode *pc, MutableHandle
         return false;
 
     /* Kludge to allow (typeof foo == "undefined") tests. */
-    JSOp op2 = JSOp(pc[JSOP_NAME_LENGTH]);
+    JSOp op2 = JSOp(pc[JSOP_GETNAME_LENGTH]);
     if (op2 == JSOP_TYPEOF)
         return FetchName<true>(cx, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp);
     return FetchName<false>(cx, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp);
@@ -2644,7 +2644,7 @@ CASE(JSOP_IMPLICITTHIS)
 END_CASE(JSOP_IMPLICITTHIS)
 
 CASE(JSOP_GETGNAME)
-CASE(JSOP_NAME)
+CASE(JSOP_GETNAME)
 {
     RootedValue &rval = rootValue0;
 
@@ -2654,7 +2654,7 @@ CASE(JSOP_NAME)
     PUSH_COPY(rval);
     TypeScript::Monitor(cx, script, REGS.pc, rval);
 }
-END_CASE(JSOP_NAME)
+END_CASE(JSOP_GETNAME)
 
 CASE(JSOP_GETINTRINSIC)
 {

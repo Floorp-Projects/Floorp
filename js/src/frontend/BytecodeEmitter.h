@@ -174,8 +174,8 @@ struct BytecodeEmitter
         Normal,
 
         /*
-         * Emit JSOP_GETINTRINSIC instead of JSOP_NAME and assert that
-         * JSOP_NAME and JSOP_*GNAME don't ever get emitted. See the comment
+         * Emit JSOP_GETINTRINSIC instead of JSOP_GETNAME and assert that
+         * JSOP_GETNAME and JSOP_*GNAME don't ever get emitted. See the comment
          * for the field |selfHostingMode| in Parser.h for details.
          */
         SelfHosting,

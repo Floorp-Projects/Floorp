@@ -651,7 +651,7 @@ LIRGeneratorARM::visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArra
 bool
 LIRGeneratorARM::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *ins)
 {
-    MOZ_ASSERT(ins->viewType() < AsmJSHeapAccess::Float32);
+    MOZ_ASSERT(ins->viewType() < Scalar::Float32);
 
     MDefinition *ptr = ins->ptr();
     MOZ_ASSERT(ptr->type() == MIRType_Int32);
@@ -667,7 +667,7 @@ LIRGeneratorARM::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *ins)
 bool
 LIRGeneratorARM::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins)
 {
-    MOZ_ASSERT(ins->viewType() < AsmJSHeapAccess::Float32);
+    MOZ_ASSERT(ins->viewType() < Scalar::Float32);
 
     MDefinition *ptr = ins->ptr();
     MOZ_ASSERT(ptr->type() == MIRType_Int32);

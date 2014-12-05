@@ -1,0 +1,243 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test StereoPannerNode</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var SR = 44100;
+var BUF_SIZE = 128;
+var PANNING = 0.1;
+var GAIN = 0.5;
+
+// Cheap reimplementation of some bits of the spec
+function gainForPanningMonoToStereo(panning) {
+  panning += 1;
+  panning /= 2;
+  return [ Math.cos(0.5 * Math.PI * panning),
+           Math.sin(0.5 * Math.PI * panning) ];
+}
+
+function gainForPanningStereoToStereo(panning) {
+  if (panning <= 0) {
+    panning += 1.;
+  }
+  return [ Math.cos(0.5 * Math.PI * panning),
+           Math.sin(0.5 * Math.PI * panning) ];
+}
+
+function applyStereoToStereoPanning(l, r, panningValues, panning) {
+  var outL, outR;
+  if (panning <= 0) {
+    outL = l + r * panningValues[0];
+    outR = r * panningValues[1];
+  } else {
+    outL = l * panningValues[0];
+    outR = r + l * panningValues[1];
+  }
+  return [outL,outR];
+}
+
+function applyMonoToStereoPanning(c, panning) {
+  return [c * panning[0], c * panning[1]];
+}
+
+// Test the DOM interface
+var context = new OfflineAudioContext(1, 1, SR);
+var stereoPanner = context.createStereoPanner();
+ok(stereoPanner.pan, "The AudioParam member must exist");
+is(stereoPanner.pan.value, 0.0, "Correct initial value");
+is(stereoPanner.pan.defaultValue, 0.0, "Correct default value");
+is(stereoPanner.channelCount, 2, "StereoPannerNode node has 2 input channels by default");
+is(stereoPanner.channelCountMode, "clamped-max", "Correct channelCountMode for the StereoPannerNode");
+is(stereoPanner.channelInterpretation, "speakers", "Correct channelCountInterpretation for the StereoPannerNode");
+expectException(function() {
+  stereoPanner.channelCount = 3;
+}, DOMException.NOT_SUPPORTED_ERR);
+expectException(function() {
+  stereoPanner.channelCountMode = "max";
+}, DOMException.NOT_SUPPORTED_ERR);
+
+// A sine to be used to fill the buffers
+function sine(t) {
+  return Math.sin(440 * 2 * Math.PI * t / context.sampleRate);
+}
+
+// A couple mono and stereo buffers: the StereoPannerNode equation is different
+// if the input is mono or stereo
+var stereoBuffer = context.createBuffer(2, BUF_SIZE, context.sampleRate);
+var monoBuffer = context.createBuffer(1, BUF_SIZE, context.sampleRate);
+for (var i = 0; i < BUF_SIZE; ++i) {
+  monoBuffer.getChannelData(0)[i]   =
+  stereoBuffer.getChannelData(0)[i] =
+  stereoBuffer.getChannelData(1)[i] = sine(i);
+}
+
+// Expected test vectors
+function expectedBufferNoop(gain) {
+  gain = gain || 1.0;
+  var expectedBuffer = context.createBuffer(2, BUF_SIZE, SR);
+  for (var i = 0; i < BUF_SIZE; i++) {
+    expectedBuffer.getChannelData(0)[i] = gain * sine(i);
+    expectedBuffer.getChannelData(1)[i] = gain * sine(i);
+  }
+  return expectedBuffer;
+}
+
+function expectedBufferForStereo(gain) {
+  gain = gain || 1.0;
+  var expectedBuffer = context.createBuffer(2, BUF_SIZE, SR);
+  var gainPanning = gainForPanningStereoToStereo(PANNING);
+  gainPanning[0] *= gain;
+  gainPanning[1] *= gain;
+  for (var i = 0; i < BUF_SIZE; i++) {
+    var values = [ sine(i), sine(i) ];
+    var processed = applyStereoToStereoPanning(values[0], values[1], gainPanning, PANNING);
+    expectedBuffer.getChannelData(0)[i] = processed[0];
+    expectedBuffer.getChannelData(1)[i] = processed[1];
+  }
+  return expectedBuffer;
+}
+
+function expectedBufferForMono(gain) {
+  gain = gain || 1.0;
+  var expectedBuffer = context.createBuffer(2, BUF_SIZE, SR);
+  var gainPanning = gainForPanningMonoToStereo(PANNING);
+  gainPanning[0] *= gain;
+  gainPanning[1] *= gain;
+  for (var i = 0; i < BUF_SIZE; i++) {
+    var value = sine(i);
+    var processed = applyMonoToStereoPanning(value, gainPanning);
+    expectedBuffer.getChannelData(0)[i] = processed[0];
+    expectedBuffer.getChannelData(1)[i] = processed[1];
+  }
+  return expectedBuffer;
+}
+
+// Actual test cases
+var tests = [
+  function monoPanningNoop(ctx, panner) {
+    var monoSource = ctx.createBufferSource();
+    monoSource.connect(panner);
+    monoSource.buffer = monoBuffer;
+    monoSource.start(0);
+    return expectedBufferNoop();
+  },
+  function stereoPanningNoop(ctx, panner) {
+    var stereoSource = ctx.createBufferSource();
+    stereoSource.connect(panner);
+    stereoSource.buffer = stereoBuffer;
+    stereoSource.start(0);
+    return expectedBufferNoop();
+  },
+  function stereoPanningAutomation(ctx, panner) {
+    var stereoSource = ctx.createBufferSource();
+    stereoSource.connect(panner);
+    stereoSource.buffer = stereoBuffer;
+    panner.pan.setValueAtTime(0.1, 0.0);
+    stereoSource.start(0);
+    return expectedBufferForStereo();
+  },
+  function stereoPanning(ctx, panner) {
+    var stereoSource = ctx.createBufferSource();
+    stereoSource.buffer = stereoBuffer;
+    stereoSource.connect(panner);
+    panner.pan.value = 0.1;
+    stereoSource.start(0);
+    return expectedBufferForStereo();
+  },
+  function monoPanningAutomation(ctx, panner) {
+    var monoSource = ctx.createBufferSource();
+    monoSource.connect(panner);
+    monoSource.buffer = monoBuffer;
+    panner.pan.setValueAtTime(PANNING, 0.0);
+    monoSource.start(0);
+    return expectedBufferForMono();
+  },
+  function monoPanning(ctx, panner) {
+    var monoSource = ctx.createBufferSource();
+    monoSource.connect(panner);
+    monoSource.buffer = monoBuffer;
+    panner.pan.value = 0.1;
+    monoSource.start(0);
+    return expectedBufferForMono();
+  },
+  function monoPanningWithGain(ctx, panner) {
+    var monoSource = ctx.createBufferSource();
+    var gain = ctx.createGain();
+    gain.gain.value = GAIN;
+    monoSource.connect(gain);
+    gain.connect(panner);
+    monoSource.buffer = monoBuffer;
+    panner.pan.value = 0.1;
+    monoSource.start(0);
+    return expectedBufferForMono(GAIN);
+  },
+  function stereoPanningWithGain(ctx, panner) {
+    var stereoSource = ctx.createBufferSource();
+    var gain = ctx.createGain();
+    gain.gain.value = GAIN;
+    stereoSource.connect(gain);
+    gain.connect(panner);
+    stereoSource.buffer = stereoBuffer;
+    panner.pan.value = 0.1;
+    stereoSource.start(0);
+    return expectedBufferForStereo(GAIN);
+  },
+  function monoPanningWithGainAndAutomation(ctx, panner) {
+    var monoSource = ctx.createBufferSource();
+    var gain = ctx.createGain();
+    gain.gain.value = GAIN;
+    monoSource.connect(gain);
+    gain.connect(panner);
+    monoSource.buffer = monoBuffer;
+    panner.pan.setValueAtTime(PANNING, 0);
+    monoSource.start(0);
+    return expectedBufferForMono(GAIN);
+  },
+  function stereoPanningWithGainAndAutomation(ctx, panner) {
+    var stereoSource = ctx.createBufferSource();
+    var gain = ctx.createGain();
+    gain.gain.value = GAIN;
+    stereoSource.connect(gain);
+    gain.connect(panner);
+    stereoSource.buffer = stereoBuffer;
+    panner.pan.setValueAtTime(PANNING, 0);
+    stereoSource.start(0);
+    return expectedBufferForStereo(GAIN);
+  }
+];
+
+var finished = 0;
+function finish() {
+  if (++finished == tests.length) {
+    SimpleTest.finish();
+  }
+}
+
+tests.forEach(function(f) {
+  var ac = new OfflineAudioContext(2, BUF_SIZE, SR);
+  var panner = ac.createStereoPanner();
+  panner.connect(ac.destination);
+  var expected = f(ac, panner);
+  ac.oncomplete = function(e) {
+    info(f.name);
+    compareBuffers(e.renderedBuffer, expected);
+    finish();
+  };
+  ac.startRendering()
+});
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+<pre id=dump>
+</pre>
+</body>
+</html>

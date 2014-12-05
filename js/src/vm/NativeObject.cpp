@@ -1756,7 +1756,7 @@ Detecting(JSContext *cx, JSScript *script, jsbytecode *pc)
         return false;
     }
 
-    if (op == JSOP_GETGNAME || op == JSOP_NAME) {
+    if (op == JSOP_GETGNAME || op == JSOP_GETNAME) {
         /*
          * Special case #2: handle (document.all == undefined).  Don't worry
          * about a local variable named |undefined| shadowing the immutable

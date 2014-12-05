@@ -82,7 +82,7 @@ public:
 AnalyserNode::AnalyserNode(AudioContext* aContext)
   : AudioNode(aContext,
               1,
-              ChannelCountMode::Explicit,
+              ChannelCountMode::Max,
               ChannelInterpretation::Speakers)
   , mAnalysisBlock(2048)
   , mMinDecibels(-100.)

@@ -58,6 +58,7 @@ EXPORTS.mozilla.dom += [
     'PannerNode.h',
     'PeriodicWave.h',
     'ScriptProcessorNode.h',
+    'StereoPannerNode.h',
     'WaveShaperNode.h',
 ]
 
@@ -93,6 +94,7 @@ UNIFIED_SOURCES += [
     'PannerNode.cpp',
     'PeriodicWave.cpp',
     'ScriptProcessorNode.cpp',
+    'StereoPannerNode.cpp',
     'ThreeDPoint.cpp',
     'WaveShaperNode.cpp',
     'WebAudioUtils.cpp',

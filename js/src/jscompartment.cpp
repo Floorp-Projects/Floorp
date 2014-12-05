@@ -140,6 +140,8 @@ JSRuntime::createJitRuntime(JSContext *cx)
     jitRuntime_ = jrt;
 
     if (!jitRuntime_->initialize(cx)) {
+        js_ReportOutOfMemory(cx);
+
         js_delete(jitRuntime_);
         jitRuntime_ = nullptr;
 

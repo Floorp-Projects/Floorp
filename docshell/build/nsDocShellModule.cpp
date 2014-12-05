@@ -53,7 +53,6 @@ Initialize()
   nsresult rv = nsSHistory::Startup();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsSHEntryShared::Startup();
   return NS_OK;
 }
 

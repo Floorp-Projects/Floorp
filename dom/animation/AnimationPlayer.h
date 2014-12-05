@@ -45,7 +45,6 @@ protected:
 public:
   explicit AnimationPlayer(AnimationTimeline* aTimeline)
     : mTimeline(aTimeline)
-    , mIsPaused(false)
     , mIsRunningOnCompositor(false)
     , mIsPreviousStateFinished(false)
   {
@@ -63,7 +62,7 @@ public:
   // AnimationPlayer methods
   Animation* GetSource() const { return mSource; }
   AnimationTimeline* Timeline() const { return mTimeline; }
-  Nullable<double> GetStartTime() const;
+  Nullable<TimeDuration> GetStartTime() const { return mStartTime; }
   Nullable<TimeDuration> GetCurrentTime() const;
   AnimationPlayState PlayState() const;
   virtual void Play();
@@ -74,6 +73,7 @@ public:
   // from script. We often use the same methods internally and from
   // script but when called from script we (or one of our subclasses) perform
   // extra steps such as flushing style or converting the return type.
+  Nullable<double> GetStartTimeAsDouble() const;
   Nullable<double> GetCurrentTimeAsDouble() const;
   virtual AnimationPlayState PlayStateFromJS() const { return PlayState(); }
   virtual void PlayFromJS() { Play(); }
@@ -84,12 +84,16 @@ public:
 
   void SetSource(Animation* aSource);
   void Tick();
+  // Sets the start time of the player to the current time of its timeline.
+  // This should only be called on a player that is currently waiting to play
+  // (and therefore has a null start time but a fixed hold time).
+  void ResolveStartTime();
 
   const nsString& Name() const {
     return mSource ? mSource->Name() : EmptyString();
   }
 
-  bool IsPaused() const { return mIsPaused; }
+  bool IsPaused() const { return PlayState() == AnimationPlayState::Paused; }
   bool IsRunning() const;
 
   bool HasCurrentSource() const {
@@ -118,9 +122,6 @@ public:
                     nsCSSPropertySet& aSetProperties,
                     bool& aNeedsRefreshes);
 
-  // The beginning of the delay period.
-  Nullable<TimeDuration> mStartTime; // Timeline timescale
-
 protected:
   void DoPlay();
   void DoPause();
@@ -136,8 +137,9 @@ protected:
 
   nsRefPtr<AnimationTimeline> mTimeline;
   nsRefPtr<Animation> mSource;
+  // The beginning of the delay period.
+  Nullable<TimeDuration> mStartTime; // Timeline timescale
   Nullable<TimeDuration> mHoldTime;  // Player timescale
-  bool mIsPaused;
   bool mIsRunningOnCompositor;
   // Indicates whether we were in the finished state during our
   // most recent unthrottled sample (our last ComposeStyle call).

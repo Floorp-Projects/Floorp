@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+button {
+  position: absolute;
+  border: 1px solid blue;
+  margin: 1px;
+  padding: 0;
+}
+div {
+  position: absolute;
+  background: yellow;
+}
+</style>
+</head>
+<body>
+
+<button style="top:0px"><img src="" width="20" height="80"></button>
+
+<button style="top:100px"><img src="" width="80" height="20"></button>
+
+<!-- solid-color <div>s that should completely cover the buttons above,
+     provided they size themselves properly for their <img> content -->
+<div style="top:0px; width:40px; height:90px;"></div>
+
+<div style="top:100px; width:100px; height:40px;"></div>
+
+</body>
+</html>

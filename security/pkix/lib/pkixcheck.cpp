@@ -24,12 +24,8 @@
 
 #include "pkixcheck.h"
 
-#include "cert.h"
 #include "pkix/bind.h"
-#include "pkix/pkix.h"
-#include "pkix/ScopedPtr.h"
 #include "pkixder.h"
-#include "pkix/pkixnss.h"
 #include "pkixutil.h"
 
 namespace mozilla { namespace pkix {
@@ -386,75 +382,6 @@ CheckBasicConstraints(EndEntityOrCA endEntityOrCA,
   if (pathLenConstraint >= 0 &&
       static_cast<long>(subCACount) > pathLenConstraint) {
     return Result::ERROR_PATH_LEN_CONSTRAINT_INVALID;
-  }
-
-  return Success;
-}
-
-// 4.2.1.10. Name Constraints
-
-inline void
-PORT_FreeArena_false(PLArenaPool* arena) {
-  // PL_FreeArenaPool can't be used because it doesn't actually free the
-  // memory, which doesn't work well with memory analysis tools
-  return PORT_FreeArena(arena, PR_FALSE);
-}
-
-// TODO: Remove #include "pkix/pkixnss.h", #include "cert.h",
-// #include "ScopedPtr.h", etc. when this is rewritten to be independent of
-// NSS.
-Result
-CheckNameConstraints(Input encodedNameConstraints,
-                     const BackCert& firstChild,
-                     KeyPurposeId requiredEKUIfPresent)
-{
-  ScopedPtr<PLArenaPool, PORT_FreeArena_false>
-    arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
-  if (!arena) {
-    return Result::FATAL_ERROR_NO_MEMORY;
-  }
-
-  SECItem encodedNameConstraintsSECItem =
-    UnsafeMapInputToSECItem(encodedNameConstraints);
-
-  // Owned by arena
-  const CERTNameConstraints* constraints =
-    CERT_DecodeNameConstraintsExtension(arena.get(),
-                                        &encodedNameConstraintsSECItem);
-  if (!constraints) {
-    return MapPRErrorCodeToResult(PR_GetError());
-  }
-
-  for (const BackCert* child = &firstChild; child; child = child->childCert) {
-    SECItem childCertDER = UnsafeMapInputToSECItem(child->GetDER());
-    ScopedPtr<CERTCertificate, CERT_DestroyCertificate>
-      nssCert(CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &childCertDER,
-                                      nullptr, false, true));
-    if (!nssCert) {
-      return MapPRErrorCodeToResult(PR_GetError());
-    }
-
-    bool includeCN = child->endEntityOrCA == EndEntityOrCA::MustBeEndEntity &&
-                     requiredEKUIfPresent == KeyPurposeId::id_kp_serverAuth;
-    // owned by arena
-    const CERTGeneralName*
-      names(CERT_GetConstrainedCertificateNames(nssCert.get(), arena.get(),
-                                                includeCN));
-    if (!names) {
-      return MapPRErrorCodeToResult(PR_GetError());
-    }
-
-    CERTGeneralName* currentName = const_cast<CERTGeneralName*>(names);
-    do {
-      if (CERT_CheckNameSpace(arena.get(), constraints, currentName)
-            != SECSuccess) {
-        // XXX: It seems like CERT_CheckNameSpace doesn't always call
-        // PR_SetError when it fails, so we ignore what PR_GetError would
-        // return. NSS's cert_VerifyCertChainOld does something similar.
-        return Result::ERROR_CERT_NOT_IN_NAME_SPACE;
-      }
-      currentName = CERT_GetNextGeneralName(currentName);
-    } while (currentName != names);
   }
 
   return Success;

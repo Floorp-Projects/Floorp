@@ -8,13 +8,13 @@ function StarGeneratorNext(val) {
     // common case with a single call. It's also inlined in Baseline.
 
     if (!IsSuspendedStarGenerator(this)) {
-	if (!IsObject(this) || !IsStarGeneratorObject(this))
+        if (!IsObject(this) || !IsStarGeneratorObject(this))
             return callFunction(CallStarGeneratorMethodIfWrapped, this, val, "StarGeneratorNext");
 
-	if (StarGeneratorObjectIsClosed(this))
+        if (StarGeneratorObjectIsClosed(this))
             return { value: undefined, done: true };
 
-	if (GeneratorIsRunning(this))
+        if (GeneratorIsRunning(this))
             ThrowError(JSMSG_NESTING_GENERATOR);
     }
 
@@ -29,13 +29,13 @@ function StarGeneratorNext(val) {
 
 function StarGeneratorThrow(val) {
     if (!IsSuspendedStarGenerator(this)) {
-	if (!IsObject(this) || !IsStarGeneratorObject(this))
+        if (!IsObject(this) || !IsStarGeneratorObject(this))
             return callFunction(CallStarGeneratorMethodIfWrapped, this, val, "StarGeneratorThrow");
 
-	if (StarGeneratorObjectIsClosed(this))
+        if (StarGeneratorObjectIsClosed(this))
             throw val;
 
-	if (GeneratorIsRunning(this))
+        if (GeneratorIsRunning(this))
             ThrowError(JSMSG_NESTING_GENERATOR);
     }
 

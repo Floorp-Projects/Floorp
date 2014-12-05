@@ -24,12 +24,6 @@
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
 #endif
 
-#define MAC_OS_X_VERSION_MASK       0x0000FFFF
-#define MAC_OS_X_VERSION_MAJOR_MASK 0x0000FFF0
-#define MAC_OS_X_VERSION_10_6_HEX   0x00001060
-#define MAC_OS_X_VERSION_10_7_HEX   0x00001070
-#define MAC_OS_X_VERSION_10_8_HEX   0x00001080
-
 using namespace mozilla;
 using namespace mozilla::widget;
 
@@ -46,13 +40,19 @@ GfxInfo::GfxInfo()
 static OperatingSystem
 OSXVersionToOperatingSystem(uint32_t aOSXVersion)
 {
-  switch (aOSXVersion & MAC_OS_X_VERSION_MAJOR_MASK) {
-    case MAC_OS_X_VERSION_10_6_HEX:
-      return DRIVER_OS_OS_X_10_6;
-    case MAC_OS_X_VERSION_10_7_HEX:
-      return DRIVER_OS_OS_X_10_7;
-    case MAC_OS_X_VERSION_10_8_HEX:
-      return DRIVER_OS_OS_X_10_8;
+  if (nsCocoaFeatures::ExtractMajorVersion(aOSXVersion) == 10) {
+    switch (nsCocoaFeatures::ExtractMinorVersion(aOSXVersion)) {
+      case 6:
+        return DRIVER_OS_OS_X_10_6;
+      case 7:
+        return DRIVER_OS_OS_X_10_7;
+      case 8:
+        return DRIVER_OS_OS_X_10_8;
+      case 9:
+        return DRIVER_OS_OS_X_10_9;
+      case 10:
+        return DRIVER_OS_OS_X_10_10;
+    }
   }
 
   return DRIVER_OS_UNKNOWN;

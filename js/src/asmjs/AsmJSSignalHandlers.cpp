@@ -331,10 +331,10 @@ ContextToPC(CONTEXT *context)
 #if defined(JS_CODEGEN_X64)
 template <class T>
 static void
-SetXMMRegToNaN(AsmJSHeapAccess::ViewType viewType, T *xmm_reg)
+SetXMMRegToNaN(Scalar::Type viewType, T *xmm_reg)
 {
     switch (viewType) {
-      case AsmJSHeapAccess::Float32: {
+      case Scalar::Float32: {
         JS_STATIC_ASSERT(sizeof(T) == 4 * sizeof(float));
         float *floats = reinterpret_cast<float*>(xmm_reg);
         floats[0] = GenericNaN();
@@ -343,41 +343,42 @@ SetXMMRegToNaN(AsmJSHeapAccess::ViewType viewType, T *xmm_reg)
         floats[3] = 0;
         break;
       }
-      case AsmJSHeapAccess::Float64: {
+      case Scalar::Float64: {
         JS_STATIC_ASSERT(sizeof(T) == 2 * sizeof(double));
         double *dbls = reinterpret_cast<double*>(xmm_reg);
         dbls[0] = GenericNaN();
         dbls[1] = 0;
         break;
       }
-      case AsmJSHeapAccess::Float32x4: {
+      case Scalar::Float32x4: {
         JS_STATIC_ASSERT(sizeof(T) == 4 * sizeof(float));
         float *floats = reinterpret_cast<float*>(xmm_reg);
         for (unsigned i = 0; i < 4; i++)
             floats[i] = GenericNaN();
         break;
       }
-      case AsmJSHeapAccess::Int32x4: {
+      case Scalar::Int32x4: {
         JS_STATIC_ASSERT(sizeof(T) == 4 * sizeof(int32_t));
         int32_t *ints = reinterpret_cast<int32_t*>(xmm_reg);
         for (unsigned i = 0; i < 4; i++)
             ints[i] = 0;
         break;
       }
-      case AsmJSHeapAccess::Int8:
-      case AsmJSHeapAccess::Uint8:
-      case AsmJSHeapAccess::Int16:
-      case AsmJSHeapAccess::Uint16:
-      case AsmJSHeapAccess::Int32:
-      case AsmJSHeapAccess::Uint32:
-      case AsmJSHeapAccess::Uint8Clamped:
+      case Scalar::Int8:
+      case Scalar::Uint8:
+      case Scalar::Int16:
+      case Scalar::Uint16:
+      case Scalar::Int32:
+      case Scalar::Uint32:
+      case Scalar::Uint8Clamped:
+      case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("unexpected type in SetXMMRegToNaN");
     }
 }
 
 # if !defined(XP_MACOSX)
 static void
-SetRegisterToCoercedUndefined(CONTEXT *context, AsmJSHeapAccess::ViewType viewType, AnyRegister reg)
+SetRegisterToCoercedUndefined(CONTEXT *context, Scalar::Type viewType, AnyRegister reg)
 {
     if (reg.isFloat()) {
         switch (reg.fpu().code()) {
@@ -482,7 +483,7 @@ HandleFault(PEXCEPTION_POINTERS exception)
     // register) and set the PC to the next op. Upon return from the handler,
     // execution will resume at this next PC.
     if (heapAccess->isLoad())
-        SetRegisterToCoercedUndefined(context, heapAccess->viewType(), heapAccess->loadedReg());
+        SetRegisterToCoercedUndefined(context, heapAccess->type(), heapAccess->loadedReg());
     *ppc += heapAccess->opLength();
 
     return true;
@@ -532,7 +533,7 @@ SetRegisterToCoercedUndefined(mach_port_t rtThread, x86_thread_state64_t &state,
         if (kret != KERN_SUCCESS)
             return false;
 
-        AsmJSHeapAccess::ViewType viewType = heapAccess.viewType();
+        Scalar::Type viewType = heapAccess.type();
         switch (heapAccess.loadedReg().fpu().code()) {
           case X86Registers::xmm0:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm0); break;
           case X86Registers::xmm1:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm1); break;
@@ -874,7 +875,7 @@ HandleFault(int signum, siginfo_t *info, void *ctx)
     // register) and set the PC to the next op. Upon return from the handler,
     // execution will resume at this next PC.
     if (heapAccess->isLoad())
-        SetRegisterToCoercedUndefined(context, heapAccess->viewType(), heapAccess->loadedReg());
+        SetRegisterToCoercedUndefined(context, heapAccess->type(), heapAccess->loadedReg());
     *ppc += heapAccess->opLength();
 
     return true;

@@ -52,6 +52,7 @@ using mozilla::CSSPoint from "Units.h";
 using mozilla::CSSToScreenScale from "Units.h";
 using mozilla::CommandInt from "mozilla/EventForwards.h";
 using mozilla::layers::GeckoContentController::APZStateChange from "mozilla/layers/GeckoContentController.h";
+using mozilla::WritingMode from "WritingModes.h";
 
 namespace mozilla {
 namespace dom {
@@ -201,10 +202,13 @@ parent:
      *  seqno        Current seqno value on the content side
      *  anchor       Offset where the selection started
      *  focus        Offset where the caret is
+     *  writingMode  CSS writing-mode in effect at the focus
      *  causedByComposition true if the change is caused by composition
      */
     prio(urgent) async NotifyIMESelection(uint32_t seqno, uint32_t anchor,
-                                          uint32_t focus, bool causedByComposition);
+                                          uint32_t focus,
+                                          WritingMode writingMode,
+                                          bool causedByComposition);
 
     /**
      * Notifies chrome to refresh its text cache 

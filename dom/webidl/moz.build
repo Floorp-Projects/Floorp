@@ -374,6 +374,7 @@ WEBIDL_FILES = [
     'SocketCommon.webidl',
     'SourceBuffer.webidl',
     'SourceBufferList.webidl',
+    'StereoPannerNode.webidl',
     'Storage.webidl',
     'StorageEvent.webidl',
     'StorageType.webidl',

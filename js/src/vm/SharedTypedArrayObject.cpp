@@ -59,7 +59,7 @@ using JS::GenericNaN;
 TypedArrayLayout SharedTypedArrayObject::layout_(true, // shared
                                                  false, // neuterable
                                                  &SharedTypedArrayObject::classes[0],
-                                                 &SharedTypedArrayObject::classes[Scalar::TypeMax]);
+                                                 &SharedTypedArrayObject::classes[Scalar::MaxTypedArrayViewType]);
 
 inline void
 InitSharedArrayBufferViewDataPointer(SharedTypedArrayObject *obj, SharedArrayBufferObject *buffer, size_t byteOffset)
@@ -773,7 +773,7 @@ IMPL_SHARED_TYPED_ARRAY_STATICS(Float32Array)
 IMPL_SHARED_TYPED_ARRAY_STATICS(Float64Array)
 IMPL_SHARED_TYPED_ARRAY_STATICS(Uint8ClampedArray)
 
-const Class SharedTypedArrayObject::classes[Scalar::TypeMax] = {
+const Class SharedTypedArrayObject::classes[Scalar::MaxTypedArrayViewType] = {
     IMPL_SHARED_TYPED_ARRAY_FAST_CLASS(Int8Array),
     IMPL_SHARED_TYPED_ARRAY_FAST_CLASS(Uint8Array),
     IMPL_SHARED_TYPED_ARRAY_FAST_CLASS(Int16Array),
@@ -785,7 +785,7 @@ const Class SharedTypedArrayObject::classes[Scalar::TypeMax] = {
     IMPL_SHARED_TYPED_ARRAY_FAST_CLASS(Uint8ClampedArray)
 };
 
-const Class SharedTypedArrayObject::protoClasses[Scalar::TypeMax] = {
+const Class SharedTypedArrayObject::protoClasses[Scalar::MaxTypedArrayViewType] = {
     IMPL_SHARED_TYPED_ARRAY_PROTO_CLASS(Int8Array),
     IMPL_SHARED_TYPED_ARRAY_PROTO_CLASS(Uint8Array),
     IMPL_SHARED_TYPED_ARRAY_PROTO_CLASS(Int16Array),
