@@ -60,6 +60,15 @@ this.WebappsUpdater = {
       return;
     }
 
+    let allowUpdate = true;
+    try {
+      allowUpdate = Services.prefs.getBoolPref("webapps.update.enabled");
+    } catch (ex) { }
+
+    if (!allowUpdate) {
+      return;
+    }
+
     this._checkingApps = true;
 
     let self = this;
