@@ -903,8 +903,8 @@ GlobalObject::initMapIteratorProto(JSContext *cx, Handle<GlobalObject *> global)
     JSObject *base = GlobalObject::getOrCreateIteratorPrototype(cx, global);
     if (!base)
         return false;
-    RootedNativeObject proto(cx,
-        NewNativeObjectWithGivenProto(cx, &MapIteratorObject::class_, base, global));
+    Rooted<MapIteratorObject *> proto(cx,
+        NewObjectWithGivenProto<MapIteratorObject>(cx, base, global));
     if (!proto)
         return false;
     proto->setSlot(MapIteratorObject::RangeSlot, PrivateValue(nullptr));
@@ -927,7 +927,7 @@ MapIteratorObject::create(JSContext *cx, HandleObject mapobj, ValueMap *data,
     if (!range)
         return nullptr;
 
-    NativeObject *iterobj = NewNativeObjectWithGivenProto(cx, &class_, proto, global);
+    MapIteratorObject *iterobj = NewObjectWithGivenProto<MapIteratorObject>(cx, proto, global);
     if (!iterobj) {
         js_delete(range);
         return nullptr;
@@ -935,7 +935,7 @@ MapIteratorObject::create(JSContext *cx, HandleObject mapobj, ValueMap *data,
     iterobj->setSlot(TargetSlot, ObjectValue(*mapobj));
     iterobj->setSlot(KindSlot, Int32Value(int32_t(kind)));
     iterobj->setSlot(RangeSlot, PrivateValue(range));
-    return static_cast<MapIteratorObject *>(iterobj);
+    return iterobj;
 }
 
 void
@@ -1206,7 +1206,7 @@ MapObject::set(JSContext *cx, HandleObject obj, HandleValue k, HandleValue v)
 MapObject*
 MapObject::create(JSContext *cx)
 {
-    RootedNativeObject obj(cx, NewNativeBuiltinClassInstance(cx, &class_));
+    Rooted<MapObject *> obj(cx, NewBuiltinClassInstance<MapObject>(cx));
     if (!obj)
         return nullptr;
 
@@ -1218,7 +1218,7 @@ MapObject::create(JSContext *cx)
     }
 
     obj->setPrivate(map);
-    return &obj->as<MapObject>();
+    return obj;
 }
 
 void
@@ -1560,8 +1560,8 @@ GlobalObject::initSetIteratorProto(JSContext *cx, Handle<GlobalObject*> global)
     JSObject *base = GlobalObject::getOrCreateIteratorPrototype(cx, global);
     if (!base)
         return false;
-    RootedNativeObject proto(cx, NewNativeObjectWithGivenProto(cx, &SetIteratorObject::class_,
-                                                               base, global));
+    Rooted<SetIteratorObject *> proto(cx,
+        NewObjectWithGivenProto<SetIteratorObject>(cx, base, global));
     if (!proto)
         return false;
     proto->setSlot(SetIteratorObject::RangeSlot, PrivateValue(nullptr));
@@ -1584,7 +1584,7 @@ SetIteratorObject::create(JSContext *cx, HandleObject setobj, ValueSet *data,
     if (!range)
         return nullptr;
 
-    NativeObject *iterobj = NewNativeObjectWithGivenProto(cx, &class_, proto, global);
+    SetIteratorObject *iterobj = NewObjectWithGivenProto<SetIteratorObject>(cx, proto, global);
     if (!iterobj) {
         js_delete(range);
         return nullptr;
@@ -1592,7 +1592,7 @@ SetIteratorObject::create(JSContext *cx, HandleObject setobj, ValueSet *data,
     iterobj->setSlot(TargetSlot, ObjectValue(*setobj));
     iterobj->setSlot(KindSlot, Int32Value(int32_t(kind)));
     iterobj->setSlot(RangeSlot, PrivateValue(range));
-    return static_cast<SetIteratorObject *>(iterobj);
+    return iterobj;
 }
 
 void
@@ -1760,7 +1760,7 @@ SetObject::add(JSContext *cx, HandleObject obj, HandleValue k)
 SetObject*
 SetObject::create(JSContext *cx)
 {
-    RootedNativeObject obj(cx, NewNativeBuiltinClassInstance(cx, &class_));
+    SetObject *obj = NewBuiltinClassInstance<SetObject>(cx);
     if (!obj)
         return nullptr;
 
@@ -1771,7 +1771,7 @@ SetObject::create(JSContext *cx)
         return nullptr;
     }
     obj->setPrivate(set);
-    return &obj->as<SetObject>();
+    return obj;
 }
 
 void

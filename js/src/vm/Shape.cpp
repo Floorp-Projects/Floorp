@@ -681,7 +681,7 @@ JSObject *
 js::NewReshapedObject(JSContext *cx, HandleTypeObject type, JSObject *parent,
                       gc::AllocKind allocKind, HandleShape shape, NewObjectKind newKind)
 {
-    RootedNativeObject res(cx, NewNativeObjectWithType(cx, type, parent, allocKind, newKind));
+    RootedPlainObject res(cx, NewObjectWithType<PlainObject>(cx, type, parent, allocKind, newKind));
     if (!res)
         return nullptr;
 

@@ -1684,7 +1684,7 @@ BaselineCompiler::emit_JSOP_NEWARRAY()
     return true;
 }
 
-typedef JSObject *(*NewArrayCopyOnWriteFn)(JSContext *, HandleNativeObject, gc::InitialHeap);
+typedef JSObject *(*NewArrayCopyOnWriteFn)(JSContext *, HandleArrayObject, gc::InitialHeap);
 const VMFunction jit::NewArrayCopyOnWriteInfo =
     FunctionInfo<NewArrayCopyOnWriteFn>(js::NewDenseCopyOnWriteArray);
 
@@ -1742,8 +1742,8 @@ BaselineCompiler::emit_JSOP_NEWOBJECT()
             return false;
     }
 
-    RootedNativeObject baseObject(cx, script->getObject(pc));
-    RootedNativeObject templateObject(cx, CopyInitializerObject(cx, baseObject, TenuredObject));
+    RootedPlainObject baseObject(cx, &script->getObject(pc)->as<PlainObject>());
+    RootedPlainObject templateObject(cx, CopyInitializerObject(cx, baseObject, TenuredObject));
     if (!templateObject)
         return false;
 
@@ -1809,8 +1809,8 @@ BaselineCompiler::emit_JSOP_NEWINIT()
     } else {
         MOZ_ASSERT(key == JSProto_Object);
 
-        RootedNativeObject templateObject(cx);
-        templateObject = NewNativeBuiltinClassInstance(cx, &JSObject::class_, TenuredObject);
+        RootedPlainObject templateObject(cx,
+            NewBuiltinClassInstance<PlainObject>(cx, TenuredObject));
         if (!templateObject)
             return false;
 
@@ -1857,7 +1857,7 @@ BaselineCompiler::emit_JSOP_INITELEM()
     return true;
 }
 
-typedef bool (*MutateProtoFn)(JSContext *cx, HandleObject obj, HandleValue newProto);
+typedef bool (*MutateProtoFn)(JSContext *cx, HandlePlainObject obj, HandleValue newProto);
 static const VMFunction MutateProtoInfo = FunctionInfo<MutateProtoFn>(MutatePrototype);
 
 bool

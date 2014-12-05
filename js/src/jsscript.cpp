@@ -921,7 +921,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
                 classk = CK_WithObject;
             else if (obj->is<JSFunction>())
                 classk = CK_JSFunction;
-            else if (obj->is<JSObject>() || obj->is<ArrayObject>())
+            else if (obj->is<PlainObject>() || obj->is<ArrayObject>())
                 classk = CK_JSObject;
             else
                 MOZ_CRASH("Cannot encode this class of object.");
