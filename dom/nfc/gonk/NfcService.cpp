@@ -163,6 +163,8 @@ public:
       }
     }
 
+    COPY_OPT_FIELD(mIsP2P, -1)
+
     if (mEvent.mTagType != -1) {
       event.mTagType.Construct();
       event.mTagType.Value() = static_cast<NFCTagType>(mEvent.mTagType);

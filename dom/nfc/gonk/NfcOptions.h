@@ -86,7 +86,7 @@ struct EventOptions
 {
   EventOptions()
     : mType(EmptyString()), mStatus(-1), mErrorCode(-1), mSessionId(-1), mRequestId(EmptyString()),
-      mMajorVersion(-1), mMinorVersion(-1),
+      mMajorVersion(-1), mMinorVersion(-1), mIsP2P(-1),
       mTagType(-1), mMaxNDEFSize(-1), mIsReadOnly(-1), mIsFormatable(-1), mRfState(-1),
       mOriginType(-1), mOriginIndex(-1)
   {}
@@ -99,6 +99,7 @@ struct EventOptions
   int32_t mMajorVersion;
   int32_t mMinorVersion;
   nsTArray<uint8_t> mTechList;
+  bool mIsP2P;
   nsTArray<NDEFRecordStruct> mRecords;
   int32_t mTagType;
   int32_t mMaxNDEFSize;

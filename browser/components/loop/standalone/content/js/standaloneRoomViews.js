@@ -351,6 +351,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
       return (
         React.DOM.div({className: "room-conversation-wrapper"}, 
+          React.DOM.div({className: "beta-logo"}), 
           StandaloneRoomHeader(null), 
           StandaloneRoomInfoArea({roomState: this.state.roomState, 
                                   failureReason: this.state.failureReason, 

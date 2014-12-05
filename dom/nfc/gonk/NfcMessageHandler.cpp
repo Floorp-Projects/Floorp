@@ -265,7 +265,7 @@ NfcMessageHandler::TechDiscoveredNotification(const Parcel& aParcel, EventOption
 {
   aOptions.mType = NS_ConvertUTF8toUTF16(kTechDiscoveredNotification);
   aOptions.mSessionId = aParcel.readInt32();
-
+  aOptions.mIsP2P = aParcel.readInt32();
   int32_t techCount = aParcel.readInt32();
   aOptions.mTechList.AppendElements(
       static_cast<const uint8_t*>(aParcel.readInplace(techCount)), techCount);

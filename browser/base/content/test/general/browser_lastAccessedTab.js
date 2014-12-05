@@ -1,33 +1,40 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let originalTab;
-let newTab;
+// gBrowser.selectedTab.lastAccessed and Date.now() called from this test can't
+// run concurrently, and therefore don't always match exactly.
+const CURRENT_TIME_TOLERANCE_MS = 15;
 
 function isCurrent(tab, msg) {
-  const tolerance = 5;
-  const difference = Math.abs(Date.now() - tab.lastAccessed);
-  ok(difference <= tolerance, msg + " (difference: " + difference + ")");
+  const DIFF = Math.abs(Date.now() - tab.lastAccessed);
+  ok(DIFF <= CURRENT_TIME_TOLERANCE_MS, msg + " (difference: " + DIFF + ")");
 }
+
+function nextStep(fn) {
+  setTimeout(fn, CURRENT_TIME_TOLERANCE_MS + 10);
+}
+
+let originalTab;
+let newTab;
 
 function test() {
   waitForExplicitFinish();
 
   originalTab = gBrowser.selectedTab;
-  setTimeout(step2, 10);
+  nextStep(step2);
 }
 
 function step2() {
   isCurrent(originalTab, "selected tab has the current timestamp");
   newTab = gBrowser.addTab("about:blank", {skipAnimation: true});
-  setTimeout(step3, 10);
+  nextStep(step3);
 }
 
 function step3() {
   ok(newTab.lastAccessed < Date.now(), "new tab hasn't been selected so far");
   gBrowser.selectedTab = newTab;
   isCurrent(newTab, "new tab has the current timestamp after being selected");
-  setTimeout(step4, 10);
+  nextStep(step4);
 }
 
 function step4() {

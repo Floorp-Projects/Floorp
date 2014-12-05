@@ -531,8 +531,8 @@ Settings.prototype = {
               yesNoToBoolean);
     this._set("Software\\Microsoft\\Internet Explorer\\Settings",
               "Always Use My Colors",
-              "browser.display.use_document_colors",
-              function (v) !Boolean(v));
+              "browser.display.document_color_use",
+              function (v) !Boolean(v) ? 0 : 2);
     this._set("Software\\Microsoft\\Internet Explorer\\Settings",
               "Always Use My Font Face",
               "browser.display.use_document_fonts",

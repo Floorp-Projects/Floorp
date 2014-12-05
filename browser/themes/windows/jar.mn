@@ -59,10 +59,11 @@ browser.jar:
         skin/classic/browser/Metro_Glyph.png                        (Metro_Glyph-aero.png)
         skin/classic/browser/Metro_Glyph-inverted.png
         skin/classic/browser/Metro_Glyph-menuPanel.png
-        skin/classic/browser/bad-content-blocked-16.png
-        skin/classic/browser/bad-content-blocked-64.png
-        skin/classic/browser/bad-content-unblocked-16.png
-        skin/classic/browser/bad-content-unblocked-64.png
+        skin/classic/browser/bad-content-blocked-16.png             (../shared/bad-content-blocked-16.png)
+        skin/classic/browser/bad-content-blocked-16@2x.png          (../shared/bad-content-blocked-16@2x.png)
+        skin/classic/browser/bad-content-blocked-64.png             (../shared/bad-content-blocked-64.png)
+        skin/classic/browser/bad-content-unblocked-16.png           (../shared/bad-content-unblocked-16.png)
+        skin/classic/browser/bad-content-unblocked-64.png           (../shared/bad-content-unblocked-64.png)
         skin/classic/browser/monitor.png
         skin/classic/browser/monitor_16-10.png
         skin/classic/browser/notification-16.png
@@ -502,10 +503,11 @@ browser.jar:
         skin/classic/aero/browser/Metro_Glyph.png                    (Metro_Glyph-aero.png)
         skin/classic/aero/browser/Metro_Glyph-inverted.png
         skin/classic/aero/browser/Metro_Glyph-menuPanel.png
-        skin/classic/aero/browser/bad-content-blocked-16.png
-        skin/classic/aero/browser/bad-content-blocked-64.png
-        skin/classic/aero/browser/bad-content-unblocked-16.png
-        skin/classic/aero/browser/bad-content-unblocked-64.png
+        skin/classic/aero/browser/bad-content-blocked-16.png         (../shared/bad-content-blocked-16.png)
+        skin/classic/aero/browser/bad-content-blocked-16@2x.png      (../shared/bad-content-blocked-16@2x.png)
+        skin/classic/aero/browser/bad-content-blocked-64.png         (../shared/bad-content-blocked-64.png)
+        skin/classic/aero/browser/bad-content-unblocked-16.png       (../shared/bad-content-unblocked-16.png)
+        skin/classic/aero/browser/bad-content-unblocked-64.png       (../shared/bad-content-unblocked-64.png)
         skin/classic/aero/browser/monitor.png
         skin/classic/aero/browser/monitor_16-10.png
         skin/classic/aero/browser/notification-16.png

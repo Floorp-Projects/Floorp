@@ -6,7 +6,7 @@ MARIONETTE_HEAD_JS = "head.js";
 
 let url = "https://www.example.com";
 
-function sendNDEF(techType, peer) {
+function sendNDEF(peer) {
   let tnf = NDEF.TNF_WELL_KNOWN;
   let type = new Uint8Array(NfcUtils.fromUTF8("U"));
   let payload = new Uint8Array(NfcUtils.fromUTF8(url));
@@ -32,9 +32,8 @@ function sendNDEF(techType, peer) {
 function handleTechnologyDiscoveredRE0(msg) {
   log("Received \'nfc-manager-tech-discovered\' " + JSON.stringify(msg));
   is(msg.type, "techDiscovered", "check for correct message type");
-  let index = msg.techList.indexOf("P2P");
-  isnot(index, -1, "check for \'P2P\' in tech list");
-  sendNDEF(msg.techList[index], msg.peer);
+  is(msg.isP2P, "check for \'P2P\' in tech list");
+  sendNDEF(msg.peer);
 }
 
 function testOnPeerReadyRE0() {

@@ -44,19 +44,24 @@ add_task(function* remove_nonexistent_guid() {
 });
 
 add_task(function* remove_roots_fail() {
-  try {
-    yield PlacesUtils.bookmarks.remove(PlacesUtils.bookmarks.unfiledGuid);
-    Assert.ok(false, "Should have thrown");
-  } catch (ex) {
-    Assert.ok(/It's not possible to remove Places root folders/.test(ex));
+  let guids = [PlacesUtils.bookmarks.rootGuid,
+               PlacesUtils.bookmarks.unfiledGuid,
+               PlacesUtils.bookmarks.menuGuid,
+               PlacesUtils.bookmarks.toolbarGuid,
+               PlacesUtils.bookmarks.tagsGuid];
+  for (let guid of guids) {
+    Assert.throws(() => PlacesUtils.bookmarks.remove(guid),
+                  /It's not possible to remove Places root folders/);
   }
+});
 
-  try {
-    yield PlacesUtils.bookmarks.remove(PlacesUtils.bookmarks.rootGuid);
-    Assert.ok(false, "Should have thrown");
-  } catch (ex) {
-    Assert.ok(/It's not possible to remove Places root folders/.test(ex));
-  }
+add_task(function* remove_normal_folder_undes_root_succeeds() {
+  let folder = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.rootGuid,
+                                                    type: PlacesUtils.bookmarks.TYPE_FOLDER });
+  checkBookmarkObject(folder);
+  let removed_folder = yield PlacesUtils.bookmarks.remove(folder);
+  Assert.deepEqual(folder, removed_folder);
+  Assert.strictEqual((yield PlacesUtils.bookmarks.fetch(folder.guid)), null);
 });
 
 add_task(function* remove_bookmark() {

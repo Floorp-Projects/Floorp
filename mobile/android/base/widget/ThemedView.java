@@ -152,4 +152,8 @@ public class ThemedView extends android.view.View
     public ColorDrawable getColorDrawable(int id) {
         return new ColorDrawable(getResources().getColor(id));
     }
+
+    protected LightweightTheme getTheme() {
+        return mTheme;
+    }
 }

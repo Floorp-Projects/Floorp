@@ -50,7 +50,7 @@ var cs5 = getComputedStyle(document.getElementById("five"), "");
 var cs6 = getComputedStyle(document.getElementById("six"), "");
 var cs7 = getComputedStyle(document.getElementById("seven"), "");
 
-SpecialPowers.pushPrefEnv({'set': [['browser.display.use_document_colors', true]]}, part1);
+SpecialPowers.pushPrefEnv({'set': [['browser.display.document_color_use', 1]]}, part1);
 
 var transparentBackgroundColor;
 var inputBackgroundColor, inputColor, inputBorderTopColor;
@@ -121,7 +121,7 @@ function part1()
     inputBorderRightColor = cs4.borderRightColor;
     inputBorderLeftColor = cs4.borderLeftColor;
     inputBorderBottomColor = cs4.borderBottomColor;
-    SpecialPowers.pushPrefEnv({'set': [['browser.display.use_document_colors', false]]}, part2);
+    SpecialPowers.pushPrefEnv({'set': [['browser.display.document_color_use', 2]]}, part2);
 }
 
 function part2()

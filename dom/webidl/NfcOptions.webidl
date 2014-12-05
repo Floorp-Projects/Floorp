@@ -35,6 +35,7 @@ dictionary NfcEventOptions
   long majorVersion;
   long minorVersion;
 
+  boolean isP2P;
   sequence<NFCTechType> techList;
   sequence<MozNDEFRecordOptions> records;
 
