@@ -41,6 +41,10 @@ skip-if(Android||B2G) == 649134-2.html 649134-2-ref.html
 fuzzy(1,149) == bug917595-iframe-1.html    bug917595-1-ref.html
 skip-if(B2G) fuzzy-if(!B2G,3,640) == bug917595-exif-rotated.jpg bug917595-pixel-rotated.jpg # bug 1060869
 
+# Test support for SVG-as-image in <picture> elements.
+pref(dom.image.picture.enabled,true) pref(dom.image.srcset.enabled,true) == bug1106522-1.html bug1106522-ref.html
+pref(dom.image.picture.enabled,true) pref(dom.image.srcset.enabled,true) == bug1106522-2.html bug1106522-ref.html
+
 == href-attr-change-restyles.html href-attr-change-restyles-ref.html
 == figure.html figure-ref.html
 == pre-1.html pre-1-ref.html
