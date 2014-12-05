@@ -31,3 +31,10 @@ like this:
       (required* used during tagging)
     - your_amazing_image/REGISTRY: Override default registry
       (useful for secret registries)
+
+## Conventions
+
+In some image folders you will see `.env` files these can be used in
+conjunction with the `--env-file` flag in docker to provide a
+environment with the given environment variables. These are primarily
+for convenience when manually hacking on the images.

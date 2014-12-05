@@ -84,29 +84,23 @@ def get_task(task_id):
     return json.load(urllib2.urlopen("https://queue.taskcluster.net/v1/task/" + task_id))
 
 @CommandProvider
-class InheritTryme(object):
-    @Command('taskcluster-inherit', category="ci",
-        description="Create taskcluster try server graph")
-    def tryme(self):
-        yaml.add_platform
-        print('meme')
-
-
-
-@CommandProvider
 class TryGraph(object):
     @Command('taskcluster-trygraph', category="ci",
         description="Create taskcluster try server graph")
     @CommandArgument('--base-repository',
+        default=os.environ.get('GECKO_BASE_REPOSITORY'),
         help='URL for "base" repository to clone')
     @CommandArgument('--head-repository',
+        default=os.environ.get('GECKO_HEAD_REPOSITORY'),
         required=True,
-        help='URL for "base" repository to clone')
+        help='URL for "head" repository to fetch revision from')
     @CommandArgument('--head-ref',
+        default=os.environ.get('GECKO_HEAD_REF'),
         help='Reference (this is same as rev usually for hg)')
     @CommandArgument('--head-rev',
+        default=os.environ.get('GECKO_HEAD_REV'),
         required=True,
-        help='Commit revision to use')
+        help='Commit revision to use from head repository')
     @CommandArgument('--message',
         required=True,
         help='Commit message to be parsed')
@@ -211,13 +205,14 @@ class CIBuild(object):
         help='URL for "base" repository to clone')
     @CommandArgument('--head-repository',
         required=True,
-        help='URL for "base" repository to clone')
+        help='URL for "head" repository to fetch revision from')
     @CommandArgument('--head-ref',
         help='Reference (this is same as rev usually for hg)')
     @CommandArgument('--head-rev',
         required=True,
         help='Commit revision to use')
     @CommandArgument('--owner',
+        required=True,
         help='email address of who owns this graph')
     @CommandArgument('build_task',
         help='path to build task definition')

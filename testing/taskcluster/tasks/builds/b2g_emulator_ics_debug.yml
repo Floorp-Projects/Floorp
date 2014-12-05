@@ -7,7 +7,7 @@ task:
     name: B2G Emulator ICS Debug
   payload:
     cache:
-      build-emulator-ics-debug: /home/worker/object-folder-emulator-ics-1/
+      build-emulator-ics-debug: /home/worker/object-folder
     env:
       B2G_CONFIG: 'emulator-ics'
       B2G_DEBUG: 1

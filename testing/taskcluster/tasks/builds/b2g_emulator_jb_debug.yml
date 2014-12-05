@@ -7,7 +7,7 @@ task:
     name: B2G Emulator JB Debug
   payload:
     cache:
-      build-emulator-jb-debug: /home/worker/object-folder-emulator-jb-1/
+      build-emulator-jb-debug: /home/worker/object-folder
     env:
       B2G_CONFIG: 'emulator-jb'
       B2G_DEBUG: 1

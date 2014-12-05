@@ -8,7 +8,7 @@ task:
 
   payload:
     cache:
-      build-emulator-ics-opt: /home/worker/object-folder-emulator-ics-0/
+      build-emulator-ics-opt: /home/worker/object-folder/
 
     env:
       B2G_CONFIG: 'emulator-ics'
