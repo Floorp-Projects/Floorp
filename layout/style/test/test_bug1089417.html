@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1089417
 
     f.height = "400";
     fdoc.getElementById("s").disabled = false;
-    todo_is(fwin.getComputedStyle(fdoc.documentElement).backgroundColor,
+    is(fwin.getComputedStyle(fdoc.documentElement).backgroundColor,
        "rgb(0, 128, 0)",
        "media query change should have restyled");
     SimpleTest.finish();
