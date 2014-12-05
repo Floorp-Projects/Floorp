@@ -539,7 +539,7 @@ nsTransitionManager::ConsiderStartingTransition(
   segment.mTimingFunction.Init(tf);
 
   nsRefPtr<CSSTransitionPlayer> player = new CSSTransitionPlayer(timeline);
-  player->mStartTime = timeline->GetCurrentTime();
+  player->PlayFromStyle();
   player->SetSource(pt);
 
   if (!aElementTransitions) {
