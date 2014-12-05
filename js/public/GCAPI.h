@@ -486,7 +486,7 @@ class JS_PUBLIC_API(AutoCheckCannotGC) : public AutoAssertOnGC
  * JSTRACE_SHAPE. |thing| should be non-null.
  */
 extern JS_FRIEND_API(bool)
-UnmarkGrayGCThingRecursively(void *thing, JSGCTraceKind kind);
+UnmarkGrayGCThingRecursively(GCCellPtr thing);
 
 } /* namespace JS */
 
@@ -509,7 +509,7 @@ ExposeGCThingToActiveJS(JS::GCCellPtr thing)
     if (IsIncrementalBarrierNeededOnTenuredGCThing(rt, thing))
         JS::IncrementalReferenceBarrier(thing);
     else if (JS::GCThingIsMarkedGray(thing.asCell()))
-        JS::UnmarkGrayGCThingRecursively(thing.asCell(), thing.kind());
+        JS::UnmarkGrayGCThingRecursively(thing);
 }
 
 static MOZ_ALWAYS_INLINE void
