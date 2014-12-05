@@ -67,7 +67,7 @@ using JS::GenericNaN;
 TypedArrayLayout TypedArrayObject::layout_(false, // shared
                                            true,  // neuterable
                                            &TypedArrayObject::classes[0],
-                                           &TypedArrayObject::classes[Scalar::TypeMax]);
+                                           &TypedArrayObject::classes[Scalar::MaxTypedArrayViewType]);
 
 TypedArrayLayout::TypedArrayLayout(bool isShared, bool isNeuterable, const Class *firstClass,
                                    const Class *maxClass)
@@ -785,6 +785,8 @@ TypedArrayObject::protoFunctions[] = {
     JS_FN("subarray", TypedArrayObject::subarray, 2, 0),
     JS_FN("set", TypedArrayObject::set, 2, 0),
     JS_FN("copyWithin", TypedArrayObject::copyWithin, 2, 0),
+    JS_SELF_HOSTED_FN("find", "TypedArrayFind", 2, 0),
+    JS_SELF_HOSTED_FN("findIndex", "TypedArrayFindIndex", 2, 0),
     JS_FS_END
 };
 
@@ -1613,7 +1615,9 @@ TypedArrayObject::getElement(uint32_t index)
         return Float64Array::getIndexValue(this, index);
       case Scalar::Uint8Clamped:
         return Uint8ClampedArray::getIndexValue(this, index);
-      case Scalar::TypeMax:
+      case Scalar::Float32x4:
+      case Scalar::Int32x4:
+      case Scalar::MaxTypedArrayViewType:
         break;
     }
 
@@ -1653,7 +1657,9 @@ TypedArrayObject::setElement(TypedArrayObject &obj, uint32_t index, double d)
       case Scalar::Float64:
         Float64Array::setIndexValue(obj, index, d);
         return;
-      case Scalar::TypeMax:
+      case Scalar::Float32x4:
+      case Scalar::Int32x4:
+      case Scalar::MaxTypedArrayViewType:
         break;
     }
 
@@ -1774,7 +1780,7 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     TYPED_ARRAY_CLASS_SPEC(_typedArray)                                        \
 }
 
-const Class TypedArrayObject::classes[Scalar::TypeMax] = {
+const Class TypedArrayObject::classes[Scalar::MaxTypedArrayViewType] = {
     IMPL_TYPED_ARRAY_CLASS(Int8Array),
     IMPL_TYPED_ARRAY_CLASS(Uint8Array),
     IMPL_TYPED_ARRAY_CLASS(Int16Array),
@@ -1827,7 +1833,7 @@ const Class TypedArrayObject::classes[Scalar::TypeMax] = {
     } \
 }
 
-const Class TypedArrayObject::protoClasses[Scalar::TypeMax] = {
+const Class TypedArrayObject::protoClasses[Scalar::MaxTypedArrayViewType] = {
     IMPL_TYPED_ARRAY_PROTO_CLASS(Int8Array),
     IMPL_TYPED_ARRAY_PROTO_CLASS(Uint8Array),
     IMPL_TYPED_ARRAY_PROTO_CLASS(Int16Array),
@@ -2019,7 +2025,7 @@ js::IsTypedArrayConstructor(HandleValue v, uint32_t type)
         return IsNativeFunction(v, Float64Array::class_constructor);
       case Scalar::Uint8Clamped:
         return IsNativeFunction(v, Uint8ClampedArray::class_constructor);
-      case Scalar::TypeMax:
+      case Scalar::MaxTypedArrayViewType:
         break;
     }
     MOZ_CRASH("unexpected typed array type");
@@ -2120,12 +2126,12 @@ JS_GetArrayBufferViewType(JSObject *obj)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)
-        return Scalar::TypeMax;
+        return Scalar::MaxTypedArrayViewType;
 
     if (obj->is<TypedArrayObject>())
         return obj->as<TypedArrayObject>().type();
     else if (obj->is<DataViewObject>())
-        return Scalar::TypeMax;
+        return Scalar::MaxTypedArrayViewType;
     MOZ_CRASH("invalid ArrayBufferView type");
 }
 

@@ -694,6 +694,17 @@ public:
   }
 
   /**
+   * Apply the mComputed(Min/Max)ISize constraints to the content
+   * size computed so far.
+   */
+  nscoord ApplyMinMaxISize(nscoord aISize) const {
+    if (NS_UNCONSTRAINEDSIZE != ComputedMaxISize()) {
+      aISize = std::min(aISize, ComputedMaxISize());
+    }
+    return std::max(aISize, ComputedMinISize());
+  }
+
+  /**
    * Apply the mComputed(Min/Max)Height constraints to the content
    * size computed so far.
    *
@@ -714,6 +725,29 @@ public:
     }
 
     return aHeight - aConsumed;
+  }
+
+  /**
+   * Apply the mComputed(Min/Max)BSize constraints to the content
+   * size computed so far.
+   *
+   * @param aBSize The block-size that we've computed an to which we want to apply
+   *        min/max constraints.
+   * @param aConsumed The amount of the computed block-size that was consumed by
+   *        our prev-in-flows.
+   */
+  nscoord ApplyMinMaxBSize(nscoord aBSize, nscoord aConsumed = 0) const {
+    aBSize += aConsumed;
+
+    if (NS_UNCONSTRAINEDSIZE != ComputedMaxBSize()) {
+      aBSize = std::min(aBSize, ComputedMaxBSize());
+    }
+
+    if (NS_UNCONSTRAINEDSIZE != ComputedMinBSize()) {
+      aBSize = std::max(aBSize, ComputedMinBSize());
+    }
+
+    return aBSize - aConsumed;
   }
 
   bool ShouldReflowAllKids() const {

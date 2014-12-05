@@ -42,7 +42,7 @@ public:
    * Retrieve the available height for content of this frame. The available content
    * height is the available height for the frame, minus borders and padding.
    */
-  virtual nscoord GetAvailableContentHeight(const nsHTMLReflowState& aReflowState);
+  virtual nscoord GetAvailableContentBSize(const nsHTMLReflowState& aReflowState);
 
   virtual nsContainerFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
     nsIFrame* frame = GetFirstPrincipalChild();
@@ -92,7 +92,7 @@ public:
 #endif
 
 protected:
-  nscoord        mLastBalanceHeight;
+  nscoord        mLastBalanceBSize;
   nsReflowStatus mLastFrameStatus;
 
   /**
@@ -103,63 +103,63 @@ protected:
     // balancing, this will be set to INT32_MAX.
     int32_t mBalanceColCount;
 
-    // The width of each individual column.
-    nscoord mColWidth;
+    // The inline-size of each individual column.
+    nscoord mColISize;
 
-    // The amount of width that is expected to be left over after all the
+    // The amount of inline-size that is expected to be left over after all the
     // columns and column gaps are laid out.
-    nscoord mExpectedWidthLeftOver;
+    nscoord mExpectedISizeLeftOver;
 
-    // The width of each column gap.
+    // The width (inline-size) of each column gap.
     nscoord mColGap;
 
-    // The maximum height of any individual column during a reflow iteration.
+    // The maximum bSize of any individual column during a reflow iteration.
     // This parameter is set during each iteration of the binary search for
-    // the best column height.
-    nscoord mColMaxHeight;
+    // the best column block-size.
+    nscoord mColMaxBSize;
 
     // A boolean controlling whether or not we are balancing. This should be
     // equivalent to mBalanceColCount == INT32_MAX.
     bool mIsBalancing;
 
-    // The last known column height that was 'feasible'. A column height is
-    // feasible if all child content fits within the specified height.
-    nscoord mKnownFeasibleHeight;
+    // The last known column block-size that was 'feasible'. A column bSize is
+    // feasible if all child content fits within the specified bSize.
+    nscoord mKnownFeasibleBSize;
 
-    // The last known height that was 'infeasible'. A column height is
-    // infeasible if not all child content fits within the specified height.
-    nscoord mKnownInfeasibleHeight;
+    // The last known block-size that was 'infeasible'. A column bSize is
+    // infeasible if not all child content fits within the specified bSize.
+    nscoord mKnownInfeasibleBSize;
 
-    // Height of the column set frame
-    nscoord mComputedHeight;
+    // block-size of the column set frame
+    nscoord mComputedBSize;
 
-    // The height "consumed" by previous-in-flows.
-    // The computed height should be equal to the height of the element (i.e.
-    // the computed height itself) plus the consumed height.
-    nscoord mConsumedHeight;
+    // The block-size "consumed" by previous-in-flows.
+    // The computed block-size should be equal to the block-size of the element
+    // (i.e. the computed block-size itself) plus the consumed block-size.
+    nscoord mConsumedBSize;
   };
 
   /**
    * Some data that is better calculated during reflow
    */
   struct ColumnBalanceData {
-    // The maximum "content height" of any column
-    nscoord mMaxHeight;
-    // The sum of the "content heights" for all columns
-    nscoord mSumHeight;
-    // The "content height" of the last column
-    nscoord mLastHeight;
-    // The maximum "content height" of all columns that overflowed
-    // their available height
-    nscoord mMaxOverflowingHeight;
+    // The maximum "content block-size" of any column
+    nscoord mMaxBSize;
+    // The sum of the "content block-size" for all columns
+    nscoord mSumBSize;
+    // The "content block-size" of the last column
+    nscoord mLastBSize;
+    // The maximum "content block-size" of all columns that overflowed
+    // their available block-size
+    nscoord mMaxOverflowingBSize;
     // This flag determines whether the last reflow of children exceeded the
-    // computed height of the column set frame. If so, we set the height to
-    // this maximum allowable height, and continue reflow without balancing.
-    bool mHasExcessHeight;
+    // computed block-size of the column set frame. If so, we set the bSize to
+    // this maximum allowable bSize, and continue reflow without balancing.
+    bool mHasExcessBSize;
 
     void Reset() {
-      mMaxHeight = mSumHeight = mLastHeight = mMaxOverflowingHeight = 0;
-      mHasExcessHeight = false;
+      mMaxBSize = mSumBSize = mLastBSize = mMaxOverflowingBSize = 0;
+      mHasExcessBSize = false;
     }
   };
 
@@ -168,7 +168,7 @@ protected:
                      nsReflowStatus& aReflowStatus,
                      ReflowConfig& aConfig,
                      bool aLastColumnUnbounded,
-                     nsCollapsingMargin* aCarriedOutBottomMargin,
+                     nsCollapsingMargin* aCarriedOutBEndMargin,
                      ColumnBalanceData& aColData);
 
   /**
@@ -179,8 +179,8 @@ protected:
    * the state machine that controls column balancing.
    */
   ReflowConfig ChooseColumnStrategy(const nsHTMLReflowState& aReflowState,
-                                    bool aForceAuto, nscoord aFeasibleHeight,
-                                    nscoord aInfeasibleHeight);
+                                    bool aForceAuto, nscoord aFeasibleBSize,
+                                    nscoord aInfeasibleBSize);
 
   /**
    * Perform the binary search for the best balance height for this column set.
@@ -206,25 +206,25 @@ protected:
    * @param aStatus A final reflow status of the column set frame, passed in as
    *        an output parameter.
    */
-  void FindBestBalanceHeight(const nsHTMLReflowState& aReflowState,
-                             nsPresContext* aPresContext,
-                             ReflowConfig& aConfig,
-                             ColumnBalanceData& aColData,
-                             nsHTMLReflowMetrics& aDesiredSize,
-                             nsCollapsingMargin& aOutMargin,
-                             bool& aUnboundedLastColumn,
-                             bool& aRunWasFeasible,
-                             nsReflowStatus& aStatus);
+  void FindBestBalanceBSize(const nsHTMLReflowState& aReflowState,
+                            nsPresContext* aPresContext,
+                            ReflowConfig& aConfig,
+                            ColumnBalanceData& aColData,
+                            nsHTMLReflowMetrics& aDesiredSize,
+                            nsCollapsingMargin& aOutMargin,
+                            bool& aUnboundedLastColumn,
+                            bool& aRunWasFeasible,
+                            nsReflowStatus& aStatus);
   /**
    * Reflow column children. Returns true iff the content that was reflowed
-   * fit into the mColMaxHeight.
+   * fit into the mColMaxBSize.
    */
   bool ReflowChildren(nsHTMLReflowMetrics& aDesiredSize,
                         const nsHTMLReflowState& aReflowState,
                         nsReflowStatus& aStatus,
                         const ReflowConfig& aConfig,
                         bool aLastColumnUnbounded,
-                        nsCollapsingMargin* aCarriedOutBottomMargin,
+                        nsCollapsingMargin* aCarriedOutBEndMargin,
                         ColumnBalanceData& aColData);
 };
 

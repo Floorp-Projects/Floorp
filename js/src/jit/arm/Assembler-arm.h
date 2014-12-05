@@ -1275,7 +1275,7 @@ class Assembler : public AssemblerShared
     void copyDataRelocationTable(uint8_t *dest);
     void copyPreBarrierTable(uint8_t *dest);
 
-    bool addCodeLabel(CodeLabel label);
+    void addCodeLabel(CodeLabel label);
     size_t numCodeLabels() const {
         return codeLabels_.length();
     }

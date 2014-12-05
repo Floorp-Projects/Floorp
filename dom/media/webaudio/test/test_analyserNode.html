@@ -30,8 +30,8 @@ addLoadEvent(function() {
   source.connect(analyser);
   analyser.connect(destination);
 
-  is(analyser.channelCount, 1, "analyser node has 2 input channels by default");
-  is(analyser.channelCountMode, "explicit", "Correct channelCountMode for the analyser node");
+  is(analyser.channelCount, 1, "analyser node has 1 input channels by default");
+  is(analyser.channelCountMode, "max", "Correct channelCountMode for the analyser node");
   is(analyser.channelInterpretation, "speakers", "Correct channelCountInterpretation for the analyser node");
 
   is(analyser.fftSize, 2048, "Correct default value for fftSize");
