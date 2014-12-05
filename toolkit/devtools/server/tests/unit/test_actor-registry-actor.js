@@ -65,7 +65,7 @@ function unregisterNewActor() {
     .unregister()
     .then(testActorIsUnregistered)
     .then(null, e => {
-      DevToolsUtils.reportException("registerNewActor", e)
+      DevToolsUtils.reportException("unregisterNewActor", e)
       do_check_true(false);
     });
 }
