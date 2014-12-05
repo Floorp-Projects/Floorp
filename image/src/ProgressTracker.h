@@ -103,7 +103,7 @@ public:
 
   // Get the current Progress.
   Progress GetProgress() const { return mProgress; }
- 
+
   // Schedule an asynchronous "replaying" of all the notifications that would
   // have to happen to put us in the current state.
   // We will also take note of any notifications that happen between the time
@@ -164,9 +164,9 @@ public:
     return mConsumers.Length();
   }
 
-  // This is intentionally non-general because its sole purpose is to support an
-  // some obscure network priority logic in imgRequest. That stuff could probably
-  // be improved, but it's too scary to mess with at the moment.
+  // This is intentionally non-general because its sole purpose is to support
+  // some obscure network priority logic in imgRequest. That stuff could
+  // probably be improved, but it's too scary to mess with at the moment.
   bool FirstConsumerIs(imgRequestProxy* aConsumer);
 
   void AdoptConsumers(ProgressTracker* aTracker) {
