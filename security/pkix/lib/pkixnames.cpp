@@ -1043,56 +1043,41 @@ PresentedDNSIDMatchesReferenceDNSID(
       return false;
   }
 
-  bool isFirstPresentedByte = true;
+  // We only allow wildcard labels that consist only of '*'.
+  if (presented.Peek('*')) {
+    Result rv = presented.Skip(1);
+    if (rv != Success) {
+      assert(false);
+      return false;
+    }
+    do {
+      uint8_t referenceByte;
+      if (reference.Read(referenceByte) != Success) {
+        return false;
+      }
+    } while (!reference.Peek('.'));
+  }
+
   for (;;) {
     uint8_t presentedByte;
     if (presented.Read(presentedByte) != Success) {
       return false;
     }
-    if (presentedByte == '*') {
-      // RFC 6125 is unclear about whether "www*.example.org" matches
-      // "www.example.org". The Chromium test suite has this test:
-      //
-      //    { false, "w.bar.foo.com", "w*.bar.foo.com" },
-      //
-      // We agree with Chromium by forbidding "*" from expanding to the empty
-      // string.
-      do {
-        uint8_t referenceByte;
-        if (reference.Read(referenceByte) != Success) {
-          return false;
-        }
-      } while (!reference.Peek('.'));
-
-      // We also don't allow a non-IDN presented ID label to match an IDN
-      // reference ID label, except when the entire presented ID label is "*".
-      // This avoids confusion when matching a presented ID like
-      // "xn-*.example.org" against "xn--www.example.org" (which attempts to
-      // abuse the punycode syntax) or "www-*.example.org" against
-      // "xn--www--ep4c4a2kpf" (which makes sense to match, semantically, but
-      // no implementations actually do).
-      if (!isFirstPresentedByte && StartsWithIDNALabel(referenceDNSID)) {
-        return false;
-      }
-    } else {
-      uint8_t referenceByte;
-      if (reference.Read(referenceByte) != Success) {
-        return false;
-      }
-      if (LocaleInsensitveToLower(presentedByte) !=
-          LocaleInsensitveToLower(referenceByte)) {
-        return false;
-      }
-
-      if (presented.AtEnd()) {
-        // Don't allow presented IDs to be absolute.
-        if (presentedByte == '.') {
-          return false;
-        }
-        break;
-      }
+    uint8_t referenceByte;
+    if (reference.Read(referenceByte) != Success) {
+      return false;
     }
-    isFirstPresentedByte = false;
+    if (LocaleInsensitveToLower(presentedByte) !=
+        LocaleInsensitveToLower(referenceByte)) {
+      return false;
+    }
+    if (presented.AtEnd()) {
+      // Don't allow presented IDs to be absolute.
+      if (presentedByte == '.') {
+        return false;
+      }
+      break;
+    }
   }
 
   // Allow a relative presented DNS ID to match an absolute reference DNS ID,
@@ -1579,16 +1564,34 @@ IsValidDNSID(Input hostname, ValidDNSIDMatchType matchType)
     return true;
   }
 
-  bool allowWildcard = matchType == ValidDNSIDMatchType::PresentedID;
-  bool isWildcard = false;
   size_t dotCount = 0;
-
   size_t labelLength = 0;
   bool labelIsAllNumeric = false;
-  bool labelIsWildcard = false;
   bool labelEndsWithHyphen = false;
 
-  bool isFirstByte = true;
+  // Only presented IDs are allowed to have wildcard labels. And, like
+  // Chromium, be stricter than RFC 6125 requires by insisting that a
+  // wildcard label consist only of '*'.
+  bool isWildcard = matchType == ValidDNSIDMatchType::PresentedID &&
+                    input.Peek('*');
+  bool isFirstByte = !isWildcard;
+  if (isWildcard) {
+    Result rv = input.Skip(1);
+    if (rv != Success) {
+      assert(false);
+      return false;
+    }
+
+    uint8_t b;
+    rv = input.Read(b);
+    if (rv != Success) {
+      return false;
+    }
+    if (b != '.') {
+      return false;
+    }
+    ++dotCount;
+  }
 
   do {
     static const size_t MAX_LABEL_LENGTH = 63;
@@ -1596,14 +1599,6 @@ IsValidDNSID(Input hostname, ValidDNSIDMatchType matchType)
     uint8_t b;
     if (input.Read(b) != Success) {
       return false;
-    }
-    if (labelIsWildcard) {
-      // Like NSS, be stricter than RFC6125 requires by insisting that the
-      // "*" must be the last character in the label. This also prevents
-      // multiple "*" in the label.
-      if (b != '.') {
-        return false;
-      }
     }
     switch (b) {
       case '-':
@@ -1659,20 +1654,6 @@ IsValidDNSID(Input hostname, ValidDNSIDMatchType matchType)
         }
         break;
 
-      case '*':
-        if (!allowWildcard) {
-          return false;
-        }
-        labelIsWildcard = true;
-        isWildcard = true;
-        labelIsAllNumeric = false;
-        labelEndsWithHyphen = false;
-        ++labelLength;
-        if (labelLength > MAX_LABEL_LENGTH) {
-          return false;
-        }
-        break;
-
       case '.':
         ++dotCount;
         if (labelLength == 0 &&
@@ -1683,8 +1664,6 @@ IsValidDNSID(Input hostname, ValidDNSIDMatchType matchType)
         if (labelEndsWithHyphen) {
           return false; // Labels must not end with a hyphen.
         }
-        allowWildcard = false; // only allowed in the first label.
-        labelIsWildcard = false;
         labelLength = 0;
         break;
 
