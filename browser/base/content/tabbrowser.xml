@@ -1513,136 +1513,6 @@
         </body>
       </method>
 
-      <field name="_preloadedBrowser">null</field>
-      <method name="_getPreloadedBrowser">
-        <body>
-          <![CDATA[
-            if (!this._isPreloadingEnabled()) {
-              return null;
-            }
-
-            // The preloaded browser might be null.
-            let browser = this._preloadedBrowser;
-
-            // Consume the browser.
-            this._preloadedBrowser = null;
-
-            // Attach the nsIFormFillController now that we know the browser
-            // will be used. If we do that before and the preloaded browser
-            // won't be consumed until shutdown then we leak a docShell.
-            if (browser && this.hasAttribute("autocompletepopup")) {
-              browser.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
-              browser.attachFormFill();
-            }
-
-            return browser;
-          ]]>
-        </body>
-      </method>
-
-      <method name="_isPreloadingEnabled">
-        <body>
-          <![CDATA[
-            // Preloading for the newtab page is enabled when the pref is true
-            // and the URL is "about:newtab". We do not support preloading for
-            // custom newtab URLs. We intentionally disable preloading for e10s
-            // as the goal here is that page loads do not affect tab animations.
-            return Services.prefs.getBoolPref("browser.newtab.preload") &&
-                   !Services.prefs.prefHasUserValue("browser.newtab.url") &&
-                   !gMultiProcessBrowser;
-          ]]>
-        </body>
-      </method>
-
-      <method name="_createPreloadBrowser">
-        <body>
-          <![CDATA[
-            // Do nothing if we have a preloaded browser already
-            // or preloading of newtab pages is disabled.
-            if (this._preloadedBrowser || !this._isPreloadingEnabled()) {
-              return;
-            }
-
-            let browser = this._createBrowser({isPreloadBrowser: true});
-            this._preloadedBrowser = browser;
-
-            let notificationbox = this.getNotificationBox(browser);
-            this.mPanelContainer.appendChild(notificationbox);
-
-            browser.loadURI(BROWSER_NEW_TAB_URL);
-            browser.docShellIsActive = false;
-          ]]>
-        </body>
-      </method>
-
-      <method name="_createBrowser">
-        <parameter name="aParams"/>
-        <body>
-          <![CDATA[
-            const NS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
-            let remote = aParams && aParams.remote;
-            let uriIsAboutBlank = aParams && aParams.uriIsAboutBlank;
-            let isPreloadBrowser = aParams && aParams.isPreloadBrowser;
-
-            let b = document.createElementNS(NS_XUL, "browser");
-            b.setAttribute("type", "content-targetable");
-            b.setAttribute("message", "true");
-            b.setAttribute("messagemanagergroup", "browsers");
-            b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
-            b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
-
-            if (remote)
-              b.setAttribute("remote", "true");
-
-            if (window.gShowPageResizers && window.windowState == window.STATE_NORMAL) {
-              b.setAttribute("showresizer", "true");
-            }
-
-            if (!isPreloadBrowser && this.hasAttribute("autocompletepopup"))
-              b.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
-
-            if (this.hasAttribute("selectpopup"))
-              b.setAttribute("selectpopup", this.getAttribute("selectpopup"));
-
-            b.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
-
-            // Create the browserStack container
-            var stack = document.createElementNS(NS_XUL, "stack");
-            stack.className = "browserStack";
-            stack.appendChild(b);
-            stack.setAttribute("flex", "1");
-
-            // Create the browserContainer
-            var browserContainer = document.createElementNS(NS_XUL, "vbox");
-            browserContainer.className = "browserContainer";
-            browserContainer.appendChild(stack);
-            browserContainer.setAttribute("flex", "1");
-
-            // Create the sidebar container
-            var browserSidebarContainer = document.createElementNS(NS_XUL,
-                                                                   "hbox");
-            browserSidebarContainer.className = "browserSidebarContainer";
-            browserSidebarContainer.appendChild(browserContainer);
-            browserSidebarContainer.setAttribute("flex", "1");
-
-            // Add the Message and the Browser to the box
-            var notificationbox = document.createElementNS(NS_XUL,
-                                                           "notificationbox");
-            notificationbox.setAttribute("flex", "1");
-            notificationbox.appendChild(browserSidebarContainer);
-
-            // Prevent the superfluous initial load of a blank document
-            // if we're going to load something other than about:blank.
-            if (!uriIsAboutBlank) {
-              b.setAttribute("nodefaultsrc", "true");
-            }
-
-            return b;
-          ]]>
-        </body>
-      </method>
-
       <method name="addTab">
         <parameter name="aURI"/>
         <parameter name="aReferrerURI"/>
@@ -1713,23 +1583,55 @@
             if (aOwner)
               t.owner = aOwner;
 
-            let b;
-            let usingPreloadedContent = false;
-            let isPrivateWindow = PrivateBrowsingUtils.isWindowPrivate(window);
+            var b = document.createElementNS(
+              "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                             "browser");
+            b.setAttribute("type", "content-targetable");
+            b.setAttribute("message", "true");
+            b.setAttribute("messagemanagergroup", "browsers");
+            b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
+            b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
 
-            // If we open a new tab with the newtab URL,
-            // check if there is a preloaded browser ready.
-            if (aURI == BROWSER_NEW_TAB_URL && !isPrivateWindow) {
-              b = this._getPreloadedBrowser();
-              usingPreloadedContent = !!b;
+            if (remote)
+              b.setAttribute("remote", "true");
+
+            if (window.gShowPageResizers && window.windowState == window.STATE_NORMAL) {
+              b.setAttribute("showresizer", "true");
             }
 
-            if (!b) {
-              // No preloaded browser found, create one.
-              b = this._createBrowser({remote, uriIsAboutBlank});
-            }
+            if (this.hasAttribute("autocompletepopup"))
+              b.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
 
-            let notificationbox = this.getNotificationBox(b);
+            if (this.hasAttribute("selectpopup"))
+              b.setAttribute("selectpopup", this.getAttribute("selectpopup"));
+
+            b.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
+
+            // Create the browserStack container
+            var stack = document.createElementNS(NS_XUL, "stack");
+            stack.className = "browserStack";
+            stack.appendChild(b);
+            stack.setAttribute("flex", "1");
+
+            // Create the browserContainer
+            var browserContainer = document.createElementNS(NS_XUL, "vbox");
+            browserContainer.className = "browserContainer";
+            browserContainer.appendChild(stack);
+            browserContainer.setAttribute("flex", "1");
+
+            // Create the sidebar container
+            var browserSidebarContainer = document.createElementNS(NS_XUL,
+                                                                   "hbox");
+            browserSidebarContainer.className = "browserSidebarContainer";
+            browserSidebarContainer.appendChild(browserContainer);
+            browserSidebarContainer.setAttribute("flex", "1");
+
+            // Add the Message and the Browser to the box
+            var notificationbox = document.createElementNS(NS_XUL,
+                                                           "notificationbox");
+            notificationbox.setAttribute("flex", "1");
+            notificationbox.appendChild(browserSidebarContainer);
+
             var position = this.tabs.length - 1;
             var uniqueId = this._generateUniquePanelID();
             notificationbox.id = uniqueId;
@@ -1740,15 +1642,18 @@
             t.lastAccessed = Date.now();
             this.tabContainer._setPositionalAttributes();
 
-            // Inject the <browser> into the DOM if necessary.
-            if (!notificationbox.parentNode) {
-              // NB: this appendChild call causes us to run constructors for the
-              // browser element, which fires off a bunch of notifications. Some
-              // of those notifications can cause code to run that inspects our
-              // state, so it is important that the tab element is fully
-              // initialized by this point.
-              this.mPanelContainer.appendChild(notificationbox);
+            // Prevent the superfluous initial load of a blank document
+            // if we're going to load something other than about:blank.
+            if (!uriIsAboutBlank) {
+              b.setAttribute("nodefaultsrc", "true");
             }
+
+            // NB: this appendChild call causes us to run constructors for the
+            // browser element, which fires off a bunch of notifications. Some
+            // of those notifications can cause code to run that inspects our
+            // state, so it is important that the tab element is fully
+            // initialized by this point.
+            this.mPanelContainer.appendChild(notificationbox);
 
             // We've waited until the tab is in the DOM to set the label. This
             // allows the TabLabelModified event to be properly dispatched.
@@ -1769,9 +1674,16 @@
 
             b.droppedLinkHandler = handleDroppedLink;
 
-            // Swap in a preloaded customize tab, if available.
-            if (aURI == "about:customizing") {
-              usingPreloadedContent = gCustomizationTabPreloader.newTab(t);
+            // If we just created a new tab that loads the default
+            // newtab url, swap in a preloaded page if possible.
+            // Do nothing if we're a private window.
+            let docShellsSwapped = false;
+            if (aURI == BROWSER_NEW_TAB_URL &&
+                !PrivateBrowsingUtils.isWindowPrivate(window) &&
+                !gMultiProcessBrowser) {
+              docShellsSwapped = gBrowserNewTabPreloader.newTab(t);
+            } else if (aURI == "about:customizing") {
+              docShellsSwapped = gCustomizationTabPreloader.newTab(t);
             }
 
             // Dispatch a new tab notification.  We do this once we're
@@ -1783,7 +1695,7 @@
 
             // If we didn't swap docShells with a preloaded browser
             // then let's just continue loading the page normally.
-            if (!usingPreloadedContent && !uriIsAboutBlank) {
+            if (!docShellsSwapped && !uriIsAboutBlank) {
               // pretend the user typed this so it'll be available till
               // the document successfully loads
               if (aURI && gInitialPages.indexOf(aURI) == -1)
@@ -4364,9 +4276,6 @@
           // without any scrolling and when the tabbar has already
           // overflowed.
           this.mTabstrip._updateScrollButtonsDisabledState();
-
-          // Preload the next about:newtab if there isn't one already.
-          this.tabbrowser._createPreloadBrowser();
         ]]></body>
       </method>
 
