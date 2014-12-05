@@ -51,10 +51,12 @@ using namespace mozilla;
 nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
                            nsFloatManager* aFloatManager,
                            const nsHTMLReflowState* aOuterReflowState,
-                           const nsLineList::iterator* aLine)
+                           const nsLineList::iterator* aLine,
+                           nsLineLayout* aBaseLineLayout)
   : mPresContext(aPresContext),
     mFloatManager(aFloatManager),
     mBlockReflowState(aOuterReflowState),
+    mBaseLineLayout(aBaseLineLayout ? aBaseLineLayout->mBaseLineLayout : this),
     mLastOptionalBreakFrame(nullptr),
     mForceBreakFrame(nullptr),
     mBlockRS(nullptr),/* XXX temporary */

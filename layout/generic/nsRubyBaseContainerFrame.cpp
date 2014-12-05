@@ -319,7 +319,7 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
     reflowStates.AppendElement(reflowState);
     reflowStateArray->AppendElement(reflowState);
     nsLineLayout* lineLayout = new nsLineLayout(
-      aPresContext, reflowState->mFloatManager, reflowState, nullptr);
+      aPresContext, reflowState->mFloatManager, reflowState, nullptr, nullptr);
     lineLayouts.AppendElement(lineLayout);
 
     // Line number is useless for ruby text
