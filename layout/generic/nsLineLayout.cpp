@@ -609,6 +609,7 @@ nsLineLayout::NewPerFrameData(nsIFrame* aFrame)
   pfd->mSpan = nullptr;
   pfd->mNext = nullptr;
   pfd->mPrev = nullptr;
+  pfd->mNextAnnotation = nullptr;
   pfd->mFlags = 0;  // all flags default to false
   pfd->mFrame = aFrame;
 
