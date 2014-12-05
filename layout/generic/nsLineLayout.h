@@ -29,10 +29,15 @@ struct nsStyleText;
 
 class nsLineLayout {
 public:
+  /**
+   * @param aBaseLineLayout the nsLineLayout for ruby base,
+   * nullptr if no separate base nsLineLayout is needed.
+   */
   nsLineLayout(nsPresContext* aPresContext,
                nsFloatManager* aFloatManager,
                const nsHTMLReflowState* aOuterReflowState,
-               const nsLineList::iterator* aLine);
+               const nsLineList::iterator* aLine,
+               nsLineLayout* aBaseLineLayout);
   ~nsLineLayout();
 
   void Init(nsBlockReflowState* aState, nscoord aMinLineBSize,
@@ -345,6 +350,14 @@ protected:
   nsFloatManager* mFloatManager;
   const nsStyleText* mStyleText; // for the block
   const nsHTMLReflowState* mBlockReflowState;
+
+  // The line layout for the base text. It is usually same as |this|.
+  // It becomes different when the current line layout is for ruby
+  // annotations. All line layouts share the same base line layout
+  // when they are associated. The base line layout is responsible
+  // for managing the life cycle of per-frame data and per-span data,
+  // and handling floats.
+  nsLineLayout* const mBaseLineLayout;
 
   nsIFrame* mLastOptionalBreakFrame;
   nsIFrame* mForceBreakFrame;
