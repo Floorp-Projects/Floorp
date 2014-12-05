@@ -395,6 +395,14 @@ protected:
     PerFrameData* mNext;
     PerFrameData* mPrev;
 
+    // Link to the frame of next ruby annotation.  It is a linked list
+    // through this pointer from ruby base to all its annotations.  It
+    // could be nullptr if there is no more annotation.
+    // If PFD_ISLINKEDTOBASE is set, the current PFD is one of the ruby
+    // annotations in the base's list, otherwise it is the ruby base,
+    // and its mNextAnnotation is the start of the linked list.
+    PerFrameData* mNextAnnotation;
+
     // pointer to child span data if this is an inline container frame
     PerSpanData* mSpan;
 
@@ -428,7 +436,8 @@ protected:
 #define PFD_ISBULLET                    0x00000040
 #define PFD_SKIPWHENTRIMMINGWHITESPACE  0x00000080
 #define PFD_ISEMPTY                     0x00000100
-#define PFD_LASTFLAG                    PFD_ISEMPTY
+#define PFD_ISLINKEDTOBASE              0x00000200
+#define PFD_LASTFLAG                    PFD_ISLINKEDTOBASE
 
     // Other state we use
     uint16_t mFlags;
