@@ -331,25 +331,27 @@ void
 CodeGeneratorX86Shared::visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds *ool)
 {
     switch (ool->viewType()) {
-      case AsmJSHeapAccess::Float32:
+      case Scalar::MaxTypedArrayViewType:
+        MOZ_CRASH("unexpected array type");
+      case Scalar::Float32:
         masm.loadConstantFloat32(float(GenericNaN()), ool->dest().fpu());
         break;
-      case AsmJSHeapAccess::Float64:
+      case Scalar::Float64:
         masm.loadConstantDouble(GenericNaN(), ool->dest().fpu());
         break;
-      case AsmJSHeapAccess::Float32x4:
+      case Scalar::Float32x4:
         masm.loadConstantFloat32x4(SimdConstant::SplatX4(float(GenericNaN())), ool->dest().fpu());
         break;
-      case AsmJSHeapAccess::Int32x4:
+      case Scalar::Int32x4:
         masm.loadConstantInt32x4(SimdConstant::SplatX4(0), ool->dest().fpu());
         break;
-      case AsmJSHeapAccess::Int8:
-      case AsmJSHeapAccess::Uint8:
-      case AsmJSHeapAccess::Int16:
-      case AsmJSHeapAccess::Uint16:
-      case AsmJSHeapAccess::Int32:
-      case AsmJSHeapAccess::Uint32:
-      case AsmJSHeapAccess::Uint8Clamped:
+      case Scalar::Int8:
+      case Scalar::Uint8:
+      case Scalar::Int16:
+      case Scalar::Uint16:
+      case Scalar::Int32:
+      case Scalar::Uint32:
+      case Scalar::Uint8Clamped:
         Register destReg = ool->dest().gpr();
         masm.mov(ImmWord(0), destReg);
         break;

@@ -174,21 +174,22 @@ LIRGeneratorX64::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
 
     LAsmJSStoreHeap *lir;
     switch (ins->viewType()) {
-      case AsmJSHeapAccess::Int8:
-      case AsmJSHeapAccess::Uint8:
-      case AsmJSHeapAccess::Int16:
-      case AsmJSHeapAccess::Uint16:
-      case AsmJSHeapAccess::Int32:
-      case AsmJSHeapAccess::Uint32:
+      case Scalar::Int8:
+      case Scalar::Uint8:
+      case Scalar::Int16:
+      case Scalar::Uint16:
+      case Scalar::Int32:
+      case Scalar::Uint32:
         lir = new(alloc()) LAsmJSStoreHeap(ptrAlloc, useRegisterOrConstantAtStart(ins->value()));
         break;
-      case AsmJSHeapAccess::Float32:
-      case AsmJSHeapAccess::Float64:
-      case AsmJSHeapAccess::Float32x4:
-      case AsmJSHeapAccess::Int32x4:
+      case Scalar::Float32:
+      case Scalar::Float64:
+      case Scalar::Float32x4:
+      case Scalar::Int32x4:
         lir = new(alloc()) LAsmJSStoreHeap(ptrAlloc, useRegisterAtStart(ins->value()));
         break;
-      case AsmJSHeapAccess::Uint8Clamped:
+      case Scalar::Uint8Clamped:
+      case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("unexpected array type");
     }
 
