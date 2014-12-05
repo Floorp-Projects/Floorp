@@ -78,7 +78,6 @@ nsXBLPrototypeResources::FlushSkinSheets()
   // We have scoped stylesheets.  Reload any chrome stylesheets we
   // encounter.  (If they aren't skin sheets, it doesn't matter, since
   // they'll still be in the chrome cache.
-  mRuleProcessor = nullptr;
 
   nsTArray<nsRefPtr<CSSStyleSheet>> oldSheets;
 
@@ -144,7 +143,8 @@ nsXBLPrototypeResources::GatherRuleProcessor()
 {
   mRuleProcessor = new nsCSSRuleProcessor(mStyleSheetList,
                                           nsStyleSet::eDocSheet,
-                                          nullptr);
+                                          nullptr,
+                                          mRuleProcessor);
 }
 
 void
