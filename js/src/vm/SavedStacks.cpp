@@ -599,8 +599,10 @@ SavedStacks::getOrCreateSavedFramePrototype(JSContext *cx)
     if (!global)
         return nullptr;
 
-    Rooted<SavedFrame *> proto(cx,
-        NewObjectWithGivenProto<SavedFrame>(cx, global->getOrCreateObjectPrototype(cx), global));
+    RootedNativeObject proto(cx,
+        NewNativeObjectWithGivenProto(cx, &SavedFrame::class_,
+                                      global->getOrCreateObjectPrototype(cx),
+                                      global));
     if (!proto
         || !JS_DefineProperties(cx, proto, SavedFrame::properties)
         || !JS_DefineFunctions(cx, proto, SavedFrame::methods)

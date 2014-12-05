@@ -61,7 +61,7 @@ class ArrayObject : public NativeObject
     createCopyOnWriteArray(ExclusiveContext *cx,
                            gc::InitialHeap heap,
                            HandleShape shape,
-                           HandleArrayObject sharedElementsOwner);
+                           HandleNativeObject sharedElementsOwner);
 
   private:
     // Helper for the above methods.

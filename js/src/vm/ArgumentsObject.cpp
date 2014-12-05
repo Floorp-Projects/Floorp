@@ -193,15 +193,14 @@ ArgumentsObject::create(JSContext *cx, HandleScript script, HandleFunction calle
     if (!data)
         return nullptr;
 
-    Rooted<ArgumentsObject *> obj(cx);
-    JSObject *base = JSObject::create(cx, FINALIZE_KIND,
-                                      GetInitialHeap(GenericObject, clasp),
-                                      shape, type);
-    if (!base) {
+    RootedNativeObject obj(cx);
+    obj = MaybeNativeObject(JSObject::create(cx, FINALIZE_KIND,
+                                             GetInitialHeap(GenericObject, clasp),
+                                             shape, type));
+    if (!obj) {
         js_free(data);
         return nullptr;
     }
-    obj = &base->as<ArgumentsObject>();
 
     data->numArgs = numArgs;
     data->callee.init(ObjectValue(*callee.get()));
@@ -223,11 +222,12 @@ ArgumentsObject::create(JSContext *cx, HandleScript script, HandleFunction calle
 
     obj->initFixedSlot(INITIAL_LENGTH_SLOT, Int32Value(numActuals << PACKED_BITS_COUNT));
 
-    copy.maybeForwardToCallObject(obj, data);
+    copy.maybeForwardToCallObject(&obj->as<ArgumentsObject>(), data);
 
-    MOZ_ASSERT(obj->initialLength() == numActuals);
-    MOZ_ASSERT(!obj->hasOverriddenLength());
-    return obj;
+    ArgumentsObject &argsobj = obj->as<ArgumentsObject>();
+    MOZ_ASSERT(argsobj.initialLength() == numActuals);
+    MOZ_ASSERT(!argsobj.hasOverriddenLength());
+    return &argsobj;
 }
 
 ArgumentsObject *

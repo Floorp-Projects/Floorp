@@ -507,13 +507,13 @@ js_InitRegExpClass(JSContext *cx, HandleObject obj)
 
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
 
-    Rooted<RegExpObject*> proto(cx, global->createBlankPrototype<RegExpObject>(cx));
+    RootedNativeObject proto(cx, global->createBlankPrototype(cx, &RegExpObject::class_));
     if (!proto)
         return nullptr;
-    proto->NativeObject::setPrivate(nullptr);
+    proto->setPrivate(nullptr);
 
     HandlePropertyName empty = cx->names().empty;
-    RegExpObjectBuilder builder(cx, proto);
+    RegExpObjectBuilder builder(cx, &proto->as<RegExpObject>());
     if (!builder.build(empty, RegExpFlag(0)))
         return nullptr;
 

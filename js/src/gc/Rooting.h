@@ -17,7 +17,6 @@ namespace js {
 class PropertyName;
 class NativeObject;
 class ArrayObject;
-class PlainObject;
 class ScriptSourceObject;
 class Shape;
 
@@ -32,7 +31,6 @@ typedef JS::Handle<JSAtom*>            HandleAtom;
 typedef JS::Handle<JSLinearString*>    HandleLinearString;
 typedef JS::Handle<PropertyName*>      HandlePropertyName;
 typedef JS::Handle<ArrayObject*>       HandleArrayObject;
-typedef JS::Handle<PlainObject*>       HandlePlainObject;
 typedef JS::Handle<ScriptSourceObject*> HandleScriptSource;
 
 typedef JS::MutableHandle<Shape*>      MutableHandleShape;
@@ -46,7 +44,6 @@ typedef JS::Rooted<JSAtom*>            RootedAtom;
 typedef JS::Rooted<JSLinearString*>    RootedLinearString;
 typedef JS::Rooted<PropertyName*>      RootedPropertyName;
 typedef JS::Rooted<ArrayObject*>       RootedArrayObject;
-typedef JS::Rooted<PlainObject*>       RootedPlainObject;
 typedef JS::Rooted<ScriptSourceObject*> RootedScriptSource;
 
 } /* namespace js */

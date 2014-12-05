@@ -194,8 +194,9 @@ SetConst(JSContext *cx, HandlePropertyName name, HandleObject scopeChain, Handle
 }
 
 bool
-MutatePrototype(JSContext *cx, HandlePlainObject obj, HandleValue value)
+MutatePrototype(JSContext *cx, HandleObject obj, HandleValue value)
 {
+    MOZ_ASSERT(obj->is<JSObject>(), "must only be used with object literals");
     if (!value.isObjectOrNull())
         return true;
 
@@ -282,7 +283,7 @@ template bool StringsEqual<true>(JSContext *cx, HandleString lhs, HandleString r
 template bool StringsEqual<false>(JSContext *cx, HandleString lhs, HandleString rhs, bool *res);
 
 JSObject*
-NewInitObject(JSContext *cx, HandlePlainObject templateObject)
+NewInitObject(JSContext *cx, HandleNativeObject templateObject)
 {
     NewObjectKind newKind = templateObject->hasSingletonType() ? SingletonObject : GenericObject;
     if (!templateObject->hasLazyType() && templateObject->type()->shouldPreTenure())
@@ -299,7 +300,7 @@ NewInitObject(JSContext *cx, HandlePlainObject templateObject)
 }
 
 JSObject *
-NewInitObjectWithClassPrototype(JSContext *cx, HandlePlainObject templateObject)
+NewInitObjectWithClassPrototype(JSContext *cx, HandleObject templateObject)
 {
     MOZ_ASSERT(!templateObject->hasSingletonType());
     MOZ_ASSERT(!templateObject->hasLazyType());
@@ -307,10 +308,11 @@ NewInitObjectWithClassPrototype(JSContext *cx, HandlePlainObject templateObject)
     NewObjectKind newKind = templateObject->type()->shouldPreTenure()
                             ? TenuredObject
                             : GenericObject;
-    PlainObject *obj = NewObjectWithGivenProto<PlainObject>(cx,
-                                                            templateObject->getProto(),
-                                                            cx->global(),
-                                                            newKind);
+    JSObject *obj = NewObjectWithGivenProto(cx,
+                                            templateObject->getClass(),
+                                            templateObject->getProto(),
+                                            cx->global(),
+                                            newKind);
     if (!obj)
         return nullptr;
 
