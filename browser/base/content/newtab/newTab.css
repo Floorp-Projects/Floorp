@@ -454,27 +454,20 @@ input[type=button] {
   transition-duration: 0ms;
 }
 
-#newtab-customize-panel .panel-arrowcontent,
-#newtab-search-panel .panel-arrowcontent {
-  -moz-padding-start: 0;
-  -moz-padding-end: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-  background: rgb(248, 250, 251);
+#newtab-customize-panel > .panel-arrowcontainer > .panel-arrowcontent,
+#newtab-search-panel > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 0;
 }
 
 .newtab-customize-panel-item,
-.newtab-search-panel-engine {
-  -moz-box-align: center;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  -moz-padding-start: 24px;
-  -moz-padding-end: 24px;
+.newtab-search-panel-engine,
+#newtab-search-manage {
+  padding: 4px 24px;
 }
 
 .newtab-customize-panel-item:not(:last-child),
-.newtab-search-panel-engine:not(:last-child) {
-  border-bottom: 1px solid #ccc;
+.newtab-search-panel-engine {
+  border-bottom: 1px solid threedshadow;
 }
 
 .newtab-search-panel-engine > image {
@@ -485,10 +478,10 @@ input[type=button] {
 }
 
 .newtab-customize-panel-item > label,
-.newtab-search-panel-engine > label {
-  -moz-padding-start: 0;
-  -moz-margin-start: 0;
-  color: rgb(130, 132, 133);
+.newtab-search-panel-engine > label,
+#newtab-search-manage > label {
+  padding: 0;
+  margin: 0;
 }
 
 .newtab-customize-panel-item[selected],
