@@ -139,6 +139,13 @@ WebGLContext::InitWebGL2()
     // we initialise WebGL 2 related stuff.
     gl->GetUIntegerv(LOCAL_GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS,
                      &mGLMaxTransformFeedbackSeparateAttribs);
+    gl->GetUIntegerv(LOCAL_GL_MAX_UNIFORM_BUFFER_BINDINGS,
+                     &mGLMaxUniformBufferBindings);
+
+    mBoundTransformFeedbackBuffers =
+        MakeUnique<WebGLRefPtr<WebGLBuffer>[]>(mGLMaxTransformFeedbackSeparateAttribs);
+    mBoundUniformBuffers =
+        MakeUnique<WebGLRefPtr<WebGLBuffer>[]>(mGLMaxUniformBufferBindings);
 
     mDefaultTransformFeedback = new WebGLTransformFeedback(this, 0);
     mBoundTransformFeedback = mDefaultTransformFeedback;
