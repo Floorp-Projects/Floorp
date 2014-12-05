@@ -719,15 +719,15 @@ class LNode
     LIR_OPCODE_LIST(LIROP)
 #   undef LIROP
 
-    virtual bool accept(LElementVisitor *visitor) = 0;
+    virtual void accept(LElementVisitor *visitor) = 0;
 
 #define LIR_HEADER(opcode)                                                  \
     Opcode op() const {                                                     \
         return LInstruction::LOp_##opcode;                                  \
     }                                                                       \
-    bool accept(LElementVisitor *visitor) {                                 \
+    void accept(LElementVisitor *visitor) {                                 \
         visitor->setElement(this);                                          \
-        return visitor->visit##opcode(this);                                \
+        visitor->visit##opcode(this);                                       \
     }
 };
 
@@ -823,7 +823,7 @@ class LElementVisitor
     {}
 
   public:
-#define VISIT_INS(op) virtual bool visit##op(L##op *) { MOZ_CRASH("NYI: " #op); }
+#define VISIT_INS(op) virtual void visit##op(L##op *) { MOZ_CRASH("NYI: " #op); }
     LIR_OPCODE_LIST(VISIT_INS)
 #undef VISIT_INS
 };

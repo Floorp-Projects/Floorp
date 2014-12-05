@@ -170,7 +170,7 @@ MacroAssemblerX86::finish()
     for (size_t i = 0; i < doubles_.length(); i++) {
         CodeLabel cl(doubles_[i].uses);
         writeDoubleConstant(doubles_[i].value, cl.src());
-        enoughMemory_ &= addCodeLabel(cl);
+        addCodeLabel(cl);
         if (!enoughMemory_)
             return;
     }
@@ -180,7 +180,7 @@ MacroAssemblerX86::finish()
     for (size_t i = 0; i < floats_.length(); i++) {
         CodeLabel cl(floats_[i].uses);
         writeFloatConstant(floats_[i].value, cl.src());
-        enoughMemory_ &= addCodeLabel(cl);
+        addCodeLabel(cl);
         if (!enoughMemory_)
             return;
     }
@@ -196,7 +196,7 @@ MacroAssemblerX86::finish()
           case SimdConstant::Float32x4: writeFloat32x4Constant(v.value, cl.src()); break;
           default: MOZ_CRASH("unexpected SimdConstant type");
         }
-        enoughMemory_ &= addCodeLabel(cl);
+        addCodeLabel(cl);
         if (!enoughMemory_)
             return;
     }
