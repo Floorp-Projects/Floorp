@@ -877,108 +877,68 @@ class ManifestParser(object):
     ### directory importers
 
     @classmethod
-    def _walk_directories(cls, directories, function, pattern=None, ignore=()):
+    def _walk_directories(cls, directories, callback, pattern=None, ignore=()):
         """
         internal function to import directories
         """
 
-        class FilteredDirectoryContents(object):
-            """class to filter directory contents"""
+        if isinstance(pattern, basestring):
+            patterns = [pattern]
+        else:
+            patterns = pattern
+        ignore = set(ignore)
 
-            sort = sorted
+        if not patterns:
+            accept_filename = lambda filename: True
+        else:
+            def accept_filename(filename):
+                for pattern in patterns:
+                    if fnmatch.fnmatch(filename, pattern):
+                        return True
 
-            def __init__(self, pattern=pattern, ignore=ignore, cache=None):
-                if pattern is None:
-                    pattern = set()
-                if isinstance(pattern, basestring):
-                    pattern = [pattern]
-                self.patterns = pattern
-                self.ignore = set(ignore)
+        if not ignore:
+            accept_dirname = lambda dirname: True
+        else:
+            accept_dirname = lambda dirname: dirname not in ignore
 
-                # cache of (dirnames, filenames) keyed on directory real path
-                # assumes volume is frozen throughout scope
-                self._cache = cache or {}
+        rootdirectories = directories[:]
+        seen_directories = set()
+        for rootdirectory in rootdirectories:
+            # let's recurse directories using list
+            directories = [os.path.realpath(rootdirectory)]
+            while directories:
+                directory = directories.pop(0)
+                if directory in seen_directories:
+                    # eliminate possible infinite recursion due to
+                    # symbolic links
+                    continue
+                seen_directories.add(directory)
 
-            def __call__(self, directory):
-                """returns 2-tuple: dirnames, filenames"""
-                directory = os.path.realpath(directory)
-                if directory not in self._cache:
-                    dirnames, filenames = self.contents(directory)
+                files = []
+                subdirs = []
+                for name in sorted(os.listdir(directory)):
+                    path = os.path.join(directory, name)
+                    if os.path.isfile(path):
+                        # os.path.isfile follow symbolic links, we don't
+                        # need to handle them here.
+                        if accept_filename(name):
+                            files.append(name)
+                        continue
+                    elif os.path.islink(path):
+                        # eliminate symbolic links
+                        path = os.path.realpath(path)
 
-                    # filter out directories without progeny
-                    # XXX recursive: should keep track of seen directories
-                    dirnames = [ dirname for dirname in dirnames
-                                 if not self.empty(os.path.join(directory, dirname)) ]
+                    # we must have a directory here
+                    if accept_dirname(name):
+                        subdirs.append(name)
+                        # this subdir is added for recursion
+                        directories.insert(0, path)
 
-                    self._cache[directory] = (tuple(dirnames), filenames)
+                # here we got all subdirs and files filtered, we can
+                # call the callback function if directory is not empty
+                if subdirs or files:
+                    callback(rootdirectory, directory, subdirs, files)
 
-                # return cached values
-                return self._cache[directory]
-
-            def empty(self, directory):
-                """
-                returns if a directory and its descendents are empty
-                """
-                return self(directory) == ((), ())
-
-            def contents(self, directory, sort=None):
-                """
-                return directory contents as (dirnames, filenames)
-                with `ignore` and `pattern` applied
-                """
-
-                if sort is None:
-                    sort = self.sort
-
-                # split directories and files
-                dirnames = []
-                filenames = []
-                for item in os.listdir(directory):
-                    path = os.path.join(directory, item)
-                    if os.path.isdir(path):
-                        dirnames.append(item)
-                    else:
-                        # XXX not sure what to do if neither a file or directory
-                        # (if anything)
-                        assert os.path.isfile(path)
-                        filenames.append(item)
-
-                # filter contents;
-                # this could be done in situ re the above for loop
-                # but it is really disparate in intent
-                # and could conceivably go to a separate method
-                dirnames = [dirname for dirname in dirnames
-                            if dirname not in self.ignore]
-                filenames = set(filenames)
-                # we use set functionality to filter filenames
-                if self.patterns:
-                    matches = set()
-                    matches.update(*[fnmatch.filter(filenames, pattern)
-                                     for pattern in self.patterns])
-                    filenames = matches
-
-                if sort is not None:
-                    # sort dirnames, filenames
-                    dirnames = sort(dirnames)
-                    filenames = sort(filenames)
-
-                return (tuple(dirnames), tuple(filenames))
-
-        # make a filtered directory object
-        directory_contents = FilteredDirectoryContents(pattern=pattern, ignore=ignore)
-
-        # walk the directories, generating manifests
-        for index, directory in enumerate(directories):
-
-            for dirpath, dirnames, filenames in os.walk(directory):
-
-                # get the directory contents from the caching object
-                _dirnames, filenames = directory_contents(dirpath)
-                # filter out directory names
-                dirnames[:] = _dirnames
-
-                # call callback function
-                function(directory, dirpath, dirnames, filenames)
 
     @classmethod
     def populate_directory_manifests(cls, directories, filename, pattern=None, ignore=(), overwrite=False):
