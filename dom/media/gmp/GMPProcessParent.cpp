@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPProcessParent.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsIFile.h"
 
 #include "base/string_util.h"
 #include "base/process_util.h"
@@ -43,8 +45,19 @@ GMPProcessParent::~GMPProcessParent()
 bool
 GMPProcessParent::Launch(int32_t aTimeoutMs)
 {
+  nsCOMPtr<nsIFile> greDir;
+  NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(greDir));
+  if (!greDir) {
+    NS_WARNING("GMPProcessParent can't get NS_GRE_DIR");
+    return false;
+  }
+  greDir->AppendNative(NS_LITERAL_CSTRING("voucher.bin"));
+  nsAutoCString voucherPath;
+  greDir->GetNativePath(voucherPath);
+
   vector<string> args;
   args.push_back(mGMPPath);
+  args.push_back(string(voucherPath.BeginReading(), voucherPath.EndReading()));
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   std::wstring wGMPPath = UTF8ToWide(mGMPPath.c_str());
