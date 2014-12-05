@@ -229,6 +229,7 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mFrameElement(nullptr)
   , mIMESelectionAnchor(0)
   , mIMESelectionFocus(0)
+  , mWritingMode()
   , mIMEComposing(false)
   , mIMECompositionEnding(false)
   , mIMECompositionStart(0)
@@ -1395,6 +1396,7 @@ bool
 TabParent::RecvNotifyIMESelection(const uint32_t& aSeqno,
                                   const uint32_t& aAnchor,
                                   const uint32_t& aFocus,
+                                  const mozilla::WritingMode& aWritingMode,
                                   const bool& aCausedByComposition)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
@@ -1404,6 +1406,7 @@ TabParent::RecvNotifyIMESelection(const uint32_t& aSeqno,
   if (aSeqno == mIMESeqno) {
     mIMESelectionAnchor = aAnchor;
     mIMESelectionFocus = aFocus;
+    mWritingMode = aWritingMode;
     const nsIMEUpdatePreference updatePreference =
       widget->GetIMEUpdatePreference();
     if (updatePreference.WantSelectionChange() &&
@@ -1585,6 +1588,7 @@ TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent)
       }
       aEvent.mReply.mReversed = mIMESelectionFocus < mIMESelectionAnchor;
       aEvent.mReply.mHasSelection = true;
+      aEvent.mReply.mWritingMode = mWritingMode;
       aEvent.mSucceeded = true;
     }
     break;

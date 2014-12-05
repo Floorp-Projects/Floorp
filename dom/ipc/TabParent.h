@@ -20,6 +20,7 @@
 #include "nsIXULBrowserWindow.h"
 #include "nsWeakReference.h"
 #include "Units.h"
+#include "WritingModes.h"
 #include "js/TypeDecls.h"
 
 class nsFrameLoader;
@@ -172,6 +173,7 @@ public:
     virtual bool RecvNotifyIMESelection(const uint32_t& aSeqno,
                                         const uint32_t& aAnchor,
                                         const uint32_t& aFocus,
+                                        const mozilla::WritingMode& aWritingMode,
                                         const bool& aCausedByComposition) MOZ_OVERRIDE;
     virtual bool RecvNotifyIMETextHint(const nsString& aText) MOZ_OVERRIDE;
     virtual bool RecvNotifyIMEMouseButtonEvent(const widget::IMENotification& aEventMessage,
@@ -379,6 +381,7 @@ protected:
     nsString mIMECacheText;
     uint32_t mIMESelectionAnchor;
     uint32_t mIMESelectionFocus;
+    mozilla::WritingMode mWritingMode;
     bool mIMEComposing;
     bool mIMECompositionEnding;
     // Buffer to store composition text during ResetInputState
