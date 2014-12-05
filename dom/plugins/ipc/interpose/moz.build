@@ -13,3 +13,5 @@ UNIFIED_SOURCES += [
 ]
 
 OS_LIBS += ['-framework Carbon']
+
+FAIL_ON_WARNINGS = True
