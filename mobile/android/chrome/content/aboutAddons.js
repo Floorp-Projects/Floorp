@@ -238,7 +238,7 @@ var Addons = {
 
   _getElementForAddon: function(aKey) {
     let list = document.getElementById("addons-list");
-    let element = list.querySelector("div[addonID=" + aKey.quote() + "]");
+    let element = list.querySelector("div[addonID=\"" + CSS.escape(aKey) + "\"]");
     return element;
   },
 

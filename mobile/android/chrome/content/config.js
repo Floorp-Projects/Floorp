@@ -87,7 +87,7 @@ var NewPrefDialog = {
     }
 
     // If item already in list, it's being changed, else added
-    let item = document.querySelector(".pref-item[name=" + aPrefName.quote() + "]");
+    let item = document.querySelector(".pref-item[name=\"" + CSS.escape(aPrefName) + "\"]");
     if (item) {
       this._positiveButton.textContent = gStringBundle.GetStringFromName("newPref.changeButton");
     } else {
@@ -472,7 +472,7 @@ var AboutConfig = {
     }
 
     // If pref not already in list, refresh display as it's being added
-    let item = document.querySelector(".pref-item[name=" + pref.name.quote() + "]");
+    let item = document.querySelector(".pref-item[name=\"" + CSS.escape(pref.name) + "\"]");
     if (!item) {
       document.location.reload();
       return;
