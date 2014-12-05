@@ -608,6 +608,12 @@ this.UITour = {
         }).then(null, Cu.reportError);
         break;
       }
+
+      case "ping": {
+        if (typeof data.callbackID == "string")
+          this.sendPageCallback(messageManager, data.callbackID);
+        break;
+      }
     }
 
     if (!window.gMultiProcessBrowser) { // Non-e10s. See bug 1089000.
@@ -1622,7 +1628,29 @@ this.UITour = {
         reject("Search engine not available");
       });
     });
-  }
+  },
+
+  notify(eventName, params) {
+    let winEnum = Services.wm.getEnumerator("navigator:browser");
+    while (winEnum.hasMoreElements()) {
+      let window = winEnum.getNext();
+      if (window.closed)
+        continue;
+debugger;
+      let originTabs = this.originTabs.get(window);
+      if (!originTabs)
+        continue;
+
+      for (let tab of originTabs) {
+        let messageManager = tab.linkedBrowser.messageManager;
+        let detail = {
+          event: eventName,
+          params: params,
+        };
+        messageManager.sendAsyncMessage("UITour:SendPageNotification", detail);
+      }
+    }
+  },
 };
 
 this.UITour.init();
