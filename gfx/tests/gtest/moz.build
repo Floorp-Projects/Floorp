@@ -23,7 +23,7 @@ UNIFIED_SOURCES += [
     'TestTiledLayerBuffer.cpp',
 ]
 
-# Because of gkmedia on windows we wont find these
+# Because of gkmedia on windows we won't find these
 # symbols in xul.dll.
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'windows':
     UNIFIED_SOURCES += [ '%s/gfx/2d/unittest/%s' % (TOPSRCDIR, p) for p in [
@@ -48,3 +48,5 @@ LOCAL_INCLUDES += [
 FINAL_LIBRARY = 'xul-gtest'
 
 CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
+
+FAIL_ON_WARNINGS = True
