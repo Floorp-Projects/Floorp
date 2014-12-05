@@ -731,6 +731,31 @@ var DebuggerServer = {
   get isInChildProcess() !!this.parentMessageManager,
 
   /**
+   * In a chrome parent process, ask all content child processes
+   * to execute a given module setup helper.
+   *
+   * @param module
+   *        The module to be required
+   * @param setupChild
+   *        The name of the setup helper exported by the above module
+   *        (setup helper signature: function ({mm}) { ... })
+   */
+  setupInChild: function({ module, setupChild, args }) {
+    if (this.isInChildProcess) {
+      return;
+    }
+
+    const gMessageManager = Cc["@mozilla.org/globalmessagemanager;1"].
+      getService(Ci.nsIMessageListenerManager);
+
+    gMessageManager.broadcastAsyncMessage("debug:setup-in-child", {
+      module: module,
+      setupChild: setupChild,
+      args: args,
+    });
+  },
+
+  /**
    * In a content child process, ask the DebuggerServer in the parent process
    * to execute a given module setup helper.
    *
@@ -828,6 +853,8 @@ var DebuggerServer = {
 
       let { NetworkMonitorManager } = require("devtools/toolkit/webconsole/network-monitor");
       netMonitor = new NetworkMonitorManager(aFrame, actor.actor);
+
+      events.emit(DebuggerServer, "new-child-process", { mm: mm });
 
       deferred.resolve(actor);
     }).bind(this);
