@@ -82,6 +82,9 @@ public:
   void AddExpression(const nsMediaExpression* aExpression,
                      bool aExpressionMatches);
   bool Matches(nsPresContext* aPresContext) const;
+  bool HasFeatureConditions() const {
+    return !mFeatureCache.IsEmpty();
+  }
 
   /**
    * An operator== that implements list equality, which isn't quite as

@@ -19,6 +19,7 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "nsRuleWalker.h"
+#include "mozilla/UniquePtr.h"
 
 struct CascadeEnumData;
 struct nsCSSSelector;
@@ -119,6 +120,12 @@ public:
     HasAttributeDependentStyle(AttributeRuleProcessorData* aData) MOZ_OVERRIDE;
 
   virtual bool MediumFeaturesChanged(nsPresContext* aPresContext) MOZ_OVERRIDE;
+
+  /**
+   * If this rule processor currently has a substantive media query
+   * result cache key, return a copy of it.
+   */
+  mozilla::UniquePtr<nsMediaQueryResultCacheKey> CloneMQCacheKey();
 
   virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
     const MOZ_MUST_OVERRIDE MOZ_OVERRIDE;
