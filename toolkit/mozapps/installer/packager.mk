@@ -541,8 +541,9 @@ MAKE_PACKAGE    = cd ./$(PKG_DMG_SOURCE) && $(MOZ_SIGN_PREPARED_PACKAGE_CMD) $(M
                   && cd $(PACKAGE_BASE_DIR) \
                   && $(INNER_MAKE_PACKAGE)
 else
-MAKE_PACKAGE    = $(MOZ_SIGN_PREPARED_PACKAGE_CMD) \
-		  $(MOZ_PKG_DIR) && $(INNER_MAKE_PACKAGE)
+MAKE_PACKAGE    = $(MOZ_SIGN_PREPARED_PACKAGE_CMD) $(MOZ_PKG_DIR) \
+                  && $(or $(MAKE_SIGN_EME_VOUCHER),true) \
+                  && $(INNER_MAKE_PACKAGE)
 endif #Darwin
 
 else
@@ -709,7 +710,6 @@ stage-package: $(MOZ_PKG_MANIFEST)
 		$(MOZ_PKG_MANIFEST) $(DIST) $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(if $(MOZ_PKG_MANIFEST),,$(_BINPATH)) \
 		$(if $(filter omni,$(MOZ_PACKAGER_FORMAT)),$(if $(NON_OMNIJAR_FILES),--non-resource $(NON_OMNIJAR_FILES)))
 	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/find-dupes.py $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)
-	$(MAKE_SIGN_EME_VOUCHER)
 ifndef LIBXUL_SDK
 ifdef MOZ_PACKAGE_JSSHELL
 # Package JavaScript Shell

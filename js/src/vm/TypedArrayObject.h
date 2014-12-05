@@ -87,17 +87,17 @@ class TypedArrayObject : public NativeObject
         return a->buffer() == b->buffer();
     }
 
-    static const Class classes[Scalar::TypeMax];
-    static const Class protoClasses[Scalar::TypeMax];
+    static const Class classes[Scalar::MaxTypedArrayViewType];
+    static const Class protoClasses[Scalar::MaxTypedArrayViewType];
     static const Class sharedTypedArrayPrototypeClass;
 
     static const Class *classForType(Scalar::Type type) {
-        MOZ_ASSERT(type < Scalar::TypeMax);
+        MOZ_ASSERT(type < Scalar::MaxTypedArrayViewType);
         return &classes[type];
     }
 
     static const Class *protoClassForType(Scalar::Type type) {
-        MOZ_ASSERT(type < Scalar::TypeMax);
+        MOZ_ASSERT(type < Scalar::MaxTypedArrayViewType);
         return &protoClasses[type];
     }
 
@@ -223,7 +223,7 @@ inline bool
 IsTypedArrayClass(const Class *clasp)
 {
     return &TypedArrayObject::classes[0] <= clasp &&
-           clasp < &TypedArrayObject::classes[Scalar::TypeMax];
+           clasp < &TypedArrayObject::classes[Scalar::MaxTypedArrayViewType];
 }
 
 bool
@@ -296,6 +296,9 @@ TypedArrayShift(Scalar::Type viewType)
         return 2;
       case Scalar::Float64:
         return 3;
+      case Scalar::Float32x4:
+      case Scalar::Int32x4:
+        return 4;
       default:;
     }
     MOZ_CRASH("Unexpected array type");

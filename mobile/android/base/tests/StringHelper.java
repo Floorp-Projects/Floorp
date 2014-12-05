@@ -51,6 +51,7 @@ public class StringHelper {
     public static final String CONTEXT_MENU_EDIT_SITE_SETTINGS = "Edit Site Settings";
     public static final String CONTEXT_MENU_ADD_TO_HOME_SCREEN = "Add to Home Screen";
     public static final String CONTEXT_MENU_PIN_SITE = "Pin Site";
+    public static final String CONTEXT_MENU_UNPIN_SITE = "Unpin Site";
 
     // Context Menu menu items
     public static final String[] CONTEXT_MENU_ITEMS_IN_PRIVATE_TAB = new String[] {

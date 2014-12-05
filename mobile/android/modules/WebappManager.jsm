@@ -358,7 +358,7 @@ this.WebappManager = {
 
     try {
       yield DOMApplicationRegistry.startDownload(aData.manifestURL);
-    } catch (ex if ex.message == "PACKAGE_UNCHANGED") {
+    } catch (ex if ex == "PACKAGE_UNCHANGED") {
       debug("package unchanged");
       // If the package is unchanged, then there's nothing more to do.
       return;

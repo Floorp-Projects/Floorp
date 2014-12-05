@@ -2066,7 +2066,7 @@ TemporaryTypeSet::getTypedArrayType()
 
     if (clasp && IsTypedArrayClass(clasp))
         return (Scalar::Type) (clasp - &TypedArrayObject::classes[0]);
-    return Scalar::TypeMax;
+    return Scalar::MaxTypedArrayViewType;
 }
 
 Scalar::Type
@@ -2076,7 +2076,7 @@ TemporaryTypeSet::getSharedTypedArrayType()
 
     if (clasp && IsSharedTypedArrayClass(clasp))
         return (Scalar::Type) (clasp - &SharedTypedArrayObject::classes[0]);
-    return Scalar::TypeMax;
+    return Scalar::MaxTypedArrayViewType;
 }
 
 bool

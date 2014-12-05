@@ -34,7 +34,7 @@ class nsSHEntryShared MOZ_FINAL : public nsIBFCacheEntry,
                                   public nsIMutationObserver
 {
   public:
-    static void Startup();
+    static void EnsureHistoryTracker();
     static void Shutdown();
 
     nsSHEntryShared();

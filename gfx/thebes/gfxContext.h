@@ -109,15 +109,6 @@ public:
     void Fill(const Pattern& aPattern);
 
     /**
-     * Fill the current path according to the current settings and
-     * with |aOpacity|.
-     *
-     * Does not consume the current path.
-     */
-    void FillWithOpacity(gfxFloat aOpacity);
-    void FillWithOpacity(const Pattern& aPattern, gfxFloat aOpacity);
-
-    /**
      * Forgets the current path.
      */
     void NewPath();
@@ -168,11 +159,6 @@ public:
      */
     void Rectangle(const gfxRect& rect, bool snapToPixels = false);
     void SnappedRectangle(const gfxRect& rect) { return Rectangle(rect, true); }
-
-    /**
-     * Draw a polygon from the given points
-     */
-    void Polygon(const gfxPoint *points, uint32_t numPoints);
 
     /**
      ** Transformation Matrix manipulation
