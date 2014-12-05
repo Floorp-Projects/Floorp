@@ -3,6 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* CSS Variables specific to this panel that aren't defined by the themes */
+.theme-dark {
+  --cell-border-color: rgba(255,255,255,0.15);
+  --focus-cell-border-color: rgba(0,0,0,0.3);
+  --row-alt-background-color: rgba(29,79,115,0.15);
+  --row-hover-background-color: rgba(29,79,115,0.25);
+}
+
+.theme-light {
+  --cell-border-color: rgba(0,0,0,0.15);
+  --focus-cell-border-color: rgba(255,255,255,0.5);
+  --row-alt-background-color: rgba(76,158,217,0.1);
+  --row-hover-background-color: rgba(76,158,217,0.2);
+}
+
 /* Reload and waiting notices */
 
 .notice-container {
@@ -245,17 +260,13 @@
 
 .call-tree-header:not(:last-child),
 .call-tree-cell:not(:last-child) {
-  -moz-border-end: 1px solid;
+  -moz-border-end-width: 1px;
+  -moz-border-end-style: solid;
 }
 
-.theme-dark .call-tree-header,
-.theme-dark .call-tree-cell {
-  -moz-border-end-color: rgba(255,255,255,0.15);
-}
-
-.theme-light .call-tree-header,
-.theme-light .call-tree-cell {
-  -moz-border-end-color: rgba(0,0,0,0.15);
+.call-tree-header,
+.call-tree-cell {
+  -moz-border-end-color: var(--cell-border-color);
 }
 
 .call-tree-header:not(:last-child) {
@@ -270,28 +281,16 @@
   background-color: var(--theme-tab-toolbar-background);
 }
 
-.theme-dark .call-tree-item:last-child:not(:focus) {
-  border-bottom: 1px solid rgba(255,255,255,0.15);
+.call-tree-item:last-child:not(:focus) {
+  border-bottom: 1px solid var(--cell-border-color);
 }
 
-.theme-light .call-tree-item:last-child:not(:focus) {
-  border-bottom: 1px solid rgba(0,0,0,0.15);
+.call-tree-item:nth-child(2n) {
+  background-color: var(--row-alt-background-color);
 }
 
-.theme-dark .call-tree-item:nth-child(2n) {
-  background-color: rgba(29,79,115,0.15);
-}
-
-.theme-light .call-tree-item:nth-child(2n) {
-  background-color: rgba(76,158,217,0.1);
-}
-
-.theme-dark .call-tree-item:hover {
-  background-color: rgba(29,79,115,0.25);
-}
-
-.theme-light .call-tree-item:hover {
-  background-color: rgba(76,158,217,0.2);
+.call-tree-item:hover {
+  background-color: var(--row-hover-background-color);
 }
 
 .call-tree-item:focus {
@@ -302,12 +301,8 @@
   color: var(--theme-selection-color) !important;
 }
 
-.theme-dark .call-tree-item:focus .call-tree-cell {
-  -moz-border-end-color: rgba(0,0,0,0.3);
-}
-
-.theme-light .call-tree-item:focus .call-tree-cell {
-  -moz-border-end-color: rgba(255,255,255,0.5);
+.call-tree-item:focus .call-tree-cell {
+  -moz-border-end-color: var(--focus-cell-border-color);
 }
 
 .call-tree-item:not([origin="content"]) .call-tree-name,
