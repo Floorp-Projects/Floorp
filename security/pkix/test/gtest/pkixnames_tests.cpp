@@ -104,9 +104,9 @@ static const PresentedMatchesReference DNSID_MATCH_PARAMS[] =
   DNS_ID_MISMATCH("example.com...", "example.com."),
 
   // xn-- IDN prefix
-  DNS_ID_MATCH("x*.b.a", "xa.b.a"),
-  DNS_ID_MATCH("x*.b.a", "xna.b.a"),
-  DNS_ID_MATCH("x*.b.a", "xn-a.b.a"),
+  DNS_ID_MISMATCH("x*.b.a", "xa.b.a"),
+  DNS_ID_MISMATCH("x*.b.a", "xna.b.a"),
+  DNS_ID_MISMATCH("x*.b.a", "xn-a.b.a"),
   DNS_ID_MISMATCH("x*.b.a", "xn--a.b.a"),
   DNS_ID_MISMATCH("xn*.b.a", "xn--a.b.a"),
   DNS_ID_MISMATCH("xn-*.b.a", "xn--a.b.a"),
@@ -150,7 +150,8 @@ static const PresentedMatchesReference DNSID_MATCH_PARAMS[] =
 
   DNS_ID_MISMATCH("w*w.bar.foo.c0m", "wwww.bar.foo.com"),
 
-  DNS_ID_MATCH("wa*.bar.foo.com", "WALLY.bar.foo.com"),
+  // '*' must be the only character in the wildcard label
+  DNS_ID_MISMATCH("wa*.bar.foo.com", "WALLY.bar.foo.com"),
 
   // We require "*" to be the last character in a wildcard label, but
   // Chromium does not.
@@ -199,8 +200,9 @@ static const PresentedMatchesReference DNSID_MATCH_PARAMS[] =
   DNS_ID_MISMATCH("*.example.com", "example.com"),
   // (e.g., baz*.example.net and *baz.example.net and b*z.example.net would
   // be taken to match baz1.example.net and foobaz.example.net and
-  // buzz.example.net, respectively
-  DNS_ID_MATCH("baz*.example.net", "baz1.example.net"),
+  // buzz.example.net, respectively. However, we don't allow any characters
+  // other than '*' in the wildcard label.
+  DNS_ID_MISMATCH("baz*.example.net", "baz1.example.net"),
 
   // Both of these are different from Chromium, but match NSS, becaues the
   // wildcard character "*" is not the last character of the label.
@@ -435,7 +437,8 @@ static const InputValidity DNSNAMES_VALIDITY[] =
   I("a-----------------b", true, true),
 
   // Wildcard specifications are not valid reference names, but are valid
-  // presented names if there are enough labels
+  // presented names if there are enough labels and if '*' is the only
+  // character in the wildcard label.
   I("*.a", false, false),
   I("a*", false, false),
   I("a*.", false, false),
@@ -443,9 +446,9 @@ static const InputValidity DNSNAMES_VALIDITY[] =
   I("a*.a.", false, false),
   I("*.a.b", false, true),
   I("*.a.b.", false, false),
-  I("a*.b.c", false, true),
+  I("a*.b.c", false, false),
   I("*.a.b.c", false, true),
-  I("a*.b.c.d", false, true),
+  I("a*.b.c.d", false, false),
 
   // Multiple wildcards are not allowed.
   I("a**.b.c", false, false),
@@ -466,9 +469,9 @@ static const InputValidity DNSNAMES_VALIDITY[] =
   I("a*b.c.d", false, false),
 
   // Wildcards not allowed with IDNA prefix
-  I("x*.a.b", false, true),
-  I("xn*.a.b", false, true),
-  I("xn-*.a.b", false, true),
+  I("x*.a.b", false, false),
+  I("xn*.a.b", false, false),
+  I("xn-*.a.b", false, false),
   I("xn--*.a.b", false, false),
   I("xn--w*.a.b", false, false),
 
