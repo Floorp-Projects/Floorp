@@ -385,9 +385,9 @@ private:
 #define NS_DECL_ISUPPORTS                                                     \
 public:                                                                       \
   NS_IMETHOD QueryInterface(REFNSIID aIID,                                    \
-                            void** aInstancePtr);                             \
-  NS_IMETHOD_(MozExternalRefCountType) AddRef(void);                          \
-  NS_IMETHOD_(MozExternalRefCountType) Release(void);                         \
+                            void** aInstancePtr) MOZ_OVERRIDE;                \
+  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) MOZ_OVERRIDE;             \
+  NS_IMETHOD_(MozExternalRefCountType) Release(void) MOZ_OVERRIDE;            \
 protected:                                                                    \
   nsAutoRefCnt mRefCnt;                                                       \
   NS_DECL_OWNINGTHREAD                                                        \
@@ -396,9 +396,9 @@ public:
 #define NS_DECL_THREADSAFE_ISUPPORTS                                          \
 public:                                                                       \
   NS_IMETHOD QueryInterface(REFNSIID aIID,                                    \
-                            void** aInstancePtr);                             \
-  NS_IMETHOD_(MozExternalRefCountType) AddRef(void);                          \
-  NS_IMETHOD_(MozExternalRefCountType) Release(void);                         \
+                            void** aInstancePtr) MOZ_OVERRIDE;                \
+  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) MOZ_OVERRIDE;             \
+  NS_IMETHOD_(MozExternalRefCountType) Release(void) MOZ_OVERRIDE;            \
 protected:                                                                    \
   ::mozilla::ThreadSafeAutoRefCnt mRefCnt;                                    \
   NS_DECL_OWNINGTHREAD                                                        \
@@ -407,9 +407,9 @@ public:
 #define NS_DECL_CYCLE_COLLECTING_ISUPPORTS                                    \
 public:                                                                       \
   NS_IMETHOD QueryInterface(REFNSIID aIID,                                    \
-                            void** aInstancePtr);                             \
-  NS_IMETHOD_(MozExternalRefCountType) AddRef(void);                          \
-  NS_IMETHOD_(MozExternalRefCountType) Release(void);                         \
+                            void** aInstancePtr) MOZ_OVERRIDE;                \
+  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) MOZ_OVERRIDE;             \
+  NS_IMETHOD_(MozExternalRefCountType) Release(void) MOZ_OVERRIDE;            \
   NS_IMETHOD_(void) DeleteCycleCollectable(void);                             \
 protected:                                                                    \
   nsCycleCollectingAutoRefCnt mRefCnt;                                        \
@@ -963,9 +963,9 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
 #define NS_DECL_ISUPPORTS_INHERITED                                           \
 public:                                                                       \
   NS_IMETHOD QueryInterface(REFNSIID aIID,                                    \
-                            void** aInstancePtr);                             \
-  NS_IMETHOD_(MozExternalRefCountType) AddRef(void);                          \
-  NS_IMETHOD_(MozExternalRefCountType) Release(void);                         \
+                            void** aInstancePtr) MOZ_OVERRIDE;                \
+  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) MOZ_OVERRIDE;             \
+  NS_IMETHOD_(MozExternalRefCountType) Release(void) MOZ_OVERRIDE;            \
 
 /**
  * These macros can be used in conjunction with NS_DECL_ISUPPORTS_INHERITED
