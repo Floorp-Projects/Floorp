@@ -152,4 +152,8 @@ public class ThemedEditText extends android.widget.EditText
     public ColorDrawable getColorDrawable(int id) {
         return new ColorDrawable(getResources().getColor(id));
     }
+
+    protected LightweightTheme getTheme() {
+        return mTheme;
+    }
 }

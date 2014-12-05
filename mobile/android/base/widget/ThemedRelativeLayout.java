@@ -152,4 +152,8 @@ public class ThemedRelativeLayout extends android.widget.RelativeLayout
     public ColorDrawable getColorDrawable(int id) {
         return new ColorDrawable(getResources().getColor(id));
     }
+
+    protected LightweightTheme getTheme() {
+        return mTheme;
+    }
 }

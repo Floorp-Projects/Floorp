@@ -134,6 +134,15 @@ MacroAssembler::guardTypeSet(const Source &address, const TypeSet *types, Barrie
     if (kind != BarrierKind::TypeTagOnly) {
         Register obj = extractObject(address, scratch);
         guardObjectType(obj, types, scratch, miss);
+    } else {
+#ifdef DEBUG
+        Label fail;
+        Register obj = extractObject(address, scratch);
+        guardObjectType(obj, types, scratch, &fail);
+        jump(&matched);
+        bind(&fail);
+        assumeUnreachable("Unexpected object type");
+#endif
     }
 
     bind(&matched);

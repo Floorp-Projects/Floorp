@@ -702,6 +702,22 @@ struct ParamTraits<mozilla::WidgetPluginEvent>
   }
 };
 
+template<>
+struct ParamTraits<mozilla::WritingMode>
+{
+  typedef mozilla::WritingMode paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mWritingMode);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mWritingMode);
+  }
+};
+
 } // namespace IPC
 
 #endif // nsGUIEventIPC_h__

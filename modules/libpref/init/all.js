@@ -177,7 +177,10 @@ pref("browser.sessionhistory.max_total_viewers", -1);
 pref("ui.use_native_colors", true);
 pref("ui.click_hold_context_menus", false);
 pref("browser.display.use_document_fonts",  1);  // 0 = never, 1 = quick, 2 = always
-pref("browser.display.use_document_colors", true);
+// 0 = default: always, except in high contrast mode
+// 1 = always
+// 2 = never
+pref("browser.display.document_color_use", 0);
 pref("browser.display.use_system_colors",   false);
 pref("browser.display.foreground_color",    "#000000");
 pref("browser.display.background_color",    "#FFFFFF");
@@ -2365,13 +2368,8 @@ pref("svg.display-lists.painting.enabled", true);
 // Is support for the SVG 2 paint-order property enabled?
 pref("svg.paint-order.enabled", true);
 
-// Is support for the new marker features from SVG 2 enabled?  Currently
-// this just includes <marker orient="auto-start-reverse">.
-#ifdef RELEASE_BUILD
-pref("svg.marker-improvements.enabled", false);
-#else
+// Is support for the <marker orient="auto-start-reverse"> feature enabled?
 pref("svg.marker-improvements.enabled", true);
-#endif
 
 #ifdef RELEASE_BUILD
 pref("svg.svg-iframe.enabled", false);
