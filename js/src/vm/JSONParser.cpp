@@ -596,7 +596,7 @@ JSONParserBase::createFinishedObject(PropertyVector &properties)
      * shape in manually.
      */
     gc::AllocKind allocKind = gc::GetGCObjectKind(properties.length());
-    RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx, allocKind));
+    RootedNativeObject obj(cx, NewNativeBuiltinClassInstance(cx, &JSObject::class_, allocKind));
     if (!obj)
         return nullptr;
 

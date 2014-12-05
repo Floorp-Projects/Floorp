@@ -286,12 +286,6 @@ class GlobalObject : public NativeObject
      */
     NativeObject *createBlankPrototypeInheriting(JSContext *cx, const js::Class *clasp, JSObject &proto);
 
-    template <typename T>
-    T *createBlankPrototype(JSContext *cx) {
-        NativeObject *res = createBlankPrototype(cx, &T::class_);
-        return res ? &res->template as<T>() : nullptr;
-    }
-
     NativeObject *getOrCreateObjectPrototype(JSContext *cx) {
         if (functionObjectClassesInitialized())
             return &getPrototype(JSProto_Object).toObject().as<NativeObject>();

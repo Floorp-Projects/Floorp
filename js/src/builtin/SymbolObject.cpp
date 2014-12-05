@@ -63,7 +63,7 @@ SymbolObject::initClass(JSContext *cx, HandleObject obj)
     // This uses &JSObject::class_ because: "The Symbol prototype object is an
     // ordinary object. It is not a Symbol instance and does not have a
     // [[SymbolData]] internal slot." (ES6 rev 24, 19.4.3)
-    RootedObject proto(cx, global->createBlankPrototype<PlainObject>(cx));
+    RootedObject proto(cx, global->createBlankPrototype(cx, &JSObject::class_));
     if (!proto)
         return nullptr;
 

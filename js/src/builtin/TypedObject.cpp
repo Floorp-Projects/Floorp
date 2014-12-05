@@ -808,11 +808,11 @@ StructMetaTypeDescr::create(JSContext *cx,
     int32_t alignment = 1;             // Alignment of struct.
     bool opaque = false;               // Opacity of struct.
 
-    userFieldOffsets = NewObjectWithProto<PlainObject>(cx, nullptr, nullptr, TenuredObject);
+    userFieldOffsets = NewObjectWithProto<JSObject>(cx, nullptr, nullptr, TenuredObject);
     if (!userFieldOffsets)
         return nullptr;
 
-    userFieldTypes = NewObjectWithProto<PlainObject>(cx, nullptr, nullptr, TenuredObject);
+    userFieldTypes = NewObjectWithProto<JSObject>(cx, nullptr, nullptr, TenuredObject);
     if (!userFieldTypes)
         return nullptr;
 
@@ -1067,7 +1067,7 @@ StructTypeDescr::maybeForwardedFieldCount() const
 bool
 StructTypeDescr::fieldIndex(jsid id, size_t *out) const
 {
-    ArrayObject &fieldNames = fieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_NAMES);
+    NativeObject &fieldNames = fieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_NAMES);
     size_t l = fieldNames.getDenseInitializedLength();
     for (size_t i = 0; i < l; i++) {
         JSAtom &a = fieldNames.getDenseElement(i).toString()->asAtom();
@@ -1088,7 +1088,7 @@ StructTypeDescr::fieldName(size_t index) const
 size_t
 StructTypeDescr::fieldOffset(size_t index) const
 {
-    ArrayObject &fieldOffsets = fieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS);
+    NativeObject &fieldOffsets = fieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS);
     MOZ_ASSERT(index < fieldOffsets.getDenseInitializedLength());
     return AssertedCast<size_t>(fieldOffsets.getDenseElement(index).toInt32());
 }
@@ -1096,7 +1096,7 @@ StructTypeDescr::fieldOffset(size_t index) const
 size_t
 StructTypeDescr::maybeForwardedFieldOffset(size_t index) const
 {
-    ArrayObject &fieldOffsets = maybeForwardedFieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS);
+    NativeObject &fieldOffsets = maybeForwardedFieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS);
     MOZ_ASSERT(index < fieldOffsets.getDenseInitializedLength());
     return AssertedCast<size_t>(fieldOffsets.getDenseElement(index).toInt32());
 }
@@ -1104,7 +1104,7 @@ StructTypeDescr::maybeForwardedFieldOffset(size_t index) const
 TypeDescr&
 StructTypeDescr::fieldDescr(size_t index) const
 {
-    ArrayObject &fieldDescrs = fieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_TYPES);
+    NativeObject &fieldDescrs = fieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_TYPES);
     MOZ_ASSERT(index < fieldDescrs.getDenseInitializedLength());
     return fieldDescrs.getDenseElement(index).toObject().as<TypeDescr>();
 }
@@ -1112,7 +1112,7 @@ StructTypeDescr::fieldDescr(size_t index) const
 TypeDescr&
 StructTypeDescr::maybeForwardedFieldDescr(size_t index) const
 {
-    ArrayObject &fieldDescrs = maybeForwardedFieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_TYPES);
+    NativeObject &fieldDescrs = maybeForwardedFieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_TYPES);
     MOZ_ASSERT(index < fieldDescrs.getDenseInitializedLength());
     JSObject &descr =
         *MaybeForwarded(&fieldDescrs.getDenseElement(index).toObject());
@@ -1228,12 +1228,12 @@ DefineSimpleTypeDescr(JSContext *cx,
 template<typename T>
 static JSObject *
 DefineMetaTypeDescr(JSContext *cx,
-                    const char *name,
                     Handle<GlobalObject*> global,
-                    Handle<TypedObjectModuleObject*> module,
+                    HandleNativeObject module,
                     TypedObjectModuleObject::Slot protoSlot)
 {
-    RootedAtom className(cx, Atomize(cx, name, strlen(name)));
+    RootedAtom className(cx, Atomize(cx, T::class_.name,
+                                     strlen(T::class_.name)));
     if (!className)
         return nullptr;
 
@@ -1243,8 +1243,8 @@ DefineMetaTypeDescr(JSContext *cx,
 
     // Create ctor.prototype, which inherits from Function.__proto__
 
-    RootedObject proto(cx, NewObjectWithProto<PlainObject>(cx, funcProto, global,
-                                                           SingletonObject));
+    RootedObject proto(cx, NewObjectWithProto<JSObject>(cx, funcProto, global,
+                                                        SingletonObject));
     if (!proto)
         return nullptr;
 
@@ -1254,8 +1254,8 @@ DefineMetaTypeDescr(JSContext *cx,
     if (!objProto)
         return nullptr;
     RootedObject protoProto(cx);
-    protoProto = NewObjectWithProto<PlainObject>(cx, objProto,
-                                                 global, SingletonObject);
+    protoProto = NewObjectWithProto<JSObject>(cx, objProto,
+                                              global, SingletonObject);
     if (!protoProto)
         return nullptr;
 
@@ -1329,7 +1329,7 @@ GlobalObject::initTypedObjectModule(JSContext *cx, Handle<GlobalObject*> global)
 
     RootedObject arrayType(cx);
     arrayType = DefineMetaTypeDescr<ArrayMetaTypeDescr>(
-        cx, "ArrayType", global, module, TypedObjectModuleObject::ArrayTypePrototype);
+        cx, global, module, TypedObjectModuleObject::ArrayTypePrototype);
     if (!arrayType)
         return false;
 
@@ -1344,7 +1344,7 @@ GlobalObject::initTypedObjectModule(JSContext *cx, Handle<GlobalObject*> global)
 
     RootedObject structType(cx);
     structType = DefineMetaTypeDescr<StructMetaTypeDescr>(
-        cx, "StructType", global, module, TypedObjectModuleObject::StructTypePrototype);
+        cx, global, module, TypedObjectModuleObject::StructTypePrototype);
     if (!structType)
         return false;
 
