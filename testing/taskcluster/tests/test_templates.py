@@ -86,4 +86,3 @@ class TemplatesTest(unittest.TestCase):
 
 if __name__ == '__main__':
     mozunit.main()
-

@@ -14,18 +14,18 @@ def merge_to(source, dest):
     :param dict dest: to copy to.
     '''
 
-    for key in source:
+    for key, value in source.items():
         # Override mismatching or empty types
-        if type(source[key]) != type(dest.get(key)):
+        if type(value) != type(dest.get(key)):
             dest[key] = source[key]
             continue
 
         # Merge dict
-        if isinstance(source[key], dict):
-            merge_to(source[key], dest[key])
+        if isinstance(value, dict):
+            merge_to(value, dest[key])
             continue
 
-        if isinstance(source[key], list):
+        if isinstance(value, list):
             dest[key] = dest[key] + source[key]
             continue
 
