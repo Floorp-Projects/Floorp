@@ -513,7 +513,7 @@ extern JS_FRIEND_API(bool)
 ZoneGlobalsAreAllGray(JS::Zone *zone);
 
 typedef void
-(*GCThingCallback)(void *closure, void *gcthing);
+(*GCThingCallback)(void *closure, JS::GCCellPtr thing);
 
 extern JS_FRIEND_API(void)
 VisitGrayWrapperTargets(JS::Zone *zone, GCThingCallback callback, void *closure);

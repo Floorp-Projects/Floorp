@@ -659,7 +659,7 @@ js::VisitGrayWrapperTargets(Zone *zone, GCThingCallback callback, void *closure)
         for (JSCompartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
             gc::Cell *thing = e.front().key().wrapped;
             if (thing->isTenured() && thing->asTenured().isMarked(gc::GRAY))
-                callback(closure, thing);
+                callback(closure, JS::GCCellPtr(thing, thing->asTenured().getTraceKind()));
         }
     }
 }
