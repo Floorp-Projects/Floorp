@@ -482,24 +482,6 @@ IsString(HandleValue v)
 
 #if JS_HAS_TOSOURCE
 
-/*
- * String.prototype.quote is generic (as are most string methods), unlike
- * toSource, toString, and valueOf.
- */
-static bool
-str_quote(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedString str(cx, ThisToStringForStringProto(cx, args));
-    if (!str)
-        return false;
-    str = js_QuoteString(cx, str, '"');
-    if (!str)
-        return false;
-    args.rval().setString(str);
-    return true;
-}
-
 MOZ_ALWAYS_INLINE bool
 str_toSource_impl(JSContext *cx, CallArgs args)
 {
@@ -3976,7 +3958,6 @@ str_concat(JSContext *cx, unsigned argc, Value *vp)
 
 static const JSFunctionSpec string_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN("quote",             str_quote,             0,JSFUN_GENERIC_NATIVE),
     JS_FN(js_toSource_str,     str_toSource,          0,0),
 #endif
 
