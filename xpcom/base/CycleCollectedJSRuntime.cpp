@@ -132,14 +132,15 @@ struct NoteWeakMapChildrenTracer : public JSTracer
 {
   NoteWeakMapChildrenTracer(JSRuntime* aRt,
                             nsCycleCollectionNoteRootCallback& aCb)
-    : JSTracer(aRt, TraceWeakMappingChild), mCb(aCb)
+    : JSTracer(aRt, TraceWeakMappingChild), mCb(aCb), mTracedAny(false),
+      mMap(nullptr), mKey(JS::GCCellPtr::NullPtr()), mKeyDelegate(nullptr)
   {
   }
   nsCycleCollectionNoteRootCallback& mCb;
   bool mTracedAny;
   JSObject* mMap;
-  void* mKey;
-  void* mKeyDelegate;
+  JS::GCCellPtr mKey;
+  JSObject* mKeyDelegate;
 };
 
 static void
@@ -159,7 +160,7 @@ TraceWeakMappingChild(JSTracer* aTrc, void** aThingp, JSGCTraceKind aKind)
   }
 
   if (AddToCCKind(aKind)) {
-    tracer->mCb.NoteWeakMapping(tracer->mMap, tracer->mKey,
+    tracer->mCb.NoteWeakMapping(tracer->mMap, tracer->mKey.asCell(),
                                 tracer->mKeyDelegate, thing);
     tracer->mTracedAny = true;
   } else {
@@ -217,7 +218,7 @@ TraceWeakMapping(js::WeakMapTracer* aTrc, JSObject* aMap,
   } else {
     tracer->mChildTracer.mTracedAny = false;
     tracer->mChildTracer.mMap = aMap;
-    tracer->mChildTracer.mKey = aKey.asCell();
+    tracer->mChildTracer.mKey = aKey;
     tracer->mChildTracer.mKeyDelegate = kdelegate;
 
     if (aValue.isString()) {
