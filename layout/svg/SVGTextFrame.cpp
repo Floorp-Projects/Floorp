@@ -2835,9 +2835,14 @@ SVGTextDrawPathCallbacks::NotifySelectionBackgroundPathEmitted()
   GeneralPattern fillPattern;
   MakeFillPattern(&fillPattern);
   if (fillPattern.GetPattern()) {
-    gfx->SetFillRule(nsSVGUtils::ToFillRule(mFrame->StyleSVG()->mFillRule));
-    gfx->FillWithOpacity(fillPattern,
-                         mColor == NS_40PERCENT_FOREGROUND_COLOR ? 0.4 : 1.0);
+    RefPtr<Path> path = gfx->GetPath();
+    FillRule fillRule = nsSVGUtils::ToFillRule(mFrame->StyleSVG()->mFillRule);
+    if (fillRule != path->GetFillRule()) {
+      RefPtr<PathBuilder> builder = path->CopyToBuilder(fillRule);
+      path = builder->Finish();
+    }
+    DrawOptions drawOptions(mColor == NS_40PERCENT_FOREGROUND_COLOR ? 0.4 : 1.0);
+    gfx->GetDrawTarget()->Fill(path, fillPattern, drawOptions);
   }
   gfx->Restore();
 }

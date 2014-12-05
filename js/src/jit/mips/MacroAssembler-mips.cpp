@@ -1475,7 +1475,7 @@ MacroAssemblerMIPS::ma_bc1d(FloatRegister lhs, FloatRegister rhs, Label *label,
     branchWithCode(getBranchCode(testKind, fcc), label, jumpKind);
 }
 
-bool
+void
 MacroAssemblerMIPSCompat::buildFakeExitFrame(Register scratch, uint32_t *offset)
 {
     mozilla::DebugOnly<uint32_t> initialDepth = framePushed();
@@ -1491,7 +1491,7 @@ MacroAssemblerMIPSCompat::buildFakeExitFrame(Register scratch, uint32_t *offset)
     *offset = currentOffset();
 
     MOZ_ASSERT(framePushed() == initialDepth + ExitFrameLayout::Size());
-    return addCodeLabel(cl);
+    addCodeLabel(cl);
 }
 
 bool

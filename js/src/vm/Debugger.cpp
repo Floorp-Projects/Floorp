@@ -600,11 +600,11 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool frame
     RootedValue value(cx);
     Debugger::resultToCompletion(cx, frameOk, frame.returnValue(), &status, &value);
 
-    // This path can be hit via unwinding the stack due to
-    // over-recursion. Only fire the frames' onPop handlers if we haven't
-    // over-recursed, because invoking more JS will only result in more
-    // over-recursion errors. See slowPathOnExceptionUnwind.
-    if (!cx->isThrowingOverRecursed()) {
+    // This path can be hit via unwinding the stack due to over-recursion or
+    // OOM. In those cases, don't fire the frames' onPop handlers, because
+    // invoking JS will only trigger the same condition. See
+    // slowPathOnExceptionUnwind.
+    if (!cx->isThrowingOverRecursed() && !cx->isThrowingOutOfMemory()) {
         /* Build a list of the recipients. */
         AutoObjectVector frames(cx);
         for (FrameRange r(frame, global); !r.empty(); r.popFront()) {
@@ -729,9 +729,9 @@ Debugger::slowPathOnDebuggerStatement(JSContext *cx, AbstractFramePtr frame)
 /* static */ JSTrapStatus
 Debugger::slowPathOnExceptionUnwind(JSContext *cx, AbstractFramePtr frame)
 {
-    // Invoking more JS on an over-recursed stack is only going to result in
-    // more over-recursion errors.
-    if (cx->isThrowingOverRecursed())
+    // Invoking more JS on an over-recursed stack or after OOM is only going
+    // to result in more of the same error.
+    if (cx->isThrowingOverRecursed() || cx->isThrowingOutOfMemory())
         return JSTRAP_CONTINUE;
 
     RootedValue rval(cx);
