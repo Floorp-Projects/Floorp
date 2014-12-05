@@ -80,7 +80,7 @@ struct TraceCallbacks
  */
 struct TraceCallbackFunc : public TraceCallbacks
 {
-  typedef void (*Func)(void* aPtr, const char* aName, void* aClosure);
+  typedef void (*Func)(JS::GCCellPtr aPtr, const char* aName, void* aClosure);
 
   explicit TraceCallbackFunc(Func aCb) : mCallback(aCb) {}
 
@@ -184,7 +184,7 @@ public:
   NS_IMETHOD_(void) Trace(void* aPtr, const TraceCallbacks& aCb,
                           void* aClosure) = 0;
 
-  static void NoteJSChild(void* aScriptThing, const char* aName,
+  static void NoteJSChild(JS::GCCellPtr aGCThing, const char* aName,
                           void* aClosure);
 };
 

@@ -5,8 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCycleCollectionParticipant.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 #include "nsCOMPtr.h"
 #include "jsapi.h"
+#include "jsfriendapi.h"
 
 #ifdef MOZILLA_INTERNAL_API
 #include "nsString.h"
@@ -15,13 +17,19 @@
 #endif
 
 void
-nsScriptObjectTracer::NoteJSChild(void* aScriptThing, const char* aName,
+nsScriptObjectTracer::NoteJSChild(JS::GCCellPtr aGCThing, const char* aName,
                                   void* aClosure)
 {
   nsCycleCollectionTraversalCallback* cb =
     static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, aName);
-  cb->NoteJSChild(aScriptThing);
+  if (aGCThing.isObject()) {
+    cb->NoteJSObject(aGCThing.toObject());
+  } else if (aGCThing.isScript()) {
+    cb->NoteJSScript(aGCThing.toScript());
+  } else {
+    MOZ_ASSERT(!mozilla::AddToCCKind(aGCThing.kind()));
+  }
 }
 
 NS_IMETHODIMP_(void)
@@ -72,7 +80,7 @@ TraceCallbackFunc::Trace(JS::Heap<JS::Value>* aPtr, const char* aName,
                          void* aClosure) const
 {
   if (aPtr->isMarkable()) {
-    mCallback(aPtr->toGCThing(), aName, aClosure);
+    mCallback(JS::GCCellPtr(*aPtr), aName, aClosure);
   }
 }
 
@@ -80,9 +88,8 @@ void
 TraceCallbackFunc::Trace(JS::Heap<jsid>* aPtr, const char* aName,
                          void* aClosure) const
 {
-  void* thing = JSID_TO_GCTHING(*aPtr);
-  if (thing) {
-    mCallback(thing, aName, aClosure);
+  if (JSID_IS_GCTHING(*aPtr)) {
+    mCallback(JSID_TO_GCTHING(*aPtr), aName, aClosure);
   }
 }
 
@@ -90,33 +97,33 @@ void
 TraceCallbackFunc::Trace(JS::Heap<JSObject*>* aPtr, const char* aName,
                          void* aClosure) const
 {
-  mCallback(*aPtr, aName, aClosure);
+  mCallback(JS::GCCellPtr(*aPtr), aName, aClosure);
 }
 
 void
 TraceCallbackFunc::Trace(JS::TenuredHeap<JSObject*>* aPtr, const char* aName,
                          void* aClosure) const
 {
-  mCallback(*aPtr, aName, aClosure);
+  mCallback(JS::GCCellPtr(*aPtr), aName, aClosure);
 }
 
 void
 TraceCallbackFunc::Trace(JS::Heap<JSFunction*>* aPtr, const char* aName,
                          void* aClosure) const
 {
-  mCallback(*aPtr, aName, aClosure);
+  mCallback(JS::GCCellPtr(*aPtr), aName, aClosure);
 }
 
 void
 TraceCallbackFunc::Trace(JS::Heap<JSString*>* aPtr, const char* aName,
                          void* aClosure) const
 {
-  mCallback(*aPtr, aName, aClosure);
+  mCallback(JS::GCCellPtr(*aPtr), aName, aClosure);
 }
 
 void
 TraceCallbackFunc::Trace(JS::Heap<JSScript*>* aPtr, const char* aName,
                          void* aClosure) const
 {
-  mCallback(aPtr->get(), aName, aClosure);
+  mCallback(JS::GCCellPtr(*aPtr), aName, aClosure);
 }

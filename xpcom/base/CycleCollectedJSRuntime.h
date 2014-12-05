@@ -334,6 +334,12 @@ MOZ_FINISH_NESTED_ENUM_CLASS(CycleCollectedJSRuntime::OOMState)
 
 void TraceScriptHolder(nsISupports* aHolder, JSTracer* aTracer);
 
+// Returns true if the JSGCTraceKind is one the cycle collector cares about.
+inline bool AddToCCKind(JSGCTraceKind aKind)
+{
+  return aKind == JSTRACE_OBJECT || aKind == JSTRACE_SCRIPT;
+}
+
 } // namespace mozilla
 
 #endif // mozilla_CycleCollectedJSRuntime_h__

@@ -28,10 +28,10 @@ nsWrapperCache::IsBlack()
 }
 
 static void
-SearchGray(void* aGCThing, const char* aName, void* aClosure)
+SearchGray(JS::GCCellPtr aGCThing, const char* aName, void* aClosure)
 {
   bool* hasGrayObjects = static_cast<bool*>(aClosure);
-  if (!*hasGrayObjects && aGCThing && JS::GCThingIsMarkedGray(aGCThing)) {
+  if (!*hasGrayObjects && aGCThing && JS::GCThingIsMarkedGray(aGCThing.asCell())) {
     *hasGrayObjects = true;
   }
 }

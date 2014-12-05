@@ -119,12 +119,6 @@ public:
 
 } // namespace mozilla
 
-inline bool
-AddToCCKind(JSGCTraceKind aKind)
-{
-  return aKind == JSTRACE_OBJECT || aKind == JSTRACE_SCRIPT;
-}
-
 static void
 TraceWeakMappingChild(JSTracer* aTrc, void** aThingp, JSGCTraceKind aKind);
 
@@ -308,7 +302,7 @@ struct Closure
 };
 
 static void
-CheckParticipatesInCycleCollection(void* aThing, const char* aName,
+CheckParticipatesInCycleCollection(JS::GCCellPtr aThing, const char* aName,
                                    void* aClosure)
 {
   Closure* closure = static_cast<Closure*>(aClosure);
@@ -317,8 +311,8 @@ CheckParticipatesInCycleCollection(void* aThing, const char* aName,
     return;
   }
 
-  if (AddToCCKind(js::GCThingTraceKind(aThing)) &&
-      xpc_IsGrayGCThing(aThing)) {
+  if (AddToCCKind(aThing.kind()) &&
+      xpc_IsGrayGCThing(aThing.asCell())) {
     closure->mCycleCollectionEnabled = true;
   }
 }
@@ -424,7 +418,12 @@ NoteJSChild(JSTracer* aTrc, void* aThing, JSGCTraceKind aTraceKind)
         tracer->mCb.NoteNextEdgeName(static_cast<const char*>(tracer->debugPrintArg()));
       }
     }
-    tracer->mCb.NoteJSChild(aThing);
+    JS::GCCellPtr thing(aThing, aTraceKind);
+    if (thing.isObject()) {
+      tracer->mCb.NoteJSObject(thing.toObject());
+    } else {
+      tracer->mCb.NoteJSScript(thing.toScript());
+    }
   } else if (aTraceKind == JSTRACE_SHAPE) {
     JS_TraceShapeCycleCollectorChildren(aTrc, aThing);
   } else if (aTraceKind != JSTRACE_STRING) {
@@ -915,7 +914,7 @@ CycleCollectedJSRuntime::IsJSHolder(void* aHolder)
 }
 
 static void
-AssertNoGcThing(void* aGCThing, const char* aName, void* aClosure)
+AssertNoGcThing(JS::GCCellPtr aGCThing, const char* aName, void* aClosure)
 {
   MOZ_ASSERT(!aGCThing);
 }
