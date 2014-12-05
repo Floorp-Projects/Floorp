@@ -1659,6 +1659,9 @@
             // allows the TabLabelModified event to be properly dispatched.
             if (!aURI || isBlankPageURL(aURI)) {
               t.label = this.mStringBundle.getString("tabs.emptyTabTitle");
+            } else if (aURI.toLowerCase().startsWith("javascript:")) {
+              // This can go away when bug 672618 or bug 55696 are fixed.
+              t.label = aURI;
             }
 
             this.tabContainer.updateVisibility();
