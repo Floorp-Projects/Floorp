@@ -975,6 +975,8 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
   PROFILER_LABEL("nsStyleSet", "FileRules",
     js::ProfileEntry::Category::CSS);
 
+  NS_ASSERTION(mBatching == 0, "rule processors out of date");
+
   // Cascading order:
   // [least important]
   //  - UA normal rules                    = Agent        normal
@@ -1164,6 +1166,8 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
                                ElementDependentRuleProcessorData* aData,
                                bool aWalkAllXBLStylesheets)
 {
+  NS_ASSERTION(mBatching == 0, "rule processors out of date");
+
   if (mRuleProcessors[eAgentSheet])
     (*aFunc)(mRuleProcessors[eAgentSheet], aData);
 
@@ -1368,6 +1372,8 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
                                     nsCSSPseudoElements::Type aPseudoType,
                                     nsRestyleHint aReplacements)
 {
+  NS_ASSERTION(mBatching == 0, "rule processors out of date");
+
   NS_ABORT_IF_FALSE(!(aReplacements & ~(eRestyle_CSSTransitions |
                                         eRestyle_CSSAnimations |
                                         eRestyle_SVGAttrAnimations |
@@ -1882,6 +1888,7 @@ nsStyleSet::AppendFontFaceRules(nsPresContext* aPresContext,
                                 nsTArray<nsFontFaceRuleContainer>& aArray)
 {
   NS_ENSURE_FALSE(mInShutdown, false);
+  NS_ASSERTION(mBatching == 0, "rule processors out of date");
 
   for (uint32_t i = 0; i < ArrayLength(gCSSSheetTypes); ++i) {
     if (gCSSSheetTypes[i] == eScopedDocSheet)
@@ -1899,6 +1906,7 @@ nsStyleSet::KeyframesRuleForName(nsPresContext* aPresContext,
                                  const nsString& aName)
 {
   NS_ENSURE_FALSE(mInShutdown, nullptr);
+  NS_ASSERTION(mBatching == 0, "rule processors out of date");
 
   for (uint32_t i = ArrayLength(gCSSSheetTypes); i-- != 0; ) {
     if (gCSSSheetTypes[i] == eScopedDocSheet)
@@ -1920,6 +1928,7 @@ nsStyleSet::CounterStyleRuleForName(nsPresContext* aPresContext,
                                     const nsAString& aName)
 {
   NS_ENSURE_FALSE(mInShutdown, nullptr);
+  NS_ASSERTION(mBatching == 0, "rule processors out of date");
 
   for (uint32_t i = ArrayLength(gCSSSheetTypes); i-- != 0; ) {
     if (gCSSSheetTypes[i] == eScopedDocSheet)
@@ -1941,6 +1950,7 @@ nsStyleSet::AppendFontFeatureValuesRules(nsPresContext* aPresContext,
                                  nsTArray<nsCSSFontFeatureValuesRule*>& aArray)
 {
   NS_ENSURE_FALSE(mInShutdown, false);
+  NS_ASSERTION(mBatching == 0, "rule processors out of date");
 
   for (uint32_t i = 0; i < ArrayLength(gCSSSheetTypes); ++i) {
     nsCSSRuleProcessor *ruleProc = static_cast<nsCSSRuleProcessor*>
@@ -1993,6 +2003,7 @@ nsStyleSet::AppendPageRules(nsPresContext* aPresContext,
                             nsTArray<nsCSSPageRule*>& aArray)
 {
   NS_ENSURE_FALSE(mInShutdown, false);
+  NS_ASSERTION(mBatching == 0, "rule processors out of date");
 
   for (uint32_t i = 0; i < ArrayLength(gCSSSheetTypes); ++i) {
     if (gCSSSheetTypes[i] == eScopedDocSheet)
@@ -2342,6 +2353,8 @@ nsStyleSet::HasAttributeDependentStyle(nsPresContext* aPresContext,
 bool
 nsStyleSet::MediumFeaturesChanged(nsPresContext* aPresContext)
 {
+  NS_ASSERTION(mBatching == 0, "rule processors out of date");
+
   // We can't use WalkRuleProcessors without a content node.
   bool stylesChanged = false;
   for (uint32_t i = 0; i < ArrayLength(mRuleProcessors); ++i) {
