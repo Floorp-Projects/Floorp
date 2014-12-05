@@ -296,6 +296,9 @@ TypedArrayShift(Scalar::Type viewType)
         return 2;
       case Scalar::Float64:
         return 3;
+      case Scalar::Float32x4:
+      case Scalar::Int32x4:
+        return 4;
       default:;
     }
     MOZ_CRASH("Unexpected array type");
