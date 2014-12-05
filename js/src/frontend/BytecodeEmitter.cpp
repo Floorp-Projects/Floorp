@@ -2258,9 +2258,9 @@ IteratorResultShape(ExclusiveContext *cx, BytecodeEmitter *bce, unsigned *shape)
 {
     MOZ_ASSERT(bce->script->compileAndGo());
 
-    RootedPlainObject obj(cx);
+    RootedNativeObject obj(cx);
     gc::AllocKind kind = GuessObjectGCKind(2);
-    obj = NewBuiltinClassInstance<PlainObject>(cx, kind);
+    obj = NewNativeBuiltinClassInstance(cx, &JSObject::class_, kind);
     if (!obj)
         return false;
 
@@ -4240,8 +4240,8 @@ ParseNode::getConstantValue(ExclusiveContext *cx, AllowConstantObjects allowObje
             allowObjects = DontAllowObjects;
 
         gc::AllocKind kind = GuessObjectGCKind(pn_count);
-        RootedPlainObject obj(cx,
-            NewBuiltinClassInstance<PlainObject>(cx, kind, MaybeSingletonObject));
+        RootedNativeObject obj(cx, NewNativeBuiltinClassInstance(cx, &JSObject::class_,
+                                                                 kind, MaybeSingletonObject));
         if (!obj)
             return false;
 
@@ -6487,10 +6487,10 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * Try to construct the shape of the object as we go, so we can emit a
      * JSOP_NEWOBJECT with the final shape instead.
      */
-    RootedPlainObject obj(cx);
+    RootedNativeObject obj(cx);
     if (bce->script->compileAndGo()) {
         gc::AllocKind kind = GuessObjectGCKind(pn->pn_count);
-        obj = NewBuiltinClassInstance<PlainObject>(cx, kind, TenuredObject);
+        obj = NewNativeBuiltinClassInstance(cx, &JSObject::class_, kind, TenuredObject);
         if (!obj)
             return false;
     }

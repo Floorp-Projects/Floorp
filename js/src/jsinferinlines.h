@@ -311,7 +311,7 @@ GetClassForProtoKey(JSProtoKey key)
 {
     switch (key) {
       case JSProto_Object:
-        return &PlainObject::class_;
+        return &JSObject::class_;
       case JSProto_Array:
         return &ArrayObject::class_;
 
@@ -573,7 +573,7 @@ FixArrayType(ExclusiveContext *cx, ArrayObject *obj)
 }
 
 inline void
-FixObjectType(ExclusiveContext *cx, PlainObject *obj)
+FixObjectType(ExclusiveContext *cx, NativeObject *obj)
 {
     cx->compartment()->types.fixObjectType(cx, obj);
 }

@@ -484,17 +484,21 @@ NewPropertyIteratorObject(JSContext *cx, unsigned flags)
         if (!shape)
             return nullptr;
 
-        JSObject *obj = JSObject::create(cx, ITERATOR_FINALIZE_KIND,
-                                         GetInitialHeap(GenericObject, clasp), shape, type);
+        NativeObject *obj =
+            MaybeNativeObject(JSObject::create(cx, ITERATOR_FINALIZE_KIND,
+                                               GetInitialHeap(GenericObject, clasp), shape, type));
         if (!obj)
             return nullptr;
-        PropertyIteratorObject *res = &obj->as<PropertyIteratorObject>();
 
-        MOZ_ASSERT(res->numFixedSlots() == JSObject::ITER_CLASS_NFIXED_SLOTS);
-        return res;
+        MOZ_ASSERT(obj->numFixedSlots() == JSObject::ITER_CLASS_NFIXED_SLOTS);
+        return &obj->as<PropertyIteratorObject>();
     }
 
-    return NewBuiltinClassInstance<PropertyIteratorObject>(cx);
+    JSObject *obj = NewBuiltinClassInstance(cx, &PropertyIteratorObject::class_);
+    if (!obj)
+        return nullptr;
+
+    return &obj->as<PropertyIteratorObject>();
 }
 
 NativeIterator *
@@ -805,7 +809,7 @@ js::CreateItrResultObject(JSContext *cx, HandleValue value, bool done)
     if (!proto)
         return nullptr;
 
-    RootedPlainObject obj(cx, NewObjectWithGivenProto<PlainObject>(cx, proto, cx->global()));
+    RootedObject obj(cx, NewObjectWithGivenProto(cx, &JSObject::class_, proto, cx->global()));
     if (!obj)
         return nullptr;
 

@@ -22,14 +22,14 @@ using namespace js;
 static void
 resc_finalize(FreeOp *fop, JSObject *obj)
 {
-    RegExpStatics *res = static_cast<RegExpStatics *>(obj->as<RegExpStaticsObject>().getPrivate());
+    RegExpStatics *res = static_cast<RegExpStatics *>(obj->as<NativeObject>().getPrivate());
     fop->delete_(res);
 }
 
 static void
 resc_trace(JSTracer *trc, JSObject *obj)
 {
-    void *pdata = obj->as<RegExpStaticsObject>().getPrivate();
+    void *pdata = obj->as<NativeObject>().getPrivate();
     MOZ_ASSERT(pdata);
     RegExpStatics *res = static_cast<RegExpStatics *>(pdata);
     res->mark(trc);
@@ -55,14 +55,14 @@ const Class RegExpStaticsObject::class_ = {
 RegExpStaticsObject *
 RegExpStatics::create(ExclusiveContext *cx, GlobalObject *parent)
 {
-    RegExpStaticsObject *obj = NewObjectWithGivenProto<RegExpStaticsObject>(cx, nullptr, parent);
+    NativeObject *obj = NewNativeObjectWithGivenProto(cx, &RegExpStaticsObject::class_, nullptr, parent);
     if (!obj)
         return nullptr;
     RegExpStatics *res = cx->new_<RegExpStatics>();
     if (!res)
         return nullptr;
     obj->setPrivate(static_cast<void *>(res));
-    return obj;
+    return &obj->as<RegExpStaticsObject>();
 }
 
 void

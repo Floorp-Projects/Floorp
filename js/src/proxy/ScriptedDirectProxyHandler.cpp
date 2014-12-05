@@ -1201,7 +1201,7 @@ js::proxy_revocable(JSContext *cx, unsigned argc, Value *vp)
 
     revoker->as<JSFunction>().initExtendedSlot(ScriptedDirectProxyHandler::REVOKE_SLOT, proxyVal);
 
-    RootedPlainObject result(cx, NewBuiltinClassInstance<PlainObject>(cx));
+    RootedObject result(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
     if (!result)
         return false;
 
