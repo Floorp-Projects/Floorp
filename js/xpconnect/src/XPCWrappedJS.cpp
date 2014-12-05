@@ -65,7 +65,7 @@ nsXPCWrappedJS::CanSkip()
 
     // If this wrapper holds a gray object, need to trace it.
     JSObject *obj = GetJSObjectPreserveColor();
-    if (obj && xpc_IsGrayGCThing(obj))
+    if (obj && JS::ObjectIsMarkedGray(obj))
         return false;
 
     // For non-root wrappers, check if the root wrapper will be

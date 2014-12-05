@@ -2021,14 +2021,14 @@ static bool
 GCThingIsGrayCCThing(JS::GCCellPtr thing)
 {
     return AddToCCKind(thing.kind()) &&
-           JS::GCThingIsMarkedGray(thing.asCell());
+           JS::GCThingIsMarkedGray(thing);
 }
 
 static bool
 ValueIsGrayCCThing(const JS::Value& value)
 {
     return AddToCCKind(value.gcKind()) &&
-           JS::GCThingIsMarkedGray(value.toGCThing());
+           JS::GCThingIsMarkedGray(value.toGCCellPtr());
 }
 
 ////////////////////////////////////////////////////////////////////////

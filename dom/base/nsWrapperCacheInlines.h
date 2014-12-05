@@ -24,14 +24,14 @@ inline bool
 nsWrapperCache::IsBlack()
 {
   JSObject* o = GetWrapperPreserveColor();
-  return o && !JS::GCThingIsMarkedGray(o);
+  return o && !JS::ObjectIsMarkedGray(o);
 }
 
 static void
 SearchGray(JS::GCCellPtr aGCThing, const char* aName, void* aClosure)
 {
   bool* hasGrayObjects = static_cast<bool*>(aClosure);
-  if (!*hasGrayObjects && aGCThing && JS::GCThingIsMarkedGray(aGCThing.asCell())) {
+  if (!*hasGrayObjects && aGCThing && JS::GCThingIsMarkedGray(aGCThing)) {
     *hasGrayObjects = true;
   }
 }
