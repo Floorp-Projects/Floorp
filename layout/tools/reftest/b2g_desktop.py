@@ -118,6 +118,15 @@ class B2GDesktopReftest(RefTest):
                     "app://test-container.gaiamobile.org/index.html"
             prefs["b2g.system_manifest_url"] = \
                     "app://test-container.gaiamobile.org/manifest.webapp"
+        # Make sure we disable system updates
+        prefs["app.update.enabled"] = False
+        prefs["app.update.url"] = ""
+        prefs["app.update.url.override"] = ""
+        # Disable webapp updates
+        prefs["webapps.update.enabled"] = False
+        # Disable tiles also
+        prefs["browser.newtabpage.directory.source"] = ""
+        prefs["browser.newtabpage.directory.ping"] = ""
         prefs["dom.ipc.tabs.disabled"] = False
         prefs["dom.mozBrowserFramesEnabled"] = True
         prefs["font.size.inflation.emPerLine"] = 0
