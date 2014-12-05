@@ -508,7 +508,7 @@ ExposeGCThingToActiveJS(JS::GCCellPtr thing)
     JS::shadow::Runtime *rt = detail::GetGCThingRuntime(thing.unsafeAsUIntPtr());
     if (IsIncrementalBarrierNeededOnTenuredGCThing(rt, thing))
         JS::IncrementalReferenceBarrier(thing);
-    else if (JS::GCThingIsMarkedGray(thing.asCell()))
+    else if (JS::GCThingIsMarkedGray(thing))
         JS::UnmarkGrayGCThingRecursively(thing);
 }
 
