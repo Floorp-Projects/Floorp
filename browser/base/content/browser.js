@@ -6443,8 +6443,18 @@ function WindowIsClosing()
 
   for (let browser of gBrowser.browsers) {
     let ds = browser.docShell;
-    if (ds.contentViewer && !ds.contentViewer.permitUnload())
+    // Passing true to permitUnload indicates we plan on closing the window.
+    // This means that once unload is permitted, all further calls to
+    // permitUnload will be ignored. This avoids getting multiple prompts
+    // to unload the page.
+    if (ds.contentViewer && !ds.contentViewer.permitUnload(true)) {
+      // ... however, if the user aborts closing, we need to undo that,
+      // to ensure they get prompted again when we next try to close the window.
+      // We do this on the window's toplevel docshell instead of on the tab, so
+      // that all tabs we iterated before will get this reset.
+      window.getInterface(Ci.nsIDocShell).contentViewer.resetCloseWindow();
       return false;
+    }
   }
 
   return true;
