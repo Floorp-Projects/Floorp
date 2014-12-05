@@ -839,7 +839,7 @@ struct ChunkBitmap
     MOZ_ALWAYS_INLINE void getMarkWordAndMask(const Cell *cell, uint32_t color,
                                               uintptr_t **wordp, uintptr_t *maskp)
     {
-        GetGCThingMarkWordAndMask(cell, color, wordp, maskp);
+        detail::GetGCThingMarkWordAndMask(uintptr_t(cell), color, wordp, maskp);
     }
 
     MOZ_ALWAYS_INLINE MOZ_TSAN_BLACKLIST bool isMarked(const Cell *cell, uint32_t color) {
