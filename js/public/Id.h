@@ -139,10 +139,14 @@ JSID_IS_GCTHING(jsid id)
     return JSID_IS_STRING(id) || JSID_IS_SYMBOL(id);
 }
 
-static MOZ_ALWAYS_INLINE void *
+static MOZ_ALWAYS_INLINE JS::GCCellPtr
 JSID_TO_GCTHING(jsid id)
 {
-    return (void *)(JSID_BITS(id) & ~(size_t)JSID_TYPE_MASK);
+    void *thing = (void *)(JSID_BITS(id) & ~(size_t)JSID_TYPE_MASK);
+    if (JSID_IS_STRING(id))
+        return JS::GCCellPtr(thing, JSTRACE_STRING);
+    MOZ_ASSERT(JSID_IS_SYMBOL(id));
+    return JS::GCCellPtr(thing, JSTRACE_SYMBOL);
 }
 
 static MOZ_ALWAYS_INLINE bool

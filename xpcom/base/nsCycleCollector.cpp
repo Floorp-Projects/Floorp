@@ -2082,12 +2082,15 @@ public:
                                      uint64_t aCompartmentAddress);
 
   NS_IMETHOD_(void) NoteXPCOMChild(nsISupports* aChild);
-  NS_IMETHOD_(void) NoteJSChild(void* aChild);
+  NS_IMETHOD_(void) NoteJSObject(JSObject* aChild);
+  NS_IMETHOD_(void) NoteJSScript(JSScript* aChild);
   NS_IMETHOD_(void) NoteNativeChild(void* aChild,
                                     nsCycleCollectionParticipant* aParticipant);
   NS_IMETHOD_(void) NoteNextEdgeName(const char* aName);
 
 private:
+  void NoteJSChild(JS::GCCellPtr aChild);
+
   NS_IMETHOD_(void) NoteRoot(void* aRoot,
                              nsCycleCollectionParticipant* aParticipant)
   {
@@ -2318,7 +2321,19 @@ CCGraphBuilder::NoteNativeChild(void* aChild,
 }
 
 NS_IMETHODIMP_(void)
-CCGraphBuilder::NoteJSChild(void* aChild)
+CCGraphBuilder::NoteJSObject(JSObject* aChild)
+{
+  return NoteJSChild(JS::GCCellPtr(aChild));
+}
+
+NS_IMETHODIMP_(void)
+CCGraphBuilder::NoteJSScript(JSScript* aChild)
+{
+  return NoteJSChild(JS::GCCellPtr(aChild));
+}
+
+void
+CCGraphBuilder::NoteJSChild(JS::GCCellPtr aChild)
 {
   if (!aChild) {
     return;
@@ -2330,11 +2345,11 @@ CCGraphBuilder::NoteJSChild(void* aChild)
     mNextEdgeName.Truncate();
   }
 
-  if (xpc_GCThingIsGrayCCThing(aChild) || MOZ_UNLIKELY(WantAllTraces())) {
-    if (JS::Zone* zone = MergeZone(aChild)) {
+  if (xpc_GCThingIsGrayCCThing(aChild.asCell()) || MOZ_UNLIKELY(WantAllTraces())) {
+    if (JS::Zone* zone = MergeZone(aChild.asCell())) {
       NoteChild(zone, mJSZoneParticipant, edgeName);
     } else {
-      NoteChild(aChild, mJSParticipant, edgeName);
+      NoteChild(aChild.asCell(), mJSParticipant, edgeName);
     }
   }
 }
@@ -2410,7 +2425,8 @@ public:
   NS_IMETHOD_(void) NoteXPCOMChild(nsISupports* aChild);
   NS_IMETHOD_(void) NoteNativeChild(void* aChild,
                                     nsCycleCollectionParticipant* aHelper);
-  NS_IMETHOD_(void) NoteJSChild(void* aChild);
+  NS_IMETHOD_(void) NoteJSObject(JSObject* aChild);
+  NS_IMETHOD_(void) NoteJSScript(JSScript* aChild);
 
   NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt aRefcount,
                                            const char* aObjname)
@@ -2459,7 +2475,15 @@ ChildFinder::NoteNativeChild(void* aChild,
 }
 
 NS_IMETHODIMP_(void)
-ChildFinder::NoteJSChild(void* aChild)
+ChildFinder::NoteJSObject(JSObject* aChild)
+{
+  if (aChild && xpc_GCThingIsGrayCCThing(aChild)) {
+    mMayHaveChild = true;
+  }
+}
+
+NS_IMETHODIMP_(void)
+ChildFinder::NoteJSScript(JSScript* aChild)
 {
   if (aChild && xpc_GCThingIsGrayCCThing(aChild)) {
     mMayHaveChild = true;

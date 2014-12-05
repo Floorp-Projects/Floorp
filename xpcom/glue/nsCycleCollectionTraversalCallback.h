@@ -7,6 +7,7 @@
 #ifndef nsCycleCollectionTraversalCallback_h__
 #define nsCycleCollectionTraversalCallback_h__
 
+#include "jspubtd.h"
 #include "nsISupports.h"
 
 class nsCycleCollectionParticipant;
@@ -26,12 +27,13 @@ public:
                                      uint64_t aCompartmentAddress = 0) = 0;
 
   NS_IMETHOD_(void) NoteXPCOMChild(nsISupports* aChild) = 0;
-  NS_IMETHOD_(void) NoteJSChild(void* aChild) = 0;
+  NS_IMETHOD_(void) NoteJSObject(JSObject* aChild) = 0;
+  NS_IMETHOD_(void) NoteJSScript(JSScript* aChild) = 0;
   NS_IMETHOD_(void) NoteNativeChild(void* aChild,
                                     nsCycleCollectionParticipant* aHelper) = 0;
 
   // Give a name to the edge associated with the next call to
-  // NoteXPCOMChild, NoteJSChild, or NoteNativeChild.
+  // NoteXPCOMChild, NoteJSObject, NoteJSScript, or NoteNativeChild.
   // Callbacks who care about this should set WANT_DEBUG_INFO in the
   // flags.
   NS_IMETHOD_(void) NoteNextEdgeName(const char* aName) = 0;
