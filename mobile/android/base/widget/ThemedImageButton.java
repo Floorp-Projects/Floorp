@@ -152,4 +152,8 @@ public class ThemedImageButton extends android.widget.ImageButton
     public ColorDrawable getColorDrawable(int id) {
         return new ColorDrawable(getResources().getColor(id));
     }
+
+    protected LightweightTheme getTheme() {
+        return mTheme;
+    }
 }
