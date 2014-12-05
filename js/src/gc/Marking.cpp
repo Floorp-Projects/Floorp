@@ -2110,10 +2110,12 @@ UnmarkGrayChildren(JSTracer *trc, void **thingp, JSGCTraceKind kind)
     tracer->unmarkedAny |= childTracer.unmarkedAny;
 }
 
-JS_FRIEND_API(bool)
-JS::UnmarkGrayGCThingRecursively(void *thing, JSGCTraceKind kind)
+static bool
+UnmarkGrayCellRecursively(gc::Cell *cell, JSGCTraceKind kind)
 {
-    JSRuntime *rt = static_cast<Cell *>(thing)->runtimeFromMainThread();
+    MOZ_ASSERT(cell);
+
+    JSRuntime *rt = cell->runtimeFromMainThread();
 
     // When the ReadBarriered type is used in a HashTable, it is difficult or
     // impossible to suppress the implicit cast operator while iterating for GC.
@@ -2121,16 +2123,28 @@ JS::UnmarkGrayGCThingRecursively(void *thing, JSGCTraceKind kind)
         return false;
 
     bool unmarkedArg = false;
-    if (!IsInsideNursery(static_cast<Cell *>(thing))) {
-        if (!JS::GCThingIsMarkedGray(thing))
+    if (cell->isTenured()) {
+        if (!cell->asTenured().isMarked(GRAY))
             return false;
 
-        TenuredCell::fromPointer(thing)->unmark(js::gc::GRAY);
+        cell->asTenured().unmark(GRAY);
         unmarkedArg = true;
     }
 
     UnmarkGrayTracer trc(rt);
-    JS_TraceChildren(&trc, thing, kind);
+    JS_TraceChildren(&trc, cell, kind);
 
     return unmarkedArg || trc.unmarkedAny;
+}
+
+bool
+js::UnmarkGrayShapeRecursively(Shape *shape)
+{
+    return UnmarkGrayCellRecursively(shape, JSTRACE_SHAPE);
+}
+
+JS_FRIEND_API(bool)
+JS::UnmarkGrayGCThingRecursively(JS::GCCellPtr thing)
+{
+    return UnmarkGrayCellRecursively(thing.asCell(), thing.kind());
 }

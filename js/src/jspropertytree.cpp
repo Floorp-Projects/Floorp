@@ -172,7 +172,7 @@ PropertyTree::getChild(ExclusiveContext *cx, Shape *parentArg, StackShape &unroo
             parent->removeChild(existingShape);
             existingShape = nullptr;
         } else if (existingShape->isMarked(gc::GRAY)) {
-            JS::UnmarkGrayGCThingRecursively(existingShape, JSTRACE_SHAPE);
+            UnmarkGrayShapeRecursively(existingShape);
         }
     }
 

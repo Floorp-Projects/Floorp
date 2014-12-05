@@ -277,7 +277,7 @@ private:
     if (delegateMightNeedMarking && aKey.isObject()) {
       JSObject* kdelegate = js::GetWeakmapKeyDelegate(aKey.toObject());
       if (kdelegate && !xpc_IsGrayGCThing(kdelegate)) {
-        if (JS::UnmarkGrayGCThingRecursively(aKey.asCell(), JSTRACE_OBJECT)) {
+        if (JS::UnmarkGrayGCThingRecursively(aKey)) {
           tracer->mAnyMarked = true;
         }
       }
@@ -287,7 +287,7 @@ private:
         (!aKey || !xpc_IsGrayGCThing(aKey.asCell())) &&
         (!aMap || !xpc_IsGrayGCThing(aMap)) &&
         aValue.kind() != JSTRACE_SHAPE) {
-      if (JS::UnmarkGrayGCThingRecursively(aValue.asCell(), aValue.kind())) {
+      if (JS::UnmarkGrayGCThingRecursively(aValue)) {
         tracer->mAnyMarked = true;
       }
     }

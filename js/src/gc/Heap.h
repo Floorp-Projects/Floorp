@@ -196,6 +196,7 @@ class TenuredCell : public Cell
     // Access to the arena header.
     inline ArenaHeader *arenaHeader() const;
     inline AllocKind getAllocKind() const;
+    inline JSGCTraceKind getTraceKind() const;
     inline JS::Zone *zone() const;
     inline JS::Zone *zoneFromAnyThread() const;
     inline bool isInsideZone(JS::Zone *zone) const;
@@ -1312,6 +1313,12 @@ TenuredCell::getAllocKind() const
     return arenaHeader()->getAllocKind();
 }
 
+JSGCTraceKind
+TenuredCell::getTraceKind() const
+{
+    return MapAllocToTraceKind(getAllocKind());
+}
+
 JS::Zone *
 TenuredCell::zone() const
 {
@@ -1346,8 +1353,9 @@ TenuredCell::readBarrier(TenuredCell *thing)
                          MapAllocToTraceKind(thing->getAllocKind()));
         MOZ_ASSERT(tmp == thing);
     }
+    JS::GCCellPtr cellptr(thing, thing->getTraceKind());
     if (JS::GCThingIsMarkedGray(thing))
-        JS::UnmarkGrayGCThingRecursively(thing, MapAllocToTraceKind(thing->getAllocKind()));
+        JS::UnmarkGrayGCThingRecursively(cellptr);
 }
 
 /* static */ MOZ_ALWAYS_INLINE void
