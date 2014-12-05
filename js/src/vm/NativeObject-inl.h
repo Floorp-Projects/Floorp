@@ -370,19 +370,17 @@ NativeObject::setSlotWithType(ExclusiveContext *cx, Shape *shape,
 }
 
 /* Make an object with pregenerated shape from a NEWOBJECT bytecode. */
-static inline NativeObject *
-CopyInitializerObject(JSContext *cx, HandleNativeObject baseobj, NewObjectKind newKind = GenericObject)
+static inline PlainObject *
+CopyInitializerObject(JSContext *cx, HandlePlainObject baseobj, NewObjectKind newKind = GenericObject)
 {
-    MOZ_ASSERT(baseobj->getClass() == &JSObject::class_);
     MOZ_ASSERT(!baseobj->inDictionaryMode());
 
     gc::AllocKind allocKind = gc::GetGCObjectFixedSlotsKind(baseobj->numFixedSlots());
     allocKind = gc::GetBackgroundAllocKind(allocKind);
     MOZ_ASSERT_IF(baseobj->isTenured(), allocKind == baseobj->asTenured().getAllocKind());
-    JSObject *baseObj = NewBuiltinClassInstance(cx, &JSObject::class_, allocKind, newKind);
-    if (!baseObj)
+    RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx, allocKind, newKind));
+    if (!obj)
         return nullptr;
-    RootedNativeObject obj(cx, &baseObj->as<NativeObject>());
 
     RootedObject metadata(cx, obj->getMetadata());
     RootedShape lastProp(cx, baseobj->lastProperty());
@@ -419,20 +417,6 @@ NewNativeObjectWithGivenProto(ExclusiveContext *cx, const js::Class *clasp,
 }
 
 inline NativeObject *
-NewNativeBuiltinClassInstance(ExclusiveContext *cx, const Class *clasp,
-                              gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
-{
-    return MaybeNativeObject(NewBuiltinClassInstance(cx, clasp, allocKind, newKind));
-}
-
-inline NativeObject *
-NewNativeBuiltinClassInstance(ExclusiveContext *cx, const Class *clasp,
-                              NewObjectKind newKind = GenericObject)
-{
-    return MaybeNativeObject(NewBuiltinClassInstance(cx, clasp, newKind));
-}
-
-inline NativeObject *
 NewNativeObjectWithClassProto(ExclusiveContext *cx, const js::Class *clasp, JSObject *proto, JSObject *parent,
                               gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
 {
@@ -444,20 +428,6 @@ NewNativeObjectWithClassProto(ExclusiveContext *cx, const js::Class *clasp, JSOb
                               NewObjectKind newKind = GenericObject)
 {
     return MaybeNativeObject(NewObjectWithClassProto(cx, clasp, proto, parent, newKind));
-}
-
-inline NativeObject *
-NewNativeObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent, gc::AllocKind allocKind,
-                        NewObjectKind newKind = GenericObject)
-{
-    return MaybeNativeObject(NewObjectWithType(cx, type, parent, allocKind, newKind));
-}
-
-inline NativeObject *
-NewNativeObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent,
-                        NewObjectKind newKind = GenericObject)
-{
-    return MaybeNativeObject(NewObjectWithType(cx, type, parent, newKind));
 }
 
 /*

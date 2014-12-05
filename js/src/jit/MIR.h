@@ -2709,7 +2709,7 @@ class MNewObject : public MUnaryInstruction
         initialHeap_(initialHeap),
         templateObjectIsClassPrototype_(templateObjectIsClassPrototype)
     {
-        JSObject *obj = templateObject();
+        PlainObject *obj = templateObject();
         MOZ_ASSERT_IF(templateObjectIsClassPrototype, !shouldUseVM());
         setResultType(MIRType_Object);
         if (!obj->hasSingletonType())
@@ -2742,8 +2742,8 @@ class MNewObject : public MUnaryInstruction
         return templateObjectIsClassPrototype_;
     }
 
-    NativeObject *templateObject() const {
-        return &getOperand(0)->toConstant()->value().toObject().as<NativeObject>();
+    PlainObject *templateObject() const {
+        return &getOperand(0)->toConstant()->value().toObject().as<PlainObject>();
     }
 
     gc::InitialHeap initialHeap() const {
@@ -4081,8 +4081,8 @@ class MCreateThisWithTemplate
     }
 
     // Template for |this|, provided by TI.
-    NativeObject *templateObject() const {
-        return &getOperand(0)->toConstant()->value().toObject().as<NativeObject>();
+    PlainObject *templateObject() const {
+        return &getOperand(0)->toConstant()->value().toObject().as<PlainObject>();
     }
 
     gc::InitialHeap initialHeap() const {
@@ -11420,9 +11420,9 @@ class MPostWriteBarrier : public MBinaryInstruction, public ObjectPolicy<0>::Dat
 
 class MNewDeclEnvObject : public MNullaryInstruction
 {
-    AlwaysTenuredNativeObject templateObj_;
+    AlwaysTenured<DeclEnvObject*> templateObj_;
 
-    explicit MNewDeclEnvObject(NativeObject *templateObj)
+    explicit MNewDeclEnvObject(DeclEnvObject *templateObj)
       : MNullaryInstruction(),
         templateObj_(templateObj)
     {
@@ -11432,11 +11432,11 @@ class MNewDeclEnvObject : public MNullaryInstruction
   public:
     INSTRUCTION_HEADER(NewDeclEnvObject);
 
-    static MNewDeclEnvObject *New(TempAllocator &alloc, NativeObject *templateObj) {
+    static MNewDeclEnvObject *New(TempAllocator &alloc, DeclEnvObject *templateObj) {
         return new(alloc) MNewDeclEnvObject(templateObj);
     }
 
-    NativeObject *templateObj() {
+    DeclEnvObject *templateObj() {
         return templateObj_;
     }
     AliasSet getAliasSet() const {
@@ -11446,10 +11446,10 @@ class MNewDeclEnvObject : public MNullaryInstruction
 
 class MNewCallObjectBase : public MNullaryInstruction
 {
-    AlwaysTenuredNativeObject templateObj_;
+    AlwaysTenured<CallObject*> templateObj_;
 
   protected:
-    explicit MNewCallObjectBase(NativeObject *templateObj)
+    explicit MNewCallObjectBase(CallObject *templateObj)
       : MNullaryInstruction(),
         templateObj_(templateObj)
     {
@@ -11457,7 +11457,7 @@ class MNewCallObjectBase : public MNullaryInstruction
     }
 
   public:
-    NativeObject *templateObject() {
+    CallObject *templateObject() {
         return templateObj_;
     }
     AliasSet getAliasSet() const {
@@ -11470,12 +11470,12 @@ class MNewCallObject : public MNewCallObjectBase
   public:
     INSTRUCTION_HEADER(NewCallObject)
 
-    explicit MNewCallObject(NativeObject *templateObj)
+    explicit MNewCallObject(CallObject *templateObj)
       : MNewCallObjectBase(templateObj)
     {}
 
     static MNewCallObject *
-    New(TempAllocator &alloc, NativeObject *templateObj)
+    New(TempAllocator &alloc, CallObject *templateObj)
     {
         return new(alloc) MNewCallObject(templateObj);
     }
@@ -11486,12 +11486,12 @@ class MNewRunOnceCallObject : public MNewCallObjectBase
   public:
     INSTRUCTION_HEADER(NewRunOnceCallObject)
 
-    explicit MNewRunOnceCallObject(NativeObject *templateObj)
+    explicit MNewRunOnceCallObject(CallObject *templateObj)
       : MNewCallObjectBase(templateObj)
     {}
 
     static MNewRunOnceCallObject *
-    New(TempAllocator &alloc, NativeObject *templateObj)
+    New(TempAllocator &alloc, CallObject *templateObj)
     {
         return new(alloc) MNewRunOnceCallObject(templateObj);
     }
@@ -11499,9 +11499,9 @@ class MNewRunOnceCallObject : public MNewCallObjectBase
 
 class MNewCallObjectPar : public MUnaryInstruction
 {
-    AlwaysTenuredNativeObject templateObj_;
+    AlwaysTenured<CallObject*> templateObj_;
 
-    MNewCallObjectPar(MDefinition *cx, NativeObject *templateObj)
+    MNewCallObjectPar(MDefinition *cx, CallObject *templateObj)
         : MUnaryInstruction(cx),
           templateObj_(templateObj)
     {
@@ -11519,7 +11519,7 @@ class MNewCallObjectPar : public MUnaryInstruction
         return getOperand(0);
     }
 
-    NativeObject *templateObj() const {
+    CallObject *templateObj() const {
         return templateObj_;
     }
 

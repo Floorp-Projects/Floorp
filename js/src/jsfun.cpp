@@ -410,9 +410,9 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
         objProto = obj->global().getOrCreateObjectPrototype(cx);
     if (!objProto)
         return nullptr;
-    const Class *clasp = &JSObject::class_;
 
-    RootedObject proto(cx, NewObjectWithGivenProto(cx, clasp, objProto, nullptr, SingletonObject));
+    RootedPlainObject proto(cx, NewObjectWithGivenProto<PlainObject>(cx, objProto,
+                                                                     nullptr, SingletonObject));
     if (!proto)
         return nullptr;
 

@@ -104,7 +104,7 @@ ArrayObject::createArray(ExclusiveContext *cx, gc::InitialHeap heap,
 /* static */ inline ArrayObject *
 ArrayObject::createCopyOnWriteArray(ExclusiveContext *cx, gc::InitialHeap heap,
                                     HandleShape shape,
-                                    HandleNativeObject sharedElementsOwner)
+                                    HandleArrayObject sharedElementsOwner)
 {
     MOZ_ASSERT(sharedElementsOwner->getElementsHeader()->isCopyOnWrite());
     MOZ_ASSERT(sharedElementsOwner->getElementsHeader()->ownerObject() == sharedElementsOwner);
