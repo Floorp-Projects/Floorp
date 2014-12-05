@@ -120,6 +120,33 @@ this.UITour = {
       allowAdd: true,
     }],
     ["loop",        {query: "#loop-button"}],
+    ["loop-newRoom", {
+      query: (aDocument) => {
+        let loopBrowser = aDocument.querySelector("#loop-notification-panel > #loop");
+        if (!loopBrowser) {
+          return null;
+        }
+        return loopBrowser.contentDocument.querySelector(".new-room-button");
+      },
+    }],
+    ["loop-roomList", {
+      query: (aDocument) => {
+        let loopBrowser = aDocument.querySelector("#loop-notification-panel > #loop");
+        if (!loopBrowser) {
+          return null;
+        }
+        return loopBrowser.contentDocument.querySelector(".room-list");
+      },
+    }],
+    ["loop-signInUpLink", {
+      query: (aDocument) => {
+        let loopBrowser = aDocument.querySelector("#loop-notification-panel > #loop");
+        if (!loopBrowser) {
+          return null;
+        }
+        return loopBrowser.contentDocument.querySelector(".signin-link");
+      },
+    }],
     ["privateWindow",  {query: "#privatebrowsing-button"}],
     ["quit",        {query: "#PanelUI-quit"}],
     ["search",      {
@@ -358,7 +385,7 @@ this.UITour = {
           if (this.highlightEffects.indexOf(data.effect) !== -1) {
             effect = data.effect;
           }
-          this.showHighlight(target, effect);
+          this.showHighlight(window, target, effect);
         }).catch(log.error);
         break;
       }
@@ -414,7 +441,7 @@ this.UITour = {
           if (typeof data.targetCallbackID == "string")
             infoOptions.targetCallbackID = data.targetCallbackID;
 
-          this.showInfo(messageManager, target, data.title, data.text, iconURL, buttons, infoOptions);
+          this.showInfo(window, messageManager, target, data.title, data.text, iconURL, buttons, infoOptions);
         }).catch(log.error);
         break;
       }
@@ -581,6 +608,12 @@ this.UITour = {
         }).then(null, Cu.reportError);
         break;
       }
+
+      case "ping": {
+        if (typeof data.callbackID == "string")
+          this.sendPageCallback(messageManager, data.callbackID);
+        break;
+      }
     }
 
     if (!window.gMultiProcessBrowser) { // Non-e10s. See bug 1089000.
@@ -735,10 +768,12 @@ this.UITour = {
     }
 
     // Clean up panel listeners after we may have called hideMenu above.
-    aWindow.PanelUI.panel.removeEventListener("popuphiding", this.hidePanelAnnotations);
-    aWindow.PanelUI.panel.removeEventListener("ViewShowing", this.hidePanelAnnotations);
+    aWindow.PanelUI.panel.removeEventListener("popuphiding", this.hideAppMenuAnnotations);
+    aWindow.PanelUI.panel.removeEventListener("ViewShowing", this.hideAppMenuAnnotations);
+    aWindow.PanelUI.panel.removeEventListener("popuphidden", this.onPanelHidden);
     let loopPanel = aWindow.document.getElementById("loop-notification-panel");
-    loopPanel.removeEventListener("popuphidden", this.onLoopPanelHidden);
+    loopPanel.removeEventListener("popuphidden", this.onPanelHidden);
+    loopPanel.removeEventListener("popuphiding", this.hideLoopPanelAnnotations);
 
     this.endUrlbarCapture(aWindow);
     this.removePinnedTab(aWindow);
@@ -792,7 +827,9 @@ this.UITour = {
 
   isElementVisible: function(aElement) {
     let targetStyle = aElement.ownerDocument.defaultView.getComputedStyle(aElement);
-    return (targetStyle.display != "none" && targetStyle.visibility == "visible");
+    return !aElement.ownerDocument.hidden &&
+             targetStyle.display != "none" &&
+             targetStyle.visibility == "visible";
   },
 
   getTarget: function(aWindow, aTargetName, aSticky = false) {
@@ -953,27 +990,28 @@ this.UITour = {
   },
 
   /**
+   * @param aChromeWindow The chrome window that the highlight is in. Necessary since some targets
+   *                      are in a sub-frame so the defaultView is not the same as the chrome
+   *                      window.
    * @param aTarget    The element to highlight.
    * @param aEffect    (optional) The effect to use from UITour.highlightEffects or "none".
    * @see UITour.highlightEffects
    */
-  showHighlight: function(aTarget, aEffect = "none") {
-    let window = aTarget.node.ownerDocument.defaultView;
-
+  showHighlight: function(aChromeWindow, aTarget, aEffect = "none") {
     function showHighlightPanel() {
       if (aTarget.targetName.startsWith(TARGET_SEARCHENGINE_PREFIX)) {
         // This won't affect normal higlights done via the panel, so we need to
         // manually hide those.
-        this.hideHighlight(window);
+        this.hideHighlight(aChromeWindow);
         aTarget.node.setAttribute("_moz-menuactive", true);
         return;
       }
 
       // Conversely, highlights for search engines are highlighted via CSS
       // rather than a panel, so need to be manually removed.
-      this._hideSearchEngineHighlight(window);
+      this._hideSearchEngineHighlight(aChromeWindow);
 
-      let highlighter = aTarget.node.ownerDocument.getElementById("UITourHighlight");
+      let highlighter = aChromeWindow.document.getElementById("UITourHighlight");
 
       let effect = aEffect;
       if (effect == "random") {
@@ -985,7 +1023,7 @@ this.UITour = {
       }
       // Toggle the effect attribute to "none" and flush layout before setting it so the effect plays.
       highlighter.setAttribute("active", "none");
-      aTarget.node.ownerDocument.defaultView.getComputedStyle(highlighter).animationName;
+      aChromeWindow.getComputedStyle(highlighter).animationName;
       highlighter.setAttribute("active", effect);
       highlighter.parentElement.setAttribute("targetName", aTarget.targetName);
       highlighter.parentElement.hidden = false;
@@ -1025,7 +1063,7 @@ this.UITour = {
       }
       /* The "overlap" position anchors from the top-left but we want to centre highlights at their
          minimum size. */
-      let highlightWindow = aTarget.node.ownerDocument.defaultView;
+      let highlightWindow = aChromeWindow;
       let containerStyle = highlightWindow.getComputedStyle(highlighter.parentElement);
       let paddingTopPx = 0 - parseFloat(containerStyle.paddingTop);
       let paddingLeftPx = 0 - parseFloat(containerStyle.paddingLeft);
@@ -1046,7 +1084,7 @@ this.UITour = {
       return;
     }
 
-    this._setAppMenuStateForAnnotation(aTarget.node.ownerDocument.defaultView, "highlight",
+    this._setAppMenuStateForAnnotation(aChromeWindow, "highlight",
                                        this.targetIsInAppMenu(aTarget),
                                        showHighlightPanel.bind(this));
   },
@@ -1085,6 +1123,7 @@ this.UITour = {
   /**
    * Show an info panel.
    *
+   * @param {ChromeWindow} aChromeWindow
    * @param {nsIMessageSender} aMessageManager
    * @param {Node}     aAnchor
    * @param {String}   [aTitle=""]
@@ -1094,12 +1133,12 @@ this.UITour = {
    * @param {Object}   [aOptions={}]
    * @param {String}   [aOptions.closeButtonCallbackID]
    */
-  showInfo: function(aMessageManager, aAnchor, aTitle = "", aDescription = "", aIconURL = "",
+  showInfo: function(aChromeWindow, aMessageManager, aAnchor, aTitle = "", aDescription = "", aIconURL = "",
                      aButtons = [], aOptions = {}) {
     function showInfoPanel(aAnchorEl) {
       aAnchorEl.focus();
 
-      let document = aAnchorEl.ownerDocument;
+      let document = aChromeWindow.document;
       let tooltip = document.getElementById("UITourTooltip");
       let tooltipTitle = document.getElementById("UITourTooltipTitle");
       let tooltipDesc = document.getElementById("UITourTooltipDescription");
@@ -1187,15 +1226,17 @@ this.UITour = {
     }
 
     // Prevent showing a panel at an undefined position.
-    if (!this.isElementVisible(aAnchor.node))
+    if (!this.isElementVisible(aAnchor.node)) {
+      log.warn("showInfo: Not showing since the target isn't visible", aAnchor);
       return;
+    }
 
     // Due to a platform limitation, we can't anchor a panel to an element in a
     // <menupopup>. So we can't support showing info panels for search engines.
     if (aAnchor.targetName.startsWith(TARGET_SEARCHENGINE_PREFIX))
       return;
 
-    this._setAppMenuStateForAnnotation(aAnchor.node.ownerDocument.defaultView, "info",
+    this._setAppMenuStateForAnnotation(aChromeWindow, "info",
                                        this.targetIsInAppMenu(aAnchor),
                                        showInfoPanel.bind(this, aAnchor.node));
   },
@@ -1235,8 +1276,9 @@ this.UITour = {
       if (aWindow.PanelUI.panel.state != "open") {
         this.recreatePopup(aWindow.PanelUI.panel);
       }
-      aWindow.PanelUI.panel.addEventListener("popuphiding", this.hidePanelAnnotations);
-      aWindow.PanelUI.panel.addEventListener("ViewShowing", this.hidePanelAnnotations);
+      aWindow.PanelUI.panel.addEventListener("popuphiding", this.hideAppMenuAnnotations);
+      aWindow.PanelUI.panel.addEventListener("ViewShowing", this.hideAppMenuAnnotations);
+      aWindow.PanelUI.panel.addEventListener("popuphidden", this.onPanelHidden);
       if (aOpenCallback) {
         aWindow.PanelUI.panel.addEventListener("popupshown", onPopupShown);
       }
@@ -1254,6 +1296,7 @@ this.UITour = {
       panel.setAttribute("noautohide", true);
       if (panel.state != "open") {
         this.recreatePopup(panel);
+        this.availableTargetsCache.clear();
       }
 
       // An event object is expected but we don't want to toggle the panel with a click if the panel
@@ -1263,7 +1306,8 @@ this.UITour = {
           aOpenCallback();
         }
       });
-      panel.addEventListener("popuphidden", this.onLoopPanelHidden);
+      panel.addEventListener("popuphidden", this.onPanelHidden);
+      panel.addEventListener("popuphiding", this.hideLoopPanelAnnotations);
     } else if (aMenuName == "searchEngines") {
       this.getTarget(aWindow, "searchProvider").then(target => {
         openMenuButton(target.node);
@@ -1278,9 +1322,7 @@ this.UITour = {
     }
 
     if (aMenuName == "appMenu") {
-      aWindow.PanelUI.panel.removeAttribute("noautohide");
       aWindow.PanelUI.hide();
-      this.recreatePopup(aWindow.PanelUI.panel);
     } else if (aMenuName == "bookmarks") {
       let menuBtn = aWindow.document.getElementById("bookmarks-menu-button");
       closeMenuButton(menuBtn);
@@ -1293,7 +1335,7 @@ this.UITour = {
     }
   },
 
-  hidePanelAnnotations: function(aEvent) {
+  hideAnnotationsForPanel: function(aEvent, aTargetPositionCallback) {
     let win = aEvent.target.ownerDocument.defaultView;
     let annotationElements = new Map([
       // [annotationElement (panel), method to hide the annotation]
@@ -1308,7 +1350,7 @@ this.UITour = {
           // changed since it may have just moved to somewhere outside of the app menu.
           if (annotationElement.getAttribute("targetName") != aTarget.targetName ||
               annotationElement.state == "closed" ||
-              !UITour.targetIsInAppMenu(aTarget)) {
+              !aTargetPositionCallback(aTarget)) {
             return;
           }
           hideMethod(win);
@@ -1318,7 +1360,18 @@ this.UITour = {
     UITour.appMenuOpenForAnnotation.clear();
   },
 
-  onLoopPanelHidden: function(aEvent) {
+  hideAppMenuAnnotations: function(aEvent) {
+    UITour.hideAnnotationsForPanel(aEvent, UITour.targetIsInAppMenu);
+  },
+
+  hideLoopPanelAnnotations: function(aEvent) {
+    UITour.hideAnnotationsForPanel(aEvent, (aTarget) => {
+      // TODO: Bug 1104927 - Handle the conversation targets separately.
+      return aTarget.targetName.startsWith("loop-");
+    });
+  },
+
+  onPanelHidden: function(aEvent) {
     aEvent.target.removeAttribute("noautohide");
     UITour.recreatePopup(aEvent.target);
   },
@@ -1575,7 +1628,29 @@ this.UITour = {
         reject("Search engine not available");
       });
     });
-  }
+  },
+
+  notify(eventName, params) {
+    let winEnum = Services.wm.getEnumerator("navigator:browser");
+    while (winEnum.hasMoreElements()) {
+      let window = winEnum.getNext();
+      if (window.closed)
+        continue;
+debugger;
+      let originTabs = this.originTabs.get(window);
+      if (!originTabs)
+        continue;
+
+      for (let tab of originTabs) {
+        let messageManager = tab.linkedBrowser.messageManager;
+        let detail = {
+          event: eventName,
+          params: params,
+        };
+        messageManager.sendAsyncMessage("UITour:SendPageNotification", detail);
+      }
+    }
+  },
 };
 
 this.UITour.init();

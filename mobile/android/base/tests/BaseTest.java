@@ -585,6 +585,28 @@ abstract class BaseTest extends BaseRobocopTest {
         mAsserter.ok(success, "Top site item was pinned: " + isPinned, null);
     }
 
+    public void pinTopSite(String gridItemTitle) {
+        verifyPinned(false, gridItemTitle);
+        mSolo.clickLongOnText(gridItemTitle);
+        boolean dialogOpened = mSolo.waitForDialogToOpen();
+        mAsserter.ok(dialogOpened, "Pin site dialog opened: " + gridItemTitle, null);
+        boolean pinSiteFound = waitForText(StringHelper.CONTEXT_MENU_PIN_SITE);
+        mAsserter.ok(pinSiteFound, "Found pin site menu item", null);
+        mSolo.clickOnText(StringHelper.CONTEXT_MENU_PIN_SITE);
+        verifyPinned(true, gridItemTitle);
+    }
+
+    public void unpinTopSite(String gridItemTitle) {
+        verifyPinned(true, gridItemTitle);
+        mSolo.clickLongOnText(gridItemTitle);
+        boolean dialogOpened = mSolo.waitForDialogToOpen();
+        mAsserter.ok(dialogOpened, "Pin site dialog opened: " + gridItemTitle, null);
+        boolean unpinSiteFound = waitForText(StringHelper.CONTEXT_MENU_UNPIN_SITE);
+        mAsserter.ok(unpinSiteFound, "Found unpin site menu item", null);
+        mSolo.clickOnText(StringHelper.CONTEXT_MENU_UNPIN_SITE);
+        verifyPinned(false, gridItemTitle);
+    }
+
     // Used to perform clicks on pop-up buttons without having to close the virtual keyboard
     public void clickOnButton(String label) {
         final Button button = mSolo.getButton(label);

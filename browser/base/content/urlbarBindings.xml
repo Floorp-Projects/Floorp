@@ -1224,8 +1224,9 @@
           createBundle("chrome://browser/locale/places/places.properties");
       </field>
 
-      <!-- Override this so that navigating between items results in an item
-           always being selected. This is contrary to the normal behaviour where
+      <!-- Override this so that when UnifiedComplete is enabled, navigating
+           between items results in an item always being selected. This is
+           contrary to the old behaviour (UnifiedComplete disabled) where
            if you navigate beyond either end of the list, no item will be
            selected. -->
       <method name="getNextIndex">
@@ -1239,10 +1240,23 @@
 
           let newIndex = index + (reverse ? -1 : 1) * amount;
 
-          // We don't want to wrap if navigation in any direction by one item.
-          // Otherwise we clamp to one end of the list.
+          // We only want to wrap if navigation is in any direction by one item,
+          // otherwise we clamp to one end of the list.
           // ie, hitting page-down will only cause is to wrap if we're already
           // at one end of the list.
+
+          if (!Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete")) {
+            if (reverse && index == -1 || newIndex > maxRow && index != maxRow)
+              newIndex = maxRow;
+            else if (!reverse && index == -1 || newIndex < 0 && index != 0)
+              newIndex = 0;
+
+            if (newIndex < 0 && index == 0 || newIndex > maxRow && index == maxRow)
+              newIndex = -1;
+
+            return newIndex;
+          }
+
           if (newIndex < 0) {
             newIndex = index > 0 ? 0 : maxRow;
           } else if (newIndex > maxRow) {

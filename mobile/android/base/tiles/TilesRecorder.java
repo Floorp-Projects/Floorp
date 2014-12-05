@@ -22,7 +22,7 @@ public class TilesRecorder {
     private static final String LOG_TAG = "GeckoTilesRecorder";
     private static final String EVENT_TILES_CLICK = "Tiles:Click";
 
-    public void recordAction(Tab tab, String action, int index, List<Tile> tiles) {
+    public void recordAction(Tab tab, String action, int index, List<Tile> tiles, String locale) {
         final Tile clickedTile = tiles.get(index);
 
         if (tab == null || clickedTile == null) {
@@ -67,6 +67,7 @@ public class TilesRecorder {
             final JSONObject payload = new JSONObject();
             payload.put(action, clickedTileIndex);
             payload.put("tiles", tilesJSON);
+            payload.put("locale", locale);
 
             final JSONObject data = new JSONObject();
             data.put("tabId", tab.getId());

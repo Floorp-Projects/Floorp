@@ -6,6 +6,9 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
        xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
+    <!-- The layout_height value is used in TabsPanel.getTabsLayoutContainerHeight
+         and as an offset in PrivateTabsPanel: if you change it here,
+         change it there! -->
     <RelativeLayout android:id="@+id/tabs_panel_header"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/browser_toolbar_height">

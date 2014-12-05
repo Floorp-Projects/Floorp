@@ -310,10 +310,12 @@ AboutProtocolInstance.prototype = {
 
 let AboutProtocolChild = {
   _classDescription: "Addon shim about: protocol handler",
-  _classID: Components.ID("8d56a310-0c80-11e4-9191-0800200c9a66"),
 
   init: function() {
-    this._instances = {};
+    // Maps contractIDs to instances
+    this._instances = new Map();
+    // Maps contractIDs to classIDs
+    this._classIDs = new Map();
     NotificationTracker.watch("about-protocol", this);
   },
 
@@ -322,11 +324,19 @@ let AboutProtocolChild = {
     let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
     if (register) {
       let instance = new AboutProtocolInstance(contractID);
-      this._instances[contractID] = instance;
-      registrar.registerFactory(this._classID, this._classDescription, contractID, instance);
+      let classID = Cc["@mozilla.org/uuid-generator;1"]
+                      .getService(Ci.nsIUUIDGenerator)
+                      .generateUUID();
+
+      this._instances.set(contractID, instance);
+      this._classIDs.set(contractID, classID);
+      registrar.registerFactory(classID, this._classDescription, contractID, instance);
     } else {
-      registrar.unregisterFactory(this._classID, this._instances[contractID]);
-      delete this._instances[contractID];
+      let instance = this._instances.get(contractID);
+      let classID = this._classIDs.get(contractID);
+      registrar.unregisterFactory(classID, instance);
+      this._instances.delete(contractID);
+      this._classIDs.delete(contractID);
     }
   },
 };

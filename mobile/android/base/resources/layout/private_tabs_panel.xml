@@ -18,7 +18,8 @@
                           android:layout_width="match_parent"
                           android:layout_height="wrap_content">
 
-                <TextView style="@style/TabsPanelItem.TextAppearance.Header.PrivateTabs"
+                <TextView android:id="@+id/private_tabs_empty_header"
+                          style="@style/TabsPanelItem.TextAppearance.Header.PrivateTabs"
                           android:layout_width="match_parent"
                           android:layout_height="wrap_content"
                           android:text="@string/private_browsing_title"/>
