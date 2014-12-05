@@ -1237,24 +1237,11 @@ MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
 
     CallArgs args = CallArgsFromVp(argc, vp);
     if (!args.get(0).isNullOrUndefined()) {
-        RootedValue adderVal(cx);
-        if (!JSObject::getProperty(cx, obj, obj, cx->names().set, &adderVal))
-            return false;
-
-        if (!IsCallable(adderVal))
-            return ReportIsNotFunction(cx, adderVal);
-
-        bool isOriginalAdder = IsNativeFunction(adderVal, MapObject::set);
-        RootedValue mapVal(cx, ObjectValue(*obj));
-        FastInvokeGuard fig(cx, adderVal);
-        InvokeArgs &args2 = fig.args();
-
         ForOfIterator iter(cx);
         if (!iter.init(args[0]))
             return false;
         RootedValue pairVal(cx);
         RootedObject pairObj(cx);
-        AutoHashableValueRooter hkey(cx);
         ValueMap *map = obj->getData();
         while (true) {
             bool done;
@@ -1276,32 +1263,20 @@ MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
             if (!JSObject::getElement(cx, pairObj, pairObj, 0, &key))
                 return false;
 
+            AutoHashableValueRooter hkey(cx);
+            if (!hkey.setValue(cx, key))
+                return false;
+
             RootedValue val(cx);
             if (!JSObject::getElement(cx, pairObj, pairObj, 1, &val))
                 return false;
 
-            if (isOriginalAdder) {
-                if (!hkey.setValue(cx, key))
-                    return false;
-
-                RelocatableValue rval(val);
-                if (!map->put(hkey, rval)) {
-                    js_ReportOutOfMemory(cx);
-                    return false;
-                }
-                WriteBarrierPost(cx->runtime(), map, key);
-            } else {
-                if (!args2.init(2))
-                    return false;
-
-                args2.setCallee(adderVal);
-                args2.setThis(mapVal);
-                args2[0].set(key);
-                args2[1].set(val);
-
-                if (!fig.invoke(cx))
-                    return false;
+            RelocatableValue rval(val);
+            if (!map->put(hkey, rval)) {
+                js_ReportOutOfMemory(cx);
+                return false;
             }
+            WriteBarrierPost(cx->runtime(), map, key);
         }
     }
 
@@ -1826,18 +1801,6 @@ SetObject::construct(JSContext *cx, unsigned argc, Value *vp)
 
     CallArgs args = CallArgsFromVp(argc, vp);
     if (!args.get(0).isNullOrUndefined()) {
-        RootedValue adderVal(cx);
-        if (!JSObject::getProperty(cx, obj, obj, cx->names().add, &adderVal))
-            return false;
-
-        if (!IsCallable(adderVal))
-            return ReportIsNotFunction(cx, adderVal);
-
-        bool isOriginalAdder = IsNativeFunction(adderVal, SetObject::add);
-        RootedValue setVal(cx, ObjectValue(*obj));
-        FastInvokeGuard fig(cx, adderVal);
-        InvokeArgs &args2 = fig.args();
-
         RootedValue keyVal(cx);
         ForOfIterator iter(cx);
         if (!iter.init(args[0]))
@@ -1850,26 +1813,13 @@ SetObject::construct(JSContext *cx, unsigned argc, Value *vp)
                 return false;
             if (done)
                 break;
-
-            if (isOriginalAdder) {
-                if (!key.setValue(cx, keyVal))
-                    return false;
-                if (!set->put(key)) {
-                    js_ReportOutOfMemory(cx);
-                    return false;
-                }
-                WriteBarrierPost(cx->runtime(), set, keyVal);
-            } else {
-                if (!args2.init(1))
-                    return false;
-
-                args2.setCallee(adderVal);
-                args2.setThis(setVal);
-                args2[0].set(keyVal);
-
-                if (!fig.invoke(cx))
-                    return false;
+            if (!key.setValue(cx, keyVal))
+                return false;
+            if (!set->put(key)) {
+                js_ReportOutOfMemory(cx);
+                return false;
             }
+            WriteBarrierPost(cx->runtime(), set, keyVal);
         }
     }
 
