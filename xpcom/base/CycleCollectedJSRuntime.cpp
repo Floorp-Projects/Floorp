@@ -439,10 +439,10 @@ NoteJSChildTracerShim(JSTracer* aTrc, void** aThingp, JSGCTraceKind aTraceKind)
 }
 
 static void
-NoteJSChildGrayWrapperShim(void* aData, void* aThing)
+NoteJSChildGrayWrapperShim(void* aData, JS::GCCellPtr aThing)
 {
   TraversalTracer* trc = static_cast<TraversalTracer*>(aData);
-  NoteJSChild(trc, aThing, js::GCThingTraceKind(aThing));
+  NoteJSChild(trc, aThing.asCell(), aThing.kind());
 }
 
 /*
@@ -706,14 +706,14 @@ CycleCollectedJSRuntime::TraverseZone(JS::Zone* aZone,
 }
 
 /* static */ void
-CycleCollectedJSRuntime::TraverseObjectShim(void* aData, void* aThing)
+CycleCollectedJSRuntime::TraverseObjectShim(void* aData, JS::GCCellPtr aThing)
 {
   TraverseObjectShimClosure* closure =
     static_cast<TraverseObjectShimClosure*>(aData);
 
-  MOZ_ASSERT(js::GCThingTraceKind(aThing) == JSTRACE_OBJECT);
-  closure->self->TraverseGCThing(CycleCollectedJSRuntime::TRAVERSE_CPP, aThing,
-                                 JSTRACE_OBJECT, closure->cb);
+  MOZ_ASSERT(aThing.isObject());
+  closure->self->TraverseGCThing(CycleCollectedJSRuntime::TRAVERSE_CPP,
+                                 aThing.asCell(), JSTRACE_OBJECT, closure->cb);
 }
 
 void

@@ -186,7 +186,7 @@ private:
   TraverseZone(JS::Zone* aZone, nsCycleCollectionTraversalCallback& aCb);
 
   static void
-  TraverseObjectShim(void* aData, void* aThing);
+  TraverseObjectShim(void* aData, JS::GCCellPtr aThing);
 
   void TraverseNativeRoots(nsCycleCollectionNoteRootCallback& aCb);
 
