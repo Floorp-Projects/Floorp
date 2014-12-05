@@ -37,10 +37,10 @@ template<class A, class V>
 class GonkRecorderProfileBase : public ICameraControl::RecorderProfile
 {
 public:
-  GonkRecorderProfileBase(uint32_t aCameraId, uint32_t aProfileIndex, const nsAString& aName)
-    : RecorderProfile(aName)
-    , mAudio(aCameraId, aProfileIndex)
-    , mVideo(aCameraId, aProfileIndex)
+  GonkRecorderProfileBase(uint32_t aCameraId, int aQuality)
+    : RecorderProfile()
+    , mAudio(aCameraId, aQuality)
+    , mVideo(aCameraId, aQuality)
   { }
 
   virtual const Audio& GetAudio() const MOZ_OVERRIDE { return mAudio; }
@@ -58,7 +58,7 @@ protected:
 class GonkRecorderVideo : public ICameraControl::RecorderProfile::Video
 {
 public:
-  GonkRecorderVideo(uint32_t aCameraId, uint32_t aProfileIndex);
+  GonkRecorderVideo(uint32_t aCameraId, int aQuality);
   virtual ~GonkRecorderVideo() { }
 
   android::video_encoder GetPlatformEncoder() const { return mPlatformEncoder; }
@@ -69,7 +69,7 @@ protected:
   static bool Translate(android::video_encoder aCodec, nsAString& aCodecName);
 
   uint32_t mCameraId;
-  uint32_t mProfileIndex;
+  int mQuality;
   bool mIsValid;
   android::video_encoder mPlatformEncoder;
 };
@@ -80,7 +80,7 @@ protected:
 class GonkRecorderAudio : public ICameraControl::RecorderProfile::Audio
 {
 public:
-  GonkRecorderAudio(uint32_t aCameraId, uint32_t aProfileIndex);
+  GonkRecorderAudio(uint32_t aCameraId, int aQuality);
   virtual ~GonkRecorderAudio() { }
 
   android::audio_encoder GetPlatformEncoder() const { return mPlatformEncoder; }
@@ -91,7 +91,7 @@ protected:
   static bool Translate(android::audio_encoder aCodec, nsAString& aCodecName);
 
   uint32_t mCameraId;
-  uint32_t mProfileIndex;
+  int mQuality;
   bool mIsValid;
   android::audio_encoder mPlatformEncoder;
 };
@@ -121,8 +121,7 @@ public:
 
 protected:
   GonkRecorderProfile(uint32_t aCameraId,
-                      uint32_t aProfileIndex,
-                      const nsAString& aName);
+                      int aQuality);
 
   int GetProfileParameter(const char* aParameter);
 
@@ -131,13 +130,15 @@ protected:
   bool IsValid() const { return mIsValid; };
 
   nsresult ConfigureRecorder(android::GonkRecorder& aRecorder);
+  static already_AddRefed<GonkRecorderProfile> CreateProfile(uint32_t aCameraId,
+                                                             int aQuality);
   static ProfileHashtable* GetProfileHashtable(uint32_t aCameraId);
   static PLDHashOperator Enumerate(const nsAString& aProfileName,
                                    GonkRecorderProfile* aProfile,
                                    void* aUserArg);
 
   uint32_t mCameraId;
-  uint32_t mProfileIndex;
+  int mQuality;
   bool mIsValid;
   android::output_format mOutputFormat;
 

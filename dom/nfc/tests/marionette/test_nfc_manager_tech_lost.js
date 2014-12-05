@@ -14,7 +14,7 @@ function handleTechnologyLost(msg) {
 function handleTechnologyDiscoveredRE0(msg) {
   log('Received \'nfc-manager-tech-discovered\'');
   is(msg.type, 'techDiscovered', 'check for correct message type');
-  is(msg.techList[0], 'P2P', 'check for correct tech type');
+  is(msg.isP2P, 'P2P', 'check for correct tech type');
 
   NCI.deactivate();
 }

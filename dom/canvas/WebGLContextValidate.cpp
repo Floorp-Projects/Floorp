@@ -1212,9 +1212,9 @@ WebGLContext::ValidateTexInputData(GLenum type, js::Scalar::Type jsArrayType,
                                    WebGLTexImageFunc func,
                                    WebGLTexDimensions dims)
 {
-    // We're using js::Scalar::TypeMax as dummy value for when the tex source
-    // wasn't a typed array.
-    if (jsArrayType == js::Scalar::TypeMax)
+    // We're using js::Scalar::MaxTypedArrayViewType as dummy value for when
+    // the tex source wasn't a typed array.
+    if (jsArrayType == js::Scalar::MaxTypedArrayViewType)
         return true;
 
     const char invalidTypedArray[] = "%s: Invalid typed array type for given"

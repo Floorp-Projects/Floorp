@@ -22,9 +22,11 @@
  * limitations under the License.
  */
 #include "pkix/pkix.h"
+#include "pkixcheck.h"
 #include "pkixder.h"
 #include "pkixgtest.h"
 #include "pkixtestutil.h"
+#include "pkixutil.h"
 
 namespace mozilla { namespace pkix {
 
@@ -1027,6 +1029,9 @@ static const uint8_t ipv4_addr_bytes[] = {
 };
 static const uint8_t ipv4_addr_bytes_as_str[] = "\x01\x02\x03\x04";
 static const uint8_t ipv4_addr_str[] = "1.2.3.4";
+static const uint8_t ipv4_addr_bytes_FFFFFFFF[8] = {
+  1, 2, 3, 4, 0xff, 0xff, 0xff, 0xff
+};
 
 static const uint8_t ipv4_compatible_ipv6_addr_bytes[] = {
   0, 0, 0, 0,
@@ -1058,6 +1063,126 @@ static const uint8_t ipv6_addr_bytes_as_str[] =
 
 static const uint8_t ipv6_addr_str[] =
   "1122:3344:5566:7788:99aa:bbcc:ddee:ff11";
+
+static const uint8_t ipv6_other_addr_bytes[] = {
+  0xff, 0xee, 0xdd, 0xcc,
+  0xbb, 0xaa, 0x99, 0x88,
+  0x77, 0x66, 0x55, 0x44,
+  0x33, 0x22, 0x11, 0x00,
+};
+
+static const uint8_t ipv4_other_addr_bytes[] = {
+  5, 6, 7, 8
+};
+static const uint8_t ipv4_other_addr_str[] = "5.6.7.8";
+static const uint8_t ipv4_other_addr_bytes_FFFFFFFF[] = {
+  5, 6, 7, 8, 0xff, 0xff, 0xff, 0xff
+};
+
+static const uint8_t ipv4_addr_00000000_bytes[] = {
+  0, 0, 0, 0
+};
+static const uint8_t ipv4_addr_FFFFFFFF_bytes[] = {
+  0, 0, 0, 0
+};
+
+static const uint8_t ipv4_constraint_all_zeros_bytes[] = {
+  0, 0, 0, 0, 0, 0, 0, 0
+};
+
+static const uint8_t ipv6_addr_all_zeros_bytes[] = {
+  0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0,
+};
+
+static const uint8_t ipv6_constraint_all_zeros_bytes[] = {
+  0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0
+};
+
+static const uint8_t ipv4_constraint_CIDR_16_bytes[] = {
+  1, 2, 0, 0, 0xff, 0xff, 0, 0
+};
+static const uint8_t ipv4_constraint_CIDR_17_bytes[] = {
+  1, 2, 0, 0, 0xff, 0xff, 0x80, 0
+};
+
+// The subnet is 1.2.0.0/16 but it is specified as 1.2.3.0/16
+static const uint8_t ipv4_constraint_CIDR_16_bad_addr_bytes[] = {
+  1, 2, 3, 0, 0xff, 0xff, 0, 0
+};
+
+// Masks are supposed to be of the form <ones><zeros>, but this one is of the
+// form <ones><zeros><ones><zeros>.
+static const uint8_t ipv4_constraint_bad_mask_bytes[] = {
+  1, 2, 3, 0, 0xff, 0, 0xff, 0
+};
+
+static const uint8_t ipv6_constraint_CIDR_16_bytes[] = {
+  0x11, 0x22, 0, 0, 0, 0, 0, 0,
+     0,    0, 0, 0, 0, 0, 0, 0,
+  0xff, 0xff, 0, 0, 0, 0, 0, 0,
+     0,    0, 0, 0, 0, 0, 0, 0
+};
+
+// The subnet is 1122::/16 but it is specified as 1122:3344::/16
+static const uint8_t ipv6_constraint_CIDR_16_bad_addr_bytes[] = {
+  0x11, 0x22, 0x33, 0x44, 0, 0, 0, 0,
+     0,    0,    0,    0, 0, 0, 0, 0,
+  0xff, 0xff,    0,    0, 0, 0, 0, 0,
+     0,    0,    0,    0, 0, 0, 0, 0
+};
+
+// Masks are supposed to be of the form <ones><zeros>, but this one is of the
+// form <ones><zeros><ones><zeros>.
+static const uint8_t ipv6_constraint_bad_mask_bytes[] = {
+  0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0, 0,
+     0,    0,    0,    0,    0,    0, 0, 0,
+  0xff, 0xff,    0,    0, 0xff, 0xff, 0, 0,
+     0,    0,    0,    0,    0,    0, 0, 0,
+};
+
+static const uint8_t ipv4_addr_truncated_bytes[] = {
+  1, 2, 3
+};
+static const uint8_t ipv4_addr_overlong_bytes[] = {
+  1, 2, 3, 4, 5
+};
+static const uint8_t ipv4_constraint_truncated_bytes[] = {
+  0, 0, 0, 0,
+  0, 0, 0,
+};
+static const uint8_t ipv4_constraint_overlong_bytes[] = {
+  0, 0, 0, 0,
+  0, 0, 0, 0, 0
+};
+
+static const uint8_t ipv6_addr_truncated_bytes[] = {
+  0x11, 0x22, 0x33, 0x44,
+  0x55, 0x66, 0x77, 0x88,
+  0x99, 0xaa, 0xbb, 0xcc,
+  0xdd, 0xee, 0xff
+};
+static const uint8_t ipv6_addr_overlong_bytes[] = {
+  0x11, 0x22, 0x33, 0x44,
+  0x55, 0x66, 0x77, 0x88,
+  0x99, 0xaa, 0xbb, 0xcc,
+  0xdd, 0xee, 0xff, 0x11, 0x00
+};
+static const uint8_t ipv6_constraint_truncated_bytes[] = {
+  0x11, 0x22, 0, 0, 0, 0, 0, 0,
+     0,    0, 0, 0, 0, 0, 0, 0,
+  0xff, 0xff, 0, 0, 0, 0, 0, 0,
+     0,    0, 0, 0, 0, 0, 0
+};
+static const uint8_t ipv6_constraint_overlong_bytes[] = {
+  0x11, 0x22, 0, 0, 0, 0, 0, 0,
+     0,    0, 0, 0, 0, 0, 0, 0,
+  0xff, 0xff, 0, 0, 0, 0, 0, 0,
+     0,    0, 0, 0, 0, 0, 0, 0, 0
+};
 
 // Note that, for DNSNames, these test cases in CHECK_CERT_HOSTNAME_PARAMS are
 // mostly about testing different scenerios regarding the structure of entries
@@ -1542,3 +1667,498 @@ TEST_P(pkixnames_CheckCertHostname_IPV4_Addresses,
 INSTANTIATE_TEST_CASE_P(pkixnames_CheckCertHostname_IPV4_ADDRESSES,
                         pkixnames_CheckCertHostname_IPV4_Addresses,
                         testing::ValuesIn(IPV4_ADDRESSES));
+
+struct NameConstraintParams
+{
+  ByteString subject;
+  ByteString subjectAltName;
+  ByteString subtrees;
+  Result expectedPermittedSubtreesResult;
+  Result expectedExcludedSubtreesResult;
+};
+
+static ByteString
+PermittedSubtrees(const ByteString& generalSubtrees)
+{
+  return TLV(der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 0,
+             generalSubtrees);
+}
+
+static ByteString
+ExcludedSubtrees(const ByteString& generalSubtrees)
+{
+  return TLV(der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 1,
+             generalSubtrees);
+}
+
+// Does not encode min or max.
+static ByteString
+GeneralSubtree(const ByteString& base)
+{
+  return TLV(der::SEQUENCE, base);
+}
+
+static const NameConstraintParams NAME_CONSTRAINT_PARAMS[] =
+{
+  /////////////////////////////////////////////////////////////////////////////
+  // Edge cases of name constraint absolute vs. relative and subdomain matching
+  // that are not clearly explained in RFC 5280. (See the long comment above
+  // PresentedDNSIDMatchesReferenceDNSID.)
+
+  // Q: Does a presented identifier equal (case insensitive) to the name
+  //    constraint match the constraint? For example, does the presented
+  //    ID "host.example.com" match a "host.example.com" constraint?
+  { ByteString(), DNSName("host.example.com"),
+    GeneralSubtree(DNSName("host.example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { // This test case is an example from RFC 5280.
+    ByteString(), DNSName("host1.example.com"),
+    GeneralSubtree(DNSName("host.example.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+
+  // Q: When the name constraint does not start with ".", do subdomain
+  //    presented identifiers match it? For example, does the presented
+  //    ID "www.host.example.com" match a "host.example.com" constraint?
+  { // This test case is an example from RFC 5280.
+    ByteString(),  DNSName("www.host.example.com"),
+    GeneralSubtree(DNSName(    "host.example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+
+  // Q: When the name constraint does not start with ".", does a
+  //    non-subdomain prefix match it? For example, does "bigfoo.bar.com"
+  //    match "foo.bar.com"?
+  { ByteString(), DNSName("bigfoo.bar.com"),
+    GeneralSubtree(DNSName("foo.bar.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+
+  // Q: Is a name constraint that starts with "." valid, and if so, what
+  //    semantics does it have? For example, does a presented ID of
+  //    "www.example.com" match a constraint of ".example.com"? Does a
+  //    presented ID of "example.com" match a constraint of ".example.com"?
+  { ByteString(), DNSName("www.example.com"),
+    GeneralSubtree(DNSName(".example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { // Check that we only allow subdomains to match.
+    ByteString(), DNSName("example.com"),
+    GeneralSubtree(DNSName(".example.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+  { // Check that we don't get confused and consider "b" == "."
+    ByteString(), DNSName("bexample.com"),
+    GeneralSubtree(DNSName(".example.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+
+  // Q: Is there a way to prevent subdomain matches?
+  // (This is tested in a different set of tests because it requires a
+  // combination of permittedSubtrees and excludedSubtrees.)
+
+  // Q: Are name constraints allowed to be specified as absolute names?
+  //    For example, does a presented ID of "example.com" match a name
+  //    constraint of "example.com." and vice versa.
+  //
+  { ByteString(), DNSName("example.com"),
+    GeneralSubtree(DNSName("example.com.")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success,
+  },
+  { ByteString(), DNSName("example.com."),
+    GeneralSubtree(DNSName("example.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success,
+  },
+  { // The presented ID is the same length as the constraint, because the
+    // subdomain is only one character long and because the constraint both
+    // begins and ends with ".".
+    ByteString(), DNSName("p.example.com"),
+    GeneralSubtree(DNSName(".example.com.")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success,
+  },
+  { // Same as previous test case, but using a wildcard presented ID.
+    ByteString(), DNSName("*.example.com"),
+    GeneralSubtree(DNSName(".example.com.")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+
+  // Q: Are "" and "." valid DNSName constraints? If so, what do they mean?
+  { ByteString(), DNSName("example.com"),
+    GeneralSubtree(DNSName("")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { ByteString(), DNSName("example.com."),
+    GeneralSubtree(DNSName("")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { ByteString(), DNSName("example.com"),
+    GeneralSubtree(DNSName(".")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success,
+  },
+  { ByteString(), DNSName("example.com."),
+    GeneralSubtree(DNSName(".")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Basic IP Address constraints (non-CN-ID)
+
+  // The Mozilla CA Policy says this means "no IPv4 addresses allowed."
+  { ByteString(), IPAddress(ipv4_addr_bytes),
+    GeneralSubtree(IPAddress(ipv4_constraint_all_zeros_bytes)),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { ByteString(), IPAddress(ipv4_addr_00000000_bytes),
+    GeneralSubtree(IPAddress(ipv4_constraint_all_zeros_bytes)),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { ByteString(), IPAddress(ipv4_addr_FFFFFFFF_bytes),
+    GeneralSubtree(IPAddress(ipv4_constraint_all_zeros_bytes)),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+
+  // The Mozilla CA Policy says this means "no IPv6 addresses allowed."
+  { ByteString(), IPAddress(ipv6_addr_bytes),
+    GeneralSubtree(IPAddress(ipv6_constraint_all_zeros_bytes)),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { ByteString(), IPAddress(ipv6_addr_all_zeros_bytes),
+    GeneralSubtree(IPAddress(ipv6_constraint_all_zeros_bytes)),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+
+  // RFC 5280 doesn't partition IP address constraints into separate IPv4 and
+  // IPv6 categories, so a IPv4 permittedSubtrees constraint excludes all IPv6
+  // addresses, and vice versa.
+  { ByteString(), IPAddress(ipv4_addr_bytes),
+    GeneralSubtree(IPAddress(ipv6_constraint_all_zeros_bytes)),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+  { ByteString(), IPAddress(ipv6_addr_bytes),
+    GeneralSubtree(IPAddress(ipv4_constraint_all_zeros_bytes)),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+
+  // IPv4 Subnets
+  { ByteString(), IPAddress(ipv4_addr_bytes),
+    GeneralSubtree(IPAddress(ipv4_constraint_CIDR_16_bytes)),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { ByteString(), IPAddress(ipv4_addr_bytes),
+    GeneralSubtree(IPAddress(ipv4_constraint_CIDR_17_bytes)),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { ByteString(), IPAddress(ipv4_other_addr_bytes),
+    GeneralSubtree(IPAddress(ipv4_constraint_CIDR_16_bytes)),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+  { // XXX(bug 1089430): We don't reject this even though it is weird.
+    ByteString(), IPAddress(ipv4_addr_bytes),
+    GeneralSubtree(IPAddress(ipv4_constraint_CIDR_16_bad_addr_bytes)),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { // XXX(bug 1089430): We don't reject this even though it is weird.
+    ByteString(), IPAddress(ipv4_other_addr_bytes),
+    GeneralSubtree(IPAddress(ipv4_constraint_bad_mask_bytes)),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+
+  // IPv6 Subnets
+  { ByteString(), IPAddress(ipv6_addr_bytes),
+    GeneralSubtree(IPAddress(ipv6_constraint_CIDR_16_bytes)),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { ByteString(), IPAddress(ipv6_other_addr_bytes),
+    GeneralSubtree(IPAddress(ipv6_constraint_CIDR_16_bytes)),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+  { // XXX(bug 1089430): We don't reject this even though it is weird.
+    ByteString(), IPAddress(ipv6_addr_bytes),
+    GeneralSubtree(IPAddress(ipv6_constraint_CIDR_16_bad_addr_bytes)),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { // XXX(bug 1089430): We don't reject this even though it is weird.
+    ByteString(), IPAddress(ipv6_other_addr_bytes),
+    GeneralSubtree(IPAddress(ipv6_constraint_bad_mask_bytes)),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+
+  // Malformed presented IP addresses and constraints
+
+  { // The presented IPv4 address is empty
+    ByteString(), IPAddress(),
+    GeneralSubtree(IPAddress(ipv4_constraint_all_zeros_bytes)),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // The presented IPv4 address is truncated
+    ByteString(), IPAddress(ipv4_addr_truncated_bytes),
+    GeneralSubtree(IPAddress(ipv4_constraint_all_zeros_bytes)),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // The presented IPv4 address is too long
+    ByteString(), IPAddress(ipv4_addr_overlong_bytes),
+    GeneralSubtree(IPAddress(ipv4_constraint_all_zeros_bytes)),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // The presented IPv4 constraint is empty
+    ByteString(), IPAddress(ipv4_addr_bytes),
+    GeneralSubtree(IPAddress()),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // The presented IPv4 constraint is truncated
+    ByteString(), IPAddress(ipv4_addr_bytes),
+    GeneralSubtree(IPAddress(ipv4_addr_truncated_bytes)),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // The presented IPv4 constraint is too long
+    ByteString(), IPAddress(ipv4_addr_bytes),
+    GeneralSubtree(IPAddress(ipv4_addr_overlong_bytes)),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // The presented IPv6 address is empty
+    ByteString(), IPAddress(),
+    GeneralSubtree(IPAddress(ipv6_constraint_all_zeros_bytes)),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // The presented IPv6 address is truncated
+    ByteString(), IPAddress(ipv6_addr_truncated_bytes),
+    GeneralSubtree(IPAddress(ipv6_constraint_all_zeros_bytes)),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // The presented IPv6 address is too long
+    ByteString(), IPAddress(ipv6_addr_overlong_bytes),
+    GeneralSubtree(IPAddress(ipv6_constraint_all_zeros_bytes)),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // The presented IPv6 constraint is empty
+    ByteString(), IPAddress(ipv6_addr_bytes),
+    GeneralSubtree(IPAddress()),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // The presented IPv6 constraint is truncated
+    ByteString(), IPAddress(ipv6_addr_bytes),
+    GeneralSubtree(IPAddress(ipv6_addr_truncated_bytes)),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // The presented IPv6 constraint is too long
+    ByteString(), IPAddress(ipv6_addr_bytes),
+    GeneralSubtree(IPAddress(ipv6_addr_overlong_bytes)),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // XXX: We don't reject malformed name constraints when there are no names of
+  // that type.
+  { ByteString(), NO_SAN, GeneralSubtree(DNSName("!")),
+    Success, Success
+  },
+  { ByteString(), NO_SAN, GeneralSubtree(IPAddress(ipv4_addr_overlong_bytes)),
+    Success, Success
+  },
+  { ByteString(), NO_SAN, GeneralSubtree(IPAddress(ipv6_addr_overlong_bytes)),
+    Success, Success
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Basic CN-ID DNSName constraint tests.
+
+  { // Empty Name is ignored for DNSName constraints.
+    ByteString(), NO_SAN, GeneralSubtree(DNSName("a.example.com")),
+    Success, Success
+  },
+  { // Empty CN is ignored for DNSName constraints because it isn't a
+    // syntactically-valid DNSName.
+    //
+    // NSS gives different results.
+    RDN(CN("")), NO_SAN, GeneralSubtree(DNSName("a.example.com")),
+    Success, Success
+  },
+  { // IP Address is ignored for DNSName constraints.
+    //
+    // NSS gives different results.
+    RDN(CN("1.2.3.4")), NO_SAN, GeneralSubtree(DNSName("a.example.com")),
+    Success, Success
+  },
+  { // OU has something that looks like a dNSName that matches.
+    RDN(OU("a.example.com")), NO_SAN, GeneralSubtree(DNSName("a.example.com")),
+    Success, Success
+  },
+  { // OU has something that looks like a dNSName that does not match.
+    RDN(OU("b.example.com")), NO_SAN, GeneralSubtree(DNSName("a.example.com")),
+    Success, Success
+  },
+  { // NSS gives different results.
+    RDN(CN("Not a DNSName")), NO_SAN, GeneralSubtree(DNSName("a.example.com")),
+    Success, Success
+  },
+  { RDN(CN("a.example.com")), NO_SAN, GeneralSubtree(DNSName("a.example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { RDN(CN("b.example.com")), NO_SAN, GeneralSubtree(DNSName("a.example.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+  { // Empty SAN is rejected
+    RDN(CN("a.example.com")), ByteString(),
+    GeneralSubtree(DNSName("a.example.com")),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // DNSName CN-ID match is detected when there is a SAN w/o any DNSName or
+    // IPAddress
+    RDN(CN("a.example.com")), RFC822Name("foo@example.com"),
+    GeneralSubtree(DNSName("a.example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { // DNSName CN-ID mismatch is detected when there is a SAN w/o any DNSName
+    // or IPAddress
+    RDN(CN("a.example.com")), RFC822Name("foo@example.com"),
+    GeneralSubtree(DNSName("b.example.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+  { // DNSName CN-ID match not reported when there is a DNSName SAN
+    RDN(CN("a.example.com")), DNSName("b.example.com"),
+    GeneralSubtree(DNSName("a.example.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+  { // DNSName CN-ID mismatch not reported when there is a DNSName SAN
+    RDN(CN("a.example.com")), DNSName("b.example.com"),
+    GeneralSubtree(DNSName("b.example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE,
+  },
+  { // DNSName CN-ID match not reported when there is an IPAddress SAN
+    RDN(CN("a.example.com")), IPAddress(ipv4_addr_bytes),
+    GeneralSubtree(DNSName("a.example.com")),
+    Success, Success
+  },
+  { // DNSName CN-ID mismatch not reported when there is an IPAddress SAN
+    RDN(CN("a.example.com")), IPAddress(ipv4_addr_bytes),
+    GeneralSubtree(DNSName("b.example.com")),
+    Success, Success
+  },
+
+  { // IPAddress CN-ID match is detected when there is a SAN w/o any DNSName or
+    // IPAddress
+    RDN(CN(ipv4_addr_str)), RFC822Name("foo@example.com"),
+    GeneralSubtree(IPAddress(ipv4_addr_bytes_FFFFFFFF)),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { // IPAddress CN-ID mismatch is detected when there is a SAN w/o any DNSName
+    // or IPAddress
+    RDN(CN(ipv4_addr_str)), RFC822Name("foo@example.com"),
+    GeneralSubtree(IPAddress(ipv4_other_addr_bytes_FFFFFFFF)),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+  { // IPAddress CN-ID match not reported when there is a DNSName SAN
+    RDN(CN(ipv4_addr_str)), DNSName("b.example.com"),
+    GeneralSubtree(IPAddress(ipv4_addr_bytes_FFFFFFFF)),
+    Success, Success
+  },
+  { // IPAddress CN-ID mismatch not reported when there is a DNSName SAN
+    RDN(CN(ipv4_addr_str)), DNSName("b.example.com"),
+    GeneralSubtree(IPAddress(ipv4_addr_bytes_FFFFFFFF)),
+    Success, Success
+  },
+  { // IPAddress CN-ID match not reported when there is an IPAddress SAN
+    RDN(CN(ipv4_addr_str)), IPAddress(ipv4_other_addr_bytes),
+    GeneralSubtree(IPAddress(ipv4_addr_bytes_FFFFFFFF)),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+  { // IPAddress CN-ID mismatch not reported when there is an IPAddress SAN
+    RDN(CN(ipv4_addr_str)), IPAddress(ipv4_other_addr_bytes),
+    GeneralSubtree(IPAddress(ipv4_other_addr_bytes_FFFFFFFF)),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Test that constraints are applied to the most specific (last) CN, and only
+  // that CN-ID.
+
+  { // Name constraint only matches a.example.com, but the most specific CN
+    // (i.e. the CN-ID) is b.example.com. (Two CNs in one RDN.)
+    RDN(CN("a.example.com") + CN("b.example.com")), NO_SAN,
+    GeneralSubtree(DNSName("a.example.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+  { // Name constraint only matches a.example.com, but the most specific CN
+    // (i.e. the CN-ID) is b.example.com. (Two CNs in separate RDNs.)
+    RDN(CN("a.example.com")) + RDN(CN("b.example.com")), NO_SAN,
+    GeneralSubtree(DNSName("a.example.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+  { // Name constraint only permits b.example.com, and the most specific CN
+    // (i.e. the CN-ID) is b.example.com. (Two CNs in one RDN.)
+    RDN(CN("a.example.com") + CN("b.example.com")), NO_SAN,
+    GeneralSubtree(DNSName("b.example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { // Name constraint only permits b.example.com, and the most specific CN
+    // (i.e. the CN-ID) is b.example.com. (Two CNs in separate RDNs.)
+    RDN(CN("a.example.com")) + RDN(CN("b.example.com")), NO_SAN,
+    GeneralSubtree(DNSName("b.example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+};
+
+class pkixnames_CheckNameConstraints
+  : public ::testing::Test
+  , public ::testing::WithParamInterface<NameConstraintParams>
+{
+};
+
+TEST_P(pkixnames_CheckNameConstraints,
+       NameConstraintsEnforcedforDirectlyIssuedEndEntity)
+{
+  // Test that name constraints are enforced on a certificate directly issued by
+  // this certificate.
+
+  const NameConstraintParams& param(GetParam());
+
+  ByteString certDER(CreateCert(param.subject, param.subjectAltName));
+  ASSERT_FALSE(ENCODING_FAILED(certDER));
+  Input certInput;
+  ASSERT_EQ(Success, certInput.Init(certDER.data(), certDER.length()));
+  BackCert cert(certInput, EndEntityOrCA::MustBeEndEntity, nullptr);
+  ASSERT_EQ(Success, cert.Init());
+
+  {
+    ByteString nameConstraintsDER(TLV(der::SEQUENCE,
+                                      PermittedSubtrees(param.subtrees)));
+    Input nameConstraints;
+    ASSERT_EQ(Success,
+              nameConstraints.Init(nameConstraintsDER.data(),
+                                   nameConstraintsDER.length()));
+    ASSERT_EQ(param.expectedPermittedSubtreesResult,
+              CheckNameConstraints(nameConstraints, cert,
+                                   KeyPurposeId::id_kp_serverAuth));
+  }
+  {
+    ByteString nameConstraintsDER(TLV(der::SEQUENCE,
+                                      ExcludedSubtrees(param.subtrees)));
+    Input nameConstraints;
+    ASSERT_EQ(Success,
+              nameConstraints.Init(nameConstraintsDER.data(),
+                                   nameConstraintsDER.length()));
+    ASSERT_EQ(param.expectedExcludedSubtreesResult,
+              CheckNameConstraints(nameConstraints, cert,
+                                   KeyPurposeId::id_kp_serverAuth));
+  }
+  {
+    ByteString nameConstraintsDER(TLV(der::SEQUENCE,
+                                      PermittedSubtrees(param.subtrees) +
+                                      ExcludedSubtrees(param.subtrees)));
+    Input nameConstraints;
+    ASSERT_EQ(Success,
+              nameConstraints.Init(nameConstraintsDER.data(),
+                                   nameConstraintsDER.length()));
+    ASSERT_EQ((param.expectedPermittedSubtreesResult ==
+               param.expectedExcludedSubtreesResult)
+                ? param.expectedExcludedSubtreesResult
+                : Result::ERROR_CERT_NOT_IN_NAME_SPACE,
+              CheckNameConstraints(nameConstraints, cert,
+                                   KeyPurposeId::id_kp_serverAuth));
+  }
+}
+
+INSTANTIATE_TEST_CASE_P(pkixnames_CheckNameConstraints,
+                        pkixnames_CheckNameConstraints,
+                        testing::ValuesIn(NAME_CONSTRAINT_PARAMS));
