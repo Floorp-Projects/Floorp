@@ -206,6 +206,11 @@ private:
   uint32_t mSize;
 };
 
+MOZ_BEGIN_ENUM_CLASS(AcceptedMimeTypes, uint8_t)
+  IMAGES,
+  IMAGES_AND_DOCUMENTS,
+MOZ_END_ENUM_CLASS(AcceptedMimeTypes)
+
 class imgLoader MOZ_FINAL : public imgILoader,
                             public nsIContentSniffer,
                             public imgICache,
@@ -271,8 +276,22 @@ public:
                                 imgRequestProxy **_retval);
 
   static nsresult GetMimeTypeFromContent(const char* aContents, uint32_t aLength, nsACString& aContentType);
-  // exported for use by mimei.cpp in libxul sdk builds
-  static NS_EXPORT_(bool) SupportImageWithMimeType(const char* aMimeType);
+
+  /**
+   * Returns true if the given mime type may be interpreted as an image.
+   *
+   * Some MIME types may be interpreted as both images and documents. (At the
+   * moment only "image/svg+xml" falls into this category, but there may be more
+   * in the future.) Callers which want this function to return true for such
+   * MIME types should pass AcceptedMimeTypes::IMAGES_AND_DOCUMENTS for @aAccept.
+   *
+   * @param aMimeType The MIME type to evaluate.
+   * @param aAcceptedMimeTypes Which kinds of MIME types to treat as images.
+   */
+  static NS_EXPORT_(bool)
+  SupportImageWithMimeType(const char* aMimeType,
+                           AcceptedMimeTypes aAccept =
+                             AcceptedMimeTypes::IMAGES);
 
   static void GlobalInit(); // for use by the factory
   static void Shutdown(); // for use by the factory

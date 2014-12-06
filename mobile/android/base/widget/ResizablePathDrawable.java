@@ -14,6 +14,10 @@ import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.Shape;
 
 public class ResizablePathDrawable extends ShapeDrawable {
+    // An attribute mirroring the super class' value. getAlpha() is only
+    // available in API 19+ so to use that alpha value, we have to mirror it.
+    private int alpha = 255;
+
     private final ColorStateList colorStateList;
     private int currentColor;
 
@@ -51,7 +55,19 @@ public class ResizablePathDrawable extends ShapeDrawable {
     @Override
     protected void onDraw(Shape shape, Canvas canvas, Paint paint) {
         paint.setColor(currentColor);
+        // setAlpha overrides the alpha value in set color. Since we just set the color,
+        // the alpha value is reset: override the alpha value with the old value.
+        //
+        // Note: We *should* be able to call Shape.setAlpha, rather than Paint.setAlpha, but
+        // then the opacity doesn't change - dunno why but probably not worth the time.
+        paint.setAlpha(alpha);
         super.onDraw(shape, canvas, paint);
+    }
+
+    @Override
+    public void setAlpha(final int alpha) {
+        super.setAlpha(alpha);
+        this.alpha = alpha;
     }
 
     @Override
