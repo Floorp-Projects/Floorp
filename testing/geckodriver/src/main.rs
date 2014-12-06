@@ -1,10 +1,11 @@
 #![feature(slicing_syntax)]
+#![feature(phase)]
 
 extern crate getopts;
 extern crate hyper;
+#[phase(plugin, link)] extern crate log;
 extern crate regex;
 extern crate serialize;
-extern crate uuid;
 
 use getopts::{usage,optflag, getopts, OptGroup};
 use httpserver::start;
@@ -54,7 +55,7 @@ fn run(args: Vec<String>) -> int {
         optflag("v", "", "show version information"),
         optflag("h", "", "show this message"),
     ];
-    let matches = match getopts(args.tail(), opts) {
+    let matches = match getopts(args.tail(), &opts) {
         Ok(m) => m,
         Err(f) => {
             err(format!("{}", f));
@@ -66,7 +67,7 @@ fn run(args: Vec<String>) -> int {
         println!("wires version {}", VERSION);
         return 0;
     } else if matches.opt_present("h") {
-        print_usage(opts);
+        print_usage(&opts);
         return 127;
     }
 
@@ -74,7 +75,7 @@ fn run(args: Vec<String>) -> int {
         matches.free[0].clone()
     } else if matches.free.len() > 1 {
         err(format!("got {} positional arguments, expected 1", matches.free.len()));
-        print_usage(opts);
+        print_usage(&opts);
         return 1;
     } else {
         DEFAULT_ADDR.to_string()
