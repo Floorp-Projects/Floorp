@@ -46,6 +46,7 @@ const GRAPH_STRIPE_PATTERN_LINE_SPACING = 4; // px
 const LINE_GRAPH_DAMPEN_VALUES = 0.85;
 const LINE_GRAPH_MIN_SQUARED_DISTANCE_BETWEEN_POINTS = 400; // 20 px
 const LINE_GRAPH_TOOLTIP_SAFE_BOUNDS = 8; // px
+const LINE_GRAPH_MIN_MAX_TOOLTIP_DISTANCE = 14; // px
 
 const LINE_GRAPH_BACKGROUND_COLOR = "#0088cc";
 const LINE_GRAPH_STROKE_WIDTH = 1; // px
@@ -1358,12 +1359,16 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     let safeTop = LINE_GRAPH_TOOLTIP_SAFE_BOUNDS;
     let safeBottom = bottom - LINE_GRAPH_TOOLTIP_SAFE_BOUNDS;
 
-    this._maxTooltip.style.top = (this.withFixedTooltipPositions
-      ? safeTop : clamp(maxPosY, safeTop, safeBottom)) + "px";
-    this._avgTooltip.style.top = (this.withFixedTooltipPositions
-      ? safeTop : clamp(avgPosY, safeTop, safeBottom)) + "px";
-    this._minTooltip.style.top = (this.withFixedTooltipPositions
-      ? safeBottom : clamp(minPosY, safeTop, safeBottom)) + "px";
+    let maxTooltipTop = (this.withFixedTooltipPositions
+      ? safeTop : clamp(maxPosY, safeTop, safeBottom));
+    let avgTooltipTop = (this.withFixedTooltipPositions
+      ? safeTop : clamp(avgPosY, safeTop, safeBottom));
+    let minTooltipTop = (this.withFixedTooltipPositions
+      ? safeBottom : clamp(minPosY, safeTop, safeBottom));
+
+    this._maxTooltip.style.top = maxTooltipTop + "px";
+    this._avgTooltip.style.top = avgTooltipTop + "px";
+    this._minTooltip.style.top = minTooltipTop + "px";
 
     this._maxGutterLine.style.top = maxPosY + "px";
     this._avgGutterLine.style.top = avgPosY + "px";
@@ -1373,10 +1378,12 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     this._avgTooltip.setAttribute("with-arrows", this.withTooltipArrows);
     this._minTooltip.setAttribute("with-arrows", this.withTooltipArrows);
 
-    this._gutter.hidden = !this.withTooltipArrows;
-    this._maxTooltip.hidden = !totalTicks;
+    let distanceMinMax = Math.abs(maxTooltipTop - minTooltipTop);
+    this._maxTooltip.hidden = !totalTicks || distanceMinMax < LINE_GRAPH_MIN_MAX_TOOLTIP_DISTANCE;
     this._avgTooltip.hidden = !totalTicks;
     this._minTooltip.hidden = !totalTicks;
+
+    this._gutter.hidden = !this.withTooltipArrows;
 
     return canvas;
   },
@@ -1415,6 +1422,7 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     tooltip.className = "line-graph-widget-tooltip";
     tooltip.setAttribute("type", type);
     tooltip.setAttribute("arrow", arrow);
+    tooltip.setAttribute("hidden", true);
 
     let infoNode = this._document.createElementNS(HTML_NS, "span");
     infoNode.textContent = info;
