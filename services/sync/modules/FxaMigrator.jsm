@@ -201,6 +201,7 @@ Migrator.prototype = {
     this.log.info("Performing final sync migration steps");
     // Do the actual migration.
     let startOverComplete = new Promise((resolve, reject) => {
+      let observe;
       Services.obs.addObserver(observe = () => {
         this.log.info("observed that startOver is complete");
         Services.obs.removeObserver(observe, "weave:service:start-over:finish");
