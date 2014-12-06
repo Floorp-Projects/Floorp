@@ -182,6 +182,7 @@ nsHttpHandler::nsHttpHandler()
     , mSpdyV31(true)
     , mHttp2DraftEnabled(true)
     , mHttp2Enabled(true)
+    , mUseH2Deps(true)
     , mEnforceHttp2TlsProfile(true)
     , mCoalesceSpdy(true)
     , mSpdyPersistentSettings(false)
@@ -1192,6 +1193,12 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetBoolPref(HTTP_PREF("spdy.enabled.http2"), &cVar);
         if (NS_SUCCEEDED(rv))
             mHttp2Enabled = cVar;
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("spdy.enabled.deps"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("spdy.enabled.deps"), &cVar);
+        if (NS_SUCCEEDED(rv))
+            mUseH2Deps = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.enforce-tls-profile"))) {
