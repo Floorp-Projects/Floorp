@@ -293,20 +293,24 @@ CodeGeneratorX86::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic 
 
     Register ptr = ToRegister(ins->ptr());
     const LDefinition *out = ins->output();
-
     OutOfLineLoadTypedArrayOutOfBounds *ool = nullptr;
-    if (!mir->fallible()) {
-        ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out), vt);
-        addOutOfLineCode(ool, ins->mir());
+    uint32_t offset = mir->offset();
+
+    if (mir->needsBoundsCheck()) {
+        MOZ_ASSERT(offset == 0);
+        if (!mir->fallible()) {
+            ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out), vt);
+            addOutOfLineCode(ool, ins->mir());
+        }
+
+        masm.cmpl(ptr, Imm32(mir->length()));
+        if (ool)
+            masm.j(Assembler::AboveOrEqual, ool->entry());
+        else
+            bailoutIf(Assembler::AboveOrEqual, ins->snapshot());
     }
 
-    masm.cmpl(ptr, Imm32(mir->length()));
-    if (ool)
-        masm.j(Assembler::AboveOrEqual, ool->entry());
-    else
-        bailoutIf(Assembler::AboveOrEqual, ins->snapshot());
-
-    Address srcAddr(ptr, (int32_t) mir->base());
+    Address srcAddr(ptr, int32_t(mir->base()) + int32_t(offset));
     load(vt, srcAddr, out);
     if (vt == Scalar::Float64)
         masm.canonicalizeDouble(ToFloatRegister(out));
@@ -430,7 +434,15 @@ CodeGeneratorX86::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStati
     Scalar::Type vt = Scalar::Type(mir->viewType());
     Register ptr = ToRegister(ins->ptr());
     const LAllocation *value = ins->value();
+    uint32_t offset = mir->offset();
 
+    if (!mir->needsBoundsCheck()) {
+        Address dstAddr(ptr, int32_t(mir->base()) + int32_t(offset));
+        store(vt, value, dstAddr);
+        return;
+    }
+
+    MOZ_ASSERT(offset == 0);
     masm.cmpl(ptr, Imm32(mir->length()));
     Label rejoin;
     masm.j(Assembler::AboveOrEqual, &rejoin);
