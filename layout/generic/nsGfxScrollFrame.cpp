@@ -2096,6 +2096,16 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
           mLastSmoothScrollOrigin = aOrigin;
           mScrollGeneration = ++sScrollGenerationCounter;
 
+          if (!nsLayoutUtils::GetDisplayPort(mOuter->GetContent())) {
+            // If this frame doesn't have a displayport then there won't be an
+            // APZC instance for it and so there won't be anything to process
+            // this smooth scroll request. We should set a displayport on this
+            // frame to force an APZC which can handle the request.
+            nsLayoutUtils::CalculateAndSetDisplayPortMargins(
+              mOuter->GetScrollTargetFrame(),
+              nsLayoutUtils::RepaintMode::DoNotRepaint);
+          }
+
           // Schedule a paint to ensure that the frame metrics get updated on
           // the compositor thread.
           mOuter->SchedulePaint();

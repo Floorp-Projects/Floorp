@@ -113,7 +113,7 @@ var Match =
         switch (typeof exp) {
         case "string":
             if (act !== exp)
-                throw new MatchError("expected " + exp.quote() + ", got " + quote(act));
+                throw new MatchError("expected " + quote(exp) + ", got " + quote(act));
             return true;
         case "boolean":
         case "number":
@@ -131,7 +131,7 @@ var Match =
 
         for (var key in exp) {
             if (!(key in act))
-                throw new MatchError("expected property " + key.quote() + " not found in " + quote(act));
+                throw new MatchError("expected property " + quote(key) + " not found in " + quote(act));
             match(act[key], exp[key]);
         }
 

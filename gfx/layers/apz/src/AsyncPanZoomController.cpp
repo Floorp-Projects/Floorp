@@ -2728,6 +2728,9 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
   bool scrollOffsetUpdated = aLayerMetrics.GetScrollOffsetUpdated()
         && (aLayerMetrics.GetScrollGeneration() != mFrameMetrics.GetScrollGeneration());
 
+  bool smoothScrollRequested = aLayerMetrics.GetDoSmoothScroll()
+       && (aLayerMetrics.GetScrollGeneration() != mFrameMetrics.GetScrollGeneration());
+
   if (aIsFirstPaint || isDefault) {
     // Initialize our internal state to something sane when the content
     // that was just painted is something we knew nothing about previously
@@ -2749,9 +2752,6 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
       needContentRepaint = true;
     }
   } else {
-    bool smoothScrollRequested = aLayerMetrics.GetDoSmoothScroll()
-         && (aLayerMetrics.GetScrollGeneration() != mFrameMetrics.GetScrollGeneration());
-
     // If we're not taking the aLayerMetrics wholesale we still need to pull
     // in some things into our local mFrameMetrics because these things are
     // determined by Gecko and our copy in mFrameMetrics may be stale.
@@ -2805,23 +2805,23 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
       // last thing we know was painted by Gecko.
       mLastDispatchedPaintMetrics = aLayerMetrics;
     }
+  }
 
-    if (smoothScrollRequested) {
-      // A smooth scroll has been requested for animation on the compositor
-      // thread.  This flag will be reset by the main thread when it receives
-      // the scroll update acknowledgement.
+  if (smoothScrollRequested) {
+    // A smooth scroll has been requested for animation on the compositor
+    // thread.  This flag will be reset by the main thread when it receives
+    // the scroll update acknowledgement.
 
-      APZC_LOG("%p smooth scrolling from %s to %s\n", this,
-        Stringify(mFrameMetrics.GetScrollOffset()).c_str(),
-        Stringify(aLayerMetrics.GetSmoothScrollOffset()).c_str());
+    APZC_LOG("%p smooth scrolling from %s to %s\n", this,
+      Stringify(mFrameMetrics.GetScrollOffset()).c_str(),
+      Stringify(aLayerMetrics.GetSmoothScrollOffset()).c_str());
 
-      mFrameMetrics.CopySmoothScrollInfoFrom(aLayerMetrics);
-      CancelAnimation();
-      mLastDispatchedPaintMetrics = aLayerMetrics;
-      StartSmoothScroll();
+    mFrameMetrics.CopySmoothScrollInfoFrom(aLayerMetrics);
+    CancelAnimation();
+    mLastDispatchedPaintMetrics = aLayerMetrics;
+    StartSmoothScroll();
 
-      scrollOffsetUpdated = true; // Ensure that AcknowledgeScrollUpdate is called
-    }
+    scrollOffsetUpdated = true; // Ensure that AcknowledgeScrollUpdate is called
   }
 
   if (scrollOffsetUpdated) {
