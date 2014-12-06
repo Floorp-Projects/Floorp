@@ -3741,6 +3741,21 @@ MLoadTypedArrayElementStatic::length() const
     return AnyTypedArrayByteLength(someTypedArray_);
 }
 
+bool
+MLoadTypedArrayElementStatic::congruentTo(const MDefinition *ins) const
+{
+    if (!ins->isLoadTypedArrayElementStatic())
+        return false;
+    const MLoadTypedArrayElementStatic *other = ins->toLoadTypedArrayElementStatic();
+    if (offset() != other->offset())
+        return false;
+    if (needsBoundsCheck() != other->needsBoundsCheck())
+        return false;
+    if (viewType() != other->viewType())
+        return false;
+    return congruentIfOperandsEqual(other);
+}
+
 void *
 MStoreTypedArrayElementStatic::base() const
 {

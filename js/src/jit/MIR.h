@@ -8615,8 +8615,10 @@ class MLoadTypedArrayElementStatic
   : public MUnaryInstruction,
     public ConvertToInt32Policy<0>::Data
 {
-    MLoadTypedArrayElementStatic(JSObject *someTypedArray, MDefinition *ptr)
-      : MUnaryInstruction(ptr), someTypedArray_(someTypedArray), fallible_(true)
+    MLoadTypedArrayElementStatic(JSObject *someTypedArray, MDefinition *ptr,
+                                 int32_t offset, bool needsBoundsCheck)
+      : MUnaryInstruction(ptr), someTypedArray_(someTypedArray), offset_(offset),
+        needsBoundsCheck_(needsBoundsCheck), fallible_(true)
     {
         int type = viewType();
         if (type == Scalar::Float32)
@@ -8628,15 +8630,22 @@ class MLoadTypedArrayElementStatic
     }
 
     AlwaysTenured<JSObject*> someTypedArray_;
+    // An offset to be encoded in the load instruction - taking advantage of the
+    // addressing modes. This is only non-zero when the access is proven to be
+    // within bounds.
+    int32_t offset_;
+    bool needsBoundsCheck_;
     bool fallible_;
 
   public:
     INSTRUCTION_HEADER(LoadTypedArrayElementStatic);
 
     static MLoadTypedArrayElementStatic *New(TempAllocator &alloc, JSObject *someTypedArray,
-                                             MDefinition *ptr)
+                                             MDefinition *ptr, int32_t offset = 0,
+                                             bool needsBoundsCheck = true)
     {
-        return new(alloc) MLoadTypedArrayElementStatic(someTypedArray, ptr);
+        return new(alloc) MLoadTypedArrayElementStatic(someTypedArray, ptr, offset,
+                                                       needsBoundsCheck);
     }
 
     Scalar::Type viewType() const {
@@ -8646,9 +8655,15 @@ class MLoadTypedArrayElementStatic
     size_t length() const;
 
     MDefinition *ptr() const { return getOperand(0); }
+    int32_t offset() const { return offset_; }
+    void setOffset(int32_t offset) { offset_ = offset; }
+    bool congruentTo(const MDefinition *ins) const;
     AliasSet getAliasSet() const {
         return AliasSet::Load(AliasSet::TypedArrayElement);
     }
+
+    bool needsBoundsCheck() const { return needsBoundsCheck_; }
+    void setNeedsBoundsCheck(bool v) { needsBoundsCheck_ = v; }
 
     bool fallible() const {
         return fallible_;
@@ -8661,6 +8676,7 @@ class MLoadTypedArrayElementStatic
     void computeRange(TempAllocator &alloc);
     bool needTruncation(TruncateKind kind);
     bool canProduceFloat32() const { return viewType() == Scalar::Float32; }
+    void collectRangeInfoPreTrunc();
 };
 
 class MStoreTypedArrayElement
@@ -8821,19 +8837,29 @@ class MStoreTypedArrayElementStatic :
     public MBinaryInstruction
   , public StoreTypedArrayElementStaticPolicy::Data
 {
-    MStoreTypedArrayElementStatic(JSObject *someTypedArray, MDefinition *ptr, MDefinition *v)
-      : MBinaryInstruction(ptr, v), someTypedArray_(someTypedArray)
+    MStoreTypedArrayElementStatic(JSObject *someTypedArray, MDefinition *ptr, MDefinition *v,
+                                  int32_t offset, bool needsBoundsCheck)
+        : MBinaryInstruction(ptr, v), someTypedArray_(someTypedArray),
+          offset_(offset), needsBoundsCheck_(needsBoundsCheck)
     {}
 
     AlwaysTenured<JSObject*> someTypedArray_;
+    // An offset to be encoded in the store instruction - taking advantage of the
+    // addressing modes. This is only non-zero when the access is proven to be
+    // within bounds.
+    int32_t offset_;
+    bool needsBoundsCheck_;
 
   public:
     INSTRUCTION_HEADER(StoreTypedArrayElementStatic);
 
     static MStoreTypedArrayElementStatic *New(TempAllocator &alloc, JSObject *someTypedArray,
-                                              MDefinition *ptr, MDefinition *v)
+                                              MDefinition *ptr, MDefinition *v,
+                                              int32_t offset = 0,
+                                              bool needsBoundsCheck = true)
     {
-        return new(alloc) MStoreTypedArrayElementStatic(someTypedArray, ptr, v);
+        return new(alloc) MStoreTypedArrayElementStatic(someTypedArray, ptr, v,
+                                                        offset, needsBoundsCheck);
     }
 
     Scalar::Type viewType() const {
@@ -8849,6 +8875,10 @@ class MStoreTypedArrayElementStatic :
 
     MDefinition *ptr() const { return getOperand(0); }
     MDefinition *value() const { return getOperand(1); }
+    bool needsBoundsCheck() const { return needsBoundsCheck_; }
+    void setNeedsBoundsCheck(bool v) { needsBoundsCheck_ = v; }
+    int32_t offset() const { return offset_; }
+    void setOffset(int32_t offset) { offset_ = offset; }
     AliasSet getAliasSet() const {
         return AliasSet::Store(AliasSet::TypedArrayElement);
     }
@@ -8857,6 +8887,7 @@ class MStoreTypedArrayElementStatic :
     bool canConsumeFloat32(MUse *use) const {
         return use == getUseFor(1) && viewType() == Scalar::Float32;
     }
+    void collectRangeInfoPreTrunc();
 };
 
 // Compute an "effective address", i.e., a compound computation of the form:
