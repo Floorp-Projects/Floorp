@@ -194,28 +194,27 @@ def write_cpp(eventname, iface, fd):
 
 
 def main():
-    from optparse import OptionParser
-    o = OptionParser(usage="usage: %prog [options] configfile")
-    o.add_option('-I', action='append', dest='incdirs', default=['.'],
+    from argparse import ArgumentParser
+    o = ArgumentParser()
+    o.add_argument('-I', action='append', dest='incdirs', default=['.'],
                  help="Directory to search for imported files")
-    o.add_option('-o', "--stub-output",
-                 type='string', dest='stub_output', default=None,
+    o.add_argument('-o', "--stub-output",
+                 dest='stub_output', default=None,
                  help="C++ source output file", metavar="FILE")
-    o.add_option('--header-output', type='string', default=None,
+    o.add_argument('--header-output', default=None,
                  help="Quick stub header output file", metavar="FILE")
-    o.add_option('--makedepend-output', type='string', default=None,
+    o.add_argument('--makedepend-output', default=None,
                  help="gnumake dependencies output file", metavar="FILE")
+    o.add_argument('config',
+                 help='Config file to load')
     global options
-    options, filenames = o.parse_args()
-    if len(filenames) != 1:
-        o.error("Exactly one config filename is needed.")
-    filename = filenames[0]
+    options = o.parse_args()
 
     # Instantiate the parser.
     global p
     p = xpidl.IDLParser()
 
-    conf = readConfigFile(filename)
+    conf = readConfigFile(options.config)
 
     if options.stub_output:
         makeutils.targets.append(options.stub_output)
