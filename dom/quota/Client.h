@@ -114,12 +114,6 @@ public:
                             nsIRunnable* aCallback) = 0;
 
   virtual void
-  AbortTransactionsForStorage(nsIOfflineStorage* aStorage) = 0;
-
-  virtual bool
-  HasTransactionsForStorage(nsIOfflineStorage* aStorage) = 0;
-
-  virtual void
   ShutdownTransactionService() = 0;
 
 protected:
