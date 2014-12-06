@@ -19,6 +19,7 @@
   <script type="application/javascript" src="performance/views/overview.js"/>
   <script type="application/javascript" src="performance/views/details.js"/>
   <script type="application/javascript" src="performance/views/call-tree.js"/>
+  <script type="application/javascript" src="performance/views/waterfall.js"/>
 
   <vbox class="theme-body" flex="1">
     <toolbar id="performance-toolbar" class="devtools-toolbar">
@@ -37,17 +38,32 @@
                        label="&profilerUI.importButton;"/>
       </hbox>
     </toolbar>
-    <splitter class="devtools-horizontal-splitter" />
     <box id="overview-pane"
-         class="devtools-responsive-container"
-         flex="1">
+         class="devtools-responsive-container">
       <vbox id="time-framerate" flex="1"/>
     </box>
-    <splitter class="devtools-horizontal-splitter" />
-    <box id="details-pane"
+    <toolbar id="details-toolbar" class="devtools-toolbar">
+      <hbox class="devtools-toolbarbutton-group">
+        <toolbarbutton id="select-waterfall-view"
+                       class="devtools-toolbarbutton"
+                       tooltiptext="waterfall"
+                       data-view="waterfall" />
+        <toolbarbutton id="select-calltree-view"
+                       class="devtools-toolbarbutton"
+                       tooltiptext="calltree"
+                       data-view="calltree" />
+      </hbox>
+    </toolbar>
+    <deck id="details-pane"
          class="devtools-responsive-container"
          flex="1">
-      <vbox class="call-tree" flex="1">
+      <hbox id="waterfall-view" flex="1">
+        <vbox id="waterfall-graph" flex="1" />
+        <splitter class="devtools-side-splitter"/>
+        <vbox id="waterfall-details" class="theme-sidebar" width="150" height="150"/>
+      </hbox>
+
+      <vbox id="calltree-view" class="call-tree" flex="1">
         <hbox class="call-tree-headers-container">
           <label class="plain call-tree-header"
                  type="duration"
@@ -76,6 +92,6 @@
         </hbox>
         <vbox class="call-tree-cells-container" flex="1"/>
       </vbox>
-    </box>
+    </deck>
   </vbox>
 </window>

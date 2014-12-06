@@ -278,7 +278,7 @@
 
     <panel id="abouthome-search-panel" orient="vertical" type="arrow" hidden="true"
            onclick="this.hidePopup()">
-      <hbox id="abouthome-search-panel-manage" class="abouthome-search-panel-item"
+      <hbox id="abouthome-search-panel-manage"
             onclick="openPreferences('paneSearch')">
         <label>&changeSearchSettings.button;</label>
       </hbox>

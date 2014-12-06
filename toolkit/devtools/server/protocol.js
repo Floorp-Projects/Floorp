@@ -770,7 +770,7 @@ let Pool = Class({
    * Remove an actor as a child of this pool.
    */
   unmanage: function(actor) {
-    this.__poolMap.delete(actor.actorID);
+    this.__poolMap && this.__poolMap.delete(actor.actorID);
   },
 
   // true if the given actor ID exists in the pool.
