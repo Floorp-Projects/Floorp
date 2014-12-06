@@ -165,8 +165,6 @@ public:
                           std::max(mEnd, aByteRange.mEnd));
   }
 
-  int64_t Length() { return mEnd - mStart; }
-
   int64_t mStart, mEnd;
 };
 
