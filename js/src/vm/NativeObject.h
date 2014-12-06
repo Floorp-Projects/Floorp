@@ -1237,6 +1237,14 @@ class NativeObject : public JSObject
     static size_t offsetOfSlots() { return offsetof(NativeObject, slots_); }
 };
 
+// Object class for plain native objects created using '{}' object literals,
+// 'new Object()', 'Object.create', etc.
+class PlainObject : public NativeObject
+{
+  public:
+    static const js::Class class_;
+};
+
 inline void
 NativeObject::privateWriteBarrierPre(void **oldval)
 {
