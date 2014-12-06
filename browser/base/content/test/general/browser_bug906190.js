@@ -121,7 +121,7 @@ function setUpTest(aTestName, aIDForNextTest, aFuncForNextTest, aChildTabLink) {
 
   mainTab = gTestWin.gBrowser.selectedTab;
   // get the link for the next test from the main page
-  let target = gTestWin.content.document.getElementById(aIDForNextTest);
+  let target = gTestWin.content.document.getElementById(aIDForNextTest).href;
   gTestWin.gBrowser.addTab(target);
   gTestWin.gBrowser.selectTabAtIndex(1);
   waitForSomeTabToLoad(checkPopUpNotification);

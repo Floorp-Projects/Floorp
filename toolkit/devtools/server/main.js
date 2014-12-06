@@ -137,7 +137,7 @@ function ModuleAPI() {
       }
       activeGlobalActors = null;
     }
-  }
+  };
 };
 
 /***
@@ -213,7 +213,7 @@ var DebuggerServer = {
     for (let id of Object.getOwnPropertyNames(gRegisteredModules)) {
       this.unregisterModule(id);
     }
-    gRegisteredModules = {};
+    gRegisteredModules = Object.create(null);
 
     this.closeAllListeners();
     this.globalActorFactories = {};
@@ -712,6 +712,39 @@ var DebuggerServer = {
   },
 
   /**
+   * Check if the caller is running in a content child process.
+   *
+   * @return boolean
+   *         true if the caller is running in a content
+   */
+  get isInChildProcess() !!this.parentMessageManager,
+
+  /**
+   * In a content child process, ask the DebuggerServer in the parent process
+   * to execute a given module setup helper.
+   *
+   * @param module
+   *        The module to be required
+   * @param setupParent
+   *        The name of the setup helper exported by the above module
+   *        (setup helper signature: function ({mm}) { ... })
+   * @return boolean
+   *         true if the setup helper returned successfully
+   */
+  setupInParent: function({ module, setupParent }) {
+    if (!this.isInChildProcess) {
+      return false;
+    }
+
+    let { sendSyncMessage } = DebuggerServer.parentMessageManager;
+
+    return sendSyncMessage("debug:setup-in-parent", {
+      module: module,
+      setupParent: setupParent
+    });
+  },
+
+  /**
    * Connect to a child process.
    *
    * @param object aConnection
@@ -735,6 +768,33 @@ var DebuggerServer = {
     let prefix = aConnection.allocID("child");
     let childID = null;
     let netMonitor = null;
+
+    // provides hook to actor modules that need to exchange messages
+    // between e10s parent and child processes
+    let onSetupInParent = function (msg) {
+      let { module, setupParent } = msg.json;
+      let m, fn;
+
+      try {
+        m = require(module);
+
+        if (!setupParent in m) {
+          dumpn("ERROR: module '" + module + "' does not export '" + setupParent + "'");
+          return false;
+        }
+
+        m[setupParent]({ mm: mm, childID: childID });
+
+        return true;
+      } catch(e) {
+        let error_msg = "exception during actor module setup running in the parent process: ";
+        DevToolsUtils.reportException(error_msg + e);
+        dumpn("ERROR: " + error_msg + " \n\t module: '" + module + "' \n\t setupParent: '" + setupParent + "'\n" +
+              DevToolsUtils.safeErrorString(e));
+        return false;
+      }
+    };
+    mm.addMessageListener("debug:setup-in-parent", onSetupInParent);
 
     let onActorCreated = DevToolsUtils.makeInfallible(function (msg) {
       mm.removeMessageListener("debug:actor", onActorCreated);
@@ -765,6 +825,13 @@ var DebuggerServer = {
     let onMessageManagerDisconnect = DevToolsUtils.makeInfallible(function (subject, topic, data) {
       if (subject == mm) {
         Services.obs.removeObserver(onMessageManagerDisconnect, topic);
+
+        // provides hook to actor modules that need to exchange messages
+        // between e10s parent and child processes
+        this.emit("disconnected-from-child:" + childID, { mm: mm, childID: childID });
+
+        mm.removeMessageListener("debug:setup-in-parent", onSetupInParent);
+
         if (childTransport) {
           // If we have a child transport, the actor has already
           // been created. We need to stop using this message manager.

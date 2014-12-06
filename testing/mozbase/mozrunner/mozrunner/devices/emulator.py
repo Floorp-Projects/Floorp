@@ -54,10 +54,8 @@ class Emulator(Device):
         self.sdcard = None
         if sdcard:
             self.sdcard = self.create_sdcard(sdcard)
-        self.userdata = os.path.join(self.arch.sysdir, 'userdata.img')
-        if userdata:
-            self.userdata = tempfile.NamedTemporaryFile(prefix='qemu-userdata')
-            shutil.copyfile(userdata, self.userdata)
+        self.userdata = tempfile.NamedTemporaryFile(prefix='qemu-userdata')
+        self.initdata = userdata if userdata else os.path.join(self.arch.sysdir, 'userdata.img')
         self.no_window = no_window
 
         self.battery = EmulatorBattery(self)
@@ -72,7 +70,9 @@ class Emulator(Device):
         qemu_args = [self.arch.binary,
                      '-kernel', self.arch.kernel,
                      '-sysdir', self.arch.sysdir,
-                     '-data', self.userdata]
+                     '-data', self.userdata.name,
+                     '-initdata', self.initdata,
+                     '-wipe-data']
         if self.no_window:
             qemu_args.append('-no-window')
         if self.sdcard:
@@ -162,7 +162,9 @@ class Emulator(Device):
         if self.proc:
             self.proc.kill()
             self.proc = None
-
+        # Remove temporary user data image
+        if self.userdata:
+            self.userdata.close()
         # Remove temporary sdcard
         if self.sdcard and os.path.isfile(self.sdcard):
             os.remove(self.sdcard)
