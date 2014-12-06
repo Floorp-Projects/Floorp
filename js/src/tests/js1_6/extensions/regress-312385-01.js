@@ -14,8 +14,7 @@ var voids = [null, undefined];
 function noop() { }
 
 var generics = {
-  String: [{ quote: [] },
-{ substring: [] },
+String: [{ substring: [] },
 { toLowerCase: [] },
 { toUpperCase: [] },
 { charAt: [] },
