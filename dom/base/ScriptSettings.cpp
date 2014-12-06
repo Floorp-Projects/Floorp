@@ -104,9 +104,16 @@ InitScriptSettings()
   sScriptSettingsTLS.set(nullptr);
 }
 
-void DestroyScriptSettings()
+void
+DestroyScriptSettings()
 {
   MOZ_ASSERT(sScriptSettingsTLS.get() == nullptr);
+}
+
+bool
+ScriptSettingsInitialized()
+{
+  return sScriptSettingsTLS.initialized();
 }
 
 ScriptSettingsStackEntry::ScriptSettingsStackEntry(nsIGlobalObject *aGlobal,
