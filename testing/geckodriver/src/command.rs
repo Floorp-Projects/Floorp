@@ -4,17 +4,15 @@ use serialize::{Encodable};
 use serialize::json::{ToJson};
 use regex::Captures;
 
-use common::{WebDriverResult, WebDriverError, UnknownError};
-use messagebuilder::{MatchType, MatchNewSession, MatchGet,
-                     MatchGetCurrentUrl, MatchGoBack, MatchGoForward, MatchRefresh,
-                     MatchGetTitle, MatchGetWindowHandle, MatchGetWindowHandles,
-                     MatchClose};
+use common::{WebDriverResult, WebDriverError, ErrorStatus};
+use messagebuilder::MatchType;
 
 
 #[deriving(PartialEq)]
 pub enum WebDriverCommand {
-    GetMarionetteId,
+    GetMarionetteId, //TODO: move this
     NewSession,
+    DeleteSession,
     Get(GetParameters),
     GetCurrentUrl,
     GoBack,
@@ -23,77 +21,61 @@ pub enum WebDriverCommand {
     GetTitle,
     GetWindowHandle,
     GetWindowHandles,
-    Close
+    Close,
+    Timeouts(TimeoutsParameters)
 }
 
+#[deriving(PartialEq)]
 pub struct WebDriverMessage {
-    pub command: WebDriverCommand,
-    pub session_id: Option<String>
+    pub session_id: Option<String>,
+    pub command: WebDriverCommand
 }
 
 impl WebDriverMessage {
-    pub fn new(command: WebDriverCommand, session_id: Option<String>) -> WebDriverMessage {
+    pub fn new(session_id: Option<String>, command: WebDriverCommand) -> WebDriverMessage {
         WebDriverMessage {
-            command: command,
-            session_id: session_id
-        }
-    }
-
-    pub fn name(&self) -> String {
-        match self.command {
-            GetMarionetteId => "getMarionetteID",
-            NewSession => "newSession",
-            Get(_) => "get",
-            GetCurrentUrl => "getCurrentUrl",
-            GoBack => "goBack",
-            GoForward => "goForward",
-            Refresh => "refresh",
-            GetTitle => "getTitle",
-            GetWindowHandle => "getWindowHandle",
-            GetWindowHandles => "getWindowHandles",
-            Close => "close"
-        }.to_string()
-    }
-
-    fn parameters_json(&self) -> json::Json {
-        match self.command {
-            Get(ref x) => {
-                x.to_json()
-            },
-            _ => {
-                json::Object(TreeMap::new())
-            }
+            session_id: session_id,
+            command: command
         }
     }
 
     pub fn from_http(match_type: MatchType, params: &Captures, body: &str) -> WebDriverResult<WebDriverMessage> {
         let session_id = WebDriverMessage::get_session_id(params);
+        let body_data = match json::from_str(body) {
+            Ok(x) => x,
+            Err(_) => return Err(WebDriverError::new(ErrorStatus::UnknownError,
+                                                     "Failed to decode request body"))
+        };
         let command = match match_type {
-            MatchNewSession => NewSession,
-            MatchGet => {
-                let parameters_result: Result<GetParameters, json::DecoderError> = json::decode(body);
-                match parameters_result {
-                    Ok(parameters) => Get(parameters),
-                    Err(_) => {
-                        return Err(WebDriverError::new(None,
-                                                       UnknownError,
-                                                       "Failed to decode request body"));
-                    }
+            MatchType::NewSession => WebDriverCommand::NewSession,
+            MatchType::DeleteSession => WebDriverCommand::DeleteSession,
+            MatchType::Get => {
+                match GetParameters::from_json(&body_data) {
+                    Ok(parameters) => {
+                        WebDriverCommand::Get(parameters)
+                    },
+                    Err(_) => return Err(WebDriverError::new(ErrorStatus::UnknownError,
+                                                             "Failed to decode request body"))
                 }
             },
-            MatchGetCurrentUrl => GetCurrentUrl,
-            MatchGoBack => GoBack,
-            MatchGoForward => GoForward,
-            MatchRefresh => Refresh,
-            MatchGetTitle => GetTitle,
-            MatchGetWindowHandle => GetWindowHandle,
-            MatchGetWindowHandles => GetWindowHandles,
-            MatchClose => Close
+            MatchType::GetCurrentUrl => WebDriverCommand::GetCurrentUrl,
+            MatchType::GoBack => WebDriverCommand::GoBack,
+            MatchType::GoForward => WebDriverCommand::GoForward,
+            MatchType::Refresh => WebDriverCommand::Refresh,
+            MatchType::GetTitle => WebDriverCommand::GetTitle,
+            MatchType::GetWindowHandle => WebDriverCommand::GetWindowHandle,
+            MatchType::GetWindowHandles => WebDriverCommand::GetWindowHandles,
+            MatchType::Close => WebDriverCommand::Close,
+            MatchType::Timeouts => {
+                let parameters_result = TimeoutsParameters::from_json(&body_data);
+                match parameters_result {
+                    Ok(parameters) => WebDriverCommand::Timeouts(parameters),
+                    Err(_) => return Err(WebDriverError::new(ErrorStatus::UnknownError,
+                                                             "Failed to decode request body"))
+                }
+            }
         };
-        Ok(WebDriverMessage {
-            session_id: session_id,
-            command: command
-        })
+        Ok(WebDriverMessage::new(session_id, command))
     }
 
     fn get_session_id(params: &Captures) -> Option<String> {
@@ -108,23 +90,61 @@ impl WebDriverMessage {
 
 impl ToJson for WebDriverMessage {
     fn to_json(&self) -> json::Json {
-        let mut data = TreeMap::new();
-        data.insert("name".to_string(), self.name().to_json());
-        data.insert("parameters".to_string(), self.parameters_json());
-        data.insert("sessionId".to_string(), self.session_id.to_json());
-        json::Object(data)
+        match self.command {
+            WebDriverCommand::Get(ref x) => {
+                x.to_json()
+            },
+            WebDriverCommand::Timeouts(ref x) => {
+                x.to_json()
+            }
+            _ => {
+                json::Object(TreeMap::new())
+            }
+        }
     }
 }
 
-#[deriving(Decodable, Encodable, PartialEq)]
+#[deriving(PartialEq)]
 struct GetParameters {
     url: String
+}
+
+impl GetParameters {
+    pub fn from_json(body: &json::Json) -> Result<GetParameters, String> {
+        return Ok(GetParameters {
+            url: body.find("url").unwrap().as_string().unwrap().to_string()
+        })
+    }
 }
 
 impl ToJson for GetParameters {
     fn to_json(&self) -> json::Json {
         let mut data = TreeMap::new();
         data.insert("url".to_string(), self.url.to_json());
+        json::Object(data)
+    }
+}
+
+#[deriving(PartialEq)]
+struct TimeoutsParameters {
+    type_: String,
+    ms: u32
+}
+
+impl TimeoutsParameters {
+    pub fn from_json(body: &json::Json) -> Result<TimeoutsParameters, String> {
+        return Ok(TimeoutsParameters {
+            type_: body.find("type").unwrap().as_string().unwrap().to_string(),
+            ms: body.find("ms").unwrap().as_i64().unwrap() as u32
+        })
+    }
+}
+
+impl ToJson for TimeoutsParameters {
+    fn to_json(&self) -> json::Json {
+        let mut data = TreeMap::new();
+        data.insert("type".to_string(), self.type_.to_json());
+        data.insert("ms".to_string(), self.ms.to_json());
         json::Object(data)
     }
 }

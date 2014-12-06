@@ -1,61 +1,142 @@
 use std::io::net::ip::IpAddr;
+use std::sync::Mutex;
+use std::collections::HashMap;
+use serialize::json::ToJson;
 
 use hyper::header::common::ContentLength;
 use hyper::method::Post;
-use hyper::server::{Server, Incoming};
+use hyper::server::{Server, Handler, Request, Response};
 use hyper::uri::AbsolutePath;
 
 use response::WebDriverResponse;
 use messagebuilder::{get_builder};
 use marionette::MarionetteConnection;
+use command::WebDriverMessage;
+use common::WebDriverResult;
 
-fn handle(mut incoming: Incoming) {
-    let mut marionette = MarionetteConnection::new();
-    if marionette.connect().is_err() {
-        fail!("Failed to connect to marionette. Start marionette client before proxy");
-    };
+enum DispatchMessage {
+    HandleWebDriver(WebDriverMessage, Sender<Option<WebDriverResult<WebDriverResponse>>>),
+    Quit
+}
 
-    let builder = get_builder();
-    for (mut req, mut resp) in incoming {
+struct Dispatcher {
+    connections: HashMap<String, MarionetteConnection>
+}
+
+impl Dispatcher {
+    fn new() -> Dispatcher {
+        Dispatcher {
+            connections: HashMap::new()
+        }
+    }
+
+    fn run(&mut self, msg_chan: Receiver<DispatchMessage>) {
+        loop {
+            match msg_chan.recv() {
+                DispatchMessage::HandleWebDriver(msg, resp_chan) => {
+                    let opt_session_id = msg.session_id.clone();
+                    if opt_session_id.is_some() {
+                        let session_id = opt_session_id.unwrap();
+                        let mut connection = match self.connections.get_mut(&session_id) {
+                            Some(x) => x,
+                            None => break
+                        };
+                        let resp = connection.send_message(&msg);
+                        resp_chan.send(resp);
+                        return;
+                    }
+                    let mut connection = MarionetteConnection::new();
+                    if connection.connect().is_err() {
+                        error!("Failed to start marionette connection");
+                        return
+                    }
+                    let resp = connection.send_message(&msg);
+                    self.connections.insert(connection.session.session_id.clone(),
+                                            connection);
+                    resp_chan.send(resp);
+                },
+                DispatchMessage::Quit => {
+                    break;
+                }
+            }
+        }
+    }
+}
+
+struct MarionetteHandler {
+    chan: Mutex<Sender<DispatchMessage>>
+}
+
+impl MarionetteHandler {
+    fn new(chan: Sender<DispatchMessage>) -> MarionetteHandler {
+        MarionetteHandler {
+            chan: Mutex::new(chan)
+        }
+    }
+}
+
+impl Handler for MarionetteHandler {
+    fn handle(&self, req: Request, res: Response) {
+        let builder = get_builder();
         println!("{}", req.uri);;
+
+        let mut req = req;
+        let mut res = res;
+
         let body = match req.method {
             Post => req.read_to_string().unwrap(),
             _ => "".to_string()
         };
+        println!("Got request {} {}", req.method, req.uri);
         match req.uri {
             AbsolutePath(path) => {
                 let (status, resp_data) = match builder.from_http(req.method, path[], body[]) {
                     Ok(message) => {
-                        match marionette.send_message(&message) {
-                            Ok(response) => {
-                                if response.is_none() {
-                                    continue;
+                        let (send_res, recv_res) = channel();
+                        {
+                            let c = self.chan.lock();
+                            c.send(DispatchMessage::HandleWebDriver(message, send_res));
+                        }
+                        match recv_res.recv() {
+                            Some(x) => {
+                                match x {
+                                    Ok(response) => {
+                                        (200, response.to_json())
+                                    }
+                                    Err(err) => (err.http_status(), err.to_json())
                                 }
-                                (200, response.unwrap())
-                            }
-                            Err(err) => (err.http_status(), WebDriverResponse::from_err(&err))
+                            },
+                            None => return
                         }
                     },
                     Err(err) => {
-                        (err.http_status(), WebDriverResponse::from_err(&err))
+                        (err.http_status(), err.to_json())
                     }
                 };
-                let body = format!("{}\n", resp_data.to_json().to_string());
+                let body = format!("{}\n", resp_data.to_string());
                 {
-                    let status_code = resp.status_mut();
+                    let status_code = res.status_mut();
                     *status_code = FromPrimitive::from_int(status).unwrap();
                 }
-                resp.headers_mut().set(ContentLength(body.len()));
-                let mut stream = resp.start();
+                res.headers_mut().set(ContentLength(body.len()));
+                let mut stream = res.start();
                 stream.write_str(body.as_slice());
                 stream.unwrap().end();
             },
             _ => {}
-        };
+        }
     }
 }
 
 pub fn start(ip_address: IpAddr, port: u16) {
     let server = Server::http(ip_address, port);
-    server.listen(handle).unwrap();
+    let mut dispatcher = Dispatcher::new();
+
+    let (msg_send, msg_recv) = channel();
+
+    spawn(proc() {
+        dispatcher.run(msg_recv);
+    });
+    let handler = MarionetteHandler::new(msg_send.clone());
+    server.listen(handler).unwrap();
 }

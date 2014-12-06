@@ -3,20 +3,22 @@ use regex::{Regex, Captures};
 use hyper::method::{Method, Get, Post, Delete};
 
 use command::{WebDriverMessage};
-use common::{WebDriverResult, WebDriverError, UnknownCommand};
+use common::{WebDriverResult, WebDriverError, ErrorStatus};
 
 #[deriving(Clone)]
 pub enum MatchType {
-    MatchNewSession,
-    MatchGet,
-    MatchGetCurrentUrl,
-    MatchGoBack,
-    MatchGoForward,
-    MatchRefresh,
-    MatchGetTitle,
-    MatchGetWindowHandle,
-    MatchGetWindowHandles,
-    MatchClose
+    NewSession,
+    DeleteSession,
+    Get,
+    GetCurrentUrl,
+    GoBack,
+    GoForward,
+    Refresh,
+    GetTitle,
+    GetWindowHandle,
+    GetWindowHandles,
+    Close,
+    Timeouts
 }
 
 #[deriving(Clone)]
@@ -36,13 +38,10 @@ impl RequestMatcher {
         }
     }
 
-    pub fn get_match<'t>(&'t self, method: Method, path: &'t str) -> Option<Captures> {
+    pub fn get_match<'t>(&'t self, method: Method, path: &'t str) -> (bool, Option<Captures>) {
         println!("{} {}", method, path);
-        if method == self.method {
-            self.path_regexp.captures(path)
-        } else {
-            None
-        }
+        let captures = self.path_regexp.captures(path);
+        (method == self.method, captures)
     }
 
     fn compile_path(path: &str) -> Regex {
@@ -52,7 +51,7 @@ impl RequestMatcher {
         for component in components {
             if component.starts_with("{") {
                 if !component.ends_with("}") {
-                    fail!("Invalid url pattern")
+                    panic!("Invalid url pattern")
                 }
                 rv.push_str(format!("(?P<{}>[^/]+)/", component[1..component.len()-1])[]);
             } else {
@@ -79,20 +78,24 @@ impl MessageBuilder {
     }
 
     pub fn from_http(&self, method: Method, path: &str, body: &str) -> WebDriverResult<WebDriverMessage> {
-        println!("{} {}", method, path)
+        println!("{} {}", method, path);
+        let mut error = ErrorStatus::UnknownPath;
         for &(ref match_method, ref matcher) in self.http_matchers.iter() {
             println!("{} {}", match_method, matcher.path_regexp);
             if method == *match_method {
-                let captures = matcher.get_match(method.clone(), path);
+                let (method_match, captures) = matcher.get_match(method.clone(), path);
                 if captures.is_some() {
-                    return WebDriverMessage::from_http(matcher.match_type,
-                                                       &captures.unwrap(),
-                                                       body)
+                    if method_match {
+                        return WebDriverMessage::from_http(matcher.match_type,
+                                                           &captures.unwrap(),
+                                                           body)
+                    } else {
+                        error = ErrorStatus::UnknownMethod;
+                    }
                 }
             }
         }
-        Err(WebDriverError::new(None,
-                                UnknownCommand,
+        Err(WebDriverError::new(error,
                                 format!("{} did not match a known command", path)[]))
     }
 
@@ -104,16 +107,18 @@ impl MessageBuilder {
 
 pub fn get_builder() -> MessageBuilder {
     let mut builder = MessageBuilder::new();
-    let matchers = vec![(Post, "/session", MatchNewSession),
-                        (Post, "/session/{sessionId}/url", MatchGet),
-                        (Get, "/session/{sessionId}/url", MatchGetCurrentUrl),
-                        (Post, "/session/{sessionId}/back", MatchGoBack),
-                        (Post, "/session/{sessionId}/forward", MatchGoForward),
-                        (Post, "/session/{sessionId}/refresh", MatchRefresh),
-                        (Get, "/session/{sessionId}/title", MatchGetTitle),
-                        (Get, "/session/{sessionId}/window_handle", MatchGetWindowHandle),
-                        (Get, "/session/{sessionId}/window_handles", MatchGetWindowHandles),
-                        (Delete, "/session/{sessionId}/window_handle", MatchClose)
+    let matchers = vec![(Post, "/session", MatchType::NewSession),
+                        (Delete, "/session/{sessionId}", MatchType::DeleteSession),
+                        (Post, "/session/{sessionId}/url", MatchType::Get),
+                        (Get, "/session/{sessionId}/url", MatchType::GetCurrentUrl),
+                        (Post, "/session/{sessionId}/back", MatchType::GoBack),
+                        (Post, "/session/{sessionId}/forward", MatchType::GoForward),
+                        (Post, "/session/{sessionId}/refresh", MatchType::Refresh),
+                        (Get, "/session/{sessionId}/title", MatchType::GetTitle),
+                        (Get, "/session/{sessionId}/window_handle", MatchType::GetWindowHandle),
+                        (Get, "/session/{sessionId}/window_handles", MatchType::GetWindowHandles),
+                        (Delete, "/session/{sessionId}/window_handle", MatchType::Close),
+                        (Post, "/session/{sessionId}/timeouts", MatchType::Timeouts)
                         ];
     for &(ref method, ref url, ref match_type) in matchers.iter() {
         println!("{} {}", method, url);
