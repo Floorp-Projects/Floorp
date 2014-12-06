@@ -127,6 +127,7 @@ NS_INTERFACE_MAP_BEGIN(HttpChannelChild)
   NS_INTERFACE_MAP_ENTRY(nsICacheInfoChannel)
   NS_INTERFACE_MAP_ENTRY(nsIResumableChannel)
   NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
+  NS_INTERFACE_MAP_ENTRY(nsIClassOfService)
   NS_INTERFACE_MAP_ENTRY(nsIProxiedChannel)
   NS_INTERFACE_MAP_ENTRY(nsITraceableChannel)
   NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheContainer)
@@ -1541,6 +1542,7 @@ HttpChannelChild::ContinueAsyncOpen()
 
   openArgs.uploadStreamHasHeaders() = mUploadStreamHasHeaders;
   openArgs.priority() = mPriority;
+  openArgs.classOfService() = mClassOfService;
   openArgs.redirectionLimit() = mRedirectionLimit;
   openArgs.allowPipelining() = mAllowPipelining;
   openArgs.allowSTS() = mAllowSTS;
@@ -1722,6 +1724,43 @@ HttpChannelChild::SetPriority(int32_t aPriority)
   mPriority = newValue;
   if (RemoteChannelExists())
     SendSetPriority(mPriority);
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// HttpChannelChild::nsIClassOfService
+//-----------------------------------------------------------------------------
+NS_IMETHODIMP
+HttpChannelChild::SetClassFlags(uint32_t inFlags)
+{
+  if (mClassOfService == inFlags) {
+    return NS_OK;
+  }
+
+  mClassOfService = inFlags;
+  if (RemoteChannelExists()) {
+    SendSetClassOfService(mClassOfService);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpChannelChild::AddClassFlags(uint32_t inFlags)
+{
+  mClassOfService |= inFlags;
+  if (RemoteChannelExists()) {
+    SendSetClassOfService(mClassOfService);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpChannelChild::ClearClassFlags(uint32_t inFlags)
+{
+  mClassOfService &= ~inFlags;
+  if (RemoteChannelExists()) {
+    SendSetClassOfService(mClassOfService);
+  }
   return NS_OK;
 }
 

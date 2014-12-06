@@ -15,6 +15,7 @@
 #include "mozilla/dom/DesktopNotification.h"
 #include "mozilla/dom/File.h"
 #include "nsGeolocation.h"
+#include "nsIClassOfService.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIContentPolicy.h"
 #include "nsIContentSecurityPolicy.h"
@@ -1188,6 +1189,11 @@ Navigator::SendBeacon(const nsAString& aUrl,
   nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(channel);
   if (p) {
     p->SetPriority(nsISupportsPriority::PRIORITY_LOWEST);
+  }
+
+  nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(channel));
+  if (cos) {
+    cos->AddClassFlags(nsIClassOfService::Background);
   }
 
   nsRefPtr<nsCORSListenerProxy> cors = new nsCORSListenerProxy(new BeaconStreamListener(),
