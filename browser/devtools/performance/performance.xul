@@ -14,12 +14,12 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://browser/content/devtools/theme-switching.js"/>
-  <script type="application/javascript" src="performance/controller.js"/>
-  <script type="application/javascript" src="performance/views/main.js"/>
+  <script type="application/javascript" src="performance/performance-controller.js"/>
+  <script type="application/javascript" src="performance/performance-view.js"/>
   <script type="application/javascript" src="performance/views/overview.js"/>
   <script type="application/javascript" src="performance/views/details.js"/>
-  <script type="application/javascript" src="performance/views/call-tree.js"/>
-  <script type="application/javascript" src="performance/views/waterfall.js"/>
+  <script type="application/javascript" src="performance/views/details-call-tree.js"/>
+  <script type="application/javascript" src="performance/views/details-waterfall.js"/>
 
   <vbox class="theme-body" flex="1">
     <toolbar id="performance-toolbar" class="devtools-toolbar">
