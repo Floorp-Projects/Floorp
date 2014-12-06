@@ -208,7 +208,7 @@ def main():
     o.add_option('--cachedir', dest='cachedir', default=None,
                  help="Directory in which to cache lex/parse tables.")
     global options
-    (options, filenames) = o.parse_args()
+    options, filenames = o.parse_args()
     if len(filenames) != 1:
         o.error("Exactly one config filename is needed.")
     filename = filenames[0]
@@ -224,17 +224,15 @@ def main():
 
     conf = readConfigFile(filename)
 
-    if options.stub_output is not None:
+    if options.stub_output:
         makeutils.targets.append(options.stub_output)
-        outfd = open(options.stub_output, 'w')
-        print_cpp_file(outfd, conf)
-        outfd.close()
-        if options.makedepend_output is not None:
+        with open(options.stub_output, 'w') as fh:
+            print_cpp_file(fh, conf)
+        if options.makedepend_output:
             makeutils.writeMakeDependOutput(options.makedepend_output)
-    if options.header_output is not None:
-        outfd = open(options.header_output, 'w')
-        print_header_file(outfd, conf)
-        outfd.close()
+    if options.header_output:
+        with open(options.header_output, 'w') as fh:
+            print_header_file(fh, conf)
 
 if __name__ == '__main__':
     main()
