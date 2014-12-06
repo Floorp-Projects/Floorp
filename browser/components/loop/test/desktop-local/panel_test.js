@@ -857,6 +857,25 @@ describe("loop.panel", function() {
           new sharedActions.OpenRoom({roomToken: roomData.roomToken}));
       });
     });
+
+    describe("Room name updated", function() {
+      it("should update room name", function() {
+        var roomEntry = mountRoomEntry({
+          dispatcher: dispatcher,
+          room: new loop.store.Room(roomData)
+        });
+        var updatedRoom = new loop.store.Room(_.extend({}, roomData, {
+          roomName: "New room name",
+          ctime: new Date().getTime()
+        }));
+
+        roomEntry.setProps({room: updatedRoom});
+
+        expect(
+          roomEntry.getDOMNode().querySelector(".edit-in-place").textContent)
+        .eql("New room name");
+      });
+    });
   });
 
   describe("loop.panel.RoomList", function() {
