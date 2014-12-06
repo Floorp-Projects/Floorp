@@ -198,15 +198,14 @@ def main():
     o = ArgumentParser()
     o.add_argument('-I', action='append', dest='incdirs', default=['.'],
                  help="Directory to search for imported files")
-    o.add_argument('-o', "--stub-output",
-                 dest='stub_output', default=None,
-                 help="C++ source output file", metavar="FILE")
-    o.add_argument('--header-output', default=None,
-                 help="Quick stub header output file", metavar="FILE")
-    o.add_argument('--makedepend-output', default=None,
-                 help="gnumake dependencies output file", metavar="FILE")
     o.add_argument('config',
                  help='Config file to load')
+    o.add_argument('header_output', metavar='FILE',
+                 help="Quick stub header output file")
+    o.add_argument('stub_output', metavar='FILE',
+                 help="C++ source output file")
+    o.add_argument('makedepend_output', metavar='FILE',
+                 help="gnumake dependencies output file")
     global options
     options = o.parse_args()
 
@@ -216,15 +215,12 @@ def main():
 
     conf = readConfigFile(options.config)
 
-    if options.stub_output:
-        makeutils.targets.append(options.stub_output)
-        with open(options.stub_output, 'w') as fh:
-            print_cpp_file(fh, conf)
-        if options.makedepend_output:
-            makeutils.writeMakeDependOutput(options.makedepend_output)
-    if options.header_output:
-        with open(options.header_output, 'w') as fh:
-            print_header_file(fh, conf)
+    makeutils.targets.append(options.stub_output)
+    with open(options.stub_output, 'w') as fh:
+        print_cpp_file(fh, conf)
+    makeutils.writeMakeDependOutput(options.makedepend_output)
+    with open(options.header_output, 'w') as fh:
+        print_header_file(fh, conf)
 
 if __name__ == '__main__':
     main()
