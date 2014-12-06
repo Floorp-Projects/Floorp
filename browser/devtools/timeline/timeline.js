@@ -251,8 +251,8 @@ let TimelineView = {
    */
   initialize: Task.async(function*() {
     this.markersOverview = new MarkersOverview($("#markers-overview"));
-    this.waterfall = new Waterfall($("#timeline-waterfall"));
-    this.markerDetails = new MarkerDetails($("#timeline-waterfall-details"));
+    this.waterfall = new Waterfall($("#timeline-waterfall"), $("#timeline-pane"));
+    this.markerDetails = new MarkerDetails($("#timeline-waterfall-details"), $("#timeline-waterfall-container > splitter"));
 
     this._onSelecting = this._onSelecting.bind(this);
     this._onRefresh = this._onRefresh.bind(this);
@@ -273,8 +273,10 @@ let TimelineView = {
    */
   destroy: function() {
     this.markerDetails.off("resize", this._onRefresh);
+    this.markerDetails.destroy();
     this.waterfall.off("selected", this._onMarkerSelected);
     this.waterfall.off("unselected", this._onMarkerSelected);
+    this.waterfall.destroy();
     this.markersOverview.off("selecting", this._onSelecting);
     this.markersOverview.off("refresh", this._onRefresh);
     this.markersOverview.destroy();
