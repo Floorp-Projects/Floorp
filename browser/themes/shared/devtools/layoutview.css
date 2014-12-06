@@ -10,11 +10,16 @@
   background-color: white;
   border-color: hsla(210,100%,85%,0.7);
   border-style: dotted;
-  color: hsl(210,53%,45%);
+  color: var(--theme-selection-color);
+}
+
+.margin,
+.size {
+  color: var(--theme-highlight-blue);
 }
 
 #content {
-  background-color: #80d4ff;
+  background-color: #87ceeb;
   border-color: hsl(210,100%,85%);
   border-style: dotted;
 }
@@ -26,18 +31,19 @@
 }
 
 #padding {
-  background-color: #66cc52;
+  background-color: #6a5acd;
 }
 
 #borders {
-  background-color: #ffe431;
+  background-color: #444444;
   border-style: dotted;
   border-color: hsl(210,100%,85%);
 }
 
 #margins {
-  background-color: #d89b28;
-  opacity: 0.6;
+  background-color: #edff64;
+  /* This opacity applies to all of the regions, since they are nested. */
+  opacity: .8;
 }
 
 .editable {
