@@ -26,6 +26,7 @@
 #include "nsHttp.h"
 #include "nsHttpHandler.h"
 #include "nsHttpRequestHead.h"
+#include "nsIClassOfService.h"
 #include "nsISocketTransport.h"
 #include "nsStandardURL.h"
 #include "prnetdb.h"
@@ -504,8 +505,11 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
                mTxInlineFrameUsed, mTxInlineFrameSize);
 
   mTxInlineFrameUsed += messageSize;
-  LOG3(("%p Generating %d bytes of HEADERS for stream 0x%X with priority weight %u frames %u\n",
-        this, mTxInlineFrameUsed, mStreamID, mPriorityWeight, numFrames));
+  UpdatePriorityDependency();
+  LOG3(("Http2Stream %p Generating %d bytes of HEADERS for stream 0x%X with "
+        "priority weight %u dep 0x%X frames %u uri=%s\n",
+        this, mTxInlineFrameUsed, mStreamID, mPriorityWeight,
+        mPriorityDependency, numFrames, nsCString(head->RequestURI()).get()));
 
   uint32_t outputOffset = 0;
   uint32_t compressedDataOffset = 0;
@@ -534,9 +538,7 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
     outputOffset += Http2Session::kFrameHeaderBytes;
 
     if (!idx) {
-      // Priority - Dependency is 0, weight is our gecko-calculated weight,
-      // non-exclusive dependency
-      memset(mTxInlineFrame.get() + outputOffset, 0, 4);
+      memcpy(mTxInlineFrame.get() + outputOffset, &mPriorityDependency, 4);
       memcpy(mTxInlineFrame.get() + outputOffset + 4, &mPriorityWeight, 1);
       outputOffset += 5;
     }
@@ -1063,16 +1065,65 @@ Http2Stream::SetPriority(uint32_t newPriority)
   mPriority = static_cast<uint32_t>(httpPriority);
   mPriorityWeight = (nsISupportsPriority::PRIORITY_LOWEST + 1) -
     (httpPriority - kNormalPriority);
+
+  mPriorityDependency = 0; // maybe adjusted later
 }
 
 void
 Http2Stream::SetPriorityDependency(uint32_t newDependency, uint8_t newWeight,
                                    bool exclusive)
 {
-  // XXX - we ignore this for now... why is the server sending priority frames?!
+  // undefined what it means when the server sends a priority frame. ignore it.
   LOG3(("Http2Stream::SetPriorityDependency %p 0x%X received dependency=0x%X "
         "weight=%u exclusive=%d", this, mStreamID, newDependency, newWeight,
         exclusive));
+}
+
+void
+Http2Stream::UpdatePriorityDependency()
+{
+  if (!mSession->UseH2Deps()) {
+    return;
+  }
+
+  nsHttpTransaction *trans = mTransaction->QueryHttpTransaction();
+  if (!trans) {
+    return;
+  }
+
+  // we create 5 fake dependency streams per session,
+  // these streams are never opened with HEADERS. our first opened stream is 0xd
+  // 3 depends 0, weight 200, leader class (kLeaderGroupID)
+  // 5 depends 0, weight 100, other (kOtherGroupID)
+  // 7 depends 0, weight 0, background (kBackgroundGroupID)
+  // 9 depends 7, weight 0, speculative (kSpeculativeGroupID)
+  // b depends 3, weight 0, follower class (kFollowerGroupID)
+  //
+  // streams for leaders (html, js, css) depend on 3
+  // streams for folowers (images) depend on b
+  // default streams (xhr, async js) depend on 5
+  // explicit bg streams (beacon, etc..) depend on 7
+  // spculative bg streams depend on 9
+
+  uint32_t classFlags = trans->ClassOfService();
+
+  if (classFlags & nsIClassOfService::Leader) {
+    mPriorityDependency = Http2Session::kLeaderGroupID;
+  } else if (classFlags & nsIClassOfService::Follower) {
+    mPriorityDependency = Http2Session::kFollowerGroupID;
+  } else if (classFlags & nsIClassOfService::Speculative) {
+    mPriorityDependency = Http2Session::kSpeculativeGroupID;
+  } else if (classFlags & nsIClassOfService::Background) {
+    mPriorityDependency = Http2Session::kBackgroundGroupID;
+  } else if (classFlags & nsIClassOfService::Unblocked) {
+    mPriorityDependency = Http2Session::kOtherGroupID;
+  } else {
+    mPriorityDependency = Http2Session::kFollowerGroupID; // unmarked followers
+  }
+
+  LOG3(("Http2Stream::UpdatePriorityDependency %p "
+        "classFlags %X depends on stream 0x%X\n",
+        this, classFlags, mPriorityDependency));
 }
 
 void

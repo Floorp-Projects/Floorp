@@ -27,7 +27,7 @@
 #include "nsJSPrincipals.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIHttpChannel.h"
-#include "nsIHttpChannelInternal.h"
+#include "nsIClassOfService.h"
 #include "nsITimedChannel.h"
 #include "nsIScriptElement.h"
 #include "nsIDOMHTMLScriptElement.h"
@@ -321,18 +321,17 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIScriptElement *script = aRequest->mElement;
-  nsCOMPtr<nsIHttpChannelInternal>
-    internalHttpChannel(do_QueryInterface(channel));
+  nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(channel));
 
-  if (internalHttpChannel) {
+  if (cos) {
     if (aScriptFromHead &&
         !(script && (script->GetScriptAsync() || script->GetScriptDeferred()))) {
       // synchronous head scripts block lading of most other non js/css
       // content such as images
-      internalHttpChannel->SetLoadAsBlocking(true);
+      cos->AddClassFlags(nsIClassOfService::Leader);
     } else if (!(script && script->GetScriptDeferred())) {
       // other scripts are neither blocked nor prioritized unless marked deferred
-      internalHttpChannel->SetLoadUnblocked(true);
+      cos->AddClassFlags(nsIClassOfService::Unblocked);
     }
   }
 

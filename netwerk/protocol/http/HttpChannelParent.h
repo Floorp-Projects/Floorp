@@ -99,6 +99,7 @@ protected:
                    const OptionalInputStreamParams& uploadStream,
                    const bool&                uploadStreamHasHeaders,
                    const uint16_t&            priority,
+                   const uint32_t&            classOfService,
                    const uint8_t&             redirectionLimit,
                    const bool&                allowPipelining,
                    const bool&                allowSTS,
@@ -116,6 +117,7 @@ protected:
                    const uint32_t&            aContentPolicyType);
 
   virtual bool RecvSetPriority(const uint16_t& priority) MOZ_OVERRIDE;
+  virtual bool RecvSetClassOfService(const uint32_t& cos) MOZ_OVERRIDE;
   virtual bool RecvSetCacheTokenCachedCharset(const nsCString& charset) MOZ_OVERRIDE;
   virtual bool RecvSuspend() MOZ_OVERRIDE;
   virtual bool RecvResume() MOZ_OVERRIDE;
