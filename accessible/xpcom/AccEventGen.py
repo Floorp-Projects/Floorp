@@ -205,22 +205,15 @@ def main():
                  help="Quick stub header output file", metavar="FILE")
     o.add_option('--makedepend-output', type='string', default=None,
                  help="gnumake dependencies output file", metavar="FILE")
-    o.add_option('--cachedir', dest='cachedir', default=None,
-                 help="Directory in which to cache lex/parse tables.")
     global options
     options, filenames = o.parse_args()
     if len(filenames) != 1:
         o.error("Exactly one config filename is needed.")
     filename = filenames[0]
 
-    if options.cachedir is not None:
-        if not os.path.isdir(options.cachedir):
-            os.mkdir(options.cachedir)
-        sys.path.append(options.cachedir)
-
     # Instantiate the parser.
     global p
-    p = xpidl.IDLParser(outputdir=options.cachedir)
+    p = xpidl.IDLParser()
 
     conf = readConfigFile(filename)
 
