@@ -19,9 +19,7 @@
 
 #include "mozilla/EnumeratedArray.h"
 
-#ifdef MOZ_METRO
 #include <DXGI1_2.h>
-#endif
 
 namespace mozilla {
 
@@ -342,6 +340,7 @@ CompositorD3D11::Initialize()
     swapDesc.OutputWindow = mHwnd;
     swapDesc.Windowed = TRUE;
     swapDesc.Flags = 0;
+    swapDesc.SwapEffect = DXGI_SWAP_EFFECT_SEQUENTIAL;
 
 
     /**
@@ -571,6 +570,10 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
                           gfx::Float aOpacity,
                           const gfx::Matrix4x4& aTransform)
 {
+  if (mCurrentClip.IsEmpty()) {
+    return;
+  }
+
   MOZ_ASSERT(mCurrentRT, "No render target");
   memcpy(&mVSConstants.layerTransform, &aTransform._11, 64);
   IntPoint origin = mCurrentRT->GetOrigin();
@@ -618,12 +621,22 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
     mVSConstants.maskQuad = maskTransform.As2D().TransformBounds(bounds);
   }
 
-
   D3D11_RECT scissor;
-  scissor.left = aClipRect.x;
-  scissor.right = aClipRect.XMost();
-  scissor.top = aClipRect.y;
-  scissor.bottom = aClipRect.YMost();
+
+  IntRect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
+  if (mCurrentRT == mDefaultRT) {
+    clipRect = clipRect.Intersect(mCurrentClip);
+  }
+
+  if (clipRect.IsEmpty()) {
+    return;
+  }
+
+  scissor.left = clipRect.x;
+  scissor.right = clipRect.XMost();
+  scissor.top = clipRect.y;
+  scissor.bottom = clipRect.YMost();
+
   mContext->RSSetScissorRects(1, &scissor);
   mContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
   mContext->VSSetShader(mAttachments->mVSQuadShader[maskType], nullptr, 0);
@@ -842,6 +855,14 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
   UINT offset = 0;
   mContext->IASetVertexBuffers(0, 1, &buffer, &size, &offset);
 
+  nsIntRect intRect = nsIntRect(nsIntPoint(0, 0), mSize);
+  // Sometimes the invalid region is larger than we want to draw.
+  nsIntRegion invalidRegionSafe;
+  invalidRegionSafe.And(aInvalidRegion, intRect);
+  nsIntRect invalidRect = invalidRegionSafe.GetBounds();
+  mInvalidRect = IntRect(invalidRect.x, invalidRect.y, invalidRect.width, invalidRect.height);
+  mInvalidRegion = invalidRegionSafe;
+
   if (aClipRectOut) {
     *aClipRectOut = Rect(0, 0, mSize.width, mSize.height);
   }
@@ -849,26 +870,18 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
     *aRenderBoundsOut = Rect(0, 0, mSize.width, mSize.height);
   }
 
-  D3D11_RECT scissor;
   if (aClipRectIn) {
-    scissor.left = aClipRectIn->x;
-    scissor.right = aClipRectIn->XMost();
-    scissor.top = aClipRectIn->y;
-    scissor.bottom = aClipRectIn->YMost();
-  } else {
-    scissor.left = scissor.top = 0;
-    scissor.right = mSize.width;
-    scissor.bottom = mSize.height;
+    invalidRect.IntersectRect(invalidRect, nsIntRect(aClipRectIn->x, aClipRectIn->y, aClipRectIn->width, aClipRectIn->height));
   }
-  mContext->RSSetScissorRects(1, &scissor);
 
-  FLOAT black[] = { 0, 0, 0, 0 };
-  mContext->ClearRenderTargetView(mDefaultRT->mRTView, black);
+  mCurrentClip = IntRect(invalidRect.x, invalidRect.y, invalidRect.width, invalidRect.height);
 
-  mContext->OMSetBlendState(mAttachments->mPremulBlendState, sBlendFactor, 0xFFFFFFFF);
   mContext->RSSetState(mAttachments->mRasterizerState);
 
   SetRenderTarget(mDefaultRT);
+
+  // ClearRect will set the correct blend state for us.
+  ClearRect(Rect(invalidRect.x, invalidRect.y, invalidRect.width, invalidRect.height));
 }
 
 void
@@ -879,7 +892,33 @@ CompositorD3D11::EndFrame()
   nsIntSize oldSize = mSize;
   EnsureSize();
   if (oldSize == mSize) {
-    mSwapChain->Present(0, mDisableSequenceForNextFrame ? DXGI_PRESENT_DO_NOT_SEQUENCE : 0);
+    RefPtr<IDXGISwapChain1> chain;
+    HRESULT hr = mSwapChain->QueryInterface((IDXGISwapChain1**)byRef(chain));
+    if (SUCCEEDED(hr) && chain) {
+      DXGI_PRESENT_PARAMETERS params;
+      PodZero(&params);
+      params.DirtyRectsCount = mInvalidRegion.GetNumRects();
+      std::vector<RECT> rects;
+      rects.reserve(params.DirtyRectsCount);
+
+      nsIntRegionRectIterator iter(mInvalidRegion);
+      const nsIntRect* r;
+      uint32_t i = 0;
+      while ((r = iter.Next()) != nullptr) {
+        RECT rect;
+        rect.left = r->x;
+        rect.top = r->y;
+        rect.bottom = r->YMost();
+        rect.right = r->XMost();
+
+        rects.push_back(rect);
+      }
+
+      params.pDirtyRects = &rects.front();
+      chain->Present1(0, mDisableSequenceForNextFrame ? DXGI_PRESENT_DO_NOT_SEQUENCE : 0, &params);
+    } else {
+      mSwapChain->Present(0, mDisableSequenceForNextFrame ? DXGI_PRESENT_DO_NOT_SEQUENCE : 0);
+    }
     mDisableSequenceForNextFrame = false;
     if (mTarget) {
       PaintToTarget();
