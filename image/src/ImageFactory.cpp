@@ -29,8 +29,7 @@ namespace image {
 
 /*static*/ void
 ImageFactory::Initialize()
-{
-}
+{ }
 
 static uint32_t
 ComputeImageFlags(ImageURL* uri, bool isMultiPart)
@@ -41,33 +40,39 @@ ComputeImageFlags(ImageURL* uri, bool isMultiPart)
   bool isDiscardable = gfxPrefs::ImageMemDiscardable();
   bool doDecodeOnDraw = gfxPrefs::ImageMemDecodeOnDraw();
 
-  // We want UI to be as snappy as possible and not to flicker. Disable discarding
-  // and decode-on-draw for chrome URLS.
+  // We want UI to be as snappy as possible and not to flicker. Disable
+  // discarding and decode-on-draw for chrome URLS.
   bool isChrome = false;
   rv = uri->SchemeIs("chrome", &isChrome);
-  if (NS_SUCCEEDED(rv) && isChrome)
+  if (NS_SUCCEEDED(rv) && isChrome) {
     isDiscardable = doDecodeOnDraw = false;
+  }
 
   // We don't want resources like the "loading" icon to be discardable or
   // decode-on-draw either.
   bool isResource = false;
   rv = uri->SchemeIs("resource", &isResource);
-  if (NS_SUCCEEDED(rv) && isResource)
+  if (NS_SUCCEEDED(rv) && isResource) {
     isDiscardable = doDecodeOnDraw = false;
+  }
 
   // For multipart/x-mixed-replace, we basically want a direct channel to the
   // decoder. Disable both for this case as well.
-  if (isMultiPart)
+  if (isMultiPart) {
     isDiscardable = doDecodeOnDraw = false;
+  }
 
   // We have all the information we need.
   uint32_t imageFlags = Image::INIT_FLAG_NONE;
-  if (isDiscardable)
+  if (isDiscardable) {
     imageFlags |= Image::INIT_FLAG_DISCARDABLE;
-  if (doDecodeOnDraw)
+  }
+  if (doDecodeOnDraw) {
     imageFlags |= Image::INIT_FLAG_DECODE_ON_DRAW;
-  if (isMultiPart)
+  }
+  if (isMultiPart) {
     imageFlags |= Image::INIT_FLAG_MULTIPART;
+  }
 
   return imageFlags;
 }
@@ -145,10 +150,12 @@ ImageFactory::CreateAnonymousImage(const nsCString& aMimeType)
 int32_t
 SaturateToInt32(int64_t val)
 {
-  if (val > INT_MAX)
+  if (val > INT_MAX) {
     return INT_MAX;
-  if (val < INT_MIN)
+  }
+  if (val < INT_MIN) {
     return INT_MIN;
+  }
 
   return static_cast<int32_t>(val);
 }
@@ -205,7 +212,8 @@ ImageFactory::CreateRasterImage(nsIRequest* aRequest,
   // Pass anything usable on so that the RasterImage can preallocate
   // its source buffer.
   if (len > 0) {
-    uint32_t sizeHint = std::min<uint32_t>(len, 20000000); // Bound by something reasonable
+    // Bound by something reasonable
+    uint32_t sizeHint = std::min<uint32_t>(len, 20000000);
     rv = newImage->SetSourceSizeHint(sizeHint);
     if (NS_FAILED(rv)) {
       // Flush memory, try to get some back, and try again.
@@ -230,8 +238,8 @@ ImageFactory::CreateRasterImage(nsIRequest* aRequest,
       nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
       nsCOMPtr<nsIPrincipal> principal;
       if (chan) {
-        nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(chan,
-                                                                        getter_AddRefs(principal));
+        nsContentUtils::GetSecurityManager()
+          ->GetChannelResultPrincipal(chan, getter_AddRefs(principal));
       }
 
       if ((principal &&
