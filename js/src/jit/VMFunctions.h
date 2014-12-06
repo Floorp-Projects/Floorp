@@ -314,6 +314,7 @@ template <> struct TypeToDataType<HandleFunction> { static const DataType result
 template <> struct TypeToDataType<Handle<NativeObject *> > { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<Handle<InlineTypedObject *> > { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<Handle<ArrayObject *> > { static const DataType result = Type_Handle; };
+template <> struct TypeToDataType<Handle<PlainObject *> > { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<Handle<StaticWithObject *> > { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<Handle<StaticBlockObject *> > { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<HandleScript> { static const DataType result = Type_Handle; };
@@ -348,6 +349,9 @@ template <> struct TypeToArgProperties<Handle<InlineTypedObject *> > {
 };
 template <> struct TypeToArgProperties<Handle<ArrayObject *> > {
     static const uint32_t result = TypeToArgProperties<ArrayObject *>::result | VMFunction::ByRef;
+};
+template <> struct TypeToArgProperties<Handle<PlainObject *> > {
+    static const uint32_t result = TypeToArgProperties<PlainObject *>::result | VMFunction::ByRef;
 };
 template <> struct TypeToArgProperties<Handle<StaticWithObject *> > {
     static const uint32_t result = TypeToArgProperties<StaticWithObject *>::result | VMFunction::ByRef;
@@ -418,6 +422,9 @@ template <> struct TypeToRootType<Handle<InlineTypedObject *> > {
     static const uint32_t result = VMFunction::RootObject;
 };
 template <> struct TypeToRootType<Handle<ArrayObject *> > {
+    static const uint32_t result = VMFunction::RootObject;
+};
+template <> struct TypeToRootType<Handle<PlainObject *> > {
     static const uint32_t result = VMFunction::RootObject;
 };
 template <> struct TypeToRootType<Handle<StaticBlockObject *> > {
@@ -665,7 +672,7 @@ bool CheckOverRecursedWithExtra(JSContext *cx, BaselineFrame *frame,
 
 bool DefVarOrConst(JSContext *cx, HandlePropertyName dn, unsigned attrs, HandleObject scopeChain);
 bool SetConst(JSContext *cx, HandlePropertyName name, HandleObject scopeChain, HandleValue rval);
-bool MutatePrototype(JSContext *cx, HandleObject obj, HandleValue value);
+bool MutatePrototype(JSContext *cx, HandlePlainObject obj, HandleValue value);
 bool InitProp(JSContext *cx, HandleNativeObject obj, HandlePropertyName name, HandleValue value);
 
 template<bool Equal>
@@ -682,10 +689,8 @@ bool GreaterThanOrEqual(JSContext *cx, MutableHandleValue lhs, MutableHandleValu
 template<bool Equal>
 bool StringsEqual(JSContext *cx, HandleString left, HandleString right, bool *res);
 
-// Allocation functions for JSOP_NEWARRAY and JSOP_NEWOBJECT and parallel array inlining
-JSObject *NewInitParallelArray(JSContext *cx, HandleObject templateObj);
-JSObject *NewInitObject(JSContext *cx, HandleNativeObject templateObject);
-JSObject *NewInitObjectWithClassPrototype(JSContext *cx, HandleObject templateObject);
+JSObject *NewInitObject(JSContext *cx, HandlePlainObject templateObject);
+JSObject *NewInitObjectWithClassPrototype(JSContext *cx, HandlePlainObject templateObject);
 
 bool ArrayPopDense(JSContext *cx, HandleObject obj, MutableHandleValue rval);
 bool ArrayPushDense(JSContext *cx, HandleArrayObject obj, HandleValue v, uint32_t *length);

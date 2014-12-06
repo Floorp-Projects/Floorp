@@ -53,12 +53,11 @@ RegExpObjectBuilder::getOrCreate()
 
     // Note: RegExp objects are always allocated in the tenured heap. This is
     // not strictly required, but simplifies embedding them in jitcode.
-    NativeObject *obj = NewNativeBuiltinClassInstance(cx, &RegExpObject::class_, TenuredObject);
-    if (!obj)
+    reobj_ = NewBuiltinClassInstance<RegExpObject>(cx, TenuredObject);
+    if (!reobj_)
         return false;
-    obj->initPrivate(nullptr);
+    reobj_->initPrivate(nullptr);
 
-    reobj_ = &obj->as<RegExpObject>();
     return true;
 }
 
@@ -72,12 +71,11 @@ RegExpObjectBuilder::getOrCreateClone(HandleTypeObject type)
 
     // Note: RegExp objects are always allocated in the tenured heap. This is
     // not strictly required, but simplifies embedding them in jitcode.
-    NativeObject *clone = NewNativeObjectWithType(cx->asJSContext(), type, parent, TenuredObject);
-    if (!clone)
+    reobj_ = NewObjectWithType<RegExpObject>(cx->asJSContext(), type, parent, TenuredObject);
+    if (!reobj_)
         return false;
-    clone->initPrivate(nullptr);
+    reobj_->initPrivate(nullptr);
 
-    reobj_ = &clone->as<RegExpObject>();
     return true;
 }
 
@@ -255,7 +253,7 @@ RegExpObject::trace(JSTracer *trc, JSObject *obj)
         IS_GC_MARKING_TRACER(trc) &&
         !obj->asTenured().zone()->isPreservingCode())
     {
-        obj->as<NativeObject>().setPrivate(nullptr);
+        obj->as<RegExpObject>().NativeObject::setPrivate(nullptr);
     } else {
         shared->trace(trc);
     }

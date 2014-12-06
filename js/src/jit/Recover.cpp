@@ -1105,7 +1105,7 @@ RNewObject::RNewObject(CompactBufferReader &reader)
 bool
 RNewObject::recover(JSContext *cx, SnapshotIterator &iter) const
 {
-    RootedNativeObject templateObject(cx, &iter.read().toObject().as<NativeObject>());
+    RootedPlainObject templateObject(cx, &iter.read().toObject().as<PlainObject>());
     RootedValue result(cx);
     JSObject *resultObject = nullptr;
 
@@ -1203,7 +1203,7 @@ RCreateThisWithTemplate::RCreateThisWithTemplate(CompactBufferReader &reader)
 bool
 RCreateThisWithTemplate::recover(JSContext *cx, SnapshotIterator &iter) const
 {
-    RootedNativeObject templateObject(cx, &iter.read().toObject().as<NativeObject>());
+    RootedPlainObject templateObject(cx, &iter.read().toObject().as<PlainObject>());
 
     // See CodeGenerator::visitCreateThisWithTemplate
     gc::AllocKind allocKind = templateObject->asTenured().getAllocKind();
@@ -1235,7 +1235,7 @@ RObjectState::RObjectState(CompactBufferReader &reader)
 bool
 RObjectState::recover(JSContext *cx, SnapshotIterator &iter) const
 {
-    RootedNativeObject object(cx, &iter.read().toObject().as<NativeObject>());
+    RootedPlainObject object(cx, &iter.read().toObject().as<PlainObject>());
     MOZ_ASSERT(object->slotSpan() == numSlots());
 
     RootedValue val(cx);

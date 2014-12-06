@@ -70,7 +70,7 @@
 
 #define JS_FOR_PROTOTYPES(real,imaginary) \
     imaginary(Null,              0,     js_InitNullClass,          dummy) \
-    real(Object,                 1,     js_InitViaClassSpec,       &JSObject::class_) \
+    real(Object,                 1,     js_InitViaClassSpec,       OCLASP(Plain)) \
     real(Function,               2,     js_InitViaClassSpec,       &JSFunction::class_) \
     real(Array,                  3,     js_InitViaClassSpec,       OCLASP(Array)) \
     real(Boolean,                4,     js_InitBooleanClass,       OCLASP(Boolean)) \
