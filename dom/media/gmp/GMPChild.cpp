@@ -25,7 +25,7 @@
 
 using mozilla::dom::CrashReporterChild;
 
-static const int MAX_PLUGIN_VOUCHER_LENGTH = 500000;
+static const int MAX_VOUCHER_LENGTH = 500000;
 
 #ifdef XP_WIN
 #include <stdlib.h> // for _exit()
@@ -255,6 +255,7 @@ GMPChild::CheckThread()
 
 bool
 GMPChild::Init(const std::string& aPluginPath,
+               const std::string& aVoucherPath,
                base::ProcessHandle aParentProcessHandle,
                MessageLoop* aIOLoop,
                IPC::Channel* aChannel)
@@ -268,6 +269,7 @@ GMPChild::Init(const std::string& aPluginPath,
 #endif
 
   mPluginPath = aPluginPath;
+  mVoucherPath = aVoucherPath;
   return true;
 }
 
@@ -398,6 +400,7 @@ GMPChild::RecvStartPlugin()
   PreLoadLibraries(mPluginPath);
 #endif
   PreLoadPluginVoucher(mPluginPath);
+  PreLoadSandboxVoucher();
 
   nsCString libPath;
   if (!GetLibPath(libPath)) {
@@ -523,7 +526,7 @@ GMPChild::DeallocPGMPVideoDecoderChild(PGMPVideoDecoderChild* aActor)
 PGMPDecryptorChild*
 GMPChild::AllocPGMPDecryptorChild()
 {
-  GMPDecryptorChild* actor = new GMPDecryptorChild(this, mPluginVoucher);
+  GMPDecryptorChild* actor = new GMPDecryptorChild(this, mPluginVoucher, mSandboxVoucher);
   actor->AddRef();
   return actor;
 }
@@ -730,7 +733,7 @@ GMPChild::PreLoadPluginVoucher(const std::string& aPluginPath)
   std::streampos end = stream.tellg();
   stream.seekg (0, std::ios::beg);
   auto length = end - start;
-  if (length > MAX_PLUGIN_VOUCHER_LENGTH) {
+  if (length > MAX_VOUCHER_LENGTH) {
     NS_WARNING("Plugin voucher file too big!");
     return false;
   }
@@ -743,6 +746,34 @@ GMPChild::PreLoadPluginVoucher(const std::string& aPluginPath)
   }
 
   return true;
+}
+
+void
+GMPChild::PreLoadSandboxVoucher()
+{
+  std::ifstream stream;
+  stream.open(mVoucherPath.c_str(), std::ios::binary);
+  if (!stream.good()) {
+    NS_WARNING("PreLoadSandboxVoucher can't find sandbox voucher file!");
+    return;
+  }
+
+  std::streampos start = stream.tellg();
+  stream.seekg (0, std::ios::end);
+  std::streampos end = stream.tellg();
+  stream.seekg (0, std::ios::beg);
+  auto length = end - start;
+  if (length > MAX_VOUCHER_LENGTH) {
+    NS_WARNING("PreLoadSandboxVoucher sandbox voucher file too big!");
+    return;
+  }
+
+  mSandboxVoucher.SetLength(length);
+  stream.read((char*)mSandboxVoucher.Elements(), length);
+  if (!stream) {
+    NS_WARNING("PreLoadSandboxVoucher failed to read plugin voucher file!");
+    return;
+  }
 }
 
 } // namespace gmp
