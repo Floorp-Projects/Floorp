@@ -2,69 +2,84 @@
 name = "wires"
 version = "0.0.1"
 dependencies = [
- "hyper 0.0.1 (git+https://github.com/hyperium/hyper.git#50a6f6103e842102ccb03e8e49bf8f412fd166bc)",
- "uuid 0.0.1 (git+https://github.com/rust-lang/uuid.git#c6159089a491ff4398c6d423263a085c95092a04)",
+ "hyper 0.0.1 (git+https://github.com/hyperium/hyper.git)",
+ "uuid 0.1.0 (git+https://github.com/rust-lang/uuid.git)",
 ]
 
 [[package]]
-name = "encoding"
+name = "cookie"
+version = "0.0.1"
+source = "git+https://github.com/alexcrichton/cookie-rs#cbeb942c35bc130e578725ab829ff3cb976a7c92"
+dependencies = [
+ "openssl 0.2.0 (git+https://github.com/sfackler/rust-openssl)",
+ "time 0.1.0 (git+https://github.com/rust-lang/time)",
+ "url 0.1.0 (git+https://github.com/servo/rust-url)",
+]
+
+[[package]]
+name = "gcc"
 version = "0.1.0"
-source = "git+https://github.com/lifthrasiir/rust-encoding#4368ee5d0e7599964d98f874df22c86f4005c9ae"
+source = "git+https://github.com/alexcrichton/gcc-rs#96c9e44ce3dfccc47c16fcfd743a33b3b4205daf"
 
 [[package]]
 name = "hyper"
 version = "0.0.1"
-source = "git+https://github.com/hyperium/hyper.git#50a6f6103e842102ccb03e8e49bf8f412fd166bc"
+source = "git+https://github.com/hyperium/hyper.git#cac2a1060c06832c14c8de360dc094a2da42f34c"
 dependencies = [
- "intertwine 0.0.1 (git+https://github.com/reem/rust-intertwine#3b23760cf7da3c7f38db16bf488c88f6e506de2d)",
- "mime 0.0.1 (git+https://github.com/seanmonstar/mime.rs#d9a80eea2a4d1bee069ac71d8932c82f7e70cee2)",
- "move-acceptor 0.0.1 (git+https://github.com/reem/rust-move-acceptor#4eef9c13745db3da74c22a26b659dc054aec5500)",
- "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl#6277635e5c579c5842fc5f921a3b27a544a7b346)",
- "typeable 0.0.1 (git+https://github.com/reem/rust-typeable#55154e1809db8ceec8f8519bdbb638c2fbd712f5)",
- "unsafe-any 0.1.0 (git+https://github.com/reem/rust-unsafe-any#75cff194795447a901c1658e31629899c9c8d52f)",
- "url 0.1.0 (git+https://github.com/servo/rust-url#55b18b796ef2cef5490069dd450c60c2cc2c0c1b)",
+ "cookie 0.0.1 (git+https://github.com/alexcrichton/cookie-rs)",
+ "mime 0.0.1 (git+https://github.com/hyperium/mime.rs)",
+ "openssl 0.2.0 (git+https://github.com/sfackler/rust-openssl)",
+ "time 0.1.0 (git+https://github.com/rust-lang/time)",
+ "unsafe-any 0.1.1 (git+https://github.com/reem/rust-unsafe-any)",
+ "url 0.1.0 (git+https://github.com/servo/rust-url)",
 ]
-
-[[package]]
-name = "intertwine"
-version = "0.0.1"
-source = "git+https://github.com/reem/rust-intertwine#3b23760cf7da3c7f38db16bf488c88f6e506de2d"
 
 [[package]]
 name = "mime"
 version = "0.0.1"
-source = "git+https://github.com/seanmonstar/mime.rs#d9a80eea2a4d1bee069ac71d8932c82f7e70cee2"
-
-[[package]]
-name = "move-acceptor"
-version = "0.0.1"
-source = "git+https://github.com/reem/rust-move-acceptor#4eef9c13745db3da74c22a26b659dc054aec5500"
+source = "git+https://github.com/hyperium/mime.rs#7898f1c29c7f5d35d0c3c7aed37ebcfc95a40873"
 
 [[package]]
 name = "openssl"
-version = "0.0.0"
-source = "git+https://github.com/sfackler/rust-openssl#6277635e5c579c5842fc5f921a3b27a544a7b346"
+version = "0.2.0"
+source = "git+https://github.com/sfackler/rust-openssl#08d1f2e6295d07f8ab42fc71defca938fb857e26"
+dependencies = [
+ "openssl-sys 0.2.0 (git+https://github.com/sfackler/rust-openssl)",
+]
 
 [[package]]
-name = "typeable"
-version = "0.0.1"
-source = "git+https://github.com/reem/rust-typeable#55154e1809db8ceec8f8519bdbb638c2fbd712f5"
+name = "openssl-sys"
+version = "0.2.0"
+source = "git+https://github.com/sfackler/rust-openssl#08d1f2e6295d07f8ab42fc71defca938fb857e26"
+dependencies = [
+ "pkg-config 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "pkg-config"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "time"
+version = "0.1.0"
+source = "git+https://github.com/rust-lang/time#afab521f3b91658a3ba2d3e877b7e01699733bef"
+dependencies = [
+ "gcc 0.1.0 (git+https://github.com/alexcrichton/gcc-rs)",
+]
 
 [[package]]
 name = "unsafe-any"
-version = "0.1.0"
-source = "git+https://github.com/reem/rust-unsafe-any#75cff194795447a901c1658e31629899c9c8d52f"
+version = "0.1.1"
+source = "git+https://github.com/reem/rust-unsafe-any#eb3fe87bea85f375b8fcefa0cdecfd131fae9624"
 
 [[package]]
 name = "url"
 version = "0.1.0"
-source = "git+https://github.com/servo/rust-url#55b18b796ef2cef5490069dd450c60c2cc2c0c1b"
-dependencies = [
- "encoding 0.1.0 (git+https://github.com/lifthrasiir/rust-encoding#4368ee5d0e7599964d98f874df22c86f4005c9ae)",
-]
+source = "git+https://github.com/servo/rust-url#9f05a0108025a1c9002e8977a42dce764895d170"
 
 [[package]]
 name = "uuid"
-version = "0.0.1"
-source = "git+https://github.com/rust-lang/uuid.git#c6159089a491ff4398c6d423263a085c95092a04"
+version = "0.1.0"
+source = "git+https://github.com/rust-lang/uuid.git#b35eddc2b6410e2ef1fcc2af74cc54c6c5ff08f2"
 
