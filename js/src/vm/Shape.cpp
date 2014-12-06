@@ -244,7 +244,7 @@ ShapeTable::search(jsid id, bool adding)
         }
     }
 
-    /* NOTREACHED */
+    MOZ_CRASH("Shape::search failed to find an expected entry.");
     return nullptr;
 }
 

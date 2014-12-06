@@ -146,6 +146,13 @@ Sink(MIRGenerator *mir, MIRGraph &graph)
             if (!ins->canClone())
                 continue;
 
+            // If the block is a split-edge block, which is created for folding
+            // test conditions, then the block has no resume point and has
+            // multiple predecessors.  In such case, we cannot safely move
+            // bailing instruction to these blocks as we have no way to bailout.
+            if (!usesDominator->entryResumePoint() && usesDominator->numPredecessors() != 1)
+                continue;
+
             JitSpewDef(JitSpew_Sink, "  Can Clone & Recover, sink instruction\n", ins);
             JitSpew(JitSpew_Sink, "  into Block %u", usesDominator->id());
 
