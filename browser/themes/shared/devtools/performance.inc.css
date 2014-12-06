@@ -46,14 +46,6 @@
 
 /* Profile call tree */
 
-.theme-dark .call-tree-headers-container {
-  border-top: 1px solid #000;
-}
-
-.theme-light .call-tree-headers-container {
-  border-top: 1px solid #aaa;
-}
-
 .call-tree-cells-container {
   /* Hack: force hardware acceleration */
   transform: translateZ(1px);
