@@ -2779,19 +2779,17 @@ class Factory MOZ_FINAL
   // ActorDestroy called.
   static uint64_t sFactoryInstanceCount;
 
-  const OptionalWindowId mOptionalWindowId;
-
   DebugOnly<bool> mActorDestroyed;
 
 public:
   static already_AddRefed<Factory>
-  Create(const OptionalWindowId& aOptionalWindowId);
+  Create();
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::indexedDB::Factory)
 
 private:
   // Only constructed in Create().
-  explicit Factory(const OptionalWindowId& aOptionalWindowId);
+  explicit Factory();
 
   // Reference counted.
   ~Factory();
@@ -2844,7 +2842,6 @@ class Database MOZ_FINAL
   const nsCString mOrigin;
   const nsCString mId;
   const nsString mFilePath;
-  Atomic<bool> mInvalidatedOnAnyThread;
   const PersistenceType mPersistenceType;
   const bool mChromeWriteAccessAllowed;
   bool mClosed;
@@ -4050,8 +4047,7 @@ class OpenDatabaseOp MOZ_FINAL
 
   class VersionChangeOp;
 
-  const OptionalWindowId mOptionalWindowId;
-  const OptionalWindowId mOptionalContentParentId;
+  const OptionalContentId mOptionalContentParentId;
 
   nsRefPtr<FullDatabaseMetadata> mMetadata;
 
@@ -4067,15 +4063,15 @@ class OpenDatabaseOp MOZ_FINAL
 public:
   OpenDatabaseOp(Factory* aFactory,
                  already_AddRefed<ContentParent> aContentParent,
-                 const OptionalWindowId& aOptionalWindowId,
                  const CommonFactoryRequestParams& aParams);
 
   bool
   IsOtherProcessActor() const
   {
-    MOZ_ASSERT(mOptionalContentParentId.type() != OptionalWindowId::T__None);
+    MOZ_ASSERT(mOptionalContentParentId.type() != OptionalContentId::T__None);
 
-    return mOptionalContentParentId.type() == OptionalWindowId::Tuint64_t;
+    return mOptionalContentParentId.type() ==
+             OptionalContentId::TContentParentId;
   }
 
 private:
@@ -5147,12 +5143,6 @@ public:
                             nsIRunnable* aCallback) MOZ_OVERRIDE;
 
   virtual void
-  AbortTransactionsForStorage(nsIOfflineStorage* aStorage) MOZ_OVERRIDE;
-
-  virtual bool
-  HasTransactionsForStorage(nsIOfflineStorage* aStorage) MOZ_OVERRIDE;
-
-  virtual void
   ShutdownTransactionService() MOZ_OVERRIDE;
 
 private:
@@ -5264,12 +5254,10 @@ class DatabaseOfflineStorage MOZ_FINAL
   // Only used on the background thread.
   Database* mDatabase;
 
-  const OptionalWindowId mOptionalWindowId;
-  const OptionalWindowId mOptionalContentParentId;
+  const OptionalContentId mOptionalContentParentId;
   const nsCString mOrigin;
   const nsCString mId;
   nsCOMPtr<nsIEventTarget> mOwningThread;
-  Atomic<uint32_t> mTransactionCount;
 
   bool mClosedOnMainThread;
   bool mClosedOnOwningThread;
@@ -5280,8 +5268,7 @@ class DatabaseOfflineStorage MOZ_FINAL
 
 public:
   DatabaseOfflineStorage(QuotaClient* aQuotaClient,
-                         const OptionalWindowId& aOptionalWindowId,
-                         const OptionalWindowId& aOptionalContentParentId,
+                         const OptionalContentId& aOptionalContentParentId,
                          const nsACString& aGroup,
                          const nsACString& aOrigin,
                          const nsACString& aId,
@@ -5300,33 +5287,6 @@ public:
     MOZ_ASSERT(!mDatabase);
 
     mDatabase = aDatabase;
-  }
-
-  void
-  NoteNewTransaction()
-  {
-    AssertIsOnBackgroundThread();
-    MOZ_ASSERT(mTransactionCount < UINT32_MAX);
-
-    mTransactionCount++;
-  }
-
-  void
-  NoteFinishedTransaction()
-  {
-    AssertIsOnBackgroundThread();
-    MOZ_ASSERT(mTransactionCount);
-
-    mTransactionCount--;
-  }
-
-  bool
-  HasOpenTransactions() const
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    // XXX This is racy, is this correct?
-    return !!mTransactionCount;
   }
 
   nsIEventTarget*
@@ -5577,31 +5537,20 @@ StaticRefPtr<DEBUGThreadSlower> gDEBUGThreadSlower;
  ******************************************************************************/
 
 PBackgroundIDBFactoryParent*
-AllocPBackgroundIDBFactoryParent(PBackgroundParent* aManager,
-                                 const OptionalWindowId& aOptionalWindowId)
+AllocPBackgroundIDBFactoryParent()
 {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aOptionalWindowId.type() != OptionalWindowId::T__None);
-
-  if (BackgroundParent::IsOtherProcessActor(aManager)) {
-    if (NS_WARN_IF(aOptionalWindowId.type() != OptionalWindowId::Tvoid_t)) {
-      ASSERT_UNLESS_FUZZING();
-      return nullptr;
-    }
-  }
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonMainThread())) {
     return nullptr;
   }
 
-  nsRefPtr<Factory> actor = Factory::Create(aOptionalWindowId);
+  nsRefPtr<Factory> actor = Factory::Create();
   return actor.forget().take();
 }
 
 bool
-RecvPBackgroundIDBFactoryConstructor(PBackgroundParent* /* aManager */,
-                                     PBackgroundIDBFactoryParent* aActor,
-                                     const OptionalWindowId& aOptionalWindowId)
+RecvPBackgroundIDBFactoryConstructor(PBackgroundIDBFactoryParent* aActor)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
@@ -5784,9 +5733,8 @@ FullDatabaseMetadata::Duplicate() const
 
 uint64_t Factory::sFactoryInstanceCount = 0;
 
-Factory::Factory(const OptionalWindowId& aOptionalWindowId)
-  : mOptionalWindowId(aOptionalWindowId)
-  , mActorDestroyed(false)
+Factory::Factory()
+  : mActorDestroyed(false)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnNonMainThread());
@@ -5799,7 +5747,7 @@ Factory::~Factory()
 
 // static
 already_AddRefed<Factory>
-Factory::Create(const OptionalWindowId& aOptionalWindowId)
+Factory::Create()
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnNonMainThread());
@@ -5847,7 +5795,7 @@ Factory::Create(const OptionalWindowId& aOptionalWindowId)
 #endif // DEBUG
   }
 
-  nsRefPtr<Factory> actor = new Factory(aOptionalWindowId);
+  nsRefPtr<Factory> actor = new Factory();
 
   sFactoryInstanceCount++;
 
@@ -5966,7 +5914,6 @@ Factory::AllocPBackgroundIDBFactoryRequestParent(
   if (aParams.type() == FactoryRequestParams::TOpenDatabaseRequestParams) {
     actor = new OpenDatabaseOp(this,
                                contentParent.forget(),
-                               mOptionalWindowId,
                                *commonParams);
   } else {
     actor = new DeleteDatabaseOp(this, contentParent.forget(), *commonParams);
@@ -6155,7 +6102,6 @@ Database::RegisterTransaction(TransactionBase* aTransaction)
     return false;
   }
 
-  mOfflineStorage->NoteNewTransaction();
   return true;
 }
 
@@ -6168,14 +6114,10 @@ Database::UnregisterTransaction(TransactionBase* aTransaction)
 
   mTransactions.RemoveEntry(aTransaction);
 
-  if (mOfflineStorage) {
-    mOfflineStorage->NoteFinishedTransaction();
-
-    if (!mTransactions.Count() && IsClosed()) {
-      DatabaseOfflineStorage::UnregisterOnOwningThread(
-        mOfflineStorage.forget());
-      CleanupMetadata();
-    }
+  if (mOfflineStorage && !mTransactions.Count() && IsClosed()) {
+    DatabaseOfflineStorage::UnregisterOnOwningThread(
+      mOfflineStorage.forget());
+    CleanupMetadata();
   }
 }
 
@@ -9516,30 +9458,6 @@ QuotaClient::WaitForStoragesToComplete(nsTArray<nsIOfflineStorage*>& aStorages,
 }
 
 void
-QuotaClient::AbortTransactionsForStorage(nsIOfflineStorage* aStorage)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aStorage);
-  MOZ_ASSERT(aStorage->GetClient() == this);
-
-  static_cast<DatabaseOfflineStorage*>(aStorage)->
-    AssertInvalidatedOnMainThread();
-
-  // Nothing to do here, calling DatabaseOfflineStorage::Close() should have
-  // aborted any transactions already.
-}
-
-bool
-QuotaClient::HasTransactionsForStorage(nsIOfflineStorage* aStorage)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aStorage);
-  MOZ_ASSERT(aStorage->GetClient() == this);
-
-  return static_cast<DatabaseOfflineStorage*>(aStorage)->HasOpenTransactions();
-}
-
-void
 QuotaClient::ShutdownTransactionService()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -9802,23 +9720,20 @@ ShutdownTransactionThreadPoolRunnable::Run()
  ******************************************************************************/
 
 DatabaseOfflineStorage::DatabaseOfflineStorage(
-                               QuotaClient* aQuotaClient,
-                               const OptionalWindowId& aOptionalWindowId,
-                               const OptionalWindowId& aOptionalContentParentId,
-                               const nsACString& aGroup,
-                               const nsACString& aOrigin,
-                               const nsACString& aId,
-                               PersistenceType aPersistenceType,
-                               nsIEventTarget* aOwningThread)
+                              QuotaClient* aQuotaClient,
+                              const OptionalContentId& aOptionalContentParentId,
+                              const nsACString& aGroup,
+                              const nsACString& aOrigin,
+                              const nsACString& aId,
+                              PersistenceType aPersistenceType,
+                              nsIEventTarget* aOwningThread)
   : mStrongQuotaClient(aQuotaClient)
   , mWeakQuotaClient(aQuotaClient)
   , mDatabase(nullptr)
-  , mOptionalWindowId(aOptionalWindowId)
   , mOptionalContentParentId(aOptionalContentParentId)
   , mOrigin(aOrigin)
   , mId(aId)
   , mOwningThread(aOwningThread)
-  , mTransactionCount(0)
   , mClosedOnMainThread(false)
   , mClosedOnOwningThread(false)
   , mInvalidatedOnMainThread(false)
@@ -9827,12 +9742,6 @@ DatabaseOfflineStorage::DatabaseOfflineStorage(
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aQuotaClient);
-  MOZ_ASSERT(aOptionalWindowId.type() != OptionalWindowId::T__None);
-  MOZ_ASSERT_IF(aOptionalWindowId.type() == OptionalWindowId::Tuint64_t,
-                aOptionalContentParentId.type() == OptionalWindowId::Tvoid_t);
-  MOZ_ASSERT(aOptionalContentParentId.type() != OptionalWindowId::T__None);
-  MOZ_ASSERT_IF(aOptionalContentParentId.type() == OptionalWindowId::Tuint64_t,
-                aOptionalWindowId.type() == OptionalWindowId::Tvoid_t);
   MOZ_ASSERT(aOwningThread);
 
   DebugOnly<bool> current;
@@ -9892,11 +9801,6 @@ DatabaseOfflineStorage::CloseOnMainThread()
   }
 
   mClosedOnMainThread = true;
-
-  QuotaManager* quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
-
-  quotaManager->OnStorageClosed(this);
 }
 
 void
@@ -9975,24 +9879,14 @@ DatabaseOfflineStorage::GetClient()
 }
 
 NS_IMETHODIMP_(bool)
-DatabaseOfflineStorage::IsOwnedByWindow(nsPIDOMWindow* aOwner)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aOwner);
-  MOZ_ASSERT(aOwner->IsInnerWindow());
-
-  return mOptionalWindowId.type() == OptionalWindowId::Tuint64_t &&
-         mOptionalWindowId.get_uint64_t() == aOwner->WindowID();
-}
-
-NS_IMETHODIMP_(bool)
 DatabaseOfflineStorage::IsOwnedByProcess(ContentParent* aOwner)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aOwner);
 
-  return mOptionalContentParentId.type() == OptionalWindowId::Tuint64_t &&
-         mOptionalContentParentId.get_uint64_t() == aOwner->ChildID();
+  return mOptionalContentParentId.type() ==
+           OptionalContentId::TContentParentId &&
+         mOptionalContentParentId.get_ContentParentId() == aOwner->ChildID();
 }
 
 NS_IMETHODIMP_(const nsACString&)
@@ -10008,14 +9902,6 @@ DatabaseOfflineStorage::Close()
 
   InvalidateOnMainThread();
   return NS_OK;
-}
-
-NS_IMETHODIMP_(bool)
-DatabaseOfflineStorage::IsClosed()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  return mClosedOnMainThread;
 }
 
 NS_IMETHODIMP_(void)
@@ -11121,18 +11007,13 @@ FactoryOp::RecvPermissionRetry()
 
 OpenDatabaseOp::OpenDatabaseOp(Factory* aFactory,
                                already_AddRefed<ContentParent> aContentParent,
-                               const OptionalWindowId& aOptionalWindowId,
                                const CommonFactoryRequestParams& aParams)
   : FactoryOp(aFactory, Move(aContentParent), aParams, /* aDeleting */ false)
-  , mOptionalWindowId(aOptionalWindowId)
   , mMetadata(new FullDatabaseMetadata(aParams.metadata()))
   , mRequestedVersion(aParams.metadata().version())
 {
-  MOZ_ASSERT_IF(mContentParent,
-                mOptionalWindowId.type() == OptionalWindowId::Tvoid_t);
-
   auto& optionalContentParentId =
-    const_cast<OptionalWindowId&>(mOptionalContentParentId);
+    const_cast<OptionalContentId&>(mOptionalContentParentId);
 
   if (mContentParent) {
     // This is a little scary but it looks safe to call this off the main thread
@@ -11162,7 +11043,6 @@ OpenDatabaseOp::QuotaManagerOpen()
 
   nsRefPtr<DatabaseOfflineStorage> offlineStorage =
     new DatabaseOfflineStorage(quotaClient,
-                               mOptionalWindowId,
                                mOptionalContentParentId,
                                mGroup,
                                mOrigin,
