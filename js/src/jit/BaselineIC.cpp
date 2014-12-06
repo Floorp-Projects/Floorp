@@ -1787,7 +1787,7 @@ DoNewObject(JSContext *cx, ICNewObject_Fallback *stub, MutableHandleValue res)
 {
     FallbackICSpew(cx, stub, "NewObject");
 
-    RootedNativeObject templateObject(cx, stub->templateObject());
+    RootedPlainObject templateObject(cx, stub->templateObject());
     JSObject *obj = NewInitObject(cx, templateObject);
     if (!obj)
         return false;
@@ -8248,8 +8248,8 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_
     }
 
     if (op == JSOP_INITPROP) {
-        MOZ_ASSERT(obj->is<JSObject>());
-        if (!DefineNativeProperty(cx, obj.as<NativeObject>(), id, rhs,
+        MOZ_ASSERT(obj->is<PlainObject>());
+        if (!DefineNativeProperty(cx, obj.as<PlainObject>(), id, rhs,
                                   nullptr, nullptr, JSPROP_ENUMERATE))
         {
             return false;
@@ -9202,7 +9202,7 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
 
         // Remember the template object associated with any script being called
         // as a constructor, for later use during Ion compilation.
-        RootedNativeObject templateObject(cx);
+        RootedPlainObject templateObject(cx);
         if (constructing) {
             templateObject = CreateThisForFunction(cx, fun, MaybeSingletonObject);
             if (!templateObject)

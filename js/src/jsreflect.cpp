@@ -357,7 +357,7 @@ class NodeBuilder
     }
 
     bool newObject(MutableHandleObject dst) {
-        RootedObject nobj(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
+        RootedPlainObject nobj(cx, NewBuiltinClassInstance<PlainObject>(cx));
         if (!nobj)
             return false;
 
@@ -704,7 +704,7 @@ NodeBuilder::newNode(ASTType type, TokenPos *pos, MutableHandleObject dst)
     MOZ_ASSERT(type > AST_ERROR && type < AST_LIMIT);
 
     RootedValue tv(cx);
-    RootedObject node(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
+    RootedPlainObject node(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!node ||
         !setNodeLoc(node, pos) ||
         !atomValue(nodeTypeNames[type], &tv) ||
@@ -3537,8 +3537,8 @@ JS_InitReflect(JSContext *cx, HandleObject obj)
     RootedObject proto(cx, obj->as<GlobalObject>().getOrCreateObjectPrototype(cx));
     if (!proto)
         return nullptr;
-    RootedObject Reflect(cx, NewObjectWithGivenProto(cx, &JSObject::class_, proto,
-                                                     obj, SingletonObject));
+    RootedPlainObject Reflect(cx, NewObjectWithGivenProto<PlainObject>(cx, proto, obj,
+                                                                       SingletonObject));
     if (!Reflect)
         return nullptr;
 

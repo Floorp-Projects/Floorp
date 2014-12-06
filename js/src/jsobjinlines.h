@@ -614,6 +614,23 @@ NewObjectWithGivenProto(ExclusiveContext *cx, const js::Class *clasp, JSObject *
     return NewObjectWithGivenProto(cx, clasp, TaggedProto(proto), parent, newKind);
 }
 
+template <typename T>
+inline T *
+NewObjectWithGivenProto(ExclusiveContext *cx, TaggedProto proto, JSObject *parent,
+                        NewObjectKind newKind = GenericObject)
+{
+    JSObject *obj = NewObjectWithGivenProto(cx, &T::class_, proto, parent, newKind);
+    return obj ? &obj->as<T>() : nullptr;
+}
+
+template <typename T>
+inline T *
+NewObjectWithGivenProto(ExclusiveContext *cx, JSObject *proto, JSObject *parent,
+                        NewObjectKind newKind = GenericObject)
+{
+    return NewObjectWithGivenProto<T>(cx, TaggedProto(proto), parent, newKind);
+}
+
 inline bool
 FindProto(ExclusiveContext *cx, const js::Class *clasp, MutableHandleObject proto)
 {
@@ -670,13 +687,19 @@ NewObjectWithClassProto(ExclusiveContext *cx, const js::Class *clasp, JSObject *
 template<typename T>
 inline T *
 NewObjectWithProto(ExclusiveContext *cx, JSObject *proto, JSObject *parent,
+                   gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
+{
+    JSObject *obj = NewObjectWithClassProto(cx, &T::class_, proto, parent, allocKind, newKind);
+    return obj ? &obj->as<T>() : nullptr;
+}
+
+template<typename T>
+inline T *
+NewObjectWithProto(ExclusiveContext *cx, JSObject *proto, JSObject *parent,
                    NewObjectKind newKind = GenericObject)
 {
     JSObject *obj = NewObjectWithClassProto(cx, &T::class_, proto, parent, newKind);
-    if (!obj)
-        return nullptr;
-
-    return &obj->as<T>();
+    return obj ? &obj->as<T>() : nullptr;
 }
 
 /*
@@ -702,10 +725,7 @@ inline T *
 NewBuiltinClassInstance(ExclusiveContext *cx, NewObjectKind newKind = GenericObject)
 {
     JSObject *obj = NewBuiltinClassInstance(cx, &T::class_, newKind);
-    if (!obj)
-        return nullptr;
-
-    return &obj->as<T>();
+    return obj ? &obj->as<T>() : nullptr;
 }
 
 template<typename T>
@@ -713,10 +733,7 @@ inline T *
 NewBuiltinClassInstance(ExclusiveContext *cx, gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
 {
     JSObject *obj = NewBuiltinClassInstance(cx, &T::class_, allocKind, newKind);
-    if (!obj)
-        return nullptr;
-
-    return &obj->as<T>();
+    return obj ? &obj->as<T>() : nullptr;
 }
 
 // Used to optimize calls to (new Object())
@@ -724,15 +741,25 @@ bool
 NewObjectScriptedCall(JSContext *cx, MutableHandleObject obj);
 
 JSObject *
-NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent, gc::AllocKind allocKind,
-                  NewObjectKind newKind = GenericObject);
+NewObjectWithTypeCommon(JSContext *cx, HandleTypeObject type, JSObject *parent,
+                        gc::AllocKind allocKind, NewObjectKind newKind);
 
-inline JSObject *
+template <typename T>
+inline T *
+NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent,
+                  gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
+{
+    JSObject *obj = NewObjectWithTypeCommon(cx, type, parent, allocKind, newKind);
+    return obj ? &obj->as<T>() : nullptr;
+}
+
+template <typename T>
+inline T *
 NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent,
                   NewObjectKind newKind = GenericObject)
 {
     gc::AllocKind allocKind = gc::GetGCObjectKind(type->clasp());
-    return NewObjectWithType(cx, type, parent, allocKind, newKind);
+    return NewObjectWithType<T>(cx, type, parent, allocKind, newKind);
 }
 
 JSObject *
@@ -768,7 +795,7 @@ ObjectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx)
         return Proxy::objectClassIs(obj, classValue, cx);
 
     switch (classValue) {
-      case ESClass_Object: return obj->is<JSObject>();
+      case ESClass_Object: return obj->is<PlainObject>();
       case ESClass_Array: return obj->is<ArrayObject>();
       case ESClass_Number: return obj->is<NumberObject>();
       case ESClass_String: return obj->is<StringObject>();
