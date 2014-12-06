@@ -204,3 +204,12 @@ functionality specific to firefox. -->
 
 <!ENTITY remoteXUL.title "Remote XUL">
 <!ENTITY remoteXUL.longDesc "<p><ul><li>Please contact the website owners to inform them of this problem.</li></ul></p>">
+
+<!ENTITY oldSecurityProtocol.title "Unable to Connect Securely">
+<!-- LOCALIZATION NOTE (oldSecurityProtocol.longDesc) - Do not translate the
+     <span id='hostname'></span>. -->
+<!ENTITY oldSecurityProtocol.longDesc "Firefox cannot guarantee the safety of your data on <span id='hostname'></span> because it uses SSLv3, a broken security protocol.">
+<!-- LOCALIZATION NOTE (oldSecurityProtocol.advancedInfo) - Do not translate
+     the <span id='errorcode'></span>. -->
+<!ENTITY oldSecurityProtocol.advancedInfo "Advanced info: <span id='errorcode'></span>">
+<!ENTITY oldSecurityProtocol.learnMore "Learn More…">

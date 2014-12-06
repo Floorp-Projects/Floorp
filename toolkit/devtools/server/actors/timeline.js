@@ -241,7 +241,14 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
     }
 
     clearTimeout(this._dataPullTimeout);
-  }, {}),
+    return this.docShells[0].now();
+  }, {
+    response: {
+      // Set as possibly nullable due to the end time possibly being
+      // undefined during destruction
+      value: RetVal("nullable:number")
+    }
+  }),
 
   /**
    * When a new window becomes available in the tabActor, start recording its

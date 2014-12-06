@@ -211,8 +211,14 @@ function busyWait(time) {
   while (Date.now() - start < time) { stack = Components.stack; }
 }
 
-function idleWait(time) {
-  return DevToolsUtils.waitForTime(time);
+function command (button) {
+  let ev = button.ownerDocument.createEvent("XULCommandEvent");
+  ev.initCommandEvent("command", true, true, button.ownerDocument.defaultView, 0, false, false, false, false, null);
+  button.dispatchEvent(ev);
+}
+
+function click (win, button) {
+  EventUtils.sendMouseEvent({ type: "click" }, button, win);
 }
 
 function* startRecording(panel) {
@@ -227,7 +233,7 @@ function* startRecording(panel) {
   ok(!button.hasAttribute("locked"),
     "The record button should not be locked yet.");
 
-  EventUtils.sendMouseEvent({ type: "click" }, button, win);
+  click(win, button);
 
   yield clicked;
 
@@ -255,7 +261,7 @@ function* stopRecording(panel) {
   ok(!button.hasAttribute("locked"),
     "The record button should not be locked yet.");
 
-  EventUtils.sendMouseEvent({ type: "click" }, button, win);
+  click(win, button);
 
   yield clicked;
 
