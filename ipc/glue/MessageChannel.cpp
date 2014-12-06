@@ -8,6 +8,8 @@
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 
+#include "mozilla/dom/ScriptSettings.h"
+
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Move.h"
@@ -79,6 +81,8 @@
 using namespace mozilla;
 using namespace std;
 
+using mozilla::dom::AutoNoJSAPI;
+using mozilla::dom::ScriptSettingsInitialized;
 using mozilla::MonitorAutoLock;
 using mozilla::MonitorAutoUnlock;
 
@@ -1058,6 +1062,9 @@ MessageChannel::OnMaybeDequeueOne()
 void
 MessageChannel::DispatchMessage(const Message &aMsg)
 {
+    Maybe<AutoNoJSAPI> nojsapi;
+    if (ScriptSettingsInitialized() && NS_IsMainThread())
+        nojsapi.emplace();
     if (aMsg.is_sync())
         DispatchSyncMessage(aMsg);
     else if (aMsg.is_interrupt())
