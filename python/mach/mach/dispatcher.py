@@ -246,6 +246,21 @@ class CommandAction(argparse.Action):
 
         parser.print_help()
 
+    def _populate_command_group(self, parser, handler, group):
+        extra_groups = {}
+        for group_name in handler.argument_group_names:
+            group_full_name = 'Command Arguments for ' + group_name
+            extra_groups[group_name] = \
+                parser.add_argument_group(group_full_name)
+
+        for arg in handler.arguments:
+            # Apply our group keyword.
+            group_name = arg[1].get('group')
+            if group_name:
+                del arg[1]['group']
+                group = extra_groups[group_name]
+            group.add_argument(*arg[0], **arg[1])
+
     def _handle_command_help(self, parser, command):
         handler = self._mach_registrar.command_handlers.get(command)
 
@@ -288,19 +303,7 @@ class CommandAction(argparse.Action):
             c_parser = argparse.ArgumentParser(**parser_args)
             group = c_parser.add_argument_group('Command Arguments')
 
-        extra_groups = {}
-        for group_name in handler.argument_group_names:
-            group_full_name = 'Command Arguments for ' + group_name
-            extra_groups[group_name] = \
-                c_parser.add_argument_group(group_full_name)
-
-        for arg in handler.arguments:
-            # Apply our group keyword.
-            group_name = arg[1].get('group')
-            if group_name:
-                del arg[1]['group']
-                group = extra_groups[group_name]
-            group.add_argument(*arg[0], **arg[1])
+        self._populate_command_group(c_parser, handler, group)
 
         # This will print the description of the command below the usage.
         description = handler.description
