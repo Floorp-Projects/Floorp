@@ -91,11 +91,16 @@ class MethodHandler(object):
 
         # Argument groups added to this command's parser.
         'argument_group_names',
+
+        # Dict of string to MethodHandler defining sub commands for this
+        # command.
+        'subcommand_handlers',
     )
 
     def __init__(self, cls, method, name, category=None, description=None,
         conditions=None, parser=None, arguments=None,
-        argument_group_names=None, pass_context=False):
+        argument_group_names=None, pass_context=False,
+        subcommand_handlers=None):
 
         self.cls = cls
         self.method = method
@@ -107,4 +112,4 @@ class MethodHandler(object):
         self.arguments = arguments or []
         self.argument_group_names = argument_group_names or []
         self.pass_context = pass_context
-
+        self.subcommand_handlers = subcommand_handlers or {}

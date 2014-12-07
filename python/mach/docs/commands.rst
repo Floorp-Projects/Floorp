@@ -23,6 +23,15 @@ The important decorators are as follows:
   A method decorator that defines an argument to the command. Its
   arguments are essentially proxied to ArgumentParser.add_argument()
 
+:py:func:`SubCommand <mach.decorators.SubCommand`
+  A method decorator that denotes that the method should be a
+  sub-command to an existing ``@Command``. The decorator takes the
+  parent command name as its first argument and the sub-command name
+  as its second argument.
+
+  ``@CommandArgument`` can be used on ``@SubCommand`` instances just
+  like they can on ``@Command`` instances.
+
 Classes with the ``@CommandProvider`` decorator **must** have an
 ``__init__`` method that accepts 1 or 2 arguments. If it accepts 2
 arguments, the 2nd argument will be a
