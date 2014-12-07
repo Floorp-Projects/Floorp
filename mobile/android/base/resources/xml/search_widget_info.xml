@@ -4,7 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="300dp"
+    android:minWidth="250dp"
     android:minHeight="40dp"
     android:label="@string/search_widget_name"
     android:widgetCategory="home_screen|keyguard"
