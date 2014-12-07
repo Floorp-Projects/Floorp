@@ -623,7 +623,10 @@ MediaDecoderStateMachine::DecodeVideo()
     mVideoDecodeStartTime = TimeStamp::Now();
   }
 
-  mReader->RequestVideoData(skipToNextKeyFrame, currentTime);
+  mReader->RequestVideoData(skipToNextKeyFrame, currentTime)
+         ->Then(DecodeTaskQueue(), __func__, this,
+                &MediaDecoderStateMachine::OnVideoDecoded,
+                &MediaDecoderStateMachine::OnVideoNotDecoded);
 }
 
 bool
@@ -666,7 +669,9 @@ MediaDecoderStateMachine::DecodeAudio()
       mIsAudioPrerolling = false;
     }
   }
-  mReader->RequestAudioData();
+  mReader->RequestAudioData()->Then(DecodeTaskQueue(), __func__, this,
+                                    &MediaDecoderStateMachine::OnAudioDecoded,
+                                    &MediaDecoderStateMachine::OnAudioNotDecoded);
 }
 
 bool
@@ -915,6 +920,7 @@ MediaDecoderStateMachine::MaybeFinishDecodeFirstFrame()
 void
 MediaDecoderStateMachine::OnVideoDecoded(VideoData* aVideoSample)
 {
+  MOZ_ASSERT(OnDecodeThread());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   nsRefPtr<VideoData> video(aVideoSample);
   mVideoRequestPending = false;
@@ -2117,12 +2123,17 @@ MediaDecoderStateMachine::DecodeFirstFrame()
   } else {
     if (HasAudio()) {
       ReentrantMonitorAutoExit unlock(mDecoder->GetReentrantMonitor());
-      mReader->RequestAudioData();
+      mReader->RequestAudioData()->Then(DecodeTaskQueue(), __func__, this,
+                                        &MediaDecoderStateMachine::OnAudioDecoded,
+                                        &MediaDecoderStateMachine::OnAudioNotDecoded);
     }
     if (HasVideo()) {
       mVideoDecodeStartTime = TimeStamp::Now();
       ReentrantMonitorAutoExit unlock(mDecoder->GetReentrantMonitor());
-      mReader->RequestVideoData(false, 0);
+      mReader->RequestVideoData(false, 0)
+             ->Then(DecodeTaskQueue(), __func__, this,
+                    &MediaDecoderStateMachine::OnVideoDecoded,
+                    &MediaDecoderStateMachine::OnVideoNotDecoded);
     }
   }
 

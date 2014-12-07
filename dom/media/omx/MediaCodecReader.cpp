@@ -347,6 +347,8 @@ MediaCodecReader::ReleaseMediaResources()
 void
 MediaCodecReader::Shutdown()
 {
+  MOZ_ASSERT(mAudioPromise.IsEmpty());
+  MOZ_ASSERT(mVideoPromise.IsEmpty());
   ReleaseResources();
   MediaDecoderReader::Shutdown();
 }
@@ -374,23 +376,28 @@ MediaCodecReader::DispatchVideoTask(int64_t aTimeThreshold)
   }
 }
 
-void
+nsRefPtr<MediaDecoderReader::AudioDataPromise>
 MediaCodecReader::RequestAudioData()
 {
   MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());
   MOZ_ASSERT(HasAudio());
+
+  nsRefPtr<AudioDataPromise> p = mAudioPromise.Ensure(__func__);
   if (CheckAudioResources()) {
     DispatchAudioTask();
   }
+
+  return p;
 }
 
-void
+nsRefPtr<MediaDecoderReader::VideoDataPromise>
 MediaCodecReader::RequestVideoData(bool aSkipToNextKeyframe,
                                    int64_t aTimeThreshold)
 {
   MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());
   MOZ_ASSERT(HasVideo());
 
+  nsRefPtr<VideoDataPromise> p = mVideoPromise.Ensure(__func__);
   int64_t threshold = sInvalidTimestampUs;
   if (aSkipToNextKeyframe && IsValidTimestampUs(aTimeThreshold)) {
     mVideoTrack.mTaskQueue->Flush();
@@ -399,6 +406,8 @@ MediaCodecReader::RequestVideoData(bool aSkipToNextKeyframe,
   if (CheckVideoResources()) {
     DispatchVideoTask(threshold);
   }
+
+  return p;
 }
 
 bool
@@ -484,11 +493,11 @@ MediaCodecReader::DecodeAudioDataTask()
         a->mDiscontinuity = true;
         mAudioTrack.mDiscontinuity = false;
       }
-      GetCallback()->OnAudioDecoded(a);
+      mAudioPromise.Resolve(a, __func__);
     }
   }
-  if (AudioQueue().AtEndOfStream()) {
-    GetCallback()->OnNotDecoded(MediaData::AUDIO_DATA, END_OF_STREAM);
+  else if (AudioQueue().AtEndOfStream()) {
+    mAudioPromise.Reject(END_OF_STREAM, __func__);
   }
   return result;
 }
@@ -504,11 +513,11 @@ MediaCodecReader::DecodeVideoFrameTask(int64_t aTimeThreshold)
         v->mDiscontinuity = true;
         mVideoTrack.mDiscontinuity = false;
       }
-      GetCallback()->OnVideoDecoded(v);
+      mVideoPromise.Resolve(v, __func__);
     }
   }
-  if (VideoQueue().AtEndOfStream()) {
-    GetCallback()->OnNotDecoded(MediaData::VIDEO_DATA, END_OF_STREAM);
+  else if (VideoQueue().AtEndOfStream()) {
+    mVideoPromise.Reject(END_OF_STREAM, __func__);
   }
   return result;
 }
