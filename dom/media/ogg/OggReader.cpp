@@ -976,7 +976,7 @@ bool OggReader::ReadOggPage(ogg_page* aPage)
 
 ogg_packet* OggReader::NextOggPacket(OggCodecState* aCodecState)
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
   if (!aCodecState || !aCodecState->mActive) {
     return nullptr;
