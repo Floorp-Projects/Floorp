@@ -122,11 +122,6 @@ class CommandAction(argparse.Action):
 
         handler = self._mach_registrar.command_handlers.get(command)
 
-        # FUTURE
-        # If we wanted to conditionally enable commands based on whether
-        # it's possible to run them given the current state of system, here
-        # would be a good place to hook that up.
-
         # We create a new parser, populate it with the command's arguments,
         # then feed all remaining arguments to it, merging the results
         # with ourselves. This is essentially what argparse subparsers
