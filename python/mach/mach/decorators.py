@@ -95,7 +95,7 @@ def CommandProvider(cls):
 
 
 class Command(object):
-    """Decorator for functions or methods that provide a mach subcommand.
+    """Decorator for functions or methods that provide a mach command.
 
     The decorator accepts arguments that define basic attributes of the
     command. The following arguments are recognized:
@@ -162,7 +162,7 @@ class CommandArgument(object):
 
 
 class CommandArgumentGroup(object):
-    """Decorator for additional argument groups to mach subcommands.
+    """Decorator for additional argument groups to mach commands.
 
     This decorator should be used to add arguments groups to mach commands.
     Arguments to the decorator are proxied to
