@@ -42,7 +42,7 @@ add_task(function* () {
     yield inspector.once("inspector-updated");
 
     info("Inspector updated, performing checks.");
-    yield assertNodeSelectedAndPanelsUpdated("#deleteChildren", "ul#deleteChildren");
+    yield assertNodeSelectedAndPanelsUpdated("#selectedAfterDelete", "li#selectedAfterDelete");
   }
 
   function* testAutomaticallyDeleteSelectedNode() {
