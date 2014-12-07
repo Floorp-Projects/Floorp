@@ -334,38 +334,6 @@ protected:
   virtual ~RequestSampleCallback() {}
 };
 
-// A RequestSampleCallback implementation that can be passed to the
-// MediaDecoderReader to block the thread requesting an audio sample until
-// the audio decode is complete. This is used to adapt the asynchronous
-// model of the MediaDecoderReader to a synchronous model.
-class AudioDecodeRendezvous {
-public:
-  AudioDecodeRendezvous(MediaDecoderReader *aReader);
-
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioDecodeRendezvous)
-
-  void OnAudioDecoded(AudioData* aSample);
-  void OnAudioNotDecoded(MediaDecoderReader::NotDecodedReason aReason);
-  void Reset();
-
-  // Returns failure on error, or NS_OK.
-  // If *aSample is null, EOS has been reached.
-  nsresult RequestAndWait(nsRefPtr<AudioData>& aSample);
-
-  // Interrupts a call to Wait().
-  void Cancel();
-
-protected:
-  ~AudioDecodeRendezvous();
-
-private:
-  nsRefPtr<MediaDecoderReader> mReader;
-  Monitor mMonitor;
-  nsresult mStatus;
-  nsRefPtr<AudioData> mSample;
-  bool mHaveResult;
-};
-
 } // namespace mozilla
 
 #endif
