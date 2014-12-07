@@ -11,6 +11,7 @@ import sys
 from operator import itemgetter
 
 from .base import (
+    MachError,
     NoCommandError,
     UnknownCommandError,
     UnrecognizedArgumentError,
@@ -122,6 +123,11 @@ class CommandAction(argparse.Action):
 
         handler = self._mach_registrar.command_handlers.get(command)
 
+        usage = '%(prog)s [global arguments] ' + command + \
+            ' [command arguments]'
+
+        subcommand = None
+
         # If there are sub-commands, parse the intent out immediately.
         if handler.subcommand_handlers:
             if not args:
@@ -136,6 +142,22 @@ class CommandAction(argparse.Action):
                 subhandler = handler.subcommand_handlers[subcommand]
                 self._handle_subcommand_help(parser, command, subcommand, subhandler)
                 sys.exit(0)
+            # We are running a sub command.
+            else:
+                subcommand = args[0]
+                if subcommand[0] == '-':
+                    raise MachError('%s invoked improperly. A sub-command name '
+                        'must be the first argument after the command name.' %
+                        command)
+
+                if subcommand not in handler.subcommand_handlers:
+                    raise UnknownCommandError(subcommand, 'run',
+                        handler.subcommand_handlers.keys())
+
+                handler = handler.subcommand_handlers[subcommand]
+                usage = '%(prog)s [global arguments] ' + command + ' ' + \
+                    subcommand + ' [command arguments]'
+                args.pop(0)
 
         # We create a new parser, populate it with the command's arguments,
         # then feed all remaining arguments to it, merging the results
@@ -144,8 +166,7 @@ class CommandAction(argparse.Action):
 
         parser_args = {
             'add_help': False,
-            'usage': '%(prog)s [global arguments] ' + command +
-                ' [command arguments]',
+            'usage': usage,
         }
 
         if handler.parser:
@@ -176,6 +197,7 @@ class CommandAction(argparse.Action):
         # not interfere with arguments passed to the command.
         setattr(namespace, 'mach_handler', handler)
         setattr(namespace, 'command', command)
+        setattr(namespace, 'subcommand', subcommand)
 
         command_namespace, extra = subparser.parse_known_args(args)
         setattr(namespace, 'command_args', command_namespace)
