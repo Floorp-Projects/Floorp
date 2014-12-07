@@ -33,15 +33,17 @@ mozilla_testing_ev_policy = ('certificatePolicies = @v3_ca_ev_cp\n\n' +
 
 generated_ev_root_filenames = []
 
-def generate_and_maybe_import_cert(key_type, cert_name_suffix, base_ext_text,
-                                   signer_key_filename, signer_cert_filename,
-                                   dsa_param_filename, key_size, generate_ev):
+def generate_and_maybe_import_cert(key_type, cert_name_prefix, cert_name_suffix,
+                                   base_ext_text, signer_key_filename,
+                                   signer_cert_filename, dsa_param_filename,
+                                   key_size, generate_ev):
     """
     Generates a certificate and imports it into the NSS DB if appropriate.
 
     Arguments:
       key_type -- the type of key generated: potential values: 'rsa', 'dsa',
                   or any of the curves found by 'openssl ecparam -list_curves'
+      cert_name_prefix -- prefix of the generated cert name
       cert_name_suffix -- suffix of the generated cert name
       base_ext_text -- the base text for the x509 extensions to be added to the
                        certificate (extra extensions will be added if generating
@@ -58,15 +60,21 @@ def generate_and_maybe_import_cert(key_type, cert_name_suffix, base_ext_text,
       generate_ev -- whether an EV cert should be generated
 
     Output:
+      cert_name -- the resultant (nick)name of the certificate
       key_filename -- the filename of the key file (PEM format)
       cert_filename -- the filename of the certificate (DER format)
     """
-    cert_name = key_type + cert_name_suffix
+    cert_name = cert_name_prefix + '_' + key_type + '_' + key_size
+
+    # If the suffix is not the empty string, add a hyphen for visual separation
+    if cert_name_suffix:
+        cert_name += '-' + cert_name_suffix
+
     ev_ext_text = ''
     subject_string = ('/CN=XPCShell Key Size Testing %s %s-bit' %
                       (key_type, key_size))
     if generate_ev:
-        cert_name = 'ev-' + cert_name
+        cert_name = 'ev_' + cert_name
         ev_ext_text = (aia_prefix + cert_name + aia_suffix +
                        mozilla_testing_ev_policy)
         subject_string += ' (EV)'
@@ -99,7 +107,7 @@ def generate_and_maybe_import_cert(key_type, cert_name_suffix, base_ext_text,
         if not signer_key_filename:
             generated_ev_root_filenames.append(cert_filename)
 
-    return [key_filename, cert_filename]
+    return [cert_name, key_filename, cert_filename]
 
 def generate_certs(key_type, inadequate_key_size, adequate_key_size, generate_ev):
     """
@@ -121,16 +129,17 @@ def generate_certs(key_type, inadequate_key_size, adequate_key_size, generate_ev
     # Generate chain with certs that have adequate sizes
     if generate_ev and key_type == 'rsa':
         # Reuse the existing RSA EV root
-        caOK_cert_name = 'evroot'
+        rootOK_nick = 'evroot'
         caOK_key = '../test_ev_certs/evroot.key'
         caOK_cert = '../test_ev_certs/evroot.der'
         caOK_pkcs12_filename = '../test_ev_certs/evroot.p12'
         CertUtils.import_cert_and_pkcs12(srcdir, caOK_cert, caOK_pkcs12_filename,
-                                         caOK_cert_name, ',,')
+                                         rootOK_nick, ',,')
     else:
-        [caOK_key, caOK_cert] = generate_and_maybe_import_cert(
+        [rootOK_nick, caOK_key, caOK_cert] = generate_and_maybe_import_cert(
             key_type,
-            '-caOK',
+            'root',
+            '',
             ca_ext_text,
             '',
             '',
@@ -138,9 +147,10 @@ def generate_certs(key_type, inadequate_key_size, adequate_key_size, generate_ev
             adequate_key_size,
             generate_ev)
 
-    [intOK_key, intOK_cert] = generate_and_maybe_import_cert(
+    [intOK_nick, intOK_key, intOK_cert] = generate_and_maybe_import_cert(
         key_type,
-        '-intOK-caOK',
+        'int',
+        rootOK_nick,
         ca_ext_text,
         caOK_key,
         caOK_cert,
@@ -150,7 +160,8 @@ def generate_certs(key_type, inadequate_key_size, adequate_key_size, generate_ev
 
     generate_and_maybe_import_cert(
         key_type,
-        '-eeOK-intOK-caOK',
+        'ee',
+        intOK_nick,
         ee_ext_text,
         intOK_key,
         intOK_cert,
@@ -159,9 +170,10 @@ def generate_certs(key_type, inadequate_key_size, adequate_key_size, generate_ev
         generate_ev)
 
     # Generate chain with a root cert that has an inadequate size
-    [rootNotOK_key, rootNotOK_cert] = generate_and_maybe_import_cert(
+    [rootNotOK_nick, rootNotOK_key, rootNotOK_cert] = generate_and_maybe_import_cert(
         key_type,
-        '-caBad',
+        'root',
+        '',
         ca_ext_text,
         '',
         '',
@@ -169,9 +181,10 @@ def generate_certs(key_type, inadequate_key_size, adequate_key_size, generate_ev
         inadequate_key_size,
         generate_ev)
 
-    [int_key, int_cert] = generate_and_maybe_import_cert(
+    [int_nick, int_key, int_cert] = generate_and_maybe_import_cert(
         key_type,
-        '-intOK-caBad',
+        'int',
+        rootNotOK_nick,
         ca_ext_text,
         rootNotOK_key,
         rootNotOK_cert,
@@ -181,7 +194,8 @@ def generate_certs(key_type, inadequate_key_size, adequate_key_size, generate_ev
 
     generate_and_maybe_import_cert(
         key_type,
-        '-eeOK-intOK-caBad',
+        'ee',
+        int_nick,
         ee_ext_text,
         int_key,
         int_cert,
@@ -190,9 +204,10 @@ def generate_certs(key_type, inadequate_key_size, adequate_key_size, generate_ev
         generate_ev)
 
     # Generate chain with an intermediate cert that has an inadequate size
-    [intNotOK_key, intNotOK_cert] = generate_and_maybe_import_cert(
+    [intNotOK_nick, intNotOK_key, intNotOK_cert] = generate_and_maybe_import_cert(
         key_type,
-        '-intBad-caOK',
+        'int',
+        rootOK_nick,
         ca_ext_text,
         caOK_key,
         caOK_cert,
@@ -202,7 +217,8 @@ def generate_certs(key_type, inadequate_key_size, adequate_key_size, generate_ev
 
     generate_and_maybe_import_cert(
         key_type,
-        '-eeOK-intBad-caOK',
+        'ee',
+        intNotOK_nick,
         ee_ext_text,
         intNotOK_key,
         intNotOK_cert,
@@ -213,7 +229,8 @@ def generate_certs(key_type, inadequate_key_size, adequate_key_size, generate_ev
     # Generate chain with an end entity cert that has an inadequate size
     generate_and_maybe_import_cert(
         key_type,
-        '-eeBad-intOK-caOK',
+        'ee',
+        intOK_nick,
         ee_ext_text,
         intOK_key,
         intOK_cert,
