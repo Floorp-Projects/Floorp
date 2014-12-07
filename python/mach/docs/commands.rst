@@ -51,7 +51,7 @@ When mach runs, it takes the assembled metadata from these handlers and
 hooks it up to the command line driver. Under the hood, arguments passed
 to the decorators are being used to help mach parse command arguments,
 formulate arguments to the methods, etc. See the documentation in the
-*mach.base* module for more.
+:py:mod:`mach.base` module for more.
 
 The Python modules defining mach commands do not need to live inside the
 main mach source tree.
@@ -63,7 +63,8 @@ Sometimes it might only make sense to run a command given a certain
 context. For example, running tests only makes sense if the product
 they are testing has been built, and said build is available. To make
 sure a command is only runnable from within a correct context, you can
-define a series of conditions on the *Command* decorator.
+define a series of conditions on the
+:py:func:`Command <mach.decorators.Command>` decorator.
 
 A condition is simply a function that takes an instance of the
 :py:func:`mach.decorators.CommandProvider` class as an argument, and
@@ -118,7 +119,7 @@ could slow mach down and waste memory.
 
 It is thus recommended that mach modules, classes, and methods do as
 little work as possible. Ideally the module should only import from
-the :py:module:`mach` package. If you need external modules, you should
+the :py:mod:`mach` package. If you need external modules, you should
 import them from within the command method.
 
 To keep code size small, the body of a command method should be limited
