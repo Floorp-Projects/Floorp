@@ -37,12 +37,14 @@ namespace mozilla {
 
 
 /* static */ bool
-HwcUtils::PrepareLayerRects(nsIntRect aVisible, const gfx::Matrix& transform,
+HwcUtils::PrepareLayerRects(nsIntRect aVisible,
+                            const gfx::Matrix& aLayerTransform,
+                            const gfx::Matrix& aLayerBufferTransform,
                             nsIntRect aClip, nsIntRect aBufferRect,
                             bool aYFlipped,
                             hwc_rect_t* aSourceCrop, hwc_rect_t* aVisibleRegionScreen) {
 
-    gfxMatrix aTransform = gfx::ThebesMatrix(transform);
+    gfxMatrix aTransform = gfx::ThebesMatrix(aLayerTransform);
     gfxRect visibleRect(aVisible);
     gfxRect clip(aClip);
     gfxRect visibleRectScreen = aTransform.TransformBounds(visibleRect);
@@ -53,7 +55,7 @@ HwcUtils::PrepareLayerRects(nsIntRect aVisible, const gfx::Matrix& transform,
         return false;
     }
 
-    gfxMatrix inverse = aTransform;
+    gfxMatrix inverse = gfx::ThebesMatrix(aLayerBufferTransform);
     inverse.Invert();
     gfxRect crop = inverse.TransformBounds(visibleRectScreen);
 
@@ -66,7 +68,8 @@ HwcUtils::PrepareLayerRects(nsIntRect aVisible, const gfx::Matrix& transform,
     }
 
     //propagate buffer clipping back to visible rect
-    visibleRectScreen = aTransform.TransformBounds(crop);
+    gfxMatrix layerBufferTransform = gfx::ThebesMatrix(aLayerBufferTransform);
+    visibleRectScreen = layerBufferTransform.TransformBounds(crop);
     visibleRectScreen.Round();
 
     // Map from layer space to buffer space
@@ -90,19 +93,22 @@ HwcUtils::PrepareLayerRects(nsIntRect aVisible, const gfx::Matrix& transform,
 
 /* static */ bool
 HwcUtils::PrepareVisibleRegion(const nsIntRegion& aVisible,
-                               const gfx::Matrix& transform,
+                               const gfx::Matrix& aLayerTransform,
+                               const gfx::Matrix& aLayerBufferTransform,
                                nsIntRect aClip, nsIntRect aBufferRect,
                                RectVector* aVisibleRegionScreen) {
 
-    gfxMatrix aTransform = gfx::ThebesMatrix(transform);
+    gfxMatrix layerTransform = gfx::ThebesMatrix(aLayerTransform);
+    gfxMatrix layerBufferTransform = gfx::ThebesMatrix(aLayerBufferTransform);
+    gfxRect bufferRect = layerBufferTransform.TransformBounds(aBufferRect);
     nsIntRegionRectIterator rect(aVisible);
     bool isVisible = false;
     while (const nsIntRect* visibleRect = rect.Next()) {
         hwc_rect_t visibleRectScreen;
         gfxRect screenRect;
 
-        screenRect.IntersectRect(gfxRect(*visibleRect), aBufferRect);
-        screenRect = aTransform.TransformBounds(screenRect);
+        screenRect = layerTransform.TransformBounds(gfxRect(*visibleRect));
+        screenRect.IntersectRect(screenRect, bufferRect);
         screenRect.IntersectRect(screenRect, aClip);
         screenRect.Round();
         if (screenRect.IsEmpty()) {
