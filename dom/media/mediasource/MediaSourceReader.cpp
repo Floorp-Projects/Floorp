@@ -296,7 +296,6 @@ MediaSourceReader::OnVideoNotDecoded(NotDecodedReason aReason)
 void
 MediaSourceReader::Shutdown()
 {
-  MediaDecoderReader::Shutdown();
   for (uint32_t i = 0; i < mTrackBuffers.Length(); ++i) {
     mTrackBuffers[i]->Shutdown();
   }
@@ -307,6 +306,8 @@ MediaSourceReader::Shutdown()
 
   MOZ_ASSERT(mAudioPromise.IsEmpty());
   MOZ_ASSERT(mVideoPromise.IsEmpty());
+
+  MediaDecoderReader::Shutdown();
 }
 
 void
