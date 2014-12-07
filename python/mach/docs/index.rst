@@ -74,40 +74,42 @@ Mach commands are defined via Python decorators.
 All the relevant decorators are defined in the *mach.decorators* module.
 The important decorators are as follows:
 
-CommandProvider
+:py:func:`CommandProvider <mach.decorators.CommandProvider>`
   A class decorator that denotes that a class contains mach
   commands. The decorator takes no arguments.
 
-Command
+:py:func:`Command <mach.decorators.Command>`
   A method decorator that denotes that the method should be called when
   the specified command is requested. The decorator takes a command name
   as its first argument and a number of additional arguments to
   configure the behavior of the command.
 
-CommandArgument
+:py:func:`CommandArgument <mach.decorators.CommandArgument>`
   A method decorator that defines an argument to the command. Its
   arguments are essentially proxied to ArgumentParser.add_argument()
 
-Classes with the *@CommandProvider* decorator *must* have an *__init__*
-method that accepts 1 or 2 arguments. If it accepts 2 arguments, the
-2nd argument will be a *MachCommandContext* instance. This is just a named
-tuple containing references to objects provided by the mach driver.
+Classes with the ``@CommandProvider`` decorator **must** have an
+``__init__`` method that accepts 1 or 2 arguments. If it accepts 2
+arguments, the 2nd argument will be a
+:py:class:`mach.base.CommandContext` instance.
 
-Here is a complete example::
+Here is a complete example:
 
-    from mach.decorators import (
-        CommandArgument,
-        CommandProvider,
-        Command,
-    )
+.. code-block:: python
 
-    @CommandProvider
-    class MyClass(object):
-        @Command('doit', help='Do ALL OF THE THINGS.')
-        @CommandArgument('--force', '-f', action='store_true',
-            help='Force doing it.')
-        def doit(self, force=False):
-            # Do stuff here.
+   from mach.decorators import (
+       CommandArgument,
+       CommandProvider,
+       Command,
+   )
+
+   @CommandProvider
+   class MyClass(object):
+       @Command('doit', help='Do ALL OF THE THINGS.')
+       @CommandArgument('--force', '-f', action='store_true',
+           help='Force doing it.')
+       def doit(self, force=False):
+           # Do stuff here.
 
 When the module is loaded, the decorators tell mach about all handlers.
 When mach runs, it takes the assembled metadata from these handlers and
@@ -129,40 +131,45 @@ sure a command is only runnable from within a correct context, you can
 define a series of conditions on the *Command* decorator.
 
 A condition is simply a function that takes an instance of the
-*CommandProvider* class as an argument, and returns True or False. If
-any of the conditions defined on a command return False, the command
-will not be runnable. The doc string of a condition function is used in
-error messages, to explain why the command cannot currently be run.
+:py:func:`mach.decorators.CommandProvider` class as an argument, and
+returns ``True`` or ``False``. If any of the conditions defined on a
+command return ``False``, the command will not be runnable. The
+docstring of a condition function is used in error messages, to explain
+why the command cannot currently be run.
 
 Here is an example:
 
-    from mach.decorators import (
-        CommandProvider,
-        Command,
-    )
+.. code-block:: python
 
-    def build_available(cls):
-        """The build needs to be available."""
-        return cls.build_path is not None
+   from mach.decorators import (
+       CommandProvider,
+       Command,
+   )
+
+   def build_available(cls):
+       """The build needs to be available."""
+       return cls.build_path is not None
 
     @CommandProvider
-    class MyClass(MachCommandBase):
-        def __init__(self, build_path=None):
-            self.build_path = build_path
+   class MyClass(MachCommandBase):
+       def __init__(self, build_path=None):
+           self.build_path = build_path
 
-        @Command('run_tests', conditions=[build_available])
-        def run_tests(self):
-            # Do stuff here.
+       @Command('run_tests', conditions=[build_available])
+       def run_tests(self):
+           # Do stuff here.
 
 It is important to make sure that any state needed by the condition is
 available to instances of the command provider.
 
 By default all commands without any conditions applied will be runnable,
-but it is possible to change this behaviour by setting *require_conditions*
-to True:
+but it is possible to change this behaviour by setting
+``require_conditions`` to ``True``:
 
-    m = mach.main.Mach()
-    m.require_conditions = True
+.. code-block:: python
+
+   m = mach.main.Mach()
+   m.require_conditions = True
 
 Minimizing Code in Commands
 ---------------------------
@@ -176,8 +183,8 @@ could slow mach down and waste memory.
 
 It is thus recommended that mach modules, classes, and methods do as
 little work as possible. Ideally the module should only import from
-the *mach* package. If you need external modules, you should import them
-from within the command method.
+the :py:module:`mach` package. If you need external modules, you should
+import them from within the command method.
 
 To keep code size small, the body of a command method should be limited
 to:
@@ -262,29 +269,33 @@ formatting string is passed as the *msg* argument, like normal.
 
 If you were logging to a logger directly, you would do something like:
 
-    logger.log(logging.INFO, 'My name is {name}',
-        extra={'action': 'my_name', 'params': {'name': 'Gregory'}})
+.. code-block:: python
 
-The JSON logging would produce something like:
+   logger.log(logging.INFO, 'My name is {name}',
+       extra={'action': 'my_name', 'params': {'name': 'Gregory'}})
 
-    [1339985554.306338, "my_name", {"name": "Gregory"}]
+The JSON logging would produce something like::
 
-Human logging would produce something like:
+   [1339985554.306338, "my_name", {"name": "Gregory"}]
 
-     0.52 My name is Gregory
+Human logging would produce something like::
+
+   0.52 My name is Gregory
 
 Since there is a lot of complexity using logger.log directly, it is
 recommended to go through a wrapping layer that hides part of the
 complexity for you. The easiest way to do this is by utilizing the
 LoggingMixin:
 
-    import logging
-    from mach.mixin.logging import LoggingMixin
+.. code-block:: python
 
-    class MyClass(LoggingMixin):
-        def foo(self):
-             self.log(logging.INFO, 'foo_start', {'bar': True},
-                 'Foo performed. Bar: {bar}')
+   import logging
+   from mach.mixin.logging import LoggingMixin
+
+   class MyClass(LoggingMixin):
+       def foo(self):
+            self.log(logging.INFO, 'foo_start', {'bar': True},
+                'Foo performed. Bar: {bar}')
 
 Entry Points
 ============
@@ -292,23 +303,26 @@ Entry Points
 It is possible to use setuptools' entry points to load commands
 directly from python packages. A mach entry point is a function which
 returns a list of files or directories containing mach command
-providers. e.g.::
+providers. e.g.:
 
-    def list_providers():
-        providers = []
-        here = os.path.abspath(os.path.dirname(__file__))
-        for p in os.listdir(here):
-            if p.endswith('.py'):
-                providers.append(os.path.join(here, p))
-        return providers
+.. code-block:: python
+
+   def list_providers():
+       providers = []
+       here = os.path.abspath(os.path.dirname(__file__))
+       for p in os.listdir(here):
+           if p.endswith('.py'):
+               providers.append(os.path.join(here, p))
+       return providers
 
 See http://pythonhosted.org/setuptools/setuptools.html#dynamic-discovery-of-services-and-plugins
 for more information on creating an entry point. To search for entry
-point plugins, you can call *load_commands_from_entry_point*. This
-takes a single parameter called *group*. This is the name of the entry
-point group to load and defaults to ``mach.providers``. e.g.::
+point plugins, you can call
+:py:meth:`mach.main.Mach.load_commands_from_entry_point`. e.g.:
 
-    mach.load_commands_from_entry_point("mach.external.providers")
+.. code-block:: python
+
+   mach.load_commands_from_entry_point("mach.external.providers")
 
 Adding Global Arguments
 =======================
@@ -318,8 +332,10 @@ mach ships with a handful of global arguments that apply to all
 commands.
 
 It is possible to extend the list of global arguments. In your
-*mach driver*, simply call ``add_global_argument()`` on your
-``mach.main.Mach`` instance. e.g.::
+*mach driver*, simply call
+:py:meth:`mach.main.Mach.add_global_argument`. e.g.:
+
+.. code-block:: python
 
    mach = mach.main.Mach(os.getcwd())
 
