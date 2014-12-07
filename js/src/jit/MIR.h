@@ -10154,9 +10154,11 @@ class MSetPropertyInstruction : public MBinaryInstruction
 class MSetElementInstruction
   : public MTernaryInstruction
 {
+    bool strict_;
   protected:
-    MSetElementInstruction(MDefinition *object, MDefinition *index, MDefinition *value)
-      : MTernaryInstruction(object, index, value)
+    MSetElementInstruction(MDefinition *object, MDefinition *index, MDefinition *value, bool strict)
+        : MTernaryInstruction(object, index, value),
+          strict_(strict)
     {
     }
 
@@ -10169,6 +10171,9 @@ class MSetElementInstruction
     }
     MDefinition *value() const {
         return getOperand(2);
+    }
+    bool strict() const {
+        return strict_;
     }
 };
 
@@ -10295,13 +10300,11 @@ class MSetElementCache
   : public MSetElementInstruction,
     public MixPolicy<ObjectPolicy<0>, BoxPolicy<1> >::Data
 {
-    bool strict_;
     bool guardHoles_;
 
     MSetElementCache(MDefinition *obj, MDefinition *index, MDefinition *value, bool strict,
                      bool guardHoles)
-      : MSetElementInstruction(obj, index, value),
-        strict_(strict),
+      : MSetElementInstruction(obj, index, value, strict),
         guardHoles_(guardHoles)
     {
     }
@@ -10315,9 +10318,6 @@ class MSetElementCache
         return new(alloc) MSetElementCache(obj, index, value, strict, guardHoles);
     }
 
-    bool strict() const {
-        return strict_;
-    }
     bool guardHoles() const {
         return guardHoles_;
     }
@@ -10402,8 +10402,8 @@ class MCallSetElement
   : public MSetElementInstruction,
     public CallSetElementPolicy::Data
 {
-    MCallSetElement(MDefinition *object, MDefinition *index, MDefinition *value)
-      : MSetElementInstruction(object, index, value)
+    MCallSetElement(MDefinition *object, MDefinition *index, MDefinition *value, bool strict)
+      : MSetElementInstruction(object, index, value, strict)
     {
     }
 
@@ -10411,9 +10411,9 @@ class MCallSetElement
     INSTRUCTION_HEADER(CallSetElement)
 
     static MCallSetElement *New(TempAllocator &alloc, MDefinition *object, MDefinition *index,
-                                MDefinition *value)
+                                MDefinition *value, bool strict)
     {
-        return new(alloc) MCallSetElement(object, index, value);
+        return new(alloc) MCallSetElement(object, index, value, strict);
     }
 
     bool possiblyCalls() const {
