@@ -252,7 +252,9 @@ InterpreterFrame::prologue(JSContext* cx)
         return false;
 
     if (isConstructing()) {
-        if (script->isDerivedClassConstructor()) {
+        if (fun()->isBoundFunction()) {
+            thisArgument() = MagicValue(JS_UNINITIALIZED_LEXICAL);
+        } else if (script->isDerivedClassConstructor()) {
             MOZ_ASSERT(callee().isClassConstructor());
             thisArgument() = MagicValue(JS_UNINITIALIZED_LEXICAL);
         } else if (thisArgument().isPrimitive()) {
