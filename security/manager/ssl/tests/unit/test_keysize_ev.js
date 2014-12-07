@@ -86,8 +86,9 @@ function addKeySizeTestForEV(expectedNamesForOCSP, certNamePrefix,
 
 /**
  * For debug builds which have the test EV roots compiled in, checks for the
- * given key type that good chains validate as EV, while bad chains fail EV and
- * validate as DV.
+ * given key type that chains that contain certs with key sizes adequate for EV
+ * are validated as such, while chains that contain any cert with an inadequate
+ * key size fail EV and validate as DV.
  * For opt builds which don't have the test EV roots compiled in, checks that
  * none of the chains validate as EV.
  *
@@ -104,7 +105,7 @@ function checkForKeyType(keyType) {
   let rootCAOKCertFileName = keyType == "rsa" ? "../test_ev_certs/evroot"
                                               : "-caOK";
 
-  // OK CA -> OK INT -> OK EE
+  // Chain with certs that have adequate sizes for EV and DV
   // In opt builds, this chain is only validated for DV. Hence, an OCSP fetch
   // will not be done for the "-intOK-caOK" intermediate in such a build.
   let expectedNamesForOCSP = isDebugBuild
@@ -117,7 +118,8 @@ function checkForKeyType(keyType) {
                       "-eeOK-intOK-caOK",
                       isDebugBuild);
 
-  // Bad CA -> OK INT -> OK EE
+  // Chain with a root cert that has an inadequate size for EV, but
+  // adequate size for DV
   expectedNamesForOCSP = [ certNamePrefix + "-eeOK-intOK-caBad" ];
   addKeySizeTestForEV(expectedNamesForOCSP, certNamePrefix,
                       "-caBad",
@@ -125,7 +127,8 @@ function checkForKeyType(keyType) {
                       "-eeOK-intOK-caBad",
                       false);
 
-  // OK CA -> Bad INT -> OK EE
+  // Chain with an intermediate cert that has an inadequate size for EV, but
+  // adequate size for DV
   expectedNamesForOCSP = isDebugBuild
                        ? [ certNamePrefix + "-intBad-caOK" ]
                        : [ certNamePrefix + "-eeOK-intBad-caOK" ];
@@ -135,7 +138,8 @@ function checkForKeyType(keyType) {
                       "-eeOK-intBad-caOK",
                       false);
 
-  // OK CA -> OK INT -> Bad EE
+  // Chain with an end entity cert that has an inadequate size for EV, but
+  // adequate size for DV
   expectedNamesForOCSP = [ certNamePrefix + "-eeBad-intOK-caOK" ];
   addKeySizeTestForEV(expectedNamesForOCSP, certNamePrefix,
                       rootCAOKCertFileName,
