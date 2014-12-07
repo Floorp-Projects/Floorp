@@ -28,6 +28,10 @@ typedef JSNative           Native;
 
 struct JSAtomState;
 
+static const uint32_t JSSLOT_BOUND_FUNCTION_TARGET     = 2;
+static const uint32_t JSSLOT_BOUND_FUNCTION_THIS       = 3;
+static const uint32_t JSSLOT_BOUND_FUNCTION_ARGS       = 4;
+
 class JSFunction : public js::NativeObject
 {
   public:
@@ -48,7 +52,7 @@ class JSFunction : public js::NativeObject
         INTERPRETED      = 0x0001,  /* function has a JSScript and environment. */
         CONSTRUCTOR      = 0x0002,  /* function that can be called as a constructor */
         EXTENDED         = 0x0004,  /* structure is FunctionExtended */
-        /* 0x0008 unused */
+        BOUND_FUN        = 0x0008,  /* function was created with Function.prototype.bind. */
         EXPR_BODY        = 0x0010,  /* arrow function with expression body or
                                      * expression closure: function(x) x*x */
         HAS_GUESSED_ATOM = 0x0020,  /* function had no explicit name, but a
@@ -186,6 +190,7 @@ class JSFunction : public js::NativeObject
     bool isExprBody()               const { return flags() & EXPR_BODY; }
     bool hasGuessedAtom()           const { return flags() & HAS_GUESSED_ATOM; }
     bool isLambda()                 const { return flags() & LAMBDA; }
+    bool isBoundFunction()          const { return flags() & BOUND_FUN; }
     bool hasRest()                  const { return flags() & HAS_REST; }
     bool isInterpretedLazy()        const { return flags() & INTERPRETED_LAZY; }
     bool hasScript()                const { return flags() & INTERPRETED; }
@@ -271,6 +276,11 @@ class JSFunction : public js::NativeObject
     // Can be called multiple times by the parser.
     void setHasRest() {
         flags_ |= HAS_REST;
+    }
+
+    void setIsBoundFunction() {
+        MOZ_ASSERT(!isBoundFunction());
+        flags_ |= BOUND_FUN;
     }
 
     void setIsSelfHostedBuiltin() {
@@ -443,15 +453,7 @@ class JSFunction : public js::NativeObject
         return u.i.s.script_;
     }
 
-    bool getLength(JSContext* cx, uint16_t* length) {
-        JS::RootedFunction self(cx, this);
-        if (self->isInterpretedLazy() && !self->getOrCreateScript(cx))
-            return false;
-
-        *length = self->hasScript() ? self->nonLazyScript()->funLength()
-                                    : (self->nargs() - self->hasRest());
-        return true;
-    }
+    inline bool getLength(JSContext* cx, uint16_t* length);
 
     js::LazyScript* lazyScript() const {
         MOZ_ASSERT(isInterpretedLazy() && u.i.s.lazy_);
@@ -561,12 +563,9 @@ class JSFunction : public js::NativeObject
 
     /* Bound function accessors. */
 
-    inline bool initBoundFunction(JSContext* cx, js::HandleObject target, js::HandleValue thisArg,
-                                  const js::Value* args, unsigned argslen);
-
     JSObject* getBoundFunctionTarget() const;
     const js::Value& getBoundFunctionThis() const;
-    const js::Value& getBoundFunctionArgument(unsigned which) const;
+    const js::Value& getBoundFunctionArgument(JSContext* cx, unsigned which) const;
     size_t getBoundFunctionArgumentCount() const;
 
   private:
@@ -682,9 +681,6 @@ FunctionHasResolveHook(const JSAtomState& atomState, jsid id);
 
 extern bool
 fun_toString(JSContext* cx, unsigned argc, Value* vp);
-
-extern bool
-fun_bind(JSContext* cx, unsigned argc, Value* vp);
 
 /*
  * Function extended with reserved slots for use by various kinds of functions.
@@ -819,10 +815,8 @@ ReportIncompatibleMethod(JSContext* cx, CallReceiver call, const Class* clasp);
 extern void
 ReportIncompatible(JSContext* cx, CallReceiver call);
 
-bool
-CallOrConstructBoundFunction(JSContext*, unsigned, js::Value*);
-
 extern const JSFunctionSpec function_methods[];
+extern const JSFunctionSpec function_selfhosted_methods[];
 
 extern bool
 fun_apply(JSContext* cx, unsigned argc, Value* vp);

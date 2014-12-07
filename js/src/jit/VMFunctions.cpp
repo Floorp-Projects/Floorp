@@ -548,12 +548,12 @@ CreateThis(JSContext* cx, HandleObject callee, HandleObject newTarget, MutableHa
     rval.set(MagicValue(JS_IS_CONSTRUCTING));
 
     if (callee->is<JSFunction>()) {
-        JSFunction* fun = &callee->as<JSFunction>();
+        RootedFunction fun(cx, &callee->as<JSFunction>());
         if (fun->isInterpreted() && fun->isConstructor()) {
             JSScript* script = fun->getOrCreateScript(cx);
             if (!script || !script->ensureHasTypes(cx))
                 return false;
-            if (script->isDerivedClassConstructor()) {
+            if (fun->isBoundFunction() || script->isDerivedClassConstructor()) {
                 rval.set(MagicValue(JS_UNINITIALIZED_LEXICAL));
             } else {
                 JSObject* thisObj = CreateThisForFunction(cx, callee, newTarget, GenericObject);

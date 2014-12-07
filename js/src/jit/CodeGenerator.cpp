@@ -1985,7 +1985,7 @@ CodeGenerator::visitLambda(LLambda* lir)
     emitLambdaInit(output, scopeChain, info);
 
     if (info.flags & JSFunction::EXTENDED) {
-        MOZ_ASSERT(info.fun->allowSuperProperty());
+        MOZ_ASSERT(info.fun->allowSuperProperty() || info.fun->isSelfHostedBuiltin());
         static_assert(FunctionExtended::NUM_EXTENDED_SLOTS == 2, "All slots must be initialized");
         masm.storeValue(UndefinedValue(), Address(output, FunctionExtended::offsetOfExtendedSlot(0)));
         masm.storeValue(UndefinedValue(), Address(output, FunctionExtended::offsetOfExtendedSlot(1)));
