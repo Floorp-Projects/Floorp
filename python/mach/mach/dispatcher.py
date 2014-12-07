@@ -95,13 +95,13 @@ class CommandAction(argparse.Action):
             if command == 'help':
                 if args and args[0] not in ['-h', '--help']:
                     # Make sure args[0] is indeed a command.
-                    self._handle_subcommand_help(parser, args[0])
+                    self._handle_command_help(parser, args[0])
                 else:
                     self._handle_main_help(parser, namespace.verbose)
                 sys.exit(0)
             elif '-h' in args or '--help' in args:
                 # -h or --help is in the command arguments.
-                self._handle_subcommand_help(parser, command)
+                self._handle_command_help(parser, command)
                 sys.exit(0)
         else:
             raise NoCommandError()
@@ -246,7 +246,7 @@ class CommandAction(argparse.Action):
 
         parser.print_help()
 
-    def _handle_subcommand_help(self, parser, command):
+    def _handle_command_help(self, parser, command):
         handler = self._mach_registrar.command_handlers.get(command)
 
         if not handler:
