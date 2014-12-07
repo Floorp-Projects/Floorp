@@ -326,3 +326,8 @@ mscarries {
   -moz-math-display: inline;
 }
 */
+
+/* Do not expose the <mphantom> element to the accessible tree. */
+mphantom {
+    visibility: hidden;
+}
