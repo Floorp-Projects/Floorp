@@ -53,28 +53,42 @@ function check_fail_ca(cert) {
                                 certificateUsageSSLCA);
 }
 
-function check_for_key_type(key_type) {
+function checkForKeyType(keyType, inadequateKeySize, adequateKeySize) {
+  let rootOKName = "root_" + keyType + "_" + adequateKeySize;
+  let rootNotOKName = "root_" + keyType + "_" + inadequateKeySize;
+  let intOKName = "int_" + keyType + "_" + adequateKeySize;
+  let intNotOKName = "int_" + keyType + "_" + inadequateKeySize;
+  let eeOKName = "ee_" + keyType + "_" + adequateKeySize;
+  let eeNotOKName = "ee_" + keyType + "_" + inadequateKeySize;
+
   // Chain with certs that have adequate sizes for DV
-  check_ok_ca(load_cert(key_type + "-caOK", "CTu,CTu,CTu"));
-  check_ok_ca(load_cert(key_type + "-intOK-caOK", ",,"));
-  check_ok(certFromFile(key_type + "-eeOK-intOK-caOK.der"));
+  let intFullName = intOKName + "-" + rootOKName;
+  let eeFullName = eeOKName + "-" + intOKName + "-" + rootOKName;
+  check_ok_ca(load_cert(rootOKName, "CTu,CTu,CTu"));
+  check_ok_ca(load_cert(intFullName, ",,"));
+  check_ok(certFromFile(eeFullName + ".der"));
 
   // Chain with a root cert that has an inadequate size for DV
-  check_fail_ca(load_cert(key_type + "-caBad", "CTu,CTu,CTu"));
-  check_fail_ca(load_cert(key_type + "-intOK-caBad", ",,"));
-  check_fail(certFromFile(key_type + "-eeOK-intOK-caBad.der"));
+  intFullName = intOKName + "-" + rootNotOKName;
+  eeFullName = eeOKName + "-" + intOKName + "-" + rootNotOKName;
+  check_fail_ca(load_cert(rootNotOKName, "CTu,CTu,CTu"));
+  check_fail_ca(load_cert(intFullName, ",,"));
+  check_fail(certFromFile(eeFullName + ".der"));
 
   // Chain with an intermediate cert that has an inadequate size for DV
-  check_fail_ca(load_cert(key_type + "-intBad-caOK", ",,"));
-  check_fail(certFromFile(key_type + "-eeOK-intBad-caOK.der"));
+  intFullName = intNotOKName + "-" + rootOKName;
+  eeFullName = eeOKName + "-" + intNotOKName + "-" + rootOKName;
+  check_fail_ca(load_cert(intFullName, ",,"));
+  check_fail(certFromFile(eeFullName + ".der"));
 
   // Chain with an end entity cert that has an inadequate size for DV
-  check_fail(certFromFile(key_type + "-eeBad-intOK-caOK.der"));
+  eeFullName = eeNotOKName + "-" + intOKName + "-" + rootOKName;
+  check_fail(certFromFile(eeFullName + ".der"));
 }
 
 function run_test() {
-  check_for_key_type("rsa");
-  check_for_key_type("dsa");
+  checkForKeyType("rsa", 1016, 1024);
+  checkForKeyType("dsa", 960, 1024);
 
   run_next_test();
 }
