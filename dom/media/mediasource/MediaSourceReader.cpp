@@ -170,7 +170,11 @@ MediaSourceReader::OnAudioNotDecoded(NotDecodedReason aReason)
 {
   MSE_DEBUG("MediaSourceReader(%p)::OnAudioNotDecoded aReason=%u IsEnded: %d", this, aReason, IsEnded());
   if (aReason == DECODE_ERROR || aReason == CANCELED) {
-    mAudioPromise.Reject(aReason, __func__);
+    if (!mAudioPromise.IsEmpty()) {
+      mAudioPromise.Reject(aReason, __func__);
+    } else {
+      MOZ_ASSERT(IsShutdown(), "This only happens when shutdown clears the promise");
+    }
     return;
   }
 
@@ -260,7 +264,11 @@ MediaSourceReader::OnVideoNotDecoded(NotDecodedReason aReason)
 {
   MSE_DEBUG("MediaSourceReader(%p)::OnVideoNotDecoded aReason=%u IsEnded: %d", this, aReason, IsEnded());
   if (aReason == DECODE_ERROR || aReason == CANCELED) {
-    mVideoPromise.Reject(aReason, __func__);
+    if (!mVideoPromise.IsEmpty()) {
+      mVideoPromise.Reject(aReason, __func__);
+    } else {
+      MOZ_ASSERT(IsShutdown(), "This only happens when shutdown clears the promise");
+    }
     return;
   }
 
