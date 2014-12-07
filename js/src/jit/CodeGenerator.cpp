@@ -7767,7 +7767,7 @@ static const VMFunctionsModal SetObjectElementInfo = VMFunctionsModal(
 void
 CodeGenerator::visitCallSetElement(LCallSetElement *lir)
 {
-    pushArg(Imm32(current->mir()->strict()));
+    pushArg(Imm32(lir->mir()->strict()));
     pushArg(ToValue(lir, LCallSetElement::Value));
     pushArg(ToValue(lir, LCallSetElement::Index));
     pushArg(ToRegister(lir->getOperand(0)));
