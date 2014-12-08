@@ -289,6 +289,10 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
         }
 
         final File[] files = (new File(pluginsDir, "common")).listFiles();
+        if (files == null) {
+            Log.e(LOG_TAG, "Could not find search plugin files in distribution directory");
+            return null;
+        }
         return createEngineFromFileList(files, name);
     }
 
@@ -353,6 +357,10 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
         }
 
         final File[] files = pluginsDir.listFiles();
+        if (files == null) {
+            Log.e(LOG_TAG, "Could not find search plugin files in profile directory");
+            return null;
+        }
         return createEngineFromFileList(files, name);
     }
 
@@ -360,7 +368,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
      * This method iterates through an array of search plugin files, creating
      * SearchEngine instances until it finds one with the right name.
      *
-     * @param files Array of search plugin files.
+     * @param files Array of search plugin files. Should not be null.
      * @param name Search engine name.
      * @return SearchEngine instance for name.
      */
