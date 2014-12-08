@@ -9893,63 +9893,78 @@ nsCSSFrameConstructor::CreateNeededPseudoContainers(
         }
     }
 
-    const PseudoParentData& pseudoData = sPseudoParentData[wrapperType];
-    nsIAtom* pseudoType = *pseudoData.mPseudoType;
     nsStyleContext* parentStyle = aParentFrame->StyleContext();
-    nsIContent* parentContent = aParentFrame->GetContent();
-
-    if (pseudoType == nsCSSAnonBoxes::table &&
-        (parentStyle->StyleDisplay()->mDisplay == NS_STYLE_DISPLAY_INLINE ||
-         IsRubyParentType(ourParentType) ||
-         parentStyle->StyleDisplay()->mDisplay == NS_STYLE_DISPLAY_RUBY_BASE ||
-         parentStyle->StyleDisplay()->mDisplay == NS_STYLE_DISPLAY_RUBY_TEXT)) {
-      pseudoType = nsCSSAnonBoxes::inlineTable;
-    }
-
-    already_AddRefed<nsStyleContext> wrapperStyle =
-      mPresShell->StyleSet()->ResolveAnonymousBoxStyle(pseudoType, parentStyle);
-    FrameConstructionItem* newItem =
-      new FrameConstructionItem(&pseudoData.mFCData,
-                                // Use the content of our parent frame
-                                parentContent,
-                                // Lie about the tag; it doesn't matter anyway
-                                pseudoType,
-                                // The namespace does matter, however; it needs
-                                // to match that of our first child item to
-                                // match the old behavior
-                                iter.item().mNameSpaceID,
-                                // no pending binding
-                                nullptr,
-                                wrapperStyle,
-                                true, nullptr);
-
-    // Here we're cheating a tad... technically, table-internal items should be
-    // inline if aParentFrame is inline, but they'll get wrapped in an
-    // inline-table in the end, so it'll all work out.  In any case, arguably
-    // we don't need to maintain this state at this point... but it's better
-    // to, I guess.
-    newItem->mIsAllInline = newItem->mHasInlineEnds =
-      newItem->mStyleContext->StyleDisplay()->IsInlineOutsideStyle();
-
-    // Table pseudo frames always induce line boundaries around their
-    // contents.
-    newItem->mChildItems.SetLineBoundaryAtStart(true);
-    newItem->mChildItems.SetLineBoundaryAtEnd(true);
-    // The parent of the items in aItems is also the parent of the items
-    // in mChildItems
-    newItem->mChildItems.SetParentHasNoXBLChildren(
-      aItems.ParentHasNoXBLChildren());
-
-    // Eat up all items between |iter| and |endIter| and put them in our wrapper
-    // Advances |iter| to point to |endIter|.
-    iter.AppendItemsToList(endIter, newItem->mChildItems);
-
-    iter.InsertItem(newItem);
+    WrapItemsInPseudoParent(aParentFrame->GetContent(), parentStyle,
+                            wrapperType, iter, endIter);
 
     // Now |iter| points to the item that was the first one we didn't wrap;
     // loop and see whether we need to skip it or wrap it in something
     // different.
   } while (!iter.IsDone());
+}
+
+/**
+ * This method wraps frame construction item from |aIter| to
+ * |aEndIter|. After it returns, aIter points to the first item
+ * after the wrapper.
+ */
+void
+nsCSSFrameConstructor::WrapItemsInPseudoParent(nsIContent* aParentContent,
+                                               nsStyleContext* aParentStyle,
+                                               ParentType aWrapperType,
+                                               FCItemIterator& aIter,
+                                               const FCItemIterator& aEndIter)
+{
+  const PseudoParentData& pseudoData = sPseudoParentData[aWrapperType];
+  nsIAtom* pseudoType = *pseudoData.mPseudoType;
+  uint8_t parentDisplay = aParentStyle->StyleDisplay()->mDisplay;
+
+  if (pseudoType == nsCSSAnonBoxes::table &&
+      (parentDisplay == NS_STYLE_DISPLAY_INLINE ||
+       parentDisplay == NS_STYLE_DISPLAY_RUBY_BASE ||
+       parentDisplay == NS_STYLE_DISPLAY_RUBY_TEXT)) {
+    pseudoType = nsCSSAnonBoxes::inlineTable;
+  }
+
+  already_AddRefed<nsStyleContext> wrapperStyle =
+    mPresShell->StyleSet()->ResolveAnonymousBoxStyle(pseudoType, aParentStyle);
+  FrameConstructionItem* newItem =
+    new FrameConstructionItem(&pseudoData.mFCData,
+                              // Use the content of our parent frame
+                              aParentContent,
+                              // Lie about the tag; it doesn't matter anyway
+                              pseudoType,
+                              // The namespace does matter, however; it needs
+                              // to match that of our first child item to
+                              // match the old behavior
+                              aIter.item().mNameSpaceID,
+                              // no pending binding
+                              nullptr,
+                              wrapperStyle,
+                              true, nullptr);
+
+  // Here we're cheating a tad... technically, table-internal items should be
+  // inline if aParentFrame is inline, but they'll get wrapped in an
+  // inline-table in the end, so it'll all work out.  In any case, arguably
+  // we don't need to maintain this state at this point... but it's better
+  // to, I guess.
+  newItem->mIsAllInline = newItem->mHasInlineEnds =
+    newItem->mStyleContext->StyleDisplay()->IsInlineOutsideStyle();
+
+  // Table pseudo frames always induce line boundaries around their
+  // contents.
+  newItem->mChildItems.SetLineBoundaryAtStart(true);
+  newItem->mChildItems.SetLineBoundaryAtEnd(true);
+  // The parent of the items in aItems is also the parent of the items
+  // in mChildItems
+  newItem->mChildItems.SetParentHasNoXBLChildren(
+      aIter.List()->ParentHasNoXBLChildren());
+
+  // Eat up all items between |aIter| and |aEndIter| and put them in our
+  // wrapper Advances |aIter| to point to |aEndIter|.
+  aIter.AppendItemsToList(aEndIter, newItem->mChildItems);
+
+  aIter.InsertItem(newItem);
 }
 
 void nsCSSFrameConstructor::CreateNeededPseudoSiblings(
