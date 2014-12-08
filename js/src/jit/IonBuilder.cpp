@@ -5301,7 +5301,7 @@ IonBuilder::createThisScriptedSingleton(JSFunction *target, MDefinition *callee)
         return nullptr;
 
     JSObject *templateObject = inspector->getTemplateObject(pc);
-    if (!templateObject || !templateObject->is<JSObject>())
+    if (!templateObject || !templateObject->is<PlainObject>())
         return nullptr;
     if (!templateObject->hasTenuredProto() || templateObject->getProto() != proto)
         return nullptr;
@@ -6037,7 +6037,7 @@ IonBuilder::jsop_newobject()
         return abort("No template object for NEWOBJECT");
     }
 
-    MOZ_ASSERT(templateObject->is<JSObject>());
+    MOZ_ASSERT(templateObject->is<PlainObject>());
     MConstant *templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject);
     current->add(templateConst);
     MNewObject *ins = MNewObject::New(alloc(), constraints(), templateConst,
@@ -8038,9 +8038,14 @@ IonBuilder::addTypedArrayLengthAndData(MDefinition *obj,
                                        MInstruction **length, MInstruction **elements)
 {
     MOZ_ASSERT((index != nullptr) == (elements != nullptr));
+    JSObject *tarr = nullptr;
 
-    if (obj->isConstant() && obj->toConstant()->value().isObject()) {
-        JSObject *tarr = &obj->toConstant()->value().toObject();
+    if (obj->isConstant() && obj->toConstant()->value().isObject())
+        tarr = &obj->toConstant()->value().toObject();
+    else if (obj->resultTypeSet())
+        tarr = obj->resultTypeSet()->getSingleton();
+
+    if (tarr) {
         void *data = AnyTypedArrayViewData(tarr);
         // Bug 979449 - Optimistically embed the elements and use TI to
         //              invalidate if we move them.
@@ -9308,13 +9313,18 @@ IonBuilder::jsop_getprop(PropertyName *name)
     MDefinition *obj = current->pop();
     types::TemporaryTypeSet *types = bytecodeTypes(pc);
 
-    // Try to optimize arguments.length.
-    if (!getPropTryArgumentsLength(&emitted, obj) || emitted)
-        return emitted;
+    if (!info().executionModeIsAnalysis()) {
+        // The calls below can abort compilation, so we only try this if we're
+        // not analyzing.
 
-    // Try to optimize arguments.callee.
-    if (!getPropTryArgumentsCallee(&emitted, obj, name) || emitted)
-        return emitted;
+        // Try to optimize arguments.length.
+        if (!getPropTryArgumentsLength(&emitted, obj) || emitted)
+            return emitted;
+
+        // Try to optimize arguments.callee.
+        if (!getPropTryArgumentsCallee(&emitted, obj, name) || emitted)
+            return emitted;
+    }
 
     BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
                                                        obj, name, types);

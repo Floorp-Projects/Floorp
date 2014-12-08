@@ -28,23 +28,25 @@ interface imgIEncoder : nsIAsyncInputStream
   // transparency=[yes|no|none]  --  default: "yes"
   //     Overrides default from input format. "no" and "none" are equivalent.
   // skipfirstframe=[yes|no]  --  default: "no"
-  //     Controls display of the first frame in animations. PNG-only clients always
-  //     display the first frame (and only that frame).
+  //     Controls display of the first frame in animations. PNG-only clients
+  //     always display the first frame (and only that frame).
   // frames=#  --  default: "1"
-  //     Total number of frames in the image. The first frame, even if skipped, is
-  //     always included in the count.
+  //     Total number of frames in the image. The first frame, even if skipped,
+  //     is always included in the count.
   // plays=#  --  default: "0"
-  //     Number of times to play the animation sequence. "0" will repeat forever.
-  //
+  //     Number of times to play the animation sequence. "0" will repeat
+  //     forever.
   //
   // The following options can be used for each frame, with addImageFrame():
   //
   // transparency=[yes|no|none]  --  default: "yes"
   //     Overrides default from input format. "no" and "none" are equivalent.
   // delay=#  --  default: "500"
-  //     Number of milliseconds to display the frame, before moving to the next frame.
+  //     Number of milliseconds to display the frame, before moving to the next
+  //     frame.
   // dispose=[none|background|previous]  --  default: "none"
-  //     What to do with the image's canvas before rendering the next frame. See APNG spec.
+  //     What to do with the image's canvas before rendering the next frame.
+  //     See APNG spec.
   // blend=[source|over]  --  default: "source"
   //     How to render the new frame on the canvas. See APNG spec.
   // xoffset=#  --  default: "0"
@@ -56,7 +58,7 @@ interface imgIEncoder : nsIAsyncInputStream
   // -----
   //
   // quality=#  --  default: "92"
-  //    Quality of compression, 0-100 (worst-best). 
+  //    Quality of compression, 0-100 (worst-best).
   //    Quality >= 90 prevents down-sampling of the color channels.
 
 

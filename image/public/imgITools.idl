@@ -145,7 +145,8 @@ interface imgITools : nsISupports
      * Create a wrapper around a scripted notification observer (ordinarily
      * imgINotificationObserver cannot be implemented from scripts).
      *
-     * @param aObserver The scripted observer to wrap 
+     * @param aObserver The scripted observer to wrap
      */
-    imgINotificationObserver createScriptedObserver(in imgIScriptedNotificationObserver aObserver);
+    imgINotificationObserver
+    createScriptedObserver(in imgIScriptedNotificationObserver aObserver);
 };

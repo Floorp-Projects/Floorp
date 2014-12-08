@@ -28,7 +28,7 @@
       function (test) {
         test.pcLocal.setRemoteDescriptionAndFail(test.pcLocal._latest_offer,
           function(err) {
-            is(err.name, "INVALID_STATE", "Error is INVALID_STATE");
+            is(err.name, "InvalidStateError", "Error is InvalidStateError");
             test.next();
           } );
       }

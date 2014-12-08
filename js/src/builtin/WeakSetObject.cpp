@@ -51,7 +51,7 @@ WeakSetObject::initClass(JSContext *cx, JSObject *obj)
 {
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
     // Todo: WeakSet.prototype should not be a WeakSet!
-    RootedNativeObject proto(cx, global->createBlankPrototype(cx, &class_));
+    Rooted<WeakSetObject*> proto(cx, global->createBlankPrototype<WeakSetObject>(cx));
     if (!proto)
         return nullptr;
     proto->setReservedSlot(WEAKSET_MAP_SLOT, UndefinedValue());
@@ -70,7 +70,7 @@ WeakSetObject::initClass(JSContext *cx, JSObject *obj)
 WeakSetObject*
 WeakSetObject::create(JSContext *cx)
 {
-    RootedNativeObject obj(cx, NewNativeBuiltinClassInstance(cx, &class_));
+    Rooted<WeakSetObject *> obj(cx, NewBuiltinClassInstance<WeakSetObject>(cx));
     if (!obj)
         return nullptr;
 
@@ -79,7 +79,7 @@ WeakSetObject::create(JSContext *cx)
         return nullptr;
 
     obj->setReservedSlot(WEAKSET_MAP_SLOT, ObjectValue(*map));
-    return &obj->as<WeakSetObject>();
+    return obj;
 }
 
 bool

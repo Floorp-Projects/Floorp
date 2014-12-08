@@ -43,9 +43,6 @@ public:
   GetClient() = 0;
 
   NS_IMETHOD_(bool)
-  IsOwnedByWindow(nsPIDOMWindow* aOwner) = 0;
-
-  NS_IMETHOD_(bool)
   IsOwnedByProcess(ContentParent* aOwner) = 0;
 
   NS_IMETHOD_(PersistenceType)
@@ -67,10 +64,6 @@ public:
   // running operations nor discarding pending operations).
   NS_IMETHOD_(nsresult)
   Close() = 0;
-
-  // Whether or not the storage has had Close called on it.
-  NS_IMETHOD_(bool)
-  IsClosed() = 0;
 
   // Implementation of this method should close the storage, all running
   // operations should be aborted and pending operations should be discarded.
@@ -99,9 +92,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIOfflineStorage, NS_OFFLINESTORAGE_IID)
   GetClient() MOZ_OVERRIDE;                                                    \
                                                                                \
   NS_IMETHOD_(bool)                                                            \
-  IsOwnedByWindow(nsPIDOMWindow* aOwner) MOZ_OVERRIDE;                         \
-                                                                               \
-  NS_IMETHOD_(bool)                                                            \
   IsOwnedByProcess(ContentParent* aOwner) MOZ_OVERRIDE;                        \
                                                                                \
   NS_IMETHOD_(const nsACString&)                                               \
@@ -109,9 +99,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIOfflineStorage, NS_OFFLINESTORAGE_IID)
                                                                                \
   NS_IMETHOD_(nsresult)                                                        \
   Close() MOZ_OVERRIDE;                                                        \
-                                                                               \
-  NS_IMETHOD_(bool)                                                            \
-  IsClosed() MOZ_OVERRIDE;                                                     \
                                                                                \
   NS_IMETHOD_(void)                                                            \
   Invalidate() MOZ_OVERRIDE;

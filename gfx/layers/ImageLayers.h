@@ -69,7 +69,12 @@ public:
 
   MOZ_LAYER_DECL_NAME("ImageLayer", TYPE_IMAGE)
 
-  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface);
+  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) MOZ_OVERRIDE;
+
+  virtual const gfx::Matrix4x4& GetEffectiveTransformForBuffer() const MOZ_OVERRIDE
+  {
+    return mEffectiveTransformForBuffer;
+  }
 
   /**
    * if true, the image will only be backed by a single tile texture
@@ -94,6 +99,7 @@ protected:
   gfx::IntSize mScaleToSize;
   ScaleMode mScaleMode;
   bool mDisallowBigImage;
+  gfx::Matrix4x4 mEffectiveTransformForBuffer;
 };
 
 }

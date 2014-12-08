@@ -72,9 +72,6 @@ public:
   void WaitForDatabasesToComplete(nsTArray<nsCString>& aDatabaseIds,
                                   nsIRunnable* aCallback);
 
-  // Returns true if there are running or pending transactions for aDatabase.
-  bool HasTransactionsForDatabase(const nsACString& aDatabaseId);
-
   NS_INLINE_DECL_REFCOUNTING(TransactionThreadPool)
 
   void Shutdown();

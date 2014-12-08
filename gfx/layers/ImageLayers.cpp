@@ -34,13 +34,6 @@ void ImageLayer::ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSu
   gfxRect sourceRect(0, 0, 0, 0);
   if (mContainer) {
     sourceRect.SizeTo(gfx::ThebesIntSize(mContainer->GetCurrentSize()));
-    if (mScaleMode != ScaleMode::SCALE_NONE &&
-        sourceRect.width != 0.0 && sourceRect.height != 0.0) {
-      NS_ASSERTION(mScaleMode == ScaleMode::STRETCH,
-                   "No other scalemodes than stretch and none supported yet.");
-      local.PreScale(mScaleToSize.width / sourceRect.width,
-                     mScaleToSize.height / sourceRect.height, 1.0);
-    }
   }
   // Snap our local transform first, and snap the inherited transform as well.
   // This makes our snapping equivalent to what would happen if our content
@@ -49,6 +42,21 @@ void ImageLayer::ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSu
   mEffectiveTransform =
       SnapTransform(local, sourceRect, nullptr) *
       SnapTransformTranslation(aTransformToSurface, nullptr);
+
+  if (mScaleMode != ScaleMode::SCALE_NONE &&
+      sourceRect.width != 0.0 && sourceRect.height != 0.0) {
+    NS_ASSERTION(mScaleMode == ScaleMode::STRETCH,
+                 "No other scalemodes than stretch and none supported yet.");
+    local.PreScale(mScaleToSize.width / sourceRect.width,
+                   mScaleToSize.height / sourceRect.height, 1.0);
+
+    mEffectiveTransformForBuffer =
+        SnapTransform(local, sourceRect, nullptr) *
+        SnapTransformTranslation(aTransformToSurface, nullptr);
+  } else {
+    mEffectiveTransformForBuffer = mEffectiveTransform;
+  }
+
   ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
 }
 

@@ -428,7 +428,7 @@ pref("media.mediasource.enabled", true);
 pref("media.mediasource.mp4.enabled", false);
 pref("media.mediasource.webm.enabled", false);
 #else
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_MACOSX)
 pref("media.mediasource.mp4.enabled", true);
 pref("media.mediasource.webm.enabled", false);
 #else
@@ -3982,6 +3982,8 @@ pref("gfx.direct2d.force-enabled", false);
 
 pref("layers.prefer-opengl", false);
 pref("layers.prefer-d3d9", false);
+pref("layers.d3d11.force-warp", false);
+pref("layers.d3d11.disable-warp", false);
 #endif
 
 // Force all possible layers to be always active layers

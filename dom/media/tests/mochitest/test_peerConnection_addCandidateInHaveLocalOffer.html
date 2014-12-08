@@ -31,7 +31,7 @@
             {candidate:"1 1 UDP 2130706431 192.168.2.1 50005 typ host",
              sdpMLineIndex: 1}),
           function(err) {
-            is(err.name, "INVALID_STATE", "Error is INVALID_STATE");
+            is(err.name, "InvalidStateError", "Error is InvalidStateError");
             test.next();
           } );
       }
