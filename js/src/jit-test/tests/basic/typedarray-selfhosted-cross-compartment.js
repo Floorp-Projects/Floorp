@@ -4,7 +4,7 @@
  */
 
 var global = newGlobal();
-var array = global.Int8Array(10);
+var array = new global.Int8Array(10);
 
 assertEq(array.find(v => v == 1), undefined)
 assertEq(array.findIndex(v => v == 0), 0)

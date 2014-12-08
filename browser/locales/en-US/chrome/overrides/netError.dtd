@@ -208,7 +208,7 @@ functionality specific to firefox. -->
 <!ENTITY oldSecurityProtocol.title "Unable to Connect Securely">
 <!-- LOCALIZATION NOTE (oldSecurityProtocol.longDesc) - Do not translate the
      <span id='hostname'></span>. -->
-<!ENTITY oldSecurityProtocol.longDesc "Firefox cannot guarantee the safety of your data on <span id='hostname'></span> because it uses SSLv3, a broken security protocol.">
+<!ENTITY oldSecurityProtocol.longDesc2 "&brandShortName; cannot guarantee the safety of your data on <span id='hostname'></span> because it uses SSLv3, a broken security protocol.">
 <!-- LOCALIZATION NOTE (oldSecurityProtocol.advancedInfo) - Do not translate
      the <span id='errorcode'></span>. -->
 <!ENTITY oldSecurityProtocol.advancedInfo "Advanced info: <span id='errorcode'></span>">

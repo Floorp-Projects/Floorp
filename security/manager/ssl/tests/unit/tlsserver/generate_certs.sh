@@ -306,7 +306,7 @@ make_delegated invalidDelegatedSignerWrongExtKeyUsage 'CN=Test Invalid Delegated
 make_INT self-signed-EE-with-cA-true 'CN=Test Self-signed End-entity with CA true' unused "-x -8 self-signed-end-entity-with-cA-true.example.com"
 make_INT ca-used-as-end-entity 'CN=Test Intermediate used as End-Entity' testCA "-8 ca-used-as-end-entity.example.com"
 
-make_delegated badKeysizeDelegatedSigner 'CN=Bad Keysize Delegated Responder' testCA "--extKeyUsage ocspResponder -g 1008"
+make_delegated rsa-1008-keysizeDelegatedSigner 'CN=RSA 1008 Key Size Test Delegated Responder' testCA "--extKeyUsage ocspResponder -g 1008"
 make_EE inadequateKeySizeEE 'CN=Inadequate Key Size End-Entity' testINT "inadequate-key-size-ee.example.com" "-g 1008"
 
 make_EE_with_nsCertType nsCertTypeCritical 'CN=nsCertType Critical' testCA "localhost,*.example.com" "y"

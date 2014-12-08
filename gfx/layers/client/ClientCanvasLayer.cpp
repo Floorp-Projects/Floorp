@@ -21,6 +21,7 @@
 
 #ifdef XP_WIN
 #include "SharedSurfaceANGLE.h"         // for SurfaceFactory_ANGLEShareHandle
+#include "gfxWindowsPlatform.h"
 #endif
 
 #ifdef MOZ_WIDGET_GONK
@@ -110,7 +111,7 @@ ClientCanvasLayer::Initialize(const Data& aData)
       case mozilla::layers::LayersBackend::LAYERS_D3D10:
       case mozilla::layers::LayersBackend::LAYERS_D3D11: {
 #ifdef XP_WIN
-        if (mGLContext->IsANGLE()) {
+        if (mGLContext->IsANGLE() && DoesD3D11DeviceWork(gfxWindowsPlatform::GetPlatform()->GetD3D11Device())) {
           factory = SurfaceFactory_ANGLEShareHandle::Create(mGLContext, caps);
         }
 #endif
