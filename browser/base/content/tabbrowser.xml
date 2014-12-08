@@ -597,12 +597,10 @@
 
               // Don't show progress indicators in tabs for about: URIs
               // pointing to local resources.
-              try {
-                let channel = aRequest.QueryInterface(Ci.nsIChannel);
-                if (channel.originalURI.schemeIs("about") &&
-                    (channel.URI.schemeIs("jar") || channel.URI.schemeIs("file")))
-                  return false;
-              } catch (e) {}
+              if ((aRequest instanceof Ci.nsIChannel) &&
+                  aRequest.originalURI.schemeIs("about") &&
+                  (aRequest.URI.schemeIs("jar") || aRequest.URI.schemeIs("file")))
+                return false;
 
               return true;
             },
