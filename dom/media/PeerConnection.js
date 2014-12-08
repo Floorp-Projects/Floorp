@@ -707,9 +707,12 @@ RTCPeerConnection.prototype = {
             "Invalid type " + desc.type + " provided to setRemoteDescription");
     }
 
+    // Have to get caller's origin outside of Promise constructor and pass it in
+    let origin = Cu.getWebIDLCallerPrincipal().origin;
+
     this._queueOrRun({
       func: this._setRemoteDescription,
-      args: [type, desc.sdp, onSuccess, onError],
+      args: [type, desc.sdp, origin, onSuccess, onError],
       wait: true
     });
   },
@@ -736,7 +739,7 @@ RTCPeerConnection.prototype = {
     return good;
   },
 
-  _setRemoteDescription: function(type, sdp, onSuccess, onError) {
+  _setRemoteDescription: function(type, sdp, origin, onSuccess, onError) {
     let idpComplete = false;
     let setRemoteComplete = false;
     let idpError = null;
@@ -785,7 +788,7 @@ RTCPeerConnection.prototype = {
     }
 
     try {
-      this._remoteIdp.verifyIdentityFromSDP(sdp, idpDone);
+      this._remoteIdp.verifyIdentityFromSDP(sdp, origin, idpDone);
     } catch (e) {
       // if processing the SDP for identity doesn't work
       this.logWarning(e.message, e.fileName, e.lineNumber);
@@ -1142,7 +1145,8 @@ PeerConnectionObserver.prototype = {
   onCreateOfferSuccess: function(sdp) {
     let pc = this._dompc;
     let fp = pc._impl.fingerprint;
-    pc._localIdp.appendIdentityToSDP(sdp, fp, function(sdp, assertion) {
+    let origin = Cu.getWebIDLCallerPrincipal().origin;
+    pc._localIdp.appendIdentityToSDP(sdp, fp, origin, function(sdp, assertion) {
       if (assertion) {
         pc._gotIdentityAssertion(assertion);
       }
@@ -1161,7 +1165,8 @@ PeerConnectionObserver.prototype = {
   onCreateAnswerSuccess: function(sdp) {
     let pc = this._dompc;
     let fp = pc._impl.fingerprint;
-    pc._localIdp.appendIdentityToSDP(sdp, fp, function(sdp, assertion) {
+    let origin = Cu.getWebIDLCallerPrincipal().origin;
+    pc._localIdp.appendIdentityToSDP(sdp, fp, origin, function(sdp, assertion) {
       if (assertion) {
         pc._gotIdentityAssertion(assertion);
       }
