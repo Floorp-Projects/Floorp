@@ -34,6 +34,10 @@ public:
 
   nsresult Dispatch(TemporaryRef<nsIRunnable> aRunnable);
 
+  // This should only be used for things that absolutely can't afford to be
+  // flushed. Normal operations should use Dispatch.
+  nsresult ForceDispatch(TemporaryRef<nsIRunnable> aRunnable);
+
   nsresult SyncDispatch(TemporaryRef<nsIRunnable> aRunnable);
 
   nsresult FlushAndDispatch(TemporaryRef<nsIRunnable> aRunnable);
@@ -68,18 +72,27 @@ private:
   // mQueueMonitor must be held.
   void AwaitIdleLocked();
 
-  enum DispatchMode { AbortIfFlushing, IgnoreFlushing };
+  enum DispatchMode { AbortIfFlushing, IgnoreFlushing, Forced };
 
   nsresult DispatchLocked(TemporaryRef<nsIRunnable> aRunnable,
                           DispatchMode aMode);
+  void FlushLocked();
 
   RefPtr<SharedThreadPool> mPool;
 
   // Monitor that protects the queue and mIsRunning;
   Monitor mQueueMonitor;
 
+  struct TaskQueueEntry {
+    RefPtr<nsIRunnable> mRunnable;
+    bool mForceDispatch;
+
+    TaskQueueEntry(TemporaryRef<nsIRunnable> aRunnable, bool aForceDispatch = false)
+      : mRunnable(aRunnable), mForceDispatch(aForceDispatch) {}
+  };
+
   // Queue of tasks to run.
-  std::queue<RefPtr<nsIRunnable>> mTasks;
+  std::queue<TaskQueueEntry> mTasks;
 
   // The thread currently running the task queue. We store a reference
   // to this so that IsCurrentThreadIn() can tell if the current thread
