@@ -25,6 +25,7 @@
 namespace mozilla {
 
 extern PRLogModuleInfo* gMediaPromiseLog;
+void EnsureMediaPromiseLog();
 
 #define PROMISE_LOG(x, ...) \
   MOZ_ASSERT(gMediaPromiseLog); \
@@ -232,9 +233,8 @@ protected:
   void DispatchAll()
   {
     mMutex.AssertCurrentThreadOwns();
-    for (size_t i = 0; i < mThenValues.Length(); ++i) {
+    for (size_t i = 0; i < mThenValues.Length(); ++i)
       mThenValues[i]->Dispatch(this);
-    }
     mThenValues.Clear();
   }
 
