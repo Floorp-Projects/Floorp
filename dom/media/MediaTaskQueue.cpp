@@ -35,13 +35,6 @@ MediaTaskQueue::Dispatch(TemporaryRef<nsIRunnable> aRunnable)
 }
 
 nsresult
-MediaTaskQueue::ForceDispatch(TemporaryRef<nsIRunnable> aRunnable)
-{
-  MonitorAutoLock mon(mQueueMonitor);
-  return DispatchLocked(aRunnable, Forced);
-}
-
-nsresult
 MediaTaskQueue::DispatchLocked(TemporaryRef<nsIRunnable> aRunnable,
                                DispatchMode aMode)
 {
@@ -52,7 +45,7 @@ MediaTaskQueue::DispatchLocked(TemporaryRef<nsIRunnable> aRunnable,
   if (mIsShutdown) {
     return NS_ERROR_FAILURE;
   }
-  mTasks.push(TaskQueueEntry(aRunnable, aMode == Forced));
+  mTasks.push(aRunnable);
   if (mIsRunning) {
     return NS_OK;
   }
@@ -147,7 +140,9 @@ MediaTaskQueue::FlushAndDispatch(TemporaryRef<nsIRunnable> aRunnable)
 {
   MonitorAutoLock mon(mQueueMonitor);
   AutoSetFlushing autoFlush(this);
-  FlushLocked();
+  while (!mTasks.empty()) {
+    mTasks.pop();
+  }
   nsresult rv = DispatchLocked(aRunnable, IgnoreFlushing);
   NS_ENSURE_SUCCESS(rv, rv);
   AwaitIdleLocked();
@@ -159,25 +154,10 @@ MediaTaskQueue::Flush()
 {
   MonitorAutoLock mon(mQueueMonitor);
   AutoSetFlushing autoFlush(this);
-  FlushLocked();
-  AwaitIdleLocked();
-}
-
-void
-MediaTaskQueue::FlushLocked()
-{
-  mQueueMonitor.AssertCurrentThreadOwns();
-  MOZ_ASSERT(mIsFlushing);
-
-  // Clear the tasks, but preserve those with mForceDispatch by re-appending
-  // them to the queue.
-  size_t numTasks = mTasks.size();
-  for (size_t i = 0; i < numTasks; ++i) {
-    if (mTasks.front().mForceDispatch) {
-      mTasks.push(mTasks.front());
-    }
+  while (!mTasks.empty()) {
     mTasks.pop();
   }
+  AwaitIdleLocked();
 }
 
 bool
@@ -211,7 +191,7 @@ MediaTaskQueue::Runner::Run()
       mon.NotifyAll();
       return NS_OK;
     }
-    event = mQueue->mTasks.front().mRunnable;
+    event = mQueue->mTasks.front();
     mQueue->mTasks.pop();
   }
   MOZ_ASSERT(event);
