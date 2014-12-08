@@ -2168,6 +2168,27 @@
     "n_buckets": 20,
     "description": "The number of unusable addresses reported for each record"
   },
+  "REFRESH_DRIVER_TICK" : {
+    "expires_in_version": "never",
+    "description": "Total time spent ticking the refresh driver in milliseconds",
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 50
+  },
+  "PAINT_BUILD_DISPLAYLIST_TIME" : {
+    "expires_in_version": "never",
+    "description": "Time spent in building displaylists in milliseconds",
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 50
+  },
+  "PAINT_RASTERIZE_TIME" : {
+    "expires_in_version": "never",
+    "description": "Time spent rasterizing each frame in milliseconds",
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 50
+  },
   "PREDICTOR_PREDICT_ATTEMPTS": {
     "expires_in_version": "never",
     "kind": "exponential",
