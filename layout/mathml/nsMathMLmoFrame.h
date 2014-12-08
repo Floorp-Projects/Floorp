@@ -48,6 +48,11 @@ public:
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
+  virtual nsresult
+  Place(nsRenderingContext& aRenderingContext,
+        bool                 aPlaceOrigin,
+        nsHTMLReflowMetrics& aDesiredSize) MOZ_OVERRIDE;
+
   virtual void MarkIntrinsicISizesDirty() MOZ_OVERRIDE;
 
   virtual void

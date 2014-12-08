@@ -133,7 +133,7 @@ interface imgIRequest : nsIRequest
   //@}
 
   /**
-   * The CORS mode that this image was loaded with. 
+   * The CORS mode that this image was loaded with.
    */
   readonly attribute long CORSMode;
 
@@ -195,14 +195,16 @@ interface imgIRequest : nsIRequest
   /**
    * Requests that the image animate (if it has an animation).
    *
-   * @see Image::IncrementAnimationConsumers for documentation of the underlying call.
+   * @see Image::IncrementAnimationConsumers for documentation of the
+   * underlying call.
    */
   void incrementAnimationConsumers();
 
   /**
    * Tell the image it can forget about a request that the image animate.
    *
-   * @see Image::DecrementAnimationConsumers for documentation of the underlying call.
+   * @see Image::DecrementAnimationConsumers for documentation of the
+   * underlying call.
    */
   void decrementAnimationConsumers();
 };
