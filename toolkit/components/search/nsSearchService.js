@@ -404,6 +404,15 @@ loadListener.prototype = {
 // Hacky method that tries to determine if this user is in a US geography, and
 // using an en-US build.
 function getIsUS() {
+  let geoSpecificDefaults = false;
+  try {
+    geoSpecificDefaults = Services.prefs.getBoolPref("browser.search.geoSpecificDefaults");
+  } catch(e) {}
+
+  if (!geoSpecificDefaults) {
+    return false;
+  }
+
   // If we've set the pref before, just return that result.
   let cachePref = "browser.search.isUS";
   try {
