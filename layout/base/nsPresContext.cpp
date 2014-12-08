@@ -2181,7 +2181,7 @@ nsPresContext::UserFontSetUpdated()
   //      requires rebuilding the rule tree from the top, avoiding the
   //      reuse of cached data even when no style rules have changed.
 
-  PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW, eRestyle_ForceDescendants);
+  PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW, eRestyle_Subtree);
 }
 
 FontFaceSet*
