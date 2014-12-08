@@ -11,9 +11,12 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Downloads", "resource://gre/modules/Downloads.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils", "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Notifications", "resource://gre/modules/Notifications.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
+
+let Log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.i.bind(null, "DownloadNotifications"); 
 
 XPCOMUtils.defineLazyGetter(this, "strings",
                             () => Services.strings.createBundle("chrome://browser/locale/browser.properties"));
@@ -36,27 +39,26 @@ Components.manager.QueryInterface(Ci.nsIComponentRegistrar)
                   .registerFactory(kTransferCid, "",
                                    kTransferContractId, null);
 
-Object.defineProperty(this, "nativeWindow",
-                      { get: () => Services.wm.getMostRecentWindow("navigator:browser").NativeWindow });
+Object.defineProperty(this, "window",
+                      { get: () => Services.wm.getMostRecentWindow("navigator:browser") });
 
 const kButtons = {
   PAUSE: new DownloadNotificationButton("pause",
                                         "drawable://pause",
-                                        "alertDownloadsPause",
-                                        notification => notification.pauseDownload()),
+                                        "alertDownloadsPause"),
   RESUME: new DownloadNotificationButton("resume",
                                          "drawable://play",
-                                         "alertDownloadsResume",
-                                         notification => notification.resumeDownload()),
+                                         "alertDownloadsResume"),
   CANCEL: new DownloadNotificationButton("cancel",
                                          "drawable://close",
-                                         "alertDownloadsCancel",
-                                         notification => notification.cancelDownload())
+                                         "alertDownloadsCancel")
 };
 
 let notifications = new Map();
 
 var DownloadNotifications = {
+  _notificationKey: "downloads",
+
   init: function () {
     if (!this._viewAdded) {
       Downloads.getList(Downloads.ALL)
@@ -64,6 +66,9 @@ var DownloadNotifications = {
                .then(null, Cu.reportError);
 
       this._viewAdded = true;
+
+      // All click, cancel, and button presses will be handled by this handler as part of the Notifications callback API.
+      Notifications.registerHandler(this._notificationKey, this);
     }
   },
 
@@ -84,10 +89,11 @@ var DownloadNotifications = {
   onDownloadAdded: function (download) {
     let notification = new DownloadNotification(download);
     notifications.set(download, notification);
-
     notification.showOrUpdate();
+
+    // If this is the start of the download, show a toast as well
     if (download.currentBytes == 0) {
-      nativeWindow.toast.show(strings.GetStringFromName("alertDownloadsToast"), "long");
+      window.NativeWindow.toast.show(strings.GetStringFromName("alertDownloadsToast"), "long");
     }
   },
 
@@ -110,8 +116,71 @@ var DownloadNotifications = {
 
     notification.hide();
     notifications.delete(download);
-  }
+  },
+
+  _findDownloadForCookie: function(cookie) {
+    return Downloads.getList(Downloads.ALL)
+      .then(list => list.getAll())
+      .then((downloads) => {
+        for (let download of downloads) {
+          let cookie2 = getCookieFromDownload(download);
+          if (cookie2 === cookie) {
+            return download;
+          }
+        }
+
+        throw "Couldn't find download for " + cookie;
+      });
+  },
+
+  onCancel: function(cookie) {
+    // TODO: I'm not sure what we do here...
+  },
+
+  showInAboutDownloads: function (download) {
+    let hash = "#" + window.encodeURIComponent(download.target.path);
+
+    // we can't use selectOrOpenTab, since it uses string equality to find a tab
+    window.BrowserApp.selectOrOpenTab("about:downloads" + hash, { startsWith: true });
+  },
+
+  onClick: function(cookie) {
+    this._findDownloadForCookie(cookie).then((download) => {
+      if (download.succeeded) {
+        // We don't call Download.launch(), because there's (currently) no way to
+        // tell if the file was actually launched or not, and we want to show
+        // about:downloads if the launch failed.
+        let file = new FileUtils.File(download.target.path);
+        try {
+          file.launch();
+        } catch (ex) {
+          this.showInAboutDownloads(id, download);
+        }
+      } else {
+        ConfirmCancelPrompt.show(download);
+      }
+    }).catch(Cu.reportError);
+  },
+
+  onButtonClick: function(button, cookie) {
+    this._findDownloadForCookie(cookie).then((download) => {
+      if (button === kButtons.PAUSE.buttonId) {
+        download.cancel().catch(Cu.reportError);
+      } else if (button === kButtons.RESUME.buttonId) {
+        download.start().catch(Cu.reportError);
+      } else if (button === kButtons.CANCEL.buttonId) {
+        download.cancel().catch(Cu.reportError);
+        download.removePartialData().catch(Cu.reportError);
+      }
+    }).catch(Cu.reportError);
+  },
 };
+
+function getCookieFromDownload(download) {
+  return download.target.path +
+         download.source.url +
+         download.startTime;
+}
 
 function DownloadNotification(download) {
   this.download = download;
@@ -135,13 +204,13 @@ DownloadNotification.prototype = {
     }
 
     let options = {
-      icon : "drawable://alert_download",
-      onClick : (id, cookie) => this.onClick(),
-      onCancel : (id, cookie) => this._notificationId = null,
-      cookie : this.download
+      icon: "drawable://alert_download",
+      cookie: getCookieFromDownload(this.download),
+      handlerKey: DownloadNotifications._notificationKey
     };
 
     if (this._downloading) {
+      options.icon = "drawable://alert_download_animation";
       if (this.download.currentBytes == 0) {
         this._updateOptionsForStatic(options, "alertDownloadsStart2");
       } else {
@@ -191,47 +260,18 @@ DownloadNotification.prototype = {
       this.id = null;
     }
   },
-
-  onClick: function () {
-    if (this.download.succeeded) {
-      this.download.launch().then(null, Cu.reportError);
-    } else {
-      ConfirmCancelPrompt.show(this);
-    }
-  },
-
-  pauseDownload: function () {
-    this.download.cancel().then(null, Cu.reportError);
-  },
-
-  resumeDownload: function () {
-    this.download.start().then(null, Cu.reportError);
-  },
-
-  cancelDownload: function () {
-    this.hide();
-
-    this.download.cancel().then(null, Cu.reportError);
-    this.download.removePartialData().then(null, Cu.reportError);
-  }
 };
 
-var ConfirmCancelPrompt = {
-  showing: false,
-  show: function (downloadNotification) {
-    if (this.showing) {
-      return;
-    }
-
-    this.showing = true;
+let ConfirmCancelPrompt = {
+  show: function (download) {
     // Open a prompt that offers a choice to cancel the download
     let title = strings.GetStringFromName("downloadCancelPromptTitle");
     let message = strings.GetStringFromName("downloadCancelPromptMessage");
 
     if (Services.prompt.confirm(null, title, message)) {
-      downloadNotification.cancelDownload();
+      download.cancel().catch(Cu.reportError);
+      download.removePartialData().catch(Cu.reportError);
     }
-    this.showing = false;
   }
 };
 
@@ -239,13 +279,4 @@ function DownloadNotificationButton(buttonId, iconUrl, titleStringName, onClicke
   this.buttonId = buttonId;
   this.title = strings.GetStringFromName(titleStringName);
   this.icon = iconUrl;
-  this.onClicked = (id, download) => {
-    let notification = notifications.get(download);
-    if (!notification) {
-      Cu.reportError("No DownloadNotification for button");
-      return;
-    }
-
-    onClicked(notification);
-  }
 }
