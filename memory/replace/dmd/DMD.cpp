@@ -305,9 +305,44 @@ class Options
     {}
   };
 
+  // DMD has several modes. These modes affect what data is recorded and
+  // written to the output file, and the written data affects the
+  // post-processing that dmd.py can do.
+  //
+  // Users specify the mode as soon as DMD starts. This leads to minimal memory
+  // usage and log file size. It has the disadvantage that is inflexible -- if
+  // you want to change modes you have to re-run DMD. But in practice changing
+  // modes seems to be rare, so it's not much of a problem.
+  //
+  // An alternative possibility would be to always record and output *all* the
+  // information needed for all modes. This would let you choose the mode when
+  // running dmd.py, and so you could do multiple kinds of profiling on a
+  // single DMD run. But if you are only interested in one of the simpler
+  // modes, you'd pay the price of (a) increased memory usage and (b) *very*
+  // large log files.
+  //
+  // Finally, another alternative possibility would be to do mode selection
+  // partly at DMD startup or recording, and then partly in dmd.py. This would
+  // give some extra flexibility at moderate memory and file size cost. But
+  // certain mode pairs wouldn't work, which would be confusing.
+  //
+  enum Mode
+  {
+    // For each live block, this mode outputs: size (usable and slop),
+    // allocation stack, and whether it's sampled. This mode is good for live
+    // heap profiling.
+    Live,
+
+    // Like "Live", but for each live block it also outputs: zero or more
+    // report stacks. This mode is good for identifying where memory reporters
+    // should be added. This is the default mode.
+    DarkMatter
+  };
+
   char* mDMDEnvVar;   // a saved copy, for later printing
 
-  NumOption<size_t>   mSampleBelowSize;
+  Mode mMode;
+  NumOption<size_t> mSampleBelowSize;
   NumOption<uint32_t> mMaxFrames;
   bool mShowDumpStats;
 
@@ -320,13 +355,14 @@ class Options
 public:
   explicit Options(const char* aDMDEnvVar);
 
+  bool IsLiveMode()       const { return mMode == Live; }
+  bool IsDarkMatterMode() const { return mMode == DarkMatter; }
+
   const char* DMDEnvVar() const { return mDMDEnvVar; }
 
   size_t SampleBelowSize() const { return mSampleBelowSize.mActual; }
   size_t MaxFrames()       const { return mMaxFrames.mActual; }
   size_t ShowDumpStats()   const { return mShowDumpStats; }
-
-  void SetSampleBelowSize(size_t aSize) { mSampleBelowSize.mActual = aSize; }
 };
 
 static Options *gOptions;
@@ -401,8 +437,11 @@ public:
   bool IsLocked() { return mIsLocked; }
 };
 
-// This lock must be held while manipulating global state, such as
-// gStackTraceTable, gLiveBlockTable, etc.
+// This lock must be held while manipulating global state such as
+// gStackTraceTable, gLiveBlockTable, etc. Note that gOptions is *not*
+// protected by this lock because it is only written to by Options(), which is
+// only invoked at start-up and in ResetEverything(), which is only used by
+// SmokeDMD.cpp.
 static Mutex* gStateLock = nullptr;
 
 class AutoLockState
@@ -780,7 +819,8 @@ public:
   bool Tag() const { return bool(mUint & kTagMask); }
 };
 
-// A live heap block.
+// A live heap block. Stores both basic data and data about reports, if we're
+// in DarkMatter mode.
 class LiveBlock
 {
   const void*  mPtr;
@@ -788,6 +828,8 @@ class LiveBlock
 
   // Ptr: |mAllocStackTrace| - stack trace where this block was allocated.
   // Tag bit 0: |mIsSampled| - was this block sampled? (if so, slop == 0).
+  //
+  // Only used in DarkMatter mode.
   TaggedPtr<const StackTrace* const>
     mAllocStackTrace_mIsSampled;
 
@@ -801,6 +843,8 @@ class LiveBlock
   //
   // |mPtr| is used as the key in LiveBlockTable, so it's ok for this member
   // to be |mutable|.
+  //
+  // Only used in DarkMatter mode.
   mutable TaggedPtr<const StackTrace*> mReportStackTrace_mReportedOnAlloc[2];
 
 public:
@@ -841,38 +885,45 @@ public:
 
   const StackTrace* ReportStackTrace1() const
   {
+    MOZ_ASSERT(gOptions->IsDarkMatterMode());
     return mReportStackTrace_mReportedOnAlloc[0].Ptr();
   }
 
   const StackTrace* ReportStackTrace2() const
   {
+    MOZ_ASSERT(gOptions->IsDarkMatterMode());
     return mReportStackTrace_mReportedOnAlloc[1].Ptr();
   }
 
   bool ReportedOnAlloc1() const
   {
+    MOZ_ASSERT(gOptions->IsDarkMatterMode());
     return mReportStackTrace_mReportedOnAlloc[0].Tag();
   }
 
   bool ReportedOnAlloc2() const
   {
+    MOZ_ASSERT(gOptions->IsDarkMatterMode());
     return mReportStackTrace_mReportedOnAlloc[1].Tag();
   }
 
   void AddStackTracesToTable(StackTraceSet& aStackTraces) const
   {
     aStackTraces.put(AllocStackTrace());  // never null
-    const StackTrace* st;
-    if ((st = ReportStackTrace1())) {     // may be null
-      aStackTraces.put(st);
-    }
-    if ((st = ReportStackTrace2())) {     // may be null
-      aStackTraces.put(st);
+    if (gOptions->IsDarkMatterMode()) {
+      const StackTrace* st;
+      if ((st = ReportStackTrace1())) {     // may be null
+        aStackTraces.put(st);
+      }
+      if ((st = ReportStackTrace2())) {     // may be null
+        aStackTraces.put(st);
+      }
     }
   }
 
   uint32_t NumReports() const
   {
+    MOZ_ASSERT(gOptions->IsDarkMatterMode());
     if (ReportStackTrace2()) {
       MOZ_ASSERT(ReportStackTrace1());
       return 2;
@@ -886,6 +937,7 @@ public:
   // This is |const| thanks to the |mutable| fields above.
   void Report(Thread* aT, bool aReportedOnAlloc) const
   {
+    MOZ_ASSERT(gOptions->IsDarkMatterMode());
     // We don't bother recording reports after the 2nd one.
     uint32_t numReports = NumReports();
     if (numReports < 2) {
@@ -896,6 +948,7 @@ public:
 
   void UnreportIfNotReportedOnAlloc() const
   {
+    MOZ_ASSERT(gOptions->IsDarkMatterMode());
     if (!ReportedOnAlloc1() && !ReportedOnAlloc2()) {
       mReportStackTrace_mReportedOnAlloc[0].Set(nullptr, 0);
       mReportStackTrace_mReportedOnAlloc[1].Set(nullptr, 0);
@@ -1236,10 +1289,11 @@ Options::GetBool(const char* aArg, const char* aOptionName, bool* aValue)
 //   prime size will explore all possible values of the alloc counter.
 //
 Options::Options(const char* aDMDEnvVar)
-  : mDMDEnvVar(InfallibleAllocPolicy::strdup_(aDMDEnvVar)),
-    mSampleBelowSize(4093, 100 * 100 * 1000),
-    mMaxFrames(StackTrace::MaxFrames, StackTrace::MaxFrames),
-    mShowDumpStats(false)
+  : mDMDEnvVar(InfallibleAllocPolicy::strdup_(aDMDEnvVar))
+  , mMode(DarkMatter)
+  , mSampleBelowSize(4093, 100 * 100 * 1000)
+  , mMaxFrames(StackTrace::MaxFrames, StackTrace::MaxFrames)
+  , mShowDumpStats(false)
 {
   char* e = mDMDEnvVar;
   if (strcmp(e, "1") != 0) {
@@ -1265,7 +1319,13 @@ Options::Options(const char* aDMDEnvVar)
       // Handle arg
       long myLong;
       bool myBool;
-      if (GetLong(arg, "--sample-below", 1, mSampleBelowSize.mMax, &myLong)) {
+      if (strcmp(arg, "--mode=live") == 0) {
+        mMode = Options::Live;
+      } else if (strcmp(arg, "--mode=dark-matter") == 0) {
+        mMode = Options::DarkMatter;
+
+      } else if (GetLong(arg, "--sample-below", 1, mSampleBelowSize.mMax,
+                 &myLong)) {
         mSampleBelowSize.mActual = myLong;
 
       } else if (GetLong(arg, "--max-frames", 1, mMaxFrames.mMax, &myLong)) {
@@ -1298,6 +1358,8 @@ Options::BadArg(const char* aArg)
   StatusMsg("entries.\n");
   StatusMsg("\n");
   StatusMsg("The following options are allowed;  defaults are shown in [].\n");
+  StatusMsg("  --mode=<mode>                Profiling mode [dark-matter]\n");
+  StatusMsg("      where <mode> is one of: live, dark-matter\n");
   StatusMsg("  --sample-below=<1..%d> Sample blocks smaller than this [%d]\n",
             int(mSampleBelowSize.mMax),
             int(mSampleBelowSize.mDefault));
@@ -1374,13 +1436,13 @@ Init(const malloc_table_t* aMallocTable)
 }
 
 //---------------------------------------------------------------------------
-// DMD reporting and unreporting
+// Block reporting and unreporting
 //---------------------------------------------------------------------------
 
 static void
 ReportHelper(const void* aPtr, bool aReportedOnAlloc)
 {
-  if (!aPtr) {
+  if (!gOptions->IsDarkMatterMode() || !aPtr) {
     return;
   }
 
@@ -1416,12 +1478,9 @@ DMDFuncs::ReportOnAlloc(const void* aPtr)
 //---------------------------------------------------------------------------
 
 // The version number of the output format. Increment this if you make
-// backwards-incompatible changes to the format.
-//
-// Version history:
-// - 1: The original format (bug 1044709).
-//
-static const int kOutputVersionNumber = 1;
+// backwards-incompatible changes to the format. See DMD.h for the version
+// history.
+static const int kOutputVersionNumber = 2;
 
 // Note that, unlike most SizeOf* functions, this function does not take a
 // |mozilla::MallocSizeOf| argument.  That's because those arguments are
@@ -1472,6 +1531,10 @@ DMDFuncs::SizeOf(Sizes* aSizes)
 void
 DMDFuncs::ClearReports()
 {
+  if (!gOptions->IsDarkMatterMode()) {
+    return;
+  }
+
   AutoLockState lock;
 
   // Unreport all blocks that were marked reported by a memory reporter.  This
@@ -1487,8 +1550,8 @@ class ToIdStringConverter MOZ_FINAL
 public:
   ToIdStringConverter() : mNextId(0) { mIdMap.init(512); }
 
-  // Converts a pointer to a unique ID. Reuses the existing ID for the pointer if
-  // it's been seen before.
+  // Converts a pointer to a unique ID. Reuses the existing ID for the pointer
+  // if it's been seen before.
   const char* ToIdString(const void* aPtr)
   {
     uint32_t id;
@@ -1576,6 +1639,16 @@ AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
     writer.StartObjectProperty("invocation");
     {
       writer.StringProperty("dmdEnvVar", gOptions->DMDEnvVar());
+      const char* mode;
+      if (gOptions->IsLiveMode()) {
+        mode = "live";
+      } else if (gOptions->IsDarkMatterMode()) {
+        mode = "dark-matter";
+      } else {
+        MOZ_ASSERT(false);
+        mode = "(unknown DMD mode)";
+      }
+      writer.StringProperty("mode", mode);
       writer.IntProperty("sampleBelowSize", gOptions->SampleBelowSize());
     }
     writer.EndObject();
@@ -1599,7 +1672,8 @@ AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
             }
           }
           writer.StringProperty("alloc", isc.ToIdString(b.AllocStackTrace()));
-          if (b.NumReports() > 0) {
+          if (gOptions->IsDarkMatterMode() && b.NumReports() > 0) {
+            MOZ_ASSERT(gOptions->IsDarkMatterMode());
             writer.StartArrayProperty("reps");
             {
               if (b.ReportStackTrace1()) {
@@ -1735,14 +1809,15 @@ DMDFuncs::Analyze(UniquePtr<JSONWriteFunc> aWriter)
 //---------------------------------------------------------------------------
 
 void
-DMDFuncs::SetSampleBelowSize(size_t aSize)
+DMDFuncs::ResetEverything(const char* aOptions)
 {
-  gOptions->SetSampleBelowSize(aSize);
-}
+  AutoLockState lock;
 
-void
-DMDFuncs::ClearBlocks()
-{
+  // Reset options.
+  InfallibleAllocPolicy::delete_(gOptions);
+  gOptions = InfallibleAllocPolicy::new_<Options>(aOptions);
+
+  // Clear all existing blocks.
   gLiveBlockTable->clear();
   gSmallBlockActualSizeCounter = 0;
 }

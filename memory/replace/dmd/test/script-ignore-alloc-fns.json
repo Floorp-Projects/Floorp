@@ -1,7 +1,8 @@
 {
- "version": 1,
+ "version": 2,
  "invocation": {
   "dmdEnvVar": "1",
+  "mode": "live",
   "sampleBelowSize": 2500
  },
  "blockList": [
