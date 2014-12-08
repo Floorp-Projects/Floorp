@@ -725,6 +725,8 @@ var CustomEventManager = {
         CaptivePortalLoginHelper.handleEvent(detail);
         break;
       case 'inputmethod-update-layouts':
+      case 'inputregistry-add':
+      case 'inputregistry-remove':
         KeyboardHelper.handleEvent(detail);
         break;
       case 'do-command':
@@ -868,7 +870,17 @@ let IndexedDBPromptHelper = {
 
 let KeyboardHelper = {
   handleEvent: function keyboard_handleEvent(detail) {
-    Keyboard.setLayouts(detail.layouts);
+    switch (detail.type) {
+      case 'inputmethod-update-layouts':
+        Keyboard.setLayouts(detail.layouts);
+
+        break;
+      case 'inputregistry-add':
+      case 'inputregistry-remove':
+        Keyboard.inputRegistryGlue.returnMessage(detail);
+
+        break;
+    }
   }
 };
 
