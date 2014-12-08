@@ -37,10 +37,10 @@ BufferDecoder::~BufferDecoder()
 }
 
 void
-BufferDecoder::BeginDecoding(MediaTaskQueue* aTaskQueueIdentity)
+BufferDecoder::BeginDecoding(nsIThread* aDecodeThread)
 {
-  MOZ_ASSERT(!mTaskQueueIdentity && aTaskQueueIdentity);
-  mTaskQueueIdentity = aTaskQueueIdentity;
+  MOZ_ASSERT(!mDecodeThread && aDecodeThread);
+  mDecodeThread = aDecodeThread;
 }
 
 ReentrantMonitor&
@@ -66,8 +66,8 @@ BufferDecoder::OnStateMachineThread() const
 bool
 BufferDecoder::OnDecodeThread() const
 {
-  MOZ_ASSERT(mTaskQueueIdentity, "Forgot to call BeginDecoding?");
-  return mTaskQueueIdentity->IsCurrentThreadIn();
+  MOZ_ASSERT(mDecodeThread, "Forgot to call BeginDecoding?");
+  return IsCurrentThread(mDecodeThread);
 }
 
 MediaResource*
