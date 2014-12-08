@@ -88,8 +88,8 @@ MarkerDetails.prototype = {
     let hbox = this._document.createElement("hbox");
     let labelName = this._document.createElement("label");
     let labelValue = this._document.createElement("label");
-    labelName.className = "marker-details-labelname";
-    labelValue.className = "marker-details-labelvalue";
+    labelName.className = "plain marker-details-labelname";
+    labelValue.className = "plain marker-details-labelvalue";
     labelName.setAttribute("value", L10N.getStr(l10nName));
     labelValue.setAttribute("value", value);
     hbox.appendChild(labelName);

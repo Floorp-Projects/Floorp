@@ -4,7 +4,7 @@
 "use strict";
 
 /**
- * Waterfall view controlled by DetailsView.
+ * Waterfall view containing the timeline markers, controlled by DetailsView.
  */
 let WaterfallView = {
   _startTime: 0,
