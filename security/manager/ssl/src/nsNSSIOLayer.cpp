@@ -890,6 +890,46 @@ nsSSLIOLayerHelpers::rememberIntolerantAtVersion(const nsACString& hostName,
       mTLSIntoleranceInfo.Put(key, entry);
     }
 
+    // If we know the server is tolerant at the version, we don't have to
+    // gather the telemetry.
+    if (intolerant <= entry.tolerant) {
+      return false;
+    }
+
+    uint32_t fallbackLimitBucket = 0;
+    // added if the version has reached the min version.
+    if (intolerant <= minVersion) {
+      switch (minVersion) {
+        case SSL_LIBRARY_VERSION_TLS_1_0:
+          fallbackLimitBucket += 1;
+          break;
+        case SSL_LIBRARY_VERSION_TLS_1_1:
+          fallbackLimitBucket += 2;
+          break;
+        case SSL_LIBRARY_VERSION_TLS_1_2:
+          fallbackLimitBucket += 3;
+          break;
+      }
+    }
+    // added if the version has reached the fallback limit.
+    if (intolerant <= mVersionFallbackLimit) {
+      switch (mVersionFallbackLimit) {
+        case SSL_LIBRARY_VERSION_TLS_1_0:
+          fallbackLimitBucket += 4;
+          break;
+        case SSL_LIBRARY_VERSION_TLS_1_1:
+          fallbackLimitBucket += 8;
+          break;
+        case SSL_LIBRARY_VERSION_TLS_1_2:
+          fallbackLimitBucket += 12;
+          break;
+      }
+    }
+    if (fallbackLimitBucket) {
+      Telemetry::Accumulate(Telemetry::SSL_FALLBACK_LIMIT_REACHED,
+                            fallbackLimitBucket);
+    }
+
     return false;
   }
 
