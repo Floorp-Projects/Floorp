@@ -21,6 +21,8 @@ static const char pluginSandboxRules[] =
   "(deny default)\n"
   "(allow signal (target self))\n"
   "(allow sysctl-read)\n"
+  // Illegal syntax on OS X 10.6, needed on 10.7 and up.
+  "%s(allow iokit-open (iokit-user-client-class \"IOHIDParamUserClient\"))\n"
   // Needed only on OS X 10.6
   "%s(allow file-read-data (literal \"%s\"))\n"
   "(allow mach-lookup\n"
@@ -34,6 +36,8 @@ static const char pluginSandboxRules[] =
   "    (regex #\"^/dev/u?random$\")\n"
   "    (regex #\"^/(private/)?var($|/)\")\n"
   "    (literal \"/usr/share/icu/icudt51l.dat\")\n"
+  "    (regex #\"^/System/Library/Displays/Overrides/*\")\n"
+  "    (regex #\"^/System/Library/CoreServices/CoreTypes.bundle/*\")\n"
   "    (literal \"%s\")\n"
   "    (literal \"%s\")\n"
   "    (literal \"%s\"))\n";
@@ -47,13 +51,13 @@ bool StartMacSandbox(MacSandboxInfo aInfo, nsCString &aErrorMessage)
   nsAutoCString profile;
   if (aInfo.type == MacSandboxType_Plugin) {
     if (nsCocoaFeatures::OnLionOrLater()) {
-      profile.AppendPrintf(pluginSandboxRules, ";",
+      profile.AppendPrintf(pluginSandboxRules, "", ";",
                            aInfo.pluginInfo.pluginPath.get(),
                            aInfo.pluginInfo.pluginBinaryPath.get(),
                            aInfo.appPath.get(),
                            aInfo.appBinaryPath.get());
     } else {
-      profile.AppendPrintf(pluginSandboxRules, "",
+      profile.AppendPrintf(pluginSandboxRules, ";", "",
                            aInfo.pluginInfo.pluginPath.get(),
                            aInfo.pluginInfo.pluginBinaryPath.get(),
                            aInfo.appPath.get(),

@@ -102,25 +102,6 @@ enum JSIterateOp {
     JSENUMERATE_DESTROY
 };
 
-/* See Value::gcKind() and JSTraceCallback in Tracer.h. */
-enum JSGCTraceKind {
-    JSTRACE_OBJECT,
-    JSTRACE_STRING,
-    JSTRACE_SYMBOL,
-    JSTRACE_SCRIPT,
-
-    /*
-     * Trace kinds internal to the engine. The embedding can only see them if
-     * it implements JSTraceCallback.
-     */
-    JSTRACE_LAZY_SCRIPT,
-    JSTRACE_JITCODE,
-    JSTRACE_SHAPE,
-    JSTRACE_BASE_SHAPE,
-    JSTRACE_TYPE_OBJECT,
-    JSTRACE_LAST = JSTRACE_TYPE_OBJECT
-};
-
 /* Struct forward declarations. */
 struct JSClass;
 struct JSCompartment;

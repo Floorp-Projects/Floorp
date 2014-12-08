@@ -59,13 +59,13 @@ Node::Node(JSGCTraceKind kind, void *ptr)
 {
     switch (kind) {
       case JSTRACE_OBJECT:      construct(static_cast<JSObject *>(ptr));              break;
+      case JSTRACE_SCRIPT:      construct(static_cast<JSScript *>(ptr));              break;
       case JSTRACE_STRING:      construct(static_cast<JSString *>(ptr));              break;
       case JSTRACE_SYMBOL:      construct(static_cast<JS::Symbol *>(ptr));            break;
-      case JSTRACE_SCRIPT:      construct(static_cast<JSScript *>(ptr));              break;
-      case JSTRACE_LAZY_SCRIPT: construct(static_cast<js::LazyScript *>(ptr));        break;
-      case JSTRACE_JITCODE:     construct(static_cast<js::jit::JitCode *>(ptr));      break;
-      case JSTRACE_SHAPE:       construct(static_cast<js::Shape *>(ptr));             break;
       case JSTRACE_BASE_SHAPE:  construct(static_cast<js::BaseShape *>(ptr));         break;
+      case JSTRACE_JITCODE:     construct(static_cast<js::jit::JitCode *>(ptr));      break;
+      case JSTRACE_LAZY_SCRIPT: construct(static_cast<js::LazyScript *>(ptr));        break;
+      case JSTRACE_SHAPE:       construct(static_cast<js::Shape *>(ptr));             break;
       case JSTRACE_TYPE_OBJECT: construct(static_cast<js::types::TypeObject *>(ptr)); break;
 
       default:

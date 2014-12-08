@@ -7,7 +7,10 @@
 interface nsIContentFrameMessageManager;
 interface nsIWebBrowserChrome3;
 
-[scriptable, uuid(2eb3bc54-78bf-40f2-b301-a5b5b70f7da0)]
+native CommandsArray(nsTArray<nsCString>);
+[ref] native CommandsArrayRef(nsTArray<nsCString>);
+
+[scriptable, uuid(7227bac4-b6fe-4090-aeb4-bc288b790925)]
 interface nsITabChild : nsISupports
 {
   readonly attribute nsIContentFrameMessageManager messageManager;
@@ -15,5 +18,9 @@ interface nsITabChild : nsISupports
   attribute nsIWebBrowserChrome3 webBrowserChrome;
 
   [notxpcom] void sendRequestFocus(in boolean canFocus);
+
+  [noscript, notxpcom] void enableDisableCommands(in AString action,
+                                                  in CommandsArrayRef enabledCommands,
+                                                  in CommandsArrayRef disabledCommands);
 };
 
