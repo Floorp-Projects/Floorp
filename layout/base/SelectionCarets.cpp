@@ -28,7 +28,6 @@
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScrollViewChangeEvent.h"
-#include "mozilla/dom/SelectionStateChangedEvent.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/TreeWalker.h"
 #include "mozilla/Preferences.h"
@@ -959,15 +958,14 @@ GetSelectionStates(int16_t aReason)
   return states;
 }
 
-static nsRect
-GetSelectionBoundingRect(Selection* aSel, nsIPresShell* aShell)
+nsRect
+SelectionCarets::GetSelectionBoundingRect(Selection* aSel)
 {
   nsRect res;
   // Bounding client rect may be empty after calling GetBoundingClientRect
   // when range is collapsed. So we get caret's rect when range is
   // collapsed.
   if (aSel->IsCollapsed()) {
-    aShell->FlushPendingNotifications(Flush_Layout);
     nsIFrame* frame = nsCaret::GetGeometry(aSel, &res);
     if (frame) {
       nsIFrame* relativeTo =
@@ -991,27 +989,27 @@ GetSelectionBoundingRect(Selection* aSel, nsIPresShell* aShell)
   return res;
 }
 
-static void
-DispatchSelectionStateChangedEvent(nsIPresShell* aPresShell,
-                             nsISelection* aSel,
-                             const dom::Sequence<SelectionState>& aStates)
+void
+SelectionCarets::DispatchSelectionStateChangedEvent(Selection* aSelection,
+                                                    const Sequence<SelectionState>& aStates)
 {
-  nsIDocument* doc = aPresShell->GetDocument();
+  nsIDocument* doc = mPresShell->GetDocument();
 
   MOZ_ASSERT(doc);
 
   SelectionStateChangedEventInit init;
   init.mBubbles = true;
 
-  if (aSel) {
-    Selection* selection = static_cast<Selection*>(aSel);
-    nsRect rect = GetSelectionBoundingRect(selection, doc->GetShell());
+  if (aSelection) {
+    // XXX: Do we need to flush layout?
+    mPresShell->FlushPendingNotifications(Flush_Layout);
+    nsRect rect = GetSelectionBoundingRect(aSelection);
     nsRefPtr<DOMRect>domRect = new DOMRect(ToSupports(doc));
 
     domRect->SetLayoutRect(rect);
     init.mBoundingClientRect = domRect;
 
-    selection->Stringify(init.mSelectedText);
+    aSelection->Stringify(init.mSelectedText);
   }
   init.mStates = aStates;
 
@@ -1031,7 +1029,7 @@ SelectionCarets::NotifyBlur()
 
   dom::Sequence<SelectionState> state;
   state.AppendElement(dom::SelectionState::Blur);
-  DispatchSelectionStateChangedEvent(mPresShell, nullptr, state);
+  DispatchSelectionStateChangedEvent(nullptr, state);
 }
 
 nsresult
@@ -1048,7 +1046,8 @@ SelectionCarets::NotifySelectionChanged(nsIDOMDocument* aDoc,
     UpdateSelectionCarets();
   }
 
-  DispatchSelectionStateChangedEvent(mPresShell, aSel, GetSelectionStates(aReason));
+  DispatchSelectionStateChangedEvent(static_cast<Selection*>(aSel),
+                                     GetSelectionStates(aReason));
   return NS_OK;
 }
 
