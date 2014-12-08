@@ -45,7 +45,7 @@ struct DMDFuncs
 
   virtual void ClearReports();
 
-  virtual void AnalyzeReports(UniquePtr<JSONWriteFunc>);
+  virtual void Analyze(UniquePtr<JSONWriteFunc>);
 
   virtual void SizeOf(Sizes*);
 
@@ -124,7 +124,7 @@ ReportOnAlloc(const void* aPtr)
 // reporters.  The following sequence should be used.
 // - ClearReports()
 // - run the memory reporters
-// - AnalyzeReports()
+// - Analyze()
 // This sequence avoids spurious twice-reported warnings.
 inline void
 ClearReports()
@@ -222,17 +222,17 @@ ClearReports()
 //   }
 // }
 // Implementation note: normally, this wouldn't be templated, but in that case,
-// the function is compiled, which makes the destructor for the UniquePtr fire up,
-// and that needs JSONWriteFunc to be fully defined. That, in turn, requires to
-// include JSONWriter.h, which includes double-conversion.h, which ends up breaking
-// various things built with -Werror for various reasons.
+// the function is compiled, which makes the destructor for the UniquePtr fire
+// up, and that needs JSONWriteFunc to be fully defined. That, in turn,
+// requires to include JSONWriter.h, which includes double-conversion.h, which
+// ends up breaking various things built with -Werror for various reasons.
 template <typename JSONWriteFunc>
 inline void
-AnalyzeReports(UniquePtr<JSONWriteFunc> aWriteFunc)
+Analyze(UniquePtr<JSONWriteFunc> aWriteFunc)
 {
   DMDFuncs* funcs = DMDFuncs::Get();
   if (funcs) {
-    funcs->AnalyzeReports(Move(aWriteFunc));
+    funcs->Analyze(Move(aWriteFunc));
   }
 }
 
