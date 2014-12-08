@@ -34,7 +34,8 @@ describe("loop.store.ActiveRoomStore", function () {
 
     fakeSdkDriver = {
       connectSession: sandbox.stub(),
-      disconnectSession: sandbox.stub()
+      disconnectSession: sandbox.stub(),
+      forceDisconnectAll: sandbox.stub().callsArg(0)
     };
 
     fakeMultiplexGum = {
@@ -740,7 +741,7 @@ describe("loop.store.ActiveRoomStore", function () {
       });
 
       it("should dispatch an UpdateRoomInfo action", function() {
-        sinon.assert.calledOnce(fakeMozLoop.rooms.on);
+        sinon.assert.calledTwice(fakeMozLoop.rooms.on);
 
         var fakeRoomData = {
           roomName: "fakeName",
@@ -753,6 +754,31 @@ describe("loop.store.ActiveRoomStore", function () {
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           new sharedActions.UpdateRoomInfo(fakeRoomData));
+      });
+    });
+
+    describe("delete:{roomToken}", function() {
+      var fakeRoomData = {
+        roomName: "Its a room",
+        roomOwner: "Me",
+        roomToken: "fakeToken",
+        roomUrl: "http://invalid"
+      };
+
+      beforeEach(function() {
+        store.setupRoomInfo(new sharedActions.SetupRoomInfo(fakeRoomData));
+      });
+
+      it("should disconnect all room connections", function() {
+        fakeMozLoop.rooms.on.callArgWith(1, "delete:" + fakeRoomData.roomToken, fakeRoomData);
+
+        sinon.assert.calledOnce(fakeSdkDriver.forceDisconnectAll);
+      });
+
+      it("should not disconnect anything when another room is deleted", function() {
+        fakeMozLoop.rooms.on.callArgWith(1, "delete:invalidToken", fakeRoomData);
+
+        sinon.assert.calledOnce(fakeSdkDriver.forceDisconnectAll);
       });
     });
   });
