@@ -394,7 +394,6 @@ let ProfileView = {
 
     let graph = new LineGraphWidget($(".framerate", panel), L10N.getStr("graphs.fps"));
     graph.fixedHeight = FRAMERATE_GRAPH_HEIGHT;
-    graph.minDistanceBetweenPoints = 1;
     graph.dataOffsetX = beginAt;
 
     yield graph.setDataWhenReady(framerateData);
