@@ -61,10 +61,6 @@ enum State {
     COMPACT
 };
 
-/* Return a printable string for the given kind, for diagnostic purposes. */
-const char *
-TraceKindAsAscii(JSGCTraceKind kind);
-
 /* Map from C++ type to alloc kind. JSObject does not have a 1:1 mapping, so must use Arena::thingSize. */
 template <typename T> struct MapTypeToFinalizeKind {};
 template <> struct MapTypeToFinalizeKind<JSScript>          { static const AllocKind kind = FINALIZE_SCRIPT; };

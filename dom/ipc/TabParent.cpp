@@ -47,6 +47,7 @@
 #include "nsIWindowCreator2.h"
 #include "nsIXULBrowserWindow.h"
 #include "nsIXULWindow.h"
+#include "nsIRemoteBrowser.h"
 #include "nsViewManager.h"
 #include "nsIWidget.h"
 #include "nsIWindowWatcher.h"
@@ -1464,6 +1465,37 @@ TabParent::RecvRequestFocus(const bool& aCanRaise)
 
   nsCOMPtr<nsIDOMElement> node = do_QueryInterface(mFrameElement);
   fm->SetFocus(node, flags);
+  return true;
+}
+
+bool
+TabParent::RecvEnableDisableCommands(const nsString& aAction,
+                                     const nsTArray<nsCString>& aEnabledCommands,
+                                     const nsTArray<nsCString>& aDisabledCommands)
+{
+  nsCOMPtr<nsIRemoteBrowser> remoteBrowser = do_QueryInterface(mFrameElement);
+  if (remoteBrowser) {
+    nsAutoArrayPtr<const char*> enabledCommands, disabledCommands;
+
+    if (aEnabledCommands.Length()) {
+      enabledCommands = new const char* [aEnabledCommands.Length()];
+      for (uint32_t c = 0; c < aEnabledCommands.Length(); c++) {
+        enabledCommands[c] = aEnabledCommands[c].get();
+      }
+    }
+
+    if (aDisabledCommands.Length()) {
+      disabledCommands = new const char* [aDisabledCommands.Length()];
+      for (uint32_t c = 0; c < aDisabledCommands.Length(); c++) {
+        disabledCommands[c] = aDisabledCommands[c].get();
+      }
+    }
+
+    remoteBrowser->EnableDisableCommands(aAction,
+                                         aEnabledCommands.Length(), enabledCommands,
+                                         aDisabledCommands.Length(), disabledCommands);
+  }
+
   return true;
 }
 
