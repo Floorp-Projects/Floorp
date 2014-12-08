@@ -564,13 +564,15 @@ RTCPeerConnection.prototype = {
                           });
   },
 
-  createOffer: function(onSuccess, onError, options) {
+  createOffer: function(optionsOrOnSuccess, onError, options) {
 
     // TODO: Remove old constraint-like RTCOptions support soon (Bug 1064223).
     // Note that webidl bindings make o.mandatory implicit but not o.optional.
     function convertLegacyOptions(o) {
-      if (!(Object.keys(o.mandatory).length || o.optional) ||
-          Object.keys(o).length != (o.optional? 2 : 1)) {
+      // Detect (mandatory OR optional) AND no other top-level members.
+      let lcy = ((o.mandatory && Object.keys(o.mandatory).length) || o.optional) &&
+                Object.keys(o).length == (o.mandatory? 1 : 0) + (o.optional? 1 : 0);
+      if (!lcy) {
         return false;
       }
       let old = o.mandatory || {};
@@ -600,17 +602,28 @@ RTCPeerConnection.prototype = {
       return true;
     }
 
+    let onSuccess;
+    if (optionsOrOnSuccess && typeof optionsOrOnSuccess === "function") {
+      onSuccess = optionsOrOnSuccess;
+    } else {
+      options = optionsOrOnSuccess;
+      onError = undefined;
+    }
     if (options && convertLegacyOptions(options)) {
       this.logWarning(
           "Mandatory/optional in createOffer options is deprecated! Use " +
           JSON.stringify(options) + " instead (note the case difference)!",
           null, 0);
     }
-    this._queueOrRun({
-      func: this._createOffer,
-      args: [onSuccess, onError, options],
-      wait: true
+    let p = new this._win.Promise((resolve, reject) => {
+      this._queueOrRun({
+        func: this._createOffer,
+        args: [resolve, reject, options],
+        wait: true
+      });
     });
+    return (onSuccess || onError)?
+      p.then(offer => { onSuccess(offer); }, onError) : p;
   },
 
   _createOffer: function(onSuccess, onError, options) {
@@ -640,20 +653,18 @@ RTCPeerConnection.prototype = {
   },
 
   createAnswer: function(onSuccess, onError) {
-    this._queueOrRun({
-      func: this._createAnswer,
-      args: [onSuccess, onError],
-      wait: true
+    let p = new this._win.Promise((resolve, reject) => {
+      this._queueOrRun({
+        func: this._createAnswer,
+        args: [resolve, reject],
+        wait: true
+      });
     });
+    return (onSuccess || onError)?
+      p.then(answer => { onSuccess(answer); }, onError) : p;
   },
 
   setLocalDescription: function(desc, onSuccess, onError) {
-    if (!onSuccess || !onError) {
-      this.logWarning(
-          "setLocalDescription called without success/failure callbacks. This is deprecated, and will be an error in the future.",
-          null, 0);
-    }
-
     this._localType = desc.type;
 
     let type;
@@ -671,11 +682,14 @@ RTCPeerConnection.prototype = {
             "Invalid type " + desc.type + " provided to setLocalDescription");
     }
 
-    this._queueOrRun({
-      func: this._setLocalDescription,
-      args: [type, desc.sdp, onSuccess, onError],
-      wait: true
+    let p = new this._win.Promise((resolve, reject) => {
+      this._queueOrRun({
+        func: this._setLocalDescription,
+        args: [type, desc.sdp, resolve, reject],
+        wait: true
+      });
     });
+    return (onSuccess || onError)? p.then(() => { onSuccess(); }, onError) : p;
   },
 
   _setLocalDescription: function(type, sdp, onSuccess, onError) {
@@ -685,11 +699,6 @@ RTCPeerConnection.prototype = {
   },
 
   setRemoteDescription: function(desc, onSuccess, onError) {
-    if (!onSuccess || !onError) {
-      this.logWarning(
-          "setRemoteDescription called without success/failure callbacks. This is deprecated, and will be an error in the future.",
-          null, 0);
-    }
     this._remoteType = desc.type;
 
     let type;
@@ -710,11 +719,14 @@ RTCPeerConnection.prototype = {
     // Have to get caller's origin outside of Promise constructor and pass it in
     let origin = Cu.getWebIDLCallerPrincipal().origin;
 
-    this._queueOrRun({
-      func: this._setRemoteDescription,
-      args: [type, desc.sdp, origin, onSuccess, onError],
-      wait: true
+    let p = new this._win.Promise((resolve, reject) => {
+      this._queueOrRun({
+        func: this._setRemoteDescription,
+        args: [type, desc.sdp, origin, resolve, reject],
+        wait: true
+      });
     });
+    return (onSuccess || onError)? p.then(() => { onSuccess(); }, onError) : p;
   },
 
   /**
@@ -829,21 +841,19 @@ RTCPeerConnection.prototype = {
   },
 
   addIceCandidate: function(cand, onSuccess, onError) {
-    if (!onSuccess || !onError) {
-      this.logWarning(
-          "addIceCandidate called without success/failure callbacks. This is deprecated, and will be an error in the future.",
-          null, 0);
-    }
     if (!cand.candidate && !cand.sdpMLineIndex) {
       throw new this._win.DOMError("InvalidParameterError",
           "Invalid candidate passed to addIceCandidate!");
     }
 
-    this._queueOrRun({
-      func: this._addIceCandidate,
-      args: [cand, onSuccess, onError],
-      wait: false
+    let p = new this._win.Promise((resolve, reject) => {
+      this._queueOrRun({
+        func: this._addIceCandidate,
+        args: [cand, resolve, reject],
+        wait: false
+      });
     });
+    return (onSuccess || onError)? p.then(() => { onSuccess(); }, onError) : p;
   },
 
   _addIceCandidate: function(cand, onSuccess, onError) {
@@ -1020,11 +1030,15 @@ RTCPeerConnection.prototype = {
   },
 
   getStats: function(selector, onSuccess, onError) {
-    this._queueOrRun({
-      func: this._getStats,
-      args: [selector, onSuccess, onError],
-      wait: false
+    let p = new this._win.Promise((resolve, reject) => {
+      this._queueOrRun({
+        func: this._getStats,
+        args: [selector, resolve, reject],
+        wait: false
+      });
     });
+    return (onSuccess || onError)?
+      p.then(stats => { onSuccess(stats); }, onError) : p;
   },
 
   _getStats: function(selector, onSuccess, onError) {
@@ -1428,13 +1442,17 @@ RTCRtpSender.prototype = {
   contractID: PC_SENDER_CONTRACT,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
 
-  replaceTrack: function(withTrack, onSuccess, onError) {
+  replaceTrack: function(withTrack) {
     this._pc._checkClosed();
-    this._pc._queueOrRun({
-      func: this._pc._replaceTrack,
-      args: [this, withTrack, onSuccess, onError],
-      wait: false
+
+    let p = new this._pc._win.Promise((resolve, reject) => {
+      this._pc._queueOrRun({
+        func: this._pc._replaceTrack,
+        args: [this, withTrack, resolve, reject],
+        wait: false
+      });
     });
+    return p;
   }
 };
 
