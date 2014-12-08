@@ -488,43 +488,24 @@ SelectionCarets::UpdateSelectionCarets()
   }
 
   mPresShell->FlushPendingNotifications(Flush_Layout);
-  nsRect firstRectInRootFrame =
+
+  nsRect firstRectInStartFrame =
     nsCaret::GetGeometryForFrame(startFrame, startOffset, nullptr);
-  nsRect lastRectInRootFrame =
+  nsRect lastRectInEndFrame =
     nsCaret::GetGeometryForFrame(endFrame, endOffset, nullptr);
 
-  // GetGeometryForFrame may return a rect that outside frame's rect. So
-  // constrain rect inside frame's rect.
-  firstRectInRootFrame = firstRectInRootFrame.ForceInside(startFrame->GetRectRelativeToSelf());
-  lastRectInRootFrame = lastRectInRootFrame.ForceInside(endFrame->GetRectRelativeToSelf());
-  nsRect firstRectInCanvasFrame = firstRectInRootFrame;
-  nsRect lastRectInCanvasFrame =lastRectInRootFrame;
-  nsLayoutUtils::TransformRect(startFrame, rootFrame, firstRectInRootFrame);
-  nsLayoutUtils::TransformRect(endFrame, rootFrame, lastRectInRootFrame);
+  bool startFrameVisible =
+    nsLayoutUtils::IsRectVisibleInScrollFrames(startFrame, firstRectInStartFrame);
+  bool endFrameVisible =
+    nsLayoutUtils::IsRectVisibleInScrollFrames(endFrame, lastRectInEndFrame);
+
+  nsRect firstRectInCanvasFrame = firstRectInStartFrame;
+  nsRect lastRectInCanvasFrame = lastRectInEndFrame;
   nsLayoutUtils::TransformRect(startFrame, canvasFrame, firstRectInCanvasFrame);
   nsLayoutUtils::TransformRect(endFrame, canvasFrame, lastRectInCanvasFrame);
 
-  firstRectInRootFrame.Inflate(AppUnitsPerCSSPixel(), 0);
-  lastRectInRootFrame.Inflate(AppUnitsPerCSSPixel(), 0);
-
-  nsAutoTArray<nsIFrame*, 16> hitFramesInFirstRect;
-  nsLayoutUtils::GetFramesForArea(rootFrame,
-    firstRectInRootFrame,
-    hitFramesInFirstRect,
-    nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
-      nsLayoutUtils::IGNORE_CROSS_DOC |
-      nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME);
-
-  nsAutoTArray<nsIFrame*, 16> hitFramesInLastRect;
-  nsLayoutUtils::GetFramesForArea(rootFrame,
-    lastRectInRootFrame,
-    hitFramesInLastRect,
-    nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
-      nsLayoutUtils::IGNORE_CROSS_DOC |
-      nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME);
-
-  SetStartFrameVisibility(hitFramesInFirstRect.Contains(startFrame));
-  SetEndFrameVisibility(hitFramesInLastRect.Contains(endFrame));
+  SetStartFrameVisibility(startFrameVisible);
+  SetEndFrameVisibility(endFrameVisible);
 
   SetStartFramePos(firstRectInCanvasFrame.BottomLeft());
   SetEndFramePos(lastRectInCanvasFrame.BottomRight());
@@ -936,7 +917,15 @@ SelectionCarets::GetFrameSelection()
     if (!focusFrame) {
       return nullptr;
     }
-    return focusFrame->GetFrameSelection();
+
+    // Prevent us from touching the nsFrameSelection associated to other
+    // PresShell.
+    nsRefPtr<nsFrameSelection> fs = focusFrame->GetFrameSelection();
+    if (!fs || fs->GetShell() != mPresShell) {
+      return nullptr;
+    }
+
+    return fs.forget();
   } else {
     return mPresShell->FrameSelection();
   }
@@ -1097,6 +1086,7 @@ SelectionCarets::AsyncPanZoomStarted(const mozilla::CSSIntPoint aScrollPos)
 void
 SelectionCarets::AsyncPanZoomStopped(const mozilla::CSSIntPoint aScrollPos)
 {
+  SELECTIONCARETS_LOG("Update selection carets after APZ is stopped!");
   UpdateSelectionCarets();
 
   SELECTIONCARETS_LOG("Dispatch scroll stopped with position x=%d, y=%d",
