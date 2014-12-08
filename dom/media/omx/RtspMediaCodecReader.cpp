@@ -74,19 +74,19 @@ RtspMediaCodecReader::EnsureActive()
   mRtspResource->SetSuspend(false);
 }
 
-nsRefPtr<MediaDecoderReader::AudioDataPromise>
+void
 RtspMediaCodecReader::RequestAudioData()
 {
   EnsureActive();
-  return MediaCodecReader::RequestAudioData();
+  MediaCodecReader::RequestAudioData();
 }
 
-nsRefPtr<MediaDecoderReader::VideoDataPromise>
+void
 RtspMediaCodecReader::RequestVideoData(bool aSkipToNextKeyframe,
                                        int64_t aTimeThreshold)
 {
   EnsureActive();
-  return MediaCodecReader::RequestVideoData(aSkipToNextKeyframe, aTimeThreshold);
+  MediaCodecReader::RequestVideoData(aSkipToNextKeyframe, aTimeThreshold);
 }
 
 nsresult

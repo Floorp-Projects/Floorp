@@ -46,14 +46,15 @@ public:
 
   bool IsWaitingMediaResources() MOZ_OVERRIDE;
 
-  nsRefPtr<AudioDataPromise> RequestAudioData() MOZ_OVERRIDE;
-  nsRefPtr<VideoDataPromise>
-  RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold) MOZ_OVERRIDE;
+  void RequestAudioData() MOZ_OVERRIDE;
 
   void OnAudioDecoded(AudioData* aSample);
-  void OnAudioNotDecoded(NotDecodedReason aReason);
+
+  void RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold) MOZ_OVERRIDE;
+
   void OnVideoDecoded(VideoData* aSample);
-  void OnVideoNotDecoded(NotDecodedReason aReason);
+
+  void OnNotDecoded(MediaData::Type aType, NotDecodedReason aReason);
 
   void OnSeekCompleted(nsresult aResult);
 
