@@ -842,6 +842,13 @@ public:
                             nscoord aInflateSize);
 
   /**
+   * Check whether aRect is visible in the boundary of the scroll frames
+   * boundary.
+   */
+  static bool IsRectVisibleInScrollFrames(nsIFrame* aFrame,
+                                          const nsRect& aRect);
+
+  /**
    * Return true if a "layer transform" could be computed for aFrame,
    * and optionally return the computed transform.  The returned
    * transform is what would be set on the layer currently if a layers
