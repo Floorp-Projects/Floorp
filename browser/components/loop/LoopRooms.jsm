@@ -346,6 +346,7 @@ let LoopRoomsInternal = {
       .then(response => {
         this.rooms.delete(roomToken);
         eventEmitter.emit("delete", room);
+        eventEmitter.emit("delete:" + room.roomToken, room);
         callback(null, room);
       }, error => callback(error)).catch(error => callback(error));
   },
