@@ -9,6 +9,7 @@
 #include "WebGLBuffer.h"
 #include "WebGLTransformFeedback.h"
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 
@@ -47,72 +48,92 @@ WebGL2Context::WrapObject(JSContext* cx)
 ////////////////////////////////////////////////////////////////////////////////
 // WebGL 2 initialisation
 
+// These WebGL 1 extensions are natively supported by WebGL 2.
+static const WebGLExtensionID kNativelySupportedExtensions[] = {
+    WebGLExtensionID::ANGLE_instanced_arrays,
+    WebGLExtensionID::EXT_blend_minmax,
+    WebGLExtensionID::EXT_sRGB,
+    WebGLExtensionID::OES_element_index_uint,
+    WebGLExtensionID::OES_standard_derivatives,
+    WebGLExtensionID::OES_texture_float,
+    WebGLExtensionID::OES_texture_float_linear,
+    WebGLExtensionID::OES_texture_half_float,
+    WebGLExtensionID::OES_texture_half_float_linear,
+    WebGLExtensionID::OES_vertex_array_object,
+    WebGLExtensionID::WEBGL_depth_texture,
+    WebGLExtensionID::WEBGL_draw_buffers
+};
+
+static const gl::GLFeature kRequiredFeatures[] = {
+    gl::GLFeature::blend_minmax,
+    gl::GLFeature::clear_buffers,
+    gl::GLFeature::copy_buffer,
+    gl::GLFeature::depth_texture,
+    gl::GLFeature::draw_instanced,
+    gl::GLFeature::draw_range_elements,
+    gl::GLFeature::element_index_uint,
+    gl::GLFeature::frag_color_float,
+    gl::GLFeature::frag_depth,
+    gl::GLFeature::framebuffer_blit,
+    gl::GLFeature::framebuffer_multisample,
+    gl::GLFeature::get_integer_indexed,
+    gl::GLFeature::get_integer64_indexed,
+    gl::GLFeature::gpu_shader4,
+    gl::GLFeature::instanced_arrays,
+    gl::GLFeature::instanced_non_arrays,
+    gl::GLFeature::invalidate_framebuffer,
+    gl::GLFeature::map_buffer_range,
+    gl::GLFeature::occlusion_query2,
+    gl::GLFeature::packed_depth_stencil,
+    gl::GLFeature::query_objects,
+    gl::GLFeature::renderbuffer_color_float,
+    gl::GLFeature::renderbuffer_color_half_float,
+    gl::GLFeature::sRGB,
+    gl::GLFeature::sampler_objects,
+    gl::GLFeature::standard_derivatives,
+    gl::GLFeature::texture_3D,
+    gl::GLFeature::texture_3D_compressed,
+    gl::GLFeature::texture_3D_copy,
+    gl::GLFeature::texture_float,
+    gl::GLFeature::texture_float_linear,
+    gl::GLFeature::texture_half_float,
+    gl::GLFeature::texture_half_float_linear,
+    gl::GLFeature::texture_non_power_of_two,
+    gl::GLFeature::texture_storage,
+    gl::GLFeature::transform_feedback2,
+    gl::GLFeature::uniform_buffer_object,
+    gl::GLFeature::uniform_matrix_nonsquare,
+    gl::GLFeature::vertex_array_object
+};
+
 bool
 WebGLContext::InitWebGL2()
 {
     MOZ_ASSERT(IsWebGL2(), "WebGLContext is not a WebGL 2 context!");
-
-    const WebGLExtensionID sExtensionNativelySupportedArr[] = {
-        WebGLExtensionID::ANGLE_instanced_arrays,
-        WebGLExtensionID::EXT_blend_minmax,
-        WebGLExtensionID::EXT_sRGB,
-        WebGLExtensionID::OES_element_index_uint,
-        WebGLExtensionID::OES_standard_derivatives,
-        WebGLExtensionID::OES_texture_float,
-        WebGLExtensionID::OES_texture_float_linear,
-        WebGLExtensionID::OES_texture_half_float,
-        WebGLExtensionID::OES_texture_half_float_linear,
-        WebGLExtensionID::OES_vertex_array_object,
-        WebGLExtensionID::WEBGL_depth_texture,
-        WebGLExtensionID::WEBGL_draw_buffers
-    };
-    const gl::GLFeature sFeatureRequiredArr[] = {
-        gl::GLFeature::instanced_non_arrays,
-        gl::GLFeature::transform_feedback2,
-        gl::GLFeature::invalidate_framebuffer
-    };
-
-    // check WebGL extensions that are supposed to be natively supported
-    size_t len = MOZ_ARRAY_LENGTH(sExtensionNativelySupportedArr);
-    for (size_t i = 0; i < len; i++) {
-        WebGLExtensionID extension = sExtensionNativelySupportedArr[i];
-
-        if (!IsExtensionSupported(extension)) {
-            GenerateWarning("WebGL 2 requires %s!", GetExtensionString(extension));
-            return false;
-        }
-    }
-
-    // check required OpenGL extensions
-    if (!gl->IsExtensionSupported(gl::GLContext::EXT_gpu_shader4)) {
-        GenerateWarning("WebGL 2 requires GL_EXT_gpu_shader4!");
-        return false;
-    }
 
     // check OpenGL features
     if (!gl->IsSupported(gl::GLFeature::occlusion_query) &&
         !gl->IsSupported(gl::GLFeature::occlusion_query_boolean))
     {
         // On desktop, we fake occlusion_query_boolean with occlusion_query if
-        //necessary. (See WebGLContextAsyncQueries.cpp)
-        GenerateWarning("WebGL 2 requires occlusion queries!");
+        // necessary. (See WebGL2ContextQueries.cpp)
+        GenerateWarning("WebGL 2 unavailable. Requires occlusion queries.");
         return false;
     }
 
-    for (size_t i = 0; i < size_t(MOZ_ARRAY_LENGTH(sFeatureRequiredArr)); i++) {
-        if (!gl->IsSupported(sFeatureRequiredArr[i])) {
-            GenerateWarning("WebGL 2 requires GLFeature::%s!",
-                            gl::GLContext::GetFeatureName(sFeatureRequiredArr[i]));
+    for (size_t i = 0; i < ArrayLength(kRequiredFeatures); i++) {
+        if (!gl->IsSupported(kRequiredFeatures[i])) {
+            GenerateWarning("WebGL 2 unavailable. Requires feature %s.",
+                            gl::GLContext::GetFeatureName(kRequiredFeatures[i]));
             return false;
         }
     }
 
     // ok WebGL 2 is compatible, we can enable natively supported extensions.
-    len = MOZ_ARRAY_LENGTH(sExtensionNativelySupportedArr);
-    for (size_t i = 0; i < len; i++) {
-        EnableExtension(sExtensionNativelySupportedArr[i]);
+    for (size_t i = 0; i < ArrayLength(kNativelySupportedExtensions); i++) {
+        EnableExtension(kNativelySupportedExtensions[i]);
 
-        MOZ_ASSERT(IsExtensionEnabled(sExtensionNativelySupportedArr[i]));
+        MOZ_ASSERT(IsExtensionEnabled(kNativelySupportedExtensions[i]));
     }
 
     // we initialise WebGL 2 related stuff.

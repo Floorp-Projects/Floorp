@@ -399,7 +399,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
          */
     },
     {
-        "renderbuffer_float",
+        "renderbuffer_color_float",
         GLVersion::GL3,
         GLESVersion::ES3,
         GLContext::Extension_None,
@@ -410,7 +410,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "renderbuffer_half_float",
+        "renderbuffer_color_half_float",
         GLVersion::GL3,
         GLESVersion::ES3,
         GLContext::Extension_None,

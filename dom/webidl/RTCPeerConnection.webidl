@@ -8,7 +8,7 @@
  */
 
 callback RTCSessionDescriptionCallback = void (mozRTCSessionDescription sdp);
-callback RTCPeerConnectionErrorCallback = void (DOMString errorInformation);
+callback RTCPeerConnectionErrorCallback = void (DOMError error);
 callback VoidFunction = void ();
 callback RTCStatsCallback = void (RTCStatsReport report);
 
