@@ -369,17 +369,6 @@ public:
   void OnAudioDecoded(AudioData* aSample);
   void OnVideoDecoded(VideoData* aSample);
   void OnNotDecoded(MediaData::Type aType, MediaDecoderReader::NotDecodedReason aReason);
-  void OnAudioNotDecoded(MediaDecoderReader::NotDecodedReason aReason)
-  {
-    MOZ_ASSERT(OnDecodeThread());
-    OnNotDecoded(MediaData::AUDIO_DATA, aReason);
-  }
-  void OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReason)
-  {
-    MOZ_ASSERT(OnDecodeThread());
-    OnNotDecoded(MediaData::VIDEO_DATA, aReason);
-  }
-
   void OnSeekCompleted(nsresult aResult);
 
 private:

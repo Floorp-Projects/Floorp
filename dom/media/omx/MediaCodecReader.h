@@ -79,12 +79,11 @@ public:
   virtual nsresult ResetDecode() MOZ_OVERRIDE;
 
   // Disptach a DecodeVideoFrameTask to decode video data.
-  virtual nsRefPtr<VideoDataPromise>
-  RequestVideoData(bool aSkipToNextKeyframe,
-                   int64_t aTimeThreshold) MOZ_OVERRIDE;
+  virtual void RequestVideoData(bool aSkipToNextKeyframe,
+                                int64_t aTimeThreshold) MOZ_OVERRIDE;
 
   // Disptach a DecodeAduioDataTask to decode video data.
-  virtual nsRefPtr<AudioDataPromise> RequestAudioData() MOZ_OVERRIDE;
+  virtual void RequestAudioData() MOZ_OVERRIDE;
 
   virtual bool HasAudio();
   virtual bool HasVideo();
