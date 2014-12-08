@@ -43,6 +43,10 @@ using namespace mozilla::gfx;
 
 #include "DeprecatedPremultiplyTables.h"
 
+#undef compress
+#include "mozilla/Compression.h"
+
+using namespace mozilla::Compression;
 extern "C" {
 
 /**
@@ -1376,6 +1380,32 @@ gfxUtils::DumpAsDataURI(DrawTarget* aDT, FILE* aFile)
   } else {
     NS_WARNING("Failed to get surface!");
   }
+}
+
+/* static */ nsCString
+gfxUtils::GetAsLZ4Base64Str(DataSourceSurface* aSourceSurface)
+{
+  int32_t dataSize = aSourceSurface->GetSize().height * aSourceSurface->Stride();
+  auto compressedData = MakeUnique<char[]>(LZ4::maxCompressedSize(dataSize));
+  if (compressedData) {
+    int nDataSize = LZ4::compress((char*)aSourceSurface->GetData(),
+                                  dataSize,
+                                  compressedData.get());
+    if (nDataSize > 0) {
+      nsCString encodedImg;
+      nsresult rv = Base64Encode(Substring(compressedData.get(), nDataSize), encodedImg);
+      if (rv == NS_OK) {
+        nsCString string("");
+        string.AppendPrintf("data:image/lz4bgra;base64,%i,%i,%i,",
+                             aSourceSurface->GetSize().width,
+                             aSourceSurface->Stride(),
+                             aSourceSurface->GetSize().height);
+        string.Append(encodedImg);
+        return string;
+      }
+    }
+  }
+  return nsCString("");
 }
 
 /* static */ nsCString
