@@ -17,6 +17,7 @@
 #include <android/log.h>
 #include <string.h>
 
+#include "ImageLayers.h"
 #include "libdisplay/GonkDisplay.h"
 #include "HwcUtils.h"
 #include "HwcComposer2D.h"
@@ -356,14 +357,19 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     //
     // A 2D transform with PreservesAxisAlignedRectangles() has all the attributes
     // above
-    Matrix transform;
-    Matrix4x4 transform3D = aLayer->GetEffectiveTransform();
-
-    if (!transform3D.Is2D(&transform) || !transform.PreservesAxisAlignedRectangles()) {
-        LOGD("Layer has a 3D transform or a non-square angle rotation");
+    Matrix layerTransform;
+    if (!aLayer->GetEffectiveTransform().Is2D(&layerTransform) ||
+        !layerTransform.PreservesAxisAlignedRectangles()) {
+        LOGD("Layer EffectiveTransform has a 3D transform or a non-square angle rotation");
         return false;
     }
 
+    Matrix layerBufferTransform;
+    if (!aLayer->GetEffectiveTransformForBuffer().Is2D(&layerBufferTransform) ||
+        !layerBufferTransform.PreservesAxisAlignedRectangles()) {
+        LOGD("Layer EffectiveTransformForBuffer has a 3D transform or a non-square angle rotation");
+      return false;
+    }
 
     if (ContainerLayer* container = aLayer->AsContainerLayer()) {
         if (container->UseIntermediateSurface()) {
@@ -374,7 +380,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         container->SortChildrenBy3DZOrder(children);
 
         for (uint32_t i = 0; i < children.Length(); i++) {
-            if (!PrepareLayerList(children[i], clip, transform)) {
+            if (!PrepareLayerList(children[i], clip, layerTransform)) {
                 return false;
             }
         }
@@ -398,18 +404,27 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     if (fillColor) {
         bufferRect = nsIntRect(visibleRect);
     } else {
+        nsIntRect layerRect;
         if (state.mHasOwnOffset) {
             bufferRect = nsIntRect(state.mOffset.x, state.mOffset.y,
                                    state.mSize.width, state.mSize.height);
+            layerRect = bufferRect;
         } else {
             //Since the buffer doesn't have its own offset, assign the whole
             //surface size as its buffer bounds
             bufferRect = nsIntRect(0, 0, state.mSize.width, state.mSize.height);
+            layerRect = bufferRect;
+            if (aLayer->GetType() == Layer::TYPE_IMAGE) {
+                ImageLayer* imageLayer = static_cast<ImageLayer*>(aLayer);
+                if(imageLayer->GetScaleMode() != ScaleMode::SCALE_NONE) {
+                  layerRect = nsIntRect(0, 0, imageLayer->GetScaleToSize().width, imageLayer->GetScaleToSize().height);
+                }
+            }
         }
         // In some cases the visible rect assigned to the layer can be larger
         // than the layer's surface, e.g., an ImageLayer with a small Image
         // in it.
-        visibleRect.IntersectRect(visibleRect, bufferRect);
+        visibleRect.IntersectRect(visibleRect, layerRect);
     }
 
     // Buffer rotation is not to be confused with the angled rotation done by a transform matrix
@@ -421,7 +436,8 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
 
     hwc_rect_t sourceCrop, displayFrame;
     if(!HwcUtils::PrepareLayerRects(visibleRect,
-                          transform,
+                          layerTransform,
+                          layerBufferTransform,
                           clip,
                           bufferRect,
                           state.YFlipped(),
@@ -505,7 +521,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         // And ignore scaling.
         //
         // Reflection is applied before rotation
-        gfx::Matrix rotation = transform;
+        gfx::Matrix rotation = layerTransform;
         // Compute fuzzy zero like PreservesAxisAlignedRectangles()
         if (fabs(rotation._11) < 1e-6) {
             if (rotation._21 < 0) {
@@ -610,7 +626,8 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
             mVisibleRegions.push_back(HwcUtils::RectVector());
             HwcUtils::RectVector* visibleRects = &(mVisibleRegions.back());
             if(!HwcUtils::PrepareVisibleRegion(visibleRegion,
-                                     transform,
+                                     layerTransform,
+                                     layerBufferTransform,
                                      clip,
                                      bufferRect,
                                      visibleRects)) {

@@ -734,24 +734,6 @@ TransactionThreadPool::FindTransaction(const uint64_t& aTransactionId,
 }
 
 bool
-TransactionThreadPool::HasTransactionsForDatabase(const nsACString& aDatabaseId)
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(!aDatabaseId.IsEmpty(), "An empty DatabaseId!");
-
-  DatabaseTransactionInfo* dbTransactionInfo = nullptr;
-  dbTransactionInfo = mTransactionsInProgress.Get(aDatabaseId);
-  if (!dbTransactionInfo) {
-    return false;
-  }
-
-  TransactionSearchInfo info(aDatabaseId);
-  dbTransactionInfo->transactions.EnumerateRead(FindTransaction, &info);
-
-  return info.found;
-}
-
-bool
 TransactionThreadPool::MaybeFireCallback(DatabasesCompleteCallback* aCallback)
 {
   AssertIsOnOwningThread();

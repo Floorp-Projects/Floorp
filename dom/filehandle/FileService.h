@@ -62,9 +62,6 @@ public:
   void
   AbortFileHandlesForStorage(nsIOfflineStorage* aStorage);
 
-  bool
-  HasFileHandlesForStorage(nsIOfflineStorage* aStorage);
-
   nsIEventTarget*
   StreamTransportTarget()
   {
@@ -134,9 +131,6 @@ private:
     {
       return !mFileHandleQueues.IsEmpty();
     }
-
-    inline bool
-    HasRunningFileHandles(nsIOfflineStorage* aStorage);
 
     inline DelayedEnqueueInfo*
     CreateDelayedEnqueueInfo(FileHandleBase* aFileHandle,

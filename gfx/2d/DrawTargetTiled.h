@@ -40,7 +40,10 @@ public:
   virtual DrawTargetType GetType() const MOZ_OVERRIDE { return mTiles[0].mDrawTarget->GetType(); }
   virtual BackendType GetBackendType() const { return mTiles[0].mDrawTarget->GetBackendType(); }
   virtual TemporaryRef<SourceSurface> Snapshot();
-  virtual IntSize GetSize() { return IntSize(mRect.XMost(), mRect.YMost()); }
+  virtual IntSize GetSize() {
+    MOZ_ASSERT(mRect.width > 0 && mRect.height > 0);
+    return IntSize(mRect.XMost(), mRect.YMost());
+  }
 
   virtual void Flush();
   virtual void DrawSurface(SourceSurface *aSurface,
@@ -162,7 +165,10 @@ public:
   }
 
   virtual SurfaceType GetType() const { return SurfaceType::TILED; }
-  virtual IntSize GetSize() const { return IntSize(mRect.XMost(), mRect.YMost()); }
+  virtual IntSize GetSize() const {
+    MOZ_ASSERT(mRect.width > 0 && mRect.height > 0);
+    return IntSize(mRect.XMost(), mRect.YMost());
+  }
   virtual SurfaceFormat GetFormat() const { return mSnapshots[0]->GetFormat(); }
 
   virtual TemporaryRef<DataSourceSurface> GetDataSurface()

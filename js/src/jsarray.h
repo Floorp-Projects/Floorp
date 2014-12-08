@@ -99,7 +99,7 @@ NewDenseFullyAllocatedArrayWithTemplate(JSContext *cx, uint32_t length, JSObject
 
 /* Create a dense array with the same copy-on-write elements as another object. */
 extern JSObject *
-NewDenseCopyOnWriteArray(JSContext *cx, HandleNativeObject templateObject, gc::InitialHeap heap);
+NewDenseCopyOnWriteArray(JSContext *cx, HandleArrayObject templateObject, gc::InitialHeap heap);
 
 /*
  * Determines whether a write to the given element on |obj| should fail because

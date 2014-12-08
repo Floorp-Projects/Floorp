@@ -1389,6 +1389,23 @@ public:
   const gfx::Matrix4x4& GetEffectiveTransform() const { return mEffectiveTransform; }
 
   /**
+   * This returns the effective transform for Layer's buffer computed by
+   * ComputeEffectiveTransforms. Typically this is a transform that transforms
+   * this layer's buffer all the way to some intermediate surface or destination
+   * surface. For non-BasicLayers this will be a transform to the nearest
+   * ancestor with UseIntermediateSurface() (or to the root, if there is no
+   * such ancestor), but for BasicLayers it's different.
+   *
+   * By default, its value is same to GetEffectiveTransform().
+   * When ImageLayer is rendered with ScaleMode::STRETCH,
+   * it becomes different from GetEffectiveTransform().
+   */
+  virtual const gfx::Matrix4x4& GetEffectiveTransformForBuffer() const
+  {
+    return mEffectiveTransform;
+  }
+
+  /**
    * @param aTransformToSurface the composition of the transforms
    * from the parent layer (if any) to the destination pixel grid.
    *

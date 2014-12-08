@@ -92,8 +92,8 @@ interface imgIContainer : nsISupports
   [noscript] readonly attribute nsSize intrinsicSize;
 
   /**
-   * The (dimensionless) intrinsic ratio of this image. In the case of any error,
-   * an exception will be thrown.
+   * The (dimensionless) intrinsic ratio of this image. In the case of any
+   * error, an exception will be thrown.
    */
   [noscript] readonly attribute nsSize intrinsicRatio;
 
@@ -113,10 +113,9 @@ interface imgIContainer : nsISupports
    * @param aFilter The filter to be used if we're scaling the image.
    * @param aFlags Flags of the FLAG_* variety
    */
-  [notxpcom, nostdcall] nsIntSizeByVal optimalImageSizeForDest([const] in gfxSize aDest,
-                                                               in uint32_t aWhichFrame,
-                                                               in gfxGraphicsFilter aFilter,
-                                                               in uint32_t aFlags);
+  [notxpcom, nostdcall] nsIntSizeByVal
+  optimalImageSizeForDest([const] in gfxSize aDest, in uint32_t aWhichFrame,
+                          in gfxGraphicsFilter aFilter, in uint32_t aFlags);
 
   /**
     * Enumerated values for the 'type' attribute (below).
@@ -158,8 +157,8 @@ interface imgIContainer : nsISupports
    * it's not already premultiplied in the image data.
    *
    * FLAG_DECODE_NO_COLORSPACE_CONVERSION: Do not do any colorspace conversion;
-   * ignore any embedded profiles, and don't convert to any particular destination
-   * space.
+   * ignore any embedded profiles, and don't convert to any particular
+   * destination space.
    *
    * FLAG_CLAMP: Extend the image to the fill area by clamping image sample
    * coordinates instead of by tiling. This only affects 'draw'.
@@ -316,9 +315,10 @@ interface imgIContainer : nsISupports
    *                includes FLAG_CLAMP, the image will be extended to this area
    *                by clamping image sample coordinates. Otherwise, the image
    *                will be automatically tiled as necessary. aRegion can also
-   *                optionally contain a second region which restricts the set of
-   *                pixels we're allowed to sample from when drawing; this is
-   *                only of use to callers which need to draw with pixel snapping.
+   *                optionally contain a second region which restricts the set
+   *                of pixels we're allowed to sample from when drawing; this
+   *                is only of use to callers which need to draw with pixel
+   *                snapping.
    * @param aWhichFrame Frame specifier of the FRAME_* variety.
    * @param aFilter The filter to be used if we're scaling the image.
    * @param aSVGContext If specified, SVG-related rendering context, such as
@@ -345,7 +345,8 @@ interface imgIContainer : nsISupports
   void requestDecode();
 
   /*
-   * This is equivalent to requestDecode() but it also decodes some of the image.
+   * This is equivalent to requestDecode() but it also decodes some of the
+   * image.
    */
   [noscript] void startDecoding();
 
@@ -456,7 +457,8 @@ interface imgIContainer : nsISupports
    * differ if the image is wrapped by an ImageWrapper that changes its size
    * or orientation.
    */
-  [notxpcom] nsIntRectByVal getImageSpaceInvalidationRect([const] in nsIntRect aRect);
+  [notxpcom] nsIntRectByVal
+  getImageSpaceInvalidationRect([const] in nsIntRect aRect);
 
   /*
    * Removes any ImageWrappers and returns the unwrapped base image.

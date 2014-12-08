@@ -55,7 +55,7 @@ class B2GContext(object):
         self.remote_process = '/system/b2g/b2g'
         self.remote_profiles_ini = '/data/b2g/mozilla/profiles.ini'
         self.remote_settings_json = '/system/b2g/defaults/settings.json'
-        self.remote_idb_dir = '/data/local/storage/persistent/chrome/idb'
+        self.remote_idb_dir = '/data/local/storage/permanent/chrome/idb'
         self.remote_test_root = '/data/local/tests'
         self.remote_webapps_dir = '/data/local/webapps'
 

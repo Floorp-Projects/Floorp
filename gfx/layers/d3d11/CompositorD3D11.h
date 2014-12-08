@@ -184,6 +184,11 @@ private:
   VertexShaderConstants mVSConstants;
   PixelShaderConstants mPSConstants;
   bool mDisableSequenceForNextFrame;
+
+  gfx::IntRect mInvalidRect;
+  // This is the clip rect applied to the default DrawTarget (i.e. the window)
+  gfx::IntRect mCurrentClip;
+  nsIntRegion mInvalidRegion;
 };
 
 }

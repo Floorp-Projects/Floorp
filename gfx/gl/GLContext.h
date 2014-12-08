@@ -517,7 +517,6 @@ public:
 
     static const char* GetFeatureName(GLFeature feature);
 
-
 private:
     std::bitset<size_t(GLFeature::EnumMax)> mAvailableFeatures;
 

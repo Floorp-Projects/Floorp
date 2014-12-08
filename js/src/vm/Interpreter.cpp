@@ -3074,8 +3074,8 @@ CASE(JSOP_NEWINIT)
         obj = NewDenseEmptyArray(cx, nullptr, newKind);
     } else {
         gc::AllocKind allocKind = GuessObjectGCKind(0);
-        newKind = UseNewTypeForInitializer(script, REGS.pc, &JSObject::class_);
-        obj = NewBuiltinClassInstance(cx, &JSObject::class_, allocKind, newKind);
+        newKind = UseNewTypeForInitializer(script, REGS.pc, &PlainObject::class_);
+        obj = NewBuiltinClassInstance<PlainObject>(cx, allocKind, newKind);
     }
     if (!obj || !SetInitializerObjectType(cx, script, REGS.pc, obj, newKind))
         goto error;
@@ -3099,13 +3099,13 @@ END_CASE(JSOP_NEWARRAY)
 
 CASE(JSOP_NEWARRAY_COPYONWRITE)
 {
-    RootedNativeObject &baseobj = rootNativeObject0;
+    RootedObject &baseobj = rootObject0;
     baseobj = types::GetOrFixupCopyOnWriteObject(cx, script, REGS.pc);
     if (!baseobj)
         goto error;
 
     RootedObject &obj = rootObject1;
-    obj = NewDenseCopyOnWriteArray(cx, baseobj, gc::DefaultHeap);
+    obj = NewDenseCopyOnWriteArray(cx, baseobj.as<ArrayObject>(), gc::DefaultHeap);
     if (!obj)
         goto error;
 
@@ -3115,12 +3115,12 @@ END_CASE(JSOP_NEWARRAY_COPYONWRITE)
 
 CASE(JSOP_NEWOBJECT)
 {
-    RootedNativeObject &baseobj = rootNativeObject0;
+    RootedObject &baseobj = rootObject0;
     baseobj = script->getObject(REGS.pc);
 
     RootedObject &obj = rootObject1;
     NewObjectKind newKind = UseNewTypeForInitializer(script, REGS.pc, baseobj->getClass());
-    obj = CopyInitializerObject(cx, baseobj, newKind);
+    obj = CopyInitializerObject(cx, baseobj.as<PlainObject>(), newKind);
     if (!obj || !SetInitializerObjectType(cx, script, REGS.pc, obj, newKind))
         goto error;
 
@@ -3138,7 +3138,7 @@ CASE(JSOP_MUTATEPROTO)
 
         RootedObject &obj = rootObject0;
         obj = &REGS.sp[-2].toObject();
-        MOZ_ASSERT(obj->is<JSObject>());
+        MOZ_ASSERT(obj->is<PlainObject>());
 
         bool succeeded;
         if (!JSObject::setProto(cx, obj, newProto, &succeeded))
@@ -3159,8 +3159,7 @@ CASE(JSOP_INITPROP)
 
     /* Load the object being initialized into lval/obj. */
     RootedNativeObject &obj = rootNativeObject0;
-    obj = &REGS.sp[-2].toObject().as<NativeObject>();
-    MOZ_ASSERT(obj->is<JSObject>());
+    obj = &REGS.sp[-2].toObject().as<PlainObject>();
 
     PropertyName *name = script->getName(REGS.pc);
 
