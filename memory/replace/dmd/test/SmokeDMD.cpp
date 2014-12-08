@@ -120,13 +120,13 @@ RunTests()
 
   //---------
 
-  // AnalyzeReports 1.  Zero for everything.
-  AnalyzeReports(Move(f1));
+  // Analyze 1.  Zero for everything.
+  Analyze(Move(f1));
 
   //---------
 
-  // AnalyzeReports 2: 1 freed, 9 out of 10 unreported.
-  // AnalyzeReports 3: still present and unreported.
+  // Analyze 2: 1 freed, 9 out of 10 unreported.
+  // Analyze 3: still present and unreported.
   int i;
   char* a = nullptr;
   for (i = 0; i < seven + 3; i++) {
@@ -137,98 +137,98 @@ RunTests()
 
   // Note: 8 bytes is the smallest requested size that gives consistent
   // behaviour across all platforms with jemalloc.
-  // AnalyzeReports 2: reported.
-  // AnalyzeReports 3: thrice-reported.
+  // Analyze 2: reported.
+  // Analyze 3: thrice-reported.
   char* a2 = (char*) malloc(8);
   Report(a2);
 
-  // AnalyzeReports 2: reported.
-  // AnalyzeReports 3: reportedness carries over, due to ReportOnAlloc.
+  // Analyze 2: reported.
+  // Analyze 3: reportedness carries over, due to ReportOnAlloc.
   char* b = (char*) malloc(10);
   ReportOnAlloc(b);
 
   // ReportOnAlloc, then freed.
-  // AnalyzeReports 2: freed, irrelevant.
-  // AnalyzeReports 3: freed, irrelevant.
+  // Analyze 2: freed, irrelevant.
+  // Analyze 3: freed, irrelevant.
   char* b2 = (char*) malloc(1);
   ReportOnAlloc(b2);
   free(b2);
 
-  // AnalyzeReports 2: reported 4 times.
-  // AnalyzeReports 3: freed, irrelevant.
+  // Analyze 2: reported 4 times.
+  // Analyze 3: freed, irrelevant.
   char* c = (char*) calloc(10, 3);
   Report(c);
   for (int i = 0; i < seven - 4; i++) {
     Report(c);
   }
 
-  // AnalyzeReports 2: ignored.
-  // AnalyzeReports 3: irrelevant.
+  // Analyze 2: ignored.
+  // Analyze 3: irrelevant.
   Report((void*)(intptr_t)i);
 
   // jemalloc rounds this up to 8192.
-  // AnalyzeReports 2: reported.
-  // AnalyzeReports 3: freed.
+  // Analyze 2: reported.
+  // Analyze 3: freed.
   char* e = (char*) malloc(4096);
   e = (char*) realloc(e, 4097);
   Report(e);
 
   // First realloc is like malloc;  second realloc is shrinking.
-  // AnalyzeReports 2: reported.
-  // AnalyzeReports 3: re-reported.
+  // Analyze 2: reported.
+  // Analyze 3: re-reported.
   char* e2 = (char*) realloc(nullptr, 1024);
   e2 = (char*) realloc(e2, 512);
   Report(e2);
 
   // First realloc is like malloc;  second realloc creates a min-sized block.
   // XXX: on Windows, second realloc frees the block.
-  // AnalyzeReports 2: reported.
-  // AnalyzeReports 3: freed, irrelevant.
+  // Analyze 2: reported.
+  // Analyze 3: freed, irrelevant.
   char* e3 = (char*) realloc(nullptr, 1023);
 //e3 = (char*) realloc(e3, 0);
   MOZ_ASSERT(e3);
   Report(e3);
 
-  // AnalyzeReports 2: freed, irrelevant.
-  // AnalyzeReports 3: freed, irrelevant.
+  // Analyze 2: freed, irrelevant.
+  // Analyze 3: freed, irrelevant.
   char* f = (char*) malloc(64);
   free(f);
 
-  // AnalyzeReports 2: ignored.
-  // AnalyzeReports 3: irrelevant.
+  // Analyze 2: ignored.
+  // Analyze 3: irrelevant.
   Report((void*)(intptr_t)0x0);
 
-  // AnalyzeReports 2: mixture of reported and unreported.
-  // AnalyzeReports 3: all unreported.
+  // Analyze 2: mixture of reported and unreported.
+  // Analyze 3: all unreported.
   Foo(seven);
 
-  // AnalyzeReports 2: twice-reported.
-  // AnalyzeReports 3: twice-reported.
+  // Analyze 2: twice-reported.
+  // Analyze 3: twice-reported.
   char* g1 = (char*) malloc(77);
   ReportOnAlloc(g1);
   ReportOnAlloc(g1);
 
-  // AnalyzeReports 2: mixture of reported and unreported.
-  // AnalyzeReports 3: all unreported.
+  // Analyze 2: mixture of reported and unreported.
+  // Analyze 3: all unreported.
   // Nb: this Foo() call is deliberately not adjacent to the previous one. See
   // the comment about adjacent calls in Foo() for more details.
   Foo(seven);
 
-  // AnalyzeReports 2: twice-reported.
-  // AnalyzeReports 3: once-reported.
+  // Analyze 2: twice-reported.
+  // Analyze 3: once-reported.
   char* g2 = (char*) malloc(78);
   Report(g2);
   ReportOnAlloc(g2);
 
-  // AnalyzeReports 2: twice-reported.
-  // AnalyzeReports 3: once-reported.
+  // Analyze 2: twice-reported.
+  // Analyze 3: once-reported.
   char* g3 = (char*) malloc(79);
   ReportOnAlloc(g3);
   Report(g3);
 
   // All the odd-ball ones.
-  // AnalyzeReports 2: all unreported.
-  // AnalyzeReports 3: all freed, irrelevant.
+  // Analyze 2: all unreported.
+  // Analyze 3: all freed, irrelevant.
   // XXX: no memalign on Mac
 //void* w = memalign(64, 65);           // rounds up to 128
 //UseItOrLoseIt(w, seven);
@@ -246,8 +246,8 @@ RunTests()
 //void* z = aligned_alloc(64, 256);
 //UseItOrLoseIt(z, seven);
 
-  // AnalyzeReports 2.
-  AnalyzeReports(Move(f2));
+  // Analyze 2.
+  Analyze(Move(f2));
 
   //---------
 
@@ -262,8 +262,8 @@ RunTests()
 //free(y);
 //free(z);
 
-  // AnalyzeReports 3.
-  AnalyzeReports(Move(f3));
+  // Analyze 3.
+  Analyze(Move(f3));
 
   //---------
 
@@ -321,8 +321,8 @@ RunTests()
   // At the end we're 64 bytes into the current sample so we report ~1,424
   // bytes of allocation overall, which is 64 less than the real value 1,488.
 
-  // AnalyzeReports 4.
-  AnalyzeReports(Move(f4));
+  // Analyze 4.
+  Analyze(Move(f4));
 }
 
 int main()
