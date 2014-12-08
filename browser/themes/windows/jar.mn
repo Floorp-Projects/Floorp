@@ -80,7 +80,7 @@ browser.jar:
         skin/classic/browser/privatebrowsing-mask-titlebar-XPVista7.png
         skin/classic/browser/privatebrowsing-mask-titlebar-XPVista7-tall.png
         skin/classic/browser/reload-stop-go.png
-*       skin/classic/browser/searchbar.css
+        skin/classic/browser/searchbar.css
         skin/classic/browser/searchbar-dropdown-arrow.png
         skin/classic/browser/search-pref.png                         (../shared/search/search-pref.png)
         skin/classic/browser/search-indicator.png                    (../shared/search/search-indicator.png)
@@ -525,7 +525,7 @@ browser.jar:
         skin/classic/aero/browser/privatebrowsing-mask-titlebar-XPVista7.png
         skin/classic/aero/browser/privatebrowsing-mask-titlebar-XPVista7-tall.png
         skin/classic/aero/browser/reload-stop-go.png
-*       skin/classic/aero/browser/searchbar.css
+        skin/classic/aero/browser/searchbar.css
         skin/classic/aero/browser/searchbar-dropdown-arrow.png       (searchbar-dropdown-arrow-aero.png)
         skin/classic/aero/browser/search-pref.png                    (../shared/search/search-pref.png)
         skin/classic/aero/browser/search-indicator.png               (../shared/search/search-indicator.png)
