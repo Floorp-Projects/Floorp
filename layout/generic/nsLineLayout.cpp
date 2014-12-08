@@ -484,20 +484,8 @@ nsLineLayout::SplitLineTo(int32_t aNewCount)
       pfd->mNext = nullptr;
       psd->mLastFrame = pfd;
 
-      // Now release all of the frames following pfd
-      pfd = next;
-      while (nullptr != pfd) {
-        next = pfd->mNext;
-        pfd->mNext = mBaseLineLayout->mFrameFreeList;
-        mBaseLineLayout->mFrameFreeList = pfd;
-#ifdef DEBUG
-        mBaseLineLayout->mFramesFreed++;
-#endif
-        if (nullptr != pfd->mSpan) {
-          FreeSpan(pfd->mSpan);
-        }
-        pfd = next;
-      }
+      // Now unlink all of the frames following pfd
+      UnlinkFrame(next);
       break;
     }
     pfd = pfd->mNext;
@@ -534,15 +522,9 @@ nsLineLayout::PushFrame(nsIFrame* aFrame)
     psd->mLastFrame = prevFrame;
   }
 
-  // Now free it, and if it has a span, free that too
-  pfd->mNext = mBaseLineLayout->mFrameFreeList;
-  mBaseLineLayout->mFrameFreeList = pfd;
-#ifdef DEBUG
-  mBaseLineLayout->mFramesFreed++;
-#endif
-  if (nullptr != pfd->mSpan) {
-    FreeSpan(pfd->mSpan);
-  }
+  // Now unlink the frame
+  MOZ_ASSERT(!pfd->mNext);
+  UnlinkFrame(pfd);
 #ifdef NOISY_PUSHING
   nsFrame::IndentBy(stdout, mSpanDepth);
   printf("PushFrame: %p after:\n", psd);
@@ -551,15 +533,13 @@ nsLineLayout::PushFrame(nsIFrame* aFrame)
 }
 
 void
-nsLineLayout::FreeSpan(PerSpanData* psd)
+nsLineLayout::UnlinkFrame(PerFrameData* pfd)
 {
-  // Free its frames
-  PerFrameData* pfd = psd->mFirstFrame;
   while (nullptr != pfd) {
+    PerFrameData* next = pfd->mNext;
     if (nullptr != pfd->mSpan) {
       FreeSpan(pfd->mSpan);
     }
-    PerFrameData* next = pfd->mNext;
     pfd->mNext = mBaseLineLayout->mFrameFreeList;
     mBaseLineLayout->mFrameFreeList = pfd;
 #ifdef DEBUG
@@ -567,6 +547,13 @@ nsLineLayout::FreeSpan(PerSpanData* psd)
 #endif
     pfd = next;
   }
+}
+
+void
+nsLineLayout::FreeSpan(PerSpanData* psd)
+{
+  // Unlink its frames
+  UnlinkFrame(psd->mFirstFrame);
 
   // Now put the span on the free list since it's free too
   psd->mNextFreeSpan = mBaseLineLayout->mSpanFreeList;
