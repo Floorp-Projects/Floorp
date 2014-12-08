@@ -605,6 +605,14 @@ protected:
    */
   PerSpanData* NewPerSpanData();
 
+  /**
+   * Unlink the given PerFrameData and all the siblings after it from
+   * the span. The unlinked PFDs are usually freed immediately.
+   * However, if PFD_ISLINKEDTOBASE is set, it won't be freed until
+   * the frame of its base is unlinked.
+   */
+  void UnlinkFrame(PerFrameData* pfd);
+
   void FreeSpan(PerSpanData* psd);
 
   bool InBlockContext() const {
