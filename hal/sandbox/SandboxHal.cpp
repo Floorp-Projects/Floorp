@@ -446,6 +446,8 @@ FactoryReset(FactoryResetReason& aReason)
     Hal()->SendFactoryReset(NS_LITERAL_STRING("normal"));
   } else if (aReason == FactoryResetReason::Wipe) {
     Hal()->SendFactoryReset(NS_LITERAL_STRING("wipe"));
+  } else if (aReason == FactoryResetReason::Root) {
+    Hal()->SendFactoryReset(NS_LITERAL_STRING("root"));
   }
 }
 
@@ -870,6 +872,8 @@ public:
       reason = FactoryResetReason::Normal;
     } else if (aReason.EqualsLiteral("wipe")) {
       reason = FactoryResetReason::Wipe;
+    } else if (aReason.EqualsLiteral("root")) {
+      reason = FactoryResetReason::Root;
     } else {
       // Invalid factory reset reason. That should never happen.
       return false;

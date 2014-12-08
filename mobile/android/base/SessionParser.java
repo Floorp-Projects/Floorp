@@ -65,7 +65,12 @@ public abstract class SessionParser {
                 for (int i = 0; i < tabs.length(); i++) {
                     final JSONObject tab = tabs.getJSONObject(i);
                     final int index = tab.getInt("index");
-                    final JSONObject entry = tab.getJSONArray("entries").getJSONObject(index - 1);
+                    final JSONArray entries = tab.getJSONArray("entries");
+                    if (index < 1 || entries.length() < index) {
+                        Log.w(LOGTAG, "Session entries and index don't agree.");
+                        continue;
+                    }
+                    final JSONObject entry = entries.getJSONObject(index - 1);
                     final String url = entry.getString("url");
 
                     String title = entry.optString("title");
