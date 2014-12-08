@@ -106,12 +106,10 @@ function bindToolboxHandlers() {
   // Badge the dock icon to differentiate this process from the main application process.
   updateBadgeText(false);
 
-  // Check if the debugger panel is already loaded otherwise listen for it to be.
-  if (gToolbox.getPanel("jsdebugger")) {
-    setupThreadListeners(gToolbox.getPanel("jsdebugger"));
-  } else {
-    gToolbox.once("jsdebugger-ready", (e, panel) => setupThreadListeners(panel));
-  }
+  // Once the debugger panel opens listen for thread pause / resume.
+  gToolbox.getPanelWhenReady("jsdebugger").then(panel => {
+    setupThreadListeners(panel);
+  });
 #endif
 }
 
