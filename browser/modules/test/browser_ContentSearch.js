@@ -102,24 +102,34 @@ add_task(function* search() {
   });
   let submissionURL =
     engine.getSubmission(data.searchString, "", data.whence).uri.spec;
-  let deferred = Promise.defer();
-  let listener = {
-    onStateChange: function (webProg, req, flags, status) {
-      let url = req.originalURI.spec;
-      info("onStateChange " + url);
-      let docStart = Ci.nsIWebProgressListener.STATE_IS_DOCUMENT |
-                     Ci.nsIWebProgressListener.STATE_START;
-      if ((flags & docStart) && webProg.isTopLevel && url == submissionURL) {
-        gBrowser.removeProgressListener(listener);
-        ok(true, "Search URL loaded");
-        req.cancel(Components.results.NS_ERROR_FAILURE);
-        deferred.resolve();
-      }
-    }
+  yield waitForLoadAndStopIt(gBrowser.selectedBrowser, submissionURL);
+});
+
+add_task(function* searchInBackgroundTab() {
+  // This test is like search(), but it opens a new tab after starting a search
+  // in another.  In other words, it performs a search in a background tab.  The
+  // search page should be loaded in the same tab that performed the search, in
+  // the background tab.
+  yield addTab();
+  let searchBrowser = gBrowser.selectedBrowser;
+  let engine = Services.search.currentEngine;
+  let data = {
+    engineName: engine.name,
+    searchString: "ContentSearchTest",
+    whence: "ContentSearchTest",
   };
-  gBrowser.addProgressListener(listener);
-  info("Waiting for search URL to load: " + submissionURL);
-  yield deferred.promise;
+  gMsgMan.sendAsyncMessage(TEST_MSG, {
+    type: "Search",
+    data: data,
+  });
+
+  let newTab = gBrowser.addTab();
+  gBrowser.selectedTab = newTab;
+  registerCleanupFunction(() => gBrowser.removeTab(newTab));
+
+  let submissionURL =
+    engine.getSubmission(data.searchString, "", data.whence).uri.spec;
+  yield waitForLoadAndStopIt(searchBrowser, submissionURL);
 });
 
 add_task(function* badImage() {
@@ -317,6 +327,33 @@ function waitForNewEngine(basename, numImages) {
   });
 
   return Promise.all([addDeferred.promise].concat(eventPromises));
+}
+
+function waitForLoadAndStopIt(browser, expectedURL) {
+  let deferred = Promise.defer();
+  let listener = {
+    onStateChange: function (webProg, req, flags, status) {
+      if (req instanceof Ci.nsIChannel) {
+        let url = req.originalURI.spec;
+        info("onStateChange " + url);
+        let docStart = Ci.nsIWebProgressListener.STATE_IS_DOCUMENT |
+                       Ci.nsIWebProgressListener.STATE_START;
+        if ((flags & docStart) && webProg.isTopLevel && url == expectedURL) {
+          browser.removeProgressListener(listener);
+          ok(true, "Expected URL loaded");
+          req.cancel(Components.results.NS_ERROR_FAILURE);
+          deferred.resolve();
+        }
+      }
+    },
+    QueryInterface: XPCOMUtils.generateQI([
+      Ci.nsIWebProgressListener,
+      Ci.nsISupportsWeakReference,
+    ]),
+  };
+  browser.addProgressListener(listener);
+  info("Waiting for URL to load: " + expectedURL);
+  return deferred.promise;
 }
 
 function addTab() {
