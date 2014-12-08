@@ -218,12 +218,7 @@ CompositableHost::DumpTextureHost(std::stringstream& aStream, TextureHost* aText
   if (!dSurf) {
     return;
   }
-  gfxPlatform *platform = gfxPlatform::GetPlatform();
-  RefPtr<gfx::DrawTarget> dt = platform->CreateDrawTargetForData(dSurf->GetData(),
-                                                                 dSurf->GetSize(),
-                                                                 dSurf->Stride(),
-                                                                 dSurf->GetFormat());
-  aStream << gfxUtils::GetAsDataURI(dt).get();
+  aStream << gfxUtils::GetAsLZ4Base64Str(dSurf).get();
 }
 #endif
 
