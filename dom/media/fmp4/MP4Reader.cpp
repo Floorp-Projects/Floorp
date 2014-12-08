@@ -121,8 +121,8 @@ private:
 
 MP4Reader::MP4Reader(AbstractMediaDecoder* aDecoder)
   : MediaDecoderReader(aDecoder)
-  , mAudio(MediaData::AUDIO_DATA, Preferences::GetUint("media.mp4-audio-decode-ahead", 2))
-  , mVideo(MediaData::VIDEO_DATA, Preferences::GetUint("media.mp4-video-decode-ahead", 2))
+  , mAudio("MP4 audio decoder data", Preferences::GetUint("media.mp4-audio-decode-ahead", 2))
+  , mVideo("MP4 video decoder data", Preferences::GetUint("media.mp4-video-decode-ahead", 2))
   , mLastReportedNumDecodedFrames(0)
   , mLayersBackendType(layers::LayersBackend::LAYERS_NONE)
   , mDemuxerInitialized(false)
@@ -132,11 +132,6 @@ MP4Reader::MP4Reader(AbstractMediaDecoder* aDecoder)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
   MOZ_COUNT_CTOR(MP4Reader);
-
-  // For MP4Reader, the promises are managed along with other data in
-  // DecoderData, and protected by the same monitor.
-  mAudioPromise.SetMonitor(&mAudio.mMonitor);
-  mVideoPromise.SetMonitor(&mVideo.mMonitor);
 }
 
 MP4Reader::~MP4Reader()
@@ -176,11 +171,6 @@ MP4Reader::Shutdown()
     mPlatform->Shutdown();
     mPlatform = nullptr;
   }
-
-  mAudioPromise.SetMonitor(nullptr);
-  MOZ_ASSERT(mAudioPromise.IsEmpty());
-  mVideoPromise.SetMonitor(nullptr);
-  MOZ_ASSERT(mVideoPromise.IsEmpty());
 
   MediaDecoderReader::Shutdown();
 }
@@ -509,7 +499,7 @@ MP4Reader::GetDecoderData(TrackType aTrack)
   return (aTrack == kAudio) ? mAudio : mVideo;
 }
 
-nsRefPtr<MediaDecoderReader::VideoDataPromise>
+void
 MP4Reader::RequestVideoData(bool aSkipToNextKeyframe,
                             int64_t aTimeThreshold)
 {
@@ -523,42 +513,34 @@ MP4Reader::RequestVideoData(bool aSkipToNextKeyframe,
 
   MOZ_ASSERT(HasVideo() && mPlatform && mVideo.mDecoder);
 
-  bool eos = false;
   if (aSkipToNextKeyframe) {
-    eos = !SkipVideoDemuxToNextKeyFrame(aTimeThreshold, parsed);
-    if (!eos && NS_FAILED(mVideo.mDecoder->Flush())) {
+    if (!SkipVideoDemuxToNextKeyFrame(aTimeThreshold, parsed) ||
+        NS_FAILED(mVideo.mDecoder->Flush())) {
       NS_WARNING("Failed to skip/flush video when skipping-to-next-keyframe.");
     }
   }
 
   auto& decoder = GetDecoderData(kVideo);
   MonitorAutoLock lock(decoder.mMonitor);
-  nsRefPtr<VideoDataPromise> p = mVideoPromise.Ensure(__func__);
-  if (eos) {
-    mVideoPromise.Reject(END_OF_STREAM, __func__);
-  } else {
-    ScheduleUpdate(kVideo);
-  }
+  decoder.mOutputRequested = true;
+  ScheduleUpdate(kVideo);
 
   // Report the number of "decoded" frames as the difference in the
   // mNumSamplesOutput field since the last time we were called.
   uint64_t delta = mVideo.mNumSamplesOutput - mLastReportedNumDecodedFrames;
   decoded = static_cast<uint32_t>(delta);
   mLastReportedNumDecodedFrames = mVideo.mNumSamplesOutput;
-
-  return p;
 }
 
-nsRefPtr<MediaDecoderReader::AudioDataPromise>
+void
 MP4Reader::RequestAudioData()
 {
   MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());
   VLOG("RequestAudioData");
   auto& decoder = GetDecoderData(kAudio);
   MonitorAutoLock lock(decoder.mMonitor);
-  nsRefPtr<AudioDataPromise> p = mAudioPromise.Ensure(__func__);
+  decoder.mOutputRequested = true;
   ScheduleUpdate(kAudio);
-  return p;
 }
 
 void
@@ -588,7 +570,7 @@ MP4Reader::NeedInput(DecoderData& aDecoder)
   return
     !aDecoder.mError &&
     !aDecoder.mDemuxEOS &&
-    HasPromise(aDecoder.mType) &&
+    aDecoder.mOutputRequested &&
     aDecoder.mOutput.IsEmpty() &&
     (aDecoder.mInputExhausted ||
      aDecoder.mNumSamplesInput - aDecoder.mNumSamplesOutput < aDecoder.mDecodeAhead);
@@ -601,7 +583,9 @@ MP4Reader::Update(TrackType aTrack)
 
   bool needInput = false;
   bool needOutput = false;
+  bool eos = false;
   auto& decoder = GetDecoderData(aTrack);
+  nsRefPtr<MediaData> output;
   {
     MonitorAutoLock lock(decoder.mMonitor);
     decoder.mUpdateScheduled = false;
@@ -610,23 +594,19 @@ MP4Reader::Update(TrackType aTrack)
       decoder.mInputExhausted = false;
       decoder.mNumSamplesInput++;
     }
-    if (HasPromise(decoder.mType)) {
-      needOutput = true;
-      if (!decoder.mOutput.IsEmpty()) {
-        nsRefPtr<MediaData> output = decoder.mOutput[0];
-        decoder.mOutput.RemoveElementAt(0);
-        ReturnOutput(output, aTrack);
-      } else if (decoder.mDrainComplete) {
-        RejectPromise(decoder.mType, END_OF_STREAM, __func__);
-      }
+    needOutput = decoder.mOutputRequested;
+    if (needOutput && !decoder.mOutput.IsEmpty()) {
+      output = decoder.mOutput[0];
+      decoder.mOutput.RemoveElementAt(0);
     }
+    eos = decoder.mDrainComplete;
   }
-
-  VLOG("Update(%s) ni=%d no=%d iex=%d fl=%d",
+  VLOG("Update(%s) ni=%d no=%d iex=%d or=%d fl=%d",
        TrackTypeToStr(aTrack),
        needInput,
        needOutput,
        decoder.mInputExhausted,
+       decoder.mOutputRequested,
        decoder.mIsFlushing);
 
   if (needInput) {
@@ -643,17 +623,27 @@ MP4Reader::Update(TrackType aTrack)
       decoder.mDecoder->Drain();
     }
   }
+  if (needOutput) {
+    if (output) {
+      ReturnOutput(output, aTrack);
+    } else if (eos) {
+      ReturnEOS(aTrack);
+    }
+  }
 }
 
 void
 MP4Reader::ReturnOutput(MediaData* aData, TrackType aTrack)
 {
   auto& decoder = GetDecoderData(aTrack);
-  decoder.mMonitor.AssertCurrentThreadOwns();
-  MOZ_ASSERT(HasPromise(decoder.mType));
-  if (decoder.mDiscontinuity) {
-    decoder.mDiscontinuity = false;
-    aData->mDiscontinuity = true;
+  {
+    MonitorAutoLock lock(decoder.mMonitor);
+    MOZ_ASSERT(decoder.mOutputRequested);
+    decoder.mOutputRequested = false;
+    if (decoder.mDiscontinuity) {
+      decoder.mDiscontinuity = false;
+      aData->mDiscontinuity = true;
+    }
   }
 
   if (aTrack == kAudio) {
@@ -667,10 +657,17 @@ MP4Reader::ReturnOutput(MediaData* aData, TrackType aTrack)
       mInfo.mAudio.mChannels = audioData->mChannels;
     }
 
-    mAudioPromise.Resolve(audioData, __func__);
+    GetCallback()->OnAudioDecoded(audioData);
   } else if (aTrack == kVideo) {
-    mVideoPromise.Resolve(static_cast<VideoData*>(aData), __func__);
+    GetCallback()->OnVideoDecoded(static_cast<VideoData*>(aData));
   }
+}
+
+void
+MP4Reader::ReturnEOS(TrackType aTrack)
+{
+  GetCallback()->OnNotDecoded(aTrack == kAudio ? MediaData::AUDIO_DATA : MediaData::VIDEO_DATA,
+                              RequestSampleCallback::END_OF_STREAM);
 }
 
 MP4Sample*
@@ -725,7 +722,7 @@ MP4Reader::Output(TrackType aTrack, MediaData* aSample)
 
   decoder.mOutput.AppendElement(aSample);
   decoder.mNumSamplesOutput++;
-  if (NeedInput(decoder) || HasPromise(decoder.mType)) {
+  if (NeedInput(decoder) || decoder.mOutputRequested) {
     ScheduleUpdate(aTrack);
   }
 }
@@ -755,10 +752,9 @@ MP4Reader::Error(TrackType aTrack)
   {
     MonitorAutoLock mon(data.mMonitor);
     data.mError = true;
-    if (HasPromise(data.mType)) {
-      RejectPromise(data.mType, DECODE_ERROR, __func__);
-    }
   }
+  GetCallback()->OnNotDecoded(aTrack == kVideo ? MediaData::VIDEO_DATA : MediaData::AUDIO_DATA,
+                              RequestSampleCallback::DECODE_ERROR);
 }
 
 void
@@ -787,9 +783,11 @@ MP4Reader::Flush(TrackType aTrack)
     data.mNumSamplesInput = 0;
     data.mNumSamplesOutput = 0;
     data.mInputExhausted = false;
-    if (HasPromise(data.mType)) {
-      RejectPromise(data.mType, CANCELED, __func__);
+    if (data.mOutputRequested) {
+      GetCallback()->OnNotDecoded(aTrack == kVideo ? MediaData::VIDEO_DATA : MediaData::AUDIO_DATA,
+                                  RequestSampleCallback::CANCELED);
     }
+    data.mOutputRequested = false;
     data.mDiscontinuity = true;
   }
   if (aTrack == kVideo) {
@@ -811,8 +809,10 @@ MP4Reader::SkipVideoDemuxToNextKeyFrame(int64_t aTimeThreshold, uint32_t& parsed
   while (true) {
     nsAutoPtr<MP4Sample> compressed(PopSample(kVideo));
     if (!compressed) {
+      // EOS, or error. Let the state machine know.
+      GetCallback()->OnNotDecoded(MediaData::VIDEO_DATA,
+                                  RequestSampleCallback::END_OF_STREAM);
       {
-        // EOS, or error. This code assumes EOS, which may or may not be right.
         MonitorAutoLock mon(mVideo.mMonitor);
         mVideo.mDemuxEOS = true;
       }

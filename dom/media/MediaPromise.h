@@ -190,8 +190,9 @@ public:
 
   template<typename TargetType, typename ThisType,
            typename ResolveMethodType, typename RejectMethodType>
-  void Then(TargetType* aResponseTarget, const char* aCallSite, ThisType* aThisVal,
-            ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
+  void Then(TargetType* aResponseTarget, ThisType* aThisVal,
+            ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod,
+            const char* aCallSite)
   {
     MutexAutoLock lock(mMutex);
     ThenValueBase* thenValue = new ThenValue<TargetType, ThisType, ResolveMethodType,

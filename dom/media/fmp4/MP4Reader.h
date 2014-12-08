@@ -37,10 +37,10 @@ public:
 
   virtual nsresult Init(MediaDecoderReader* aCloneDonor) MOZ_OVERRIDE;
 
-  virtual nsRefPtr<VideoDataPromise>
-  RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold) MOZ_OVERRIDE;
+  virtual void RequestVideoData(bool aSkipToNextKeyframe,
+                                int64_t aTimeThreshold) MOZ_OVERRIDE;
 
-  virtual nsRefPtr<AudioDataPromise> RequestAudioData() MOZ_OVERRIDE;
+  virtual void RequestAudioData() MOZ_OVERRIDE;
 
   virtual bool HasAudio() MOZ_OVERRIDE;
   virtual bool HasVideo() MOZ_OVERRIDE;
@@ -75,6 +75,7 @@ public:
 
 private:
 
+  void ReturnEOS(TrackType aTrack);
   void ReturnOutput(MediaData* aData, TrackType aTrack);
 
   // Sends input to decoder for aTrack, and output to the state machine,
@@ -145,11 +146,9 @@ private:
   };
 
   struct DecoderData {
-    DecoderData(MediaData::Type aType,
+    DecoderData(const char* aMonitorName,
                 uint32_t aDecodeAhead)
-      : mType(aType)
-      , mMonitor(aType == MediaData::AUDIO_DATA ? "MP4 audio decoder data"
-                                                : "MP4 video decoder data")
+      : mMonitor(aMonitorName)
       , mNumSamplesInput(0)
       , mNumSamplesOutput(0)
       , mDecodeAhead(aDecodeAhead)
@@ -157,6 +156,7 @@ private:
       , mInputExhausted(false)
       , mError(false)
       , mIsFlushing(false)
+      , mOutputRequested(false)
       , mUpdateScheduled(false)
       , mDemuxEOS(false)
       , mDrainComplete(false)
@@ -174,8 +174,6 @@ private:
     // Decoded samples returned my mDecoder awaiting being returned to
     // state machine upon request.
     nsTArray<nsRefPtr<MediaData> > mOutput;
-    // Disambiguate Audio vs Video.
-    MediaData::Type mType;
 
     // Monitor that protects all non-threadsafe state; the primitives
     // that follow.
@@ -188,6 +186,7 @@ private:
     bool mInputExhausted;
     bool mError;
     bool mIsFlushing;
+    bool mOutputRequested;
     bool mUpdateScheduled;
     bool mDemuxEOS;
     bool mDrainComplete;

@@ -261,10 +261,12 @@ MediaDecodeTask::Decode()
   }
 
   MediaQueue<AudioData> audioQueue;
-  nsRefPtr<AudioDecodeRendezvous> barrier(new AudioDecodeRendezvous(mDecoderReader));
+  nsRefPtr<AudioDecodeRendezvous> barrier(new AudioDecodeRendezvous());
+  mDecoderReader->SetCallback(barrier);
   while (1) {
+    mDecoderReader->RequestAudioData();
     nsRefPtr<AudioData> audio;
-    if (NS_FAILED(barrier->RequestAndWait(audio))) {
+    if (NS_FAILED(barrier->Await(audio))) {
       mDecoderReader->Shutdown();
       ReportFailureOnMainThread(WebAudioDecodeJob::InvalidContent);
       return;
