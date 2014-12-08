@@ -32,17 +32,19 @@ interface imgICache : nsISupports
    * Evict images from the cache.
    *
    * @param uri The URI to remove.
-   * @throws NS_ERROR_NOT_AVAILABLE if \a uri was unable to be removed from the cache.
+   * @throws NS_ERROR_NOT_AVAILABLE if \a uri was unable to be removed from
+   * the cache.
    */
   void removeEntry(in nsIURI uri);
 
   /**
    * Find Properties
    * Used to get properties such as 'type' and 'content-disposition'
-   * 'type' is a nsISupportsCString containing the images' mime type such as 'image/png'
+   * 'type' is a nsISupportsCString containing the images' mime type such as
+   * 'image/png'
    * 'content-disposition' will be a nsISupportsCString containing the header
-   * If you call this before any data has been loaded from a URI, it will succeed,
-   * but come back empty.
+   * If you call this before any data has been loaded from a URI, it will
+   * succeed, but come back empty.
    *
    * Hopefully this will be removed with bug 805119
    *
@@ -52,9 +54,9 @@ interface imgICache : nsISupports
   nsIProperties findEntryProperties(in nsIURI uri);
 
   /**
-   * Make this cache instance respect private browsing notifications. This entails clearing
-   * the chrome and content caches whenever the last-pb-context-exited notification is
-   * observed.
+   * Make this cache instance respect private browsing notifications. This
+   * entails clearing the chrome and content caches whenever the
+   * last-pb-context-exited notification is observed.
    */
   void respectPrivacyNotifications();
 };
