@@ -12,7 +12,5 @@
 interface RTCRtpSender {
   readonly attribute MediaStreamTrack track;
 
-  void replaceTrack(MediaStreamTrack track,
-                    VoidFunction successCallback,
-                    RTCPeerConnectionErrorCallback failureCallback);
+  Promise<void> replaceTrack(MediaStreamTrack track);
 };
