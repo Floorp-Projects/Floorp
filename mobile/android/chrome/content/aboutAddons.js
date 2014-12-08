@@ -348,15 +348,11 @@ var Addons = {
             let event = document.createEvent("Events");
             event.initEvent("AddonOptionsLoad", true, false);
             window.dispatchEvent(event);
-  
-            // Also send a notification to match the behavior of desktop Firefox
-            let id = aListItem.getAttribute("addonID");
-            Services.obs.notifyObservers(document, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED, id);
-          } else {
-            // No options, so hide the header and reset the list item
-            detailItem.setAttribute("optionsURL", "");
-            aListItem.setAttribute("optionsURL", "");
           }
+
+          // Also send a notification to match the behavior of desktop Firefox
+          let id = aListItem.getAttribute("addonID");
+          Services.obs.notifyObservers(document, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED, id);
         }
       }
       xhr.send(null);
