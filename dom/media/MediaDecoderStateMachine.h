@@ -368,7 +368,7 @@ public:
 
   void OnAudioDecoded(AudioData* aSample);
   void OnVideoDecoded(VideoData* aSample);
-  void OnNotDecoded(MediaData::Type aType, MediaDecoderReader::NotDecodedReason aReason);
+  void OnNotDecoded(MediaData::Type aType, RequestSampleCallback::NotDecodedReason aReason);
   void OnSeekCompleted(nsresult aResult);
 
 private:
