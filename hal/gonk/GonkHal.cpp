@@ -1777,6 +1777,8 @@ FactoryReset(FactoryResetReason& aReason)
 
   if (aReason == FactoryResetReason::Wipe) {
     recoveryService->FactoryReset("wipe");
+  } else if (aReason == FactoryResetReason::Root) {
+    recoveryService->FactoryReset("root");
   } else {
     recoveryService->FactoryReset("normal");
   }
