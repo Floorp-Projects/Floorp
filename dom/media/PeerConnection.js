@@ -342,7 +342,7 @@ RTCPeerConnection.prototype = {
     this._mustValidateRTCConfiguration(rtcConfig,
         "RTCPeerConnection constructor passed invalid RTCConfiguration");
     if (_globalPCList._networkdown || !this._win.navigator.onLine) {
-      throw new this._win.DOMError("",
+      throw new this._win.DOMError("InvalidStateError",
           "Can't create RTCPeerConnections when the network is down");
     }
 
@@ -385,7 +385,7 @@ RTCPeerConnection.prototype = {
 
   get _impl() {
     if (!this._pc) {
-      throw new this._win.DOMError("",
+      throw new this._win.DOMError("InvalidStateError",
           "RTCPeerConnection is gone (did you enter Offline mode?)");
     }
     return this._pc;
@@ -501,7 +501,7 @@ RTCPeerConnection.prototype = {
   // spec. See Bug 831756.
   _checkClosed: function() {
     if (this._closed) {
-      throw new this._win.DOMError("", "Peer connection is closed");
+      throw new this._win.DOMError("InvalidStateError", "Peer connection is closed");
     }
   },
 
@@ -665,9 +665,9 @@ RTCPeerConnection.prototype = {
         type = Ci.IPeerConnection.kActionAnswer;
         break;
       case "pranswer":
-        throw new this._win.DOMError("", "pranswer not yet implemented");
+        throw new this._win.DOMError("NotSupportedError", "pranswer not yet implemented");
       default:
-        throw new this._win.DOMError("",
+        throw new this._win.DOMError("InvalidParameterError",
             "Invalid type " + desc.type + " provided to setLocalDescription");
     }
 
@@ -701,9 +701,9 @@ RTCPeerConnection.prototype = {
         type = Ci.IPeerConnection.kActionAnswer;
         break;
       case "pranswer":
-        throw new this._win.DOMError("", "pranswer not yet implemented");
+        throw new this._win.DOMError("NotSupportedError", "pranswer not yet implemented");
       default:
-        throw new this._win.DOMError("",
+        throw new this._win.DOMError("InvalidParameterError",
             "Invalid type " + desc.type + " provided to setRemoteDescription");
     }
 
@@ -822,7 +822,7 @@ RTCPeerConnection.prototype = {
   },
 
   updateIce: function(config) {
-    throw new this._win.DOMError("", "updateIce not yet implemented");
+    throw new this._win.DOMError("NotSupportedError", "updateIce not yet implemented");
   },
 
   addIceCandidate: function(cand, onSuccess, onError) {
@@ -832,7 +832,7 @@ RTCPeerConnection.prototype = {
           null, 0);
     }
     if (!cand.candidate && !cand.sdpMLineIndex) {
-      throw new this._win.DOMError("",
+      throw new this._win.DOMError("InvalidParameterError",
           "Invalid candidate passed to addIceCandidate!");
     }
 
@@ -858,19 +858,19 @@ RTCPeerConnection.prototype = {
 
   removeStream: function(stream) {
      // Bug 844295: Not implementing this functionality.
-     throw new this._win.DOMError("", "removeStream not yet implemented");
+     throw new this._win.DOMError("NotSupportedError", "removeStream not yet implemented");
   },
 
   getStreamById: function(id) {
-    throw new this._win.DOMError("", "getStreamById not yet implemented");
+    throw new this._win.DOMError("NotSupportedError", "getStreamById not yet implemented");
   },
 
   addTrack: function(track, stream) {
     if (stream.currentTime === undefined) {
-      throw new this._win.DOMError("", "invalid stream.");
+      throw new this._win.DOMError("InvalidParameterError", "invalid stream.");
     }
     if (stream.getTracks().indexOf(track) == -1) {
-      throw new this._win.DOMError("", "track is not in stream.");
+      throw new this._win.DOMError("InvalidParameterError", "track is not in stream.");
     }
     this._checkClosed();
     this._impl.addTrack(track, stream);
@@ -883,7 +883,7 @@ RTCPeerConnection.prototype = {
 
   removeTrack: function(sender) {
      // Bug 844295: Not implementing this functionality.
-     throw new this._win.DOMError("", "removeTrack not yet implemented");
+     throw new this._win.DOMError("NotSupportedError", "removeTrack not yet implemented");
   },
 
   _replaceTrack: function(sender, withTrack, onSuccess, onError) {
@@ -1056,7 +1056,7 @@ RTCPeerConnection.prototype = {
 
     if (dict.maxRetransmitTime != undefined &&
         dict.maxRetransmits != undefined) {
-      throw new this._win.DOMError("",
+      throw new this._win.DOMError("InvalidParameterError",
           "Both maxRetransmitTime and maxRetransmits cannot be provided");
     }
     let protocol;
