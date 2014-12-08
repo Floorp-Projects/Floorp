@@ -9308,13 +9308,18 @@ IonBuilder::jsop_getprop(PropertyName *name)
     MDefinition *obj = current->pop();
     types::TemporaryTypeSet *types = bytecodeTypes(pc);
 
-    // Try to optimize arguments.length.
-    if (!getPropTryArgumentsLength(&emitted, obj) || emitted)
-        return emitted;
+    if (!info().executionModeIsAnalysis()) {
+        // The calls below can abort compilation, so we only try this if we're
+        // not analyzing.
 
-    // Try to optimize arguments.callee.
-    if (!getPropTryArgumentsCallee(&emitted, obj, name) || emitted)
-        return emitted;
+        // Try to optimize arguments.length.
+        if (!getPropTryArgumentsLength(&emitted, obj) || emitted)
+            return emitted;
+
+        // Try to optimize arguments.callee.
+        if (!getPropTryArgumentsCallee(&emitted, obj, name) || emitted)
+            return emitted;
+    }
 
     BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
                                                        obj, name, types);
