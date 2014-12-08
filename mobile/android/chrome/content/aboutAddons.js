@@ -244,7 +244,7 @@ var Addons = {
 
   init: function init() {
     let self = this;
-    AddonManager.getAddonsByTypes(["extension", "theme", "locale"], function(aAddons) {
+    AddonManager.getAllAddons(function(aAddons) {
       // Clear all content before filling the addons
       let list = document.getElementById("addons-list");
       list.innerHTML = "";
