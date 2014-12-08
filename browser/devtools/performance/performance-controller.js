@@ -7,22 +7,19 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/devtools/Loader.jsm");
-Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 Cu.import("resource://gre/modules/devtools/Console.jsm");
+Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 
-let require = devtools.require;
 devtools.lazyRequireGetter(this, "Services");
 devtools.lazyRequireGetter(this, "promise");
 devtools.lazyRequireGetter(this, "EventEmitter",
   "devtools/toolkit/event-emitter");
 devtools.lazyRequireGetter(this, "DevToolsUtils",
   "devtools/toolkit/DevToolsUtils");
-devtools.lazyRequireGetter(this, "FramerateFront",
-  "devtools/server/actors/framerate", true);
 devtools.lazyRequireGetter(this, "L10N",
   "devtools/profiler/global", true);
-devtools.lazyImporter(this, "LineGraphWidget",
-  "resource:///modules/devtools/Graphs.jsm");
+devtools.lazyRequireGetter(this, "FramerateFront",
+  "devtools/server/actors/framerate", true);
 devtools.lazyRequireGetter(this, "Waterfall",
   "devtools/timeline/waterfall", true);
 devtools.lazyRequireGetter(this, "MarkerDetails",
@@ -31,6 +28,9 @@ devtools.lazyRequireGetter(this, "CallView",
   "devtools/profiler/tree-view", true);
 devtools.lazyRequireGetter(this, "ThreadNode",
   "devtools/profiler/tree-model", true);
+
+devtools.lazyImporter(this, "LineGraphWidget",
+  "resource:///modules/devtools/Graphs.jsm");
 
 // Events emitted by the `PerformanceController`
 const EVENTS = {
@@ -154,10 +154,11 @@ let PerformanceController = {
    */
   stopRecording: Task.async(function *() {
     let results = yield gFront.stopRecording();
-    // If `endTime` is not yielded from timeline actor (< Fx36),
-    // fake an endTime
+
+    // If `endTime` is not yielded from timeline actor (< Fx36), fake an endTime.
     if (!results.endTime) {
-      this._endTime = results.endTime = this._startTime + (performance.now() - this._localStartTime);
+      results.endTime = this._startTime + (performance.now() - this._localStartTime);
+      this._endTime = results.endTime;
     }
 
     this.emit(EVENTS.RECORDING_STOPPED, results);

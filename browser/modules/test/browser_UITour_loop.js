@@ -10,6 +10,7 @@ let loopButton;
 let loopPanel = document.getElementById("loop-notification-panel");
 
 Components.utils.import("resource:///modules/UITour.jsm");
+const { LoopRooms } = Components.utils.import("resource:///modules/loop/LoopRooms.jsm", {});
 
 function test() {
   UITourTest();
@@ -84,6 +85,20 @@ let tests = [
         }), "Info panel should be anchored to the new room button");
       });
     });
+  },
+  function test_notifyLoopChatWindowOpenedClosed(done) {
+    gContentAPI.observe((event, params) => {
+      is(event, "Loop:ChatWindowOpened", "Check Loop:ChatWindowOpened notification");
+      gContentAPI.observe((event, params) => {
+        is(event, "Loop:ChatWindowClosed", "Check Loop:ChatWindowClosed notification");
+        gContentAPI.observe((event, params) => {
+          ok(false, "No more notifications should have arrived");
+        });
+        done();
+      });
+      document.querySelector("#pinnedchats > chatbox").close();
+    });
+    LoopRooms.open("fakeTourRoom");
   },
 ];
 
