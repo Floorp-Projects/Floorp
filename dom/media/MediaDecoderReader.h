@@ -30,13 +30,6 @@ class SharedDecoderManager;
 // be accessed on the decode task queue.
 class MediaDecoderReader {
 public:
-  enum NotDecodedReason {
-    END_OF_STREAM,
-    DECODE_ERROR,
-    WAITING_FOR_DATA,
-    CANCELED
-  };
-
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderReader)
 
   explicit MediaDecoderReader(AbstractMediaDecoder* aDecoder);
@@ -297,6 +290,13 @@ class RequestSampleCallback {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RequestSampleCallback)
 
+  enum NotDecodedReason {
+    END_OF_STREAM,
+    DECODE_ERROR,
+    WAITING_FOR_DATA,
+    CANCELED
+  };
+
   // Receives the result of a RequestAudioData() call.
   virtual void OnAudioDecoded(AudioData* aSample) = 0;
 
@@ -305,8 +305,7 @@ public:
 
   // Called when a RequestAudioData() or RequestVideoData() call can't be
   // fulfiled. The reason is passed as aReason.
-  virtual void OnNotDecoded(MediaData::Type aType,
-                            MediaDecoderReader::NotDecodedReason aReason) = 0;
+  virtual void OnNotDecoded(MediaData::Type aType, NotDecodedReason aReason) = 0;
 
   virtual void OnSeekCompleted(nsresult aResult) = 0;
 
@@ -323,6 +322,8 @@ protected:
 // model of the MediaDecoderReader to a synchronous model.
 class AudioDecodeRendezvous : public RequestSampleCallback {
 public:
+  using RequestSampleCallback::NotDecodedReason;
+
   AudioDecodeRendezvous();
   ~AudioDecodeRendezvous();
 
@@ -330,8 +331,7 @@ public:
   // Note: aSample is null at end of stream.
   virtual void OnAudioDecoded(AudioData* aSample) MOZ_OVERRIDE;
   virtual void OnVideoDecoded(VideoData* aSample) MOZ_OVERRIDE {}
-  virtual void OnNotDecoded(MediaData::Type aType,
-                            MediaDecoderReader::NotDecodedReason aReason) MOZ_OVERRIDE;
+  virtual void OnNotDecoded(MediaData::Type aType, NotDecodedReason aReason) MOZ_OVERRIDE;
   virtual void OnSeekCompleted(nsresult aResult) MOZ_OVERRIDE {};
   virtual void BreakCycles() MOZ_OVERRIDE {};
   void Reset();
