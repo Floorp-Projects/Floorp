@@ -312,8 +312,8 @@ MediaSourceReader::Shutdown()
   mVideoTrack = nullptr;
   mVideoReader = nullptr;
 
-  // We can't assert that the promises are empty here because our subdecoders
-  // might reject their final promises asynchronously.
+  MOZ_ASSERT(mAudioPromise.IsEmpty());
+  MOZ_ASSERT(mVideoPromise.IsEmpty());
 
   MediaDecoderReader::Shutdown();
 }
