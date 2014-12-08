@@ -211,6 +211,8 @@ loop.store.ActiveRoomStore = (function() {
 
       this._mozLoop.rooms.on("update:" + actionData.roomToken,
         this._handleRoomUpdate.bind(this));
+      this._mozLoop.rooms.on("delete:" + actionData.roomToken,
+        this._handleRoomDelete.bind(this));
     },
 
     /**
@@ -230,6 +232,8 @@ loop.store.ActiveRoomStore = (function() {
 
       this._mozLoop.rooms.on("update:" + actionData.roomToken,
         this._handleRoomUpdate.bind(this));
+      this._mozLoop.rooms.on("delete:" + actionData.roomToken,
+        this._handleRoomDelete.bind(this));
     },
 
     /**
@@ -257,6 +261,18 @@ loop.store.ActiveRoomStore = (function() {
         roomOwner: roomData.roomOwner,
         roomUrl: roomData.roomUrl
       }));
+    },
+
+    /**
+     * Handles the deletion of a room, notified by the mozLoop rooms API.
+     *
+     * @param {String} eventName The name of the event
+     * @param {Object} roomData  The roomData of the deleted room
+     */
+    _handleRoomDelete: function(eventName, roomData) {
+      this._sdkDriver.forceDisconnectAll(function() {
+        window.close();
+      });
     },
 
     /**
@@ -391,7 +407,9 @@ loop.store.ActiveRoomStore = (function() {
       this._leaveRoom(ROOM_STATES.CLOSING);
 
       // If we're closing the window, we can stop listening to updates.
-      this._mozLoop.rooms.off("update:" + this.getStoreState().roomToken);
+      var roomToken = this.getStoreState().roomToken;
+      this._mozLoop.rooms.off("update:" + roomToken);
+      this._mozLoop.rooms.off("delete:" + roomToken);
     },
 
     /**
