@@ -401,6 +401,8 @@ pref("browser.search.order.1",                "chrome://browser-region/locale/re
 pref("browser.search.order.2",                "chrome://browser-region/locale/region.properties");
 pref("browser.search.order.3",                "chrome://browser-region/locale/region.properties");
 
+// Market-specific search defaults (US market only)
+pref("browser.search.geoSpecificDefaults", true);
 // Hack for Firefox 34
 pref("browser.search.defaultenginename.US",      "chrome://browser-region/locale/region.properties");
 pref("browser.search.order.US.1",                "chrome://browser-region/locale/region.properties");
