@@ -405,36 +405,6 @@ ToMarkable(Cell *cell)
     return cell;
 }
 
-inline JSGCTraceKind
-TraceKind(const Value &v)
-{
-    MOZ_ASSERT(v.isMarkable());
-    if (v.isObject())
-        return JSTRACE_OBJECT;
-    if (v.isString())
-        return JSTRACE_STRING;
-    MOZ_ASSERT(v.isSymbol());
-    return JSTRACE_SYMBOL;
-}
-
-inline JSGCTraceKind
-TraceKind(JSObject *obj)
-{
-    return JSTRACE_OBJECT;
-}
-
-inline JSGCTraceKind
-TraceKind(JSScript *script)
-{
-    return JSTRACE_SCRIPT;
-}
-
-inline JSGCTraceKind
-TraceKind(LazyScript *lazy)
-{
-    return JSTRACE_LAZY_SCRIPT;
-}
-
 } /* namespace gc */
 
 void
