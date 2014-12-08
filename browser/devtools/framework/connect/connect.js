@@ -52,12 +52,16 @@ function submit() {
   // Show the "connecting" screen
   document.body.classList.add("connecting");
 
-  // Save the host/port values
   let host = document.getElementById("host").value;
-  Services.prefs.setCharPref("devtools.debugger.remote-host", host);
-
   let port = document.getElementById("port").value;
-  Services.prefs.setIntPref("devtools.debugger.remote-port", port);
+
+  // Save the host/port values
+  try {
+    Services.prefs.setCharPref("devtools.debugger.remote-host", host);
+    Services.prefs.setIntPref("devtools.debugger.remote-port", port);
+  } catch(e) {
+    // Fails in e10s mode, but not a critical feature.
+  }
 
   // Initiate the connection
   let transport;
