@@ -537,16 +537,43 @@ nsLineLayout::UnlinkFrame(PerFrameData* pfd)
 {
   while (nullptr != pfd) {
     PerFrameData* next = pfd->mNext;
-    if (nullptr != pfd->mSpan) {
-      FreeSpan(pfd->mSpan);
+    if (pfd->GetFlag(PFD_ISLINKEDTOBASE)) {
+      // This frame is linked to a ruby base, and should not be freed
+      // now. Just unlink it from the span. It will be freed when its
+      // base frame gets unlinked.
+      pfd->mNext = pfd->mPrev = nullptr;
+      pfd = next;
+      continue;
     }
-    pfd->mNext = mBaseLineLayout->mFrameFreeList;
-    mBaseLineLayout->mFrameFreeList = pfd;
-#ifdef DEBUG
-    mBaseLineLayout->mFramesFreed++;
-#endif
+
+    // It is a ruby base frame. If there are any annotations
+    // linked to this frame, free them first.
+    PerFrameData* annotationPFD = pfd->mNextAnnotation;
+    while (annotationPFD) {
+      PerFrameData* nextAnnotation = annotationPFD->mNextAnnotation;
+      MOZ_ASSERT(annotationPFD->mNext == nullptr &&
+                 annotationPFD->mPrev == nullptr,
+                 "PFD in annotations should have been unlinked.");
+      FreeFrame(annotationPFD);
+      annotationPFD = nextAnnotation;
+    }
+
+    FreeFrame(pfd);
     pfd = next;
   }
+}
+
+void
+nsLineLayout::FreeFrame(PerFrameData* pfd)
+{
+  if (nullptr != pfd->mSpan) {
+    FreeSpan(pfd->mSpan);
+  }
+  pfd->mNext = mBaseLineLayout->mFrameFreeList;
+  mBaseLineLayout->mFrameFreeList = pfd;
+#ifdef DEBUG
+  mBaseLineLayout->mFramesFreed++;
+#endif
 }
 
 void

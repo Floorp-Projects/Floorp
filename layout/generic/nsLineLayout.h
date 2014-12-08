@@ -613,6 +613,11 @@ protected:
    */
   void UnlinkFrame(PerFrameData* pfd);
 
+  /**
+   * Free the given PerFrameData.
+   */
+  void FreeFrame(PerFrameData* pfd);
+
   void FreeSpan(PerSpanData* psd);
 
   bool InBlockContext() const {
