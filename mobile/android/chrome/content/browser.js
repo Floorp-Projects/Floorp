@@ -16,6 +16,8 @@ Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import('resource://gre/modules/Payment.jsm');
 Cu.import("resource://gre/modules/NotificationDB.jsm");
 Cu.import("resource://gre/modules/SpatialNavigation.jsm");
+// TODO: Lazy load this based on a message...?
+Cu.import("resource://gre/modules/DownloadNotifications.jsm");
 
 #ifdef ACCESSIBILITY
 Cu.import("resource://gre/modules/accessibility/AccessFu.jsm");
