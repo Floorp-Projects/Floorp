@@ -25,9 +25,7 @@
     is(pc.iceGatheringState, "new", "Initial iceGatheringState is 'new'");
 
     var finish;
-    var finished = new Promise(function(resolve) {
-      finish = resolve;
-    });
+    var finished = new Promise(resolve => finish = resolve);
 
     pc.onsignalingstatechange = function(e) {
       clearTimeout(eTimeout);
@@ -59,6 +57,39 @@
       // - addIceCandidate
       // - getStats
       //
+      // These legacy methods fire the error callback instead. This is not
+      // entirely to spec but is better than ignoring programming errors.
+
+      var offer = new mozRTCSessionDescription({ sdp: "sdp", type: "offer" });
+      var answer = new mozRTCSessionDescription({ sdp: "sdp", type: "answer" });
+      var candidate = new mozRTCIceCandidate({ candidate: "dummy",
+                                               sdpMid: "test",
+                                               sdpMLineIndex: 3 });
+
+      var doesFail = (p, msg) => p.then(generateErrorCallback(),
+                                        r => is(r.name, "InvalidStateError", msg));
+
+      doesFail(pc.createOffer(), "createOffer fails on close")
+      .then(() => doesFail(pc.createAnswer(), "createAnswer fails on close"))
+      .then(() => doesFail(pc.setLocalDescription(offer),
+                           "setLocalDescription fails on close"))
+      .then(() => doesFail(pc.setRemoteDescription(answer),
+                           "setRemoteDescription fails on close"))
+      .then(() => doesFail(pc.addIceCandidate(candidate),
+                           "addIceCandidate fails on close"))
+      .then(() => doesFail(new Promise((y, n) => pc.createOffer(y, n)),
+                           "Legacy createOffer fails on close"))
+      .then(() => doesFail(new Promise((y, n) => pc.createAnswer(y, n)),
+                           "Legacy createAnswer fails on close"))
+      .then(() => doesFail(new Promise((y, n) => pc.setLocalDescription(offer, y, n)),
+                           "Legacy setLocalDescription fails on close"))
+      .then(() => doesFail(new Promise((y, n) => pc.setRemoteDescription(answer, y, n)),
+                           "Legacy setRemoteDescription fails on close"))
+      .then(() => doesFail(new Promise((y, n) => pc.addIceCandidate(candidate, y, n)),
+                           "Legacy addIceCandidate fails on close"))
+      .catch(reason => ok(false, "unexpected failure: " + reason))
+      .then(finish);
+
       // Other methods are unaffected.
 
       SimpleTest.doesThrow(function() {
@@ -80,9 +111,7 @@
       SimpleTest.doesThrow(function() {
         pc.setIdentityProvider("Invalid Provider")},
         "setIdentityProvider() on closed PC raised expected exception");
-
-      finish();
-    }
+    };
 
     // This prevents a mochitest timeout in case the event does not fire
     eTimeout = setTimeout(function() {
