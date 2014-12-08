@@ -20,8 +20,6 @@ class MediaData;
 template<class Target>
 class MediaDataDecodedListener : public RequestSampleCallback {
 public:
-  using RequestSampleCallback::NotDecodedReason;
-
   MediaDataDecodedListener(Target* aTarget,
                            MediaTaskQueue* aTaskQueue)
     : mMonitor("MediaDataDecodedListener")
@@ -52,7 +50,8 @@ public:
     mTaskQueue->Dispatch(task);
   }
 
-  virtual void OnNotDecoded(MediaData::Type aType, NotDecodedReason aReason) MOZ_OVERRIDE {
+  virtual void OnNotDecoded(MediaData::Type aType,
+                            MediaDecoderReader::NotDecodedReason aReason) MOZ_OVERRIDE {
     MonitorAutoLock lock(mMonitor);
     if (!mTarget || !mTaskQueue) {
       // We've been shutdown, abort.
@@ -133,7 +132,7 @@ private:
   class DeliverNotDecodedTask : public nsRunnable {
   public:
     DeliverNotDecodedTask(MediaData::Type aType,
-                          RequestSampleCallback::NotDecodedReason aReason,
+                          MediaDecoderReader::NotDecodedReason aReason,
                           Target* aTarget)
       : mType(aType)
       , mReason(aReason)
@@ -153,7 +152,7 @@ private:
     }
   private:
     MediaData::Type mType;
-    RequestSampleCallback::NotDecodedReason mReason;
+    MediaDecoderReader::NotDecodedReason mReason;
     RefPtr<Target> mTarget;
   };
 
