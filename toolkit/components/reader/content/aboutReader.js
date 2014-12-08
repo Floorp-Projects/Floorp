@@ -309,6 +309,8 @@ AboutReader.prototype = {
       return;
 
     if (this._isReadingListItem == 0) {
+      // If we're in reader mode, we must have fetched the article.
+      this._article.status = gChromeWin.Reader.STATUS_FETCHED_ARTICLE;
       gChromeWin.Reader.addArticleToReadingList(this._article);
 
       UITelemetry.addEvent("save.1", "button", null, "reader");
