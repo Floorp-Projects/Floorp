@@ -68,7 +68,12 @@ show allResults
 
 check sets [lib] [middle] [main]
 
-check [lib] directlyIndependentOf [main]
+# Bug 1107134: it appears that Classycle can be fooled if the Java
+# compiler inlines a constant from [main] into [lib].  That is, [main]
+# really does depend on [lib] but Classycle only sees the dependency
+# with some javac versions.  For now, disable the check.  Yes, this
+# processing is useless without this check.
+# check [lib] directlyIndependentOf [main]
 
 # This fails; if this passed, GeckoView would be ready to extract from Fennec.
 # check [lib] independentOf [middle]
