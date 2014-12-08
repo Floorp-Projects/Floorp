@@ -562,13 +562,16 @@ ClearWithTempFB(WebGLContext* webgl, GLuint tex,
         gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0,
                                   texImageTarget.get(), tex, level);
         break;
-
+    case LOCAL_GL_DEPTH_COMPONENT32_OES:
+    case LOCAL_GL_DEPTH_COMPONENT24_OES:
+    case LOCAL_GL_DEPTH_COMPONENT16:
     case LOCAL_GL_DEPTH_COMPONENT:
         mask = LOCAL_GL_DEPTH_BUFFER_BIT;
         gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT,
                                   texImageTarget.get(), tex, level);
         break;
 
+    case LOCAL_GL_DEPTH24_STENCIL8:
     case LOCAL_GL_DEPTH_STENCIL:
         mask = LOCAL_GL_DEPTH_BUFFER_BIT |
                LOCAL_GL_STENCIL_BUFFER_BIT;
