@@ -4197,10 +4197,10 @@ class OutOfLineNewObject : public OutOfLineCodeBase<CodeGenerator>
     }
 };
 
-typedef JSObject *(*NewInitObjectFn)(JSContext *, HandleNativeObject);
+typedef JSObject *(*NewInitObjectFn)(JSContext *, HandlePlainObject);
 static const VMFunction NewInitObjectInfo = FunctionInfo<NewInitObjectFn>(NewInitObject);
 
-typedef JSObject *(*NewInitObjectWithClassPrototypeFn)(JSContext *, HandleObject);
+typedef JSObject *(*NewInitObjectWithClassPrototypeFn)(JSContext *, HandlePlainObject);
 static const VMFunction NewInitObjectWithClassPrototypeInfo =
     FunctionInfo<NewInitObjectWithClassPrototypeFn>(NewInitObjectWithClassPrototype);
 
@@ -4321,7 +4321,7 @@ CodeGenerator::visitNewObject(LNewObject *lir)
     MOZ_ASSERT(gen->info().executionMode() == SequentialExecution);
     Register objReg = ToRegister(lir->output());
     Register tempReg = ToRegister(lir->temp());
-    NativeObject *templateObject = lir->mir()->templateObject();
+    PlainObject *templateObject = lir->mir()->templateObject();
 
     if (lir->mir()->shouldUseVM()) {
         visitNewObjectVMCall(lir);
@@ -4375,7 +4375,7 @@ CodeGenerator::visitNewDeclEnvObject(LNewDeclEnvObject *lir)
 {
     Register objReg = ToRegister(lir->output());
     Register tempReg = ToRegister(lir->temp());
-    NativeObject *templateObj = lir->mir()->templateObj();
+    DeclEnvObject *templateObj = lir->mir()->templateObj();
     CompileInfo &info = lir->mir()->block()->info();
 
     // If we have a template object, we can inline call object creation.
@@ -4401,7 +4401,7 @@ CodeGenerator::visitNewCallObject(LNewCallObject *lir)
     Register objReg = ToRegister(lir->output());
     Register tempReg = ToRegister(lir->temp());
 
-    NativeObject *templateObj = lir->mir()->templateObject();
+    CallObject *templateObj = lir->mir()->templateObject();
 
     JSScript *script = lir->mir()->block()->info().script();
     uint32_t lexicalBegin = script->bindings.aliasedBodyLevelLexicalBegin();
@@ -4452,7 +4452,7 @@ CodeGenerator::visitNewCallObjectPar(LNewCallObjectPar *lir)
     Register cxReg = ToRegister(lir->forkJoinContext());
     Register tempReg1 = ToRegister(lir->getTemp0());
     Register tempReg2 = ToRegister(lir->getTemp1());
-    NativeObject *templateObj = lir->mir()->templateObj();
+    CallObject *templateObj = lir->mir()->templateObj();
 
     emitAllocateGCThingPar(lir, resultReg, cxReg, tempReg1, tempReg2, templateObj);
 }
@@ -4624,7 +4624,7 @@ CodeGenerator::visitInitElemGetterSetter(LInitElemGetterSetter *lir)
     callVM(InitElemGetterSetterInfo, lir);
 }
 
-typedef bool(*MutatePrototypeFn)(JSContext *cx, HandleObject obj, HandleValue value);
+typedef bool(*MutatePrototypeFn)(JSContext *cx, HandlePlainObject obj, HandleValue value);
 static const VMFunction MutatePrototypeInfo =
     FunctionInfo<MutatePrototypeFn>(MutatePrototype);
 
@@ -4728,7 +4728,7 @@ static const VMFunction NewGCObjectInfo =
 void
 CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate *lir)
 {
-    NativeObject *templateObject = lir->mir()->templateObject();
+    PlainObject *templateObject = lir->mir()->templateObject();
     gc::AllocKind allocKind = templateObject->asTenured().getAllocKind();
     gc::InitialHeap initialHeap = lir->mir()->initialHeap();
     Register objReg = ToRegister(lir->output());

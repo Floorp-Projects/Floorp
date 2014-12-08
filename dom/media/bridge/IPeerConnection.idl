@@ -59,13 +59,10 @@ interface IPeerConnection : nsISupports
 
   /* Constants for 'name' in error callbacks */
   const unsigned long kNoError                          = 0; // Test driver only
-  const unsigned long kInvalidConstraintsType           = 1;
-  const unsigned long kInvalidCandidateType             = 2;
   const unsigned long kInvalidMediastreamTrack          = 3;
   const unsigned long kInvalidState                     = 4;
   const unsigned long kInvalidSessionDescription        = 5;
   const unsigned long kIncompatibleSessionDescription   = 6;
-  const unsigned long kIncompatibleConstraints          = 7;
   const unsigned long kIncompatibleMediaStreamTrack     = 8;
   const unsigned long kInternalError                    = 9;
   const unsigned long kMaxErrorType                     = 9; // Same as final error
