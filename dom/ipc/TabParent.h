@@ -191,6 +191,9 @@ public:
                                      const int32_t& aCause,
                                      const int32_t& aFocusChange) MOZ_OVERRIDE;
     virtual bool RecvRequestFocus(const bool& aCanRaise) MOZ_OVERRIDE;
+    virtual bool RecvEnableDisableCommands(const nsString& aAction,
+                                           const nsTArray<nsCString>& aEnabledCommands,
+                                           const nsTArray<nsCString>& aDisabledCommands) MOZ_OVERRIDE;
     virtual bool RecvSetCursor(const uint32_t& aValue, const bool& aForce) MOZ_OVERRIDE;
     virtual bool RecvSetBackgroundColor(const nscolor& aValue) MOZ_OVERRIDE;
     virtual bool RecvSetStatus(const uint32_t& aType, const nsString& aStatus) MOZ_OVERRIDE;
