@@ -1547,42 +1547,231 @@ add_task(function test_getSha256Hash()
   }
 });
 
+
 /**
- * Checks that application reputation blocks the download and the target file
- * does not exist.
+ * Create a download which will be reputation blocked.
+ *
+ * @param options
+ *        {
+ *           keepPartialData: bool,
+ *           keepBlockedData: bool,
+ *        }
+ * @return {Promise}
+ * @resolves The reputation blocked download.
+ * @rejects JavaScript exception.
  */
-add_task(function test_blocked_applicationReputation()
-{
+let promiseBlockedDownload = Task.async(function* (options) {
   function cleanup() {
     DownloadIntegration.shouldBlockInTestForApplicationReputation = false;
+    DownloadIntegration.shouldKeepBlockedDataInTest = false;
   }
   do_register_cleanup(cleanup);
+
+  let {keepPartialData, keepBlockedData} = options;
   DownloadIntegration.shouldBlockInTestForApplicationReputation = true;
+  DownloadIntegration.shouldKeepBlockedDataInTest = keepBlockedData;
 
   let download;
+
   try {
-    if (!gUseLegacySaver) {
-      // When testing DownloadCopySaver, we want to check that the promise
-      // returned by the "start" method is rejected.
+    if (keepPartialData) {
+      download = yield promiseStartDownload_tryToKeepPartialData();
+      continueResponses();
+    } else if (gUseLegacySaver) {
+      download = yield promiseStartLegacyDownload();
+    } else {
       download = yield promiseNewDownload();
       yield download.start();
-    } else {
-      // When testing DownloadLegacySaver, we cannot be sure whether we are
-      // testing the promise returned by the "start" method or we are testing
-      // the "error" property checked by promiseDownloadStopped.  This happens
-      // because we don't have control over when the download is started.
-      download = yield promiseStartLegacyDownload();
-      yield promiseDownloadStopped(download);
+      do_throw("The download should have blocked.");
     }
+
+    yield promiseDownloadStopped(download);
     do_throw("The download should have blocked.");
   } catch (ex if ex instanceof Downloads.Error && ex.becauseBlocked) {
     do_check_true(ex.becauseBlockedByReputationCheck);
     do_check_true(download.error.becauseBlockedByReputationCheck);
   }
 
+  do_check_true(download.stopped);
+  do_check_false(download.succeeded);
+  do_check_false(yield OS.File.exists(download.target.path));
+
+  cleanup();
+  return download;
+});
+
+/**
+ * Checks that application reputation blocks the download and the target file
+ * does not exist.
+ */
+add_task(function test_blocked_applicationReputation()
+{
+  let download = yield promiseBlockedDownload({
+    keepPartialData: false,
+    keepBlockedData: false,
+  });
+
   // Now that the download is blocked, the target file should not exist.
   do_check_false(yield OS.File.exists(download.target.path));
-  cleanup();
+
+  // There should also be no blocked data in this case
+  do_check_false(download.hasBlockedData);
+});
+
+/**
+ * Checks that application reputation blocks the download but maintains the
+ * blocked data, which will be deleted when the block is confirmed.
+ */
+add_task(function test_blocked_applicationReputation_confirmBlock()
+{
+  let download = yield promiseBlockedDownload({
+    keepPartialData: true,
+    keepBlockedData: true,
+  });
+
+  do_check_true(download.hasBlockedData);
+  do_check_true(yield OS.File.exists(download.target.partFilePath));
+
+  yield download.confirmBlock();
+
+  // After confirming the block the download should be in a failed state and
+  // have no downloaded data left on disk.
+  do_check_true(download.stopped);
+  do_check_false(download.succeeded);
+  do_check_false(download.hasBlockedData);
+  do_check_false(yield OS.File.exists(download.target.partFilePath));
+  do_check_false(yield OS.File.exists(download.target.path));
+});
+
+/**
+ * Checks that application reputation blocks the download but maintains the
+ * blocked data, which will be used to complete the download when unblocking.
+ */
+add_task(function test_blocked_applicationReputation_unblock()
+{
+  let download = yield promiseBlockedDownload({
+    keepPartialData: true,
+    keepBlockedData: true,
+  });
+
+  do_check_true(download.hasBlockedData);
+  do_check_true(yield OS.File.exists(download.target.partFilePath));
+
+  yield download.unblock();
+
+  // After unblocking the download should have succeeded and be
+  // present at the final path.
+  do_check_true(download.stopped);
+  do_check_true(download.succeeded);
+  do_check_false(download.hasBlockedData);
+  do_check_false(yield OS.File.exists(download.target.partFilePath));
+  do_check_true(yield OS.File.exists(download.target.path));
+
+  // The only indication the download was previously blocked is the
+  // existence of the error, so we make sure it's still set.
+  do_check_true(download.error instanceof Downloads.Error);
+  do_check_true(download.error.becauseBlocked);
+  do_check_true(download.error.becauseBlockedByReputationCheck);
+});
+
+/**
+ * Check that calling cancel on a blocked download will not cause errors
+ */
+add_task(function test_blocked_applicationReputation_cancel()
+{
+  let download = yield promiseBlockedDownload({
+    keepPartialData: true,
+    keepBlockedData: true,
+  });
+
+  // This call should succeed on a blocked download.
+  yield download.cancel();
+
+  // Calling cancel should not have changed the current state, the download
+  // should still be blocked.
+  do_check_true(download.error.becauseBlockedByReputationCheck);
+  do_check_true(download.stopped);
+  do_check_false(download.succeeded);
+  do_check_true(download.hasBlockedData);
+});
+
+/**
+ * Checks that unblock and confirmBlock cannot race on a blocked download
+ */
+add_task(function test_blocked_applicationReputation_decisionRace()
+{
+  let download = yield promiseBlockedDownload({
+    keepPartialData: true,
+    keepBlockedData: true,
+  });
+
+  let unblockPromise = download.unblock();
+  let confirmBlockPromise = download.confirmBlock();
+
+  yield confirmBlockPromise.then(() => {
+    do_throw("confirmBlock should have failed.");
+  }, () => {});
+
+  yield unblockPromise;
+
+  // After unblocking the download should have succeeded and be
+  // present at the final path.
+  do_check_true(download.stopped);
+  do_check_true(download.succeeded);
+  do_check_false(download.hasBlockedData);
+  do_check_false(yield OS.File.exists(download.target.partFilePath));
+  do_check_true(yield OS.File.exists(download.target.path));
+
+  download = yield promiseBlockedDownload({
+    keepPartialData: true,
+    keepBlockedData: true,
+  });
+
+  confirmBlockPromise = download.confirmBlock();
+  unblockPromise = download.unblock();
+
+  yield unblockPromise.then(() => {
+    do_throw("unblock should have failed.");
+  }, () => {});
+
+  yield confirmBlockPromise;
+
+  // After confirming the block the download should be in a failed state and
+  // have no downloaded data left on disk.
+  do_check_true(download.stopped);
+  do_check_false(download.succeeded);
+  do_check_false(download.hasBlockedData);
+  do_check_false(yield OS.File.exists(download.target.partFilePath));
+  do_check_false(yield OS.File.exists(download.target.path));
+});
+
+/**
+ * Checks that unblocking a blocked download fails if the blocked data has been
+ * removed.
+ */
+add_task(function test_blocked_applicationReputation_unblock()
+{
+  let download = yield promiseBlockedDownload({
+    keepPartialData: true,
+    keepBlockedData: true,
+  });
+
+  do_check_true(download.hasBlockedData);
+  do_check_true(yield OS.File.exists(download.target.partFilePath));
+
+  // Remove the blocked data without telling the download.
+  yield OS.File.remove(download.target.partFilePath);
+
+  let unblockPromise = download.unblock();
+  yield unblockPromise.then(() => {
+    do_throw("unblock should have failed.");
+  }, () => {});
+
+  // Even though unblocking failed the download state should have been updated
+  // to reflect the lack of blocked data.
+  do_check_false(download.hasBlockedData);
+  do_check_true(download.stopped);
+  do_check_false(download.succeeded);
 });
 
 /**
