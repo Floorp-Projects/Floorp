@@ -105,7 +105,6 @@ EXPORTS += [
     'MediaDecoderStateMachine.h',
     'MediaInfo.h',
     'MediaMetadataManager.h',
-    'MediaPromise.h',
     'MediaQueue.h',
     'MediaRecorder.h',
     'MediaResource.h',
