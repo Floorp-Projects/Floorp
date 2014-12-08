@@ -458,7 +458,7 @@ TouchCaret::IsDisplayable()
     return false;
   }
 
-  if (!IsCaretShowingInScrollFrame()) {
+  if (!IsRectVisibleInScrollFrames(focusFrame, focusRect)) {
     TOUCHCARET_LOG("Caret does not show in the scrollable frame!");
     return false;
   }
@@ -495,24 +495,21 @@ TouchCaret::GetTouchCaretPosition()
 }
 
 bool
-TouchCaret::IsCaretShowingInScrollFrame()
+TouchCaret::IsRectVisibleInScrollFrames(nsIFrame* aFrame, const nsRect& aRect)
 {
-  nsRect caretRect;
-  nsIFrame* caretFrame = GetCaretFocusFrame(&caretRect);
-
   nsIFrame* closestScrollFrame =
-    nsLayoutUtils::GetClosestFrameOfType(caretFrame, nsGkAtoms::scrollFrame);
+    nsLayoutUtils::GetClosestFrameOfType(aFrame, nsGkAtoms::scrollFrame);
 
   while (closestScrollFrame) {
     nsIScrollableFrame* sf = do_QueryFrame(closestScrollFrame);
     nsRect scrollPortRect = sf->GetScrollPortRect();
 
-    nsRect caretRectRelativeToScrollFrame = caretRect;
-    nsLayoutUtils::TransformRect(caretFrame, closestScrollFrame,
-                                 caretRectRelativeToScrollFrame);
+    nsRect rectRelativeToScrollFrame = aRect;
+    nsLayoutUtils::TransformRect(aFrame, closestScrollFrame,
+                                 rectRelativeToScrollFrame);
 
-    // Check whether nsCaret appears in the scroll frame or not.
-    if (!scrollPortRect.Intersects(caretRectRelativeToScrollFrame)) {
+    // Check whether aRect is visible in the scroll frame or not.
+    if (!scrollPortRect.Intersects(rectRelativeToScrollFrame)) {
       return false;
     }
 
