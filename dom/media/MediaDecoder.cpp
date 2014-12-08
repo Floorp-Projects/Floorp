@@ -461,6 +461,7 @@ MediaDecoder::MediaDecoder() :
     gMediaDecoderLog = PR_NewLogModule("MediaDecoder");
   }
 #endif
+
   mAudioChannel = AudioChannelService::GetDefaultAudioChannel();
 }
 

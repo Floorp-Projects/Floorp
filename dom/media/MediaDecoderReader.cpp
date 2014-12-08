@@ -27,16 +27,6 @@ extern PRLogModuleInfo* gMediaDecoderLog;
 #define DECODER_LOG(x, ...)
 #endif
 
-PRLogModuleInfo* gMediaPromiseLog;
-
-void
-EnsureMediaPromiseLog()
-{
-  if (!gMediaPromiseLog) {
-    gMediaPromiseLog = PR_NewLogModule("MediaPromise");
-  }
-}
-
 class VideoQueueMemoryFunctor : public nsDequeFunctor {
 public:
   VideoQueueMemoryFunctor() : mSize(0) {}
@@ -79,7 +69,6 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
   , mShutdown(false)
 {
   MOZ_COUNT_CTOR(MediaDecoderReader);
-  EnsureMediaPromiseLog();
 }
 
 MediaDecoderReader::~MediaDecoderReader()
@@ -215,7 +204,7 @@ MediaDecoderReader::RequestVideoData(bool aSkipToNextKeyframe,
     }
     GetCallback()->OnVideoDecoded(v);
   } else if (VideoQueue().IsFinished()) {
-    GetCallback()->OnNotDecoded(MediaData::VIDEO_DATA, END_OF_STREAM);
+    GetCallback()->OnNotDecoded(MediaData::VIDEO_DATA, RequestSampleCallback::END_OF_STREAM);
   }
 }
 
@@ -248,7 +237,7 @@ MediaDecoderReader::RequestAudioData()
     GetCallback()->OnAudioDecoded(a);
     return;
   } else if (AudioQueue().IsFinished()) {
-    GetCallback()->OnNotDecoded(MediaData::AUDIO_DATA, END_OF_STREAM);
+    GetCallback()->OnNotDecoded(MediaData::AUDIO_DATA, RequestSampleCallback::END_OF_STREAM);
     return;
   }
 }
@@ -318,13 +307,12 @@ AudioDecodeRendezvous::OnAudioDecoded(AudioData* aSample)
 }
 
 void
-AudioDecodeRendezvous::OnNotDecoded(MediaData::Type aType,
-                                    MediaDecoderReader::NotDecodedReason aReason)
+AudioDecodeRendezvous::OnNotDecoded(MediaData::Type aType, NotDecodedReason aReason)
 {
   MOZ_ASSERT(aType == MediaData::AUDIO_DATA);
   MonitorAutoLock mon(mMonitor);
   mSample = nullptr;
-  mStatus = aReason == MediaDecoderReader::DECODE_ERROR ? NS_ERROR_FAILURE : NS_OK;
+  mStatus = aReason == DECODE_ERROR ? NS_ERROR_FAILURE : NS_OK;
   mHaveResult = true;
   mon.NotifyAll();
 }
