@@ -537,6 +537,26 @@ js_str_toString(JSContext *cx, unsigned argc, Value *vp)
  * Java-like string native methods.
  */
 
+static MOZ_ALWAYS_INLINE bool
+ValueToIntegerRange(JSContext *cx, HandleValue v, int32_t *out)
+{
+    if (v.isInt32()) {
+        *out = v.toInt32();
+    } else {
+        double d;
+        if (!ToInteger(cx, v, &d))
+            return false;
+        if (d > INT32_MAX)
+            *out = INT32_MAX;
+        else if (d < INT32_MIN)
+            *out = INT32_MIN;
+        else
+            *out = int32_t(d);
+    }
+
+    return true;
+}
+
 JSString *
 js::SubstringKernel(JSContext *cx, HandleString str, int32_t beginInt, int32_t lengthInt)
 {
