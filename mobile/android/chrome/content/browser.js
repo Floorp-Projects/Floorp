@@ -1133,14 +1133,24 @@ var BrowserApp = {
    * Gets an open tab with the given URL.
    *
    * @param  aURL URL to look for
+   * @param  aOptions Options for the search. Currently supports:
+   **  @option startsWith a Boolean indicating whether to search for a tab who's url starts with the
+   *           requested url. Useful if you want to ignore hash codes on the end of a url. For instance
+   *           to have about:downloads match about:downloads#123.
    * @return the tab with the given URL, or null if no such tab exists
    */
-  getTabWithURL: function getTabWithURL(aURL) {
+  getTabWithURL: function getTabWithURL(aURL, aOptions) {
     let uri = Services.io.newURI(aURL, null, null);
     for (let i = 0; i < this._tabs.length; ++i) {
       let tab = this._tabs[i];
-      if (tab.browser.currentURI.equals(uri)) {
-        return tab;
+      if (aOptions.startsWith) {
+        if (tab.browser.currentURI.spec.startsWith(aURL)) {
+          return tab;
+        }
+      } else {
+        if (tab.browser.currentURI.equals(uri)) {
+          return tab;
+        }
       }
     }
     return null;
@@ -1151,14 +1161,20 @@ var BrowserApp = {
    * Otherwise, a new tab is opened with the given URL.
    *
    * @param aURL URL to open
+   * @param  aFlags Options for the search. Currently supports:
+   **  @option startsWith a Boolean indicating whether to search for a tab who's url starts with the
+   *           requested url. Useful if you want to ignore hash codes on the end of a url. For instance
+   *           to have about:downloads match about:downloads#123.
    */
-  selectOrOpenTab: function selectOrOpenTab(aURL) {
-    let tab = this.getTabWithURL(aURL);
+  selectOrOpenTab: function selectOrOpenTab(aURL, aFlags) {
+    let tab = this.getTabWithURL(aURL, aFlags);
     if (tab == null) {
-      this.addTab(aURL);
+      tab = this.addTab(aURL);
     } else {
       this.selectTab(tab);
     }
+
+    return tab;
   },
 
   // This method updates the state in BrowserApp after a tab has been selected
