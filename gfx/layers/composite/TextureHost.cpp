@@ -335,7 +335,7 @@ TextureHost::PrintInfo(std::stringstream& aStream, const char* aPrefix)
     aStream << "\n" << pfx.get() << "Surface: ";
     RefPtr<gfx::DataSourceSurface> dSurf = GetAsSurface();
     if (dSurf) {
-      aStream << gfxUtils::GetAsDataURI(dSurf).get();
+      aStream << gfxUtils::GetAsLZ4Base64Str(dSurf).get();
     }
   }
 #endif
