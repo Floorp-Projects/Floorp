@@ -514,8 +514,11 @@ let SyncServerCallback = {
    *
    * Allows the test to inspect the request. Hooks should be careful not to
    * modify or change state of the request or they may impact future processing.
+   * The response is also passed so the callback can set headers etc - but care
+   * must be taken to not screw with the response body or headers that may
+   * conflict with normal operation of this server.
    */
-  onRequest: function onRequest(request) {},
+  onRequest: function onRequest(request, response) {},
 };
 
 /**
@@ -796,7 +799,7 @@ SyncServer.prototype = {
     this._log.debug("SyncServer: Handling request: " + req.method + " " + req.path);
 
     if (this.callback.onRequest) {
-      this.callback.onRequest(req);
+      this.callback.onRequest(req, resp);
     }
 
     let parts = this.pathRE.exec(req.path);

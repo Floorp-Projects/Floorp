@@ -108,7 +108,7 @@ PerformanceActorsConnection.prototype = {
     if (this._target.chrome) {
       this._profiler = this._target.form.profilerActor;
     }
-    // Or when we are debugging content processes, we already have the tab
+    // When we are debugging content processes, we already have the tab
     // specific one. Use it immediately.
     else if (this._target.form && this._target.form.profilerActor) {
       this._profiler = this._target.form.profilerActor;
