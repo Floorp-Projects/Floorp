@@ -18,7 +18,7 @@
  * 
  */
 
-[scriptable, uuid(d1a47834-6ad4-11d7-bfad-000393636592)]
+[scriptable, uuid(c847f90e-b8f3-49db-a4df-8867831f2800)]
 interface nsIControllerCommandTable : nsISupports
 {
   /**
@@ -82,6 +82,9 @@ interface nsIControllerCommandTable : nsISupports
 	void    doCommandParams(in string aCommandName, in nsICommandParams aParam, in nsISupports aCommandRefCon);
 
 	void    getCommandState(in string aCommandName, in nsICommandParams aParam, in nsISupports aCommandRefCon);
+
+  void getSupportedCommands(out unsigned long count,
+                            [array, size_is(count), retval] out string commands);
 };
 
 
