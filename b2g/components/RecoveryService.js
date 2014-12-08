@@ -81,19 +81,24 @@ RecoveryService.prototype = {
     }
 
     log("factoryReset " + reason);
+    let commands = [];
     if (reason == "wipe") {
       let volumeService = Cc["@mozilla.org/telephony/volume-service;1"]
                           .getService(Ci.nsIVolumeService);
       let volNames = volumeService.getVolumeNames();
       log("Found " + volNames.length + " volumes");
-      let text = "";
+
       for (let i = 0; i < volNames.length; i++) {
         let name = volNames.queryElementAt(i, Ci.nsISupportsString);
         let volume = volumeService.getVolumeByName(name.data);
         log("Got volume: " + name.data + " at " + volume.mountPoint);
-        text += "wipe " + volume.mountPoint + "\n";
+        commands.push("wipe " + volume.mountPoint);
       }
+    } else if (reason == "root") {
+      commands.push("root");
+    }
 
+    if (commands.length > 0) {
       Cu.import("resource://gre/modules/osfile.jsm");
       let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       dir.initWithPath("/persist");
@@ -101,6 +106,7 @@ RecoveryService.prototype = {
                           OS.Path.join("/persist", gFactoryResetFile):
                           OS.Path.join("/cache", gFactoryResetFile);
       let encoder = new TextEncoder();
+      let text = commands.join("\n");
       let array = encoder.encode(text);
       let promise = OS.File.writeAtomic(postResetFile, array,
                                         { tmpPath: postResetFile + ".tmp" });
