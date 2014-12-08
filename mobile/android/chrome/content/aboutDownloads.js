@@ -53,7 +53,7 @@ let contextMenu = {
                             deleteDownload(download);
                           }),
       new ContextMenuItem("pause",
-                          download => !download.stopped,
+                          download => !download.stopped && download.hasPartialData,
                           download => download.cancel().then(null, Cu.reportError)),
       new ContextMenuItem("resume",
                           download => download.canceled && download.hasPartialData,

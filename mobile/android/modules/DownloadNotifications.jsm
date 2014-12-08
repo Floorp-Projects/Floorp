@@ -214,7 +214,9 @@ DownloadNotification.prototype = {
       if (this.download.currentBytes == 0) {
         this._updateOptionsForStatic(options, "alertDownloadsStart2");
       } else {
-        this._updateOptionsForOngoing(options, [kButtons.PAUSE, kButtons.CANCEL]);
+        let buttons = this.download.hasPartialData ? [kButtons.PAUSE, kButtons.CANCEL] :
+                                                     [kButtons.CANCEL]
+        this._updateOptionsForOngoing(options, buttons);
       }
     } else if (this._paused) {
       this._updateOptionsForOngoing(options, [kButtons.RESUME, kButtons.CANCEL]);
