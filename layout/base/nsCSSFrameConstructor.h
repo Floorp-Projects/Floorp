@@ -1169,6 +1169,15 @@ private:
                                            nsIFrame* aParentFrame);
 
   /**
+   * Function to wrap consecutive items into a pseudo parent.
+   */
+  inline void WrapItemsInPseudoParent(nsIContent* aParentContent,
+                                      nsStyleContext* aParentStyle,
+                                      ParentType aWrapperType,
+                                      FCItemIterator& aIter,
+                                      const FCItemIterator& aEndIter);
+
+  /**
    * Function to create the pseudo siblings we need.
    */
   inline void CreateNeededPseudoSiblings(nsFrameConstructorState& aState,
