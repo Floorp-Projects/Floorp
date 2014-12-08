@@ -19,6 +19,7 @@ this.EXPORTED_SYMBOLS = [
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const GRAPH_SRC = "chrome://browser/content/devtools/graphs-frame.xhtml";
+const WORKER_URL = "resource:///modules/devtools/GraphsWorker.js";
 const L10N = new ViewHelpers.L10N();
 
 // Generic constants.
@@ -44,7 +45,7 @@ const GRAPH_STRIPE_PATTERN_LINE_SPACING = 4; // px
 // Line graph constants.
 
 const LINE_GRAPH_DAMPEN_VALUES = 0.85;
-const LINE_GRAPH_MIN_SQUARED_DISTANCE_BETWEEN_POINTS = 400; // 20 px
+const LINE_GRAPH_MIN_SQUARED_DISTANCE_BETWEEN_POINTS = 1; // px
 const LINE_GRAPH_TOOLTIP_SAFE_BOUNDS = 8; // px
 const LINE_GRAPH_MIN_MAX_TOOLTIP_DISTANCE = 14; // px
 
@@ -92,10 +93,10 @@ const BAR_GRAPH_LEGEND_MOUSEOVER_DEBOUNCE = 50; // ms
 /**
  * Small data primitives for all graphs.
  */
-this.GraphCursor = function() {}
-this.GraphSelection = function() {}
-this.GraphSelectionDragger = function() {}
-this.GraphSelectionResizer = function() {}
+this.GraphCursor = function() {};
+this.GraphSelection = function() {};
+this.GraphSelectionDragger = function() {};
+this.GraphSelectionResizer = function() {};
 
 GraphCursor.prototype = {
   x: null,
@@ -206,7 +207,7 @@ this.AbstractCanvasGraph = function(parent, name, sharpness) {
     this._ready.resolve(this);
     this.emit("ready", this);
   });
-}
+};
 
 AbstractCanvasGraph.prototype = {
   /**
@@ -895,7 +896,7 @@ AbstractCanvasGraph.prototype = {
     while (node = node.offsetParent) {
       x += node.offsetLeft;
       y += node.offsetTop;
-    };
+    }
 
     return { left: x, top: y };
   },
@@ -1178,7 +1179,7 @@ this.LineGraphWidget = function(parent, metric, ...args) {
     this._avgTooltip = this._createTooltip("average", "end", "avg", metric);
     this._minTooltip = this._createTooltip("minimum", "start", "min", metric);
   });
-}
+};
 
 LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   backgroundColor: LINE_GRAPH_BACKGROUND_COLOR,
@@ -1211,7 +1212,7 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
    * Points that are too close too each other in the graph will not be rendered.
    * This scalar specifies the required minimum squared distance between points.
    */
-  minDistanceBetweenPoints: LINE_GRAPH_MIN_SQUARED_DISTANCE_BETWEEN_POINTS,
+  minSquaredDistanceBetweenPoints: LINE_GRAPH_MIN_SQUARED_DISTANCE_BETWEEN_POINTS,
 
   /**
    * Specifies if min/max/avg tooltips have arrow handlers on their sides.
@@ -1223,6 +1224,36 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
    * values, or just placed next to the graph corners.
    */
   withFixedTooltipPositions: false,
+
+  /**
+   * Takes a list of numbers and plots them on a line graph representing
+   * the rate of occurences in a specified interval. Useful for drawing
+   * framerate, for example, from a sequence of timestamps.
+   *
+   * @param array timestamps
+   *        A list of numbers representing time, ordered ascending. For example,
+   *        this can be the raw data received from the framerate actor, which
+   *        represents the elapsed time on each refresh driver tick.
+   * @param number interval
+   *        The maximum amount of time to wait between calculations.
+   */
+  setDataFromTimestamps: Task.async(function*(timestamps, interval) {
+    let {
+      plottedData,
+      plottedMinMaxSum
+    } = yield CanvasGraphUtils._performTaskInWorker("plotTimestampsGraph", {
+      width: this._width,
+      height: this._height,
+      dataOffsetX: this.dataOffsetX,
+      dampenValuesFactor: this.dampenValuesFactor,
+      minSquaredDistanceBetweenPoints: this.minSquaredDistanceBetweenPoints,
+      timestamps: timestamps,
+      interval: interval
+    });
+
+    this._tempMinMaxSum = plottedMinMaxSum;
+    this.setData(plottedData);
+  }),
 
   /**
    * Renders the graph's data source.
@@ -1238,30 +1269,36 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     let lastTick = totalTicks ? this._data[totalTicks - 1].delta : 0;
     let maxValue = Number.MIN_SAFE_INTEGER;
     let minValue = Number.MAX_SAFE_INTEGER;
-    let sumValues = 0;
+    let avgValue = 0;
+    let forceDrawAllPoints = false;
 
-    for (let { delta, value } of this._data) {
-      maxValue = Math.max(value, maxValue);
-      minValue = Math.min(value, minValue);
-      sumValues += value;
+    if (this._tempMinMaxSum) {
+      maxValue = this._tempMinMaxSum.maxValue;
+      minValue = this._tempMinMaxSum.minValue;
+      avgValue = this._tempMinMaxSum.avgValue;
+      // If we use cached `minValue`, `maxValue`, `avgValue` then we can assume
+      // that we've already removed points that did not meet the
+      // `minSquaredDistanceBetweenPoints` requirement.
+      forceDrawAllPoints = true;
+    } else {
+      let sumValues = 0;
+      for (let { delta, value } of this._data) {
+        maxValue = Math.max(value, maxValue);
+        minValue = Math.min(value, minValue);
+        sumValues += value;
+      }
+      avgValue = sumValues / totalTicks;
     }
 
     let dataScaleX = this.dataScaleX = width / (lastTick - this.dataOffsetX);
     let dataScaleY = this.dataScaleY = height / maxValue * this.dampenValuesFactor;
 
-    /**
-     * Calculates the squared distance between two 2D points.
-     */
-    function distSquared(x0, y0, x1, y1) {
-      let xs = x1 - x0;
-      let ys = y1 - y0;
-      return xs * xs + ys * ys;
-    }
-
-    // Draw the graph.
+    // Draw the background.
 
     ctx.fillStyle = this.backgroundColor;
     ctx.fillRect(0, 0, width, height);
+
+    // Draw the graph.
 
     let gradient = ctx.createLinearGradient(0, height / 2, 0, height);
     gradient.addColorStop(0, this.backgroundGradientStart);
@@ -1273,6 +1310,7 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
 
     let prevX = 0;
     let prevY = 0;
+    let minSqDist = this.minSquaredDistanceBetweenPoints;
 
     for (let { delta, value } of this._data) {
       let currX = (delta - this.dataOffsetX) * dataScaleX;
@@ -1283,8 +1321,7 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
         ctx.lineTo(-LINE_GRAPH_STROKE_WIDTH, currY);
       }
 
-      let distance = distSquared(prevX, prevY, currX, currY);
-      if (distance >= this.minDistanceBetweenPoints) {
+      if (forceDrawAllPoints || distSquared(prevX, prevY, currX, currY) >= minSqDist) {
         ctx.lineTo(currX, currY);
         prevX = currX;
         prevY = currY;
@@ -1298,6 +1335,26 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
 
     ctx.fill();
     ctx.stroke();
+
+    this._drawOverlays(ctx, minValue, maxValue, avgValue, dataScaleY);
+
+    return canvas;
+  },
+
+  /**
+   * Draws the min, max and average horizontal lines, along with their
+   * repsective tooltips.
+   *
+   * @param CanvasRenderingContext2D ctx
+   * @param number minValue
+   * @param number maxValue
+   * @param number avgValue
+   * @param number dataScaleY
+   */
+  _drawOverlays: function(ctx, minValue, maxValue, avgValue, dataScaleY) {
+    let width = this._width;
+    let height = this._height;
+    let totalTicks = this._data.length;
 
     // Draw the maximum value horizontal line.
 
@@ -1316,7 +1373,6 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     ctx.lineWidth = LINE_GRAPH_HELPER_LINES_WIDTH;
     ctx.setLineDash(LINE_GRAPH_HELPER_LINES_DASH);
     ctx.beginPath();
-    let avgValue = totalTicks ? sumValues / totalTicks : 0;
     let averageY = height - avgValue * dataScaleY;
     ctx.moveTo(0, averageY);
     ctx.lineTo(width, averageY);
@@ -1341,15 +1397,6 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
       L10N.numberWithDecimals(avgValue, 2);
     this._minTooltip.querySelector("[text=value]").textContent =
       L10N.numberWithDecimals(minValue, 2);
-
-    /**
-     * Constrains a value to a range.
-     */
-    function clamp(value, min, max) {
-      if (value < min) return min;
-      if (value > max) return max;
-      return value;
-    }
 
     let bottom = height / this._pixelRatio;
     let maxPosY = map(maxValue * this.dampenValuesFactor, 0, maxValue, bottom, 0);
@@ -1384,8 +1431,6 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     this._minTooltip.hidden = !totalTicks;
 
     this._gutter.hidden = !this.withTooltipArrows;
-
-    return canvas;
   },
 
   /**
@@ -1445,7 +1490,6 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   }
 });
 
-
 /**
  * A bar graph, plotting tuples of values as rectangles.
  *
@@ -1501,7 +1545,7 @@ this.BarGraphWidget = function(parent, ...args) {
     }
     this.outstandingEventListeners = null;
   });
-}
+};
 
 BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   clipheadLineColor: BAR_GRAPH_CLIPHEAD_LINE_COLOR,
@@ -1955,6 +1999,9 @@ const gCachedStripePattern = new Map();
  * Utility functions for graph canvases.
  */
 this.CanvasGraphUtils = {
+  _graphUtilsWorker: null,
+  _graphUtilsTaskId: 0,
+
   /**
    * Merges the animation loop of two graphs.
    */
@@ -2004,6 +2051,47 @@ this.CanvasGraphUtils = {
     graph2.on("deselecting", () => {
       graph1.dropSelection();
     });
+  },
+
+  /**
+   * Performs the given task in a chrome worker, assuming it exists.
+   *
+   * @param string task
+   *        The task name. Currently supported: "plotTimestampsGraph".
+   * @param any args
+   *        Extra arguments to pass to the worker.
+   * @param array transferrable [optional]
+   *        A list of transferrable objects, if any.
+   * @return object
+   *         A promise that is resolved once the worker finishes the task.
+   */
+  _performTaskInWorker: function(task, args, transferrable) {
+    let worker = this._graphUtilsWorker || new ChromeWorker(WORKER_URL);
+    let id = this._graphUtilsTaskId++;
+    worker.postMessage({ task, id, args }, transferrable);
+    return this._waitForWorkerResponse(worker, id);
+  },
+
+  /**
+   * Waits for the specified worker to finish a task.
+   *
+   * @param ChromeWorker worker
+   *        The worker for which to add a message listener.
+   * @param number id
+   *        The worker task id.
+   */
+  _waitForWorkerResponse: function(worker, id) {
+    let deferred = promise.defer();
+
+    worker.addEventListener("message", function listener({ data }) {
+      if (data.id != id) {
+        return;
+      }
+      worker.removeEventListener("message", listener);
+      deferred.resolve(data);
+    });
+
+    return deferred.promise;
   }
 };
 
@@ -2014,6 +2102,26 @@ this.CanvasGraphUtils = {
  */
 function map(value, istart, istop, ostart, ostop) {
   return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
+}
+
+/**
+ * Constrains a value to a range.
+ * @param number value, min, max
+ * @return number
+ */
+function clamp(value, min, max) {
+  if (value < min) return min;
+  if (value > max) return max;
+  return value;
+}
+
+/**
+ * Calculates the squared distance between two 2D points.
+ */
+function distSquared(x0, y0, x1, y1) {
+  let xs = x1 - x0;
+  let ys = y1 - y0;
+  return xs * xs + ys * ys;
 }
 
 /**
