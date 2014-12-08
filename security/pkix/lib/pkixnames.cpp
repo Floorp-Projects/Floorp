@@ -54,14 +54,15 @@ namespace {
 //      registeredID                    [8]     OBJECT IDENTIFIER }
 MOZILLA_PKIX_ENUM_CLASS GeneralNameType : uint8_t
 {
-  // Note that these values are NOT contiguous because directoryName also
-  // has the der::CONSTRUCTED bit set.
-  otherName = der::CONTEXT_SPECIFIC | 0,
+  // Note that these values are NOT contiguous. Some values have the
+  // der::CONSTRUCTED bit set while others do not.
+  // (The der::CONSTRUCTED bit is for types where the value is a SEQUENCE.)
+  otherName = der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 0,
   rfc822Name = der::CONTEXT_SPECIFIC | 1,
   dNSName = der::CONTEXT_SPECIFIC | 2,
-  x400Address = der::CONTEXT_SPECIFIC | 3,
+  x400Address = der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 3,
   directoryName = der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 4,
-  ediPartyName = der::CONTEXT_SPECIFIC | 5,
+  ediPartyName = der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 5,
   uniformResourceIdentifier = der::CONTEXT_SPECIFIC | 6,
   iPAddress = der::CONTEXT_SPECIFIC | 7,
   registeredID = der::CONTEXT_SPECIFIC | 8,
