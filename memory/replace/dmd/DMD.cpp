@@ -797,7 +797,7 @@ class LiveBlock
   //   nullptr if not reported.
   // - Tag bit 0: |mReportedOnAlloc| - was the block reported immediately on
   //   allocation?  If so, DMD must not clear the report at the end of
-  //   AnalyzeReports(). Only relevant if |mReportStackTrace| is non-nullptr.
+  //   Analyze(). Only relevant if |mReportStackTrace| is non-nullptr.
   //
   // |mPtr| is used as the key in LiveBlockTable, so it's ok for this member
   // to be |mutable|.
@@ -1549,7 +1549,7 @@ private:
 };
 
 static void
-AnalyzeReportsImpl(UniquePtr<JSONWriteFunc> aWriter)
+AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
 {
   AutoBlockIntercepts block(Thread::Fetch());
   AutoLockState lock;
@@ -1724,9 +1724,9 @@ AnalyzeReportsImpl(UniquePtr<JSONWriteFunc> aWriter)
 }
 
 void
-DMDFuncs::AnalyzeReports(UniquePtr<JSONWriteFunc> aWriter)
+DMDFuncs::Analyze(UniquePtr<JSONWriteFunc> aWriter)
 {
-  AnalyzeReportsImpl(Move(aWriter));
+  AnalyzeImpl(Move(aWriter));
   ClearReports();
 }
 
