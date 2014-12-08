@@ -18,8 +18,6 @@ devtools.lazyRequireGetter(this, "DevToolsUtils",
   "devtools/toolkit/DevToolsUtils");
 devtools.lazyRequireGetter(this, "L10N",
   "devtools/profiler/global", true);
-devtools.lazyRequireGetter(this, "FramerateFront",
-  "devtools/server/actors/framerate", true);
 devtools.lazyRequireGetter(this, "Waterfall",
   "devtools/timeline/waterfall", true);
 devtools.lazyRequireGetter(this, "MarkerDetails",
