@@ -21,6 +21,8 @@
 
 #if defined(__cplusplus)
 #include "mozilla/fallible.h"
+#include "mozilla/NullPtr.h"
+#include "mozilla/TemplateLib.h"
 #endif
 #include "mozilla/Attributes.h"
 
@@ -294,7 +296,49 @@ void operator delete[](void* ptr, const mozilla::fallible_t&) MOZALLOC_THROW_IF_
     moz_free(ptr);
 }
 
-#endif  /* ifdef __cplusplus */
 
+/*
+ * This policy is identical to MallocAllocPolicy, except it uses
+ * moz_xmalloc/moz_xcalloc/moz_xrealloc/moz_free instead of
+ * malloc/calloc/realloc/free.
+ */
+class InfallibleAllocPolicy
+{
+public:
+    template <typename T>
+    T* pod_malloc(size_t aNumElems)
+    {
+        if (aNumElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value) {
+            return nullptr;
+        }
+        return static_cast<T*>(moz_xmalloc(aNumElems * sizeof(T)));
+    }
+
+    template <typename T>
+    T* pod_calloc(size_t aNumElems)
+    {
+        return static_cast<T*>(moz_xcalloc(aNumElems, sizeof(T)));
+    }
+
+    template <typename T>
+    T* pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize)
+    {
+        if (aNewSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value) {
+            return nullptr;
+        }
+        return static_cast<T*>(moz_xrealloc(aPtr, aNewSize * sizeof(T)));
+    }
+
+    void free_(void* aPtr)
+    {
+        moz_free(aPtr);
+    }
+
+    void reportAllocOverflow() const
+    {
+    }
+};
+
+#endif  /* ifdef __cplusplus */
 
 #endif /* ifndef mozilla_mozalloc_h */
