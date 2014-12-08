@@ -53,5 +53,6 @@ interface imgINotificationObserver : nsISupports
   // The image is transparent.
   const long HAS_TRANSPARENCY = 9;
 
-  [noscript] void notify(in imgIRequest aProxy, in long aType, [const] in nsIntRect aRect);
+  [noscript] void notify(in imgIRequest aProxy, in long aType,
+                         [const] in nsIntRect aRect);
 };

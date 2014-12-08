@@ -201,7 +201,7 @@ DebuggerMemory::drainAllocationsLog(JSContext *cx, unsigned argc, Value *vp)
     result->ensureDenseInitializedLength(cx, 0, length);
 
     for (size_t i = 0; i < length; i++) {
-        RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
+        RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
         if (!obj)
             return false;
 
@@ -363,7 +363,7 @@ class Tally {
     size_t total() const { return total_; }
 
     bool report(Census &census, MutableHandleValue report) {
-        RootedObject obj(census.cx, NewBuiltinClassInstance(census.cx, &JSObject::class_));
+        RootedPlainObject obj(census.cx, NewBuiltinClassInstance<PlainObject>(census.cx));
         RootedValue countValue(census.cx, NumberValue(total_));
         if (!obj ||
             !JSObject::defineProperty(census.cx, obj, census.cx->names().count, countValue))
@@ -435,7 +435,7 @@ class ByJSType {
     bool report(Census &census, MutableHandleValue report) {
         JSContext *cx = census.cx;
 
-        RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
+        RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
         if (!obj)
             return false;
 
@@ -552,7 +552,7 @@ class ByObjectClass {
         qsort(entries.begin(), entries.length(), sizeof(*entries.begin()), compareEntries);
 
         // Now build the result by iterating over the sorted vector.
-        RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
+        RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
         if (!obj)
             return false;
         for (Entry **entryPtr = entries.begin(); entryPtr < entries.end(); entryPtr++) {
@@ -661,7 +661,7 @@ class ByUbinodeType {
         qsort(entries.begin(), entries.length(), sizeof(*entries.begin()), compareEntries);
 
         // Now build the result by iterating over the sorted vector.
-        RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
+        RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
         if (!obj)
             return false;
         for (Entry **entryPtr = entries.begin(); entryPtr < entries.end(); entryPtr++) {

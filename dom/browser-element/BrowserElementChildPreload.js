@@ -1211,39 +1211,114 @@ BrowserElementChild.prototype = {
         } catch (e) {}
         sendAsyncMsg('loadend', {backgroundColor: bgColor});
 
-        // Ignoring NS_BINDING_ABORTED, which is set when loading page is
-        // stopped.
-        if (status == Cr.NS_OK ||
-            status == Cr.NS_BINDING_ABORTED) {
-          return;
-        }
+        switch (status) {
+          case Cr.NS_OK :
+          case Cr.NS_BINDING_ABORTED :
+            // Ignoring NS_BINDING_ABORTED, which is set when loading page is
+            // stopped.
+            return;
 
-        // getErrorClass() will throw if the error code passed in is not a NSS
-        // error code.
-        try {
-          let nssErrorsService = Cc['@mozilla.org/nss_errors_service;1']
-                                   .getService(Ci.nsINSSErrorsService);
-          if (nssErrorsService.getErrorClass(status)
-                == Ci.nsINSSErrorsService.ERROR_CLASS_BAD_CERT) {
-            // XXX Is there a point firing the event if the error page is not
-            // certerror? If yes, maybe we should add a property to the
-            // event to to indicate whether there is a custom page. That would
-            // let the embedder have more control over the desired behavior.
-            let errorPage = null;
+          // TODO See nsDocShell::DisplayLoadError to see what extra
+          // information we should be annotating this first block of errors
+          // with. Bug 1107091.
+          case Cr.NS_ERROR_UNKNOWN_PROTOCOL :
+            sendAsyncMsg('error', { type: 'unknownProtocolFound' });
+            return;
+          case Cr.NS_ERROR_FILE_NOT_FOUND :
+            sendAsyncMsg('error', { type: 'fileNotFound' });
+            return;
+          case Cr.NS_ERROR_UNKNOWN_HOST :
+            sendAsyncMsg('error', { type: 'dnsNotFound' });
+            return;
+          case Cr.NS_ERROR_CONNECTION_REFUSED :
+            sendAsyncMsg('error', { type: 'connectionFailure' });
+            return;
+          case Cr.NS_ERROR_NET_INTERRUPT :
+            sendAsyncMsg('error', { type: 'netInterrupt' });
+            return;
+          case Cr.NS_ERROR_NET_TIMEOUT :
+            sendAsyncMsg('error', { type: 'netTimeout' });
+            return;
+          case Cr.NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION :
+            sendAsyncMsg('error', { type: 'cspBlocked' });
+            return;
+          case Cr.NS_ERROR_PHISHING_URI :
+            sendAsyncMsg('error', { type: 'phishingBlocked' });
+            return;
+          case Cr.NS_ERROR_MALWARE_URI :
+            sendAsyncMsg('error', { type: 'malwareBlocked' });
+            return;
+
+          case Cr.NS_ERROR_OFFLINE :
+            sendAsyncMsg('error', { type: 'offline' });
+            return;
+          case Cr.NS_ERROR_MALFORMED_URI :
+            sendAsyncMsg('error', { type: 'malformedURI' });
+            return;
+          case Cr.NS_ERROR_REDIRECT_LOOP :
+            sendAsyncMsg('error', { type: 'redirectLoop' });
+            return;
+          case Cr.NS_ERROR_UNKNOWN_SOCKET_TYPE :
+            sendAsyncMsg('error', { type: 'unknownSocketType' });
+            return;
+          case Cr.NS_ERROR_NET_RESET :
+            sendAsyncMsg('error', { type: 'netReset' });
+            return;
+          case Cr.NS_ERROR_DOCUMENT_NOT_CACHED :
+            sendAsyncMsg('error', { type: 'notCached' });
+            return;
+          case Cr.NS_ERROR_DOCUMENT_IS_PRINTMODE :
+            sendAsyncMsg('error', { type: 'isprinting' });
+            return;
+          case Cr.NS_ERROR_PORT_ACCESS_NOT_ALLOWED :
+            sendAsyncMsg('error', { type: 'deniedPortAccess' });
+            return;
+          case Cr.NS_ERROR_UNKNOWN_PROXY_HOST :
+            sendAsyncMsg('error', { type: 'proxyResolveFailure' });
+            return;
+          case Cr.NS_ERROR_PROXY_CONNECTION_REFUSED :
+            sendAsyncMsg('error', { type: 'proxyConnectFailure' });
+            return;
+          case Cr.NS_ERROR_INVALID_CONTENT_ENCODING :
+            sendAsyncMsg('error', { type: 'contentEncodingFailure' });
+            return;
+          case Cr.NS_ERROR_REMOTE_XUL :
+            sendAsyncMsg('error', { type: 'remoteXUL' });
+            return;
+          case Cr.NS_ERROR_UNSAFE_CONTENT_TYPE :
+            sendAsyncMsg('error', { type: 'unsafeContentType' });
+            return;
+          case Cr.NS_ERROR_CORRUPTED_CONTENT :
+            sendAsyncMsg('error', { type: 'corruptedContentError' });
+            return;
+
+          default:
+            // getErrorClass() will throw if the error code passed in is not a NSS
+            // error code.
             try {
-              errorPage = Services.prefs.getCharPref(CERTIFICATE_ERROR_PAGE_PREF);
+              let nssErrorsService = Cc['@mozilla.org/nss_errors_service;1']
+                                       .getService(Ci.nsINSSErrorsService);
+              if (nssErrorsService.getErrorClass(status)
+                    == Ci.nsINSSErrorsService.ERROR_CLASS_BAD_CERT) {
+                // XXX Is there a point firing the event if the error page is not
+                // certerror? If yes, maybe we should add a property to the
+                // event to to indicate whether there is a custom page. That would
+                // let the embedder have more control over the desired behavior.
+                let errorPage = null;
+                try {
+                  errorPage = Services.prefs.getCharPref(CERTIFICATE_ERROR_PAGE_PREF);
+                } catch (e) {}
+
+                if (errorPage == 'certerror') {
+                  sendAsyncMsg('error', { type: 'certerror' });
+                  return;
+                }
+              }
             } catch (e) {}
 
-            if (errorPage == 'certerror') {
-              sendAsyncMsg('error', { type: 'certerror' });
-              return;
-            }
-          }
-        } catch (e) {}
-
-        // TODO See nsDocShell::DisplayLoadError for a list of all the error
-        // codes (the status param) we should eventually handle here.
-        sendAsyncMsg('error', { type: 'other' });
+            sendAsyncMsg('error', { type: 'other' });
+            return;
+        }
       }
     },
 

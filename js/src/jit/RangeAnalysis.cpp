@@ -3041,6 +3041,36 @@ MLoadElementHole::collectRangeInfoPreTrunc()
 }
 
 void
+MLoadTypedArrayElementStatic::collectRangeInfoPreTrunc()
+{
+    Range *range = ptr()->range();
+
+    if (range && range->hasInt32LowerBound() && range->hasInt32UpperBound()) {
+        int64_t offset = this->offset();
+        int64_t lower = range->lower() + offset;
+        int64_t upper = range->upper() + offset;
+        int64_t length = this->length();
+        if (lower >= 0 && upper < length)
+            setNeedsBoundsCheck(false);
+    }
+}
+
+void
+MStoreTypedArrayElementStatic::collectRangeInfoPreTrunc()
+{
+    Range *range = ptr()->range();
+
+    if (range && range->hasInt32LowerBound() && range->hasInt32UpperBound()) {
+        int64_t offset = this->offset();
+        int64_t lower = range->lower() + offset;
+        int64_t upper = range->upper() + offset;
+        int64_t length = this->length();
+        if (lower >= 0 && upper < length)
+            setNeedsBoundsCheck(false);
+    }
+}
+
+void
 MClz::collectRangeInfoPreTrunc()
 {
     Range inputRange(input());

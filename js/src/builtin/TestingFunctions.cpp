@@ -1212,7 +1212,7 @@ js::testingFunc_inParallelSection(JSContext *cx, unsigned argc, jsval *vp)
 static bool
 ShellObjectMetadataCallback(JSContext *cx, JSObject **pmetadata)
 {
-    RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
+    RootedObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!obj)
         return false;
 
@@ -2025,7 +2025,7 @@ FindPath(JSContext *cx, unsigned argc, jsval *vp)
     // array in start-to-target order.
     for (size_t i = 0; i < length; i++) {
         // Build an object describing the node and edge.
-        RootedObject obj(cx, NewBuiltinClassInstance<JSObject>(cx));
+        RootedObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
         if (!obj)
             return false;
 
