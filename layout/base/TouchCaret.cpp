@@ -458,7 +458,7 @@ TouchCaret::IsDisplayable()
     return false;
   }
 
-  if (!IsRectVisibleInScrollFrames(focusFrame, focusRect)) {
+  if (!nsLayoutUtils::IsRectVisibleInScrollFrames(focusFrame, focusRect)) {
     TOUCHCARET_LOG("Caret does not show in the scrollable frame!");
     return false;
   }
@@ -492,34 +492,6 @@ TouchCaret::GetTouchCaretPosition()
   nsLayoutUtils::TransformPoint(focusFrame, canvasFrame, pos);
 
   return pos;
-}
-
-bool
-TouchCaret::IsRectVisibleInScrollFrames(nsIFrame* aFrame, const nsRect& aRect)
-{
-  nsIFrame* closestScrollFrame =
-    nsLayoutUtils::GetClosestFrameOfType(aFrame, nsGkAtoms::scrollFrame);
-
-  while (closestScrollFrame) {
-    nsIScrollableFrame* sf = do_QueryFrame(closestScrollFrame);
-    nsRect scrollPortRect = sf->GetScrollPortRect();
-
-    nsRect rectRelativeToScrollFrame = aRect;
-    nsLayoutUtils::TransformRect(aFrame, closestScrollFrame,
-                                 rectRelativeToScrollFrame);
-
-    // Check whether aRect is visible in the scroll frame or not.
-    if (!scrollPortRect.Intersects(rectRelativeToScrollFrame)) {
-      return false;
-    }
-
-    // Get next ancestor scroll frame.
-    closestScrollFrame =
-      nsLayoutUtils::GetClosestFrameOfType(closestScrollFrame->GetParent(),
-                                           nsGkAtoms::scrollFrame);
-  }
-
-  return true;
 }
 
 nsPoint
