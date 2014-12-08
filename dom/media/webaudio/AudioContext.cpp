@@ -474,7 +474,7 @@ AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
   uint8_t* data = static_cast<uint8_t*>(JS_StealArrayBufferContents(cx, obj));
 
   // Sniff the content of the media.
-  // Failed type sniffing will be handled by AsyncDecodeWebAudio.
+  // Failed type sniffing will be handled by AsyncDecodeMedia.
   nsAutoCString contentType;
   NS_SniffContent(NS_DATA_SNIFFER_CATEGORY, nullptr, data, length, contentType);
 
@@ -489,7 +489,7 @@ AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
   nsRefPtr<WebAudioDecodeJob> job(
     new WebAudioDecodeJob(contentType, this,
                           promise, successCallback, failureCallback));
-  AsyncDecodeWebAudio(contentType.get(), data, length, *job);
+  mDecoder.AsyncDecodeMedia(contentType.get(), data, length, *job);
   // Transfer the ownership to mDecodeJobs
   mDecodeJobs.AppendElement(job.forget());
 
@@ -584,6 +584,8 @@ AudioContext::Shutdown()
   if (!mIsOffline) {
     Mute();
   }
+
+  mDecoder.Shutdown();
 
   // Release references to active nodes.
   // Active AudioNodes don't unregister in destructors, at which point the
@@ -699,6 +701,7 @@ AudioContext::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   if (mListener) {
     amount += mListener->SizeOfIncludingThis(aMallocSizeOf);
   }
+  amount += mDecoder.SizeOfExcludingThis(aMallocSizeOf);
   amount += mDecodeJobs.SizeOfExcludingThis(aMallocSizeOf);
   for (uint32_t i = 0; i < mDecodeJobs.Length(); ++i) {
     amount += mDecodeJobs[i]->SizeOfIncludingThis(aMallocSizeOf);

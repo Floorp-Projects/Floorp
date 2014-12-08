@@ -271,6 +271,7 @@ private:
   const float mSampleRate;
   nsRefPtr<AudioDestinationNode> mDestination;
   nsRefPtr<AudioListener> mListener;
+  MediaBufferDecoder mDecoder;
   nsTArray<nsRefPtr<WebAudioDecodeJob> > mDecodeJobs;
   // See RegisterActiveNode.  These will keep the AudioContext alive while it
   // is rendering and the window remains alive.
