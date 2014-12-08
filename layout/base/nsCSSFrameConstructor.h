@@ -919,10 +919,15 @@ private:
       }
       void SetToEnd() { mCurrent = mEnd; }
 
+      // Skip over all items that want the given parent type. Return whether
+      // the iterator is done after doing that.  The iterator must not be done
+      // when this is called.
+      inline bool SkipItemsWantingParentType(ParentType aParentType);
+
       // Skip over all items that want a parent type different from the given
       // one.  Return whether the iterator is done after doing that.  The
       // iterator must not be done when this is called.
-      inline bool SkipItemsWantingParentType(ParentType aParentType);
+      inline bool SkipItemsNotWantingParentType(ParentType aParentType);
 
       // Skip over non-replaced inline frames and positioned frames.
       // Return whether the iterator is done after doing that.
@@ -935,6 +940,11 @@ private:
       // The iterator must not be done when this is called.
       inline bool SkipItemsThatDontNeedAnonFlexOrGridItem(
         const nsFrameConstructorState& aState);
+
+      // Skip over all items that do not want a ruby parent.  Return whether
+      // the iterator is done after doing that.  The iterator must not be done
+      // when this is called.
+      inline bool SkipItemsNotWantingRubyParent();
 
       // Skip over whitespace.  Return whether the iterator is done after doing
       // that.  The iterator must not be done, and must be pointing to a
@@ -1165,6 +1175,59 @@ private:
   void CreateNeededAnonFlexOrGridItems(nsFrameConstructorState& aState,
                                        FrameConstructionItemList& aItems,
                                        nsIFrame* aParentFrame);
+
+  enum RubyWhitespaceType
+  {
+    eRubyNotWhitespace,
+    eRubyInterLevelWhitespace,
+    // Includes inter-base and inter-annotation whitespace
+    eRubyInterLeafWhitespace,
+    eRubyInterSegmentWhitespace
+  };
+
+  /**
+   * Function to compute the whitespace type according to the display
+   * values of the previous and the next elements.
+   */
+  static inline RubyWhitespaceType ComputeRubyWhitespaceType(
+    uint_fast8_t aPrevDisplay, uint_fast8_t aNextDisplay);
+
+  /**
+   * Function to interpret the type of whitespace between
+   * |aStartIter| and |aEndIter|.
+   */
+  static inline RubyWhitespaceType InterpretRubyWhitespace(
+    nsFrameConstructorState& aState,
+    const FCItemIterator& aStartIter, const FCItemIterator& aEndIter);
+
+  /**
+   * Function to wrap consecutive misparented inline content into
+   * a ruby base box or a ruby text box.
+   */
+  void WrapItemsInPseudoRubyLeafBox(FCItemIterator& aIter,
+                                    nsStyleContext* aParentStyle,
+                                    nsIContent* aParentContent);
+
+  /**
+   * Function to wrap consecutive misparented items
+   * into a ruby level container.
+   */
+  inline void WrapItemsInPseudoRubyLevelContainer(
+    nsFrameConstructorState& aState, FCItemIterator& aIter,
+    nsStyleContext* aParentStyle, nsIContent* aParentContent);
+
+  /**
+   * Function to trim leading and trailing whitespaces.
+   */
+  inline void TrimLeadingAndTrailingWhitespaces(
+    nsFrameConstructorState& aState, FrameConstructionItemList& aItems);
+
+  /**
+   * Function to create internal ruby boxes.
+   */
+  inline void CreateNeededPseudoInternalRubyBoxes(
+    nsFrameConstructorState& aState,
+    FrameConstructionItemList& aItems, nsIFrame* aParentFrame);
 
   /**
    * Function to create the pseudo intermediate containers we need.
