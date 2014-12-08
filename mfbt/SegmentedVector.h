@@ -1,0 +1,249 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// A simple segmented vector class.
+//
+// This class should be used in preference to mozilla::Vector or nsTArray when
+// you are simply gathering items in order to later iterate over them.
+//
+// - In the case where you don't know the final size in advance, using
+//   SegmentedVector avoids the need to repeatedly allocate increasingly large
+//   buffers and copy the data into them.
+//
+// - In the case where you know the final size in advance and so can set the
+//   capacity appropriately, using SegmentedVector still avoids the need for
+//   large allocations (which can trigger OOMs).
+
+#ifndef mozilla_SegmentedVector_h
+#define mozilla_SegmentedVector_h
+
+#include "mozilla/Alignment.h"
+#include "mozilla/AllocPolicy.h"
+#include "mozilla/Array.h"
+#include "mozilla/LinkedList.h"
+#include "mozilla/MemoryReporting.h"
+#include "mozilla/Move.h"
+#include "mozilla/TypeTraits.h"
+
+#include <new>  // for placement new
+
+namespace mozilla {
+
+// IdealSegmentSize is how big each segment will be in bytes (or as close as is
+// possible). It's best to choose a size that's a power-of-two (to avoid slop)
+// and moderately large (not too small so segment allocations are infrequent,
+// and not too large so that not too much space is wasted when the final
+// segment is not full). Something like 4096 or 8192 is probably good.
+template<typename T, size_t IdealSegmentSize,
+         typename AllocPolicy = MallocAllocPolicy>
+class SegmentedVector : private AllocPolicy
+{
+  template<size_t SegmentCapacity>
+  struct SegmentImpl
+    : public mozilla::LinkedListElement<SegmentImpl<SegmentCapacity>>
+  {
+    SegmentImpl() : mLength(0) {}
+
+    ~SegmentImpl()
+    {
+      for (uint32_t i = 0; i < mLength; i++) {
+        (*this)[i].~T();
+      }
+    }
+
+    uint32_t Length() const { return mLength; }
+
+    T* Elems() { return reinterpret_cast<T*>(&mStorage.mBuf); }
+
+    T& operator[](size_t aIndex)
+    {
+      MOZ_ASSERT(aIndex < mLength);
+      return Elems()[aIndex];
+    }
+
+    const T& operator[](size_t aIndex) const
+    {
+      MOZ_ASSERT(aIndex < mLength);
+      return Elems()[aIndex];
+    }
+
+    template<typename U>
+    void Append(U&& aU)
+    {
+      // GCC 4.4 gives a bogus "invalid use of member" error for this
+      // assertion, so skip it in that case. Once bug 1056337 lands and GCC 4.4
+      // is no longer used we should be able to remove this condition.
+#if !(defined(__GNUC__) && (__GNUC__ == 4) && (__GNUC_MINOR__ == 4))
+      MOZ_ASSERT(mLength < SegmentCapacity);
+#endif
+      // Pre-increment mLength so that the bounds-check in operator[] passes.
+      mLength++;
+      T* elem = &(*this)[mLength - 1];
+      new (elem) T(mozilla::Forward<U>(aU));
+    }
+
+    uint32_t mLength;
+
+    // The union ensures that the elements are appropriately aligned.
+    union Storage
+    {
+      char mBuf[sizeof(T) * SegmentCapacity];
+      mozilla::AlignedElem<MOZ_ALIGNOF(T)> mAlign;
+    } mStorage;
+
+    static_assert(MOZ_ALIGNOF(T) == MOZ_ALIGNOF(Storage),
+                  "SegmentedVector provides incorrect alignment");
+  };
+
+  // See how many we elements we can fit in a segment of IdealSegmentSize. If
+  // IdealSegmentSize is too small, it'll be just one. The +1 is because
+  // kSingleElementSegmentSize already accounts for one element.
+  static const size_t kSingleElementSegmentSize = sizeof(SegmentImpl<1>);
+  static const size_t kSegmentCapacity =
+    kSingleElementSegmentSize <= IdealSegmentSize
+    ? (IdealSegmentSize - kSingleElementSegmentSize) / sizeof(T) + 1
+    : 1;
+
+  typedef SegmentImpl<kSegmentCapacity> Segment;
+
+public:
+  // The |aIdealSegmentSize| is only for sanity checking. If it's specified, we
+  // check that the actual segment size is as close as possible to it. This
+  // serves as a sanity check for SegmentedVectorCapacity's capacity
+  // computation.
+  SegmentedVector(size_t aIdealSegmentSize = 0)
+  {
+    // The difference between the actual segment size and the ideal segment
+    // size should be less than the size of a single element... unless the
+    // ideal size was too small, in which case the capacity should be one.
+    MOZ_ASSERT_IF(
+      aIdealSegmentSize != 0,
+      (sizeof(Segment) > aIdealSegmentSize && kSegmentCapacity == 1) ||
+      aIdealSegmentSize - sizeof(Segment) < sizeof(T));
+  }
+
+  ~SegmentedVector() { Clear(); }
+
+  bool IsEmpty() const { return !mSegments.getFirst(); }
+
+  // Note that this is O(n) rather than O(1), but the constant factor is very
+  // small because it only has to do one addition per segment.
+  size_t Length() const
+  {
+    size_t n = 0;
+    for (auto segment = mSegments.getFirst();
+         segment;
+         segment = segment->getNext()) {
+      n += segment->Length();
+    }
+    return n;
+  }
+
+  // Returns false if the allocation failed. (If you are using an infallible
+  // allocation policy, use InfallibleAppend() instead.)
+  template<typename U>
+  MOZ_WARN_UNUSED_RESULT bool Append(U&& aU)
+  {
+    Segment* last = mSegments.getLast();
+    if (!last || last->Length() == kSegmentCapacity) {
+      last = this->template pod_malloc<Segment>(1);
+      if (!last) {
+        return false;
+      }
+      new (last) Segment();
+      mSegments.insertBack(last);
+    }
+    last->Append(mozilla::Forward<U>(aU));
+    return true;
+  }
+
+  // You should probably only use this instead of Append() if you are using an
+  // infallible allocation policy. It will crash if the allocation fails.
+  template<typename U>
+  void InfallibleAppend(U&& aU)
+  {
+    bool ok = Append(mozilla::Forward<U>(aU));
+    MOZ_RELEASE_ASSERT(ok);
+  }
+
+  void Clear()
+  {
+    Segment* segment;
+    while ((segment = mSegments.popFirst())) {
+      segment->~Segment();
+      this->free_(segment);
+    }
+  }
+
+  // Use this class to iterate over a SegmentedVector, like so:
+  //
+  //  for (auto iter = v.Iter(); !iter.Done(); iter.Next()) {
+  //    MyElem& elem = iter.Get();
+  //    f(elem);
+  //  }
+  //
+  class IterImpl
+  {
+    friend class SegmentedVector;
+
+    Segment* mSegment;
+    size_t mIndex;
+
+    IterImpl(SegmentedVector* aVector)
+      : mSegment(aVector->mSegments.getFirst())
+      , mIndex(0)
+    {}
+
+  public:
+    bool Done() const { return !mSegment; }
+
+    T& Get()
+    {
+      MOZ_ASSERT(!Done());
+      return (*mSegment)[mIndex];
+    }
+
+    const T& Get() const
+    {
+      MOZ_ASSERT(!Done());
+      return (*mSegment)[mIndex];
+    }
+
+    void Next()
+    {
+      MOZ_ASSERT(!Done());
+      mIndex++;
+      if (mIndex == mSegment->Length()) {
+        mSegment = mSegment->getNext();
+        mIndex = 0;
+      }
+    }
+  };
+
+  IterImpl Iter() { return IterImpl(this); }
+
+  // Measure the memory consumption of the vector excluding |this|. Note that
+  // it only measures the vector itself. If the vector elements contain
+  // pointers to other memory blocks, those blocks must be measured separately
+  // during a subsequent iteration over the vector.
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+  {
+    return mSegments.sizeOfExcludingThis(aMallocSizeOf);
+  }
+
+  // Like sizeOfExcludingThis(), but measures |this| as well.
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
+private:
+  mozilla::LinkedList<Segment> mSegments;
+};
+
+} // namespace mozilla
+
+#endif /* mozilla_SegmentedVector_h */
