@@ -25,6 +25,8 @@ loop.OTSdkDriver = (function() {
       this.dispatcher = options.dispatcher;
       this.sdk = options.sdk;
 
+      this.connections = {};
+
       this.dispatcher.register(this, [
         "setupStreamElements",
         "setMute"
@@ -115,6 +117,38 @@ loop.OTSdkDriver = (function() {
       delete this._publisherReady;
       delete this._publishedLocalStream;
       delete this._subscribedRemoteStream;
+      this.connections = {};
+    },
+
+    /**
+     * Oust all users from an ongoing session. This is typically done when a room
+     * owner deletes the room.
+     *
+     * @param {Function} callback Function to be invoked once all connections are
+     *                            ousted
+     */
+    forceDisconnectAll: function(callback) {
+      if (!this._sessionConnected) {
+        callback();
+        return;
+      }
+
+      var connectionNames = Object.keys(this.connections);
+      if (connectionNames.length === 0) {
+        callback();
+        return;
+      }
+      var disconnectCount = 0;
+      connectionNames.forEach(function(id) {
+        var connection = this.connections[id];
+        this.session.forceDisconnect(connection, function() {
+          // When all connections have disconnected, call the callback, since
+          // we're done.
+          if (++disconnectCount === connectionNames.length) {
+            callback();
+          }
+        });
+      }, this);
     },
 
     /**
@@ -139,10 +173,14 @@ loop.OTSdkDriver = (function() {
     /**
      * Handles the connection event for a peer's connection being dropped.
      *
-     * @param {SessionDisconnectEvent} event The event details
-     * https://tokbox.com/opentok/libraries/client/js/reference/SessionDisconnectEvent.html
+     * @param {ConnectionEvent} event The event details
+     * https://tokbox.com/opentok/libraries/client/js/reference/ConnectionEvent.html
      */
     _onConnectionDestroyed: function(event) {
+      var connection = event.connection;
+      if (connection && (connection.id in this.connections)) {
+        delete this.connections[connection.id];
+      }
       this.dispatcher.dispatch(new sharedActions.RemotePeerDisconnected({
         peerHungup: event.reason === "clientDisconnected"
       }));
@@ -164,11 +202,18 @@ loop.OTSdkDriver = (function() {
       }
     },
 
+    /**
+     * Handles the connection event for a newly connecting peer.
+     *
+     * @param {ConnectionEvent} event The event details
+     * https://tokbox.com/opentok/libraries/client/js/reference/ConnectionEvent.html
+     */
     _onConnectionCreated: function(event) {
-      if (this.session.connection.id === event.connection.id) {
+      var connection = event.connection;
+      if (this.session.connection.id === connection.id) {
         return;
       }
-
+      this.connections[connection.id] = connection;
       this.dispatcher.dispatch(new sharedActions.RemotePeerConnected());
     },
 
