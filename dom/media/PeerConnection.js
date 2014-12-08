@@ -499,13 +499,13 @@ RTCPeerConnection.prototype = {
   },
 
   // Log error message to web console and window.onerror, if present.
-  logErrorAndCallOnError: function(msg, file, line) {
-    this.logMsg(msg, file, line, Ci.nsIScriptError.exceptionFlag);
+  logErrorAndCallOnError: function(e) {
+    this.logMsg(e.message, e.fileName, e.lineNumber, Ci.nsIScriptError.exceptionFlag);
 
     // Safely call onerror directly if present (necessary for testing)
     try {
       if (typeof this._win.onerror === "function") {
-        this._win.onerror(msg, file, line);
+        this._win.onerror(e.message, e.fileName, e.lineNumber);
       }
     } catch(e) {
       // If onerror itself throws, service it.
@@ -547,6 +547,21 @@ RTCPeerConnection.prototype = {
                             get:function()  { return this.getEH(name); },
                             set:function(h) { return this.setEH(name, h); }
                           });
+  },
+
+  // Helper for legacy callbacks
+  thenCB: function(p, onSuccess, onError) {
+    var errorFunc = this.logErrorAndCallOnError.bind(this);
+
+    function callCB(func, arg) {
+      try {
+        func(arg);
+      } catch (e) {
+        errorFunc(e);
+      }
+    }
+    return onSuccess? p.then(result => callCB(onSuccess, result),
+                             reason => (onError? callCB(onError, reason) : null)) : p;
   },
 
   createOffer: function(optionsOrOnSuccess, onError, options) {
@@ -600,15 +615,12 @@ RTCPeerConnection.prototype = {
           JSON.stringify(options) + " instead (note the case difference)!",
           null, 0);
     }
-    let p = new this._win.Promise((resolve, reject) => {
-      this._queueOrRun({
-        func: this._createOffer,
-        args: [resolve, reject, options],
-        wait: true
-      });
-    });
-    return (onSuccess || onError)?
-      p.then(offer => { onSuccess(offer); }, onError) : p;
+    let p = new this._win.Promise((resolve, reject) => this._queueOrRun({
+      func: this._createOffer,
+      args: [resolve, reject, options],
+      wait: true
+    }));
+    return this.thenCB(p, onSuccess, onError);
   },
 
   _createOffer: function(onSuccess, onError, options) {
@@ -638,15 +650,12 @@ RTCPeerConnection.prototype = {
   },
 
   createAnswer: function(onSuccess, onError) {
-    let p = new this._win.Promise((resolve, reject) => {
-      this._queueOrRun({
-        func: this._createAnswer,
-        args: [resolve, reject],
-        wait: true
-      });
-    });
-    return (onSuccess || onError)?
-      p.then(answer => { onSuccess(answer); }, onError) : p;
+    let p = new this._win.Promise((resolve, reject) => this._queueOrRun({
+      func: this._createAnswer,
+      args: [resolve, reject],
+      wait: true
+    }));
+    return this.thenCB(p, onSuccess, onError);
   },
 
   setLocalDescription: function(desc, onSuccess, onError) {
@@ -667,14 +676,12 @@ RTCPeerConnection.prototype = {
             "Invalid type " + desc.type + " provided to setLocalDescription");
     }
 
-    let p = new this._win.Promise((resolve, reject) => {
-      this._queueOrRun({
-        func: this._setLocalDescription,
-        args: [type, desc.sdp, resolve, reject],
-        wait: true
-      });
-    });
-    return (onSuccess || onError)? p.then(() => { onSuccess(); }, onError) : p;
+    let p = new this._win.Promise((resolve, reject) => this._queueOrRun({
+      func: this._setLocalDescription,
+      args: [type, desc.sdp, resolve, reject],
+      wait: true
+    }));
+    return this.thenCB(p, onSuccess, onError);
   },
 
   _setLocalDescription: function(type, sdp, onSuccess, onError) {
@@ -704,14 +711,12 @@ RTCPeerConnection.prototype = {
     // Have to get caller's origin outside of Promise constructor and pass it in
     let origin = Cu.getWebIDLCallerPrincipal().origin;
 
-    let p = new this._win.Promise((resolve, reject) => {
-      this._queueOrRun({
-        func: this._setRemoteDescription,
-        args: [type, desc.sdp, origin, resolve, reject],
-        wait: true
-      });
-    });
-    return (onSuccess || onError)? p.then(() => { onSuccess(); }, onError) : p;
+    let p = new this._win.Promise((resolve, reject) => this._queueOrRun({
+      func: this._setRemoteDescription,
+      args: [type, desc.sdp, origin, resolve, reject],
+      wait: true
+    }));
+    return this.thenCB(p, onSuccess, onError);
   },
 
   /**
@@ -831,14 +836,12 @@ RTCPeerConnection.prototype = {
           "Invalid candidate passed to addIceCandidate!");
     }
 
-    let p = new this._win.Promise((resolve, reject) => {
-      this._queueOrRun({
-        func: this._addIceCandidate,
-        args: [cand, resolve, reject],
-        wait: false
-      });
-    });
-    return (onSuccess || onError)? p.then(() => { onSuccess(); }, onError) : p;
+    let p = new this._win.Promise((resolve, reject) => this._queueOrRun({
+      func: this._addIceCandidate,
+      args: [cand, resolve, reject],
+      wait: false
+    }));
+    return this.thenCB(p, onSuccess, onError);
   },
 
   _addIceCandidate: function(cand, onSuccess, onError) {
@@ -1015,15 +1018,12 @@ RTCPeerConnection.prototype = {
   },
 
   getStats: function(selector, onSuccess, onError) {
-    let p = new this._win.Promise((resolve, reject) => {
-      this._queueOrRun({
-        func: this._getStats,
-        args: [selector, resolve, reject],
-        wait: false
-      });
-    });
-    return (onSuccess || onError)?
-      p.then(stats => { onSuccess(stats); }, onError) : p;
+    let p = new this._win.Promise((resolve, reject) => this._queueOrRun({
+      func: this._getStats,
+      args: [selector, resolve, reject],
+      wait: false
+    }));
+    return this.thenCB(p, onSuccess, onError);
   },
 
   _getStats: function(selector, onSuccess, onError) {
@@ -1423,14 +1423,11 @@ RTCRtpSender.prototype = {
   replaceTrack: function(withTrack) {
     this._pc._checkClosed();
 
-    let p = new this._pc._win.Promise((resolve, reject) => {
-      this._pc._queueOrRun({
-        func: this._pc._replaceTrack,
-        args: [this, withTrack, resolve, reject],
-        wait: false
-      });
-    });
-    return p;
+    return new this._pc._win.Promise((resolve, reject) => this._pc._queueOrRun({
+      func: this._pc._replaceTrack,
+      args: [this, withTrack, resolve, reject],
+      wait: false
+    }));
   }
 };
 
