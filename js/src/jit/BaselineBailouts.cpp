@@ -1101,8 +1101,15 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
                     // 4. If resuming into top-level code main body, an SPS entry will
                     // have been pushed, and can be left alone.
                     //
+                    // 5. If resuming for propagating an exception for debug
+                    // mode, an SPS entry will have been pushed, and can be left
+                    // alone as we will resume into HandleException again in
+                    // Baseline.
+                    //
                     // Only need to handle case 3 here.
-                    if (!caller && bailoutKind != Bailout_ArgumentCheck) {
+                    if (!caller && bailoutKind != Bailout_ArgumentCheck &&
+                        !(excInfo && excInfo->propagatingIonExceptionForDebugMode()))
+                    {
                         JitSpew(JitSpew_BaselineBailouts,
                                 "      Popping SPS entry for outermost frame");
                         cx->runtime()->spsProfiler.exit(script, fun);
