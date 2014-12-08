@@ -27,6 +27,16 @@ extern PRLogModuleInfo* gMediaDecoderLog;
 #define DECODER_LOG(x, ...)
 #endif
 
+PRLogModuleInfo* gMediaPromiseLog;
+
+void
+EnsureMediaPromiseLog()
+{
+  if (!gMediaPromiseLog) {
+    gMediaPromiseLog = PR_NewLogModule("MediaPromise");
+  }
+}
+
 class VideoQueueMemoryFunctor : public nsDequeFunctor {
 public:
   VideoQueueMemoryFunctor() : mSize(0) {}
@@ -69,6 +79,7 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
   , mShutdown(false)
 {
   MOZ_COUNT_CTOR(MediaDecoderReader);
+  EnsureMediaPromiseLog();
 }
 
 MediaDecoderReader::~MediaDecoderReader()
