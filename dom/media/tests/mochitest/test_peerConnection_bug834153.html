@@ -14,34 +14,25 @@
     title: "Queue CreateAnswer in PeerConnection.js"
   });
 
-  function croak(msg) {
-    ok(0, msg);
-    pc1.close();
-    pc2.close();
-    networkTestFinished();
-  }
-
   runNetworkTest(function () {
     var pc1 = new mozRTCPeerConnection();
+    var pc2 = new mozRTCPeerConnection();
 
-    pc1.createOffer(function (d) {
-      var pc2 = new mozRTCPeerConnection();
-
+    pc1.createOffer({ offerToReceiveAudio: true }).then(offer => {
       // The whole point of this test is not to wait for the
       // setRemoteDescription call to succesfully complete, so we
-      // don't do anything in its callbacks.
-      pc2.setRemoteDescription(d, function (x) {}, function (x) {});
-      pc2.createAnswer(function (d) {
-        is(d.type,"answer","CreateAnswer created an answer");
-        pc1.close();
-        pc2.close();
-        networkTestFinished();
-      }, function (err) {
-        croak("createAnswer failed: " + err);
-      });
-    }, function (err) {
-        croak("createOffer failed: " + err);
-    },  { offerToReceiveAudio: true });
+      // don't wait for it to succeed.
+      pc2.setRemoteDescription(offer);
+      return pc2.createAnswer();
+    })
+    .then(answer => is(answer.type, "answer", "CreateAnswer created an answer"))
+    .catch(reason => ok(false, reason.message))
+    .then(() => {
+      pc1.close();
+      pc2.close();
+      networkTestFinished();
+    })
+    .catch(reason => ok(false, reason.message));
   });
 </script>
 </pre>
