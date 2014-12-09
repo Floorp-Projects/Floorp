@@ -60,6 +60,60 @@ const TESTS = [
   },
   {
     action: {
+      selector: "#viewer",
+      event: "keydown",
+      keyCode: 36
+    },
+    expectedPage: 1,
+    message: "navigated to 1st page using 'home' key"
+  },
+  {
+    action: {
+      selector: "#viewer",
+      event: "keydown",
+      keyCode: 34
+    },
+    expectedPage: 2,
+    message: "navigated to 2nd page using 'Page Down' key"
+  },
+  {
+    action: {
+      selector: "#viewer",
+      event: "keydown",
+      keyCode: 33
+    },
+    expectedPage: 1,
+    message: "navigated to 1st page using 'Page Up' key"
+  },
+  {
+    action: {
+      selector: "#viewer",
+      event: "keydown",
+      keyCode: 39
+    },
+    expectedPage: 2,
+    message: "navigated to 2nd page using 'right' key"
+  },
+  {
+    action: {
+      selector: "#viewer",
+      event: "keydown",
+      keyCode: 37
+    },
+    expectedPage: 1,
+    message: "navigated to 1st page using 'left' key"
+  },
+  {
+    action: {
+      selector: "#viewer",
+      event: "keydown",
+      keyCode: 35
+    },
+    expectedPage: 5,
+    message: "navigated to last page using 'home' key"
+  },
+  {
+    action: {
       selector: ".outlineItem:nth-child(1) a",
       event: "click"
     },
@@ -130,7 +184,14 @@ function runTests(document, window, finish) {
 
   // Wait for outline items, the start the navigation actions
   waitForOutlineItems(document).then(function () {
-    runNextTest(document, window, finish);
+    // The key navigation has to happen in page-fit, otherwise it won't scroll
+    // trough a complete page
+    setZoomToPageFit(document).then(function () {
+      runNextTest(document, window, finish);
+    }, function () {
+      ok(false, "Current scale has been ste to 'page-fit'");
+      finish();
+    });
   }, function () {
     ok(false, "Outline items have ben found");
     finish();
@@ -170,7 +231,17 @@ function runNextTest(document, window, endCallback) {
     el.value = test.action.value;
 
   // Dispatch the event for changing the page
-  el.dispatchEvent(new Event(test.action.event));
+  if (test.action.event == "keydown") {
+    var ev = document.createEvent("KeyboardEvent");
+        ev.initKeyEvent("keydown", true, true, null, false, false, false, false,
+                        test.action.keyCode, 0);
+    el.dispatchEvent(ev);
+  }
+  else {
+    var ev = new Event(test.action.event);
+  }
+  el.dispatchEvent(ev);
+
 
   // When the promise gets resolved we call the next test if there are any left
   // or else we call the final callback which will end the test
@@ -207,3 +278,27 @@ function waitForOutlineItems(document) {
 
   return deferred.promise;
 }
+
+/**
+ * The key navigation has to happen in page-fit, otherwise it won't scroll
+ * trough a complete page
+ *
+ * @param document
+ * @returns {deferred.promise|*}
+ */
+function setZoomToPageFit(document) {
+  var deferred = Promise.defer();
+  document.addEventListener("pagerendered", function onZoom(e) {
+    document.removeEventListener("pagerendered", onZoom), false;
+    document.querySelector("#viewer").click();
+    deferred.resolve();
+
+  }, false);
+
+  var select = document.querySelector("select#scaleSelect");
+  select.selectedIndex = 2;
+  select.dispatchEvent(new Event("change"));
+
+  return deferred.promise;
+}
+
