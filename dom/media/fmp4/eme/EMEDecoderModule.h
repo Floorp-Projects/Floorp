@@ -24,8 +24,7 @@ public:
   EMEDecoderModule(CDMProxy* aProxy,
                    PlatformDecoderModule* aPDM,
                    bool aCDMDecodesAudio,
-                   bool aCDMDecodesVideo,
-                   already_AddRefed<MediaTaskQueue> aDecodeTaskQueue);
+                   bool aCDMDecodesVideo);
 
   virtual ~EMEDecoderModule();
 

@@ -75,26 +75,6 @@ PlatformDecoderModule::Init()
 }
 
 #ifdef MOZ_EME
-class CreateTaskQueueTask : public nsRunnable {
-public:
-  NS_IMETHOD Run() {
-    MOZ_ASSERT(NS_IsMainThread());
-    mTaskQueue = new MediaTaskQueue(GetMediaDecodeThreadPool());
-    return NS_OK;
-  }
-  nsRefPtr<MediaTaskQueue> mTaskQueue;
-};
-
-static already_AddRefed<MediaTaskQueue>
-CreateTaskQueue()
-{
-  // We must create the MediaTaskQueue/SharedThreadPool on the main thread.
-  nsRefPtr<CreateTaskQueueTask> t(new CreateTaskQueueTask());
-  nsresult rv = NS_DispatchToMainThread(t, NS_DISPATCH_SYNC);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  return t->mTaskQueue.forget();
-}
-
 /* static */
 PlatformDecoderModule*
 PlatformDecoderModule::CreateCDMWrapper(CDMProxy* aProxy,
@@ -123,8 +103,7 @@ PlatformDecoderModule::CreateCDMWrapper(CDMProxy* aProxy,
   return new EMEDecoderModule(aProxy,
                               pdm.forget(),
                               cdmDecodesAudio,
-                              cdmDecodesVideo,
-                              CreateTaskQueue());
+                              cdmDecodesVideo);
 }
 #endif
 
