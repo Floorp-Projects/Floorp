@@ -409,10 +409,10 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
     // when it is reflowed, it will just use this size.
     nsRubyTextContainerFrame* textContainer = i < rtcCount ?
       mTextContainers[i] : mSpanContainers[i - rtcCount];
-    RubyUtils::ClearReservedISize(textContainer);
-    textContainer->SetISize(isize);
+    nsLineLayout* lineLayout = lineLayouts[i].get();
 
-    nscoord rtcISize = lineLayouts[i]->GetCurrentICoord();
+    RubyUtils::ClearReservedISize(textContainer);
+    nscoord rtcISize = lineLayout->GetCurrentICoord();
     // Only span containers and containers with collapsed annotations
     // need reserving isize. For normal ruby text containers, their
     // children will be expanded properly. We only need to expand their
@@ -422,7 +422,11 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
     } else if (isize > rtcISize) {
       RubyUtils::SetReservedISize(textContainer, isize - rtcISize);
     }
-    lineLayouts[i]->EndLineReflow();
+
+    lineLayout->VerticalAlignLine();
+    LogicalSize lineSize(lineWM, isize, lineLayout->GetFinalLineBSize());
+    textContainer->SetLineSize(lineSize);
+    lineLayout->EndLineReflow();
   }
 
   aDesiredSize.ISize(lineWM) = isize;

@@ -90,7 +90,10 @@ nsRubyTextFrame::Reflow(nsPresContext* aPresContext,
                                aReflowState, aStatus);
 
   if (GetStateBits() & NS_RUBY_TEXT_FRAME_AUTOHIDE) {
-    aDesiredSize.ClearSize();
+    // Reset the ISize. The BSize is not changed so that it won't
+    // affect vertical positioning in unexpected way.
+    WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
+    aDesiredSize.ISize(lineWM) = 0;
     aDesiredSize.SetOverflowAreasToDesiredBounds();
   }
 }
