@@ -17,7 +17,6 @@
 #include "nsAttrValueInlines.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
-#include "nsQueryObject.h"
 #include "nsIContentInlines.h"
 #include "nsIContentViewer.h"
 #include "mozilla/css/StyleRule.h"

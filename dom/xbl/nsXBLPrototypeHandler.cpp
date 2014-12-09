@@ -6,7 +6,6 @@
 #include "mozilla/ArrayUtils.h"
 
 #include "nsCOMPtr.h"
-#include "nsQueryObject.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsContentUtils.h"

@@ -10,7 +10,6 @@
 #include "nsIEventTarget.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsPIDOMWindow.h"
-#include "nsQueryObject.h"
 
 namespace mozilla {
 namespace dom {

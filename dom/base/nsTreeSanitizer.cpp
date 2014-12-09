@@ -23,7 +23,6 @@
 #include "nsContentUtils.h"
 #include "nsIParserUtils.h"
 #include "nsIDocument.h"
-#include "nsQueryObject.h"
 
 using namespace mozilla;
 

@@ -20,7 +20,6 @@
 #include "nscore.h"
 #include "nsWeakPtr.h"
 #include "nsAutoPtr.h"
-#include "nsQueryObject.h"
 
 #include "nsIDOMWindow.h"
 

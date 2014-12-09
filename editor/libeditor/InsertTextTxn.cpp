@@ -11,7 +11,6 @@
 #include "nsDebug.h"                    // for NS_ASSERTION, etc
 #include "nsEditor.h"                   // mEditor
 #include "nsError.h"                    // for NS_OK, etc
-#include "nsQueryObject.h"              // for do_QueryObject
 
 using namespace mozilla;
 using namespace mozilla::dom;

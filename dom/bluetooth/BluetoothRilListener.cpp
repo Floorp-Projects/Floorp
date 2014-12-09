@@ -14,7 +14,6 @@
 #include "nsRadioInterfaceLayer.h" // For NS_RILCONTENTHELPER_CONTRACTID.
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
-#include "nsQueryObject.h"
 
 USING_BLUETOOTH_NAMESPACE
 
