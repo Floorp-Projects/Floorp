@@ -394,20 +394,24 @@ private:
     typedef enum {
         OP3_ROUNDSS_VsdWsd  = 0x0A,
         OP3_ROUNDSD_VsdWsd  = 0x0B,
+        OP3_BLENDVPS_VdqWdq = 0x14,
         OP3_PEXTRD_EdVdqIb  = 0x16,
         OP3_BLENDPS_VpsWpsIb = 0x0C,
         OP3_PTEST_VdVd      = 0x17,
         OP3_INSERTPS_VpsUps = 0x21,
-        OP3_PINSRD_VdqEdIb  = 0x22
+        OP3_PINSRD_VdqEdIb  = 0x22,
+        OP3_VBLENDVPS_VdqWdq = 0x4A
     } ThreeByteOpcodeID;
 
     typedef enum {
+        ESCAPE_BLENDVPS     = 0x38,
         ESCAPE_PTEST        = 0x38,
         ESCAPE_PINSRD       = 0x3A,
         ESCAPE_PEXTRD       = 0x3A,
         ESCAPE_ROUNDSD      = 0x3A,
         ESCAPE_INSERTPS     = 0x3A,
-        ESCAPE_BLENDPS      = 0x3A
+        ESCAPE_BLENDPS      = 0x3A,
+        ESCAPE_VBLENDVPS    = 0x3A
     } ThreeByteEscape;
 
     typedef enum {
@@ -3765,23 +3769,24 @@ public:
         m_formatter.immediate8(uint8_t(lane));
     }
 
-    void blendps_irr(unsigned imm, XMMRegisterID src, XMMRegisterID dst)
+    void vblendps_irr(unsigned imm, XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
         MOZ_ASSERT(imm < 16);
-        spew("blendps    $%x, %s, %s", imm, nameFPReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.threeByteOp(OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, (RegisterID)src, (RegisterID)dst);
+        // Despite being a "ps" instruction, vblendps is encoded with the "pd" prefix.
+        threeByteOpSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, src1, src0, dst);
         m_formatter.immediate8(uint8_t(imm));
     }
 
-    void blendps_imr(unsigned imm, int offset, RegisterID base, XMMRegisterID dst)
+    void vblendps_imr(unsigned imm, int offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
     {
         MOZ_ASSERT(imm < 16);
-        spew("blendps    $%x, %s0x%x(%s), %s", imm, PRETTY_PRINT_OFFSET(offset), nameIReg(base),
-             nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.threeByteOp(OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, offset, base, (RegisterID)dst);
+        // Despite being a "ps" instruction, vblendps is encoded with the "pd" prefix.
+        threeByteOpSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, offset, base, src0, dst);
         m_formatter.immediate8(uint8_t(imm));
+    }
+
+    void vblendvps_rr(XMMRegisterID mask, XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst) {
+        vblendvOpSimd(mask, src1, src0, dst);
     }
 
     void movsldup_rr(XMMRegisterID src, XMMRegisterID dst)
@@ -4227,6 +4232,20 @@ private:
         return src0 == dst;
     }
 
+    bool useLegacySSEEncodingForVblendv(XMMRegisterID mask, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        // Similar to useLegacySSEEncoding, but for vblendv the Legacy SSE
+        // encoding also requires the mask to be in xmm0.
+
+        if (!useVEX_) {
+            MOZ_ASSERT(src0 == dst);
+            MOZ_ASSERT(mask == X86Registers::xmm0);
+            return true;
+        }
+
+        return src0 == dst && mask == X86Registers::xmm0;
+    }
+
     const char *legacySSEOpName(const char *name)
     {
         MOZ_ASSERT(name[0] == 'v');
@@ -4357,6 +4376,25 @@ private:
         spew("%-11s%s0x%x(%s), %s, %s", name,
              PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(src0), nameFPReg(dst));
         m_formatter.threeByteOpVex(ty, opcode, escape, offset, base, src0, dst);
+    }
+
+    // Blendv is a three-byte op, but the VEX encoding has a different opcode
+    // than the SSE encoding, so we handle it specially.
+    void vblendvOpSimd(XMMRegisterID mask, XMMRegisterID rm, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        if (useLegacySSEEncodingForVblendv(mask, src0, dst)) {
+            spew("blendvps   %s, %s", nameFPReg(rm), nameFPReg(src0));
+            // Even though a "ps" instruction, vblendv is encoded with the "pd" prefix.
+            m_formatter.legacySSEPrefix(VEX_PD);
+            m_formatter.threeByteOp(OP3_BLENDVPS_VdqWdq, ESCAPE_BLENDVPS, (RegisterID)rm, src0);
+            return;
+        }
+
+        spew("vblendvps  %s, %s, %s, %s",
+             nameFPReg(mask), nameFPReg(rm), nameFPReg(src0), nameFPReg(dst));
+        // Even though a "ps" instruction, vblendv is encoded with the "pd" prefix.
+        m_formatter.vblendvOpVex(VEX_PD, OP3_VBLENDVPS_VdqWdq, ESCAPE_VBLENDVPS,
+                                 mask, (RegisterID)rm, src0, dst);
     }
 
 #ifdef JS_CODEGEN_X64
@@ -4678,6 +4716,21 @@ private:
             }
             threeOpVex(ty, r, x, b, m, w, v, l, opcode);
             memoryModRM(offset, base, reg);
+        }
+
+        void vblendvOpVex(VexOperandType ty, ThreeByteOpcodeID opcode, ThreeByteEscape escape,
+                          XMMRegisterID mask, RegisterID rm, XMMRegisterID src0, int reg)
+        {
+            int r = (reg >> 3), x = 0, b = (rm >> 3);
+            int m = 0, w = 0, v = src0, l = 0;
+            switch (escape) {
+              case 0x38: m = 2; break; // 0x0F 0x38
+              case 0x3A: m = 3; break; // 0x0F 0x3A
+              default: MOZ_CRASH("unexpected escape");
+            }
+            threeOpVex(ty, r, x, b, m, w, v, l, opcode);
+            registerModRM(rm, reg);
+            immediate8(mask << 4);
         }
 
 #ifdef JS_CODEGEN_X64
