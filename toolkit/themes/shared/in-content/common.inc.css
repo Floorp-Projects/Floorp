@@ -286,7 +286,7 @@ xul|menulist[disabled="true"]:not([editable="true"]) > xul|*.menulist-dropmarker
 xul|menulist > xul|menupopup,
 xul|button[type="menu"] > xul|menupopup {
   -moz-appearance: none;
-  border: 1px solid rgba(23,50,77,0.4);
+  border: 1px solid #c1c1c1;
   border-radius: 2px;
   background-color: #fff;
 }
@@ -323,10 +323,9 @@ xul|button[type="menu"] > xul|menupopup > xul|menuitem[selected="true"] {
 xul|menulist > xul|menupopup xul|menuseparator,
 xul|button[type="menu"] > xul|menupopup xul|menuseparator {
   -moz-appearance: none;
-  margin-top: 2px;
-  margin-bottom: 2px;
+  margin: 0;
   padding: 0;
-  border-top: 1px solid rgba(23,50,77,0.4);
+  border-top: 1px solid #c1c1c1;
   border-bottom: none;
 }
 
