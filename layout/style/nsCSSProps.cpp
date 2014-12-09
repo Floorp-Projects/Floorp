@@ -1625,6 +1625,16 @@ const KTableValue nsCSSProps::kResizeKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const KTableValue nsCSSProps::kRubyPositionKTable[] = {
+  eCSSKeyword_over, NS_STYLE_RUBY_POSITION_OVER,
+  eCSSKeyword_under, NS_STYLE_RUBY_POSITION_UNDER,
+  // bug 1055672 for 'inter-character' support
+  // eCSSKeyword_inter_character, NS_STYLE_RUBY_POSITION_INTER_CHARACTER,
+  eCSSKeyword_right, NS_STYLE_RUBY_POSITION_RIGHT,
+  eCSSKeyword_left, NS_STYLE_RUBY_POSITION_LEFT,
+  eCSSKeyword_UNKNOWN, -1
+};
+
 const KTableValue nsCSSProps::kScrollBehaviorKTable[] = {
   eCSSKeyword_auto,       NS_STYLE_SCROLL_BEHAVIOR_AUTO,
   eCSSKeyword_smooth,     NS_STYLE_SCROLL_BEHAVIOR_SMOOTH,
