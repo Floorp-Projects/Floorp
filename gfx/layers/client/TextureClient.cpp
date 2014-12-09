@@ -17,6 +17,7 @@
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "ImageContainer.h"             // for PlanarYCbCrData, etc
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Logging.h"        // for gfxDebug
 #include "mozilla/layers/TextureClientOGL.h"
 #include "mozilla/layers/PTextureChild.h"
 #include "SharedSurface.h"
@@ -584,8 +585,10 @@ bool
 ShmemTextureClient::Allocate(uint32_t aSize)
 {
   MOZ_ASSERT(mValid);
-  SharedMemory::SharedMemoryType memType = OptimalShmemType();
-  mAllocated = GetAllocator()->AllocUnsafeShmem(aSize, memType, &mShmem);
+  if (aSize > 0) {
+    SharedMemory::SharedMemoryType memType = OptimalShmemType();
+    mAllocated = GetAllocator()->AllocUnsafeShmem(aSize, memType, &mShmem);
+  }
   return mAllocated;
 }
 
@@ -716,8 +719,12 @@ BufferTextureClient::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFla
   MOZ_ASSERT(mFormat != gfx::SurfaceFormat::YUV, "This textureClient cannot use YCbCr data");
   MOZ_ASSERT(aSize.width > 0 && aSize.height > 0);
 
-  int bufSize
-    = ImageDataSerializer::ComputeMinBufferSize(aSize, mFormat);
+  if (aSize.width <= 0 || aSize.height <= 0) {
+    gfxDebug() << "Asking for buffer of invalid size " << aSize.width << "x" << aSize.height;
+    return false;
+  }
+
+  uint32_t bufSize = ImageDataSerializer::ComputeMinBufferSize(aSize, mFormat);
   if (!Allocate(bufSize)) {
     return false;
   }

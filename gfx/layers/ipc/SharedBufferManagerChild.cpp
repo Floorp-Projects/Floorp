@@ -8,6 +8,7 @@
 #include "base/task.h"                  // for NewRunnableFunction, etc
 #include "base/thread.h"                // for Thread
 #include "base/tracked.h"               // for FROM_HERE
+#include "mozilla/gfx/Logging.h"        // for gfxDebug
 #include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layers/SharedBufferManagerParent.h"
 #include "mozilla/StaticPtr.h"          // for StaticRefPtr
@@ -239,6 +240,11 @@ SharedBufferManagerChild::AllocGrallocBuffer(const gfx::IntSize& aSize,
                                              const uint32_t& aUsage,
                                              mozilla::layers::MaybeMagicGrallocBufferHandle* aBuffer)
 {
+  if (aSize.width <= 0 || aSize.height <= 0) {
+    gfxDebug() << "Asking for gralloc of invalid size " << aSize.width << "x" << aSize.height;
+    return false;
+  }
+
   if (InSharedBufferManagerChildThread()) {
     return SharedBufferManagerChild::AllocGrallocBufferNow(aSize, aFormat, aUsage, aBuffer);
   }
@@ -264,6 +270,9 @@ SharedBufferManagerChild::AllocGrallocBufferNow(const IntSize& aSize,
                                                 const uint32_t& aUsage,
                                                 mozilla::layers::MaybeMagicGrallocBufferHandle* aHandle)
 {
+  // These are protected functions, we can just assert and ask the caller to test
+  MOZ_ASSERT(aSize.width >= 0 && aSize.height >= 0);
+
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
   mozilla::layers::MaybeMagicGrallocBufferHandle handle;
   SendAllocateGrallocBuffer(aSize, aFormat, aUsage, &handle);
