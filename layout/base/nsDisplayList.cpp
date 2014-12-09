@@ -558,6 +558,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mIsCompositingCheap(false),
       mContainsPluginItem(false),
       mAncestorHasTouchEventHandler(false),
+      mAncestorHasScrollEventHandler(false),
       mHaveScrollableDisplayPort(false)
 {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);
@@ -772,7 +773,7 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
     if (document) {
       nsCOMPtr<nsPIDOMWindow> innerWin(document->GetInnerWindow());
       if (innerWin) {
-        metrics.SetMayHaveTouchListeners(innerWin->HasTouchEventListeners());
+        metrics.SetMayHaveTouchListeners(innerWin->HasApzAwareEventListeners());
       }
     }
     metrics.SetMayHaveTouchCaret(presShell->MayHaveTouchCaret());
@@ -2982,7 +2983,9 @@ nsDisplayLayerEventRegions::AddFrame(nsDisplayListBuilder* aBuilder,
   } else {
     mHitRegion.Or(mHitRegion, borderBox);
   }
-  if (aBuilder->GetAncestorHasTouchEventHandler()) {
+  if (aBuilder->GetAncestorHasTouchEventHandler() ||
+      aBuilder->GetAncestorHasScrollEventHandler())
+  {
     mDispatchToContentHitRegion.Or(mDispatchToContentHitRegion, borderBox);
   }
 }

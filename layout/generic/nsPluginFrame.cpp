@@ -419,7 +419,9 @@ nsPluginFrame::GetMinISize(nsRenderingContext *aRenderingContext)
   if (!IsHidden(false)) {
     nsIAtom *atom = mContent->Tag();
     if (atom == nsGkAtoms::applet || atom == nsGkAtoms::embed) {
-      result = nsPresContext::CSSPixelsToAppUnits(EMBED_DEF_WIDTH);
+      bool vertical = GetWritingMode().IsVertical();
+      result = nsPresContext::CSSPixelsToAppUnits(
+        vertical ? EMBED_DEF_HEIGHT : EMBED_DEF_WIDTH);
     }
   }
 

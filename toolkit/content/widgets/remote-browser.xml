@@ -10,7 +10,8 @@
 
   <binding id="remote-browser" extends="chrome://global/content/bindings/browser.xml#browser">
 
-    <implementation type="application/javascript" implements="nsIObserver, nsIDOMEventListener, nsIMessageListener">
+    <implementation type="application/javascript"
+                    implements="nsIObserver, nsIDOMEventListener, nsIMessageListener, nsIRemoteBrowser">
 
       <field name="_securityUI">null</field>
 
@@ -369,6 +370,21 @@
           return { x: aScreenX + this.boxObject.screenX,
                    y: aScreenY + this.boxObject.screenY };
         ]]>
+        </body>
+      </method>
+
+      <method name="enableDisableCommands">
+        <parameter name="aAction"/>
+        <parameter name="aEnabledLength"/>
+        <parameter name="aEnabledCommands"/>
+        <parameter name="aDisabledLength"/>
+        <parameter name="aDisabledCommands"/>
+        <body>
+          if (this._controller) {
+            this._controller.enableDisableCommands(aAction,
+                                                   aEnabledLength, aEnabledCommands,
+                                                   aDisabledLength, aDisabledCommands);
+          }
         </body>
       </method>
 

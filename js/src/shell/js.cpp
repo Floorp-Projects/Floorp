@@ -5808,7 +5808,7 @@ main(int argc, char **argv, char **envp)
         || !op.addStringOption('\0', "ion-range-analysis", "on/off",
                                "Range analysis (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-sink", "on/off",
-                               "Sink code motion (default: on, off to disable)")
+                               "Sink code motion (default: off, on to enable)")
         || !op.addStringOption('\0', "ion-loop-unrolling", "on/off",
                                "Loop unrolling (default: off, on to enable)")
         || !op.addBoolOption('\0', "ion-check-range-analysis",

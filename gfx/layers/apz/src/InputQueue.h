@@ -14,11 +14,14 @@
 namespace mozilla {
 
 class InputData;
+class MultiTouchInput;
+class ScrollWheelInput;
 
 namespace layers {
 
 class AsyncPanZoomController;
 class OverscrollHandoffChain;
+class CancelableBlockState;
 class TouchBlockState;
 
 /**
@@ -50,7 +53,7 @@ public:
    * decides whether or not it wants to cancel a block of events. The block
    * id to which this applies should be provided in |aInputBlockId|.
    */
-  void ContentReceivedTouch(uint64_t aInputBlockId, bool aPreventDefault);
+  void ContentReceivedInputBlock(uint64_t aInputBlockId, bool aPreventDefault);
   /**
    * This function should be invoked to notify the InputQueue once the target
    * APZC to handle an input block has been confirmed. In practice this should
@@ -76,28 +79,68 @@ public:
    */
   uint64_t InjectNewTouchBlock(AsyncPanZoomController* aTarget);
   /**
-   * Returns the touch block at the head of the queue.
+   * Returns the pending input block at the head of the queue.
+   */
+  CancelableBlockState* CurrentBlock() const;
+  /**
+   * Returns the current pending input block as a touch block. It must only
+   * called if the current pending block is a touch block.
    */
   TouchBlockState* CurrentTouchBlock() const;
   /**
-   * Returns true iff the touch block at the head of the queue is ready for
+   * Returns true iff the pending block at the head of the queue is ready for
    * handling.
    */
   bool HasReadyTouchBlock() const;
 
 private:
   ~InputQueue();
+
   TouchBlockState* StartNewTouchBlock(const nsRefPtr<AsyncPanZoomController>& aTarget,
                                       bool aTargetConfirmed,
                                       bool aCopyAllowedTouchBehaviorFromCurrent);
+
+  /**
+   * If animations are present for the current pending input block, cancel
+   * them as soon as possible.
+   */
+  void CancelAnimationsForNewBlock(CancelableBlockState* aBlock);
+
+  /**
+   * If we need to wait for a content response, schedule that now.
+   */
+  void MaybeRequestContentResponse(const nsRefPtr<AsyncPanZoomController>& aTarget,
+                                   CancelableBlockState* aBlock);
+
+  nsEventStatus ReceiveTouchInput(const nsRefPtr<AsyncPanZoomController>& aTarget,
+                                  bool aTargetConfirmed,
+                                  const MultiTouchInput& aEvent,
+                                  uint64_t* aOutInputBlockId);
+  nsEventStatus ReceiveScrollWheelInput(const nsRefPtr<AsyncPanZoomController>& aTarget,
+                                        bool aTargetConfirmed,
+                                        const ScrollWheelInput& aEvent,
+                                        uint64_t* aOutInputBlockId);
+
+  /**
+   * Remove any blocks that are inactive - not ready, and having no events.
+   */
+  void SweepDepletedBlocks();
+
+  /**
+   * Processes the current block if it's ready for handling.
+   */
+  bool MaybeHandleCurrentBlock(const nsRefPtr<AsyncPanZoomController>& aTarget,
+                                      CancelableBlockState* block,
+                                      const InputData& aEvent);
+
   void ScheduleMainThreadTimeout(const nsRefPtr<AsyncPanZoomController>& aTarget, uint64_t aInputBlockId);
   void MainThreadTimeout(const uint64_t& aInputBlockId);
-  void ProcessPendingInputBlocks();
+  void ProcessInputBlocks();
 
 private:
-  // The queue of touch blocks that have not yet been processed.
+  // The queue of touch blocks that have not yet been fully processed.
   // This member must only be accessed on the controller/UI thread.
-  nsTArray<UniquePtr<TouchBlockState>> mTouchBlockQueue;
+  nsTArray<UniquePtr<CancelableBlockState>> mInputBlockQueue;
 };
 
 }

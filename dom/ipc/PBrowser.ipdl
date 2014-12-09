@@ -244,6 +244,14 @@ parent:
      */
     RequestFocus(bool canRaise);
 
+    /**
+     * Indicate, based on the current state, that some commands are enabled and
+     * some are disabled.
+     */
+    EnableDisableCommands(nsString action,
+                          nsCString[] enabledCommands,
+                          nsCString[] disabledCommands);
+
     prio(urgent) sync GetInputContext() returns (int32_t IMEEnabled,
                                                  int32_t IMEOpen,
                                                  intptr_t NativeIMEContext);
@@ -362,7 +370,7 @@ parent:
      * batched and only processed for panning and zooming if content does not
      * preventDefault.
      */
-    ContentReceivedTouch(ScrollableLayerGuid aGuid, uint64_t aInputBlockId, bool aPreventDefault);
+    ContentReceivedInputBlock(ScrollableLayerGuid aGuid, uint64_t aInputBlockId, bool aPreventDefault);
 
     /**
      * Notifies the APZ code of the results of the gecko hit-test for a
@@ -469,7 +477,7 @@ child:
 
     RealMouseEvent(WidgetMouseEvent event);
     RealKeyEvent(WidgetKeyboardEvent event, MaybeNativeKeyBinding keyBinding);
-    MouseWheelEvent(WidgetWheelEvent event);
+    MouseWheelEvent(WidgetWheelEvent event, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
     RealTouchEvent(WidgetTouchEvent aEvent, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
     RealTouchMoveEvent(WidgetTouchEvent aEvent, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
 
