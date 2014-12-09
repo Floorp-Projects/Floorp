@@ -192,6 +192,7 @@ class CommonTestCase(unittest.TestCase):
         self.duration = 0
         self.start_time = 0
         self.expected = kwargs.pop('expected', 'pass')
+        self.logger = get_default_logger()
 
     def _addSkip(self, result, reason):
         addSkip = getattr(result, 'addSkip', None)
@@ -609,22 +610,21 @@ class MarionetteJSTestCase(CommonTestCase):
                 self.assertTrue(len(results['failures']) > 0,
                                 "expected test failures didn't occur")
             else:
-                logger = get_default_logger()
                 for failure in results['failures']:
                     diag = "" if failure.get('diag') is None else failure['diag']
                     name = "got false, expected true" if failure.get('name') is None else failure['name']
-                    logger.test_status(self.test_name, name, 'FAIL',
-                                       message=diag)
+                    self.logger.test_status(self.test_name, name, 'FAIL',
+                                            message=diag)
                 for failure in results['expectedFailures']:
                     diag = "" if failure.get('diag') is None else failure['diag']
                     name = "got false, expected false" if failure.get('name') is None else failure['name']
-                    logger.test_status(self.test_name, name, 'FAIL',
-                                       expected='FAIL', message=diag)
+                    self.logger.test_status(self.test_name, name, 'FAIL',
+                                            expected='FAIL', message=diag)
                 for failure in results['unexpectedSuccesses']:
                     diag = "" if failure.get('diag') is None else failure['diag']
                     name = "got true, expected false" if failure.get('name') is None else failure['name']
-                    logger.test_status(self.test_name, name, 'PASS',
-                                       expected='FAIL', message=diag)
+                    self.logger.test_status(self.test_name, name, 'PASS',
+                                            expected='FAIL', message=diag)
                 self.assertEqual(0, len(results['failures']),
                                  '%d tests failed' % len(results['failures']))
                 if len(results['unexpectedSuccesses']) > 0:
