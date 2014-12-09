@@ -8,7 +8,6 @@
 #include "IMETextTxn.h"
 #include "nsGkAtoms.h"
 #include "mozilla/dom/Selection.h"
-#include "nsQueryObject.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

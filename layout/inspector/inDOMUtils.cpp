@@ -45,7 +45,6 @@
 #include "nsColor.h"
 #include "nsStyleSet.h"
 #include "nsStyleUtil.h"
-#include "nsQueryObject.h"
 
 using namespace mozilla;
 using namespace mozilla::css;

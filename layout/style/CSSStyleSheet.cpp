@@ -43,7 +43,6 @@
 #include "mozilla/Likely.h"
 #include "mozilla/dom/CSSStyleSheetBinding.h"
 #include "nsComponentManagerUtils.h"
-#include "nsQueryObject.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

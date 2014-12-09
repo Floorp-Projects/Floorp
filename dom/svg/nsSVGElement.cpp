@@ -53,7 +53,6 @@
 #include "mozilla/dom/SVGElementBinding.h"
 #include "mozilla/unused.h"
 #include "RestyleManager.h"
-#include "nsQueryObject.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

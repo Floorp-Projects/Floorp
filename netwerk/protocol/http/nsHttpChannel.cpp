@@ -71,7 +71,6 @@
 #include "nsIHttpPushListener.h"
 #include "nsIX509Cert.h"
 #include "ScopedNSSTypes.h"
-#include "nsQueryObject.h"
 
 namespace mozilla { namespace net {
 

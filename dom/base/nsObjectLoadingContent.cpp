@@ -58,7 +58,6 @@
 #include "nsUnicharUtils.h"
 #include "mozilla/Preferences.h"
 #include "nsSandboxFlags.h"
-#include "nsQueryObject.h"
 
 // Concrete classes
 #include "nsFrameLoader.h"

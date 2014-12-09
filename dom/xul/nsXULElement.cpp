@@ -93,7 +93,6 @@
 #include "nsAttrValueInlines.h"
 #include "mozilla/Attributes.h"
 #include "nsIController.h"
-#include "nsQueryObject.h"
 #include <algorithm>
 
 // The XUL doc interface
