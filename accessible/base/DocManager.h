@@ -74,20 +74,20 @@ public:
   /*
    * Notification that a top level document in a content process has gone away.
    */
-  static void RemoteDocShutdown(DocAccessibleParent* aDoc)
+  void RemoteDocShutdown(DocAccessibleParent* aDoc)
   {
-    DebugOnly<bool> result = sRemoteDocuments.RemoveElement(aDoc);
+    DebugOnly<bool> result = mRemoteDocuments.RemoveElement(aDoc);
     MOZ_ASSERT(result, "Why didn't we find the document!");
   }
 
   /*
    * Notify of a new top level document in a content process.
    */
-  static void RemoteDocAdded(DocAccessibleParent* aDoc)
+  void RemoteDocAdded(DocAccessibleParent* aDoc)
   {
-    MOZ_ASSERT(!sRemoteDocuments.Contains(aDoc),
+    MOZ_ASSERT(!mRemoteDocuments.Contains(aDoc),
                "How did we already have the doc!");
-    sRemoteDocuments.AppendElement(aDoc);
+    mRemoteDocuments.AppendElement(aDoc);
   }
 
 #ifdef DEBUG
@@ -176,7 +176,7 @@ private:
   /*
    * The list of remote top level documents.
    */
-  static nsTArray<DocAccessibleParent*> sRemoteDocuments;
+  nsTArray<DocAccessibleParent*> mRemoteDocuments;
 };
 
 /**
