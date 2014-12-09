@@ -1,6 +1,6 @@
 from marionette_test import MarionetteTestCase
-from marionette import Actions
-from errors import MarionetteException
+from marionette_driver.marionette import Actions
+from marionette_driver.errors import MarionetteException
 #add this directory to the path
 import os
 import sys
