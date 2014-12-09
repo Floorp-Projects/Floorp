@@ -838,7 +838,7 @@ class MacroAssemblerX86Shared : public Assembler
     void storeAlignedInt32x4(FloatRegister src, const Address &dest) {
         movdqa(src, Operand(dest));
     }
-    void moveAlignedInt32x4(FloatRegister src, FloatRegister dest) {
+    void moveInt32x4(FloatRegister src, FloatRegister dest) {
         movdqa(src, dest);
     }
     void loadUnalignedInt32x4(const Address &src, FloatRegister dest) {
@@ -907,7 +907,7 @@ class MacroAssemblerX86Shared : public Assembler
     void storeAlignedFloat32x4(FloatRegister src, const Address &dest) {
         movaps(src, Operand(dest));
     }
-    void moveAlignedFloat32x4(FloatRegister src, FloatRegister dest) {
+    void moveFloat32x4(FloatRegister src, FloatRegister dest) {
         movaps(src, dest);
     }
     void loadUnalignedFloat32x4(const Address &src, FloatRegister dest) {
@@ -961,7 +961,7 @@ class MacroAssemblerX86Shared : public Assembler
         // afterwards.
         // Note: this is useAtStart-safe because src isn't read afterwards.
         if (src != dest)
-            moveAlignedFloat32x4(src, dest);
+            moveFloat32x4(src, dest);
         shufps(mask, dest, dest);
     }
     void shuffleMix(uint32_t mask, const Operand &src, FloatRegister dest) {
