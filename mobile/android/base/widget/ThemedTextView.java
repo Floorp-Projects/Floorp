@@ -43,8 +43,12 @@ public class ThemedTextView extends android.widget.TextView
     }
 
     private void initialize(final Context context, final AttributeSet attrs) {
-        // The theme can be null, particularly for webapps: Bug 1089266.
-        mTheme = ((GeckoApplication) context.getApplicationContext()).getLightweightTheme();
+        // The theme can be null, particularly for webapps: Bug 1089266.  Or we
+        // might be instantiating this View in an IDE, with no ambient GeckoApplication.
+        final Context applicationContext = context.getApplicationContext();
+        if (applicationContext instanceof GeckoApplication) {
+            mTheme = ((GeckoApplication) applicationContext).getLightweightTheme();
+        }
 
         final TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.LightweightTheme);
         mAutoUpdateTheme = mTheme != null && a.getBoolean(R.styleable.LightweightTheme_autoUpdateTheme, true);
