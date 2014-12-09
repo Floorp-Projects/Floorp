@@ -2864,7 +2864,7 @@ ContentParent::RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc, PDocAcc
     return parentDoc->AddChildDoc(doc, aParentID);
   } else {
     MOZ_ASSERT(!aParentID);
-    a11y::DocManager::RemoteDocAdded(doc);
+    GetAccService()->RemoteDocAdded(doc);
   }
 #endif
   return true;
