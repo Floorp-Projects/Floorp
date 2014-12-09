@@ -9,19 +9,20 @@
 
 #include "prlog.h"
 
+#include "nsTArray.h"
+#include "nsThreadUtils.h"
+
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Monitor.h"
-
-#include "MediaTaskQueue.h"
-#include "nsIEventTarget.h"
 
 /* Polyfill __func__ on MSVC for consumers to pass to the MediaPromise API. */
 #ifdef _MSC_VER
 #define __func__ __FUNCTION__
 #endif
 
+class nsIEventTarget;
 namespace mozilla {
 
 extern PRLogModuleInfo* gMediaPromiseLog;
@@ -30,6 +31,14 @@ void EnsureMediaPromiseLog();
 #define PROMISE_LOG(x, ...) \
   MOZ_ASSERT(gMediaPromiseLog); \
   PR_LOG(gMediaPromiseLog, PR_LOG_DEBUG, (x, ##__VA_ARGS__))
+
+class MediaTaskQueue;
+namespace detail {
+
+nsresult DispatchMediaPromiseRunnable(MediaTaskQueue* aQueue, nsIRunnable* aRunnable);
+nsresult DispatchMediaPromiseRunnable(nsIEventTarget* aTarget, nsIRunnable* aRunnable);
+
+} // namespace detail
 
 /*
  * A promise manages an asynchronous request that may or may not be able to be
@@ -172,7 +181,7 @@ protected:
       PROMISE_LOG("%s Then() call made from %s [Runnable=%p, Promise=%p, ThenValue=%p]",
                   resolved ? "Resolving" : "Rejecting", ThenValueBase::mCallSite,
                   runnable.get(), aPromise, this);
-      DebugOnly<nsresult> rv = DoDispatch(mResponseTarget, runnable);
+      DebugOnly<nsresult> rv = detail::DispatchMediaPromiseRunnable(mResponseTarget, runnable);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
 
@@ -185,16 +194,6 @@ protected:
     virtual void DoReject(RejectValueType aRejectValue)
     {
       ((*mThisVal).*mRejectMethod)(aRejectValue);
-    }
-
-    static nsresult DoDispatch(MediaTaskQueue* aTaskQueue, nsIRunnable* aRunnable)
-    {
-      return aTaskQueue->ForceDispatch(aRunnable);
-    }
-
-    static nsresult DoDispatch(nsIEventTarget* aEventTarget, nsIRunnable* aRunnable)
-    {
-      return aEventTarget->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
     }
 
     virtual ~ThenValue() {}
