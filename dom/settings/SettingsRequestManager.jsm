@@ -55,6 +55,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
 
 let SettingsPermissions = {
   checkPermission: function(aPrincipal, aPerm) {
+    if (!aPrincipal) {
+      Cu.reportError("SettingsPermissions.checkPermission was passed a null principal. Denying all permissions.");
+      return false;
+    }
     if (aPrincipal.origin == "[System Principal]" ||
         Services.perms.testExactPermissionFromPrincipal(aPrincipal, aPerm) == Ci.nsIPermissionManager.ALLOW_ACTION) {
       return true;
