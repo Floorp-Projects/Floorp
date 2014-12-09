@@ -52,7 +52,7 @@ public:
    * decides whether or not it wants to cancel a block of events. The block
    * id to which this applies should be provided in |aInputBlockId|.
    */
-  void ContentReceivedTouch(uint64_t aInputBlockId, bool aPreventDefault);
+  void ContentReceivedInputBlock(uint64_t aInputBlockId, bool aPreventDefault);
   /**
    * This function should be invoked to notify the InputQueue once the target
    * APZC to handle an input block has been confirmed. In practice this should

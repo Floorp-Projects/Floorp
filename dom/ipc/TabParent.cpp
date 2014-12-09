@@ -2108,12 +2108,12 @@ TabParent::RecvUpdateZoomConstraints(const uint32_t& aPresShellId,
 }
 
 bool
-TabParent::RecvContentReceivedTouch(const ScrollableLayerGuid& aGuid,
-                                    const uint64_t& aInputBlockId,
-                                    const bool& aPreventDefault)
+TabParent::RecvContentReceivedInputBlock(const ScrollableLayerGuid& aGuid,
+                                         const uint64_t& aInputBlockId,
+                                         const bool& aPreventDefault)
 {
   if (RenderFrameParent* rfp = GetRenderFrame()) {
-    rfp->ContentReceivedTouch(aGuid, aInputBlockId, aPreventDefault);
+    rfp->ContentReceivedInputBlock(aGuid, aInputBlockId, aPreventDefault);
   }
   return true;
 }
