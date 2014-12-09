@@ -3269,6 +3269,15 @@ TabChild::SendRequestFocus(bool aCanFocus)
   PBrowserChild::SendRequestFocus(aCanFocus);
 }
 
+void
+TabChild::EnableDisableCommands(const nsAString& aAction,
+                                nsTArray<nsCString>& aEnabledCommands,
+                                nsTArray<nsCString>& aDisabledCommands)
+{
+  PBrowserChild::SendEnableDisableCommands(PromiseFlatString(aAction),
+                                           aEnabledCommands, aDisabledCommands);
+}
+
 bool
 TabChild::DoSendBlockingMessage(JSContext* aCx,
                                 const nsAString& aMessage,
