@@ -10,6 +10,7 @@ UNIFIED_SOURCES += [
     'xpctest_attributes.cpp',
     'xpctest_module.cpp',
     'xpctest_params.cpp',
+    'xpctest_returncode.cpp',
 ]
 
 XPCOMBinaryComponent('xpctest')
