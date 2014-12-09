@@ -379,7 +379,7 @@ GeckoMediaPluginService::GetGMPAudioDecoder(nsTArray<nsCString>* aTags,
   }
 
   nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aNodeId,
-                                               NS_LITERAL_CSTRING("decode-audio"),
+                                               NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER),
                                                *aTags);
   if (!gmp) {
     return NS_ERROR_FAILURE;
@@ -412,7 +412,7 @@ GeckoMediaPluginService::GetGMPVideoDecoder(nsTArray<nsCString>* aTags,
   }
 
   nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aNodeId,
-                                               NS_LITERAL_CSTRING("decode-video"),
+                                               NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
                                                *aTags);
 #ifdef PR_LOGGING
   nsCString api = (*aTags)[0];
@@ -451,7 +451,7 @@ GeckoMediaPluginService::GetGMPVideoEncoder(nsTArray<nsCString>* aTags,
   }
 
   nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aNodeId,
-                                               NS_LITERAL_CSTRING("encode-video"),
+                                               NS_LITERAL_CSTRING(GMP_API_VIDEO_ENCODER),
                                                *aTags);
 #ifdef PR_LOGGING
   nsCString api = (*aTags)[0];
@@ -495,7 +495,7 @@ GeckoMediaPluginService::GetGMPDecryptor(nsTArray<nsCString>* aTags,
   }
 
   nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aNodeId,
-                                               NS_LITERAL_CSTRING("eme-decrypt"),
+                                               NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
                                                *aTags);
   if (!gmp) {
     return NS_ERROR_FAILURE;
