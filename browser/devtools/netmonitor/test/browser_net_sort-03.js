@@ -130,7 +130,6 @@ function test() {
             statusText: "Meh",
             type: "1",
             fullMimeType: "text/1",
-            transferred: L10N.getStr("networkMenu.sizeUnavailable"),
             size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0),
             time: true
           });
@@ -143,7 +142,6 @@ function test() {
             statusText: "Meh",
             type: "2",
             fullMimeType: "text/2",
-            transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.01),
             size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.01),
             time: true
           });
@@ -156,7 +154,6 @@ function test() {
             statusText: "Meh",
             type: "3",
             fullMimeType: "text/3",
-            transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
             size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
             time: true
           });
@@ -169,7 +166,6 @@ function test() {
             statusText: "Meh",
             type: "4",
             fullMimeType: "text/4",
-            transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.03),
             size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.03),
             time: true
           });
@@ -182,7 +178,6 @@ function test() {
             statusText: "Meh",
             type: "5",
             fullMimeType: "text/5",
-            transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.04),
             size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.04),
             time: true
           });
