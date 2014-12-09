@@ -96,7 +96,6 @@ public class Tab {
     public static final int LOAD_PROGRESS_STOP = 100;
 
     private static final int DEFAULT_BACKGROUND_COLOR = Color.WHITE;
-    public static final int MAX_HISTORY_LIST_SIZE = 50;
 
     public enum ErrorType {
         CERT_ERROR,  // Pages with certificate problems
