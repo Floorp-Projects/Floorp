@@ -62,43 +62,32 @@ protected:
   /*
    * A ThenValue tracks a single consumer waiting on the promise. When a consumer
    * invokes promise->Then(...), a ThenValue is created. Once the Promise is
-   * resolved or rejected, a ThenValueRunnable is dispatched, which invokes the
-   * resolve/reject method and then deletes the ThenValue.
+   * resolved or rejected, a {Resolve,Reject}Runnable is dispatched, which
+   * invokes the resolve/reject method and then deletes the ThenValue.
    */
   class ThenValueBase
   {
   public:
-    class ThenValueRunnable : public nsRunnable
+    class ResolveRunnable : public nsRunnable
     {
     public:
-      ThenValueRunnable(ThenValueBase* aThenValue, ResolveValueType aResolveValue)
+      ResolveRunnable(ThenValueBase* aThenValue, ResolveValueType aResolveValue)
         : mThenValue(aThenValue)
+        , mResolveValue(aResolveValue)
       {
-        MOZ_COUNT_CTOR(ThenValueRunnable);
-        mResolveValue.emplace(aResolveValue);
+        MOZ_COUNT_CTOR(ResolveRunnable);
       }
 
-      ThenValueRunnable(ThenValueBase* aThenValue, RejectValueType aRejectValue)
-        : mThenValue(aThenValue)
+      ~ResolveRunnable()
       {
-        MOZ_COUNT_CTOR(ThenValueRunnable);
-        mRejectValue.emplace(aRejectValue);
-      }
-
-      ~ThenValueRunnable()
-      {
-        MOZ_COUNT_DTOR(ThenValueRunnable);
+        MOZ_COUNT_DTOR(ResolveRunnable);
         MOZ_ASSERT(!mThenValue);
       }
 
       NS_IMETHODIMP Run()
       {
-        PROMISE_LOG("ThenValueRunnable::Run() [this=%p]", this);
-        if (mResolveValue.isSome()) {
-          mThenValue->DoResolve(mResolveValue.ref());
-        } else {
-          mThenValue->DoReject(mRejectValue.ref());
-        }
+        PROMISE_LOG("ResolveRunnable::Run() [this=%p]", this);
+        mThenValue->DoResolve(mResolveValue);
 
         delete mThenValue;
         mThenValue = nullptr;
@@ -107,8 +96,38 @@ protected:
 
     private:
       ThenValueBase* mThenValue;
-      Maybe<ResolveValueType> mResolveValue;
-      Maybe<RejectValueType> mRejectValue;
+      ResolveValueType mResolveValue;
+    };
+
+    class RejectRunnable : public nsRunnable
+    {
+    public:
+      RejectRunnable(ThenValueBase* aThenValue, RejectValueType aRejectValue)
+        : mThenValue(aThenValue)
+        , mRejectValue(aRejectValue)
+      {
+        MOZ_COUNT_CTOR(RejectRunnable);
+      }
+
+      ~RejectRunnable()
+      {
+        MOZ_COUNT_DTOR(RejectRunnable);
+        MOZ_ASSERT(!mThenValue);
+      }
+
+      NS_IMETHODIMP Run()
+      {
+        PROMISE_LOG("RejectRunnable::Run() [this=%p]", this);
+        mThenValue->DoReject(mRejectValue);
+
+        delete mThenValue;
+        mThenValue = nullptr;
+        return NS_OK;
+      }
+
+    private:
+      ThenValueBase* mThenValue;
+      RejectValueType mRejectValue;
     };
 
     ThenValueBase(const char* aCallSite) : mCallSite(aCallSite)
@@ -119,7 +138,7 @@ protected:
     virtual void Dispatch(MediaPromise *aPromise) = 0;
 
   protected:
-    // This may only be deleted by ThenValueRunnable::Run.
+    // This may only be deleted by {Resolve,Reject}Runnable::Run.
     virtual ~ThenValueBase() { MOZ_COUNT_DTOR(ThenValueBase); }
 
     virtual void DoResolve(ResolveValueType aResolveValue) = 0;
@@ -148,8 +167,8 @@ protected:
       MOZ_ASSERT(!aPromise->IsPending());
       bool resolved = aPromise->mResolveValue.isSome();
       nsRefPtr<nsRunnable> runnable =
-        resolved ? new (typename ThenValueBase::ThenValueRunnable)(this, aPromise->mResolveValue.ref())
-                 : new (typename ThenValueBase::ThenValueRunnable)(this, aPromise->mRejectValue.ref());
+        resolved ? static_cast<nsRunnable*>(new (typename ThenValueBase::ResolveRunnable)(this, aPromise->mResolveValue.ref()))
+                 : static_cast<nsRunnable*>(new (typename ThenValueBase::RejectRunnable)(this, aPromise->mRejectValue.ref()));
       PROMISE_LOG("%s Then() call made from %s [Runnable=%p, Promise=%p, ThenValue=%p]",
                   resolved ? "Resolving" : "Rejecting", ThenValueBase::mCallSite,
                   runnable.get(), aPromise, this);
