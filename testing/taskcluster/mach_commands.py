@@ -92,14 +92,12 @@ class TryGraph(object):
         help='URL for "base" repository to clone')
     @CommandArgument('--head-repository',
         default=os.environ.get('GECKO_HEAD_REPOSITORY'),
-        required=True,
         help='URL for "head" repository to fetch revision from')
     @CommandArgument('--head-ref',
         default=os.environ.get('GECKO_HEAD_REF'),
         help='Reference (this is same as rev usually for hg)')
     @CommandArgument('--head-rev',
         default=os.environ.get('GECKO_HEAD_REV'),
-        required=True,
         help='Commit revision to use from head repository')
     @CommandArgument('--message',
         required=True,
@@ -132,14 +130,13 @@ class TryGraph(object):
             'scopes': []
         }
 
-        if params['ci'] is False:
-            graph['metadata'] = {
-                'source': 'http://todo.com/what/goes/here',
-                'owner': params['owner'],
-                # TODO: Add full mach commands to this example?
-                'description': 'Try task graph generated via ./mach trygraph',
-                'name': 'trygraph local'
-            }
+        graph['metadata'] = {
+            'source': 'http://todo.com/what/goes/here',
+            'owner': params['owner'],
+            # TODO: Add full mach commands to this example?
+            'description': 'Try task graph generated via ./mach trygraph',
+            'name': 'trygraph local'
+        }
 
         for build in job_graph:
             build_parameters = dict(parameters)
@@ -195,6 +192,12 @@ class TryGraph(object):
                     graph['scopes'].extend(test_task['task'].get('scopes', []))
 
         graph['scopes'] = list(set(graph['scopes']))
+
+        # When we are extending the graph remove extra fields...
+        if params['ci'] is True:
+            graph.pop('scopes', None)
+            graph.pop('metadata', None)
+
         print(json.dumps(graph, indent=4))
 
 @CommandProvider
