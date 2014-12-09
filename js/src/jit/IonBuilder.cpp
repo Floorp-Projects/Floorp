@@ -9124,6 +9124,12 @@ IonBuilder::testCommonGetterSetter(types::TemporaryTypeSet *types, PropertyName 
         *globalGuard = addShapeGuard(globalObj, globalShape, Bailout_ShapeGuard);
     }
 
+    if (foundProto->isNative()) {
+        Shape *propShape = foundProto->as<NativeObject>().lookupPure(name);
+        if (propShape && !propShape->configurable())
+            return true;
+    }
+
     MInstruction *wrapper = constant(ObjectValue(*foundProto));
     *guard = addShapeGuard(wrapper, lastProperty, Bailout_ShapeGuard);
     return true;
