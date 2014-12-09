@@ -244,6 +244,14 @@ parent:
      */
     RequestFocus(bool canRaise);
 
+    /**
+     * Indicate, based on the current state, that some commands are enabled and
+     * some are disabled.
+     */
+    EnableDisableCommands(nsString action,
+                          nsCString[] enabledCommands,
+                          nsCString[] disabledCommands);
+
     prio(urgent) sync GetInputContext() returns (int32_t IMEEnabled,
                                                  int32_t IMEOpen,
                                                  intptr_t NativeIMEContext);
