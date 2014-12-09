@@ -9704,6 +9704,16 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, MDefinition *obj, PropertyName
         const JSJitInfo *jitinfo = commonGetter->jitInfo();
         MInstruction *get;
         if (jitinfo->isAlwaysInSlot) {
+            // If our object is a singleton and we know the property is
+            // constant (which is true if and only if the get doesn't alias
+            // anything), we can just read the slot here and use that constant.
+            JSObject *singleton = objTypes->getSingleton();
+            if (singleton && jitinfo->aliasSet() == JSJitInfo::AliasNone) {
+                size_t slot = jitinfo->slotIndex;
+                *emitted = true;
+                return pushConstant(GetReservedSlot(singleton, slot));
+            }
+
             // We can't use MLoadFixedSlot here because it might not have the
             // right aliasing behavior; we want to alias DOM setters as needed.
             get = MGetDOMMember::New(alloc(), jitinfo, obj, guard, globalGuard);
