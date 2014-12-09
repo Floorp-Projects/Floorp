@@ -139,7 +139,7 @@ MP4Reader::~MP4Reader()
   MOZ_COUNT_DTOR(MP4Reader);
 }
 
-nsRefPtr<ShutdownPromise>
+void
 MP4Reader::Shutdown()
 {
   MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());
@@ -172,7 +172,7 @@ MP4Reader::Shutdown()
     mPlatform = nullptr;
   }
 
-  return MediaDecoderReader::Shutdown();
+  MediaDecoderReader::Shutdown();
 }
 
 void

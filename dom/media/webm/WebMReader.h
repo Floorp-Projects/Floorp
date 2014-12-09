@@ -133,7 +133,7 @@ protected:
   ~WebMReader();
 
 public:
-  virtual nsRefPtr<ShutdownPromise> Shutdown() MOZ_OVERRIDE;
+  virtual void Shutdown() MOZ_OVERRIDE;
   virtual nsresult Init(MediaDecoderReader* aCloneDonor);
   virtual nsresult ResetDecode();
   virtual bool DecodeAudioData();
