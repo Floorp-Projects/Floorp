@@ -57,6 +57,14 @@ public:
   virtual void Error(GMPErr aError) = 0;
 };
 
+#define GMP_API_VIDEO_ENCODER "encode-video"
+
+// Video encoding for a single stream. A GMP may be asked to create multiple
+// encoders concurrently.
+//
+// API name macro: GMP_API_VIDEO_ENCODER
+// Host API: GMPVideoHost
+//
 // ALL METHODS MUST BE CALLED ON THE MAIN THREAD
 class GMPVideoEncoder
 {
