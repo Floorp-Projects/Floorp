@@ -19,6 +19,36 @@ XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
 XPCOMUtils.defineLazyModuleGetter(this, "SystemAppProxy",
                                   "resource://gre/modules/SystemAppProxy.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "appsService", function() {
+  return Cc["@mozilla.org/AppsService;1"].getService(Ci.nsIAppsService);
+});
+
+let Utils = {
+  getMMFromMessage: function u_getMMFromMessage(msg) {
+    let mm;
+    try {
+      mm = msg.target.QueryInterface(Ci.nsIFrameLoaderOwner)
+                     .frameLoader.messageManager;
+    } catch(e) {
+      mm = msg.target;
+    }
+
+    return mm;
+  },
+  checkPermissionForMM: function u_checkPermissionForMM(mm, permName) {
+    let testing = false;
+    try {
+      testing = Services.prefs.getBoolPref("dom.mozInputMethod.testing");
+    } catch (e) { }
+
+    if (testing) {
+      return true;
+    }
+
+    return mm.assertPermission(permName);
+  }
+};
+
 this.Keyboard = {
   _formMM: null,      // The current web page message manager.
   _keyboardMM: null,  // The keyboard app message manager.
@@ -72,6 +102,8 @@ this.Keyboard = {
     for (let name of this._systemMessageName) {
       ppmm.addMessageListener('System:' + name, this);
     }
+
+    this.inputRegistryGlue = new InputRegistryGlue();
   },
 
   observe: function keyboardObserve(subject, topic, data) {
@@ -122,12 +154,7 @@ this.Keyboard = {
         return;
       }
 
-      try {
-        mm = msg.target.QueryInterface(Ci.nsIFrameLoaderOwner)
-                       .frameLoader.messageManager;
-      } catch(e) {
-        mm = msg.target;
-      }
+      mm = Utils.getMMFromMessage(msg);
 
       // That should never happen.
       if (!mm) {
@@ -135,16 +162,10 @@ this.Keyboard = {
         return;
       }
 
-      let testing = false;
-      try {
-        testing = Services.prefs.getBoolPref("dom.mozInputMethod.testing");
-      } catch (e) {
-      }
-
       let perm = (msg.name.indexOf("Keyboard:") === 0) ? "input"
                                                        : "input-manage";
-      if (!isKeyboardRegistration && !testing &&
-          !mm.assertPermission(perm)) {
+
+      if (!isKeyboardRegistration && !Utils.checkPermissionForMM(mm, perm)) {
         dump("Keyboard message " + msg.name +
         " from a content process with no '" + perm + "' privileges.");
         return;
@@ -361,6 +382,95 @@ this.Keyboard = {
     this._layouts = layouts;
 
     this.sendToKeyboard('Keyboard:LayoutsChange', layouts);
+  }
+};
+
+function InputRegistryGlue() {
+  this._messageId = 0;
+  this._msgMap = new Map();
+
+  ppmm.addMessageListener('InputRegistry:Add', this);
+  ppmm.addMessageListener('InputRegistry:Remove', this);
+};
+
+InputRegistryGlue.prototype.receiveMessage = function(msg) {
+  let mm = Utils.getMMFromMessage(msg);
+
+  if (!Utils.checkPermissionForMM(mm, 'input')) {
+    dump("InputRegistryGlue message " + msg.name +
+      " from a content process with no 'input' privileges.");
+    return;
+  }
+
+  switch (msg.name) {
+    case 'InputRegistry:Add':
+      this.addInput(msg, mm);
+
+      break;
+
+    case 'InputRegistry:Remove':
+      this.removeInput(msg, mm);
+
+      break;
+  }
+};
+
+InputRegistryGlue.prototype.addInput = function(msg, mm) {
+  let msgId = this._messageId++;
+  this._msgMap.set(msgId, {
+    mm: mm,
+    requestId: msg.data.requestId
+  });
+
+  let manifestURL = appsService.getManifestURLByLocalId(msg.data.appId);
+
+  SystemAppProxy.dispatchEvent({
+    type: 'inputregistry-add',
+    id: msgId,
+    manifestURL: manifestURL,
+    inputId: msg.data.inputId,
+    inputManifest: msg.data.inputManifest
+  });
+};
+
+InputRegistryGlue.prototype.removeInput = function(msg, mm) {
+  let msgId = this._messageId++;
+  this._msgMap.set(msgId, {
+    mm: mm,
+    requestId: msg.data.requestId
+  });
+
+  let manifestURL = appsService.getManifestURLByLocalId(msg.data.appId);
+
+  SystemAppProxy.dispatchEvent({
+    type: 'inputregistry-remove',
+    id: msgId,
+    manifestURL: manifestURL,
+    inputId: msg.data.inputId
+  });
+};
+
+InputRegistryGlue.prototype.returnMessage = function(detail) {
+  if (!this._msgMap.has(detail.id)) {
+    return;
+  }
+
+  let { mm, requestId } = this._msgMap.get(detail.id);
+  this._msgMap.delete(detail.id);
+
+  if (Cu.isDeadWrapper(mm)) {
+    return;
+  }
+
+  if (!('error' in detail)) {
+    mm.sendAsyncMessage('InputRegistry:Result:OK', {
+      requestId: requestId
+    });
+  } else {
+    mm.sendAsyncMessage('InputRegistry:Result:Error', {
+      error: detail.error,
+      requestId: requestId
+    });
   }
 };
 
