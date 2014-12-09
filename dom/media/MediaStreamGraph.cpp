@@ -1038,11 +1038,13 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
           if (endTicksNeeded > endTicksAvailable &&
               offset < endTicksAvailable) {
             output.AppendSlice(*audio, offset, endTicksAvailable);
-            ticksWritten += toWrite;
-            toWrite -= endTicksAvailable - offset;
+            uint32_t available = endTicksAvailable - offset;
+            ticksWritten += available;
+            toWrite -= available;
             offset = endTicksAvailable;
           }
           output.AppendNullData(toWrite);
+          ticksWritten += toWrite;
         }
         output.ApplyVolume(volume);
       }
