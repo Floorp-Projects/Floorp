@@ -94,24 +94,34 @@ class ReftestRunner(MozbuildObject):
         return files[suite]
 
     def _find_manifest(self, suite, test_file):
+        """Return a tuple of (manifest-path, filter-string) for running test_file.
+
+        test_file can be a relative path to a single test file or manifest from
+        the top source directory, an absolute path to the same, or a directory
+        containing a manifest.
+        """
         assert test_file
         path_arg = self._wrap_path_argument(test_file)
         relpath = path_arg.relpath()
 
         if os.path.isdir(path_arg.srcdir_path()):
-            return mozpack.path.join(relpath, self._manifest_file(suite))
+            return (mozpack.path.join(relpath, self._manifest_file(suite)), None)
 
         if relpath.endswith('.list'):
-            return relpath
+            return (relpath, None)
 
-        raise Exception('Running a single test is not currently supported')
+        return (self._find_manifest(suite, mozpack.path.dirname(test_file))[0],
+                mozpack.path.basename(test_file))
 
     def _make_shell_string(self, s):
         return "'%s'" % re.sub("'", r"'\''", s)
 
     def run_b2g_test(self, b2g_home=None, xre_path=None, test_file=None,
-                     suite=None, **kwargs):
+                     suite=None, filter=None, **kwargs):
         """Runs a b2g reftest.
+
+        filter is a regular expression (in JS syntax, as could be passed to the
+        RegExp constructor) to select which reftests to run from the manifest.
 
         test_file is a path to a test file. It can be a relative path from the
         top source directory, an absolute filename, or a directory containing
@@ -134,9 +144,13 @@ class ReftestRunner(MozbuildObject):
             test_file = mozpack.path.relpath(os.path.abspath(test_file),
                                              self.topsrcdir)
 
-        manifest = self._find_manifest(suite, test_file)
+        (manifest, single_file_filter) = self._find_manifest(suite, test_file)
         if not os.path.exists(mozpack.path.join(self.topsrcdir, manifest)):
             raise Exception('No manifest file was found at %s.' % manifest)
+        if single_file_filter:
+            if filter:
+                raise Exception('Cannot run single files in conjunction with --filter')
+            filter = single_file_filter
 
         # Need to chdir to reftest_dir otherwise imports fail below.
         os.chdir(self.reftest_dir)
@@ -206,6 +220,7 @@ class ReftestRunner(MozbuildObject):
         options.httpdPath = os.path.join(self.topsrcdir, 'netwerk', 'test', 'httpserver')
         options.xrePath = xre_path
         options.ignoreWindowSize = True
+        options.filter = filter
 
         # Don't enable oop for crashtest until they run oop in automation
         if suite == 'reftest':
@@ -245,9 +260,13 @@ class ReftestRunner(MozbuildObject):
         extra_args = []
 
         if test_file:
-            path = self._find_manifest(suite, test_file)
+            (path, single_file_filter) = self._find_manifest(suite, test_file)
             if not os.path.exists(mozpack.path.join(self.topsrcdir, path)):
                 raise Exception('No manifest file was found at %s.' % path)
+            if single_file_filter:
+                if filter:
+                    raise Exception('Cannot run single files in conjunction with --filter')
+                filter = single_file_filter
             env[b'TEST_PATH'] = path
         if filter:
             extra_args.extend(['--filter', self._make_shell_string(filter)])
@@ -344,7 +363,7 @@ def ReftestCommand(func):
     return func
 
 def B2GCommand(func):
-    """Decorator that adds shared command arguments to b2g mochitest commands."""
+    """Decorator that adds shared command arguments to b2g reftest commands."""
 
     busybox = CommandArgument('--busybox', default=None,
         help='Path to busybox binary to install on device')
@@ -375,6 +394,11 @@ def B2GCommand(func):
         type = int,
         help = 'Which chunk to run between 1 and --total-chunks.')
     func = thisChunk(func)
+
+    flter = CommandArgument('--filter', metavar='REGEX',
+        help='A JS regular expression to match test URLs against, to select '
+             'a subset of tests to run.')
+    func = flter(func)
 
     oop = CommandArgument('--enable-oop', action='store_true', dest='oop',
         help = 'Run tests in out-of-process mode.')

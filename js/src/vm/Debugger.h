@@ -232,6 +232,13 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
         Observing = 1
     };
 
+    // Return true if the given compartment is a debuggee of this debugger,
+    // false otherwise.
+    bool isDebuggee(const JSCompartment *compartment) const {
+        MOZ_ASSERT(compartment);
+        return compartment->isDebuggee() && debuggees.has(compartment->maybeGlobal());
+    }
+
   private:
     HeapPtrNativeObject object;         /* The Debugger object. Strong reference. */
     GlobalObjectSet debuggees;          /* Debuggee globals. Cross-compartment weak references. */
