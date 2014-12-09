@@ -44,6 +44,54 @@ private:
 };
 
 /**
+ * This class represents a set of events that can be cancelled by web content
+ * via event listeners.
+ *
+ * Each cancelable input block can be cancelled by web content, and
+ * this information is stored in the mPreventDefault flag. Because web
+ * content runs on the Gecko main thread, we cannot always wait for web content's
+ * response. Instead, there is a timeout that sets this flag in the case
+ * where web content doesn't respond in time. The mContentResponded
+ * and mContentResponseTimerExpired flags indicate which of these scenarios
+ * occurred.
+ */
+class CancelableBlockState : public InputBlockState
+{
+public:
+  CancelableBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
+                       bool aTargetConfirmed);
+
+  /**
+   * Record whether or not content cancelled this block of events.
+   * @param aPreventDefault true iff the block is cancelled.
+   * @return false if this block has already received a response from
+   *         web content, true if not.
+   */
+  bool SetContentResponse(bool aPreventDefault);
+
+  /**
+   * Record that content didn't respond in time.
+   * @return false if this block already timed out, true if not.
+   */
+  bool TimeoutContentResponse();
+
+  /**
+   * @return true iff web content cancelled this block of events.
+   */
+  bool IsDefaultPrevented() const;
+
+  /**
+   * @returns true if web content responded or timed out.
+   */
+  virtual bool IsReadyForHandling() const;
+
+private:
+  bool mPreventDefault;
+  bool mContentResponded;
+  bool mContentResponseTimerExpired;
+};
+
+/**
  * This class represents a single touch block. A touch block is
  * a set of touch events that can be cancelled by web content via
  * touch event listeners.
@@ -60,21 +108,13 @@ private:
  * dispatched to web content, a new touch block is started to hold the remaining
  * touch events, up to but not including the next touch start (or long-tap).
  *
- * Conceptually, each touch block can be cancelled by web content, and
- * this information is stored in the mPreventDefault flag. Because web
- * content runs on the Gecko main thread, we cannot always wait for web content's
- * response. Instead, there is a timeout that sets this flag in the case
- * where web content doesn't respond in time. The mContentResponded
- * and mContentResponseTimerExpired flags indicate which of these scenarios
- * occurred.
- *
  * Additionally, if touch-action is enabled, each touch block should
  * have a set of allowed touch behavior flags; one for each touch point.
  * This also requires running code on the Gecko main thread, and so may
  * be populated with some latency. The mAllowedTouchBehaviorSet and
  * mAllowedTouchBehaviors variables track this information.
  */
-class TouchBlockState : public InputBlockState
+class TouchBlockState : public CancelableBlockState
 {
 public:
   typedef uint32_t TouchBehaviorFlags;
@@ -82,18 +122,6 @@ public:
   explicit TouchBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
                            bool aTargetConfirmed);
 
-  /**
-   * Record whether or not content cancelled this block of events.
-   * @param aPreventDefault true iff the block is cancelled.
-   * @return false if this block has already received a response from
-   *         web content, true if not.
-   */
-  bool SetContentResponse(bool aPreventDefault);
-  /**
-   * Record that content didn't respond in time.
-   * @return false if this block already timed out, true if not.
-   */
-  bool TimeoutContentResponse();
   /**
    * Set the allowed touch behavior flags for this block.
    * @return false if this block already has these flags set, true if not.
@@ -109,11 +137,7 @@ public:
    * @return true iff this block has received all the information needed
    *         to properly dispatch the events in the block.
    */
-  bool IsReadyForHandling() const;
-  /**
-   * @return true iff web content cancelled this block of events.
-   */
-  bool IsDefaultPrevented() const;
+  bool IsReadyForHandling() const MOZ_OVERRIDE;
 
   /**
    * Sets a flag that indicates this input block occurred while the APZ was
@@ -176,9 +200,6 @@ public:
 private:
   nsTArray<TouchBehaviorFlags> mAllowedTouchBehaviors;
   bool mAllowedTouchBehaviorSet;
-  bool mPreventDefault;
-  bool mContentResponded;
-  bool mContentResponseTimerExpired;
   bool mDuringFastMotion;
   bool mSingleTapOccurred;
   nsTArray<MultiTouchInput> mEvents;

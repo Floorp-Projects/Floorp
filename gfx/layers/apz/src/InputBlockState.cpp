@@ -78,21 +78,17 @@ InputBlockState::IsTargetConfirmed() const
   return mTargetConfirmed;
 }
 
-TouchBlockState::TouchBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
-                                 bool aTargetConfirmed)
+CancelableBlockState::CancelableBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
+                                           bool aTargetConfirmed)
   : InputBlockState(aTargetApzc, aTargetConfirmed)
-  , mAllowedTouchBehaviorSet(false)
   , mPreventDefault(false)
   , mContentResponded(false)
   , mContentResponseTimerExpired(false)
-  , mDuringFastMotion(false)
-  , mSingleTapOccurred(false)
 {
-  TBS_LOG("Creating %p\n", this);
 }
 
 bool
-TouchBlockState::SetContentResponse(bool aPreventDefault)
+CancelableBlockState::SetContentResponse(bool aPreventDefault)
 {
   if (mContentResponded) {
     return false;
@@ -107,7 +103,7 @@ TouchBlockState::SetContentResponse(bool aPreventDefault)
 }
 
 bool
-TouchBlockState::TimeoutContentResponse()
+CancelableBlockState::TimeoutContentResponse()
 {
   if (mContentResponseTimerExpired) {
     return false;
@@ -119,6 +115,31 @@ TouchBlockState::TimeoutContentResponse()
   }
   mContentResponseTimerExpired = true;
   return true;
+}
+
+bool
+CancelableBlockState::IsDefaultPrevented() const
+{
+  MOZ_ASSERT(mContentResponded || mContentResponseTimerExpired);
+  return mPreventDefault;
+}
+
+bool
+CancelableBlockState::IsReadyForHandling() const
+{
+  if (!IsTargetConfirmed())
+    return false;
+  return mContentResponded || mContentResponseTimerExpired;
+}
+
+TouchBlockState::TouchBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
+                                 bool aTargetConfirmed)
+  : CancelableBlockState(aTargetApzc, aTargetConfirmed)
+  , mAllowedTouchBehaviorSet(false)
+  , mDuringFastMotion(false)
+  , mSingleTapOccurred(false)
+{
+  TBS_LOG("Creating %p\n", this);
 }
 
 bool
@@ -144,24 +165,15 @@ TouchBlockState::CopyAllowedTouchBehaviorsFrom(const TouchBlockState& aOther)
 bool
 TouchBlockState::IsReadyForHandling() const
 {
-  if (!IsTargetConfirmed()) {
+  if (!CancelableBlockState::IsReadyForHandling()) {
     return false;
   }
+
   // TODO: for long-tap blocks we probably don't need the touch behaviour?
   if (gfxPrefs::TouchActionEnabled() && !mAllowedTouchBehaviorSet) {
     return false;
   }
-  if (!mContentResponded && !mContentResponseTimerExpired) {
-    return false;
-  }
   return true;
-}
-
-bool
-TouchBlockState::IsDefaultPrevented() const
-{
-  MOZ_ASSERT(mContentResponded || mContentResponseTimerExpired);
-  return mPreventDefault;
 }
 
 void
