@@ -264,7 +264,7 @@ TemporaryRef<DataSourceSurface>
 CloneAligned(DataSourceSurface* aSource)
 {
   RefPtr<DataSourceSurface> copy =
-    Factory::CreateDataSourceSurface(aSource->GetSize(), aSource->GetFormat());
+    Factory::CreateDataSourceSurface(aSource->GetSize(), aSource->GetFormat(), true);
   if (copy) {
     CopyRect(aSource, copy, IntRect(IntPoint(), aSource->GetSize()), IntPoint());
   }
@@ -492,9 +492,8 @@ GetDataSurfaceInRect(SourceSurface *aSurface,
   IntRect intersectInDestSpace = intersect - aDestRect.TopLeft();
   SurfaceFormat format = aSurface ? aSurface->GetFormat() : SurfaceFormat(SurfaceFormat::B8G8R8A8);
 
-  bool clear = aEdgeMode == EDGE_MODE_NONE && !aSurfaceRect.Contains(aDestRect);
   RefPtr<DataSourceSurface> target =
-    Factory::CreateDataSourceSurface(aDestRect.Size(), format, clear);
+    Factory::CreateDataSourceSurface(aDestRect.Size(), format, true);
   if (MOZ2D_WARN_IF(!target)) {
     return nullptr;
   }
@@ -2852,7 +2851,7 @@ FilterNodeCompositeSoftware::Render(const IntRect& aRect)
   RefPtr<DataSourceSurface> start =
     GetInputDataSourceSurface(IN_COMPOSITE_IN_START, aRect, NEED_COLOR_CHANNELS);
   RefPtr<DataSourceSurface> dest =
-    Factory::CreateDataSourceSurface(aRect.Size(), SurfaceFormat::B8G8R8A8, !start);
+    Factory::CreateDataSourceSurface(aRect.Size(), SurfaceFormat::B8G8R8A8, true);
   if (MOZ2D_WARN_IF(!dest)) {
     return nullptr;
   }

@@ -23,43 +23,43 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
                                   MTableSwitch *ins);
     LTableSwitchV *newLTableSwitchV(MTableSwitch *ins);
 
-    bool visitGuardShape(MGuardShape *ins);
-    bool visitGuardObjectType(MGuardObjectType *ins);
-    bool visitPowHalf(MPowHalf *ins);
-    bool lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs,
+    void visitGuardShape(MGuardShape *ins);
+    void visitGuardObjectType(MGuardObjectType *ins);
+    void visitPowHalf(MPowHalf *ins);
+    void lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs,
                        MDefinition *rhs);
-    bool lowerForALU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir, MDefinition *input);
-    bool lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs,
+    void lowerForALU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir, MDefinition *input);
+    void lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs,
                      MDefinition *rhs);
     template<size_t Temps>
-    bool lowerForFPU(LInstructionHelper<1, 2, Temps> *ins, MDefinition *mir, MDefinition *lhs,
+    void lowerForFPU(LInstructionHelper<1, 2, Temps> *ins, MDefinition *mir, MDefinition *lhs,
                      MDefinition *rhs);
-    bool lowerForCompIx4(LSimdBinaryCompIx4 *ins, MSimdBinaryComp *mir,
+    void lowerForCompIx4(LSimdBinaryCompIx4 *ins, MSimdBinaryComp *mir,
                          MDefinition *lhs, MDefinition *rhs);
-    bool lowerForCompFx4(LSimdBinaryCompFx4 *ins, MSimdBinaryComp *mir,
+    void lowerForCompFx4(LSimdBinaryCompFx4 *ins, MSimdBinaryComp *mir,
                          MDefinition *lhs, MDefinition *rhs);
-    bool lowerForBitAndAndBranch(LBitAndAndBranch *baab, MInstruction *mir,
+    void lowerForBitAndAndBranch(LBitAndAndBranch *baab, MInstruction *mir,
                                  MDefinition *lhs, MDefinition *rhs);
-    bool visitConstant(MConstant *ins);
-    bool visitAsmJSNeg(MAsmJSNeg *ins);
-    bool lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs);
-    bool lowerDivI(MDiv *div);
-    bool lowerModI(MMod *mod);
-    bool lowerUDiv(MDiv *div);
-    bool lowerUMod(MMod *mod);
-    bool lowerUrshD(MUrsh *mir);
-    bool lowerConstantDouble(double d, MInstruction *ins);
-    bool lowerConstantFloat32(float d, MInstruction *ins);
-    bool lowerTruncateDToInt32(MTruncateToInt32 *ins);
-    bool lowerTruncateFToInt32(MTruncateToInt32 *ins);
-    bool visitForkJoinGetSlice(MForkJoinGetSlice *ins);
-    bool visitSimdTernaryBitwise(MSimdTernaryBitwise *ins);
-    bool visitSimdSplatX4(MSimdSplatX4 *ins);
-    bool visitSimdValueX4(MSimdValueX4 *ins);
-    bool visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement *ins);
-    bool visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop *ins);
-    bool visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *ins);
-    bool visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins);
+    void visitConstant(MConstant *ins);
+    void visitAsmJSNeg(MAsmJSNeg *ins);
+    void lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs);
+    void lowerDivI(MDiv *div);
+    void lowerModI(MMod *mod);
+    void lowerUDiv(MDiv *div);
+    void lowerUMod(MMod *mod);
+    void lowerUrshD(MUrsh *mir);
+    void lowerConstantDouble(double d, MInstruction *ins);
+    void lowerConstantFloat32(float d, MInstruction *ins);
+    void lowerTruncateDToInt32(MTruncateToInt32 *ins);
+    void lowerTruncateFToInt32(MTruncateToInt32 *ins);
+    void visitForkJoinGetSlice(MForkJoinGetSlice *ins);
+    void visitSimdTernaryBitwise(MSimdTernaryBitwise *ins);
+    void visitSimdSplatX4(MSimdSplatX4 *ins);
+    void visitSimdValueX4(MSimdValueX4 *ins);
+    void visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement *ins);
+    void visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop *ins);
+    void visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *ins);
+    void visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins);
 };
 
 } // namespace jit

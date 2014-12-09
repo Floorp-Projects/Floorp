@@ -530,7 +530,7 @@ private:
   // New fields from now on should be made private and old fields should
   // be refactored to be private.
 
-  // Whether or not this frame may have a touch listeners.
+  // Whether or not this frame may have touch or scroll wheel listeners.
   bool mMayHaveTouchListeners;
 
   // Whether or not this frame may have a touch caret.

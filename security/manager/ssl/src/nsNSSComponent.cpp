@@ -718,6 +718,37 @@ nsNSSComponent::UseWeakCiphersOnSocket(PRFileDesc* fd)
   }
 }
 
+// This function will convert from pref values like 0, 1, ...
+// to the internal values of SSL_LIBRARY_VERSION_3_0,
+// SSL_LIBRARY_VERSION_TLS_1_0, ...
+/*static*/ void
+nsNSSComponent::FillTLSVersionRange(SSLVersionRange& rangeOut,
+                                    uint32_t minFromPrefs,
+                                    uint32_t maxFromPrefs,
+                                    SSLVersionRange defaults)
+{
+  rangeOut = defaults;
+  // determine what versions are supported
+  SSLVersionRange range;
+  if (SSL_VersionRangeGetSupported(ssl_variant_stream, &range)
+        != SECSuccess) {
+    return;
+  }
+
+  // convert min/maxFromPrefs to the internal representation
+  minFromPrefs += SSL_LIBRARY_VERSION_3_0;
+  maxFromPrefs += SSL_LIBRARY_VERSION_3_0;
+  // if min/maxFromPrefs are invalid, use defaults
+  if (minFromPrefs > maxFromPrefs ||
+      minFromPrefs < range.min || maxFromPrefs > range.max) {
+    return;
+  }
+
+  // fill out rangeOut
+  rangeOut.min = (uint16_t) minFromPrefs;
+  rangeOut.max = (uint16_t) maxFromPrefs;
+}
+
 static const int32_t OCSP_ENABLED_DEFAULT = 1;
 static const bool REQUIRE_SAFE_NEGOTIATION_DEFAULT = false;
 static const bool ALLOW_UNRESTRICTED_RENEGO_DEFAULT = false;
@@ -876,29 +907,26 @@ nsresult
 nsNSSComponent::setEnabledTLSVersions()
 {
   // keep these values in sync with security-prefs.js
-  static const int32_t PSM_DEFAULT_MIN_TLS_VERSION = 1;
-  static const int32_t PSM_DEFAULT_MAX_TLS_VERSION = 3;
-
-  int32_t minVersion = Preferences::GetInt("security.tls.version.min",
-                                           PSM_DEFAULT_MIN_TLS_VERSION);
-  int32_t maxVersion = Preferences::GetInt("security.tls.version.max",
-                                           PSM_DEFAULT_MAX_TLS_VERSION);
-
   // 0 means SSL 3.0, 1 means TLS 1.0, 2 means TLS 1.1, etc.
-  minVersion += SSL_LIBRARY_VERSION_3_0;
-  maxVersion += SSL_LIBRARY_VERSION_3_0;
+  static const uint32_t PSM_DEFAULT_MIN_TLS_VERSION = 1;
+  static const uint32_t PSM_DEFAULT_MAX_TLS_VERSION = 3;
 
-  SSLVersionRange range = { (uint16_t) minVersion, (uint16_t) maxVersion };
+  uint32_t minFromPrefs = Preferences::GetUint("security.tls.version.min",
+                                               PSM_DEFAULT_MIN_TLS_VERSION);
+  uint32_t maxFromPrefs = Preferences::GetUint("security.tls.version.max",
+                                               PSM_DEFAULT_MAX_TLS_VERSION);
 
-  if (minVersion != (int32_t) range.min || // prevent truncation
-      maxVersion != (int32_t) range.max || // prevent truncation
-      SSL_VersionRangeSetDefault(ssl_variant_stream, &range) != SECSuccess) {
-    range.min = SSL_LIBRARY_VERSION_3_0 + PSM_DEFAULT_MIN_TLS_VERSION;
-    range.max = SSL_LIBRARY_VERSION_3_0 + PSM_DEFAULT_MAX_TLS_VERSION;
-    if (SSL_VersionRangeSetDefault(ssl_variant_stream, &range)
-          != SECSuccess) {
-      return NS_ERROR_UNEXPECTED;
-    }
+  SSLVersionRange defaults = {
+    SSL_LIBRARY_VERSION_3_0 + PSM_DEFAULT_MIN_TLS_VERSION,
+    SSL_LIBRARY_VERSION_3_0 + PSM_DEFAULT_MAX_TLS_VERSION
+  };
+  SSLVersionRange filledInRange;
+  FillTLSVersionRange(filledInRange, minFromPrefs, maxFromPrefs, defaults);
+
+  SECStatus srv =
+    SSL_VersionRangeSetDefault(ssl_variant_stream, &filledInRange);
+  if (srv != SECSuccess) {
+    return NS_ERROR_FAILURE;
   }
 
   return NS_OK;

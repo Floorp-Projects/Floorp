@@ -13,7 +13,6 @@
 #include "nsIPluginInstanceOwner.h"
 #include "nsIURI.h"
 #include "nsIChannel.h"
-#include "nsInterfaceHashtable.h"
 #include "nsHashKeys.h"
 #include <prinrval.h>
 #include "js/TypeDecls.h"
