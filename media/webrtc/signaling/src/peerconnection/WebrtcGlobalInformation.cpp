@@ -25,15 +25,18 @@
 #include "PeerConnectionImpl.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
+using sipcc::PeerConnectionImpl;
+using sipcc::PeerConnectionCtx;
+using sipcc::RTCStatsQuery;
+
 static const char* logTag = "WebrtcGlobalInformation";
 
 namespace mozilla {
-
 namespace dom {
 
 typedef Vector<nsAutoPtr<RTCStatsQuery>> RTCStatsQueries;
 
-static PeerConnectionCtx* GetPeerConnectionCtx()
+static sipcc::PeerConnectionCtx* GetPeerConnectionCtx()
 {
   if(PeerConnectionCtx::isActive()) {
     MOZ_ASSERT(PeerConnectionCtx::GetInstance());
@@ -497,7 +500,7 @@ static void GetStatsForLongTermStorage_s(
 }
 
 void WebrtcGlobalInformation::StoreLongTermICEStatistics(
-    PeerConnectionImpl& aPc) {
+    sipcc::PeerConnectionImpl& aPc) {
   Telemetry::Accumulate(Telemetry::WEBRTC_ICE_FINAL_CONNECTION_STATE,
                         static_cast<uint32_t>(aPc.IceConnectionState()));
 

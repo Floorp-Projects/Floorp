@@ -7,7 +7,7 @@
 #define CODEC_CONFIG_H_
 
 #include <string>
-#include <vector>
+#include "ccsdp_rtcp_fb.h"
 
 namespace mozilla {
 
@@ -76,11 +76,7 @@ public:
    */
   int mType; // payload type
   std::string mName;
-
-  std::vector<std::string> mAckFbTypes;
-  std::vector<std::string> mNackFbTypes;
-  std::vector<std::string> mCcmFbTypes;
-
+  uint32_t mRtcpFbTypes;
   unsigned int mMaxFrameSize;
   unsigned int mMaxFrameRate;
   unsigned int mMaxMBPS;    // in macroblocks-per-second
@@ -95,11 +91,13 @@ public:
 
   VideoCodecConfig(int type,
                    std::string name,
+                   int rtcpFbTypes,
                    unsigned int max_fs = 0,
                    unsigned int max_fr = 0,
                    const struct VideoCodecConfigH264 *h264 = nullptr) :
     mType(type),
     mName(name),
+    mRtcpFbTypes(rtcpFbTypes),
     mMaxFrameSize(max_fs), // may be overridden
     mMaxFrameRate(max_fr),
     mMaxMBPS(0),
@@ -123,36 +121,19 @@ public:
     }
   }
 
-  // Nothing seems to use this right now. Do we intend to support this
-  // someday?
-  bool RtcpFbAckIsSet(const std::string& type) const
+  bool RtcpFbIsSet(sdp_rtcp_fb_nack_type_e type) const
   {
-    for (auto i = mAckFbTypes.begin(); i != mAckFbTypes.end(); ++i) {
-      if (*i == type) {
-        return true;
-      }
-    }
-    return false;
+    return mRtcpFbTypes & sdp_rtcp_fb_nack_to_bitmap(type);
   }
 
-  bool RtcpFbNackIsSet(const std::string& type) const
+  bool RtcpFbIsSet(sdp_rtcp_fb_ack_type_e type) const
   {
-    for (auto i = mNackFbTypes.begin(); i != mNackFbTypes.end(); ++i) {
-      if (*i == type) {
-        return true;
-      }
-    }
-    return false;
+    return mRtcpFbTypes & sdp_rtcp_fb_ack_to_bitmap(type);
   }
 
-  bool RtcpFbCcmIsSet(const std::string& type) const
+  bool RtcpFbIsSet(sdp_rtcp_fb_ccm_type_e type) const
   {
-    for (auto i = mCcmFbTypes.begin(); i != mCcmFbTypes.end(); ++i) {
-      if (*i == type) {
-        return true;
-      }
-    }
-    return false;
+    return mRtcpFbTypes & sdp_rtcp_fb_ccm_to_bitmap(type);
   }
 };
 }
