@@ -199,10 +199,7 @@ add_task(function *testMigration() {
     Assert.ok(!haveStartedSentinel, "haven't written a sentinel yet");
 
     // sync should be blocked from continuing
-// (This is waiting on bug 1019408)
-/**
     Assert.ok(Service.scheduler.isBlocked, "sync is blocked.")
-**/
 
     wasWaiting = true;
     throw ex;
@@ -227,10 +224,7 @@ add_task(function *testMigration() {
 
   // The migration is now going to run to completion.
   // sync should still be "blocked"
-// (This is waiting on bug 1019408)
-/**
   Assert.ok(Service.scheduler.isBlocked, "sync is blocked.");
-**/
 
   // We should see the migration sentinel written and it should return true.
 // (This is waiting on bug 1017433)
