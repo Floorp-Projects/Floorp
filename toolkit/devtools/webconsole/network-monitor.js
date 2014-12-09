@@ -63,9 +63,7 @@ exports.NetworkResponseListener = NetworkResponseListener;
 NetworkResponseListener.prototype = {
   QueryInterface:
     XPCOMUtils.generateQI([Ci.nsIStreamListener, Ci.nsIInputStreamCallback,
-                           Ci.nsIRequestObserver, Ci.nsIInterfaceRequestor,
-                           Ci.nsISupports]),
-  getInterface: XPCOMUtils.generateQI([Ci.nsIProgressEventSink]),
+                           Ci.nsIRequestObserver, Ci.nsISupports]),
 
   /**
    * This NetworkResponseListener tracks the NetworkMonitor.openResponses object
@@ -96,14 +94,9 @@ NetworkResponseListener.prototype = {
   receivedData: null,
 
   /**
-   * The uncompressed, decoded response body size.
+   * The network response body size.
    */
   bodySize: null,
-
-  /**
-   * Response body size on the wire, potentially compressed / encoded.
-   */
-  transferredSize: null,
 
   /**
    * The nsIRequest we are started for.
@@ -183,18 +176,6 @@ NetworkResponseListener.prototype = {
     this._findOpenResponse();
     this.sink.outputStream.close();
   },
-
-  // nsIProgressEventSink implementation
-
-  /**
-   * Handle progress event as data is transferred.  This is used to record the
-   * size on the wire, which may be compressed / encoded.
-   */
-  onProgress: function(request, context, progress, progressMax) {
-    this.transferredSize = progress;
-  },
-
-  onStatus: function () {},
 
   /**
    * Find the open response object associated to the current request. The
@@ -278,7 +259,6 @@ NetworkResponseListener.prototype = {
     };
 
     response.size = response.text.length;
-    response.transferredSize = this.transferredSize;
 
     try {
       response.mimeType = this.request.contentType;
@@ -299,7 +279,6 @@ NetworkResponseListener.prototype = {
     this.httpActivity.owner.
       addResponseContent(response, this.httpActivity.discardResponseBody);
 
-    this.httpActivity.channel.notificationCallbacks = null;
     this.httpActivity.channel = null;
     this.httpActivity.owner = null;
     this.httpActivity = null;
@@ -801,8 +780,6 @@ NetworkMonitor.prototype = {
     let originalListener = channel.setNewListener(tee);
 
     tee.init(originalListener, sink.outputStream, newListener);
-
-    channel.notificationCallbacks = newListener;
   },
 
   /**
