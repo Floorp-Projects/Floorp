@@ -236,35 +236,17 @@ MediaSourceReader::OnNotDecoded(MediaData::Type aType, NotDecodedReason aReason)
   GetCallback()->OnNotDecoded(aType, WAITING_FOR_DATA);
 }
 
-nsRefPtr<ShutdownPromise>
+void
 MediaSourceReader::Shutdown()
 {
-  MOZ_ASSERT(mMediaSourceShutdownPromise.IsEmpty());
-  nsRefPtr<ShutdownPromise> p = mMediaSourceShutdownPromise.Ensure(__func__);
-
-  ContinueShutdown(true);
-  return p;
-}
-
-void
-MediaSourceReader::ContinueShutdown(bool aSuccess)
-{
-  MOZ_ASSERT(aSuccess);
-  if (mTrackBuffers.Length()) {
-    mTrackBuffers[0]->Shutdown()->Then(GetTaskQueue(), __func__, this,
-                                       &MediaSourceReader::ContinueShutdown,
-                                       &MediaSourceReader::ContinueShutdown);
-    mShutdownTrackBuffers.AppendElement(mTrackBuffers[0]);
-    mTrackBuffers.RemoveElementAt(0);
-    return;
+  MediaDecoderReader::Shutdown();
+  for (uint32_t i = 0; i < mTrackBuffers.Length(); ++i) {
+    mTrackBuffers[i]->Shutdown();
   }
-
   mAudioTrack = nullptr;
   mAudioReader = nullptr;
   mVideoTrack = nullptr;
   mVideoReader = nullptr;
-
-  MediaDecoderReader::Shutdown()->ChainTo(mMediaSourceShutdownPromise.Steal(), __func__);
 }
 
 void
@@ -277,12 +259,11 @@ MediaSourceReader::BreakCycles()
   MOZ_ASSERT(!mAudioReader);
   MOZ_ASSERT(!mVideoTrack);
   MOZ_ASSERT(!mVideoReader);
-  MOZ_ASSERT(!mTrackBuffers.Length());
 
-  for (uint32_t i = 0; i < mShutdownTrackBuffers.Length(); ++i) {
-    mShutdownTrackBuffers[i]->BreakCycles();
+  for (uint32_t i = 0; i < mTrackBuffers.Length(); ++i) {
+    mTrackBuffers[i]->BreakCycles();
   }
-  mShutdownTrackBuffers.Clear();
+  mTrackBuffers.Clear();
 }
 
 already_AddRefed<MediaDecoderReader>

@@ -344,11 +344,11 @@ MediaCodecReader::ReleaseMediaResources()
   ReleaseCriticalResources();
 }
 
-nsRefPtr<ShutdownPromise>
+void
 MediaCodecReader::Shutdown()
 {
   ReleaseResources();
-  return MediaDecoderReader::Shutdown();
+  MediaDecoderReader::Shutdown();
 }
 
 void

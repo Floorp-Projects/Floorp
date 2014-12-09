@@ -8,7 +8,6 @@ MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 EXPORTS += [
     'AsyncEventRunner.h',
     'MediaSourceDecoder.h',
-    'MediaSourceReader.h',
 ]
 
 EXPORTS.mozilla.dom += [

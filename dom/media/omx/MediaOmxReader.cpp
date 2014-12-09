@@ -175,20 +175,17 @@ void MediaOmxReader::ReleaseDecoder()
   mOmxDecoder.clear();
 }
 
-nsRefPtr<ShutdownPromise>
-MediaOmxReader::Shutdown()
+void MediaOmxReader::Shutdown()
 {
   nsCOMPtr<nsIRunnable> cancelEvent =
     NS_NewRunnableMethod(this, &MediaOmxReader::CancelProcessCachedData);
   NS_DispatchToMainThread(cancelEvent);
 
-  nsRefPtr<ShutdownPromise> p = MediaDecoderReader::Shutdown();
+  MediaDecoderReader::Shutdown();
 
   nsCOMPtr<nsIRunnable> event =
     NS_NewRunnableMethod(this, &MediaOmxReader::ReleaseDecoder);
   NS_DispatchToMainThread(event);
-
-  return p;
 }
 
 bool MediaOmxReader::IsWaitingMediaResources()
