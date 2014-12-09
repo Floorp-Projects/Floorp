@@ -96,6 +96,9 @@ if __name__ == '__main__':
     parser.add_argument("--upload-output", required=True,
                         action="store", dest="upload_output",
                         help="Path to the text output of 'make upload'")
+    parser.add_argument("--upload-files", required=True, nargs="+",
+                        action="store", dest="upload_files",
+                        help="List of files to be uploaded.")
     args = parser.parse_args()
 
     json_data = getMarProperties(args.complete_mar_file)
@@ -111,6 +114,8 @@ if __name__ == '__main__':
             # Set partialInfo to be a collection of the partial mar properties
             # useful for balrog.
             json_data['partialInfo'] = getPartialInfo(json_data)
+
+    json_data['uploadFiles'] = args.upload_files
 
     with open('mach_build_properties.json', 'w') as outfile:
         json.dump(json_data, outfile, indent=4)

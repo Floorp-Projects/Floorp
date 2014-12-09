@@ -12,6 +12,10 @@ endif
 endif
 
 include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
+include $(topsrcdir)/toolkit/mozapps/installer/upload-files.mk
+
+# Clear out DIST_FILES if it was set by upload-files.mk (for Android builds)
+DIST_FILES =
 
 # Log file from the 'make upload' step. We need this to parse out the URLs of
 # the uploaded files.
@@ -86,7 +90,7 @@ automation/l10n-check: automation/pretty-l10n-check
 automation/update-packaging: automation/pretty-update-packaging
 
 automation/build: $(addprefix automation/,$(MOZ_AUTOMATION_TIERS))
-	$(PYTHON) $(topsrcdir)/build/gen_mach_buildprops.py --complete-mar-file $(DIST)/$(COMPLETE_MAR) $(addprefix --partial-mar-file ,$(wildcard $(DIST)/$(PARTIAL_MAR))) --upload-output $(AUTOMATION_UPLOAD_OUTPUT)
+	$(PYTHON) $(topsrcdir)/build/gen_mach_buildprops.py --complete-mar-file $(DIST)/$(COMPLETE_MAR) $(addprefix --partial-mar-file ,$(wildcard $(DIST)/$(PARTIAL_MAR))) --upload-output $(AUTOMATION_UPLOAD_OUTPUT) --upload-files $(abspath $(UPLOAD_FILES))
 
 # We need the log from make upload to grep it for urls in order to set
 # properties.
