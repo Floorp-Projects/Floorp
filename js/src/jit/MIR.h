@@ -412,7 +412,7 @@ class MDefinition : public MNode
 
     virtual Opcode op() const = 0;
     virtual const char *opName() const = 0;
-    virtual bool accept(MDefinitionVisitor *visitor) = 0;
+    virtual void accept(MDefinitionVisitor *visitor) = 0;
 
     void printName(FILE *fp) const;
     static void PrintOpcodeName(FILE *fp, Opcode op);
@@ -903,8 +903,8 @@ class MInstruction
     const char *opName() const {                                            \
         return #opcode;                                                     \
     }                                                                       \
-    bool accept(MDefinitionVisitor *visitor) {                              \
-        return visitor->visit##opcode(this);                                \
+    void accept(MDefinitionVisitor *visitor) {                              \
+        visitor->visit##opcode(this);                                       \
     }                                                                       \
     virtual TypePolicy *typePolicy();                                       \
     virtual MIRType typePolicySpecialization();

@@ -14,27 +14,23 @@
 using namespace js;
 using namespace js::jit;
 
-bool
+void
 LIRGeneratorX64::useBox(LInstruction *lir, size_t n, MDefinition *mir,
                         LUse::Policy policy, bool useAtStart)
 {
     MOZ_ASSERT(mir->type() == MIRType_Value);
 
-    if (!ensureDefined(mir))
-        return false;
+    ensureDefined(mir);
     lir->setOperand(n, LUse(mir->virtualRegister(), policy, useAtStart));
-    return true;
 }
 
-bool
+void
 LIRGeneratorX64::useBoxFixed(LInstruction *lir, size_t n, MDefinition *mir, Register reg1, Register)
 {
     MOZ_ASSERT(mir->type() == MIRType_Value);
 
-    if (!ensureDefined(mir))
-        return false;
+    ensureDefined(mir);
     lir->setOperand(n, LUse(reg1, mir->virtualRegister()));
-    return true;
 }
 
 LAllocation
@@ -61,23 +57,26 @@ LIRGeneratorX64::tempToUnbox()
     return temp();
 }
 
-bool
+void
 LIRGeneratorX64::visitBox(MBox *box)
 {
     MDefinition *opd = box->getOperand(0);
 
     // If the operand is a constant, emit near its uses.
-    if (opd->isConstant() && box->canEmitAtUses())
-        return emitAtUses(box);
+    if (opd->isConstant() && box->canEmitAtUses()) {
+        emitAtUses(box);
+        return;
+    }
 
-    if (opd->isConstant())
-        return define(new(alloc()) LValue(opd->toConstant()->value()), box, LDefinition(LDefinition::BOX));
-
-    LBox *ins = new(alloc()) LBox(opd->type(), useRegister(opd));
-    return define(ins, box, LDefinition(LDefinition::BOX));
+    if (opd->isConstant()) {
+        define(new(alloc()) LValue(opd->toConstant()->value()), box, LDefinition(LDefinition::BOX));
+    } else {
+        LBox *ins = new(alloc()) LBox(opd->type(), useRegister(opd));
+        define(ins, box, LDefinition(LDefinition::BOX));
+    }
 }
 
-bool
+void
 LIRGeneratorX64::visitUnbox(MUnbox *unbox)
 {
     MDefinition *box = unbox->getOperand(0);
@@ -94,13 +93,13 @@ LIRGeneratorX64::visitUnbox(MUnbox *unbox)
         lir = new(alloc()) LUnbox(useAtStart(box));
     }
 
-    if (unbox->fallible() && !assignSnapshot(lir, unbox->bailoutKind()))
-        return false;
+    if (unbox->fallible())
+        assignSnapshot(lir, unbox->bailoutKind());
 
-    return define(lir, unbox);
+    define(lir, unbox);
 }
 
-bool
+void
 LIRGeneratorX64::visitReturn(MReturn *ret)
 {
     MDefinition *opd = ret->getOperand(0);
@@ -108,13 +107,13 @@ LIRGeneratorX64::visitReturn(MReturn *ret)
 
     LReturn *ins = new(alloc()) LReturn;
     ins->setOperand(0, useFixed(opd, JSReturnReg));
-    return add(ins);
+    add(ins);
 }
 
-bool
+void
 LIRGeneratorX64::defineUntypedPhi(MPhi *phi, size_t lirIndex)
 {
-    return defineTypedPhi(phi, lirIndex);
+    defineTypedPhi(phi, lirIndex);
 }
 
 void
@@ -123,23 +122,23 @@ LIRGeneratorX64::lowerUntypedPhiInput(MPhi *phi, uint32_t inputPosition, LBlock 
     lowerTypedPhiInput(phi, inputPosition, block, lirIndex);
 }
 
-bool
+void
 LIRGeneratorX64::visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble *ins)
 {
     MOZ_ASSERT(ins->input()->type() == MIRType_Int32);
     LAsmJSUInt32ToDouble *lir = new(alloc()) LAsmJSUInt32ToDouble(useRegisterAtStart(ins->input()));
-    return define(lir, ins);
+    define(lir, ins);
 }
 
-bool
+void
 LIRGeneratorX64::visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32 *ins)
 {
     MOZ_ASSERT(ins->input()->type() == MIRType_Int32);
     LAsmJSUInt32ToFloat32 *lir = new(alloc()) LAsmJSUInt32ToFloat32(useRegisterAtStart(ins->input()));
-    return define(lir, ins);
+    define(lir, ins);
 }
 
-bool
+void
 LIRGeneratorX64::visitAsmJSLoadHeap(MAsmJSLoadHeap *ins)
 {
     MDefinition *ptr = ins->ptr();
@@ -154,10 +153,10 @@ LIRGeneratorX64::visitAsmJSLoadHeap(MAsmJSLoadHeap *ins)
                            ? useRegisterAtStart(ptr)
                            : useRegisterOrNonNegativeConstantAtStart(ptr);
 
-    return define(new(alloc()) LAsmJSLoadHeap(ptrAlloc), ins);
+    define(new(alloc()) LAsmJSLoadHeap(ptrAlloc), ins);
 }
 
-bool
+void
 LIRGeneratorX64::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
 {
     MDefinition *ptr = ins->ptr();
@@ -193,16 +192,16 @@ LIRGeneratorX64::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
         MOZ_CRASH("unexpected array type");
     }
 
-    return add(lir, ins);
+    add(lir, ins);
 }
 
-bool
+void
 LIRGeneratorX64::visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins)
 {
-    return define(new(alloc()) LAsmJSLoadFuncPtr(useRegister(ins->index()), temp()), ins);
+    define(new(alloc()) LAsmJSLoadFuncPtr(useRegister(ins->index()), temp()), ins);
 }
 
-bool
+void
 LIRGeneratorX64::visitSubstr(MSubstr *ins)
 {
     LSubstr *lir = new (alloc()) LSubstr(useRegister(ins->string()),
@@ -211,10 +210,11 @@ LIRGeneratorX64::visitSubstr(MSubstr *ins)
                                          temp(),
                                          temp(),
                                          tempByteOpRegister());
-    return define(lir, ins) && assignSafepoint(lir, ins);
+    define(lir, ins);
+    assignSafepoint(lir, ins);
 }
 
-bool
+void
 LIRGeneratorX64::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins)
 {
     MOZ_CRASH("NYI");

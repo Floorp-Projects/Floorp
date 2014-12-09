@@ -14,42 +14,43 @@
 using namespace js;
 using namespace jit;
 
-bool
+void
 LIRGeneratorShared::visitConstant(MConstant *ins)
 {
     const Value &v = ins->value();
     switch (ins->type()) {
       case MIRType_Boolean:
-        return define(new(alloc()) LInteger(v.toBoolean()), ins);
+        define(new(alloc()) LInteger(v.toBoolean()), ins);
+        break;
       case MIRType_Int32:
-        return define(new(alloc()) LInteger(v.toInt32()), ins);
+        define(new(alloc()) LInteger(v.toInt32()), ins);
+        break;
       case MIRType_String:
-        return define(new(alloc()) LPointer(v.toString()), ins);
+        define(new(alloc()) LPointer(v.toString()), ins);
+        break;
       case MIRType_Symbol:
-        return define(new(alloc()) LPointer(v.toSymbol()), ins);
+        define(new(alloc()) LPointer(v.toSymbol()), ins);
+        break;
       case MIRType_Object:
-        return define(new(alloc()) LPointer(&v.toObject()), ins);
+        define(new(alloc()) LPointer(&v.toObject()), ins);
+        break;
       default:
         // Constants of special types (undefined, null) should never flow into
         // here directly. Operations blindly consuming them require a Box.
-        MOZ_ASSERT(!"unexpected constant type");
-        return false;
+        MOZ_CRASH("unexpected constant type");
     }
 }
 
-bool
+void
 LIRGeneratorShared::defineTypedPhi(MPhi *phi, size_t lirIndex)
 {
     LPhi *lir = current->getPhi(lirIndex);
 
     uint32_t vreg = getVirtualRegister();
-    if (vreg >= MAX_VIRTUAL_REGISTERS)
-        return false;
 
     phi->setVirtualRegister(vreg);
     lir->setDef(0, LDefinition(vreg, LDefinition::TypeFrom(phi->type())));
     annotate(lir);
-    return true;
 }
 
 void
@@ -213,7 +214,7 @@ LIRGeneratorShared::assignSnapshot(LInstruction *ins, BailoutKind kind)
     return true;
 }
 
-bool
+void
 LIRGeneratorShared::assignSafepoint(LInstruction *ins, MInstruction *mir, BailoutKind kind)
 {
     MOZ_ASSERT(!osiPoint_);
@@ -223,11 +224,14 @@ LIRGeneratorShared::assignSafepoint(LInstruction *ins, MInstruction *mir, Bailou
 
     MResumePoint *mrp = mir->resumePoint() ? mir->resumePoint() : lastResumePoint_;
     LSnapshot *postSnapshot = buildSnapshot(ins, mrp, kind);
-    if (!postSnapshot)
-        return false;
+    if (!postSnapshot) {
+        gen->abort("buildSnapshot failed");
+        return;
+    }
 
     osiPoint_ = new(alloc()) LOsiPoint(ins->safepoint(), postSnapshot);
 
-    return lirGraph_.noteNeedsSafepoint(ins);
+    if (!lirGraph_.noteNeedsSafepoint(ins))
+        gen->abort("noteNeedsSafepoint failed");
 }
 
