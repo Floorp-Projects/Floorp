@@ -1680,7 +1680,10 @@ StopTimingMutator(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     double mutator_ms, gc_ms;
-    cx->runtime()->gc.stats.stopTimingMutator(mutator_ms, gc_ms);
+    if (!cx->runtime()->gc.stats.stopTimingMutator(mutator_ms, gc_ms)) {
+        JS_ReportError(cx, "stopTimingMutator called when not timing the mutator");
+        return false;
+    }
     double total_ms = mutator_ms + gc_ms;
     if (total_ms > 0) {
         fprintf(gOutFile, "Mutator: %.3fms (%.1f%%), GC: %.3fms (%.1f%%)\n",
