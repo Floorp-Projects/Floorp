@@ -258,7 +258,10 @@ loop.contacts = (function(_, mozL10n) {
   });
 
   const ContactsList = React.createClass({displayName: 'ContactsList',
-    mixins: [React.addons.LinkedStateMixin],
+    mixins: [
+      React.addons.LinkedStateMixin,
+      loop.shared.mixins.WindowCloseMixin
+    ],
 
     /**
      * Contacts collection object
@@ -435,11 +438,13 @@ loop.contacts = (function(_, mozL10n) {
         case "video-call":
           if (!contact.blocked) {
             navigator.mozLoop.calls.startDirectCall(contact, CALL_TYPES.AUDIO_VIDEO);
+            this.closeWindow();
           }
           break;
         case "audio-call":
           if (!contact.blocked) {
             navigator.mozLoop.calls.startDirectCall(contact, CALL_TYPES.AUDIO_ONLY);
+            this.closeWindow();
           }
           break;
         default:
