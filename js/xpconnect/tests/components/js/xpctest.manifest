@@ -19,4 +19,7 @@ contract @mozilla.org/js/xpc/test/js/InterfaceB;1 {ff528c3a-2410-46de-acaa-449aa
 component {90ec5c9e-f6da-406b-9a38-14d00f59db76} xpctest_interfaces.js
 contract @mozilla.org/js/xpc/test/js/TestInterfaceAll;1 {90ec5c9e-f6da-406b-9a38-14d00f59db76}
 
+component {38dd78aa-467f-4fad-8dcf-4383a743e235} xpctest_returncode_child.js
+contract @mozilla.org/js/xpc/test/js/ReturnCodeChild;1 {38dd78aa-467f-4fad-8dcf-4383a743e235}
+
 interfaces xpctest.xpt

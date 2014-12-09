@@ -10,6 +10,7 @@ JS_FILES := \
   xpctest_bug809674.js \
   xpctest_interfaces.js \
   xpctest_params.js \
+  xpctest_returncode_child.js \
   xpctest.manifest \
   $(NULL)
 JS_DEST = $(testxpcobjdir)/$(componentdir)
