@@ -14,6 +14,8 @@
 #include "mozilla/Base64.h"
 #include "nsIRandomGenerator.h"
 #include "nsIServiceManager.h"
+#include "MediaTaskQueue.h"
+
 #include <stdint.h>
 
 namespace mozilla {
@@ -269,5 +271,24 @@ GenerateRandomPathName(nsCString& aOutSalt, uint32_t aLength)
   return NS_OK;
 }
 
+class CreateTaskQueueTask : public nsRunnable {
+public:
+  NS_IMETHOD Run() {
+    MOZ_ASSERT(NS_IsMainThread());
+    mTaskQueue = new MediaTaskQueue(GetMediaDecodeThreadPool());
+    return NS_OK;
+  }
+  nsRefPtr<MediaTaskQueue> mTaskQueue;
+};
+
+already_AddRefed<MediaTaskQueue>
+CreateMediaDecodeTaskQueue()
+{
+  // We must create the MediaTaskQueue/SharedThreadPool on the main thread.
+  nsRefPtr<CreateTaskQueueTask> t(new CreateTaskQueueTask());
+  nsresult rv = NS_DispatchToMainThread(t, NS_DISPATCH_SYNC);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+  return t->mTaskQueue.forget();
+}
 
 } // end namespace mozilla
