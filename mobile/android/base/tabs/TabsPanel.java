@@ -30,6 +30,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewStub;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -88,6 +89,7 @@ public class TabsPanel extends LinearLayout
     private IconTabWidget mTabWidget;
     private static ImageButton mMenuButton;
     private static ImageButton mAddTab;
+    private ImageButton mNavBackButton;
 
     private Panel mCurrentPanel;
     private boolean mIsSideBar;
@@ -163,6 +165,17 @@ public class TabsPanel extends LinearLayout
                 showMenu();
             }
         });
+
+        if(NewTabletUI.isEnabled(getContext())) {
+            ViewStub backButtonStub = (ViewStub) findViewById(R.id.nav_back_stub);
+            mNavBackButton = (ImageButton) backButtonStub.inflate( );
+            mNavBackButton.setOnClickListener(new Button.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    mActivity.onBackPressed();
+                }
+            });
+        }
     }
 
     public void showMenu() {
