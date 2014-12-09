@@ -193,6 +193,11 @@ nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
   psd->mIEnd = aICoord + aISize;
   mContainerWidth = aContainerWidth;
 
+  PerFrameData* pfd = NewPerFrameData(mBlockReflowState->frame);
+  pfd->mAscent = 0;
+  pfd->mSpan = psd;
+  psd->mFrame = pfd;
+
   // If we're in a constrained height frame, then we don't allow a
   // max line box width to take effect.
   if (!(LineContainerFrame()->GetStateBits() &
@@ -251,7 +256,7 @@ nsLineLayout::EndLineReflow()
                 !mFramesAllocated && !mFramesFreed && !mFrameFreeList),
                "Allocated frames or spans on non-base line layout?");
 
-  FreeSpan(mRootSpan);
+  UnlinkFrame(mRootSpan->mFrame);
   mCurrentSpan = mRootSpan = nullptr;
 
   NS_ASSERTION(mSpansAllocated == mSpansFreed, "leak");
@@ -1220,9 +1225,6 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
   if (nullptr != psd->mFrame) {
     nsFrame::ListTag(stdout, psd->mFrame->mFrame);
   }
-  else {
-    nsFrame::ListTag(stdout, mBlockReflowState->frame);
-  } 
   printf(": aNotSafeToBreak=%s frame=", aNotSafeToBreak ? "true" : "false");
   nsFrame::ListTag(stdout, pfd->mFrame);
   printf(" frameWidth=%d, margins=%d,%d\n",
@@ -1417,12 +1419,6 @@ nsLineLayout::DumpPerSpanData(PerSpanData* psd, int32_t aIndent)
 void
 nsLineLayout::VerticalAlignLine()
 {
-  // Synthesize a PerFrameData for the block frame
-  PerFrameData rootPFD(mBlockReflowState->frame->GetWritingMode());
-  rootPFD.mFrame = mBlockReflowState->frame;
-  rootPFD.mAscent = 0;
-  mRootSpan->mFrame = &rootPFD;
-
   // Partially place the children of the block frame. The baseline for
   // this operation is set to zero so that the y coordinates for all
   // of the placed children will be relative to there.
@@ -1515,9 +1511,6 @@ nsLineLayout::VerticalAlignLine()
     mLineBox->GetBounds().ISize(lineWM), mLineBox->GetBounds().BSize(lineWM),
     mFinalLineBSize, mLineBox->GetLogicalAscent());
 #endif
-
-  // Undo root-span mFrame pointer to prevent brane damage later on...
-  mRootSpan->mFrame = nullptr;
 }
 
 // Place frames with CSS property vertical-align: top or bottom.
@@ -2326,9 +2319,7 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
   pfd = pfd->Last();
   while (nullptr != pfd) {
 #ifdef REALLY_NOISY_TRIM
-    nsFrame::ListTag(stdout, (psd == mRootSpan
-                              ? mBlockReflowState->frame
-                              : psd->mFrame->mFrame));
+    nsFrame::ListTag(stdout, psd->mFrame->mFrame);
     printf(": attempting trim of ");
     nsFrame::ListTag(stdout, pfd->mFrame);
     printf("\n");
@@ -2394,9 +2385,7 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
       nsTextFrame::TrimOutput trimOutput = static_cast<nsTextFrame*>(pfd->mFrame)->
           TrimTrailingWhiteSpace(mBlockReflowState->rendContext);
 #ifdef NOISY_TRIM
-      nsFrame::ListTag(stdout, (psd == mRootSpan
-                                ? mBlockReflowState->frame
-                                : psd->mFrame->mFrame));
+      nsFrame::ListTag(stdout, psd->mFrame->mFrame);
       printf(": trim of ");
       nsFrame::ListTag(stdout, pfd->mFrame);
       printf(" returned %d\n", trimOutput.mDeltaWidth);
@@ -2702,7 +2691,7 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflo
 {
   nsOverflowAreas overflowAreas;
   WritingMode wm = psd->mWritingMode;
-  if (nullptr != psd->mFrame) {
+  if (psd != mRootSpan) {
     // The span's overflow areas come in three parts:
     // -- this frame's width and height
     // -- pfd->mOverflowAreas, which is the area of a bullet or the union
@@ -2804,7 +2793,7 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflo
 
   // If we just computed a spans combined area, we need to update its
   // overflow rect...
-  if (psd->mFrame) {
+  if (psd != mRootSpan) {
     PerFrameData* spanPFD = psd->mFrame;
     nsIFrame* frame = spanPFD->mFrame;
     frame->FinishAndStoreOverflow(overflowAreas, frame->GetSize());
