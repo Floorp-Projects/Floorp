@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1055665 - Test for ruby-position</title>
+  <link rel="stylesheet" href="common.css">
+  <style>
+    body {
+      font-family: monospace;
+      line-height: normal;
+      writing-mode: vertical-rl;
+    }
+    .annotation, .annotation > div {
+      position: absolute;
+    }
+  </style>
+</head>
+<body>
+  <div style="width: 8em; line-height: 8em;">
+    <div style="display: inline-block; line-height: normal;">
+      <div class="annotation">
+        <div style="right: 100%;">left##</div>
+        <div style="right: -100%;">right#</div>
+        <div style="right: 200%;">left2#</div>
+        <div style="right: -200%;">right2</div>
+        &nbsp; <!-- to give container a nonzero size for
+                    percent values to resolve against -->
+      </div>
+      base##
+    </div>
+  </div>
+</body>
+</html>
