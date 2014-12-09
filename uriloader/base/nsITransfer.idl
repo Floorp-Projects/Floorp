@@ -11,7 +11,7 @@ interface nsICancelable;
 interface nsIMIMEInfo;
 interface nsIFile;
 
-[scriptable, uuid(37ec75d3-97ad-4da8-afaa-eabe5b4afd73)]
+[scriptable, uuid(9b729b43-0d74-4762-bf11-8cb88a88ead3)]
 interface nsITransfer : nsIWebProgressListener2 {
 
     /**
