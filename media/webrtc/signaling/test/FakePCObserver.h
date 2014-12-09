@@ -22,7 +22,7 @@
 #include "PeerConnectionImpl.h"
 #include "nsWeakReference.h"
 
-namespace sipcc {
+namespace mozilla {
 class PeerConnectionImpl;
 }
 
@@ -47,7 +47,7 @@ public:
     stateError
   };
 
-  AFakePCObserver(sipcc::PeerConnectionImpl *peerConnection,
+  AFakePCObserver(mozilla::PeerConnectionImpl *peerConnection,
                   const std::string &aName) :
     state(stateNoResponse), addIceSuccessCount(0),
     onAddStreamCalled(false),
@@ -61,7 +61,7 @@ public:
 
   ResponseState state;
   std::string lastString;
-  sipcc::PeerConnectionImpl::Error lastStatusCode;
+  mozilla::PeerConnectionImpl::Error lastStatusCode;
   mozilla::dom::PCObserverStateType lastStateType;
   int addIceSuccessCount;
   bool onAddStreamCalled;
@@ -90,7 +90,7 @@ public:
   virtual NS_IMETHODIMP OnIceCandidate(uint16_t level, const char *mid,
                                        const char *candidate, ER&) = 0;
 protected:
-  sipcc::PeerConnectionImpl *pc;
+  mozilla::PeerConnectionImpl *pc;
   std::vector<mozilla::DOMMediaStream *> streams;
 };
 }

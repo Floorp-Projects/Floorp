@@ -54,7 +54,7 @@ public:
 
   void OnVideoDecoded(VideoData* aSample);
 
-  void OnNotDecoded(MediaData::Type aType, RequestSampleCallback::NotDecodedReason aReason);
+  void OnNotDecoded(MediaData::Type aType, NotDecodedReason aReason);
 
   void OnSeekCompleted(nsresult aResult);
 

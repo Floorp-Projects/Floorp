@@ -61,6 +61,7 @@ EXPORTS.mozilla = [
     'RefPtr.h',
     'RollingMean.h',
     'Scoped.h',
+    'SegmentedVector.h',
     'SHA1.h',
     'SplayTree.h',
     'TaggedAnonymousMemory.h',

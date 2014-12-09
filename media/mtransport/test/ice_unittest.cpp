@@ -282,6 +282,10 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   void SetStunServer(const std::string addr, uint16_t port) {
+    if (addr.empty()) {
+      // Happens when MOZ_DISABLE_NONLOCAL_CONNECTIONS is set
+      return;
+    }
 
     std::vector<NrIceStunServer> stun_servers;
     ScopedDeletePtr<NrIceStunServer> server(NrIceStunServer::Create(addr,
@@ -316,12 +320,14 @@ class IceTestPeer : public sigslot::has_slots<> {
 
   void SetFakeResolver() {
     ASSERT_TRUE(NS_SUCCEEDED(dns_resolver_->Init()));
-    PRNetAddr addr;
-    PRStatus status = PR_StringToNetAddr(g_stun_server_address.c_str(),
-                                          &addr);
-    addr.inet.port = kDefaultStunServerPort;
-    ASSERT_EQ(PR_SUCCESS, status);
-    fake_resolver_.SetAddr(g_stun_server_hostname, addr);
+    if (!g_stun_server_address.empty() && !g_stun_server_hostname.empty()) {
+      PRNetAddr addr;
+      PRStatus status = PR_StringToNetAddr(g_stun_server_address.c_str(),
+                                            &addr);
+      addr.inet.port = kDefaultStunServerPort;
+      ASSERT_EQ(PR_SUCCESS, status);
+      fake_resolver_.SetAddr(g_stun_server_hostname, addr);
+    }
     ASSERT_TRUE(NS_SUCCEEDED(ice_ctx_->SetResolver(
         fake_resolver_.AllocateResolver())));
   }
@@ -545,7 +551,7 @@ class IceTestPeer : public sigslot::has_slots<> {
   void DumpAndCheckActiveCandidates_s() {
     std::cerr << "Active candidates:" << std::endl;
     for (size_t i=0; i < streams_.size(); ++i) {
-      for (int j=0; j < streams_[i]->components(); ++j) {
+      for (size_t j=0; j < streams_[i]->components(); ++j) {
         std::cerr << "Stream " << i << " component " << j+1 << std::endl;
 
         NrIceCandidate *local;
@@ -1275,12 +1281,20 @@ class PacketFilterTest : public ::testing::Test {
 }  // end namespace
 
 TEST_F(IceGatherTest, TestGatherFakeStunServerHostnameNoResolver) {
+  if (g_stun_server_hostname.empty()) {
+    return;
+  }
+
   EnsurePeer();
   peer_->SetStunServer(g_stun_server_hostname, kDefaultStunServerPort);
   Gather();
 }
 
 TEST_F(IceGatherTest, TestGatherFakeStunServerIpAddress) {
+  if (g_stun_server_address.empty()) {
+    return;
+  }
+
   EnsurePeer();
   peer_->SetStunServer(g_stun_server_address, kDefaultStunServerPort);
   peer_->SetFakeResolver();
@@ -1288,6 +1302,10 @@ TEST_F(IceGatherTest, TestGatherFakeStunServerIpAddress) {
 }
 
 TEST_F(IceGatherTest, TestGatherFakeStunServerHostname) {
+  if (g_stun_server_hostname.empty()) {
+    return;
+  }
+
   EnsurePeer();
   peer_->SetStunServer(g_stun_server_hostname, kDefaultStunServerPort);
   peer_->SetFakeResolver();
@@ -1302,6 +1320,10 @@ TEST_F(IceGatherTest, TestGatherFakeStunBogusHostname) {
 }
 
 TEST_F(IceGatherTest, TestGatherDNSStunServerIpAddress) {
+  if (g_stun_server_address.empty()) {
+    return;
+  }
+
   EnsurePeer();
   peer_->SetStunServer(g_stun_server_address, kDefaultStunServerPort);
   peer_->SetDNSResolver();
@@ -1310,6 +1332,10 @@ TEST_F(IceGatherTest, TestGatherDNSStunServerIpAddress) {
 }
 
 TEST_F(IceGatherTest, TestGatherDNSStunServerHostname) {
+  if (g_stun_server_hostname.empty()) {
+    return;
+  }
+
   EnsurePeer();
   peer_->SetStunServer(g_stun_server_hostname, kDefaultStunServerPort);
   peer_->SetDNSResolver();
@@ -1342,8 +1368,12 @@ TEST_F(IceGatherTest, TestGatherTurnTcp) {
 }
 
 TEST_F(IceGatherTest, TestGatherDisableComponent) {
+  if (g_stun_server_hostname.empty()) {
+    return;
+  }
+
   EnsurePeer();
-  peer_->SetStunServer(kDefaultStunServerHostname, kDefaultStunServerPort);
+  peer_->SetStunServer(g_stun_server_hostname, kDefaultStunServerPort);
   peer_->AddStream(2);
   peer_->DisableComponent(1, 2);
   Gather();
@@ -2091,6 +2121,17 @@ int main(int argc, char **argv)
   tmp = get_environment("STUN_SERVER_HOSTNAME");
   if (tmp != "")
     g_stun_server_hostname = tmp;
+
+  tmp = get_environment("MOZ_DISABLE_NONLOCAL_CONNECTIONS");
+
+  if ((tmp != "" && tmp != "0") || getenv("MOZ_UPLOAD_DIR")) {
+    // We're assuming that MOZ_UPLOAD_DIR is only set on tbpl;
+    // MOZ_DISABLE_NONLOCAL_CONNECTIONS probably should be set when running the
+    // cpp unit-tests, but is not presently.
+    g_stun_server_address = "";
+    g_stun_server_hostname = "";
+    g_turn_server = "";
+  }
 
   test_utils = new MtransportTestUtils();
   NSS_NoDB_Init(nullptr);
