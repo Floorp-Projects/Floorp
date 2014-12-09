@@ -3040,7 +3040,6 @@ GCRuntime::refillFreeListFromMainThread(JSContext *cx, AllocKind thingKind)
             // instead of reporting it.
             if (!allowGC) {
                 MOZ_ASSERT(!mustCollectNow);
-                js_ReportOutOfMemory(cx);
                 return nullptr;
             }
 
