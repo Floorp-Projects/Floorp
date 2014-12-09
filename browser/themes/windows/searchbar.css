@@ -145,6 +145,7 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
 .search-panel-one-offs {
   margin: 0 0 !important;
   border-top: 1px solid #ccc;
+  line-height: 0;
 }
 
 .searchbar-engine-one-off-item {
