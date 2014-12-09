@@ -666,8 +666,7 @@ MP4Reader::ReturnOutput(MediaData* aData, TrackType aTrack)
 void
 MP4Reader::ReturnEOS(TrackType aTrack)
 {
-  GetCallback()->OnNotDecoded(aTrack == kAudio ? MediaData::AUDIO_DATA : MediaData::VIDEO_DATA,
-                              RequestSampleCallback::END_OF_STREAM);
+  GetCallback()->OnNotDecoded(aTrack == kAudio ? MediaData::AUDIO_DATA : MediaData::VIDEO_DATA, END_OF_STREAM);
 }
 
 MP4Sample*
@@ -753,8 +752,7 @@ MP4Reader::Error(TrackType aTrack)
     MonitorAutoLock mon(data.mMonitor);
     data.mError = true;
   }
-  GetCallback()->OnNotDecoded(aTrack == kVideo ? MediaData::VIDEO_DATA : MediaData::AUDIO_DATA,
-                              RequestSampleCallback::DECODE_ERROR);
+  GetCallback()->OnNotDecoded(aTrack == kVideo ? MediaData::VIDEO_DATA : MediaData::AUDIO_DATA, DECODE_ERROR);
 }
 
 void
@@ -784,8 +782,7 @@ MP4Reader::Flush(TrackType aTrack)
     data.mNumSamplesOutput = 0;
     data.mInputExhausted = false;
     if (data.mOutputRequested) {
-      GetCallback()->OnNotDecoded(aTrack == kVideo ? MediaData::VIDEO_DATA : MediaData::AUDIO_DATA,
-                                  RequestSampleCallback::CANCELED);
+      GetCallback()->OnNotDecoded(aTrack == kVideo ? MediaData::VIDEO_DATA : MediaData::AUDIO_DATA, CANCELED);
     }
     data.mOutputRequested = false;
     data.mDiscontinuity = true;
@@ -810,8 +807,7 @@ MP4Reader::SkipVideoDemuxToNextKeyFrame(int64_t aTimeThreshold, uint32_t& parsed
     nsAutoPtr<MP4Sample> compressed(PopSample(kVideo));
     if (!compressed) {
       // EOS, or error. Let the state machine know.
-      GetCallback()->OnNotDecoded(MediaData::VIDEO_DATA,
-                                  RequestSampleCallback::END_OF_STREAM);
+      GetCallback()->OnNotDecoded(MediaData::VIDEO_DATA, END_OF_STREAM);
       {
         MonitorAutoLock mon(mVideo.mMonitor);
         mVideo.mDemuxEOS = true;

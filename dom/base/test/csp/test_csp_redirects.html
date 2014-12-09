@@ -86,6 +86,10 @@ var testExpectedResults = { "font-src": true,
                             "worker-redir": false,
                             "xhr-src": true,
                             "xhr-src-redir": false,
+                            "script-src-from-worker": true, /* test runs */
+                            "script-src-redir-from-worker": false, /* redir is blocked */
+                            "img-src-from-css": true, /* test runs */
+                            "img-src-redir-from-css": false, /* redir is blocked */
                           };
 
 // takes the name of the test, the URL that was tested, and whether the
