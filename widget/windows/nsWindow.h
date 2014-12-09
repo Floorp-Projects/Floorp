@@ -392,8 +392,6 @@ protected:
   void                    OnWindowPosChanging(LPWINDOWPOS& info);
   void                    OnSysColorChanged();
 
-  nsEventStatus           MaybeDispatchAsyncWheelEvent(mozilla::WidgetGUIEvent* aEvent);
-
   /**
    * Function that registers when the user has been active (used for detecting
    * when the user is idle).
