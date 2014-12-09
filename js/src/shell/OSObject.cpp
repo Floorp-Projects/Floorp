@@ -61,27 +61,32 @@ os_getpid(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+#if !defined(XP_WIN)
+
 // There are two possible definitions of strerror_r floating around. The GNU
 // one returns a char* which may or may not be the buffer you passed in. The
 // other one returns an integer status code, and always writes the result into
 // the provided buffer.
 
-static inline char *
+inline char *
 strerror_message(int result, char *buffer)
 {
     return result == 0 ? buffer : nullptr;
 }
 
-static inline char *
+inline char *
 strerror_message(char *result, char *buffer)
 {
     return result;
 }
 
+#endif
+
 static void
 ReportSysError(JSContext *cx, const char *prefix)
 {
-    static char buffer[200];
+    char buffer[200];
+
 #if defined(XP_WIN)
     strerror_s(buffer, sizeof(buffer), errno);
     const char *errstr = buffer;
@@ -104,6 +109,7 @@ ReportSysError(JSContext *cx, const char *prefix)
 #else
     snprintf(final, nbytes, "%s: %s", prefix, errstr);
 #endif
+
     JS_ReportError(cx, final);
     js_free(final);
 }
