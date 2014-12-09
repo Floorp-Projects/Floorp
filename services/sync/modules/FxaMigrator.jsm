@@ -301,19 +301,11 @@ Migrator.prototype = {
 
   // Prevent sync from automatically starting
   _blockSync() {
-    if (Weave.Service.scheduler.blockSync) {
-      Weave.Service.scheduler.blockSync();
-    } else {
-      this.log.warn("Waiting on bug 1019408; sync not blocked");
-    }
+    Weave.Service.scheduler.blockSync();
   },
 
   _unblockSync() {
-    if (Weave.Service.scheduler.unblockSync) {
-      Weave.Service.scheduler.unblockSync();
-    } else {
-      this.log.warn("Waiting on bug 1019408; sync not unblocked");
-    }
+    Weave.Service.scheduler.unblockSync();
   },
 
   /*
