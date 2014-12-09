@@ -78,6 +78,20 @@ public:
   // Returns the width of the span
   nscoord EndSpan(nsIFrame* aFrame);
 
+  // This method attaches the last frame reflowed in this line layout
+  // to that in the base line layout.
+  void AttachLastFrameToBaseLineLayout()
+  {
+    AttachFrameToBaseLineLayout(LastFrame());
+  }
+
+  // This method attaches the root frame of this line layout to the
+  // last reflowed frame in the base line layout.
+  void AttachRootFrameToBaseLineLayout()
+  {
+    AttachFrameToBaseLineLayout(mRootSpan->mFrame);
+  }
+
   int32_t GetCurrentSpanCount() const;
 
   void SplitLineTo(int32_t aNewCount);
@@ -605,6 +619,8 @@ protected:
    */
   PerSpanData* NewPerSpanData();
 
+  PerFrameData* LastFrame() const { return mCurrentSpan->mLastFrame; }
+
   /**
    * Unlink the given PerFrameData and all the siblings after it from
    * the span. The unlinked PFDs are usually freed immediately.
@@ -659,6 +675,7 @@ protected:
   nscoord ApplyFrameJustification(
       PerSpanData* aPSD, mozilla::JustificationApplicationState& aState);
 
+  void AttachFrameToBaseLineLayout(PerFrameData* aFrame);
 
 #ifdef DEBUG
   void DumpPerSpanData(PerSpanData* psd, int32_t aIndent);

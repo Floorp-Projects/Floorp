@@ -457,6 +457,22 @@ nsLineLayout::EndSpan(nsIFrame* aFrame)
   return iSizeResult;
 }
 
+void
+nsLineLayout::AttachFrameToBaseLineLayout(PerFrameData* aFrame)
+{
+  NS_PRECONDITION(this != mBaseLineLayout,
+                  "This method must not be called in a base line layout.");
+
+  PerFrameData* baseFrame = mBaseLineLayout->LastFrame();
+  MOZ_ASSERT(aFrame && baseFrame);
+  MOZ_ASSERT(!aFrame->GetFlag(PFD_ISLINKEDTOBASE),
+             "The frame must not have been linked with the base");
+
+  aFrame->mNextAnnotation = baseFrame->mNextAnnotation;
+  baseFrame->mNextAnnotation = aFrame;
+  aFrame->SetFlag(PFD_ISLINKEDTOBASE, true);
+}
+
 int32_t
 nsLineLayout::GetCurrentSpanCount() const
 {
