@@ -38,9 +38,11 @@ from ..frontend.data import (
     ExternalLibrary,
     FinalTargetFiles,
     GeneratedInclude,
+    GeneratedSources,
     HostLibrary,
     HostProgram,
     HostSimpleProgram,
+    HostSources,
     InstallationTarget,
     IPDLFile,
     JARManifest,
@@ -53,9 +55,11 @@ from ..frontend.data import (
     Resources,
     SharedLibrary,
     SimpleProgram,
+    Sources,
     StaticLibrary,
     TestHarnessFiles,
     TestManifest,
+    UnifiedSources,
     VariablePassthru,
     XPIDLFile,
 )
@@ -359,46 +363,70 @@ class RecursiveMakeBackend(CommonBackend):
             # CommonBackend.
             assert os.path.basename(obj.output_path) == 'Makefile'
             self._create_makefile(obj)
-        elif isinstance(obj, VariablePassthru):
-            unified_suffixes = dict(
-                UNIFIED_CSRCS='c',
-                UNIFIED_CMMSRCS='mm',
-                UNIFIED_CPPSRCS='cpp',
-            )
+        elif isinstance(obj, (Sources, GeneratedSources)):
+            suffix_map = {
+                '.s': 'ASFILES',
+                '.c': 'CSRCS',
+                '.m': 'CMSRCS',
+                '.mm': 'CMMSRCS',
+                '.cpp': 'CPPSRCS',
+                '.S': 'SSRCS',
+            }
+            var = suffix_map[obj.canonical_suffix]
+            for f in sorted(obj.files):
+                backend_file.write('%s += %s\n' % (var, f))
+        elif isinstance(obj, HostSources):
+            suffix_map = {
+                '.c': 'HOST_CSRCS',
+                '.mm': 'HOST_CMMSRCS',
+                '.cpp': 'HOST_CPPSRCS',
+            }
+            var = suffix_map[obj.canonical_suffix]
+            for f in sorted(obj.files):
+                backend_file.write('%s += %s\n' % (var, f))
+        elif isinstance(obj, UnifiedSources):
+            suffix_map = {
+                '.c': 'UNIFIED_CSRCS',
+                '.mm': 'UNIFIED_CMMSRCS',
+                '.cpp': 'UNIFIED_CPPSRCS',
+            }
 
-            files_per_unification = 16
-            if 'FILES_PER_UNIFIED_FILE' in obj.variables.keys():
-                files_per_unification = obj.variables['FILES_PER_UNIFIED_FILE']
+            var = suffix_map[obj.canonical_suffix]
+            non_unified_var = var[len('UNIFIED_'):]
 
+            files_per_unification = obj.files_per_unified_file
             do_unify = not self.environment.substs.get(
                 'MOZ_DISABLE_UNIFIED_COMPILATION') and files_per_unification > 1
+            # Sorted so output is consistent and we don't bump mtimes.
+            source_files = list(sorted(obj.files))
 
+            if do_unify:
+                # On Windows, path names have a maximum length of 255 characters,
+                # so avoid creating extremely long path names.
+                unified_prefix = mozpath.relpath(backend_file.objdir,
+                    backend_file.environment.topobjdir)
+                if len(unified_prefix) > 20:
+                    unified_prefix = unified_prefix[-20:].split('/', 1)[-1]
+                unified_prefix = unified_prefix.replace('/', '_')
+
+                suffix = obj.canonical_suffix[1:]
+                self._add_unified_build_rules(backend_file, source_files,
+                    backend_file.objdir,
+                    unified_prefix='Unified_%s_%s' % (
+                        suffix,
+                        unified_prefix),
+                    unified_suffix=suffix,
+                    unified_files_makefile_variable=var,
+                    include_curdir_build_rules=False,
+                    files_per_unified_file=files_per_unification)
+                backend_file.write('%s += $(%s)\n' % (non_unified_var, var))
+            else:
+                backend_file.write('%s += %s\n' % (
+                    non_unified_var, ' '.join(source_files)))
+        elif isinstance(obj, VariablePassthru):
             # Sorted so output is consistent and we don't bump mtimes.
             for k, v in sorted(obj.variables.items()):
-                if k in unified_suffixes:
-                    if do_unify:
-                        # On Windows, path names have a maximum length of 255 characters,
-                        # so avoid creating extremely long path names.
-                        unified_prefix = mozpath.relpath(backend_file.objdir,
-                            backend_file.environment.topobjdir)
-                        if len(unified_prefix) > 20:
-                            unified_prefix = unified_prefix[-20:].split('/', 1)[-1]
-                        unified_prefix = unified_prefix.replace('/', '_')
-
-                        self._add_unified_build_rules(backend_file, v,
-                            backend_file.objdir,
-                            unified_prefix='Unified_%s_%s' % (
-                                unified_suffixes[k],
-                                unified_prefix),
-                            unified_suffix=unified_suffixes[k],
-                            unified_files_makefile_variable=k,
-                            include_curdir_build_rules=False,
-                            files_per_unified_file=files_per_unification)
-                        backend_file.write('%s += $(%s)\n' % (k[len('UNIFIED_'):], k))
-                    else:
-                        backend_file.write('%s += %s\n' % (
-                            k[len('UNIFIED_'):], ' '.join(sorted(v))))
-                elif isinstance(v, list):
+                if isinstance(v, list):
                     for item in v:
                         backend_file.write('%s += %s\n' % (k, item))
                 elif isinstance(v, bool):

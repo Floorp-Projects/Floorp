@@ -1,0 +1,18 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+HOST_SOURCES += [
+    'a.cpp',
+    'b.cc',
+    'c.cxx',
+]
+
+HOST_SOURCES += [
+    'd.c',
+]
+
+HOST_SOURCES += [
+    'e.mm',
+    'f.mm',
+]
