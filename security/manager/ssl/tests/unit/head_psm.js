@@ -18,6 +18,12 @@ let gIsWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
 const isDebugBuild = Cc["@mozilla.org/xpcom/debug;1"]
                        .getService(Ci.nsIDebug2).isDebugBuild;
 
+// The test EV roots are only enabled in debug builds as a security measure.
+//
+// Bug 1008316: B2G doesn't have EV enabled, so EV is not expected even in debug
+// builds.
+const gEVExpected = isDebugBuild && !("@mozilla.org/b2g-process-global;1" in Cc);
+
 const SSS_STATE_FILE_NAME = "SiteSecurityServiceState.txt";
 
 const SEC_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE;

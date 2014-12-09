@@ -5,13 +5,6 @@
 
 "use strict";
 
-// XXX: The isDebugBuild tests you see are here because the test EV root is
-// only enabled for EV in debug builds, as a security measure. An ugly hack.
-//
-// Bug 1008316: B2G doesn't have EV enabled, so EV is not expected even in debug
-// builds.
-const gEVExpected = isDebugBuild && !("@mozilla.org/b2g-process-global;1" in Cc);
-
 do_get_profile(); // must be called before getting nsIX509CertDB
 const certdb = Cc["@mozilla.org/security/x509certdb;1"]
                  .getService(Ci.nsIX509CertDB);
@@ -33,7 +26,7 @@ let certList = [
   // Testing a root that looks like EV but is not EV enabled
   'int-non-ev-root',
   'non-ev-root',
-]
+];
 
 function load_ca(ca_name) {
   var ca_filename = ca_name + ".der";
