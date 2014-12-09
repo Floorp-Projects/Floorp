@@ -960,7 +960,8 @@
       <xul:hbox xbl:inherits="collapsed=showonlysettings" anonid="searchbar-engine"
                 class="search-panel-header search-panel-current-engine">
         <xul:image class="searchbar-engine-image" xbl:inherits="src"/>
-        <xul:label anonid="searchbar-engine-name" flex="1" crop="end"/>
+        <xul:label anonid="searchbar-engine-name" flex="1" crop="end"
+                   role="presentation"/>
       </xul:hbox>
       <xul:tree anonid="tree" flex="1"
                 class="autocomplete-tree plain search-panel-tree"
