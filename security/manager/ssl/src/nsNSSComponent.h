@@ -20,6 +20,7 @@
 #include "nsNSSHelper.h"
 #include "nsClientAuthRemember.h"
 #include "prerror.h"
+#include "sslt.h"
 
 class nsIDOMWindow;
 class nsIPrompt;
@@ -156,6 +157,11 @@ public:
   // The following two methods are thread-safe.
   static bool AreAnyWeakCiphersEnabled();
   static void UseWeakCiphersOnSocket(PRFileDesc* fd);
+
+  static void FillTLSVersionRange(SSLVersionRange& rangeOut,
+                                  uint32_t minFromPrefs,
+                                  uint32_t maxFromPrefs,
+                                  SSLVersionRange defaults);
 
 protected:
   virtual ~nsNSSComponent();
