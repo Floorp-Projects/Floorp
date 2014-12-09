@@ -210,6 +210,7 @@ abstract class BaseTest extends BaseRobocopTest {
         boolean success = waitForCondition(new Condition() {
             @Override
             public boolean isSatisfied() {
+                mSolo.waitForView(R.id.url_edit_text);
                 EditText urlEditText = (EditText) mSolo.getView(R.id.url_edit_text);
                 if (urlEditText.isInputMethodTarget()) {
                     return true;
