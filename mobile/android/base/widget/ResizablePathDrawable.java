@@ -35,6 +35,7 @@ public class ResizablePathDrawable extends ShapeDrawable {
         int newColor = colorStateList.getColorForState(stateSet, Color.WHITE);
         if (newColor != currentColor) {
             currentColor = newColor;
+            alpha = Color.alpha(currentColor);
             invalidateSelf();
             return true;
         }
