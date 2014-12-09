@@ -857,22 +857,30 @@ nsEditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher)
         // Strip trailing charset if there is any
         int32_t dot_pos = lang.FindChar('.');
         if (dot_pos != -1) {
-          lang = Substring(lang, 0, dot_pos - 1);
+          lang = Substring(lang, 0, dot_pos);
         }
-        // Replace '_' with '-'
-        int32_t underScore = lang.FindChar('_');
-        if (underScore != -1) {
-          lang.Replace(underScore, 1, '-');
-        }
+        // Some Linux distributions use '_' as lang/dialect separator.
         rv = SetCurrentDictionary(lang);
+        if (NS_FAILED(rv)) {
+          // Replace '_' with '-' when dictionary with underscore not found.
+          int32_t underScore = lang.FindChar('_');
+          if (underScore != -1) {
+            lang.Replace(underScore, 1, '-');
+            rv = SetCurrentDictionary(lang);
+          }
+        }
       }
       if (NS_FAILED(rv)) {
         rv = SetCurrentDictionary(NS_LITERAL_STRING("en-US"));
         if (NS_FAILED(rv)) {
-          nsTArray<nsString> dictList;
-          rv = mSpellChecker->GetDictionaryList(&dictList);
-          if (NS_SUCCEEDED(rv) && dictList.Length() > 0) {
-            SetCurrentDictionary(dictList[0]);
+          // Some Linux distributions are using '_' as separator for dictionaries.
+          rv = SetCurrentDictionary(NS_LITERAL_STRING("en_US"));
+          if (NS_FAILED(rv)) {
+            nsTArray<nsString> dictList;
+            rv = mSpellChecker->GetDictionaryList(&dictList);
+            if (NS_SUCCEEDED(rv) && dictList.Length() > 0) {
+              SetCurrentDictionary(dictList[0]);
+            }
           }
         }
       }
