@@ -5,7 +5,7 @@
 package org.mozilla.gecko.fxa.activities;
 
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.LocaleAware.LocaleAwareFragmentActivity;
+import org.mozilla.gecko.Locales.LocaleAwareFragmentActivity;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
