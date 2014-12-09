@@ -288,21 +288,21 @@ MediaConduitErrorCode WebrtcVideoConduit::Init(WebrtcVideoConduit *other)
     if (branch)
     {
       int32_t temp;
-      (void) NS_WARN_IF(NS_FAILED(branch->GetBoolPref("media.video.test_latency", &mVideoLatencyTestEnable)));
-      (void) NS_WARN_IF(NS_FAILED(branch->GetIntPref("media.peerconnection.video.min_bitrate", &temp)));
+      NS_WARN_IF(NS_FAILED(branch->GetBoolPref("media.video.test_latency", &mVideoLatencyTestEnable)));
+      NS_WARN_IF(NS_FAILED(branch->GetIntPref("media.peerconnection.video.min_bitrate", &temp)));
       if (temp >= 0) {
         mMinBitrate = temp;
       }
-      (void) NS_WARN_IF(NS_FAILED(branch->GetIntPref("media.peerconnection.video.start_bitrate", &temp)));
+      NS_WARN_IF(NS_FAILED(branch->GetIntPref("media.peerconnection.video.start_bitrate", &temp)));
       if (temp >= 0) {
         mStartBitrate = temp;
       }
-      (void) NS_WARN_IF(NS_FAILED(branch->GetIntPref("media.peerconnection.video.max_bitrate", &temp)));
+      NS_WARN_IF(NS_FAILED(branch->GetIntPref("media.peerconnection.video.max_bitrate", &temp)));
       if (temp >= 0) {
         mMaxBitrate = temp;
       }
       bool use_loadmanager = false;
-      (void) NS_WARN_IF(NS_FAILED(branch->GetBoolPref("media.navigator.load_adapt", &use_loadmanager)));
+      NS_WARN_IF(NS_FAILED(branch->GetBoolPref("media.navigator.load_adapt", &use_loadmanager)));
       if (use_loadmanager) {
         mLoadManager = LoadManagerBuild();
       }
@@ -657,7 +657,7 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
   mSendingWidth = 0;
   mSendingHeight = 0;
 
-  if(codecConfig->RtcpFbNackIsSet("")) {
+  if(codecConfig->RtcpFbIsSet(SDP_RTCP_FB_NACK_BASIC)) {
     CSFLogDebug(logTag, "Enabling NACK (send) for video stream\n");
     if (mPtrRTP->SetNACKStatus(mChannel, true) != 0)
     {
@@ -740,17 +740,17 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
 
     // Check for the keyframe request type: PLI is preferred
     // over FIR, and FIR is preferred over none.
-    if (codecConfigList[i]->RtcpFbNackIsSet("pli"))
+    if (codecConfigList[i]->RtcpFbIsSet(SDP_RTCP_FB_NACK_PLI))
     {
       kf_request = webrtc::kViEKeyFrameRequestPliRtcp;
     } else if(kf_request == webrtc::kViEKeyFrameRequestNone &&
-              codecConfigList[i]->RtcpFbCcmIsSet("fir"))
+              codecConfigList[i]->RtcpFbIsSet(SDP_RTCP_FB_CCM_FIR))
     {
       kf_request = webrtc::kViEKeyFrameRequestFirRtcp;
     }
 
     // Check whether NACK is requested
-    if(codecConfigList[i]->RtcpFbNackIsSet(""))
+    if(codecConfigList[i]->RtcpFbIsSet(SDP_RTCP_FB_NACK_BASIC))
     {
       use_nack_basic = true;
     }
@@ -1278,7 +1278,7 @@ WebrtcVideoConduit::CodecConfigToWebRTCCodec(const VideoCodecConfig* codecInfo,
   // hand or from a config fetched with GetConfig(); this modifies the config
   // to match parameters from VideoCodecConfig
   cinst.plType  = codecInfo->mType;
-  if (codecInfo->mName == "H264") {
+  if (codecInfo->mName == "H264_P0" || codecInfo->mName == "H264_P1") {
     cinst.codecType = webrtc::kVideoCodecH264;
     PL_strncpyz(cinst.plName, "H264", sizeof(cinst.plName));
   } else if (codecInfo->mName == "VP8") {

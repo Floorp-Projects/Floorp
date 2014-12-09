@@ -136,10 +136,6 @@ class NrIceMediaStream {
   // queue, in priority order. |out_pairs| is cleared before being filled.
   nsresult GetCandidatePairs(std::vector<NrIceCandidatePair>* out_pairs) const;
 
-  // TODO(bug 1096795): This needs to take a component number, so we can get
-  // default candidates for rtcp.
-  nsresult GetDefaultCandidate(NrIceCandidate* candidate) const;
-
   // Parse remote attributes
   nsresult ParseAttributes(std::vector<std::string>& candidates);
 
@@ -155,7 +151,7 @@ class NrIceMediaStream {
                          NrIceCandidate** local, NrIceCandidate** remote);
 
   // The number of components
-  size_t components() const { return components_; }
+  int components() const { return components_; }
 
   // The underlying nICEr stream
   nr_ice_media_stream *stream() { return stream_; }
@@ -192,7 +188,7 @@ class NrIceMediaStream {
 
  private:
   NrIceMediaStream(NrIceCtx *ctx,  const std::string& name,
-                   size_t components) :
+                   int components) :
       state_(ICE_CONNECTING),
       ctx_(ctx),
       name_(name),
@@ -207,7 +203,7 @@ class NrIceMediaStream {
   State state_;
   NrIceCtx *ctx_;
   const std::string name_;
-  const size_t components_;
+  const int components_;
   nr_ice_media_stream *stream_;
   uint16_t level_;
 };
