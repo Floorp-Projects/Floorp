@@ -35,7 +35,6 @@ describe("loop.contacts", function() {
 
     fakeWindow = {
       close: sandbox.stub(),
-      //document: { addEventListener: function(){} }
     };
     loop.shared.mixins.setRootObject(fakeWindow);
 
