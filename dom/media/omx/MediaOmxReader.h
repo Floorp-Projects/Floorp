@@ -104,7 +104,7 @@ public:
 
   virtual void SetIdle() MOZ_OVERRIDE;
 
-  virtual void Shutdown() MOZ_OVERRIDE;
+  virtual nsRefPtr<ShutdownPromise> Shutdown() MOZ_OVERRIDE;
 
   bool IsShutdown() {
     MutexAutoLock lock(mMutex);

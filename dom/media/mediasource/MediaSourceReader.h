@@ -97,7 +97,7 @@ public:
   void RemoveTrackBuffer(TrackBuffer* aTrackBuffer);
   void OnTrackBufferConfigured(TrackBuffer* aTrackBuffer, const MediaInfo& aInfo);
 
-  void Shutdown();
+  nsRefPtr<ShutdownPromise> Shutdown() MOZ_OVERRIDE;
 
   virtual void BreakCycles();
 
@@ -135,6 +135,7 @@ private:
   nsRefPtr<MediaDecoderReader> mVideoReader;
 
   nsTArray<nsRefPtr<TrackBuffer>> mTrackBuffers;
+  nsTArray<nsRefPtr<TrackBuffer>> mShutdownTrackBuffers;
   nsTArray<nsRefPtr<TrackBuffer>> mEssentialTrackBuffers;
   nsRefPtr<TrackBuffer> mAudioTrack;
   nsRefPtr<TrackBuffer> mVideoTrack;
@@ -176,6 +177,9 @@ private:
   bool mVideoIsSeeking;
 
   bool mHasEssentialTrackBuffers;
+
+  void ContinueShutdown(bool aSuccess);
+  MediaPromiseHolder<ShutdownPromise> mMediaSourceShutdownPromise;
 #ifdef MOZ_FMP4
   nsRefPtr<SharedDecoderManager> mSharedDecoderManager;
 #endif

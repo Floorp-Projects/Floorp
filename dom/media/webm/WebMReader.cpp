@@ -223,7 +223,8 @@ WebMReader::~WebMReader()
   MOZ_COUNT_DTOR(WebMReader);
 }
 
-void WebMReader::Shutdown()
+nsRefPtr<ShutdownPromise>
+WebMReader::Shutdown()
 {
 #if defined(MOZ_PDM_VPX)
   if (mVideoTaskQueue) {
@@ -237,7 +238,7 @@ void WebMReader::Shutdown()
     mVideoDecoder = nullptr;
   }
 
-  MediaDecoderReader::Shutdown();
+  return MediaDecoderReader::Shutdown();
 }
 
 nsresult WebMReader::Init(MediaDecoderReader* aCloneDonor)
