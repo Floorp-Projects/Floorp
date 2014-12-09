@@ -12,7 +12,6 @@
 #include "mozilla/dom/HTMLLabelElementBinding.h"
 #include "nsFocusManager.h"
 #include "nsIDOMMouseEvent.h"
-#include "nsQueryObject.h"
 
 // construction, destruction
 

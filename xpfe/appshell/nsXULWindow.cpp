@@ -50,7 +50,6 @@
 #include "nsContentUtils.h"
 #include "nsWebShellWindow.h" // get rid of this one, too...
 #include "nsGlobalWindow.h"
-#include "nsQueryObject.h"
 
 #include "prenv.h"
 #include "mozilla/AutoRestore.h"

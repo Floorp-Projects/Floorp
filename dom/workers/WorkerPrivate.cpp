@@ -29,7 +29,6 @@
 #include "nsIURL.h"
 #include "nsIWorkerDebugger.h"
 #include "nsIXPConnect.h"
-#include "nsQueryObject.h"
 
 #include <algorithm>
 #include "jsfriendapi.h"

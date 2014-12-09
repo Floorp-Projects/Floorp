@@ -11,7 +11,6 @@
 #include "nsDebug.h"
 #include "nsEditor.h"
 #include "nsError.h"
-#include "nsQueryObject.h"
 #include "nsHTMLEditUtils.h"
 #include "nsHTMLEditor.h"
 #include "nsIDOMElement.h"

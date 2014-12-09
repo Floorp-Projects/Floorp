@@ -49,7 +49,6 @@
 #include "nsThreadUtils.h"
 #include "ProfilerHelpers.h"
 #include "ReportInternalError.h"
-#include "nsQueryObject.h"
 
 // Include this last to avoid path problems on Windows.
 #include "ActorsChild.h"

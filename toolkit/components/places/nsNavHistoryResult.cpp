@@ -18,7 +18,6 @@
 #include "nsUnicharUtils.h"
 #include "prtime.h"
 #include "prprf.h"
-#include "nsQueryObject.h"
 
 #include "nsCycleCollectionParticipant.h"
 

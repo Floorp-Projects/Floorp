@@ -15,7 +15,6 @@
 #include "nsISupportsImpl.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
-#include "nsQueryObject.h"
 #include <windows.h>
 #include <ws2spi.h>
 
