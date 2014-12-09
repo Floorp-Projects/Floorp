@@ -27,8 +27,8 @@ typedef any Transferable;
 [PrimaryGlobal, NeedResolve]
 /*sealed*/ interface Window : EventTarget {
   // the current browsing context
-  [Unforgeable, Throws,
-   CrossOriginReadable] readonly attribute WindowProxy window;
+  [Unforgeable, Constant, StoreInSlot,
+   CrossOriginReadable] readonly attribute Window window;
   [Replaceable, Throws,
    CrossOriginReadable] readonly attribute WindowProxy self;
   [Unforgeable, StoreInSlot, Pure] readonly attribute Document? document;
