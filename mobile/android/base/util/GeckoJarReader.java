@@ -110,6 +110,7 @@ public final class GeckoJarReader {
             // Some JNI code throws IllegalArgumentException on a bad file name;
             // swallow the error and return null.  We could also see legitimate
             // IOExceptions here.
+            Log.e(LOGTAG, "Exception getting input stream from jar URL: " + url, ex);
             return null;
         }
     }
