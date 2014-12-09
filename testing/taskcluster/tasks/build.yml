@@ -12,6 +12,7 @@ task:
 
   workerType: b2gbuild
   provisionerId: aws-provisioner
+  schedulerId: task-graph-scheduler
 
   scopes:
     # Nearly all of our build tasks use tc-vcs so just include the scope across
