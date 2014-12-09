@@ -9,13 +9,13 @@
     <org.mozilla.gecko.widget.FaviconView android:id="@+id/icon"
                                           android:layout_width="@dimen/favicon_bg"
                                           android:layout_height="@dimen/favicon_bg"
-                                          android:layout_marginLeft="10dip"
-                                          android:layout_marginRight="10dip"/>
+                                          android:layout_margin="16dp"/>
 
     <LinearLayout android:layout_width="match_parent"
                   android:layout_height="wrap_content"
-                  android:layout_marginRight="10dip"
-                  android:orientation="vertical">
+                  android:layout_gravity="center_vertical"
+                  android:orientation="vertical"
+                  android:paddingRight="25dp">
 
         <org.mozilla.gecko.widget.FadedTextView
                 android:id="@+id/title"
@@ -32,5 +32,4 @@
                   android:maxLength="1024"/>
 
     </LinearLayout>
-
 </merge>
