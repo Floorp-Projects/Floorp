@@ -432,7 +432,7 @@ GMPChild::RecvStartPlugin()
 
   void* sh = nullptr;
   GMPAsyncShutdownHost* host = static_cast<GMPAsyncShutdownHost*>(this);
-  GMPErr err = GetAPI("async-shutdown", host, &sh);
+  GMPErr err = GetAPI(GMP_API_ASYNC_SHUTDOWN, host, &sh);
   if (err == GMPNoErr && sh) {
     mAsyncShutdown = reinterpret_cast<GMPAsyncShutdown*>(sh);
     SendAsyncShutdownRequired();
@@ -544,7 +544,7 @@ GMPChild::RecvPGMPAudioDecoderConstructor(PGMPAudioDecoderChild* aActor)
   auto vdc = static_cast<GMPAudioDecoderChild*>(aActor);
 
   void* vd = nullptr;
-  GMPErr err = GetAPI("decode-audio", &vdc->Host(), &vd);
+  GMPErr err = GetAPI(GMP_API_AUDIO_DECODER, &vdc->Host(), &vd);
   if (err != GMPNoErr || !vd) {
     return false;
   }
@@ -573,7 +573,7 @@ GMPChild::RecvPGMPVideoDecoderConstructor(PGMPVideoDecoderChild* aActor)
   auto vdc = static_cast<GMPVideoDecoderChild*>(aActor);
 
   void* vd = nullptr;
-  GMPErr err = GetAPI("decode-video", &vdc->Host(), &vd);
+  GMPErr err = GetAPI(GMP_API_VIDEO_DECODER, &vdc->Host(), &vd);
   if (err != GMPNoErr || !vd) {
     NS_WARNING("GMPGetAPI call failed trying to construct decoder.");
     return false;
@@ -590,7 +590,7 @@ GMPChild::RecvPGMPVideoEncoderConstructor(PGMPVideoEncoderChild* aActor)
   auto vec = static_cast<GMPVideoEncoderChild*>(aActor);
 
   void* ve = nullptr;
-  GMPErr err = GetAPI("encode-video", &vec->Host(), &ve);
+  GMPErr err = GetAPI(GMP_API_VIDEO_ENCODER, &vec->Host(), &ve);
   if (err != GMPNoErr || !ve) {
     NS_WARNING("GMPGetAPI call failed trying to construct encoder.");
     return false;
@@ -608,7 +608,7 @@ GMPChild::RecvPGMPDecryptorConstructor(PGMPDecryptorChild* aActor)
   GMPDecryptorHost* host = static_cast<GMPDecryptorHost*>(child);
 
   void* session = nullptr;
-  GMPErr err = GetAPI("eme-decrypt", host, &session);
+  GMPErr err = GetAPI(GMP_API_DECRYPTOR, host, &session);
   if (err != GMPNoErr || !session) {
     return false;
   }

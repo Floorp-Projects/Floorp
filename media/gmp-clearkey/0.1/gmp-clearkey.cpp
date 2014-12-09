@@ -31,7 +31,7 @@ GMPInit(GMPPlatformAPI* aPlatformAPI)
 MOZ_EXPORT GMPErr
 GMPGetAPI(const char* aApiName, void* aHostAPI, void** aPluginAPI)
 {
-  if (strcmp(aApiName, "eme-decrypt")) {
+  if (strcmp(aApiName, GMP_API_DECRYPTOR)) {
     return GMPNotImplementedErr;
   }
 
