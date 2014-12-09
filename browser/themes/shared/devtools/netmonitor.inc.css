@@ -166,6 +166,11 @@
   width: 8em;
 }
 
+.requests-menu-transferred {
+  text-align: center;
+  width: 8em;
+}
+
 /* Network requests table: status codes */
 
 box.requests-menu-status {

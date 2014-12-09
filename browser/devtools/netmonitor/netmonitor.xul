@@ -101,6 +101,16 @@
                         flex="1">
                 </button>
               </hbox>
+              <hbox id="requests-menu-transferred-header-box"
+                    class="requests-menu-header requests-menu-transferred"
+                    align="center">
+                <button id="requests-menu-transferred-button"
+                        class="requests-menu-header-button requests-menu-transferred"
+                        data-key="transferred"
+                        label="&netmonitorUI.toolbar.transferred;"
+                        flex="1">
+                </button>
+              </hbox>
               <hbox id="requests-menu-size-header-box"
                     class="requests-menu-header requests-menu-size"
                     align="center">
@@ -173,6 +183,8 @@
               <label class="plain requests-menu-subitem requests-menu-domain"
                      crop="end"/>
               <label class="plain requests-menu-subitem requests-menu-type"
+                     crop="end"/>
+              <label class="plain requests-menu-subitem requests-menu-transferred"
                      crop="end"/>
               <label class="plain requests-menu-subitem requests-menu-size"
                      crop="end"/>
