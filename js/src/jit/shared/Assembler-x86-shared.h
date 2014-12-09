@@ -2234,6 +2234,23 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_CRASH("unexpected operand kind");
         }
     }
+    void vblendvps(FloatRegister mask, FloatRegister src1, FloatRegister src0, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE41());
+        masm.vblendvps_rr(mask.code(), src1.code(), src0.code(), dest.code());
+    }
+    void vblendvps(FloatRegister mask, const Operand &src1, FloatRegister src0, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE41());
+        switch (src1.kind()) {
+          case Operand::FPREG:
+            masm.vblendvps_rr(mask.code(), src1.fpu(), src0.code(), dest.code());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.vblendvps_mr(mask.code(), src1.disp(), src1.base(), src0.code(), dest.code());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
     void movsldup(FloatRegister src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE3());
         masm.movsldup_rr(src.code(), dest.code());
