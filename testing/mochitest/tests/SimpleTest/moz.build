@@ -4,3 +4,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+TEST_HARNESS_FILES.testing.mochitest.tests.SimpleTest += [
+    '/docshell/test/chrome/docshell_helpers.js',
+    '/testing/specialpowers/content/MozillaLogger.js',
+    'ChromeUtils.js',
+    'EventUtils.js',
+    'iframe-between-tests.html',
+    'LogController.js',
+    'MemoryStats.js',
+    'MockObjects.js',
+    'NativeKeyCodes.js',
+    'paint_listener.js',
+    'setup.js',
+    'SimpleTest.js',
+    'test.css',
+    'TestRunner.js',
+    'WindowSnapshot.js',
+]
