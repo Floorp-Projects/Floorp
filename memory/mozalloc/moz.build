@@ -71,3 +71,6 @@ TEST_DIRS += ['tests']
 GENERATED_INCLUDES += ['/xpcom']
 
 DISABLE_STL_WRAPPING = True
+
+if CONFIG['_MSC_VER']:
+    FAIL_ON_WARNINGS = True

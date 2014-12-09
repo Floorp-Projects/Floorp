@@ -26,7 +26,6 @@
 #include "nsIWebNavigation.h"
 #include "nsCaret.h"
 #include "nsIBaseWindow.h"
-#include "nsIXULWindow.h"
 #include "nsViewManager.h"
 #include "nsFrameSelection.h"
 #include "mozilla/dom/Selection.h"
@@ -735,10 +734,7 @@ nsFocusManager::WindowRaised(nsIDOMWindow* aWindow)
     frameSelection->SetDragState(false);
   }
 
-  // If there is no nsIXULWindow, then this is an embedded or child process window.
-  // Pass false for aWindowRaised so that commands get updated.
-  nsCOMPtr<nsIXULWindow> xulWin(do_GetInterface(baseWindow));
-  Focus(currentWindow, currentFocus, 0, true, false, xulWin != nullptr, true);
+  Focus(currentWindow, currentFocus, 0, true, false, true, true);
 
   return NS_OK;
 }

@@ -25,6 +25,7 @@ CppUnitTests([
     'TestPair',
     'TestRefPtr',
     'TestRollingMean',
+    'TestSegmentedVector',
     'TestSHA1',
     'TestSplayTree',
     'TestTypedEnum',
