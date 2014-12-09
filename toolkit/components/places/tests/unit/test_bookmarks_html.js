@@ -79,7 +79,7 @@ function run_test()
   run_next_test();
 }
 
-add_task(function setup() {
+add_task(function* setup() {
   // Avoid creating smart bookmarks during the test.
   Services.prefs.setIntPref("browser.places.smartBookmarksVersion", -1);
 
@@ -107,7 +107,7 @@ add_task(function setup() {
   remove_all_bookmarks();
 });
 
-add_task(function test_import_new()
+add_task(function* test_import_new()
 {
   // Test importing a Places bookmarks.html file.
   // 1. import bookmarks.exported.html
@@ -121,7 +121,7 @@ add_task(function test_import_new()
   remove_all_bookmarks();
 });
 
-add_task(function test_emptytitle_export()
+add_task(function* test_emptytitle_export()
 {
   // Test exporting and importing with an empty-titled bookmark.
   // 1. import bookmarks
@@ -135,6 +135,7 @@ add_task(function test_emptytitle_export()
   // 9. empty bookmarks db and continue
 
   yield BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
+  yield promiseAsyncUpdates();
 
   const NOTITLE_URL = "http://notitle.mozilla.org/";
   let id = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
@@ -144,6 +145,7 @@ add_task(function test_emptytitle_export()
   test_bookmarks.unfiled.push({ title: "", url: NOTITLE_URL });
 
   yield BookmarkHTMLUtils.exportToFile(gBookmarksFileNew);
+  yield promiseAsyncUpdates();
   remove_all_bookmarks();
 
   yield BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
@@ -159,7 +161,7 @@ add_task(function test_emptytitle_export()
   remove_all_bookmarks();
 });
 
-add_task(function test_import_chromefavicon()
+add_task(function* test_import_chromefavicon()
 {
   // Test exporting and importing with a bookmark pointing to a chrome favicon.
   // 1. import bookmarks
@@ -177,6 +179,7 @@ add_task(function test_import_chromefavicon()
   const CHROME_FAVICON_URI_2 = NetUtil.newURI("chrome://global/skin/icons/error-16.png");
 
   yield BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
+  yield promiseAsyncUpdates();
   let id = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                                 PAGE_URI,
                                                 PlacesUtils.bookmarks.DEFAULT_INDEX,
@@ -201,6 +204,7 @@ add_task(function test_import_chromefavicon()
     { title: "Test", url: PAGE_URI.spec, icon: base64Icon });
 
   yield BookmarkHTMLUtils.exportToFile(gBookmarksFileNew);
+  yield promiseAsyncUpdates();
 
   // Change the favicon to check it's really imported again later.
   deferred = Promise.defer();
@@ -225,7 +229,7 @@ add_task(function test_import_chromefavicon()
   remove_all_bookmarks();
 });
 
-add_task(function test_import_ontop()
+add_task(function* test_import_ontop()
 {
   // Test importing the exported bookmarks.html file *on top of* the existing
   // bookmarks.
@@ -236,7 +240,10 @@ add_task(function test_import_ontop()
   // 4. run the test-suite
 
   yield BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
+  yield promiseAsyncUpdates();
   yield BookmarkHTMLUtils.exportToFile(gBookmarksFileNew);
+  yield promiseAsyncUpdates();
+
   yield BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
   yield promiseAsyncUpdates();
   yield testImportedBookmarks();
@@ -244,7 +251,7 @@ add_task(function test_import_ontop()
   remove_all_bookmarks();
 });
 
-function testImportedBookmarks()
+function* testImportedBookmarks()
 {
   for (let group in test_bookmarks) {
     do_print("[testImportedBookmarks()] Checking group '" + group + "'");
@@ -273,37 +280,7 @@ function testImportedBookmarks()
   }
 }
 
-function testImportedBookmarksToFolder(aFolder)
-{
-  root = PlacesUtils.getFolderContents(aFolder).root;
-
-  // Menu bookmarks are put directly into the folder, while other roots are
-  // imported into subfolders.
-  let rootFolderCount = test_bookmarks.menu.length;
-
-  for (let i = 0; i < root.childCount; i++) {
-    let child = root.getChild(i);
-    // This check depends on all "menu" bookmarks being listed first in the imported file :-|
-    if (i < rootFolderCount) {
-      checkItem(test_bookmarks.menu[i], child);
-    }
-    else {
-      let container = child.QueryInterface(Ci.nsINavHistoryContainerResultNode);
-      let group = /Toolbar/.test(container.title) ? test_bookmarks.toolbar
-                                                  : test_bookmarks.unfiled;
-      container.containerOpen = true;
-      do_print("[testImportedBookmarksToFolder()] Checking container '" + container.title + "'");
-      for (let t = 0; t < container.childCount; t++) {
-        checkItem(group[t], container.getChild(t));
-      }
-      container.containerOpen = false;
-    }
-  }
-
-  root.containerOpen = false;
-}
-
-function checkItem(aExpected, aNode)
+function* checkItem(aExpected, aNode)
 {
   let id = aNode.itemId;
 
@@ -373,7 +350,9 @@ function checkItem(aExpected, aNode)
           folder.containerOpen = true;
           do_check_eq(folder.childCount, aExpected.children.length);
 
-          aExpected.children.forEach(function (item, index) checkItem(item, folder.getChild(index)));
+          for (let index = 0; index < aExpected.children.length; index++) {
+            yield checkItem(aExpected.children[index], folder.getChild(index));
+          }
 
           folder.containerOpen = false;
           break;
