@@ -757,6 +757,12 @@ CheckPresentedIDConformsToNameConstraintsSubtrees(
         case GeneralNameType::dNSName:
           matches = PresentedDNSIDMatchesReferenceDNSID(
                       presentedID, ValidDNSIDMatchType::NameConstraint, base);
+          // If matches is not false, then base must be syntactically valid
+          // because PresentedDNSIDMatchesReferenceDNSID verifies that.
+          if (!matches &&
+              !IsValidDNSID(base, ValidDNSIDMatchType::NameConstraint)) {
+            return Result::ERROR_CERT_NOT_IN_NAME_SPACE;
+          }
           break;
 
         case GeneralNameType::iPAddress:
@@ -846,15 +852,15 @@ CheckPresentedIDConformsToNameConstraintsSubtrees(
 // follow NSS's stricter policy by accepting wildcards only of the form
 // <x>*.<DNSID>, where <x> may be empty.
 //
-// An absolute presented DNS ID matches an absolute reference ID and a relative
-// reference ID, and vice-versa. For example, all of these are matches:
+// An relative presented DNS ID matches both an absolute reference ID and a
+// relative reference ID. Absolute presented DNS IDs are not supported:
 //
-//      Presented ID   Reference ID
-//      ---------------------------
-//      example.com    example.com
-//      example.com.   example.com
-//      example.com    example.com.
-//      example.com.   exmaple.com.
+//      Presented ID   Reference ID  Result
+//      -------------------------------------
+//      example.com    example.com   Match
+//      example.com.   example.com   Mismatch
+//      example.com    example.com.  Match
+//      example.com.   example.com.  Mismatch
 //
 // There are more subtleties documented inline in the code.
 //
@@ -929,22 +935,16 @@ CheckPresentedIDConformsToNameConstraintsSubtrees(
 //     Q: Are name constraints allowed to be specified as absolute names?
 //        For example, does a presented ID of "example.com" match a name
 //        constraint of "example.com." and vice versa.
-//     A: Relative DNSNames match relative DNSName constraints but not
-//        absolute DNSName constraints. Absolute DNSNames match absolute
-//        DNSName constraints but not relative DNSName constraints (except "";
-//        see below). This follows from the requirement that matching DNSNames
-//        are constructed "by simply adding zero or more labels to the
-//        left-hand side" of the constraint.
+//     A: Absolute names are not supported as presented IDs or name
+//        constraints. Only reference IDs may be absolute.
 //
-//     Q: Are "" and "." valid DNSName constraints? If so, what do they mean?
-//     A: Yes, both are valid. All relative and absolute DNSNames match
-//        a constraint of "" because any DNSName can be formed "by simply
-//        adding zero or more labels to the left-hand side" of "". In
-//        particular, an excludedSubtrees DNSName constraint of "" forbids all
-//        DNSNames. Only absolute names match a DNSName constraint of ".";
-//        relative DNSNames do not match "." because one cannot form a relative
-//        DNSName "by simply adding zero or more labels to the left-hand side"
-//        of "." (all such names would be absolute).
+//     Q: Is "" a valid DNSName constraints? If so, what does it mean?
+//     A: Yes. Any valid presented DNSName can be formed "by simply adding zero
+//        or more labels to the left-hand side" of "". In particular, an
+//        excludedSubtrees DNSName constraint of "" forbids all DNSNames.
+//
+//     Q: Is "." a valid DNSName constraints? If so, what does it mean?
+//     A: No, because absolute names are not allowed (see above).
 //
 // [0] RFC 6265 (Cookies) Domain Matching rules:
 //     http://tools.ietf.org/html/rfc6265#section-5.1.3
@@ -1044,7 +1044,7 @@ PresentedDNSIDMatchesReferenceDNSID(
   }
 
   bool isFirstPresentedByte = true;
-  do {
+  for (;;) {
     uint8_t presentedByte;
     if (presented.Read(presentedByte) != Success) {
       return false;
@@ -1075,12 +1075,6 @@ PresentedDNSIDMatchesReferenceDNSID(
         return false;
       }
     } else {
-      // Allow an absolute presented DNS ID to match a relative reference DNS
-      // ID.
-      if (reference.AtEnd() && presented.AtEnd() && presentedByte == '.') {
-        return true;
-      }
-
       uint8_t referenceByte;
       if (reference.Read(referenceByte) != Success) {
         return false;
@@ -1089,9 +1083,17 @@ PresentedDNSIDMatchesReferenceDNSID(
           LocaleInsensitveToLower(referenceByte)) {
         return false;
       }
+
+      if (presented.AtEnd()) {
+        // Don't allow presented IDs to be absolute.
+        if (presentedByte == '.') {
+          return false;
+        }
+        break;
+      }
     }
     isFirstPresentedByte = false;
-  } while (!presented.AtEnd());
+  }
 
   // Allow a relative presented DNS ID to match an absolute reference DNS ID,
   // unless we're matching a name constraint.
@@ -1691,6 +1693,12 @@ IsValidDNSID(Input hostname, ValidDNSIDMatchType matchType)
     }
     isFirstByte = false;
   } while (!input.AtEnd());
+
+  // Only reference IDs, not presented IDs or name constraints, may be
+  // absolute.
+  if (labelLength == 0 && matchType != ValidDNSIDMatchType::ReferenceID) {
+    return false;
+  }
 
   if (labelEndsWithHyphen) {
     return false; // Labels must not end with a hyphen.
