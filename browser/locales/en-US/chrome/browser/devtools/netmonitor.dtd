@@ -42,8 +42,14 @@
   -  in the network table toolbar, above the "type" column. -->
 <!ENTITY netmonitorUI.toolbar.type        "Type">
 
+<!-- LOCALIZATION NOTE (netmonitorUI.toolbar.transferred): This is the label displayed
+  -  in the network table toolbar, above the "transferred" column, which is the
+  -  compressed / encoded size. -->
+<!ENTITY netmonitorUI.toolbar.transferred "Transferred">
+
 <!-- LOCALIZATION NOTE (netmonitorUI.toolbar.size): This is the label displayed
-  -  in the network table toolbar, above the "size" column. -->
+  -  in the network table toolbar, above the "size" column, which is the
+  -  uncompressed / decoded size. -->
 <!ENTITY netmonitorUI.toolbar.size        "Size">
 
 <!-- LOCALIZATION NOTE (netmonitorUI.toolbar.waterfall): This is the label displayed
