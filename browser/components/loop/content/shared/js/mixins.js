@@ -16,8 +16,10 @@ loop.shared.mixins = (function() {
   var rootObject = window;
 
   /**
-   * Sets a new root object. This is useful for testing native DOM events so we
-   * can fake them.
+   * Sets a new root object.  This is useful for testing native DOM events so we
+   * can fake them. In beforeEach(), loop.shared.mixins.setRootObject is used to
+   * substitute a fake window, and in afterEach(), the real window object is
+   * replaced.
    *
    * @param {Object}
    */
@@ -61,6 +63,21 @@ loop.shared.mixins = (function() {
   var DocumentTitleMixin = {
     setTitle: function(newTitle) {
       rootObject.document.title = newTitle;
+    }
+  };
+
+  /**
+   * Window close mixin, for more testable closing of windows.  Instead of
+   * calling window.close() directly, use this mixin and call
+   * this.closeWindow from your component.
+   *
+   * @type {Object}
+   *
+   * @see setRootObject for info on how to unit test code that uses this mixin
+   */
+  var WindowCloseMixin = {
+    closeWindow: function() {
+      rootObject.close();
     }
   };
 
@@ -291,6 +308,7 @@ loop.shared.mixins = (function() {
     DocumentVisibilityMixin: DocumentVisibilityMixin,
     DocumentLocationMixin: DocumentLocationMixin,
     DocumentTitleMixin: DocumentTitleMixin,
-    UrlHashChangeMixin: UrlHashChangeMixin
+    UrlHashChangeMixin: UrlHashChangeMixin,
+    WindowCloseMixin: WindowCloseMixin
   };
 })();
