@@ -263,6 +263,11 @@ ExtractH264CodecDetails(const nsAString& aCodecs,
 nsresult
 GenerateRandomPathName(nsCString& aOutSalt, uint32_t aLength);
 
+class MediaTaskQueue;
+
+already_AddRefed<MediaTaskQueue>
+CreateMediaDecodeTaskQueue();
+
 } // end namespace mozilla
 
 #endif
