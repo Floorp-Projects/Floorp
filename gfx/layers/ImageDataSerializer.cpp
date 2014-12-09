@@ -8,6 +8,7 @@
 #include "gfxPoint.h"                   // for gfxIntSize
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/gfx/2D.h"             // for DataSourceSurface, Factory
+#include "mozilla/gfx/Logging.h"        // for gfxDebug
 #include "mozilla/gfx/Tools.h"          // for GetAlignedStride, etc
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 
@@ -68,16 +69,36 @@ ImageDataSerializer::InitializeBufferInfo(IntSize aSize,
 static inline uint32_t
 ComputeStride(SurfaceFormat aFormat, uint32_t aWidth)
 {
-  return GetAlignedStride<4>(BytesPerPixel(aFormat) * aWidth);
+  CheckedInt<uint32_t> size = BytesPerPixel(aFormat);
+  size *= aWidth;
+  if (!size.isValid() || size == 0) {
+    gfxDebug() << "ComputeStride overflow " << aWidth;
+    return 0;
+  }
+
+  return GetAlignedStride<4>(size.value());
 }
 
 uint32_t
 ImageDataSerializerBase::ComputeMinBufferSize(IntSize aSize,
-                                          SurfaceFormat aFormat)
+                                              SurfaceFormat aFormat)
 {
-  uint32_t bufsize = aSize.height * ComputeStride(aFormat, aSize.width);
+  MOZ_ASSERT(aSize.height >= 0 && aSize.width >= 0);
+  if (aSize.height <= 0 || aSize.width <= 0) {
+    gfxDebug() << "Non-positive image buffer size request " << aSize.width << "x" << aSize.height;
+    return 0;
+  }
+
+  CheckedInt<uint32_t> bufsize = ComputeStride(aFormat, aSize.width);
+  bufsize *= aSize.height;
+
+  if (!bufsize.isValid() || bufsize.value() == 0) {
+    gfxDebug() << "Buffer size overflow " << aSize.width << "x" << aSize.height;
+    return 0;
+  }
+
   return SurfaceBufferInfo::GetOffset()
-       + GetAlignedStride<16>(bufsize);
+       + GetAlignedStride<16>(bufsize.value());
 }
 
 void
