@@ -458,7 +458,7 @@ public:
   void AddListenerImpl(already_AddRefed<MediaStreamListener> aListener);
   void RemoveListenerImpl(MediaStreamListener* aListener);
   void RemoveAllListenersImpl();
-  void SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled);
+  virtual void SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled);
   /**
    * Returns true when this stream requires the contents of its inputs even if
    * its own outputs are not being consumed. This is used to signal inputs to
@@ -536,7 +536,7 @@ public:
 
   StreamBuffer::Track* EnsureTrack(TrackID aTrack);
 
-  void ApplyTrackDisabling(TrackID aTrackID, MediaSegment* aSegment, MediaSegment* aRawSegment = nullptr);
+  virtual void ApplyTrackDisabling(TrackID aTrackID, MediaSegment* aSegment, MediaSegment* aRawSegment = nullptr);
 
   DOMMediaStream* GetWrapper()
   {
@@ -776,15 +776,24 @@ public:
    */
   void FinishWithLockHeld();
   void Finish()
-    {
-      MutexAutoLock lock(mMutex);
-      FinishWithLockHeld();
-    }
+  {
+    MutexAutoLock lock(mMutex);
+    FinishWithLockHeld();
+  }
 
   // Overriding allows us to hold the mMutex lock while changing the track enable status
-  void SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled) {
+  virtual void
+  SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled) MOZ_OVERRIDE {
     MutexAutoLock lock(mMutex);
     MediaStream::SetTrackEnabledImpl(aTrackID, aEnabled);
+  }
+
+  // Overriding allows us to ensure mMutex is locked while changing the track enable status
+  virtual void
+  ApplyTrackDisabling(TrackID aTrackID, MediaSegment* aSegment,
+                      MediaSegment* aRawSegment = nullptr) MOZ_OVERRIDE {
+    mMutex.AssertCurrentThreadOwns();
+    MediaStream::ApplyTrackDisabling(aTrackID, aSegment, aRawSegment);
   }
 
   /**
