@@ -20,6 +20,7 @@
 #include "mozilla/EMELog.h"
 #include "EMEH264Decoder.h"
 #include "EMEAudioDecoder.h"
+#include "mozilla/unused.h"
 #include <string>
 
 namespace mozilla {
@@ -31,19 +32,19 @@ public:
 
   EMEDecryptor(MediaDataDecoder* aDecoder,
                MediaDataDecoderCallback* aCallback,
-               MediaTaskQueue* aTaskQueue,
                CDMProxy* aProxy)
     : mDecoder(aDecoder)
     , mCallback(aCallback)
-    , mTaskQueue(aTaskQueue)
+    , mTaskQueue(CreateMediaDecodeTaskQueue())
     , mProxy(aProxy)
   {
   }
 
   virtual nsresult Init() MOZ_OVERRIDE {
-    return mTaskQueue->SyncDispatch(
-      NS_NewRunnableMethod(mDecoder,
-      &MediaDataDecoder::Init));
+    nsresult rv = mTaskQueue->SyncDispatch(
+      NS_NewRunnableMethod(mDecoder, &MediaDataDecoder::Init));
+    unused << NS_WARN_IF(NS_FAILED(rv));
+    return rv;
   }
 
   class RedeliverEncryptedInput : public nsRunnable {
@@ -123,40 +124,44 @@ public:
   }
 
   void Decrypted(mp4_demuxer::MP4Sample* aSample) {
-    mTaskQueue->Dispatch(
+    nsresult rv = mTaskQueue->Dispatch(
       NS_NewRunnableMethodWithArg<mp4_demuxer::MP4Sample*>(
         mDecoder,
         &MediaDataDecoder::Input,
         aSample));
+    unused << NS_WARN_IF(NS_FAILED(rv));
   }
 
   virtual nsresult Flush() MOZ_OVERRIDE {
-    mTaskQueue->SyncDispatch(
+    nsresult rv = mTaskQueue->SyncDispatch(
       NS_NewRunnableMethod(
         mDecoder,
         &MediaDataDecoder::Flush));
-    return NS_OK;
+    unused << NS_WARN_IF(NS_FAILED(rv));
+    return rv;
   }
 
   virtual nsresult Drain() MOZ_OVERRIDE {
-    mTaskQueue->Dispatch(
+    nsresult rv = mTaskQueue->Dispatch(
       NS_NewRunnableMethod(
         mDecoder,
         &MediaDataDecoder::Drain));
-    return NS_OK;
+    unused << NS_WARN_IF(NS_FAILED(rv));
+    return rv;
   }
 
   virtual nsresult Shutdown() MOZ_OVERRIDE {
-    mTaskQueue->SyncDispatch(
+    nsresult rv = mTaskQueue->SyncDispatch(
       NS_NewRunnableMethod(
         mDecoder,
         &MediaDataDecoder::Shutdown));
+    unused << NS_WARN_IF(NS_FAILED(rv));
     mDecoder = nullptr;
     mTaskQueue->BeginShutdown();
     mTaskQueue->AwaitShutdownAndIdle();
     mTaskQueue = nullptr;
     mProxy = nullptr;
-    return NS_OK;
+    return rv;
   }
 
 private:
@@ -170,11 +175,9 @@ private:
 EMEDecoderModule::EMEDecoderModule(CDMProxy* aProxy,
                                    PlatformDecoderModule* aPDM,
                                    bool aCDMDecodesAudio,
-                                   bool aCDMDecodesVideo,
-                                   already_AddRefed<MediaTaskQueue> aTaskQueue)
+                                   bool aCDMDecodesVideo)
   : mProxy(aProxy)
   , mPDM(aPDM)
-  , mTaskQueue(aTaskQueue)
   , mCDMDecodesAudio(aCDMDecodesAudio)
   , mCDMDecodesVideo(aCDMDecodesVideo)
 {
@@ -190,8 +193,6 @@ EMEDecoderModule::Shutdown()
   if (mPDM) {
     return mPDM->Shutdown();
   }
-  mTaskQueue->BeginShutdown();
-  mTaskQueue->AwaitShutdownAndIdle();
   return NS_OK;
 }
 
@@ -227,7 +228,6 @@ EMEDecoderModule::CreateVideoDecoder(const VideoDecoderConfig& aConfig,
 
   nsRefPtr<MediaDataDecoder> emeDecoder(new EMEDecryptor(decoder,
                                                          aCallback,
-                                                         mTaskQueue,
                                                          mProxy));
   return emeDecoder.forget();
 }
@@ -258,7 +258,6 @@ EMEDecoderModule::CreateAudioDecoder(const AudioDecoderConfig& aConfig,
 
   nsRefPtr<MediaDataDecoder> emeDecoder(new EMEDecryptor(decoder,
                                                          aCallback,
-                                                         mTaskQueue,
                                                          mProxy));
   return emeDecoder.forget();
 }
