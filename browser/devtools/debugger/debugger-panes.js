@@ -171,7 +171,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     let url = fullUrl.split(" -> ").pop();
     let label = aSource.addonPath ? aSource.addonPath : SourceUtils.getSourceLabel(url);
 
-    if (!aSource.url && aSource.introductionUrl) {
+    if (aSource.introductionUrl) {
       label += ' > eval';
     }
 
