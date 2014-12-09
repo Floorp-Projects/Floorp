@@ -1290,6 +1290,13 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
                          aResult);
       break;
 
+    case eCSSProperty_ruby_position:
+      nsStyleUtil::AppendBitmaskCSSValue(aProperty, intValue,
+                                         NS_STYLE_RUBY_POSITION_OVER,
+                                         NS_STYLE_RUBY_POSITION_LEFT,
+                                         aResult);
+      break;
+
     default:
       const nsAFlatCString& name = nsCSSProps::LookupPropertyValue(aProperty, intValue);
       AppendASCIItoUTF16(name, aResult);
