@@ -34,55 +34,14 @@ public class TabHistoryController {
         this.showTabHistoryListener = showTabHistoryListener;
     }
 
-    public boolean showTabHistory(final Tab tab, final HistoryAction action) {
-        int historyIndex = tab.getHistoryIndex();
-        int historySize = tab.getHistorySize();
-
-        switch(action) {
-        case BACK:
-            if (!tab.canDoBack()) {
-                return false;
-            }
-            return showHistory(Math.max(historyIndex - Tab.MAX_HISTORY_LIST_SIZE, 0), historyIndex, historyIndex);
-
-        case FORWARD:
-            if (!tab.canDoForward()) {
-                return false;
-            }
-            return showHistory(historyIndex, Math.min(historySize - 1, historyIndex + Tab.MAX_HISTORY_LIST_SIZE), historyIndex);
-
-        case ALL:
-            if (!tab.canDoForward() && !tab.canDoBack()) {
-                return false;
-            }
-
-            int min = historyIndex - Tab.MAX_HISTORY_LIST_SIZE / 2;
-            int max = historyIndex + Tab.MAX_HISTORY_LIST_SIZE / 2;
-            if (min < 0) {
-                max -= min;
-            }
-            if (max > historySize - 1) {
-                min -= max - (historySize - 1);
-                max = historySize - 1;
-            }
-            min = Math.max(min, 0);
-
-            return showHistory(min, max, historyIndex);
-
-        default:
-            return false;
-        }
-    }
-
     /**
-     * This method will show the history starting on fromIndex until toIndex of the history.
+     * This method will show the history for the current tab.
      */
-    private boolean showHistory(final int fromIndex, final int toIndex, final int selIndex) {
+    public boolean showTabHistory(final Tab tab, final HistoryAction action) {
         JSONObject json = new JSONObject();
         try {
-            json.put("fromIndex", fromIndex);
-            json.put("toIndex", toIndex);
-            json.put("selIndex", selIndex);
+            json.put("action", action.name());
+            json.put("tabId", tab.getId());
         } catch (JSONException e) {
             Log.e(LOGTAG, "JSON error", e);
         }
@@ -92,17 +51,26 @@ public class TabHistoryController {
             public void onResponse(NativeJSObject nativeJSObject) {
                 /*
                  * The response from gecko request is of the form
-                 * "urls" : [
-                 *            {
-                 *              "title": "google",
-                 *              "url": "google.com",
-                 *              "selected": false
-                 *            }
-                 *          ]
+                 * {
+                 *   "historyItems" : [
+                 *     {
+                 *       "title": "google",
+                 *       "url": "google.com",
+                 *       "selected": false
+                 *     }
+                 *   ],
+                 *   toIndex = 1
+                 * }
                  */
 
                 final NativeJSObject[] historyItems = nativeJSObject.getObjectArray("historyItems");
+                if (historyItems.length == 0) {
+                    // Empty history, return without showing the popup.
+                    return;
+                }
+
                 final List<TabHistoryPage> historyPageList = new ArrayList<>(historyItems.length);
+                final int toIndex = nativeJSObject.getInt("toIndex");
 
                 for (NativeJSObject obj : historyItems) {
                     final String title = obj.getString("title");
