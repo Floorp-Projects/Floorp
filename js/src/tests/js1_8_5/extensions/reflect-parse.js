@@ -679,11 +679,19 @@ testParamPatternCombinations(function(n) ("{a" + n + ":x" + n + "," + "b" + n + 
                                                    assignProp("b" + n, ident("y" + n)),
                                                    assignProp("c" + n, ident("z" + n))])));
 
+testParamPatternCombinations(function(n) ("{a" + n + ":x" + n + " = 10," + "b" + n + ":y" + n + " = 10," + "c" + n + ":z" + n + " = 10}"),
+                             function(n) (objPatt([assignProp("a" + n, ident("x" + n), lit(10)),
+                                                   assignProp("b" + n, ident("y" + n), lit(10)),
+                                                   assignProp("c" + n, ident("z" + n), lit(10))])));
+
 testParamPatternCombinations(function(n) ("[x" + n + "," + "y" + n + "," + "z" + n + "]"),
                              function(n) (arrPatt([assignElem("x" + n), assignElem("y" + n), assignElem("z" + n)])));
 
 testParamPatternCombinations(function(n) ("[a" + n + ", ..." + "b" + n + "]"),
                              function(n) (arrPatt([assignElem("a" + n), spread(ident("b" + n))])));
+
+testParamPatternCombinations(function(n) ("[a" + n + ", " + "b" + n + " = 10]"),
+                             function(n) (arrPatt([assignElem("a" + n), assignElem("b" + n, lit(10))])));
 
 // destructuring variable declarations
 
@@ -721,6 +729,12 @@ testVarPatternCombinations(function (n) ("{a" + n + ":x" + n + "," + "b" + n + "
                                                         assignProp("c" + n, ident("z" + n))]),
                                            init: lit(0) }));
 
+testVarPatternCombinations(function (n) ("{a" + n + ":x" + n + " = 10," + "b" + n + ":y" + n + " = 10," + "c" + n + ":z" + n + " = 10} = 0"),
+                           function (n) ({ id: objPatt([assignProp("a" + n, ident("x" + n), lit(10)),
+                                                        assignProp("b" + n, ident("y" + n), lit(10)),
+                                                        assignProp("c" + n, ident("z" + n), lit(10))]),
+                                           init: lit(0) }));
+
 testVarPatternCombinations(function(n) ("[x" + n + "," + "y" + n + "," + "z" + n + "] = 0"),
                            function(n) ({ id: arrPatt([assignElem("x" + n), assignElem("y" + n), assignElem("z" + n)]),
                                           init: lit(0) }));
@@ -729,6 +743,9 @@ testVarPatternCombinations(function(n) ("[a" + n + ", ..." + "b" + n + "] = 0"),
                            function(n) ({ id: arrPatt([assignElem("a" + n), spread(ident("b" + n))]),
                                           init: lit(0) }));
 
+testVarPatternCombinations(function(n) ("[a" + n + ", " + "b" + n + " = 10] = 0"),
+                           function(n) ({ id: arrPatt([assignElem("a" + n), assignElem("b" + n, lit(10))]),
+                                          init: lit(0) }));
 // destructuring assignment
 
 function testAssignmentCombinations(makePattSrc, makePattPatt) {
