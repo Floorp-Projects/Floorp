@@ -15,6 +15,8 @@ from mozbuild.frontend.data import (
     DirectoryTraversal,
     Exports,
     GeneratedInclude,
+    GeneratedSources,
+    HostSources,
     IPDLFile,
     JARManifest,
     LocalInclude,
@@ -22,9 +24,11 @@ from mozbuild.frontend.data import (
     ReaderSummary,
     Resources,
     SimpleProgram,
+    Sources,
     StaticLibrary,
     TestHarnessFiles,
     TestManifest,
+    UnifiedSources,
     VariablePassthru,
 )
 from mozbuild.frontend.emitter import TreeMetadataEmitter
@@ -152,18 +156,12 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertIsInstance(objs[0], VariablePassthru)
 
         wanted = {
-            'ASFILES': ['fans.asm', 'tans.s'],
-            'CMMSRCS': ['fans.mm', 'tans.mm'],
-            'CSRCS': ['fans.c', 'tans.c'],
             'DISABLE_STL_WRAPPING': True,
             'EXTRA_COMPONENTS': ['fans.js', 'tans.js'],
             'EXTRA_PP_COMPONENTS': ['fans.pp.js', 'tans.pp.js'],
             'FAIL_ON_WARNINGS': True,
-            'HOST_CPPSRCS': ['fans.cpp', 'tans.cpp'],
-            'HOST_CSRCS': ['fans.c', 'tans.c'],
             'MSVC_ENABLE_PGO': True,
             'NO_DIST_INSTALL': True,
-            'SSRCS': ['bans.S', 'fans.S'],
             'VISIBILITY_FLAGS': '',
             'RCFILE': 'foo.rc',
             'RESFILE': 'bar.res',
@@ -616,6 +614,102 @@ class TestEmitterBasic(unittest.TestCase):
         for lib in libraries:
             defines[lib.basename] = ' '.join(lib.defines.get_defines())
         self.assertEqual(expected, defines)
+
+    def test_sources(self):
+        """Test that SOURCES works properly."""
+        reader = self.reader('sources')
+        objs = self.read_topsrcdir(reader)
+
+        self.assertEqual(len(objs), 6)
+        for o in objs:
+            self.assertIsInstance(o, Sources)
+
+        suffix_map = {obj.canonical_suffix: obj for obj in objs}
+        self.assertEqual(len(suffix_map), 6)
+
+        expected = {
+            '.cpp': ['a.cpp', 'b.cc', 'c.cxx'],
+            '.c': ['d.c'],
+            '.m': ['e.m'],
+            '.mm': ['f.mm'],
+            '.S': ['g.S'],
+            '.s': ['h.s', 'i.asm'],
+        }
+        for suffix, files in expected.items():
+            sources = suffix_map[suffix]
+            self.assertEqual(sources.files, files)
+
+    def test_sources(self):
+        """Test that GENERATED_SOURCES works properly."""
+        reader = self.reader('generated-sources')
+        objs = self.read_topsrcdir(reader)
+
+        self.assertEqual(len(objs), 7)
+
+        # GENERATED_SOURCES automatically generate GARBAGE definitions.
+        garbage = [o for o in objs if isinstance(o, VariablePassthru)]
+        self.assertEqual(len(garbage), 1)
+
+        generated_sources = [o for o in objs if isinstance(o, GeneratedSources)]
+        self.assertEqual(len(generated_sources), 6)
+
+        suffix_map = {obj.canonical_suffix: obj for obj in generated_sources}
+        self.assertEqual(len(suffix_map), 6)
+
+        expected = {
+            '.cpp': ['a.cpp', 'b.cc', 'c.cxx'],
+            '.c': ['d.c'],
+            '.m': ['e.m'],
+            '.mm': ['f.mm'],
+            '.S': ['g.S'],
+            '.s': ['h.s', 'i.asm'],
+        }
+        for suffix, files in expected.items():
+            sources = suffix_map[suffix]
+            self.assertEqual(sources.files, files)
+
+    def test_host_sources(self):
+        """Test that HOST_SOURCES works properly."""
+        reader = self.reader('host-sources')
+        objs = self.read_topsrcdir(reader)
+
+        self.assertEqual(len(objs), 3)
+        for o in objs:
+            self.assertIsInstance(o, HostSources)
+
+        suffix_map = {obj.canonical_suffix: obj for obj in objs}
+        self.assertEqual(len(suffix_map), 3)
+
+        expected = {
+            '.cpp': ['a.cpp', 'b.cc', 'c.cxx'],
+            '.c': ['d.c'],
+            '.mm': ['e.mm', 'f.mm'],
+        }
+        for suffix, files in expected.items():
+            sources = suffix_map[suffix]
+            self.assertEqual(sources.files, files)
+
+    def test_unified_sources(self):
+        """Test that UNIFIED_SOURCES works properly."""
+        reader = self.reader('unified-sources')
+        objs = self.read_topsrcdir(reader)
+
+        self.assertEqual(len(objs), 3)
+        for o in objs:
+            self.assertIsInstance(o, UnifiedSources)
+
+        suffix_map = {obj.canonical_suffix: obj for obj in objs}
+        self.assertEqual(len(suffix_map), 3)
+
+        expected = {
+            '.cpp': ['bar.cxx', 'foo.cpp', 'quux.cc'],
+            '.mm': ['objc1.mm', 'objc2.mm'],
+            '.c': ['c1.c', 'c2.c'],
+        }
+        for suffix, files in expected.items():
+            sources = suffix_map[suffix]
+            self.assertEqual(sources.files, files)
+            self.assertEqual(sources.files_per_unified_file, 32)
 
 if __name__ == '__main__':
     main()
