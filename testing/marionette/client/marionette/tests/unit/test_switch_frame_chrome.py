@@ -48,9 +48,3 @@ class TestSwitchFrameChrome(MarionetteTestCase):
             self.marionette.execute_async_script("foo();")
         except JavascriptException as e:
             self.assertIn("foo", e.msg)
-
-    def test_we_can_switch_to_a_browser_frame(self):
-        self.assertIn("test.xul", self.marionette.get_url(), "Initial navigation has failed")
-        browser = self.marionette.find_element(By.ID, 'aBrowser')
-        self.marionette.switch_to_frame(browser)
-        self.assertIn("test2.xul", self.marionette.get_url(), "Switching by element failed")
