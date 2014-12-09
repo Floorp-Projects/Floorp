@@ -283,28 +283,18 @@ MediaDecoderReader::BreakCycles()
   mTaskQueue = nullptr;
 }
 
-nsRefPtr<ShutdownPromise>
+void
 MediaDecoderReader::Shutdown()
 {
   MOZ_ASSERT(OnDecodeThread());
   mShutdown = true;
   ReleaseMediaResources();
-  nsRefPtr<ShutdownPromise> p;
-
-  // Spin down the task queue if necessary. We wait until BreakCycles to null
-  // out mTaskQueue, since otherwise any remaining tasks could crash when they
-  // invoke GetTaskQueue()->IsCurrentThreadIn().
   if (mTaskQueue && !mTaskQueueIsBorrowed) {
-    // If we own our task queue, shutdown ends when the task queue is done.
-    p = mTaskQueue->BeginShutdown();
-  } else {
-    // If we don't own our task queue, we resolve immediately (though
-    // asynchronously).
-    p = new ShutdownPromise(__func__);
-    p->Resolve(true, __func__);
+    // We may be running in the task queue ourselves, so we don't block this
+    // thread on task queue draining, since that would deadlock.
+    mTaskQueue->BeginShutdown();
   }
-
-  return p;
+  mTaskQueue = nullptr;
 }
 
 AudioDecodeRendezvous::AudioDecodeRendezvous()
