@@ -1538,7 +1538,7 @@ OptimizeMIR(MIRGenerator *mir)
             return false;
     }
 
-    if (mir->optimizationInfo().sinkEnabled()) {
+    {
         AutoTraceLog log(logger, TraceLogger::EliminateDeadCode);
         if (!Sink(mir, graph))
             return false;
