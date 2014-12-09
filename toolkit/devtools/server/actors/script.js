@@ -12,6 +12,7 @@ const { ActorPool, getOffsetColumn } = require("devtools/server/actors/common");
 const { DebuggerServer } = require("devtools/server/main");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const { dbg_assert, dumpn, update, fetch } = DevToolsUtils;
+const { dirname, joinURI } = require("devtools/toolkit/path");
 const { SourceMapConsumer, SourceMapGenerator } = require("source-map");
 const promise = require("promise");
 const PromiseDebugging = require("PromiseDebugging");
@@ -5373,7 +5374,9 @@ ThreadSources.prototype = {
    * Only to be used when we aren't source mapping.
    */
   _sourceForScript: function (aScript) {
-    let url = getSourceURL(aScript.source);
+    // Don't use getSourceURL because we don't want to consider the
+    // displayURL property if it's an eval source
+    let url = isEvalSource(aScript.source) ? null : aScript.source.url;
     let spec = {
       source: aScript.source
     };
@@ -5864,17 +5867,30 @@ function getSymbolName(symbol) {
   return name || undefined;
 }
 
-function getSourceURL(source) {
+function isEvalSource(source) {
   let introType = source.introductionType;
   // These are all the sources that are essentially eval-ed (either
   // by calling eval or passing a string to one of these functions).
-  // Current these have a `url` property when the shouldn't, so
-  // forcefully only consider displayURL
-  if (introType === 'eval' ||
-      introType === 'Function' ||
-      introType === 'eventHandler' ||
-      introType === 'setTimeout' ||
-      introType === 'setInterval') {
+  return (introType === 'eval' ||
+          introType === 'Function' ||
+          introType === 'eventHandler' ||
+          introType === 'setTimeout' ||
+          introType === 'setInterval');
+}
+
+function getSourceURL(source) {
+  if(isEvalSource(source)) {
+    // Eval sources have no urls, but they might have a `displayURL`
+    // created with the sourceURL pragma. If the introduction script
+    // is a non-eval script, generate an full absolute URL relative to it.
+
+    if(source.displayURL &&
+       source.introductionScript &&
+       !isEvalSource(source.introductionScript.source)) {
+      return joinURI(dirname(source.introductionScript.source.url),
+                     source.displayURL);
+    }
+
     return source.displayURL;
   }
   return source.url;
