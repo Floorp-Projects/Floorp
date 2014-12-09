@@ -39,6 +39,11 @@ InputQueue::ReceiveInputEvent(const nsRefPtr<AsyncPanZoomController>& aTarget,
       return ReceiveTouchInput(aTarget, aTargetConfirmed, event, aOutInputBlockId);
     }
 
+    case SCROLLWHEEL_INPUT: {
+      const ScrollWheelInput& event = aEvent.AsScrollWheelInput();
+      return ReceiveScrollWheelInput(aTarget, aTargetConfirmed, event, aOutInputBlockId);
+    }
+
     default:
       // The return value for non-touch input is only used by tests, so just pass
       // through the return value for now. This can be changed later if needed.
@@ -113,6 +118,46 @@ InputQueue::ReceiveTouchInput(const nsRefPtr<AsyncPanZoomController>& aTarget,
     block->AddEvent(aEvent.AsMultiTouchInput());
   }
   return result;
+}
+
+nsEventStatus
+InputQueue::ReceiveScrollWheelInput(const nsRefPtr<AsyncPanZoomController>& aTarget,
+                                    bool aTargetConfirmed,
+                                    const ScrollWheelInput& aEvent,
+                                    uint64_t* aOutInputBlockId) {
+  WheelBlockState* block = nullptr;
+  if (!mInputBlockQueue.IsEmpty()) {
+    block = mInputBlockQueue.LastElement().get()->AsWheelBlock();
+  }
+
+  if (!block) {
+    block = new WheelBlockState(aTarget, aTargetConfirmed);
+    INPQ_LOG("started new scroll wheel block %p for target %p\n", block, aTarget.get());
+
+    SweepDepletedBlocks();
+    mInputBlockQueue.AppendElement(block);
+
+    CancelAnimationsForNewBlock(block);
+    MaybeRequestContentResponse(aTarget, block);
+  } else {
+    INPQ_LOG("received new event in block %p\n", block);
+  }
+
+  if (aOutInputBlockId) {
+    *aOutInputBlockId = block->GetBlockId();
+  }
+
+  // Note that the |aTarget| the APZCTM sent us may contradict the confirmed
+  // target set on the block. In this case the confirmed target (which may be
+  // null) should take priority. This is equivalent to just always using the
+  // target (confirmed or not) from the block.
+  nsRefPtr<AsyncPanZoomController> target = block->GetTargetApzc();
+
+  if (!MaybeHandleCurrentBlock(target, block, aEvent)) {
+    block->AddEvent(aEvent.AsScrollWheelInput());
+  }
+
+  return nsEventStatus_eIgnore;
 }
 
 void

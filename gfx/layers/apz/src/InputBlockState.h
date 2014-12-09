@@ -17,6 +17,8 @@ namespace layers {
 class AsyncPanZoomController;
 class OverscrollHandoffChain;
 class CancelableBlockState;
+class TouchBlockState;
+class WheelBlockState;
 
 /**
  * A base class that stores state common to various input blocks.
@@ -65,6 +67,9 @@ public:
                        bool aTargetConfirmed);
 
   virtual TouchBlockState *AsTouchBlock() {
+    return nullptr;
+  }
+  virtual WheelBlockState *AsWheelBlock() {
     return nullptr;
   }
 
@@ -123,6 +128,32 @@ private:
   bool mPreventDefault;
   bool mContentResponded;
   bool mContentResponseTimerExpired;
+};
+
+/**
+ * A single block of wheel events.
+ */
+class WheelBlockState : public CancelableBlockState
+{
+public:
+  WheelBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
+                  bool aTargetConfirmed);
+
+  bool IsReadyForHandling() const MOZ_OVERRIDE;
+  bool HasEvents() const MOZ_OVERRIDE;
+  void DropEvents() MOZ_OVERRIDE;
+  void HandleEvents(const nsRefPtr<AsyncPanZoomController>& aTarget) MOZ_OVERRIDE;
+  bool MustStayActive() MOZ_OVERRIDE;
+  const char* Type() MOZ_OVERRIDE;
+
+  void AddEvent(const ScrollWheelInput& aEvent);
+
+  WheelBlockState *AsWheelBlock() MOZ_OVERRIDE {
+    return this;
+  }
+
+private:
+  nsTArray<ScrollWheelInput> mEvents;
 };
 
 /**

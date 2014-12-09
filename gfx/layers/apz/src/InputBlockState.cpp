@@ -132,6 +132,63 @@ CancelableBlockState::IsReadyForHandling() const
   return mContentResponded || mContentResponseTimerExpired;
 }
 
+WheelBlockState::WheelBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
+                                 bool aTargetConfirmed)
+  : CancelableBlockState(aTargetApzc, aTargetConfirmed)
+{
+}
+
+void
+WheelBlockState::AddEvent(const ScrollWheelInput& aEvent)
+{
+  mEvents.AppendElement(aEvent);
+}
+
+bool
+WheelBlockState::IsReadyForHandling() const
+{
+  if (!CancelableBlockState::IsReadyForHandling()) {
+    return false;
+  }
+  return true;
+}
+
+bool
+WheelBlockState::HasEvents() const
+{
+  return !mEvents.IsEmpty();
+}
+
+void
+WheelBlockState::DropEvents()
+{
+  TBS_LOG("%p dropping %lu events\n", this, mEvents.Length());
+  mEvents.Clear();
+}
+
+void
+WheelBlockState::HandleEvents(const nsRefPtr<AsyncPanZoomController>& aTarget)
+{
+  while (HasEvents()) {
+    TBS_LOG("%p returning first of %lu events\n", this, mEvents.Length());
+    ScrollWheelInput event = mEvents[0];
+    mEvents.RemoveElementAt(0);
+    aTarget->HandleInputEvent(event);
+  }
+}
+
+bool
+WheelBlockState::MustStayActive()
+{
+  return false;
+}
+
+const char*
+WheelBlockState::Type()
+{
+  return "scroll wheel";
+}
+
 TouchBlockState::TouchBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
                                  bool aTargetConfirmed)
   : CancelableBlockState(aTargetApzc, aTargetConfirmed)
