@@ -164,7 +164,8 @@ class TabsGridLayout extends GridView
             // via a sweet animation
 
             final int removedHeight = getChildAt(0).getMeasuredHeight();
-            final int verticalSpacing = getVerticalSpacing();
+            final int verticalSpacing =
+                    getResources().getDimensionPixelOffset(R.dimen.new_tablet_tab_panel_grid_vspacing);
 
             ValueAnimator paddingAnimator = ValueAnimator.ofInt(getPaddingBottom() + removedHeight + verticalSpacing, getPaddingBottom());
             paddingAnimator.setDuration(ANIM_TIME_MS * 2);
