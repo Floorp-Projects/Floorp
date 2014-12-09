@@ -7,7 +7,7 @@
 /**
  * An extended version of nsIWebProgressListener.
  */
-[scriptable, uuid(dde39de0-e4e0-11da-8ad9-0800200c9a66)]
+[scriptable, uuid(19e9d920-c67e-406c-aeea-77ac5a5c908d)]
 interface nsIWebProgressListener2 : nsIWebProgressListener {
   /**
    * Notification that the progress has changed for one of the requests
