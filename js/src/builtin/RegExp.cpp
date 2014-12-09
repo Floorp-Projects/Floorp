@@ -371,6 +371,72 @@ regexp_toString(JSContext *cx, unsigned argc, Value *vp)
     return CallNonGenericMethod<IsRegExp, regexp_toString_impl>(cx, args);
 }
 
+/* ES6 draft rev29 21.2.5.3 RegExp.prototype.flags */
+bool
+regexp_flags(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    /* Steps 1-2. */
+    if (!args.thisv().isObject()) {
+        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, args.thisv(), NullPtr());
+        if (!bytes)
+            return false;
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+                             bytes, "not an object");
+        js_free(bytes);
+        return false;
+    }
+    RootedObject thisObj(cx, &args.thisv().toObject());
+
+    /* Step 3. */
+    StringBuffer sb(cx);
+
+    /* Steps 4-6. */
+    RootedValue global(cx);
+    if (!JSObject::getProperty(cx, thisObj, thisObj, cx->names().global, &global))
+        return false;
+    if (ToBoolean(global) && !sb.append('g'))
+        return false;
+
+    /* Steps 7-9. */
+    RootedValue ignoreCase(cx);
+    if (!JSObject::getProperty(cx, thisObj, thisObj, cx->names().ignoreCase, &ignoreCase))
+        return false;
+    if (ToBoolean(ignoreCase) && !sb.append('i'))
+        return false;
+
+    /* Steps 10-12. */
+    RootedValue multiline(cx);
+    if (!JSObject::getProperty(cx, thisObj, thisObj, cx->names().multiline, &multiline))
+        return false;
+    if (ToBoolean(multiline) && !sb.append('m'))
+        return false;
+
+    /* Steps 13-15. */
+    RootedValue unicode(cx);
+    if (!JSObject::getProperty(cx, thisObj, thisObj, cx->names().unicode, &unicode))
+        return false;
+    if (ToBoolean(unicode) && !sb.append('u'))
+        return false;
+
+    /* Steps 16-18. */
+    RootedValue sticky(cx);
+    if (!JSObject::getProperty(cx, thisObj, thisObj, cx->names().sticky, &sticky))
+        return false;
+    if (ToBoolean(sticky) && !sb.append('y'))
+        return false;
+
+    /* Step 19. */
+    args.rval().setString(sb.finishString());
+    return true;
+}
+
+static const JSPropertySpec regexp_properties[] = {
+    JS_PSG("flags", regexp_flags, 0),
+    JS_PS_END
+};
+
 static const JSFunctionSpec regexp_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,  regexp_toString,    0,0),
@@ -517,7 +583,7 @@ js_InitRegExpClass(JSContext *cx, HandleObject obj)
     if (!builder.build(empty, RegExpFlag(0)))
         return nullptr;
 
-    if (!DefinePropertiesAndFunctions(cx, proto, nullptr, regexp_methods))
+    if (!DefinePropertiesAndFunctions(cx, proto, regexp_properties, regexp_methods))
         return nullptr;
 
     RootedFunction ctor(cx);
