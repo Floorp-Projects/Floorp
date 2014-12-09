@@ -8,6 +8,7 @@
 #define MOZILLA_TRACKBUFFER_H_
 
 #include "SourceBufferDecoder.h"
+#include "MediaPromise.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/mozalloc.h"
@@ -33,7 +34,7 @@ public:
 
   TrackBuffer(MediaSourceDecoder* aParentDecoder, const nsACString& aType);
 
-  void Shutdown();
+  nsRefPtr<ShutdownPromise> Shutdown();
 
   // Append data to the current decoder.  Also responsible for calling
   // NotifyDataArrived on the decoder to keep buffered range computation up
@@ -131,6 +132,11 @@ private:
   // mParentDecoder's monitor.
   nsTArray<nsRefPtr<SourceBufferDecoder>> mDecoders;
 
+  // During shutdown, we move decoders from mDecoders to mShutdownDecoders after
+  // invoking Shutdown. This is all so that we can avoid destroying the decoders
+  // off-main-thread. :-(
+  nsTArray<nsRefPtr<SourceBufferDecoder>> mShutdownDecoders;
+
   // Contains only the initialized decoders managed by this TrackBuffer.
   // Access protected by mParentDecoder's monitor.
   nsTArray<nsRefPtr<SourceBufferDecoder>> mInitializedDecoders;
@@ -153,6 +159,9 @@ private:
   // Set when the first decoder used by this TrackBuffer is initialized.
   // Protected by mParentDecoder's monitor.
   MediaInfo mInfo;
+
+  void ContinueShutdown(bool aSuccess);
+  MediaPromiseHolder<ShutdownPromise> mShutdownPromise;
 };
 
 } // namespace mozilla
