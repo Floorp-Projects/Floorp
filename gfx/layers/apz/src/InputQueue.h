@@ -15,6 +15,7 @@ namespace mozilla {
 
 class InputData;
 class MultiTouchInput;
+class ScrollWheelInput;
 
 namespace layers {
 
@@ -115,6 +116,10 @@ private:
                                   bool aTargetConfirmed,
                                   const MultiTouchInput& aEvent,
                                   uint64_t* aOutInputBlockId);
+  nsEventStatus ReceiveScrollWheelInput(const nsRefPtr<AsyncPanZoomController>& aTarget,
+                                        bool aTargetConfirmed,
+                                        const ScrollWheelInput& aEvent,
+                                        uint64_t* aOutInputBlockId);
 
   /**
    * Remove any blocks that are inactive - not ready, and having no events.
