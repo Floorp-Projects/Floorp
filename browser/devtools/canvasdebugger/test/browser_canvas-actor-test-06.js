@@ -47,7 +47,7 @@ function ifTestingSupported() {
     "The first draw call has the correct screenshot width.");
   is(firstDrawCallScreenshot.height, 128,
     "The first draw call has the correct screenshot height.");
-  is([].find.call(firstDrawCallScreenshot.pixels, e => e > 0), undefined,
+  is([].find.call(Uint32(firstDrawCallScreenshot.pixels), e => e > 0), undefined,
     "The first draw call's screenshot's pixels seems to be completely transparent.");
 
   ok(secondDrawCallScreenshot,
@@ -58,7 +58,7 @@ function ifTestingSupported() {
     "The second draw call has the correct screenshot width.");
   is(secondDrawCallScreenshot.height, 128,
     "The second draw call has the correct screenshot height.");
-  is([].find.call(firstDrawCallScreenshot.pixels, e => e > 0), undefined,
+  is([].find.call(Uint32(firstDrawCallScreenshot.pixels), e => e > 0), undefined,
     "The second draw call's screenshot's pixels seems to be completely transparent.");
 
   ok(thirdDrawCallScreenshot,
@@ -69,7 +69,7 @@ function ifTestingSupported() {
     "The third draw call has the correct screenshot width.");
   is(thirdDrawCallScreenshot.height, 128,
     "The third draw call has the correct screenshot height.");
-  is([].find.call(thirdDrawCallScreenshot.pixels, e => e > 0), 2160001024,
+  is([].find.call(Uint32(thirdDrawCallScreenshot.pixels), e => e > 0), 2160001024,
     "The third draw call's screenshot's pixels seems to not be completely transparent.");
 
   ok(fourthDrawCallScreenshot,
@@ -80,7 +80,7 @@ function ifTestingSupported() {
     "The fourth draw call has the correct screenshot width.");
   is(fourthDrawCallScreenshot.height, 128,
     "The fourth draw call has the correct screenshot height.");
-  is([].find.call(fourthDrawCallScreenshot.pixels, e => e > 0), 2147483839,
+  is([].find.call(Uint32(fourthDrawCallScreenshot.pixels), e => e > 0), 2147483839,
     "The fourth draw call's screenshot's pixels seems to not be completely transparent.");
 
   isnot(firstDrawCallScreenshot.pixels, secondDrawCallScreenshot.pixels,
@@ -92,4 +92,9 @@ function ifTestingSupported() {
 
   yield removeTab(target.tab);
   finish();
+}
+
+function Uint32(src) {
+  let charView = new Uint8Array(src);
+  return new Uint32Array(charView.buffer);
 }
