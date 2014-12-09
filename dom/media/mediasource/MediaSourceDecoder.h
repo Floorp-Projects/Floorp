@@ -11,6 +11,7 @@
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "MediaDecoder.h"
+#include "MediaSourceReader.h"
 
 class nsIStreamListener;
 
@@ -18,7 +19,6 @@ namespace mozilla {
 
 class MediaResource;
 class MediaDecoderStateMachine;
-class MediaSourceReader;
 class SourceBufferDecoder;
 class TrackBuffer;
 
@@ -70,6 +70,8 @@ public:
 #ifdef MOZ_EME
   virtual nsresult SetCDMProxy(CDMProxy* aProxy) MOZ_OVERRIDE;
 #endif
+
+  MediaSourceReader* GetReader() { return mReader; }
 
 private:
   // The owning MediaSource holds a strong reference to this decoder, and
