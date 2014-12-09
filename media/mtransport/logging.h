@@ -40,7 +40,6 @@
 // PR_LOGGING is off --> make no-op MTLOG macros
 #define MOZ_MTLOG_MODULE(n)
 #define MOZ_MTLOG(level, b)
-
 #endif // defined(PR_LOGGING)
 
 #endif // logging_h__

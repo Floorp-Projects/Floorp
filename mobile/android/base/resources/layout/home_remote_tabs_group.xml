@@ -6,50 +6,54 @@
 -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     xmlns:gecko="http://schemas.android.com/apk/res-auto"
     style="@style/Widget.RemoteTabsClientView"
-    android:layout_width="match_parent"
-    android:layout_height="@dimen/page_row_height"
     android:gravity="center_vertical"
-    android:minHeight="@dimen/page_row_height" >
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/page_group_height"
+    android:minHeight="@dimen/page_group_height">
 
     <ImageView
         android:id="@+id/device_type"
-        android:layout_width="@dimen/favicon_bg"
-        android:layout_height="@dimen/favicon_bg"
-        android:layout_marginLeft="10dip"
-        android:layout_marginRight="10dip"
-        android:scaleType="center" />
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginLeft="5dp"
+        android:layout_gravity="center_vertical"
+        android:scaleType="center"
+        tools:src="@drawable/sync_mobile"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginRight="10dip"
         android:layout_weight="1"
-        android:orientation="vertical" >
+        android:orientation="vertical">
 
         <org.mozilla.gecko.widget.FadedTextView
             android:id="@+id/client"
             style="@style/Widget.TwoLinePageRow.Title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            gecko:fadeWidth="30dp" />
+            gecko:fadeWidth="30dp"
+            tools:text="Firefox on Nexus 5"/>
 
         <TextView
             android:id="@+id/last_synced"
             style="@style/Widget.TwoLinePageRow.Url"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:drawablePadding="5dp"
-            android:maxLength="1024" />
+            android:layout_marginTop="4dp"
+            android:maxLength="1024"
+            tools:text="Last synced: 5 minutes ago"/>
     </LinearLayout>
 
     <ImageView
         android:id="@+id/device_expanded"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
-        android:layout_marginLeft="10dip"
-        android:layout_marginRight="10dip"
-        android:scaleType="center" />
+        android:layout_marginLeft="15dip"
+        android:layout_marginRight="15dip"
+        android:scaleType="center"
+        tools:src="@drawable/home_group_expanded"/>
 
 </LinearLayout>

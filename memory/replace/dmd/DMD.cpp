@@ -111,11 +111,17 @@ static bool gIsDMDInitialized = false;
 
 // This provides infallible allocations (they abort on OOM).  We use it for all
 // of DMD's own allocations, which fall into the following three cases.
+//
 // - Direct allocations (the easy case).
+//
 // - Indirect allocations in js::{Vector,HashSet,HashMap} -- this class serves
 //   as their AllocPolicy.
+//
 // - Other indirect allocations (e.g. NS_StackWalk) -- see the comments on
 //   Thread::mBlockIntercepts and in replace_malloc for how these work.
+//
+// It would be nice if we could use the InfallibleAllocPolicy from mozalloc,
+// but DMD cannot use mozalloc.
 //
 class InfallibleAllocPolicy
 {

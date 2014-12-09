@@ -2168,6 +2168,27 @@
     "n_buckets": 20,
     "description": "The number of unusable addresses reported for each record"
   },
+  "REFRESH_DRIVER_TICK" : {
+    "expires_in_version": "never",
+    "description": "Total time spent ticking the refresh driver in milliseconds",
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 50
+  },
+  "PAINT_BUILD_DISPLAYLIST_TIME" : {
+    "expires_in_version": "never",
+    "description": "Time spent in building displaylists in milliseconds",
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 50
+  },
+  "PAINT_RASTERIZE_TIME" : {
+    "expires_in_version": "never",
+    "description": "Time spent rasterizing each frame in milliseconds",
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 50
+  },
   "PREDICTOR_PREDICT_ATTEMPTS": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -6458,6 +6479,12 @@
     "kind": "enumerated",
     "n_values": 64,
     "description": "TLS/SSL version intolerance was falsely detected, server rejected handshake"
+  },
+  "SSL_FALLBACK_LIMIT_REACHED": {
+    "expires_in_version": "default",
+    "kind": "enumerated",
+    "n_values": 16,
+    "description": "TLS/SSL version fallback reached the minimum version (1=TLS 1.0, 2=TLS 1.1, 3=TLS 1.2) or the fallback limit (4=TLS 1.0, 8=TLS 1.1, 12=TLS 1.2), stopped the fallback"
   },
   "SSL_WEAK_CIPHERS_FALLBACK": {
     "expires_in_version": "never",
