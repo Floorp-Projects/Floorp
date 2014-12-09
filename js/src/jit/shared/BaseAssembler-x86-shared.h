@@ -3788,6 +3788,9 @@ public:
     void vblendvps_rr(XMMRegisterID mask, XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst) {
         vblendvOpSimd(mask, src1, src0, dst);
     }
+    void vblendvps_mr(XMMRegisterID mask, int offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst) {
+        vblendvOpSimd(mask, offset, base, src0, dst);
+    }
 
     void movsldup_rr(XMMRegisterID src, XMMRegisterID dst)
     {
@@ -4397,6 +4400,25 @@ private:
                                  mask, (RegisterID)rm, src0, dst);
     }
 
+    void vblendvOpSimd(XMMRegisterID mask, int offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        if (useLegacySSEEncodingForVblendv(mask, src0, dst)) {
+            spew("blendvps   %s0x%x(%s), %s",
+                 PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(src0));
+            // Even though a "ps" instruction, vblendv is encoded with the "pd" prefix.
+            m_formatter.legacySSEPrefix(VEX_PD);
+            m_formatter.threeByteOp(OP3_BLENDVPS_VdqWdq, ESCAPE_BLENDVPS, offset, base, src0);
+            return;
+        }
+
+        spew("vblendvps  %s, %s0x%x(%s), %s, %s",
+             nameFPReg(mask), PRETTY_PRINT_OFFSET(offset), nameIReg(base),
+             nameFPReg(src0), nameFPReg(dst));
+        // Even though a "ps" instruction, vblendv is encoded with the "pd" prefix.
+        m_formatter.vblendvOpVex(VEX_PD, OP3_VBLENDVPS_VdqWdq, ESCAPE_VBLENDVPS,
+                                 mask, offset, base, src0, dst);
+    }
+
 #ifdef JS_CODEGEN_X64
     void twoByteOpSimd64(const char *name, VexOperandType ty, TwoByteOpcodeID opcode,
                          XMMRegisterID rm, XMMRegisterID src0, XMMRegisterID dst)
@@ -4730,6 +4752,21 @@ private:
             }
             threeOpVex(ty, r, x, b, m, w, v, l, opcode);
             registerModRM(rm, reg);
+            immediate8(mask << 4);
+        }
+
+        void vblendvOpVex(VexOperandType ty, ThreeByteOpcodeID opcode, ThreeByteEscape escape,
+                          XMMRegisterID mask, int offset, RegisterID base, XMMRegisterID src0, int reg)
+        {
+            int r = (reg >> 3), x = 0, b = (base >> 3);
+            int m = 0, w = 0, v = src0, l = 0;
+            switch (escape) {
+              case 0x38: m = 2; break; // 0x0F 0x38
+              case 0x3A: m = 3; break; // 0x0F 0x3A
+              default: MOZ_CRASH("unexpected escape");
+            }
+            threeOpVex(ty, r, x, b, m, w, v, l, opcode);
+            memoryModRM(offset, base, reg);
             immediate8(mask << 4);
         }
 

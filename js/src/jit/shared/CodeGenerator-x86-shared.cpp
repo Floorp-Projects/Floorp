@@ -2704,12 +2704,18 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *ins)
         FloatRegister rhsCopy = masm.reusedInputAlignedFloat32x4(rhs, mask);
         masm.vcmpneqps(rhs, rhsCopy, mask);
 
-        // Emulates blendv
-        if (lhs != output)
-            masm.movaps(lhs, output);
-        masm.andps(Operand(mask), output);
-        masm.andnps(Operand(tmp), mask);
-        masm.orps(Operand(mask), output);
+        if (AssemblerX86Shared::HasAVX()) {
+            masm.vblendvps(mask, lhs, tmp, output);
+        } else {
+            // Emulate vblendvps.
+            // With SSE.4.1 we could use blendvps, however it's awkward since
+            // it requires the mask to be in xmm0.
+            if (lhs != output)
+                masm.movaps(lhs, output);
+            masm.andps(Operand(mask), output);
+            masm.andnps(Operand(tmp), mask);
+            masm.orps(Operand(mask), output);
+        }
         return;
       }
       case MSimdBinaryArith::MaxNum: {
@@ -2732,12 +2738,18 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *ins)
         FloatRegister rhsCopy = masm.reusedInputAlignedFloat32x4(rhs, mask);
         masm.vcmpneqps(rhs, rhsCopy, mask);
 
-        // Emulates blendv
-        if (lhs != output)
-            masm.movaps(lhs, output);
-        masm.andps(Operand(mask), output);
-        masm.andnps(Operand(tmp), mask);
-        masm.orps(Operand(mask), output);
+        if (AssemblerX86Shared::HasAVX()) {
+            masm.vblendvps(mask, lhs, tmp, output);
+        } else {
+            // Emulate vblendvps.
+            // With SSE.4.1 we could use blendvps, however it's awkward since
+            // it requires the mask to be in xmm0.
+            if (lhs != output)
+                masm.movaps(lhs, output);
+            masm.andps(Operand(mask), output);
+            masm.andnps(Operand(tmp), mask);
+            masm.orps(Operand(mask), output);
+        }
         return;
       }
     }
