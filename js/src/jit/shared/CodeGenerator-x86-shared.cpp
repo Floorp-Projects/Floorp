@@ -2546,14 +2546,14 @@ CodeGeneratorX86Shared::visitSimdBinaryCompIx4(LSimdBinaryCompIx4 *ins)
       case MSimdBinaryComp::lessThan:
         // src := rhs
         if (rhs.kind() == Operand::FPREG)
-            masm.moveAlignedInt32x4(ToFloatRegister(ins->rhs()), ScratchSimdReg);
+            masm.moveInt32x4(ToFloatRegister(ins->rhs()), ScratchSimdReg);
         else
             masm.loadAlignedInt32x4(rhs, ScratchSimdReg);
 
         // src := src > lhs (i.e. lhs < rhs)
         // Improve by doing custom lowering (rhs is tied to the output register)
         masm.packedGreaterThanInt32x4(ToOperand(ins->lhs()), ScratchSimdReg);
-        masm.moveAlignedInt32x4(ScratchSimdReg, lhs);
+        masm.moveInt32x4(ScratchSimdReg, lhs);
         return;
       case MSimdBinaryComp::notEqual:
         // Ideally for notEqual, greaterThanOrEqual, and lessThanOrEqual, we
@@ -2566,7 +2566,7 @@ CodeGeneratorX86Shared::visitSimdBinaryCompIx4(LSimdBinaryCompIx4 *ins)
       case MSimdBinaryComp::greaterThanOrEqual:
         // src := rhs
         if (rhs.kind() == Operand::FPREG)
-            masm.moveAlignedInt32x4(ToFloatRegister(ins->rhs()), ScratchSimdReg);
+            masm.moveInt32x4(ToFloatRegister(ins->rhs()), ScratchSimdReg);
         else
             masm.loadAlignedInt32x4(rhs, ScratchSimdReg);
         masm.packedGreaterThanInt32x4(ToOperand(ins->lhs()), ScratchSimdReg);
