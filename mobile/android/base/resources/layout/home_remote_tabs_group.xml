@@ -6,6 +6,7 @@
 -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     xmlns:gecko="http://schemas.android.com/apk/res-auto"
     style="@style/Widget.RemoteTabsClientView"
     android:gravity="center_vertical"
@@ -19,7 +20,8 @@
         android:layout_height="50dp"
         android:layout_marginLeft="5dp"
         android:layout_gravity="center_vertical"
-        android:scaleType="center"/>
+        android:scaleType="center"
+        tools:src="@drawable/sync_mobile"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -32,7 +34,8 @@
             style="@style/Widget.TwoLinePageRow.Title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            gecko:fadeWidth="30dp"/>
+            gecko:fadeWidth="30dp"
+            tools:text="Firefox on Nexus 5"/>
 
         <TextView
             android:id="@+id/last_synced"
@@ -40,7 +43,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:maxLength="1024"/>
+            android:maxLength="1024"
+            tools:text="Last synced: 5 minutes ago"/>
     </LinearLayout>
 
     <ImageView
@@ -49,6 +53,7 @@
         android:layout_width="wrap_content"
         android:layout_marginLeft="15dip"
         android:layout_marginRight="15dip"
-        android:scaleType="center"/>
+        android:scaleType="center"
+        tools:src="@drawable/home_group_expanded"/>
 
 </LinearLayout>
