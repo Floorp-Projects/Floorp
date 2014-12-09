@@ -5844,6 +5844,8 @@ main(int argc, char **argv, char **envp)
                              "to test JIT codegen (no-op on platforms other than x86 and x64).")
         || !op.addBoolOption('\0', "no-sse4", "Pretend CPU does not support SSE4 instructions"
                              "to test JIT codegen (no-op on platforms other than x86 and x64).")
+        || !op.addBoolOption('\0', "no-avx", "Pretend CPU does not support AVX instructions"
+                             "to test JIT codegen (no-op on platforms other than x86 and x64).")
         || !op.addBoolOption('\0', "fuzzing-safe", "Don't expose functions that aren't safe for "
                              "fuzzers to call")
         || !op.addBoolOption('\0', "no-threads", "Disable helper threads and PJS threads")
@@ -5928,6 +5930,10 @@ main(int argc, char **argv, char **envp)
     if (op.getBoolOption("no-sse4")) {
         js::jit::CPUInfo::SetSSE4Disabled();
         PropagateFlagToNestedShells("--no-sse4");
+    }
+    if (op.getBoolOption("no-avx")) {
+        js::jit::CPUInfo::SetAVXDisabled();
+        PropagateFlagToNestedShells("--no-avx");
     }
 #endif
 
