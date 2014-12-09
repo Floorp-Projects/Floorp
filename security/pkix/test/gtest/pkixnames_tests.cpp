@@ -89,16 +89,16 @@ static const PresentedMatchesReference DNSID_MATCH_PARAMS[] =
   // digits
   DNS_ID_MATCH("a1", "a1"),
 
-  // A trailing dot indicates an absolute name, and absolute names can match
-  // relative names, and vice-versa.
+  // A trailing dot indicates an absolute name. Absolute presented names are
+  // not allowed, but absolute reference names are allowed.
   DNS_ID_MATCH("example", "example"),
-  DNS_ID_MATCH("example.", "example."),
+  DNS_ID_MISMATCH("example.", "example."),
   DNS_ID_MATCH("example", "example."),
-  DNS_ID_MATCH("example.", "example"),
+  DNS_ID_MISMATCH("example.", "example"),
   DNS_ID_MATCH("example.com", "example.com"),
-  DNS_ID_MATCH("example.com.", "example.com."),
+  DNS_ID_MISMATCH("example.com.", "example.com."),
   DNS_ID_MATCH("example.com", "example.com."),
-  DNS_ID_MATCH("example.com.", "example.com"),
+  DNS_ID_MISMATCH("example.com.", "example.com"),
   DNS_ID_MISMATCH("example.com..", "example.com."),
   DNS_ID_MISMATCH("example.com..", "example.com"),
   DNS_ID_MISMATCH("example.com...", "example.com."),
@@ -245,17 +245,18 @@ static const PresentedMatchesReference DNSID_MATCH_PARAMS[] =
 
   // Absolute vs relative DNS name tests. Although not explicitly specified
   // in RFC 6125, absolute reference names (those ending in a .) should
-  // match either absolute or relative presented names.
+  // match either absolute or relative presented names. We don't allow
+  // absolute presented names.
   // TODO: File errata against RFC 6125 about this.
-  DNS_ID_MATCH("foo.com.", "foo.com"),
+  DNS_ID_MISMATCH("foo.com.", "foo.com"),
   DNS_ID_MATCH("foo.com", "foo.com."),
-  DNS_ID_MATCH("foo.com.", "foo.com."),
-  DNS_ID_MATCH("f.", "f"),
+  DNS_ID_MISMATCH("foo.com.", "foo.com."),
+  DNS_ID_MISMATCH("f.", "f"),
   DNS_ID_MATCH("f", "f."),
-  DNS_ID_MATCH("f.", "f."),
-  DNS_ID_MATCH("*.bar.foo.com.", "www-3.bar.foo.com"),
+  DNS_ID_MISMATCH("f.", "f."),
+  DNS_ID_MISMATCH("*.bar.foo.com.", "www-3.bar.foo.com"),
   DNS_ID_MATCH("*.bar.foo.com", "www-3.bar.foo.com."),
-  DNS_ID_MATCH("*.bar.foo.com.", "www-3.bar.foo.com."),
+  DNS_ID_MISMATCH("*.bar.foo.com.", "www-3.bar.foo.com."),
 
   // We require the reference ID to be a valid DNS name, so we cannot test this
   // case.
@@ -269,8 +270,10 @@ static const PresentedMatchesReference DNSID_MATCH_PARAMS[] =
 
   // The result is different than Chromium because we don't know that co.uk is
   // a TLD.
-  DNS_ID_MATCH("*.co.uk.", "foo.co.uk"),
-  DNS_ID_MATCH("*.co.uk.", "foo.co.uk."),
+  DNS_ID_MATCH("*.co.uk", "foo.co.uk"),
+  DNS_ID_MATCH("*.co.uk", "foo.co.uk."),
+  DNS_ID_MISMATCH("*.co.uk.", "foo.co.uk"),
+  DNS_ID_MISMATCH("*.co.uk.", "foo.co.uk."),
 };
 
 struct InputValidity
@@ -309,10 +312,10 @@ static const InputValidity DNSNAMES_VALIDITY[] =
   I("a.b..c", false, false),
   I(".a.b.c.", false, false),
 
-  // absolute names
-  I("a.", true, true),
-  I("a.b.", true, true),
-  I("a.b.c.", true, true),
+  // absolute names (only allowed for reference names)
+  I("a.", true, false),
+  I("a.b.", true, false),
+  I("a.b.c.", true, false),
 
   // absolute names with empty label at end
   I("a..", false, false),
@@ -439,7 +442,7 @@ static const InputValidity DNSNAMES_VALIDITY[] =
   I("a*.a", false, false),
   I("a*.a.", false, false),
   I("*.a.b", false, true),
-  I("*.a.b.", false, true),
+  I("*.a.b.", false, false),
   I("a*.b.c", false, true),
   I("*.a.b.c", false, true),
   I("a*.b.c.d", false, true),
@@ -1761,25 +1764,30 @@ static const NameConstraintParams NAME_CONSTRAINT_PARAMS[] =
   //    For example, does a presented ID of "example.com" match a name
   //    constraint of "example.com." and vice versa.
   //
-  { ByteString(), DNSName("example.com"),
+  { // The DNSName in the constraint is not valid because constraint DNS IDs
+    // are not allowed to be absolute.
+    ByteString(), DNSName("example.com"),
     GeneralSubtree(DNSName("example.com.")),
-    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success,
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Result::ERROR_CERT_NOT_IN_NAME_SPACE,
   },
-  { ByteString(), DNSName("example.com."),
+  { // The DNSName in the SAN is not valid because presented DNS IDs are not
+    // allowed to be absolute.
+    ByteString(), DNSName("example.com."),
     GeneralSubtree(DNSName("example.com")),
     Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success,
   },
   { // The presented ID is the same length as the constraint, because the
     // subdomain is only one character long and because the constraint both
-    // begins and ends with ".".
+    // begins and ends with ".". But, it doesn't matter because absolute names
+    // are not allowed for DNSName constraints.
     ByteString(), DNSName("p.example.com"),
     GeneralSubtree(DNSName(".example.com.")),
-    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success,
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Result::ERROR_CERT_NOT_IN_NAME_SPACE,
   },
   { // Same as previous test case, but using a wildcard presented ID.
     ByteString(), DNSName("*.example.com"),
     GeneralSubtree(DNSName(".example.com.")),
-    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Result::ERROR_CERT_NOT_IN_NAME_SPACE
   },
 
   // Q: Are "" and "." valid DNSName constraints? If so, what do they mean?
@@ -1787,17 +1795,19 @@ static const NameConstraintParams NAME_CONSTRAINT_PARAMS[] =
     GeneralSubtree(DNSName("")),
     Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
   },
-  { ByteString(), DNSName("example.com."),
+  { // The malformed (absolute) presented ID does not match.
+    ByteString(), DNSName("example.com."),
     GeneralSubtree(DNSName("")),
-    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
   },
-  { ByteString(), DNSName("example.com"),
+  { // Invalid syntax in name constraint -> ERROR_CERT_NOT_IN_NAME_SPACE.
+    ByteString(), DNSName("example.com"),
     GeneralSubtree(DNSName(".")),
-    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success,
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Result::ERROR_CERT_NOT_IN_NAME_SPACE,
   },
   { ByteString(), DNSName("example.com."),
     GeneralSubtree(DNSName(".")),
-    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Result::ERROR_CERT_NOT_IN_NAME_SPACE
   },
 
   /////////////////////////////////////////////////////////////////////////////
