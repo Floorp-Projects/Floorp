@@ -4,33 +4,39 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
-       xmlns:gecko="http://schemas.android.com/apk/res-auto">
+       xmlns:tools="http://schemas.android.com/tools"
+       xmlns:gecko="http://schemas.android.com/apk/res-auto"
+       tools:context=".BrowserApp">
 
     <org.mozilla.gecko.widget.FaviconView android:id="@+id/icon"
                                           android:layout_width="@dimen/favicon_bg"
                                           android:layout_height="@dimen/favicon_bg"
-                                          android:layout_marginLeft="10dip"
-                                          android:layout_marginRight="10dip"/>
+                                          android:layout_margin="16dp"
+                                          tools:background="@drawable/favicon"/>
 
     <LinearLayout android:layout_width="match_parent"
                   android:layout_height="wrap_content"
-                  android:layout_marginRight="10dip"
-                  android:orientation="vertical">
+                  android:layout_gravity="center_vertical"
+                  android:orientation="vertical"
+                  android:paddingRight="25dp">
 
         <org.mozilla.gecko.widget.FadedTextView
                 android:id="@+id/title"
                 style="@style/Widget.TwoLinePageRow.Title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                gecko:fadeWidth="30dp"/>
+                gecko:fadeWidth="30dp"
+                tools:text="This is a long test title"/>
 
         <TextView android:id="@+id/url"
                   style="@style/Widget.TwoLinePageRow.Url"
                   android:layout_width="match_parent"
                   android:layout_height="wrap_content"
                   android:drawablePadding="5dp"
-                  android:maxLength="1024"/>
+                  android:maxLength="1024"
+                  tools:text="http://test.com/test"
+                  tools:drawableLeft="@drawable/ic_url_bar_tab"
+                  tools:drawableRight="@drawable/ic_url_bar_star"/>
 
     </LinearLayout>
-
 </merge>
