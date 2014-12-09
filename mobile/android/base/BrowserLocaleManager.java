@@ -81,64 +81,6 @@ public class BrowserLocaleManager implements LocaleManager {
     }
 
     /**
-     * Sometimes we want just the language for a locale, not the entire
-     * language tag. But Java's .getLanguage method is wrong.
-     *
-     * This method is equivalent to the first part of {@link #getLanguageTag(Locale)}.
-     *
-     * @return a language string, such as "he" for the Hebrew locales.
-     */
-    public static String getLanguage(final Locale locale) {
-        final String language = locale.getLanguage();  // Can, but should never be, an empty string.
-        // Modernize certain language codes.
-        if (language.equals("iw")) {
-            return "he";
-        }
-
-        if (language.equals("in")) {
-            return "id";
-        }
-
-        if (language.equals("ji")) {
-            return "yi";
-        }
-
-        return language;
-    }
-
-    /**
-     * Gecko uses locale codes like "es-ES", whereas a Java {@link Locale}
-     * stringifies as "es_ES".
-     *
-     * This method approximates the Java 7 method <code>Locale#toLanguageTag()</code>.
-     *
-     * @return a locale string suitable for passing to Gecko.
-     */
-    public static String getLanguageTag(final Locale locale) {
-        // If this were Java 7:
-        // return locale.toLanguageTag();
-
-        final String language = getLanguage(locale);
-        final String country = locale.getCountry();    // Can be an empty string.
-        if (country.equals("")) {
-            return language;
-        }
-        return language + "-" + country;
-    }
-
-    public static Locale parseLocaleCode(final String localeCode) {
-        int index;
-        if ((index = localeCode.indexOf('-')) != -1 ||
-            (index = localeCode.indexOf('_')) != -1) {
-            final String langCode = localeCode.substring(0, index);
-            final String countryCode = localeCode.substring(index + 1);
-            return new Locale(langCode, countryCode);
-        } else {
-            return new Locale(localeCode);
-        }
-    }
-
-    /**
      * Ensure that you call this early in your application startup,
      * and with a context that's sufficiently long-lived (typically
      * the application context).
@@ -275,7 +217,7 @@ public class BrowserLocaleManager implements LocaleManager {
 
         // The value we send to Gecko should be a language tag, not
         // a Java locale string.
-        final String osLanguageTag = BrowserLocaleManager.getLanguageTag(osLocale);
+        final String osLanguageTag = Locales.getLanguageTag(osLocale);
         final GeckoEvent localeOSEvent = GeckoEvent.createBroadcastEvent("Locale:OS", osLanguageTag);
         GeckoAppShell.sendEventToGecko(localeOSEvent);
     }
@@ -321,7 +263,7 @@ public class BrowserLocaleManager implements LocaleManager {
         persistLocale(context, localeCode);
 
         // Tell Gecko.
-        GeckoEvent ev = GeckoEvent.createBroadcastEvent(EVENT_LOCALE_CHANGED, BrowserLocaleManager.getLanguageTag(getCurrentLocale(context)));
+        GeckoEvent ev = GeckoEvent.createBroadcastEvent(EVENT_LOCALE_CHANGED, Locales.getLanguageTag(getCurrentLocale(context)));
         GeckoAppShell.sendEventToGecko(ev);
 
         return resultant;
@@ -389,7 +331,7 @@ public class BrowserLocaleManager implements LocaleManager {
         if (current == null) {
             return null;
         }
-        return currentLocale = parseLocaleCode(current);
+        return currentLocale = Locales.parseLocaleCode(current);
     }
 
     /**
@@ -409,7 +351,7 @@ public class BrowserLocaleManager implements LocaleManager {
             return null;
         }
 
-        final Locale locale = parseLocaleCode(localeCode);
+        final Locale locale = Locales.parseLocaleCode(localeCode);
 
         return updateLocale(context, locale);
     }
@@ -495,7 +437,8 @@ public class BrowserLocaleManager implements LocaleManager {
      * @return the single default locale baked into this application.
      *         Applicable when there is no multilocale.json present.
      */
-    public static String getFallbackLocaleTag() {
+    @SuppressWarnings("static-method")
+    public String getFallbackLocaleTag() {
         return FALLBACK_LOCALE_TAG;
     }
 }

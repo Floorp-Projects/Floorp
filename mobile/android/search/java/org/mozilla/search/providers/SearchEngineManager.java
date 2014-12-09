@@ -12,9 +12,9 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GeckoJarReader;
@@ -188,7 +188,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
             final JSONObject all = new JSONObject(FileUtils.getFileContents(prefFile));
 
             // First, check to see if there's a locale-specific override.
-            final String languageTag = BrowserLocaleManager.getLanguageTag(Locale.getDefault());
+            final String languageTag = Locales.getLanguageTag(Locale.getDefault());
             final String overridesKey = "LocalizablePreferences." + languageTag;
             if (all.has(overridesKey)) {
                 final JSONObject overridePrefs = all.getJSONObject(overridesKey);
@@ -421,7 +421,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
         final Locale locale = Locale.getDefault();
 
         // First, try a file path for the full locale.
-        final String languageTag = BrowserLocaleManager.getLanguageTag(locale);
+        final String languageTag = Locales.getLanguageTag(locale);
         String url = getSearchPluginsJarURL(languageTag, fileName);
 
         InputStream in = GeckoJarReader.getStream(url);
@@ -430,7 +430,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
         }
 
         // If that doesn't work, try a file path for just the language.
-        final String language = BrowserLocaleManager.getLanguage(locale);
+        final String language = Locales.getLanguage(locale);
         if (!languageTag.equals(language)) {
             url = getSearchPluginsJarURL(language, fileName);
             in = GeckoJarReader.getStream(url);
