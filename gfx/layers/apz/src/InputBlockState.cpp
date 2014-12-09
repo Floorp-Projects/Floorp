@@ -220,11 +220,31 @@ TouchBlockState::AddEvent(const MultiTouchInput& aEvent)
   mEvents.AppendElement(aEvent);
 }
 
+bool
+TouchBlockState::MustStayActive()
+{
+  return true;
+}
+
+const char*
+TouchBlockState::Type()
+{
+  return "touch";
+}
+
 void
 TouchBlockState::DropEvents()
 {
   TBS_LOG("%p dropping %lu events\n", this, mEvents.Length());
   mEvents.Clear();
+}
+
+void
+TouchBlockState::HandleEvents(const nsRefPtr<AsyncPanZoomController>& aTarget)
+{
+  while (HasEvents()) {
+    aTarget->HandleInputEvent(RemoveFirstEvent());
+  }
 }
 
 MultiTouchInput
