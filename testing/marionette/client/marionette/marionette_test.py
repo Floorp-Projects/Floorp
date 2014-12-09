@@ -82,10 +82,11 @@ def expectedFailure(func):
 
 def skip_if_b2g(target):
     def wrapper(self, *args, **kwargs):
-        if self.marionette.session_capabilities.get('b2g') == True:
+        if self.marionette.session_capabilities.has_key('b2g') and \
+            not self.marionette.session_capabilities['b2g'] == True:
+            return target(self, *args, **kwargs)
+        else:
             raise SkipTest('skipping due to b2g')
-        return target(self, *args, **kwargs)
-
     return wrapper
 
 def parameterized(func_suffix, *args, **kwargs):

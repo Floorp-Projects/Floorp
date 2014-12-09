@@ -54,6 +54,7 @@ def getUrlProperties(filename):
         ('jsshellUrl', lambda m: 'jsshell-' in m and m.endswith('.zip')),
         ('completeMarUrl', lambda m: m.endswith('.complete.mar')),
         ('partialMarUrl', lambda m: m.endswith('.mar') and '.partial.' in m),
+        ('codeCoverageURL', lambda m: m.endswith('code-coverage-gcno.zip')),
         # packageUrl must be last!
         ('packageUrl', lambda m: True),
     ]

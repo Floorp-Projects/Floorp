@@ -174,3 +174,10 @@ nsBaseCommandController::OnEvent(const char * aEventName)
   NS_ENSURE_ARG_POINTER(aEventName);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsBaseCommandController::GetSupportedCommands(uint32_t* aCount, char*** aCommands)
+{
+  NS_ENSURE_STATE(mCommandTable);
+  return mCommandTable->GetSupportedCommands(aCount, aCommands);
+}

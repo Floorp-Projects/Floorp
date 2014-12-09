@@ -24,16 +24,15 @@ using parallel::SpewMIR;
 using parallel::SpewCompile;
 
 #define SAFE_OP(op)                             \
-    virtual bool visit##op(M##op *prop) { return true; }
+    virtual void visit##op(M##op *prop) { }
 
 #define CUSTOM_OP(op)                        \
-    virtual bool visit##op(M##op *prop);
+    virtual void visit##op(M##op *prop);
 
 #define DROP_OP(op)                             \
-    virtual bool visit##op(M##op *ins) {        \
+    virtual void visit##op(M##op *ins) {        \
         MBasicBlock *block = ins->block();      \
         block->discard(ins);                    \
-        return true;                            \
     }
 
 #define PERMIT(T) (1 << T)
@@ -41,27 +40,26 @@ using parallel::SpewCompile;
 #define PERMIT_INT32 (PERMIT(MIRType_Int32))
 #define PERMIT_NUMERIC (PERMIT(MIRType_Int32) | PERMIT(MIRType_Double))
 
-#define SPECIALIZED_OP(op, flags)                                               \
-    virtual bool visit##op(M##op *ins) {                                        \
-        return visitSpecializedInstruction(ins, ins->specialization(), flags);  \
+#define SPECIALIZED_OP(op, flags)                                             \
+    virtual void visit##op(M##op *ins) {                                      \
+        visitSpecializedInstruction(ins, ins->specialization(), flags);       \
     }
 
 #define UNSAFE_OP(op)                                                         \
-    virtual bool visit##op(M##op *ins) {                                      \
+    virtual void visit##op(M##op *ins) {                                      \
         SpewMIR(ins, "Unsafe");                                               \
-        return markUnsafe();                                                  \
+        markUnsafe();                                                         \
     }
 
 #define WRITE_GUARDED_OP(op, obj)                                             \
-    virtual bool visit##op(M##op *prop) {                                     \
-        return insertWriteGuard(prop, prop->obj());                           \
+    virtual void visit##op(M##op *prop) {                                     \
+        insertWriteGuard(prop, prop->obj());                                  \
     }
 
 #define MAYBE_WRITE_GUARDED_OP(op, obj)                                       \
-    virtual bool visit##op(M##op *prop) {                                     \
-        if (prop->racy())                                                     \
-            return true;                                                      \
-        return insertWriteGuard(prop, prop->obj());                           \
+    virtual void visit##op(M##op *prop) {                                     \
+        if (!prop->racy())                                                    \
+            insertWriteGuard(prop, prop->obj());                              \
     }
 
 class ParallelSafetyVisitor : public MDefinitionVisitor
@@ -70,20 +68,17 @@ class ParallelSafetyVisitor : public MDefinitionVisitor
     bool unsafe_;
     MDefinition *cx_;
 
-    bool insertWriteGuard(MInstruction *writeInstruction, MDefinition *valueBeingWritten);
+    void insertWriteGuard(MInstruction *writeInstruction, MDefinition *valueBeingWritten);
 
-    bool replaceWithNewPar(MInstruction *newInstruction, NativeObject *templateObject);
-    bool replace(MInstruction *oldInstruction, MInstruction *replacementInstruction);
+    void replaceWithNewPar(MInstruction *newInstruction, NativeObject *templateObject);
+    void replace(MInstruction *oldInstruction, MInstruction *replacementInstruction);
 
-    bool visitSpecializedInstruction(MInstruction *ins, MIRType spec, uint32_t flags);
+    void visitSpecializedInstruction(MInstruction *ins, MIRType spec, uint32_t flags);
 
-    // Intended for use in a visitXyz() instruction like "return
-    // markUnsafe()".  Sets the unsafe flag and returns true (since
-    // this does not indicate an unrecoverable compilation failure).
-    bool markUnsafe() {
+    // Intended for use in a visitXyz() instruction.
+    void markUnsafe() {
         MOZ_ASSERT(!unsafe_);
         unsafe_ = true;
-        return true;
     }
 
     TempAllocator &alloc() const {
@@ -415,10 +410,7 @@ ParallelSafetyAnalysis::analyze()
                 // prove unsafe.
                 ins = *iter++;
 
-                if (!ins->accept(&visitor)) {
-                    SpewMIR(ins, "Unaccepted");
-                    return false;
-                }
+                ins->accept(&visitor);
             }
 
             if (!visitor.unsafe()) {
@@ -500,69 +492,69 @@ ParallelSafetyVisitor::convertToBailout(MInstructionIterator &iter)
 // replaced with MNewPar, which is supplied with the thread context.
 // These allocations will take place using per-helper-thread arenas.
 
-bool
+void
 ParallelSafetyVisitor::visitCreateThisWithTemplate(MCreateThisWithTemplate *ins)
 {
-    return replaceWithNewPar(ins, ins->templateObject());
+    replaceWithNewPar(ins, ins->templateObject());
 }
 
-bool
+void
 ParallelSafetyVisitor::visitNewCallObject(MNewCallObject *ins)
 {
     if (ins->templateObject()->hasDynamicSlots()) {
         SpewMIR(ins, "call with dynamic slots");
-        return markUnsafe();
+        markUnsafe();
+    } else {
+        replace(ins, MNewCallObjectPar::New(alloc(), ForkJoinContext(), ins));
     }
-
-    return replace(ins, MNewCallObjectPar::New(alloc(), ForkJoinContext(), ins));
 }
 
-bool
+void
 ParallelSafetyVisitor::visitNewRunOnceCallObject(MNewRunOnceCallObject *ins)
 {
     if (ins->templateObject()->hasDynamicSlots()) {
         SpewMIR(ins, "call with dynamic slots");
-        return markUnsafe();
+        markUnsafe();
+    } else {
+        replace(ins, MNewCallObjectPar::New(alloc(), ForkJoinContext(), ins));
     }
-
-    return replace(ins, MNewCallObjectPar::New(alloc(), ForkJoinContext(), ins));
 }
 
-bool
+void
 ParallelSafetyVisitor::visitLambda(MLambda *ins)
 {
     if (ins->info().singletonType || ins->info().useNewTypeForClone) {
         // slow path: bail on parallel execution.
-        return markUnsafe();
+        markUnsafe();
+    } else {
+        // fast path: replace with LambdaPar op
+        replace(ins, MLambdaPar::New(alloc(), ForkJoinContext(), ins));
     }
-
-    // fast path: replace with LambdaPar op
-    return replace(ins, MLambdaPar::New(alloc(), ForkJoinContext(), ins));
 }
 
-bool
+void
 ParallelSafetyVisitor::visitNewObject(MNewObject *newInstruction)
 {
     if (newInstruction->shouldUseVM()) {
         SpewMIR(newInstruction, "should use VM");
-        return markUnsafe();
+        markUnsafe();
+    } else {
+        replaceWithNewPar(newInstruction, newInstruction->templateObject());
     }
-
-    return replaceWithNewPar(newInstruction, newInstruction->templateObject());
 }
 
-bool
+void
 ParallelSafetyVisitor::visitNewArray(MNewArray *newInstruction)
 {
     if (newInstruction->shouldUseVM()) {
         SpewMIR(newInstruction, "should use VM");
-        return markUnsafe();
+        markUnsafe();
+    } else {
+        replaceWithNewPar(newInstruction, newInstruction->templateObject());
     }
-
-    return replaceWithNewPar(newInstruction, newInstruction->templateObject());
 }
 
-bool
+void
 ParallelSafetyVisitor::visitNewDerivedTypedObject(MNewDerivedTypedObject *ins)
 {
     // FIXME(Bug 984090) -- There should really be a parallel-safe
@@ -570,47 +562,46 @@ ParallelSafetyVisitor::visitNewDerivedTypedObject(MNewDerivedTypedObject *ins)
     // implemented, let's just ignore those with 0 uses, since they
     // will be stripped out by DCE later.
     if (!ins->hasUses())
-        return true;
+        return;
 
     SpewMIR(ins, "visitNewDerivedTypedObject");
-    return markUnsafe();
+    markUnsafe();
 }
 
-bool
+void
 ParallelSafetyVisitor::visitRest(MRest *ins)
 {
-    return replace(ins, MRestPar::New(alloc(), ForkJoinContext(), ins));
+    replace(ins, MRestPar::New(alloc(), ForkJoinContext(), ins));
 }
 
-bool
+void
 ParallelSafetyVisitor::visitMathFunction(MMathFunction *ins)
 {
-    return replace(ins, MMathFunction::New(alloc(), ins->input(), ins->function(), nullptr));
+    replace(ins, MMathFunction::New(alloc(), ins->input(), ins->function(), nullptr));
 }
 
-bool
+void
 ParallelSafetyVisitor::visitConcat(MConcat *ins)
 {
-    return replace(ins, MConcatPar::New(alloc(), ForkJoinContext(), ins));
+    replace(ins, MConcatPar::New(alloc(), ForkJoinContext(), ins));
 }
 
-bool
+void
 ParallelSafetyVisitor::visitToString(MToString *ins)
 {
     MIRType inputType = ins->input()->type();
     if (inputType != MIRType_Int32 && inputType != MIRType_Double)
-        return markUnsafe();
-    return true;
+        markUnsafe();
 }
 
-bool
+void
 ParallelSafetyVisitor::replaceWithNewPar(MInstruction *newInstruction,
                                          NativeObject *templateObject)
 {
-    return replace(newInstruction, MNewPar::New(alloc(), ForkJoinContext(), templateObject));
+    replace(newInstruction, MNewPar::New(alloc(), ForkJoinContext(), templateObject));
 }
 
-bool
+void
 ParallelSafetyVisitor::replace(MInstruction *oldInstruction,
                                MInstruction *replacementInstruction)
 {
@@ -632,8 +623,6 @@ ParallelSafetyVisitor::replace(MInstruction *oldInstruction,
         replacementInstruction->trySpecializeFloat32(alloc());
     }
     MOZ_ASSERT(oldInstruction->type() == replacementInstruction->type());
-
-    return true;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -646,7 +635,7 @@ ParallelSafetyVisitor::replace(MInstruction *oldInstruction,
 // guard which will check whether the object was allocated from the
 // per-thread-arena or not.
 
-bool
+void
 ParallelSafetyVisitor::insertWriteGuard(MInstruction *writeInstruction,
                                         MDefinition *valueBeingWritten)
 {
@@ -668,7 +657,8 @@ ParallelSafetyVisitor::insertWriteGuard(MInstruction *writeInstruction,
           default:
             SpewMIR(writeInstruction, "cannot insert write guard for %s",
                     valueBeingWritten->opName());
-            return markUnsafe();
+            markUnsafe();
+            return;
         }
         break;
 
@@ -689,14 +679,16 @@ ParallelSafetyVisitor::insertWriteGuard(MInstruction *writeInstruction,
           default:
             SpewMIR(writeInstruction, "cannot insert write guard for %s",
                     valueBeingWritten->opName());
-            return markUnsafe();
+            markUnsafe();
+            return;
         }
         break;
 
       default:
         SpewMIR(writeInstruction, "cannot insert write guard for MIR Type %d",
                 valueBeingWritten->type());
-        return markUnsafe();
+        markUnsafe();
+        return;
     }
 
     if (object->isUnbox())
@@ -706,7 +698,7 @@ ParallelSafetyVisitor::insertWriteGuard(MInstruction *writeInstruction,
       case MDefinition::Op_NewPar:
         // MNewPar will always be creating something thread-local, omit the guard
         SpewMIR(writeInstruction, "write to NewPar prop does not require guard");
-        return true;
+        return;
       default:
         break;
     }
@@ -716,7 +708,6 @@ ParallelSafetyVisitor::insertWriteGuard(MInstruction *writeInstruction,
         MGuardThreadExclusive::New(alloc(), ForkJoinContext(), object);
     block->insertBefore(writeInstruction, writeGuard);
     writeGuard->typePolicy()->adjustInputs(alloc(), writeGuard);
-    return true;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -725,13 +716,14 @@ ParallelSafetyVisitor::insertWriteGuard(MInstruction *writeInstruction,
 // We only support calls to interpreted functions that that have already been
 // Ion compiled. If a function has no IonScript, we bail out.
 
-bool
+void
 ParallelSafetyVisitor::visitCall(MCall *ins)
 {
     // DOM? Scary.
     if (ins->isCallDOMNative()) {
         SpewMIR(ins, "call to dom function");
-        return markUnsafe();
+        markUnsafe();
+        return;
     }
 
     JSFunction *target = ins->getSingleTarget();
@@ -739,17 +731,15 @@ ParallelSafetyVisitor::visitCall(MCall *ins)
         // Non-parallel native? Scary
         if (target->isNative() && !target->hasParallelNative()) {
             SpewMIR(ins, "call to non-parallel native function");
-            return markUnsafe();
+            markUnsafe();
         }
-        return true;
+        return;
     }
 
     if (ins->isConstructing()) {
         SpewMIR(ins, "call to unknown constructor");
-        return markUnsafe();
+        markUnsafe();
     }
-
-    return true;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -760,16 +750,16 @@ ParallelSafetyVisitor::visitCall(MCall *ins)
 // instruction to access it, one parameterized by the thread context.
 // Similar considerations apply to checking for interrupts.
 
-bool
+void
 ParallelSafetyVisitor::visitCheckOverRecursed(MCheckOverRecursed *ins)
 {
-    return replace(ins, MCheckOverRecursedPar::New(alloc(), ForkJoinContext()));
+    replace(ins, MCheckOverRecursedPar::New(alloc(), ForkJoinContext()));
 }
 
-bool
+void
 ParallelSafetyVisitor::visitInterruptCheck(MInterruptCheck *ins)
 {
-    return replace(ins, MInterruptCheckPar::New(alloc(), ForkJoinContext()));
+    replace(ins, MInterruptCheckPar::New(alloc(), ForkJoinContext()));
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -781,22 +771,22 @@ ParallelSafetyVisitor::visitInterruptCheck(MInterruptCheck *ins)
 // TODO---Eventually, we should probably permit arbitrary + but bail
 // if the operands are not both integers/floats.
 
-bool
+void
 ParallelSafetyVisitor::visitSpecializedInstruction(MInstruction *ins, MIRType spec,
                                                    uint32_t flags)
 {
     uint32_t flag = 1 << spec;
     if (flags & flag)
-        return true;
+        return;
 
     SpewMIR(ins, "specialized to unacceptable type %d", spec);
-    return markUnsafe();
+    markUnsafe();
 }
 
 /////////////////////////////////////////////////////////////////////////////
 // Throw
 
-bool
+void
 ParallelSafetyVisitor::visitThrow(MThrow *thr)
 {
     MBasicBlock *block = thr->block();
@@ -805,7 +795,6 @@ ParallelSafetyVisitor::visitThrow(MThrow *thr)
     block->discardLastIns();
     block->add(bail);
     block->end(MUnreachable::New(alloc()));
-    return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////

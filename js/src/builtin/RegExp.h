@@ -12,6 +12,9 @@
 JSObject *
 js_InitRegExpClass(JSContext *cx, js::HandleObject obj);
 
+bool
+regexp_flags(JSContext *cx, unsigned argc, JS::Value *vp);
+
 /*
  * The following builtin natives are extern'd for pointer comparison in
  * other parts of the engine.

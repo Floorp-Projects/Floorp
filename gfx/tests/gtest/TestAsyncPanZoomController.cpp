@@ -146,8 +146,8 @@ public:
     return GetInputQueue()->ReceiveInputEvent(this, true, aEvent, aOutInputBlockId);
   }
 
-  void ContentReceivedTouch(uint64_t aInputBlockId, bool aPreventDefault) {
-    GetInputQueue()->ContentReceivedTouch(aInputBlockId, aPreventDefault);
+  void ContentReceivedInputBlock(uint64_t aInputBlockId, bool aPreventDefault) {
+    GetInputQueue()->ContentReceivedInputBlock(aInputBlockId, aPreventDefault);
   }
   
   void SetAllowedTouchBehavior(uint64_t aInputBlockId, const nsTArray<TouchBehaviorFlags>& aBehaviors) {
@@ -708,7 +708,7 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_PreventDefault) {
   PinchWithTouchInput(apzc, 250, 300, 1.25, touchInputId, nullptr, nullptr, &blockId);
 
   // Send the prevent-default notification for the touch block
-  apzc->ContentReceivedTouch(blockId, true);
+  apzc->ContentReceivedInputBlock(blockId, true);
 
   // Run all pending tasks (this should include at least the
   // prevent-default timer).
@@ -918,7 +918,7 @@ protected:
 
     // Send the signal that content has handled and preventDefaulted the touch
     // events. This flushes the event queue.
-    apzc->ContentReceivedTouch(blockId, true);
+    apzc->ContentReceivedInputBlock(blockId, true);
     // Run all pending tasks (this should include at least the
     // prevent-default timer).
     EXPECT_LE(1, mcc->RunThroughDelayedTasks());
@@ -1189,7 +1189,7 @@ protected:
 
     // Start the fling down.
     Pan(apzc, time, touchStart, touchEnd, false, nullptr, nullptr, &blockId);
-    apzc->ContentReceivedTouch(blockId, false);
+    apzc->ContentReceivedInputBlock(blockId, false);
     while (mcc->RunThroughDelayedTasks());
 
     // Sample the fling a couple of times to ensure it's going.
@@ -1209,7 +1209,7 @@ protected:
 
     // respond to the touchdown that stopped the fling.
     // even if we do a prevent-default on it, the animation should remain stopped.
-    apzc->ContentReceivedTouch(blockId, aPreventDefault);
+    apzc->ContentReceivedInputBlock(blockId, aPreventDefault);
     while (mcc->RunThroughDelayedTasks());
 
     // Verify the page hasn't moved
@@ -1299,7 +1299,7 @@ protected:
       apzc->SetAllowedTouchBehavior(blockId, allowedTouchBehaviors);
     }
     // Have content "respond" to the touchstart
-    apzc->ContentReceivedTouch(blockId, false);
+    apzc->ContentReceivedInputBlock(blockId, false);
 
     MockFunction<void(std::string checkPointName)> check;
 
@@ -1332,7 +1332,7 @@ protected:
     // in the queue. Deal with those here. We do the content response first
     // with preventDefault=false, and then we run the timeout task which
     // "loses the race" and does nothing.
-    apzc->ContentReceivedTouch(blockId, false);
+    apzc->ContentReceivedInputBlock(blockId, false);
     mcc->CheckHasDelayedTask();
     mcc->RunDelayedTask();
 
@@ -1370,7 +1370,7 @@ protected:
       apzc->SetAllowedTouchBehavior(blockId, allowedTouchBehaviors);
     }
     // Have content "respond" to the touchstart
-    apzc->ContentReceivedTouch(blockId, false);
+    apzc->ContentReceivedInputBlock(blockId, false);
 
     MockFunction<void(std::string checkPointName)> check;
 
@@ -1398,7 +1398,7 @@ protected:
     // Send the signal that content has handled the long-tap, and then run
     // the timeout task (it will be a no-op because the content "wins" the
     // race. This takes the place of the "contextmenu" event.
-    apzc->ContentReceivedTouch(blockId, true);
+    apzc->ContentReceivedInputBlock(blockId, true);
     mcc->CheckHasDelayedTask();
     mcc->RunDelayedTask();
 
@@ -1502,8 +1502,8 @@ TEST_F(APZCGestureDetectorTester, DoubleTap) {
   DoubleTapAndCheckStatus(apzc, 10, 10, time, &blockIds);
 
   // responses to the two touchstarts
-  apzc->ContentReceivedTouch(blockIds[0], false);
-  apzc->ContentReceivedTouch(blockIds[1], false);
+  apzc->ContentReceivedInputBlock(blockIds[0], false);
+  apzc->ContentReceivedInputBlock(blockIds[1], false);
 
   while (mcc->RunThroughDelayedTasks());
 
@@ -1522,8 +1522,8 @@ TEST_F(APZCGestureDetectorTester, DoubleTapNotZoomable) {
   DoubleTapAndCheckStatus(apzc, 10, 10, time, &blockIds);
 
   // responses to the two touchstarts
-  apzc->ContentReceivedTouch(blockIds[0], false);
-  apzc->ContentReceivedTouch(blockIds[1], false);
+  apzc->ContentReceivedInputBlock(blockIds[0], false);
+  apzc->ContentReceivedInputBlock(blockIds[1], false);
 
   while (mcc->RunThroughDelayedTasks());
 
@@ -1542,8 +1542,8 @@ TEST_F(APZCGestureDetectorTester, DoubleTapPreventDefaultFirstOnly) {
   DoubleTapAndCheckStatus(apzc, 10, 10, time, &blockIds);
 
   // responses to the two touchstarts
-  apzc->ContentReceivedTouch(blockIds[0], true);
-  apzc->ContentReceivedTouch(blockIds[1], false);
+  apzc->ContentReceivedInputBlock(blockIds[0], true);
+  apzc->ContentReceivedInputBlock(blockIds[1], false);
 
   while (mcc->RunThroughDelayedTasks());
 
@@ -1562,8 +1562,8 @@ TEST_F(APZCGestureDetectorTester, DoubleTapPreventDefaultBoth) {
   DoubleTapAndCheckStatus(apzc, 10, 10, time, &blockIds);
 
   // responses to the two touchstarts
-  apzc->ContentReceivedTouch(blockIds[0], true);
-  apzc->ContentReceivedTouch(blockIds[1], true);
+  apzc->ContentReceivedInputBlock(blockIds[0], true);
+  apzc->ContentReceivedInputBlock(blockIds[1], true);
 
   while (mcc->RunThroughDelayedTasks());
 
@@ -2227,7 +2227,7 @@ TEST_F(APZOverscrollHandoffTester, DeferredInputEventProcessing) {
   ApzcPanNoFling(childApzc, time, 90, 30, &blockId);
 
   // Allow the pan to be processed.
-  childApzc->ContentReceivedTouch(blockId, false);
+  childApzc->ContentReceivedInputBlock(blockId, false);
 
   // Make sure overscroll was handed off correctly.
   EXPECT_EQ(50, childApzc->GetFrameMetrics().GetScrollOffset().y);
@@ -2266,7 +2266,7 @@ TEST_F(APZOverscrollHandoffTester, LayerStructureChangesWhileEventsArePending) {
   ApzcPanNoFling(childApzc, time, 30, 90, &secondBlockId);
 
   // Allow the first pan to be processed.
-  childApzc->ContentReceivedTouch(blockId, false);
+  childApzc->ContentReceivedInputBlock(blockId, false);
 
   // Make sure things have scrolled according to the handoff chain in
   // place at the time the touch-start of the first pan was queued.
@@ -2275,7 +2275,7 @@ TEST_F(APZOverscrollHandoffTester, LayerStructureChangesWhileEventsArePending) {
   EXPECT_EQ(0, middleApzc->GetFrameMetrics().GetScrollOffset().y);
 
   // Allow the second pan to be processed.
-  childApzc->ContentReceivedTouch(secondBlockId, false);
+  childApzc->ContentReceivedInputBlock(secondBlockId, false);
 
   // Make sure things have scrolled according to the handoff chain in
   // place at the time the touch-start of the second pan was queued.

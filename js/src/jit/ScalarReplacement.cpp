@@ -107,12 +107,10 @@ EmulateStateOf<MemoryView>::run(MemoryView &view)
             // Increment the iterator before visiting the instruction, as the
             // visit function might discard itself from the basic block.
             MNode *ins = *iter++;
-            if (ins->isDefinition()) {
-                if (!ins->toDefinition()->accept(&view))
-                    return false;
-            } else if (!view.visitResumePoint(ins->toResumePoint())) {
-                return false;
-            }
+            if (ins->isDefinition())
+                ins->toDefinition()->accept(&view);
+            else
+                view.visitResumePoint(ins->toResumePoint());
         }
 
         // For each successor, merge the current state into the state of the
@@ -239,12 +237,12 @@ class ObjectMemoryView : public MDefinitionVisitorDefaultNoop
 #endif
 
   public:
-    bool visitResumePoint(MResumePoint *rp);
-    bool visitStoreFixedSlot(MStoreFixedSlot *ins);
-    bool visitLoadFixedSlot(MLoadFixedSlot *ins);
-    bool visitStoreSlot(MStoreSlot *ins);
-    bool visitLoadSlot(MLoadSlot *ins);
-    bool visitGuardShape(MGuardShape *ins);
+    void visitResumePoint(MResumePoint *rp);
+    void visitStoreFixedSlot(MStoreFixedSlot *ins);
+    void visitLoadFixedSlot(MLoadFixedSlot *ins);
+    void visitStoreSlot(MStoreSlot *ins);
+    void visitLoadSlot(MLoadSlot *ins);
+    void visitGuardShape(MGuardShape *ins);
 };
 
 const char *ObjectMemoryView::phaseName = "Scalar Replacement of Object";
@@ -388,19 +386,18 @@ ObjectMemoryView::assertSuccess()
 }
 #endif
 
-bool
+void
 ObjectMemoryView::visitResumePoint(MResumePoint *rp)
 {
     ReplaceResumePointOperands(rp, obj_, state_);
-    return true;
 }
 
-bool
+void
 ObjectMemoryView::visitStoreFixedSlot(MStoreFixedSlot *ins)
 {
     // Skip stores made on other objects.
     if (ins->object() != obj_)
-        return true;
+        return;
 
     // Clone the state and update the slot value.
     state_ = BlockState::Copy(alloc_, state_);
@@ -409,25 +406,23 @@ ObjectMemoryView::visitStoreFixedSlot(MStoreFixedSlot *ins)
 
     // Remove original instruction.
     ins->block()->discard(ins);
-    return true;
 }
 
-bool
+void
 ObjectMemoryView::visitLoadFixedSlot(MLoadFixedSlot *ins)
 {
     // Skip loads made on other objects.
     if (ins->object() != obj_)
-        return true;
+        return;
 
     // Replace load by the slot value.
     ins->replaceAllUsesWith(state_->getFixedSlot(ins->slot()));
 
     // Remove original instruction.
     ins->block()->discard(ins);
-    return true;
 }
 
-bool
+void
 ObjectMemoryView::visitStoreSlot(MStoreSlot *ins)
 {
     // Skip stores made on other objects.
@@ -435,7 +430,7 @@ ObjectMemoryView::visitStoreSlot(MStoreSlot *ins)
     if (slots->object() != obj_) {
         // Guard objects are replaced when they are visited.
         MOZ_ASSERT(!slots->object()->isGuardShape() || slots->object()->toGuardShape()->obj() != obj_);
-        return true;
+        return;
     }
 
     // Clone the state and update the slot value.
@@ -445,10 +440,9 @@ ObjectMemoryView::visitStoreSlot(MStoreSlot *ins)
 
     // Remove original instruction.
     ins->block()->discard(ins);
-    return true;
 }
 
-bool
+void
 ObjectMemoryView::visitLoadSlot(MLoadSlot *ins)
 {
     // Skip loads made on other objects.
@@ -456,7 +450,7 @@ ObjectMemoryView::visitLoadSlot(MLoadSlot *ins)
     if (slots->object() != obj_) {
         // Guard objects are replaced when they are visited.
         MOZ_ASSERT(!slots->object()->isGuardShape() || slots->object()->toGuardShape()->obj() != obj_);
-        return true;
+        return;
     }
 
     // Replace load by the slot value.
@@ -464,22 +458,20 @@ ObjectMemoryView::visitLoadSlot(MLoadSlot *ins)
 
     // Remove original instruction.
     ins->block()->discard(ins);
-    return true;
 }
 
-bool
+void
 ObjectMemoryView::visitGuardShape(MGuardShape *ins)
 {
     // Skip loads made on other objects.
     if (ins->obj() != obj_)
-        return true;
+        return;
 
     // Replace the shape guard by its object.
     ins->replaceAllUsesWith(obj_);
 
     // Remove original instruction.
     ins->block()->discard(ins);
-    return true;
 }
 
 static bool
@@ -689,12 +681,12 @@ class ArrayMemoryView : public MDefinitionVisitorDefaultNoop
     void discardInstruction(MInstruction *ins, MDefinition *elements);
 
   public:
-    bool visitResumePoint(MResumePoint *rp);
-    bool visitStoreElement(MStoreElement *ins);
-    bool visitLoadElement(MLoadElement *ins);
-    bool visitSetInitializedLength(MSetInitializedLength *ins);
-    bool visitInitializedLength(MInitializedLength *ins);
-    bool visitArrayLength(MArrayLength *ins);
+    void visitResumePoint(MResumePoint *rp);
+    void visitStoreElement(MStoreElement *ins);
+    void visitLoadElement(MLoadElement *ins);
+    void visitSetInitializedLength(MSetInitializedLength *ins);
+    void visitInitializedLength(MInitializedLength *ins);
+    void visitArrayLength(MArrayLength *ins);
 };
 
 const char *ArrayMemoryView::phaseName = "Scalar Replacement of Array";
@@ -828,11 +820,10 @@ ArrayMemoryView::assertSuccess()
 }
 #endif
 
-bool
+void
 ArrayMemoryView::visitResumePoint(MResumePoint *rp)
 {
     ReplaceResumePointOperands(rp, arr_, state_);
-    return true;
 }
 
 bool
@@ -850,13 +841,13 @@ ArrayMemoryView::discardInstruction(MInstruction *ins, MDefinition *elements)
         elements->block()->discard(elements->toInstruction());
 }
 
-bool
+void
 ArrayMemoryView::visitStoreElement(MStoreElement *ins)
 {
     // Skip other array objects.
     MDefinition *elements = ins->elements();
     if (!isArrayStateElements(elements))
-        return true;
+        return;
 
     // Register value of the setter in the state.
     int32_t index;
@@ -867,16 +858,15 @@ ArrayMemoryView::visitStoreElement(MStoreElement *ins)
 
     // Remove original instruction.
     discardInstruction(ins, elements);
-    return true;
 }
 
-bool
+void
 ArrayMemoryView::visitLoadElement(MLoadElement *ins)
 {
     // Skip other array objects.
     MDefinition *elements = ins->elements();
     if (!isArrayStateElements(elements))
-        return true;
+        return;
 
     // Replace by the value contained at the index.
     int32_t index;
@@ -885,16 +875,15 @@ ArrayMemoryView::visitLoadElement(MLoadElement *ins)
 
     // Remove original instruction.
     discardInstruction(ins, elements);
-    return true;
 }
 
-bool
+void
 ArrayMemoryView::visitSetInitializedLength(MSetInitializedLength *ins)
 {
     // Skip other array objects.
     MDefinition *elements = ins->elements();
     if (!isArrayStateElements(elements))
-        return true;
+        return;
 
     // Replace by the new initialized length.  Note that the argument of
     // MSetInitalizedLength is the last index and not the initialized length.
@@ -909,32 +898,30 @@ ArrayMemoryView::visitSetInitializedLength(MSetInitializedLength *ins)
 
     // Remove original instruction.
     discardInstruction(ins, elements);
-    return true;
 }
 
-bool
+void
 ArrayMemoryView::visitInitializedLength(MInitializedLength *ins)
 {
     // Skip other array objects.
     MDefinition *elements = ins->elements();
     if (!isArrayStateElements(elements))
-        return true;
+        return;
 
     // Replace by the value of the length.
     ins->replaceAllUsesWith(state_->initializedLength());
 
     // Remove original instruction.
     discardInstruction(ins, elements);
-    return true;
 }
 
-bool
+void
 ArrayMemoryView::visitArrayLength(MArrayLength *ins)
 {
     // Skip other array objects.
     MDefinition *elements = ins->elements();
     if (!isArrayStateElements(elements))
-        return true;
+        return;
 
     // Replace by the value of the length.
     if (!length_) {
@@ -945,7 +932,6 @@ ArrayMemoryView::visitArrayLength(MArrayLength *ins)
 
     // Remove original instruction.
     discardInstruction(ins, elements);
-    return true;
 }
 
 bool

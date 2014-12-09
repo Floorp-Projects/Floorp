@@ -69,9 +69,6 @@ public:
   virtual TouchBlockState *AsTouchBlock() {
     return nullptr;
   }
-  virtual WheelBlockState *AsWheelBlock() {
-    return nullptr;
-  }
 
   /**
    * Record whether or not content cancelled this block of events.
@@ -98,6 +95,9 @@ public:
    */
   virtual bool IsReadyForHandling() const;
 
+<<<<<<< HEAD
+private:
+=======
   /**
    * Returns whether or not this block has pending events.
    */
@@ -124,36 +124,11 @@ public:
    */
   virtual const char* Type() = 0;
 
-private:
+ private:
+>>>>>>> 80325be... Refactor InputQueue to hold more than touch events. (bug 1013432 part 2, r=kats)
   bool mPreventDefault;
   bool mContentResponded;
   bool mContentResponseTimerExpired;
-};
-
-/**
- * A single block of wheel events.
- */
-class WheelBlockState : public CancelableBlockState
-{
-public:
-  WheelBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
-                  bool aTargetConfirmed);
-
-  bool IsReadyForHandling() const MOZ_OVERRIDE;
-  bool HasEvents() const MOZ_OVERRIDE;
-  void DropEvents() MOZ_OVERRIDE;
-  void HandleEvents(const nsRefPtr<AsyncPanZoomController>& aTarget) MOZ_OVERRIDE;
-  bool MustStayActive() MOZ_OVERRIDE;
-  const char* Type() MOZ_OVERRIDE;
-
-  void AddEvent(const ScrollWheelInput& aEvent);
-
-  WheelBlockState *AsWheelBlock() MOZ_OVERRIDE {
-    return this;
-  }
-
-private:
-  nsTArray<ScrollWheelInput> mEvents;
 };
 
 /**
@@ -209,24 +184,16 @@ public:
   bool IsReadyForHandling() const MOZ_OVERRIDE;
 
   /**
-   * Sets a flag that indicates this input block occurred while the APZ was
-   * in a state of fast motion. This affects gestures that may be produced
-   * from input events in this block.
+   * Set a flag that disables setting the single-tap flag on this block.
    */
-  void SetDuringFastMotion();
+  void DisallowSingleTap();
   /**
-   * @return true iff SetDuringFastMotion was called on this block.
-   */
-  bool IsDuringFastMotion() const;
-  /**
-   * Set the single-tap-occurred flag that indicates that this touch block
-   * triggered a single tap event.
-   * @return true if the flag was set. This may not happen if, for example,
-   *         SetDuringFastMotion was previously called.
+   * Set a flag that indicates that this touch block triggered a single tap event.
+   * @return true iff DisallowSingleTap was not previously called.
    */
   bool SetSingleTapOccurred();
   /**
-   * @return true iff the single-tap-occurred flag is set on this block.
+   * @return true iff SetSingleTapOccurred was previously called on this block.
    */
   bool SingleTapOccurred() const;
 
@@ -269,7 +236,7 @@ private:
 private:
   nsTArray<TouchBehaviorFlags> mAllowedTouchBehaviors;
   bool mAllowedTouchBehaviorSet;
-  bool mDuringFastMotion;
+  bool mSingleTapDisallowed;
   bool mSingleTapOccurred;
   nsTArray<MultiTouchInput> mEvents;
 };

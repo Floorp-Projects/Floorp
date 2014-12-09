@@ -1,0 +1,26 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(C8379366-F79F-4D25-89A6-22BEC0A93D16)]
+interface nsIRemoteBrowser : nsISupports
+{
+  /*
+   * Called by the child to inform the parent that a command update has occurred
+   * and the supplied set of commands are now enabled and disabled.
+   *
+   * @param action command updater action
+   * @param enabledLength length of enabledCommands array
+   * @param enabledCommands commands to enable
+   * @param disabledLength length of disabledCommands array
+   * @param disabledCommand commands to disable
+   */
+  void enableDisableCommands(in AString action,
+                             in unsigned long enabledLength,
+                             [array, size_is(enabledLength)] in string enabledCommands,
+                             in unsigned long disabledLength,
+                             [array, size_is(disabledLength)] in string disabledCommands);
+};
+

@@ -37,31 +37,27 @@ LIRGeneratorX86::tempForDispatchCache(MIRType outputType)
     return LDefinition::BogusTemp();
 }
 
-bool
+void
 LIRGeneratorX86::useBox(LInstruction *lir, size_t n, MDefinition *mir,
                         LUse::Policy policy, bool useAtStart)
 {
     MOZ_ASSERT(mir->type() == MIRType_Value);
 
-    if (!ensureDefined(mir))
-        return false;
+    ensureDefined(mir);
     lir->setOperand(n, LUse(mir->virtualRegister(), policy, useAtStart));
     lir->setOperand(n + 1, LUse(VirtualRegisterOfPayload(mir), policy, useAtStart));
-    return true;
 }
 
-bool
+void
 LIRGeneratorX86::useBoxFixed(LInstruction *lir, size_t n, MDefinition *mir, Register reg1,
                              Register reg2)
 {
     MOZ_ASSERT(mir->type() == MIRType_Value);
     MOZ_ASSERT(reg1 != reg2);
 
-    if (!ensureDefined(mir))
-        return false;
+    ensureDefined(mir);
     lir->setOperand(n, LUse(reg1, mir->virtualRegister()));
     lir->setOperand(n + 1, LUse(reg2, VirtualRegisterOfPayload(mir)));
-    return true;
 }
 
 LAllocation
@@ -82,29 +78,33 @@ LIRGeneratorX86::tempByteOpRegister()
     return tempFixed(eax);
 }
 
-bool
+void
 LIRGeneratorX86::visitBox(MBox *box)
 {
     MDefinition *inner = box->getOperand(0);
 
     // If the box wrapped a double, it needs a new register.
-    if (IsFloatingPointType(inner->type()))
-        return defineBox(new(alloc()) LBoxFloatingPoint(useRegisterAtStart(inner), tempCopy(inner, 0),
-                                                        inner->type()), box);
+    if (IsFloatingPointType(inner->type())) {
+        defineBox(new(alloc()) LBoxFloatingPoint(useRegisterAtStart(inner), tempCopy(inner, 0),
+                                                 inner->type()), box);
+        return;
+    }
 
-    if (box->canEmitAtUses())
-        return emitAtUses(box);
+    if (box->canEmitAtUses()) {
+        emitAtUses(box);
+        return;
+    }
 
-    if (inner->isConstant())
-        return defineBox(new(alloc()) LValue(inner->toConstant()->value()), box);
+    if (inner->isConstant()) {
+        defineBox(new(alloc()) LValue(inner->toConstant()->value()), box);
+        return;
+    }
 
     LBox *lir = new(alloc()) LBox(use(inner), inner->type());
 
     // Otherwise, we should not define a new register for the payload portion
     // of the output, so bypass defineBox().
     uint32_t vreg = getVirtualRegister();
-    if (vreg >= MAX_VIRTUAL_REGISTERS)
-        return false;
 
     // Note that because we're using BogusTemp(), we do not change the type of
     // the definition. We also do not define the first output as "TYPE",
@@ -115,10 +115,10 @@ LIRGeneratorX86::visitBox(MBox *box)
     lir->setDef(0, LDefinition(vreg, LDefinition::GENERAL));
     lir->setDef(1, LDefinition::BogusTemp());
     box->setVirtualRegister(vreg);
-    return add(lir);
+    add(lir);
 }
 
-bool
+void
 LIRGeneratorX86::visitUnbox(MUnbox *unbox)
 {
     // An unbox on x86 reads in a type tag (either in memory or a register) and
@@ -127,16 +127,15 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
     MDefinition *inner = unbox->getOperand(0);
     MOZ_ASSERT(inner->type() == MIRType_Value);
 
-    if (!ensureDefined(inner))
-        return false;
+    ensureDefined(inner);
 
     if (IsFloatingPointType(unbox->type())) {
         LUnboxFloatingPoint *lir = new(alloc()) LUnboxFloatingPoint(unbox->type());
-        if (unbox->fallible() && !assignSnapshot(lir, unbox->bailoutKind()))
-            return false;
-        if (!useBox(lir, LUnboxFloatingPoint::Input, inner))
-            return false;
-        return define(lir, unbox);
+        if (unbox->fallible())
+            assignSnapshot(lir, unbox->bailoutKind());
+        useBox(lir, LUnboxFloatingPoint::Input, inner);
+        define(lir, unbox);
+        return;
     }
 
     // Swap the order we use the box pieces so we can re-use the payload register.
@@ -144,18 +143,18 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
     lir->setOperand(0, usePayloadInRegisterAtStart(inner));
     lir->setOperand(1, useType(inner, LUse::ANY));
 
-    if (unbox->fallible() && !assignSnapshot(lir, unbox->bailoutKind()))
-        return false;
+    if (unbox->fallible())
+        assignSnapshot(lir, unbox->bailoutKind());
 
     // Types and payloads form two separate intervals. If the type becomes dead
     // before the payload, it could be used as a Value without the type being
     // recoverable. Unbox's purpose is to eagerly kill the definition of a type
     // tag, so keeping both alive (for the purpose of gcmaps) is unappealing.
     // Instead, we create a new virtual register.
-    return defineReuseInput(lir, unbox, 0);
+    defineReuseInput(lir, unbox, 0);
 }
 
-bool
+void
 LIRGeneratorX86::visitReturn(MReturn *ret)
 {
     MDefinition *opd = ret->getOperand(0);
@@ -164,31 +163,27 @@ LIRGeneratorX86::visitReturn(MReturn *ret)
     LReturn *ins = new(alloc()) LReturn;
     ins->setOperand(0, LUse(JSReturnReg_Type));
     ins->setOperand(1, LUse(JSReturnReg_Data));
-    return fillBoxUses(ins, 0, opd) && add(ins);
+    fillBoxUses(ins, 0, opd);
+    add(ins);
 }
 
-bool
+void
 LIRGeneratorX86::defineUntypedPhi(MPhi *phi, size_t lirIndex)
 {
     LPhi *type = current->getPhi(lirIndex + VREG_TYPE_OFFSET);
     LPhi *payload = current->getPhi(lirIndex + VREG_DATA_OFFSET);
 
     uint32_t typeVreg = getVirtualRegister();
-    if (typeVreg >= MAX_VIRTUAL_REGISTERS)
-        return false;
 
     phi->setVirtualRegister(typeVreg);
 
     uint32_t payloadVreg = getVirtualRegister();
-    if (payloadVreg >= MAX_VIRTUAL_REGISTERS)
-        return false;
     MOZ_ASSERT(typeVreg + 1 == payloadVreg);
 
     type->setDef(0, LDefinition(typeVreg, LDefinition::TYPE));
     payload->setDef(0, LDefinition(payloadVreg, LDefinition::PAYLOAD));
     annotate(type);
     annotate(payload);
-    return true;
 }
 
 void
@@ -201,23 +196,23 @@ LIRGeneratorX86::lowerUntypedPhiInput(MPhi *phi, uint32_t inputPosition, LBlock 
     payload->setOperand(inputPosition, LUse(VirtualRegisterOfPayload(operand), LUse::ANY));
 }
 
-bool
+void
 LIRGeneratorX86::visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble *ins)
 {
     MOZ_ASSERT(ins->input()->type() == MIRType_Int32);
     LAsmJSUInt32ToDouble *lir = new(alloc()) LAsmJSUInt32ToDouble(useRegisterAtStart(ins->input()), temp());
-    return define(lir, ins);
+    define(lir, ins);
 }
 
-bool
+void
 LIRGeneratorX86::visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32 *ins)
 {
     MOZ_ASSERT(ins->input()->type() == MIRType_Int32);
     LAsmJSUInt32ToFloat32 *lir = new(alloc()) LAsmJSUInt32ToFloat32(useRegisterAtStart(ins->input()), temp());
-    return define(lir, ins);
+    define(lir, ins);
 }
 
-bool
+void
 LIRGeneratorX86::visitAsmJSLoadHeap(MAsmJSLoadHeap *ins)
 {
     MDefinition *ptr = ins->ptr();
@@ -233,10 +228,10 @@ LIRGeneratorX86::visitAsmJSLoadHeap(MAsmJSLoadHeap *ins)
         ptrAlloc = useRegisterAtStart(ptr);
     }
     LAsmJSLoadHeap *lir = new(alloc()) LAsmJSLoadHeap(ptrAlloc);
-    return define(lir, ins);
+    define(lir, ins);
 }
 
-bool
+void
 LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
 {
     MDefinition *ptr = ins->ptr();
@@ -262,7 +257,8 @@ LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
           case Scalar::MaxTypedArrayViewType:
             MOZ_CRASH("unexpected array type");
         }
-        return add(lir, ins);
+        add(lir, ins);
+        return;
     }
 
     switch (ins->viewType()) {
@@ -283,10 +279,10 @@ LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
         MOZ_CRASH("unexpected array type");
     }
 
-    return add(lir, ins);
+    add(lir, ins);
 }
 
-bool
+void
 LIRGeneratorX86::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins)
 {
     // The code generated for StoreTypedArrayElementStatic is identical to that
@@ -307,16 +303,16 @@ LIRGeneratorX86::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic
       default: MOZ_CRASH("unexpected array type");
     }
 
-    return add(lir, ins);
+    add(lir, ins);
 }
 
-bool
+void
 LIRGeneratorX86::visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins)
 {
-    return define(new(alloc()) LAsmJSLoadFuncPtr(useRegisterAtStart(ins->index())), ins);
+    define(new(alloc()) LAsmJSLoadFuncPtr(useRegisterAtStart(ins->index())), ins);
 }
 
-bool
+void
 LIRGeneratorX86::visitSubstr(MSubstr *ins)
 {
     // Due to lack of registers on x86, we reuse the string register as
@@ -328,5 +324,6 @@ LIRGeneratorX86::visitSubstr(MSubstr *ins)
                                          temp(),
                                          LDefinition::BogusTemp(),
                                          tempByteOpRegister());
-    return define(lir, ins) && assignSafepoint(lir, ins);
+    define(lir, ins);
+    assignSafepoint(lir, ins);
 }

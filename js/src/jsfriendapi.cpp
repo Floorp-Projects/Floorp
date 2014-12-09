@@ -1125,6 +1125,24 @@ JS::DisableIncrementalGC(JSRuntime *rt)
     rt->gc.disallowIncrementalGC();
 }
 
+JS_FRIEND_API(void)
+JS::DisableCompactingGC(JSRuntime *rt)
+{
+#ifdef JSGC_COMPACTING
+    rt->gc.disableCompactingGC();
+#endif
+}
+
+JS_FRIEND_API(bool)
+JS::IsCompactingGCEnabled(JSRuntime *rt)
+{
+#ifdef JSGC_COMPACTING
+    return rt->gc.isCompactingGCEnabled();
+#else
+    return false;
+#endif
+}
+
 JS::AutoDisableGenerationalGC::AutoDisableGenerationalGC(JSRuntime *rt)
   : gc(&rt->gc)
 #if defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)
