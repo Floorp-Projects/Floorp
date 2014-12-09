@@ -14,8 +14,11 @@ describe("loop.contacts", function() {
   var fakeAddContactButtonText = "Fake Add Contact";
   var fakeEditContactButtonText = "Fake Edit Contact";
   var fakeDoneButtonText = "Fake Done";
+  var sandbox;
+  var fakeWindow;
 
   beforeEach(function(done) {
+    sandbox = sinon.sandbox.create();
     navigator.mozLoop = {
       getStrings: function(entityName) {
         var textContentValue = "fakeText";
@@ -30,9 +33,57 @@ describe("loop.contacts", function() {
       },
     };
 
+    fakeWindow = {
+      close: sandbox.stub(),
+      //document: { addEventListener: function(){} }
+    };
+    loop.shared.mixins.setRootObject(fakeWindow);
+
     document.mozL10n.initialize(navigator.mozLoop);
     // XXX prevent a race whenever mozL10n hasn't been initialized yet
     setTimeout(done, 0);
+  });
+
+  afterEach(function() {
+    loop.shared.mixins.setRootObject(window);
+    sandbox.restore();
+  });
+
+
+  describe("ContactsList", function () {
+    var listView;
+
+    beforeEach(function() {
+      navigator.mozLoop.calls = {
+        startDirectCall: sandbox.stub(),
+        clearCallInProgress: sandbox.stub()
+      };
+      navigator.mozLoop.contacts = {getAll: sandbox.stub()};
+
+      listView = TestUtils.renderIntoDocument(loop.contacts.ContactsList());
+    });
+
+    afterEach(function() {
+      listView = null;
+      delete navigator.mozLoop.calls;
+      delete navigator.mozLoop.contacts;
+    });
+
+    describe("#handleContactAction", function() {
+      it("should call window.close when called with 'video-call' action",
+        function() {
+          listView.handleContactAction({}, "video-call");
+
+          sinon.assert.calledOnce(fakeWindow.close);
+      });
+
+      it("should call window.close when called with 'audio-call' action",
+        function() {
+          listView.handleContactAction({}, "audio-call");
+
+          sinon.assert.calledOnce(fakeWindow.close);
+        });
+    });
   });
 
   describe("ContactDetailsForm", function() {

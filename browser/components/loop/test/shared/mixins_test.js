@@ -117,6 +117,34 @@ describe("loop.shared.mixins", function() {
     });
   });
 
+
+  describe("loop.shared.mixins.WindowCloseMixin", function() {
+    var TestComp, rootObject;
+
+    beforeEach(function() {
+      rootObject = {
+        close: sandbox.stub()
+      };
+      sharedMixins.setRootObject(rootObject);
+
+      TestComp = React.createClass({
+        mixins: [loop.shared.mixins.WindowCloseMixin],
+        render: function() {
+          return React.DOM.div();
+        }
+      });
+    });
+
+    it("should call window.close", function() {
+      var comp = TestUtils.renderIntoDocument(TestComp());
+
+      comp.closeWindow();
+
+      sinon.assert.calledOnce(rootObject.close);
+      sinon.assert.calledWithExactly(rootObject.close);
+    });
+  });
+
   describe("loop.shared.mixins.DocumentVisibilityMixin", function() {
     var comp, TestComp, onDocumentVisibleStub, onDocumentHiddenStub;
 
