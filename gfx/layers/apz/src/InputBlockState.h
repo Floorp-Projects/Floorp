@@ -16,6 +16,9 @@ namespace layers {
 
 class AsyncPanZoomController;
 class OverscrollHandoffChain;
+class CancelableBlockState;
+class TouchBlockState;
+class WheelBlockState;
 
 /**
  * A base class that stores state common to various input blocks.
@@ -28,14 +31,16 @@ public:
 
   explicit InputBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
                            bool aTargetConfirmed);
+  virtual ~InputBlockState()
+  {}
 
   bool SetConfirmedTargetApzc(const nsRefPtr<AsyncPanZoomController>& aTargetApzc);
   const nsRefPtr<AsyncPanZoomController>& GetTargetApzc() const;
   const nsRefPtr<const OverscrollHandoffChain>& GetOverscrollHandoffChain() const;
   uint64_t GetBlockId() const;
 
-protected:
   bool IsTargetConfirmed() const;
+
 private:
   nsRefPtr<AsyncPanZoomController> mTargetApzc;
   nsRefPtr<const OverscrollHandoffChain> mOverscrollHandoffChain;
@@ -61,6 +66,10 @@ public:
   CancelableBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
                        bool aTargetConfirmed);
 
+  virtual TouchBlockState *AsTouchBlock() {
+    return nullptr;
+  }
+
   /**
    * Record whether or not content cancelled this block of events.
    * @param aPreventDefault true iff the block is cancelled.
@@ -81,9 +90,36 @@ public:
   bool IsDefaultPrevented() const;
 
   /**
-   * @returns true if web content responded or timed out.
+   * @return true iff this block has received all the information needed
+   *         to properly dispatch the events in the block.
    */
   virtual bool IsReadyForHandling() const;
+
+  /**
+   * Returns whether or not this block has pending events.
+   */
+  virtual bool HasEvents() const = 0;
+
+  /**
+   * Throw away all the events in this input block.
+   */
+  virtual void DropEvents() = 0;
+
+  /**
+   * Process all events given an apzc, leaving ths block depleted.
+   */
+  virtual void HandleEvents(const nsRefPtr<AsyncPanZoomController>& aTarget) = 0;
+
+  /**
+   * Return true if this input block must stay active if it would otherwise
+   * be removed as the last item in the pending queue.
+   */
+  virtual bool MustStayActive() = 0;
+
+  /**
+   * Return a descriptive name for the block kind.
+   */
+  virtual const char* Type() = 0;
 
 private:
   bool mPreventDefault;
@@ -121,6 +157,10 @@ public:
 
   explicit TouchBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
                            bool aTargetConfirmed);
+
+  TouchBlockState *AsTouchBlock() MOZ_OVERRIDE {
+    return this;
+  }
 
   /**
    * Set the allowed touch behavior flags for this block.
@@ -162,22 +202,9 @@ public:
   bool SingleTapOccurred() const;
 
   /**
-   * @return true iff there are pending events in this touch block.
-   */
-  bool HasEvents() const;
-  /**
    * Add a new touch event to the queue of events in this input block.
    */
   void AddEvent(const MultiTouchInput& aEvent);
-  /**
-   * Throw away all the events in this input block.
-   */
-  void DropEvents();
-  /**
-   * @return the first event in the queue. The event is removed from the queue
-   *         before it is returned.
-   */
-  MultiTouchInput RemoveFirstEvent();
 
   /**
    * @return false iff touch-action is enabled and the allowed touch behaviors for
@@ -196,6 +223,19 @@ public:
   bool TouchActionAllowsPanningX() const;
   bool TouchActionAllowsPanningY() const;
   bool TouchActionAllowsPanningXY() const;
+
+  bool HasEvents() const MOZ_OVERRIDE;
+  void DropEvents() MOZ_OVERRIDE;
+  void HandleEvents(const nsRefPtr<AsyncPanZoomController>& aTarget) MOZ_OVERRIDE;
+  bool MustStayActive() MOZ_OVERRIDE;
+  const char* Type() MOZ_OVERRIDE;
+
+private:
+  /**
+   * @return the first event in the queue. The event is removed from the queue
+   *         before it is returned.
+   */
+  MultiTouchInput RemoveFirstEvent();
 
 private:
   nsTArray<TouchBehaviorFlags> mAllowedTouchBehaviors;
