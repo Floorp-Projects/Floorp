@@ -8,7 +8,7 @@ interface nsIDOMWindow;
 interface nsIObserver;
 interface nsIPrompt;
 
-[scriptable, uuid(10b6ec13-09ed-4f7d-9df9-962c0d18306f)]
+[scriptable, uuid(594fd36d-5b1b-412f-a74e-ab72099a5bb2)]
 interface nsIPrintProgress: nsIWebProgressListener {
 
   /* Open the progress dialog
