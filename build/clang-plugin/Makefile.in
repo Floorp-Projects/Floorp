@@ -13,3 +13,8 @@ OS_CXXFLAGS := $(LLVM_CXXFLAGS) -fno-rtti -fno-exceptions
 OS_COMPILE_CXXFLAGS :=
 OS_LDFLAGS := $(LLVM_LDFLAGS) $(CLANG_LDFLAGS)
 DSO_LDOPTS := -shared
+
+# Use the default OS X deployment target to enable using the libc++ headers
+# correctly.  Note that the binary produced here is a host tool and doesn't need
+# to be distributed.
+MACOSX_DEPLOYMENT_TARGET :=
