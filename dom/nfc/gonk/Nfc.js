@@ -54,31 +54,29 @@ const NFC_CONTRACTID = "@mozilla.org/nfc;1";
 const NFC_CID =
   Components.ID("{2ff24790-5e74-11e1-b86c-0800200c9a66}");
 
-const NFC_IPC_MSG_NAMES = [
-  "NFC:AddEventListener",
-  "NFC:QueryInfo"
-];
+const NFC_IPC_MSG_ENTRIES = [
+  { permission: null,
+    messages: ["NFC:AddEventListener",
+               "NFC:QueryInfo"] },
 
-const NFC_IPC_NFC_PERM_MSG_NAMES = [
-  "NFC:ReadNDEF",
-  "NFC:Connect",
-  "NFC:Close",
-  "NFC:WriteNDEF",
-  "NFC:MakeReadOnly",
-  "NFC:Format",
-];
+  { permission: "nfc",
+    messages: ["NFC:ReadNDEF",
+               "NFC:Connect",
+               "NFC:Close",
+               "NFC:WriteNDEF",
+               "NFC:MakeReadOnly",
+               "NFC:Format"] },
 
-const NFC_IPC_NFC_SHARE_PERM_MSG_NAMES = [
-  "NFC:SendFile",
-  "NFC:RegisterPeerReadyTarget",
-  "NFC:UnregisterPeerReadyTarget"
-];
+  { permission: "nfc-share",
+    messages: ["NFC:SendFile",
+               "NFC:RegisterPeerReadyTarget",
+               "NFC:UnregisterPeerReadyTarget"] },
 
-const NFC_IPC_MANAGER_PERM_MSG_NAMES = [
-  "NFC:CheckP2PRegistration",
-  "NFC:NotifyUserAcceptedP2P",
-  "NFC:NotifySendFileStatus",
-  "NFC:ChangeRFState"
+  { permission: "nfc-manager",
+    messages: ["NFC:CheckP2PRegistration",
+               "NFC:NotifyUserAcceptedP2P",
+               "NFC:NotifySendFileStatus",
+               "NFC:ChangeRFState"] }
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
@@ -127,40 +125,20 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
     _registerMessageListeners: function _registerMessageListeners() {
       ppmm.addMessageListener("child-process-shutdown", this);
 
-      for (let message of NFC_IPC_MSG_NAMES) {
-        ppmm.addMessageListener(message, this);
-      }
-
-      for (let message of NFC_IPC_NFC_PERM_MSG_NAMES) {
-        ppmm.addMessageListener(message, this);
-      }
-
-      for (let message of NFC_IPC_NFC_SHARE_PERM_MSG_NAMES) {
-        ppmm.addMessageListener(message, this);
-      }
-
-      for (let message of NFC_IPC_MANAGER_PERM_MSG_NAMES) {
-        ppmm.addMessageListener(message, this);
+      for (let entry of NFC_IPC_MSG_ENTRIES) {
+        for (let message of entry.messages) {
+          ppmm.addMessageListener(message, this);
+        }
       }
     },
 
     _unregisterMessageListeners: function _unregisterMessageListeners() {
       ppmm.removeMessageListener("child-process-shutdown", this);
 
-      for (let message of NFC_IPC_MSG_NAMES) {
-        ppmm.removeMessageListener(message, this);
-      }
-
-      for (let message of NFC_IPC_NFC_PERM_MSG_NAMES) {
-        ppmm.removeMessageListener(message, this);
-      }
-
-      for (let message of NFC_IPC_NFC_SHARE_PERM_MSG_NAMES) {
-        ppmm.removeMessageListener(message, this);
-      }
-
-      for (let message of NFC_IPC_MANAGER_PERM_MSG_NAMES) {
-        ppmm.removeMessageListener(message, this);
+      for (let entry of NFC_IPC_MSG_ENTRIES) {
+        for (let message of entry.messages) {
+          ppmm.removeMessageListener(message, this);
+        }
       }
 
       ppmm = null;
@@ -278,29 +256,16 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
         return null;
       }
 
-      if (NFC_IPC_MSG_NAMES.indexOf(message.name) != -1) {
-        // Do nothing.
-      } else if (NFC_IPC_NFC_PERM_MSG_NAMES.indexOf(message.name) != -1) {
-        if (!message.target.assertPermission("nfc")) {
-          debug("Nfc Peer message  " + message.name +
-                " from a content process with no 'nfc' privileges.");
-          return null;
+      for (let entry of NFC_IPC_MSG_ENTRIES) {
+        if (entry.messages.indexOf(message.name) != -1) {
+          if (entry.permission &&
+              !message.target.assertPermission(entry.permission)) {
+            debug("Nfc message " + message.name + "doesn't have " +
+                  entry.permission + " permission.");
+            return null;
+          }
+          break;
         }
-      } else if (NFC_IPC_NFC_SHARE_PERM_MSG_NAMES.indexOf(message.name) != -1) {
-        if (!message.target.assertPermission("nfc-share")) {
-          debug("Nfc Peer message  " + message.name +
-                " from a content process with no 'nfc-share' privileges.");
-          return null;
-        }
-      } else if (NFC_IPC_MANAGER_PERM_MSG_NAMES.indexOf(message.name) != -1) {
-        if (!message.target.assertPermission("nfc-manager")) {
-          debug("NFC message " + message.name +
-                " from a content process with no 'nfc-manager' privileges.");
-          return null;
-        }
-      } else {
-        debug("Ignoring unknown message type: " + message.name);
-        return null;
       }
 
       switch (message.name) {
