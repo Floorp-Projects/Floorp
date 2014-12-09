@@ -316,6 +316,14 @@ public:
     mPromise = nullptr;
   }
 
+  void ResolveIfExists(typename PromiseType::ResolveValueType aResolveValue,
+                       const char* aMethodName)
+  {
+    if (!IsEmpty()) {
+      Resolve(aResolveValue, aMethodName);
+    }
+  }
+
   void Reject(typename PromiseType::RejectValueType aRejectValue,
               const char* aMethodName)
   {
@@ -325,6 +333,14 @@ public:
     MOZ_ASSERT(mPromise);
     mPromise->Reject(aRejectValue, aMethodName);
     mPromise = nullptr;
+  }
+
+  void RejectIfExists(typename PromiseType::RejectValueType aRejectValue,
+                      const char* aMethodName)
+  {
+    if (!IsEmpty()) {
+      Reject(aRejectValue, aMethodName);
+    }
   }
 
 private:
