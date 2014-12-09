@@ -845,7 +845,7 @@ CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate *ool)
         // integer, by adding/subtracting 2^32 and then trying to convert to int32.
         // This has to be an exact conversion, as otherwise the truncation works
         // incorrectly on the modified value.
-        masm.xorpd(ScratchDoubleReg, ScratchDoubleReg);
+        masm.zeroDouble(ScratchDoubleReg);
         masm.ucomisd(input, ScratchDoubleReg);
         masm.j(Assembler::Parity, &fail);
 
@@ -862,7 +862,7 @@ CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate *ool)
             masm.bind(&skip);
         }
 
-        masm.addsd(input, temp);
+        masm.addDouble(input, temp);
         masm.cvttsd2si(temp, output);
         masm.cvtsi2sd(output, ScratchDoubleReg);
 
@@ -934,7 +934,7 @@ CodeGeneratorX86::visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32 *ool)
         // integer, by adding/subtracting 2^32 and then trying to convert to int32.
         // This has to be an exact conversion, as otherwise the truncation works
         // incorrectly on the modified value.
-        masm.xorps(ScratchFloat32Reg, ScratchFloat32Reg);
+        masm.zeroFloat32(ScratchFloat32Reg);
         masm.ucomiss(input, ScratchFloat32Reg);
         masm.j(Assembler::Parity, &fail);
 
@@ -951,7 +951,7 @@ CodeGeneratorX86::visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32 *ool)
             masm.bind(&skip);
         }
 
-        masm.addss(input, temp);
+        masm.addFloat32(input, temp);
         masm.cvttss2si(temp, output);
         masm.cvtsi2ss(output, ScratchFloat32Reg);
 

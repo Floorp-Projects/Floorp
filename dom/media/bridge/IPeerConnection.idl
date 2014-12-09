@@ -59,6 +59,7 @@ interface IPeerConnection : nsISupports
 
   /* Constants for 'name' in error callbacks */
   const unsigned long kNoError                          = 0; // Test driver only
+  const unsigned long kInvalidCandidate                 = 2;
   const unsigned long kInvalidMediastreamTrack          = 3;
   const unsigned long kInvalidState                     = 4;
   const unsigned long kInvalidSessionDescription        = 5;

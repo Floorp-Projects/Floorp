@@ -3605,7 +3605,7 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery
              */
             for (Traversal::NodeMap::Range r = traversal.visited.all(); !r.empty(); r.popFront()) {
                 JS::ubi::Node node = r.front().key();
-                if (!node.is<JSObject>())
+                if (!node.is<JSObject>() || !dbg->isDebuggee(node.compartment()))
                     continue;
 
                 JSObject *obj = node.as<JSObject>();

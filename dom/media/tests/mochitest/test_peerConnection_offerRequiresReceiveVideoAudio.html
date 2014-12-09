@@ -18,10 +18,8 @@
 
   runNetworkTest(function() {
     var test = new PeerConnectionTest();
-    test.setOfferOptions({
-      offerToReceiveVideo: true,
-      offerToReceiveAudio: true
-    });
+    test.setMediaConstraints([], [{audio: true, video: true}]);
+    test.setOfferOptions({ offerToReceiveVideo: true, offerToReceiveAudio: true });
     test.run();
   });
 </script>

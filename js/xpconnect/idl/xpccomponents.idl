@@ -716,6 +716,8 @@ interface nsIXPCComponents : nsIXPCComponentsBase
     [implicit_jscontext]
     readonly attribute jsval                            lastResult;
     [implicit_jscontext]
+    // A javascript component can set |returnCode| to specify an nsresult to
+    // be returned without throwing an exception.
     attribute jsval                                     returnCode;
 
     /* @deprecated Use Components.utils.reportError instead. */

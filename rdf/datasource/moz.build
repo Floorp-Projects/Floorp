@@ -20,3 +20,6 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/rdf/base',
 ]
+
+if CONFIG['GNU_CXX']:
+    FAIL_ON_WARNINGS = True
