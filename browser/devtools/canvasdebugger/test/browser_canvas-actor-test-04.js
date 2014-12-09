@@ -39,7 +39,7 @@ function ifTestingSupported() {
     "The first thumbnail's height is correct.");
   is(thumbnails[0].flipped, false,
     "The first thumbnail's flipped flag is correct.");
-  is([].find.call(thumbnails[0].pixels, e => e > 0), undefined,
+  is([].find.call(Uint32(thumbnails[0].pixels), e => e > 0), undefined,
     "The first thumbnail's pixels seem to be completely transparent.");
 
   is(thumbnails[1].index, 2,
@@ -50,7 +50,7 @@ function ifTestingSupported() {
     "The second thumbnail's height is correct.");
   is(thumbnails[1].flipped, false,
     "The second thumbnail's flipped flag is correct.");
-  is([].find.call(thumbnails[1].pixels, e => e > 0), 4290822336,
+  is([].find.call(Uint32(thumbnails[1].pixels), e => e > 0), 4290822336,
     "The second thumbnail's pixels seem to not be completely transparent.");
 
   is(thumbnails[2].index, 4,
@@ -61,7 +61,7 @@ function ifTestingSupported() {
     "The third thumbnail's height is correct.");
   is(thumbnails[2].flipped, false,
     "The third thumbnail's flipped flag is correct.");
-  is([].find.call(thumbnails[2].pixels, e => e > 0), 4290822336,
+  is([].find.call(Uint32(thumbnails[2].pixels), e => e > 0), 4290822336,
     "The third thumbnail's pixels seem to not be completely transparent.");
 
   is(thumbnails[3].index, 6,
@@ -72,9 +72,14 @@ function ifTestingSupported() {
     "The fourth thumbnail's height is correct.");
   is(thumbnails[3].flipped, false,
     "The fourth thumbnail's flipped flag is correct.");
-  is([].find.call(thumbnails[3].pixels, e => e > 0), 4290822336,
+  is([].find.call(Uint32(thumbnails[3].pixels), e => e > 0), 4290822336,
     "The fourth thumbnail's pixels seem to not be completely transparent.");
 
   yield removeTab(target.tab);
   finish();
+}
+
+function Uint32(src) {
+  let charView = new Uint8Array(src);
+  return new Uint32Array(charView.buffer);
 }
