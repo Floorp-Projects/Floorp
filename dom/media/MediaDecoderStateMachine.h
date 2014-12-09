@@ -162,6 +162,8 @@ public:
   // Set/Unset dormant state.
   void SetDormant(bool aDormant);
   void Shutdown();
+  void ShutdownReader();
+  void FinishShutdown(bool aSuccess);
 
   // Called from the main thread to get the duration. The decoder monitor
   // must be obtained before calling this. It is in units of microseconds.
