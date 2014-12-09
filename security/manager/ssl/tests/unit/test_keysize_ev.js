@@ -114,12 +114,12 @@ function checkForKeyType(keyType, inadequateKeySize, adequateKeySize) {
   // in such a build.
   let intFullName = intOKName + "-" + rootOKName;
   let eeFullName = eeOKName + "-" + intOKName + "-" + rootOKName;
-  let expectedNamesForOCSP = isDebugBuild
+  let expectedNamesForOCSP = gEVExpected
                            ? [ intFullName,
                                eeFullName ]
                            : [ eeFullName ];
   addKeySizeTestForEV(expectedNamesForOCSP, rootOKCertFileName,
-                      [ intFullName ], eeFullName, isDebugBuild);
+                      [ intFullName ], eeFullName, gEVExpected);
 
   // Chain with a root cert that has an inadequate size for EV, but
   // adequate size for DV
@@ -133,7 +133,7 @@ function checkForKeyType(keyType, inadequateKeySize, adequateKeySize) {
   // adequate size for DV
   intFullName = intNotOKName + "-" + rootOKName;
   eeFullName = eeOKName + "-" + intNotOKName + "-" + rootOKName;
-  expectedNamesForOCSP = isDebugBuild
+  expectedNamesForOCSP = gEVExpected
                        ? [ intFullName ]
                        : [ eeFullName ];
   addKeySizeTestForEV(expectedNamesForOCSP, rootOKCertFileName,
