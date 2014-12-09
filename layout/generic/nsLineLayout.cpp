@@ -1529,21 +1529,23 @@ nsLineLayout::VerticalAlignLine()
   }
   PlaceTopBottomFrames(psd, -mBStartEdge, lineBSize);
 
-  // Fill in returned line-box and max-element-width data
-  mLineBox->SetBounds(lineWM,
-                      psd->mIStart, mBStartEdge,
-                      psd->mICoord - psd->mIStart, lineBSize,
-                      mContainerWidth);
-
   mFinalLineBSize = lineBSize;
-  mLineBox->SetLogicalAscent(baselineBCoord - mBStartEdge);
+  if (mGotLineBox) {
+    // Fill in returned line-box and max-element-width data
+    mLineBox->SetBounds(lineWM,
+                        psd->mIStart, mBStartEdge,
+                        psd->mICoord - psd->mIStart, lineBSize,
+                        mContainerWidth);
+
+    mLineBox->SetLogicalAscent(baselineBCoord - mBStartEdge);
 #ifdef NOISY_BLOCKDIR_ALIGN
-  printf(
-    "  [line]==> bounds{x,y,w,h}={%d,%d,%d,%d} lh=%d a=%d\n",
-    mLineBox->GetBounds().IStart(lineWM), mLineBox->GetBounds().BStart(lineWM),
-    mLineBox->GetBounds().ISize(lineWM), mLineBox->GetBounds().BSize(lineWM),
-    mFinalLineBSize, mLineBox->GetLogicalAscent());
+    printf(
+      "  [line]==> bounds{x,y,w,h}={%d,%d,%d,%d} lh=%d a=%d\n",
+      mLineBox->GetBounds().IStart(lineWM), mLineBox->GetBounds().BStart(lineWM),
+      mLineBox->GetBounds().ISize(lineWM), mLineBox->GetBounds().BSize(lineWM),
+      mFinalLineBSize, mLineBox->GetLogicalAscent());
 #endif
+  }
 }
 
 // Place frames with CSS property vertical-align: top or bottom.
@@ -2154,7 +2156,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
 
     // (1) and (2) above
     bool applyMinLH = !psd->mZeroEffectiveSpanBox || mHasBullet;
-    bool isLastLine = (!mLineBox->IsLineWrapped() && !mLineEndsInBR);
+    bool isLastLine = !mGotLineBox ||
+      (!mLineBox->IsLineWrapped() && !mLineEndsInBR);
     if (!applyMinLH && isLastLine) {
       nsIContent* blockContent = mRootSpan->mFrame->mFrame->GetContent();
       if (blockContent) {
