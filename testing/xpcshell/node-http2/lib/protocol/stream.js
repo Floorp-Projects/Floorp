@@ -443,6 +443,8 @@ Stream.prototype._transition = function transition(sending, frame) {
         this._initiated = sending;
       } else if (sending && RST_STREAM) {
         this._setState('CLOSED');
+      } else if (PRIORITY) {
+        /* No state change */
       } else {
         connectionError = 'PROTOCOL_ERROR';
       }
