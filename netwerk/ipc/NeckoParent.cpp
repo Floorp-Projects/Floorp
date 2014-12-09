@@ -21,6 +21,7 @@
 #include "mozilla/net/RemoteOpenFileParent.h"
 #include "mozilla/net/ChannelDiverterParent.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/TabContext.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/network/TCPSocketParent.h"
 #include "mozilla/dom/network/TCPServerSocketParent.h"
@@ -41,6 +42,7 @@
 #include "mozilla/net/OfflineObserver.h"
 
 using mozilla::dom::ContentParent;
+using mozilla::dom::TabContext;
 using mozilla::dom::TabParent;
 using mozilla::net::PTCPSocketParent;
 using mozilla::dom::TCPSocketParent;
@@ -113,22 +115,23 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
     }
   }
 
-  const InfallibleTArray<PBrowserParent*>& browsers = aContent->ManagedPBrowserParent();
-  for (uint32_t i = 0; i < browsers.Length(); i++) {
-    nsRefPtr<TabParent> tabParent = static_cast<TabParent*>(browsers[i]);
-    uint32_t appId = tabParent->OwnOrContainingAppId();
+  nsTArray<TabContext> contextArray =
+    static_cast<ContentParent*>(aContent)->GetManagedTabContext();
+  for (uint32_t i = 0; i < contextArray.Length(); i++) {
+    TabContext tabContext = contextArray[i];
+    uint32_t appId = tabContext.OwnOrContainingAppId();
     bool inBrowserElement = aSerialized.IsNotNull() ? aSerialized.mIsInBrowserElement
-                                                    : tabParent->IsBrowserElement();
+                                                    : tabContext.IsBrowserElement();
 
     if (appId == NECKO_UNKNOWN_APP_ID) {
       continue;
     }
     // We may get appID=NO_APP if child frame is neither a browser nor an app
     if (appId == NECKO_NO_APP_ID) {
-      if (tabParent->HasOwnApp()) {
+      if (tabContext.HasOwnApp()) {
         continue;
       }
-      if (UsingNeckoIPCSecurity() && tabParent->IsBrowserElement()) {
+      if (UsingNeckoIPCSecurity() && tabContext.IsBrowserElement()) {
         // <iframe mozbrowser> which doesn't have an <iframe mozapp> above it.
         // This is not supported now, and we'll need to do a code audit to make
         // sure we can handle it (i.e don't short-circuit using separate
@@ -141,7 +144,7 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
     return nullptr;
   }
 
-  if (browsers.Length() != 0) {
+  if (contextArray.Length() != 0) {
     return "App does not have permission";
   }
 
@@ -521,10 +524,11 @@ NeckoParent::AllocPRemoteOpenFileParent(const SerializedLoadContext& aSerialized
     bool haveValidBrowser = false;
     bool hasManage = false;
     nsCOMPtr<mozIApplication> mozApp;
-    for (uint32_t i = 0; i < Manager()->ManagedPBrowserParent().Length(); i++) {
-      nsRefPtr<TabParent> tabParent =
-        static_cast<TabParent*>(Manager()->ManagedPBrowserParent()[i]);
-      uint32_t appId = tabParent->OwnOrContainingAppId();
+    nsTArray<TabContext> contextArray =
+      static_cast<ContentParent*>(Manager())->GetManagedTabContext();
+    for (uint32_t i = 0; i < contextArray.Length(); i++) {
+      TabContext tabContext = contextArray[i];
+      uint32_t appId = tabContext.OwnOrContainingAppId();
       // Note: this enforces that SerializedLoadContext.appID is one of the apps
       // in the child process, but there's currently no way to verify the
       // request is not from a different app in that process.
@@ -814,10 +818,11 @@ NeckoParent::OfflineNotification(nsISupports *aSubject)
   uint32_t targetAppId = NECKO_UNKNOWN_APP_ID;
   info->GetAppId(&targetAppId);
 
-  for (uint32_t i = 0; i < Manager()->ManagedPBrowserParent().Length(); ++i) {
-    nsRefPtr<TabParent> tabParent =
-      static_cast<TabParent*>(Manager()->ManagedPBrowserParent()[i]);
-    uint32_t appId = tabParent->OwnOrContainingAppId();
+  nsTArray<TabContext> contextArray =
+      static_cast<ContentParent*>(Manager())->GetManagedTabContext();
+  for (uint32_t i = 0; i < contextArray.Length(); ++i) {
+    TabContext tabContext = contextArray[i];
+    uint32_t appId = tabContext.OwnOrContainingAppId();
 
     if (appId == targetAppId) {
       if (gIOService) {
