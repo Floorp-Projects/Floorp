@@ -14,6 +14,7 @@
 #include "nsStringGlue.h"
 #include "xpctest_attributes.h"
 #include "xpctest_params.h"
+#include "xpctest_returncode.h"
 #include "mozilla/Attributes.h"
 
 class xpcTestObjectReadOnly MOZ_FINAL : public nsIXPCTestObjectReadOnly {
@@ -62,6 +63,18 @@ public:
 
 private:
     ~nsXPCTestParams();
+};
+
+class nsXPCTestReturnCodeParent MOZ_FINAL : public nsIXPCTestReturnCodeParent
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIXPCTESTRETURNCODEPARENT
+
+    nsXPCTestReturnCodeParent();
+
+private:
+    ~nsXPCTestReturnCodeParent();
 };
 
 #endif /* xpctest_private_h___ */
