@@ -59,23 +59,26 @@ public:
    *
    * @param aMimeType      The mimetype of the image.
    */
-  static already_AddRefed<Image> CreateAnonymousImage(const nsCString& aMimeType);
+  static already_AddRefed<Image>
+  CreateAnonymousImage(const nsCString& aMimeType);
 
 private:
   // Factory functions that create specific types of image containers.
-  static already_AddRefed<Image> CreateRasterImage(nsIRequest* aRequest,
-                                                   ProgressTracker* aProgressTracker,
-                                                   const nsCString& aMimeType,
-                                                   ImageURL* aURI,
-                                                   uint32_t aImageFlags,
-                                                   uint32_t aInnerWindowId);
+  static already_AddRefed<Image>
+  CreateRasterImage(nsIRequest* aRequest,
+                    ProgressTracker* aProgressTracker,
+                    const nsCString& aMimeType,
+                    ImageURL* aURI,
+                    uint32_t aImageFlags,
+                    uint32_t aInnerWindowId);
 
-  static already_AddRefed<Image> CreateVectorImage(nsIRequest* aRequest,
-                                                   ProgressTracker* aProgressTracker,
-                                                   const nsCString& aMimeType,
-                                                   ImageURL* aURI,
-                                                   uint32_t aImageFlags,
-                                                   uint32_t aInnerWindowId);
+  static already_AddRefed<Image>
+  CreateVectorImage(nsIRequest* aRequest,
+                    ProgressTracker* aProgressTracker,
+                    const nsCString& aMimeType,
+                    ImageURL* aURI,
+                    uint32_t aImageFlags,
+                    uint32_t aInnerWindowId);
 
   // This is a static factory class, so disallow instantiation.
   virtual ~ImageFactory() = 0;

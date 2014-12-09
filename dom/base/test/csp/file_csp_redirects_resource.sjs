@@ -92,6 +92,34 @@ function handleRequest(request, response)
     return;
   }
 
+  // internal stylesheet that loads an image from an external site
+  if (query["res"] == "cssLoader") {
+    let bgURL = thisSite + resource + '?redir=other&res=image&id=' + query["id"];
+    response.setHeader("Content-Type", "text/css", false);
+    response.write("body { background:url('" + bgURL + "'); }");
+    return;
+  }
+
+  // script that loads an internal worker that uses importScripts on a redirect
+  // to an external script.
+  if (query["res"] == "loadWorkerThatImports") {
+    // this creates a worker (same origin) that imports a redirecting script.
+    let workerURL = thisSite + resource + '?res=importScriptWorker&id=' + query["id"];
+    response.setHeader("Content-Type", "application/javascript", false);
+    response.write("var w=new Worker('" + workerURL + "'); w.onmessage=function(event){ alert(event.data); }");
+    return;
+  }
+
+  // source for a worker that simply calls importScripts on a script that
+  // redirects.
+  if (query["res"] == "importScriptWorker") {
+    // this is code for a worker that imports a redirected script.
+    let scriptURL = thisSite + resource + "?redir=other&res=script&id=" + query["id"];
+    response.setHeader("Content-Type", "application/javascript", false);
+    response.write("importScripts('" + scriptURL + "');");
+    return;
+  }
+
   // script that invokes XHR
   if (query["res"] == "xhr") {
     response.setHeader("Content-Type", "text/html", false);

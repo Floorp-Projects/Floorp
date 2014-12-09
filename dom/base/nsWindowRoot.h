@@ -23,8 +23,6 @@ class EventChainPreVisitor;
 #include "nsPIWindowRoot.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsAutoPtr.h"
-#include "nsTHashtable.h"
-#include "nsHashKeys.h"
 
 class nsWindowRoot : public nsPIWindowRoot
 {
@@ -54,9 +52,6 @@ public:
   virtual nsresult GetControllerForCommand(const char * aCommand,
                                            nsIController** _retval) MOZ_OVERRIDE;
 
-  virtual void GetEnabledDisabledCommands(nsTArray<nsCString>& aEnabledCommands,
-                                          nsTArray<nsCString>& aDisabledCommands) MOZ_OVERRIDE;
-
   virtual nsIDOMNode* GetPopupNode() MOZ_OVERRIDE;
   virtual void SetPopupNode(nsIDOMNode* aNode) MOZ_OVERRIDE;
 
@@ -76,11 +71,6 @@ public:
 
 protected:
   virtual ~nsWindowRoot();
-
-  void GetEnabledDisabledCommandsForControllers(nsIControllers* aControllers,
-                                                nsTHashtable<nsCharPtrHashKey>& aCommandsHandled,
-                                                nsTArray<nsCString>& aEnabledCommands,
-                                                nsTArray<nsCString>& aDisabledCommands);
 
   // Members
   nsCOMPtr<nsPIDOMWindow> mWindow;

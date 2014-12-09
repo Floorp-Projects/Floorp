@@ -107,7 +107,8 @@ ProgressTracker::ResetImage()
   mImage = nullptr;
 }
 
-void ProgressTracker::SetIsMultipart()
+void
+ProgressTracker::SetIsMultipart()
 {
   if (mProgress & FLAG_IS_MULTIPART) {
     return;
@@ -218,9 +219,11 @@ ProgressTracker::Notify(imgRequestProxy* proxy)
     nsRefPtr<ImageURL> uri(mImage->GetURI());
     nsAutoCString spec;
     uri->GetSpec(spec);
-    LOG_FUNC_WITH_PARAM(GetImgLog(), "ProgressTracker::Notify async", "uri", spec.get());
+    LOG_FUNC_WITH_PARAM(GetImgLog(),
+                        "ProgressTracker::Notify async", "uri", spec.get());
   } else {
-    LOG_FUNC_WITH_PARAM(GetImgLog(), "ProgressTracker::Notify async", "uri", "<unknown>");
+    LOG_FUNC_WITH_PARAM(GetImgLog(),
+                        "ProgressTracker::Notify async", "uri", "<unknown>");
   }
 #endif
 
@@ -283,7 +286,8 @@ ProgressTracker::NotifyCurrentState(imgRequestProxy* proxy)
   proxy->GetURI(getter_AddRefs(uri));
   nsAutoCString spec;
   uri->GetSpec(spec);
-  LOG_FUNC_WITH_PARAM(GetImgLog(), "ProgressTracker::NotifyCurrentState", "uri", spec.get());
+  LOG_FUNC_WITH_PARAM(GetImgLog(),
+                      "ProgressTracker::NotifyCurrentState", "uri", spec.get());
 #endif
 
   proxy->SetNotificationsDeferred(true);
@@ -311,31 +315,38 @@ ProgressTracker::SyncNotifyInternal(ProxyArray& aProxies,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (aProgress & FLAG_SIZE_AVAILABLE)
+  if (aProgress & FLAG_SIZE_AVAILABLE) {
     NOTIFY_IMAGE_OBSERVERS(aProxies, OnSizeAvailable());
+  }
 
-  if (aProgress & FLAG_DECODE_STARTED)
+  if (aProgress & FLAG_DECODE_STARTED) {
     NOTIFY_IMAGE_OBSERVERS(aProxies, OnStartDecode());
+  }
 
-  if (aProgress & FLAG_ONLOAD_BLOCKED)
+  if (aProgress & FLAG_ONLOAD_BLOCKED) {
     NOTIFY_IMAGE_OBSERVERS(aProxies, BlockOnload());
+  }
 
   if (aHasImage) {
     // OnFrameUpdate
     // If there's any content in this frame at all (always true for
     // vector images, true for raster images that have decoded at
     // least one frame) then send OnFrameUpdate.
-    if (!aDirtyRect.IsEmpty())
+    if (!aDirtyRect.IsEmpty()) {
       NOTIFY_IMAGE_OBSERVERS(aProxies, OnFrameUpdate(&aDirtyRect));
+    }
 
-    if (aProgress & FLAG_FRAME_COMPLETE)
+    if (aProgress & FLAG_FRAME_COMPLETE) {
       NOTIFY_IMAGE_OBSERVERS(aProxies, OnFrameComplete());
+    }
 
-    if (aProgress & FLAG_HAS_TRANSPARENCY)
+    if (aProgress & FLAG_HAS_TRANSPARENCY) {
       NOTIFY_IMAGE_OBSERVERS(aProxies, OnImageHasTransparency());
+    }
 
-    if (aProgress & FLAG_IS_ANIMATED)
+    if (aProgress & FLAG_IS_ANIMATED) {
       NOTIFY_IMAGE_OBSERVERS(aProxies, OnImageIsAnimated());
+    }
   }
 
   // Send UnblockOnload before OnStopDecode and OnStopRequest. This allows
@@ -358,7 +369,8 @@ ProgressTracker::SyncNotifyInternal(ProxyArray& aProxies,
 
 void
 ProgressTracker::SyncNotifyProgress(Progress aProgress,
-                                    const nsIntRect& aInvalidRect /* = nsIntRect() */)
+                                    const nsIntRect& aInvalidRect
+                                                  /* = nsIntRect() */)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Use mConsumers on main thread only");
 
@@ -390,7 +402,8 @@ ProgressTracker::SyncNotify(imgRequestProxy* proxy)
   proxy->GetURI(getter_AddRefs(uri));
   nsAutoCString spec;
   uri->GetSpec(spec);
-  LOG_SCOPE_WITH_PARAM(GetImgLog(), "ProgressTracker::SyncNotify", "uri", spec.get());
+  LOG_SCOPE_WITH_PARAM(GetImgLog(),
+                       "ProgressTracker::SyncNotify", "uri", spec.get());
 #endif
 
   nsIntRect r;

@@ -1,0 +1,45 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * Test the use of Components.returnCode
+ *
+ * This ("parent") interface defines a method that in-turn calls another
+ * ("child") interface implemented in JS, and returns the nsresult from that
+ * child interface.  The child interface manages the return code by way of
+ * Components.returnCode.
+ */
+
+#include "nsISupports.idl"
+
+
+[scriptable, uuid(479e4532-95cf-48b8-a99b-8a5881e47138)]
+interface nsIXPCTestReturnCodeParent : nsISupports {
+  // Calls the "child" interface with the specified behavior flag.  Returns
+  // the NSRESULT from the child interface.
+  nsresult        callChild(in long childBehavior);
+};
+
+[scriptable, uuid(672cfd34-1fd1-455d-9901-d879fa6fdb95)]
+interface nsIXPCTestReturnCodeChild : nsISupports {
+  void doIt(in long behavior);
+
+  // Flags to control that the child does.
+  // child will throw a JS exception
+  const long CHILD_SHOULD_THROW = 0;
+
+  // child will just return normally
+  const long CHILD_SHOULD_RETURN_SUCCESS = 1;
+
+  // child will return after setting Components.returnCode to NS_ERROR_FAILURE
+  const long CHILD_SHOULD_RETURN_RESULTCODE = 2;
+
+  // child will set Components.returnCode to NS_ERROR_UNEXPECTED, then create
+  // a new component that sets Components.returnCode to NS_ERROR_FAILURE.
+  // Our caller should see the NS_ERROR_UNEXPECTED we set rather than the
+  // value set later by the "inner" child.
+  const long CHILD_SHOULD_NEST_RESULTCODES = 3;
+};
