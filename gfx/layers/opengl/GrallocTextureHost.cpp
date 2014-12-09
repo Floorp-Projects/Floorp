@@ -8,7 +8,6 @@
 #include "gfx2DGlue.h"
 #include <ui/GraphicBuffer.h>
 #include "GrallocImages.h"  // for GrallocImage
-#include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/layers/GrallocTextureHost.h"
 #include "mozilla/layers/SharedBufferManagerParent.h"
 #include "EGLImageHelpers.h"
@@ -386,45 +385,29 @@ GrallocTextureHostOGL::GetRenderState()
 
 TemporaryRef<gfx::DataSourceSurface>
 GrallocTextureHostOGL::GetAsSurface() {
-  if (mTilingTextureSource) {
-    return mTilingTextureSource->GetAsSurface();
-  } else {
-    android::GraphicBuffer* graphicBuffer = GetGraphicBufferFromDesc(mGrallocHandle).get();
-    uint8_t* grallocData;
-    int32_t rv = graphicBuffer->lock(GRALLOC_USAGE_SW_READ_OFTEN, reinterpret_cast<void**>(&grallocData));
-    RefPtr<gfx::DataSourceSurface> grallocTempSurf =
-      Factory::CreateWrappingDataSourceSurface(grallocData,
-                                               graphicBuffer->getStride() * android::bytesPerPixel(graphicBuffer->getPixelFormat()),
-                                               GetSize(), GetFormat());
-    RefPtr<gfx::DataSourceSurface> surf = CreateDataSourceSurfaceByCloning(grallocTempSurf);
-
-    graphicBuffer->unlock();
-
-    return surf.forget();
-  }
+  return mTilingTextureSource ? mTilingTextureSource->GetAsSurface()
+                              : nullptr;
 }
 
 TemporaryRef<gfx::DataSourceSurface>
 GrallocTextureSourceOGL::GetAsSurface() {
-  if (!IsValid()) {
+  if (!IsValid() || !gl()->MakeCurrent()) {
     return nullptr;
   }
 
-  uint8_t* grallocData;
-  int32_t rv = mGraphicBuffer->lock(GRALLOC_USAGE_SW_READ_OFTEN, reinterpret_cast<void**>(&grallocData));
-  if (rv) {
-    return nullptr;
+  GLuint tex = GetGLTexture();
+  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+  gl()->fBindTexture(GetTextureTarget(), tex);
+  if (!mEGLImage) {
+    mEGLImage = EGLImageCreateFromNativeBuffer(gl(), mGraphicBuffer->getNativeBuffer());
   }
+  BindEGLImage();
 
-  RefPtr<gfx::DataSourceSurface> grallocTempSurf =
-    Factory::CreateWrappingDataSourceSurface(grallocData,
-                                             mGraphicBuffer->getStride() * android::bytesPerPixel(mGraphicBuffer->getPixelFormat()),
-                                             GetSize(), GetFormat());
+  RefPtr<gfx::DataSourceSurface> surf =
+    IsValid() ? ReadBackSurface(gl(), tex, false, GetFormat())
+              : nullptr;
 
-  RefPtr<gfx::DataSourceSurface> surf = CreateDataSourceSurfaceByCloning(grallocTempSurf);
-
-  mGraphicBuffer->unlock();
-
+  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
   return surf.forget();
 }
 
