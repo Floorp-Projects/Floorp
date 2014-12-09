@@ -362,7 +362,7 @@ parent:
      * batched and only processed for panning and zooming if content does not
      * preventDefault.
      */
-    ContentReceivedTouch(ScrollableLayerGuid aGuid, uint64_t aInputBlockId, bool aPreventDefault);
+    ContentReceivedInputBlock(ScrollableLayerGuid aGuid, uint64_t aInputBlockId, bool aPreventDefault);
 
     /**
      * Notifies the APZ code of the results of the gecko hit-test for a

@@ -207,9 +207,9 @@ public:
                                            const ViewID& aViewId,
                                            const bool& aIsRoot,
                                            const ZoomConstraints& aConstraints) MOZ_OVERRIDE;
-    virtual bool RecvContentReceivedTouch(const ScrollableLayerGuid& aGuid,
-                                          const uint64_t& aInputBlockId,
-                                          const bool& aPreventDefault) MOZ_OVERRIDE;
+    virtual bool RecvContentReceivedInputBlock(const ScrollableLayerGuid& aGuid,
+                                               const uint64_t& aInputBlockId,
+                                               const bool& aPreventDefault) MOZ_OVERRIDE;
     virtual bool RecvSetTargetAPZC(const uint64_t& aInputBlockId,
                                    const nsTArray<ScrollableLayerGuid>& aTargets) MOZ_OVERRIDE;
 

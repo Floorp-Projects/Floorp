@@ -219,7 +219,7 @@ It also activates inactive scrollframes that were hit by the input events.
 </li>
 <li value="8">
 The call stack unwinds back to the widget code, which sends two notifications to the APZ code on the input thread.
-The first notification is via APZCTreeManager::ContentReceivedTouch, and informs the APZ whether the input block was cancelled.
+The first notification is via APZCTreeManager::ContentReceivedInputBlock, and informs the APZ whether the input block was cancelled.
 The second notification is via APZCTreeManager::SetTargetAPZC, and informs the APZ the results of the Gecko hit-test during event dispatch.
 Note that Gecko may report that the input event did not hit any scrollable frame at all.
 These notifications happen only once per input block.

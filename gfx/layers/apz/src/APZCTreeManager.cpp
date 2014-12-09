@@ -951,10 +951,9 @@ APZCTreeManager::ZoomToRect(const ScrollableLayerGuid& aGuid,
 }
 
 void
-APZCTreeManager::ContentReceivedTouch(uint64_t aInputBlockId,
-                                      bool aPreventDefault)
+APZCTreeManager::ContentReceivedInputBlock(uint64_t aInputBlockId, bool aPreventDefault)
 {
-  mInputQueue->ContentReceivedTouch(aInputBlockId, aPreventDefault);
+  mInputQueue->ContentReceivedInputBlock(aInputBlockId, aPreventDefault);
 }
 
 void

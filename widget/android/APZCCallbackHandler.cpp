@@ -52,7 +52,7 @@ APZCCallbackHandler::NotifyDefaultPrevented(uint64_t aInputBlockId,
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
     APZCTreeManager* controller = nsWindow::GetAPZCTreeManager();
     if (controller) {
-        controller->ContentReceivedTouch(aInputBlockId, aDefaultPrevented);
+        controller->ContentReceivedInputBlock(aInputBlockId, aDefaultPrevented);
     }
 }
 
