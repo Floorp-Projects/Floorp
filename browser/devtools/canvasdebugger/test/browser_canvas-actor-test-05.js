@@ -37,9 +37,14 @@ function ifTestingSupported() {
     "The screenshot's height is correct.");
   is(screenshot.flipped, false,
     "The screenshot's flipped flag is correct.");
-  is([].find.call(screenshot.pixels, e => e > 0), 4290822336,
+  is([].find.call(Uint32(screenshot.pixels), e => e > 0), 4290822336,
     "The screenshot's pixels seem to not be completely transparent.");
 
   yield removeTab(target.tab);
   finish();
+}
+
+function Uint32(src) {
+  let charView = new Uint8Array(src);
+  return new Uint32Array(charView.buffer);
 }

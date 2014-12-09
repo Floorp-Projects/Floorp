@@ -441,14 +441,6 @@ let SnapshotsListView = Heritage.extend(WidgetMethods, {
       snapshotItem.isLoadedFromDisk = true;
       data.calls.forEach(e => e.isLoadedFromDisk = true);
 
-      // Create array buffers from the parsed pixel arrays.
-      for (let thumbnail of data.thumbnails) {
-        let thumbnailPixelsArray = thumbnail.pixels.split(",");
-        thumbnail.pixels = new Uint32Array(thumbnailPixelsArray);
-      }
-      let screenshotPixelsArray = data.screenshot.pixels.split(",");
-      data.screenshot.pixels = new Uint32Array(screenshotPixelsArray);
-
       this.customizeSnapshot(snapshotItem, data.calls, data);
     });
   },
@@ -498,24 +490,12 @@ let SnapshotsListView = Heritage.extend(WidgetMethods, {
       // Prepare all the thumbnails for serialization.
       yield DevToolsUtils.yieldingEach(thumbnails, (thumbnail, i) => {
         let { index, width, height, flipped, pixels } = thumbnail;
-        data.thumbnails.push({
-          index: index,
-          width: width,
-          height: height,
-          flipped: flipped,
-          pixels: Array.join(pixels, ",")
-        });
+        data.thumbnails.push({ index, width, height, flipped, pixels });
       });
 
       // Prepare the screenshot for serialization.
       let { index, width, height, flipped, pixels } = screenshot;
-      data.screenshot = {
-        index: index,
-        width: width,
-        height: height,
-        flipped: flipped,
-        pixels: Array.join(pixels, ",")
-      };
+      data.screenshot = { index, width, height, flipped, pixels };
 
       let string = JSON.stringify(data);
       let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
@@ -1147,7 +1127,7 @@ getImageDataStorage.cache = null;
  *        The image data width.
  * @param number height
  *        The image data height.
- * @param pixels
+ * @param array pixels
  *        An array buffer view of the image data.
  * @param object options
  *        Additional options supported by this operation:
@@ -1165,9 +1145,8 @@ function drawImage(canvas, width, height, pixels, options = {}) {
     return;
   }
 
-  let arrayBuffer = new Uint8Array(pixels.buffer);
   let imageData = getImageDataStorage(ctx, width, height);
-  imageData.data.set(arrayBuffer);
+  imageData.data.set(pixels);
 
   if (options.centered) {
     let left = (canvas.width - width) / 2;
@@ -1188,7 +1167,7 @@ function drawImage(canvas, width, height, pixels, options = {}) {
  *        The image data width.
  * @param number height
  *        The image data height.
- * @param pixels
+ * @param array pixels
  *        An array buffer view of the image data.
  */
 function drawBackground(id, width, height, pixels) {
