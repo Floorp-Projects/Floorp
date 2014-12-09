@@ -27,7 +27,7 @@
 
   <xul:panel id="newtab-search-panel" orient="vertical" type="arrow"
              noautohide="true">
-    <xul:hbox id="newtab-search-manage" class="newtab-search-panel-engine">
+    <xul:hbox id="newtab-search-manage">
       <xul:label>&cmd_engineManager.label;</xul:label>
     </xul:hbox>
   </xul:panel>
