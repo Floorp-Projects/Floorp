@@ -564,7 +564,7 @@ NFCTechDiscoveredWrapper.prototype = {
   // nsISystemMessagesWrapper implementation.
   wrapMessage: function wrapMessage(aMessage, aWindow) {
     aMessage = Cu.cloneInto(aMessage, aWindow);
-    if (aMessage.techList.indexOf("P2P") != -1) {
+    if (aMessage.isP2P) {
       let peerImpl = new MozNFCPeerImpl(aWindow, aMessage.sessionToken);
       let peer = aWindow.MozNFCPeer._create(aWindow, peerImpl);
       aMessage.peer = peer;
