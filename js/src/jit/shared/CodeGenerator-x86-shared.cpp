@@ -2357,7 +2357,7 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle *ins)
     // If all values stay in their lane, this is a blend.
     if (AssemblerX86Shared::HasSSE41()) {
         if (x % 4 == 0 && y % 4 == 1 && z % 4 == 2 && w % 4 == 3) {
-            masm.blendps(rhs, out, masm.blendpsMask(x >= 4, y >= 4, z >= 4, w >= 4));
+            masm.vblendps(masm.blendpsMask(x >= 4, y >= 4, z >= 4, w >= 4), rhs, lhs, out);
             return;
         }
     }
