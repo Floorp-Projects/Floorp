@@ -53,6 +53,7 @@ public class testSearchSuggestions extends BaseTest {
             }
 
             final String query = TEST_QUERY.substring(0, i+1);
+            mSolo.waitForView(R.id.suggestion_text);
             boolean success = waitForTest(new BooleanTest() {
                 @Override
                 public boolean test() {
