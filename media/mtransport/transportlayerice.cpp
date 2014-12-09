@@ -84,25 +84,11 @@ namespace mozilla {
 
 MOZ_MTLOG_MODULE("mtransport")
 
-TransportLayerIce::TransportLayerIce(const std::string& name)
-    : name_(name), ctx_(nullptr), stream_(nullptr), component_(0) {}
-
-TransportLayerIce::~TransportLayerIce() {
-  // No need to do anything here, since we use smart pointers
-}
-
-void TransportLayerIce::SetParameters(RefPtr<NrIceCtx> ctx,
-                                      RefPtr<NrIceMediaStream> stream,
-                                      int component) {
-  ctx_ = ctx;
-  stream_ = stream;
-  component_ = component;
-
-  PostSetup();
-}
-
-void TransportLayerIce::PostSetup() {
-  target_ = ctx_->thread();
+TransportLayerIce::TransportLayerIce(const std::string& name,
+    RefPtr<NrIceCtx> ctx, RefPtr<NrIceMediaStream> stream,
+                                     int component)
+    : name_(name), ctx_(ctx), stream_(stream), component_(component) {
+  target_ = ctx->thread();
 
   stream_->SignalReady.connect(this, &TransportLayerIce::IceReady);
   stream_->SignalFailed.connect(this, &TransportLayerIce::IceFailed);
@@ -111,6 +97,10 @@ void TransportLayerIce::PostSetup() {
   if (stream_->state() == NrIceMediaStream::ICE_OPEN) {
     TL_SET_STATE(TS_OPEN);
   }
+}
+
+TransportLayerIce::~TransportLayerIce() {
+  // No need to do anything here, since we use smart pointers
 }
 
 TransportResult TransportLayerIce::SendPacket(const unsigned char *data,

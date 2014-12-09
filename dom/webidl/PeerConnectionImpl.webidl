@@ -67,7 +67,6 @@ interface PeerConnectionImpl  {
   boolean pluginCrash(unsigned long long pluginId, DOMString name, DOMString pluginDumpID);
 
   /* Attributes */
-  [Constant]
   readonly attribute DOMString fingerprint;
   readonly attribute DOMString localDescription;
   readonly attribute DOMString remoteDescription;
@@ -75,6 +74,7 @@ interface PeerConnectionImpl  {
   readonly attribute PCImplIceConnectionState iceConnectionState;
   readonly attribute PCImplIceGatheringState iceGatheringState;
   readonly attribute PCImplSignalingState signalingState;
+  readonly attribute PCImplSipccState sipccState;
   attribute DOMString id;
 
   attribute DOMString peerIdentity;

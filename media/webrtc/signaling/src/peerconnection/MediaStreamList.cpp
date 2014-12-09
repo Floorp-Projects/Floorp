@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace dom {
 
-MediaStreamList::MediaStreamList(PeerConnectionImpl* peerConnection,
+MediaStreamList::MediaStreamList(sipcc::PeerConnectionImpl* peerConnection,
                                  StreamType type)
   : mPeerConnection(peerConnection),
     mType(type)
@@ -83,11 +83,11 @@ MediaStreamList::IndexedGetter(uint32_t index, bool& found)
   }
   if (mType == Local) {
     return GetStreamFromInfo(mPeerConnection->media()->
-      GetLocalStreamByIndex(index), found);
+      GetLocalStream(index), found);
   }
 
   return GetStreamFromInfo(mPeerConnection->media()->
-    GetRemoteStreamByIndex(index), found);
+    GetRemoteStream(index), found);
 }
 
 uint32_t

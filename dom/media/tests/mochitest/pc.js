@@ -1755,13 +1755,11 @@ PeerConnectionWrapper.prototype = {
    *
    * @param {function} onSuccess
    *        Callback to execute if all media has been requested successfully
-   * @param {array} constraintsList
-   *        Array of constraints for GUM calls
    */
-  getAllUserMedia : function PCW_GetAllUserMedia(constraintsList, onSuccess) {
+  getAllUserMedia : function PCW_GetAllUserMedia(onSuccess) {
     var self = this;
 
-    function _getAllUserMedia(index) {
+    function _getAllUserMedia(constraintsList, index) {
       if (index < constraintsList.length) {
         var constraints = constraintsList[index];
 
@@ -1778,20 +1776,20 @@ PeerConnectionWrapper.prototype = {
 
           self.attachMedia(stream, type, 'local');
 
-          _getAllUserMedia(index + 1);
+          _getAllUserMedia(constraintsList, index + 1);
         }, generateErrorCallback());
       } else {
         onSuccess();
       }
     }
 
-    if (constraintsList.length === 0) {
+    if (this.constraints.length === 0) {
       info("Skipping GUM: no UserMedia requested");
       onSuccess();
     }
     else {
-      info("Get " + constraintsList.length + " local streams");
-      _getAllUserMedia(0);
+      info("Get " + this.constraints.length + " local streams");
+      _getAllUserMedia(this.constraints, 0);
     }
   },
 
@@ -2176,13 +2174,13 @@ PeerConnectionWrapper.prototype = {
     if ((!constraints) || (constraints.length === 0)) {
       return 0;
     }
-    var numAudioTracks = 0;
+    var audioTracks = 0;
     for (var i = 0; i < constraints.length; i++) {
       if (constraints[i].audio) {
-        numAudioTracks++;
+        audioTracks++;
       }
     }
-    return numAudioTracks;
+    return audioTracks;
   },
 
   /**
@@ -2225,13 +2223,13 @@ PeerConnectionWrapper.prototype = {
     if ((!constraints) || (constraints.length === 0)) {
       return 0;
     }
-    var numVideoTracks = 0;
+    var videoTracks = 0;
     for (var i = 0; i < constraints.length; i++) {
       if (constraints[i].video) {
-        numVideoTracks++;
+        videoTracks++;
       }
     }
-    return numVideoTracks;
+    return videoTracks;
   },
 
   /**
@@ -2274,11 +2272,11 @@ PeerConnectionWrapper.prototype = {
     if (!streams || (streams.length === 0)) {
       return 0;
     }
-    var numAudioTracks = 0;
+    var audioTracks = 0;
     streams.forEach(function(st) {
-      numAudioTracks += st.getAudioTracks().length;
+      audioTracks += st.getAudioTracks().length;
     });
-    return numAudioTracks;
+    return audioTracks;
   },
 
   /*
@@ -2292,11 +2290,11 @@ PeerConnectionWrapper.prototype = {
     if (!streams || (streams.length === 0)) {
       return 0;
     }
-    var numVideoTracks = 0;
+    var videoTracks = 0;
     streams.forEach(function(st) {
-      numVideoTracks += st.getVideoTracks().length;
+      videoTracks += st.getVideoTracks().length;
     });
-    return numVideoTracks;
+    return videoTracks;
   },
 
   /**
@@ -2369,9 +2367,10 @@ PeerConnectionWrapper.prototype = {
   },
 
   verifySdp : function PCW_verifySdp(desc, expectedType, offerConstraintsList,
-      offerOptions, trickleIceCallback) {
+      answerConstraintsList, offerOptions, trickleIceCallback) {
     info("Examining this SessionDescription: " + JSON.stringify(desc));
     info("offerConstraintsList: " + JSON.stringify(offerConstraintsList));
+    info("answerConstraintsList: " + JSON.stringify(answerConstraintsList));
     info("offerOptions: " + JSON.stringify(offerOptions));
     ok(desc, "SessionDescription is not null");
     is(desc.type, expectedType, "SessionDescription type is " + expectedType);
@@ -2391,7 +2390,8 @@ PeerConnectionWrapper.prototype = {
     //TODO: how can we check for absence/presence of m=application?
 
     var audioTracks =
-      this.countAudioTracksInMediaConstraint(offerConstraintsList) ||
+      Math.max(this.countAudioTracksInMediaConstraint(offerConstraintsList),
+               this.countAudioTracksInMediaConstraint(answerConstraintsList)) ||
       this.audioInOfferOptions(offerOptions);
 
     info("expected audio tracks: " + audioTracks);
@@ -2407,7 +2407,8 @@ PeerConnectionWrapper.prototype = {
     }
 
     var videoTracks =
-      this.countVideoTracksInMediaConstraint(offerConstraintsList) ||
+      Math.max(this.countVideoTracksInMediaConstraint(offerConstraintsList),
+               this.countVideoTracksInMediaConstraint(answerConstraintsList)) ||
       this.videoInOfferOptions(offerOptions);
 
     info("expected video tracks: " + videoTracks);
@@ -2632,46 +2633,6 @@ PeerConnectionWrapper.prototype = {
     } else {
       info("P2P configured");
       ok(((lType !== "relayed") && (rType !== "relayed")), "Pure peer to peer call without a relay");
-    }
-  },
-
-  /**
-   * Compares amount of established ICE connection according to ICE candidate
-   * pairs in the stats reporting with the expected amount of connection based
-   * on the constraints.
-   *
-   * @param {object} stats
-   *        The stats to check for ICE candidate pairs
-   * @param {object} counters
-   *        The counters for media and data tracks based on constraints
-   * @param {object} answer
-   *        The SDP answer to check for SDP bundle support
-   */
-  checkStatsIceConnections : function PCW_checkStatsIceConnections(stats,
-      offerConstraintsList, offerOptions, numDataTracks, answer) {
-    var numIceConnections = 0;
-    Object.keys(stats).forEach(function(key) {
-      if ((stats[key].type === "candidatepair") && stats[key].selected) {
-        numIceConnections += 1;
-      }
-    });
-    info("ICE connections according to stats: " + numIceConnections);
-    if (answer.sdp.contains('a=group:BUNDLE')) {
-      is(numIceConnections, 1, "stats reports exactly 1 ICE connection");
-    } else {
-      // This code assumes that no media sections have been rejected due to
-      // codec mismatch or other unrecoverable negotiation failures.
-      var numAudioTracks =
-        this.countAudioTracksInMediaConstraint(offerConstraintsList) ||
-        this.audioInOfferOptions(offerOptions);
-
-      var numVideoTracks =
-        this.countVideoTracksInMediaConstraint(offerConstraintsList) ||
-        this.videoInOfferOptions(offerOptions);
-
-      var numAudioVideoDataTracks = numAudioTracks + numVideoTracks + numDataTracks;
-      info("expected audio + video + data tracks: " + numAudioVideoDataTracks);
-      is(numAudioVideoDataTracks, numIceConnections, "stats ICE connections matches expected A/V tracks");
     }
   },
 
