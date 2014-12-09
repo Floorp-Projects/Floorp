@@ -70,13 +70,13 @@ tasks:
 
         command:
           - /bin/bash
-          - -c
+          - -cx
           - >
             source $(which entrypoint) &&
-            mach taskcluster-trygraph
-             --message='{{comment}}'
-             --owner='{{owner}}'"
-             --extend-graph > /home/worker/graph.json
+            ./mach taskcluster-trygraph
+            --message='{{comment}}'
+            --owner='{{owner}}'
+            --extend-graph > /home/worker/graph.json
         graphs:
           - /home/worker/graph.json
 
