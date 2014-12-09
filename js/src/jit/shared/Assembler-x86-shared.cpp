@@ -138,6 +138,8 @@ AssemblerX86Shared::InvertCondition(Condition cond)
 
 CPUInfo::SSEVersion CPUInfo::maxSSEVersion = UnknownSSE;
 CPUInfo::SSEVersion CPUInfo::maxEnabledSSEVersion = UnknownSSE;
+bool CPUInfo::avxPresent = false;
+bool CPUInfo::avxEnabled = true;
 
 void
 CPUInfo::SetSSEVersion()
@@ -196,4 +198,7 @@ CPUInfo::SetSSEVersion()
 
     if (maxEnabledSSEVersion != UnknownSSE)
         maxSSEVersion = Min(maxSSEVersion, maxEnabledSSEVersion);
+
+    static const int AVXBit = 1 << 28;
+    avxPresent = (flagsECX & AVXBit) && avxEnabled;
 }
