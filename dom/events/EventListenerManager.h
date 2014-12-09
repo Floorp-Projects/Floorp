@@ -394,6 +394,12 @@ public:
    */
   bool MayHaveTouchEventListener() { return mMayHaveTouchEventListener; }
 
+  /**
+   * Returns true if there may be a scroll wheel listener registered,
+   * false if there definitely isn't.
+   */
+  bool MayHaveScrollWheelEventListener() { return mMayHaveScrollWheelEventListener; }
+
   bool MayHaveMouseEnterLeaveEventListener() { return mMayHaveMouseEnterLeaveEventListener; }
   bool MayHavePointerEnterLeaveEventListener() { return mMayHavePointerEnterLeaveEventListener; }
 
@@ -544,6 +550,7 @@ protected:
   uint32_t mMayHaveCapturingListeners : 1;
   uint32_t mMayHaveSystemGroupListeners : 1;
   uint32_t mMayHaveTouchEventListener : 1;
+  uint32_t mMayHaveScrollWheelEventListener : 1;
   uint32_t mMayHaveMouseEnterLeaveEventListener : 1;
   uint32_t mMayHavePointerEnterLeaveEventListener : 1;
   uint32_t mClearingListeners : 1;

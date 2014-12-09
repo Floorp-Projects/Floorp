@@ -614,7 +614,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
 
         result = mInputQueue->ReceiveInputEvent(
           apzc,
-          /* aTargetConfirmed = */ hitResult,
+          /* aTargetConfirmed = */ hitResult == ApzcHitRegion,
           wheelInput, aOutInputBlockId);
 
         // Update the out-parameters so they are what the caller expects.
