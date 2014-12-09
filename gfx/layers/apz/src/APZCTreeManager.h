@@ -211,8 +211,7 @@ public:
    * that have come in. If |aPreventDefault| is true, any touch events in the
    * queue will be discarded.
    */
-  void ContentReceivedTouch(uint64_t aInputBlockId,
-                            bool aPreventDefault);
+  void ContentReceivedInputBlock(uint64_t aInputBlockId, bool aPreventDefault);
 
   /**
    * When the event regions code is enabled, this function should be invoked to

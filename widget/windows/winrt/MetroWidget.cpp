@@ -1090,7 +1090,7 @@ MetroWidget::ApzContentConsumingTouch(uint64_t aInputBlockId)
   if (!mController) {
     return;
   }
-  mController->ContentReceivedTouch(aInputBlockId, true);
+  mController->ContentReceivedInputBlock(aInputBlockId, true);
 }
 
 void
@@ -1100,7 +1100,7 @@ MetroWidget::ApzContentIgnoringTouch(uint64_t aInputBlockId)
   if (!mController) {
     return;
   }
-  mController->ContentReceivedTouch(aInputBlockId, false);
+  mController->ContentReceivedInputBlock(aInputBlockId, false);
 }
 
 bool

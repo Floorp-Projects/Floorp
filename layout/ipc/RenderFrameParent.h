@@ -98,9 +98,9 @@ public:
 
   void ZoomToRect(uint32_t aPresShellId, ViewID aViewId, const CSSRect& aRect);
 
-  void ContentReceivedTouch(const ScrollableLayerGuid& aGuid,
-                            uint64_t aInputBlockId,
-                            bool aPreventDefault);
+  void ContentReceivedInputBlock(const ScrollableLayerGuid& aGuid,
+                                 uint64_t aInputBlockId,
+                                 bool aPreventDefault);
   void SetTargetAPZC(uint64_t aInputBlockId,
                      const nsTArray<ScrollableLayerGuid>& aTargets);
 

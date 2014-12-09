@@ -156,7 +156,7 @@ InputQueue::MaybeRequestContentResponse(const nsRefPtr<AsyncPanZoomController>& 
     ScheduleMainThreadTimeout(aTarget, aBlock->GetBlockId());
   } else {
     // Content won't prevent-default this, so we can just pretend like we scheduled
-    // a timeout and it expired. Note that we will still receive a ContentReceivedTouch
+    // a timeout and it expired. Note that we will still receive a ContentReceivedInputBlock
     // callback for this block, and so we need to make sure we adjust the touch balance.
     INPQ_LOG("not waiting for content response on block %p\n", block);
     aBlock->TimeoutContentResponse();
@@ -263,7 +263,7 @@ InputQueue::MainThreadTimeout(const uint64_t& aInputBlockId) {
 }
 
 void
-InputQueue::ContentReceivedTouch(uint64_t aInputBlockId, bool aPreventDefault) {
+InputQueue::ContentReceivedInputBlock(uint64_t aInputBlockId, bool aPreventDefault) {
   AsyncPanZoomController::AssertOnControllerThread();
 
   INPQ_LOG("got a content response; block=%" PRIu64 "\n", aInputBlockId);

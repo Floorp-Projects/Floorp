@@ -17,8 +17,6 @@ namespace layers {
 class AsyncPanZoomController;
 class OverscrollHandoffChain;
 class CancelableBlockState;
-class TouchBlockState;
-class WheelBlockState;
 
 /**
  * A base class that stores state common to various input blocks.
