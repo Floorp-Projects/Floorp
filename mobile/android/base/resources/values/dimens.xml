@@ -67,6 +67,9 @@
     <!-- Regular page row on about:home -->
     <dimen name="page_row_height">64dp</dimen>
 
+    <!-- Group/heading page row on about:home -->
+    <dimen name="page_group_height">56dp</dimen>
+
     <!-- Reading list row on about:home -->
     <dimen name="reading_list_row_height">128dp</dimen>
     <dimen name="reading_list_row_padding_left">15dp</dimen>
@@ -76,7 +79,7 @@
     <dimen name="home_remote_tabs_top_padding">48dp</dimen>
 
     <!-- Remote Tabs Hidden devices row height -->
-    <dimen name="home_remote_tabs_hidden_footer_height">48dp</dimen>
+    <dimen name="home_remote_tabs_hidden_footer_height">40dp</dimen>
 
     <!-- Search Engine Row height -->
     <dimen name="search_row_height">48dp</dimen>
