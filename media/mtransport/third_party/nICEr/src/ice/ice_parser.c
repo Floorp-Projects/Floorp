@@ -137,6 +137,10 @@ nr_ice_peer_candidate_from_attribute(nr_ice_ctx *ctx,char *orig,nr_ice_media_str
     cand->stream=stream;
     skip_whitespace(&str);
 
+    /* Skip a= if present */
+    if (!strncmp(str, "a=", 2))
+        str += 2;
+
     /* Candidate attr */
     if (strncasecmp(str, "candidate:", 10))
         ABORT(R_BAD_DATA);

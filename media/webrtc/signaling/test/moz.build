@@ -6,10 +6,11 @@
 
 if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     GeckoCppUnitTests([
+        'jsep_session_unittest',
         'mediaconduit_unittests',
         'mediapipeline_unittest',
-        'sdp_unittests',
-        'signaling_unittests',
+       'sdp_unittests',
+       'signaling_unittests',
     ])
 
 include('/ipc/chromium/chromium-config.mozbuild')
@@ -38,17 +39,14 @@ LOCAL_INCLUDES += [
     '/media/mtransport/third_party/nrappkit/src/share',
     '/media/mtransport/third_party/nrappkit/src/stats',
     '/media/mtransport/third_party/nrappkit/src/util/libekr',
-    '/media/webrtc/signaling/include',
+    '/media/webrtc',
     '/media/webrtc/signaling/src/common/browser_logging',
     '/media/webrtc/signaling/src/common/time_profiling',
     '/media/webrtc/signaling/src/media',
     '/media/webrtc/signaling/src/media-conduit',
     '/media/webrtc/signaling/src/mediapipeline',
     '/media/webrtc/signaling/src/peerconnection',
-    '/media/webrtc/signaling/src/sipcc/core/includes',
-    '/media/webrtc/signaling/src/sipcc/core/sdp',
-    '/media/webrtc/signaling/src/sipcc/cpr/include',
-    '/media/webrtc/signaling/src/sipcc/include',
+    '/media/webrtc/signaling/src/sdp/sipcc',
     '/media/webrtc/trunk',
     '/media/webrtc/trunk/testing/gtest/include',
     '/xpcom/base',
@@ -91,7 +89,6 @@ if CONFIG['OS_TARGET'] in ('DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD'):
 
 USE_LIBS += [
     '/media/webrtc/signalingtest/signaling_ecc/ecc',
-    '/media/webrtc/signalingtest/signaling_sipcc/sipcc',
     '/media/webrtc/trunk/testing/gtest_gtest/gtest',
     'gkmedias',
     'mtransport_s',

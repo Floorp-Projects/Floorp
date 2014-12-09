@@ -16,11 +16,8 @@
 #include "DOMMediaStream.h"
 #endif
 
-namespace sipcc {
-class PeerConnectionImpl;
-} // namespace sipcc
-
 namespace mozilla {
+class PeerConnectionImpl;
 namespace dom {
 
 class MediaStreamList : public nsISupports,
@@ -32,7 +29,7 @@ public:
     Remote
   };
 
-  MediaStreamList(sipcc::PeerConnectionImpl* peerConnection, StreamType type);
+  MediaStreamList(PeerConnectionImpl* peerConnection, StreamType type);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaStreamList)
@@ -47,7 +44,7 @@ public:
 private:
   virtual ~MediaStreamList();
 
-  nsRefPtr<sipcc::PeerConnectionImpl> mPeerConnection;
+  nsRefPtr<PeerConnectionImpl> mPeerConnection;
   StreamType mType;
 };
 

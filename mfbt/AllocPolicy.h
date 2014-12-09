@@ -55,8 +55,9 @@ public:
   template <typename T>
   T* pod_malloc(size_t aNumElems)
   {
-    if (aNumElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
-        return nullptr;
+    if (aNumElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value) {
+      return nullptr;
+    }
     return static_cast<T*>(malloc(aNumElems * sizeof(T)));
   }
 
@@ -69,8 +70,9 @@ public:
   template <typename T>
   T* pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize)
   {
-    if (aNewSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
-        return nullptr;
+    if (aNewSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value) {
+      return nullptr;
+    }
     return static_cast<T*>(realloc(aPtr, aNewSize * sizeof(T)));
   }
 

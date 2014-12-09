@@ -82,6 +82,25 @@ bool xpc_IsReportableErrorCode(nsresult code)
     }
 }
 
+// A little stack-based RAII class to help management of the XPCContext
+// PendingResult.
+class MOZ_STACK_CLASS AutoSavePendingResult {
+public:
+    AutoSavePendingResult(XPCContext *xpcc) :
+        mXPCContext(xpcc)
+    {
+        // Save any existing pending result and reset to NS_OK for this invocation.
+        mSavedResult = xpcc->GetPendingResult();
+        xpcc->SetPendingResult(NS_OK);
+    }
+    ~AutoSavePendingResult() {
+        mXPCContext->SetPendingResult(mSavedResult);
+    }
+private:
+    XPCContext *mXPCContext;
+    nsresult mSavedResult;
+};
+
 // static
 already_AddRefed<nsXPCWrappedJSClass>
 nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID, bool allowNonScriptable)
@@ -873,7 +892,6 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     jsval* argv = nullptr;
     uint8_t i;
     nsresult retval = NS_ERROR_FAILURE;
-    nsresult pending_result = NS_OK;
     bool success;
     bool readyToDoTheCall = false;
     nsID  param_iid;
@@ -922,6 +940,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     AutoValueVector args(cx);
     AutoScriptEvaluate scriptEval(cx);
 
+    AutoSavePendingResult apr(xpcc);
+
     // XXX ASSUMES that retval is last arg. The xpidl compiler ensures this.
     uint8_t paramCount = info->num_args;
     uint8_t argc = paramCount -
@@ -930,7 +950,6 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     if (!scriptEval.StartEvaluating(obj))
         goto pre_call_clean_up;
 
-    xpcc->SetPendingResult(pending_result);
     xpcc->SetException(nullptr);
     XPCJSRuntime::Get()->SetPendingException(nullptr);
 
@@ -1403,7 +1422,7 @@ pre_call_clean_up:
         }
     } else {
         // set to whatever the JS code might have set as the result
-        retval = pending_result;
+        retval = xpcc->GetPendingResult();
     }
 
     return retval;

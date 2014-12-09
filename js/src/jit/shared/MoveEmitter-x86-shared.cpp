@@ -458,7 +458,7 @@ MoveEmitterX86::emitInt32X4Move(const MoveOperand &from, const MoveOperand &to)
 {
     if (from.isFloatReg()) {
         if (to.isFloatReg())
-            masm.moveAlignedInt32x4(from.floatReg(), to.floatReg());
+            masm.moveInt32x4(from.floatReg(), to.floatReg());
         else
             masm.storeAlignedInt32x4(from.floatReg(), toAddress(to));
     } else if (to.isFloatReg()) {
@@ -476,7 +476,7 @@ MoveEmitterX86::emitFloat32X4Move(const MoveOperand &from, const MoveOperand &to
 {
     if (from.isFloatReg()) {
         if (to.isFloatReg())
-            masm.moveAlignedFloat32x4(from.floatReg(), to.floatReg());
+            masm.moveFloat32x4(from.floatReg(), to.floatReg());
         else
             masm.storeAlignedFloat32x4(from.floatReg(), toAddress(to));
     } else if (to.isFloatReg()) {
