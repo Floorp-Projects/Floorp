@@ -974,6 +974,13 @@ class MOZ_STACK_CLASS SourceBufferHolder MOZ_FINAL
 
 #define JSFUN_CONSTRUCTOR      0x400    /* native that can be called as a ctor */
 
+#define JSPROP_REDEFINE_NONCONFIGURABLE 0x800 /* If set, will allow redefining a
+                                                 non-configurable property, but
+                                                 only on a non-DOM global.  This
+                                                 is a temporary hack that will
+                                                 need to go away in bug
+                                                 1105518 */
+
 #define JSPROP_IGNORE_ENUMERATE 0x1000  /* ignore the value in JSPROP_ENUMERATE.
                                            This flag only valid when defining over
                                            an existing property. */
