@@ -225,6 +225,19 @@ public:
     }
   }
 
+  void ChainTo(already_AddRefed<MediaPromise> aChainedPromise, const char* aCallSite)
+  {
+    MutexAutoLock lock(mMutex);
+    nsRefPtr<MediaPromise> chainedPromise = aChainedPromise;
+    PROMISE_LOG("%s invoking Chain() [this=%p, chainedPromise=%p, isPending=%d]",
+                aCallSite, this, chainedPromise.get(), (int) IsPending());
+    if (!IsPending()) {
+      ForwardTo(chainedPromise);
+    } else {
+      mChainedPromises.AppendElement(chainedPromise);
+    }
+  }
+
   void Resolve(ResolveValueType aResolveValue, const char* aResolveSite)
   {
     MutexAutoLock lock(mMutex);
@@ -251,6 +264,21 @@ protected:
     for (size_t i = 0; i < mThenValues.Length(); ++i)
       mThenValues[i]->Dispatch(this);
     mThenValues.Clear();
+
+    for (size_t i = 0; i < mChainedPromises.Length(); ++i) {
+      ForwardTo(mChainedPromises[i]);
+    }
+    mChainedPromises.Clear();
+  }
+
+  void ForwardTo(MediaPromise* aOther)
+  {
+    MOZ_ASSERT(!IsPending());
+    if (mResolveValue.isSome()) {
+      aOther->Resolve(mResolveValue.ref(), "<chained promise>");
+    } else {
+      aOther->Reject(mRejectValue.ref(), "<chained promise>");
+    }
   }
 
   ~MediaPromise()
@@ -258,6 +286,8 @@ protected:
     MOZ_COUNT_DTOR(MediaPromise);
     PROMISE_LOG("MediaPromise::~MediaPromise [this=%p]", this);
     MOZ_ASSERT(!IsPending());
+    MOZ_ASSERT(mThenValues.IsEmpty());
+    MOZ_ASSERT(mChainedPromises.IsEmpty());
   };
 
   const char* mCreationSite; // For logging
@@ -265,6 +295,7 @@ protected:
   Maybe<ResolveValueType> mResolveValue;
   Maybe<RejectValueType> mRejectValue;
   nsTArray<ThenValueBase*> mThenValues;
+  nsTArray<nsRefPtr<MediaPromise>> mChainedPromises;
 };
 
 /*
@@ -300,6 +331,17 @@ public:
       mMonitor->AssertCurrentThreadOwns();
     }
     return !mPromise;
+  }
+
+  already_AddRefed<PromiseType> Steal()
+  {
+    if (mMonitor) {
+      mMonitor->AssertCurrentThreadOwns();
+    }
+
+    nsRefPtr<PromiseType> p = mPromise;
+    mPromise = nullptr;
+    return p.forget();
   }
 
   void Resolve(typename PromiseType::ResolveValueType aResolveValue,
