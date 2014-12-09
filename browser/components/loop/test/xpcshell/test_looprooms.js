@@ -102,6 +102,9 @@ const kCreateRoomData = {
   expiresAt: 1405534180
 };
 
+const kChannelGuest = MozLoopService.channelIDs.roomsGuest;
+const kChannelFxA = MozLoopService.channelIDs.roomsFxA;
+
 const normalizeRoom = function(room) {
   delete room.currSize;
   if (!("participants" in room)) {
@@ -144,7 +147,7 @@ const onRoomDeleted = function(e, room) {
   let idx = gExpectedDeletes.indexOf(room.roomToken);
   Assert.ok(idx > -1, "Deleted room should be expected");
   gExpectedDeletes.splice(idx, 1);
-}
+};
 
 const onRoomJoined = function(e, room, participant) {
   let participants = gExpectedJoins[room.roomToken];
@@ -316,52 +319,73 @@ add_task(function* test_roomUpdates() {
     "2a1787a6-4a73-43b5-ae3e-906ec1e763cb",
     "781f012b-f1ea-4ce1-9105-7cfc36fb4ec7"
   ];
-  roomsPushNotification("1");
+  roomsPushNotification("1", kChannelGuest);
   yield waitForCondition(() => Object.getOwnPropertyNames(gExpectedLeaves).length === 0);
 
   gExpectedUpdates.push("_nxD4V4FflQ");
   gExpectedJoins["_nxD4V4FflQ"] = ["2a1787a6-4a73-43b5-ae3e-906ec1e763cb"];
-  roomsPushNotification("2");
+  roomsPushNotification("2", kChannelGuest);
   yield waitForCondition(() => Object.getOwnPropertyNames(gExpectedJoins).length === 0);
 
   gExpectedUpdates.push("_nxD4V4FflQ");
   gExpectedJoins["_nxD4V4FflQ"] = ["781f012b-f1ea-4ce1-9105-7cfc36fb4ec7"];
   gExpectedLeaves["_nxD4V4FflQ"] = ["2a1787a6-4a73-43b5-ae3e-906ec1e763cb"];
-  roomsPushNotification("3");
+  roomsPushNotification("3", kChannelGuest);
   yield waitForCondition(() => Object.getOwnPropertyNames(gExpectedLeaves).length === 0);
 
   gExpectedUpdates.push("_nxD4V4FflQ");
   gExpectedJoins["_nxD4V4FflQ"] = [
     "2a1787a6-4a73-43b5-ae3e-906ec1e763cb",
     "5de6281c-6568-455f-af08-c0b0a973100e"];
-  roomsPushNotification("4");
+  roomsPushNotification("4", kChannelGuest);
   yield waitForCondition(() => Object.getOwnPropertyNames(gExpectedJoins).length === 0);
 });
 
-// Test if joining a room works as expected.
+// Test if push updates' channelIDs are respected.
+add_task(function* () {
+  function badRoomJoin() {
+    Assert.ok(false, "Unexpected 'joined' event emitted!");
+  }
+  LoopRooms.on("join", onRoomLeft);
+  roomsPushNotification("4", kChannelFxA);
+  LoopRooms.off("join", badRoomJoin);
+
+  // Set the userProfile to look like we're logged into FxA.
+  MozLoopServiceInternal.fxAOAuthTokenData = { token_type: "bearer" };
+  MozLoopServiceInternal.fxAOAuthProfile = { email: "fake@invalid.com" };
+
+  gExpectedUpdates.push("_nxD4V4FflQ");
+  gExpectedLeaves["_nxD4V4FflQ"] = [
+    "2a1787a6-4a73-43b5-ae3e-906ec1e763cb",
+    "5de6281c-6568-455f-af08-c0b0a973100e"
+  ];
+  roomsPushNotification("3", kChannelFxA);
+  yield waitForCondition(() => Object.getOwnPropertyNames(gExpectedLeaves).length === 0);
+});
+
+// Test if joining a room as Guest works as expected.
 add_task(function* test_joinRoomGuest() {
-  // We need these set up for getting the email address.
+  MozLoopServiceInternal.fxAOAuthTokenData = null;
+  MozLoopServiceInternal.fxAOAuthProfile = null;
+
   let roomToken = "_nxD4V4FflQ";
   let joinedData = yield LoopRooms.promise("join", roomToken);
   Assert.equal(joinedData.action, "join");
 });
 
+// Test if joining a room as FxA user works as expected.
 add_task(function* test_joinRoom() {
   // We need these set up for getting the email address.
-  Services.prefs.setCharPref("loop.fxa_oauth.profile", JSON.stringify({
-    email: "fake@invalid.com"
-  }));
-  Services.prefs.setCharPref("loop.fxa_oauth.tokendata", JSON.stringify({
-    token_type: "bearer"
-  }));
+  MozLoopServiceInternal.fxAOAuthTokenData = { token_type: "bearer" };
+  MozLoopServiceInternal.fxAOAuthProfile = { email: "fake@invalid.com" };
 
   let roomToken = "_nxD4V4FflQ";
   let joinedData = yield LoopRooms.promise("join", roomToken);
   Assert.equal(joinedData.action, "join");
   Assert.equal(joinedData.displayName, "fake@invalid.com");
 
-  Services.prefs.clearUserPref("loop.fxa_oauth.profile");
-  Services.prefs.clearUserPref("loop.fxa_oauth.tokendata");
+  MozLoopServiceInternal.fxAOAuthTokenData = null;
+  MozLoopServiceInternal.fxAOAuthProfile = null;
 });
 
 // Test if refreshing a room works as expected.
@@ -390,7 +414,7 @@ add_task(function* test_renameRoom() {
 
 add_task(function* test_roomDeleteNotifications() {
   gExpectedDeletes.push("_nxD4V4FflQ");
-  roomsPushNotification("5");
+  roomsPushNotification("5", kChannelGuest);
   yield waitForCondition(() => gExpectedDeletes.length === 0);
 });
 
@@ -424,8 +448,8 @@ function run_test() {
     // Revert original Chat.open implementation
     Chat.open = openChatOrig;
 
-    Services.prefs.clearUserPref("loop.fxa_oauth.profile");
-    Services.prefs.clearUserPref("loop.fxa_oauth.tokendata");
+    MozLoopServiceInternal.fxAOAuthTokenData = null;
+    MozLoopServiceInternal.fxAOAuthProfile = null;
 
     LoopRooms.off("add", onRoomAdded);
     LoopRooms.off("update", onRoomUpdated);
