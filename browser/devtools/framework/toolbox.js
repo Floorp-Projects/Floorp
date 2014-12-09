@@ -175,6 +175,33 @@ Toolbox.prototype = {
   },
 
   /**
+   * Get the panel instance for a given tool once it is ready.
+   * If the tool is already opened, the promise will resolve immediately,
+   * otherwise it will wait until the tool has been opened before resolving.
+   *
+   * Note that this does not open the tool, use selectTool if you'd
+   * like to select the tool right away.
+   *
+   * @param  {String} id
+   *         The id of the panel, for example "jsdebugger".
+   * @returns Promise
+   *          A promise that resolves once the panel is ready.
+   */
+  getPanelWhenReady: function(id) {
+    let deferred = promise.defer();
+    let panel = this.getPanel(id);
+    if (panel) {
+      deferred.resolve(panel);
+    } else {
+      this.on(id + "-ready", (e, panel) => {
+        deferred.resolve(panel);
+      });
+    }
+
+    return deferred.promise;
+  },
+
+  /**
    * This is a shortcut for getPanel(currentToolId) because it is much more
    * likely that we're going to want to get the panel that we've just made
    * visible

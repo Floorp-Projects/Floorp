@@ -69,15 +69,15 @@ function ifTestingSupported() {
     "The second screenshot has the correct scaling.");
   is(secondScreenshot.flipped, true,
     "The second screenshot has the correct 'flipped' flag.");
-  is(secondScreenshot.pixels.length, Math.pow(CanvasFront.WEBGL_SCREENSHOT_MAX_HEIGHT, 2),
+  is(secondScreenshot.pixels.length, Math.pow(CanvasFront.WEBGL_SCREENSHOT_MAX_HEIGHT, 2) * 4,
     "The second screenshot should not be empty.");
-  is(new Uint8Array(secondScreenshot.pixels.buffer)[0], 0,
+  is(secondScreenshot.pixels[0], 0,
     "The second screenshot has the correct red component.");
-  is(new Uint8Array(secondScreenshot.pixels.buffer)[1], 0,
+  is(secondScreenshot.pixels[1], 0,
     "The second screenshot has the correct green component.");
-  is(new Uint8Array(secondScreenshot.pixels.buffer)[2], 255,
+  is(secondScreenshot.pixels[2], 255,
     "The second screenshot has the correct blue component.");
-  is(new Uint8Array(secondScreenshot.pixels.buffer)[3], 255,
+  is(secondScreenshot.pixels[3], 255,
     "The second screenshot has the correct alpha component.");
 
   is((yield evalInDebuggee("gl.getParameter(gl.FRAMEBUFFER_BINDING) === customFramebuffer")),
