@@ -39,18 +39,14 @@ loop.webapp = (function($, _, OT, mozL10n) {
    */
   var UnsupportedBrowserView = React.createClass({
     render: function() {
-      var useLatestFF = mozL10n.get("use_latest_firefox", {
-        "firefoxBrandNameLink": React.renderComponentToStaticMarkup(
-          <a target="_blank" href={loop.config.brandWebsiteUrl}>
-            {mozL10n.get("brandShortname")}
-          </a>
-        )
-      });
       return (
-        <div>
-          <h2>{mozL10n.get("incompatible_browser")}</h2>
-          <p>{mozL10n.get("powered_by_webrtc", {clientShortname: mozL10n.get("clientShortname2")})}</p>
-          <p dangerouslySetInnerHTML={{__html: useLatestFF}}></p>
+        <div className="expired-url-info">
+          <div className="info-panel">
+            <div className="firefox-logo" />
+            <h1>{mozL10n.get("incompatible_browser_heading")}</h1>
+            <h4>{mozL10n.get("incompatible_browser_message")}</h4>
+          </div>
+          <PromoteFirefoxView helper={this.props.helper} />
         </div>
       );
     }
@@ -993,7 +989,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
           return <UnsupportedDeviceView />;
         }
         case "unsupportedBrowser": {
-          return <UnsupportedBrowserView />;
+          return <UnsupportedBrowserView helper={this.props.helper}/>;
         }
         case "outgoing": {
           return (
