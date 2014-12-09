@@ -39,18 +39,14 @@ loop.webapp = (function($, _, OT, mozL10n) {
    */
   var UnsupportedBrowserView = React.createClass({displayName: 'UnsupportedBrowserView',
     render: function() {
-      var useLatestFF = mozL10n.get("use_latest_firefox", {
-        "firefoxBrandNameLink": React.renderComponentToStaticMarkup(
-          React.DOM.a({target: "_blank", href: loop.config.brandWebsiteUrl}, 
-            mozL10n.get("brandShortname")
-          )
-        )
-      });
       return (
-        React.DOM.div(null, 
-          React.DOM.h2(null, mozL10n.get("incompatible_browser")), 
-          React.DOM.p(null, mozL10n.get("powered_by_webrtc", {clientShortname: mozL10n.get("clientShortname2")})), 
-          React.DOM.p({dangerouslySetInnerHTML: {__html: useLatestFF}})
+        React.DOM.div({className: "expired-url-info"}, 
+          React.DOM.div({className: "info-panel"}, 
+            React.DOM.div({className: "firefox-logo"}), 
+            React.DOM.h1(null, mozL10n.get("incompatible_browser_heading")), 
+            React.DOM.h4(null, mozL10n.get("incompatible_browser_message"))
+          ), 
+          PromoteFirefoxView({helper: this.props.helper})
         )
       );
     }
@@ -993,7 +989,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
           return UnsupportedDeviceView(null);
         }
         case "unsupportedBrowser": {
-          return UnsupportedBrowserView(null);
+          return UnsupportedBrowserView({helper: this.props.helper});
         }
         case "outgoing": {
           return (
