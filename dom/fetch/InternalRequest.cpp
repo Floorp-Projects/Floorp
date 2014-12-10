@@ -29,22 +29,6 @@ InternalRequest::GetRequestConstructorCopy(nsIGlobalObject* aGlobal, ErrorResult
   copy->mBodyStream = mBodyStream;
   copy->mPreserveContentCodings = true;
 
-  if (NS_IsMainThread()) {
-    nsIPrincipal* principal = aGlobal->PrincipalOrNull();
-    MOZ_ASSERT(principal);
-    aRv = nsContentUtils::GetASCIIOrigin(principal, copy->mOrigin);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
-    }
-  } else {
-    workers::WorkerPrivate* worker = workers::GetCurrentThreadWorkerPrivate();
-    MOZ_ASSERT(worker);
-    worker->AssertIsOnWorkerThread();
-
-    workers::WorkerPrivate::LocationInfo& location = worker->GetLocationInfo();
-    copy->mOrigin = NS_ConvertUTF16toUTF8(location.mOrigin);
-  }
-
   copy->mContext = nsIContentPolicy::TYPE_FETCH;
   copy->mMode = mMode;
   copy->mCredentialsMode = mCredentialsMode;
