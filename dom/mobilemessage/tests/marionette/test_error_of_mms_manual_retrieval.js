@@ -13,8 +13,8 @@ let MMS = {};
 Cu.import("resource://gre/modules/MmsPduHelper.jsm", MMS);
 
 let gMobileMessageDatabaseService =
-  Cc["@mozilla.org/mobilemessage/rilmobilemessagedatabaseservice;1"]
-    .getService(Ci.nsIRilMobileMessageDatabaseService);
+  Cc["@mozilla.org/mobilemessage/gonkmobilemessagedatabaseservice;1"]
+    .getService(Ci.nsIGonkMobileMessageDatabaseService);
 
 let gUuidGenerator =
   Cc["@mozilla.org/uuid-generator;1"]
