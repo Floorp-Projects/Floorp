@@ -6,6 +6,8 @@
 package org.mozilla.gecko.tabs;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.StateListDrawable;
 import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -127,5 +129,25 @@ public class TabStrip extends ThemedLinearLayout {
                     break;
             }
         }
+    }
+
+    @Override
+    public void onLightweightThemeChanged() {
+        final Drawable drawable = getTheme().getDrawable(this);
+        if (drawable == null) {
+            return;
+        }
+
+        final StateListDrawable stateList = new StateListDrawable();
+        stateList.addState(PRIVATE_STATE_SET, getColorDrawable(R.color.background_tabs));
+        stateList.addState(EMPTY_STATE_SET, drawable);
+
+        setBackgroundDrawable(stateList);
+    }
+
+    @Override
+    public void onLightweightThemeReset() {
+        final int defaultBackgroundColor = getResources().getColor(R.color.background_tabs);
+        setBackgroundColor(defaultBackgroundColor);
     }
 }
