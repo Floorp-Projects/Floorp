@@ -65,7 +65,7 @@ public:
   // This is different from ReleaseMediaResources() as it is irreversable,
   // whereas ReleaseMediaResources() is.  Must be called on the decode
   // thread.
-  virtual void Shutdown();
+  virtual nsRefPtr<ShutdownPromise> Shutdown();
 
   virtual void SetCallback(RequestSampleCallback* aDecodedSampleCallback);
   MediaTaskQueue* EnsureTaskQueue();

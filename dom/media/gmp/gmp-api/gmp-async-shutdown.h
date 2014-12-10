@@ -17,6 +17,8 @@
 #ifndef GMP_ASYNC_SHUTDOWN_H_
 #define GMP_ASYNC_SHUTDOWN_H_
 
+#define GMP_API_ASYNC_SHUTDOWN "async-shutdown"
+
 // API exposed by the plugin library to manage asynchronous shutdown.
 // Some plugins require special cleanup which may need to make calls
 // to host services and wait for async responses.
@@ -33,7 +35,7 @@
 // Note: Your GMP's GMPShutdown function will still be called after your
 // call to ShutdownComplete().
 //
-// API name: "async-shutdown"
+// API name macro: GMP_API_ASYNC_SHUTDOWN
 // Host API: GMPAsyncShutdownHost
 class GMPAsyncShutdown {
 public:

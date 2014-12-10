@@ -38,13 +38,10 @@ using mozilla::RangedPtr;
 const Class js::JSONClass = {
     js_JSON_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_JSON),
-    JS_PropertyStub,        /* addProperty */
-    JS_DeletePropertyStub,  /* delProperty */
+    nullptr,                /* addProperty */
+    nullptr,                /* delProperty */
     JS_PropertyStub,        /* getProperty */
-    JS_StrictPropertyStub,  /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub
+    JS_StrictPropertyStub   /* setProperty */
 };
 
 static inline bool

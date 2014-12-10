@@ -134,12 +134,17 @@ MediaTaskQueue::AwaitShutdownAndIdle()
   AwaitIdleLocked();
 }
 
-void
+nsRefPtr<ShutdownPromise>
 MediaTaskQueue::BeginShutdown()
 {
   MonitorAutoLock mon(mQueueMonitor);
   mIsShutdown = true;
+  nsRefPtr<ShutdownPromise> p = mShutdownPromise.Ensure(__func__);
+  if (!mIsRunning) {
+    mShutdownPromise.Resolve(true, __func__);
+  }
   mon.NotifyAll();
+  return p;
 }
 
 nsresult
@@ -208,6 +213,7 @@ MediaTaskQueue::Runner::Run()
     mQueue->mRunningThread = NS_GetCurrentThread();
     if (mQueue->mTasks.size() == 0) {
       mQueue->mIsRunning = false;
+      mQueue->mShutdownPromise.ResolveIfExists(true, __func__);
       mon.NotifyAll();
       return NS_OK;
     }
@@ -235,6 +241,7 @@ MediaTaskQueue::Runner::Run()
     if (mQueue->mTasks.size() == 0) {
       // No more events to run. Exit the task runner.
       mQueue->mIsRunning = false;
+      mQueue->mShutdownPromise.ResolveIfExists(true, __func__);
       mon.NotifyAll();
       mQueue->mRunningThread = nullptr;
       return NS_OK;

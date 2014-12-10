@@ -3133,34 +3133,6 @@ MOZ_ARG_WITH_STRING(wrap-malloc,
     WRAP_LDFLAGS="${WRAP_LDFLAGS} $withval")
 
 dnl ========================================================
-dnl = Use incremental GC
-dnl ========================================================
-JSGC_INCREMENTAL=1
-MOZ_ARG_DISABLE_BOOL(gcincremental,
-[  --disable-gcincremental Disable incremental GC],
-    JSGC_INCREMENTAL= )
-if test -n "$JSGC_INCREMENTAL"; then
-    AC_DEFINE(JSGC_INCREMENTAL)
-fi
-
-dnl ========================================================
-dnl = Use generational GC
-dnl ========================================================
-dnl Use generational GC by default in all shell builds. The top-level mozilla
-dnl configure.in will configure SpiderMonkey with --disable-gcgenerational as
-dnl needed on a per-platform basis.
-JSGC_GENERATIONAL=1
-MOZ_ARG_DISABLE_BOOL(gcgenerational,
-[  --disable-gcgenerational Disable generational GC],
-    JSGC_GENERATIONAL= ,
-    JSGC_GENERATIONAL=1 )
-if test -n "$JSGC_GENERATIONAL"; then
-    AC_DEFINE(JSGC_GENERATIONAL)
-fi
-JSGC_GENERATIONAL_CONFIGURED=$JSGC_GENERATIONAL
-AC_SUBST(JSGC_GENERATIONAL_CONFIGURED)
-
-dnl ========================================================
 dnl = Use compacting GC
 dnl ========================================================
 dnl Compact the heap by moving GC things when doing a shrinking colletion.

@@ -962,7 +962,7 @@ GMPParent::ReadGMPMetaData()
     }
 
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
-    if (cap->mAPIName.EqualsLiteral("eme-decrypt") &&
+    if (cap->mAPIName.EqualsLiteral(GMP_API_DECRYPTOR) &&
         !mozilla::SandboxInfo::Get().CanSandboxMedia()) {
       printf_stderr("GMPParent::ReadGMPMetaData: Plugin \"%s\" is an EME CDM"
                     " but this system can't sandbox it; not loading.\n",

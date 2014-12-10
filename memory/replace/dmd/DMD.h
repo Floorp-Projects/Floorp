@@ -29,6 +29,7 @@ struct Sizes
   size_t mStackTracesUnused;
   size_t mStackTraceTable;
   size_t mLiveBlockTable;
+  size_t mDeadBlockList;
 
   Sizes() { Clear(); }
   void Clear() { memset(this, 0, sizeof(Sizes)); }
@@ -45,15 +46,13 @@ struct DMDFuncs
 
   virtual void ClearReports();
 
-  virtual void AnalyzeReports(UniquePtr<JSONWriteFunc>);
+  virtual void Analyze(UniquePtr<JSONWriteFunc>);
 
   virtual void SizeOf(Sizes*);
 
   virtual void StatusMsg(const char*, va_list);
 
-  virtual void SetSampleBelowSize(size_t);
-
-  virtual void ClearBlocks();
+  virtual void ResetEverything(const char*);
 
 #ifndef REPLACE_MALLOC_IMPL
   // We deliberately don't use ReplaceMalloc::GetDMDFuncs here, because if we
@@ -124,7 +123,7 @@ ReportOnAlloc(const void* aPtr)
 // reporters.  The following sequence should be used.
 // - ClearReports()
 // - run the memory reporters
-// - AnalyzeReports()
+// - Analyze()
 // This sequence avoids spurious twice-reported warnings.
 inline void
 ClearReports()
@@ -146,12 +145,20 @@ ClearReports()
 // {
 //   // The version number of the format, which will be incremented each time
 //   // backwards-incompatible changes are made. A mandatory integer.
-//   "version": 1,
+//   //
+//   // Version history:
+//   // - 1: The original format. Implemented in bug 1044709.
+//   // - 2: Added the "mode" field under "invocation". Added in bug 1094552.
+//   "version": 2,
 //
 //   // Information about how DMD was invoked. A mandatory object.
 //   "invocation": {
 //     // The contents of the $DMD environment variable. A mandatory string.
 //     "dmdEnvVar": "1",
+//
+//     // The profiling mode. A mandatory string taking one of the following
+//     // values: "live", "dark-matter", "cumulative".
+//     "mode": "dark-matter",
 //
 //     // The value of the --sample-below-size option. A mandatory integer.
 //     "sampleBelowSize": 4093
@@ -182,8 +189,9 @@ ClearReports()
 //       "alloc": "B",
 //
 //       // One or more stack traces at which this heap block was reported by a
-//       // memory reporter. An optional array. The elements are strings that
-//       // index into the "traceTable" object.
+//       // memory reporter. An optional array that will only be present in
+//       // "dark-matter" mode. The elements are strings that index into
+//       // the "traceTable" object.
 //       "reps": ["C"]
 //     }
 //   ],
@@ -221,18 +229,20 @@ ClearReports()
 //     "H": "#00: quuux (Quux.cpp:567)"
 //   }
 // }
+//
 // Implementation note: normally, this wouldn't be templated, but in that case,
-// the function is compiled, which makes the destructor for the UniquePtr fire up,
-// and that needs JSONWriteFunc to be fully defined. That, in turn, requires to
-// include JSONWriter.h, which includes double-conversion.h, which ends up breaking
-// various things built with -Werror for various reasons.
+// the function is compiled, which makes the destructor for the UniquePtr fire
+// up, and that needs JSONWriteFunc to be fully defined. That, in turn,
+// requires to include JSONWriter.h, which includes double-conversion.h, which
+// ends up breaking various things built with -Werror for various reasons.
+//
 template <typename JSONWriteFunc>
 inline void
-AnalyzeReports(UniquePtr<JSONWriteFunc> aWriteFunc)
+Analyze(UniquePtr<JSONWriteFunc> aWriteFunc)
 {
   DMDFuncs* funcs = DMDFuncs::Get();
   if (funcs) {
-    funcs->AnalyzeReports(Move(aWriteFunc));
+    funcs->Analyze(Move(aWriteFunc));
   }
 }
 
@@ -267,23 +277,15 @@ IsRunning()
   return !!DMDFuncs::Get();
 }
 
-// Sets the sample-below size. Only used for testing purposes.
+// Resets all DMD options and then sets new ones according to those specified
+// in |aOptions|. Also clears all recorded data about allocations. Only used
+// for testing purposes.
 inline void
-SetSampleBelowSize(size_t aSize)
+ResetEverything(const char* aOptions)
 {
   DMDFuncs* funcs = DMDFuncs::Get();
   if (funcs) {
-    funcs->SetSampleBelowSize(aSize);
-  }
-}
-
-// Clears all records of live allocations. Only used for testing purposes.
-inline void
-ClearBlocks()
-{
-  DMDFuncs* funcs = DMDFuncs::Get();
-  if (funcs) {
-    funcs->ClearBlocks();
+    funcs->ResetEverything(aOptions);
   }
 }
 #endif

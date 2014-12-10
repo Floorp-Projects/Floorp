@@ -90,6 +90,8 @@ inline void
 AssertGCThingHasType(js::gc::Cell *cell, JSGCTraceKind kind) {}
 #endif
 
+MOZ_ALWAYS_INLINE bool IsInsideNursery(const js::gc::Cell *cell);
+
 } /* namespace gc */
 } /* namespace js */
 
@@ -270,9 +272,15 @@ class JS_FRIEND_API(GCCellPtr)
         return reinterpret_cast<js::gc::Cell *>(ptr & ~JSTRACE_OUTOFLINE);
     }
 
-    // The CC's trace logger needs an identity that is XPIDL serializable.
+    // The CC stores nodes as void* internally.
     void *unsafeGetUntypedPtr() const {
+        MOZ_ASSERT(asCell());
+        MOZ_ASSERT(!js::gc::IsInsideNursery(asCell()));
         return reinterpret_cast<void *>(asCell());
+    }
+    // The CC's trace logger needs an identity that is XPIDL serializable.
+    uint64_t unsafeAsInteger() const {
+        return reinterpret_cast<uint64_t>(unsafeGetUntypedPtr());
     }
 
   private:
@@ -341,7 +349,6 @@ GetGCThingArena(void *thing)
 MOZ_ALWAYS_INLINE bool
 IsInsideNursery(const js::gc::Cell *cell)
 {
-#ifdef JSGC_GENERATIONAL
     if (!cell)
         return false;
     uintptr_t addr = uintptr_t(cell);
@@ -350,9 +357,6 @@ IsInsideNursery(const js::gc::Cell *cell)
     uint32_t location = *reinterpret_cast<uint32_t *>(addr);
     MOZ_ASSERT(location != 0);
     return location & ChunkLocationAnyNursery;
-#else
-    return false;
-#endif
 }
 
 } /* namespace gc */
@@ -364,9 +368,7 @@ static MOZ_ALWAYS_INLINE Zone *
 GetTenuredGCThingZone(void *thing)
 {
     MOZ_ASSERT(thing);
-#ifdef JSGC_GENERATIONAL
     MOZ_ASSERT(!js::gc::IsInsideNursery((js::gc::Cell *)thing));
-#endif
     return js::gc::GetGCThingArena(thing)->zone;
 }
 
@@ -377,7 +379,6 @@ static MOZ_ALWAYS_INLINE bool
 GCThingIsMarkedGray(void *thing)
 {
     MOZ_ASSERT(thing);
-#ifdef JSGC_GENERATIONAL
     /*
      * GC things residing in the nursery cannot be gray: they have no mark bits.
      * All live objects in the nursery are moved to tenured at the beginning of
@@ -385,7 +386,6 @@ GCThingIsMarkedGray(void *thing)
      */
     if (js::gc::IsInsideNursery((js::gc::Cell *)thing))
         return false;
-#endif
     uintptr_t *word, mask;
     js::gc::GetGCThingMarkWordAndMask(thing, js::gc::GRAY, &word, &mask);
     return *word & mask;
@@ -400,9 +400,7 @@ static MOZ_ALWAYS_INLINE bool
 IsIncrementalBarrierNeededOnTenuredGCThing(JS::shadow::Runtime *rt, const JS::GCCellPtr thing)
 {
     MOZ_ASSERT(thing);
-#ifdef JSGC_GENERATIONAL
     MOZ_ASSERT(!js::gc::IsInsideNursery(thing.asCell()));
-#endif
     if (!rt->needsIncrementalBarrier())
         return false;
     JS::Zone *zone = JS::GetTenuredGCThingZone(thing.asCell());

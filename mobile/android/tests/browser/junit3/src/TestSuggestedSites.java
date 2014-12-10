@@ -96,7 +96,7 @@ public class TestSuggestedSites extends BrowserTestCase {
         @Override
         public File getDistributionFile(String name) {
             for (Locale locale : filesPerLocale.keySet()) {
-                if (name.startsWith("suggestedsites/locales/" + BrowserLocaleManager.getLanguageTag(locale))) {
+                if (name.startsWith("suggestedsites/locales/" + Locales.getLanguageTag(locale))) {
                     return filesPerLocale.get(locale);
                 }
             }

@@ -335,7 +335,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
                      [Symbol.for("registrySymbolProp")]: 44`;
     }
     var trickyObject =
-      iwin.eval(`new Object({
+      iwin.eval(`(function() {
+                 var o = new Object({
                    primitiveProp: 42, objectProp: { foo: 2 },
                    xoProp: top.location, hasOwnProperty: 10,
                    get getterProp() { return 2; },
@@ -345,7 +346,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
                    callableProp: function() { },
                    nonXrayableProp: new WeakMap()
                    ${symbolProps}
-                 })`);
+                 });
+                 Object.defineProperty(o, "nonConfigurableGetterSetterProp",
+                    { get: function() { return 5; }, set: function() {} });
+                 return o;
+                 })()`);
     testTrickyObject(trickyObject);
   }
 
@@ -373,7 +378,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
                  trickyArray.hasOwnProperty = 10;
                  Object.defineProperty(trickyArray, 'getterProp', { get: function() { return 2; }});
                  Object.defineProperty(trickyArray, 'setterProp', { set: function(x) {}});
-                 Object.defineProperty(trickyArray, 'getterSetterProp', { get: function() { return 3; }, set: function(x) {}});
+                 Object.defineProperty(trickyArray, 'getterSetterProp', { get: function() { return 3; }, set: function(x) {}, configurable: true});
+                 Object.defineProperty(trickyArray, 'nonConfigurableGetterSetterProp', { get: function() { return 5; }, set: function(x) {}});
                  trickyArray.callableProp = function() {};
                  trickyArray.nonXrayableProp = new WeakMap();
                  ${symbolProps}
@@ -486,6 +492,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     trickyObject.getterSetterProp = 'redefined';
     is(trickyObject.getterSetterProp, 'redefined', "Redefinition works");
     is(trickyObject.wrappedJSObject.getterSetterProp, 'redefined', "Redefinition forwards");
+
+    // We should NOT be able to overwrite an existing non-configurable accessor
+    // prop, though.
+    is(trickyObject.wrappedJSObject.nonConfigurableGetterSetterProp, 5,
+       "Underlying object has getter");
+    is(trickyObject.nonConfigurableGetterSetterProp, undefined,
+       "Filtering properly over Xray here too");
+    checkThrows(function() {
+	trickyObject.nonConfigurableGetterSetterProp = 'redefined';
+    }, /config/, "Should throw when redefining non-configurable prop");
+    is(trickyObject.nonConfigurableGetterSetterProp, undefined,
+       "Redefinition should have thrown");
+    is(trickyObject.wrappedJSObject.nonConfigurableGetterSetterProp, 5,
+       "Redefinition really should have thrown");
 
     checkThrows(function() { trickyObject.hasOwnProperty = 33; }, /shadow/,
                 "Should reject shadowing of pre-existing inherited properties over Xrays");

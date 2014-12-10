@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -238,7 +238,7 @@ public class TopSitesPanel extends HomeFragment {
                         final Tab tab = Tabs.getInstance().getSelectedTab();
                         if (!tab.isPrivate()) {
                             final Locale locale = Locale.getDefault();
-                            final String localeTag = BrowserLocaleManager.getLanguageTag(locale);
+                            final String localeTag = Locales.getLanguageTag(locale);
                             mTilesRecorder.recordAction(tab, TilesRecorder.ACTION_CLICK, position, getTilesSnapshot(), localeTag);
                         }
 

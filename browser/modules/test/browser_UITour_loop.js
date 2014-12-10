@@ -100,7 +100,27 @@ let tests = [
     });
     LoopRooms.open("fakeTourRoom");
   },
+  taskify(function* test_arrow_panel_position() {
+    ise(loopButton.open, false, "Menu should initially be closed");
+    let popup = document.getElementById("UITourTooltip");
+
+    yield showMenuPromise("loop");
+
+    let currentTarget = "loop-newRoom";
+    yield showInfoPromise(currentTarget, "This is " + currentTarget, "My arrow should be on the side");
+    is(popup.popupBoxObject.alignmentPosition, "start_before", "Check " + currentTarget + " position");
+
+    currentTarget = "loop-roomList";
+    yield showInfoPromise(currentTarget, "This is " + currentTarget, "My arrow should be on the side");
+    is(popup.popupBoxObject.alignmentPosition, "start_before", "Check " + currentTarget + " position");
+
+    currentTarget = "loop-signInUpLink";
+    yield showInfoPromise(currentTarget, "This is " + currentTarget, "My arrow should be underneath");
+    is(popup.popupBoxObject.alignmentPosition, "after_end", "Check " + currentTarget + " position");
+  }),
 ];
+
+// End tests
 
 function checkLoopPanelIsHidden() {
   ok(!loopPanel.hasAttribute("noautohide"), "@noautohide on the loop panel should have been cleaned up");

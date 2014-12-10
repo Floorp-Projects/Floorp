@@ -4,6 +4,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ifndef MOZ_JEMALLOC3
+# Force optimize mozjemalloc on --disable-optimize builds.
+# This works around the issue that the Android NDK's definition of ffs is
+# broken when compiling without optimization, while avoiding to add yet another
+# configure test.
+MOZ_OPTIMIZE = 1
+
 ifeq ($(OS_ARCH),SunOS)
 ifndef GNU_CC
 MODULE_OPTIMIZE_FLAGS = -xO5

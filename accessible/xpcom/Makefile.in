@@ -19,10 +19,10 @@ xpcAccEvents.cpp: $(srcdir)/AccEvents.conf \
 	  -I$(LIBXUL_DIST)/sdk/bin \
 	  $(srcdir)/AccEventGen.py \
 	  -I $(DEPTH)/dist/idl \
-	  --header-output xpcAccEvents.h \
-	  --stub-output xpcAccEvents.cpp \
-	  --makedepend-output $(MDDEPDIR)/xpcAccEvents.pp \
-	  $(srcdir)/AccEvents.conf
+	  $(srcdir)/AccEvents.conf \
+	  xpcAccEvents.h \
+	  xpcAccEvents.cpp \
+	  $(MDDEPDIR)/xpcAccEvents.pp
 
 xpcAccEvents.h: xpcAccEvents.cpp
 

@@ -4687,8 +4687,6 @@ MacroAssemblerARMCompat::jumpWithPatch(RepatchLabel *label, Condition cond)
     return ret;
 }
 
-#ifdef JSGC_GENERATIONAL
-
 void
 MacroAssemblerARMCompat::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp,
                                                  Label *label)
@@ -4995,5 +4993,3 @@ template void
 js::jit::MacroAssemblerARMCompat::atomicFetchOp(int nbytes, bool signExtend, AtomicOp op,
                                                 const Register &value, const BaseIndex &mem,
                                                 Register temp, Register output);
-
-#endif

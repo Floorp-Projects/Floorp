@@ -20,9 +20,6 @@ class MediaDecoderOwner
 public:
   // Called by the media decoder to indicate that the download is progressing.
   virtual void DownloadProgressed() = 0;
-  // Called by the media decoder to indicate that the download has stalled
-  // (no data has arrived for a while).
-  virtual void DownloadStalled() = 0;
 
   // Dispatch a synchronous event to the decoder owner
   virtual nsresult DispatchEvent(const nsAString& aName) = 0;

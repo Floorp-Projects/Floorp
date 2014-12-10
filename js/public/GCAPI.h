@@ -349,7 +349,7 @@ WasIncrementalGC(JSRuntime *rt);
 class JS_FRIEND_API(AutoDisableGenerationalGC)
 {
     js::gc::GCRuntime *gc;
-#if defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)
+#ifdef JS_GC_ZEAL
     bool restartVerifier;
 #endif
 
@@ -486,7 +486,7 @@ class JS_PUBLIC_API(AutoCheckCannotGC) : public AutoAssertOnGC
  * JSTRACE_SHAPE. |thing| should be non-null.
  */
 extern JS_FRIEND_API(bool)
-UnmarkGrayGCThingRecursively(void *thing, JSGCTraceKind kind);
+UnmarkGrayGCThingRecursively(GCCellPtr thing);
 
 } /* namespace JS */
 
@@ -499,7 +499,6 @@ ExposeGCThingToActiveJS(JS::GCCellPtr thing)
     MOZ_ASSERT(thing.kind() != JSTRACE_SHAPE);
 
     JS::shadow::Runtime *rt = GetGCThingRuntime(thing.asCell());
-#ifdef JSGC_GENERATIONAL
     /*
      * GC things residing in the nursery cannot be gray: they have no mark bits.
      * All live objects in the nursery are moved to tenured at the beginning of
@@ -507,24 +506,21 @@ ExposeGCThingToActiveJS(JS::GCCellPtr thing)
      */
     if (IsInsideNursery(thing.asCell()))
         return;
-#endif
     if (IsIncrementalBarrierNeededOnTenuredGCThing(rt, thing))
         JS::IncrementalReferenceBarrier(thing);
     else if (JS::GCThingIsMarkedGray(thing.asCell()))
-        JS::UnmarkGrayGCThingRecursively(thing.asCell(), thing.kind());
+        JS::UnmarkGrayGCThingRecursively(thing);
 }
 
 static MOZ_ALWAYS_INLINE void
 MarkGCThingAsLive(JSRuntime *aRt, JS::GCCellPtr thing)
 {
     JS::shadow::Runtime *rt = JS::shadow::Runtime::asShadowRuntime(aRt);
-#ifdef JSGC_GENERATIONAL
     /*
      * Any object in the nursery will not be freed during any GC running at that time.
      */
     if (IsInsideNursery(thing.asCell()))
         return;
-#endif
     if (IsIncrementalBarrierNeededOnTenuredGCThing(rt, thing))
         JS::IncrementalReferenceBarrier(thing);
 }
