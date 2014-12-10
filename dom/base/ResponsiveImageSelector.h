@@ -81,8 +81,12 @@ private:
   // already contains one, use SetDefaultSource instead.
   void AppendDefaultCandidate(nsIURI *aURL);
 
-  // Get index of best candidate
-  int GetBestCandidateIndex();
+  // Get index of selected candidate, triggering selection if necessary.
+  int GetSelectedCandidateIndex();
+
+  // Forget currently selected candidate. (See "NOTE ABOUT CURRENT SELECTION"
+  // above.)
+  void ClearSelectedCandidate();
 
   // Compute a density from a Candidate width. Returns false if sizes were not
   // specified for this selector.
@@ -95,7 +99,7 @@ private:
   // If this array contains an eCandidateType_Default, it should be the last
   // element, such that the Setters can preserve/replace it respectively.
   nsTArray<ResponsiveImageCandidate> mCandidates;
-  int mBestCandidateIndex;
+  int mSelectedCandidateIndex;
 
   nsTArray< nsAutoPtr<nsMediaQuery> > mSizeQueries;
   nsTArray<nsCSSValue> mSizeValues;
