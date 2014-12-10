@@ -35,7 +35,7 @@
 #include "android/MobileMessageDatabaseService.h"
 #include "android/SmsService.h"
 #elif defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
-#include "nsIRilMobileMessageDatabaseService.h"
+#include "nsIGonkMobileMessageDatabaseService.h"
 #include "nsIGonkSmsService.h"
 #endif
 #include "nsXULAppAPI.h" // For XRE_GetProcessType()
@@ -729,7 +729,7 @@ NS_CreateMobileMessageDatabaseService()
     mobileMessageDBService = new MobileMessageDatabaseService();
 #elif defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
     mobileMessageDBService =
-      do_CreateInstance(RIL_MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID);
+      do_CreateInstance(GONK_MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID);
 #endif
   }
 
