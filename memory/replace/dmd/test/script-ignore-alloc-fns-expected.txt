@@ -3,6 +3,7 @@
 
 Invocation {
   $DMD is undefined
+  Mode = 'dark-matter'
   Sample-below size = 2500
 }
 

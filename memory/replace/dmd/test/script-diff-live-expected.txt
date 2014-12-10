@@ -3,11 +3,13 @@
 
 Invocation 1 {
   $DMD = '--mode=live --sample-below=127'
+  Mode = 'live'
   Sample-below size = 127
 }
 
 Invocation 2 {
   $DMD = '--mode=live --sample-below=63'
+  Mode = 'live'
   Sample-below size = 63
 }
 

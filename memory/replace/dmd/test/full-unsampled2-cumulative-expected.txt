@@ -3,6 +3,7 @@
 
 Invocation {
   $DMD = '--mode=cumulative --sample-below=1 --show-dump-stats=yes'
+  Mode = 'cumulative'
   Sample-below size = 1
 }
 
