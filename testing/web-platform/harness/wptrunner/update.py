@@ -333,12 +333,7 @@ def sync_tests(paths, local_tree, wpt, bug):
                             "metadata_path": paths["sync_dest"]["metadata_path"]}}
 
         manifest_loader = testloader.ManifestLoader(sync_paths)
-        test_manifest = manifest_loader.load_manifest(**sync_paths["/"])
-
-        initial_rev = test_manifest.rev
-        manifest.update(sync_paths["/"]["tests_path"], "/", test_manifest)
-        manifest.write(test_manifest, os.path.join(sync_paths["/"]["metadata_path"], "MANIFEST.json"))
-
+        initial_manifests = manifest_loader.load()
         wpt.copy_work_tree(paths["sync_dest"]["tests_path"])
 
         local_tree.create_patch("web-platform-tests_update_%s" % wpt.rev,
@@ -354,7 +349,7 @@ def sync_tests(paths, local_tree, wpt, bug):
     finally:
         pass  # wpt.clean()
 
-    return initial_rev
+    return initial_manifests
 
 
 def update_metadata(paths, local_tree, initial_rev, bug, log_files, ignore_existing,
@@ -445,7 +440,12 @@ expected data."""
         wpt_repo = WebPlatformTests(config["web-platform-tests"]["remote_url"],
                                     paths["sync"],
                                     rev=rev)
-        initial_rev = sync_tests(paths, local_tree, wpt_repo, bug)
+        initial_manifests = sync_tests(paths, local_tree, wpt_repo, bug)
+        initial_rev = None
+        for manifest, path_data in initial_manifests.iteritems():
+            if path_data["url_base"] == "/":
+                initial_rev = manifest.rev
+                break
 
     if kwargs["run_log"]:
         update_metadata(paths,
