@@ -57,7 +57,7 @@ public:
   typedef RejectValueT RejectValueType;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaPromise)
-  MediaPromise(const char* aCreationSite)
+  explicit MediaPromise(const char* aCreationSite)
     : mCreationSite(aCreationSite)
     , mMutex("MediaPromise Mutex")
   {
@@ -138,7 +138,7 @@ protected:
       RejectValueType mRejectValue;
     };
 
-    ThenValueBase(const char* aCallSite) : mCallSite(aCallSite)
+    explicit ThenValueBase(const char* aCallSite) : mCallSite(aCallSite)
     {
       MOZ_COUNT_CTOR(ThenValueBase);
     }
