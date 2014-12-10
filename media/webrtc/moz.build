@@ -58,7 +58,9 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
         'signaling/src/jsep/JsepSessionImpl.cpp',
         'signaling/src/media-conduit/AudioConduit.cpp',
         'signaling/src/media-conduit/CodecStatistics.cpp',
+        'signaling/src/media-conduit/MediaCodecVideoCodec.cpp',
         'signaling/src/media-conduit/VideoConduit.cpp',
+        'signaling/src/media-conduit/WebrtcMediaCodecVP8VideoCodec.cpp',
         'signaling/src/mediapipeline/MediaPipeline.cpp',
         'signaling/src/mediapipeline/MediaPipelineFilter.cpp',
         'signaling/src/mediapipeline/SrtpFlow.cpp',
@@ -94,6 +96,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
         GYP_DIRS['signalingtest'].variables = gyp_vars.copy()
         GYP_DIRS['signalingtest'].variables.update(
             build_for_test=1,
+            moz_webrtc_mediacodec=0,
             build_for_standalone=0
         )
         GYP_DIRS['signalingtest'].non_unified_sources += signaling_non_unified_sources

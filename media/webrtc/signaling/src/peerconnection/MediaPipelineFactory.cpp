@@ -3,6 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "logging.h"
+#include "nsIGfxInfo.h"
+#include "nsServiceManagerUtils.h"
 
 #include "PeerConnectionImpl.h"
 #include "PeerConnectionMedia.h"
@@ -28,6 +30,14 @@
 #ifdef MOZ_WEBRTC_OMX
 #include "OMXVideoCodec.h"
 #include "OMXCodecWrapper.h"
+#endif
+
+#ifdef MOZ_WEBRTC_MEDIACODEC
+#include "MediaCodecVideoCodec.h"
+#endif
+
+#ifdef MOZILLA_INTERNAL_API
+#include "mozilla/Preferences.h"
 #endif
 
 #include <stdlib.h>
@@ -846,7 +856,63 @@ MediaPipelineFactory::EnsureExternalCodec(VideoSessionConduit& aConduit,
                                           VideoCodecConfig* aConfig,
                                           bool aIsSend)
 {
-  if (aConfig->mName == "VP8" || aConfig->mName == "VP9") {
+  if (aConfig->mName == "VP8") {
+#ifdef MOZ_WEBRTC_MEDIACODEC
+     if (aIsSend) {
+#ifdef MOZILLA_INTERNAL_API
+       bool enabled = mozilla::Preferences::GetBool("media.navigator.hardware.vp8_encode.acceleration_enabled", false);
+#else
+       bool enabled = false;
+#endif
+       if (enabled) {
+         nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+         if (gfxInfo) {
+           int32_t status;
+           if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION, &status))) {
+             if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
+               NS_WARNING("VP8 encoder hardware is not whitelisted: disabling.\n");
+             } else {
+               VideoEncoder* encoder = nullptr;
+               encoder = MediaCodecVideoCodec::CreateEncoder(MediaCodecVideoCodec::CodecType::CODEC_VP8);
+               if (encoder) {
+                 return aConduit.SetExternalSendCodec(aConfig, encoder);
+               } else {
+                 return kMediaConduitNoError;
+               }
+             }
+           }
+         }
+       }
+     } else {
+#ifdef MOZILLA_INTERNAL_API
+       bool enabled = mozilla::Preferences::GetBool("media.navigator.hardware.vp8_decode.acceleration_enabled", false);
+#else
+       bool enabled = false;
+#endif
+       if (enabled) {
+         nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+         if (gfxInfo) {
+           int32_t status;
+           if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION, &status))) {
+             if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
+               NS_WARNING("VP8 decoder hardware is not whitelisted: disabling.\n");
+             } else {
+
+               VideoDecoder* decoder;
+               decoder = MediaCodecVideoCodec::CreateDecoder(MediaCodecVideoCodec::CodecType::CODEC_VP8);
+               if (decoder) {
+                 return aConduit.SetExternalRecvCodec(aConfig, decoder);
+               } else {
+                 return kMediaConduitNoError;
+               }
+             }
+           }
+         }
+       }
+     }
+#endif
+     return kMediaConduitNoError;
+  } else if (aConfig->mName == "VP9") {
     return kMediaConduitNoError;
   } else if (aConfig->mName == "H264") {
     if (aConduit.CodecPluginID() != 0) {
