@@ -204,6 +204,8 @@ private:
   already_AddRefed<nsFrameSelection> GetFrameSelection();
   nsIContent* GetFocusedContent();
   void DispatchSelectionStateChangedEvent(dom::Selection* aSelection,
+                                          dom::SelectionState aState);
+  void DispatchSelectionStateChangedEvent(dom::Selection* aSelection,
                                           const dom::Sequence<dom::SelectionState>& aStates);
   nsRect GetSelectionBoundingRect(dom::Selection* aSel);
 
@@ -246,6 +248,7 @@ private:
 
   bool mEndCaretVisible;
   bool mStartCaretVisible;
+  bool mSelectionVisibleInScrollFrames;
   bool mVisible;
 
   // Preference
