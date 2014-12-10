@@ -35,6 +35,7 @@ public class ResizablePathDrawable extends ShapeDrawable {
         int newColor = colorStateList.getColorForState(stateSet, Color.WHITE);
         if (newColor != currentColor) {
             currentColor = newColor;
+            alpha = Color.alpha(currentColor);
             invalidateSelf();
             return true;
         }
@@ -56,11 +57,15 @@ public class ResizablePathDrawable extends ShapeDrawable {
     protected void onDraw(Shape shape, Canvas canvas, Paint paint) {
         paint.setColor(currentColor);
         // setAlpha overrides the alpha value in set color. Since we just set the color,
-        // the alpha value is reset: override the alpha value with the old value.
+        // the alpha value is reset: override the alpha value with the old value. We don't
+        // set alpha if the color is transparent.
         //
         // Note: We *should* be able to call Shape.setAlpha, rather than Paint.setAlpha, but
         // then the opacity doesn't change - dunno why but probably not worth the time.
-        paint.setAlpha(alpha);
+        if (currentColor != Color.TRANSPARENT) {
+            paint.setAlpha(alpha);
+        }
+
         super.onDraw(shape, canvas, paint);
     }
 

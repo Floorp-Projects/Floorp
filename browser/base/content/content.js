@@ -327,12 +327,6 @@ let AboutHomeListener = {
       doc.documentElement.setAttribute("searchUIConfiguration", "oldsearchui");
     }
 
-    // XXX bug 738646 - when Marketplace is launched, remove this statement and
-    // the hidden attribute set on the apps button in aboutHome.xhtml
-    if (Services.prefs.getPrefType("browser.aboutHome.apps") == Services.prefs.PREF_BOOL &&
-        Services.prefs.getBoolPref("browser.aboutHome.apps"))
-      doc.getElementById("apps").removeAttribute("hidden");
-
     sendAsyncMessage("AboutHome:RequestUpdate");
     doc.addEventListener("AboutHomeSearchEvent", this, true, true);
     doc.addEventListener("AboutHomeSearchPanel", this, true, true);

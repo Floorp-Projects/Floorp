@@ -193,7 +193,11 @@ loop.conversationViews = (function(mozL10n) {
    * Call failed view. Displayed when a call fails.
    */
   var CallFailedView = React.createClass({
-    mixins: [Backbone.Events, sharedMixins.AudioMixin],
+    mixins: [
+      Backbone.Events,
+      sharedMixins.AudioMixin,
+      sharedMixins.WindowCloseMixin
+    ],
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
@@ -227,7 +231,7 @@ loop.conversationViews = (function(mozL10n) {
       var emailLink = this.props.store.getStoreState("emailLink");
       var contactEmail = _getPreferredEmail(this.props.contact).value;
       sharedUtils.composeCallUrlEmail(emailLink, contactEmail);
-      window.close();
+      this.closeWindow();
     },
 
     _onEmailLinkError: function() {
