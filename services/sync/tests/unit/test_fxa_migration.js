@@ -103,20 +103,18 @@ add_task(function *testMigration() {
 
   // monkey-patch the migration sentinel code so we know it was called.
   let haveStartedSentinel = false;
-// (This is waiting on bug 1017433)
-/**
-  let origSetFxaMigrationSentinel = Service.setFxaMigrationSentinel;
+  let origSetFxAMigrationSentinel = Service.setFxAMigrationSentinel;
   let promiseSentinelWritten = new Promise((resolve, reject) => {
-    Service.setFxaMigrationSentinel = function(arg) {
+    Service.setFxAMigrationSentinel = function(arg) {
       haveStartedSentinel = true;
-      return origSetFxaMigrationSentinel.call(Service, arg).then(result => {
-        Service.setFxaMigrationSentinel = origSetFxaMigrationSentinel;
+      return origSetFxAMigrationSentinel.call(Service, arg).then(result => {
+        Service.setFxAMigrationSentinel = origSetFxAMigrationSentinel;
         resolve(result);
         return result;
       });
     }
   });
-**/
+
   // We are now configured for legacy sync, but we aren't in an EOL state yet,
   // so should still be not waiting for a user.
   Assert.deepEqual((yield fxaMigrator._queueCurrentUserState()), null,
@@ -227,10 +225,7 @@ add_task(function *testMigration() {
   Assert.ok(Service.scheduler.isBlocked, "sync is blocked.");
 
   // We should see the migration sentinel written and it should return true.
-// (This is waiting on bug 1017433)
-/**
   Assert.ok((yield promiseSentinelWritten), "wrote the sentinel");
-**/
 
   // And we should see a new sync start
   yield promiseFinalSync;
