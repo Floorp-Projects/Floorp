@@ -232,7 +232,9 @@ public:
   nsresult RowToResult(mozIStorageValueArray* aRow,
                        nsNavHistoryQueryOptions* aOptions,
                        nsNavHistoryResultNode** aResult);
-  nsresult QueryRowToResult(int64_t aItemId, const nsACString& aURI,
+  nsresult QueryRowToResult(int64_t aItemId,
+                            const nsACString& aBookmarkGuid,
+                            const nsACString& aURI,
                             const nsACString& aTitle,
                             uint32_t aAccessCount, PRTime aTime,
                             const nsACString& aFavicon,
