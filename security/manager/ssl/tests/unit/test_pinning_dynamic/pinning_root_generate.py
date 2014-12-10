@@ -1,13 +1,6 @@
 #!/usr/bin/python
 
-# after runing this file you MUST modify test_pinning_dynamic to change the
-# fingerprint of the pinningroot
-
 import tempfile, os, sys
-import random
-import pexpect
-import subprocess
-import shutil
 
 libpath = os.path.abspath('../psm_common_py')
 sys.path.append(libpath)
@@ -55,5 +48,11 @@ prefix = "pinningroot"
                                        CA_basic_constraints +
                                        CA_min_ku + subject_key_ident)
 CertUtils.generate_pkcs12(db, dest_dir, ca_cert, ca_key, prefix)
-print ("You now MUST modify test_pinning_dynamic to ensure the xpchell debug " +
-       "certificate there matches this newly generated one\n")
+
+# Print a blank line and the hash for this cert for use in the HPKP tests.
+print
+os.system('openssl x509 -inform der -pubkey -noout < ' + ca_cert +
+          ' | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary' +
+          ' | base64')
+print ('You now MUST update the hashes corresponding to this root in ' +
+       'test_pinning_*.js to match the hash printed above.')
