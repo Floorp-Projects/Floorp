@@ -926,8 +926,8 @@ sdp_result_e sdp_parse_timespec (sdp_t *sdp_p, uint16_t level, const char *ptr)
 sdp_result_e sdp_build_timespec (sdp_t *sdp_p, uint16_t level, flex_string *fs)
 {
     if ((sdp_p->timespec_p == NULL) ||
-        (sdp_p->timespec_p->start_time == '\0') ||
-        (sdp_p->timespec_p->stop_time == '\0')) {
+        (sdp_p->timespec_p->start_time[0] == '\0') ||
+        (sdp_p->timespec_p->stop_time[0] == '\0')) {
         if (sdp_p->conf_p->timespec_reqd == TRUE) {
             CSFLogError(logTag, "%s Invalid params for t= time spec line, "
                         "build failed.", sdp_p->debug_str);
