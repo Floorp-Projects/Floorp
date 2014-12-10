@@ -45,11 +45,6 @@ abstract class UITest extends BaseRobocopTest
     private Driver mDriver;
     private Actions mActions;
 
-    // Base to build hostname URLs
-    private String mBaseHostnameUrl;
-    // Base to build IP URLs
-    private String mBaseIpUrl;
-
     protected AboutHomeComponent mAboutHome;
     protected AppMenuComponent mAppMenu;
     protected GeckoViewComponent mGeckoView;
@@ -67,9 +62,6 @@ abstract class UITest extends BaseRobocopTest
         mSolo = new Solo(getInstrumentation(), activity);
         mDriver = new FennecNativeDriver(activity, mSolo, mRootPath);
         mActions = new FennecNativeActions(activity, mSolo, getInstrumentation(), mAsserter);
-
-        mBaseHostnameUrl = mConfig.get("host").replaceAll("(/$)", "");
-        mBaseIpUrl = mConfig.get("rawhost").replaceAll("(/$)", "");
 
         // Helpers depend on components so initialize them first.
         initComponents();
