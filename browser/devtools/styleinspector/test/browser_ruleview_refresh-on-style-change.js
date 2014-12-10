@@ -10,7 +10,7 @@
 const TESTCASE_URI = 'data:text/html;charset=utf-8,' +
                      '<div id="testdiv" style="font-size:10px;">Test div!</div>';
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab(TESTCASE_URI);
 
   Services.prefs.setCharPref("devtools.defaultColorUnit", "name");

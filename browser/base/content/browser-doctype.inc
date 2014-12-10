@@ -21,5 +21,7 @@
 %aboutHomeDTD;
 <!ENTITY % searchBarDTD SYSTEM "chrome://browser/locale/searchbar.dtd">
 %searchBarDTD;
+<!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
+%syncBrandDTD;
 ]>
 

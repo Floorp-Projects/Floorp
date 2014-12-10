@@ -12,7 +12,7 @@ const TEST_URI = TEST_URL_ROOT + "doc_media_queries.html";
 let {PropertyView} = devtools.require("devtools/styleinspector/computed-view");
 let {CssLogic} = devtools.require("devtools/styleinspector/css-logic");
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab(TEST_URI);
   let {toolbox, inspector, view} = yield openComputedView();
 
