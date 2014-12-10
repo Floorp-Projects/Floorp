@@ -588,7 +588,14 @@ CssHtmlTree.prototype = {
     CssHtmlTree.propertyNames.push.apply(CssHtmlTree.propertyNames,
       mozProps.sort());
 
-    this._createPropertyViews();
+    this._createPropertyViews().then(null, e => {
+      if (!this.styleInspector) {
+        console.warn("The creation of property views was cancelled because the " +
+          "computed-view was destroyed before it was done creating views");
+      } else {
+        console.error(e);
+      }
+    });
   },
 
   /**

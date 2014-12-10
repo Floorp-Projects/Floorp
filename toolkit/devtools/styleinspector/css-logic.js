@@ -164,6 +164,10 @@ CssLogic.prototype = {
       return;
     }
 
+    if (aViewedElement === this.viewedElement) {
+      return;
+    }
+
     this.viewedElement = aViewedElement;
 
     let doc = this.viewedElement.ownerDocument;

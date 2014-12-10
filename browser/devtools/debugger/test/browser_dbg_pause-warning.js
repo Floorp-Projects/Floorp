@@ -27,7 +27,9 @@ function testPause() {
     ok(gTarget.isThreadPaused,
       "target.isThreadPaused has been updated to true.");
 
-    gToolbox.once("inspector-selected", testNotificationIsUp1);
+    gToolbox.once("inspector-selected").then(inspector => {
+      inspector.once("inspector-updated").then(testNotificationIsUp1);
+    });
     gToolbox.selectTool("inspector");
   });
 

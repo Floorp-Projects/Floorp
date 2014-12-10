@@ -128,6 +128,23 @@ var PageStyleActor = protocol.ActorClass({
 
   get conn() this.inspector.conn,
 
+  form: function(detail) {
+    if (detail === "actorid") {
+      return this.actorID;
+    }
+
+    return {
+      actor: this.actorID,
+      traits: {
+        // Whether the actor has had bug 1103993 fixed, which means that the
+        // getApplied method calls cssLogic.highlight(node) to recreate the
+        // style cache. Clients requesting getApplied from actors that have not
+        // been fixed must make sure cssLogic.highlight(node) was called before.
+        getAppliedCreatesStyleCache: true
+      }
+    };
+  },
+
   /**
    * Return or create a StyleRuleActor for the given item.
    * @param item Either a CSSStyleRule or a DOM element.
@@ -416,6 +433,7 @@ var PageStyleActor = protocol.ActorClass({
    *     caused this rule to match its node.
    */
   getApplied: method(function(node, options) {
+    this.cssLogic.highlight(node.rawNode);
     let entries = [];
     entries = entries.concat(this._getAllElementRules(node, undefined, options));
     return this.getAppliedProps(node, entries, options);
@@ -803,6 +821,14 @@ var PageStyleFront = protocol.FrontClass(PageStyleActor, {
     this.inspector = this.parent();
   },
 
+  form: function(form, detail) {
+    if (detail === "actorid") {
+      this.actorID = form;
+      return;
+    }
+    this._form = form;
+  },
+
   destroy: function() {
     protocol.Front.prototype.destroy.call(this);
   },
@@ -819,11 +845,17 @@ var PageStyleFront = protocol.FrontClass(PageStyleActor, {
     impl: "_getMatchedSelectors"
   }),
 
-  getApplied: protocol.custom(function(node, options={}) {
-    return this._getApplied(node, options).then(ret => {
-      return ret.entries;
-    });
-  }, {
+  getApplied: protocol.custom(Task.async(function*(node, options={}) {
+    // If the getApplied method doesn't recreate the style cache itself, this
+    // means a call to cssLogic.highlight is required before trying to access
+    // the applied rules. Issue a request to getLayout if this is the case.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1103993#c16.
+    if (!this._form.traits || !this._form.traits.getAppliedCreatesStyleCache) {
+      yield this.getLayout(node);
+    }
+    let ret = yield this._getApplied(node, options);
+    return ret.entries;
+  }), {
     impl: "_getApplied"
   }),
 
