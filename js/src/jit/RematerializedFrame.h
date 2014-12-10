@@ -103,8 +103,13 @@ class RematerializedFrame
     JSObject *scopeChain() const {
         return scopeChain_;
     }
+    void pushOnScopeChain(ScopeObject &scope);
+    bool initFunctionScopeObjects(JSContext *cx);
+
     bool hasCallObj() const {
-        return maybeFun() && fun()->isHeavyweight();
+        return maybeFun() &&
+               fun()->isHeavyweight() &&
+               scopeChain()->is<CallObject>();
     }
     CallObject &callObj() const;
 
