@@ -831,6 +831,7 @@ void wasapi_stream_destroy(cubeb_stream * stm)
   SafeRelease(stm->client);
   SafeRelease(stm->render_client);
   SafeRelease(stm->audio_clock);
+  SafeRelease(stm->audio_stream_volume);
 
   cubeb_resampler_destroy(stm->resampler);
 
