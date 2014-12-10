@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1087872 - Test for dynamic removal of ruby frames</title>
+  <link rel="stylesheet" href="common.css">
+  <script src="dynamic-removal.js"></script>
+</head>
+<body>
+
+  <p>No space should exist between 'a' and 'b':</p>
+
+  <!-- inter-base white space -->
+  <!--     => leading white space -->
+  <p>a<ruby><rb class="remove"></rb> <rb></rb></ruby>b</p>
+  <!--     => trailing white space -->
+  <p>a<ruby><rb></rb> <rb class="remove"></rb></ruby>b</p>
+  <!--     => inter-level white space -->
+  <p>a<ruby><rb></rb> <rb class="remove"></rb><rt></rt></ruby>b</p>
+
+  <!-- inter-segment white space -->
+  <!--     => leading white space -->
+  <p>a<ruby><rbc class="remove"></rbc> <rbc></rbc></ruby>b</p>
+  <!--     => trailing white space -->
+  <p>a<ruby><rbc></rbc> <rbc class="remove"></rbc></ruby>b</p>
+  <!--     => inter-level white space -->
+  <p>a<rbc></rbc> <rbc class="remove"></rbc><rtc></rtc>b</p>
+
+  <!-- inter-annotation white space -->
+  <!--     => leading white space -->
+  <p><rb>a</rb><rb>b</rb><rtc><rt class="remove"></rt> <rt>x</rt></rtc></p>
+  <!--     => trailing white space -->
+  <p><rb>a</rb><rb>b</rb><rtc><rt>x</rt> <rt class="remove"></rt></rtc></p>
+  <!--     => inter-level white space -->
+  <p><rb>a</rb><rb>b</rb><rt class="remove"></rt> <rt>x</rt></p>
+
+</body>
+</html>

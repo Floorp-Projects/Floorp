@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1087872 - Test for dynamic insertion of ruby frames</title>
+  <link rel="stylesheet" href="common.css">
+</head>
+<body>
+
+  <p>'a' and 'b' should be paired with 'x' and 'y' respectively:</p>
+
+  <p><rb></rb><span></span><rb>a</rb><rb>b</rb><rt>x</rt><rt>y</rt></p>
+  <p><rb></rb><rt></rt><rb>a</rb><rb>b</rb><rt>x</rt><rt>y</rt></p>
+  <p><rb>a</rb><rt>x</rt><rb>b</rb><rt>y</rt></p>
+  <p><rbc><span>a</span><rb></rb>b</rbc><rt>x</rt><rt></rt><rt>y</rt></p>
+  <p><rb>a</rb><rb></rb><rb>b</rb><rtc><span>x</span><rt></rt>y</rtc></p>
+
+</body>
+</html>
