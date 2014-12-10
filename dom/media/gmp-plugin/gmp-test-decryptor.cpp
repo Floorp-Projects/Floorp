@@ -150,9 +150,9 @@ public:
 
 class SendMessageTask : public GMPTask {
 public:
-  SendMessageTask(const string& aMessage,
-                  TestManager* aTestManager = nullptr,
-                  const string& aTestID = "")
+  explicit SendMessageTask(const string& aMessage,
+                           TestManager* aTestManager = nullptr,
+                           const string& aTestID = "")
     : mMessage(aMessage), mTestmanager(aTestManager), mTestID(aTestID) {}
 
   void Run() MOZ_OVERRIDE {

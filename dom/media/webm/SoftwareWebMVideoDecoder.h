@@ -24,7 +24,7 @@ public:
 
   virtual void Shutdown() MOZ_OVERRIDE;
 
-  SoftwareWebMVideoDecoder(WebMReader* aReader);
+  explicit SoftwareWebMVideoDecoder(WebMReader* aReader);
   ~SoftwareWebMVideoDecoder();
 
 private:

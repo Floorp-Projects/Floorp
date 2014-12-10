@@ -54,9 +54,9 @@ class WebGLBindableName
 {
 public:
 
-    WebGLBindableName(GLuint name)
+    explicit WebGLBindableName(GLuint aName)
         : WebGLBindable<T>()
-        , mGLName(name)
+        , mGLName(aName)
     { }
     GLuint GLName() const { return mGLName; }
 

@@ -758,7 +758,7 @@ class TabChild::DelayedDeleteRunnable MOZ_FINAL
     nsRefPtr<TabChild> mTabChild;
 
 public:
-    DelayedDeleteRunnable(TabChild* aTabChild)
+    explicit DelayedDeleteRunnable(TabChild* aTabChild)
       : mTabChild(aTabChild)
     {
         MOZ_ASSERT(NS_IsMainThread());

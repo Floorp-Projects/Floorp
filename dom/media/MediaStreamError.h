@@ -44,9 +44,9 @@ class MediaMgrError MOZ_FINAL : public nsISupports,
                                 public BaseMediaMgrError
 {
 public:
-  MediaMgrError(const nsAString& aName,
-                const nsAString& aMessage =  EmptyString(),
-                const nsAString& aConstraintName =  EmptyString())
+  explicit MediaMgrError(const nsAString& aName,
+                         const nsAString& aMessage =  EmptyString(),
+                         const nsAString& aConstraintName =  EmptyString())
   : BaseMediaMgrError(aName, aMessage, aConstraintName) {}
 
   NS_DECL_THREADSAFE_ISUPPORTS
