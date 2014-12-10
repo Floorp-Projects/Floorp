@@ -55,6 +55,9 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
     protected Assert mAsserter;
     protected String mLogFile;
 
+    protected String mBaseHostnameUrl;
+    protected String mBaseIpUrl;
+
     protected Map<String, String> mConfig;
     protected String mRootPath;
 
@@ -112,6 +115,9 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
         }
         mAsserter.setLogFile(mLogFile);
         mAsserter.setTestName(getClass().getName());
+
+        mBaseHostnameUrl = mConfig.get("host").replaceAll("(/$)", "");
+        mBaseIpUrl = mConfig.get("rawhost").replaceAll("(/$)", "");
     }
 
     /**
