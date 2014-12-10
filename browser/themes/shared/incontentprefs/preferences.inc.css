@@ -99,6 +99,12 @@ treecol {
   }
 }
 
+@media (max-width: 800px) {
+  .category-name {
+    display: none;
+  }
+}
+
 /* header */
 
 #header-advanced {

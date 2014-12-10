@@ -11,6 +11,7 @@ describe("loop.conversation", function() {
 
   var sharedModels = loop.shared.models,
       sharedView = loop.shared.views,
+      fakeWindow,
       sandbox;
 
   // XXX refactor to Just Work with "sandbox.stubComponent" or else
@@ -68,6 +69,12 @@ describe("loop.conversation", function() {
       })
     };
 
+    fakeWindow = {
+      navigator: { mozLoop: navigator.mozLoop },
+      close: sandbox.stub(),
+    };
+    loop.shared.mixins.setRootObject(fakeWindow);
+
     // XXX These stubs should be hoisted in a common file
     // Bug 1040968
     sandbox.stub(document.mozL10n, "get", function(x) {
@@ -77,6 +84,7 @@ describe("loop.conversation", function() {
   });
 
   afterEach(function() {
+    loop.shared.mixins.setRootObject(window);
     delete navigator.mozLoop;
     sandbox.restore();
   });
@@ -408,7 +416,6 @@ describe("loop.conversation", function() {
 
             sandbox.stub(loop.CallConnectionWebSocket.prototype, "promiseConnect").returns(promise);
             sandbox.stub(loop.CallConnectionWebSocket.prototype, "close");
-            sandbox.stub(window, "close");
           });
 
           describe("progress - terminated (previousState = alerting)", function() {
@@ -445,11 +452,12 @@ describe("loop.conversation", function() {
 
                 sandbox.clock.tick(1);
 
-                sinon.assert.calledOnce(window.close);
+                sinon.assert.calledOnce(fakeWindow.close);
                 done();
               });
             });
           });
+
 
           describe("progress - terminated (previousState not init" +
                    " nor alerting)",
@@ -521,7 +529,6 @@ describe("loop.conversation", function() {
         beforeEach(function() {
           icView = mountTestComponent();
 
-          sandbox.stub(window, "close");
           icView._websocket = {
             decline: sinon.stub(),
             close: sinon.stub()
@@ -539,7 +546,7 @@ describe("loop.conversation", function() {
 
           sandbox.clock.tick(1);
 
-          sinon.assert.calledOnce(window.close);
+          sinon.assert.calledOnce(fakeWindow.close);
         });
 
         it("should stop alerting", function() {
@@ -567,7 +574,6 @@ describe("loop.conversation", function() {
             decline: sinon.spy(),
             close: sinon.stub()
           };
-          sandbox.stub(window, "close");
 
           mozLoop = {
             LOOP_SESSION_TYPE: {
@@ -626,7 +632,7 @@ describe("loop.conversation", function() {
 
           sandbox.clock.tick(1);
 
-          sinon.assert.calledOnce(window.close);
+          sinon.assert.calledOnce(fakeWindow.close);
         });
       });
     });

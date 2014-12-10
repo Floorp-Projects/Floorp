@@ -22,7 +22,7 @@
     <dimen name="new_tablet_nav_button_width_half">21dp</dimen>
     <dimen name="new_tablet_nav_button_width_plus_half">63dp</dimen>
 
-    <dimen name="new_tablet_tab_strip_height">44dp</dimen>
+    <dimen name="new_tablet_tab_strip_height">48dp</dimen>
     <dimen name="new_tablet_tab_strip_item_width">208dp</dimen>
     <dimen name="new_tablet_tab_strip_item_margin">-28dp</dimen>
     <dimen name="new_tablet_tab_strip_favicon_size">16dp</dimen>
@@ -138,6 +138,7 @@
     <dimen name="new_tablet_tab_thumbnail_height">140dp</dimen>
     <dimen name="new_tablet_tab_panel_column_width">178dp</dimen>
     <dimen name="new_tablet_tab_panel_grid_padding">19dp</dimen>
+    <dimen name="new_tablet_tab_panel_grid_vspacing">21dp</dimen>
     <dimen name="new_tablet_tab_panel_grid_padding_top">24dp</dimen>
 
     <dimen name="new_tablet_tab_highlight_stroke_width">5dp</dimen>
