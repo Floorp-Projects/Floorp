@@ -34,7 +34,7 @@ window[chromehidden~="status"] .chromeclass-status,
 window[chromehidden~="extrachrome"] .chromeclass-extrachrome,
 window[chromehidden~="location"] .chromeclass-location,
 window[chromehidden~="location"][chromehidden~="toolbar"] .chromeclass-toolbar,
-window[chromehidden~="toolbar"] .chromeclass-toolbar-additional {
+window[chromehidden~="toolbar"] toolbar .chromeclass-toolbar-additional {
   display: none;
 }
 
