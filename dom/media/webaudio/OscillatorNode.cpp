@@ -151,14 +151,14 @@ public:
   {
     double frequency, detune;
 
-    bool simpleFrequency = mFrequency.HasSimpleValue();
-    bool simpleDetune = mDetune.HasSimpleValue();
-
     // Shortcut if frequency-related AudioParam are not automated, and we
     // already have computed the frequency information and related parameters.
-    if (simpleFrequency && simpleDetune && !mRecomputeParameters) {
+    if (!ParametersMayNeedUpdate()) {
       return;
     }
+
+    bool simpleFrequency = mFrequency.HasSimpleValue();
+    bool simpleDetune = mDetune.HasSimpleValue();
 
     if (simpleFrequency) {
       frequency = mFrequency.GetValue();
@@ -212,6 +212,13 @@ public:
     }
   }
 
+  bool ParametersMayNeedUpdate()
+  {
+    return mDetune.HasSimpleValue() ||
+           mFrequency.HasSimpleValue() ||
+           mRecomputeParameters;
+  }
+
   void ComputeCustom(float* aOutput,
                      StreamTime ticks,
                      uint32_t aStart,
@@ -231,12 +238,22 @@ public:
     // mPhase runs [0,periodicWaveSize) here instead of [0,2*M_PI).
     float basePhaseIncrement = mPeriodicWave->rateScale();
 
-    for (uint32_t i = aStart; i < aEnd; ++i) {
-      UpdateParametersIfNeeded(ticks, i);
+    bool parametersMayNeedUpdate = ParametersMayNeedUpdate();
+    if (!parametersMayNeedUpdate) {
       mPeriodicWave->waveDataForFundamentalFrequency(mFinalFrequency,
                                                      lowerWaveData,
                                                      higherWaveData,
                                                      tableInterpolationFactor);
+    }
+
+    for (uint32_t i = aStart; i < aEnd; ++i) {
+      if (parametersMayNeedUpdate) {
+        mPeriodicWave->waveDataForFundamentalFrequency(mFinalFrequency,
+                                                       lowerWaveData,
+                                                       higherWaveData,
+                                                       tableInterpolationFactor);
+        UpdateParametersIfNeeded(ticks, i);
+      }
       // Bilinear interpolation between adjacent samples in each table.
       float floorPhase = floorf(mPhase);
       uint32_t j1 = floorPhase;
