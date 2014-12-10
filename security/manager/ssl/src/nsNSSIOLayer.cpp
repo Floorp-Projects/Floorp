@@ -79,30 +79,6 @@ getSiteKey(const nsACString& hostName, uint16_t port,
 // SSM_UserCertChoice: enum for cert choice info
 typedef enum {ASK, AUTO} SSM_UserCertChoice;
 
-// Forward secrecy provides us with a proof of posession of the private key
-// from the server. Without of proof of posession of the private key of the
-// server, any MitM can force us to false start in a connection that the real
-// server never participates in, since with RSA key exchange a MitM can
-// complete the server's first round of the handshake without knowing the
-// server's public key This would be used, for example, to greatly accelerate
-// the attacks on RC4 or other attacks that allow a MitM to decrypt encrypted
-// data without having the server's private key. Without false start, such
-// attacks are naturally rate limited by network latency and may also be rate
-// limited explicitly by the server's DoS or other security mechanisms.
-// Further, because the server that has the private key must participate in the
-// handshake, the server could detect these kinds of attacks if they they are
-// repeated rapidly and/or frequently, by noticing lots of invalid or
-// incomplete handshakes.
-//
-// With this in mind, when we choose not to require forward secrecy (when the
-// pref's value is false), then we will still only false start for RSA key
-// exchange only if the most recent handshake we've previously done used RSA
-// key exchange. This way, we prevent any (EC)DHE-to-RSA downgrade attacks for
-// servers that consistently choose (EC)DHE key exchange. In order to prevent
-// downgrade from ECDHE_*_GCM cipher suites, we need to also consider downgrade
-// from TLS 1.2 to earlier versions (bug 861310).
-static const bool FALSE_START_REQUIRE_FORWARD_SECRECY_DEFAULT = true;
-
 // Historically, we have required that the server negotiate ALPN or NPN in
 // order to false start, as a compatibility hack to work around
 // implementations that just stop responding during false start. However, now
@@ -134,7 +110,6 @@ nsNSSSocketInfo::nsNSSSocketInfo(SharedSSLState& aState, uint32_t providerFlags)
     mNotedTimeUntilReady(false),
     mFailedVerification(false),
     mKEAUsed(nsISSLSocketControl::KEY_EXCHANGE_UNKNOWN),
-    mKEAExpected(nsISSLSocketControl::KEY_EXCHANGE_UNKNOWN),
     mKEAKeyBits(0),
     mSSLVersionUsed(nsISSLSocketControl::SSL_VERSION_UNKNOWN),
     mMACAlgorithmUsed(nsISSLSocketControl::SSL_MAC_UNKNOWN),
@@ -167,20 +142,6 @@ NS_IMETHODIMP
 nsNSSSocketInfo::GetKEAUsed(int16_t* aKea)
 {
   *aKea = mKEAUsed;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSSocketInfo::GetKEAExpected(int16_t* aKea)
-{
-  *aKea = mKEAExpected;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSSocketInfo::SetKEAExpected(int16_t aKea)
-{
-  mKEAExpected = aKea;
   return NS_OK;
 }
 
@@ -1484,7 +1445,6 @@ nsSSLIOLayerHelpers::nsSSLIOLayerHelpers()
   , mWarnLevelMissingRFC5746(1)
   , mTLSIntoleranceInfo()
   , mFalseStartRequireNPN(true)
-  , mFalseStartRequireForwardSecrecy(false)
   , mVersionFallbackLimit(SSL_LIBRARY_VERSION_TLS_1_0)
   , mutex("nsSSLIOLayerHelpers.mutex")
 {
@@ -1708,10 +1668,6 @@ PrefObserver::Observe(nsISupports* aSubject, const char* aTopic,
       mOwner->mFalseStartRequireNPN =
         Preferences::GetBool("security.ssl.false_start.require-npn",
                              FALSE_START_REQUIRE_NPN_DEFAULT);
-    } else if (prefName.EqualsLiteral("security.ssl.false_start.require-forward-secrecy")) {
-      mOwner->mFalseStartRequireForwardSecrecy =
-        Preferences::GetBool("security.ssl.false_start.require-forward-secrecy",
-                             FALSE_START_REQUIRE_FORWARD_SECRECY_DEFAULT);
     } else if (prefName.EqualsLiteral("security.tls.version.fallback-limit")) {
       mOwner->loadVersionFallbackLimit();
     }
@@ -1750,8 +1706,6 @@ nsSSLIOLayerHelpers::~nsSSLIOLayerHelpers()
         "security.ssl.warn_missing_rfc5746");
     Preferences::RemoveObserver(mPrefObserver,
         "security.ssl.false_start.require-npn");
-    Preferences::RemoveObserver(mPrefObserver,
-        "security.ssl.false_start.require-forward-secrecy");
   }
 }
 
@@ -1819,9 +1773,6 @@ nsSSLIOLayerHelpers::Init()
   mFalseStartRequireNPN =
     Preferences::GetBool("security.ssl.false_start.require-npn",
                          FALSE_START_REQUIRE_NPN_DEFAULT);
-  mFalseStartRequireForwardSecrecy =
-    Preferences::GetBool("security.ssl.false_start.require-forward-secrecy",
-                         FALSE_START_REQUIRE_FORWARD_SECRECY_DEFAULT);
   loadVersionFallbackLimit();
 
   mPrefObserver = new PrefObserver(this);
@@ -1833,8 +1784,6 @@ nsSSLIOLayerHelpers::Init()
                                  "security.ssl.warn_missing_rfc5746");
   Preferences::AddStrongObserver(mPrefObserver,
                                  "security.ssl.false_start.require-npn");
-  Preferences::AddStrongObserver(mPrefObserver,
-                                 "security.ssl.false_start.require-forward-secrecy");
   Preferences::AddStrongObserver(mPrefObserver,
                                  "security.tls.version.fallback-limit");
   return NS_OK;
