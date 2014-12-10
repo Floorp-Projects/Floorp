@@ -559,7 +559,7 @@ private:
 
   static const JSClass sGlobalClass;
 
-  JSRuntimeWrapper(JSRuntime* rt)
+  explicit JSRuntimeWrapper(JSRuntime* rt)
      : mRuntime(rt), mContext(nullptr), mGlobal(rt, nullptr), mOK(false)
   {
       MOZ_COUNT_CTOR(JSRuntimeWrapper);
