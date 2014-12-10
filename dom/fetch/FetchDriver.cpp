@@ -310,7 +310,8 @@ FetchDriver::ContinueHttpFetchAfterCORSPreflight()
 nsresult
 FetchDriver::HttpNetworkFetch()
 {
-  nsRefPtr<InternalRequest> httpRequest = new InternalRequest(*mRequest);
+  // We don't create a HTTPRequest copy since Necko sets the information on the
+  // nsIHttpChannel instead.
 
   nsresult rv;
 
@@ -321,7 +322,7 @@ FetchDriver::HttpNetworkFetch()
   }
 
   nsAutoCString url;
-  httpRequest->GetURL(url);
+  mRequest->GetURL(url);
   nsCOMPtr<nsIURI> uri;
   rv = NS_NewURI(getter_AddRefs(uri),
                           url,
@@ -356,8 +357,62 @@ FetchDriver::HttpNetworkFetch()
       FailWithNetworkError();
       return rv;
     }
+
+    nsAutoTArray<InternalHeaders::Entry, 5> headers;
+    mRequest->Headers()->GetEntries(headers);
+    for (uint32_t i = 0; i < headers.Length(); ++i) {
+      httpChan->SetRequestHeader(headers[i].mName, headers[i].mValue, false /* merge */);
+    }
+
+    MOZ_ASSERT(mRequest->ReferrerIsURL());
+    nsCString referrer = mRequest->ReferrerAsURL();
+    if (!referrer.IsEmpty()) {
+      nsCOMPtr<nsIURI> uri;
+      rv = NS_NewURI(getter_AddRefs(uri), referrer, nullptr, nullptr, ios);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      rv = httpChan->SetReferrer(uri);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    if (mRequest->ForceOriginHeader()) {
+      nsAutoString origin;
+      rv = nsContentUtils::GetUTFOrigin(mPrincipal, origin);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        FailWithNetworkError();
+        return rv;
+      }
+      httpChan->SetRequestHeader(NS_LITERAL_CSTRING("origin"),
+                                 NS_ConvertUTF16toUTF8(origin),
+                                 false /* merge */);
+    }
   }
 
+  nsCOMPtr<nsIUploadChannel2> uploadChan = do_QueryInterface(chan);
+  if (uploadChan) {
+    nsAutoCString contentType;
+    ErrorResult result;
+    mRequest->Headers()->Get(NS_LITERAL_CSTRING("content-type"), contentType, result);
+    // This is an error because the Request constructor explicitly extracts and
+    // sets a content-type per spec.
+    if (result.Failed()) {
+      return result.ErrorCode();
+    }
+
+    nsCOMPtr<nsIInputStream> bodyStream;
+    mRequest->GetBody(getter_AddRefs(bodyStream));
+    if (bodyStream) {
+      nsAutoCString method;
+      mRequest->GetMethod(method);
+      rv = uploadChan->ExplicitSetUploadStream(bodyStream, contentType, -1, method, false /* aStreamHasHeaders */);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+  }
   return chan->AsyncOpen(this, nullptr);
 }
 
@@ -469,13 +524,19 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
   // For now we only support HTTP.
   MOZ_ASSERT(channel);
 
-  uint32_t status;
-  channel->GetResponseStatus(&status);
+  aRequest->GetStatus(&rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    FailWithNetworkError();
+    return rv;
+  }
+
+  uint32_t responseStatus;
+  channel->GetResponseStatus(&responseStatus);
 
   nsAutoCString statusText;
   channel->GetResponseStatusText(statusText);
 
-  nsRefPtr<InternalResponse> response = new InternalResponse(status, statusText);
+  nsRefPtr<InternalResponse> response = new InternalResponse(responseStatus, statusText);
 
   nsRefPtr<FillResponseHeaders> visitor = new FillResponseHeaders(response);
   rv = channel->VisitResponseHeaders(visitor);
