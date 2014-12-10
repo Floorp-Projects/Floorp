@@ -266,7 +266,7 @@ interface nsINavHistoryContainerResultNode : nsINavHistoryResultNode
  * generated this node, this item will report it has no children and never try
  * to populate itself.
  */
-[scriptable, uuid(91AC5E59-3F5C-4ACD-AB3B-325FC425A5A1)]
+[scriptable, uuid(62817759-4FEE-44A3-B58C-3E2F5AFC9D0A)]
 interface nsINavHistoryQueryResultNode : nsINavHistoryContainerResultNode
 {
   /**
@@ -283,10 +283,18 @@ interface nsINavHistoryQueryResultNode : nsINavHistoryContainerResultNode
   readonly attribute nsINavHistoryQueryOptions queryOptions;
 
   /**
-   * For both simple folder nodes and simple-folder-query nodes, this is set
-   * to the concrete itemId of the folder. Otherwise, this is set to -1.
+   * For both simple folder queries and folder shortcut queries, this is set to
+   * the concrete itemId of the folder (i.e. for folder shortcuts it's the
+   * target folder id).  Otherwise, this is set to -1.
    */
   readonly attribute long long folderItemId;
+
+  /**
+   * For both simple folder queries and folder shortcut queries, this is set to
+   * the concrete guid of the folder (i.e. for folder shortcuts it's the target
+   * folder guid). Otherwise, this is set to an empty string.
+   */
+  readonly attribute ACString targetFolderGuid;
 };
 
 
