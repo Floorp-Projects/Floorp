@@ -103,12 +103,12 @@ typedef enum {ASK, AUTO} SSM_UserCertChoice;
 // from TLS 1.2 to earlier versions (bug 861310).
 static const bool FALSE_START_REQUIRE_FORWARD_SECRECY_DEFAULT = true;
 
-// XXX(perf bug 940787): We currently require NPN because there is a very
-// high (perfect so far) correlation between servers that are false-start-
-// tolerant and servers that support NPN, according to Google. Without this, we
-// will run into interop issues with a small percentage of servers that stop
-// responding when we attempt to false start.
-static const bool FALSE_START_REQUIRE_NPN_DEFAULT = true;
+// Historically, we have required that the server negotiate ALPN or NPN in
+// order to false start, as a compatibility hack to work around
+// implementations that just stop responding during false start. However, now
+// false start is resricted to modern crypto (TLS 1.2 and AEAD cipher suites)
+// so it is less likely that requring NPN or ALPN is still necessary.
+static const bool FALSE_START_REQUIRE_NPN_DEFAULT = false;
 
 } // unnamed namespace
 
