@@ -2904,6 +2904,13 @@ ElementRestyler::ComputeRestyleResultFromNewContext(nsIFrame* aSelf,
     return eRestyleResult_Continue;
   }
 
+  if (oldContext->IsDirectlyInsideRuby() !=
+        aNewContext->IsDirectlyInsideRuby()) {
+    LOG_RESTYLE_CONTINUE("NS_STYLE_IS_DIRECTLY_INSIDE_RUBY differes between old"
+                         " and new style contexts");
+    return eRestyleResult_Continue;
+  }
+
   return eRestyleResult_Stop;
 }
 
