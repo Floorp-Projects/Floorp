@@ -39,10 +39,8 @@
 }
 
 .addon-item[isDisabled="true"] .options-header,
-.addon-item:not([optionsURL]) .options-header,
 .addon-item[optionsURL=""] .options-header,
 .addon-item[isDisabled="true"] .options-box,
-.addon-item:not([optionsURL]) .options-box,
 .addon-item[optionsURL=""] .options-box {
   display: none;
 }
