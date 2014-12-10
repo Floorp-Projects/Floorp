@@ -363,11 +363,11 @@ class MochitestOptions(optparse.OptionParser):
           "dest": "e10s",
           "help": "Run tests with electrolysis preferences and test filtering enabled.",
         }],
-        [["--content-sandbox"],
-        { "choices": ["off", "warn", "on"],
-          "default": "off",
-          "dest": "contentSandbox",
-          "help": "Run tests with the content sandbox enabled or in warn only mode (Windows only). --e10s is assumed.",
+        [["--strict-content-sandbox"],
+        { "action": "store_true",
+          "default": False,
+          "dest": "strictContentSandbox",
+          "help": "Run tests with a more strict content sandbox (Windows only).",
         }],
         [["--dmd-path"],
          { "action": "store",
@@ -479,11 +479,8 @@ class MochitestOptions(optparse.OptionParser):
     def verifyOptions(self, options, mochitest):
         """ verify correct options and cleanup paths """
 
-        if options.contentSandbox != 'off':
-            options.e10s = True
-
         mozinfo.update({"e10s": options.e10s}) # for test manifest parsing.
-        mozinfo.update({"contentSandbox": options.contentSandbox}) # for test manifest parsing.
+        mozinfo.update({"strictContentSandbox": options.strictContentSandbox}) # for test manifest parsing.
 
         if options.app is None:
             if build_obj is not None:
