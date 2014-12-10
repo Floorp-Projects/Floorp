@@ -18,7 +18,7 @@ public:
 
   virtual MediaOmxCommonReader* CreateReader() MOZ_OVERRIDE;
 
-  virtual MediaDecoderStateMachine* CreateStateMachine(MediaOmxCommonReader* aReader) MOZ_OVERRIDE;
+  virtual MediaDecoderStateMachine* CreateStateMachineFromReader(MediaOmxCommonReader* aReader) MOZ_OVERRIDE;
 
   virtual void ApplyStateToStateMachine(PlayState aState) MOZ_OVERRIDE;
 };

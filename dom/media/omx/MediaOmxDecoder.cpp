@@ -25,7 +25,7 @@ MediaOmxDecoder::CreateReader()
 }
 
 MediaDecoderStateMachine*
-MediaOmxDecoder::CreateStateMachine(MediaOmxCommonReader* aReader)
+MediaOmxDecoder::CreateStateMachineFromReader(MediaOmxCommonReader* aReader)
 {
   return new MediaDecoderStateMachine(this, aReader);
 }
