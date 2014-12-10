@@ -39,7 +39,7 @@ protected:
 
   virtual ~InterceptedChannelBase();
 public:
-  InterceptedChannelBase(nsINetworkInterceptController* aController);
+  explicit InterceptedChannelBase(nsINetworkInterceptController* aController);
 
   // Notify the interception controller that the channel has been intercepted
   // and prepare the response body output stream.
