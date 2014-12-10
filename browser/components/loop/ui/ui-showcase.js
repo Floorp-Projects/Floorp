@@ -535,7 +535,7 @@
           Section({name: "UnsupportedBrowserView"}, 
             Example({summary: "Standalone Unsupported Browser"}, 
               React.DOM.div({className: "standalone"}, 
-                UnsupportedBrowserView(null)
+                UnsupportedBrowserView({helper: {isFirefox: returnFalse}})
               )
             )
           ), 
