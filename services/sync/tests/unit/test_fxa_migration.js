@@ -29,7 +29,7 @@ function promiseOneObserver(topic) {
   return new Promise((resolve, reject) => {
     let observer = function(subject, topic, data) {
       Services.obs.removeObserver(observer, topic);
-      resolve(data);
+      resolve({ subject: subject, data: data });
     }
     Services.obs.addObserver(observer, topic, false);
   });
@@ -128,7 +128,7 @@ add_task(function *testMigration() {
   _("Finished sync");
 
   // We should have seen the observer, so be waiting for an FxA user.
-  Assert.equal((yield promise), fxaMigrator.STATE_USER_FXA, "now waiting for FxA.")
+  Assert.equal((yield promise).data, fxaMigrator.STATE_USER_FXA, "now waiting for FxA.")
 
   // Re-calling our user-state promise should also reflect the same state.
   Assert.equal((yield fxaMigrator._queueCurrentUserState()),
@@ -154,9 +154,15 @@ add_task(function *testMigration() {
   promise = promiseOneObserver("fxa-migration:state-changed");
   fxAccounts.setSignedInUser(config.fxaccount.user);
 
-  Assert.equal((yield promise),
+  let observerInfo = yield promise;
+  Assert.equal(observerInfo.data,
                fxaMigrator.STATE_USER_FXA_VERIFIED,
                "now waiting for verification");
+  Assert.ok(observerInfo.subject instanceof Ci.nsISupportsString,
+            "email was passed to observer");
+  Assert.equal(observerInfo.subject.data,
+               FXA_USERNAME,
+               "email passed to observer is correct");
 
   // should have seen the user set, so state should automatically update.
   Assert.equal((yield fxaMigrator._queueCurrentUserState()),
@@ -190,7 +196,7 @@ add_task(function *testMigration() {
     // we should be in a 'null' user-state as there is no user-action
     // necessary.
     let cb = Async.makeSpinningCallback();
-    promiseOneObserver("fxa-migration:state-changed").then(state => cb(null, state));
+    promiseOneObserver("fxa-migration:state-changed").then(({ data: state }) => cb(null, state));
     Assert.equal(cb.wait(), null, "no user action necessary while sync completes.");
 
     // We must not have started writing the sentinel yet.
