@@ -84,7 +84,6 @@ public:
     , mHeaders(aOther.mHeaders)
     , mBodyStream(aOther.mBodyStream)
     , mContext(aOther.mContext)
-    , mOrigin(aOther.mOrigin)
     , mContextFrameType(aOther.mContextFrameType)
     , mReferrerType(aOther.mReferrerType)
     , mReferrerURL(aOther.mReferrerURL)
@@ -225,12 +224,6 @@ public:
     return mForceOriginHeader;
   }
 
-  void
-  GetOrigin(nsCString& aOrigin) const
-  {
-    aOrigin.Assign(mOrigin);
-  }
-
   bool
   SameOriginDataURL() const
   {
@@ -240,6 +233,8 @@ public:
   void
   SetBody(nsIInputStream* aStream)
   {
+    // A request's body may not be reset once set.
+    MOZ_ASSERT(!mBodyStream);
     mBodyStream = aStream;
   }
 
@@ -273,8 +268,6 @@ private:
   // nsContentPolicyType does not cover the complete set defined in the spec,
   // but it is a good start.
   nsContentPolicyType mContext;
-
-  nsCString mOrigin;
 
   ContextFrameType mContextFrameType;
   ReferrerType mReferrerType;

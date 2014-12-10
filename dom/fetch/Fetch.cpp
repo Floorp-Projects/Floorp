@@ -7,7 +7,8 @@
 
 #include "nsIDocument.h"
 #include "nsIGlobalObject.h"
-#include "nsIStringStream.h"
+#include "nsIStreamLoader.h"
+#include "nsIThreadRetargetableRequest.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeEncoder.h"
 
@@ -22,52 +23,111 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/Request.h"
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/URLSearchParams.h"
-#include "mozilla/dom/WorkerScope.h"
-#include "mozilla/dom/workers/Workers.h"
 
 #include "InternalResponse.h"
+
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
+#include "WorkerScope.h"
+#include "Workers.h"
 
 namespace mozilla {
 namespace dom {
 
 using namespace workers;
 
-class WorkerFetchResolver MOZ_FINAL : public FetchDriverObserver
+class WorkerFetchResolver MOZ_FINAL : public FetchDriverObserver,
+                                      public WorkerFeature
 {
+  friend class MainThreadFetchRunnable;
+  friend class WorkerFetchResponseEndRunnable;
   friend class WorkerFetchResponseRunnable;
-  friend class ResolveFetchWithBodyRunnable;
 
-  // This promise proxy is for the Promise returned by a call to fetch() that
-  // is resolved with a Response instance.
-  nsRefPtr<PromiseWorkerProxy> mPromiseProxy;
-  // Passed from main thread to worker thread after being initialized (except
-  // for the body.
-  nsRefPtr<InternalResponse> mInternalResponse;
+  workers::WorkerPrivate* mWorkerPrivate;
+
+  Mutex mCleanUpLock;
+  bool mCleanedUp;
+  // The following are initialized and used exclusively on the worker thread.
+  nsRefPtr<Promise> mFetchPromise;
+  nsRefPtr<Response> mResponse;
 public:
 
-  WorkerFetchResolver(workers::WorkerPrivate* aWorkerPrivate, Promise* aPromise);
+  WorkerFetchResolver(workers::WorkerPrivate* aWorkerPrivate, Promise* aPromise)
+    : mWorkerPrivate(aWorkerPrivate)
+    , mCleanUpLock("WorkerFetchResolver")
+    , mCleanedUp(false)
+    , mFetchPromise(aPromise)
+  {
+  }
 
   void
   OnResponseAvailable(InternalResponse* aResponse) MOZ_OVERRIDE;
 
+  void
+  OnResponseEnd() MOZ_OVERRIDE;
+
+  bool
+  Notify(JSContext* aCx, Status aStatus) MOZ_OVERRIDE
+  {
+    if (aStatus > Running) {
+      CleanUp(aCx);
+    }
+    return true;
+  }
+
+  void
+  CleanUp(JSContext* aCx)
+  {
+    MutexAutoLock lock(mCleanUpLock);
+
+    if (mCleanedUp) {
+      return;
+    }
+
+    MOZ_ASSERT(mWorkerPrivate);
+    mWorkerPrivate->AssertIsOnWorkerThread();
+    MOZ_ASSERT(mWorkerPrivate->GetJSContext() == aCx);
+
+    mWorkerPrivate->RemoveFeature(aCx, this);
+    CleanUpUnchecked();
+  }
+
+  void
+  CleanUpUnchecked()
+  {
+    mResponse = nullptr;
+    if (mFetchPromise) {
+      mFetchPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+      mFetchPromise = nullptr;
+    }
+    mCleanedUp = true;
+  }
+
   workers::WorkerPrivate*
-  GetWorkerPrivate() { return mPromiseProxy->GetWorkerPrivate(); }
+  GetWorkerPrivate() const
+  {
+    // It's ok to race on |mCleanedUp|, because it will never cause us to fire
+    // the assertion when we should not.
+    MOZ_ASSERT(!mCleanedUp);
+    return mWorkerPrivate;
+  }
 
 private:
-  ~WorkerFetchResolver();
+  ~WorkerFetchResolver()
+  {
+    MOZ_ASSERT(mCleanedUp);
+    MOZ_ASSERT(!mFetchPromise);
+  }
 };
 
 class MainThreadFetchResolver MOZ_FINAL : public FetchDriverObserver
 {
   nsRefPtr<Promise> mPromise;
-  nsRefPtr<InternalResponse> mInternalResponse;
+  nsRefPtr<Response> mResponse;
 
   NS_DECL_OWNINGTHREAD
 public:
@@ -75,6 +135,9 @@ public:
 
   void
   OnResponseAvailable(InternalResponse* aResponse) MOZ_OVERRIDE;
+
+  void
+  OnResponseEnd() MOZ_OVERRIDE;
 
 private:
   ~MainThreadFetchResolver();
@@ -94,16 +157,26 @@ public:
   {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
+    if (!aWorkerPrivate->AddFeature(aWorkerPrivate->GetJSContext(), mResolver)) {
+      NS_WARNING("Could not add WorkerFetchResolver feature to worker");
+      mResolver->CleanUpUnchecked();
+      mResolver = nullptr;
+    }
   }
 
   NS_IMETHODIMP
   Run()
   {
     AssertIsOnMainThread();
-    nsRefPtr<FetchDriver> fetch = new FetchDriver(mRequest);
+    // AddFeature() call failed, don't bother running.
+    if (!mResolver) {
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIPrincipal> principal = mResolver->GetWorkerPrivate()->GetPrincipal();
+    nsRefPtr<FetchDriver> fetch = new FetchDriver(mRequest, principal);
     nsresult rv = fetch->Fetch(mResolver);
     // Right now we only support async fetch, which should never directly fail.
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -143,8 +216,20 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
   }
 
   if (NS_IsMainThread()) {
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal);
+    if (!window) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+    if (!doc) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
     nsRefPtr<MainThreadFetchResolver> resolver = new MainThreadFetchResolver(p);
-    nsRefPtr<FetchDriver> fetch = new FetchDriver(r);
+    nsRefPtr<FetchDriver> fetch = new FetchDriver(r, doc->NodePrincipal());
     aRv = fetch->Fetch(resolver);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
@@ -171,12 +256,18 @@ MainThreadFetchResolver::OnResponseAvailable(InternalResponse* aResponse)
 {
   NS_ASSERT_OWNINGTHREAD(MainThreadFetchResolver);
   AssertIsOnMainThread();
-  mInternalResponse = aResponse;
 
   nsCOMPtr<nsIGlobalObject> go = mPromise->GetParentObject();
+  mResponse = new Response(go, aResponse);
+  mPromise->MaybeResolve(mResponse);
+}
 
-  nsRefPtr<Response> response = new Response(go, aResponse);
-  mPromise->MaybeResolve(response);
+void
+MainThreadFetchResolver::OnResponseEnd()
+{
+  NS_ASSERT_OWNINGTHREAD(MainThreadFetchResolver);
+  AssertIsOnMainThread();
+  MOZ_ASSERT(mResponse);
 }
 
 MainThreadFetchResolver::~MainThreadFetchResolver()
@@ -184,13 +275,16 @@ MainThreadFetchResolver::~MainThreadFetchResolver()
   NS_ASSERT_OWNINGTHREAD(MainThreadFetchResolver);
 }
 
-class WorkerFetchResponseRunnable : public WorkerRunnable
+class WorkerFetchResponseRunnable MOZ_FINAL : public WorkerRunnable
 {
   nsRefPtr<WorkerFetchResolver> mResolver;
+  // Passed from main thread to worker thread after being initialized.
+  nsRefPtr<InternalResponse> mInternalResponse;
 public:
-  explicit WorkerFetchResponseRunnable(WorkerFetchResolver* aResolver)
+  WorkerFetchResponseRunnable(WorkerFetchResolver* aResolver, InternalResponse* aResponse)
     : WorkerRunnable(aResolver->GetWorkerPrivate(), WorkerThreadModifyBusyCount)
     , mResolver(aResolver)
+    , mInternalResponse(aResponse)
   {
   }
 
@@ -202,38 +296,72 @@ public:
     MOZ_ASSERT(aWorkerPrivate == mResolver->GetWorkerPrivate());
 
     nsRefPtr<nsIGlobalObject> global = aWorkerPrivate->GlobalScope();
-    nsRefPtr<Response> response = new Response(global, mResolver->mInternalResponse);
+    mResolver->mResponse = new Response(global, mInternalResponse);
 
-    nsRefPtr<Promise> promise = mResolver->mPromiseProxy->GetWorkerPromise();
-    MOZ_ASSERT(promise);
-    promise->MaybeResolve(response);
+    nsRefPtr<Promise> promise = mResolver->mFetchPromise.forget();
+    promise->MaybeResolve(mResolver->mResponse);
 
-    mResolver->mPromiseProxy->CleanUp(aCx);
     return true;
   }
 };
 
-WorkerFetchResolver::WorkerFetchResolver(WorkerPrivate* aWorkerPrivate, Promise* aPromise)
+class WorkerFetchResponseEndRunnable MOZ_FINAL : public WorkerRunnable
 {
-  mPromiseProxy = PromiseWorkerProxy::Create(aWorkerPrivate, aPromise);
-}
+  nsRefPtr<WorkerFetchResolver> mResolver;
+public:
+  explicit WorkerFetchResponseEndRunnable(WorkerFetchResolver* aResolver)
+    : WorkerRunnable(aResolver->GetWorkerPrivate(), WorkerThreadModifyBusyCount)
+    , mResolver(aResolver)
+  {
+  }
 
-WorkerFetchResolver::~WorkerFetchResolver()
-{
-}
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(aWorkerPrivate);
+    aWorkerPrivate->AssertIsOnWorkerThread();
+    MOZ_ASSERT(aWorkerPrivate == mResolver->GetWorkerPrivate());
+    MOZ_ASSERT(mResolver->mResponse);
+
+    mResolver->CleanUp(aCx);
+    return true;
+  }
+};
 
 void
 WorkerFetchResolver::OnResponseAvailable(InternalResponse* aResponse)
 {
   AssertIsOnMainThread();
-  mInternalResponse = aResponse;
+
+  MutexAutoLock lock(mCleanUpLock);
+  if (mCleanedUp) {
+    return;
+  }
 
   nsRefPtr<WorkerFetchResponseRunnable> r =
-    new WorkerFetchResponseRunnable(this);
+    new WorkerFetchResponseRunnable(this, aResponse);
 
   AutoSafeJSContext cx;
   if (!r->Dispatch(cx)) {
     NS_WARNING("Could not dispatch fetch resolve");
+  }
+}
+
+void
+WorkerFetchResolver::OnResponseEnd()
+{
+  AssertIsOnMainThread();
+  MutexAutoLock lock(mCleanUpLock);
+  if (mCleanedUp) {
+    return;
+  }
+
+  nsRefPtr<WorkerFetchResponseEndRunnable> r =
+    new WorkerFetchResponseEndRunnable(this);
+
+  AutoSafeJSContext cx;
+  if (!r->Dispatch(cx)) {
+    NS_WARNING("Could not dispatch fetch resolve end");
   }
 }
 
@@ -309,7 +437,7 @@ ExtractFromBlob(const File& aFile, nsIInputStream** aStream,
     return rv;
   }
 
-  nsString type;
+  nsAutoString type;
   impl->GetType(type);
   aContentType = NS_ConvertUTF16toUTF8(type);
   return NS_OK;
@@ -317,8 +445,8 @@ ExtractFromBlob(const File& aFile, nsIInputStream** aStream,
 
 nsresult
 ExtractFromUSVString(const nsString& aStr,
-                             nsIInputStream** aStream,
-                             nsCString& aContentType)
+                     nsIInputStream** aStream,
+                     nsCString& aContentType)
 {
   nsCOMPtr<nsIUnicodeEncoder> encoder = EncodingUtils::EncoderForEncoding("UTF-8");
   if (!encoder) {
@@ -362,7 +490,7 @@ ExtractFromURLSearchParams(const URLSearchParams& aParams,
   aContentType = NS_LITERAL_CSTRING("application/x-www-form-urlencoded;charset=UTF-8");
   return NS_NewStringInputStream(aStream, serialized);
 }
-}
+} // anonymous namespace
 
 nsresult
 ExtractByteStreamFromBody(const OwningArrayBufferOrArrayBufferViewOrBlobOrUSVStringOrURLSearchParams& aBodyInit,
@@ -423,129 +551,574 @@ ExtractByteStreamFromBody(const ArrayBufferOrArrayBufferViewOrBlobOrUSVStringOrU
 }
 
 namespace {
-nsresult
-DecodeUTF8(const nsCString& aBuffer, nsString& aDecoded)
+class StreamDecoder MOZ_FINAL
 {
-  nsCOMPtr<nsIUnicodeDecoder> decoder =
-    EncodingUtils::DecoderForEncoding("UTF-8");
-  if (!decoder) {
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIUnicodeDecoder> mDecoder;
+  nsString mDecoded;
+
+public:
+  StreamDecoder()
+    : mDecoder(EncodingUtils::DecoderForEncoding("UTF-8"))
+  {
+    MOZ_ASSERT(mDecoder);
   }
 
-  int32_t destBufferLen;
-  nsresult rv =
-    decoder->GetMaxLength(aBuffer.get(), aBuffer.Length(), &destBufferLen);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  nsresult
+  AppendText(const char* aSrcBuffer, uint32_t aSrcBufferLen)
+  {
+    int32_t destBufferLen;
+    nsresult rv =
+      mDecoder->GetMaxLength(aSrcBuffer, aSrcBufferLen, &destBufferLen);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!mDecoded.SetCapacity(mDecoded.Length() + destBufferLen, fallible_t())) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    char16_t* destBuffer = mDecoded.BeginWriting() + mDecoded.Length();
+    int32_t totalChars = mDecoded.Length();
+
+    int32_t srcLen = (int32_t) aSrcBufferLen;
+    int32_t outLen = destBufferLen;
+    rv = mDecoder->Convert(aSrcBuffer, &srcLen, destBuffer, &outLen);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    totalChars += outLen;
+    mDecoded.SetLength(totalChars);
+
+    return NS_OK;
   }
 
-  if (!aDecoded.SetCapacity(destBufferLen, fallible_t())) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsString&
+  GetText()
+  {
+    return mDecoded;
+  }
+};
+
+/*
+ * Called on successfully reading the complete stream.
+ */
+template <class Derived>
+class ContinueConsumeBodyRunnable MOZ_FINAL : public WorkerRunnable
+{
+  // This has been addrefed before this runnable is dispatched,
+  // released in WorkerRun().
+  FetchBody<Derived>* mFetchBody;
+  nsresult mStatus;
+  uint32_t mLength;
+  uint8_t* mResult;
+
+public:
+  ContinueConsumeBodyRunnable(FetchBody<Derived>* aFetchBody, nsresult aStatus,
+                              uint32_t aLength, uint8_t* aResult)
+    : WorkerRunnable(aFetchBody->mWorkerPrivate, WorkerThreadModifyBusyCount)
+    , mFetchBody(aFetchBody)
+    , mStatus(aStatus)
+    , mLength(aLength)
+    , mResult(aResult)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
   }
 
-  char16_t* destBuffer = aDecoded.BeginWriting();
-  int32_t srcLen = (int32_t) aBuffer.Length();
-  int32_t outLen = destBufferLen;
-  rv = decoder->Convert(aBuffer.get(), &srcLen, destBuffer, &outLen);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
+  {
+    mFetchBody->ContinueConsumeBody(mStatus, mLength, mResult);
+    return true;
+  }
+};
+
+// OnStreamComplete always adopts the buffer, utility class to release it in
+// a couple of places.
+class MOZ_STACK_CLASS AutoFreeBuffer MOZ_FINAL {
+  uint8_t* mBuffer;
+
+public:
+  explicit AutoFreeBuffer(uint8_t* aBuffer)
+    : mBuffer(aBuffer)
+  {}
+
+  ~AutoFreeBuffer()
+  {
+    moz_free(mBuffer);
   }
 
-  MOZ_ASSERT(outLen <= destBufferLen);
-  aDecoded.SetLength(outLen);
-  return NS_OK;
+  void
+  Reset()
+  {
+    mBuffer= nullptr;
+  }
+};
+
+template <class Derived>
+class FailConsumeBodyWorkerRunnable : public MainThreadWorkerControlRunnable
+{
+  FetchBody<Derived>* mBody;
+public:
+  explicit FailConsumeBodyWorkerRunnable(FetchBody<Derived>* aBody)
+    : MainThreadWorkerControlRunnable(aBody->mWorkerPrivate)
+    , mBody(aBody)
+  {
+    AssertIsOnMainThread();
+  }
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
+  {
+    mBody->ContinueConsumeBody(NS_ERROR_FAILURE, 0, nullptr);
+    return true;
+  }
+};
+
+/*
+ * In case of failure to create a stream pump or dispatch stream completion to
+ * worker, ensure we cleanup properly. Thread agnostic.
+ */
+template <class Derived>
+class MOZ_STACK_CLASS AutoFailConsumeBody MOZ_FINAL
+{
+  FetchBody<Derived>* mBody;
+public:
+  explicit AutoFailConsumeBody(FetchBody<Derived>* aBody)
+    : mBody(aBody)
+  { }
+
+  ~AutoFailConsumeBody()
+  {
+    AssertIsOnMainThread();
+    if (mBody) {
+      if (mBody->mWorkerPrivate) {
+        nsRefPtr<FailConsumeBodyWorkerRunnable<Derived>> r =
+          new FailConsumeBodyWorkerRunnable<Derived>(mBody);
+        AutoSafeJSContext cx;
+        if (!r->Dispatch(cx)) {
+          MOZ_CRASH("We are going to leak");
+        }
+      } else {
+        mBody->ContinueConsumeBody(NS_ERROR_FAILURE, 0, nullptr);
+      }
+    }
+  }
+
+  void
+  DontFail()
+  {
+    mBody = nullptr;
+  }
+};
+
+template <class Derived>
+class ConsumeBodyDoneObserver : public nsIStreamLoaderObserver
+{
+  FetchBody<Derived>* mFetchBody;
+
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  explicit ConsumeBodyDoneObserver(FetchBody<Derived>* aFetchBody)
+    : mFetchBody(aFetchBody)
+  { }
+
+  NS_IMETHOD
+  OnStreamComplete(nsIStreamLoader* aLoader,
+                   nsISupports* aCtxt,
+                   nsresult aStatus,
+                   uint32_t aResultLength,
+                   const uint8_t* aResult)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    // If the binding requested cancel, we don't need to call
+    // ContinueConsumeBody, since that is the originator.
+    if (aStatus == NS_BINDING_ABORTED) {
+      return NS_OK;
+    }
+
+    uint8_t* nonconstResult = const_cast<uint8_t*>(aResult);
+    if (mFetchBody->mWorkerPrivate) {
+      // This way if the runnable dispatch fails, the body is still released.
+      AutoFailConsumeBody<Derived> autoFail(mFetchBody);
+      nsRefPtr<ContinueConsumeBodyRunnable<Derived>> r =
+        new ContinueConsumeBodyRunnable<Derived>(mFetchBody,
+                                        aStatus,
+                                        aResultLength,
+                                        nonconstResult);
+      AutoSafeJSContext cx;
+      if (r->Dispatch(cx)) {
+        autoFail.DontFail();
+      } else {
+        NS_WARNING("Could not dispatch ConsumeBodyRunnable");
+        // Return failure so that aResult is freed.
+        return NS_ERROR_FAILURE;
+      }
+    } else {
+      mFetchBody->ContinueConsumeBody(aStatus, aResultLength, nonconstResult);
+    }
+
+    // FetchBody is responsible for data.
+    return NS_SUCCESS_ADOPTED_DATA;
+  }
+
+private:
+  virtual ~ConsumeBodyDoneObserver()
+  { }
+};
+
+template <class Derived>
+NS_IMPL_ADDREF(ConsumeBodyDoneObserver<Derived>)
+template <class Derived>
+NS_IMPL_RELEASE(ConsumeBodyDoneObserver<Derived>)
+template <class Derived>
+NS_INTERFACE_MAP_BEGIN(ConsumeBodyDoneObserver<Derived>)
+  NS_INTERFACE_MAP_ENTRY(nsIStreamLoaderObserver)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamLoaderObserver)
+NS_INTERFACE_MAP_END
+
+template <class Derived>
+class BeginConsumeBodyRunnable MOZ_FINAL : public nsRunnable
+{
+  FetchBody<Derived>* mFetchBody;
+public:
+  explicit BeginConsumeBodyRunnable(FetchBody<Derived>* aBody)
+    : mFetchBody(aBody)
+  { }
+
+  NS_IMETHOD
+  Run() MOZ_OVERRIDE
+  {
+    mFetchBody->BeginConsumeBodyMainThread();
+    return NS_OK;
+  }
+};
+
+template <class Derived>
+class CancelPumpRunnable MOZ_FINAL : public WorkerMainThreadRunnable
+{
+  FetchBody<Derived>* mBody;
+public:
+  explicit CancelPumpRunnable(FetchBody<Derived>* aBody)
+    : WorkerMainThreadRunnable(aBody->mWorkerPrivate)
+    , mBody(aBody)
+  { }
+
+  bool
+  MainThreadRun() MOZ_OVERRIDE
+  {
+    mBody->CancelPump();
+    return true;
+  }
+};
+} // anonymous namespace
+
+template <class Derived>
+class FetchBodyFeature MOZ_FINAL : public workers::WorkerFeature
+{
+  // This is addrefed before the feature is created, and is released in ContinueConsumeBody()
+  // so we can hold a rawptr.
+  FetchBody<Derived>* mBody;
+
+public:
+  explicit FetchBodyFeature(FetchBody<Derived>* aBody)
+    : mBody(aBody)
+  { }
+
+  ~FetchBodyFeature()
+  { }
+
+  bool Notify(JSContext* aCx, workers::Status aStatus) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(aStatus > workers::Running);
+    mBody->ContinueConsumeBody(NS_BINDING_ABORTED, 0, nullptr);
+    return true;
+  }
+};
+
+template <class Derived>
+FetchBody<Derived>::FetchBody()
+  : mFeature(nullptr)
+  , mBodyUsed(false)
+  , mReadDone(false)
+{
+  if (!NS_IsMainThread()) {
+    mWorkerPrivate = GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(mWorkerPrivate);
+  } else {
+    mWorkerPrivate = nullptr;
+  }
 }
+
+template
+FetchBody<Request>::FetchBody();
+
+template
+FetchBody<Response>::FetchBody();
+
+// Returns true if addref succeeded.
+// Always succeeds on main thread.
+// May fail on worker if RegisterFeature() fails. In that case, it will release
+// the object before returning false.
+template <class Derived>
+bool
+FetchBody<Derived>::AddRefObject()
+{
+  AssertIsOnTargetThread();
+  DerivedClass()->AddRef();
+
+  if (mWorkerPrivate && !mFeature) {
+    if (!RegisterFeature()) {
+      ReleaseObject();
+      return false;
+    }
+  }
+  return true;
 }
 
 template <class Derived>
-already_AddRefed<Promise>
-FetchBody<Derived>::ConsumeBody(ConsumeType aType, ErrorResult& aRv)
+void
+FetchBody<Derived>::ReleaseObject()
 {
-  nsRefPtr<Promise> promise = Promise::Create(DerivedClass()->GetParentObject(), aRv);
-  if (aRv.Failed()) {
-    return nullptr;
+  AssertIsOnTargetThread();
+
+  if (mWorkerPrivate && mFeature) {
+    UnregisterFeature();
   }
 
-  if (BodyUsed()) {
-    aRv.ThrowTypeError(MSG_REQUEST_BODY_CONSUMED_ERROR);
-    return nullptr;
+  DerivedClass()->Release();
+}
+
+template <class Derived>
+bool
+FetchBody<Derived>::RegisterFeature()
+{
+  MOZ_ASSERT(mWorkerPrivate);
+  mWorkerPrivate->AssertIsOnWorkerThread();
+  MOZ_ASSERT(!mFeature);
+  mFeature = new FetchBodyFeature<Derived>(this);
+
+  if (!mWorkerPrivate->AddFeature(mWorkerPrivate->GetJSContext(), mFeature)) {
+    NS_WARNING("Failed to add feature");
+    mFeature = nullptr;
+    return false;
   }
 
-  SetBodyUsed();
+  return true;
+}
 
-  // While the spec says to do this asynchronously, all the body constructors
-  // right now only accept bodies whose streams are backed by an in-memory
-  // buffer that can be read without blocking. So I think this is fine.
+template <class Derived>
+void
+FetchBody<Derived>::UnregisterFeature()
+{
+  MOZ_ASSERT(mWorkerPrivate);
+  mWorkerPrivate->AssertIsOnWorkerThread();
+  MOZ_ASSERT(mFeature);
+
+  mWorkerPrivate->RemoveFeature(mWorkerPrivate->GetJSContext(), mFeature);
+  mFeature = nullptr;
+}
+
+template <class Derived>
+void
+FetchBody<Derived>::CancelPump()
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(mConsumeBodyPump);
+  mConsumeBodyPump->Cancel(NS_BINDING_ABORTED);
+}
+
+// Return value is used by ConsumeBody to bubble the error code up to WebIDL so
+// mConsumePromise doesn't have to be rejected on early exit.
+template <class Derived>
+nsresult
+FetchBody<Derived>::BeginConsumeBody()
+{
+  AssertIsOnTargetThread();
+  MOZ_ASSERT(!mFeature);
+  MOZ_ASSERT(mConsumePromise);
+
+  // The FetchBody is not thread-safe refcounted. We addref it here and release
+  // it once the stream read is finished.
+  if (!AddRefObject()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (NS_IsMainThread()) {
+    BeginConsumeBodyMainThread();
+    return NS_OK;
+  } else {
+    nsRefPtr<BeginConsumeBodyRunnable<Derived>> r = new BeginConsumeBodyRunnable<Derived>(this);
+    nsresult rv = NS_DispatchToMainThread(r);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      ReleaseObject();
+      return rv;
+    }
+    return NS_OK;
+  }
+}
+
+/*
+ * BeginConsumeBodyMainThread() will automatically reject the consume promise
+ * and clean up on any failures, so there is no need for callers to do so,
+ * reflected in a lack of error return code.
+ */
+template <class Derived>
+void
+FetchBody<Derived>::BeginConsumeBodyMainThread()
+{
+  AssertIsOnMainThread();
+  AutoFailConsumeBody<Derived> autoReject(DerivedClass());
+  nsresult rv;
   nsCOMPtr<nsIInputStream> stream;
   DerivedClass()->GetBody(getter_AddRefs(stream));
-
   if (!stream) {
-    aRv = NS_NewByteInputStream(getter_AddRefs(stream), "", 0,
-                                NS_ASSIGNMENT_COPY);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
+    NS_WARNING("Could not get stream");
+    return;
+  }
+
+  nsCOMPtr<nsIInputStreamPump> pump;
+  rv = NS_NewInputStreamPump(getter_AddRefs(pump),
+                             stream);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  nsRefPtr<ConsumeBodyDoneObserver<Derived>> p = new ConsumeBodyDoneObserver<Derived>(this);
+  nsCOMPtr<nsIStreamLoader> loader;
+  rv = NS_NewStreamLoader(getter_AddRefs(loader), p);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  rv = pump->AsyncRead(loader, nullptr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  // Now that everything succeeded, we can assign the pump to a pointer that
+  // stays alive for the lifetime of the FetchBody.
+  mConsumeBodyPump = new nsMainThreadPtrHolder<nsIInputStreamPump>(pump);
+  // It is ok for retargeting to fail and reads to happen on the main thread.
+  autoReject.DontFail();
+
+  // Try to retarget, otherwise fall back to main thread.
+  nsCOMPtr<nsIThreadRetargetableRequest> rr = do_QueryInterface(pump);
+  if (rr) {
+    nsCOMPtr<nsIEventTarget> sts = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+    rv = rr->RetargetDeliveryTo(sts);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      NS_WARNING("Retargeting failed");
     }
   }
+}
+
+template <class Derived>
+void
+FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength, uint8_t* aResult)
+{
+  AssertIsOnTargetThread();
+  // Just a precaution to ensure ContinueConsumeBody is not called out of
+  // sync with a body read.
+  MOZ_ASSERT(mBodyUsed);
+  MOZ_ASSERT(!mReadDone);
+  MOZ_ASSERT_IF(mWorkerPrivate, mFeature);
+  mReadDone = true;
+
+  AutoFreeBuffer autoFree(aResult);
+
+  MOZ_ASSERT(mConsumePromise);
+  nsRefPtr<Promise> localPromise = mConsumePromise.forget();
+
+  nsRefPtr<Derived> kungfuDeathGrip = DerivedClass();
+  ReleaseObject();
+
+  if (NS_WARN_IF(NS_FAILED(aStatus))) {
+    localPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+
+    // If binding aborted, cancel the pump. We can't assert mConsumeBodyPump.
+    // In the (admittedly rare) situation that BeginConsumeBodyMainThread()
+    // context switches out, and the worker thread gets canceled before the
+    // pump is setup, mConsumeBodyPump will be null.
+    // We've to use the !! form since non-main thread pointer access on
+    // a nsMainThreadPtrHandle is not permitted.
+    if (aStatus == NS_BINDING_ABORTED && !!mConsumeBodyPump) {
+      if (NS_IsMainThread()) {
+        CancelPump();
+      } else {
+        MOZ_ASSERT(mWorkerPrivate);
+        // In case of worker thread, we block the worker while the request is
+        // canceled on the main thread. This ensures that OnStreamComplete has
+        // a valid FetchBody around to call CancelPump and we don't release the
+        // FetchBody on the main thread.
+        nsRefPtr<CancelPumpRunnable<Derived>> r =
+          new CancelPumpRunnable<Derived>(this);
+        if (!r->Dispatch(mWorkerPrivate->GetJSContext())) {
+          NS_WARNING("Could not dispatch CancelPumpRunnable. Nothing we can do here");
+        }
+      }
+    }
+  }
+
+  // Release the pump and then early exit if there was an error.
+  // Uses NS_ProxyRelease internally, so this is safe.
+  mConsumeBodyPump = nullptr;
+
+  // Don't warn here since we warned above.
+  if (NS_FAILED(aStatus)) {
+    return;
+  }
+
+  // Finish successfully consuming body according to type.
+  MOZ_ASSERT(aResult);
 
   AutoJSAPI api;
   api.Init(DerivedClass()->GetParentObject());
   JSContext* cx = api.cx();
 
-  // We can make this assertion because for now we only support memory backed
-  // structures for the body argument for a Request.
-  MOZ_ASSERT(NS_InputStreamIsBuffered(stream));
-  nsCString buffer;
-  uint64_t len;
-  aRv = stream->Available(&len);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  aRv = NS_ReadInputStreamToString(stream, buffer, len);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  buffer.SetLength(len);
-
-  switch (aType) {
+  switch (mConsumeType) {
     case CONSUME_ARRAYBUFFER: {
       JS::Rooted<JSObject*> arrayBuffer(cx);
-      arrayBuffer =
-        ArrayBuffer::Create(cx, buffer.Length(),
-                            reinterpret_cast<const uint8_t*>(buffer.get()));
-      JS::Rooted<JS::Value> val(cx);
-      val.setObjectOrNull(arrayBuffer);
-      promise->MaybeResolve(cx, val);
-      return promise.forget();
-    }
-    case CONSUME_BLOB: {
-      // XXXnsm it is actually possible to avoid these duplicate allocations
-      // for the Blob case by having the Blob adopt the stream's memory
-      // directly, but I've not added a special case for now.
-      //
-      // FIXME(nsm): Use nsContentUtils::CreateBlobBuffer once blobs have been fixed on
-      // workers.
-      uint32_t blobLen = buffer.Length();
-      void* blobData = moz_malloc(blobLen);
-      nsRefPtr<File> blob;
-      if (blobData) {
-        memcpy(blobData, buffer.BeginReading(), blobLen);
-        blob = File::CreateMemoryFile(DerivedClass()->GetParentObject(), blobData, blobLen,
-                                      NS_ConvertUTF8toUTF16(mMimeType));
-      } else {
-        aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-        return nullptr;
+      arrayBuffer = JS_NewArrayBufferWithContents(cx, aResultLength, reinterpret_cast<void *>(aResult));
+      if (!arrayBuffer) {
+        JS_ClearPendingException(cx);
+        localPromise->MaybeReject(NS_ERROR_DOM_UNKNOWN_ERR);
+        NS_WARNING("OUT OF MEMORY");
+        return;
       }
 
-      promise->MaybeResolve(blob);
-      return promise.forget();
+      JS::Rooted<JS::Value> val(cx);
+      val.setObjectOrNull(arrayBuffer);
+      localPromise->MaybeResolve(cx, val);
+      // ArrayBuffer takes over ownership.
+      autoFree.Reset();
+      return;
     }
+    case CONSUME_BLOB: {
+      nsRefPtr<File> blob =
+        File::CreateMemoryFile(DerivedClass()->GetParentObject(),
+                               reinterpret_cast<void *>(aResult), aResultLength, NS_ConvertUTF8toUTF16(mMimeType));
+
+      if (!blob) {
+        localPromise->MaybeReject(NS_ERROR_DOM_UNKNOWN_ERR);
+        return;
+      }
+
+      localPromise->MaybeResolve(blob);
+      // File takes over ownership.
+      autoFree.Reset();
+      return;
+    }
+    case CONSUME_TEXT:
+      // fall through handles early exit.
     case CONSUME_JSON: {
-      nsAutoString decoded;
-      aRv = DecodeUTF8(buffer, decoded);
-      if (NS_WARN_IF(aRv.Failed())) {
-        return nullptr;
+      StreamDecoder decoder;
+      decoder.AppendText(reinterpret_cast<char*>(aResult), aResultLength);
+
+      nsString& decoded = decoder.GetText();
+      if (mConsumeType == CONSUME_TEXT) {
+        localPromise->MaybeResolve(decoded);
+        return;
       }
 
       JS::Rooted<JS::Value> json(cx);
@@ -553,27 +1126,44 @@ FetchBody<Derived>::ConsumeBody(ConsumeType aType, ErrorResult& aRv)
         JS::Rooted<JS::Value> exn(cx);
         if (JS_GetPendingException(cx, &exn)) {
           JS_ClearPendingException(cx);
-          promise->MaybeReject(cx, exn);
+          localPromise->MaybeReject(cx, exn);
         }
-      }
-      promise->MaybeResolve(cx, json);
-      return promise.forget();
-    }
-    case CONSUME_TEXT: {
-      nsAutoString decoded;
-      aRv = DecodeUTF8(buffer, decoded);
-      if (NS_WARN_IF(aRv.Failed())) {
-        return nullptr;
+        return;
       }
 
-      promise->MaybeResolve(decoded);
-      return promise.forget();
+      localPromise->MaybeResolve(cx, json);
+      return;
     }
   }
 
   NS_NOTREACHED("Unexpected consume body type");
-  // Silence warnings.
-  return nullptr;
+}
+
+template <class Derived>
+already_AddRefed<Promise>
+FetchBody<Derived>::ConsumeBody(ConsumeType aType, ErrorResult& aRv)
+{
+  mConsumeType = aType;
+  if (BodyUsed()) {
+    aRv.ThrowTypeError(MSG_REQUEST_BODY_CONSUMED_ERROR);
+    return nullptr;
+  }
+
+  SetBodyUsed();
+
+  mConsumePromise = Promise::Create(DerivedClass()->GetParentObject(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  aRv = BeginConsumeBody();
+  if (NS_WARN_IF(aRv.Failed())) {
+    mConsumePromise = nullptr;
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = mConsumePromise;
+  return promise.forget();
 }
 
 template
