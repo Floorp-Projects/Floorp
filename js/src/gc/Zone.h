@@ -322,7 +322,8 @@ struct Zone : public JS::shadow::Zone,
     friend class js::gc::ZoneList;
     static Zone * const NotOnList;
     Zone *listNext_;
-    bool isOnList();
+    bool isOnList() const;
+    Zone *nextZone() const;
 
     friend bool js::CurrentThreadCanAccessZone(Zone *zone);
     friend class js::gc::GCRuntime;
