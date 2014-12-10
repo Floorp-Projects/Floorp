@@ -243,10 +243,11 @@ add_task(function* create_bookmark() {
   let parent = yield PlacesUtils.bookmarks.fetch({ guid: bm.parentGuid });
   Assert.deepEqual(parent.lastModified, bm.dateAdded);
 
+  // While here, also check keywords are case-insensitive.
   bm = yield PlacesUtils.bookmarks.insert({ parentGuid: parentGuid,
                                             type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                             url: NetUtil.newURI("http://example.com/"),
-                                            keyword: "test" });
+                                            keyword: "tEsT" });
   checkBookmarkObject(bm);
   Assert.equal(bm.parentGuid, parentGuid);
   Assert.equal(bm.index, 1);
