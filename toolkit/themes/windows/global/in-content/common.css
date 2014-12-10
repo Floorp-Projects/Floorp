@@ -23,10 +23,32 @@ xul|checkbox {
   -moz-padding-start: 0;
 }
 
+@media not all and (-moz-windows-default-theme) {
+  xul|*.checkbox-check {
+    background-image: none !important;
+  }
+
+  xul|*.checkbox-check[checked] {
+    list-style-image: url("chrome://global/skin/in-content/check.svg#check-native");
+    background-color: -moz-dialog;
+  }
+}
+
 xul|radio {
   -moz-binding: url("chrome://global/content/bindings/radio.xml#radio");
   -moz-margin-start: 0;
   -moz-padding-start: 0;
+}
+
+@media not all and (-moz-windows-default-theme) {
+  xul|*.radio-check {
+    background-image: none;
+  }
+
+  xul|*.radio-check[selected] {
+    list-style-image: url("chrome://global/skin/in-content/radio.svg#radio-native");
+    background-color: -moz-dialog;
+  }
 }
 
 xul|*.radio-icon,
