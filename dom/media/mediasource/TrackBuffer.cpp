@@ -202,6 +202,32 @@ TrackBuffer::AppendDataToCurrentResource(const uint8_t* aData, uint32_t aLength)
   return true;
 }
 
+class DecoderSorter
+{
+public:
+  bool LessThan(SourceBufferDecoder* aFirst, SourceBufferDecoder* aSecond) const
+  {
+    nsRefPtr<dom::TimeRanges> first = new dom::TimeRanges();
+    aFirst->GetBuffered(first);
+
+    nsRefPtr<dom::TimeRanges> second = new dom::TimeRanges();
+    aSecond->GetBuffered(second);
+
+    return first->GetStartTime() < second->GetStartTime();
+  }
+
+  bool Equals(SourceBufferDecoder* aFirst, SourceBufferDecoder* aSecond) const
+  {
+    nsRefPtr<dom::TimeRanges> first = new dom::TimeRanges();
+    aFirst->GetBuffered(first);
+
+    nsRefPtr<dom::TimeRanges> second = new dom::TimeRanges();
+    aSecond->GetBuffered(second);
+
+    return first->GetStartTime() == second->GetStartTime();
+  }
+};
+
 bool
 TrackBuffer::EvictData(uint32_t aThreshold)
 {
@@ -218,13 +244,20 @@ TrackBuffer::EvictData(uint32_t aThreshold)
     return false;
   }
 
-  for (uint32_t i = 0; i < mInitializedDecoders.Length(); ++i) {
+  nsTArray<SourceBufferDecoder*> decoders;
+  decoders.AppendElements(mInitializedDecoders);
+  decoders.Sort(DecoderSorter());
+
+  for (uint32_t i = 0; i < decoders.Length(); ++i) {
     MSE_DEBUG("TrackBuffer(%p)::EvictData decoder=%u threshold=%u toEvict=%lld",
               this, i, aThreshold, toEvict);
-    toEvict -= mInitializedDecoders[i]->GetResource()->EvictData(toEvict);
-    if (!mInitializedDecoders[i]->GetResource()->GetSize() &&
-        mInitializedDecoders[i] != mCurrentDecoder) {
-      RemoveDecoder(mInitializedDecoders[i]);
+    toEvict -= decoders[i]->GetResource()->EvictData(toEvict);
+    if (!decoders[i]->GetResource()->GetSize() &&
+        decoders[i] != mCurrentDecoder) {
+      RemoveDecoder(decoders[i]);
+    }
+    if (toEvict <= 0 || decoders[i] == mCurrentDecoder) {
+      break;
     }
   }
   return toEvict < (totalSize - aThreshold);
