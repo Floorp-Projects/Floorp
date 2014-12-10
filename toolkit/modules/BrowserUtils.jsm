@@ -1,3 +1,4 @@
+/* -*- mode: js; indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -203,5 +204,25 @@ this.BrowserUtils = {
                         replace(/[\s\d\.\-\_\(\)]+$/, "").
                         replace(/\bplug-?in\b/i, "").trim();
     return newName;
+  },
+
+  /**
+   * Return true if linkNode has a rel="noreferrer" attribute.
+   *
+   * @param linkNode The <a> element, or null.
+   * @return a boolean indicating if linkNode has a rel="noreferrer" attribute.
+   */
+  linkHasNoReferrer: function (linkNode) {
+    if (!linkNode)
+      return false;
+
+    let rel = linkNode.getAttribute("rel");
+    if (!rel)
+      return false;
+
+    // The HTML spec says that rel should be split on spaces before looking
+    // for particular rel values.
+    let values = rel.split(/[ \t\r\n\f]/);
+    return values.indexOf('noreferrer') != -1;
   },
 };
