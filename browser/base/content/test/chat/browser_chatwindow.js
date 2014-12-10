@@ -6,6 +6,30 @@ Components.utils.import("resource://gre/modules/Promise.jsm", this);
 
 let chatbar = document.getElementById("pinnedchats");
 
+function waitForCondition(condition, errorMsg) {
+  let deferred = Promise.defer();
+  var tries = 0;
+  var interval = setInterval(function() {
+    if (tries >= 30) {
+      ok(false, errorMsg);
+      moveOn();
+    }
+    var conditionPassed;
+    try {
+      conditionPassed = condition();
+    } catch (e) {
+      ok(false, e + "\n" + e.stack);
+      conditionPassed = false;
+    }
+    if (conditionPassed) {
+      moveOn();
+    }
+    tries++;
+  }, 100);
+  var moveOn = function() { clearInterval(interval); deferred.resolve(); };
+  return deferred.promise;
+}
+
 add_chat_task(function* testOpenCloseChat() {
   let chatbox = yield promiseOpenChat("http://example.com");
   Assert.strictEqual(chatbox, chatbar.selectedChat);
@@ -99,11 +123,15 @@ add_chat_task(function* testChatWindowChooser() {
   // therefore be the window that hosts the new chat (see bug 835111)
   let secondWindow = OpenBrowserWindow();
   yield promiseOneEvent(secondWindow, "load");
+  Assert.equal(secondWindow, Chat.findChromeWindowForChats(null), "Second window is the preferred chat window");
   Assert.equal(numChatsInWindow(secondWindow), 0, "second window starts with no chats");
   yield promiseOpenChat("http://example.com#2");
   Assert.equal(numChatsInWindow(secondWindow), 1, "second window now has chats");
   Assert.equal(numChatsInWindow(window), 1, "first window still has 1 chat");
   chat.close();
+
+  // a bit heavy handed, but handy fixing bug 1090633
+  yield waitForCondition(function () !chat.parentNode, "chat has been detached");
   Assert.equal(numChatsInWindow(window), 0, "first window now has no chats");
   // now open another chat - it should still open in the second.
   yield promiseOpenChat("http://example.com#3");
