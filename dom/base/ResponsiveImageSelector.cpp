@@ -44,7 +44,7 @@ ParseInteger(const nsAString& aString, int32_t& aInt)
 
 ResponsiveImageSelector::ResponsiveImageSelector(nsIContent *aContent)
   : mContent(aContent),
-    mBestCandidateIndex(-1)
+    mSelectedCandidateIndex(-1)
 {
 }
 
@@ -55,6 +55,8 @@ ResponsiveImageSelector::~ResponsiveImageSelector()
 bool
 ResponsiveImageSelector::SetCandidatesFromSourceSet(const nsAString & aSrcSet)
 {
+  ClearSelectedCandidate();
+
   nsIDocument* doc = mContent ? mContent->OwnerDoc() : nullptr;
   nsCOMPtr<nsIURI> docBaseURI = mContent ? mContent->GetBaseURI() : nullptr;
 
@@ -181,14 +183,13 @@ ResponsiveImageSelector::NumCandidates(bool aIncludeDefault)
 void
 ResponsiveImageSelector::SetDefaultSource(nsIURI *aURL)
 {
+  ClearSelectedCandidate();
+
   // Check if the last element of our candidates is a default
   int32_t candidates = mCandidates.Length();
   if (candidates && (mCandidates[candidates - 1].Type() ==
                      ResponsiveImageCandidate::eCandidateType_Default)) {
     mCandidates.RemoveElementAt(candidates - 1);
-    if (mBestCandidateIndex == candidates - 1) {
-      mBestCandidateIndex = -1;
-    }
   }
 
   // Add new default if set
@@ -197,12 +198,18 @@ ResponsiveImageSelector::SetDefaultSource(nsIURI *aURL)
   }
 }
 
+void
+ResponsiveImageSelector::ClearSelectedCandidate()
+{
+  mSelectedCandidateIndex = -1;
+}
+
 bool
 ResponsiveImageSelector::SetSizesFromDescriptor(const nsAString & aSizes)
 {
+  ClearSelectedCandidate();
   mSizeQueries.Clear();
   mSizeValues.Clear();
-  mBestCandidateIndex = -1;
 
   nsCSSParser cssParser;
 
@@ -233,7 +240,6 @@ ResponsiveImageSelector::AppendCandidateIfUnique(const ResponsiveImageCandidate 
     }
   }
 
-  mBestCandidateIndex = -1;
   mCandidates.AppendElement(aCandidate);
 }
 
@@ -247,14 +253,13 @@ ResponsiveImageSelector::AppendDefaultCandidate(nsIURI *aURL)
   defaultCandidate.SetURL(aURL);
   // We don't use MaybeAppend since we want to keep this even if it can never
   // match, as it may if the source set changes.
-  mBestCandidateIndex = -1;
   mCandidates.AppendElement(defaultCandidate);
 }
 
 already_AddRefed<nsIURI>
 ResponsiveImageSelector::GetSelectedImageURL()
 {
-  int bestIndex = GetBestCandidateIndex();
+  int bestIndex = GetSelectedCandidateIndex();
   if (bestIndex < 0) {
     return nullptr;
   }
@@ -267,7 +272,7 @@ ResponsiveImageSelector::GetSelectedImageURL()
 double
 ResponsiveImageSelector::GetSelectedImageDensity()
 {
-  int bestIndex = GetBestCandidateIndex();
+  int bestIndex = GetSelectedCandidateIndex();
   if (bestIndex < 0) {
     return 1.0;
   }
@@ -278,13 +283,13 @@ ResponsiveImageSelector::GetSelectedImageDensity()
 bool
 ResponsiveImageSelector::SelectImage(bool aReselect)
 {
-  if (!aReselect && mBestCandidateIndex != -1) {
+  if (!aReselect && mSelectedCandidateIndex != -1) {
     // Already have selection
     return false;
   }
 
-  int oldBest = mBestCandidateIndex;
-  mBestCandidateIndex = -1;
+  int oldBest = mSelectedCandidateIndex;
+  ClearSelectedCandidate();
 
   int numCandidates = mCandidates.Length();
   if (!numCandidates) {
@@ -344,17 +349,17 @@ ResponsiveImageSelector::SelectImage(bool aReselect)
   }
 
   MOZ_ASSERT(bestIndex >= 0 && bestIndex < numCandidates);
-  mBestCandidateIndex = bestIndex;
+  mSelectedCandidateIndex = bestIndex;
 
-  return mBestCandidateIndex != oldBest;
+  return mSelectedCandidateIndex != oldBest;
 }
 
 int
-ResponsiveImageSelector::GetBestCandidateIndex()
+ResponsiveImageSelector::GetSelectedCandidateIndex()
 {
   SelectImage();
 
-  return mBestCandidateIndex;
+  return mSelectedCandidateIndex;
 }
 
 bool
