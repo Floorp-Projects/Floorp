@@ -116,9 +116,14 @@ public:
   void SetParameterAsDensity(double aDensity);
   void SetParameterAsComputedWidth(int32_t aWidth);
 
-  // Fill from a valid candidate descriptor. Returns false descriptor is
-  // invalid.
-  bool SetParamaterFromDescriptor(const nsAString & aDescriptor);
+  void SetParameterInvalid();
+
+  // Consume descriptors from a string defined by aIter and aIterEnd, adjusts
+  // aIter to the end of data consumed.
+  // Returns false if descriptors string is invalid, but still parses to the end
+  // of descriptors microsyntax.
+  bool ConsumeDescriptors(nsAString::const_iterator& aIter,
+                          const nsAString::const_iterator& aIterEnd);
 
   // Check if our parameter (which does not include the url) is identical
   bool HasSameParameter(const ResponsiveImageCandidate & aOther) const;

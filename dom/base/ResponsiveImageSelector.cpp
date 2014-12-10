@@ -16,6 +16,10 @@
 #include "nsRuleNode.h"
 #include "nsRuleData.h"
 
+// For IsPictureEnabled() -- the candidate parser needs to be aware of sizes
+// support being enabled
+#include "HTMLPictureElement.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -76,10 +80,12 @@ ResponsiveImageSelector::SetCandidatesFromSourceSet(const nsAString & aSrcSet)
 
   // Read URL / descriptor pairs
   while (iter != end) {
-    nsAString::const_iterator url, desc;
+    nsAString::const_iterator url, urlEnd, descriptor;
 
-    // Skip whitespace
-    for (; iter != end && nsContentUtils::IsHTMLWhitespace(*iter); ++iter);
+    // Skip whitespace and commas.
+    // Extra commas at this point are a non-fatal syntax error.
+    for (; iter != end && (nsContentUtils::IsHTMLWhitespace(*iter) ||
+                           *iter == char16_t(',')); ++iter);
 
     if (iter == end) {
       break;
@@ -90,30 +96,33 @@ ResponsiveImageSelector::SetCandidatesFromSourceSet(const nsAString & aSrcSet)
     // Find end of url
     for (;iter != end && !nsContentUtils::IsHTMLWhitespace(*iter); ++iter);
 
-    desc = iter;
+    urlEnd = iter;
 
-    // Find end of descriptor
-    for (; iter != end && *iter != char16_t(','); ++iter);
-    const nsDependentSubstring &descriptor = Substring(desc, iter);
-
-    nsresult rv;
-    nsCOMPtr<nsIURI> candidateURL;
-    rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(candidateURL),
-                                                   Substring(url, desc),
-                                                   doc,
-                                                   docBaseURI);
-    if (NS_SUCCEEDED(rv) && candidateURL) {
-      NS_TryToSetImmutable(candidateURL);
-      ResponsiveImageCandidate candidate;
-      if (candidate.SetParamaterFromDescriptor(descriptor)) {
-        candidate.SetURL(candidateURL);
-        AppendCandidateIfUnique(candidate);
+    // Omit trailing commas from URL.
+    // Multiple commas are a non-fatal error.
+    while (urlEnd != url) {
+      if (*(--urlEnd) != char16_t(',')) {
+        urlEnd++;
+        break;
       }
     }
 
-    // Advance past comma
-    if (iter != end) {
-      ++iter;
+    const nsDependentSubstring &urlStr = Substring(url, urlEnd);
+
+    ResponsiveImageCandidate candidate;
+    if (candidate.ConsumeDescriptors(iter, end)) {
+      nsresult rv;
+      nsCOMPtr<nsIURI> candidateURL;
+      rv =
+        nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(candidateURL),
+                                                  urlStr,
+                                                  doc,
+                                                  docBaseURI);
+      if (NS_SUCCEEDED(rv) && candidateURL) {
+        NS_TryToSetImmutable(candidateURL);
+        candidate.SetURL(candidateURL);
+        AppendCandidateIfUnique(candidate);
+      }
     }
   }
 
@@ -427,6 +436,15 @@ ResponsiveImageCandidate::SetParameterDefault()
 }
 
 void
+ResponsiveImageCandidate::SetParameterInvalid()
+{
+  mType = eCandidateType_Invalid;
+  // mValue shouldn't actually be used for this type, but set it to default
+  // anyway
+  mValue.mDensity = 1.0;
+}
+
+void
 ResponsiveImageCandidate::SetParameterAsDensity(double aDensity)
 {
   MOZ_ASSERT(mType == eCandidateType_Invalid, "double setting candidate type");
@@ -435,76 +453,182 @@ ResponsiveImageCandidate::SetParameterAsDensity(double aDensity)
   mValue.mDensity = aDensity;
 }
 
-bool
-ResponsiveImageCandidate::SetParamaterFromDescriptor(const nsAString & aDescriptor)
+// Represents all supported descriptors for a ResponsiveImageCandidate, though
+// there is no candidate type that uses all of these. This should generally
+// match the mValue union of ResponsiveImageCandidate.
+struct ResponsiveImageDescriptors {
+  ResponsiveImageDescriptors()
+    : mInvalid(false) {};
+
+  Maybe<double> mDensity;
+  Maybe<int32_t> mWidth;
+  // We don't support "h" descriptors yet and they are not spec'd, but the
+  // current spec does specify that they can be silently ignored (whereas
+  // entirely unknown descriptors cause us to invalidate the candidate)
+  Maybe<int32_t> mFutureCompatHeight;
+  // If this descriptor set is bogus, e.g. a value was added twice (and thus
+  // dropped) or an unknown descriptor was added.
+  bool mInvalid;
+
+  void AddDescriptor(const nsAString& aDescriptor);
+  bool Valid();
+  // Use the current set of descriptors to configure a candidate
+  void FillCandidate(ResponsiveImageCandidate &aCandidate);
+};
+
+// Try to parse a single descriptor from a string. If value already set or
+// unknown, sets invalid flag.
+// This corresponds to the descriptor "Descriptor parser" step in:
+// https://html.spec.whatwg.org/#parse-a-srcset-attribute
+void
+ResponsiveImageDescriptors::AddDescriptor(const nsAString& aDescriptor)
 {
-  // Valid input values must be positive, using -1 for not-set
-  double density = -1.0;
-  int32_t width = -1;
+  if (aDescriptor.IsEmpty()) {
+    return;
+  }
 
-  nsAString::const_iterator iter, end;
-  aDescriptor.BeginReading(iter);
-  aDescriptor.EndReading(end);
-
-  // Parse descriptor list
-  // We currently only support a single density descriptor of the form:
-  //   <floating-point number>x
-  // Silently ignore other descriptors in the list for forward-compat
-  while (iter != end) {
-    // Skip initial whitespace
-    for (; iter != end && nsContentUtils::IsHTMLWhitespace(*iter); ++iter);
-    if (iter == end) {
-      break;
-    }
-
-    // Find end of type
-    nsAString::const_iterator start = iter;
-    for (; iter != end && !nsContentUtils::IsHTMLWhitespace(*iter); ++iter);
-
-    if (start == iter) {
-      // Empty descriptor
-      break;
-    }
-
-    // Iter is at end of descriptor, type is single character previous to that.
-    // Safe because we just verified that iter > start
-    --iter;
-    nsAString::const_iterator type(iter);
-    ++iter;
-
-    const nsDependentSubstring& valStr = Substring(start, type);
-    if (*type == char16_t('w')) {
-      int32_t possibleWidth;
-      if (width == -1 && density == -1.0) {
-        if (ParseInteger(valStr, possibleWidth) && possibleWidth > 0) {
-          width = possibleWidth;
-        }
+  // All currently supported descriptors end with an identifying character.
+  nsAString::const_iterator descStart, descType;
+  aDescriptor.BeginReading(descStart);
+  aDescriptor.EndReading(descType);
+  descType--;
+  const nsDependentSubstring& valueStr = Substring(descStart, descType);
+  if (*descType == char16_t('w')) {
+    int32_t possibleWidth;
+    // If the value is not a valid non-negative integer, it doesn't match this
+    // descriptor, fall through.
+    if (ParseInteger(valueStr, possibleWidth) && possibleWidth >= 0) {
+      if (possibleWidth != 0 && HTMLPictureElement::IsPictureEnabled() &&
+          mWidth.isNothing() && mDensity.isNothing()) {
+        mWidth.emplace(possibleWidth);
       } else {
-        return false;
+        // Valid width descriptor, but width or density were already seen, sizes
+        // support isn't enabled, or it parsed to 0, which is an error per spec
+        mInvalid = true;
       }
-    } else if (*type == char16_t('x')) {
-      if (width == -1 && density == -1.0) {
-        nsresult rv;
-        double possibleDensity = PromiseFlatString(valStr).ToDouble(&rv);
-        if (NS_SUCCEEDED(rv) && possibleDensity > 0.0) {
-          density = possibleDensity;
-        }
+
+      return;
+    }
+  } else if (*descType == char16_t('h')) {
+    int32_t possibleHeight;
+    // If the value is not a valid non-negative integer, it doesn't match this
+    // descriptor, fall through.
+    if (ParseInteger(valueStr, possibleHeight) && possibleHeight >= 0) {
+      if (possibleHeight != 0 && mFutureCompatHeight.isNothing() &&
+          mDensity.isNothing()) {
+        mFutureCompatHeight.emplace(possibleHeight);
       } else {
-        return false;
+        // Valid height descriptor, but height or density were already seen, or
+        // it parsed to zero, which is an error per spec
+        mInvalid = true;
       }
+
+      return;
+    }
+  } else if (*descType == char16_t('x')) {
+    // If the value is not a valid floating point number, it doesn't match this
+    // descriptor, fall through.
+    nsresult rv;
+    double possibleDensity = PromiseFlatString(valueStr).ToDouble(&rv);
+    if (NS_SUCCEEDED(rv)) {
+      if (possibleDensity >= 0.0 &&
+          mWidth.isNothing() &&
+          mDensity.isNothing() &&
+          mFutureCompatHeight.isNothing()) {
+        mDensity.emplace(possibleDensity);
+      } else {
+        // Valid density descriptor, but height or width or density were already
+        // seen, or it parsed to less than zero, which is an error per spec
+        mInvalid = true;
+      }
+
+      return;
     }
   }
 
-  if (width != -1) {
-    SetParameterAsComputedWidth(width);
-  } else if (density != -1.0) {
-    SetParameterAsDensity(density);
+  // Matched no known descriptor, mark this descriptor set invalid
+  mInvalid = true;
+}
+
+bool
+ResponsiveImageDescriptors::Valid()
+{
+  return !mInvalid && !(mFutureCompatHeight.isSome() && mWidth.isNothing());
+}
+
+void
+ResponsiveImageDescriptors::FillCandidate(ResponsiveImageCandidate &aCandidate)
+{
+  if (!Valid()) {
+    aCandidate.SetParameterInvalid();
+  } else if (mWidth.isSome()) {
+    MOZ_ASSERT(mDensity.isNothing()); // Shouldn't be valid
+
+    aCandidate.SetParameterAsComputedWidth(*mWidth);
+  } else if (mDensity.isSome()) {
+    MOZ_ASSERT(mWidth.isNothing()); // Shouldn't be valid
+
+    aCandidate.SetParameterAsDensity(*mDensity);
   } else {
-    // No valid descriptors -> 1.0 density
-    SetParameterAsDensity(1.0);
+    // A valid set of descriptors with no density nor width (e.g. an empty set)
+    // becomes 1.0 density, per spec
+    aCandidate.SetParameterAsDensity(1.0);
+  }
+}
+
+bool
+ResponsiveImageCandidate::ConsumeDescriptors(nsAString::const_iterator& aIter,
+                                             const nsAString::const_iterator& aIterEnd)
+{
+  nsAString::const_iterator &iter = aIter;
+  const nsAString::const_iterator &end  = aIterEnd;
+
+  bool inParens = false;
+
+  ResponsiveImageDescriptors descriptors;
+
+  // Parse descriptor list.
+  // This corresponds to the descriptor parsing loop from:
+  // https://html.spec.whatwg.org/#parse-a-srcset-attribute
+
+  // Skip initial whitespace
+  for (; iter != end && nsContentUtils::IsHTMLWhitespace(*iter); ++iter);
+
+  nsAString::const_iterator currentDescriptor = iter;
+
+  for (;; iter++) {
+    if (iter == end) {
+      descriptors.AddDescriptor(Substring(currentDescriptor, iter));
+      break;
+    } else if (inParens) {
+      if (*iter == char16_t(')')) {
+        inParens = false;
+      }
+    } else {
+      if (*iter == char16_t(',')) {
+        // End of descriptors, flush current descriptor and advance past comma
+        // before breaking
+        descriptors.AddDescriptor(Substring(currentDescriptor, iter));
+        iter++;
+        break;
+      } else if (nsContentUtils::IsHTMLWhitespace(*iter)) {
+        // End of current descriptor, consume it, skip spaces
+        // ("After descriptor" state in spec) before continuing
+        descriptors.AddDescriptor(Substring(currentDescriptor, iter));
+        for (; iter != end && *iter == char16_t(' '); ++iter);
+        if (iter == end) {
+          break;
+        }
+        currentDescriptor = iter;
+      } else if (*iter == char16_t('(')) {
+        inParens = true;
+      }
+    }
   }
 
-  return true;
+  descriptors.FillCandidate(*this);
+
+  return Type() != eCandidateType_Invalid;
 }
 
 bool
