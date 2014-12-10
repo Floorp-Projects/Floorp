@@ -1858,6 +1858,24 @@ IsTablePseudo(nsIFrame* aFrame)
          nsCSSAnonBoxes::inlineTable)));
 }
 
+static bool
+IsRubyPseudo(nsIFrame* aFrame)
+{
+  nsIAtom* pseudoType = aFrame->StyleContext()->GetPseudo();
+  return pseudoType &&
+    (pseudoType == nsCSSAnonBoxes::ruby ||
+     pseudoType == nsCSSAnonBoxes::rubyBase ||
+     pseudoType == nsCSSAnonBoxes::rubyText ||
+     pseudoType == nsCSSAnonBoxes::rubyBaseContainer ||
+     pseudoType == nsCSSAnonBoxes::rubyTextContainer);
+}
+
+static bool
+IsTableOrRubyPseudo(nsIFrame* aFrame)
+{
+  return IsTablePseudo(aFrame) || IsRubyPseudo(aFrame);
+}
+
 /* static */
 nsCSSFrameConstructor::ParentType
 nsCSSFrameConstructor::GetParentType(nsIAtom* aFrameType)
@@ -8966,12 +8984,19 @@ nsCSSFrameConstructor::MaybeRecreateFramesForElement(Element* aElement)
   return nullptr;
 }
 
+static bool
+IsWhitespaceFrame(nsIFrame* aFrame)
+{
+  NS_ABORT_IF_FALSE(aFrame, "invalid argument");
+  return aFrame->GetType() == nsGkAtoms::textFrame &&
+    aFrame->GetContent()->TextIsOnlyWhitespace();
+}
+
 static nsIFrame*
 FindFirstNonWhitespaceChild(nsIFrame* aParentFrame)
 {
   nsIFrame* f = aParentFrame->GetFirstPrincipalChild();
-  while (f && f->GetType() == nsGkAtoms::textFrame &&
-         f->GetContent()->TextIsOnlyWhitespace()) {
+  while (f && IsWhitespaceFrame(f)) {
     f = f->GetNextSibling();
   }
   return f;
@@ -8983,8 +9008,7 @@ FindNextNonWhitespaceSibling(nsIFrame* aFrame)
   nsIFrame* f = aFrame;
   do {
     f = f->GetNextSibling();
-  } while (f && f->GetType() == nsGkAtoms::textFrame &&
-           f->GetContent()->TextIsOnlyWhitespace());
+  } while (f && IsWhitespaceFrame(f));
   return f;
 }
 
@@ -8994,8 +9018,7 @@ FindPreviousNonWhitespaceSibling(nsIFrame* aFrame)
   nsIFrame* f = aFrame;
   do {
     f = f->GetPrevSibling();
-  } while (f && f->GetType() == nsGkAtoms::textFrame &&
-           f->GetContent()->TextIsOnlyWhitespace());
+  } while (f && IsWhitespaceFrame(f));
   return f;
 }
 
@@ -9047,9 +9070,16 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
   MOZ_ASSERT(inFlowFrame == inFlowFrame->FirstContinuation(),
              "placeholder for primary frame has previous continuations?");
   nsIFrame* parent = inFlowFrame->GetParent();
-  if (IsTablePseudo(parent)) {
+  // For the case of ruby pseudo parent, effectively, only pseudo rb/rt frame
+  // need to be checked here, since all other types of parent will be catched
+  // by "Check ruby containers" section below.
+  if (IsTableOrRubyPseudo(parent)) {
     if (FindFirstNonWhitespaceChild(parent) == inFlowFrame ||
         !FindNextNonWhitespaceSibling(inFlowFrame->LastContinuation()) ||
+        // If it is a whitespace, and is the only child of the parent, the
+        // pseudo parent was created for the space, and should now be removed.
+        (IsWhitespaceFrame(aFrame) &&
+         parent->PrincipalChildList().OnlyChild()) ||
         // If we're a table-column-group, then the GetFirstChild check above is
         // not going to catch cases when we're the first child.
         (inFlowFrame->GetType() == nsGkAtoms::tableColGroupFrame &&
@@ -9066,29 +9096,50 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
   }
 
   // Might need to reconstruct things if this frame's nextSibling is a table
-  // pseudo, since removal of this frame might mean that this pseudo needs to
-  // get merged with the frame's prevSibling if that's also a table pseudo.
+  // or ruby pseudo, since removal of this frame might mean that this pseudo
+  // needs to get merged with the frame's prevSibling if that's also a table
+  // or ruby pseudo.
   nsIFrame* nextSibling =
     FindNextNonWhitespaceSibling(inFlowFrame->LastContinuation());
-  NS_ASSERTION(!IsTablePseudo(inFlowFrame), "Shouldn't happen here");
-  if (nextSibling && IsTablePseudo(nextSibling)) {
+  NS_ASSERTION(!IsTableOrRubyPseudo(inFlowFrame), "Shouldn't happen here");
+  // Effectively, for the ruby pseudo sibling case, only pseudo <ruby> frame
+  // need to be checked here, since all other types of such frames will have
+  // a ruby container parent, and be catched by "Check ruby containers" below.
+  if (nextSibling && IsTableOrRubyPseudo(nextSibling)) {
     nsIFrame* prevSibling = FindPreviousNonWhitespaceSibling(inFlowFrame);
-    if (prevSibling && IsTablePseudo(prevSibling)) {
+    if (prevSibling && IsTableOrRubyPseudo(prevSibling)) {
 #ifdef DEBUG
       if (gNoisyContentUpdates) {
         printf("nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval: "
-                 "frame=");
+               "frame=");
         nsFrame::ListTag(stdout, aFrame);
         printf(" has a table pseudo next sibling of different type and a "
-                 "table pseudo prevsibling\n");
+               "table pseudo prevsibling\n");
       }
 #endif
       // Good enough to recreate frames for aFrame's parent's content; even if
-      // aFrame's parent is a table pseudo, that'll be the right content node.
+      // aFrame's parent is a pseudo, that'll be the right content node.
       *aResult = RecreateFramesForContent(parent->GetContent(), true, aFlags,
                                           aDestroyedFramesFor);
       return true;
     }
+  }
+
+  // Check ruby containers
+  nsIAtom* parentType = parent->GetType();
+  if (parentType == nsGkAtoms::rubyFrame ||
+      parentType == nsGkAtoms::rubyBaseContainerFrame ||
+      parentType == nsGkAtoms::rubyTextContainerFrame) {
+    // In ruby containers, pseudo frames may be created from
+    // whitespaces or even nothing. There are two cases we actually
+    // need to handle here, but hard to check exactly:
+    // 1. Status of spaces beside the frame may vary, and related
+    //    frames may be constructed or destroyed accordingly.
+    // 2. The type of the first child of a ruby frame determines
+    //    whether a pseudo ruby base container should exist.
+    *aResult = RecreateFramesForContent(parent->GetContent(), true, aFlags,
+                                        aDestroyedFramesFor);
+    return true;
   }
 
   // Might need to reconstruct things if the removed frame's nextSibling is an
