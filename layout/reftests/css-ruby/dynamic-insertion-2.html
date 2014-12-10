@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1087872 - Test for dynamic insertion of ruby frames</title>
+  <link rel="stylesheet" href="common.css">
+  <script src="dynamic-insertion.js"></script>
+</head>
+<body>
+
+  <p>No space should exist between 'a' and 'b':</p>
+
+  <!-- inter-level white space -->
+  <!--     <= normal white space -->
+  <p><span data-insert="after" data-tag="rb">a</span> <rt></rt>b</p>
+  <p>a<rb></rb> <span data-insert="before" data-tag="rt">b</span></p>
+  <!--     <= inter-base white space -->
+  <p>a<rb></rb> <rb data-insert="before" data-tag="rt"></rb>b</p>
+  <!--     <= inter-segment white space -->
+  <p>a<rbc></rbc> <rb data-insert="before" data-tag="rt"></rb>b</p>
+  <!--     <= inter-annotation white space -->
+  <p>a<rt data-insert="after" data-tag="rb"></rt> <rt></rt>b</p>
+
+  <!-- insert white space -->
+  <!--     leading white space -->
+  <p>a<ruby data-insert="start" data-text=" "><rb></rb></ruby>b</p>
+  <p>a<rbc data-insert="start" data-text=" "><rb></rb></rbc>b</p>
+  <p>a<rtc data-insert="start" data-text=" "><rt></rt></rtc>b</p>
+  <!--     trailing white space -->
+  <p>a<ruby data-insert="end" data-text=" "><rb></rb></ruby>b</p>
+  <p>a<rbc data-insert="end" data-text=" "><rb></rb></rbc>b</p>
+  <p>a<rtc data-insert="end" data-text=" "><rt></rt></rtc>b</p>
+  <!--     inter-level white space -->
+  <p>a<rb data-insert="after" data-text=" "></rb><rt></rt>b</p>
+
+</body>
+</html>

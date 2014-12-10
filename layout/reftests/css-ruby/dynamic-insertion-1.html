@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1087872 - Test for dynamic insertion of ruby frames</title>
+  <link rel="stylesheet" href="common.css">
+  <script src="dynamic-insertion.js"></script>
+</head>
+<body>
+
+  <p>One space should exist between 'a' and 'b':</p>
+
+  <!-- leading white space -->
+  <!--     => inter-base white space -->
+  <p>a<rbc data-insert="start" data-tag="rb"> <rb></rb></rbc>b</p>
+  <p>a<ruby data-insert="start" data-tag="rb"> <rb></rb></ruby>b</p>
+  <!--     => inter-segment white space -->
+  <p>a<ruby data-insert="start" data-tag="rbc"> <rbc></rbc></ruby>b</p>
+  <!--     => inter-annotation white space -->
+  <p>a<rtc data-insert="start" data-tag="rt"> <rt></rt></rtc>b</p>
+  <p>a<ruby data-insert="start" data-tag="rt"> <rt></rt></ruby>b</p>
+
+  <!-- trailing white space -->
+  <!--     => inter-base white space -->
+  <p>a<rbc data-insert="end" data-tag="rb"><rb></rb> </rbc>b</p>
+  <p>a<ruby data-insert="end" data-tag="rb"><rb></rb> </ruby>b</p>
+  <!--     => inter-segment white space -->
+  <p>a<ruby data-insert="end" data-tag="rbc"><rbc></rbc> </ruby>b</p>
+  <!--     => inter-annotation white space -->
+  <p>a<rtc data-insert="end" data-tag="rt"><rt></rt> </rtc>b</p>
+  <p>a<ruby data-insert="end" data-tag="rt"><rt></rt> </ruby>b</p>
+
+  <!-- inter-level white space -->
+  <!--     => normal white space -->
+  <p>a<rb data-insert="after" data-tag="span"></rb> <rt></rt>b</p>
+  <p>a<rb></rb> <rt data-insert="before" data-tag="span"></rt>b</p>
+  <!--     => inter-base white space -->
+  <p>a<rb></rb> <rt data-insert="before" data-tag="rb"></rt>b</p>
+  <p>a<rt data-insert="after" data-tag="rb"></rt> <rb></rb>b</p>
+  <!--     => inter-segment white space -->
+  <p>a<rbc></rbc> <rt data-insert="before" data-tag="rbc"></rt>b</p>
+  <!--     => inter-annotation white space -->
+  <p>a<rb data-insert="after" data-tag="rt"></rb> <rt></rt>b</p>
+  <p>a<rt></rt> <rb data-insert="before" data-tag="rt"></rb>b</p>
+
+  <!-- insert white space -->
+  <!--     inter-base white space -->
+  <p>a<rb data-insert="after" data-text=" "></rb><rb></rb>b</p>
+  <!--     inter-segment white space -->
+  <p>a<rbc data-insert="after" data-text=" "></rbc><rbc></rbc>b</p>
+  <!--     inter-annotation white space -->
+  <p>a<rt data-insert="after" data-text=" "></rt><rt></rt>b</p>
+
+</body>
+</html>
