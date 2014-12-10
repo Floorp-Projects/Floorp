@@ -24,7 +24,7 @@ const PAGE_CONTENT = [
 
 const TYPE = "SelectorHighlighter";
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + PAGE_CONTENT);
 
   let {inspector, view: rView} = yield openRuleView();

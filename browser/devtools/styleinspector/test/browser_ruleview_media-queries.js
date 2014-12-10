@@ -9,7 +9,7 @@
 
 const TEST_URI = TEST_URL_ROOT + "doc_media_queries.html";
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab(TEST_URI);
   let {inspector, view} = yield openRuleView();
 

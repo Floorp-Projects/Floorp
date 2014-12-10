@@ -13,7 +13,7 @@ let TEST_PAGE = [
   "<p id='id2' style='width:100px;'>element 2</p>"
 ].join("");
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab(TEST_PAGE);
   let {toolbox, inspector, view} = yield openRuleView();
 

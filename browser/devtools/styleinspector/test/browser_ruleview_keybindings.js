@@ -7,7 +7,7 @@
 // Test that focus doesn't leave the style editor when adding a property
 // (bug 719916)
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab("data:text/html;charset=utf-8,<h1>Some header text</h1>");
   let {toolbox, inspector, view} = yield openRuleView();
 

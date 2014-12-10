@@ -33,7 +33,7 @@ const EXPECTED_COLOR = "rgb(255, 255, 85)"; // #ff5
 // Test opening the eyedropper from the color picker. Pressing escape
 // to close it, and clicking the page to select a color.
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab("data:text/html;charset=utf-8,rule view eyedropper test");
   content.document.body.innerHTML = PAGE_CONTENT;
 
