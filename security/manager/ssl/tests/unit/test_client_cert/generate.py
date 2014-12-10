@@ -6,9 +6,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# After running this file you MUST modify ClientAuthServer.cpp to change the
-# fingerprint of the client cert
-
 import tempfile, os, sys, random
 
 libpath = os.path.abspath("../psm_common_py")
@@ -25,8 +22,12 @@ name = "client-cert"
                                               name, "")
 CertUtils.generate_pkcs12(db, dest_dir, cert, key, name)
 
+# Print a blank line and the fingerprint of the cert that ClientAuthServer.cpp
+# should be modified with.
+print
+CertUtils.print_cert_info(cert)
+print ('You now MUST update the fingerprint in ClientAuthServer.cpp to match ' +
+       'the fingerprint printed above.')
+
 # Remove unnecessary .der file
 os.remove(dest_dir + "/" + name + ".der")
-
-print ("You now MUST modify ClientAuthServer.cpp to ensure the xpchell debug " +
-       "certificate there matches this newly generated one\n")
