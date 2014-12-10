@@ -9,7 +9,7 @@
 const {PropertyView} = devtools.require("devtools/styleinspector/computed-view");
 const TEST_URI = TEST_URL_ROOT + "doc_matched_selectors.html";
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab(TEST_URI);
   let {toolbox, inspector, view} = yield openComputedView();
 

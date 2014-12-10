@@ -23,7 +23,7 @@ const testData = [
   {value: "blue", commitKey: "VK_TAB", modifiers: {shiftKey: true}, expected: "blue"}
 ];
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab("data:text/html;charset=utf-8,test escaping property change reverts back to original value");
 
   info("Creating the test document");

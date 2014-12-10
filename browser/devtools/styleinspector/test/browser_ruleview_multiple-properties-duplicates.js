@@ -7,7 +7,7 @@
 // Test that the rule-view behaves correctly when entering mutliple and/or
 // unfinished properties/values in inplace-editors
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab("data:text/html;charset=utf-8,test rule view user changes");
   content.document.body.innerHTML = "<h1>Testing Multiple Properties</h1>";
   let {toolbox, inspector, view} = yield openRuleView();

@@ -16,7 +16,7 @@ let BLUE_DOT = "data:image/png;base64," +
   "BIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gYcDCwlCkCM9QAAABl0RVh0Q29tbWVudABDcmVh" +
   "dGVkIHdpdGggR0lNUFeBDhcAAAANSURBVAjXY2Bg+F8PAAKCAX/tPkrkAAAAAElFTkSuQmCC";
 
-let test = asyncTest(function* () {
+add_task(function* () {
   let TEST_STYLE = "h1 {background: url(" + YELLOW_DOT + "), url(" + BLUE_DOT + ");}";
 
   let PAGE_CONTENT = "<style>" + TEST_STYLE + "</style>" +

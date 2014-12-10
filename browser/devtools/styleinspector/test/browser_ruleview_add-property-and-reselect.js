@@ -9,7 +9,7 @@
 
 const TEST_URI = TEST_URL_ROOT + "doc_content_stylesheet.html";
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab(TEST_URI);
 
   let target = getNode("#target");

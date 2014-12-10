@@ -19,7 +19,7 @@ const PAGE_CONTENT = [
 
 let TYPE = "CssTransformHighlighter";
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + PAGE_CONTENT);
 
   let {inspector, view: rView} = yield openRuleView();
