@@ -33,9 +33,9 @@
 #define ERROR(args...)  __android_log_print(ANDROID_LOG_ERROR,  "NetworkUtils", ## args)
 
 #if _DEBUG
-#define DEBUG(args...)  __android_log_print(ANDROID_LOG_DEBUG, "NetworkUtils" , ## args)
+#define NU_DBG(args...)  __android_log_print(ANDROID_LOG_DEBUG, "NetworkUtils" , ## args)
 #else
-#define DEBUG(args...)
+#define NU_DBG(args...)
 #endif
 
 using namespace mozilla::dom;
@@ -452,7 +452,7 @@ void NetworkUtils::nextNetdCommand()
   gCurrentCommand.callback = GET_CURRENT_CALLBACK;
   snprintf(gCurrentCommand.command, MAX_COMMAND_SIZE - 1, "%s", GET_CURRENT_COMMAND);
 
-  DEBUG("Sending \'%s\' command to netd.", gCurrentCommand.command);
+  NU_DBG("Sending \'%s\' command to netd.", gCurrentCommand.command);
   SendNetdCommand(GET_CURRENT_NETD_COMMAND);
 
   gCommandQueue.RemoveElementAt(0);
@@ -469,7 +469,7 @@ void NetworkUtils::nextNetdCommand()
  */
 void NetworkUtils::doCommand(const char* aCommand, CommandChain* aChain, CommandCallback aCallback)
 {
-  DEBUG("Preparing to send \'%s\' command...", aCommand);
+  NU_DBG("Preparing to send \'%s\' command...", aCommand);
 
   NetdCommand* netdCommand = new NetdCommand();
 
@@ -1175,8 +1175,8 @@ void NetworkUtils::onNetdMessage(NetdCommand* aCommand)
   char* reason = strtok(nullptr, "\0");
 
   if (isBroadcastMessage(code)) {
-    DEBUG("Receiving broadcast message from netd.");
-    DEBUG("          ==> Code: %d  Reason: %s", code, reason);
+    NU_DBG("Receiving broadcast message from netd.");
+    NU_DBG("          ==> Code: %d  Reason: %s", code, reason);
     sendBroadcastMessage(code, reason);
 
     if (code == NETD_COMMAND_INTERFACE_CHANGE) {
@@ -1187,7 +1187,7 @@ void NetworkUtils::onNetdMessage(NetdCommand* aCommand)
                  NS_ConvertUTF16toUTF8(gWifiTetheringParms->mIfname).get());
 
         if (!strcmp(reason, linkdownReason)) {
-          DEBUG("Wifi link down, restarting tethering.");
+          NU_DBG("Wifi link down, restarting tethering.");
           RUN_CHAIN(*gWifiTetheringParms, sWifiRetryChain, wifiTetheringFail)
         }
       }
@@ -1198,8 +1198,8 @@ void NetworkUtils::onNetdMessage(NetdCommand* aCommand)
   }
 
    // Set pending to false before we handle next command.
-  DEBUG("Receiving \"%s\" command response from netd.", gCurrentCommand.command);
-  DEBUG("          ==> Code: %d  Reason: %s", code, reason);
+  NU_DBG("Receiving \"%s\" command response from netd.", gCurrentCommand.command);
+  NU_DBG("          ==> Code: %d  Reason: %s", code, reason);
 
   gReason.AppendElement(nsCString(reason));
 
@@ -1599,21 +1599,21 @@ CommandResult NetworkUtils::removeSecondaryRoute(NetworkParams& aOptions)
 
 CommandResult NetworkUtils::setNetworkInterfaceAlarm(NetworkParams& aOptions)
 {
-  DEBUG("setNetworkInterfaceAlarms: %s", GET_CHAR(mIfname));
+  NU_DBG("setNetworkInterfaceAlarms: %s", GET_CHAR(mIfname));
   RUN_CHAIN(aOptions, sNetworkInterfaceSetAlarmChain, networkInterfaceAlarmFail);
   return CommandResult::Pending();
 }
 
 CommandResult NetworkUtils::enableNetworkInterfaceAlarm(NetworkParams& aOptions)
 {
-  DEBUG("enableNetworkInterfaceAlarm: %s", GET_CHAR(mIfname));
+  NU_DBG("enableNetworkInterfaceAlarm: %s", GET_CHAR(mIfname));
   RUN_CHAIN(aOptions, sNetworkInterfaceEnableAlarmChain, networkInterfaceAlarmFail);
   return CommandResult::Pending();
 }
 
 CommandResult NetworkUtils::disableNetworkInterfaceAlarm(NetworkParams& aOptions)
 {
-  DEBUG("disableNetworkInterfaceAlarms: %s", GET_CHAR(mIfname));
+  NU_DBG("disableNetworkInterfaceAlarms: %s", GET_CHAR(mIfname));
   RUN_CHAIN(aOptions, sNetworkInterfaceDisableAlarmChain, networkInterfaceAlarmFail);
   return CommandResult::Pending();
 }
@@ -1623,7 +1623,7 @@ CommandResult NetworkUtils::disableNetworkInterfaceAlarm(NetworkParams& aOptions
  */
 CommandResult NetworkUtils::setWifiOperationMode(NetworkParams& aOptions)
 {
-  DEBUG("setWifiOperationMode: %s %s", GET_CHAR(mIfname), GET_CHAR(mMode));
+  NU_DBG("setWifiOperationMode: %s %s", GET_CHAR(mIfname), GET_CHAR(mMode));
   RUN_CHAIN(aOptions, sWifiOperationModeChain, wifiOperationModeFail);
   return CommandResult::Pending();
 }
@@ -1652,11 +1652,11 @@ CommandResult NetworkUtils::setWifiTethering(NetworkParams& aOptions)
   dumpParams(aOptions, "WIFI");
 
   if (enable) {
-    DEBUG("Starting Wifi Tethering on %s <-> %s",
+    NU_DBG("Starting Wifi Tethering on %s <-> %s",
            GET_CHAR(mInternalIfname), GET_CHAR(mExternalIfname));
     RUN_CHAIN(aOptions, sWifiEnableChain, wifiTetheringFail)
   } else {
-    DEBUG("Stopping Wifi Tethering on %s <-> %s",
+    NU_DBG("Stopping Wifi Tethering on %s <-> %s",
            GET_CHAR(mInternalIfname), GET_CHAR(mExternalIfname));
     RUN_CHAIN(aOptions, sWifiDisableChain, wifiTetheringFail)
   }
@@ -1684,11 +1684,11 @@ CommandResult NetworkUtils::setUSBTethering(NetworkParams& aOptions)
   dumpParams(aOptions, "USB");
 
   if (enable) {
-    DEBUG("Starting USB Tethering on %s <-> %s",
+    NU_DBG("Starting USB Tethering on %s <-> %s",
            GET_CHAR(mInternalIfname), GET_CHAR(mExternalIfname));
     RUN_CHAIN(aOptions, sUSBEnableChain, usbTetheringFail)
   } else {
-    DEBUG("Stopping USB Tethering on %s <-> %s",
+    NU_DBG("Stopping USB Tethering on %s <-> %s",
            GET_CHAR(mInternalIfname), GET_CHAR(mExternalIfname));
     RUN_CHAIN(aOptions, sUSBDisableChain, usbTetheringFail)
   }
@@ -1855,24 +1855,24 @@ inline bool NetworkUtils::isProceeding(uint32_t code)
 void NetworkUtils::dumpParams(NetworkParams& aOptions, const char* aType)
 {
 #ifdef _DEBUG
-  DEBUG("Dump params:");
-  DEBUG("     ifname: %s", GET_CHAR(mIfname));
-  DEBUG("     ip: %s", GET_CHAR(mIp));
-  DEBUG("     link: %s", GET_CHAR(mLink));
-  DEBUG("     prefix: %s", GET_CHAR(mPrefix));
-  DEBUG("     wifiStartIp: %s", GET_CHAR(mWifiStartIp));
-  DEBUG("     wifiEndIp: %s", GET_CHAR(mWifiEndIp));
-  DEBUG("     usbStartIp: %s", GET_CHAR(mUsbStartIp));
-  DEBUG("     usbEndIp: %s", GET_CHAR(mUsbEndIp));
-  DEBUG("     dnsserver1: %s", GET_CHAR(mDns1));
-  DEBUG("     dnsserver2: %s", GET_CHAR(mDns2));
-  DEBUG("     internalIfname: %s", GET_CHAR(mInternalIfname));
-  DEBUG("     externalIfname: %s", GET_CHAR(mExternalIfname));
+  NU_DBG("Dump params:");
+  NU_DBG("     ifname: %s", GET_CHAR(mIfname));
+  NU_DBG("     ip: %s", GET_CHAR(mIp));
+  NU_DBG("     link: %s", GET_CHAR(mLink));
+  NU_DBG("     prefix: %s", GET_CHAR(mPrefix));
+  NU_DBG("     wifiStartIp: %s", GET_CHAR(mWifiStartIp));
+  NU_DBG("     wifiEndIp: %s", GET_CHAR(mWifiEndIp));
+  NU_DBG("     usbStartIp: %s", GET_CHAR(mUsbStartIp));
+  NU_DBG("     usbEndIp: %s", GET_CHAR(mUsbEndIp));
+  NU_DBG("     dnsserver1: %s", GET_CHAR(mDns1));
+  NU_DBG("     dnsserver2: %s", GET_CHAR(mDns2));
+  NU_DBG("     internalIfname: %s", GET_CHAR(mInternalIfname));
+  NU_DBG("     externalIfname: %s", GET_CHAR(mExternalIfname));
   if (!strcmp(aType, "WIFI")) {
-    DEBUG("     wifictrlinterfacename: %s", GET_CHAR(mWifictrlinterfacename));
-    DEBUG("     ssid: %s", GET_CHAR(mSsid));
-    DEBUG("     security: %s", GET_CHAR(mSecurity));
-    DEBUG("     key: %s", GET_CHAR(mKey));
+    NU_DBG("     wifictrlinterfacename: %s", GET_CHAR(mWifictrlinterfacename));
+    NU_DBG("     ssid: %s", GET_CHAR(mSsid));
+    NU_DBG("     security: %s", GET_CHAR(mSecurity));
+    NU_DBG("     key: %s", GET_CHAR(mKey));
   }
 #endif
 }
