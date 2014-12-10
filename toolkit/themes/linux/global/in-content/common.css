@@ -46,10 +46,28 @@ xul|checkbox {
   -moz-box-align: center;
 }
 
+xul|*.checkbox-check {
+  background-image: none !important;
+}
+
+xul|*.checkbox-check[checked] {
+  list-style-image: url("chrome://global/skin/in-content/check.svg#check-native");
+  background-color: -moz-dialog;
+}
+
 xul|radio {
   -moz-binding: url("chrome://global/content/bindings/radio.xml#radio");
   -moz-box-align: center;
   -moz-margin-start: 0;
+}
+
+xul|*.radio-check {
+  background-image: none;
+}
+
+xul|*.radio-check[selected] {
+  list-style-image: url("chrome://global/skin/in-content/radio.svg#radio-native");
+  background-color: -moz-dialog;
 }
 
 xul|*.radio-label-box {
