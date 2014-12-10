@@ -197,7 +197,17 @@ ParseTask::ParseTask(ExclusiveContext *cx, JSObject *exclusiveContextGlobal, JSC
 bool
 ParseTask::init(JSContext *cx, const ReadOnlyCompileOptions &options)
 {
-    return this->options.copy(cx, options);
+    if (!this->options.copy(cx, options))
+        return false;
+
+    // If the main-thread global is a debuggee, disable asm.js
+    // compilation. This is preferred to marking the task compartment as a
+    // debuggee, as the task compartment is (1) invisible to Debugger and (2)
+    // cannot have any Debuggers.
+    if (cx->compartment()->isDebuggee())
+        this->options.asmJSOption = false;
+
+    return true;
 }
 
 void
@@ -363,12 +373,6 @@ js::StartOffThreadParseScript(JSContext *cx, const ReadOnlyCompileOptions &optio
             return false;
     } else {
         task->activate(cx->runtime());
-
-        if (cx->compartment()->isDebuggee()) {
-            task->cx->compartment()->setIsDebuggee();
-            if (cx->compartment()->debugObservesAllExecution())
-                task->cx->compartment()->setDebugObservesAllExecution();
-        }
 
         AutoLockHelperThreadState lock;
 
