@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<!--
+  Helper for test_img_picture_preload.htm. Can be merged in to the test file
+ when dom.image.{picture,srcset} are removed and we don't need to do pref
+ flipping before the load.
+
+  https://bugzilla.mozilla.org/show_bug.cgi?id=1067345
+-->
+<head>
+  <title>Test for Bug 1067345</title>
+</head>
+<body onload="afterLoad();">
+  <script type="text/javascript">
+    var is = window.parent.is;
+    var ok = window.parent.ok;
+    var SimpleTest = window.parent.SimpleTest;
+    // Called with number of requests made
+    var notifyTestFinished = window.parent.childTestFinished;
+    var currentDPI = window.parent.currentDPI;
+
+    // This script is intentionally blocking the images below from
+    // loading. It issues sync XHRs to the sjs to wait for the files
+    // to be requested before unblocking DOM creation, then asserts
+    // that the same sources were selected by the preloader and the
+    // real DOM.
+
+    // Number of images to wait for before unblocking load
+    const EXPECTED_PRELOADS = 11;
+
+    function busyWait(waitms) {
+      var start = Date.now();
+      while (Date.now() < start + waitms);
+    }
+
+    // Send sync XHRs asking the sjs what images it's seen until we
+    // see EXPECTED_PRELOADS images. (If this test is timing out, you broke
+    // the preloader)
+    var preloadedImages = [];
+    while (preloadedImages.length < EXPECTED_PRELOADS) {
+      var request = new XMLHttpRequest();
+      request.open('GET', "./file_img_picture_preload.sjs?status", false);
+      request.send(null);
+      is(request.status, 200, "Getting status from sjs helper should succeed");
+      if (request.status === 200) {
+        var preloadedImages = JSON.parse(request.responseText);
+      }
+    }
+
+    // Ensure the DOM is still blocked on us before proceeding
+    is(document.querySelector("img"), null, "No <img> elements should exist yet");
+  </script>
+
+  <!-- All images below will be checked, use sources of the format
+       ./file_img_picture_preload.sjs?imgName:sourceName
+       Update numImages when adding or removing images below -->
+
+  <!-- Basic src -->
+  <img id="img1"
+       src="./file_img_picture_preload.sjs?img1:source1">
+  <!-- Basic srcset, no src -->
+  <img id="img2"
+       srcset="./file_img_picture_preload.sjs?img2:source1, ./file_img_picture_preload.sjs?img2:source2 2x, ./file_img_picture_preload.sjs?img2:source3 0.5x">
+  <!-- srcset + src, srcset should shadow entirley -->
+  <img id="img3"
+       srcset="./file_img_picture_preload.sjs?img3:source1, ./file_img_picture_preload.sjs?img3:source2 2x, ./file_img_picture_preload.sjs?img3:source3 0.5x">
+  <!-- Ditto with sizes selector -->
+  <img id="img4"
+       sizes="50vw"
+       srcset="./file_img_picture_preload.sjs?img4:source1 500w, ./file_img_picture_preload.sjs?img4:source2 200w, ./file_img_picture_preload.sjs?img4:source3 5w">
+  <!-- Default source shouldn't be selected -->
+  <img id="img5"
+       srcset="./file_img_picture_preload.sjs?img5:source1, ./file_img_picture_preload.sjs?img5:source2 2x"
+       src="./file_img_picture_preload.sjs?img5:source3">
+  <!-- Default source should be the 1x source, but srcset for others -->
+  <img id="img6"
+       srcset="./file_img_picture_preload.sjs?img6:source1 0.5x, ./file_img_picture_preload.sjs?img6:source2 2x"
+       src="./file_img_picture_preload.sjs?img6:source3">
+
+  <!-- Ensure we skip various invalid sources -->
+  <picture>
+    <source type="image/png">
+    <source type="image/png" srcset="">
+    <source media="(min-width: 1px)">
+    <source media="(min-width: 1px)" srcset=" ">
+    <source type="invalid/x-bogus-type" srcset="./file_img_picture_preload.sjs?img7:source1">
+    <source media="(unknown-query-value-thing: 1000something)" srcset="./file_img_picture_preload.sjs?img7:source2">
+    <source media="(unknown-query-value-thing: 1000something)" srcset="bogus ./file_img_picture_preload.sjs?img7:source3 ./file_img_picture_preload.sjs?img7:source4">
+    <img id="img7" src="./file_img_picture_preload.sjs?img7:source5">
+  </picture>
+
+  <!-- Should select matching sources with known type, and shouldn't select later sources that have closer densities-->
+  <picture>
+    <source type="invalid/x-unsupported-image-type" srcset="./file_img_picture_preload.sjs?img8:source1">
+    <source type="image/png" srcset="./file_img_picture_preload.sjs?img8:source2 2x">
+    <source type="image/png" srcset="./file_img_picture_preload.sjs?img8:source3 1x">
+    <img id="img8" src="./file_img_picture_preload.sjs?img8:source4" srcset="./file_img_picture_preload.sjs?img8:source5 2x">
+  </picture>
+
+  <!-- Should select matching sources by media, and shouldn't select later sources that have closer densities -->
+  <picture>
+    <source media="(bogusxx)" srcset="./file_img_picture_preload.sjs?img9:source1">
+    <source media="(minimum-width: 1px)" srcset="./file_img_picture_preload.sjs?img9:source2 2x">
+    <source media="(max-resolution: 0.5dppx)" srcset="./file_img_picture_preload.sjs?img9:source3 1x">
+    <source media="(min-resolution: 2dppx)" srcset="./file_img_picture_preload.sjs?img9:source4 1x">
+    <source media="(min-resolution: 1dppx)" srcset="./file_img_picture_preload.sjs?img9:source5 1x">
+    <source media="(min-resolution: 1dppx)" srcset="./file_img_picture_preload.sjs?img9:source6 2x">
+    <img id="img9" src="./file_img_picture_preload.sjs?img9:source7" srcset="./file_img_picture_preload.sjs?img9:source8 2x">
+  </picture>
+
+  <!-- Make sure we consider sizes properly in sources -->
+  <picture>
+    <source type="image/png"
+            sizes="10px"
+            srcset="./file_img_picture_preload.sjs?img10:source1 10w, ./file_img_picture_preload.sjs?img10:source2 20w">
+    <img id="img10" src="./file_img_picture_preload.sjs?img10:source3">
+  </picture>
+
+  <!-- Make sure we consider sizes properly -->
+  <img id="img11" sizes="10px"
+       srcset="./file_img_picture_preload.sjs?img11:source1 10w, ./file_img_picture_preload.sjs?img11:source2 20w"
+       src="./file_img_picture_preload.sjs?img11:source3">
+
+  <script type="text/javascript">
+    function afterLoad() {
+      // All images should have picked a source of the format
+      // imgName:sourceName, ensure we have one source per image and
+      // that it was preloaded.
+
+      is(preloadedImages.length, EXPECTED_PRELOADS,
+         "Should have exactly " + EXPECTED_PRELOADS + " preloaded URLs");
+
+      // Split "imgName:source" sources we saw preload by img name
+      var preloadByName = {};
+      for (var preload of preloadedImages) {
+        var split = preload.split(":");
+        // Ensure we didn't preload two sources for the same image
+        ok(preloadByName[split[0]] === undefined,
+           "Should not have queried multiple sources for " + split[0] +
+           " (got " + split[1] + ", already had " + preloadByName[split[0]] + ")");
+        preloadByName[split[0]] = split[1];
+      }
+
+      // Check all images, ensure each one had a preload
+      var images = document.querySelectorAll('img');
+      for (var img of images) {
+        var imgName = img.id;
+        if (img.currentSrc) {
+          var split = img.currentSrc.split("?")[1].split(":");
+          is(split[0], imgName,
+             "image " + imgName + " source matches element id");
+          is(split[1], preloadByName[imgName],
+             "image " + imgName + " source should match preloaded source");
+          // Remove from array
+          delete preloadByName[imgName];
+        } else {
+          // img loaded nothing
+          is(preloadByName[imgName], null,
+             "Should not have preloaded anything for image " + imgName);
+        }
+      }
+
+      notifyTestFinished(preloadedImages.length);
+    }
+  </script>
+</body>
+</html>
