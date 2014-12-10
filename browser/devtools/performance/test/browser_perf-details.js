@@ -25,22 +25,20 @@ function spawnTest () {
   is(viewName, "waterfall", "DETAILS_VIEW_SELECTED fired with view name");
   checkViews(DetailsView, doc, "waterfall");
 
-
   yield teardown(panel);
   finish();
 }
 
 function checkViews (DetailsView, doc, currentView) {
-  for (let viewName in DetailsView.views) {
-    let view = DetailsView.views[viewName].el;
-    let button = doc.querySelector("toolbarbutton[data-view='" + viewName + "']");
+  for (let viewName in DetailsView.viewIndexes) {
+    let button = doc.querySelector(`toolbarbutton[data-view="${viewName}"]`);
 
+    is(DetailsView.el.selectedIndex, DetailsView.viewIndexes[currentView],
+      `DetailsView correctly has ${currentView} selected.`);
     if (viewName === currentView) {
-      ok(!view.getAttribute("hidden"), view + " view displayed");
-      ok(button.getAttribute("checked"), view + " button checked");
+      ok(button.getAttribute("checked"), `${viewName} button checked`);
     } else {
-      ok(view.getAttribute("hidden"), view + " view hidden");
-      ok(!button.getAttribute("checked"), view + " button not checked");
+      ok(!button.getAttribute("checked"), `${viewName} button not checked`);
     }
   }
 }
