@@ -2017,6 +2017,20 @@ nsCycleCollectorLoggerConstructor(nsISupports* aOuter,
   return logger->QueryInterface(aIID, aInstancePtr);
 }
 
+static bool
+GCThingIsGrayCCThing(JS::GCCellPtr thing)
+{
+    return AddToCCKind(thing.kind()) &&
+           JS::GCThingIsMarkedGray(thing.asCell());
+}
+
+static bool
+ValueIsGrayCCThing(const JS::Value& value)
+{
+    return AddToCCKind(value.gcKind()) &&
+           JS::GCThingIsMarkedGray(value.toGCThing());
+}
+
 ////////////////////////////////////////////////////////////////////////
 // Bacon & Rajan's |MarkRoots| routine.
 ////////////////////////////////////////////////////////////////////////
@@ -2051,7 +2065,8 @@ public:
   }
 
   PtrInfo* AddNode(void* aPtr, nsCycleCollectionParticipant* aParticipant);
-  PtrInfo* AddWeakMapNode(void* aNode);
+  PtrInfo* AddWeakMapNode(JS::GCCellPtr aThing);
+  PtrInfo* AddWeakMapNode(JSObject* aObject);
   void Traverse(PtrInfo* aPtrInfo);
   void SetLastChild();
 
@@ -2345,7 +2360,7 @@ CCGraphBuilder::NoteJSChild(JS::GCCellPtr aChild)
     mNextEdgeName.Truncate();
   }
 
-  if (xpc_GCThingIsGrayCCThing(aChild.asCell()) || MOZ_UNLIKELY(WantAllTraces())) {
+  if (GCThingIsGrayCCThing(aChild) || MOZ_UNLIKELY(WantAllTraces())) {
     if (JS::Zone* zone = MergeZone(aChild.asCell())) {
       NoteChild(zone, mJSZoneParticipant, edgeName);
     } else {
@@ -2363,18 +2378,24 @@ CCGraphBuilder::NoteNextEdgeName(const char* aName)
 }
 
 PtrInfo*
-CCGraphBuilder::AddWeakMapNode(void* aNode)
+CCGraphBuilder::AddWeakMapNode(JS::GCCellPtr aNode)
 {
   MOZ_ASSERT(aNode, "Weak map node should be non-null.");
 
-  if (!xpc_GCThingIsGrayCCThing(aNode) && !WantAllTraces()) {
+  if (!GCThingIsGrayCCThing(aNode) && !WantAllTraces()) {
     return nullptr;
   }
 
-  if (JS::Zone* zone = MergeZone(aNode)) {
+  if (JS::Zone* zone = MergeZone(aNode.asCell())) {
     return AddNode(zone, mJSZoneParticipant);
   }
-  return AddNode(aNode, mJSParticipant);
+  return AddNode(aNode.asCell(), mJSParticipant);
+}
+
+PtrInfo*
+CCGraphBuilder::AddWeakMapNode(JSObject* aObject)
+{
+  return AddWeakMapNode(JS::GCCellPtr(aObject));
 }
 
 NS_IMETHODIMP_(void)
@@ -2385,9 +2406,9 @@ CCGraphBuilder::NoteWeakMapping(JSObject* aMap, JS::GCCellPtr aKey,
   // do that in TraceWeakMapping in nsXPConnect.
   WeakMapping* mapping = mGraph.mWeakMaps.AppendElement();
   mapping->mMap = aMap ? AddWeakMapNode(aMap) : nullptr;
-  mapping->mKey = aKey ? AddWeakMapNode(aKey.asCell()) : nullptr;
+  mapping->mKey = aKey ? AddWeakMapNode(aKey) : nullptr;
   mapping->mKeyDelegate = aKdelegate ? AddWeakMapNode(aKdelegate) : mapping->mKey;
-  mapping->mVal = aVal ? AddWeakMapNode(aVal.asCell()) : nullptr;
+  mapping->mVal = aVal ? AddWeakMapNode(aVal) : nullptr;
 
   if (mListener) {
     mListener->NoteWeakMapEntry((uint64_t)aMap, aKey.unsafeAsInteger(),
@@ -2477,7 +2498,7 @@ ChildFinder::NoteNativeChild(void* aChild,
 NS_IMETHODIMP_(void)
 ChildFinder::NoteJSObject(JSObject* aChild)
 {
-  if (aChild && xpc_GCThingIsGrayCCThing(aChild)) {
+  if (aChild && JS::ObjectIsMarkedGray(aChild)) {
     mMayHaveChild = true;
   }
 }
@@ -2485,7 +2506,7 @@ ChildFinder::NoteJSObject(JSObject* aChild)
 NS_IMETHODIMP_(void)
 ChildFinder::NoteJSScript(JSScript* aChild)
 {
-  if (aChild && xpc_GCThingIsGrayCCThing(aChild)) {
+  if (aChild && JS::ScriptIsMarkedGray(aChild)) {
     mMayHaveChild = true;
   }
 }
@@ -2629,13 +2650,9 @@ public:
   virtual void Trace(JS::Heap<JS::Value>* aValue, const char* aName,
                      void* aClosure) const
   {
-    JS::Value val = *aValue;
-    if (val.isMarkable()) {
-      void* thing = val.toGCThing();
-      if (thing && xpc_GCThingIsGrayCCThing(thing)) {
-        MOZ_ASSERT(!js::gc::IsInsideNursery((js::gc::Cell*)thing));
-        mCollector->GetJSPurpleBuffer()->mValues.InfallibleAppend(val);
-      }
+    if (aValue->isMarkable() && ValueIsGrayCCThing(*aValue)) {
+      MOZ_ASSERT(!js::gc::IsInsideNursery(aValue->toGCThing()));
+      mCollector->GetJSPurpleBuffer()->mValues.InfallibleAppend(*aValue);
     }
   }
 
@@ -2646,7 +2663,7 @@ public:
 
   void AppendJSObjectToPurpleBuffer(JSObject* obj) const
   {
-    if (obj && xpc_GCThingIsGrayCCThing(obj)) {
+    if (obj && JS::ObjectIsMarkedGray(obj)) {
       MOZ_ASSERT(!js::gc::IsInsideNursery(JS::AsCell(obj)));
       mCollector->GetJSPurpleBuffer()->mObjects.InfallibleAppend(obj);
     }
@@ -3027,7 +3044,8 @@ nsCycleCollector::ScanIncrementalRoots()
       // If the object is still marked gray by the GC, nothing could have gotten
       // hold of it, so it isn't an incremental root.
       if (pi->mParticipant == jsParticipant) {
-        if (xpc_GCThingIsGrayCCThing(pi->mPointer)) {
+        JS::GCCellPtr ptr(pi->mPointer, js::GCThingTraceKind(pi->mPointer));
+        if (GCThingIsGrayCCThing(ptr)) {
           continue;
         }
       } else if (pi->mParticipant == zoneParticipant) {

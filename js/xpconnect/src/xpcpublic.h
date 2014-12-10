@@ -185,11 +185,6 @@ xpc_IsGrayGCThing(void *thing)
     return JS::GCThingIsMarkedGray(thing);
 }
 
-// The cycle collector only cares about some kinds of GCthings that are
-// reachable from an XPConnect root. Implemented in nsXPConnect.cpp.
-extern bool
-xpc_GCThingIsGrayCCThing(void *thing);
-
 inline JSScript *
 xpc_UnmarkGrayScript(JSScript *script)
 {

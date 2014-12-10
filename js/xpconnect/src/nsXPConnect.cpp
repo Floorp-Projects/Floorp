@@ -295,13 +295,6 @@ nsXPConnect::GarbageCollect(uint32_t reason)
     return NS_OK;
 }
 
-bool
-xpc_GCThingIsGrayCCThing(void *thing)
-{
-    return AddToCCKind(js::GCThingTraceKind(thing)) &&
-           xpc_IsGrayGCThing(thing);
-}
-
 void
 xpc_MarkInCCGeneration(nsISupports* aVariant, uint32_t aGeneration)
 {
