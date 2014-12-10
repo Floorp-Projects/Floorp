@@ -745,7 +745,7 @@ NS_CreateMmsService()
     mmsService = SmsIPCService::GetSingleton();
   } else {
 #if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
-    mmsService = do_CreateInstance("@mozilla.org/mms/rilmmsservice;1");
+    mmsService = do_CreateInstance("@mozilla.org/mms/gonkmmsservice;1");
 #endif
   }
 

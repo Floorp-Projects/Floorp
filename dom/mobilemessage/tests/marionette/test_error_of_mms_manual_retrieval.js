@@ -20,7 +20,7 @@ let gUuidGenerator =
   Cc["@mozilla.org/uuid-generator;1"]
     .getService(Ci.nsIUUIDGenerator);
 
-let gMmsService = Cc["@mozilla.org/mms/rilmmsservice;1"]
+let gMmsService = Cc["@mozilla.org/mms/gonkmmsservice;1"]
                        .getService(Ci.nsIMmsService);
 
 function saveMmsNotification() {
