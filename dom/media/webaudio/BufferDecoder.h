@@ -8,6 +8,7 @@
 #define BUFFER_DECODER_H_
 
 #include "AbstractMediaDecoder.h"
+#include "MediaTaskQueue.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ReentrantMonitor.h"
 
@@ -27,7 +28,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   // This has to be called before decoding begins
-  void BeginDecoding(nsIThread* aDecodeThread);
+  void BeginDecoding(MediaTaskQueue* aTaskQueueIdentity);
 
   virtual ReentrantMonitor& GetReentrantMonitor() MOZ_FINAL MOZ_OVERRIDE;
 
@@ -83,7 +84,7 @@ private:
   // It's just there in order for us to be able to override
   // GetReentrantMonitor correctly.
   ReentrantMonitor mReentrantMonitor;
-  nsCOMPtr<nsIThread> mDecodeThread;
+  nsRefPtr<MediaTaskQueue> mTaskQueueIdentity;
   nsRefPtr<MediaResource> mResource;
 };
 
