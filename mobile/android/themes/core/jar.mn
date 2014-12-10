@@ -34,6 +34,10 @@ chrome.jar:
 % override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
 % override chrome://global/skin/netError.css chrome://browser/skin/netError.css
 
+#ifdef NIGHTLY_BUILD
+  skin/aboutPasswords.css                   (aboutPasswords.css)
+#endif
+
   skin/images/search.png                    (images/search.png)
   skin/images/lock.png                      (images/lock.png)
   skin/images/textfield.png                 (images/textfield.png)
