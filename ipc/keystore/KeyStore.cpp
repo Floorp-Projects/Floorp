@@ -10,12 +10,11 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#undef CHROMIUM_LOG
 #if defined(MOZ_WIDGET_GONK)
 #include <android/log.h>
-#define CHROMIUM_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk", args)
+#define KEYSTORE_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk", args)
 #else
-#define CHROMIUM_LOG(args...)  printf(args);
+#define KEYSTORE_LOG(args...)  printf(args);
 #endif
 
 #include "KeyStore.h"

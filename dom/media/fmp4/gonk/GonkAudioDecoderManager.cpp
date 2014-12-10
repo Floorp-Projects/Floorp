@@ -20,9 +20,8 @@
 #include <stagefright/foundation/ALooper.h>
 #include "media/openmax/OMX_Audio.h"
 
-#define LOG_TAG "GonkAudioDecoderManager"
 #include <android/log.h>
-#define ALOG(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+#define GADM_LOG(...) __android_log_print(ANDROID_LOG_DEBUG, "GonkAudioDecoderManager", __VA_ARGS__)
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* GetDemuxerLog();
@@ -77,7 +76,7 @@ GonkAudioDecoderManager::Init(MediaDataDecoderCallback* aCallback)
   }
   sp<AMessage> format = new AMessage;
   // Fixed values
-  ALOG("Init Audio channel no:%d, sample-rate:%d", mAudioChannels, mAudioRate);
+  GADM_LOG("Init Audio channel no:%d, sample-rate:%d", mAudioChannels, mAudioRate);
   format->setString("mime", "audio/mp4a-latm");
   format->setInt32("channel-count", mAudioChannels);
   format->setInt32("sample-rate", mAudioRate);
@@ -93,7 +92,7 @@ GonkAudioDecoderManager::Init(MediaDataDecoderCallback* aCallback)
   if (rv == OK) {
     return mDecoder;
   } else {
-    ALOG("Failed to input codec specific data!");
+    GADM_LOG("Failed to input codec specific data!");
     return nullptr;
   }
 }
@@ -101,7 +100,7 @@ GonkAudioDecoderManager::Init(MediaDataDecoderCallback* aCallback)
 nsresult
 GonkAudioDecoderManager::CreateAudioData(int64_t aStreamOffset, AudioData **v) {
   if (!(mAudioBuffer != nullptr && mAudioBuffer->data() != nullptr)) {
-    ALOG("Audio Buffer is not valid!");
+    GADM_LOG("Audio Buffer is not valid!");
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -167,7 +166,7 @@ GonkAudioDecoderManager::Output(int64_t aStreamOffset,
     case android::INFO_OUTPUT_BUFFERS_CHANGED:
     {
       // If the format changed, update our cached info.
-      ALOG("Decoder format changed");
+      GADM_LOG("Decoder format changed");
       return Output(aStreamOffset, aOutData);
     }
     case -EAGAIN:
@@ -176,14 +175,14 @@ GonkAudioDecoderManager::Output(int64_t aStreamOffset,
     }
     case android::ERROR_END_OF_STREAM:
     {
-      ALOG("Got EOS frame!");
+      GADM_LOG("Got EOS frame!");
       nsRefPtr<AudioData> data;
       nsresult rv = CreateAudioData(aStreamOffset, getter_AddRefs(data));
       if (rv == NS_ERROR_NOT_AVAILABLE) {
         // For EOS, no need to do any thing.
         return NS_ERROR_ABORT;
       } else if (rv != NS_OK || data == nullptr) {
-        ALOG("Failed to create audio data!");
+        GADM_LOG("Failed to create audio data!");
         return NS_ERROR_UNEXPECTED;
       }
       aOutData = data;
@@ -191,12 +190,12 @@ GonkAudioDecoderManager::Output(int64_t aStreamOffset,
     }
     case -ETIMEDOUT:
     {
-      ALOG("Timeout. can try again next time");
+      GADM_LOG("Timeout. can try again next time");
       return NS_ERROR_UNEXPECTED;
     }
     default:
     {
-      ALOG("Decoder failed, err=%d", err);
+      GADM_LOG("Decoder failed, err=%d", err);
       return NS_ERROR_UNEXPECTED;
     }
   }
@@ -221,7 +220,7 @@ nsresult
 GonkAudioDecoderManager::Input(mp4_demuxer::MP4Sample* aSample)
 {
   if (mDecoder == nullptr) {
-    ALOG("Decoder is not inited");
+    GADM_LOG("Decoder is not inited");
     return NS_ERROR_UNEXPECTED;
   }
   if (aSample && mUseAdts) {
@@ -232,7 +231,7 @@ GonkAudioDecoderManager::Input(mp4_demuxer::MP4Sample* aSample)
                                                mAudioProfile,
                                                aSample);
     if (!rv) {
-      ALOG("Failed to apply ADTS header");
+      GADM_LOG("Failed to apply ADTS header");
       return NS_ERROR_FAILURE;
     }
   }
