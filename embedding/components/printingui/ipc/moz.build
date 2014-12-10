@@ -8,13 +8,14 @@ EXPORTS.mozilla.embedding.printingui += [
     'PrintingParent.h',
 ]
 
-UNIFIED_SOURCES += [
-    'nsPrintingPromptServiceProxy.cpp',
-    'PrintDataUtils.cpp',
-    'PrintingParent.cpp',
-    'PrintProgressDialogChild.cpp',
-    'PrintProgressDialogParent.cpp',
-]
+if CONFIG['NS_PRINTING']:
+    UNIFIED_SOURCES += [
+        'nsPrintingPromptServiceProxy.cpp',
+        'PrintDataUtils.cpp',
+        'PrintingParent.cpp',
+        'PrintProgressDialogChild.cpp',
+        'PrintProgressDialogParent.cpp',
+    ]
 
 IPDL_SOURCES += [
     'PPrinting.ipdl',

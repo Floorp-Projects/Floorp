@@ -28,8 +28,8 @@ struct CopyValueToRematerializedFrame
     }
 };
 
-RematerializedFrame::RematerializedFrame(ThreadSafeContext *cx, uint8_t *top,
-                                         unsigned numActualArgs, InlineFrameIterator &iter)
+RematerializedFrame::RematerializedFrame(JSContext *cx, uint8_t *top, unsigned numActualArgs,
+                                         InlineFrameIterator &iter)
   : prevUpToDate_(false),
     isDebuggee_(iter.script()->isDebuggee()),
     top_(top),
@@ -46,7 +46,7 @@ RematerializedFrame::RematerializedFrame(ThreadSafeContext *cx, uint8_t *top,
 }
 
 /* static */ RematerializedFrame *
-RematerializedFrame::New(ThreadSafeContext *cx, uint8_t *top, InlineFrameIterator &iter)
+RematerializedFrame::New(JSContext *cx, uint8_t *top, InlineFrameIterator &iter)
 {
     unsigned numFormals = iter.isFunctionFrame() ? iter.callee()->nargs() : 0;
     unsigned numActualArgs = Max(numFormals, iter.numActualArgs());
@@ -62,7 +62,7 @@ RematerializedFrame::New(ThreadSafeContext *cx, uint8_t *top, InlineFrameIterato
 }
 
 /* static */ bool
-RematerializedFrame::RematerializeInlineFrames(ThreadSafeContext *cx, uint8_t *top,
+RematerializedFrame::RematerializeInlineFrames(JSContext *cx, uint8_t *top,
                                                InlineFrameIterator &iter,
                                                Vector<RematerializedFrame *> &frames)
 {
@@ -71,9 +71,19 @@ RematerializedFrame::RematerializeInlineFrames(ThreadSafeContext *cx, uint8_t *t
 
     while (true) {
         size_t frameNo = iter.frameNo();
-        frames[frameNo] = RematerializedFrame::New(cx, top, iter);
-        if (!frames[frameNo])
+        RematerializedFrame *frame = RematerializedFrame::New(cx, top, iter);
+        if (!frame)
             return false;
+        if (frame->scopeChain()) {
+            // Frames are often rematerialized with the cx inside a Debugger's
+            // compartment. To create CallObjects, we need to be in that
+            // frame's compartment.
+            AutoCompartment ac(cx, frame->scopeChain());
+            if (!EnsureHasScopeObjects(cx, frame))
+                return false;
+        }
+
+        frames[frameNo] = frame;
 
         if (!iter.more())
             break;
@@ -110,6 +120,26 @@ RematerializedFrame::callObj() const
     while (!scope->is<CallObject>())
         scope = scope->enclosingScope();
     return scope->as<CallObject>();
+}
+
+void
+RematerializedFrame::pushOnScopeChain(ScopeObject &scope)
+{
+    MOZ_ASSERT(*scopeChain() == scope.enclosingScope() ||
+               *scopeChain() == scope.as<CallObject>().enclosingScope().as<DeclEnvObject>().enclosingScope());
+    scopeChain_ = &scope;
+}
+
+bool
+RematerializedFrame::initFunctionScopeObjects(JSContext *cx)
+{
+    MOZ_ASSERT(isNonEvalFunctionFrame());
+    MOZ_ASSERT(fun()->isHeavyweight());
+    CallObject *callobj = CallObject::createForFunction(cx, this);
+    if (!callobj)
+        return false;
+    pushOnScopeChain(*callobj);
+    return true;
 }
 
 void

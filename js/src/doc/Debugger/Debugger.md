@@ -357,7 +357,7 @@ other kinds of objects.
     `url`
     :   The script's `url` property must be equal to this value.
 
-    `source` <i>(not yet implemented)</i>
+    `source`
     :   The script's `source` property must be equal to this value.
 
     `line`

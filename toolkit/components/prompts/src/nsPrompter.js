@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -21,7 +22,7 @@ Prompter.prototype = {
     QueryInterface   : XPCOMUtils.generateQI([Ci.nsIPromptFactory, Ci.nsIPromptService, Ci.nsIPromptService2]),
 
 
-    /* ----------  private memebers  ---------- */
+    /* ----------  private members  ---------- */
 
     pickPrompter : function (domWin) {
         return new ModalPrompter(domWin);
@@ -210,7 +211,7 @@ let PromptUtilsTemp = {
 
         // If the URI explicitly specified a port, only include it when
         // it's not the default. (We never want "http://foo.com:80")
-        port = uri.port;
+        let port = uri.port;
         if (port != -1) {
             let handler = Services.io.getProtocolHandler(scheme);
             if (port != handler.defaultPort)
