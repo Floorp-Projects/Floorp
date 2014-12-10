@@ -285,19 +285,10 @@ ResponsiveImageSelector::SelectImage(bool aReselect)
 
   int oldBest = mBestCandidateIndex;
   mBestCandidateIndex = -1;
-  return GetBestCandidateIndex() != oldBest;
-}
-
-int
-ResponsiveImageSelector::GetBestCandidateIndex()
-{
-  if (mBestCandidateIndex != -1) {
-    return mBestCandidateIndex;
-  }
 
   int numCandidates = mCandidates.Length();
   if (!numCandidates) {
-    return -1;
+    return oldBest != -1;
   }
 
   nsIDocument* doc = mContent ? mContent->OwnerDoc() : nullptr;
@@ -306,7 +297,7 @@ ResponsiveImageSelector::GetBestCandidateIndex()
 
   if (!pctx) {
     MOZ_ASSERT(false, "Unable to find document prescontext");
-    return -1;
+    return oldBest != -1;
   }
 
   double displayDensity = pctx->CSSPixelsToDevPixels(1.0f);
@@ -354,7 +345,16 @@ ResponsiveImageSelector::GetBestCandidateIndex()
 
   MOZ_ASSERT(bestIndex >= 0 && bestIndex < numCandidates);
   mBestCandidateIndex = bestIndex;
-  return bestIndex;
+
+  return mBestCandidateIndex != oldBest;
+}
+
+int
+ResponsiveImageSelector::GetBestCandidateIndex()
+{
+  SelectImage();
+
+  return mBestCandidateIndex;
 }
 
 bool
