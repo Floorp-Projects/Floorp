@@ -118,7 +118,6 @@ public:
 private:
     ~OpenFileAndSendFDRunnable()
     {
-        MOZ_ASSERT(NS_IsMainThread());
         MOZ_ASSERT(!mFD);
     }
 
@@ -171,8 +170,7 @@ private:
         }
     }
 
-    // Helper method to avoid gnarly control flow for failures.
-    void OpenFileImpl()
+    void OpenFile()
     {
         MOZ_ASSERT(!NS_IsMainThread());
         MOZ_ASSERT(!mFD);
@@ -186,21 +184,10 @@ private:
         NS_ENSURE_SUCCESS_VOID(rv);
 
         mFD = fd;
-    }
-
-    void OpenFile()
-    {
-        MOZ_ASSERT(!NS_IsMainThread());
-
-        OpenFileImpl();
 
         if (NS_FAILED(NS_DispatchToMainThread(this))) {
             NS_WARNING("Failed to dispatch to main thread!");
 
-            // Intentionally leak the runnable (but not the fd) rather
-            // than crash when trying to release a main thread object
-            // off the main thread.
-            NS_ADDREF(this);
             CloseFile();
         }
     }
