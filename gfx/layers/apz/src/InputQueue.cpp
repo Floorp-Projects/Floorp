@@ -178,6 +178,7 @@ InputQueue::CancelAnimationsForNewBlock(CancelableBlockState* aBlock)
       // and to disallow the touch event from being used as part of a fling.
       if (TouchBlockState* touch = aBlock->AsTouchBlock()) {
         touch->SetDuringFastMotion();
+        INPQ_LOG("block %p tagged as fast-motion\n", touch);
       }
     }
     aBlock->GetOverscrollHandoffChain()->CancelAnimations();
@@ -191,6 +192,10 @@ InputQueue::MaybeRequestContentResponse(const nsRefPtr<AsyncPanZoomController>& 
   bool waitForMainThread = !aBlock->IsTargetConfirmed();
   if (!gfxPrefs::LayoutEventRegionsEnabled()) {
     waitForMainThread |= aTarget->NeedToWaitForContent();
+  }
+  if (aBlock->AsTouchBlock() && aBlock->AsTouchBlock()->IsDuringFastMotion()) {
+    aBlock->SetConfirmedTargetApzc(aTarget);
+    waitForMainThread = false;
   }
 
   if (waitForMainThread) {
