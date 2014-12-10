@@ -65,7 +65,8 @@ obj_propertyIsEnumerable(JSContext *cx, unsigned argc, Value *vp)
         /* Step 3. */
         Shape *shape;
         if (!obj->is<ProxyObject>() &&
-            HasOwnProperty<NoGC>(cx, obj->getOps()->lookupGeneric, obj, id, &pobj, &shape))
+            NonProxyLookupOwnProperty<NoGC>(cx, obj->getOps()->lookupGeneric, obj, id,
+                                            &pobj, &shape))
         {
             /* Step 4. */
             if (!shape) {
@@ -724,7 +725,8 @@ js::obj_hasOwnProperty(JSContext *cx, unsigned argc, Value *vp)
         JSObject *obj = &args.thisv().toObject(), *obj2;
         Shape *prop;
         if (!obj->is<ProxyObject>() &&
-            HasOwnProperty<NoGC>(cx, obj->getOps()->lookupGeneric, obj, id, &obj2, &prop))
+            NonProxyLookupOwnProperty<NoGC>(cx, obj->getOps()->lookupGeneric, obj, id,
+                                            &obj2, &prop))
         {
             args.rval().setBoolean(!!prop);
             return true;
@@ -740,15 +742,6 @@ js::obj_hasOwnProperty(JSContext *cx, unsigned argc, Value *vp)
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
-
-    /* Non-standard code for proxies. */
-    if (obj->is<ProxyObject>()) {
-        bool has;
-        if (!Proxy::hasOwn(cx, obj, idRoot, &has))
-            return false;
-        args.rval().setBoolean(has);
-        return true;
-    }
 
     /* Step 3. */
     bool found;
@@ -1314,9 +1307,8 @@ FinishObjectClassInit(JSContext *cx, JS::HandleObject ctor, JS::HandleObject pro
     self->setIntrinsicsHolder(intrinsicsHolder);
     /* Define a property 'global' with the current global as its value. */
     RootedValue global(cx, ObjectValue(*self));
-    if (!JSObject::defineProperty(cx, intrinsicsHolder, cx->names().global,
-                                  global, JS_PropertyStub, JS_StrictPropertyStub,
-                                  JSPROP_PERMANENT | JSPROP_READONLY))
+    if (!JSObject::defineProperty(cx, intrinsicsHolder, cx->names().global, global,
+                                  nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY))
     {
         return false;
     }
@@ -1347,13 +1339,13 @@ FinishObjectClassInit(JSContext *cx, JS::HandleObject ctor, JS::HandleObject pro
 const Class PlainObject::class_ = {
     js_Object_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
-    JS_PropertyStub,         /* addProperty */
-    JS_DeletePropertyStub,   /* delProperty */
+    nullptr,                 /* addProperty */
+    nullptr,                 /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub,
+    nullptr,                 /* enumerate */
+    nullptr,                 /* resolve */
+    nullptr,                 /* convert */
     nullptr,                 /* finalize */
     nullptr,                 /* call */
     nullptr,                 /* hasInstance */

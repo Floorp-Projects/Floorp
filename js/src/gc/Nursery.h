@@ -8,8 +8,6 @@
 #ifndef gc_Nursery_h
 #define gc_Nursery_h
 
-#ifdef JSGC_GENERATIONAL
-
 #include "jsalloc.h"
 #include "jspubtd.h"
 
@@ -339,5 +337,4 @@ class Nursery
 
 } /* namespace js */
 
-#endif /* JSGC_GENERATIONAL */
 #endif /* gc_Nursery_h */

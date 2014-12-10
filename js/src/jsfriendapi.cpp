@@ -659,7 +659,7 @@ js::VisitGrayWrapperTargets(Zone *zone, GCThingCallback callback, void *closure)
         for (JSCompartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
             gc::Cell *thing = e.front().key().wrapped;
             if (thing->isTenured() && thing->asTenured().isMarked(gc::GRAY))
-                callback(closure, thing);
+                callback(closure, JS::GCCellPtr(thing, thing->asTenured().getTraceKind()));
         }
     }
 }
@@ -1020,10 +1020,8 @@ DumpHeapVisitRoot(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 void
 js::DumpHeapComplete(JSRuntime *rt, FILE *fp, js::DumpHeapNurseryBehaviour nurseryBehaviour)
 {
-#ifdef JSGC_GENERATIONAL
     if (nurseryBehaviour == js::CollectNurseryBeforeDump)
         rt->gc.evictNursery(JS::gcreason::API);
-#endif
 
     DumpHeapTracer dtrc(fp, rt, DumpHeapVisitRoot, TraceWeakMapKeysValues);
     TraceRuntime(&dtrc);
@@ -1145,11 +1143,11 @@ JS::IsCompactingGCEnabled(JSRuntime *rt)
 
 JS::AutoDisableGenerationalGC::AutoDisableGenerationalGC(JSRuntime *rt)
   : gc(&rt->gc)
-#if defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)
+#ifdef JS_GC_ZEAL
   , restartVerifier(false)
 #endif
 {
-#if defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)
+#ifdef JS_GC_ZEAL
     restartVerifier = gc->endVerifyPostBarriers();
 #endif
     gc->disableGenerationalGC();
@@ -1158,7 +1156,7 @@ JS::AutoDisableGenerationalGC::AutoDisableGenerationalGC(JSRuntime *rt)
 JS::AutoDisableGenerationalGC::~AutoDisableGenerationalGC()
 {
     gc->enableGenerationalGC();
-#if defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)
+#ifdef JS_GC_ZEAL
     if (restartVerifier) {
         MOZ_ASSERT(gc->isGenerationalGCEnabled());
         gc->startVerifyPostBarriers();
@@ -1447,7 +1445,6 @@ js::HasObjectMovedOp(JSObject *obj) {
 }
 #endif
 
-#ifdef JSGC_GENERATIONAL
 JS_FRIEND_API(void)
 JS_StoreObjectPostBarrierCallback(JSContext* cx,
                                   void (*callback)(JSTracer *trc, JSObject *key, void *data),
@@ -1467,7 +1464,6 @@ JS_StoreStringPostBarrierCallback(JSContext* cx,
     if (IsInsideNursery(key))
         rt->gc.storeBuffer.putCallback(callback, key, data);
 }
-#endif /* JSGC_GENERATIONAL */
 
 JS_FRIEND_API(bool)
 js::ForwardToNative(JSContext *cx, JSNative native, const CallArgs &args)

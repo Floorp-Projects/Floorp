@@ -431,8 +431,7 @@ NS_INTERFACE_MAP_END
 
 static const JSClass sDOMConstructorProtoClass = {
   "DOM Constructor.prototype", 0,
-  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, nullptr
+  nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub
 };
 
 
@@ -2053,8 +2052,7 @@ nsWindowSH::NameStructEnabled(JSContext* aCx, nsGlobalWindow *aWin,
 #ifdef USE_CONTROLLERS_SHIM
 static const JSClass ControllersShimClass = {
     "XULControllers", 0,
-    JS_PropertyStub,   JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, nullptr
+    nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub
 };
 #endif
 

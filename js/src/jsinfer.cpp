@@ -2363,8 +2363,7 @@ types::UseNewTypeForInitializer(JSScript *script, jsbytecode *pc, const Class *c
 static inline bool
 ClassCanHaveExtraProperties(const Class *clasp)
 {
-    MOZ_ASSERT(clasp->resolve);
-    return clasp->resolve != JS_ResolveStub
+    return clasp->resolve
         || clasp->ops.lookupGeneric
         || clasp->ops.getGeneric
         || IsAnyTypedArrayClass(clasp);
@@ -4373,7 +4372,6 @@ JSObject::setNewTypeUnknown(JSContext *cx, const Class *clasp, HandleObject obj)
     return true;
 }
 
-#ifdef JSGC_GENERATIONAL
 /*
  * This class is used to add a post barrier on the newTypeObjects set, as the
  * key is calculated from a prototype object which may be moved by generational
@@ -4425,7 +4423,6 @@ TypeObjectTablePostBarrier(ExclusiveContext *cx, TypeObjectWithNewScriptSet *tab
         sb.putGeneric(NewTypeObjectsSetRef(table, clasp, proto.toObject(), fun));
     }
 }
-#endif
 
 TypeObject *
 ExclusiveContext::getNewType(const Class *clasp, TaggedProto proto, JSFunction *fun)
@@ -4481,9 +4478,7 @@ ExclusiveContext::getNewType(const Class *clasp, TaggedProto proto, JSFunction *
     if (!newTypeObjects.add(p, TypeObjectWithNewScriptEntry(type, fun)))
         return nullptr;
 
-#ifdef JSGC_GENERATIONAL
     TypeObjectTablePostBarrier(this, &newTypeObjects, clasp, proto, fun);
-#endif
 
     if (proto.isObject()) {
         RootedObject obj(this, proto.toObject());
@@ -4549,9 +4544,7 @@ ExclusiveContext::getSingletonType(const Class *clasp, TaggedProto proto)
     if (!table.add(p, TypeObjectWithNewScriptEntry(type, nullptr)))
         return nullptr;
 
-#ifdef JSGC_GENERATIONAL
     TypeObjectTablePostBarrier(this, &table, clasp, proto, nullptr);
-#endif
 
     type->initSingleton((JSObject *) TypeObject::LAZY_SINGLETON);
     MOZ_ASSERT(type->singleton(), "created type must be a proper singleton");

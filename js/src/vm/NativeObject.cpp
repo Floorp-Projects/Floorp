@@ -412,10 +412,8 @@ NativeObject::setSlotSpan(ThreadSafeContext *cx, HandleNativeObject obj, uint32_
 static HeapSlot *
 AllocateSlots(ThreadSafeContext *cx, JSObject *obj, uint32_t nslots)
 {
-#ifdef JSGC_GENERATIONAL
     if (cx->isJSContext())
         return cx->asJSContext()->runtime()->gc.nursery.allocateSlots(obj, nslots);
-#endif
 #ifdef JSGC_FJGENERATIONAL
     if (cx->isForkJoinContext())
         return cx->asForkJoinContext()->nursery().allocateSlots(obj, nslots);
@@ -431,12 +429,10 @@ static HeapSlot *
 ReallocateSlots(ThreadSafeContext *cx, JSObject *obj, HeapSlot *oldSlots,
                 uint32_t oldCount, uint32_t newCount)
 {
-#ifdef JSGC_GENERATIONAL
     if (cx->isJSContext()) {
         return cx->asJSContext()->runtime()->gc.nursery.reallocateSlots(obj, oldSlots,
                                                                         oldCount, newCount);
     }
-#endif
 #ifdef JSGC_FJGENERATIONAL
     if (cx->isForkJoinContext()) {
         return cx->asForkJoinContext()->nursery().reallocateSlots(obj, oldSlots,
@@ -483,11 +479,9 @@ NativeObject::growSlots(ThreadSafeContext *cx, HandleNativeObject obj, uint32_t 
 static void
 FreeSlots(ThreadSafeContext *cx, HeapSlot *slots)
 {
-#ifdef JSGC_GENERATIONAL
     // Note: threads without a JSContext do not have access to GGC nursery allocated things.
     if (cx->isJSContext())
         return cx->asJSContext()->runtime()->gc.nursery.freeSlots(slots);
-#endif
 #ifdef JSGC_FJGENERATIONAL
     if (cx->isForkJoinContext())
         return cx->asForkJoinContext()->nursery().freeSlots(slots);
@@ -722,10 +716,8 @@ NativeObject::maybeDensifySparseElements(js::ExclusiveContext *cx, HandleNativeO
 static ObjectElements *
 AllocateElements(ThreadSafeContext *cx, JSObject *obj, uint32_t nelems)
 {
-#ifdef JSGC_GENERATIONAL
     if (cx->isJSContext())
         return cx->asJSContext()->runtime()->gc.nursery.allocateElements(obj, nelems);
-#endif
 #ifdef JSGC_FJGENERATIONAL
     if (cx->isForkJoinContext())
         return cx->asForkJoinContext()->nursery().allocateElements(obj, nelems);
@@ -740,12 +732,10 @@ static ObjectElements *
 ReallocateElements(ThreadSafeContext *cx, JSObject *obj, ObjectElements *oldHeader,
                    uint32_t oldCount, uint32_t newCount)
 {
-#ifdef JSGC_GENERATIONAL
     if (cx->isJSContext()) {
         return cx->asJSContext()->runtime()->gc.nursery.reallocateElements(obj, oldHeader,
                                                                            oldCount, newCount);
     }
-#endif
 #ifdef JSGC_FJGENERATIONAL
     if (cx->isForkJoinContext()) {
         return cx->asForkJoinContext()->nursery().reallocateElements(obj, oldHeader,
@@ -1075,7 +1065,9 @@ CallAddPropertyHook(typename ExecutionModeTraits<mode>::ExclusiveContextType cxA
                     const Class *clasp, HandleNativeObject obj, HandleShape shape,
                     HandleValue nominal)
 {
-    if (clasp->addProperty != JS_PropertyStub) {
+    if (clasp->addProperty) {
+        MOZ_ASSERT(clasp->addProperty != JS_PropertyStub);
+
         if (mode == ParallelExecution)
             return false;
 
@@ -1122,7 +1114,9 @@ CallAddPropertyHookDense(typename ExecutionModeTraits<mode>::ExclusiveContextTyp
         return true;
     }
 
-    if (clasp->addProperty != JS_PropertyStub) {
+    if (clasp->addProperty) {
+        MOZ_ASSERT(clasp->addProperty != JS_PropertyStub);
+
         if (mode == ParallelExecution)
             return false;
 
@@ -1393,6 +1387,37 @@ PurgeScopeChain(ExclusiveContext *cx, HandleObject obj, HandleId id)
     return true;
 }
 
+/*
+ * Check whether we're redefining away a non-configurable getter, and
+ * throw if so.
+ */
+static inline bool
+CheckAccessorRedefinition(ExclusiveContext *cx, HandleObject obj, HandleShape shape,
+                          PropertyOp getter, StrictPropertyOp setter, HandleId id, unsigned attrs)
+{
+    MOZ_ASSERT(shape->isAccessorDescriptor());
+    if (shape->configurable() || (getter == shape->getter() && setter == shape->setter()))
+        return true;
+
+    /*
+     *  Only allow redefining if JSPROP_REDEFINE_NONCONFIGURABLE is set _and_
+     *  the object is a non-DOM global.  The idea is that a DOM object can
+     *  never have such a thing on its proto chain directly on the web, so we
+     *  should be OK optimizing access to accessors found on such an object.
+     */
+    if ((attrs & JSPROP_REDEFINE_NONCONFIGURABLE) &&
+        obj->is<GlobalObject>() &&
+        !obj->getClass()->isDOMClass())
+    {
+        return true;
+    }
+
+    if (!cx->isJSContext())
+        return false;
+
+    return Throw(cx->asJSContext(), id, JSMSG_CANT_REDEFINE_PROP);
+}
+
 bool
 js::DefineNativeProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId id, HandleValue value,
                          PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
@@ -1428,6 +1453,8 @@ js::DefineNativeProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId 
                 shape = obj->lookup(cx, id);
             }
             if (shape->isAccessorDescriptor()) {
+                if (!CheckAccessorRedefinition(cx, obj, shape, getter, setter, id, attrs))
+                    return false;
                 attrs = ApplyOrDefaultAttributes(attrs, shape);
                 shape = NativeObject::changeProperty<SequentialExecution>(cx, obj, shape, attrs,
                                                                           JSPROP_GETTER | JSPROP_SETTER,
@@ -1454,8 +1481,15 @@ js::DefineNativeProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId 
          *        loops.
          */
         shape = obj->lookup(cx, id);
-        if (shape && shape->isDataDescriptor())
-            attrs = ApplyOrDefaultAttributes(attrs, shape);
+        if (shape) {
+            if (shape->isAccessorDescriptor() &&
+                !CheckAccessorRedefinition(cx, obj, shape, getter, setter, id, attrs))
+            {
+                return false;
+            }
+            if (shape->isDataDescriptor())
+                attrs = ApplyOrDefaultAttributes(attrs, shape);
+        }
     } else {
         /*
          * We have been asked merely to update some attributes by a caller of
@@ -1479,6 +1513,12 @@ js::DefineNativeProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId 
                 if (!NativeObject::sparsifyDenseElement(cx, obj, JSID_TO_INT(id)))
                     return false;
                 shape = obj->lookup(cx, id);
+            }
+
+            if (shape->isAccessorDescriptor() &&
+                !CheckAccessorRedefinition(cx, obj, shape, getter, setter, id, attrs))
+            {
+                return false;
             }
 
             attrs = ApplyOrDefaultAttributes(attrs, shape);

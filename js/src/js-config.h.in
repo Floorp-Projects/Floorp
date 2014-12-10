@@ -31,12 +31,6 @@
 /* Define to 1 if SpiderMonkey should use small chunks. */
 #undef JS_GC_SMALL_CHUNK_SIZE
 
-/* Define to 1 if SpiderMonkey should use Incremental GC. */
-#undef JSGC_INCREMENTAL
-
-/* Define to 1 if SpiderMonkey should use Generational GC. */
-#undef JSGC_GENERATIONAL
-
 /* Define to 1 if SpiderMonkey should use Compacting GC. */
 #undef JSGC_COMPACTING
 

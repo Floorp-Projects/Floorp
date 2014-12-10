@@ -494,21 +494,17 @@ class JSString : public js::gc::TenuredCell
 #endif
 
     static MOZ_ALWAYS_INLINE void readBarrier(JSString *thing) {
-#ifdef JSGC_INCREMENTAL
         if (thing->isPermanentAtom())
             return;
 
         TenuredCell::readBarrier(thing);
-#endif
     }
 
     static MOZ_ALWAYS_INLINE void writeBarrierPre(JSString *thing) {
-#ifdef JSGC_INCREMENTAL
         if (isNullLike(thing) || thing->isPermanentAtom())
             return;
 
         TenuredCell::writeBarrierPre(thing);
-#endif
     }
 
   private:

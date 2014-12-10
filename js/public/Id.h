@@ -182,10 +182,8 @@ template <> struct GCMethods<jsid>
     static jsid initial() { return JSID_VOID; }
     static bool poisoned(jsid id) { return IsPoisonedId(id); }
     static bool needsPostBarrier(jsid id) { return false; }
-#ifdef JSGC_GENERATIONAL
     static void postBarrier(jsid *idp) {}
     static void relocate(jsid *idp) {}
-#endif
 };
 
 #undef id
