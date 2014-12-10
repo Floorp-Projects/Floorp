@@ -3910,6 +3910,26 @@ DebuggerScript_checkThis(JSContext *cx, const CallArgs &args, const char *fnname
     Rooted<JSScript*> script(cx, GetScriptReferent(obj))
 
 static bool
+DebuggerScript_getDisplayName(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get displayName)", args, obj, script);
+    Debugger *dbg = Debugger::fromChildJSObject(obj);
+
+    JSFunction *func = script->functionNonDelazifying();
+    JSString *name = func ? func->displayAtom() : nullptr;
+    if (!name) {
+        args.rval().setUndefined();
+        return true;
+    }
+
+    RootedValue namev(cx, StringValue(name));
+    if (!dbg->wrapDebuggeeValue(cx, &namev))
+        return false;
+    args.rval().set(namev);
+    return true;
+}
+
+static bool
 DebuggerScript_getUrl(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get url)", args, obj, script);
@@ -4717,6 +4737,7 @@ DebuggerScript_construct(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static const JSPropertySpec DebuggerScript_properties[] = {
+    JS_PSG("displayName", DebuggerScript_getDisplayName, 0),
     JS_PSG("url", DebuggerScript_getUrl, 0),
     JS_PSG("startLine", DebuggerScript_getStartLine, 0),
     JS_PSG("lineCount", DebuggerScript_getLineCount, 0),
