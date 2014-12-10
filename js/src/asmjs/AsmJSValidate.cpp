@@ -6213,9 +6213,12 @@ CheckConditional(FunctionCompiler &f, ParseNode *ternary, MDefinition **def, Typ
         *type = Type::Double;
     } else if (thenType.isFloat() && elseType.isFloat()) {
         *type = Type::Float;
+    } else if (elseType.isSimd() && thenType <= elseType && elseType <= thenType) {
+        *type = thenType;
     } else {
-        return f.failf(ternary, "then/else branches of conditional must both produce int or double, "
-                       "current types are %s and %s", thenType.toChars(), elseType.toChars());
+        return f.failf(ternary, "then/else branches of conditional must both produce int, float, "
+                       "double or SIMD types, current types are %s and %s",
+                       thenType.toChars(), elseType.toChars());
     }
 
     if (!f.joinIfElse(thenBlocks, elseExpr))
