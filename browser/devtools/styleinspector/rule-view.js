@@ -1460,10 +1460,12 @@ CssRuleView.prototype = {
       this.menuitemSources.setAttribute("checked", isEnabled);
     }
 
-    // update text of source links
-    for (let rule of this._elementStyle.rules) {
-      if (rule.editor) {
-        rule.editor.updateSourceLink();
+    // update text of source links if the rule-view is populated
+    if (this._elementStyle) {
+      for (let rule of this._elementStyle.rules) {
+        if (rule.editor) {
+          rule.editor.updateSourceLink();
+        }
       }
     }
   },

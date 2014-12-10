@@ -32,7 +32,7 @@ let test = asyncTest(function* () {
 function* testRuleViewUrls() {
   info("Testing tooltips in the rule view");
 
-  let { view, inspector } = yield openRuleView();
+  let {view, inspector} = yield openRuleView();
   yield selectNode("h1", inspector);
 
   let {valueSpan} = getRuleViewProperty(view, "h1", "background");
@@ -42,7 +42,8 @@ function* testRuleViewUrls() {
 function* testComputedViewUrls() {
   info("Testing tooltips in the computed view");
 
-  let {view} = yield openComputedView();
+  let {view, inspector} = yield openComputedView();
+  yield inspector.once("computed-view-refreshed");
   let {valueSpan} = getComputedViewProperty(view, "background-image");
 
   yield performChecks(view, valueSpan);
