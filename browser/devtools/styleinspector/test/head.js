@@ -57,7 +57,7 @@ registerCleanupFunction(() => {
  *
  * All tests should follow the following pattern:
  *
- * let test = asyncTest(function*() {
+ * add_task(function*() {
  *   yield addTab(TEST_URI);
  *   let {toolbox, inspector, view} = yield openComputedView();
  *
@@ -84,16 +84,9 @@ registerCleanupFunction(() => {
  * UTILS
  * *********************************************
  * General test utilities.
- * Define the test case, add new tabs, open the toolbox and switch to the
- * various panels, select nodes, get node references, ...
+ * Add new tabs, open the toolbox and switch to the various panels, select
+ * nodes, get node references, ...
  */
-
-/**
- * Define an async test based on a generator function
- */
-function asyncTest(generator) {
-  return () => Task.spawn(generator).then(null, ok.bind(null, false)).then(finish);
-}
 
 /**
  * Add a new test tab in the browser and load the given url.

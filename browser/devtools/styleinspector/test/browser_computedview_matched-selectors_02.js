@@ -6,7 +6,7 @@
 
 // Tests for matched selector texts in the computed view
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab("data:text/html;charset=utf-8,<div style='color:blue;'></div>");
 
   info("Opening the computed view");

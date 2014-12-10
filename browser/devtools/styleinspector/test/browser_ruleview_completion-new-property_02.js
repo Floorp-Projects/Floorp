@@ -42,7 +42,7 @@ let testData = [
 let TEST_URL = "data:text/html;charset=utf-8,<style>h1{border: 1px solid red}</style>" +
   "<h1>Test element</h1>";
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab(TEST_URL);
   let {toolbox, inspector, view} = yield openRuleView();
 

@@ -10,7 +10,7 @@ const TEST_URL = 'data:text/html;charset=utf-8,' +
                  '<div id="one" style="color:red;">one</div>' +
                  '<div id="two" style="color:blue;">two</div>';
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab(TEST_URL);
 
   info("Opening the rule-view and selecting test node one");

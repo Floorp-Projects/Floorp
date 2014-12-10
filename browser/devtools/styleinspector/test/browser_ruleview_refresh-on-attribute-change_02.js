@@ -6,7 +6,7 @@
 
 // Test that changing the current element's style attribute refreshes the rule-view
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab("data:text/html;charset=utf-8,browser_ruleview_update.js");
 
   content.document.body.innerHTML = '<div id="testid" class="testclass">Styled Node</div>';

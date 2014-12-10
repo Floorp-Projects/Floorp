@@ -16,7 +16,7 @@ const PAGE_CONTENT = [
   'Updating a gradient declaration with the color picker tooltip'
 ].join("\n");
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab("data:text/html;charset=utf-8,rule view color picker tooltip test");
 
   info("Creating the test document");

@@ -39,7 +39,7 @@ let testData = [
 let TEST_URL = "data:text/html;charset=utf-8,<h1 style='color: red'>Filename: " +
                "browser_bug894376_css_value_completion_existing_property_value_pair.js</h1>";
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab(TEST_URL);
   let {toolbox, inspector, view} = yield openRuleView();
 

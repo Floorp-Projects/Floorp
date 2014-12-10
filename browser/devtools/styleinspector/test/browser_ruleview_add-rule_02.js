@@ -17,7 +17,7 @@ let PAGE_CONTENT = [
   '<span>This is a span</span>'
 ].join("\n");
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab("data:text/html;charset=utf-8,test rule view add rule");
 
   info("Creating the test document");

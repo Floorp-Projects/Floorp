@@ -22,7 +22,7 @@ const TEST_DATA = [
   {escape: true, value: "inline", expected: "block"}
 ];
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab("data:text/html;charset=utf-8,test rule view live preview on user changes");
 
   let style = '#testid {display:block;}';

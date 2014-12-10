@@ -7,7 +7,7 @@
 // Test all sorts of additions and updates of properties in the rule-view
 // FIXME: TO BE SPLIT IN *MANY* SMALLER TESTS
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab("data:text/html;charset=utf-8,browser_ruleview_ui.js");
   let {toolbox, inspector, view} = yield openRuleView();
 
