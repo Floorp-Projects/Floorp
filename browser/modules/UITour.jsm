@@ -123,15 +123,19 @@ this.UITour = {
     }],
     ["loop",        {query: "#loop-button-throttled"}],
     ["loop-newRoom", {
+      infoPanelPosition: "leftcenter topright",
       query: (aDocument) => {
         let loopBrowser = aDocument.querySelector("#loop-notification-panel > #loop");
         if (!loopBrowser) {
           return null;
         }
-        return loopBrowser.contentDocument.querySelector(".new-room-button");
+        // Use the parentElement full-width container of the button so our arrow
+        // doesn't overlap the panel contents much.
+        return loopBrowser.contentDocument.querySelector(".new-room-button").parentElement;
       },
     }],
     ["loop-roomList", {
+      infoPanelPosition: "leftcenter topright",
       query: (aDocument) => {
         let loopBrowser = aDocument.querySelector("#loop-notification-panel > #loop");
         if (!loopBrowser) {
@@ -152,6 +156,7 @@ this.UITour = {
     ["privateWindow",  {query: "#privatebrowsing-button"}],
     ["quit",        {query: "#PanelUI-quit"}],
     ["search",      {
+      infoPanelPosition: "after_start",
       query: "#searchbar",
       widgetName: "search-container",
     }],
@@ -930,6 +935,7 @@ this.UITour = {
 
       deferred.resolve({
         addTargetListener: targetObject.addTargetListener,
+        infoPanelPosition: targetObject.infoPanelPosition,
         node: node,
         removeTargetListener: targetObject.removeTargetListener,
         targetName: aTargetName,
@@ -1263,10 +1269,13 @@ this.UITour = {
 
       tooltip.setAttribute("targetName", aAnchor.targetName);
       tooltip.hidden = false;
-      let xOffset = 0, yOffset = 0;
       let alignment = "bottomcenter topright";
+      if (aAnchor.infoPanelPosition) {
+        alignment = aAnchor.infoPanelPosition;
+      }
+
+      let xOffset = 0, yOffset = 0;
       if (aAnchor.targetName == "search") {
-        alignment = "after_start";
         xOffset = 18;
       }
       this._addAnnotationPanelMutationObserver(tooltip);

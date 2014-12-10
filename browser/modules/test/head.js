@@ -135,6 +135,12 @@ function showInfoPromise(...args) {
   return promisePanelElementShown(window, popup);
 }
 
+function showMenuPromise(name) {
+  return new Promise(resolve => {
+    gContentAPI.showMenu(name, () => resolve());
+  });
+}
+
 function waitForCallbackResultPromise() {
   return waitForConditionPromise(() => {
     return gContentWindow.callbackResult;
