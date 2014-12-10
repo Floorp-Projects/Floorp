@@ -33,7 +33,7 @@ if test -n "$ENABLE_CLANG_PLUGIN"; then
         AC_MSG_ERROR([Cannot find an llvm-config binary for building a clang plugin])
     fi
     LLVM_CXXFLAGS=`$LLVMCONFIG --cxxflags`
-    LLVM_LDFLAGS=`$LLVMCONFIG --ldflags --libs core mc analysis asmparser mcparser bitreader | xargs`
+    LLVM_LDFLAGS=`$LLVMCONFIG --ldflags --system-libs --libs core mc analysis asmparser mcparser bitreader option | xargs`
 
     if test "${OS_ARCH}" = "Darwin"; then
         CLANG_LDFLAGS="-lclangFrontend -lclangDriver -lclangSerialization"
