@@ -559,13 +559,13 @@ static const uint32_t COLLATOR_SLOTS_COUNT = 1;
 static const Class CollatorClass = {
     js_Object_str,
     JSCLASS_HAS_RESERVED_SLOTS(COLLATOR_SLOTS_COUNT),
-    JS_PropertyStub,         /* addProperty */
-    JS_DeletePropertyStub,   /* delProperty */
+    nullptr,                 /* addProperty */
+    nullptr,                 /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub,
+    nullptr,                 /* enumerate */
+    nullptr,                 /* resolve */
+    nullptr,                 /* convert */
     collator_finalize
 };
 
@@ -1048,13 +1048,13 @@ static const uint32_t NUMBER_FORMAT_SLOTS_COUNT = 1;
 static const Class NumberFormatClass = {
     js_Object_str,
     JSCLASS_HAS_RESERVED_SLOTS(NUMBER_FORMAT_SLOTS_COUNT),
-    JS_PropertyStub,         /* addProperty */
-    JS_DeletePropertyStub,   /* delProperty */
+    nullptr,                 /* addProperty */
+    nullptr,                 /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub,
+    nullptr,                 /* enumerate */
+    nullptr,                 /* resolve */
+    nullptr,                 /* convert */
     numberFormat_finalize
 };
 
@@ -1505,13 +1505,13 @@ static const uint32_t DATE_TIME_FORMAT_SLOTS_COUNT = 1;
 static const Class DateTimeFormatClass = {
     js_Object_str,
     JSCLASS_HAS_RESERVED_SLOTS(DATE_TIME_FORMAT_SLOTS_COUNT),
-    JS_PropertyStub,         /* addProperty */
-    JS_DeletePropertyStub,   /* delProperty */
+    nullptr,                 /* addProperty */
+    nullptr,                 /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub,
+    nullptr,                 /* enumerate */
+    nullptr,                 /* resolve */
+    nullptr,                 /* convert */
     dateTimeFormat_finalize
 };
 
@@ -2001,13 +2001,10 @@ js::intl_FormatDateTime(JSContext *cx, unsigned argc, Value *vp)
 const Class js::IntlClass = {
     js_Object_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_Intl),
-    JS_PropertyStub,         /* addProperty */
-    JS_DeletePropertyStub,   /* delProperty */
+    nullptr,                 /* addProperty */
+    nullptr,                 /* delProperty */
     JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub
+    JS_StrictPropertyStub    /* setProperty */
 };
 
 #if JS_HAS_TOSOURCE

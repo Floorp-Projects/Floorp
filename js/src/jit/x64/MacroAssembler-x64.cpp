@@ -497,8 +497,6 @@ template void
 MacroAssemblerX64::storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const BaseIndex &dest,
                                      MIRType slotType);
 
-#ifdef JSGC_GENERATIONAL
-
 void
 MacroAssemblerX64::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label *label)
 {
@@ -528,5 +526,3 @@ MacroAssemblerX64::branchValueIsNurseryObject(Condition cond, ValueOperand value
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
               ScratchReg, Imm32(nursery.nurserySize()), label);
 }
-
-#endif

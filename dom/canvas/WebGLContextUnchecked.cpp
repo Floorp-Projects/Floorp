@@ -7,6 +7,7 @@
 #include "WebGLContextUnchecked.h"
 
 #include "GLContext.h"
+#include "WebGLBuffer.h"
 #include "WebGLSampler.h"
 
 namespace mozilla {
@@ -14,6 +15,38 @@ namespace mozilla {
 WebGLContextUnchecked::WebGLContextUnchecked(gl::GLContext* gl)
     : gl(gl)
 { }
+
+
+// -----------------------------------------------------------------------------
+// Buffer Objects
+
+void
+WebGLContextUnchecked::BindBuffer(GLenum target, WebGLBuffer* buffer)
+{
+    gl->MakeCurrent();
+    gl->fBindBuffer(target, buffer ? buffer->GLName() : 0);
+}
+
+void
+WebGLContextUnchecked::BindBufferBase(GLenum target, GLuint index, WebGLBuffer* buffer)
+{
+    gl->MakeCurrent();
+    gl->fBindBufferBase(target, index, buffer ? buffer->GLName() : 0);
+}
+
+void
+WebGLContextUnchecked::BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer, WebGLintptr offset, WebGLsizeiptr size)
+{
+    gl->MakeCurrent();
+    gl->fBindBufferRange(target, index, buffer ? buffer->GLName() : 0, offset, size);
+}
+
+void
+WebGLContextUnchecked::CopyBufferSubData(GLenum readTarget, GLenum writeTarget, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size)
+{
+    gl->MakeCurrent();
+    gl->fCopyBufferSubData(readTarget, writeTarget, readOffset, writeOffset, size);
+}
 
 
 // -----------------------------------------------------------------------------

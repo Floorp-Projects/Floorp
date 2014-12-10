@@ -120,7 +120,7 @@ js::IterateGrayObjects(Zone *zone, GCThingCallback cellCallback, void *data)
         for (ZoneCellIterUnderGC i(zone, AllocKind(finalizeKind)); !i.done(); i.next()) {
             JSObject *obj = i.get<JSObject>();
             if (obj->asTenured().isMarked(GRAY))
-                cellCallback(data, obj);
+                cellCallback(data, JS::GCCellPtr(obj));
         }
     }
 }

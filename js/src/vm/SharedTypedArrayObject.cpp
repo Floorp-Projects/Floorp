@@ -704,13 +704,13 @@ IMPL_SHARED_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     JSCLASS_HAS_RESERVED_SLOTS(SharedTypedArrayObject::RESERVED_SLOTS) |       \
     JSCLASS_HAS_PRIVATE |                                                      \
     JSCLASS_HAS_CACHED_PROTO(JSProto_Shared##_typedArray),                     \
-    JS_PropertyStub,         /* addProperty */                                 \
-    JS_DeletePropertyStub,   /* delProperty */                                 \
+    nullptr,                 /* addProperty */                                 \
+    nullptr,                 /* delProperty */                                 \
     JS_PropertyStub,         /* getProperty */                                 \
     JS_StrictPropertyStub,   /* setProperty */                                 \
-    JS_EnumerateStub,                                                          \
-    JS_ResolveStub,                                                            \
-    JS_ConvertStub,                                                            \
+    nullptr,                 /* enumerate   */                                 \
+    nullptr,                 /* resolve     */                                 \
+    nullptr,                 /* convert     */                                 \
     nullptr,                 /* finalize    */                                 \
     nullptr,                 /* call        */                                 \
     nullptr,                 /* hasInstance */                                 \
@@ -725,13 +725,13 @@ IMPL_SHARED_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     JSCLASS_HAS_RESERVED_SLOTS(SharedTypedArrayObject::RESERVED_SLOTS) |       \
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |                        \
     JSCLASS_HAS_CACHED_PROTO(JSProto_Shared##_typedArray),                     \
-    JS_PropertyStub,         /* addProperty */                                 \
-    JS_DeletePropertyStub,   /* delProperty */                                 \
+    nullptr,                 /* addProperty */                                 \
+    nullptr,                 /* delProperty */                                 \
     JS_PropertyStub,         /* getProperty */                                 \
     JS_StrictPropertyStub,   /* setProperty */                                 \
-    JS_EnumerateStub,                                                          \
-    JS_ResolveStub,                                                            \
-    JS_ConvertStub,                                                            \
+    nullptr,                 /* enumerate   */                                 \
+    nullptr,                 /* resolve     */                                 \
+    nullptr,                 /* convert     */                                 \
     nullptr,                 /* finalize    */                                 \
     nullptr,                 /* call        */                                 \
     nullptr,                 /* hasInstance */                                 \

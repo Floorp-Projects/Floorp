@@ -9,6 +9,7 @@
 #include "vm/ProxyObject.h"
 
 #include "jscntxtinlines.h"
+#include "jsobjinlines.h"
 
 using namespace js;
 
@@ -78,20 +79,71 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
 {
     assertEnteredPolicy(cx, proxy, id, SET);
 
-    // Find an own or inherited property. The code here is strange for maximum
-    // backward compatibility with earlier code written before ES6 and before
-    // SetPropertyIgnoringNamedGetter.
-    Rooted<PropertyDescriptor> desc(cx);
-    if (!getOwnPropertyDescriptor(cx, proxy, id, &desc))
+    // This method is not covered by any spec, but we follow ES6 draft rev 28
+    // (2014 Oct 14) 9.1.9 fairly closely, adapting it slightly for
+    // SpiderMonkey's particular foibles.
+
+    // Steps 2-3.  (Step 1 is a superfluous assertion.)
+    Rooted<PropertyDescriptor> ownDesc(cx);
+    if (!getOwnPropertyDescriptor(cx, proxy, id, &ownDesc))
         return false;
-    bool descIsOwn = desc.object() != nullptr;
-    if (!descIsOwn) {
-        if (!getPropertyDescriptor(cx, proxy, id, &desc))
+
+    // Step 4.
+    if (!ownDesc.object()) {
+        // The spec calls this variable "parent", but that word has weird
+        // connotations in SpiderMonkey, so let's go with "proto".
+        RootedObject proto(cx);
+        if (!JSObject::getProto(cx, proxy, &proto))
             return false;
+        if (proto)
+            return JSObject::setGeneric(cx, proto, receiver, id, vp, strict);
+
+        // Change ownDesc to be a complete descriptor for a configurable,
+        // writable, enumerable data property. Then fall through to step 5.
+        ownDesc.clear();
+        ownDesc.setAttributes(JSPROP_ENUMERATE);
     }
 
-    return SetPropertyIgnoringNamedGetter(cx, this, proxy, receiver, id, &desc, descIsOwn, strict,
-                                          vp);
+    // Step 5.
+    if (ownDesc.isDataDescriptor()) {
+        // Steps 5.a-b, adapted to our nonstandard implementation of ES6
+        // [[Set]] return values.
+        if (!ownDesc.isWritable()) {
+            if (strict)
+                return JSObject::reportReadOnly(cx, id, JSREPORT_ERROR);
+            if (cx->compartment()->options().extraWarnings(cx))
+                return JSObject::reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
+            return true;
+        }
+
+        // Nonstandard SpiderMonkey special case: setter ops.
+        StrictPropertyOp setter = ownDesc.setter();
+        if (setter && setter != JS_StrictPropertyStub)
+            return CallSetter(cx, receiver, id, setter, ownDesc.attributes(), strict, vp);
+
+        // Steps 5.c-d. Adapt for SpiderMonkey by using HasOwnProperty instead
+        // of the standard [[GetOwnProperty]].
+        bool existingDescriptor;
+        if (!HasOwnProperty(cx, receiver, id, &existingDescriptor))
+            return false;
+
+        // Steps 5.e-f.
+        unsigned attrs =
+            existingDescriptor
+            ? JSPROP_IGNORE_ENUMERATE | JSPROP_IGNORE_READONLY | JSPROP_IGNORE_PERMANENT
+            : JSPROP_ENUMERATE;
+        return JSObject::defineGeneric(cx, receiver, id, vp, nullptr, nullptr, attrs);
+    }
+
+    // Step 6.
+    MOZ_ASSERT(ownDesc.isAccessorDescriptor());
+    RootedObject setter(cx);
+    if (ownDesc.hasSetterObject())
+        setter = ownDesc.setterObject();
+    if (!setter)
+        return js_ReportGetterOnlyAssignment(cx, strict);
+    RootedValue setterValue(cx, ObjectValue(*setter));
+    return InvokeGetterOrSetter(cx, receiver, setterValue, 1, vp.address(), vp);
 }
 
 bool

@@ -22,9 +22,7 @@
 #include "vm/ForkJoin.h"
 #include "vm/TraceLogging.h"
 
-#ifdef JSGC_GENERATIONAL
-# include "jsgcinlines.h"
-#endif
+#include "jsgcinlines.h"
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "vm/Interpreter-inl.h"
@@ -639,16 +637,12 @@ MacroAssembler::checkAllocatorState(Label *fail)
 bool
 MacroAssembler::shouldNurseryAllocate(gc::AllocKind allocKind, gc::InitialHeap initialHeap)
 {
-#ifdef JSGC_GENERATIONAL
     // Note that Ion elides barriers on writes to objects known to be in the
     // nursery, so any allocation that can be made into the nursery must be made
     // into the nursery, even if the nursery is disabled. At runtime these will
     // take the out-of-line path, which is required to insert a barrier for the
     // initializing writes.
     return IsNurseryAllocable(allocKind) && initialHeap != gc::TenuredHeap;
-#else
-    return false;
-#endif
 }
 
 // Inline version of Nursery::allocateObject.
@@ -656,7 +650,6 @@ void
 MacroAssembler::nurseryAllocate(Register result, Register slots, gc::AllocKind allocKind,
                                 size_t nDynamicSlots, gc::InitialHeap initialHeap, Label *fail)
 {
-#ifdef JSGC_GENERATIONAL
     MOZ_ASSERT(IsNurseryAllocable(allocKind));
     MOZ_ASSERT(initialHeap != gc::TenuredHeap);
 
@@ -681,7 +674,6 @@ MacroAssembler::nurseryAllocate(Register result, Register slots, gc::AllocKind a
 
     if (nDynamicSlots)
         computeEffectiveAddress(Address(result, thingSize), slots);
-#endif // JSGC_GENERATIONAL
 }
 
 // Inlined version of FreeList::allocate.

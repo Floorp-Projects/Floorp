@@ -598,20 +598,6 @@ protected:
   UserData mUserData;
 };
 
-#ifdef MOZ_ENABLE_FREETYPE
-/**
- * Describes a font.
- * Used to pass the key informatin from a gfxFont into Azure
- * @todo Should be replaced by a more long term solution, perhaps Bug 738014
- */
-struct FontOptions
-{
-  std::string mName;
-  FontStyle mStyle;
-};
-#endif
-
-
 /** This class is designed to allow passing additional glyph rendering
  * parameters to the glyph drawing functions. This is an empty wrapper class
  * merely used to allow holding on to and passing around platform specific

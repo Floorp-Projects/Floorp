@@ -514,15 +514,13 @@ namespace UInt64 {
 static const JSClass sCTypesGlobalClass = {
   "ctypes",
   JSCLASS_HAS_RESERVED_SLOTS(CTYPESGLOBAL_SLOTS),
-  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
+  nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub
 };
 
 static const JSClass sCABIClass = {
   "CABI",
   JSCLASS_HAS_RESERVED_SLOTS(CABI_SLOTS),
-  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
+  nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub
 };
 
 // Class representing ctypes.{C,Pointer,Array,Struct,Function}Type.prototype.
@@ -531,8 +529,8 @@ static const JSClass sCABIClass = {
 static const JSClass sCTypeProtoClass = {
   "CType",
   JSCLASS_HAS_RESERVED_SLOTS(CTYPEPROTO_SLOTS),
-  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, nullptr,
+  nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub,
+  nullptr, nullptr, nullptr, nullptr,
   ConstructAbstract, nullptr, ConstructAbstract
 };
 
@@ -541,15 +539,14 @@ static const JSClass sCTypeProtoClass = {
 static const JSClass sCDataProtoClass = {
   "CData",
   0,
-  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
+  nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub
 };
 
 static const JSClass sCTypeClass = {
   "CType",
   JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(CTYPE_SLOTS),
-  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, CType::Finalize,
+  nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub,
+  nullptr, nullptr, nullptr, CType::Finalize,
   CType::ConstructData, CType::HasInstance, CType::ConstructData,
   CType::Trace
 };
@@ -557,16 +554,16 @@ static const JSClass sCTypeClass = {
 static const JSClass sCDataClass = {
   "CData",
   JSCLASS_HAS_RESERVED_SLOTS(CDATA_SLOTS),
-  JS_PropertyStub, JS_DeletePropertyStub, ArrayType::Getter, ArrayType::Setter,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, CData::Finalize,
+  nullptr, nullptr, ArrayType::Getter, ArrayType::Setter,
+  nullptr, nullptr, nullptr, CData::Finalize,
   FunctionType::Call, nullptr, FunctionType::Call
 };
 
 static const JSClass sCClosureClass = {
   "CClosure",
   JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(CCLOSURE_SLOTS),
-  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, CClosure::Finalize,
+  nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub,
+  nullptr, nullptr, nullptr, CClosure::Finalize,
   nullptr, nullptr, nullptr, CClosure::Trace
 };
 
@@ -576,8 +573,7 @@ static const JSClass sCClosureClass = {
 static const JSClass sCDataFinalizerProtoClass = {
   "CDataFinalizer",
   0,
-  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
+  nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub
 };
 
 /*
@@ -589,8 +585,8 @@ static const JSClass sCDataFinalizerProtoClass = {
 static const JSClass sCDataFinalizerClass = {
   "CDataFinalizer",
   JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(CDATAFINALIZER_SLOTS),
-  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, CDataFinalizer::Finalize,
+  nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub,
+  nullptr, nullptr, nullptr, CDataFinalizer::Finalize,
 };
 
 
@@ -765,29 +761,27 @@ static const JSFunctionSpec sFunctionInstanceFunctions[] = {
 static const JSClass sInt64ProtoClass = {
   "Int64",
   0,
-  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
+  nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub
 };
 
 static const JSClass sUInt64ProtoClass = {
   "UInt64",
   0,
-  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
+  nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub
 };
 
 static const JSClass sInt64Class = {
   "Int64",
   JSCLASS_HAS_RESERVED_SLOTS(INT64_SLOTS),
-  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Int64Base::Finalize
+  nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub,
+  nullptr, nullptr, nullptr, Int64Base::Finalize
 };
 
 static const JSClass sUInt64Class = {
   "UInt64",
   JSCLASS_HAS_RESERVED_SLOTS(INT64_SLOTS),
-  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Int64Base::Finalize
+  nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub,
+  nullptr, nullptr, nullptr, Int64Base::Finalize
 };
 
 static const JSFunctionSpec sInt64StaticFunctions[] = {

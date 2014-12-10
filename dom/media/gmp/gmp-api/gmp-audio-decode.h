@@ -41,6 +41,14 @@ public:
   virtual void Error(GMPErr aError) = 0;
 };
 
+#define GMP_API_AUDIO_DECODER "decode-audio"
+
+// Audio decoding for a single stream. A GMP may be asked to create multiple
+// decoders concurrently.
+//
+// API name macro: GMP_API_AUDIO_DECODER
+// Host API: GMPAudioHost
+//
 // ALL METHODS MUST BE CALLED ON THE MAIN THREAD
 class GMPAudioDecoder
 {

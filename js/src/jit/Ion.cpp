@@ -974,10 +974,8 @@ IonScript::trace(JSTracer *trc)
 /* static */ void
 IonScript::writeBarrierPre(Zone *zone, IonScript *ionScript)
 {
-#ifdef JSGC_INCREMENTAL
     if (zone->needsIncrementalBarrier())
         ionScript->trace(zone->barrierTracer());
-#endif
 }
 
 void

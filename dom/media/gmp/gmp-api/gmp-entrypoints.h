@@ -49,7 +49,10 @@ typedef GMPErr (*GMPInitFunc)(const GMPPlatformAPI* aPlatformAPI);
 // GMPGetAPI
 // - Called when host wants to use an API.
 // - Called on main thread.
-// - 'aAPIName' is a string indicating the API being requested.
+// - 'aAPIName' is a string indicating the API being requested. This should
+//   match one of the GMP_API_* macros. Subsequent iterations of the GMP_APIs
+//   may change the value of the GMP_API_* macros when ABI changes occur. So
+//   make sure you compare aAPIName against the corresponding GMP_API_* macro!
 // - 'aHostAPI' is the host API which is specific to the API being requested
 //   from the plugin. It is valid so long as the API object requested from the
 //   plugin is valid. It is owned by the host, plugin should not attempt to delete.

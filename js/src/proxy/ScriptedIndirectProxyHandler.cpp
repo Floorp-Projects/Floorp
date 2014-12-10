@@ -287,8 +287,28 @@ ScriptedIndirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObjec
     if (!GetDerivedTrap(cx, handler, cx->names().set, &fval))
         return false;
     if (!IsCallable(fval))
-        return BaseProxyHandler::set(cx, proxy, receiver, id, strict, vp);
+        return derivedSet(cx, proxy, receiver, id, strict, vp);
     return Trap(cx, handler, fval, 3, argv.begin(), &idv);
+}
+
+bool
+ScriptedIndirectProxyHandler::derivedSet(JSContext *cx, HandleObject proxy, HandleObject receiver,
+                                         HandleId id, bool strict, MutableHandleValue vp) const
+{
+    // Find an own or inherited property. The code here is strange for maximum
+    // backward compatibility with earlier code written before ES6 and before
+    // SetPropertyIgnoringNamedGetter.
+    Rooted<PropertyDescriptor> desc(cx);
+    if (!getOwnPropertyDescriptor(cx, proxy, id, &desc))
+        return false;
+    bool descIsOwn = desc.object() != nullptr;
+    if (!descIsOwn) {
+        if (!getPropertyDescriptor(cx, proxy, id, &desc))
+            return false;
+    }
+
+    return SetPropertyIgnoringNamedGetter(cx, this, proxy, receiver, id, &desc, descIsOwn, strict,
+                                          vp);
 }
 
 bool

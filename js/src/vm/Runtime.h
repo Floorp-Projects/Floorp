@@ -347,10 +347,8 @@ class NewObjectCache
 
     static void copyCachedToObject(JSObject *dst, JSObject *src, gc::AllocKind kind) {
         js_memcpy(dst, src, gc::Arena::thingSize(kind));
-#ifdef JSGC_GENERATIONAL
         Shape::writeBarrierPost(dst->shape_, &dst->shape_);
         types::TypeObject::writeBarrierPost(dst->type_, &dst->type_);
-#endif
     }
 };
 

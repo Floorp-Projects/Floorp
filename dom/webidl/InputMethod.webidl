@@ -29,6 +29,20 @@ interface MozInputMethod : EventTarget {
   // Activate or decactive current input method window.
   void setActive(boolean isActive);
 
+  // Add a dynamically declared input.
+  //
+  // The id must not be the same with any statically declared input in the app
+  // manifest. If an input of the same id is already declared, the info of that
+  // input will be updated.
+  Promise<void> addInput(DOMString inputId, object inputManifest);
+
+  // Remove a dynamically declared input.
+  //
+  // The id must not be the same with any statically declared input in the app
+  // manifest. Silently resolves if the input is not previously declared;
+  // rejects if attempt to remove a statically declared input.
+  Promise<void> removeInput(DOMString id);
+
   // The following are internal methods for Firefox OS system app only.
 
   // Set the value on the currently focused element. This has to be used

@@ -132,14 +132,15 @@ struct NoteWeakMapChildrenTracer : public JSTracer
 {
   NoteWeakMapChildrenTracer(JSRuntime* aRt,
                             nsCycleCollectionNoteRootCallback& aCb)
-    : JSTracer(aRt, TraceWeakMappingChild), mCb(aCb)
+    : JSTracer(aRt, TraceWeakMappingChild), mCb(aCb), mTracedAny(false),
+      mMap(nullptr), mKey(JS::GCCellPtr::NullPtr()), mKeyDelegate(nullptr)
   {
   }
   nsCycleCollectionNoteRootCallback& mCb;
   bool mTracedAny;
   JSObject* mMap;
-  void* mKey;
-  void* mKeyDelegate;
+  JS::GCCellPtr mKey;
+  JSObject* mKeyDelegate;
 };
 
 static void
@@ -160,7 +161,8 @@ TraceWeakMappingChild(JSTracer* aTrc, void** aThingp, JSGCTraceKind aKind)
 
   if (AddToCCKind(aKind)) {
     tracer->mCb.NoteWeakMapping(tracer->mMap, tracer->mKey,
-                                tracer->mKeyDelegate, thing);
+                                tracer->mKeyDelegate,
+                                JS::GCCellPtr(thing, aKind));
     tracer->mTracedAny = true;
   } else {
     JS_TraceChildren(aTrc, thing, aKind);
@@ -213,11 +215,11 @@ TraceWeakMapping(js::WeakMapTracer* aTrc, JSObject* aMap,
   }
 
   if (AddToCCKind(aValue.kind())) {
-    tracer->mCb.NoteWeakMapping(aMap, aKey.asCell(), kdelegate, aValue.asCell());
+    tracer->mCb.NoteWeakMapping(aMap, aKey, kdelegate, aValue);
   } else {
     tracer->mChildTracer.mTracedAny = false;
     tracer->mChildTracer.mMap = aMap;
-    tracer->mChildTracer.mKey = aKey.asCell();
+    tracer->mChildTracer.mKey = aKey;
     tracer->mChildTracer.mKeyDelegate = kdelegate;
 
     if (aValue.isString()) {
@@ -228,7 +230,8 @@ TraceWeakMapping(js::WeakMapTracer* aTrc, JSObject* aMap,
     // if we haven't already.
     if (!tracer->mChildTracer.mTracedAny &&
         aKey && xpc_IsGrayGCThing(aKey.asCell()) && kdelegate) {
-      tracer->mCb.NoteWeakMapping(aMap, aKey.asCell(), kdelegate, nullptr);
+      tracer->mCb.NoteWeakMapping(aMap, aKey, kdelegate,
+                                  JS::GCCellPtr::NullPtr());
     }
   }
 }
@@ -274,7 +277,7 @@ private:
     if (delegateMightNeedMarking && aKey.isObject()) {
       JSObject* kdelegate = js::GetWeakmapKeyDelegate(aKey.toObject());
       if (kdelegate && !xpc_IsGrayGCThing(kdelegate)) {
-        if (JS::UnmarkGrayGCThingRecursively(aKey.asCell(), JSTRACE_OBJECT)) {
+        if (JS::UnmarkGrayGCThingRecursively(aKey)) {
           tracer->mAnyMarked = true;
         }
       }
@@ -284,7 +287,7 @@ private:
         (!aKey || !xpc_IsGrayGCThing(aKey.asCell())) &&
         (!aMap || !xpc_IsGrayGCThing(aMap)) &&
         aValue.kind() != JSTRACE_SHAPE) {
-      if (JS::UnmarkGrayGCThingRecursively(aValue.asCell(), aValue.kind())) {
+      if (JS::UnmarkGrayGCThingRecursively(aValue)) {
         tracer->mAnyMarked = true;
       }
     }
@@ -436,10 +439,10 @@ NoteJSChildTracerShim(JSTracer* aTrc, void** aThingp, JSGCTraceKind aTraceKind)
 }
 
 static void
-NoteJSChildGrayWrapperShim(void* aData, void* aThing)
+NoteJSChildGrayWrapperShim(void* aData, JS::GCCellPtr aThing)
 {
   TraversalTracer* trc = static_cast<TraversalTracer*>(aData);
-  NoteJSChild(trc, aThing, js::GCThingTraceKind(aThing));
+  NoteJSChild(trc, aThing.asCell(), aThing.kind());
 }
 
 /*
@@ -703,14 +706,14 @@ CycleCollectedJSRuntime::TraverseZone(JS::Zone* aZone,
 }
 
 /* static */ void
-CycleCollectedJSRuntime::TraverseObjectShim(void* aData, void* aThing)
+CycleCollectedJSRuntime::TraverseObjectShim(void* aData, JS::GCCellPtr aThing)
 {
   TraverseObjectShimClosure* closure =
     static_cast<TraverseObjectShimClosure*>(aData);
 
-  MOZ_ASSERT(js::GCThingTraceKind(aThing) == JSTRACE_OBJECT);
-  closure->self->TraverseGCThing(CycleCollectedJSRuntime::TRAVERSE_CPP, aThing,
-                                 JSTRACE_OBJECT, closure->cb);
+  MOZ_ASSERT(aThing.isObject());
+  closure->self->TraverseGCThing(CycleCollectedJSRuntime::TRAVERSE_CPP,
+                                 aThing.asCell(), JSTRACE_OBJECT, closure->cb);
 }
 
 void
