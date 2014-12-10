@@ -32,7 +32,9 @@ let test = asyncTest(function*() {
   yield testRuleView(view, inspector.selection.nodeFront);
 
   info("Opening the computed view");
+  let onComputedViewReady = inspector.once("computed-view-refreshed");
   ({toolbox, inspector, view} = yield openComputedView());
+  yield onComputedViewReady;
 
   yield testComputedView(view, inspector.selection.nodeFront);
 
