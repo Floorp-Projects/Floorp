@@ -114,7 +114,7 @@ public:
   // check that the actual segment size is as close as possible to it. This
   // serves as a sanity check for SegmentedVectorCapacity's capacity
   // computation.
-  SegmentedVector(size_t aIdealSegmentSize = 0)
+  explicit SegmentedVector(size_t aIdealSegmentSize = 0)
   {
     // The difference between the actual segment size and the ideal segment
     // size should be less than the size of a single element... unless the
@@ -192,7 +192,7 @@ public:
     Segment* mSegment;
     size_t mIndex;
 
-    IterImpl(SegmentedVector* aVector)
+    explicit IterImpl(SegmentedVector* aVector)
       : mSegment(aVector->mSegments.getFirst())
       , mIndex(0)
     {}
