@@ -24,15 +24,15 @@ class MOZ_STACK_CLASS nsRenderingContext MOZ_FINAL
 public:
     nsRenderingContext() {}
 
-    nsRenderingContext(gfxContext* aThebesContext)
+    explicit nsRenderingContext(gfxContext* aThebesContext)
       : mThebes(aThebesContext)
     {}
 
-    nsRenderingContext(already_AddRefed<gfxContext>&& aThebesContext)
+    explicit nsRenderingContext(already_AddRefed<gfxContext>&& aThebesContext)
       : mThebes(aThebesContext)
     {}
 
-    nsRenderingContext(DrawTarget* aDrawTarget) {
+    explicit nsRenderingContext(DrawTarget* aDrawTarget) {
       Init(aDrawTarget);
     }
 

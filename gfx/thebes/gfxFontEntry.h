@@ -63,7 +63,7 @@ public:
         mHash(0), mBuildOnTheFly(false), mShared(false)
     { }
 
-    gfxCharacterMap(const gfxSparseBitSet& aOther) :
+    explicit gfxCharacterMap(const gfxSparseBitSet& aOther) :
         gfxSparseBitSet(aOther),
         mHash(0), mBuildOnTheFly(false), mShared(false)
     { }
