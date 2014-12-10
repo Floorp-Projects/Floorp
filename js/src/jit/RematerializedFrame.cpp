@@ -71,9 +71,19 @@ RematerializedFrame::RematerializeInlineFrames(JSContext *cx, uint8_t *top,
 
     while (true) {
         size_t frameNo = iter.frameNo();
-        frames[frameNo] = RematerializedFrame::New(cx, top, iter);
-        if (!frames[frameNo])
+        RematerializedFrame *frame = RematerializedFrame::New(cx, top, iter);
+        if (!frame)
             return false;
+        if (frame->scopeChain()) {
+            // Frames are often rematerialized with the cx inside a Debugger's
+            // compartment. To create CallObjects, we need to be in that
+            // frame's compartment.
+            AutoCompartment ac(cx, frame->scopeChain());
+            if (!EnsureHasScopeObjects(cx, frame))
+                return false;
+        }
+
+        frames[frameNo] = frame;
 
         if (!iter.more())
             break;
@@ -110,6 +120,26 @@ RematerializedFrame::callObj() const
     while (!scope->is<CallObject>())
         scope = scope->enclosingScope();
     return scope->as<CallObject>();
+}
+
+void
+RematerializedFrame::pushOnScopeChain(ScopeObject &scope)
+{
+    MOZ_ASSERT(*scopeChain() == scope.enclosingScope() ||
+               *scopeChain() == scope.as<CallObject>().enclosingScope().as<DeclEnvObject>().enclosingScope());
+    scopeChain_ = &scope;
+}
+
+bool
+RematerializedFrame::initFunctionScopeObjects(JSContext *cx)
+{
+    MOZ_ASSERT(isNonEvalFunctionFrame());
+    MOZ_ASSERT(fun()->isHeavyweight());
+    CallObject *callobj = CallObject::createForFunction(cx, this);
+    if (!callobj)
+        return false;
+    pushOnScopeChain(*callobj);
+    return true;
 }
 
 void
