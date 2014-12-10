@@ -84,6 +84,12 @@ let modules = {
     privileged: true
   },
 #endif
+#ifdef NIGHTLY_BUILD
+  passwords: {
+    uri: "chrome://browser/content/aboutPasswords.xhtml",
+    privileged: true
+  }
+#endif
 }
 
 function AboutRedirector() {}
@@ -113,7 +119,7 @@ AboutRedirector.prototype = {
               getService(Ci.nsIIOService);
 
     var channel = ios.newChannel(moduleInfo.uri, null, null);
-    
+
     if (!moduleInfo.privileged) {
       // Setting the owner to null means that we'll go through the normal
       // path in GetChannelPrincipal and create a codebase principal based
