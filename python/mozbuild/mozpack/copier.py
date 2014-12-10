@@ -212,12 +212,7 @@ class FileCopier(FileRegistry):
 
         result = FileCopyResult()
         have_symlinks = hasattr(os, 'symlink')
-
-        # Aliased to prevent attribute lookup in tight loops.
-        normpath = os.path.normpath
-        join = os.path.join
-        dirname = os.path.dirname
-        destination = normpath(destination)
+        destination = os.path.normpath(destination)
 
         # We create the destination directory specially. We can't do this as
         # part of the loop doing mkdir() below because that loop munges
@@ -239,9 +234,9 @@ class FileCopier(FileRegistry):
         dest_files = set()
 
         for p, f in self:
-            dest_files.add(normpath(join(destination, p)))
+            dest_files.add(os.path.normpath(os.path.join(destination, p)))
 
-        required_dirs |= set(normpath(join(destination, d))
+        required_dirs |= set(os.path.normpath(os.path.join(destination, d))
             for d in self.required_directories())
 
         # Ensure destination directories are in place and proper.
@@ -294,7 +289,7 @@ class FileCopier(FileRegistry):
             if have_symlinks:
                 filtered = []
                 for d in dirs:
-                    full = join(root, d)
+                    full = os.path.join(root, d)
                     st = os.lstat(full)
                     if stat.S_ISLNK(st.st_mode):
                         # This directory symlink is not a required
@@ -302,21 +297,21 @@ class FileCopier(FileRegistry):
                         # removed and a directory created above.
                         if remove_all_directory_symlinks:
                             os.remove(full)
-                            result.removed_files.add(full)
+                            result.removed_files.add(os.path.normpath(full))
                         else:
-                            existing_files.add(full)
+                            existing_files.add(os.path.normpath(full))
                     else:
                         filtered.append(d)
 
                 dirs[:] = filtered
 
-            existing_dirs.add(root)
+            existing_dirs.add(os.path.normpath(root))
 
             for d in dirs:
-                existing_dirs.add(join(root, d))
+                existing_dirs.add(os.path.normpath(os.path.join(root, d)))
 
             for f in files:
-                existing_files.add(join(root, f))
+                existing_files.add(os.path.normpath(os.path.join(root, f)))
 
         # Now we reconcile the state of the world against what we want.
 
@@ -334,7 +329,7 @@ class FileCopier(FileRegistry):
 
         # Install files.
         for p, f in self:
-            destfile = join(destination, p)
+            destfile = os.path.normpath(os.path.join(destination, p))
             if f.copy(destfile, skip_if_older):
                 result.updated_files.add(destfile)
             else:
@@ -359,7 +354,7 @@ class FileCopier(FileRegistry):
                 previous = ''
                 parents = set()
                 while True:
-                    parent = dirname(parent)
+                    parent = os.path.dirname(parent)
                     parents.add(parent)
 
                     if previous == parent:
