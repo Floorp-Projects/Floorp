@@ -17,6 +17,20 @@ loop.store = loop.store || {};
   var sharedActions = loop.shared.actions;
 
   /**
+   * Maximum size given to createRoom; only 2 is supported (and is
+   * always passed) because that's what the user-experience is currently
+   * designed and tested to handle.
+   * @type {Number}
+   */
+  var MAX_ROOM_CREATION_SIZE = loop.store.MAX_ROOM_CREATION_SIZE = 2;
+
+  /**
+   * The number of hours for which the room will exist - default 8 weeks
+   * @type {Number}
+   */
+  var DEFAULT_EXPIRES_IN = loop.store.DEFAULT_EXPIRES_IN = 24 * 7 * 8;
+
+  /**
    * Room validation schema. See validate.js.
    * @type {Object}
    */
@@ -61,13 +75,13 @@ loop.store = loop.store || {};
      * designed and tested to handle.
      * @type {Number}
      */
-    maxRoomCreationSize: 2,
+    maxRoomCreationSize: MAX_ROOM_CREATION_SIZE,
 
     /**
      * The number of hours for which the room will exist - default 8 weeks
      * @type {Number}
      */
-    defaultExpiresIn: 24 * 7 * 8,
+    defaultExpiresIn: DEFAULT_EXPIRES_IN,
 
     /**
      * Registered actions.

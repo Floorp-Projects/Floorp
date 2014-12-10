@@ -76,10 +76,12 @@ loop.shared.actions = (function() {
     }),
 
     /**
-     * Fetch a new call url from the server, intended to be sent over email when
+     * Fetch a new room url from the server, intended to be sent over email when
      * a contact can't be reached.
      */
-    FetchEmailLink: Action.define("fetchEmailLink", {
+    FetchRoomEmailLink: Action.define("fetchRoomEmailLink", {
+      roomOwner: String,
+      roomName: String
     }),
 
     /**
