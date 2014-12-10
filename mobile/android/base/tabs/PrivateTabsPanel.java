@@ -7,7 +7,7 @@ package org.mozilla.gecko.tabs;
 
 import java.util.Locale;
 
-import org.mozilla.gecko.BrowserLocaleManager;
+import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tabs;
@@ -58,7 +58,7 @@ class PrivateTabsPanel extends FrameLayout implements CloseAllPanelView {
         learnMore.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                final String locale = BrowserLocaleManager.getLanguageTag(Locale.getDefault());
+                final String locale = Locales.getLanguageTag(Locale.getDefault());
                 final String url =
                         getResources().getString(R.string.private_tabs_panel_learn_more_link, locale);
                 Tabs.getInstance().loadUrlInTab(url);

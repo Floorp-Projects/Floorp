@@ -38,4 +38,5 @@ public interface LocaleManager {
      * use.
      */
     Locale onSystemConfigurationChanged(Context context, Resources resources, Configuration configuration, Locale currentActivityLocale);
+    String getFallbackLocaleTag();
 }
