@@ -657,6 +657,7 @@ BrowserElementChild.prototype = {
       zoomFactor: zoomFactor,
       states: e.states,
       isCollapsed: (e.selectedText.length == 0),
+      visible: e.visible,
     };
 
     // Get correct geometry information if we have nested iframe.

@@ -87,6 +87,7 @@ SelectionCarets::SelectionCarets(nsIPresShell* aPresShell)
   , mAsyncPanZoomEnabled(false)
   , mEndCaretVisible(false)
   , mStartCaretVisible(false)
+  , mSelectionVisibleInScrollFrames(true)
   , mVisible(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -487,6 +488,22 @@ SelectionCarets::UpdateSelectionCarets()
   }
 
   mPresShell->FlushPendingNotifications(Flush_Layout);
+
+  // If the selection is not visible, we should dispatch a event.
+  nsIFrame* commonAncestorFrame =
+    nsLayoutUtils::FindNearestCommonAncestorFrame(startFrame, endFrame);
+
+  nsRect selectionRectInRootFrame = GetSelectionBoundingRect(selection);
+  nsRect selectionRectInCommonAncestorFrame = selectionRectInRootFrame;
+  nsLayoutUtils::TransformRect(rootFrame, commonAncestorFrame,
+                               selectionRectInCommonAncestorFrame);
+
+  mSelectionVisibleInScrollFrames =
+    nsLayoutUtils::IsRectVisibleInScrollFrames(commonAncestorFrame,
+                                               selectionRectInCommonAncestorFrame);
+  SELECTIONCARETS_LOG("Selection visibility %s",
+                      (mSelectionVisibleInScrollFrames ? "shown" : "hidden"));
+
 
   nsRect firstRectInStartFrame =
     nsCaret::GetGeometryForFrame(startFrame, startOffset, nullptr);
@@ -991,6 +1008,15 @@ SelectionCarets::GetSelectionBoundingRect(Selection* aSel)
 
 void
 SelectionCarets::DispatchSelectionStateChangedEvent(Selection* aSelection,
+                                                    SelectionState aState)
+{
+  dom::Sequence<SelectionState> state;
+  state.AppendElement(aState);
+  DispatchSelectionStateChangedEvent(aSelection, state);
+}
+
+void
+SelectionCarets::DispatchSelectionStateChangedEvent(Selection* aSelection,
                                                     const Sequence<SelectionState>& aStates)
 {
   nsIDocument* doc = mPresShell->GetDocument();
@@ -1008,6 +1034,7 @@ SelectionCarets::DispatchSelectionStateChangedEvent(Selection* aSelection,
 
     domRect->SetLayoutRect(rect);
     init.mBoundingClientRect = domRect;
+    init.mVisible = mSelectionVisibleInScrollFrames;
 
     aSelection->Stringify(init.mSelectedText);
   }
@@ -1026,10 +1053,7 @@ void
 SelectionCarets::NotifyBlur()
 {
   SetVisibility(false);
-
-  dom::Sequence<SelectionState> state;
-  state.AppendElement(dom::SelectionState::Blur);
-  DispatchSelectionStateChangedEvent(nullptr, state);
+  DispatchSelectionStateChangedEvent(nullptr, SelectionState::Blur);
 }
 
 nsresult
@@ -1088,8 +1112,13 @@ SelectionCarets::AsyncPanZoomStopped(const mozilla::CSSIntPoint aScrollPos)
   SELECTIONCARETS_LOG("Update selection carets after APZ is stopped!");
   UpdateSelectionCarets();
 
+  // SelectionStateChangedEvent should be dispatched before ScrollViewChangeEvent.
+  DispatchSelectionStateChangedEvent(GetSelection(),
+                                     SelectionState::Updateposition);
+
   SELECTIONCARETS_LOG("Dispatch scroll stopped with position x=%d, y=%d",
                       aScrollPos.x, aScrollPos.y);
+
   DispatchScrollViewChangeEvent(mPresShell, dom::ScrollState::Stopped, aScrollPos);
 }
 
@@ -1179,6 +1208,8 @@ SelectionCarets::FireScrollEnd(nsITimer* aTimer, void* aSelectionCarets)
   SELECTIONCARETS_LOG_STATIC("Update selection carets!");
   self->SetVisibility(true);
   self->UpdateSelectionCarets();
+  self->DispatchSelectionStateChangedEvent(self->GetSelection(),
+                                           SelectionState::Updateposition);
 }
 
 NS_IMETHODIMP
@@ -1187,6 +1218,9 @@ SelectionCarets::Reflow(DOMHighResTimeStamp aStart, DOMHighResTimeStamp aEnd)
   if (mVisible) {
     SELECTIONCARETS_LOG("Update selection carets after reflow!");
     UpdateSelectionCarets();
+
+    DispatchSelectionStateChangedEvent(GetSelection(),
+                                       SelectionState::Updateposition);
   }
   return NS_OK;
 }
