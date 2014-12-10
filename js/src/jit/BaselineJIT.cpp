@@ -576,7 +576,7 @@ BaselineScript::anyKindICEntryFromPCOffset(uint32_t pcOffset)
 
     // Return any IC entry with a matching PC offset.
     for (size_t i = mid; i < numICEntries() && icEntry(i).pcOffset() == pcOffset; i--)
-            return icEntry(i);
+        return icEntry(i);
     for (size_t i = mid+1; i < numICEntries() && icEntry(i).pcOffset() == pcOffset; i++)
         return icEntry(i);
     MOZ_CRASH("Invalid PC offset for IC entry.");
