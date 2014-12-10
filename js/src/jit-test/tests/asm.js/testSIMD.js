@@ -763,9 +763,9 @@ CheckF4(ORF32,  'var x=f4(42, 13.37,-1.42, 23.10); var y=f4(19.89, 2.4, 8.15, 16
 CheckF4(XORF32, 'var x=f4(42, 13.37,-1.42, 23.10); var y=f4(19.89, 2.4, 8.15, 16.36); x=xorr(x,y)', bitwise.xor([42, 13.37, -1.42, 23.10], [19.89, 2.4, 8.15, 16.36]));
 
 // Logical ops
-const LSHI = 'var lsh=i4.shiftLeft;'
-const RSHI = 'var rsh=i4.shiftRight;'
-const URSHI = 'var ursh=i4.shiftRightLogical;'
+const LSHI = 'var lsh=i4.shiftLeftByScalar;'
+const RSHI = 'var rsh=i4.shiftRightArithmeticByScalar;'
+const URSHI = 'var ursh=i4.shiftRightLogicalByScalar;'
 
 assertAsmTypeFail('glob', USE_ASM + I32 + F32 + FROUND + LSHI + "function f() {var x=f4(1,2,3,4); return i4(lsh(x,f32(42)));} return f");
 assertAsmTypeFail('glob', USE_ASM + I32 + F32 + FROUND + LSHI + "function f() {var x=f4(1,2,3,4); return i4(lsh(x,42));} return f");

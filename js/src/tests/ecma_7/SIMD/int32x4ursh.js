@@ -10,7 +10,7 @@ function test() {
 
   for (var bits = 0; bits < 32; bits++) {
       var a = int32x4(-1, 2, -3, 4);
-      var c = SIMD.int32x4.shiftRightLogical(a, bits);
+      var c = SIMD.int32x4.shiftRightLogicalByScalar(a, bits);
       assertEq(c.x >>> 0, -1 >>> bits);
       assertEq(c.y >>> 0, 2 >>> bits);
       assertEq(c.z >>> 0, -3 >>> bits);
@@ -21,7 +21,7 @@ function test() {
   var INT32_MIN = -Math.pow(2, 31);
 
   var d = int32x4(INT32_MAX, INT32_MIN, INT32_MAX, INT32_MIN);
-  var f = SIMD.int32x4.shiftRightLogical(d, 0);
+  var f = SIMD.int32x4.shiftRightLogicalByScalar(d, 0);
   assertEq(f.x, (INT32_MAX >>> 0) | 0);
   assertEq(f.y, (INT32_MIN >>> 0) | 0);
   assertEq(f.z, (INT32_MAX >>> 0) | 0);

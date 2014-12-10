@@ -5772,11 +5772,11 @@ CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompile
       case AsmJSSimdOperation_fromFloat32x4Bits:
         return CheckSimdCast<MSimdReinterpretCast>(f, call, AsmJSSimdType_float32x4, opType, def, type);
 
-      case AsmJSSimdOperation_shiftLeft:
+      case AsmJSSimdOperation_shiftLeftByScalar:
         return CheckSimdBinary(f, call, opType, MSimdShift::lsh, def, type);
-      case AsmJSSimdOperation_shiftRight:
+      case AsmJSSimdOperation_shiftRightArithmeticByScalar:
         return CheckSimdBinary(f, call, opType, MSimdShift::rsh, def, type);
-      case AsmJSSimdOperation_shiftRightLogical:
+      case AsmJSSimdOperation_shiftRightLogicalByScalar:
         return CheckSimdBinary(f, call, opType, MSimdShift::ursh, def, type);
 
       case AsmJSSimdOperation_abs:
