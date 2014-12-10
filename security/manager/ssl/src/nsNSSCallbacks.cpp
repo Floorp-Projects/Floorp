@@ -1008,16 +1008,10 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
     }
   }
 
-  // Prevent downgrade attacks on the symmetric cipher. We accept downgrades
-  // from 256-bit keys to 128-bit keys and we treat AES and Camellia as being
-  // equally secure. We consider every message authentication mechanism that we
-  // support *for these ciphers* to be equally-secure. We assume that for CBC
-  // mode, that the server has implemented all the same mitigations for
-  // published attacks that we have, or that those attacks are not relevant in
-  // the decision to false start.
-  if (cipherInfo.symCipher != ssl_calg_aes_gcm && 
-      cipherInfo.symCipher != ssl_calg_aes &&
-      cipherInfo.symCipher != ssl_calg_camellia) {
+  // Prevent downgrade attacks on the symmetric cipher. We do not allow CBC
+  // mode due to BEAST, POODLE, and other attacks on the MAC-then-Encrypt
+  // design. See bug 1109766 for more details.
+  if (cipherInfo.symCipher != ssl_calg_aes_gcm) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
            ("CanFalseStartCallback [%p] failed - Symmetric cipher used, %d, "
             "is not supported with False Start.\n", fd,
