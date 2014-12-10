@@ -75,9 +75,11 @@ add_task(function* insert_bookmark_keyword_notification() {
   let bm = yield PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                 parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                 url: new URL("http://example.com/"),
-                                                keyword: "kw" });
+                                                keyword: "Kw" });
   let itemId = yield PlacesUtils.promiseItemId(bm.guid);
   let parentId = yield PlacesUtils.promiseItemId(bm.parentGuid);
+  // Keywords are case-insensitive.
+  Assert.equal(bm.keyword, "kw");
   observer.check([ { name: "onItemAdded",
                      arguments: [ itemId, parentId, bm.index, bm.type,
                                   bm.url, null, bm.dateAdded,
@@ -173,7 +175,9 @@ add_task(function* update_bookmark_keyword() {
                                                 parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                 url: new URL("http://keyword.example.com/") });
   let observer = expectNotifications();
-  bm = yield PlacesUtils.bookmarks.update({ guid: bm.guid, keyword: "kw" });
+  bm = yield PlacesUtils.bookmarks.update({ guid: bm.guid, keyword: "kW" });
+  // Keywords are case-insensitive.
+  Assert.equal(bm.keyword, "kw");
   let itemId = yield PlacesUtils.promiseItemId(bm.guid);
   let parentId = yield PlacesUtils.promiseItemId(bm.parentGuid);
 

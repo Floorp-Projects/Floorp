@@ -8,7 +8,7 @@
 
 const TEST_URI = TEST_URL_ROOT + "doc_keyframeanimation.html";
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab(TEST_URI);
 
   let {toolbox, inspector, view} = yield openRuleView();

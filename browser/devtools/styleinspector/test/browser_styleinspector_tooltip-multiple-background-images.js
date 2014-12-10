@@ -16,7 +16,7 @@ let BLUE_DOT = "data:image/png;base64," +
   "BIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gYcDCwlCkCM9QAAABl0RVh0Q29tbWVudABDcmVh" +
   "dGVkIHdpdGggR0lNUFeBDhcAAAANSURBVAjXY2Bg+F8PAAKCAX/tPkrkAAAAAElFTkSuQmCC";
 
-let test = asyncTest(function* () {
+add_task(function* () {
   let TEST_STYLE = "h1 {background: url(" + YELLOW_DOT + "), url(" + BLUE_DOT + ");}";
 
   let PAGE_CONTENT = "<style>" + TEST_STYLE + "</style>" +
@@ -32,7 +32,7 @@ let test = asyncTest(function* () {
 function* testRuleViewUrls() {
   info("Testing tooltips in the rule view");
 
-  let { view, inspector } = yield openRuleView();
+  let {view, inspector} = yield openRuleView();
   yield selectNode("h1", inspector);
 
   let {valueSpan} = getRuleViewProperty(view, "h1", "background");
@@ -42,7 +42,8 @@ function* testRuleViewUrls() {
 function* testComputedViewUrls() {
   info("Testing tooltips in the computed view");
 
-  let {view} = yield openComputedView();
+  let {view, inspector} = yield openComputedView();
+  yield inspector.once("computed-view-refreshed");
   let {valueSpan} = getComputedViewProperty(view, "background-image");
 
   yield performChecks(view, valueSpan);

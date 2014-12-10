@@ -6,7 +6,7 @@
 
 // Tests the computed-view keyboard navigation
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab("data:text/html;charset=utf-8,computed view keyboard nav test");
 
   content.document.body.innerHTML = '<style type="text/css"> ' +

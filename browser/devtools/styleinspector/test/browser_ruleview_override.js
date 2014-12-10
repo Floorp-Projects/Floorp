@@ -6,7 +6,7 @@
 
 // Test the display of overridden declarations in the rule-view
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab("data:text/html;charset=utf-8,browser_ruleview_override.js");
   let {toolbox, inspector, view} = yield openRuleView();
 

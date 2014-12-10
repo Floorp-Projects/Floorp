@@ -12,7 +12,7 @@ const PREF = "devtools.styleeditor.source-maps-enabled";
 const SCSS_LOC = "doc_sourcemaps.scss:4";
 const CSS_LOC = "doc_sourcemaps.css:1";
 
-let test = asyncTest(function*() {
+add_task(function*() {
   info("Setting the " + PREF +  " pref to true");
   Services.prefs.setBoolPref(PREF, true);
 

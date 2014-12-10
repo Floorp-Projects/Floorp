@@ -54,7 +54,7 @@ const DOCUMENT_URL = "data:text/html;charset=utf-8,"+encodeURIComponent(
    '</body>',
    '</html>'].join("\n"));
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab(DOCUMENT_URL);
   let {toolbox, inspector, view} = yield openRuleView();
 

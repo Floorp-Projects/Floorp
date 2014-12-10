@@ -19,11 +19,10 @@ const PAGE_CONTENT = [
 
 let TYPE = "CssTransformHighlighter";
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + PAGE_CONTENT);
 
-
-  let {view: rView} = yield openRuleView();
+  let {inspector, view: rView} = yield openRuleView();
   let hs = rView.highlighters;
 
   ok(!hs.highlighters[TYPE], "No highlighter exists in the rule-view (1)");
@@ -42,7 +41,9 @@ let test = asyncTest(function*() {
   let h = yield hs.promises[TYPE];
   is(h, hs.highlighters[TYPE], "The initialized highlighter is the right one");
 
+  let onComputedViewReady = inspector.once("computed-view-refreshed");
   let {view: cView} = yield openComputedView();
+  yield onComputedViewReady;
   hs = cView.highlighters;
 
   ok(!hs.highlighters[TYPE], "No highlighter exists in the computed-view (1)");
