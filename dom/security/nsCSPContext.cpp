@@ -135,6 +135,13 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
   // Default decision, CSP can revise it if there's a policy to enforce
   *outDecision = nsIContentPolicy::ACCEPT;
 
+  // If the content type doesn't map to a CSP directive, there's nothing for
+  // CSP to do.
+  CSPDirective dir = CSP_ContentTypeToDirective(aContentType);
+  if (dir == nsIContentSecurityPolicy::NO_DIRECTIVE) {
+    return NS_OK;
+  }
+
   // This may be a load or a preload. If it is a preload, the document will
   // not have been fully parsed yet, and aRequestContext will be an
   // nsIDOMHTMLDocument rather than the nsIDOMHTMLElement associated with the
@@ -165,38 +172,23 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
     }
   }
 
-  nsAutoString violatedDirective;
-  for (uint32_t p = 0; p < mPolicies.Length(); p++) {
-    if (!mPolicies[p]->permits(aContentType,
-                               aContentLocation,
-                               nonce,
-                               // aExtra is only non-null if
-                               // the channel got redirected.
-                               (aExtra != nullptr),
-                               violatedDirective)) {
-      // If the policy is violated and not report-only, reject the load and
-      // report to the console
-      if (!mPolicies[p]->getReportOnlyFlag()) {
-        CSPCONTEXTLOG(("nsCSPContext::ShouldLoad, nsIContentPolicy::REJECT_SERVER"));
-        *outDecision = nsIContentPolicy::REJECT_SERVER;
-      }
+  // aExtra is only non-null if the channel got redirected.
+  bool wasRedirected = (aExtra != nullptr);
+  nsCOMPtr<nsIURI> originalURI = do_QueryInterface(aExtra);
 
-      // Do not send a report or notify observers if this is a preload - the
-      // decision may be wrong due to the inability to get the nonce, and will
-      // incorrectly fail the unit tests.
-      if (!isPreload) {
-        nsCOMPtr<nsIURI> originalURI = do_QueryInterface(aExtra);
-        this->AsyncReportViolation(aContentLocation,
-                                   originalURI,   /* in case of redirect originalURI is not null */
-                                   violatedDirective,
-                                   p,             /* policy index        */
-                                   EmptyString(), /* no observer subject */
-                                   EmptyString(), /* no source file      */
-                                   EmptyString(), /* no script sample    */
-                                   0);            /* no line number      */
-      }
-    }
-  }
+  bool permitted = permitsInternal(dir,
+                                   aContentLocation,
+                                   originalURI,
+                                   nonce,
+                                   wasRedirected,
+                                   isPreload,
+                                   false,     // allow fallback to default-src
+                                   true,      // send violation reports
+                                   true);     // send blocked URI in violation reports
+
+  *outDecision = permitted ? nsIContentPolicy::ACCEPT
+                           : nsIContentPolicy::REJECT_SERVER;
+
   // Done looping, cache any relevant result
   if (cacheKey.Length() > 0 && !isPreload) {
     mShouldLoadCache.Put(cacheKey, *outDecision);
@@ -211,6 +203,64 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
 #endif
   return NS_OK;
 }
+
+bool
+nsCSPContext::permitsInternal(CSPDirective aDir,
+                              nsIURI* aContentLocation,
+                              nsIURI* aOriginalURI,
+                              const nsAString& aNonce,
+                              bool aWasRedirected,
+                              bool aIsPreload,
+                              bool aSpecific,
+                              bool aSendViolationReports,
+                              bool aSendContentLocationInViolationReports)
+{
+  bool permits = true;
+
+  nsAutoString violatedDirective;
+  for (uint32_t p = 0; p < mPolicies.Length(); p++) {
+
+    // According to the W3C CSP spec, frame-ancestors checks are ignored for
+    // report-only policies (when "monitoring").
+    if (aDir == nsIContentSecurityPolicy::FRAME_ANCESTORS_DIRECTIVE &&
+        mPolicies[p]->getReportOnlyFlag()) {
+      continue;
+    }
+
+    if (!mPolicies[p]->permits(aDir,
+                               aContentLocation,
+                               aNonce,
+                               aWasRedirected,
+                               aSpecific,
+                               violatedDirective)) {
+      // If the policy is violated and not report-only, reject the load and
+      // report to the console
+      if (!mPolicies[p]->getReportOnlyFlag()) {
+        CSPCONTEXTLOG(("nsCSPContext::permitsInternal, false"));
+        permits = false;
+      }
+
+      // Do not send a report or notify observers if this is a preload - the
+      // decision may be wrong due to the inability to get the nonce, and will
+      // incorrectly fail the unit tests.
+      if (!aIsPreload && aSendViolationReports) {
+        this->AsyncReportViolation((aSendContentLocationInViolationReports ?
+                                    aContentLocation : nullptr),
+                                   aOriginalURI,  /* in case of redirect originalURI is not null */
+                                   violatedDirective,
+                                   p,             /* policy index        */
+                                   EmptyString(), /* no observer subject */
+                                   EmptyString(), /* no source file      */
+                                   EmptyString(), /* no script sample    */
+                                   0);            /* no line number      */
+      }
+    }
+  }
+
+  return permits;
+}
+
+
 
 /* ===== nsISupports implementation ========== */
 
@@ -1041,128 +1091,66 @@ nsCSPContext::PermitsAncestry(nsIDocShell* aDocShell, bool* outPermitsAncestry)
 
   // Now that we've got the ancestry chain in ancestorsArray, time to check
   // them against any CSP.
-  for (uint32_t i = 0; i < mPolicies.Length(); i++) {
+  // NOTE:  the ancestors are not allowed to be sent cross origin; this is a
+  // restriction not placed on subresource loads.
 
-    // According to the W3C CSP spec, frame-ancestors checks are ignored for
-    // report-only policies (when "monitoring").
-    if (mPolicies[i]->getReportOnlyFlag()) {
-      continue;
-    }
-
-    for (uint32_t a = 0; a < ancestorsArray.Length(); a++) {
-      // TODO(sid) the mapping from frame-ancestors context to TYPE_DOCUMENT is
-      // forced. while this works for now, we will implement something in
-      // bug 999656.
+  for (uint32_t a = 0; a < ancestorsArray.Length(); a++) {
 #ifdef PR_LOGGING
-      {
-      nsAutoCString spec;
-      ancestorsArray[a]->GetSpec(spec);
-      CSPCONTEXTLOG(("nsCSPContext::PermitsAncestry, checking ancestor: %s", spec.get()));
-      }
+    {
+    nsAutoCString spec;
+    ancestorsArray[a]->GetSpec(spec);
+    CSPCONTEXTLOG(("nsCSPContext::PermitsAncestry, checking ancestor: %s", spec.get()));
+    }
 #endif
-      if (!mPolicies[i]->permits(nsIContentPolicy::TYPE_DOCUMENT,
-                                 ancestorsArray[a],
-                                 EmptyString(), // no nonce
-                                 false, // no redirect
-                                 violatedDirective)) {
-        // Policy is violated
-        // Send reports, but omit the ancestor URI if cross-origin as per spec
-        // (it is a violation of the same-origin policy).
-        bool okToSendAncestor = NS_SecurityCompareURIs(ancestorsArray[a], mSelfURI, true);
+    // omit the ancestor URI in violation reports if cross-origin as per spec
+    // (it is a violation of the same-origin policy).
+    bool okToSendAncestor = NS_SecurityCompareURIs(ancestorsArray[a], mSelfURI, true);
 
-        this->AsyncReportViolation((okToSendAncestor ? ancestorsArray[a] : nullptr),
-                                   nullptr,       /* originalURI in case of redirect */
-                                   violatedDirective,
-                                   i,             /* policy index        */
-                                   EmptyString(), /* no observer subject */
-                                   EmptyString(), /* no source file      */
-                                   EmptyString(), /* no script sample    */
-                                   0);            /* no line number      */
-        *outPermitsAncestry = false;
-      }
+
+    bool permits = permitsInternal(nsIContentSecurityPolicy::FRAME_ANCESTORS_DIRECTIVE,
+                                   ancestorsArray[a],
+                                   nullptr, // no redirect here.
+                                   EmptyString(), // no nonce
+                                   false,   // no redirect here.
+                                   false,   // not a preload.
+                                   true,    // specific, do not use default-src
+                                   true,    // send violation reports
+                                   okToSendAncestor);
+    if (!permits) {
+      *outPermitsAncestry = false;
     }
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCSPContext::PermitsBaseURI(nsIURI* aURI, bool* outPermitsBaseURI)
+nsCSPContext::Permits(nsIURI* aURI,
+                      CSPDirective aDir,
+                      bool aSpecific,
+                      bool* outPermits)
 {
   // Can't perform check without aURI
   if (aURI == nullptr) {
     return NS_ERROR_FAILURE;
   }
 
-  *outPermitsBaseURI = true;
-
-  for (uint32_t i = 0; i < mPolicies.Length(); i++) {
-    if (!mPolicies[i]->permitsBaseURI(aURI)) {
-      // policy is violated, report to caller if not report-only
-      if (!mPolicies[i]->getReportOnlyFlag()) {
-        *outPermitsBaseURI = false;
-      }
-      nsAutoString violatedDirective;
-      mPolicies[i]->getDirectiveAsString(CSP_BASE_URI, violatedDirective);
-      this->AsyncReportViolation(aURI,
-                                 nullptr,       /* originalURI in case of redirect */
-                                 violatedDirective,
-                                 i,             /* policy index        */
-                                 EmptyString(), /* no observer subject */
-                                 EmptyString(), /* no source file      */
-                                 EmptyString(), /* no script sample    */
-                                 0);            /* no line number      */
-    }
-  }
+  *outPermits = permitsInternal(aDir,
+                                aURI,
+                                nullptr,  // no original (pre-redirect) URI
+                                EmptyString(),  // no nonce
+                                false,    // not redirected.
+                                false,    // not a preload.
+                                aSpecific,
+                                true,     // send violation reports
+                                true);    // send blocked URI in violation reports
 
 #ifdef PR_LOGGING
   {
     nsAutoCString spec;
     aURI->GetSpec(spec);
-    CSPCONTEXTLOG(("nsCSPContext::PermitsBaseURI, aUri: %s, isAllowed: %s",
-                  spec.get(),
-                  *outPermitsBaseURI ? "allow" : "deny"));
-  }
-#endif
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCSPContext::PermitsFormAction(nsIURI* aURI, bool* outPermitsFormAction)
-{
-  // Can't perform check without aURI
-  if (!aURI) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *outPermitsFormAction = true;
-
-  for (uint32_t i = 0; i < mPolicies.Length(); i++) {
-    if (!mPolicies[i]->permitsFormAction(aURI)) {
-      // policy is violated, report to caller if not report-only
-      if (!mPolicies[i]->getReportOnlyFlag()) {
-        *outPermitsFormAction = false;
-      }
-      nsAutoString violatedDirective;
-      mPolicies[i]->getDirectiveAsString(CSP_FORM_ACTION, violatedDirective);
-      this->AsyncReportViolation(aURI,
-                                 mSelfURI,
-                                 violatedDirective,
-                                 i,             /* policy index        */
-                                 EmptyString(), /* no observer subject */
-                                 EmptyString(), /* no source file      */
-                                 EmptyString(), /* no script sample    */
-                                 0);            /* no line number      */
-    }
-  }
-
-#ifdef PR_LOGGING
-  {
-    nsAutoCString spec;
-    aURI->GetSpec(spec);
-    CSPCONTEXTLOG(("nsCSPContext::PermitsFormAction, aUri: %s, isAllowed: %s",
-                  spec.get(),
-                  *outPermitsFormAction ? "allow" : "deny"));
+    CSPCONTEXTLOG(("nsCSPContext::Permits, aUri: %s, aDir: %d, isAllowed: %s",
+                  spec.get(), aDir,
+                  *outPermits ? "allow" : "deny"));
   }
 #endif
 

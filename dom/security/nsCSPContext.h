@@ -61,6 +61,16 @@ class nsCSPContext : public nsIContentSecurityPolicy
                                     bool* outShouldReportViolations,
                                     bool* outIsAllowed) const;
 
+    bool permitsInternal(CSPDirective aDir,
+                         nsIURI* aContentLocation,
+                         nsIURI* aOriginalURI,
+                         const nsAString& aNonce,
+                         bool aWasRedirected,
+                         bool aIsPreload,
+                         bool aSpecific,
+                         bool aSendViolationReports,
+                         bool aSendContentLocationInViolationReports);
+
     nsCOMPtr<nsIURI>                           mReferrer;
     uint64_t                                   mInnerWindowID; // used for web console logging
     nsTArray<nsCSPPolicy*>                     mPolicies;

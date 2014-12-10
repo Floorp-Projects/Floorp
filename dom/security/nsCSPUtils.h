@@ -8,6 +8,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIContentPolicy.h"
+#include "nsIContentSecurityPolicy.h"
 #include "nsIURI.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -54,72 +55,45 @@ void CSP_LogMessage(const nsAString& aMessage,
 #define SCRIPT_HASH_VIOLATION_OBSERVER_TOPIC    "Inline Script had invalid hash"
 #define STYLE_HASH_VIOLATION_OBSERVER_TOPIC     "Inline Style had invalid hash"
 
-
-// Please add any new enum items not only to CSPDirective, but also add
-// a string version for every enum >> using the same index << to
-// CSPStrDirectives underneath.
-enum CSPDirective {
-  CSP_DEFAULT_SRC = 0,
-  CSP_SCRIPT_SRC,
-  CSP_OBJECT_SRC,
-  CSP_STYLE_SRC,
-  CSP_IMG_SRC,
-  CSP_MEDIA_SRC,
-  CSP_FRAME_SRC,
-  CSP_FONT_SRC,
-  CSP_CONNECT_SRC,
-  CSP_REPORT_URI,
-  CSP_FRAME_ANCESTORS,
-  CSP_REFLECTED_XSS,
-  CSP_BASE_URI,
-  CSP_FORM_ACTION,
-  // CSP_LAST_DIRECTIVE_VALUE always needs to be the last element in the enum
-  // because we use it to calculate the size for the char* array.
-  CSP_LAST_DIRECTIVE_VALUE
-};
-
+// these strings map to the CSPDirectives in nsIContentSecurityPolicy
+// NOTE: When implementing a new directive, you will need to add it here but also
+// add a corresponding entry to the constants in nsIContentSecurityPolicy.idl
 static const char* CSPStrDirectives[] = {
-  "default-src",     // CSP_DEFAULT_SRC = 0
-  "script-src",      // CSP_SCRIPT_SRC
-  "object-src",      // CSP_OBJECT_SRC
-  "style-src",       // CSP_STYLE_SRC
-  "img-src",         // CSP_IMG_SRC
-  "media-src",       // CSP_MEDIA_SRC
-  "frame-src",       // CSP_FRAME_SRC
-  "font-src",        // CSP_FONT_SRC
-  "connect-src",     // CSP_CONNECT_SRC
-  "report-uri",      // CSP_REPORT_URI
-  "frame-ancestors", // CSP_FRAME_ANCESTORS
-  "reflected-xss",   // CSP_REFLECTED_XSS
-  "base-uri",        // CSP_BASE_URI
-  "form-action"      // CSP_FORM_ACTION
+  "-error-",    // NO_DIRECTIVE
+  "default-src",     // DEFAULT_SRC_DIRECTIVE
+  "script-src",      // SCRIPT_SRC_DIRECTIVE
+  "object-src",      // OBJECT_SRC_DIRECTIVE
+  "style-src",       // STYLE_SRC_DIRECTIVE
+  "img-src",         // IMG_SRC_DIRECTIVE
+  "media-src",       // MEDIA_SRC_DIRECTIVE
+  "frame-src",       // FRAME_SRC_DIRECTIVE
+  "font-src",        // FONT_SRC_DIRECTIVE
+  "connect-src",     // CONNECT_SRC_DIRECTIVE
+  "report-uri",      // REPORT_URI_DIRECTIVE
+  "frame-ancestors", // FRAME_ANCESTORS_DIRECTIVE
+  "reflected-xss",   // REFLECTED_XSS_DIRECTIVE
+  "base-uri",        // BASE_URI_DIRECTIVE
+  "form-action"      // FORM_ACTION_DIRECTIVE
 };
 
-inline const char* CSP_EnumToDirective(enum CSPDirective aDir)
+inline const char* CSP_CSPDirectiveToString(CSPDirective aDir)
 {
-  // Make sure all elements in enum CSPDirective got added to CSPStrDirectives.
-  static_assert((sizeof(CSPStrDirectives) / sizeof(CSPStrDirectives[0]) ==
-                static_cast<uint32_t>(CSP_LAST_DIRECTIVE_VALUE)),
-                "CSP_LAST_DIRECTIVE_VALUE does not match length of CSPStrDirectives");
   return CSPStrDirectives[static_cast<uint32_t>(aDir)];
 }
 
-inline CSPDirective CSP_DirectiveToEnum(const nsAString& aDir)
+inline CSPDirective CSP_StringToCSPDirective(const nsAString& aDir)
 {
   nsString lowerDir = PromiseFlatString(aDir);
   ToLowerCase(lowerDir);
 
-  static_assert(CSP_LAST_DIRECTIVE_VALUE ==
-                (sizeof(CSPStrDirectives) / sizeof(CSPStrDirectives[0])),
-                "CSP_LAST_DIRECTIVE_VALUE does not match length of CSPStrDirectives");
-
-  for (uint32_t i = 0; i < CSP_LAST_DIRECTIVE_VALUE; i++) {
+  uint32_t numDirs = (sizeof(CSPStrDirectives) / sizeof(CSPStrDirectives[0]));
+  for (uint32_t i = 1; i < numDirs; i++) {
     if (lowerDir.EqualsASCII(CSPStrDirectives[i])) {
       return static_cast<CSPDirective>(i);
     }
   }
-  NS_ASSERTION(false, "Can not convert unknown Directive to Enum");
-  return CSP_LAST_DIRECTIVE_VALUE;
+  NS_ASSERTION(false, "Can not convert unknown Directive to Integer");
+  return nsIContentSecurityPolicy::NO_DIRECTIVE;
 }
 
 // Please add any new enum items not only to CSPKeyword, but also add
@@ -182,9 +156,11 @@ class nsCSPHostSrc;
 
 nsCSPHostSrc* CSP_CreateHostSrcFromURI(nsIURI* aURI);
 bool CSP_IsValidDirective(const nsAString& aDir);
-bool CSP_IsDirective(const nsAString& aValue, enum CSPDirective aDir);
+bool CSP_IsDirective(const nsAString& aValue, CSPDirective aDir);
 bool CSP_IsKeyword(const nsAString& aValue, enum CSPKeyword aKey);
 bool CSP_IsQuotelessKeyword(const nsAString& aKey);
+CSPDirective CSP_ContentTypeToDirective(nsContentPolicyType aType);
+
 
 /* =============== nsCSPSrc ================== */
 
@@ -296,7 +272,7 @@ class nsCSPReportURI : public nsCSPBaseSrc {
 class nsCSPDirective {
   public:
     nsCSPDirective();
-    explicit nsCSPDirective(enum CSPDirective aDirective);
+    explicit nsCSPDirective(CSPDirective aDirective);
     virtual ~nsCSPDirective();
 
     bool permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected) const;
@@ -310,9 +286,9 @@ class nsCSPDirective {
     bool restrictsContentType(nsContentPolicyType aContentType) const;
 
     inline bool isDefaultDirective() const
-     { return mDirective == CSP_DEFAULT_SRC; }
+     { return mDirective == nsIContentSecurityPolicy::DEFAULT_SRC_DIRECTIVE; }
 
-    inline bool equals(enum CSPDirective aDirective) const
+    inline bool equals(CSPDirective aDirective) const
       { return (mDirective == aDirective); }
 
     void getReportURIs(nsTArray<nsString> &outReportURIs) const;
@@ -329,13 +305,15 @@ class nsCSPPolicy {
     nsCSPPolicy();
     virtual ~nsCSPPolicy();
 
-    bool permits(nsContentPolicyType aContentType,
+    bool permits(CSPDirective aDirective,
                  nsIURI* aUri,
                  const nsAString& aNonce,
                  bool aWasRedirected,
+                 bool aSpecific,
                  nsAString& outViolatedDirective) const;
-    bool permitsBaseURI(nsIURI* aUri) const;
-    bool permitsFormAction(nsIURI* aUri) const;
+    bool permits(CSPDirective aDir,
+                 nsIURI* aUri,
+                 bool aSpecific) const;
     bool allows(nsContentPolicyType aContentType,
                 enum CSPKeyword aKeyword,
                 const nsAString& aHashOrNonce) const;
@@ -346,7 +324,7 @@ class nsCSPPolicy {
     inline void addDirective(nsCSPDirective* aDir)
       { mDirectives.AppendElement(aDir); }
 
-    bool directiveExists(enum CSPDirective aDir) const;
+    bool hasDirective(CSPDirective aDir) const;
 
     inline void setReportOnlyFlag(bool aFlag)
       { mReportOnly = aFlag; }
@@ -359,7 +337,7 @@ class nsCSPPolicy {
     void getDirectiveStringForContentType(nsContentPolicyType aContentType,
                                           nsAString& outDirective) const;
 
-    void getDirectiveAsString(enum CSPDirective aDir, nsAString& outDirective) const;
+    void getDirectiveAsString(CSPDirective aDir, nsAString& outDirective) const;
 
     inline uint32_t getNumDirectives() const
       { return mDirectives.Length(); }
