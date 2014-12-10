@@ -269,9 +269,17 @@ js::ZonesIter::atAtomsZone(JSRuntime *rt)
     return rt->isAtomsZone(*it);
 }
 
-bool Zone::isOnList()
+bool
+Zone::isOnList() const
 {
     return listNext_ != NotOnList;
+}
+
+Zone *
+Zone::nextZone() const
+{
+    MOZ_ASSERT(isOnList());
+    return listNext_;
 }
 
 ZoneList::ZoneList()

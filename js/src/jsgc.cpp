@@ -546,12 +546,14 @@ FinalizeTypedArenas(FreeOp *fop,
     if (!fop->onBackgroundThread())
         maybeLock.emplace(fop->runtime());
 
-    /*
-     * During parallel sections, we sometimes finalize the parallel arenas,
-     * but in that case, we want to hold on to the memory in our arena
-     * lists, not offer it up for reuse.
-     */
-    MOZ_ASSERT_IF(InParallelSection(), keepArenas);
+    // During background sweeping free arenas are released later on in
+    // sweepBackgroundThings().
+    MOZ_ASSERT_IF(fop->onBackgroundThread(), keepArenas == ArenaLists::KEEP_ARENAS);
+
+    // During parallel sections, we sometimes finalize the parallel arenas, but
+    // in that case, we want to hold on to the memory in our arena lists, not
+    // offer it up for reuse.
+    MOZ_ASSERT_IF(InParallelSection(), keepArenas == ArenaLists::KEEP_ARENAS);
 
     size_t thingSize = Arena::thingSize(thingKind);
     size_t thingsPerArena = Arena::thingsPerArena(thingSize);
@@ -561,18 +563,12 @@ FinalizeTypedArenas(FreeOp *fop,
         size_t nmarked = aheader->getArena()->finalize<T>(fop, thingKind, thingSize);
         size_t nfree = thingsPerArena - nmarked;
 
-        if (nmarked) {
+        if (nmarked)
             dest.insertAt(aheader, nfree);
-        } else if (keepArenas == ArenaLists::KEEP_ARENAS) {
+        else if (keepArenas == ArenaLists::KEEP_ARENAS)
             aheader->chunk()->recycleArena(aheader, dest, thingKind, thingsPerArena);
-        } else if (fop->onBackgroundThread()) {
-            // When background sweeping, take the lock around each release so
-            // that we do not block the foreground for extended periods.
-            AutoLockGC lock(fop->runtime());
-            fop->runtime()->gc.releaseArena(aheader, lock);
-        } else {
+        else
             fop->runtime()->gc.releaseArena(aheader, maybeLock.ref());
-        }
 
         budget.step(thingsPerArena);
         if (budget.isOverBudget())
@@ -3438,11 +3434,10 @@ void
 GCRuntime::sweepBackgroundThings(ZoneList &zones, ThreadType threadType)
 {
     // We must finalize thing kinds in the order specified by BackgroundFinalizePhases.
+    ArenaHeader *emptyArenas = nullptr;
     FreeOp fop(rt, threadType);
-    while (!zones.isEmpty()) {
-        Zone *zone = zones.front();
-        ArenaHeader *emptyArenas = nullptr;
-        for (unsigned phase = 0 ; phase < ArrayLength(BackgroundFinalizePhases) ; ++phase) {
+    for (unsigned phase = 0 ; phase < ArrayLength(BackgroundFinalizePhases) ; ++phase) {
+        for (Zone *zone = zones.front(); zone; zone = zone->nextZone()) {
             for (unsigned index = 0 ; index < BackgroundFinalizePhases[phase].length ; ++index) {
                 AllocKind kind = BackgroundFinalizePhases[phase].kinds[index];
                 ArenaHeader *arenas = zone->allocator.arenas.arenaListsToSweep[kind];
@@ -3450,11 +3445,12 @@ GCRuntime::sweepBackgroundThings(ZoneList &zones, ThreadType threadType)
                     ArenaLists::backgroundFinalize(&fop, arenas, &emptyArenas);
             }
         }
-
-        AutoLockGC lock(rt);
-        ReleaseArenaList(rt, emptyArenas, lock);
-        zones.removeFront();
     }
+
+    AutoLockGC lock(rt);
+    ReleaseArenaList(rt, emptyArenas, lock);
+    while (!zones.isEmpty())
+        zones.removeFront();
 }
 
 void
