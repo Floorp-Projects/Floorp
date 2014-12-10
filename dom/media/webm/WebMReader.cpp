@@ -744,7 +744,7 @@ bool WebMReader::DecodeOpus(const unsigned char* aData, size_t aLength,
     // Discard padding should be used only on the final packet, so
     // decoding after a padding discard is invalid.
     LOG(PR_LOG_DEBUG, ("Opus error, discard padding on interstitial packet"));
-    GetCallback()->OnNotDecoded(MediaData::AUDIO_DATA, DECODE_ERROR);
+    mHitAudioDecodeError = true;
     return false;
   }
 
@@ -798,8 +798,7 @@ bool WebMReader::DecodeOpus(const unsigned char* aData, size_t aLength,
   if (discardPadding < 0) {
     // Negative discard padding is invalid.
     LOG(PR_LOG_DEBUG, ("Opus error, negative discard padding"));
-    GetCallback()->OnNotDecoded(MediaData::AUDIO_DATA, DECODE_ERROR);
-    return false;
+    mHitAudioDecodeError = true;
   }
   if (discardPadding > 0) {
     CheckedInt64 discardFrames = UsecsToFrames(discardPadding / NS_PER_USEC,
@@ -811,7 +810,7 @@ bool WebMReader::DecodeOpus(const unsigned char* aData, size_t aLength,
     if (discardFrames.value() > frames) {
       // Discarding more than the entire packet is invalid.
       LOG(PR_LOG_DEBUG, ("Opus error, discard padding larger than packet"));
-      GetCallback()->OnNotDecoded(MediaData::AUDIO_DATA, DECODE_ERROR);
+      mHitAudioDecodeError = true;
       return false;
     }
     LOG(PR_LOG_DEBUG, ("Opus decoder discarding %d of %d frames",
