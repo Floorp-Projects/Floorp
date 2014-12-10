@@ -962,13 +962,11 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
 
   nsSSLIOLayerHelpers& helpers = infoObject->SharedState().IOLayerHelpers();
 
-  // Prevent version downgrade attacks from TLS 1.x to SSL 3.0.
-  // TODO(bug 861310): If we negotiate less than our highest-supported version,
-  // then check that a previously-completed handshake negotiated that version;
-  // eventually, require that the highest-supported version of TLS is used.
-  if (channelInfo.protocolVersion < SSL_LIBRARY_VERSION_TLS_1_0) {
+  // Prevent version downgrade attacks from TLS 1.2, and avoid False Start for
+  // TLS 1.3 and later. See Bug 861310 for all the details as to why.
+  if (channelInfo.protocolVersion != SSL_LIBRARY_VERSION_TLS_1_2) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
-                                      "SSL Version must be >= TLS1 %x\n", fd,
+                                      "SSL Version must be TLS 1.2, was %x\n", fd,
                                       static_cast<int32_t>(channelInfo.protocolVersion)));
     reasonsForNotFalseStarting |= POSSIBLE_VERSION_DOWNGRADE;
   }
