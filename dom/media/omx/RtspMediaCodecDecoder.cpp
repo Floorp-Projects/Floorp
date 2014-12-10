@@ -25,7 +25,7 @@ RtspMediaCodecDecoder::CreateReader()
 }
 
 MediaDecoderStateMachine*
-RtspMediaCodecDecoder::CreateStateMachine(MediaOmxCommonReader* aReader)
+RtspMediaCodecDecoder::CreateStateMachineFromReader(MediaOmxCommonReader* aReader)
 {
   return new MediaDecoderStateMachine(this, aReader,
                                       mResource->IsRealTime());
