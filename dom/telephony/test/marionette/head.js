@@ -1025,6 +1025,9 @@ let emulator = (function() {
 
   this.gDelay = delay;
   this.gWaitForEvent = waitForEvent;
+  this.gWaitForCallsChangedEvent = waitForCallsChangedEvent;
+  this.gWaitForNamedStateEvent = waitForNamedStateEvent;
+  this.gWaitForStateChangeEvent = waitForStateChangeEvent;
   this.gCheckInitialState = checkInitialState;
   this.gClearCalls = clearCalls;
   this.gOutCallStrPool = outCallStrPool;
