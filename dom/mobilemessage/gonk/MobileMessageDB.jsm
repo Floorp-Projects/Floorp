@@ -73,7 +73,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gMobileMessageService",
                                    "nsIMobileMessageService");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gMMSService",
-                                   "@mozilla.org/mms/rilmmsservice;1",
+                                   "@mozilla.org/mms/gonkmmsservice;1",
                                    "nsIMmsService");
 
 XPCOMUtils.defineLazyGetter(this, "MMS", function() {
