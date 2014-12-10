@@ -333,9 +333,12 @@ class TestAgentReceive : public TestAgent {
     bundle_filter_ = filter;
   }
 
-  void UpdateFilterFromRemoteDescription_s(
+  void UpdateFilter_s(
       nsAutoPtr<MediaPipelineFilter> filter) {
-    audio_pipeline_->UpdateFilterFromRemoteDescription_s(filter);
+    audio_pipeline_->UpdateTransport_s(1,
+                                       audio_rtp_transport_.flow_,
+                                       audio_rtcp_transport_.flow_,
+                                       filter);
   }
 
  private:
@@ -417,7 +420,7 @@ class MediaPipelineTest : public ::testing::Test {
       mozilla::SyncRunnable::DispatchToThread(
           test_utils->sts_target(),
           WrapRunnable(&p2_,
-                       &TestAgentReceive::UpdateFilterFromRemoteDescription_s,
+                       &TestAgentReceive::UpdateFilter_s,
                        refinedFilter));
     }
 
@@ -768,59 +771,6 @@ TEST_F(MediaPipelineFilterTest, TestPayloadTypeFilterSSRCUpdate) {
             filter.FilterRTCP(rtcp_sr_s16, sizeof(rtcp_sr_s16)));
 }
 
-TEST_F(MediaPipelineFilterTest, TestAnswerAddsSSRCs) {
-  MediaPipelineFilter filter;
-  filter.SetCorrelator(7777);
-  ASSERT_TRUE(Filter(filter, 7777, 555, 110));
-  ASSERT_FALSE(Filter(filter, 7778, 556, 110));
-  // This should also have resulted in the SSRC 555 being added to the filter
-  ASSERT_TRUE(Filter(filter, 0, 555, 110));
-  ASSERT_FALSE(Filter(filter, 0, 556, 110));
-
-  // This sort of thing can happen when getting an answer with SSRC attrs
-  // The answer will not contain the correlator.
-  MediaPipelineFilter filter2;
-  filter2.AddRemoteSSRC(555);
-  filter2.AddRemoteSSRC(556);
-  filter2.AddRemoteSSRC(557);
-
-  filter.IncorporateRemoteDescription(filter2);
-
-  // Ensure that the old SSRC still works.
-  ASSERT_TRUE(Filter(filter, 0, 555, 110));
-
-  // Ensure that the new SSRCs work.
-  ASSERT_TRUE(Filter(filter, 0, 556, 110));
-  ASSERT_TRUE(Filter(filter, 0, 557, 110));
-
-  // Ensure that the correlator continues to work
-  ASSERT_TRUE(Filter(filter, 7777, 558, 110));
-}
-
-TEST_F(MediaPipelineFilterTest, TestSSRCMovedWithSDP) {
-  MediaPipelineFilter filter;
-  filter.SetCorrelator(7777);
-  filter.AddUniquePT(111);
-  ASSERT_TRUE(Filter(filter, 7777, 555, 110));
-
-  MediaPipelineFilter filter2;
-  filter2.AddRemoteSSRC(556);
-
-  filter.IncorporateRemoteDescription(filter2);
-
-  // Ensure that the old SSRC has been removed.
-  ASSERT_FALSE(Filter(filter, 0, 555, 110));
-
-  // Ensure that the new SSRC works.
-  ASSERT_TRUE(Filter(filter, 0, 556, 110));
-
-  // Ensure that the correlator continues to work
-  ASSERT_TRUE(Filter(filter, 7777, 558, 110));
-
-  // Ensure that the payload type mapping continues to work
-  ASSERT_TRUE(Filter(filter, 0, 559, 111));
-}
-
 TEST_F(MediaPipelineFilterTest, TestSSRCMovedWithCorrelator) {
   MediaPipelineFilter filter;
   filter.SetCorrelator(7777);
@@ -841,10 +791,10 @@ TEST_F(MediaPipelineFilterTest, TestRemoteSDPNoSSRCs) {
 
   MediaPipelineFilter filter2;
 
-  filter.IncorporateRemoteDescription(filter2);
+  filter.Update(filter2);
 
   // Ensure that the old SSRC still works.
-  ASSERT_TRUE(Filter(filter, 7777, 555, 110));
+  ASSERT_TRUE(Filter(filter, 0, 555, 110));
 }
 
 TEST_F(MediaPipelineTest, TestAudioSendNoMux) {

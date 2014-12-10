@@ -280,15 +280,16 @@ public:
   NS_IMETHOD OnSetRemoteDescriptionError(uint32_t code, const char *msg, ER&) MOZ_OVERRIDE;
   NS_IMETHOD NotifyDataChannel(nsIDOMDataChannel *channel, ER&) MOZ_OVERRIDE;
   NS_IMETHOD OnStateChange(PCObserverStateType state_type, ER&, void*) MOZ_OVERRIDE;
-  NS_IMETHOD OnAddStream(DOMMediaStream *stream, ER&) MOZ_OVERRIDE;
-  NS_IMETHOD OnRemoveStream(ER&) MOZ_OVERRIDE;
-  NS_IMETHOD OnAddTrack(ER&) MOZ_OVERRIDE;
-  NS_IMETHOD OnRemoveTrack(ER&) MOZ_OVERRIDE;
+  NS_IMETHOD OnAddStream(DOMMediaStream &stream, ER&) MOZ_OVERRIDE;
+  NS_IMETHOD OnRemoveStream(DOMMediaStream &stream, ER&) MOZ_OVERRIDE;
+  NS_IMETHOD OnAddTrack(MediaStreamTrack &track, ER&) MOZ_OVERRIDE;
+  NS_IMETHOD OnRemoveTrack(MediaStreamTrack &track, ER&) MOZ_OVERRIDE;
   NS_IMETHOD OnReplaceTrackSuccess(ER&) MOZ_OVERRIDE;
   NS_IMETHOD OnReplaceTrackError(uint32_t code, const char *msg, ER&) MOZ_OVERRIDE;
   NS_IMETHOD OnAddIceCandidateSuccess(ER&) MOZ_OVERRIDE;
   NS_IMETHOD OnAddIceCandidateError(uint32_t code, const char *msg, ER&) MOZ_OVERRIDE;
   NS_IMETHOD OnIceCandidate(uint16_t level, const char *mid, const char *cand, ER&) MOZ_OVERRIDE;
+  NS_IMETHODIMP OnNegotiationNeeded(ER&);
 
   // Hack because add_ice_candidates can happen asynchronously with respect
   // to the API calls. The whole test suite needs a refactor.
@@ -439,21 +440,19 @@ TestObserver::OnStateChange(PCObserverStateType state_type, ER&, void*)
 
 
 NS_IMETHODIMP
-TestObserver::OnAddStream(DOMMediaStream *stream, ER&)
+TestObserver::OnAddStream(DOMMediaStream &stream, ER&)
 {
-  PR_ASSERT(stream);
-
-  std::cout << name << ": OnAddStream called hints=" << stream->GetHintContents()
+  std::cout << name << ": OnAddStream called hints=" << stream.GetHintContents()
             << " thread=" << PR_GetCurrentThread() << std::endl ;
 
   onAddStreamCalled = true;
 
-  streams.push_back(stream);
+  streams.push_back(&stream);
 
   // We know that the media stream is secretly a Fake_SourceMediaStream,
   // so now we can start it pulling from us
   nsRefPtr<Fake_SourceMediaStream> fs =
-    static_cast<Fake_SourceMediaStream *>(stream->GetStream());
+    static_cast<Fake_SourceMediaStream *>(stream.GetStream());
 
   test_utils->sts_target()->Dispatch(
     WrapRunnable(fs, &Fake_SourceMediaStream::Start),
@@ -463,21 +462,21 @@ TestObserver::OnAddStream(DOMMediaStream *stream, ER&)
 }
 
 NS_IMETHODIMP
-TestObserver::OnRemoveStream(ER&)
+TestObserver::OnRemoveStream(DOMMediaStream &stream, ER&)
 {
   state = stateSuccess;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TestObserver::OnAddTrack(ER&)
+TestObserver::OnAddTrack(MediaStreamTrack &track, ER&)
 {
   state = stateSuccess;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TestObserver::OnRemoveTrack(ER&)
+TestObserver::OnRemoveTrack(MediaStreamTrack &track, ER&)
 {
   state = stateSuccess;
   return NS_OK;
@@ -1654,6 +1653,12 @@ TestObserver::OnIceCandidate(uint16_t level,
             std::string(candidate)),
         NS_DISPATCH_NORMAL);
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TestObserver::OnNegotiationNeeded(ER&)
+{
   return NS_OK;
 }
 
