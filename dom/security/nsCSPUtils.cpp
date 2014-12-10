@@ -127,6 +127,59 @@ CSP_LogLocalizedStr(const char16_t* aName,
 }
 
 /* ===== Helpers ============================ */
+CSPDirective
+CSP_ContentTypeToDirective(nsContentPolicyType aType)
+{
+  switch (aType) {
+    case nsIContentPolicy::TYPE_IMAGE:
+    case nsIContentPolicy::TYPE_IMAGESET:
+      return nsIContentSecurityPolicy::IMG_SRC_DIRECTIVE;
+
+    // BLock XSLT as script, see bug 910139
+    case nsIContentPolicy::TYPE_XSLT:
+    case nsIContentPolicy::TYPE_SCRIPT:
+      return nsIContentSecurityPolicy::SCRIPT_SRC_DIRECTIVE;
+
+    case nsIContentPolicy::TYPE_STYLESHEET:
+      return nsIContentSecurityPolicy::STYLE_SRC_DIRECTIVE;
+
+    case nsIContentPolicy::TYPE_FONT:
+      return nsIContentSecurityPolicy::FONT_SRC_DIRECTIVE;
+
+    case nsIContentPolicy::TYPE_MEDIA:
+      return nsIContentSecurityPolicy::MEDIA_SRC_DIRECTIVE;
+
+    // TYPE_DOCUMENT shouldn't be used since it's specifically whitelisted by
+    // the CSPService, but in case we do want to know which directive to check,
+    // FRAME_SRC is the best fit.
+    case nsIContentPolicy::TYPE_DOCUMENT:
+    case nsIContentPolicy::TYPE_SUBDOCUMENT:
+      return nsIContentSecurityPolicy::FRAME_SRC_DIRECTIVE;
+
+    case nsIContentPolicy::TYPE_WEBSOCKET:
+    case nsIContentPolicy::TYPE_XMLHTTPREQUEST:
+    case nsIContentPolicy::TYPE_BEACON:
+    case nsIContentPolicy::TYPE_FETCH:
+      return nsIContentSecurityPolicy::CONNECT_SRC_DIRECTIVE;
+
+    case nsIContentPolicy::TYPE_OBJECT:
+    case nsIContentPolicy::TYPE_OBJECT_SUBREQUEST:
+      return nsIContentSecurityPolicy::OBJECT_SRC_DIRECTIVE;
+
+    case nsIContentPolicy::TYPE_XBL:
+    case nsIContentPolicy::TYPE_PING:
+    case nsIContentPolicy::TYPE_DTD:
+    case nsIContentPolicy::TYPE_OTHER:
+      return nsIContentSecurityPolicy::DEFAULT_SRC_DIRECTIVE;
+
+    // CSP can not block csp reports, fall through to error
+    case nsIContentPolicy::TYPE_CSP_REPORT:
+    // Fall through to error for all other directives
+    default:
+      MOZ_ASSERT(false, "Can not map nsContentPolicyType to CSPDirective");
+  }
+  return nsIContentSecurityPolicy::DEFAULT_SRC_DIRECTIVE;
+}
 
 nsCSPHostSrc*
 CSP_CreateHostSrcFromURI(nsIURI* aURI)
@@ -155,11 +208,9 @@ CSP_CreateHostSrcFromURI(nsIURI* aURI)
 bool
 CSP_IsValidDirective(const nsAString& aDir)
 {
-  static_assert(CSP_LAST_DIRECTIVE_VALUE ==
-                (sizeof(CSPStrDirectives) / sizeof(CSPStrDirectives[0])),
-                "CSP_LAST_DIRECTIVE_VALUE does not match length of CSPStrDirectives");
+  uint32_t numDirs = (sizeof(CSPStrDirectives) / sizeof(CSPStrDirectives[0]));
 
-  for (uint32_t i = 0; i < CSP_LAST_DIRECTIVE_VALUE; i++) {
+  for (uint32_t i = 0; i < numDirs; i++) {
     if (aDir.LowerCaseEqualsASCII(CSPStrDirectives[i])) {
       return true;
     }
@@ -167,9 +218,9 @@ CSP_IsValidDirective(const nsAString& aDir)
   return false;
 }
 bool
-CSP_IsDirective(const nsAString& aValue, enum CSPDirective aDir)
+CSP_IsDirective(const nsAString& aValue, CSPDirective aDir)
 {
-  return aValue.LowerCaseEqualsASCII(CSP_EnumToDirective(aDir));
+  return aValue.LowerCaseEqualsASCII(CSP_CSPDirectiveToString(aDir));
 }
 
 bool
@@ -470,7 +521,7 @@ nsCSPHostSrc::appendPath(const nsAString& aPath)
 
 /* ===== nsCSPKeywordSrc ===================== */
 
-nsCSPKeywordSrc::nsCSPKeywordSrc(CSPKeyword aKeyword)
+nsCSPKeywordSrc::nsCSPKeywordSrc(enum CSPKeyword aKeyword)
 {
   NS_ASSERTION((aKeyword != CSP_SELF),
                "'self' should have been replaced in the parser");
@@ -624,7 +675,7 @@ nsCSPReportURI::toString(nsAString& outStr) const
 
 /* ===== nsCSPDirective ====================== */
 
-nsCSPDirective::nsCSPDirective(enum CSPDirective aDirective)
+nsCSPDirective::nsCSPDirective(CSPDirective aDirective)
 {
   mDirective = aDirective;
 }
@@ -680,7 +731,7 @@ void
 nsCSPDirective::toString(nsAString& outStr) const
 {
   // Append directive name
-  outStr.AppendASCII(CSP_EnumToDirective(mDirective));
+  outStr.AppendASCII(CSP_CSPDirectiveToString(mDirective));
   outStr.AppendASCII(" ");
 
   // Append srcs
@@ -691,62 +742,6 @@ nsCSPDirective::toString(nsAString& outStr) const
       outStr.AppendASCII(" ");
     }
   }
-}
-
-enum CSPDirective
-CSP_ContentTypeToDirective(nsContentPolicyType aType)
-{
-  switch (aType) {
-    case nsIContentPolicy::TYPE_IMAGE:
-    case nsIContentPolicy::TYPE_IMAGESET:
-      return CSP_IMG_SRC;
-
-    case nsIContentPolicy::TYPE_SCRIPT:
-      return CSP_SCRIPT_SRC;
-
-    case nsIContentPolicy::TYPE_STYLESHEET:
-      return CSP_STYLE_SRC;
-
-    case nsIContentPolicy::TYPE_FONT:
-      return CSP_FONT_SRC;
-
-    case nsIContentPolicy::TYPE_MEDIA:
-      return CSP_MEDIA_SRC;
-
-    case nsIContentPolicy::TYPE_SUBDOCUMENT:
-      return CSP_FRAME_SRC;
-
-    // BLock XSLT as script, see bug 910139
-    case nsIContentPolicy::TYPE_XSLT:
-      return CSP_SCRIPT_SRC;
-
-    // TODO(sid): fix this mapping to be more precise (bug 999656)
-    case nsIContentPolicy::TYPE_DOCUMENT:
-      return CSP_FRAME_ANCESTORS;
-
-    case nsIContentPolicy::TYPE_WEBSOCKET:
-    case nsIContentPolicy::TYPE_XMLHTTPREQUEST:
-    case nsIContentPolicy::TYPE_BEACON:
-    case nsIContentPolicy::TYPE_FETCH:
-      return CSP_CONNECT_SRC;
-
-    case nsIContentPolicy::TYPE_OBJECT:
-    case nsIContentPolicy::TYPE_OBJECT_SUBREQUEST:
-      return CSP_OBJECT_SRC;
-
-    case nsIContentPolicy::TYPE_XBL:
-    case nsIContentPolicy::TYPE_PING:
-    case nsIContentPolicy::TYPE_DTD:
-    case nsIContentPolicy::TYPE_OTHER:
-      return CSP_DEFAULT_SRC;
-
-    // CSP can not block csp reports, fall through to error
-    case nsIContentPolicy::TYPE_CSP_REPORT:
-    // Fall through to error for all other directives
-    default:
-      NS_ASSERTION(false, "Can not map nsContentPolicyType to CSPDirective");
-  }
-  return CSP_DEFAULT_SRC;
 }
 
 bool
@@ -762,7 +757,7 @@ nsCSPDirective::restrictsContentType(nsContentPolicyType aContentType) const
 void
 nsCSPDirective::getReportURIs(nsTArray<nsString> &outReportURIs) const
 {
-  NS_ASSERTION((mDirective == CSP_REPORT_URI), "not a report-uri directive");
+  NS_ASSERTION((mDirective == nsIContentSecurityPolicy::REPORT_URI_DIRECTIVE), "not a report-uri directive");
 
   // append uris
   nsString tmpReportURI;
@@ -791,18 +786,28 @@ nsCSPPolicy::~nsCSPPolicy()
 }
 
 bool
-nsCSPPolicy::permits(nsContentPolicyType aContentType,
+nsCSPPolicy::permits(CSPDirective aDir,
+                     nsIURI* aUri,
+                     bool aSpecific) const
+{
+  nsString outp;
+  return this->permits(aDir, aUri, EmptyString(), false, aSpecific, outp);
+}
+
+bool
+nsCSPPolicy::permits(CSPDirective aDir,
                      nsIURI* aUri,
                      const nsAString& aNonce,
                      bool aWasRedirected,
+                     bool aSpecific,
                      nsAString& outViolatedDirective) const
 {
 #ifdef PR_LOGGING
   {
     nsAutoCString spec;
     aUri->GetSpec(spec);
-    CSPUTILSLOG(("nsCSPPolicy::permits, aContentType: %d, aUri: %s, aNonce: %s",
-                aContentType, spec.get(), NS_ConvertUTF16toUTF8(aNonce).get()));
+    CSPUTILSLOG(("nsCSPPolicy::permits, aUri: %s, aDir: %d, aSpecific: %s",
+                 spec.get(), aDir, aSpecific ? "true" : "false"));
   }
 #endif
 
@@ -810,11 +815,10 @@ nsCSPPolicy::permits(nsContentPolicyType aContentType,
 
   nsCSPDirective* defaultDir = nullptr;
 
+  // Try to find a relevant directive
   // These directive arrays are short (1-5 elements), not worth using a hashtable.
-
   for (uint32_t i = 0; i < mDirectives.Length(); i++) {
-    // Check if the directive name matches
-    if (mDirectives[i]->restrictsContentType(aContentType)) {
+    if (mDirectives[i]->equals(aDir)) {
       if (!mDirectives[i]->permits(aUri, aNonce, aWasRedirected)) {
         mDirectives[i]->toString(outViolatedDirective);
         return false;
@@ -826,16 +830,9 @@ nsCSPPolicy::permits(nsContentPolicyType aContentType,
     }
   }
 
-  // If [frame-ancestors] is not listed explicitly then default to true
-  // without consulting [default-src]
-  // TODO: currently [frame-ancestors] is mapped to TYPE_DOCUMENT (needs to be fixed)
-  if (aContentType == nsIContentPolicy::TYPE_DOCUMENT) {
-    return true;
-  }
-
   // If the above loop runs through, we haven't found a matching directive.
   // Avoid relooping, just store the result of default-src while looping.
-  if (defaultDir) {
+  if (!aSpecific && defaultDir) {
     if (!defaultDir->permits(aUri, aNonce, aWasRedirected)) {
       defaultDir->toString(outViolatedDirective);
       return false;
@@ -843,56 +840,8 @@ nsCSPPolicy::permits(nsContentPolicyType aContentType,
     return true;
   }
 
-  // unspecified default-src should default to no restrictions
-  // see bug 764937
-  return true;
-}
-
-bool
-nsCSPPolicy::permitsBaseURI(nsIURI* aUri) const
-{
-#ifdef PR_LOGGING
-  {
-    nsAutoCString spec;
-    aUri->GetSpec(spec);
-    CSPUTILSLOG(("nsCSPPolicy::permitsBaseURI, aUri: %s", spec.get()));
-  }
-#endif
-
-  // Try to find a base-uri directive
-  for (uint32_t i = 0; i < mDirectives.Length(); i++) {
-    if (mDirectives[i]->equals(CSP_BASE_URI)) {
-      return mDirectives[i]->permits(aUri);
-    }
-  }
-
-  // base-uri is only enforced if explicitly defined in the
-  // policy - do *not* consult default-src, see:
-  // http://www.w3.org/TR/CSP11/#directive-default-src
-  return true;
-}
-
-bool
-nsCSPPolicy::permitsFormAction(nsIURI* aUri) const
-{
-#ifdef PR_LOGGING
-  {
-    nsAutoCString spec;
-    aUri->GetSpec(spec);
-    CSPUTILSLOG(("nsCSPPolicy::permitsFormAction, aUri: %s", spec.get()));
-  }
-#endif
-
-  // Try to find a form-action directive
-  for (uint32_t i = 0; i < mDirectives.Length(); i++) {
-    if (mDirectives[i]->equals(CSP_FORM_ACTION)) {
-      return mDirectives[i]->permits(aUri);
-    }
-  }
-
-  // form-action is only enforced if explicitly defined in the
-  // policy - do *not* consult default-src, see:
-  // http://www.w3.org/TR/CSP2/#directive-default-src
+  // Nothing restricts this, so we're allowing the load
+  // See bug 764937
   return true;
 }
 
@@ -958,7 +907,7 @@ nsCSPPolicy::toString(nsAString& outStr) const
 }
 
 bool
-nsCSPPolicy::directiveExists(enum CSPDirective aDir) const
+nsCSPPolicy::hasDirective(CSPDirective aDir) const
 {
   for (uint32_t i = 0; i < mDirectives.Length(); i++) {
     if (mDirectives[i]->equals(aDir)) {
@@ -999,7 +948,7 @@ nsCSPPolicy::getDirectiveStringForContentType(nsContentPolicyType aContentType,
 }
 
 void
-nsCSPPolicy::getDirectiveAsString(enum CSPDirective aDir, nsAString& outDirective) const
+nsCSPPolicy::getDirectiveAsString(CSPDirective aDir, nsAString& outDirective) const
 {
   for (uint32_t i = 0; i < mDirectives.Length(); i++) {
     if (mDirectives[i]->equals(aDir)) {
@@ -1013,7 +962,7 @@ void
 nsCSPPolicy::getReportURIs(nsTArray<nsString>& outReportURIs) const
 {
   for (uint32_t i = 0; i < mDirectives.Length(); i++) {
-    if (mDirectives[i]->equals(CSP_REPORT_URI)) {
+    if (mDirectives[i]->equals(nsIContentSecurityPolicy::REPORT_URI_DIRECTIVE)) {
       mDirectives[i]->getReportURIs(outReportURIs);
       return;
     }
