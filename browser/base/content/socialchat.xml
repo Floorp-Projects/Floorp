@@ -53,6 +53,14 @@
           this.isActive = !this.minimized;
           this._deferredChatLoaded.resolve(this);
         }, true);
+
+        // load content.js to support webrtc, fullscreen, etc.
+        this.addEventListener("load", function loaded(event) {
+          this.removeEventListener("load", loaded, true);
+          let mm = this.content.messageManager;
+          mm.loadFrameScript("chrome://browser/content/content.js", true);
+        }, true);
+
         if (this.src)
           this.setAttribute("src", this.src);
       ]]></constructor>
