@@ -12,11 +12,18 @@
 #include "clang/Frontend/MultiplexConsumer.h"
 #include "clang/Sema/Sema.h"
 #include "llvm/ADT/DenseMap.h"
+#include <memory>
 
 #define CLANG_VERSION_FULL (CLANG_VERSION_MAJOR * 100 + CLANG_VERSION_MINOR)
 
 using namespace llvm;
 using namespace clang;
+
+#if CLANG_VERSION_FULL >= 306
+typedef std::unique_ptr<ASTConsumer> ASTConsumerPtr;
+#else
+typedef ASTConsumer *ASTConsumerPtr;
+#endif
 
 namespace {
 
@@ -25,7 +32,7 @@ class DiagnosticsMatcher {
 public:
   DiagnosticsMatcher();
 
-  ASTConsumer *makeASTConsumer() {
+  ASTConsumerPtr makeASTConsumer() {
     return astMatcher.newASTConsumer();
   }
 
@@ -54,7 +61,7 @@ class MozChecker : public ASTConsumer, public RecursiveASTVisitor<MozChecker> {
 public:
   MozChecker(const CompilerInstance &CI) : Diag(CI.getDiagnostics()), CI(CI) {}
 
-  ASTConsumer *getOtherConsumer() {
+  ASTConsumerPtr getOtherConsumer() {
     return matcher.makeASTConsumer();
   }
 
@@ -375,15 +382,24 @@ void DiagnosticsMatcher::NonHeapClassChecker::noteInferred(QualType T,
 
 class MozCheckAction : public PluginASTAction {
 public:
-  ASTConsumer *CreateASTConsumer(CompilerInstance &CI, StringRef fileName) {
+  ASTConsumerPtr CreateASTConsumer(CompilerInstance &CI, StringRef fileName) override {
+#if CLANG_VERSION_FULL >= 306
+    std::unique_ptr<MozChecker> checker(make_unique<MozChecker>(CI));
+
+    std::vector<std::unique_ptr<ASTConsumer>> consumers;
+    consumers.push_back(std::move(checker));
+    consumers.push_back(checker->getOtherConsumer());
+    return make_unique<MultiplexConsumer>(std::move(consumers));
+#else
     MozChecker *checker = new MozChecker(CI);
 
     ASTConsumer *consumers[] = { checker, checker->getOtherConsumer() };
     return new MultiplexConsumer(consumers);
+#endif
   }
 
   bool ParseArgs(const CompilerInstance &CI,
-                 const std::vector<std::string> &args) {
+                 const std::vector<std::string> &args) override {
     return true;
   }
 };

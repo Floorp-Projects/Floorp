@@ -993,15 +993,15 @@ let Impl = {
           yield this.send("overdue-flush", this._server);
         }
 
-        this.attachObservers();
-        this.gatherMemory();
-
         if ("@mozilla.org/datareporting/service;1" in Cc) {
           let drs = Cc["@mozilla.org/datareporting/service;1"]
                       .getService(Ci.nsISupports)
                       .wrappedJSObject;
           this._clientID = yield drs.getClientID();
         }
+
+        this.attachObservers();
+        this.gatherMemory();
 
         Telemetry.asyncFetchTelemetryData(function () {});
         delete this._timer;

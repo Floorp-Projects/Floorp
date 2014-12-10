@@ -5615,14 +5615,14 @@ CheckSimdLoadStoreArgs(FunctionCompiler &f, ParseNode *call, AsmJSSimdType opTyp
 {
     ParseNode *view = CallArgList(call);
     if (!view->isKind(PNK_NAME))
-        return f.fail(view, "expected Uint8Array view as SIMD.*.store first argument");
+        return f.fail(view, "expected Uint8Array view as SIMD.*.load/store first argument");
 
     const ModuleCompiler::Global *global = f.lookupGlobal(view->name());
     if (!global ||
         global->which() != ModuleCompiler::Global::ArrayView ||
         global->viewType() != Scalar::Uint8)
     {
-        return f.fail(view, "expected Uint8Array view as SIMD.*.store first argument");
+        return f.fail(view, "expected Uint8Array view as SIMD.*.load/store first argument");
     }
 
     *needsBoundsCheck = NEEDS_BOUNDS_CHECK;
@@ -5685,7 +5685,7 @@ CheckSimdStore(FunctionCompiler &f, ParseNode *call, AsmJSSimdType opType, MDefi
 {
     unsigned numArgs = CallArgListLength(call);
     if (numArgs != 3)
-        return f.failf(call, "expected 3 arguments to SIMD load, got %u", numArgs);
+        return f.failf(call, "expected 3 arguments to SIMD store, got %u", numArgs);
 
     Scalar::Type viewType;
     MDefinition *index;
@@ -5772,11 +5772,11 @@ CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompile
       case AsmJSSimdOperation_fromFloat32x4Bits:
         return CheckSimdCast<MSimdReinterpretCast>(f, call, AsmJSSimdType_float32x4, opType, def, type);
 
-      case AsmJSSimdOperation_shiftLeft:
+      case AsmJSSimdOperation_shiftLeftByScalar:
         return CheckSimdBinary(f, call, opType, MSimdShift::lsh, def, type);
-      case AsmJSSimdOperation_shiftRight:
+      case AsmJSSimdOperation_shiftRightArithmeticByScalar:
         return CheckSimdBinary(f, call, opType, MSimdShift::rsh, def, type);
-      case AsmJSSimdOperation_shiftRightLogical:
+      case AsmJSSimdOperation_shiftRightLogicalByScalar:
         return CheckSimdBinary(f, call, opType, MSimdShift::ursh, def, type);
 
       case AsmJSSimdOperation_abs:
@@ -6213,9 +6213,12 @@ CheckConditional(FunctionCompiler &f, ParseNode *ternary, MDefinition **def, Typ
         *type = Type::Double;
     } else if (thenType.isFloat() && elseType.isFloat()) {
         *type = Type::Float;
+    } else if (elseType.isSimd() && thenType <= elseType && elseType <= thenType) {
+        *type = thenType;
     } else {
-        return f.failf(ternary, "then/else branches of conditional must both produce int or double, "
-                       "current types are %s and %s", thenType.toChars(), elseType.toChars());
+        return f.failf(ternary, "then/else branches of conditional must both produce int, float, "
+                       "double or SIMD types, current types are %s and %s",
+                       thenType.toChars(), elseType.toChars());
     }
 
     if (!f.joinIfElse(thenBlocks, elseExpr))

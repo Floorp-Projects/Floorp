@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 //****************************************************************************//
 // Constants & Enumeration Values
 
@@ -1846,10 +1848,9 @@ var gApplicationsPane = {
         return this._getIconURLForSystemDefault(aHandlerInfo);
 
       case Ci.nsIHandlerInfo.useHelperApp:
-        let (preferredApp = aHandlerInfo.preferredApplicationHandler) {
-          if (this.isValidHandlerApp(preferredApp))
-            return this._getIconURLForHandlerApp(preferredApp);
-        }
+        let preferredApp = aHandlerInfo.preferredApplicationHandler;
+        if (this.isValidHandlerApp(preferredApp))
+          return this._getIconURLForHandlerApp(preferredApp);
         break;
 
       // This should never happen, but if preferredAction is set to some weird

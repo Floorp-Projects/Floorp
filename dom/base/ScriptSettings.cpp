@@ -326,13 +326,12 @@ AutoJSAPI::~AutoJSAPI()
         errorGlobal = xpc::PrivilegedJunkScope();
       JSAutoCompartment ac(cx(), errorGlobal);
       nsCOMPtr<nsPIDOMWindow> win = xpc::WindowGlobalOrNull(errorGlobal);
-      const char *category = nsContentUtils::IsCallerChrome() ? "chrome javascript"
-                                                              : "content javascript";
       JS::Rooted<JS::Value> exn(cx());
       js::ErrorReport jsReport(cx());
       if (StealException(&exn) && jsReport.init(cx(), exn)) {
         nsRefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
-        xpcReport->Init(jsReport.report(), jsReport.message(), category,
+        xpcReport->Init(jsReport.report(), jsReport.message(),
+                        nsContentUtils::IsCallerChrome(),
                         win ? win->WindowID() : 0);
         if (win) {
           DispatchScriptErrorEvent(win, JS_GetRuntime(cx()), xpcReport, exn);
@@ -483,10 +482,9 @@ WarningOnlyErrorReporter(JSContext* aCx, const char* aMessage, JSErrorReport* aR
 {
   MOZ_ASSERT(JSREPORT_IS_WARNING(aRep->flags));
   nsRefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
-  const char* category = nsContentUtils::IsCallerChrome() ? "chrome javascript"
-                                                          : "content javascript";
   nsPIDOMWindow* win = xpc::WindowGlobalOrNull(JS::CurrentGlobalOrNull(aCx));
-  xpcReport->Init(aRep, aMessage, category, win ? win->WindowID() : 0);
+  xpcReport->Init(aRep, aMessage, nsContentUtils::IsCallerChrome(),
+                  win ? win->WindowID() : 0);
   xpcReport->LogToConsole();
 }
 

@@ -1480,6 +1480,12 @@ function UpdateCurrentCanvasForInvalidation(rects)
         var right = Math.ceil(r.right);
         var bottom = Math.ceil(r.bottom);
 
+        // Clamp the values to the canvas size
+        left = Math.max(0, Math.min(left, gCurrentCanvas.width));
+        top = Math.max(0, Math.min(top, gCurrentCanvas.height));
+        right = Math.max(0, Math.min(right, gCurrentCanvas.width));
+        bottom = Math.max(0, Math.min(bottom, gCurrentCanvas.height));
+
         ctx.save();
         ctx.translate(left, top);
         DoDrawWindow(ctx, left, top, right - left, bottom - top);

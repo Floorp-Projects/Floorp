@@ -8,6 +8,7 @@
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/ShadowLayerUtilsX11.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Logging.h"
 #include "gfxXlibSurface.h"
 #include "gfx2DGlue.h"
 
@@ -38,6 +39,8 @@ TextureClientX11::CreateSimilar(TextureFlags aFlags,
 {
   RefPtr<TextureClient> tex = new TextureClientX11(mAllocator, mFormat, mFlags);
 
+  // mSize is guaranteed to be non-negative
+  MOZ_ASSERT(mSize.width >= 0 && mSize.height >= 0);
   if (!tex->AllocateForSurface(mSize, aAllocFlags)) {
     return nullptr;
   }
@@ -107,6 +110,11 @@ TextureClientX11::AllocateForSurface(IntSize aSize, TextureAllocationFlags aText
   MOZ_ASSERT(!IsAllocated());
   //MOZ_ASSERT(mFormat != gfx::FORMAT_YUV, "This TextureClient cannot use YCbCr data");
 
+  MOZ_ASSERT(aSize.width >= 0 && aSize.height >= 0);
+  if (aSize.width <= 0 || aSize.height <= 0) {
+    gfxDebug() << "Asking for X11 surface of invalid size " << aSize.width << "x" << aSize.height;
+    return false;
+  }
   gfxContentType contentType = ContentForFormat(mFormat);
   nsRefPtr<gfxASurface> surface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, contentType);
   if (!surface || surface->GetType() != gfxSurfaceType::Xlib) {

@@ -28,3 +28,13 @@ function testBinaryFunc(v, w, simdFunc, func) {
     for (var i = 0; i < observed.length; i++)
         assertEq(observed[i], expected[i]);
 }
+
+function testBinaryScalarFunc(v, scalar, simdFunc, func) {
+    var varr = simdToArray(v);
+
+    var observed = simdToArray(simdFunc(v, scalar));
+    var expected = varr.map(function(v, i) { return func(varr[i], scalar); });
+
+    for (var i = 0; i < observed.length; i++)
+        assertEq(observed[i], expected[i]);
+}

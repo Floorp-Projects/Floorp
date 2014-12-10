@@ -116,26 +116,31 @@ static const unsigned PushedRetAddr = 0;
 # endif
 static const unsigned PushedFP = 10;
 static const unsigned StoredFP = 14;
+static const unsigned PostStorePrePopFP = 0;
 #elif defined(JS_CODEGEN_X86)
 # if defined(DEBUG)
 static const unsigned PushedRetAddr = 0;
 # endif
 static const unsigned PushedFP = 8;
 static const unsigned StoredFP = 11;
+static const unsigned PostStorePrePopFP = 0;
 #elif defined(JS_CODEGEN_ARM)
 static const unsigned PushedRetAddr = 4;
 static const unsigned PushedFP = 16;
 static const unsigned StoredFP = 20;
+static const unsigned PostStorePrePopFP = 4;
 #elif defined(JS_CODEGEN_MIPS)
 static const unsigned PushedRetAddr = 8;
 static const unsigned PushedFP = 24;
 static const unsigned StoredFP = 28;
+static const unsigned PostStorePrePopFP = 4;
 #elif defined(JS_CODEGEN_NONE)
 # if defined(DEBUG)
 static const unsigned PushedRetAddr = 0;
 # endif
 static const unsigned PushedFP = 1;
 static const unsigned StoredFP = 1;
+static const unsigned PostStorePrePopFP = 0;
 #else
 # error "Unknown architecture!"
 #endif
@@ -221,21 +226,29 @@ GenerateProfilingEpilogue(MacroAssembler &masm, unsigned framePushed, AsmJSExit:
     if (reason != AsmJSExit::None)
         masm.store32(Imm32(AsmJSExit::None), Address(scratch, AsmJSActivation::offsetOfExitReason()));
 
-    // AsmJSProfilingFrameIterator assumes that there is only a single 'ret'
-    // instruction (whose offset is recorded by profilingReturn) after the store
-    // which sets AsmJSActivation::fp to the caller's fp. Use AutoForbidPools to
-    // ensure that a pool is not inserted before the return (a pool inserts a
-    // jump instruction).
+    // AsmJSProfilingFrameIterator assumes fixed offsets of the last few
+    // instructions from profilingReturn, so AutoForbidPools to ensure that
+    // unintended instructions are not automatically inserted.
     {
 #if defined(JS_CODEGEN_ARM)
-        AutoForbidPools afp(&masm, /* number of instructions in scope = */ 3);
+        AutoForbidPools afp(&masm, /* number of instructions in scope = */ 4);
 #endif
+
+        // sp protects the stack from clobber via asynchronous signal handlers
+        // and the async interrupt exit. Since activation.fp can be read at any
+        // time and still points to the current frame, be careful to only update
+        // sp after activation.fp has been repointed to the caller's frame.
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
-        masm.pop(scratch2);
+        masm.loadPtr(Address(StackPointer, 0), scratch2);
         masm.storePtr(scratch2, Address(scratch, AsmJSActivation::offsetOfFP()));
+        DebugOnly<uint32_t> prePop = masm.currentOffset();
+        masm.add32(Imm32(4), StackPointer);
+        MOZ_ASSERT(PostStorePrePopFP == masm.currentOffset() - prePop);
 #else
         masm.pop(Address(scratch, AsmJSActivation::offsetOfFP()));
+        MOZ_ASSERT(PostStorePrePopFP == 0);
 #endif
+
         masm.bind(profilingReturn);
         masm.ret();
     }
@@ -439,9 +452,9 @@ AsmJSProfilingFrameIterator::initFromFP(const AsmJSActivation &activation)
         return;
     }
 
-    // Since we don't have the pc for fp, start unwinding at the caller of fp,
-    // whose pc we do have via fp->returnAddress. This means that the innermost
-    // frame is skipped but this is fine because:
+    // Since we don't have the pc for fp, start unwinding at the caller of fp
+    // (ReturnAddressFromFP(fp)). This means that the innermost frame is
+    // skipped. This is fine because:
     //  - for FFI calls, the innermost frame is a thunk, so the first frame that
     //    shows up is the function calling the FFI;
     //  - for Math and other builtin calls, when profiling is activated, we
@@ -472,13 +485,13 @@ AsmJSProfilingFrameIterator::initFromFP(const AsmJSActivation &activation)
         MOZ_CRASH("Unexpected CodeRange kind");
     }
 
-    // Since, despite the above reasoning for skipping a frame, we do want FFI
+    // Despite the above reasoning for skipping a frame, we do actually want FFI
     // trampolines and interrupts to show up in the profile (so they can
-    // accumulate self time and explain performance faults), an "exit reason" is
-    // stored on all the paths leaving asm.js and the iterator logic treats this
-    // reason as its own frame. If we have exited asm.js code without setting an
-    // exit reason, the reason will be None and this means the code was
-    // asynchronously interrupted.
+    // accumulate self time and explain performance faults). To do this, an
+    // "exit reason" is stored on all the paths leaving asm.js and this iterator
+    // treats this exit reason as its own frame. If we have exited asm.js code
+    // without setting an exit reason, the reason will be None and this means
+    // the code was asynchronously interrupted.
     exitReason_ = activation.exitReason();
     if (exitReason_ == AsmJSExit::None)
         exitReason_ = AsmJSExit::Interrupt;
@@ -523,16 +536,14 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation &
       case AsmJSModule::CodeRange::SlowFFI:
       case AsmJSModule::CodeRange::Interrupt:
       case AsmJSModule::CodeRange::Thunk: {
-        // While codeRange describes the *current* frame, the fp/pc state stored in
-        // the iterator is the *caller's* frame. The reason for this is that the
-        // activation.fp isn't always the AsmJSFrame for state.pc; during the
-        // prologue/epilogue, activation.fp will point to the caller's frame.
-        // Naively unwinding starting at activation.fp could thus lead to the
-        // second-to-innermost function being skipped in the callstack which will
-        // bork profiling stacks. Instead, we depend on the exact layout of the
-        // prologue/epilogue, as generated by GenerateProfiling(Prologue|Epilogue)
-        // below.
-        uint32_t offsetInModule = ((uint8_t*)state.pc) - module_->codeBase();
+        // When the pc is inside the prologue/epilogue, the innermost
+        // call's AsmJSFrame is not complete and thus fp points to the the
+        // second-to-innermost call's AsmJSFrame. Since fp can only tell you
+        // about its caller (via ReturnAddressFromFP(fp)), naively unwinding
+        // while pc is in the prologue/epilogue would skip the second-to-
+        // innermost call. To avoid this problem, we use the static structure of
+        // the code in the prologue and epilogue to do the Right Thing.
+        uint32_t offsetInModule = (uint8_t*)state.pc - module_->codeBase();
         MOZ_ASSERT(offsetInModule < module_->codeBytes());
         MOZ_ASSERT(offsetInModule >= codeRange->begin());
         MOZ_ASSERT(offsetInModule < codeRange->end());
@@ -540,21 +551,34 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation &
         void **sp = (void**)state.sp;
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
         if (offsetInCodeRange < PushedRetAddr) {
+            // First instruction of the ARM/MIPS function; the return address is
+            // still in lr and fp still holds the caller's fp.
             callerPC_ = state.lr;
             callerFP_ = fp;
             AssertMatchesCallSite(*module_, codeRange, callerPC_, callerFP_, sp - 2);
+        } else if (offsetInModule == codeRange->profilingReturn() - PostStorePrePopFP) {
+            // Second-to-last instruction of the ARM/MIPS function; fp points to
+            // the caller's fp; have not yet popped AsmJSFrame.
+            callerPC_ = ReturnAddressFromFP(sp);
+            callerFP_ = CallerFPFromFP(sp);
+            AssertMatchesCallSite(*module_, codeRange, callerPC_, callerFP_, sp);
         } else
 #endif
         if (offsetInCodeRange < PushedFP || offsetInModule == codeRange->profilingReturn()) {
+            // The return address has been pushed on the stack but not fp; fp
+            // still points to the caller's fp.
             callerPC_ = *sp;
             callerFP_ = fp;
             AssertMatchesCallSite(*module_, codeRange, callerPC_, callerFP_, sp - 1);
         } else if (offsetInCodeRange < StoredFP) {
+            // The full AsmJSFrame has been pushed; fp still points to the
+            // caller's frame.
             MOZ_ASSERT(fp == CallerFPFromFP(sp));
             callerPC_ = ReturnAddressFromFP(sp);
             callerFP_ = CallerFPFromFP(sp);
             AssertMatchesCallSite(*module_, codeRange, callerPC_, callerFP_, sp);
         } else {
+            // Not in the prologue/epilogue.
             callerPC_ = ReturnAddressFromFP(fp);
             callerFP_ = CallerFPFromFP(fp);
             AssertMatchesCallSite(*module_, codeRange, callerPC_, callerFP_, fp);
@@ -564,7 +588,7 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation &
       case AsmJSModule::CodeRange::Entry: {
         // The entry trampoline is the final frame in an AsmJSActivation. The entry
         // trampoline also doesn't GenerateAsmJSPrologue/Epilogue so we can't use
-        // the general unwinding logic below.
+        // the general unwinding logic above.
         MOZ_ASSERT(!fp);
         callerPC_ = nullptr;
         callerFP_ = nullptr;
@@ -577,9 +601,11 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation &
             return;
         }
 
-        // Inline code ranges execute in the frame of the caller have no
-        // prologue/epilogue and thus don't require the general unwinding logic
-        // as below.
+        // Most inline code stubs execute after the prologue/epilogue have
+        // completed so we can simply unwind based on fp. The only exception is
+        // the async interrupt stub, since it can be executed at any time.
+        // However, the async interrupt is super rare, so we can tolerate
+        // skipped frames. Thus, we use simply unwind based on fp.
         callerPC_ = ReturnAddressFromFP(fp);
         callerFP_ = CallerFPFromFP(fp);
         AssertMatchesCallSite(*module_, codeRange, callerPC_, callerFP_, fp);
@@ -617,7 +643,6 @@ AsmJSProfilingFrameIterator::operator++()
     switch (codeRange->kind()) {
       case AsmJSModule::CodeRange::Entry:
         MOZ_ASSERT(callerFP_ == nullptr);
-        MOZ_ASSERT(callerPC_ != nullptr);
         callerPC_ = nullptr;
         break;
       case AsmJSModule::CodeRange::Function:

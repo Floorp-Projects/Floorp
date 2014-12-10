@@ -8,6 +8,7 @@
 #include "gfxPoint.h"                   // for gfxIntSize
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/gfx/2D.h"             // for DataSourceSurface, Factory
+#include "mozilla/gfx/Logging.h"        // for gfxDebug
 #include "mozilla/gfx/Tools.h"          // for GetAlignedStride, etc
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 
@@ -34,11 +35,11 @@ using namespace gfx;
 namespace {
 struct SurfaceBufferInfo
 {
-  uint32_t width;
-  uint32_t height;
+  int32_t width;
+  int32_t height;
   SurfaceFormat format;
 
-  static uint32_t GetOffset()
+  static int32_t GetOffset()
   {
     return GetAlignedStride<16>(sizeof(SurfaceBufferInfo));
   }
@@ -65,19 +66,39 @@ ImageDataSerializer::InitializeBufferInfo(IntSize aSize,
   Validate();
 }
 
-static inline uint32_t
-ComputeStride(SurfaceFormat aFormat, uint32_t aWidth)
+static inline int32_t
+ComputeStride(SurfaceFormat aFormat, int32_t aWidth)
 {
-  return GetAlignedStride<4>(BytesPerPixel(aFormat) * aWidth);
+  CheckedInt<int32_t> size = BytesPerPixel(aFormat);
+  size *= aWidth;
+  if (!size.isValid() || size.value() <= 0) {
+    gfxDebug() << "ComputeStride overflow " << aWidth;
+    return 0;
+  }
+
+  return GetAlignedStride<4>(size.value());
 }
 
 uint32_t
 ImageDataSerializerBase::ComputeMinBufferSize(IntSize aSize,
-                                          SurfaceFormat aFormat)
+                                              SurfaceFormat aFormat)
 {
-  uint32_t bufsize = aSize.height * ComputeStride(aFormat, aSize.width);
+  MOZ_ASSERT(aSize.height >= 0 && aSize.width >= 0);
+  if (aSize.height <= 0 || aSize.width <= 0) {
+    gfxDebug() << "Non-positive image buffer size request " << aSize.width << "x" << aSize.height;
+    return 0;
+  }
+
+  CheckedInt<int32_t> bufsize = ComputeStride(aFormat, aSize.width);
+  bufsize *= aSize.height;
+
+  if (!bufsize.isValid() || bufsize.value() <= 0) {
+    gfxDebug() << "Buffer size overflow " << aSize.width << "x" << aSize.height;
+    return 0;
+  }
+
   return SurfaceBufferInfo::GetOffset()
-       + GetAlignedStride<16>(bufsize);
+       + GetAlignedStride<16>(bufsize.value());
 }
 
 void
