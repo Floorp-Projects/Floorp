@@ -26,6 +26,7 @@
   top: 0;
   left: 0;
   right: 0;
+  /* note that .room-invitation-overlay top matches this */
   height: 26px;
 }
 
@@ -751,7 +752,8 @@ html, .fx-embedded, #main,
 .room-invitation-overlay {
   position: absolute;
   background: rgba(0, 0, 0, .6);
-  top: 0;
+  /* This matches .fx-embedded .conversation toolbar height */
+  top: 26px;
   right: 0;
   bottom: 0;
   left: 0;
