@@ -105,68 +105,6 @@ WBORecord.prototype = {
 
 Utils.deferGetSet(WBORecord, "data", ["id", "modified", "sortindex", "payload"]);
 
-/**
- * An interface and caching layer for records.
- */
-this.RecordManager = function RecordManager(service) {
-  this.service = service;
-
-  this._log = Log.repository.getLogger(this._logName);
-  this._records = {};
-}
-RecordManager.prototype = {
-  _recordType: WBORecord,
-  _logName: "Sync.RecordManager",
-
-  import: function RecordMgr_import(url) {
-    this._log.trace("Importing record: " + (url.spec ? url.spec : url));
-    try {
-      // Clear out the last response with empty object if GET fails
-      this.response = {};
-      this.response = this.service.resource(url).get();
-
-      // Don't parse and save the record on failure
-      if (!this.response.success)
-        return null;
-
-      let record = new this._recordType(url);
-      record.deserialize(this.response);
-
-      return this.set(url, record);
-    } catch(ex) {
-      this._log.debug("Failed to import record: " + Utils.exceptionStr(ex));
-      return null;
-    }
-  },
-
-  get: function RecordMgr_get(url) {
-    // Use a url string as the key to the hash
-    let spec = url.spec ? url.spec : url;
-    if (spec in this._records)
-      return this._records[spec];
-    return this.import(url);
-  },
-
-  set: function RecordMgr_set(url, record) {
-    let spec = url.spec ? url.spec : url;
-    return this._records[spec] = record;
-  },
-
-  contains: function RecordMgr_contains(url) {
-    if ((url.spec || url) in this._records)
-      return true;
-    return false;
-  },
-
-  clearCache: function recordMgr_clearCache() {
-    this._records = {};
-  },
-
-  del: function RecordMgr_del(url) {
-    delete this._records[url];
-  }
-};
-
 this.CryptoWrapper = function CryptoWrapper(collection, id) {
   this.cleartext = {};
   WBORecord.call(this, collection, id);
@@ -269,6 +207,67 @@ CryptoWrapper.prototype = {
 Utils.deferGetSet(CryptoWrapper, "payload", ["ciphertext", "IV", "hmac"]);
 Utils.deferGetSet(CryptoWrapper, "cleartext", "deleted");
 
+/**
+ * An interface and caching layer for records.
+ */
+this.RecordManager = function RecordManager(service) {
+  this.service = service;
+
+  this._log = Log.repository.getLogger(this._logName);
+  this._records = {};
+}
+RecordManager.prototype = {
+  _recordType: CryptoWrapper,
+  _logName: "Sync.RecordManager",
+
+  import: function RecordMgr_import(url) {
+    this._log.trace("Importing record: " + (url.spec ? url.spec : url));
+    try {
+      // Clear out the last response with empty object if GET fails
+      this.response = {};
+      this.response = this.service.resource(url).get();
+
+      // Don't parse and save the record on failure
+      if (!this.response.success)
+        return null;
+
+      let record = new this._recordType(url);
+      record.deserialize(this.response);
+
+      return this.set(url, record);
+    } catch(ex) {
+      this._log.debug("Failed to import record: " + Utils.exceptionStr(ex));
+      return null;
+    }
+  },
+
+  get: function RecordMgr_get(url) {
+    // Use a url string as the key to the hash
+    let spec = url.spec ? url.spec : url;
+    if (spec in this._records)
+      return this._records[spec];
+    return this.import(url);
+  },
+
+  set: function RecordMgr_set(url, record) {
+    let spec = url.spec ? url.spec : url;
+    return this._records[spec] = record;
+  },
+
+  contains: function RecordMgr_contains(url) {
+    if ((url.spec || url) in this._records)
+      return true;
+    return false;
+  },
+
+  clearCache: function recordMgr_clearCache() {
+    this._records = {};
+  },
+
+  del: function RecordMgr_del(url) {
+    delete this._records[url];
+  }
+};
 
 /**
  * Keeps track of mappings between collection names ('tabs') and KeyBundles.
