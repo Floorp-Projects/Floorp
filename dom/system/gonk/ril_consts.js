@@ -2876,6 +2876,7 @@ this.MMI_KS_SC_PUK = "scPuk";
 this.MMI_KS_SC_PUK2 = "scPuk2";
 this.MMI_KS_SC_IMEI = "scImei";
 this.MMI_KS_SC_USSD = "scUssd";
+this.MMI_KS_SC_CALL = "scCall";
 
 // MMI error messages key strings.
 this.MMI_ERROR_KS_ERROR = "emMmiError";
@@ -2905,6 +2906,7 @@ this.MMI_SM_KS_CLIR_DEFAULT_ON_NEXT_CALL_ON = "smClirDefaultOnNextCallOn";
 this.MMI_SM_KS_CLIR_DEFAULT_ON_NEXT_CALL_OFF = "smClirDefaultOnNextCallOff";
 this.MMI_SM_KS_CLIR_DEFAULT_OFF_NEXT_CALL_ON = "smClirDefaultOffNextCallOn";
 this.MMI_SM_KS_CLIR_DEFAULT_OFF_NEXT_CALL_OFF = "smClirDefaultOffNextCallOff";
+this.MMI_SM_KS_CALL_CONTROL = "smCallControl";
 
 // MMI Service class
 this.MMI_KS_SERVICE_CLASS_VOICE = "serviceClassVoice";
