@@ -45,6 +45,14 @@ let DetailsView = {
    */
   selectView: function (selectedView) {
     this.el.selectedIndex = this.viewIndexes[selectedView];
+
+    for (let button of $$("toolbarbutton[data-view]", $("#details-toolbar"))) {
+      if (button.getAttribute("data-view") === selectedView)
+        button.setAttribute("checked", true);
+      else
+        button.removeAttribute("checked");
+    }
+
     this.emit(EVENTS.DETAILS_VIEW_SELECTED, selectedView);
   },
 
