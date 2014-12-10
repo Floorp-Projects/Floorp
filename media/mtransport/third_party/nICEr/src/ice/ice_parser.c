@@ -242,9 +242,6 @@ nr_ice_peer_candidate_from_attribute(nr_ice_ctx *ctx,char *orig,nr_ice_media_str
         ABORT(R_BAD_DATA);
 
     assert(nr_ice_candidate_type_names[0] == 0);
-#if __STDC_VERSION__ >= 201112L
-    _Static_assert(nr_ice_candidate_type_names[0] == 0,"Candidate name array is misformatted");
-#endif
 
     for (i = 1; nr_ice_candidate_type_names[i]; ++i) {
         if(!strncasecmp(nr_ice_candidate_type_names[i], str, strlen(nr_ice_candidate_type_names[i]))) {
