@@ -4092,7 +4092,7 @@ pref("dom.battery.enabled", true);
 pref("dom.image.srcset.enabled", true);
 
 // <picture> element and sizes
-pref("dom.image.picture.enabled", false);
+pref("dom.image.picture.enabled", true);
 
 // WebSMS
 pref("dom.sms.enabled", false);
