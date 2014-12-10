@@ -142,14 +142,14 @@ JSObject *newKey()
     static const js::Class keyClass = {
         "keyWithDelgate",
         JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1),
-        JS_PropertyStub,         /* addProperty */
-        JS_DeletePropertyStub,   /* delProperty */
+        nullptr,                 /* addProperty */
+        nullptr,                 /* delProperty */
         JS_PropertyStub,         /* getProperty */
         JS_StrictPropertyStub,   /* setProperty */
-        JS_EnumerateStub,
-        JS_ResolveStub,
-        JS_ConvertStub,
-        nullptr,
+        nullptr,                 /* enumerate */
+        nullptr,                 /* resolve */
+        nullptr,                 /* convert */
+        nullptr,                 /* finalize */
         nullptr,
         nullptr,
         nullptr,
@@ -202,14 +202,14 @@ JSObject *newDelegate()
     static const js::Class delegateClass = {
         "delegate",
         JSCLASS_GLOBAL_FLAGS | JSCLASS_HAS_RESERVED_SLOTS(1),
-        JS_PropertyStub,
-        JS_DeletePropertyStub,
+        nullptr,                 /* addProperty */
+        nullptr,                 /* delProperty */
         JS_PropertyStub,
         JS_StrictPropertyStub,
-        JS_EnumerateStub,
-        JS_ResolveStub,
-        JS_ConvertStub,
-        nullptr,
+        nullptr,                 /* enumerate */
+        nullptr,                 /* resolve */
+        nullptr,                 /* convert */
+        nullptr,                 /* finalize */
         nullptr,
         nullptr,
         nullptr,

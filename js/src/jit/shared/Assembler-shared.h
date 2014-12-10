@@ -923,7 +923,6 @@ class AssemblerShared
     }
 
     ImmGCPtr noteMaybeNurseryPtr(ImmMaybeNurseryPtr ptr) {
-#ifdef JSGC_GENERATIONAL
         if (ptr.value && gc::IsInsideNursery(ptr.value)) {
             // FIXME: Ideally we'd assert this in all cases, but PJS needs to
             //        compile IC's from off-main-thread; it will not touch
@@ -931,7 +930,6 @@ class AssemblerShared
             MOZ_ASSERT(GetJitContext()->runtime->onMainThread());
             embedsNurseryPointers_ = true;
         }
-#endif
         return ImmGCPtr(ptr);
     }
 

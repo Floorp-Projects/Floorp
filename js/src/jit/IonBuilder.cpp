@@ -6605,7 +6605,7 @@ ClassHasResolveHook(CompileCompartment *comp, const Class *clasp, PropertyName *
     if (clasp == &ArrayObject::class_)
         return name == comp->runtime()->names().length;
 
-    if (clasp->resolve == JS_ResolveStub)
+    if (!clasp->resolve)
         return false;
 
     if (clasp->resolve == str_resolve) {
@@ -7065,10 +7065,8 @@ jit::TypeSetIncludes(types::TypeSet *types, MIRType input, types::TypeSet *input
 bool
 jit::NeedsPostBarrier(CompileInfo &info, MDefinition *value)
 {
-#ifdef JSGC_GENERATIONAL
     if (!GetJitContext()->runtime->gcNursery().exists())
         return false;
-#endif
     return info.executionMode() != ParallelExecution && value->mightBeType(MIRType_Object);
 }
 
@@ -8049,11 +8047,7 @@ IonBuilder::addTypedArrayLengthAndData(MDefinition *obj,
         void *data = AnyTypedArrayViewData(tarr);
         // Bug 979449 - Optimistically embed the elements and use TI to
         //              invalidate if we move them.
-#ifdef JSGC_GENERATIONAL
         bool isTenured = !tarr->runtimeFromMainThread()->gc.nursery.isInside(data);
-#else
-        bool isTenured = true;
-#endif
         if (isTenured && tarr->hasSingletonType()) {
             // The 'data' pointer of TypedArrayObject can change in rare circumstances
             // (ArrayBufferObject::changeContents).
@@ -8397,10 +8391,8 @@ IonBuilder::setElemTryTypedStatic(bool *emitted, MDefinition *object,
     if (!tarrObj)
         return true;
 
-#ifdef JSGC_GENERATIONAL
     if (tarrObj->runtimeFromMainThread()->gc.nursery.isInside(AnyTypedArrayViewData(tarrObj)))
         return true;
-#endif
 
     types::TypeObjectKey *tarrType = types::TypeObjectKey::get(tarrObj);
     if (tarrType->unknownProperties())
@@ -9124,6 +9116,12 @@ IonBuilder::testCommonGetterSetter(types::TemporaryTypeSet *types, PropertyName 
         *globalGuard = addShapeGuard(globalObj, globalShape, Bailout_ShapeGuard);
     }
 
+    if (foundProto->isNative()) {
+        Shape *propShape = foundProto->as<NativeObject>().lookupPure(name);
+        if (propShape && !propShape->configurable())
+            return true;
+    }
+
     MInstruction *wrapper = constant(ObjectValue(*foundProto));
     *guard = addShapeGuard(wrapper, lastProperty, Bailout_ShapeGuard);
     return true;
@@ -9704,6 +9702,16 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, MDefinition *obj, PropertyName
         const JSJitInfo *jitinfo = commonGetter->jitInfo();
         MInstruction *get;
         if (jitinfo->isAlwaysInSlot) {
+            // If our object is a singleton and we know the property is
+            // constant (which is true if and only if the get doesn't alias
+            // anything), we can just read the slot here and use that constant.
+            JSObject *singleton = objTypes->getSingleton();
+            if (singleton && jitinfo->aliasSet() == JSJitInfo::AliasNone) {
+                size_t slot = jitinfo->slotIndex;
+                *emitted = true;
+                return pushConstant(GetReservedSlot(singleton, slot));
+            }
+
             // We can't use MLoadFixedSlot here because it might not have the
             // right aliasing behavior; we want to alias DOM setters as needed.
             get = MGetDOMMember::New(alloc(), jitinfo, obj, guard, globalGuard);

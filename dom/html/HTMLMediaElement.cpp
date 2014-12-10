@@ -111,6 +111,12 @@ using mozilla::net::nsMediaFragmentURIParser;
 namespace mozilla {
 namespace dom {
 
+// Number of milliseconds between progress events as defined by spec
+static const uint32_t PROGRESS_MS = 350;
+
+// Number of milliseconds of no data before a stall event is fired as defined by spec
+static const uint32_t STALL_MS = 3000;
+
 // Used by AudioChannel for suppresssing the volume to this ratio.
 #define FADED_VOLUME_RATIO 0.25
 
@@ -2052,6 +2058,9 @@ HTMLMediaElement::~HTMLMediaElement()
   if (mDecoder) {
     ShutdownDecoder();
   }
+  if (mProgressTimer) {
+    StopProgress();
+  }
   if (mSrcStream) {
     EndSrcMediaStreamPlayback();
   }
@@ -2636,8 +2645,6 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
   mDecoder->SetVolume(mMuted ? 0.0 : mVolume);
   mDecoder->SetPreservesPitch(mPreservesPitch);
   mDecoder->SetPlaybackRate(mPlaybackRate);
-  // Start progress timer for we are in NETWORK_LOADING.
-  mDecoder->StartProgress();
 
 #ifdef MOZ_EME
   if (mMediaKeys) {
@@ -3053,7 +3060,9 @@ void HTMLMediaElement::NotifySuspendedByCache(bool aIsSuspended)
 
 void HTMLMediaElement::DownloadSuspended()
 {
-  DownloadProgressed();
+  if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING) {
+    DispatchAsyncEvent(NS_LITERAL_STRING("progress"));
+  }
   if (mBegun) {
     ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
     AddRemoveSelfReference();
@@ -3068,18 +3077,99 @@ void HTMLMediaElement::DownloadResumed(bool aForceNetworkLoading)
   }
 }
 
-void HTMLMediaElement::DownloadProgressed()
+void HTMLMediaElement::CheckProgress(bool aHaveNewProgress)
 {
-  if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING);
+
+  TimeStamp now = TimeStamp::NowLoRes();
+
+  if (aHaveNewProgress) {
+    mDataTime = now;
+  }
+
+  // If this is the first progress, or PROGRESS_MS has passed since the last
+  // progress event fired and more data has arrived since then, fire a
+  // progress event.
+  NS_ASSERTION((mProgressTime.IsNull() && !aHaveNewProgress) ||
+               !mDataTime.IsNull(),
+               "null TimeStamp mDataTime should not be used in comparison");
+  if (mProgressTime.IsNull() ? aHaveNewProgress
+      : (now - mProgressTime >= TimeDuration::FromMilliseconds(PROGRESS_MS) &&
+         mDataTime > mProgressTime)) {
     DispatchAsyncEvent(NS_LITERAL_STRING("progress"));
+    // Resolution() ensures that future data will have now > mProgressTime,
+    // and so will trigger another event.  mDataTime is not reset because it
+    // is still required to detect stalled; it is similarly offset by
+    // resolution to indicate the new data has not yet arrived.
+    mProgressTime = now - TimeDuration::Resolution();
+    if (mDataTime > mProgressTime) {
+      mDataTime = mProgressTime;
+    }
+    if (!mProgressTimer) {
+      NS_ASSERTION(aHaveNewProgress,
+                   "timer dispatched when there was no timer");
+      // Were stalled.  Restart timer.
+      StartProgressTimer();
+    }
+  }
+
+  if (now - mDataTime >= TimeDuration::FromMilliseconds(STALL_MS)) {
+    DispatchAsyncEvent(NS_LITERAL_STRING("stalled"));
+    NS_ASSERTION(mProgressTimer, "detected stalled without timer");
+    // Stop timer events, which prevents repeated stalled events until there
+    // is more progress.
+    StopProgress();
   }
 }
 
-void HTMLMediaElement::DownloadStalled()
+/* static */
+void HTMLMediaElement::ProgressTimerCallback(nsITimer* aTimer, void* aClosure)
 {
-  if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING) {
-    DispatchAsyncEvent(NS_LITERAL_STRING("stalled"));
+  auto decoder = static_cast<HTMLMediaElement*>(aClosure);
+  decoder->CheckProgress(false);
+}
+
+void HTMLMediaElement::StartProgressTimer()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING);
+  NS_ASSERTION(!mProgressTimer, "Already started progress timer.");
+
+  mProgressTimer = do_CreateInstance("@mozilla.org/timer;1");
+  mProgressTimer->InitWithFuncCallback(ProgressTimerCallback,
+                                       this,
+                                       PROGRESS_MS,
+                                       nsITimer::TYPE_REPEATING_SLACK);
+}
+
+void HTMLMediaElement::StartProgress()
+{
+  // Record the time now for detecting stalled.
+  mDataTime = TimeStamp::NowLoRes();
+  // Reset mProgressTime so that mDataTime is not indicating bytes received
+  // after the last progress event.
+  mProgressTime = TimeStamp();
+  StartProgressTimer();
+}
+
+void HTMLMediaElement::StopProgress()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mProgressTimer) {
+    return;
   }
+
+  mProgressTimer->Cancel();
+  mProgressTimer = nullptr;
+}
+
+void HTMLMediaElement::DownloadProgressed()
+{
+  if (mNetworkState != nsIDOMHTMLMediaElement::NETWORK_LOADING) {
+    return;
+  }
+  CheckProgress(true);
 }
 
 bool HTMLMediaElement::ShouldCheckAllowOrigin()
@@ -3234,19 +3324,15 @@ void HTMLMediaElement::ChangeNetworkState(nsMediaNetworkState aState)
   if (oldState == nsIDOMHTMLMediaElement::NETWORK_LOADING) {
     // Reset |mBegun| since we're not downloading anymore.
     mBegun = false;
-    if (mDecoder) {
-      // Stop progress notification when exiting NETWORK_LOADING.
-      mDecoder->StopProgress();
-    }
+    // Stop progress notification when exiting NETWORK_LOADING.
+    StopProgress();
   }
 
   if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING) {
     // Download is begun.
     mBegun = true;
-    if (mDecoder) {
-      // Start progress notification when entering NETWORK_LOADING.
-      mDecoder->StartProgress();
-    }
+    // Start progress notification when entering NETWORK_LOADING.
+    StartProgress();
   } else if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_IDLE && !mError) {
     // Fire 'suspend' event when entering NETWORK_IDLE and no error presented.
     DispatchAsyncEvent(NS_LITERAL_STRING("suspend"));

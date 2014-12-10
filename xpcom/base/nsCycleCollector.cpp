@@ -909,6 +909,7 @@ CCGraph::FindNode(void* aPtr)
 PtrToNodeEntry*
 CCGraph::AddNodeToMap(void* aPtr)
 {
+  JS::AutoSuppressGCAnalysis suppress;
   PtrToNodeEntry* e =
     static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, aPtr,
                                                       PL_DHASH_ADD));
@@ -2071,8 +2072,8 @@ public:
   NS_IMETHOD_(void) NoteJSRoot(void* aRoot);
   NS_IMETHOD_(void) NoteNativeRoot(void* aRoot,
                                    nsCycleCollectionParticipant* aParticipant);
-  NS_IMETHOD_(void) NoteWeakMapping(void* aMap, void* aKey, void* aKdelegate,
-                                    void* aVal);
+  NS_IMETHOD_(void) NoteWeakMapping(JSObject* aMap, JS::GCCellPtr aKey,
+                                    JSObject* aKdelegate, JS::GCCellPtr aVal);
 
   // nsCycleCollectionTraversalCallback methods.
   NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt aRefCount,
@@ -2360,20 +2361,20 @@ CCGraphBuilder::AddWeakMapNode(void* aNode)
 }
 
 NS_IMETHODIMP_(void)
-CCGraphBuilder::NoteWeakMapping(void* aMap, void* aKey, void* aKdelegate,
-                                void* aVal)
+CCGraphBuilder::NoteWeakMapping(JSObject* aMap, JS::GCCellPtr aKey,
+                                JSObject* aKdelegate, JS::GCCellPtr aVal)
 {
   // Don't try to optimize away the entry here, as we've already attempted to
   // do that in TraceWeakMapping in nsXPConnect.
   WeakMapping* mapping = mGraph.mWeakMaps.AppendElement();
   mapping->mMap = aMap ? AddWeakMapNode(aMap) : nullptr;
-  mapping->mKey = aKey ? AddWeakMapNode(aKey) : nullptr;
+  mapping->mKey = aKey ? AddWeakMapNode(aKey.asCell()) : nullptr;
   mapping->mKeyDelegate = aKdelegate ? AddWeakMapNode(aKdelegate) : mapping->mKey;
-  mapping->mVal = aVal ? AddWeakMapNode(aVal) : nullptr;
+  mapping->mVal = aVal ? AddWeakMapNode(aVal.asCell()) : nullptr;
 
   if (mListener) {
-    mListener->NoteWeakMapEntry((uint64_t)aMap, (uint64_t)aKey,
-                                (uint64_t)aKdelegate, (uint64_t)aVal);
+    mListener->NoteWeakMapEntry((uint64_t)aMap, aKey.unsafeAsInteger(),
+                                (uint64_t)aKdelegate, aVal.unsafeAsInteger());
   }
 }
 

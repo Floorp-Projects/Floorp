@@ -279,10 +279,8 @@ void MarkIonCompilerRoots(JSTracer *trc);
 JSCompartment *
 TopmostIonActivationCompartment(JSRuntime *rt);
 
-#ifdef JSGC_GENERATIONAL
 template<typename T>
 void UpdateJitActivationsForMinorGC(PerThreadData *ptd, JSTracer *trc);
-#endif
 
 static inline uint32_t
 MakeFrameDescriptor(uint32_t frameSize, FrameType type)

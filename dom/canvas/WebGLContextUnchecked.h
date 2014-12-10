@@ -8,12 +8,12 @@
 #define WEBGLCONTEXTUNCHECKED_H
 
 #include "GLDefs.h"
+#include "nsRefPtr.h"
 #include "WebGLTypes.h"
-#include "nsAutoPtr.h"
-#include "nsTArray.h"
 
 namespace mozilla {
 
+class WebGLBuffer;
 class WebGLSampler;
 namespace gl {
     class GLContext;
@@ -23,6 +23,13 @@ class WebGLContextUnchecked
 {
 public:
     explicit WebGLContextUnchecked(gl::GLContext* gl);
+
+    // -------------------------------------------------------------------------
+    // Buffer Objects
+    void BindBuffer(GLenum target, WebGLBuffer* buffer);
+    void BindBufferBase(GLenum target, GLuint index, WebGLBuffer* buffer);
+    void BindBufferRange(GLenum taret, GLuint index, WebGLBuffer* buffer, WebGLintptr offset, WebGLsizeiptr size);
+    void CopyBufferSubData(GLenum readTarget, GLenum writeTarget, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size);
 
     // -------------------------------------------------------------------------
     // Sampler Objects

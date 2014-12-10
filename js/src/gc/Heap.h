@@ -196,6 +196,7 @@ class TenuredCell : public Cell
     // Access to the arena header.
     inline ArenaHeader *arenaHeader() const;
     inline AllocKind getAllocKind() const;
+    inline JSGCTraceKind getTraceKind() const;
     inline JS::Zone *zone() const;
     inline JS::Zone *zoneFromAnyThread() const;
     inline bool isInsideZone(JS::Zone *zone) const;
@@ -1249,11 +1250,7 @@ InFreeList(ArenaHeader *aheader, void *thing)
 
 /* static */ MOZ_ALWAYS_INLINE bool
 Cell::needWriteBarrierPre(JS::Zone *zone) {
-#ifdef JSGC_INCREMENTAL
     return JS::shadow::Zone::asShadowZone(zone)->needsIncrementalBarrier();
-#else
-    return false;
-#endif
 }
 
 /* static */ MOZ_ALWAYS_INLINE TenuredCell *
@@ -1316,6 +1313,12 @@ TenuredCell::getAllocKind() const
     return arenaHeader()->getAllocKind();
 }
 
+JSGCTraceKind
+TenuredCell::getTraceKind() const
+{
+    return MapAllocToTraceKind(getAllocKind());
+}
+
 JS::Zone *
 TenuredCell::zone() const
 {
@@ -1339,7 +1342,6 @@ TenuredCell::isInsideZone(JS::Zone *zone) const
 /* static */ MOZ_ALWAYS_INLINE void
 TenuredCell::readBarrier(TenuredCell *thing)
 {
-#ifdef JSGC_INCREMENTAL
     MOZ_ASSERT(!CurrentThreadIsIonCompiling());
     MOZ_ASSERT(!isNullLike(thing));
     JS::shadow::Zone *shadowZone = thing->shadowZoneFromAnyThread();
@@ -1351,14 +1353,14 @@ TenuredCell::readBarrier(TenuredCell *thing)
                          MapAllocToTraceKind(thing->getAllocKind()));
         MOZ_ASSERT(tmp == thing);
     }
+    JS::GCCellPtr cellptr(thing, thing->getTraceKind());
     if (JS::GCThingIsMarkedGray(thing))
-        JS::UnmarkGrayGCThingRecursively(thing, MapAllocToTraceKind(thing->getAllocKind()));
-#endif
+        JS::UnmarkGrayGCThingRecursively(cellptr);
 }
 
 /* static */ MOZ_ALWAYS_INLINE void
-TenuredCell::writeBarrierPre(TenuredCell *thing) {
-#ifdef JSGC_INCREMENTAL
+TenuredCell::writeBarrierPre(TenuredCell *thing)
+{
     MOZ_ASSERT(!CurrentThreadIsIonCompiling());
     if (isNullLike(thing) || !thing->shadowRuntimeFromAnyThread()->needsIncrementalBarrier())
         return;
@@ -1372,7 +1374,6 @@ TenuredCell::writeBarrierPre(TenuredCell *thing) {
                          MapAllocToTraceKind(thing->getAllocKind()));
         MOZ_ASSERT(tmp == thing);
     }
-#endif
 }
 
 static MOZ_ALWAYS_INLINE void

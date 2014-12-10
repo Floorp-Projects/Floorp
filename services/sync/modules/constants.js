@@ -54,6 +54,9 @@ HMAC_EVENT_INTERVAL:                   600000,
 // How long to wait between sync attempts if the Master Password is locked.
 MASTER_PASSWORD_LOCKED_RETRY_INTERVAL: 15 * 60 * 1000,   // 15 minutes
 
+// The default for how long we "block" sync from running when doing a migration.
+DEFAULT_BLOCK_PERIOD:                  2 * 24 * 60 * 60 * 1000, // 2 days
+
 // Separate from the ID fetch batch size to allow tuning for mobile.
 MOBILE_BATCH_SIZE:                     50,
 

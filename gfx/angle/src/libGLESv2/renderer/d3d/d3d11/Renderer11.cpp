@@ -66,6 +66,12 @@ static const DXGI_FORMAT RenderTargetFormats[] =
         DXGI_FORMAT_R8G8B8A8_UNORM
     };
 
+static const GLenum RenderTargetExposedFormats[] =
+    {
+        GL_RGBA8,    // DXGI_FORMAT_B8G8R8A8_UNORM
+        GL_RGBA8,    // DXGI_FORMAT_R8G8B8A8_UNORM
+    };
+
 static const DXGI_FORMAT DepthStencilFormats[] =
     {
         DXGI_FORMAT_UNKNOWN,
@@ -341,6 +347,7 @@ int Renderer11::generateConfigs(ConfigDesc **configDescList)
     for (unsigned int formatIndex = 0; formatIndex < numRenderFormats; formatIndex++)
     {
         const d3d11::DXGIFormat &renderTargetFormatInfo = d3d11::GetDXGIFormatInfo(RenderTargetFormats[formatIndex]);
+        const GLenum renderTargetExposedFormat = RenderTargetExposedFormats[formatIndex];
         const gl::TextureCaps &renderTargetFormatCaps = getRendererTextureCaps().get(renderTargetFormatInfo.internalFormat);
         if (renderTargetFormatCaps.renderable)
         {
@@ -351,7 +358,7 @@ int Renderer11::generateConfigs(ConfigDesc **configDescList)
                 if (depthStencilFormatCaps.renderable || DepthStencilFormats[depthStencilIndex] == DXGI_FORMAT_UNKNOWN)
                 {
                     ConfigDesc newConfig;
-                    newConfig.renderTargetFormat = renderTargetFormatInfo.internalFormat;
+                    newConfig.renderTargetFormat = renderTargetExposedFormat;
                     newConfig.depthStencilFormat = depthStencilFormatInfo.internalFormat;
                     newConfig.multiSample = 0;     // FIXME: enumerate multi-sampling
                     newConfig.fastConfig = true;   // Assume all DX11 format conversions to be fast
@@ -1815,6 +1822,12 @@ bool Renderer11::resetDevice()
 DWORD Renderer11::getAdapterVendor() const
 {
     return mAdapterDescription.VendorId;
+}
+
+SIZE_T Renderer11::getMaxResourceSize() const
+{
+    // This formula comes from http://msdn.microsoft.com/en-us/library/windows/desktop/ff819065%28v=vs.85%29.aspx
+    return std::min(std::max(SIZE_T(128 * 1024 * 1024), mAdapterDescription.DedicatedVideoMemory), SIZE_T(2048) * 1024 * 1024);
 }
 
 std::string Renderer11::getRendererDescription() const

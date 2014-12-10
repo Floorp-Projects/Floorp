@@ -322,7 +322,10 @@ CallJSDeletePropertyOp(JSContext *cx, JSDeletePropertyOp op, HandleObject receiv
     JS_CHECK_RECURSION(cx, return false);
 
     assertSameCompartment(cx, receiver, id);
-    return op(cx, receiver, id, succeeded);
+    if (op)
+        return op(cx, receiver, id, succeeded);
+    *succeeded = true;
+    return true;
 }
 
 inline bool

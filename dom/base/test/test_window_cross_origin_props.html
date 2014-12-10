@@ -75,10 +75,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=946067
        "Our subframe's top should still be our top");
 
     is(frames[0].window, frames[0], "window getter should work");
-    // "window" is not a getter property yet
-    //is(doGet("window", frames[0]), frames[0], "window getter should still work");
-    todo_isnot(Object.getOwnPropertyDescriptor(window, "window").get, undefined,
-              "Should have a getter here");
+    is(doGet("window", frames[0]), frames[0], "window getter should still work");
+    isnot(Object.getOwnPropertyDescriptor(window, "window").get, undefined,
+          "Should have a getter here");
 
     // Finally, check that we can set the location
     frames[0].location = "about:blank";
