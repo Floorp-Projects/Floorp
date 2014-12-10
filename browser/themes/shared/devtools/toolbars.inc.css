@@ -647,7 +647,7 @@
 
 .devtools-tabbar {
   -moz-appearance: none;
-  min-height: 28px;
+  min-height: 24px;
   border: 0px solid;
   border-bottom-width: 1px;
   padding: 0;
@@ -672,7 +672,7 @@
   -moz-binding: url("chrome://global/content/bindings/general.xml#control-item");
   -moz-box-align: center;
   min-width: 32px;
-  min-height: 28px;
+  min-height: 24px;
   max-width: 127px;
   margin: 0;
   padding: 0;
@@ -853,3 +853,13 @@
 .devtools-invisible-splitter {
   border-color: transparent;
 }
+
+.devtools-horizontal-splitter {
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.devtools-side-splitter {
+  -moz-border-end: 1px solid var(--theme-splitter-color);
+  border-color: var(--theme-splitter-color); /* Needed for responsive container at low width. */
+}
+

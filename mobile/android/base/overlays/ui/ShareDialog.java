@@ -10,7 +10,7 @@ import java.net.URISyntaxException;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.GeckoProfile;
-import org.mozilla.gecko.LocaleAware;
+import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -50,7 +50,7 @@ import android.widget.Toast;
 /**
  * A transparent activity that displays the share overlay.
  */
-public class ShareDialog extends LocaleAware.LocaleAwareActivity implements SendTabTargetSelectedListener {
+public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabTargetSelectedListener {
     private static final String LOGTAG = "GeckoShareDialog";
 
     private String url;
