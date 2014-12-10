@@ -12,7 +12,7 @@ function run_test() {
 }
 
 function parseMMI(mmiString) {
-  return NS.TelephonyService.prototype._parseMMI(mmiString, false);
+  return NS.TelephonyService.prototype._parseMMI(mmiString);
 }
 
 add_test(function test_parseMMI_empty() {
