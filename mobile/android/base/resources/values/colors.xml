@@ -5,7 +5,11 @@
 
 <resources>
   <color name="background_light">#FFF5F5F5</color>
+
+  <!-- If you update one, update the other. -->
   <color name="background_normal">#FFEBEBF0</color>
+  <color name="background_normal_lwt">#DDEBEBF0</color>
+
   <color name="background_private">#FF292C29</color>
   <color name="background_tabs">#FF363B40</color>
   <color name="highlight">#33000000</color>

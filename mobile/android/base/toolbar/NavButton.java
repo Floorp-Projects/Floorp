@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko.toolbar;
 
+import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
 
 import android.content.Context;
@@ -60,9 +61,17 @@ abstract class NavButton extends ShapedButton {
     // The drawable is constructed as per @drawable/url_bar_nav_button.
     @Override
     public void onLightweightThemeChanged() {
-        final Drawable drawable = mTheme.getDrawable(this);
-        if (drawable == null)
+        final Drawable drawable;
+        if (!NewTabletUI.isEnabled(getContext())) {
+            drawable = mTheme.getDrawable(this);
+        } else {
+            drawable = BrowserToolbar.getLightweightThemeDrawable(this, getResources(), getTheme(),
+                    R.color.background_normal);
+        }
+
+        if (drawable == null) {
             return;
+        }
 
         final StateListDrawable stateList = new StateListDrawable();
         stateList.addState(PRIVATE_PRESSED_STATE_SET, getColorDrawable(R.color.highlight_nav_pb));
