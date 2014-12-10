@@ -44,7 +44,7 @@ public:
 
   // WebIDL
   virtual void GetKind(nsAString& aKind) = 0;
-  void GetId(nsAString& aID);
+  void GetId(nsAString& aID) const;
   void GetLabel(nsAString& aLabel) { aLabel.Truncate(); }
   bool Enabled() { return mEnabled; }
   void SetEnabled(bool aEnabled);
@@ -53,12 +53,16 @@ public:
   // Notifications from the MediaStreamGraph
   void NotifyEnded() { mEnded = true; }
 
+  // Webrtc allows the remote side to name tracks whatever it wants, and we
+  // need to surface this to content.
+  void AssignId(const nsAString& aID) { mID = aID; }
+
 protected:
   virtual ~MediaStreamTrack();
 
   nsRefPtr<DOMMediaStream> mStream;
   TrackID mTrackID;
-  nsID mID;
+  nsString mID;
   bool mEnded;
   bool mEnabled;
 };

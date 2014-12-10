@@ -1513,6 +1513,8 @@ JsepSessionImpl::ParseSdp(const std::string& sdp, UniquePtr<Sdp>* parsedp)
     return NS_ERROR_INVALID_ARG;
   }
 
+  std::set<std::string> trackIds;
+
   for (size_t i = 0; i < parsed->GetMediaSectionCount(); ++i) {
     if (parsed->GetMediaSection(i).GetPort() == 0) {
       // Disabled, let this stuff slide.
@@ -1553,6 +1555,26 @@ JsepSessionImpl::ParseSdp(const std::string& sdp, UniquePtr<Sdp>* parsedp)
                        << i);
         return NS_ERROR_INVALID_ARG;
       }
+    }
+
+    std::string streamId;
+    std::string trackId;
+    nsresult rv = GetIdsFromMsid(*parsed,
+                                 parsed->GetMediaSection(i),
+                                 &streamId,
+                                 &trackId);
+
+    if (NS_SUCCEEDED(rv)) {
+      if (trackIds.count(trackId)) {
+        JSEP_SET_ERROR("track id:" << trackId
+                       << " appears in more than one m-section at level " << i);
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      trackIds.insert(trackId);
+    } else if (rv != NS_ERROR_NOT_AVAILABLE) {
+      // Error has already been set
+      return rv;
     }
   }
 
