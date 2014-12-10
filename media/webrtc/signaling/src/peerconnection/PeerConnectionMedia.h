@@ -198,18 +198,38 @@ public:
     return mMediaStream;
   }
 
+  nsresult StorePipeline(
+      const std::string& trackId,
+      const mozilla::RefPtr<mozilla::MediaPipeline>& aPipeline);
+
+  void AddTrack(const std::string& trackId) { mTracks.insert(trackId); }
+  void RemoveTrack(const std::string& trackId) { mTracks.erase(trackId); }
+  bool HasTrack(const std::string& trackId) const
+  {
+    return !!mTracks.count(trackId);
+  }
+  size_t GetTrackCount() const { return mTracks.size(); }
+
   // This method exists for stats and the unittests.
   // It allows visibility into the pipelines and flows.
-  const std::map<mozilla::TrackID, mozilla::RefPtr<mozilla::MediaPipeline>>&
+  const std::map<std::string, mozilla::RefPtr<mozilla::MediaPipeline>>&
   GetPipelines() const { return mPipelines; }
-  mozilla::RefPtr<mozilla::MediaPipeline> GetPipelineByLevel_m(int aMLine);
+  mozilla::RefPtr<mozilla::MediaPipeline> GetPipelineByTrackId_m(
+      const std::string& trackId);
   const std::string& GetId() const { return mId; }
 
+  void DetachTransport_s();
+  void DetachMedia_m();
+  bool AnyCodecHasPluginID(uint64_t aPluginID);
 protected:
-  std::map<mozilla::TrackID, mozilla::RefPtr<mozilla::MediaPipeline>> mPipelines;
   nsRefPtr<DOMMediaStream> mMediaStream;
   PeerConnectionMedia *mParent;
   const std::string mId;
+  // These get set up before we generate our local description, the pipelines
+  // are set up once offer/answer completes.
+  std::set<std::string> mTracks;
+  // Indexed by track id, might contain pipelines for removed tracks
+  std::map<std::string, mozilla::RefPtr<mozilla::MediaPipeline>> mPipelines;
 };
 
 // TODO(ekr@rtfm.com): Refactor {Local,Remote}SourceStreamInfo
@@ -224,40 +244,19 @@ public:
                         const std::string& aId)
      : SourceStreamInfo(aMediaStream, aParent, aId) {}
 
-  // Returns the mPipelines index for the track or -1.
-#if 0
-  int HasTrack(DOMMediaStream* aStream, mozilla::TrackID aMLine);
-#endif
-  int HasTrackType(DOMMediaStream* aStream, bool aIsVideo);
   // XXX NOTE: does not change mMediaStream, even if it replaces the last track
   // in a LocalSourceStreamInfo.  Revise when we have support for multiple tracks
   // of a type.
-  // Note aMLine != aOldTrack!  It's the result of HasTrackType()
-  nsresult ReplaceTrack(int aMLine, DOMMediaStream* aNewStream, mozilla::TrackID aNewTrack);
-
-  void StorePipeline(int aMLine,
-                     mozilla::RefPtr<mozilla::MediaPipelineTransmit> aPipeline);
+  nsresult ReplaceTrack(const std::string& oldTrackId,
+                        DOMMediaStream* aNewStream,
+                        const std::string& aNewTrack);
 
 #ifdef MOZILLA_INTERNAL_API
   void UpdateSinkIdentity_m(nsIPrincipal* aPrincipal,
                             const mozilla::PeerIdentity* aSinkIdentity);
 #endif
 
-  void ExpectAudio(const mozilla::TrackID);
-  void ExpectVideo(const mozilla::TrackID);
-  void RemoveAudio(const mozilla::TrackID);
-  void RemoveVideo(const mozilla::TrackID);
-  unsigned AudioTrackCount();
-  unsigned VideoTrackCount();
-  void DetachTransport_s();
-  void DetachMedia_m();
-
-  bool AnyCodecHasPluginID(uint64_t aPluginID);
-
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(LocalSourceStreamInfo)
-private:
-  nsTArray<mozilla::TrackID> mAudioTracks;
-  nsTArray<mozilla::TrackID> mVideoTracks;
 };
 
 class RemoteSourceStreamInfo : public SourceStreamInfo {
@@ -266,28 +265,17 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
   RemoteSourceStreamInfo(already_AddRefed<DOMMediaStream> aMediaStream,
                          PeerConnectionMedia *aParent,
                          const std::string& aId)
-    : SourceStreamInfo(aMediaStream, aParent, aId),
-      mTrackTypeHints(0) {
+    : SourceStreamInfo(aMediaStream, aParent, aId)
+  {
   }
 
-  void StorePipeline(int aMLine, bool aIsVideo,
-                     mozilla::RefPtr<mozilla::MediaPipelineReceive> aPipeline);
-
-  void DetachTransport_s();
-  void DetachMedia_m();
+  void SyncPipeline(RefPtr<MediaPipelineReceive> aPipeline);
 
 #ifdef MOZILLA_INTERNAL_API
   void UpdatePrincipal_m(nsIPrincipal* aPrincipal);
 #endif
 
-  bool AnyCodecHasPluginID(uint64_t aPluginID);
-
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteSourceStreamInfo)
-
-public:
-  DOMMediaStream::TrackTypeHints mTrackTypeHints;
- private:
-  std::map<int, bool> mTypes;
 };
 
 class PeerConnectionMedia : public sigslot::has_slots<> {
@@ -333,14 +321,18 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   // Handle complete media pipelines.
   nsresult UpdateMediaPipelines(const mozilla::JsepSession& session);
 
-  // Add a stream (main thread only)
-  nsresult AddStream(DOMMediaStream* aMediaStream, uint32_t hints,
-                     std::string* stream_id);
+  // Add a track (main thread only)
+  // TODO(bug 1089798): Once DOMMediaStream has an id field, use it instead of
+  // letting PCMedia choose a streamId
+  nsresult AddTrack(DOMMediaStream* aMediaStream,
+                    std::string* streamId,
+                    const std::string& trackId);
 
-  // Remove a stream (main thread only)
-  nsresult RemoveStream(DOMMediaStream* aMediaStream,
-                        uint32_t hints,
-                        uint32_t *stream_id);
+  // Remove a track (main thread only)
+  // TODO(bug 1089798): Once DOMMediaStream has an id field, use it instead of
+  // passing |aMediaStream|
+  nsresult RemoveTrack(DOMMediaStream* aMediaStream,
+                       const std::string& trackId);
 
   // Get a specific local stream
   uint32_t LocalStreamsLength()
@@ -349,6 +341,8 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   }
   LocalSourceStreamInfo* GetLocalStreamByIndex(int index);
   LocalSourceStreamInfo* GetLocalStreamById(const std::string& id);
+  LocalSourceStreamInfo* GetLocalStreamByDomStream(
+      const DOMMediaStream& stream);
 
   // Get a specific remote stream
   uint32_t RemoteStreamsLength()
@@ -358,14 +352,16 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
 
   RemoteSourceStreamInfo* GetRemoteStreamByIndex(size_t index);
   RemoteSourceStreamInfo* GetRemoteStreamById(const std::string& id);
+  RemoteSourceStreamInfo* GetRemoteStreamByDomStream(
+      const DOMMediaStream& stream);
+
 
   bool UpdateFilterFromRemoteDescription_m(
-      int aMLine,
+      const std::string& trackId,
       nsAutoPtr<mozilla::MediaPipelineFilter> filter);
 
   // Add a remote stream.
   nsresult AddRemoteStream(nsRefPtr<RemoteSourceStreamInfo> aInfo);
-  nsresult AddRemoteStreamHint(int aIndex, bool aIsVideo);
 
 #ifdef MOZILLA_INTERNAL_API
   // In cases where the peer isn't yet identified, we disable the pipeline (not
