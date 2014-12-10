@@ -565,13 +565,13 @@ NativeFileWatcherIOTask::AddPathRunnableMethod(
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
+  nsAutoPtr<PathRunnablesParametersWrapper> wrappedParameters(aWrappedParameters);
+
   // We return immediately if |mShuttingDown| is true (see below for
   // details about the shutdown protocol being followed).
   if (mShuttingDown) {
     return NS_OK;
   }
-
-  nsAutoPtr<PathRunnablesParametersWrapper> wrappedParameters(aWrappedParameters);
 
   if (!wrappedParameters ||
       !wrappedParameters->mChangeCallbackHandle) {
@@ -735,13 +735,13 @@ NativeFileWatcherIOTask::RemovePathRunnableMethod(
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
+  nsAutoPtr<PathRunnablesParametersWrapper> wrappedParameters(aWrappedParameters);
+
   // We return immediately if |mShuttingDown| is true (see below for
   // details about the shutdown protocol being followed).
   if (mShuttingDown) {
     return NS_OK;
   }
-
-  nsAutoPtr<PathRunnablesParametersWrapper> wrappedParameters(aWrappedParameters);
 
   if (!wrappedParameters ||
       !wrappedParameters->mChangeCallbackHandle) {
