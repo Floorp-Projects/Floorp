@@ -122,10 +122,4 @@ LoadInfo::GetBaseURI(nsIURI** aBaseURI)
   return NS_OK;
 }
 
-nsIURI*
-LoadInfo::BaseURI()
-{
-  return mBaseURI;
-}
-
 } // namespace mozilla
