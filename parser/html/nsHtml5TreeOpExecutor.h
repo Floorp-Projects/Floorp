@@ -254,15 +254,27 @@ class nsHtml5TreeOpExecutor MOZ_FINAL : public nsHtml5DocumentBuilder,
                        bool aScriptFromHead);
 
     void PreloadStyle(const nsAString& aURL, const nsAString& aCharset,
-		      const nsAString& aCrossOrigin);
+                      const nsAString& aCrossOrigin);
 
-    void PreloadImage(const nsAString& aURL, const nsAString& aCrossOrigin);
+    void PreloadImage(const nsAString& aURL,
+                      const nsAString& aCrossOrigin,
+                      const nsAString& aSrcset,
+                      const nsAString& aSizes);
+
+    void PreloadOpenPicture();
+
+    void PreloadEndPicture();
+
+    void PreloadPictureSource(const nsAString& aSrcset,
+                              const nsAString& aSizes,
+                              const nsAString& aType,
+                              const nsAString& aMedia);
 
     void SetSpeculationBase(const nsAString& aURL);
 
     void SetSpeculationReferrerPolicy(ReferrerPolicy aReferrerPolicy);
     void SetSpeculationReferrerPolicy(const nsAString& aReferrerPolicy);
-    
+
     void AddBase(const nsAString& aURL);
 
     static void InitializeStatics();
@@ -277,6 +289,16 @@ class nsHtml5TreeOpExecutor MOZ_FINAL : public nsHtml5DocumentBuilder,
      */
     already_AddRefed<nsIURI> ConvertIfNotPreloadedYet(const nsAString& aURL);
 
+    /**
+     * The base URI we would use for current preload operations
+     */
+    nsIURI* BaseURIForPreload();
+
+    /**
+     * Returns true if we haven't preloaded this URI yet, and adds it to the
+     * list of preloaded URIs
+     */
+    bool ShouldPreloadURI(nsIURI *aURI);
 };
 
 #endif // nsHtml5TreeOpExecutor_h

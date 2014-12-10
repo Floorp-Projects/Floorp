@@ -146,6 +146,7 @@
 #include "nsHtml5TreeOpExecutor.h"
 #include "mozilla/dom/HTMLLinkElement.h"
 #include "mozilla/dom/HTMLMediaElement.h"
+#include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/MediaSource.h"
 
 #include "mozAutoDocUpdate.h"
@@ -1605,6 +1606,9 @@ nsDocument::nsDocument(const char* aContentType)
 
   // Start out mLastStyleSheetSet as null, per spec
   SetDOMStringToNull(mLastStyleSheetSet);
+
+  // void state used to differentiate an empty source from an unselected source
+  mPreloadPictureFoundSource.SetIsVoid(true);
 
   if (!sProcessingStack) {
     sProcessingStack.emplace();
@@ -9667,6 +9671,87 @@ FireOrClearDelayedEvents(nsTArray<nsCOMPtr<nsIDocument> >& aDocuments,
       }
     }
   }
+}
+
+void
+nsDocument::PreloadPictureOpened()
+{
+  mPreloadPictureDepth++;
+}
+
+void
+nsDocument::PreloadPictureClosed()
+{
+  mPreloadPictureDepth--;
+  if (mPreloadPictureDepth == 0) {
+    mPreloadPictureFoundSource.SetIsVoid(true);
+  } else {
+    MOZ_ASSERT(mPreloadPictureDepth >= 0);
+  }
+}
+
+void
+nsDocument::PreloadPictureImageSource(const nsAString& aSrcsetAttr,
+                                      const nsAString& aSizesAttr,
+                                      const nsAString& aTypeAttr,
+                                      const nsAString& aMediaAttr)
+{
+  // Nested pictures are not valid syntax, so while we'll eventually load them,
+  // it's not worth tracking sources mixed between nesting levels to preload
+  // them effectively.
+  if (mPreloadPictureDepth == 1 && mPreloadPictureFoundSource.IsVoid()) {
+    // <picture> selects the first matching source, so if this returns a URI we
+    // needn't consider new sources until a new <picture> is encountered.
+    bool found =
+      HTMLImageElement::SelectSourceForTagWithAttrs(this, true, NullString(),
+                                                    aSrcsetAttr, aSizesAttr,
+                                                    aTypeAttr, aMediaAttr,
+                                                    mPreloadPictureFoundSource);
+    if (found && mPreloadPictureFoundSource.IsVoid()) {
+      // Found an empty source, which counts
+      mPreloadPictureFoundSource.SetIsVoid(false);
+    }
+  }
+}
+
+already_AddRefed<nsIURI>
+nsDocument::ResolvePreloadImage(nsIURI *aBaseURI,
+                                const nsAString& aSrcAttr,
+                                const nsAString& aSrcsetAttr,
+                                const nsAString& aSizesAttr)
+{
+  nsString sourceURL;
+  if (mPreloadPictureDepth == 1 && !mPreloadPictureFoundSource.IsVoid()) {
+    // We're in a <picture> element and found a URI from a source previous to
+    // this image, use it.
+    sourceURL = mPreloadPictureFoundSource;
+  } else {
+    // Otherwise try to use this <img> as a source
+    HTMLImageElement::SelectSourceForTagWithAttrs(this, false, aSrcAttr,
+                                                  aSrcsetAttr, aSizesAttr,
+                                                  NullString(), NullString(),
+                                                  sourceURL);
+  }
+
+  // Empty sources are not loaded by <img> (i.e. not resolved to the baseURI)
+  if (sourceURL.IsEmpty()) {
+    return nullptr;
+  }
+
+  // Construct into URI using passed baseURI (the parser may know of base URI
+  // changes that have not reached us)
+  nsresult rv;
+  nsCOMPtr<nsIURI> uri;
+  rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri), sourceURL,
+                                                 this, aBaseURI);
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  // We don't clear mPreloadPictureFoundSource because subsequent <img> tags in
+  // this this <picture> share the same <sources> (though this is not valid per
+  // spec)
+  return uri.forget();
 }
 
 void
