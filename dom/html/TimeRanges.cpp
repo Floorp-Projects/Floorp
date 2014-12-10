@@ -98,7 +98,7 @@ TimeRanges::GetEndTime()
 }
 
 void
-TimeRanges::Normalize()
+TimeRanges::Normalize(double aError)
 {
   if (mRanges.Length() >= 2) {
     nsAutoTArray<TimeRange,4> normalized;
@@ -112,7 +112,7 @@ TimeRanges::Normalize()
           current.mEnd >= mRanges[i].mEnd) {
         continue;
       }
-      if (current.mEnd >= mRanges[i].mStart) {
+      if (current.mEnd + aError >= mRanges[i].mStart) {
         current.mEnd = mRanges[i].mEnd;
       } else {
         normalized.AppendElement(current);
@@ -127,10 +127,10 @@ TimeRanges::Normalize()
 }
 
 void
-TimeRanges::Union(const TimeRanges* aOtherRanges)
+TimeRanges::Union(const TimeRanges* aOtherRanges, double aError)
 {
   mRanges.AppendElements(aOtherRanges->mRanges);
-  Normalize();
+  Normalize(aError);
 }
 
 void
