@@ -874,7 +874,8 @@ HandleParallelFailure(ResumeFromException *rfe)
     SnapshotIterator snapIter(frameIter);
 
     cx->bailoutRecord->setIonBailoutKind(snapIter.bailoutKind());
-    cx->bailoutRecord->rematerializeFrames(cx, frameIter);
+    while (!frameIter.done())
+        ++frameIter;
 
     rfe->kind = ResumeFromException::RESUME_ENTRY_FRAME;
 

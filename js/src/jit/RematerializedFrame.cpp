@@ -28,8 +28,8 @@ struct CopyValueToRematerializedFrame
     }
 };
 
-RematerializedFrame::RematerializedFrame(ThreadSafeContext *cx, uint8_t *top,
-                                         unsigned numActualArgs, InlineFrameIterator &iter)
+RematerializedFrame::RematerializedFrame(JSContext *cx, uint8_t *top, unsigned numActualArgs,
+                                         InlineFrameIterator &iter)
   : prevUpToDate_(false),
     isDebuggee_(iter.script()->isDebuggee()),
     top_(top),
@@ -46,7 +46,7 @@ RematerializedFrame::RematerializedFrame(ThreadSafeContext *cx, uint8_t *top,
 }
 
 /* static */ RematerializedFrame *
-RematerializedFrame::New(ThreadSafeContext *cx, uint8_t *top, InlineFrameIterator &iter)
+RematerializedFrame::New(JSContext *cx, uint8_t *top, InlineFrameIterator &iter)
 {
     unsigned numFormals = iter.isFunctionFrame() ? iter.callee()->nargs() : 0;
     unsigned numActualArgs = Max(numFormals, iter.numActualArgs());
@@ -62,7 +62,7 @@ RematerializedFrame::New(ThreadSafeContext *cx, uint8_t *top, InlineFrameIterato
 }
 
 /* static */ bool
-RematerializedFrame::RematerializeInlineFrames(ThreadSafeContext *cx, uint8_t *top,
+RematerializedFrame::RematerializeInlineFrames(JSContext *cx, uint8_t *top,
                                                InlineFrameIterator &iter,
                                                Vector<RematerializedFrame *> &frames)
 {
