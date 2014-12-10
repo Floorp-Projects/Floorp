@@ -216,6 +216,20 @@
             'MOZ_WEBRTC_OMX'
           ],
         }],
+        ['moz_webrtc_mediacodec==1', {
+          'include_dirs': [
+            '../../../widget/android',
+          ],
+          'sources': [
+            './src/media-conduit/MediaCodecVideoCodec.h',
+            './src/media-conduit/WebrtcMediaCodecVP8VideoCodec.h',
+            './src/media-conduit/MediaCodecVideoCodec.cpp',
+            './src/media-conduit/WebrtcMediaCodecVP8VideoCodec.cpp',
+          ],
+          'defines' : [
+            'MOZ_WEBRTC_MEDIACODEC',
+          ],
+        }],
         ['(build_for_test==0) and (build_for_standalone==0)', {
           'defines' : [
             'MOZILLA_INTERNAL_API',
