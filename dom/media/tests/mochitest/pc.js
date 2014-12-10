@@ -1689,7 +1689,7 @@ PeerConnectionWrapper.prototype = {
       }
     }
 
-    var element = createMediaElement(type, this.label + '_' + side);
+    var element = createMediaElement(type, this.label + '_' + side + this.streams.length);
     this.mediaCheckers.push(new MediaElementChecker(element));
     element.mozSrcObject = stream;
     element.play();
@@ -2319,6 +2319,27 @@ PeerConnectionWrapper.prototype = {
     }
     _compareReceivedAndExpectedTracks(constraintsRemote, onSuccess);
 
+  },
+
+  checkMsids : function PCW_checkMsids() {
+    function _checkMsids(desc, streams, sdpLabel) {
+      streams.forEach(function(stream) {
+        stream.getTracks().forEach(function(track) {
+          // TODO(bug 1089798): Once DOMMediaStream has an id field, we
+          // should be verifying that the SDP contains
+          // a=msid:<stream-id> <track-id>
+          ok(desc.sdp.match(new RegExp("a=msid:[^ ]+ " + track.id)),
+             sdpLabel + " SDP contains track id " + track.id );
+        });
+      });
+    }
+
+    _checkMsids(this.localDescription,
+                this._pc.getLocalStreams(),
+                "local");
+    _checkMsids(this.remoteDescription,
+                this._pc.getRemoteStreams(),
+                "remote");
   },
 
   verifySdp : function PCW_verifySdp(desc, expectedType, offerConstraintsList,

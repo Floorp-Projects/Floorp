@@ -547,17 +547,13 @@ nsresult MediaPipelineTransmit::Init() {
   return MediaPipeline::Init();
 }
 
-void MediaPipelineTransmit::AttachToTrack(TrackID track_id) {
-  char track_id_string[11];
+void MediaPipelineTransmit::AttachToTrack(const std::string& track_id) {
   ASSERT_ON_THREAD(main_thread_);
-
-  // We can replace this when we are allowed to do streams or std::to_string
-  PR_snprintf(track_id_string, sizeof(track_id_string), "%d", track_id);
 
   description_ = pc_ + "| ";
   description_ += conduit_->type() == MediaSessionConduit::AUDIO ?
       "Transmit audio[" : "Transmit video[";
-  description_ += track_id_string;
+  description_ += track_id;
   description_ += "]";
 
   // TODO(ekr@rtfm.com): Check for errors
@@ -613,10 +609,11 @@ nsresult MediaPipelineTransmit::TransportReady_s(TransportInfo &info) {
 }
 
 nsresult MediaPipelineTransmit::ReplaceTrack(DOMMediaStream *domstream,
-                                             TrackID track_id) {
+                                             const std::string& track_id) {
   // MainThread, checked in calls we make
-  MOZ_MTLOG(ML_DEBUG, "Reattaching pipeline to stream "
-            << static_cast<void *>(domstream->GetStream()) << " conduit type=" <<
+  MOZ_MTLOG(ML_DEBUG, "Reattaching pipeline " << description_ << " to stream "
+            << static_cast<void *>(domstream->GetStream())
+            << " track " << track_id << " conduit type=" <<
             (conduit_->type() == MediaSessionConduit::AUDIO ?"audio":"video"));
 
   if (domstream_) { // may be excessive paranoia
@@ -624,7 +621,7 @@ nsresult MediaPipelineTransmit::ReplaceTrack(DOMMediaStream *domstream,
   }
   domstream_ = domstream; // Detach clears it
   stream_ = domstream->GetStream();
-  //track_id_ = track_id; not threadsafe to change this; and we don't need to
+  track_id_ = track_id;
   AttachToTrack(track_id);
   return NS_OK;
 }
@@ -1165,15 +1162,11 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
 #endif
 
 nsresult MediaPipelineReceiveAudio::Init() {
-  char track_id_string[11];
   ASSERT_ON_THREAD(main_thread_);
   MOZ_MTLOG(ML_DEBUG, __FUNCTION__);
 
-  // We can replace this when we are allowed to do streams or std::to_string
-  PR_snprintf(track_id_string, sizeof(track_id_string), "%d", track_id_);
-
   description_ = pc_ + "| Receive audio[";
-  description_ += track_id_string;
+  description_ += track_id_;
   description_ += "]";
 
   listener_->AddSelf(new AudioSegment());
@@ -1336,15 +1329,11 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
 }
 
 nsresult MediaPipelineReceiveVideo::Init() {
-  char track_id_string[11];
   ASSERT_ON_THREAD(main_thread_);
   MOZ_MTLOG(ML_DEBUG, __FUNCTION__);
 
-  // We can replace this when we are allowed to do streams or std::to_string
-  PR_snprintf(track_id_string, sizeof(track_id_string), "%d", track_id_);
-
   description_ = pc_ + "| Receive video[";
-  description_ += track_id_string;
+  description_ += track_id_;
   description_ += "]";
 
 #ifdef MOZILLA_INTERNAL_API
