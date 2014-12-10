@@ -244,11 +244,15 @@ TrackBuffer::EvictData(uint32_t aThreshold)
     return false;
   }
 
+  // Get a list of initialized decoders, sorted by their start times.
   nsTArray<SourceBufferDecoder*> decoders;
   decoders.AppendElements(mInitializedDecoders);
   decoders.Sort(DecoderSorter());
 
-  for (uint32_t i = 0; i < decoders.Length(); ++i) {
+  // First try to evict data before the current play position, starting
+  // with the earliest time.
+  uint32_t i = 0;
+  for (; i < decoders.Length(); ++i) {
     MSE_DEBUG("TrackBuffer(%p)::EvictData decoder=%u threshold=%u toEvict=%lld",
               this, i, aThreshold, toEvict);
     toEvict -= decoders[i]->GetResource()->EvictData(toEvict);
@@ -258,6 +262,25 @@ TrackBuffer::EvictData(uint32_t aThreshold)
     }
     if (toEvict <= 0 || decoders[i] == mCurrentDecoder) {
       break;
+    }
+  }
+
+  // If we still need to evict more, then try to evict entire decoders,
+  // starting from the end.
+  if (toEvict > 0) {
+    uint32_t end = i;
+    MOZ_ASSERT(decoders[end] == mCurrentDecoder);
+
+    for (i = decoders.Length() - 1; i > end; --i) {
+      MSE_DEBUG("TrackBuffer(%p)::EvictData removing entire decoder=%u from end toEvict=%lld",
+                this, i, toEvict);
+      // TODO: We could implement forward-eviction within a decoder and
+      // be able to evict within the current decoder.
+      toEvict -= decoders[i]->GetResource()->GetSize();
+      RemoveDecoder(decoders[i]);
+      if (toEvict <= 0) {
+        break;
+      }
     }
   }
   return toEvict < (totalSize - aThreshold);
