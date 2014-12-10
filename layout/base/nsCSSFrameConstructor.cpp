@@ -11848,7 +11848,30 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     // an anonymous flex or grid item.  That's where it's already going - good!
   }
 
-  // Situation #4 is a case when table pseudo-frames don't work out right
+  // Situation #4 is a ruby-related frame that's getting new children.
+  // The situation for ruby is complex, especially when interacting with
+  // spaces. It containes these two special cases apart from tables:
+  // 1) There are effectively three types of white spaces in ruby frames
+  //    we handle differently: leading/tailing/inter-level space,
+  //    inter-base/inter-annotation space, and inter-segment space.
+  //    These three types of spaces can be converted to each other when
+  //    their sibling changes.
+  // 2) The first effective child of a ruby frame must always be a ruby
+  //    base container. It should be created or destroyed accordingly.
+  nsIAtom* frameType = aFrame->GetType();
+  if (IsRubyPseudo(aFrame) ||
+      frameType == nsGkAtoms::rubyFrame ||
+      frameType == nsGkAtoms::rubyBaseContainerFrame ||
+      frameType == nsGkAtoms::rubyTextContainerFrame) {
+    // We want to optimize it better, and avoid reframing as much as
+    // possible. But given the cases above, and the fact that a ruby
+    // usually won't be very large, it should be fine to reframe it.
+    RecreateFramesForContent(aFrame->GetContent(), true,
+                             REMOVE_FOR_RECONSTRUCTION, nullptr);
+    return true;
+  }
+
+  // Situation #5 is a case when table pseudo-frames don't work out right
   ParentType parentType = GetParentType(aFrame);
   // If all the kids want a parent of the type that aFrame is, then we're all
   // set to go.  Indeed, there won't be any table pseudo-frames created between
