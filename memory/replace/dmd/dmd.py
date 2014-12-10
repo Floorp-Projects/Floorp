@@ -613,12 +613,13 @@ def printDigest(args, digest):
         return (kindUsableSize, kindBlocks)
 
 
-    def printInvocation(n, dmdEnvVar, sampleBelowSize):
+    def printInvocation(n, dmdEnvVar, mode, sampleBelowSize):
         out('Invocation{:} {{'.format(n))
         if dmdEnvVar == None:
             out('  $DMD is undefined')
         else:
             out('  $DMD = \'' + dmdEnvVar + '\'')
+        out('  Mode = \'' + mode + '\'')
         out('  Sample-below size = ' + str(sampleBelowSize))
         out('}\n')
 
@@ -629,10 +630,10 @@ def printDigest(args, digest):
 
     # Print invocation(s).
     if type(dmdEnvVar) is not tuple:
-        printInvocation('', dmdEnvVar, sampleBelowSize)
+        printInvocation('', dmdEnvVar, mode, sampleBelowSize)
     else:
-        printInvocation(' 1', dmdEnvVar[0], sampleBelowSize[0])
-        printInvocation(' 2', dmdEnvVar[1], sampleBelowSize[1])
+        printInvocation(' 1', dmdEnvVar[0], mode, sampleBelowSize[0])
+        printInvocation(' 2', dmdEnvVar[1], mode, sampleBelowSize[1])
 
     # Print records.
     if mode in ['live', 'cumulative']:
