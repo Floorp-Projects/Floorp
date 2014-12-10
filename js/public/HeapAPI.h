@@ -393,6 +393,18 @@ GCThingIsMarkedGray(void *thing)
     return *word & mask;
 }
 
+static MOZ_ALWAYS_INLINE bool
+ObjectIsMarkedGray(JSObject *obj)
+{
+    return GCThingIsMarkedGray(obj);
+}
+
+static MOZ_ALWAYS_INLINE bool
+ScriptIsMarkedGray(JSScript *script)
+{
+    return GCThingIsMarkedGray(script);
+}
+
 } /* namespace JS */
 
 namespace js {
