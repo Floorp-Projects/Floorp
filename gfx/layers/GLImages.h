@@ -20,7 +20,7 @@ namespace layers {
 
 class GLImage : public Image {
 public:
-  GLImage(ImageFormat aFormat) : Image(nullptr, aFormat){}
+  explicit GLImage(ImageFormat aFormat) : Image(nullptr, aFormat){}
 
   virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() MOZ_OVERRIDE;
 };

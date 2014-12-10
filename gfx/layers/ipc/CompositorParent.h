@@ -100,7 +100,7 @@ class CompositorVsyncObserver MOZ_FINAL : public VsyncObserver
   friend class CompositorParent;
 
 public:
-  CompositorVsyncObserver(CompositorParent* aCompositorParent);
+  explicit CompositorVsyncObserver(CompositorParent* aCompositorParent);
   virtual bool NotifyVsync(TimeStamp aVsyncTimestamp) MOZ_OVERRIDE;
   void SetNeedsComposite(bool aSchedule);
   bool NeedsComposite();

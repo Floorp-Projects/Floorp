@@ -164,7 +164,7 @@ public:
 class CrashStatsLogForwarder: public mozilla::gfx::LogForwarder
 {
 public:
-  CrashStatsLogForwarder(const char* aKey);
+  explicit CrashStatsLogForwarder(const char* aKey);
   virtual void Log(const std::string& aString) MOZ_OVERRIDE;
 
   void SetCircularBufferSize(uint32_t aCapacity);
