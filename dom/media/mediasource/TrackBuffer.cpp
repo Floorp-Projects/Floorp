@@ -316,7 +316,7 @@ TrackBuffer::Buffered(dom::TimeRanges* aRanges)
     mDecoders[i]->GetBuffered(r);
     if (r->Length() > 0) {
       highestEndTime = std::max(highestEndTime, r->GetEndTime());
-      aRanges->Union(r, double(mParser->GetRoundingError()) / USECS_PER_S);
+      aRanges->Union(r);
     }
   }
 
