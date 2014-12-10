@@ -181,7 +181,7 @@ uint32_t
 jit::ExceptionHandlerBailout(JSContext *cx, const InlineFrameIterator &frame,
                              ResumeFromException *rfe,
                              const ExceptionBailoutInfo &excInfo,
-                             bool *overrecursed)
+                             bool *overrecursed, bool *poppedLastSPSFrameOut)
 {
     // We can be propagating debug mode exceptions without there being an
     // actual exception pending. For instance, when we return false from an
@@ -196,9 +196,8 @@ jit::ExceptionHandlerBailout(JSContext *cx, const InlineFrameIterator &frame,
     JitFrameIterator iter(jitActivations);
 
     BaselineBailoutInfo *bailoutInfo = nullptr;
-    bool poppedLastSPSFrame = false;
     uint32_t retval = BailoutIonToBaseline(cx, bailoutData.activation(), iter, true,
-                                           &bailoutInfo, &excInfo, &poppedLastSPSFrame);
+                                           &bailoutInfo, &excInfo, poppedLastSPSFrameOut);
 
     if (retval == BAILOUT_RETURN_OK) {
         MOZ_ASSERT(bailoutInfo);
