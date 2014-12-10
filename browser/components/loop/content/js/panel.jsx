@@ -23,14 +23,14 @@ loop.panel = (function(_, mozL10n) {
 
   var TabView = React.createClass({
     propTypes: {
-      buttonsHidden: React.PropTypes.bool,
+      buttonsHidden: React.PropTypes.array,
       // The selectedTab prop is used by the UI showcase.
       selectedTab: React.PropTypes.string
     },
 
     getDefaultProps: function() {
       return {
-        buttonsHidden: false
+        buttonsHidden: []
       };
     },
 
@@ -60,6 +60,9 @@ loop.panel = (function(_, mozL10n) {
           return;
         }
         var tabName = tab.props.name;
+        if (this.props.buttonsHidden.indexOf(tabName) > -1) {
+          return;
+        }
         var isSelected = (this.state.selectedTab == tabName);
         if (!tab.props.hidden) {
           tabButtons.push(
@@ -77,9 +80,7 @@ loop.panel = (function(_, mozL10n) {
       }, this);
       return (
         <div className="tab-view-container">
-          {!this.props.buttonsHidden
-            ? <ul className="tab-view">{tabButtons}</ul>
-            : null}
+          <ul className="tab-view">{tabButtons}</ul>
           {tabs}
         </div>
       );
@@ -782,6 +783,7 @@ loop.panel = (function(_, mozL10n) {
       // Mostly used for UI components showcase and unit tests
       callUrl: React.PropTypes.string,
       userProfile: React.PropTypes.object,
+      // Used only for unit tests.
       showTabButtons: React.PropTypes.bool,
       selectedTab: React.PropTypes.string,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
@@ -929,12 +931,18 @@ loop.panel = (function(_, mozL10n) {
         );
       }
 
+      // Determine which buttons to NOT show.
+      var hideButtons = [];
+      if (!this.state.userProfile && !this.props.showTabButtons) {
+        hideButtons.push("contacts");
+      }
+
       return (
         <div>
           <NotificationListView notifications={this.props.notifications}
                                 clearOnDocumentHidden={true} />
           <TabView ref="tabView" selectedTab={this.props.selectedTab}
-            buttonsHidden={!this.state.userProfile && !this.props.showTabButtons}>
+            buttonsHidden={hideButtons}>
             {this._renderRoomsOrCallTab()}
             <Tab name="contacts">
               <ContactsList selectTab={this.selectTab}
