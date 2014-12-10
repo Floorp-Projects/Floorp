@@ -35,7 +35,9 @@ public:
   // Compare aLhs and rHs, considering any error that may exist in the
   // timestamps from the format's base representation.  Return true if aLhs
   // == aRhs within the error epsilon.
-  virtual bool TimestampsFuzzyEqual(int64_t aLhs, int64_t aRhs);
+  bool TimestampsFuzzyEqual(int64_t aLhs, int64_t aRhs);
+
+  virtual int64_t GetRoundingError();
 
   const nsTArray<uint8_t>& InitData();
 
