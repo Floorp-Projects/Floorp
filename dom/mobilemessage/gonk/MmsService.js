@@ -144,8 +144,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
                                    "nsIUUIDGenerator");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gMobileMessageDatabaseService",
-                                   "@mozilla.org/mobilemessage/rilmobilemessagedatabaseservice;1",
-                                   "nsIRilMobileMessageDatabaseService");
+                                   "@mozilla.org/mobilemessage/gonkmobilemessagedatabaseservice;1",
+                                   "nsIGonkMobileMessageDatabaseService");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gMobileMessageService",
                                    "@mozilla.org/mobilemessage/mobilemessageservice;1",

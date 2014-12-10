@@ -2559,7 +2559,7 @@ MobileMessageDB.prototype = {
   },
 
   /**
-   * nsIRilMobileMessageDatabaseService API
+   * nsIGonkMobileMessageDatabaseService API
    */
 
   saveReceivedMessage: function(aMessage, aCallback) {
