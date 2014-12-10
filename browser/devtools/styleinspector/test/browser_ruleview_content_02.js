@@ -18,7 +18,7 @@ const CONTENT = '<body style="color:red;">\
 const STRINGS = Services.strings
   .createBundle("chrome://global/locale/devtools/styleinspector.properties");
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + CONTENT);
 
   info("Getting the test element");

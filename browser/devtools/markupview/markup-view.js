@@ -747,6 +747,15 @@ MarkupView.prototype = {
     }).then(() => {
       // Why is this not working?
       this.layoutHelpers.scrollIntoViewIfNeeded(this.getContainer(aNode).editor.elt, centered);
+    }, e => {
+      // Only report this rejection as an error if the panel hasn't been
+      // destroyed in the meantime.
+      if (!this._destroyer) {
+        console.error(e);
+      } else {
+        console.warn("Could not show the node, the markup-view was destroyed " +
+          "while waiting for children");
+      }
     });
   },
 

@@ -15,7 +15,7 @@ const PAGE_CONTENT = [
   '<div id="testElement">test element</div>'
 ].join("\n");
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab("data:text/html;charset=utf-8,font family shorthand tooltip test");
 
   info("Creating the test document");

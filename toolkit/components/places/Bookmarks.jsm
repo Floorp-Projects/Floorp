@@ -1228,7 +1228,12 @@ const VALIDATORS = Object.freeze({
       return new URL(v.spec);
     return v;
   },
-  keyword: simpleValidateFunc(v => typeof(v) == "string" && /^\S*$/.test(v)),
+  keyword: v => {
+    simpleValidateFunc(val => typeof(val) == "string" && /^\S*$/.test(val))
+                      .call(this, v);
+    // Keywords are handled as case-insensitive.
+    return v.toLowerCase();
+  }
 });
 
 /**

@@ -25,7 +25,7 @@ const TEST_URL = [
   "</div>"
 ].join("");
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab(TEST_URL);
   let {toolbox, inspector, view} = yield openRuleView();
 

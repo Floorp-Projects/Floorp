@@ -163,7 +163,7 @@ const TEST_DATA = [
   }
 ];
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + PAGE_CONTENT);
 
   let {inspector, view} = yield openComputedView();

@@ -18,15 +18,8 @@ function test() {
     gSources = gDebugger.DebuggerView.Sources;
     gBreakpoints = gDebugger.DebuggerController.Breakpoints;
 
-    waitForSourceShown(gPanel, "-eval.js")
-      .then(run)
-      .then(null, aError => {
-        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
-      });
-  });
-
-  function run() {
     return Task.spawn(function*() {
+      yield waitForSourceShown(gPanel, "-eval.js");
       is(gSources.values.length, 1, "Should have 1 source");
 
       let newSource = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.NEW_SOURCE);
@@ -37,5 +30,5 @@ function test() {
 
       yield closeDebuggerAndFinish(gPanel);
     });
-  }
+  });
 }
