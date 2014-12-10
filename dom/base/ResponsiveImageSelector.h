@@ -27,6 +27,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(ResponsiveImageSelector)
 
   explicit ResponsiveImageSelector(nsIContent* aContent);
+  explicit ResponsiveImageSelector(nsIDocument* aDocument);
 
   // NOTE ABOUT CURRENT SELECTION
   //
@@ -53,7 +54,13 @@ public:
 
   uint32_t NumCandidates(bool aIncludeDefault = true);
 
-  nsIContent *Content() { return mContent; }
+  // If this was created for a specific content. May be null if we were only
+  // created for a document.
+  nsIContent *Content();
+
+  // The document we were created for, or the owner document of the content if
+  // we were created for a specific nsIContent.
+  nsIDocument *Document();
 
   // Get the url and density for the selected best candidate. These
   // implicitly cause an image to be selected if necessary.
@@ -96,7 +103,7 @@ private:
   // use the associated content's context.
   bool ComputeFinalWidthForCurrentViewport(int32_t *aWidth);
 
-  nsCOMPtr<nsIContent> mContent;
+  nsCOMPtr<nsINode> mOwnerNode;
   // If this array contains an eCandidateType_Default, it should be the last
   // element, such that the Setters can preserve/replace it respectively.
   nsTArray<ResponsiveImageCandidate> mCandidates;
