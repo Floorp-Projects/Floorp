@@ -61,7 +61,7 @@ function Migrator() {
   // Leave the log-level as Debug - Sync will setup log appenders such that
   // these messages generally will not be seen unless other log related
   // prefs are set.
-  this.level = Log.Level.Debug;
+  this.log.level = Log.Level.Debug;
 
   this._nextUserStatePromise = Promise.resolve();
 
@@ -138,12 +138,12 @@ Migrator.prototype = {
 
   _promiseCurrentUserState: Task.async(function* (forceObserver) {
     this.log.trace("starting _promiseCurrentUserState");
-    let update = newState => {
+    let update = (newState, subject=null) => {
       this.log.info("Migration state: '${state}' => '${newState}'",
                     {state: this._state, newState: newState});
       if (forceObserver || newState !== this._state) {
         this._state = newState;
-        Services.obs.notifyObservers(null, OBSERVER_STATE_CHANGE_TOPIC, newState);
+        Services.obs.notifyObservers(subject, OBSERVER_STATE_CHANGE_TOPIC, newState);
       }
       return newState;
     }
@@ -153,6 +153,7 @@ Migrator.prototype = {
     if (WeaveService.fxAccountsEnabled) {
       // should not be necessary, but if we somehow ended up with FxA enabled
       // and sync blocked it would be bad - so better safe than sorry.
+      this.log.debug("FxA enabled - there's nothing to do!")
       this._unblockSync();
       return update(null);
     }
@@ -175,7 +176,10 @@ Migrator.prototype = {
       return update(this.STATE_USER_FXA);
     }
     if (!fxauser.verified) {
-      return update(this.STATE_USER_FXA_VERIFIED);
+      let email = Cc["@mozilla.org/supports-string;1"].
+                  createInstance(Ci.nsISupportsString);
+      email.data = fxauser.email || "";
+      return update(this.STATE_USER_FXA_VERIFIED, email);
     }
 
     // So we just have housekeeping to do - we aren't blocked on a user, so
@@ -216,6 +220,13 @@ Migrator.prototype = {
     this.log.info("scheduling initial FxA sync.");
     this._unblockSync();
     Weave.Service.scheduler.scheduleNextSync(0);
+
+    // Tell the front end that migration is now complete -- Sync is now
+    // configured with an FxA user.
+    forceObserver = true;
+    this.log.info("Migration complete");
+    update(null);
+
     return null;
   }),
 

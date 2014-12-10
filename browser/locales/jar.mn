@@ -13,6 +13,7 @@
     locale/browser/aboutPrivateBrowsing.properties (%chrome/browser/aboutPrivateBrowsing.properties)
     locale/browser/aboutRobots.dtd                 (%chrome/browser/aboutRobots.dtd)
     locale/browser/aboutHome.dtd                   (%chrome/browser/aboutHome.dtd)
+    locale/browser/accounts.properties             (%chrome/browser/accounts.properties)
 #ifdef MOZ_SERVICES_HEALTHREPORT
     locale/browser/aboutHealthReport.dtd           (%chrome/browser/aboutHealthReport.dtd)
 #endif
