@@ -26,7 +26,7 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION(ResponsiveImageSelector, mContent)
+NS_IMPL_CYCLE_COLLECTION(ResponsiveImageSelector, mOwnerNode)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ResponsiveImageSelector, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ResponsiveImageSelector, Release)
@@ -43,7 +43,13 @@ ParseInteger(const nsAString& aString, int32_t& aInt)
 }
 
 ResponsiveImageSelector::ResponsiveImageSelector(nsIContent *aContent)
-  : mContent(aContent),
+  : mOwnerNode(aContent),
+    mSelectedCandidateIndex(-1)
+{
+}
+
+ResponsiveImageSelector::ResponsiveImageSelector(nsIDocument *aDocument)
+  : mOwnerNode(aDocument),
     mSelectedCandidateIndex(-1)
 {
 }
@@ -57,12 +63,11 @@ ResponsiveImageSelector::SetCandidatesFromSourceSet(const nsAString & aSrcSet)
 {
   ClearSelectedCandidate();
 
-  nsIDocument* doc = mContent ? mContent->OwnerDoc() : nullptr;
-  nsCOMPtr<nsIURI> docBaseURI = mContent ? mContent->GetBaseURI() : nullptr;
+  nsCOMPtr<nsIURI> docBaseURI = mOwnerNode ? mOwnerNode->GetBaseURI() : nullptr;
 
-  if (!mContent || !doc || !docBaseURI) {
+  if (!docBaseURI) {
     MOZ_ASSERT(false,
-               "Should not be parsing SourceSet without a content and document");
+               "Should not be parsing SourceSet without a document");
     return false;
   }
 
@@ -143,6 +148,18 @@ ResponsiveImageSelector::NumCandidates(bool aIncludeDefault)
   }
 
   return candidates;
+}
+
+nsIContent*
+ResponsiveImageSelector::Content()
+{
+  return mOwnerNode->IsContent() ? mOwnerNode->AsContent() : nullptr;
+}
+
+nsIDocument*
+ResponsiveImageSelector::Document()
+{
+  return mOwnerNode->OwnerDoc();
 }
 
 void
@@ -271,10 +288,10 @@ ResponsiveImageSelector::SelectImage(bool aReselect)
     return oldBest != -1;
   }
 
-  nsIDocument* doc = mContent ? mContent->OwnerDoc() : nullptr;
+  nsIDocument* doc = Document();
   nsIPresShell *shell = doc ? doc->GetShell() : nullptr;
   nsPresContext *pctx = shell ? shell->GetPresContext() : nullptr;
-  nsCOMPtr<nsIURI> baseURI = mContent ? mContent->GetBaseURI() : nullptr;
+  nsCOMPtr<nsIURI> baseURI = mOwnerNode ? mOwnerNode->GetBaseURI() : nullptr;
 
   if (!pctx || !doc || !baseURI) {
     MOZ_ASSERT(false, "Unable to find document prescontext and base URI");
@@ -351,7 +368,7 @@ bool
 ResponsiveImageSelector::ComputeFinalWidthForCurrentViewport(int32_t *aWidth)
 {
   unsigned int numSizes = mSizeQueries.Length();
-  nsIDocument* doc = mContent ? mContent->OwnerDoc() : nullptr;
+  nsIDocument* doc = Document();
   nsIPresShell *presShell = doc ? doc->GetShell() : nullptr;
   nsPresContext *pctx = presShell ? presShell->GetPresContext() : nullptr;
 
