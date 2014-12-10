@@ -5,6 +5,12 @@ default-preferences pref(layout.css.ruby.enabled,true)
 == box-generation-3.html box-generation-3-ref.html
 == box-generation-4.html box-generation-4-ref.html
 == box-generation-5.html box-generation-5-ref.html
+== dynamic-insertion-1.html dynamic-insertion-1-ref.html
+== dynamic-insertion-2.html dynamic-insertion-2-ref.html
+== dynamic-insertion-3.html dynamic-insertion-3-ref.html
+== dynamic-removal-1.html dynamic-removal-1-ref.html
+== dynamic-removal-2.html dynamic-removal-2-ref.html
+fuzzy-if(winWidget,28,1) == dynamic-removal-3.html dynamic-removal-3-ref.html # bug 1111891
 == ruby-whitespace-1.html ruby-whitespace-1-ref.html
 == ruby-whitespace-2.html ruby-whitespace-2-ref.html
 != ruby-reflow-1-opaqueruby.html ruby-reflow-1-noruby.html
