@@ -68,7 +68,7 @@ public:
   // Destroys the decoding state. The reader cannot be made usable again.
   // This is different from ReleaseMediaResources() as Shutdown() is
   // irreversible, whereas ReleaseMediaResources() is reversible.
-  virtual void Shutdown();
+  virtual nsRefPtr<ShutdownPromise> Shutdown();
 
   // Used to retrieve some special information that can only be retrieved after
   // all contents have been continuously parsed. (ex. total duration of some

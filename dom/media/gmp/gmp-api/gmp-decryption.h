@@ -201,10 +201,12 @@ enum GMPSessionType {
   kGMPSessionInvalid = 2 // Must always be last.
 };
 
+#define GMP_API_DECRYPTOR "eme-decrypt"
+
 // API exposed by plugin library to manage decryption sessions.
 // When the Host requests this by calling GMPGetAPIFunc().
 //
-// API name: "eme-decrypt".
+// API name macro: GMP_API_DECRYPTOR
 // Host API: GMPDecryptorHost
 class GMPDecryptor {
 public:

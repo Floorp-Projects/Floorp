@@ -71,7 +71,7 @@ public:
 
   virtual nsresult ResetDecode() MOZ_OVERRIDE;
 
-  virtual void Shutdown() MOZ_OVERRIDE;
+  virtual nsRefPtr<ShutdownPromise> Shutdown() MOZ_OVERRIDE;
 
 private:
 

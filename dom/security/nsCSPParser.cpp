@@ -51,13 +51,12 @@ static const char16_t DOLLAR       = '$';
 static const char16_t AMPERSAND    = '&';
 static const char16_t OPENBRACE    = '(';
 static const char16_t CLOSINGBRACE = ')';
-static const char16_t COMMA        = ',';
 static const char16_t EQUALS       = '=';
 static const char16_t ATSYMBOL     = '@';
 
-static uint32_t kSubHostPathCharacterCutoff = 512;
+static const uint32_t kSubHostPathCharacterCutoff = 512;
 
-static const char* kHashSourceValidFns [] = { "sha256", "sha384", "sha512" };
+static const char *const kHashSourceValidFns [] = { "sha256", "sha384", "sha512" };
 static const uint32_t kHashSourceValidFnsLen = 3;
 
 /* ===== nsCSPTokenizer ==================== */
@@ -135,21 +134,20 @@ nsCSPParser::~nsCSPParser()
   CSPPARSERLOG(("nsCSPParser::~nsCSPParser"));
 }
 
-
-bool
+static bool
 isCharacterToken(char16_t aSymbol)
 {
   return (aSymbol >= 'a' && aSymbol <= 'z') ||
          (aSymbol >= 'A' && aSymbol <= 'Z');
 }
 
-bool
+static bool
 isNumberToken(char16_t aSymbol)
 {
   return (aSymbol >= '0' && aSymbol <= '9');
 }
 
-bool
+static bool
 isValidHexDig(char16_t aHexDig)
 {
   return (isNumberToken(aHexDig) ||
@@ -689,7 +687,6 @@ nsCSPParser::hashSource()
   CSPPARSERLOG(("nsCSPParser::hashSource, mCurToken: %s, mCurValue: %s",
                NS_ConvertUTF16toUTF8(mCurToken).get(),
                NS_ConvertUTF16toUTF8(mCurValue).get()));
-
 
   // Check if mCurToken starts and ends with "'"
   if (mCurToken.First() != SINGLEQUOTE ||

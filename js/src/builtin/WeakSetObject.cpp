@@ -25,13 +25,10 @@ const Class WeakSetObject::class_ = {
     "WeakSet",
     JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_CACHED_PROTO(JSProto_WeakSet) |
     JSCLASS_HAS_RESERVED_SLOTS(WeakSetObject::RESERVED_SLOTS),
-    JS_PropertyStub,         // addProperty
-    JS_DeletePropertyStub,   // delProperty
+    nullptr,                 // addProperty
+    nullptr,                 // delProperty
     JS_PropertyStub,         // getProperty
-    JS_StrictPropertyStub,   // setProperty
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub
+    JS_StrictPropertyStub    // setProperty
 };
 
 const JSPropertySpec WeakSetObject::properties[] = {

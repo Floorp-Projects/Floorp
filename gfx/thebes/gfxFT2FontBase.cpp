@@ -20,7 +20,6 @@ gfxFT2FontBase::gfxFT2FontBase(cairo_scaled_font_t *aScaledFont,
       mHasMetrics(false)
 {
     cairo_scaled_font_reference(mScaledFont);
-    ConstructFontOptions();
 }
 
 gfxFT2FontBase::~gfxFT2FontBase()
@@ -215,26 +214,4 @@ gfxFT2FontBase::SetupCairoFont(gfxContext *aContext)
     // font for pdf and ps surfaces (bug 403513).
     cairo_set_scaled_font(cr, cairoFont);
     return true;
-}
-
-void
-gfxFT2FontBase::ConstructFontOptions()
-{
-  NS_LossyConvertUTF16toASCII name(this->GetName());
-  mFontOptions.mName = name.get();
-
-  const gfxFontStyle* style = this->GetStyle();
-  if (style->style == NS_FONT_STYLE_ITALIC) {
-    if (style->weight == NS_FONT_WEIGHT_BOLD) {
-      mFontOptions.mStyle = FontStyle::BOLD_ITALIC;
-    } else {
-      mFontOptions.mStyle = FontStyle::ITALIC;
-    }
-  } else {
-    if (style->weight == NS_FONT_WEIGHT_BOLD) {
-      mFontOptions.mStyle = FontStyle::BOLD;
-    } else {
-      mFontOptions.mStyle = FontStyle::NORMAL;
-    }
-  }
 }

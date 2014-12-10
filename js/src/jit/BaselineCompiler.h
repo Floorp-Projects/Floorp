@@ -196,9 +196,7 @@ class BaselineCompiler : public BaselineCompilerSpecific
 {
     FixedList<Label>            labels_;
     NonAssertingLabel           return_;
-#ifdef JSGC_GENERATIONAL
     NonAssertingLabel           postBarrierSlot_;
-#endif
 
     // Native code offset right before the scope chain is initialized.
     CodeOffsetLabel prologueOffset_;
@@ -241,9 +239,7 @@ class BaselineCompiler : public BaselineCompilerSpecific
     void emitInitializeLocals(size_t n, const Value &v);
     bool emitPrologue();
     bool emitEpilogue();
-#ifdef JSGC_GENERATIONAL
     bool emitOutOfLinePostBarrierSlot();
-#endif
     bool emitIC(ICStub *stub, ICEntry::Kind kind);
     bool emitOpIC(ICStub *stub) {
         return emitIC(stub, ICEntry::Kind_Op);

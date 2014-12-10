@@ -18,8 +18,8 @@ public:
   NS_IMETHOD_(void) NoteNativeRoot(void* aRoot,
                                    nsCycleCollectionParticipant* aParticipant) = 0;
 
-  NS_IMETHOD_(void) NoteWeakMapping(void* aMap, void* aKey, void* aKeyDelegate,
-                                    void* aVal) = 0;
+  NS_IMETHOD_(void) NoteWeakMapping(JSObject* aMap, JS::GCCellPtr aKey,
+                                    JSObject* aKeyDelegate, JS::GCCellPtr aVal) = 0;
 
   bool WantAllTraces() const { return mWantAllTraces; }
 protected:

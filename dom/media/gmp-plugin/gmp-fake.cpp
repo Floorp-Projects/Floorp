@@ -395,16 +395,16 @@ extern "C" {
 
   PUBLIC_FUNC GMPErr
   GMPGetAPI (const char* aApiName, void* aHostAPI, void** aPluginApi) {
-    if (!strcmp (aApiName, "decode-video")) {
+    if (!strcmp (aApiName, GMP_API_VIDEO_DECODER)) {
       *aPluginApi = new FakeVideoDecoder (static_cast<GMPVideoHost*> (aHostAPI));
       return GMPNoErr;
-    } else if (!strcmp (aApiName, "encode-video")) {
+    } else if (!strcmp (aApiName, GMP_API_VIDEO_ENCODER)) {
       *aPluginApi = new FakeVideoEncoder (static_cast<GMPVideoHost*> (aHostAPI));
       return GMPNoErr;
-    } else if (!strcmp (aApiName, "eme-decrypt")) {
+    } else if (!strcmp (aApiName, GMP_API_DECRYPTOR)) {
       *aPluginApi = new FakeDecryptor(static_cast<GMPDecryptorHost*> (aHostAPI));
       return GMPNoErr;
-    } else if (!strcmp (aApiName, "async-shutdown")) {
+    } else if (!strcmp (aApiName, GMP_API_ASYNC_SHUTDOWN)) {
       *aPluginApi = new TestAsyncShutdown(static_cast<GMPAsyncShutdownHost*> (aHostAPI));
       return GMPNoErr;
     }

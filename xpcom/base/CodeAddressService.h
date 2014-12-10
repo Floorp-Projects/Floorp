@@ -110,7 +110,7 @@ class CodeAddressService
     }
   };
 
-  // A direct-mapped cache.  When doing AnalyzeReports just after starting
+  // A direct-mapped cache.  When doing dmd::Analyze() just after starting
   // desktop Firefox (which is similar to analyzing after a longer-running
   // session, thanks to the limit on how many records we print), a cache with
   // 2^24 entries (which approximates an infinite-entry cache) has a ~91% hit

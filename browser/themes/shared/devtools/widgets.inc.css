@@ -50,13 +50,20 @@
   }
 
   .devtools-responsive-container > .devtools-side-splitter {
-    border-width: 0;
-    border-top-width: 1px;
-    border-top-style: solid;
-    margin: 0;
+    /* This is a normally vertical splitter, but we have turned it horizontal
+       due to the smaller resolution */
     min-height: 3px;
     height: 3px;
-    margin-bottom: -3px;
+    margin-top: -3px;
+
+    /* Reset the vertical splitter styles */
+    border-width: 0;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    -moz-margin-start: 0;
+    width: auto;
+    min-width: 0;
+
     /* In some edge case the cursor is not changed to n-resize */
     cursor: n-resize;
   }

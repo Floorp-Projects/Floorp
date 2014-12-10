@@ -229,9 +229,9 @@ NPObjectMember_Trace(JSTracer *trc, JSObject *obj);
 static const JSClass sNPObjectMemberClass =
   {
     "NPObject Ambiguous Member class", JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS,
-    JS_PropertyStub, JS_DeletePropertyStub,
-    JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub,
-    JS_ResolveStub, NPObjectMember_Convert,
+    nullptr, nullptr,
+    JS_PropertyStub, JS_StrictPropertyStub, nullptr,
+    nullptr, NPObjectMember_Convert,
     NPObjectMember_Finalize, NPObjectMember_Call,
     nullptr, nullptr, NPObjectMember_Trace
   };
@@ -1713,16 +1713,16 @@ NPObjWrapper_Convert(JSContext *cx, JS::Handle<JSObject*> obj, JSType hint, JS::
 {
   MOZ_ASSERT(hint == JSTYPE_NUMBER || hint == JSTYPE_STRING || hint == JSTYPE_VOID);
 
-  // Plugins do not simply use JS_ConvertStub, and the default [[DefaultValue]]
-  // behavior, because that behavior involves calling toString or valueOf on
-  // objects which weren't designed to accommodate this.  Usually this wouldn't
-  // be a problem, because the absence of either property, or the presence of
-  // either property with a value that isn't callable, will cause that property
-  // to simply be ignored.  But there is a problem in one specific case: Java,
-  // specifically java.lang.Integer.  The Integer class has static valueOf
-  // methods, none of which are nullary, so the JS-reflected method will behave
-  // poorly when called with no arguments.  We work around this problem by
-  // giving plugins a [[DefaultValue]] which uses only toString and not valueOf.
+  // Plugins do not simply use the default [[DefaultValue]] behavior, because
+  // that behavior involves calling toString or valueOf on objects which
+  // weren't designed to accommodate this.  Usually this wouldn't be a problem,
+  // because the absence of either property, or the presence of either property
+  // with a value that isn't callable, will cause that property to simply be
+  // ignored.  But there is a problem in one specific case: Java, specifically
+  // java.lang.Integer.  The Integer class has static valueOf methods, none of
+  // which are nullary, so the JS-reflected method will behave poorly when
+  // called with no arguments.  We work around this problem by giving plugins a
+  // [[DefaultValue]] which uses only toString and not valueOf.
 
   JS::Rooted<JS::Value> v(cx, JSVAL_VOID);
   if (!JS_GetProperty(cx, obj, "toString", &v))

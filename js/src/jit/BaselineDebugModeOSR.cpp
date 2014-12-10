@@ -819,10 +819,8 @@ jit::RecompileOnStackBaselineScriptsForDebugMode(JSContext *cx,
     if (entries.empty())
         return true;
 
-#ifdef JSGC_GENERATIONAL
     // Scripts can entrain nursery things. See note in js::ReleaseAllJITCode.
     cx->runtime()->gc.evictNursery();
-#endif
 
     // When the profiler is enabled, we need to have suppressed sampling,
     // since the basline jit scripts are in a state of flux.

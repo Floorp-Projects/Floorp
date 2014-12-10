@@ -367,9 +367,8 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
     mIgnoreResume = false;
   }
 
-  // Fires an initial progress event and sets up the stall counter so stall events
-  // fire if no download occurs within the required time frame.
-  mDecoder->Progress(false);
+  // Fires an initial progress event.
+  owner->DownloadProgressed();
 
   return NS_OK;
 }
