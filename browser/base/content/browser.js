@@ -5684,9 +5684,11 @@ function handleLinkClick(event, href, linkNode) {
   }
 
   urlSecurityCheck(href, doc.nodePrincipal);
-  openLinkIn(href, where, { referrerURI: referrerURI,
-                            charset: doc.characterSet,
-                            allowMixedContent: persistAllowMixedContentInChildTab });
+  let params = { charset: doc.characterSet,
+                 allowMixedContent: persistAllowMixedContentInChildTab };
+  if (!BrowserUtils.linkHasNoReferrer(linkNode))
+    params.referrerURI = referrerURI;
+  openLinkIn(href, where, params);
   event.preventDefault();
   return true;
 }
