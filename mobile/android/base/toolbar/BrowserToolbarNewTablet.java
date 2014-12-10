@@ -11,6 +11,7 @@ import org.mozilla.gecko.animation.ViewHelper;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 
 /**
@@ -203,5 +204,11 @@ class BrowserToolbarNewTablet extends BrowserToolbarTabletBase {
         // Note that this should be called first so the enabled state of the
         // forward button is set to the proper value.
         setButtonEnabled(forwardButton, true);
+    }
+
+    @Override
+    protected Drawable getLWTDefaultStateSetDrawable() {
+        return BrowserToolbar.getLightweightThemeDrawable(this, getResources(), getTheme(),
+                R.color.background_normal);
     }
 }
