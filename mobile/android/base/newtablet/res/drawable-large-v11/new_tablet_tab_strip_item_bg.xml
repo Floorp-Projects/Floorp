@@ -23,6 +23,14 @@
           android:state_checked="true"
           android:color="@color/new_tablet_highlight" />
 
+    <!-- Lightweight Themes -->
+    <item android:state_checked="true"
+          gecko:state_light="true"
+          android:color="@color/background_normal_lwt" />
+    <item android:state_checked="true"
+          gecko:state_dark="true"
+          android:color="@color/background_normal_lwt" />
+
     <item android:state_checked="true"
           android:color="@color/background_normal" />
 
