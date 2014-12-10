@@ -795,6 +795,13 @@ public:
   static gfxSize GetTransformToAncestorScale(nsIFrame* aFrame);
 
   /**
+   * Find the nearest common ancestor frame for aFrame1 and aFrame2. The
+   * ancestor frame could be cross-doc.
+   */
+  static nsIFrame* FindNearestCommonAncestorFrame(nsIFrame* aFrame1,
+                                                  nsIFrame* aFrame2);
+
+  /**
    * Transforms a list of CSSPoints from aFromFrame to aToFrame, taking into
    * account all relevant transformations on the frames up to (but excluding)
    * their nearest common ancestor.
