@@ -394,7 +394,7 @@ struct MOZ_STACK_CLASS nsRubyBaseContainerFrame::PullFrameState
   ContinuationTraversingState mBase;
   nsAutoTArray<ContinuationTraversingState, RTC_ARRAY_SIZE> mTexts;
 
-  PullFrameState(nsRubyBaseContainerFrame* aFrame);
+  explicit PullFrameState(nsRubyBaseContainerFrame* aFrame);
 };
 
 nscoord
