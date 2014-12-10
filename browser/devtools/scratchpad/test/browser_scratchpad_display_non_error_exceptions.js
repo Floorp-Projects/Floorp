@@ -41,7 +41,7 @@ function runTests()
     method: "display",
     code: error1,
     result: error1 + openComment +
-            "Exception: Ouch!\n@" + scratchpad.uniqueName + ":1:7" + closeComment,
+            "Exception: Error: Ouch!\n@" + scratchpad.uniqueName + ":1:7" + closeComment,
     label: "error display output"
   },
   {
@@ -62,7 +62,7 @@ function runTests()
     // Display error4, document.body.appendChild(document.body)
     method: "display",
     code: error4,
-    result: error4 + openComment + "Exception: Node cannot be inserted " +
+    result: error4 + openComment + "Exception: HierarchyRequestError: Node cannot be inserted " +
             "at the specified point in the hierarchy\n@" +
             scratchpad.uniqueName + ":1:0" + closeComment,
     label: "Alternative format error display output"
@@ -79,7 +79,7 @@ function runTests()
     method: "run",
     code: error1,
     result: error1 + openComment +
-            "Exception: Ouch!\n@" + scratchpad.uniqueName + ":1:7" + closeComment,
+            "Exception: Error: Ouch!\n@" + scratchpad.uniqueName + ":1:7" + closeComment,
     label: "error run output"
   },
   {
@@ -100,7 +100,7 @@ function runTests()
     // Run error4, document.body.appendChild(document.body)
     method: "run",
     code: error4,
-    result: error4 + openComment + "Exception: Node cannot be inserted " +
+    result: error4 + openComment + "Exception: HierarchyRequestError: Node cannot be inserted " +
             "at the specified point in the hierarchy\n@" +
             scratchpad.uniqueName + ":1:0" + closeComment,
     label: "Alternative format error run output"
