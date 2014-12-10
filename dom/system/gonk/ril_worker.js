@@ -222,9 +222,10 @@ const TELEPHONY_REQUESTS = [
   REQUEST_UDUB
 ];
 
-function TelephonyRequestEntry(request, callback) {
+function TelephonyRequestEntry(request, action, options) {
   this.request = request;
-  this.callback = callback;
+  this.action = action;
+  this.options = options;
 }
 
 function TelephonyRequestQueue(ril) {
@@ -273,7 +274,7 @@ TelephonyRequestQueue.prototype = {
 
   _executeEntry: function(entry) {
     if (DEBUG) this.debug("execute " + this._getRequestName(entry.request));
-    entry.callback();
+    entry.action.call(this.ril, entry.options);
   },
 
   _getRequestName: function(request) {
@@ -289,7 +290,7 @@ TelephonyRequestQueue.prototype = {
     return TELEPHONY_REQUESTS.indexOf(request) !== -1;
   },
 
-  push: function(request, callback) {
+  push: function(request, action, options) {
     if (!this.isValidRequest(request)) {
       if (DEBUG) {
         this.debug("Error: " + this._getRequestName(request) +
@@ -299,7 +300,7 @@ TelephonyRequestQueue.prototype = {
     }
 
     if (DEBUG) this.debug("push " + this._getRequestName(request));
-    let entry = new TelephonyRequestEntry(request, callback);
+    let entry = new TelephonyRequestEntry(request, action, options);
     let queue = this._getQueue(request);
     queue.push(entry);
 
@@ -1545,6 +1546,18 @@ RilObject.prototype = {
   },
 
   /**
+   * Get current calls.
+   */
+  getCurrentCalls: function() {
+    this.telephonyRequestQueue.push(REQUEST_GET_CURRENT_CALLS,
+                                    this.sendRilRequestGetCurrentCalls, null);
+  },
+
+  sendRilRequestGetCurrentCalls: function() {
+    this.context.Buf.simpleRequest(REQUEST_GET_CURRENT_CALLS);
+  },
+
+  /**
    * Get the signal strength.
    */
   getSignalStrength: function() {
@@ -1618,24 +1631,20 @@ RilObject.prototype = {
     let isRadioOff = (this.radioState === GECKO_RADIOSTATE_DISABLED);
 
     if (options.isEmergency) {
-      options.request = RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL ?
-                        REQUEST_DIAL_EMERGENCY_CALL : REQUEST_DIAL;
-
       if (isRadioOff) {
         if (DEBUG) {
           this.context.debug("Automatically enable radio for an emergency call.");
         }
 
         this.cachedDialRequest = {
-          callback: this.dialInternal.bind(this, options),
+          callback: this.dialEmergencyNumber.bind(this, options),
           onerror: onerror
         };
-
         this.setRadioEnabled({enabled: true});
         return;
       }
 
-      this.dialInternal(options);
+      this.dialEmergencyNumber(options);
     } else {
       // Notify error in establishing the call without radio.
       if (isRadioOff) {
@@ -1649,39 +1658,70 @@ RilObject.prototype = {
         return;
       }
 
-      // Exit emergency callback mode when user dial a non-emergency call.
-      if (this._isInEmergencyCbMode) {
-        this.exitEmergencyCbMode();
-      }
-
-      options.request = REQUEST_DIAL;
-
-      this.dialInternal(options);
+      this.dialNonEmergencyNumber(options);
     }
   },
 
-  dialInternal: function(options) {
-    // Make a Cdma 3way call.
+  /**
+   * Dial a non-emergency number.
+   *
+   * @param number
+   *        String containing the number to dial.
+   * @param clirMode
+   *        Integer for showing/hidding the caller Id to the called party.
+   * @param uusInfo
+   *        Integer doing something XXX TODO
+   */
+  dialNonEmergencyNumber: function(options) {
+    // Exit emergency callback mode when user dial a non-emergency call.
+    if (this._isInEmergencyCbMode) {
+      this.exitEmergencyCbMode();
+    }
+
+    options.request = REQUEST_DIAL;
+    this.sendDialRequest(options);
+  },
+
+  /**
+   * Dial an emergency number.
+   *
+   * @param number
+   *        String containing the number to dial.
+   * @param clirMode
+   *        Integer for showing/hidding the caller Id to the called party.
+   * @param uusInfo
+   *        Integer doing something XXX TODO
+   */
+  dialEmergencyNumber: function(options) {
+    options.request = RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL ?
+                      REQUEST_DIAL_EMERGENCY_CALL : REQUEST_DIAL;
+    this.sendDialRequest(options);
+  },
+
+  sendDialRequest: function(options) {
     if (this._isCdma && Object.keys(this.currentCalls).length == 1) {
+      // Make a Cdma 3way call.
       options.featureStr = options.number;
-      this.cdmaFlash(options);
-      return;
+      this.sendCdmaFlashCommand(options);
+    } else {
+      this.telephonyRequestQueue.push(options.request, this.sendRilRequestDial,
+                                      options);
     }
-
-    this.telephonyRequestQueue.push(options.request, () => {
-      let Buf = this.context.Buf;
-      Buf.newParcel(options.request, options);
-      Buf.writeString(options.number);
-      Buf.writeInt32(options.clirMode || 0);
-      Buf.writeInt32(options.uusInfo || 0);
-      // TODO Why do we need this extra 0? It was put it in to make this
-      // match the format of the binary message.
-      Buf.writeInt32(0);
-      Buf.sendParcel();
-    });
   },
 
-  cdmaFlash: function(options) {
+  sendRilRequestDial: function(options) {
+    let Buf = this.context.Buf;
+    Buf.newParcel(options.request, options);
+    Buf.writeString(options.number);
+    Buf.writeInt32(options.clirMode || 0);
+    Buf.writeInt32(options.uusInfo || 0);
+    // TODO Why do we need this extra 0? It was put it in to make this
+    // match the format of the binary message.
+    Buf.writeInt32(0);
+    Buf.sendParcel();
+  },
+
+  sendCdmaFlashCommand: function(options) {
     let Buf = this.context.Buf;
     options.isCdma = true;
     options.request = REQUEST_CDMA_FLASH;
@@ -1713,43 +1753,58 @@ RilObject.prototype = {
 
     call.hangUpLocal = true;
     if (call.state === CALL_STATE_HOLDING) {
-      this.hangUpBackground(options);
+      this.sendHangUpBackgroundRequest();
     } else {
-      this.telephonyRequestQueue.push(REQUEST_HANGUP, () => {
-        let Buf = this.context.Buf;
-        Buf.newParcel(REQUEST_HANGUP, options);
-        Buf.writeInt32(1);
-        Buf.writeInt32(options.callIndex);
-        Buf.sendParcel();
-      });
+      this.sendHangUpRequest(options);
     }
   },
 
-  hangUpForeground: function(options) {
-    this.telephonyRequestQueue.push(REQUEST_HANGUP_FOREGROUND_RESUME_BACKGROUND, () => {
-      this.context.Buf.simpleRequest(REQUEST_HANGUP_FOREGROUND_RESUME_BACKGROUND,
-                                     options);
-    });
+  sendHangUpRequest: function(options) {
+    this.telephonyRequestQueue.push(REQUEST_HANGUP, this.sendRilRequestHangUp,
+                                    options);
   },
 
-  hangUpBackground: function(options) {
-    this.telephonyRequestQueue.push(REQUEST_HANGUP_WAITING_OR_BACKGROUND, () => {
-      this.context.Buf.simpleRequest(REQUEST_HANGUP_WAITING_OR_BACKGROUND,
-                                     options);
-    });
+  sendRilRequestHangUp: function(options) {
+    let Buf = this.context.Buf;
+    Buf.newParcel(REQUEST_HANGUP, options);
+    Buf.writeInt32(1);
+    Buf.writeInt32(options.callIndex);
+    Buf.sendParcel();
   },
 
-  switchActiveCall: function(options) {
-    this.telephonyRequestQueue.push(REQUEST_SWITCH_WAITING_OR_HOLDING_AND_ACTIVE, () => {
-      this.context.Buf.simpleRequest(REQUEST_SWITCH_WAITING_OR_HOLDING_AND_ACTIVE,
-                                     options);
-    });
+  sendHangUpForegroundRequest: function(options) {
+    this.telephonyRequestQueue.push(REQUEST_HANGUP_FOREGROUND_RESUME_BACKGROUND,
+                                    this.sendRilRequestHangUpForeground,
+                                    options);
   },
 
-  udub: function(options) {
-    this.telephonyRequestQueue.push(REQUEST_UDUB, () => {
-      this.context.Buf.simpleRequest(REQUEST_UDUB, options);
-    });
+  sendRilRequestHangUpForeground: function(options) {
+    this.context.Buf.simpleRequest(REQUEST_HANGUP_FOREGROUND_RESUME_BACKGROUND,
+                                   options);
+  },
+
+  sendHangUpBackgroundRequest: function(options) {
+    this.telephonyRequestQueue.push(REQUEST_HANGUP_WAITING_OR_BACKGROUND,
+                                    this.sendRilRequestHangUpWaiting, options);
+  },
+
+  sendRilRequestHangUpWaiting: function(options) {
+    this.context.Buf.simpleRequest(REQUEST_HANGUP_WAITING_OR_BACKGROUND,
+                                   options);
+  },
+
+  /**
+   * Mute or unmute the radio.
+   *
+   * @param mute
+   *        Boolean to indicate whether to mute or unmute the radio.
+   */
+  setMute: function(options) {
+    let Buf = this.context.Buf;
+    Buf.newParcel(REQUEST_SET_MUTE);
+    Buf.writeInt32(1);
+    Buf.writeInt32(options.muted ? 1 : 0);
+    Buf.sendParcel();
   },
 
   /**
@@ -1759,26 +1814,38 @@ RilObject.prototype = {
    *        Call index of the call to answer.
    */
   answerCall: function(options) {
+    // Check for races. Since we dispatched the incoming/waiting call
+    // notification the incoming/waiting call may have changed. The main
+    // thread thinks that it is answering the call with the given index,
+    // so only answer if that is still incoming/waiting.
     let call = this.currentCalls[options.callIndex];
     if (!call) {
       return;
     }
 
-    // Check for races. Since we dispatched the incoming/waiting call
-    // notification the incoming/waiting call may have changed. The main
-    // thread thinks that it is answering the call with the given index,
-    // so only answer if that is still incoming/waiting.
     switch (call.state) {
       case CALL_STATE_INCOMING:
-        this.telephonyRequestQueue.push(REQUEST_ANSWER, () => {
-          this.context.Buf.simpleRequest(REQUEST_ANSWER);
-        });
+        this.telephonyRequestQueue.push(REQUEST_ANSWER, this.sendRilRequestAnswer,
+                                        null);
         break;
       case CALL_STATE_WAITING:
         // Answer the waiting (second) call, and hold the first call.
-        this.switchActiveCall(options);
+        this.sendSwitchWaitingRequest();
         break;
     }
+  },
+
+  sendRilRequestAnswer: function() {
+    this.context.Buf.simpleRequest(REQUEST_ANSWER);
+  },
+
+  sendSwitchWaitingRequest: function() {
+    this.telephonyRequestQueue.push(REQUEST_SWITCH_WAITING_OR_HOLDING_AND_ACTIVE,
+                                    this.sendRilRequestSwitch, null);
+  },
+
+  sendRilRequestSwitch: function() {
+    this.context.Buf.simpleRequest(REQUEST_SWITCH_WAITING_OR_HOLDING_AND_ACTIVE);
   },
 
   /**
@@ -1801,19 +1868,24 @@ RilObject.prototype = {
 
     if (this._isCdma) {
       // AT+CHLD=0 means "release held or UDUB."
-      this.hangUpBackground(options);
+      this.sendHangUpBackgroundRequest();
       return;
     }
 
     switch (call.state) {
       case CALL_STATE_INCOMING:
-        this.udub(options);
+        this.telephonyRequestQueue.push(REQUEST_UDUB, this.sendRilRequestUdub,
+                                        null);
         break;
       case CALL_STATE_WAITING:
         // Reject the waiting (second) call, and remain the first call.
-        this.hangUpBackground(options);
+        this.sendHangUpBackgroundRequest();
         break;
     }
+  },
+
+  sendRilRequestUdub: function() {
+    this.context.Buf.simpleRequest(REQUEST_UDUB);
   },
 
   holdCall: function(options) {
@@ -1828,9 +1900,9 @@ RilObject.prototype = {
     let Buf = this.context.Buf;
     if (this._isCdma) {
       options.featureStr = "";
-      this.cdmaFlash(options);
+      this.sendCdmaFlashCommand(options);
     } else if (call.state == CALL_STATE_ACTIVE) {
-      this.switchActiveCall(options);
+      this.sendSwitchWaitingRequest();
     }
   },
 
@@ -1846,22 +1918,24 @@ RilObject.prototype = {
     let Buf = this.context.Buf;
     if (this._isCdma) {
       options.featureStr = "";
-      this.cdmaFlash(options);
+      this.sendCdmaFlashCommand(options);
     } else if (call.state == CALL_STATE_HOLDING) {
-      this.switchActiveCall(options);
+      this.sendSwitchWaitingRequest();
     }
   },
 
   conferenceCall: function(options) {
     if (this._isCdma) {
       options.featureStr = "";
-      this.cdmaFlash(options);
-      return;
+      this.sendCdmaFlashCommand(options);
+    } else {
+      this.telephonyRequestQueue.push(REQUEST_CONFERENCE,
+                                      this.sendRilRequestConference, options);
     }
+  },
 
-    this.telephonyRequestQueue.push(REQUEST_CONFERENCE, () => {
-      this.context.Buf.simpleRequest(REQUEST_CONFERENCE, options);
-    });
+  sendRilRequestConference: function(options) {
+    this.context.Buf.simpleRequest(REQUEST_CONFERENCE, options);
   },
 
   separateCall: function(options) {
@@ -1876,17 +1950,20 @@ RilObject.prototype = {
 
     if (this._isCdma) {
       options.featureStr = "";
-      this.cdmaFlash(options);
-      return;
+      this.sendCdmaFlashCommand(options);
+    } else {
+      this.telephonyRequestQueue.push(REQUEST_SEPARATE_CONNECTION,
+                                     this.sendRilRequestSeparateConnection,
+                                     options);
     }
+ },
 
-    this.telephonyRequestQueue.push(REQUEST_SEPARATE_CONNECTION, () => {
-      let Buf = this.context.Buf;
-      Buf.newParcel(REQUEST_SEPARATE_CONNECTION, options);
-      Buf.writeInt32(1);
-      Buf.writeInt32(options.callIndex);
-      Buf.sendParcel();
-    });
+  sendRilRequestSeparateConnection: function(options) {
+    let Buf = this.context.Buf;
+    Buf.newParcel(REQUEST_SEPARATE_CONNECTION, options);
+    Buf.writeInt32(1);
+    Buf.writeInt32(options.callIndex);
+    Buf.sendParcel();
   },
 
   hangUpConference: function(options) {
@@ -1899,56 +1976,31 @@ RilObject.prototype = {
         this.sendChromeMessage(options);
         return;
       }
-
-      options.callIndex = 1;
-      this.hangUp(options);
-      return;
-    }
-
-    if (this.currentConferenceState === CALL_STATE_ACTIVE) {
-      this.hangUpForeground(options);
+      call.hangUpLocal = true;
+      this.sendHangUpRequest(1);
     } else {
-      this.hangUpBackground(options);
+      if (this.currentConferenceState === CALL_STATE_ACTIVE) {
+        this.sendHangUpForegroundRequest(options);
+      } else {
+        this.sendHangUpBackgroundRequest(options);
+      }
     }
   },
 
-  holdConference: function(options) {
+  holdConference: function() {
     if (this._isCdma) {
       return;
     }
 
-    this.switchActiveCall(options);
+    this.sendSwitchWaitingRequest();
   },
 
-  resumeConference: function(options) {
+  resumeConference: function() {
     if (this._isCdma) {
       return;
     }
 
-    this.switchActiveCall(options);
-  },
-
-  /**
-   * Get current calls.
-   */
-  getCurrentCalls: function() {
-    this.telephonyRequestQueue.push(REQUEST_GET_CURRENT_CALLS, () => {
-      this.context.Buf.simpleRequest(REQUEST_GET_CURRENT_CALLS);
-    });
-  },
-
-  /**
-   * Mute or unmute the radio.
-   *
-   * @param mute
-   *        Boolean to indicate whether to mute or unmute the radio.
-   */
-  setMute: function(options) {
-    let Buf = this.context.Buf;
-    Buf.newParcel(REQUEST_SET_MUTE);
-    Buf.writeInt32(1);
-    Buf.writeInt32(options.muted ? 1 : 0);
-    Buf.sendParcel();
+    this.sendSwitchWaitingRequest();
   },
 
   /**
@@ -2635,6 +2687,10 @@ RilObject.prototype = {
       return;
     }
 
+    this.sendRilRequestSendUSSD(options);
+  },
+
+  sendRilRequestSendUSSD: function(options) {
     let Buf = this.context.Buf;
     Buf.newParcel(REQUEST_SEND_USSD, options);
     Buf.writeString(options.ussd);
@@ -3880,8 +3936,6 @@ RilObject.prototype = {
    * Helpers for processing call state changes.
    */
   _processCalls: function(newCalls, failCause) {
-    if (DEBUG) this.context.debug("_processCalls: " + JSON.stringify(newCalls));
-
     // Let's get the failCause first if there are removed calls. Otherwise, we
     // need to trigger another async request when removing call and it cause
     // the order of callDisconnected and conferenceCallStateChanged
@@ -5410,7 +5464,7 @@ RilObject.prototype[REQUEST_GET_IMSI] = function REQUEST_GET_IMSI(length, option
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_HANGUP] = function REQUEST_HANGUP(length, options) {
-  options.success = (options.rilRequestError === 0);
+  options.success = options.rilRequestError === 0;
   options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
   this.sendChromeMessage(options);
 };
@@ -5421,9 +5475,6 @@ RilObject.prototype[REQUEST_HANGUP_FOREGROUND_RESUME_BACKGROUND] = function REQU
   RilObject.prototype[REQUEST_HANGUP].call(this, length, options);
 };
 RilObject.prototype[REQUEST_SWITCH_WAITING_OR_HOLDING_AND_ACTIVE] = function REQUEST_SWITCH_WAITING_OR_HOLDING_AND_ACTIVE(length, options) {
-  options.success = (options.rilRequestError === 0);
-  options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-  this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_CONFERENCE] = function REQUEST_CONFERENCE(length, options) {
   options.success = (options.rilRequestError === 0);
