@@ -96,23 +96,39 @@ private:
   nsAutoTArray<nsRefPtr<SourceBufferDecoder>,2> mDecoders;
 };
 
-void
+nsRefPtr<ShutdownPromise>
 TrackBuffer::Shutdown()
 {
-  // Finish any decoder initialization, which may add to mInitializedDecoders.
-  // Shutdown waits for any pending events, which may require the monitor,
-  // so we must not hold the monitor during this call.
-  mParentDecoder->GetReentrantMonitor().AssertNotCurrentThreadIn();
-  mTaskQueue->BeginShutdown();
-  mTaskQueue->AwaitShutdownAndIdle();
-  mTaskQueue = nullptr;
+  MOZ_ASSERT(mShutdownPromise.IsEmpty());
+  nsRefPtr<ShutdownPromise> p = mShutdownPromise.Ensure(__func__);
 
+  RefPtr<MediaTaskQueue> queue = mTaskQueue;
+  mTaskQueue = nullptr;
+  queue->BeginShutdown()
+       ->Then(mParentDecoder->GetReader()->GetTaskQueue(), __func__, this,
+              &TrackBuffer::ContinueShutdown, &TrackBuffer::ContinueShutdown);
+
+  return p;
+}
+
+void
+TrackBuffer::ContinueShutdown(bool aSuccess)
+{
+  MOZ_ASSERT(aSuccess);
   ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
-  for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
-    mDecoders[i]->GetReader()->Shutdown();
+  if (mDecoders.Length()) {
+    mDecoders[0]->GetReader()->Shutdown()
+                ->Then(mParentDecoder->GetReader()->GetTaskQueue(), __func__, this,
+                       &TrackBuffer::ContinueShutdown, &TrackBuffer::ContinueShutdown);
+    mShutdownDecoders.AppendElement(mDecoders[0]);
+    mDecoders.RemoveElementAt(0);
+    return;
   }
+
   mInitializedDecoders.Clear();
   mParentDecoder = nullptr;
+
+  mShutdownPromise.Resolve(true, __func__);
 }
 
 bool
@@ -180,6 +196,7 @@ TrackBuffer::AppendDataToCurrentResource(const uint8_t* aData, uint32_t aLength)
   // XXX: For future reference: NDA call must run on the main thread.
   mCurrentDecoder->NotifyDataArrived(reinterpret_cast<const char*>(aData),
                                      aLength, appendOffset);
+  mParentDecoder->NotifyBytesDownloaded();
   mParentDecoder->NotifyTimeRangesChanged();
 
   return true;
@@ -433,12 +450,13 @@ TrackBuffer::BreakCycles()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
-    mDecoders[i]->BreakCycles();
+  for (uint32_t i = 0; i < mShutdownDecoders.Length(); ++i) {
+    mShutdownDecoders[i]->BreakCycles();
   }
-  mDecoders.Clear();
+  mShutdownDecoders.Clear();
 
   // These are cleared in Shutdown()
+  MOZ_ASSERT(!mDecoders.Length());
   MOZ_ASSERT(mInitializedDecoders.IsEmpty());
   MOZ_ASSERT(!mParentDecoder);
 }

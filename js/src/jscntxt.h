@@ -535,11 +535,9 @@ struct JSContext : public js::ExclusiveContext,
                                    MaybeAllowCrossCompartment = DONT_ALLOW_CROSS_COMPARTMENT) const;
 
     // The generational GC nursery may only be used on the main thread.
-#ifdef JSGC_GENERATIONAL
     inline js::Nursery &nursery() {
         return runtime_->gc.nursery;
     }
-#endif
 
     void minorGC(JS::gcreason::Reason reason) {
         runtime_->gc.minorGC(this, reason);

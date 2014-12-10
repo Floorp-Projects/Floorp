@@ -156,9 +156,7 @@ void
 ICStub::updateCode(JitCode *code)
 {
     // Write barrier on the old code.
-#ifdef JSGC_INCREMENTAL
     JitCode::writeBarrierPre(jitCode());
-#endif
     stubCode_ = code->raw();
 }
 
@@ -776,7 +774,6 @@ ICStubCompiler::emitProfilingUpdate(MacroAssembler &masm, GeneralRegisterSet reg
     emitProfilingUpdate(masm, regs.takeAny(), regs.takeAny(), stubPcOffset);
 }
 
-#ifdef JSGC_GENERATIONAL
 inline bool
 ICStubCompiler::emitPostWriteBarrierSlot(MacroAssembler &masm, Register obj, ValueOperand val,
                                          Register scratch, GeneralRegisterSet saveRegs)
@@ -801,7 +798,6 @@ ICStubCompiler::emitPostWriteBarrierSlot(MacroAssembler &masm, Register obj, Val
     masm.bind(&skipBarrier);
     return true;
 }
-#endif // JSGC_GENERATIONAL
 
 //
 // WarmUpCounter_Fallback
@@ -3394,7 +3390,7 @@ CheckHasNoSuchProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
             return false;
 
         // Don't handle proto chains with resolve hooks.
-        if (curObj->getClass()->resolve != JS_ResolveStub)
+        if (curObj->getClass()->resolve)
             return false;
 
         Shape *shape = curObj->as<NativeObject>().lookup(cx, NameToId(name));
@@ -3479,14 +3475,12 @@ IsCacheableGetPropCall(JSContext *cx, JSObject *obj, JSObject *holder, Shape *sh
 
     JSFunction *func = &shape->getterObject()->as<JSFunction>();
 
-#ifdef JSGC_GENERATIONAL
     // Information from get prop call ICs may be used directly from Ion code,
     // and should not be nursery allocated.
     if (IsInsideNursery(holder) || IsInsideNursery(func)) {
         *isTemporarilyUnoptimizable = true;
         return false;
     }
-#endif
 
     if (func->isNative()) {
         *isScripted = false;
@@ -3545,8 +3539,8 @@ IsCacheableSetPropAddSlot(JSContext *cx, HandleObject obj, HandleShape oldShape,
         return false;
     }
 
-    // If object has a non-default resolve hook, don't inline
-    if (obj->getClass()->resolve != JS_ResolveStub)
+    // If object has a resolve hook, don't inline
+    if (obj->getClass()->resolve)
         return false;
 
     size_t chainDepth = 0;
@@ -3565,7 +3559,7 @@ IsCacheableSetPropAddSlot(JSContext *cx, HandleObject obj, HandleShape oldShape,
 
         // Otherise, if there's no such property, watch out for a resolve hook that would need
         // to be invoked and thus prevent inlining of property addition.
-        if (proto->getClass()->resolve != JS_ResolveStub)
+        if (proto->getClass()->resolve)
              return false;
     }
 
@@ -3603,14 +3597,12 @@ IsCacheableSetPropCall(JSContext *cx, JSObject *obj, JSObject *holder, Shape *sh
 
     JSFunction *func = &shape->setterObject()->as<JSFunction>();
 
-#ifdef JSGC_GENERATIONAL
     // Information from set prop call ICs may be used directly from Ion code,
     // and should not be nursery allocated.
     if (IsInsideNursery(holder) || IsInsideNursery(func)) {
         *isTemporarilyUnoptimizable = true;
         return false;
     }
-#endif
 
     if (func->isNative()) {
         *isScripted = false;
@@ -5435,14 +5427,12 @@ ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     EmitPreBarrier(masm, element, MIRType_Value);
     masm.storeValue(tmpVal, element);
     regs.add(key);
-#ifdef JSGC_GENERATIONAL
     if (cx->runtime()->gc.nursery.exists()) {
         Register r = regs.takeAny();
         GeneralRegisterSet saveRegs;
         emitPostWriteBarrierSlot(masm, obj, tmpVal, r, saveRegs);
         regs.add(r);
     }
-#endif
     EmitReturnFromIC(masm);
 
 
@@ -5623,14 +5613,12 @@ ICSetElemDenseAddCompiler::generateStubCode(MacroAssembler &masm)
     masm.loadValue(valueAddr, tmpVal);
     masm.storeValue(tmpVal, element);
     regs.add(key);
-#ifdef JSGC_GENERATIONAL
     if (cx->runtime()->gc.nursery.exists()) {
         Register r = regs.takeAny();
         GeneralRegisterSet saveRegs;
         emitPostWriteBarrierSlot(masm, obj, tmpVal, r, saveRegs);
         regs.add(r);
     }
-#endif
     EmitReturnFromIC(masm);
 
     // Failure case - fail but first unstow R0 and R1
@@ -8416,7 +8404,6 @@ ICSetProp_Native::Compiler::generateStubCode(MacroAssembler &masm)
     masm.storeValue(R1, BaseIndex(holderReg, scratch, TimesOne));
     if (holderReg != objReg)
         regs.add(holderReg);
-#ifdef JSGC_GENERATIONAL
     if (cx->runtime()->gc.nursery.exists()) {
         Register scr = regs.takeAny();
         GeneralRegisterSet saveRegs;
@@ -8424,7 +8411,6 @@ ICSetProp_Native::Compiler::generateStubCode(MacroAssembler &masm)
         emitPostWriteBarrierSlot(masm, objReg, R1, scr, saveRegs);
         regs.add(scr);
     }
-#endif
 
     // The RHS has to be in R0.
     masm.moveValue(R1, R0);
@@ -8562,14 +8548,12 @@ ICSetPropNativeAddCompiler::generateStubCode(MacroAssembler &masm)
     if (holderReg != objReg)
         regs.add(holderReg);
 
-#ifdef JSGC_GENERATIONAL
     if (cx->runtime()->gc.nursery.exists()) {
         Register scr = regs.takeAny();
         GeneralRegisterSet saveRegs;
         saveRegs.add(R1);
         emitPostWriteBarrierSlot(masm, objReg, R1, scr, saveRegs);
     }
-#endif
 
     // The RHS has to be in R0.
     masm.moveValue(R1, R0);

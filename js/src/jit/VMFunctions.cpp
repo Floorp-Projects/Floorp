@@ -543,13 +543,11 @@ NewCallObject(JSContext *cx, HandleShape shape, HandleTypeObject type, uint32_t 
     if (!obj)
         return nullptr;
 
-#ifdef JSGC_GENERATIONAL
     // The JIT creates call objects in the nursery, so elides barriers for
     // the initializing writes. The interpreter, however, may have allocated
     // the call object tenured, so barrier as needed before re-entering.
     if (!IsInsideNursery(obj))
         cx->runtime()->gc.storeBuffer.putWholeCellFromMainThread(obj);
-#endif
 
     return obj;
 }
@@ -561,14 +559,12 @@ NewSingletonCallObject(JSContext *cx, HandleShape shape, uint32_t lexicalBegin)
     if (!obj)
         return nullptr;
 
-#ifdef JSGC_GENERATIONAL
     // The JIT creates call objects in the nursery, so elides barriers for
     // the initializing writes. The interpreter, however, may have allocated
     // the call object tenured, so barrier as needed before re-entering.
     MOZ_ASSERT(!IsInsideNursery(obj),
                "singletons are created in the tenured heap");
     cx->runtime()->gc.storeBuffer.putWholeCellFromMainThread(obj);
-#endif
 
     return obj;
 }
@@ -704,7 +700,6 @@ FilterArgumentsOrEval(JSContext *cx, JSString *str)
         !StringHasPattern(linear, eval, mozilla::ArrayLength(eval));
 }
 
-#ifdef JSGC_GENERATIONAL
 void
 PostWriteBarrier(JSRuntime *rt, JSObject *obj)
 {
@@ -721,7 +716,6 @@ PostGlobalWriteBarrier(JSRuntime *rt, JSObject *obj)
         obj->compartment()->globalWriteBarriered = true;
     }
 }
-#endif
 
 uint32_t
 GetIndexFromString(JSString *str)

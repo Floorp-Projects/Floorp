@@ -1104,7 +1104,6 @@ MarkBailoutFrame(JSTracer *trc, const JitFrameIterator &frame)
 
 }
 
-#ifdef JSGC_GENERATIONAL
 template <typename T>
 void
 UpdateIonJSFrameForMinorGC(JSTracer *trc, const JitFrameIterator &frame)
@@ -1154,7 +1153,6 @@ UpdateIonJSFrameForMinorGC(JSTracer *trc, const JitFrameIterator &frame)
         trc->runtime()->gc.nursery.forwardBufferPointer(slots);
     }
 }
-#endif
 
 static void
 MarkBaselineStubFrame(JSTracer *trc, const JitFrameIterator &frame)
@@ -1474,7 +1472,6 @@ TopmostIonActivationCompartment(JSRuntime *rt)
     return nullptr;
 }
 
-#ifdef JSGC_GENERATIONAL
 template <typename T>
 void UpdateJitActivationsForMinorGC(PerThreadData *ptd, JSTracer *trc)
 {
@@ -1497,8 +1494,6 @@ void UpdateJitActivationsForMinorGC<Nursery>(PerThreadData *ptd, JSTracer *trc);
 #ifdef JSGC_FJGENERATIONAL
 template
 void UpdateJitActivationsForMinorGC<gc::ForkJoinNursery>(PerThreadData *ptd, JSTracer *trc);
-#endif
-
 #endif
 
 void
