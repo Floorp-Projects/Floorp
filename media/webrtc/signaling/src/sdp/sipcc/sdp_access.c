@@ -444,8 +444,8 @@ tinybool sdp_timespec_valid (void *sdp_ptr)
     }
 
     if ((sdp_p->timespec_p == NULL) ||
-        (sdp_p->timespec_p->start_time == '\0') ||
-        (sdp_p->timespec_p->stop_time == '\0')) {
+        (sdp_p->timespec_p->start_time[0] == '\0') ||
+        (sdp_p->timespec_p->stop_time[0] == '\0')) {
         return (FALSE);
     } else {
         return (TRUE);

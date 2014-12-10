@@ -106,6 +106,9 @@ SharedPlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
 {
   NS_ABORT_IF_FALSE(!mTextureClient, "This image already has allocated data");
   size_t size = YCbCrImageDataSerializer::ComputeMinBufferSize(aSize);
+  if (!size) {
+    return nullptr;
+  }
 
   mTextureClient = TextureClient::CreateWithBufferSize(mCompositable->GetForwarder(),
                                                        gfx::SurfaceFormat::YUV, size,
@@ -219,7 +222,7 @@ SharedPlanarYCbCrImage::Allocate(PlanarYCbCrData& aData)
                                                                mData.mCbCrSize);
   mSize = mData.mPicSize;
 
-  return true;
+  return mBufferSize > 0;
 }
 
 } // namespace

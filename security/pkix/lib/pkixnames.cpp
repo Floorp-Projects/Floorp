@@ -757,6 +757,12 @@ CheckPresentedIDConformsToNameConstraintsSubtrees(
         case GeneralNameType::dNSName:
           matches = PresentedDNSIDMatchesReferenceDNSID(
                       presentedID, ValidDNSIDMatchType::NameConstraint, base);
+          // If matches is not false, then base must be syntactically valid
+          // because PresentedDNSIDMatchesReferenceDNSID verifies that.
+          if (!matches &&
+              !IsValidDNSID(base, ValidDNSIDMatchType::NameConstraint)) {
+            return Result::ERROR_CERT_NOT_IN_NAME_SPACE;
+          }
           break;
 
         case GeneralNameType::iPAddress:
@@ -846,15 +852,15 @@ CheckPresentedIDConformsToNameConstraintsSubtrees(
 // follow NSS's stricter policy by accepting wildcards only of the form
 // <x>*.<DNSID>, where <x> may be empty.
 //
-// An absolute presented DNS ID matches an absolute reference ID and a relative
-// reference ID, and vice-versa. For example, all of these are matches:
+// An relative presented DNS ID matches both an absolute reference ID and a
+// relative reference ID. Absolute presented DNS IDs are not supported:
 //
-//      Presented ID   Reference ID
-//      ---------------------------
-//      example.com    example.com
-//      example.com.   example.com
-//      example.com    example.com.
-//      example.com.   exmaple.com.
+//      Presented ID   Reference ID  Result
+//      -------------------------------------
+//      example.com    example.com   Match
+//      example.com.   example.com   Mismatch
+//      example.com    example.com.  Match
+//      example.com.   example.com.  Mismatch
 //
 // There are more subtleties documented inline in the code.
 //
@@ -929,22 +935,16 @@ CheckPresentedIDConformsToNameConstraintsSubtrees(
 //     Q: Are name constraints allowed to be specified as absolute names?
 //        For example, does a presented ID of "example.com" match a name
 //        constraint of "example.com." and vice versa.
-//     A: Relative DNSNames match relative DNSName constraints but not
-//        absolute DNSName constraints. Absolute DNSNames match absolute
-//        DNSName constraints but not relative DNSName constraints (except "";
-//        see below). This follows from the requirement that matching DNSNames
-//        are constructed "by simply adding zero or more labels to the
-//        left-hand side" of the constraint.
+//     A: Absolute names are not supported as presented IDs or name
+//        constraints. Only reference IDs may be absolute.
 //
-//     Q: Are "" and "." valid DNSName constraints? If so, what do they mean?
-//     A: Yes, both are valid. All relative and absolute DNSNames match
-//        a constraint of "" because any DNSName can be formed "by simply
-//        adding zero or more labels to the left-hand side" of "". In
-//        particular, an excludedSubtrees DNSName constraint of "" forbids all
-//        DNSNames. Only absolute names match a DNSName constraint of ".";
-//        relative DNSNames do not match "." because one cannot form a relative
-//        DNSName "by simply adding zero or more labels to the left-hand side"
-//        of "." (all such names would be absolute).
+//     Q: Is "" a valid DNSName constraints? If so, what does it mean?
+//     A: Yes. Any valid presented DNSName can be formed "by simply adding zero
+//        or more labels to the left-hand side" of "". In particular, an
+//        excludedSubtrees DNSName constraint of "" forbids all DNSNames.
+//
+//     Q: Is "." a valid DNSName constraints? If so, what does it mean?
+//     A: No, because absolute names are not allowed (see above).
 //
 // [0] RFC 6265 (Cookies) Domain Matching rules:
 //     http://tools.ietf.org/html/rfc6265#section-5.1.3
@@ -1043,55 +1043,42 @@ PresentedDNSIDMatchesReferenceDNSID(
       return false;
   }
 
-  bool isFirstPresentedByte = true;
-  do {
-    uint8_t presentedByte;
-    if (presented.Read(presentedByte) != Success) {
+  // We only allow wildcard labels that consist only of '*'.
+  if (presented.Peek('*')) {
+    Result rv = presented.Skip(1);
+    if (rv != Success) {
+      assert(false);
       return false;
     }
-    if (presentedByte == '*') {
-      // RFC 6125 is unclear about whether "www*.example.org" matches
-      // "www.example.org". The Chromium test suite has this test:
-      //
-      //    { false, "w.bar.foo.com", "w*.bar.foo.com" },
-      //
-      // We agree with Chromium by forbidding "*" from expanding to the empty
-      // string.
-      do {
-        uint8_t referenceByte;
-        if (reference.Read(referenceByte) != Success) {
-          return false;
-        }
-      } while (!reference.Peek('.'));
-
-      // We also don't allow a non-IDN presented ID label to match an IDN
-      // reference ID label, except when the entire presented ID label is "*".
-      // This avoids confusion when matching a presented ID like
-      // "xn-*.example.org" against "xn--www.example.org" (which attempts to
-      // abuse the punycode syntax) or "www-*.example.org" against
-      // "xn--www--ep4c4a2kpf" (which makes sense to match, semantically, but
-      // no implementations actually do).
-      if (!isFirstPresentedByte && StartsWithIDNALabel(referenceDNSID)) {
-        return false;
-      }
-    } else {
-      // Allow an absolute presented DNS ID to match a relative reference DNS
-      // ID.
-      if (reference.AtEnd() && presented.AtEnd() && presentedByte == '.') {
-        return true;
-      }
-
+    do {
       uint8_t referenceByte;
       if (reference.Read(referenceByte) != Success) {
         return false;
       }
-      if (LocaleInsensitveToLower(presentedByte) !=
-          LocaleInsensitveToLower(referenceByte)) {
+    } while (!reference.Peek('.'));
+  }
+
+  for (;;) {
+    uint8_t presentedByte;
+    if (presented.Read(presentedByte) != Success) {
+      return false;
+    }
+    uint8_t referenceByte;
+    if (reference.Read(referenceByte) != Success) {
+      return false;
+    }
+    if (LocaleInsensitveToLower(presentedByte) !=
+        LocaleInsensitveToLower(referenceByte)) {
+      return false;
+    }
+    if (presented.AtEnd()) {
+      // Don't allow presented IDs to be absolute.
+      if (presentedByte == '.') {
         return false;
       }
+      break;
     }
-    isFirstPresentedByte = false;
-  } while (!presented.AtEnd());
+  }
 
   // Allow a relative presented DNS ID to match an absolute reference DNS ID,
   // unless we're matching a name constraint.
@@ -1577,16 +1564,34 @@ IsValidDNSID(Input hostname, ValidDNSIDMatchType matchType)
     return true;
   }
 
-  bool allowWildcard = matchType == ValidDNSIDMatchType::PresentedID;
-  bool isWildcard = false;
   size_t dotCount = 0;
-
   size_t labelLength = 0;
   bool labelIsAllNumeric = false;
-  bool labelIsWildcard = false;
   bool labelEndsWithHyphen = false;
 
-  bool isFirstByte = true;
+  // Only presented IDs are allowed to have wildcard labels. And, like
+  // Chromium, be stricter than RFC 6125 requires by insisting that a
+  // wildcard label consist only of '*'.
+  bool isWildcard = matchType == ValidDNSIDMatchType::PresentedID &&
+                    input.Peek('*');
+  bool isFirstByte = !isWildcard;
+  if (isWildcard) {
+    Result rv = input.Skip(1);
+    if (rv != Success) {
+      assert(false);
+      return false;
+    }
+
+    uint8_t b;
+    rv = input.Read(b);
+    if (rv != Success) {
+      return false;
+    }
+    if (b != '.') {
+      return false;
+    }
+    ++dotCount;
+  }
 
   do {
     static const size_t MAX_LABEL_LENGTH = 63;
@@ -1594,14 +1599,6 @@ IsValidDNSID(Input hostname, ValidDNSIDMatchType matchType)
     uint8_t b;
     if (input.Read(b) != Success) {
       return false;
-    }
-    if (labelIsWildcard) {
-      // Like NSS, be stricter than RFC6125 requires by insisting that the
-      // "*" must be the last character in the label. This also prevents
-      // multiple "*" in the label.
-      if (b != '.') {
-        return false;
-      }
     }
     switch (b) {
       case '-':
@@ -1657,20 +1654,6 @@ IsValidDNSID(Input hostname, ValidDNSIDMatchType matchType)
         }
         break;
 
-      case '*':
-        if (!allowWildcard) {
-          return false;
-        }
-        labelIsWildcard = true;
-        isWildcard = true;
-        labelIsAllNumeric = false;
-        labelEndsWithHyphen = false;
-        ++labelLength;
-        if (labelLength > MAX_LABEL_LENGTH) {
-          return false;
-        }
-        break;
-
       case '.':
         ++dotCount;
         if (labelLength == 0 &&
@@ -1681,8 +1664,6 @@ IsValidDNSID(Input hostname, ValidDNSIDMatchType matchType)
         if (labelEndsWithHyphen) {
           return false; // Labels must not end with a hyphen.
         }
-        allowWildcard = false; // only allowed in the first label.
-        labelIsWildcard = false;
         labelLength = 0;
         break;
 
@@ -1691,6 +1672,12 @@ IsValidDNSID(Input hostname, ValidDNSIDMatchType matchType)
     }
     isFirstByte = false;
   } while (!input.AtEnd());
+
+  // Only reference IDs, not presented IDs or name constraints, may be
+  // absolute.
+  if (labelLength == 0 && matchType != ValidDNSIDMatchType::ReferenceID) {
+    return false;
+  }
 
   if (labelEndsWithHyphen) {
     return false; // Labels must not end with a hyphen.

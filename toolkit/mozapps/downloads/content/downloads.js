@@ -3,6 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+"use strict";
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Globals
 
@@ -411,11 +413,10 @@ function Startup()
   gSearchBox = document.getElementById("searchbox");
 
   // convert strings to those in the string bundle
-  let (sb = document.getElementById("downloadStrings")) {
-    let getStr = function(string) sb.getString(string);
-    for (let [name, value] in Iterator(gStr))
-      gStr[name] = typeof value == "string" ? getStr(value) : value.map(getStr);
-  }
+  let sb = document.getElementById("downloadStrings");
+  let getStr = function(string) sb.getString(string);
+  for (let [name, value] in Iterator(gStr))
+    gStr[name] = typeof value == "string" ? getStr(value) : value.map(getStr);
 
   initStatement();
   buildDownloadList(true);
@@ -823,7 +824,7 @@ function performCommand(aCmd, aItem)
       items.unshift(gDownloadsView.selectedItems[i]);
 
     // Do the command for each download item
-    for each (let item in items)
+    for (let item of items)
       performCommand(aCmd, item);
 
     // Call the callback with no arguments and reset because we're done
@@ -973,30 +974,30 @@ function updateStatus(aItem, aDownload) {
     case nsIDM.DOWNLOAD_BLOCKED_POLICY:
     case nsIDM.DOWNLOAD_DIRTY:
     {
-      let (stateSize = {}) {
-        stateSize[nsIDM.DOWNLOAD_FINISHED] = function() {
-          // Display the file size, but show "Unknown" for negative sizes
-          let fileSize = Number(aItem.getAttribute("maxBytes"));
-          let sizeText = gStr.doneSizeUnknown;
-          if (fileSize >= 0) {
-            let [size, unit] = DownloadUtils.convertByteUnits(fileSize);
-            sizeText = replaceInsert(gStr.doneSize, 1, size);
-            sizeText = replaceInsert(sizeText, 2, unit);
-          }
-          return sizeText;
-        };
-        stateSize[nsIDM.DOWNLOAD_FAILED] = function() gStr.stateFailed;
-        stateSize[nsIDM.DOWNLOAD_CANCELED] = function() gStr.stateCanceled;
-        stateSize[nsIDM.DOWNLOAD_BLOCKED_PARENTAL] = function() gStr.stateBlockedParentalControls;
-        stateSize[nsIDM.DOWNLOAD_BLOCKED_POLICY] = function() gStr.stateBlockedPolicy;
-        stateSize[nsIDM.DOWNLOAD_DIRTY] = function() gStr.stateDirty;
+      let stateSize = {};
+      stateSize[nsIDM.DOWNLOAD_FINISHED] = function() {
+        // Display the file size, but show "Unknown" for negative sizes
+        let fileSize = Number(aItem.getAttribute("maxBytes"));
+        let sizeText = gStr.doneSizeUnknown;
+        if (fileSize >= 0) {
+          let [size, unit] = DownloadUtils.convertByteUnits(fileSize);
+          sizeText = replaceInsert(gStr.doneSize, 1, size);
+          sizeText = replaceInsert(sizeText, 2, unit);
+        }
+        return sizeText;
+      };
+      stateSize[nsIDM.DOWNLOAD_FAILED] = function() gStr.stateFailed;
+      stateSize[nsIDM.DOWNLOAD_CANCELED] = function() gStr.stateCanceled;
+      stateSize[nsIDM.DOWNLOAD_BLOCKED_PARENTAL] = function() gStr.stateBlockedParentalControls;
+      stateSize[nsIDM.DOWNLOAD_BLOCKED_POLICY] = function() gStr.stateBlockedPolicy;
+      stateSize[nsIDM.DOWNLOAD_DIRTY] = function() gStr.stateDirty;
 
-        // Insert 1 is the download size or download state
-        status = replaceInsert(gStr.doneStatus, 1, stateSize[state]());
-      }
+      // Insert 1 is the download size or download state
+      status = replaceInsert(gStr.doneStatus, 1, stateSize[state]());
 
       let [displayHost, fullHost] =
         DownloadUtils.getURIHost(getReferrerOrSource(aItem));
+
       // Insert 2 is the eTLD + 1 or other variations of the host
       status = replaceInsert(status, 2, displayHost);
       // Set the tooltip to be the full host
@@ -1110,10 +1111,9 @@ function buildDownloadList(aForceBuild)
   gStmt.reset();
 
   // Clear the list before adding items by replacing with a shallow copy
-  let (empty = gDownloadsView.cloneNode(false)) {
-    gDownloadsView.parentNode.replaceChild(empty, gDownloadsView);
-    gDownloadsView = empty;
-  }
+  let empty = gDownloadsView.cloneNode(false);
+  gDownloadsView.parentNode.replaceChild(empty, gDownloadsView);
+  gDownloadsView = empty;
 
   try {
     gStmt.bindByIndex(0, nsIDM.DOWNLOAD_NOTSTARTED);
@@ -1172,10 +1172,9 @@ function stepListBuilder(aNumItems) {
     };
 
     // Only add the referrer if it's not null
-    let (referrer = gStmt.getString(7)) {
-      if (referrer)
-        attrs.referrer = referrer;
-    }
+    let referrer = gStmt.getString(7);
+    if (referrer)
+      attrs.referrer = referrer;
 
     // If the download is active, grab the real progress, otherwise default 100
     let isActive = gStmt.getInt32(10);
@@ -1187,7 +1186,7 @@ function stepListBuilder(aNumItems) {
     if (item && (isActive || downloadMatchesSearch(item))) {
       // Add item to the end
       gDownloadsView.appendChild(item);
-    
+
       // Because of the joys of XBL, we can't update the buttons until the
       // download object is in the document.
       updateButtons(item);
@@ -1263,11 +1262,11 @@ function downloadMatchesSearch(aItem)
   // Search through the download attributes that are shown to the user and
   // make it into one big string for easy combined searching
   let combinedSearch = "";
-  for each (let attr in gSearchAttributes)
+  for (let attr of gSearchAttributes)
     combinedSearch += aItem.getAttribute(attr).toLowerCase() + " ";
 
   // Make sure each of the terms are found
-  for each (let term in gSearchTerms)
+  for (let term of gSearchTerms)
     if (combinedSearch.indexOf(term) == -1)
       return false;
 

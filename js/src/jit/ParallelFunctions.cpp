@@ -549,7 +549,8 @@ jit::BailoutPar(BailoutStack *sp, uint8_t **entryFramePointer)
     SnapshotIterator snapIter(frameIter);
 
     cx->bailoutRecord->setIonBailoutKind(snapIter.bailoutKind());
-    cx->bailoutRecord->rematerializeFrames(cx, frameIter);
+    while (!frameIter.done())
+        ++frameIter;
 
     MOZ_ASSERT(frameIter.done());
     *entryFramePointer = frameIter.fp();

@@ -695,7 +695,7 @@ class InlineFrameIterator
     }
 
     template <class Op>
-    void unaliasedForEachActual(ThreadSafeContext *cx, Op op,
+    void unaliasedForEachActual(JSContext *cx, Op op,
                                 ReadFrameArgsBehavior behavior,
                                 MaybeReadFallback &fallback) const
     {

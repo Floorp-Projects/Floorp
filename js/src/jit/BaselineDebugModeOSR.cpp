@@ -400,17 +400,31 @@ PatchBaselineFramesForDebugMode(JSContext *cx, const Debugger::ExecutionObservab
             BaselineScript *bl = script->baselineScript();
             ICEntry::Kind kind = entry.frameKind;
 
-            if (kind == ICEntry::Kind_Op) {
-                // Case A above.
-                //
-                // Patching this case needs to patch both the stub frame and
+            if (kind == ICEntry::Kind_Op || kind == ICEntry::Kind_NonOp) {
+                uint8_t *retAddr;
+                if (kind == ICEntry::Kind_Op) {
+                    // Case A above.
+                    retAddr = bl->returnAddressForIC(bl->icEntryFromPCOffset(pcOffset));
+                } else {
+                    // Case H above.
+                    //
+                    // It could happen that the in-place Ion bailout chose the
+                    // return-from-IC address of a NonOp IC for the frame
+                    // iterators to report the correct bytecode pc.
+                    //
+                    // See note under propagatingIonExceptionForDebugMode in
+                    // InitFromBailout.
+                    MOZ_ASSERT(iter.baselineFrame()->isDebuggerHandlingException());
+                    retAddr = bl->returnAddressForIC(bl->anyKindICEntryFromPCOffset(pcOffset));
+                }
+
+                // Patching these cases needs to patch both the stub frame and
                 // the baseline frame. The stub frame is patched below. For
                 // the baseline frame here, we resume right after the IC
                 // returns.
                 //
                 // Since we're using the same IC stub code, we can resume
                 // directly to the IC resume address.
-                uint8_t *retAddr = bl->returnAddressForIC(bl->icEntryFromPCOffset(pcOffset));
                 SpewPatchBaselineFrame(prev->returnAddress(), retAddr, script, kind, pc);
                 DebugModeOSRVolatileJitFrameIterator::forwardLiveIterators(
                     cx, prev->returnAddress(), retAddr);
