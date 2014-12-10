@@ -5615,14 +5615,14 @@ CheckSimdLoadStoreArgs(FunctionCompiler &f, ParseNode *call, AsmJSSimdType opTyp
 {
     ParseNode *view = CallArgList(call);
     if (!view->isKind(PNK_NAME))
-        return f.fail(view, "expected Uint8Array view as SIMD.*.store first argument");
+        return f.fail(view, "expected Uint8Array view as SIMD.*.load/store first argument");
 
     const ModuleCompiler::Global *global = f.lookupGlobal(view->name());
     if (!global ||
         global->which() != ModuleCompiler::Global::ArrayView ||
         global->viewType() != Scalar::Uint8)
     {
-        return f.fail(view, "expected Uint8Array view as SIMD.*.store first argument");
+        return f.fail(view, "expected Uint8Array view as SIMD.*.load/store first argument");
     }
 
     *needsBoundsCheck = NEEDS_BOUNDS_CHECK;
@@ -5685,7 +5685,7 @@ CheckSimdStore(FunctionCompiler &f, ParseNode *call, AsmJSSimdType opType, MDefi
 {
     unsigned numArgs = CallArgListLength(call);
     if (numArgs != 3)
-        return f.failf(call, "expected 3 arguments to SIMD load, got %u", numArgs);
+        return f.failf(call, "expected 3 arguments to SIMD store, got %u", numArgs);
 
     Scalar::Type viewType;
     MDefinition *index;
