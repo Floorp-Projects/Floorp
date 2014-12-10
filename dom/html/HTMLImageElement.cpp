@@ -420,7 +420,7 @@ HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     // img.src, so we only need to handle the unset case
     if (InResponsiveMode()) {
       if (mResponsiveSelector->Content() == this) {
-        mResponsiveSelector->SetDefaultSource(nullptr);
+        mResponsiveSelector->SetDefaultSource(NullString());
       }
       QueueImageLoadTask();
     } else {
@@ -916,7 +916,9 @@ HTMLImageElement::LoadSelectedImage(bool aForce, bool aNotify)
 
   if (mResponsiveSelector) {
     nsCOMPtr<nsIURI> url = mResponsiveSelector->GetSelectedImageURL();
-    rv = LoadImage(url, aForce, aNotify, eImageLoadType_Imageset);
+    if (url) {
+      rv = LoadImage(url, aForce, aNotify, eImageLoadType_Imageset);
+    }
   } else {
     nsAutoString src;
     if (!GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {

@@ -68,10 +68,10 @@ ResponsiveImageSelector::SetCandidatesFromSourceSet(const nsAString & aSrcSet)
 
   // Preserve the default source if we have one, it has a separate setter.
   uint32_t prevNumCandidates = mCandidates.Length();
-  nsCOMPtr<nsIURI> defaultURL;
+  nsString defaultURLString;
   if (prevNumCandidates && (mCandidates[prevNumCandidates - 1].Type() ==
                             ResponsiveImageCandidate::eCandidateType_Default)) {
-    defaultURL = mCandidates[prevNumCandidates - 1].URL();
+    defaultURLString = mCandidates[prevNumCandidates - 1].URLString();
   }
 
   mCandidates.Clear();
@@ -111,58 +111,23 @@ ResponsiveImageSelector::SetCandidatesFromSourceSet(const nsAString & aSrcSet)
 
     const nsDependentSubstring &urlStr = Substring(url, urlEnd);
 
+    MOZ_ASSERT(url != urlEnd, "Shouldn't have empty URL at this point");
+
     ResponsiveImageCandidate candidate;
     if (candidate.ConsumeDescriptors(iter, end)) {
-      nsresult rv;
-      nsCOMPtr<nsIURI> candidateURL;
-      rv =
-        nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(candidateURL),
-                                                  urlStr,
-                                                  doc,
-                                                  docBaseURI);
-      if (NS_SUCCEEDED(rv) && candidateURL) {
-        NS_TryToSetImmutable(candidateURL);
-        candidate.SetURL(candidateURL);
-        AppendCandidateIfUnique(candidate);
-      }
+      candidate.SetURLSpec(urlStr);
+      AppendCandidateIfUnique(candidate);
     }
   }
 
   bool parsedCandidates = mCandidates.Length() > 0;
 
   // Re-add default to end of list
-  if (defaultURL) {
-    AppendDefaultCandidate(defaultURL);
+  if (!defaultURLString.IsEmpty()) {
+    AppendDefaultCandidate(defaultURLString);
   }
 
   return parsedCandidates;
-}
-
-nsresult
-ResponsiveImageSelector::SetDefaultSource(const nsAString & aSpec)
-{
-  nsIDocument* doc = mContent ? mContent->OwnerDoc() : nullptr;
-  nsCOMPtr<nsIURI> docBaseURI = mContent ? mContent->GetBaseURI() : nullptr;
-
-  if (!mContent || !doc || !docBaseURI) {
-    MOZ_ASSERT(false,
-               "Should not be calling this without a content and document");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (aSpec.IsEmpty()) {
-    SetDefaultSource(nullptr);
-    return NS_OK;
-  }
-
-  nsresult rv;
-  nsCOMPtr<nsIURI> candidateURL;
-  rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(candidateURL),
-                                                 aSpec, doc, docBaseURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  SetDefaultSource(candidateURL);
-  return NS_OK;
 }
 
 uint32_t
@@ -181,7 +146,7 @@ ResponsiveImageSelector::NumCandidates(bool aIncludeDefault)
 }
 
 void
-ResponsiveImageSelector::SetDefaultSource(nsIURI *aURL)
+ResponsiveImageSelector::SetDefaultSource(const nsAString& aURLString)
 {
   ClearSelectedCandidate();
 
@@ -193,8 +158,8 @@ ResponsiveImageSelector::SetDefaultSource(nsIURI *aURL)
   }
 
   // Add new default if set
-  if (aURL) {
-    AppendDefaultCandidate(aURL);
+  if (!aURLString.IsEmpty()) {
+    AppendDefaultCandidate(aURLString);
   }
 }
 
@@ -202,6 +167,7 @@ void
 ResponsiveImageSelector::ClearSelectedCandidate()
 {
   mSelectedCandidateIndex = -1;
+  mSelectedCandidateURL = nullptr;
 }
 
 bool
@@ -244,13 +210,13 @@ ResponsiveImageSelector::AppendCandidateIfUnique(const ResponsiveImageCandidate 
 }
 
 void
-ResponsiveImageSelector::AppendDefaultCandidate(nsIURI *aURL)
+ResponsiveImageSelector::AppendDefaultCandidate(const nsAString& aURLString)
 {
-  NS_ENSURE_TRUE(aURL, /* void */);
+  NS_ENSURE_TRUE(!aURLString.IsEmpty(), /* void */);
 
   ResponsiveImageCandidate defaultCandidate;
   defaultCandidate.SetParameterDefault();
-  defaultCandidate.SetURL(aURL);
+  defaultCandidate.SetURLSpec(aURLString);
   // We don't use MaybeAppend since we want to keep this even if it can never
   // match, as it may if the source set changes.
   mCandidates.AppendElement(defaultCandidate);
@@ -259,14 +225,23 @@ ResponsiveImageSelector::AppendDefaultCandidate(nsIURI *aURL)
 already_AddRefed<nsIURI>
 ResponsiveImageSelector::GetSelectedImageURL()
 {
-  int bestIndex = GetSelectedCandidateIndex();
-  if (bestIndex < 0) {
-    return nullptr;
+  SelectImage();
+
+  nsCOMPtr<nsIURI> url = mSelectedCandidateURL;
+  return url.forget();
+}
+
+bool
+ResponsiveImageSelector::GetSelectedImageURLSpec(nsAString& aResult)
+{
+  SelectImage();
+
+  if (mSelectedCandidateIndex == -1) {
+    return false;
   }
 
-  nsCOMPtr<nsIURI> bestURL = mCandidates[bestIndex].URL();
-  MOZ_ASSERT(bestURL, "Shouldn't have candidates with no URL in the array");
-  return bestURL.forget();
+  aResult.Assign(mCandidates[mSelectedCandidateIndex].URLString());
+  return true;
 }
 
 double
@@ -299,9 +274,10 @@ ResponsiveImageSelector::SelectImage(bool aReselect)
   nsIDocument* doc = mContent ? mContent->OwnerDoc() : nullptr;
   nsIPresShell *shell = doc ? doc->GetShell() : nullptr;
   nsPresContext *pctx = shell ? shell->GetPresContext() : nullptr;
+  nsCOMPtr<nsIURI> baseURI = mContent ? mContent->GetBaseURI() : nullptr;
 
-  if (!pctx) {
-    MOZ_ASSERT(false, "Unable to find document prescontext");
+  if (!pctx || !doc || !baseURI) {
+    MOZ_ASSERT(false, "Unable to find document prescontext and base URI");
     return oldBest != -1;
   }
 
@@ -349,6 +325,15 @@ ResponsiveImageSelector::SelectImage(bool aReselect)
   }
 
   MOZ_ASSERT(bestIndex >= 0 && bestIndex < numCandidates);
+
+  // Resolve URL
+  nsresult rv;
+  const nsAString& urlStr = mCandidates[bestIndex].URLString();
+  nsCOMPtr<nsIURI> candidateURL;
+  rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(candidateURL),
+                                                 urlStr, doc, baseURI);
+
+  mSelectedCandidateURL = NS_SUCCEEDED(rv) ? candidateURL : nullptr;
   mSelectedCandidateIndex = bestIndex;
 
   return mSelectedCandidateIndex != oldBest;
@@ -407,9 +392,9 @@ ResponsiveImageCandidate::ResponsiveImageCandidate()
   mValue.mDensity = 1.0;
 }
 
-ResponsiveImageCandidate::ResponsiveImageCandidate(nsIURI *aURL,
+ResponsiveImageCandidate::ResponsiveImageCandidate(const nsAString& aURLString,
                                                    double aDensity)
-  : mURL(aURL)
+  : mURLString(aURLString)
 {
   mType = eCandidateType_Density;
   mValue.mDensity = aDensity;
@@ -417,9 +402,9 @@ ResponsiveImageCandidate::ResponsiveImageCandidate(nsIURI *aURL,
 
 
 void
-ResponsiveImageCandidate::SetURL(nsIURI *aURL)
+ResponsiveImageCandidate::SetURLSpec(const nsAString& aURLString)
 {
-  mURL = aURL;
+  mURLString = aURLString;
 }
 
 void
@@ -662,11 +647,10 @@ ResponsiveImageCandidate::HasSameParameter(const ResponsiveImageCandidate & aOth
   return false;
 }
 
-already_AddRefed<nsIURI>
-ResponsiveImageCandidate::URL() const
+const nsAString&
+ResponsiveImageCandidate::URLString() const
 {
-  nsCOMPtr<nsIURI> url = mURL;
-  return url.forget();
+  return mURLString;
 }
 
 double

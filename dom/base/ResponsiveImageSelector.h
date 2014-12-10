@@ -49,8 +49,7 @@ public:
   bool SetSizesFromDescriptor(const nsAString & aSizesDescriptor);
 
   // Set the default source, treated as the least-precedence 1.0 density source.
-  nsresult SetDefaultSource(const nsAString & aSpec);
-  void SetDefaultSource(nsIURI *aURL);
+  void SetDefaultSource(const nsAString& aURLString);
 
   uint32_t NumCandidates(bool aIncludeDefault = true);
 
@@ -59,6 +58,8 @@ public:
   // Get the url and density for the selected best candidate. These
   // implicitly cause an image to be selected if necessary.
   already_AddRefed<nsIURI> GetSelectedImageURL();
+  // Returns false if there is no selected image
+  bool GetSelectedImageURLSpec(nsAString& aResult);
   double GetSelectedImageDensity();
 
   // Runs image selection now if necessary. If an image has already
@@ -79,7 +80,7 @@ private:
 
   // Append a default candidate with this URL. Does not check if the array
   // already contains one, use SetDefaultSource instead.
-  void AppendDefaultCandidate(nsIURI *aURL);
+  void AppendDefaultCandidate(const nsAString& aURLString);
 
   // Get index of selected candidate, triggering selection if necessary.
   int GetSelectedCandidateIndex();
@@ -100,6 +101,9 @@ private:
   // element, such that the Setters can preserve/replace it respectively.
   nsTArray<ResponsiveImageCandidate> mCandidates;
   int mSelectedCandidateIndex;
+  // The cached resolved URL for mSelectedCandidateIndex, such that we only
+  // resolve the absolute URL at selection time
+  nsCOMPtr<nsIURI> mSelectedCandidateURL;
 
   nsTArray< nsAutoPtr<nsMediaQuery> > mSizeQueries;
   nsTArray<nsCSSValue> mSizeValues;
@@ -108,9 +112,9 @@ private:
 class ResponsiveImageCandidate {
 public:
   ResponsiveImageCandidate();
-  ResponsiveImageCandidate(nsIURI *aURL, double aDensity);
+  ResponsiveImageCandidate(const nsAString& aURLString, double aDensity);
 
-  void SetURL(nsIURI *aURL);
+  void SetURLSpec(const nsAString& aURLString);
   // Set this as a default-candidate. This behaves the same as density 1.0, but
   // has a differing type such that it can be replaced by subsequent
   // SetDefaultSource calls.
@@ -132,7 +136,7 @@ public:
   // Check if our parameter (which does not include the url) is identical
   bool HasSameParameter(const ResponsiveImageCandidate & aOther) const;
 
-  already_AddRefed<nsIURI> URL() const;
+  const nsAString& URLString() const;
 
   // Compute and return the density relative to a selector.
   double Density(ResponsiveImageSelector *aSelector) const;
@@ -156,7 +160,7 @@ public:
 
 private:
 
-  nsCOMPtr<nsIURI> mURL;
+  nsString mURLString;
   eCandidateType mType;
   union {
     double mDensity;
