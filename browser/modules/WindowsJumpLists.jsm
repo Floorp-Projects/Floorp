@@ -52,11 +52,15 @@ XPCOMUtils.defineLazyGetter(this, "_stringBundle", function() {
                  .createBundle("chrome://browser/locale/taskbar.properties");
 });
 
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
-                                  "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
+  Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
+  return PlacesUtils;
+});
 
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
+  Components.utils.import("resource://gre/modules/NetUtil.jsm");
+  return NetUtil;
+});
 
 XPCOMUtils.defineLazyServiceGetter(this, "_idle",
                                    "@mozilla.org/widget/idleservice;1",
@@ -72,16 +76,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "_winShellService",
 
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "gHistoryObserver", function() {
-  return Object.freeze({
-    onClearHistory() {
-      WinTaskbarJumpList.update();
-    },
-    QueryInterface: XPCOMUtils.generateQI(Ci.nsINavHistoryObserver),
-    __noSuchMethod__: () => {}, // Catch all of the other notifications.
-  });
-});
 
 /**
  * Global functions
@@ -152,7 +146,7 @@ this.WinTaskbarJumpList =
 
   /**
    * Startup, shutdown, and update
-   */
+   */ 
 
   startup: function WTBJL_startup() {
     // exit if this isn't win7 or higher.
@@ -161,7 +155,7 @@ this.WinTaskbarJumpList =
 
     // Win shell shortcut maintenance. If we've gone through an update,
     // this will update any pinned taskbar shortcuts. Not specific to
-    // jump lists, but this was a convienent place to call it.
+    // jump lists, but this was a convienent place to call it. 
     try {
       // dev builds may not have helper.exe, ignore failures.
       this._shortcutMaintenance();
@@ -192,6 +186,14 @@ this.WinTaskbarJumpList =
 
   _shutdown: function WTBJL__shutdown() {
     this._shuttingDown = true;
+
+    // Correctly handle a clear history on shutdown.  If there are no
+    // entries be sure to empty all history lists.  Luckily Places caches
+    // this value, so it's a pretty fast call.
+    if (!PlacesUtils.history.hasHistoryEntries) {
+      this.update();
+    }
+
     this._free();
   },
 
@@ -251,13 +253,13 @@ this.WinTaskbarJumpList =
 
   /**
    * Taskbar api wrappers
-   */
+   */ 
 
   _startBuild: function WTBJL__startBuild() {
     var removedItems = Cc["@mozilla.org/array;1"].
                        createInstance(Ci.nsIMutableArray);
     this._builder.abortListBuild();
-    if (this._builder.initListBuild(removedItems)) {
+    if (this._builder.initListBuild(removedItems)) { 
       // Prior to building, delete removed items from history.
       this._clearHistory(removedItems);
       return true;
@@ -281,7 +283,7 @@ this.WinTaskbarJumpList =
                                          task.args, task.iconIndex, null);
       items.appendElement(item, false);
     }, this);
-
+    
     if (items.length > 0)
       this._builder.addListToBuild(this._builder.JUMPLIST_CATEGORY_TASKS, items);
   },
@@ -292,6 +294,11 @@ this.WinTaskbarJumpList =
   },
 
   _buildFrequent: function WTBJL__buildFrequent() {
+    // If history is empty, just bail out.
+    if (!PlacesUtils.history.hasHistoryEntries) {
+      return;
+    }
+
     // Windows supports default frequent and recent lists,
     // but those depend on internal windows visit tracking
     // which we don't populate. So we build our own custom
@@ -317,7 +324,7 @@ this.WinTaskbarJumpList =
 
         let title = aResult.title || aResult.uri;
         let faviconPageUri = Services.io.newURI(aResult.uri, null, null);
-        let shortcut = this._getHandlerAppItem(title, title, aResult.uri, 1,
+        let shortcut = this._getHandlerAppItem(title, title, aResult.uri, 1, 
                                                faviconPageUri);
         items.appendElement(shortcut, false);
         this._frequentHashList.push(aResult.uri);
@@ -327,6 +334,11 @@ this.WinTaskbarJumpList =
   },
 
   _buildRecent: function WTBJL__buildRecent() {
+    // If history is empty, just bail out.
+    if (!PlacesUtils.history.hasHistoryEntries) {
+      return;
+    }
+
     var items = Cc["@mozilla.org/array;1"].
                 createInstance(Ci.nsIMutableArray);
     // Frequent items will be skipped, so we select a double amount of
@@ -374,8 +386,8 @@ this.WinTaskbarJumpList =
    * Jump list item creation helpers
    */
 
-  _getHandlerAppItem: function WTBJL__getHandlerAppItem(name, description,
-                                                        args, iconIndex,
+  _getHandlerAppItem: function WTBJL__getHandlerAppItem(name, description, 
+                                                        args, iconIndex, 
                                                         faviconPageUri) {
     var file = Services.dirsvc.get("XREExeF", Ci.nsILocalFile);
 
@@ -457,7 +469,7 @@ this.WinTaskbarJumpList =
 
   /**
    * Prefs utilities
-   */
+   */ 
 
   _refreshPrefs: function WTBJL__refreshPrefs() {
     this._enabled = _prefs.getBoolPref(PREF_TASKBAR_ENABLED);
@@ -469,7 +481,7 @@ this.WinTaskbarJumpList =
 
   /**
    * Init and shutdown utilities
-   */
+   */ 
 
   _initTaskbar: function WTBJL__initTaskbar() {
     this._builder = _taskbarService.createJumpListBuilder();
@@ -486,14 +498,12 @@ this.WinTaskbarJumpList =
     Services.obs.addObserver(this, "profile-before-change", false);
     Services.obs.addObserver(this, "browser:purge-session-history", false);
     _prefs.addObserver("", this, false);
-    PlacesUtils.history.addObserver(gHistoryObserver, false);
   },
-
+ 
   _freeObs: function WTBJL__freeObs() {
     Services.obs.removeObserver(this, "profile-before-change");
     Services.obs.removeObserver(this, "browser:purge-session-history");
     _prefs.removeObserver("", this);
-    PlacesUtils.history.removeObserver(gHistoryObserver);
   },
 
   _updateTimer: function WTBJL__updateTimer() {
