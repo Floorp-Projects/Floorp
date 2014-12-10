@@ -180,16 +180,101 @@ NS_lround(double x)
   return x >= 0.0 ? int32_t(x + 0.5) : int32_t(x - 0.5);
 }
 
+// This check is safe against integer overflow.
+static bool
+SurfaceContainsPoint(SourceSurface* aSurface, const IntPoint& aPoint)
+{
+  IntSize size = aSurface->GetSize();
+  return aPoint.x >= 0 && aPoint.x < size.width &&
+         aPoint.y >= 0 && aPoint.y < size.height;
+}
+
+static uint8_t*
+DataAtOffset(DataSourceSurface* aSurface, IntPoint aPoint)
+{
+  if (!SurfaceContainsPoint(aSurface, aPoint)) {
+    MOZ_CRASH("sample position needs to be inside surface!");
+  }
+
+  MOZ_ASSERT(Factory::CheckSurfaceSize(aSurface->GetSize()),
+             "surface size overflows - this should have been prevented when the surface was created");
+
+  uint8_t* data = aSurface->GetData() + aPoint.y * aSurface->Stride() +
+    aPoint.x * BytesPerPixel(aSurface->GetFormat());
+
+  if (data < aSurface->GetData()) {
+    MOZ_CRASH("out-of-range data access");
+  }
+
+  return data;
+}
+
+static bool
+IntRectOverflows(const IntRect& aRect)
+{
+  CheckedInt<int32_t> xMost = aRect.x;
+  xMost += aRect.width;
+  CheckedInt<int32_t> yMost = aRect.y;
+  yMost += aRect.height;
+  return !xMost.isValid() || !yMost.isValid();
+}
+
+/**
+ * aSrcRect: Rect relative to the aSrc surface
+ * aDestPoint: Point inside aDest surface
+ */
+static void
+CopyRect(DataSourceSurface* aSrc, DataSourceSurface* aDest,
+         IntRect aSrcRect, IntPoint aDestPoint)
+{
+  if (IntRectOverflows(aSrcRect) ||
+      IntRectOverflows(IntRect(aDestPoint, aSrcRect.Size()))) {
+    MOZ_CRASH("we should never be getting invalid rects at this point");
+  }
+
+  MOZ_ASSERT(aSrc->GetFormat() == aDest->GetFormat(), "different surface formats");
+  MOZ_ASSERT(IntRect(IntPoint(), aSrc->GetSize()).Contains(aSrcRect), "source rect too big for source surface");
+  MOZ_ASSERT(IntRect(IntPoint(), aDest->GetSize()).Contains(aSrcRect - aSrcRect.TopLeft() + aDestPoint), "dest surface too small");
+
+  if (aSrcRect.IsEmpty()) {
+    return;
+  }
+
+  uint8_t* sourceData = DataAtOffset(aSrc, aSrcRect.TopLeft());
+  uint32_t sourceStride = aSrc->Stride();
+  uint8_t* destData = DataAtOffset(aDest, aDestPoint);
+  uint32_t destStride = aDest->Stride();
+
+  if (BytesPerPixel(aSrc->GetFormat()) == 4) {
+    for (int32_t y = 0; y < aSrcRect.height; y++) {
+      PodCopy((int32_t*)destData, (int32_t*)sourceData, aSrcRect.width);
+      sourceData += sourceStride;
+      destData += destStride;
+    }
+  } else if (BytesPerPixel(aSrc->GetFormat()) == 1) {
+    for (int32_t y = 0; y < aSrcRect.height; y++) {
+      PodCopy(destData, sourceData, aSrcRect.width);
+      sourceData += sourceStride;
+      destData += destStride;
+    }
+  }
+}
+
 TemporaryRef<DataSourceSurface>
 CloneAligned(DataSourceSurface* aSource)
 {
-  return CreateDataSourceSurfaceByCloning(aSource);
+  RefPtr<DataSourceSurface> copy =
+    Factory::CreateDataSourceSurface(aSource->GetSize(), aSource->GetFormat(), true);
+  if (copy) {
+    CopyRect(aSource, copy, IntRect(IntPoint(), aSource->GetSize()), IntPoint());
+  }
+  return copy.forget();
 }
 
 static void
 FillRectWithPixel(DataSourceSurface *aSurface, const IntRect &aFillRect, IntPoint aPixelPos)
 {
-  MOZ_ASSERT(!aFillRect.Overflows());
+  MOZ_ASSERT(!IntRectOverflows(aFillRect));
   MOZ_ASSERT(IntRect(IntPoint(), aSurface->GetSize()).Contains(aFillRect),
              "aFillRect needs to be completely inside the surface");
   MOZ_ASSERT(SurfaceContainsPoint(aSurface, aPixelPos),
@@ -222,8 +307,8 @@ FillRectWithVerticallyRepeatingHorizontalStrip(DataSourceSurface *aSurface,
                                                const IntRect &aFillRect,
                                                const IntRect &aSampleRect)
 {
-  MOZ_ASSERT(!aFillRect.Overflows());
-  MOZ_ASSERT(!aSampleRect.Overflows());
+  MOZ_ASSERT(!IntRectOverflows(aFillRect));
+  MOZ_ASSERT(!IntRectOverflows(aSampleRect));
   MOZ_ASSERT(IntRect(IntPoint(), aSurface->GetSize()).Contains(aFillRect),
              "aFillRect needs to be completely inside the surface");
   MOZ_ASSERT(IntRect(IntPoint(), aSurface->GetSize()).Contains(aSampleRect),
@@ -250,8 +335,8 @@ FillRectWithHorizontallyRepeatingVerticalStrip(DataSourceSurface *aSurface,
                                                const IntRect &aFillRect,
                                                const IntRect &aSampleRect)
 {
-  MOZ_ASSERT(!aFillRect.Overflows());
-  MOZ_ASSERT(!aSampleRect.Overflows());
+  MOZ_ASSERT(!IntRectOverflows(aFillRect));
+  MOZ_ASSERT(!IntRectOverflows(aSampleRect));
   MOZ_ASSERT(IntRect(IntPoint(), aSurface->GetSize()).Contains(aFillRect),
              "aFillRect needs to be completely inside the surface");
   MOZ_ASSERT(IntRect(IntPoint(), aSurface->GetSize()).Contains(aSampleRect),
@@ -282,7 +367,7 @@ FillRectWithHorizontallyRepeatingVerticalStrip(DataSourceSurface *aSurface,
 static void
 DuplicateEdges(DataSourceSurface* aSurface, const IntRect &aFromRect)
 {
-  MOZ_ASSERT(!aFromRect.Overflows());
+  MOZ_ASSERT(!IntRectOverflows(aFromRect));
   MOZ_ASSERT(IntRect(IntPoint(), aSurface->GetSize()).Contains(aFromRect),
              "aFromRect needs to be completely inside the surface");
 
@@ -390,7 +475,7 @@ GetDataSurfaceInRect(SourceSurface *aSurface,
 {
   MOZ_ASSERT(aSurface ? aSurfaceRect.Size() == aSurface->GetSize() : aSurfaceRect.IsEmpty());
 
-  if (aSurfaceRect.Overflows() || aDestRect.Overflows()) {
+  if (IntRectOverflows(aSurfaceRect) || IntRectOverflows(aDestRect)) {
     // We can't rely on the intersection calculations below to make sense when
     // XMost() or YMost() overflow. Bail out.
     return nullptr;
@@ -544,7 +629,7 @@ FilterNodeSoftware::Draw(DrawTarget* aDrawTarget,
   }
 
   IntRect outputRect = GetOutputRectInRect(renderIntRect);
-  if (outputRect.Overflows()) {
+  if (IntRectOverflows(outputRect)) {
 #ifdef DEBUG_DUMP_SURFACES
     printf("output rect overflowed, not painting anything\n");
     printf("</pre>\n");
@@ -595,7 +680,7 @@ FilterNodeSoftware::GetOutput(const IntRect &aRect)
 {
   MOZ_ASSERT(GetOutputRectInRect(aRect).Contains(aRect));
 
-  if (aRect.Overflows()) {
+  if (IntRectOverflows(aRect)) {
     return nullptr;
   }
 
@@ -625,7 +710,7 @@ FilterNodeSoftware::RequestRect(const IntRect &aRect)
 void
 FilterNodeSoftware::RequestInputRect(uint32_t aInputEnumIndex, const IntRect &aRect)
 {
-  if (aRect.Overflows()) {
+  if (IntRectOverflows(aRect)) {
     return;
   }
 
@@ -658,7 +743,7 @@ FilterNodeSoftware::GetInputDataSourceSurface(uint32_t aInputEnumIndex,
                                               ConvolveMatrixEdgeMode aEdgeMode,
                                               const IntRect *aTransparencyPaddedSourceRect)
 {
-  if (aRect.Overflows()) {
+  if (IntRectOverflows(aRect)) {
     return nullptr;
   }
 
@@ -773,7 +858,7 @@ IntRect
 FilterNodeSoftware::GetInputRectInRect(uint32_t aInputEnumIndex,
                                        const IntRect &aInRect)
 {
-  if (aInRect.Overflows()) {
+  if (IntRectOverflows(aInRect)) {
     return IntRect();
   }
 
