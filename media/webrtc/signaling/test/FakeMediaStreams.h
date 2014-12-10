@@ -6,6 +6,8 @@
 #define FAKE_MEDIA_STREAM_H_
 
 #include <set>
+#include <string>
+#include <sstream>
 
 #include "nsNetCID.h"
 #include "nsITimer.h"
@@ -13,6 +15,7 @@
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsISupportsImpl.h"
+#include "nsServiceManagerUtils.h"
 
 // #includes from MediaStream.h
 #include "mozilla/Mutex.h"
@@ -220,8 +223,16 @@ class Fake_MediaStreamTrack
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Fake_MediaStreamTrack)
 
-  explicit Fake_MediaStreamTrack(bool aIsVideo) : mIsVideo (aIsVideo) {}
+  explicit Fake_MediaStreamTrack(bool aIsVideo) : mIsVideo (aIsVideo)
+  {
+    static size_t counter = 0;
+    std::ostringstream os;
+    os << counter++;
+    mID = os.str();
+  }
   mozilla::TrackID GetTrackID() { return mIsVideo ? 1 : 0; }
+  std::string GetId() const { return mID; }
+  void AssignId(const std::string& id) { mID = id; }
   Fake_DOMMediaStream *GetStream() { return nullptr; }
   const Fake_MediaStreamTrack* AsVideoStreamTrack() const
   {
@@ -235,6 +246,7 @@ private:
   ~Fake_MediaStreamTrack() {}
 
   const bool mIsVideo;
+  std::string mID;
 };
 
 class Fake_DOMMediaStream : public nsISupports
