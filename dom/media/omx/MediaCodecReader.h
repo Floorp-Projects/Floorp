@@ -432,6 +432,9 @@ private:
   VideoTrack mVideoTrack;
   AudioTrack mAudioOffloadTrack; // only Track::mSource is valid
 
+  MediaPromiseHolder<AudioDataPromise> mAudioPromise;
+  MediaPromiseHolder<VideoDataPromise> mVideoPromise;
+
   // color converter
   android::I420ColorConverterHelper mColorConverter;
   nsAutoArrayPtr<uint8_t> mColorConverterBuffer;
