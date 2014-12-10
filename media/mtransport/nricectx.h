@@ -225,13 +225,18 @@ class NrIceCtx {
 
   // Create a media stream
   RefPtr<NrIceMediaStream> CreateStream(const std::string& name,
-                                                 int components);
+                                        int components);
 
   RefPtr<NrIceMediaStream> GetStream(size_t index) {
     if (index < streams_.size()) {
       return streams_[index];
     }
     return nullptr;
+  }
+
+  void RemoveStream(size_t index)
+  {
+    streams_[index] = nullptr;
   }
 
   // The name of the ctx
@@ -325,7 +330,7 @@ class NrIceCtx {
   DISALLOW_COPY_ASSIGN(NrIceCtx);
 
   // Callbacks for nICEr
-  static void initialized_cb(NR_SOCKET s, int h, void *arg);  // ICE initialized
+  static void gather_cb(NR_SOCKET s, int h, void *arg);  // ICE gather complete
 
   // Handler implementation
   static int select_pair(void *obj,nr_ice_media_stream *stream,

@@ -245,17 +245,16 @@ protected:
 
     if (checkFlags & CHECK_TRACKS) {
       // Check that the transports exist.
-      ASSERT_EQ(types.size(), mSessionOff.GetTransportCount());
+      ASSERT_EQ(types.size(), mSessionOff.GetTransports().size());
+      auto tracks = mSessionOff.GetLocalTracks();
       for (size_t i = 0; i < types.size(); ++i) {
-        RefPtr<JsepTrack> ltrack;
-        ASSERT_EQ(NS_OK, mSessionOff.GetLocalTrack(i, &ltrack));
-        ASSERT_NE("", ltrack->GetStreamId());
-        ASSERT_NE("", ltrack->GetTrackId());
-        if (ltrack->GetMediaType() != SdpMediaSection::kApplication) {
+        ASSERT_NE("", tracks[i]->GetStreamId());
+        ASSERT_NE("", tracks[i]->GetTrackId());
+        if (tracks[i]->GetMediaType() != SdpMediaSection::kApplication) {
           std::string msidAttr("a=msid:");
-          msidAttr += ltrack->GetStreamId();
+          msidAttr += tracks[i]->GetStreamId();
           msidAttr += " ";
-          msidAttr += ltrack->GetTrackId();
+          msidAttr += tracks[i]->GetTrackId();
           ASSERT_NE(std::string::npos, offer.find(msidAttr))
             << "Did not find " << msidAttr << " in offer";
         }
@@ -273,19 +272,18 @@ protected:
     }
 
     if (checkFlags & CHECK_TRACKS) {
+      auto tracks = mSessionAns.GetRemoteTracks();
       // Now verify that the right stuff is in the tracks.
-      ASSERT_EQ(types.size(), mSessionAns.GetRemoteTrackCount());
-      for (size_t i = 0; i < types.size(); ++i) {
-        RefPtr<JsepTrack> rtrack;
-        ASSERT_EQ(NS_OK, mSessionAns.GetRemoteTrack(i, &rtrack));
-        ASSERT_EQ(types[i], rtrack->GetMediaType());
-        ASSERT_NE("", rtrack->GetStreamId());
-        ASSERT_NE("", rtrack->GetTrackId());
-        if (rtrack->GetMediaType() != SdpMediaSection::kApplication) {
+      ASSERT_EQ(types.size(), tracks.size());
+      for (size_t i = 0; i < tracks.size(); ++i) {
+        ASSERT_EQ(types[i], tracks[i]->GetMediaType());
+        ASSERT_NE("", tracks[i]->GetStreamId());
+        ASSERT_NE("", tracks[i]->GetTrackId());
+        if (tracks[i]->GetMediaType() != SdpMediaSection::kApplication) {
           std::string msidAttr("a=msid:");
-          msidAttr += rtrack->GetStreamId();
+          msidAttr += tracks[i]->GetStreamId();
           msidAttr += " ";
-          msidAttr += rtrack->GetTrackId();
+          msidAttr += tracks[i]->GetTrackId();
           ASSERT_NE(std::string::npos, offer.find(msidAttr))
             << "Did not find " << msidAttr << " in offer";
         }
@@ -303,26 +301,25 @@ protected:
 
     if (checkFlags & CHECK_TRACKS) {
       // Verify that the right stuff is in the tracks.
-      ASSERT_EQ(types.size(), mSessionAns.GetNegotiatedTrackPairCount());
+      auto pairs = mSessionAns.GetNegotiatedTrackPairs();
+      ASSERT_EQ(types.size(), pairs.size());
       for (size_t i = 0; i < types.size(); ++i) {
-        const JsepTrackPair* pair;
-        ASSERT_EQ(NS_OK, mSessionAns.GetNegotiatedTrackPair(i, &pair));
-        ASSERT_TRUE(pair->mSending);
-        ASSERT_EQ(types[i], pair->mSending->GetMediaType());
-        ASSERT_TRUE(pair->mReceiving);
-        ASSERT_EQ(types[i], pair->mReceiving->GetMediaType());
-        ASSERT_NE("", pair->mSending->GetStreamId());
-        ASSERT_NE("", pair->mSending->GetTrackId());
+        ASSERT_TRUE(pairs[i].mSending);
+        ASSERT_EQ(types[i], pairs[i].mSending->GetMediaType());
+        ASSERT_TRUE(pairs[i].mReceiving);
+        ASSERT_EQ(types[i], pairs[i].mReceiving->GetMediaType());
+        ASSERT_NE("", pairs[i].mSending->GetStreamId());
+        ASSERT_NE("", pairs[i].mSending->GetTrackId());
         // These might have been in the SDP, or might have been randomly
         // chosen by JsepSessionImpl
-        ASSERT_NE("", pair->mReceiving->GetStreamId());
-        ASSERT_NE("", pair->mReceiving->GetTrackId());
+        ASSERT_NE("", pairs[i].mReceiving->GetStreamId());
+        ASSERT_NE("", pairs[i].mReceiving->GetTrackId());
 
-        if (pair->mReceiving->GetMediaType() != SdpMediaSection::kApplication) {
+        if (pairs[i].mReceiving->GetMediaType() != SdpMediaSection::kApplication) {
           std::string msidAttr("a=msid:");
-          msidAttr += pair->mSending->GetStreamId();
+          msidAttr += pairs[i].mSending->GetStreamId();
           msidAttr += " ";
-          msidAttr += pair->mSending->GetTrackId();
+          msidAttr += pairs[i].mSending->GetTrackId();
           ASSERT_NE(std::string::npos, answer.find(msidAttr))
             << "Did not find " << msidAttr << " in offer";
         }
@@ -341,26 +338,25 @@ protected:
 
     if (checkFlags & CHECK_TRACKS) {
       // Verify that the right stuff is in the tracks.
-      ASSERT_EQ(types.size(), mSessionOff.GetNegotiatedTrackPairCount());
+      auto pairs = mSessionOff.GetNegotiatedTrackPairs();
+      ASSERT_EQ(types.size(), pairs.size());
       for (size_t i = 0; i < types.size(); ++i) {
-        const JsepTrackPair* pair;
-        ASSERT_EQ(NS_OK, mSessionOff.GetNegotiatedTrackPair(i, &pair));
-        ASSERT_TRUE(pair->mSending);
-        ASSERT_EQ(types[i], pair->mSending->GetMediaType());
-        ASSERT_TRUE(pair->mReceiving);
-        ASSERT_EQ(types[i], pair->mReceiving->GetMediaType());
-        ASSERT_NE("", pair->mSending->GetStreamId());
-        ASSERT_NE("", pair->mSending->GetTrackId());
+        ASSERT_TRUE(pairs[i].mSending);
+        ASSERT_EQ(types[i], pairs[i].mSending->GetMediaType());
+        ASSERT_TRUE(pairs[i].mReceiving);
+        ASSERT_EQ(types[i], pairs[i].mReceiving->GetMediaType());
+        ASSERT_NE("", pairs[i].mSending->GetStreamId());
+        ASSERT_NE("", pairs[i].mSending->GetTrackId());
         // These might have been in the SDP, or might have been randomly
         // chosen by JsepSessionImpl
-        ASSERT_NE("", pair->mReceiving->GetStreamId());
-        ASSERT_NE("", pair->mReceiving->GetTrackId());
+        ASSERT_NE("", pairs[i].mReceiving->GetStreamId());
+        ASSERT_NE("", pairs[i].mReceiving->GetTrackId());
 
-        if (pair->mReceiving->GetMediaType() != SdpMediaSection::kApplication) {
+        if (pairs[i].mReceiving->GetMediaType() != SdpMediaSection::kApplication) {
           std::string msidAttr("a=msid:");
-          msidAttr += pair->mReceiving->GetStreamId();
+          msidAttr += pairs[i].mReceiving->GetStreamId();
           msidAttr += " ";
-          msidAttr += pair->mReceiving->GetTrackId();
+          msidAttr += pairs[i].mReceiving->GetTrackId();
           ASSERT_NE(std::string::npos, answer.find(msidAttr))
             << "Did not find " << msidAttr << " in offer";
         }
@@ -372,14 +368,21 @@ protected:
   void
   GatherCandidates(JsepSession& session)
   {
-    session.AddLocalIceCandidate(kAEqualsCandidate + kCandidates[0], "", 0);
-    session.AddLocalIceCandidate(kAEqualsCandidate + kCandidates[1], "", 0);
-    session.AddLocalIceCandidate(kAEqualsCandidate + kCandidates[2], "", 0);
+    bool skipped;
+    session.AddLocalIceCandidate(
+        kAEqualsCandidate + kCandidates[0], "", 0, &skipped);
+    session.AddLocalIceCandidate(
+        kAEqualsCandidate + kCandidates[1], "", 0, &skipped);
+    session.AddLocalIceCandidate(
+        kAEqualsCandidate + kCandidates[2], "", 0, &skipped);
     session.EndOfLocalCandidates("192.168.0.2", 2002, 0);
 
-    session.AddLocalIceCandidate(kAEqualsCandidate + kCandidates[3], "", 1);
-    session.AddLocalIceCandidate(kAEqualsCandidate + kCandidates[4], "", 1);
-    session.AddLocalIceCandidate(kAEqualsCandidate + kCandidates[5], "", 1);
+    session.AddLocalIceCandidate(
+        kAEqualsCandidate + kCandidates[3], "", 1, &skipped);
+    session.AddLocalIceCandidate(
+        kAEqualsCandidate + kCandidates[4], "", 1, &skipped);
+    session.AddLocalIceCandidate(
+        kAEqualsCandidate + kCandidates[5], "", 1, &skipped);
     session.EndOfLocalCandidates("192.168.1.2", 2012, 1);
 
     std::cerr << "local SDP after candidates: "
@@ -505,18 +508,16 @@ protected:
   void
   DumpTrackPairs(const JsepSessionImpl& session)
   {
-    size_t count = mSessionAns.GetNegotiatedTrackPairCount();
-    for (size_t i = 0; i < count; ++i) {
-      std::cerr << "Track pair " << i << std::endl;
-      const JsepTrackPair* pair;
-      ASSERT_EQ(NS_OK, mSessionAns.GetNegotiatedTrackPair(i, &pair));
-      if (pair->mSending) {
+    auto pairs = mSessionAns.GetNegotiatedTrackPairs();
+    for (auto i = pairs.begin(); i != pairs.end(); ++i) {
+      std::cerr << "Track pair " << i->mLevel << std::endl;
+      if (i->mSending) {
         std::cerr << "Sending-->" << std::endl;
-        DumpTrack(*pair->mSending);
+        DumpTrack(*i->mSending);
       }
-      if (pair->mReceiving) {
+      if (i->mReceiving) {
         std::cerr << "Receiving-->" << std::endl;
-        DumpTrack(*pair->mReceiving);
+        DumpTrack(*i->mReceiving);
       }
     }
   }
@@ -530,7 +531,7 @@ private:
   ValidateTransport(TransportData& source, const std::string& sdp_str)
   {
     SipccSdpParser parser;
-    auto sdp = mozilla::Move(parser.Parse(sdp_str));
+    auto sdp = parser.Parse(sdp_str);
     ASSERT_TRUE(!!sdp) << "Should have valid SDP" << std::endl
                        << "Errors were: " << GetParseErrors(parser);
     size_t num_m_sections = sdp->GetMediaSectionCount();
@@ -672,7 +673,7 @@ TEST_F(JsepSessionTest, OfferAnswerRecvOnlyLines)
   std::string offer = CreateOffer(Some(options));
 
   SipccSdpParser parser;
-  auto outputSdp = mozilla::Move(parser.Parse(offer));
+  auto outputSdp = parser.Parse(offer);
   ASSERT_TRUE(!!outputSdp) << "Should have valid SDP" << std::endl
                            << "Errors were: " << GetParseErrors(parser);
 
@@ -703,7 +704,7 @@ TEST_F(JsepSessionTest, OfferAnswerRecvOnlyLines)
   SetRemoteOffer(offer, CHECK_SUCCESS);
 
   std::string answer = CreateAnswer();
-  outputSdp = mozilla::Move(parser.Parse(answer));
+  outputSdp = parser.Parse(answer);
 
   ASSERT_EQ(3U, outputSdp->GetMediaSectionCount());
   ASSERT_EQ(SdpMediaSection::kAudio,
@@ -731,7 +732,7 @@ TEST_F(JsepSessionTest, OfferAnswerSendOnlyLines)
   std::string offer = CreateOffer(Some(options));
 
   SipccSdpParser parser;
-  auto outputSdp = mozilla::Move(parser.Parse(offer));
+  auto outputSdp = parser.Parse(offer);
   ASSERT_TRUE(!!outputSdp) << "Should have valid SDP" << std::endl
                            << "Errors were: " << GetParseErrors(parser);
 
@@ -762,7 +763,7 @@ TEST_F(JsepSessionTest, OfferAnswerSendOnlyLines)
   SetRemoteOffer(offer, CHECK_SUCCESS);
 
   std::string answer = CreateAnswer();
-  outputSdp = mozilla::Move(parser.Parse(answer));
+  outputSdp = parser.Parse(answer);
 
   ASSERT_EQ(3U, outputSdp->GetMediaSectionCount());
   ASSERT_EQ(SdpMediaSection::kAudio,
@@ -792,7 +793,7 @@ TEST_F(JsepSessionTest, CreateOfferNoDatachannelDefault)
   std::string offer = CreateOffer();
 
   SipccSdpParser parser;
-  auto outputSdp = mozilla::Move(parser.Parse(offer));
+  auto outputSdp = parser.Parse(offer);
   ASSERT_TRUE(!!outputSdp) << "Should have valid SDP" << std::endl
                            << "Errors were: " << GetParseErrors(parser);
 
@@ -818,7 +819,7 @@ TEST_F(JsepSessionTest, ValidateOfferedCodecParams)
   std::string offer = CreateOffer();
 
   SipccSdpParser parser;
-  auto outputSdp = mozilla::Move(parser.Parse(offer));
+  auto outputSdp = parser.Parse(offer);
   ASSERT_TRUE(!!outputSdp) << "Should have valid SDP" << std::endl
                            << "Errors were: " << GetParseErrors(parser);
 
@@ -936,7 +937,7 @@ TEST_F(JsepSessionTest, ValidateAnsweredCodecParams)
   std::string answer = CreateAnswer();
 
   SipccSdpParser parser;
-  auto outputSdp = mozilla::Move(parser.Parse(answer));
+  auto outputSdp = parser.Parse(answer);
   ASSERT_TRUE(!!outputSdp) << "Should have valid SDP" << std::endl
                            << "Errors were: " << GetParseErrors(parser);
 
@@ -991,47 +992,45 @@ TEST_F(JsepSessionTest, ValidateAnsweredCodecParams)
   SetLocalAnswer(answer);
   SetRemoteAnswer(answer);
 
-  ASSERT_EQ(2U, mSessionOff.GetNegotiatedTrackPairCount());
-  const JsepTrackPair* offerVideoPair;
-  ASSERT_EQ(NS_OK, mSessionOff.GetNegotiatedTrackPair(1, &offerVideoPair));
-  ASSERT_TRUE(offerVideoPair->mSending);
-  ASSERT_TRUE(offerVideoPair->mReceiving);
-  ASSERT_TRUE(offerVideoPair->mSending->GetNegotiatedDetails());
-  ASSERT_TRUE(offerVideoPair->mReceiving->GetNegotiatedDetails());
+  auto offerPairs = mSessionOff.GetNegotiatedTrackPairs();
+  ASSERT_EQ(2U, offerPairs.size());
+  ASSERT_TRUE(offerPairs[1].mSending);
+  ASSERT_TRUE(offerPairs[1].mReceiving);
+  ASSERT_TRUE(offerPairs[1].mSending->GetNegotiatedDetails());
+  ASSERT_TRUE(offerPairs[1].mReceiving->GetNegotiatedDetails());
   ASSERT_EQ(1U,
-      offerVideoPair->mSending->GetNegotiatedDetails()->GetCodecCount());
+      offerPairs[1].mSending->GetNegotiatedDetails()->GetCodecCount());
   ASSERT_EQ(1U,
-      offerVideoPair->mReceiving->GetNegotiatedDetails()->GetCodecCount());
+      offerPairs[1].mReceiving->GetNegotiatedDetails()->GetCodecCount());
   const JsepCodecDescription* offerRecvCodec;
   ASSERT_EQ(NS_OK,
-      offerVideoPair->mReceiving->GetNegotiatedDetails()->GetCodec(
+      offerPairs[1].mReceiving->GetNegotiatedDetails()->GetCodec(
         0,
         &offerRecvCodec));
   const JsepCodecDescription* offerSendCodec;
   ASSERT_EQ(NS_OK,
-      offerVideoPair->mSending->GetNegotiatedDetails()->GetCodec(
+      offerPairs[1].mSending->GetNegotiatedDetails()->GetCodec(
         0,
         &offerSendCodec));
 
-  ASSERT_EQ(2U, mSessionAns.GetNegotiatedTrackPairCount());
-  const JsepTrackPair* answerVideoPair;
-  ASSERT_EQ(NS_OK, mSessionAns.GetNegotiatedTrackPair(1, &answerVideoPair));
-  ASSERT_TRUE(answerVideoPair->mSending);
-  ASSERT_TRUE(answerVideoPair->mReceiving);
-  ASSERT_TRUE(answerVideoPair->mSending->GetNegotiatedDetails());
-  ASSERT_TRUE(answerVideoPair->mReceiving->GetNegotiatedDetails());
+  auto answerPairs = mSessionAns.GetNegotiatedTrackPairs();
+  ASSERT_EQ(2U, answerPairs.size());
+  ASSERT_TRUE(answerPairs[1].mSending);
+  ASSERT_TRUE(answerPairs[1].mReceiving);
+  ASSERT_TRUE(answerPairs[1].mSending->GetNegotiatedDetails());
+  ASSERT_TRUE(answerPairs[1].mReceiving->GetNegotiatedDetails());
   ASSERT_EQ(1U,
-      answerVideoPair->mSending->GetNegotiatedDetails()->GetCodecCount());
+      answerPairs[1].mSending->GetNegotiatedDetails()->GetCodecCount());
   ASSERT_EQ(1U,
-      answerVideoPair->mReceiving->GetNegotiatedDetails()->GetCodecCount());
+      answerPairs[1].mReceiving->GetNegotiatedDetails()->GetCodecCount());
   const JsepCodecDescription* answerRecvCodec;
   ASSERT_EQ(NS_OK,
-      answerVideoPair->mReceiving->GetNegotiatedDetails()->GetCodec(
+      answerPairs[1].mReceiving->GetNegotiatedDetails()->GetCodec(
         0,
         &answerRecvCodec));
   const JsepCodecDescription* answerSendCodec;
   ASSERT_EQ(NS_OK,
-      answerVideoPair->mSending->GetNegotiatedDetails()->GetCodec(
+      answerPairs[1].mSending->GetNegotiatedDetails()->GetCodec(
         0,
         &answerSendCodec));
 
@@ -1093,7 +1092,7 @@ TEST_P(JsepSessionTest, TestRejectMline)
   std::string answer = CreateAnswer();
 
   SipccSdpParser parser;
-  auto outputSdp = mozilla::Move(parser.Parse(answer));
+  auto outputSdp = parser.Parse(answer);
   ASSERT_TRUE(!!outputSdp) << "Should have valid SDP" << std::endl
                            << "Errors were: " << GetParseErrors(parser);
 
@@ -1114,16 +1113,16 @@ TEST_P(JsepSessionTest, TestRejectMline)
   mSessionAns.SetLocalDescription(kJsepSdpAnswer, answer);
   mSessionOff.SetRemoteDescription(kJsepSdpAnswer, answer);
 
-  ASSERT_EQ(types.size() - 1, mSessionOff.GetNegotiatedTrackPairCount());
-  ASSERT_EQ(types.size() - 1, mSessionAns.GetNegotiatedTrackPairCount());
+  ASSERT_EQ(types.size() - 1, mSessionOff.GetNegotiatedTrackPairs().size());
+  ASSERT_EQ(types.size() - 1, mSessionAns.GetNegotiatedTrackPairs().size());
 
-  ASSERT_EQ(types.size(), mSessionOff.GetTransportCount());
-  ASSERT_EQ(types.size(), mSessionOff.GetLocalTrackCount());
-  ASSERT_EQ(types.size() - 1, mSessionOff.GetRemoteTrackCount());
+  ASSERT_EQ(types.size(), mSessionOff.GetTransports().size());
+  ASSERT_EQ(types.size(), mSessionOff.GetLocalTracks().size());
+  ASSERT_EQ(types.size() - 1, mSessionOff.GetRemoteTracks().size());
 
-  ASSERT_EQ(types.size(), mSessionAns.GetTransportCount());
-  ASSERT_EQ(types.size(), mSessionAns.GetLocalTrackCount());
-  ASSERT_EQ(types.size(), mSessionAns.GetRemoteTrackCount());
+  ASSERT_EQ(types.size(), mSessionAns.GetTransports().size());
+  ASSERT_EQ(types.size(), mSessionAns.GetLocalTracks().size());
+  ASSERT_EQ(types.size(), mSessionAns.GetRemoteTracks().size());
 }
 
 TEST_F(JsepSessionTest, CreateOfferNoMlines)
@@ -1239,9 +1238,8 @@ TEST_F(JsepSessionTest, TestRtcpFbStar)
   SetLocalAnswer(answer, CHECK_SUCCESS);
   SetRemoteAnswer(answer, CHECK_SUCCESS);
 
-  ASSERT_EQ(1U, mSessionAns.GetRemoteTrackCount());
-  RefPtr<JsepTrack> track;
-  ASSERT_EQ(NS_OK, mSessionAns.GetRemoteTrack(0, &track));
+  ASSERT_EQ(1U, mSessionAns.GetRemoteTracks().size());
+  RefPtr<JsepTrack> track = mSessionAns.GetRemoteTracks()[0];
   ASSERT_TRUE(track->GetNegotiatedDetails());
   auto* details = track->GetNegotiatedDetails();
   for (size_t i = 0; i < details->GetCodecCount(); ++i) {
@@ -1268,46 +1266,46 @@ TEST_F(JsepSessionTest, TestUniquePayloadTypes)
   SetLocalAnswer(answer, CHECK_SUCCESS);
   SetRemoteAnswer(answer, CHECK_SUCCESS);
 
-  ASSERT_EQ(3U, mSessionOff.GetNegotiatedTrackPairCount());
-  ASSERT_EQ(3U, mSessionAns.GetNegotiatedTrackPairCount());
+  auto offerPairs = mSessionOff.GetNegotiatedTrackPairs();
+  auto answerPairs = mSessionAns.GetNegotiatedTrackPairs();
+  ASSERT_EQ(3U, offerPairs.size());
+  ASSERT_EQ(3U, answerPairs.size());
 
-  const JsepTrackPair* pair;
-  ASSERT_EQ(NS_OK, mSessionOff.GetNegotiatedTrackPair(0, &pair));
-  ASSERT_TRUE(pair->mReceiving);
-  ASSERT_TRUE(pair->mReceiving->GetNegotiatedDetails());
+  ASSERT_TRUE(offerPairs[0].mReceiving);
+  ASSERT_TRUE(offerPairs[0].mReceiving->GetNegotiatedDetails());
   ASSERT_EQ(0U,
-      pair->mReceiving->GetNegotiatedDetails()->GetUniquePayloadTypes().size());
+      offerPairs[0].mReceiving->GetNegotiatedDetails()->
+      GetUniquePayloadTypes().size());
 
-  ASSERT_EQ(NS_OK, mSessionOff.GetNegotiatedTrackPair(1, &pair));
-  ASSERT_TRUE(pair->mReceiving);
-  ASSERT_TRUE(pair->mReceiving->GetNegotiatedDetails());
+  ASSERT_TRUE(offerPairs[1].mReceiving);
+  ASSERT_TRUE(offerPairs[1].mReceiving->GetNegotiatedDetails());
   ASSERT_EQ(0U,
-      pair->mReceiving->GetNegotiatedDetails()->GetUniquePayloadTypes().size());
+      offerPairs[1].mReceiving->GetNegotiatedDetails()->
+      GetUniquePayloadTypes().size());
 
-  ASSERT_EQ(NS_OK, mSessionOff.GetNegotiatedTrackPair(2, &pair));
-  ASSERT_TRUE(pair->mReceiving);
-  ASSERT_TRUE(pair->mReceiving->GetNegotiatedDetails());
+  ASSERT_TRUE(offerPairs[2].mReceiving);
+  ASSERT_TRUE(offerPairs[2].mReceiving->GetNegotiatedDetails());
   ASSERT_NE(0U,
-      pair->mReceiving->GetNegotiatedDetails()->GetUniquePayloadTypes().size());
+      offerPairs[2].mReceiving->GetNegotiatedDetails()->
+      GetUniquePayloadTypes().size());
 
-  ASSERT_EQ(NS_OK, mSessionAns.GetNegotiatedTrackPair(0, &pair));
-  ASSERT_TRUE(pair->mReceiving);
-  ASSERT_TRUE(pair->mReceiving->GetNegotiatedDetails());
+  ASSERT_TRUE(answerPairs[0].mReceiving);
+  ASSERT_TRUE(answerPairs[0].mReceiving->GetNegotiatedDetails());
   ASSERT_EQ(0U,
-      pair->mReceiving->GetNegotiatedDetails()->GetUniquePayloadTypes().size());
+      answerPairs[0].mReceiving->GetNegotiatedDetails()->
+      GetUniquePayloadTypes().size());
 
-  ASSERT_EQ(NS_OK, mSessionAns.GetNegotiatedTrackPair(1, &pair));
-  ASSERT_TRUE(pair->mReceiving);
-  ASSERT_TRUE(pair->mReceiving->GetNegotiatedDetails());
+  ASSERT_TRUE(answerPairs[1].mReceiving);
+  ASSERT_TRUE(answerPairs[1].mReceiving->GetNegotiatedDetails());
   ASSERT_EQ(0U,
-      pair->mReceiving->GetNegotiatedDetails()->GetUniquePayloadTypes().size());
+      answerPairs[1].mReceiving->GetNegotiatedDetails()->
+      GetUniquePayloadTypes().size());
 
-  ASSERT_EQ(NS_OK, mSessionAns.GetNegotiatedTrackPair(2, &pair));
-  ASSERT_TRUE(pair->mReceiving);
-  ASSERT_TRUE(pair->mReceiving->GetNegotiatedDetails());
+  ASSERT_TRUE(answerPairs[2].mReceiving);
+  ASSERT_TRUE(answerPairs[2].mReceiving->GetNegotiatedDetails());
   ASSERT_NE(0U,
-      pair->mReceiving->GetNegotiatedDetails()->GetUniquePayloadTypes().size());
-
+      answerPairs[2].mReceiving->GetNegotiatedDetails()->
+      GetUniquePayloadTypes().size());
 }
 
 } // namespace mozilla
