@@ -3,6 +3,7 @@
 
 Invocation {
   $DMD = '--mode=live --sample-below=1 --show-dump-stats=yes'
+  Mode = 'live'
   Sample-below size = 1
 }
 
