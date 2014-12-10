@@ -86,7 +86,7 @@ public:
   // Structure that stores the current state of a frame manager for
   // Save/Restore purposes.
   struct SavedState {
-    SavedState(mozilla::WritingMode aWM)
+    explicit SavedState(mozilla::WritingMode aWM)
       : mWritingMode(aWM)
       , mOrigin(aWM)
     {}

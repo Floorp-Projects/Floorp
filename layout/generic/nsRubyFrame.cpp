@@ -62,7 +62,7 @@ nsRubyFrame::GetFrameName(nsAString& aResult) const
 class MOZ_STACK_CLASS TextContainerIterator
 {
 public:
-  TextContainerIterator(nsRubyBaseContainerFrame* aBaseContainer);
+  explicit TextContainerIterator(nsRubyBaseContainerFrame* aBaseContainer);
   void Next();
   bool AtEnd() const { return !mFrame; }
   nsRubyTextContainerFrame* GetTextContainer() const
@@ -99,7 +99,7 @@ TextContainerIterator::Next()
 class MOZ_STACK_CLASS AutoSetTextContainers
 {
 public:
-  AutoSetTextContainers(nsRubyBaseContainerFrame* aBaseContainer);
+  explicit AutoSetTextContainers(nsRubyBaseContainerFrame* aBaseContainer);
   ~AutoSetTextContainers();
 
 private:
@@ -130,7 +130,7 @@ AutoSetTextContainers::~AutoSetTextContainers()
 class MOZ_STACK_CLASS SegmentEnumerator
 {
 public:
-  SegmentEnumerator(nsRubyFrame* aRubyFrame);
+  explicit SegmentEnumerator(nsRubyFrame* aRubyFrame);
 
   void Next();
   bool AtEnd() const { return !mBaseContainer; }

@@ -532,7 +532,7 @@ protected:
   struct ContinuationTraversingState
   {
     nsContainerFrame* mNextInFlow;
-    ContinuationTraversingState(nsContainerFrame* aFrame)
+    explicit ContinuationTraversingState(nsContainerFrame* aFrame)
       : mNextInFlow(static_cast<nsContainerFrame*>(aFrame->GetNextInFlow()))
     { }
   };
