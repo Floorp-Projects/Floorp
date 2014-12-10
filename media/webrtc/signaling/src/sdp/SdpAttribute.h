@@ -256,8 +256,9 @@ public:
             bool direction_specified, const std::string& extensionname,
             const std::string& extensionattributes = "")
   {
-    mExtmaps.push_back({ entry, direction, direction_specified, extensionname,
-                         extensionattributes });
+    Extmap value = { entry, direction, direction_specified, extensionname,
+                     extensionattributes };
+    mExtmaps.push_back(value);
   }
 
   virtual void Serialize(std::ostream& os) const MOZ_OVERRIDE;
@@ -343,7 +344,8 @@ public:
   void
   PushEntry(HashAlgorithm hashFunc, const std::vector<uint8_t>& fingerprint)
   {
-    mFingerprints.push_back({ hashFunc, fingerprint });
+    Fingerprint value = { hashFunc, fingerprint };
+    mFingerprints.push_back(value);
   }
 
   virtual void Serialize(std::ostream& os) const MOZ_OVERRIDE;
@@ -420,7 +422,8 @@ public:
   void
   PushEntry(Semantics semantics, const std::vector<std::string>& tags)
   {
-    mGroups.push_back({ semantics, tags });
+    Group value = { semantics, tags };
+    mGroups.push_back(value);
   }
 
   virtual void Serialize(std::ostream& os) const MOZ_OVERRIDE;
@@ -600,7 +603,8 @@ public:
   void
   PushEntry(const std::string& identifier, const std::string& appdata = "")
   {
-    mMsids.push_back({ identifier, appdata });
+    Msid value = { identifier, appdata };
+    mMsids.push_back(value);
   }
 
   virtual void Serialize(std::ostream& os) const MOZ_OVERRIDE;
@@ -721,7 +725,8 @@ public:
   PushEntry(const std::string& pt, Type type, const std::string& parameter = "",
             const std::string& extra = "")
   {
-    mFeedbacks.push_back({ pt, type, parameter, extra });
+    Feedback value = { pt, type, parameter, extra };
+    mFeedbacks.push_back(value);
   }
 
   virtual void Serialize(std::ostream& os) const MOZ_OVERRIDE;
@@ -792,7 +797,8 @@ public:
   PushEntry(const std::string& pt, CodecType codec, const std::string& name,
             uint32_t clock, uint32_t channels = 0)
   {
-    mRtpmaps.push_back({ pt, codec, name, clock, channels });
+    Rtpmap value = { pt, codec, name, clock, channels };
+    mRtpmaps.push_back(value);
   }
 
   virtual void Serialize(std::ostream& os) const MOZ_OVERRIDE;
@@ -1068,7 +1074,8 @@ public:
   PushEntry(const std::string& pt, const std::string& name,
             uint32_t streams = 0)
   {
-    mSctpmaps.push_back({ pt, name, streams });
+    Sctpmap value = { pt, name, streams };
+    mSctpmaps.push_back(value);
   }
 
   virtual void Serialize(std::ostream& os) const MOZ_OVERRIDE;
@@ -1168,7 +1175,8 @@ public:
   void
   PushEntry(uint32_t ssrc, const std::string& attribute)
   {
-    mSsrcs.push_back({ ssrc, attribute });
+    Ssrc value = { ssrc, attribute };
+    mSsrcs.push_back(value);
   }
 
   virtual void Serialize(std::ostream& os) const MOZ_OVERRIDE;
@@ -1204,7 +1212,8 @@ public:
   void
   PushEntry(Semantics semantics, const std::vector<uint32_t>& ssrcs)
   {
-    mSsrcGroups.push_back({ semantics, ssrcs });
+    SsrcGroup value = { semantics, ssrcs };
+    mSsrcGroups.push_back(value);
   }
 
   virtual void Serialize(std::ostream& os) const MOZ_OVERRIDE;
