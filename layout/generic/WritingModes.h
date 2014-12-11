@@ -262,7 +262,7 @@ public:
         mWritingMode = eBlockFlowMask |
                        eLineOrientMask |
                        eOrientationMask;
-        uint8_t textOrientation = aStyleContext->StyleText()->mTextOrientation;
+        uint8_t textOrientation = aStyleContext->StyleVisibility()->mTextOrientation;
 #if 0 // not yet implemented
         if (textOrientation == NS_STYLE_TEXT_ORIENTATION_SIDEWAYS_LEFT) {
           mWritingMode &= ~eLineOrientMask;
@@ -277,7 +277,7 @@ public:
       case NS_STYLE_WRITING_MODE_VERTICAL_RL:
       {
         mWritingMode = eOrientationMask;
-        uint8_t textOrientation = aStyleContext->StyleText()->mTextOrientation;
+        uint8_t textOrientation = aStyleContext->StyleVisibility()->mTextOrientation;
 #if 0 // not yet implemented
         if (textOrientation == NS_STYLE_TEXT_ORIENTATION_SIDEWAYS_LEFT) {
           mWritingMode |= eLineOrientMask;
