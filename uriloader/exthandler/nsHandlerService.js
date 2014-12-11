@@ -457,6 +457,14 @@ HandlerService.prototype = {
     var fileExtension = aFileExtension.toLowerCase();
     var typeID;
 
+    // See bug 1100069 for why we want to fail gracefully and silently here.
+    try {
+      this._ds;
+    } catch (ex) {
+      Components.returnCode = Cr.NS_ERROR_NOT_AVAILABLE;
+      return;
+    }
+
     if (this._existsLiteralTarget(NC_FILE_EXTENSIONS, fileExtension))
       typeID = this._getSourceForLiteral(NC_FILE_EXTENSIONS, fileExtension);
 
