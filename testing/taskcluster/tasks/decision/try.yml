@@ -1,3 +1,4 @@
+---
 metadata:
   name: 'Task graph used to build try jobs'
   description: |
@@ -26,20 +27,20 @@ scopes:
   - "docker-worker:cache:sources-gaia"
   - "docker-worker:cache:build-emulator-ics-debug"
 tasks:
-  - taskId: '{{#as_slugid }}decision task{{/as_slugid}}'
+  - taskId: '{{#as_slugid}}decision task{{/as_slugid}}'
     task:
       created: '{{now}}'
-      deadline: '{{#from_now }}1 day{{#/from_now}}'
+      deadline: '{{#from_now}}1 day{{/from_now}}'
       metadata:
-        source: '{{source}}'
-        owner: '{{owner}}'
+        source: {{source}}
+        owner: {{owner}}
         name: Initial decision task for try
         description: |
           This is the single most important task as it decides how all other tasks
           get built.
 
-      workerType: gecko-decision
-      provisionerId: aws-provisioner
+      workerType: "gecko-decision"
+      provisionerId: "aws-provisioner"
 
       scopes:
         - "docker-worker:cache:tc-vcs-public-sources"
