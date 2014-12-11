@@ -11603,7 +11603,9 @@ ICGetPropCallGetter::ICGetPropCallGetter(Kind kind, JitCode *stubCode, ICStub *f
 {
     MOZ_ASSERT(kind == ICStub::GetProp_CallScripted  ||
                kind == ICStub::GetProp_CallNative    ||
-               kind == ICStub::GetProp_CallNativePrototype);
+               kind == ICStub::GetProp_CallNativePrototype ||
+               kind == ICStub::GetProp_CallDOMProxyNative ||
+               kind == ICStub::GetProp_CallDOMProxyWithGenerationNative);
 }
 
 ICGetPropCallPrototypeGetter::ICGetPropCallPrototypeGetter(Kind kind, JitCode *stubCode,
@@ -11868,14 +11870,11 @@ ICGetPropCallDOMProxyNativeStub::ICGetPropCallDOMProxyNativeStub(Kind kind, JitC
                                                                  HandleShape holderShape,
                                                                  HandleFunction getter,
                                                                  uint32_t pcOffset)
-  : ICMonitoredStub(kind, stubCode, firstMonitorStub),
+: ICGetPropCallGetter(kind, stubCode, firstMonitorStub, holder, holderShape,
+                      getter, pcOffset),
     shape_(shape),
     proxyHandler_(proxyHandler),
-    expandoShape_(expandoShape),
-    holder_(holder),
-    holderShape_(holderShape),
-    getter_(getter),
-    pcOffset_(pcOffset)
+    expandoShape_(expandoShape)
 { }
 
 ICGetPropCallDOMProxyNativeCompiler::ICGetPropCallDOMProxyNativeCompiler(JSContext *cx,
