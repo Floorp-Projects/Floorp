@@ -631,63 +631,6 @@ ReorderComparison(JSOp op, MDefinition **lhsp, MDefinition **rhsp)
     return op;
 }
 
-static bool
-ShouldReorderCommutative(MDefinition *lhs, MDefinition *rhs, MInstruction *ins)
-{
-    // lhs and rhs are used by the commutative operator.
-    MOZ_ASSERT(lhs->hasDefUses());
-    MOZ_ASSERT(rhs->hasDefUses());
-
-    // Ensure that if there is a constant, then it is in rhs.
-    if (rhs->isConstant())
-        return false;
-    if (lhs->isConstant())
-        return true;
-
-    // Since clobbering binary operations clobber the left operand, prefer a
-    // non-constant lhs operand with no further uses. To be fully precise, we
-    // should check whether this is the *last* use, but checking hasOneDefUse()
-    // is a decent approximation which doesn't require any extra analysis.
-    bool rhsSingleUse = rhs->hasOneDefUse();
-    bool lhsSingleUse = lhs->hasOneDefUse();
-    if (rhsSingleUse) {
-        if (!lhsSingleUse)
-            return true;
-    } else {
-        if (lhsSingleUse)
-            return false;
-    }
-
-    // If this is a reduction-style computation, such as
-    //
-    //   sum = 0;
-    //   for (...)
-    //      sum += ...;
-    //
-    // put the phi on the left to promote coalescing. This is fairly specific.
-    if (rhsSingleUse &&
-        rhs->isPhi() &&
-        rhs->block()->isLoopHeader() &&
-        ins == rhs->toPhi()->getLoopBackedgeOperand())
-    {
-        return true;
-    }
-
-    return false;
-}
-
-static void
-ReorderCommutative(MDefinition **lhsp, MDefinition **rhsp, MInstruction *ins)
-{
-    MDefinition *lhs = *lhsp;
-    MDefinition *rhs = *rhsp;
-
-    if (ShouldReorderCommutative(lhs, rhs, ins)) {
-        *rhsp = lhs;
-        *lhsp = rhs;
-    }
-}
-
 void
 LIRGenerator::visitTest(MTest *test)
 {
@@ -4081,34 +4024,6 @@ LIRGenerator::visitSimdBinaryComp(MSimdBinaryComp *ins)
     } else {
         MOZ_CRASH("Unknown compare type when comparing values");
     }
-}
-
-void
-LIRGenerator::visitSimdBinaryArith(MSimdBinaryArith *ins)
-{
-    MOZ_ASSERT(IsSimdType(ins->type()));
-
-    MDefinition *lhs = ins->lhs();
-    MDefinition *rhs = ins->rhs();
-
-    if (ins->isCommutative())
-        ReorderCommutative(&lhs, &rhs, ins);
-
-    if (ins->type() == MIRType_Int32x4) {
-        lowerForFPU(new(alloc()) LSimdBinaryArithIx4(), ins, lhs, rhs);
-        return;
-    }
-
-    MOZ_ASSERT(ins->type() == MIRType_Float32x4, "unknown simd type on binary arith operation");
-
-    LSimdBinaryArithFx4 *lir = new(alloc()) LSimdBinaryArithFx4();
-
-    bool needsTemp = ins->operation() == MSimdBinaryArith::Max ||
-                     ins->operation() == MSimdBinaryArith::MinNum ||
-                     ins->operation() == MSimdBinaryArith::MaxNum;
-    lir->setTemp(0, needsTemp ? temp(LDefinition::FLOAT32X4) : LDefinition::BogusTemp());
-
-    lowerForFPU(lir, ins, lhs, rhs);
 }
 
 void
