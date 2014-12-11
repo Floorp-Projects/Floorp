@@ -33,3 +33,5 @@ TEST_DIRS += ['tests']
 HOST_OS_LIBS += [
     'z',
 ]
+
+FAIL_ON_WARNINGS = True
