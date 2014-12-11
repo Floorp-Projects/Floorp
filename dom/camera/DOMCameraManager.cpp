@@ -144,24 +144,17 @@ public:
                           nsRefPtr<nsDOMCameraManager> aManager,
                           uint32_t aCameraId,
                           const CameraConfiguration& aInitialConfig,
-                          nsRefPtr<GetCameraCallback> aOnSuccess,
-                          nsRefPtr<CameraErrorCallback> aOnError,
                           nsRefPtr<Promise> aPromise)
     : mPrincipal(aPrincipal)
     , mWindow(aWindow)
     , mCameraManager(aManager)
     , mCameraId(aCameraId)
     , mInitialConfig(aInitialConfig)
-    , mOnSuccess(aOnSuccess)
-    , mOnError(aOnError)
     , mPromise(aPromise)
-  {
-  }
+  { }
 
 protected:
-  virtual ~CameraPermissionRequest()
-  {
-  }
+  virtual ~CameraPermissionRequest() { }
 
   nsresult DispatchCallback(uint32_t aPermission);
   void CallAllow();
@@ -171,15 +164,10 @@ protected:
   nsRefPtr<nsDOMCameraManager> mCameraManager;
   uint32_t mCameraId;
   CameraConfiguration mInitialConfig;
-  nsRefPtr<GetCameraCallback> mOnSuccess;
-  nsRefPtr<CameraErrorCallback> mOnError;
   nsRefPtr<Promise> mPromise;
 };
 
-NS_IMPL_CYCLE_COLLECTION(CameraPermissionRequest, mWindow,
-                                                  mOnSuccess,
-                                                  mOnError,
-                                                  mPromise)
+NS_IMPL_CYCLE_COLLECTION(CameraPermissionRequest, mWindow, mPromise)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CameraPermissionRequest)
   NS_INTERFACE_MAP_ENTRY(nsIContentPermissionRequest)
@@ -245,13 +233,13 @@ CameraPermissionRequest::DispatchCallback(uint32_t aPermission)
 void
 CameraPermissionRequest::CallAllow()
 {
-  mCameraManager->PermissionAllowed(mCameraId, mInitialConfig, mOnSuccess, mOnError, mPromise);
+  mCameraManager->PermissionAllowed(mCameraId, mInitialConfig, mPromise);
 }
 
 void
 CameraPermissionRequest::CallCancel()
 {
-  mCameraManager->PermissionCancelled(mCameraId, mInitialConfig, mOnSuccess, mOnError, mPromise);
+  mCameraManager->PermissionCancelled(mCameraId, mInitialConfig, mPromise);
 }
 
 NS_IMETHODIMP
@@ -275,8 +263,6 @@ nsDOMCameraManager::PreinitCameraHardware()
 already_AddRefed<Promise>
 nsDOMCameraManager::GetCamera(const nsAString& aCamera,
                               const CameraConfiguration& aInitialConfig,
-                              const OptionalNonNullGetCameraCallback& aOnSuccess,
-                              const OptionalNonNullCameraErrorCallback& aOnError,
                               ErrorResult& aRv)
 {
   DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
@@ -297,18 +283,8 @@ nsDOMCameraManager::GetCamera(const nsAString& aCamera,
     return nullptr;
   }
 
-  nsRefPtr<GetCameraCallback> successCallback;
-  if (aOnSuccess.WasPassed()) {
-    successCallback = &aOnSuccess.Value();
-  }
-
-  nsRefPtr<CameraErrorCallback> errorCallback;
-  if (aOnError.WasPassed()) {
-    errorCallback = &aOnError.Value();
-  }
-
   if (mPermission == nsIPermissionManager::ALLOW_ACTION) {
-    PermissionAllowed(cameraId, aInitialConfig, successCallback, errorCallback, promise);
+    PermissionAllowed(cameraId, aInitialConfig, promise);
     return promise.forget();
   }
 
@@ -324,13 +300,13 @@ nsDOMCameraManager::GetCamera(const nsAString& aCamera,
   uint16_t status = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
   principal->GetAppStatus(&status);
   if (status == nsIPrincipal::APP_STATUS_CERTIFIED && CheckPermission(mWindow)) {
-    PermissionAllowed(cameraId, aInitialConfig, successCallback, errorCallback, promise);
+    PermissionAllowed(cameraId, aInitialConfig, promise);
     return promise.forget();
   }
 
   nsCOMPtr<nsIRunnable> permissionRequest =
-    new CameraPermissionRequest(principal, mWindow, this, cameraId, aInitialConfig,
-                                successCallback, errorCallback, promise);
+    new CameraPermissionRequest(principal, mWindow, this, cameraId,
+                                aInitialConfig, promise);
 
   NS_DispatchToMainThread(permissionRequest);
   return promise.forget();
@@ -339,8 +315,6 @@ nsDOMCameraManager::GetCamera(const nsAString& aCamera,
 void
 nsDOMCameraManager::PermissionAllowed(uint32_t aCameraId,
                                       const CameraConfiguration& aInitialConfig,
-                                      GetCameraCallback* aOnSuccess,
-                                      CameraErrorCallback* aOnError,
                                       Promise* aPromise)
 {
   mPermission = nsIPermissionManager::ALLOW_ACTION;
@@ -348,7 +322,7 @@ nsDOMCameraManager::PermissionAllowed(uint32_t aCameraId,
   // Creating this object will trigger the aOnSuccess callback
   //  (or the aOnError one, if it fails).
   nsRefPtr<nsDOMCameraControl> cameraControl =
-    new nsDOMCameraControl(aCameraId, aInitialConfig, aOnSuccess, aOnError, aPromise, mWindow);
+    new nsDOMCameraControl(aCameraId, aInitialConfig, aPromise, mWindow);
 
   Register(cameraControl);
 }
@@ -356,17 +330,10 @@ nsDOMCameraManager::PermissionAllowed(uint32_t aCameraId,
 void
 nsDOMCameraManager::PermissionCancelled(uint32_t aCameraId,
                                         const CameraConfiguration& aInitialConfig,
-                                        GetCameraCallback* aOnSuccess,
-                                        CameraErrorCallback* aOnError,
                                         Promise* aPromise)
 {
   mPermission = nsIPermissionManager::DENY_ACTION;
-
   aPromise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
-  if (aOnError) {
-    ErrorResult ignored;
-    aOnError->Call(NS_LITERAL_STRING("Permission denied."), ignored);
-  }
 }
 
 void
