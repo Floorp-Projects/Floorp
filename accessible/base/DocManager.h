@@ -85,16 +85,7 @@ public:
   /*
    * Notify of a new top level document in a content process.
    */
-  static void RemoteDocAdded(DocAccessibleParent* aDoc)
-  {
-    if (!sRemoteDocuments) {
-      sRemoteDocuments = new nsTArray<DocAccessibleParent*>;
-      ClearOnShutdown(&sRemoteDocuments);
-    }
-    MOZ_ASSERT(!sRemoteDocuments->Contains(aDoc),
-               "How did we already have the doc!");
-    sRemoteDocuments->AppendElement(aDoc);
-  }
+  static void RemoteDocAdded(DocAccessibleParent* aDoc);
 
 #ifdef DEBUG
   bool IsProcessingRefreshDriverNotification() const;
