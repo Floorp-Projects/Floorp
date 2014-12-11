@@ -9,11 +9,18 @@
 #include <errno.h>
 #include <utility>
 
-#include "linux_seccomp.h"
 #include "mozilla/NullPtr.h"
 #include "sandbox/linux/seccomp-bpf/codegen.h"
+#include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
+
+// Currently included only for struct arch_seccomp_data; newer
+// chromiums define it in sandbox/linux/bpf_dsl/trap_registry.h
+#include "sandbox/linux/seccomp-bpf/sandbox_bpf.h"
 
 namespace mozilla {
+
+// Need this for the SECCOMP_*_IDX macros to work.
+using sandbox::arch_seccomp_data;
 
 class SandboxAssemblerImpl {
   typedef sandbox::Instruction* NodePtr;
