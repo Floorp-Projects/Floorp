@@ -3394,7 +3394,7 @@ getTopLevelWindowActivationEventCount(NPObject* npobj, const NPVariant* args, ui
 }
 
 // Returns top-level window activation state as indicated by Cocoa NPAPI's
-// NPCocoaEventWindowFocusChanged events - 'true' if active, 'false' if not.
+// NPCocoaEventFocusChanged events - 'true' if active, 'false' if not.
 // Throws an exception if no events have been received and thus this state
 // is unknown.
 bool

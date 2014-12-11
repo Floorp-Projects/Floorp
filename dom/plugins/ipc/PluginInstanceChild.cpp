@@ -388,12 +388,12 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
     }
 
     case NPNVsupportsCoreAnimationBool: {
-        *((NPBool*)aValue) = nsCocoaFeatures::SupportCoreAnimationPlugins();
+        *((NPBool*)aValue) = true;
         return NPERR_NO_ERROR;
     }
 
     case NPNVsupportsInvalidatingCoreAnimationBool: {
-        *((NPBool*)aValue) = nsCocoaFeatures::SupportCoreAnimationPlugins();
+        *((NPBool*)aValue) = true;
         return NPERR_NO_ERROR;
     }
 

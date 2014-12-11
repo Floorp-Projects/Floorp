@@ -65,11 +65,6 @@
 #define NS_MOZ_USER_IDLE                 (NS_WINDOW_START + 67)
 #define NS_MOZ_USER_ACTIVE               (NS_WINDOW_START + 68)
 
-// The resolution at which a plugin should draw has changed, for
-// example as the result of changing from a HiDPI mode to a non-
-// HiDPI mode.
-#define NS_PLUGIN_RESOLUTION_CHANGED     (NS_WINDOW_START + 69)
-
 #define NS_LANGUAGECHANGE                (NS_WINDOW_START + 70)
 
 #define NS_MOUSE_MESSAGE_START          300

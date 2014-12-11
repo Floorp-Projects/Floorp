@@ -2010,13 +2010,15 @@ TabChild::RecvShow(const nsIntSize& aSize,
 }
 
 bool
-TabChild::RecvUpdateDimensions(const nsIntRect& rect, const nsIntSize& size, const ScreenOrientation& orientation)
+TabChild::RecvUpdateDimensions(const nsIntRect& rect, const nsIntSize& size,
+                               const ScreenOrientation& orientation, const nsIntPoint& chromeDisp)
 {
     if (!mRemoteFrame) {
         return true;
     }
 
     mOuterRect = rect;
+    mChromeDisp = chromeDisp;
 
     bool initialSizing = !HasValidInnerSize()
                       && (size.width != 0 && size.height != 0);

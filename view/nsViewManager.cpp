@@ -755,8 +755,7 @@ nsViewManager::DispatchEvent(WidgetGUIEvent *aEvent,
       (dispatchUsingCoordinates || aEvent->HasKeyEventMessage() ||
        aEvent->IsIMERelatedEvent() ||
        aEvent->IsNonRetargetedNativeEventDelivererForPlugin() ||
-       aEvent->HasPluginActivationEventMessage() ||
-       aEvent->message == NS_PLUGIN_RESOLUTION_CHANGED)) {
+       aEvent->HasPluginActivationEventMessage())) {
     while (view && !view->GetFrame()) {
       view = view->GetParent();
     }
