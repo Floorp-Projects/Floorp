@@ -192,7 +192,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitTypedArrayElements(MTypedArrayElements *ins);
     void visitTypedObjectElements(MTypedObjectElements *ins);
     void visitSetTypedObjectOffset(MSetTypedObjectOffset *ins);
-    void visitTypedObjectProto(MTypedObjectProto *ins);
+    void visitTypedObjectDescr(MTypedObjectDescr *ins);
     void visitInitializedLength(MInitializedLength *ins);
     void visitSetInitializedLength(MSetInitializedLength *ins);
     void visitNot(MNot *ins);
