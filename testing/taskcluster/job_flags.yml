@@ -18,6 +18,7 @@ flags:
     - cppunit
     - crashtest
     - crashtest-ipc
+    - gaia-build
     - gaia-build-unit
     - gaia-js-integration
     - gaia-linter
@@ -117,6 +118,10 @@ tests:
       tasks/builds/b2g_emulator_ics_opt.yml:
         task: tasks/tests/b2g_emulator_crashtest.yml
         chunks: 3
+  gaia-build:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop_opt.yml:
+        task: tasks/tests/b2g_build_test.yml
   gaia-build-unit:
     allowed_build_tasks:
       tasks/builds/b2g_desktop_opt.yml:
