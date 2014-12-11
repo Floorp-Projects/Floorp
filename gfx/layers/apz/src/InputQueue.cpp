@@ -208,7 +208,7 @@ InputQueue::MaybeRequestContentResponse(const nsRefPtr<AsyncPanZoomController>& 
     // Content won't prevent-default this, so we can just pretend like we scheduled
     // a timeout and it expired. Note that we will still receive a ContentReceivedInputBlock
     // callback for this block, and so we need to make sure we adjust the touch balance.
-    INPQ_LOG("not waiting for content response on block %p\n", block);
+    INPQ_LOG("not waiting for content response on block %p\n", aBlock);
     aBlock->TimeoutContentResponse();
   }
 }
