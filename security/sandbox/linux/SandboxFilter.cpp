@@ -471,7 +471,6 @@ SandboxFilter::SandboxFilter(const sock_fprog** aStored, SandboxType aType,
     MOZ_CRASH("Nonexistent sandbox type!");
   }
   impl->Build();
-  impl->Finish();
   impl->Compile(&filterVec, aVerbose);
   delete impl;
 
