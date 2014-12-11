@@ -274,6 +274,8 @@ class PluginModuleContentParent : public PluginModuleParent
 #ifdef MOZ_CRASHREPORTER_INJECTOR
     void OnCrash(DWORD processID) MOZ_OVERRIDE {}
 #endif
+
+    static PluginModuleContentParent* sSavedModuleParent;
 };
 
 class PluginModuleChromeParent
