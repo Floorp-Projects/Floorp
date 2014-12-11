@@ -58,7 +58,9 @@ protected:
   nsRefPtr<DOMError> mError;
 
   nsString mFilename;
-  uint64_t mLoggingSerialNumber;
+#ifdef MOZ_ENABLE_PROFILER_SPS
+  uint64_t mSerialNumber;
+#endif
   nsresult mErrorCode;
   uint32_t mLineNo;
   bool mHaveResultOrErrorCode;
@@ -81,9 +83,6 @@ public:
 
   static void
   CaptureCaller(nsAString& aFilename, uint32_t* aLineNo);
-
-  static uint64_t
-  NextSerialNumber();
 
   // nsIDOMEventTarget
   virtual nsresult
@@ -126,16 +125,13 @@ public:
     return !mHaveResultOrErrorCode;
   }
 
+#ifdef MOZ_ENABLE_PROFILER_SPS
   uint64_t
-  LoggingSerialNumber() const
+  GetSerialNumber() const
   {
-    AssertIsOnOwningThread();
-
-    return mLoggingSerialNumber;
+    return mSerialNumber;
   }
-
-  void
-  SetLoggingSerialNumber(uint64_t aLoggingSerialNumber);
+#endif
 
   nsPIDOMWindow*
   GetParentObject() const

@@ -7,13 +7,14 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ipc/PBackgroundChild.h"
-#include "nsAutoPtr.h"
+
+template <class> class nsAutoPtr;
 
 namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
-class ThreadLocal;
+class IDBTransaction;
 
 } // namespace indexedDB
 } // namespace dom
@@ -52,7 +53,7 @@ protected:
   DeallocPBackgroundTestChild(PBackgroundTestChild* aActor) MOZ_OVERRIDE;
 
   virtual PBackgroundIDBFactoryChild*
-  AllocPBackgroundIDBFactoryChild(const LoggingInfo& aLoggingInfo) MOZ_OVERRIDE;
+  AllocPBackgroundIDBFactoryChild() MOZ_OVERRIDE;
 
   virtual bool
   DeallocPBackgroundIDBFactoryChild(PBackgroundIDBFactoryChild* aActor)
@@ -77,7 +78,12 @@ class BackgroundChildImpl::ThreadLocal MOZ_FINAL
   friend class nsAutoPtr<ThreadLocal>;
 
 public:
-  nsAutoPtr<mozilla::dom::indexedDB::ThreadLocal> mIndexedDBThreadLocal;
+  mozilla::dom::indexedDB::IDBTransaction* mCurrentTransaction;
+
+#ifdef MOZ_ENABLE_PROFILER_SPS
+  uint64_t mNextTransactionSerialNumber;
+  uint64_t mNextRequestSerialNumber;
+#endif
 
 public:
   ThreadLocal();
