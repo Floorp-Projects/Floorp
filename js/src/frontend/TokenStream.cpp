@@ -130,6 +130,12 @@ frontend::IsIdentifier(JSLinearString *str)
 }
 
 bool
+frontend::IsIdentifier(const char16_t *chars, size_t length)
+{
+    return ::IsIdentifier(chars, length);
+}
+
+bool
 frontend::IsKeyword(JSLinearString *str)
 {
     return FindKeyword(str) != nullptr;
