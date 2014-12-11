@@ -13,6 +13,7 @@
 #include "nsServiceManagerUtils.h"
 #include "GMPAudioHost.h"
 #include "GMPAudioDecoderProxy.h"
+#include "SamplesWaitingForKey.h"
 
 namespace mozilla {
 
@@ -108,8 +109,14 @@ private:
   nsRefPtr<MediaTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
 
+  nsRefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
+
   Monitor mMonitor;
   bool mFlushComplete;
+
+#ifdef DEBUG
+  bool mIsShutdown;
+#endif
 };
 
 } // namespace mozilla

@@ -12,6 +12,7 @@
 #include "ImageContainer.h"
 #include "GMPVideoDecoderProxy.h"
 #include "mozIGeckoMediaPluginService.h"
+#include "SamplesWaitingForKey.h"
 
 namespace mozilla {
 
@@ -104,8 +105,15 @@ private:
   nsRefPtr<MediaTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
   int64_t mLastStreamOffset;
+
+  nsRefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
+
   Monitor mMonitor;
   bool mFlushComplete;
+
+#ifdef DEBUG
+  bool mIsShutdown;
+#endif
 };
 
 }
