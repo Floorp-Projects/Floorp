@@ -656,34 +656,6 @@ LIRGeneratorX86Shared::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins)
 }
 
 void
-LIRGeneratorX86Shared::visitSimdBinaryArith(MSimdBinaryArith *ins)
-{
-    MOZ_ASSERT(IsSimdType(ins->type()));
-
-    MDefinition *lhs = ins->lhs();
-    MDefinition *rhs = ins->rhs();
-
-    if (ins->isCommutative())
-        ReorderCommutative(&lhs, &rhs, ins);
-
-    if (ins->type() == MIRType_Int32x4) {
-        lowerForFPU(new(alloc()) LSimdBinaryArithIx4(), ins, lhs, rhs);
-        return;
-    }
-
-    MOZ_ASSERT(ins->type() == MIRType_Float32x4, "unknown simd type on binary arith operation");
-
-    LSimdBinaryArithFx4 *lir = new(alloc()) LSimdBinaryArithFx4();
-
-    bool needsTemp = ins->operation() == MSimdBinaryArith::Max ||
-                     ins->operation() == MSimdBinaryArith::MinNum ||
-                     ins->operation() == MSimdBinaryArith::MaxNum;
-    lir->setTemp(0, needsTemp ? temp(LDefinition::FLOAT32X4) : LDefinition::BogusTemp());
-
-    lowerForFPU(lir, ins, lhs, rhs);
-}
-
-void
 LIRGeneratorX86Shared::visitSimdTernaryBitwise(MSimdTernaryBitwise *ins)
 {
     MOZ_ASSERT(IsSimdType(ins->type()));
