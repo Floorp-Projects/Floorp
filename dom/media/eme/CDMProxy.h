@@ -27,7 +27,7 @@ class MediaKeySession;
 class DecryptionClient {
 public:
   virtual ~DecryptionClient() {}
-  virtual void Decrypted(nsresult aResult,
+  virtual void Decrypted(GMPErr aResult,
                          mp4_demuxer::MP4Sample* aSample) = 0;
 };
 
