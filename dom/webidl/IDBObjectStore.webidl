@@ -8,8 +8,7 @@
  */
 
 dictionary IDBObjectStoreParameters {
-    // TODO (DOMString or sequence<DOMString>)? keyPath = null;
-    any                                         keyPath = null;
+    (DOMString or sequence<DOMString>)? keyPath = null;
     boolean                             autoIncrement = false;
 };
 

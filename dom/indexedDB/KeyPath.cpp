@@ -14,6 +14,7 @@
 #include "xpcpublic.h"
 
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/IDBObjectStoreBinding.h"
 
 namespace mozilla {
 namespace dom {
@@ -252,62 +253,28 @@ KeyPath::Parse(const Sequence<nsString>& aStrings, KeyPath* aKeyPath)
 
 // static
 nsresult
-KeyPath::Parse(JSContext* aCx, const JS::Value& aValue_, KeyPath* aKeyPath)
+KeyPath::Parse(const Nullable<OwningStringOrStringSequence>& aValue, KeyPath* aKeyPath)
 {
-  JS::Rooted<JS::Value> aValue(aCx, aValue_);
   KeyPath keyPath(0);
 
   aKeyPath->SetType(NONEXISTENT);
 
-  // See if this is a JS array.
-  if (JS_IsArrayObject(aCx, aValue)) {
-
-    JS::Rooted<JSObject*> obj(aCx, aValue.toObjectOrNull());
-
-    uint32_t length;
-    if (!JS_GetArrayLength(aCx, obj, &length)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    if (!length) {
-      return NS_ERROR_FAILURE;
-    }
-
-    keyPath.SetType(ARRAY);
-
-    for (uint32_t index = 0; index < length; index++) {
-      JS::Rooted<JS::Value> val(aCx);
-      JSString* jsstr;
-      nsAutoJSString str;
-      if (!JS_GetElement(aCx, obj, index, &val) ||
-          !(jsstr = JS::ToString(aCx, val)) ||
-          !str.init(aCx, jsstr)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      if (!keyPath.AppendStringWithValidation(str)) {
-        return NS_ERROR_FAILURE;
-      }
-    }
-  }
-  // Otherwise convert it to a string.
-  else if (!aValue.isNull() && !aValue.isUndefined()) {
-    JSString* jsstr;
-    nsAutoJSString str;
-    if (!(jsstr = JS::ToString(aCx, aValue)) ||
-        !str.init(aCx, jsstr)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    keyPath.SetType(STRING);
-
-    if (!keyPath.AppendStringWithValidation(str)) {
-      return NS_ERROR_FAILURE;
-    }
+  if (aValue.IsNull()) {
+    *aKeyPath = keyPath;
+    return NS_OK;
   }
 
-  *aKeyPath = keyPath;
-  return NS_OK;
+  if (aValue.Value().IsString()) {
+    return Parse(aValue.Value().GetAsString(), aKeyPath);
+  }
+
+  MOZ_ASSERT(aValue.Value().IsStringSequence());
+
+  const Sequence<nsString>& seq = aValue.Value().GetAsStringSequence();
+  if (seq.Length() == 0) {
+    return NS_ERROR_FAILURE;
+  }
+  return Parse(seq, aKeyPath);
 }
 
 void
