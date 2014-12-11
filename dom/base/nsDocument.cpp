@@ -6265,13 +6265,7 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
     return;
   }
 
-  JS::Rooted<JSObject*> constructorObj(aCx, JS_GetFunctionObject(constructor));
-  if (!JS_LinkConstructorAndPrototype(aCx, constructorObj, protoObject)) {
-    rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return;
-  }
-
-  aRetval.set(constructorObj);
+  aRetval.set(JS_GetFunctionObject(constructor));
 }
 
 void
