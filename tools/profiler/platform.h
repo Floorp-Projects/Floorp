@@ -405,11 +405,6 @@ class ThreadInfo {
 
   bool IsMainThread() const { return mIsMainThread; }
   PseudoStack* Stack() const { return mPseudoStack; }
-  PseudoStack* ForgetStack() {
-    PseudoStack* stack = mPseudoStack;
-    mPseudoStack = nullptr;
-    return stack;
-  }
 
   void SetProfile(ThreadProfile* aProfile) { mProfile = aProfile; }
   ThreadProfile* Profile() const { return mProfile; }
@@ -417,7 +412,7 @@ class ThreadInfo {
   PlatformData* GetPlatformData() const { return mPlatformData; }
   void* StackTop() const { return mStackTop; }
 
-  void SetPendingDelete();
+  virtual void SetPendingDelete();
   bool IsPendingDelete() const { return mPendingDelete; }
 
 #ifdef MOZ_NUWA_PROCESS
@@ -438,6 +433,15 @@ class ThreadInfo {
   void* const mStackTop;
   nsCOMPtr<nsIThread> mThread;
   bool mPendingDelete;
+};
+
+// Just like ThreadInfo, but owns a reference to the PseudoStack.
+class StackOwningThreadInfo : public ThreadInfo {
+ public:
+  StackOwningThreadInfo(const char* aName, int aThreadId, bool aIsMainThread, PseudoStack* aPseudoStack, void* aStackTop);
+  virtual ~StackOwningThreadInfo();
+
+  virtual void SetPendingDelete();
 };
 
 #endif /* ndef TOOLS_PLATFORM_H_ */
