@@ -278,6 +278,7 @@ CreateSimdClass(JSContext *cx,
     proto = NewObjectWithProto<TypedProto>(cx, objProto, nullptr, TenuredObject);
     if (!proto)
         return nullptr;
+    proto->initTypeDescrSlot(*typeDescr);
     typeDescr->initReservedSlot(JS_DESCR_SLOT_TYPROTO, ObjectValue(*proto));
 
     // Link constructor to prototype and install properties.

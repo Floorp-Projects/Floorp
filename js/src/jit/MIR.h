@@ -2829,12 +2829,12 @@ class MNewTypedObject : public MNullaryInstruction
     }
 };
 
-class MTypedObjectDescr
+class MTypedObjectProto
   : public MUnaryInstruction,
     public SingleObjectPolicy::Data
 {
   private:
-    explicit MTypedObjectDescr(MDefinition *object)
+    explicit MTypedObjectProto(MDefinition *object)
       : MUnaryInstruction(object)
     {
         setResultType(MIRType_Object);
@@ -2842,10 +2842,10 @@ class MTypedObjectDescr
     }
 
   public:
-    INSTRUCTION_HEADER(TypedObjectDescr)
+    INSTRUCTION_HEADER(TypedObjectProto)
 
-    static MTypedObjectDescr *New(TempAllocator &alloc, MDefinition *object) {
-        return new(alloc) MTypedObjectDescr(object);
+    static MTypedObjectProto *New(TempAllocator &alloc, MDefinition *object) {
+        return new(alloc) MTypedObjectProto(object);
     }
 
     MDefinition *object() const {

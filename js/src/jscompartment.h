@@ -271,13 +271,13 @@ struct JSCompartment
     void sweepInitialShapeTable();
 
     /* Set of default 'new' or lazy types in the compartment. */
-    js::types::NewTypeObjectTable newTypeObjects;
-    js::types::NewTypeObjectTable lazyTypeObjects;
-    void sweepNewTypeObjectTable(js::types::NewTypeObjectTable &table);
+    js::types::TypeObjectWithNewScriptSet newTypeObjects;
+    js::types::TypeObjectWithNewScriptSet lazyTypeObjects;
+    void sweepNewTypeObjectTable(js::types::TypeObjectWithNewScriptSet &table);
 
 #ifdef JSGC_HASH_TABLE_CHECKS
     void checkTypeObjectTablesAfterMovingGC();
-    void checkTypeObjectTableAfterMovingGC(js::types::NewTypeObjectTable &table);
+    void checkTypeObjectTableAfterMovingGC(js::types::TypeObjectWithNewScriptSet &table);
     void checkInitialShapesTableAfterMovingGC();
     void checkWrapperMapAfterMovingGC();
 #endif
@@ -394,7 +394,7 @@ struct JSCompartment
 
 #ifdef JSGC_COMPACTING
     void fixupInitialShapeTable();
-    void fixupNewTypeObjectTable(js::types::NewTypeObjectTable &table);
+    void fixupNewTypeObjectTable(js::types::TypeObjectWithNewScriptSet &table);
     void fixupAfterMovingGC();
     void fixupGlobal();
 #endif

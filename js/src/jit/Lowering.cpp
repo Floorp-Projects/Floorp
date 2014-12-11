@@ -2496,10 +2496,12 @@ LIRGenerator::visitTypedArrayElements(MTypedArrayElements *ins)
 }
 
 void
-LIRGenerator::visitTypedObjectDescr(MTypedObjectDescr *ins)
+LIRGenerator::visitTypedObjectProto(MTypedObjectProto *ins)
 {
     MOZ_ASSERT(ins->type() == MIRType_Object);
-    define(new(alloc()) LTypedObjectDescr(useRegisterAtStart(ins->object())), ins);
+    defineReturn(new(alloc()) LTypedObjectProto(useFixed(ins->object(), CallTempReg0),
+                                                tempFixed(CallTempReg1)),
+                 ins);
 }
 
 void

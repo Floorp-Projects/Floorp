@@ -11271,7 +11271,14 @@ IonBuilder::typedObjectPrediction(types::TemporaryTypeSet *types)
         if (!IsTypedObjectClass(type->clasp()))
             return TypedObjectPrediction();
 
-        out.addDescr(type->typeDescr());
+        TaggedProto proto = type->proto();
+
+        // typed objects have immutable prototypes, and they are
+        // always instances of TypedProto
+        MOZ_ASSERT(proto.isObject() && proto.toObject()->is<TypedProto>());
+
+        TypedProto &typedProto = proto.toObject()->as<TypedProto>();
+        out.addDescr(typedProto.typeDescr());
     }
 
     return out;
@@ -11287,10 +11294,16 @@ IonBuilder::loadTypedObjectType(MDefinition *typedObj)
     if (typedObj->isNewDerivedTypedObject())
         return typedObj->toNewDerivedTypedObject()->type();
 
-    MInstruction *descr = MTypedObjectDescr::New(alloc(), typedObj);
-    current->add(descr);
+    MInstruction *proto = MTypedObjectProto::New(alloc(), typedObj);
+    current->add(proto);
 
-    return descr;
+    MInstruction *load = MLoadFixedSlot::New(alloc(), proto, JS_TYPROTO_SLOT_DESCR);
+    current->add(load);
+
+    MInstruction *unbox = MUnbox::New(alloc(), load, MIRType_Object, MUnbox::Infallible);
+    current->add(unbox);
+
+    return unbox;
 }
 
 // Given a typed object `typedObj` and an offset `offset` into that
