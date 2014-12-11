@@ -124,11 +124,14 @@ public:
   nsRefPtr<InputQueue> GetInputQueue() const {
     return mInputQueue;
   }
+
+protected:
+  AsyncPanZoomController* MakeAPZCInstance(uint64_t aLayersId, GeckoContentController* aController) MOZ_OVERRIDE;
 };
 
 class TestAsyncPanZoomController : public AsyncPanZoomController {
 public:
-  TestAsyncPanZoomController(uint64_t aLayersId, MockContentController* aMcc,
+  TestAsyncPanZoomController(uint64_t aLayersId, GeckoContentController* aMcc,
                              TestAPZCTreeManager* aTreeManager,
                              GestureBehavior aBehavior = DEFAULT_GESTURES)
     : AsyncPanZoomController(aLayersId, aTreeManager, aTreeManager->GetInputQueue(), aMcc, aBehavior)
@@ -195,6 +198,12 @@ public:
     return ret;
   }
 };
+
+AsyncPanZoomController*
+TestAPZCTreeManager::MakeAPZCInstance(uint64_t aLayersId, GeckoContentController* aController)
+{
+  return new TestAsyncPanZoomController(aLayersId, aController, this, AsyncPanZoomController::USE_GESTURE_DETECTOR);
+}
 
 static FrameMetrics
 TestFrameMetrics()
