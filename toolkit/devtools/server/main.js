@@ -511,6 +511,11 @@ var DebuggerServer = {
         type: { global: true, tab: true }
       });
     }
+    this.registerModule("devtools/server/actors/animation", {
+      prefix: "animations",
+      constructor: "AnimationsActor",
+      type: { global: true, tab: true }
+    });
   },
 
   /**
