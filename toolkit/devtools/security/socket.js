@@ -14,6 +14,8 @@ loader.lazyRequireGetter(this, "DebuggerTransport",
   "devtools/toolkit/transport/transport", true);
 loader.lazyRequireGetter(this, "DebuggerServer",
   "devtools/server/main", true);
+loader.lazyRequireGetter(this, "discovery",
+  "devtools/toolkit/discovery/discovery");
 
 DevToolsUtils.defineLazyGetter(this, "ServerSocket", () => {
   return CC("@mozilla.org/network/server-socket;1",
@@ -126,11 +128,20 @@ SocketListener.prototype = {
   allowConnection: SocketListener.defaultAllowConnection,
 
   /**
+   * Controls whether this listener is announced via the service discovery
+   * mechanism.
+   */
+  discoverable: false,
+
+  /**
    * Validate that all options have been set to a supported configuration.
    */
   _validateOptions: function() {
     if (this.portOrPath === null) {
       throw new Error("Must set a port / path to listen on.");
+    }
+    if (this.discoverable && !Number(this.portOrPath)) {
+      throw new Error("Discovery only supported for TCP sockets.");
     }
   },
 
@@ -166,6 +177,10 @@ SocketListener.prototype = {
       this.close();
       throw Cr.NS_ERROR_NOT_AVAILABLE;
     }
+
+    if (this.discoverable && this.port) {
+      discovery.addService("devtools", { port: this.port });
+    }
   },
 
   /**
@@ -173,6 +188,9 @@ SocketListener.prototype = {
    * the set of active SocketListeners.
    */
   close: function() {
+    if (this.discoverable && this.port) {
+      discovery.removeService("devtools");
+    }
     if (this._socket) {
       this._socket.close();
       this._socket = null;
