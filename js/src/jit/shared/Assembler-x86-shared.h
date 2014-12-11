@@ -602,6 +602,9 @@ class AssemblerX86Shared : public AssemblerShared
     void movdqa(const Operand &src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
         switch (src.kind()) {
+          case Operand::FPREG:
+            masm.movdqa_rr(src.fpu(), dest.code());
+            break;
           case Operand::MEM_REG_DISP:
             masm.movdqa_mr(src.disp(), src.base(), dest.code());
             break;
@@ -1812,6 +1815,26 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_CRASH("unexpected operand kind");
         }
     }
+    void pmuludq(FloatRegister src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.pmuludq_rr(src.code(), dest.code());
+    }
+    void pmulld(const Operand &src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE41());
+        switch (src.kind()) {
+          case Operand::FPREG:
+            masm.pmulld_rr(src.fpu(), dest.code());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.pmulld_mr(src.disp(), src.base(), dest.code());
+            break;
+          case Operand::MEM_ADDRESS32:
+            masm.pmulld_mr(src.address(), dest.code());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
     void vaddps(const Operand &src1, FloatRegister src0, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
         switch (src1.kind()) {
@@ -1980,6 +2003,22 @@ class AssemblerX86Shared : public AssemblerShared
     void pshufd(uint32_t mask, FloatRegister src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
         masm.pshufd_irr(mask, src.code(), dest.code());
+    }
+    void pshufd(uint32_t mask, const Operand &src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        switch (src.kind()) {
+          case Operand::FPREG:
+            masm.pshufd_irr(mask, src.fpu(), dest.code());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.pshufd_imr(mask, src.disp(), src.base(), dest.code());
+            break;
+          case Operand::MEM_ADDRESS32:
+            masm.pshufd_imr(mask, src.address(), dest.code());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
     }
     void movhlps(FloatRegister src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());

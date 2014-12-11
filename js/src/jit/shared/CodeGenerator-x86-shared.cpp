@@ -2626,9 +2626,27 @@ CodeGeneratorX86Shared::visitSimdBinaryArithIx4(LSimdBinaryArithIx4 *ins)
       case MSimdBinaryArith::Sub:
         masm.packedSubInt32(rhs, lhs);
         return;
-      case MSimdBinaryArith::Mul:
-        // we can do mul with a single instruction only if we have SSE4.1
-        // using the PMULLD instruction.
+      case MSimdBinaryArith::Mul: {
+        if (AssemblerX86Shared::HasSSE41()) {
+            masm.pmulld(rhs, lhs);
+            return;
+        }
+
+        masm.loadAlignedInt32x4(rhs, ScratchSimdReg);
+        masm.pmuludq(lhs, ScratchSimdReg);
+        // ScratchSimdReg contains (Rx, _, Rz, _) where R is the resulting vector.
+
+        FloatRegister temp = ToFloatRegister(ins->temp());
+        masm.pshufd(MacroAssembler::ComputeShuffleMask(LaneY, LaneY, LaneW, LaneW), lhs, lhs);
+        masm.pshufd(MacroAssembler::ComputeShuffleMask(LaneY, LaneY, LaneW, LaneW), rhs, temp);
+        masm.pmuludq(temp, lhs);
+        // lhs contains (Ry, _, Rw, _) where R is the resulting vector.
+
+        masm.shufps(MacroAssembler::ComputeShuffleMask(LaneX, LaneZ, LaneX, LaneZ), ScratchSimdReg, lhs);
+        // lhs contains (Ry, Rw, Rx, Rz)
+        masm.shufps(MacroAssembler::ComputeShuffleMask(LaneZ, LaneX, LaneW, LaneY), lhs, lhs);
+        return;
+      }
       case MSimdBinaryArith::Div:
         // x86 doesn't have SIMD i32 div.
         break;
