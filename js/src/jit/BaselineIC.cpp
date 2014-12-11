@@ -4677,8 +4677,8 @@ LoadTypedThingLength(MacroAssembler &masm, TypedThingLayout layout, Register obj
         break;
       case Layout_OutlineTypedObject:
       case Layout_InlineTypedObject:
-        masm.loadPtr(Address(obj, JSObject::offsetOfType()), result);
-        masm.loadPtr(Address(result, types::TypeObject::offsetOfAddendum()), result);
+        masm.loadObjProto(obj, result);
+        masm.unboxObject(Address(result, TypedProto::offsetOfTypeDescr()), result);
         masm.unboxInt32(Address(result, ArrayTypeDescr::offsetOfLength()), result);
         break;
       default:
@@ -8516,7 +8516,7 @@ ICSetPropNativeAddCompiler::generateStubCode(MacroAssembler &masm)
     // Check if the old type still has a newScript.
     masm.loadPtr(Address(objReg, JSObject::offsetOfType()), scratch);
     masm.branchPtr(Assembler::Equal,
-                   Address(scratch, types::TypeObject::offsetOfAddendum()),
+                   Address(scratch, types::TypeObject::offsetOfNewScript()),
                    ImmWord(0),
                    &noTypeChange);
 
