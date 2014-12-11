@@ -6,6 +6,7 @@
 <body onload="runTests()">
   <script class="testbody" type="application/javascript">
   SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("untriaged");
   setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
   var pending = 5;

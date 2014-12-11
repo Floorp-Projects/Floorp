@@ -13,6 +13,8 @@
 <video id="v1" src="../../test/vp9cake.webm" height="120" width="160" autoplay muted></video>
 <pre id="test">
 <script type="application/javascript;version=1.8">
+  SimpleTest.requestFlakyTimeout("untriaged");
+
   createHTML({
     bug: "1081409",
     title: "Captured video-only over peer connection",

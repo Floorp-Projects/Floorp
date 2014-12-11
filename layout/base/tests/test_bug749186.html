@@ -34,6 +34,7 @@ browser.
 
      function startTest() {
        SimpleTest.waitForExplicitFinish();
+       SimpleTest.requestFlakyTimeout("untriaged");
        setTimeout(setEmPerLineTo8, 100);
      }
 

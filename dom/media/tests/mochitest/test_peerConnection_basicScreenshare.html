@@ -12,6 +12,8 @@
 <body>
 <pre id="test">
 <script type="application/javascript">
+  SimpleTest.requestFlakyTimeout("untriaged");
+
   createHTML({
     bug: "1039666",
     title: "Basic screenshare-only peer connection"

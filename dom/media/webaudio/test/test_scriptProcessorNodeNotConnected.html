@@ -10,6 +10,7 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("This test needs to wait a while to ensure that a given event does not happen.");
 addLoadEvent(function() {
   var context = new AudioContext();
 

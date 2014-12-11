@@ -33,6 +33,7 @@ var testFiles =
 var testCount = 0; // Used by the test files.
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 
 var testWindow;
 function nextTest_() {
