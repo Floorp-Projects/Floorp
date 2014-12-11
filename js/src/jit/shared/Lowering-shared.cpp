@@ -14,6 +14,63 @@
 using namespace js;
 using namespace jit;
 
+bool
+LIRGeneratorShared::ShouldReorderCommutative(MDefinition *lhs, MDefinition *rhs, MInstruction *ins)
+{
+    // lhs and rhs are used by the commutative operator.
+    MOZ_ASSERT(lhs->hasDefUses());
+    MOZ_ASSERT(rhs->hasDefUses());
+
+    // Ensure that if there is a constant, then it is in rhs.
+    if (rhs->isConstant())
+        return false;
+    if (lhs->isConstant())
+        return true;
+
+    // Since clobbering binary operations clobber the left operand, prefer a
+    // non-constant lhs operand with no further uses. To be fully precise, we
+    // should check whether this is the *last* use, but checking hasOneDefUse()
+    // is a decent approximation which doesn't require any extra analysis.
+    bool rhsSingleUse = rhs->hasOneDefUse();
+    bool lhsSingleUse = lhs->hasOneDefUse();
+    if (rhsSingleUse) {
+        if (!lhsSingleUse)
+            return true;
+    } else {
+        if (lhsSingleUse)
+            return false;
+    }
+
+    // If this is a reduction-style computation, such as
+    //
+    //   sum = 0;
+    //   for (...)
+    //      sum += ...;
+    //
+    // put the phi on the left to promote coalescing. This is fairly specific.
+    if (rhsSingleUse &&
+        rhs->isPhi() &&
+        rhs->block()->isLoopHeader() &&
+        ins == rhs->toPhi()->getLoopBackedgeOperand())
+    {
+        return true;
+    }
+
+    return false;
+}
+
+void
+LIRGeneratorShared::ReorderCommutative(MDefinition **lhsp, MDefinition **rhsp, MInstruction *ins)
+{
+    MDefinition *lhs = *lhsp;
+    MDefinition *rhs = *rhsp;
+
+    if (ShouldReorderCommutative(lhs, rhs, ins)) {
+        *rhsp = lhs;
+        *lhsp = rhs;
+    }
+}
+
 void
 LIRGeneratorShared::visitConstant(MConstant *ins)
 {
