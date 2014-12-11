@@ -698,7 +698,7 @@ const XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass = {
         nullptr, // deleteGeneric
         nullptr, nullptr, // watch/unwatch
         nullptr, // getElements
-        XPC_WN_JSOp_Enumerate,
+        nullptr, // enumerate
         XPC_WN_JSOp_ThisObject,
     }
   }
@@ -928,118 +928,48 @@ XPC_WN_Helper_Resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolv
     return retval;
 }
 
-/***************************************************************************/
-
-/*
-    Here are the enumerator cases:
-
-    set jsclass enumerate to stub (unless noted otherwise)
-
-    if ( helper wants new enumerate )
-        if ( DONT_ENUM_STATICS )
-            forward to scriptable enumerate
-        else
-            if ( set not mutated )
-                forward to scriptable enumerate
-            else
-                call shared enumerate
-                forward to scriptable enumerate
-    else if ( helper wants old enumerate )
-        use this JSOp
-        if ( DONT_ENUM_STATICS )
-            call scriptable enumerate
-            call stub
-        else
-            if ( set not mutated )
-                call scriptable enumerate
-                call stub
-            else
-                call shared enumerate
-                call scriptable enumerate
-                call stub
-
-    else //... if ( helper wants NO enumerate )
-        if ( DONT_ENUM_STATICS )
-            use enumerate stub - don't use this JSOp thing at all
-        else
-            do shared enumerate - don't use this JSOp thing at all
-*/
-
-bool
-XPC_WN_JSOp_Enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
-                      MutableHandleValue statep, MutableHandleId idp)
+static bool
+XPC_WN_Helper_Enumerate(JSContext *cx, HandleObject obj)
 {
-    const js::Class *clazz = js::GetObjectClass(obj);
-    if (!IS_WN_CLASS(clazz) || clazz == &XPC_WN_NoHelper_JSClass.base) {
-        // obj must be a prototype object or a wrapper w/o a
-        // helper. Short circuit this call to the default
-        // implementation.
-
-        return JS_EnumerateState(cx, obj, enum_op, statep, idp);
-    }
-
     XPCCallContext ccx(JS_CALLER, cx, obj);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
 
     XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
-    if (!si)
+    if (!si || !si->GetFlags().WantEnumerate())
         return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
 
+    if (!XPC_WN_Shared_Enumerate(cx, obj))
+        return false;
+
     bool retval = true;
-    nsresult rv;
+    nsresult rv = si->GetCallback()->Enumerate(wrapper, cx, obj, &retval);
+    if (NS_FAILED(rv))
+        return Throw(rv, cx);
+    return retval;
+}
 
-    if (si->GetFlags().WantNewEnumerate()) {
-        // XXXevilpie I am like 80% sure that has no effect on what is actually
-        // enumerated.
-        // The loop in jsiter.cpp will only put stuff that is actually in idp
-        // into the property id array.
-        if (enum_op == JSENUMERATE_INIT || enum_op == JSENUMERATE_INIT_ALL) {
-            if (wrapper->HasMutatedSet() &&
-                !XPC_WN_Shared_Enumerate(cx, obj)) {
-                statep.set(JSVAL_NULL);
-                return false;
-            }
-        }
+/***************************************************************************/
 
-        rv = si->GetCallback()->
-            NewEnumerate(wrapper, cx, obj, enum_op, statep.address(), idp.address(), &retval);
+static bool
+XPC_WN_JSOp_Enumerate(JSContext *cx, HandleObject obj, AutoIdVector &properties)
+{
+    XPCCallContext ccx(JS_CALLER, cx, obj);
+    XPCWrappedNative* wrapper = ccx.GetWrapper();
+    THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
 
-        if ((enum_op == JSENUMERATE_INIT || enum_op == JSENUMERATE_INIT_ALL) &&
-            (NS_FAILED(rv) || !retval)) {
-            statep.set(JSVAL_NULL);
-        }
+    XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
+    if (!si || !si->GetFlags().WantNewEnumerate())
+        return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
 
-        if (NS_FAILED(rv))
-            return Throw(rv, cx);
-        return retval;
-    }
+    if (!XPC_WN_Shared_Enumerate(cx, obj))
+        return false;
 
-    if (si->GetFlags().WantEnumerate()) {
-        if (enum_op == JSENUMERATE_INIT || enum_op == JSENUMERATE_INIT_ALL) {
-            if (wrapper->HasMutatedSet() &&
-                !XPC_WN_Shared_Enumerate(cx, obj)) {
-                statep.set(JSVAL_NULL);
-                return false;
-            }
-
-            rv = si->GetCallback()->
-                Enumerate(wrapper, cx, obj, &retval);
-
-            if (NS_FAILED(rv) || !retval)
-                statep.set(JSVAL_NULL);
-
-            if (NS_FAILED(rv))
-                return Throw(rv, cx);
-            if (!retval)
-                return false;
-            // Then fall through and call the default implementation...
-        }
-    }
-
-    // else call js_ObjectOps.enumerate...
-
-    return JS_EnumerateState(cx, obj, enum_op, statep, idp);
+    bool retval = true;
+    nsresult rv = si->GetCallback()->NewEnumerate(wrapper, cx, obj, properties, &retval);
+    if (NS_FAILED(rv))
+        return Throw(rv, cx);
+    return retval;
 }
 
 JSObject*
@@ -1131,10 +1061,14 @@ XPCNativeScriptableShared::PopulateJSClass()
         setProperty = XPC_WN_CannotModifyStrictPropertyStub;
     mJSClass.base.setProperty = setProperty;
 
-    // We figure out most of the enumerate strategy at call time.
+    MOZ_ASSERT_IF(mFlags.WantEnumerate(), !mFlags.WantNewEnumerate());
+    MOZ_ASSERT_IF(mFlags.WantNewEnumerate(), !mFlags.WantEnumerate());
 
-    if (mFlags.WantNewEnumerate() || mFlags.WantEnumerate())
+    // We will use ops->enumerate set below for NewEnumerate
+    if (mFlags.WantNewEnumerate())
         mJSClass.base.enumerate = nullptr;
+    else if (mFlags.WantEnumerate())
+        mJSClass.base.enumerate = XPC_WN_Helper_Enumerate;
     else
         mJSClass.base.enumerate = XPC_WN_Shared_Enumerate;
 
@@ -1152,7 +1086,8 @@ XPCNativeScriptableShared::PopulateJSClass()
         mJSClass.base.finalize = XPC_WN_NoHelper_Finalize;
 
     js::ObjectOps *ops = &mJSClass.base.ops;
-    ops->enumerate = XPC_WN_JSOp_Enumerate;
+    if (mFlags.WantNewEnumerate())
+        ops->enumerate = XPC_WN_JSOp_Enumerate;
     ops->thisObject = XPC_WN_JSOp_ThisObject;
 
 
