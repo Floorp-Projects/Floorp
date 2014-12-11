@@ -1265,16 +1265,16 @@ nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
     uint32_t imageStatus = 0;
     if (aRequest)
       aRequest->GetImageStatus(&imageStatus);
-    if (imageStatus & imgIRequest::STATUS_FRAME_COMPLETE) {
+    if (imageStatus & imgIRequest::STATUS_LOAD_COMPLETE) {
       nsCOMPtr<imgIContainer> imgCon;
       aRequest->GetImage(getter_AddRefs(imgCon));
-      NS_ABORT_IF_FALSE(imgCon, "Frame Complete, but no image container?");
+      MOZ_ASSERT(imgCon, "Load complete, but no image container?");
       nsRect dest((vis->mDirection == NS_STYLE_DIRECTION_RTL) ?
                   inner.XMost() - size : inner.x,
                   inner.y, size, size);
       nsLayoutUtils::DrawSingleImage(*gfx, PresContext(), imgCon,
         nsLayoutUtils::GetGraphicsFilterForFrame(this), dest, aDirtyRect,
-        nullptr, imgIContainer::FLAG_NONE);
+        nullptr, imgIContainer::FLAG_SYNC_DECODE);
       iconUsed = true;
     }
 
@@ -2089,10 +2089,16 @@ nsresult nsImageFrame::LoadIcons(nsPresContext *aPresContext)
   if (NS_FAILED(rv)) {
     return rv;
   }
+  gIconLoad->mLoadingImage->RequestDecode();
 
   rv = LoadIcon(brokenSrc,
                 aPresContext,
                 getter_AddRefs(gIconLoad->mBrokenImage));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  gIconLoad->mBrokenImage->RequestDecode();
+
   return rv;
 }
 
