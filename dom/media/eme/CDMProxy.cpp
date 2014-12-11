@@ -271,10 +271,6 @@ CDMProxy::CloseSession(const nsAString& aSessionId,
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE_VOID(!mKeys.IsNull());
 
-  {
-    CDMCaps::AutoLock caps(Capabilites());
-    caps.DropKeysForSession(aSessionId);
-  }
   nsAutoPtr<SessionOpData> data(new SessionOpData());
   data->mPromiseId = aPromiseId;
   data->mSessionId = NS_ConvertUTF16toUTF8(aSessionId);
@@ -301,10 +297,6 @@ CDMProxy::RemoveSession(const nsAString& aSessionId,
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE_VOID(!mKeys.IsNull());
 
-  {
-    CDMCaps::AutoLock caps(Capabilites());
-    caps.DropKeysForSession(aSessionId);
-  }
   nsAutoPtr<SessionOpData> data(new SessionOpData());
   data->mPromiseId = aPromiseId;
   data->mSessionId = NS_ConvertUTF16toUTF8(aSessionId);
@@ -331,7 +323,9 @@ CDMProxy::Shutdown()
   mKeys.Clear();
   // Note: This may end up being the last owning reference to the CDMProxy.
   nsRefPtr<nsIRunnable> task(NS_NewRunnableMethod(this, &CDMProxy::gmp_Shutdown));
-  mGMPThread->Dispatch(task, NS_DISPATCH_NORMAL);
+  if (mGMPThread) {
+    mGMPThread->Dispatch(task, NS_DISPATCH_NORMAL);
+  }
 }
 
 void

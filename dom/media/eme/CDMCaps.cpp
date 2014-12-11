@@ -148,21 +148,6 @@ CDMCaps::AutoLock::CallWhenKeyUsable(const CencKeyId& aKey,
   mData.mWaitForKeys.AppendElement(WaitForKeys(aKey, aContinuation, aTarget));
 }
 
-void
-CDMCaps::AutoLock::DropKeysForSession(const nsAString& aSessionId)
-{
-  mData.mMonitor.AssertCurrentThreadOwns();
-  auto& keys = mData.mUsableKeyIds;
-  size_t i = 0;
-  while (i < keys.Length()) {
-    if (keys[i].mSessionId == aSessionId) {
-      keys.RemoveElementAt(i);
-    } else {
-      i++;
-    }
-  }
-}
-
 bool
 CDMCaps::AutoLock::AreCapsKnown()
 {
