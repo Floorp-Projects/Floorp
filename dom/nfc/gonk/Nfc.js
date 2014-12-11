@@ -57,7 +57,8 @@ const NFC_CID =
 const NFC_IPC_MSG_ENTRIES = [
   { permission: null,
     messages: ["NFC:AddEventListener",
-               "NFC:QueryInfo"] },
+               "NFC:QueryInfo",
+               "NFC:CallDefaultFoundHandler"] },
 
   { permission: "nfc",
     messages: ["NFC:ReadNDEF",
@@ -227,6 +228,13 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
                                    sessionToken: sessionToken});
     },
 
+    callDefaultFoundHandler: function callDefaultFoundHandler(message) {
+      let sysMsg = new NfcTechDiscoveredSysMsg(message.sessionToken,
+                                               message.isP2P,
+                                               message.records || null);
+      gSystemMessenger.broadcastMessage("nfc-manager-tech-discovered", sysMsg);
+    },
+
     onTagFound: function onTagFound(message) {
       let target = this.eventListeners[this.focusApp] ||
                    this.eventListeners[NFC.SYSTEM_APP_ID];
@@ -316,6 +324,9 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
               this.nfc.getErrorMessage(NFC.NFC_GECKO_ERROR_SEND_FILE_FAILED);
           }
           this.nfc.sendNfcResponse(message.data);
+          return null;
+        case "NFC:CallDefaultFoundHandler":
+          this.callDefaultFoundHandler(message.data);
           return null;
         default:
           return this.nfc.receiveMessage(message);
@@ -502,11 +513,6 @@ Nfc.prototype = {
         } else {
           gMessageManager.onTagFound(message);
         }
-
-        let sysMsg = new NfcTechDiscoveredSysMsg(message.sessionToken,
-                                                 message.isP2P,
-                                                 message.records || null);
-        gSystemMessenger.broadcastMessage("nfc-manager-tech-discovered", sysMsg);
         break;
       case "TechLostNotification":
         message.type = "techLost";
