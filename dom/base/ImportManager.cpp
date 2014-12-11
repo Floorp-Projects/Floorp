@@ -626,6 +626,9 @@ ImportLoader::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   nsCOMPtr<nsIDocument> master = mImportParent->MasterDocument();
   mDocument->SetMasterDocument(master);
 
+  // We want to inherit the sandbox flags from the master document.
+  mDocument->SetSandboxFlags(master->GetSandboxFlags());
+
   // We have to connect the blank document we created with the channel we opened,
   // and create its own LoadGroup for it.
   nsCOMPtr<nsIStreamListener> listener;
