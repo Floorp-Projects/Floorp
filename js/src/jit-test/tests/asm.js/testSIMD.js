@@ -12,6 +12,7 @@ if (!isSimdAvailable() || typeof SIMD === 'undefined') {
 const I32 = 'var i4 = glob.SIMD.int32x4;'
 const I32A = 'var i4a = i4.add;'
 const I32S = 'var i4s = i4.sub;'
+const I32M = 'var i4m = i4.mul;'
 const F32 = 'var f4 = glob.SIMD.float32x4;'
 const F32A = 'var f4a = f4.add;'
 const F32S = 'var f4s = f4.sub;'
@@ -453,8 +454,18 @@ CheckF4(F32S, 'var x=f4(13.37,2,3,4); var y=f4(4,3,5,2); x=f4s(x,y)', [Math.frou
 CheckF4(F32S, 'var x=f4(13.37,2,3,4); var y=f4(4,3,5,2); x=f4(f4s(x,y))', [Math.fround(13.37) - 4,-1,-2,2]);
 
 // 2.3.3. Multiplications / Divisions
-assertAsmTypeFail('glob', USE_ASM + I32 + "var f4m=i4.mul; function f() {} return f");
 assertAsmTypeFail('glob', USE_ASM + I32 + "var f4d=i4.div; function f() {} return f");
+
+CheckI4(I32M, 'var x=i4(1,2,3,4); var y=i4(-1,1,0,2); x=i4m(x,y)', [-1,2,0,8]);
+CheckI4(I32M, 'var x=i4(5,4,3,2); var y=i4(1,2,3,4); x=i4m(x,y)', [5,8,9,8]);
+CheckI4(I32M, 'var x=i4(1,2,3,4); x=i4m(x,x)', [1,4,9,16]);
+(function() {
+    var m = INT32_MIN, M = INT32_MAX, imul = Math.imul;
+    CheckI4(I32M, `var x=i4(${m},${m}, ${M}, ${M}); var y=i4(2,-3,4,-5); x=i4m(x,y)`,
+            [imul(m, 2), imul(m, -3), imul(M, 4), imul(M, -5)]);
+    CheckI4(I32M, `var x=i4(${m},${m}, ${M}, ${M}); var y=i4(${m}, ${M}, ${m}, ${M}); x=i4m(x,y)`,
+            [imul(m, m), imul(m, M), imul(M, m), imul(M, M)]);
+})();
 
 CheckF4(F32M, 'var x=f4(1,2,3,4); x=f4m(x,x)', [1,4,9,16]);
 CheckF4(F32M, 'var x=f4(1,2,3,4); var y=f4(4,3,5,2); x=f4m(x,y)', [4,6,15,8]);
