@@ -7,7 +7,6 @@
 
 template <class> struct already_AddRefed;
 class nsCString;
-struct nsID;
 class nsIPrincipal;
 class nsPIDOMWindow;
 
@@ -24,16 +23,14 @@ class Client;
 
 namespace indexedDB {
 
-class LoggingInfo;
 class PBackgroundIDBFactoryParent;
 class PIndexedDBPermissionRequestParent;
 
 PBackgroundIDBFactoryParent*
-AllocPBackgroundIDBFactoryParent(const LoggingInfo& aLoggingInfo);
+AllocPBackgroundIDBFactoryParent();
 
 bool
-RecvPBackgroundIDBFactoryConstructor(PBackgroundIDBFactoryParent* aActor,
-                                     const LoggingInfo& aLoggingInfo);
+RecvPBackgroundIDBFactoryConstructor(PBackgroundIDBFactoryParent* aActor);
 
 bool
 DeallocPBackgroundIDBFactoryParent(PBackgroundIDBFactoryParent* aActor);

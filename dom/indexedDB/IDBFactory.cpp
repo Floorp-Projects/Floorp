@@ -6,7 +6,6 @@
 
 #include "IDBFactory.h"
 
-#include "BackgroundChildImpl.h"
 #include "IDBRequest.h"
 #include "IndexedDatabaseManager.h"
 #include "mozilla/ErrorResult.h"
@@ -22,9 +21,7 @@
 #include "nsIIPCBackgroundChildCreateCallback.h"
 #include "nsILoadContext.h"
 #include "nsIPrincipal.h"
-#include "nsIUUIDGenerator.h"
 #include "nsIWebNavigation.h"
-#include "nsServiceManagerUtils.h"
 #include "ProfilerHelpers.h"
 #include "ReportInternalError.h"
 
@@ -79,14 +76,10 @@ class IDBFactory::BackgroundCreateCallback MOZ_FINAL
   : public nsIIPCBackgroundChildCreateCallback
 {
   nsRefPtr<IDBFactory> mFactory;
-  LoggingInfo mLoggingInfo;
 
 public:
-  explicit
-  BackgroundCreateCallback(IDBFactory* aFactory,
-                           const LoggingInfo& aLoggingInfo)
-    : mFactory(aFactory)
-    , mLoggingInfo(aLoggingInfo)
+  explicit BackgroundCreateCallback(IDBFactory* aFactory)
+  : mFactory(aFactory)
   {
     MOZ_ASSERT(aFactory);
   }
@@ -313,15 +306,6 @@ IDBFactory::SetBackgroundActor(BackgroundFactoryChild* aBackgroundActor)
   mBackgroundActor = aBackgroundActor;
 }
 
-void
-IDBFactory::IncrementParentLoggingRequestSerialNumber()
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mBackgroundActor);
-
-  mBackgroundActor->SendIncrementLoggingRequestSerialNumber();
-}
-
 already_AddRefed<IDBOpenDBRequest>
 IDBFactory::Open(const nsAString& aName,
                  uint64_t aVersion,
@@ -517,44 +501,27 @@ IDBFactory::OpenInternal(nsIPrincipal* aPrincipal,
     params = OpenDatabaseRequestParams(commonParams);
   }
 
-  if (!mBackgroundActor && mPendingRequests.IsEmpty()) {
-    // We need to start the sequence to create a background actor for this
-    // thread.
-    BackgroundChildImpl::ThreadLocal* threadLocal =
-      BackgroundChildImpl::GetThreadLocalForCurrentThread();
-
-    nsAutoPtr<ThreadLocal> newIDBThreadLocal;
-    ThreadLocal* idbThreadLocal;
-
-    if (threadLocal && threadLocal->mIndexedDBThreadLocal) {
-      idbThreadLocal = threadLocal->mIndexedDBThreadLocal;
-    } else {
-      nsCOMPtr<nsIUUIDGenerator> uuidGen =
-        do_GetService("@mozilla.org/uuid-generator;1");
-      MOZ_ASSERT(uuidGen);
-
-      nsID id;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(uuidGen->GenerateUUIDInPlace(&id)));
-
-      newIDBThreadLocal = idbThreadLocal = new ThreadLocal(id);
-    }
-
-    nsRefPtr<BackgroundCreateCallback> cb =
-      new BackgroundCreateCallback(this, idbThreadLocal->GetLoggingInfo());
-    if (NS_WARN_IF(!BackgroundChild::GetOrCreateForCurrentThread(cb))) {
-      IDB_REPORT_INTERNAL_ERR();
-      aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-      return nullptr;
-    }
-
-    if (newIDBThreadLocal) {
-      if (!threadLocal) {
-        threadLocal = BackgroundChildImpl::GetThreadLocalForCurrentThread();
+  if (!mBackgroundActor) {
+    // If another consumer has already created a background actor for this
+    // thread then we can start this request immediately.
+    if (PBackgroundChild* bgActor = BackgroundChild::GetForCurrentThread()) {
+      nsresult rv = BackgroundActorCreated(bgActor);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        IDB_REPORT_INTERNAL_ERR();
+        aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+        return nullptr;
       }
-      MOZ_ASSERT(threadLocal);
-      MOZ_ASSERT(!threadLocal->mIndexedDBThreadLocal);
-
-      threadLocal->mIndexedDBThreadLocal = newIDBThreadLocal.forget();
+      MOZ_ASSERT(mBackgroundActor);
+    } else if (mPendingRequests.IsEmpty()) {
+      // We need to start the sequence to create a background actor for this
+      // thread.
+      nsRefPtr<BackgroundCreateCallback> cb =
+        new BackgroundCreateCallback(this);
+      if (NS_WARN_IF(!BackgroundChild::GetOrCreateForCurrentThread(cb))) {
+        IDB_REPORT_INTERNAL_ERR();
+        aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+        return nullptr;
+      }
     }
   }
 
@@ -583,23 +550,6 @@ IDBFactory::OpenInternal(nsIPrincipal* aPrincipal,
 
   MOZ_ASSERT(request);
 
-  if (aDeleting) {
-    IDB_LOG_MARK("IndexedDB %s: Child  Request[%llu]: "
-                   "indexedDB.deleteDatabase(\"%s\")",
-                 "IndexedDB %s: C R[%llu]: IDBFactory.deleteDatabase()",
-                 IDB_LOG_ID_STRING(),
-                 request->LoggingSerialNumber(),
-                 NS_ConvertUTF16toUTF8(aName).get());
-  } else {
-    IDB_LOG_MARK("IndexedDB %s: Child  Request[%llu]: "
-                   "indexedDB.open(\"%s\", %s)",
-                 "IndexedDB %s: C R[%llu]: IDBFactory.open()",
-                 IDB_LOG_ID_STRING(),
-                 request->LoggingSerialNumber(),
-                 NS_ConvertUTF16toUTF8(aName).get(),
-                 IDB_LOG_STRINGIFY(aVersion));
-  }
-
   // If we already have a background actor then we can start this request now.
   if (mBackgroundActor) {
     nsresult rv = InitiateRequest(request, params);
@@ -612,12 +562,27 @@ IDBFactory::OpenInternal(nsIPrincipal* aPrincipal,
     mPendingRequests.AppendElement(new PendingRequestInfo(request, params));
   }
 
+#ifdef IDB_PROFILER_USE_MARKS
+  {
+    NS_ConvertUTF16toUTF8 profilerName(aName);
+    if (aDeleting) {
+      IDB_PROFILER_MARK("IndexedDB Request %llu: deleteDatabase(\"%s\")",
+                        "MT IDBFactory.deleteDatabase()",
+                        request->GetSerialNumber(), profilerName.get());
+    } else {
+      IDB_PROFILER_MARK("IndexedDB Request %llu: open(\"%s\", %lld)",
+                        "MT IDBFactory.open()",
+                        request->GetSerialNumber(), profilerName.get(),
+                        aVersion);
+    }
+  }
+#endif
+
   return request.forget();
 }
 
 nsresult
-IDBFactory::BackgroundActorCreated(PBackgroundChild* aBackgroundActor,
-                                   const LoggingInfo& aLoggingInfo)
+IDBFactory::BackgroundActorCreated(PBackgroundChild* aBackgroundActor)
 {
   MOZ_ASSERT(aBackgroundActor);
   MOZ_ASSERT(!mBackgroundActor);
@@ -630,8 +595,7 @@ IDBFactory::BackgroundActorCreated(PBackgroundChild* aBackgroundActor,
 
     mBackgroundActor =
       static_cast<BackgroundFactoryChild*>(
-        aBackgroundActor->SendPBackgroundIDBFactoryConstructor(actor,
-                                                               aLoggingInfo));
+        aBackgroundActor->SendPBackgroundIDBFactoryConstructor(actor));
   }
 
   if (NS_WARN_IF(!mBackgroundActor)) {
@@ -771,7 +735,7 @@ IDBFactory::BackgroundCreateCallback::ActorCreated(PBackgroundChild* aActor)
   nsRefPtr<IDBFactory> factory;
   mFactory.swap(factory);
 
-  factory->BackgroundActorCreated(aActor, mLoggingInfo);
+  factory->BackgroundActorCreated(aActor);
 }
 
 void

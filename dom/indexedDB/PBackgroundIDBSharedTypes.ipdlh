@@ -5,8 +5,6 @@
 include protocol PBlob;
 include protocol PBackgroundIDBDatabaseFile;
 
-include DOMTypes;
-
 include "mozilla/dom/indexedDB/SerializationHelpers.h";
 
 using struct mozilla::void_t
@@ -253,16 +251,6 @@ union RequestParams
   IndexGetAllParams;
   IndexGetAllKeysParams;
   IndexCountParams;
-};
-
-struct LoggingInfo
-{
-  nsID backgroundChildLoggingId;
-  // This counter is always positive.
-  int64_t nextTransactionSerialNumber;
-  // This counter is always negative.
-  int64_t nextVersionChangeTransactionSerialNumber;
-  uint64_t nextRequestSerialNumber;
 };
 
 } // namespace indexedDB

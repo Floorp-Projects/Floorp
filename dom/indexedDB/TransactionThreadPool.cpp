@@ -144,9 +144,7 @@ class TransactionThreadPool::TransactionQueue MOZ_FINAL
   Monitor mMonitor;
 
   nsRefPtr<TransactionThreadPool> mOwningThreadPool;
-  const uint64_t mTransactionId;
-  const nsID mBackgroundChildLoggingId;
-  const int64_t mLoggingSerialNumber;
+  uint64_t mTransactionId;
   const nsCString mDatabaseId;
   const nsTArray<nsString> mObjectStoreNames;
   uint16_t mMode;
@@ -157,12 +155,10 @@ class TransactionThreadPool::TransactionQueue MOZ_FINAL
 
 public:
   TransactionQueue(TransactionThreadPool* aThreadPool,
-                   uint64_t aTransactionId,
-                   const nsACString& aDatabaseId,
-                   const nsTArray<nsString>& aObjectStoreNames,
-                   uint16_t aMode,
-                   const nsID& aBackgroundChildLoggingId,
-                   int64_t aLoggingSerialNumber);
+                    uint64_t aTransactionId,
+                    const nsACString& aDatabaseId,
+                    const nsTArray<nsString>& aObjectStoreNames,
+                    uint16_t aMode);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -191,21 +187,13 @@ struct TransactionThreadPool::TransactionInfo MOZ_FINAL
                   uint64_t aTransactionId,
                   const nsACString& aDatabaseId,
                   const nsTArray<nsString>& aObjectStoreNames,
-                  uint16_t aMode,
-                  const nsID& aBackgroundChildLoggingId,
-                  int64_t aLoggingSerialNumber)
+                  uint16_t aMode)
   : transactionId(aTransactionId), databaseId(aDatabaseId)
   {
     MOZ_COUNT_CTOR(TransactionInfo);
 
-    queue =
-      new TransactionQueue(aThreadPool,
-                           aTransactionId,
-                           aDatabaseId,
-                           aObjectStoreNames,
-                           aMode,
-                           aBackgroundChildLoggingId,
-                           aLoggingSerialNumber);
+    queue = new TransactionQueue(aThreadPool, aTransactionId, aDatabaseId,
+                                  aObjectStoreNames, aMode);
   }
 
   ~TransactionInfo()
@@ -314,6 +302,7 @@ TransactionThreadPool::Shutdown()
   }
 }
 
+// static
 uint64_t
 TransactionThreadPool::NextTransactionId()
 {
@@ -559,17 +548,20 @@ TransactionThreadPool::GetQueueForTransaction(uint64_t aTransactionId,
 }
 
 TransactionThreadPool::TransactionQueue&
-TransactionThreadPool::CreateQueueForTransaction(
+TransactionThreadPool::GetQueueForTransaction(
                                     uint64_t aTransactionId,
                                     const nsACString& aDatabaseId,
                                     const nsTArray<nsString>& aObjectStoreNames,
-                                    uint16_t aMode,
-                                    const nsID& aBackgroundChildLoggingId,
-                                    int64_t aLoggingSerialNumber)
+                                    uint16_t aMode)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aTransactionId <= mNextTransactionId);
-  MOZ_ASSERT(!GetQueueForTransaction(aTransactionId, aDatabaseId));
+
+  TransactionQueue* existingQueue =
+    GetQueueForTransaction(aTransactionId, aDatabaseId);
+  if (existingQueue) {
+    return *existingQueue;
+  }
 
   // See if we can run this transaction now.
   DatabaseTransactionInfo* dbTransactionInfo;
@@ -587,14 +579,11 @@ TransactionThreadPool::CreateQueueForTransaction(
     return *info->queue;
   }
 
-  TransactionInfo* transactionInfo =
-    new TransactionInfo(this,
-                        aTransactionId,
-                        aDatabaseId,
-                        aObjectStoreNames,
-                        aMode,
-                        aBackgroundChildLoggingId,
-                        aLoggingSerialNumber);
+  TransactionInfo* transactionInfo = new TransactionInfo(this,
+                                                         aTransactionId,
+                                                         aDatabaseId,
+                                                         aObjectStoreNames,
+                                                         aMode);
 
   dbTransactionInfo->transactions.Put(aTransactionId, transactionInfo);;
 
@@ -644,27 +633,26 @@ TransactionThreadPool::CreateQueueForTransaction(
 }
 
 void
-TransactionThreadPool::Start(uint64_t aTransactionId,
-                             const nsACString& aDatabaseId,
-                             const nsTArray<nsString>& aObjectStoreNames,
-                             uint16_t aMode,
-                             const nsID& aBackgroundChildLoggingId,
-                             int64_t aLoggingSerialNumber,
-                             nsIRunnable* aRunnable)
+TransactionThreadPool::Dispatch(uint64_t aTransactionId,
+                                const nsACString& aDatabaseId,
+                                const nsTArray<nsString>& aObjectStoreNames,
+                                uint16_t aMode,
+                                nsIRunnable* aRunnable,
+                                bool aFinish,
+                                FinishCallback* aFinishCallback)
 {
-  AssertIsOnOwningThread();
   MOZ_ASSERT(aTransactionId <= mNextTransactionId);
-  MOZ_ASSERT(aRunnable);
   MOZ_ASSERT(!mShutdownRequested);
 
-  TransactionQueue& queue = CreateQueueForTransaction(aTransactionId,
-                                                      aDatabaseId,
-                                                      aObjectStoreNames,
-                                                      aMode,
-                                                      aBackgroundChildLoggingId,
-                                                      aLoggingSerialNumber);
+  TransactionQueue& queue = GetQueueForTransaction(aTransactionId,
+                                                   aDatabaseId,
+                                                   aObjectStoreNames,
+                                                   aMode);
 
   queue.Dispatch(aRunnable);
+  if (aFinish) {
+    queue.Finish(aFinishCallback);
+  }
 }
 
 void
@@ -777,18 +765,14 @@ TransactionQueue::TransactionQueue(TransactionThreadPool* aThreadPool,
                                    uint64_t aTransactionId,
                                    const nsACString& aDatabaseId,
                                    const nsTArray<nsString>& aObjectStoreNames,
-                                   uint16_t aMode,
-                                   const nsID& aBackgroundChildLoggingId,
-                                   int64_t aLoggingSerialNumber)
-  : mMonitor("TransactionQueue::mMonitor")
-  , mOwningThreadPool(aThreadPool)
-  , mTransactionId(aTransactionId)
-  , mBackgroundChildLoggingId(aBackgroundChildLoggingId)
-  , mLoggingSerialNumber(aLoggingSerialNumber)
-  , mDatabaseId(aDatabaseId)
-  , mObjectStoreNames(aObjectStoreNames)
-  , mMode(aMode)
-  , mShouldFinish(false)
+                                   uint16_t aMode)
+: mMonitor("TransactionQueue::mMonitor"),
+  mOwningThreadPool(aThreadPool),
+  mTransactionId(aTransactionId),
+  mDatabaseId(aDatabaseId),
+  mObjectStoreNames(aObjectStoreNames),
+  mMode(aMode),
+  mShouldFinish(false)
 {
   MOZ_ASSERT(aThreadPool);
   aThreadPool->AssertIsOnOwningThread();
@@ -840,11 +824,9 @@ TransactionThreadPool::TransactionQueue::Run()
                  "TransactionThreadPool::TransactionQueue""Run",
                  js::ProfileEntry::Category::STORAGE);
 
-  IDB_LOG_MARK("IndexedDB %s: Parent Transaction[%lld]: "
-                 "Beginning database work",
-               "IndexedDB %s: P T[%lld]: DB Start",
-               IDB_LOG_ID_STRING(mBackgroundChildLoggingId),
-               mLoggingSerialNumber);
+  IDB_PROFILER_MARK("IndexedDB Transaction %llu: Beginning database work",
+                    "IDBTransaction[%llu] DT Start",
+                    mTransaction->GetSerialNumber());
 
   nsAutoTArray<nsCOMPtr<nsIRunnable>, 10> queue;
   nsRefPtr<FinishCallback> finishCallback;
@@ -895,11 +877,9 @@ TransactionThreadPool::TransactionQueue::Run()
   }
 #endif // DEBUG
 
-  IDB_LOG_MARK("IndexedDB %s: Parent Transaction[%lld]: "
-                 "Finished database work",
-               "IndexedDB %s: P T[%lld]: DB End",
-               IDB_LOG_ID_STRING(mBackgroundChildLoggingId),
-               mLoggingSerialNumber);
+  IDB_PROFILER_MARK("IndexedDB Transaction %llu: Finished database work",
+                    "IDBTransaction[%llu] DT Done",
+                    mTransaction->GetSerialNumber());
 
   nsRefPtr<FinishTransactionRunnable> finishTransactionRunnable =
     new FinishTransactionRunnable(mOwningThreadPool.forget(),

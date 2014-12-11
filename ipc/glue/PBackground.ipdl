@@ -8,7 +8,6 @@ include protocol PBlob;
 include protocol PFileDescriptorSet;
 
 include DOMTypes;
-include PBackgroundIDBSharedTypes;
 
 namespace mozilla {
 namespace ipc {
@@ -24,7 +23,7 @@ parent:
   // Only called at startup during mochitests to check the basic infrastructure.
   PBackgroundTest(nsCString testArg);
 
-  PBackgroundIDBFactory(LoggingInfo loggingInfo);
+  PBackgroundIDBFactory();
 
 both:
   PBlob(BlobConstructorParams params);
