@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette_test import MarionetteTestCase
-from errors import JavascriptException
-from by import By
+from marionette_driver.errors import JavascriptException
+from marionette_driver.by import By
 
 class TestSwitchFrameChrome(MarionetteTestCase):
     def setUp(self):
