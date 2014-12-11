@@ -255,7 +255,7 @@ AutocompletePopup.prototype = {
    */
   selectFirstItem: function AP_selectFirstItem()
   {
-    if (this.position.includes("before")) {
+    if (this.position.contains("before")) {
       this.selectedIndex = this.itemCount - 1;
     }
     else {

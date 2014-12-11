@@ -249,7 +249,7 @@ function waitForSourceShown(aPanel, aUrl) {
     let sourceUrl = aSource.url || aSource.introductionUrl;
     info("Source shown: " + sourceUrl);
 
-    if (!sourceUrl.includes(aUrl)) {
+    if (!sourceUrl.contains(aUrl)) {
       return waitForSourceShown(aPanel, aUrl);
     } else {
       ok(true, "The correct source has been shown.");
@@ -265,7 +265,7 @@ function ensureSourceIs(aPanel, aUrlOrSource, aWaitFlag = false) {
   let sources = aPanel.panelWin.DebuggerView.Sources;
 
   if (sources.selectedValue === aUrlOrSource ||
-      sources.selectedItem.attachment.source.url.includes(aUrlOrSource)) {
+      sources.selectedItem.attachment.source.url.contains(aUrlOrSource)) {
     ok(true, "Expected source is shown: " + aUrlOrSource);
     return promise.resolve(null);
   }

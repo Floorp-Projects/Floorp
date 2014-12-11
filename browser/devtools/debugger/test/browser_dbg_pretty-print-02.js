@@ -42,7 +42,7 @@ function selectContextMenuItem() {
 }
 
 function testSourceIsPretty() {
-  ok(gEditor.getText().includes("\n  "),
+  ok(gEditor.getText().contains("\n  "),
      "The source should be pretty printed.")
 }
 

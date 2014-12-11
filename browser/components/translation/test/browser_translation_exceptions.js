@@ -72,7 +72,7 @@ function openPopup(aPopup) {
   aPopup.focus();
   // One down event to open the popup.
   EventUtils.synthesizeKey("VK_DOWN",
-                           { altKey: !navigator.platform.includes("Mac") });
+                           { altKey: !navigator.platform.contains("Mac") });
 
   return deferred.promise;
 }

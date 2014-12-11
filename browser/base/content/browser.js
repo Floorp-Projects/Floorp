@@ -2964,7 +2964,7 @@ function getMeOutOfHere() {
     url = prefs.getComplexValue("browser.startup.homepage",
                                 Ci.nsIPrefLocalizedString).data;
     // If url is a pipe-delimited set of pages, just take the first one.
-    if (url.includes("|"))
+    if (url.contains("|"))
       url = url.split("|")[0];
   } catch(e) {
     Components.utils.reportError("Couldn't get homepage pref: " + e);
@@ -3773,7 +3773,7 @@ function FillHistoryMenu(aParent) {
 function addToUrlbarHistory(aUrlToAdd) {
   if (!PrivateBrowsingUtils.isWindowPrivate(window) &&
       aUrlToAdd &&
-      !aUrlToAdd.includes(" ") &&
+      !aUrlToAdd.contains(" ") &&
       !/[\x00-\x1F]/.test(aUrlToAdd))
     PlacesUIUtils.markPageAsTyped(aUrlToAdd);
 }
@@ -6646,7 +6646,7 @@ function GetSearchFieldBookmarkData(node) {
   if (isURLEncoded)
     postData = formData.join("&");
   else {
-    let separator = spec.includes("?") ? "&" : "?";
+    let separator = spec.contains("?") ? "&" : "?";
     spec += separator + formData.join("&");
   }
 

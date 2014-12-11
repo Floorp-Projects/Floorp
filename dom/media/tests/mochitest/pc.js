@@ -875,11 +875,11 @@ PCT_iceCandidateHandler(caller, candidate) {
   info("Received: " + JSON.stringify(candidate) + " from " + caller);
 
   var target = null;
-  if (caller.includes("pcLocal")) {
+  if (caller.contains("pcLocal")) {
     if (self.pcRemote) {
       target = self.pcRemote;
     }
-  } else if (caller.includes("pcRemote")) {
+  } else if (caller.contains("pcRemote")) {
     if (self.pcLocal) {
       target = self.pcLocal;
     }
@@ -2376,12 +2376,12 @@ PeerConnectionWrapper.prototype = {
     ok(desc, "SessionDescription is not null");
     is(desc.type, expectedType, "SessionDescription type is " + expectedType);
     ok(desc.sdp.length > 10, "SessionDescription body length is plausible");
-    ok(desc.sdp.includes("a=ice-ufrag"), "ICE username is present in SDP");
-    ok(desc.sdp.includes("a=ice-pwd"), "ICE password is present in SDP");
-    ok(desc.sdp.includes("a=fingerprint"), "ICE fingerprint is present in SDP");
+    ok(desc.sdp.contains("a=ice-ufrag"), "ICE username is present in SDP");
+    ok(desc.sdp.contains("a=ice-pwd"), "ICE password is present in SDP");
+    ok(desc.sdp.contains("a=fingerprint"), "ICE fingerprint is present in SDP");
     //TODO: update this for loopback support bug 1027350
-    ok(!desc.sdp.includes(LOOPBACK_ADDR), "loopback interface is absent from SDP");
-    if (desc.sdp.includes("a=candidate")) {
+    ok(!desc.sdp.contains(LOOPBACK_ADDR), "loopback interface is absent from SDP");
+    if (desc.sdp.contains("a=candidate")) {
       ok(true, "at least one ICE candidate is present in SDP");
       trickleIceCallback(false);
     } else {
@@ -2396,13 +2396,13 @@ PeerConnectionWrapper.prototype = {
 
     info("expected audio tracks: " + audioTracks);
     if (audioTracks == 0) {
-      ok(!desc.sdp.includes("m=audio"), "audio m-line is absent from SDP");
+      ok(!desc.sdp.contains("m=audio"), "audio m-line is absent from SDP");
     } else {
-      ok(desc.sdp.includes("m=audio"), "audio m-line is present in SDP");
-      ok(desc.sdp.includes("a=rtpmap:109 opus/48000/2"), "OPUS codec is present in SDP");
+      ok(desc.sdp.contains("m=audio"), "audio m-line is present in SDP");
+      ok(desc.sdp.contains("a=rtpmap:109 opus/48000/2"), "OPUS codec is present in SDP");
       //TODO: ideally the rtcp-mux should be for the m=audio, and not just
       //      anywhere in the SDP (JS SDP parser bug 1045429)
-      ok(desc.sdp.includes("a=rtcp-mux"), "RTCP Mux is offered in SDP");
+      ok(desc.sdp.contains("a=rtcp-mux"), "RTCP Mux is offered in SDP");
 
     }
 
@@ -2412,15 +2412,15 @@ PeerConnectionWrapper.prototype = {
 
     info("expected video tracks: " + videoTracks);
     if (videoTracks == 0) {
-      ok(!desc.sdp.includes("m=video"), "video m-line is absent from SDP");
+      ok(!desc.sdp.contains("m=video"), "video m-line is absent from SDP");
     } else {
-      ok(desc.sdp.includes("m=video"), "video m-line is present in SDP");
+      ok(desc.sdp.contains("m=video"), "video m-line is present in SDP");
       if (this.h264) {
-        ok(desc.sdp.includes("a=rtpmap:126 H264/90000"), "H.264 codec is present in SDP");
+        ok(desc.sdp.contains("a=rtpmap:126 H264/90000"), "H.264 codec is present in SDP");
       } else {
-        ok(desc.sdp.includes("a=rtpmap:120 VP8/90000"), "VP8 codec is present in SDP");
+        ok(desc.sdp.contains("a=rtpmap:120 VP8/90000"), "VP8 codec is present in SDP");
       }
-      ok(desc.sdp.includes("a=rtcp-mux"), "RTCP Mux is offered in SDP");
+      ok(desc.sdp.contains("a=rtcp-mux"), "RTCP Mux is offered in SDP");
     }
 
   },
@@ -2656,7 +2656,7 @@ PeerConnectionWrapper.prototype = {
       }
     });
     info("ICE connections according to stats: " + numIceConnections);
-    if (answer.sdp.includes('a=group:BUNDLE')) {
+    if (answer.sdp.contains('a=group:BUNDLE')) {
       is(numIceConnections, 1, "stats reports exactly 1 ICE connection");
     } else {
       // This code assumes that no media sections have been rejected due to

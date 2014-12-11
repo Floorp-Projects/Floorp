@@ -200,7 +200,7 @@ add_test(function test_checkForAddons_bad_ssl() {
   promise.then(function() {
     do_throw("Defensive timeout should reject");
   }, function(err) {
-    do_check_true(err.message.includes("SSL is required and URI scheme is not https."));
+    do_check_true(err.message.contains("SSL is required and URI scheme is not https."));
     installManager.uninit();
     if (PREF_KEY_URL_OVERRIDE_BACKUP) {
       Preferences.set(GMPPrefs.KEY_URL_OVERRIDE,

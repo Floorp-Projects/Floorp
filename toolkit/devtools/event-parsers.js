@@ -103,7 +103,7 @@ let parsers = [
       }
 
       for (let path of paths) {
-        if (name.includes(path[0])) {
+        if (name.contains(path[0])) {
           path.splice(0, 1);
 
           for (let point of path) {
@@ -121,7 +121,7 @@ let parsers = [
               }
 
               if (temp.class === "Function" &&
-                  (displayName.includes(point) || point === "*")) {
+                  (displayName.contains(point) || point === "*")) {
                 handlerDO = temp;
                 break;
               }

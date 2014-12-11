@@ -563,7 +563,7 @@ add_task(function* test_saveLoadPing() {
   let request2 = yield gRequestIterator.next();
 
   // Check we have the correct two requests. Ordering is not guaranteed.
-  if (request1.path.includes("test-ping")) {
+  if (request1.path.contains("test-ping")) {
     checkPayload(request1, "test-ping", 1);
     checkPayload(request2, "saved-session", 1);
   } else {
