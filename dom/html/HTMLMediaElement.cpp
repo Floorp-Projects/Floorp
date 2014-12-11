@@ -145,15 +145,22 @@ static const double THRESHOLD_LOW_PLAYBACKRATE_AUDIO = 0.5;
 // start playing afterward, so we need to stay alive.
 // 4) If autoplay could start playback in this element (if we got enough data),
 // then we need to stay alive.
-// 5) if the element is currently loading and not suspended,
-// script might be waiting for progress events or a 'suspend' event,
-// so we need to stay alive. If we're already suspended then (all other
-// conditions being met) it's OK to just disappear without firing any more
-// events, since we have the freedom to remain suspended indefinitely. Note
+// 5) if the element is currently loading, not suspended, and its source is
+// not a MediaSource, then script might be waiting for progress events or a
+// 'stalled' or 'suspend' event, so we need to stay alive.
+// If we're already suspended then (all other conditions being met),
+// it's OK to just disappear without firing any more events,
+// since we have the freedom to remain suspended indefinitely. Note
 // that we could use this 'suspended' loophole to garbage-collect a suspended
 // element in case 4 even if it had 'autoplay' set, but we choose not to.
 // If someone throws away all references to a loading 'autoplay' element
 // sound should still eventually play.
+// 6) If the source is a MediaSource, most loading events will not fire unless
+// appendBuffer() is called on a SourceBuffer, in which case something is
+// already referencing the SourceBuffer, which keeps the associated media
+// element alive. Further, a MediaSource will never time out the resource
+// fetch, and so should not keep the media element alive if it is
+// unreferenced. A pending 'stalled' event keeps the media element alive.
 //
 // Media elements owned by inactive documents (i.e. documents not contained in any
 // document viewer) should never hold a self-reference because none of the
@@ -3118,6 +3125,8 @@ void HTMLMediaElement::CheckProgress(bool aHaveNewProgress)
     // is more progress.
     StopProgress();
   }
+
+  AddRemoveSelfReference();
 }
 
 /* static */
@@ -3602,7 +3611,8 @@ void HTMLMediaElement::AddRemoveSelfReference()
      (!mPaused && mSrcStream && !mSrcStream->IsFinished()) ||
      (mDecoder && mDecoder->IsSeeking()) ||
      CanActivateAutoplay() ||
-     mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING);
+     (mMediaSource ? mProgressTimer :
+      mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING));
 
   if (needSelfReference != mHasSelfReference) {
     mHasSelfReference = needSelfReference;
