@@ -485,7 +485,7 @@ exports.testWindowStopDontBreak = function (assert, done) {
                             getService(Ci.nsIConsoleService);
   const listener = {
     observe: ({message}) => {
-      if (message.includes('contentWorker is null'))
+      if (message.contains('contentWorker is null'))
         assert.fail('contentWorker is null');
     }
   };

@@ -43,7 +43,7 @@ function test() {
 
 function testChromeActor() {
   gClient.listTabs(aResponse => {
-    ok(aResponse.chromeDebugger.includes("chromeDebugger"),
+    ok(aResponse.chromeDebugger.contains("chromeDebugger"),
       "Chrome debugger actor should identify itself accordingly.");
 
     gClient.addListener("newGlobal", onNewGlobal);

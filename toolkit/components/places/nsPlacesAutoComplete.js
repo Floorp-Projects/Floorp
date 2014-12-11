@@ -1500,7 +1500,7 @@ urlInlineComplete.prototype = {
         // If the untrimmed value doesn't preserve the user's input just
         // ignore it and complete to the found host.
         if (untrimmedHost &&
-            !untrimmedHost.toLowerCase().includes(ac._originalSearchString.toLowerCase())) {
+            !untrimmedHost.toLowerCase().contains(ac._originalSearchString.toLowerCase())) {
           untrimmedHost = null;
         }
 
@@ -1575,7 +1575,7 @@ urlInlineComplete.prototype = {
         // ignore it and complete to the found url.
         let untrimmedURL = prefix + url;
         if (untrimmedURL &&
-            !untrimmedURL.toLowerCase().includes(ac._originalSearchString.toLowerCase())) {
+            !untrimmedURL.toLowerCase().contains(ac._originalSearchString.toLowerCase())) {
           untrimmedURL = null;
          }
 

@@ -142,7 +142,7 @@ function checkDiskCacheFor(host, done)
     {
       var urispec = uri.asciiSpec;
       info(urispec);
-      foundPrivateData |= urispec.includes(host);
+      foundPrivateData |= urispec.contains(host);
     },
     onCacheEntryVisitCompleted: function()
     {

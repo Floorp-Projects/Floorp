@@ -21,7 +21,7 @@ function runTests(sw)
   sp.setText("function main() { console.log(5); }");
   sp.prettyPrint().then(() => {
     const prettyText = sp.getText();
-    ok(prettyText.includes("\n"));
+    ok(prettyText.contains("\n"));
     finish();
   }).then(null, error => {
     ok(false, error);

@@ -49,14 +49,14 @@ function testTraceLogs() {
      "The second 'onclick' log should be a return.");
   for (let t of onclickLogs) {
     ok(t.querySelector(".trace-item").getAttribute("tooltiptext")
-        .includes("doc_tracing-01.html"));
+        .contains("doc_tracing-01.html"));
   }
 
   const nonOnclickLogs = filterTraces(gPanel,
                                       t => !t.querySelector(".trace-name[value=onclick]"));
   for (let t of nonOnclickLogs) {
     ok(t.querySelector(".trace-item").getAttribute("tooltiptext")
-        .includes("code_tracing-01.js"));
+        .contains("code_tracing-01.js"));
   }
 
   const mainLogs = filterTraces(gPanel,

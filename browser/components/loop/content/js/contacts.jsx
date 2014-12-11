@@ -481,8 +481,8 @@ loop.contacts = (function(_, mozL10n) {
         let filter = this.state.filter.trim().toLocaleLowerCase();
         if (filter) {
           let filterFn = contact => {
-            return contact.name[0].toLocaleLowerCase().includes(filter) ||
-                   getPreferred(contact, "email").value.toLocaleLowerCase().includes(filter);
+            return contact.name[0].toLocaleLowerCase().contains(filter) ||
+                   getPreferred(contact, "email").value.toLocaleLowerCase().contains(filter);
           };
           if (shownContacts.available) {
             shownContacts.available = shownContacts.available.filter(filterFn);

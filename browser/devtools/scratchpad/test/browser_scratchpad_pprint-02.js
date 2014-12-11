@@ -27,7 +27,7 @@ function runTests(sw)
   sp.setText("function main() { console.log(5); }");
   sp.prettyPrint().then(() => {
     const prettyText = sp.getText();
-    ok(prettyText.includes(space));
+    ok(prettyText.contains(space));
     finish();
   }).then(null, error => {
     ok(false, error);

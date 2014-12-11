@@ -134,8 +134,8 @@ var TextEditor = Class({
       let keyUpper = key.getAttribute("key").toUpperCase();
       let toolModifiers = key.getAttribute("modifiers");
       let modifiers = {
-        alt: toolModifiers.includes("alt"),
-        shift: toolModifiers.includes("shift")
+        alt: toolModifiers.contains("alt"),
+        shift: toolModifiers.contains("shift")
       };
 
       // On the key press, we will dispatch the event within projecteditor.

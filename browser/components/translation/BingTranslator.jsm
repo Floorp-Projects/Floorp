@@ -135,8 +135,8 @@ this.BingTranslator.prototype = {
     if (aError instanceof RESTRequest &&
         [400, 401].indexOf(aError.response.status) != -1) {
       let body = aError.response.body;
-      if (body.includes("TranslateApiException") &&
-          (body.includes("balance") || body.includes("active state")))
+      if (body.contains("TranslateApiException") &&
+          (body.contains("balance") || body.contains("active state")))
         this._serviceUnavailable = true;
     }
 
