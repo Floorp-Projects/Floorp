@@ -7,7 +7,7 @@ function test() {
 	try {
 	    arr.push(2);
 	} catch(e) {
-	    assertEq(e.toString().includes("length"), true);
+	    assertEq(e.toString().contains("length"), true);
 	    c++;
 	}
     }

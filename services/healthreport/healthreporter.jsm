@@ -756,7 +756,7 @@ AbstractHealthReporter.prototype = Object.freeze({
       recordMessage = recordMessage.replace(path, '<' + thing + 'Path>', 'g');
     }
 
-    if (appData.path.includes(profile.path)) {
+    if (appData.path.contains(profile.path)) {
       replace(appDataURI, appData.path, 'AppData');
       replace(profileURI, profile.path, 'Profile');
     } else {

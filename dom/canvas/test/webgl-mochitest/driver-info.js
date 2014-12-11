@@ -128,13 +128,13 @@ DriverInfo = (function() {
     info('GL vendor: ' + glVendor);
     info('GL renderer: ' + glRenderer);
 
-    if (glRenderer.includes('llvmpipe')) {
+    if (glRenderer.contains('llvmpipe')) {
       kDriver = DRIVER.MESA;
-    } else if (glRenderer.includes('Android Emulator')) {
+    } else if (glRenderer.contains('Android Emulator')) {
       kDriver = DRIVER.ANDROID_X86_EMULATOR;
-    } else if (glRenderer.includes('ANGLE')) {
+    } else if (glRenderer.contains('ANGLE')) {
       kDriver = DRIVER.ANGLE;
-    } else if (glVendor.includes('NVIDIA')) {
+    } else if (glVendor.contains('NVIDIA')) {
       kDriver = DRIVER.NVIDIA;
     }
   } catch (e) {

@@ -113,7 +113,7 @@ let wrapper = {
     // URLSearchParams implementation doesn't support iteration (bug 1085284).
     let urlParamStr = urlParams.toString();
     if (urlParamStr) {
-      url += (url.includes("?") ? "&" : "?") + urlParamStr;
+      url += (url.contains("?") ? "&" : "?") + urlParamStr;
     }
     iframe.src = url;
   },

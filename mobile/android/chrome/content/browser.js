@@ -5742,7 +5742,7 @@ var FormAssistant = {
       else if (item.text)
         label = item.text;
 
-      if (filter && !(label.toLowerCase().includes(lowerFieldValue)) )
+      if (filter && !(label.toLowerCase().contains(lowerFieldValue)) )
         continue;
       suggestions.push({ label: label, value: item.value });
     }

@@ -58,7 +58,7 @@ function makeOffererNonTrickle(chain) {
         info("test.pcLocal.localDescription.sdp: " + JSON.stringify(test.pcLocal.localDescription.sdp));
         info("test._local_offer.sdp" + JSON.stringify(test._local_offer.sdp));
         ok(!test.localRequiresTrickleIce, "Local does NOT require trickle");
-        ok(test._local_offer.sdp.includes("a=candidate"), "offer has ICE candidates")
+        ok(test._local_offer.sdp.contains("a=candidate"), "offer has ICE candidates")
         // TODO check for a=end-of-candidates once implemented
         test.next();
       }
@@ -121,7 +121,7 @@ function makeAnswererNonTrickle(chain) {
         info("test.pcRemote.localDescription.sdp: " + JSON.stringify(test.pcRemote.localDescription.sdp));
         info("test._remote_answer.sdp" + JSON.stringify(test._remote_answer.sdp));
         ok(!test.remoteRequiresTrickleIce, "Remote does NOT require trickle");
-        ok(test._remote_answer.sdp.includes("a=candidate"), "answer has ICE candidates")
+        ok(test._remote_answer.sdp.contains("a=candidate"), "answer has ICE candidates")
         // TODO check for a=end-of-candidates once implemented
         test.next();
       }

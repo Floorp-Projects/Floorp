@@ -12,8 +12,8 @@ const cssTokenizer  = require("devtools/sourceeditor/css-tokenizer");
  * Returns the string enclosed in quotes
  */
 function quoteString(string) {
-  let hasDoubleQuotes = string.includes('"');
-  let hasSingleQuotes = string.includes("'");
+  let hasDoubleQuotes = string.contains('"');
+  let hasSingleQuotes = string.contains("'");
 
   if (hasDoubleQuotes && !hasSingleQuotes) {
     // In this case, no escaping required, just enclose in single-quotes

@@ -78,7 +78,7 @@ function runTests(sw)
          "Should get the full text back since there was a parse error.");
       ok(!error, "Should not have got an error");
       ok(!result, "Should not have got a result");
-      ok(sp.getText().includes("SyntaxError"),
+      ok(sp.getText().contains("SyntaxError"),
          "We should have written the syntax error to the scratchpad.");
     })
 

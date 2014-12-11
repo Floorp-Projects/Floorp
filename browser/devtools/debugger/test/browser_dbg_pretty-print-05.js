@@ -29,7 +29,7 @@ function test() {
 
       is(getSelectedSourceURL(gSources), TAB_URL,
         "The correct source is currently selected.");
-      ok(gEditor.getText().includes("myFunction"),
+      ok(gEditor.getText().contains("myFunction"),
         "The source shouldn't be pretty printed yet.");
 
       clickPrettyPrintButton();
@@ -47,9 +47,9 @@ function test() {
       [source, text] = yield gControllerSources.getText(source);
       is(getSelectedSourceURL(gSources), TAB_URL,
         "The correct source is still selected.");
-      ok(gEditor.getText().includes("myFunction"),
+      ok(gEditor.getText().contains("myFunction"),
         "The displayed source hasn't changed.");
-      ok(text.includes("myFunction"),
+      ok(text.contains("myFunction"),
         "The cached source text wasn't altered in any way.");
 
       yield closeDebuggerAndFinish(gPanel);

@@ -37,7 +37,7 @@ function testLocationColumn() {
   for(let i = 0, len = messages.length; i < len; i++) {
     let msg = messages[i].textContent;
 
-    is(msg.includes(expected[i]), true, 'Found expected line:column of ' + expected[i]);
+    is(msg.contains(expected[i]), true, 'Found expected line:column of ' + expected[i]);
   }
 
   finishTest();

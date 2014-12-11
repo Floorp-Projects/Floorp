@@ -1113,7 +1113,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           <![CDATA[
           let width  = Math.round(aWidth * aWin.devicePixelRatio);
           let height = Math.round(aHeight * aWin.devicePixelRatio);
-          return aURL + (aURL.includes("#") ? "&" : "#") +
+          return aURL + (aURL.contains("#") ? "&" : "#") +
                  "-moz-resolution=" + width + "," + height;
           ]]>
         </body>

@@ -154,7 +154,7 @@ function activateSecondaryAction(aAction) {
 
   // One down event to open the popup
   EventUtils.synthesizeKey("VK_DOWN",
-                           { altKey: !navigator.platform.includes("Mac") });
+                           { altKey: !navigator.platform.contains("Mac") });
 }
 
 registerCleanupFunction(function() {

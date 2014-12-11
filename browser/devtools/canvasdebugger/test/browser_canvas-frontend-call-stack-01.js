@@ -32,16 +32,16 @@ function ifTestingSupported() {
     "There should be 4 functions on the stack for the draw call.");
 
   ok($all(".call-item-stack-fn-name", callItem.target)[0].getAttribute("value")
-    .includes("C()"),
+    .contains("C()"),
     "The first function on the stack has the correct name.");
   ok($all(".call-item-stack-fn-name", callItem.target)[1].getAttribute("value")
-    .includes("B()"),
+    .contains("B()"),
     "The second function on the stack has the correct name.");
   ok($all(".call-item-stack-fn-name", callItem.target)[2].getAttribute("value")
-    .includes("A()"),
+    .contains("A()"),
     "The third function on the stack has the correct name.");
   ok($all(".call-item-stack-fn-name", callItem.target)[3].getAttribute("value")
-    .includes("drawRect()"),
+    .contains("drawRect()"),
     "The fourth function on the stack has the correct name.");
 
   is($all(".call-item-stack-fn-location", callItem.target)[0].getAttribute("value"),
