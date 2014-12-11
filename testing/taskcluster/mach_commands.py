@@ -21,6 +21,7 @@ from mach.decorators import (
 
 from taskcluster_graph.commit_parser import parse_commit
 from taskcluster_graph.slugid import slugid
+from taskcluster_graph.slugidjar import SlugidJar
 from taskcluster_graph.from_now import json_time_from_now, current_json_time
 from taskcluster_graph.templates import Templates
 
@@ -82,6 +83,39 @@ def docker_image(name):
 
 def get_task(task_id):
     return json.load(urllib2.urlopen("https://queue.taskcluster.net/v1/task/" + task_id))
+
+@CommandProvider
+class DecisionTask(object):
+    @Command('taskcluster-decision', category="ci",
+        description="Build a decision task")
+    @CommandArgument('--project',
+        required=True,
+        help='Treeherder project name')
+    @CommandArgument('--revision',
+        required=True,
+        help='Revision for this project')
+    @CommandArgument('--comment',
+        required=True,
+        help='Commit message for this revision')
+    @CommandArgument('--owner',
+        required=True,
+        help='email address of who owns this graph')
+    @CommandArgument('task', help="Path to decision task to run.")
+    def run_task(self, **params):
+        templates = Templates(ROOT)
+        # Template parameters used when expanding the graph
+        parameters = {
+            'source': 'http://todo.com/soon',
+            'project': params['project'],
+            'comment': params['comment'],
+            'revision': params['revision'],
+            'owner': params['owner'],
+            'as_slugid': SlugidJar(),
+            'from_now': json_time_from_now,
+            'now': datetime.datetime.now().isoformat()
+        }
+        task = templates.load(params['task'], parameters)
+        print(json.dumps(task, indent=4))
 
 @CommandProvider
 class TryGraph(object):
