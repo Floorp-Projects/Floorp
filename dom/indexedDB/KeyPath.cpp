@@ -31,7 +31,7 @@ IgnoreWhitespace(char16_t c)
 typedef nsCharSeparatedTokenizerTemplate<IgnoreWhitespace> KeyPathTokenizer;
 
 bool
-IsValidKeyPathString(JSContext* aCx, const nsAString& aKeyPath)
+IsValidKeyPathString(const nsAString& aKeyPath)
 {
   NS_ASSERTION(!aKeyPath.IsVoid(), "What?");
 
@@ -44,16 +44,7 @@ IsValidKeyPathString(JSContext* aCx, const nsAString& aKeyPath)
       return false;
     }
 
-    JS::Rooted<JS::Value> stringVal(aCx);
-    if (!xpc::StringToJsval(aCx, token, &stringVal)) {
-      return false;
-    }
-
-    NS_ASSERTION(stringVal.toString(), "This should never happen");
-    JS::Rooted<JSString*> str(aCx, stringVal.toString());
-
-    bool isIdentifier = false;
-    if (!JS_IsIdentifier(aCx, str, &isIdentifier) || !isIdentifier) {
+    if (!JS_IsIdentifier(token.get(), token.Length())) {
       return false;
     }
   }
@@ -83,7 +74,7 @@ GetJSValFromKeyPathString(JSContext* aCx,
                           void* aClosure)
 {
   NS_ASSERTION(aCx, "Null pointer!");
-  NS_ASSERTION(IsValidKeyPathString(aCx, aKeyPathString),
+  NS_ASSERTION(IsValidKeyPathString(aKeyPathString),
                "This will explode!");
   NS_ASSERTION(!(aCallback || aClosure) || aOptions == CreateProperties,
                "This is not allowed!");
@@ -229,12 +220,12 @@ GetJSValFromKeyPathString(JSContext* aCx,
 
 // static
 nsresult
-KeyPath::Parse(JSContext* aCx, const nsAString& aString, KeyPath* aKeyPath)
+KeyPath::Parse(const nsAString& aString, KeyPath* aKeyPath)
 {
   KeyPath keyPath(0);
   keyPath.SetType(STRING);
 
-  if (!keyPath.AppendStringWithValidation(aCx, aString)) {
+  if (!keyPath.AppendStringWithValidation(aString)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -244,14 +235,13 @@ KeyPath::Parse(JSContext* aCx, const nsAString& aString, KeyPath* aKeyPath)
 
 //static
 nsresult
-KeyPath::Parse(JSContext* aCx, const mozilla::dom::Sequence<nsString>& aStrings,
-               KeyPath* aKeyPath)
+KeyPath::Parse(const Sequence<nsString>& aStrings, KeyPath* aKeyPath)
 {
   KeyPath keyPath(0);
   keyPath.SetType(ARRAY);
 
   for (uint32_t i = 0; i < aStrings.Length(); ++i) {
-    if (!keyPath.AppendStringWithValidation(aCx, aStrings[i])) {
+    if (!keyPath.AppendStringWithValidation(aStrings[i])) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -295,7 +285,7 @@ KeyPath::Parse(JSContext* aCx, const JS::Value& aValue_, KeyPath* aKeyPath)
         return NS_ERROR_FAILURE;
       }
 
-      if (!keyPath.AppendStringWithValidation(aCx, str)) {
+      if (!keyPath.AppendStringWithValidation(str)) {
         return NS_ERROR_FAILURE;
       }
     }
@@ -311,7 +301,7 @@ KeyPath::Parse(JSContext* aCx, const JS::Value& aValue_, KeyPath* aKeyPath)
 
     keyPath.SetType(STRING);
 
-    if (!keyPath.AppendStringWithValidation(aCx, str)) {
+    if (!keyPath.AppendStringWithValidation(str)) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -328,9 +318,9 @@ KeyPath::SetType(KeyPathType aType)
 }
 
 bool
-KeyPath::AppendStringWithValidation(JSContext* aCx, const nsAString& aString)
+KeyPath::AppendStringWithValidation(const nsAString& aString)
 {
-  if (!IsValidKeyPathString(aCx, aString)) {
+  if (!IsValidKeyPathString(aString)) {
     return false;
   }
 
