@@ -844,6 +844,11 @@ this.AddonRepository = {
         if (idIndex == -1)
           continue;
 
+        // Ignore add-on if the add-on manager doesn't know about its type:
+        if (!(result.addon.type in AddonManager.addonTypes)) {
+          continue;
+        }
+
         results.push(result);
         // Ignore this add-on from now on
         ids.splice(idIndex, 1);
@@ -1089,10 +1094,8 @@ this.AddonRepository = {
               addon.type = "search";
               break;
             case 5:
-              addon.type = "langpack";
-              break;
             case 6:
-              addon.type = "langpack-addon";
+              addon.type = "locale";
               break;
             case 7:
               addon.type = "plugin";
@@ -1301,6 +1304,10 @@ this.AddonRepository = {
       // Ignore add-on missing a required attribute
       let requiredAttributes = ["id", "name", "version", "type", "creator"];
       if (requiredAttributes.some(function parseAddons_attributeFilter(aAttribute) !result.addon[aAttribute]))
+        continue;
+
+      // Ignore add-on with a type AddonManager doesn't understand:
+      if (!(result.addon.type in AddonManager.addonTypes))
         continue;
 
       // Add only if the add-on is compatible with the platform
