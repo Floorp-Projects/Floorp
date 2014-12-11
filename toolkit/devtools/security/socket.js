@@ -318,7 +318,10 @@ SocketListener.prototype = {
       dumpn("Socket listening on: " + (self.port || self.portOrPath));
     }).then(() => {
       if (this.discoverable && this.port) {
-        discovery.addService("devtools", { port: this.port });
+        discovery.addService("devtools", {
+          port: this.port,
+          encryption: this.encryption
+        });
       }
     }).catch(e => {
       dumpn("Could not start debugging listener on '" + this.portOrPath +
