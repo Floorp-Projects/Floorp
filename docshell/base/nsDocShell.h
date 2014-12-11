@@ -305,6 +305,11 @@ public:
         {
         }
 
+        virtual void AddLayerRectangles(mozilla::dom::Sequence<mozilla::dom::ProfileTimelineLayerRect>&)
+        {
+            MOZ_ASSERT_UNREACHABLE("can only be called on layer markers");
+        }
+
         const char* GetName() const
         {
             return mName;
