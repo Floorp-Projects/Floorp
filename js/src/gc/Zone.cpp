@@ -281,7 +281,7 @@ ZoneList::ZoneList()
 ZoneList::ZoneList(Zone *zone)
   : head(zone), tail(zone)
 {
-    MOZ_ASSERT(!zone->isOnList());
+    MOZ_RELEASE_ASSERT(!zone->isOnList());
     zone->listNext_ = nullptr;
 }
 
