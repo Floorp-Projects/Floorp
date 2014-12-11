@@ -333,10 +333,15 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     uint8_t opacity = std::min(0xFF, (int)(aLayer->GetEffectiveOpacity() * 256.0));
 #if ANDROID_VERSION < 18
     if (opacity < 0xFF) {
-        LOGD("%s Layer has planar semitransparency which is unsupported", aLayer->Name());
+        LOGD("%s Layer has planar semitransparency which is unsupported by hwcomposer", aLayer->Name());
         return false;
     }
 #endif
+
+    if (aLayer->GetMaskLayer()) {
+      LOGD("%s Layer has MaskLayer which is unsupported by hwcomposer", aLayer->Name());
+      return false;
+    }
 
     nsIntRect clip;
     if (!HwcUtils::CalculateClipRect(aParentTransform,
