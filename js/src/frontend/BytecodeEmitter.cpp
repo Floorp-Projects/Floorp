@@ -3592,6 +3592,9 @@ BytecodeEmitter::emitFunctionScript(ParseNode* body)
     if (!emitTree(body))
         return false;
 
+    if (!updateSourceCoordNotes(body->pn_pos.end))
+        return false;
+
     if (sc->isFunctionBox()) {
         if (sc->asFunctionBox()->isGenerator()) {
             // If we fall off the end of a generator, do a final yield.
