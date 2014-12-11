@@ -14,7 +14,7 @@
 <script>
 
 var scrollPositions = [81, 82];
-if (location.search.contains("reverse")) {
+if (location.search.includes("reverse")) {
   scrollPositions.reverse();
 }
 document.documentElement.scrollTop = scrollPositions[0];

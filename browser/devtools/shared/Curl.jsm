@@ -157,14 +157,14 @@ this.CurlUtils = {
     }
 
     postDataText = postDataText.toLowerCase();
-    if (postDataText.contains("content-type: application/x-www-form-urlencoded")) {
+    if (postDataText.includes("content-type: application/x-www-form-urlencoded")) {
       return true;
     }
 
     let contentType = this.findHeader(aData.headers, "content-type");
 
     return (contentType &&
-      contentType.toLowerCase().contains("application/x-www-form-urlencoded"));
+      contentType.toLowerCase().includes("application/x-www-form-urlencoded"));
   },
 
   /**
@@ -182,14 +182,14 @@ this.CurlUtils = {
     }
 
     postDataText = postDataText.toLowerCase();
-    if (postDataText.contains("content-type: multipart/form-data")) {
+    if (postDataText.includes("content-type: multipart/form-data")) {
       return true;
     }
 
     let contentType = this.findHeader(aData.headers, "content-type");
 
     return (contentType &&
-      contentType.toLowerCase().contains("multipart/form-data;"));
+      contentType.toLowerCase().includes("multipart/form-data;"));
   },
 
   /**
@@ -278,8 +278,8 @@ this.CurlUtils = {
         continue;
       }
       contentDispositionLine = contentDispositionLine.toLowerCase();
-      if (contentDispositionLine.contains("content-disposition: form-data")) {
-        if (contentDispositionLine.contains("filename=")) {
+      if (contentDispositionLine.includes("content-disposition: form-data")) {
+        if (contentDispositionLine.includes("filename=")) {
           // The header lines and the binary blob is separated by 2 CRLF's.
           // Add only the headers to the result.
           let headers = part.split("\r\n\r\n")[0];

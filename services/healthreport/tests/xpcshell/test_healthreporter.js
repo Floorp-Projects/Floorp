@@ -917,7 +917,7 @@ add_task(function test_failure_if_not_initialized() {
     yield reporter.requestDataUpload();
   } catch (ex) {
     error = true;
-    do_check_true(ex.message.contains("Not initialized."));
+    do_check_true(ex.message.includes("Not initialized."));
   } finally {
     do_check_true(error);
     error = false;
@@ -927,7 +927,7 @@ add_task(function test_failure_if_not_initialized() {
     yield reporter.collectMeasurements();
   } catch (ex) {
     error = true;
-    do_check_true(ex.message.contains("Not initialized."));
+    do_check_true(ex.message.includes("Not initialized."));
   } finally {
     do_check_true(error);
     error = false;
@@ -984,7 +984,7 @@ add_task(function test_upload_on_init_failure() {
   do_check_eq(doc.notInitialized, 1);
   do_check_true("errors" in doc);
   do_check_eq(doc.errors.length, 1);
-  do_check_true(doc.errors[0].contains(MESSAGE));
+  do_check_true(doc.errors[0].includes(MESSAGE));
 
   yield reporter._shutdown();
   yield shutdownServer(server);

@@ -431,7 +431,7 @@ const PanelUI = {
       if (!label) {
         continue;
       }
-      if (label.contains("\u00ad")) {
+      if (label.includes("\u00ad")) {
         node.setAttribute("auto-hyphens", "off");
       } else {
         node.removeAttribute("auto-hyphens");

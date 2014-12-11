@@ -18,7 +18,7 @@ function testSupported() {
   navigator.getFeature("hardware.memory").then(function(mem) {
 
     var isLinux = (navigator.platform.indexOf('Linux') != -1);
-    var isAndroid = !!navigator.userAgent.contains("Android");
+    var isAndroid = !!navigator.userAgent.includes("Android");
     var isB2G = !isAndroid && /Mobile|Tablet/.test(navigator.userAgent);
 
     if (isLinux) {
@@ -103,7 +103,7 @@ SpecialPowers.pushPermissions([
   ok('hasFeature' in navigator, "navigator.hasFeature should exist");
   // B2G specific manifest features.
   // Touching navigator before pushPermissions makes it fail.
-  if (!navigator.userAgent.contains("Android") &&
+  if (!navigator.userAgent.includes("Android") &&
         /Mobile|Tablet/.test(navigator.userAgent)) {
     info("Adding B2G specific tests");
     tests.push(createManifestTest("manifest.chrome.navigation"));

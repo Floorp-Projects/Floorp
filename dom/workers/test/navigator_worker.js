@@ -19,7 +19,7 @@ var supportedProps = [
 ];
 
 var isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
-var isB2G = !isDesktop && !navigator.userAgent.contains("Android");
+var isB2G = !isDesktop && !navigator.userAgent.includes("Android");
 
 // Prepare the interface map showing if a propery should exist in this build.
 // For example, if interfaceMap[foo] = true means navigator.foo should exist.

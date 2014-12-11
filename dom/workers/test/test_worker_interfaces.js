@@ -143,9 +143,9 @@ var interfaceNamesInGlobalScope =
 
 function createInterfaceMap(prefMap, permissionMap, version, userAgent) {
   var isNightly = version.endsWith("a1");
-  var isRelease = !version.contains("a");
+  var isRelease = !version.includes("a");
   var isDesktop = !/Mobile|Tablet/.test(userAgent);
-  var isB2G = !isDesktop && !userAgent.contains("Android");
+  var isB2G = !isDesktop && !userAgent.includes("Android");
 
   var interfaceMap = {};
 

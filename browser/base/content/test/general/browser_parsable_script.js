@@ -83,7 +83,7 @@ add_task(function* checkAllTheJS() {
 
   let uris;
   // If an absolute URI is specified on the command line, use it immediately.
-  if (parseValue && parseValue.contains(":")) {
+  if (parseValue && parseValue.includes(":")) {
     uris = [NetUtil.newURI(parseValue)];
   } else {
     let appDir = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
@@ -98,7 +98,7 @@ add_task(function* checkAllTheJS() {
     // Apply the filter specified on the command line, if any.
     if (parseValue) {
       uris = uris.filter(uri => {
-        if (uri.spec.contains(parseValue)) {
+        if (uri.spec.includes(parseValue)) {
           return true;
         }
         info("Not checking filtered out " + uri.spec);

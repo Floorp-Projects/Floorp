@@ -34,7 +34,7 @@
         continue;
       }
 
-      if (msg.category.contains("DOM") && msg.errorMessage.contains("Importing XUL")) {
+      if (msg.category.includes("DOM") && msg.errorMessage.includes("Importing XUL")) {
         sawWarning = true;
       }
     }

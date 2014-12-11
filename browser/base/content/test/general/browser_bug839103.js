@@ -18,7 +18,7 @@ function initialStylesheetAdded(evt) {
   is(evt.type, "StyleSheetAdded", "evt.type has expected value");
   is(evt.target, gBrowser.contentDocument, "event targets correct document");
   ok(evt.stylesheet, "evt.stylesheet is defined");
-  ok(evt.stylesheet.toString().contains("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
+  ok(evt.stylesheet.toString().includes("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
   ok(evt.documentSheet, "style sheet is a document sheet");
 }
 
@@ -63,7 +63,7 @@ function dynamicStylesheetAdded(evt) {
   is(evt.type, "StyleSheetAdded", "evt.type has expected value");
   is(evt.target, gBrowser.contentDocument, "event targets correct document");
   ok(evt.stylesheet, "evt.stylesheet is defined");
-  ok(evt.stylesheet.toString().contains("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
+  ok(evt.stylesheet.toString().includes("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
   ok(evt.documentSheet, "style sheet is a document sheet");
 }
 
@@ -97,8 +97,8 @@ function dynamicStylesheetRemoved(evt) {
   is(evt.type, "StyleSheetRemoved", "evt.type has expected value");
   is(evt.target, gBrowser.contentDocument, "event targets correct document");
   ok(evt.stylesheet, "evt.stylesheet is defined");
-  ok(evt.stylesheet.toString().contains("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
-  ok(evt.stylesheet.href.contains(gStyleSheet), "evt.stylesheet is the removed stylesheet");
+  ok(evt.stylesheet.toString().includes("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
+  ok(evt.stylesheet.href.includes(gStyleSheet), "evt.stylesheet is the removed stylesheet");
 
   gBrowser.addEventListener("StyleRuleAdded", styleRuleAdded, true);
   gBrowser.contentDocument.querySelector("style").sheet.insertRule("*{color:black}", 0);
@@ -110,7 +110,7 @@ function styleRuleAdded(evt) {
   is(evt.type, "StyleRuleAdded", "evt.type has expected value");
   is(evt.target, gBrowser.contentDocument, "event targets correct document");
   ok(evt.stylesheet, "evt.stylesheet is defined");
-  ok(evt.stylesheet.toString().contains("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
+  ok(evt.stylesheet.toString().includes("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
   ok(evt.rule, "evt.rule is defined");
   is(evt.rule.cssText, "* { color: black; }", "evt.rule.cssText has expected value");
 
@@ -124,7 +124,7 @@ function styleRuleChanged(evt) {
   is(evt.type, "StyleRuleChanged", "evt.type has expected value");
   is(evt.target, gBrowser.contentDocument, "event targets correct document");
   ok(evt.stylesheet, "evt.stylesheet is defined");
-  ok(evt.stylesheet.toString().contains("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
+  ok(evt.stylesheet.toString().includes("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
   ok(evt.rule, "evt.rule is defined");
   is(evt.rule.cssText, "* { color: green; }", "evt.rule.cssText has expected value");
 
@@ -138,7 +138,7 @@ function styleRuleRemoved(evt) {
   is(evt.type, "StyleRuleRemoved", "evt.type has expected value");
   is(evt.target, gBrowser.contentDocument, "event targets correct document");
   ok(evt.stylesheet, "evt.stylesheet is defined");
-  ok(evt.stylesheet.toString().contains("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
+  ok(evt.stylesheet.toString().includes("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
   ok(evt.rule, "evt.rule is defined");
 
   executeSoon(concludeTest);

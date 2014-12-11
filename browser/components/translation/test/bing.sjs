@@ -130,7 +130,7 @@ function checkAuth(req) {
     throw new HTTPError(401, "Invalid Authorization header content: '" + auth + "'");
 
   // Rejecting inactive subscriptions.
-  if (auth.contains("inactive")) {
+  if (auth.includes("inactive")) {
     const INACTIVE_STATE_RESPONSE = "<html><body><h1>TranslateApiException</h1><p>Method: TranslateArray()</p><p>Message: The Azure Market Place Translator Subscription associated with the request credentials is not in an active state.</p><code></code><p>message id=5641.V2_Rest.TranslateArray.48CC6470</p></body></html>";
     throw new HTTPError(401, INACTIVE_STATE_RESPONSE);
   }
