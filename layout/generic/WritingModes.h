@@ -1041,6 +1041,36 @@ public:
     mMargin.SizeTo(aBStart, aIEnd, aBEnd, aIStart);
   }
 
+  nscoord& Top(WritingMode aWritingMode)
+  {
+    CHECK_WRITING_MODE(aWritingMode);
+    return aWritingMode.IsVertical() ?
+      (aWritingMode.IsBidiLTR() ? IStart() : IEnd()) : BStart();
+  }
+
+  nscoord& Bottom(WritingMode aWritingMode)
+  {
+    CHECK_WRITING_MODE(aWritingMode);
+    return aWritingMode.IsVertical() ?
+      (aWritingMode.IsBidiLTR() ? IEnd() : IStart()) : BEnd();
+  }
+
+  nscoord& Left(WritingMode aWritingMode)
+  {
+    CHECK_WRITING_MODE(aWritingMode);
+    return aWritingMode.IsVertical() ?
+      (aWritingMode.IsVerticalLR() ? BStart() : BEnd()) :
+      (aWritingMode.IsBidiLTR() ? IStart() : IEnd());
+  }
+
+  nscoord& Right(WritingMode aWritingMode)
+  {
+    CHECK_WRITING_MODE(aWritingMode);
+    return aWritingMode.IsVertical() ?
+      (aWritingMode.IsVerticalLR() ? BEnd() : BStart()) :
+      (aWritingMode.IsBidiLTR() ? IEnd() : IStart());
+  }
+
   /**
    * Return an nsMargin containing our physical coordinates
    */

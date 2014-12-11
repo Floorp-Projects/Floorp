@@ -166,8 +166,8 @@ public:
   // to the display-reflow infrastructure.
   static void* DisplayInitOffsetsEnter(nsIFrame* aFrame,
                                        nsCSSOffsetState* aState,
-                                       nscoord aHorizontalPercentBasis,
-                                       nscoord aVerticalPercentBasis,
+                                       nscoord aInlineDirPercentBasis,
+                                       nscoord aBlockDirPercentBasis,
                                        const nsMargin* aBorder,
                                        const nsMargin* aPadding);
   static void DisplayInitOffsetsExit(nsIFrame* aFrame,
@@ -189,8 +189,8 @@ private:
    *    be the containing block *height*, e.g. in CSS3 Flexbox and Grid.
    * @return true if the margin is dependent on the containing block size.
    */
-  bool ComputeMargin(nscoord aHorizontalPercentBasis,
-                     nscoord aVerticalPercentBasis);
+  bool ComputeMargin(nscoord aInlineDirPercentBasis,
+                     nscoord aBlockDirPercentBasis);
   
   /**
    * Computes padding values from the specified padding style information, and
@@ -205,13 +205,13 @@ private:
    *    be the containing block *height* in e.g. CSS3 Flexbox and Grid.
    * @return true if the padding is dependent on the containing block size.
    */
-   bool ComputePadding(nscoord aHorizontalPercentBasis,
-                       nscoord aVerticalPercentBasis, nsIAtom* aFrameType);
+   bool ComputePadding(nscoord aInlineDirPercentBasis,
+                       nscoord aBlockDirPercentBasis, nsIAtom* aFrameType);
 
 protected:
 
-  void InitOffsets(nscoord aHorizontalPercentBasis,
-                   nscoord aVerticalPercentBasis,
+  void InitOffsets(nscoord aInlineDirPercentBasis,
+                   nscoord aBlockDirPercentBasis,
                    nsIAtom* aFrameType,
                    const nsMargin *aBorder = nullptr,
                    const nsMargin *aPadding = nullptr);
