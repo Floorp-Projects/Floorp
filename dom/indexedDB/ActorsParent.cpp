@@ -107,7 +107,6 @@ namespace {
 class Cursor;
 class Database;
 struct DatabaseActorInfo;
-class DatabaseLoggingInfo;
 class DatabaseFile;
 class DatabaseOfflineStorage;
 class Factory;
@@ -2554,14 +2553,17 @@ class DatabaseOperationBase
   : public nsRunnable
   , public mozIStorageProgressHandler
 {
+  // Uniquely tracks each operation for logging purposes. Only modified on the
+  // PBackground thread.
+  static uint64_t sNextSerialNumber;
+
 protected:
   class AutoSetProgressHandler;
 
   typedef nsDataHashtable<nsUint64HashKey, bool> UniqueIndexTable;
 
   nsCOMPtr<nsIEventTarget> mOwningThread;
-  const nsID mBackgroundChildLoggingId;
-  const uint64_t mLoggingSerialNumber;
+  const uint64_t mSerialNumber;
   nsresult mResultCode;
 
 private:
@@ -2608,16 +2610,10 @@ public:
     return mOperationMayProceed;
   }
 
-  const nsID&
-  BackgroundChildLoggingId() const
-  {
-    return mBackgroundChildLoggingId;
-  }
-
   uint64_t
-  LoggingSerialNumber() const
+  SerialNumber() const
   {
-    return mLoggingSerialNumber;
+    return mSerialNumber;
   }
 
   nsresult
@@ -2636,11 +2632,9 @@ public:
   }
 
 protected:
-  DatabaseOperationBase(const nsID& aBackgroundChildLoggingId,
-                        uint64_t aLoggingSerialNumber)
+  DatabaseOperationBase()
     : mOwningThread(NS_GetCurrentThread())
-    , mBackgroundChildLoggingId(aBackgroundChildLoggingId)
-    , mLoggingSerialNumber(aLoggingSerialNumber)
+    , mSerialNumber(++sNextSerialNumber)
     , mResultCode(NS_OK)
     , mOperationMayProceed(true)
     , mActorDestroyed(false)
@@ -2715,7 +2709,6 @@ class TransactionDatabaseOperationBase
   : public DatabaseOperationBase
 {
   nsRefPtr<TransactionBase> mTransaction;
-  const int64_t mTransactionLoggingSerialNumber;
   const bool mTransactionIsAborted;
 
 public:
@@ -2743,11 +2736,7 @@ public:
   Cleanup();
 
 protected:
-  explicit
-  TransactionDatabaseOperationBase(TransactionBase* aTransaction);
-
-  TransactionDatabaseOperationBase(TransactionBase* aTransaction,
-                                   uint64_t aLoggingSerialNumber);
+  explicit TransactionDatabaseOperationBase(TransactionBase* aTransaction);
 
   virtual
   ~TransactionDatabaseOperationBase();
@@ -2790,29 +2779,17 @@ class Factory MOZ_FINAL
   // ActorDestroy called.
   static uint64_t sFactoryInstanceCount;
 
-  nsRefPtr<DatabaseLoggingInfo> mLoggingInfo;
-
   DebugOnly<bool> mActorDestroyed;
 
 public:
   static already_AddRefed<Factory>
-  Create(const LoggingInfo& aLoggingInfo);
-
-  DatabaseLoggingInfo*
-  GetLoggingInfo() const
-  {
-    AssertIsOnBackgroundThread();
-    MOZ_ASSERT(mLoggingInfo);
-
-    return mLoggingInfo;
-  }
+  Create();
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::indexedDB::Factory)
 
 private:
   // Only constructed in Create().
-  explicit
-  Factory(already_AddRefed<DatabaseLoggingInfo> aLoggingInfo);
+  explicit Factory();
 
   // Reference counted.
   ~Factory();
@@ -2823,9 +2800,6 @@ private:
 
   virtual bool
   RecvDeleteMe() MOZ_OVERRIDE;
-
-  virtual bool
-  RecvIncrementLoggingRequestSerialNumber() MOZ_OVERRIDE;
 
   virtual PBackgroundIDBFactoryRequestParent*
   AllocPBackgroundIDBFactoryRequestParent(const FactoryRequestParams& aParams)
@@ -2948,15 +2922,6 @@ public:
     MOZ_ASSERT(!IsActorDestroyed());
 
     return Manager()->Manager();
-  }
-
-  DatabaseLoggingInfo*
-  GetLoggingInfo() const
-  {
-    AssertIsOnBackgroundThread();
-    MOZ_ASSERT(mFactory);
-
-    return mFactory->GetLoggingInfo();
   }
 
   bool
@@ -3165,7 +3130,6 @@ private:
     mModifiedAutoIncrementObjectStoreMetadataArray;
   const uint64_t mTransactionId;
   const nsCString mDatabaseId;
-  const int64_t mLoggingSerialNumber;
   uint64_t mActiveRequestCount;
   Atomic<bool> mInvalidatedOnAnyThread;
   Mode mMode;
@@ -3284,21 +3248,6 @@ public:
     return mDatabase;
   }
 
-  DatabaseLoggingInfo*
-  GetLoggingInfo() const
-  {
-    AssertIsOnBackgroundThread();
-    MOZ_ASSERT(mDatabase);
-
-    return mDatabase->GetLoggingInfo();
-  }
-
-  int64_t
-  LoggingSerialNumber() const
-  {
-    return mLoggingSerialNumber;
-  }
-
   bool
   IsAborted() const
   {
@@ -3348,7 +3297,8 @@ public:
   Invalidate();
 
 protected:
-  TransactionBase(Database* aDatabase, Mode aMode);
+  TransactionBase(Database* aDatabase,
+                  Mode aMode);
 
   virtual
   ~TransactionBase();
@@ -3470,7 +3420,13 @@ class TransactionBase::CommitOp MOZ_FINAL
   nsresult mResultCode;
 
 private:
-  CommitOp(TransactionBase* aTransaction, nsresult aResultCode);
+  CommitOp(TransactionBase* aTransaction,
+           nsresult aResultCode)
+    : mTransaction(aTransaction)
+    , mResultCode(aResultCode)
+  {
+    MOZ_ASSERT(aTransaction);
+  }
 
   ~CommitOp()
   { }
@@ -3714,8 +3670,8 @@ class NormalTransaction MOZ_FINAL
 private:
   // This constructor is only called by Database.
   NormalTransaction(Database* aDatabase,
-                    TransactionBase::Mode aMode,
-                    nsTArray<nsRefPtr<FullObjectStoreMetadata>>& aObjectStores);
+                    nsTArray<nsRefPtr<FullObjectStoreMetadata>>& aObjectStores,
+                    TransactionBase::Mode aMode);
 
   // Reference counted.
   ~NormalTransaction()
@@ -4177,11 +4133,9 @@ class OpenDatabaseOp::VersionChangeOp MOZ_FINAL
   uint64_t mPreviousVersion;
 
 private:
-  explicit
-  VersionChangeOp(OpenDatabaseOp* aOpenDatabaseOp)
+  explicit VersionChangeOp(OpenDatabaseOp* aOpenDatabaseOp)
     : TransactionDatabaseOperationBase(
-                                     aOpenDatabaseOp->mVersionChangeTransaction,
-                                     aOpenDatabaseOp->LoggingSerialNumber())
+                                     aOpenDatabaseOp->mVersionChangeTransaction)
     , mOpenDatabaseOp(aOpenDatabaseOp)
     , mRequestedVersion(aOpenDatabaseOp->mRequestedVersion)
     , mPreviousVersion(aOpenDatabaseOp->mMetadata->mCommonMetadata.version())
@@ -4260,11 +4214,8 @@ class DeleteDatabaseOp::VersionChangeOp MOZ_FINAL
   nsRefPtr<DeleteDatabaseOp> mDeleteDatabaseOp;
 
 private:
-  explicit
-  VersionChangeOp(DeleteDatabaseOp* aDeleteDatabaseOp)
-    : DatabaseOperationBase(aDeleteDatabaseOp->BackgroundChildLoggingId(),
-                            aDeleteDatabaseOp->LoggingSerialNumber())
-    , mDeleteDatabaseOp(aDeleteDatabaseOp)
+  explicit VersionChangeOp(DeleteDatabaseOp* aDeleteDatabaseOp)
+    : mDeleteDatabaseOp(aDeleteDatabaseOp)
   {
     MOZ_ASSERT(aDeleteDatabaseOp);
     MOZ_ASSERT(!aDeleteDatabaseOp->mDatabaseDirectoryPath.IsEmpty());
@@ -5040,7 +4991,7 @@ private:
  * Other class declarations
  ******************************************************************************/
 
-struct DatabaseActorInfo MOZ_FINAL
+struct DatabaseActorInfo
 {
   friend class nsAutoPtr<DatabaseActorInfo>;
 
@@ -5068,60 +5019,6 @@ private:
 
     MOZ_COUNT_DTOR(DatabaseActorInfo);
   }
-};
-
-class DatabaseLoggingInfo MOZ_FINAL
-{
-#ifdef DEBUG
-  // Just for potential warnings.
-  friend class Factory;
-#endif
-
-  LoggingInfo mLoggingInfo;
-
-public:
-  DatabaseLoggingInfo(const LoggingInfo& aLoggingInfo)
-    : mLoggingInfo(aLoggingInfo)
-  {
-    AssertIsOnBackgroundThread();
-  }
-
-  const nsID&
-  Id() const
-  {
-    AssertIsOnBackgroundThread();
-
-    return mLoggingInfo.backgroundChildLoggingId();
-  }
-
-  int64_t
-  NextTransactionSN(IDBTransaction::Mode aMode)
-  {
-    AssertIsOnBackgroundThread();
-    MOZ_ASSERT(mLoggingInfo.nextTransactionSerialNumber() < INT64_MAX);
-    MOZ_ASSERT(mLoggingInfo.nextVersionChangeTransactionSerialNumber() >
-                 INT64_MIN);
-
-    if (aMode == IDBTransaction::VERSION_CHANGE) {
-      return mLoggingInfo.nextVersionChangeTransactionSerialNumber()--;
-    }
-
-    return mLoggingInfo.nextTransactionSerialNumber()++;
-  }
-
-  uint64_t
-  NextRequestSN()
-  {
-    AssertIsOnBackgroundThread();
-    MOZ_ASSERT(mLoggingInfo.nextRequestSerialNumber() < UINT64_MAX);
-
-    return mLoggingInfo.nextRequestSerialNumber()++;
-  }
-
-  NS_INLINE_DECL_REFCOUNTING(DatabaseLoggingInfo)
-
-private:
-  ~DatabaseLoggingInfo();
 };
 
 class NonMainThreadHackBlobImpl MOZ_FINAL
@@ -5627,11 +5524,6 @@ StaticRefPtr<nsRunnable> gStartTransactionRunnable;
 
 StaticRefPtr<TransactionThreadPool> gTransactionThreadPool;
 
-typedef nsDataHashtable<nsIDHashKey, DatabaseLoggingInfo*>
-        DatabaseLoggingInfoHashtable;
-
-StaticAutoPtr<DatabaseLoggingInfoHashtable> gLoggingInfoHashtable;
-
 #ifdef DEBUG
 
 StaticRefPtr<DEBUGThreadSlower> gDEBUGThreadSlower;
@@ -5645,7 +5537,7 @@ StaticRefPtr<DEBUGThreadSlower> gDEBUGThreadSlower;
  ******************************************************************************/
 
 PBackgroundIDBFactoryParent*
-AllocPBackgroundIDBFactoryParent(const LoggingInfo& aLoggingInfo)
+AllocPBackgroundIDBFactoryParent()
 {
   AssertIsOnBackgroundThread();
 
@@ -5653,15 +5545,12 @@ AllocPBackgroundIDBFactoryParent(const LoggingInfo& aLoggingInfo)
     return nullptr;
   }
 
-  nsRefPtr<Factory> actor = Factory::Create(aLoggingInfo);
-  MOZ_ASSERT(actor);
-
+  nsRefPtr<Factory> actor = Factory::Create();
   return actor.forget().take();
 }
 
 bool
-RecvPBackgroundIDBFactoryConstructor(PBackgroundIDBFactoryParent* aActor,
-                                     const LoggingInfo& /* aLoggingInfo */)
+RecvPBackgroundIDBFactoryConstructor(PBackgroundIDBFactoryParent* aActor)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
@@ -5838,27 +5727,14 @@ FullDatabaseMetadata::Duplicate() const
   return newMetadata.forget();
 }
 
-DatabaseLoggingInfo::~DatabaseLoggingInfo()
-{
-  MOZ_ASSERT(gLoggingInfoHashtable);
-
-  const nsID& backgroundChildLoggingId =
-    mLoggingInfo.backgroundChildLoggingId();
-
-  MOZ_ASSERT(gLoggingInfoHashtable->Get(backgroundChildLoggingId) == this);
-
-  gLoggingInfoHashtable->Remove(backgroundChildLoggingId);
-}
-
 /*******************************************************************************
  * Factory
  ******************************************************************************/
 
 uint64_t Factory::sFactoryInstanceCount = 0;
 
-Factory::Factory(already_AddRefed<DatabaseLoggingInfo> aLoggingInfo)
-  : mLoggingInfo(Move(aLoggingInfo))
-  , mActorDestroyed(false)
+Factory::Factory()
+  : mActorDestroyed(false)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnNonMainThread());
@@ -5866,13 +5742,12 @@ Factory::Factory(already_AddRefed<DatabaseLoggingInfo> aLoggingInfo)
 
 Factory::~Factory()
 {
-  MOZ_ASSERT(!mLoggingInfo);
   MOZ_ASSERT(mActorDestroyed);
 }
 
 // static
 already_AddRefed<Factory>
-Factory::Create(const LoggingInfo& aLoggingInfo)
+Factory::Create()
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnNonMainThread());
@@ -5894,9 +5769,6 @@ Factory::Create(const LoggingInfo& aLoggingInfo)
 
     MOZ_ASSERT(!gStartTransactionRunnable);
     gStartTransactionRunnable = new nsRunnable();
-
-    MOZ_ASSERT(!gLoggingInfoHashtable);
-    gLoggingInfoHashtable = new DatabaseLoggingInfoHashtable();
 
 #ifdef DEBUG
     if (kDEBUGThreadPriority != nsISupportsPriority::PRIORITY_NORMAL) {
@@ -5923,29 +5795,7 @@ Factory::Create(const LoggingInfo& aLoggingInfo)
 #endif // DEBUG
   }
 
-  nsRefPtr<DatabaseLoggingInfo> loggingInfo =
-    gLoggingInfoHashtable->Get(aLoggingInfo.backgroundChildLoggingId());
-  if (loggingInfo) {
-    MOZ_ASSERT(aLoggingInfo.backgroundChildLoggingId() == loggingInfo->Id());
-#if !DISABLE_ASSERTS_FOR_FUZZING
-    NS_WARN_IF_FALSE(aLoggingInfo.nextTransactionSerialNumber() ==
-                       loggingInfo->mLoggingInfo.nextTransactionSerialNumber(),
-                     "NextTransactionSerialNumber doesn't match!");
-    NS_WARN_IF_FALSE(aLoggingInfo.nextVersionChangeTransactionSerialNumber() ==
-                       loggingInfo->mLoggingInfo.
-                         nextVersionChangeTransactionSerialNumber(),
-                     "NextVersionChangeTransactionSerialNumber doesn't match!");
-    NS_WARN_IF_FALSE(aLoggingInfo.nextRequestSerialNumber() ==
-                       loggingInfo->mLoggingInfo.nextRequestSerialNumber(),
-                     "NextRequestSerialNumber doesn't match!");
-#endif // !DISABLE_ASSERTS_FOR_FUZZING
-  } else {
-    loggingInfo = new DatabaseLoggingInfo(aLoggingInfo);
-    gLoggingInfoHashtable->Put(aLoggingInfo.backgroundChildLoggingId(),
-                               loggingInfo);
-  }
-
-  nsRefPtr<Factory> actor = new Factory(loggingInfo.forget());
+  nsRefPtr<Factory> actor = new Factory();
 
   sFactoryInstanceCount++;
 
@@ -5960,14 +5810,8 @@ Factory::ActorDestroy(ActorDestroyReason aWhy)
 
   mActorDestroyed = true;
 
-  mLoggingInfo = nullptr;
-
   // Clean up if there are no more instances.
   if (!(--sFactoryInstanceCount)) {
-    MOZ_ASSERT(gLoggingInfoHashtable);
-    MOZ_ASSERT(!gLoggingInfoHashtable->Count());
-    gLoggingInfoHashtable = nullptr;
-
     MOZ_ASSERT(gStartTransactionRunnable);
     gStartTransactionRunnable = nullptr;
 
@@ -6007,16 +5851,6 @@ Factory::RecvDeleteMe()
   MOZ_ASSERT(!mActorDestroyed);
 
   return PBackgroundIDBFactoryParent::Send__delete__(this);
-}
-
-bool
-Factory::RecvIncrementLoggingRequestSerialNumber()
-{
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mLoggingInfo);
-
-  mLoggingInfo->NextRequestSN();
-  return true;
 }
 
 PBackgroundIDBFactoryRequestParent*
@@ -6243,7 +6077,7 @@ Database::Invalidate()
 
   mInvalidated = true;
 
-  if (mActorWasAlive && !mActorDestroyed) {
+  if (!mActorDestroyed) {
     unused << SendInvalidate();
   }
 
@@ -6495,15 +6329,6 @@ Database::AllocPBackgroundIDBTransactionParent(
 
   for (uint32_t nameIndex = 0; nameIndex < nameCount; nameIndex++) {
     const nsString& name = aObjectStoreNames[nameIndex];
-
-    if (nameIndex) {
-      // Make sure that this name is sorted properly and not a duplicate.
-      if (NS_WARN_IF(name <= aObjectStoreNames[nameIndex - 1])) {
-        ASSERT_UNLESS_FUZZING();
-        return nullptr;
-      }
-    }
-
     const uint32_t oldLength = fallibleObjectStores.Length();
 
     Closure closure(name, fallibleObjectStores);
@@ -6518,7 +6343,7 @@ Database::AllocPBackgroundIDBTransactionParent(
   infallibleObjectStores.SwapElements(fallibleObjectStores);
 
   nsRefPtr<NormalTransaction> transaction =
-    new NormalTransaction(this, aMode, infallibleObjectStores);
+    new NormalTransaction(this, infallibleObjectStores, aMode);
 
   MOZ_ASSERT(infallibleObjectStores.IsEmpty());
 
@@ -6547,13 +6372,13 @@ Database::RecvPBackgroundIDBTransactionConstructor(
   auto* transaction = static_cast<NormalTransaction*>(aActor);
 
   // Add a placeholder for this transaction immediately.
-  gTransactionThreadPool->Start(transaction->TransactionId(),
-                                mMetadata->mDatabaseId,
-                                aObjectStoreNames,
-                                aMode,
-                                GetLoggingInfo()->Id(),
-                                transaction->LoggingSerialNumber(),
-                                gStartTransactionRunnable);
+  gTransactionThreadPool->Dispatch(transaction->TransactionId(),
+                                   mMetadata->mDatabaseId,
+                                   aObjectStoreNames,
+                                   aMode,
+                                   gStartTransactionRunnable,
+                                   /* aFinish */ false,
+                                   /* aFinishCallback */ nullptr);
 
   transaction->SetActive();
 
@@ -6647,11 +6472,11 @@ Database::RecvClose()
  * TransactionBase
  ******************************************************************************/
 
-TransactionBase::TransactionBase(Database* aDatabase, Mode aMode)
+TransactionBase::TransactionBase(Database* aDatabase,
+                                 Mode aMode)
   : mDatabase(aDatabase)
   , mTransactionId(gTransactionThreadPool->NextTransactionId())
   , mDatabaseId(aDatabase->Id())
-  , mLoggingSerialNumber(aDatabase->GetLoggingInfo()->NextTransactionSN(aMode))
   , mActiveRequestCount(0)
   , mInvalidatedOnAnyThread(false)
   , mMode(aMode)
@@ -6667,8 +6492,6 @@ TransactionBase::TransactionBase(Database* aDatabase, Mode aMode)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
-  MOZ_ASSERT(mTransactionId);
-  MOZ_ASSERT(mLoggingSerialNumber);
 }
 
 TransactionBase::~TransactionBase()
@@ -7798,8 +7621,8 @@ TransactionBase::ReleaseBackgroundThreadObjects()
 
 NormalTransaction::NormalTransaction(
                      Database* aDatabase,
-                     TransactionBase::Mode aMode,
-                     nsTArray<nsRefPtr<FullObjectStoreMetadata>>& aObjectStores)
+                     nsTArray<nsRefPtr<FullObjectStoreMetadata>>& aObjectStores,
+                     TransactionBase::Mode aMode)
   : TransactionBase(aDatabase, aMode)
 {
   AssertIsOnBackgroundThread();
@@ -10096,6 +9919,8 @@ DatabaseOfflineStorage::Invalidate()
 NS_IMPL_ISUPPORTS(CompressDataBlobsFunction, mozIStorageFunction)
 NS_IMPL_ISUPPORTS(EncodeKeysFunction, mozIStorageFunction)
 
+uint64_t DatabaseOperationBase::sNextSerialNumber = 0;
+
 // static
 void
 DatabaseOperationBase::GetBindingClauseForKeyRange(
@@ -10504,9 +10329,7 @@ FactoryOp::FactoryOp(Factory* aFactory,
                      already_AddRefed<ContentParent> aContentParent,
                      const CommonFactoryRequestParams& aCommonParams,
                      bool aDeleting)
-  : DatabaseOperationBase(aFactory->GetLoggingInfo()->Id(),
-                          aFactory->GetLoggingInfo()->NextRequestSN())
-  , mFactory(aFactory)
+  : mFactory(aFactory)
   , mContentParent(Move(aContentParent))
   , mCommonParams(aCommonParams)
   , mState(State_Initial)
@@ -11253,7 +11076,7 @@ OpenDatabaseOp::DoDatabaseWork()
   MOZ_ASSERT(mState == State_DatabaseWorkOpen);
 
   PROFILER_LABEL("IndexedDB",
-                 "OpenDatabaseOp::DoDatabaseWork",
+                 "OpenDatabaseHelper::DoDatabaseWork",
                  js::ProfileEntry::Category::STORAGE);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonMainThread()) ||
@@ -11826,8 +11649,6 @@ OpenDatabaseOp::DispatchToWorkThread()
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State_WaitingForTransactionsToComplete);
   MOZ_ASSERT(mVersionChangeTransaction);
-  MOZ_ASSERT(mVersionChangeTransaction->GetMode() ==
-               IDBTransaction::VERSION_CHANGE);
   MOZ_ASSERT(mMaybeBlockedDatabases.IsEmpty());
 
   if (IsActorDestroyed()) {
@@ -11840,20 +11661,15 @@ OpenDatabaseOp::DispatchToWorkThread()
   // Intentionally empty.
   nsTArray<nsString> objectStoreNames;
 
-  const int64_t loggingSerialNumber =
-    mVersionChangeTransaction->LoggingSerialNumber();
-  const nsID& backgroundChildLoggingId =
-    mVersionChangeTransaction->GetLoggingInfo()->Id();
-
   nsRefPtr<VersionChangeOp> versionChangeOp = new VersionChangeOp(this);
 
-  gTransactionThreadPool->Start(mVersionChangeTransaction->TransactionId(),
-                                mVersionChangeTransaction->DatabaseId(),
-                                objectStoreNames,
-                                mVersionChangeTransaction->GetMode(),
-                                backgroundChildLoggingId,
-                                loggingSerialNumber,
-                                versionChangeOp);
+  gTransactionThreadPool->Dispatch(mVersionChangeTransaction->TransactionId(),
+                                   mVersionChangeTransaction->DatabaseId(),
+                                   objectStoreNames,
+                                   mVersionChangeTransaction->GetMode(),
+                                   versionChangeOp,
+                                   /* aFinish */ false,
+                                   /* aFinishCallback */ nullptr);
 
   mVersionChangeTransaction->SetActive();
 
@@ -12293,7 +12109,7 @@ VersionChangeOp::DoDatabaseWork(TransactionBase* aTransaction)
   }
 
   PROFILER_LABEL("IndexedDB",
-                 "OpenDatabaseOp::VersionChangeOp::DoDatabaseWork",
+                 "VersionChangeOp::DoDatabaseWork",
                  js::ProfileEntry::Category::STORAGE);
 
   mozIStorageConnection* connection = aTransaction->Connection();
@@ -12981,27 +12797,10 @@ VersionChangeOp::Run()
 
 TransactionDatabaseOperationBase::TransactionDatabaseOperationBase(
                                                   TransactionBase* aTransaction)
-  : DatabaseOperationBase(aTransaction->GetLoggingInfo()->Id(),
-                          aTransaction->GetLoggingInfo()->NextRequestSN())
-  , mTransaction(aTransaction)
-  , mTransactionLoggingSerialNumber(aTransaction->LoggingSerialNumber())
+  : mTransaction(aTransaction)
   , mTransactionIsAborted(aTransaction->IsAborted())
 {
   MOZ_ASSERT(aTransaction);
-  MOZ_ASSERT(LoggingSerialNumber());
-}
-
-TransactionDatabaseOperationBase::TransactionDatabaseOperationBase(
-                                                  TransactionBase* aTransaction,
-                                                  uint64_t aLoggingSerialNumber)
-  : DatabaseOperationBase(aTransaction->GetLoggingInfo()->Id(),
-                          aLoggingSerialNumber)
-  , mTransaction(aTransaction)
-  , mTransactionLoggingSerialNumber(aTransaction->LoggingSerialNumber())
-  , mTransactionIsAborted(aTransaction->IsAborted())
-{
-  MOZ_ASSERT(aTransaction);
-  MOZ_ASSERT(LoggingSerialNumber());
 }
 
 TransactionDatabaseOperationBase::~TransactionDatabaseOperationBase()
@@ -13043,10 +12842,6 @@ TransactionDatabaseOperationBase::RunOnTransactionThread()
   MOZ_ASSERT(mTransaction);
   MOZ_ASSERT(NS_SUCCEEDED(mResultCode));
 
-  PROFILER_LABEL("IndexedDB",
-                 "TransactionDatabaseOperationBase::RunOnTransactionThread",
-                 js::ProfileEntry::Category::STORAGE);
-
   // There are several cases where we don't actually have to to any work here.
 
   if (mTransactionIsAborted) {
@@ -13073,22 +12868,7 @@ TransactionDatabaseOperationBase::RunOnTransactionThread()
       if (NS_WARN_IF(NS_FAILED(rv))) {
         mResultCode = rv;
       } else {
-        IDB_LOG_MARK("IndexedDB %s: Parent Transaction[%lld] Request[%llu]: "
-                       "Beginning database work",
-                     "IndexedDB %s: P T[%lld] R[%llu]: DB Start",
-                     IDB_LOG_ID_STRING(mBackgroundChildLoggingId),
-                     mTransactionLoggingSerialNumber,
-                     mLoggingSerialNumber);
-
         rv = DoDatabaseWork(mTransaction);
-
-        IDB_LOG_MARK("IndexedDB %s: Parent Transaction[%lld] Request[%llu]: "
-                       "Finished database work",
-                     "IndexedDB %s: P T[%lld] R[%llu]: DB End",
-                     IDB_LOG_ID_STRING(mBackgroundChildLoggingId),
-                     mTransactionLoggingSerialNumber,
-                     mLoggingSerialNumber);
-
         if (NS_FAILED(rv)) {
           mResultCode = rv;
         }
@@ -13168,18 +12948,6 @@ TransactionDatabaseOperationBase::Run()
   }
 
   return NS_OK;
-}
-
-TransactionBase::
-
-CommitOp::CommitOp(TransactionBase* aTransaction, nsresult aResultCode)
-  : DatabaseOperationBase(aTransaction->GetLoggingInfo()->Id(),
-                          aTransaction->GetLoggingInfo()->NextRequestSN())
-  , mTransaction(aTransaction)
-  , mResultCode(aResultCode)
-{
-  MOZ_ASSERT(aTransaction);
-  MOZ_ASSERT(LoggingSerialNumber());
 }
 
 nsresult
@@ -13287,13 +13055,6 @@ CommitOp::Run()
 
   AssertIsOnTransactionThread();
 
-  IDB_LOG_MARK("IndexedDB %s: Parent Transaction[%lld] Request[%llu]: "
-                 "Beginning database work",
-               "IndexedDB %s: P T[%lld] R[%llu]: DB Start",
-               IDB_LOG_ID_STRING(mBackgroundChildLoggingId),
-               mTransaction->LoggingSerialNumber(),
-               mLoggingSerialNumber);
-
   if (NS_SUCCEEDED(mResultCode) && mTransaction->mUpdateFileRefcountFunction) {
     mResultCode = mTransaction->
       mUpdateFileRefcountFunction->WillCommit(connection);
@@ -13334,13 +13095,6 @@ CommitOp::Run()
 
   mTransaction->ReleaseTransactionThreadObjects();
 
-  IDB_LOG_MARK("IndexedDB %s: Parent Transaction[%lld] Request[%llu]: "
-                 "Finished database work",
-               "IndexedDB %s: P T[%lld] R[%llu]: DB End",
-               IDB_LOG_ID_STRING(mBackgroundChildLoggingId),
-               mTransaction->LoggingSerialNumber(),
-               mLoggingSerialNumber);
-
   return NS_OK;
 }
 
@@ -13367,14 +13121,13 @@ CommitOp::TransactionFinishedAfterUnblock()
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mTransaction);
 
-  if (!mTransaction->IsActorDestroyed()) {
-    IDB_LOG_MARK("IndexedDB %s: Parent Transaction[%lld]: "
-                   "Finished with result 0x%x",
-                 "IndexedDB %s: P T[%lld]: Transaction finished (0x%x)",
-                 IDB_LOG_ID_STRING(mTransaction->GetLoggingInfo()->Id()),
-                 mTransaction->LoggingSerialNumber(),
-                 mResultCode);
-  }
+  PROFILER_LABEL("IndexedDB",
+                 "CommitOp::TransactionFinishedAfterUnblock",
+                 js::ProfileEntry::Category::STORAGE);
+
+  IDB_PROFILER_MARK("IndexedDB Transaction %llu: Complete (rv = %lu)",
+                    "IDBTransaction[%llu] MT Complete",
+                    mTransaction->TransactionId(), mResultCode);
 
   mTransaction->ReleaseBackgroundThreadObjects();
 
@@ -16850,10 +16603,6 @@ OpenOp::DoDatabaseWork(TransactionBase* aTransaction)
   MOZ_ASSERT(mCursor->mContinueToQuery.IsEmpty());
   MOZ_ASSERT(mCursor->mKey.IsUnset());
   MOZ_ASSERT(mCursor->mRangeKey.IsUnset());
-
-  PROFILER_LABEL("IndexedDB",
-                 "Cursor::OpenOp::DoDatabaseWork",
-                 js::ProfileEntry::Category::STORAGE);
 
   nsresult rv;
 

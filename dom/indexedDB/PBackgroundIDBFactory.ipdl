@@ -51,8 +51,6 @@ parent:
 
   PBackgroundIDBFactoryRequest(FactoryRequestParams params);
 
-  IncrementLoggingRequestSerialNumber();
-
 child:
   __delete__();
 

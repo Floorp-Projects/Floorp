@@ -32,8 +32,6 @@ namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
-using namespace mozilla::ipc;
-
 namespace {
 
 NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
@@ -46,7 +44,6 @@ IDBTransaction::IDBTransaction(IDBDatabase* aDatabase,
   : IDBWrapperCache(aDatabase)
   , mDatabase(aDatabase)
   , mObjectStoreNames(aObjectStoreNames)
-  , mLoggingSerialNumber(0)
   , mNextObjectStoreId(0)
   , mNextIndexId(0)
   , mAbortCode(NS_OK)
@@ -66,15 +63,16 @@ IDBTransaction::IDBTransaction(IDBDatabase* aDatabase,
 
   mBackgroundActor.mNormalBackgroundActor = nullptr;
 
-  BackgroundChildImpl::ThreadLocal* threadLocal =
-    BackgroundChildImpl::GetThreadLocalForCurrentThread();
-  MOZ_ASSERT(threadLocal);
+#ifdef MOZ_ENABLE_PROFILER_SPS
+  {
+    using namespace mozilla::ipc;
+    BackgroundChildImpl::ThreadLocal* threadLocal =
+      BackgroundChildImpl::GetThreadLocalForCurrentThread();
+    MOZ_ASSERT(threadLocal);
 
-  ThreadLocal* idbThreadLocal = threadLocal->mIndexedDBThreadLocal;
-  MOZ_ASSERT(idbThreadLocal);
-
-  const_cast<int64_t&>(mLoggingSerialNumber) =
-    idbThreadLocal->NextTransactionSN(aMode);
+    mSerialNumber = threadLocal->mNextTransactionSerialNumber++;
+  }
+#endif
 
 #ifdef DEBUG
   if (!aObjectStoreNames.IsEmpty()) {
@@ -113,15 +111,13 @@ IDBTransaction::~IDBTransaction()
   mDatabase->UnregisterTransaction(this);
 
   if (mMode == VERSION_CHANGE) {
-    if (auto* actor = mBackgroundActor.mVersionChangeBackgroundActor) {
-      actor->SendDeleteMeInternal();
-
+    if (mBackgroundActor.mVersionChangeBackgroundActor) {
+      mBackgroundActor.mVersionChangeBackgroundActor->SendDeleteMeInternal();
       MOZ_ASSERT(!mBackgroundActor.mVersionChangeBackgroundActor,
                  "SendDeleteMeInternal should have cleared!");
     }
-  } else if (auto* actor = mBackgroundActor.mNormalBackgroundActor) {
-    actor->SendDeleteMeInternal();
-
+  } else if (mBackgroundActor.mNormalBackgroundActor) {
+    mBackgroundActor.mNormalBackgroundActor->SendDeleteMeInternal();
     MOZ_ASSERT(!mBackgroundActor.mNormalBackgroundActor,
                "SendDeleteMeInternal should have cleared!");
   }
@@ -216,10 +212,7 @@ IDBTransaction::GetCurrent()
     BackgroundChildImpl::GetThreadLocalForCurrentThread();
   MOZ_ASSERT(threadLocal);
 
-  ThreadLocal* idbThreadLocal = threadLocal->mIndexedDBThreadLocal;
-  MOZ_ASSERT(idbThreadLocal);
-
-  return idbThreadLocal->GetCurrentTransaction();
+  return threadLocal->mCurrentTransaction;
 }
 
 #ifdef DEBUG
@@ -346,18 +339,6 @@ IDBTransaction::SendCommit()
   MOZ_ASSERT(NS_SUCCEEDED(mAbortCode));
   MOZ_ASSERT(IsFinished());
   MOZ_ASSERT(!mSentCommitOrAbort);
-  MOZ_ASSERT(!mPendingRequestCount);
-
-  // Don't do this in the macro because we always need to increment the serial
-  // number to keep in sync with the parent.
-  const uint64_t requestSerialNumber = IDBRequest::NextSerialNumber();
-
-  IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld] Request[%llu]: "
-                 "All requests complete, committing transaction",
-               "IndexedDB %s: C T[%lld] R[%llu]: IDBTransaction commit",
-               IDB_LOG_ID_STRING(),
-               LoggingSerialNumber(),
-               requestSerialNumber);
 
   if (mMode == VERSION_CHANGE) {
     MOZ_ASSERT(mBackgroundActor.mVersionChangeBackgroundActor);
@@ -379,18 +360,6 @@ IDBTransaction::SendAbort(nsresult aResultCode)
   MOZ_ASSERT(NS_FAILED(aResultCode));
   MOZ_ASSERT(IsFinished());
   MOZ_ASSERT(!mSentCommitOrAbort);
-
-  // Don't do this in the macro because we always need to increment the serial
-  // number to keep in sync with the parent.
-  const uint64_t requestSerialNumber = IDBRequest::NextSerialNumber();
-
-  IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld] Request[%llu]: "
-                 "Aborting transaction with result 0x%x",
-               "IndexedDB %s: C T[%lld] R[%llu]: IDBTransaction abort (0x%x)",
-               IDB_LOG_ID_STRING(),
-               LoggingSerialNumber(),
-               requestSerialNumber,
-               aResultCode);
 
   if (mMode == VERSION_CHANGE) {
     MOZ_ASSERT(mBackgroundActor.mVersionChangeBackgroundActor);
@@ -548,14 +517,11 @@ IDBTransaction::AbortInternal(nsresult aAbortCode,
   const bool isInvalidated = mDatabase->IsInvalidated();
   bool needToSendAbort = mReadyState == INITIAL && !isInvalidated;
 
-  if (isInvalidated) {
 #ifdef DEBUG
+  if (isInvalidated) {
     mSentCommitOrAbort = true;
-#endif
-    // Increment the serial number counter here to account for the aborted
-    // transaction and keep the parent in sync.
-    IDBRequest::NextSerialNumber();
   }
+#endif
 
   mAbortCode = aAbortCode;
   mReadyState = DONE;
@@ -673,6 +639,10 @@ IDBTransaction::FireCompleteOrAbortEvents(nsresult aResult)
   AssertIsOnOwningThread();
   MOZ_ASSERT(!mFiredCompleteOrAbort);
 
+  IDB_PROFILER_MARK("IndexedDB Transaction %llu: Complete (rv = %lu)",
+                    "IDBTransaction[%llu] MT Complete",
+                    mTransaction->GetSerialNumber(), mAbortCode);
+
   mReadyState = DONE;
 
 #ifdef DEBUG
@@ -698,21 +668,6 @@ IDBTransaction::FireCompleteOrAbortEvents(nsresult aResult)
 
   if (NS_WARN_IF(!event)) {
     return;
-  }
-
-  if (NS_SUCCEEDED(mAbortCode)) {
-    IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld]: "
-                   "Firing 'complete' event",
-                 "IndexedDB %s: C T[%lld]: IDBTransaction 'complete' event",
-                 IDB_LOG_ID_STRING(),
-                 mLoggingSerialNumber);
-  } else {
-    IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld]: "
-                   "Firing 'abort' event with error 0x%x",
-                 "IndexedDB %s: C T[%lld]: IDBTransaction 'abort' event (0x%x)",
-                 IDB_LOG_ID_STRING(),
-                 mLoggingSerialNumber,
-                 mAbortCode);
   }
 
   bool dummy;

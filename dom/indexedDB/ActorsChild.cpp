@@ -57,37 +57,6 @@ namespace dom {
 namespace indexedDB {
 
 /*******************************************************************************
- * ThreadLocal
- ******************************************************************************/
-
-ThreadLocal::ThreadLocal(const nsID& aBackgroundChildLoggingId)
-  : mLoggingInfo(aBackgroundChildLoggingId, 1, -1, 1)
-  , mCurrentTransaction(0)
-#ifdef DEBUG
-  , mOwningThread(PR_GetCurrentThread())
-#endif
-{
-  MOZ_ASSERT(mOwningThread);
-
-  MOZ_COUNT_CTOR(mozilla::dom::indexedDB::ThreadLocal);
-}
-
-ThreadLocal::~ThreadLocal()
-{
-  MOZ_COUNT_DTOR(mozilla::dom::indexedDB::ThreadLocal);
-}
-
-#ifdef DEBUG
-
-void
-ThreadLocal::AssertIsOnOwningThread() const
-{
-  MOZ_ASSERT(PR_GetCurrentThread() == mOwningThread);
-}
-
-#endif // DEBUG
-
-/*******************************************************************************
  * Helpers
  ******************************************************************************/
 
@@ -135,40 +104,39 @@ class MOZ_STACK_CLASS AutoSetCurrentTransaction MOZ_FINAL
 
   IDBTransaction* const mTransaction;
   IDBTransaction* mPreviousTransaction;
-  ThreadLocal* mThreadLocal;
+  IDBTransaction** mThreadLocalSlot;
 
 public:
   explicit AutoSetCurrentTransaction(IDBTransaction* aTransaction)
     : mTransaction(aTransaction)
     , mPreviousTransaction(nullptr)
-    , mThreadLocal(nullptr)
+    , mThreadLocalSlot(nullptr)
   {
     if (aTransaction) {
       BackgroundChildImpl::ThreadLocal* threadLocal =
         BackgroundChildImpl::GetThreadLocalForCurrentThread();
       MOZ_ASSERT(threadLocal);
 
-      // Hang onto this for resetting later.
-      mThreadLocal = threadLocal->mIndexedDBThreadLocal;
-      MOZ_ASSERT(mThreadLocal);
+      // Hang onto this location for resetting later.
+      mThreadLocalSlot = &threadLocal->mCurrentTransaction;
 
       // Save the current value.
-      mPreviousTransaction = mThreadLocal->GetCurrentTransaction();
+      mPreviousTransaction = *mThreadLocalSlot;
 
       // Set the new value.
-      mThreadLocal->SetCurrentTransaction(aTransaction);
+      *mThreadLocalSlot = aTransaction;
     }
   }
 
   ~AutoSetCurrentTransaction()
   {
-    MOZ_ASSERT_IF(mThreadLocal, mTransaction);
-    MOZ_ASSERT_IF(mThreadLocal,
-                  mThreadLocal->GetCurrentTransaction() == mTransaction);
+    MOZ_ASSERT_IF(mThreadLocalSlot, mTransaction);
 
-    if (mThreadLocal) {
+    if (mThreadLocalSlot) {
+      MOZ_ASSERT(*mThreadLocalSlot == mTransaction);
+
       // Reset old value.
-      mThreadLocal->SetCurrentTransaction(mPreviousTransaction);
+      *mThreadLocalSlot = mPreviousTransaction;
     }
   }
 
@@ -621,25 +589,6 @@ DispatchErrorEvent(IDBRequest* aRequest,
     asct.emplace(aTransaction);
   }
 
-  if (transaction) {
-    IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld] Request[%llu]: "
-                   "Firing %s event with error 0x%x",
-                 "IndexedDB %s: C T[%lld] R[%llu]: %s (0x%x)",
-                 IDB_LOG_ID_STRING(),
-                 transaction->LoggingSerialNumber(),
-                 request->LoggingSerialNumber(),
-                 IDB_LOG_STRINGIFY(aEvent, kErrorEventType),
-                 aErrorCode);
-  } else {
-    IDB_LOG_MARK("IndexedDB %s: Child  Request[%llu]: "
-                   "Firing %s event with error 0x%x",
-                 "IndexedDB %s: C R[%llu]: %s (0x%x)",
-                 IDB_LOG_ID_STRING(),
-                 request->LoggingSerialNumber(),
-                 IDB_LOG_STRINGIFY(aEvent, kErrorEventType),
-                 aErrorCode);
-  }
-
   bool doDefault;
   nsresult rv = request->DispatchEvent(aEvent, &doDefault);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -698,22 +647,6 @@ DispatchSuccessEvent(ResultHelper* aResultHelper,
 
   MOZ_ASSERT(aEvent);
   MOZ_ASSERT_IF(transaction, transaction->IsOpen());
-
-  if (transaction) {
-    IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld] Request[%llu]: "
-                   "Firing %s event",
-                 "IndexedDB %s: C T[%lld] R[%llu]: %s",
-                 IDB_LOG_ID_STRING(),
-                 transaction->LoggingSerialNumber(),
-                 request->LoggingSerialNumber(),
-                 IDB_LOG_STRINGIFY(aEvent, kSuccessEventType));
-  } else {
-    IDB_LOG_MARK("IndexedDB %s: Child  Request[%llu]: Firing %s event",
-                 "IndexedDB %s: C R[%llu]: %s",
-                 IDB_LOG_ID_STRING(),
-                 request->LoggingSerialNumber(),
-                 IDB_LOG_STRINGIFY(aEvent, kSuccessEventType));
-  }
 
   bool dummy;
   nsresult rv = request->DispatchEvent(aEvent, &dummy);
@@ -1135,11 +1068,6 @@ BackgroundFactoryRequestChild::RecvBlocked(const uint64_t& aCurrentVersion)
 
   nsRefPtr<IDBRequest> kungFuDeathGrip = mRequest;
 
-  IDB_LOG_MARK("IndexedDB %s: Child  Request[%llu]: Firing \"blocked\" event",
-               "IndexedDB %s: C R[%llu]: \"blocked\"",
-               IDB_LOG_ID_STRING(),
-               mRequest->LoggingSerialNumber());
-
   bool dummy;
   if (NS_FAILED(mRequest->DispatchEvent(blockedEvent, &dummy))) {
     NS_WARNING("Failed to dispatch event!");
@@ -1428,10 +1356,6 @@ BackgroundDatabaseChild::RecvVersionChange(const uint64_t& aOldVersion,
   if (NS_WARN_IF(!versionChangeEvent)) {
     return false;
   }
-
-  IDB_LOG_MARK("IndexedDB %s: Child : Firing \"versionchange\" event",
-               "IndexedDB %s: C: IDBDatabase \"versionchange\" event",
-               IDB_LOG_ID_STRING());
 
   bool dummy;
   if (NS_FAILED(mDatabase->DispatchEvent(versionChangeEvent, &dummy))) {

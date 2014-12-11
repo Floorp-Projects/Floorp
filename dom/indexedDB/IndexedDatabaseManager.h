@@ -17,7 +17,6 @@
 #include "nsHashKeys.h"
 
 class nsPIDOMWindow;
-struct PRLogModuleInfo;
 
 namespace mozilla {
 
@@ -37,15 +36,6 @@ class IndexedDatabaseManager MOZ_FINAL : public nsIObserver
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
 
 public:
-  enum LoggingMode
-  {
-    Logging_Disabled = 0,
-    Logging_Concise,
-    Logging_Detailed,
-    Logging_ConciseProfilerMarks,
-    Logging_DetailedProfilerMarks
-  };
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
@@ -85,26 +75,6 @@ public:
 
   static bool
   FullSynchronous();
-
-  static LoggingMode
-  GetLoggingMode()
-#ifdef DEBUG
-  ;
-#else
-  {
-    return sLoggingMode;
-  }
-#endif
-
-  static PRLogModuleInfo*
-  GetLoggingModule()
-#ifdef DEBUG
-  ;
-#else
-  {
-    return sLoggingModule;
-  }
-#endif
 
   already_AddRefed<FileManager>
   GetFileManager(PersistenceType aPersistenceType,
@@ -173,9 +143,6 @@ private:
   void
   Destroy();
 
-  static void
-  LoggingModePrefChangedCallback(const char* aPrefName, void* aClosure);
-
   // Maintains a list of all file managers per origin. This list isn't
   // protected by any mutex but it is only ever touched on the IO thread.
   nsClassHashtable<nsCStringHashKey, FileManagerInfo> mFileManagerInfos;
@@ -187,8 +154,6 @@ private:
 
   static bool sIsMainProcess;
   static bool sFullSynchronousMode;
-  static PRLogModuleInfo* sLoggingModule;
-  static Atomic<LoggingMode> sLoggingMode;
   static mozilla::Atomic<bool> sLowDiskSpaceMode;
 };
 
