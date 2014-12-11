@@ -1,15 +1,10 @@
 ---
+$inherits:
+  from: 'tasks/test.yml'
 task:
-  created: '{{now}}'
-  deadline: '{{#from_now}}24 hours{{/from_now}}'
   metadata:
-    source: http://todo.com/soon
-    owner: {{owner}}
     name: Gaia JS Integration Test
     description: Gaia JS Integration Test run {{chunk}}
-
-  workerType: b2gtest
-  provisionerId: aws-provisioner
 
   scopes:
     - 'docker-worker:cache:sources-gaia'
@@ -17,9 +12,6 @@ task:
   payload:
     cache:
       sources-gaia: '/home/worker/gaia'
-
-    image: '{{#docker_image}}tester{{/docker_image}}'
-    maxRunTime: 3600
 
     command:
       - entrypoint # entrypoint ensures we are running in xvfb
