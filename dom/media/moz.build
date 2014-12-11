@@ -225,6 +225,11 @@ SOURCES += [
     'DecoderTraits.cpp',
 ]
 
+# Some codec-related code uses multi-character constants, which GCC and clang
+# warn about. Suppress turning this warning into an error.
+if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
+  SOURCES['DecoderTraits.cpp'].flags += ['-Wno-error=multichar']
+
 EXTRA_COMPONENTS += [
     'PeerConnection.js',
     'PeerConnection.manifest',
