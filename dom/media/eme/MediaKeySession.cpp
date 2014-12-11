@@ -291,17 +291,9 @@ MediaKeySession::DispatchKeysChange()
   if (IsClosed()) {
     return;
   }
-  DebugOnly<nsresult> rv =
-    nsContentUtils::DispatchTrustedEvent(mKeys->GetOwnerDoc(),
-                                         this,
-                                         NS_LITERAL_STRING("keyschange"),
-                                         false,
-                                         false);
-#ifdef DEBUG
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to dispatch keyschange event");
-  }
-#endif
+  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
+    new AsyncEventDispatcher(this, NS_LITERAL_STRING("keyschange"), false);
+  asyncDispatcher->PostDOMEvent();
 }
 
 } // namespace dom
