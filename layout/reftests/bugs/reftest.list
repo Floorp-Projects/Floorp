@@ -1845,3 +1845,4 @@ test-pref(dom.webcomponents.enabled,true) == 1066554-1.html 1066554-1-ref.html
 test-pref(layout.testing.overlay-scrollbars.always-visible,false) == 1081072-1.html 1081072-1-ref.html
 fuzzy-if(winWidget&&!layersGPUAccelerated,1,31) == 1081185-1.html 1081185-1-ref.html
 == 1097437-1.html 1097437-1-ref.html
+== 1105137-1.html 1105137-1-ref.html
