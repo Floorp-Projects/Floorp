@@ -291,7 +291,7 @@ GetMetricsFor(nsPresContext* aPresContext,
   gfxFont::Orientation orientation = gfxFont::eHorizontal;
   if (aStyleContext) {
     WritingMode wm(aStyleContext);
-    if (wm.IsVertical()) {
+    if (wm.IsVertical() && !wm.IsSideways()) {
       orientation = gfxFont::eVertical;
     }
   }
