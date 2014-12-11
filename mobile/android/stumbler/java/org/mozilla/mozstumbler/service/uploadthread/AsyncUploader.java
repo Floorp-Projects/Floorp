@@ -112,10 +112,6 @@ public class AsyncUploader extends AsyncTask<Void, Void, SyncSummary> {
     private class Submitter extends AbstractCommunicator {
         private static final String SUBMIT_URL = "https://location.services.mozilla.com/v1/submit";
 
-        public Submitter() {
-            super(Prefs.getInstance().getUserAgent());
-        }
-
         @Override
         public String getUrlString() {
             return SUBMIT_URL;
