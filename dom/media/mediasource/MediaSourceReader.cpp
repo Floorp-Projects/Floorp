@@ -299,13 +299,14 @@ MediaSourceReader::Shutdown()
   MOZ_ASSERT(mMediaSourceShutdownPromise.IsEmpty());
   nsRefPtr<ShutdownPromise> p = mMediaSourceShutdownPromise.Ensure(__func__);
 
-  ContinueShutdown();
+  ContinueShutdown(true);
   return p;
 }
 
 void
-MediaSourceReader::ContinueShutdown()
+MediaSourceReader::ContinueShutdown(bool aSuccess)
 {
+  MOZ_ASSERT(aSuccess);
   if (mTrackBuffers.Length()) {
     mTrackBuffers[0]->Shutdown()->Then(GetTaskQueue(), __func__, this,
                                        &MediaSourceReader::ContinueShutdown,
