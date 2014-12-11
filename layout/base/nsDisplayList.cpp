@@ -1338,7 +1338,9 @@ TreatAsOpaque(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
 {
   bool snap;
   nsRegion opaque = aItem->GetOpaqueRegion(aBuilder, &snap);
-  if (aBuilder->IsForPluginGeometry()) {
+  if (aBuilder->IsForPluginGeometry() &&
+      aItem->GetType() != nsDisplayItem::TYPE_LAYER_EVENT_REGIONS)
+  {
     // Treat all leaf chrome items as opaque, unless their frames are opacity:0.
     // Since opacity:0 frames generate an nsDisplayOpacity, that item will
     // not be treated as opaque here, so opacity:0 chrome content will be
