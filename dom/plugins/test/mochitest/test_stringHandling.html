@@ -1,0 +1,35 @@
+<html>
+<head>
+  <title>NPAPI string test</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="utils.js"></script>
+
+  <link rel="stylesheet" type="text/css"
+        href="/tests/SimpleTest/test.css" />
+</head>
+
+<body onload="runTests()">
+  <script class="testbody" type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+    function runTests() {
+      try {
+        var plugin = document.getElementById("plugin1");
+        var badData = 'foo ' + '\x00'.repeat(260000);
+        var ret = plugin.echoString(badData);
+        ok(true, "Did not crash.");
+        is(ret, badData, "Returned string should equal what we passed in.");
+      } catch (e) {
+        ok(false, "Failed to call plugin.echoString() properly.");
+      } finally {
+        SimpleTest.finish();
+      }
+    }
+  </script>
+
+  <p id="display"></p>
+
+  <embed id="plugin1" type="application/x-test" width="400" height="400"></embed>
+</body>
+</html>
