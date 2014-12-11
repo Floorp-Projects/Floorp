@@ -2120,83 +2120,43 @@ TypedObject::obj_deleteGeneric(JSContext *cx, HandleObject obj, HandleId id, boo
 }
 
 bool
-TypedObject::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
-                           MutableHandleValue statep, MutableHandleId idp)
+TypedObject::obj_enumerate(JSContext *cx, HandleObject obj, AutoIdVector &properties)
 {
-    int32_t index;
-
     MOZ_ASSERT(obj->is<TypedObject>());
     Rooted<TypedObject *> typedObj(cx, &obj->as<TypedObject>());
     Rooted<TypeDescr *> descr(cx, &typedObj->typeDescr());
+
+    RootedId id(cx);
     switch (descr->kind()) {
       case type::Scalar:
       case type::Reference:
-      case type::Simd:
-        switch (enum_op) {
-          case JSENUMERATE_INIT_ALL:
-          case JSENUMERATE_INIT:
-            statep.setInt32(0);
-            idp.set(INT_TO_JSID(0));
+      case type::Simd: {
+        // Nothing to enumerate.
+        break;
+      }
 
-          case JSENUMERATE_NEXT:
-          case JSENUMERATE_DESTROY:
-            statep.setNull();
-            break;
+      case type::Array: {
+        if (!properties.reserve(typedObj->length()))
+            return false;
+
+        for (int32_t index = 0; index < typedObj->length(); index++) {
+            id.set(INT_TO_JSID(index));
+            properties.infallibleAppend(id);
         }
         break;
+      }
 
-      case type::Array:
-        switch (enum_op) {
-          case JSENUMERATE_INIT_ALL:
-          case JSENUMERATE_INIT:
-            statep.setInt32(0);
-            idp.set(INT_TO_JSID(typedObj->length()));
-            break;
+      case type::Struct: {
+        size_t fieldCount = descr->as<StructTypeDescr>().fieldCount();
+        if (!properties.reserve(fieldCount))
+            return false;
 
-          case JSENUMERATE_NEXT:
-            index = statep.toInt32();
-
-            if (index < typedObj->length()) {
-                idp.set(INT_TO_JSID(index));
-                statep.setInt32(index + 1);
-            } else {
-                MOZ_ASSERT(index == typedObj->length());
-                statep.setNull();
-            }
-
-            break;
-
-          case JSENUMERATE_DESTROY:
-            statep.setNull();
-            break;
+        for (size_t index = 0; index < fieldCount; index++) {
+            id.set(AtomToId(&descr->as<StructTypeDescr>().fieldName(index)));
+            properties.infallibleAppend(id);
         }
         break;
-
-      case type::Struct:
-        switch (enum_op) {
-          case JSENUMERATE_INIT_ALL:
-          case JSENUMERATE_INIT:
-            statep.setInt32(0);
-            idp.set(INT_TO_JSID(descr->as<StructTypeDescr>().fieldCount()));
-            break;
-
-          case JSENUMERATE_NEXT:
-            index = static_cast<uint32_t>(statep.toInt32());
-
-            if ((size_t) index < descr->as<StructTypeDescr>().fieldCount()) {
-                idp.set(AtomToId(&descr->as<StructTypeDescr>().fieldName(index)));
-                statep.setInt32(index + 1);
-            } else {
-                statep.setNull();
-            }
-
-            break;
-
-          case JSENUMERATE_DESTROY:
-            statep.setNull();
-            break;
-        }
-        break;
+      }
     }
 
     return true;

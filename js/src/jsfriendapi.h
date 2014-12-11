@@ -232,10 +232,6 @@ JS_CopyPropertyFrom(JSContext *cx, JS::HandleId id, JS::HandleObject target,
 extern JS_FRIEND_API(bool)
 JS_WrapPropertyDescriptor(JSContext *cx, JS::MutableHandle<JSPropertyDescriptor> desc);
 
-extern JS_FRIEND_API(bool)
-JS_EnumerateState(JSContext *cx, JS::HandleObject obj, JSIterateOp enum_op,
-                  JS::MutableHandleValue statep, JS::MutableHandleId idp);
-
 struct JSFunctionSpecWithHelp {
     const char      *name;
     JSNative        call;
