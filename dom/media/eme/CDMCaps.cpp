@@ -8,6 +8,7 @@
 #include "gmp-decryption.h"
 #include "EMELog.h"
 #include "nsThreadUtils.h"
+#include "SamplesWaitingForKey.h"
 
 namespace mozilla {
 
@@ -103,12 +104,7 @@ CDMCaps::AutoLock::SetKeyUsable(const CencKeyId& aKeyId,
   while (i < waiters.Length()) {
     auto& w = waiters[i];
     if (w.mKeyId == aKeyId) {
-      if (waiters[i].mTarget) {
-        EME_LOG("SetKeyUsable() notified waiter.");
-        w.mTarget->Dispatch(w.mContinuation, NS_DISPATCH_NORMAL);
-      } else {
-        w.mContinuation->Run();
-      }
+      w.mListener->NotifyUsable(aKeyId);
       waiters.RemoveElementAt(i);
     } else {
       i++;
@@ -138,14 +134,13 @@ CDMCaps::AutoLock::SetKeyUnusable(const CencKeyId& aKeyId,
 }
 
 void
-CDMCaps::AutoLock::CallWhenKeyUsable(const CencKeyId& aKey,
-                                     nsIRunnable* aContinuation,
-                                     nsIThread* aTarget)
+CDMCaps::AutoLock::NotifyWhenKeyIdUsable(const CencKeyId& aKey,
+                                         SamplesWaitingForKey* aListener)
 {
   mData.mMonitor.AssertCurrentThreadOwns();
   MOZ_ASSERT(!IsKeyUsable(aKey));
-  MOZ_ASSERT(aContinuation);
-  mData.mWaitForKeys.AppendElement(WaitForKeys(aKey, aContinuation, aTarget));
+  MOZ_ASSERT(aListener);
+  mData.mWaitForKeys.AppendElement(WaitForKeys(aKey, aListener));
 }
 
 bool

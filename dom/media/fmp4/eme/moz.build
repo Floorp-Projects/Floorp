@@ -8,12 +8,14 @@ EXPORTS += [
     'EMEAudioDecoder.h',
     'EMEDecoderModule.h',
     'EMEH264Decoder.h',
+    'SamplesWaitingForKey.h',
 ]
 
 UNIFIED_SOURCES += [
     'EMEAudioDecoder.cpp',
     'EMEDecoderModule.cpp',
     'EMEH264Decoder.cpp',
+    'SamplesWaitingForKey.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
