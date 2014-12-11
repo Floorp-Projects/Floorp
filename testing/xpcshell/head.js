@@ -406,8 +406,10 @@ function _initDebugging(port) {
   do_print("*******************************************************************");
   do_print("")
 
-  let listener = DebuggerServer.openListener(port);
+  let listener = DebuggerServer.createListener();
+  listener.portOrPath = port;
   listener.allowConnection = () => true;
+  listener.open();
 
   // spin an event loop until the debugger connects.
   let thr = Components.classes["@mozilla.org/thread-manager;1"]

@@ -145,8 +145,10 @@ let USBRemoteDebugger = {
 
     try {
       debug("Starting USB debugger on " + portOrPath);
-      this._listener = DebuggerServer.openListener(portOrPath);
+      this._listener = DebuggerServer.createListener();
+      this._listener.portOrPath = portOrPath;
       this._listener.allowConnection = RemoteDebugger.prompt;
+      this._listener.open();
       // Temporary event, until bug 942756 lands and offers a way to know
       // when the server is up and running.
       Services.obs.notifyObservers(null, "debugger-server-started", null);
@@ -181,8 +183,10 @@ let WiFiRemoteDebugger = {
 
     try {
       debug("Starting WiFi debugger");
-      this._listener = DebuggerServer.openListener(-1);
+      this._listener = DebuggerServer.createListener();
+      this._listener.portOrPath = -1 /* any available port */;
       this._listener.allowConnection = RemoteDebugger.prompt;
+      this._listener.open();
       let port = this._listener.port;
       debug("Started WiFi debugger on " + port);
       discovery.addService("devtools", { port: port });

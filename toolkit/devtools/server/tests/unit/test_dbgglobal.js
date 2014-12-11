@@ -9,7 +9,7 @@ function run_test()
   // Should get an exception if we try to interact with DebuggerServer
   // before we initialize it...
   check_except(function() {
-    DebuggerServer.openListener(-1);
+    DebuggerServer.createListener();
   });
   check_except(DebuggerServer.closeAllListeners);
   check_except(DebuggerServer.connectPipe);
@@ -20,7 +20,7 @@ function run_test()
   // These should still fail because we haven't added a createRootActor
   // implementation yet.
   check_except(function() {
-    DebuggerServer.openListener(-1);
+    DebuggerServer.createListener();
   });
   check_except(DebuggerServer.closeAllListeners);
   check_except(DebuggerServer.connectPipe);
@@ -28,7 +28,7 @@ function run_test()
   DebuggerServer.registerModule("xpcshell-test/testactors");
 
   // Now they should work.
-  DebuggerServer.openListener(-1);
+  DebuggerServer.createListener();
   DebuggerServer.closeAllListeners();
 
   // Make sure we got the test's root actor all set up.

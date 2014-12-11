@@ -142,7 +142,9 @@ BrowserToolboxProcess.prototype = {
 
     let chromeDebuggingPort =
       Services.prefs.getIntPref("devtools.debugger.chrome-debugging-port");
-    this.debuggerServer.openListener(chromeDebuggingPort);
+    let listener = this.debuggerServer.createListener();
+    listener.portOrPath = chromeDebuggingPort;
+    listener.open();
 
     dumpn("Finished initializing the chrome toolbox server.");
     dumpn("Started listening on port: " + chromeDebuggingPort);
