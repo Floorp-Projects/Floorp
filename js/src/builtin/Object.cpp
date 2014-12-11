@@ -1208,6 +1208,7 @@ static const JSPropertySpec object_properties[] = {
 };
 
 static const JSFunctionSpec object_static_methods[] = {
+    JS_SELF_HOSTED_FN("assign",        "ObjectStaticAssign",        2,JSPROP_DEFINE_LATE),
     JS_FN("getPrototypeOf",            obj_getPrototypeOf,          1,0),
     JS_FN("setPrototypeOf",            obj_setPrototypeOf,          2,0),
     JS_FN("getOwnPropertyDescriptor",  obj_getOwnPropertyDescriptor,2,0),
@@ -1224,16 +1225,6 @@ static const JSFunctionSpec object_static_methods[] = {
     JS_FN("isFrozen",                  obj_isFrozen,                1,0),
     JS_FN("seal",                      obj_seal,                    1,0),
     JS_FN("isSealed",                  obj_isSealed,                1,0),
-    JS_FS_END
-};
-
-/*
- * For Object, self-hosted functions have to be done at a different
- * time, after the intrinsic holder has been set, so we put them
- * in a different array.
- */
-static const JSFunctionSpec object_static_selfhosted_methods[] = {
-    JS_SELF_HOSTED_FN("assign",        "ObjectStaticAssign",        2,0),
     JS_FS_END
 };
 
@@ -1318,7 +1309,7 @@ FinishObjectClassInit(JSContext *cx, JS::HandleObject ctor, JS::HandleObject pro
      * (which is needed to define self-hosted functions)
      */
     if (!isSelfHostingGlobal) {
-        if (!JS_DefineFunctions(cx, ctor, object_static_selfhosted_methods))
+        if (!JS_DefineFunctions(cx, ctor, object_static_methods, OnlyDefineLateProperties))
             return false;
     }
 
