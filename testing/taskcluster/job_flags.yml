@@ -22,6 +22,7 @@ flags:
     - gaia-build-unit
     - gaia-js-integration
     - gaia-linter
+    - gaia-unit
     - gaia-ui-test-accessibility
     - gaia-ui-test-functional
     - gaia-ui-test-unit
@@ -130,6 +131,10 @@ tests:
     allowed_build_tasks:
       tasks/builds/b2g_desktop_opt.yml:
         task: tasks/tests/b2g_build_unit.yml
+  gaia-unit:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop_opt.yml:
+        task: tasks/tests/b2g_gaia_unit.yml
   gaia-js-integration:
     allowed_build_tasks:
       tasks/builds/b2g_desktop_opt.yml:
