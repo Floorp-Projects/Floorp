@@ -17,7 +17,7 @@ typedef unsigned long nsSecurityFlags;
 /**
  * An nsILoadOwner represents per-load information about who started the load.
  */
-[scriptable, builtinclass, uuid(768a1f20-57d4-462a-812a-41c04e5d1e19)]
+[scriptable, builtinclass, uuid(da363267-236d-49bf-83a2-33da8d892728)]
 interface nsILoadInfo : nsISupports
 {
   /**
@@ -156,7 +156,7 @@ interface nsILoadInfo : nsISupports
    * The contentPolicyType of the channel, used for security checks
    * like Mixed Content Blocking and Content Security Policy.
    */
-  readonly attribute nsContentPolicyType contentPolicyType;
+   readonly attribute nsContentPolicyType contentPolicyType;
 
 %{ C++
   inline nsContentPolicyType GetContentPolicyType()
@@ -173,11 +173,5 @@ interface nsILoadInfo : nsISupports
    * This attribute may be null.  The value of this attribute may be
    * ignored if the base URI can be inferred by the channel's URI.
    */
-  readonly attribute nsIURI baseURI;
-
-  /**
-   * A C++-friendly version of baseURI.
-   */
-  [noscript, notxpcom, nostdcall, binaryname(BaseURI)]
-  nsIURI binaryBaseURI();
+   readonly attribute nsIURI baseURI;
 };
