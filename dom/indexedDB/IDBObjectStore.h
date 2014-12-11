@@ -184,15 +184,13 @@ public:
   Clear(ErrorResult& aRv);
 
   already_AddRefed<IDBIndex>
-  CreateIndex(JSContext* aCx,
-              const nsAString& aName,
+  CreateIndex(const nsAString& aName,
               const nsAString& aKeyPath,
               const IDBIndexParameters& aOptionalParameters,
               ErrorResult& aRv);
 
   already_AddRefed<IDBIndex>
-  CreateIndex(JSContext* aCx,
-              const nsAString& aName,
+  CreateIndex(const nsAString& aName,
               const Sequence<nsString>& aKeyPath,
               const IDBIndexParameters& aOptionalParameters,
               ErrorResult& aRv);
@@ -298,8 +296,7 @@ private:
                  ErrorResult& aRv);
 
   already_AddRefed<IDBIndex>
-  CreateIndexInternal(JSContext* aCx,
-                      const nsAString& aName,
+  CreateIndexInternal(const nsAString& aName,
                       const KeyPath& aKeyPath,
                       const IDBIndexParameters& aOptionalParameters,
                       ErrorResult& aRv);
