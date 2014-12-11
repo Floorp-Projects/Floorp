@@ -8,6 +8,9 @@ FAIL_ON_WARNINGS = True
 
 if CONFIG['OS_TARGET'] == 'Android':
     SharedLibrary('mozsandbox')
+    USE_LIBS += [
+        'mozglue',
+    ]
 else:
     Library('mozsandbox')
 
