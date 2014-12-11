@@ -444,7 +444,13 @@ void
 CDMProxy::OnSessionClosed(const nsAString& aSessionId)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  NS_WARNING("CDMProxy::OnSessionClosed() not implemented");
+  if (mKeys.IsNull()) {
+    return;
+  }
+  nsRefPtr<dom::MediaKeySession> session(mKeys->GetSession(aSessionId));
+  if (session) {
+    session->OnClosed();
+  }
 }
 
 static void
