@@ -65,7 +65,7 @@ testOne("testTryFinally",
          } finally {            // +6
          }                      // +7
          nothing();             // +8
-        `, "168");
+        `, "1689");
 
 // The same but without a finally clause.
 testOne("testTryCatch",
@@ -74,7 +74,7 @@ testOne("testTryCatch",
          } catch (e) {          // +6
          }                      // +7
          nothing();             // +8
-        `, "18");
+        `, "189");
 
 // Test the instructions at the end of a "catch".
 testOne("testCatchFinally",
@@ -85,7 +85,7 @@ testOne("testCatchFinally",
          } finally {            // +6
          }                      // +7
          nothing();             // +8
-        `, "168");
+        `, "1689");
 
 // The same but without a finally clause.  This relies on a
 // SpiderMonkey extension, because otherwise there's no way to see
@@ -98,7 +98,7 @@ testOne("testCatch",
          } catch (e) {          // +6
          }                      // +7
          nothing();             // +8
-        `, "18");
+        `, "189");
 
 // Test the instruction at the end of a "finally" clause.
 testOne("testFinally",
@@ -107,7 +107,7 @@ testOne("testFinally",
            ${bitOfCode}
          }                      // +6
          nothing();             // +7
-        `, "17");
+        `, "178");
 
 // Test the instruction at the end of a "then" clause.
 testOne("testThen",
@@ -116,7 +116,7 @@ testOne("testThen",
          } else {               // +6
          }                      // +7
          nothing();             // +8
-        `, "18");
+        `, "189");
 
 // Test the instructions leaving a switch block.
 testOne("testSwitch",
@@ -126,4 +126,4 @@ testOne("testSwitch",
              ${bitOfCode}
          }                      // +6
          nothing();             // +7
-        `, "17");
+        `, "178");

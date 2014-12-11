@@ -33,4 +33,4 @@ dbg.onDebuggerStatement = function(frame) {
 
 g.f();
 
-assertEq(foundLines, ",1,2,3,4,5,6,7,8,10");
+assertEq(foundLines, ",1,2,3,4,5,6,7,8,10,11");
