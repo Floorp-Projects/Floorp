@@ -61,6 +61,7 @@ public class ReadingListRow extends LinearLayout {
         final int excerptIndex = cursor.getColumnIndexOrThrow(ReadingListItems.EXCERPT);
         excerpt.setText(cursor.getString(excerptIndex));
 
+        /* Disabled until UX issues are fixed (see bug 1110461).
         final int lengthIndex = cursor.getColumnIndexOrThrow(ReadingListItems.LENGTH);
         final int minutes = getEstimatedReadTime(cursor.getInt(lengthIndex));
         if (minutes <= 60) {
@@ -68,6 +69,7 @@ public class ReadingListRow extends LinearLayout {
         } else {
             readTime.setText(resources.getString(R.string.reading_list_time_over_an_hour));
         }
+        */
     }
 
     /**
