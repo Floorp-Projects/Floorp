@@ -116,8 +116,7 @@ function Connection(host, port) {
   this._onDisconnected = this._onDisconnected.bind(this);
   this._onConnected = this._onConnected.bind(this);
   this._onTimeout = this._onTimeout.bind(this);
-  this.keepConnecting = false;
-  this.encryption = false;
+  this.resetOptions();
 }
 
 Connection.Status = {
@@ -178,6 +177,11 @@ Connection.prototype = {
       return;
     this._port = value;
     this.emit(Connection.Events.PORT_CHANGED);
+  },
+
+  resetOptions() {
+    this.keepConnecting = false;
+    this.encryption = false;
   },
 
   disconnect: function(force) {
