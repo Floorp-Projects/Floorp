@@ -295,10 +295,6 @@ nsAppShell::Init()
 
   rv = nsBaseAppShell::Init();
 
-#ifndef __LP64__
-  TextInputHandler::InstallPluginKeyEventsHandler();
-#endif
-
   if (!gAppShellMethodsSwizzled) {
     // We should only replace the original terminate: method if we're not
     // running in a Cocoa embedder. See bug 604901.
@@ -671,10 +667,6 @@ nsAppShell::Exit(void)
   }
 
   mTerminated = true;
-
-#ifndef __LP64__
-  TextInputHandler::RemovePluginKeyEventsHandler();
-#endif
 
   // Quoting from Apple's doc on the [NSApplication stop:] method (from their
   // doc on the NSApplication class):  "If this method is invoked during a

@@ -27,6 +27,8 @@
 
 #import "ComplexTextInputPanel.h"
 
+#import <Cocoa/Cocoa.h>
+
 #include <algorithm>
 #include "mozilla/Preferences.h"
 #include "nsChildView.h"
@@ -34,16 +36,35 @@
 
 using namespace mozilla;
 
+extern "C" OSStatus TSMProcessRawKeyEvent(EventRef anEvent);
+
 #define kInputWindowHeight 20
 
-@implementation ComplexTextInputPanel
+@interface ComplexTextInputPanelImpl : NSPanel {
+  NSTextView *mInputTextView;
+}
 
-+ (ComplexTextInputPanel*)sharedComplexTextInputPanel
++ (ComplexTextInputPanelImpl*)sharedComplexTextInputPanelImpl;
+
+- (NSTextInputContext*)inputContext;
+- (void)interpretKeyEvent:(NSEvent*)event string:(NSString**)string;
+- (void)cancelComposition;
+- (BOOL)inComposition;
+
+// This places the text input panel fully onscreen and below the lower left
+// corner of the focused plugin.
+- (void)adjustTo:(NSPoint)point;
+
+@end
+
+@implementation ComplexTextInputPanelImpl
+
++ (ComplexTextInputPanelImpl*)sharedComplexTextInputPanelImpl
 {
-  static ComplexTextInputPanel *sComplexTextInputPanel;
-  if (!sComplexTextInputPanel)
-    sComplexTextInputPanel = [[ComplexTextInputPanel alloc] init];
-  return sComplexTextInputPanel;
+  static ComplexTextInputPanelImpl *sComplexTextInputPanelImpl;
+  if (!sComplexTextInputPanelImpl)
+    sComplexTextInputPanelImpl = [[ComplexTextInputPanelImpl alloc] init];
+  return sComplexTextInputPanelImpl;
 }
 
 - (id)init
@@ -107,31 +128,45 @@ using namespace mozilla;
   }
 }
 
-- (BOOL)interpretKeyEvent:(NSEvent*)event string:(NSString**)string
+- (void)interpretKeyEvent:(NSEvent*)event string:(NSString**)string
 {
-  BOOL hadMarkedText = [mInputTextView hasMarkedText];
-
   *string = nil;
 
-  if (![[mInputTextView inputContext] handleEvent:event])
-    return NO;
+  if (!nsCocoaFeatures::OnMountainLionOrLater()) {
+    // This "works" on OS X 10.7 and below, but at the cost of breaking plugin
+    // IME, even in non-e10s mode: In an IME like Kotoeri Hiragana, every key
+    // gets sent to the plugin individually.
+    if (![[mInputTextView inputContext] handleEvent:event]) {
+      return;
+    }
+  } else {
+    // On OS X 10.8 and above we can't use -[NSTextInputContext handleEvent:]
+    // -- it doesn't work with a synthesized event. We need to activate the
+    // input context and call TSMProcessRawKeyEvent instead. This also allows
+    // plugin IME to work properly in non-e10s mode.
+    [[mInputTextView inputContext] activate];
+    OSErr err = TSMProcessRawKeyEvent((EventRef)[event eventRef]);
+    if (err != noErr) {
+      return;
+    }
+  }
 
   if ([mInputTextView hasMarkedText]) {
     // Don't show the input method window for dead keys
-    if ([[event characters] length] > 0)
+    if ([[event characters] length] > 0) {
       [self orderFront:nil];
-
-    return YES;
+    }
+    return;
   } else {
     [self orderOut:nil];
 
     NSString *text = [[mInputTextView textStorage] string];
-    if ([text length] > 0)
+    if ([text length] > 0) {
       *string = [[text copy] autorelease];
+    }
   }
 
   [mInputTextView setString:@""];
-  return hadMarkedText;
 }
 
 - (NSTextInputContext*)inputContext
@@ -150,23 +185,13 @@ using namespace mozilla;
   return [mInputTextView hasMarkedText];
 }
 
-- (void)adjustTo:(NSView*)view
+- (void)adjustTo:(NSPoint)point
 {
-  NSRect viewRect = [view frame];
-  viewRect.origin.x = 0;
-  viewRect.origin.y = 0;
-  viewRect = [view convertRect:viewRect toView:nil];
-  if (nsCocoaFeatures::OnLionOrLater()) {
-    viewRect = [[view window] convertRectToScreen:viewRect];
-  } else {
-    viewRect.origin = [[view window] convertBaseToScreen:viewRect.origin];
-  }
   NSRect selfRect = [self frame];
-  CGFloat minWidth = static_cast<CGFloat>(
-                       Preferences::GetUint("ui.plugin.panel.min-width", 500));
-  NSRect rect = NSMakeRect(viewRect.origin.x,
-                           viewRect.origin.y - selfRect.size.height,
-                           std::max(viewRect.size.width, minWidth),
+  CGFloat minWidth = static_cast<CGFloat>(Preferences::GetUint("ui.plugin.panel.min-width", 500));
+  NSRect rect = NSMakeRect(point.x,
+                           point.y - selfRect.size.height,
+                           500,
                            selfRect.size.height);
 
   // Adjust to screen.
@@ -192,3 +217,70 @@ using namespace mozilla;
 }
 
 @end
+
+class ComplexTextInputPanelPrivate : public ComplexTextInputPanel
+{
+public:
+  ComplexTextInputPanelPrivate();
+
+  virtual void InterpretKeyEvent(NPCocoaEvent* aEvent, nsAString& aOutText);
+  virtual bool IsInComposition();
+  virtual void PlacePanel(int32_t x, int32_t y);
+private:
+  ~ComplexTextInputPanelPrivate();
+  ComplexTextInputPanelImpl* mPanel;
+};
+
+ComplexTextInputPanelPrivate::ComplexTextInputPanelPrivate()
+{
+  mPanel = [[ComplexTextInputPanelImpl alloc] init];
+}
+
+ComplexTextInputPanelPrivate::~ComplexTextInputPanelPrivate()
+{
+  [mPanel release];
+}
+
+ComplexTextInputPanel*
+ComplexTextInputPanel::GetSharedComplexTextInputPanel()
+{
+  static ComplexTextInputPanelPrivate *sComplexTextInputPanelPrivate;
+  if (!sComplexTextInputPanelPrivate) {
+    sComplexTextInputPanelPrivate = new ComplexTextInputPanelPrivate();
+  }
+  return sComplexTextInputPanelPrivate;
+}
+
+void
+ComplexTextInputPanelPrivate::InterpretKeyEvent(NPCocoaEvent* aEvent, nsAString& aOutText)
+{
+  NSEvent* nativeEvent = [NSEvent keyEventWithType:NSKeyDown
+                                          location:NSMakePoint(0,0)
+                                     modifierFlags:aEvent->data.key.modifierFlags
+                                         timestamp:0
+                                      windowNumber:[mPanel windowNumber]
+                                           context:[mPanel graphicsContext]
+                                        characters:(NSString*)aEvent->data.key.characters
+                       charactersIgnoringModifiers:(NSString*)aEvent->data.key.charactersIgnoringModifiers
+                                         isARepeat:aEvent->data.key.isARepeat
+                                           keyCode:aEvent->data.key.keyCode];
+
+  NSString* textString = nil;
+  [mPanel interpretKeyEvent:nativeEvent string:&textString];
+
+  if (textString) {
+    nsCocoaUtils::GetStringForNSString(textString, aOutText);
+  }
+}
+
+bool
+ComplexTextInputPanelPrivate::IsInComposition()
+{
+  return !![mPanel inComposition];
+}
+
+void
+ComplexTextInputPanelPrivate::PlacePanel(int32_t x, int32_t y)
+{
+  [mPanel adjustTo:NSMakePoint(x, y)];
+}

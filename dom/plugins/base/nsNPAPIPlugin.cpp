@@ -52,6 +52,7 @@
 #include <ApplicationServices/ApplicationServices.h>
 #include <OpenGL/OpenGL.h>
 #include "nsCocoaFeatures.h"
+#include "PluginUtilsOSX.h"
 #endif
 
 // needed for nppdf plugin
@@ -2121,13 +2122,13 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
   }
 
   case NPNVsupportsCoreAnimationBool: {
-    *(NPBool*)result = nsCocoaFeatures::SupportCoreAnimationPlugins();
+    *(NPBool*)result = true;
 
     return NPERR_NO_ERROR;
   }
 
   case NPNVsupportsInvalidatingCoreAnimationBool: {
-    *(NPBool*)result = nsCocoaFeatures::SupportCoreAnimationPlugins();
+    *(NPBool*)result = true;
 
     return NPERR_NO_ERROR;
   }
@@ -2784,11 +2785,50 @@ _unscheduletimer(NPP instance, uint32_t timerID)
 NPError
 _popupcontextmenu(NPP instance, NPMenu* menu)
 {
+#ifdef MOZ_WIDGET_COCOA
   nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
-  if (!inst)
+
+  double pluginX, pluginY;
+  double screenX, screenY;
+
+  const NPCocoaEvent* currentEvent = static_cast<NPCocoaEvent*>(inst->GetCurrentEvent());
+  if (!currentEvent) {
+    return NPERR_GENERIC_ERROR;
+  }
+
+  // Ensure that the events has an x/y value.
+  if (currentEvent->type != NPCocoaEventMouseDown    &&
+      currentEvent->type != NPCocoaEventMouseUp      &&
+      currentEvent->type != NPCocoaEventMouseMoved   &&
+      currentEvent->type != NPCocoaEventMouseEntered &&
+      currentEvent->type != NPCocoaEventMouseExited  &&
+      currentEvent->type != NPCocoaEventMouseDragged) {
+      return NPERR_GENERIC_ERROR;
+  }
+
+  pluginX = currentEvent->data.mouse.pluginX;
+  pluginY = currentEvent->data.mouse.pluginY;
+
+  if ((pluginX < 0.0) || (pluginY < 0.0))
     return NPERR_GENERIC_ERROR;
 
-  return inst->PopUpContextMenu(menu);
+  NPBool success = _convertpoint(instance,
+                                 pluginX,  pluginY, NPCoordinateSpacePlugin,
+                                 &screenX, &screenY, NPCoordinateSpaceScreen);
+
+  if (success) {
+    return mozilla::plugins::PluginUtilsOSX::ShowCocoaContextMenu(menu,
+                                    screenX, screenY,
+                                    nullptr,
+                                    nullptr);
+  } else {
+    NS_WARNING("Convertpoint failed, could not created contextmenu.");
+    return NPERR_GENERIC_ERROR;
+  }
+#else
+    NS_WARNING("Not supported on this platform!");
+    return NPERR_GENERIC_ERROR;
+#endif
 }
 
 NPBool

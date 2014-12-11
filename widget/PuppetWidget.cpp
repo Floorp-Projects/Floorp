@@ -830,6 +830,28 @@ PuppetWidget::GetNativeData(uint32_t aDataType)
   return nullptr;
 }
 
+nsIntPoint
+PuppetWidget::GetChromeDimensions()
+{
+  if (!GetOwningTabChild()) {
+    NS_WARNING("PuppetWidget without Tab does not have chrome information.");
+    return nsIntPoint();
+  }
+  return GetOwningTabChild()->GetChromeDisplacement();
+}
+
+nsIntPoint
+PuppetWidget::GetWindowPosition()
+{
+  if (!GetOwningTabChild()) {
+    return nsIntPoint();
+  }
+
+  int32_t winX, winY, winW, winH;
+  NS_ENSURE_SUCCESS(GetOwningTabChild()->GetDimensions(0, &winX, &winY, &winW, &winH), nsIntPoint());
+  return nsIntPoint(winX, winY);
+}
+
 PuppetScreen::PuppetScreen(void *nativeScreen)
 {
 }
@@ -844,6 +866,13 @@ ScreenConfig()
   ScreenConfiguration config;
   hal::GetCurrentScreenConfiguration(&config);
   return config;
+}
+
+nsIntSize
+PuppetWidget::GetScreenDimensions()
+{
+  nsIntRect r = ScreenConfig().rect();
+  return nsIntSize(r.width, r.height);
 }
 
 NS_IMETHODIMP

@@ -59,7 +59,7 @@
       utils.sendNativeMouseEvent(plugin1X, plugin1Y, NSLeftMouseUp, 0, plugin1);
       expectedEventCount++;
 
-      is(plugin1.getFocusState(), true, "Plugin should have focus.");
+      is(plugin1.getFocusState(), true, "(1) Plugin should have focus.");
       is(plugin1.getFocusEventCount(), expectedEventCount, "Focus event count should be " + expectedEventCount);
 
       // Make sure window activation state changes don't spontaneously
@@ -68,13 +68,13 @@
       // Blur the window.
       window.blur();
 
-      is(plugin1.getFocusState(), true, "Plugin should still have focus.");
+      is(plugin1.getFocusState(), true, "(2) Plugin should still have focus.");
       is(plugin1.getFocusEventCount(), expectedEventCount, "Focus event count should be " + expectedEventCount);
 
       // Focus the window.
       window.focus();
 
-      is(plugin1.getFocusState(), true, "Plugin should still have focus.");
+      is(plugin1.getFocusState(), true, "(3) Plugin should still have focus.");
       is(plugin1.getFocusEventCount(), expectedEventCount, "Focus event count should be " + expectedEventCount);
 
       // Take focus from the plugin.
@@ -82,7 +82,7 @@
       utils.sendNativeMouseEvent(plugin2X, plugin2Y, NSLeftMouseUp, 0, plugin2);
       expectedEventCount++;
 
-      is(plugin1.getFocusState(), false, "Plugin should not have focus.");
+      is(plugin1.getFocusState(), false, "(4) Plugin should not have focus.");
       is(plugin1.getFocusEventCount(), expectedEventCount, "Focus event count should be " + expectedEventCount);
 
       // Make sure window activation causes the plugin to be informed of focus
@@ -99,14 +99,14 @@
       // Take focus from the plugin while the window is blurred.
       plugin2.focus();
 
-      is(plugin1.getFocusState(), true, "Plugin should still have focus.");
+      is(plugin1.getFocusState(), true, "(5) Plugin should still have focus.");
       is(plugin1.getFocusEventCount(), expectedEventCount, "Focus event count should be " + expectedEventCount);
 
       // Focus the window.
       window.focus();
       expectedEventCount++;
 
-      is(plugin1.getFocusState(), false, "Plugin should not have focus.");
+      is(plugin1.getFocusState(), false, "(6) Plugin should not have focus.");
       is(plugin1.getFocusEventCount(), expectedEventCount, "Focus event count should be " + expectedEventCount);
 
       window.opener.testsFinished();

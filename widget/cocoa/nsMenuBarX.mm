@@ -832,40 +832,17 @@ static BOOL gMenuItemsExecuteCommands = YES;
     return [super performKeyEquivalent:theEvent];
   }
 
-  // Plugins normally eat all keyboard commands, this hack mitigates
-  // the problem.
-  BOOL handleForPluginHack = NO;
   NSResponder *firstResponder = [keyWindow firstResponder];
-  if (firstResponder &&
-      [firstResponder isKindOfClass:[ChildView class]] &&
-      [(ChildView*)firstResponder isPluginView]) {
-    handleForPluginHack = YES;
-    // Maintain a list of cmd+key combinations that we never act on (in the
-    // browser) when the keyboard focus is in a plugin.  What a particular
-    // cmd+key combo means here (to the browser) is governed by browser.dtd,
-    // which "contains the browser main menu items".
-    UInt32 modifierFlags = [theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
-    if (modifierFlags == NSCommandKeyMask) {
-      NSString *unmodchars = [theEvent charactersIgnoringModifiers];
-      if ([unmodchars length] == 1) {
-        if ([unmodchars characterAtIndex:0] == nsMenuBarX::GetLocalizedAccelKey("key_selectAll")) {
-          handleForPluginHack = NO;
-        }
-      }
-    }
-  }
 
-  gMenuItemsExecuteCommands = handleForPluginHack;
+  gMenuItemsExecuteCommands = NO;
   [super performKeyEquivalent:theEvent];
   gMenuItemsExecuteCommands = YES; // return to default
 
   // Return YES if we invoked a command and there is now no key window or we changed
   // the first responder. In this case we do not want to propagate the event because
   // we don't want it handled again.
-  if (handleForPluginHack) {
-    if (![NSApp keyWindow] || [[NSApp keyWindow] firstResponder] != firstResponder) {
-      return YES;
-    }
+  if (![NSApp keyWindow] || [[NSApp keyWindow] firstResponder] != firstResponder) {
+    return YES;
   }
 
   // Return NO so that we can handle the event via NSView's "keyDown:".
