@@ -46,7 +46,6 @@ public:
     // changing for this session, i.e. the key was previously marked usable.
     bool SetKeyUnusable(const CencKeyId& aKeyId, const nsString& aSessionId);
 
-    void DropKeysForSession(const nsAString& aSessionId);
     void GetUsableKeysForSession(const nsAString& aSessionId,
                                  nsTArray<CencKeyId>& aOutKeyIds);
 
