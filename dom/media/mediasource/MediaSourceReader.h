@@ -180,7 +180,7 @@ private:
 
   bool mHasEssentialTrackBuffers;
 
-  void ContinueShutdown();
+  void ContinueShutdown(bool aSuccess);
   MediaPromiseHolder<ShutdownPromise> mMediaSourceShutdownPromise;
 #ifdef MOZ_FMP4
   nsRefPtr<SharedDecoderManager> mSharedDecoderManager;
