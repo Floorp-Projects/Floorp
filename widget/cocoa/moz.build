@@ -18,6 +18,7 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
+    'ComplexTextInputPanel.mm',
     'GfxInfo.mm',
     'NativeKeyBindings.mm',
     'nsAppShell.mm',
@@ -64,11 +65,6 @@ SOURCES += [
     'nsChildView.mm',
     'nsClipboard.mm',
 ]
-
-if CONFIG['TARGET_CPU'] == 'x86_64':
-    UNIFIED_SOURCES += [
-        'ComplexTextInputPanel.mm',
-    ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

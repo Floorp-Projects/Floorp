@@ -191,8 +191,7 @@ WidgetEvent::IsUsingCoordinates() const
   return !HasKeyEventMessage() && !IsIMERelatedEvent() &&
          !HasPluginActivationEventMessage() &&
          !IsNativeEventDelivererForPlugin() &&
-         !IsContentCommandEvent() &&
-         message != NS_PLUGIN_RESOLUTION_CHANGED;
+         !IsContentCommandEvent();
 }
 
 bool

@@ -16,8 +16,6 @@
 #include "nsAutoPtr.h"
 #include "nsISupports.h"
 #include "nsBaseWidget.h"
-#include "nsIPluginInstanceOwner.h"
-#include "nsIPluginWidget.h"
 #include "nsWeakPtr.h"
 #include "TextInputHandler.h"
 #include "nsCocoaUtils.h"
@@ -31,62 +29,13 @@
 #include "nsString.h"
 #include "nsIDragService.h"
 
-#include "npapi.h"
-
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
 #import <AppKit/NSOpenGL.h>
 
-// The header files QuickdrawAPI.h and QDOffscreen.h are missing on OS X 10.7
-// and up (though the QuickDraw APIs defined in them are still present) -- so
-// we need to supply the relevant parts of their contents here.  It's likely
-// that Apple will eventually remove the APIs themselves (probably in OS X
-// 10.8), so we need to make them weak imports, and test for their presence
-// before using them.
-#ifdef __cplusplus
-extern "C" {
-#endif
-  #if !defined(__QUICKDRAWAPI__)
-
-  extern void SetPort(GrafPtr port)
-    __attribute__((weak_import));
-  extern void SetOrigin(short h, short v)
-    __attribute__((weak_import));
-  extern RgnHandle NewRgn(void)
-    __attribute__((weak_import));
-  extern void DisposeRgn(RgnHandle rgn)
-    __attribute__((weak_import));
-  extern void RectRgn(RgnHandle rgn, const Rect * r)
-    __attribute__((weak_import));
-  extern GDHandle GetMainDevice(void)
-    __attribute__((weak_import));
-  extern Boolean IsPortOffscreen(CGrafPtr port)
-    __attribute__((weak_import));
-  extern void SetPortVisibleRegion(CGrafPtr port, RgnHandle visRgn)
-    __attribute__((weak_import));
-  extern void SetPortClipRegion(CGrafPtr port, RgnHandle clipRgn)
-    __attribute__((weak_import));
-  extern CGrafPtr GetQDGlobalsThePort(void)
-    __attribute__((weak_import));
-
-  #endif /* __QUICKDRAWAPI__ */
-
-  #if !defined(__QDOFFSCREEN__)
-
-  extern void GetGWorld(CGrafPtr *  port, GDHandle *  gdh)
-    __attribute__((weak_import));
-  extern void SetGWorld(CGrafPtr port, GDHandle gdh)
-    __attribute__((weak_import));
-
-  #endif /* __QDOFFSCREEN__ */
-#ifdef __cplusplus
-}
-#endif
-
 class gfxASurface;
 class nsChildView;
 class nsCocoaWindow;
-union nsPluginPort;
 
 namespace {
 class GLPresenter;
@@ -231,10 +180,6 @@ typedef NSInteger NSEventGestureAxis;
   // cleared by [mozView uninstallTextInputHandler].
   mozilla::widget::TextInputHandler* mTextInputHandler;  // [WEAK]
 
-  BOOL mIsPluginView;
-  NPEventModel mPluginEventModel;
-  NPDrawingModel mPluginDrawingModel;
-
   // when mouseDown: is called, we store its event here (strong)
   NSEvent* mLastMouseDownEvent;
 
@@ -326,12 +271,6 @@ typedef NSInteger NSEventGestureAxis;
 - (void)updateGLContext;
 - (void)_surfaceNeedsUpdate:(NSNotification*)notification;
 
-- (BOOL)isPluginView;
-
-// Are we processing an NSLeftMouseDown event that will fail to click through?
-// If so, we shouldn't focus or unfocus a plugin.
-- (BOOL)isInFailingLeftClickThrough;
-
 - (void)setGLContext:(NSOpenGLContext *)aGLContext;
 - (bool)preRender:(NSOpenGLContext *)aGLContext;
 - (void)postRender:(NSOpenGLContext *)aGLContext;
@@ -390,11 +329,6 @@ public:
   static void ReEvaluateMouseEnterState(NSEvent* aEvent = nil, ChildView* aOldView = nil);
   static void ResendLastMouseMoveEvent();
   static ChildView* ViewForEvent(NSEvent* aEvent);
-  static void AttachPluginEvent(mozilla::WidgetMouseEventBase& aMouseEvent,
-                                ChildView* aView,
-                                NSEvent* aNativeMouseEvent,
-                                int aPluginEventType,
-                                void* aPluginEventHolder);
 
   static ChildView* sLastMouseEventView;
   static NSEvent* sLastMouseMoveEvent;
@@ -408,8 +342,7 @@ public:
 //
 //-------------------------------------------------------------------------
 
-class nsChildView : public nsBaseWidget,
-                    public nsIPluginWidget
+class nsChildView : public nsBaseWidget
 {
 private:
   typedef nsBaseWidget Inherited;
@@ -417,8 +350,6 @@ private:
 
 public:
   nsChildView();
-
-  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIWidget interface
   NS_IMETHOD              Create(nsIWidget *aParent,
@@ -515,19 +446,6 @@ public:
   NS_IMETHOD        GetToggledKeyState(uint32_t aKeyCode,
                                        bool* aLEDState);
 
-  // nsIPluginWidget
-  // outClipRect and outOrigin are in display pixels (not device pixels)
-  NS_IMETHOD        GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint& outOrigin, bool& outWidgetVisible);
-  NS_IMETHOD        StartDrawPlugin();
-  NS_IMETHOD        EndDrawPlugin();
-  NS_IMETHOD        SetPluginInstanceOwner(nsIPluginInstanceOwner* aInstanceOwner);
-
-  NS_IMETHOD        SetPluginEventModel(int inEventModel);
-  NS_IMETHOD        GetPluginEventModel(int* outEventModel);
-  NS_IMETHOD        SetPluginDrawingModel(int inDrawingModel);
-
-  NS_IMETHOD        StartComplexTextInputForCurrentEvent();
-
   virtual nsTransparencyMode GetTransparencyMode();
   virtual void                SetTransparencyMode(nsTransparencyMode aMode);
 
@@ -568,9 +486,6 @@ public:
   virtual void UpdateWindowDraggingRegion(const nsIntRegion& aRegion) MOZ_OVERRIDE;
   const nsIntRegion& GetDraggableRegion() { return mDraggableRegion; }
 
-  void              HidePlugin();
-  void              UpdatePluginPort();
-
   void              ResetParent();
 
   static bool DoHasPendingInputEvent();
@@ -578,8 +493,6 @@ public:
   static void UpdateCurrentInputEventCount();
 
   NSView<mozView>* GetEditorView();
-
-  bool IsPluginView() { return (mWindowType == eWindowType_plugin); }
 
   nsCocoaWindow*    GetXULWindowWidget();
 
@@ -710,11 +623,7 @@ protected:
 
   bool                  mVisible;
   bool                  mDrawing;
-  bool                  mPluginDrawing;
   bool                  mIsDispatchPaint; // Is a paint event being dispatched
-
-  NP_CGContext          mPluginCGContext;
-  nsIPluginInstanceOwner* mPluginInstanceOwner; // [WEAK]
 
   // Used in OMTC BasicLayers mode. Presents the BasicCompositor result
   // surface to the screen using an OpenGL context.
@@ -728,8 +637,5 @@ protected:
 
   void ReleaseTitlebarCGContext();
 };
-
-void NS_InstallPluginKeyEventsHandler();
-void NS_RemovePluginKeyEventsHandler();
 
 #endif // nsChildView_h_

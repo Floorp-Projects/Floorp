@@ -618,7 +618,8 @@ TabParent::Show(const nsIntSize& size)
 }
 
 void
-TabParent::UpdateDimensions(const nsIntRect& rect, const nsIntSize& size)
+TabParent::UpdateDimensions(const nsIntRect& rect, const nsIntSize& size,
+                            const nsIntPoint& aChromeDisp)
 {
   if (mIsDestroyed) {
     return;
@@ -634,7 +635,7 @@ TabParent::UpdateDimensions(const nsIntRect& rect, const nsIntSize& size)
     mDimensions = size;
     mOrientation = orientation;
 
-    unused << SendUpdateDimensions(mRect, mDimensions, mOrientation);
+    unused << SendUpdateDimensions(mRect, mDimensions, mOrientation, aChromeDisp);
   }
 }
 
