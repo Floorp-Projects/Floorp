@@ -106,6 +106,7 @@ class GlobalObject : public NativeObject
     static const unsigned FLOAT32X4_TYPE_DESCR   = INTRINSICS + 1;
     static const unsigned INT32X4_TYPE_DESCR     = FLOAT32X4_TYPE_DESCR + 1;
     static const unsigned FOR_OF_PIC_CHAIN        = INT32X4_TYPE_DESCR + 1;
+    static const unsigned WARNED_STRING_CONTAINS_DEPRECATED = INT32X4_TYPE_DESCR + 1;
 
     /* Total reserved-slot count for global objects. */
     static const unsigned RESERVED_SLOTS = FOR_OF_PIC_CHAIN + 1;
@@ -609,6 +610,11 @@ class GlobalObject : public NativeObject
     // object's [[Prototype]], if no prior warning was given.
     static bool warnOnceAboutPrototypeMutation(JSContext *cx, HandleObject protoSetter) {
         return warnOnceAbout(cx, protoSetter, WARNED_PROTO_SETTING_SLOW, JSMSG_PROTO_SETTING_SLOW);
+    }
+
+    // Warn about use of the deprecated String.prototype.contains method
+    static bool warnOnceAboutStringContains(JSContext *cx, HandleObject strContains) {
+        return warnOnceAbout(cx, strContains, WARNED_STRING_CONTAINS_DEPRECATED, JSMSG_DEPRECATED_STRING_CONTAINS);
     }
 
     static bool getOrCreateEval(JSContext *cx, Handle<GlobalObject*> global,
