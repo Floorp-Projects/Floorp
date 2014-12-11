@@ -2491,10 +2491,9 @@ MediaDecoderStateMachine::ShutdownReader()
 }
 
 void
-MediaDecoderStateMachine::FinishShutdown(bool aSuccess)
+MediaDecoderStateMachine::FinishShutdown()
 {
   MOZ_ASSERT(OnStateMachineThread());
-  MOZ_ASSERT(aSuccess);
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
   // The reader's listeners hold references to the state machine,
