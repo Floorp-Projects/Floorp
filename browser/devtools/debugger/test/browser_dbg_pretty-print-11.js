@@ -36,7 +36,7 @@ function test() {
 }
 
 function testSourceIsUgly() {
-  ok(!gEditor.getText().contains("\n  "),
+  ok(!gEditor.getText().includes("\n  "),
      "The source shouldn't be pretty printed yet.");
 }
 
@@ -45,7 +45,7 @@ function clickPrettyPrintButton() {
 }
 
 function testSourceIsPretty() {
-  ok(gEditor.getText().contains("\n  "),
+  ok(gEditor.getText().includes("\n  "),
      "The source should be pretty printed.")
 }
 

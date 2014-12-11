@@ -24,8 +24,8 @@ function isWindowChromeless(win) {
   let docElem = win.document.documentElement;
   // extrachrome is not restored during session restore, so we need
   // to check for the toolbar as well.
-  let chromeless = docElem.getAttribute("chromehidden").contains("extrachrome") ||
-                   docElem.getAttribute('chromehidden').contains("toolbar");
+  let chromeless = docElem.getAttribute("chromehidden").includes("extrachrome") ||
+                   docElem.getAttribute('chromehidden').includes("toolbar");
   return chromeless;
 }
 

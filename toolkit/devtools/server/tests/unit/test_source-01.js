@@ -56,7 +56,7 @@ function test_source()
         do_check_true(!!aResponse);
         do_check_true(!aResponse.error);
         do_check_true(!!aResponse.contentType);
-        do_check_true(aResponse.contentType.contains("javascript"));
+        do_check_true(aResponse.contentType.includes("javascript"));
 
         do_check_true(!!aResponse.source);
         do_check_eq(SOURCE_CONTENT,

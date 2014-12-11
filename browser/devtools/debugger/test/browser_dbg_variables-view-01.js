@@ -15,7 +15,7 @@ function test() {
 
     ok(testScope,
       "Should have created a scope.");
-    ok(testScope.id.contains("test"),
+    ok(testScope.id.includes("test"),
       "The newly created scope should have the default id set.");
     is(testScope.name, "test",
       "The newly created scope should have the desired name set.");
@@ -27,7 +27,7 @@ function test() {
 
     ok(testScope.target,
       "The newly created scope should point to a target node.");
-    ok(testScope.target.id.contains("test"),
+    ok(testScope.target.id.includes("test"),
       "Should have the correct scope id on the element.");
 
     is(testScope.target.querySelector(".name").getAttribute("value"), "test",

@@ -25,7 +25,7 @@ function test() {
 
       is(tooltip.querySelector(".devtools-tooltip-simple-text").textContent, textContent,
         "The inspected property's value is correct.");
-      ok(tooltip.querySelector(".devtools-tooltip-simple-text").className.contains(className),
+      ok(tooltip.querySelector(".devtools-tooltip-simple-text").className.includes(className),
         "The inspected property's value is colorized correctly.");
     }
 

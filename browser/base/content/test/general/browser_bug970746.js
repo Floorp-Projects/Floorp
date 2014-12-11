@@ -40,7 +40,7 @@ function test() {
       is(document.getElementById("context-searchselect").hidden, !opts.shouldBeShown, "search context menu item is shown for  '#" + opts.id + "' and selected is '" + opts.isSelected + "'");
 
       if(opts.shouldBeShown) {
-        ok(menuItem.label.contains(opts.expectedLabelContents), "Menu item text '" + menuItem.label  + "' contains the correct search terms '" + opts.expectedLabelContents  + "'");
+        ok(menuItem.label.includes(opts.expectedLabelContents), "Menu item text '" + menuItem.label  + "' contains the correct search terms '" + opts.expectedLabelContents  + "'");
       }
     }
 

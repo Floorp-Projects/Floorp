@@ -37,9 +37,9 @@ function ifWebGLSupported() {
     "The linkage status should not be empty.");
   is(error.link.split("ERROR").length - 1, 2,
     "The linkage status contains two errors.");
-  ok(error.link.contains("ERROR: 0:8: 'constructor'"),
+  ok(error.link.includes("ERROR: 0:8: 'constructor'"),
     "A constructor error is contained in the linkage status.");
-  ok(error.link.contains("ERROR: 0:8: 'assign'"),
+  ok(error.link.includes("ERROR: 0:8: 'assign'"),
     "An assignment error is contained in the linkage status.");
 
   fsEditor.replaceText("vec4", { line: 2, ch: 14 }, { line: 2, ch: 18 });
@@ -53,7 +53,7 @@ function ifWebGLSupported() {
     "The linkage status should not be empty.");
   is(error.link.split("ERROR").length - 1, 1,
     "The linkage status contains one error.");
-  ok(error.link.contains("ERROR: 0:6: 'constructor'"),
+  ok(error.link.includes("ERROR: 0:6: 'constructor'"),
     "A constructor error is contained in the linkage status.");
 
   yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);

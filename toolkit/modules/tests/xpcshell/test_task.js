@@ -552,7 +552,7 @@ add_test(function test_throw_stack_do_not_capture_the_wrong_task() {
         do_check_rewritten_stack(["task_a",
                                   "test_throw_stack_do_not_capture_the_wrong_task"],
                                   ex);
-        do_check_true(!ex.stack.contains("task_b"));
+        do_check_true(!ex.stack.includes("task_b"));
         run_next_test();
       });
       Task.spawn(function* task_b() {

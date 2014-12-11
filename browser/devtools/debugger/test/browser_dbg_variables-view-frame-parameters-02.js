@@ -56,84 +56,84 @@ function testScopeVariables() {
   is(localEnums[0].querySelector(".value").getAttribute("value"),
     "Window \u2192 doc_frame-parameters.html",
     "Should have the right property value for 'this'.");
-  ok(localEnums[0].querySelector(".value").className.contains("token-other"),
+  ok(localEnums[0].querySelector(".value").className.includes("token-other"),
     "Should have the right token class for 'this'.");
 
   is(localEnums[1].querySelector(".name").getAttribute("value"), "aArg",
     "Should have the right property name for 'aArg'.");
   is(localEnums[1].querySelector(".value").getAttribute("value"), "Object",
     "Should have the right property value for 'aArg'.");
-  ok(localEnums[1].querySelector(".value").className.contains("token-other"),
+  ok(localEnums[1].querySelector(".value").className.includes("token-other"),
     "Should have the right token class for 'aArg'.");
 
   is(localEnums[2].querySelector(".name").getAttribute("value"), "bArg",
     "Should have the right property name for 'bArg'.");
   is(localEnums[2].querySelector(".value").getAttribute("value"), "\"beta\"",
     "Should have the right property value for 'bArg'.");
-  ok(localEnums[2].querySelector(".value").className.contains("token-string"),
+  ok(localEnums[2].querySelector(".value").className.includes("token-string"),
     "Should have the right token class for 'bArg'.");
 
   is(localEnums[3].querySelector(".name").getAttribute("value"), "cArg",
     "Should have the right property name for 'cArg'.");
   is(localEnums[3].querySelector(".value").getAttribute("value"), "3",
     "Should have the right property value for 'cArg'.");
-  ok(localEnums[3].querySelector(".value").className.contains("token-number"),
+  ok(localEnums[3].querySelector(".value").className.includes("token-number"),
     "Should have the right token class for 'cArg'.");
 
   is(localEnums[4].querySelector(".name").getAttribute("value"), "dArg",
     "Should have the right property name for 'dArg'.");
   is(localEnums[4].querySelector(".value").getAttribute("value"), "false",
     "Should have the right property value for 'dArg'.");
-  ok(localEnums[4].querySelector(".value").className.contains("token-boolean"),
+  ok(localEnums[4].querySelector(".value").className.includes("token-boolean"),
     "Should have the right token class for 'dArg'.");
 
   is(localEnums[5].querySelector(".name").getAttribute("value"), "eArg",
     "Should have the right property name for 'eArg'.");
   is(localEnums[5].querySelector(".value").getAttribute("value"), "null",
     "Should have the right property value for 'eArg'.");
-  ok(localEnums[5].querySelector(".value").className.contains("token-null"),
+  ok(localEnums[5].querySelector(".value").className.includes("token-null"),
     "Should have the right token class for 'eArg'.");
 
   is(localEnums[6].querySelector(".name").getAttribute("value"), "fArg",
     "Should have the right property name for 'fArg'.");
   is(localEnums[6].querySelector(".value").getAttribute("value"), "undefined",
     "Should have the right property value for 'fArg'.");
-  ok(localEnums[6].querySelector(".value").className.contains("token-undefined"),
+  ok(localEnums[6].querySelector(".value").className.includes("token-undefined"),
     "Should have the right token class for 'fArg'.");
 
   is(localEnums[7].querySelector(".name").getAttribute("value"), "a",
    "Should have the right property name for 'a'.");
   is(localEnums[7].querySelector(".value").getAttribute("value"), "1",
    "Should have the right property value for 'a'.");
-  ok(localEnums[7].querySelector(".value").className.contains("token-number"),
+  ok(localEnums[7].querySelector(".value").className.includes("token-number"),
    "Should have the right token class for 'a'.");
 
   is(localEnums[8].querySelector(".name").getAttribute("value"), "arguments",
     "Should have the right property name for 'arguments'.");
   is(localEnums[8].querySelector(".value").getAttribute("value"), "Arguments",
     "Should have the right property value for 'arguments'.");
-  ok(localEnums[8].querySelector(".value").className.contains("token-other"),
+  ok(localEnums[8].querySelector(".value").className.includes("token-other"),
     "Should have the right token class for 'arguments'.");
 
   is(localEnums[9].querySelector(".name").getAttribute("value"), "b",
    "Should have the right property name for 'b'.");
   is(localEnums[9].querySelector(".value").getAttribute("value"), "Object",
    "Should have the right property value for 'b'.");
-  ok(localEnums[9].querySelector(".value").className.contains("token-other"),
+  ok(localEnums[9].querySelector(".value").className.includes("token-other"),
    "Should have the right token class for 'b'.");
 
   is(localEnums[10].querySelector(".name").getAttribute("value"), "c",
    "Should have the right property name for 'c'.");
   is(localEnums[10].querySelector(".value").getAttribute("value"), "Object",
    "Should have the right property value for 'c'.");
-  ok(localEnums[10].querySelector(".value").className.contains("token-other"),
+  ok(localEnums[10].querySelector(".value").className.includes("token-other"),
    "Should have the right token class for 'c'.");
 
   is(localEnums[11].querySelector(".name").getAttribute("value"), "myVar",
    "Should have the right property name for 'myVar'.");
   is(localEnums[11].querySelector(".value").getAttribute("value"), "Object",
    "Should have the right property value for 'myVar'.");
-  ok(localEnums[11].querySelector(".value").className.contains("token-other"),
+  ok(localEnums[11].querySelector(".value").className.includes("token-other"),
    "Should have the right token class for 'myVar'.");
 }
 
@@ -157,35 +157,35 @@ function testArgumentsProperties() {
       "Should have the right property name for '0'.");
     is(argsEnums[0].querySelector(".value").getAttribute("value"), "Object",
       "Should have the right property value for '0'.");
-    ok(argsEnums[0].querySelector(".value").className.contains("token-other"),
+    ok(argsEnums[0].querySelector(".value").className.includes("token-other"),
       "Should have the right token class for '0'.");
 
     is(argsEnums[1].querySelector(".name").getAttribute("value"), "1",
       "Should have the right property name for '1'.");
     is(argsEnums[1].querySelector(".value").getAttribute("value"), "\"beta\"",
       "Should have the right property value for '1'.");
-    ok(argsEnums[1].querySelector(".value").className.contains("token-string"),
+    ok(argsEnums[1].querySelector(".value").className.includes("token-string"),
       "Should have the right token class for '1'.");
 
     is(argsEnums[2].querySelector(".name").getAttribute("value"), "2",
       "Should have the right property name for '2'.");
     is(argsEnums[2].querySelector(".value").getAttribute("value"), "3",
       "Should have the right property name for '2'.");
-    ok(argsEnums[2].querySelector(".value").className.contains("token-number"),
+    ok(argsEnums[2].querySelector(".value").className.includes("token-number"),
       "Should have the right token class for '2'.");
 
     is(argsEnums[3].querySelector(".name").getAttribute("value"), "3",
       "Should have the right property name for '3'.");
     is(argsEnums[3].querySelector(".value").getAttribute("value"), "false",
       "Should have the right property value for '3'.");
-    ok(argsEnums[3].querySelector(".value").className.contains("token-boolean"),
+    ok(argsEnums[3].querySelector(".value").className.includes("token-boolean"),
       "Should have the right token class for '3'.");
 
     is(argsEnums[4].querySelector(".name").getAttribute("value"), "4",
       "Should have the right property name for '4'.");
     is(argsEnums[4].querySelector(".value").getAttribute("value"), "null",
       "Should have the right property name for '4'.");
-    ok(argsEnums[4].querySelector(".value").className.contains("token-null"),
+    ok(argsEnums[4].querySelector(".value").className.includes("token-null"),
       "Should have the right token class for '4'.");
 
     is(argsNonEnums[0].querySelector(".name").getAttribute("value"), "callee",
@@ -193,21 +193,21 @@ function testArgumentsProperties() {
     is(argsNonEnums[0].querySelector(".value").getAttribute("value"),
      "test(aArg,bArg,cArg,dArg,eArg,fArg)",
      "Should have the right property name for 'callee'.");
-    ok(argsNonEnums[0].querySelector(".value").className.contains("token-other"),
+    ok(argsNonEnums[0].querySelector(".value").className.includes("token-other"),
      "Should have the right token class for 'callee'.");
 
     is(argsNonEnums[1].querySelector(".name").getAttribute("value"), "length",
       "Should have the right property name for 'length'.");
     is(argsNonEnums[1].querySelector(".value").getAttribute("value"), "5",
       "Should have the right property value for 'length'.");
-    ok(argsNonEnums[1].querySelector(".value").className.contains("token-number"),
+    ok(argsNonEnums[1].querySelector(".value").className.includes("token-number"),
       "Should have the right token class for 'length'.");
 
     is(argsNonEnums[2].querySelector(".name").getAttribute("value"), "__proto__",
      "Should have the right property name for '__proto__'.");
     is(argsNonEnums[2].querySelector(".value").getAttribute("value"), "Object",
      "Should have the right property value for '__proto__'.");
-    ok(argsNonEnums[2].querySelector(".value").className.contains("token-other"),
+    ok(argsNonEnums[2].querySelector(".value").className.includes("token-other"),
      "Should have the right token class for '__proto__'.");
 
     deferred.resolve();
@@ -237,14 +237,14 @@ function testSimpleObject() {
       "Should have the right property name for 'a'.");
     is(bEnums[0].querySelector(".value").getAttribute("value"), "1",
       "Should have the right property value for 'a'.");
-    ok(bEnums[0].querySelector(".value").className.contains("token-number"),
+    ok(bEnums[0].querySelector(".value").className.includes("token-number"),
       "Should have the right token class for 'a'.");
 
     is(bNonEnums[0].querySelector(".name").getAttribute("value"), "__proto__",
      "Should have the right property name for '__proto__'.");
     is(bNonEnums[0].querySelector(".value").getAttribute("value"), "Object",
      "Should have the right property value for '__proto__'.");
-    ok(bNonEnums[0].querySelector(".value").className.contains("token-other"),
+    ok(bNonEnums[0].querySelector(".value").className.includes("token-other"),
      "Should have the right token class for '__proto__'.");
 
     deferred.resolve();
@@ -274,49 +274,49 @@ function testComplexObject() {
       "Should have the right property name for 'a'.");
     is(cEnums[0].querySelector(".value").getAttribute("value"), "1",
       "Should have the right property value for 'a'.");
-    ok(cEnums[0].querySelector(".value").className.contains("token-number"),
+    ok(cEnums[0].querySelector(".value").className.includes("token-number"),
       "Should have the right token class for 'a'.");
 
     is(cEnums[1].querySelector(".name").getAttribute("value"), "b",
       "Should have the right property name for 'b'.");
     is(cEnums[1].querySelector(".value").getAttribute("value"), "\"beta\"",
       "Should have the right property value for 'b'.");
-    ok(cEnums[1].querySelector(".value").className.contains("token-string"),
+    ok(cEnums[1].querySelector(".value").className.includes("token-string"),
       "Should have the right token class for 'b'.");
 
     is(cEnums[2].querySelector(".name").getAttribute("value"), "c",
       "Should have the right property name for 'c'.");
     is(cEnums[2].querySelector(".value").getAttribute("value"), "3",
       "Should have the right property value for 'c'.");
-    ok(cEnums[2].querySelector(".value").className.contains("token-number"),
+    ok(cEnums[2].querySelector(".value").className.includes("token-number"),
       "Should have the right token class for 'c'.");
 
     is(cEnums[3].querySelector(".name").getAttribute("value"), "d",
       "Should have the right property name for 'd'.");
     is(cEnums[3].querySelector(".value").getAttribute("value"), "false",
       "Should have the right property value for 'd'.");
-    ok(cEnums[3].querySelector(".value").className.contains("token-boolean"),
+    ok(cEnums[3].querySelector(".value").className.includes("token-boolean"),
       "Should have the right token class for 'd'.");
 
     is(cEnums[4].querySelector(".name").getAttribute("value"), "e",
       "Should have the right property name for 'e'.");
     is(cEnums[4].querySelector(".value").getAttribute("value"), "null",
       "Should have the right property value for 'e'.");
-    ok(cEnums[4].querySelector(".value").className.contains("token-null"),
+    ok(cEnums[4].querySelector(".value").className.includes("token-null"),
       "Should have the right token class for 'e'.");
 
     is(cEnums[5].querySelector(".name").getAttribute("value"), "f",
       "Should have the right property name for 'f'.");
     is(cEnums[5].querySelector(".value").getAttribute("value"), "undefined",
       "Should have the right property value for 'f'.");
-    ok(cEnums[5].querySelector(".value").className.contains("token-undefined"),
+    ok(cEnums[5].querySelector(".value").className.includes("token-undefined"),
       "Should have the right token class for 'f'.");
 
     is(cNonEnums[0].querySelector(".name").getAttribute("value"), "__proto__",
      "Should have the right property name for '__proto__'.");
     is(cNonEnums[0].querySelector(".value").getAttribute("value"), "Object",
      "Should have the right property value for '__proto__'.");
-    ok(cNonEnums[0].querySelector(".value").className.contains("token-other"),
+    ok(cNonEnums[0].querySelector(".value").className.includes("token-other"),
      "Should have the right token class for '__proto__'.");
 
     deferred.resolve();
@@ -346,49 +346,49 @@ function testArgumentObject() {
       "Should have the right property name for 'a'.");
     is(argEnums[0].querySelector(".value").getAttribute("value"), "1",
       "Should have the right property value for 'a'.");
-    ok(argEnums[0].querySelector(".value").className.contains("token-number"),
+    ok(argEnums[0].querySelector(".value").className.includes("token-number"),
       "Should have the right token class for 'a'.");
 
     is(argEnums[1].querySelector(".name").getAttribute("value"), "b",
       "Should have the right property name for 'b'.");
     is(argEnums[1].querySelector(".value").getAttribute("value"), "\"beta\"",
       "Should have the right property value for 'b'.");
-    ok(argEnums[1].querySelector(".value").className.contains("token-string"),
+    ok(argEnums[1].querySelector(".value").className.includes("token-string"),
       "Should have the right token class for 'b'.");
 
     is(argEnums[2].querySelector(".name").getAttribute("value"), "c",
       "Should have the right property name for 'c'.");
     is(argEnums[2].querySelector(".value").getAttribute("value"), "3",
       "Should have the right property value for 'c'.");
-    ok(argEnums[2].querySelector(".value").className.contains("token-number"),
+    ok(argEnums[2].querySelector(".value").className.includes("token-number"),
       "Should have the right token class for 'c'.");
 
     is(argEnums[3].querySelector(".name").getAttribute("value"), "d",
       "Should have the right property name for 'd'.");
     is(argEnums[3].querySelector(".value").getAttribute("value"), "false",
       "Should have the right property value for 'd'.");
-    ok(argEnums[3].querySelector(".value").className.contains("token-boolean"),
+    ok(argEnums[3].querySelector(".value").className.includes("token-boolean"),
       "Should have the right token class for 'd'.");
 
     is(argEnums[4].querySelector(".name").getAttribute("value"), "e",
       "Should have the right property name for 'e'.");
     is(argEnums[4].querySelector(".value").getAttribute("value"), "null",
       "Should have the right property value for 'e'.");
-    ok(argEnums[4].querySelector(".value").className.contains("token-null"),
+    ok(argEnums[4].querySelector(".value").className.includes("token-null"),
       "Should have the right token class for 'e'.");
 
     is(argEnums[5].querySelector(".name").getAttribute("value"), "f",
       "Should have the right property name for 'f'.");
     is(argEnums[5].querySelector(".value").getAttribute("value"), "undefined",
       "Should have the right property value for 'f'.");
-    ok(argEnums[5].querySelector(".value").className.contains("token-undefined"),
+    ok(argEnums[5].querySelector(".value").className.includes("token-undefined"),
       "Should have the right token class for 'f'.");
 
     is(argNonEnums[0].querySelector(".name").getAttribute("value"), "__proto__",
      "Should have the right property name for '__proto__'.");
     is(argNonEnums[0].querySelector(".value").getAttribute("value"), "Object",
      "Should have the right property value for '__proto__'.");
-    ok(argNonEnums[0].querySelector(".value").className.contains("token-other"),
+    ok(argNonEnums[0].querySelector(".value").className.includes("token-other"),
      "Should have the right token class for '__proto__'.");
 
     deferred.resolve();
@@ -418,49 +418,49 @@ function testInnerArgumentObject() {
       "Should have the right property name for 'a'.");
     is(argEnums[0].querySelector(".value").getAttribute("value"), "1",
       "Should have the right property value for 'a'.");
-    ok(argEnums[0].querySelector(".value").className.contains("token-number"),
+    ok(argEnums[0].querySelector(".value").className.includes("token-number"),
       "Should have the right token class for 'a'.");
 
     is(argEnums[1].querySelector(".name").getAttribute("value"), "b",
       "Should have the right property name for 'b'.");
     is(argEnums[1].querySelector(".value").getAttribute("value"), "\"beta\"",
       "Should have the right property value for 'b'.");
-    ok(argEnums[1].querySelector(".value").className.contains("token-string"),
+    ok(argEnums[1].querySelector(".value").className.includes("token-string"),
       "Should have the right token class for 'b'.");
 
     is(argEnums[2].querySelector(".name").getAttribute("value"), "c",
       "Should have the right property name for 'c'.");
     is(argEnums[2].querySelector(".value").getAttribute("value"), "3",
       "Should have the right property value for 'c'.");
-    ok(argEnums[2].querySelector(".value").className.contains("token-number"),
+    ok(argEnums[2].querySelector(".value").className.includes("token-number"),
       "Should have the right token class for 'c'.");
 
     is(argEnums[3].querySelector(".name").getAttribute("value"), "d",
       "Should have the right property name for 'd'.");
     is(argEnums[3].querySelector(".value").getAttribute("value"), "false",
       "Should have the right property value for 'd'.");
-    ok(argEnums[3].querySelector(".value").className.contains("token-boolean"),
+    ok(argEnums[3].querySelector(".value").className.includes("token-boolean"),
       "Should have the right token class for 'd'.");
 
     is(argEnums[4].querySelector(".name").getAttribute("value"), "e",
       "Should have the right property name for 'e'.");
     is(argEnums[4].querySelector(".value").getAttribute("value"), "null",
       "Should have the right property value for 'e'.");
-    ok(argEnums[4].querySelector(".value").className.contains("token-null"),
+    ok(argEnums[4].querySelector(".value").className.includes("token-null"),
       "Should have the right token class for 'e'.");
 
     is(argEnums[5].querySelector(".name").getAttribute("value"), "f",
       "Should have the right property name for 'f'.");
     is(argEnums[5].querySelector(".value").getAttribute("value"), "undefined",
       "Should have the right property value for 'f'.");
-    ok(argEnums[5].querySelector(".value").className.contains("token-undefined"),
+    ok(argEnums[5].querySelector(".value").className.includes("token-undefined"),
       "Should have the right token class for 'f'.");
 
     is(argNonEnums[0].querySelector(".name").getAttribute("value"), "__proto__",
      "Should have the right property name for '__proto__'.");
     is(argNonEnums[0].querySelector(".value").getAttribute("value"), "Object",
      "Should have the right property value for '__proto__'.");
-    ok(argNonEnums[0].querySelector(".value").className.contains("token-other"),
+    ok(argNonEnums[0].querySelector(".value").className.includes("token-other"),
      "Should have the right token class for '__proto__'.");
 
     deferred.resolve();
@@ -490,21 +490,21 @@ function testGetterSetterObject() {
       "Should have the right property name for '_prop'.");
     is(myVarEnums[0].querySelector(".value").getAttribute("value"), "42",
       "Should have the right property value for '_prop'.");
-    ok(myVarEnums[0].querySelector(".value").className.contains("token-number"),
+    ok(myVarEnums[0].querySelector(".value").className.includes("token-number"),
       "Should have the right token class for '_prop'.");
 
     is(myVarEnums[1].querySelector(".name").getAttribute("value"), "prop",
       "Should have the right property name for 'prop'.");
     is(myVarEnums[1].querySelector(".value").getAttribute("value"), "",
       "Should have the right property value for 'prop'.");
-    ok(!myVarEnums[1].querySelector(".value").className.contains("token"),
+    ok(!myVarEnums[1].querySelector(".value").className.includes("token"),
       "Should have no token class for 'prop'.");
 
     is(myVarNonEnums[0].querySelector(".name").getAttribute("value"), "__proto__",
      "Should have the right property name for '__proto__'.");
     is(myVarNonEnums[0].querySelector(".value").getAttribute("value"), "Object",
      "Should have the right property value for '__proto__'.");
-    ok(myVarNonEnums[0].querySelector(".value").className.contains("token-other"),
+    ok(myVarNonEnums[0].querySelector(".value").className.includes("token-other"),
      "Should have the right token class for '__proto__'.");
 
     let propEnums = myVarEnums[1].querySelector(".variables-view-element-details.enum").childNodes;
@@ -520,7 +520,7 @@ function testGetterSetterObject() {
     is(propNonEnums[0].querySelector(".value").getAttribute("value"),
       "test/myVar.prop()",
       "Should have the right property value for 'get'.");
-    ok(propNonEnums[0].querySelector(".value").className.contains("token-other"),
+    ok(propNonEnums[0].querySelector(".value").className.includes("token-other"),
       "Should have the right token class for 'get'.");
 
     is(propNonEnums[1].querySelector(".name").getAttribute("value"), "set",
@@ -528,7 +528,7 @@ function testGetterSetterObject() {
     is(propNonEnums[1].querySelector(".value").getAttribute("value"),
       "test/myVar.prop(val)",
       "Should have the right property value for 'set'.");
-    ok(propNonEnums[1].querySelector(".value").className.contains("token-other"),
+    ok(propNonEnums[1].querySelector(".value").className.includes("token-other"),
       "Should have the right token class for 'set'.");
 
     deferred.resolve();

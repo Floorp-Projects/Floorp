@@ -67,8 +67,8 @@ let RemoteTabViewer = {
       let item = this._tabsList.getItemAtIndex(i);
       let hide = false;
       if (item.getAttribute("type") == "tab") {
-        if (!item.getAttribute("url").toLowerCase().contains(val) &&
-            !item.getAttribute("title").toLowerCase().contains(val)) {
+        if (!item.getAttribute("url").toLowerCase().includes(val) &&
+            !item.getAttribute("title").toLowerCase().includes(val)) {
           hide = true;
         } else {
           clientTabs++;

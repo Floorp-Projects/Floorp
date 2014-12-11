@@ -26,7 +26,7 @@ exports["test start / stop ports"] = assert => {
   const input = new InputPort({ id: Date.now().toString(32), initial: {data:0} });
   const topic = input.topic;
 
-  assert.ok(topic.contains(addonID), "topics are namespaced to add-on");
+  assert.ok(topic.includes(addonID), "topics are namespaced to add-on");
 
   const xs = lift(({data}) => "x:" + data, input);
   const ys = lift(({data}) => "y:" + data, input);
@@ -216,7 +216,7 @@ exports["test receive what was send"] = assert => {
   const input = new InputPort({ id: id, initial: 0});
   const output = new OutputPort({ id: id, sync: true });
 
-  assert.ok(input.topic.contains(addonID),
+  assert.ok(input.topic.includes(addonID),
             "input topic is namespaced to addon");
   assert.equal(input.topic, output.topic,
               "input & output get same topics from id.");

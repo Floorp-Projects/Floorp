@@ -7,7 +7,7 @@ function handleRequest(request, response) {
   response.processAsync();
 
   let params = request.queryString.split("&");
-  let index = params.filter((s) => s.contains("index="))[0].split("=")[1];
+  let index = params.filter((s) => s.includes("index="))[0].split("=")[1];
 
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   timer.initWithCallback(() => {

@@ -448,8 +448,8 @@ StorageUI.prototype = {
         let p = separators[j];
         let regex = new RegExp("^([^" + kv + p + "]*" + kv + "+[^" + kv + p +
                                "]*" + p + "*)+$", "g");
-        if (value.match(regex) && value.contains(kv) &&
-            (value.contains(p) || value.split(kv).length == 2)) {
+        if (value.match(regex) && value.includes(kv) &&
+            (value.includes(p) || value.split(kv).length == 2)) {
           return makeObject(kv, p);
         }
       }

@@ -48,7 +48,7 @@ function doSearch() {
 
       ok(isCaretPos(gPanel, 6),
         "The editor shouldn't have jumped to a matching line yet.");
-      ok(getSelectedSourceURL(gSources).contains("-02.js"),
+      ok(getSelectedSourceURL(gSources).includes("-02.js"),
         "The current source shouldn't have changed after a global search.");
       is(gSources.visibleItems.length, 2,
         "Not all the sources are shown after the global search.");
@@ -101,7 +101,7 @@ function testClickLineToJump() {
       "The editor didn't jump to the correct line (1).");
     is(gEditor.getSelection(), "",
       "The editor didn't select the correct text (1).");
-    ok(getSelectedSourceURL(gSources).contains("-01.js"),
+    ok(getSelectedSourceURL(gSources).includes("-01.js"),
       "The currently shown source is incorrect (1).");
     is(gSources.visibleItems.length, 2,
       "Not all the sources are shown after the global search (1).");
@@ -130,7 +130,7 @@ function testClickMatchToJump() {
       "The editor didn't jump to the correct line (2).");
     is(gEditor.getSelection(), "",
       "The editor didn't select the correct text (2).");
-    ok(getSelectedSourceURL(gSources).contains("-02.js"),
+    ok(getSelectedSourceURL(gSources).includes("-02.js"),
       "The currently shown source is incorrect (2).");
     is(gSources.visibleItems.length, 2,
       "Not all the sources are shown after the global search (2).");

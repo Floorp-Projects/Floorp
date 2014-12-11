@@ -833,7 +833,7 @@ var commandsDataChannel = [
       test.createOffer(test.pcLocal, function (offer) {
         is(test.pcLocal.signalingState, STABLE,
            "Local create offer does not change signaling state");
-        ok(offer.sdp.contains("m=application"),
+        ok(offer.sdp.includes("m=application"),
            "m=application is contained in the SDP");
         if (test.steeplechase) {
           send_message({"type": "offer",
@@ -917,7 +917,7 @@ var commandsDataChannel = [
       test.createAnswer(test.pcRemote, function (answer) {
         is(test.pcRemote.signalingState, HAVE_REMOTE_OFFER,
            "Remote createAnswer does not change signaling state");
-        ok(answer.sdp.contains("m=application"),
+        ok(answer.sdp.includes("m=application"),
            "m=application is contained in the SDP");
         if (test.steeplechase) {
           send_message({"type":"answer",
