@@ -67,15 +67,6 @@ function promiseAddVisits(aPlaceInfo) {
   });
 }
 
-function* promiseAutocompleteResultPopup(inputText) {
-  gURLBar.focus();
-  gURLBar.value = inputText.slice(0, -1);
-  EventUtils.synthesizeKey(inputText.slice(-1) , {});
-  yield promiseSearchComplete();
-
-  return gURLBar.popup.richlistbox.children;
-}
-
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref(gUnifiedCompletePref);
   Services.prefs.clearUserPref(gRestyleSearchesPref);
@@ -101,10 +92,13 @@ add_task(function*() {
   let uri = NetUtil.newURI("http://s.example.com/search?q=foo&client=1");
   yield promiseAddVisits({ uri: uri, title: "Foo - SearchEngine Search" });
 
+  let tab = gBrowser.selectedTab = gBrowser.addTab("about:mozilla", {animate: false});
+  yield promiseTabLoaded(gBrowser.selectedTab);
+
   // The first autocomplete result has the action searchengine, while
   // the second result is the "search favicon" element.
-  let result = yield promiseAutocompleteResultPopup("foo");
-  result = result[1];
+  yield promiseAutocompleteResultPopup("foo");
+  let result = gURLBar.popup.richlistbox.children[1];
 
   isnot(result, null, "Expect a search result");
   is(result.getAttribute("type"), "search favicon", "Expect correct `type` attribute");
@@ -121,4 +115,6 @@ add_task(function*() {
 
   is_element_visible(result._url, "URL element should be visible");
   is(result._url.textContent, "Search with SearchEngine");
+
+  gBrowser.removeCurrentTab();
 });

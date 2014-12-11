@@ -1,13 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function* promiseAutoComplete(inputText) {
-  gURLBar.focus();
-  gURLBar.value = inputText.slice(0, -1);
-  EventUtils.synthesizeKey(inputText.slice(-1) , {});
-  yield promiseSearchComplete();
-}
-
 function is_selected(index) {
   is(gURLBar.popup.richlistbox.selectedIndex, index, `Item ${index + 1} should be selected`);
 }
@@ -38,7 +31,9 @@ add_task(function*() {
                                          PlacesUtils.bookmarks.DEFAULT_INDEX,
                                          "keyword abc");
 
-  yield promiseAutoComplete("keyword a");
+  let tab = gBrowser.selectedTab = gBrowser.addTab("about:mozilla", {animate: false});
+  yield promiseTabLoaded(tab);
+  yield promiseAutocompleteResultPopup("keyword a");
 
   // First item should already be selected
   is_selected(0);
@@ -61,4 +56,5 @@ add_task(function*() {
 
   EventUtils.synthesizeKey("VK_ESCAPE", {});
   yield promisePopupHidden(gURLBar.popup);
+  gBrowser.removeTab(tab);
 });
