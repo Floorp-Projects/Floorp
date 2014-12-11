@@ -33,6 +33,7 @@ Tests for plugin stream error conditions.
 function $(id) { return document.getElementById(id); }
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
 

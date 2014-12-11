@@ -234,6 +234,7 @@ window.testResult = function(testname, result, msg) {
 
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 
 // save this for last so that our listeners are registered.
 // ... this loads the testbed of good and bad requests.

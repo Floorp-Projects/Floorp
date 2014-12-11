@@ -26,6 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=402380
   SimpleTest.finish();
 }
 
+  SimpleTest.requestFlakyTimeout("untriaged");
   setTimeout(test, 500);
   SimpleTest.waitForExplicitFinish();
 </script>

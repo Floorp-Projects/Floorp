@@ -34,6 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=903715
 </pre>
 <script type="application/javascript">
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 SimpleTest.waitForFocus(runTests, window);
 
 function runTests()

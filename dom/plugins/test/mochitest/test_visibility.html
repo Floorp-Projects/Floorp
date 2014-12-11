@@ -15,6 +15,7 @@
   <script type="application/javascript" src="utils.js"></script>
   <script type="application/javascript">
   SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("untriaged");
   setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
   var didPaint = function() {};

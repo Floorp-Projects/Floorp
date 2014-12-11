@@ -10,6 +10,7 @@
 <body onload="startTest()">
   <script type="text/javascript">
   SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("untriaged");
   setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
   var urlnotified = false;

@@ -47,6 +47,7 @@ function snapshotsEqual(snap1, snap2)
 }
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 window.addEventListener("load", step1, false);
 
 var iframe, subdoc, subwin;

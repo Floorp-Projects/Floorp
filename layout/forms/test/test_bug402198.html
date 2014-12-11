@@ -64,6 +64,7 @@ function do_test() {
 }
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 addLoadEvent(do_test);
 </script>
 </pre>

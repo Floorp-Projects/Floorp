@@ -33,6 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=935501
  * various mouse events.
  **/
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 SimpleTest.waitForFocus(function() {
   test();
 });

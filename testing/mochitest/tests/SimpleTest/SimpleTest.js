@@ -616,6 +616,29 @@ SimpleTest.expectAssertions = function(min, max) {
     }
 }
 
+SimpleTest._flakyTimeoutIsOK = false;
+SimpleTest._originalSetTimeout = window.setTimeout;
+window.setTimeout = function SimpleTest_setTimeoutShim() {
+    var testSuiteSupported = false;
+    // Right now, we only enable these checks for mochitest-plain.
+    switch (SimpleTest.harnessParameters.testRoot) {
+    case "browser":
+    case "chrome":
+    case "a11y":
+    case "webapprtContent":
+        break;
+    default:
+        if (!SimpleTest._alreadyFinished && arguments.length > 1 && arguments[1] > 0) {
+            if (SimpleTest._flakyTimeoutIsOK) {
+                SimpleTest.todo(false, "The author of the test has indicated that flaky timeouts are expected.  Reason: " + SimpleTest._flakyTimeoutReason);
+            } else {
+                SimpleTest.ok(false, "Test attempted to use a flaky timeout value " + arguments[1]);
+            }
+        }
+    }
+    return SimpleTest._originalSetTimeout.apply(window, arguments);
+}
+
 /**
  * Request the framework to allow usage of setTimeout(func, timeout)
  * where |timeout > 0|.  This is required to note that the author of
@@ -631,7 +654,10 @@ SimpleTest.expectAssertions = function(min, max) {
  * failures in your test, and are almost never necessary!
  */
 SimpleTest.requestFlakyTimeout = function (reason) {
-    // TODO: This will get implemented in bug 649012.
+    SimpleTest.is(typeof(reason), "string", "A valid string reason is expected");
+    SimpleTest.isnot(reason, "", "Reason cannot be empty");
+    SimpleTest._flakyTimeoutIsOK = true;
+    SimpleTest._flakyTimeoutReason = reason;
 }
 
 SimpleTest.waitForFocus_started = false;

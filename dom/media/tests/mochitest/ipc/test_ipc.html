@@ -11,6 +11,7 @@
     "use strict";
 
     SimpleTest.waitForExplicitFinish();
+    SimpleTest.requestFlakyTimeout("untriaged");
 
     // This isn't a single test. It runs the entirety of the PeerConnection
     // tests. Each of those has a normal timeout handler, so there's no point in

@@ -30,6 +30,7 @@ document.body.addEventListener('popupshowing', function(e) {e.target.parentNode.
 /** Test for Bug 378670 **/
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 
 function clickit() {
   var select = document.getElementById('select');

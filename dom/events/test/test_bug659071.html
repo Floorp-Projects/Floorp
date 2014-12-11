@@ -22,6 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=659071
 /** Test for Bug 659071 **/
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 
 var subWin = window.open("window_bug659071.html", "_blank",
                          "width=500,height=500");

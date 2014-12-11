@@ -45,6 +45,7 @@ function boom(event)
 
 window.addEventListener("message", boom, false);
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 
 </script>
 </head>
