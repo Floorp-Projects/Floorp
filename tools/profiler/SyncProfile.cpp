@@ -21,10 +21,7 @@ SyncProfile::~SyncProfile()
   if (mUtb) {
     utb__release_sync_buffer(mUtb);
   }
-
-  // SyncProfile owns the ThreadInfo; see NewSyncProfile.
-  ThreadInfo* info = GetThreadInfo();
-  delete info;
+  Sampler::FreePlatformData(GetPlatformData());
 }
 
 bool
