@@ -1901,11 +1901,11 @@ GetFlexContainer(nsIFrame* aFrame)
   return static_cast<nsFlexContainerFrame*>(parent);
 }
 
-// Flex items resolve percentage margin & padding against the flex
-// container's height (which is the containing block height).
+// Flex items resolve block-axis percentage margin & padding against the flex
+// container's block-size (which is the containing block block-size).
 // For everything else: the CSS21 spec requires that margin and padding
-// percentage values are calculated with respect to the *width* of the
-// containing block, even for margin & padding in the vertical axis.
+// percentage values are calculated with respect to the inline-size of the
+// containing block, even for margin & padding in the block axis.
 static nscoord
 BlockDirOffsetPercentBasis(const nsIFrame* aFrame,
                            nscoord aContainingBlockISize,
