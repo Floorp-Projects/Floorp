@@ -30,6 +30,7 @@ chrome.jar:
   skin/netError.css                         (netError.css)
 % override chrome://global/skin/about.css chrome://browser/skin/about.css
 % override chrome://global/skin/aboutMemory.css chrome://browser/skin/aboutMemory.css
+% override chrome://global/skin/aboutReader.css chrome://browser/skin/aboutReader.css
 % override chrome://global/skin/aboutSupport.css chrome://browser/skin/aboutSupport.css
 % override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
 % override chrome://global/skin/netError.css chrome://browser/skin/netError.css

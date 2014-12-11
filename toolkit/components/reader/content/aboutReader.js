@@ -24,7 +24,7 @@ function dump(s) {
   Services.console.logStringMessage("AboutReader: " + s);
 }
 
-let gStrings = Services.strings.createBundle("chrome://browser/locale/aboutReader.properties");
+let gStrings = Services.strings.createBundle("chrome://global/locale/aboutReader.properties");
 
 let AboutReader = function(doc, win) {
   dump("Init()");
