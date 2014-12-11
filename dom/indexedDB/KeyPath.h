@@ -8,9 +8,13 @@
 #define mozilla_dom_indexeddb_keypath_h__
 
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/Nullable.h"
 
 namespace mozilla {
 namespace dom {
+
+class OwningStringOrStringSequence;
+
 namespace indexedDB {
 
 class IndexMetadata;
@@ -65,7 +69,7 @@ public:
   Parse(const Sequence<nsString>& aStrings, KeyPath* aKeyPath);
 
   static nsresult
-  Parse(JSContext* aCx, const JS::Value& aValue, KeyPath* aKeyPath);
+  Parse(const Nullable<OwningStringOrStringSequence>& aValue, KeyPath* aKeyPath);
 
   nsresult
   ExtractKey(JSContext* aCx, const JS::Value& aValue, Key& aKey) const;
