@@ -948,10 +948,6 @@ XPC_WN_CallMethod(JSContext *cx, unsigned argc, jsval *vp);
 extern bool
 XPC_WN_GetterSetter(JSContext *cx, unsigned argc, jsval *vp);
 
-extern bool
-XPC_WN_JSOp_Enumerate(JSContext *cx, JS::HandleObject obj, JSIterateOp enum_op,
-                      JS::MutableHandleValue statep, JS::MutableHandleId idp);
-
 extern JSObject*
 XPC_WN_JSOp_ThisObject(JSContext *cx, JS::HandleObject obj);
 
@@ -975,7 +971,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JS::HandleObject obj);
         nullptr, /* deleteGeneric */                                          \
         nullptr, nullptr, /* watch/unwatch */                                 \
         nullptr, /* getElements */                                            \
-        XPC_WN_JSOp_Enumerate,                                                \
+        nullptr, /* enumerate */                                              \
         XPC_WN_JSOp_ThisObject,                                               \
     }
 
@@ -998,7 +994,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JS::HandleObject obj);
         nullptr, /* deleteGeneric */                                          \
         nullptr, nullptr, /* watch/unwatch */                                 \
         nullptr, /* getElements */                                            \
-        XPC_WN_JSOp_Enumerate,                                                \
+        nullptr, /* enumerate */                                              \
         XPC_WN_JSOp_ThisObject,                                               \
     }
 

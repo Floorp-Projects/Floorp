@@ -1003,9 +1003,9 @@ nsDOMClassInfo::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 }
 
 NS_IMETHODIMP
-nsDOMClassInfo::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
-                             JSContext *cx, JSObject *obj, uint32_t enum_op,
-                             jsval *statep, jsid *idp, bool *_retval)
+nsDOMClassInfo::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                             JSObject *obj, JS::AutoIdVector &properties,
+                             bool *_retval)
 {
   NS_WARNING("nsDOMClassInfo::NewEnumerate Don't call me!");
 
