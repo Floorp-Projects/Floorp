@@ -387,6 +387,7 @@ private:
         OP2_PSRAD_VdqWdq    = 0xE2,
         OP2_PXORDQ_VdqWdq   = 0xEF,
         OP2_PSLLD_VdqWdq    = 0xF2,
+        OP2_PMULUDQ_VdqWdq  = 0xF4,
         OP2_PSUBD_VdqWdq    = 0xFA,
         OP2_PADDD_VdqWdq    = 0xFE
     } TwoByteOpcodeID;
@@ -400,11 +401,13 @@ private:
         OP3_PTEST_VdVd      = 0x17,
         OP3_INSERTPS_VpsUps = 0x21,
         OP3_PINSRD_VdqEdIb  = 0x22,
+        OP3_PMULLD_VdqWdq   = 0x40,
         OP3_VBLENDVPS_VdqWdq = 0x4A
     } ThreeByteOpcodeID;
 
     typedef enum {
         ESCAPE_BLENDVPS     = 0x38,
+        ESCAPE_PMULLD       = 0x38,
         ESCAPE_PTEST        = 0x38,
         ESCAPE_PINSRD       = 0x3A,
         ESCAPE_PEXTRD       = 0x3A,
@@ -800,6 +803,33 @@ public:
         spew("psubd      %p, %s", address, nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.twoByteOp(OP2_PSUBD_VdqWdq, address, (RegisterID)dst);
+    }
+
+    void pmuludq_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("pmuludq     %s, %s", nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PMULUDQ_VdqWdq, (RegisterID)src, (RegisterID)dst);
+    }
+
+    void pmulld_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("pmulld      %s, %s", nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.threeByteOp(OP3_PMULLD_VdqWdq, ESCAPE_PMULLD, (RegisterID)src, (RegisterID)dst);
+    }
+    void pmulld_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("pmulld      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.threeByteOp(OP3_PMULLD_VdqWdq, ESCAPE_PMULLD, offset, base, (RegisterID)dst);
+    }
+    void pmulld_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("pmulld      %p, %s", address, nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.threeByteOp(OP3_PMULLD_VdqWdq, ESCAPE_PMULLD, address, (RegisterID)dst);
     }
 
     void vaddps_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
@@ -2941,6 +2971,24 @@ public:
         m_formatter.immediate8(uint8_t(mask));
     }
 
+    void pshufd_imr(uint32_t mask, int offset, RegisterID base, XMMRegisterID dst)
+    {
+        MOZ_ASSERT(mask < 256);
+        spew("pshufd     0x%x, %s0x%x(%s), %s",
+             mask, PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PSHUFD_VdqWdqIb, offset, base, (RegisterID)dst);
+        m_formatter.immediate8(uint8_t(mask));
+    }
+
+    void pshufd_imr(uint32_t mask, const void* address, XMMRegisterID dst)
+    {
+        spew("pshufd     %x, %p, %s", mask, address, nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PSHUFD_VdqWdqIb, address, (RegisterID)dst);
+        m_formatter.immediate8(uint8_t(mask));
+    }
+
     void shufps_irr(uint32_t mask, XMMRegisterID src, XMMRegisterID dst)
     {
         MOZ_ASSERT(mask < 256);
@@ -2961,7 +3009,6 @@ public:
     void shufps_imr(uint32_t mask, const void* address, XMMRegisterID dst)
     {
         spew("shufps     %x, %p, %s", mask, address, nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F3);
         m_formatter.twoByteOp(OP2_SHUFPS_VpsWpsIb, address, (RegisterID)dst);
         m_formatter.immediate8(uint8_t(mask));
     }
@@ -4738,6 +4785,16 @@ private:
             }
             threeOpVex(ty, r, x, b, m, w, v, l, opcode);
             memoryModRM(offset, base, reg);
+        }
+
+        void threeByteOp(ThreeByteOpcodeID opcode, ThreeByteEscape escape, const void* address, int reg)
+        {
+            m_buffer.ensureSpace(maxInstructionSize);
+            emitRexIfNeeded(reg, 0, 0);
+            m_buffer.putByteUnchecked(OP_2BYTE_ESCAPE);
+            m_buffer.putByteUnchecked(escape);
+            m_buffer.putByteUnchecked(opcode);
+            memoryModRM(address, reg);
         }
 
         void vblendvOpVex(VexOperandType ty, ThreeByteOpcodeID opcode, ThreeByteEscape escape,
