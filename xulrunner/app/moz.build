@@ -53,3 +53,5 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     ]
 
 DISABLE_STL_WRAPPING = True
+
+FAIL_ON_WARNINGS = True
