@@ -42,14 +42,7 @@ add_task(function() {
   FullZoom.enlarge();
   yield zoomChangePromise;
   is(parseInt(zoomResetButton.label, 10), 110, "Zoom is changed to 110% for about:mozilla");
-  let attributeChangePromise = promiseAttributeMutation(zoomResetButton, {
-    attributes: true,
-    attributeFilter: ["label"],
-  });
-  // don't need to wait for the tab load as waiting for the attribute is enough
-  // but do need to actually load this page:
-  promiseTabLoadEvent(tab1, "about:home");
-  yield attributeChangePromise;
+  yield promiseTabLoadEvent(tab1, "about:home");
   is(parseInt(zoomResetButton.label, 10), 100, "Default zoom is 100% for about:home");
   yield promiseTabHistoryNavigation(-1, function() {
     return parseInt(zoomResetButton.label, 10) == 110;
