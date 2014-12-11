@@ -3103,7 +3103,7 @@ GCRuntime::refillFreeListFromAnyThread(ThreadSafeContext *cx, AllocKind thingKin
     if (cx->isJSContext())
         return refillFreeListFromMainThread<allowGC>(cx->asJSContext(), thingKind);
 
-    if (cx->allocator()->zone_->runtimeFromAnyThread()->exclusiveThreadsPresent())
+    if (cx->isExclusiveContext())
         return refillFreeListOffMainThread(cx->asExclusiveContext(), thingKind);
 
     return refillFreeListPJS(cx->asForkJoinContext(), thingKind);
