@@ -41,14 +41,18 @@ window.addEventListener("DOMContentLoaded", function onDOMReady() {
 
   let form = document.querySelector("#connection-form form");
   form.addEventListener("submit", function() {
-    window.submit();
+    window.submit().catch(e => {
+      Cu.reportError(e);
+      // Bug 921850: catch rare exception from DebuggerClient.socketConnect
+      showError("unexpected");
+    });
   });
 }, true);
 
 /**
  * Called when the "connect" button is clicked.
  */
-function submit() {
+let submit = Task.async(function*() {
   // Show the "connecting" screen
   document.body.classList.add("connecting");
 
@@ -64,18 +68,18 @@ function submit() {
   }
 
   // Initiate the connection
-  let transport;
-  try {
-    transport = DebuggerClient.socketConnect(host, port);
-  } catch(e) {
-    // Bug 921850: catch rare exception from DebuggerClient.socketConnect
-    showError("unexpected");
-    return;
-  }
+  let transport = yield DebuggerClient.socketConnect({ host, port });
   gClient = new DebuggerClient(transport);
   let delay = Services.prefs.getIntPref("devtools.debugger.remote-timeout");
   gConnectionTimeout = setTimeout(handleConnectionTimeout, delay);
-  gClient.connect(onConnectionReady);
+  let response = yield clientConnect();
+  yield onConnectionReady(...response);
+});
+
+function clientConnect() {
+  let deferred = promise.defer();
+  gClient.connect((...args) => deferred.resolve(args));
+  return deferred.promise;
 }
 
 /**
