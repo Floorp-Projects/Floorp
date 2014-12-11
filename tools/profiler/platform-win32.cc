@@ -326,7 +326,7 @@ bool Sampler::RegisterCurrentThread(const char* aName,
 
   set_tls_stack_top(stackTop);
 
-  ThreadInfo* info = new StackOwningThreadInfo(aName, id,
+  ThreadInfo* info = new ThreadInfo(aName, id,
     aIsMainThread, aPseudoStack, stackTop);
 
   if (sActiveSampler) {
