@@ -28,3 +28,4 @@ random-if(gtk2Widget) == 1094434-2.html 1094434-2-ref.html # bug 1094845
 == 1105268-1-min-max-dimensions.html 1105268-1-min-max-dimensions-ref.html
 == 1105268-2-min-max-dimensions.html 1105268-2-min-max-dimensions-ref.html
 == 1106669-1-intrinsic-for-container.html 1106669-1-intrinsic-for-container-ref.html
+== 1108923-1-percentage-margins.html 1108923-1-percentage-margins-ref.html
