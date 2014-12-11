@@ -2596,7 +2596,7 @@ GenerateAddSlot(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &att
         masm.push(object);
         masm.loadPtr(Address(object, JSObject::offsetOfType()), object);
         masm.branchPtr(Assembler::Equal,
-                       Address(object, types::TypeObject::offsetOfAddendum()),
+                       Address(object, types::TypeObject::offsetOfNewScript()),
                        ImmWord(0),
                        &noTypeChange);
         masm.pop(object);

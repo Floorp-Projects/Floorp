@@ -478,10 +478,16 @@ CreatePrototypeObjectForComplexTypeInstance(JSContext *cx,
     if (!ctorPrototypePrototype)
         return nullptr;
 
-    return NewObjectWithProto<TypedProto>(cx,
-                                          &*ctorPrototypePrototype,
-                                          nullptr,
-                                          TenuredObject);
+    Rooted<TypedProto*> result(cx);
+    result = NewObjectWithProto<TypedProto>(cx,
+                                            &*ctorPrototypePrototype,
+                                            nullptr,
+                                            TenuredObject);
+    if (!result)
+        return nullptr;
+
+    result->initTypeDescrSlot(*descr);
+    return result;
 }
 
 const Class ArrayTypeDescr::class_ = {
@@ -1166,6 +1172,7 @@ DefineSimpleTypeDescr(JSContext *cx,
     proto = NewObjectWithProto<TypedProto>(cx, objProto, nullptr, TenuredObject);
     if (!proto)
         return false;
+    proto->initTypeDescrSlot(*descr);
     descr->initReservedSlot(JS_DESCR_SLOT_TYPROTO, ObjectValue(*proto));
 
     RootedValue descrValue(cx, ObjectValue(*descr));
@@ -1461,6 +1468,24 @@ OutlineTypedObject::createUnattached(JSContext *cx,
         return createUnattachedWithClass(cx, &OutlineTransparentTypedObject::class_, descr, length, heap);
 }
 
+static JSObject *
+PrototypeForTypeDescr(JSContext *cx, HandleTypeDescr descr)
+{
+    if (descr->is<SimpleTypeDescr>()) {
+        // FIXME Bug 929651 -- What prototype to use?
+        return cx->global()->getOrCreateObjectPrototype(cx);
+    }
+
+    RootedValue protoVal(cx);
+    if (!JSObject::getProperty(cx, descr, descr,
+                               cx->names().prototype, &protoVal))
+    {
+        return nullptr;
+    }
+
+    return &protoVal.toObject();
+}
+
 void
 OutlineTypedObject::setOwnerAndData(JSObject *owner, uint8_t *data)
 {
@@ -1483,25 +1508,26 @@ OutlineTypedObject::setOwnerAndData(JSObject *owner, uint8_t *data)
 /*static*/ OutlineTypedObject *
 OutlineTypedObject::createUnattachedWithClass(JSContext *cx,
                                               const Class *clasp,
-                                              HandleTypeDescr descr,
+                                              HandleTypeDescr type,
                                               int32_t length,
                                               gc::InitialHeap heap)
 {
     MOZ_ASSERT(clasp == &OutlineTransparentTypedObject::class_ ||
                clasp == &OutlineOpaqueTypedObject::class_);
 
-    RootedTypeObject type(cx, cx->getNewType(clasp, TaggedProto(&descr->typedProto()), descr));
-    if (!type)
+    RootedObject proto(cx, PrototypeForTypeDescr(cx, type));
+    if (!proto)
         return nullptr;
 
     NewObjectKind newKind = (heap == gc::TenuredHeap) ? MaybeSingletonObject : GenericObject;
-    OutlineTypedObject *obj = NewObjectWithType<OutlineTypedObject>(cx, type, cx->global(),
-                                                                    gc::FINALIZE_OBJECT0, newKind);
+    JSObject *obj = NewObjectWithClassProto(cx, clasp, proto, nullptr, gc::FINALIZE_OBJECT0, newKind);
     if (!obj)
         return nullptr;
 
-    obj->setOwnerAndData(nullptr, nullptr);
-    return obj;
+    OutlineTypedObject *typedObj = &obj->as<OutlineTypedObject>();
+
+    typedObj->setOwnerAndData(nullptr, nullptr);
+    return typedObj;
 }
 
 void
@@ -2191,16 +2217,20 @@ InlineTypedObject::create(JSContext *cx, HandleTypeDescr descr, gc::InitialHeap 
 {
     gc::AllocKind allocKind = allocKindForTypeDescriptor(descr);
 
+    RootedObject proto(cx, PrototypeForTypeDescr(cx, descr));
+    if (!proto)
+        return nullptr;
+
     const Class *clasp = descr->opaque()
                          ? &InlineOpaqueTypedObject::class_
                          : &InlineTransparentTypedObject::class_;
 
-    RootedTypeObject type(cx, cx->getNewType(clasp, TaggedProto(&descr->typedProto()), descr));
-    if (!type)
+    NewObjectKind newKind = (heap == gc::TenuredHeap) ? MaybeSingletonObject : GenericObject;
+    RootedObject obj(cx, NewObjectWithClassProto(cx, clasp, proto, nullptr, allocKind, newKind));
+    if (!obj)
         return nullptr;
 
-    NewObjectKind newKind = (heap == gc::TenuredHeap) ? MaybeSingletonObject : GenericObject;
-    return NewObjectWithType<InlineTypedObject>(cx, type, cx->global(), allocKind, newKind);
+    return &obj->as<InlineTypedObject>();
 }
 
 /* static */ InlineTypedObject *
@@ -2747,19 +2777,6 @@ js::TypedObjectIsAttached(ThreadSafeContext *cx, unsigned argc, Value *vp)
 JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::TypedObjectIsAttachedJitInfo,
                                       TypedObjectIsAttachedJitInfo,
                                       js::TypedObjectIsAttached);
-
-bool
-js::TypedObjectTypeDescr(ThreadSafeContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    TypedObject &typedObj = args[0].toObject().as<TypedObject>();
-    args.rval().setObject(typedObj.typeDescr());
-    return true;
-}
-
-JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::TypedObjectTypeDescrJitInfo,
-                                      TypedObjectTypeDescrJitInfo,
-                                      js::TypedObjectTypeDescr);
 
 bool
 js::ClampToUint8(ThreadSafeContext *, unsigned argc, Value *vp)

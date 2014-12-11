@@ -4295,17 +4295,22 @@ class LTypedArrayElements : public LInstructionHelper<1, 1, 0>
     }
 };
 
-// Load a typed object's descriptor.
-class LTypedObjectDescr : public LInstructionHelper<1, 1, 0>
+// Load a typed object's prototype, which is guaranteed to be a
+// TypedProto object.
+class LTypedObjectProto : public LCallInstructionHelper<1, 1, 1>
 {
   public:
-    LIR_HEADER(TypedObjectDescr)
+    LIR_HEADER(TypedObjectProto)
 
-    LTypedObjectDescr(const LAllocation &object) {
+    LTypedObjectProto(const LAllocation &object, const LDefinition &temp1) {
         setOperand(0, object);
+        setTemp(0, temp1);
     }
     const LAllocation *object() {
         return getOperand(0);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
     }
 };
 
