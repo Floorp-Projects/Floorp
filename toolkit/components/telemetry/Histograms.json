@@ -82,6 +82,13 @@
     "kind": "boolean",
     "description": "blocklist.xml has been loaded synchronously"
   },
+  "COMPOSITE_TIME" : {
+    "expires_in_version": "never",
+    "description": "Composite times in milliseconds",
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 50
+  },
   "CYCLE_COLLECTOR": {
     "expires_in_version": "never",
     "kind": "exponential",
