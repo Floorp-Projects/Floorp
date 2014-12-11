@@ -252,6 +252,7 @@ function testProfileSave(callback) {
 }
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 
 SpecialPowers.Cu.import("resource://gre/modules/FileUtils.jsm", window);
 var FU = SpecialPowers.wrap(FileUtils);

@@ -48,6 +48,7 @@
 <script type="application/javascript">
 
 SimpleTest.waitForFocus(runTests, window);
+SimpleTest.requestFlakyTimeout("untriaged");
 
 var winUtils = SpecialPowers.getDOMWindowUtils(window);
 // grab refresh driver

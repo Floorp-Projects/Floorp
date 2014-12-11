@@ -67,6 +67,7 @@ function runTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 ok(!anyXULAlertsVisible(), "Alerts should not be present at the start of the test.");
 runTest();
 setTimeout(waitForAlertsThenFinish, 1000);

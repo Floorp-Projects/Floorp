@@ -19,6 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=682299
 <script type="application/javascript">
 
 /** Test for Bug 682299 **/
+SimpleTest.requestFlakyTimeout("untriaged");
 
 function createCanvas(width, height) {
   var c = document.createElement("canvas");

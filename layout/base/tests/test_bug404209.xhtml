@@ -37,6 +37,7 @@ function lastTest()
   SimpleTest.finish();
 }
 
+  SimpleTest.requestFlakyTimeout("untriaged");
   setTimeout(boom1, 400);
   SimpleTest.waitForExplicitFinish();
 </script>

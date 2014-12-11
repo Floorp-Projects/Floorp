@@ -53,6 +53,8 @@ lines</p>
 
 <script type="application/javascript">
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+SimpleTest.requestFlakyTimeout("untriaged");
 
 function isOrIsParent(actual, expected, msg) {
   // actual should be expected or actual's parent node should be expected.

@@ -10,6 +10,7 @@
 <script class="testbody" type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("This test needs to wait a while for the AudioContext's timer to start.");
 addLoadEvent(function() {
   var ac = new AudioContext();
   is(ac.currentTime, 0, "AudioContext.currentTime should be 0 initially");
