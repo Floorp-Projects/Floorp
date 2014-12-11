@@ -3094,7 +3094,7 @@ CSS_PROP_TEXT(
     nullptr,
     offsetof(nsStyleText, mTextIndent),
     eStyleAnimType_Coord)
-CSS_PROP_TEXT(
+CSS_PROP_VISIBILITY(
     text-orientation,
     text_orientation,
     TextOrientation,
@@ -3102,7 +3102,7 @@ CSS_PROP_TEXT(
     "layout.css.vertical-text.enabled",
     VARIANT_HK,
     kTextOrientationKTable,
-    offsetof(nsStyleText, mTextOrientation),
+    offsetof(nsStyleVisibility, mTextOrientation),
     eStyleAnimType_EnumU8)
 CSS_PROP_TEXTRESET(
     text-overflow,

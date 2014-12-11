@@ -2880,6 +2880,7 @@ nsStyleVisibility::nsStyleVisibility(nsPresContext* aPresContext)
   mVisible = NS_STYLE_VISIBILITY_VISIBLE;
   mPointerEvents = NS_STYLE_POINTER_EVENTS_AUTO;
   mWritingMode = NS_STYLE_WRITING_MODE_HORIZONTAL_TB;
+  mTextOrientation = NS_STYLE_TEXT_ORIENTATION_MIXED;
 }
 
 nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
@@ -2890,6 +2891,7 @@ nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
   mVisible = aSource.mVisible;
   mPointerEvents = aSource.mPointerEvents;
   mWritingMode = aSource.mWritingMode;
+  mTextOrientation = aSource.mTextOrientation;
 } 
 
 nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) const
@@ -2910,6 +2912,9 @@ nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) 
       } else {
         NS_UpdateHint(hint, NS_STYLE_HINT_VISUAL);
       }
+    }
+    if (mTextOrientation != aOther.mTextOrientation) {
+      NS_UpdateHint(hint, NS_STYLE_HINT_REFLOW);
     }
     if (mPointerEvents != aOther.mPointerEvents) {
       // nsSVGPathGeometryFrame's mRect depends on stroke _and_ on the value
@@ -3340,7 +3345,6 @@ nsStyleText::nsStyleText(void)
   mWordWrap = NS_STYLE_WORDWRAP_NORMAL;
   mHyphens = NS_STYLE_HYPHENS_MANUAL;
   mTextSizeAdjust = NS_STYLE_TEXT_SIZE_ADJUST_AUTO;
-  mTextOrientation = NS_STYLE_TEXT_ORIENTATION_MIXED;
   mTextCombineUpright = NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE;
   mControlCharacterVisibility = NS_STYLE_CONTROL_CHARACTER_VISIBILITY_HIDDEN;
 
@@ -3364,7 +3368,6 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
     mWordWrap(aSource.mWordWrap),
     mHyphens(aSource.mHyphens),
     mTextSizeAdjust(aSource.mTextSizeAdjust),
-    mTextOrientation(aSource.mTextOrientation),
     mTextCombineUpright(aSource.mTextCombineUpright),
     mControlCharacterVisibility(aSource.mControlCharacterVisibility),
     mTabSize(aSource.mTabSize),
@@ -3405,7 +3408,6 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aOther) const
       (mWordWrap != aOther.mWordWrap) ||
       (mHyphens != aOther.mHyphens) ||
       (mTextSizeAdjust != aOther.mTextSizeAdjust) ||
-      (mTextOrientation != aOther.mTextOrientation) ||
       (mLetterSpacing != aOther.mLetterSpacing) ||
       (mLineHeight != aOther.mLineHeight) ||
       (mTextIndent != aOther.mTextIndent) ||
