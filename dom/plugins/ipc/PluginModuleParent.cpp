@@ -21,7 +21,6 @@
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
-#include "mozilla/Telemetry.h"
 #include "mozilla/unused.h"
 #include "nsAutoPtr.h"
 #include "nsCRT.h"
@@ -161,15 +160,12 @@ PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId)
 
     // Block on the child process being launched and initialized.
     nsAutoPtr<PluginModuleChromeParent> parent(new PluginModuleChromeParent(aFilePath, aPluginId));
-    TimeStamp launchStart = TimeStamp::Now();
     bool launched = parent->mSubprocess->Launch(prefSecs * 1000);
     if (!launched) {
         // We never reached open
         parent->mShutdown = true;
         return nullptr;
     }
-    TimeStamp launchEnd = TimeStamp::Now();
-    parent->mTimeBlocked = (launchEnd - launchStart);
     parent->Open(parent->mSubprocess->GetChannel(),
                  parent->mSubprocess->GetChildProcessHandle());
 
@@ -1382,7 +1378,6 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs
     if (IsChrome()) {
         PluginSettings settings;
         GetSettings(&settings);
-        TimeStamp callNpInitStart = TimeStamp::Now();
         if (!CallNP_Initialize(settings, error)) {
             Close();
             return NS_ERROR_FAILURE;
@@ -1391,16 +1386,6 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs
             Close();
             return NS_OK;
         }
-        TimeStamp callNpInitEnd = TimeStamp::Now();
-        mTimeBlocked += (callNpInitEnd - callNpInitStart);
-        /** mTimeBlocked measures the time that the main thread has been blocked
-         *  on plugin module initialization. As implemented, this is the sum of
-         *  plugin-container launch + NP_Initialize
-         */
-        Telemetry::Accumulate(Telemetry::BLOCKED_ON_PLUGIN_MODULE_INIT_MS,
-                              GetHistogramKey(),
-                              static_cast<uint32_t>(mTimeBlocked.ToMilliseconds()));
-        mTimeBlocked = TimeDuration();
     }
 
     SetPluginFuncs(pFuncs);
@@ -1433,7 +1418,6 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
 
     PluginSettings settings;
     GetSettings(&settings);
-    TimeStamp callNpInitStart = TimeStamp::Now();
     if (!CallNP_Initialize(settings, error)) {
         Close();
         return NS_ERROR_FAILURE;
@@ -1442,8 +1426,6 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
         Close();
         return NS_OK;
     }
-    TimeStamp callNpInitEnd = TimeStamp::Now();
-    mTimeBlocked += (callNpInitEnd - callNpInitStart);
 
 #if defined XP_WIN
     // Send the info needed to join the chrome process's audio session to the
@@ -1460,17 +1442,6 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
 #ifdef MOZ_CRASHREPORTER_INJECTOR
     InitializeInjector();
 #endif
-
-    /** This Accumulate must be placed below the call to InitializeInjector()
-     *  because mTimeBlocked is modified in that function.
-     *  mTimeBlocked measures the time that the main thread has been blocked
-     *  on plugin module initialization. As implemented, this is the sum of
-     *  plugin-container launch + toolhelp32 snapshot + NP_Initialize
-     */
-    Telemetry::Accumulate(Telemetry::BLOCKED_ON_PLUGIN_MODULE_INIT_MS,
-                          GetHistogramKey(),
-                          static_cast<uint32_t>(mTimeBlocked.ToMilliseconds()));
-    mTimeBlocked = TimeDuration();
 
     return NS_OK;
 }
@@ -1585,21 +1556,17 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
 
     instance->pdata = parentInstance;
 
-    {   // Scope for timer
-        Telemetry::AutoTimer<Telemetry::BLOCKED_ON_PLUGIN_INSTANCE_INIT_MS>
-            timer(GetHistogramKey());
-        if (!CallPPluginInstanceConstructor(parentInstance,
-                                            nsDependentCString(pluginType), mode,
-                                            names, values, error)) {
-            // |parentInstance| is automatically deleted.
-            instance->pdata = nullptr;
-            // if IPC is down, we'll get an immediate "failed" return, but
-            // without *error being set.  So make sure that the error
-            // condition is signaled to nsNPAPIPluginInstance
-            if (NPERR_NO_ERROR == *error)
-                *error = NPERR_GENERIC_ERROR;
-            return NS_ERROR_FAILURE;
-        }
+    if (!CallPPluginInstanceConstructor(parentInstance,
+                                        nsDependentCString(pluginType), mode,
+                                        names, values, error)) {
+        // |parentInstance| is automatically deleted.
+        instance->pdata = nullptr;
+        // if IPC is down, we'll get an immediate "failed" return, but
+        // without *error being set.  So make sure that the error
+        // condition is signaled to nsNPAPIPluginInstance
+        if (NPERR_NO_ERROR == *error)
+            *error = NPERR_GENERIC_ERROR;
+        return NS_ERROR_FAILURE;
     }
 
     if (*error != NPERR_NO_ERROR) {
@@ -1946,12 +1913,9 @@ PluginModuleChromeParent::InitializeInjector()
                           NS_LITERAL_CSTRING(FLASH_PLUGIN_PREFIX)))
         return;
 
-    TimeStamp th32Start = TimeStamp::Now();
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == snapshot)
         return;
-    TimeStamp th32End = TimeStamp::Now();
-    mTimeBlocked += (th32End - th32Start);
 
     DWORD pluginProcessPID = GetProcessId(Process()->GetChildProcessHandle());
     mFlashProcess1 = GetFlashChildOfPID(pluginProcessPID, snapshot);
