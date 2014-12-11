@@ -1184,7 +1184,7 @@ ThreadActor.prototype = {
     for (let line = 0, n = offsets.length; line < n; line++) {
       if (offsets[line]) {
         let location = { line: line };
-        let resp = sourceActor._setBreakpoint(location);
+        let resp = sourceActor.setBreakpoint(location);
         dbg_assert(!resp.actualLocation, "No actualLocation should be returned");
         if (resp.error) {
           reportError(new Error("Unable to set breakpoint on event listener"));
@@ -2007,7 +2007,7 @@ ThreadActor.prototype = {
       // Limit the search to the line numbers contained in the new script.
       if (bpActor.location.line >= aScript.startLine
           && bpActor.location.line <= endLine) {
-        source._setBreakpoint(bpActor.location, aScript);
+        source.setBreakpoint(bpActor.location, aScript);
       }
     }
 
@@ -2691,7 +2691,7 @@ SourceActor.prototype = {
 
   _createBreakpoint: function(loc, originalLoc, condition) {
     return resolve(null).then(() => {
-      return this._setBreakpoint({
+      return this.setBreakpoint({
         line: loc.line,
         column: loc.column,
         condition: condition
@@ -2884,7 +2884,7 @@ SourceActor.prototype = {
    *        If provided, only set breakpoints in this Debugger.Script, and
    *        nowhere else.
    */
-  _setBreakpoint: function (aLocation, aOnlyThisScript=null) {
+  setBreakpoint: function (aLocation, aOnlyThisScript=null) {
     const location = {
       source: this.form(),
       line: aLocation.line,
