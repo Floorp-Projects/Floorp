@@ -1709,8 +1709,6 @@ private:
   }
 };
 
-#ifdef DEBUG
-
 PRThread*
 PRThreadFromThread(nsIThread* aThread)
 {
@@ -1722,8 +1720,6 @@ PRThreadFromThread(nsIThread* aThread)
 
   return result;
 }
-
-#endif // DEBUG
 
 } /* anonymous namespace */
 

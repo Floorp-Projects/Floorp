@@ -30,8 +30,6 @@ const uint32_t kWorkerStackSize = 256 * sizeof(size_t) * 1024;
 
 } // anonymous namespace
 
-#ifdef NS_BUILD_REFCNT_LOGGING
-
 WorkerThreadFriendKey::WorkerThreadFriendKey()
 {
   MOZ_COUNT_CTOR(WorkerThreadFriendKey);
@@ -41,8 +39,6 @@ WorkerThreadFriendKey::~WorkerThreadFriendKey()
 {
   MOZ_COUNT_DTOR(WorkerThreadFriendKey);
 }
-
-#endif
 
 class WorkerThread::Observer MOZ_FINAL
   : public nsIThreadObserver

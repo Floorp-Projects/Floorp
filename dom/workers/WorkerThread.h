@@ -34,10 +34,8 @@ class WorkerThreadFriendKey
   friend class WorkerPrivate;
   friend class WorkerPrivateParent<WorkerPrivate>;
 
-#ifdef NS_BUILD_REFCNT_LOGGING
   WorkerThreadFriendKey();
   ~WorkerThreadFriendKey();
-#endif
 };
 
 class WorkerThread MOZ_FINAL
