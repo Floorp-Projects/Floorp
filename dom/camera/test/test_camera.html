@@ -103,7 +103,7 @@ var Camera = {
   },
   takePictureSuccess: function taken_foto(blob) {
     ok(blob.size > 100 , "Blob Size Gathered = " + blob.size);
-    ok("image/" + test.fileFormat ==  blob.type, "Blob Type = " + blob.type);
+    ok("image/" + this._currentTest.fileFormat === blob.type, "Blob Type = " + blob.type);
   },
   takePictureEvent: function taken_foto_evt(e) {
     var blob = e.data;
