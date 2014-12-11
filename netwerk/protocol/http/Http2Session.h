@@ -41,7 +41,7 @@ public:
   NS_DECL_NSAHTTPSEGMENTREADER
   NS_DECL_NSAHTTPSEGMENTWRITER
 
-  explicit Http2Session(nsISocketTransport *);
+ Http2Session(nsISocketTransport *, uint32_t version);
 
   bool AddStream(nsAHttpTransaction *, int32_t,
                  bool, nsIInterfaceRequestor *);
@@ -481,6 +481,7 @@ private:
   nsCString mNegotiatedToken;
 
   bool mUseH2Deps;
+  uint32_t mVersion; // HTTP2_VERSION_ from nsHttp.h remove when draft support removed
 
 private:
 /// connect tunnels
