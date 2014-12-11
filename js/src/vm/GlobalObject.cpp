@@ -175,7 +175,7 @@ GlobalObject::resolveConstructor(JSContext *cx, Handle<GlobalObject*> global, JS
     // standard class (in which case they live on the prototype).
     if (!StandardClassIsDependent(key)) {
         if (const JSFunctionSpec *funs = clasp->spec.prototypeFunctions) {
-            if (!JS_DefineFunctions(cx, proto, funs))
+            if (!JS_DefineFunctions(cx, proto, funs, DontDefineLateProperties))
                 return false;
         }
         if (const JSPropertySpec *props = clasp->spec.prototypeProperties) {
@@ -183,7 +183,7 @@ GlobalObject::resolveConstructor(JSContext *cx, Handle<GlobalObject*> global, JS
                 return false;
         }
         if (const JSFunctionSpec *funs = clasp->spec.constructorFunctions) {
-            if (!JS_DefineFunctions(cx, ctor, funs))
+            if (!JS_DefineFunctions(cx, ctor, funs, DontDefineLateProperties))
                 return false;
         }
     }
