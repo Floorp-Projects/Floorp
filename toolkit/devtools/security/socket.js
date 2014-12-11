@@ -106,14 +106,41 @@ SocketListener.defaultAllowConnection = () => {
 
 SocketListener.prototype = {
 
+  /* Socket Options */
+
+  /**
+   * The port or path to listen on.
+   *
+   * If given an integer, the port to listen on.  Use -1 to choose any available
+   * port. Otherwise, the path to the unix socket domain file to listen on.
+   */
+  portOrPath: null,
+
+  /**
+   * Prompt the user to accept or decline the incoming connection. The default
+   * implementation is used unless this is overridden on a particular socket
+   * listener instance.
+   *
+   * @return true if the connection should be permitted, false otherwise
+   */
+  allowConnection: SocketListener.defaultAllowConnection,
+
+  /**
+   * Validate that all options have been set to a supported configuration.
+   */
+  _validateOptions: function() {
+    if (this.portOrPath === null) {
+      throw new Error("Must set a port / path to listen on.");
+    }
+  },
+
   /**
    * Listens on the given port or socket file for remote debugger connections.
-   *
-   * @param portOrPath int, string
-   *        If given an integer, the port to listen on.
-   *        Otherwise, the path to the unix socket domain file to listen on.
    */
-  open: function(portOrPath) {
+  open: function() {
+    this._validateOptions();
+    DebuggerServer._addListener(this);
+
     let flags = Ci.nsIServerSocket.KeepWhenOffline;
     // A preference setting can force binding on the loopback interface.
     if (Services.prefs.getBoolPref("devtools.debugger.force-local")) {
@@ -122,11 +149,11 @@ SocketListener.prototype = {
 
     try {
       let backlog = 4;
-      let port = Number(portOrPath);
+      let port = Number(this.portOrPath);
       if (port) {
         this._socket = new ServerSocket(port, flags, backlog);
       } else {
-        let file = nsFile(portOrPath);
+        let file = nsFile(this.portOrPath);
         if (file.exists())
           file.remove(false);
         this._socket = new UnixDomainServerSocket(file, parseInt("666", 8),
@@ -134,7 +161,9 @@ SocketListener.prototype = {
       }
       this._socket.asyncListen(this);
     } catch (e) {
-      dumpn("Could not start debugging listener on '" + portOrPath + "': " + e);
+      dumpn("Could not start debugging listener on '" + this.portOrPath +
+            "': " + e);
+      this.close();
       throw Cr.NS_ERROR_NOT_AVAILABLE;
     }
   },
@@ -144,7 +173,10 @@ SocketListener.prototype = {
    * the set of active SocketListeners.
    */
   close: function() {
-    this._socket.close();
+    if (this._socket) {
+      this._socket.close();
+      this._socket = null;
+    }
     DebuggerServer._removeListener(this);
   },
 
@@ -158,15 +190,6 @@ SocketListener.prototype = {
     }
     return this._socket.port;
   },
-
-  /**
-   * Prompt the user to accept or decline the incoming connection. The default
-   * implementation is used unless this is overridden on a particular socket
-   * listener instance.
-   *
-   * @return true if the connection should be permitted, false otherwise
-   */
-  allowConnection: SocketListener.defaultAllowConnection,
 
   // nsIServerSocketListener implementation
 
