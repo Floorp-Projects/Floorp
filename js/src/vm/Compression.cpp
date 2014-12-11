@@ -6,8 +6,13 @@
 
 #include "vm/Compression.h"
 
+#include "mozilla/DebugOnly.h"
+
+#include <zlib.h>
+
 #include "js/Utility.h"
 
+using mozilla::DebugOnly;
 using namespace js;
 
 static void *
@@ -22,79 +27,91 @@ zlib_free(void *cx, void *addr)
     js_free(addr);
 }
 
-Compressor::Compressor(const unsigned char *inp, size_t inplen)
-    : inp(inp),
-      inplen(inplen),
-      outbytes(0),
-      initialized(false)
-{
-    MOZ_ASSERT(inplen > 0);
-    zs.opaque = nullptr;
-    zs.next_in = (Bytef *)inp;
-    zs.avail_in = 0;
-    zs.next_out = nullptr;
-    zs.avail_out = 0;
-    zs.zalloc = zlib_alloc;
-    zs.zfree = zlib_free;
-}
-
-
 Compressor::~Compressor()
 {
     if (initialized) {
-        int ret = deflateEnd(&zs);
+        int ret = deflateEnd(zs);
         if (ret != Z_OK) {
             // If we finished early, we can get a Z_DATA_ERROR.
             MOZ_ASSERT(ret == Z_DATA_ERROR);
-            MOZ_ASSERT(uInt(zs.next_in - inp) < inplen || !zs.avail_out);
+            MOZ_ASSERT(uInt(zs->next_in - inp) < inplen || !zs->avail_out);
         }
     }
+    js_free(zs);
 }
 
 bool
-Compressor::init()
+Compressor::prepare(const unsigned char *inp_, size_t inplen_)
 {
-    if (inplen >= UINT32_MAX)
+    MOZ_ASSERT(inplen_ > 0);
+
+    if (inplen_ >= UINT32_MAX)
         return false;
-    // zlib is slow and we'd rather be done compression sooner
-    // even if it means decompression is slower which penalizes
-    // Function.toString()
-    int ret = deflateInit(&zs, Z_BEST_SPEED);
-    if (ret != Z_OK) {
-        MOZ_ASSERT(ret == Z_MEM_ERROR);
-        return false;
+
+    if (!zs) {
+        zs = js_pod_malloc<z_stream>();
+        if (!zs)
+            return false;
+        zs->zalloc = zlib_alloc;
+        zs->zfree = zlib_free;
     }
-    initialized = true;
+
+    inp = inp_;
+    inplen = inplen_;
+    outbytes = 0;
+
+    zs->opaque = nullptr;
+    zs->next_in = (Bytef *)inp;
+    zs->avail_in = 0;
+    zs->next_out = nullptr;
+    zs->avail_out = 0;
+
+    if (initialized) {
+        DebugOnly<int> ret = deflateReset(zs);
+        MOZ_ASSERT(ret == Z_OK);
+    } else {
+        // zlib is slow and we'd rather be done compression sooner even if it
+        // means decompression is slower which penalizes Function.toString()
+        int ret = deflateInit(zs, Z_BEST_SPEED);
+        if (ret != Z_OK) {
+            MOZ_ASSERT(ret == Z_MEM_ERROR);
+            return false;
+        }
+        initialized = true;
+    }
+
     return true;
 }
 
 void
 Compressor::setOutput(unsigned char *out, size_t outlen)
 {
+    MOZ_ASSERT(initialized);
     MOZ_ASSERT(outlen > outbytes);
-    zs.next_out = out + outbytes;
-    zs.avail_out = outlen - outbytes;
+    zs->next_out = out + outbytes;
+    zs->avail_out = outlen - outbytes;
 }
 
 Compressor::Status
 Compressor::compressMore()
 {
-    MOZ_ASSERT(zs.next_out);
-    uInt left = inplen - (zs.next_in - inp);
+    MOZ_ASSERT(initialized);
+    MOZ_ASSERT(zs->next_out);
+    uInt left = inplen - (zs->next_in - inp);
     bool done = left <= CHUNKSIZE;
     if (done)
-        zs.avail_in = left;
-    else if (zs.avail_in == 0)
-        zs.avail_in = CHUNKSIZE;
-    Bytef *oldout = zs.next_out;
-    int ret = deflate(&zs, done ? Z_FINISH : Z_NO_FLUSH);
-    outbytes += zs.next_out - oldout;
+        zs->avail_in = left;
+    else if (zs->avail_in == 0)
+        zs->avail_in = CHUNKSIZE;
+    Bytef *oldout = zs->next_out;
+    int ret = deflate(zs, done ? Z_FINISH : Z_NO_FLUSH);
+    outbytes += zs->next_out - oldout;
     if (ret == Z_MEM_ERROR) {
-        zs.avail_out = 0;
+        zs->avail_out = 0;
         return OOM;
     }
     if (ret == Z_BUF_ERROR || (done && ret == Z_OK)) {
-        MOZ_ASSERT(zs.avail_out == 0);
+        MOZ_ASSERT(zs->avail_out == 0);
         return MOREOUTPUT;
     }
     MOZ_ASSERT_IF(!done, ret == Z_OK);
