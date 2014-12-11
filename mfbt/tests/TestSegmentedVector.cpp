@@ -147,7 +147,7 @@ void TestSegmentCapacitiesAndAlignments()
   SegmentedVector<B, 999> v3(999);
   SegmentedVector<C, 10> v4(10);
   SegmentedVector<D, 1234> v5(1234);
-  SegmentedVector<E, 4096> v6(4096);
+  SegmentedVector<E> v6(4096);  // 4096 is the default segment size
   SegmentedVector<mozilla::AlignedElem<16>, 100> v7(100);
 }
 
