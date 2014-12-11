@@ -461,27 +461,6 @@ function promiseTabHistoryNavigation(aDirection = -1, aConditionFn) {
   return deferred.promise;
 }
 
-/**
- * Wait for an attribute on a node to change
- *
- * @param aNode      Node on which the mutation is expected
- * @param aOptions   MutationObserver options to select the right mutation.
- * @return {Promise} resolved when the requisite mutation shows up.
- */
-function promiseAttributeMutation(aNode, aOptions) {
-  return new Promise((resolve, reject) => {
-    info("waiting for mutation: " + JSON.stringify(aOptions));
-    let obs = new MutationObserver((mutations) => {
-      if (mutations.length > 0) {
-        ok(true, "mutation occurred");
-        obs.disconnect();
-        resolve();
-      }
-    });
-    obs.observe(aNode, aOptions);
-  });
-}
-
 function popupShown(aPopup) {
   return promisePopupEvent(aPopup, "shown");
 }
