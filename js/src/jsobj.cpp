@@ -3523,27 +3523,6 @@ js::DefaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValu
     return false;
 }
 
-JS_FRIEND_API(bool)
-JS_EnumerateState(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
-                  MutableHandleValue statep, JS::MutableHandleId idp)
-{
-    /* If the class has a custom JSCLASS_NEW_ENUMERATE hook, call it. */
-    const Class *clasp = obj->getClass();
-    JSEnumerateOp enumerate = clasp->enumerate;
-    if (enumerate) {
-        if (clasp->flags & JSCLASS_NEW_ENUMERATE)
-            return ((JSNewEnumerateOp) enumerate)(cx, obj, enum_op, statep, idp);
-
-        if (!enumerate(cx, obj))
-            return false;
-    }
-
-    /* Tell InitNativeIterator to treat us like a native object. */
-    MOZ_ASSERT(enum_op == JSENUMERATE_INIT || enum_op == JSENUMERATE_INIT_ALL);
-    statep.setMagic(JS_NATIVE_ENUMERATE);
-    return true;
-}
-
 bool
 js::IsDelegate(JSContext *cx, HandleObject obj, const js::Value &v, bool *result)
 {
@@ -3791,7 +3770,6 @@ dumpValue(const Value &v)
 #ifdef DEBUG
         switch (v.whyMagic()) {
           case JS_ELEMENTS_HOLE:     fprintf(stderr, " elements hole");      break;
-          case JS_NATIVE_ENUMERATE:  fprintf(stderr, " native enumeration"); break;
           case JS_NO_ITER_VALUE:     fprintf(stderr, " no iter value");      break;
           case JS_GENERATOR_CLOSING: fprintf(stderr, " generator closing");  break;
           case JS_OPTIMIZED_OUT:     fprintf(stderr, " optimized out");      break;

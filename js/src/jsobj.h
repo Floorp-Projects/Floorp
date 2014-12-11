@@ -674,13 +674,6 @@ class JSObject : public js::gc::Cell
                              JS::HandleObject callable);
     static inline bool unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id);
 
-    static bool enumerate(JSContext *cx, JS::HandleObject obj, JSIterateOp iterop,
-                          JS::MutableHandleValue statep, JS::MutableHandleId idp)
-    {
-        JSNewEnumerateOp op = obj->getOps()->enumerate;
-        return (op ? op : JS_EnumerateState)(cx, obj, iterop, statep, idp);
-    }
-
     static bool defaultValue(JSContext *cx, js::HandleObject obj, JSType hint,
                              js::MutableHandleValue vp)
     {
