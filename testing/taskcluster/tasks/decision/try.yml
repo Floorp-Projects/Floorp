@@ -26,10 +26,10 @@ scopes:
   - "docker-worker:cache:sources-gaia"
   - "docker-worker:cache:build-emulator-ics-debug"
 tasks:
-  - taskId: '{{ "decision task" | as-slugid }}'
+  - taskId: '{{#as_slugid }}decision task{{/as_slugid}}'
     task:
       created: '{{now}}'
-      deadline: '{{ "1 day" | from-now }}'
+      deadline: '{{#from_now }}1 day{{#/from_now}}'
       metadata:
         source: '{{source}}'
         owner: '{{owner}}'
