@@ -160,7 +160,7 @@ private:
   // Protected by mParentDecoder's monitor.
   MediaInfo mInfo;
 
-  void ContinueShutdown(bool aSuccess);
+  void ContinueShutdown();
   MediaPromiseHolder<ShutdownPromise> mShutdownPromise;
 };
 
