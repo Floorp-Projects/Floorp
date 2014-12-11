@@ -32,12 +32,24 @@
 
 namespace mozilla {
 
-// IdealSegmentSize is how big each segment will be in bytes (or as close as is
-// possible). It's best to choose a size that's a power-of-two (to avoid slop)
-// and moderately large (not too small so segment allocations are infrequent,
-// and not too large so that not too much space is wasted when the final
-// segment is not full). Something like 4096 or 8192 is probably good.
-template<typename T, size_t IdealSegmentSize,
+// |IdealSegmentSize| specifies how big each segment will be in bytes (or as
+// close as is possible). Use the following guidelines to choose a size.
+//
+// - It should be a power-of-two, to avoid slop.
+//
+// - It should not be too small, so that segment allocations are infrequent,
+//   and so that per-segment bookkeeping overhead is low. Typically each
+//   segment should be able to hold hundreds of elements, at least.
+//
+// - It should not be too large, so that OOMs are unlikely when allocating
+//   segments, and so that not too much space is wasted when the final segment
+//   is not full.
+//
+// The ideal size depends on how the SegmentedVector is used and the size of
+// |T|, but reasonable sizes include 1024, 4096 (the default), 8192, and 16384.
+//
+template<typename T,
+         size_t IdealSegmentSize = 4096,
          typename AllocPolicy = MallocAllocPolicy>
 class SegmentedVector : private AllocPolicy
 {
