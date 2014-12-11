@@ -39,15 +39,16 @@ namespace net {
         // 27 was http/2-draft09, h2-10, and h2-11
         // 28 was http/2-draft12
         // 29 was http/2-draft13
-        // 30 was also h2-14 and -15. They're effectively the same, -15 added an
+        // 30 was also h2-14. They're effectively the same, -15 added an
         // error code. So, we advertise all, but our "default position" is -16.
-        HTTP2_VERSION_DRAFT16 = 30
+        HTTP_VERSION_2_DRAFT_15 = 30,
+        HTTP_VERSION_2_DRAFT_16 = 31
     };
 
 typedef uint8_t nsHttpVersion;
 
-#define NS_HTTP2_DRAFT_VERSION HTTP2_VERSION_DRAFT16
-#define NS_HTTP2_DRAFT_TOKEN "h2-16"
+#define HTTP_VERSION_2_DRAFT_LATEST HTTP_VERSION_2_DRAFT_16
+#define HTTP2_DRAFT_LATEST_TOKEN "h2-16"
 
 //-----------------------------------------------------------------------------
 // http connection capabilities
