@@ -7355,8 +7355,10 @@ var RemoteDebugger = {
       let pathOrPort = this._getPath();
       if (!pathOrPort)
         pathOrPort = this._getPort();
-      let listener = DebuggerServer.openListener(pathOrPort);
+      let listener = DebuggerServer.createListener();
+      listener.portOrPath = pathOrPort;
       listener.allowConnection = this._showConnectionPrompt.bind(this);
+      listener.open();
       dump("Remote debugger listening at path " + pathOrPort);
     } catch(e) {
       dump("Remote debugger didn't start: " + e);

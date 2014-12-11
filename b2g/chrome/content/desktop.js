@@ -56,8 +56,8 @@ function setupButtons() {
 function checkDebuggerPort() {
   // XXX: To be removed once bug 942756 lands.
   // We are hacking 'unix-domain-socket' pref by setting a tcp port (number).
-  // DebuggerServer.openListener detects that it isn't a file path (string),
-  // and starts listening on the tcp port given here as command line argument.
+  // SocketListener.open detects that it isn't a file path (string), and starts
+  // listening on the tcp port given here as command line argument.
 
   // Get the command line arguments that were passed to the b2g client
   let args;
