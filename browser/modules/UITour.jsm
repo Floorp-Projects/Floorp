@@ -1680,7 +1680,7 @@ this.UITour = {
       let window = winEnum.getNext();
       if (window.closed)
         continue;
-debugger;
+
       let originTabs = this.originTabs.get(window);
       if (!originTabs)
         continue;
