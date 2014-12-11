@@ -28,8 +28,12 @@ function connect(onDone) {
     let observer = {
       observe: function (subject, topic, data) {
         Services.obs.removeObserver(observer, "debugger-server-started");
-        let transport = DebuggerClient.socketConnect("127.0.0.1", 6000);
-        startClient(transport, onDone);
+        DebuggerClient.socketConnect({
+          host: "127.0.0.1",
+          port: 6000
+        }).then(transport => {
+          startClient(transport, onDone);
+        }, e => dump("Connection failed: " + e + "\n"));
       }
     };
     Services.obs.addObserver(observer, "debugger-server-started", false);
