@@ -221,7 +221,6 @@ static const char* const gOmxTypes[] = {
   "audio/mp4",
   "audio/amr",
   "audio/3gpp",
-  "audio/flac",
   "video/mp4",
   "video/3gpp",
   "video/3gpp2",
