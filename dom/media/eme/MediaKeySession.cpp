@@ -204,7 +204,6 @@ MediaKeySession::OnClosed()
     return;
   }
   mIsClosed = true;
-  // TODO: reset usableKeyIds
   mKeys->OnSessionClosed(this);
   mKeys = nullptr;
   mClosed->MaybeResolve(JS::UndefinedHandleValue);
