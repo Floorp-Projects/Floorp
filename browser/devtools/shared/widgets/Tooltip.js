@@ -415,6 +415,16 @@ Tooltip.prototype = {
       setNamedTimeout(this.uid, this._showDelay, () => {
         this.isValidHoverTarget(event.target).then(target => {
           this.show(target);
+        }).catch((reason) => {
+          if (reason === false) {
+            // isValidHoverTarget rejects with false if the tooltip should
+            // not be shown. This can be safely ignored.
+            return;
+          }
+          // Report everything else. Reason might be error that should not be
+          // hidden.
+          console.error("isValidHoverTarget rejected with an unexpected reason:");
+          console.error(reason);
         });
       });
     }
