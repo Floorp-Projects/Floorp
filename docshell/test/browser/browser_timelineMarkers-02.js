@@ -7,7 +7,6 @@
 // restyles, reflows and paints occur
 
 let URL = '<!DOCTYPE html><style>' +
-          'body {margin:0; padding: 0;} ' +
           'div {width:100px;height:100px;background:red;} ' +
           '.resize-change-color {width:50px;height:50px;background:blue;} ' +
           '.change-color {width:50px;height:50px;background:yellow;} ' +
@@ -22,19 +21,8 @@ let TESTS = [{
   check: function(markers) {
     ok(markers.length > 0, "markers were returned");
     console.log(markers);
-    info(JSON.stringify(markers.filter(m => m.name == "Paint")));
     ok(markers.some(m => m.name == "Reflow"), "markers includes Reflow");
     ok(markers.some(m => m.name == "Paint"), "markers includes Paint");
-    for (let marker of markers.filter(m => m.name == "Paint")) {
-      // This change should generate a single rectangle.
-      // We only verify that it contains the the div.
-      ok(marker.rectangles.length == 1, "marker has one rectangle");
-      let rect = marker.rectangles[0];
-      ok(rect.x <= 0, "marker x");
-      ok(rect.y <= 0, "marker y");
-      ok(rect.width >= 100, "marker width");
-      ok(rect.height >= 100, "marker height");
-    }
     ok(markers.some(m => m.name == "Styles"), "markers includes Restyle");
   }
 }, {
@@ -46,16 +34,6 @@ let TESTS = [{
     ok(markers.length > 0, "markers were returned");
     ok(!markers.some(m => m.name == "Reflow"), "markers doesn't include Reflow");
     ok(markers.some(m => m.name == "Paint"), "markers includes Paint");
-    for (let marker of markers.filter(m => m.name == "Paint")) {
-      // This change should generate a single rectangle which is the
-      // same as the div.
-      ok(marker.rectangles.length == 1, "marker has one rectangle");
-      let rect = marker.rectangles[0];
-      ok(rect.x == 0, "marker x");
-      ok(rect.y == 0, "marker y");
-      ok(rect.width == 50, "marker width");
-      ok(rect.height == 50, "marker height");
-    }
     ok(markers.some(m => m.name == "Styles"), "markers includes Restyle");
   }
 }, {
