@@ -224,8 +224,7 @@ NS_IMPL_RELEASE(SharedScriptableHelperForJSIID)
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME           SharedScriptableHelperForJSIID
 #define XPC_MAP_QUOTED_CLASSNAME   "JSIID"
-#define XPC_MAP_FLAGS               nsIXPCScriptable::DONT_ENUM_STATIC_PROPS |\
-                                    nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
+#define XPC_MAP_FLAGS               nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h" /* This will #undef the above */
 
 static mozilla::StaticRefPtr<nsIXPCScriptable> gSharedScriptableHelperForJSIID;
@@ -298,8 +297,7 @@ NS_IMPL_CI_INTERFACE_GETTER(nsJSIID, nsIJSID, nsIJSIID)
 #define                             XPC_MAP_WANT_RESOLVE
 #define                             XPC_MAP_WANT_ENUMERATE
 #define                             XPC_MAP_WANT_HASINSTANCE
-#define XPC_MAP_FLAGS               nsIXPCScriptable::DONT_ENUM_STATIC_PROPS |\
-                                    nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
+#define XPC_MAP_FLAGS               nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h" /* This will #undef the above */
 
 

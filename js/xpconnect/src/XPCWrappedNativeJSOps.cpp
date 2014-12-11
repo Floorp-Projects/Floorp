@@ -910,9 +910,6 @@ XPC_WN_Helper_Resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolv
             if (si)
                 siFlags = si->GetFlags();
 
-            unsigned enumFlag =
-                siFlags.DontEnumStaticProps() ? 0 : JSPROP_ENUMERATE;
-
             XPCWrappedNative* wrapperForInterfaceNames =
                 siFlags.DontReflectInterfaceNames() ? nullptr : wrapper;
 
@@ -923,7 +920,7 @@ XPC_WN_Helper_Resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolv
                                            false,
                                            wrapperForInterfaceNames,
                                            nullptr, si,
-                                           enumFlag, resolvedp);
+                                           JSPROP_ENUMERATE, resolvedp);
             (void)ccx.SetResolvingWrapper(oldResolvingWrapper);
         }
     }
@@ -993,17 +990,17 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
     nsresult rv;
 
     if (si->GetFlags().WantNewEnumerate()) {
-        if (((enum_op == JSENUMERATE_INIT &&
-              !si->GetFlags().DontEnumStaticProps()) ||
-             enum_op == JSENUMERATE_INIT_ALL) &&
-            wrapper->HasMutatedSet() &&
-            !XPC_WN_Shared_Enumerate(cx, obj)) {
-            statep.set(JSVAL_NULL);
-            return false;
+        // XXXevilpie I am like 80% sure that has no effect on what is actually
+        // enumerated.
+        // The loop in jsiter.cpp will only put stuff that is actually in idp
+        // into the property id array.
+        if (enum_op == JSENUMERATE_INIT || enum_op == JSENUMERATE_INIT_ALL) {
+            if (wrapper->HasMutatedSet() &&
+                !XPC_WN_Shared_Enumerate(cx, obj)) {
+                statep.set(JSVAL_NULL);
+                return false;
+            }
         }
-
-        // XXX Might we really need to wrap this call and *also* call
-        // js_ObjectOps.enumerate ???
 
         rv = si->GetCallback()->
             NewEnumerate(wrapper, cx, obj, enum_op, statep.address(), idp.address(), &retval);
@@ -1020,13 +1017,12 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
 
     if (si->GetFlags().WantEnumerate()) {
         if (enum_op == JSENUMERATE_INIT || enum_op == JSENUMERATE_INIT_ALL) {
-            if ((enum_op == JSENUMERATE_INIT_ALL ||
-                 !si->GetFlags().DontEnumStaticProps()) &&
-                wrapper->HasMutatedSet() &&
+            if (wrapper->HasMutatedSet() &&
                 !XPC_WN_Shared_Enumerate(cx, obj)) {
                 statep.set(JSVAL_NULL);
                 return false;
             }
+
             rv = si->GetCallback()->
                 Enumerate(wrapper, cx, obj, &retval);
 
@@ -1137,8 +1133,7 @@ XPCNativeScriptableShared::PopulateJSClass()
 
     // We figure out most of the enumerate strategy at call time.
 
-    if (mFlags.WantNewEnumerate() || mFlags.WantEnumerate() ||
-        mFlags.DontEnumStaticProps())
+    if (mFlags.WantNewEnumerate() || mFlags.WantEnumerate())
         mJSClass.base.enumerate = nullptr;
     else
         mJSClass.base.enumerate = XPC_WN_Shared_Enumerate;
@@ -1295,10 +1290,6 @@ XPC_WN_Shared_Proto_Enumerate(JSContext *cx, HandleObject obj)
     if (!self)
         return false;
 
-    if (self->GetScriptableInfo() &&
-        self->GetScriptableInfo()->GetFlags().DontEnumStaticProps())
-        return true;
-
     XPCNativeSet* set = self->GetSet();
     if (!set)
         return false;
@@ -1369,14 +1360,11 @@ XPC_WN_ModsAllowed_Proto_Resolve(JSContext *cx, HandleObject obj, HandleId id, b
         return false;
 
     XPCNativeScriptableInfo* si = self->GetScriptableInfo();
-    unsigned enumFlag = (si && si->GetFlags().DontEnumStaticProps()) ?
-                                                0 : JSPROP_ENUMERATE;
-
     return DefinePropertyIfFound(ccx, obj, id,
                                  self->GetSet(), nullptr, nullptr,
                                  self->GetScope(),
                                  true, nullptr, nullptr, si,
-                                 enumFlag, resolvep);
+                                 JSPROP_ENUMERATE, resolvep);
 }
 
 #define XPC_WN_SHARED_PROTO_CLASS_EXT                                  \
@@ -1488,8 +1476,6 @@ XPC_WN_NoMods_Proto_Resolve(JSContext *cx, HandleObject obj, HandleId id, bool *
         return false;
 
     XPCNativeScriptableInfo* si = self->GetScriptableInfo();
-    unsigned enumFlag = (si && si->GetFlags().DontEnumStaticProps()) ?
-                                                0 : JSPROP_ENUMERATE;
 
     return DefinePropertyIfFound(ccx, obj, id,
                                  self->GetSet(), nullptr, nullptr,
@@ -1497,7 +1483,7 @@ XPC_WN_NoMods_Proto_Resolve(JSContext *cx, HandleObject obj, HandleId id, bool *
                                  true, nullptr, nullptr, si,
                                  JSPROP_READONLY |
                                  JSPROP_PERMANENT |
-                                 enumFlag, resolvedp);
+                                 JSPROP_ENUMERATE, resolvedp);
 }
 
 const js::Class XPC_WN_NoMods_WithCall_Proto_JSClass = {
