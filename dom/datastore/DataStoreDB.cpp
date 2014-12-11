@@ -275,7 +275,7 @@ DataStoreDB::UpgradeSchema(nsIDOMEvent* aEvent)
     RootedDictionary<IDBIndexParameters> params(cx);
     params.Init(NS_LITERAL_STRING("{ \"unique\": true }"));
     nsRefPtr<IDBIndex> index =
-      store->CreateIndex(cx, NS_LITERAL_STRING(DATASTOREDB_REVISION_INDEX),
+      store->CreateIndex(NS_LITERAL_STRING(DATASTOREDB_REVISION_INDEX),
                          NS_LITERAL_STRING("revisionId"), params, error);
     if (NS_WARN_IF(error.Failed())) {
       return error.ErrorCode();
