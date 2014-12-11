@@ -5112,6 +5112,14 @@ JS_CharsToId(JSContext* cx, JS::TwoByteChars chars, JS::MutableHandleId);
 extern JS_PUBLIC_API(bool)
 JS_IsIdentifier(JSContext *cx, JS::HandleString str, bool *isIdentifier);
 
+/*
+ * Test whether the given chars + length are a valid ECMAScript identifier.
+ * This version is infallible, so just returns whether the chars are an
+ * identifier.
+ */
+extern JS_PUBLIC_API(bool)
+JS_IsIdentifier(const char16_t *chars, size_t length);
+
 namespace JS {
 
 /*

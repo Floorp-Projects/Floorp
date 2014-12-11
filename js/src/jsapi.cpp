@@ -6292,6 +6292,12 @@ JS_IsIdentifier(JSContext *cx, HandleString str, bool *isIdentifier)
     return true;
 }
 
+JS_PUBLIC_API(bool)
+JS_IsIdentifier(const char16_t *chars, size_t length)
+{
+    return js::frontend::IsIdentifier(chars, length);
+}
+
 namespace JS {
 
 void
