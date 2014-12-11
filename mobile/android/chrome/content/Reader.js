@@ -277,7 +277,7 @@ let Reader = {
         return;
       }
 
-      let worker = new ChromeWorker("readerWorker.js");
+      let worker = new ChromeWorker("chrome://global/content/reader/readerWorker.js");
       worker.onmessage = evt => {
         let article = evt.data;
 
