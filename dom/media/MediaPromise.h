@@ -155,6 +155,23 @@ protected:
     const char* mCallSite;
   };
 
+  /*
+   * We create two specializations for invoking Resolve/Reject Methods so as to
+   * make the resolve/reject value argument "optional" via SFINAE.
+   */
+
+  template<typename ThisType, typename ValueType>
+  static void InvokeCallbackMethod(ThisType* aThisVal, void(ThisType::*aMethod)(ValueType), ValueType aValue)
+  {
+      ((*aThisVal).*aMethod)(aValue);
+  }
+
+  template<typename ThisType, typename ValueType>
+  static void InvokeCallbackMethod(ThisType* aThisVal, void(ThisType::*aMethod)(), ValueType aValue)
+  {
+      ((*aThisVal).*aMethod)();
+  }
+
   template<typename TargetType, typename ThisType,
            typename ResolveMethodType, typename RejectMethodType>
   class ThenValue : public ThenValueBase
@@ -187,12 +204,12 @@ protected:
   protected:
     virtual void DoResolve(ResolveValueType aResolveValue)
     {
-      ((*mThisVal).*mResolveMethod)(aResolveValue);
+      InvokeCallbackMethod(mThisVal.get(), mResolveMethod, aResolveValue);
     }
 
     virtual void DoReject(RejectValueType aRejectValue)
     {
-      ((*mThisVal).*mRejectMethod)(aRejectValue);
+      InvokeCallbackMethod(mThisVal.get(), mRejectMethod, aRejectValue);
     }
 
     virtual ~ThenValue() {}

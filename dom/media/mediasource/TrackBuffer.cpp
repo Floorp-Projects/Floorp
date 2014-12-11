@@ -112,9 +112,8 @@ TrackBuffer::Shutdown()
 }
 
 void
-TrackBuffer::ContinueShutdown(bool aSuccess)
+TrackBuffer::ContinueShutdown()
 {
-  MOZ_ASSERT(aSuccess);
   ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
   if (mDecoders.Length()) {
     mDecoders[0]->GetReader()->Shutdown()
