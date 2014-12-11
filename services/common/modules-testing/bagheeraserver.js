@@ -205,7 +205,7 @@ BagheeraServer.prototype = {
     }
 
     let id = rest;
-    if (id.contains("/")) {
+    if (id.includes("/")) {
       this._log.info("URI has too many components.");
       throw HTTP_404;
     }

@@ -65,7 +65,7 @@ function ifTestingSupported() {
     "The last called function's file is correct.");
   is(functionCalls[7].line, 30,
     "The last called function's line is correct.");
-  ok(functionCalls[7].argsPreview.contains("Function"),
+  ok(functionCalls[7].argsPreview.includes("Function"),
     "The last called function's args preview is correct.");
   is(functionCalls[7].callerPreview, "",
     "The last called function's caller preview is correct.");

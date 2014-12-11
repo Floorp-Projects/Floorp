@@ -17,6 +17,6 @@ function f() {
 try {
     f();
 } catch (exc) {
-    assertEq(exc.message.contains("is not a function"), true);
+    assertEq(exc.message.includes("is not a function"), true);
 }
 f();

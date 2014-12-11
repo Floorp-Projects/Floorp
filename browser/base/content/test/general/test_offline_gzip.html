@@ -78,7 +78,7 @@ function handleMessageEvents(event) {
         catch (e) {
           var bodyInnerHTML = "";
         }
-        if (cacheCount == 2 || bodyInnerHTML.contains("error")) {
+        if (cacheCount == 2 || bodyInnerHTML.includes("error")) {
           clearInterval(intervalID);
           is(cacheCount, 2, "frame not reloaded successfully");
           if (cacheCount != 2) {

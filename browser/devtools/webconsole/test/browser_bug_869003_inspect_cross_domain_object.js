@@ -52,7 +52,7 @@ function onConsoleMessage(aResults)
 
   let clickable = aResults[0].clickableElements[0];
   ok(clickable, "clickable object found");
-  ok(body.textContent.contains('{ hello: "world!",'), "message text check");
+  ok(body.textContent.includes('{ hello: "world!",'), "message text check");
 
   gJSTerm.once("variablesview-fetched", onObjFetch);
 

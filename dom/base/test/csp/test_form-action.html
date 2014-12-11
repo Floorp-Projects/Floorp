@@ -55,7 +55,7 @@ examiner.prototype  = {
    if (topic === "specialpowers-http-notify-request") {
       // making sure we do not bubble a result for something other
       // then the request in question.
-      if (!data.contains("submit-form")) {
+      if (!data.includes("submit-form")) {
         return;
       }
       checkResult("allowed");
@@ -67,7 +67,7 @@ examiner.prototype  = {
       var asciiSpec = SpecialPowers.getPrivilegedProps(
                         SpecialPowers.do_QueryInterface(subject, "nsIURI"),
                         "asciiSpec");
-      if (!asciiSpec.contains("submit-form")) {
+      if (!asciiSpec.includes("submit-form")) {
         return;
       }
       checkResult("blocked");

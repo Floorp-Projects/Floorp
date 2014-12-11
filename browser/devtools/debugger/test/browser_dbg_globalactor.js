@@ -27,7 +27,7 @@ function test() {
     gClient.listTabs(aResponse => {
       let globalActor = aResponse.testGlobalActor1;
       ok(globalActor, "Found the test tab actor.")
-      ok(globalActor.contains("test_one"),
+      ok(globalActor.includes("test_one"),
         "testGlobalActor1's actorPrefix should be used.");
 
       gClient.request({ to: globalActor, type: "ping" }, aResponse => {

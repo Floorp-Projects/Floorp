@@ -24,7 +24,7 @@ function test() {
       {
         var urispec = uri.asciiSpec;
         info(urispec);
-        is(urispec.contains(filename), false, "web content present in disk cache");
+        is(urispec.includes(filename), false, "web content present in disk cache");
       },
       onCacheEntryVisitCompleted: function()
       {

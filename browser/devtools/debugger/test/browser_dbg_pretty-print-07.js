@@ -23,7 +23,7 @@ function test() {
 function findSource() {
   gThreadClient.getSources(({ error, sources }) => {
     ok(!error);
-    sources = sources.filter(s => s.url.contains('code_ugly-2.js'));
+    sources = sources.filter(s => s.url.includes('code_ugly-2.js'));
     is(sources.length, 1);
     gSource = sources[0];
     prettyPrintSource();
@@ -36,7 +36,7 @@ function prettyPrintSource() {
 
 function testPrettyPrinted({ error, source }) {
   ok(!error);
-  ok(source.contains("\n    "));
+  ok(source.includes("\n    "));
   disablePrettyPrint();
 }
 
@@ -46,7 +46,7 @@ function disablePrettyPrint() {
 
 function testUgly({ error, source }) {
   ok(!error);
-  ok(!source.contains("\n    "));
+  ok(!source.includes("\n    "));
   closeDebuggerAndFinish(gPanel);
 }
 

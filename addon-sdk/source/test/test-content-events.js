@@ -134,7 +134,7 @@ exports["test dead object errors"] = function(assert, done) {
     let { level } = message;
     let text = String(message.arguments[0]);
 
-    if (level === "error" && text.contains("can't access dead object"))
+    if (level === "error" && text.includes("can't access dead object"))
       fail(text);
   }
 
