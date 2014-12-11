@@ -2679,6 +2679,7 @@ RasterImage::FinishedSomeDecoding(ShutdownReason aReason /* = ShutdownReason::DO
 
   bool done = false;
   bool wasSize = false;
+  bool wasDefaultFlags = false;
   nsIntRect invalidRect;
   nsresult rv = NS_OK;
   Progress progress = aProgress;
@@ -2686,6 +2687,7 @@ RasterImage::FinishedSomeDecoding(ShutdownReason aReason /* = ShutdownReason::DO
   if (image->mDecoder) {
     invalidRect = image->mDecoder->TakeInvalidRect();
     progress |= image->mDecoder->TakeProgress();
+    wasDefaultFlags = image->mDecoder->GetDecodeFlags() == DECODE_FLAGS_DEFAULT;
 
     if (!image->mDecoder->IsSizeDecode() && image->mDecoder->ChunkCount()) {
       Telemetry::Accumulate(Telemetry::IMAGE_DECODE_CHUNKS,
@@ -2743,6 +2745,10 @@ RasterImage::FinishedSomeDecoding(ShutdownReason aReason /* = ShutdownReason::DO
     // Don't send partial invalidations if we've been decoded before.
     invalidRect = mDecoded ? GetFirstFrameRect()
                            : nsIntRect();
+  }
+  if (!invalidRect.IsEmpty() && wasDefaultFlags) {
+    // Update our image container since we're invalidating.
+    UpdateImageContainer();
   }
 
   if (mNotifying) {
