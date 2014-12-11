@@ -78,9 +78,9 @@ public class UploadAlarmReceiver extends BroadcastReceiver {
                 !AsyncUploader.isUploading()) {
                 Log.d(LOG_TAG, "Alarm upload(), call AsyncUploader");
                 AsyncUploader.UploadSettings settings =
-                    new AsyncUploader.UploadSettings(Prefs.getInstance().getWifiScanAlways(), Prefs.getInstance().getUseWifiOnly());
+                    new AsyncUploader.UploadSettings(Prefs.getInstance(this).getWifiScanAlways(), Prefs.getInstance(this).getUseWifiOnly());
                 AsyncUploader uploader = new AsyncUploader(settings, null);
-                uploader.setNickname(Prefs.getInstance().getNickname());
+                uploader.setNickname(Prefs.getInstance(this).getNickname());
                 uploader.execute();
                 // we could listen for completion and cancel, instead, cancel on next alarm when db empty
             }

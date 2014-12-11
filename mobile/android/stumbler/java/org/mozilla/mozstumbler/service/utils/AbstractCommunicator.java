@@ -61,14 +61,16 @@ public abstract class AbstractCommunicator {
         return null;
     }
 
-    public AbstractCommunicator(String userAgent) {
-        mUserAgent = userAgent;
+    public AbstractCommunicator() {
+        Prefs prefs = Prefs.getInstanceWithoutContext();
+        mUserAgent = (prefs != null)? prefs.getUserAgent() : "fennec-stumbler-unset-user-agent";
     }
 
     private void openConnectionAndSetHeaders() {
         try {
-            if (sMozApiKey == null) {
-                sMozApiKey = Prefs.getInstance().getMozApiKey();
+            Prefs prefs = Prefs.getInstanceWithoutContext();
+            if (sMozApiKey == null || prefs != null) {
+                sMozApiKey = prefs.getMozApiKey();
             }
             URL url = new URL(getUrlString() + "?key=" + sMozApiKey);
             mHttpURLConnection = (HttpURLConnection) url.openConnection();
