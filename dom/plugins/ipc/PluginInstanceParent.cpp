@@ -7,7 +7,6 @@
 #include "mozilla/DebugOnly.h"
 #include <stdint.h> // for intptr_t
 
-#include "mozilla/Telemetry.h"
 #include "PluginInstanceParent.h"
 #include "BrowserStreamParent.h"
 #include "PluginBackgroundDestroyer.h"
@@ -146,13 +145,8 @@ NPError
 PluginInstanceParent::Destroy()
 {
     NPError retval;
-    {   // Scope for timer
-        Telemetry::AutoTimer<Telemetry::BLOCKED_ON_PLUGIN_INSTANCE_DESTROY_MS>
-            timer(Module()->GetHistogramKey());
-        if (!CallNPP_Destroy(&retval)) {
-            retval = NPERR_GENERIC_ERROR;
-        }
-    }
+    if (!CallNPP_Destroy(&retval))
+        retval = NPERR_GENERIC_ERROR;
 
 #if defined(OS_WIN)
     SharedSurfaceRelease();
@@ -1310,20 +1304,15 @@ PluginInstanceParent::NPP_NewStream(NPMIMEType type, NPStream* stream,
     BrowserStreamParent* bs = new BrowserStreamParent(this, stream);
 
     NPError err;
-    {   // Scope for timer
-        Telemetry::AutoTimer<Telemetry::BLOCKED_ON_PLUGIN_STREAM_INIT_MS>
-            timer(Module()->GetHistogramKey());
-        if (!CallPBrowserStreamConstructor(bs,
-                                           NullableString(stream->url),
-                                           stream->end,
-                                           stream->lastmodified,
-                                           static_cast<PStreamNotifyParent*>(stream->notifyData),
-                                           NullableString(stream->headers),
-                                           NullableString(type), seekable,
-                                           &err, stype)) {
-            return NPERR_GENERIC_ERROR;
-        }
-    }
+    if (!CallPBrowserStreamConstructor(bs,
+                                       NullableString(stream->url),
+                                       stream->end,
+                                       stream->lastmodified,
+                                       static_cast<PStreamNotifyParent*>(stream->notifyData),
+                                       NullableString(stream->headers),
+                                       NullableString(type), seekable,
+                                       &err, stype))
+        return NPERR_GENERIC_ERROR;
 
     if (NPERR_NO_ERROR != err)
         unused << PBrowserStreamParent::Send__delete__(bs);

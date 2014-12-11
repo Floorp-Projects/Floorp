@@ -16,7 +16,6 @@
 #include "mozilla/plugins/PPluginModuleParent.h"
 #include "mozilla/plugins/PluginMessageUtils.h"
 #include "mozilla/plugins/PluginTypes.h"
-#include "mozilla/TimeStamp.h"
 #include "npapi.h"
 #include "npfunctions.h"
 #include "nsAutoPtr.h"
@@ -105,10 +104,6 @@ public:
     }
 
     void ProcessRemoteNativeEventsInInterruptCall();
-
-    nsCString GetHistogramKey() const {
-        return mPluginName + mPluginVersion;
-    }
 
 protected:
     virtual mozilla::ipc::RacyInterruptPolicy
@@ -250,7 +245,6 @@ protected:
     nsString mBrowserDumpID;
     nsString mHangID;
     nsRefPtr<nsIObserver> mProfilerObserver;
-    TimeDuration mTimeBlocked;
     nsCString mPluginName;
     nsCString mPluginVersion;
 
