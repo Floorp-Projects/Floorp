@@ -1,0 +1,14 @@
+# This task is the base for most tests in gecko.
+task:
+  created: '{{now}}'
+  deadline: '{{#from_now}}24 hours{{/from_now}}'
+  metadata:
+    source: http://todo.com/soon
+    owner: {{owner}}
+  workerType: b2gtest
+  provisionerId: aws-provisioner
+  schedulerId: task-graph-scheduler
+
+  payload:
+    image: '{{#docker_image}}tester{{/docker_image}}'
+    maxRunTime: 3600
