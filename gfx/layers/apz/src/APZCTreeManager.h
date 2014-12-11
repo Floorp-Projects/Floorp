@@ -47,6 +47,7 @@ class OverscrollHandoffChain;
 struct OverscrollHandoffState;
 class LayerMetricsWrapper;
 class InputQueue;
+class GeckoContentController;
 
 /**
  * ****************** NOTE ON LOCK ORDERING IN APZ **************************
@@ -379,6 +380,10 @@ public:
 protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~APZCTreeManager();
+
+  // Hook for gtests subclass
+  virtual AsyncPanZoomController* MakeAPZCInstance(uint64_t aLayersId,
+                                                   GeckoContentController* aController);
 
 public:
   /* Some helper functions to find an APZC given some identifying input. These functions
