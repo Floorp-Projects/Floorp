@@ -165,6 +165,7 @@ public:
 
   void Prepend(const uint8_t* aData, size_t aSize);
 
+private:
   nsAutoArrayPtr<uint8_t> extra_buffer;
 };
 }
