@@ -1201,7 +1201,7 @@ HelperThread::handleCompressionWorkload()
 
     {
         AutoUnlockHelperThreadState unlock;
-        compressionTask->result = compressionTask->work();
+        compressionTask->result = compressionTask->work(sourceCompressor);
     }
 
     compressionTask->helperThread = nullptr;
