@@ -933,6 +933,54 @@ TEST_F(JsepSessionTest, ValidateAnsweredCodecParams)
   ASSERT_EQ((uint32_t)12288, parsed_vp8_params.max_fs);
   ASSERT_EQ((uint32_t)60, parsed_vp8_params.max_fr);
 
+
+  SetLocalAnswer(answer);
+  SetRemoteAnswer(answer);
+
+  ASSERT_EQ(2U, mSessionOff.GetNegotiatedTrackPairCount());
+  const JsepTrackPair* offerVideoPair;
+  ASSERT_EQ(NS_OK, mSessionOff.GetNegotiatedTrackPair(1, &offerVideoPair));
+  ASSERT_TRUE(offerVideoPair->mSending);
+  ASSERT_TRUE(offerVideoPair->mReceiving);
+  ASSERT_TRUE(offerVideoPair->mSending->GetNegotiatedDetails());
+  ASSERT_TRUE(offerVideoPair->mReceiving->GetNegotiatedDetails());
+  ASSERT_EQ(1U,
+      offerVideoPair->mSending->GetNegotiatedDetails()->GetCodecCount());
+  ASSERT_EQ(1U,
+      offerVideoPair->mReceiving->GetNegotiatedDetails()->GetCodecCount());
+  const JsepCodecDescription* offerRecvCodec;
+  ASSERT_EQ(NS_OK,
+      offerVideoPair->mReceiving->GetNegotiatedDetails()->GetCodec(
+        0,
+        &offerRecvCodec));
+  const JsepCodecDescription* offerSendCodec;
+  ASSERT_EQ(NS_OK,
+      offerVideoPair->mSending->GetNegotiatedDetails()->GetCodec(
+        0,
+        &offerSendCodec));
+
+  ASSERT_EQ(2U, mSessionAns.GetNegotiatedTrackPairCount());
+  const JsepTrackPair* answerVideoPair;
+  ASSERT_EQ(NS_OK, mSessionAns.GetNegotiatedTrackPair(1, &answerVideoPair));
+  ASSERT_TRUE(answerVideoPair->mSending);
+  ASSERT_TRUE(answerVideoPair->mReceiving);
+  ASSERT_TRUE(answerVideoPair->mSending->GetNegotiatedDetails());
+  ASSERT_TRUE(answerVideoPair->mReceiving->GetNegotiatedDetails());
+  ASSERT_EQ(1U,
+      answerVideoPair->mSending->GetNegotiatedDetails()->GetCodecCount());
+  ASSERT_EQ(1U,
+      answerVideoPair->mReceiving->GetNegotiatedDetails()->GetCodecCount());
+  const JsepCodecDescription* answerRecvCodec;
+  ASSERT_EQ(NS_OK,
+      answerVideoPair->mReceiving->GetNegotiatedDetails()->GetCodec(
+        0,
+        &answerRecvCodec));
+  const JsepCodecDescription* answerSendCodec;
+  ASSERT_EQ(NS_OK,
+      answerVideoPair->mSending->GetNegotiatedDetails()->GetCodec(
+        0,
+        &answerSendCodec));
+
 #if 0
   // H264 packetization mode 1
   ASSERT_EQ("126", fmtps[1].format);
