@@ -38,7 +38,7 @@ var Camera = {
   callbackTriggered: false,
   checkForDone: function test_checkForDone() {
     if (Camera.firstCallFailed && Camera.secondCallSucceeded) {
-      ok(Camera.callbackTriggered, "Async callback triggered");
+      ok(Camera.callbackTriggered, "Async callback triggered?");
       Camera.cameraObj.release();
       Camera.cameraObj = null;
       CameraTest.end();
@@ -50,7 +50,7 @@ var Camera = {
   },
   failureOne: function test_failureOne(error) {
     ok(error.name == "NS_ERROR_IN_PROGRESS", "First call to autoFocus() failed with: "
-      + error);
+      + error.name);
     Camera.firstCallFailed = true;
     Camera.checkForDone();
   },
@@ -62,7 +62,8 @@ var Camera = {
   failureTwo: function test_failureTwo(error) {
     ok(false, "Second call to autoFocus() failed unexpectedly with: " + error);
   },
-  callback: function test_callback(focused) {
+  callback: function test_callback(e) {
+    Camera.cameraObj.removeEventListener('focus', Camera.callback);
     Camera.callbackTriggered = true;
   },
 
@@ -75,7 +76,7 @@ var Camera = {
 
       // It doesn't matter if the emulator supports focus or not;
       // this is just testing the sequencing.
-      camera.onAutoFocusCompleted = Camera.callback;
+      camera.addEventListener('focus', Camera.callback);
       camera.autoFocus().then(Camera.successOne, Camera.failureOne);
       camera.autoFocus().then(Camera.successTwo, Camera.failureTwo);
     };

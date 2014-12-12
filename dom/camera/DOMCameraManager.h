@@ -26,17 +26,11 @@ namespace mozilla {
   class nsDOMCameraControl;
   namespace dom {
     struct CameraConfiguration;
-    class GetCameraCallback;
-    class CameraErrorCallback;
   }
 }
 
 typedef nsTArray<nsRefPtr<mozilla::nsDOMCameraControl> > CameraControls;
 typedef nsClassHashtable<nsUint64HashKey, CameraControls> WindowTable;
-typedef mozilla::dom::Optional<mozilla::dom::OwningNonNull<mozilla::dom::GetCameraCallback> >
-          OptionalNonNullGetCameraCallback;
-typedef mozilla::dom::Optional<mozilla::dom::OwningNonNull<mozilla::dom::CameraErrorCallback> >
-          OptionalNonNullCameraErrorCallback;
 
 class nsDOMCameraManager MOZ_FINAL
   : public nsIObserver
@@ -66,28 +60,21 @@ public:
 
   void PermissionAllowed(uint32_t aCameraId,
                          const mozilla::dom::CameraConfiguration& aOptions,
-                         mozilla::dom::GetCameraCallback* aOnSuccess,
-                         mozilla::dom::CameraErrorCallback* aOnError,
                          mozilla::dom::Promise* aPromise);
 
   void PermissionCancelled(uint32_t aCameraId,
                            const mozilla::dom::CameraConfiguration& aOptions,
-                           mozilla::dom::GetCameraCallback* aOnSuccess,
-                           mozilla::dom::CameraErrorCallback* aOnError,
                            mozilla::dom::Promise* aPromise);
 
   // WebIDL
   already_AddRefed<mozilla::dom::Promise>
   GetCamera(const nsAString& aCamera,
             const mozilla::dom::CameraConfiguration& aOptions,
-            const OptionalNonNullGetCameraCallback& aOnSuccess,
-            const OptionalNonNullCameraErrorCallback& aOnError,
             mozilla::ErrorResult& aRv);
   void GetListOfCameras(nsTArray<nsString>& aList, mozilla::ErrorResult& aRv);
 
   nsPIDOMWindow* GetParentObject() const { return mWindow; }
-  virtual JSObject* WrapObject(JSContext* aCx)
-    MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
 #ifdef MOZ_WIDGET_GONK
   static void PreinitCameraHardware();

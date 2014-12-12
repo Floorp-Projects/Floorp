@@ -55,8 +55,6 @@ public:
 
   nsDOMCameraControl(uint32_t aCameraId,
                      const dom::CameraConfiguration& aInitialConfig,
-                     dom::GetCameraCallback* aOnSuccess,
-                     dom::CameraErrorCallback* aOnError,
                      dom::Promise* aPromise,
                      nsPIDOMWindow* aWindow);
 
@@ -90,26 +88,8 @@ public:
   double GetPictureQuality(ErrorResult& aRv);
   void SetPictureQuality(double aQuality, ErrorResult& aRv);
 
-  // Unsolicited event handlers.
-  dom::CameraShutterCallback* GetOnShutter();
-  void SetOnShutter(dom::CameraShutterCallback* aCb);
-  dom::CameraClosedCallback* GetOnClosed();
-  void SetOnClosed(dom::CameraClosedCallback* aCb);
-  dom::CameraRecorderStateChange* GetOnRecorderStateChange();
-  void SetOnRecorderStateChange(dom::CameraRecorderStateChange* aCb);
-  dom::CameraPreviewStateChange* GetOnPreviewStateChange();
-  void SetOnPreviewStateChange(dom::CameraPreviewStateChange* aCb);
-  dom::CameraAutoFocusMovingCallback* GetOnAutoFocusMoving();
-  void SetOnAutoFocusMoving(dom::CameraAutoFocusMovingCallback* aCb);
-  dom::CameraAutoFocusCallback* GetOnAutoFocusCompleted();
-  void SetOnAutoFocusCompleted(dom::CameraAutoFocusCallback* aCb);
-  dom::CameraFaceDetectionCallback* GetOnFacesDetected();
-  void SetOnFacesDetected(dom::CameraFaceDetectionCallback* aCb);
-
   // Methods.
   already_AddRefed<dom::Promise> SetConfiguration(const dom::CameraConfiguration& aConfiguration,
-                                                  const dom::Optional<dom::OwningNonNull<dom::CameraSetConfigurationCallback> >& aOnSuccess,
-                                                  const dom::Optional<dom::OwningNonNull<dom::CameraErrorCallback> >& aOnError,
                                                   ErrorResult& aRv);
   void GetMeteringAreas(nsTArray<dom::CameraRegion>& aAreas, ErrorResult& aRv);
   void SetMeteringAreas(const dom::Optional<dom::Sequence<dom::CameraRegion> >& aAreas, ErrorResult& aRv);
@@ -119,26 +99,18 @@ public:
   void SetPictureSize(const dom::CameraSize& aSize, ErrorResult& aRv);
   void GetThumbnailSize(dom::CameraSize& aSize, ErrorResult& aRv);
   void SetThumbnailSize(const dom::CameraSize& aSize, ErrorResult& aRv);
-  already_AddRefed<dom::Promise> AutoFocus(const dom::Optional<dom::OwningNonNull<dom::CameraAutoFocusCallback> >& aOnSuccess,
-                                           const dom::Optional<dom::OwningNonNull<dom::CameraErrorCallback> >& aOnError,
-                                           ErrorResult& aRv);
+  already_AddRefed<dom::Promise> AutoFocus(ErrorResult& aRv);
   void StartFaceDetection(ErrorResult& aRv);
   void StopFaceDetection(ErrorResult& aRv);
   already_AddRefed<dom::Promise> TakePicture(const dom::CameraPictureOptions& aOptions,
-                                             const dom::Optional<dom::OwningNonNull<dom::CameraTakePictureCallback> >& aOnSuccess,
-                                             const dom::Optional<dom::OwningNonNull<dom::CameraErrorCallback> >& aOnError,
                                              ErrorResult& aRv);
   already_AddRefed<dom::Promise> StartRecording(const dom::CameraStartRecordingOptions& aOptions,
                                                 nsDOMDeviceStorage& storageArea,
                                                 const nsAString& filename,
-                                                const dom::Optional<dom::OwningNonNull<dom::CameraStartRecordingCallback> >& aOnSuccess,
-                                                const dom::Optional<dom::OwningNonNull<dom::CameraErrorCallback> >& aOnError,
                                                 ErrorResult& aRv);
   void StopRecording(ErrorResult& aRv);
   void ResumePreview(ErrorResult& aRv);
-  already_AddRefed<dom::Promise> ReleaseHardware(const dom::Optional<dom::OwningNonNull<dom::CameraReleaseCallback> >& aOnSuccess,
-                                                 const dom::Optional<dom::OwningNonNull<dom::CameraErrorCallback> >& aOnError,
-                                                 ErrorResult& aRv);
+  already_AddRefed<dom::Promise> ReleaseHardware(ErrorResult& aRv);
   void ResumeContinuousFocus(ErrorResult& aRv);
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
@@ -222,29 +194,6 @@ protected:
   nsRefPtr<dom::Promise>                        mStartRecordingPromise;
   nsRefPtr<dom::Promise>                        mReleasePromise;
   nsRefPtr<dom::Promise>                        mSetConfigurationPromise;
-
-  // solicited camera control event handlers
-  nsRefPtr<dom::GetCameraCallback>              mGetCameraOnSuccessCb;
-  nsRefPtr<dom::CameraErrorCallback>            mGetCameraOnErrorCb;
-  nsRefPtr<dom::CameraAutoFocusCallback>        mAutoFocusOnSuccessCb;
-  nsRefPtr<dom::CameraErrorCallback>            mAutoFocusOnErrorCb;
-  nsRefPtr<dom::CameraTakePictureCallback>      mTakePictureOnSuccessCb;
-  nsRefPtr<dom::CameraErrorCallback>            mTakePictureOnErrorCb;
-  nsRefPtr<dom::CameraStartRecordingCallback>   mStartRecordingOnSuccessCb;
-  nsRefPtr<dom::CameraErrorCallback>            mStartRecordingOnErrorCb;
-  nsRefPtr<dom::CameraReleaseCallback>          mReleaseOnSuccessCb;
-  nsRefPtr<dom::CameraErrorCallback>            mReleaseOnErrorCb;
-  nsRefPtr<dom::CameraSetConfigurationCallback> mSetConfigurationOnSuccessCb;
-  nsRefPtr<dom::CameraErrorCallback>            mSetConfigurationOnErrorCb;
-
-  // unsolicited event handlers
-  nsRefPtr<dom::CameraShutterCallback>          mOnShutterCb;
-  nsRefPtr<dom::CameraClosedCallback>           mOnClosedCb;
-  nsRefPtr<dom::CameraRecorderStateChange>      mOnRecorderStateChangeCb;
-  nsRefPtr<dom::CameraPreviewStateChange>       mOnPreviewStateChangeCb;
-  nsRefPtr<dom::CameraAutoFocusMovingCallback>  mOnAutoFocusMovingCb;
-  nsRefPtr<dom::CameraAutoFocusCallback>        mOnAutoFocusCompletedCb;
-  nsRefPtr<dom::CameraFaceDetectionCallback>    mOnFacesDetectedCb;
 
   // Camera event listener; we only need this weak reference so that
   //  we can remove the listener from the camera when we're done
