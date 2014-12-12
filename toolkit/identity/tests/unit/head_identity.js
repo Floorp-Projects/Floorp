@@ -253,11 +253,4 @@ do_register_cleanup(function() {
   Services.prefs.setBoolPref("identity.fxaccounts.enabled", initialPrefFXAValue);
 });
 
-do_register_cleanup(function tail_identity() {
-  // Pre-emptively shut down to clear resources.
-  if (typeof IdentityService !== "undefined") {
-    IdentityService.shutdown();
-  } else if (typeof IDService !== "undefined") {
-    IDService.shutdown();
-  }
-});
+
