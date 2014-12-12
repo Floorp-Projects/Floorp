@@ -433,6 +433,9 @@ MediaEngineWebRTCVideoSource::Stop(SourceMediaStream *aSource, TrackID aID)
     // Already stopped - this is allowed
     return NS_OK;
   }
+
+  aSource->EndTrack(aID);
+
   if (!mSources.IsEmpty()) {
     return NS_OK;
   }
@@ -443,7 +446,6 @@ MediaEngineWebRTCVideoSource::Stop(SourceMediaStream *aSource, TrackID aID)
   {
     MonitorAutoLock lock(mMonitor);
     mState = kStopped;
-    aSource->EndTrack(aID);
     // Drop any cached image so we don't start with a stale image on next
     // usage
     mImage = nullptr;
