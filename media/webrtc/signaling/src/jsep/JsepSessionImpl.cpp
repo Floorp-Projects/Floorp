@@ -1037,6 +1037,7 @@ JsepSessionImpl::NegotiateTrack(const SdpMediaSection& remoteMsection,
     }
 
     negotiatedDetails->mCodecs.push_back(negotiated);
+    break;
   }
 
   if (negotiatedDetails->mCodecs.empty()) {
