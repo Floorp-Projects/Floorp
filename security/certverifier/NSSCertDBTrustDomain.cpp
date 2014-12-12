@@ -13,7 +13,6 @@
 #include "NSSErrorsService.h"
 #include "OCSPRequestor.h"
 #include "certdb.h"
-#include "mozilla/Telemetry.h"
 #include "nss.h"
 #include "pk11pub.h"
 #include "pkix/pkix.h"
@@ -68,6 +67,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
   , mMinimumNonECCBits(forEV ? MINIMUM_NON_ECC_BITS_EV : MINIMUM_NON_ECC_BITS_DV)
   , mHostname(hostname)
   , mBuiltChain(builtChain)
+  , mOCSPStaplingStatus(CertVerifier::OCSP_STAPLING_NEVER_CHECKED)
 {
 }
 
@@ -383,7 +383,7 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
                                              ResponseWasStapled, expired);
     if (stapledOCSPResponseResult == Success) {
       // stapled OCSP response present and good
-      Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 1);
+      mOCSPStaplingStatus = CertVerifier::OCSP_STAPLING_GOOD;
       PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
              ("NSSCertDBTrustDomain: stapled OCSP response: good"));
       return Success;
@@ -391,19 +391,19 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
     if (stapledOCSPResponseResult == Result::ERROR_OCSP_OLD_RESPONSE ||
         expired) {
       // stapled OCSP response present but expired
-      Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 3);
+      mOCSPStaplingStatus = CertVerifier::OCSP_STAPLING_EXPIRED;
       PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
              ("NSSCertDBTrustDomain: expired stapled OCSP response"));
     } else {
       // stapled OCSP response present but invalid for some reason
-      Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 4);
+      mOCSPStaplingStatus = CertVerifier::OCSP_STAPLING_INVALID;
       PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
              ("NSSCertDBTrustDomain: stapled OCSP response: failure"));
       return stapledOCSPResponseResult;
     }
   } else {
     // no stapled OCSP response
-    Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 2);
+    mOCSPStaplingStatus = CertVerifier::OCSP_STAPLING_NONE;
     PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
            ("NSSCertDBTrustDomain: no stapled OCSP response"));
   }
