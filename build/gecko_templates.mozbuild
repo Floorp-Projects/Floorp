@@ -154,12 +154,11 @@ def GeckoFramework(name, **kwargs):
 
 
 @template
-def XPCOMBinaryComponent(name):
+def XPCOMBinaryComponent(name, **kwargs):
     '''Template defining an XPCOM binary component for Gecko.
 
     `name` is the name of the component.
     '''
-    GeckoSharedLibrary(name)
+    GeckoSharedLibrary(name, **kwargs)
 
     IS_COMPONENT = True
-
