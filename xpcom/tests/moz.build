@@ -9,6 +9,7 @@ TEST_DIRS += [
     'component',
     'bug656331_component',
     'component_no_aslr',
+    'gtest',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

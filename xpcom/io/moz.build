@@ -83,10 +83,14 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'Base64.h',
+    'SnappyCompressOutputStream.h',
+    'SnappyFrameUtils.h',
+    'SnappyUncompressInputStream.h',
 ]
 
 UNIFIED_SOURCES += [
     'Base64.cpp',
+    'crc32c.c',
     'nsAnonymousTemporaryFile.cpp',
     'nsAppFileLocationProvider.cpp',
     'nsBinaryStream.cpp',
@@ -107,6 +111,9 @@ UNIFIED_SOURCES += [
     'nsStringStream.cpp',
     'nsUnicharInputStream.cpp',
     'nsWildCard.cpp',
+    'SnappyCompressOutputStream.cpp',
+    'SnappyFrameUtils.cpp',
+    'SnappyUncompressInputStream.cpp',
     'SpecialSystemDirectory.cpp',
 ]
 
