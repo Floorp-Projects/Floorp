@@ -94,6 +94,7 @@ UNIFIED_SOURCES += [
     'nsTextRunTransformations.cpp',
     'nsVideoFrame.cpp',
     'nsViewportFrame.cpp',
+    'RubyUtils.cpp',
     'ScrollbarActivity.cpp',
     'StickyScrollContainer.cpp',
     'TextOverflow.cpp',
