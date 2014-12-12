@@ -15,9 +15,6 @@ Cu.import("resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "BrowserNewTabPreloader",
-  "resource:///modules/BrowserNewTabPreloader.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizationTabPreloader",
   "resource:///modules/CustomizationTabPreloader.jsm");
 
@@ -504,7 +501,13 @@ Tester.prototype = {
             Cu.import("resource://gre/modules/BackgroundPageThumbs.jsm", {});
           BackgroundPageThumbs._destroy();
 
-          BrowserNewTabPreloader.uninit();
+          // Destroy preloaded browsers.
+          if (gBrowser._preloadedBrowser) {
+            let browser = gBrowser._preloadedBrowser;
+            gBrowser._preloadedBrowser = null;
+            gBrowser.getNotificationBox(browser).remove();
+          }
+
           CustomizationTabPreloader.uninit();
           SocialFlyout.unload();
           SocialShare.uninit();

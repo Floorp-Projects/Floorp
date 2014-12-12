@@ -29,6 +29,9 @@
 #include "nsString.h"
 #include "ReportInternalError.h"
 
+// Include this last to avoid path problems on Windows.
+#include "ActorsChild.h"
+
 namespace mozilla {
 namespace dom {
 namespace indexedDB {
@@ -75,19 +78,10 @@ IDBRequest::InitMembers()
   AssertIsOnOwningThread();
 
   mResultVal.setUndefined();
+  mLoggingSerialNumber = NextSerialNumber();
   mErrorCode = NS_OK;
   mLineNo = 0;
   mHaveResultOrErrorCode = false;
-
-#ifdef MOZ_ENABLE_PROFILER_SPS
-  {
-    BackgroundChildImpl::ThreadLocal* threadLocal =
-      BackgroundChildImpl::GetThreadLocalForCurrentThread();
-    MOZ_ASSERT(threadLocal);
-
-    mSerialNumber = threadLocal->mNextRequestSerialNumber++;
-  }
-#endif
 }
 
 // static
@@ -140,6 +134,28 @@ IDBRequest::Create(IDBIndex* aSourceAsIndex,
 }
 
 // static
+uint64_t
+IDBRequest::NextSerialNumber()
+{
+  BackgroundChildImpl::ThreadLocal* threadLocal =
+    BackgroundChildImpl::GetThreadLocalForCurrentThread();
+  MOZ_ASSERT(threadLocal);
+
+  ThreadLocal* idbThreadLocal = threadLocal->mIndexedDBThreadLocal;
+  MOZ_ASSERT(idbThreadLocal);
+
+  return idbThreadLocal->NextRequestSN();
+}
+
+void
+IDBRequest::SetLoggingSerialNumber(uint64_t aLoggingSerialNumber)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aLoggingSerialNumber > mLoggingSerialNumber);
+
+  mLoggingSerialNumber = aLoggingSerialNumber;
+}
+
 void
 IDBRequest::CaptureCaller(nsAString& aFilename, uint32_t* aLineNo)
 {
