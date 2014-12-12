@@ -63,28 +63,7 @@ Debugger.Object.prototype.getPromiseState = function () {
  */
 function BreakpointActorMap() {
   this._size = 0;
-
-  // If we have a whole-line breakpoint set at LINE in URL, then
-  //
-  //   this._wholeLineBreakpoints[URL][LINE]
-  //
-  // is an object
-  //
-  //   { url, line[, actor] }
-  //
-  // where the `actor` property is optional.
-  this._wholeLineBreakpoints = Object.create(null);
-
-  // If we have a breakpoint set at LINE, COLUMN in URL, then
-  //
-  //   this._breakpoints[URL][LINE][COLUMN]
-  //
-  // is an object
-  //
-  //   { url, line, column[, actor] }
-  //
-  // where the `actor` property is optional.
-  this._breakpoints = Object.create(null);
+  this._actors = {};
 }
 
 BreakpointActorMap.prototype = {
@@ -111,28 +90,28 @@ BreakpointActorMap.prototype = {
    *        - column (optional, requires line)
    */
   findActors: function* (query = {}) {
-    if (query.column != null) {
-      dbg_assert(query.line != null);
-    }
-    if (query.line != null) {
-      dbg_assert(query.source != null);
-      dbg_assert(query.source.actor != null);
-    }
-
-    let actor = query.source ? query.source.actor : null;
-    for (let actor of this._iterActors(actor)) {
-      for (let line of this._iterLines(actor, query.line)) {
-        // Always yield whole line breakpoints first. See comment in
-        // |BreakpointActorMap.prototype.getActor|.
-        if (query.column == null
-            && this._wholeLineBreakpoints[actor]
-            && this._wholeLineBreakpoints[actor][line]) {
-          yield this._wholeLineBreakpoints[actor][line];
-        }
-        for (let column of this._iterColumns(actor, line, query.column)) {
-          yield this._breakpoints[actor][line][column];
+    function* findKeys(object, key) {
+      if (key !== undefined) {
+        if (key in object) {
+          yield key;
         }
       }
+      else {
+        for (let key of Object.keys(object)) {
+          yield key;
+        }
+      }
+    }
+
+    query.actor = query.source ? query.source.actor : undefined;
+    query.beginColumn = query.column ? query.column : undefined;
+    query.endColumn = query.column ? query.column + 1 : undefined;
+
+    for (let actor of findKeys(this._actors, query.actor))
+    for (let line of findKeys(this._actors[actor], query.line))
+    for (let beginColumn of findKeys(this._actors[actor][line], query.beginColumn))
+    for (let endColumn of findKeys(this._actors[actor][line][beginColumn], query.endColumn)) {
+      yield this._actors[actor][line][beginColumn][endColumn];
     }
   },
 
@@ -150,15 +129,7 @@ BreakpointActorMap.prototype = {
    *          The instance of BreakpointActor at the given location.
    */
   getActor: function (location) {
-    let { source: { actor }, line, column } = location;
-
-    dbg_assert(actor != null);
-    dbg_assert(line != null);
     for (let actor of this.findActors(location)) {
-      // We will get whole line breakpoints before individual columns, so just
-      // return the first one and if they didn't specify a column then they will
-      // get the whole line breakpoint, and otherwise we will find the correct
-      // one.
       return actor;
     }
 
@@ -181,31 +152,22 @@ BreakpointActorMap.prototype = {
   setActor: function (location, actor) {
     let { source, line, column } = location;
 
-    if (column != null) {
-      if (!this._breakpoints[source.actor]) {
-        this._breakpoints[source.actor] = [];
-      }
-      if (!this._breakpoints[source.actor][line]) {
-        this._breakpoints[source.actor][line] = [];
-      }
+    let beginColumn = column ? column : 0;
+    let endColumn = column ? column + 1 : Infinity;
 
-      if (!this._breakpoints[source.actor][line][column]) {
-        this._breakpoints[source.actor][line][column] = actor;
-        this._size++;
-      }
-      return this._breakpoints[source.actor][line][column];
-    } else {
-      // Add a breakpoint that breaks on the whole line.
-      if (!this._wholeLineBreakpoints[source.actor]) {
-        this._wholeLineBreakpoints[source.actor] = [];
-      }
-
-      if (!this._wholeLineBreakpoints[source.actor][line]) {
-        this._wholeLineBreakpoints[source.actor][line] = actor;
-        this._size++;
-      }
-      return this._wholeLineBreakpoints[source.actor][line];
+    if (!this._actors[source.actor]) {
+      this._actors[source.actor] = [];
     }
+    if (!this._actors[source.actor][line]) {
+      this._actors[source.actor][line] = [];
+    }
+    if (!this._actors[source.actor][line][beginColumn]) {
+      this._actors[source.actor][line][beginColumn] = [];
+    }
+    if (!this._actors[source.actor][line][beginColumn][endColumn]) {
+      ++this._size;
+    }
+    this._actors[source.actor][line][beginColumn][endColumn] = actor;
   },
 
   /**
@@ -219,99 +181,28 @@ BreakpointActorMap.prototype = {
    *        - column (optional)
    */
   deleteActor: function (location) {
-    let { source: { actor }, line, column } = location;
+    let { source, line, column } = location;
 
-    if (column != null) {
-      if (this._breakpoints[actor]) {
-        if (this._breakpoints[actor][line]) {
-          if (this._breakpoints[actor][line][column]) {
-            delete this._breakpoints[actor][line][column];
-            this._size--;
+    let beginColumn = column ? column : 0;
+    let endColumn = column ? column + 1 : Infinity;
 
-            // If this was the last breakpoint on this line, delete the line from
-            // `this._breakpoints[url]` as well. Otherwise `_iterLines` will yield
-            // this line even though we no longer have breakpoints on
-            // it. Furthermore, we use Object.keys() instead of just checking
-            // `this._breakpoints[url].length` directly, because deleting
-            // properties from sparse arrays doesn't update the `length` property
-            // like adding them does.
-            if (Object.keys(this._breakpoints[actor][line]).length === 0) {
-              delete this._breakpoints[actor][line];
-            }
+    if (this._actors[source.actor]) {
+      if (this._actors[source.actor][line]) {
+        if (this._actors[source.actor][line][beginColumn]) {
+          if (this._actors[source.actor][line][beginColumn][endColumn]) {
+            --this._size;
+          }
+          delete this._actors[source.actor][line][beginColumn][endColumn];
+          if (Object.keys(this._actors[source.actor][line][beginColumn]).length === 0) {
+            delete this._actors[source.actor][line][beginColumn];
           }
         }
-      }
-    } else {
-      if (this._wholeLineBreakpoints[actor]) {
-        if (this._wholeLineBreakpoints[actor][line]) {
-          delete this._wholeLineBreakpoints[actor][line];
-          this._size--;
+        if (Object.keys(this._actors[source.actor][line]).length === 0) {
+          delete this._actors[source.actor][line];
         }
       }
     }
-  },
-
-  _iterActors: function* (aActor) {
-    if (aActor) {
-      if (this._breakpoints[aActor] || this._wholeLineBreakpoints[aActor]) {
-        yield aActor;
-      }
-    } else {
-      for (let actor of Object.keys(this._wholeLineBreakpoints)) {
-        yield actor;
-      }
-      for (let actor of Object.keys(this._breakpoints)) {
-        if (actor in this._wholeLineBreakpoints) {
-          continue;
-        }
-        yield actor;
-      }
-    }
-  },
-
-  _iterLines: function* (aActor, aLine) {
-    if (aLine != null) {
-      if ((this._wholeLineBreakpoints[aActor]
-           && this._wholeLineBreakpoints[aActor][aLine])
-          || (this._breakpoints[aActor] && this._breakpoints[aActor][aLine])) {
-        yield aLine;
-      }
-    } else {
-      const wholeLines = this._wholeLineBreakpoints[aActor]
-        ? Object.keys(this._wholeLineBreakpoints[aActor])
-        : [];
-      const columnLines = this._breakpoints[aActor]
-        ? Object.keys(this._breakpoints[aActor])
-        : [];
-
-      const lines = wholeLines.concat(columnLines).sort();
-
-      let lastLine;
-      for (let line of lines) {
-        if (line === lastLine) {
-          continue;
-        }
-        yield line;
-        lastLine = line;
-      }
-    }
-  },
-
-  _iterColumns: function* (aActor, aLine, aColumn) {
-    if (!this._breakpoints[aActor] || !this._breakpoints[aActor][aLine]) {
-      return;
-    }
-
-    if (aColumn != null) {
-      if (this._breakpoints[aActor][aLine][aColumn]) {
-        yield aColumn;
-      }
-    } else {
-      for (let column in this._breakpoints[aActor][aLine]) {
-        yield column;
-      }
-    }
-  },
+  }
 };
 
 exports.BreakpointActorMap = BreakpointActorMap;
@@ -1293,7 +1184,7 @@ ThreadActor.prototype = {
     for (let line = 0, n = offsets.length; line < n; line++) {
       if (offsets[line]) {
         let location = { line: line };
-        let resp = sourceActor._setBreakpoint(location);
+        let resp = sourceActor.setBreakpoint(location);
         dbg_assert(!resp.actualLocation, "No actualLocation should be returned");
         if (resp.error) {
           reportError(new Error("Unable to set breakpoint on event listener"));
@@ -2116,7 +2007,7 @@ ThreadActor.prototype = {
       // Limit the search to the line numbers contained in the new script.
       if (bpActor.location.line >= aScript.startLine
           && bpActor.location.line <= endLine) {
-        source._setBreakpoint(bpActor.location, aScript);
+        source.setBreakpoint(bpActor.location, aScript);
       }
     }
 
@@ -2800,7 +2691,7 @@ SourceActor.prototype = {
 
   _createBreakpoint: function(loc, originalLoc, condition) {
     return resolve(null).then(() => {
-      return this._setBreakpoint({
+      return this.setBreakpoint({
         line: loc.line,
         column: loc.column,
         condition: condition
@@ -2993,7 +2884,7 @@ SourceActor.prototype = {
    *        If provided, only set breakpoints in this Debugger.Script, and
    *        nowhere else.
    */
-  _setBreakpoint: function (aLocation, aOnlyThisScript=null) {
+  setBreakpoint: function (aLocation, aOnlyThisScript=null) {
     const location = {
       source: this.form(),
       line: aLocation.line,

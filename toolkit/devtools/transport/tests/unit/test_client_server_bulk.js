@@ -134,7 +134,7 @@ let replyHandlers = {
 
 /*** Tests ***/
 
-function test_bulk_request_cs(transportFactory, actorType, replyType) {
+let test_bulk_request_cs = Task.async(function*(transportFactory, actorType, replyType) {
   // Ensure test files are not present from a failed run
   cleanup_files();
   writeTestTempFile("bulk-input", really_long());
@@ -143,7 +143,7 @@ function test_bulk_request_cs(transportFactory, actorType, replyType) {
   let serverDeferred = promise.defer();
   let bulkCopyDeferred = promise.defer();
 
-  let transport = transportFactory();
+  let transport = yield transportFactory();
 
   let client = new DebuggerClient(transport);
   client.connect((app, traits) => {
@@ -186,9 +186,9 @@ function test_bulk_request_cs(transportFactory, actorType, replyType) {
     bulkCopyDeferred.promise,
     serverDeferred.promise
   ]);
-}
+});
 
-function test_json_request_cs(transportFactory, actorType, replyType) {
+let test_json_request_cs = Task.async(function*(transportFactory, actorType, replyType) {
   // Ensure test files are not present from a failed run
   cleanup_files();
   writeTestTempFile("bulk-input", really_long());
@@ -196,7 +196,7 @@ function test_json_request_cs(transportFactory, actorType, replyType) {
   let clientDeferred = promise.defer();
   let serverDeferred = promise.defer();
 
-  let transport = transportFactory();
+  let transport = yield transportFactory();
 
   let client = new DebuggerClient(transport);
   client.connect((app, traits) => {
@@ -227,7 +227,7 @@ function test_json_request_cs(transportFactory, actorType, replyType) {
     clientDeferred.promise,
     serverDeferred.promise
   ]);
-}
+});
 
 /*** Test Utils ***/
 

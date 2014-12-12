@@ -26,9 +26,9 @@ function run_test() {
 
 /*** Tests ***/
 
-function test_bulk_send_error(transportFactory) {
+let test_bulk_send_error = Task.async(function*(transportFactory) {
   let deferred = promise.defer();
-  let transport = transportFactory();
+  let transport = yield transportFactory();
 
   let client = new DebuggerClient(transport);
   client.connect((app, traits) => {
@@ -45,4 +45,4 @@ function test_bulk_send_error(transportFactory) {
   });
 
   return deferred.promise;
-}
+});

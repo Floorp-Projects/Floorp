@@ -73,10 +73,8 @@
               accesskey="&removeallpermissions.accesskey;" 
               oncommand="gPermissionManager.onAllPermissionsDeleted();"/>
       <spacer flex="1"/>
-#ifndef XP_MACOSX
       <button oncommand="close();" icon="close"
               label="&button.close.label;" accesskey="&button.close.accesskey;"/>
-#endif
     </hbox>
   </hbox>
 </window>

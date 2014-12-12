@@ -12,6 +12,7 @@ let { DebuggerClient } =
   Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
 let { ViewHelpers } =
   Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
+let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 
 /**
  * Shortcuts for accessing various debugger preferences.
@@ -23,13 +24,13 @@ let Prefs = new ViewHelpers.Prefs("devtools.debugger", {
 
 let gToolbox, gClient;
 
-function connect() {
+let connect = Task.async(function*() {
   window.removeEventListener("load", connect);
   // Initiate the connection
-  let transport = DebuggerClient.socketConnect(
-    Prefs.chromeDebuggingHost,
-    Prefs.chromeDebuggingPort
-  );
+  let transport = yield DebuggerClient.socketConnect({
+    host: Prefs.chromeDebuggingHost,
+    port: Prefs.chromeDebuggingPort
+  });
   gClient = new DebuggerClient(transport);
   gClient.connect(() => {
     let addonID = getParameterByName("addonID");
@@ -43,7 +44,7 @@ function connect() {
       gClient.listTabs(openToolbox);
     }
   });
-}
+});
 
 // Certain options should be toggled since we can assume chrome debugging here
 function setPrefDefaults() {
@@ -56,7 +57,7 @@ window.addEventListener("load", function() {
   let cmdClose = document.getElementById("toolbox-cmd-close");
   cmdClose.addEventListener("command", onCloseCommand);
   setPrefDefaults();
-  connect();
+  connect().catch(Cu.reportError);
 });
 
 function onCloseCommand(event) {

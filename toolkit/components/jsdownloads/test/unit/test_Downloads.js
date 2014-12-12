@@ -61,6 +61,31 @@ add_task(function test_createDownload_public()
 });
 
 /**
+ * Tests createDownload for a pdf saver throws if only given a url.
+ */
+add_task(function test_createDownload_pdf()
+{
+  let download = yield Downloads.createDownload({
+    source: { url: "about:blank" },
+    target: { path: getTempFile(TEST_TARGET_FILE_NAME).path },
+    saver: { type: "pdf" },
+  });
+
+  try {
+    yield download.start();
+    do_throw("The download should have failed.");
+  } catch (ex if ex instanceof Downloads.Error && ex.becauseSourceFailed) { }
+
+  do_check_false(download.succeeded);
+  do_check_true(download.stopped);
+  do_check_false(download.canceled);
+  do_check_true(download.error !== null);
+  do_check_true(download.error.becauseSourceFailed);
+  do_check_false(download.error.becauseTargetFailed);
+  do_check_false(yield OS.File.exists(download.target.path));
+});
+
+/**
  * Tests "fetch" with nsIURI and nsIFile as arguments.
  */
 add_task(function test_fetch_uri_file_arguments()

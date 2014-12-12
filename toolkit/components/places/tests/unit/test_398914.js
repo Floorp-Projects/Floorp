@@ -97,7 +97,7 @@ function run_test() {
   // that the modified date of bm2, otherwise in case of a "tie"
   // bm2 will win, as it has a bigger item id
   if (bm1lm == bm2lm) 
-    bmsvc.setItemLastModified(bm1, bm2lm + 1);
+    bmsvc.setItemLastModified(bm1, bm2lm + 1000);
 
   [url, postdata] = PlacesUtils.getURLAndPostDataForKeyword("foo");
   do_check_eq(testURI.spec, url);

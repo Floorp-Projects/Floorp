@@ -1,0 +1,46 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+// Test the xpcshell-test debug support.  Ideally we should have this test
+// next to the xpcshell support code, but that's tricky...
+
+function run_test() {
+  let testFile = do_get_file("xpcshell_debugging_script.js");
+
+  // _setupDebuggerServer is from xpcshell-test's head.js
+  let testResumed = false;
+  let DebuggerServer = _setupDebuggerServer([testFile.path], () => testResumed = true);
+  let transport = DebuggerServer.connectPipe();
+  let client = new DebuggerClient(transport);
+  client.connect(() => {
+    // Even though we have no tabs, listTabs gives us the chromeDebugger.
+    client.listTabs(response => {
+      let chromeDebugger = response.chromeDebugger;
+      client.attachThread(chromeDebugger, (response, threadClient) => {
+        threadClient.addOneTimeListener("paused", (event, packet) => {
+        equal(packet.why.type, "breakpoint",
+              "yay - hit the breakpoint at the first line in our script");
+          // Resume again - next stop should be our "debugger" statement.
+          threadClient.addOneTimeListener("paused", (event, packet) => {
+            equal(packet.why.type, "debuggerStatement",
+                  "yay - hit the 'debugger' statement in our script");
+            threadClient.resume(() => {
+              finishClient(client);
+            });
+          });
+          threadClient.resume();
+        });
+        // tell the thread to do the initial resume.  This would cause the
+        // xpcshell test harness to resume and load the file under test.
+        threadClient.resume(response => {
+          // should have been told to resume the test itself.
+          ok(testResumed);
+          // Now load our test script.
+          load(testFile.path);
+          // and our "paused" listener above should get hit.
+        });
+      });
+    });
+  });
+  do_test_pending();
+}
