@@ -680,6 +680,10 @@ body[dir=rtl] .generate-url-spinner {
   background: transparent url(../img/svg/glyph-settings-16x16.svg) no-repeat center center;
 }
 
+.settings-menu .icon-tour {
+  background: transparent url("../img/icons-16x16.svg#tour") no-repeat center center;
+}
+
 .settings-menu .icon-account {
   background: transparent url(../img/svg/glyph-account-16x16.svg) no-repeat center center;
 }
