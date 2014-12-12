@@ -2354,6 +2354,8 @@ pref("dom.ipc.tabs.shutdownTimeoutSecs", 0);
 pref("dom.ipc.plugins.java.enabled", false);
 #endif
 
+pref("dom.ipc.plugins.flash.disable-protected-mode", false);
+
 pref("dom.ipc.plugins.flash.subprocess.crashreporter.enabled", true);
 pref("dom.ipc.plugins.reportCrashURL", true);
 

@@ -409,7 +409,7 @@ GetNewPluginLibrary(nsPluginTag *aPluginTag)
   }
 
   if (nsNPAPIPlugin::RunPluginOOP(aPluginTag)) {
-    return PluginModuleChromeParent::LoadModule(aPluginTag->mFullPath.get(), aPluginTag->mId);
+    return PluginModuleChromeParent::LoadModule(aPluginTag->mFullPath.get(), aPluginTag->mId, aPluginTag);
   }
   return new PluginPRLibrary(aPluginTag->mFullPath.get(), aPluginTag->mLibrary);
 }
