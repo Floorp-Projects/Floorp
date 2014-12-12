@@ -2312,7 +2312,9 @@ CCGraphBuilder::NoteNativeChild(void* aChild,
   }
 
   MOZ_ASSERT(aParticipant, "Need a nsCycleCollectionParticipant!");
-  NoteChild(aChild, aParticipant, edgeName);
+  if (!aParticipant->CanSkipThis(aChild) || WantAllTraces()) {
+    NoteChild(aChild, aParticipant, edgeName);
+  }
 }
 
 NS_IMETHODIMP_(void)
