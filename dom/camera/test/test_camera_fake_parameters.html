@@ -36,7 +36,7 @@ function end() {
 }
 function next() {
   if (cameraObj) {
-    cameraObj.release(
+    cameraObj.release().then(
       function success() {
         CameraTest.next();
       },
@@ -345,7 +345,7 @@ var tests = [
         run();
       });
     },
-    test: function testFakeFocusAreas(cam, cap) {
+    test: function testFakePictureSizes(cam, cap) {
       // validate the capability attribute
       ok(cap.pictureSizes.length == 3, "pictureSizes.length = " + cap.pictureSizes.length);
       var found = 0;
@@ -368,7 +368,7 @@ var tests = [
         // settings are applied. Yes--this is an ugly hack.
         cam.setConfiguration({ mode: 'video',
                                recorderProfile: 'weird-unsupported-profile'
-                             }, resolve, resolve);
+                             }).then(resolve, resolve);
       });
       var sizeGenerator = function() {
         var sizes = [ { height: 3264, width: 1836 },
