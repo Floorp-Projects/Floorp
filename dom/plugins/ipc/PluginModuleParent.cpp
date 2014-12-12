@@ -31,6 +31,7 @@
 #include "nsPrintfCString.h"
 #include "prsystem.h"
 #include "GeckoProfiler.h"
+#include "nsPluginTags.h"
 
 #ifdef XP_WIN
 #include "PluginHangUIParent.h"
@@ -153,7 +154,8 @@ PluginModuleContentParent::Create(mozilla::ipc::Transport* aTransport,
 
 // static
 PluginLibrary*
-PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId)
+PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId,
+                                     nsPluginTag* aPluginTag)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
 
@@ -190,6 +192,13 @@ PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId)
     mozilla::MutexAutoLock lock(parent->mCrashReporterMutex);
     parent->mCrashReporter = parent->CrashReporter();
 #endif
+#endif
+
+#ifdef XP_WIN
+    if (aPluginTag->mIsFlashPlugin &&
+        Preferences::GetBool("dom.ipc.plugins.flash.disable-protected-mode", false)) {
+        parent->SendDisableFlashProtectedMode();
+    }
 #endif
 
     return parent.forget();
