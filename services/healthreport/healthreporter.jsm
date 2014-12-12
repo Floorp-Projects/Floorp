@@ -337,6 +337,10 @@ function AbstractHealthReporter(branch, policy, sessionRecorder) {
   let hasFirstRun = this._prefs.get("service.firstRun", false);
   this._initHistogram = hasFirstRun ? TELEMETRY_INIT : TELEMETRY_INIT_FIRSTRUN;
   this._dbOpenHistogram = hasFirstRun ? TELEMETRY_DB_OPEN : TELEMETRY_DB_OPEN_FIRSTRUN;
+
+  // This is set to the name of the provider that we are currently shutting down, if any.
+  // It is used for AsyncShutdownTimeout diagnostics.
+  this._currentProviderInShutdown = null;
 }
 
 AbstractHealthReporter.prototype = Object.freeze({
@@ -407,7 +411,8 @@ AbstractHealthReporter.prototype = Object.freeze({
             storageInProgress: this._storageInProgress,
             hasProviderManager: !!this._providerManager,
             hasStorage: !!this._storage,
-            shutdownComplete: this._shutdownComplete
+            shutdownComplete: this._shutdownComplete,
+            currentProviderInShutdown: this._currentProviderInShutdown,
           }));
 
       try {
@@ -612,6 +617,8 @@ AbstractHealthReporter.prototype = Object.freeze({
           this._log.info("Shutting down provider manager.");
           for (let provider of this._providerManager.providers) {
             try {
+              this._log.info("Shutting down provider: " + provider.name);
+              this._currentProviderInShutdown = provider.name;
               yield provider.shutdown();
             } catch (ex) {
               this._log.warn("Error when shutting down provider: " +
@@ -620,6 +627,7 @@ AbstractHealthReporter.prototype = Object.freeze({
           }
           this._log.info("Provider manager shut down.");
           this._providerManager = null;
+          this._currentProviderInShutdown = null;
           this._onProviderManagerShutdown();
         }
         if (this._storage) {
