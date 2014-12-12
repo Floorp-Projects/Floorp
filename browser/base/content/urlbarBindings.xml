@@ -1042,8 +1042,6 @@
 
         let addEngines = getBrowser().mCurrentBrowser.engines;
         if (addEngines && addEngines.length > 0) {
-          const kBundleURI = "chrome://browser/locale/search.properties";
-          let bundle = Services.strings.createBundle(kBundleURI);
           for (let engine of addEngines) {
             let button = document.createElementNS(kXULNS, "button");
             let label = bundle.formatStringFromName("cmd_addFoundEngine",
