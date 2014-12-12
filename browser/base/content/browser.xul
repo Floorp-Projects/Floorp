@@ -982,6 +982,7 @@
                      tooltiptext="&navbarOverflow.label;"/>
 
       <toolbaritem id="PanelUI-button"
+                   class="chromeclass-toolbar-additional"
                    removable="false">
         <toolbarbutton id="PanelUI-menu-button"
                        class="toolbarbutton-1"
