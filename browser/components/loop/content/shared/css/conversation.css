@@ -512,6 +512,36 @@
   background-position: center;
 }
 
+/*
+ * Ensure that the publisher (i.e. local) video is never cropped, so that it's
+ * not possible for someone to be presented with a picture that displays
+ * (for example) a person from the neck up, even though the camera is capturing
+ * and transmitting a picture of that person from the waist up.
+ *
+ * The !importants are necessary to override the SDK attempts to avoid
+ * letterboxing entirely.
+ *
+ * If we could easily use test video streams with the SDK (eg if initPublisher
+ * supported something like a "testMediaToStreamURI" parameter that it would
+ * use to source the stream rather than the output of gUM, it wouldn't be too
+ * hard to generate a video with a 1 pixel border at the edges that one could
+ * at least visually see wasn't being cropped.
+ *
+ * Another less ugly possibility would be to work with Ted Mielczarek to use
+ * the fake camera drivers he has for Linux.
+ */
+.room-conversation .OT_publisher .OT_video-container {
+  height: 100% !important;
+  width: 100% !important;
+  top: 0 !important;
+  left: 0 !important;
+  background-color: transparent; /* avoid visually obvious letterboxing */
+}
+
+.room-conversation .OT_publisher .OT_video-container video {
+  background-color: transparent; /* avoid visually obvious letterboxing */
+}
+
 .fx-embedded .media.nested {
   min-height: 200px;
 }
