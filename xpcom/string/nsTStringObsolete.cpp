@@ -466,14 +466,6 @@ nsTString_CharT::ReplaceSubstring( const self_type& aTarget, const self_type& aN
   if (aTarget.Length() == 0)
     return;
 
-  struct Segment {
-    uint32_t mBegin, mLength;
-    Segment(uint32_t aBegin, uint32_t aLength)
-      : mBegin(aBegin)
-      , mLength(aLength)
-    {}
-  };
-
   // Remember all of the non-matching parts.
   nsAutoTArray<Segment, 16> nonMatching;
   uint32_t i = 0;

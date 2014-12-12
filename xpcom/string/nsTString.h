@@ -463,6 +463,14 @@ protected:
     : substring_type(aData, aLength, aFlags)
   {
   }
+
+  struct Segment {
+    uint32_t mBegin, mLength;
+    Segment(uint32_t aBegin, uint32_t aLength)
+      : mBegin(aBegin)
+      , mLength(aLength)
+    {}
+  };
 };
 
 
