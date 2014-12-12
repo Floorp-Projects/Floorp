@@ -231,13 +231,3 @@ function oldDownloadManagerDisabled() {
   }
   return false;
 }
-
-do_register_cleanup(function tail_download_manager() {
-  add_task(function test_common_terminate() {
-    // Stop the HTTP server.  We must do this inside a task in "tail.js" until the
-    // xpcshell testing framework supports asynchronous termination functions.
-    let deferred = Promise.defer();
-    gHttpServer.stop(deferred.resolve);
-    yield deferred.promise;
-  });
-});

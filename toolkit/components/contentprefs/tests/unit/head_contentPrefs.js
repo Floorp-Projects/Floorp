@@ -164,7 +164,3 @@ if (!inChildProcess()) {
   prefBranch.setBoolPref("browser.preferences.content.log", true);
 }
 
-do_register_cleanup(function tail_contentPrefs() {
-  ContentPrefTest.deleteDatabase();
-  ContentPrefTest.__dirSvc = null;
-});
