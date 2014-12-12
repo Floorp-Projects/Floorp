@@ -46,6 +46,7 @@ int         sLastFrameNumber = 0;
 int         sInitCount = 0; // Each init must have a matched shutdown.
 static bool sIsProfiling = false; // is raced on
 static bool sIsGPUProfiling = false; // is raced on
+static bool sIsLayersDump = false; // is raced on
 
 // env variables to control the profiler
 const char* PROFILER_MODE = "MOZ_PROFILER_MODE";
@@ -700,6 +701,8 @@ const char** mozilla_sampler_get_features()
     "threads",
     // Do not include user-identifiable information
     "privacy",
+    // Dump the layer tree with the textures.
+    "layersdump",
     // Add main thread I/O to the profile
     "mainthreadio",
     // Add RSS collection
@@ -798,6 +801,7 @@ void mozilla_sampler_start(int aProfileEntries, double aInterval,
 
   sIsProfiling = true;
   sIsGPUProfiling = t->ProfileGPU();
+  sIsLayersDump = t->LayersDump();
 
   if (Sampler::CanNotifyObservers()) {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
@@ -867,6 +871,8 @@ void mozilla_sampler_stop()
   sInterposeObserver = nullptr;
 
   sIsProfiling = false;
+  sIsGPUProfiling = false;
+  sIsLayersDump = false;
 
   if (Sampler::CanNotifyObservers()) {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
@@ -905,6 +911,10 @@ bool mozilla_sampler_feature_active(const char* aName)
 
   if (strcmp(aName, "gpu") == 0) {
     return sIsGPUProfiling;
+  }
+
+  if (strcmp(aName, "layersdump") == 0) {
+    return sIsLayersDump;
   }
 
   return false;
