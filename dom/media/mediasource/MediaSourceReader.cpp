@@ -268,7 +268,7 @@ MediaSourceReader::OnVideoNotDecoded(NotDecodedReason aReason)
   // switching to the end of the buffered range.
   MOZ_ASSERT(aReason == END_OF_STREAM);
   if (mVideoReader) {
-    AdjustEndTime(&mLastVideoTime, mAudioReader);
+    AdjustEndTime(&mLastVideoTime, mVideoReader);
   }
 
   // See if we can find a different reader that can pick up where we left off. We use the
