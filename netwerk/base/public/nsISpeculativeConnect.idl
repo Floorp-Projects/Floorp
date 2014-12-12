@@ -35,7 +35,7 @@ interface nsISpeculativeConnect : nsISupports
  * inline) to determine whether or not to actually make a speculative
  * connection.
  */
-[builtinclass, uuid(1040ebe3-6ed1-45a6-8587-995e082518d7)]
+[builtinclass, uuid(f6a0d1e5-369f-4abc-81ae-d370d36e4006)]
 interface nsISpeculativeConnectionOverrider : nsISupports
 {
     /**
@@ -43,6 +43,13 @@ interface nsISpeculativeConnectionOverrider : nsISupports
      * we will have open for a host at any one time
      */
     [infallible] readonly attribute unsigned long parallelSpeculativeConnectLimit;
+
+    /**
+     * Used to loosen the restrictions nsHttpConnectionMgr::RestrictConnections
+     * to allow more speculative connections when we're unsure if a host will
+     * connect via SPDY or not.
+     */
+    [infallible] readonly attribute boolean ignorePossibleSpdyConnections;
 
     /**
      * Used to determine if we will ignore the existence of any currently idle
