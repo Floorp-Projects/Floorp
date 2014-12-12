@@ -34,7 +34,7 @@ uint64_t gSHEntrySharedID = 0;
 typedef nsExpirationTracker<nsSHEntryShared, 3> HistoryTrackerBase;
 class HistoryTracker MOZ_FINAL : public HistoryTrackerBase {
 public:
-  HistoryTracker(uint32_t aTimeout)
+  explicit HistoryTracker(uint32_t aTimeout)
     : HistoryTrackerBase(1000 * aTimeout / 2)
   {
   }

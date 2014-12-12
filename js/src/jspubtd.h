@@ -84,24 +84,6 @@ enum JSProtoKey {
     JSProto_LIMIT
 };
 
-/*
- * This enum type is used to control the behavior of a JSObject property
- * iterator function that has type JSNewEnumerate.
- */
-enum JSIterateOp {
-    /* Create new iterator state over enumerable properties. */
-    JSENUMERATE_INIT,
-
-    /* Create new iterator state over all properties. */
-    JSENUMERATE_INIT_ALL,
-
-    /* Iterate once. */
-    JSENUMERATE_NEXT,
-
-    /* Destroy iterator state. */
-    JSENUMERATE_DESTROY
-};
-
 /* Struct forward declarations. */
 struct JSClass;
 struct JSCompartment;

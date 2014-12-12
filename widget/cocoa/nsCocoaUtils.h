@@ -321,11 +321,6 @@ public:
   static void InitNPCocoaEvent(NPCocoaEvent* aNPCocoaEvent);
 
   /**
-   * Initializes aPluginEvent for aCocoaEvent.
-   */
-  static void InitPluginEvent(mozilla::WidgetPluginEvent &aPluginEvent,
-                              NPCocoaEvent &aCocoaEvent);
-  /**
    * Initializes WidgetInputEvent for aNativeEvent or aModifiers.
    */
   static void InitInputEvent(mozilla::WidgetInputEvent &aInputEvent,

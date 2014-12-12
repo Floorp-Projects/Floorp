@@ -107,6 +107,7 @@ class LIRGeneratorARM : public LIRGeneratorShared
     void visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins);
     void visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins);
     void visitForkJoinGetSlice(MForkJoinGetSlice *ins);
+    void visitSimdBinaryArith(MSimdBinaryArith *ins);
     void visitSimdTernaryBitwise(MSimdTernaryBitwise *ins);
     void visitSimdSplatX4(MSimdSplatX4 *ins);
     void visitSimdValueX4(MSimdValueX4 *ins);

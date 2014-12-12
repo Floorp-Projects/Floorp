@@ -6223,7 +6223,7 @@ nsLayoutUtils::GetTextRunFlagsForStyle(nsStyleContext* aStyleContext,
   }
   WritingMode wm(aStyleContext);
   if (wm.IsVertical()) {
-    switch (aStyleText->mTextOrientation) {
+    switch (aStyleContext->StyleVisibility()->mTextOrientation) {
     case NS_STYLE_TEXT_ORIENTATION_MIXED:
       result |= gfxTextRunFactory::TEXT_ORIENT_VERTICAL_MIXED;
       break;

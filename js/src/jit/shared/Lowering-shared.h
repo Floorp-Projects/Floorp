@@ -50,6 +50,10 @@ class LIRGeneratorShared : public MDefinitionVisitor
     }
 
   protected:
+
+    static void ReorderCommutative(MDefinition **lhsp, MDefinition **rhsp, MInstruction *ins);
+    static bool ShouldReorderCommutative(MDefinition *lhs, MDefinition *rhs, MInstruction *ins);
+
     // A backend can decide that an instruction should be emitted at its uses,
     // rather than at its definition. To communicate this, set the
     // instruction's virtual register set to 0. When using the instruction,

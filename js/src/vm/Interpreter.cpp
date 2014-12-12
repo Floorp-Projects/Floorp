@@ -141,8 +141,7 @@ static const uint32_t JSSLOT_SAVED_ID = 1;
 
 static const Class js_NoSuchMethodClass = {
     "NoSuchMethod",
-    JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS,
-    nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub
+    JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS
 };
 
 /*
@@ -3699,18 +3698,14 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
                      : JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
     /* Steps 5d, 5f. */
-    if (!shape || pobj != parent) {
-        return JSObject::defineProperty(cx, parent, name, rval, JS_PropertyStub,
-                                        JS_StrictPropertyStub, attrs);
-    }
+    if (!shape || pobj != parent)
+        return JSObject::defineProperty(cx, parent, name, rval, nullptr, nullptr, attrs);
 
     /* Step 5e. */
     MOZ_ASSERT(parent->isNative());
     if (parent->is<GlobalObject>()) {
-        if (shape->configurable()) {
-            return JSObject::defineProperty(cx, parent, name, rval, JS_PropertyStub,
-                                            JS_StrictPropertyStub, attrs);
-        }
+        if (shape->configurable())
+            return JSObject::defineProperty(cx, parent, name, rval, nullptr, nullptr, attrs);
 
         if (shape->isAccessorDescriptor() || !shape->writable() || !shape->enumerable()) {
             JSAutoByteString bytes;
@@ -3959,11 +3954,11 @@ js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, H
 
     if (op == JSOP_INITPROP_GETTER || op == JSOP_INITELEM_GETTER) {
         getter = CastAsPropertyOp(val);
-        setter = JS_StrictPropertyStub;
+        setter = nullptr;
         attrs |= JSPROP_GETTER;
     } else {
         MOZ_ASSERT(op == JSOP_INITPROP_SETTER || op == JSOP_INITELEM_SETTER);
-        getter = JS_PropertyStub;
+        getter = nullptr;
         setter = CastAsStrictPropertyOp(val);
         attrs |= JSPROP_SETTER;
     }

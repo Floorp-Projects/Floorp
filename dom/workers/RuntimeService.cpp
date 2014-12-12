@@ -26,6 +26,7 @@
 #include "jsfriendapi.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
 #include "mozilla/dom/AtomList.h"
 #include "mozilla/dom/BindingUtils.h"
@@ -45,7 +46,6 @@
 #include "nsLayoutStatics.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
-#include "nsThread.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
 #include "nsXPCOMPrivate.h"
@@ -56,15 +56,12 @@
 #include "ipc/Nuwa.h"
 #endif
 
-#ifdef DEBUG
-#include "nsThreadManager.h"
-#endif
-
 #include "Principal.h"
 #include "ServiceWorker.h"
 #include "SharedWorker.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
+#include "WorkerThread.h"
 
 #ifdef ENABLE_TESTS
 #include "BackgroundChildImpl.h"
@@ -89,10 +86,6 @@ using mozilla::Preferences;
 
 // The size of the worker JS allocation threshold in MB. May be changed via pref.
 #define WORKER_DEFAULT_ALLOCATION_THRESHOLD 30
-
-// The C stack size. We use the same stack size on all platforms for
-// consistency.
-#define WORKER_STACK_SIZE 256 * sizeof(size_t) * 1024
 
 // Half the size of the actual C stack, to be safe.
 #define WORKER_CONTEXT_NATIVE_STACK_LIMIT 128 * sizeof(size_t) * 1024
@@ -907,6 +900,58 @@ private:
   WorkerPrivate* mWorkerPrivate;
 };
 
+#ifdef ENABLE_TESTS
+
+class TestPBackgroundCreateCallback MOZ_FINAL :
+  public nsIIPCBackgroundChildCreateCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  virtual void
+  ActorCreated(PBackgroundChild* aActor) MOZ_OVERRIDE
+  {
+    MOZ_RELEASE_ASSERT(aActor);
+  }
+
+  virtual void
+  ActorFailed() MOZ_OVERRIDE
+  {
+    MOZ_CRASH("TestPBackground() should not fail "
+              "GetOrCreateForCurrentThread()");
+  }
+
+private:
+  ~TestPBackgroundCreateCallback()
+  { }
+};
+
+NS_IMPL_ISUPPORTS(TestPBackgroundCreateCallback,
+                  nsIIPCBackgroundChildCreateCallback);
+
+void
+TestPBackground()
+{
+  using namespace mozilla::ipc;
+
+  if (gTestPBackground) {
+    // Randomize value to validate workers are not cross-posting messages.
+    uint32_t testValue;
+    size_t randomSize = PR_GetRandomNoise(&testValue, sizeof(testValue));
+    MOZ_RELEASE_ASSERT(randomSize == sizeof(testValue));
+    nsCString testStr;
+    testStr.AppendInt(testValue);
+    testStr.AppendInt(reinterpret_cast<int64_t>(PR_GetCurrentThread()));
+    PBackgroundChild* existingBackgroundChild =
+      BackgroundChild::GetForCurrentThread();
+    MOZ_RELEASE_ASSERT(existingBackgroundChild);
+    bool ok = existingBackgroundChild->SendPBackgroundTestConstructor(testStr);
+    MOZ_RELEASE_ASSERT(ok);
+  }
+}
+
+#endif // ENABLE_TESTS
+
 class WorkerBackgroundChildCallback MOZ_FINAL :
   public nsIIPCBackgroundChildCreateCallback
 {
@@ -942,15 +987,15 @@ private:
 class WorkerThreadPrimaryRunnable MOZ_FINAL : public nsRunnable
 {
   WorkerPrivate* mWorkerPrivate;
-  nsRefPtr<RuntimeService::WorkerThread> mThread;
+  nsRefPtr<WorkerThread> mThread;
   JSRuntime* mParentRuntime;
 
   class FinishedRunnable MOZ_FINAL : public nsRunnable
   {
-    nsRefPtr<RuntimeService::WorkerThread> mThread;
+    nsRefPtr<WorkerThread> mThread;
 
   public:
-    explicit FinishedRunnable(already_AddRefed<RuntimeService::WorkerThread> aThread)
+    explicit FinishedRunnable(already_AddRefed<WorkerThread> aThread)
     : mThread(aThread)
     {
       MOZ_ASSERT(mThread);
@@ -967,7 +1012,7 @@ class WorkerThreadPrimaryRunnable MOZ_FINAL : public nsRunnable
 
 public:
   WorkerThreadPrimaryRunnable(WorkerPrivate* aWorkerPrivate,
-                              RuntimeService::WorkerThread* aThread,
+                              WorkerThread* aThread,
                               JSRuntime* aParentRuntime)
   : mWorkerPrivate(aWorkerPrivate), mThread(aThread), mParentRuntime(aParentRuntime)
   {
@@ -1078,129 +1123,6 @@ PlatformOverrideChanged(const char* /* aPrefName */, void* /* aClosure */)
 
 } /* anonymous namespace */
 
-class RuntimeService::WorkerThread MOZ_FINAL : public nsThread
-{
-  class Observer MOZ_FINAL : public nsIThreadObserver
-  {
-    WorkerPrivate* mWorkerPrivate;
-
-  public:
-    explicit Observer(WorkerPrivate* aWorkerPrivate)
-    : mWorkerPrivate(aWorkerPrivate)
-    {
-      MOZ_ASSERT(aWorkerPrivate);
-      aWorkerPrivate->AssertIsOnWorkerThread();
-    }
-
-    NS_DECL_THREADSAFE_ISUPPORTS
-
-  private:
-    ~Observer()
-    {
-      mWorkerPrivate->AssertIsOnWorkerThread();
-    }
-
-    NS_DECL_NSITHREADOBSERVER
-  };
-
-  WorkerPrivate* mWorkerPrivate;
-  nsRefPtr<Observer> mObserver;
-
-#ifdef DEBUG
-  // Protected by nsThread::mLock.
-  bool mAcceptingNonWorkerRunnables;
-#endif
-
-public:
-  static already_AddRefed<WorkerThread>
-  Create();
-
-  void
-  SetWorker(WorkerPrivate* aWorkerPrivate);
-
-  NS_DECL_ISUPPORTS_INHERITED
-
-  NS_IMETHOD
-  Dispatch(nsIRunnable* aRunnable, uint32_t aFlags) MOZ_OVERRIDE;
-
-#ifdef DEBUG
-  bool
-  IsAcceptingNonWorkerRunnables()
-  {
-    MutexAutoLock lock(mLock);
-    return mAcceptingNonWorkerRunnables;
-  }
-
-  void
-  SetAcceptingNonWorkerRunnables(bool aAcceptingNonWorkerRunnables)
-  {
-    MutexAutoLock lock(mLock);
-    mAcceptingNonWorkerRunnables = aAcceptingNonWorkerRunnables;
-  }
-#endif
-
-#ifdef ENABLE_TESTS
-  class TestPBackgroundCreateCallback MOZ_FINAL :
-    public nsIIPCBackgroundChildCreateCallback
-  {
-  public:
-    virtual void ActorCreated(PBackgroundChild* actor) MOZ_OVERRIDE
-    {
-      MOZ_RELEASE_ASSERT(actor);
-    }
-
-    virtual void ActorFailed() MOZ_OVERRIDE
-    {
-      MOZ_CRASH("TestPBackground() should not fail GetOrCreateForCurrentThread()");
-    }
-
-  private:
-    ~TestPBackgroundCreateCallback()
-    { }
-
-  public:
-    NS_DECL_ISUPPORTS;
-  };
-
-  void
-  TestPBackground()
-  {
-    using namespace mozilla::ipc;
-    if (gTestPBackground) {
-      // Randomize value to validate workers are not cross-posting messages.
-      uint32_t testValue;
-      size_t randomSize = PR_GetRandomNoise(&testValue, sizeof(testValue));
-      MOZ_RELEASE_ASSERT(randomSize == sizeof(testValue));
-      nsCString testStr;
-      testStr.AppendInt(testValue);
-      testStr.AppendInt(reinterpret_cast<int64_t>(PR_GetCurrentThread()));
-      PBackgroundChild* existingBackgroundChild =
-        BackgroundChild::GetForCurrentThread();
-      MOZ_RELEASE_ASSERT(existingBackgroundChild);
-      bool ok = existingBackgroundChild->SendPBackgroundTestConstructor(testStr);
-      MOZ_RELEASE_ASSERT(ok);
-    }
-  }
-#endif // #ENABLE_TESTS
-
-private:
-  WorkerThread()
-  : nsThread(nsThread::NOT_MAIN_THREAD, WORKER_STACK_SIZE),
-    mWorkerPrivate(nullptr)
-#ifdef DEBUG
-    , mAcceptingNonWorkerRunnables(true)
-#endif
-  { }
-
-  ~WorkerThread()
-  { }
-};
-
-#ifdef ENABLE_TESTS
-NS_IMPL_ISUPPORTS(RuntimeService::WorkerThread::TestPBackgroundCreateCallback,
-                  nsIIPCBackgroundChildCreateCallback);
-#endif
-
 BEGIN_WORKERS_NAMESPACE
 
 void
@@ -1306,6 +1228,12 @@ GetCurrentThreadJSContext()
 }
 
 END_WORKERS_NAMESPACE
+
+struct RuntimeService::IdleThreadInfo
+{
+  nsRefPtr<WorkerThread> mThread;
+  mozilla::TimeStamp mExpirationTime;
+};
 
 // This is only touched on the main thread. Initialized in Init() below.
 JSSettings RuntimeService::sDefaultJSSettings;
@@ -1614,16 +1542,16 @@ RuntimeService::ScheduleWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     }
   }
 
+  const WorkerThreadFriendKey friendKey;
+
   if (!thread) {
-    thread = WorkerThread::Create();
+    thread = WorkerThread::Create(friendKey);
     if (!thread) {
       UnregisterWorker(aCx, aWorkerPrivate);
       JS_ReportError(aCx, "Could not create new thread!");
       return false;
     }
   }
-
-  MOZ_ASSERT(thread->IsAcceptingNonWorkerRunnables());
 
   int32_t priority = aWorkerPrivate->IsChromeWorker() ?
                      nsISupportsPriority::PRIORITY_NORMAL :
@@ -1635,7 +1563,7 @@ RuntimeService::ScheduleWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
   nsCOMPtr<nsIRunnable> runnable =
     new WorkerThreadPrimaryRunnable(aWorkerPrivate, thread, JS_GetParentRuntime(aCx));
-  if (NS_FAILED(thread->Dispatch(runnable, NS_DISPATCH_NORMAL))) {
+  if (NS_FAILED(thread->DispatchPrimaryRunnable(friendKey, runnable))) {
     UnregisterWorker(aCx, aWorkerPrivate);
     JS_ReportError(aCx, "Could not dispatch to thread!");
     return false;
@@ -2387,10 +2315,6 @@ RuntimeService::NoteIdleThread(WorkerThread* aThread)
   AssertIsOnMainThread();
   MOZ_ASSERT(aThread);
 
-#ifdef DEBUG
-  aThread->SetAcceptingNonWorkerRunnables(true);
-#endif
-
   static TimeDuration timeout =
     TimeDuration::FromSeconds(IDLE_THREAD_TIMEOUT_SEC);
 
@@ -2592,145 +2516,6 @@ RuntimeService::JSVersionChanged(const char* /* aPrefName */, void* /* aClosure 
   options.setVersion(useLatest ? JSVERSION_LATEST : JSVERSION_DEFAULT);
 }
 
-// static
-already_AddRefed<RuntimeService::WorkerThread>
-RuntimeService::WorkerThread::Create()
-{
-  MOZ_ASSERT(nsThreadManager::get());
-
-  nsRefPtr<WorkerThread> thread = new WorkerThread();
-  if (NS_FAILED(thread->Init())) {
-    NS_WARNING("Failed to create new thread!");
-    return nullptr;
-  }
-
-  NS_SetThreadName(thread, "DOM Worker");
-
-  return thread.forget();
-}
-
-void
-RuntimeService::WorkerThread::SetWorker(WorkerPrivate* aWorkerPrivate)
-{
-  MOZ_ASSERT(PR_GetCurrentThread() == mThread);
-  MOZ_ASSERT_IF(aWorkerPrivate, !mWorkerPrivate);
-  MOZ_ASSERT_IF(!aWorkerPrivate, mWorkerPrivate);
-
-  // No need to lock here because mWorkerPrivate is only modified on mThread.
-
-  if (mWorkerPrivate) {
-    MOZ_ASSERT(mObserver);
-
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(RemoveObserver(mObserver)));
-
-    mObserver = nullptr;
-    mWorkerPrivate->SetThread(nullptr);
-  }
-
-  mWorkerPrivate = aWorkerPrivate;
-
-  if (mWorkerPrivate) {
-    mWorkerPrivate->SetThread(this);
-
-    nsRefPtr<Observer> observer = new Observer(mWorkerPrivate);
-
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(AddObserver(observer)));
-
-    mObserver.swap(observer);
-  }
-}
-
-NS_IMPL_ISUPPORTS_INHERITED0(RuntimeService::WorkerThread, nsThread)
-
-NS_IMETHODIMP
-RuntimeService::WorkerThread::Dispatch(nsIRunnable* aRunnable, uint32_t aFlags)
-{
-  // May be called on any thread!
-
-#ifdef DEBUG
-  if (PR_GetCurrentThread() == mThread) {
-    MOZ_ASSERT(mWorkerPrivate);
-    mWorkerPrivate->AssertIsOnWorkerThread();
-  }
-  else if (aRunnable && !IsAcceptingNonWorkerRunnables()) {
-    // Only enforce cancelable runnables after we've started the worker loop.
-    nsCOMPtr<nsICancelableRunnable> cancelable = do_QueryInterface(aRunnable);
-    MOZ_ASSERT(cancelable,
-               "Should have been wrapped by the worker's event target!");
-  }
-#endif
-
-  // Workers only support asynchronous dispatch for now.
-  if (NS_WARN_IF(aFlags != NS_DISPATCH_NORMAL)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  nsIRunnable* runnableToDispatch;
-  nsRefPtr<WorkerRunnable> workerRunnable;
-
-  if (aRunnable && PR_GetCurrentThread() == mThread) {
-    // No need to lock here because mWorkerPrivate is only modified on mThread.
-    workerRunnable = mWorkerPrivate->MaybeWrapAsWorkerRunnable(aRunnable);
-    runnableToDispatch = workerRunnable;
-  }
-  else {
-    runnableToDispatch = aRunnable;
-  }
-
-  nsresult rv = nsThread::Dispatch(runnableToDispatch, NS_DISPATCH_NORMAL);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-NS_IMPL_ISUPPORTS(RuntimeService::WorkerThread::Observer, nsIThreadObserver)
-
-NS_IMETHODIMP
-RuntimeService::WorkerThread::Observer::OnDispatchedEvent(
-                                                nsIThreadInternal* /*aThread */)
-{
-  MOZ_CRASH("OnDispatchedEvent() should never be called!");
-}
-
-NS_IMETHODIMP
-RuntimeService::WorkerThread::Observer::OnProcessNextEvent(
-                                               nsIThreadInternal* /* aThread */,
-                                               bool aMayWait,
-                                               uint32_t aRecursionDepth)
-{
-  using mozilla::ipc::BackgroundChild;
-
-  mWorkerPrivate->AssertIsOnWorkerThread();
-
-  // If the PBackground child is not created yet, then we must permit
-  // blocking event processing to support SynchronouslyCreatePBackground().
-  // If this occurs then we are spinning on the event queue at the start of
-  // PrimaryWorkerRunnable::Run() and don't want to process the event in
-  // mWorkerPrivate yet.
-  if (aMayWait) {
-    MOZ_ASSERT(aRecursionDepth == 2);
-    MOZ_ASSERT(!BackgroundChild::GetForCurrentThread());
-    return NS_OK;
-  }
-
-  mWorkerPrivate->OnProcessNextEvent(aRecursionDepth);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-RuntimeService::WorkerThread::Observer::AfterProcessNextEvent(
-                                               nsIThreadInternal* /* aThread */,
-                                               uint32_t aRecursionDepth,
-                                               bool /* aEventWasProcessed */)
-{
-  mWorkerPrivate->AssertIsOnWorkerThread();
-
-  mWorkerPrivate->AfterProcessNextEvent(aRecursionDepth);
-  return NS_OK;
-}
-
 NS_IMPL_ISUPPORTS_INHERITED0(LogViolationDetailsRunnable, nsRunnable)
 
 NS_IMETHODIMP
@@ -2777,15 +2562,17 @@ WorkerThreadPrimaryRunnable::Run()
 
   char stackBaseGuess;
 
+  PR_SetCurrentThreadName("DOM Worker");
+
   nsAutoCString threadName;
-  threadName.AssignLiteral("WebWorker '");
+  threadName.AssignLiteral("DOM Worker '");
   threadName.Append(NS_LossyConvertUTF16toASCII(mWorkerPrivate->ScriptURL()));
   threadName.Append('\'');
 
   profiler_register_thread(threadName.get(), &stackBaseGuess);
 
   // Note: SynchronouslyCreatePBackground() must be called prior to
-  //       mThread->SetWorker() in order to avoid accidentally consuming
+  //       mWorkerPrivate->SetThread() in order to avoid accidentally consuming
   //       worker messages here.
   nsresult rv = SynchronouslyCreatePBackground();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2793,10 +2580,10 @@ WorkerThreadPrimaryRunnable::Run()
     return rv;
   }
 
-  mThread->SetWorker(mWorkerPrivate);
+  mWorkerPrivate->SetThread(mThread);
 
 #ifdef ENABLE_TESTS
-  mThread->TestPBackground();
+  TestPBackground();
 #endif
 
   mWorkerPrivate->AssertIsOnWorkerThread();
@@ -2831,7 +2618,7 @@ WorkerThreadPrimaryRunnable::Run()
       }
 
 #ifdef ENABLE_TESTS
-      mThread->TestPBackground();
+      TestPBackground();
 #endif
 
       BackgroundChild::CloseForCurrentThread();
@@ -2854,7 +2641,7 @@ WorkerThreadPrimaryRunnable::Run()
     // participating.
   }
 
-  mThread->SetWorker(nullptr);
+  mWorkerPrivate->SetThread(nullptr);
 
   mWorkerPrivate->ScheduleDeletion(WorkerPrivate::WorkerRan);
 
@@ -2899,10 +2686,6 @@ WorkerThreadPrimaryRunnable::SynchronouslyCreatePBackground()
     return NS_ERROR_FAILURE;
   }
 
-#ifdef DEBUG
-  mThread->SetAcceptingNonWorkerRunnables(false);
-#endif
-
   return NS_OK;
 }
 
@@ -2914,7 +2697,7 @@ WorkerThreadPrimaryRunnable::FinishedRunnable::Run()
 {
   AssertIsOnMainThread();
 
-  nsRefPtr<RuntimeService::WorkerThread> thread;
+  nsRefPtr<WorkerThread> thread;
   mThread.swap(thread);
 
   RuntimeService* rts = RuntimeService::GetService();

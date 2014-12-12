@@ -463,8 +463,12 @@ static bool
 array_length_setter(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp)
 {
     if (!obj->is<ArrayObject>()) {
+        // This array .length property was found on the prototype
+        // chain. Ideally the setter should not have been called, but since
+        // we're here, do an impression of SetPropertyByDefining.
+        const Class *clasp = obj->getClass();
         return JSObject::defineProperty(cx, obj, cx->names().length, vp,
-                                        nullptr, nullptr, JSPROP_ENUMERATE);
+                                        clasp->getProperty, clasp->setProperty, JSPROP_ENUMERATE);
     }
 
     Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
@@ -3360,17 +3364,17 @@ const Class ArrayObject::class_ = {
     "Array",
     JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
     array_addProperty,
-    nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
-    nullptr,                 /* enumerate */
-    nullptr,                 /* resolve */
-    nullptr,                 /* convert */
-    nullptr,                 /* finalize */
-    nullptr,                 /* call */
-    nullptr,                 /* hasInstance */
-    nullptr,                 /* construct */
-    nullptr,                 /* trace */
+    nullptr, /* delProperty */
+    nullptr, /* getProperty */
+    nullptr, /* setProperty */
+    nullptr, /* enumerate */
+    nullptr, /* resolve */
+    nullptr, /* convert */
+    nullptr, /* finalize */
+    nullptr, /* call */
+    nullptr, /* hasInstance */
+    nullptr, /* construct */
+    nullptr, /* trace */
     {
         GenericCreateConstructor<js_Array, 1, JSFunction::FinalizeKind>,
         CreateArrayPrototype,

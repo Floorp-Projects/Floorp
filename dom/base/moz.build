@@ -64,6 +64,7 @@ EXPORTS += [
     'nsCrossSiteListenerProxy.h',
     'nsDeprecatedOperationList.h',
     'nsDocElementCreatedNotificationRunner.h',
+    'nsDocumentWarningList.h',
     'nsDOMAttributeMap.h',
     'nsDOMCID.h',
     'nsDOMClassInfoClasses.h',

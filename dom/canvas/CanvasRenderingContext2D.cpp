@@ -695,7 +695,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CanvasPattern, mContext)
 class CanvasDrawObserver
 {
 public:
-  CanvasDrawObserver(CanvasRenderingContext2D* aCanvasContext);
+  explicit CanvasDrawObserver(CanvasRenderingContext2D* aCanvasContext);
 
   // Only enumerate draw calls that could affect the heuristic
   enum DrawCallType {

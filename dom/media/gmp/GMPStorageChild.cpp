@@ -293,7 +293,7 @@ GMPStorageChild::EnumerateRecords(RecvGMPRecordIteratorPtr aRecvIteratorFunc,
 
 class GMPRecordIteratorImpl : public GMPRecordIterator {
 public:
-  GMPRecordIteratorImpl(const InfallibleTArray<nsCString>& aRecordNames)
+  explicit GMPRecordIteratorImpl(const InfallibleTArray<nsCString>& aRecordNames)
     : mRecordNames(aRecordNames)
     , mIndex(0)
   {

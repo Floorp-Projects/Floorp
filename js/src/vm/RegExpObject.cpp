@@ -264,17 +264,17 @@ const Class RegExpObject::class_ = {
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(RegExpObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
-    nullptr,                 /* enumerate */
-    nullptr,                 /* resolve */
-    nullptr,                 /* convert */
-    nullptr,                 /* finalize */
-    nullptr,                 /* call */
-    nullptr,                 /* hasInstance */
-    nullptr,                 /* construct */
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* getProperty */
+    nullptr, /* setProperty */
+    nullptr, /* enumerate */
+    nullptr, /* resolve */
+    nullptr, /* convert */
+    nullptr, /* finalize */
+    nullptr, /* call */
+    nullptr, /* hasInstance */
+    nullptr, /* construct */
     RegExpObject::trace
 };
 
@@ -717,15 +717,19 @@ RegExpCompartment::createMatchResultTemplateObject(JSContext *cx)
 
     /* Set dummy index property */
     RootedValue index(cx, Int32Value(0));
-    if (!baseops::DefineProperty(cx, templateObject, cx->names().index, index,
-                                 JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE))
+    if (!baseops::DefineProperty(cx, templateObject, cx->names().index, index, nullptr, nullptr,
+                                 JSPROP_ENUMERATE))
+    {
         return matchResultTemplateObject_; // = nullptr
+    }
 
     /* Set dummy input property */
     RootedValue inputVal(cx, StringValue(cx->runtime()->emptyString));
-    if (!baseops::DefineProperty(cx, templateObject, cx->names().input, inputVal,
-                                 JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE))
+    if (!baseops::DefineProperty(cx, templateObject, cx->names().input, inputVal, nullptr, nullptr,
+                                 JSPROP_ENUMERATE))
+    {
         return matchResultTemplateObject_; // = nullptr
+    }
 
     // Make sure that the properties are in the right slots.
     DebugOnly<Shape *> shape = templateObject->lastProperty();

@@ -12,7 +12,6 @@
 
 #include "nsIObserver.h"
 
-#include "mozilla/TimeStamp.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
@@ -20,7 +19,6 @@
 #include "WorkerPrivate.h"
 
 class nsIRunnable;
-class nsIThread;
 class nsITimer;
 class nsPIDOMWindow;
 
@@ -28,13 +26,10 @@ BEGIN_WORKERS_NAMESPACE
 
 class ServiceWorker;
 class SharedWorker;
+class WorkerThread;
 
 class RuntimeService MOZ_FINAL : public nsIObserver
 {
-public:
-  class WorkerThread;
-
-private:
   struct SharedWorkerInfo
   {
     WorkerPrivate* mWorkerPrivate;
@@ -67,11 +62,7 @@ private:
     }
   };
 
-  struct IdleThreadInfo
-  {
-    nsRefPtr<WorkerThread> mThread;
-    mozilla::TimeStamp mExpirationTime;
-  };
+  struct IdleThreadInfo;
 
   struct MatchSharedWorkerInfo
   {

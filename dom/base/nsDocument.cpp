@@ -3565,7 +3565,12 @@ nsDocument::SetBaseURI(nsIURI* aURI)
   NS_ENSURE_SUCCESS(rv, rv);
   if (csp) {
     bool permitsBaseURI = false;
-    rv = csp->PermitsBaseURI(aURI, &permitsBaseURI);
+
+    // base-uri is only enforced if explicitly defined in the
+    // policy - do *not* consult default-src, see:
+    // http://www.w3.org/TR/CSP2/#directive-default-src
+    rv = csp->Permits(aURI, nsIContentSecurityPolicy::BASE_URI_DIRECTIVE,
+                      true, &permitsBaseURI);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!permitsBaseURI) {
       return NS_OK;
@@ -10175,18 +10180,25 @@ nsDocument::FindImageMap(const nsAString& aUseMapValue)
 }
 
 #define DEPRECATED_OPERATION(_op) #_op "Warning",
-static const char* kWarnings[] = {
+static const char* kDeprecationWarnings[] = {
 #include "nsDeprecatedOperationList.h"
   nullptr
 };
 #undef DEPRECATED_OPERATION
+
+#define DOCUMENT_WARNING(_op) #_op "Warning",
+static const char* kDocumentWarnings[] = {
+#include "nsDocumentWarningList.h"
+  nullptr
+};
+#undef DOCUMENT_WARNING
 
 bool
 nsIDocument::HasWarnedAbout(DeprecatedOperations aOperation)
 {
   static_assert(eDeprecatedOperationCount <= 64,
                 "Too many deprecated operations");
-  return mWarnedAbout & (1ull << aOperation);
+  return mDeprecationWarnedAbout & (1ull << aOperation);
 }
 
 void
@@ -10196,13 +10208,41 @@ nsIDocument::WarnOnceAbout(DeprecatedOperations aOperation,
   if (HasWarnedAbout(aOperation)) {
     return;
   }
-  mWarnedAbout |= (1ull << aOperation);
+  mDeprecationWarnedAbout |= (1ull << aOperation);
   uint32_t flags = asError ? nsIScriptError::errorFlag
                            : nsIScriptError::warningFlag;
   nsContentUtils::ReportToConsole(flags,
                                   NS_LITERAL_CSTRING("DOM Core"), this,
                                   nsContentUtils::eDOM_PROPERTIES,
-                                  kWarnings[aOperation]);
+                                  kDeprecationWarnings[aOperation]);
+}
+
+bool
+nsIDocument::HasWarnedAbout(DocumentWarnings aWarning)
+{
+  static_assert(eDocumentWarningCount <= 64,
+                "Too many document warnings");
+  return mDocWarningWarnedAbout & (1ull << aWarning);
+}
+
+void
+nsIDocument::WarnOnceAbout(DocumentWarnings aWarning,
+                           bool asError /* = false */,
+                           const char16_t **aParams /* = nullptr */,
+                           uint32_t aParamsLength /* = 0 */)
+{
+  if (HasWarnedAbout(aWarning)) {
+    return;
+  }
+  mDocWarningWarnedAbout |= (1ull << aWarning);
+  uint32_t flags = asError ? nsIScriptError::errorFlag
+                           : nsIScriptError::warningFlag;
+  nsContentUtils::ReportToConsole(flags,
+                                  NS_LITERAL_CSTRING("DOM Core"), this,
+                                  nsContentUtils::eDOM_PROPERTIES,
+                                  kDocumentWarnings[aWarning],
+                                  aParams,
+                                  aParamsLength);
 }
 
 nsresult

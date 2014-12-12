@@ -51,8 +51,7 @@ selfHosting_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep
 
 static const JSClass self_hosting_global_class = {
     "self-hosting-global", JSCLASS_GLOBAL_FLAGS,
-    nullptr,          nullptr,
-    JS_PropertyStub,  JS_StrictPropertyStub,
+    nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr,
     JS_GlobalObjectTraceHook
@@ -100,6 +99,18 @@ js::intrinsic_ToString(JSContext *cx, unsigned argc, Value *vp)
     if (!str)
         return false;
     args.rval().setString(str);
+    return true;
+}
+
+bool
+intrinsic_ToPropertyKey(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedId id(cx);
+    if (!ValueToId<CanGC>(cx, args[0], &id))
+        return false;
+
+    args.rval().set(IdToValue(id));
     return true;
 }
 
@@ -217,7 +228,7 @@ intrinsic_MakeConstructible(JSContext *cx, unsigned argc, Value *vp)
     // correctly, it must be enumerable.
     RootedObject ctor(cx, &args[0].toObject());
     if (!JSObject::defineProperty(cx, ctor, cx->names().prototype, args[1],
-                                  JS_PropertyStub, JS_StrictPropertyStub,
+                                  nullptr, nullptr,
                                   JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT))
     {
         return false;
@@ -1036,6 +1047,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_Number_valueOf",                  js_num_valueOf,               0,0),
 
     JS_FN("std_Object_create",                   obj_create,                   2,0),
+    JS_FN("std_Object_defineProperty",           obj_defineProperty,           3,0),
     JS_FN("std_Object_getPrototypeOf",           obj_getPrototypeOf,           1,0),
     JS_FN("std_Object_getOwnPropertyNames",      obj_getOwnPropertyNames,      1,0),
     JS_FN("std_Object_getOwnPropertyDescriptor", obj_getOwnPropertyDescriptor, 2,0),
@@ -1066,6 +1078,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("IsObject",                intrinsic_IsObject,                1,0),
     JS_FN("ToInteger",               intrinsic_ToInteger,               1,0),
     JS_FN("ToString",                intrinsic_ToString,                1,0),
+    JS_FN("ToPropertyKey",           intrinsic_ToPropertyKey,           1,0),
     JS_FN("IsCallable",              intrinsic_IsCallable,              1,0),
     JS_FN("IsConstructor",           intrinsic_IsConstructor,           1,0),
     JS_FN("OwnPropertyKeys",         intrinsic_OwnPropertyKeys,         1,0),

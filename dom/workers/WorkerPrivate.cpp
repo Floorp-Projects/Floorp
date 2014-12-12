@@ -65,6 +65,7 @@
 #include "nsPrintfCString.h"
 #include "nsProxyRelease.h"
 #include "nsSandboxFlags.h"
+#include "prthread.h"
 #include "xpcpublic.h"
 
 #ifdef ANDROID
@@ -86,6 +87,7 @@
 #include "WorkerFeature.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
+#include "WorkerThread.h"
 
 // JS_MaybeGC will run once every second during normal execution.
 #define PERIODIC_GC_TIMER_DELAY_SEC 1
@@ -1707,21 +1709,17 @@ private:
   }
 };
 
-#ifdef DEBUG
-
 PRThread*
 PRThreadFromThread(nsIThread* aThread)
 {
   MOZ_ASSERT(aThread);
 
   PRThread* result;
-  MOZ_ASSERT(NS_SUCCEEDED(aThread->GetPRThread(&result)));
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aThread->GetPRThread(&result)));
   MOZ_ASSERT(result);
 
   return result;
 }
-
-#endif // DEBUG
 
 } /* anonymous namespace */
 
@@ -2130,15 +2128,13 @@ WorkerPrivateParent<Derived>::DispatchPrivate(WorkerRunnable* aRunnable,
       return NS_ERROR_UNEXPECTED;
     }
 
-    nsCOMPtr<nsIEventTarget> target;
+    nsresult rv;
     if (aSyncLoopTarget) {
-      target = aSyncLoopTarget;
-    }
-    else {
-      target = self->mThread;
+      rv = aSyncLoopTarget->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
+    } else {
+      rv = self->mThread->Dispatch(WorkerThreadFriendKey(), aRunnable);
     }
 
-    nsresult rv = target->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -3713,19 +3709,25 @@ WorkerPrivate::WorkerPrivate(JSContext* aCx,
                              bool aIsChromeWorker, WorkerType aWorkerType,
                              const nsACString& aSharedWorkerName,
                              LoadInfo& aLoadInfo)
-: WorkerPrivateParent<WorkerPrivate>(aCx, aParent, aScriptURL,
-                                     aIsChromeWorker, aWorkerType,
-                                     aSharedWorkerName, aLoadInfo),
-  mJSContext(nullptr), mErrorHandlerRecursionCount(0), mNextTimeoutId(1),
-  mStatus(Pending), mSuspended(false), mTimerRunning(false),
-  mRunningExpiredTimeouts(false), mCloseHandlerStarted(false),
-  mCloseHandlerFinished(false), mMemoryReporterRunning(false),
-  mBlockedForMemoryReporter(false), mCancelAllPendingRunnables(false),
-  mPeriodicGCTimerRunning(false), mIdleGCTimerRunning(false),
-  mWorkerScriptExecutedSuccessfully(false)
-#ifdef DEBUG
+  : WorkerPrivateParent<WorkerPrivate>(aCx, aParent, aScriptURL,
+                                       aIsChromeWorker, aWorkerType,
+                                       aSharedWorkerName, aLoadInfo)
+  , mJSContext(nullptr)
   , mPRThread(nullptr)
-#endif
+  , mErrorHandlerRecursionCount(0)
+  , mNextTimeoutId(1)
+  , mStatus(Pending)
+  , mSuspended(false)
+  , mTimerRunning(false)
+  , mRunningExpiredTimeouts(false)
+  , mCloseHandlerStarted(false)
+  , mCloseHandlerFinished(false)
+  , mMemoryReporterRunning(false)
+  , mBlockedForMemoryReporter(false)
+  , mCancelAllPendingRunnables(false)
+  , mPeriodicGCTimerRunning(false)
+  , mIdleGCTimerRunning(false)
+  , mWorkerScriptExecutedSuccessfully(false)
 {
   MOZ_ASSERT_IF(!IsDedicatedWorker(), !aSharedWorkerName.IsVoid());
   MOZ_ASSERT_IF(IsDedicatedWorker(), aSharedWorkerName.IsEmpty());
@@ -4444,24 +4446,9 @@ WorkerPrivate::IsOnCurrentThread(bool* aIsOnCurrentThread)
   // May be called on any thread!
 
   MOZ_ASSERT(aIsOnCurrentThread);
+  MOZ_ASSERT(mPRThread);
 
-  nsCOMPtr<nsIThread> thread;
-  {
-    MutexAutoLock lock(mMutex);
-    thread = mThread;
-  }
-
-  if (!thread) {
-    NS_WARNING("Trying to test thread correctness after the worker has "
-               "released its thread!");
-    return NS_ERROR_FAILURE;
-  }
-
-  nsresult rv = thread->IsOnCurrentThread(aIsOnCurrentThread);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
+  *aIsOnCurrentThread = PR_GetCurrentThread() == mPRThread;
   return NS_OK;
 }
 
@@ -4981,14 +4968,11 @@ WorkerPrivate::RunCurrentSyncLoop()
   loopInfo->mHasRun = true;
 #endif
 
-  nsCOMPtr<nsIThreadInternal> thread = do_QueryInterface(mThread);
-  MOZ_ASSERT(thread);
-
   while (!loopInfo->mCompleted) {
     bool normalRunnablesPending = false;
 
     // Don't block with the periodic GC timer running.
-    if (!NS_HasPendingEvents(thread)) {
+    if (!NS_HasPendingEvents(mThread)) {
       SetGCTimerMode(IdleTimer);
     }
 
@@ -4999,7 +4983,7 @@ WorkerPrivate::RunCurrentSyncLoop()
       for (;;) {
         while (mControlQueue.IsEmpty() &&
                !normalRunnablesPending &&
-               !(normalRunnablesPending = NS_HasPendingEvents(thread))) {
+               !(normalRunnablesPending = NS_HasPendingEvents(mThread))) {
           WaitForWorkerEvents();
         }
 
@@ -5017,7 +5001,7 @@ WorkerPrivate::RunCurrentSyncLoop()
       // Make sure the periodic timer is running before we continue.
       SetGCTimerMode(PeriodicTimer);
 
-      MOZ_ALWAYS_TRUE(NS_ProcessNextEvent(thread, false));
+      MOZ_ALWAYS_TRUE(NS_ProcessNextEvent(mThread, false));
 
       // Now *might* be a good time to GC. Let the JS engine make the decision.
       JS_MaybeGC(cx);
@@ -5037,10 +5021,7 @@ WorkerPrivate::DestroySyncLoop(uint32_t aLoopIndex, nsIThreadInternal* aThread)
   MOZ_ASSERT(mSyncLoopStack.Length() - 1 == aLoopIndex);
 
   if (!aThread) {
-    nsCOMPtr<nsIThreadInternal> thread = do_QueryInterface(mThread);
-    MOZ_ASSERT(thread);
-
-    aThread = thread.get();
+    aThread = mThread;
   }
 
   // We're about to delete the loop, stash its event target and result.
@@ -5851,13 +5832,16 @@ WorkerPrivate::CycleCollectInternal(JSContext* aCx, bool aCollectChildren)
 }
 
 void
-WorkerPrivate::SetThread(nsIThread* aThread)
+WorkerPrivate::SetThread(WorkerThread* aThread)
 {
-#ifdef DEBUG
   if (aThread) {
-    bool isOnCurrentThread;
-    MOZ_ASSERT(NS_SUCCEEDED(aThread->IsOnCurrentThread(&isOnCurrentThread)));
-    MOZ_ASSERT(isOnCurrentThread);
+#ifdef DEBUG
+    {
+      bool isOnCurrentThread;
+      MOZ_ASSERT(NS_SUCCEEDED(aThread->IsOnCurrentThread(&isOnCurrentThread)));
+      MOZ_ASSERT(isOnCurrentThread);
+    }
+#endif
 
     MOZ_ASSERT(!mPRThread);
     mPRThread = PRThreadFromThread(aThread);
@@ -5866,9 +5850,10 @@ WorkerPrivate::SetThread(nsIThread* aThread)
   else {
     MOZ_ASSERT(mPRThread);
   }
-#endif
 
-  nsCOMPtr<nsIThread> doomedThread;
+  const WorkerThreadFriendKey friendKey;
+
+  nsRefPtr<WorkerThread> doomedThread;
 
   { // Scope so that |doomedThread| is released without holding the lock.
     MutexAutoLock lock(mMutex);
@@ -5878,18 +5863,21 @@ WorkerPrivate::SetThread(nsIThread* aThread)
       MOZ_ASSERT(mStatus == Pending);
 
       mThread = aThread;
+      mThread->SetWorker(friendKey, this);
 
       if (!mPreStartRunnables.IsEmpty()) {
         for (uint32_t index = 0; index < mPreStartRunnables.Length(); index++) {
-          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mThread->Dispatch(
-                                                      mPreStartRunnables[index],
-                                                      NS_DISPATCH_NORMAL)));
+          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+            mThread->Dispatch(friendKey, mPreStartRunnables[index])));
         }
         mPreStartRunnables.Clear();
       }
     }
     else {
       MOZ_ASSERT(mThread);
+
+      mThread->SetWorker(friendKey, nullptr);
+
       mThread.swap(doomedThread);
     }
   }

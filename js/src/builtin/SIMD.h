@@ -140,7 +140,6 @@
     _(reciprocalSqrt)                \
     _(fromInt32x4)                   \
     _(fromInt32x4Bits)               \
-    _(mul)                           \
     _(div)                           \
     _(max)                           \
     _(min)                           \
@@ -149,6 +148,7 @@
 #define FOREACH_COMMONX4_SIMD_OP(_)  \
     _(add)                           \
     _(sub)                           \
+    _(mul)                           \
     _(lessThan)                      \
     _(lessThanOrEqual)               \
     _(equal)                         \

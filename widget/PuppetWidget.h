@@ -193,6 +193,14 @@ public:
     mDefaultScale = -1;
   }
 
+  nsIntSize GetScreenDimensions();
+
+  // Get the size of the chrome of the window that this tab belongs to.
+  nsIntPoint GetChromeDimensions();
+
+  // Get the screen position of the application window.
+  nsIntPoint GetWindowPosition();
+
 protected:
   bool mEnabled;
   bool mVisible;

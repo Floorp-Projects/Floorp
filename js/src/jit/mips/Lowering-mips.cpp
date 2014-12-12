@@ -547,6 +547,12 @@ LIRGeneratorMIPS::visitForkJoinGetSlice(MForkJoinGetSlice *ins)
 }
 
 void
+LIRGeneratorMIPS::visitSimdBinaryArith(MSimdBinaryArith *ins)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
 LIRGeneratorMIPS::visitSimdTernaryBitwise(MSimdTernaryBitwise *ins)
 {
     MOZ_CRASH("NYI");

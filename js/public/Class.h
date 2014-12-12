@@ -41,6 +41,12 @@ extern JS_FRIEND_DATA(const js::Class* const) FunctionClassPtr;
 
 } // namespace js
 
+namespace JS {
+
+class AutoIdVector;
+
+}
+
 // JSClass operation signatures.
 
 // Add or get a property named by id in obj.  Note the jsid id type -- id may
@@ -76,39 +82,19 @@ typedef bool
 (* JSDeletePropertyOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                        bool *succeeded);
 
-// This function type is used for callbacks that enumerate the properties of
-// a JSObject.  The behavior depends on the value of enum_op:
+// The type of ObjectOps::enumerate. This callback overrides a portion of SpiderMonkey's default
+// [[Enumerate]] internal method. When an ordinary object is enumerated, that object and each object
+// on its prototype chain is tested for an enumerate op, and those ops are called in order.
+// The properties each op adds to the 'properties' vector are added to the set of values the
+// for-in loop will iterate over. All of this is nonstandard.
 //
-//  JSENUMERATE_INIT
-//    A new, opaque iterator state should be allocated and stored in *statep.
-//    (You can use PRIVATE_TO_JSVAL() to tag the pointer to be stored).
+// An object is "enumerated" when it's the target of a for-in loop or JS_Enumerate().
+// All other property inspection, including Object.keys(obj), goes through [[OwnKeys]].
 //
-//    The number of properties that will be enumerated should be returned as
-//    an integer jsval in *idp, if idp is non-null, and provided the number of
-//    enumerable properties is known.  If idp is non-null and the number of
-//    enumerable properties can't be computed in advance, *idp should be set
-//    to JSVAL_ZERO.
-//
-//  JSENUMERATE_INIT_ALL
-//    Used identically to JSENUMERATE_INIT, but exposes all properties of the
-//    object regardless of enumerability.
-//
-//  JSENUMERATE_NEXT
-//    A previously allocated opaque iterator state is passed in via statep.
-//    Return the next jsid in the iteration using *idp.  The opaque iterator
-//    state pointed at by statep is destroyed and *statep is set to JSVAL_NULL
-//    if there are no properties left to enumerate.
-//
-//  JSENUMERATE_DESTROY
-//    Destroy the opaque iterator state previously allocated in *statep by a
-//    call to this function when enum_op was JSENUMERATE_INIT or
-//    JSENUMERATE_INIT_ALL.
-//
-// The return value is used to indicate success, with a value of false
-// indicating failure.
+// The callback's job is to populate 'properties' with all property keys that the for-in loop
+// should visit.
 typedef bool
-(* JSNewEnumerateOp)(JSContext *cx, JS::HandleObject obj, JSIterateOp enum_op,
-                     JS::MutableHandleValue statep, JS::MutableHandleId idp);
+(* JSNewEnumerateOp)(JSContext *cx, JS::HandleObject obj, JS::AutoIdVector &properties);
 
 // The old-style JSClass.enumerate op should define all lazy properties not
 // yet reflected in obj.
@@ -282,7 +268,7 @@ typedef void
     const char          *name;                                                \
     uint32_t            flags;                                                \
                                                                               \
-    /* Mandatory function pointer members. */                                 \
+    /* Function pointer members (may be null). */                             \
     JSPropertyOp        addProperty;                                          \
     JSDeletePropertyOp  delProperty;                                          \
     JSPropertyOp        getProperty;                                          \
@@ -290,8 +276,6 @@ typedef void
     JSEnumerateOp       enumerate;                                            \
     JSResolveOp         resolve;                                              \
     JSConvertOp         convert;                                              \
-                                                                              \
-    /* Optional members (may be null). */                                     \
     FinalizeOpType      finalize;                                             \
     JSNative            call;                                                 \
     JSHasInstanceOp     hasInstance;                                          \
@@ -423,7 +407,6 @@ struct JSClass {
 };
 
 #define JSCLASS_HAS_PRIVATE             (1<<0)  // objects have private slot
-#define JSCLASS_NEW_ENUMERATE           (1<<1)  // has JSNewEnumerateOp hook
 #define JSCLASS_PRIVATE_IS_NSISUPPORTS  (1<<3)  // private is (nsISupports *)
 #define JSCLASS_IS_DOMJSCLASS           (1<<4)  // objects are DOM
 #define JSCLASS_IMPLEMENTS_BARRIERS     (1<<5)  // Correctly implements GC read

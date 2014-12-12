@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Sandbox.h"
+#include "SandboxFilter.h"
 #include "SandboxInternal.h"
 #include "SandboxLogging.h"
 
@@ -27,16 +28,10 @@
 #include "mozilla/NullPtr.h"
 #include "mozilla/SandboxInfo.h"
 #include "mozilla/unused.h"
-
+#include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
 #if defined(ANDROID)
-#include "android_ucontext.h"
+#include "sandbox/linux/services/android_ucontext.h"
 #endif
-
-#include "linux_seccomp.h"
-#include "SandboxFilter.h"
-
-// See definition of SandboxDie, below.
-#include "sandbox/linux/seccomp-bpf/die.h"
 
 #ifdef MOZ_ASAN
 // Copy libsanitizer declarations to avoid depending on ASAN headers.

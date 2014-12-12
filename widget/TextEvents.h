@@ -97,6 +97,10 @@ public:
     , mCodeNameIndex(CODE_NAME_INDEX_UNKNOWN)
     , mNativeKeyEvent(nullptr)
     , mUniqueId(0)
+#ifdef XP_MACOSX
+    , mNativeKeyCode(0)
+    , mNativeModifierFlags(0)
+#endif
   {
   }
 
@@ -150,6 +154,14 @@ public:
   // after preventDefault is called on keydown events. It's ok if this wraps
   // over long periods.
   uint32_t mUniqueId;
+
+#ifdef XP_MACOSX
+  // Values given by a native NSEvent, for use with Cocoa NPAPI plugins.
+  uint16_t mNativeKeyCode;
+  uint32_t mNativeModifierFlags;
+  nsString mNativeCharacters;
+  nsString mNativeCharactersIgnoringModifiers;
+#endif
 
   void GetDOMKeyName(nsAString& aKeyName)
   {

@@ -463,11 +463,7 @@ static const JSFunctionSpec number_functions[] = {
 
 const Class NumberObject::class_ = {
     js_Number_str,
-    JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_HAS_CACHED_PROTO(JSProto_Number),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub    /* setProperty */
+    JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_HAS_CACHED_PROTO(JSProto_Number)
 };
 
 static bool
@@ -1212,11 +1208,9 @@ js_InitNumberClass(JSContext *cx, HandleObject obj)
     RootedValue valueInfinity(cx, cx->runtime()->positiveInfinityValue);
 
     /* ES5 15.1.1.1, 15.1.1.2 */
-    if (!DefineNativeProperty(cx, global, cx->names().NaN, valueNaN,
-                              JS_PropertyStub, JS_StrictPropertyStub,
+    if (!DefineNativeProperty(cx, global, cx->names().NaN, valueNaN, nullptr, nullptr,
                               JSPROP_PERMANENT | JSPROP_READONLY) ||
-        !DefineNativeProperty(cx, global, cx->names().Infinity, valueInfinity,
-                              JS_PropertyStub, JS_StrictPropertyStub,
+        !DefineNativeProperty(cx, global, cx->names().Infinity, valueInfinity, nullptr, nullptr,
                               JSPROP_PERMANENT | JSPROP_READONLY))
     {
         return nullptr;

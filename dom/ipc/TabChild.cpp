@@ -758,7 +758,7 @@ class TabChild::DelayedDeleteRunnable MOZ_FINAL
     nsRefPtr<TabChild> mTabChild;
 
 public:
-    DelayedDeleteRunnable(TabChild* aTabChild)
+    explicit DelayedDeleteRunnable(TabChild* aTabChild)
       : mTabChild(aTabChild)
     {
         MOZ_ASSERT(NS_IsMainThread());
@@ -2010,13 +2010,15 @@ TabChild::RecvShow(const nsIntSize& aSize,
 }
 
 bool
-TabChild::RecvUpdateDimensions(const nsIntRect& rect, const nsIntSize& size, const ScreenOrientation& orientation)
+TabChild::RecvUpdateDimensions(const nsIntRect& rect, const nsIntSize& size,
+                               const ScreenOrientation& orientation, const nsIntPoint& chromeDisp)
 {
     if (!mRemoteFrame) {
         return true;
     }
 
     mOuterRect = rect;
+    mChromeDisp = chromeDisp;
 
     bool initialSizing = !HasValidInnerSize()
                       && (size.width != 0 && size.height != 0);

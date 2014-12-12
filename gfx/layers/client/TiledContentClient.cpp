@@ -719,7 +719,8 @@ TileClient::GetBackBuffer(const nsIntRegion& aDirtyRegion,
   // Try to re-use the front-buffer if possible
   if (mFrontBuffer &&
       mFrontBuffer->HasInternalBuffer() &&
-      mFrontLock->GetReadCount() == 1) {
+      mFrontLock->GetReadCount() == 1 &&
+      !(aMode == SurfaceMode::SURFACE_COMPONENT_ALPHA && !mFrontBufferOnWhite)) {
     // If we had a backbuffer we no longer care about it since we'll
     // re-use the front buffer.
     DiscardBackBuffer();

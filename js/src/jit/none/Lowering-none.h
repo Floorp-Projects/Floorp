@@ -89,6 +89,8 @@ class LIRGeneratorNone : public LIRGeneratorShared
     void visitSimdTernaryBitwise(MSimdTernaryBitwise *ins) { MOZ_CRASH(); }
     void visitSimdSplatX4(MSimdSplatX4 *ins) { MOZ_CRASH(); }
     void visitSimdValueX4(MSimdValueX4 *lir) { MOZ_CRASH(); }
+    bool visitSubstr(MSubstr *) { MOZ_CRASH(); }
+
 };
 
 typedef LIRGeneratorNone LIRGeneratorSpecific;

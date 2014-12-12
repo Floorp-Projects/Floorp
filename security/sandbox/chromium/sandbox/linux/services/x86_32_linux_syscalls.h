@@ -2,10 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-/* This file has been imported from
- * http://git.chromium.org/gitweb/?p=chromium.git;a=blob_plain;f=sandbox/linux/services/x86_32_linux_syscalls.h;h=ca8ccbdc6d39989304b8fcb8ce931d2f87ab6f00;hb=2362c9abea79cae475921bdeee58f9e3910d211c
- */
-
 // Generated from the Linux kernel's syscall_32.tbl.
 #ifndef SANDBOX_LINUX_SERVICES_X86_32_LINUX_SYSCALLS_H_
 #define SANDBOX_LINUX_SERVICES_X86_32_LINUX_SYSCALLS_H_

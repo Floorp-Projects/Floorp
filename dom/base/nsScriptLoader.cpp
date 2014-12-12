@@ -438,6 +438,8 @@ static bool
 CSPAllowsInlineScript(nsIScriptElement *aElement, nsIDocument *aDocument)
 {
   nsCOMPtr<nsIContentSecurityPolicy> csp;
+  // Note: For imports NodePrincipal and the principal of the master are
+  // the same.
   nsresult rv = aDocument->NodePrincipal()->GetCsp(getter_AddRefs(csp));
   NS_ENSURE_SUCCESS(rv, false);
 

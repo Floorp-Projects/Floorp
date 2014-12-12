@@ -2275,10 +2275,14 @@ IteratorResultShape(ExclusiveContext *cx, BytecodeEmitter *bce, unsigned *shape)
     Rooted<jsid> done_id(cx, AtomToId(cx->names().done));
     if (!DefineNativeProperty(cx, obj, value_id, UndefinedHandleValue, nullptr, nullptr,
                               JSPROP_ENUMERATE))
+    {
         return false;
+    }
     if (!DefineNativeProperty(cx, obj, done_id, UndefinedHandleValue, nullptr, nullptr,
                               JSPROP_ENUMERATE))
+    {
         return false;
+    }
 
     ObjectBox *objbox = bce->parser->newObjectBox(obj);
     if (!objbox)
@@ -6574,8 +6578,8 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 MOZ_ASSERT(!obj->inDictionaryMode());
                 Rooted<jsid> id(cx, AtomToId(key->pn_atom));
                 RootedValue undefinedValue(cx, UndefinedValue());
-                if (!DefineNativeProperty(cx, obj, id, undefinedValue, nullptr,
-                                          nullptr, JSPROP_ENUMERATE))
+                if (!DefineNativeProperty(cx, obj, id, undefinedValue, nullptr, nullptr,
+                                          JSPROP_ENUMERATE))
                 {
                     return false;
                 }

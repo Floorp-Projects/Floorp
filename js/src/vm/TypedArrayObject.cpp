@@ -242,14 +242,10 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     finishClassInit(JSContext *cx, HandleObject ctor, HandleObject proto)
     {
         RootedValue bytesValue(cx, Int32Value(BYTES_PER_ELEMENT));
-        if (!JSObject::defineProperty(cx, ctor,
-                                      cx->names().BYTES_PER_ELEMENT, bytesValue,
-                                      JS_PropertyStub, JS_StrictPropertyStub,
-                                      JSPROP_PERMANENT | JSPROP_READONLY) ||
-            !JSObject::defineProperty(cx, proto,
-                                      cx->names().BYTES_PER_ELEMENT, bytesValue,
-                                      JS_PropertyStub, JS_StrictPropertyStub,
-                                      JSPROP_PERMANENT | JSPROP_READONLY))
+        if (!JSObject::defineProperty(cx, ctor, cx->names().BYTES_PER_ELEMENT, bytesValue,
+                                      nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY) ||
+            !JSObject::defineProperty(cx, proto, cx->names().BYTES_PER_ELEMENT, bytesValue,
+                                      nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY))
         {
             return false;
         }
@@ -808,8 +804,8 @@ TypedArrayObject::sharedTypedArrayPrototypeClass = {
     JSCLASS_HAS_CACHED_PROTO(JSProto_TypedArray),
     nullptr,                /* addProperty */
     nullptr,                /* delProperty */
-    JS_PropertyStub,        /* getProperty */
-    JS_StrictPropertyStub,  /* setProperty */
+    nullptr,                /* getProperty */
+    nullptr,                /* setProperty */
     nullptr,                /* enumerate */
     nullptr,                /* resolve */
     nullptr,                /* convert */
@@ -1767,8 +1763,8 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     JSCLASS_HAS_CACHED_PROTO(JSProto_##_typedArray),                           \
     nullptr,                 /* addProperty */                                 \
     nullptr,                 /* delProperty */                                 \
-    JS_PropertyStub,         /* getProperty */                                 \
-    JS_StrictPropertyStub,   /* setProperty */                                 \
+    nullptr,                 /* getProperty */                                 \
+    nullptr,                 /* setProperty */                                 \
     nullptr,                 /* enumerate   */                                 \
     nullptr,                 /* resolve     */                                 \
     nullptr,                 /* convert     */                                 \
@@ -1810,18 +1806,18 @@ const Class TypedArrayObject::classes[Scalar::MaxTypedArrayViewType] = {
      */ \
     #typedArray "Prototype", \
     JSCLASS_HAS_CACHED_PROTO(JSProto_##typedArray), \
-    nullptr,                /* addProperty */ \
-    nullptr,                /* delProperty */ \
-    JS_PropertyStub,        /* getProperty */ \
-    JS_StrictPropertyStub,  /* setProperty */ \
-    nullptr,                /* enumerate   */ \
-    nullptr,                /* resolve     */ \
-    nullptr,                /* convert     */ \
-    nullptr,                /* finalize    */ \
-    nullptr,                /* call        */ \
-    nullptr,                /* hasInstance */ \
-    nullptr,                /* construct   */ \
-    nullptr,                /* trace  */ \
+    nullptr, /* addProperty */ \
+    nullptr, /* delProperty */ \
+    nullptr, /* getProperty */ \
+    nullptr, /* setProperty */ \
+    nullptr, /* enumerate */ \
+    nullptr, /* resolve */ \
+    nullptr, /* convert */ \
+    nullptr, /* finalize */ \
+    nullptr, /* call */ \
+    nullptr, /* hasInstance */ \
+    nullptr, /* construct */ \
+    nullptr, /* trace  */ \
     { \
         typedArray::createConstructor, \
         typedArray::createPrototype, \
@@ -1855,11 +1851,7 @@ const Class DataViewObject::protoClass = {
     "DataViewPrototype",
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_RESERVED_SLOTS(TypedArrayLayout::RESERVED_SLOTS) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub    /* setProperty */
+    JSCLASS_HAS_CACHED_PROTO(JSProto_DataView)
 };
 
 const Class DataViewObject::class_ = {
@@ -1868,17 +1860,17 @@ const Class DataViewObject::class_ = {
     JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(TypedArrayLayout::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
-    nullptr,                 /* enumerate   */
-    nullptr,                 /* resolve     */
-    nullptr,                 /* convert     */
-    nullptr,                 /* finalize    */
-    nullptr,                 /* call        */
-    nullptr,                 /* hasInstance */
-    nullptr,                 /* construct   */
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* getProperty */
+    nullptr, /* setProperty */
+    nullptr, /* enumerate */
+    nullptr, /* resolve */
+    nullptr, /* convert */
+    nullptr, /* finalize */
+    nullptr, /* call */
+    nullptr, /* hasInstance */
+    nullptr, /* construct */
     ArrayBufferViewObject::trace
 };
 

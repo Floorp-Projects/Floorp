@@ -9,6 +9,7 @@
 #include "AbstractMediaDecoder.h"
 #include "MediaInfo.h"
 #include "MediaData.h"
+#include "MediaPromise.h"
 #include "MediaQueue.h"
 #include "AudioCompactor.h"
 
@@ -36,6 +37,9 @@ public:
     WAITING_FOR_DATA,
     CANCELED
   };
+
+  typedef MediaPromise<nsRefPtr<AudioData>, NotDecodedReason> AudioDataPromise;
+  typedef MediaPromise<nsRefPtr<VideoData>, NotDecodedReason> VideoDataPromise;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderReader)
 
@@ -93,22 +97,22 @@ public:
   // properly!
   virtual nsresult ResetDecode();
 
-  // Requests the Reader to call OnAudioDecoded() on aCallback with one
-  // audio sample. The decode should be performed asynchronously, and
-  // the callback can be performed on any thread. Don't hold the decoder
+  // Requests one audio sample from the reader.
+  //
+  // The decode should be performed asynchronously, and the promise should
+  // be resolved when it is complete. Don't hold the decoder
   // monitor while calling this, as the implementation may try to wait
   // on something that needs the monitor and deadlock.
-  virtual void RequestAudioData();
+  virtual nsRefPtr<AudioDataPromise> RequestAudioData();
 
-  // Requests the Reader to call OnVideoDecoded() on aCallback with one
-  // video sample. The decode should be performed asynchronously, and
-  // the callback can be performed on any thread. Don't hold the decoder
-  // monitor while calling this, as the implementation may try to wait
-  // on something that needs the monitor and deadlock.
+  // Requests one video sample from the reader.
+  //
+  // Don't hold the decoder monitor while calling this, as the implementation
+  // may try to wait on something that needs the monitor and deadlock.
   // If aSkipToKeyframe is true, the decode should skip ahead to the
   // the next keyframe at or after aTimeThreshold microseconds.
-  virtual void RequestVideoData(bool aSkipToNextKeyframe,
-                                int64_t aTimeThreshold);
+  virtual nsRefPtr<VideoDataPromise>
+  RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold);
 
   virtual bool HasAudio() = 0;
   virtual bool HasVideo() = 0;
@@ -275,9 +279,20 @@ protected:
   // and then set to a value >= by MediaDecoderStateMachine::SetStartTime(),
   // after which point it never changes.
   int64_t mStartTime;
-private:
 
+  // This is a quick-and-dirty way for DecodeAudioData implementations to
+  // communicate the presence of a decoding error to RequestAudioData. We should
+  // replace this with a promise-y mechanism as we make this stuff properly
+  // async.
+  bool mHitAudioDecodeError;
+
+private:
   nsRefPtr<RequestSampleCallback> mSampleDecodedCallback;
+
+  // Promises used only for the base-class (sync->async adapter) implementation
+  // of Request{Audio,Video}Data.
+  MediaPromiseHolder<AudioDataPromise> mBaseAudioPromise;
+  MediaPromiseHolder<VideoDataPromise> mBaseVideoPromise;
 
   nsRefPtr<MediaTaskQueue> mTaskQueue;
   bool mTaskQueueIsBorrowed;
@@ -297,17 +312,6 @@ class RequestSampleCallback {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RequestSampleCallback)
 
-  // Receives the result of a RequestAudioData() call.
-  virtual void OnAudioDecoded(AudioData* aSample) = 0;
-
-  // Receives the result of a RequestVideoData() call.
-  virtual void OnVideoDecoded(VideoData* aSample) = 0;
-
-  // Called when a RequestAudioData() or RequestVideoData() call can't be
-  // fulfiled. The reason is passed as aReason.
-  virtual void OnNotDecoded(MediaData::Type aType,
-                            MediaDecoderReader::NotDecodedReason aReason) = 0;
-
   virtual void OnSeekCompleted(nsresult aResult) = 0;
 
   // Called during shutdown to break any reference cycles.
@@ -315,39 +319,6 @@ public:
 
 protected:
   virtual ~RequestSampleCallback() {}
-};
-
-// A RequestSampleCallback implementation that can be passed to the
-// MediaDecoderReader to block the thread requesting an audio sample until
-// the audio decode is complete. This is used to adapt the asynchronous
-// model of the MediaDecoderReader to a synchronous model.
-class AudioDecodeRendezvous : public RequestSampleCallback {
-public:
-  AudioDecodeRendezvous();
-  ~AudioDecodeRendezvous();
-
-  // RequestSampleCallback implementation. Called when decode is complete.
-  // Note: aSample is null at end of stream.
-  virtual void OnAudioDecoded(AudioData* aSample) MOZ_OVERRIDE;
-  virtual void OnVideoDecoded(VideoData* aSample) MOZ_OVERRIDE {}
-  virtual void OnNotDecoded(MediaData::Type aType,
-                            MediaDecoderReader::NotDecodedReason aReason) MOZ_OVERRIDE;
-  virtual void OnSeekCompleted(nsresult aResult) MOZ_OVERRIDE {};
-  virtual void BreakCycles() MOZ_OVERRIDE {};
-  void Reset();
-
-  // Returns failure on error, or NS_OK.
-  // If *aSample is null, EOS has been reached.
-  nsresult Await(nsRefPtr<AudioData>& aSample);
-
-  // Interrupts a call to Wait().
-  void Cancel();
-
-private:
-  Monitor mMonitor;
-  nsresult mStatus;
-  nsRefPtr<AudioData> mSample;
-  bool mHaveResult;
 };
 
 } // namespace mozilla

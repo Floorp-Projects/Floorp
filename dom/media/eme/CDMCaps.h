@@ -13,10 +13,9 @@
 #include "nsIThread.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
+#include "SamplesWaitingForKey.h"
 
 namespace mozilla {
-
-typedef nsTArray<uint8_t> CencKeyId;
 
 // CDM capabilities; what keys a CDMProxy can use, and whether it can decrypt, or
 // decrypt-and-decode on a per stream basis. Must be locked to access state.
@@ -46,7 +45,6 @@ public:
     // changing for this session, i.e. the key was previously marked usable.
     bool SetKeyUnusable(const CencKeyId& aKeyId, const nsString& aSessionId);
 
-    void DropKeysForSession(const nsAString& aSessionId);
     void GetUsableKeysForSession(const nsAString& aSessionId,
                                  nsTArray<CencKeyId>& aOutKeyIds);
 
@@ -62,13 +60,9 @@ public:
 
     void CallOnMainThreadWhenCapsAvailable(nsIRunnable* aContinuation);
 
-    // Calls aContinuation on aTarget thread when key become usable.
-    // Pass aTarget=nullptr and runnable will be called on the GMP thread
-    // when key becomes usable.
-    void CallWhenKeyUsable(const CencKeyId& aKey,
-                           nsIRunnable* aContinuation,
-                           nsIThread* aTarget = nullptr);
-
+    // Notifies the SamplesWaitingForKey when key become usable.
+    void NotifyWhenKeyIdUsable(const CencKeyId& aKey,
+                               SamplesWaitingForKey* aSamplesWaiting);
   private:
     // Not taking a strong ref, since this should be allocated on the stack.
     CDMCaps& mData;
@@ -81,15 +75,12 @@ private:
 
   struct WaitForKeys {
     WaitForKeys(const CencKeyId& aKeyId,
-                nsIRunnable* aContinuation,
-                nsIThread* aTarget)
+                SamplesWaitingForKey* aListener)
       : mKeyId(aKeyId)
-      , mContinuation(aContinuation)
-      , mTarget(aTarget)
+      , mListener(aListener)
     {}
     CencKeyId mKeyId;
-    nsRefPtr<nsIRunnable> mContinuation;
-    nsCOMPtr<nsIThread> mTarget;
+    nsRefPtr<SamplesWaitingForKey> mListener;
   };
 
   Monitor mMonitor;

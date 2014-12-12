@@ -111,7 +111,7 @@ private:
 class DecodeWorker : public nsRunnable
 {
 public:
-  DecodeWorker(RasterImage* aImage)
+  explicit DecodeWorker(RasterImage* aImage)
     : mImage(aImage)
   { }
 

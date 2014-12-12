@@ -262,7 +262,7 @@ public:
         mWritingMode = eBlockFlowMask |
                        eLineOrientMask |
                        eOrientationMask;
-        uint8_t textOrientation = aStyleContext->StyleText()->mTextOrientation;
+        uint8_t textOrientation = aStyleContext->StyleVisibility()->mTextOrientation;
 #if 0 // not yet implemented
         if (textOrientation == NS_STYLE_TEXT_ORIENTATION_SIDEWAYS_LEFT) {
           mWritingMode &= ~eLineOrientMask;
@@ -277,7 +277,7 @@ public:
       case NS_STYLE_WRITING_MODE_VERTICAL_RL:
       {
         mWritingMode = eOrientationMask;
-        uint8_t textOrientation = aStyleContext->StyleText()->mTextOrientation;
+        uint8_t textOrientation = aStyleContext->StyleVisibility()->mTextOrientation;
 #if 0 // not yet implemented
         if (textOrientation == NS_STYLE_TEXT_ORIENTATION_SIDEWAYS_LEFT) {
           mWritingMode |= eLineOrientMask;
@@ -1039,6 +1039,36 @@ public:
   {
     CHECK_WRITING_MODE(aWritingMode);
     mMargin.SizeTo(aBStart, aIEnd, aBEnd, aIStart);
+  }
+
+  nscoord& Top(WritingMode aWritingMode)
+  {
+    CHECK_WRITING_MODE(aWritingMode);
+    return aWritingMode.IsVertical() ?
+      (aWritingMode.IsBidiLTR() ? IStart() : IEnd()) : BStart();
+  }
+
+  nscoord& Bottom(WritingMode aWritingMode)
+  {
+    CHECK_WRITING_MODE(aWritingMode);
+    return aWritingMode.IsVertical() ?
+      (aWritingMode.IsBidiLTR() ? IEnd() : IStart()) : BEnd();
+  }
+
+  nscoord& Left(WritingMode aWritingMode)
+  {
+    CHECK_WRITING_MODE(aWritingMode);
+    return aWritingMode.IsVertical() ?
+      (aWritingMode.IsVerticalLR() ? BStart() : BEnd()) :
+      (aWritingMode.IsBidiLTR() ? IStart() : IEnd());
+  }
+
+  nscoord& Right(WritingMode aWritingMode)
+  {
+    CHECK_WRITING_MODE(aWritingMode);
+    return aWritingMode.IsVertical() ?
+      (aWritingMode.IsVerticalLR() ? BEnd() : BStart()) :
+      (aWritingMode.IsBidiLTR() ? IEnd() : IStart());
   }
 
   /**

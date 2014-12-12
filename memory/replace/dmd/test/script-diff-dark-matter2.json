@@ -1,5 +1,5 @@
 {
- "version": 2,
+ "version": 3,
  "invocation": {
   "dmdEnvVar": "--sample-below=63",
   "mode": "dark-matter",

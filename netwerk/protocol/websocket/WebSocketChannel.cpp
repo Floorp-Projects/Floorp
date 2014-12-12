@@ -1969,7 +1969,7 @@ class RemoveObserverRunnable : public nsRunnable
   nsRefPtr<WebSocketChannel> mChannel;
 
 public:
-  RemoveObserverRunnable(WebSocketChannel* aChannel)
+  explicit RemoveObserverRunnable(WebSocketChannel* aChannel)
     : mChannel(aChannel)
   {}
 

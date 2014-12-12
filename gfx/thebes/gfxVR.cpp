@@ -180,7 +180,7 @@ using namespace mozilla::gfx;
 class FakeScreen : public nsIScreen
 {
 public:
-  FakeScreen(const IntRect& aScreenRect)
+  explicit FakeScreen(const IntRect& aScreenRect)
     : mScreenRect(aScreenRect)
   { }
 
@@ -230,7 +230,7 @@ NS_IMPL_ISUPPORTS(FakeScreen, nsIScreen)
 class HMDInfoOculus : public VRHMDInfo {
   friend class VRHMDManagerOculusImpl;
 public:
-  HMDInfoOculus(ovrHmd aHMD);
+  explicit HMDInfoOculus(ovrHmd aHMD);
 
   bool SetFOV(const VRFieldOfView& aFOVLeft, const VRFieldOfView& aFOVRight,
               double zNear, double zFar) MOZ_OVERRIDE;

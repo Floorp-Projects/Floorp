@@ -997,7 +997,9 @@ class XPCShellTests(object):
     def makeTestId(self, test_object):
         """Calculate an identifier for a test based on its path or a combination of
         its path and the source manifest."""
-        path = test_object['path'].replace('\\', '/');
+
+        relpath_key = 'file_relpath' if 'file_relpath' in test_object else 'relpath'
+        path = test_object[relpath_key].replace('\\', '/');
         if 'dupe-manifest' in test_object and 'ancestor-manifest' in test_object:
             return '%s:%s' % (os.path.basename(test_object['ancestor-manifest']), path)
         return path

@@ -967,7 +967,10 @@ class MOZ_STACK_CLASS SourceBufferHolder MOZ_FINAL
                                            object that delegates to a prototype
                                            containing this property */
 #define JSPROP_INDEX            0x80    /* name is actually (int) index */
-
+#define JSPROP_DEFINE_LATE     0x100    /* Don't define property when initially creating
+                                           the constructor. Some objects like Function/Object
+                                           have self-hosted functions that can only be defined
+                                           after the initialization is already finished. */
 #define JSFUN_STUB_GSOPS       0x200    /* use JS_PropertyStub getter/setter
                                            instead of defaulting to class gsops
                                            for property holding function */
@@ -3102,8 +3105,14 @@ class MutablePropertyDescriptorOperations : public PropertyDescriptorOperations<
     void setEnumerable() { desc()->attrs |= JSPROP_ENUMERATE; }
     void setAttributes(unsigned attrs) { desc()->attrs = attrs; }
 
-    void setGetter(JSPropertyOp op) { desc()->getter = op; }
-    void setSetter(JSStrictPropertyOp op) { desc()->setter = op; }
+    void setGetter(JSPropertyOp op) {
+        MOZ_ASSERT(op != JS_PropertyStub);
+        desc()->getter = op;
+    }
+    void setSetter(JSStrictPropertyOp op) {
+        MOZ_ASSERT(op != JS_StrictPropertyStub);
+        desc()->setter = op;
+    }
     void setGetterObject(JSObject *obj) { desc()->getter = reinterpret_cast<JSPropertyOp>(obj); }
     void setSetterObject(JSObject *obj) { desc()->setter = reinterpret_cast<JSStrictPropertyOp>(obj); }
 
@@ -3528,8 +3537,18 @@ JS_IsConstructor(JSFunction *fun);
 extern JS_PUBLIC_API(JSObject*)
 JS_BindCallable(JSContext *cx, JS::Handle<JSObject*> callable, JS::Handle<JSObject*> newThis);
 
+// This enum is used to select if properties with JSPROP_DEFINE_LATE flag
+// should be defined on the object.
+// Normal JSAPI consumers probably always want DefineAllProperties here.
+enum PropertyDefinitionBehavior {
+    DefineAllProperties,
+    OnlyDefineLateProperties,
+    DontDefineLateProperties
+};
+
 extern JS_PUBLIC_API(bool)
-JS_DefineFunctions(JSContext *cx, JS::Handle<JSObject*> obj, const JSFunctionSpec *fs);
+JS_DefineFunctions(JSContext *cx, JS::Handle<JSObject*> obj, const JSFunctionSpec *fs,
+                   PropertyDefinitionBehavior behavior = DefineAllProperties);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_DefineFunction(JSContext *cx, JS::Handle<JSObject*> obj, const char *name, JSNative call,
@@ -5105,6 +5124,14 @@ JS_CharsToId(JSContext* cx, JS::TwoByteChars chars, JS::MutableHandleId);
  */
 extern JS_PUBLIC_API(bool)
 JS_IsIdentifier(JSContext *cx, JS::HandleString str, bool *isIdentifier);
+
+/*
+ * Test whether the given chars + length are a valid ECMAScript identifier.
+ * This version is infallible, so just returns whether the chars are an
+ * identifier.
+ */
+extern JS_PUBLIC_API(bool)
+JS_IsIdentifier(const char16_t *chars, size_t length);
 
 namespace JS {
 

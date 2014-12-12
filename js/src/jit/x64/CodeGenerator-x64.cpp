@@ -390,7 +390,7 @@ CodeGeneratorX64::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap *ins)
     if (mir->needsBoundsCheck()) {
         maybeCmpOffset = masm.cmplWithPatch(ToRegister(ptr), Imm32(0)).offset();
         Label goahead;
-        masm.j(Assembler::LessThan, &goahead);
+        masm.j(Assembler::Below, &goahead);
         memoryBarrier(MembarFull);
         Register out = ToRegister(ins->output());
         masm.xorl(out, out);
@@ -427,7 +427,7 @@ CodeGeneratorX64::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap *ins)
     if (mir->needsBoundsCheck()) {
         maybeCmpOffset = masm.cmplWithPatch(ToRegister(ptr), Imm32(0)).offset();
         Label goahead;
-        masm.j(Assembler::LessThan, &goahead);
+        masm.j(Assembler::Below, &goahead);
         memoryBarrier(MembarFull);
         Register out = ToRegister(ins->output());
         masm.xorl(out,out);

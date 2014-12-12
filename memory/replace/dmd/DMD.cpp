@@ -1376,14 +1376,18 @@ Options::GetBool(const char* aArg, const char* aOptionName, bool* aValue)
 //   prime size will explore all possible values of the alloc counter.
 //
 Options::Options(const char* aDMDEnvVar)
-  : mDMDEnvVar(InfallibleAllocPolicy::strdup_(aDMDEnvVar))
+  : mDMDEnvVar(aDMDEnvVar ? InfallibleAllocPolicy::strdup_(aDMDEnvVar)
+                          : nullptr)
   , mMode(DarkMatter)
   , mSampleBelowSize(4093, 100 * 100 * 1000)
   , mMaxFrames(StackTrace::MaxFrames, StackTrace::MaxFrames)
   , mShowDumpStats(false)
 {
+  // It's no longer necessary to set the DMD env var to "1" if you want default
+  // options (you can leave it undefined) but we still accept "1" for
+  // backwards compatibility.
   char* e = mDMDEnvVar;
-  if (strcmp(e, "1") != 0) {
+  if (e && strcmp(e, "1") != 0) {
     bool isEnd = false;
     while (!isEnd) {
       // Consume leading whitespace.
@@ -1485,11 +1489,11 @@ Init(const malloc_table_t* aMallocTable)
   // DMD is controlled by the |DMD| environment variable.
   const char* e = getenv("DMD");
 
-  if (!e) {
-    e = "1";
+  if (e) {
+    StatusMsg("$DMD = '%s'\n", e);
+  } else {
+    StatusMsg("$DMD is undefined\n", e);
   }
-
-  StatusMsg("$DMD = '%s'\n", e);
 
   // Parse $DMD env var.
   gOptions = InfallibleAllocPolicy::new_<Options>(e);
@@ -1575,7 +1579,7 @@ DMDFuncs::ReportOnAlloc(const void* aPtr)
 // The version number of the output format. Increment this if you make
 // backwards-incompatible changes to the format. See DMD.h for the version
 // history.
-static const int kOutputVersionNumber = 2;
+static const int kOutputVersionNumber = 3;
 
 // Note that, unlike most SizeOf* functions, this function does not take a
 // |mozilla::MallocSizeOf| argument.  That's because those arguments are
@@ -1735,7 +1739,13 @@ AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
 
     writer.StartObjectProperty("invocation");
     {
-      writer.StringProperty("dmdEnvVar", gOptions->DMDEnvVar());
+      const char* var = gOptions->DMDEnvVar();
+      if (var) {
+        writer.StringProperty("dmdEnvVar", var);
+      } else {
+        writer.NullProperty("dmdEnvVar");
+      }
+
       const char* mode;
       if (gOptions->IsLiveMode()) {
         mode = "live";
@@ -1748,6 +1758,7 @@ AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
         mode = "(unknown DMD mode)";
       }
       writer.StringProperty("mode", mode);
+
       writer.IntProperty("sampleBelowSize", gOptions->SampleBelowSize());
     }
     writer.EndObject();
