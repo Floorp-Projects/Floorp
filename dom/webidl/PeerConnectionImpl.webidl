@@ -86,7 +86,4 @@ interface PeerConnectionImpl  {
     unsigned short type, boolean outOfOrderAllowed,
     unsigned short maxTime, unsigned short maxNum,
     boolean externalNegotiated, unsigned short stream);
-  [Throws]
-  void connectDataConnection(unsigned short localport,
-    unsigned short remoteport, unsigned short numstreams);
 };
