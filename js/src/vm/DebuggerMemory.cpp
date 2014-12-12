@@ -757,18 +757,22 @@ DebuggerMemory::takeCensus(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     Debugger *dbg = memory->getDebugger();
-    RootedObject dbgObj(cx, dbg->object);
 
-    // Populate our target set of debuggee zones.
+    // Populate census.debuggeeZones and ensure that all of our debuggee globals
+    // are rooted so that they are visible in the RootList.
+    JS::AutoObjectVector debuggees(cx);
     for (GlobalObjectSet::Range r = dbg->allDebuggees(); !r.empty(); r.popFront()) {
-        if (!census.debuggeeZones.put(r.front()->zone()))
+        if (!census.debuggeeZones.put(r.front()->zone()) ||
+            !debuggees.append(static_cast<JSObject *>(r.front())))
+        {
             return false;
+        }
     }
 
     {
         Maybe<JS::AutoCheckCannotGC> maybeNoGC;
         JS::ubi::RootList rootList(cx, maybeNoGC);
-        if (!rootList.init(dbgObj))
+        if (!rootList.init(cx, census.debuggeeZones))
             return false;
 
         dbg::DefaultCensusTraversal traversal(cx, handler, maybeNoGC.ref());
