@@ -7,7 +7,11 @@
           android:color="@color/text_color_primary_inverse"/>
 
     <item android:state_checked="true"
-        android:color="@color/text_color_secondary"/>
+          android:color="@color/text_color_secondary"/>
+
+    <item android:state_checked="false"
+          gecko:state_dark="true"
+          android:color="@color/text_color_primary_inverse"/>
 
     <item android:color="@color/text_color_secondary"/>
 
