@@ -976,7 +976,7 @@ nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI* aURI, uint32_t aAppId,
     if (uriPrinc) {
         nsCOMPtr<nsIPrincipal> principal;
         uriPrinc->GetPrincipal(getter_AddRefs(principal));
-        if (!principal || principal == mSystemPrincipal) {
+        if (!principal) {
             return CallCreateInstance(NS_NULLPRINCIPAL_CONTRACTID, result);
         }
 
