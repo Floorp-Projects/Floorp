@@ -163,7 +163,7 @@ public class SendTabDeviceListArrayAdapter extends ArrayAdapter<ParcelableClient
                 showDummyRecord(getContext().getResources().getString(R.string.overlay_share_send_other));
                 break;
             default:
-                Assert.isTrue(false, "Unexpected state transition: " + newState);
+                Assert.fail("Unexpected state transition: " + newState);
         }
     }
 
