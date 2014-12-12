@@ -57,7 +57,6 @@ private:
     
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
     nsCOMPtr<nsILoadGroup> mLoadGroup;
-    nsCOMPtr<nsILoadInfo> mLoadInfo;
 };
 
 NS_IMPL_ADDREF(nsExtProtocolChannel)
@@ -265,16 +264,14 @@ NS_IMETHODIMP nsExtProtocolChannel::SetOwner(nsISupports * aPrincipal)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsExtProtocolChannel::GetLoadInfo(nsILoadInfo **aLoadInfo)
+NS_IMETHODIMP nsExtProtocolChannel::GetLoadInfo(nsILoadInfo * *aLoadInfo)
 {
-  NS_IF_ADDREF(*aLoadInfo = mLoadInfo);
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsExtProtocolChannel::SetLoadInfo(nsILoadInfo *aLoadInfo)
+NS_IMETHODIMP nsExtProtocolChannel::SetLoadInfo(nsILoadInfo * aLoadInfo)
 {
-  mLoadInfo = aLoadInfo;
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -415,9 +412,6 @@ nsExternalProtocolHandler::NewChannel2(nsIURI* aURI,
 
     ((nsExtProtocolChannel*) channel.get())->SetURI(aURI);
     channel->SetOriginalURI(aURI);
-
-    // set the loadInfo on the new channel
-    ((nsExtProtocolChannel*) channel.get())->SetLoadInfo(aLoadInfo);
 
     if (_retval)
     {
