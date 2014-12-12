@@ -155,6 +155,32 @@ protected:
     const char* mCallSite;
   };
 
+  /*
+   * We create two overloads for invoking Resolve/Reject Methods so as to
+   * make the resolve/reject value argument "optional".
+   */
+
+  // Avoid confusing the compiler when the callback accepts T* but the ValueType
+  // is nsRefPtr<T>. See bug 1109954 comment 6.
+  template <typename T>
+  struct NonDeduced
+  {
+    typedef T type;
+  };
+
+  template<typename ThisType, typename ValueType>
+  static void InvokeCallbackMethod(ThisType* aThisVal, void(ThisType::*aMethod)(ValueType),
+                                   typename NonDeduced<ValueType>::type aValue)
+  {
+      ((*aThisVal).*aMethod)(aValue);
+  }
+
+  template<typename ThisType, typename ValueType>
+  static void InvokeCallbackMethod(ThisType* aThisVal, void(ThisType::*aMethod)(), ValueType aValue)
+  {
+      ((*aThisVal).*aMethod)();
+  }
+
   template<typename TargetType, typename ThisType,
            typename ResolveMethodType, typename RejectMethodType>
   class ThenValue : public ThenValueBase
@@ -187,12 +213,12 @@ protected:
   protected:
     virtual void DoResolve(ResolveValueType aResolveValue)
     {
-      ((*mThisVal).*mResolveMethod)(aResolveValue);
+      InvokeCallbackMethod(mThisVal.get(), mResolveMethod, aResolveValue);
     }
 
     virtual void DoReject(RejectValueType aRejectValue)
     {
-      ((*mThisVal).*mRejectMethod)(aRejectValue);
+      InvokeCallbackMethod(mThisVal.get(), mRejectMethod, aRejectValue);
     }
 
     virtual ~ThenValue() {}
