@@ -6,6 +6,7 @@
 
 #include "mozilla/SnappyUncompressInputStream.h"
 
+#include <algorithm>
 #include "nsIAsyncInputStream.h"
 #include "nsStreamUtils.h"
 #include "snappy/snappy.h"
