@@ -27,6 +27,7 @@ interface nsIProxiedProtocolHandler : nsIProtocolHandler
      *        effect), except in the case of websockets which wants to bootstrap
      *        to an http:// channel but make its proxy determination based on
      *        a ws:// uri.
+     * @param aLoadInfo used to evaluate who initated the resource request.
      */
     nsIChannel newProxiedChannel2(in nsIURI uri, in nsIProxyInfo proxyInfo,
                                   in unsigned long proxyResolveFlags,
