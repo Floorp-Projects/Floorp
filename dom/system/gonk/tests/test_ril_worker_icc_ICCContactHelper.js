@@ -1,5 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 subscriptLoader.loadSubScript("resource://gre/modules/ril_consts.js", this);
 
@@ -32,7 +32,8 @@ add_test(function test_error_message_read_icc_contact () {
   // Error 3, suppose we update the supported PBR fields in USIM_PBR_FIELDS,
   // but forget to add implemenetations for it.
   USIM_PBR_FIELDS.push("pbc");
-  do_test({contactType: "adn"}, CONTACT_ERR_FIELD_NOT_SUPPORTED);
+  do_test({contactType: GECKO_CARDCONTACT_TYPE_ADN},
+          CONTACT_ERR_FIELD_NOT_SUPPORTED);
 
   run_next_test();
 });
@@ -59,14 +60,18 @@ add_test(function test_error_message_update_icc_contact() {
   do_test({}, CONTACT_ERR_REQUEST_NOT_SUPPORTED);
 
   // Error 2, specifying a correct contactType, but without providing 'contact'.
-  do_test({contactType: "adn"}, CONTACT_ERR_REQUEST_NOT_SUPPORTED);
+  do_test({contactType: GECKO_CARDCONTACT_TYPE_ADN},
+          CONTACT_ERR_REQUEST_NOT_SUPPORTED);
 
   // Error 3, specifying a non-supported contactType.
   ril.appType = CARD_APPTYPE_USIM;
-  do_test({contactType: "sdn", contact: {}}, CONTACT_ERR_CONTACT_TYPE_NOT_SUPPORTED);
+  do_test({contactType: GECKO_CARDCONTACT_TYPE_SDN, contact: {}},
+          CONTACT_ERR_CONTACT_TYPE_NOT_SUPPORTED);
 
   // Error 4, without supplying pin2.
-  do_test({contactType: "fdn", contact: {contactId: ICCID + "1"}}, GECKO_ERROR_SIM_PIN2);
+  do_test({contactType: GECKO_CARDCONTACT_TYPE_FDN,
+           contact: {contactId: ICCID + "1"}},
+          GECKO_ERROR_SIM_PIN2);
 
   // Error 5, No free record found in EF_ADN.
   let record = context.ICCRecordHelper;
@@ -81,19 +86,22 @@ add_test(function test_error_message_update_icc_contact() {
     options.callback(options);
   };
 
-  do_test({contactType: "adn", contact: {}}, CONTACT_ERR_NO_FREE_RECORD_FOUND);
+  do_test({contactType: GECKO_CARDCONTACT_TYPE_ADN, contact: {}},
+          CONTACT_ERR_NO_FREE_RECORD_FOUND);
 
   // Error 6, ICC IO Error.
   io.loadLinearFixedEF = function(options) {
     ril[REQUEST_SIM_IO](0, {rilRequestError: ERROR_GENERIC_FAILURE});
   };
-  do_test({contactType: "adn", contact: {contactId: ICCID + "1"}},
+  do_test({contactType: GECKO_CARDCONTACT_TYPE_ADN,
+           contact: {contactId: ICCID + "1"}},
           GECKO_ERROR_GENERIC_FAILURE);
 
   // Error 7, suppose we update the supported PBR fields in USIM_PBR_FIELDS,
   // but forget to add implemenetations for it.
   USIM_PBR_FIELDS.push("pbc");
-  do_test({contactType: "adn", contact: {contactId: ICCID + "1"}},
+  do_test({contactType: GECKO_CARDCONTACT_TYPE_ADN,
+           contact: {contactId: ICCID + "1"}},
           CONTACT_ERR_FIELD_NOT_SUPPORTED);
 
   // Error 8, EF_PBR doesn't exist.
@@ -101,7 +109,8 @@ add_test(function test_error_message_update_icc_contact() {
     onsuccess([]);
   };
 
-  do_test({contactType: "adn", contact: {contactId: ICCID + "1"}},
+  do_test({contactType: GECKO_CARDCONTACT_TYPE_ADN,
+           contact: {contactId: ICCID + "1"}},
           CONTACT_ERR_CANNOT_ACCESS_PHONEBOOK);
 
   run_next_test();
@@ -183,31 +192,31 @@ add_test(function test_read_icc_contacts() {
 
   // SIM
   do_print("Test read SIM adn contacts");
-  do_test(CARD_APPTYPE_SIM, "adn", expectedContact1);
+  do_test(CARD_APPTYPE_SIM, GECKO_CARDCONTACT_TYPE_ADN, expectedContact1);
 
   do_print("Test read SIM fdn contacts");
-  do_test(CARD_APPTYPE_SIM, "fdn", expectedContact1);
+  do_test(CARD_APPTYPE_SIM, GECKO_CARDCONTACT_TYPE_FDN, expectedContact1);
 
   // USIM
   do_print("Test read USIM adn contacts");
-  do_test(CARD_APPTYPE_USIM, "adn", expectedContact2);
+  do_test(CARD_APPTYPE_USIM, GECKO_CARDCONTACT_TYPE_ADN, expectedContact2);
 
   do_print("Test read USIM fdn contacts");
-  do_test(CARD_APPTYPE_USIM, "fdn", expectedContact1);
+  do_test(CARD_APPTYPE_USIM, GECKO_CARDCONTACT_TYPE_FDN, expectedContact1);
 
   // RUIM
   do_print("Test read RUIM adn contacts");
-  do_test(CARD_APPTYPE_RUIM, "adn", expectedContact1);
+  do_test(CARD_APPTYPE_RUIM, GECKO_CARDCONTACT_TYPE_ADN, expectedContact1);
 
   do_print("Test read RUIM fdn contacts");
-  do_test(CARD_APPTYPE_RUIM, "fdn", expectedContact1);
+  do_test(CARD_APPTYPE_RUIM, GECKO_CARDCONTACT_TYPE_FDN, expectedContact1);
 
   // RUIM with enhanced phone book
   do_print("Test read RUIM adn contacts with enhanced phone book");
-  do_test(CARD_APPTYPE_RUIM, "adn", expectedContact2, true);
+  do_test(CARD_APPTYPE_RUIM, GECKO_CARDCONTACT_TYPE_ADN, expectedContact2, true);
 
   do_print("Test read RUIM fdn contacts with enhanced phone book");
-  do_test(CARD_APPTYPE_RUIM, "fdn", expectedContact1, true);
+  do_test(CARD_APPTYPE_RUIM, GECKO_CARDCONTACT_TYPE_FDN, expectedContact1, true);
 
   run_next_test();
 });
@@ -261,9 +270,9 @@ add_test(function test_update_icc_contact() {
     };
 
     recordHelper.updateADNLike = function(fileId, contact, pin2, onsuccess, onerror) {
-      if (aContactType === "fdn") {
+      if (aContactType === GECKO_CARDCONTACT_TYPE_FDN) {
         do_check_eq(fileId, ICC_EF_FDN);
-      } else if (aContactType === "adn") {
+      } else if (aContactType === GECKO_CARDCONTACT_TYPE_ADN) {
         do_check_eq(fileId, ICC_EF_ADN);
       }
       do_check_eq(pin2, aPin2);
@@ -370,35 +379,42 @@ add_test(function test_update_icc_contact() {
     let contact = contacts[i];
     // SIM
     do_print("Test update SIM adn contacts");
-    do_test(CARD_APPTYPE_SIM, "adn", contact);
+    do_test(CARD_APPTYPE_SIM, GECKO_CARDCONTACT_TYPE_ADN, contact);
 
     do_print("Test update SIM fdn contacts");
-    do_test(CARD_APPTYPE_SIM, "fdn", contact, "1234");
+    do_test(CARD_APPTYPE_SIM, GECKO_CARDCONTACT_TYPE_FDN, contact, "1234");
 
     // USIM
     do_print("Test update USIM adn contacts");
-    do_test(CARD_APPTYPE_USIM, "adn", contact, null, ICC_USIM_TYPE1_TAG);
-    do_test(CARD_APPTYPE_USIM, "adn", contact, null, ICC_USIM_TYPE2_TAG, true);
-    do_test(CARD_APPTYPE_USIM, "adn", contact, null, ICC_USIM_TYPE2_TAG, false);
+    do_test(CARD_APPTYPE_USIM, GECKO_CARDCONTACT_TYPE_ADN, contact, null,
+            ICC_USIM_TYPE1_TAG);
+    do_test(CARD_APPTYPE_USIM, GECKO_CARDCONTACT_TYPE_ADN, contact, null,
+            ICC_USIM_TYPE2_TAG, true);
+    do_test(CARD_APPTYPE_USIM, GECKO_CARDCONTACT_TYPE_ADN, contact, null,
+            ICC_USIM_TYPE2_TAG, false);
 
     do_print("Test update USIM fdn contacts");
-    do_test(CARD_APPTYPE_USIM, "fdn", contact, "1234");
+    do_test(CARD_APPTYPE_USIM, GECKO_CARDCONTACT_TYPE_FDN, contact, "1234");
 
     // RUIM
     do_print("Test update RUIM adn contacts");
-    do_test(CARD_APPTYPE_RUIM, "adn", contact);
+    do_test(CARD_APPTYPE_RUIM, GECKO_CARDCONTACT_TYPE_ADN, contact);
 
     do_print("Test update RUIM fdn contacts");
-    do_test(CARD_APPTYPE_RUIM, "fdn", contact, "1234");
+    do_test(CARD_APPTYPE_RUIM, GECKO_CARDCONTACT_TYPE_FDN, contact, "1234");
 
     // RUIM with enhanced phone book
     do_print("Test update RUIM adn contacts with enhanced phone book");
-    do_test(CARD_APPTYPE_RUIM, "adn", contact, null, ICC_USIM_TYPE1_TAG, null, true);
-    do_test(CARD_APPTYPE_RUIM, "adn", contact, null, ICC_USIM_TYPE2_TAG, true, true);
-    do_test(CARD_APPTYPE_RUIM, "adn", contact, null, ICC_USIM_TYPE2_TAG, false, true);
+    do_test(CARD_APPTYPE_RUIM, GECKO_CARDCONTACT_TYPE_ADN, contact, null,
+            ICC_USIM_TYPE1_TAG, null,true);
+    do_test(CARD_APPTYPE_RUIM, GECKO_CARDCONTACT_TYPE_ADN, contact, null,
+            ICC_USIM_TYPE2_TAG, true, true);
+    do_test(CARD_APPTYPE_RUIM, GECKO_CARDCONTACT_TYPE_ADN, contact, null,
+            ICC_USIM_TYPE2_TAG, false, true);
 
     do_print("Test update RUIM fdn contacts with enhanced phone book");
-    do_test(CARD_APPTYPE_RUIM, "fdn", contact, "1234", null, true);
+    do_test(CARD_APPTYPE_RUIM, GECKO_CARDCONTACT_TYPE_FDN, contact, "1234",
+            null, true);
   }
 
   run_next_test();
@@ -476,7 +492,9 @@ add_test(function test_update_icc_contact_with_remove_type1_attr() {
       do_check_true(false);
     };
 
-    contactHelper.updateICCContact(CARD_APPTYPE_USIM, "adn", contact, null, successCb, errorCb);
+    contactHelper.updateICCContact(CARD_APPTYPE_USIM,
+                                   GECKO_CARDCONTACT_TYPE_ADN,
+                                   contact, null, successCb, errorCb);
   }
 
   do_test(ICC_USIM_TYPE1_TAG);
@@ -518,7 +536,9 @@ add_test(function test_find_free_icc_contact_sim() {
   };
 
   for (let i = 0; i < MAX_RECORDS; i++) {
-    contactHelper.findFreeICCContact(CARD_APPTYPE_SIM, "adn", successCb, errorCb);
+    contactHelper.findFreeICCContact(CARD_APPTYPE_SIM,
+                                     GECKO_CARDCONTACT_TYPE_ADN,
+                                     successCb, errorCb);
   }
   // The 1st element, records[0], is null.
   do_check_eq(records.length - 1, MAX_RECORDS);
@@ -531,7 +551,8 @@ add_test(function test_find_free_icc_contact_sim() {
   errorCb = function(errorMsg) {
     do_check_true(errorMsg === "No free record found.");
   };
-  contactHelper.findFreeICCContact(CARD_APPTYPE_SIM, "adn", successCb, errorCb);
+  contactHelper.findFreeICCContact(CARD_APPTYPE_SIM, GECKO_CARDCONTACT_TYPE_ADN,
+                                   successCb, errorCb);
 
   run_next_test();
 });
@@ -576,7 +597,9 @@ add_test(function test_find_free_icc_contact_usim() {
     do_check_true(false);
   };
 
-  contactHelper.findFreeICCContact(CARD_APPTYPE_USIM, "adn", successCb, errorCb);
+  contactHelper.findFreeICCContact(CARD_APPTYPE_USIM,
+                                   GECKO_CARDCONTACT_TYPE_ADN,
+                                   successCb, errorCb);
 
   // Now the EF_ADN in the 1st phonebook set is full, so the next free contact
   // will come from the 2nd phonebook set.
@@ -584,7 +607,9 @@ add_test(function test_find_free_icc_contact_usim() {
     do_check_eq(pbrIndex, 1);
     do_check_eq(recordId, 1);
   }
-  contactHelper.findFreeICCContact(CARD_APPTYPE_USIM, "adn", successCb, errorCb);
+  contactHelper.findFreeICCContact(CARD_APPTYPE_USIM,
+                                   GECKO_CARDCONTACT_TYPE_ADN,
+                                   successCb, errorCb);
 
   run_next_test();
 });
