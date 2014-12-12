@@ -13,8 +13,6 @@ let CloudSync = null;
 
 // gSyncUI handles updating the tools menu and displaying notifications.
 let gSyncUI = {
-  DEFAULT_EOL_URL: "https://www.mozilla.org/firefox/?utm_source=synceol",
-
   _obs: ["weave:service:sync:start",
          "weave:service:quota:remaining",
          "weave:service:setup-complete",
@@ -27,7 +25,6 @@ let gSyncUI = {
          "weave:ui:sync:error",
          "weave:ui:sync:finish",
          "weave:ui:clear-error",
-         "weave:eol",
   ],
 
   _unloaded: false,
@@ -258,32 +255,6 @@ let gSyncUI = {
   _getAppName: function () {
     let brand = new StringBundle("chrome://branding/locale/brand.properties");
     return brand.get("brandShortName");
-  },
-
-  onEOLNotice: function (data) {
-    let code = data.code;
-    let kind = (code == "hard-eol") ? "error" : "warning";
-    let url = data.url || gSyncUI.DEFAULT_EOL_URL;
-
-    let title = this._stringBundle.GetStringFromName(kind + ".sync.eol.label");
-    let description = this._stringBundle.formatStringFromName(kind + ".sync.eol.description",
-                                                              [this._getAppName()],
-                                                              1);
-
-    let buttons = [];
-    buttons.push(new Weave.NotificationButton(
-      this._stringBundle.GetStringFromName("sync.eol.learnMore.label"),
-      this._stringBundle.GetStringFromName("sync.eol.learnMore.accesskey"),
-      function() {
-        window.openUILinkIn(url, "tab");
-        return true;
-      }
-    ));
-
-    let priority = (kind == "error") ? Weave.Notifications.PRIORITY_WARNING :
-                                       Weave.Notifications.PRIORITY_INFO;
-    let notification = new Weave.Notification(title, description, null, priority, buttons);
-    Weave.Notifications.replaceTitle(notification);
   },
 
   openServerStatus: function () {
@@ -550,9 +521,6 @@ let gSyncUI = {
         break;
       case "weave:ui:clear-error":
         this.clearError();
-        break;
-      case "weave:eol":
-        this.onEOLNotice(subject);
         break;
     }
   },
