@@ -523,7 +523,7 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
                                 uri,
                                 stream,
                                 info->mPrincipal,
-                                nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
+                                nsILoadInfo::SEC_NORMAL,
                                 nsIContentPolicy::TYPE_OTHER);
 
   NS_ENSURE_SUCCESS(rv, rv);
