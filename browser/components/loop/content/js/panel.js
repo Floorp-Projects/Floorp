@@ -319,7 +319,8 @@ loop.panel = (function(_, mozL10n) {
                                    onClick: this.handleClickAccountEntry, 
                                    icon: "account", 
                                    displayed: this._isSignedIn()}), 
-            SettingsDropdownEntry({label: mozL10n.get("tour_label"), 
+            SettingsDropdownEntry({icon: "tour", 
+                                   label: mozL10n.get("tour_label"), 
                                    onClick: this.openGettingStartedTour}), 
             SettingsDropdownEntry({label: this._isSignedIn() ?
                                           mozL10n.get("settings_menu_item_signout") :
