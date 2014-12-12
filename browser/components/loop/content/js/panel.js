@@ -624,7 +624,7 @@ loop.panel = (function(_, mozL10n) {
    * Room list.
    */
   var RoomList = React.createClass({displayName: 'RoomList',
-    mixins: [Backbone.Events],
+    mixins: [Backbone.Events, sharedMixins.WindowCloseMixin],
 
     propTypes: {
       store: React.PropTypes.instanceOf(loop.store.RoomStore).isRequired,
@@ -666,6 +666,8 @@ loop.panel = (function(_, mozL10n) {
     },
 
     handleCreateButtonClick: function() {
+      this.closeWindow();
+
       this.props.dispatcher.dispatch(new sharedActions.CreateRoom({
         nameTemplate: mozL10n.get("rooms_default_room_name_template"),
         roomOwner: this.props.userDisplayName
