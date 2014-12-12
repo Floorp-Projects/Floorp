@@ -1725,7 +1725,7 @@ nsHttpHandler::NewChannel2(nsIURI* uri,
         }
     }
 
-    return NewProxiedChannel2(uri, nullptr, 0, nullptr, aLoadInfo, result);
+    return NewProxiedChannel(uri, nullptr, 0, nullptr, result);
 }
 
 NS_IMETHODIMP
@@ -1792,12 +1792,6 @@ nsHttpHandler::NewProxiedChannel2(nsIURI *uri,
     rv = httpChannel->Init(uri, caps, proxyInfo, proxyResolveFlags, proxyURI);
     if (NS_FAILED(rv))
         return rv;
-
-    // set the loadInfo on the new channel
-    rv = httpChannel->SetLoadInfo(aLoadInfo);
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
 
     httpChannel.forget(result);
     return NS_OK;
@@ -2113,7 +2107,7 @@ nsHttpsHandler::NewChannel2(nsIURI* aURI,
     MOZ_ASSERT(gHttpHandler);
     if (!gHttpHandler)
       return NS_ERROR_UNEXPECTED;
-    return gHttpHandler->NewChannel2(aURI, aLoadInfo, _retval);
+    return gHttpHandler->NewChannel(aURI, _retval);
 }
 
 NS_IMETHODIMP
