@@ -841,7 +841,7 @@ describe("loop.panel", function() {
   });
 
   describe("loop.panel.RoomList", function() {
-    var roomStore, dispatcher, fakeEmail;
+    var roomStore, dispatcher, fakeEmail, dispatch;
 
     beforeEach(function() {
       fakeEmail = "fakeEmail@example.com";
@@ -855,6 +855,7 @@ describe("loop.panel", function() {
         rooms: [],
         error: undefined
       });
+      dispatch = sandbox.stub(dispatcher, "dispatch");
     });
 
     function createTestComponent() {
@@ -866,8 +867,6 @@ describe("loop.panel", function() {
     }
 
     it("should dispatch a GetAllRooms action on mount", function() {
-      var dispatch = sandbox.stub(dispatcher, "dispatch");
-
       createTestComponent();
 
       sinon.assert.calledOnce(dispatch);
@@ -878,7 +877,6 @@ describe("loop.panel", function() {
        "conversation button",
       function() {
         navigator.mozLoop.userProfile = {email: fakeEmail};
-        var dispatch = sandbox.stub(dispatcher, "dispatch");
         var view = createTestComponent();
 
         TestUtils.Simulate.click(view.getDOMNode().querySelector("button"));
@@ -889,9 +887,17 @@ describe("loop.panel", function() {
         }));
       });
 
+    it("should close the panel when 'Start a Conversation' is clicked",
+      function() {
+        var view = createTestComponent();
+
+        TestUtils.Simulate.click(view.getDOMNode().querySelector("button"));
+
+        sinon.assert.calledOnce(fakeWindow.close);
+      });
+
     it("should disable the create button when a creation operation is ongoing",
       function() {
-        var dispatch = sandbox.stub(dispatcher, "dispatch");
         roomStore.setStoreState({pendingCreation: true});
 
         var view = createTestComponent();
@@ -902,7 +908,6 @@ describe("loop.panel", function() {
 
     it("should disable the create button when a list retrieval operation is pending",
       function() {
-        var dispatch = sandbox.stub(dispatcher, "dispatch");
         roomStore.setStoreState({pendingInitialRetrieval: true});
 
         var view = createTestComponent();
