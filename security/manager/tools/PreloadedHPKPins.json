@@ -36,7 +36,8 @@
       "google": "google_root_pems"
     },
     "production_pinsets": [
-      "google_root_pems"
+      "google_root_pems",
+      "facebook"
     ],
     "production_domains": [
       // Chrome's test domain.
