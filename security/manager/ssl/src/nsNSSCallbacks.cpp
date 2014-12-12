@@ -41,9 +41,6 @@ namespace {
 // These bits are numbered so that the least subtle issues have higher values.
 // This should make it easier for us to interpret the results.
 const uint32_t NPN_NOT_NEGOTIATED = 64;
-const uint32_t KEA_NOT_FORWARD_SECRET = 32;
-const uint32_t KEA_NOT_SAME_AS_EXPECTED = 16;
-const uint32_t KEA_NOT_ALLOWED = 8;
 const uint32_t POSSIBLE_VERSION_DOWNGRADE = 4;
 const uint32_t POSSIBLE_CIPHER_SUITE_DOWNGRADE = 2;
 const uint32_t KEA_NOT_SUPPORTED = 1;
@@ -971,41 +968,12 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
     reasonsForNotFalseStarting |= POSSIBLE_VERSION_DOWNGRADE;
   }
 
-  // never do false start without one of these key exchange algorithms
-  if (cipherInfo.keaType != ssl_kea_rsa &&
-      cipherInfo.keaType != ssl_kea_dh &&
-      cipherInfo.keaType != ssl_kea_ecdh) {
+  // See bug 952863 for why ECDHE is allowed, but DHE (and RSA) are not.
+  if (cipherInfo.keaType != ssl_kea_ecdh) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
                                       "unsupported KEA %d\n", fd,
                                       static_cast<int32_t>(cipherInfo.keaType)));
     reasonsForNotFalseStarting |= KEA_NOT_SUPPORTED;
-  }
-
-  // XXX: This assumes that all TLS_DH_* and TLS_ECDH_* cipher suites
-  // are disabled.
-  if (cipherInfo.keaType != ssl_kea_ecdh &&
-      cipherInfo.keaType != ssl_kea_dh) {
-    if (helpers.mFalseStartRequireForwardSecrecy) {
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
-             ("CanFalseStartCallback [%p] failed - KEA used is %d, but "
-              "require-forward-secrecy configured.\n", fd,
-              static_cast<int32_t>(cipherInfo.keaType)));
-      reasonsForNotFalseStarting |= KEA_NOT_FORWARD_SECRET;
-    } else if (cipherInfo.keaType == ssl_kea_rsa) {
-      // Make sure we've seen the same kea from this host in the past, to limit
-      // the potential for downgrade attacks.
-      int16_t expected = infoObject->GetKEAExpected();
-      if (cipherInfo.keaType != expected) {
-        PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
-               ("CanFalseStartCallback [%p] failed - "
-                "KEA used is %d, expected %d\n", fd,
-                static_cast<int32_t>(cipherInfo.keaType),
-                static_cast<int32_t>(expected)));
-        reasonsForNotFalseStarting |= KEA_NOT_SAME_AS_EXPECTED;
-      }
-    } else {
-      reasonsForNotFalseStarting |= KEA_NOT_ALLOWED;
-    }
   }
 
   // Prevent downgrade attacks on the symmetric cipher. We do not allow CBC
