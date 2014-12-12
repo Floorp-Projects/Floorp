@@ -186,7 +186,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitTypedArrayElements(LTypedArrayElements *lir);
     void visitTypedObjectElements(LTypedObjectElements *lir);
     void visitSetTypedObjectOffset(LSetTypedObjectOffset *lir);
-    void visitTypedObjectProto(LTypedObjectProto *ins);
+    void visitTypedObjectDescr(LTypedObjectDescr *ins);
     void visitStringLength(LStringLength *lir);
     void visitSubstr(LSubstr *lir);
     void visitInitializedLength(LInitializedLength *lir);

@@ -512,10 +512,14 @@ enum MOZ_ENUM_TYPE(uint32_t) {
         OBJECT_FLAG_DYNAMIC_MASK
       | OBJECT_FLAG_SETS_MARKED_UNKNOWN,
 
+    // Mask/shift for the kind of addendum attached to this type object.
+    OBJECT_FLAG_ADDENDUM_MASK         = 0x04000000,
+    OBJECT_FLAG_ADDENDUM_SHIFT        = 26,
+
     // Mask/shift for this type object's generation. If out of sync with the
     // TypeZone's generation, this TypeObject hasn't been swept yet.
-    OBJECT_FLAG_GENERATION_MASK       = 0x04000000,
-    OBJECT_FLAG_GENERATION_SHIFT      = 26,
+    OBJECT_FLAG_GENERATION_MASK       = 0x08000000,
+    OBJECT_FLAG_GENERATION_SHIFT      = 27,
 };
 typedef uint32_t TypeObjectFlags;
 
@@ -976,9 +980,6 @@ class TypeNewScript
         js_free(initializerList);
     }
 
-    static inline void writeBarrierPre(TypeNewScript *newScript);
-    static void writeBarrierPost(TypeNewScript *newScript, void *addr) {}
-
     bool analyzed() const {
         if (preliminaryObjects) {
             MOZ_ASSERT(!templateObject());
@@ -1099,12 +1100,27 @@ struct TypeObject : public gc::TenuredCell
     /* Flags for this object. */
     TypeObjectFlags flags_;
 
-    /*
-     * If specified, holds information about properties which are definitely
-     * added to objects of this type after being constructed by a particular
-     * script.
-     */
-    HeapPtrTypeNewScript newScript_;
+    enum AddendumKind {
+        Addendum_NewScript,
+        Addendum_TypeDescr
+    };
+
+    // If non-null, holds additional information about this object, whose
+    // format is indicated by the object's addendum kind.
+    void *addendum_;
+
+    void setAddendum(AddendumKind kind, void *addendum);
+
+    AddendumKind addendumKind() const {
+        return (AddendumKind)
+            ((flags_ & OBJECT_FLAG_ADDENDUM_MASK) >> OBJECT_FLAG_ADDENDUM_SHIFT);
+    }
+
+    TypeNewScript *newScriptDontCheckGeneration() const {
+        return addendumKind() == Addendum_NewScript
+               ? reinterpret_cast<TypeNewScript *>(addendum_)
+               : nullptr;
+    }
 
   public:
 
@@ -1125,10 +1141,23 @@ struct TypeObject : public gc::TenuredCell
 
     TypeNewScript *newScript() {
         maybeSweep(nullptr);
-        return newScript_;
+        return newScriptDontCheckGeneration();
     }
 
-    void setNewScript(TypeNewScript *newScript);
+    void setNewScript(TypeNewScript *newScript) {
+        setAddendum(Addendum_NewScript, newScript);
+    }
+
+    TypeDescr &typeDescr() {
+        // Note: there is no need to sweep when accessing the type descriptor
+        // of an object, as it is strongly held and immutable.
+        MOZ_ASSERT(addendumKind() == Addendum_TypeDescr);
+        return *reinterpret_cast<TypeDescr *>(addendum_);
+    }
+
+    void setTypeDescr(TypeDescr *descr) {
+        setAddendum(Addendum_TypeDescr, descr);
+    }
 
   private:
     /*
@@ -1289,8 +1318,8 @@ struct TypeObject : public gc::TenuredCell
         return offsetof(TypeObject, proto_);
     }
 
-    static inline uint32_t offsetOfNewScript() {
-        return offsetof(TypeObject, newScript_);
+    static inline uint32_t offsetOfAddendum() {
+        return offsetof(TypeObject, addendum_);
     }
 
     static inline uint32_t offsetOfFlags() {
@@ -1307,49 +1336,50 @@ struct TypeObject : public gc::TenuredCell
 };
 
 /*
- * Entries for the per-compartment set of type objects which are 'new' types to
- * use for some prototype and constructed with an optional script. This also
- * includes entries for the set of lazy type objects in the compartment, which
- * use a null script (though there are only a few of these per compartment).
+ * Entries for the per-compartment set of type objects which are the default
+ * types to use for some prototype. An optional associated object is used which
+ * allows multiple type objects to be created with the same prototype. The
+ * associated object may be a function (for types constructed with 'new') or a
+ * type descriptor (for typed objects). These entries are also used for the set
+ * of lazy type objects in the compartment, which use a null associated object
+ * (though there are only a few of these per compartment).
  */
-struct TypeObjectWithNewScriptEntry
+struct NewTypeObjectEntry
 {
     ReadBarrieredTypeObject object;
 
     // Note: This pointer is only used for equality and does not need a read barrier.
-    JSFunction *newFunction;
+    JSObject *associated;
 
-    TypeObjectWithNewScriptEntry(TypeObject *object, JSFunction *newFunction)
-      : object(object), newFunction(newFunction)
+    NewTypeObjectEntry(TypeObject *object, JSObject *associated)
+      : object(object), associated(associated)
     {}
 
     struct Lookup {
         const Class *clasp;
         TaggedProto hashProto;
         TaggedProto matchProto;
-        JSFunction *newFunction;
+        JSObject *associated;
 
-        Lookup(const Class *clasp, TaggedProto proto, JSFunction *newFunction)
-          : clasp(clasp), hashProto(proto), matchProto(proto), newFunction(newFunction)
+        Lookup(const Class *clasp, TaggedProto proto, JSObject *associated)
+          : clasp(clasp), hashProto(proto), matchProto(proto), associated(associated)
         {}
 
         /*
          * For use by generational post barriers only.  Look up an entry whose
          * proto has been moved, but was hashed with the original value.
          */
-        Lookup(const Class *clasp, TaggedProto hashProto, TaggedProto matchProto, JSFunction *newFunction)
-            : clasp(clasp), hashProto(hashProto), matchProto(matchProto), newFunction(newFunction)
+        Lookup(const Class *clasp, TaggedProto hashProto, TaggedProto matchProto, JSObject *associated)
+            : clasp(clasp), hashProto(hashProto), matchProto(matchProto), associated(associated)
         {}
 
     };
 
     static inline HashNumber hash(const Lookup &lookup);
-    static inline bool match(const TypeObjectWithNewScriptEntry &key, const Lookup &lookup);
-    static void rekey(TypeObjectWithNewScriptEntry &k, const TypeObjectWithNewScriptEntry& newKey) { k = newKey; }
+    static inline bool match(const NewTypeObjectEntry &key, const Lookup &lookup);
+    static void rekey(NewTypeObjectEntry &k, const NewTypeObjectEntry& newKey) { k = newKey; }
 };
-typedef HashSet<TypeObjectWithNewScriptEntry,
-                TypeObjectWithNewScriptEntry,
-                SystemAllocPolicy> TypeObjectWithNewScriptSet;
+typedef HashSet<NewTypeObjectEntry, NewTypeObjectEntry, SystemAllocPolicy> NewTypeObjectTable;
 
 /* Whether to use a new type object when calling 'new' at script/pc. */
 bool
