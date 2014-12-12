@@ -506,12 +506,20 @@ IDBDatabase::CreateObjectStore(
     transaction->CreateObjectStore(*newSpec);
   MOZ_ASSERT(objectStore);
 
-  IDB_PROFILER_MARK("IndexedDB Pseudo-request: "
-                    "database(%s).transaction(%s).createObjectStore(%s)",
-                    "MT IDBDatabase.createObjectStore()",
-                    IDB_PROFILER_STRING(this),
-                    IDB_PROFILER_STRING(aTransaction),
-                    IDB_PROFILER_STRING(objectStore));
+  // Don't do this in the macro because we always need to increment the serial
+  // number to keep in sync with the parent.
+  const uint64_t requestSerialNumber = IDBRequest::NextSerialNumber();
+
+  IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld] Request[%llu]: "
+                 "database(%s).transaction(%s).createObjectStore(%s)",
+               "IndexedDB %s: C T[%lld] R[%llu]: "
+                 "IDBDatabase.createObjectStore()",
+               IDB_LOG_ID_STRING(),
+               transaction->LoggingSerialNumber(),
+               requestSerialNumber,
+               IDB_LOG_STRINGIFY(this),
+               IDB_LOG_STRINGIFY(transaction),
+               IDB_LOG_STRINGIFY(objectStore));
 
   return objectStore.forget();
 }
@@ -559,12 +567,20 @@ IDBDatabase::DeleteObjectStore(const nsAString& aName, ErrorResult& aRv)
     return;
   }
 
-  IDB_PROFILER_MARK("IndexedDB Pseudo-request: "
-                    "database(%s).transaction(%s).deleteObjectStore(\"%s\")",
-                    "MT IDBDatabase.deleteObjectStore()",
-                    IDB_PROFILER_STRING(this),
-                    IDB_PROFILER_STRING(transaction),
-                    NS_ConvertUTF16toUTF8(aName).get());
+  // Don't do this in the macro because we always need to increment the serial
+  // number to keep in sync with the parent.
+  const uint64_t requestSerialNumber = IDBRequest::NextSerialNumber();
+
+  IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld] Request[%llu]: "
+                 "database(%s).transaction(%s).deleteObjectStore(\"%s\")",
+               "IndexedDB %s: C T[%lld] R[%llu]: "
+                 "IDBDatabase.deleteObjectStore()",
+               IDB_LOG_ID_STRING(),
+               transaction->LoggingSerialNumber(),
+               requestSerialNumber,
+               IDB_LOG_STRINGIFY(this),
+               IDB_LOG_STRINGIFY(transaction),
+               NS_ConvertUTF16toUTF8(aName).get());
 }
 
 already_AddRefed<IDBTransaction>
@@ -669,17 +685,20 @@ IDBDatabase::Transaction(const Sequence<nsString>& aStoreNames,
   BackgroundTransactionChild* actor =
     new BackgroundTransactionChild(transaction);
 
+  IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld]: "
+                 "database(%s).transaction(%s)",
+               "IndexedDB %s: C T[%lld]: IDBDatabase.transaction()",
+               IDB_LOG_ID_STRING(),
+               transaction->LoggingSerialNumber(),
+               IDB_LOG_STRINGIFY(this),
+               IDB_LOG_STRINGIFY(transaction));
+
   MOZ_ALWAYS_TRUE(
     mBackgroundActor->SendPBackgroundIDBTransactionConstructor(actor,
                                                                sortedStoreNames,
                                                                mode));
 
   transaction->SetBackgroundActor(actor);
-
-  IDB_PROFILER_MARK("IndexedDB Transaction %llu: database(%s).transaction(%s)",
-                    "IDBTransaction[%llu] MT Started",
-                    transaction->GetSerialNumber(), IDB_PROFILER_STRING(this),
-                    IDB_PROFILER_STRING(transaction));
 
   return transaction.forget();
 }
@@ -721,6 +740,8 @@ IDBDatabase::CreateMutableFile(const nsAString& aName,
   if (aType.WasPassed()) {
     type = aType.Value();
   }
+
+  mFactory->IncrementParentLoggingRequestSerialNumber();
 
   aRv = CreateFileHelper::CreateAndDispatch(this, request, aName, type);
   if (NS_WARN_IF(aRv.Failed())) {
