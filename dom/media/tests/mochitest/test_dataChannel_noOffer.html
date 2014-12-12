@@ -20,12 +20,13 @@
     // necessary to circumvent bug 864109
     var options = { offerToReceiveAudio: true };
 
-    pc.createOffer(function (offer) {
+    pc.createOffer(options).then(offer => {
       ok(!offer.sdp.contains("m=application"),
         "m=application is not contained in the SDP");
 
       networkTestFinished();
-    }, generateErrorCallback(), options);
+    })
+    .catch(generateErrorCallback());
   });
 
 </script>

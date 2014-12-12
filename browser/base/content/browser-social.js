@@ -552,6 +552,7 @@ SocialShare = {
       button.setAttribute("image", provider.iconURL);
       button.setAttribute("tooltip", "share-button-tooltip");
       button.setAttribute("origin", provider.origin);
+      button.setAttribute("label", provider.name);
       button.setAttribute("oncommand", "SocialShare.sharePage(this.getAttribute('origin'));");
       if (provider == selectedProvider) {
         this.defaultButton = button;

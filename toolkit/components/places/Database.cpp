@@ -269,7 +269,7 @@ CreateRoot(nsCOMPtr<mozIStorageConnection>& aDBConn,
   // last modification time isn't earlier than its childrens' creation time.
   static PRTime timestamp = 0;
   if (!timestamp)
-    timestamp = PR_Now();
+    timestamp = RoundedPRNow();
 
   // Create a new bookmark folder for the root.
   nsCOMPtr<mozIStorageStatement> stmt;
@@ -727,6 +727,13 @@ Database::InitSchema(bool* aDatabaseMigrated)
       }
 
       // Firefox 36 uses schema version 25.
+
+      if (currentSchemaVersion < 26) {
+        rv = MigrateV26Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 37 uses schema version 26.
 
       // Schema Upgrades must add migration code here.
 
@@ -1467,6 +1474,19 @@ Database::MigrateV25Up()
   return NS_OK;
 }
 
+nsresult
+Database::MigrateV26Up() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Round down dateAdded and lastModified values to milliseconds precision.
+  nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE moz_bookmarks SET dateAdded = dateAdded - dateAdded % 1000, "
+    "                         lastModified = lastModified - lastModified % 1000"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
 void
 Database::Shutdown()
 {
@@ -1579,6 +1599,22 @@ Database::Observe(nsISupports *aSubject,
       rv = stmt->ExecuteStep(&haveNullGuids);
       NS_ENSURE_SUCCESS(rv, rv);
       MOZ_ASSERT(!haveNullGuids && "Found a favicon without a GUID!");
+    }
+
+    { // Sanity check for unrounded dateAdded and lastModified values (bug
+      // 1107308).
+      bool hasUnroundedDates = false;
+      nsCOMPtr<mozIStorageStatement> stmt;
+
+      nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+        "SELECT 1 "
+        "FROM moz_bookmarks "
+        "WHERE dateAdded % 1000 > 0 OR lastModified % 1000 > 0 LIMIT 1"
+      ), getter_AddRefs(stmt));
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = stmt->ExecuteStep(&hasUnroundedDates);
+      NS_ENSURE_SUCCESS(rv, rv);
+      MOZ_ASSERT(!hasUnroundedDates && "Found unrounded dates!");
     }
 #endif
 

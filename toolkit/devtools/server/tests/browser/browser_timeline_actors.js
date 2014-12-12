@@ -9,7 +9,7 @@
 
 const {TimelineFront} = require("devtools/server/actors/timeline");
 
-let test = asyncTest(function*() {
+add_task(function*() {
   let doc = yield addTab("data:text/html;charset=utf-8,mop");
 
   initDebuggerServer();

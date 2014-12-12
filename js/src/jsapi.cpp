@@ -43,7 +43,6 @@
 #include "jswatchpoint.h"
 #include "jsweakmap.h"
 #include "jswrapper.h"
-#include "prmjtime.h"
 
 #include "asmjs/AsmJSLink.h"
 #include "builtin/AtomicsObject.h"

@@ -25,9 +25,7 @@
     is(pc.iceGatheringState, "new", "Initial iceGatheringState is 'new'");
 
     var finish;
-    var finished = new Promise(function(resolve) {
-      finish = resolve;
-    });
+    var finished = new Promise(resolve => finish = resolve);
 
     pc.onsignalingstatechange = function(e) {
       clearTimeout(eTimeout);
@@ -43,21 +41,56 @@
       is(pc.signalingState, "closed", "Final signalingState stays at 'closed'");
       is(pc.iceConnectionState, "closed", "Final iceConnectionState stays at 'closed'");
 
-      // TODO: according to the webrtc spec all of these should throw InvalidStateError's
-      //       instead they seem to throw simple Error's
-      SimpleTest.doesThrow(function() {
-        pc.setLocalDescription(
-          "Invalid Session Description",
-          function() {},
-          function() {})},
-        "setLocalDescription() on closed PC raised expected exception");
+      // Due to a limitation in our WebIDL compiler that prevents overloads with
+      // both Promise and non-Promise return types, legacy APIs with callbacks
+      // are unable to continue to throw exceptions. Luckily the spec uses
+      // exceptions solely for "programming errors" so this should not hinder
+      // working code from working, which is the point of the legacy API. All
+      // new code should use the promise API.
+      //
+      // The legacy methods that no longer throw on programming errors like
+      // "invalid-on-close" are:
+      // - createOffer
+      // - createAnswer
+      // - setLocalDescription
+      // - setRemoteDescription
+      // - addIceCandidate
+      // - getStats
+      //
+      // These legacy methods fire the error callback instead. This is not
+      // entirely to spec but is better than ignoring programming errors.
 
-      SimpleTest.doesThrow(function() {
-        pc.setRemoteDescription(
-          "Invalid Session Description",
-          function() {},
-          function() {})},
-        "setRemoteDescription() on closed PC raised expected exception");
+      var offer = new mozRTCSessionDescription({ sdp: "sdp", type: "offer" });
+      var answer = new mozRTCSessionDescription({ sdp: "sdp", type: "answer" });
+      var candidate = new mozRTCIceCandidate({ candidate: "dummy",
+                                               sdpMid: "test",
+                                               sdpMLineIndex: 3 });
+
+      var doesFail = (p, msg) => p.then(generateErrorCallback(),
+                                        r => is(r.name, "InvalidStateError", msg));
+
+      doesFail(pc.createOffer(), "createOffer fails on close")
+      .then(() => doesFail(pc.createAnswer(), "createAnswer fails on close"))
+      .then(() => doesFail(pc.setLocalDescription(offer),
+                           "setLocalDescription fails on close"))
+      .then(() => doesFail(pc.setRemoteDescription(answer),
+                           "setRemoteDescription fails on close"))
+      .then(() => doesFail(pc.addIceCandidate(candidate),
+                           "addIceCandidate fails on close"))
+      .then(() => doesFail(new Promise((y, n) => pc.createOffer(y, n)),
+                           "Legacy createOffer fails on close"))
+      .then(() => doesFail(new Promise((y, n) => pc.createAnswer(y, n)),
+                           "Legacy createAnswer fails on close"))
+      .then(() => doesFail(new Promise((y, n) => pc.setLocalDescription(offer, y, n)),
+                           "Legacy setLocalDescription fails on close"))
+      .then(() => doesFail(new Promise((y, n) => pc.setRemoteDescription(answer, y, n)),
+                           "Legacy setRemoteDescription fails on close"))
+      .then(() => doesFail(new Promise((y, n) => pc.addIceCandidate(candidate, y, n)),
+                           "Legacy addIceCandidate fails on close"))
+      .catch(reason => ok(false, "unexpected failure: " + reason))
+      .then(finish);
+
+      // Other methods are unaffected.
 
       SimpleTest.doesThrow(function() {
         pc.updateIce("Invalid RTC Configuration")},
@@ -75,17 +108,10 @@
         pc.createDataChannel({})},
         "createDataChannel() on closed PC raised expected exception");
 
-      // The spec says it has to throw, but it seems questionable why...
-      SimpleTest.doesThrow(function() {
-        pc.getStats()},
-        "getStats() on closed PC raised expected exception");
-
       SimpleTest.doesThrow(function() {
         pc.setIdentityProvider("Invalid Provider")},
         "setIdentityProvider() on closed PC raised expected exception");
-
-      finish();
-    }
+    };
 
     // This prevents a mochitest timeout in case the event does not fire
     eTimeout = setTimeout(function() {

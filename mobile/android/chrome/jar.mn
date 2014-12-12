@@ -64,6 +64,8 @@ chrome.jar:
   content/aboutDevices.js              (content/aboutDevices.js)
 #endif
 #ifdef NIGHTLY_BUILD
+  content/aboutPasswords.xhtml         (content/aboutPasswords.xhtml)
+  content/aboutPasswords.js            (content/aboutPasswords.js)
   content/WebcompatReporter.js         (content/WebcompatReporter.js)
 #endif
 

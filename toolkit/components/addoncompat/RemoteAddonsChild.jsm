@@ -204,7 +204,7 @@ AboutProtocolChannel.prototype = {
       contractID: this._contractID
     }, {
       notificationCallbacks: this.notificationCallbacks,
-      loadGroupNotificationCallbacks: this.loadGroup.notificationCallbacks
+      loadGroupNotificationCallbacks: this.loadGroup ? this.loadGroup.notificationCallbacks : null,
     });
 
     if (rval.length != 1) {

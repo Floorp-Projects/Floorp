@@ -210,7 +210,7 @@ loop.store = loop.store || {};
         "retryCall",
         "mediaConnected",
         "setMute",
-        "fetchEmailLink"
+        "fetchRoomEmailLink"
       ]);
 
       this.setStoreState({
@@ -323,18 +323,21 @@ loop.store = loop.store || {};
     },
 
     /**
-     * Fetches a new call URL intended to be sent over email when a contact
+     * Fetches a new room URL intended to be sent over email when a contact
      * can't be reached.
      */
-    fetchEmailLink: function() {
-      // XXX This is an empty string as a conversation identifier. Bug 1015938 implements
-      // a user-set string.
-      this.client.requestCallUrl("", function(err, callUrlData) {
+    fetchRoomEmailLink: function(actionData) {
+      this.mozLoop.rooms.create({
+        roomName: actionData.roomName,
+        roomOwner: actionData.roomOwner,
+        maxSize:   loop.store.MAX_ROOM_CREATION_SIZE,
+        expiresIn: loop.store.DEFAULT_EXPIRES_IN
+      }, function(err, createdRoomData) {
         if (err) {
           this.trigger("error:emailLink");
           return;
         }
-        this.setStoreState({"emailLink": callUrlData.callUrl});
+        this.setStoreState({"emailLink": createdRoomData.roomUrl});
       }.bind(this));
     },
 
