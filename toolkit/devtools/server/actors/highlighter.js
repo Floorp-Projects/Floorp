@@ -684,16 +684,15 @@ AutoRefreshHighlighter.prototype = {
   _startRefreshLoop: function() {
     let win = this.currentNode.ownerDocument.defaultView;
     this.rafID = win.requestAnimationFrame(this._startRefreshLoop.bind(this));
+    this.rafWin = win;
     this.update();
   },
 
   _stopRefreshLoop: function() {
-    if (!this.rafID) {
-      return;
+    if (this.rafID && !Cu.isDeadWrapper(this.rafWin)) {
+      this.rafWin.cancelAnimationFrame(this.rafID);
     }
-    let win = this.currentNode.ownerDocument.defaultView;
-    win.cancelAnimationFrame(this.rafID);
-    this.rafID = null;
+    this.rafID = this.rafWin = null;
   },
 
   destroy: function() {

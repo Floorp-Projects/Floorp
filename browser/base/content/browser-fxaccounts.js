@@ -11,6 +11,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "fxaMigrator",
 
 const PREF_SYNC_START_DOORHANGER = "services.sync.ui.showSyncStartDoorhanger";
 const DOORHANGER_ACTIVATE_DELAY_MS = 5000;
+const SYNC_MIGRATION_NOTIFICATION_TITLE = "fxa-migration";
 
 let gFxAccounts = {
 
@@ -157,7 +158,7 @@ let gFxAccounts = {
       setTimeout(() => this.onSyncStart(), DOORHANGER_ACTIVATE_DELAY_MS);
     } else {
       this._inCustomizationMode = event.type == "customizationstarting";
-      this.updateUI();
+      this.updateAppMenuItem();
     }
   },
 
@@ -182,8 +183,13 @@ let gFxAccounts = {
   },
 
   updateUI: function () {
+    this.updateAppMenuItem();
+    this.updateMigrationNotification();
+  },
+
+  updateAppMenuItem: function () {
     if (this._migrationInfo) {
-      this.showMigrationUI();
+      this.updateAppMenuItemForMigration();
       return;
     }
 
@@ -241,32 +247,74 @@ let gFxAccounts = {
     });
   },
 
-  showMigrationUI: Task.async(function* () {
+  updateAppMenuItemForMigration: Task.async(function* () {
     let status = null;
     let label = null;
     switch (this._migrationInfo.state) {
       case fxaMigrator.STATE_USER_FXA:
         status = "migrate-signup";
-        label = this.strings.formatStringFromName("needUser",
+        label = this.strings.formatStringFromName("needUserShort",
           [this.button.getAttribute("fxabrandname")], 1);
         break;
       case fxaMigrator.STATE_USER_FXA_VERIFIED:
-        if (this._migrationInfo.email) {
-          status = "migrate-verify";
-          label = this.strings.formatStringFromName("needVerifiedUser",
-                                                    [this._migrationInfo.email],
-                                                    1);
-        }
+        status = "migrate-verify";
+        label = this.strings.formatStringFromName("needVerifiedUserShort",
+                                                  [this._migrationInfo.email],
+                                                  1);
         break;
     }
-    if (label && status) {
-      this.button.label = label;
-      this.button.hidden = false;
-      this.button.setAttribute("fxastatus", status);
-    } else {
-      Cu.reportError("Could not update menu panel button given migration " +
-                     "state: " + this._migrationInfo.state);
+    this.button.label = label;
+    this.button.hidden = false;
+    this.button.setAttribute("fxastatus", status);
+  }),
+
+  updateMigrationNotification: Task.async(function* () {
+    if (!this._migrationInfo) {
+      Weave.Notifications.removeAll(SYNC_MIGRATION_NOTIFICATION_TITLE);
+      return;
     }
+    if (gBrowser.currentURI.spec.split("?")[0] == "about:accounts") {
+      // If the current tab is about:accounts, assume the user just completed a
+      // migration step and don't bother them with a redundant notification.
+      return;
+    }
+    let note = null;
+    switch (this._migrationInfo.state) {
+      case fxaMigrator.STATE_USER_FXA: {
+        let msg = this.strings.GetStringFromName("needUserLong");
+        let upgradeLabel =
+          this.strings.GetStringFromName("upgradeToFxA.label");
+        let upgradeAccessKey =
+          this.strings.GetStringFromName("upgradeToFxA.accessKey");
+        note = new Weave.Notification(
+          undefined, msg, undefined, Weave.Notifications.PRIORITY_WARNING, [
+            new Weave.NotificationButton(upgradeLabel, upgradeAccessKey, () => {
+              fxaMigrator.createFxAccount(window);
+            }),
+          ]
+        );
+        break;
+      }
+      case fxaMigrator.STATE_USER_FXA_VERIFIED: {
+        let msg =
+          this.strings.formatStringFromName("needVerifiedUserLong",
+                                            [this._migrationInfo.email], 1);
+        let resendLabel =
+          this.strings.GetStringFromName("resendVerificationEmail.label");
+        let resendAccessKey =
+          this.strings.GetStringFromName("resendVerificationEmail.accessKey");
+        note = new Weave.Notification(
+          undefined, msg, undefined, Weave.Notifications.PRIORITY_INFO, [
+            new Weave.NotificationButton(resendLabel, resendAccessKey, () => {
+              fxaMigrator.resendVerificationMail();
+            }),
+          ]
+        );
+        break;
+      }
+    }
+    note.title = SYNC_MIGRATION_NOTIFICATION_TITLE;
+    Weave.Notifications.replaceTitle(note);
   }),
 
   onMenuPanelCommand: function (event) {

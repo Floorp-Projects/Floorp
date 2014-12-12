@@ -1345,6 +1345,11 @@ nsDocShell::LoadURI(nsIURI * aURI,
     if (!IsNavigationAllowed(true, false)) {
       return NS_OK; // JS may not handle returning of an error code
     }
+
+    if (DoAppRedirectIfNeeded(aURI, aLoadInfo, aFirstParty)) {
+      return NS_OK;
+    }
+
     nsCOMPtr<nsIURI> referrer;
     nsCOMPtr<nsIInputStream> postStream;
     nsCOMPtr<nsIInputStream> headersStream;
@@ -6584,10 +6589,6 @@ nsDocShell::ForceRefreshURI(nsIURI * aURI,
     }
     else {
         loadInfo->SetLoadType(nsIDocShellLoadInfo::loadRefresh);
-    }
-
-    if (DoAppRedirectIfNeeded(aURI, loadInfo, true)) {
-      return NS_OK;
     }
 
     /*

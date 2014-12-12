@@ -135,7 +135,7 @@ public class OverlayActionService extends Service {
                         OverlayToastHelper.showFailureToast(getApplicationContext(), shareMethod.getFailureMessage());
                         break;
                     default:
-                        Assert.isTrue(false, "Unknown share method result code: " + result);
+                        Assert.fail("Unknown share method result code: " + result);
                         break;
                 }
             }
