@@ -24,6 +24,15 @@ public:
   // Don't perform fallback DV validation on EV validation failure.
   static const Flags FLAG_MUST_BE_EV;
 
+  // These values correspond to the SSL_OCSP_STAPLING telemetry.
+  enum OCSPStaplingStatus {
+    OCSP_STAPLING_NEVER_CHECKED = 0,
+    OCSP_STAPLING_GOOD = 1,
+    OCSP_STAPLING_NONE = 2,
+    OCSP_STAPLING_EXPIRED = 3,
+    OCSP_STAPLING_INVALID = 4,
+  };
+
   // *evOidPolicy == SEC_OID_UNKNOWN means the cert is NOT EV
   // Only one usage per verification is supported.
   SECStatus VerifyCert(CERTCertificate* cert,
@@ -34,7 +43,8 @@ public:
                        Flags flags = 0,
        /*optional in*/ const SECItem* stapledOCSPResponse = nullptr,
       /*optional out*/ ScopedCERTCertList* builtChain = nullptr,
-      /*optional out*/ SECOidTag* evOidPolicy = nullptr);
+      /*optional out*/ SECOidTag* evOidPolicy = nullptr,
+      /*optional out*/ OCSPStaplingStatus* ocspStaplingStatus = nullptr);
 
   SECStatus VerifySSLServerCert(
                     CERTCertificate* peerCert,
@@ -45,7 +55,8 @@ public:
                     bool saveIntermediatesInPermanentDatabase = false,
                     Flags flags = 0,
    /*optional out*/ ScopedCERTCertList* builtChain = nullptr,
-   /*optional out*/ SECOidTag* evOidPolicy = nullptr);
+   /*optional out*/ SECOidTag* evOidPolicy = nullptr,
+   /*optional out*/ OCSPStaplingStatus* ocspStaplingStatus = nullptr);
 
   enum PinningMode {
     pinningDisabled = 0,
