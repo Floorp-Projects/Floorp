@@ -188,7 +188,6 @@ extern "C" OSStatus TSMProcessRawKeyEvent(EventRef anEvent);
 - (void)adjustTo:(NSPoint)point
 {
   NSRect selfRect = [self frame];
-  CGFloat minWidth = static_cast<CGFloat>(Preferences::GetUint("ui.plugin.panel.min-width", 500));
   NSRect rect = NSMakeRect(point.x,
                            point.y - selfRect.size.height,
                            500,
