@@ -1232,7 +1232,12 @@
       //////////////////////////////////////////////////////////////////////////
       // HTML:time
 
-      ok(!isAccessible("time"), "time element is not accessible");
+      obj = {
+        role: ROLE_TEXT_CONTAINER,
+        attributes: { "xml-roles": "time", "datetime": "2001-05-15 19:00" },
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+      };
+      testElm("time", obj);
 
       //////////////////////////////////////////////////////////////////////////
       // HTML:u contained by paragraph
