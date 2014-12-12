@@ -142,6 +142,16 @@ nsAboutProtocolHandler::NewChannel2(nsIURI* uri,
         // The standard return case:
         rv = aboutMod->NewChannel(uri, aLoadInfo, result);
         if (NS_SUCCEEDED(rv)) {
+            // Not all implementations of nsIAboutModule::NewChannel()
+            // set the LoadInfo on the newly created channel yet, as
+            // an interim solution we set the LoadInfo here if not
+            // available on the channel. Bug 1087720
+            nsCOMPtr<nsILoadInfo> loadInfo;
+            (*result)->GetLoadInfo(getter_AddRefs(loadInfo));
+            if (!loadInfo) {
+                (*result)->SetLoadInfo(aLoadInfo);
+            }
+
             // If this URI is safe for untrusted content, enforce that its
             // principal be based on the channel's originalURI by setting the
             // owner to null.

@@ -423,7 +423,9 @@ AppProtocolHandler::NewChannel2(nsIURI* aUri,
     if (NS_FAILED(rv) || !jsInfo.isObject()) {
       // Return a DummyChannel.
       printf_stderr("!! Creating a dummy channel for %s (no appInfo)\n", host.get());
-      NS_IF_ADDREF(*aResult = new DummyChannel());
+      nsRefPtr<nsIChannel> dummyChannel = new DummyChannel();
+      dummyChannel->SetLoadInfo(aLoadInfo);
+      dummyChannel.forget(aResult);
       return NS_OK;
     }
 
@@ -432,7 +434,9 @@ AppProtocolHandler::NewChannel2(nsIURI* aUri,
     if (!appInfo->Init(cx, jsInfo) || appInfo->mPath.IsEmpty()) {
       // Return a DummyChannel.
       printf_stderr("!! Creating a dummy channel for %s (invalid appInfo)\n", host.get());
-      NS_IF_ADDREF(*aResult = new DummyChannel());
+      nsRefPtr<nsIChannel> dummyChannel = new DummyChannel();
+      dummyChannel->SetLoadInfo(aLoadInfo);
+      dummyChannel.forget(aResult);
       return NS_OK;
     }
     mAppInfoCache.Put(host, appInfo);
@@ -454,6 +458,10 @@ AppProtocolHandler::NewChannel2(nsIURI* aUri,
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = channel->Init(jarURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // set the loadInfo on the new channel
+  rv = channel->SetLoadInfo(aLoadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = channel->SetAppURI(aUri);
