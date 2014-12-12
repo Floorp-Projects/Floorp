@@ -2331,82 +2331,6 @@ DisassWithSrc(JSContext *cx, unsigned argc, jsval *vp)
 #undef LINE_BUF_LEN
 }
 
-static bool
-DumpHeap(JSContext *cx, unsigned argc, jsval *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    JSAutoByteString fileName;
-    if (args.hasDefined(0) && !args[0].isNull()) {
-        RootedString str(cx, JS::ToString(cx, args[0]));
-        if (!str)
-            return false;
-
-        if (!fileName.encodeLatin1(cx, str))
-            return false;
-    }
-
-    RootedValue startThing(cx);
-    if (args.hasDefined(1)) {
-        if (!args[1].isGCThing()) {
-            JS_ReportError(cx, "dumpHeap: Second argument not a GC thing!");
-            return false;
-        }
-        startThing = args[1];
-    }
-
-    RootedValue thingToFind(cx);
-    if (args.hasDefined(2)) {
-        if (!args[2].isGCThing()) {
-            JS_ReportError(cx, "dumpHeap: Third argument not a GC thing!");
-            return false;
-        }
-        thingToFind = args[2];
-    }
-
-    size_t maxDepth = size_t(-1);
-    if (args.hasDefined(3)) {
-        uint32_t depth;
-        if (!ToUint32(cx, args[3], &depth))
-            return false;
-        maxDepth = depth;
-    }
-
-    RootedValue thingToIgnore(cx);
-    if (args.hasDefined(4)) {
-        if (!args[2].isGCThing()) {
-            JS_ReportError(cx, "dumpHeap: Fifth argument not a GC thing!");
-            return false;
-        }
-        thingToIgnore = args[4];
-    }
-
-    FILE *dumpFile = stdout;
-    if (fileName.length()) {
-        dumpFile = fopen(fileName.ptr(), "w");
-        if (!dumpFile) {
-            JS_ReportError(cx, "dumpHeap: can't open %s: %s\n",
-                          fileName.ptr(), strerror(errno));
-            return false;
-        }
-    }
-
-    bool ok = JS_DumpHeap(JS_GetRuntime(cx), dumpFile,
-                          startThing.isUndefined() ? nullptr : startThing.toGCThing(),
-                          startThing.isUndefined() ? JSTRACE_OBJECT : startThing.get().gcKind(),
-                          thingToFind.isUndefined() ? nullptr : thingToFind.toGCThing(),
-                          maxDepth,
-                          thingToIgnore.isUndefined() ? nullptr : thingToIgnore.toGCThing());
-
-    if (dumpFile != stdout)
-        fclose(dumpFile);
-
-    if (!ok)
-        JS_ReportOutOfMemory(cx);
-
-    return ok;
-}
-
 #endif /* DEBUG */
 
 static bool
@@ -4541,12 +4465,6 @@ static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
 "getSelfHostedValue()",
 "  Get a self-hosted value by its name. Note that these values don't get \n"
 "  cached, so repeatedly getting the same value creates multiple distinct clones."),
-
-#ifdef DEBUG
-    JS_FN_HELP("dumpHeap", DumpHeap, 0, 0,
-"dumpHeap([fileName[, start[, toFind[, maxDepth[, toIgnore]]]]])",
-"  Interface to JS_DumpHeap with output sent to file."),
-#endif
 
     JS_FN_HELP("parent", Parent, 1, 0,
 "parent(obj)",
