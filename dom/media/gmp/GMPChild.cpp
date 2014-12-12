@@ -361,7 +361,7 @@ GMPChild::PreLoadLibraries(const std::string& aPluginPath)
 #if defined(XP_MACOSX)
 class MacOSXSandboxStarter : public SandboxStarter {
 public:
-  MacOSXSandboxStarter(GMPChild* aGMPChild)
+  explicit MacOSXSandboxStarter(GMPChild* aGMPChild)
     : mGMPChild(aGMPChild)
   {}
   virtual void Start(const char* aLibPath) MOZ_OVERRIDE {

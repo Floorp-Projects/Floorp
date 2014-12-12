@@ -2,10 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-/* This file has been imported from
- * http://git.chromium.org/gitweb/?p=chromium.git;a=blob;f=sandbox/linux/services/android_i386_ucontext.h;hb=99b3e83972e478a42fa72da1ffefee58413e87d4
- */
-
 #ifndef SANDBOX_LINUX_SERVICES_ANDROID_I386_UCONTEXT_H_
 #define SANDBOX_LINUX_SERVICES_ANDROID_I386_UCONTEXT_H_
 

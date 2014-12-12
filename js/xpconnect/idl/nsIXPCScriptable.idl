@@ -24,6 +24,7 @@ interface nsIXPConnectWrappedNative;
 [ptr] native JSValPtr(JS::Value);
 [ptr] native JSFreeOpPtr(JSFreeOp);
 [ref] native JSCallArgsRef(const JS::CallArgs);
+[ref] native JSAutoIdVector(JS::AutoIdVector);
 
 /**
  * Note: This is not really an XPCOM interface.  For example, callers must
@@ -56,7 +57,7 @@ interface nsIXPCScriptable : nsISupports
     const uint32_t USE_JSSTUB_FOR_ADDPROPERTY       = 1 << 17;
     const uint32_t USE_JSSTUB_FOR_DELPROPERTY       = 1 << 18;
     const uint32_t USE_JSSTUB_FOR_SETPROPERTY       = 1 << 19;
-    const uint32_t DONT_ENUM_STATIC_PROPS           = 1 << 20;
+    // Unused bit here!
     const uint32_t DONT_ENUM_QUERY_INTERFACE        = 1 << 21;
     const uint32_t DONT_ASK_INSTANCE_FOR_SCRIPTABLE = 1 << 22;
     const uint32_t CLASSINFO_INTERFACES_ONLY        = 1 << 23;
@@ -113,7 +114,7 @@ interface nsIXPCScriptable : nsISupports
 
     boolean newEnumerate(in nsIXPConnectWrappedNative wrapper,
                         in JSContextPtr cx, in JSObjectPtr obj,
-                        in uint32_t enum_op, in JSValPtr statep, out jsid idp);
+                        in JSAutoIdVector properties);
 
     boolean resolve(in nsIXPConnectWrappedNative wrapper,
                     in JSContextPtr cx, in JSObjectPtr obj, in jsid id,

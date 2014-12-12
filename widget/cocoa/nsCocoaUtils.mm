@@ -608,16 +608,6 @@ nsCocoaUtils::InitNPCocoaEvent(NPCocoaEvent* aNPCocoaEvent)
 
 // static
 void
-nsCocoaUtils::InitPluginEvent(WidgetPluginEvent &aPluginEvent,
-                              NPCocoaEvent &aCocoaEvent)
-{
-  aPluginEvent.time = PR_IntervalNow();
-  aPluginEvent.mPluginEvent.Copy(aCocoaEvent);
-  aPluginEvent.retargetToFocusedDocument = false;
-}
-
-// static
-void
 nsCocoaUtils::InitInputEvent(WidgetInputEvent& aInputEvent,
                              NSEvent* aNativeEvent)
 {

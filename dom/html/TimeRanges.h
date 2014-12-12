@@ -42,10 +42,10 @@ public:
   double GetEndTime();
 
   // See http://www.whatwg.org/html/#normalized-timeranges-object
-  void Normalize();
+  void Normalize(double aError = 0.0);
 
   // Mutate this TimeRange to be the union of this and aOtherRanges.
-  void Union(const TimeRanges* aOtherRanges);
+  void Union(const TimeRanges* aOtherRanges, double aError);
 
   // Mutate this TimeRange to be the intersection of this and aOtherRanges.
   void Intersection(const TimeRanges* aOtherRanges);

@@ -21,6 +21,7 @@
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/unused.h"
 #include "nsAutoPtr.h"
 #include "nsCRT.h"
@@ -97,82 +98,29 @@ mozilla::plugins::SetupBridge(uint32_t aPluginId, dom::ContentParent* aContentPa
     return PPluginModule::Bridge(aContentParent, chromeParent);
 }
 
-// A linked list used to fetch newly created PluginModuleContentParent instances
-// for LoadModule. Each pending LoadModule call owns an element in this list.
-// The element's mModule field is filled in when the new
-// PluginModuleContentParent arrives from chrome.
-struct MOZ_STACK_CLASS SavedPluginModule
-{
-    SavedPluginModule() : mModule(nullptr), mNext(sSavedModuleStack)
-    {
-        sSavedModuleStack = this;
-    }
-    ~SavedPluginModule()
-    {
-        MOZ_ASSERT(sSavedModuleStack == this);
-        sSavedModuleStack = mNext;
-    }
-
-    PluginModuleContentParent* GetModule() { return mModule; }
-
-    // LoadModule can be on the stack multiple times since the intr message it
-    // sends will dispatch arbitrary incoming messages from the chrome process,
-    // which can include new HTTP data. This makes it somewhat tricky to match
-    // up the object created in PluginModuleContentParent::Create with the
-    // LoadModule call that asked for it.
-    //
-    // Each invocation of LoadModule pushes a new SavedPluginModule object on
-    // the sSavedModuleStack stack, with the most recent invocation at the
-    // front. LoadModule messages are always processed by the chrome process in
-    // order, and PluginModuleContentParent allocation messages will also be
-    // received in order. Therefore, we need to match up the first received
-    // PluginModuleContentParent creation message with the first sent LoadModule
-    // call. This call will be the last one in the list that doesn't already
-    // have a module attached to it.
-    static void SaveModule(PluginModuleContentParent* module)
-    {
-        SavedPluginModule* saved = sSavedModuleStack;
-        SavedPluginModule* prev = nullptr;
-        while (saved && !saved->mModule) {
-            prev = saved;
-            saved = saved->mNext;
-        }
-        MOZ_ASSERT(prev);
-        MOZ_ASSERT(!prev->mModule);
-        prev->mModule = module;
-    }
-
-private:
-    PluginModuleContentParent* mModule;
-    SavedPluginModule* mNext;
-
-    static SavedPluginModule* sSavedModuleStack;
-};
-
-SavedPluginModule* SavedPluginModule::sSavedModuleStack;
+PluginModuleContentParent* PluginModuleContentParent::sSavedModuleParent;
 
 /* static */ PluginLibrary*
 PluginModuleContentParent::LoadModule(uint32_t aPluginId)
 {
-    SavedPluginModule saved;
-
+    MOZ_ASSERT(!sSavedModuleParent);
     MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Content);
 
     /*
      * We send a LoadPlugin message to the chrome process using an intr
-     * message. Before it sends its response, it sends a message to create a
-     * PluginModuleContentParent instance. That message is handled by
-     * PluginModuleContentParent::Create. See SavedPluginModule for details
-     * about how we match up the result of PluginModuleContentParent::Create
-     * with the LoadModule call that requested it.
+     * message. Before it sends its response, it sends a message to create
+     * PluginModuleParent instance. That message is handled by
+     * PluginModuleContentParent::Create, which saves the instance in
+     * sSavedModuleParent. We fetch it from there after LoadPlugin finishes.
      */
     dom::ContentChild* cp = dom::ContentChild::GetSingleton();
     if (!cp->CallLoadPlugin(aPluginId)) {
         return nullptr;
     }
 
-    PluginModuleContentParent* parent = saved.GetModule();
+    PluginModuleContentParent* parent = sSavedModuleParent;
     MOZ_ASSERT(parent);
+    sSavedModuleParent = nullptr;
 
     return parent;
 }
@@ -188,7 +136,8 @@ PluginModuleContentParent::Create(mozilla::ipc::Transport* aTransport,
         return nullptr;
     }
 
-    SavedPluginModule::SaveModule(parent);
+    MOZ_ASSERT(!sSavedModuleParent);
+    sSavedModuleParent = parent;
 
     DebugOnly<bool> ok = parent->Open(aTransport, handle, XRE_GetIOMessageLoop(),
                                       mozilla::ipc::ParentSide);
@@ -212,12 +161,15 @@ PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId)
 
     // Block on the child process being launched and initialized.
     nsAutoPtr<PluginModuleChromeParent> parent(new PluginModuleChromeParent(aFilePath, aPluginId));
+    TimeStamp launchStart = TimeStamp::Now();
     bool launched = parent->mSubprocess->Launch(prefSecs * 1000);
     if (!launched) {
         // We never reached open
         parent->mShutdown = true;
         return nullptr;
     }
+    TimeStamp launchEnd = TimeStamp::Now();
+    parent->mTimeBlocked = (launchEnd - launchStart);
     parent->Open(parent->mSubprocess->GetChannel(),
                  parent->mSubprocess->GetChildProcessHandle());
 
@@ -1430,6 +1382,7 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs
     if (IsChrome()) {
         PluginSettings settings;
         GetSettings(&settings);
+        TimeStamp callNpInitStart = TimeStamp::Now();
         if (!CallNP_Initialize(settings, error)) {
             Close();
             return NS_ERROR_FAILURE;
@@ -1438,6 +1391,16 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs
             Close();
             return NS_OK;
         }
+        TimeStamp callNpInitEnd = TimeStamp::Now();
+        mTimeBlocked += (callNpInitEnd - callNpInitStart);
+        /** mTimeBlocked measures the time that the main thread has been blocked
+         *  on plugin module initialization. As implemented, this is the sum of
+         *  plugin-container launch + NP_Initialize
+         */
+        Telemetry::Accumulate(Telemetry::BLOCKED_ON_PLUGIN_MODULE_INIT_MS,
+                              GetHistogramKey(),
+                              static_cast<uint32_t>(mTimeBlocked.ToMilliseconds()));
+        mTimeBlocked = TimeDuration();
     }
 
     SetPluginFuncs(pFuncs);
@@ -1470,6 +1433,7 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
 
     PluginSettings settings;
     GetSettings(&settings);
+    TimeStamp callNpInitStart = TimeStamp::Now();
     if (!CallNP_Initialize(settings, error)) {
         Close();
         return NS_ERROR_FAILURE;
@@ -1478,6 +1442,8 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
         Close();
         return NS_OK;
     }
+    TimeStamp callNpInitEnd = TimeStamp::Now();
+    mTimeBlocked += (callNpInitEnd - callNpInitStart);
 
 #if defined XP_WIN
     // Send the info needed to join the chrome process's audio session to the
@@ -1494,6 +1460,17 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
 #ifdef MOZ_CRASHREPORTER_INJECTOR
     InitializeInjector();
 #endif
+
+    /** This Accumulate must be placed below the call to InitializeInjector()
+     *  because mTimeBlocked is modified in that function.
+     *  mTimeBlocked measures the time that the main thread has been blocked
+     *  on plugin module initialization. As implemented, this is the sum of
+     *  plugin-container launch + toolhelp32 snapshot + NP_Initialize
+     */
+    Telemetry::Accumulate(Telemetry::BLOCKED_ON_PLUGIN_MODULE_INIT_MS,
+                          GetHistogramKey(),
+                          static_cast<uint32_t>(mTimeBlocked.ToMilliseconds()));
+    mTimeBlocked = TimeDuration();
 
     return NS_OK;
 }
@@ -1608,17 +1585,21 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
 
     instance->pdata = parentInstance;
 
-    if (!CallPPluginInstanceConstructor(parentInstance,
-                                        nsDependentCString(pluginType), mode,
-                                        names, values, error)) {
-        // |parentInstance| is automatically deleted.
-        instance->pdata = nullptr;
-        // if IPC is down, we'll get an immediate "failed" return, but
-        // without *error being set.  So make sure that the error
-        // condition is signaled to nsNPAPIPluginInstance
-        if (NPERR_NO_ERROR == *error)
-            *error = NPERR_GENERIC_ERROR;
-        return NS_ERROR_FAILURE;
+    {   // Scope for timer
+        Telemetry::AutoTimer<Telemetry::BLOCKED_ON_PLUGIN_INSTANCE_INIT_MS>
+            timer(GetHistogramKey());
+        if (!CallPPluginInstanceConstructor(parentInstance,
+                                            nsDependentCString(pluginType), mode,
+                                            names, values, error)) {
+            // |parentInstance| is automatically deleted.
+            instance->pdata = nullptr;
+            // if IPC is down, we'll get an immediate "failed" return, but
+            // without *error being set.  So make sure that the error
+            // condition is signaled to nsNPAPIPluginInstance
+            if (NPERR_NO_ERROR == *error)
+                *error = NPERR_GENERIC_ERROR;
+            return NS_ERROR_FAILURE;
+        }
     }
 
     if (*error != NPERR_NO_ERROR) {
@@ -1965,9 +1946,12 @@ PluginModuleChromeParent::InitializeInjector()
                           NS_LITERAL_CSTRING(FLASH_PLUGIN_PREFIX)))
         return;
 
+    TimeStamp th32Start = TimeStamp::Now();
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == snapshot)
         return;
+    TimeStamp th32End = TimeStamp::Now();
+    mTimeBlocked += (th32End - th32Start);
 
     DWORD pluginProcessPID = GetProcessId(Process()->GetChildProcessHandle());
     mFlashProcess1 = GetFlashChildOfPID(pluginProcessPID, snapshot);

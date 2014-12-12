@@ -235,60 +235,53 @@ NS_IMPL_RELEASE(nsXPCComponents_Interfaces)
 #define XPC_MAP_QUOTED_CLASSNAME   "nsXPCComponents_Interfaces"
 #define                             XPC_MAP_WANT_RESOLVE
 #define                             XPC_MAP_WANT_NEWENUMERATE
-#define XPC_MAP_FLAGS               nsIXPCScriptable::DONT_ENUM_STATIC_PROPS |\
-                                    nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
+#define XPC_MAP_FLAGS               nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h" /* This will #undef the above */
 
 
-/* bool newEnumerate (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in uint32_t enum_op, in JSValPtr statep, out JSID idp); */
 NS_IMETHODIMP
 nsXPCComponents_Interfaces::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
-                                         JSContext * cx, JSObject * obj,
-                                         uint32_t enum_op, jsval * statep,
-                                         jsid * idp, bool *_retval)
+                                         JSContext *cx, JSObject *obj,
+                                         JS::AutoIdVector &properties,
+                                         bool *_retval)
 {
-    switch (enum_op) {
-        case JSENUMERATE_INIT:
-        case JSENUMERATE_INIT_ALL:
-        {
-            // Lazily init the list of interfaces when someone tries to
-            // enumerate them.
-            if (mInterfaces.IsEmpty()) {
-                XPTInterfaceInfoManager::GetSingleton()->
-                    GetScriptableInterfaces(mInterfaces);
-            }
 
-            *statep = JSVAL_ZERO;
-            if (idp)
-                *idp = INT_TO_JSID(mInterfaces.Length());
-            return NS_OK;
-        }
-        case JSENUMERATE_NEXT:
-        {
-            uint32_t idx = statep->toInt32();
-            nsIInterfaceInfo* interface = mInterfaces.SafeElementAt(idx);
-            *statep = UINT_TO_JSVAL(idx + 1);
-
-            if (interface) {
-                const char* name;
-
-                RootedId id(cx);
-                if (NS_SUCCEEDED(interface->GetNameShared(&name)) && name) {
-                    RootedString idstr(cx, JS_NewStringCopyZ(cx, name));
-                    if (idstr && JS_StringToId(cx, idstr, &id)) {
-                        *idp = id;
-                        return NS_OK;
-                    }
-                }
-            }
-            // fall through
-        }
-
-        case JSENUMERATE_DESTROY:
-        default:
-            *statep = JSVAL_NULL;
-            return NS_OK;
+    // Lazily init the list of interfaces when someone tries to
+    // enumerate them.
+    if (mInterfaces.IsEmpty()) {
+        XPTInterfaceInfoManager::GetSingleton()->
+            GetScriptableInterfaces(mInterfaces);
     }
+
+    if (!properties.reserve(mInterfaces.Length())) {
+        *_retval = false;
+        return NS_OK;
+    }
+
+    for (uint32_t index = 0; index < mInterfaces.Length(); index++) {
+        nsIInterfaceInfo* interface = mInterfaces.SafeElementAt(index);
+        if (!interface)
+            continue;
+
+        const char* name;
+        if (NS_SUCCEEDED(interface->GetNameShared(&name)) && name) {
+            RootedString idstr(cx, JS_NewStringCopyZ(cx, name));
+            if (!idstr) {
+                *_retval = false;
+                return NS_OK;
+            }
+
+            RootedId id(cx);
+            if (!JS_StringToId(cx, idstr, &id)) {
+                *_retval = false;
+                return NS_OK;
+            }
+
+            properties.infallibleAppend(id);
+        }
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -485,60 +478,52 @@ NS_IMPL_RELEASE(nsXPCComponents_InterfacesByID)
 #define XPC_MAP_QUOTED_CLASSNAME   "nsXPCComponents_InterfacesByID"
 #define                             XPC_MAP_WANT_RESOLVE
 #define                             XPC_MAP_WANT_NEWENUMERATE
-#define XPC_MAP_FLAGS               nsIXPCScriptable::DONT_ENUM_STATIC_PROPS |\
-                                    nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
+#define XPC_MAP_FLAGS               nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h" /* This will #undef the above */
 
-/* bool newEnumerate (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in uint32_t enum_op, in JSValPtr statep, out JSID idp); */
 NS_IMETHODIMP
 nsXPCComponents_InterfacesByID::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
-                                             JSContext * cx, JSObject * obj,
-                                             uint32_t enum_op, jsval * statep,
-                                             jsid * idp, bool *_retval)
+                                             JSContext *cx, JSObject *obj,
+                                             JS::AutoIdVector &properties,
+                                             bool *_retval)
 {
-    switch (enum_op) {
-        case JSENUMERATE_INIT:
-        case JSENUMERATE_INIT_ALL:
-        {
-            // Lazily init the list of interfaces when someone tries to
-            // enumerate them.
-            if (mInterfaces.IsEmpty()) {
-                XPTInterfaceInfoManager::GetSingleton()->
-                    GetScriptableInterfaces(mInterfaces);
-            }
 
-            *statep = JSVAL_ZERO;
-            if (idp)
-                *idp = INT_TO_JSID(mInterfaces.Length());
-            return NS_OK;
-        }
-        case JSENUMERATE_NEXT:
-        {
-            uint32_t idx = statep->toInt32();
-            nsIInterfaceInfo* interface = mInterfaces.SafeElementAt(idx);
-            *statep = UINT_TO_JSVAL(idx + 1);
-            if (interface) {
-                nsIID const *iid;
-                char idstr[NSID_LENGTH];
-
-                if (NS_SUCCEEDED(interface->GetIIDShared(&iid))) {
-                    iid->ToProvidedString(idstr);
-                    RootedString jsstr(cx, JS_NewStringCopyZ(cx, idstr));
-                    RootedId id(cx);
-                    if (jsstr && JS_StringToId(cx, jsstr, &id)) {
-                        *idp = id;
-                        return NS_OK;
-                    }
-                }
-            }
-            // FALL THROUGH
-        }
-
-        case JSENUMERATE_DESTROY:
-        default:
-            *statep = JSVAL_NULL;
-            return NS_OK;
+    if (mInterfaces.IsEmpty()) {
+        XPTInterfaceInfoManager::GetSingleton()->
+            GetScriptableInterfaces(mInterfaces);
     }
+
+    if (!properties.reserve(mInterfaces.Length())) {
+        *_retval = false;
+        return NS_OK;
+    }
+
+    for (uint32_t index = 0; index < mInterfaces.Length(); index++) {
+        nsIInterfaceInfo* interface = mInterfaces.SafeElementAt(index);
+        if (!interface)
+            continue;
+
+        nsIID const *iid;
+        if (NS_SUCCEEDED(interface->GetIIDShared(&iid))) {
+            char idstr[NSID_LENGTH];
+            iid->ToProvidedString(idstr);
+            RootedString jsstr(cx, JS_NewStringCopyZ(cx, idstr));
+            if (!jsstr) {
+                *_retval = false;
+                return NS_OK;
+            }
+
+            RootedId id(cx);
+            if (!JS_StringToId(cx, jsstr, &id)) {
+                *_retval = false;
+                return NS_OK;
+            }
+
+            properties.infallibleAppend(id);
+        }
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -737,67 +722,53 @@ NS_IMPL_RELEASE(nsXPCComponents_Classes)
 #define XPC_MAP_QUOTED_CLASSNAME   "nsXPCComponents_Classes"
 #define                             XPC_MAP_WANT_RESOLVE
 #define                             XPC_MAP_WANT_NEWENUMERATE
-#define XPC_MAP_FLAGS               nsIXPCScriptable::DONT_ENUM_STATIC_PROPS |\
-                                    nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
+#define XPC_MAP_FLAGS               nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h" /* This will #undef the above */
 
-
-/* bool newEnumerate (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in uint32_t enum_op, in JSValPtr statep, out JSID idp); */
 NS_IMETHODIMP
 nsXPCComponents_Classes::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
-                                      JSContext * cx, JSObject * obj,
-                                      uint32_t enum_op, jsval * statep,
-                                      jsid * idp, bool *_retval)
+                                      JSContext *cx, JSObject *obj,
+                                      JS::AutoIdVector &properties,
+                                      bool *_retval)
 {
-    nsISimpleEnumerator* e;
+    nsCOMPtr<nsIComponentRegistrar> compMgr;
+    if (NS_FAILED(NS_GetComponentRegistrar(getter_AddRefs(compMgr))) || !compMgr)
+        return NS_ERROR_UNEXPECTED;
 
-    switch (enum_op) {
-        case JSENUMERATE_INIT:
-        case JSENUMERATE_INIT_ALL:
-        {
-            nsCOMPtr<nsIComponentRegistrar> compMgr;
-            if (NS_FAILED(NS_GetComponentRegistrar(getter_AddRefs(compMgr))) || !compMgr ||
-                NS_FAILED(compMgr->EnumerateContractIDs(&e)) || !e ) {
-                *statep = JSVAL_NULL;
-                return NS_ERROR_UNEXPECTED;
+    nsCOMPtr<nsISimpleEnumerator> e;
+    if (NS_FAILED(compMgr->EnumerateContractIDs(getter_AddRefs(e))) || !e)
+        return NS_ERROR_UNEXPECTED;
+
+    bool hasMore;
+    nsCOMPtr<nsISupports> isup;
+    while(NS_SUCCEEDED(e->HasMoreElements(&hasMore)) && hasMore &&
+          NS_SUCCEEDED(e->GetNext(getter_AddRefs(isup))) && isup) {
+        nsCOMPtr<nsISupportsCString> holder(do_QueryInterface(isup));
+        if (!holder)
+            continue;
+
+        nsAutoCString name;
+        if (NS_SUCCEEDED(holder->GetData(name))) {
+            RootedString idstr(cx, JS_NewStringCopyN(cx, name.get(), name.Length()));
+            if (!idstr) {
+                *_retval = false;
+                return NS_OK;
             }
 
-            *statep = PRIVATE_TO_JSVAL(e);
-            if (idp)
-                *idp = INT_TO_JSID(0); // indicate that we don't know the count
-            return NS_OK;
-        }
-        case JSENUMERATE_NEXT:
-        {
-            nsCOMPtr<nsISupports> isup;
-            bool hasMore;
-            e = (nsISimpleEnumerator*) statep->toPrivate();
-
-            if (NS_SUCCEEDED(e->HasMoreElements(&hasMore)) && hasMore &&
-                NS_SUCCEEDED(e->GetNext(getter_AddRefs(isup))) && isup) {
-                nsCOMPtr<nsISupportsCString> holder(do_QueryInterface(isup));
-                if (holder) {
-                    nsAutoCString name;
-                    if (NS_SUCCEEDED(holder->GetData(name))) {
-                        RootedString idstr(cx, JS_NewStringCopyN(cx, name.get(), name.Length()));
-                        RootedId id(cx);
-                        if (idstr && JS_StringToId(cx, idstr, &id)) {
-                            *idp = id;
-                            return NS_OK;
-                        }
-                    }
-                }
+            RootedId id(cx);
+            if (!JS_StringToId(cx, idstr, &id)) {
+                *_retval = false;
+                return NS_OK;
             }
-            // else... FALL THROUGH
-        }
 
-        case JSENUMERATE_DESTROY:
-        default:
-            e = (nsISimpleEnumerator*) statep->toPrivate();
-            NS_IF_RELEASE(e);
-            *statep = JSVAL_NULL;
-            return NS_OK;
+            if (!properties.append(id)) {
+                *_retval = false;
+                return NS_OK;
+            }
+        }
     }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -977,67 +948,54 @@ NS_IMPL_RELEASE(nsXPCComponents_ClassesByID)
 #define XPC_MAP_QUOTED_CLASSNAME   "nsXPCComponents_ClassesByID"
 #define                             XPC_MAP_WANT_RESOLVE
 #define                             XPC_MAP_WANT_NEWENUMERATE
-#define XPC_MAP_FLAGS               nsIXPCScriptable::DONT_ENUM_STATIC_PROPS |\
-                                    nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
+#define XPC_MAP_FLAGS               nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h" /* This will #undef the above */
 
-/* bool newEnumerate (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in uint32_t enum_op, in JSValPtr statep, out JSID idp); */
 NS_IMETHODIMP
 nsXPCComponents_ClassesByID::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
-                                          JSContext * cx, JSObject * obj,
-                                          uint32_t enum_op, jsval * statep,
-                                          jsid * idp, bool *_retval)
+                                          JSContext *cx, JSObject *obj,
+                                          JS::AutoIdVector &properties,
+                                          bool *_retval)
 {
+
+    nsCOMPtr<nsIComponentRegistrar> compMgr;
+    if (NS_FAILED(NS_GetComponentRegistrar(getter_AddRefs(compMgr))) || !compMgr)
+        return NS_ERROR_UNEXPECTED;
+
     nsISimpleEnumerator* e;
+    if (NS_FAILED(compMgr->EnumerateCIDs(&e)) || !e)
+        return NS_ERROR_UNEXPECTED;
 
-    switch (enum_op) {
-        case JSENUMERATE_INIT:
-        case JSENUMERATE_INIT_ALL:
-        {
-            nsCOMPtr<nsIComponentRegistrar> compMgr;
-            if (NS_FAILED(NS_GetComponentRegistrar(getter_AddRefs(compMgr))) || !compMgr ||
-                NS_FAILED(compMgr->EnumerateCIDs(&e)) || !e ) {
-                *statep = JSVAL_NULL;
-                return NS_ERROR_UNEXPECTED;
+    bool hasMore;
+    nsCOMPtr<nsISupports> isup;
+    while(NS_SUCCEEDED(e->HasMoreElements(&hasMore)) && hasMore &&
+          NS_SUCCEEDED(e->GetNext(getter_AddRefs(isup))) && isup) {
+        nsCOMPtr<nsISupportsID> holder(do_QueryInterface(isup));
+        if (!holder)
+            continue;
+
+        char* name;
+        if (NS_SUCCEEDED(holder->ToString(&name)) && name) {
+            RootedString idstr(cx, JS_NewStringCopyZ(cx, name));
+            if (!idstr) {
+                *_retval = false;
+                return NS_OK;
             }
 
-            *statep = PRIVATE_TO_JSVAL(e);
-            if (idp)
-                *idp = INT_TO_JSID(0); // indicate that we don't know the count
-            return NS_OK;
-        }
-        case JSENUMERATE_NEXT:
-        {
-            nsCOMPtr<nsISupports> isup;
-            bool hasMore;
-            e = (nsISimpleEnumerator*) statep->toPrivate();
-
-            if (NS_SUCCEEDED(e->HasMoreElements(&hasMore)) && hasMore &&
-                NS_SUCCEEDED(e->GetNext(getter_AddRefs(isup))) && isup) {
-                nsCOMPtr<nsISupportsID> holder(do_QueryInterface(isup));
-                if (holder) {
-                    char* name;
-                    if (NS_SUCCEEDED(holder->ToString(&name)) && name) {
-                        RootedString idstr(cx, JS_NewStringCopyZ(cx, name));
-                        nsMemory::Free(name);
-                        RootedId id(cx);
-                        if (idstr && JS_StringToId(cx, idstr, &id)) {
-                            *idp = id;
-                            return NS_OK;
-                        }
-                    }
-                }
+            RootedId id(cx);
+            if (!JS_StringToId(cx, idstr, &id)) {
+                *_retval = false;
+                return NS_OK;
             }
-            // else... FALL THROUGH
-        }
 
-        case JSENUMERATE_DESTROY:
-        default:
-            e = (nsISimpleEnumerator*) statep->toPrivate();
-            NS_IF_RELEASE(e);
-            *statep = JSVAL_NULL;
-            return NS_OK;
+            if (!properties.append(id)) {
+                *_retval = false;
+                return NS_OK;
+            }
+        }
     }
+
+    return NS_OK;
 }
 
 static bool
@@ -1241,53 +1199,37 @@ NS_IMPL_RELEASE(nsXPCComponents_Results)
 #define XPC_MAP_QUOTED_CLASSNAME   "nsXPCComponents_Results"
 #define                             XPC_MAP_WANT_RESOLVE
 #define                             XPC_MAP_WANT_NEWENUMERATE
-#define XPC_MAP_FLAGS               nsIXPCScriptable::DONT_ENUM_STATIC_PROPS |\
-                                    nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
+#define XPC_MAP_FLAGS               nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h" /* This will #undef the above */
 
-/* bool newEnumerate (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in uint32_t enum_op, in JSValPtr statep, out JSID idp); */
 NS_IMETHODIMP
 nsXPCComponents_Results::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
-                                      JSContext * cx, JSObject * obj,
-                                      uint32_t enum_op, jsval * statep,
-                                      jsid * idp, bool *_retval)
+                                      JSContext *cx, JSObject *obj,
+                                      JS::AutoIdVector &properties,
+                                      bool *_retval)
 {
-    const void** iter;
-
-    switch (enum_op) {
-        case JSENUMERATE_INIT:
-        case JSENUMERATE_INIT_ALL:
-        {
-            if (idp)
-                *idp = INT_TO_JSID(nsXPCException::GetNSResultCount());
-
-            void** space = (void**) new char[sizeof(void*)];
-            *space = nullptr;
-            *statep = PRIVATE_TO_JSVAL(space);
+    const char* name;
+    const void* iter = nullptr;
+    while (nsXPCException::IterateNSResults(nullptr, &name, nullptr, &iter)) {
+        RootedString idstr(cx, JS_NewStringCopyZ(cx, name));
+        if (!idstr) {
+            *_retval = false;
             return NS_OK;
         }
-        case JSENUMERATE_NEXT:
-        {
-            const char* name;
-            iter = (const void**) statep->toPrivate();
-            if (nsXPCException::IterateNSResults(nullptr, &name, nullptr, iter)) {
-                RootedString idstr(cx, JS_NewStringCopyZ(cx, name));
-                JS::RootedId id(cx);
-                if (idstr && JS_StringToId(cx, idstr, &id)) {
-                    *idp = id;
-                    return NS_OK;
-                }
-            }
-            // else... FALL THROUGH
+
+        RootedId id(cx);
+        if (!JS_StringToId(cx, idstr, &id)) {
+            *_retval = false;
+            return NS_OK;
         }
 
-        case JSENUMERATE_DESTROY:
-        default:
-            iter = (const void**) statep->toPrivate();
-            delete [] (char*) iter;
-            *statep = JSVAL_NULL;
+        if (!properties.append(id)) {
+            *_retval = false;
             return NS_OK;
+        }
     }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP

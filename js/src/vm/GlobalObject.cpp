@@ -175,7 +175,7 @@ GlobalObject::resolveConstructor(JSContext *cx, Handle<GlobalObject*> global, JS
     // standard class (in which case they live on the prototype).
     if (!StandardClassIsDependent(key)) {
         if (const JSFunctionSpec *funs = clasp->spec.prototypeFunctions) {
-            if (!JS_DefineFunctions(cx, proto, funs))
+            if (!JS_DefineFunctions(cx, proto, funs, DontDefineLateProperties))
                 return false;
         }
         if (const JSPropertySpec *props = clasp->spec.prototypeProperties) {
@@ -183,7 +183,7 @@ GlobalObject::resolveConstructor(JSContext *cx, Handle<GlobalObject*> global, JS
                 return false;
         }
         if (const JSFunctionSpec *funs = clasp->spec.constructorFunctions) {
-            if (!JS_DefineFunctions(cx, ctor, funs))
+            if (!JS_DefineFunctions(cx, ctor, funs, DontDefineLateProperties))
                 return false;
         }
     }
@@ -279,7 +279,7 @@ GlobalObject::initStandardClasses(JSContext *cx, Handle<GlobalObject*> global)
 {
     /* Define a top-level property 'undefined' with the undefined value. */
     if (!JSObject::defineProperty(cx, global, cx->names().undefined, UndefinedHandleValue,
-                                  JS_PropertyStub, JS_StrictPropertyStub, JSPROP_PERMANENT | JSPROP_READONLY))
+                                  nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY))
     {
         return false;
     }
@@ -326,8 +326,7 @@ GlobalObject::initSelfHostingBuiltins(JSContext *cx, Handle<GlobalObject*> globa
 {
     // Define a top-level property 'undefined' with the undefined value.
     if (!JSObject::defineProperty(cx, global, cx->names().undefined, UndefinedHandleValue,
-                                  JS_PropertyStub, JS_StrictPropertyStub,
-                                  JSPROP_PERMANENT | JSPROP_READONLY))
+                                  nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY))
     {
         return false;
     }
@@ -435,11 +434,10 @@ js::LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor_, JSObject *proto_
     RootedValue protoVal(cx, ObjectValue(*proto));
     RootedValue ctorVal(cx, ObjectValue(*ctor));
 
-    return JSObject::defineProperty(cx, ctor, cx->names().prototype,
-                                    protoVal, JS_PropertyStub, JS_StrictPropertyStub,
-                                    JSPROP_PERMANENT | JSPROP_READONLY) &&
-           JSObject::defineProperty(cx, proto, cx->names().constructor,
-                                    ctorVal, JS_PropertyStub, JS_StrictPropertyStub, 0);
+    return JSObject::defineProperty(cx, ctor, cx->names().prototype, protoVal,
+                                    nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY) &&
+           JSObject::defineProperty(cx, proto, cx->names().constructor, ctorVal,
+                                    nullptr, nullptr, 0);
 }
 
 bool
@@ -462,7 +460,7 @@ GlobalDebuggees_finalize(FreeOp *fop, JSObject *obj)
 static const Class
 GlobalDebuggees_class = {
     "GlobalDebuggee", JSCLASS_HAS_PRIVATE,
-    nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub,
+    nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, GlobalDebuggees_finalize
 };
 

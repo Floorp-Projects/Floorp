@@ -4691,14 +4691,10 @@ StorageDirectoryHelper::CreateOrUpgradeMetadataFiles()
     }
 
     if (leafName.EqualsLiteral(kChromeOrigin)) {
-      if (mPersistent) {
-        OriginProps* originProps = mOriginProps.AppendElement();
-        originProps->mDirectory = originDir;
-        originProps->mSpec = kChromeOrigin;
-        originProps->mType = OriginProps::eChrome;
-      } else {
-        NS_WARNING("chrome in temporary storage directory?!");
-      }
+      OriginProps* originProps = mOriginProps.AppendElement();
+      originProps->mDirectory = originDir;
+      originProps->mSpec = kChromeOrigin;
+      originProps->mType = OriginProps::eChrome;
     } else {
       nsCString spec;
       uint32_t appId;
@@ -4835,8 +4831,6 @@ StorageDirectoryHelper::RunOnMainThread()
 
     switch (originProps.mType) {
       case OriginProps::eChrome: {
-        MOZ_ASSERT(mPersistent);
-
         QuotaManager::GetInfoForChrome(&originProps.mGroup,
                                        &originProps.mOrigin,
                                        &originProps.mIsApp,

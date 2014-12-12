@@ -40,7 +40,7 @@ PSArenaFreeCB(size_t aSize, void* aPtr, void* aClosure)
 nsFloatManager::nsFloatManager(nsIPresShell* aPresShell,
                                mozilla::WritingMode aWM)
   : mWritingMode(aWM),
-    mOrigin(aWM),
+    mOffset(aWM),
     mFloatDamage(PSArenaAllocCB, PSArenaFreeCB, aPresShell),
     mPushedLeftFloatPastBreak(false),
     mPushedRightFloatPastBreak(false),
@@ -121,8 +121,8 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBOffset,
   NS_ASSERTION(aContentArea.ISize(aWM) >= 0,
                "unexpected content area inline size");
 
-  LogicalPoint origin = mOrigin.ConvertTo(aWM, mWritingMode, aContainerWidth);
-  nscoord blockStart = aBOffset + origin.B(aWM);
+  LogicalPoint offset = mOffset.ConvertTo(aWM, mWritingMode, 0);
+  nscoord blockStart = aBOffset + offset.B(aWM);
   if (blockStart < nscoord_MIN) {
     NS_WARNING("bad value");
     blockStart = nscoord_MIN;
@@ -162,8 +162,8 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBOffset,
       blockEnd = nscoord_MAX;
     }
   }
-  nscoord inlineStart = origin.I(aWM) + aContentArea.IStart(aWM);
-  nscoord inlineEnd = origin.I(aWM) + aContentArea.IEnd(aWM);
+  nscoord inlineStart = offset.I(aWM) + aContentArea.IStart(aWM);
+  nscoord inlineEnd = offset.I(aWM) + aContentArea.IEnd(aWM);
   if (inlineEnd < inlineStart) {
     NS_WARNING("bad value");
     inlineEnd = inlineStart;
@@ -238,7 +238,7 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBOffset,
   nscoord blockSize = (blockEnd == nscoord_MAX) ?
                        nscoord_MAX : (blockEnd - blockStart);
   return nsFlowAreaRect(aWM,
-                        inlineStart - origin.I(aWM), blockStart - origin.B(aWM),
+                        inlineStart - offset.I(aWM), blockStart - offset.B(aWM),
                         inlineEnd - inlineStart, blockSize, haveFloats);
 }
 
@@ -249,7 +249,7 @@ nsFloatManager::AddFloat(nsIFrame* aFloatFrame, const LogicalRect& aMarginRect,
   NS_ASSERTION(aMarginRect.ISize(aWM) >= 0, "negative inline size!");
   NS_ASSERTION(aMarginRect.BSize(aWM) >= 0, "negative block size!");
 
-  FloatInfo info(aFloatFrame, aWM, aMarginRect + mOrigin);
+  FloatInfo info(aFloatFrame, aWM, aMarginRect + mOffset);
 
   // Set mLeftBEnd and mRightBEnd.
   if (HasAnyFloats()) {
@@ -402,7 +402,7 @@ nsFloatManager::PushState(SavedState* aState)
   // Allowing mFloatDamage to accumulate the damage incurred during both
   // reflows ensures that nothing gets missed.
   aState->mWritingMode = mWritingMode;
-  aState->mOrigin = mOrigin;
+  aState->mOffset = mOffset;
   aState->mPushedLeftFloatPastBreak = mPushedLeftFloatPastBreak;
   aState->mPushedRightFloatPastBreak = mPushedRightFloatPastBreak;
   aState->mSplitLeftFloatAcrossBreak = mSplitLeftFloatAcrossBreak;
@@ -416,7 +416,7 @@ nsFloatManager::PopState(SavedState* aState)
   NS_PRECONDITION(aState, "No state to restore?");
 
   mWritingMode = aState->mWritingMode;
-  mOrigin = aState->mOrigin;
+  mOffset = aState->mOffset;
   mPushedLeftFloatPastBreak = aState->mPushedLeftFloatPastBreak;
   mPushedRightFloatPastBreak = aState->mPushedRightFloatPastBreak;
   mSplitLeftFloatAcrossBreak = aState->mSplitLeftFloatAcrossBreak;
@@ -439,9 +439,9 @@ nsFloatManager::GetLowestFloatTop(WritingMode aWM,
   }
   FloatInfo fi = mFloats[mFloats.Length() - 1];
   LogicalRect rect = fi.mRect.ConvertTo(aWM, fi.mWritingMode, aContainerWidth);
-  LogicalPoint origin = mOrigin.ConvertTo(aWM, mWritingMode, aContainerWidth);
+  LogicalPoint offset = mOffset.ConvertTo(aWM, mWritingMode, 0);
 
-  return rect.BStart(aWM) - origin.B(aWM);
+  return rect.BStart(aWM) - offset.B(aWM);
 }
 
 #ifdef DEBUG_FRAME_DUMP
@@ -483,8 +483,8 @@ nsFloatManager::ClearFloats(WritingMode aWM, nscoord aBCoord,
     return aBCoord;
   }
 
-  LogicalPoint origin = mOrigin.ConvertTo(aWM, mWritingMode, aContainerWidth);
-  nscoord blockEnd = aBCoord + origin.B(aWM);
+  LogicalPoint offset = mOffset.ConvertTo(aWM, mWritingMode, 0);
+  nscoord blockEnd = aBCoord + offset.B(aWM);
 
   const FloatInfo &tail = mFloats[mFloats.Length() - 1];
   switch (aBreakType) {
@@ -505,7 +505,7 @@ nsFloatManager::ClearFloats(WritingMode aWM, nscoord aBCoord,
       break;
   }
 
-  blockEnd -= origin.B(aWM);
+  blockEnd -= offset.B(aWM);
 
   return blockEnd;
 }

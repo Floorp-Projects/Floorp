@@ -1348,17 +1348,17 @@ const Class ScriptSourceObject::class_ = {
     "ScriptSource",
     JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
     JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_IS_ANONYMOUS,
-    nullptr,                /* addProperty */
-    nullptr,                /* delProperty */
-    JS_PropertyStub,        /* getProperty */
-    JS_StrictPropertyStub,  /* setProperty */
-    nullptr,                /* enumerate */
-    nullptr,                /* resolve */
-    nullptr,                /* convert */
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* getProperty */
+    nullptr, /* setProperty */
+    nullptr, /* enumerate */
+    nullptr, /* resolve */
+    nullptr, /* convert */
     finalize,
-    nullptr,                /* call        */
-    nullptr,                /* hasInstance */
-    nullptr,                /* construct   */
+    nullptr, /* call */
+    nullptr, /* hasInstance */
+    nullptr, /* construct */
     trace
 };
 
@@ -1752,7 +1752,7 @@ ScriptSource::setSourceCopy(ExclusiveContext *cx, SourceBufferHolder &srcBuf,
 }
 
 SourceCompressionTask::ResultType
-SourceCompressionTask::work()
+SourceCompressionTask::work(Compressor &comp)
 {
     // Try to keep the maximum memory usage down by only allocating half the
     // size of the string, first.
@@ -1762,8 +1762,7 @@ SourceCompressionTask::work()
     if (!compressed)
         return OOM;
 
-    Compressor comp(reinterpret_cast<const unsigned char *>(ss->uncompressedChars()), inputBytes);
-    if (!comp.init())
+    if (!comp.prepare(reinterpret_cast<const unsigned char *>(ss->uncompressedChars()), inputBytes))
         return OOM;
 
     comp.setOutput((unsigned char *) compressed, firstSize);

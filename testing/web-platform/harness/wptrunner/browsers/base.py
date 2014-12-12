@@ -86,11 +86,6 @@ class Browser(object):
         pass
 
     @abstractmethod
-    def on_output(self, line):
-        """Callback function used with ProcessHandler to handle output from the browser process."""
-        pass
-
-    @abstractmethod
     def pid(self):
         """pid of the browser process or None if there is no pid"""
         pass

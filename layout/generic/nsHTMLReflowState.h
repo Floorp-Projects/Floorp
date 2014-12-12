@@ -166,8 +166,8 @@ public:
   // to the display-reflow infrastructure.
   static void* DisplayInitOffsetsEnter(nsIFrame* aFrame,
                                        nsCSSOffsetState* aState,
-                                       nscoord aHorizontalPercentBasis,
-                                       nscoord aVerticalPercentBasis,
+                                       nscoord aInlineDirPercentBasis,
+                                       nscoord aBlockDirPercentBasis,
                                        const nsMargin* aBorder,
                                        const nsMargin* aPadding);
   static void DisplayInitOffsetsExit(nsIFrame* aFrame,
@@ -180,38 +180,41 @@ private:
    * Computes margin values from the specified margin style information, and
    * fills in the mComputedMargin member.
    *
-   * @param aHorizontalPercentBasis
-   *    Length to use for resolving percentage margin values in the horizontal
-   *    axis. Usually the containing block width.
-   * @param aVerticalPercentBasis
-   *    Length to use for resolving percentage margin values in the vertical
-   *    axis.  Usually the containing block width, per CSS21 sec 8.3, but may
-   *    be the containing block *height*, e.g. in CSS3 Flexbox and Grid.
+   * @param aInlineDirPercentBasis
+   *    Length to use for resolving percentage margin values in the inline
+   *    axis. Usually the containing block inline-size (width if writing mode
+   *    is horizontal, and height if vertical).
+   * @param aBlockDirPercentBasis
+   *    Length to use for resolving percentage margin values in the block
+   *    axis.  Usually the containing block inline-size, per CSS21 sec 8.3
+   *    (read in conjunction with CSS Writing Modes sec 7.2), but may
+   *    be the containing block block-size, e.g. in CSS3 Flexbox and Grid.
    * @return true if the margin is dependent on the containing block size.
    */
-  bool ComputeMargin(nscoord aHorizontalPercentBasis,
-                     nscoord aVerticalPercentBasis);
+  bool ComputeMargin(nscoord aInlineDirPercentBasis,
+                     nscoord aBlockDirPercentBasis);
   
   /**
    * Computes padding values from the specified padding style information, and
    * fills in the mComputedPadding member.
    *
-   * @param aHorizontalPercentBasis
-   *    Length to use for resolving percentage padding values in the horizontal
-   *    axis. Usually the containing block width.
-   * @param aVerticalPercentBasis
-   *    Length to use for resolving percentage padding values in the vertical
-   *    axis.  Usually the containing block width, per CSS21 sec 8.4, but may
-   *    be the containing block *height* in e.g. CSS3 Flexbox and Grid.
+   * @param aInlineDirPercentBasis
+   *    Length to use for resolving percentage padding values in the inline
+   *    axis. Usually the containing block inline-size.
+   * @param aBlockDirPercentBasis
+   *    Length to use for resolving percentage padding values in the block
+   *    axis.  Usually the containing block inline-size, per CSS21 sec 8.4,
+   *    but may be the containing block block-size in e.g. CSS3 Flexbox and
+   *    Grid.
    * @return true if the padding is dependent on the containing block size.
    */
-   bool ComputePadding(nscoord aHorizontalPercentBasis,
-                       nscoord aVerticalPercentBasis, nsIAtom* aFrameType);
+   bool ComputePadding(nscoord aInlineDirPercentBasis,
+                       nscoord aBlockDirPercentBasis, nsIAtom* aFrameType);
 
 protected:
 
-  void InitOffsets(nscoord aHorizontalPercentBasis,
-                   nscoord aVerticalPercentBasis,
+  void InitOffsets(nscoord aInlineDirPercentBasis,
+                   nscoord aBlockDirPercentBasis,
                    nsIAtom* aFrameType,
                    const nsMargin *aBorder = nullptr,
                    const nsMargin *aPadding = nullptr);

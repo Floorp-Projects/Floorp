@@ -2,7 +2,8 @@
 # dmd.py --filter-stacks-for-testing -o script-max-frames-3-actual.txt --max-frames=3 --no-fix-stacks script-max-frames.json
 
 Invocation {
-  $DMD = '1'
+  $DMD = '--mode=live'
+  Mode = 'live'
   Sample-below size = 1
 }
 

@@ -41,13 +41,8 @@ DirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, HandleId i
     RootedValue v(cx, desc.value());
     return CheckDefineProperty(cx, target, id, v, desc.attributes(),
                                desc.getter(), desc.setter()) &&
-           JS_DefinePropertyById(cx, target, id, v,
-                                 // Descriptors never store JSNatives for
-                                 // accessors: they have either JSFunctions or
-                                 // JSPropertyOps.
-                                 desc.attributes() | JSPROP_PROPOP_ACCESSORS,
-                                 JS_PROPERTYOP_GETTER(desc.getter()),
-                                 JS_PROPERTYOP_SETTER(desc.setter()));
+           JSObject::defineGeneric(cx, target, id, v, desc.getter(), desc.setter(),
+                                   desc.attributes());
 }
 
 bool

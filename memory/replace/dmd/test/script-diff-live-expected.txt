@@ -2,12 +2,14 @@
 # dmd.py --filter-stacks-for-testing -o script-diff-live-actual.txt script-diff-live1.json script-diff-live2.json
 
 Invocation 1 {
-  $DMD = '--sample-below=127'
+  $DMD = '--mode=live --sample-below=127'
+  Mode = 'live'
   Sample-below size = 127
 }
 
 Invocation 2 {
-  $DMD = '--sample-below=63'
+  $DMD = '--mode=live --sample-below=63'
+  Mode = 'live'
   Sample-below size = 63
 }
 

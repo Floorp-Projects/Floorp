@@ -171,6 +171,7 @@ static bool getLastKeyText(NPObject* npobj, const NPVariant* args, uint32_t argC
 static bool getNPNVdocumentOrigin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getMouseUpEventCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool queryContentsScaleFactor(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool echoString(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnEvaluateTest",
@@ -235,7 +236,8 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "getLastKeyText",
   "getNPNVdocumentOrigin",
   "getMouseUpEventCount",
-  "queryContentsScaleFactor"
+  "queryContentsScaleFactor",
+  "echoString",
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[] = {
@@ -301,7 +303,8 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   getLastKeyText,
   getNPNVdocumentOrigin,
   getMouseUpEventCount,
-  queryContentsScaleFactor
+  queryContentsScaleFactor,
+  echoString,
 };
 
 STATIC_ASSERT(ARRAY_LENGTH(sPluginMethodIdentifierNames) ==
@@ -3394,7 +3397,7 @@ getTopLevelWindowActivationEventCount(NPObject* npobj, const NPVariant* args, ui
 }
 
 // Returns top-level window activation state as indicated by Cocoa NPAPI's
-// NPCocoaEventWindowFocusChanged events - 'true' if active, 'false' if not.
+// NPCocoaEventFocusChanged events - 'true' if active, 'false' if not.
 // Throws an exception if no events have been received and thus this state
 // is unknown.
 bool
@@ -3684,3 +3687,26 @@ bool queryContentsScaleFactor(NPObject* npobj, const NPVariant* args, uint32_t a
   DOUBLE_TO_NPVARIANT(scaleFactor, *result);
   return true;
 }
+
+bool echoString(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (argCount != 1) {
+    return false;
+  }
+
+  if (!NPVARIANT_IS_STRING(args[0])) {
+    return false;
+  }
+
+  const NPString& arg = NPVARIANT_TO_STRING(args[0]);
+  NPUTF8* buffer = static_cast<NPUTF8*>(NPN_MemAlloc(sizeof(NPUTF8) * arg.UTF8Length));
+  if (!buffer) {
+    return false;
+  }
+
+  std::copy(arg.UTF8Characters, arg.UTF8Characters + arg.UTF8Length, buffer);
+  STRINGN_TO_NPVARIANT(buffer, arg.UTF8Length, *result);
+
+  return true;
+}
+

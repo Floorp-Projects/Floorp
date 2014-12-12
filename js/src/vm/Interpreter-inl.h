@@ -346,8 +346,9 @@ DefVarOrConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName dn
 
     /* Steps 8c, 8d. */
     if (!prop || (obj2 != varobj && varobj->is<GlobalObject>())) {
-        if (!JSObject::defineProperty(cx, varobj, dn, UndefinedHandleValue, JS_PropertyStub,
-                                      JS_StrictPropertyStub, attrs)) {
+        if (!JSObject::defineProperty(cx, varobj, dn, UndefinedHandleValue, nullptr, nullptr,
+                                      attrs))
+        {
             return false;
         }
     } else if (attrs & JSPROP_READONLY) {
@@ -557,6 +558,8 @@ static MOZ_ALWAYS_INLINE bool
 InitElemOperation(JSContext *cx, HandleObject obj, HandleValue idval, HandleValue val)
 {
     MOZ_ASSERT(!val.isMagic(JS_ELEMENTS_HOLE));
+    MOZ_ASSERT(!obj->getClass()->getProperty);
+    MOZ_ASSERT(!obj->getClass()->setProperty);
 
     RootedId id(cx);
     if (!ValueToId<CanGC>(cx, idval, &id))

@@ -3641,8 +3641,6 @@ GCHelperState::maybeStartBackgroundSweep(const AutoLockGC &lock)
 {
     MOZ_ASSERT(CanUseExtraThreads());
 
-    sweepFlag = true;
-    shrinkFlag = false;
     if (state() == IDLE)
         startBackgroundThread(SWEEPING);
 }
@@ -3653,7 +3651,6 @@ GCHelperState::startBackgroundShrink(const AutoLockGC &lock)
     MOZ_ASSERT(CanUseExtraThreads());
     switch (state()) {
       case IDLE:
-        MOZ_ASSERT(!sweepFlag);
         shrinkFlag = true;
         startBackgroundThread(SWEEPING);
         break;
@@ -3678,30 +3675,26 @@ GCHelperState::waitBackgroundSweepEnd()
 void
 GCHelperState::doSweep(AutoLockGC &lock)
 {
-    while (sweepFlag) {
-        sweepFlag = false;
-        ZoneList zones;
-        zones.transferFrom(rt->gc.backgroundSweepZones);
-        LifoAlloc freeLifoAlloc(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
-        freeLifoAlloc.transferFrom(&rt->gc.freeLifoAlloc);
-        AutoUnlockGC unlock(lock);
+    // The main thread may call queueZonesForBackgroundSweep() or
+    // ShrinkGCBuffers() while this is running so we must check there is no more
+    // work to do before exiting.
 
-        rt->gc.sweepBackgroundThings(zones, BackgroundThread);
-        freeLifoAlloc.freeAll();
-    }
+    do {
+        while (!rt->gc.backgroundSweepZones.isEmpty()) {
+            ZoneList zones;
+            zones.transferFrom(rt->gc.backgroundSweepZones);
+            LifoAlloc freeLifoAlloc(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
+            freeLifoAlloc.transferFrom(&rt->gc.freeLifoAlloc);
+            AutoUnlockGC unlock(lock);
 
-    bool shrinking = shrinkFlag;
-    rt->gc.expireChunksAndArenas(shrinking, lock);
+            rt->gc.sweepBackgroundThings(zones, BackgroundThread);
+            freeLifoAlloc.freeAll();
+        }
 
-    /*
-     * The main thread may have called ShrinkGCBuffers while
-     * ExpireChunksAndArenas(rt, false) was running, so we recheck the flag
-     * afterwards.
-     */
-    if (!shrinking && shrinkFlag) {
+        bool shrinking = shrinkFlag;
         shrinkFlag = false;
-        rt->gc.expireChunksAndArenas(true, lock);
-    }
+        rt->gc.expireChunksAndArenas(shrinking, lock);
+    } while (!rt->gc.backgroundSweepZones.isEmpty() || shrinkFlag);
 }
 
 bool

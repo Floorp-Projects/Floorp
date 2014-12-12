@@ -111,10 +111,6 @@ public:
   // was created, failure otherwise.
   nsresult CheckPrincipals();
 
-  // Returns a pointer to the bound media element's owner doc.
-  // If we're not bound, this returns null.
-  nsIDocument* GetOwnerDoc() const;
-
 private:
 
   bool IsInPrivateBrowsing();

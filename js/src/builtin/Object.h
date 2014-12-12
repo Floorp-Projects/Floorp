@@ -28,6 +28,9 @@ bool
 obj_create(JSContext *cx, unsigned argc, JS::Value *vp);
 
 bool
+obj_defineProperty(JSContext *cx, unsigned argc, JS::Value *vp);
+
+bool
 obj_getOwnPropertyNames(JSContext *cx, unsigned argc, JS::Value *vp);
 
 bool

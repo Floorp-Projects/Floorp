@@ -18,9 +18,35 @@ interface nsIURI;
  * one of these per document/principal.
  */
 
-[scriptable, uuid(dc86b261-5e41-4cab-ace3-a0278f5a7ec7)]
+typedef unsigned short CSPDirective;
+
+[scriptable, uuid(69b7663e-117a-4a3b-81bd-d86420b7c79e)]
 interface nsIContentSecurityPolicy : nsISerializable
 {
+  /**
+   * Directives supported by Content Security Policy.  These are enums for
+   * the CSPDirective type.
+   * The NO_DIRECTIVE entry is  used for checking default permissions and
+   * returning failure when asking CSP which directive to check.
+   *
+   * NOTE: When implementing a new directive, you will need to add it here but also
+   * add it to the CSPStrDirectives array in nsCSPUtils.h.
+   */
+  const unsigned short NO_DIRECTIVE               = 0;
+  const unsigned short DEFAULT_SRC_DIRECTIVE      = 1;
+  const unsigned short SCRIPT_SRC_DIRECTIVE       = 2;
+  const unsigned short OBJECT_SRC_DIRECTIVE       = 3;
+  const unsigned short STYLE_SRC_DIRECTIVE        = 4;
+  const unsigned short IMG_SRC_DIRECTIVE          = 5;
+  const unsigned short MEDIA_SRC_DIRECTIVE        = 6;
+  const unsigned short FRAME_SRC_DIRECTIVE        = 7;
+  const unsigned short FONT_SRC_DIRECTIVE         = 8;
+  const unsigned short CONNECT_SRC_DIRECTIVE      = 9;
+  const unsigned short REPORT_URI_DIRECTIVE       = 10;
+  const unsigned short FRAME_ANCESTORS_DIRECTIVE  = 11;
+  const unsigned short REFLECTED_XSS_DIRECTIVE    = 12;
+  const unsigned short BASE_URI_DIRECTIVE         = 13;
+  const unsigned short FORM_ACTION_DIRECTIVE      = 14;
 
   /**
    * Accessor method for a read-only string version of the policy at a given
@@ -196,24 +222,29 @@ interface nsIContentSecurityPolicy : nsISerializable
    */
   boolean permitsAncestry(in nsIDocShell docShell);
 
-  /**
-   * Whether this policy allows setting the document's base URI to
-   * a given value.
-   *
-   * @return
-   *    Whether or not the provided URI is allowed to be used as the
-   *    document's base URI. (block the setting if false).
-   */
-  boolean permitsBaseURI(in nsIURI aURI);
 
   /**
-   * Whether this policy allows submitting HTML forms to a given URI.
+   * Checks if a specific directive permits loading of a URI.
    *
+   * NOTE: Calls to this may trigger violation reports when queried, so the
+   * return value should not be cached.
+   *
+   * @param aURI
+   *    The URI about to be loaded or used.
+   * @param aDir
+   *    The CSPDirective to query (see above constants *_DIRECTIVE).
+   * @param aSpecific
+   *    If "true" and the directive is specified to fall back to "default-src"
+   *    when it's not explicitly provided, directivePermits will NOT try
+   *    default-src when the specific directive is not used.  Setting this to
+   *    "false" allows CSP to fall back to default-src.  This function
+   *    behaves the same for both values of canUseDefault when querying
+   *    directives that don't fall-back.
    * @return
-   *    Whether or not the provided URI is allowed to be used as a
-   *    form's action URI.
+   *    Whether or not the provided URI is allowed by CSP under the given
+   *    directive. (block the pending operation if false).
    */
-  boolean permitsFormAction(in nsIURI aURI);
+  boolean permits(in nsIURI aURI, in CSPDirective aDir, in boolean aSpecific);
 
   /**
    * Delegate method called by the service when sub-elements of the protected

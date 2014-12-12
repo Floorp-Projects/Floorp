@@ -91,6 +91,14 @@ struct IntRectTyped :
     IntRectTyped<UnknownUnits> ToUnknownRect() const {
         return IntRectTyped<UnknownUnits>(this->x, this->y, this->width, this->height);
     }
+
+    bool Overflows() const {
+      CheckedInt<int32_t> xMost = this->x;
+      xMost += this->width;
+      CheckedInt<int32_t> yMost = this->y;
+      yMost += this->height;
+      return !xMost.isValid() || !yMost.isValid();
+    }
 };
 typedef IntRectTyped<UnknownUnits> IntRect;
 

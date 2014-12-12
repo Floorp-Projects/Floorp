@@ -49,7 +49,7 @@ nsHyphenator::Hyphenate(const nsAString& aString,
   if (!aHyphens.SetLength(aString.Length())) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  memset(aHyphens.Elements(), false, aHyphens.Length());
+  memset(aHyphens.Elements(), false, aHyphens.Length() * sizeof(bool));
 
   bool inWord = false;
   uint32_t wordStart = 0, wordLimit = 0;

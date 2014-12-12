@@ -3,6 +3,7 @@
 
 Invocation {
   $DMD = '--mode=dark-matter --sample-below=1'
+  Mode = 'dark-matter'
   Sample-below size = 1
 }
 

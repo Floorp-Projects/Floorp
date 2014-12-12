@@ -39,7 +39,6 @@ NS_IMPL_RELEASE(BackstagePass)
 #define XPC_MAP_FLAGS       nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY   |  \
                             nsIXPCScriptable::USE_JSSTUB_FOR_DELPROPERTY   |  \
                             nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY   |  \
-                            nsIXPCScriptable::DONT_ENUM_STATIC_PROPS       |  \
                             nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE    |  \
                             nsIXPCScriptable::IS_GLOBAL_OBJECT             |  \
                             nsIXPCScriptable::DONT_REFLECT_INTERFACE_NAMES

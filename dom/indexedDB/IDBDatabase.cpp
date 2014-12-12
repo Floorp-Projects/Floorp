@@ -448,7 +448,6 @@ IDBDatabase::GetOwnerDocument() const
 
 already_AddRefed<IDBObjectStore>
 IDBDatabase::CreateObjectStore(
-                            JSContext* aCx,
                             const nsAString& aName,
                             const IDBObjectStoreParameters& aOptionalParameters,
                             ErrorResult& aRv)
@@ -466,7 +465,7 @@ IDBDatabase::CreateObjectStore(
   MOZ_ASSERT(transaction->IsOpen());
 
   KeyPath keyPath(0);
-  if (NS_FAILED(KeyPath::Parse(aCx, aOptionalParameters.mKeyPath, &keyPath))) {
+  if (NS_FAILED(KeyPath::Parse(aOptionalParameters.mKeyPath, &keyPath))) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return nullptr;
   }

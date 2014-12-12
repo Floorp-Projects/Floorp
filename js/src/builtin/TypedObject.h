@@ -581,8 +581,7 @@ class TypedObject : public JSObject
 
     static bool obj_deleteGeneric(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded);
 
-    static bool obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
-                              MutableHandleValue statep, MutableHandleId idp);
+    static bool obj_enumerate(JSContext *cx, HandleObject obj, AutoIdVector &properties);
 
   public:
     TypedProto &typedProto() const {

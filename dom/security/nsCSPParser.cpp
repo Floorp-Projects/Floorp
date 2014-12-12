@@ -896,7 +896,7 @@ nsCSPParser::directiveValue(nsTArray<nsCSPBaseSrc*>& outSrcs)
   // The tokenzier already generated an array in the form of
   // [ name, src, src, ... ], no need to parse again, but
   // special case handling in case the directive is report-uri.
-  if (CSP_IsDirective(mCurDir[0], CSP_REPORT_URI)) {
+  if (CSP_IsDirective(mCurDir[0], nsIContentSecurityPolicy::REPORT_URI_DIRECTIVE)) {
     reportURIList(outSrcs);
     return;
   }
@@ -924,7 +924,7 @@ nsCSPParser::directiveName()
   // http://www.w3.org/TR/2014/WD-CSP11-20140211/#reflected-xss
   // Currently we are not supporting that directive, hence we log a
   // warning to the console and ignore the directive including its values.
-  if (CSP_IsDirective(mCurToken, CSP_REFLECTED_XSS)) {
+  if (CSP_IsDirective(mCurToken, nsIContentSecurityPolicy::REFLECTED_XSS_DIRECTIVE)) {
     const char16_t* params[] = { mCurToken.get() };
     logWarningErrorToConsole(nsIScriptError::warningFlag, "notSupportingDirective",
                              params, ArrayLength(params));
@@ -933,13 +933,13 @@ nsCSPParser::directiveName()
 
   // Make sure the directive does not already exist
   // (see http://www.w3.org/TR/CSP11/#parsing)
-  if (mPolicy->directiveExists(CSP_DirectiveToEnum(mCurToken))) {
+  if (mPolicy->hasDirective(CSP_StringToCSPDirective(mCurToken))) {
     const char16_t* params[] = { mCurToken.get() };
     logWarningErrorToConsole(nsIScriptError::warningFlag, "duplicateDirective",
                              params, ArrayLength(params));
     return nullptr;
   }
-  return new nsCSPDirective(CSP_DirectiveToEnum(mCurToken));
+  return new nsCSPDirective(CSP_StringToCSPDirective(mCurToken));
 }
 
 // directive = *WSP [ directive-name [ WSP directive-value ] ]
@@ -1039,7 +1039,7 @@ nsCSPParser::parseContentSecurityPolicy(const nsAString& aPolicyString,
   // Check that report-only policies define a report-uri, otherwise log warning.
   if (aReportOnly) {
     policy->setReportOnlyFlag(true);
-    if (!policy->directiveExists(CSP_REPORT_URI)) {
+    if (!policy->hasDirective(nsIContentSecurityPolicy::REPORT_URI_DIRECTIVE)) {
       nsAutoCString prePath;
       nsresult rv = aSelfURI->GetPrePath(prePath);
       NS_ENSURE_SUCCESS(rv, policy);

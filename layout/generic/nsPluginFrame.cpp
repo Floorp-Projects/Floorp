@@ -69,7 +69,6 @@
 
 #ifdef XP_MACOSX
 #include "gfxQuartzNativeDrawing.h"
-#include "nsPluginUtilsOSX.h"
 #include "mozilla/gfx/QuartzSupport.h"
 #endif
 
@@ -102,43 +101,6 @@ GetObjectFrameLog()
   return sLog;
 }
 #endif /* PR_LOGGING */
-
-#if defined(XP_MACOSX) && !defined(__LP64__)
-
-// The header files QuickdrawAPI.h and QDOffscreen.h are missing on OS X 10.7
-// and up (though the QuickDraw APIs defined in them are still present) -- so
-// we need to supply the relevant parts of their contents here.  It's likely
-// that Apple will eventually remove the APIs themselves (probably in OS X
-// 10.8), so we need to make them weak imports, and test for their presence
-// before using them.
-extern "C" {
-  #if !defined(__QUICKDRAWAPI__)
-  extern void SetRect(
-    Rect * r,
-    short  left,
-    short  top,
-    short  right,
-    short  bottom)
-    __attribute__((weak_import));
-  #endif /* __QUICKDRAWAPI__ */
-
-  #if !defined(__QDOFFSCREEN__)
-  extern QDErr NewGWorldFromPtr(
-    GWorldPtr *   offscreenGWorld,
-    UInt32        PixelFormat,
-    const Rect *  boundsRect,
-    CTabHandle    cTable,                /* can be nullptr */
-    GDHandle      aGDevice,              /* can be nullptr */
-    GWorldFlags   flags,
-    Ptr           newBuffer,
-    SInt32        rowBytes)
-    __attribute__((weak_import));
-  extern void DisposeGWorld(GWorldPtr offscreenGWorld)
-    __attribute__((weak_import));
-  #endif /* __QDOFFSCREEN__ */
-}
-
-#endif /* #if defined(XP_MACOSX) && !defined(__LP64__) */
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -220,7 +182,7 @@ nsPluginFrame::AccessibleType()
 #ifdef XP_WIN
 NS_IMETHODIMP nsPluginFrame::GetPluginPort(HWND *aPort)
 {
-  *aPort = (HWND) mInstanceOwner->GetPluginPortFromWidget();
+  *aPort = (HWND) mInstanceOwner->GetPluginPort();
   return NS_OK;
 }
 #endif
@@ -388,10 +350,7 @@ nsPluginFrame::PrepForDrawing(nsIWidget *aWidget)
   } else {
     // Changing to windowless mode changes the NPWindow geometry.
     FixupWindow(GetContentRectRelativeToSelf().Size());
-
-#ifndef XP_MACOSX
     RegisterPluginForGeometryUpdates();
-#endif
   }
 
   if (!IsHidden()) {
@@ -577,14 +536,6 @@ nsPluginFrame::FixupWindow(const nsSize& aSize)
 
   NS_ENSURE_TRUE_VOID(window);
 
-#ifdef XP_MACOSX
-  nsWeakFrame weakFrame(this);
-  mInstanceOwner->FixUpPluginWindow(nsPluginInstanceOwner::ePluginPaintDisable);
-  if (!weakFrame.IsAlive()) {
-    return;
-  }
-#endif
-
   bool windowless = (window->type == NPWindowTypeDrawable);
 
   nsIntPoint origin = GetWindowOriginInPixels(windowless);
@@ -600,15 +551,7 @@ nsPluginFrame::FixupWindow(const nsSize& aSize)
   window->width = presContext->AppUnitsToDevPixels(aSize.width) / intScaleFactor;
   window->height = presContext->AppUnitsToDevPixels(aSize.height) / intScaleFactor;
 
-  // on the Mac we need to set the clipRect to { 0, 0, 0, 0 } for now. This will keep
-  // us from drawing on screen until the widget is properly positioned, which will not
-  // happen until we have finished the reflow process.
-#ifdef XP_MACOSX
-  window->clipRect.top = 0;
-  window->clipRect.left = 0;
-  window->clipRect.bottom = 0;
-  window->clipRect.right = 0;
-#else
+#ifndef XP_MACOSX
   mInstanceOwner->UpdateWindowPositionAndClipRect(false);
 #endif
 
@@ -630,19 +573,15 @@ nsPluginFrame::CallSetWindow(bool aCheckIsHidden)
     return rv;
 
   nsPluginNativeWindow *window = (nsPluginNativeWindow *)win;
-#ifdef XP_MACOSX
-  nsWeakFrame weakFrame(this);
-  mInstanceOwner->FixUpPluginWindow(nsPluginInstanceOwner::ePluginPaintDisable);
-  if (!weakFrame.IsAlive()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-#endif
 
   if (aCheckIsHidden && IsHidden())
     return NS_ERROR_FAILURE;
 
   // refresh the plugin port as well
-  window->window = mInstanceOwner->GetPluginPortFromWidget();
+#ifdef XP_MACOSX
+  mInstanceOwner->FixUpPluginWindow(nsPluginInstanceOwner::ePluginPaintEnable);
+#endif
+  window->window = mInstanceOwner->GetPluginPort();
 
   // Adjust plugin dimensions according to pixel snap results
   // and reduce amount of SetWindow calls
@@ -1064,11 +1003,7 @@ nsPluginFrame::NotifyPluginReflowObservers()
 void
 nsPluginFrame::DidSetWidgetGeometry()
 {
-#if defined(XP_MACOSX)
-  if (mInstanceOwner) {
-    mInstanceOwner->FixUpPluginWindow(nsPluginInstanceOwner::ePluginPaintEnable);
-  }
-#else
+#ifndef XP_MACOSX
   if (!mWidget && mInstanceOwner) {
     // UpdateWindowVisibility will notify the plugin of position changes
     // by updating the NPWindow and calling NPP_SetWindow/AsyncSetWindow.
@@ -1079,6 +1014,8 @@ nsPluginFrame::DidSetWidgetGeometry()
       nsLayoutUtils::IsPopup(nsLayoutUtils::GetDisplayRootFrame(this)) ||
       !mNextConfigurationBounds.IsEmpty());
   }
+#else
+  CallSetWindow(false);
 #endif
 }
 
@@ -1086,7 +1023,6 @@ bool
 nsPluginFrame::IsOpaque() const
 {
 #if defined(XP_MACOSX)
-  // ???
   return false;
 #elif defined(MOZ_WIDGET_ANDROID)
   // We don't know, so just assume transparent
@@ -1100,7 +1036,6 @@ bool
 nsPluginFrame::IsTransparentMode() const
 {
 #if defined(XP_MACOSX)
-  // ???
   return false;
 #else
   if (!mInstanceOwner)
@@ -1153,17 +1088,23 @@ nsPluginFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 #endif
 
-  if (aBuilder->IsForPainting() && mInstanceOwner && mInstanceOwner->UseAsyncRendering()) {
-    NPWindow* window = nullptr;
-    mInstanceOwner->GetWindow(window);
-    bool isVisible = window && window->width > 0 && window->height > 0;
-    if (isVisible && aBuilder->ShouldSyncDecodeImages()) {
-  #ifndef XP_MACOSX
-      mInstanceOwner->UpdateWindowVisibility(true);
-  #endif
-    }
+  if (aBuilder->IsForPainting() && mInstanceOwner) {
+#ifdef XP_MACOSX
+    mInstanceOwner->ResolutionMayHaveChanged();
+    mInstanceOwner->WindowFocusMayHaveChanged();
+#endif
+    if (mInstanceOwner->UseAsyncRendering()) {
+      NPWindow* window = nullptr;
+      mInstanceOwner->GetWindow(window);
+      bool isVisible = window && window->width > 0 && window->height > 0;
+      if (isVisible && aBuilder->ShouldSyncDecodeImages()) {
+#ifndef XP_MACOSX
+        mInstanceOwner->UpdateWindowVisibility(true);
+#endif
+      }
 
-    mInstanceOwner->NotifyPaintWaiter(aBuilder);
+      mInstanceOwner->NotifyPaintWaiter(aBuilder);
+    }
   }
 
   DisplayListClipState::AutoClipContainingBlockDescendantsToContentBox
@@ -1253,117 +1194,10 @@ nsPluginFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
   window.clipRect.left = 0; window.clipRect.right = 0;
 
 // platform specific printing code
-#if defined(XP_MACOSX) && !defined(__LP64__)
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-  DrawTarget& aDrawTarget = *aRenderingContext.GetDrawTarget();
-
-  // Don't use this code if any of the QuickDraw APIs it currently requires
-  // are missing (as they probably will be on OS X 10.8 and up).
-  if (!&::SetRect || !&::NewGWorldFromPtr || !&::DisposeGWorld) {
-    NS_WARNING("Cannot print plugin -- required QuickDraw APIs are missing!");
-    return;
-  }
-
-  nsSize contentSize = GetContentRectRelativeToSelf().Size();
-  window.x = 0;
-  window.y = 0;
-  window.width = presContext->AppUnitsToDevPixels(contentSize.width);
-  window.height = presContext->AppUnitsToDevPixels(contentSize.height);
-
-  gfxContext *ctx = aRenderingContext.ThebesContext();
-  if (!ctx)
-    return;
-  gfxContextAutoSaveRestore save(ctx);
-
-  ctx->NewPath();
-
-  gfx::Rect rect(window.x, window.y, window.width, window.height);
-
-  ctx->Rectangle(ThebesRect(rect));
-  ctx->Clip();
-
-  gfxQuartzNativeDrawing nativeDraw(aDrawTarget, rect);
-  CGContextRef cgContext = nativeDraw.BeginNativeDrawing();
-  if (!cgContext) {
-    nativeDraw.EndNativeDrawing();
-    return;
-  }
-
-  window.clipRect.right = window.width;
-  window.clipRect.bottom = window.height;
-  window.type = NPWindowTypeDrawable;
-
-  ::Rect gwBounds;
-  ::SetRect(&gwBounds, 0, 0, window.width, window.height);
-
-  nsTArray<char> buffer(window.width * window.height * 4);
-  CGColorSpaceRef cspace = ::CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
-  if (!cspace) {
-    nativeDraw.EndNativeDrawing();
-    return;
-  }
-  CGContextRef cgBuffer =
-    ::CGBitmapContextCreate(buffer.Elements(), 
-                            window.width, window.height, 8, window.width * 4,
-                            cspace, kCGBitmapByteOrder32Big | kCGImageAlphaPremultipliedFirst);
-  ::CGColorSpaceRelease(cspace);
-  if (!cgBuffer) {
-    nativeDraw.EndNativeDrawing();
-    return;
-  }
-  GWorldPtr gWorld;
-  if (::NewGWorldFromPtr(&gWorld, k32ARGBPixelFormat, &gwBounds,
-                         nullptr, nullptr, 0,
-                         buffer.Elements(), window.width * 4) != noErr) {
-    ::CGContextRelease(cgBuffer);
-    nativeDraw.EndNativeDrawing();
-    return;
-  }
-
-  window.clipRect.right = window.width;
-  window.clipRect.bottom = window.height;
-  window.type = NPWindowTypeDrawable;
-  // Setting nsPluginPrint/NPPrint.print.embedPrint.window.window to
-  // &GWorldPtr and nsPluginPrint/NPPrint.print.embedPrint.platformPrint to
-  // GWorldPtr isn't any kind of standard (it's not documented anywhere).
-  // But that's what WebKit does.  And it's what the Flash plugin (apparently
-  // the only NPAPI plugin on OS X to support printing) seems to expect.  So
-  // we do the same.  The Flash plugin uses the CoreGraphics drawing mode.
-  // But a GWorldPtr should be usable in either CoreGraphics or QuickDraw
-  // drawing mode.  See bug 191046.
-  window.window = &gWorld;
-  npprint.print.embedPrint.platformPrint = gWorld;
-  npprint.print.embedPrint.window = window;
-  pi->Print(&npprint);
-
-  ::CGContextTranslateCTM(cgContext, 0.0f, float(window.height));
-  ::CGContextScaleCTM(cgContext, 1.0f, -1.0f);
-  CGImageRef image = ::CGBitmapContextCreateImage(cgBuffer);
-  if (!image) {
-    ::CGContextRestoreGState(cgContext);
-    ::CGContextRelease(cgBuffer);
-    ::DisposeGWorld(gWorld);
-    nativeDraw.EndNativeDrawing();
-    return;
-  }
-  ::CGContextDrawImage(cgContext,
-                       ::CGRectMake(0, 0, window.width, window.height),
-                       image);
-  ::CGImageRelease(image);
-  ::CGContextRelease(cgBuffer);
-
-  ::DisposeGWorld(gWorld);
-
-  nativeDraw.EndNativeDrawing();
-#pragma clang diagnostic warning "-Wdeprecated-declarations"
-#elif defined(XP_UNIX)
-
-  /* XXX this just flat-out doesn't work in a thebes world --
-   * RenderEPS is a no-op.  So don't bother to do any work here.
-   */
+#if defined(XP_UNIX) || defined(XP_MACOSX)
+  // Doesn't work in a thebes world, or on OS X.
   (void)window;
   (void)npprint;
-
 #elif defined(XP_WIN)
 
   /* On Windows, we use the win32 printing surface to print.  This, in
@@ -1861,15 +1695,6 @@ nsPluginFrame::HandleEvent(nsPresContext* aPresContext,
       return fm->FocusPlugin(GetContent());
   }
 
-#ifdef XP_MACOSX
-  if (anEvent->message == NS_PLUGIN_RESOLUTION_CHANGED) {
-    double scaleFactor = 1.0;
-    mInstanceOwner->GetContentsScaleFactor(&scaleFactor);
-    mInstanceOwner->ContentsScaleFactorChanged(scaleFactor);
-    return NS_OK;
-  }
-#endif
-
   if (mInstanceOwner->SendNativeEvents() &&
       anEvent->IsNativeEventDelivererForPlugin()) {
     *anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
@@ -2034,13 +1859,7 @@ nsPluginFrame::EndSwapDocShells(nsISupports* aSupports, void*)
     }
   }
 
-#ifdef XP_MACOSX
-  if (objectFrame->mWidget) {
-    objectFrame->RegisterPluginForGeometryUpdates();
-  }
-#else
   objectFrame->RegisterPluginForGeometryUpdates();
-#endif
 }
 
 nsIFrame*

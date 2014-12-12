@@ -2,12 +2,14 @@
 # dmd.py --filter-stacks-for-testing -o script-diff-dark-matter-actual.txt script-diff-dark-matter1.json script-diff-dark-matter2.json
 
 Invocation 1 {
-  $DMD = '--sample-below=127'
+  $DMD = '--mode=dark-matter --sample-below=127'
+  Mode = 'dark-matter'
   Sample-below size = 127
 }
 
 Invocation 2 {
   $DMD = '--sample-below=63'
+  Mode = 'dark-matter'
   Sample-below size = 63
 }
 

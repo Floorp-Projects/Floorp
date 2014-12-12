@@ -24,11 +24,10 @@ PTest(JSContext* cx, unsigned argc, jsval *vp);
 static const JSClass ptestClass = {
     "PTest",
     JSCLASS_HAS_PRIVATE,
-
-    nullptr,               // add
-    nullptr,               // delete
-    test_prop_get,         // get
-    JS_StrictPropertyStub  // set
+    nullptr, // addProperty
+    nullptr, // delProperty
+    test_prop_get,
+    nullptr // setProperty
 };
 
 static bool

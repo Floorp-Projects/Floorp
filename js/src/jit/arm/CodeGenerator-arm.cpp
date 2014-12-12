@@ -1926,7 +1926,7 @@ CodeGeneratorARM::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap *ins)
         BufferOffset bo = masm.ma_BoundsCheck(ptrReg);
         Register out = ToRegister(ins->output());
         maybeCmpOffset = bo.getOffset();
-        masm.ma_b(&goahead, Assembler::LessThan);
+        masm.ma_b(&goahead, Assembler::Below);
         memoryBarrier(MembarFull);
         masm.as_eor(out, out, O2Reg(out));
         masm.ma_b(&rejoin, Assembler::Always);
@@ -1961,7 +1961,7 @@ CodeGeneratorARM::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap *ins)
         BufferOffset bo = masm.ma_BoundsCheck(ptrReg);
         Register out = ToRegister(ins->output());
         maybeCmpOffset = bo.getOffset();
-        masm.ma_b(&goahead, Assembler::LessThan);
+        masm.ma_b(&goahead, Assembler::Below);
         memoryBarrier(MembarFull);
         masm.as_eor(out, out, O2Reg(out));
         masm.ma_b(&rejoin, Assembler::Always);

@@ -32,33 +32,28 @@ def do_delayed_imports():
 
 
 class SeleniumTestExecutor(TestExecutor):
-    def __init__(self, browser, http_server_url, timeout_multiplier=1,
-                 **kwargs):
+    def __init__(self, browser, http_server_url, capabilities,
+                 timeout_multiplier=1, **kwargs):
         do_delayed_imports()
         TestExecutor.__init__(self, browser, http_server_url, timeout_multiplier)
-        self.webdriver_port = browser.webdriver_port
+        self.capabilities = capabilities
+        self.url = browser.webdriver_url
         self.webdriver = None
-
         self.timer = None
         self.window_id = str(uuid.uuid4())
-        self.capabilities = kwargs.pop("capabilities")
 
     def setup(self, runner):
         """Connect to browser via Selenium's WebDriver implementation."""
         self.runner = runner
-        url = "http://localhost:%i/wd/url" % self.webdriver_port
-        self.logger.debug("Connecting to Selenium on URL: %s" % url)
+        self.logger.debug("Connecting to Selenium on URL: %s" % self.url)
 
         session_started = False
         try:
-            time.sleep(1)
             self.webdriver = webdriver.Remote(
-                url, desired_capabilities=self.capabilities)
-            time.sleep(10)
+                self.url, desired_capabilities=self.capabilities)
         except:
             self.logger.warning(
                 "Connecting to Selenium failed:\n%s" % traceback.format_exc())
-            time.sleep(1)
         else:
             self.logger.debug("Selenium session started")
             session_started = True
@@ -78,6 +73,7 @@ class SeleniumTestExecutor(TestExecutor):
                 self.runner.send_message("init_succeeded")
 
     def teardown(self):
+        self.logger.debug("Hanging up on Selenium session")
         try:
             self.webdriver.quit()
         except:

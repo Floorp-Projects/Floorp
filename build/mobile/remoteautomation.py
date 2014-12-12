@@ -60,7 +60,6 @@ class RemoteAutomation(Automation):
             env = {}
 
         if dmdPath:
-            env['DMD'] = '1'
             env['MOZ_REPLACE_MALLOC_LIB'] = os.path.join(dmdPath, 'libdmd.so')
 
         # Except for the mochitest results table hiding option, which isn't

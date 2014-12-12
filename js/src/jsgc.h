@@ -1008,8 +1008,7 @@ class GCHelperState
     State state();
     void setState(State state);
 
-    bool              sweepFlag;
-    bool              shrinkFlag;
+    bool shrinkFlag;
 
     friend class js::gc::ArenaLists;
 
@@ -1028,7 +1027,6 @@ class GCHelperState
         done(nullptr),
         state_(IDLE),
         thread(nullptr),
-        sweepFlag(false),
         shrinkFlag(false)
     { }
 
