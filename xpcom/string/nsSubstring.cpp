@@ -106,7 +106,7 @@ static nsStringStats gStringStats;
 
 // ---------------------------------------------------------------------------
 
-void
+inline void
 ReleaseData(void* aData, uint32_t aFlags)
 {
   if (aFlags & nsSubstring::F_SHARED) {
