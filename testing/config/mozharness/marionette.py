@@ -50,10 +50,13 @@ config = {
         "--testvars=%(testvars)s",
         "--profile=%(profile)s",
         "--symbols-path=%(symbols_path)s",
+        "--gecko-log=%(gecko_log)s",
         "--xml-output=%(xml_output)s",
         "--html-output=%(html_output)s",
         "--log-raw=%(raw_log_file)s",
         "--binary=%(binary)s",
         "--address=%(address)s",
+        "--total-chunks=%(total_chunks)s",
+        "--this-chunk=%(this_chunk)s",
     ],
 }
