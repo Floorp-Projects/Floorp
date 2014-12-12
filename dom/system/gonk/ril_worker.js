@@ -1023,7 +1023,7 @@ RilObject.prototype = {
    * Read UICC Phonebook contacts.
    *
    * @param contactType
-   *        "adn" or "fdn".
+   *        One of GECKO_CARDCONTACT_TYPE_*.
    * @param requestId
    *        Request id from RadioInterfaceLayer.
    */
@@ -1057,7 +1057,7 @@ RilObject.prototype = {
   /**
    * Update UICC Phonebook.
    *
-   * @param contactType   "adn" or "fdn".
+   * @param contactType   One of GECKO_CARDCONTACT_TYPE_*.
    * @param contact       The contact will be updated.
    * @param pin2          PIN2 is required for updating FDN.
    * @param requestId     Request id from RadioInterfaceLayer.
@@ -15138,7 +15138,7 @@ ICCContactHelperObject.prototype = {
    * Helper function to read ICC contacts.
    *
    * @param appType       One of CARD_APPTYPE_*.
-   * @param contactType   "adn" or "fdn".
+   * @param contactType   One of GECKO_CARDCONTACT_TYPE_*.
    * @param onsuccess     Callback to be called when success.
    * @param onerror       Callback to be called when error.
    */
@@ -15146,17 +15146,17 @@ ICCContactHelperObject.prototype = {
     let ICCRecordHelper = this.context.ICCRecordHelper;
 
     switch (contactType) {
-      case "adn":
+      case GECKO_CARDCONTACT_TYPE_ADN:
         if (!this.hasDfPhoneBook(appType)) {
           ICCRecordHelper.readADNLike(ICC_EF_ADN, onsuccess, onerror);
         } else {
           this.readUSimContacts(onsuccess, onerror);
         }
         break;
-      case "fdn":
+      case GECKO_CARDCONTACT_TYPE_FDN:
         ICCRecordHelper.readADNLike(ICC_EF_FDN, onsuccess, onerror);
         break;
-      case "sdn":
+      case GECKO_CARDCONTACT_TYPE_SDN:
         let ICCUtilsHelper = this.context.ICCUtilsHelper;
         if (!ICCUtilsHelper.isICCServiceAvailable("SDN")) {
           onerror(CONTACT_ERR_CONTACT_TYPE_NOT_SUPPORTED);
@@ -15178,7 +15178,7 @@ ICCContactHelperObject.prototype = {
    * Helper function to find free contact record.
    *
    * @param appType       One of CARD_APPTYPE_*.
-   * @param contactType   "adn" or "fdn".
+   * @param contactType   One of GECKO_CARDCONTACT_TYPE_*.
    * @param onsuccess     Callback to be called when success.
    * @param onerror       Callback to be called when error.
    */
@@ -15186,7 +15186,7 @@ ICCContactHelperObject.prototype = {
     let ICCRecordHelper = this.context.ICCRecordHelper;
 
     switch (contactType) {
-      case "adn":
+      case GECKO_CARDCONTACT_TYPE_ADN:
         if (!this.hasDfPhoneBook(appType)) {
           ICCRecordHelper.findFreeRecordId(ICC_EF_ADN, onsuccess.bind(null, 0), onerror);
         } else {
@@ -15197,7 +15197,7 @@ ICCContactHelperObject.prototype = {
           ICCRecordHelper.readPBR(gotPbrCb, onerror);
         }
         break;
-      case "fdn":
+      case GECKO_CARDCONTACT_TYPE_FDN:
         ICCRecordHelper.findFreeRecordId(ICC_EF_FDN, onsuccess.bind(null, 0), onerror);
         break;
       default:
@@ -15255,7 +15255,7 @@ ICCContactHelperObject.prototype = {
    * Helper function to add a new ICC contact.
    *
    * @param appType       One of CARD_APPTYPE_*.
-   * @param contactType   "adn" or "fdn".
+   * @param contactType   One of GECKO_CARDCONTACT_TYPE_*.
    * @param contact       The contact will be added.
    * @param pin2          PIN2 is required for FDN.
    * @param onsuccess     Callback to be called when success.
@@ -15276,7 +15276,7 @@ ICCContactHelperObject.prototype = {
    * Helper function to update ICC contact.
    *
    * @param appType       One of CARD_APPTYPE_*.
-   * @param contactType   "adn" or "fdn".
+   * @param contactType   One of GECKO_CARDCONTACT_TYPE_*.
    * @param contact       The contact will be updated.
    * @param pin2          PIN2 is required for FDN.
    * @param onsuccess     Callback to be called when success.
@@ -15286,14 +15286,14 @@ ICCContactHelperObject.prototype = {
     let ICCRecordHelper = this.context.ICCRecordHelper;
 
     switch (contactType) {
-      case "adn":
+      case GECKO_CARDCONTACT_TYPE_ADN:
         if (!this.hasDfPhoneBook(appType)) {
           ICCRecordHelper.updateADNLike(ICC_EF_ADN, contact, null, onsuccess, onerror);
         } else {
           this.updateUSimContact(contact, onsuccess, onerror);
         }
         break;
-      case "fdn":
+      case GECKO_CARDCONTACT_TYPE_FDN:
         if (!pin2) {
           onerror(GECKO_ERROR_SIM_PIN2);
           return;
