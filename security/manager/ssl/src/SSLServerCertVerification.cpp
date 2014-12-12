@@ -1085,11 +1085,22 @@ AuthCertificate(CertVerifier& certVerifier,
 
   SECOidTag evOidPolicy;
   ScopedCERTCertList certList;
+  CertVerifier::OCSPStaplingStatus ocspStaplingStatus =
+    CertVerifier::OCSP_STAPLING_NEVER_CHECKED;
+
   rv = certVerifier.VerifySSLServerCert(cert, stapledOCSPResponse,
                                         time, infoObject,
                                         infoObject->GetHostNameRaw(),
                                         saveIntermediates, 0, &certList,
-                                        &evOidPolicy);
+                                        &evOidPolicy, &ocspStaplingStatus);
+  PRErrorCode savedErrorCode;
+  if (rv != SECSuccess) {
+    savedErrorCode = PR_GetError();
+  }
+
+  if (ocspStaplingStatus != CertVerifier::OCSP_STAPLING_NEVER_CHECKED) {
+    Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, ocspStaplingStatus);
+  }
 
   // We want to remember the CA certs in the temp db, so that the application can find the
   // complete chain at any time it might need it.
@@ -1142,6 +1153,7 @@ AuthCertificate(CertVerifier& certVerifier,
     // infoObject so it can be used for error reporting. Note: infoObject
     // indirectly takes ownership of peerCertChain.
     infoObject->SetFailedCertChain(peerCertChain);
+    PR_SetError(savedErrorCode, 0);
   }
 
   return rv;
