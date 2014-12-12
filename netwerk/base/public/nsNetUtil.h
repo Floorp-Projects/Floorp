@@ -239,19 +239,8 @@ NS_NewChannelInternal(nsIChannel**           outChannel,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Some channels might already have a loadInfo attached at this
-  // point (see bug 1104623). We have to make sure to update
-  // security flags in such cases before we set the loadinfo.
-  // Once bug 1087442 lands, this problem disappears because we
-  // attach the loadinfo in each individual protocol handler.
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  channel->GetLoadInfo(getter_AddRefs(loadInfo));
-  if (loadInfo) {
-    aSecurityFlags |= loadInfo->GetSecurityFlags();
-  }
-
   // create a new Loadinfo with the potentially updated securityFlags
-  loadInfo =
+  nsCOMPtr<nsILoadInfo> loadInfo =
     new mozilla::LoadInfo(aRequestingPrincipal, aTriggeringPrincipal,
                           aRequestingNode, aSecurityFlags,
                           aContentPolicyType, aBaseURI);
