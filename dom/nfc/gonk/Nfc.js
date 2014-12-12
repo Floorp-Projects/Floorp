@@ -397,7 +397,7 @@ Nfc.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsINfcGonkEventListener]),
 
-  rfState: null,
+  rfState: NFC.NFC_RF_STATE_IDLE,
 
   nfcService: null,
 

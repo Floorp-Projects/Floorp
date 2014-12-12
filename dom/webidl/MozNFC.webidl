@@ -76,6 +76,11 @@ interface MozNFCManager {
  AvailableIn="PrivilegedApps"]
 interface MozNFC : EventTarget {
   /**
+   * Indicate if NFC is enabled.
+   */
+  readonly attribute boolean enabled;
+
+  /**
    * This event will be fired when another NFCPeer is detected, and user confirms
    * to share data to the NFCPeer object by calling mozNFC.notifyUserAcceptedP2P.
    * The event will be type of NFCPeerEvent.
