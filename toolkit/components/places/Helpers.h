@@ -14,6 +14,7 @@
 #include "nsIURI.h"
 #include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
+#include "prtime.h"
 #include "mozilla/Telemetry.h"
 
 namespace mozilla {
@@ -147,6 +148,22 @@ bool IsValidGUID(const nsACString& aGUID);
  *        Output parameter to return the trimmed string
  */
 void TruncateTitle(const nsACString& aTitle, nsACString& aTrimmed);
+
+/**
+ * Round down a PRTime value to milliseconds precision (...000).
+ *
+ * @param aTime
+ *        a PRTime value.
+ * @return aTime rounded down to milliseconds precision.
+ */
+PRTime RoundToMilliseconds(PRTime aTime);
+
+/**
+ * Round down PR_Now() to milliseconds precision.
+ *
+ * @return @see PR_Now, RoundToMilliseconds.
+ */
+PRTime RoundedPRNow();
 
 /**
  * Used to finalize a statementCache on a specified thread.

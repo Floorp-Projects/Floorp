@@ -19,6 +19,7 @@
 var Cu = require('chrome').Cu;
 
 var DebuggerClient = Cu.import('resource://gre/modules/devtools/dbg-client.jsm', {}).DebuggerClient;
+var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 
 var Promise = require('../util/promise').Promise;
 var Connection = require('./connectors').Connection;
@@ -61,7 +62,7 @@ function RdpConnection(url) {
 /**
  * Asynchronous construction
  */
-RdpConnection.create = function(url) {
+RdpConnection.create = Task.async(function*(url) {
   this.host = url;
   this.port = undefined; // TODO: Split out the port number
 
@@ -70,9 +71,13 @@ RdpConnection.create = function(url) {
 
   this._emit = this._emit.bind(this);
 
+  let transport = yield DebuggerClient.socketConnect({
+    host: this.host,
+    port: this.port
+  });
+
   return new Promise(function(resolve, reject) {
-    this.transport = DebuggerClient.socketConnect(this.host, this.port);
-    this.client = new DebuggerClient(this.transport);
+    this.client = new DebuggerClient(transport);
     this.client.connect(function() {
       this.client.listTabs(function(response) {
         this.actor = response.gcliActor;
@@ -80,7 +85,7 @@ RdpConnection.create = function(url) {
       }.bind(this));
     }.bind(this));
   }.bind(this));
-};
+});
 
 RdpConnection.prototype = Object.create(Connection.prototype);
 

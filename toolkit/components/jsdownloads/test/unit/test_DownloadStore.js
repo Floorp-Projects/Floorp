@@ -57,12 +57,24 @@ add_task(function test_save_reload()
     target: getTempFile(TEST_TARGET_FILE_NAME),
   }));
 
+  // This PDF download should not be serialized because it never succeeds.
+  let pdfDownload = yield Downloads.createDownload({
+    source: { url: httpUrl("empty.txt"),
+              referrer: TEST_REFERRER_URL },
+    target: getTempFile(TEST_TARGET_FILE_NAME),
+    saver: "pdf",
+  });
+  listForSave.add(pdfDownload);
+
   let legacyDownload = yield promiseStartLegacyDownload();
   yield legacyDownload.cancel();
   listForSave.add(legacyDownload);
 
   yield storeForSave.save();
   yield storeForLoad.load();
+
+  // Remove the PDF download because it should not appear in this list.
+  listForSave.remove(pdfDownload);
 
   let itemsForSave = yield listForSave.getAll();
   let itemsForLoad = yield listForLoad.getAll();

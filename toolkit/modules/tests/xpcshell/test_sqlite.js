@@ -50,7 +50,7 @@ function getConnection(dbName, extraOptions={}) {
   return Sqlite.openConnection(options);
 }
 
-function getDummyDatabase(name, extraOptions={}) {
+function* getDummyDatabase(name, extraOptions={}) {
   const TABLES = {
     dirs: "id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT",
     files: "id INTEGER PRIMARY KEY AUTOINCREMENT, dir_id INTEGER, path TEXT",
@@ -64,10 +64,10 @@ function getDummyDatabase(name, extraOptions={}) {
     c._initialStatementCount++;
   }
 
-  throw new Task.Result(c);
+  return c;
 }
 
-function getDummyTempDatabase(name, extraOptions={}) {
+function* getDummyTempDatabase(name, extraOptions={}) {
   const TABLES = {
     dirs: "id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT",
     files: "id INTEGER PRIMARY KEY AUTOINCREMENT, dir_id INTEGER, path TEXT",
@@ -81,7 +81,7 @@ function getDummyTempDatabase(name, extraOptions={}) {
     c._initialStatementCount++;
   }
 
-  throw new Task.Result(c);
+  return c;
 }
 
 function run_test() {
@@ -91,26 +91,26 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function test_open_normal() {
+add_task(function* test_open_normal() {
   let c = yield Sqlite.openConnection({path: "test_open_normal.sqlite"});
   yield c.close();
 });
 
-add_task(function test_open_unshared() {
+add_task(function* test_open_unshared() {
   let path = OS.Path.join(OS.Constants.Path.profileDir, "test_open_unshared.sqlite");
 
   let c = yield Sqlite.openConnection({path: path, sharedMemoryCache: false});
   yield c.close();
 });
 
-add_task(function test_get_dummy_database() {
+add_task(function* test_get_dummy_database() {
   let db = yield getDummyDatabase("get_dummy_database");
 
   do_check_eq(typeof(db), "object");
   yield db.close();
 });
 
-add_task(function test_schema_version() {
+add_task(function* test_schema_version() {
   let db = yield getDummyDatabase("schema_version");
 
   let version = yield db.getSchemaVersion();
@@ -138,7 +138,7 @@ add_task(function test_schema_version() {
   yield db.close();
 });
 
-add_task(function test_simple_insert() {
+add_task(function* test_simple_insert() {
   let c = yield getDummyDatabase("simple_insert");
 
   let result = yield c.execute("INSERT INTO dirs VALUES (NULL, 'foo')");
@@ -147,7 +147,7 @@ add_task(function test_simple_insert() {
   yield c.close();
 });
 
-add_task(function test_simple_bound_array() {
+add_task(function* test_simple_bound_array() {
   let c = yield getDummyDatabase("simple_bound_array");
 
   let result = yield c.execute("INSERT INTO dirs VALUES (?, ?)", [1, "foo"]);
@@ -155,7 +155,7 @@ add_task(function test_simple_bound_array() {
   yield c.close();
 });
 
-add_task(function test_simple_bound_object() {
+add_task(function* test_simple_bound_object() {
   let c = yield getDummyDatabase("simple_bound_object");
   let result = yield c.execute("INSERT INTO dirs VALUES (:id, :path)",
                                {id: 1, path: "foo"});
@@ -168,7 +168,7 @@ add_task(function test_simple_bound_object() {
 });
 
 // This is mostly a sanity test to ensure simple executions work.
-add_task(function test_simple_insert_then_select() {
+add_task(function* test_simple_insert_then_select() {
   let c = yield getDummyDatabase("simple_insert_then_select");
 
   yield c.execute("INSERT INTO dirs VALUES (NULL, 'foo')");
@@ -191,7 +191,7 @@ add_task(function test_simple_insert_then_select() {
   yield c.close();
 });
 
-add_task(function test_repeat_execution() {
+add_task(function* test_repeat_execution() {
   let c = yield getDummyDatabase("repeat_execution");
 
   let sql = "INSERT INTO dirs (path) VALUES (:path)";
@@ -205,7 +205,7 @@ add_task(function test_repeat_execution() {
   yield c.close();
 });
 
-add_task(function test_table_exists() {
+add_task(function* test_table_exists() {
   let c = yield getDummyDatabase("table_exists");
 
   do_check_false(yield c.tableExists("does_not_exist"));
@@ -215,7 +215,7 @@ add_task(function test_table_exists() {
   yield c.close();
 });
 
-add_task(function test_index_exists() {
+add_task(function* test_index_exists() {
   let c = yield getDummyDatabase("index_exists");
 
   do_check_false(yield c.indexExists("does_not_exist"));
@@ -226,7 +226,7 @@ add_task(function test_index_exists() {
   yield c.close();
 });
 
-add_task(function test_temp_table_exists() {
+add_task(function* test_temp_table_exists() {
   let c = yield getDummyTempDatabase("temp_table_exists");
 
   do_check_false(yield c.tableExists("temp_does_not_exist"));
@@ -236,7 +236,7 @@ add_task(function test_temp_table_exists() {
   yield c.close();
 });
 
-add_task(function test_temp_index_exists() {
+add_task(function* test_temp_index_exists() {
   let c = yield getDummyTempDatabase("temp_index_exists");
 
   do_check_false(yield c.indexExists("temp_does_not_exist"));
@@ -247,7 +247,7 @@ add_task(function test_temp_index_exists() {
   yield c.close();
 });
 
-add_task(function test_close_cached() {
+add_task(function* test_close_cached() {
   let c = yield getDummyDatabase("close_cached");
 
   yield c.executeCached("SELECT * FROM dirs");
@@ -256,7 +256,7 @@ add_task(function test_close_cached() {
   yield c.close();
 });
 
-add_task(function test_execute_invalid_statement() {
+add_task(function* test_execute_invalid_statement() {
   let c = yield getDummyDatabase("invalid_statement");
 
   let deferred = Promise.defer();
@@ -275,7 +275,7 @@ add_task(function test_execute_invalid_statement() {
   yield c.close();
 });
 
-add_task(function test_on_row_exception_ignored() {
+add_task(function* test_on_row_exception_ignored() {
   let c = yield getDummyDatabase("on_row_exception_ignored");
 
   let sql = "INSERT INTO dirs (path) VALUES (?)";
@@ -297,7 +297,7 @@ add_task(function test_on_row_exception_ignored() {
 });
 
 // Ensure StopIteration during onRow causes processing to stop.
-add_task(function test_on_row_stop_iteration() {
+add_task(function* test_on_row_stop_iteration() {
   let c = yield getDummyDatabase("on_row_stop_iteration");
 
   let sql = "INSERT INTO dirs (path) VALUES (?)";
@@ -321,7 +321,7 @@ add_task(function test_on_row_stop_iteration() {
 });
 
 // Ensure execute resolves to false when no rows are selected.
-add_task(function test_on_row_stop_iteration() {
+add_task(function* test_on_row_stop_iteration() {
   let c = yield getDummyDatabase("no_on_row");
 
   let i = 0;
@@ -335,28 +335,22 @@ add_task(function test_on_row_stop_iteration() {
   yield c.close();
 });
 
-add_task(function test_invalid_transaction_type() {
+add_task(function* test_invalid_transaction_type() {
   let c = yield getDummyDatabase("invalid_transaction_type");
 
-  let errored = false;
-  try {
-    c.executeTransaction(function () {}, "foobar");
-  } catch (ex) {
-    errored = true;
-    do_check_true(ex.message.startsWith("Unknown transaction type"));
-  } finally {
-    do_check_true(errored);
-  }
+  Assert.throws(() => c.executeTransaction(function* () {}, "foobar"),
+                /Unknown transaction type/,
+                "Unknown transaction type should throw");
 
   yield c.close();
 });
 
-add_task(function test_execute_transaction_success() {
+add_task(function* test_execute_transaction_success() {
   let c = yield getDummyDatabase("execute_transaction_success");
 
   do_check_false(c.transactionInProgress);
 
-  yield c.executeTransaction(function transaction(conn) {
+  yield c.executeTransaction(function* transaction(conn) {
     do_check_eq(c, conn);
     do_check_true(conn.transactionInProgress);
 
@@ -371,12 +365,12 @@ add_task(function test_execute_transaction_success() {
   yield c.close();
 });
 
-add_task(function test_execute_transaction_rollback() {
+add_task(function* test_execute_transaction_rollback() {
   let c = yield getDummyDatabase("execute_transaction_rollback");
 
   let deferred = Promise.defer();
 
-  c.executeTransaction(function transaction(conn) {
+  c.executeTransaction(function* transaction(conn) {
     yield conn.execute("INSERT INTO dirs (path) VALUES ('foo')");
     print("Expecting error with next statement.");
     yield conn.execute("INSERT INTO invalid VALUES ('foo')");
@@ -395,23 +389,19 @@ add_task(function test_execute_transaction_rollback() {
   yield c.close();
 });
 
-add_task(function test_close_during_transaction() {
+add_task(function* test_close_during_transaction() {
   let c = yield getDummyDatabase("close_during_transaction");
 
   yield c.execute("INSERT INTO dirs (path) VALUES ('foo')");
 
-  let errored = false;
-  try {
-    yield c.executeTransaction(function transaction(conn) {
-      yield c.execute("INSERT INTO dirs (path) VALUES ('bar')");
-      yield c.close();
-    });
-  } catch (ex) {
-    errored = true;
-    do_check_eq(ex.message, "Connection being closed.");
-  } finally {
-    do_check_true(errored);
-  }
+  let promise = c.executeTransaction(function* transaction(conn) {
+    yield c.execute("INSERT INTO dirs (path) VALUES ('bar')");
+  });
+  yield c.close();
+
+  yield Assert.rejects(promise,
+                       /Transaction canceled due to a closed connection/,
+                       "closing a connection in the middle of a transaction should reject it");
 
   let c2 = yield getConnection("close_during_transaction");
   let rows = yield c2.execute("SELECT * FROM dirs");
@@ -420,32 +410,66 @@ add_task(function test_close_during_transaction() {
   yield c2.close();
 });
 
-add_task(function test_detect_multiple_transactions() {
+// Verify that we support concurrent transactions.
+add_task(function* test_multiple_transactions() {
   let c = yield getDummyDatabase("detect_multiple_transactions");
 
-  yield c.executeTransaction(function main() {
-    yield c.execute("INSERT INTO dirs (path) VALUES ('foo')");
-
-    let errored = false;
-    try {
-      yield c.executeTransaction(function child() {
-        yield c.execute("INSERT INTO dirs (path) VALUES ('bar')");
-      });
-    } catch (ex) {
-      errored = true;
-      do_check_true(ex.message.startsWith("A transaction is already active."));
-    } finally {
-      do_check_true(errored);
-    }
-  });
+  for (let i = 0; i < 10; ++i) {
+    // We don't wait for these transactions.
+    c.executeTransaction(function* () {
+      yield c.execute("INSERT INTO dirs (path) VALUES (:path)",
+                      { path: `foo${i}` });
+      yield c.execute("SELECT * FROM dirs");
+    });
+  }
+  for (let i = 0; i < 10; ++i) {
+    yield c.executeTransaction(function* () {
+      yield c.execute("INSERT INTO dirs (path) VALUES (:path)",
+                      { path: `bar${i}` });
+      yield c.execute("SELECT * FROM dirs");
+    });
+  }
 
   let rows = yield c.execute("SELECT * FROM dirs");
-  do_check_eq(rows.length, 1);
+  do_check_eq(rows.length, 20);
 
   yield c.close();
 });
 
-add_task(function test_shrink_memory() {
+// Verify that wrapped transactions ignore a BEGIN TRANSACTION failure, when
+// an externally opened transaction exists.
+add_task(function* test_wrapped_connection_transaction() {
+  let file = new FileUtils.File(OS.Path.join(OS.Constants.Path.profileDir,
+                                             "test_wrapStorageConnection.sqlite"));
+  let c = yield new Promise((resolve, reject) => {
+    Services.storage.openAsyncDatabase(file, null, (status, db) => {
+      if (Components.isSuccessCode(status)) {
+        resolve(db.QueryInterface(Ci.mozIStorageAsyncConnection));
+      } else {
+        reject(new Error(status));
+      }
+    });
+  });
+
+  let wrapper = yield Sqlite.wrapStorageConnection({ connection: c });
+  // Start a transaction on the raw connection.
+  yield c.executeSimpleSQLAsync("BEGIN");
+  // Now use executeTransaction, it will be executed, but not in a transaction.
+  yield wrapper.executeTransaction(function* () {
+    yield wrapper.execute("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT)");
+  });
+  // This should not fail cause the internal transaction has not been created.
+  yield c.executeSimpleSQLAsync("COMMIT");
+
+  yield wrapper.execute("SELECT * FROM test");
+
+  // Closing the wrapper should just finalize statements but not close the
+  // database.
+  yield wrapper.close();
+  yield c.asyncClose();
+});
+
+add_task(function* test_shrink_memory() {
   let c = yield getDummyDatabase("shrink_memory");
 
   // It's just a simple sanity test. We have no way of measuring whether this
@@ -455,7 +479,7 @@ add_task(function test_shrink_memory() {
   yield c.close();
 });
 
-add_task(function test_no_shrink_on_init() {
+add_task(function* test_no_shrink_on_init() {
   let c = yield getConnection("no_shrink_on_init",
                               {shrinkMemoryOnConnectionIdleMS: 200});
 
@@ -478,7 +502,7 @@ add_task(function test_no_shrink_on_init() {
   yield c.close();
 });
 
-add_task(function test_idle_shrink_fires() {
+add_task(function* test_idle_shrink_fires() {
   let c = yield getDummyDatabase("idle_shrink_fires",
                                  {shrinkMemoryOnConnectionIdleMS: 200});
   c._connectionData._clearIdleShrinkTimer();
@@ -520,7 +544,7 @@ add_task(function test_idle_shrink_fires() {
   yield c.close();
 });
 
-add_task(function test_idle_shrink_reset_on_operation() {
+add_task(function* test_idle_shrink_reset_on_operation() {
   const INTERVAL = 500;
   let c = yield getDummyDatabase("idle_shrink_reset_on_operation",
                                  {shrinkMemoryOnConnectionIdleMS: INTERVAL});
@@ -568,7 +592,7 @@ add_task(function test_idle_shrink_reset_on_operation() {
   yield c.close();
 });
 
-add_task(function test_in_progress_counts() {
+add_task(function* test_in_progress_counts() {
   let c = yield getDummyDatabase("in_progress_counts");
   do_check_eq(c._connectionData._statementCounter, c._initialStatementCount);
   do_check_eq(c._connectionData._pendingStatements.size, 0);
@@ -621,7 +645,7 @@ add_task(function test_in_progress_counts() {
   yield c.close();
 });
 
-add_task(function test_discard_while_active() {
+add_task(function* test_discard_while_active() {
   let c = yield getDummyDatabase("discard_while_active");
 
   yield c.executeCached("INSERT INTO dirs (path) VALUES ('foo')");
@@ -647,7 +671,7 @@ add_task(function test_discard_while_active() {
   yield c.close();
 });
 
-add_task(function test_discard_cached() {
+add_task(function* test_discard_cached() {
   let c = yield getDummyDatabase("discard_cached");
 
   yield c.executeCached("SELECT * from dirs");
@@ -665,7 +689,7 @@ add_task(function test_discard_cached() {
   yield c.close();
 });
 
-add_task(function test_programmatic_binding() {
+add_task(function* test_programmatic_binding() {
   let c = yield getDummyDatabase("programmatic_binding");
 
   let bindings = [
@@ -683,7 +707,7 @@ add_task(function test_programmatic_binding() {
   yield c.close();
 });
 
-add_task(function test_programmatic_binding_transaction() {
+add_task(function* test_programmatic_binding_transaction() {
   let c = yield getDummyDatabase("programmatic_binding_transaction");
 
   let bindings = [
@@ -693,7 +717,7 @@ add_task(function test_programmatic_binding_transaction() {
   ];
 
   let sql = "INSERT INTO dirs VALUES (:id, :path)";
-  yield c.executeTransaction(function transaction() {
+  yield c.executeTransaction(function* transaction() {
     let result = yield c.execute(sql, bindings);
     do_check_eq(result.length, 0);
 
@@ -707,7 +731,7 @@ add_task(function test_programmatic_binding_transaction() {
   yield c.close();
 });
 
-add_task(function test_programmatic_binding_transaction_partial_rollback() {
+add_task(function* test_programmatic_binding_transaction_partial_rollback() {
   let c = yield getDummyDatabase("programmatic_binding_transaction_partial_rollback");
 
   let bindings = [
@@ -722,7 +746,7 @@ add_task(function test_programmatic_binding_transaction_partial_rollback() {
 
   let secondSucceeded = false;
   try {
-    yield c.executeTransaction(function transaction() {
+    yield c.executeTransaction(function* transaction() {
       // Insert one row. This won't implicitly start a transaction.
       let result = yield c.execute(sql, bindings[0]);
 
@@ -746,11 +770,9 @@ add_task(function test_programmatic_binding_transaction_partial_rollback() {
   yield c.close();
 });
 
-/**
- * Just like the previous test, but relying on the implicit
- * transaction established by mozStorage.
- */
-add_task(function test_programmatic_binding_implicit_transaction() {
+// Just like the previous test, but relying on the implicit
+// transaction established by mozStorage.
+add_task(function* test_programmatic_binding_implicit_transaction() {
   let c = yield getDummyDatabase("programmatic_binding_implicit_transaction");
 
   let bindings = [
@@ -777,11 +799,9 @@ add_task(function test_programmatic_binding_implicit_transaction() {
   yield c.close();
 });
 
-/**
- * Test that direct binding of params and execution through mozStorage doesn't
- * error when we manually create a transaction. See Bug 856925.
- */
-add_task(function test_direct() {
+// Test that direct binding of params and execution through mozStorage doesn't
+// error when we manually create a transaction. See Bug 856925.
+add_task(function* test_direct() {
   let file = FileUtils.getFile("TmpD", ["test_direct.sqlite"]);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
   print("Opening " + file.path);
@@ -856,9 +876,7 @@ add_task(function test_direct() {
   yield deferred.promise;
 });
 
-/**
- * Test Sqlite.cloneStorageConnection.
- */
+// Test Sqlite.cloneStorageConnection.
 add_task(function* test_cloneStorageConnection() {
   let file = new FileUtils.File(OS.Path.join(OS.Constants.Path.profileDir,
                                              "test_cloneStorageConnection.sqlite"));
@@ -886,9 +904,7 @@ add_task(function* test_cloneStorageConnection() {
   yield clone.close();
 });
 
-/**
- * Test Sqlite.cloneStorageConnection invalid argument.
- */
+// Test Sqlite.cloneStorageConnection invalid argument.
 add_task(function* test_cloneStorageConnection() {
   try {
     let clone = yield Sqlite.cloneStorageConnection({ connection: null });
@@ -896,9 +912,7 @@ add_task(function* test_cloneStorageConnection() {
   } catch (ex if ex.name == "TypeError") {}
 });
 
-/**
- * Test clone() method.
- */
+// Test clone() method.
 add_task(function* test_clone() {
   let c = yield getDummyDatabase("clone");
 
@@ -910,9 +924,7 @@ add_task(function* test_clone() {
   yield clone.close();
 });
 
-/**
- * Test clone(readOnly) method.
- */
+// Test clone(readOnly) method.
 add_task(function* test_readOnly_clone() {
   let path = OS.Path.join(OS.Constants.Path.profileDir, "test_readOnly_clone.sqlite");
   let c = yield Sqlite.openConnection({path: path, sharedMemoryCache: false});
@@ -930,9 +942,7 @@ add_task(function* test_readOnly_clone() {
   yield clone.close();
 });
 
-/**
- * Test Sqlite.wrapStorageConnection.
- */
+// Test Sqlite.wrapStorageConnection.
 add_task(function* test_wrapStorageConnection() {
   let file = new FileUtils.File(OS.Path.join(OS.Constants.Path.profileDir,
                                              "test_wrapStorageConnection.sqlite"));
@@ -957,9 +967,7 @@ add_task(function* test_wrapStorageConnection() {
   yield c.asyncClose();
 });
 
-/**
- * Test finalization
- */
+// Test finalization
 add_task(function* test_closed_by_witness() {
   failTestsOnAutoClose(false);
   let c = yield getDummyDatabase("closed_by_witness");
@@ -1064,6 +1072,9 @@ add_task(function* test_close_database_on_gc() {
   yield last.close();
 
   Components.utils.forceGC();
+  Components.utils.forceCC();
+  Components.utils.forceShrinkingGC();
+
   yield finalPromise;
   failTestsOnAutoClose(true);
 });

@@ -4,6 +4,7 @@ var Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/BrowserUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const baseURL = "http://mochi.test:8888/browser/" +
   "toolkit/components/addoncompat/tests/browser/";
@@ -258,6 +259,165 @@ function testAddonContent()
   });
 }
 
+
+// Test for bug 1102410. We check that multiple nsIAboutModule's can be
+// registered in the parent, and that the child can browse to each of
+// the registered about: pages.
+function testAboutModuleRegistration()
+{
+  let Registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+
+  let modulesToUnregister = new Map();
+
+  /**
+   * This function creates a new nsIAboutModule and registers it. Callers
+   * should also call unregisterModules after using this function to clean
+   * up the nsIAboutModules at the end of this test.
+   *
+   * @param aboutName
+   *        This will be the string after about: used to refer to this module.
+   *        For example, if aboutName is foo, you can refer to this module by
+   *        browsing to about:foo.
+   *
+   * @param uuid
+   *        A unique identifer string for this module. For example,
+   *        "5f3a921b-250f-4ac5-a61c-8f79372e6063"
+   */
+  let createAndRegisterAboutModule = function(aboutName, uuid) {
+
+    let AboutModule = function() {};
+
+    AboutModule.prototype = {
+      classID: Components.ID(uuid),
+      classDescription: `Testing About Module for about:${aboutName}`,
+      contractID: `@mozilla.org/network/protocol/about;1?what=${aboutName}`,
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule]),
+
+      newChannel: (aURI) => {
+        let uri = Services.io.newURI(`data:,<html><h1>${aboutName}</h1></html>`, null, null);
+        let chan = Services.io.newChannelFromURI(uri);
+        chan.originalURI = aURI;
+        return chan;
+      },
+
+      getURIFlags: (aURI) => {
+        return Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT |
+               Ci.nsIAboutModule.ALLOW_SCRIPT;
+      },
+    };
+
+    let factory = {
+      createInstance: function(outer, iid) {
+        if (outer) {
+          throw Cr.NS_ERROR_NO_AGGREGATION;
+        }
+        return new AboutModule();
+      },
+    };
+
+    Registrar.registerFactory(AboutModule.prototype.classID,
+                              AboutModule.prototype.classDescription,
+                              AboutModule.prototype.contractID,
+                              factory);
+
+    modulesToUnregister.set(AboutModule.prototype.classID,
+                            factory);
+  };
+
+  /**
+   * Unregisters any nsIAboutModules registered with
+   * createAndRegisterAboutModule.
+   */
+  let unregisterModules = () => {
+    for (let [classID, factory] of modulesToUnregister) {
+      Registrar.unregisterFactory(classID, factory);
+    }
+  };
+
+  /**
+   * Takes a browser, and sends it a framescript to attempt to
+   * load some about: pages. The frame script will send a test:result
+   * message on completion, passing back a data object with:
+   *
+   * {
+   *   pass: true
+   * }
+   *
+   * on success, and:
+   *
+   * {
+   *   pass: false,
+   *   errorMsg: message,
+   * }
+   *
+   * on failure.
+   *
+   * @param browser
+   *        The browser to send the framescript to.
+   */
+  let testAboutModulesWork = (browser) => {
+    let testConnection = () => {
+      const XMLHttpRequest = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1",
+                                                    "nsIXMLHttpRequest");
+      let request = new XMLHttpRequest();
+      try {
+        request.open("GET", "about:test1", false);
+        request.send(null);
+        if (request.status != 200) {
+          throw(`about:test1 response had status ${request.status} - expected 200`);
+        }
+
+        request = new XMLHttpRequest();
+        request.open("GET", "about:test2", false);
+        request.send(null);
+
+        if (request.status != 200) {
+          throw(`about:test2 response had status ${request.status} - expected 200`);
+        }
+
+        sendAsyncMessage("test:result", {
+          pass: true,
+        });
+      } catch(e) {
+        sendAsyncMessage("test:result", {
+          pass: false,
+          errorMsg: e.toString(),
+        });
+      }
+    };
+
+    return new Promise((resolve, reject) => {
+      let mm = browser.messageManager;
+      mm.addMessageListener("test:result", function onTestResult(message) {
+        mm.removeMessageListener("test:result", onTestResult);
+        if (message.data.pass) {
+          ok(true, "Connections to about: pages were successful");
+        } else {
+          ok(false, message.data.errorMsg);
+        }
+        resolve();
+      });
+      mm.loadFrameScript("data:,(" + testConnection.toString() + ")();", false);
+    });
+  }
+
+  // Here's where the actual test is performed.
+  return new Promise((resolve, reject) => {
+    createAndRegisterAboutModule("test1", "5f3a921b-250f-4ac5-a61c-8f79372e6063");
+    createAndRegisterAboutModule("test2", "d7ec0389-1d49-40fa-b55c-a1fc3a6dbf6f");
+
+    let newTab = gBrowser.addTab();
+    gBrowser.selectedTab = newTab;
+    let browser = newTab.linkedBrowser;
+
+    testAboutModulesWork(browser).then(() => {
+      gBrowser.removeTab(newTab);
+      unregisterModules();
+      resolve();
+    });
+  });
+}
+
 function runTests(win, funcs)
 {
   ok = funcs.ok;
@@ -272,7 +432,8 @@ function runTests(win, funcs)
     then(testCapturing).
     then(testObserver).
     then(testSandbox).
-    then(testAddonContent);
+    then(testAddonContent).
+    then(testAboutModuleRegistration);
 }
 
 /*

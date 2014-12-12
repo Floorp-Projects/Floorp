@@ -286,7 +286,7 @@ xul|menulist[disabled="true"]:not([editable="true"]) > xul|*.menulist-dropmarker
 xul|menulist > xul|menupopup,
 xul|button[type="menu"] > xul|menupopup {
   -moz-appearance: none;
-  border: 1px solid rgba(23,50,77,0.4);
+  border: 1px solid #c1c1c1;
   border-radius: 2px;
   background-color: #fff;
 }
@@ -323,10 +323,9 @@ xul|button[type="menu"] > xul|menupopup > xul|menuitem[selected="true"] {
 xul|menulist > xul|menupopup xul|menuseparator,
 xul|button[type="menu"] > xul|menupopup xul|menuseparator {
   -moz-appearance: none;
-  margin-top: 2px;
-  margin-bottom: 2px;
+  margin: 0;
   padding: 0;
-  border-top: 1px solid rgba(23,50,77,0.4);
+  border-top: 1px solid #c1c1c1;
   border-bottom: none;
 }
 
@@ -398,7 +397,8 @@ xul|*.checkbox-check {
   border: 1px solid #c1c1c1;
   -moz-margin-end: 10px;
   background-color: #f1f1f1;
-  background-image: linear-gradient(#fff, rgba(255,255,255,0.8));
+  /* !important needed to override toolkit checked !important rule */
+  background-image: linear-gradient(#fff, rgba(255,255,255,0.8)) !important;
   background-position: center center;
   background-repeat: no-repeat;
   box-shadow: 0 1px 1px 0 #fff, inset 0 2px 0 0 rgba(0,0,0,0.03);
@@ -409,9 +409,7 @@ xul|checkbox:not([disabled="true"]):hover > xul|*.checkbox-check {
 }
 
 xul|*.checkbox-check[checked] {
-  background-image: url("chrome://global/skin/in-content/check.png"),
-                    /* !important needed to override toolkit !important rule */
-                    linear-gradient(#fff, rgba(255,255,255,0.8)) !important;
+  list-style-image: url("chrome://global/skin/in-content/check.svg#check");
 }
 
 xul|checkbox[disabled="true"] > xul|*.checkbox-check {
@@ -421,14 +419,6 @@ xul|checkbox[disabled="true"] > xul|*.checkbox-check {
 xul|*.checkbox-label-box {
   -moz-margin-start: -1px; /* negative margin for the transparent border */
   -moz-padding-start: 0;
-}
-
-@media (min-resolution: 2dppx) {
-  xul|*.checkbox-check[checked] {
-    background-size: 12px 12px, auto;
-    background-image: url("chrome://global/skin/in-content/check@2x.png"),
-                      linear-gradient(#fff, rgba(255,255,255,0.8)) !important;
-  }
 }
 
 xul|richlistitem > xul|*.checkbox-check {
@@ -452,10 +442,7 @@ xul|radio:not([disabled="true"]):hover > xul|*.radio-check {
 }
 
 xul|*.radio-check[selected] {
-  background-image: radial-gradient(circle, rgb(23,146,229),
-                    rgb(76,177,255) 5.5px, rgba(76,177,255,0.2) 6px,
-                    transparent 6px),
-                    linear-gradient(rgb(255,255,255), rgba(255,255,255,0.8));
+  list-style-image: url("chrome://global/skin/in-content/radio.svg#radio");
 }
 
 xul|radio[disabled="true"] > xul|*.radio-check {

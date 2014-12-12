@@ -408,27 +408,51 @@ interface nsINavBookmarksService : nsISupports
 
   /**
    * Set the date added time for an item.
+   *
+   * @param aItemId
+   *        the id of the item whose date added time should be updated.
+   * @param aDateAdded
+   *        the new date added value in microseconds.  Note that it is rounded
+   *        down to milliseconds precision.
    */
   void setItemDateAdded(in long long aItemId, in PRTime aDateAdded);
+
   /**
    * Get the date added time for an item.
+   *
+   * @param aItemId
+   *        the id of the item whose date added time should be retrieved.
+   *
+   * @return the date added value in microseconds.
    */
   PRTime getItemDateAdded(in long long aItemId);
 
   /**
    * Set the last modified time for an item.
    *
-   *  @note This is the only method that will send an itemChanged notification
-   *        for the property.  lastModified will still be updated in
-   *        any other method that changes an item property, but we will send
-   *        the corresponding itemChanged notification instead.
+   * @param aItemId
+   *        the id of the item whose last modified time should be updated.
+   * @param aLastModified
+   *        the new last modified value in microseconds.  Note that it is
+   *        rounded down to milliseconds precision.
+   *
+   * @note This is the only method that will send an itemChanged notification
+   *       for the property.  lastModified will still be updated in
+   *       any other method that changes an item property, but we will send
+   *       the corresponding itemChanged notification instead.
    */
   void setItemLastModified(in long long aItemId, in PRTime aLastModified);
+
   /**
    * Get the last modified time for an item.
    *
-   *  @note When an item is added lastModified is set to the same value as
-   *        dateAdded.
+   * @param aItemId
+   *        the id of the item whose last modified time should be retrieved.
+   *
+   * @return the date added value in microseconds.
+   *
+   * @note When an item is added lastModified is set to the same value as
+   *       dateAdded.
    */
   PRTime getItemLastModified(in long long aItemId);
 

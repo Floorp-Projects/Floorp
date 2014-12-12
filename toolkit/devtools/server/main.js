@@ -511,6 +511,11 @@ var DebuggerServer = {
         type: { global: true, tab: true }
       });
     }
+    this.registerModule("devtools/server/actors/animation", {
+      prefix: "animations",
+      constructor: "AnimationsActor",
+      type: { global: true, tab: true }
+    });
   },
 
   /**
@@ -542,28 +547,34 @@ var DebuggerServer = {
   },
 
   /**
-   * Listens on the given port or socket file for remote debugger connections.
+   * Creates a socket listener for remote debugger connections.
    *
-   * @param portOrPath int, string
-   *        If given an integer, the port to listen on.
-   *        Otherwise, the path to the unix socket domain file to listen on.
+   * After calling this, set some socket options, such as the port / path to
+   * listen on, and then call |open| on the listener.
+   *
+   * See SocketListener in toolkit/devtools/security/socket.js for available
+   * options.
+   *
    * @return SocketListener
-   *         A SocketListener instance that is already opened is returned.  This
-   *         single listener can be closed at any later time by calling |close|
-   *         on the SocketListener.  If a SocketListener could not be opened, an
-   *         error is thrown.  If remote connections are disabled, undefined is
-   *         returned.
+   *         A SocketListener instance that is waiting to be configured and
+   *         opened is returned.  This single listener can be closed at any
+   *         later time by calling |close| on the SocketListener.  If remote
+   *         connections are disabled, an error is thrown.
    */
-  openListener: function(portOrPath) {
+  createListener: function() {
     if (!Services.prefs.getBoolPref("devtools.debugger.remote-enabled")) {
-      return;
+      throw new Error("Can't create listener, remote debugging disabled");
     }
     this._checkInit();
+    return DebuggerSocket.createListener();
+  },
 
-    let listener = DebuggerSocket.createListener();
-    listener.open(portOrPath);
+  /**
+   * Add a SocketListener instance to the server's set of active
+   * SocketListeners.  This is called by a SocketListener after it is opened.
+   */
+  _addListener: function(listener) {
     this._listeners.push(listener);
-    return listener;
   },
 
   /**

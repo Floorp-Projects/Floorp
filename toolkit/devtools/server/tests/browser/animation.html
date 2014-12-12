@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<style>
+  .simple-animation {
+    display: inline-block;
+
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: red;
+
+    animation: move 2s infinite;
+  }
+
+  .multiple-animations {
+    display: inline-block;
+
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: #eee;
+
+    animation: move 2s infinite, glow 1s 5;
+  }
+
+  .transition {
+    display: inline-block;
+
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: #f06;
+
+    transition: width 5s;
+  }
+  .transition.get-round {
+    width: 200px;
+  }
+
+  .short-animation {
+    display: inline-block;
+
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: purple;
+
+    animation: move 1s;
+  }
+
+  @keyframes move {
+    100% {
+      transform: translateY(100px);
+    }
+  }
+
+  @keyframes glow {
+    100% {
+      background: yellow;
+    }
+  }
+</style>
+<div class="not-animated"></div>
+<div class="simple-animation"></div>
+<div class="multiple-animations"></div>
+<div class="transition"></div>
+<div class="short-animation"></div>
+<script type="text/javascript">
+  // Get the transition started when the page loads
+  var players;
+  addEventListener("load", function() {
+    document.querySelector(".transition").classList.add("get-round");
+  });
+</script>

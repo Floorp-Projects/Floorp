@@ -336,7 +336,9 @@ function _register_modules_protocol_handler() {
   protocolHandler.setSubstitution("testing-common", modulesURI);
 }
 
-function _initDebugging(port) {
+/* Debugging support */
+// Used locally and by our self-tests.
+function _setupDebuggerServer(breakpointFiles, callback) {
   let prefs = Components.classes["@mozilla.org/preferences-service;1"]
               .getService(Components.interfaces.nsIPrefBranch);
 
@@ -362,7 +364,6 @@ function _initDebugging(port) {
   // execution.
   let obsSvc = Components.classes["@mozilla.org/observer-service;1"].
                getService(Components.interfaces.nsIObserverService);
-  let initialized = false;
 
   const TOPICS = ["devtools-thread-resumed", "xpcshell-test-devtools-shutdown"];
   let observe = function(subject, topic, data) {
@@ -374,9 +375,9 @@ function _initDebugging(port) {
           // Add a breakpoint for the first line in our test files.
           let threadActor = subject.wrappedJSObject;
           let location = { line: 1 };
-          for (let file of _TEST_FILE) {
+          for (let file of breakpointFiles) {
             let sourceActor = threadActor.sources.source({originalUrl: file});
-            sourceActor.createAndStoreBreakpoint(location);
+            sourceActor.setBreakpoint(location);
           }
         } catch (ex) {
           do_print("Failed to initialize breakpoints: " + ex + "\n" + ex.stack);
@@ -387,15 +388,21 @@ function _initDebugging(port) {
         // special to do here.
         break;
     }
-    initialized = true;
     for (let topicToRemove of TOPICS) {
       obsSvc.removeObserver(observe, topicToRemove);
     }
+    callback();
   };
 
   for (let topic of TOPICS) {
     obsSvc.addObserver(observe, topic, false);
   }
+  return DebuggerServer;
+}
+
+function _initDebugging(port) {
+  let initialized = false;
+  let DebuggerServer = _setupDebuggerServer(_TEST_FILE, () => {initialized = true;});
 
   do_print("");
   do_print("*******************************************************************");
@@ -406,8 +413,10 @@ function _initDebugging(port) {
   do_print("*******************************************************************");
   do_print("")
 
-  let listener = DebuggerServer.openListener(port);
+  let listener = DebuggerServer.createListener();
+  listener.portOrPath = port;
   listener.allowConnection = () => true;
+  listener.open();
 
   // spin an event loop until the debugger connects.
   let thr = Components.classes["@mozilla.org/thread-manager;1"]

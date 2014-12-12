@@ -12,30 +12,38 @@ function run_test()
   do_print("Starting test at " + new Date().toTimeString());
   initTestDebuggerServer();
 
-  add_test(test_socket_conn);
-  add_test(test_socket_shutdown);
+  add_task(test_socket_conn);
+  add_task(test_socket_shutdown);
   add_test(test_pipe_conn);
 
   run_next_test();
 }
 
-function test_socket_conn()
+function* test_socket_conn()
 {
   do_check_eq(DebuggerServer.listeningSockets, 0);
-  let listener = DebuggerServer.openListener(-1);
-  listener.allowConnection = () => true;
+  let listener = DebuggerServer.createListener();
   do_check_true(listener);
+  listener.portOrPath = -1 /* any available port */;
+  listener.allowConnection = () => true;
+  listener.open();
   do_check_eq(DebuggerServer.listeningSockets, 1);
   gPort = DebuggerServer._listeners[0].port;
   do_print("Debugger server port is " + gPort);
   // Open a second, separate listener
-  gExtraListener = DebuggerServer.openListener(-1);
+  gExtraListener = DebuggerServer.createListener();
+  gExtraListener.portOrPath = -1;
   gExtraListener.allowConnection = () => true;
+  gExtraListener.open();
   do_check_eq(DebuggerServer.listeningSockets, 2);
 
   do_print("Starting long and unicode tests at " + new Date().toTimeString());
   let unicodeString = "(╯°□°）╯︵ ┻━┻";
-  let transport = DebuggerClient.socketConnect("127.0.0.1", gPort);
+  let transport = yield DebuggerClient.socketConnect({
+    host: "127.0.0.1",
+    port: gPort
+  });
+  let closedDeferred = promise.defer();
   transport.hooks = {
     onPacket: function(aPacket) {
       this.onPacket = function(aPacket) {
@@ -51,13 +59,14 @@ function test_socket_conn()
       do_check_eq(aPacket.from, "root");
     },
     onClosed: function(aStatus) {
-      run_next_test();
+      closedDeferred.resolve();
     },
   };
   transport.ready();
+  return closedDeferred.promise;
 }
 
-function test_socket_shutdown()
+function* test_socket_shutdown()
 {
   do_check_eq(DebuggerServer.listeningSockets, 2);
   gExtraListener.close();
@@ -69,25 +78,21 @@ function test_socket_shutdown()
   do_check_eq(DebuggerServer.listeningSockets, 0);
 
   do_print("Connecting to a server socket at " + new Date().toTimeString());
-  let transport = DebuggerClient.socketConnect("127.0.0.1", gPort);
-  transport.hooks = {
-    onPacket: function(aPacket) {
-      // Shouldn't reach this, should never connect.
-      do_check_true(false);
-    },
+  try {
+    let transport = yield DebuggerClient.socketConnect({
+      host: "127.0.0.1",
+      port: gPort
+    });
+  } catch(e if e.result == Cr.NS_ERROR_CONNECTION_REFUSED ||
+               e.result == Cr.NS_ERROR_NET_TIMEOUT) {
+    // The connection should be refused here, but on slow or overloaded
+    // machines it may just time out.
+    do_check_true(true);
+    return;
+  }
 
-    onClosed: function(aStatus) {
-      do_print("test_socket_shutdown onClosed called at " + new Date().toTimeString());
-      // The connection should be refused here, but on slow or overloaded
-      // machines it may just time out.
-      let expected = [ Cr.NS_ERROR_CONNECTION_REFUSED, Cr.NS_ERROR_NET_TIMEOUT ];
-      do_check_neq(expected.indexOf(aStatus), -1);
-      run_next_test();
-    }
-  };
-
-  do_print("Initializing input stream at " + new Date().toTimeString());
-  transport.ready();
+  // Shouldn't reach this, should never connect.
+  do_check_true(false);
 }
 
 function test_pipe_conn()

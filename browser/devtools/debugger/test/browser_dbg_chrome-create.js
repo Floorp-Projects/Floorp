@@ -10,6 +10,7 @@ let gProcess;
 function test() {
   // Windows XP and 8.1 test slaves are terribly slow at this test.
   requestLongerTimeout(5);
+  Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 
   initChromeDebugger(aOnClose).then(aProcess => {
     gProcess = aProcess;
@@ -56,5 +57,6 @@ function aOnClose() {
 }
 
 registerCleanupFunction(function() {
+  Services.prefs.clearUserPref("devtools.debugger.remote-enabled");
   gProcess = null;
 });

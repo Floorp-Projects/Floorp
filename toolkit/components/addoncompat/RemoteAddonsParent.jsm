@@ -241,7 +241,11 @@ let AboutProtocolParent = {
     try {
       let channel = module.newChannel(uri, null);
       channel.notificationCallbacks = msg.objects.notificationCallbacks;
-      channel.loadGroup = {notificationCallbacks: msg.objects.loadGroupNotificationCallbacks};
+      if (msg.objects.loadGroupNotificationCallbacks) {
+        channel.loadGroup = {notificationCallbacks: msg.objects.loadGroupNotificationCallbacks};
+      } else {
+        channel.loadGroup = null;
+      }
       let stream = channel.open();
       let data = NetUtil.readInputStreamToString(stream, stream.available(), {});
       return {
