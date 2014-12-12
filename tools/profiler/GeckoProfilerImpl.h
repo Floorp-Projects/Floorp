@@ -75,9 +75,9 @@ void profiler_shutdown()
 }
 
 static inline
-void profiler_start(int aProfileEntries, int aInterval,
-                       const char** aFeatures, uint32_t aFeatureCount,
-                       const char** aThreadNameFilters, uint32_t aFilterCount)
+void profiler_start(int aProfileEntries, double aInterval,
+                    const char** aFeatures, uint32_t aFeatureCount,
+                    const char** aThreadNameFilters, uint32_t aFilterCount)
 {
   mozilla_sampler_start(aProfileEntries, aInterval, aFeatures, aFeatureCount, aThreadNameFilters, aFilterCount);
 }
