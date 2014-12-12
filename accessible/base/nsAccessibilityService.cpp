@@ -1480,7 +1480,8 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
       tag == nsGkAtoms::h6 ||
       tag == nsGkAtoms::nav ||
       tag == nsGkAtoms::q ||
-      tag == nsGkAtoms::section) {
+      tag == nsGkAtoms::section ||
+      tag == nsGkAtoms::time) {
     nsRefPtr<Accessible> accessible =
       new HyperTextAccessibleWrap(aContent, document);
     return accessible.forget();
