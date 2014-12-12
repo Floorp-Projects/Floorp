@@ -234,8 +234,8 @@ public:
   // The following metrics are all in widget space/device pixels.
   //
 
-  // This is the area within the widget that we're compositing to. It is relative
-  // to the layer tree origin.
+  // This is the area within the widget that we're compositing to. It is in the
+  // same coordinate space as the reference frame for the scrolled frame.
   //
   // This is useful because, on mobile, the viewport and composition dimensions
   // are not always the same. In this case, we calculate the displayport using
@@ -256,11 +256,8 @@ public:
   // space, so each is explained separately.
   //
 
-  // The area of a frame's contents that has been painted, relative to the
-  // viewport. It is in the same coordinate space as |mViewport|. For example,
-  // if it is at 0,0, then it's at the same place at the viewport, which is at
-  // the top-left in the layer, and at the same place as the scroll offset of
-  // the document.
+  // The area of a frame's contents that has been painted, relative to
+  // mCompositionBounds.
   //
   // Note that this is structured in such a way that it doesn't depend on the
   // method layout uses to scroll content.
