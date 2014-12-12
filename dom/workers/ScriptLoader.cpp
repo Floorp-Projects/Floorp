@@ -29,8 +29,6 @@
 #include "nsXPCOM.h"
 #include "xpcpublic.h"
 
-#include "mozilla/Assertions.h"
-#include "mozilla/LoadContext.h"
 #include "mozilla/dom/Exceptions.h"
 #include "Principal.h"
 #include "WorkerFeature.h"
@@ -119,14 +117,15 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                        flags,
                        ios);
   } else {
-    // We must have a loadGroup with a load context for the principal to
-    // traverse the channel correctly.
-    MOZ_ASSERT(loadGroup);
-    MOZ_ASSERT(NS_LoadGroupMatchesPrincipal(loadGroup, principal));
-
+    // we should use 'principal' here; needs to be fixed before
+    // we move security checks to AsyncOpen. We use nullPrincipal
+    // for now, because the loadGroup is null and hence causes
+    // GetChannelUriPrincipal to return the wrong principal.
+    nsCOMPtr<nsIPrincipal> nullPrincipal =
+      do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
     rv = NS_NewChannel(getter_AddRefs(channel),
                        uri,
-                       principal,
+                       nullPrincipal,
                        nsILoadInfo::SEC_NORMAL,
                        nsIContentPolicy::TYPE_SCRIPT,
                        loadGroup,
@@ -335,16 +334,13 @@ private:
 
     // Figure out which principal to use.
     nsIPrincipal* principal = mWorkerPrivate->GetPrincipal();
-    nsCOMPtr<nsILoadGroup> loadGroup = mWorkerPrivate->GetLoadGroup();
     if (!principal) {
       NS_ASSERTION(parentWorker, "Must have a principal!");
       NS_ASSERTION(mIsWorkerScript, "Must have a principal for importScripts!");
 
       principal = parentWorker->GetPrincipal();
-      loadGroup = parentWorker->GetLoadGroup();
     }
     NS_ASSERTION(principal, "This should never be null here!");
-    MOZ_ASSERT(NS_LoadGroupMatchesPrincipal(loadGroup, principal));
 
     // Figure out our base URI.
     nsCOMPtr<nsIURI> baseURI;
@@ -370,6 +366,13 @@ private:
     if (mIsWorkerScript) {
       // May be null.
       channel = mWorkerPrivate->ForgetWorkerChannel();
+    }
+
+    // All of these can potentially be null, but that should be ok. We'll either
+    // succeed without them or fail below.
+    nsCOMPtr<nsILoadGroup> loadGroup;
+    if (parentDoc) {
+      loadGroup = parentDoc->GetDocumentLoadGroup();
     }
 
     nsCOMPtr<nsIIOService> ios(do_GetIOService());
@@ -510,11 +513,6 @@ private:
       rv = ssm->GetChannelResultPrincipal(channel, getter_AddRefs(channelPrincipal));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      nsCOMPtr<nsILoadGroup> channelLoadGroup;
-      rv = channel->GetLoadGroup(getter_AddRefs(channelLoadGroup));
-      NS_ENSURE_SUCCESS(rv, rv);
-      MOZ_ASSERT(channelLoadGroup);
-
       // See if this is a resource URI. Since JSMs usually come from resource://
       // URIs we're currently considering all URIs with the URI_IS_UI_RESOURCE
       // flag as valid for creating privileged workers.
@@ -553,11 +551,7 @@ private:
         }
       }
 
-      // The principal can change, but it should still match the original
-      // load group's appId and browser element flag.
-      MOZ_ASSERT(NS_LoadGroupMatchesPrincipal(channelLoadGroup, channelPrincipal));
-
-      mWorkerPrivate->SetPrincipal(channelPrincipal, channelLoadGroup);
+      mWorkerPrivate->SetPrincipal(channelPrincipal);
 
       if (parent) {
         // XHR Params Allowed
@@ -639,7 +633,6 @@ public:
   : mParentWorker(aParentWorker), mSyncLoopTarget(aSyncLoopTarget),
     mScriptURL(aScriptURL), mChannel(aChannel), mResult(NS_ERROR_FAILURE)
   {
-    MOZ_ASSERT(mParentWorker);
     aParentWorker->AssertIsOnWorkerThread();
     MOZ_ASSERT(aSyncLoopTarget);
   }
@@ -659,13 +652,10 @@ public:
     // May be null.
     nsCOMPtr<nsIDocument> parentDoc = mParentWorker->GetDocument();
 
-    nsCOMPtr<nsILoadGroup> loadGroup = mParentWorker->GetLoadGroup();
-
     nsCOMPtr<nsIChannel> channel;
     mResult =
       scriptloader::ChannelFromScriptURLMainThread(principal, baseURI,
-                                                   parentDoc, loadGroup,
-                                                   mScriptURL,
+                                                   parentDoc, mScriptURL,
                                                    getter_AddRefs(channel));
     if (NS_SUCCEEDED(mResult)) {
       channel.forget(mChannel);
@@ -856,18 +846,22 @@ nsresult
 ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
                                nsIURI* aBaseURI,
                                nsIDocument* aParentDoc,
-                               nsILoadGroup* aLoadGroup,
                                const nsAString& aScriptURL,
                                nsIChannel** aChannel)
 {
   AssertIsOnMainThread();
+
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  if (aParentDoc) {
+    loadGroup = aParentDoc->GetDocumentLoadGroup();
+  }
 
   nsCOMPtr<nsIIOService> ios(do_GetIOService());
 
   nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
   NS_ASSERTION(secMan, "This should never be null!");
 
-  return ChannelFromScriptURL(aPrincipal, aBaseURI, aParentDoc, aLoadGroup,
+  return ChannelFromScriptURL(aPrincipal, aBaseURI, aParentDoc, loadGroup,
                               ios, secMan, aScriptURL, true, aChannel);
 }
 

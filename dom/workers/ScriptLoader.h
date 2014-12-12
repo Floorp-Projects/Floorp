@@ -11,7 +11,6 @@
 class nsIPrincipal;
 class nsIURI;
 class nsIDocument;
-class nsILoadGroup;
 class nsString;
 class nsIChannel;
 
@@ -35,7 +34,6 @@ nsresult
 ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
                                nsIURI* aBaseURI,
                                nsIDocument* aParentDoc,
-                               nsILoadGroup* aLoadGroup,
                                const nsAString& aScriptURL,
                                nsIChannel** aChannel);
 

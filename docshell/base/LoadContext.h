@@ -105,10 +105,6 @@ public:
 #endif
   {}
 
-  // Constructor for creating a LoadContext with a given principal's appId and
-  // browser flag.
-  LoadContext(nsIPrincipal* aPrincipal);
-
 private:
   ~LoadContext() {}
 
