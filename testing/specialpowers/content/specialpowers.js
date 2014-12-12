@@ -5,31 +5,6 @@
  * order to be used as a replacement for UniversalXPConnect
  */
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
-
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
-const CHILD_SCRIPT = "chrome://specialpowers/content/specialpowers.js";
-const CHILD_SCRIPT_API = "chrome://specialpowers/content/specialpowersAPI.js";
-const CHILD_LOGGER_SCRIPT = "chrome://specialpowers/content/MozillaLogger.js";
-
-// All messages sent to observer should be listed here.
-const SP_SYNC_MESSAGES = ["SPChromeScriptMessage",
-                          "SPLoadChromeScript",
-                          "SPObserverService",
-                          "SPPermissionManager",
-                          "SPPrefService",
-                          "SPProcessCrashService",
-                          "SPSetTestPluginEnabledState",
-                          "SPWebAppService"];
-
-const SP_ASYNC_MESSAGES = ["SpecialPowers.Focus",
-                           "SpecialPowers.Quit",
-                           "SPPingService",
-                           "SPQuotaManager"];
-
 function SpecialPowers(window) {
   this.window = Components.utils.getWeakReference(window);
   this._windowID = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
@@ -48,8 +23,6 @@ function SpecialPowers(window) {
       }});
   this._pongHandlers = [];
   this._messageListener = this._messageReceived.bind(this);
-  this._nestedFrameInjected = false;
-  this._grandChildFrameMM = null;
   addMessageListener("SPPingService", this._messageListener);
   let (self = this) {
     Services.obs.addObserver(function onInnerWindowDestroyed(subject, topic, data) {
@@ -64,40 +37,6 @@ function SpecialPowers(window) {
         }
       }
     }, "inner-window-destroyed", false);
-    Services.obs.addObserver(function onRemoteBrowserShown(subject, topic, data) {
-      let frameLoader = subject;
-
-      // get a ref to the app <iframe>
-      frameLoader.QueryInterface(Ci.nsIFrameLoader);
-      let frame = frameLoader.ownerElement;
-      let mm = frame.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
-      var frameId = frame.getAttribute('id');
-
-      if (frameId === "nested-parent-frame" && !self._nestedFrameInjected) {
-        Services.obs.removeObserver(onRemoteBrowserShown, "remote-browser-shown");
-        self._grandChildFrameMM = mm;
-        mm.loadFrameScript(CHILD_LOGGER_SCRIPT, true);
-        mm.loadFrameScript(CHILD_SCRIPT_API, true);
-        mm.loadFrameScript(CHILD_SCRIPT, true);
-
-        SP_SYNC_MESSAGES.forEach(function (msgname) {
-          mm.addMessageListener(msgname, function (msg) {
-            return self._sendSyncMessage(msgname, msg.data)[0];
-          });
-        });
-        SP_ASYNC_MESSAGES.forEach(function (msgname) {
-          mm.addMessageListener(msgname, function (msg) {
-            self._sendAsyncMessage(msgname, msg.data);
-          });
-        });
-        mm.addMessageListener("SPPAddNestedMessageListener", function(msg) {
-          self._addMessageListener(msg.json.name, function(aMsg) {
-            mm.sendAsyncMessage(aMsg.name, aMsg.data);
-            });
-          });
-        self._nestedFrameInjected = true;
-      }
-    }, "remote-browser-shown", false);
   }
 }
 
@@ -111,22 +50,15 @@ SpecialPowers.prototype.DOMWindowUtils = undefined;
 SpecialPowers.prototype.Components = undefined;
 
 SpecialPowers.prototype._sendSyncMessage = function(msgname, msg) {
-  if (SP_SYNC_MESSAGES.indexOf(msgname) == -1) {
-    throw new Error("Unexpected SP message: " + msgname);
-  }
   return sendSyncMessage(msgname, msg);
 };
 
 SpecialPowers.prototype._sendAsyncMessage = function(msgname, msg) {
-  if (SP_ASYNC_MESSAGES.indexOf(msgname) == -1) {
-    throw new Error("Unexpected SP message: " + msgname);
-  }
   sendAsyncMessage(msgname, msg);
 };
 
 SpecialPowers.prototype._addMessageListener = function(msgname, listener) {
   addMessageListener(msgname, listener);
-  sendAsyncMessage("SPPAddNestedMessageListener", { name: msgname });
 };
 
 SpecialPowers.prototype._removeMessageListener = function(msgname, listener) {
@@ -158,9 +90,6 @@ SpecialPowers.prototype._messageReceived = function(aMessage) {
         var handler = this._pongHandlers.shift();
         if (handler) {
           handler();
-        }
-        if (this._grandChildFrameMM) {
-          this._grandChildFrameMM.sendAsyncMessage("SPPingService", { op: "pong" });
         }
       }
       break;
