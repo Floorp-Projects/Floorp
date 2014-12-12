@@ -488,7 +488,7 @@ SpdyStream31::ParseHttpRequestHeaders(const char *buf,
 
   CompressToFrame(NS_LITERAL_CSTRING(":path"));
   if (!mTransaction->RequestHead()->IsConnect()) {
-    CompressToFrame(mTransaction->RequestHead()->RequestURI());
+    CompressToFrame(mTransaction->RequestHead()->Path());
   } else {
     MOZ_ASSERT(mTransaction->QuerySpdyConnectTransaction());
     mIsTunnel = true;
