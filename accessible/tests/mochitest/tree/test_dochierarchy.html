@@ -31,10 +31,15 @@
 
     is(root.parentDocument, null,
        "Wrong parent document of root accessible");
-    is(root.childDocumentCount, 1,
+    ok(root.childDocumentCount >= 1,
        "Wrong child document count of root accessible");
-    is(root.getChildDocumentAt(0), tabDoc,
-       "Wrong child document at index 0 of root accessible");
+
+    var tabDocumentFound = false;
+    for (var i = 0; i < root.childDocumentCount && !tabDocumentFound; i++) {
+      tabDocumentFound = root.getChildDocumentAt(i) == tabDoc;
+    }
+    ok(tabDocumentFound,
+       "Tab document not found in children of the root accessible");
 
     is(tabDoc.parentDocument, root,
        "Wrong parent document of tab document");
