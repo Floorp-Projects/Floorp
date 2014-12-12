@@ -386,6 +386,11 @@ public:
 #ifdef CharT_is_PRUnichar
   void ReplaceChar(const char16_t* aSet, char16_t aNewChar);
 #endif
+  /**
+   * Replace all occurrences of aTarget with aNewValue.
+   * The complexity of this function is O(n+m), n being the length of the string
+   * and m being the length of aNewValue.
+   */
   void ReplaceSubstring(const self_type& aTarget, const self_type& aNewValue);
   void ReplaceSubstring(const char_type* aTarget, const char_type* aNewValue);
 
