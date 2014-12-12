@@ -192,13 +192,6 @@ nsFileProtocolHandler::NewChannel2(nsIURI* uri,
         return rv;
     }
 
-    // set the loadInfo on the new channel
-    rv = chan->SetLoadInfo(aLoadInfo);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(chan);
-        return rv;
-    }
-
     *result = chan;
     return NS_OK;
 }
