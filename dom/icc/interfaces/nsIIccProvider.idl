@@ -20,7 +20,7 @@ interface nsIIccListener : nsISupports
 /**
  * XPCOM component (in the content process) that provides the ICC information.
  */
-[scriptable, uuid(38bbc600-76ac-11e4-82f8-0800200c9a66)]
+[scriptable, uuid(937213c3-f64e-4f58-b4e0-3010f219d0c3)]
 interface nsIIccProvider : nsISupports
 {
   // MUST match enum IccCardState in MozIcc.webidl!
@@ -79,6 +79,11 @@ interface nsIIccProvider : nsISupports
   const unsigned long CARD_LOCK_TYPE_RCCK_PUK = 18;
   const unsigned long CARD_LOCK_TYPE_RSPCK_PUK = 19;
   const unsigned long CARD_LOCK_TYPE_FDN = 20;
+
+  // MUST match with enum IccContactType in MozIcc.webidl
+  const unsigned long CARD_CONTACT_TYPE_ADN = 0;
+  const unsigned long CARD_CONTACT_TYPE_FDN = 1;
+  const unsigned long CARD_CONTACT_TYPE_SDN = 2;
 
   /**
    * Called when a content process registers receiving unsolicited messages from
@@ -148,11 +153,11 @@ interface nsIIccProvider : nsISupports
    */
   nsIDOMDOMRequest readContacts(in unsigned long clientId,
                                 in nsIDOMWindow window,
-                                in DOMString contactType);
+                                in unsigned long contactType);
 
   nsIDOMDOMRequest updateContact(in unsigned long clientId,
                                  in nsIDOMWindow window,
-                                 in DOMString contactType,
+                                 in unsigned long contactType,
                                  in jsval contact,
                                  in DOMString pin2);
 
