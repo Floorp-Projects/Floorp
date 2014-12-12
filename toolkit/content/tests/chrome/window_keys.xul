@@ -17,13 +17,17 @@ SimpleTest.waitForExplicitFinish();
 
 var gExpected = null;
 
+const kIsWin = navigator.platform.indexOf("Win") >= 0;
+
+// Only on Windows, osKey state is ignored when there is no shortcut key handler
+// which exactly matches with osKey state.
 var keysToTest = [
   ["k-v", "V", { } ],
   ["", "V", { shiftKey: true } ],
   ["k-v-scy", "V", { ctrlKey: true } ],
   ["", "V", { altKey: true } ],
   ["", "V", { metaKey: true } ],
-  ["", "V", { osKey: true } ],
+  [kIsWin ? "k-v" : "", "V", { osKey: true } ],
   ["k-v-scy", "V", { shiftKey: true, ctrlKey: true } ],
   ["", "V", { shiftKey: true, ctrlKey: true, altKey: true } ],
   ["k-e-y", "E", { } ],
@@ -31,22 +35,26 @@ var keysToTest = [
   ["", "E", { ctrlKey: true } ],
   ["", "E", { altKey: true } ],
   ["", "E", { metaKey: true } ],
-  ["", "E", { osKey: true } ],
+  [kIsWin ? "k-e-y" : "", "E", { osKey: true } ],
   ["k-d-a", "D", { altKey: true } ],
   ["k-8-m", "8", { metaKey: true } ],
-  ["", "8", { metaKey: true, osKey: true } ],
+  [kIsWin ? "k-8-m" : "", "8", { metaKey: true, osKey: true } ],
   ["k-a-o", "A", { osKey: true } ],
   ["", "A", { osKey: true, metaKey: true } ],
+  ["", "B", {} ],
   ["k-b-myo", "B", { osKey: true } ],
   ["k-b-myo", "B", { osKey: true, metaKey: true } ],
   ["k-f-oym", "F", { metaKey: true } ],
   ["k-f-oym", "F", { metaKey: true, osKey: true } ],
   ["k-c-scaym", "C", { metaKey: true } ],
   ["k-c-scaym", "C", { shiftKey: true, ctrlKey: true, altKey: true, metaKey: true } ],
+  [kIsWin ? "k-c-scaym" : "", "C", { shiftKey: true, ctrlKey: true, altKey: true, metaKey: true, osKey: true } ],
   ["", "V", { shiftKey: true, ctrlKey: true, altKey: true } ],
   ["k-h-l", "H", { accelKey: true } ],
 //  ["k-j-s", "J", { accessKey: true } ],
   ["", "T", { } ],
+  ["k-g-c", "G", { ctrlKey: true } ],
+  ["k-g-co", "G", { ctrlKey: true, osKey: true } ],
   ["scommand", "Y", { } ],
   ["", "U", { } ],
 ];
@@ -76,13 +84,13 @@ function runTest()
   // now check if a menu updates its accelerator text when a key attribute is changed
   var menuitem1 = $("menuitem1");
   ok(accelText(menuitem1).indexOf("d") >= 0, "menuitem1 accelText before");
-  if (navigator.platform.indexOf("Win") != -1) {
+  if (kIsWin) {
     ok(accelText(menuitem1).indexOf("alt") >= 0, "menuitem1 accelText modifier before");
   }
 
   menuitem1.setAttribute("key", "k-s-c");
   ok(accelText(menuitem1).indexOf("s") >= 0, "menuitem1 accelText after");
-  if (navigator.platform.indexOf("Win") != -1) {
+  if (kIsWin) {
     ok(accelText(menuitem1).indexOf("ctrl") >= 0, "menuitem1 accelText modifier after");
   }
 
@@ -90,7 +98,7 @@ function runTest()
   is(accelText(menuitem1), "custom", "menuitem1 accelText set custom");
   menuitem1.removeAttribute("acceltext");
   ok(accelText(menuitem1).indexOf("s") >= 0, "menuitem1 accelText remove");
-  if (navigator.platform.indexOf("Win") != -1) {
+  if (kIsWin) {
     ok(accelText(menuitem1).indexOf("ctrl") >= 0, "menuitem1 accelText modifier remove");
   }
 
@@ -98,13 +106,13 @@ function runTest()
   is(accelText(menuitem2), "", "menuitem2 accelText before");
   menuitem2.setAttribute("key", "k-s-c");
   ok(accelText(menuitem2).indexOf("s") >= 0, "menuitem2 accelText before");
-  if (navigator.platform.indexOf("Win") != -1) {
+  if (kIsWin) {
     ok(accelText(menuitem2).indexOf("ctrl") >= 0, "menuitem2 accelText modifier before");
   }
 
   menuitem2.setAttribute("key", "k-h-l");
   ok(accelText(menuitem2).indexOf("h") >= 0, "menuitem2 accelText after");
-  if (navigator.platform.indexOf("Win") != -1) {
+  if (kIsWin) {
     ok(accelText(menuitem2).indexOf("ctrl") >= 0, "menuitem2 accelText modifier after");
   }
 
@@ -164,6 +172,8 @@ SimpleTest.waitForFocus(runTest);
   <key id="k-h-l" key="h" modifiers="accel" oncommand="checkKey(event)"/>
   <key id="k-j-s" key="j" modifiers="access" oncommand="checkKey(event)"/>
   <key id="k-t-y" disabled="true" key="t" oncommand="checkKey(event)"/>
+  <key id="k-g-c" key="g" modifiers="control" oncommand="checkKey(event)"/>
+  <key id="k-g-co" key="g" modifiers="control os" oncommand="checkKey(event)"/>
   <key id="k-y" key="y" command="scommand"/>
   <key id="k-u" key="u" command="scommand-disabled"/>
 </keyset>
