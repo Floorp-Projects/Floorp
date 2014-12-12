@@ -922,7 +922,9 @@ setReq.onerror = function() {
                 break
 
     def run_test_sets(self):
-        if self.total_chunks > len(self.tests):
+        if len(self.tests) < 1:
+            raise Exception('There are no tests to run.')
+        elif self.total_chunks > len(self.tests):
             raise ValueError('Total number of chunks must be between 1 and %d.' % len(self.tests))
         if self.total_chunks > 1:
             chunks = [[] for i in range(self.total_chunks)]
