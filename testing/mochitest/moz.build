@@ -61,6 +61,7 @@ TEST_HARNESS_FILES.testing.mochitest += [
     'manifest.webapp',
     'manifestLibrary.js',
     'mochitest_options.py',
+    'nested_setup.js',
     'pywebsocket_wrapper.py',
     'redirect.html',
     'runtests.py',
