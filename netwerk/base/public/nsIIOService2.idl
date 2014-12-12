@@ -33,10 +33,6 @@ interface nsIIOService2 : nsIIOService
   /**
    * Creates a channel for a given URI.
    *
-   * Please note, if you provide both a loadingNode and a loadingPrincipal,
-   * then loadingPrincipal must be equal to loadingNode->NodePrincipal().
-   * But less error prone is to just supply a loadingNode.
-   *
    * @param aURI
    *        nsIURI from which to make a channel
    * @param aProxyURI
@@ -93,6 +89,9 @@ interface nsIIOService2 : nsIIOService
    *        Any of the content types defined in nsIContentPolicy.idl
    * @return reference to the new nsIChannel object
    *
+   * Please note, if you provide both a loadingNode and a loadingPrincipal,
+   * then loadingPrincipal must be equal to loadingNode->NodePrincipal().
+   * But less error prone is to just supply a loadingNode.
    */
   nsIChannel newChannelFromURIWithProxyFlags2(in nsIURI aURI,
                                               in nsIURI aProxyURI,
