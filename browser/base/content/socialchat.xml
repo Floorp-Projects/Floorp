@@ -669,6 +669,12 @@
             if (event.target != otherWin.document)
               return;
 
+            let detachEvent = new aChatbox.contentWindow.CustomEvent("socialFrameDetached", {
+              bubbles: true,
+              cancelable: true,
+            });
+            aChatbox.contentDocument.dispatchEvent(detachEvent);
+
             otherWin.removeEventListener("load", _chatLoad, true);
             let otherChatbox = otherWin.document.getElementById("chatter");
             aChatbox.swapDocShells(otherChatbox);
