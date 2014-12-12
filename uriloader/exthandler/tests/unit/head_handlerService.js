@@ -161,3 +161,7 @@ var HandlerServiceTest = {
 };
 
 HandlerServiceTest.init();
+
+do_register_cleanup(function tail_handleService() {
+  HandlerServiceTest.destroy();
+});
