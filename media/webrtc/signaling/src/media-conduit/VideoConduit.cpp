@@ -1137,7 +1137,7 @@ WebrtcVideoConduit::ReceivedRTCPPacket(const void *data, int len)
   if(mPtrViENetwork->ReceivedRTCPPacket(mChannel,data,len) == -1)
   {
     int error = mPtrViEBase->LastError();
-    CSFLogError(logTag, "%s RTP Processing Failed %d", __FUNCTION__, error);
+    CSFLogError(logTag, "%s RTCP Processing Failed %d", __FUNCTION__, error);
     if(error >= kViERtpRtcpInvalidChannelId && error <= kViERtpRtcpRtcpDisabled)
     {
       return kMediaConduitRTPProcessingFailed;
