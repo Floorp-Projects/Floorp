@@ -50,6 +50,9 @@ extern bool
 CurrentThreadIsIonCompiling();
 #endif
 
+extern bool
+UnmarkGrayCellRecursively(gc::Cell *cell, JSGCTraceKind kind);
+
 namespace gc {
 
 struct Arena;
@@ -1353,9 +1356,8 @@ TenuredCell::readBarrier(TenuredCell *thing)
                          MapAllocToTraceKind(thing->getAllocKind()));
         MOZ_ASSERT(tmp == thing);
     }
-    JS::GCCellPtr cellptr(thing, thing->getTraceKind());
-    if (JS::GCThingIsMarkedGray(thing))
-        JS::UnmarkGrayGCThingRecursively(cellptr);
+    if (thing->isMarked(js::gc::GRAY))
+        UnmarkGrayCellRecursively(thing, thing->getTraceKind());
 }
 
 /* static */ MOZ_ALWAYS_INLINE void
