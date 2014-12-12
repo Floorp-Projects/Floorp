@@ -367,7 +367,3 @@ LFSRgenerator.prototype = {
 };
 
 cleanUp();
-
-do_register_cleanup(function tail_ulrclassifier() {
-  cleanUp();
-});
