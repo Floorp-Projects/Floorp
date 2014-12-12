@@ -168,7 +168,6 @@ public:
   // WebIDL API
   virtual JSObject* WrapNode(JSContext* aCx)
     MOZ_OVERRIDE;
-  void GetDomain(nsAString& aDomain, mozilla::ErrorResult& rv);
   void SetDomain(const nsAString& aDomain, mozilla::ErrorResult& rv);
   void GetCookie(nsAString& aCookie, mozilla::ErrorResult& rv);
   void SetCookie(const nsAString& aCookie, mozilla::ErrorResult& rv);
