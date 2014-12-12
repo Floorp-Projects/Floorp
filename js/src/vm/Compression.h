@@ -7,9 +7,11 @@
 #ifndef vm_Compression_h
 #define vm_Compression_h
 
-#include <zlib.h>
+#include "mozilla/NullPtr.h"
 
 #include "jstypes.h"
+
+struct z_stream_s; // from <zlib.h>
 
 namespace js {
 
@@ -17,7 +19,7 @@ class Compressor
 {
     /* Number of bytes we should hand to zlib each compressMore() call. */
     static const size_t CHUNKSIZE = 2048;
-    z_stream zs;
+    struct z_stream_s *zs;
     const unsigned char *inp;
     size_t inplen;
     size_t outbytes;
@@ -31,12 +33,22 @@ class Compressor
         OOM
     };
 
-    Compressor(const unsigned char *inp, size_t inplen);
+    Compressor()
+      : zs(nullptr),
+        initialized(false)
+    {}
     ~Compressor();
-    bool init();
+    /*
+     * Prepare the compressor to process the string |inp| of length
+     * |inplen|. Return false if initialization failed (usually OOM).
+     *
+     * The compressor may be reused for a different input by calling prepare()
+     * again.
+     */
+    bool prepare(const unsigned char *inp, size_t inplen);
     void setOutput(unsigned char *out, size_t outlen);
     size_t outWritten() const { return outbytes; }
-    /* Compress some of the input. Return true if it should be called again. */
+    /* Compress some of the input. Return CONTINUE if it should be called again. */
     Status compressMore();
 };
 

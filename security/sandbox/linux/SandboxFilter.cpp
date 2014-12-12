@@ -7,12 +7,6 @@
 #include "SandboxFilter.h"
 #include "SandboxAssembler.h"
 
-#include "linux_seccomp.h"
-#include "linux_syscalls.h"
-
-#include "mozilla/ArrayUtils.h"
-#include "mozilla/NullPtr.h"
-
 #include <errno.h>
 #include <linux/ipc.h>
 #include <linux/net.h>
@@ -21,6 +15,11 @@
 #include <sys/mman.h>
 #include <time.h>
 #include <unistd.h>
+
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/NullPtr.h"
+#include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
+#include "sandbox/linux/services/linux_syscalls.h"
 
 namespace mozilla {
 
@@ -471,7 +470,6 @@ SandboxFilter::SandboxFilter(const sock_fprog** aStored, SandboxType aType,
     MOZ_CRASH("Nonexistent sandbox type!");
   }
   impl->Build();
-  impl->Finish();
   impl->Compile(&filterVec, aVerbose);
   delete impl;
 

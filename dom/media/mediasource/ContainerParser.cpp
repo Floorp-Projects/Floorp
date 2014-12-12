@@ -61,8 +61,14 @@ ContainerParser::ParseStartAndEndTimestamps(const uint8_t* aData, uint32_t aLeng
 bool
 ContainerParser::TimestampsFuzzyEqual(int64_t aLhs, int64_t aRhs)
 {
-  NS_WARNING("Using default ContainerParser::TimestampFuzzyEquals implementation");
-  return aLhs == aRhs;
+  return llabs(aLhs - aRhs) <= GetRoundingError();
+}
+
+int64_t
+ContainerParser::GetRoundingError()
+{
+  NS_WARNING("Using default ContainerParser::GetRoundingError implementation");
+  return 0;
 }
 
 const nsTArray<uint8_t>&
@@ -79,6 +85,7 @@ public:
   {}
 
   static const unsigned NS_PER_USEC = 1000;
+  static const unsigned USEC_PER_SEC = 1000000;
 
   bool IsInitSegmentPresent(const uint8_t* aData, uint32_t aLength)
   {
@@ -182,10 +189,10 @@ public:
     return true;
   }
 
-  bool TimestampsFuzzyEqual(int64_t aLhs, int64_t aRhs)
+  int64_t GetRoundingError()
   {
     int64_t error = mParser.GetTimecodeScale() / NS_PER_USEC;
-    return llabs(aLhs - aRhs) <= error * 2;
+    return error * 2;
   }
 
 private:
@@ -276,9 +283,9 @@ public:
     return true;
   }
 
-  bool TimestampsFuzzyEqual(int64_t aLhs, int64_t aRhs)
+  int64_t GetRoundingError()
   {
-    return llabs(aLhs - aRhs) <= 1000;
+    return 1000;
   }
 
 private:

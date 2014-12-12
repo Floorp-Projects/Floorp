@@ -201,9 +201,13 @@ def import_cert_and_pkcs12(db_dir, cert_filename, pkcs12_filename, nickname,
     os.system('pk12util -i ' + pkcs12_filename + ' -d sql:' + db_dir +
               ' -w ' + db_dir + '/pwfile')
 
-def print_cert_info_for_ev(cert_filename):
+def print_cert_info(cert_filename):
     """
-    Prints out the information required to enable EV for the given cert.
+    Prints out information (such as fingerprints) for the given cert.
+    The information printed is sufficient for enabling EV for the given cert
+    if necessary.
+
+    Note: The utility 'pp' is available as part of NSS.
 
     Arguments:
       cert_filename -- the filename of the cert in DER format

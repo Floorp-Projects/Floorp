@@ -6,8 +6,6 @@
 #ifndef mozView_h_
 #define mozView_h_
 
-#include "npapi.h"
-
 #undef DARWIN
 #import <Cocoa/Cocoa.h>
 class nsIWidget;
@@ -46,17 +44,11 @@ class TextInputHandler;
 
 - (BOOL)isDragInProgress;
 
-  // Gets the plugin event model for the view
-- (NPEventModel)pluginEventModel;
-
   // Checks whether the view is first responder or not
 - (BOOL)isFirstResponder;
 
   // Call when you dispatch an event which may cause to open context menu.
 - (void)maybeInitContextMenuTracking;
-
-  // Checks whether the view is for plugin or not
-- (BOOL)isPluginView;
 
 @end
 

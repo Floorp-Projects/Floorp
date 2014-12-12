@@ -598,20 +598,20 @@ class JSObject : public js::gc::Cell
 
     static bool defineGeneric(js::ExclusiveContext *cx, js::HandleObject obj,
                               js::HandleId id, js::HandleValue value,
-                              JSPropertyOp getter = JS_PropertyStub,
-                              JSStrictPropertyOp setter = JS_StrictPropertyStub,
+                              JSPropertyOp getter = nullptr,
+                              JSStrictPropertyOp setter = nullptr,
                               unsigned attrs = JSPROP_ENUMERATE);
 
     static bool defineProperty(js::ExclusiveContext *cx, js::HandleObject obj,
                                js::PropertyName *name, js::HandleValue value,
-                               JSPropertyOp getter = JS_PropertyStub,
-                               JSStrictPropertyOp setter = JS_StrictPropertyStub,
+                               JSPropertyOp getter = nullptr,
+                               JSStrictPropertyOp setter = nullptr,
                                unsigned attrs = JSPROP_ENUMERATE);
 
     static bool defineElement(js::ExclusiveContext *cx, js::HandleObject obj,
                               uint32_t index, js::HandleValue value,
-                              JSPropertyOp getter = JS_PropertyStub,
-                              JSStrictPropertyOp setter = JS_StrictPropertyStub,
+                              JSPropertyOp getter = nullptr,
+                              JSStrictPropertyOp setter = nullptr,
                               unsigned attrs = JSPROP_ENUMERATE);
 
     static inline bool getGeneric(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
@@ -673,13 +673,6 @@ class JSObject : public js::gc::Cell
     static inline bool watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                              JS::HandleObject callable);
     static inline bool unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id);
-
-    static bool enumerate(JSContext *cx, JS::HandleObject obj, JSIterateOp iterop,
-                          JS::MutableHandleValue statep, JS::MutableHandleId idp)
-    {
-        JSNewEnumerateOp op = obj->getOps()->enumerate;
-        return (op ? op : JS_EnumerateState)(cx, obj, iterop, statep, idp);
-    }
 
     static bool defaultValue(JSContext *cx, js::HandleObject obj, JSType hint,
                              js::MutableHandleValue vp)

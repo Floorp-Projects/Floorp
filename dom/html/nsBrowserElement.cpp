@@ -35,7 +35,7 @@ class nsBrowserElement::BrowserShownObserver : public nsIObserver
                                              , public nsSupportsWeakReference
 {
 public:
-  BrowserShownObserver(nsBrowserElement* aBrowserElement);
+  explicit BrowserShownObserver(nsBrowserElement* aBrowserElement);
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
   void AddObserver();

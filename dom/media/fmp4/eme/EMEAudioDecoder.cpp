@@ -34,8 +34,12 @@ EMEAudioDecoder::EMEAudioDecoder(CDMProxy* aProxy,
   , mConfig(aConfig)
   , mTaskQueue(aTaskQueue)
   , mCallback(aCallback)
+  , mSamplesWaitingForKey(new SamplesWaitingForKey(this, mTaskQueue, mProxy))
   , mMonitor("EMEAudioDecoder")
   , mFlushComplete(false)
+#ifdef DEBUG
+  , mIsShutdown(false)
+#endif
 {
 }
 
@@ -47,6 +51,7 @@ nsresult
 EMEAudioDecoder::Init()
 {
   // Note: this runs on the decode task queue.
+  MOZ_ASSERT(!mIsShutdown);
 
   MOZ_ASSERT((mConfig.bits_per_sample / 8) == 2); // Demuxer guarantees this.
 
@@ -68,6 +73,11 @@ nsresult
 EMEAudioDecoder::Input(MP4Sample* aSample)
 {
   MOZ_ASSERT(!IsOnGMPThread()); // Runs on the decode task queue.
+  MOZ_ASSERT(!mIsShutdown);
+
+  if (mSamplesWaitingForKey->WaitIfKeyNotUsable(aSample)) {
+    return NS_OK;
+  }
 
   nsRefPtr<nsIRunnable> task(new DeliverSample(this, aSample));
   nsresult rv = mGMPThread->Dispatch(task, NS_DISPATCH_NORMAL);
@@ -80,6 +90,7 @@ nsresult
 EMEAudioDecoder::Flush()
 {
   MOZ_ASSERT(!IsOnGMPThread()); // Runs on the decode task queue.
+  MOZ_ASSERT(!mIsShutdown);
 
   {
     MonitorAutoLock mon(mMonitor);
@@ -105,6 +116,7 @@ nsresult
 EMEAudioDecoder::Drain()
 {
   MOZ_ASSERT(!IsOnGMPThread()); // Runs on the decode task queue.
+  MOZ_ASSERT(!mIsShutdown);
 
   nsRefPtr<nsIRunnable> task;
   task = NS_NewRunnableMethod(this, &EMEAudioDecoder::GmpDrain);
@@ -117,11 +129,19 @@ nsresult
 EMEAudioDecoder::Shutdown()
 {
   MOZ_ASSERT(!IsOnGMPThread()); // Runs on the decode task queue.
+  MOZ_ASSERT(!mIsShutdown);
+#ifdef DEBUG
+  mIsShutdown = true;
+#endif
 
   nsRefPtr<nsIRunnable> task;
   task = NS_NewRunnableMethod(this, &EMEAudioDecoder::GmpShutdown);
   nsresult rv = mGMPThread->Dispatch(task, NS_DISPATCH_SYNC);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  mSamplesWaitingForKey->BreakCycles();
+  mSamplesWaitingForKey = nullptr;
+
   return NS_OK;
 }
 
@@ -221,9 +241,15 @@ void
 EMEAudioDecoder::Error(GMPErr aErr)
 {
   MOZ_ASSERT(IsOnGMPThread());
-  EME_LOG("EMEAudioDecoder::Error");
-  mCallback->Error();
-  GmpShutdown();
+  EME_LOG("EMEAudioDecoder::Error %d", aErr);
+  if (aErr == GMPNoKeyErr) {
+    // The GMP failed to decrypt a frame due to not having a key. This can
+    // happen if a key expires or a session is closed during playback.
+    NS_WARNING("GMP failed to decrypt due to lack of key");
+  } else {
+    mCallback->Error();
+    GmpShutdown();
+  }
 }
 
 void
@@ -273,18 +299,6 @@ EMEAudioDecoder::GmpInput(MP4Sample* aSample)
   if (!mGMP) {
     mCallback->Error();
     return NS_ERROR_FAILURE;
-  }
-
-  if (sample->crypto.valid) {
-    CDMCaps::AutoLock caps(mProxy->Capabilites());
-    MOZ_ASSERT(caps.CanDecryptAndDecodeAudio());
-    const auto& keyid = sample->crypto.key;
-    if (!caps.IsKeyUsable(keyid)) {
-      // DeliverSample assumes responsibility for deleting aSample.
-      nsRefPtr<nsIRunnable> task(new DeliverSample(this, sample.forget()));
-      caps.CallWhenKeyUsable(keyid, task, mGMPThread);
-      return NS_OK;
-    }
   }
 
   gmp::GMPAudioSamplesImpl samples(sample, mAudioChannels, mAudioRate);

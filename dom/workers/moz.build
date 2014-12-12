@@ -72,6 +72,7 @@ UNIFIED_SOURCES += [
     'WorkerPrivate.cpp',
     'WorkerRunnable.cpp',
     'WorkerScope.cpp',
+    'WorkerThread.cpp',
     'XMLHttpRequest.cpp',
     'XMLHttpRequestUpload.cpp',
 ]

@@ -21,6 +21,7 @@
 #include "EMEH264Decoder.h"
 #include "EMEAudioDecoder.h"
 #include "mozilla/unused.h"
+#include "SamplesWaitingForKey.h"
 #include <string>
 
 namespace mozilla {
@@ -37,42 +38,20 @@ public:
     , mCallback(aCallback)
     , mTaskQueue(CreateMediaDecodeTaskQueue())
     , mProxy(aProxy)
+    , mSamplesWaitingForKey(new SamplesWaitingForKey(this, mTaskQueue, mProxy))
+#ifdef DEBUG
+    , mIsShutdown(false)
+#endif
   {
   }
 
   virtual nsresult Init() MOZ_OVERRIDE {
+    MOZ_ASSERT(!mIsShutdown);
     nsresult rv = mTaskQueue->SyncDispatch(
       NS_NewRunnableMethod(mDecoder, &MediaDataDecoder::Init));
     unused << NS_WARN_IF(NS_FAILED(rv));
     return rv;
   }
-
-  class RedeliverEncryptedInput : public nsRunnable {
-  public:
-    RedeliverEncryptedInput(EMEDecryptor* aDecryptor,
-                            MediaTaskQueue* aTaskQueue,
-                            MP4Sample* aSample)
-      : mDecryptor(aDecryptor)
-      , mTaskQueue(aTaskQueue)
-      , mSample(aSample)
-    {}
-
-    NS_IMETHOD Run() {
-      RefPtr<nsIRunnable> task;
-      task = NS_NewRunnableMethodWithArg<MP4Sample*>(mDecryptor,
-                                                     &EMEDecryptor::Input,
-                                                     mSample.forget());
-      mTaskQueue->Dispatch(task.forget());
-      mTaskQueue = nullptr;
-      mDecryptor = nullptr;
-      return NS_OK;
-    }
-
-  private:
-    nsRefPtr<EMEDecryptor> mDecryptor;
-    nsRefPtr<MediaTaskQueue> mTaskQueue;
-    nsAutoPtr<MP4Sample> mSample;
-  };
 
   class DeliverDecrypted : public DecryptionClient {
   public:
@@ -80,9 +59,15 @@ public:
       : mDecryptor(aDecryptor)
       , mTaskQueue(aTaskQueue)
     {}
-    virtual void Decrypted(nsresult aResult,
+    virtual void Decrypted(GMPErr aResult,
                            mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE {
-      if (NS_FAILED(aResult)) {
+      if (aResult == GMPNoKeyErr) {
+        RefPtr<nsIRunnable> task;
+        task = NS_NewRunnableMethodWithArg<MP4Sample*>(mDecryptor,
+                                                       &EMEDecryptor::Input,
+                                                       aSample);
+        mTaskQueue->Dispatch(task.forget());
+      } else if (GMP_FAILED(aResult)) {
         mDecryptor->mCallback->Error();
         MOZ_ASSERT(!aSample);
       } else {
@@ -91,9 +76,9 @@ public:
                                                        &EMEDecryptor::Decrypted,
                                                        aSample);
         mTaskQueue->Dispatch(task.forget());
-        mTaskQueue = nullptr;
-        mDecryptor = nullptr;
       }
+      mTaskQueue = nullptr;
+      mDecryptor = nullptr;
     }
   private:
     nsRefPtr<EMEDecryptor> mDecryptor;
@@ -101,6 +86,7 @@ public:
   };
 
   virtual nsresult Input(MP4Sample* aSample) MOZ_OVERRIDE {
+    MOZ_ASSERT(!mIsShutdown);
     // We run the PDM on its own task queue. We can't run it on the decode
     // task queue, because that calls into Input() in a loop and waits until
     // output is delivered. We need to defer some Input() calls while we wait
@@ -108,22 +94,16 @@ public:
     // to run the PDM on the same task queue, but since the decode task queue
     // is waiting in MP4Reader::Decode() for output our task would never run.
     // So we dispatch tasks to make all calls into the wrapped decoder.
-    {
-      CDMCaps::AutoLock caps(mProxy->Capabilites());
-      if (!caps.IsKeyUsable(aSample->crypto.key)) {
-        EME_LOG("Encountered a non-usable key, waiting");
-        nsRefPtr<nsIRunnable> task(new RedeliverEncryptedInput(this,
-                                                               mTaskQueue,
-                                                               aSample));
-        caps.CallWhenKeyUsable(aSample->crypto.key, task);
-        return NS_OK;
-      }
+    if (mSamplesWaitingForKey->WaitIfKeyNotUsable(aSample)) {
+      return NS_OK;
     }
+
     mProxy->Decrypt(aSample, new DeliverDecrypted(this, mTaskQueue));
     return NS_OK;
   }
 
   void Decrypted(mp4_demuxer::MP4Sample* aSample) {
+    MOZ_ASSERT(!mIsShutdown);
     nsresult rv = mTaskQueue->Dispatch(
       NS_NewRunnableMethodWithArg<mp4_demuxer::MP4Sample*>(
         mDecoder,
@@ -133,15 +113,18 @@ public:
   }
 
   virtual nsresult Flush() MOZ_OVERRIDE {
+    MOZ_ASSERT(!mIsShutdown);
     nsresult rv = mTaskQueue->SyncDispatch(
       NS_NewRunnableMethod(
         mDecoder,
         &MediaDataDecoder::Flush));
     unused << NS_WARN_IF(NS_FAILED(rv));
+    mSamplesWaitingForKey->Flush();
     return rv;
   }
 
   virtual nsresult Drain() MOZ_OVERRIDE {
+    MOZ_ASSERT(!mIsShutdown);
     nsresult rv = mTaskQueue->Dispatch(
       NS_NewRunnableMethod(
         mDecoder,
@@ -151,11 +134,17 @@ public:
   }
 
   virtual nsresult Shutdown() MOZ_OVERRIDE {
+    MOZ_ASSERT(!mIsShutdown);
+#ifdef DEBUG
+    mIsShutdown = true;
+#endif
     nsresult rv = mTaskQueue->SyncDispatch(
       NS_NewRunnableMethod(
         mDecoder,
         &MediaDataDecoder::Shutdown));
     unused << NS_WARN_IF(NS_FAILED(rv));
+    mSamplesWaitingForKey->BreakCycles();
+    mSamplesWaitingForKey = nullptr;
     mDecoder = nullptr;
     mTaskQueue->BeginShutdown();
     mTaskQueue->AwaitShutdownAndIdle();
@@ -170,6 +159,10 @@ private:
   MediaDataDecoderCallback* mCallback;
   nsRefPtr<MediaTaskQueue> mTaskQueue;
   nsRefPtr<CDMProxy> mProxy;
+  nsRefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
+#ifdef DEBUG
+  bool mIsShutdown;
+#endif
 };
 
 EMEDecoderModule::EMEDecoderModule(CDMProxy* aProxy,

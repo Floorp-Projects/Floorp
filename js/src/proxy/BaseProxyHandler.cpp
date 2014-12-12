@@ -56,9 +56,8 @@ BaseProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
         vp.setUndefined();
         return true;
     }
-    if (!desc.getter() ||
-        (!desc.hasGetterObject() && desc.getter() == JS_PropertyStub))
-    {
+    MOZ_ASSERT(desc.getter() != JS_PropertyStub);
+    if (!desc.getter()) {
         vp.set(desc.value());
         return true;
     }
@@ -118,6 +117,7 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
 
         // Nonstandard SpiderMonkey special case: setter ops.
         StrictPropertyOp setter = ownDesc.setter();
+        MOZ_ASSERT(setter != JS_StrictPropertyStub);
         if (setter && setter != JS_StrictPropertyStub)
             return CallSetter(cx, receiver, id, setter, ownDesc.attributes(), strict, vp);
 
@@ -132,7 +132,14 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
             existingDescriptor
             ? JSPROP_IGNORE_ENUMERATE | JSPROP_IGNORE_READONLY | JSPROP_IGNORE_PERMANENT
             : JSPROP_ENUMERATE;
-        return JSObject::defineGeneric(cx, receiver, id, vp, nullptr, nullptr, attrs);
+
+        // A very old nonstandard SpiderMonkey extension: default to the Class
+        // getter and setter ops.
+        const Class *clasp = receiver->getClass();
+        MOZ_ASSERT(clasp->getProperty != JS_PropertyStub);
+        MOZ_ASSERT(clasp->setProperty != JS_StrictPropertyStub);
+        return JSObject::defineGeneric(cx, receiver, id, vp,
+                                       clasp->getProperty, clasp->setProperty, attrs);
     }
 
     // Step 6.
@@ -153,18 +160,19 @@ js::SetPropertyIgnoringNamedGetter(JSContext *cx, const BaseProxyHandler *handle
                                    bool descIsOwn, bool strict, MutableHandleValue vp)
 {
     /* The control-flow here differs from ::get() because of the fall-through case below. */
-    if (descIsOwn) {
-        MOZ_ASSERT(desc.object());
+    MOZ_ASSERT_IF(descIsOwn, desc.object());
+    if (desc.object()) {
+        MOZ_ASSERT(desc.getter() != JS_PropertyStub);
+        MOZ_ASSERT(desc.setter() != JS_StrictPropertyStub);
 
         // Check for read-only properties.
-        if (desc.isReadonly())
-            return strict ? Throw(cx, id, JSMSG_READ_ONLY) : true;
-        if (!desc.setter()) {
-            // Be wary of the odd explicit undefined setter case possible through
-            // Object.defineProperty.
-            if (!desc.hasSetterObject())
-                desc.setSetter(JS_StrictPropertyStub);
-        } else if (desc.hasSetterObject() || desc.setter() != JS_StrictPropertyStub) {
+        if (desc.isReadonly()) {
+            if (strict)
+                return Throw(cx, id, descIsOwn ? JSMSG_READ_ONLY : JSMSG_CANT_REDEFINE_PROP);
+            return true;
+        }
+
+        if (desc.hasSetterObject() || desc.setter()) {
             if (!CallSetter(cx, receiver, id, desc.setter(), desc.attributes(), strict, vp))
                 return false;
             if (!proxy->is<ProxyObject>() || proxy->as<ProxyObject>().handler() != handler)
@@ -172,37 +180,10 @@ js::SetPropertyIgnoringNamedGetter(JSContext *cx, const BaseProxyHandler *handle
             if (desc.isShared())
                 return true;
         }
-        if (!desc.getter()) {
-            // Same as above for the null setter case.
-            if (!desc.hasGetterObject())
-                desc.setGetter(JS_PropertyStub);
-        }
         desc.value().set(vp.get());
-        return handler->defineProperty(cx, receiver, id, desc);
-    }
-    if (desc.object()) {
-        // Check for read-only properties.
-        if (desc.isReadonly())
-            return strict ? Throw(cx, id, JSMSG_CANT_REDEFINE_PROP) : true;
-        if (!desc.setter()) {
-            // Be wary of the odd explicit undefined setter case possible through
-            // Object.defineProperty.
-            if (!desc.hasSetterObject())
-                desc.setSetter(JS_StrictPropertyStub);
-        } else if (desc.hasSetterObject() || desc.setter() != JS_StrictPropertyStub) {
-            if (!CallSetter(cx, receiver, id, desc.setter(), desc.attributes(), strict, vp))
-                return false;
-            if (!proxy->is<ProxyObject>() || proxy->as<ProxyObject>().handler() != handler)
-                return true;
-            if (desc.isShared())
-                return true;
-        }
-        if (!desc.getter()) {
-            // Same as above for the null setter case.
-            if (!desc.hasGetterObject())
-                desc.setGetter(JS_PropertyStub);
-        }
-        desc.value().set(vp.get());
+
+        if (descIsOwn)
+            return handler->defineProperty(cx, receiver, id, desc);
         return JSObject::defineGeneric(cx, receiver, id, desc.value(),
                                        desc.getter(), desc.setter(), desc.attributes());
     }

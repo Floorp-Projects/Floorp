@@ -352,8 +352,6 @@ class B2GRemoteReftest(RefTest):
         if (os.name == "nt"):
             xpcshell += ".exe"
 
-        if (options.utilityPath):
-            paths.insert(0, options.utilityPath)
         options.utilityPath = self.findPath(paths, xpcshell)
         if options.utilityPath == None:
             print "ERROR: unable to find utility path for %s, please specify with --utility-path" % (os.name)

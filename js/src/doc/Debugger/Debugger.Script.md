@@ -46,6 +46,42 @@ evaluated in the same lexical environment.
 A `Debugger.Script` instance inherits the following accessor properties
 from its prototype:
 
+`displayName`
+:   The script's display name, if it has one. If the script has no display name
+    &mdash; for example, if it is a top-level `eval` script &mdash; this is
+    `undefined`.
+
+    If the script's function has a given name, its display name is the same as
+    its function's given name.
+
+    If the script's function has no name, SpiderMonkey attempts to infer an
+    appropriate name for it given its context. For example:
+
+    ```language-js
+    function f() {}          // display name: f (the given name)
+    var g = function () {};  // display name: g
+    o.p = function () {};    // display name: o.p
+    var q = {
+      r: function () {}      // display name: q.r
+    };
+    ```
+
+    Note that the display name may not be a proper JavaScript identifier,
+    or even a proper expression: we attempt to find helpful names even when
+    the function is not immediately assigned as the value of some variable
+    or property. Thus, we use <code><i>a</i>/<i>b</i></code> to refer to
+    the <i>b</i> defined within <i>a</i>, and <code><i>a</i>&lt;</code> to
+    refer to a function that occurs somewhere within an expression that is
+    assigned to <i>a</i>. For example:
+
+    ```language-js
+    function h() {
+      var i = function() {};    // display name: h/i
+      f(function () {});        // display name: h/<
+    }
+    var s = f(function () {});  // display name: s<
+    ```
+
 `url`
 :   The filename or URL from which this script's code was loaded. If the
     `source` property is non-`null`, then this is equal to `source.url`.

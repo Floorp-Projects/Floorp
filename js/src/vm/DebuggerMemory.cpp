@@ -70,12 +70,7 @@ DebuggerMemory::construct(JSContext *cx, unsigned argc, Value *vp)
 /* static */ const Class DebuggerMemory::class_ = {
     "Memory",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
-    JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_COUNT),
-
-    nullptr,               // addProperty
-    nullptr,               // delProperty
-    JS_PropertyStub,       // getProperty
-    JS_StrictPropertyStub  // setProperty
+    JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_COUNT)
 };
 
 /* static */ DebuggerMemory *
@@ -453,7 +448,7 @@ class ByJSType {
 
         RootedValue otherReport(cx);
         if (!other.report(census, &otherReport) ||
-            !JSObject::defineProperty(cx, obj, cx->names().other,   otherReport))
+            !JSObject::defineProperty(cx, obj, cx->names().other, otherReport))
             return false;
 
         report.setObject(*obj);

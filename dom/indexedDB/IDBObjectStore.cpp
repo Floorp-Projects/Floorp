@@ -842,11 +842,7 @@ ClearStructuredCloneBuffer(JSAutoStructuredCloneBuffer& aBuffer)
 
 const JSClass IDBObjectStore::sDummyPropJSClass = {
   "IDBObjectStore Dummy",
-  0 /* flags */,
-  nullptr /* addProperty */,
-  nullptr /* delProperty */,
-  JS_PropertyStub /* getProperty */,
-  JS_StrictPropertyStub /* setProperty */
+  0 /* flags */
 };
 
 IDBObjectStore::IDBObjectStore(IDBTransaction* aTransaction,
@@ -1650,8 +1646,7 @@ IDBObjectStore::Delete(JSContext* aCx,
 }
 
 already_AddRefed<IDBIndex>
-IDBObjectStore::CreateIndex(JSContext* aCx,
-                            const nsAString& aName,
+IDBObjectStore::CreateIndex(const nsAString& aName,
                             const nsAString& aKeyPath,
                             const IDBIndexParameters& aOptionalParameters,
                             ErrorResult& aRv)
@@ -1659,18 +1654,17 @@ IDBObjectStore::CreateIndex(JSContext* aCx,
   AssertIsOnOwningThread();
 
   KeyPath keyPath(0);
-  if (NS_FAILED(KeyPath::Parse(aCx, aKeyPath, &keyPath)) ||
+  if (NS_FAILED(KeyPath::Parse(aKeyPath, &keyPath)) ||
       !keyPath.IsValid()) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return nullptr;
   }
 
-  return CreateIndexInternal(aCx, aName, keyPath, aOptionalParameters, aRv);
+  return CreateIndexInternal(aName, keyPath, aOptionalParameters, aRv);
 }
 
 already_AddRefed<IDBIndex>
-IDBObjectStore::CreateIndex(JSContext* aCx,
-                            const nsAString& aName,
+IDBObjectStore::CreateIndex(const nsAString& aName,
                             const Sequence<nsString >& aKeyPath,
                             const IDBIndexParameters& aOptionalParameters,
                             ErrorResult& aRv)
@@ -1679,18 +1673,17 @@ IDBObjectStore::CreateIndex(JSContext* aCx,
 
   KeyPath keyPath(0);
   if (aKeyPath.IsEmpty() ||
-      NS_FAILED(KeyPath::Parse(aCx, aKeyPath, &keyPath)) ||
+      NS_FAILED(KeyPath::Parse(aKeyPath, &keyPath)) ||
       !keyPath.IsValid()) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return nullptr;
   }
 
-  return CreateIndexInternal(aCx, aName, keyPath, aOptionalParameters, aRv);
+  return CreateIndexInternal(aName, keyPath, aOptionalParameters, aRv);
 }
 
 already_AddRefed<IDBIndex>
 IDBObjectStore::CreateIndexInternal(
-                                  JSContext* aCx,
                                   const nsAString& aName,
                                   const KeyPath& aKeyPath,
                                   const IDBIndexParameters& aOptionalParameters,

@@ -419,8 +419,7 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
     // Per ES5 15.3.5.2 a user-defined function's .prototype property is
     // initially non-configurable, non-enumerable, and writable.
     RootedValue protoVal(cx, ObjectValue(*proto));
-    if (!JSObject::defineProperty(cx, obj, cx->names().prototype,
-                                  protoVal, JS_PropertyStub, JS_StrictPropertyStub,
+    if (!JSObject::defineProperty(cx, obj, cx->names().prototype, protoVal, nullptr, nullptr,
                                   JSPROP_PERMANENT))
     {
         return nullptr;
@@ -432,8 +431,8 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
     // back with a .constructor.
     if (!isStarGenerator) {
         RootedValue objVal(cx, ObjectValue(*obj));
-        if (!JSObject::defineProperty(cx, proto, cx->names().constructor,
-                                      objVal, JS_PropertyStub, JS_StrictPropertyStub, 0))
+        if (!JSObject::defineProperty(cx, proto, cx->names().constructor, objVal, nullptr, nullptr,
+                                      0))
         {
             return nullptr;
         }
@@ -499,7 +498,7 @@ js::fun_resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp)
             v.setString(fun->atom() == nullptr ? cx->runtime()->emptyString : fun->atom());
         }
 
-        if (!DefineNativeProperty(cx, fun, id, v, JS_PropertyStub, JS_StrictPropertyStub,
+        if (!DefineNativeProperty(cx, fun, id, v, nullptr, nullptr,
                                   JSPROP_PERMANENT | JSPROP_READONLY)) {
             return false;
         }
@@ -896,8 +895,8 @@ const Class JSFunction::class_ = {
     JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
     nullptr,                 /* addProperty */
     nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
+    nullptr,                 /* getProperty */
+    nullptr,                 /* setProperty */
     fun_enumerate,
     js::fun_resolve,
     nullptr,                 /* convert     */
@@ -2120,11 +2119,13 @@ js::DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
          * for more on this.
          */
         flags &= ~JSFUN_STUB_GSOPS;
-        gop = JS_PropertyStub;
-        sop = JS_StrictPropertyStub;
-    } else {
         gop = nullptr;
         sop = nullptr;
+    } else {
+        gop = obj->getClass()->getProperty;
+        sop = obj->getClass()->setProperty;
+        MOZ_ASSERT(gop != JS_PropertyStub);
+        MOZ_ASSERT(sop != JS_StrictPropertyStub);
     }
 
     JSFunction::Flags funFlags;

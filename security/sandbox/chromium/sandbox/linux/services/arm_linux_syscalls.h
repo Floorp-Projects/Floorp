@@ -2,10 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-/* This file has been imported from
- * http://git.chromium.org/gitweb/?p=chromium.git;a=blob_plain;f=sandbox/linux/services/arm_linux_syscalls.h;h=dd0826e54eb8777a92edf2ec1ca9274ab6950bd5;hb=2362c9abea79cae475921bdeee58f9e3910d211c
- */
-
 // Generated from the Linux kernel's calls.S.
 #ifndef SANDBOX_LINUX_SERVICES_ARM_LINUX_SYSCALLS_H_
 #define SANDBOX_LINUX_SERVICES_ARM_LINUX_SYSCALLS_H_

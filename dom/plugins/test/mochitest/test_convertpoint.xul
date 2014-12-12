@@ -29,11 +29,10 @@ function runTests() {
 
   var domWindowUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                              .getInterface(Components.interfaces.nsIDOMWindowUtils);
-  var devPxPerCSSPx = domWindowUtils.screenPixelsPerCSSPixel;
 
   var pluginRect = pluginElement.getBoundingClientRect();
-  var pluginX = (pluginRect.left * devPxPerCSSPx) + ((window.mozInnerScreenX * devPxPerCSSPx) - window.screenX);
-  var pluginY = (pluginRect.top * devPxPerCSSPx) + ((window.mozInnerScreenY * devPxPerCSSPx) - window.screenY);
+  var pluginX = pluginRect.left + (window.mozInnerScreenX - window.screenX);
+  var pluginY = pluginRect.top + (window.mozInnerScreenY - window.screenY);
 
   var windowX = window.screenX;
   var windowY = window.screenY;

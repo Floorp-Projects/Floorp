@@ -16,6 +16,7 @@
     SimpleTest.waitForExplicitFinish();
     // Run the test in a separate window so that the test runs as a chrome
     // window
+    SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
     var w = window.open("chrome_over_plugin_window.xul", "chrome_over_plugin",
                          "chrome,width=200,height=300");
   ]]>

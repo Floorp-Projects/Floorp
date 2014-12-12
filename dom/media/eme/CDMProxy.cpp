@@ -271,10 +271,6 @@ CDMProxy::CloseSession(const nsAString& aSessionId,
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE_VOID(!mKeys.IsNull());
 
-  {
-    CDMCaps::AutoLock caps(Capabilites());
-    caps.DropKeysForSession(aSessionId);
-  }
   nsAutoPtr<SessionOpData> data(new SessionOpData());
   data->mPromiseId = aPromiseId;
   data->mSessionId = NS_ConvertUTF16toUTF8(aSessionId);
@@ -301,10 +297,6 @@ CDMProxy::RemoveSession(const nsAString& aSessionId,
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE_VOID(!mKeys.IsNull());
 
-  {
-    CDMCaps::AutoLock caps(Capabilites());
-    caps.DropKeysForSession(aSessionId);
-  }
   nsAutoPtr<SessionOpData> data(new SessionOpData());
   data->mPromiseId = aPromiseId;
   data->mSessionId = NS_ConvertUTF16toUTF8(aSessionId);
@@ -331,7 +323,9 @@ CDMProxy::Shutdown()
   mKeys.Clear();
   // Note: This may end up being the last owning reference to the CDMProxy.
   nsRefPtr<nsIRunnable> task(NS_NewRunnableMethod(this, &CDMProxy::gmp_Shutdown));
-  mGMPThread->Dispatch(task, NS_DISPATCH_NORMAL);
+  if (mGMPThread) {
+    mGMPThread->Dispatch(task, NS_DISPATCH_NORMAL);
+  }
 }
 
 void
@@ -342,7 +336,7 @@ CDMProxy::gmp_Shutdown()
   // Abort any pending decrypt jobs, to awaken any clients waiting on a job.
   for (size_t i = 0; i < mDecryptionJobs.Length(); i++) {
     DecryptJob* job = mDecryptionJobs[i];
-    job->mClient->Decrypted(NS_ERROR_ABORT, nullptr);
+    job->mClient->Decrypted(GMPAbortedErr, nullptr);
   }
   mDecryptionJobs.Clear();
 
@@ -450,7 +444,13 @@ void
 CDMProxy::OnSessionClosed(const nsAString& aSessionId)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  NS_WARNING("CDMProxy::OnSessionClosed() not implemented");
+  if (mKeys.IsNull()) {
+    return;
+  }
+  nsRefPtr<dom::MediaKeySession> session(mKeys->GetSession(aSessionId));
+  if (session) {
+    session->OnClosed();
+  }
 }
 
 static void
@@ -522,7 +522,7 @@ CDMProxy::gmp_Decrypt(nsAutoPtr<DecryptJob> aJob)
   MOZ_ASSERT(aJob->mSample);
 
   if (!mCDM) {
-    aJob->mClient->Decrypted(NS_ERROR_FAILURE, nullptr);
+    aJob->mClient->Decrypted(GMPAbortedErr, nullptr);
     return;
   }
 
@@ -549,23 +549,30 @@ CDMProxy::gmp_Decrypted(uint32_t aId,
         PodCopy(job->mSample->data,
                 aDecryptedData.Elements(),
                 std::min<size_t>(aDecryptedData.Length(), job->mSample->size));
-        job->mClient->Decrypted(NS_OK, job->mSample.forget());
+        job->mClient->Decrypted(GMPNoErr, job->mSample.forget());
+      } else if (aResult == GMPNoKeyErr) {
+        NS_WARNING("CDM returned GMPNoKeyErr");
+        // We still have the encrypted sample, so we can re-enqueue it to be
+        // decrypted again once the key is usable again.
+        job->mClient->Decrypted(GMPNoKeyErr, job->mSample.forget());
       } else {
-        job->mClient->Decrypted(NS_ERROR_FAILURE, nullptr);
+        nsAutoCString str("CDM returned decode failure GMPErr=");
+        str.AppendInt(aResult);
+        NS_WARNING(str.get());
+        job->mClient->Decrypted(aResult, nullptr);
       }
       mDecryptionJobs.RemoveElementAt(i);
       return;
-    } else {
-      NS_WARNING("GMPDecryptorChild returned incorrect job ID");
     }
   }
+  NS_WARNING("GMPDecryptorChild returned incorrect job ID");
 }
 
 void
 CDMProxy::gmp_Terminated()
 {
   MOZ_ASSERT(IsOnGMPThread());
-  EME_LOG("CDM terminated");
+  NS_WARNING("CDM terminated");
   gmp_Shutdown();
 }
 

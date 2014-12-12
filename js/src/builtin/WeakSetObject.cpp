@@ -24,11 +24,7 @@ using namespace js;
 const Class WeakSetObject::class_ = {
     "WeakSet",
     JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_CACHED_PROTO(JSProto_WeakSet) |
-    JSCLASS_HAS_RESERVED_SLOTS(WeakSetObject::RESERVED_SLOTS),
-    nullptr,                 // addProperty
-    nullptr,                 // delProperty
-    JS_PropertyStub,         // getProperty
-    JS_StrictPropertyStub    // setProperty
+    JSCLASS_HAS_RESERVED_SLOTS(WeakSetObject::RESERVED_SLOTS)
 };
 
 const JSPropertySpec WeakSetObject::properties[] = {

@@ -86,14 +86,14 @@ public:
   // Structure that stores the current state of a frame manager for
   // Save/Restore purposes.
   struct SavedState {
-    SavedState(mozilla::WritingMode aWM)
+    explicit SavedState(mozilla::WritingMode aWM)
       : mWritingMode(aWM)
-      , mOrigin(aWM)
+      , mOffset(aWM)
     {}
   private:
     uint32_t mFloatInfoCount;
     mozilla::WritingMode mWritingMode;
-    mozilla::LogicalPoint mOrigin;
+    mozilla::LogicalPoint mOffset;
     bool mPushedLeftFloatPastBreak;
     bool mPushedRightFloatPastBreak;
     bool mSplitLeftFloatAcrossBreak;
@@ -103,39 +103,37 @@ public:
   };
 
   /**
-   * Translate the current origin by the specified (dICoord, dBCoord). This
+   * Translate the current offset by the specified (dICoord, dBCoord). This
    * creates a new local coordinate space relative to the current
    * coordinate space.
    * @returns previous writing mode
    */
   mozilla::WritingMode Translate(mozilla::WritingMode aWM,
-                                 mozilla::LogicalPoint aDOrigin,
-                                 nscoord aContainerWidth)
+                                 mozilla::LogicalPoint aDOffset)
   {
     mozilla::WritingMode oldWM = mWritingMode;
-    mOrigin = mOrigin.ConvertTo(aWM, oldWM, aContainerWidth);
+    mOffset = mOffset.ConvertTo(aWM, oldWM, 0);
     mWritingMode = aWM;
-    mOrigin += aDOrigin;
+    mOffset += aDOffset;
     return oldWM;
   }
 
   /*
-   * Set the translation origin to a specified value instead of
+   * Set the translation offset to a specified value instead of
    * translating by a delta.
    */
   void SetTranslation(mozilla::WritingMode aWM,
-                      mozilla::LogicalPoint aOrigin)
+                      mozilla::LogicalPoint aOffset)
   {
     mWritingMode = aWM;
-    mOrigin = aOrigin;
+    mOffset = aOffset;
   }
 
   void Untranslate(mozilla::WritingMode aWM,
-                   mozilla::LogicalPoint aDOrigin,
-                   nscoord aContainerWidth)
+                   mozilla::LogicalPoint aDOffset)
   {
-    mOrigin -= aDOrigin;
-    mOrigin = mOrigin.ConvertTo(aWM, mWritingMode, aContainerWidth);
+    mOffset -= aDOffset;
+    mOffset = mOffset.ConvertTo(aWM, mWritingMode, 0);
     mWritingMode = aWM;
   }
 
@@ -145,10 +143,10 @@ public:
    * Translate().
    */
   void GetTranslation(mozilla::WritingMode& aWM,
-                      mozilla::LogicalPoint& aOrigin) const
+                      mozilla::LogicalPoint& aOffset) const
   {
     aWM = mWritingMode;
-    aOrigin = mOrigin;
+    aOffset = mOffset;
   }
 
   /**
@@ -257,15 +255,15 @@ public:
   void IncludeInDamage(mozilla::WritingMode aWM,
                        nscoord aIntervalBegin, nscoord aIntervalEnd)
   {
-    mFloatDamage.IncludeInterval(aIntervalBegin + mOrigin.B(aWM),
-                                 aIntervalEnd + mOrigin.B(aWM));
+    mFloatDamage.IncludeInterval(aIntervalBegin + mOffset.B(aWM),
+                                 aIntervalEnd + mOffset.B(aWM));
   }
 
   bool IntersectsDamage(mozilla::WritingMode aWM,
                         nscoord aIntervalBegin, nscoord aIntervalEnd) const
   {
-    return mFloatDamage.Intersects(aIntervalBegin + mOrigin.B(aWM),
-                                   aIntervalEnd + mOrigin.B(aWM));
+    return mFloatDamage.Intersects(aIntervalBegin + mOffset.B(aWM),
+                                   aIntervalEnd + mOffset.B(aWM));
   }
 
   /**
@@ -320,7 +318,7 @@ public:
   void AssertStateMatches(SavedState *aState) const
   {
     NS_ASSERTION(aState->mWritingMode == mWritingMode &&
-                 aState->mOrigin == mOrigin &&
+                 aState->mOffset == mOffset &&
                  aState->mPushedLeftFloatPastBreak ==
                    mPushedLeftFloatPastBreak &&
                  aState->mPushedRightFloatPastBreak ==
@@ -359,7 +357,7 @@ private:
   };
 
   mozilla::WritingMode mWritingMode;
-  mozilla::LogicalPoint mOrigin;  // translation from local to global
+  mozilla::LogicalPoint mOffset;  // translation from local to global
                                   // coordinate space
 
   nsTArray<FloatInfo> mFloats;

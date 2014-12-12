@@ -15,7 +15,7 @@ using namespace JS;
 /* The class of the global object. */
 const JSClass global_class = {
     "global", JSCLASS_GLOBAL_FLAGS,
-    nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub,
+    nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr,
     JS_GlobalObjectTraceHook

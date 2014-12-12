@@ -7,20 +7,16 @@
 #ifndef mozilla_SandboxAssembler_h
 #define mozilla_SandboxAssembler_h
 
-#include "sandbox/linux/seccomp-bpf/codegen.h"
-
 #include <vector>
+
 #include "mozilla/Assertions.h"
 
-using namespace sandbox;
+struct sock_filter;
 
 namespace mozilla {
 
 class SandboxAssembler {
 public:
-  SandboxAssembler();
-  ~SandboxAssembler();
-
   class Condition {
     friend class SandboxAssembler;
     uint32_t mSyscallNr;
@@ -49,45 +45,29 @@ public:
     {
       MOZ_ASSERT(aArgChecked < sNumArgs);
     }
+    // This isn't perf-critical, so a naive copy ctor is fine.
+    Condition(const Condition& aOther)
+    : mSyscallNr(aOther.mSyscallNr)
+    , mCheckingArg(aOther.mCheckingArg)
+    , mArgChecked(aOther.mArgChecked)
+    , mArgValues(aOther.mArgValues)
+    { }
   };
 
   // Allow syscalls matching this condition, if no earlier condition matched.
-  void Allow(const Condition &aCond) {
-    Handle(aCond, RetAllow());
+  void Allow(const Condition& aCond) {
+    mRuleStack.push_back(std::make_pair(0, aCond));
   }
   // Cause syscalls matching this condition to fail with the given error, if
   // no earlier condition matched.
-  void Deny(int aErrno, const Condition &aCond) {
-    Handle(aCond, RetDeny(aErrno));
+  void Deny(int aErrno, const Condition& aCond) {
+    MOZ_ASSERT(aErrno != 0);
+    mRuleStack.push_back(std::make_pair(aErrno, aCond));
   }
 
-  void Finish();
-  void Compile(std::vector<struct sock_filter> *aProgram,
-               bool aPrint = false);
+  void Compile(std::vector<sock_filter>* aProgram, bool aPrint = false);
 private:
-  CodeGen mCode;
-  // The entry point of the filter program.
-  Instruction *mHead;
-  // Pointer to an instruction with a null successor which needs to be filled
-  // in with the rest of the program; see CodeGen::JoinInstructions.
-  Instruction *mTail;
-  // In some cases we will have two such instructions; this, if not null, is
-  // that.  (If we have more complicated conditions in the future, this may
-  // need to be generalized into a vector<Instruction*>.)
-  Instruction *mTailAlt;
-
-  Instruction *RetAllow();
-  Instruction *RetDeny(int aErrno);
-  Instruction *RetKill();
-  Instruction *LoadArch(Instruction *aNext);
-  Instruction *LoadSyscall(Instruction *aNext);
-  Instruction *LoadArgHi(int aArg, Instruction *aNext);
-  Instruction *LoadArgLo(int aArg, Instruction *aNext);
-  Instruction *JmpEq(uint32_t aValue, Instruction *aThen, Instruction *aElse);
-  void AppendCheck(Instruction *aCheck,
-                   Instruction *aNewTail,
-                   Instruction *aNewTailAlt);
-  void Handle(const Condition &aCond, Instruction* aResult);
+  std::vector<std::pair<int, Condition>> mRuleStack;
 
   static const uint8_t sNumArgs = 6;
 };

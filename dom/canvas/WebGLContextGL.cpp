@@ -3323,7 +3323,8 @@ WebGLContext::CompileShader(WebGLShader* shader)
     int compileOptions = SH_VARIABLES |
                          SH_ENFORCE_PACKING_RESTRICTIONS |
                          SH_INIT_VARYINGS_WITHOUT_STATIC_USE |
-                         SH_OBJECT_CODE;
+                         SH_OBJECT_CODE |
+                         SH_LIMIT_CALL_STACK_DEPTH;
 
     if (resources.MaxExpressionComplexity > 0) {
         compileOptions |= SH_LIMIT_EXPRESSION_COMPLEXITY;

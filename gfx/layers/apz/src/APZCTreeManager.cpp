@@ -89,6 +89,14 @@ APZCTreeManager::~APZCTreeManager()
 {
 }
 
+AsyncPanZoomController*
+APZCTreeManager::MakeAPZCInstance(uint64_t aLayersId,
+                                  GeckoContentController* aController)
+{
+  return new AsyncPanZoomController(aLayersId, this, mInputQueue,
+    aController, AsyncPanZoomController::USE_GESTURE_DETECTOR);
+}
+
 void
 APZCTreeManager::GetAllowedTouchBehavior(WidgetInputEvent* aEvent,
                                          nsTArray<TouchBehaviorFlags>& aOutValues)
@@ -307,8 +315,7 @@ APZCTreeManager::PrepareAPZCForLayer(const LayerMetricsWrapper& aLayer,
     // a new one.
     bool newApzc = (apzc == nullptr || apzc->IsDestroyed());
     if (newApzc) {
-      apzc = new AsyncPanZoomController(aLayersId, this, mInputQueue, state->mController,
-                                        AsyncPanZoomController::USE_GESTURE_DETECTOR);
+      apzc = MakeAPZCInstance(aLayersId, state->mController);
       apzc->SetCompositorParent(aState.mCompositor);
       if (state->mCrossProcessParent != nullptr) {
         apzc->ShareFrameMetricsAcrossProcesses();

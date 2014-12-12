@@ -15,7 +15,6 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
-#include "npapi.h"
 #include "nsTArray.h"
 #include "mozilla/EventForwards.h"
 
@@ -317,9 +316,8 @@ protected:
 };
 
 /**
- * TextInputHandlerBase is a base class of PluginTextInputHandler,
- * IMEInputHandler and TextInputHandler.  Utility methods should be implemented
- * this level.
+ * TextInputHandlerBase is a base class of IMEInputHandler and TextInputHandler.
+ * Utility methods should be implemented this level.
  */
 
 class TextInputHandlerBase
@@ -679,151 +677,6 @@ private:
 };
 
 /**
- * PluginTextInputHandler handles text input events for plugins.
- */
-
-class PluginTextInputHandler : public TextInputHandlerBase
-{
-public:
-
-  /**
-   * When starting complex text input for current event on plugin, this is
-   * called.  See also the comment of StartComplexTextInputForCurrentEvent() of
-   * nsIPluginWidget.
-   */
-  nsresult StartComplexTextInputForCurrentEvent()
-  {
-    mPluginComplexTextInputRequested = true;
-    return NS_OK;
-  }
-
-  /**
-   * HandleKeyDownEventForPlugin() handles aNativeKeyEvent.
-   *
-   * @param aNativeKeyEvent       A native NSKeyDown event.
-   */
-  void HandleKeyDownEventForPlugin(NSEvent* aNativeKeyEvent);
-
-  /**
-   * HandleKeyUpEventForPlugin() handles aNativeKeyEvent.
-   *
-   * @param aNativeKeyEvent       A native NSKeyUp event.
-   */
-  void HandleKeyUpEventForPlugin(NSEvent* aNativeKeyEvent);
-
-  /**
-   * ConvertCocoaKeyEventToNPCocoaEvent() converts aCocoaEvent to NPCocoaEvent.
-   *
-   * @param aCocoaEvent           A native key event.
-   * @param aPluginEvent          The result.
-   */
-  static void ConvertCocoaKeyEventToNPCocoaEvent(NSEvent* aCocoaEvent,
-                                                 NPCocoaEvent& aPluginEvent);
-
-#ifndef __LP64__
-
-  /**
-   * InstallPluginKeyEventsHandler() is called when initializing process.
-   * RemovePluginKeyEventsHandler() is called when finalizing process.
-   * These methods initialize/finalize global resource for handling events for
-   * plugins.
-   */
-  static void InstallPluginKeyEventsHandler();
-  static void RemovePluginKeyEventsHandler();
-
-  /**
-   * This must be called before first key/IME event for plugins.
-   * This method initializes IMKInputSession methods swizzling.
-   */
-  static void SwizzleMethods();
-
-  /**
-   * When a composition starts or finishes, this is called.
-   */
-  void SetPluginTSMInComposition(bool aInComposition)
-  {
-    mPluginTSMInComposition = aInComposition;
-  }
-
-#endif // #ifndef __LP64__
-
-protected:
-  bool mIgnoreNextKeyUpEvent;
-
-  PluginTextInputHandler(nsChildView* aWidget, NSView<mozView> *aNativeView);
-  ~PluginTextInputHandler();
-
-private:
-
-#ifndef __LP64__
-  TSMDocumentID mPluginTSMDoc;
-
-  bool mPluginTSMInComposition;
-#endif // #ifndef __LP64__
-
-  bool mPluginComplexTextInputRequested;
-
-  /**
-   * DispatchCocoaNPAPITextEvent() dispatches a text event for Cocoa plugin.
-   *
-   * @param aString               A string inputted by the dispatching event.
-   * @return                      TRUE if the dispatched event was consumed.
-   *                              Otherwise, FALSE.
-   */
-  bool DispatchCocoaNPAPITextEvent(NSString* aString);
-
-  /**
-   * Whether the plugin is in composition or not.
-   * On 32bit build, this returns the state of mPluginTSMInComposition.
-   * On 64bit build, this returns ComplexTextInputPanel's state.
-   *
-   * @return                      TRUE if plugin is in composition.  Otherwise,
-   *                              FALSE.
-   */
-  bool IsInPluginComposition();
-
-#ifndef __LP64__
-
-  /**
-   * Create a TSM document for use with plugins, so that we can support IME in
-   * them.  Once it's created, if need be (re)activate it.  Some plugins (e.g.
-   * the Flash plugin running in Camino) don't create their own TSM document --
-   * without which IME can't work.  Others (e.g. the Flash plugin running in
-   * Firefox) create a TSM document that (somehow) makes the input window behave
-   * badly when it contains more than one kind of input (say Hiragana and
-   * Romaji).  (We can't just use the per-NSView TSM documents that Cocoa
-   * provides (those created and managed by the NSTSMInputContext class) -- for
-   * some reason TSMProcessRawKeyEvent() doesn't work with them.)
-   */
-  void ActivatePluginTSMDocument();
-
-  /**
-   * HandleCarbonPluginKeyEvent() handles the aKeyEvent.  This is called by
-   * PluginKeyEventsHandler().
-   *
-   * @param aKeyEvent             A native Carbon event.
-   */
-  void HandleCarbonPluginKeyEvent(EventRef aKeyEvent);
-
-  /**
-   * Target for text services events sent as the result of calls made to
-   * TSMProcessRawKeyEvent() in HandleKeyDownEventForPlugin() when a plugin has
-   * the focus.  The calls to TSMProcessRawKeyEvent() short-circuit Cocoa-based
-   * IME (which would otherwise interfere with our efforts) and allow Carbon-
-   * based IME to work in plugins (via the NPAPI).  This strategy doesn't cause
-   * trouble for plugins that (like the Java Embedding Plugin) bypass the NPAPI
-   * to get their keyboard events and do their own Cocoa-based IME.
-   */
-  static OSStatus PluginKeyEventsHandler(EventHandlerCallRef aHandlerRef,
-                                         EventRef aEvent,
-                                         void *aUserData);
-
-  static EventHandlerRef sPluginKeyEventsHandler;
-
-#endif // #ifndef __LP64__
-};
-
-/**
  * IMEInputHandler manages:
  *   1. The IME/keyboard layout statement of nsChildView.
  *   2. The IME composition statement of nsChildView.
@@ -836,7 +689,7 @@ private:
  * actual focused view is notified by OnFocusChangeInGecko.
  */
 
-class IMEInputHandler : public PluginTextInputHandler
+class IMEInputHandler : public TextInputHandlerBase
 {
 public:
   virtual bool OnDestroyWidget(nsChildView* aDestroyingWidget);

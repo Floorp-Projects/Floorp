@@ -2103,6 +2103,18 @@ public:
   bool HasWarnedAbout(DeprecatedOperations aOperation);
   void WarnOnceAbout(DeprecatedOperations aOperation, bool asError = false);
 
+#define DOCUMENT_WARNING(_op) e##_op,
+  enum DocumentWarnings {
+#include "nsDocumentWarningList.h"
+    eDocumentWarningCount
+  };
+#undef DOCUMENT_WARNING
+  bool HasWarnedAbout(DocumentWarnings aWarning);
+  void WarnOnceAbout(DocumentWarnings aWarning,
+                     bool asError = false,
+                     const char16_t **aParams = nullptr,
+                     uint32_t aParamsLength = 0);
+
   virtual void PostVisibilityUpdateEvent() = 0;
   
   bool IsSyntheticDocument() const { return mIsSyntheticDocument; }
@@ -2459,7 +2471,8 @@ public:
   bool DidFireDOMContentLoaded() const { return mDidFireDOMContentLoaded; }
 
 private:
-  uint64_t mWarnedAbout;
+  uint64_t mDeprecationWarnedAbout;
+  uint64_t mDocWarningWarnedAbout;
   SelectorCache mSelectorCache;
 
 protected:

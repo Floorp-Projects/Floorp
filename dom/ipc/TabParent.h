@@ -225,7 +225,8 @@ public:
     // message-sending functions under a layer of indirection and
     // eating the return values
     void Show(const nsIntSize& size);
-    void UpdateDimensions(const nsIntRect& rect, const nsIntSize& size);
+    void UpdateDimensions(const nsIntRect& rect, const nsIntSize& size,
+                          const nsIntPoint& chromeDisp);
     void UpdateFrame(const layers::FrameMetrics& aFrameMetrics);
     void UIResolutionChanged();
     void AcknowledgeScrollUpdate(const ViewID& aScrollId, const uint32_t& aScrollGeneration);

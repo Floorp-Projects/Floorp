@@ -150,7 +150,7 @@ protected:
     virtual bool AnswerGetProfile(nsCString* aProfile) MOZ_OVERRIDE;
 
 public:
-    PluginModuleChild(bool aIsChrome);
+    explicit PluginModuleChild(bool aIsChrome);
     virtual ~PluginModuleChild();
 
     bool CommonInit(base::ProcessHandle aParentProcessHandle,

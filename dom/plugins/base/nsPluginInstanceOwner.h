@@ -33,7 +33,12 @@ namespace mozilla {
 namespace dom {
 struct MozPluginParameter;
 }
+namespace widget {
+class PuppetWidget;
 }
+}
+
+using mozilla::widget::PuppetWidget;
 
 #ifdef MOZ_X11
 class gfxXlibSurface;
@@ -62,6 +67,7 @@ public:
   
   NS_IMETHOD ShowStatus(const char16_t *aStatusMsg) MOZ_OVERRIDE;
   
+  // This can go away, just leaving it here to avoid changing the interface.
   NPError    ShowNativeContextMenu(NPMenu* menu, void* event) MOZ_OVERRIDE;
   
   NPBool     ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
@@ -108,14 +114,19 @@ public:
   
   nsresult Init(nsIContent* aContent);
   
-  void* GetPluginPortFromWidget();
+  void* GetPluginPort();
   void ReleasePluginPort(void* pluginPort);
 
   nsEventStatus ProcessEvent(const mozilla::WidgetGUIEvent& anEvent);
   
 #ifdef XP_MACOSX
   enum { ePluginPaintEnable, ePluginPaintDisable };
-  
+
+  void WindowFocusMayHaveChanged();
+  void ResolutionMayHaveChanged();
+
+  bool WindowIsActive();
+  void SendWindowFocusChanged(bool aIsActive);
   NPDrawingModel GetDrawingModel();
   bool IsRemoteDrawingCoreAnimation();
   nsresult ContentsScaleFactorChanged(double aContentsScaleFactor);
@@ -124,19 +135,14 @@ public:
   void AddToCARefreshTimer();
   void RemoveFromCARefreshTimer();
   // This calls into the plugin (NPP_SetWindow) and can run script.
-  void* FixUpPluginWindow(int32_t inPaintState);
+  void FixUpPluginWindow(int32_t inPaintState);
   void HidePluginWindow();
-  // Set a flag that (if true) indicates the plugin port info has changed and
-  // SetWindow() needs to be called.
-  void SetPluginPortChanged(bool aState) { mPluginPortChanged = aState; }
   // Return a pointer to the internal nsPluginPort structure that's used to
   // store a copy of plugin port info and to detect when it's been changed.
   void* GetPluginPortCopy();
   // Set plugin port info in the plugin (in the 'window' member of the
-  // NPWindow structure passed to the plugin by SetWindow()) and set a
-  // flag (mPluginPortChanged) to indicate whether or not this info has
-  // changed, and SetWindow() needs to be called again.
-  void* SetPluginPortAndDetectChange();
+  // NPWindow structure passed to the plugin by SetWindow()).
+  void SetPluginPort();
   // Flag when we've set up a Thebes (and CoreGraphics) context in
   // nsPluginFrame::PaintPlugin().  We need to know this in
   // FixUpPluginWindow() (i.e. we need to know when FixUpPluginWindow() has
@@ -288,6 +294,11 @@ private:
   static nsCOMPtr<nsITimer>                *sCATimer;
   static nsTArray<nsPluginInstanceOwner*>  *sCARefreshListeners;
   bool                                      mSentInitialTopLevelWindowEvent;
+  bool                                      mLastWindowIsActive;
+  bool                                      mLastContentFocused;
+  double                                    mLastScaleFactor;
+  // True if, the next time the window is activated, we should blur ourselves.
+  bool                                      mShouldBlurOnActivate;
 #endif
 
   // Initially, the event loop nesting level we were created on, it's updated
@@ -296,9 +307,6 @@ private:
   uint32_t                    mLastEventloopNestingLevel;
   bool                        mContentFocused;
   bool                        mWidgetVisible;    // used on Mac to store our widget's visible state
-#ifdef XP_MACOSX
-  bool                        mPluginPortChanged;
-#endif
 #ifdef MOZ_X11
   // Used with windowless plugins only, initialized in CreateWidget().
   bool                        mFlash10Quirks;
@@ -322,6 +330,16 @@ private:
   nsresult DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent,
                                  bool aAllowPropagate = false);
   nsresult DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent);
+
+#ifdef XP_MACOSX
+  static NPBool ConvertPointPuppet(PuppetWidget *widget, nsPluginFrame* pluginFrame,
+                            double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
+                            double *destX, double *destY, NPCoordinateSpace destSpace);
+  static NPBool ConvertPointNoPuppet(nsIWidget *widget, nsPluginFrame* pluginFrame,
+                            double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
+                            double *destX, double *destY, NPCoordinateSpace destSpace);
+  void PerformDelayedBlurs();
+#endif    // XP_MACOSX
 
   int mLastMouseDownButtonType;
 

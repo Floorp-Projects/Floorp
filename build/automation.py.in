@@ -487,7 +487,6 @@ class Automation(object):
       preloadEnvVar = "MOZ_REPLACE_MALLOC_LIB"
 
     if dmdPath and dmdLibrary and preloadEnvVar:
-      env['DMD'] = '1'
       env[preloadEnvVar] = os.path.join(dmdPath, dmdLibrary)
 
     if crashreporter and not debugger:

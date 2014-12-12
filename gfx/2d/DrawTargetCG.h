@@ -96,7 +96,7 @@ class GlyphRenderingOptionsCG : public GlyphRenderingOptions
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GlyphRenderingOptionsCG)
 
-  GlyphRenderingOptionsCG(const Color &aFontSmoothingBackgroundColor)
+  explicit GlyphRenderingOptionsCG(const Color &aFontSmoothingBackgroundColor)
     : mFontSmoothingBackgroundColor(aFontSmoothingBackgroundColor)
   {}
 

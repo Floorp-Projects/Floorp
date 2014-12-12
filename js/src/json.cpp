@@ -37,11 +37,7 @@ using mozilla::RangedPtr;
 
 const Class js::JSONClass = {
     js_JSON_str,
-    JSCLASS_HAS_CACHED_PROTO(JSProto_JSON),
-    nullptr,                /* addProperty */
-    nullptr,                /* delProperty */
-    JS_PropertyStub,        /* getProperty */
-    JS_StrictPropertyStub   /* setProperty */
+    JSCLASS_HAS_CACHED_PROTO(JSProto_JSON)
 };
 
 static inline bool
@@ -668,11 +664,8 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
 
     /* Step 10. */
     RootedId emptyId(cx, NameToId(cx->names().empty));
-    if (!DefineNativeProperty(cx, wrapper, emptyId, vp, JS_PropertyStub, JS_StrictPropertyStub,
-                              JSPROP_ENUMERATE))
-    {
+    if (!DefineNativeProperty(cx, wrapper, emptyId, vp, nullptr, nullptr, JSPROP_ENUMERATE))
         return false;
-    }
 
     /* Step 11. */
     StringifyContext scx(cx, sb, gap, replacer, propertyList);

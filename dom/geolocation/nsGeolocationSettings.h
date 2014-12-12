@@ -57,7 +57,7 @@ enum GeolocationFuzzMethod {
 
 class GeolocationSetting MOZ_FINAL {
 public:
-  GeolocationSetting(const nsString& aOrigin) :
+  explicit GeolocationSetting(const nsString& aOrigin) :
     mFuzzMethod(GEO_ALA_TYPE_DEFAULT),
 #ifdef MOZ_APPROX_LOCATION
     mDistance(0),

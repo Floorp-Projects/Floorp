@@ -67,8 +67,8 @@ static const JSFunctionSpec exception_methods[] = {
         JSCLASS_HAS_RESERVED_SLOTS(ErrorObject::RESERVED_SLOTS), \
         nullptr,                 /* addProperty */ \
         nullptr,                 /* delProperty */ \
-        JS_PropertyStub,         /* getProperty */ \
-        JS_StrictPropertyStub,   /* setProperty */ \
+        nullptr,                 /* getProperty */ \
+        nullptr,                 /* setProperty */ \
         nullptr,                 /* enumerate */ \
         nullptr,                 /* resolve */ \
         nullptr,                 /* convert */ \
@@ -97,8 +97,8 @@ ErrorObject::classes[JSEXN_LIMIT] = {
         JSCLASS_HAS_RESERVED_SLOTS(ErrorObject::RESERVED_SLOTS),
         nullptr,                 /* addProperty */
         nullptr,                 /* delProperty */
-        JS_PropertyStub,         /* getProperty */
-        JS_StrictPropertyStub,   /* setProperty */
+        nullptr,                 /* getProperty */
+        nullptr,                 /* setProperty */
         nullptr,                 /* enumerate */
         nullptr,                 /* resolve */
         nullptr,                 /* convert */
@@ -508,11 +508,8 @@ ErrorObject::createProto(JSContext *cx, JSProtoKey key)
     // instance properties.
     RootedPropertyName name(cx, ClassName(key, cx));
     RootedValue nameValue(cx, StringValue(name));
-    if (!JSObject::defineProperty(cx, err, cx->names().name, nameValue,
-                                  JS_PropertyStub, JS_StrictPropertyStub, 0))
-    {
+    if (!JSObject::defineProperty(cx, err, cx->names().name, nameValue, nullptr, nullptr, 0))
         return nullptr;
-    }
 
     return errorProto;
 }

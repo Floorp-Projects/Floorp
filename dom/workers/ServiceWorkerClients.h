@@ -28,7 +28,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ServiceWorkerClients)
 
-  ServiceWorkerClients(ServiceWorkerGlobalScope* aWorkerScope);
+  explicit ServiceWorkerClients(ServiceWorkerGlobalScope* aWorkerScope);
 
   already_AddRefed<Promise> GetServiced(ErrorResult& aRv);
   already_AddRefed<Promise> ReloadAll(ErrorResult& aRv);
