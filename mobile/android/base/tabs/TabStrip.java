@@ -14,21 +14,18 @@ import android.view.LayoutInflater;
 import android.view.TouchDelegate;
 import android.view.View;
 import android.view.ViewTreeObserver;
-import android.widget.ImageButton;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.widget.ThemedImageButton;
 import org.mozilla.gecko.widget.ThemedLinearLayout;
 
 public class TabStrip extends ThemedLinearLayout {
     private static final String LOGTAG = "GeckoTabStrip";
 
-    private static final int IMAGE_LEVEL_NORMAL = 0;
-    private static final int IMAGE_LEVEL_PRIVATE = 1;
-
     private final TabStripView tabStripView;
-    private final ImageButton addTabButton;
+    private final ThemedImageButton addTabButton;
 
     private final TabsListener tabsListener;
 
@@ -43,7 +40,7 @@ public class TabStrip extends ThemedLinearLayout {
         LayoutInflater.from(context).inflate(R.layout.tab_strip, this);
         tabStripView = (TabStripView) findViewById(R.id.tab_strip);
 
-        addTabButton = (ImageButton) findViewById(R.id.add_tab);
+        addTabButton = (ThemedImageButton) findViewById(R.id.add_tab);
         addTabButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -97,7 +94,7 @@ public class TabStrip extends ThemedLinearLayout {
     @Override
     public void setPrivateMode(boolean isPrivate) {
         super.setPrivateMode(isPrivate);
-        addTabButton.setImageLevel(isPrivate ? IMAGE_LEVEL_PRIVATE : IMAGE_LEVEL_NORMAL);
+        addTabButton.setPrivateMode(isPrivate);
     }
 
     private class TabsListener implements Tabs.OnTabsChangedListener {
