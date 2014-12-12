@@ -96,6 +96,13 @@ nsIconProtocolHandler::NewChannel2(nsIURI* url,
     return rv;
   }
 
+  // set the loadInfo on the new channel
+  rv = channel->SetLoadInfo(aLoadInfo);
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(channel);
+    return rv;
+  }
+
   *result = channel;
   return NS_OK;
 }
