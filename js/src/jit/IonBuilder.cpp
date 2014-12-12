@@ -1959,7 +1959,8 @@ IonBuilder::processCfgEntry(CFGState &state)
 IonBuilder::ControlStatus
 IonBuilder::processIfEnd(CFGState &state)
 {
-    if (current) {
+    bool thenBranchTerminated = !current;
+    if (!thenBranchTerminated) {
         // Here, the false block is the join point. Create an edge from the
         // current block to the false block. Note that a RETURN opcode
         // could have already ended the block.
@@ -1973,6 +1974,15 @@ IonBuilder::processIfEnd(CFGState &state)
         return ControlStatus_Error;
     graph().moveBlockToEnd(current);
     pc = current->pc();
+
+    if (thenBranchTerminated) {
+        // If we can't reach here via the then-branch, we can filter the types
+        // after the if-statement based on the if-condition.
+        MTest *test = state.branch.test;
+        if (!improveTypesAtTest(test->getOperand(0), test->ifTrue() == current, test))
+            return ControlStatus_Error;
+    }
+
     return ControlStatus_Joined;
 }
 
@@ -1989,11 +1999,9 @@ IonBuilder::processIfElseTrueEnd(CFGState &state)
         return ControlStatus_Error;
     graph().moveBlockToEnd(current);
 
-    if (state.branch.test) {
-        MTest *test = state.branch.test;
-        if (!improveTypesAtTest(test->getOperand(0), test->ifTrue() == current, test))
-            return ControlStatus_Error;
-    }
+    MTest *test = state.branch.test;
+    if (!improveTypesAtTest(test->getOperand(0), test->ifTrue() == current, test))
+        return ControlStatus_Error;
 
     return ControlStatus_Jumped;
 }
@@ -2286,6 +2294,10 @@ IonBuilder::processWhileCondEnd(CFGState &state)
     state.stopAt = state.loop.bodyEnd;
     pc = state.loop.bodyStart;
     if (!setCurrentAndSpecializePhis(body))
+        return ControlStatus_Error;
+
+    // Filter the types in the loop body.
+    if (!improveTypesAtTest(test->getOperand(0), test->ifTrue() == current, test))
         return ControlStatus_Error;
 
     // If this is a for-in loop, unbox the current value as string if possible.
@@ -3362,10 +3374,8 @@ IonBuilder::improveTypesAtCompare(MCompare *ins, bool trueBranch, MTest *test)
 bool
 IonBuilder::improveTypesAtTest(MDefinition *ins, bool trueBranch, MTest *test)
 {
-    // We explore the test condition to try and deduce
-    // as much type information as possible.
-    if (!ins)
-        return true;
+    // We explore the test condition to try and deduce as much type information
+    // as possible.
 
     // All branches of this switch that don't want to fall through to the
     // default behavior must return.  The default behavior assumes that a true
