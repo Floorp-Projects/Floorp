@@ -135,7 +135,7 @@ let LoopRoomsInternal = {
   get participantsCount() {
     let count = 0;
     for (let room of this.rooms.values()) {
-      if (!("participants" in room)) {
+      if (room.deleted || !("participants" in room)) {
         continue;
       }
       count += room.participants.length;
