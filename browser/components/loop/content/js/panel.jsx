@@ -686,7 +686,7 @@ loop.panel = (function(_, mozL10n) {
               title={mozL10n.get("rooms_list_delete_tooltip")}
               onClick={this.handleDeleteButtonClick} />
           </h2>
-          <p><a href="#">{room.roomUrl}</a></p>
+          <p><a className="room-url-link" href="#">{room.roomUrl}</a></p>
         </div>
       );
     }
