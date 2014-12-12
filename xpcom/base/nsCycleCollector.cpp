@@ -2449,7 +2449,11 @@ NS_IMETHODIMP_(void)
 ChildFinder::NoteNativeChild(void* aChild,
                              nsCycleCollectionParticipant* aHelper)
 {
-  if (aChild) {
+  if (!aChild) {
+    return;
+  }
+  MOZ_ASSERT(aHelper, "Native child must have a participant");
+  if (!aHelper->CanSkip(aChild, true)) {
     mMayHaveChild = true;
   }
 }
