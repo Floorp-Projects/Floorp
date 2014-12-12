@@ -22,8 +22,17 @@
       var thisTabDocAcc = getTabDocAccessible();
       var thisDocTabPanelAcc = thisTabDocAcc.parent.parent;
       var tabPanelsAcc = thisDocTabPanelAcc.parent;
-      var newDocTabPanelAcc = tabPanelsAcc.lastChild.firstChild;
-      return newDocTabPanelAcc.firstChild;
+      var newDocTabPanelAcc = tabPanelsAcc.firstChild;
+      var nextAcc = newDocTabPanelAcc;
+
+      while (nextAcc = nextAcc.nextSibling) {
+        // Find the last accessible for a browser with about:mozilla loaded.
+        if (nextAcc.firstChild.DOMNode.currentURI.spec == "about:mozilla") {
+          newDocTabPanelAcc = nextAcc;
+        }
+      }
+
+      return newDocTabPanelAcc.firstChild.firstChild;
     }
 
     function linkChecker(aID)
