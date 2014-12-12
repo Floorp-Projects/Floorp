@@ -778,10 +778,6 @@ class UnownedBaseShape;
 namespace jit {
 class JitCode;
 }
-namespace types {
-struct TypeObject;
-class TypeNewScript;
-}
 
 typedef PreBarriered<JSObject*> PreBarrieredObject;
 typedef PreBarriered<JSScript*> PreBarrieredScript;
@@ -811,7 +807,6 @@ typedef HeapPtr<Shape*> HeapPtrShape;
 typedef HeapPtr<UnownedBaseShape*> HeapPtrUnownedBaseShape;
 typedef HeapPtr<jit::JitCode*> HeapPtrJitCode;
 typedef HeapPtr<types::TypeObject*> HeapPtrTypeObject;
-typedef HeapPtr<types::TypeNewScript*> HeapPtrTypeNewScript;
 
 typedef PreBarriered<Value> PreBarrieredValue;
 typedef RelocatablePtr<Value> RelocatableValue;
