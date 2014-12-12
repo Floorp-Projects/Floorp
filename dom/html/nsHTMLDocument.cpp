@@ -894,19 +894,11 @@ nsHTMLDocument::GetDomainURI()
 NS_IMETHODIMP
 nsHTMLDocument::GetDomain(nsAString& aDomain)
 {
-  ErrorResult rv;
-  GetDomain(aDomain, rv);
-  return rv.ErrorCode();
-}
-
-void
-nsHTMLDocument::GetDomain(nsAString& aDomain, ErrorResult& rv)
-{
   nsCOMPtr<nsIURI> uri = GetDomainURI();
 
   if (!uri) {
     SetDOMStringToNull(aDomain);
-    return;
+    return NS_OK;
   }
 
   nsAutoCString hostName;
@@ -918,6 +910,7 @@ nsHTMLDocument::GetDomain(nsAString& aDomain, ErrorResult& rv)
     // etc), just return an null string.
     SetDOMStringToNull(aDomain);
   }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
