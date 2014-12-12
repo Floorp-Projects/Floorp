@@ -452,7 +452,7 @@ WebContentConverterRegistrar.prototype = {
         }
     };
     var browserElement = this._getBrowserForContentWindow(browserWindow, aContentWindow);
-    var notificationBox = browserWindow.getBrowser().getNotificationBox(browserElement);
+    var notificationBox = browserWindow.gBrowser.getNotificationBox(browserElement);
     notificationBox.appendNotification(message,
                                        notificationValue,
                                        notificationIcon,
@@ -481,7 +481,7 @@ WebContentConverterRegistrar.prototype = {
   
       var browserWindow = this._getBrowserWindowForContentWindow(aContentWindow);
       var browserElement = this._getBrowserForContentWindow(browserWindow, aContentWindow);
-      var notificationBox = browserWindow.getBrowser().getNotificationBox(browserElement);
+      var notificationBox = browserWindow.gBrowser.getNotificationBox(browserElement);
       this._appendFeedReaderNotification(uri, aTitle, notificationBox);
     }
     else
@@ -516,7 +516,7 @@ WebContentConverterRegistrar.prototype = {
   function WCCR__getBrowserForContentWindow(aBrowserWindow, aContentWindow) {
     // This depends on pseudo APIs of browser.js and tabbrowser.xml
     aContentWindow = aContentWindow.top;
-    var browsers = aBrowserWindow.getBrowser().browsers;
+    var browsers = aBrowserWindow.gBrowser.browsers;
     for (var i = 0; i < browsers.length; ++i) {
       if (browsers[i].contentWindow == aContentWindow)
         return browsers[i];
