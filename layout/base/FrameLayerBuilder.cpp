@@ -510,7 +510,7 @@ public:
   /**
    * The union of all the bounds of the display items in this layer.
    */
-  nsIntRegion mBounds;
+  nsIntRect mBounds;
 
 private:
   /**
@@ -2183,7 +2183,7 @@ ContainerState::PopPaintedLayerData()
     SetOuterVisibleRegionForLayer(layer, data->mVisibleRegion);
   }
 
-  nsIntRect layerBounds = data->mBounds.GetBounds();
+  nsIntRect layerBounds = data->mBounds;
   layerBounds.MoveBy(-GetTranslationForPaintedLayer(data->mLayer));
   layer->SetLayerBounds(layerBounds);
 
@@ -2351,7 +2351,7 @@ PaintedLayerData::Accumulate(ContainerState* aState,
 
   bool snap;
   nsRect itemBounds = aItem->GetBounds(aState->mBuilder, &snap);
-  mBounds.OrWith(aState->ScaleToOutsidePixels(itemBounds, snap));
+  mBounds = mBounds.Union(aState->ScaleToOutsidePixels(itemBounds, snap));
 
   if (aState->mBuilder->NeedToForceTransparentSurfaceForItem(aItem)) {
     mForceTransparentSurface = true;
