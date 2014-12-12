@@ -384,8 +384,7 @@ Icc::UpdateContact(const JSContext* aCx, IccContactType aContactType,
 }
 
 already_AddRefed<DOMRequest>
-Icc::MatchMvno(const nsAString& aMvnoType,
-               const nsAString& aMvnoData,
+Icc::MatchMvno(IccMvnoType aMvnoType, const nsAString& aMvnoData,
                ErrorResult& aRv)
 {
   if (!mProvider) {
@@ -395,8 +394,8 @@ Icc::MatchMvno(const nsAString& aMvnoType,
 
   nsRefPtr<nsIDOMDOMRequest> request;
   nsresult rv = mProvider->MatchMvno(mClientId, GetOwner(),
-                                     aMvnoType, aMvnoData,
-                                     getter_AddRefs(request));
+                                     static_cast<uint32_t>(aMvnoType),
+                                     aMvnoData, getter_AddRefs(request));
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return nullptr;
