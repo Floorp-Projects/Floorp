@@ -6924,7 +6924,14 @@ RilObject.prototype[UNSOLICITED_RIL_CONNECTED] = function UNSOLICITED_RIL_CONNEC
   // Reset radio in the case that b2g restart (or crash).
   this.setRadioEnabled({enabled: false});
 };
-RilObject.prototype[UNSOLICITED_VOICE_RADIO_TECH_CHANGED] = null;
+RilObject.prototype[UNSOLICITED_VOICE_RADIO_TECH_CHANGED] = function UNSOLICITED_VOICE_RADIO_TECH_CHANGED(length) {
+  // This unsolicited response will be sent when the technology of a multi-tech
+  // modem is changed, ex. switch between gsm and cdma.
+  // TODO: We may need to do more on updating data when switching between gsm
+  //       and cdma mode, e.g. IMEI, ESN, iccInfo, iccType ... etc.
+  //       See Bug 866038.
+  this._processRadioTech(this.context.Buf.readInt32List()[0]);
+};
 
 /**
  * This object exposes the functionality to parse and serialize PDU strings

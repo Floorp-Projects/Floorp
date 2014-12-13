@@ -123,6 +123,8 @@ OnSharedPreferenceChangeListener
     private static final String PREFS_DISPLAY_REFLOW_ON_ZOOM = "browser.zoom.reflowOnZoom";
     private static final String PREFS_DISPLAY_TITLEBAR_MODE = "browser.chrome.titlebarMode";
     private static final String PREFS_SYNC = NON_PREF_PREFIX + "sync";
+    private static final String PREFS_TRACKING_PROTECTION = "privacy.trackingprotection.enabled";
+    private static final String PREFS_TRACKING_PROTECTION_LEARN_MORE = NON_PREF_PREFIX + "trackingprotection.learn_more";
 
     private static final String ACTION_STUMBLER_UPLOAD_PREF = AppConstants.ANDROID_PACKAGE_NAME + ".STUMBLER_PREF";
 
@@ -679,6 +681,13 @@ OnSharedPreferenceChangeListener
                 } else if ((AppConstants.RELEASE_BUILD || !HardwareUtils.isTablet()) &&
                            PREFS_NEW_TABLET_UI.equals(key)) {
                     // Remove toggle for new tablet UI on release builds and phones.
+                    preferences.removePreference(pref);
+                    i--;
+                    continue;
+                } else if (!AppConstants.NIGHTLY_BUILD &&
+                           (PREFS_TRACKING_PROTECTION.equals(key) ||
+                            PREFS_TRACKING_PROTECTION_LEARN_MORE.equals(key))) {
+                    // Remove UI for tracking protection preference on non-Nightly builds.
                     preferences.removePreference(pref);
                     i--;
                     continue;

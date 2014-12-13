@@ -235,6 +235,13 @@ public class AppConstants {
     false;
 //#endif
 
+    public static final boolean NIGHTLY_BUILD =
+//#ifdef NIGHTLY_BUILD
+    true;
+//#else
+    false;
+//#endif
+
     public static final boolean DEBUG_BUILD =
 //#ifdef MOZ_DEBUG
     true;

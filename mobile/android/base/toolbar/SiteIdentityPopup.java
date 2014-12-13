@@ -39,7 +39,7 @@ public class SiteIdentityPopup extends ArrowPopup {
         "https://support.mozilla.org/kb/how-does-insecure-content-affect-safety-android";
 
     private static final String TRACKING_CONTENT_SUPPORT_URL =
-        "https://support.mozilla.org/kb/how-does-insecure-content-affect-safety-android";
+        "https://support.mozilla.org/kb/firefox-android-tracking-protection";
 
     private SiteIdentity mSiteIdentity;
 
