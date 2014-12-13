@@ -146,6 +146,8 @@ private:
 /**
  * CameraRecorderProfiles
  */
+template<class T> class CameraClosedListenerProxy;
+
 class CameraRecorderProfiles MOZ_FINAL : public nsISupports
                                        , public nsWrapperCache
 {
@@ -162,12 +164,15 @@ public:
   bool NameIsEnumerable(const nsAString& aName);
   void GetSupportedNames(unsigned aFlags, nsTArray<nsString>& aNames);
 
+  virtual void OnHardwareClosed();
+
 protected:
   virtual ~CameraRecorderProfiles();
 
   nsCOMPtr<nsISupports> mParent;
   nsRefPtr<ICameraControl> mCameraControl;
   nsRefPtrHashtable<nsStringHashKey, CameraRecorderProfile> mProfiles;
+  nsRefPtr<CameraClosedListenerProxy<CameraRecorderProfiles>> mListener;
 
 private:
   DISALLOW_EVIL_CONSTRUCTORS(CameraRecorderProfiles);
@@ -218,6 +223,8 @@ public:
 
   CameraRecorderProfiles* RecorderProfiles();
 
+  virtual void OnHardwareClosed();
+
 protected:
   ~CameraCapabilities();
 
@@ -249,6 +256,7 @@ protected:
   nsRefPtr<nsPIDOMWindow> mWindow;
   nsRefPtr<ICameraControl> mCameraControl;
   nsRefPtr<CameraRecorderProfiles> mRecorderProfiles;
+  nsRefPtr<CameraClosedListenerProxy<CameraCapabilities>> mListener;
 
 private:
   DISALLOW_EVIL_CONSTRUCTORS(CameraCapabilities);
