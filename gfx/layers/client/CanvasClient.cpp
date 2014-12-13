@@ -112,6 +112,7 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
   if (updated) {
     GetForwarder()->UpdatedTexture(this, mBuffer, nullptr);
     GetForwarder()->UseTexture(this, mBuffer);
+    mBuffer->SyncWithObject(GetForwarder()->GetSyncObject());
   }
 }
 
