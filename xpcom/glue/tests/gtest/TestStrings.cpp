@@ -473,8 +473,10 @@ TEST(Strings, xpidl_string)
   a.Adopt(0);
   ASSERT_TRUE(a.IsVoid());
 
+  /*
   int32_t index = a.FindCharInSet("xyz");
   ASSERT_EQ(index, kNotFound);
+  */
 }
 
 TEST(Strings, empty_assign)
