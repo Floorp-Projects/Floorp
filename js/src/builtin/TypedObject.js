@@ -28,19 +28,10 @@
 #define DESCR_STRUCT_FIELD_OFFSETS(obj) \
     UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS)
 
-// Typed prototype slots
-
-#define TYPROTO_DESCR(obj) \
-    UnsafeGetReservedSlot(obj, JS_TYPROTO_SLOT_DESCR)
-
 // Other
 
 #define HAS_PROPERTY(obj, prop) \
     callFunction(std_Object_hasOwnProperty, obj, prop)
-
-function TypedObjectTypeDescr(typedObj) {
-  return TYPROTO_DESCR(std_Object_getPrototypeOf(typedObj));
-}
 
 ///////////////////////////////////////////////////////////////////////////
 // Getting values

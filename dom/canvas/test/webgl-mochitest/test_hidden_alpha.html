@@ -148,6 +148,7 @@ function Test(gl, prog) {
   prog.aPosCoord = gl.getAttribLocation(prog, 'aPosCoord');
 
   SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("untriaged");
   setTimeout(function(){ Test(gl, prog); }, 500);
 })();
 

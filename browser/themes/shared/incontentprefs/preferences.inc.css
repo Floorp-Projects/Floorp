@@ -141,86 +141,8 @@ treecol {
   -moz-margin-start: 0;
 }
 
-#handlersView {
-  -moz-appearance: none;
-  -moz-margin-start: 0;
-  font-size: 1.25rem;
-  line-height: 22px;
-  color: #333333;
-  border: 1px solid #C1C1C1;
-  border-radius: 2px;
-  background-color: #FBFBFB;
-  overflow-y: auto;
-  height: 500px;
-}
-
-#handlersView > listheader {
-  -moz-appearance: none;
-  border: 0;
-  padding: 0;
-}
-
-#typeColumn,
-#actionColumn {
-  -moz-appearance: none;
-  line-height: 20px;
-  color: #333333;
-  height: 36px;
-  padding: 0 10px;
-  background-color: #FBFBFB;
-  border: 1px solid #C1C1C1;
-  -moz-border-top-colors: none;
-  -moz-border-right-colors: none;
-  -moz-border-bottom-colors: none;
-  -moz-border-left-colors: none;
-}
-
-#typeColumn:-moz-locale-dir(ltr),
-#actionColumn:-moz-locale-dir(rtl) {
-  border-top-left-radius: 2px;
-}
-
-#typeColumn:-moz-locale-dir(rtl),
-#actionColumn:-moz-locale-dir(ltr) {
-  border-top-right-radius: 2px;
-}
-
-#typeColumn:hover,
-#actionColumn:hover {
-  border-color: #0095DD;
-}
-
-#typeColumn:hover:active,
-#actionColumn:hover:active {
-  padding: 0 10px;
-}
-
-#typeColumn > .treecol-sortdirection[sortDirection=ascending],
-#actionColumn > .treecol-sortdirection[sortDirection=ascending],
-#typeColumn > .treecol-sortdirection[sortDirection=descending],
-#actionColumn > .treecol-sortdirection[sortDirection=descending] {
-  -moz-appearance: none;
-  list-style-image: url("chrome://global/skin/in-content/sorter.png");
-}
-
-#typeColumn > .treecol-sortdirection[sortDirection=descending],
-#actionColumn > .treecol-sortdirection[sortDirection=descending] {
-  transform: scaleY(-1);
-}
-
-@media (min-resolution: 2dppx) {
-  #typeColumn > .treecol-sortdirection[sortDirection=ascending],
-  #actionColumn > .treecol-sortdirection[sortDirection=ascending],
-  #typeColumn > .treecol-sortdirection[sortDirection=descending],
-  #actionColumn > .treecol-sortdirection[sortDirection=descending] {
-    width: 12px;
-    height: 8px;
-    list-style-image: url("chrome://global/skin/in-content/sorter@2x.png");
-  }
-}
-
 #handlersView > richlistitem {
-  min-height: 40px !important;
+  min-height: 36px !important;
 }
 
 .typeIcon {
@@ -234,8 +156,7 @@ treecol {
 }
 
 .actionsMenu {
-  height: 40px;
-  max-height: 40px;
+  min-height: 36px;
 }
 
 .actionsMenu > menupopup > menuitem {

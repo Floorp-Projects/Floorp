@@ -33,6 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=77992
 "use strict";
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 
 // We don't use SpecialPowers.pushPrefEnv since it can delay the test
 // function until after the load event has fired which means we can't

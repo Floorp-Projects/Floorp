@@ -70,6 +70,7 @@ function doTest() {
 // regions to empty.
 addLoadEvent(function() { setTimeout(doTest, 1000); } );
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 
 </script>
 </pre>

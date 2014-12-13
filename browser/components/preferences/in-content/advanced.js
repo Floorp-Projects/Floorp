@@ -79,6 +79,15 @@ var gAdvancedPane = {
                      gAdvancedPane.showCertificates);
     setEventListener("viewSecurityDevicesButton", "command",
                      gAdvancedPane.showSecurityDevices);
+
+#ifdef MOZ_WIDGET_GTK
+    // GTK tabbox' allow the scroll wheel to change the selected tab,
+    // but we don't want this behavior for the in-content preferences.
+    let tabsElement = document.getElementById("tabsElement");
+    tabsElement.addEventListener("DOMMouseScroll", event => {
+      event.stopPropagation();
+    }, true);
+#endif
   },
 
   /**

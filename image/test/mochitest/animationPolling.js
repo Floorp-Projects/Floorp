@@ -185,6 +185,7 @@ AnimationTest.prototype.takeBlankSnapshot = function()
 AnimationTest.prototype.beginTest = function()
 {
   SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("untriaged");
 
   currentTest = this;
   this.preloadImage();

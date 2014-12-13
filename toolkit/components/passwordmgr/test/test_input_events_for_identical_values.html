@@ -13,6 +13,7 @@ Login Manager test: input events should fire.
 <script>
 commonInit();
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 
 /** Test for Login Manager: form fill when form is already filled, should not get input events. **/
 

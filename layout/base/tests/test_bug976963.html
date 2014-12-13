@@ -12,6 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=976963
     <script type="text/javascript">
       function prepareTest() {
         SimpleTest.waitForExplicitFinish();
+        SimpleTest.requestFlakyTimeout("untriaged");
         SpecialPowers.pushPrefEnv({
           "set": [
             ["dom.w3c_pointer_events.enabled", true]

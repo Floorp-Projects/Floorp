@@ -134,30 +134,12 @@ class StructTypeDescr;
 class TypedProto;
 
 /*
- * The prototype for a typed object. Currently, carries a link to the
- * type descriptor. Eventually will carry most of the type information
- * we want.
+ * The prototype for a typed object.
  */
 class TypedProto : public NativeObject
 {
   public:
     static const Class class_;
-
-    inline void initTypeDescrSlot(TypeDescr &descr);
-
-    TypeDescr &typeDescr() const {
-        return getReservedSlot(JS_TYPROTO_SLOT_DESCR).toObject().as<TypeDescr>();
-    }
-
-    TypeDescr &maybeForwardedTypeDescr() const {
-        return MaybeForwarded(&getReservedSlot(JS_TYPROTO_SLOT_DESCR).toObject())->as<TypeDescr>();
-    }
-
-    inline type::Kind kind() const;
-
-    static int32_t offsetOfTypeDescr() {
-        return getFixedSlotOffset(JS_TYPROTO_SLOT_DESCR);
-    }
 };
 
 class TypeDescr : public NativeObject
@@ -593,11 +575,11 @@ class TypedObject : public JSObject
     }
 
     TypeDescr &typeDescr() const {
-        return typedProto().typeDescr();
+        return type()->typeDescr();
     }
 
     TypeDescr &maybeForwardedTypeDescr() const {
-        return maybeForwardedTypedProto().maybeForwardedTypeDescr();
+        return MaybeForwarded(&typeDescr())->as<TypeDescr>();
     }
 
     int32_t offset() const;
@@ -871,6 +853,14 @@ bool TypedObjectIsAttached(ThreadSafeContext *cx, unsigned argc, Value *vp);
 extern const JSJitInfo TypedObjectIsAttachedJitInfo;
 
 /*
+ * Usage: TypedObjectTypeDescr(obj)
+ *
+ * Given a TypedObject `obj`, returns the object's type descriptor.
+ */
+bool TypedObjectTypeDescr(ThreadSafeContext *cx, unsigned argc, Value *vp);
+extern const JSJitInfo TypedObjectTypeDescrJitInfo;
+
+/*
  * Usage: ClampToUint8(v)
  *
  * Same as the C function ClampDoubleToUint8. `v` must be a number.
@@ -1127,19 +1117,6 @@ JSObject::is<js::InlineTypedObject>() const
 {
     return getClass() == &js::InlineTransparentTypedObject::class_ ||
            getClass() == &js::InlineOpaqueTypedObject::class_;
-}
-
-inline void
-js::TypedProto::initTypeDescrSlot(TypeDescr &descr)
-{
-    initReservedSlot(JS_TYPROTO_SLOT_DESCR, ObjectValue(descr));
-}
-
-inline js::type::Kind
-js::TypedProto::kind() const {
-    // Defined out of line because it depends on def'n of both
-    // TypedProto and TypeDescr
-    return typeDescr().kind();
 }
 
 #endif /* builtin_TypedObject_h */

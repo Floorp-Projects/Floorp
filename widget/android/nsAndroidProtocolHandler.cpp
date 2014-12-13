@@ -170,6 +170,11 @@ nsAndroidProtocolHandler::NewChannel2(nsIURI* aURI,
     nsCOMPtr<nsIChannel> channel = AndroidChannel::CreateChannel(aURI);
     if (!channel)
         return NS_ERROR_FAILURE;
+
+    // set the loadInfo on the new channel
+    nsresult rv = channel->SetLoadInfo(aLoadInfo);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     NS_ADDREF(*aResult = channel);
     return NS_OK;
 }
