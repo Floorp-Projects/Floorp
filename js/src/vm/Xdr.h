@@ -44,7 +44,7 @@ static const uint32_t XDR_BYTECODE_VERSION =
 #endif
                                                               ));
 
-static_assert(JSErr_Limit == 368,
+static_assert(JSErr_Limit == 369,
               "GREETINGS, POTENTIAL SUBTRAHEND INCREMENTER! If you added or "
               "removed MSG_DEFs from js.msg, you should increment "
               "XDR_BYTECODE_VERSION_SUBTRAHEND and update this assertion's "
