@@ -898,8 +898,15 @@ private:
       }
 
       FrameConstructionItem& item() {
+        MOZ_ASSERT(!IsDone(), "Should have checked IsDone()!");
         return *FrameConstructionItemList::ToItem(mCurrent);
       }
+
+      const FrameConstructionItem& item() const {
+        MOZ_ASSERT(!IsDone(), "Should have checked IsDone()!");
+        return *FrameConstructionItemList::ToItem(mCurrent);
+      }
+
       bool IsDone() const { return mCurrent == mEnd; }
       bool AtStart() const { return mCurrent == PR_NEXT_LINK(mEnd); }
       void Next() {
