@@ -22,6 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=399925
 var triggerDiscardingManually = false;
 var pngResults = new Array();
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 
 window.onload = function() {
   // It'd be nice to reduce the discard timer here, but unfortunately we only

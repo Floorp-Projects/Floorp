@@ -155,14 +155,18 @@ protected:
 class MediaEngineDefault : public MediaEngine
 {
 public:
-  MediaEngineDefault()
-  : mMutex("mozilla::MediaEngineDefault")
+  explicit MediaEngineDefault(bool aHasFakeTracks = false)
+    : mHasFakeTracks(aHasFakeTracks)
+    , mMutex("mozilla::MediaEngineDefault")
   {}
 
   virtual void EnumerateVideoDevices(MediaSourceType,
                                      nsTArray<nsRefPtr<MediaEngineVideoSource> >*);
   virtual void EnumerateAudioDevices(MediaSourceType,
                                      nsTArray<nsRefPtr<MediaEngineAudioSource> >*);
+
+protected:
+  bool mHasFakeTracks;
 
 private:
   ~MediaEngineDefault() {}

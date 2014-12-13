@@ -55,6 +55,7 @@ function delayed_focusarea() {
 }
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 addLoadEvent(delayed_focusarea);
 
 </script>

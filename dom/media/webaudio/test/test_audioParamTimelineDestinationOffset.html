@@ -10,6 +10,8 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+SimpleTest.requestFlakyTimeout("This test needs to wait until the AudioDestinationNode's stream's timer starts.");
+
 var gTest = {
   length: 16384,
   numberOfChannels: 1,

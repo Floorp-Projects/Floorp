@@ -603,9 +603,10 @@ nsXBLPrototypeHandler::GetController(EventTarget* aTarget)
 }
 
 bool
-nsXBLPrototypeHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent,
-                                       uint32_t aCharCode,
-                                       bool aIgnoreShiftKey)
+nsXBLPrototypeHandler::KeyEventMatched(
+                         nsIDOMKeyEvent* aKeyEvent,
+                         uint32_t aCharCode,
+                         const IgnoreModifierState& aIgnoreModifierState)
 {
   if (mDetail != -1) {
     // Get the keycode or charcode of the key event.
@@ -626,7 +627,7 @@ nsXBLPrototypeHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent,
       return false;
   }
 
-  return ModifiersMatchMask(aKeyEvent, aIgnoreShiftKey);
+  return ModifiersMatchMask(aKeyEvent, aIgnoreModifierState);
 }
 
 bool
@@ -645,7 +646,7 @@ nsXBLPrototypeHandler::MouseEventMatched(nsIDOMMouseEvent* aMouseEvent)
   if (mMisc != 0 && (clickcount != mMisc))
     return false;
 
-  return ModifiersMatchMask(aMouseEvent);
+  return ModifiersMatchMask(aMouseEvent, IgnoreModifierState());
 }
 
 struct keyCodeData {
@@ -917,8 +918,9 @@ nsXBLPrototypeHandler::ReportKeyConflict(const char16_t* aKey, const char16_t* a
 }
 
 bool
-nsXBLPrototypeHandler::ModifiersMatchMask(nsIDOMUIEvent* aEvent,
-                                          bool aIgnoreShiftKey)
+nsXBLPrototypeHandler::ModifiersMatchMask(
+                         nsIDOMUIEvent* aEvent,
+                         const IgnoreModifierState& aIgnoreModifierState)
 {
   WidgetInputEvent* inputEvent = aEvent->GetInternalNSEvent()->AsInputEvent();
   NS_ENSURE_TRUE(inputEvent, false);
@@ -929,13 +931,13 @@ nsXBLPrototypeHandler::ModifiersMatchMask(nsIDOMUIEvent* aEvent,
     }
   }
 
-  if (mKeyMask & cOSMask) {
+  if ((mKeyMask & cOSMask) && !aIgnoreModifierState.mOS) {
     if (inputEvent->IsOS() != ((mKeyMask & cOS) != 0)) {
       return false;
     }
   }
 
-  if (mKeyMask & cShiftMask && !aIgnoreShiftKey) {
+  if (mKeyMask & cShiftMask && !aIgnoreModifierState.mShift) {
     if (inputEvent->IsShift() != ((mKeyMask & cShift) != 0)) {
       return false;
     }

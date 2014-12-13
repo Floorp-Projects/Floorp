@@ -38,9 +38,9 @@ const PR_CREATE_FILE = 0x08;
 const PR_TRUNCATE    = 0x20;
 
 function debug(aMsg) {
-//#ifdef DEBUG
+#ifdef DEBUG
   dump("-*- ImportExport.jsm : " + aMsg + "\n");
-//#endif
+#endif
 }
 
 /*
