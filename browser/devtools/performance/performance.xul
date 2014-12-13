@@ -54,13 +54,14 @@
                        data-view="calltree" />
       </hbox>
     </toolbar>
-    <deck id="details-pane"
-         class="devtools-responsive-container"
-         flex="1">
-      <hbox id="waterfall-view" flex="1">
+    <deck id="details-pane" flex="1">
+      <hbox id="waterfall-view">
         <vbox id="waterfall-graph" flex="1" />
         <splitter class="devtools-side-splitter"/>
-        <vbox id="waterfall-details" class="theme-sidebar" width="150" height="150"/>
+        <vbox id="waterfall-details"
+              class="theme-sidebar"
+              width="150"
+              height="150"/>
       </hbox>
 
       <vbox id="calltree-view" class="call-tree" flex="1">
