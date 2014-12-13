@@ -17,10 +17,10 @@ const Cr = Components.results;
 var whichCamera = navigator.mozCameras.getListOfCameras()[0];
 var config = {
   mode: 'picture',
-  recorderProfile: 'cif',
+  recorderProfile: 'high',
   previewSize: {
-    width: 352,
-    height: 288
+    width: 320,
+    height: 240
   }
 };
 var options = {
@@ -137,7 +137,7 @@ var tests = [
         next();
       }
       var recordingOptions = {
-        profile: 'cif',
+        profile: 'high',
         rotation: 0
       };
       camera.startRecording(recordingOptions,
