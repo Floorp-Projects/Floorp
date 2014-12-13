@@ -14,7 +14,7 @@ let WaterfallView = {
   /**
    * Sets up the view with event binding.
    */
-  initialize: Task.async(function *() {
+  initialize: function () {
     this.el = $("#waterfall-view");
     this._stop = this._stop.bind(this);
     this._start = this._start.bind(this);
@@ -32,8 +32,9 @@ let WaterfallView = {
     PerformanceController.on(EVENTS.RECORDING_STARTED, this._start);
     PerformanceController.on(EVENTS.RECORDING_STOPPED, this._stop);
     PerformanceController.on(EVENTS.TIMELINE_DATA, this._onTimelineData);
-    yield this.graph.recalculateBounds();
-  }),
+
+    this.graph.recalculateBounds();
+  },
 
   /**
    * Unbinds events.
@@ -48,11 +49,10 @@ let WaterfallView = {
     PerformanceController.off(EVENTS.TIMELINE_DATA, this._onTimelineData);
   },
 
-  render: Task.async(function *() {
-    yield this.graph.recalculateBounds();
+  render: function () {
     this.graph.setData(this._markers, this._startTime, this._startTime, this._endTime);
     this.emit(EVENTS.WATERFALL_RENDERED);
-  }),
+  },
 
   /**
    * Event handlers
@@ -70,11 +70,11 @@ let WaterfallView = {
   /**
    * Called when recording stops.
    */
-  _stop: Task.async(function *(_, { endTime }) {
+  _stop: function (_, { endTime }) {
     this._endTime = endTime;
     this._markers = this._markers.sort((a,b) => (a.start > b.start));
     this.render();
-  }),
+  },
 
   /**
    * Called when a marker is selected in the waterfall view,
@@ -93,6 +93,7 @@ let WaterfallView = {
    * Called when the marker details view is resized.
    */
   _onResize: function () {
+    this.graph.recalculateBounds();
     this.render();
   },
 
