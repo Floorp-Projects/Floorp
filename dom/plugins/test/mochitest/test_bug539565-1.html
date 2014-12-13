@@ -76,6 +76,7 @@ function runTests() {
 }
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
   </script>

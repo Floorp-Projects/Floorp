@@ -23,6 +23,7 @@ var gInterval;
 
 function run() {
     SimpleTest.waitForExplicitFinish();
+    SimpleTest.requestFlakyTimeout("untriaged");
 
     gIFrame = document.getElementById("display");
 

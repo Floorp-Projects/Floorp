@@ -1132,7 +1132,9 @@ endif
 ifneq ($(PREF_JS_EXPORTS),)
 ifndef NO_DIST_INSTALL
 PREF_JS_EXPORTS_PATH := $(FINAL_TARGET)/$(PREF_DIR)
-PREF_JS_EXPORTS_FLAGS := $(PREF_PPFLAGS)
+# We preprocess these, but they don't necessarily have preprocessor directives,
+# so tell them preprocessor to not complain about that.
+PREF_JS_EXPORTS_FLAGS := $(PREF_PPFLAGS) --silence-missing-directive-warnings
 PP_TARGETS += PREF_JS_EXPORTS
 endif
 endif
@@ -1275,7 +1277,9 @@ endif
 
 ifneq ($(DIST_FILES),)
 DIST_FILES_PATH := $(FINAL_TARGET)
-DIST_FILES_FLAGS := $(XULAPP_DEFINES)
+# We preprocess these, but they don't necessarily have preprocessor directives,
+# so tell them preprocessor to not complain about that.
+DIST_FILES_FLAGS := $(XULAPP_DEFINES) --silence-missing-directive-warnings
 PP_TARGETS += DIST_FILES
 endif
 

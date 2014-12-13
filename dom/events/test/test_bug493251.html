@@ -185,6 +185,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=493251
 
 
   SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("untriaged");
   win = window.open("window_bug493251.html", "_blank" , "width=500,height=500");
 
 </script>

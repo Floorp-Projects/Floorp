@@ -21,6 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=731471
 /** Test for Bug 731471. This is effectively a crashtest, but it uses window.open, which
     doesn't work in the crashtest harness. **/
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 function boom()
 {
     w = window.open("data:text/html,1");

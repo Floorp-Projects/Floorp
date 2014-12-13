@@ -14,6 +14,7 @@
     ok(n >= 0, "The value of now() should be equal to or greater than 0.");
     ok(window.performance.now() >= n, "The value of now() should monotonically increase.");
     SimpleTest.waitForExplicitFinish();
+    SimpleTest.requestFlakyTimeout("untriaged");
 
     // The spec says performance.now() should have micro-second resolution, but allows 1ms if the platform doesn't support it.
     // Our implementation does provide micro-second resolution, except for windows XP combined with some HW properties

@@ -18,7 +18,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=581072
 <script type="application/javascript">
 
 SimpleTest.waitForExplicitFinish();
-  
+SimpleTest.requestFlakyTimeout("untriaged");
+
 /** Test for Bug 581072 **/
 var longTimerFired = 0;
 

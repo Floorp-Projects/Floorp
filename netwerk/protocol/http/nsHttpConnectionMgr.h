@@ -376,6 +376,12 @@ private:
         // connection is currently using spdy.
         bool mUsingSpdy;
 
+        // mTestedSpdy is set after NPN negotiation has occurred and we know
+        // with confidence whether a host speaks spdy or not (which is reflected
+        // in mUsingSpdy). Before mTestedSpdy is set, handshake parallelism is
+        // minimized so that we can multiplex on a single spdy connection.
+        bool mTestedSpdy;
+
         bool mSpdyPreferred;
 
         // Flags to remember our happy-eyeballs decision.
@@ -559,7 +565,7 @@ private:
     nsresult BuildPipeline(nsConnectionEntry *,
                            nsAHttpTransaction *,
                            nsHttpPipeline **);
-    bool     RestrictConnections(nsConnectionEntry *);
+    bool     RestrictConnections(nsConnectionEntry *, bool = false);
     nsresult ProcessNewTransaction(nsHttpTransaction *);
     nsresult EnsureSocketThreadTarget();
     void     ClosePersistentConnections(nsConnectionEntry *ent);

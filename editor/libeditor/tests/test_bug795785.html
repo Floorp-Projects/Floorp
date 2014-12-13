@@ -25,6 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795785
 
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("This test uses setTimeouts in order to fix an intermittent failure.");
 
 // Turn off spatial navigation because it hijacks arrow key events and VK_RETURN
 // events.

@@ -1208,7 +1208,7 @@ inline TypeObject::TypeObject(const Class *clasp, TaggedProto proto, TypeObjectF
 inline void
 TypeObject::finalize(FreeOp *fop)
 {
-    fop->delete_(newScript_.get());
+    fop->delete_(newScriptDontCheckGeneration());
 }
 
 inline uint32_t
@@ -1298,17 +1298,6 @@ TypeObject::getProperty(unsigned i)
         return (Property *) propertySet;
     }
     return propertySet[i];
-}
-
-inline void
-TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
-{
-    if (!newScript || !newScript->fun->runtimeFromAnyThread()->needsIncrementalBarrier())
-        return;
-
-    JS::Zone *zone = newScript->fun->zoneFromAnyThread();
-    if (zone->needsIncrementalBarrier())
-        newScript->trace(zone->barrierTracer());
 }
 
 } } /* namespace js::types */

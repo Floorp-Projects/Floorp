@@ -357,13 +357,15 @@ nsXBLWindowKeyHandler::HandleEventOnCapture(nsIDOMKeyEvent* aEvent)
 // See if the given handler cares about this particular key event
 //
 bool
-nsXBLWindowKeyHandler::EventMatched(nsXBLPrototypeHandler* inHandler,
-                                    nsIAtom* inEventType,
-                                    nsIDOMKeyEvent* inEvent,
-                                    uint32_t aCharCode, bool aIgnoreShiftKey)
+nsXBLWindowKeyHandler::EventMatched(
+                         nsXBLPrototypeHandler* aHandler,
+                         nsIAtom* aEventType,
+                         nsIDOMKeyEvent* aEvent,
+                         uint32_t aCharCode,
+                         const IgnoreModifierState& aIgnoreModifierState)
 {
-  return inHandler->KeyEventMatched(inEventType, inEvent, aCharCode,
-                                    aIgnoreShiftKey);
+  return aHandler->KeyEventMatched(aEventType, aEvent, aCharCode,
+                                   aIgnoreModifierState);
 }
 
 bool
@@ -437,25 +439,29 @@ nsXBLWindowKeyHandler::WalkHandlersInternal(nsIDOMKeyEvent* aKeyEvent,
 
   if (accessKeys.IsEmpty()) {
     return WalkHandlersAndExecute(aKeyEvent, aEventType, aHandler,
-                                  0, false, aExecute);
+                                  0, IgnoreModifierState(), aExecute);
   }
 
   for (uint32_t i = 0; i < accessKeys.Length(); ++i) {
     nsShortcutCandidate &key = accessKeys[i];
+    IgnoreModifierState ignoreModifierState;
+    ignoreModifierState.mShift = key.mIgnoreShift;
     if (WalkHandlersAndExecute(aKeyEvent, aEventType, aHandler,
-                               key.mCharCode, key.mIgnoreShift, aExecute))
+                               key.mCharCode, ignoreModifierState, aExecute)) {
       return true;
+    }
   }
   return false;
 }
 
 bool
-nsXBLWindowKeyHandler::WalkHandlersAndExecute(nsIDOMKeyEvent* aKeyEvent,
-                                              nsIAtom* aEventType,
-                                              nsXBLPrototypeHandler* aHandler,
-                                              uint32_t aCharCode,
-                                              bool aIgnoreShiftKey,
-                                              bool aExecute)
+nsXBLWindowKeyHandler::WalkHandlersAndExecute(
+                         nsIDOMKeyEvent* aKeyEvent,
+                         nsIAtom* aEventType,
+                         nsXBLPrototypeHandler* aHandler,
+                         uint32_t aCharCode,
+                         const IgnoreModifierState& aIgnoreModifierState,
+                         bool aExecute)
 {
   nsresult rv;
 
@@ -469,8 +475,9 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(nsIDOMKeyEvent* aKeyEvent,
     }
 
     if (!EventMatched(currHandler, aEventType, aKeyEvent,
-                      aCharCode, aIgnoreShiftKey))
+                      aCharCode, aIgnoreModifierState)) {
       continue;  // try the next one
+    }
 
     // Before executing this handler, check that it's not disabled,
     // and that it has something to do (oncommand of the <key> or its
@@ -534,6 +541,23 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(nsIDOMKeyEvent* aKeyEvent,
       return true;
     }
   }
+
+#ifdef XP_WIN
+  // Windows native applications ignore Windows-Logo key state when checking
+  // shortcut keys even if the key is pressed.  Therefore, if there is no
+  // shortcut key which exactly matches current modifier state, we should
+  // retry to look for a shortcut key without the Windows-Logo key press.
+  if (!aIgnoreModifierState.mOS) {
+    WidgetKeyboardEvent* keyEvent =
+      aKeyEvent->GetInternalNSEvent()->AsKeyboardEvent();
+    if (keyEvent && keyEvent->IsOS()) {
+      IgnoreModifierState ignoreModifierState(aIgnoreModifierState);
+      ignoreModifierState.mOS = true;
+      return WalkHandlersAndExecute(aKeyEvent, aEventType, aHandler, aCharCode,
+                                    ignoreModifierState, aExecute);
+    }
+  }
+#endif
 
   return false;
 }

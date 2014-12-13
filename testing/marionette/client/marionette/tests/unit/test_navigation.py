@@ -90,6 +90,14 @@ class TestNavigate(MarionetteTestCase):
             print traceback.format_exc()
             self.fail("Should have thrown a MarionetteException instead of %s" % type(inst))
 
+    @skip_if_b2g # about:blocked isn't a well formed uri on b2g
+    def test_should_navigate_to_requested_about_page(self):
+        self.marionette.navigate("about:neterror")
+        self.assertEqual(self.marionette.get_url(), "about:neterror")
+        self.marionette.navigate(self.marionette.absolute_url("test.html"))
+        self.marionette.navigate("about:blocked")
+        self.assertEqual(self.marionette.get_url(), "about:blocked")
+
     def test_find_element_state_complete(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)

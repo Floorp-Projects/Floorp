@@ -26,6 +26,7 @@ function do_test() {
   setTimeout(boom, 200);
 }
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 addLoadEvent(do_test);
 </script>
 

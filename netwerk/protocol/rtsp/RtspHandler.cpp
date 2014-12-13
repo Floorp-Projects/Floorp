@@ -86,6 +86,10 @@ RtspHandler::NewChannel2(nsIURI* aURI,
   rv = rtspChannel->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // set the loadInfo on the new channel
+  rv = rtspChannel->SetLoadInfo(aLoadInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rtspChannel.forget(aResult);
   return NS_OK;
 }

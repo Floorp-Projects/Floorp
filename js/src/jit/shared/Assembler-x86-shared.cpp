@@ -200,5 +200,6 @@ CPUInfo::SetSSEVersion()
         maxSSEVersion = Min(maxSSEVersion, maxEnabledSSEVersion);
 
     static const int AVXBit = 1 << 28;
-    avxPresent = (flagsECX & AVXBit) && avxEnabled;
+    static const int XSAVEBit = 1 << 27;
+    avxPresent = (flagsECX & AVXBit) && (flagsECX & XSAVEBit) && avxEnabled;
 }

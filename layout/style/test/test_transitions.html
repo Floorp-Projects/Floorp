@@ -45,6 +45,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435441
 
 // Run tests simultaneously so we don't have to take up too much time.
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 var gTestsRunning = 0;
 function TestStarted() { ++gTestsRunning; }
 function TestFinished() { if (--gTestsRunning == 0) SimpleTest.finish(); }
