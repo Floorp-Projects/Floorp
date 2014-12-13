@@ -23,7 +23,7 @@ public:
   // Construct a new blocking stream to uncompress the given base stream.  The
   // base stream must also be blocking.  The base stream does not have to be
   // buffered.
-  SnappyUncompressInputStream(nsIInputStream* aBaseStream);
+  explicit SnappyUncompressInputStream(nsIInputStream* aBaseStream);
 
 private:
   virtual ~SnappyUncompressInputStream();

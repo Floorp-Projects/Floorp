@@ -415,7 +415,7 @@ private:
 class MOZ_STACK_CLASS MaybeDisconnect
 {
 public:
-  MaybeDisconnect(WebSocketImpl* aImpl)
+  explicit MaybeDisconnect(WebSocketImpl* aImpl)
     : mImpl(aImpl)
   {
   }
