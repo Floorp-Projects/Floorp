@@ -29,8 +29,8 @@ function* performTest() {
 function* testGraph(graph) {
   yield graph.setDataWhenReady(TEST_DATA);
 
-  is(graph._gutter.hidden, false,
-    "The gutter should not be hidden.");
+  is(graph._gutter.hidden, true,
+    "The gutter should be hidden, since there's no data available.");
   is(graph._maxTooltip.hidden, true,
     "The max tooltip should be hidden.");
   is(graph._avgTooltip.hidden, true,
