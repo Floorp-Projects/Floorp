@@ -7,14 +7,78 @@
 #include "DOMCameraCapabilities.h"
 #include "nsPIDOMWindow.h"
 #include "nsContentUtils.h"
+#include "nsProxyRelease.h"
 #include "mozilla/dom/CameraManagerBinding.h"
 #include "mozilla/dom/CameraCapabilitiesBinding.h"
 #include "Navigator.h"
 #include "CameraCommon.h"
 #include "ICameraControl.h"
+#include "CameraControlListener.h"
 
 namespace mozilla {
 namespace dom {
+
+/**
+ * CameraClosedListenerProxy and CameraClosedMessage
+ */
+template<class T>
+class CameraClosedMessage : public nsRunnable
+{
+public:
+  CameraClosedMessage(nsMainThreadPtrHandle<T> aListener)
+    : mListener(aListener)
+  {
+    DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  }
+
+  NS_IMETHODIMP
+  Run() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsRefPtr<T> listener = mListener.get();
+    if (listener) {
+      listener->OnHardwareClosed();
+    }
+    return NS_OK;
+  }
+
+protected:
+  virtual ~CameraClosedMessage()
+  {
+    DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  }
+
+  nsMainThreadPtrHandle<T> mListener;
+};
+
+template<class T>
+class CameraClosedListenerProxy : public CameraControlListener
+{
+public:
+  CameraClosedListenerProxy(T* aListener)
+    : mListener(new nsMainThreadPtrHolder<T>(aListener))
+  {
+    DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  }
+
+  virtual void
+  OnHardwareStateChange(HardwareState aState, nsresult aReason) MOZ_OVERRIDE
+  {
+    if (aState != kHardwareClosed) {
+      return;
+    }
+    NS_DispatchToMainThread(new CameraClosedMessage<T>(mListener));
+  }
+
+protected:
+  virtual ~CameraClosedListenerProxy()
+  {
+    DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  }
+
+  nsMainThreadPtrHandle<T> mListener;
+};
 
 /**
  * CameraRecorderVideoProfile
@@ -96,7 +160,10 @@ CameraRecorderAudioProfile::~CameraRecorderAudioProfile()
 /**
  * CameraRecorderProfile
  */
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CameraRecorderProfile, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CameraRecorderProfile,
+                                      mParent,
+                                      mVideo,
+                                      mAudio)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(CameraRecorderProfile)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(CameraRecorderProfile)
@@ -136,7 +203,9 @@ CameraRecorderProfile::~CameraRecorderProfile()
 /**
  * CameraRecorderProfiles
  */
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CameraRecorderProfiles, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CameraRecorderProfiles,
+                                      mParent,
+                                      mProfiles)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(CameraRecorderProfiles)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(CameraRecorderProfiles)
@@ -158,6 +227,10 @@ CameraRecorderProfiles::CameraRecorderProfiles(nsISupports* aParent,
   , mCameraControl(aCameraControl)
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  if (mCameraControl) {
+    mListener = new CameraClosedListenerProxy<CameraRecorderProfiles>(this);
+    mCameraControl->AddListener(mListener);
+  }
 }
 
 CameraRecorderProfiles::~CameraRecorderProfiles()
@@ -170,6 +243,10 @@ CameraRecorderProfiles::GetSupportedNames(unsigned aFlags, nsTArray<nsString>& a
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p, flags=0x%x\n",
     __func__, __LINE__, this, aFlags);
+  if (!mCameraControl) {
+    aNames.Clear();
+    return;
+  }
 
   nsresult rv = mCameraControl->GetRecorderProfiles(aNames);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -182,6 +259,9 @@ CameraRecorderProfiles::NamedGetter(const nsAString& aName, bool& aFound)
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p, name='%s'\n", __func__, __LINE__, this,
     NS_ConvertUTF16toUTF8(aName).get());
+  if (!mCameraControl) {
+    return nullptr;
+  }
 
   CameraRecorderProfile* profile = mProfiles.GetWeak(aName, &aFound);
   if (!aFound || !profile) {
@@ -204,10 +284,25 @@ CameraRecorderProfiles::NameIsEnumerable(const nsAString& aName)
   return true;
 }
 
+void
+CameraRecorderProfiles::OnHardwareClosed()
+{
+  DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mCameraControl) {
+    mCameraControl->RemoveListener(mListener);
+    mCameraControl = nullptr;
+  }
+  mListener = nullptr;
+}
+
 /**
  * CameraCapabilities
  */
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CameraCapabilities, mWindow)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CameraCapabilities,
+                                      mWindow,
+                                      mRecorderProfiles)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(CameraCapabilities)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(CameraCapabilities)
@@ -236,13 +331,29 @@ CameraCapabilities::CameraCapabilities(nsPIDOMWindow* aWindow,
   , mCameraControl(aCameraControl)
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
-  MOZ_COUNT_CTOR(CameraCapabilities);
+  if (mCameraControl) {
+    mListener = new CameraClosedListenerProxy<CameraCapabilities>(this);
+    mCameraControl->AddListener(mListener);
+  }
 }
 
 CameraCapabilities::~CameraCapabilities()
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
   MOZ_COUNT_DTOR(CameraCapabilities);
+}
+
+void
+CameraCapabilities::OnHardwareClosed()
+{
+  DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mCameraControl) {
+    mCameraControl->RemoveListener(mListener);
+    mCameraControl = nullptr;
+  }
+  mListener = nullptr;
 }
 
 JSObject*
@@ -262,6 +373,10 @@ CameraCapabilities::WrapObject(JSContext* aCx)
 nsresult
 CameraCapabilities::TranslateToDictionary(uint32_t aKey, nsTArray<CameraSize>& aSizes)
 {
+  if (NS_WARN_IF(!mCameraControl)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   nsresult rv;
   nsTArray<ICameraControl::Size> sizes;
 
@@ -328,6 +443,10 @@ CameraCapabilities::GetVideoSizes(nsTArray<dom::CameraSize>& retval)
 void
 CameraCapabilities::GetFileFormats(nsTArray<nsString>& retval)
 {
+  if (NS_WARN_IF(!mCameraControl)) {
+    return;
+  }
+
   if (mFileFormats.Length() == 0) {
     nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_PICTUREFORMATS,
                                       mFileFormats);
@@ -339,6 +458,10 @@ CameraCapabilities::GetFileFormats(nsTArray<nsString>& retval)
 void
 CameraCapabilities::GetWhiteBalanceModes(nsTArray<nsString>& retval)
 {
+  if (NS_WARN_IF(!mCameraControl)) {
+    return;
+  }
+
   if (mWhiteBalanceModes.Length() == 0) {
     nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_WHITEBALANCES,
                                       mWhiteBalanceModes);
@@ -350,6 +473,10 @@ CameraCapabilities::GetWhiteBalanceModes(nsTArray<nsString>& retval)
 void
 CameraCapabilities::GetSceneModes(nsTArray<nsString>& retval)
 {
+  if (NS_WARN_IF(!mCameraControl)) {
+    return;
+  }
+
   if (mSceneModes.Length() == 0) {
     nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_SCENEMODES,
                                       mSceneModes);
@@ -361,6 +488,10 @@ CameraCapabilities::GetSceneModes(nsTArray<nsString>& retval)
 void
 CameraCapabilities::GetEffects(nsTArray<nsString>& retval)
 {
+  if (NS_WARN_IF(!mCameraControl)) {
+    return;
+  }
+
   if (mEffects.Length() == 0) {
     nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_EFFECTS,
                                       mEffects);
@@ -372,6 +503,10 @@ CameraCapabilities::GetEffects(nsTArray<nsString>& retval)
 void
 CameraCapabilities::GetFlashModes(nsTArray<nsString>& retval)
 {
+  if (NS_WARN_IF(!mCameraControl)) {
+    return;
+  }
+
   if (mFlashModes.Length() == 0) {
     nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_FLASHMODES,
                                       mFlashModes);
@@ -383,6 +518,10 @@ CameraCapabilities::GetFlashModes(nsTArray<nsString>& retval)
 void
 CameraCapabilities::GetFocusModes(nsTArray<nsString>& retval)
 {
+  if (NS_WARN_IF(!mCameraControl)) {
+    return;
+  }
+
   if (mFocusModes.Length() == 0) {
     nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_FOCUSMODES,
                                       mFocusModes);
@@ -394,6 +533,10 @@ CameraCapabilities::GetFocusModes(nsTArray<nsString>& retval)
 void
 CameraCapabilities::GetZoomRatios(nsTArray<double>& retval)
 {
+  if (NS_WARN_IF(!mCameraControl)) {
+    return;
+  }
+
   if (mZoomRatios.Length() == 0) {
     nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_ZOOMRATIOS,
                                       mZoomRatios);
@@ -405,6 +548,10 @@ CameraCapabilities::GetZoomRatios(nsTArray<double>& retval)
 uint32_t
 CameraCapabilities::MaxFocusAreas()
 {
+  if (NS_WARN_IF(!mCameraControl)) {
+    return 0;
+  }
+
   if (mMaxFocusAreas == 0) {
     int32_t areas;
     nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_MAXFOCUSAREAS,
@@ -418,6 +565,10 @@ CameraCapabilities::MaxFocusAreas()
 uint32_t
 CameraCapabilities::MaxMeteringAreas()
 {
+  if (NS_WARN_IF(!mCameraControl)) {
+    return 0;
+  }
+
   if (mMaxMeteringAreas == 0) {
     int32_t areas;
     nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_MAXMETERINGAREAS,
@@ -431,6 +582,10 @@ CameraCapabilities::MaxMeteringAreas()
 uint32_t
 CameraCapabilities::MaxDetectedFaces()
 {
+  if (NS_WARN_IF(!mCameraControl)) {
+    return 0;
+  }
+
   if (mMaxDetectedFaces == 0) {
     int32_t faces;
     nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_MAXDETECTEDFACES,
@@ -444,6 +599,10 @@ CameraCapabilities::MaxDetectedFaces()
 double
 CameraCapabilities::MinExposureCompensation()
 {
+  if (NS_WARN_IF(!mCameraControl)) {
+    return 0.0;
+  }
+
   if (mMinExposureCompensation == 0.0) {
     nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_MINEXPOSURECOMPENSATION,
                                       mMinExposureCompensation);
@@ -455,6 +614,10 @@ CameraCapabilities::MinExposureCompensation()
 double
 CameraCapabilities::MaxExposureCompensation()
 {
+  if (NS_WARN_IF(!mCameraControl)) {
+    return 0.0;
+  }
+
   if (mMaxExposureCompensation == 0.0) {
     nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_MAXEXPOSURECOMPENSATION,
                                       mMaxExposureCompensation);
@@ -466,6 +629,10 @@ CameraCapabilities::MaxExposureCompensation()
 double
 CameraCapabilities::ExposureCompensationStep()
 {
+  if (NS_WARN_IF(!mCameraControl)) {
+    return 0.0;
+  }
+
   if (mExposureCompensationStep == 0.0) {
     nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_EXPOSURECOMPENSATIONSTEP,
                                       mExposureCompensationStep);
@@ -477,6 +644,10 @@ CameraCapabilities::ExposureCompensationStep()
 CameraRecorderProfiles*
 CameraCapabilities::RecorderProfiles()
 {
+  if (NS_WARN_IF(!mCameraControl)) {
+    return nullptr;
+  }
+
   nsRefPtr<CameraRecorderProfiles> profiles = mRecorderProfiles;
   if (!mRecorderProfiles) {
     profiles = new CameraRecorderProfiles(this, mCameraControl);
@@ -488,6 +659,10 @@ CameraCapabilities::RecorderProfiles()
 void
 CameraCapabilities::GetIsoModes(nsTArray<nsString>& retval)
 {
+  if (NS_WARN_IF(!mCameraControl)) {
+    return;
+  }
+
   if (mIsoModes.Length() == 0) {
     nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_ISOMODES,
                                       mIsoModes);
