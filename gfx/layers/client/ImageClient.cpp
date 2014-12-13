@@ -242,9 +242,6 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
 
   mLastPaintedImageSerial = image->GetSerial();
   aContainer->NotifyPaintedImage(image);
-
-  texture->SyncWithObject(GetForwarder()->GetSyncObject());
-
   return true;
 }
 

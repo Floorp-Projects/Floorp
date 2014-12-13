@@ -158,8 +158,6 @@ MOZ_BEGIN_ENUM_CLASS(DeprecatedTextureHostFlags, uint8_t)
 MOZ_END_ENUM_CLASS(DeprecatedTextureHostFlags)
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DeprecatedTextureHostFlags)
 
-typedef void* SyncHandle;
-
 /**
  * Sent from the compositor to the content-side LayerManager, includes properties
  * of the compositor and should (in the future) include information about what
@@ -173,21 +171,18 @@ struct TextureFactoryIdentifier
   int32_t mMaxTextureSize;
   bool mSupportsTextureBlitting;
   bool mSupportsPartialUploads;
-  SyncHandle mSyncHandle;
 
   explicit TextureFactoryIdentifier(LayersBackend aLayersBackend = LayersBackend::LAYERS_NONE,
                                     GeckoProcessType aParentProcessId = GeckoProcessType_Default,
                                     int32_t aMaxTextureSize = 4096,
                                     bool aSupportsTextureBlitting = false,
-                                    bool aSupportsPartialUploads = false,
-                                    SyncHandle aSyncHandle = nullptr)
+                                    bool aSupportsPartialUploads = false)
     : mParentBackend(aLayersBackend)
     , mParentProcessId(aParentProcessId)
     , mSupportedBlendModes(gfx::CompositionOp::OP_OVER)
     , mMaxTextureSize(aMaxTextureSize)
     , mSupportsTextureBlitting(aSupportsTextureBlitting)
     , mSupportsPartialUploads(aSupportsPartialUploads)
-    , mSyncHandle(aSyncHandle)
   {}
 };
 

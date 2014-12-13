@@ -66,7 +66,6 @@ struct DeviceAttachmentsD3D11
   RefPtr<ID3D11BlendState> mNonPremulBlendState;
   RefPtr<ID3D11BlendState> mComponentBlendState;
   RefPtr<ID3D11BlendState> mDisabledBlendState;
-  RefPtr<IDXGIResource> mSyncTexture;
 };
 
 CompositorD3D11::CompositorD3D11(nsIWidget* aWidget)
@@ -274,24 +273,6 @@ CompositorD3D11::Initialize()
     if (FAILED(hr)) {
       return false;
     }
-
-    CD3D11_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, 1, 1, 1, 1,
-                                D3D11_BIND_SHADER_RESOURCE |
-                                D3D11_BIND_RENDER_TARGET);
-    desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
-
-    RefPtr<ID3D11Texture2D> texture;
-    hr = mDevice->CreateTexture2D(&desc, nullptr, byRef(texture));
-    
-    if (FAILED(hr)) {
-      return false;
-    }
-
-    hr = texture->QueryInterface((IDXGIResource**)byRef(mAttachments->mSyncTexture));
-
-    if (FAILED(hr)) {
-      return false;
-    }
   }
 
   nsRefPtr<IDXGIDevice> dxgiDevice;
@@ -396,13 +377,6 @@ CompositorD3D11::GetTextureFactoryIdentifier()
   ident.mMaxTextureSize = GetMaxTextureSize();
   ident.mParentProcessId = XRE_GetProcessType();
   ident.mParentBackend = LayersBackend::LAYERS_D3D11;
-  if (mAttachments->mSyncTexture) {
-    HRESULT hr = mAttachments->mSyncTexture->GetSharedHandle(&ident.mSyncHandle);
-    if (FAILED(hr) || !ident.mSyncHandle) {
-      gfxCriticalError() << "Failed to get SharedHandle for sync texture. Result: " << hr;
-      MOZ_CRASH();
-    }
-  }
   return ident;
 }
 
@@ -908,13 +882,6 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   // ClearRect will set the correct blend state for us.
   ClearRect(Rect(invalidRect.x, invalidRect.y, invalidRect.width, invalidRect.height));
-
-  RefPtr<IDXGIKeyedMutex> mutex;
-  mAttachments->mSyncTexture->QueryInterface((IDXGIKeyedMutex**)byRef(mutex));
-
-  MOZ_ASSERT(mutex);
-  mutex->AcquireSync(0, INFINITE);
-  mutex->ReleaseSync(0);
 }
 
 void
