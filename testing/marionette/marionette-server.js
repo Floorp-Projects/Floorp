@@ -673,27 +673,29 @@ MarionetteServerConnection.prototype = {
 
   /**
    * Update the sessionCapabilities object with the keys that have been
-   * passed in when a new session is created
-   * This part of the WebDriver spec is currently in flux see
+   * passed in when a new session is created.
+   *
+   * This part of the WebDriver spec is currently in flux, see
    * http://lists.w3.org/Archives/Public/public-browser-tools-testing/2014OctDec/0000.html
    *
-   * This is not a public API, only available when a new Session is created
+   * This is not a public API, only available when a new session is
+   * created.
    *
-   * @param Object capabilities holds all the keys for capabilities
-   *
+   * @param Object newCaps key/value dictionary to overwrite
+   *   session's current capabilities
    */
-  setSessionCapabilities: function MDA_setSessionCapabilities (capabilities) {
-    this.command_id = this.getCommandId();
-    var tempCapabilities = {};
-    for (var caps in this.sessionCapabilities) {
-      tempCapabilities[caps] = this.sessionCapabilities[caps];
-    }
+  setSessionCapabilities: function(newCaps) {
+    const copy = (from, to={}) => {
+      for (let key in from) {
+        to[key] = from[key];
+      }
+      return to;
+    };
 
-    for (var caps in capabilities) {
-      tempCapabilities[caps] = capabilities[caps];
-    }
-
-    this.sessionCapabilities = tempCapabilities;
+    // Clone, overwrite, and set.
+    let caps = copy(this.sessionCapabilities);
+    caps = copy(newCaps, caps);
+    this.sessionCapabilities = caps;
   },
 
   /**
