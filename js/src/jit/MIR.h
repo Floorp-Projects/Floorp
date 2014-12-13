@@ -11343,10 +11343,8 @@ class MTypeBarrier
     }
 
     void printOpcode(FILE *fp) const;
+    bool congruentTo(const MDefinition *def) const;
 
-    bool congruentTo(const MDefinition *def) const {
-        return false;
-    }
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }

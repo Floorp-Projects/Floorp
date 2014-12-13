@@ -1207,6 +1207,19 @@ MTypeBarrier::printOpcode(FILE *fp) const
     getOperand(0)->printName(fp);
 }
 
+bool
+MTypeBarrier::congruentTo(const MDefinition *def) const
+{
+    if (!def->isTypeBarrier())
+        return false;
+    const MTypeBarrier *other = def->toTypeBarrier();
+    if (barrierKind() != other->barrierKind() || isGuard() != other->isGuard())
+        return false;
+    if (!resultTypeSet()->equals(other->resultTypeSet()))
+        return false;
+    return congruentIfOperandsEqual(other);
+}
+
 #ifdef DEBUG
 void
 MPhi::assertLoopPhi() const
@@ -4355,11 +4368,8 @@ TryAddTypeBarrierForWrite(TempAllocator &alloc, types::CompilerConstraintList *c
         if (!aggregateProperty) {
             aggregateProperty.emplace(property);
         } else {
-            if (!aggregateProperty->maybeTypes()->isSubset(property.maybeTypes()) ||
-                !property.maybeTypes()->isSubset(aggregateProperty->maybeTypes()))
-            {
+            if (!aggregateProperty->maybeTypes()->equals(property.maybeTypes()))
                 return false;
-            }
         }
     }
 
