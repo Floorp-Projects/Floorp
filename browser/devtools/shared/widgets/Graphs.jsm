@@ -1429,8 +1429,7 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     this._maxTooltip.hidden = !totalTicks || distanceMinMax < LINE_GRAPH_MIN_MAX_TOOLTIP_DISTANCE;
     this._avgTooltip.hidden = !totalTicks;
     this._minTooltip.hidden = !totalTicks;
-
-    this._gutter.hidden = !this.withTooltipArrows;
+    this._gutter.hidden = !totalTicks || !this.withTooltipArrows;
   },
 
   /**
@@ -1440,6 +1439,7 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   _createGutter: function() {
     let gutter = this._document.createElementNS(HTML_NS, "div");
     gutter.className = "line-graph-widget-gutter";
+    gutter.setAttribute("hidden", true);
     this._container.appendChild(gutter);
 
     return gutter;
