@@ -562,6 +562,9 @@ IonBuilder::analyzeNewLoopTypes(MBasicBlock *entry, jsbytecode *start, jsbytecod
               case JSOP_TYPEOFEXPR:
                 type = MIRType_String;
                 break;
+              case JSOP_SYMBOL:
+                type = MIRType_Symbol;
+                break;
               case JSOP_ADD:
               case JSOP_SUB:
               case JSOP_MUL:
@@ -1519,6 +1522,12 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_STRING:
         return pushConstant(StringValue(info().getAtom(pc)));
+
+      case JSOP_SYMBOL: {
+        unsigned which = GET_UINT8(pc);
+        JS::Symbol *sym = compartment->runtime()->wellKnownSymbols().get(which);
+        return pushConstant(SymbolValue(sym));
+      }
 
       case JSOP_ZERO:
         return pushConstant(Int32Value(0));
