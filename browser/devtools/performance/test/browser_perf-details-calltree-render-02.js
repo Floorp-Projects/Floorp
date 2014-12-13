@@ -15,6 +15,7 @@ function spawnTest () {
 
   yield startRecording(panel);
   yield busyWait(100);
+
   yield stopRecording(panel);
   yield rendered;
 
