@@ -308,6 +308,7 @@
   transform-origin: left center;
 }
 
+.waterfall-marker-container.selected > .waterfall-sidebar,
 .waterfall-marker-container.selected > .waterfall-marker-item {
   background-color: var(--theme-selection-background);
   color: var(--theme-selection-color);
