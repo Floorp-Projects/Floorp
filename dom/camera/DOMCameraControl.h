@@ -95,6 +95,8 @@ public:
   void SetIsoMode(const nsAString& aMode, ErrorResult& aRv);
   double GetPictureQuality(ErrorResult& aRv);
   void SetPictureQuality(double aQuality, ErrorResult& aRv);
+  void GetMeteringMode(nsString& aMode, ErrorResult& aRv);
+  void SetMeteringMode(const nsAString& aMode, ErrorResult& aRv);
 
   // Methods.
   already_AddRefed<dom::Promise> SetConfiguration(const dom::CameraConfiguration& aConfiguration,

@@ -492,6 +492,19 @@ nsDOMCameraControl::SetPictureQuality(double aQuality, ErrorResult& aRv)
   aRv = mCameraControl->Set(CAMERA_PARAM_PICTURE_QUALITY, aQuality);
 }
 
+void
+nsDOMCameraControl::GetMeteringMode(nsString& aMode, ErrorResult& aRv)
+{
+  THROW_IF_NO_CAMERACONTROL();
+  aRv = mCameraControl->Get(CAMERA_PARAM_METERINGMODE, aMode);
+}
+void
+nsDOMCameraControl::SetMeteringMode(const nsAString& aMode, ErrorResult& aRv)
+{
+  THROW_IF_NO_CAMERACONTROL();
+  aRv = mCameraControl->Set(CAMERA_PARAM_METERINGMODE, aMode);
+}
+
 double
 nsDOMCameraControl::GetZoom(ErrorResult& aRv)
 {
