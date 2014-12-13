@@ -21,7 +21,6 @@
 #include "mozilla/ipc/Shmem.h"          // for Shmem
 #include "mozilla/layers/AtomicRefCountedWithFinalize.h"
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags, etc
-#include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsAutoPtr.h"                  // for nsRefPtr
@@ -72,27 +71,6 @@ enum TextureAllocationFlags {
   ALLOC_DEFAULT = 0,
   ALLOC_CLEAR_BUFFER = 1,
   ALLOC_CLEAR_BUFFER_WHITE = 2
-};
-
-typedef void* SyncHandle;
-
-class SyncObject : public RefCounted<SyncObject>
-{
-public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SyncObject)
-  virtual ~SyncObject() { }
-
-  static TemporaryRef<SyncObject> CreateSyncObject(SyncHandle aHandle);
-
-  MOZ_BEGIN_NESTED_ENUM_CLASS(SyncType)
-    D3D11,
-  MOZ_END_NESTED_ENUM_CLASS(SyncType)
-
-  virtual SyncType GetSyncType() = 0;
-  virtual void FinalizeFrame() = 0;
-
-protected:
-  SyncObject() { }
 };
 
 /**
@@ -455,8 +433,6 @@ public:
    virtual void SetReadbackSink(TextureReadbackSink* aReadbackSink) {
      mReadbackSink = aReadbackSink;
    }
-   
-   virtual void SyncWithObject(SyncObject* aSyncObject) { }
 
 private:
   /**
