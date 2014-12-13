@@ -87,7 +87,6 @@ if CONFIG['MOZ_MEMORY']:
 #    'TestPipes',
 #    'TestPriorityQueue',
 #    'TestStorageStream',
-#    'TestStrings',
 #    'TestSynchronization',
 #    'TestTArray',
 #    'TestThreadPool',
