@@ -220,6 +220,7 @@ public:
   double MaxExposureCompensation();
   double ExposureCompensationStep();
   void GetIsoModes(nsTArray<nsString>& aRetVal);
+  void GetMeteringModes(nsTArray<nsString>& aRetVal);
 
   CameraRecorderProfiles* RecorderProfiles();
 
@@ -230,32 +231,8 @@ protected:
 
   nsresult TranslateToDictionary(uint32_t aKey, nsTArray<CameraSize>& aSizes);
 
-  nsTArray<CameraSize> mPreviewSizes;
-  nsTArray<CameraSize> mPictureSizes;
-  nsTArray<CameraSize> mThumbnailSizes;
-  nsTArray<CameraSize> mVideoSizes;
-
-  nsTArray<nsString> mFileFormats;
-  nsTArray<nsString> mWhiteBalanceModes;
-  nsTArray<nsString> mSceneModes;
-  nsTArray<nsString> mEffects;
-  nsTArray<nsString> mFlashModes;
-  nsTArray<nsString> mFocusModes;
-  nsTArray<nsString> mIsoModes;
-
-  nsTArray<double> mZoomRatios;
-
-  uint32_t mMaxFocusAreas;
-  uint32_t mMaxMeteringAreas;
-  uint32_t mMaxDetectedFaces;
-
-  double mMinExposureCompensation;
-  double mMaxExposureCompensation;
-  double mExposureCompensationStep;
-
   nsRefPtr<nsPIDOMWindow> mWindow;
   nsRefPtr<ICameraControl> mCameraControl;
-  nsRefPtr<CameraRecorderProfiles> mRecorderProfiles;
   nsRefPtr<CameraClosedListenerProxy<CameraCapabilities>> mListener;
 
 private:

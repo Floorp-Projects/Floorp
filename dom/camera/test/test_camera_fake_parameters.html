@@ -401,6 +401,34 @@ var tests = [
       nextSize();
     },
   },
+  {
+    key: "bug-1052851",
+    prep: function setupFakeMetering(test) {
+      // We should reject duplicate values.
+      test.setFakeParameters(
+        "auto-exposure=frame-average;auto-exposure-values=spot,frame-average,center-weighted,spot,center-weighted",
+        function () {
+        run();
+      });
+    },
+    test: function testFakeMetering(cam, cap) {
+      ok(cap.meteringModes.length == 3, "Metering modes length = " + cap.meteringModes.length);
+
+      // make sure expected values are present
+      [ "spot", "frame-average", "center-weighted" ].forEach(function(mode) {
+        ok(cap.meteringModes.indexOf(mode) != -1, "Metering mode '" + mode + "' is present");
+      });
+
+      // test setters/getters for individual metering modes
+      cap.meteringModes.forEach(function(mode, index) {
+        cam.meteringMode = mode;
+        ok(cam.meteringMode === mode,
+          "Metering Mode[" + index + "] = " + mode + ", cam.meteringMode = " + cam.meteringMode);
+      });
+
+      next();
+    }
+  },
 ];
 
 var testGenerator = function() {

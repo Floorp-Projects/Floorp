@@ -289,6 +289,11 @@ interface CameraControl : MediaStream
      same orientation as the real world. */
   readonly attribute long   sensorAngle;
 
+  /* the mode the camera will use to determine the correct exposure of
+     the scene; supported modes are exposed by capabilities.meteringModes. */
+  [Throws]
+  attribute DOMString       meteringMode;
+
   /* tell the camera to attempt to focus the image */
   [Throws]
   Promise<boolean> autoFocus();
