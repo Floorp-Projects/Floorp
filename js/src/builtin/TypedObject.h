@@ -1060,7 +1060,7 @@ class LazyArrayBufferTable
     Map map;
 
   public:
-    LazyArrayBufferTable(JSContext *cx);
+    explicit LazyArrayBufferTable(JSContext *cx);
     ~LazyArrayBufferTable();
 
     ArrayBufferObject *maybeBuffer(InlineTransparentTypedObject *obj);
