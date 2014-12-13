@@ -180,7 +180,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   }
   gPrototypeProperties['TypedArray'] =
     ["length", "buffer", "byteLength", "byteOffset", kIteratorSymbol, "subarray",
-     "set", "copyWithin", "find", "findIndex"];
+     "set", "copyWithin", "find", "findIndex", "indexOf", "lastIndexOf"];
 
   for (var c of errorObjectClasses) {
       gPrototypeProperties[c] = ["constructor", "name",

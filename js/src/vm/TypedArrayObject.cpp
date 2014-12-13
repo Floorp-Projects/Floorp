@@ -783,6 +783,8 @@ TypedArrayObject::protoFunctions[] = {
     JS_FN("copyWithin", TypedArrayObject::copyWithin, 2, 0),
     JS_SELF_HOSTED_FN("find", "TypedArrayFind", 2, 0),
     JS_SELF_HOSTED_FN("findIndex", "TypedArrayFindIndex", 2, 0),
+    JS_SELF_HOSTED_FN("indexOf", "TypedArrayIndexOf", 2, 0),
+    JS_SELF_HOSTED_FN("lastIndexOf", "TypedArrayLastIndexOf", 2, 0),
     JS_FS_END
 };
 
