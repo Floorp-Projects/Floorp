@@ -2712,15 +2712,21 @@ nsLineLayout::TextAlignLine(nsLineBox* aLine,
     }
   }
 
-  if ((remainingISize > 0 || textAlignTrue) &&
-      !(mBlockReflowState->frame->IsSVGText())) {
+  bool isSVG = mBlockReflowState->frame->IsSVGText();
+  bool doTextAlign = remainingISize > 0 || textAlignTrue;
 
+  int32_t opportunities = 0;
+  if (!isSVG && (mHasRuby || (doTextAlign &&
+                              textAlign == NS_STYLE_TEXT_ALIGN_JUSTIFY))) {
+    JustificationComputationState computeState = {
+      nullptr // mLastParticipant
+    };
+    opportunities = ComputeFrameJustification(psd, computeState);
+  }
+
+  if (!isSVG && doTextAlign) {
     switch (textAlign) {
       case NS_STYLE_TEXT_ALIGN_JUSTIFY: {
-        JustificationComputationState computeState = {
-          nullptr // mLastParticipant
-        };
-        int32_t opportunities = ComputeFrameJustification(psd, computeState);
         if (opportunities > 0) {
           JustificationApplicationState applyState(
               opportunities * 2, remainingISize);
