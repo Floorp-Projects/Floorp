@@ -22,6 +22,7 @@ const gWaitTime = 20;
 var gSvg = document.getElementById("svg");
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 
 function main() {
   ok(gSvg.animationsPaused(), "should be paused by <svg> load handler");

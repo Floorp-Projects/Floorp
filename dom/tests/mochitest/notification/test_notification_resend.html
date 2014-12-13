@@ -18,6 +18,8 @@
   var notifications = [];
   var manifestURL;
 
+  SimpleTest.requestFlakyTimeout("untriaged");
+
   var steps = [
     function (done) {
       if (window.Notification) {

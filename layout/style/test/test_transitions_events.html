@@ -56,6 +56,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=531585
 /** Test for Bug 531585 (transitionend event) **/
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 var gTestCount = 0;
 function started_test() { ++gTestCount; }
 function finished_test() { if (--gTestCount == 0) { SimpleTest.finish(); } }

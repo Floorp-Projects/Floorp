@@ -1281,19 +1281,23 @@ function get(msg) {
   function checkLoad() {
     checkTimer.cancel();
     end = new Date().getTime();
-    let errorRegex = /about:.+(error)|(blocked)\?/;
+    let aboutErrorRegex = /about:.+(error)\?/;
     let elapse = end - start;
     if (msg.json.pageTimeout == null || elapse <= msg.json.pageTimeout) {
       if (curFrame.document.readyState == "complete") {
         removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
         sendOk(command_id);
-      }
-      else if (curFrame.document.readyState == "interactive" &&
-               errorRegex.exec(curFrame.document.baseURI)) {
+      } else if (curFrame.document.readyState == "interactive" &&
+                 aboutErrorRegex.exec(curFrame.document.baseURI) &&
+                 !curFrame.document.baseURI.startsWith(msg.json.url)) {
+        // We have reached an error url without requesting it.
         removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
         sendError("Error loading page", 13, null, command_id);
-      }
-      else {
+      } else if (curFrame.document.readyState == "interactive" &&
+                 curFrame.document.baseURI.startsWith("about:")) {
+        removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
+        sendOk(command_id);
+      } else {
         checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
       }
     }

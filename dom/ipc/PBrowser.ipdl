@@ -75,6 +75,8 @@ struct ShowInfo
   nsString name;
   bool fullscreenAllowed;
   bool isPrivate;
+  float dpi;
+  double defaultScale;
 };
 
 prio(normal upto urgent) intr protocol PBrowser

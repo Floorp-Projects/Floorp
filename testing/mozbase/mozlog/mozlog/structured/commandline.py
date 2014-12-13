@@ -26,6 +26,13 @@ def verbose_wrapper(formatter, verbose):
     formatter.verbose = verbose
     return formatter
 
+def buffer_handler_wrapper(handler, buffer_limit):
+    if buffer_limit == "UNLIMITED":
+        buffer_limit = None
+    else:
+        buffer_limit = int(buffer_limit)
+    return handlers.BufferingLogFilter(handler, buffer_limit)
+
 formatter_option_defaults = {
     'verbose': False,
     'level': 'info',
@@ -40,6 +47,9 @@ fmt_options = {
     'level': (level_filter_wrapper,
               "A least log level to subscribe to for the given formatter (debug, info, error, etc.)",
               ["mach", "tbpl"], "store"),
+    'buffer': (buffer_handler_wrapper,
+               "If specified, enables message buffering at the given buffer size limit.",
+               ["mach", "tbpl"], "store"),
 }
 
 
@@ -115,12 +125,18 @@ def setup_handlers(logger, formatters, formatter_options):
     for fmt, streams in formatters.iteritems():
         formatter_cls = log_formatters[fmt][0]
         formatter = formatter_cls()
+        handler_wrapper, handler_option = None, ""
         for option, value in formatter_options[fmt].iteritems():
-            formatter = fmt_options[option][0](formatter, value)
+            if option == "buffer":
+                handler_wrapper, handler_option = fmt_options[option][0], value
+            else:
+                formatter = fmt_options[option][0](formatter, value)
 
         for value in streams:
-            logger.add_handler(handlers.StreamHandler(stream=value,
-                                                      formatter=formatter))
+            handler = handlers.StreamHandler(stream=value, formatter=formatter)
+            if handler_wrapper:
+                handler = handler_wrapper(handler, handler_option)
+            logger.add_handler(handler)
 
 
 def setup_logging(suite, args, defaults=None):

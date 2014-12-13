@@ -1959,7 +1959,8 @@ IonBuilder::processCfgEntry(CFGState &state)
 IonBuilder::ControlStatus
 IonBuilder::processIfEnd(CFGState &state)
 {
-    if (current) {
+    bool thenBranchTerminated = !current;
+    if (!thenBranchTerminated) {
         // Here, the false block is the join point. Create an edge from the
         // current block to the false block. Note that a RETURN opcode
         // could have already ended the block.
@@ -1973,6 +1974,15 @@ IonBuilder::processIfEnd(CFGState &state)
         return ControlStatus_Error;
     graph().moveBlockToEnd(current);
     pc = current->pc();
+
+    if (thenBranchTerminated) {
+        // If we can't reach here via the then-branch, we can filter the types
+        // after the if-statement based on the if-condition.
+        MTest *test = state.branch.test;
+        if (!improveTypesAtTest(test->getOperand(0), test->ifTrue() == current, test))
+            return ControlStatus_Error;
+    }
+
     return ControlStatus_Joined;
 }
 
@@ -1989,11 +1999,9 @@ IonBuilder::processIfElseTrueEnd(CFGState &state)
         return ControlStatus_Error;
     graph().moveBlockToEnd(current);
 
-    if (state.branch.test) {
-        MTest *test = state.branch.test;
-        if (!improveTypesAtTest(test->getOperand(0), test->ifTrue() == current, test))
-            return ControlStatus_Error;
-    }
+    MTest *test = state.branch.test;
+    if (!improveTypesAtTest(test->getOperand(0), test->ifTrue() == current, test))
+        return ControlStatus_Error;
 
     return ControlStatus_Jumped;
 }
@@ -2286,6 +2294,10 @@ IonBuilder::processWhileCondEnd(CFGState &state)
     state.stopAt = state.loop.bodyEnd;
     pc = state.loop.bodyStart;
     if (!setCurrentAndSpecializePhis(body))
+        return ControlStatus_Error;
+
+    // Filter the types in the loop body.
+    if (!improveTypesAtTest(test->getOperand(0), test->ifTrue() == current, test))
         return ControlStatus_Error;
 
     // If this is a for-in loop, unbox the current value as string if possible.
@@ -3362,11 +3374,14 @@ IonBuilder::improveTypesAtCompare(MCompare *ins, bool trueBranch, MTest *test)
 bool
 IonBuilder::improveTypesAtTest(MDefinition *ins, bool trueBranch, MTest *test)
 {
-    // We explore the test condition to try and deduce
-    // as much type information as possible.
-    if (!ins)
-        return true;
+    // We explore the test condition to try and deduce as much type information
+    // as possible.
 
+    // All branches of this switch that don't want to fall through to the
+    // default behavior must return.  The default behavior assumes that a true
+    // test means the incoming ins is not null or undefined and that a false
+    // tests means it's one of null, undefined, false, 0, "", and objects
+    // emulating undefined
     switch (ins->op()) {
       case MDefinition::Op_Not:
         return improveTypesAtTest(ins->toNot()->getOperand(0), !trueBranch, test);
@@ -3390,8 +3405,10 @@ IonBuilder::improveTypesAtTest(MDefinition *ins, bool trueBranch, MTest *test)
       }
       case MDefinition::Op_Phi: {
         bool branchIsAnd = true;
-        if (!detectAndOrStructure(ins->toPhi(), &branchIsAnd))
-            return true;
+        if (!detectAndOrStructure(ins->toPhi(), &branchIsAnd)) {
+            // Just fall through to the default behavior.
+            break;
+        }
 
         // Now we have detected the triangular structure and determined if it was an AND or an OR.
         if (branchIsAnd) {
@@ -3430,53 +3447,54 @@ IonBuilder::improveTypesAtTest(MDefinition *ins, bool trueBranch, MTest *test)
       case MDefinition::Op_Compare:
         return improveTypesAtCompare(ins->toCompare(), trueBranch, test);
 
-      // By default MTest tests ToBoolean(input). As a result in the true branch we can filter
-      // undefined and null. In false branch we can only encounter undefined, null, false, 0, ""
-      // and objects that emulate undefined.
-      default: {
-        // If ins does not have a typeset we return as we cannot optimize.
-        if (!ins->resultTypeSet() || ins->resultTypeSet()->unknown())
-            return true;
-
-        types::TemporaryTypeSet *oldType = ins->resultTypeSet();
-        types::TemporaryTypeSet *type;
-
-        // Decide either to set or filter.
-        if (trueBranch) {
-            // Filter undefined/null.
-            if (!ins->mightBeType(MIRType_Undefined) &&
-                !ins->mightBeType(MIRType_Null))
-            {
-                return true;
-            }
-            type = oldType->filter(alloc_->lifoAlloc(), true, true);
-        } else {
-            // According to the standards, we cannot filter out: Strings,
-            // Int32, Double, Booleans, Objects (if they emulate undefined)
-            uint32_t flags = types::TYPE_FLAG_PRIMITIVE;
-
-            // If the typeset does emulate undefined, then we cannot filter out
-            // objects.
-            if (oldType->maybeEmulatesUndefined())
-                flags |= types::TYPE_FLAG_ANYOBJECT;
-
-            // Only intersect the typesets if it will generate a more narrow
-            // typeset. The first part takes care of primitives and AnyObject,
-            // while the second line specific (type)objects.
-            if (!oldType->hasAnyFlag(~flags & types::TYPE_FLAG_BASE_MASK) &&
-                (oldType->maybeEmulatesUndefined() || !oldType->maybeObject()))
-            {
-                return true;
-            }
-
-            types::TemporaryTypeSet base(flags, static_cast<types::TypeObjectKey**>(nullptr));
-            type = types::TypeSet::intersectSets(&base, oldType, alloc_->lifoAlloc());
-        }
-        replaceTypeSet(ins, type, test);
-      }
-
+      default:
+        break;
     }
-    return true;
+
+    // By default MTest tests ToBoolean(input). As a result in the true branch we can filter
+    // undefined and null. In false branch we can only encounter undefined, null, false, 0, ""
+    // and objects that emulate undefined.
+
+    // If ins does not have a typeset we return as we cannot optimize.
+    if (!ins->resultTypeSet() || ins->resultTypeSet()->unknown())
+        return true;
+
+    types::TemporaryTypeSet *oldType = ins->resultTypeSet();
+    types::TemporaryTypeSet *type;
+
+    // Decide either to set or filter.
+    if (trueBranch) {
+        // Filter undefined/null.
+        if (!ins->mightBeType(MIRType_Undefined) &&
+            !ins->mightBeType(MIRType_Null))
+        {
+            return true;
+        }
+        type = oldType->filter(alloc_->lifoAlloc(), true, true);
+    } else {
+        // According to the standards, we cannot filter out: Strings,
+        // Int32, Double, Booleans, Objects (if they emulate undefined)
+        uint32_t flags = types::TYPE_FLAG_PRIMITIVE;
+
+        // If the typeset does emulate undefined, then we cannot filter out
+        // objects.
+        if (oldType->maybeEmulatesUndefined())
+            flags |= types::TYPE_FLAG_ANYOBJECT;
+
+        // Only intersect the typesets if it will generate a more narrow
+        // typeset. The first part takes care of primitives and AnyObject,
+        // while the second line specific (type)objects.
+        if (!oldType->hasAnyFlag(~flags & types::TYPE_FLAG_BASE_MASK) &&
+            (oldType->maybeEmulatesUndefined() || !oldType->maybeObject()))
+        {
+            return true;
+        }
+
+        types::TemporaryTypeSet base(flags, static_cast<types::TypeObjectKey**>(nullptr));
+        type = types::TypeSet::intersectSets(&base, oldType, alloc_->lifoAlloc());
+    }
+
+    return replaceTypeSet(ins, type, test);
 }
 
 bool
@@ -11271,14 +11289,7 @@ IonBuilder::typedObjectPrediction(types::TemporaryTypeSet *types)
         if (!IsTypedObjectClass(type->clasp()))
             return TypedObjectPrediction();
 
-        TaggedProto proto = type->proto();
-
-        // typed objects have immutable prototypes, and they are
-        // always instances of TypedProto
-        MOZ_ASSERT(proto.isObject() && proto.toObject()->is<TypedProto>());
-
-        TypedProto &typedProto = proto.toObject()->as<TypedProto>();
-        out.addDescr(typedProto.typeDescr());
+        out.addDescr(type->typeDescr());
     }
 
     return out;
@@ -11294,16 +11305,10 @@ IonBuilder::loadTypedObjectType(MDefinition *typedObj)
     if (typedObj->isNewDerivedTypedObject())
         return typedObj->toNewDerivedTypedObject()->type();
 
-    MInstruction *proto = MTypedObjectProto::New(alloc(), typedObj);
-    current->add(proto);
+    MInstruction *descr = MTypedObjectDescr::New(alloc(), typedObj);
+    current->add(descr);
 
-    MInstruction *load = MLoadFixedSlot::New(alloc(), proto, JS_TYPROTO_SLOT_DESCR);
-    current->add(load);
-
-    MInstruction *unbox = MUnbox::New(alloc(), load, MIRType_Object, MUnbox::Infallible);
-    current->add(unbox);
-
-    return unbox;
+    return descr;
 }
 
 // Given a typed object `typedObj` and an offset `offset` into that

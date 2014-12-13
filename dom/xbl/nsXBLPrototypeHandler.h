@@ -45,8 +45,30 @@ class EventTarget;
 #define NS_PHASE_TARGET             2
 #define NS_PHASE_BUBBLING           3
 
+namespace mozilla {
+namespace dom {
+
+struct IgnoreModifierState
+{
+  // When mShift is true, Shift key state will be ignored.
+  bool mShift;
+  // When mOS is true, OS key state will be ignored.
+  bool mOS;
+
+  IgnoreModifierState()
+    : mShift(false)
+    , mOS(false)
+  {
+  }
+};
+
+} // namespace dom
+} // namespace mozilla
+
 class nsXBLPrototypeHandler
 {
+  typedef mozilla::dom::IgnoreModifierState IgnoreModifierState;
+
 public:
   // This constructor is used by XBL handlers (both the JS and command shorthand variety)
   nsXBLPrototypeHandler(const char16_t* aEvent, const char16_t* aPhase,
@@ -69,17 +91,17 @@ public:
 
   // if aCharCode is not zero, it is used instead of the charCode of aKeyEvent.
   bool KeyEventMatched(nsIDOMKeyEvent* aKeyEvent,
-                         uint32_t aCharCode = 0,
-                         bool aIgnoreShiftKey = false);
+                       uint32_t aCharCode,
+                       const IgnoreModifierState& aIgnoreModifierState);
   inline bool KeyEventMatched(nsIAtom* aEventType,
-                                nsIDOMKeyEvent* aEvent,
-                                uint32_t aCharCode = 0,
-                                bool aIgnoreShiftKey = false)
+                              nsIDOMKeyEvent* aEvent,
+                              uint32_t aCharCode,
+                              const IgnoreModifierState& aIgnoreModifierState)
   {
     if (aEventType != mEventName)
       return false;
 
-    return KeyEventMatched(aEvent, aCharCode, aIgnoreShiftKey);
+    return KeyEventMatched(aEvent, aCharCode, aIgnoreModifierState);
   }
 
   bool MouseEventMatched(nsIDOMMouseEvent* aMouseEvent);
@@ -163,7 +185,7 @@ protected:
   void ReportKeyConflict(const char16_t* aKey, const char16_t* aModifiers, nsIContent* aElement, const char *aMessageName);
   void GetEventType(nsAString& type);
   bool ModifiersMatchMask(nsIDOMUIEvent* aEvent,
-                            bool aIgnoreShiftKey = false);
+                          const IgnoreModifierState& aIgnoreModifierState);
   nsresult DispatchXBLCommand(mozilla::dom::EventTarget* aTarget, nsIDOMEvent* aEvent);
   nsresult DispatchXULKeyCommand(nsIDOMEvent* aEvent);
   nsresult EnsureEventHandler(mozilla::dom::AutoJSAPI& jsapi, nsIAtom* aName,

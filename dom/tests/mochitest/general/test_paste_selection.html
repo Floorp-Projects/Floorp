@@ -111,6 +111,7 @@ function pastedGlobal(event)
 }
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 SimpleTest.waitForFocus(function() {
   SpecialPowers.pushPrefEnv({"set": [["general.autoScroll", false]]}, selectArea);
 });

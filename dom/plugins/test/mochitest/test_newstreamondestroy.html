@@ -9,6 +9,7 @@
 <body onload="runTest()">
   <script class="testbody" type="application/javascript">
   SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("untriaged");
   setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
   function runTest() {

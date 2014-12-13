@@ -1,5 +1,14 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
 # vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+mochitest_profile_files = [
+    'prefs_b2g_unittest.js',
+    'prefs_general.js',
+    'webapps_mochitest.json',
+]
+
+TEST_HARNESS_FILES.testing.mochitest.profile_data += mochitest_profile_files
+TEST_HARNESS_FILES['web-platform'].prefs += mochitest_profile_files

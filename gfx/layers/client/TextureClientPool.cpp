@@ -48,6 +48,10 @@ static bool TestClientPool(const char* what,
                            TextureClient* aClient,
                            TextureClientPool* aPool)
 {
+  if (!aClient || !aPool) {
+    return false;
+  }
+
   TextureClientPool* actual = aClient->mPoolTracker;
   bool ok = (actual == aPool);
   if (ok) {
@@ -105,7 +109,9 @@ TextureClientPool::GetTextureClient()
 
   mOutstandingClients++;
 #ifdef GFX_DEBUG_TRACK_CLIENTS_IN_POOL
-  textureClient->mPoolTracker = this;
+  if (textureClient) {
+    textureClient->mPoolTracker = this;
+  }
 #endif
   return textureClient;
 }

@@ -13,7 +13,7 @@ pref("security.ssl.require_safe_negotiation",  false);
 pref("security.ssl.warn_missing_rfc5746",  1);
 pref("security.ssl.enable_ocsp_stapling", true);
 pref("security.ssl.enable_false_start", true);
-pref("security.ssl.false_start.require-npn", true);
+pref("security.ssl.false_start.require-npn", false);
 pref("security.ssl.false_start.require-forward-secrecy", true);
 pref("security.ssl.enable_npn", true);
 pref("security.ssl.enable_alpn", true);

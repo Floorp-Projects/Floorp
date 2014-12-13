@@ -1369,7 +1369,7 @@ public:
 
     nsRefPtr<MediaEngine> backend;
     if (mConstraints.mFake)
-      backend = new MediaEngineDefault();
+      backend = new MediaEngineDefault(mConstraints.mFakeTracks);
     else
       backend = mManager->GetBackend(mWindowId);
 
@@ -1668,7 +1668,7 @@ MediaManager::GetUserMedia(
   if (c.mFake) {
     // Fake stream from default backend.
     task = new GetUserMediaTask(c, onSuccess.forget(),
-      onFailure.forget(), windowID, listener, mPrefs, new MediaEngineDefault());
+      onFailure.forget(), windowID, listener, mPrefs, new MediaEngineDefault(c.mFakeTracks));
   } else {
     // Stream from default device from WebRTC backend.
     task = new GetUserMediaTask(c, onSuccess.forget(),

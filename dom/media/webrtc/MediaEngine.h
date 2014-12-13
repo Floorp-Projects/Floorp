@@ -165,10 +165,18 @@ public:
   /* It is an error to call Start() before an Allocate(), and Stop() before
    * a Start(). Only Allocate() may be called after a Deallocate(). */
 
+  void SetHasFakeTracks(bool aHasFakeTracks) {
+    mHasFakeTracks = aHasFakeTracks;
+  }
+
 protected:
   // Only class' own members can be initialized in constructor initializer list.
-  explicit MediaEngineSource(MediaEngineState aState) : mState(aState) {}
+  explicit MediaEngineSource(MediaEngineState aState)
+    : mState(aState)
+    , mHasFakeTracks(false)
+  {}
   MediaEngineState mState;
+  bool mHasFakeTracks;
 };
 
 /**

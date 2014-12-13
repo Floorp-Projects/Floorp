@@ -85,24 +85,35 @@ nsAboutRedirector::NewChannel(nsIURI* aURI,
     NS_ENSURE_ARG_POINTER(aURI);
     NS_ASSERTION(result, "must not be null");
 
-    nsresult rv;
-
     nsAutoCString path;
-    rv = NS_GetAboutModuleName(aURI, path);
-    if (NS_FAILED(rv))
-        return rv;
+    nsresult rv = NS_GetAboutModuleName(aURI, path);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
-    if (NS_FAILED(rv))
-        return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
+
 
     for (int i=0; i<kRedirTotal; i++) 
     {
         if (!strcmp(path.get(), kRedirMap[i].id))
         {
             nsCOMPtr<nsIChannel> tempChannel;
-            rv = ioService->NewChannel(nsDependentCString(kRedirMap[i].url),
-                                       nullptr, nullptr, getter_AddRefs(tempChannel));
+            nsCOMPtr<nsIURI> tempURI;
+            rv = NS_NewURI(getter_AddRefs(tempURI), kRedirMap[i].url);
+            NS_ENSURE_SUCCESS(rv, rv);
+            // Bug 1087720 (and Bug 1099296):
+            // Once all callsites have been updated to call NewChannel2()
+            // instead of NewChannel() we should have a non-null loadInfo
+            // consistently. Until then we have to branch on the loadInfo.
+            if (aLoadInfo) {
+              rv = NS_NewChannelInternal(getter_AddRefs(tempChannel),
+                                         tempURI,
+                                         aLoadInfo);
+            }
+            else {
+              rv = ioService->NewChannelFromURI(tempURI,
+                                                getter_AddRefs(tempChannel));
+            }
             if (NS_FAILED(rv))
                 return rv;
 

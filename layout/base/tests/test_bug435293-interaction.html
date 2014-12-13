@@ -29,6 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435293
 <pre id="test">
 <script type="application/javascript">
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 runtests();
 
 function runtests() {

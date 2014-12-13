@@ -20,6 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=599584
 
 /** Test for Bug 599584 **/
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 var alreadyRan = false;
 
 function startTest() {

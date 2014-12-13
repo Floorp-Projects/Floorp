@@ -27,6 +27,7 @@ function set_pref(val)
 }
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 
 window.addEventListener("load", step0, false);
 

@@ -30,6 +30,8 @@ SpecialPowers.setBoolPref("full-screen-api.enabled", true);
 // to write.
 SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
 
+SimpleTest.requestFlakyTimeout("untriaged");
+
 // Run the tests which go full-screen in new windows, as mochitests normally
 // run in an iframe, which by default will not have the allowfullscreen
 // attribute set, so full-screen won't work.

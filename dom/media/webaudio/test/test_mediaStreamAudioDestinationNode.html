@@ -12,6 +12,7 @@
 <script class="testbody" type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("This test uses a live media element so it needs to wait for the media stack to do some work.");
 addLoadEvent(function() {
   var context = new AudioContext();
   var buffer = context.createBuffer(1, 2048, context.sampleRate);

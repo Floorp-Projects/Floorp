@@ -962,13 +962,11 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
 
   nsSSLIOLayerHelpers& helpers = infoObject->SharedState().IOLayerHelpers();
 
-  // Prevent version downgrade attacks from TLS 1.x to SSL 3.0.
-  // TODO(bug 861310): If we negotiate less than our highest-supported version,
-  // then check that a previously-completed handshake negotiated that version;
-  // eventually, require that the highest-supported version of TLS is used.
-  if (channelInfo.protocolVersion < SSL_LIBRARY_VERSION_TLS_1_0) {
+  // Prevent version downgrade attacks from TLS 1.2, and avoid False Start for
+  // TLS 1.3 and later. See Bug 861310 for all the details as to why.
+  if (channelInfo.protocolVersion != SSL_LIBRARY_VERSION_TLS_1_2) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
-                                      "SSL Version must be >= TLS1 %x\n", fd,
+                                      "SSL Version must be TLS 1.2, was %x\n", fd,
                                       static_cast<int32_t>(channelInfo.protocolVersion)));
     reasonsForNotFalseStarting |= POSSIBLE_VERSION_DOWNGRADE;
   }
@@ -1010,16 +1008,10 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
     }
   }
 
-  // Prevent downgrade attacks on the symmetric cipher. We accept downgrades
-  // from 256-bit keys to 128-bit keys and we treat AES and Camellia as being
-  // equally secure. We consider every message authentication mechanism that we
-  // support *for these ciphers* to be equally-secure. We assume that for CBC
-  // mode, that the server has implemented all the same mitigations for
-  // published attacks that we have, or that those attacks are not relevant in
-  // the decision to false start.
-  if (cipherInfo.symCipher != ssl_calg_aes_gcm && 
-      cipherInfo.symCipher != ssl_calg_aes &&
-      cipherInfo.symCipher != ssl_calg_camellia) {
+  // Prevent downgrade attacks on the symmetric cipher. We do not allow CBC
+  // mode due to BEAST, POODLE, and other attacks on the MAC-then-Encrypt
+  // design. See bug 1109766 for more details.
+  if (cipherInfo.symCipher != ssl_calg_aes_gcm) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
            ("CanFalseStartCallback [%p] failed - Symmetric cipher used, %d, "
             "is not supported with False Start.\n", fd,
