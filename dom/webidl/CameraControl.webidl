@@ -255,7 +255,10 @@ interface CameraControl : MediaStream
 
   /* the size of the picture to be returned by a call to takePicture();
      an object with 'height' and 'width' properties that corresponds to
-     one of the options returned by capabilities.pictureSizes. */
+     one of the options returned by capabilities.pictureSizes.
+
+     note that unlike when one uses setConfiguration instead to update the
+     picture size, this will not recalculate the ideal preview size. */
   [Throws]
   CameraSize getPictureSize();
   [Throws]
@@ -287,6 +290,7 @@ interface CameraControl : MediaStream
      to the display; e.g. if 'sensorAngle' is 270 degrees (or -90 degrees),
      then the preview stream needs to be rotated +90 degrees to have the
      same orientation as the real world. */
+  [Constant, Cached]
   readonly attribute long   sensorAngle;
 
   /* the mode the camera will use to determine the correct exposure of
@@ -360,11 +364,8 @@ interface CameraControl : MediaStream
 
   /* the event dispatched when the camera is successfully configured.
 
-     event type is CameraConfigurationEvent where:
-         'mode' is the selected camera mode
-         'recorderProfile' is the selected profile
-         'width' contains the preview width
-         'height' contains the preview height */
+     event type is CameraConfigurationEvent which has the same members as
+     CameraConfiguration. */
   attribute EventHandler onconfigurationchange;
 
   /* if focusMode is set to either 'continuous-picture' or 'continuous-video',
