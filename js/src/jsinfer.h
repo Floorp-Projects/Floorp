@@ -679,7 +679,7 @@ class AutoClearTypeInferenceStateOnOOM
     bool oom;
 
   public:
-    AutoClearTypeInferenceStateOnOOM(Zone *zone)
+    explicit AutoClearTypeInferenceStateOnOOM(Zone *zone)
       : zone(zone), oom(false)
     {}
 
