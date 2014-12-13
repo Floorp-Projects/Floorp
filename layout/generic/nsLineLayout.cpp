@@ -77,7 +77,8 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
     mInFirstLetter(false),
     mHasBullet(false),
     mDirtyNextLine(false),
-    mLineAtStart(false)
+    mLineAtStart(false),
+    mHasRuby(false)
 {
   MOZ_ASSERT(aOuterReflowState, "aOuterReflowState must not be null");
   NS_ASSERTION(aFloatManager || aOuterReflowState->frame->GetType() ==
@@ -1083,6 +1084,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         if (!pfd->mSpan) {
           // nonempty leaf content has been placed
           mLineAtStart = false;
+        }
+        if (nsGkAtoms::rubyFrame == frameType) {
+          mHasRuby = true;
         }
       }
 
