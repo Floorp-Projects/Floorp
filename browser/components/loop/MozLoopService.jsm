@@ -1073,11 +1073,13 @@ this.MozLoopService = {
 
     // The Loop toolbar button should change icon when the room participant count
     // changes from 0 to something.
-    const onRoomsChange = () => {
-      MozLoopServiceInternal.notifyStatusChanged();
+    const onRoomsChange = (e) => {
+      // Pass the event name as notification reason for better logging.
+      MozLoopServiceInternal.notifyStatusChanged("room-" + e);
     };
     LoopRooms.on("add", onRoomsChange);
     LoopRooms.on("update", onRoomsChange);
+    LoopRooms.on("delete", onRoomsChange);
     LoopRooms.on("joined", (e, room, participant) => {
       // Don't alert if we're in the doNotDisturb mode, or the participant
       // is the owner - the content code deals with the rest of the sounds.

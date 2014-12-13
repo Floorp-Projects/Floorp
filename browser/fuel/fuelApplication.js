@@ -94,7 +94,7 @@ Window.prototype = {
   },
 
   get _tabbrowser() {
-    return this._window.getBrowser();
+    return this._window.gBrowser;
   },
 
   /*
