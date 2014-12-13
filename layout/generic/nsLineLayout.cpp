@@ -24,6 +24,7 @@
 #include "nsTextFrame.h"
 #include "nsStyleStructInlines.h"
 #include "nsBidiPresUtils.h"
+#include "RubyUtils.h"
 #include <algorithm>
 
 #ifdef DEBUG
@@ -2552,18 +2553,38 @@ nsLineLayout::AdvanceAnnotationInlineBounds(PerFrameData* aPFD,
                                             nscoord aDeltaICoord,
                                             nscoord aDeltaISize)
 {
-  MOZ_ASSERT(aPFD->mFrame->GetType() == nsGkAtoms::rubyTextFrame ||
-             aPFD->mFrame->GetType() == nsGkAtoms::rubyTextContainerFrame);
+  nsIFrame* frame = aPFD->mFrame;
+  nsIAtom* frameType = frame->GetType();
+  MOZ_ASSERT(frameType == nsGkAtoms::rubyTextFrame ||
+             frameType == nsGkAtoms::rubyTextContainerFrame);
   MOZ_ASSERT(aPFD->mSpan, "rt and rtc should have span.");
 
+  PerSpanData* psd = aPFD->mSpan;
   WritingMode lineWM = mRootSpan->mWritingMode;
-  WritingMode frameWM = aPFD->mSpan->mWritingMode;
-  LogicalRect bounds = aPFD->mFrame->GetLogicalRect(aContainerWidth);
-  bounds = bounds.ConvertTo(lineWM, frameWM, aContainerWidth);
+  LogicalRect bounds(lineWM, frame->GetRect(), aContainerWidth);
   bounds.IStart(lineWM) += aDeltaICoord;
-  bounds.ISize(lineWM) += aDeltaISize;
-  aPFD->mBounds = bounds.ConvertTo(frameWM, lineWM, aContainerWidth);
-  aPFD->mFrame->SetRect(frameWM, aPFD->mBounds, aContainerWidth);
+
+  // Check whether this expansion should be counted into the reserved
+  // isize or not. When it is a ruby text container, and it has some
+  // children linked to the base, it must not have reserved isize,
+  // or its children won't align with their bases.  Otherwise, this
+  // expansion should be reserved.  There are two cases a ruby text
+  // container does not have children linked to the base:
+  // 1. it is a container for span; 2. its children are collapsed.
+  // See bug 1055674 for the second case.
+  if (frameType == nsGkAtoms::rubyTextFrame ||
+      // This ruby text container is a span.
+      (psd->mFirstFrame == psd->mLastFrame && psd->mFirstFrame &&
+       !psd->mFirstFrame->mIsLinkedToBase)) {
+    nscoord reservedISize = RubyUtils::GetReservedISize(frame);
+    RubyUtils::SetReservedISize(frame, reservedISize + aDeltaISize);
+  } else {
+    // It is a normal ruby text container. Its children will expand
+    // themselves properly. We only need to expand its own size here.
+    bounds.ISize(lineWM) += aDeltaISize;
+  }
+  aPFD->mBounds = bounds;
+  aPFD->mFrame->SetRect(lineWM, bounds, aContainerWidth);
 }
 
 /**
