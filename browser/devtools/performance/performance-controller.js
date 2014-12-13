@@ -55,6 +55,10 @@ const EVENTS = {
   // Emitted by the CallTreeView when a call tree has been rendered
   CALL_TREE_RENDERED: "Performance:UI:CallTreeRendered",
 
+  // When a source is shown in the JavaScript Debugger at a specific location.
+  SOURCE_SHOWN_IN_JS_DEBUGGER: "Performance:UI:SourceShownInJsDebugger",
+  SOURCE_NOT_FOUND_IN_JS_DEBUGGER: "Performance:UI:SourceNotFoundInJsDebugger",
+
   // Emitted by the WaterfallView when it has been rendered
   WATERFALL_RENDERED: "Performance:UI:WaterfallRendered"
 };

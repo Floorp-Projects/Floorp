@@ -169,7 +169,7 @@ __wrap_PR_SetEnv(const char *string)
     if ( !strchr(string, '=')) return(-1);
 
     pthread_mutex_lock(&_pr_envLock);
-    result = putenv(string);
+    result = putenv(const_cast<char*>(string));
     pthread_mutex_unlock(&_pr_envLock);
     return (result)? -1 : 0;
 }
