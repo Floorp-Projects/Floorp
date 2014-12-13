@@ -889,7 +889,7 @@ MarionetteServerConnection.prototype = {
       if (that.inactivityTimer != null) {
        that.inactivityTimer.initWithCallback(function() {
         inactivityTimeoutHandler("timed out due to inactivity", 28);
-       }, inactivityTimeout, Ci.nsITimer.TYPE_ONESHOT);
+       }, inactivityTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
       }
      }
      setTimer();
@@ -1052,7 +1052,7 @@ MarionetteServerConnection.prototype = {
      if (this.inactivityTimer != null) {
       this.inactivityTimer.initWithCallback(function() {
        chromeAsyncReturnFunc("timed out due to inactivity", 28);
-      }, inactivityTimeout, Ci.nsITimer.TYPE_ONESHOT);
+      }, inactivityTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
      }
      this.heartbeatCallback = function resetInactivityTimer() {
       that.inactivityTimer.cancel();
@@ -1060,7 +1060,7 @@ MarionetteServerConnection.prototype = {
       if (that.inactivityTimer != null) {
        that.inactivityTimer.initWithCallback(function() {
         chromeAsyncReturnFunc("timed out due to inactivity", 28);
-       }, inactivityTimeout, Ci.nsITimer.TYPE_ONESHOT);
+       }, inactivityTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
       }
      }
     }
@@ -1128,7 +1128,7 @@ MarionetteServerConnection.prototype = {
       if (this.timer != null) {
         this.timer.initWithCallback(function() {
           chromeAsyncReturnFunc("timed out", 28);
-        }, that.timeout, Ci.nsITimer.TYPE_ONESHOT);
+        }, that.timeout, Ci.nsITimer.TYPE_ONE_SHOT);
       }
 
       _chromeSandbox.returnFunc = chromeAsyncReturnFunc;
