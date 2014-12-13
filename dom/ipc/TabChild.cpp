@@ -889,6 +889,8 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mHasValidInnerSize(false)
   , mDestroyed(false)
   , mUniqueId(aTabId)
+  , mDPI(0)
+  , mDefaultScale(0)
 {
   if (!sActiveDurationMsSet) {
     Preferences::AddIntVarCache(&sActiveDurationMs,
@@ -1881,7 +1883,7 @@ TabChild::DoFakeShow(const ScrollingBehavior& aScrolling,
                      const uint64_t& aLayersId,
                      PRenderFrameChild* aRenderFrame)
 {
-  ShowInfo info(EmptyString(), false, false);
+  ShowInfo info(EmptyString(), false, false, 0, 0);
   RecvShow(nsIntSize(0, 0), info, aScrolling, aTextureFactoryIdentifier, aLayersId, aRenderFrame);
   mDidFakeShow = true;
 }
@@ -1909,6 +1911,8 @@ TabChild::ApplyShowInfo(const ShowInfo& aInfo)
       }
     }
   }
+  mDPI = aInfo.dpi();
+  mDefaultScale = aInfo.defaultScale();
 }
 
 #ifdef MOZ_WIDGET_GONK
@@ -3176,6 +3180,12 @@ TabChild::GetDPI(float* aDPI)
         return;
     }
 
+    if (mDPI > 0) {
+      *aDPI = mDPI;
+      return;
+    }
+
+    // Fallback to a sync call if needed.
     SendGetDPI(aDPI);
 }
 
@@ -3187,6 +3197,12 @@ TabChild::GetDefaultScale(double* aScale)
         return;
     }
 
+    if (mDefaultScale > 0) {
+      *aScale = mDefaultScale;
+      return;
+    }
+
+    // Fallback to a sync call if needed.
     SendGetDefaultScale(aScale);
 }
 

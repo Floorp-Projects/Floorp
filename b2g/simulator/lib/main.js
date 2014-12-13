@@ -5,21 +5,58 @@
 
 const { Cc, Ci, Cu } = require("chrome");
 
-const { SimulatorProcess } = require("./simulator-process");
-const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
-const { Simulator } = Cu.import("resource://gre/modules/devtools/Simulator.jsm");
 const { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
+const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
+const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+const { Simulator } = Cu.import("resource://gre/modules/devtools/Simulator.jsm");
+const { SimulatorProcess } = require("./simulator-process");
+const Runtime = require("sdk/system/runtime");
+const URL = require("sdk/url");
+
+const ROOT_URI = require("addon").uri;
+const PROFILE_URL = ROOT_URI + "profile/";
+const BIN_URL = ROOT_URI + "b2g/";
 
 let process;
 
-function launch({ port }) {
-  // Close already opened simulation
+function launch(options) {
+  // Close already opened simulation.
   if (process) {
-    return close().then(launch.bind(null, { port: port }));
+    return close().then(launch.bind(null, options));
   }
 
-  process = SimulatorProcess();
-  process.remoteDebuggerPort = port;
+  // Compute B2G runtime path.
+  let path;
+  try {
+    let pref = "extensions." + require("addon").id + ".customRuntime";
+    path = Services.prefs.getComplexValue(pref, Ci.nsIFile);
+  } catch(e) {}
+
+  if (!path) {
+    let executables = {
+      WINNT: "b2g-bin.exe",
+      Darwin: "B2G.app/Contents/MacOS/b2g-bin",
+      Linux: "b2g-bin",
+    };
+    path = URL.toFilename(BIN_URL);
+    path += Runtime.OS == "WINNT" ? "\\" : "/";
+    path += executables[Runtime.OS];
+  }
+  options.runtimePath = path;
+  console.log("simulator path:", options.runtimePath);
+
+  // Compute Gaia profile path.
+  if (!options.profilePath) {
+    let gaiaProfile;
+    try {
+      let pref = "extensions." + require("addon").id + ".gaiaProfile";
+      gaiaProfile = Services.prefs.getComplexValue(pref, Ci.nsIFile).path;
+    } catch(e) {}
+
+    options.profilePath = gaiaProfile || URL.toFilename(PROFILE_URL);
+  }
+
+  process = new SimulatorProcess(options);
   process.run();
 
   return promise.resolve();
