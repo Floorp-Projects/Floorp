@@ -349,7 +349,7 @@
               popup.removeChild(items[i]);
           }
 
-          var addengines = getBrowser().mCurrentBrowser.engines;
+          var addengines = gBrowser.mCurrentBrowser.engines;
           if (addengines && addengines.length > 0) {
             const kXULNS =
                "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
