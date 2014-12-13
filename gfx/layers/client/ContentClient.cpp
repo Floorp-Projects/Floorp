@@ -255,10 +255,13 @@ ContentClientRemoteBuffer::EndPaint(nsTArray<ReadbackProcessor::Update>* aReadba
     }
 
     mTextureClient->Unlock();
+    mTextureClient->SyncWithObject(mForwarder->GetSyncObject());
   }
   if (mTextureClientOnWhite && mTextureClientOnWhite->IsLocked()) {
     mTextureClientOnWhite->Unlock();
+    mTextureClientOnWhite->SyncWithObject(mForwarder->GetSyncObject());
   }
+
   ContentClientRemote::EndPaint(aReadbackUpdates);
 }
 
