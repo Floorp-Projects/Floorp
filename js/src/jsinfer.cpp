@@ -383,7 +383,7 @@ TypeSet::objectsAreSubset(TypeSet *other)
 }
 
 bool
-TypeSet::isSubset(TypeSet *other)
+TypeSet::isSubset(const TypeSet *other) const
 {
     if ((baseFlags() & other->baseFlags()) != baseFlags())
         return false;
