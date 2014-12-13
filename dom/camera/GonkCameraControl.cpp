@@ -61,7 +61,7 @@ using namespace android;
 
 // Construct nsGonkCameraControl on the main thread.
 nsGonkCameraControl::nsGonkCameraControl(uint32_t aCameraId)
-  : CameraControlImpl(aCameraId)
+  : mCameraId(aCameraId)
   , mLastPictureSize({0, 0})
   , mLastThumbnailSize({0, 0})
   , mPreviewFps(30)

@@ -18,6 +18,7 @@
 #include "nsHashPropertyBag.h"
 #include "DeviceStorage.h"
 #include "DOMCameraControlListener.h"
+#include "nsWeakReference.h"
 #ifdef MOZ_WIDGET_GONK
 #include "nsITimer.h"
 #endif
@@ -39,10 +40,17 @@ namespace dom {
 class ErrorResult;
 class StartRecordingHelper;
 
+#define NS_DOM_CAMERA_CONTROL_CID \
+{ 0x3700c096, 0xf920, 0x438d, \
+  { 0x8b, 0x3f, 0x15, 0xb3, 0xc9, 0x96, 0x23, 0x62 } }
+
 // Main camera control.
 class nsDOMCameraControl MOZ_FINAL : public DOMMediaStream
+                                   , public nsSupportsWeakReference
 {
 public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOM_CAMERA_CONTROL_CID)
+
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMCameraControl, DOMMediaStream)
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -114,6 +122,8 @@ public:
   void ResumeContinuousFocus(ErrorResult& aRv);
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+
+  operator nsISupports*() { return static_cast<DOMMediaStream*>(this); }
 
 #ifdef MOZ_WIDGET_GONK
   static void PreinitCameraHardware();
@@ -221,6 +231,8 @@ private:
   nsDOMCameraControl(const nsDOMCameraControl&) MOZ_DELETE;
   nsDOMCameraControl& operator=(const nsDOMCameraControl&) MOZ_DELETE;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsDOMCameraControl, NS_DOM_CAMERA_CONTROL_CID)
 
 } // namespace mozilla
 

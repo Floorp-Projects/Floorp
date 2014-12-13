@@ -251,7 +251,7 @@ public:
   virtual nsresult StopPreview() = 0;
   virtual nsresult AutoFocus() = 0;
   virtual nsresult TakePicture() = 0;
-  virtual nsresult StartRecording(DeviceStorageFileDescriptor *aFileDescriptor,
+  virtual nsresult StartRecording(DeviceStorageFileDescriptor* aFileDescriptor,
                                   const StartRecordingOptions* aOptions = nullptr) = 0;
   virtual nsresult StopRecording() = 0;
   virtual nsresult StartFaceDetection() = 0;
@@ -292,10 +292,6 @@ public:
 
   virtual nsresult GetRecorderProfiles(nsTArray<nsString>& aProfiles) = 0;
   virtual RecorderProfile* GetProfileInfo(const nsAString& aProfile) = 0;
-
-  virtual uint32_t GetCameraId() = 0;
-
-  virtual void Shutdown() = 0;
 
 protected:
   virtual ~ICameraControl() { }
