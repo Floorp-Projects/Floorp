@@ -1,0 +1,25 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMBlob ;
+interface nsIVariant;
+
+[scriptable, uuid(ff0b1622-0e79-4d97-8153-6244a2410eee)]
+interface nsINfcTechDiscoveredSysMsg : nsISupports
+{
+  readonly attribute DOMString sessionToken;
+  readonly attribute boolean isP2P;
+  readonly attribute nsIVariant records;
+};
+
+[scriptable, uuid(31c334f5-f072-451f-9405-19d0ac7ae7d1)]
+interface nsINfcSendFileSysMsg : nsISupports
+{
+  readonly attribute DOMString requestId;
+  readonly attribute DOMString sessionToken;
+  readonly attribute nsIDOMBlob blob;
+};
+

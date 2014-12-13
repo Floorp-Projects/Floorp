@@ -325,6 +325,7 @@ function checkNewVersionOfIFrame()
 // ==============================
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 
 if (OfflineTest.setup()) {
   applicationCache.onerror = OfflineTest.failEvent;

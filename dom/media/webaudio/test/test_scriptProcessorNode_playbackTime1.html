@@ -10,6 +10,7 @@
 <script class="testbody" type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("This test needs to wait until after the AudioContext's timer has started.");
 addLoadEvent(
   function() {
     const delay = 0.1;

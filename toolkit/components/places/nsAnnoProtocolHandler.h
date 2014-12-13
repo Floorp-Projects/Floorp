@@ -41,10 +41,13 @@ protected:
    * @param aAnnotationURI
    *        The URI that holds the data needed to get the favicon from the
    *        database.
+   * @param aLoadInfo
+   *        The loadinfo that requested the resource load.
    * @returns (via _channel) the channel that will obtain the favicon data.
    */
   nsresult NewFaviconChannel(nsIURI *aURI,
                              nsIURI *aAnnotationURI,
+                             nsILoadInfo *aLoadInfo,
                              nsIChannel **_channel);
 };
 

@@ -13,6 +13,8 @@
 <body>
 <pre id="test">
 <script type="application/javascript">
+  SimpleTest.requestFlakyTimeout("untriaged");
+
   createHTML({
     bug: "1060102",
     title: "Basic audio only SDP offer without trickle ICE"

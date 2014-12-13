@@ -1,0 +1,43 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the ability of MediaStream with multiple MediaStreamTracks</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+function startTest() {
+  navigator.mediaDevices.getUserMedia({audio:true, video:true, fake:true, fakeTracks:true})
+  .then(function(stream) {
+    var element = document.createElement("video");
+
+    element.onloadedmetadata = function() {
+      is(stream.getAudioTracks().length, 4, 'Length of audio tracks should be 4.');
+      is(stream.getVideoTracks().length, 3, 'Length of vudio tracks should be 3.');
+      SimpleTest.finish();
+    };
+
+    mStream = stream;
+    element.mozSrcObject = mStream;
+  })
+  .catch(function(reason) {
+    ok(false, "unexpected error = " + reason.message);
+    SimpleTest.finish();
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {
+    "set": [
+      ["media.track.enabled", true]
+    ]
+  }, startTest);
+
+</script>
+</pre>
+</body>
+</html>

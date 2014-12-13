@@ -52,6 +52,7 @@ function done() {
 }
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 // waitForFocus is most likely not the right thing to wait for, but
 // without this the first click is ineffective (even with a reflow forced
 // before synthesizeMouse).

@@ -26,6 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=382429
   is(t.data, "\u05e2 3 \u05d3 4", "replace succeeded");
   SimpleTest.finish();
 }
+  SimpleTest.requestFlakyTimeout("untriaged");
   setTimeout(do_Replace, 500);
   SimpleTest.waitForExplicitFinish();
 </script>

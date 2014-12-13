@@ -145,6 +145,7 @@ function startTest(i)
 }
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 
 // Run the tests.
 for (var i = 0; i < gTests.length; ++i) {

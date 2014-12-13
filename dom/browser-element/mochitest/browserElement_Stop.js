@@ -10,6 +10,7 @@
 
 "use strict";
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 

@@ -36,7 +36,8 @@
       "google": "google_root_pems"
     },
     "production_pinsets": [
-      "google_root_pems"
+      "google_root_pems",
+      "facebook"
     ],
     "production_domains": [
       // Chrome's test domain.
@@ -210,8 +211,6 @@
     { "name": "cdn.mozilla.net", "include_subdomains": true,
       "pins": "mozilla", "test_mode": false },
     { "name": "cdn.mozilla.org", "include_subdomains": true,
-      "pins": "mozilla", "test_mode": false },
-    { "name": "media.mozilla.com", "include_subdomains": true,
       "pins": "mozilla", "test_mode": false },
     { "name": "services.mozilla.com", "include_subdomains": true,
       "pins": "mozilla_services", "test_mode": false, "id": 6 },
