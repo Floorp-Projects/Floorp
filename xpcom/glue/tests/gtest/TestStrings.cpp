@@ -25,13 +25,13 @@ TEST(Strings, assign)
 {
   nsCString result;
   test_assign_helper(NS_LITERAL_CSTRING("a") + NS_LITERAL_CSTRING("b"), result);
-  ASSERT_STREQ(result.get(), "ab");
+  EXPECT_STREQ(result.get(), "ab");
 }
 
 TEST(Strings, assign_c)
 {
   nsCString c; c.Assign('c');
-  ASSERT_STREQ(c.get(), "c");
+  EXPECT_STREQ(c.get(), "c");
 }
 
 TEST(Strings, test1)
@@ -48,7 +48,7 @@ TEST(Strings, test1)
   buf.Cut(0, n + 1);
   n = buf.FindChar(',');
 
-  ASSERT_EQ(n, kNotFound);
+  EXPECT_EQ(n, kNotFound);
 }
 
 TEST(Strings, test2)
@@ -59,7 +59,7 @@ TEST(Strings, test2)
   nsCString temp(aStr);
   temp.Cut(0, 6);
 
-  ASSERT_STREQ(temp.get(), "world");
+  EXPECT_STREQ(temp.get(), "world");
 }
 
 TEST(Strings, find)
@@ -67,7 +67,7 @@ TEST(Strings, find)
   nsCString src("<!DOCTYPE blah blah blah>");
 
   int32_t i = src.Find("DOCTYPE", true, 2, 1);
-  ASSERT_EQ(i, 2);
+  EXPECT_EQ(i, 2);
 }
 
 TEST(Strings, rfind)
@@ -78,16 +78,16 @@ TEST(Strings, rfind)
   int32_t i;
 
   i = src.RFind(term, true, 3, -1); 
-  ASSERT_EQ(i, kNotFound);
+  EXPECT_EQ(i, kNotFound);
 
   i = src.RFind(term, true, -1, -1);
-  ASSERT_EQ(i, 20);
+  EXPECT_EQ(i, 20);
 
   i = src.RFind(term, true, 13, -1);
-  ASSERT_EQ(i, 10);
+  EXPECT_EQ(i, 10);
 
   i = src.RFind(term, true, 22, 3);
-  ASSERT_EQ(i, 20);
+  EXPECT_EQ(i, 20);
 }
 
 TEST(Strings, rfind_2)
@@ -95,7 +95,7 @@ TEST(Strings, rfind_2)
   const char text[] = "<!DOCTYPE blah blah blah>";
   nsCString src(text);
   int32_t i = src.RFind("TYPE", false, 5, -1); 
-  ASSERT_EQ(i, 5);
+  EXPECT_EQ(i, 5);
 }
 
 TEST(Strings, rfind_3)
@@ -103,14 +103,14 @@ TEST(Strings, rfind_3)
   const char text[] = "urn:mozilla:locale:en-US:necko";
   nsAutoCString value(text);
   int32_t i = value.RFind(":");
-  ASSERT_EQ(i, 24);
+  EXPECT_EQ(i, 24);
 }
 
 TEST(Strings, rfind_4)
 {
   nsCString value("a.msf");
   int32_t i = value.RFind(".msf");
-  ASSERT_EQ(i, 1);
+  EXPECT_EQ(i, 1);
 }
 
 TEST(Strings, findinreadable)
@@ -125,57 +125,57 @@ TEST(Strings, findinreadable)
                              delim_end   (end);
 
   // Search for last !/ at the end of the string
-  ASSERT_TRUE(FindInReadable(NS_LITERAL_CSTRING("!/"), delim_begin, delim_end));
+  EXPECT_TRUE(FindInReadable(NS_LITERAL_CSTRING("!/"), delim_begin, delim_end));
   char *r = ToNewCString(Substring(delim_begin, delim_end));
   // Should match the first "!/" but not the last
-  ASSERT_NE(delim_end, end);
-  ASSERT_STREQ(r, "!/");
+  EXPECT_NE(delim_end, end);
+  EXPECT_STREQ(r, "!/");
   nsMemory::Free(r);
 
   delim_begin = begin;
   delim_end = end;
 
   // Search for first jar:
-  ASSERT_TRUE(FindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
+  EXPECT_TRUE(FindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
 
   r = ToNewCString(Substring(delim_begin, delim_end));
   // Should not match the first jar:, but the second one
-  ASSERT_EQ(delim_begin, begin);
-  ASSERT_STREQ(r, "jar:");
+  EXPECT_EQ(delim_begin, begin);
+  EXPECT_STREQ(r, "jar:");
   nsMemory::Free(r);
 
   // Search for jar: in a Substring
   delim_begin = begin; delim_begin++;
   delim_end = end;
-  ASSERT_TRUE(FindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
+  EXPECT_TRUE(FindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
 
   r = ToNewCString(Substring(delim_begin, delim_end));
   // Should not match the first jar:, but the second one
-  ASSERT_NE(delim_begin, begin);
-  ASSERT_STREQ(r, "jar:");
+  EXPECT_NE(delim_begin, begin);
+  EXPECT_STREQ(r, "jar:");
   nsMemory::Free(r);
 
   // Should not find a match
-  ASSERT_FALSE(FindInReadable(NS_LITERAL_CSTRING("gecko"), delim_begin, delim_end));
+  EXPECT_FALSE(FindInReadable(NS_LITERAL_CSTRING("gecko"), delim_begin, delim_end));
 
   // When no match is found, range should be empty
-  ASSERT_EQ(delim_begin, delim_end);
+  EXPECT_EQ(delim_begin, delim_end);
 
   // Should not find a match (search not beyond Substring)
   delim_begin = begin; for (int i=0;i<6;i++) delim_begin++;
   delim_end = end;
-  ASSERT_FALSE(FindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
+  EXPECT_FALSE(FindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
 
   // When no match is found, range should be empty
-  ASSERT_EQ(delim_begin, delim_end);
+  EXPECT_EQ(delim_begin, delim_end);
 
   // Should not find a match (search not beyond Substring)
   delim_begin = begin;
   delim_end = end; for (int i=0;i<7;i++) delim_end--;
-  ASSERT_FALSE(FindInReadable(NS_LITERAL_CSTRING("classic"), delim_begin, delim_end));
+  EXPECT_FALSE(FindInReadable(NS_LITERAL_CSTRING("classic"), delim_begin, delim_end));
 
   // When no match is found, range should be empty
-  ASSERT_EQ(delim_begin, delim_end);
+  EXPECT_EQ(delim_begin, delim_end);
 }
 
 TEST(Strings, rfindinreadable)
@@ -190,59 +190,59 @@ TEST(Strings, rfindinreadable)
                              delim_end   (end);
 
   // Search for last !/ at the end of the string
-  ASSERT_TRUE(RFindInReadable(NS_LITERAL_CSTRING("!/"), delim_begin, delim_end));
+  EXPECT_TRUE(RFindInReadable(NS_LITERAL_CSTRING("!/"), delim_begin, delim_end));
   char *r = ToNewCString(Substring(delim_begin, delim_end));
   // Should match the last "!/"
-  ASSERT_EQ(delim_end, end);
-  ASSERT_STREQ(r, "!/");
+  EXPECT_EQ(delim_end, end);
+  EXPECT_STREQ(r, "!/");
   nsMemory::Free(r);
 
   delim_begin = begin;
   delim_end = end;
 
   // Search for last jar: but not the first one...
-  ASSERT_TRUE(RFindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
+  EXPECT_TRUE(RFindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
 
   r = ToNewCString(Substring(delim_begin, delim_end));
   // Should not match the first jar:, but the second one
-  ASSERT_NE(delim_begin, begin);
-  ASSERT_STREQ(r, "jar:");
+  EXPECT_NE(delim_begin, begin);
+  EXPECT_STREQ(r, "jar:");
   nsMemory::Free(r);
 
   // Search for jar: in a Substring
   delim_begin = begin;
   delim_end = begin; for (int i=0;i<6;i++) delim_end++;
-  ASSERT_TRUE(RFindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
+  EXPECT_TRUE(RFindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
 
   r = ToNewCString(Substring(delim_begin, delim_end));
   // Should not match the first jar:, but the second one
-  ASSERT_EQ(delim_begin, begin);
-  ASSERT_STREQ(r, "jar:");
+  EXPECT_EQ(delim_begin, begin);
+  EXPECT_STREQ(r, "jar:");
   nsMemory::Free(r);
 
   // Should not find a match
   delim_begin = begin;
   delim_end = end;
-  ASSERT_FALSE(RFindInReadable(NS_LITERAL_CSTRING("gecko"), delim_begin, delim_end));
+  EXPECT_FALSE(RFindInReadable(NS_LITERAL_CSTRING("gecko"), delim_begin, delim_end));
 
   // When no match is found, range should be empty
-  ASSERT_EQ(delim_begin, delim_end);
+  EXPECT_EQ(delim_begin, delim_end);
 
   // Should not find a match (search not before Substring)
   delim_begin = begin; for (int i=0;i<6;i++) delim_begin++;
   delim_end = end;
-  ASSERT_FALSE(RFindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
+  EXPECT_FALSE(RFindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end));
 
   // When no match is found, range should be empty
-  ASSERT_EQ(delim_begin, delim_end);
+  EXPECT_EQ(delim_begin, delim_end);
 
   // Should not find a match (search not beyond Substring)
   delim_begin = begin;
   delim_end = end; for (int i=0;i<7;i++) delim_end--;
-  ASSERT_FALSE(RFindInReadable(NS_LITERAL_CSTRING("classic"), delim_begin, delim_end));
+  EXPECT_FALSE(RFindInReadable(NS_LITERAL_CSTRING("classic"), delim_begin, delim_end));
 
   // When no match is found, range should be empty
-  ASSERT_EQ(delim_begin, delim_end);
+  EXPECT_EQ(delim_begin, delim_end);
 }
 
 TEST(Strings, distance)
@@ -253,7 +253,7 @@ TEST(Strings, distance)
   s.BeginReading(begin);
   s.EndReading(end);
   size_t d = Distance(begin, end);
-  ASSERT_EQ(d, sizeof(text) - 1);
+  EXPECT_EQ(d, sizeof(text) - 1);
 }
 
 TEST(Strings, length)
@@ -261,7 +261,7 @@ TEST(Strings, length)
   const char text[] = "abc-xyz";
   nsCString s(text);
   size_t d = s.Length();
-  ASSERT_EQ(d, sizeof(text) - 1);
+  EXPECT_EQ(d, sizeof(text) - 1);
 }
 
 TEST(Strings, trim)
@@ -271,7 +271,7 @@ TEST(Strings, trim)
 
   nsCString s(text);
   s.Trim(set);
-  ASSERT_STREQ(s.get(), "a");
+  EXPECT_STREQ(s.get(), "a");
 }
 
 TEST(Strings, replace_substr)
@@ -279,20 +279,20 @@ TEST(Strings, replace_substr)
   const char text[] = "abc-ppp-qqq-ppp-xyz";
   nsCString s(text);
   s.ReplaceSubstring("ppp", "www");
-  ASSERT_STREQ(s.get(), "abc-www-qqq-www-xyz");
+  EXPECT_STREQ(s.get(), "abc-www-qqq-www-xyz");
 
   s.Assign("foobar");
   s.ReplaceSubstring("foo", "bar");
   s.ReplaceSubstring("bar", "");
-  ASSERT_STREQ(s.get(), "");
+  EXPECT_STREQ(s.get(), "");
 
   s.Assign("foofoofoo");
   s.ReplaceSubstring("foo", "foo");
-  ASSERT_STREQ(s.get(), "foofoofoo");
+  EXPECT_STREQ(s.get(), "foofoofoo");
 
   s.Assign("foofoofoo");
   s.ReplaceSubstring("of", "fo");
-  ASSERT_STREQ(s.get(), "fofoofooo");
+  EXPECT_STREQ(s.get(), "fofoofooo");
 }
 
 TEST(Strings, replace_substr_2)
@@ -310,7 +310,7 @@ TEST(Strings, replace_substr_2)
   newAcctName.ReplaceSubstring(oldVal, newVal);
 
   // we expect that newAcctName will be unchanged.
-  ASSERT_TRUE(newAcctName.Equals(acctName));
+  EXPECT_TRUE(newAcctName.Equals(acctName));
 }
 
 TEST(Strings, replace_substr_3)
@@ -318,67 +318,67 @@ TEST(Strings, replace_substr_3)
   nsCString s;
   s.Assign("abcabcabc");
   s.ReplaceSubstring("ca", "X");
-  ASSERT_STREQ(s.get(), "abXbXbc");
+  EXPECT_STREQ(s.get(), "abXbXbc");
 
   s.Assign("abcabcabc");
   s.ReplaceSubstring("ca", "XYZ");
-  ASSERT_STREQ(s.get(), "abXYZbXYZbc");
+  EXPECT_STREQ(s.get(), "abXYZbXYZbc");
 
   s.Assign("abcabcabc");
   s.ReplaceSubstring("ca", "XY");
-  ASSERT_STREQ(s.get(), "abXYbXYbc");
+  EXPECT_STREQ(s.get(), "abXYbXYbc");
 
   s.Assign("abcabcabc");
   s.ReplaceSubstring("ca", "XYZ!");
-  ASSERT_STREQ(s.get(), "abXYZ!bXYZ!bc");
+  EXPECT_STREQ(s.get(), "abXYZ!bXYZ!bc");
 
   s.Assign("abcdabcdabcd");
   s.ReplaceSubstring("bcd", "X");
-  ASSERT_STREQ(s.get(), "aXaXaX");
+  EXPECT_STREQ(s.get(), "aXaXaX");
 
   s.Assign("abcdabcdabcd");
   s.ReplaceSubstring("bcd", "XYZ!");
-  ASSERT_STREQ(s.get(), "aXYZ!aXYZ!aXYZ!");
+  EXPECT_STREQ(s.get(), "aXYZ!aXYZ!aXYZ!");
 
   s.Assign("abcdabcdabcd");
   s.ReplaceSubstring("bcd", "XY");
-  ASSERT_STREQ(s.get(), "aXYaXYaXY");
+  EXPECT_STREQ(s.get(), "aXYaXYaXY");
 
   s.Assign("abcdabcdabcd");
   s.ReplaceSubstring("bcd", "XYZABC");
-  ASSERT_STREQ(s.get(), "aXYZABCaXYZABCaXYZABC");
+  EXPECT_STREQ(s.get(), "aXYZABCaXYZABCaXYZABC");
 
   s.Assign("abcdabcdabcd");
   s.ReplaceSubstring("bcd", "XYZ");
-  ASSERT_STREQ(s.get(), "aXYZaXYZaXYZ");
+  EXPECT_STREQ(s.get(), "aXYZaXYZaXYZ");
 
   s.Assign("abcdabcdabcd");
   s.ReplaceSubstring("bcd", "XYZ!");
-  ASSERT_STREQ(s.get(), "aXYZ!aXYZ!aXYZ!");
+  EXPECT_STREQ(s.get(), "aXYZ!aXYZ!aXYZ!");
 
   s.Assign("abcdabcdabcd");
   s.ReplaceSubstring("ab", "X");
-  ASSERT_STREQ(s.get(), "XcdXcdXcd");
+  EXPECT_STREQ(s.get(), "XcdXcdXcd");
 
   s.Assign("abcdabcdabcd");
   s.ReplaceSubstring("ab", "XYZABC");
-  ASSERT_STREQ(s.get(), "XYZABCcdXYZABCcdXYZABCcd");
+  EXPECT_STREQ(s.get(), "XYZABCcdXYZABCcdXYZABCcd");
 
   s.Assign("abcdabcdabcd");
   s.ReplaceSubstring("ab", "XY");
-  ASSERT_STREQ(s.get(), "XYcdXYcdXYcd");
+  EXPECT_STREQ(s.get(), "XYcdXYcdXYcd");
 
   s.Assign("abcdabcdabcd");
   s.ReplaceSubstring("ab", "XYZ!");
-  ASSERT_STREQ(s.get(), "XYZ!cdXYZ!cdXYZ!cd");
+  EXPECT_STREQ(s.get(), "XYZ!cdXYZ!cdXYZ!cd");
 
   s.Assign("abcdabcdabcd");
   s.ReplaceSubstring("notfound", "X");
-  ASSERT_STREQ(s.get(), "abcdabcdabcd");
+  EXPECT_STREQ(s.get(), "abcdabcdabcd");
 
   s.Assign("abcdabcdabcd");
   s.ReplaceSubstring("notfound", "longlongstring");
-  ASSERT_STREQ(s.get(), "abcdabcdabcd");
+  EXPECT_STREQ(s.get(), "abcdabcdabcd");
 }
 
 TEST(Strings, strip_ws)
@@ -386,13 +386,13 @@ TEST(Strings, strip_ws)
   const char text[] = " a    $   ";
   nsCString s(text);
   s.StripWhitespace();
-  ASSERT_STREQ(s.get(), "a$");
+  EXPECT_STREQ(s.get(), "a$");
 }
 
 TEST(Strings, equals_ic)
 {
   nsCString s;
-  ASSERT_FALSE(s.LowerCaseEqualsLiteral("view-source"));
+  EXPECT_FALSE(s.LowerCaseEqualsLiteral("view-source"));
 }
 
 TEST(Strings, fixed_string)
@@ -401,12 +401,12 @@ TEST(Strings, fixed_string)
 
   nsFixedCString s(buf, sizeof(buf));
 
-  ASSERT_EQ(s.Length(), strlen(buf));
+  EXPECT_EQ(s.Length(), strlen(buf));
 
-  ASSERT_STREQ(s.get(), buf);
+  EXPECT_STREQ(s.get(), buf);
 
   s.Assign("foopy doopy doo");
-  ASSERT_EQ(s.get(), buf);
+  EXPECT_EQ(s.get(), buf);
 }
 
 TEST(Strings, concat)
@@ -418,7 +418,7 @@ TEST(Strings, concat)
       PromiseFlatCString(NS_LITERAL_CSTRING("foo") +
                          NS_LITERAL_CSTRING(",") +
                          barRef);
-  ASSERT_STREQ(result.get(), "foo,bar");
+  EXPECT_STREQ(result.get(), "foo,bar");
 }
 
 TEST(Strings, concat_2)
@@ -429,7 +429,7 @@ TEST(Strings, concat_2)
 
   nsAutoCString result( fieldTextStr + aText );
 
-  ASSERT_STREQ(result.get(), "xyztext");
+  EXPECT_STREQ(result.get(), "xyztext");
 }
 
 TEST(Strings, concat_3)
@@ -438,46 +438,46 @@ TEST(Strings, concat_3)
   nsCString ab("ab"), c("c");
 
   result = ab + result + c;
-  ASSERT_STREQ(result.get(), "abc");
+  EXPECT_STREQ(result.get(), "abc");
 }
 
 TEST(Strings, xpidl_string)
 {
   nsXPIDLCString a, b;
   a = b;
-  ASSERT_TRUE(a == b);
+  EXPECT_TRUE(a == b);
 
   a.Adopt(0);
-  ASSERT_TRUE(a == b);
+  EXPECT_TRUE(a == b);
 
   a.Append("foopy");
   a.Assign(b);
-  ASSERT_TRUE(a == b);
+  EXPECT_TRUE(a == b);
 
   a.Insert("", 0);
   a.Assign(b);
-  ASSERT_TRUE(a == b);
+  EXPECT_TRUE(a == b);
 
   const char text[] = "hello world";
   *getter_Copies(a) = NS_strdup(text);
-  ASSERT_STREQ(a, text);
+  EXPECT_STREQ(a, text);
 
   b = a;
-  ASSERT_STREQ(a, b);
+  EXPECT_STREQ(a, b);
 
   a.Adopt(0);
   nsACString::const_iterator begin, end;
   a.BeginReading(begin);
   a.EndReading(end);
   char *r = ToNewCString(Substring(begin, end));
-  ASSERT_STREQ(r, "");
+  EXPECT_STREQ(r, "");
   nsMemory::Free(r);
 
   a.Adopt(0);
-  ASSERT_TRUE(a.IsVoid());
+  EXPECT_TRUE(a.IsVoid());
 
   int32_t index = a.FindCharInSet("xyz");
-  ASSERT_EQ(index, kNotFound);
+  EXPECT_EQ(index, kNotFound);
 }
 
 TEST(Strings, empty_assign)
@@ -498,7 +498,7 @@ TEST(Strings, set_length)
   buf.SetCapacity(sizeof(kText)-1);
   buf.Assign(kText);
   buf.SetLength(sizeof(kText)-1);
-  ASSERT_STREQ(buf.get(), kText);
+  EXPECT_STREQ(buf.get(), kText);
 }
 
 TEST(Strings, substring)
@@ -507,17 +507,17 @@ TEST(Strings, substring)
 
   // this tests that |super| starts with |sub|,
   
-  ASSERT_TRUE(sub.Equals(StringHead(super, sub.Length())));
+  EXPECT_TRUE(sub.Equals(StringHead(super, sub.Length())));
 
   // and verifies that |sub| does not start with |super|.
 
-  ASSERT_FALSE(super.Equals(StringHead(sub, super.Length())));
+  EXPECT_FALSE(super.Equals(StringHead(sub, super.Length())));
 }
 
 #define test_append_expect(str, int, suffix, expect) \
   str.Truncate(); \
   str.AppendInt(suffix = int); \
-  ASSERT_TRUE(str.EqualsLiteral(expect));
+  EXPECT_TRUE(str.EqualsLiteral(expect));
 
 #define test_appends_expect(int, suffix, expect) \
   test_append_expect(str, int, suffix, expect) \
@@ -526,7 +526,7 @@ TEST(Strings, substring)
 #define test_appendbase(str, prefix, int, suffix, base) \
   str.Truncate(); \
   str.AppendInt(suffix = prefix ## int ## suffix, base); \
-  ASSERT_TRUE(str.EqualsLiteral(#int));
+  EXPECT_TRUE(str.EqualsLiteral(#int));
 
 #define test_appendbases(prefix, int, suffix, base) \
   test_appendbase(str, prefix, int, suffix, base) \
@@ -575,22 +575,22 @@ TEST(Strings, appendint64)
 
   str.AppendInt(max);
 
-  ASSERT_TRUE(str.Equals(max_expected));
+  EXPECT_TRUE(str.Equals(max_expected));
 
   str.Truncate();
   str.AppendInt(min);
-  ASSERT_TRUE(str.Equals(min_expected));
+  EXPECT_TRUE(str.Equals(min_expected));
   str.Truncate();
   str.AppendInt(min, 8);
-  ASSERT_TRUE(str.Equals(min_expected_oct));
+  EXPECT_TRUE(str.Equals(min_expected_oct));
 
 
   str.Truncate();
   str.AppendInt(maxint_plus1);
-  ASSERT_TRUE(str.Equals(maxint_plus1_expected));
+  EXPECT_TRUE(str.Equals(maxint_plus1_expected));
   str.Truncate();
   str.AppendInt(maxint_plus1, 16);
-  ASSERT_TRUE(str.Equals(maxint_plus1_expected_x));
+  EXPECT_TRUE(str.Equals(maxint_plus1_expected_x));
 }
 
 TEST(Strings, appendfloat)
@@ -603,12 +603,12 @@ TEST(Strings, appendfloat)
   // AppendFloat is used to append doubles, therefore the precision must be
   // large enough (see bug 327719)
   str.AppendFloat( bigdouble );
-  ASSERT_TRUE(str.Equals(double_expected));
+  EXPECT_TRUE(str.Equals(double_expected));
 
   str.Truncate();
   // AppendFloat is used to append floats (bug 327719 #27)
   str.AppendFloat( 0.1f * 0.1f );
-  ASSERT_TRUE(str.Equals(float_expected));
+  EXPECT_TRUE(str.Equals(float_expected));
 }
 
 TEST(Strings, findcharinset)
@@ -616,13 +616,13 @@ TEST(Strings, findcharinset)
   nsCString buf("hello, how are you?");
 
   int32_t index = buf.FindCharInSet(",?", 5);
-  ASSERT_EQ(index, 5);
+  EXPECT_EQ(index, 5);
 
   index = buf.FindCharInSet("helo", 0);
-  ASSERT_EQ(index, 0);
+  EXPECT_EQ(index, 0);
 
   index = buf.FindCharInSet("z?", 6);
-  ASSERT_EQ(index, (int32_t) buf.Length() - 1);
+  EXPECT_EQ(index, (int32_t) buf.Length() - 1);
 }
 
 TEST(Strings, rfindcharinset)
@@ -630,36 +630,36 @@ TEST(Strings, rfindcharinset)
   nsCString buf("hello, how are you?");
 
   int32_t index = buf.RFindCharInSet(",?", 5);
-  ASSERT_EQ(index, 5);
+  EXPECT_EQ(index, 5);
 
   index = buf.RFindCharInSet("helo", 0);
-  ASSERT_EQ(index, 0);
+  EXPECT_EQ(index, 0);
 
   index = buf.RFindCharInSet("z?", 6);
-  ASSERT_EQ(index, kNotFound);
+  EXPECT_EQ(index, kNotFound);
 
   index = buf.RFindCharInSet("l", 5);
-  ASSERT_EQ(index, 3);
+  EXPECT_EQ(index, 3);
 
   buf.Assign("abcdefghijkabc");
 
   index = buf.RFindCharInSet("ab");
-  ASSERT_EQ(index, 12);
+  EXPECT_EQ(index, 12);
 
   index = buf.RFindCharInSet("ab", 11);
-  ASSERT_EQ(index, 11);
+  EXPECT_EQ(index, 11);
 
   index = buf.RFindCharInSet("ab", 10);
-  ASSERT_EQ(index, 1);
+  EXPECT_EQ(index, 1);
 
   index = buf.RFindCharInSet("ab", 0);
-  ASSERT_EQ(index, 0);
+  EXPECT_EQ(index, 0);
 
   index = buf.RFindCharInSet("cd", 1);
-  ASSERT_EQ(index, kNotFound);
+  EXPECT_EQ(index, kNotFound);
 
   index = buf.RFindCharInSet("h");
-  ASSERT_EQ(index, 7);
+  EXPECT_EQ(index, 7);
 }
 
 TEST(Strings, stringbuffer)
@@ -669,10 +669,10 @@ TEST(Strings, stringbuffer)
   nsRefPtr<nsStringBuffer> buf;
 
   buf = nsStringBuffer::Alloc(sizeof(kData));
-  ASSERT_TRUE(!!buf);
+  EXPECT_TRUE(!!buf);
 
   buf = nsStringBuffer::Alloc(sizeof(kData));
-  ASSERT_TRUE(!!buf);
+  EXPECT_TRUE(!!buf);
   char *data = (char *) buf->Data();
   memcpy(data, kData, sizeof(kData));
 
@@ -682,7 +682,7 @@ TEST(Strings, stringbuffer)
   nsStringBuffer *buf2;
   buf2 = nsStringBuffer::FromString(str);
 
-  ASSERT_EQ(buf, buf2);
+  EXPECT_EQ(buf, buf2);
 }
 
 TEST(Strings, voided)
@@ -690,20 +690,20 @@ TEST(Strings, voided)
   const char kData[] = "hello world";
 
   nsXPIDLCString str;
-  ASSERT_FALSE(str);
-  ASSERT_TRUE(str.IsVoid());
-  ASSERT_TRUE(str.IsEmpty());
+  EXPECT_FALSE(str);
+  EXPECT_TRUE(str.IsVoid());
+  EXPECT_TRUE(str.IsEmpty());
 
   str.Assign(kData);
-  ASSERT_STREQ(str, kData);
+  EXPECT_STREQ(str, kData);
 
   str.SetIsVoid(true);
-  ASSERT_FALSE(str);
-  ASSERT_TRUE(str.IsVoid());
-  ASSERT_TRUE(str.IsEmpty());
+  EXPECT_FALSE(str);
+  EXPECT_TRUE(str.IsVoid());
+  EXPECT_TRUE(str.IsEmpty());
 
   str.SetIsVoid(false);
-  ASSERT_STREQ(str, "");
+  EXPECT_STREQ(str, "");
 }
 
 TEST(Strings, voided_autostr)
@@ -711,20 +711,20 @@ TEST(Strings, voided_autostr)
   const char kData[] = "hello world";
 
   nsAutoCString str;
-  ASSERT_FALSE(str.IsVoid());
-  ASSERT_TRUE(str.IsEmpty());
+  EXPECT_FALSE(str.IsVoid());
+  EXPECT_TRUE(str.IsEmpty());
 
   str.Assign(kData);
-  ASSERT_STREQ(str.get(), kData);
+  EXPECT_STREQ(str.get(), kData);
 
   str.SetIsVoid(true);
-  ASSERT_TRUE(str.IsVoid());
-  ASSERT_TRUE(str.IsEmpty());
+  EXPECT_TRUE(str.IsVoid());
+  EXPECT_TRUE(str.IsEmpty());
 
   str.Assign(kData);
-  ASSERT_FALSE(str.IsVoid());
-  ASSERT_FALSE(str.IsEmpty());
-  ASSERT_STREQ(str.get(), kData);
+  EXPECT_FALSE(str.IsVoid());
+  EXPECT_FALSE(str.IsEmpty());
+  EXPECT_STREQ(str.get(), kData);
 }
 
 TEST(Strings, voided_assignment)
@@ -732,15 +732,15 @@ TEST(Strings, voided_assignment)
   nsCString a, b;
   b.SetIsVoid(true);
   a = b;
-  ASSERT_TRUE(a.IsVoid());
-  ASSERT_EQ(a.get(), b.get());
+  EXPECT_TRUE(a.IsVoid());
+  EXPECT_EQ(a.get(), b.get());
 }
 
 TEST(Strings, empty_assignment)
 {
   nsCString a, b;
   a = b;
-  ASSERT_EQ(a.get(), b.get());
+  EXPECT_EQ(a.get(), b.get());
 }
 
 struct ToIntegerTest
@@ -763,11 +763,11 @@ TEST(Strings, string_tointeger)
   nsresult rv;
   for (const ToIntegerTest* t = kToIntegerTests; t->str; ++t) {
     int32_t result = nsAutoCString(t->str).ToInteger(&rv, t->radix);
-    ASSERT_EQ(rv, t->rv);
-    ASSERT_EQ(result, t->result);
+    EXPECT_EQ(rv, t->rv);
+    EXPECT_EQ(result, t->result);
     result = nsAutoCString(t->str).ToInteger(&rv, t->radix);
-    ASSERT_EQ(rv, t->rv);
-    ASSERT_EQ(result, t->result);
+    EXPECT_EQ(rv, t->rv);
+    EXPECT_EQ(result, t->result);
   }
 }
 
@@ -776,11 +776,11 @@ static void test_parse_string_helper(const char* str, char separator, int len,
 {
   nsCString data(str);
   nsTArray<nsCString> results;
-  ASSERT_TRUE(ParseString(data, separator, results));
-  ASSERT_EQ(int(results.Length()), len);
+  EXPECT_TRUE(ParseString(data, separator, results));
+  EXPECT_EQ(int(results.Length()), len);
   const char* strings[] = { s1, s2 };
   for (int i = 0; i < len; ++i) {
-    ASSERT_TRUE(results[i].Equals(strings[i]));
+    EXPECT_TRUE(results[i].Equals(strings[i]));
   }
 }
 
@@ -816,7 +816,7 @@ static void test_strip_chars_helper(const char16_t* str, const char16_t* strip, 
   nsAutoString tmp(str);
   nsAString& data = tmp;
   data.StripChars(strip, offset);
-  ASSERT_TRUE(data.Equals(result));
+  EXPECT_TRUE(data.Equals(result));
 }
 
 TEST(String, strip_chars)
@@ -849,86 +849,86 @@ TEST(Strings, huge_capacity)
   // Ignore the result if the address space is less than 64-bit because
   // some of the allocations above will exhaust the address space.
   if (sizeof(void*) >= 8) {
-    ASSERT_TRUE(a.SetCapacity(1, fallible_t()));
-    ASSERT_FALSE(a.SetCapacity(nsString::size_type(-1)/2, fallible_t()));
-    ASSERT_TRUE(a.SetCapacity(0, fallible_t()));  // free the allocated memory
+    EXPECT_TRUE(a.SetCapacity(1, fallible_t()));
+    EXPECT_FALSE(a.SetCapacity(nsString::size_type(-1)/2, fallible_t()));
+    EXPECT_TRUE(a.SetCapacity(0, fallible_t()));  // free the allocated memory
 
-    ASSERT_TRUE(b.SetCapacity(1, fallible_t()));
-    ASSERT_FALSE(b.SetCapacity(nsString::size_type(-1)/2 - 1, fallible_t()));
-    ASSERT_TRUE(b.SetCapacity(0, fallible_t()));
+    EXPECT_TRUE(b.SetCapacity(1, fallible_t()));
+    EXPECT_FALSE(b.SetCapacity(nsString::size_type(-1)/2 - 1, fallible_t()));
+    EXPECT_TRUE(b.SetCapacity(0, fallible_t()));
 
-    ASSERT_TRUE(c.SetCapacity(1, fallible_t()));
-    ASSERT_FALSE(c.SetCapacity(nsString::size_type(-1)/2, fallible_t()));
-    ASSERT_TRUE(c.SetCapacity(0, fallible_t()));
+    EXPECT_TRUE(c.SetCapacity(1, fallible_t()));
+    EXPECT_FALSE(c.SetCapacity(nsString::size_type(-1)/2, fallible_t()));
+    EXPECT_TRUE(c.SetCapacity(0, fallible_t()));
 
-    ASSERT_FALSE(d.SetCapacity(nsString::size_type(-1)/2 - 1, fallible_t()));
-    ASSERT_FALSE(d.SetCapacity(nsString::size_type(-1)/2, fallible_t()));
-    ASSERT_TRUE(d.SetCapacity(0, fallible_t()));
+    EXPECT_FALSE(d.SetCapacity(nsString::size_type(-1)/2 - 1, fallible_t()));
+    EXPECT_FALSE(d.SetCapacity(nsString::size_type(-1)/2, fallible_t()));
+    EXPECT_TRUE(d.SetCapacity(0, fallible_t()));
 
-    ASSERT_FALSE(e.SetCapacity(nsString::size_type(-1)/4, fallible_t()));
-    ASSERT_FALSE(e.SetCapacity(nsString::size_type(-1)/4 + 1, fallible_t()));
-    ASSERT_TRUE(e.SetCapacity(0, fallible_t()));
+    EXPECT_FALSE(e.SetCapacity(nsString::size_type(-1)/4, fallible_t()));
+    EXPECT_FALSE(e.SetCapacity(nsString::size_type(-1)/4 + 1, fallible_t()));
+    EXPECT_TRUE(e.SetCapacity(0, fallible_t()));
 
-    ASSERT_FALSE(f.SetCapacity(nsString::size_type(-1)/2, fallible_t()));
-    ASSERT_TRUE(f.SetCapacity(0, fallible_t()));
+    EXPECT_FALSE(f.SetCapacity(nsString::size_type(-1)/2, fallible_t()));
+    EXPECT_TRUE(f.SetCapacity(0, fallible_t()));
 
-    ASSERT_FALSE(g.SetCapacity(nsString::size_type(-1)/4 + 1000, fallible_t()));
-    ASSERT_FALSE(g.SetCapacity(nsString::size_type(-1)/4 + 1001, fallible_t()));
-    ASSERT_TRUE(g.SetCapacity(0, fallible_t()));
+    EXPECT_FALSE(g.SetCapacity(nsString::size_type(-1)/4 + 1000, fallible_t()));
+    EXPECT_FALSE(g.SetCapacity(nsString::size_type(-1)/4 + 1001, fallible_t()));
+    EXPECT_TRUE(g.SetCapacity(0, fallible_t()));
 
-    ASSERT_FALSE(h.SetCapacity(nsString::size_type(-1)/4+1, fallible_t()));
-    ASSERT_FALSE(h.SetCapacity(nsString::size_type(-1)/2, fallible_t()));
-    ASSERT_TRUE(h.SetCapacity(0, fallible_t()));
+    EXPECT_FALSE(h.SetCapacity(nsString::size_type(-1)/4+1, fallible_t()));
+    EXPECT_FALSE(h.SetCapacity(nsString::size_type(-1)/2, fallible_t()));
+    EXPECT_TRUE(h.SetCapacity(0, fallible_t()));
 
-    ASSERT_TRUE(i.SetCapacity(1, fallible_t()));
-    ASSERT_TRUE(i.SetCapacity(nsString::size_type(-1)/4 - 1000, fallible_t()));
-    ASSERT_FALSE(i.SetCapacity(nsString::size_type(-1)/4 + 1, fallible_t()));
-    ASSERT_TRUE(i.SetCapacity(0, fallible_t()));
+    EXPECT_TRUE(i.SetCapacity(1, fallible_t()));
+    EXPECT_TRUE(i.SetCapacity(nsString::size_type(-1)/4 - 1000, fallible_t()));
+    EXPECT_FALSE(i.SetCapacity(nsString::size_type(-1)/4 + 1, fallible_t()));
+    EXPECT_TRUE(i.SetCapacity(0, fallible_t()));
 
-    ASSERT_TRUE(j.SetCapacity(nsString::size_type(-1)/4 - 1000, fallible_t()));
-    ASSERT_FALSE(j.SetCapacity(nsString::size_type(-1)/4 + 1, fallible_t()));
-    ASSERT_TRUE(j.SetCapacity(0, fallible_t()));
+    EXPECT_TRUE(j.SetCapacity(nsString::size_type(-1)/4 - 1000, fallible_t()));
+    EXPECT_FALSE(j.SetCapacity(nsString::size_type(-1)/4 + 1, fallible_t()));
+    EXPECT_TRUE(j.SetCapacity(0, fallible_t()));
 
-    ASSERT_TRUE(k.SetCapacity(nsString::size_type(-1)/8 - 1000, fallible_t()));
-    ASSERT_TRUE(k.SetCapacity(nsString::size_type(-1)/4 - 1001, fallible_t()));
-    ASSERT_TRUE(k.SetCapacity(nsString::size_type(-1)/4 - 998, fallible_t()));
-    ASSERT_FALSE(k.SetCapacity(nsString::size_type(-1)/4 + 1, fallible_t()));
-    ASSERT_TRUE(k.SetCapacity(0, fallible_t()));
+    EXPECT_TRUE(k.SetCapacity(nsString::size_type(-1)/8 - 1000, fallible_t()));
+    EXPECT_TRUE(k.SetCapacity(nsString::size_type(-1)/4 - 1001, fallible_t()));
+    EXPECT_TRUE(k.SetCapacity(nsString::size_type(-1)/4 - 998, fallible_t()));
+    EXPECT_FALSE(k.SetCapacity(nsString::size_type(-1)/4 + 1, fallible_t()));
+    EXPECT_TRUE(k.SetCapacity(0, fallible_t()));
 
-    ASSERT_TRUE(l.SetCapacity(nsString::size_type(-1)/8, fallible_t()));
-    ASSERT_TRUE(l.SetCapacity(nsString::size_type(-1)/8 + 1, fallible_t()));
-    ASSERT_TRUE(l.SetCapacity(nsString::size_type(-1)/8 + 2, fallible_t()));
-    ASSERT_TRUE(l.SetCapacity(0, fallible_t()));
+    EXPECT_TRUE(l.SetCapacity(nsString::size_type(-1)/8, fallible_t()));
+    EXPECT_TRUE(l.SetCapacity(nsString::size_type(-1)/8 + 1, fallible_t()));
+    EXPECT_TRUE(l.SetCapacity(nsString::size_type(-1)/8 + 2, fallible_t()));
+    EXPECT_TRUE(l.SetCapacity(0, fallible_t()));
 
-    ASSERT_TRUE(m.SetCapacity(nsString::size_type(-1)/8 + 1000, fallible_t()));
-    ASSERT_TRUE(m.SetCapacity(nsString::size_type(-1)/8 + 1001, fallible_t()));
-    ASSERT_TRUE(m.SetCapacity(0, fallible_t()));
+    EXPECT_TRUE(m.SetCapacity(nsString::size_type(-1)/8 + 1000, fallible_t()));
+    EXPECT_TRUE(m.SetCapacity(nsString::size_type(-1)/8 + 1001, fallible_t()));
+    EXPECT_TRUE(m.SetCapacity(0, fallible_t()));
 
-    ASSERT_TRUE(n.SetCapacity(nsString::size_type(-1)/8+1, fallible_t()));
-    ASSERT_FALSE(n.SetCapacity(nsString::size_type(-1)/4, fallible_t()));
-    ASSERT_TRUE(n.SetCapacity(0, fallible_t()));
+    EXPECT_TRUE(n.SetCapacity(nsString::size_type(-1)/8+1, fallible_t()));
+    EXPECT_FALSE(n.SetCapacity(nsString::size_type(-1)/4, fallible_t()));
+    EXPECT_TRUE(n.SetCapacity(0, fallible_t()));
 
-    ASSERT_TRUE(n.SetCapacity(0, fallible_t()));
-    ASSERT_TRUE(n.SetCapacity((nsString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 2 - 2, fallible_t()));
-    ASSERT_TRUE(n.SetCapacity(0, fallible_t()));
-    ASSERT_FALSE(n.SetCapacity((nsString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 2 - 1, fallible_t()));
-    ASSERT_TRUE(n.SetCapacity(0, fallible_t()));
-    ASSERT_TRUE(n1.SetCapacity(0, fallible_t()));
-    ASSERT_TRUE(n1.SetCapacity((nsCString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 1 - 2, fallible_t()));
-    ASSERT_TRUE(n1.SetCapacity(0, fallible_t()));
-    ASSERT_FALSE(n1.SetCapacity((nsCString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 1 - 1, fallible_t()));
-    ASSERT_TRUE(n1.SetCapacity(0, fallible_t()));
+    EXPECT_TRUE(n.SetCapacity(0, fallible_t()));
+    EXPECT_TRUE(n.SetCapacity((nsString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 2 - 2, fallible_t()));
+    EXPECT_TRUE(n.SetCapacity(0, fallible_t()));
+    EXPECT_FALSE(n.SetCapacity((nsString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 2 - 1, fallible_t()));
+    EXPECT_TRUE(n.SetCapacity(0, fallible_t()));
+    EXPECT_TRUE(n1.SetCapacity(0, fallible_t()));
+    EXPECT_TRUE(n1.SetCapacity((nsCString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 1 - 2, fallible_t()));
+    EXPECT_TRUE(n1.SetCapacity(0, fallible_t()));
+    EXPECT_FALSE(n1.SetCapacity((nsCString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 1 - 1, fallible_t()));
+    EXPECT_TRUE(n1.SetCapacity(0, fallible_t()));
   }
 }
 
 static void test_tofloat_helper(const nsString& aStr, float aExpected, bool aSuccess)
 {
   nsresult result;
-  ASSERT_EQ(aStr.ToFloat(&result), aExpected);
+  EXPECT_EQ(aStr.ToFloat(&result), aExpected);
   if (aSuccess) {
-    ASSERT_EQ(result, NS_OK);
+    EXPECT_EQ(result, NS_OK);
   } else {
-    ASSERT_NE(result, NS_OK);
+    EXPECT_NE(result, NS_OK);
   }
 }
 
@@ -951,11 +951,11 @@ TEST(Strings, tofloat)
 static void test_todouble_helper(const nsString& aStr, double aExpected, bool aSuccess)
 {
   nsresult result;
-  ASSERT_EQ(aStr.ToDouble(&result), aExpected);
+  EXPECT_EQ(aStr.ToDouble(&result), aExpected);
   if (aSuccess) {
-    ASSERT_EQ(result, NS_OK);
+    EXPECT_EQ(result, NS_OK);
   } else {
-    ASSERT_NE(result, NS_OK);
+    EXPECT_NE(result, NS_OK);
   }
 }
 
