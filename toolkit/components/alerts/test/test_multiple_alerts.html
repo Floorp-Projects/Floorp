@@ -117,6 +117,7 @@ function runTest() {
   }
 
   SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("untriaged");
   showFirstAlert(alertService);
 }
 

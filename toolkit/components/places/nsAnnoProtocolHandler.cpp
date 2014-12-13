@@ -279,7 +279,7 @@ nsAnnoProtocolHandler::NewChannel2(nsIURI* aURI,
   if (!annoName.EqualsLiteral(FAVICON_ANNOTATION_NAME))
     return NS_ERROR_INVALID_ARG;
 
-  return NewFaviconChannel(aURI, annoURI, _retval);
+  return NewFaviconChannel(aURI, annoURI, aLoadInfo, _retval);
 }
 
 NS_IMETHODIMP
@@ -328,7 +328,7 @@ nsAnnoProtocolHandler::ParseAnnoURI(nsIURI* aURI,
 
 nsresult
 nsAnnoProtocolHandler::NewFaviconChannel(nsIURI *aURI, nsIURI *aAnnotationURI,
-                                         nsIChannel **_channel)
+                                         nsILoadInfo* aLoadInfo, nsIChannel **_channel)
 {
   // Create our pipe.  This will give us our input stream and output stream
   // that will be written to when we get data from the database.
@@ -343,12 +343,26 @@ nsAnnoProtocolHandler::NewFaviconChannel(nsIURI *aURI, nsIURI *aAnnotationURI,
   // Create our channel.  We'll call SetContentType with the right type when
   // we know what it actually is.
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewInputStreamChannel(getter_AddRefs(channel),
-                                aURI,
-                                inputStream,
-                                nsContentUtils::GetSystemPrincipal(),
-                                nsILoadInfo::SEC_NORMAL,
-                                nsIContentPolicy::TYPE_OTHER);
+  // Bug 1087720 (and Bug 1099296):
+  // Once all callsites have been updated to call NewChannel2() instead of NewChannel()
+  // we should have a non-null loadInfo consistently. Until then we have to brach on the
+  // loadInfo and provide default arguments to create a NewInputStreamChannel.
+  if (aLoadInfo) {
+    rv = NS_NewInputStreamChannelInternal(getter_AddRefs(channel),
+                                          aURI,
+                                          inputStream,
+                                          EmptyCString(), // aContentType
+                                          EmptyCString(), // aContentCharset
+                                          aLoadInfo);
+  }
+  else {
+    rv = NS_NewInputStreamChannel(getter_AddRefs(channel),
+                                  aURI,
+                                  inputStream,
+                                  nsContentUtils::GetSystemPrincipal(),
+                                  nsILoadInfo::SEC_NORMAL,
+                                  nsIContentPolicy::TYPE_OTHER);
+  }
   NS_ENSURE_SUCCESS(rv, GetDefaultIcon(_channel));
 
   // Now we go ahead and get our data asynchronously for the favicon.

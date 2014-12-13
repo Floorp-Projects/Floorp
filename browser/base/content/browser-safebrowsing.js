@@ -7,7 +7,7 @@ var gSafeBrowsing = {
 
   setReportPhishingMenu: function() {
     // A phishing page will have a specific about:blocked content documentURI
-    var uri = getBrowser().currentURI;
+    var uri = gBrowser.currentURI;
     var isPhishingPage = uri && uri.spec.startsWith("about:blocked?e=phishingBlocked");
 
     // Show/hide the appropriate menu item.

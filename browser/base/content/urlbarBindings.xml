@@ -1058,7 +1058,7 @@
         const kXULNS =
           "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-        let addEngines = getBrowser().mCurrentBrowser.engines;
+        let addEngines = gBrowser.mCurrentBrowser.engines;
         if (addEngines && addEngines.length > 0) {
           const kBundleURI = "chrome://browser/locale/search.properties";
           let bundle = Services.strings.createBundle(kBundleURI);

@@ -789,6 +789,105 @@ class TestCommandline(unittest.TestCase):
         args = parser.parse_args(["--log-tbpl-level=error"])
         self.assertRaises(ValueError, commandline.setup_logging, "test_fmtopts", args, {})
 
+class TestBuffer(BaseStructuredTest):
+
+    def assert_log_equals(self, expected, actual=None):
+        if actual is None:
+            actual = self.pop_last_item()
+
+        all_expected = {"pid": os.getpid(),
+                        "thread": "MainThread",
+                        "source": "testBuffer"}
+        specials = set(["time"])
+
+        all_expected.update(expected)
+        for key, value in all_expected.iteritems():
+            self.assertEqual(actual[key], value)
+
+        self.assertEquals(set(all_expected.keys()) | specials, set(actual.keys()))
+
+    def setUp(self):
+        self.logger = structuredlog.StructuredLogger("testBuffer")
+        self.handler = handlers.BufferHandler(TestHandler(), message_limit=4)
+        self.logger.add_handler(self.handler)
+
+    def tearDown(self):
+        self.logger.remove_handler(self.handler)
+
+    def pop_last_item(self):
+        return self.handler.inner.items.pop()
+
+    def test_buffer_messages(self):
+        self.logger.suite_start([])
+        self.logger.test_start("test1")
+        self.logger.send_message("buffer", "off")
+        self.logger.test_status("test1", "sub1", status="PASS")
+        # Even for buffered actions, the buffer does not interfere if
+        # buffering is turned off.
+        self.assert_log_equals({"action": "test_status",
+                                "test": "test1",
+                                "status": "PASS",
+                                "subtest": "sub1"})
+        self.logger.send_message("buffer", "on")
+        self.logger.test_status("test1", "sub2", status="PASS")
+        self.logger.test_status("test1", "sub3", status="PASS")
+        self.logger.test_status("test1", "sub4", status="PASS")
+        self.logger.test_status("test1", "sub5", status="PASS")
+        self.logger.test_status("test1", "sub6", status="PASS")
+        self.logger.test_status("test1", "sub7", status="PASS")
+        self.logger.test_end("test1", status="OK")
+        self.logger.send_message("buffer", "clear")
+        self.assert_log_equals({"action": "test_end",
+                                "test": "test1",
+                                "status": "OK"})
+        self.logger.suite_end()
+
+
+    def test_buffer_size(self):
+        self.logger.suite_start([])
+        self.logger.test_start("test1")
+        self.logger.test_status("test1", "sub1", status="PASS")
+        self.logger.test_status("test1", "sub2", status="PASS")
+        self.logger.test_status("test1", "sub3", status="PASS")
+        self.logger.test_status("test1", "sub4", status="PASS")
+        self.logger.test_status("test1", "sub5", status="PASS")
+        self.logger.test_status("test1", "sub6", status="PASS")
+        self.logger.test_status("test1", "sub7", status="PASS")
+
+        # No test status messages made it to the underlying handler.
+        self.assert_log_equals({"action": "test_start",
+                                "test": "test1"})
+
+        # The buffer's actual size never grows beyond the specified limit.
+        self.assertEquals(len(self.handler._buffer), 4)
+
+        self.logger.test_status("test1", "sub8", status="FAIL")
+        # The number of messages deleted comes back in a list.
+        self.assertEquals([4], self.logger.send_message("buffer", "flush"))
+
+        # When the buffer is dumped, the failure is the last thing logged
+        self.assert_log_equals({"action": "test_status",
+                                "test": "test1",
+                                "subtest": "sub8",
+                                "status": "FAIL",
+                                "expected": "PASS"})
+        # Three additional messages should have been retained for context
+        self.assert_log_equals({"action": "test_status",
+                                "test": "test1",
+                                "status": "PASS",
+                                "subtest": "sub7"})
+        self.assert_log_equals({"action": "test_status",
+                                "test": "test1",
+                                "status": "PASS",
+                                "subtest": "sub6"})
+        self.assert_log_equals({"action": "test_status",
+                                "test": "test1",
+                                "status": "PASS",
+                                "subtest": "sub5"})
+        self.assert_log_equals({"action": "suite_start",
+                                "tests": []})
+
+
 class TestReader(unittest.TestCase):
     def to_file_like(self, obj):
         data_str = "\n".join(json.dumps(item) for item in obj)

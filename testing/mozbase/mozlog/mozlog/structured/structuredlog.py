@@ -136,10 +136,23 @@ class StructuredLogger(object):
 
     def remove_handler(self, handler):
         """Remove a handler from the current logger"""
-        for i, candidate_handler in enumerate(self._state.handlers[:]):
-            if candidate_handler == handler:
-                del self._state.handlers[i]
-                break
+        self._state.handlers.remove(handler)
+
+    def send_message(self, topic, command, *args):
+        """Send a message to each handler configured for this logger. This
+        part of the api is useful to those users requiring dynamic control
+        of a handler's behavior.
+
+        :param topic: The name used by handlers to subscribe to a message.
+        :param command: The name of the command to issue.
+        :param args: Any arguments known to the target for specialized
+                     behavior.
+        """
+        rv = []
+        for handler in self._state.handlers:
+            if hasattr(handler, "handle_message"):
+                rv += handler.handle_message(topic, command, *args)
+        return rv
 
     @property
     def handlers(self):

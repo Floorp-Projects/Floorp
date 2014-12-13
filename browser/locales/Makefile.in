@@ -78,6 +78,9 @@ SEARCHPLUGINS_PATH := $(FINAL_TARGET)/searchplugins
 .PHONY: searchplugins
 SEARCHPLUGINS_TARGET := libs searchplugins
 SEARCHPLUGINS := $(foreach plugin,$(addsuffix .xml,$(SEARCHPLUGINS_NAMES)),$(or $(wildcard $(call MERGE_FILE,searchplugins/$(plugin))),$(info Missing searchplugin: $(plugin))))
+# Some locale-specific search plugins may have preprocessor directives, but the
+# default en-US ones do not.
+SEARCHPLUGINS_FLAGS := --silence-missing-directive-warnings
 PP_TARGETS += SEARCHPLUGINS
 
 # Required for l10n.mk - defines a list of app sub dirs that should

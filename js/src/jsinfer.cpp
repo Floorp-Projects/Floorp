@@ -3264,7 +3264,7 @@ TypeObject::maybeClearNewScriptOnOOM()
     if (!isMarked())
         return;
 
-    if (!newScript_)
+    if (!newScript())
         return;
 
     for (unsigned i = 0; i < getPropertyCount(); i++) {
@@ -3278,7 +3278,7 @@ TypeObject::maybeClearNewScriptOnOOM()
     // This method is called during GC sweeping, so there is no write barrier
     // that needs to be triggered.
     js_delete(newScript());
-    newScript_.unsafeSet(nullptr);
+    addendum_ = nullptr;
 }
 
 void
@@ -4083,12 +4083,12 @@ TypeNewScript::maybeAnalyze(JSContext *cx, TypeObject *type, bool *regenerate, b
     if (!type->addDefiniteProperties(cx, prefixShape))
         return false;
 
-    TypeObjectWithNewScriptSet &table = cx->compartment()->newTypeObjects;
-    TypeObjectWithNewScriptSet::Lookup lookup(type->clasp(), type->proto(), fun);
+    NewTypeObjectTable &table = cx->compartment()->newTypeObjects;
+    NewTypeObjectTable::Lookup lookup(type->clasp(), type->proto(), fun);
 
     MOZ_ASSERT(table.lookup(lookup)->object == type);
     table.remove(lookup);
-    table.putNew(lookup, TypeObjectWithNewScriptEntry(initialType, fun));
+    table.putNew(lookup, NewTypeObjectEntry(initialType, fun));
 
     templateObject()->setType(initialType);
 
@@ -4322,31 +4322,32 @@ JSObject::makeLazyType(JSContext *cx, HandleObject obj)
 }
 
 /* static */ inline HashNumber
-TypeObjectWithNewScriptEntry::hash(const Lookup &lookup)
+NewTypeObjectEntry::hash(const Lookup &lookup)
 {
     return PointerHasher<JSObject *, 3>::hash(lookup.hashProto.raw()) ^
            PointerHasher<const Class *, 3>::hash(lookup.clasp) ^
-           PointerHasher<JSFunction *, 3>::hash(lookup.newFunction);
+           PointerHasher<JSObject *, 3>::hash(lookup.associated);
 }
 
 /* static */ inline bool
-TypeObjectWithNewScriptEntry::match(const TypeObjectWithNewScriptEntry &key, const Lookup &lookup)
+NewTypeObjectEntry::match(const NewTypeObjectEntry &key, const Lookup &lookup)
 {
     return key.object->proto() == lookup.matchProto &&
            key.object->clasp() == lookup.clasp &&
-           key.newFunction == lookup.newFunction;
+           key.associated == lookup.associated;
 }
 
 #ifdef DEBUG
 bool
 JSObject::hasNewType(const Class *clasp, TypeObject *type)
 {
-    TypeObjectWithNewScriptSet &table = compartment()->newTypeObjects;
+    NewTypeObjectTable &table = compartment()->newTypeObjects;
 
     if (!table.initialized())
         return false;
 
-    TypeObjectWithNewScriptSet::Ptr p = table.lookup(TypeObjectWithNewScriptSet::Lookup(clasp, TaggedProto(this), nullptr));
+    NewTypeObjectTable::Ptr p =
+        table.lookup(NewTypeObjectTable::Lookup(clasp, TaggedProto(this), nullptr));
     return p && p->object == type;
 }
 #endif /* DEBUG */
@@ -4362,10 +4363,12 @@ JSObject::setNewTypeUnknown(JSContext *cx, const Class *clasp, HandleObject obj)
      * not have the SETS_MARKED_UNKNOWN bit set, so may require a type set
      * crawl if prototypes of the object change dynamically in the future.
      */
-    TypeObjectWithNewScriptSet &table = cx->compartment()->newTypeObjects;
+    NewTypeObjectTable &table = cx->compartment()->newTypeObjects;
     if (table.initialized()) {
         Rooted<TaggedProto> taggedProto(cx, TaggedProto(obj));
-        if (TypeObjectWithNewScriptSet::Ptr p = table.lookup(TypeObjectWithNewScriptSet::Lookup(clasp, taggedProto, nullptr)))
+        NewTypeObjectTable::Ptr p =
+            table.lookup(NewTypeObjectTable::Lookup(clasp, taggedProto, nullptr));
+        if (p)
             MarkTypeObjectUnknownProperties(cx, p->object);
     }
 
@@ -4379,14 +4382,14 @@ JSObject::setNewTypeUnknown(JSContext *cx, const Class *clasp, HandleObject obj)
  */
 class NewTypeObjectsSetRef : public BufferableRef
 {
-    TypeObjectWithNewScriptSet *set;
+    NewTypeObjectTable *set;
     const Class *clasp;
     JSObject *proto;
-    JSFunction *newFunction;
+    JSObject *associated;
 
   public:
-    NewTypeObjectsSetRef(TypeObjectWithNewScriptSet *s, const Class *clasp, JSObject *proto, JSFunction *newFunction)
-        : set(s), clasp(clasp), proto(proto), newFunction(newFunction)
+    NewTypeObjectsSetRef(NewTypeObjectTable *s, const Class *clasp, JSObject *proto, JSObject *associated)
+        : set(s), clasp(clasp), proto(proto), associated(associated)
     {}
 
     void mark(JSTracer *trc) {
@@ -4396,19 +4399,21 @@ class NewTypeObjectsSetRef : public BufferableRef
         if (prior == proto)
             return;
 
-        TypeObjectWithNewScriptSet::Ptr p = set->lookup(TypeObjectWithNewScriptSet::Lookup(clasp, TaggedProto(prior), TaggedProto(proto), newFunction));
+        NewTypeObjectTable::Ptr p =
+            set->lookup(NewTypeObjectTable::Lookup(clasp, TaggedProto(prior), TaggedProto(proto),
+                                                   associated));
         MOZ_ASSERT(p);  // newTypeObjects set must still contain original entry.
 
-        set->rekeyAs(TypeObjectWithNewScriptSet::Lookup(clasp, TaggedProto(prior), TaggedProto(proto), newFunction),
-                     TypeObjectWithNewScriptSet::Lookup(clasp, TaggedProto(proto), newFunction), *p);
+        set->rekeyAs(NewTypeObjectTable::Lookup(clasp, TaggedProto(prior), TaggedProto(proto), associated),
+                     NewTypeObjectTable::Lookup(clasp, TaggedProto(proto), associated), *p);
     }
 };
 
 static void
-TypeObjectTablePostBarrier(ExclusiveContext *cx, TypeObjectWithNewScriptSet *table,
-                           const Class *clasp, TaggedProto proto, JSFunction *fun)
+TypeObjectTablePostBarrier(ExclusiveContext *cx, NewTypeObjectTable *table,
+                           const Class *clasp, TaggedProto proto, JSObject *associated)
 {
-    MOZ_ASSERT_IF(fun, !IsInsideNursery(fun));
+    MOZ_ASSERT_IF(associated, !IsInsideNursery(associated));
 
     if (!proto.isObject())
         return;
@@ -4420,33 +4425,35 @@ TypeObjectTablePostBarrier(ExclusiveContext *cx, TypeObjectWithNewScriptSet *tab
 
     if (IsInsideNursery(proto.toObject())) {
         StoreBuffer &sb = cx->asJSContext()->runtime()->gc.storeBuffer;
-        sb.putGeneric(NewTypeObjectsSetRef(table, clasp, proto.toObject(), fun));
+        sb.putGeneric(NewTypeObjectsSetRef(table, clasp, proto.toObject(), associated));
     }
 }
 
 TypeObject *
-ExclusiveContext::getNewType(const Class *clasp, TaggedProto proto, JSFunction *fun)
+ExclusiveContext::getNewType(const Class *clasp, TaggedProto proto, JSObject *associated)
 {
-    MOZ_ASSERT_IF(fun, proto.isObject());
+    MOZ_ASSERT_IF(associated, proto.isObject());
+    MOZ_ASSERT_IF(associated, associated->is<JSFunction>() || associated->is<TypeDescr>());
     MOZ_ASSERT_IF(proto.isObject(), isInsideCurrentCompartment(proto.toObject()));
 
-    TypeObjectWithNewScriptSet &newTypeObjects = compartment()->newTypeObjects;
+    NewTypeObjectTable &newTypeObjects = compartment()->newTypeObjects;
 
     if (!newTypeObjects.initialized() && !newTypeObjects.init())
         return nullptr;
 
     // Canonicalize new functions to use the original one associated with its script.
-    if (fun) {
+    if (associated && associated->is<JSFunction>()) {
+        JSFunction *fun = &associated->as<JSFunction>();
         if (fun->hasScript())
-            fun = fun->nonLazyScript()->functionNonDelazifying();
+            associated = fun->nonLazyScript()->functionNonDelazifying();
         else if (fun->isInterpretedLazy() && !fun->isSelfHostedBuiltin())
-            fun = fun->lazyScript()->functionNonDelazifying();
+            associated = fun->lazyScript()->functionNonDelazifying();
         else
-            fun = nullptr;
+            associated = nullptr;
     }
 
-    TypeObjectWithNewScriptSet::AddPtr p =
-        newTypeObjects.lookupForAdd(TypeObjectWithNewScriptSet::Lookup(clasp, proto, fun));
+    NewTypeObjectTable::AddPtr p =
+        newTypeObjects.lookupForAdd(NewTypeObjectTable::Lookup(clasp, proto, associated));
     if (p) {
         TypeObject *type = p->object;
         MOZ_ASSERT(type->clasp() == clasp);
@@ -4475,16 +4482,20 @@ ExclusiveContext::getNewType(const Class *clasp, TaggedProto proto, JSFunction *
     if (!type)
         return nullptr;
 
-    if (!newTypeObjects.add(p, TypeObjectWithNewScriptEntry(type, fun)))
+    if (!newTypeObjects.add(p, NewTypeObjectEntry(type, associated)))
         return nullptr;
 
-    TypeObjectTablePostBarrier(this, &newTypeObjects, clasp, proto, fun);
+    TypeObjectTablePostBarrier(this, &newTypeObjects, clasp, proto, associated);
 
     if (proto.isObject()) {
         RootedObject obj(this, proto.toObject());
 
-        if (fun)
-            TypeNewScript::make(asJSContext(), type, fun);
+        if (associated) {
+            if (associated->is<JSFunction>())
+                TypeNewScript::make(asJSContext(), type, &associated->as<JSFunction>());
+            else
+                type->setTypeDescr(&associated->as<TypeDescr>());
+        }
 
         /*
          * Some builtin objects have slotful native properties baked in at
@@ -4523,12 +4534,12 @@ ExclusiveContext::getSingletonType(const Class *clasp, TaggedProto proto)
 
     AutoEnterAnalysis enter(this);
 
-    TypeObjectWithNewScriptSet &table = compartment()->lazyTypeObjects;
+    NewTypeObjectTable &table = compartment()->lazyTypeObjects;
 
     if (!table.initialized() && !table.init())
         return nullptr;
 
-    TypeObjectWithNewScriptSet::AddPtr p = table.lookupForAdd(TypeObjectWithNewScriptSet::Lookup(clasp, proto, nullptr));
+    NewTypeObjectTable::AddPtr p = table.lookupForAdd(NewTypeObjectTable::Lookup(clasp, proto, nullptr));
     if (p) {
         TypeObject *type = p->object;
         MOZ_ASSERT(type->lazy());
@@ -4541,7 +4552,7 @@ ExclusiveContext::getSingletonType(const Class *clasp, TaggedProto proto)
     if (!type)
         return nullptr;
 
-    if (!table.add(p, TypeObjectWithNewScriptEntry(type, nullptr)))
+    if (!table.add(p, NewTypeObjectEntry(type, nullptr)))
         return nullptr;
 
     TypeObjectTablePostBarrier(this, &table, clasp, proto, nullptr);
@@ -4849,20 +4860,20 @@ TypeCompartment::sweep(FreeOp *fop)
 }
 
 void
-JSCompartment::sweepNewTypeObjectTable(TypeObjectWithNewScriptSet &table)
+JSCompartment::sweepNewTypeObjectTable(NewTypeObjectTable &table)
 {
     MOZ_ASSERT(zone()->runtimeFromAnyThread()->isHeapCollecting());
     if (table.initialized()) {
-        for (TypeObjectWithNewScriptSet::Enum e(table); !e.empty(); e.popFront()) {
-            TypeObjectWithNewScriptEntry entry = e.front();
+        for (NewTypeObjectTable::Enum e(table); !e.empty(); e.popFront()) {
+            NewTypeObjectEntry entry = e.front();
             if (IsTypeObjectAboutToBeFinalizedFromAnyThread(entry.object.unsafeGet()) ||
-                (entry.newFunction && IsObjectAboutToBeFinalizedFromAnyThread(&entry.newFunction)))
+                (entry.associated && IsObjectAboutToBeFinalizedFromAnyThread(&entry.associated)))
             {
                 e.removeFront();
             } else {
                 /* Any rekeying necessary is handled by fixupNewTypeObjectTable() below. */
                 MOZ_ASSERT(entry.object.unbarrieredGet() == e.front().object.unbarrieredGet());
-                MOZ_ASSERT(entry.newFunction == e.front().newFunction);
+                MOZ_ASSERT(entry.associated == e.front().associated);
             }
         }
     }
@@ -4871,7 +4882,7 @@ JSCompartment::sweepNewTypeObjectTable(TypeObjectWithNewScriptSet &table)
 #ifdef JSGC_COMPACTING
 
 void
-JSCompartment::fixupNewTypeObjectTable(TypeObjectWithNewScriptSet &table)
+JSCompartment::fixupNewTypeObjectTable(NewTypeObjectTable &table)
 {
     /*
      * Each entry's hash depends on the object's prototype and we can't tell
@@ -4879,8 +4890,8 @@ JSCompartment::fixupNewTypeObjectTable(TypeObjectWithNewScriptSet &table)
      */
     MOZ_ASSERT(zone()->isCollecting());
     if (table.initialized()) {
-        for (TypeObjectWithNewScriptSet::Enum e(table); !e.empty(); e.popFront()) {
-            TypeObjectWithNewScriptEntry entry = e.front();
+        for (NewTypeObjectTable::Enum e(table); !e.empty(); e.popFront()) {
+            NewTypeObjectEntry entry = e.front();
             bool needRekey = false;
             if (IsForwarded(entry.object.get())) {
                 entry.object.set(Forwarded(entry.object.get()));
@@ -4891,14 +4902,14 @@ JSCompartment::fixupNewTypeObjectTable(TypeObjectWithNewScriptSet &table)
                 proto = TaggedProto(Forwarded(proto.toObject()));
                 needRekey = true;
             }
-            if (entry.newFunction && IsForwarded(entry.newFunction)) {
-                entry.newFunction = Forwarded(entry.newFunction);
+            if (entry.associated && IsForwarded(entry.associated)) {
+                entry.associated = Forwarded(entry.associated);
                 needRekey = true;
             }
             if (needRekey) {
-                TypeObjectWithNewScriptSet::Lookup lookup(entry.object->clasp(),
-                                                          proto,
-                                                          entry.newFunction);
+                NewTypeObjectTable::Lookup lookup(entry.object->clasp(),
+                                                  proto,
+                                                  entry.associated);
                 e.rekeyFront(lookup, entry);
             }
         }
@@ -4924,8 +4935,19 @@ TypeObject::fixupAfterMovingGC()
         proto_ = Forwarded(proto_.get());
     if (singleton_ && !lazy() && IsForwarded(singleton_.get()))
         singleton_ = Forwarded(singleton_.get());
-    if (newScript_)
-        newScript_->fixupAfterMovingGC();
+    if (addendum_) {
+        switch (addendumKind()) {
+          case Addendum_NewScript:
+            newScript()->fixupAfterMovingGC();
+            break;
+          case Addendum_TypeDescr:
+            if (IsForwarded(&typeDescr()))
+                addendum_ = Forwarded(&typeDescr());
+            break;
+          default:
+            MOZ_CRASH();
+        }
+    }
     if (interpretedFunction && IsForwarded(interpretedFunction.get()))
         interpretedFunction = Forwarded(interpretedFunction.get());
 }
@@ -4942,7 +4964,7 @@ JSCompartment::checkTypeObjectTablesAfterMovingGC()
 }
 
 void
-JSCompartment::checkTypeObjectTableAfterMovingGC(TypeObjectWithNewScriptSet &table)
+JSCompartment::checkTypeObjectTableAfterMovingGC(NewTypeObjectTable &table)
 {
     /*
      * Assert that nothing points into the nursery or needs to be relocated, and
@@ -4951,17 +4973,17 @@ JSCompartment::checkTypeObjectTableAfterMovingGC(TypeObjectWithNewScriptSet &tab
     if (!table.initialized())
         return;
 
-    for (TypeObjectWithNewScriptSet::Enum e(table); !e.empty(); e.popFront()) {
-        TypeObjectWithNewScriptEntry entry = e.front();
+    for (NewTypeObjectTable::Enum e(table); !e.empty(); e.popFront()) {
+        NewTypeObjectEntry entry = e.front();
         CheckGCThingAfterMovingGC(entry.object.get());
         TaggedProto proto = entry.object->proto();
         if (proto.isObject())
             CheckGCThingAfterMovingGC(proto.toObject());
-        CheckGCThingAfterMovingGC(entry.newFunction);
+        CheckGCThingAfterMovingGC(entry.associated);
 
-        TypeObjectWithNewScriptEntry::Lookup
-            lookup(entry.object->clasp(), proto, entry.newFunction);
-        TypeObjectWithNewScriptSet::Ptr ptr = table.lookup(lookup);
+        NewTypeObjectTable::Lookup
+            lookup(entry.object->clasp(), proto, entry.associated);
+        NewTypeObjectTable::Ptr ptr = table.lookup(lookup);
         MOZ_ASSERT(ptr.found() && &*ptr == &e.front());
     }
 }
@@ -5072,7 +5094,7 @@ TypeCompartment::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
 size_t
 TypeObject::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
-    return mallocSizeOf(newScript_);
+    return mallocSizeOf(newScriptDontCheckGeneration());
 }
 
 TypeZone::TypeZone(Zone *zone)
@@ -5237,8 +5259,14 @@ TypeScript::printTypes(JSContext *cx, HandleScript script) const
 #endif /* DEBUG */
 
 void
-TypeObject::setNewScript(TypeNewScript *newScript)
+TypeObject::setAddendum(AddendumKind kind, void *addendum)
 {
     MOZ_ASSERT(!needsSweep());
-    newScript_ = newScript;
+    MOZ_ASSERT(kind <= (OBJECT_FLAG_ADDENDUM_MASK >> OBJECT_FLAG_ADDENDUM_SHIFT));
+    MOZ_ASSERT(!(flags_ & OBJECT_FLAG_ADDENDUM_MASK));
+
+    writeBarrierPre(this);
+
+    flags_ |= kind << OBJECT_FLAG_ADDENDUM_SHIFT;
+    addendum_ = addendum;
 }

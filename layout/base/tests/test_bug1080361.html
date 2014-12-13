@@ -13,6 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1080361
       var iframe = undefined;
       function prepareTest() {
         SimpleTest.waitForExplicitFinish();
+        SimpleTest.requestFlakyTimeout("untriaged");
         iframe = document.getElementById("testFrame");
         turnOnPointerEvents(startTest);
       }

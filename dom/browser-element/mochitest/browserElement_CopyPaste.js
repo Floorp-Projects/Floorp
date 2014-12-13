@@ -5,6 +5,7 @@
 "use strict";
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.setSelectionChangeEnabledPref(true);
 browserElementTestHelpers.addPermission();

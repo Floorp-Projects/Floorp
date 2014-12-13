@@ -40,6 +40,7 @@
 #include "MainThreadUtils.h"
 #include "nsIWidget.h"
 #include "nsThreadUtils.h"
+#include "mozilla/LoadInfo.h"
 #include "mozilla/net/NeckoCommon.h"
 
 #ifdef MOZ_WIDGET_GONK
@@ -634,13 +635,76 @@ nsIOService::NewChannelFromURIWithProxyFlags2(nsIURI* aURI,
     if (NS_FAILED(rv))
         return rv;
 
+    // Ideally we are creating new channels by calling NewChannel2 (NewProxiedChannel2).
+    // Keep in mind that Addons can implement their own Protocolhandlers, hence
+    // NewChannel2() might *not* be implemented.
+    // We do not want to break those addons, therefore we first try to create a channel
+    // calling NewChannel2(); if that fails we fall back to creating a channel by calling
+    // NewChannel();
+
+    nsCOMPtr<nsILoadInfo> loadInfo;
+    // Unfortunately not all callsites (see Bug 1087720, and 1099296) have been updated
+    // yet to call NewChannel2() instead of NewChannel(), hence those callsites do not
+    // provide the necessary loadinfo arguments yet.
+    // Since creating a new loadInfo requires 'aLoadingPrincipal' or 'aLoadingNode' we
+    // can branch on those arguments as an interim solution.
+    //
+    // BUG 1087720: Once that bug lands, we should have a loadInfo for all callers of
+    // NewChannelFromURIWithProxyFlags2() and should remove the *if* before creating a
+    // a new loadinfo.
+    if (aLoadingNode || aLoadingPrincipal) {
+      nsCOMPtr<nsINode> loadingNode(do_QueryInterface(aLoadingNode));
+      loadInfo = new mozilla::LoadInfo(aLoadingPrincipal,
+                                       aTriggeringPrincipal,
+                                       loadingNode,
+                                       aSecurityFlags,
+                                       aContentPolicyType);
+      if (!loadInfo) {
+        return NS_ERROR_UNEXPECTED;
+      }
+    }
+
+    bool newChannel2Succeeded = true;
+
     nsCOMPtr<nsIProxiedProtocolHandler> pph = do_QueryInterface(handler);
-    if (pph)
-        rv = pph->NewProxiedChannel(aURI, nullptr, aProxyFlags, aProxyURI, result);
-    else
-        rv = handler->NewChannel(aURI, result);
-    if (NS_FAILED(rv))
-        return rv;
+    if (pph) {
+        rv = pph->NewProxiedChannel2(aURI, nullptr, aProxyFlags, aProxyURI,
+                                     loadInfo, result);
+        // if calling NewProxiedChannel2() fails we try to fall back to
+        // creating a new proxied channel by calling NewProxiedChannel().
+        if (NS_FAILED(rv)) {
+            newChannel2Succeeded = false;
+            rv = pph->NewProxiedChannel(aURI, nullptr, aProxyFlags, aProxyURI,
+                                        result);
+        }
+    }
+    else {
+        rv = handler->NewChannel2(aURI, loadInfo, result);
+        // if calling newChannel2() fails we try to fall back to
+        // creating a new channel by calling NewChannel().
+        if (NS_FAILED(rv)) {
+            newChannel2Succeeded = false;
+            rv = handler->NewChannel(aURI, result);
+        }
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if ((aLoadingNode || aLoadingPrincipal) && newChannel2Succeeded) {
+      // Make sure that all the individual protocolhandlers attach
+      // a loadInfo within it's implementation of ::newChannel2().
+      // Once Bug 1087720 lands, we should remove the surrounding
+      // if-clause here and always assert that we indeed have a
+      // loadinfo on the newly created channel.
+      nsCOMPtr<nsILoadInfo> loadInfo;
+      (*result)->GetLoadInfo(getter_AddRefs(loadInfo));
+      MOZ_ASSERT(loadInfo);
+
+      // If we're sandboxed, make sure to clear any owner the channel
+      // might already have.
+      if (loadInfo->GetLoadingSandboxed()) {
+        (*result)->SetOwner(nullptr);
+      }
+    }
 
     // Some extensions override the http protocol handler and provide their own
     // implementation. The channels returned from that implementation doesn't

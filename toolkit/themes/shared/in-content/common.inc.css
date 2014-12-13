@@ -166,6 +166,22 @@ xul|menulist[disabled="true"] {
   opacity: 0.5;
 }
 
+*|button.primary {
+  background-color: #0095dd;
+  border-color: transparent;
+  color: #fff;
+}
+
+html|button.primary:enabled:hover,
+xul|button.primary:not([disabled="true"]):hover {
+  background-color: #008acb;
+}
+
+html|button.primary:enabled:hover:active,
+xul|button.primary:not([disabled="true"]):hover:active {
+  background-color: #006b9d;
+}
+
 xul|colorpicker[type="button"] {
   padding: 6px;
   width: 50px;
@@ -560,4 +576,79 @@ xul|filefield + xul|button:-moz-locale-dir(rtl) {
 xul|textbox + xul|button,
 xul|filefield + xul|button {
   -moz-border-start: none;
+}
+
+/* List boxes */
+
+xul|richlistbox,
+xul|listbox {
+  -moz-appearance: none;
+  border: 1px solid #c1c1c1;
+}
+
+xul|treechildren::-moz-tree-row,
+xul|listbox xul|listitem {
+  padding: 5px;
+  margin: 0;
+  border: none;
+  background-image: none;
+}
+
+xul|treechildren::-moz-tree-row(selected),
+xul|listbox xul|listitem[selected="true"] {
+  background-color: #f1f1f1;
+}
+
+/* Trees */
+
+xul|tree {
+  -moz-appearance: none;
+  font-size: 1em;
+  border: 1px solid #c1c1c1;
+}
+
+xul|listheader,
+xul|treecols {
+  -moz-appearance: none;
+  border: none;
+  border-bottom: 1px solid #c1c1c1;
+  padding: 0;
+}
+
+xul|treecol:not([hideheader="true"]),
+xul|treecolpicker {
+  -moz-appearance: none;
+  border: none;
+  background-color: #ebebeb;
+  color: #808080;
+  padding: 5px 10px;
+}
+
+xul|treecol:not([hideheader="true"]):hover,
+xul|treecolpicker:hover {
+  background-color: #dadada;
+  color: #333;
+}
+
+xul|treecol:not([hideheader="true"]):not(:first-child),
+xul|treecolpicker {
+  -moz-border-start-width: 1px;
+  -moz-border-start-style: solid;
+  border-image: linear-gradient(transparent 0%, transparent 20%, #c1c1c1 20%, #c1c1c1 80%, transparent 80%, transparent 100%) 1 1;
+}
+
+xul|treecol:not([hideheader="true"]) > xul|*.treecol-sortdirection[sortDirection] {
+  list-style-image: url("chrome://global/skin/in-content/sorter.png");
+  width: 12px;
+  height: 8px;
+}
+
+xul|treecol:not([hideheader="true"]) > xul|*.treecol-sortdirection[sortDirection="descending"] {
+  transform: scaleY(-1);
+}
+
+@media (min-resolution: 2dppx) {
+  xul|treecol:not([hideheader="true"]) > xul|*.treecol-sortdirection[sortDirection] {
+    list-style-image: url("chrome://global/skin/in-content/sorter@2x.png");
+  }
 }

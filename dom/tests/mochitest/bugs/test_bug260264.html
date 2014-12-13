@@ -24,6 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=260264
 /** Test for Bug 260264 **/
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 
 var a = $("link"),
     checkOpened = function() { ok(window.open("http://example.com"), "not properly opened") },

@@ -315,11 +315,12 @@ class Preprocessor:
         self.LE = line_endings
         self.varsubst = re.compile('@(?P<VAR>\w+)@', re.U)
         self.includes = set()
+        self.silenceMissingDirectiveWarnings = False
         if defines:
             self.context.update(defines)
 
     def warnUnused(self, file):
-        if self.actionLevel == 0:
+        if self.actionLevel == 0 and not self.silenceMissingDirectiveWarnings:
             sys.stderr.write('{0}: WARNING: no preprocessor directives found\n'.format(file))
         elif self.actionLevel == 1:
             sys.stderr.write('{0}: WARNING: no useful preprocessor directives found\n'.format(file))
@@ -348,6 +349,14 @@ class Preprocessor:
                 def match(self, *args):
                     return False
             self.instruction = self.comment = NoMatch()
+
+    def setSilenceDirectiveWarnings(self, value):
+        """
+        Sets whether missing directive warnings are silenced, according to
+        ``value``.  The default behavior of the preprocessor is to emit
+        such warnings.
+        """
+        self.silenceMissingDirectiveWarnings = value
 
     def addDefines(self, defines):
         """
@@ -503,6 +512,8 @@ class Preprocessor:
             self.setLineEndings(value)
         def handleMarker(option, opt, value, parser):
             self.setMarker(value)
+        def handleSilenceDirectiveWarnings(option, opt, value, parse):
+            self.setSilenceDirectiveWarnings(True)
         p = OptionParser()
         p.add_option('-I', action='append', type="string", default = [],
                      metavar="FILENAME", help='Include file')
@@ -525,6 +536,9 @@ class Preprocessor:
         p.add_option('--marker', action='callback', callback=handleMarker,
                      type="string",
                      help='Use the specified marker instead of #')
+        p.add_option('--silence-missing-directive-warnings', action='callback',
+                     callback=handleSilenceDirectiveWarnings,
+                     help='Don\'t emit warnings about missing directives')
         return p
 
     def handleLine(self, aLine):

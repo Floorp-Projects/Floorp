@@ -29,6 +29,7 @@ var step = 0;
 var gTestFrame = document.getElementById('testFrame');
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
 addLoadEvent(doNextStep);
 
 function doNextStep() {
