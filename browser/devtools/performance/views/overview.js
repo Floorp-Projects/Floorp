@@ -8,6 +8,9 @@
 // in toolkit/devtools/server/actors/timeline.js
 const OVERVIEW_UPDATE_INTERVAL = 200; // ms
 
+const FRAMERATE_GRAPH_LOW_RES_INTERVAL = 100; // ms
+const FRAMERATE_GRAPH_HIGH_RES_INTERVAL = 16; // ms
+
 const FRAMERATE_GRAPH_HEIGHT = 60; // px
 const GRAPH_SCROLL_EVENTS_DRAIN = 50; // ms
 
@@ -52,17 +55,27 @@ let OverviewView = {
   },
 
   /**
+   * Method for handling all the set up for rendering the overview graphs.
+   *
+   * @param number interval
+   *        The fps graph resolution. @see Graphs.jsm
+   */
+  render: Task.async(function *(interval) {
+    // The `ticks` event on the TimelineFront returns all ticks for the
+    // recording session, so just convert to plottable values and draw.
+    let [, timestamps] = this._ticksData;
+    yield this.framerateGraph.setDataFromTimestamps(timestamps, interval);
+
+    this.emit(EVENTS.OVERVIEW_RENDERED);
+  }),
+
+  /**
    * Called at most every OVERVIEW_UPDATE_INTERVAL milliseconds
    * and uses data fetched from `_onTimelineData` to render
    * data into all the corresponding overview graphs.
    */
   _onRecordingTick: Task.async(function *() {
-    // The `ticks` event on the TimelineFront returns all ticks for the
-    // recording session, so just convert to plottable values and draw.
-    let [, timestamps] = this._ticksData;
-    yield this.framerateGraph.setDataFromTimestamps(timestamps);
-
-    this.emit(EVENTS.OVERVIEW_RENDERED);
+    yield this.render(FRAMERATE_GRAPH_LOW_RES_INTERVAL);
     this._prepareNextTick();
   }),
 
@@ -131,6 +144,9 @@ let OverviewView = {
 
   _stop: function () {
     clearTimeout(this._timeoutId);
+    this._timeoutId = null;
+
+    this.render(FRAMERATE_GRAPH_HIGH_RES_INTERVAL);
     this.framerateGraph.selectionEnabled = true;
   },
 
