@@ -886,5 +886,21 @@ SharedSurfaceTextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescripto
   return true;
 }
 
+TemporaryRef<SyncObject>
+SyncObject::CreateSyncObject(SyncHandle aHandle)
+{
+  if (!aHandle) {
+    return nullptr;
+  }
+
+#ifdef XP_WIN
+  RefPtr<SyncObject> syncObject = new SyncObjectD3D11(aHandle);
+  return syncObject;
+#else
+  MOZ_ASSERT_UNREACHABLE();
+  return nullptr;
+#endif
+}
+
 }
 }
