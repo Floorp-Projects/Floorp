@@ -578,6 +578,7 @@ protected:
   bool mHasBullet               : 1;
   bool mDirtyNextLine           : 1;
   bool mLineAtStart             : 1;
+  bool mHasRuby                 : 1;
 
   int32_t mSpanDepth;
 #ifdef DEBUG
