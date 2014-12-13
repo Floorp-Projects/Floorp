@@ -6,8 +6,6 @@
  */
 
 function spawnTest () {
-  Services.prefs.setBoolPref("devtools.performance.ui.show-timeline-memory", true);
-
   let { target, front } = yield initBackend(SIMPLE_URL);
 
   let lastMemoryDelta = 0;
@@ -29,7 +27,7 @@ function spawnTest () {
   front.on("memory", handler);
   front.on("ticks", handler);
 
-  yield front.startRecording();
+  yield front.startRecording({ withMemory: true, withTicks: true });
 
   yield Promise.all(Object.keys(deferreds).map(type => deferreds[type].promise));
 
@@ -43,7 +41,17 @@ function spawnTest () {
   finish();
 
   function handler (name, ...args) {
-    if (name === "memory") {
+    if (name === "markers") {
+      let [markers] = args;
+      ok(markers[0].start, "received atleast one marker with `start`");
+      ok(markers[0].end, "received atleast one marker with `end`");
+      ok(markers[0].name, "received atleast one marker with `name`");
+
+      counters.markers.push(markers);
+      front.off(name, handler);
+      deferreds[name].resolve();
+    }
+    else if (name === "memory") {
       let [delta, measurement] = args;
       is(typeof delta, "number", "received `delta` in memory event");
       ok(delta > lastMemoryDelta, "received `delta` in memory event");
@@ -53,7 +61,8 @@ function spawnTest () {
 
       counters.memory.push({ delta: delta, measurement: measurement });
       lastMemoryDelta = delta;
-    } else if (name === "ticks") {
+    }
+    else if (name === "ticks") {
       let [delta, timestamps] = args;
       ok(delta > lastTickDelta, "received `delta` in ticks event");
 
@@ -64,15 +73,8 @@ function spawnTest () {
 
       counters.ticks.push({ delta: delta, timestamps: timestamps});
       lastTickDelta = delta;
-    } else if (name === "markers") {
-      let [markers] = args;
-      ok(markers[0].start, "received atleast one marker with `start`");
-      ok(markers[0].end, "received atleast one marker with `end`");
-      ok(markers[0].name, "received atleast one marker with `name`");
-      counters.markers.push(markers);
-      front.off(name, handler);
-      deferreds[name].resolve();
-    } else {
+    }
+    else {
       throw new Error("unknown event");
     }
 

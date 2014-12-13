@@ -11,6 +11,10 @@ let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 let gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 Services.prefs.setBoolPref("devtools.debugger.log", false);
 
+// Enable the new performance panel for all tests. Remove this after
+// bug 1075567 is resolved.
+let gToolEnabled = Services.prefs.getBoolPref("devtools.performance_dev.enabled");
+
 let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 let { Promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
@@ -29,9 +33,6 @@ const SIMPLE_URL = EXAMPLE_URL + "doc_simple-test.html";
 // All tests are asynchronous.
 waitForExplicitFinish();
 
-let gToolEnabled = Services.prefs.getBoolPref("devtools.performance_dev.enabled");
-let gShowTimelineMemory = Services.prefs.getBoolPref("devtools.performance.ui.show-timeline-memory");
-
 gDevTools.testing = true;
 
 /**
@@ -49,9 +50,9 @@ registerCleanupFunction(() => {
   gDevTools.testing = false;
   info("finish() was called, cleaning up...");
 
-  Services.prefs.setBoolPref("devtools.performance.ui.show-timeline-memory", gShowTimelineMemory);
   Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);
   Services.prefs.setBoolPref("devtools.performance_dev.enabled", gToolEnabled);
+
   // Make sure the profiler module is stopped when the test finishes.
   nsIProfilerModule.StopProfiler();
 
@@ -186,6 +187,12 @@ function idleWait(time) {
   return DevToolsUtils.waitForTime(time);
 }
 
+function busyWait(time) {
+  let start = Date.now();
+  let stack;
+  while (Date.now() - start < time) { stack = Components.stack; }
+}
+
 function consoleMethod (...args) {
   if (!mm) {
     throw new Error("`loadFrameScripts()` must be called before using frame scripts.");
@@ -203,12 +210,6 @@ function* consoleProfileEnd(connection) {
   let notified = connection.once("profileEnd");
   consoleMethod("profileEnd");
   yield notified;
-}
-
-function busyWait(time) {
-  let start = Date.now();
-  let stack;
-  while (Date.now() - start < time) { stack = Components.stack; }
 }
 
 function command (button) {

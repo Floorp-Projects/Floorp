@@ -18,6 +18,11 @@ devtools.lazyRequireGetter(this, "DevToolsUtils",
   "devtools/toolkit/DevToolsUtils");
 devtools.lazyRequireGetter(this, "L10N",
   "devtools/profiler/global", true);
+
+devtools.lazyRequireGetter(this, "MarkersOverview",
+  "devtools/timeline/markers-overview", true);
+devtools.lazyRequireGetter(this, "MemoryOverview",
+  "devtools/timeline/memory-overview", true);
 devtools.lazyRequireGetter(this, "Waterfall",
   "devtools/timeline/waterfall", true);
 devtools.lazyRequireGetter(this, "MarkerDetails",
@@ -27,15 +32,18 @@ devtools.lazyRequireGetter(this, "CallView",
 devtools.lazyRequireGetter(this, "ThreadNode",
   "devtools/profiler/tree-model", true);
 
+devtools.lazyImporter(this, "CanvasGraphUtils",
+  "resource:///modules/devtools/Graphs.jsm");
 devtools.lazyImporter(this, "LineGraphWidget",
   "resource:///modules/devtools/Graphs.jsm");
 
-// Events emitted by the `PerformanceController`
+// Events emitted by various objects in the panel.
 const EVENTS = {
-  // When a recording is started or stopped via the controller
+  // When a recording is started or stopped via the PerformanceController
   RECORDING_STARTED: "Performance:RecordingStarted",
   RECORDING_STOPPED: "Performance:RecordingStopped",
-  // When the PerformanceActor front emits `framerate` data
+
+  // When the PerformanceController has new recording data.
   TIMELINE_DATA: "Performance:TimelineData",
 
   // Emitted by the PerformanceView on record button click
@@ -44,6 +52,10 @@ const EVENTS = {
 
   // Emitted by the OverviewView when more data has been rendered
   OVERVIEW_RENDERED: "Performance:UI:OverviewRendered",
+  FRAMERATE_GRAPH_RENDERED: "Performance:UI:OverviewFramerateRendered",
+  MARKERS_GRAPH_RENDERED: "Performance:UI:OverviewMarkersRendered",
+  MEMORY_GRAPH_RENDERED: "Performance:UI:OverviewMemoryRendered",
+
   // Emitted by the OverviewView when a range has been selected in the graphs
   OVERVIEW_RANGE_SELECTED: "Performance:UI:OverviewRangeSelected",
   // Emitted by the OverviewView when a selection range has been removed
@@ -113,6 +125,16 @@ let PrefObserver = {
  */
 let PerformanceController = {
   /**
+   * Permanent storage for the markers and the memory measurements streamed by
+   * the backend, along with the start and end timestamps.
+   */
+  _startTime: 0,
+  _endTime: 0,
+  _markers: [],
+  _memory: [],
+  _ticks: [],
+
+  /**
    * Listen for events emitted by the current tab target and
    * main UI events.
    */
@@ -123,8 +145,9 @@ let PerformanceController = {
 
     PerformanceView.on(EVENTS.UI_START_RECORDING, this.startRecording);
     PerformanceView.on(EVENTS.UI_STOP_RECORDING, this.stopRecording);
-    gFront.on("ticks", this._onTimelineData);
-    gFront.on("markers", this._onTimelineData);
+    gFront.on("ticks", this._onTimelineData); // framerate
+    gFront.on("markers", this._onTimelineData); // timeline markers
+    gFront.on("memory", this._onTimelineData); // timeline memory
   },
 
   /**
@@ -135,41 +158,107 @@ let PerformanceController = {
     PerformanceView.off(EVENTS.UI_STOP_RECORDING, this.stopRecording);
     gFront.off("ticks", this._onTimelineData);
     gFront.off("markers", this._onTimelineData);
+    gFront.off("memory", this._onTimelineData);
   },
 
   /**
    * Starts recording with the PerformanceFront. Emits `EVENTS.RECORDING_STARTED`
-   * when the front is starting to record.
+   * when the front has started to record.
    */
   startRecording: Task.async(function *() {
-    // Save local start time for use with faking the endTime
-    // if not returned from the timeline actor
+    // Times must come from the actor in order to be self-consistent.
+    // However, we also want to update the view with the elapsed time
+    // even when the actor is not generating data. To do this we get
+    // the local time and use it to compute a reasonable elapsed time.
     this._localStartTime = performance.now();
 
-    let startTime = this._startTime = yield gFront.startRecording();
-    this.emit(EVENTS.RECORDING_STARTED, startTime);
+    let { startTime } = yield gFront.startRecording({
+      withTicks: true,
+      withMemory: true
+    });
+
+    this._startTime = startTime;
+    this._endTime = startTime;
+    this._markers = [];
+    this._memory = [];
+    this._ticks = [];
+
+    this.emit(EVENTS.RECORDING_STARTED, this._startTime);
   }),
 
   /**
    * Stops recording with the PerformanceFront. Emits `EVENTS.RECORDING_STOPPED`
-   * when the front stops recording.
+   * when the front has stopped recording.
    */
   stopRecording: Task.async(function *() {
     let results = yield gFront.stopRecording();
 
-    // If `endTime` is not yielded from timeline actor (< Fx36), fake an endTime.
+    // If `endTime` is not yielded from timeline actor (< Fx36), fake it.
     if (!results.endTime) {
-      results.endTime = this._startTime + (performance.now() - this._localStartTime);
-      this._endTime = results.endTime;
+      results.endTime = this._startTime + this.getInterval().localElapsedTime;
     }
+
+    this._endTime = results.endTime;
+    this._markers = this._markers.sort((a,b) => (a.start > b.start));
 
     this.emit(EVENTS.RECORDING_STOPPED, results);
   }),
 
   /**
-   * Fired whenever the gFront emits a ticks, memory, or markers event.
+   * Gets the time interval for the current recording.
+   * @return object
+   */
+  getInterval: function() {
+    let localElapsedTime = performance.now() - this._localStartTime;
+    let startTime = this._startTime;
+    let endTime = this._endTime;
+    return { localElapsedTime, startTime, endTime };
+  },
+
+  /**
+   * Gets the accumulated markers in the current recording.
+   * @return array
+   */
+  getMarkers: function() {
+    return this._markers;
+  },
+
+  /**
+   * Gets the accumulated memory measurements in this recording.
+   * @return array
+   */
+  getMemory: function() {
+    return this._memory;
+  },
+
+  /**
+   * Gets the accumulated refresh driver ticks in this recording.
+   * @return array
+   */
+  getTicks: function() {
+    return this._ticks;
+  },
+
+  /**
+   * Fired whenever the PerformanceFront emits markers, memory or ticks.
    */
   _onTimelineData: function (eventName, ...data) {
+    // Accumulate markers into an array.
+    if (eventName == "markers") {
+      let [markers] = data;
+      Array.prototype.push.apply(this._markers, markers);
+    }
+    // Accumulate memory measurements into an array.
+    else if (eventName == "memory") {
+      let [delta, measurement] = data;
+      this._memory.push({ delta, value: measurement.total / 1024 / 1024 });
+    }
+    // Save the accumulated refresh driver ticks.
+    else if (eventName == "ticks") {
+      let [delta, timestamps] = data;
+      this._ticks = timestamps;
+    }
+
     this.emit(EVENTS.TIMELINE_DATA, eventName, ...data);
   }
 };

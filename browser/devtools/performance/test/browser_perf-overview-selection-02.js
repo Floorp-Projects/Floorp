@@ -7,27 +7,45 @@
 function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, OverviewView } = panel.panelWin;
-  let graph = OverviewView.framerateGraph;
+  let framerateGraph = OverviewView.framerateGraph;
+  let markersOverview = OverviewView.markersOverview;
+  let memoryOverview = OverviewView.memoryOverview;
 
   yield startRecording(panel);
 
-  ok(!graph.selectionEnabled,
-    "Selection shouldn't be enabled when the first recording started.");
+  ok(!framerateGraph.selectionEnabled,
+    "Selection shouldn't be enabled when the first recording started (1).");
+  ok(!markersOverview.selectionEnabled,
+    "Selection shouldn't be enabled when the first recording started (2).");
+  ok(!memoryOverview.selectionEnabled,
+    "Selection shouldn't be enabled when the first recording started (3).");
 
   yield stopRecording(panel);
 
-  ok(graph.selectionEnabled,
-    "Selection should be enabled when the first recording finishes.");
+  ok(framerateGraph.selectionEnabled,
+    "Selection should be enabled when the first recording finishes (1).");
+  ok(markersOverview.selectionEnabled,
+    "Selection should be enabled when the first recording finishes (2).");
+  ok(memoryOverview.selectionEnabled,
+    "Selection should be enabled when the first recording finishes (3).");
 
   yield startRecording(panel);
 
-  ok(!graph.selectionEnabled,
-    "Selection shouldn't be enabled when the second recording started.");
+  ok(!framerateGraph.selectionEnabled,
+    "Selection shouldn't be enabled when the second recording started (1).");
+  ok(!markersOverview.selectionEnabled,
+    "Selection shouldn't be enabled when the second recording started (2).");
+  ok(!memoryOverview.selectionEnabled,
+    "Selection shouldn't be enabled when the second recording started (3).");
 
   yield stopRecording(panel);
 
-  ok(graph.selectionEnabled,
-    "Selection should be enabled when the first second finishes.");
+  ok(framerateGraph.selectionEnabled,
+    "Selection should be enabled when the first second finishes (1).");
+  ok(markersOverview.selectionEnabled,
+    "Selection should be enabled when the first second finishes (2).");
+  ok(memoryOverview.selectionEnabled,
+    "Selection should be enabled when the first second finishes (3).");
 
   yield teardown(panel);
   finish();
