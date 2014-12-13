@@ -301,7 +301,7 @@ struct ShutdownStep
   char const* const mTopic;
   int mTicks;
 
-  MOZ_CONSTEXPR ShutdownStep(const char *const topic)
+  MOZ_CONSTEXPR explicit ShutdownStep(const char *const topic)
     : mTopic(topic)
     , mTicks(-1)
   {}

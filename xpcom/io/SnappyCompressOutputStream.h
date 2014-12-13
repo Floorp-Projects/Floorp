@@ -27,8 +27,8 @@ public:
   // the given base stream.  The base stream must also be blocking.
   // The compression block size may optionally be set to a value
   // up to kMaxBlockSize.
-  SnappyCompressOutputStream(nsIOutputStream* aBaseStream,
-                             size_t aBlockSize = kMaxBlockSize);
+  explicit SnappyCompressOutputStream(nsIOutputStream* aBaseStream,
+                                      size_t aBlockSize = kMaxBlockSize);
 
   // The compression block size.  To optimize stream performance
   // try to write to the stream in segments at least this size.
