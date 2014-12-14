@@ -1143,18 +1143,23 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
 
   // If we have a next-in-flow, and that next-in-flow has pushed floats from
   // this frame from a previous iteration of reflow, then we should not return
-  // a status of NS_FRAME_COMPLETE, since we actually have overflow, it's just
-  // already been handled.
+  // a status of NS_FRAME_IS_FULLY_COMPLETE, since we actually have overflow,
+  // it's just already been handled.
 
   // NOTE: This really shouldn't happen, since we _should_ pull back our floats
   // and reflow them, but just in case it does, this is a safety precaution so
   // we don't end up with a placeholder pointing to frames that have already
   // been deleted as part of removing our next-in-flow.
-  if (NS_FRAME_IS_COMPLETE(state.mReflowStatus)) {
+  // XXXmats maybe this code isn't needed anymore?
+  // XXXmats (layout/generic/crashtests/600100.xhtml doesn't crash without it)
+  if (NS_FRAME_IS_FULLY_COMPLETE(state.mReflowStatus)) {
     nsBlockFrame* nif = static_cast<nsBlockFrame*>(GetNextInFlow());
     while (nif) {
       if (nif->HasPushedFloatsFromPrevContinuation()) {
-        NS_MergeReflowStatusInto(&state.mReflowStatus, NS_FRAME_NOT_COMPLETE);
+        bool oc = nif->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER;
+        NS_MergeReflowStatusInto(&state.mReflowStatus,
+            oc ? NS_FRAME_OVERFLOW_INCOMPLETE : NS_FRAME_NOT_COMPLETE);
+        break;
       }
 
       nif = static_cast<nsBlockFrame*>(nif->GetNextInFlow());
@@ -1549,9 +1554,10 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       "Shouldn't be incomplete if availableBSize is UNCONSTRAINED.");
     finalSize.BSize(wm) = std::max(aState.mBCoord,
                                    aReflowState.AvailableBSize());
-    if (aReflowState.AvailableBSize() == NS_UNCONSTRAINEDSIZE)
+    if (aReflowState.AvailableBSize() == NS_UNCONSTRAINEDSIZE) {
       // This should never happen, but it does. See bug 414255
       finalSize.BSize(wm) = aState.mBCoord;
+    }
   }
 
   if (IS_TRUE_OVERFLOW_CONTAINER(this) &&
