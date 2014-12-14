@@ -195,11 +195,6 @@ nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
   psd->mIEnd = aICoord + aISize;
   mContainerWidth = aContainerWidth;
 
-  PerFrameData* pfd = NewPerFrameData(mBlockReflowState->frame);
-  pfd->mAscent = 0;
-  pfd->mSpan = psd;
-  psd->mFrame = pfd;
-
   // If we're in a constrained height frame, then we don't allow a
   // max line box width to take effect.
   if (!(LineContainerFrame()->GetStateBits() &
@@ -243,6 +238,11 @@ nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
 
     psd->mICoord += indent;
   }
+
+  PerFrameData* pfd = NewPerFrameData(mBlockReflowState->frame);
+  pfd->mAscent = 0;
+  pfd->mSpan = psd;
+  psd->mFrame = pfd;
 }
 
 void
@@ -2716,6 +2716,79 @@ nsLineLayout::ApplyFrameJustification(PerSpanData* aPSD,
   return deltaICoord;
 }
 
+/**
+ * This method expands the given frame by the given reserved isize.
+ */
+void
+nsLineLayout::ExpandRubyBox(PerFrameData* aFrame, nscoord aReservedISize,
+                            nscoord aContainerWidth)
+{
+  int32_t opportunities = aFrame->mJustificationInfo.mInnerOpportunities;
+  // Each expandable ruby box has an gap at each of its sides. For
+  // rb/rbc, see comment in ComputeFrameJustification; for rt/rtc,
+  // see comment in this method below.
+  int32_t gaps = opportunities * 2 + 2;
+  JustificationApplicationState state(gaps, aReservedISize);
+  ApplyFrameJustification(aFrame->mSpan, state);
+
+  WritingMode lineWM = mRootSpan->mWritingMode;
+  aFrame->mBounds.ISize(lineWM) += aReservedISize;
+  aFrame->mFrame->SetRect(lineWM, aFrame->mBounds, aContainerWidth);
+}
+
+/**
+ * This method expands the given frame by the reserved inline size.
+ * It also expands its annotations if they are expandable and have
+ * reserved isize larger than zero.
+ */
+void
+nsLineLayout::ExpandRubyBoxWithAnnotations(PerFrameData* aFrame,
+                                           nscoord aContainerWidth)
+{
+  nscoord reservedISize = RubyUtils::GetReservedISize(aFrame->mFrame);
+  if (reservedISize) {
+    ExpandRubyBox(aFrame, reservedISize, aContainerWidth);
+  }
+
+  for (PerFrameData* annotation = aFrame->mNextAnnotation;
+       annotation; annotation = annotation->mNextAnnotation) {
+    nscoord reservedISize = RubyUtils::GetReservedISize(annotation->mFrame);
+    if (!reservedISize) {
+      continue;
+    }
+
+    MOZ_ASSERT(annotation->mSpan);
+    JustificationComputationState computeState;
+    ComputeFrameJustification(annotation->mSpan, computeState);
+    if (!computeState.mFirstParticipant) {
+      continue;
+    }
+    // Add one gap at each side of this annotation.
+    computeState.mFirstParticipant->mJustificationAssignment.mGapsAtStart = 1;
+    computeState.mLastParticipant->mJustificationAssignment.mGapsAtEnd = 1;
+    ExpandRubyBox(annotation, reservedISize, aContainerWidth);
+    ExpandInlineRubyBoxes(annotation->mSpan);
+  }
+}
+
+/**
+ * This method looks for all expandable ruby box in the given span, and
+ * calls ExpandRubyBox to expand them in depth-first preorder.
+ */
+void
+nsLineLayout::ExpandInlineRubyBoxes(PerSpanData* aSpan)
+{
+  nscoord containerWidth = ContainerWidthForSpan(aSpan);
+  for (PerFrameData* pfd = aSpan->mFirstFrame; pfd; pfd = pfd->mNext) {
+    if (RubyUtils::IsExpandableRubyBox(pfd->mFrame)) {
+      ExpandRubyBoxWithAnnotations(pfd, containerWidth);
+    }
+    if (pfd->mSpan) {
+      ExpandInlineRubyBoxes(pfd->mSpan);
+    }
+  }
+}
+
 // Align inline frames within the line according to the CSS text-align
 // property.
 void
@@ -2835,6 +2908,10 @@ nsLineLayout::TextAlignLine(nsLineBox* aLine,
         dx = remainingISize / 2;
         break;
     }
+  }
+
+  if (mHasRuby) {
+    ExpandInlineRubyBoxes(mRootSpan);
   }
 
   if (mPresContext->BidiEnabled() &&
