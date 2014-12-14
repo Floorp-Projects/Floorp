@@ -505,16 +505,18 @@ class FreeList
 };
 
 /* Every arena has a header. */
-struct ArenaHeader : public JS::shadow::ArenaHeader
+struct ArenaHeader
 {
     friend struct FreeLists;
+
+    JS::Zone *zone;
 
     /*
      * ArenaHeader::next has two purposes: when unallocated, it points to the
      * next available Arena's header. When allocated, it points to the next
      * arena of the same size class and compartment.
      */
-    ArenaHeader     *next;
+    ArenaHeader *next;
 
   private:
     /*
@@ -645,6 +647,8 @@ struct ArenaHeader : public JS::shadow::ArenaHeader
     size_t countFreeCells();
 #endif
 };
+static_assert(ArenaZoneOffset == offsetof(ArenaHeader, zone),
+              "The hardcoded API zone offset must match the actual offset.");
 
 struct Arena
 {
