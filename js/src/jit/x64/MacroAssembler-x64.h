@@ -1168,7 +1168,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         MOZ_ASSERT(dest != ScratchReg);
         if (src.containsReg(dest)) {
             mov(ImmWord(JSVAL_PAYLOAD_MASK), ScratchReg);
-            movq(src, dest);
+            // If src is already a register, then src and dest are the same
+            // thing and we don't need to move anything into dest.
+            if (src.kind() != Operand::REG)
+                movq(src, dest);
             andq(ScratchReg, dest);
         } else {
             mov(ImmWord(JSVAL_PAYLOAD_MASK), dest);
