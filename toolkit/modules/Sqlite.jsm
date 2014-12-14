@@ -682,7 +682,7 @@ ConnectionData.prototype = Object.freeze({
             break;
 
           case Ci.mozIStorageStatementCallback.REASON_ERROR:
-            let error = new Error("Error(s) encountered during statement execution.");
+            let error = new Error("Error(s) encountered during statement execution: " + [error.message for (error of errors)].join(", "));
             error.errors = errors;
             deferred.reject(error);
             break;
