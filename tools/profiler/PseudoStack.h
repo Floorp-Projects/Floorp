@@ -41,23 +41,7 @@ LinuxKernelMemoryBarrierFunc pLinuxKernelMemoryBarrier __attribute__((weak)) =
 # define STORE_SEQUENCER() pLinuxKernelMemoryBarrier()
 #elif defined(V8_HOST_ARCH_IA32) || defined(V8_HOST_ARCH_X64)
 # if defined(_MSC_VER)
-#if _MSC_VER > 1400
 #  include <intrin.h>
-#else // _MSC_VER > 1400
-    // MSVC2005 has a name collision bug caused when both <intrin.h> and <winnt.h> are included together.
-#ifdef _WINNT_
-#  define _interlockedbittestandreset _interlockedbittestandreset_NAME_CHANGED_TO_AVOID_MSVS2005_ERROR
-#  define _interlockedbittestandset _interlockedbittestandset_NAME_CHANGED_TO_AVOID_MSVS2005_ERROR
-#  include <intrin.h>
-#else
-#  include <intrin.h>
-#  define _interlockedbittestandreset _interlockedbittestandreset_NAME_CHANGED_TO_AVOID_MSVS2005_ERROR
-#  define _interlockedbittestandset _interlockedbittestandset_NAME_CHANGED_TO_AVOID_MSVS2005_ERROR
-#endif
-   // Even though MSVC2005 has the intrinsic _ReadWriteBarrier, it fails to link to it when it's
-   // not explicitly declared.
-#  pragma intrinsic(_ReadWriteBarrier)
-#endif // _MSC_VER > 1400
 #  define STORE_SEQUENCER() _ReadWriteBarrier();
 # elif defined(__INTEL_COMPILER)
 #  define STORE_SEQUENCER() __memory_barrier();
