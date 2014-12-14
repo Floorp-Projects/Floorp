@@ -925,6 +925,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   }
 
   pfd->mJustificationInfo = mJustificationInfo;
+  mJustificationInfo = JustificationInfo();
 
   // See if the frame is a placeholderFrame and if it is process
   // the float. At the same time, check if the frame has any non-collapsed-away
@@ -2493,8 +2494,9 @@ struct nsLineLayout::JustificationComputationState
 };
 
 /**
- * This function returns the total number of
- * expansion opportunities in the given span.
+ * Compute the justification info of the given span, and store the
+ * number of inner opportunities into the frame's justification info.
+ * It returns the number of non-inner opportunities it detects.
  */
 int32_t
 nsLineLayout::ComputeFrameJustification(PerSpanData* aPSD,
@@ -2503,20 +2505,27 @@ nsLineLayout::ComputeFrameJustification(PerSpanData* aPSD,
   NS_ASSERTION(aPSD, "null arg");
   NS_ASSERTION(!aState.mLastParticipant || !aState.mLastParticipant->mSpan,
                "Last participant shall always be a leaf frame");
-  int32_t result = 0;
+  bool firstChild = true;
+  int32_t& innerOpportunities =
+    aPSD->mFrame->mJustificationInfo.mInnerOpportunities;
+  MOZ_ASSERT(innerOpportunities == 0,
+             "Justification info should not have been set yet.");
+  int32_t outerOpportunities = 0;
 
   for (PerFrameData* pfd = aPSD->mFirstFrame; pfd; pfd = pfd->mNext) {
     if (!pfd->ParticipatesInJustification()) {
       continue;
     }
 
+    int extraOpportunities = 0;
     if (pfd->mSpan) {
       PerSpanData* span = pfd->mSpan;
-      result += ComputeFrameJustification(span, aState);
+      extraOpportunities = ComputeFrameJustification(span, aState);
+      innerOpportunities += pfd->mJustificationInfo.mInnerOpportunities;
     } else {
       const auto& info = pfd->mJustificationInfo;
       if (pfd->mIsTextFrame) {
-        result += info.mInnerOpportunities;
+        innerOpportunities += info.mInnerOpportunities;
       }
 
       PerFrameData* prev = aState.mLastParticipant;
@@ -2526,7 +2535,7 @@ nsLineLayout::ComputeFrameJustification(PerSpanData* aPSD,
         const auto& prevInfo = prev->mJustificationInfo;
 
         if (info.mIsStartJustifiable || prevInfo.mIsEndJustifiable) {
-          result++;
+          extraOpportunities = 1;
           if (!info.mIsStartJustifiable) {
             prevAssign.mGapsAtEnd = 2;
             assign.mGapsAtStart = 0;
@@ -2542,9 +2551,16 @@ nsLineLayout::ComputeFrameJustification(PerSpanData* aPSD,
 
       aState.mLastParticipant = pfd;
     }
+
+    if (firstChild) {
+      outerOpportunities = extraOpportunities;
+      firstChild = false;
+    } else {
+      innerOpportunities += extraOpportunities;
+    }
   }
 
-  return result;
+  return outerOpportunities;
 }
 
 void
@@ -2715,18 +2731,19 @@ nsLineLayout::TextAlignLine(nsLineBox* aLine,
   bool isSVG = mBlockReflowState->frame->IsSVGText();
   bool doTextAlign = remainingISize > 0 || textAlignTrue;
 
-  int32_t opportunities = 0;
   if (!isSVG && (mHasRuby || (doTextAlign &&
                               textAlign == NS_STYLE_TEXT_ALIGN_JUSTIFY))) {
     JustificationComputationState computeState = {
       nullptr // mLastParticipant
     };
-    opportunities = ComputeFrameJustification(psd, computeState);
+    ComputeFrameJustification(psd, computeState);
   }
 
   if (!isSVG && doTextAlign) {
     switch (textAlign) {
       case NS_STYLE_TEXT_ALIGN_JUSTIFY: {
+        int32_t opportunities =
+          psd->mFrame->mJustificationInfo.mInnerOpportunities;
         if (opportunities > 0) {
           JustificationApplicationState applyState(
               opportunities * 2, remainingISize);
