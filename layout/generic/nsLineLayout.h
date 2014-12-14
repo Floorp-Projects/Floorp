@@ -666,6 +666,14 @@ protected:
   nscoord ApplyFrameJustification(
       PerSpanData* aPSD, mozilla::JustificationApplicationState& aState);
 
+  void ExpandRubyBox(PerFrameData* aFrame, nscoord aReservedISize,
+                     nscoord aContainerWidth);
+
+  void ExpandRubyBoxWithAnnotations(PerFrameData* aFrame,
+                                    nscoord aContainerWidth);
+
+  void ExpandInlineRubyBoxes(PerSpanData* aSpan);
+
   void AttachFrameToBaseLineLayout(PerFrameData* aFrame);
 
 #ifdef DEBUG
