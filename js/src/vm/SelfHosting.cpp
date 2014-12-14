@@ -640,7 +640,7 @@ intrinsic_NewArrayIterator(JSContext *cx, unsigned argc, Value *vp)
     if (!proto)
         return false;
 
-    JSObject *obj = NewObjectWithGivenProto(cx, proto->getClass(), proto, cx->global());
+    JSObject *obj = NewObjectWithGivenProto(cx, &ArrayIteratorObject::class_, proto, cx->global());
     if (!obj)
         return false;
 
