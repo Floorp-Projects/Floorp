@@ -19,7 +19,7 @@
 
 #include "mozilla/EnumeratedArray.h"
 
-#include <DXGI1_2.h>
+#include <dxgi1_2.h>
 
 namespace mozilla {
 
