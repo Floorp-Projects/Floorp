@@ -437,6 +437,9 @@ protected:
     mozilla::LogicalMargin mOffsets;       // in *frame* writing mode
 
     // state for text justification
+    // Note that, although all frames would have correct inner
+    // opportunities computed after ComputeFrameJustification, start
+    // and end justifiable info are not reliable for non-text frames.
     mozilla::JustificationInfo mJustificationInfo;
     mozilla::JustificationAssignment mJustificationAssignment;
     
