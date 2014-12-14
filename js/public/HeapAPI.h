@@ -105,58 +105,6 @@ const uint32_t DefaultNurseryBytes = 16 * js::gc::ChunkSize;
 /* Default maximum heap size in bytes to pass to JS_NewRuntime(). */
 const uint32_t DefaultHeapMaxBytes = 32 * 1024 * 1024;
 
-/*
- * We cannot expose the class hierarchy: the implementation is hidden. Instead
- * we provide cast functions with strong debug-mode assertions.
- */
-static MOZ_ALWAYS_INLINE js::gc::Cell *
-AsCell(JSObject *obj)
-{
-    js::gc::Cell *cell = reinterpret_cast<js::gc::Cell *>(obj);
-    js::gc::AssertGCThingHasType(cell, JSTRACE_OBJECT);
-    return cell;
-}
-
-static MOZ_ALWAYS_INLINE js::gc::Cell *
-AsCell(JSFunction *fun)
-{
-    js::gc::Cell *cell = reinterpret_cast<js::gc::Cell *>(fun);
-    js::gc::AssertGCThingHasType(cell, JSTRACE_OBJECT);
-    return cell;
-}
-
-static MOZ_ALWAYS_INLINE js::gc::Cell *
-AsCell(JSString *str)
-{
-    js::gc::Cell *cell = reinterpret_cast<js::gc::Cell *>(str);
-    js::gc::AssertGCThingHasType(cell, JSTRACE_STRING);
-    return cell;
-}
-
-static MOZ_ALWAYS_INLINE js::gc::Cell *
-AsCell(JSFlatString *flat)
-{
-    js::gc::Cell *cell = reinterpret_cast<js::gc::Cell *>(flat);
-    js::gc::AssertGCThingHasType(cell, JSTRACE_STRING);
-    return cell;
-}
-
-static MOZ_ALWAYS_INLINE js::gc::Cell *
-AsCell(JS::Symbol *sym)
-{
-    js::gc::Cell *cell = reinterpret_cast<js::gc::Cell *>(sym);
-    js::gc::AssertGCThingHasType(cell, JSTRACE_SYMBOL);
-    return cell;
-}
-
-static MOZ_ALWAYS_INLINE js::gc::Cell *
-AsCell(JSScript *script)
-{
-    js::gc::Cell *cell = reinterpret_cast<js::gc::Cell *>(script);
-    js::gc::AssertGCThingHasType(cell, JSTRACE_SCRIPT);
-    return cell;
-}
-
 namespace shadow {
 
 struct Zone
@@ -383,6 +331,12 @@ GetTenuredGCThingZone(void *thing)
 
 extern JS_PUBLIC_API(Zone *)
 GetObjectZone(JSObject *obj);
+
+static MOZ_ALWAYS_INLINE bool
+ObjectIsTenured(JSObject *obj)
+{
+    return !js::gc::IsInsideNursery(reinterpret_cast<js::gc::Cell *>(obj));
+}
 
 static MOZ_ALWAYS_INLINE bool
 ObjectIsMarkedGray(JSObject *obj)
