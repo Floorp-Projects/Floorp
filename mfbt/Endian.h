@@ -73,7 +73,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#if defined(_MSC_VER) && _MSC_VER >= 1300
+#if defined(_MSC_VER)
 #  include <stdlib.h>
 #  pragma intrinsic(_byteswap_ushort)
 #  pragma intrinsic(_byteswap_ulong)
