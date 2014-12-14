@@ -10,6 +10,7 @@ this.EXPORTED_SYMBOLS = ["CustomizableWidgets"];
 Cu.import("resource:///modules/CustomizableUI.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUIUtils",
@@ -36,8 +37,9 @@ const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
 const kWidePanelItemClass = "panel-wide-item";
 
-let gModuleName = "[CustomizableWidgets]";
-#include logging.js
+let gLogger = Log.repository.getLogger("CustomizableUI.CustomizableWidgets");
+gLogger.level = Services.prefs.getBoolPref(kPrefCustomizationDebug) ? Log.Level.Debug : Log.Level.Info;
+gLogger.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
 
 function setAttributes(aNode, aAttrs) {
   let doc = aNode.ownerDocument;
@@ -211,16 +213,16 @@ const CustomizableWidgets = [
               }
               fragment.appendChild(item);
             } catch (e) {
-              ERROR("Error while showing history subview: " + e);
+              gLogger.error("Error while showing history subview: " + e);
             }
           }
           items.appendChild(fragment);
         },
         handleError: function (aError) {
-          LOG("History view tried to show but had an error: " + aError);
+          gLogger.debug("History view tried to show but had an error: " + aError);
         },
         handleCompletion: function (aReason) {
-          LOG("History view is being shown!");
+          gLogger.debug("History view is being shown!");
         },
       });
 
@@ -284,7 +286,7 @@ const CustomizableWidgets = [
       recentlyClosedWindows.addEventListener("click", onRecentlyClosedClick);
     },
     onViewHiding: function(aEvent) {
-      LOG("History view is being hidden!");
+      gLogger.debug("History view is being hidden!");
     }
   }, {
     id: "privatebrowsing-button",
