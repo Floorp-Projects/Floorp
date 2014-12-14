@@ -648,8 +648,8 @@ intrinsic_NewArrayIterator(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static bool
-intrinsic_IsArrayIterator(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::intrinsic_IsArrayIterator(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 1);
@@ -677,8 +677,8 @@ intrinsic_NewStringIterator(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static bool
-intrinsic_IsStringIterator(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::intrinsic_IsStringIterator(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 1);
