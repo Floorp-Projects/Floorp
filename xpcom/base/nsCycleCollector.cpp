@@ -3213,9 +3213,14 @@ nsCycleCollector::CollectWhite()
     if (pinfo->mColor == white && pinfo->mParticipant) {
       if (pinfo->IsGrayJS()) {
         ++numWhiteGCed;
+        JS::Zone* zone;
         if (MOZ_UNLIKELY(pinfo->mParticipant == zoneParticipant)) {
           ++numWhiteJSZones;
+          zone = static_cast<JS::Zone*>(pinfo->mPointer);
+        } else {
+          zone = JS::GetTenuredGCThingZone(pinfo->mPointer);
         }
+        mJSRuntime->AddZoneWaitingForGC(zone);
       } else {
         whiteNodes.InfallibleAppend(pinfo);
         pinfo->mParticipant->Root(pinfo->mPointer);
