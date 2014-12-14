@@ -10,6 +10,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PanelWideWidgetTracker",
   "resource:///modules/PanelWideWidgetTracker.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableWidgets",
@@ -151,12 +152,13 @@ let gUIStateBeforeReset = {
   gUIStateBeforeReset: null,
 };
 
-let gModuleName = "[CustomizableUI]";
-#include logging.js
+let gLogger = Log.repository.getLogger("CustomizableUI");
+gLogger.level = Services.prefs.getBoolPref(kPrefCustomizationDebug) ? Log.Level.Debug : Log.Level.Info;
+gLogger.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
 
 let CustomizableUIInternal = {
   initialize: function() {
-    LOG("Initializing");
+    gLogger.debug("Initializing");
 
     this.addListener(this);
     this._defineBuiltInWidgets();
@@ -582,7 +584,7 @@ let CustomizableUIInternal = {
 
         let [provider, node] = this.getWidgetNode(id, window);
         if (!node) {
-          LOG("Unknown widget: " + id);
+          gLogger.debug("Unknown widget: " + id);
           continue;
         }
 
@@ -647,7 +649,7 @@ let CustomizableUIInternal = {
               }
             } else {
               node.setAttribute("removable", false);
-              LOG("Adding non-removable widget to placements of " + aArea + ": " +
+              gLogger.debug("Adding non-removable widget to placements of " + aArea + ": " +
                   node.id);
               gPlacements.get(aArea).push(node.id);
               gDirty = true;
@@ -747,7 +749,7 @@ let CustomizableUIInternal = {
     if (widget) {
       // If we have an instance of this widget already, just use that.
       if (widget.instances.has(document)) {
-        LOG("An instance of widget " + aWidgetId + " already exists in this "
+        gLogger.debug("An instance of widget " + aWidgetId + " already exists in this "
             + "document. Reusing.");
         return [ CustomizableUI.PROVIDER_API,
                  widget.instances.get(document) ];
@@ -757,13 +759,13 @@ let CustomizableUIInternal = {
                this.buildWidget(document, widget) ];
     }
 
-    LOG("Searching for " + aWidgetId + " in toolbox.");
+    gLogger.debug("Searching for " + aWidgetId + " in toolbox.");
     let node = this.findWidgetInWindow(aWidgetId, aWindow);
     if (node) {
       return [ CustomizableUI.PROVIDER_XUL, node ];
     }
 
-    LOG("No node for " + aWidgetId + " found.");
+    gLogger.debug("No node for " + aWidgetId + " found.");
     return [null, null];
   },
 
@@ -833,7 +835,7 @@ let CustomizableUIInternal = {
       }
 
       if (!widgetNode || !container.contains(widgetNode)) {
-        INFO("Widget " + aWidgetId + " not found, unable to remove from " + aArea);
+        gLogger.info("Widget " + aWidgetId + " not found, unable to remove from " + aArea);
         continue;
       }
 
@@ -985,7 +987,7 @@ let CustomizableUIInternal = {
 
     let placements = gPlacements.get(aArea);
     if (!placements) {
-      ERROR("Could not find any placements for " + aArea +
+      gLogger.error("Could not find any placements for " + aArea +
             " when moving a widget.");
       return;
     }
@@ -1009,7 +1011,7 @@ let CustomizableUIInternal = {
 
     let [, widgetNode] = this.getWidgetNode(aWidgetId, window);
     if (!widgetNode) {
-      ERROR("Widget '" + aWidgetId + "' not found, unable to move");
+      gLogger.error("Widget '" + aWidgetId + "' not found, unable to move");
       return;
     }
 
@@ -1129,7 +1131,7 @@ let CustomizableUIInternal = {
     }
 
     if (!aId) {
-      ERROR("findWidgetInWindow was passed an empty string.");
+      gLogger.error("findWidgetInWindow was passed an empty string.");
       return null;
     }
 
@@ -1193,7 +1195,7 @@ let CustomizableUIInternal = {
       throw new Error("buildWidget was passed a non-widget to build.");
     }
 
-    LOG("Building " + aWidget.id + " of type " + aWidget.type);
+    gLogger.debug("Building " + aWidget.id + " of type " + aWidget.type);
 
     let node;
     if (aWidget.type == "custom") {
@@ -1201,7 +1203,7 @@ let CustomizableUIInternal = {
         node = aWidget.onBuild(aDocument);
       }
       if (!node || !(node instanceof aDocument.defaultView.XULElement))
-        ERROR("Custom widget with id " + aWidget.id + " does not return a valid node");
+        gLogger.error("Custom widget with id " + aWidget.id + " does not return a valid node");
     }
     else {
       if (aWidget.onBeforeCreated) {
@@ -1224,7 +1226,7 @@ let CustomizableUIInternal = {
         if (keyEl) {
           additionalTooltipArguments.push(ShortcutUtils.prettifyShortcut(keyEl));
         } else {
-          ERROR("Key element with id '" + aWidget.shortcutId + "' for widget '" + aWidget.id +
+          gLogger.error("Key element with id '" + aWidget.shortcutId + "' for widget '" + aWidget.id +
                 "' not found!");
         }
       }
@@ -1241,7 +1243,7 @@ let CustomizableUIInternal = {
       // If the widget has a view, and has view showing / hiding listeners,
       // hook those up to this widget.
       if (aWidget.type == "view") {
-        LOG("Widget " + aWidget.id + " has a view. Auto-registering event handlers.");
+        gLogger.debug("Widget " + aWidget.id + " has a view. Auto-registering event handlers.");
         let viewNode = aDocument.getElementById(aWidget.viewId);
 
         if (viewNode) {
@@ -1256,9 +1258,9 @@ let CustomizableUIInternal = {
             }
           }
 
-          LOG("Widget " + aWidget.id + " showing and hiding event handlers set.");
+          gLogger.debug("Widget " + aWidget.id + " showing and hiding event handlers set.");
         } else {
-          ERROR("Could not find the view node with id: " + aWidget.viewId +
+          gLogger.error("Could not find the view node with id: " + aWidget.viewId +
                 ", for widget: " + aWidget.id + ".");
         }
       }
@@ -1301,7 +1303,7 @@ let CustomizableUIInternal = {
       return gWidgetsBundle.GetStringFromName(name) || def;
     } catch(ex) {
       if (!def) {
-        ERROR("Could not localize property '" + name + "'.");
+        gLogger.error("Could not localize property '" + name + "'.");
       }
     }
     return def;
@@ -1333,14 +1335,14 @@ let CustomizableUIInternal = {
   },
 
   handleWidgetCommand: function(aWidget, aNode, aEvent) {
-    LOG("handleWidgetCommand");
+    gLogger.debug("handleWidgetCommand");
 
     if (aWidget.type == "button") {
       if (aWidget.onCommand) {
         try {
           aWidget.onCommand.call(null, aEvent);
         } catch (e) {
-          ERROR(e);
+          gLogger.error(e);
         }
       } else {
         //XXXunf Need to think this through more, and formalize.
@@ -1364,7 +1366,7 @@ let CustomizableUIInternal = {
   },
 
   handleWidgetClick: function(aWidget, aNode, aEvent) {
-    LOG("handleWidgetClick");
+    gLogger.debug("handleWidgetClick");
     if (aWidget.onClick) {
       try {
         aWidget.onClick.call(null, aEvent);
@@ -1513,7 +1515,7 @@ let CustomizableUIInternal = {
         return;
       }
       let isInteractive = this._isOnInteractiveElement(aEvent);
-      LOG("maybeAutoHidePanel: interactive ? " + isInteractive);
+      gLogger.debug("maybeAutoHidePanel: interactive ? " + isInteractive);
       if (isInteractive) {
         return;
       }
@@ -1573,9 +1575,9 @@ let CustomizableUIInternal = {
       }
     }
 
-    LOG("Iterating the actual nodes of the window palette");
+    gLogger.debug("Iterating the actual nodes of the window palette");
     for (let node of aWindowPalette.children) {
-      LOG("In palette children: " + node.id);
+      gLogger.debug("In palette children: " + node.id);
       if (node.id && !this.getPlacementOfWidget(node.id)) {
         widgets.add(node.id);
       }
@@ -1774,7 +1776,7 @@ let CustomizableUIInternal = {
     try {
       state = Services.prefs.getCharPref(kPrefCustomizationState);
     } catch (e) {
-      LOG("No saved state found");
+      gLogger.debug("No saved state found");
       // This will fail if nothing has been customized, so silently fall back to
       // the defaults.
     }
@@ -1790,7 +1792,7 @@ let CustomizableUIInternal = {
     } catch(e) {
       Services.prefs.clearUserPref(kPrefCustomizationState);
       gSavedState = {};
-      LOG("Error loading saved UI customization state, falling back to defaults.");
+      gLogger.debug("Error loading saved UI customization state, falling back to defaults.");
     }
 
     if (!("placements" in gSavedState)) {
@@ -1815,7 +1817,7 @@ let CustomizableUIInternal = {
 
       let restored = false;
       if (placementsPreexisted) {
-        LOG("Restoring " + aArea + " from pre-existing placements");
+        gLogger.debug("Restoring " + aArea + " from pre-existing placements");
         for (let [position, id] in Iterator(gPlacements.get(aArea))) {
           this.moveWidgetWithinArea(id, position);
         }
@@ -1826,7 +1828,7 @@ let CustomizableUIInternal = {
       }
 
       if (!restored && gSavedState && aArea in gSavedState.placements) {
-        LOG("Restoring " + aArea + " from saved state");
+        gLogger.debug("Restoring " + aArea + " from saved state");
         let placements = gSavedState.placements[aArea];
         for (let id of placements)
           this.addWidgetToArea(id, aArea);
@@ -1835,7 +1837,7 @@ let CustomizableUIInternal = {
       }
 
       if (!restored && aLegacyState) {
-        LOG("Restoring " + aArea + " from legacy state");
+        gLogger.debug("Restoring " + aArea + " from legacy state");
         for (let id of aLegacyState)
           this.addWidgetToArea(id, aArea);
         // Don't override dirty state, to ensure legacy state is saved here and
@@ -1844,7 +1846,7 @@ let CustomizableUIInternal = {
       }
 
       if (!restored) {
-        LOG("Restoring " + aArea + " from default state");
+        gLogger.debug("Restoring " + aArea + " from default state");
         let defaults = gAreas.get(aArea).get("defaultPlacements");
         if (defaults) {
           for (let id of defaults)
@@ -1862,7 +1864,7 @@ let CustomizableUIInternal = {
         gFuturePlacements.delete(aArea);
       }
 
-      LOG("Placements for " + aArea + ":\n\t" + gPlacements.get(aArea).join("\n\t"));
+      gLogger.debug("Placements for " + aArea + ":\n\t" + gPlacements.get(aArea).join("\n\t"));
 
       gRestoring = false;
     } finally {
@@ -1893,9 +1895,9 @@ let CustomizableUIInternal = {
       }
     }
 
-    LOG("Saving state.");
+    gLogger.debug("Saving state.");
     let serialized = JSON.stringify(state, this.serializerHelper);
-    LOG("State saved as: " + serialized);
+    gLogger.debug("State saved as: " + serialized);
     Services.prefs.setCharPref(kPrefCustomizationState, serialized);
     gDirty = false;
   },
@@ -1954,7 +1956,7 @@ let CustomizableUIInternal = {
           listener[aEvent].apply(listener, aArgs);
         }
       } catch (e) {
-        ERROR(e + " -- " + e.fileName + ":" + e.lineNumber);
+        gLogger.error(e + " -- " + e.fileName + ":" + e.lineNumber);
       }
     }
   },
@@ -2100,11 +2102,11 @@ let CustomizableUIInternal = {
     // current placement settings.
     let widget = this.normalizeWidget(aData, CustomizableUI.SOURCE_BUILTIN);
     if (!widget) {
-      ERROR("Error creating builtin widget: " + aData.id);
+      gLogger.error("Error creating builtin widget: " + aData.id);
       return;
     }
 
-    LOG("Creating built-in widget with id: " + widget.id);
+    gLogger.debug("Creating built-in widget with id: " + widget.id);
     gPalette.set(widget.id, widget);
   },
 
@@ -2133,7 +2135,7 @@ let CustomizableUIInternal = {
     };
 
     if (typeof aData.id != "string" || !/^[a-z0-9-_]{1,}$/i.test(aData.id)) {
-      ERROR("Given an illegal id in normalizeWidget: " + aData.id);
+      gLogger.error("Given an illegal id in normalizeWidget: " + aData.id);
       return null;
     }
 
@@ -2143,7 +2145,7 @@ let CustomizableUIInternal = {
     const kReqStringProps = ["id"];
     for (let prop of kReqStringProps) {
       if (typeof aData[prop] != "string") {
-        ERROR("Missing required property '" + prop + "' in normalizeWidget: "
+        gLogger.error("Missing required property '" + prop + "' in normalizeWidget: "
               + aData.id);
         return null;
       }
@@ -2169,7 +2171,7 @@ let CustomizableUIInternal = {
         (aSource == CustomizableUI.SOURCE_BUILTIN || gAreas.has(aData.defaultArea))) {
       widget.defaultArea = aData.defaultArea;
     } else if (!widget.removable) {
-      ERROR("Widget '" + widget.id + "' is not removable but does not specify " +
+      gLogger.error("Widget '" + widget.id + "' is not removable but does not specify " +
             "a valid defaultArea. That's not possible; it must specify a " +
             "valid defaultArea as well.");
       return null;
@@ -2197,7 +2199,7 @@ let CustomizableUIInternal = {
                            null;
     } else if (widget.type == "view") {
       if (typeof aData.viewId != "string") {
-        ERROR("Expected a string for widget " + widget.id + " viewId, but got "
+        gLogger.error("Expected a string for widget " + widget.id + " viewId, but got "
               + aData.viewId);
         return null;
       }
@@ -2348,7 +2350,7 @@ let CustomizableUIInternal = {
     Services.prefs.clearUserPref(kPrefCustomizationState);
     Services.prefs.clearUserPref(kPrefDrawInTitlebar);
     Services.prefs.clearUserPref(kPrefDeveditionTheme);
-    LOG("State reset");
+    gLogger.debug("State reset");
 
     // Reset placements to make restoring default placements possible.
     gPlacements = new Map();
@@ -2578,12 +2580,12 @@ let CustomizableUIInternal = {
           let collapsed = container.getAttribute(attribute) == "true";
           let defaultCollapsed = props.get("defaultCollapsed");
           if (defaultCollapsed !== null && collapsed != defaultCollapsed) {
-            LOG("Found " + areaId + " had non-default toolbar visibility (expected " + defaultCollapsed + ", was " + collapsed + ")");
+            gLogger.debug("Found " + areaId + " had non-default toolbar visibility (expected " + defaultCollapsed + ", was " + collapsed + ")");
             return false;
           }
         }
       }
-      LOG("Checking default state for " + areaId + ":\n" + currentPlacements.join(",") +
+      gLogger.debug("Checking default state for " + areaId + ":\n" + currentPlacements.join(",") +
           "\nvs.\n" + defaultPlacements.join(","));
 
       if (currentPlacements.length != defaultPlacements.length) {
@@ -2592,7 +2594,7 @@ let CustomizableUIInternal = {
 
       for (let i = 0; i < currentPlacements.length; ++i) {
         if (currentPlacements[i] != defaultPlacements[i]) {
-          LOG("Found " + currentPlacements[i] + " in " + areaId + " where " +
+          gLogger.debug("Found " + currentPlacements[i] + " in " + areaId + " where " +
               defaultPlacements[i] + " was expected!");
           return false;
         }
@@ -2600,11 +2602,11 @@ let CustomizableUIInternal = {
     }
 
     if (Services.prefs.prefHasUserValue(kPrefDrawInTitlebar)) {
-      LOG(kPrefDrawInTitlebar + " pref is non-default");
+      gLogger.debug(kPrefDrawInTitlebar + " pref is non-default");
       return false;
     }
     if (Services.prefs.prefHasUserValue(kPrefDeveditionTheme)) {
-      LOG(kPrefDeveditionTheme + " pref is non-default");
+      gLogger.debug(kPrefDeveditionTheme + " pref is non-default");
       return false;
     }
 
