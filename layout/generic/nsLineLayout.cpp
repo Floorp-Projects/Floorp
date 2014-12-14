@@ -2490,7 +2490,16 @@ nsLineLayout::TrimTrailingWhiteSpace()
 
 struct nsLineLayout::JustificationComputationState
 {
+  PerFrameData* mFirstParticipant;
   PerFrameData* mLastParticipant;
+  // Whether we are going across a boundary of ruby base, i.e.
+  // entering one, leaving one, or both.
+  bool mCrossingRubyBaseBoundary;
+
+  JustificationComputationState()
+    : mFirstParticipant(nullptr)
+    , mLastParticipant(nullptr)
+    , mCrossingRubyBaseBoundary(false) { }
 };
 
 /**
@@ -2517,6 +2526,11 @@ nsLineLayout::ComputeFrameJustification(PerSpanData* aPSD,
       continue;
     }
 
+    bool isRubyBase = pfd->mFrame->GetType() == nsGkAtoms::rubyBaseFrame;
+    if (isRubyBase) {
+      aState.mCrossingRubyBaseBoundary = true;
+    }
+
     int extraOpportunities = 0;
     if (pfd->mSpan) {
       PerSpanData* span = pfd->mSpan;
@@ -2529,14 +2543,26 @@ nsLineLayout::ComputeFrameJustification(PerSpanData* aPSD,
       }
 
       PerFrameData* prev = aState.mLastParticipant;
-      if (prev) {
+      if (!prev) {
+        aState.mFirstParticipant = pfd;
+      } else {
         auto& assign = pfd->mJustificationAssignment;
         auto& prevAssign = prev->mJustificationAssignment;
         const auto& prevInfo = prev->mJustificationInfo;
 
-        if (info.mIsStartJustifiable || prevInfo.mIsEndJustifiable) {
+        if (info.mIsStartJustifiable ||
+            prevInfo.mIsEndJustifiable ||
+            aState.mCrossingRubyBaseBoundary) {
           extraOpportunities = 1;
-          if (!info.mIsStartJustifiable) {
+          if (aState.mCrossingRubyBaseBoundary) {
+            // For ruby alignment with value space-around, there is
+            // always an expansion opportunity at the boundary of a ruby
+            // base, and it always generates one gap at each side. If we
+            // don't do it here, the interaction between text align and
+            // and ruby align could be strange.
+            prevAssign.mGapsAtEnd = 1;
+            assign.mGapsAtStart = 1;
+          } else if (!info.mIsStartJustifiable) {
             prevAssign.mGapsAtEnd = 2;
             assign.mGapsAtStart = 0;
           } else if (!prevInfo.mIsEndJustifiable) {
@@ -2550,6 +2576,7 @@ nsLineLayout::ComputeFrameJustification(PerSpanData* aPSD,
       }
 
       aState.mLastParticipant = pfd;
+      aState.mCrossingRubyBaseBoundary = isRubyBase;
     }
 
     if (firstChild) {
@@ -2650,15 +2677,13 @@ nsLineLayout::ApplyFrameJustification(PerSpanData* aPSD,
     if (!pfd->mIsBullet) {
       nscoord dw = 0;
       WritingMode lineWM = mRootSpan->mWritingMode;
-
-      pfd->mBounds.IStart(lineWM) += deltaICoord;
+      const auto& assign = pfd->mJustificationAssignment;
 
       if (true == pfd->mIsTextFrame) {
         if (aState.IsJustifiable()) {
           // Set corresponding justification gaps here, so that the
           // text frame knows how it should add gaps at its sides.
           const auto& info = pfd->mJustificationInfo;
-          const auto& assign = pfd->mJustificationAssignment;
           auto textFrame = static_cast<nsTextFrame*>(pfd->mFrame);
           textFrame->AssignJustificationGaps(assign);
           dw = aState.Consume(JustificationUtils::CountGaps(info, assign));
@@ -2675,6 +2700,13 @@ nsLineLayout::ApplyFrameJustification(PerSpanData* aPSD,
       }
 
       pfd->mBounds.ISize(lineWM) += dw;
+      if (!pfd->mIsTextFrame && assign.TotalGaps()) {
+        // It is possible that we assign gaps to non-text frame.
+        // Apply the gaps as margin around the frame.
+        deltaICoord += aState.Consume(assign.mGapsAtStart);
+        dw += aState.Consume(assign.mGapsAtEnd);
+      }
+      pfd->mBounds.IStart(lineWM) += deltaICoord;
 
       ApplyLineJustificationToAnnotations(pfd, aPSD, deltaICoord, dw);
       deltaICoord += dw;
@@ -2731,12 +2763,25 @@ nsLineLayout::TextAlignLine(nsLineBox* aLine,
   bool isSVG = mBlockReflowState->frame->IsSVGText();
   bool doTextAlign = remainingISize > 0 || textAlignTrue;
 
+  int32_t additionalGaps = 0;
   if (!isSVG && (mHasRuby || (doTextAlign &&
                               textAlign == NS_STYLE_TEXT_ALIGN_JUSTIFY))) {
-    JustificationComputationState computeState = {
-      nullptr // mLastParticipant
-    };
+    JustificationComputationState computeState;
     ComputeFrameJustification(psd, computeState);
+    if (mHasRuby && computeState.mFirstParticipant) {
+      PerFrameData* firstFrame = computeState.mFirstParticipant;
+      if (firstFrame->mFrame->StyleContext()->IsDirectlyInsideRuby()) {
+        MOZ_ASSERT(!firstFrame->mJustificationAssignment.mGapsAtStart);
+        firstFrame->mJustificationAssignment.mGapsAtStart = 1;
+        additionalGaps++;
+      }
+      PerFrameData* lastFrame = computeState.mLastParticipant;
+      if (lastFrame->mFrame->StyleContext()->IsDirectlyInsideRuby()) {
+        MOZ_ASSERT(!lastFrame->mJustificationAssignment.mGapsAtEnd);
+        lastFrame->mJustificationAssignment.mGapsAtEnd = 1;
+        additionalGaps++;
+      }
+    }
   }
 
   if (!isSVG && doTextAlign) {
@@ -2745,8 +2790,8 @@ nsLineLayout::TextAlignLine(nsLineBox* aLine,
         int32_t opportunities =
           psd->mFrame->mJustificationInfo.mInnerOpportunities;
         if (opportunities > 0) {
-          JustificationApplicationState applyState(
-              opportunities * 2, remainingISize);
+          int32_t gaps = opportunities * 2 + additionalGaps;
+          JustificationApplicationState applyState(gaps, remainingISize);
 
           // Apply the justification, and make sure to update our linebox
           // width to account for it.
