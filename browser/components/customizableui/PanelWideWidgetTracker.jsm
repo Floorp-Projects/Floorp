@@ -11,9 +11,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm");
 
-let gModuleName = "[PanelWideWidgetTracker]";
-#include logging.js
-
 let gPanel = CustomizableUI.AREA_PANEL;
 // We keep track of the widget placements for the panel locally:
 let gPanelPlacements = [];
