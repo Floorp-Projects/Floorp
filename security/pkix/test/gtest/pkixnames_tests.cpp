@@ -30,8 +30,9 @@
 
 namespace mozilla { namespace pkix {
 
-bool PresentedDNSIDMatchesReferenceDNSID(Input presentedDNSID,
-                                         Input referenceDNSID);
+Result MatchPresentedDNSIDWithReferenceDNSID(Input presentedDNSID,
+                                             Input referenceDNSID,
+                                             /*out*/ bool& matches);
 
 bool IsValidReferenceDNSID(Input hostname);
 bool IsValidPresentedDNSID(Input hostname);
@@ -47,13 +48,15 @@ struct PresentedMatchesReference
 {
   ByteString presentedDNSID;
   ByteString referenceDNSID;
-  bool matches;
+  Result expectedResult;
+  bool expectedMatches; // only valid when expectedResult == Success
 };
 
 #define DNS_ID_MATCH(a, b) \
   { \
     ByteString(reinterpret_cast<const uint8_t*>(a), sizeof(a) - 1), \
     ByteString(reinterpret_cast<const uint8_t*>(b), sizeof(b) - 1), \
+    Success, \
     true \
   }
 
@@ -61,12 +64,20 @@ struct PresentedMatchesReference
   { \
     ByteString(reinterpret_cast<const uint8_t*>(a), sizeof(a) - 1), \
     ByteString(reinterpret_cast<const uint8_t*>(b), sizeof(b) - 1), \
+    Success, \
     false \
+  }
+
+#define DNS_ID_BAD_DER(a, b) \
+  { \
+    ByteString(reinterpret_cast<const uint8_t*>(a), sizeof(a) - 1), \
+    ByteString(reinterpret_cast<const uint8_t*>(b), sizeof(b) - 1), \
+    Result::ERROR_BAD_DER \
   }
 
 static const PresentedMatchesReference DNSID_MATCH_PARAMS[] =
 {
-  DNS_ID_MISMATCH("", "a"),
+  DNS_ID_BAD_DER("", "a"),
 
   DNS_ID_MATCH("a", "a"),
   DNS_ID_MISMATCH("b", "a"),
@@ -77,9 +88,9 @@ static const PresentedMatchesReference DNSID_MATCH_PARAMS[] =
 
   // Wildcard not in leftmost label
   DNS_ID_MATCH("d.c.b.a", "d.c.b.a"),
-  DNS_ID_MISMATCH("d.*.b.a", "d.c.b.a"),
-  DNS_ID_MISMATCH("d.c*.b.a", "d.c.b.a"),
-  DNS_ID_MISMATCH("d.c*.b.a", "d.cc.b.a"),
+  DNS_ID_BAD_DER("d.*.b.a", "d.c.b.a"),
+  DNS_ID_BAD_DER("d.c*.b.a", "d.c.b.a"),
+  DNS_ID_BAD_DER("d.c*.b.a", "d.cc.b.a"),
 
   // case sensitivity
   DNS_ID_MATCH("abcdefghijklmnopqrstuvwxyz", "ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
@@ -92,39 +103,38 @@ static const PresentedMatchesReference DNSID_MATCH_PARAMS[] =
   // A trailing dot indicates an absolute name. Absolute presented names are
   // not allowed, but absolute reference names are allowed.
   DNS_ID_MATCH("example", "example"),
-  DNS_ID_MISMATCH("example.", "example."),
+  DNS_ID_BAD_DER("example.", "example."),
   DNS_ID_MATCH("example", "example."),
-  DNS_ID_MISMATCH("example.", "example"),
+  DNS_ID_BAD_DER("example.", "example"),
   DNS_ID_MATCH("example.com", "example.com"),
-  DNS_ID_MISMATCH("example.com.", "example.com."),
+  DNS_ID_BAD_DER("example.com.", "example.com."),
   DNS_ID_MATCH("example.com", "example.com."),
-  DNS_ID_MISMATCH("example.com.", "example.com"),
-  DNS_ID_MISMATCH("example.com..", "example.com."),
-  DNS_ID_MISMATCH("example.com..", "example.com"),
-  DNS_ID_MISMATCH("example.com...", "example.com."),
+  DNS_ID_BAD_DER("example.com.", "example.com"),
+  DNS_ID_BAD_DER("example.com..", "example.com."),
+  DNS_ID_BAD_DER("example.com..", "example.com"),
+  DNS_ID_BAD_DER("example.com...", "example.com."),
 
   // xn-- IDN prefix
-  DNS_ID_MISMATCH("x*.b.a", "xa.b.a"),
-  DNS_ID_MISMATCH("x*.b.a", "xna.b.a"),
-  DNS_ID_MISMATCH("x*.b.a", "xn-a.b.a"),
-  DNS_ID_MISMATCH("x*.b.a", "xn--a.b.a"),
-  DNS_ID_MISMATCH("xn*.b.a", "xn--a.b.a"),
-  DNS_ID_MISMATCH("xn-*.b.a", "xn--a.b.a"),
-  DNS_ID_MISMATCH("xn--*.b.a", "xn--a.b.a"),
-  DNS_ID_MISMATCH("xn*.b.a", "xn--a.b.a"),
-  DNS_ID_MISMATCH("xn-*.b.a", "xn--a.b.a"),
-  DNS_ID_MISMATCH("xn--*.b.a", "xn--a.b.a"),
-  DNS_ID_MISMATCH("xn---*.b.a", "xn--a.b.a"),
+  DNS_ID_BAD_DER("x*.b.a", "xa.b.a"),
+  DNS_ID_BAD_DER("x*.b.a", "xna.b.a"),
+  DNS_ID_BAD_DER("x*.b.a", "xn-a.b.a"),
+  DNS_ID_BAD_DER("x*.b.a", "xn--a.b.a"),
+  DNS_ID_BAD_DER("xn*.b.a", "xn--a.b.a"),
+  DNS_ID_BAD_DER("xn-*.b.a", "xn--a.b.a"),
+  DNS_ID_BAD_DER("xn--*.b.a", "xn--a.b.a"),
+  DNS_ID_BAD_DER("xn*.b.a", "xn--a.b.a"),
+  DNS_ID_BAD_DER("xn-*.b.a", "xn--a.b.a"),
+  DNS_ID_BAD_DER("xn--*.b.a", "xn--a.b.a"),
+  DNS_ID_BAD_DER("xn---*.b.a", "xn--a.b.a"),
 
   // "*" cannot expand to nothing.
-  DNS_ID_MISMATCH("c*.b.a", "c.b.a"),
+  DNS_ID_BAD_DER("c*.b.a", "c.b.a"),
 
-  // --------------------------------------------------------------------------
-  // The rest of these are test cases adapted from Chromium's
-  // x509_certificate_unittest.cc. The parameter order is the opposite in
-  // Chromium's tests. Also, they some tests were modified to fit into this
-  // framework or due to intentional differences between mozilla::pkix and
-  // Chromium.
+  /////////////////////////////////////////////////////////////////////////////
+  // These are test cases adapted from Chromium's x509_certificate_unittest.cc.
+  // The parameter order is the opposite in Chromium's tests. Also, some tests
+  // were modified to fit into this framework or due to intentional differences
+  // between mozilla::pkix and Chromium.
 
   DNS_ID_MATCH("foo.com", "foo.com"),
   DNS_ID_MATCH("f", "f"),
@@ -132,30 +142,30 @@ static const PresentedMatchesReference DNSID_MATCH_PARAMS[] =
   DNS_ID_MATCH("*.foo.com", "bar.foo.com"),
   DNS_ID_MATCH("*.test.fr", "www.test.fr"),
   DNS_ID_MATCH("*.test.FR", "wwW.tESt.fr"),
-  DNS_ID_MISMATCH(".uk", "f.uk"),
-  DNS_ID_MISMATCH("?.bar.foo.com", "w.bar.foo.com"),
-  DNS_ID_MISMATCH("(www|ftp).foo.com", "www.foo.com"), // regex!
-  DNS_ID_MISMATCH("www.foo.com\0", "www.foo.com"),
-  DNS_ID_MISMATCH("www.foo.com\0*.foo.com", "www.foo.com"),
+  DNS_ID_BAD_DER(".uk", "f.uk"),
+  DNS_ID_BAD_DER("?.bar.foo.com", "w.bar.foo.com"),
+  DNS_ID_BAD_DER("(www|ftp).foo.com", "www.foo.com"), // regex!
+  DNS_ID_BAD_DER("www.foo.com\0", "www.foo.com"),
+  DNS_ID_BAD_DER("www.foo.com\0*.foo.com", "www.foo.com"),
   DNS_ID_MISMATCH("ww.house.example", "www.house.example"),
   DNS_ID_MISMATCH("www.test.org", "test.org"),
   DNS_ID_MISMATCH("*.test.org", "test.org"),
-  DNS_ID_MISMATCH("*.org", "test.org"),
-  DNS_ID_MISMATCH("w*.bar.foo.com", "w.bar.foo.com"),
-  DNS_ID_MISMATCH("ww*ww.bar.foo.com", "www.bar.foo.com"),
-  DNS_ID_MISMATCH("ww*ww.bar.foo.com", "wwww.bar.foo.com"),
+  DNS_ID_BAD_DER("*.org", "test.org"),
+  DNS_ID_BAD_DER("w*.bar.foo.com", "w.bar.foo.com"),
+  DNS_ID_BAD_DER("ww*ww.bar.foo.com", "www.bar.foo.com"),
+  DNS_ID_BAD_DER("ww*ww.bar.foo.com", "wwww.bar.foo.com"),
 
   // Different than Chromium, matches NSS.
-  DNS_ID_MISMATCH("w*w.bar.foo.com", "wwww.bar.foo.com"),
+  DNS_ID_BAD_DER("w*w.bar.foo.com", "wwww.bar.foo.com"),
 
-  DNS_ID_MISMATCH("w*w.bar.foo.c0m", "wwww.bar.foo.com"),
+  DNS_ID_BAD_DER("w*w.bar.foo.c0m", "wwww.bar.foo.com"),
 
   // '*' must be the only character in the wildcard label
-  DNS_ID_MISMATCH("wa*.bar.foo.com", "WALLY.bar.foo.com"),
+  DNS_ID_BAD_DER("wa*.bar.foo.com", "WALLY.bar.foo.com"),
 
   // We require "*" to be the last character in a wildcard label, but
   // Chromium does not.
-  DNS_ID_MISMATCH("*Ly.bar.foo.com", "wally.bar.foo.com"),
+  DNS_ID_BAD_DER("*Ly.bar.foo.com", "wally.bar.foo.com"),
 
   // Chromium does URL decoding of the reference ID, but we don't, and we also
   // require that the reference ID is valid, so we can't test these two.
@@ -163,33 +173,33 @@ static const PresentedMatchesReference DNSID_MATCH_PARAMS[] =
   // DNS_ID_MATCH("www&.foo.com", "www%26.foo.com"),
 
   DNS_ID_MISMATCH("*.test.de", "www.test.co.jp"),
-  DNS_ID_MISMATCH("*.jp", "www.test.co.jp"),
+  DNS_ID_BAD_DER("*.jp", "www.test.co.jp"),
   DNS_ID_MISMATCH("www.test.co.uk", "www.test.co.jp"),
-  DNS_ID_MISMATCH("www.*.co.jp", "www.test.co.jp"),
+  DNS_ID_BAD_DER("www.*.co.jp", "www.test.co.jp"),
   DNS_ID_MATCH("www.bar.foo.com", "www.bar.foo.com"),
   DNS_ID_MISMATCH("*.foo.com", "www.bar.foo.com"),
-  DNS_ID_MISMATCH("*.*.foo.com", "www.bar.foo.com"),
-  DNS_ID_MISMATCH("*.*.foo.com", "www.bar.foo.com"),
+  DNS_ID_BAD_DER("*.*.foo.com", "www.bar.foo.com"),
+  DNS_ID_BAD_DER("*.*.foo.com", "www.bar.foo.com"),
 
   // Our matcher requires the reference ID to be a valid DNS name, so we cannot
   // test this case.
-  // DNS_ID_MISMATCH("*.*.bar.foo.com", "*..bar.foo.com"),
+  //DNS_ID_BAD_DER("*.*.bar.foo.com", "*..bar.foo.com"),
 
   DNS_ID_MATCH("www.bath.org", "www.bath.org"),
 
   // Our matcher requires the reference ID to be a valid DNS name, so we cannot
   // test these cases.
-  // DNS_ID_MISMATCH("www.bath.org", ""),
-  // DNS_ID_MISMATCH("www.bath.org", "20.30.40.50"),
-  // DNS_ID_MISMATCH("www.bath.org", "66.77.88.99"),
+  // DNS_ID_BAD_DER("www.bath.org", ""),
+  // DNS_ID_BAD_DER("www.bath.org", "20.30.40.50"),
+  // DNS_ID_BAD_DER("www.bath.org", "66.77.88.99"),
 
   // IDN tests
   DNS_ID_MATCH("xn--poema-9qae5a.com.br", "xn--poema-9qae5a.com.br"),
   DNS_ID_MATCH("*.xn--poema-9qae5a.com.br", "www.xn--poema-9qae5a.com.br"),
   DNS_ID_MISMATCH("*.xn--poema-9qae5a.com.br", "xn--poema-9qae5a.com.br"),
-  DNS_ID_MISMATCH("xn--poema-*.com.br", "xn--poema-9qae5a.com.br"),
-  DNS_ID_MISMATCH("xn--*-9qae5a.com.br", "xn--poema-9qae5a.com.br"),
-  DNS_ID_MISMATCH("*--poema-9qae5a.com.br", "xn--poema-9qae5a.com.br"),
+  DNS_ID_BAD_DER("xn--poema-*.com.br", "xn--poema-9qae5a.com.br"),
+  DNS_ID_BAD_DER("xn--*-9qae5a.com.br", "xn--poema-9qae5a.com.br"),
+  DNS_ID_BAD_DER("*--poema-9qae5a.com.br", "xn--poema-9qae5a.com.br"),
 
   // The following are adapted from the examples quoted from
   //   http://tools.ietf.org/html/rfc6125#section-6.4.3
@@ -202,12 +212,12 @@ static const PresentedMatchesReference DNSID_MATCH_PARAMS[] =
   // be taken to match baz1.example.net and foobaz.example.net and
   // buzz.example.net, respectively. However, we don't allow any characters
   // other than '*' in the wildcard label.
-  DNS_ID_MISMATCH("baz*.example.net", "baz1.example.net"),
+  DNS_ID_BAD_DER("baz*.example.net", "baz1.example.net"),
 
   // Both of these are different from Chromium, but match NSS, becaues the
   // wildcard character "*" is not the last character of the label.
-  DNS_ID_MISMATCH("*baz.example.net", "foobaz.example.net"),
-  DNS_ID_MISMATCH("b*z.example.net", "buzz.example.net"),
+  DNS_ID_BAD_DER("*baz.example.net", "foobaz.example.net"),
+  DNS_ID_BAD_DER("b*z.example.net", "buzz.example.net"),
 
   // Wildcards should not be valid for public registry controlled domains,
   // and unknown/unrecognized domains, at least three domain components must
@@ -215,16 +225,16 @@ static const PresentedMatchesReference DNSID_MATCH_PARAMS[] =
   // labels after the wildcard label.
   DNS_ID_MATCH("*.test.example", "www.test.example"),
   DNS_ID_MATCH("*.example.co.uk", "test.example.co.uk"),
-  DNS_ID_MISMATCH("*.exmaple", "test.example"),
+  DNS_ID_BAD_DER("*.exmaple", "test.example"),
 
   // The result is different than Chromium, because Chromium takes into account
   // the additional knowledge it has that "co.uk" is a TLD. mozilla::pkix does
   // not know that.
   DNS_ID_MATCH("*.co.uk", "example.co.uk"),
 
-  DNS_ID_MISMATCH("*.com", "foo.com"),
-  DNS_ID_MISMATCH("*.us", "foo.us"),
-  DNS_ID_MISMATCH("*", "foo"),
+  DNS_ID_BAD_DER("*.com", "foo.com"),
+  DNS_ID_BAD_DER("*.us", "foo.us"),
+  DNS_ID_BAD_DER("*", "foo"),
 
   // IDN variants of wildcards and registry controlled domains.
   DNS_ID_MATCH("*.xn--poema-9qae5a.com.br", "www.xn--poema-9qae5a.com.br"),
@@ -234,7 +244,7 @@ static const PresentedMatchesReference DNSID_MATCH_PARAMS[] =
   // TODO: File bug against Chromium.
   DNS_ID_MATCH("*.com.br", "xn--poema-9qae5a.com.br"),
 
-  DNS_ID_MISMATCH("*.xn--mgbaam7a8h", "example.xn--mgbaam7a8h"),
+  DNS_ID_BAD_DER("*.xn--mgbaam7a8h", "example.xn--mgbaam7a8h"),
   // Wildcards should be permissible for 'private' registry-controlled
   // domains. (In mozilla::pkix, we do not know if it is a private registry-
   // controlled domain or not.)
@@ -242,40 +252,40 @@ static const PresentedMatchesReference DNSID_MATCH_PARAMS[] =
   DNS_ID_MATCH("*.s3.amazonaws.com", "foo.s3.amazonaws.com"),
 
   // Multiple wildcards are not valid.
-  DNS_ID_MISMATCH("*.*.com", "foo.example.com"),
-  DNS_ID_MISMATCH("*.bar.*.com", "foo.bar.example.com"),
+  DNS_ID_BAD_DER("*.*.com", "foo.example.com"),
+  DNS_ID_BAD_DER("*.bar.*.com", "foo.bar.example.com"),
 
   // Absolute vs relative DNS name tests. Although not explicitly specified
   // in RFC 6125, absolute reference names (those ending in a .) should
   // match either absolute or relative presented names. We don't allow
   // absolute presented names.
   // TODO: File errata against RFC 6125 about this.
-  DNS_ID_MISMATCH("foo.com.", "foo.com"),
+  DNS_ID_BAD_DER("foo.com.", "foo.com"),
   DNS_ID_MATCH("foo.com", "foo.com."),
-  DNS_ID_MISMATCH("foo.com.", "foo.com."),
-  DNS_ID_MISMATCH("f.", "f"),
+  DNS_ID_BAD_DER("foo.com.", "foo.com."),
+  DNS_ID_BAD_DER("f.", "f"),
   DNS_ID_MATCH("f", "f."),
-  DNS_ID_MISMATCH("f.", "f."),
-  DNS_ID_MISMATCH("*.bar.foo.com.", "www-3.bar.foo.com"),
+  DNS_ID_BAD_DER("f.", "f."),
+  DNS_ID_BAD_DER("*.bar.foo.com.", "www-3.bar.foo.com"),
   DNS_ID_MATCH("*.bar.foo.com", "www-3.bar.foo.com."),
-  DNS_ID_MISMATCH("*.bar.foo.com.", "www-3.bar.foo.com."),
+  DNS_ID_BAD_DER("*.bar.foo.com.", "www-3.bar.foo.com."),
 
   // We require the reference ID to be a valid DNS name, so we cannot test this
   // case.
   // DNS_ID_MISMATCH(".", "."),
 
-  DNS_ID_MISMATCH("*.com.", "example.com"),
-  DNS_ID_MISMATCH("*.com", "example.com."),
-  DNS_ID_MISMATCH("*.com.", "example.com."),
-  DNS_ID_MISMATCH("*.", "foo."),
-  DNS_ID_MISMATCH("*.", "foo"),
+  DNS_ID_BAD_DER("*.com.", "example.com"),
+  DNS_ID_BAD_DER("*.com", "example.com."),
+  DNS_ID_BAD_DER("*.com.", "example.com."),
+  DNS_ID_BAD_DER("*.", "foo."),
+  DNS_ID_BAD_DER("*.", "foo"),
 
   // The result is different than Chromium because we don't know that co.uk is
   // a TLD.
   DNS_ID_MATCH("*.co.uk", "foo.co.uk"),
   DNS_ID_MATCH("*.co.uk", "foo.co.uk."),
-  DNS_ID_MISMATCH("*.co.uk.", "foo.co.uk"),
-  DNS_ID_MISMATCH("*.co.uk.", "foo.co.uk."),
+  DNS_ID_BAD_DER("*.co.uk.", "foo.co.uk"),
+  DNS_ID_BAD_DER("*.co.uk.", "foo.co.uk."),
 };
 
 struct InputValidity
@@ -305,8 +315,8 @@ static const InputValidity DNSNAMES_VALIDITY[] =
   I("", false, false),
   I(".", false, false),
   I("a", true, true),
-  I(".a", false, false), // PresentedDNSIDMatchesReferenceDNSID depends on this
-  I(".a.b", false, false), // PresentedDNSIDMatchesReferenceDNSID depends on this
+  I(".a", false, false),
+  I(".a.b", false, false),
   I("..a", false, false),
   I("a..b", false, false),
   I("a...b", false, false),
@@ -854,14 +864,14 @@ static const IPAddressParams<16> IPV6_ADDRESSES[] =
   IPV6_INVALID("::1.2\02.3.4"),
 };
 
-class pkixnames_PresentedDNSIDMatchesReferenceDNSID
+class pkixnames_MatchPresentedDNSIDWithReferenceDNSID
   : public ::testing::Test
   , public ::testing::WithParamInterface<PresentedMatchesReference>
 {
 };
 
-TEST_P(pkixnames_PresentedDNSIDMatchesReferenceDNSID,
-       PresentedDNSIDMatchesReferenceDNSID)
+TEST_P(pkixnames_MatchPresentedDNSIDWithReferenceDNSID,
+       MatchPresentedDNSIDWithReferenceDNSID)
 {
   const PresentedMatchesReference& param(GetParam());
   SCOPED_TRACE(param.presentedDNSID.c_str());
@@ -876,12 +886,17 @@ TEST_P(pkixnames_PresentedDNSIDMatchesReferenceDNSID,
   // sanity check that test makes sense
   ASSERT_TRUE(IsValidReferenceDNSID(reference));
 
-  ASSERT_EQ(param.matches,
-            PresentedDNSIDMatchesReferenceDNSID(presented, reference));
+  bool matches;
+  ASSERT_EQ(param.expectedResult,
+            MatchPresentedDNSIDWithReferenceDNSID(presented, reference,
+                                                  matches));
+  if (param.expectedResult == Success) {
+    ASSERT_EQ(param.expectedMatches, matches);
+  }
 }
 
-INSTANTIATE_TEST_CASE_P(pkixnames_PresentedDNSIDMatchesReferenceDNSID,
-                        pkixnames_PresentedDNSIDMatchesReferenceDNSID,
+INSTANTIATE_TEST_CASE_P(pkixnames_MatchPresentedDNSIDWithReferenceDNSID,
+                        pkixnames_MatchPresentedDNSIDWithReferenceDNSID,
                         testing::ValuesIn(DNSID_MATCH_PARAMS));
 
 class pkixnames_Turkish_I_Comparison
@@ -890,7 +905,7 @@ class pkixnames_Turkish_I_Comparison
 {
 };
 
-TEST_P(pkixnames_Turkish_I_Comparison, PresentedDNSIDMatchesReferenceDNSID)
+TEST_P(pkixnames_Turkish_I_Comparison, MatchPresentedDNSIDWithReferenceDNSID)
 {
   // Make sure we don't have the similar problems that strcasecmp and others
   // have with the other kinds of "i" and "I" commonly used in Turkish locales.
@@ -900,10 +915,29 @@ TEST_P(pkixnames_Turkish_I_Comparison, PresentedDNSIDMatchesReferenceDNSID)
   Input input;
   ASSERT_EQ(Success, input.Init(inputValidity.input.data(),
                                 inputValidity.input.length()));
+
   bool isASCII = InputsAreEqual(LOWERCASE_I, input) ||
                  InputsAreEqual(UPPERCASE_I, input);
-  ASSERT_EQ(isASCII, PresentedDNSIDMatchesReferenceDNSID(input, LOWERCASE_I));
-  ASSERT_EQ(isASCII, PresentedDNSIDMatchesReferenceDNSID(input, UPPERCASE_I));
+  {
+    bool matches;
+    ASSERT_EQ(inputValidity.isValidPresentedID ? Success
+                                               : Result::ERROR_BAD_DER,
+              MatchPresentedDNSIDWithReferenceDNSID(input, LOWERCASE_I,
+                                                    matches));
+    if (inputValidity.isValidPresentedID) {
+      ASSERT_EQ(isASCII, matches);
+    }
+  }
+  {
+    bool matches;
+    ASSERT_EQ(inputValidity.isValidPresentedID ? Success
+                                               : Result::ERROR_BAD_DER,
+              MatchPresentedDNSIDWithReferenceDNSID(input, UPPERCASE_I,
+                                                    matches));
+    if (inputValidity.isValidPresentedID) {
+      ASSERT_EQ(isASCII, matches);
+    }
+  }
 }
 
 INSTANTIATE_TEST_CASE_P(pkixnames_Turkish_I_Comparison,
@@ -1245,7 +1279,7 @@ static const CheckCertHostnameParams CHECK_CERT_HOSTNAME_PARAMS[] =
   // Do not match a CN-ID when there is a valid DNSName SAN Entry.
   WITH_SAN("a", RDN(CN("a")), DNSName("b"), Result::ERROR_BAD_CERT_DOMAIN),
   // Do not match a CN-ID when there is a malformed DNSName SAN Entry.
-  WITH_SAN("a", RDN(CN("a")), DNSName("!"), Result::ERROR_BAD_CERT_DOMAIN),
+  WITH_SAN("a", RDN(CN("a")), DNSName("!"), Result::ERROR_BAD_DER),
   // Do not match a matching CN-ID when there is a valid IPAddress SAN entry.
   WITH_SAN("a", RDN(CN("a")), IPAddress(ipv4_addr_bytes),
            Result::ERROR_BAD_CERT_DOMAIN),
@@ -1281,7 +1315,8 @@ static const CheckCertHostnameParams CHECK_CERT_HOSTNAME_PARAMS[] =
   // Duplicate DNSName.
   WITH_SAN("a", RDN(CN("foo")), DNSName("a") + DNSName("a"), Success),
   // After an invalid DNSName.
-  WITH_SAN("b", RDN(CN("foo")), DNSName("!") + DNSName("b"), Success),
+  WITH_SAN("b", RDN(CN("foo")), DNSName("!") + DNSName("b"),
+           Result::ERROR_BAD_DER),
 
   // http://tools.ietf.org/html/rfc5280#section-4.2.1.6: "If the subjectAltName
   // extension is present, the sequence MUST contain at least one entry."
@@ -1361,9 +1396,8 @@ static const CheckCertHostnameParams CHECK_CERT_HOSTNAME_PARAMS[] =
   WITH_SAN("example.org", RDN(CN("foo")),
            IPAddress(example_com) + DNSName("example.org"), Success),
 
-  // We skip over malformed DNSName entries too.
   WITH_SAN("example.com", RDN(CN("foo")),
-           DNSName("!") + DNSName("example.com"), Success),
+           DNSName("!") + DNSName("example.com"), Result::ERROR_BAD_DER),
 
   // Match a matching IPv4 address SAN entry.
   WITH_SAN(ipv4_addr_str, RDN(CN("foo")), IPAddress(ipv4_addr_bytes),
@@ -1543,7 +1577,7 @@ TEST_P(pkixnames_CheckCertHostname_PresentedMatchesReference, CN_NoSAN)
   ASSERT_EQ(Success, hostnameInput.Init(param.referenceDNSID.data(),
                                         param.referenceDNSID.length()));
 
-  ASSERT_EQ(param.matches ? Success : Result::ERROR_BAD_CERT_DOMAIN,
+  ASSERT_EQ(param.expectedMatches ? Success : Result::ERROR_BAD_CERT_DOMAIN,
             CheckCertHostname(certInput, hostnameInput));
 }
 
@@ -1564,9 +1598,11 @@ TEST_P(pkixnames_CheckCertHostname_PresentedMatchesReference,
   Input hostnameInput;
   ASSERT_EQ(Success, hostnameInput.Init(param.referenceDNSID.data(),
                                         param.referenceDNSID.length()));
-
-  ASSERT_EQ(param.matches ? Success : Result::ERROR_BAD_CERT_DOMAIN,
-            CheckCertHostname(certInput, hostnameInput));
+  Result expectedResult
+    = param.expectedResult != Success ? param.expectedResult
+    : param.expectedMatches ? Success
+    : Result::ERROR_BAD_CERT_DOMAIN;
+  ASSERT_EQ(expectedResult, CheckCertHostname(certInput, hostnameInput));
 }
 
 INSTANTIATE_TEST_CASE_P(pkixnames_CheckCertHostname_DNSID_MATCH_PARAMS,
@@ -1616,10 +1652,11 @@ TEST_P(pkixnames_Turkish_I_Comparison, CheckCertHostname_SAN)
   Input certInput;
   ASSERT_EQ(Success, certInput.Init(cert.data(), cert.length()));
 
-  Result expectedResult = (InputsAreEqual(LOWERCASE_I, input) ||
-                           InputsAreEqual(UPPERCASE_I, input))
-                        ? Success
-                        : Result::ERROR_BAD_CERT_DOMAIN;
+  Result expectedResult
+    = (!param.isValidPresentedID) ? Result::ERROR_BAD_DER
+    : (InputsAreEqual(LOWERCASE_I, input) ||
+       InputsAreEqual(UPPERCASE_I, input)) ? Success
+    : Result::ERROR_BAD_CERT_DOMAIN;
 
   ASSERT_EQ(expectedResult, CheckCertHostname(certInput, UPPERCASE_I));
   ASSERT_EQ(expectedResult, CheckCertHostname(certInput, LOWERCASE_I));
@@ -1753,7 +1790,7 @@ static const NameConstraintParams NAME_CONSTRAINT_PARAMS[] =
   /////////////////////////////////////////////////////////////////////////////
   // Edge cases of name constraint absolute vs. relative and subdomain matching
   // that are not clearly explained in RFC 5280. (See the long comment above
-  // PresentedDNSIDMatchesReferenceDNSID.)
+  // MatchPresentedDNSIDWithReferenceDNSID.)
 
   // Q: Does a presented identifier equal (case insensitive) to the name
   //    constraint match the constraint? For example, does the presented
@@ -1816,13 +1853,13 @@ static const NameConstraintParams NAME_CONSTRAINT_PARAMS[] =
     // are not allowed to be absolute.
     ByteString(), DNSName("example.com"),
     GeneralSubtree(DNSName("example.com.")),
-    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Result::ERROR_CERT_NOT_IN_NAME_SPACE,
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER,
   },
   { // The DNSName in the SAN is not valid because presented DNS IDs are not
     // allowed to be absolute.
     ByteString(), DNSName("example.com."),
     GeneralSubtree(DNSName("example.com")),
-    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success,
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER,
   },
   { // The presented ID is the same length as the constraint, because the
     // subdomain is only one character long and because the constraint both
@@ -1830,12 +1867,12 @@ static const NameConstraintParams NAME_CONSTRAINT_PARAMS[] =
     // are not allowed for DNSName constraints.
     ByteString(), DNSName("p.example.com"),
     GeneralSubtree(DNSName(".example.com.")),
-    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Result::ERROR_CERT_NOT_IN_NAME_SPACE,
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER,
   },
   { // Same as previous test case, but using a wildcard presented ID.
     ByteString(), DNSName("*.example.com"),
     GeneralSubtree(DNSName(".example.com.")),
-    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
   },
 
   // Q: Are "" and "." valid DNSName constraints? If so, what do they mean?
@@ -1846,16 +1883,16 @@ static const NameConstraintParams NAME_CONSTRAINT_PARAMS[] =
   { // The malformed (absolute) presented ID does not match.
     ByteString(), DNSName("example.com."),
     GeneralSubtree(DNSName("")),
-    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
   },
-  { // Invalid syntax in name constraint -> ERROR_CERT_NOT_IN_NAME_SPACE.
+  { // Invalid syntax in name constraint.
     ByteString(), DNSName("example.com"),
     GeneralSubtree(DNSName(".")),
-    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Result::ERROR_CERT_NOT_IN_NAME_SPACE,
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER,
   },
   { ByteString(), DNSName("example.com."),
     GeneralSubtree(DNSName(".")),
-    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
   },
 
   /////////////////////////////////////////////////////////////////////////////
