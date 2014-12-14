@@ -53,6 +53,7 @@ const size_t ChunkMarkBitmapBits = 129024;
 #endif
 const size_t ChunkRuntimeOffset = ChunkSize - sizeof(void*);
 const size_t ChunkLocationOffset = ChunkSize - 2 * sizeof(void*) - sizeof(uint64_t);
+const size_t ArenaZoneOffset = 0;
 
 /*
  * Live objects are marked black. How many other additional colors are available
@@ -157,11 +158,6 @@ AsCell(JSScript *script)
 }
 
 namespace shadow {
-
-struct ArenaHeader
-{
-    JS::Zone *zone;
-};
 
 struct Zone
 {
@@ -339,11 +335,13 @@ GetGCThingMarkWordAndMask(const uintptr_t addr, uint32_t color,
     *wordp = &bitmap[bit / nbits];
 }
 
-static MOZ_ALWAYS_INLINE JS::shadow::ArenaHeader *
-GetGCThingArena(const uintptr_t addr)
+static MOZ_ALWAYS_INLINE JS::Zone *
+GetGCThingZone(const uintptr_t addr)
 {
     MOZ_ASSERT(addr);
-    return reinterpret_cast<JS::shadow::ArenaHeader *>(addr & ~ArenaMask);
+    const uintptr_t zone_addr = (addr & ~ArenaMask) | ArenaZoneOffset;
+    return *reinterpret_cast<JS::Zone **>(zone_addr);
+
 }
 
 static MOZ_ALWAYS_INLINE bool
@@ -379,9 +377,8 @@ namespace JS {
 static MOZ_ALWAYS_INLINE Zone *
 GetTenuredGCThingZone(void *thing)
 {
-    MOZ_ASSERT(thing);
     MOZ_ASSERT(!js::gc::IsInsideNursery((js::gc::Cell *)thing));
-    return js::gc::detail::GetGCThingArena(uintptr_t(thing))->zone;
+    return js::gc::detail::GetGCThingZone(uintptr_t(thing));
 }
 
 extern JS_PUBLIC_API(Zone *)
