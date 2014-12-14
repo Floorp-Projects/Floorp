@@ -2160,9 +2160,13 @@ IonBuilder::inlineIsObject(CallInfo &callInfo)
         return InliningStatus_NotInlined;
 
     callInfo.setImplicitlyUsedUnchecked();
-    MIsObject *isObject = MIsObject::New(alloc(), callInfo.getArg(0));
-    current->add(isObject);
-    current->push(isObject);
+    if (callInfo.getArg(0)->type() == MIRType_Object) {
+        pushConstant(BooleanValue(true));
+    } else {
+        MIsObject *isObject = MIsObject::New(alloc(), callInfo.getArg(0));
+        current->add(isObject);
+        current->push(isObject);
+    }
     return InliningStatus_Inlined;
 }
 
