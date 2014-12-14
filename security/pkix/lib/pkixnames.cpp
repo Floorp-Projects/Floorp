@@ -155,17 +155,17 @@ Result CheckPresentedIDConformsToConstraints(GeneralNameType referenceIDType,
 uint8_t LocaleInsensitveToLower(uint8_t a);
 bool StartsWithIDNALabel(Input id);
 
-MOZILLA_PKIX_ENUM_CLASS ValidDNSIDMatchType
+MOZILLA_PKIX_ENUM_CLASS IDRole
 {
   ReferenceID = 0,
   PresentedID = 1,
   NameConstraint = 2,
 };
 
-bool IsValidDNSID(Input hostname, ValidDNSIDMatchType matchType);
+bool IsValidDNSID(Input hostname, IDRole idRole);
 
 Result MatchPresentedDNSIDWithReferenceDNSID(
-         Input presentedDNSID, ValidDNSIDMatchType referenceDNSIDType,
+         Input presentedDNSID, IDRole referenceDNSIDRole,
          Input referenceDNSID, /*out*/ bool& matches);
 
 } // unnamed namespace
@@ -182,8 +182,7 @@ MatchPresentedDNSIDWithReferenceDNSID(Input presentedDNSID,
                                       /*out*/ bool& matches)
 {
   return MatchPresentedDNSIDWithReferenceDNSID(
-           presentedDNSID, ValidDNSIDMatchType::ReferenceID,
-           referenceDNSID, matches);
+           presentedDNSID, IDRole::ReferenceID, referenceDNSID, matches);
 }
 
 // Verify that the given end-entity cert, which is assumed to have been already
@@ -619,8 +618,7 @@ MatchPresentedIDWithReferenceID(GeneralNameType presentedIDType,
   switch (referenceIDType) {
     case GeneralNameType::dNSName:
       rv = MatchPresentedDNSIDWithReferenceDNSID(
-             presentedID, ValidDNSIDMatchType::ReferenceID,
-             referenceID, foundMatch);
+             presentedID, IDRole::ReferenceID, referenceID, foundMatch);
       break;
 
     case GeneralNameType::iPAddress:
@@ -771,8 +769,7 @@ CheckPresentedIDConformsToNameConstraintsSubtrees(
       switch (presentedIDType) {
         case GeneralNameType::dNSName:
           rv = MatchPresentedDNSIDWithReferenceDNSID(
-                 presentedID, ValidDNSIDMatchType::NameConstraint,
-                 base, matches);
+                 presentedID, IDRole::NameConstraint, base, matches);
           if (rv != Success) {
             return rv;
           }
@@ -973,7 +970,7 @@ CheckPresentedIDConformsToNameConstraintsSubtrees(
 //     https://www.ietf.org/mail-archive/web/pkix/current/msg21192.html
 Result
 MatchPresentedDNSIDWithReferenceDNSID(Input presentedDNSID,
-                                      ValidDNSIDMatchType referenceDNSIDType,
+                                      IDRole referenceDNSIDRole,
                                       Input referenceDNSID,
                                       /*out*/ bool& matches)
 {
@@ -981,19 +978,19 @@ MatchPresentedDNSIDWithReferenceDNSID(Input presentedDNSID,
     return Result::ERROR_BAD_DER;
   }
 
-  if (!IsValidDNSID(referenceDNSID, referenceDNSIDType)) {
+  if (!IsValidDNSID(referenceDNSID, referenceDNSIDRole)) {
     return Result::ERROR_BAD_DER;
   }
 
   Reader presented(presentedDNSID);
   Reader reference(referenceDNSID);
 
-  switch (referenceDNSIDType)
+  switch (referenceDNSIDRole)
   {
-    case ValidDNSIDMatchType::ReferenceID:
+    case IDRole::ReferenceID:
       break;
 
-    case ValidDNSIDMatchType::NameConstraint:
+    case IDRole::NameConstraint:
     {
       if (presentedDNSID.GetLength() > referenceDNSID.GetLength()) {
         if (referenceDNSID.GetLength() == 0) {
@@ -1052,9 +1049,9 @@ MatchPresentedDNSIDWithReferenceDNSID(Input presentedDNSID,
       break;
     }
 
-    case ValidDNSIDMatchType::PresentedID: // fall through
+    case IDRole::PresentedID: // fall through
     default:
-      return NotReached("invalid or unknown referenceDNSIDType",
+      return NotReached("invalid or unknown referenceDNSIDRole",
                         Result::FATAL_ERROR_INVALID_ARGS);
   }
 
@@ -1101,7 +1098,7 @@ MatchPresentedDNSIDWithReferenceDNSID(Input presentedDNSID,
   // Allow a relative presented DNS ID to match an absolute reference DNS ID,
   // unless we're matching a name constraint.
   if (!reference.AtEnd()) {
-    if (referenceDNSIDType != ValidDNSIDMatchType::NameConstraint) {
+    if (referenceDNSIDRole != IDRole::NameConstraint) {
       uint8_t referenceByte;
       if (reference.Read(referenceByte) != Success) {
         return NotReached("read failed but not at end",
@@ -1562,19 +1559,19 @@ ParseIPv6Address(Input hostname, /*out*/ uint8_t (&out)[16])
 bool
 IsValidReferenceDNSID(Input hostname)
 {
-  return IsValidDNSID(hostname, ValidDNSIDMatchType::ReferenceID);
+  return IsValidDNSID(hostname, IDRole::ReferenceID);
 }
 
 bool
 IsValidPresentedDNSID(Input hostname)
 {
-  return IsValidDNSID(hostname, ValidDNSIDMatchType::PresentedID);
+  return IsValidDNSID(hostname, IDRole::PresentedID);
 }
 
 namespace {
 
 bool
-IsValidDNSID(Input hostname, ValidDNSIDMatchType matchType)
+IsValidDNSID(Input hostname, IDRole idRole)
 {
   if (hostname.GetLength() > 253) {
     return false;
@@ -1582,7 +1579,7 @@ IsValidDNSID(Input hostname, ValidDNSIDMatchType matchType)
 
   Reader input(hostname);
 
-  if (matchType == ValidDNSIDMatchType::NameConstraint && input.AtEnd()) {
+  if (idRole == IDRole::NameConstraint && input.AtEnd()) {
     return true;
   }
 
@@ -1594,8 +1591,7 @@ IsValidDNSID(Input hostname, ValidDNSIDMatchType matchType)
   // Only presented IDs are allowed to have wildcard labels. And, like
   // Chromium, be stricter than RFC 6125 requires by insisting that a
   // wildcard label consist only of '*'.
-  bool isWildcard = matchType == ValidDNSIDMatchType::PresentedID &&
-                    input.Peek('*');
+  bool isWildcard = idRole == IDRole::PresentedID && input.Peek('*');
   bool isFirstByte = !isWildcard;
   if (isWildcard) {
     Result rv = input.Skip(1);
@@ -1679,8 +1675,7 @@ IsValidDNSID(Input hostname, ValidDNSIDMatchType matchType)
       case '.':
         ++dotCount;
         if (labelLength == 0 &&
-            (matchType != ValidDNSIDMatchType::NameConstraint ||
-             !isFirstByte)) {
+            (idRole != IDRole::NameConstraint || !isFirstByte)) {
           return false;
         }
         if (labelEndsWithHyphen) {
@@ -1697,7 +1692,7 @@ IsValidDNSID(Input hostname, ValidDNSIDMatchType matchType)
 
   // Only reference IDs, not presented IDs or name constraints, may be
   // absolute.
-  if (labelLength == 0 && matchType != ValidDNSIDMatchType::ReferenceID) {
+  if (labelLength == 0 && idRole != IDRole::ReferenceID) {
     return false;
   }
 
