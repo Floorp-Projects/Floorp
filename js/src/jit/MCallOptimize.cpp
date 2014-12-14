@@ -199,6 +199,10 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
         return inlineIsConstructing(callInfo);
     if (native == intrinsic_SubstringKernel)
         return inlineSubstringKernel(callInfo);
+    if (native == intrinsic_IsArrayIterator)
+        return inlineHasClass(callInfo, &ArrayIteratorObject::class_);
+    if (native == intrinsic_IsStringIterator)
+        return inlineHasClass(callInfo, &StringIteratorObject::class_);
 
     // TypedObject intrinsics.
     if (native == intrinsic_ObjectIsTypedObject)
