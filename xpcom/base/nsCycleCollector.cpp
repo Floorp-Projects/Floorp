@@ -2664,7 +2664,7 @@ public:
   void AppendJSObjectToPurpleBuffer(JSObject* obj) const
   {
     if (obj && JS::ObjectIsMarkedGray(obj)) {
-      MOZ_ASSERT(!js::gc::IsInsideNursery(JS::AsCell(obj)));
+      MOZ_ASSERT(JS::ObjectIsTenured(obj));
       mCollector->GetJSPurpleBuffer()->mObjects.InfallibleAppend(obj);
     }
   }
