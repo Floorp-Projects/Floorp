@@ -17,17 +17,7 @@
 /***************************************************************************/
 // shows how to use the dhw stuff to hook imported functions
 
-#if _MSC_VER < 1300
-#define NS_DEBUG_CRT "MSVCRTD.dll"
-#elif _MSC_VER == 1300
-#define NS_DEBUG_CRT "msvcr70d.dll"
-#elif _MSC_VER == 1310
-#define NS_DEBUG_CRT "msvcr71d.dll"
-#elif _MSC_VER == 1400
-#define NS_DEBUG_CRT "msvcr80d.dll"
-#elif _MSC_VER == 1500
-#define NS_DEBUG_CRT "msvcr90d.dll"
-#elif _MSC_VER == 1600
+#if _MSC_VER == 1600
 #define NS_DEBUG_CRT "msvcr100d.dll"
 #elif _MSC_VER == 1700
 #define NS_DEBUG_CRT "msvcr110d.dll"
