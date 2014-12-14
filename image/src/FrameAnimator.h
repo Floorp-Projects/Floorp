@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_imagelib_FrameAnimator_h_
-#define mozilla_imagelib_FrameAnimator_h_
+#ifndef mozilla_image_src_FrameAnimator_h
+#define mozilla_image_src_FrameAnimator_h
 
 #include "mozilla/TimeStamp.h"
 #include "nsRect.h"
@@ -43,7 +43,7 @@ public:
       : frameAdvanced(false)
       , animationFinished(false)
       , error(false)
-    {}
+    { }
 
     void Accumulate(const RefreshResult& other)
     {
@@ -119,8 +119,8 @@ private: // methods
    * Gets the length of a single loop of this image, in milliseconds.
    *
    * If this image is not finished decoding, is not animated, or it is animated
-   * but does not loop, returns -1. Can return 0 in the case of an animated image
-   * that has a 0ms delay between its frames and does not loop.
+   * but does not loop, returns -1. Can return 0 in the case of an animated
+   * image that has a 0ms delay between its frames and does not loop.
    */
   int32_t GetSingleLoopTime() const;
 
@@ -171,4 +171,4 @@ private: // data
 } // namespace image
 } // namespace mozilla
 
-#endif /* mozilla_imagelib_FrameAnimator_h_ */
+#endif // mozilla_image_src_FrameAnimator_h
