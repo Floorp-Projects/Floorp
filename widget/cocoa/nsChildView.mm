@@ -4199,7 +4199,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // tolerating a small vertical element to a true horizontal swipe.  The number
   // '8' was arrived at by trial and error.
   if (anOverflowX != 0.0 && deltaX != 0.0 &&
-      fabsf(deltaX) > fabsf(deltaY) * 8) {
+      std::abs(deltaX) > std::abs(deltaY) * 8) {
     // Only initiate horizontal tracking for gestures that have just begun --
     // otherwise a scroll to one side of the page can have a swipe tacked on
     // to it.
@@ -4217,7 +4217,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // at least two times larger than its horizontal element. This minimizes
   // performance problems. The number '2' was arrived at by trial and error.
   else if (anOverflowY != 0.0 && deltaY != 0.0 &&
-           fabsf(deltaY) > fabsf(deltaX) * 2) {
+           std::abs(deltaY) > std::abs(deltaX) * 2) {
     if (deltaY < 0.0) {
       direction = (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_DOWN;
     } else {
