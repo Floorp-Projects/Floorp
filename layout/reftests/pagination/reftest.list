@@ -1,7 +1,7 @@
 # For more pagination tests, see layout/reftests/w3c-css/submitted/css21/pagination/
 #   and layout/reftests/w3c-css/submitted/multicol3/
 # Pagination tests
-== abspos-breaking-000.xhtml abspos-breaking-000.ref.xhtml
+asserts(3) == abspos-breaking-000.xhtml abspos-breaking-000.ref.xhtml # bug 1067755
 == abspos-breaking-001.xhtml abspos-breaking-000.ref.xhtml
 == abspos-breaking-002.xhtml abspos-breaking-000.ref.xhtml
 == abspos-breaking-003.html abspos-breaking-003-ref.html
