@@ -44,7 +44,7 @@ public:
   }
   explicit Mdhd(Box& aBox);
 
-  Microseconds ToMicroseconds(uint64_t aTimescaleUnits)
+  Microseconds ToMicroseconds(int64_t aTimescaleUnits)
   {
     return aTimescaleUnits * 1000000ll / mTimescale;
   }
