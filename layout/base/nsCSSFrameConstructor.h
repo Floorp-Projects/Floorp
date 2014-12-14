@@ -1986,9 +1986,6 @@ private:
   nsContainerFrame*   mRootElementFrame;
   // This is the frame for the root element that has no pseudo-element style.
   nsIFrame*           mRootElementStyleFrame;
-  // This is the containing block for fixed-pos frames --- the
-  // viewport or page frame
-  nsContainerFrame*   mFixedContainingBlock;
   // This is the containing block that contains the root element ---
   // the real "initial containing block" according to CSS 2.1.
   nsContainerFrame*   mDocElementContainingBlock;
