@@ -31,7 +31,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
-Cu.import("resource://gre/modules/Log.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DragPositionManager",
                                   "resource:///modules/DragPositionManager.jsm");
@@ -41,9 +40,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                                   "resource://gre/modules/LightweightThemeManager.jsm");
 
 
-let gLogger = Log.repository.getLogger("CustomizableUI.CustomizeMode");
-gLogger.level = Services.prefs.getBoolPref(kPrefCustomizationDebug) ? Log.Level.Debug : Log.Level.Info;
-gLogger.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
+let gModuleName = "[CustomizeMode]";
+#include logging.js
 
 let gDisableAnimation = null;
 
@@ -140,7 +138,7 @@ CustomizeMode.prototype = {
 
     // Exiting; want to re-enter once we've done that.
     if (this._handler.isExitingCustomizeMode) {
-      gLogger.debug("Attempted to enter while we're in the middle of exiting. " +
+      LOG("Attempted to enter while we're in the middle of exiting. " +
           "We'll exit after we've entered");
       return;
     }
@@ -312,7 +310,7 @@ CustomizeMode.prototype = {
         this.exit();
       }
     }.bind(this)).then(null, function(e) {
-      gLogger.error(e);
+      ERROR(e);
       // We should ensure this has been called, and calling it again doesn't hurt:
       window.PanelUI.endBatchUpdate();
       this._handler.isEnteringCustomizeMode = false;
@@ -328,13 +326,13 @@ CustomizeMode.prototype = {
 
     // Entering; want to exit once we've done that.
     if (this._handler.isEnteringCustomizeMode) {
-      gLogger.debug("Attempted to exit while we're in the middle of entering. " +
+      LOG("Attempted to exit while we're in the middle of entering. " +
           "We'll exit after we've entered");
       return;
     }
 
     if (this.resetting) {
-      gLogger.debug("Attempted to exit while we're resetting. " +
+      LOG("Attempted to exit while we're resetting. " +
           "We'll exit after resetting has finished.");
       return;
     }
@@ -402,7 +400,7 @@ CustomizeMode.prototype = {
           try {
             custBrowser.goBack();
           } catch (ex) {
-            gLogger.error(ex);
+            ERROR(ex);
           }
         } else {
           // If we can't go back, we're removing the about:customization tab.
@@ -486,7 +484,7 @@ CustomizeMode.prototype = {
         this.enter();
       }
     }.bind(this)).then(null, function(e) {
-      gLogger.error(e);
+      ERROR(e);
       // We should ensure this has been called, and calling it again doesn't hurt:
       window.PanelUI.endBatchUpdate();
       this._handler.isExitingCustomizeMode = false;
@@ -757,7 +755,7 @@ CustomizeMode.prototype = {
       this._stowedPalette = this.window.gNavToolbox.palette;
       this.window.gNavToolbox.palette = this.visiblePalette;
     } catch (ex) {
-      gLogger.error(ex);
+      ERROR(ex);
     }
   },
 
@@ -768,7 +766,7 @@ CustomizeMode.prototype = {
   makePaletteItem: function(aWidget, aPlace) {
     let widgetNode = aWidget.forWindow(this.window).node;
     if (!widgetNode) {
-      gLogger.error("Widget with id " + aWidget.id + " does not return a valid node");
+      ERROR("Widget with id " + aWidget.id + " does not return a valid node");
       return null;
     }
     // Do not build a palette item for hidden widgets; there's not much to show.
@@ -961,7 +959,7 @@ CustomizeMode.prototype = {
 
     let toolbarItem = aWrapper.firstChild;
     if (!toolbarItem) {
-      gLogger.error("no toolbarItem child for " + aWrapper.tagName + "#" + aWrapper.id);
+      ERROR("no toolbarItem child for " + aWrapper.tagName + "#" + aWrapper.id);
       aWrapper.remove();
       return null;
     }
@@ -1031,7 +1029,7 @@ CustomizeMode.prototype = {
         }
       }
     } catch (ex) {
-      gLogger.error(ex);
+      ERROR(ex, ex.stack);
     }
 
     this.areas.add(target);
@@ -1770,7 +1768,7 @@ CustomizeMode.prototype = {
     try {
       this._applyDrop(aEvent, targetArea, originArea, draggedItemId, targetNode);
     } catch (ex) {
-      gLogger.error(ex);
+      ERROR(ex, ex.stack);
     }
 
     this._showPanelCustomizationPlaceholders();
@@ -1877,7 +1875,7 @@ CustomizeMode.prototype = {
       placement = CustomizableUI.getPlacementOfWidget(targetNodeId);
     }
     if (!placement) {
-      gLogger.debug("Could not get a position for " + aTargetNode.nodeName + "#" + aTargetNode.id + "." + aTargetNode.className);
+      LOG("Could not get a position for " + aTargetNode.nodeName + "#" + aTargetNode.id + "." + aTargetNode.className);
     }
     let position = placement ? placement.position : null;
 
@@ -2198,7 +2196,7 @@ CustomizeMode.prototype = {
   },
 
   _onMouseDown: function(aEvent) {
-    gLogger.debug("_onMouseDown");
+    LOG("_onMouseDown");
     if (aEvent.button != 0) {
       return;
     }
@@ -2212,7 +2210,7 @@ CustomizeMode.prototype = {
   },
 
   _onMouseUp: function(aEvent) {
-    gLogger.debug("_onMouseUp");
+    LOG("_onMouseUp");
     if (aEvent.button != 0) {
       return;
     }
@@ -2331,7 +2329,7 @@ function __dumpDragData(aEvent, caller) {
     }
   }
   str += "}";
-  gLogger.debug(str);
+  LOG(str);
 }
 
 function dispatchFunction(aFunc) {
