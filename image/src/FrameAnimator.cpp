@@ -18,8 +18,7 @@ FrameAnimator::FrameAnimator(FrameBlender& aFrameBlender,
   , mFrameBlender(aFrameBlender)
   , mAnimationMode(aAnimationMode)
   , mDoneDecoding(false)
-{
-}
+{ }
 
 int32_t
 FrameAnimator::GetSingleLoopTime() const
@@ -54,7 +53,8 @@ TimeStamp
 FrameAnimator::GetCurrentImgFrameEndTime() const
 {
   TimeStamp currentFrameTime = mCurrentAnimationFrameTime;
-  int32_t timeout = mFrameBlender.GetTimeoutForFrame(mCurrentAnimationFrameIndex);
+  int32_t timeout =
+    mFrameBlender.GetTimeoutForFrame(mCurrentAnimationFrameIndex);
 
   if (timeout < 0) {
     // We need to return a sentinel value in this case, because our logic
@@ -108,8 +108,10 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
       mLoopCounter = mFrameBlender.GetLoopCount();
     }
 
-    // If animation mode is "loop once", or we're at end of loop counter, it's time to stop animating
-    if (mAnimationMode == imgIContainer::kLoopOnceAnimMode || mLoopCounter == 0) {
+    // If animation mode is "loop once", or we're at end of loop counter,
+    // it's time to stop animating
+    if (mAnimationMode == imgIContainer::kLoopOnceAnimMode ||
+        mLoopCounter == 0) {
       ret.animationFinished = true;
     }
 
@@ -141,7 +143,8 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
       nextFrame = mFrameBlender.RawGetFrame(nextFrameIndex);
     }
 
-    if (!mFrameBlender.DoBlend(&ret.dirtyRect, currentFrameIndex, nextFrameIndex)) {
+    if (!mFrameBlender.DoBlend(&ret.dirtyRect, currentFrameIndex,
+                               nextFrameIndex)) {
       // something went wrong, move on to next
       NS_WARNING("FrameAnimator::AdvanceFrame(): Compositing of frame failed");
       nextFrame->SetCompositingFailed(true);
@@ -166,7 +169,8 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
       // Explicitly use integer division to get the floor of the number of
       // loops.
       uint32_t loops = static_cast<uint32_t>(delay.ToMilliseconds()) / loopTime;
-      mCurrentAnimationFrameTime += TimeDuration::FromMilliseconds(loops * loopTime);
+      mCurrentAnimationFrameTime +=
+        TimeDuration::FromMilliseconds(loops * loopTime);
     }
   }
 
