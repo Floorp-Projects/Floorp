@@ -6018,13 +6018,10 @@ nsBlockFrame::ReflowPushedFloats(nsBlockReflowState& aState,
 {
   // Pushed floats live at the start of our float list; see comment
   // above nsBlockFrame::DrainPushedFloats.
-  for (nsIFrame* f = mFloats.FirstChild(), *next;
-       f && (f->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT);
-       f = next) {
-    // save next sibling now, since reflowing could push the entire
-    // float, changing its siblings
-    next = f->GetNextSibling();
-
+  nsIFrame* f = mFloats.FirstChild();
+  nsIFrame* prev = nullptr;
+  while (f && (f->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT)) {
+    MOZ_ASSERT(prev == f->GetPrevSibling());
     // When we push a first-continuation float in a non-initial reflow,
     // it's possible that we end up with two continuations with the same
     // parent.  This happens if, on the previous reflow of the block or
@@ -6061,14 +6058,22 @@ nsBlockFrame::ReflowPushedFloats(nsBlockReflowState& aState,
     if (prevContinuation && prevContinuation->GetParent() == f->GetParent()) {
       mFloats.RemoveFrame(f);
       aState.AppendPushedFloat(f);
+      f = !prev ? mFloats.FirstChild() : prev->GetNextSibling();
       continue;
     }
 
     // Always call FlowAndPlaceFloat; we might need to place this float
     // if didn't belong to this block the last time it was reflowed.
     aState.FlowAndPlaceFloat(f);
-
     ConsiderChildOverflow(aOverflowAreas, f);
+
+    nsIFrame* next = !prev ? mFloats.FirstChild() : prev->GetNextSibling();
+    if (next == f) {
+      // We didn't push |f| so its next-sibling is next.
+      next = f->GetNextSibling();
+      prev = f;
+    } // else: we did push |f| so |prev|'s new next-sibling is next.
+    f = next;
   }
 
   // If there are continued floats, then we may need to continue BR clearance
