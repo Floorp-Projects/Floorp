@@ -8,6 +8,8 @@
 #include "nsXULAppAPI.h"
 #include <time.h>
 
+#include "mozilla/Telemetry.h"
+
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
 #include "nsICrashService.h"
@@ -171,21 +173,27 @@ CrashReporterParent::NotifyCrashService()
     int32_t processType;
     int32_t crashType = nsICrashService::CRASH_TYPE_CRASH;
 
+    nsCString telemetryKey;
+
     switch (mProcessType) {
         case GeckoProcessType_Content:
             processType = nsICrashService::PROCESS_TYPE_CONTENT;
+            telemetryKey.AssignLiteral("content");
             break;
         case GeckoProcessType_Plugin: {
             processType = nsICrashService::PROCESS_TYPE_PLUGIN;
+            telemetryKey.AssignLiteral("plugin");
             nsAutoCString val;
             if (mNotes.Get(NS_LITERAL_CSTRING("PluginHang"), &val) &&
                 val.Equals(NS_LITERAL_CSTRING("1"))) {
                 crashType = nsICrashService::CRASH_TYPE_HANG;
+                telemetryKey.AssignLiteral("pluginhang");
             }
             break;
         }
         case GeckoProcessType_GMPlugin:
             processType = nsICrashService::PROCESS_TYPE_GMPLUGIN;
+            telemetryKey.AssignLiteral("gmplugin");
             break;
         default:
             NS_ERROR("unknown process type");
@@ -193,6 +201,7 @@ CrashReporterParent::NotifyCrashService()
     }
 
     crashService->AddCrash(processType, crashType, mChildDumpID);
+    Telemetry::Accumulate(Telemetry::SUBPROCESS_CRASHES_WITH_DUMP, telemetryKey, 1);
 }
 #endif
 
