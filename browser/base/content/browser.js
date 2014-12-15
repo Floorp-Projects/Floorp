@@ -936,7 +936,7 @@ var gBrowserInit = {
         .getService(Ci.nsIEventListenerService)
         .addSystemEventListener(gBrowser, "click", contentAreaClick, true);
     } else {
-      gBrowser.updateBrowserRemoteness(gBrowser.mCurrentBrowser, true);
+      gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser, true);
     }
 
     // hook up UI through progress listener
