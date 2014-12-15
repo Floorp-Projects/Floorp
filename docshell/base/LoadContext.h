@@ -107,7 +107,7 @@ public:
 
   // Constructor for creating a LoadContext with a given principal's appId and
   // browser flag.
-  LoadContext(nsIPrincipal* aPrincipal);
+  explicit LoadContext(nsIPrincipal* aPrincipal);
 
 private:
   ~LoadContext() {}
