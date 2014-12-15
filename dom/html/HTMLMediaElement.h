@@ -1297,6 +1297,19 @@ protected:
   nsRefPtr<VideoTrackList> mVideoTrackList;
 
   MediaWaitingFor mWaitingFor;
+
+  enum ElementInTreeState {
+    // The MediaElement is not in the DOM tree now.
+    ELEMENT_NOT_INTREE,
+    // The MediaElement is in the DOM tree now.
+    ELEMENT_INTREE,
+    // The MediaElement is not in the DOM tree now but had been binded to the
+    // tree before.
+    ELEMENT_NOT_INTREE_HAD_INTREE
+  };
+
+  ElementInTreeState mElementInTreeState;
+
 };
 
 } // namespace dom
