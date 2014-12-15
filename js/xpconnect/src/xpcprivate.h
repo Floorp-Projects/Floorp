@@ -3353,14 +3353,10 @@ struct GlobalProperties {
     GlobalProperties() {
       mozilla::PodZero(this);
 
-      // Promise is supposed to be part of ES, and therefore should appear on
-      // every global.
-      Promise = true;
     }
     bool Parse(JSContext *cx, JS::HandleObject obj);
     bool Define(JSContext *cx, JS::HandleObject obj);
     bool CSS : 1;
-    bool Promise : 1;
     bool indexedDB : 1;
     bool XMLHttpRequest : 1;
     bool TextDecoder : 1;
