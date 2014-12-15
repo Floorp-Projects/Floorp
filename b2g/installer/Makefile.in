@@ -49,9 +49,6 @@ endif
 ifndef _BINPATH
 _BINPATH = /$(_APPNAME)/Contents/MacOS
 endif
-ifndef _RESPATH
-_RESPATH = /$(_APPNAME)/Contents/Resources
-endif
 endif
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
@@ -67,16 +64,12 @@ endif
 
 ifeq (bundle, $(MOZ_FS_LAYOUT))
 BINPATH = $(_BINPATH)
-RESPATH = $(_RESPATH)
 DEFINES += -DAPPNAME=$(_APPNAME)
 else
 # Every other platform just winds up in dist/bin
 BINPATH = bin
-RESPATH = bin
 endif
 DEFINES += -DBINPATH=$(BINPATH)
-DEFINES += -DRESPATH=$(RESPATH)
-
 
 ifneq (,$(filter WINNT Darwin Android,$(OS_TARGET)))
 DEFINES += -DMOZ_SHARED_MOZGLUE=1
