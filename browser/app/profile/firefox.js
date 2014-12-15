@@ -1429,7 +1429,6 @@ pref("devtools.timeline.enabled", true);
 #else
 pref("devtools.timeline.enabled", false);
 #endif
-pref("devtools.timeline.hiddenMarkers", "[]");
 
 // Enable perftools via build command
 #ifdef MOZ_DEVTOOLS_PERFTOOLS
