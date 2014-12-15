@@ -616,14 +616,19 @@ AbstractCanvasGraph.prototype = {
 
   /**
    * Updates this graph to reflect the new dimensions of the parent node.
+   *
+   * @param boolean options.force
+   *        Force redrawing everything
    */
-  refresh: function() {
+  refresh: function(options={}) {
     let bounds = this._parent.getBoundingClientRect();
     let newWidth = this.fixedWidth || bounds.width;
     let newHeight = this.fixedHeight || bounds.height;
 
-    // Prevent redrawing everything if the graph's width & height won't change.
-    if (this._width == newWidth * this._pixelRatio &&
+    // Prevent redrawing everything if the graph's width & height won't change,
+    // except if force=true.
+    if (!options.force &&
+        this._width == newWidth * this._pixelRatio &&
         this._height == newHeight * this._pixelRatio) {
       this.emit("refresh-cancelled");
       return;
