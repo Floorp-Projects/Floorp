@@ -1676,8 +1676,6 @@ protected:
 
 protected:
   static void SetScrollableFrameMetrics(Layer* aLayer, FrameMetrics::ViewID aScrollId,
-                                        // The scrollable rect is only used in HitTesting2,
-                                        // HitTesting1 doesn't care about it.
                                         CSSRect aScrollableRect = CSSRect(-1, -1, -1, -1)) {
     FrameMetrics metrics;
     metrics.SetScrollId(aScrollId);
@@ -1687,6 +1685,16 @@ protected:
     metrics.mScrollableRect = aScrollableRect;
     metrics.SetScrollOffset(CSSPoint(0, 0));
     aLayer->SetFrameMetrics(metrics);
+    if (!aScrollableRect.IsEqualEdges(CSSRect(-1, -1, -1, -1))) {
+      // The purpose of this is to roughly mimic what layout would do in the
+      // case of a scrollable frame with the event regions and clip. This lets
+      // us exercise the hit-testing code in APZCTreeManager
+      EventRegions er = aLayer->GetEventRegions();
+      nsIntRect scrollRect = LayerIntRect::ToUntyped(RoundedToInt(aScrollableRect * metrics.LayersPixelsPerCSSPixel()));
+      er.mHitRegion = nsIntRegion(nsIntRect(layerBound.TopLeft(), scrollRect.Size()));
+      aLayer->SetEventRegions(er);
+      aLayer->SetClipRect(&layerBound);
+    }
   }
 
   void SetScrollHandoff(Layer* aChild, Layer* aParent) {
