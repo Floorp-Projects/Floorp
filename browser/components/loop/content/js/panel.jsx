@@ -194,11 +194,16 @@ loop.panel = (function(_, mozL10n) {
 
   var ToSView = React.createClass({
     getInitialState: function() {
-      return {seenToS: navigator.mozLoop.getLoopPref("seenToS")};
+      var getPref = navigator.mozLoop.getLoopPref.bind(navigator.mozLoop);
+
+      return {
+        seenToS: getPref("seenToS"),
+        gettingStartedSeen: getPref("gettingStarted.seen")
+      };
     },
 
     render: function() {
-      if (this.state.seenToS == "unseen") {
+      if (!this.state.gettingStartedSeen || this.state.seenToS == "unseen") {
         var locale = mozL10n.getLanguage();
         var terms_of_use_url = navigator.mozLoop.getLoopPref('legal.ToS_url');
         var privacy_notice_url = navigator.mozLoop.getLoopPref('legal.privacy_url');
