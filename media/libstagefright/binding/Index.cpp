@@ -112,8 +112,11 @@ MP4Sample* SampleIterator::Get()
 
   nsTArray<Moof>& moofs = mIndex->mMoofParser->mMoofs;
   while (true) {
-    if (mCurrentMoof >= moofs.Length()) {
-      return nsAutoPtr<MP4Sample>();
+    if (mCurrentMoof == moofs.Length()) {
+      if (!mIndex->mMoofParser->BlockingReadNextMoof()) {
+        return nsAutoPtr<MP4Sample>();
+      }
+      MOZ_ASSERT(mCurrentMoof < moofs.Length());
     }
     if (mCurrentSample < moofs[mCurrentMoof].mIndex.Length()) {
       break;
@@ -153,6 +156,9 @@ void SampleIterator::Seek(Microseconds aTime)
     if (sample->is_sync_point) {
       syncMoof = mCurrentMoof;
       syncSample = mCurrentSample;
+    }
+    if (sample->composition_timestamp == aTime) {
+      break;
     }
     Next();
   }
