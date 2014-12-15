@@ -32,8 +32,8 @@ protected:
  * This is a stream for camera preview.
  *
  * XXX It is a temporary fix of SourceMediaStream.
- * A camera preview requests no delay and no buffering stream.
- * But the SourceMediaStream do not support it.
+ * A camera preview requests no delay and no buffering stream,
+ * but the SourceMediaStream does not support it.
  */
 class CameraPreviewMediaStream : public MediaStream
 {
@@ -50,7 +50,7 @@ public:
   virtual void ChangeExplicitBlockerCount(int32_t aDelta) MOZ_OVERRIDE;
   virtual void AddListener(MediaStreamListener* aListener) MOZ_OVERRIDE;
   virtual void RemoveListener(MediaStreamListener* aListener) MOZ_OVERRIDE;
-  virtual void Destroy();
+  virtual void Destroy() MOZ_OVERRIDE;
   void OnPreviewStateChange(bool aActive);
 
   void Invalidate();
