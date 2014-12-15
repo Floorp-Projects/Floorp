@@ -32,7 +32,6 @@ namespace android {
   class GonkCameraHardware;
   class MediaProfiles;
   class GonkRecorder;
-  class GonkCameraSource;
 }
 
 namespace mozilla {
@@ -152,9 +151,6 @@ protected:
   nsresult SetThumbnailSize(const Size& aSize);
   nsresult UpdateThumbnailSize();
   nsresult SetThumbnailSizeImpl(const Size& aSize);
-
-  friend class android::GonkCameraSource;
-  android::sp<android::GonkCameraHardware> GetCameraHw();
 
   int32_t RationalizeRotation(int32_t aRotation);
 
