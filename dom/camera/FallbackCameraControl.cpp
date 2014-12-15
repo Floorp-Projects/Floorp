@@ -22,7 +22,7 @@ namespace mozilla {
 class FallbackCameraControl : public CameraControlImpl
 {
 public:
-  explicit FallbackCameraControl(uint32_t aCameraId) : CameraControlImpl(aCameraId) { }
+  explicit FallbackCameraControl() : CameraControlImpl() { }
 
   virtual nsresult Set(uint32_t aKey, const nsAString& aValue) MOZ_OVERRIDE { return NS_ERROR_NOT_IMPLEMENTED; }
   virtual nsresult Get(uint32_t aKey, nsAString& aValue) MOZ_OVERRIDE { return NS_ERROR_NOT_IMPLEMENTED; }
