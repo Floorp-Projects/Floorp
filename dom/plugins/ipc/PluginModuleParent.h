@@ -25,6 +25,8 @@
 #include "nsExceptionHandler.h"
 #endif
 
+class nsPluginTag;
+
 namespace mozilla {
 namespace dom {
 class PCrashReporterParent;
@@ -103,7 +105,7 @@ public:
      * This may or may not launch a plugin child process,
      * and may or may not be very expensive.
      */
-    static PluginLibrary* LoadModule(const char* aFilePath);
+    static PluginLibrary* LoadModule(const char* aFilePath, nsPluginTag* aPluginTag);
 
     const NPNetscapeFuncs* GetNetscapeFuncs() {
         return mNPNIface;
