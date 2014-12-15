@@ -59,7 +59,7 @@ public:
   IsDisplaySpnRequired() const;
 
 protected:
-  ~IccInfo() {}
+  virtual ~IccInfo() {}
 
 protected:
   nsCOMPtr<nsPIDOMWindow> mWindow;

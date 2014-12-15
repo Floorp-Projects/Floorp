@@ -1455,7 +1455,6 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument,
   , mDocument(aDocument)
   , mRootElementFrame(nullptr)
   , mRootElementStyleFrame(nullptr)
-  , mFixedContainingBlock(nullptr)
   , mDocElementContainingBlock(nullptr)
   , mGfxScrollFrame(nullptr)
   , mPageSequenceFrame(nullptr)
@@ -1857,6 +1856,24 @@ IsTablePseudo(nsIFrame* aFrame)
          nsCSSAnonBoxes::table ||
        aFrame->GetFirstPrincipalChild()->StyleContext()->GetPseudo() ==
          nsCSSAnonBoxes::inlineTable)));
+}
+
+static bool
+IsRubyPseudo(nsIFrame* aFrame)
+{
+  nsIAtom* pseudoType = aFrame->StyleContext()->GetPseudo();
+  return pseudoType &&
+    (pseudoType == nsCSSAnonBoxes::ruby ||
+     pseudoType == nsCSSAnonBoxes::rubyBase ||
+     pseudoType == nsCSSAnonBoxes::rubyText ||
+     pseudoType == nsCSSAnonBoxes::rubyBaseContainer ||
+     pseudoType == nsCSSAnonBoxes::rubyTextContainer);
+}
+
+static bool
+IsTableOrRubyPseudo(nsIFrame* aFrame)
+{
+  return IsTablePseudo(aFrame) || IsRubyPseudo(aFrame);
 }
 
 /* static */
@@ -2373,12 +2390,10 @@ nsIFrame*
 nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocElement,
                                                 nsILayoutHistoryState*   aFrameState)
 {
-  NS_PRECONDITION(mFixedContainingBlock,
-                  "No viewport?  Someone forgot to call ConstructRootFrame!");
-  NS_PRECONDITION(mFixedContainingBlock == GetRootFrame(),
-                  "Unexpected mFixedContainingBlock");
-  NS_PRECONDITION(!mDocElementContainingBlock,
-                  "Shouldn't have a doc element containing block here");
+  MOZ_ASSERT(GetRootFrame(),
+             "No viewport?  Someone forgot to call ConstructRootFrame!");
+  MOZ_ASSERT(!mDocElementContainingBlock,
+             "Shouldn't have a doc element containing block here");
 
   // Make sure to call PropagateScrollToViewport before
   // SetUpDocElementContainingBlock, since it sets up our scrollbar state
@@ -2392,7 +2407,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
 
   NS_ASSERTION(mDocElementContainingBlock, "Should have parent by now");
 
-  nsFrameConstructorState state(mPresShell, mFixedContainingBlock, nullptr,
+  nsFrameConstructorState state(mPresShell,
+                                GetAbsoluteContainingBlock(mDocElementContainingBlock, FIXED_POS),
+                                nullptr,
                                 nullptr, aFrameState);
   // Initialize the ancestor filter with null for now; we'll push
   // aDocElement once we finish resolving style for it.
@@ -2672,11 +2689,9 @@ nsCSSFrameConstructor::ConstructRootFrame()
   nsContainerFrame::SyncWindowProperties(mPresShell->GetPresContext(), viewportFrame,
                                          rootView);
 
-  // The viewport is the containing block for 'fixed' elements
-  mFixedContainingBlock = viewportFrame;
   // Make it an absolute container for fixed-pos elements
-  mFixedContainingBlock->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
-  mFixedContainingBlock->MarkAsAbsoluteContainingBlock();
+  viewportFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
+  viewportFrame->MarkAsAbsoluteContainingBlock();
 
   return viewportFrame;
 }
@@ -2711,8 +2726,8 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
 
       ViewportFrame
         nsSimplePageSequenceFrame
-          nsPageFrame [fixed-cb]
-            nsPageContentFrame
+          nsPageFrame
+            nsPageContentFrame [fixed-cb]
               nsCanvasFrame [abs-cb]
                 root element frame (nsBlockFrame, nsSVGOuterSVGFrame,
                                     nsTableOuterFrame, nsPlaceholderFrame)
@@ -2722,8 +2737,8 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
       ViewportFrame
         nsHTMLScrollFrame
           nsSimplePageSequenceFrame
-            nsPageFrame [fixed-cb]
-              nsPageContentFrame
+            nsPageFrame
+              nsPageContentFrame [fixed-cb]
                 nsCanvasFrame [abs-cb]
                   root element frame (nsBlockFrame, nsSVGOuterSVGFrame,
                                       nsTableOuterFrame, nsPlaceholderFrame)
@@ -2737,7 +2752,6 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
       the root element.
     mDocElementContainingBlock is the parent of mRootElementFrame
       (i.e. nsCanvasFrame or nsRootBoxFrame)
-    mFixedContainingBlock is the [fixed-cb]
     mGfxScrollFrame is the nsHTMLScrollFrame mentioned above, or null if there isn't one
     mPageSequenceFrame is the nsSimplePageSequenceFrame, or null if there isn't one
   */
@@ -2755,7 +2769,7 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
 
   nsPresContext* presContext = mPresShell->GetPresContext();
   bool isPaginated = presContext->IsRootPaginatedDocument();
-  nsContainerFrame* viewportFrame = mFixedContainingBlock;
+  nsContainerFrame* viewportFrame = static_cast<nsContainerFrame*>(GetRootFrame());
   nsStyleContext* viewportPseudoStyle = viewportFrame->StyleContext();
 
   nsContainerFrame* rootFrame = nullptr;
@@ -2950,10 +2964,9 @@ nsCSSFrameConstructor::ConstructPageFrame(nsIPresShell*  aPresShell,
   }
   pageContentFrame->Init(nullptr, pageFrame, prevPageContentFrame);
   SetInitialSingleChild(pageFrame, pageContentFrame);
-  mFixedContainingBlock = pageContentFrame;
   // Make it an absolute container for fixed-pos elements
-  mFixedContainingBlock->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
-  mFixedContainingBlock->MarkAsAbsoluteContainingBlock();
+  pageContentFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
+  pageContentFrame->MarkAsAbsoluteContainingBlock();
 
   nsRefPtr<nsStyleContext> canvasPseudoStyle;
   canvasPseudoStyle = styleSet->ResolveAnonymousBoxStyle(nsCSSAnonBoxes::canvas,
@@ -5930,8 +5943,6 @@ nsContainerFrame*
 nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame,
                                                   ContainingBlockType aType)
 {
-  NS_PRECONDITION(nullptr != mRootElementFrame, "no root element frame");
-
   // Starting with aFrame, look for a frame that is absolutely positioned or
   // relatively positioned (and transformed, if aType is FIXED)
   for (nsIFrame* frame = aFrame; frame; frame = frame->GetParent()) {
@@ -5940,6 +5951,15 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame,
       // mathml frames.  Note that we don't make this part of the loop
       // condition because of the stuff at the end of this method...
       return nullptr;
+    }
+
+    // Look for the ICB.
+    if (aType == FIXED_POS) {
+      nsIAtom* t = frame->GetType();
+      if (t == nsGkAtoms::viewportFrame ||
+          t == nsGkAtoms::pageContentFrame) {
+        return static_cast<nsContainerFrame*>(frame);
+      }
     }
 
     // If the frame is positioned, we will probably return it as the containing
@@ -5990,12 +6010,11 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame,
     return static_cast<nsContainerFrame*>(absPosCBCandidate);
   }
 
+  MOZ_ASSERT(aType != FIXED_POS, "no ICB in this frame tree?");
+
   // It is possible for the search for the containing block to fail, because
   // no absolute container can be found in the parent chain.  In those cases,
   // we fall back to the document element's containing block.
-  if (aType == FIXED_POS) {
-    return mFixedContainingBlock;
-  }
   return mHasRootAbsPosContainingBlock ? mDocElementContainingBlock : nullptr;
 }
 
@@ -7450,7 +7469,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
       if (gReallyNoisyContentUpdates) {
         printf("nsCSSFrameConstructor::ContentRangeInserted: resulting frame "
                "model:\n");
-        mFixedContainingBlock->List(stdout, 0);
+        docElementFrame->List(stdout, 0);
       }
 #endif
     }
@@ -8183,7 +8202,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*  aContainer,
       mPageSequenceFrame = nullptr;
       mGfxScrollFrame = nullptr;
       mHasRootAbsPosContainingBlock = false;
-      mFixedContainingBlock = static_cast<nsContainerFrame*>(GetRootFrame());
     }
 
     if (haveFLS && mRootElementFrame) {
@@ -8907,7 +8925,9 @@ nsCSSFrameConstructor::CaptureStateForFramesOf(nsIContent* aContent,
   }
   nsIFrame* frame = aContent->GetPrimaryFrame();
   if (frame == mRootElementFrame) {
-    frame = mFixedContainingBlock;
+    frame = mRootElementFrame ?
+      GetAbsoluteContainingBlock(mRootElementFrame, FIXED_POS) :
+      GetRootFrame();
   }
   for ( ; frame;
         frame = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(frame)) {
@@ -8964,12 +8984,19 @@ nsCSSFrameConstructor::MaybeRecreateFramesForElement(Element* aElement)
   return nullptr;
 }
 
+static bool
+IsWhitespaceFrame(nsIFrame* aFrame)
+{
+  NS_ABORT_IF_FALSE(aFrame, "invalid argument");
+  return aFrame->GetType() == nsGkAtoms::textFrame &&
+    aFrame->GetContent()->TextIsOnlyWhitespace();
+}
+
 static nsIFrame*
 FindFirstNonWhitespaceChild(nsIFrame* aParentFrame)
 {
   nsIFrame* f = aParentFrame->GetFirstPrincipalChild();
-  while (f && f->GetType() == nsGkAtoms::textFrame &&
-         f->GetContent()->TextIsOnlyWhitespace()) {
+  while (f && IsWhitespaceFrame(f)) {
     f = f->GetNextSibling();
   }
   return f;
@@ -8981,8 +9008,7 @@ FindNextNonWhitespaceSibling(nsIFrame* aFrame)
   nsIFrame* f = aFrame;
   do {
     f = f->GetNextSibling();
-  } while (f && f->GetType() == nsGkAtoms::textFrame &&
-           f->GetContent()->TextIsOnlyWhitespace());
+  } while (f && IsWhitespaceFrame(f));
   return f;
 }
 
@@ -8992,8 +9018,7 @@ FindPreviousNonWhitespaceSibling(nsIFrame* aFrame)
   nsIFrame* f = aFrame;
   do {
     f = f->GetPrevSibling();
-  } while (f && f->GetType() == nsGkAtoms::textFrame &&
-           f->GetContent()->TextIsOnlyWhitespace());
+  } while (f && IsWhitespaceFrame(f));
   return f;
 }
 
@@ -9045,9 +9070,16 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
   MOZ_ASSERT(inFlowFrame == inFlowFrame->FirstContinuation(),
              "placeholder for primary frame has previous continuations?");
   nsIFrame* parent = inFlowFrame->GetParent();
-  if (IsTablePseudo(parent)) {
+  // For the case of ruby pseudo parent, effectively, only pseudo rb/rt frame
+  // need to be checked here, since all other types of parent will be catched
+  // by "Check ruby containers" section below.
+  if (IsTableOrRubyPseudo(parent)) {
     if (FindFirstNonWhitespaceChild(parent) == inFlowFrame ||
         !FindNextNonWhitespaceSibling(inFlowFrame->LastContinuation()) ||
+        // If it is a whitespace, and is the only child of the parent, the
+        // pseudo parent was created for the space, and should now be removed.
+        (IsWhitespaceFrame(aFrame) &&
+         parent->PrincipalChildList().OnlyChild()) ||
         // If we're a table-column-group, then the GetFirstChild check above is
         // not going to catch cases when we're the first child.
         (inFlowFrame->GetType() == nsGkAtoms::tableColGroupFrame &&
@@ -9064,29 +9096,50 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
   }
 
   // Might need to reconstruct things if this frame's nextSibling is a table
-  // pseudo, since removal of this frame might mean that this pseudo needs to
-  // get merged with the frame's prevSibling if that's also a table pseudo.
+  // or ruby pseudo, since removal of this frame might mean that this pseudo
+  // needs to get merged with the frame's prevSibling if that's also a table
+  // or ruby pseudo.
   nsIFrame* nextSibling =
     FindNextNonWhitespaceSibling(inFlowFrame->LastContinuation());
-  NS_ASSERTION(!IsTablePseudo(inFlowFrame), "Shouldn't happen here");
-  if (nextSibling && IsTablePseudo(nextSibling)) {
+  NS_ASSERTION(!IsTableOrRubyPseudo(inFlowFrame), "Shouldn't happen here");
+  // Effectively, for the ruby pseudo sibling case, only pseudo <ruby> frame
+  // need to be checked here, since all other types of such frames will have
+  // a ruby container parent, and be catched by "Check ruby containers" below.
+  if (nextSibling && IsTableOrRubyPseudo(nextSibling)) {
     nsIFrame* prevSibling = FindPreviousNonWhitespaceSibling(inFlowFrame);
-    if (prevSibling && IsTablePseudo(prevSibling)) {
+    if (prevSibling && IsTableOrRubyPseudo(prevSibling)) {
 #ifdef DEBUG
       if (gNoisyContentUpdates) {
         printf("nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval: "
-                 "frame=");
+               "frame=");
         nsFrame::ListTag(stdout, aFrame);
         printf(" has a table pseudo next sibling of different type and a "
-                 "table pseudo prevsibling\n");
+               "table pseudo prevsibling\n");
       }
 #endif
       // Good enough to recreate frames for aFrame's parent's content; even if
-      // aFrame's parent is a table pseudo, that'll be the right content node.
+      // aFrame's parent is a pseudo, that'll be the right content node.
       *aResult = RecreateFramesForContent(parent->GetContent(), true, aFlags,
                                           aDestroyedFramesFor);
       return true;
     }
+  }
+
+  // Check ruby containers
+  nsIAtom* parentType = parent->GetType();
+  if (parentType == nsGkAtoms::rubyFrame ||
+      parentType == nsGkAtoms::rubyBaseContainerFrame ||
+      parentType == nsGkAtoms::rubyTextContainerFrame) {
+    // In ruby containers, pseudo frames may be created from
+    // whitespaces or even nothing. There are two cases we actually
+    // need to handle here, but hard to check exactly:
+    // 1. Status of spaces beside the frame may vary, and related
+    //    frames may be constructed or destroyed accordingly.
+    // 2. The type of the first child of a ruby frame determines
+    //    whether a pseudo ruby base container should exist.
+    *aResult = RecreateFramesForContent(parent->GetContent(), true, aFlags,
+                                        aDestroyedFramesFor);
+    return true;
   }
 
   // Might need to reconstruct things if the removed frame's nextSibling is an
@@ -9609,6 +9662,248 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
   } while (!iter.IsDone());
 }
 
+/* static */ nsCSSFrameConstructor::RubyWhitespaceType
+nsCSSFrameConstructor::ComputeRubyWhitespaceType(uint_fast8_t aPrevDisplay,
+                                                 uint_fast8_t aNextDisplay)
+{
+  MOZ_ASSERT(nsStyleDisplay::IsRubyDisplayType(aPrevDisplay) &&
+             nsStyleDisplay::IsRubyDisplayType(aNextDisplay));
+  if (aPrevDisplay == aNextDisplay &&
+      (aPrevDisplay == NS_STYLE_DISPLAY_RUBY_BASE ||
+       aPrevDisplay == NS_STYLE_DISPLAY_RUBY_TEXT)) {
+    return eRubyInterLeafWhitespace;
+  }
+  if (aNextDisplay == NS_STYLE_DISPLAY_RUBY_TEXT ||
+      aNextDisplay == NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER) {
+    return eRubyInterLevelWhitespace;
+  }
+  return eRubyInterSegmentWhitespace;
+}
+
+/**
+ * This function checks the content from |aStartIter| to |aEndIter|,
+ * determines whether it contains only whitespace, and if yes,
+ * interprets the type of whitespace. This method does not change
+ * any of the iters.
+ */
+/* static */ nsCSSFrameConstructor::RubyWhitespaceType
+nsCSSFrameConstructor::InterpretRubyWhitespace(nsFrameConstructorState& aState,
+                                               const FCItemIterator& aStartIter,
+                                               const FCItemIterator& aEndIter)
+{
+  if (!aStartIter.item().IsWhitespace(aState)) {
+    return eRubyNotWhitespace;
+  }
+
+  FCItemIterator spaceEndIter(aStartIter);
+  spaceEndIter.SkipWhitespace(aState);
+  if (spaceEndIter != aEndIter) {
+    return eRubyNotWhitespace;
+  }
+
+  // Any leading or trailing whitespace in non-pseudo ruby box
+  // should have been trimmed, hence there should not be any
+  // whitespace at the start or the end.
+  MOZ_ASSERT(!aStartIter.AtStart() && !aEndIter.IsDone());
+  FCItemIterator prevIter(aStartIter);
+  prevIter.Prev();
+  return ComputeRubyWhitespaceType(
+      prevIter.item().mStyleContext->StyleDisplay()->mDisplay,
+      aEndIter.item().mStyleContext->StyleDisplay()->mDisplay);
+}
+
+
+/**
+ * This function eats up consecutive items which do not want the current
+ * parent into either a ruby base box or a ruby text box.  When it
+ * returns, |aIter| points to the first item it doesn't wrap.
+ */
+void
+nsCSSFrameConstructor::WrapItemsInPseudoRubyLeafBox(
+  FCItemIterator& aIter,
+  nsStyleContext* aParentStyle, nsIContent* aParentContent)
+{
+  uint_fast8_t parentDisplay = aParentStyle->StyleDisplay()->mDisplay;
+  ParentType parentType, wrapperType;
+  if (parentDisplay == NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER) {
+    parentType = eTypeRubyTextContainer;
+    wrapperType = eTypeRubyText;
+  } else {
+    MOZ_ASSERT(parentDisplay == NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER);
+    parentType = eTypeRubyBaseContainer;
+    wrapperType = eTypeRubyBase;
+  }
+
+  MOZ_ASSERT(aIter.item().DesiredParentType() != parentType,
+             "Should point to something needs to be wrapped.");
+
+  FCItemIterator endIter(aIter);
+  endIter.SkipItemsNotWantingParentType(parentType);
+
+  WrapItemsInPseudoParent(aParentContent, aParentStyle,
+                          wrapperType, aIter, endIter);
+}
+
+/**
+ * This function eats up consecutive items into a ruby level container.
+ * It may create zero or one level container. When it returns, |aIter|
+ * points to the first item it doesn't wrap.
+ */
+void
+nsCSSFrameConstructor::WrapItemsInPseudoRubyLevelContainer(
+  nsFrameConstructorState& aState, FCItemIterator& aIter,
+  nsStyleContext* aParentStyle, nsIContent* aParentContent)
+{
+  MOZ_ASSERT(aIter.item().DesiredParentType() != eTypeRuby,
+             "Pointing to a level container?");
+
+  FrameConstructionItem& firstItem = aIter.item();
+  ParentType wrapperType = firstItem.DesiredParentType();
+  if (wrapperType != eTypeRubyTextContainer) {
+    // If the first item is not ruby text,
+    // it should be in a base container.
+    wrapperType = eTypeRubyBaseContainer;
+  }
+
+  FCItemIterator endIter(aIter);
+  do {
+    if (endIter.SkipItemsWantingParentType(wrapperType) ||
+        // If the skipping above stops at some item which wants a
+        // different ruby parent, then we have finished.
+        IsRubyParentType(endIter.item().DesiredParentType())) {
+      // No more items need to be wrapped in this level container.
+      break;
+    }
+
+    FCItemIterator contentEndIter(endIter);
+    contentEndIter.SkipItemsNotWantingRubyParent();
+    // endIter must be on something doesn't want a ruby parent.
+    MOZ_ASSERT(contentEndIter != endIter);
+
+    // InterpretRubyWhitespace depends on the fact that any leading or
+    // trailing whitespace described in the spec have been trimmed at
+    // this point. With this precondition, it is safe not to check
+    // whether contentEndIter has been done.
+    RubyWhitespaceType whitespaceType =
+      InterpretRubyWhitespace(aState, endIter, contentEndIter);
+    if (whitespaceType == eRubyInterLevelWhitespace) {
+      // Remove inter-level whitespace.
+      bool atStart = (aIter == endIter);
+      endIter.DeleteItemsTo(contentEndIter);
+      if (atStart) {
+        aIter = endIter;
+      }
+    } else if (whitespaceType == eRubyInterSegmentWhitespace) {
+      // If this level container starts with inter-segment whitespaces,
+      // wrap them. Break at contentEndIter. Otherwise, leave it here.
+      // Break at endIter. They will be wrapped when we are here again.
+      if (aIter == endIter) {
+        MOZ_ASSERT(wrapperType == eTypeRubyBaseContainer,
+                   "Inter-segment whitespace should be wrapped in rbc");
+        endIter = contentEndIter;
+      }
+      break;
+    } else if (wrapperType == eTypeRubyTextContainer &&
+               whitespaceType != eRubyInterLeafWhitespace) {
+      // Misparented inline content that's not inter-annotation
+      // whitespace doesn't belong in a pseudo ruby text container.
+      // Break at endIter.
+      break;
+    } else {
+      endIter = contentEndIter;
+    }
+  } while (!endIter.IsDone());
+
+  // It is possible that everything our parent wants us to wrap is
+  // simply an inter-level whitespace, which has been trimmed, or
+  // an inter-segment whitespace, which will be wrapped later.
+  // In those cases, don't create anything.
+  if (aIter != endIter) {
+    WrapItemsInPseudoParent(aParentContent, aParentStyle,
+                            wrapperType, aIter, endIter);
+  }
+}
+
+/**
+ * This function trims leading and trailing whitespaces
+ * in the given item list.
+ */
+void
+nsCSSFrameConstructor::TrimLeadingAndTrailingWhitespaces(
+    nsFrameConstructorState& aState,
+    FrameConstructionItemList& aItems)
+{
+  FCItemIterator iter(aItems);
+  if (!iter.IsDone() &&
+      iter.item().IsWhitespace(aState)) {
+    FCItemIterator spaceEndIter(iter);
+    spaceEndIter.SkipWhitespace(aState);
+    iter.DeleteItemsTo(spaceEndIter);
+  }
+
+  iter.SetToEnd();
+  if (!iter.AtStart()) {
+    FCItemIterator spaceEndIter(iter);
+    do {
+      iter.Prev();
+      if (iter.AtStart()) {
+        // It's fine to not check the first item, because we
+        // should have trimmed leading whitespaces above.
+        break;
+      }
+    } while (iter.item().IsWhitespace(aState));
+    iter.Next();
+    if (iter != spaceEndIter) {
+      iter.DeleteItemsTo(spaceEndIter);
+    }
+  }
+}
+
+/**
+ * This function walks through the child list (aItems) and creates
+ * needed pseudo ruby boxes to wrap misparented children.
+ */
+void
+nsCSSFrameConstructor::CreateNeededPseudoInternalRubyBoxes(
+  nsFrameConstructorState& aState,
+  FrameConstructionItemList& aItems,
+  nsIFrame* aParentFrame)
+{
+  const ParentType ourParentType = GetParentType(aParentFrame);
+  if (!IsRubyParentType(ourParentType) ||
+      aItems.AllWantParentType(ourParentType)) {
+    return;
+  }
+
+  nsStyleContext* parentStyle = aParentFrame->StyleContext();
+  if (!parentStyle->GetPseudo()) {
+    // Normally, pseudo frames start from and end at some elements,
+    // which means they don't have leading and trailing whitespaces at
+    // all.  But there are two cases where they do actually have leading
+    // or trailing whitespaces:
+    // 1. It is an inter-segment whitespace which in an individual ruby
+    //    base container.
+    // 2. The pseudo frame starts from or ends at consecutive inline
+    //    content, which is not pure whitespace, but includes some.
+    // In either case, the whitespaces are not the leading or trailing
+    // whitespaces defined in the spec, and thus should not be trimmed.
+    TrimLeadingAndTrailingWhitespaces(aState, aItems);
+  }
+
+  FCItemIterator iter(aItems);
+  nsIContent* parentContent = aParentFrame->GetContent();
+  while (!iter.IsDone()) {
+    if (!iter.SkipItemsWantingParentType(ourParentType)) {
+      if (ourParentType == eTypeRuby) {
+        WrapItemsInPseudoRubyLevelContainer(aState, iter, parentStyle,
+                                            parentContent);
+      } else {
+        WrapItemsInPseudoRubyLeafBox(iter, parentStyle, parentContent);
+      }
+    }
+  }
+}
+
 /*
  * This function works as follows: we walk through the child list (aItems) and
  * find items that cannot have aParentFrame as their parent.  We wrap
@@ -9627,7 +9922,8 @@ nsCSSFrameConstructor::CreateNeededPseudoContainers(
     nsIFrame* aParentFrame)
 {
   ParentType ourParentType = GetParentType(aParentFrame);
-  if (aItems.AllWantParentType(ourParentType)) {
+  if (IsRubyParentType(ourParentType) ||
+      aItems.AllWantParentType(ourParentType)) {
     // Nothing to do here
     return;
   }
@@ -9676,70 +9972,18 @@ nsCSSFrameConstructor::CreateNeededPseudoContainers(
             !aParentFrame->IsGeneratedContentFrame() &&
             spaceEndIter.item().IsWhitespace(aState)) {
           bool trailingSpaces = spaceEndIter.SkipWhitespace(aState);
-          int nextDisplay = -1;
-          int prevDisplay = -1;
-
-          if (!endIter.AtStart() &&
-              (IsRubyParentType(ourParentType) ||
-               IsRubyParentType(groupingParentType))) {
-            FCItemIterator prevItemIter(endIter);
-            prevItemIter.Prev();
-            prevDisplay =
-              prevItemIter.item().mStyleContext->StyleDisplay()->mDisplay;
-          }
-
-          // We only need to compute nextDisplay for testing for ruby white
-          // space.
-          if (!spaceEndIter.IsDone() &&
-              (IsRubyParentType(ourParentType) ||
-               IsRubyParentType(groupingParentType))) {
-            nextDisplay =
-              spaceEndIter.item().mStyleContext->StyleDisplay()->mDisplay;
-          }
-
-          if (ourParentType == eTypeRubyBaseContainer &&
-              prevDisplay == -1 && nextDisplay == -1) {
-            if (aParentFrame->StyleContext()->GetPseudo()) {
-              // We are in a pseudo ruby base container, which has
-              // whitespaces only. This is a special case to handle
-              // inter-segment spaces.
-              endIter = spaceEndIter;
-              break;
-            }
-          }
 
           // We drop the whitespace in the following cases:
           // 1) If these are not trailing spaces and the next item wants a table
           //    or table-part parent
           // 2) If these are trailing spaces and aParentFrame is a
           //    tabular container according to rule 1.3 of CSS 2.1 Sec 17.2.1.
-          //    (Being a tabular container pretty much means
-          //    IsTableParentType(ourParentType) besides the eTypeColGroup case,
-          //    which won't reach here.)
-          // 3) The whitespace is leading or trailing inside a ruby box, ruby
-          //    base container box, or ruby text container box.
-          // 4) The whitespace is classified as inter-level intra-ruby
-          //    whitespace according to the spec for CSS ruby.
-          bool isRubyLeadingTrailingParentType =
-            ourParentType == eTypeRuby ||
-            ourParentType == eTypeRubyBaseContainer ||
-            ourParentType == eTypeRubyTextContainer;
-          bool isRubyLeading =
-            prevDisplay == -1 && isRubyLeadingTrailingParentType;
-          bool isRubyTrailing =
-            nextDisplay == -1 && isRubyLeadingTrailingParentType;
-          // There's an implicit condition that we are in a ruby parent or
-          // we are grouping a ruby parent here, because nextDisplay and
-          // prevDisplay are only set if that is true.
-          bool isRubyInterLevel =
-            (nextDisplay == NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER) ||
-            (nextDisplay == NS_STYLE_DISPLAY_RUBY_TEXT &&
-             prevDisplay != NS_STYLE_DISPLAY_RUBY_TEXT);
-
+          //    (Being a tabular container pretty much means ourParentType is
+          //    not eTypeBlock besides the eTypeColGroup case, which won't
+          //    reach here.)
           if ((!trailingSpaces &&
                IsTableParentType(spaceEndIter.item().DesiredParentType())) ||
-              (trailingSpaces && IsTableParentType(ourParentType)) ||
-              isRubyLeading || isRubyTrailing || isRubyInterLevel) {
+              (trailingSpaces && ourParentType != eTypeBlock)) {
             bool updateStart = (iter == endIter);
             endIter.DeleteItemsTo(spaceEndIter);
             NS_ASSERTION(trailingSpaces == endIter.IsDone(),
@@ -9768,23 +10012,16 @@ nsCSSFrameConstructor::CreateNeededPseudoContainers(
         // what it means that this is the group end), so it's OK.
         // However, when we are grouping a ruby parent, and endIter points to
         // a non-droppable whitespace, if the next non-whitespace item also
-        // wants a ruby parent which is not our parent, the whitespace should
-        // also be included into the current ruby parent.
+        // wants a ruby parent, the whitespace should also be included into
+        // the current ruby container.
         prevParentType = endIter.item().DesiredParentType();
-        if (prevParentType == ourParentType) {
-          if (endIter == spaceEndIter ||
-              // not grouping a ruby parent
-              !IsRubyParentType(groupingParentType) ||
-              spaceEndIter.IsDone()) {
-            // End the group at endIter.
-            break;
-          }
-          ParentType nextParentType = spaceEndIter.item().DesiredParentType();
-          if (nextParentType == ourParentType ||
-              !IsRubyParentType(nextParentType)) {
-            // End the group at endIter.
-            break;
-          }
+        if (prevParentType == ourParentType &&
+            (endIter == spaceEndIter ||
+             spaceEndIter.IsDone() ||
+             !IsRubyParentType(groupingParentType) ||
+             !IsRubyParentType(spaceEndIter.item().DesiredParentType()))) {
+          // End the group at endIter.
+          break;
         }
 
         if (ourParentType == eTypeTable &&
@@ -9793,31 +10030,6 @@ nsCSSFrameConstructor::CreateNeededPseudoContainers(
           // Either we started with columns and now found something else, or vice
           // versa.  In any case, end the grouping.
           break;
-        }
-
-        // Break from the boundary between a ruby base container and a
-        // ruby text container, or the boundary between an inter-segment
-        // whitespace and the next ruby segment.
-        if (ourParentType == eTypeRuby) {
-          if ((prevParentType == eTypeRubyBaseContainer &&
-               groupingParentType == eTypeRubyTextContainer) ||
-              (prevParentType == eTypeRubyTextContainer &&
-               groupingParentType == eTypeRubyBaseContainer)) {
-            // Don't group ruby base boxes and
-            // ruby annotation boxes together.
-            break;
-          } else if (groupingParentType == eTypeBlock &&
-                     endIter != spaceEndIter) {
-            // We are on inter-segment whitespaces, which we want to
-            // create an independent ruby base container for.
-            endIter = spaceEndIter;
-            break;
-          }
-          // The only case where prevParentType is different from
-          // groupingParentType but we still want to continue, is that
-          // we are on an inter-base or inter-annotation whitespace.
-          MOZ_ASSERT(groupingParentType == prevParentType ||
-                     prevParentType == eTypeBlock);
         }
 
         // If we have some whitespace that we were not able to drop and there is
@@ -9863,23 +10075,6 @@ nsCSSFrameConstructor::CreateNeededPseudoContainers(
         break;
       case eTypeColGroup:
         MOZ_CRASH("Colgroups should be suppresing non-col child items");
-      case eTypeRuby:
-        if (groupingParentType == eTypeRubyTextContainer) {
-          wrapperType = eTypeRubyTextContainer;
-        } else {
-          NS_ASSERTION(groupingParentType == eTypeRubyBaseContainer ||
-                       groupingParentType == eTypeBlock,
-                       "It should be either a ruby base container, "
-                       "or an inter-segment whitespace");
-          wrapperType = eTypeRubyBaseContainer;
-        } 
-        break;
-      case eTypeRubyBaseContainer:
-        wrapperType = eTypeRubyBase;
-        break;
-      case eTypeRubyTextContainer:
-        wrapperType = eTypeRubyText;
-        break;
       default: 
         NS_ASSERTION(ourParentType == eTypeBlock, "Unrecognized parent type");
         if (IsRubyParentType(groupingParentType)) {
@@ -9891,63 +10086,78 @@ nsCSSFrameConstructor::CreateNeededPseudoContainers(
         }
     }
 
-    const PseudoParentData& pseudoData = sPseudoParentData[wrapperType];
-    nsIAtom* pseudoType = *pseudoData.mPseudoType;
     nsStyleContext* parentStyle = aParentFrame->StyleContext();
-    nsIContent* parentContent = aParentFrame->GetContent();
-
-    if (pseudoType == nsCSSAnonBoxes::table &&
-        (parentStyle->StyleDisplay()->mDisplay == NS_STYLE_DISPLAY_INLINE ||
-         IsRubyParentType(ourParentType) ||
-         parentStyle->StyleDisplay()->mDisplay == NS_STYLE_DISPLAY_RUBY_BASE ||
-         parentStyle->StyleDisplay()->mDisplay == NS_STYLE_DISPLAY_RUBY_TEXT)) {
-      pseudoType = nsCSSAnonBoxes::inlineTable;
-    }
-
-    already_AddRefed<nsStyleContext> wrapperStyle =
-      mPresShell->StyleSet()->ResolveAnonymousBoxStyle(pseudoType, parentStyle);
-    FrameConstructionItem* newItem =
-      new FrameConstructionItem(&pseudoData.mFCData,
-                                // Use the content of our parent frame
-                                parentContent,
-                                // Lie about the tag; it doesn't matter anyway
-                                pseudoType,
-                                // The namespace does matter, however; it needs
-                                // to match that of our first child item to
-                                // match the old behavior
-                                iter.item().mNameSpaceID,
-                                // no pending binding
-                                nullptr,
-                                wrapperStyle,
-                                true, nullptr);
-
-    // Here we're cheating a tad... technically, table-internal items should be
-    // inline if aParentFrame is inline, but they'll get wrapped in an
-    // inline-table in the end, so it'll all work out.  In any case, arguably
-    // we don't need to maintain this state at this point... but it's better
-    // to, I guess.
-    newItem->mIsAllInline = newItem->mHasInlineEnds =
-      newItem->mStyleContext->StyleDisplay()->IsInlineOutsideStyle();
-
-    // Table pseudo frames always induce line boundaries around their
-    // contents.
-    newItem->mChildItems.SetLineBoundaryAtStart(true);
-    newItem->mChildItems.SetLineBoundaryAtEnd(true);
-    // The parent of the items in aItems is also the parent of the items
-    // in mChildItems
-    newItem->mChildItems.SetParentHasNoXBLChildren(
-      aItems.ParentHasNoXBLChildren());
-
-    // Eat up all items between |iter| and |endIter| and put them in our wrapper
-    // Advances |iter| to point to |endIter|.
-    iter.AppendItemsToList(endIter, newItem->mChildItems);
-
-    iter.InsertItem(newItem);
+    WrapItemsInPseudoParent(aParentFrame->GetContent(), parentStyle,
+                            wrapperType, iter, endIter);
 
     // Now |iter| points to the item that was the first one we didn't wrap;
     // loop and see whether we need to skip it or wrap it in something
     // different.
   } while (!iter.IsDone());
+}
+
+/**
+ * This method wraps frame construction item from |aIter| to
+ * |aEndIter|. After it returns, aIter points to the first item
+ * after the wrapper.
+ */
+void
+nsCSSFrameConstructor::WrapItemsInPseudoParent(nsIContent* aParentContent,
+                                               nsStyleContext* aParentStyle,
+                                               ParentType aWrapperType,
+                                               FCItemIterator& aIter,
+                                               const FCItemIterator& aEndIter)
+{
+  const PseudoParentData& pseudoData = sPseudoParentData[aWrapperType];
+  nsIAtom* pseudoType = *pseudoData.mPseudoType;
+  uint8_t parentDisplay = aParentStyle->StyleDisplay()->mDisplay;
+
+  if (pseudoType == nsCSSAnonBoxes::table &&
+      (parentDisplay == NS_STYLE_DISPLAY_INLINE ||
+       parentDisplay == NS_STYLE_DISPLAY_RUBY_BASE ||
+       parentDisplay == NS_STYLE_DISPLAY_RUBY_TEXT)) {
+    pseudoType = nsCSSAnonBoxes::inlineTable;
+  }
+
+  already_AddRefed<nsStyleContext> wrapperStyle =
+    mPresShell->StyleSet()->ResolveAnonymousBoxStyle(pseudoType, aParentStyle);
+  FrameConstructionItem* newItem =
+    new FrameConstructionItem(&pseudoData.mFCData,
+                              // Use the content of our parent frame
+                              aParentContent,
+                              // Lie about the tag; it doesn't matter anyway
+                              pseudoType,
+                              // The namespace does matter, however; it needs
+                              // to match that of our first child item to
+                              // match the old behavior
+                              aIter.item().mNameSpaceID,
+                              // no pending binding
+                              nullptr,
+                              wrapperStyle,
+                              true, nullptr);
+
+  // Here we're cheating a tad... technically, table-internal items should be
+  // inline if aParentFrame is inline, but they'll get wrapped in an
+  // inline-table in the end, so it'll all work out.  In any case, arguably
+  // we don't need to maintain this state at this point... but it's better
+  // to, I guess.
+  newItem->mIsAllInline = newItem->mHasInlineEnds =
+    newItem->mStyleContext->StyleDisplay()->IsInlineOutsideStyle();
+
+  // Table pseudo frames always induce line boundaries around their
+  // contents.
+  newItem->mChildItems.SetLineBoundaryAtStart(true);
+  newItem->mChildItems.SetLineBoundaryAtEnd(true);
+  // The parent of the items in aItems is also the parent of the items
+  // in mChildItems
+  newItem->mChildItems.SetParentHasNoXBLChildren(
+      aIter.List()->ParentHasNoXBLChildren());
+
+  // Eat up all items between |aIter| and |aEndIter| and put them in our
+  // wrapper Advances |aIter| to point to |aEndIter|.
+  aIter.AppendItemsToList(aEndIter, newItem->mChildItems);
+
+  aIter.InsertItem(newItem);
 }
 
 void nsCSSFrameConstructor::CreateNeededPseudoSiblings(
@@ -9998,6 +10208,7 @@ nsCSSFrameConstructor::ConstructFramesFromItemList(nsFrameConstructorState& aSta
 {
   CreateNeededPseudoContainers(aState, aItems, aParentFrame);
   CreateNeededAnonFlexOrGridItems(aState, aItems, aParentFrame);
+  CreateNeededPseudoInternalRubyBoxes(aState, aItems, aParentFrame);
   CreateNeededPseudoSiblings(aState, aItems, aParentFrame);
 
   aItems.SetTriedConstructingFrames();
@@ -11637,7 +11848,30 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     // an anonymous flex or grid item.  That's where it's already going - good!
   }
 
-  // Situation #4 is a case when table pseudo-frames don't work out right
+  // Situation #4 is a ruby-related frame that's getting new children.
+  // The situation for ruby is complex, especially when interacting with
+  // spaces. It containes these two special cases apart from tables:
+  // 1) There are effectively three types of white spaces in ruby frames
+  //    we handle differently: leading/tailing/inter-level space,
+  //    inter-base/inter-annotation space, and inter-segment space.
+  //    These three types of spaces can be converted to each other when
+  //    their sibling changes.
+  // 2) The first effective child of a ruby frame must always be a ruby
+  //    base container. It should be created or destroyed accordingly.
+  nsIAtom* frameType = aFrame->GetType();
+  if (IsRubyPseudo(aFrame) ||
+      frameType == nsGkAtoms::rubyFrame ||
+      frameType == nsGkAtoms::rubyBaseContainerFrame ||
+      frameType == nsGkAtoms::rubyTextContainerFrame) {
+    // We want to optimize it better, and avoid reframing as much as
+    // possible. But given the cases above, and the fact that a ruby
+    // usually won't be very large, it should be fine to reframe it.
+    RecreateFramesForContent(aFrame->GetContent(), true,
+                             REMOVE_FOR_RECONSTRUCTION, nullptr);
+    return true;
+  }
+
+  // Situation #5 is a case when table pseudo-frames don't work out right
   ParentType parentType = GetParentType(aFrame);
   // If all the kids want a parent of the type that aFrame is, then we're all
   // set to go.  Indeed, there won't be any table pseudo-frames created between
@@ -12041,6 +12275,20 @@ Iterator::SkipItemsWantingParentType(ParentType aParentType)
   return false;
 }
 
+inline bool
+nsCSSFrameConstructor::FrameConstructionItemList::
+Iterator::SkipItemsNotWantingParentType(ParentType aParentType)
+{
+  NS_PRECONDITION(!IsDone(), "Shouldn't be done yet");
+  while (item().DesiredParentType() != aParentType) {
+    Next();
+    if (IsDone()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool
 nsCSSFrameConstructor::FrameConstructionItem::
   NeedsAnonFlexOrGridItem(const nsFrameConstructorState& aState)
@@ -12084,6 +12332,20 @@ Iterator::SkipItemsThatDontNeedAnonFlexOrGridItem(
 {
   NS_PRECONDITION(!IsDone(), "Shouldn't be done yet");
   while (!(item().NeedsAnonFlexOrGridItem(aState))) {
+    Next();
+    if (IsDone()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+inline bool
+nsCSSFrameConstructor::FrameConstructionItemList::
+Iterator::SkipItemsNotWantingRubyParent()
+{
+  NS_PRECONDITION(!IsDone(), "Shouldn't be done yet");
+  while (!IsRubyParentType(item().DesiredParentType())) {
     Next();
     if (IsDone()) {
       return true;

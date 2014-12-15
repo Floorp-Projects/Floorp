@@ -2714,23 +2714,10 @@ JS_AlreadyHasOwnPropertyById(JSContext *cx, HandleObject obj, HandleId id, bool 
         return true;
     }
 
-    // Check for an existing native property on the object. Be careful not to
-    // call any lookup or resolve hooks.
-    if (JSID_IS_INT(id)) {
-        uint32_t index = JSID_TO_INT(id);
-
-        if (obj->as<NativeObject>().containsDenseElement(index)) {
-            *foundp = true;
-            return true;
-        }
-
-        if (IsAnyTypedArray(obj) && index < AnyTypedArrayLength(obj)) {
-            *foundp = true;
-            return true;
-        }
-    }
-
-    *foundp = obj->as<NativeObject>().contains(cx, id);
+    RootedNativeObject nativeObj(cx, &obj->as<NativeObject>());
+    RootedShape prop(cx);
+    NativeLookupOwnPropertyNoResolve(cx, nativeObj, id, &prop);
+    *foundp = !!prop;
     return true;
 }
 

@@ -22,6 +22,16 @@ LOCAL_INCLUDES += [
 ]
 include('/ipc/chromium/chromium-config.mozbuild')
 
+# Suppress some GCC/clang warnings being treated as errors:
+#  - about attributes on forward declarations for types that are already
+#    defined, which complains about an important MOZ_EXPORT for android::AString
+#  - about multi-character constants which are used in codec-related code
+if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
+  CXXFLAGS += [
+    '-Wno-error=attributes',
+    '-Wno-error=multichar'
+  ]
+
 FINAL_LIBRARY = 'xul'
 
 FAIL_ON_WARNINGS = True

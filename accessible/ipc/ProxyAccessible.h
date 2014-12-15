@@ -86,8 +86,9 @@ public:
   uint64_t ID() const { return mID; }
 
 protected:
-  ProxyAccessible() :
-    mParent(nullptr), mDoc(nullptr), mWrapper(0), mID(0)
+  explicit ProxyAccessible(DocAccessibleParent* aThisAsDoc) :
+    mParent(nullptr), mDoc(aThisAsDoc), mWrapper(0), mID(0),
+    mRole(roles::DOCUMENT)
   { MOZ_COUNT_CTOR(ProxyAccessible); }
 
 protected:

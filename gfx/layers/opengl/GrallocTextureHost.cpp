@@ -322,7 +322,7 @@ GrallocTextureHostOGL::DeallocateSharedData()
 
   DestroyEGLImage();
 
-  if (mGrallocHandle.buffer().type() != SurfaceDescriptor::Tnull_t) {
+  if (mGrallocHandle.buffer().type() != MaybeMagicGrallocBufferHandle::Tnull_t) {
     MaybeMagicGrallocBufferHandle handle = mGrallocHandle.buffer();
     base::ProcessId owner;
     if (handle.type() == MaybeMagicGrallocBufferHandle::TGrallocBufferRef) {

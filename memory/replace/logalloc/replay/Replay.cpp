@@ -202,7 +202,7 @@ private:
 /* Helper class to read from a file descriptor line by line. */
 class FdReader {
 public:
-  FdReader(int aFd)
+  explicit FdReader(int aFd)
     : mFd(aFd)
     , mData(&mRawBuf, 0)
     , mBuf(&mRawBuf, sizeof(mRawBuf))

@@ -1,0 +1,36 @@
+ruby {
+  display: ruby;
+}
+rbc {
+  display: ruby-base-container;
+}
+rtc {
+  display: ruby-text-container;
+  font-size: 50%;
+  line-height: 1em;
+}
+rb {
+  display: ruby-base;
+  white-space: nowrap;
+}
+rt {
+  display: ruby-text;
+  white-space: nowrap;
+  font-size: 50%;
+  line-height: 1em;
+}
+rtc > rt {
+  font-size: inherit;
+  line-height: 1em;
+}
+[pseudo] {
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+[pseudo] > rt {
+  font-size: 50%;
+}
+
+.large {
+  font-size: 200%;
+}

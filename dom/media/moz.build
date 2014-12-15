@@ -225,6 +225,11 @@ SOURCES += [
     'DecoderTraits.cpp',
 ]
 
+# Some codec-related code uses multi-character constants, which GCC and clang
+# warn about. Suppress turning this warning into an error.
+if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
+  SOURCES['DecoderTraits.cpp'].flags += ['-Wno-error=multichar']
+
 EXTRA_COMPONENTS += [
     'PeerConnection.js',
     'PeerConnection.manifest',
@@ -272,5 +277,11 @@ CFLAGS += CONFIG['GSTREAMER_CFLAGS']
 CXXFLAGS += CONFIG['GSTREAMER_CFLAGS']
 
 include('/ipc/chromium/chromium-config.mozbuild')
+
+# Suppress some GCC warnings being treated as errors:
+#  - about attributes on forward declarations for types that are already
+#    defined, which complains about an important MOZ_EXPORT for android::AString
+if CONFIG['GNU_CC']:
+  CXXFLAGS += ['-Wno-error=attributes']
 
 FINAL_LIBRARY = 'xul'

@@ -1085,21 +1085,6 @@ RTCPeerConnection.prototype = {
       dict.id != undefined ? dict.id : 0xFFFF
     );
     return channel;
-  },
-
-  connectDataConnection: function(localport, remoteport, numstreams) {
-    if (numstreams == undefined || numstreams <= 0) {
-      numstreams = 16;
-    }
-    this._queueOrRun({
-      func: this._connectDataConnection,
-      args: [localport, remoteport, numstreams],
-      wait: false
-    });
-  },
-
-  _connectDataConnection: function(localport, remoteport, numstreams) {
-    this._impl.connectDataConnection(localport, remoteport, numstreams);
   }
 };
 

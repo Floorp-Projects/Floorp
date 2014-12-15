@@ -525,14 +525,6 @@ public:
 
   nsresult InitializeDataChannel();
 
-  NS_IMETHODIMP_TO_ERRORRESULT(ConnectDataConnection, ErrorResult &rv,
-                               uint16_t aLocalport,
-                               uint16_t aRemoteport,
-                               uint16_t aNumstreams)
-  {
-    rv = ConnectDataConnection(aLocalport, aRemoteport, aNumstreams);
-  }
-
   NS_IMETHODIMP_TO_ERRORRESULT_RETREF(nsDOMDataChannel,
                                       CreateDataChannel, ErrorResult &rv,
                                       const nsAString& aLabel,

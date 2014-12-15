@@ -1438,6 +1438,17 @@ static const CheckCertHostnameParams CHECK_CERT_HOSTNAME_PARAMS[] =
   WITH_SAN(ipv4_mapped_ipv6_addr_str, RDN(CN("foo")),
            IPAddress(ipv4_addr_bytes),
            Result::ERROR_BAD_CERT_DOMAIN),
+
+  // Test that the presence of an otherName entry is handled appropriately.
+  // (The actual value of the otherName entry isn't important - that's not what
+  // we're testing here.)
+  WITH_SAN("example.com", ByteString(),
+           // The tag for otherName is CONTEXT_SPECIFIC | CONSTRUCTED | 0
+           TLV((2 << 6) | (1 << 5) | 0, ByteString()) + DNSName("example.com"),
+           Success),
+  WITH_SAN("example.com", ByteString(),
+           TLV((2 << 6) | (1 << 5) | 0, ByteString()),
+           Result::ERROR_BAD_CERT_DOMAIN),
 };
 
 ByteString

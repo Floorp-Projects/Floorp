@@ -163,6 +163,8 @@ void
 CompositableForwarder::IdentifyTextureHost(const TextureFactoryIdentifier& aIdentifier)
 {
   mTextureFactoryIdentifier = aIdentifier;
+
+  mSyncObject = SyncObject::CreateSyncObject(aIdentifier.mSyncHandle);
 }
 
 ShadowLayerForwarder::ShadowLayerForwarder()
