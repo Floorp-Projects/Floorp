@@ -5,11 +5,8 @@
 
 #include "WebGL2Context.h"
 #include "GLContext.h"
-#include "WebGLContext.h"
-#include "WebGLProgram.h"
 #include "WebGLVertexArray.h"
 #include "WebGLVertexAttribData.h"
-#include "mozilla/dom/WebGL2RenderingContextBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -33,39 +30,38 @@ GLfloat PuntToFloat(GLuint u)
 }
 
 bool
-WebGL2Context::ValidateAttribPointerType(bool integerMode, GLenum type,
-                                         GLsizei* out_alignment, const char* info)
+WebGL2Context::ValidateAttribPointerType(bool integerMode, GLenum type, GLsizei* alignment, const char* info)
 {
-    MOZ_ASSERT(out_alignment);
+    MOZ_ASSERT(alignment);
 
     switch (type) {
     case LOCAL_GL_BYTE:
     case LOCAL_GL_UNSIGNED_BYTE:
-        *out_alignment = 1;
+        *alignment = 1;
         return true;
 
     case LOCAL_GL_SHORT:
     case LOCAL_GL_UNSIGNED_SHORT:
-        *out_alignment = 2;
+        *alignment = 2;
         return true;
 
     case LOCAL_GL_INT:
     case LOCAL_GL_UNSIGNED_INT:
-        *out_alignment = 4;
+        *alignment = 4;
         return true;
     }
 
     if (!integerMode) {
         switch (type) {
         case LOCAL_GL_HALF_FLOAT:
-            *out_alignment = 2;
+            *alignment = 2;
             return true;
 
         case LOCAL_GL_FLOAT:
         case LOCAL_GL_FIXED:
         case LOCAL_GL_INT_2_10_10_10_REV:
         case LOCAL_GL_UNSIGNED_INT_2_10_10_10_REV:
-            *out_alignment = 4;
+            *alignment = 4;
             return true;
         }
     }
@@ -78,8 +74,7 @@ WebGL2Context::ValidateAttribPointerType(bool integerMode, GLenum type,
 // Uniforms and attributes
 
 void
-WebGL2Context::VertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsizei stride,
-                                    GLintptr offset)
+WebGL2Context::VertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsizei stride, GLintptr offset)
 {
     if (IsContextLost())
         return;
@@ -87,11 +82,8 @@ WebGL2Context::VertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsiz
     if (!ValidateAttribIndex(index, "vertexAttribIPointer"))
         return;
 
-    if (!ValidateAttribPointer(true, index, size, type, LOCAL_GL_FALSE, stride, offset,
-                               "vertexAttribIPointer"))
-    {
+    if (!ValidateAttribPointer(true, index, size, type, LOCAL_GL_FALSE, stride, offset, "vertexAttribIPointer"))
         return;
-    }
 
     MOZ_ASSERT(mBoundVertexArray);
     mBoundVertexArray->EnsureAttrib(index);
@@ -131,120 +123,103 @@ WebGL2Context::Uniform3ui(WebGLUniformLocation* location, GLuint v0, GLuint v1, 
 }
 
 void
-WebGL2Context::Uniform4ui(WebGLUniformLocation* location, GLuint v0, GLuint v1,
-                          GLuint v2, GLuint v3)
+WebGL2Context::Uniform4ui(WebGLUniformLocation* location, GLuint v0, GLuint v1, GLuint v2, GLuint v3)
 {
     MOZ_CRASH("Not Implemented.");
 }
 
 void
-WebGL2Context::Uniform1uiv(WebGLUniformLocation* location,
-                           const dom::Sequence<GLuint>& value)
+WebGL2Context::Uniform1uiv(WebGLUniformLocation* location, const dom::Sequence<GLuint>& value)
 {
     MOZ_CRASH("Not Implemented.");
 }
 
 void
-WebGL2Context::Uniform2uiv(WebGLUniformLocation* location,
-                           const dom::Sequence<GLuint>& value)
+WebGL2Context::Uniform2uiv(WebGLUniformLocation* location, const dom::Sequence<GLuint>& value)
 {
     MOZ_CRASH("Not Implemented.");
 }
 
 void
-WebGL2Context::Uniform3uiv(WebGLUniformLocation* location,
-                           const dom::Sequence<GLuint>& value)
+WebGL2Context::Uniform3uiv(WebGLUniformLocation* location, const dom::Sequence<GLuint>& value)
 {
     MOZ_CRASH("Not Implemented.");
 }
 
 void
-WebGL2Context::Uniform4uiv(WebGLUniformLocation* location,
-                           const dom::Sequence<GLuint>& value)
+WebGL2Context::Uniform4uiv(WebGLUniformLocation* location, const dom::Sequence<GLuint>& value)
 {
     MOZ_CRASH("Not Implemented.");
 }
 
 void
-WebGL2Context::UniformMatrix2x3fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Float32Array& value)
+WebGL2Context::UniformMatrix2x3fv(WebGLUniformLocation* location, bool transpose, const dom::Float32Array& value)
 {
     MOZ_CRASH("Not Implemented.");
 }
 
 void
-WebGL2Context::UniformMatrix2x3fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Sequence<GLfloat>& value)
+WebGL2Context::UniformMatrix2x3fv(WebGLUniformLocation* location, bool transpose, const dom::Sequence<GLfloat>& value)
 {
     MOZ_CRASH("Not Implemented.");
 }
 
 void
-WebGL2Context::UniformMatrix3x2fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Float32Array& value)
+WebGL2Context::UniformMatrix3x2fv(WebGLUniformLocation* location, bool transpose, const dom::Float32Array& value)
 {
     MOZ_CRASH("Not Implemented.");
 }
 
 void
-WebGL2Context::UniformMatrix3x2fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Sequence<GLfloat>& value)
+WebGL2Context::UniformMatrix3x2fv(WebGLUniformLocation* location, bool transpose, const dom::Sequence<GLfloat>& value)
 {
     MOZ_CRASH("Not Implemented.");
 }
 
 void
-WebGL2Context::UniformMatrix2x4fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Float32Array& value)
+WebGL2Context::UniformMatrix2x4fv(WebGLUniformLocation* location, bool transpose, const dom::Float32Array& value)
 {
     MOZ_CRASH("Not Implemented.");
 }
 
 void
-WebGL2Context::UniformMatrix2x4fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Sequence<GLfloat>& value)
+WebGL2Context::UniformMatrix2x4fv(WebGLUniformLocation* location, bool transpose, const dom::Sequence<GLfloat>& value)
 {
     MOZ_CRASH("Not Implemented.");
 }
 
 void
-WebGL2Context::UniformMatrix4x2fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Float32Array& value)
+WebGL2Context::UniformMatrix4x2fv(WebGLUniformLocation* location, bool transpose, const dom::Float32Array& value)
 {
     MOZ_CRASH("Not Implemented.");
 }
 
 void
-WebGL2Context::UniformMatrix4x2fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Sequence<GLfloat>& value)
+WebGL2Context::UniformMatrix4x2fv(WebGLUniformLocation* location, bool transpose, const dom::Sequence<GLfloat>& value)
 {
     MOZ_CRASH("Not Implemented.");
 }
 
 void
-WebGL2Context::UniformMatrix3x4fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Float32Array& value)
+WebGL2Context::UniformMatrix3x4fv(WebGLUniformLocation* location, bool transpose, const dom::Float32Array& value)
 {
     MOZ_CRASH("Not Implemented.");
 }
 
 void
-WebGL2Context::UniformMatrix3x4fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Sequence<GLfloat>& value)
+WebGL2Context::UniformMatrix3x4fv(WebGLUniformLocation* location, bool transpose, const dom::Sequence<GLfloat>& value)
 {
     MOZ_CRASH("Not Implemented.");
 }
 
 void
-WebGL2Context::UniformMatrix4x3fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Float32Array& value)
+WebGL2Context::UniformMatrix4x3fv(WebGLUniformLocation* location, bool transpose, const dom::Float32Array& value)
 {
     MOZ_CRASH("Not Implemented.");
 }
 
 void
-WebGL2Context::UniformMatrix4x3fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Sequence<GLfloat>& value)
+WebGL2Context::UniformMatrix4x3fv(WebGLUniformLocation* location, bool transpose, const dom::Sequence<GLfloat>& value)
 {
     MOZ_CRASH("Not Implemented.");
 }
@@ -334,51 +309,13 @@ WebGL2Context::VertexAttribI4uiv(GLuint index, const dom::Sequence<GLuint>& v)
 // TODO(djg): Implemented in WebGLContext
 /*
     void BindBufferBase(GLenum target, GLuint index, WebGLBuffer* buffer);
-    void BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer,
-                         GLintptr offset, GLsizeiptr size);
+    void BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer, GLintptr offset, GLsizeiptr size);
 */
 
-/* This doesn't belong here. It's part of state querying */
 void
-WebGL2Context::GetIndexedParameter(GLenum target, GLuint index,
-                                   dom::Nullable<dom::OwningWebGLBufferOrLongLong>& retval)
+WebGL2Context::GetIndexedParameter(JSContext*, GLenum target, GLuint index, JS::MutableHandleValue retval)
 {
-    retval.SetNull();
-    if (IsContextLost())
-        return;
-
-    GLint64 data = 0;
-
-    MakeContextCurrent();
-
-    switch (target) {
-    case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
-        if (index >= mGLMaxTransformFeedbackSeparateAttribs)
-            return ErrorInvalidValue("getIndexedParameter: index should be less than "
-                                     "MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS");
-
-        retval.SetValue().SetAsWebGLBuffer() =
-            mBoundTransformFeedbackBuffers[index].get();
-        return;
-
-    case LOCAL_GL_UNIFORM_BUFFER_BINDING:
-        if (index >= mGLMaxUniformBufferBindings)
-            return ErrorInvalidValue("getIndexedParameter: index should be than "
-                                     "MAX_UNIFORM_BUFFER_BINDINGS");
-
-        retval.SetValue().SetAsWebGLBuffer() = mBoundUniformBuffers[index].get();
-        return;
-
-    case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_START:
-    case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_SIZE:
-    case LOCAL_GL_UNIFORM_BUFFER_START:
-    case LOCAL_GL_UNIFORM_BUFFER_SIZE:
-        gl->fGetInteger64i_v(target, index, &data);
-        retval.SetValue().SetAsLongLong() = data;
-        return;
-    }
-
-    ErrorInvalidEnumInfo("getIndexedParameter: target", target);
+    MOZ_CRASH("Not Implemented.");
 }
 
 void
@@ -386,32 +323,7 @@ WebGL2Context::GetUniformIndices(WebGLProgram* program,
                                  const dom::Sequence<nsString>& uniformNames,
                                  dom::Nullable< nsTArray<GLuint> >& retval)
 {
-    retval.SetNull();
-    if (IsContextLost())
-        return;
-
-    if (!ValidateObject("getUniformIndices: program", program))
-        return;
-
-    if (!uniformNames.Length())
-        return;
-
-    GLuint progname = program->GLName();
-    size_t count = uniformNames.Length();
-    nsTArray<GLuint>& arr = retval.SetValue();
-
-    MakeContextCurrent();
-
-    for (size_t n = 0; n < count; n++) {
-        NS_LossyConvertUTF16toASCII name(uniformNames[n]);
-        //        const GLchar* glname = name.get();
-        const GLchar* glname = nullptr;
-        name.BeginReading(glname);
-
-        GLuint index = 0;
-        gl->fGetUniformIndices(progname, 1, &glname, &index);
-        arr.AppendElement(index);
-    }
+    MOZ_CRASH("Not Implemented.");
 }
 
 void
@@ -420,159 +332,32 @@ WebGL2Context::GetActiveUniforms(WebGLProgram* program,
                                  GLenum pname,
                                  dom::Nullable< nsTArray<GLint> >& retval)
 {
-    retval.SetNull();
-    if (IsContextLost())
-        return;
-
-    if (!ValidateObject("getActiveUniforms: program", program))
-        return;
-
-    size_t count = uniformIndices.Length();
-    if (!count)
-        return;
-
-    GLuint progname = program->GLName();
-    nsTArray<GLint>& arr = retval.SetValue();
-    arr.SetLength(count);
-
-    MakeContextCurrent();
-    gl->fGetActiveUniformsiv(progname, count, uniformIndices.Elements(), pname,
-                             arr.Elements());
+    MOZ_CRASH("Not Implemented.");
 }
 
 GLuint
-WebGL2Context::GetUniformBlockIndex(WebGLProgram* program,
-                                    const nsAString& uniformBlockName)
+WebGL2Context::GetUniformBlockIndex(WebGLProgram* program, const nsAString& uniformBlockName)
 {
-    if (IsContextLost())
-        return 0;
-
-    if (!ValidateObject("getUniformBlockIndex: program", program))
-        return 0;
-
-    if (!ValidateGLSLVariableName(uniformBlockName, "getUniformBlockIndex"))
-        return 0;
-
-    NS_LossyConvertUTF16toASCII cname(uniformBlockName);
-    nsCString mappedName;
-    program->MapIdentifier(cname, &mappedName);
-
-    GLuint progname = program->GLName();
-
-    MakeContextCurrent();
-    return gl->fGetUniformBlockIndex(progname, mappedName.get());
-}
-
-static bool
-GetUniformBlockActiveUniforms(gl::GLContext* gl, JSContext* cx,
-                              WebGL2Context* owner, GLuint progname,
-                              GLuint uniformBlockIndex,
-                              JS::MutableHandleObject out_array)
-{
-    GLint length = 0;
-    gl->fGetActiveUniformBlockiv(progname, uniformBlockIndex,
-                                 LOCAL_GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &length);
-    JS::RootedObject obj(cx, Uint32Array::Create(cx, owner, length, nullptr));
-    if (!obj)
-        return false;
-
-    JS::AutoCheckCannotGC nogc;
-    gl->fGetActiveUniformBlockiv(progname, uniformBlockIndex,
-                                 LOCAL_GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES,
-                                 (GLint*) JS_GetUint32ArrayData(obj, nogc));
-
-    out_array.set(obj);
-    return true;
+    MOZ_CRASH("Not Implemented.");
+    return 0;
 }
 
 void
-WebGL2Context::GetActiveUniformBlockParameter(JSContext* cx, WebGLProgram* program,
+WebGL2Context::GetActiveUniformBlockParameter(JSContext*, WebGLProgram* program,
                                               GLuint uniformBlockIndex, GLenum pname,
-                                              Nullable<dom::OwningUnsignedLongOrUint32ArrayOrBoolean>& retval,
-                                              ErrorResult& rv)
+                                              JS::MutableHandleValue retval)
 {
-    retval.SetNull();
-    if (IsContextLost())
-        return;
-
-    if (!ValidateObject("getActiveUniformBlockParameter: program", program))
-        return;
-
-    GLuint progname = program->GLName();
-    GLint param = 0;
-    JS::RootedObject array(cx);
-
-    MakeContextCurrent();
-
-    switch(pname) {
-    case LOCAL_GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER:
-    case LOCAL_GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER:
-        gl->fGetActiveUniformBlockiv(progname, uniformBlockIndex, pname, &param);
-        retval.SetValue().SetAsBoolean() = (param != 0);
-        return;
-
-    case LOCAL_GL_UNIFORM_BLOCK_BINDING:
-    case LOCAL_GL_UNIFORM_BLOCK_DATA_SIZE:
-    case LOCAL_GL_UNIFORM_BLOCK_NAME_LENGTH:
-    case LOCAL_GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS:
-        gl->fGetActiveUniformBlockiv(progname, uniformBlockIndex, pname, &param);
-        retval.SetValue().SetAsUnsignedLong() = param;
-        return;
-
-    case LOCAL_GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES:
-        if (!GetUniformBlockActiveUniforms(gl, cx, this, progname, uniformBlockIndex,
-                                           &array))
-        {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            return;
-        }
-
-        DebugOnly<bool> inited = retval.SetValue().SetAsUint32Array().Init(array);
-        MOZ_ASSERT(inited);
-
-        return;
-    }
-
-    ErrorInvalidEnumInfo("getActiveUniformBlockParameter: parameter", pname);
+    MOZ_CRASH("Not Implemented.");
 }
 
-#define WEBGL_MAX_UNIFORM_BLOCK_NAME_LENGTH 256
-
 void
-WebGL2Context::GetActiveUniformBlockName(WebGLProgram* program, GLuint uniformBlockIndex,
-                                         nsAString& retval)
+WebGL2Context::GetActiveUniformBlockName(WebGLProgram* program, GLuint uniformBlockIndex, dom::DOMString& retval)
 {
-    if (IsContextLost())
-        return;
-
-    if (!ValidateObject("getActiveUniformBlockName: program", program))
-        return;
-
-    GLuint progname = program->GLName();
-    GLchar nameBuffer[WEBGL_MAX_UNIFORM_BLOCK_NAME_LENGTH];
-    GLsizei length = 0;
-
-    MakeContextCurrent();
-    gl->fGetActiveUniformBlockName(progname, uniformBlockIndex,
-                                   WEBGL_MAX_UNIFORM_BLOCK_NAME_LENGTH, &length,
-                                   nameBuffer);
-    retval.Assign(NS_ConvertASCIItoUTF16(nsDependentCString(nameBuffer)));
+    MOZ_CRASH("Not Implemented.");
 }
 
-#undef WEBGL_MAX_UNIFORM_BLOCK_NAME_LENGTH
-
 void
-WebGL2Context::UniformBlockBinding(WebGLProgram* program, GLuint uniformBlockIndex,
-                                   GLuint uniformBlockBinding)
+WebGL2Context::UniformBlockBinding(WebGLProgram* program, GLuint uniformBlockIndex, GLuint uniformBlockBinding)
 {
-    if (IsContextLost())
-        return;
-
-    if (!ValidateObject("uniformBlockBinding: program", program))
-        return;
-
-    GLuint progname = program->GLName();
-
-    MakeContextCurrent();
-    gl->fUniformBlockBinding(progname, uniformBlockIndex, uniformBlockBinding);
+    MOZ_CRASH("Not Implemented.");
 }
