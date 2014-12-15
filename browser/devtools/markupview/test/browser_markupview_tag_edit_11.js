@@ -9,7 +9,7 @@
 
 const TEST_URL = "data:text/html;charset=utf-8,<div></div>";
 
-let test = asyncTest(function*() {
+add_task(function*() {
   let isEditTagNameCalled = false;
 
   let {toolbox, inspector} = yield addTab(TEST_URL).then(openInspector);

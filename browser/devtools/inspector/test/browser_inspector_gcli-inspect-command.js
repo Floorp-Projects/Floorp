@@ -131,4 +131,4 @@ add_task(function* () {
       },
     ]); // helpers.audit
   }); // helpers.addTabWithToolbar
-}); // asyncTest
+}); // add_task

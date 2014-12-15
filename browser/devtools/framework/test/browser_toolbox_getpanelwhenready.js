@@ -8,7 +8,7 @@ let toolbox = null;
 
 const URL = "data:text/html;charset=utf8,test for getPanelWhenReady";
 
-let test = asyncTest(function*() {
+add_task(function*() {
   let tab = yield addTab(URL);
   let target = TargetFactory.forTab(tab);
   toolbox = yield gDevTools.showToolbox(target);

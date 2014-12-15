@@ -8,7 +8,7 @@ waitForExplicitFinish();
 
 const NEW_RULE = "body { background-color: purple; }";
 
-let test = asyncTest(function*() {
+add_task(function*() {
   let {UI} = yield addTabAndOpenStyleEditors(2, null, TESTCASE_URI);
 
   is(UI.editors.length, 2, "correct number of editors");

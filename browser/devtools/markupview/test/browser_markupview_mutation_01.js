@@ -146,7 +146,7 @@ const TEST_DATA = [
   }
 ];
 
-let test = asyncTest(function*() {
+add_task(function*() {
   let {toolbox, inspector} = yield addTab(TEST_URL).then(openInspector);
 
   info("Expanding all markup-view nodes");

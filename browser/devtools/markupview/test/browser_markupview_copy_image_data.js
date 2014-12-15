@@ -13,7 +13,7 @@ const PAGE_CONTENT = [
   '<canvas class="canvas" width="600" height="600"></canvas>'
 ].join("\n");
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab("data:text/html,markup view copy image as data-uri");
   createDocument();
   let doc = content.document;

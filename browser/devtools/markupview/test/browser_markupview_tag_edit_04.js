@@ -31,7 +31,7 @@ function* checkDeleteAndSelection(inspector, key, nodeSelector, focusedNodeSelec
   ok(content.document.querySelector(nodeSelector), "The test node is back!");
 }
 
-let test = asyncTest(function*() {
+add_task(function*() {
   let {inspector} = yield addTab(TEST_URL).then(openInspector);
 
   info("Selecting the test node by clicking on it to make sure it receives focus");
