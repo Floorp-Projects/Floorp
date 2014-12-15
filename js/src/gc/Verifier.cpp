@@ -184,6 +184,8 @@ gc::GCRuntime::startVerifyPreBarriers()
 
     evictNursery();
 
+    gcstats::AutoPhase ap(stats, gcstats::PHASE_TRACE_HEAP);
+
     AutoPrepareForTracing prep(rt, WithAtoms);
 
     if (!IsIncrementalGCSafe(rt))
@@ -498,10 +500,7 @@ js::gc::GCRuntime::endVerifyPostBarriers()
     if (!edges.init())
         goto oom;
     trc->edges = &edges;
-    {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_MINOR_GC);
-        storeBuffer.markAll(trc);
-    }
+    storeBuffer.markAll(trc);
 
     /* Walk the heap to find any edges not the the |edges| set. */
     trc->setTraceCallback(PostVerifierVisitEdge);
