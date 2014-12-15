@@ -392,7 +392,7 @@ GetNewPluginLibrary(nsPluginTag *aPluginTag)
   }
 
   if (nsNPAPIPlugin::RunPluginOOP(aPluginTag)) {
-    return PluginModuleParent::LoadModule(aPluginTag->mFullPath.get());
+    return PluginModuleParent::LoadModule(aPluginTag->mFullPath.get(), aPluginTag);
   }
   return new PluginPRLibrary(aPluginTag->mFullPath.get(), aPluginTag->mLibrary);
 }

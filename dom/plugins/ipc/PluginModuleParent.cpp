@@ -31,6 +31,7 @@
 #include "PluginIdentifierParent.h"
 #include "prsystem.h"
 #include "GeckoProfiler.h"
+#include "nsPluginTags.h"
 
 #ifdef XP_WIN
 #include "PluginHangUIParent.h"
@@ -86,7 +87,7 @@ struct RunnableMethodTraits<mozilla::plugins::PluginModuleParent>
 
 // static
 PluginLibrary*
-PluginModuleParent::LoadModule(const char* aFilePath)
+PluginModuleParent::LoadModule(const char* aFilePath, nsPluginTag* aPluginTag)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
 
@@ -120,6 +121,13 @@ PluginModuleParent::LoadModule(const char* aFilePath)
     mozilla::MutexAutoLock lock(parent->mCrashReporterMutex);
     parent->mCrashReporter = parent->CrashReporter();
 #endif
+#endif
+
+#ifdef XP_WIN
+    if (aPluginTag->mIsFlashPlugin &&
+        Preferences::GetBool("dom.ipc.plugins.flash.disable-protected-mode", false)) {
+        parent->SendDisableFlashProtectedMode();
+    }
 #endif
 
     return parent.forget();
