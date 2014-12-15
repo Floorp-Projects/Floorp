@@ -213,6 +213,7 @@ describe("loop.StandaloneMozLoop", function() {
       mozLoop.rooms.leave("fakeToken", "fakeSessionToken", callback);
 
       expect(requests).to.have.length.of(1);
+      expect(requests[0].async).eql(false);
       expect(requests[0].url).eql(fakeBaseServerUrl + "/rooms/fakeToken");
       expect(requests[0].method).eql("POST");
       expect(requests[0].requestHeaders.Authorization)
