@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<head>
+  <style>
+    body {
+      border:  0px;
+      margin:  0px;
+      padding: 0px;
+    }
+  </style>
+</head>
+<body>
+  <img src="blue-square-in-square-par-none.svg">
+
+  <script>
+    var sizes = location.search.substring(1).split("&");
+
+    // Apply the size to the image.
+    var img = document.getElementsByTagName("img")[0];
+    img.width = sizes[0];
+    img.height = sizes[1];
+  </script>
+</body>
