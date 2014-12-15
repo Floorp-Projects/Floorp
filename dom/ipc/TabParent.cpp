@@ -1461,6 +1461,29 @@ TabParent::RecvNotifyIMEEditorRect(const nsIntRect& aRect)
 }
 
 bool
+TabParent::RecvNotifyIMEPositionChange(
+             const nsIntRect& aEditorRect,
+             const InfallibleTArray<nsIntRect>& aCompositionRects,
+             const nsIntRect& aCaretRect)
+{
+  mIMEEditorRect = aEditorRect;
+  mIMECompositionRects = aCompositionRects;
+  mIMECaretRect = aCaretRect;
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return true;
+  }
+
+  const nsIMEUpdatePreference updatePreference =
+    widget->GetIMEUpdatePreference();
+  if (updatePreference.WantPositionChanged()) {
+    widget->NotifyIME(IMENotification(NOTIFY_IME_OF_POSITION_CHANGE));
+  }
+  return true;
+}
+
+bool
 TabParent::RecvRequestFocus(const bool& aCanRaise)
 {
   nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
