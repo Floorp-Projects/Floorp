@@ -76,6 +76,16 @@ static PRLibrary *sGtkLib = nullptr;
 #endif
 
 #ifdef XP_WIN
+// Hooking CreateFileW for protected-mode magic
+static WindowsDllInterceptor sKernel32Intercept;
+typedef HANDLE (WINAPI *CreateFileWPtr)(LPCWSTR fname, DWORD access,
+                                        DWORD share,
+                                        LPSECURITY_ATTRIBUTES security,
+                                        DWORD creation, DWORD flags,
+                                        HANDLE ftemplate);
+static CreateFileWPtr sCreateFileWStub = nullptr;
+static WCHAR* sReplacementConfigFile;
+
 // Used with fix for flash fullscreen window loosing focus.
 static bool gDelayFlashFocusReplyUntilEval = false;
 // Used to fix GetWindowInfo problems with internal flash settings dialogs
@@ -131,6 +141,17 @@ PluginModuleChild::current()
 {
     NS_ASSERTION(gInstance, "Null instance!");
     return gInstance;
+}
+
+bool
+PluginModuleChild::RecvDisableFlashProtectedMode()
+{
+#ifdef XP_WIN
+    HookProtectedMode();
+#else
+    MOZ_ASSERT(false, "Should not be called");
+#endif
+    return true;
 }
 
 bool
@@ -1878,6 +1899,10 @@ PluginModuleChild::AnswerNP_Initialize(const uint32_t& aFlags, NPError* _retval)
 #else
 #  error Please implement me for your platform
 #endif
+
+#ifdef XP_WIN
+    CleanupProtectedModeHook();
+#endif
 }
 
 PPluginIdentifierChild*
@@ -1913,6 +1938,92 @@ PluginModuleChild::DeallocPPluginIdentifierChild(PPluginIdentifierChild* aActor)
 }
 
 #if defined(XP_WIN)
+
+HANDLE WINAPI
+CreateFileHookFn(LPCWSTR fname, DWORD access, DWORD share,
+                 LPSECURITY_ATTRIBUTES security, DWORD creation, DWORD flags,
+                 HANDLE ftemplate)
+{
+    static const WCHAR kConfigFile[] = L"mms.cfg";
+    static const size_t kConfigLength = ArrayLength(kConfigFile) - 1;
+
+    while (true) { // goto out, in sheep's clothing
+        size_t len = wcslen(fname);
+        if (len < kConfigLength) {
+            break;
+        }
+        if (wcscmp(fname + len - kConfigLength, kConfigFile) != 0) {
+            break;
+        }
+
+        // This is the config file we want to rewrite
+        WCHAR tempPath[MAX_PATH+1];
+        if (GetTempPathW(MAX_PATH, tempPath) == 0) {
+            break;
+        }
+        WCHAR tempFile[MAX_PATH+1];
+        if (GetTempFileNameW(tempPath, L"fx", 0, tempFile) == 0) {
+            break;
+        }
+        HANDLE replacement =
+            sCreateFileWStub(tempFile, GENERIC_READ | GENERIC_WRITE, share,
+                             security, TRUNCATE_EXISTING,
+                             FILE_ATTRIBUTE_TEMPORARY,
+                             NULL);
+        if (replacement == INVALID_HANDLE_VALUE) {
+            break;
+        }
+
+        HANDLE original = sCreateFileWStub(fname, access, share, security,
+                                           creation, flags, ftemplate);
+        if (original != INVALID_HANDLE_VALUE) {
+            // copy original to replacement
+            static const size_t kBufferSize = 1024;
+            char buffer[kBufferSize];
+            DWORD bytes;
+            while (ReadFile(original, buffer, kBufferSize, &bytes, NULL)) {
+                if (bytes == 0) {
+                    break;
+                }
+                DWORD wbytes;
+                WriteFile(replacement, buffer, bytes, &wbytes, NULL);
+                if (bytes < kBufferSize) {
+                    break;
+                }
+            }
+            CloseHandle(original);
+        }
+        static const char kSettingString[] = "\nProtectedMode=0\n";
+        DWORD wbytes;
+        WriteFile(replacement, static_cast<const void*>(kSettingString),
+                  sizeof(kSettingString) - 1, &wbytes, NULL);
+        SetFilePointer(replacement, 0, NULL, FILE_BEGIN);
+        sReplacementConfigFile = _wcsdup(tempFile);
+        return replacement;
+    }
+    return sCreateFileWStub(fname, access, share, security, creation, flags,
+                            ftemplate);
+}
+
+void
+PluginModuleChild::HookProtectedMode()
+{
+    sKernel32Intercept.Init("kernel32.dll");
+    sKernel32Intercept.AddHook("CreateFileW",
+                               reinterpret_cast<intptr_t>(CreateFileHookFn),
+                               (void**) &sCreateFileWStub);
+}
+
+void
+PluginModuleChild::CleanupProtectedModeHook()
+{
+    if (sReplacementConfigFile) {
+        DeleteFile(sReplacementConfigFile);
+        free(sReplacementConfigFile);
+        sReplacementConfigFile = nullptr;
+    }
+}
+
 BOOL WINAPI
 PMCGetWindowInfoHook(HWND hWnd, PWINDOWINFO pwi)
 {
