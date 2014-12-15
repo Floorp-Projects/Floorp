@@ -104,7 +104,7 @@
 ***********************************************************************/
 #define JS_BEGIN_MACRO  do {
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && _MSC_VER >= 1400
 # define JS_END_MACRO                                                         \
     } __pragma(warning(push)) __pragma(warning(disable:4127))                 \
     while (0) __pragma(warning(pop))

@@ -24,8 +24,14 @@
 #include <windef.h>
 #include <winbase.h>
 #include <mmsystem.h> /* for timeBegin/EndPeriod */
+/* VC++ 8.0 or later */
+#if _MSC_VER >= 1400
+#define NS_HAVE_INVALID_PARAMETER_HANDLER 1
+#endif
+#ifdef NS_HAVE_INVALID_PARAMETER_HANDLER
 #include <crtdbg.h>   /* for _CrtSetReportMode */
 #include <stdlib.h>   /* for _set_invalid_parameter_handler */
+#endif
 
 #include "prinit.h"
 
@@ -247,7 +253,7 @@ PRMJ_Now()
 }
 #endif
 
-#ifdef XP_WIN
+#ifdef NS_HAVE_INVALID_PARAMETER_HANDLER
 static void
 PRMJ_InvalidParameterHandler(const wchar_t *expression,
                              const wchar_t *function,
@@ -267,7 +273,7 @@ PRMJ_FormatTime(char *buf, int buflen, const char *fmt, PRMJTime *prtm)
 #if defined(XP_UNIX) || defined(XP_WIN)
     struct tm a;
     int fake_tm_year = 0;
-#ifdef XP_WIN
+#ifdef NS_HAVE_INVALID_PARAMETER_HANDLER
     _invalid_parameter_handler oldHandler;
     int oldReportMode;
 #endif
@@ -341,14 +347,14 @@ PRMJ_FormatTime(char *buf, int buflen, const char *fmt, PRMJTime *prtm)
      * changeover time.)
      */
 
-#ifdef XP_WIN
+#ifdef NS_HAVE_INVALID_PARAMETER_HANDLER
     oldHandler = _set_invalid_parameter_handler(PRMJ_InvalidParameterHandler);
     oldReportMode = _CrtSetReportMode(_CRT_ASSERT, 0);
 #endif
 
     result = strftime(buf, buflen, fmt, &a);
 
-#ifdef XP_WIN
+#ifdef NS_HAVE_INVALID_PARAMETER_HANDLER
     _set_invalid_parameter_handler(oldHandler);
     _CrtSetReportMode(_CRT_ASSERT, oldReportMode);
 #endif
