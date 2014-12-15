@@ -111,7 +111,7 @@ MP4Demuxer::Init()
       nsRefPtr<Index> index = new Index(mPrivate->mAudio->exportIndex(),
                                         mSource, mAudioConfig.mTrackId);
       mPrivate->mIndexes.AppendElement(index);
-      if (index->IsFragmented()) {
+      if (index->IsFragmented() && !mAudioConfig.crypto.valid) {
         mPrivate->mAudioIterator = new SampleIterator(index);
       }
     } else if (!mPrivate->mVideo.get() && !strncmp(mimeType, "video/", 6)) {
@@ -124,7 +124,7 @@ MP4Demuxer::Init()
       nsRefPtr<Index> index = new Index(mPrivate->mVideo->exportIndex(),
                                         mSource, mVideoConfig.mTrackId);
       mPrivate->mIndexes.AppendElement(index);
-      if (index->IsFragmented()) {
+      if (index->IsFragmented() && !mVideoConfig.crypto.valid) {
         mPrivate->mVideoIterator = new SampleIterator(index);
       }
     }
@@ -219,6 +219,7 @@ MP4Demuxer::DemuxVideoSample()
       sample->prefix_data = mVideoConfig.annex_b;
       if (sample->crypto.valid) {
         sample->crypto.mode = mVideoConfig.crypto.mode;
+        sample->crypto.iv_size = mVideoConfig.crypto.iv_size;
         sample->crypto.key.AppendElements(mVideoConfig.crypto.key);
       }
     }
