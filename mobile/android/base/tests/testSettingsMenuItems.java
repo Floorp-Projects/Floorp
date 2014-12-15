@@ -160,14 +160,8 @@ public class testSettingsMenuItems extends PixelTest {
             String[] textReflowUi = { StringHelper.TEXT_REFLOW_LABEL };
             settingsMap.get(PATH_DISPLAY).add(textReflowUi);
 
-            // New tablet UI can only be enabled on tablets in non-release builds.
+            // Tablet: we don't allow a page title option.
             if (HardwareUtils.isTablet()) {
-                String[] newTabletUi = { StringHelper.NEW_TABLET_UI };
-                settingsMap.get(PATH_DISPLAY).add(newTabletUi);
-            }
-
-            // New tablet UI: we don't allow a page title option.
-            if (NewTabletUI.isEnabled(getActivity())) {
                 settingsMap.get(PATH_DISPLAY).remove(TITLE_BAR_LABEL_ARR);
             }
 
