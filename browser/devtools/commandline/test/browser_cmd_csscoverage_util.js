@@ -5,7 +5,7 @@
 
 const csscoverage = require("devtools/server/actors/csscoverage");
 
-let test = asyncTest(function*() {
+add_task(function*() {
   testDeconstructRuleId();
 });
 

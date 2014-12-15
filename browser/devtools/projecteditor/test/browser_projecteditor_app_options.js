@@ -6,7 +6,7 @@
 
 // Test that options can be changed without resetting the whole
 // editor.
-let test = asyncTest(function*() {
+add_task(function*() {
 
   let TEMP_PATH = buildTempDirectoryStructure();
   let projecteditor = yield addProjectEditorTab();

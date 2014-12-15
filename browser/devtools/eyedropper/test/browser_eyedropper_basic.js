@@ -10,7 +10,7 @@ const DIV_COLOR = "#0000FF";
  *  - Opening eyedropper and pressing ESC closes the eyedropper
  *  - Opening eyedropper and clicking copies the center color
  */
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab(TESTCASE_URI);
 
   info("added tab");

@@ -6,7 +6,7 @@
 
 // Test that context menus append to the correct document.
 
-let test = asyncTest(function*() {
+add_task(function*() {
   let projecteditor = yield addProjectEditorTabForTempDirectory({
     menubar: false
   });
