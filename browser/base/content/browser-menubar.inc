@@ -451,7 +451,8 @@
 
             <menu id="tools-menu"
                   label="&toolsMenu.label;"
-                  accesskey="&toolsMenu.accesskey;">
+                  accesskey="&toolsMenu.accesskey;"
+                  onpopupshowing="mirrorShow(this)">
               <menupopup id="menu_ToolsPopup"
 #ifdef MOZ_SERVICES_SYNC
 # We have to use setTimeout() here to avoid a flickering menu bar when opening
@@ -548,6 +549,12 @@
                         key="key_viewInfo"
 #endif
                         command="View:PageInfo"/>
+              <menu id="menu_mirrorTabCmd"
+                    accesskey="&mirrorTabCmd.accesskey;"
+                    label="&mirrorTabCmd.label;">
+                <menupopup id="menu_mirrorTab-popup"
+                           onpopupshowing="populateMirrorTabMenu(this)"/>
+              </menu>
 #ifndef XP_UNIX
               <menuseparator id="prefSep"/>
               <menuitem id="menu_preferences"

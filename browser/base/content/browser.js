@@ -2968,6 +2968,30 @@ function BrowserFullScreen()
   window.fullScreen = !window.fullScreen;
 }
 
+function mirrorShow(popup) {
+  let services = CastingApps.getServicesForMirroring();
+  popup.ownerDocument.getElementById("menu_mirrorTabCmd").disabled = !services.length;
+}
+
+function mirrorMenuItemClicked(event) {
+  gBrowser.selectedBrowser.messageManager.sendAsyncMessage("SecondScreen:tab-mirror",
+                                                           {service: event.originalTarget._service});
+}
+
+function populateMirrorTabMenu(popup) {
+  let videoEl = this.target;
+  popup.innerHTML = null;
+  let doc = popup.ownerDocument;
+  let services = CastingApps.getServicesForMirroring();
+  services.forEach(service => {
+    let item = doc.createElement("menuitem");
+    item.setAttribute("label", service.friendlyName);
+    item._service = service;
+    item.addEventListener("command", mirrorMenuItemClicked);
+    popup.appendChild(item);
+  });
+};
+
 function _checkDefaultAndSwitchToMetro() {
 #ifdef HAVE_SHELL_SERVICE
 #ifdef XP_WIN
