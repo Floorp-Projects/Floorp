@@ -841,6 +841,12 @@ nsGonkCameraControl::SetThumbnailSizeImpl(const Size& aSize)
   return SetAndPush(CAMERA_PARAM_THUMBNAILSIZE, size);
 }
 
+android::sp<android::GonkCameraHardware>
+nsGonkCameraControl::GetCameraHw()
+{
+  return mCameraHw;
+}
+
 nsresult
 nsGonkCameraControl::SetThumbnailSize(const Size& aSize)
 {
