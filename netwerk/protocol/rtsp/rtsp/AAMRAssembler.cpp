@@ -143,7 +143,7 @@ ARTPAssembler::AssemblyStatus AAMRAssembler::addPacket(
     }
 
     unsigned payloadHeader = buffer->data()[0];
-    if (payloadHeader & 0x0f != 0u) {
+    if ((payloadHeader & 0x0f) != 0u) {
         queue->erase(queue->begin());
         ++mNextExpectedSeqNo;
 

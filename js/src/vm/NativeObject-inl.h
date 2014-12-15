@@ -574,6 +574,36 @@ LookupOwnPropertyInline(ExclusiveContext *cx,
     return true;
 }
 
+/*
+ * Simplified version of LookupOwnPropertyInline that doesn't call resolve
+ * hooks.
+ */
+static inline void
+NativeLookupOwnPropertyNoResolve(ExclusiveContext *cx, HandleNativeObject obj, HandleId id,
+                                 MutableHandleShape result)
+{
+    // Check for a native dense element.
+    if (JSID_IS_INT(id) && obj->containsDenseElement(JSID_TO_INT(id))) {
+        MarkDenseOrTypedArrayElementFound<CanGC>(result);
+        return;
+    }
+
+    // Check for a typed array element.
+    if (IsAnyTypedArray(obj)) {
+        uint64_t index;
+        if (IsTypedArrayIndex(id, &index)) {
+            if (index < AnyTypedArrayLength(obj))
+                MarkDenseOrTypedArrayElementFound<CanGC>(result);
+            else
+                result.set(nullptr);
+            return;
+        }
+    }
+
+    // Check for a native property.
+    result.set(obj->lookup(cx, id));
+}
+
 template <AllowGC allowGC>
 static MOZ_ALWAYS_INLINE bool
 LookupPropertyInline(ExclusiveContext *cx,

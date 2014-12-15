@@ -1032,30 +1032,27 @@ MetroWidget::SetWidgetListener(nsIWidgetListener* aWidgetListener)
   mWidgetListener = aWidgetListener;
 }
 
-CompositorParent* MetroWidget::NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight)
+void
+MetroWidget::ConfigureAPZCTreeManager()
 {
-  CompositorParent *compositor = nsBaseWidget::NewCompositorParent(aSurfaceWidth, aSurfaceHeight);
+  nsBaseWidget::ConfigureAPZCTreeManager();
 
-  if (ShouldUseAPZC()) {
-    mRootLayerTreeId = compositor->RootLayerTreeId();
-
-    mController = new APZController();
-
-    CompositorParent::SetControllerForLayerTree(mRootLayerTreeId, mController);
-
-    APZController::sAPZC = CompositorParent::GetAPZCTreeManager(compositor->RootLayerTreeId());
-    APZController::sAPZC->SetDPI(GetDPI());
-
-    nsresult rv;
-    nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
-    if (NS_SUCCEEDED(rv)) {
-      observerService->AddObserver(this, "apzc-scroll-offset-changed", false);
-      observerService->AddObserver(this, "apzc-zoom-to-rect", false);
-      observerService->AddObserver(this, "apzc-disable-zoom", false);
-    }
+  nsresult rv;
+  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
+  if (NS_SUCCEEDED(rv)) {
+    observerService->AddObserver(this, "apzc-scroll-offset-changed", false);
+    observerService->AddObserver(this, "apzc-zoom-to-rect", false);
+    observerService->AddObserver(this, "apzc-disable-zoom", false);
   }
+}
 
-  return compositor;
+already_AddRefed<GeckoContentController>
+MetroWidget::CreateRootContentController()
+{
+  MOZ_ASSERT(!mController);
+
+  mController = new APZController();
+  return mController;
 }
 
 MetroWidget::TouchBehaviorFlags

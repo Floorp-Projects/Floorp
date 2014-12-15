@@ -12,6 +12,7 @@
 #include "js/ProfilingStack.h"
 #include <stdlib.h>
 #include "mozilla/Atomics.h"
+#include "nsISupportsImpl.h"
 
 /* we duplicate this code here to avoid header dependencies
  * which make it more difficult to include in other places */
@@ -40,23 +41,7 @@ LinuxKernelMemoryBarrierFunc pLinuxKernelMemoryBarrier __attribute__((weak)) =
 # define STORE_SEQUENCER() pLinuxKernelMemoryBarrier()
 #elif defined(V8_HOST_ARCH_IA32) || defined(V8_HOST_ARCH_X64)
 # if defined(_MSC_VER)
-#if _MSC_VER > 1400
 #  include <intrin.h>
-#else // _MSC_VER > 1400
-    // MSVC2005 has a name collision bug caused when both <intrin.h> and <winnt.h> are included together.
-#ifdef _WINNT_
-#  define _interlockedbittestandreset _interlockedbittestandreset_NAME_CHANGED_TO_AVOID_MSVS2005_ERROR
-#  define _interlockedbittestandset _interlockedbittestandset_NAME_CHANGED_TO_AVOID_MSVS2005_ERROR
-#  include <intrin.h>
-#else
-#  include <intrin.h>
-#  define _interlockedbittestandreset _interlockedbittestandreset_NAME_CHANGED_TO_AVOID_MSVS2005_ERROR
-#  define _interlockedbittestandset _interlockedbittestandset_NAME_CHANGED_TO_AVOID_MSVS2005_ERROR
-#endif
-   // Even though MSVC2005 has the intrinsic _ReadWriteBarrier, it fails to link to it when it's
-   // not explicitly declared.
-#  pragma intrinsic(_ReadWriteBarrier)
-#endif // _MSC_VER > 1400
 #  define STORE_SEQUENCER() _ReadWriteBarrier();
 # elif defined(__INTEL_COMPILER)
 #  define STORE_SEQUENCER() __memory_barrier();
@@ -286,24 +271,10 @@ void ProfilerJSEventMarker(const char *event);
 struct PseudoStack
 {
 public:
-  PseudoStack()
-    : mStackPointer(0)
-    , mSleepId(0)
-    , mSleepIdObserved(0)
-    , mSleeping(false)
-    , mRuntime(nullptr)
-    , mStartJSSampling(false)
-    , mPrivacyMode(false)
-  { }
-
-  ~PseudoStack() {
-    if (mStackPointer != 0) {
-      // We're releasing the pseudostack while it's still in use.
-      // The label macros keep a non ref counted reference to the
-      // stack to avoid a TLS. If these are not all cleared we will
-      // get a use-after-free so better to crash now.
-      abort();
-    }
+  // Create a new PseudoStack and acquire a reference to it.
+  static PseudoStack *create()
+  {
+    return new PseudoStack();
   }
 
   // This is called on every profiler restart. Put things that should happen at that time here.
@@ -356,6 +327,13 @@ public:
       return;
     }
 
+    // In order to ensure this object is kept alive while it is
+    // active, we acquire a reference at the outermost push.  This is
+    // released by the corresponding pop.
+    if (mStackPointer == 0) {
+      ref();
+    }
+
     volatile StackEntry &entry = mStack[mStackPointer];
 
     // Make sure we increment the pointer after the name has
@@ -381,9 +359,20 @@ public:
     STORE_SEQUENCER();
     mStackPointer++;
   }
-  void pop()
+
+  // Pop the stack.  If the stack is empty and all other references to
+  // this PseudoStack have been dropped, then the PseudoStack is
+  // deleted and "false" is returned.  Otherwise "true" is returned.
+  bool popAndMaybeDelete()
   {
     mStackPointer--;
+    if (mStackPointer == 0) {
+      // Release our self-owned reference count.  See 'push'.
+      deref();
+      return false;
+    } else {
+      return true;
+    }
   }
   bool isEmpty()
   {
@@ -432,6 +421,34 @@ public:
   // Keep a list of active checkpoints
   StackEntry volatile mStack[1024];
  private:
+
+  // A PseudoStack can only be created via the "create" method.
+  PseudoStack()
+    : mStackPointer(0)
+    , mSleepId(0)
+    , mSleepIdObserved(0)
+    , mSleeping(false)
+    , mRefCnt(1)
+    , mRuntime(nullptr)
+    , mStartJSSampling(false)
+    , mPrivacyMode(false)
+  { }
+
+  // A PseudoStack can only be deleted via deref.
+  ~PseudoStack() {
+    if (mStackPointer != 0) {
+      // We're releasing the pseudostack while it's still in use.
+      // The label macros keep a non ref counted reference to the
+      // stack to avoid a TLS. If these are not all cleared we will
+      // get a use-after-free so better to crash now.
+      abort();
+    }
+  }
+
+  // No copying.
+  PseudoStack(const PseudoStack&) MOZ_DELETE;
+  void operator=(const PseudoStack&) MOZ_DELETE;
+
   // Keep a list of pending markers that must be moved
   // to the circular buffer
   PendingMarkers mPendingMarkers;
@@ -446,6 +463,11 @@ public:
   mozilla::Atomic<int> mSleepIdObserved;
   // Keeps tack of whether the thread is sleeping or not (1 when sleeping 0 when awake)
   mozilla::Atomic<int> mSleeping;
+  // This class is reference counted because it must be kept alive by
+  // the ThreadInfo, by the reference from tlsPseudoStack, and by the
+  // current thread when callbacks are in progress.
+  mozilla::Atomic<int> mRefCnt;
+
  public:
   // The runtime which is being sampled
   JSRuntime *mRuntime;
@@ -477,6 +499,17 @@ public:
     MOZ_ASSERT(mSleeping != sleeping);
     mSleepId++;
     mSleeping = sleeping;
+  }
+
+  void ref() {
+    ++mRefCnt;
+  }
+
+  void deref() {
+    int newValue = --mRefCnt;
+    if (newValue == 0) {
+      delete this;
+    }
   }
 };
 

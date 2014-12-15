@@ -580,7 +580,6 @@ readRDSDataThread(void* data)
     }
 
     int blockcount = len / sizeof(rdsblocks[0]);
-    int lastblock = -1;
     for (int i = 0; i < blockcount; i++) {
       if ((rdsblocks[i].block & V4L2_RDS_BLOCK_MSK) == V4L2_RDS_BLOCK_INVALID ||
            rdsblocks[i].block & V4L2_RDS_BLOCK_ERROR) {
@@ -608,14 +607,13 @@ readRDSDataThread(void* data)
 
       // Skip the group if we skipped a block.
       // This stops us from processing blocks sent out of order.
-      if (block_bitmap != ((1 << blocknum) - 1)) {
+      if (block_bitmap != ((1u << blocknum) - 1u)) {
         block_bitmap |= 1 << V4L2_RDS_BLOCK_INVALID;
         continue;
       }
 
       block_bitmap |= 1 << blocknum;
 
-      lastblock = blocknum;
       blocks[blocknum] = (rdsblocks[i].msb << 8) | rdsblocks[i].lsb;
 
       // Make sure we have all 4 blocks and that they're valid

@@ -355,7 +355,8 @@ class MochiRemote(Mochitest):
     def startServers(self, options, debuggerInfo):
         """ Create the servers on the host and start them up """
         restoreRemotePaths = self.switchToLocalPaths(options)
-        Mochitest.startServers(self, options, debuggerInfo)
+        # ignoreSSLTunnelExts is a workaround for bug 1109310
+        Mochitest.startServers(self, options, debuggerInfo, ignoreSSLTunnelExts = True)
         restoreRemotePaths()
 
     def buildProfile(self, options):

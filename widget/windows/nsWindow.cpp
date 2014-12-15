@@ -186,7 +186,7 @@
 #define SM_CONVERTIBLESLATEMODE 0x2003
 #endif
 
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/APZCTreeManager.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -7664,19 +7664,6 @@ void nsWindow::PickerClosed()
   if (!mPickerDisplayCount && mDestroyCalled) {
     Destroy();
   }
-}
-
-CompositorParent* nsWindow::NewCompositorParent(int aSurfaceWidth,
-                                                int aSurfaceHeight)
-{
-  CompositorParent *compositor = new CompositorParent(this, false, aSurfaceWidth, aSurfaceHeight);
-
-  if (gfxPrefs::AsyncPanZoomEnabled()) {
-    mAPZC = CompositorParent::GetAPZCTreeManager(compositor->RootLayerTreeId());
-    APZCTreeManager::SetDPI(GetDPI());
-  }
-
-  return compositor;
 }
 
 /**************************************************************
