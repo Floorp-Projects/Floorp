@@ -148,11 +148,18 @@ class Record(object):
         return cmp(abs(r1.slopSize), abs(r2.slopSize)) or \
                Record.cmpByIsSampled(r1, r2)
 
+    @staticmethod
+    def cmpByNumBlocks(r1, r2):
+        # Sort by block counts, then by usable size.
+        return cmp(abs(r1.numBlocks), abs(r2.numBlocks)) or \
+               Record.cmpByUsableSize(r1, r2)
+
 
 sortByChoices = {
-    'usable': Record.cmpByUsableSize,   # the default
-    'req':    Record.cmpByReqSize,
-    'slop':   Record.cmpBySlopSize,
+    'usable':     Record.cmpByUsableSize,   # the default
+    'req':        Record.cmpByReqSize,
+    'slop':       Record.cmpBySlopSize,
+    'num-blocks': Record.cmpByNumBlocks,
 }
 
 
@@ -185,7 +192,7 @@ variable is used to find breakpad symbols for stack fixing.
                    help='maximum number of frames to consider in each trace')
 
     p.add_argument('-s', '--sort-by', choices=sortByChoices.keys(),
-                   default=sortByChoices.keys()[0],
+                   default='usable',
                    help='sort the records by a particular metric')
 
     p.add_argument('-a', '--ignore-alloc-fns', action='store_true',
