@@ -688,9 +688,7 @@ MP4Reader::ResetDecode()
 {
   MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());
   Flush(kVideo);
-  mDemuxer->SeekVideo(0);
   Flush(kAudio);
-  mDemuxer->SeekAudio(0);
   return MediaDecoderReader::ResetDecode();
 }
 
