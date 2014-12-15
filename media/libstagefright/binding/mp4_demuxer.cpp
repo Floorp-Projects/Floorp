@@ -185,15 +185,7 @@ MP4Sample*
 MP4Demuxer::DemuxAudioSample()
 {
   if (mPrivate->mAudioIterator) {
-    nsAutoPtr<MP4Sample> sample(mPrivate->mAudioIterator->GetNext());
-    if (sample) {
-      if (sample->crypto.valid) {
-        sample->crypto.mode = mAudioConfig.crypto.mode;
-        sample->crypto.iv_size = mAudioConfig.crypto.iv_size;
-        sample->crypto.key.AppendElements(mAudioConfig.crypto.key);
-      }
-    }
-    return sample.forget();
+    return mPrivate->mAudioIterator->GetNext();
   }
 
   nsAutoPtr<MP4Sample> sample(new MP4Sample());
@@ -217,11 +209,6 @@ MP4Demuxer::DemuxVideoSample()
     nsAutoPtr<MP4Sample> sample(mPrivate->mVideoIterator->GetNext());
     if (sample) {
       sample->prefix_data = mVideoConfig.annex_b;
-      if (sample->crypto.valid) {
-        sample->crypto.mode = mVideoConfig.crypto.mode;
-        sample->crypto.iv_size = mVideoConfig.crypto.iv_size;
-        sample->crypto.key.AppendElements(mVideoConfig.crypto.key);
-      }
     }
     return sample.forget();
   }
