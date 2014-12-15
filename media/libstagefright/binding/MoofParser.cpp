@@ -12,17 +12,12 @@ using namespace stagefright;
 using namespace mozilla;
 
 void
-MoofParser::RebuildFragmentedIndex(
-  const nsTArray<mozilla::MediaByteRange>& aByteRanges)
+MoofParser::RebuildFragmentedIndex(const nsTArray<MediaByteRange>& aByteRanges)
 {
   BoxContext context(mSource, aByteRanges);
-  RebuildFragmentedIndex(context);
-}
 
-void
-MoofParser::RebuildFragmentedIndex(BoxContext& aContext)
-{
-  for (Box box(&aContext, mOffset); box.IsAvailable(); box = box.Next()) {
+  Box box(&context, mOffset);
+  for (; box.IsAvailable(); box = box.Next()) {
     if (box.IsType("moov")) {
       mInitRange = MediaByteRange(0, box.Range().mEnd);
       ParseMoov(box);
@@ -40,56 +35,6 @@ MoofParser::RebuildFragmentedIndex(BoxContext& aContext)
     mOffset = box.NextOffset();
   }
 }
-
-class BlockingStream : public Stream {
-public:
-  BlockingStream(Stream* aStream) : mStream(aStream)
-  {
-  }
-
-  bool ReadAt(int64_t offset, void* data, size_t size, size_t* bytes_read)
-    MOZ_OVERRIDE
-  {
-    return mStream->ReadAt(offset, data, size, bytes_read);
-  }
-
-  bool CachedReadAt(int64_t offset, void* data, size_t size, size_t* bytes_read)
-    MOZ_OVERRIDE
-  {
-    return mStream->ReadAt(offset, data, size, bytes_read);
-  }
-
-  virtual bool Length(int64_t* size) MOZ_OVERRIDE
-  {
-    return mStream->Length(size);
-  }
-
-private:
-  nsRefPtr<Stream> mStream;
-};
-
-bool
-MoofParser::BlockingReadNextMoof()
-{
-  nsTArray<MediaByteRange> byteRanges;
-  int64_t size;
-  bool hasSize = mSource->Length(&size);
-  byteRanges.AppendElement(
-    MediaByteRange(0,hasSize ? size : std::numeric_limits<int64_t>::max()));
-  mp4_demuxer::BlockingStream* stream = new BlockingStream(mSource);
-
-  BoxContext context(stream, byteRanges);
-  for (Box box(&context, mOffset); box.IsAvailable(); box = box.Next()) {
-    if (box.IsType("moof")) {
-      byteRanges.Clear();
-      byteRanges.AppendElement(MediaByteRange(mOffset, box.Range().mEnd));
-      RebuildFragmentedIndex(context);
-      return true;
-    }
-  }
-  return false;
-}
-
 
 Interval<Microseconds>
 MoofParser::GetCompositionRange(const nsTArray<MediaByteRange>& aByteRanges)
