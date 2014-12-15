@@ -342,13 +342,27 @@ nsDOMCameraManager::Register(nsDOMCameraControl* aDOMCameraControl)
   DOM_CAMERA_LOGI(">>> Register( aDOMCameraControl = %p ) mWindowId = 0x%" PRIx64 "\n", aDOMCameraControl, mWindowId);
   MOZ_ASSERT(NS_IsMainThread());
 
-  // Put the camera control into the hash table
   CameraControls* controls = sActiveWindows->Get(mWindowId);
   if (!controls) {
-    controls = new CameraControls;
+    controls = new CameraControls();
     sActiveWindows->Put(mWindowId, controls);
   }
-  controls->AppendElement(aDOMCameraControl);
+
+  // Remove any stale CameraControl objects to limit our memory usage
+  uint32_t i = controls->Length();
+  while (i > 0) {
+    --i;
+    nsRefPtr<nsDOMCameraControl> cameraControl =
+      do_QueryObject(controls->ElementAt(i));
+    if (!cameraControl) {
+      controls->RemoveElementAt(i);
+    }
+  }
+
+  // Put the camera control into the hash table
+  nsWeakPtr cameraControl =
+    do_GetWeakReference(static_cast<DOMMediaStream*>(aDOMCameraControl));
+  controls->AppendElement(cameraControl);
 }
 
 void
@@ -362,10 +376,14 @@ nsDOMCameraManager::Shutdown(uint64_t aWindowId)
     return;
   }
 
-  uint32_t length = controls->Length();
-  for (uint32_t i = 0; i < length; i++) {
-    nsRefPtr<nsDOMCameraControl> cameraControl = controls->ElementAt(i);
-    cameraControl->Shutdown();
+  uint32_t i = controls->Length();
+  while (i > 0) {
+    --i;
+    nsRefPtr<nsDOMCameraControl> cameraControl =
+      do_QueryObject(controls->ElementAt(i));
+    if (cameraControl) {
+      cameraControl->Shutdown();
+    }
   }
   controls->Clear();
 

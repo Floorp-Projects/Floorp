@@ -20,6 +20,7 @@
 #include "ICameraControl.h"
 #include "CameraCommon.h"
 #include "mozilla/Hal.h"
+#include "nsDataHashtable.h"
 
 using namespace mozilla;
 using namespace android;
@@ -119,6 +120,9 @@ GonkCameraParameters::Parameters::GetTextKey(uint32_t aKey)
       return KEY_JPEG_QUALITY;
     case CAMERA_PARAM_PREFERRED_PREVIEWSIZE_FOR_VIDEO:
       return KEY_PREFERRED_PREVIEW_SIZE_FOR_VIDEO;
+    case CAMERA_PARAM_METERINGMODE:
+      // Not every platform defines KEY_AUTO_EXPOSURE.
+      return "auto-exposure";
 
     case CAMERA_PARAM_SUPPORTED_PREVIEWSIZES:
       return KEY_SUPPORTED_PREVIEW_SIZES;
@@ -160,6 +164,9 @@ GonkCameraParameters::Parameters::GetTextKey(uint32_t aKey)
       // Not every platform defines KEY_SUPPORTED_ISO_MODES;
       // for those that don't, we use the raw string key.
       return "iso-values";
+    case CAMERA_PARAM_SUPPORTED_METERINGMODES:
+      // Not every platform defines KEY_SUPPORTED_AUTO_EXPOSURE.
+      return "auto-exposure-values";
     default:
       DOM_CAMERA_LOGE("Unhandled camera parameter value %u\n", aKey);
       return nullptr;
@@ -278,7 +285,7 @@ GonkCameraParameters::Initialize()
   nsString s;
   nsTArray<nsCString> isoModes;
   GetListAsArray(CAMERA_PARAM_SUPPORTED_ISOMODES, isoModes);
-  for (nsTArray<nsCString>::size_type i = 0; i < isoModes.Length(); ++i) {
+  for (nsTArray<nsCString>::index_type i = 0; i < isoModes.Length(); ++i) {
     rv = MapIsoFromGonk(isoModes[i].get(), s);
     if (NS_FAILED(rv)) {
       DOM_CAMERA_LOGW("Unrecognized ISO mode value '%s'\n", isoModes[i].get());
@@ -299,6 +306,22 @@ GonkCameraParameters::Initialize()
     }
   }
 
+  // Some platforms have strange duplicate metering mode values.
+  // We filter any out here.
+  nsDataHashtable<nsStringHashKey, bool> uniqueModes;
+  GetListAsArray(CAMERA_PARAM_SUPPORTED_METERINGMODES, mMeteringModes);
+  nsTArray<nsCString>::index_type i = mMeteringModes.Length();
+  while (i > 0) {
+    --i;
+    if (!uniqueModes.Get(mMeteringModes[i])) {
+      uniqueModes.Put(mMeteringModes[i], true);
+    } else {
+      DOM_CAMERA_LOGW("Dropped duplicate metering mode '%s' (index=%u)\n",
+        NS_ConvertUTF16toUTF8(mMeteringModes[i]).get(), i);
+      mMeteringModes.RemoveElementAt(i);
+    }
+  }
+  
   mInitialized = true;
   return NS_OK;
 }
@@ -934,6 +957,10 @@ GonkCameraParameters::GetTranslated(uint32_t aKey, nsTArray<nsString>& aValues)
 
     case CAMERA_PARAM_SUPPORTED_SCENEMODES:
       aValues = mSceneModes;
+      return NS_OK;
+
+    case CAMERA_PARAM_SUPPORTED_METERINGMODES:
+      aValues = mMeteringModes;
       return NS_OK;
 
     default:
