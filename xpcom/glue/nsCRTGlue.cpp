@@ -21,6 +21,7 @@
 
 #ifdef ANDROID
 #include <android/log.h>
+#include <unistd.h>
 #endif
 
 const char*
@@ -292,6 +293,29 @@ set_stderr_callback(StderrCallback aCallback)
 {
   sStderrCallback = aCallback;
 }
+
+#if defined(ANDROID) && !defined(RELEASE_BUILD)
+static FILE* sStderrCopy = nullptr;
+
+void
+stderr_to_file(const char* aFmt, va_list aArgs)
+{
+  vfprintf(sStderrCopy, aFmt, aArgs);
+}
+
+void
+copy_stderr_to_file(const char* aFile)
+{
+  if (sStderrCopy) {
+    return;
+  }
+  char* buf = (char*)malloc(strlen(aFile) + 16);
+  sprintf(buf, "%s.%u", aFile, (uint32_t)getpid());
+  sStderrCopy = fopen(buf, "w");
+  free(buf);
+  set_stderr_callback(stderr_to_file);
+}
+#endif
 
 #ifdef HAVE_VA_COPY
 #define VARARGS_ASSIGN(foo, bar)        VA_COPY(foo,bar)
