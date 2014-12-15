@@ -2107,6 +2107,15 @@ TabChild::RecvHandleSingleTap(const CSSPoint& aPoint, const ScrollableLayerGuid&
   }
 
   LayoutDevicePoint currentPoint = APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid) * mWidget->GetDefaultScale();;
+  if (!mActiveElementManager->ActiveElementUsesStyle()) {
+    // If the active element isn't visually affected by the :active style, we
+    // have no need to wait the extra sActiveDurationMs to make the activation
+    // visually obvious to the user.
+    FireSingleTapEvent(currentPoint);
+    return true;
+  }
+
+  TABC_LOG("Active element uses style, scheduling timer for click event\n");
   nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
   nsRefPtr<DelayedFireSingleTapEvent> callback =
     new DelayedFireSingleTapEvent(this, currentPoint, timer);
