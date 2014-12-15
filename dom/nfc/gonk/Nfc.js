@@ -482,7 +482,7 @@ Nfc.prototype = {
 
         let sysMsg = new NfcTechDiscoveredSysMsg(message.sessionToken,
                                                  message.isP2P,
-                                                 message.records);
+                                                 message.records || null);
         gSystemMessenger.broadcastMessage("nfc-manager-tech-discovered", sysMsg);
         break;
       case "TechLostNotification":
