@@ -147,7 +147,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
       return (
         <header>
           <h1>{mozL10n.get("clientShortname2")}</h1>
-          <a target="_blank" href={loop.config.roomsSupportUrl}>
+          <a target="_blank" href={loop.config.generalSupportUrl}>
             <i className="icon icon-help"></i>
           </a>
         </header>
