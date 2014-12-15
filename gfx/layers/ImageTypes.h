@@ -26,6 +26,16 @@ MOZ_BEGIN_ENUM_CLASS(ImageFormat)
   GRALLOC_PLANAR_YCBCR,
 
   /**
+   * The GONK_CAMERA_IMAGE format creates a GonkCameraImage, which contains two
+   * parts. One is PlanarYCbCr image for preview image. Another one is
+   * MediaBuffer from Gonk recording image. The preview image can be rendered in
+   * a layer for display. And the MediaBuffer will be used in component like OMX
+   * encoder. It is for GUM to support preview and recording image on Gonk
+   * camera.
+   */
+  GONK_CAMERA_IMAGE,
+
+  /**
    * The SHARED_RGB format creates a SharedRGBImage, which stores RGB data in
    * shared memory. Some Android hardware video decoders require this format.
    * Currently only used on Android.
