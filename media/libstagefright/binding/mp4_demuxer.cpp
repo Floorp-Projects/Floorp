@@ -111,7 +111,7 @@ MP4Demuxer::Init()
       nsRefPtr<Index> index = new Index(mPrivate->mAudio->exportIndex(),
                                         mSource, mAudioConfig.mTrackId);
       mPrivate->mIndexes.AppendElement(index);
-      if (index->IsFragmented() && !mAudioConfig.crypto.valid) {
+      if (index->IsFragmented()) {
         mPrivate->mAudioIterator = new SampleIterator(index);
       }
     } else if (!mPrivate->mVideo.get() && !strncmp(mimeType, "video/", 6)) {
@@ -124,7 +124,7 @@ MP4Demuxer::Init()
       nsRefPtr<Index> index = new Index(mPrivate->mVideo->exportIndex(),
                                         mSource, mVideoConfig.mTrackId);
       mPrivate->mIndexes.AppendElement(index);
-      if (index->IsFragmented() && !mVideoConfig.crypto.valid) {
+      if (index->IsFragmented()) {
         mPrivate->mVideoIterator = new SampleIterator(index);
       }
     }

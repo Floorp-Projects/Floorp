@@ -4,7 +4,6 @@
 
 #include "mp4_demuxer/MoofParser.h"
 #include "mp4_demuxer/Box.h"
-#include <limits>
 
 namespace mp4_demuxer
 {
@@ -73,8 +72,10 @@ bool
 MoofParser::BlockingReadNextMoof()
 {
   nsTArray<MediaByteRange> byteRanges;
+  int64_t size;
+  bool hasSize = mSource->Length(&size);
   byteRanges.AppendElement(
-    MediaByteRange(0, std::numeric_limits<int64_t>::max()));
+    MediaByteRange(0,hasSize ? size : std::numeric_limits<int64_t>::max()));
   mp4_demuxer::BlockingStream* stream = new BlockingStream(mSource);
 
   BoxContext context(stream, byteRanges);
@@ -333,7 +334,7 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd, Edts& aEdts)
     sample.mByteRange = MediaByteRange(offset, offset + sampleSize);
     offset += sampleSize;
 
-    sample.mDecodeTime = aMdhd.ToMicroseconds(decodeTime);
+    sample.mDecodeTime = decodeTime;
     sample.mCompositionRange = Interval<Microseconds>(
       aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset - aEdts.mMediaStart),
       aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset + sampleDuration - aEdts.mMediaStart));
