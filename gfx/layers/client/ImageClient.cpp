@@ -165,9 +165,8 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
     // Slow path, we should not be hitting it very often and if we do it means
     // we are using an Image class that is not backed by textureClient and we
     // should fix it.
-    if (image->GetFormat() == ImageFormat::PLANAR_YCBCR) {
-      PlanarYCbCrImage* ycbcr = static_cast<PlanarYCbCrImage*>(image);
-      const PlanarYCbCrData* data = ycbcr->GetData();
+    if (image->AsPlanarYCbCrImage()) {
+      const PlanarYCbCrData* data = image->AsPlanarYCbCrImage()->GetData();
       if (!data) {
         return false;
       }
