@@ -154,6 +154,8 @@ protected:
 
   int32_t RationalizeRotation(int32_t aRotation);
 
+  uint32_t                  mCameraId;
+
   android::sp<android::GonkCameraHardware> mCameraHw;
 
   Size                      mLastPictureSize;

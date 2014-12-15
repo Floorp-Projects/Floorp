@@ -7,14 +7,78 @@
 #include "DOMCameraCapabilities.h"
 #include "nsPIDOMWindow.h"
 #include "nsContentUtils.h"
+#include "nsProxyRelease.h"
 #include "mozilla/dom/CameraManagerBinding.h"
 #include "mozilla/dom/CameraCapabilitiesBinding.h"
 #include "Navigator.h"
 #include "CameraCommon.h"
 #include "ICameraControl.h"
+#include "CameraControlListener.h"
 
 namespace mozilla {
 namespace dom {
+
+/**
+ * CameraClosedListenerProxy and CameraClosedMessage
+ */
+template<class T>
+class CameraClosedMessage : public nsRunnable
+{
+public:
+  CameraClosedMessage(nsMainThreadPtrHandle<T> aListener)
+    : mListener(aListener)
+  {
+    DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  }
+
+  NS_IMETHODIMP
+  Run() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsRefPtr<T> listener = mListener.get();
+    if (listener) {
+      listener->OnHardwareClosed();
+    }
+    return NS_OK;
+  }
+
+protected:
+  virtual ~CameraClosedMessage()
+  {
+    DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  }
+
+  nsMainThreadPtrHandle<T> mListener;
+};
+
+template<class T>
+class CameraClosedListenerProxy : public CameraControlListener
+{
+public:
+  CameraClosedListenerProxy(T* aListener)
+    : mListener(new nsMainThreadPtrHolder<T>(aListener))
+  {
+    DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  }
+
+  virtual void
+  OnHardwareStateChange(HardwareState aState, nsresult aReason) MOZ_OVERRIDE
+  {
+    if (aState != kHardwareClosed) {
+      return;
+    }
+    NS_DispatchToMainThread(new CameraClosedMessage<T>(mListener));
+  }
+
+protected:
+  virtual ~CameraClosedListenerProxy()
+  {
+    DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  }
+
+  nsMainThreadPtrHandle<T> mListener;
+};
 
 /**
  * CameraRecorderVideoProfile
@@ -96,7 +160,10 @@ CameraRecorderAudioProfile::~CameraRecorderAudioProfile()
 /**
  * CameraRecorderProfile
  */
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CameraRecorderProfile, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CameraRecorderProfile,
+                                      mParent,
+                                      mVideo,
+                                      mAudio)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(CameraRecorderProfile)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(CameraRecorderProfile)
@@ -136,7 +203,9 @@ CameraRecorderProfile::~CameraRecorderProfile()
 /**
  * CameraRecorderProfiles
  */
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CameraRecorderProfiles, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CameraRecorderProfiles,
+                                      mParent,
+                                      mProfiles)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(CameraRecorderProfiles)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(CameraRecorderProfiles)
@@ -158,6 +227,10 @@ CameraRecorderProfiles::CameraRecorderProfiles(nsISupports* aParent,
   , mCameraControl(aCameraControl)
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  if (mCameraControl) {
+    mListener = new CameraClosedListenerProxy<CameraRecorderProfiles>(this);
+    mCameraControl->AddListener(mListener);
+  }
 }
 
 CameraRecorderProfiles::~CameraRecorderProfiles()
@@ -170,6 +243,10 @@ CameraRecorderProfiles::GetSupportedNames(unsigned aFlags, nsTArray<nsString>& a
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p, flags=0x%x\n",
     __func__, __LINE__, this, aFlags);
+  if (!mCameraControl) {
+    aNames.Clear();
+    return;
+  }
 
   nsresult rv = mCameraControl->GetRecorderProfiles(aNames);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -182,6 +259,9 @@ CameraRecorderProfiles::NamedGetter(const nsAString& aName, bool& aFound)
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p, name='%s'\n", __func__, __LINE__, this,
     NS_ConvertUTF16toUTF8(aName).get());
+  if (!mCameraControl) {
+    return nullptr;
+  }
 
   CameraRecorderProfile* profile = mProfiles.GetWeak(aName, &aFound);
   if (!aFound || !profile) {
@@ -202,6 +282,19 @@ CameraRecorderProfiles::NameIsEnumerable(const nsAString& aName)
     __func__, __LINE__, this, NS_ConvertUTF16toUTF8(aName).get());
 
   return true;
+}
+
+void
+CameraRecorderProfiles::OnHardwareClosed()
+{
+  DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mCameraControl) {
+    mCameraControl->RemoveListener(mListener);
+    mCameraControl = nullptr;
+  }
+  mListener = nullptr;
 }
 
 /**
@@ -226,23 +319,33 @@ CameraCapabilities::HasSupport(JSContext* aCx, JSObject* aGlobal)
 
 CameraCapabilities::CameraCapabilities(nsPIDOMWindow* aWindow,
                                        ICameraControl* aCameraControl)
-  : mMaxFocusAreas(0)
-  , mMaxMeteringAreas(0)
-  , mMaxDetectedFaces(0)
-  , mMinExposureCompensation(0.0)
-  , mMaxExposureCompensation(0.0)
-  , mExposureCompensationStep(0.0)
-  , mWindow(aWindow)
+  : mWindow(aWindow)
   , mCameraControl(aCameraControl)
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
-  MOZ_COUNT_CTOR(CameraCapabilities);
+  if (mCameraControl) {
+    mListener = new CameraClosedListenerProxy<CameraCapabilities>(this);
+    mCameraControl->AddListener(mListener);
+  }
 }
 
 CameraCapabilities::~CameraCapabilities()
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
   MOZ_COUNT_DTOR(CameraCapabilities);
+}
+
+void
+CameraCapabilities::OnHardwareClosed()
+{
+  DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mCameraControl) {
+    mCameraControl->RemoveListener(mListener);
+    mCameraControl = nullptr;
+  }
+  mListener = nullptr;
 }
 
 JSObject*
@@ -262,6 +365,10 @@ CameraCapabilities::WrapObject(JSContext* aCx)
 nsresult
 CameraCapabilities::TranslateToDictionary(uint32_t aKey, nsTArray<CameraSize>& aSizes)
 {
+  if (NS_WARN_IF(!mCameraControl)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   nsresult rv;
   nsTArray<ICameraControl::Size> sizes;
 
@@ -281,219 +388,224 @@ CameraCapabilities::TranslateToDictionary(uint32_t aKey, nsTArray<CameraSize>& a
   return NS_OK;
 }
 
+// The following attributes are tagged [Cached, Constant] in the WebIDL, so
+// the framework will handle caching them for us.
+
 void
-CameraCapabilities::GetPreviewSizes(nsTArray<dom::CameraSize>& retval)
+CameraCapabilities::GetPreviewSizes(nsTArray<dom::CameraSize>& aRetVal)
 {
-  if (mPreviewSizes.Length() == 0) {
-    nsresult rv = TranslateToDictionary(CAMERA_PARAM_SUPPORTED_PREVIEWSIZES,
-                                        mPreviewSizes);
-    LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_PREVIEWSIZES);
-  }
-  retval = mPreviewSizes;
+  nsresult rv = TranslateToDictionary(CAMERA_PARAM_SUPPORTED_PREVIEWSIZES, aRetVal);
+  LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_PREVIEWSIZES);
 }
 
 void
-CameraCapabilities::GetPictureSizes(nsTArray<dom::CameraSize>& retval)
+CameraCapabilities::GetPictureSizes(nsTArray<dom::CameraSize>& aRetVal)
 {
-  if (mPictureSizes.Length() == 0) {
-    nsresult rv = TranslateToDictionary(CAMERA_PARAM_SUPPORTED_PICTURESIZES,
-                                        mPictureSizes);
-    LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_PICTURESIZES);
-  }
-  retval = mPictureSizes;
+  nsresult rv = TranslateToDictionary(CAMERA_PARAM_SUPPORTED_PICTURESIZES, aRetVal);
+  LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_PICTURESIZES);
 }
 
 void
-CameraCapabilities::GetThumbnailSizes(nsTArray<dom::CameraSize>& retval)
+CameraCapabilities::GetThumbnailSizes(nsTArray<dom::CameraSize>& aRetVal)
 {
-  if (mThumbnailSizes.Length() == 0) {
-    nsresult rv = TranslateToDictionary(CAMERA_PARAM_SUPPORTED_JPEG_THUMBNAIL_SIZES,
-                                        mThumbnailSizes);
-    LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_JPEG_THUMBNAIL_SIZES);
-  }
-  retval = mThumbnailSizes;
+  nsresult rv = TranslateToDictionary(CAMERA_PARAM_SUPPORTED_JPEG_THUMBNAIL_SIZES, aRetVal);
+  LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_JPEG_THUMBNAIL_SIZES);
 }
 
 void
-CameraCapabilities::GetVideoSizes(nsTArray<dom::CameraSize>& retval)
+CameraCapabilities::GetVideoSizes(nsTArray<dom::CameraSize>& aRetVal)
 {
-  if (mVideoSizes.Length() == 0) {
-    nsresult rv = TranslateToDictionary(CAMERA_PARAM_SUPPORTED_VIDEOSIZES,
-                                        mVideoSizes);
-    LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_VIDEOSIZES);
-  }
-  retval = mVideoSizes;
+  nsresult rv = TranslateToDictionary(CAMERA_PARAM_SUPPORTED_VIDEOSIZES, aRetVal);
+  LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_VIDEOSIZES);
 }
 
 void
-CameraCapabilities::GetFileFormats(nsTArray<nsString>& retval)
+CameraCapabilities::GetFileFormats(nsTArray<nsString>& aRetVal)
 {
-  if (mFileFormats.Length() == 0) {
-    nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_PICTUREFORMATS,
-                                      mFileFormats);
-    LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_PICTUREFORMATS);
+  if (NS_WARN_IF(!mCameraControl)) {
+    return;
   }
-  retval = mFileFormats;
+
+  nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_PICTUREFORMATS, aRetVal);
+  LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_PICTUREFORMATS);
 }
 
 void
-CameraCapabilities::GetWhiteBalanceModes(nsTArray<nsString>& retval)
+CameraCapabilities::GetWhiteBalanceModes(nsTArray<nsString>& aRetVal)
 {
-  if (mWhiteBalanceModes.Length() == 0) {
-    nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_WHITEBALANCES,
-                                      mWhiteBalanceModes);
-    LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_WHITEBALANCES);
+  if (NS_WARN_IF(!mCameraControl)) {
+    return;
   }
-  retval = mWhiteBalanceModes;
+
+  nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_WHITEBALANCES, aRetVal);
+  LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_WHITEBALANCES);
 }
 
 void
-CameraCapabilities::GetSceneModes(nsTArray<nsString>& retval)
+CameraCapabilities::GetSceneModes(nsTArray<nsString>& aRetVal)
 {
-  if (mSceneModes.Length() == 0) {
-    nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_SCENEMODES,
-                                      mSceneModes);
-    LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_SCENEMODES);
+  if (NS_WARN_IF(!mCameraControl)) {
+    return;
   }
-  retval = mSceneModes;
+
+  nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_SCENEMODES, aRetVal);
+  LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_SCENEMODES);
 }
 
 void
-CameraCapabilities::GetEffects(nsTArray<nsString>& retval)
+CameraCapabilities::GetEffects(nsTArray<nsString>& aRetVal)
 {
-  if (mEffects.Length() == 0) {
-    nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_EFFECTS,
-                                      mEffects);
-    LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_EFFECTS);
+  if (NS_WARN_IF(!mCameraControl)) {
+    return;
   }
-  retval = mEffects;
+
+  nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_EFFECTS, aRetVal);
+  LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_EFFECTS);
 }
 
 void
-CameraCapabilities::GetFlashModes(nsTArray<nsString>& retval)
+CameraCapabilities::GetFlashModes(nsTArray<nsString>& aRetVal)
 {
-  if (mFlashModes.Length() == 0) {
-    nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_FLASHMODES,
-                                      mFlashModes);
-    LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_FLASHMODES);
+  if (NS_WARN_IF(!mCameraControl)) {
+    return;
   }
-  retval = mFlashModes;
+
+  nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_FLASHMODES, aRetVal);
+  LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_FLASHMODES);
 }
 
 void
-CameraCapabilities::GetFocusModes(nsTArray<nsString>& retval)
+CameraCapabilities::GetFocusModes(nsTArray<nsString>& aRetVal)
 {
-  if (mFocusModes.Length() == 0) {
-    nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_FOCUSMODES,
-                                      mFocusModes);
-    LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_FOCUSMODES);
+  if (NS_WARN_IF(!mCameraControl)) {
+    return;
   }
-  retval = mFocusModes;
+
+  nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_FOCUSMODES, aRetVal);
+  LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_FOCUSMODES);
 }
 
 void
-CameraCapabilities::GetZoomRatios(nsTArray<double>& retval)
+CameraCapabilities::GetZoomRatios(nsTArray<double>& aRetVal)
 {
-  if (mZoomRatios.Length() == 0) {
-    nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_ZOOMRATIOS,
-                                      mZoomRatios);
-    LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_ZOOMRATIOS);
+  if (NS_WARN_IF(!mCameraControl)) {
+    return;
   }
-  retval = mZoomRatios;
+
+  nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_ZOOMRATIOS, aRetVal);
+  LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_ZOOMRATIOS);
 }
 
 uint32_t
 CameraCapabilities::MaxFocusAreas()
 {
-  if (mMaxFocusAreas == 0) {
-    int32_t areas;
-    nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_MAXFOCUSAREAS,
-                                      areas);
-    LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_MAXFOCUSAREAS);
-    mMaxFocusAreas = areas < 0 ? 0 : areas;
+  if (NS_WARN_IF(!mCameraControl)) {
+    return 0;
   }
-  return mMaxFocusAreas;
+
+  int32_t areas = 0;
+  nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_MAXFOCUSAREAS, areas);
+  LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_MAXFOCUSAREAS);
+  return areas < 0 ? 0 : areas;
 }
 
 uint32_t
 CameraCapabilities::MaxMeteringAreas()
 {
-  if (mMaxMeteringAreas == 0) {
-    int32_t areas;
-    nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_MAXMETERINGAREAS,
-                                      areas);
-    LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_MAXMETERINGAREAS);
-    mMaxMeteringAreas = areas < 0 ? 0 : areas;
+  if (NS_WARN_IF(!mCameraControl)) {
+    return 0;
   }
-  return mMaxMeteringAreas;
+
+  int32_t areas = 0;
+  nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_MAXMETERINGAREAS, areas);
+  LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_MAXMETERINGAREAS);
+  return areas < 0 ? 0 : areas;
 }
 
 uint32_t
 CameraCapabilities::MaxDetectedFaces()
 {
-  if (mMaxDetectedFaces == 0) {
-    int32_t faces;
-    nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_MAXDETECTEDFACES,
-                                      faces);
-    LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_MAXDETECTEDFACES);
-    mMaxDetectedFaces = faces < 0 ? 0 : faces;
+  if (NS_WARN_IF(!mCameraControl)) {
+    return 0;
   }
-  return mMaxDetectedFaces;
+
+  int32_t faces = 0;
+  nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_MAXDETECTEDFACES, faces);
+  LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_MAXDETECTEDFACES);
+  return faces < 0 ? 0 : faces;
 }
 
 double
 CameraCapabilities::MinExposureCompensation()
 {
-  if (mMinExposureCompensation == 0.0) {
-    nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_MINEXPOSURECOMPENSATION,
-                                      mMinExposureCompensation);
-    LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_MINEXPOSURECOMPENSATION);
+  if (NS_WARN_IF(!mCameraControl)) {
+    return 0.0;
   }
-  return mMinExposureCompensation;
+
+  double minEv = 0.0;
+  nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_MINEXPOSURECOMPENSATION, minEv);
+  LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_MINEXPOSURECOMPENSATION);
+  return minEv;
 }
 
 double
 CameraCapabilities::MaxExposureCompensation()
 {
-  if (mMaxExposureCompensation == 0.0) {
-    nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_MAXEXPOSURECOMPENSATION,
-                                      mMaxExposureCompensation);
-    LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_MAXEXPOSURECOMPENSATION);
+  if (NS_WARN_IF(!mCameraControl)) {
+    return 0.0;
   }
-  return mMaxExposureCompensation;
+
+  double maxEv = 0.0;
+  nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_MAXEXPOSURECOMPENSATION, maxEv);
+  LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_MAXEXPOSURECOMPENSATION);
+  return maxEv;
 }
 
 double
 CameraCapabilities::ExposureCompensationStep()
 {
-  if (mExposureCompensationStep == 0.0) {
-    nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_EXPOSURECOMPENSATIONSTEP,
-                                      mExposureCompensationStep);
-    LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_EXPOSURECOMPENSATIONSTEP);
+  if (NS_WARN_IF(!mCameraControl)) {
+    return 0.0;
   }
-  return mExposureCompensationStep;
+
+  double evStep = 0.0;
+  nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_EXPOSURECOMPENSATIONSTEP, evStep);
+  LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_EXPOSURECOMPENSATIONSTEP);
+  return evStep;
 }
 
 CameraRecorderProfiles*
 CameraCapabilities::RecorderProfiles()
 {
-  nsRefPtr<CameraRecorderProfiles> profiles = mRecorderProfiles;
-  if (!mRecorderProfiles) {
-    profiles = new CameraRecorderProfiles(this, mCameraControl);
-    mRecorderProfiles = profiles;
+  if (NS_WARN_IF(!mCameraControl)) {
+    return nullptr;
   }
+
+  nsRefPtr<CameraRecorderProfiles> profiles =
+    new CameraRecorderProfiles(this, mCameraControl);
   return profiles;
 }
 
 void
-CameraCapabilities::GetIsoModes(nsTArray<nsString>& retval)
+CameraCapabilities::GetIsoModes(nsTArray<nsString>& aRetVal)
 {
-  if (mIsoModes.Length() == 0) {
-    nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_ISOMODES,
-                                      mIsoModes);
-    LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_ISOMODES);
+  if (NS_WARN_IF(!mCameraControl)) {
+    return;
   }
-  retval = mIsoModes;
+
+  nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_ISOMODES, aRetVal);
+  LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_ISOMODES);
+}
+
+void
+CameraCapabilities::GetMeteringModes(nsTArray<nsString>& aRetVal)
+{
+  if (NS_WARN_IF(!mCameraControl)) {
+    return;
+  }
+
+  nsresult rv = mCameraControl->Get(CAMERA_PARAM_SUPPORTED_METERINGMODES, aRetVal);
+  LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_METERINGMODES);
 }
 
 } // namespace dom

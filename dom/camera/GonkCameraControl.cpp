@@ -61,7 +61,7 @@ using namespace android;
 
 // Construct nsGonkCameraControl on the main thread.
 nsGonkCameraControl::nsGonkCameraControl(uint32_t aCameraId)
-  : CameraControlImpl(aCameraId)
+  : mCameraId(aCameraId)
   , mLastPictureSize({0, 0})
   , mLastThumbnailSize({0, 0})
   , mPreviewFps(30)
@@ -226,6 +226,30 @@ nsGonkCameraControl::Initialize()
     mLastRecorderSize = mCurrentConfiguration.mPreviewSize;
   }
 
+  nsAutoTArray<nsString, 8> modes;
+  mParams.Get(CAMERA_PARAM_SUPPORTED_METERINGMODES, modes);
+  if (!modes.IsEmpty()) {
+    nsString mode;
+    const char* kCenterWeighted = "center-weighted";
+
+    mParams.Get(CAMERA_PARAM_METERINGMODE, mode);
+    if (!mode.EqualsASCII(kCenterWeighted)) {
+      nsTArray<nsString>::index_type i = modes.Length();
+      while (i > 0) {
+        --i;
+        if (modes[i].EqualsASCII(kCenterWeighted)) {
+          mParams.Set(CAMERA_PARAM_METERINGMODE, kCenterWeighted);
+          PushParametersImpl();
+          break;
+        }
+      }
+    }
+
+    mParams.Get(CAMERA_PARAM_METERINGMODE, mode);
+    DOM_CAMERA_LOGI(" - metering mode:                 '%s'\n",
+      NS_ConvertUTF16toUTF8(mode).get());
+  }
+      
   return NS_OK;
 }
 
