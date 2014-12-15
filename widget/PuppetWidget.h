@@ -216,7 +216,6 @@ private:
   nsresult NotifyIMEOfUpdateComposition();
   nsresult NotifyIMEOfTextChange(const IMENotification& aIMENotification);
   nsresult NotifyIMEOfMouseButtonEvent(const IMENotification& aIMENotification);
-  nsresult NotifyIMEOfEditorRect();
 
   class PaintTask : public nsRunnable {
   public:
