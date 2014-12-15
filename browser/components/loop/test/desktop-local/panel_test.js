@@ -13,7 +13,9 @@ var sharedUtils = loop.shared.utils;
 describe("loop.panel", function() {
   "use strict";
 
-  var sandbox, notifications, fakeXHR, fakeWindow, requests = [];
+  var sandbox, notifications;
+  var fakeXHR, fakeWindow, fakeMozLoop;
+  var requests = [];
 
   beforeEach(function(done) {
     sandbox = sinon.sandbox.create();
@@ -22,7 +24,7 @@ describe("loop.panel", function() {
     // https://github.com/cjohansen/Sinon.JS/issues/393
     fakeXHR.xhr.onCreate = function (xhr) {
       requests.push(xhr);
-    }
+    };
 
     fakeWindow = {
       close: sandbox.stub(),
@@ -32,7 +34,7 @@ describe("loop.panel", function() {
 
     notifications = new loop.shared.models.NotificationCollection();
 
-    navigator.mozLoop = {
+    fakeMozLoop = navigator.mozLoop = {
       doNotDisturb: true,
       fxAEnabled: true,
       getStrings: function() {
@@ -164,7 +166,7 @@ describe("loop.panel", function() {
 
       dispatcher = new loop.Dispatcher();
       roomStore = new loop.store.RoomStore(dispatcher, {
-        mozLoop: navigator.mozLoop
+        mozLoop: fakeMozLoop
       });
     });
 
@@ -173,6 +175,7 @@ describe("loop.panel", function() {
         notifications: notifications,
         client: fakeClient,
         showTabButtons: true,
+        mozLoop: fakeMozLoop,
         dispatcher: dispatcher,
         roomStore: roomStore
       }));

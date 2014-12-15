@@ -48,12 +48,14 @@ var fakeRooms = [
  * @type {Object}
  */
 navigator.mozLoop = {
+  roomsEnabled: false,
   ensureRegistered: function() {},
   getAudioBlob: function(){},
   getLoopPref: function(pref) {
     switch(pref) {
       // Ensure UI for rooms is displayed in the showcase.
       case "rooms.enabled":
+        return this.roomsEnabled;
       // Ensure we skip FTE completely.
       case "gettingStarted.seen":
         return true;
