@@ -105,7 +105,6 @@ class TextureClient;
 class CompositableClient;
 class CompositableForwarder;
 class SurfaceDescriptor;
-class PlanarYCbCrImage;
 
 struct ImageBackendData
 {
@@ -167,11 +166,6 @@ public:
   bool IsSentToCompositor() { return mSent; }
 
   virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() = 0;
-
-  virtual PlanarYCbCrImage* AsPlanarYCbCrImage()
-  {
-    return nullptr;
-  }
 
 protected:
   Image(void* aImplData, ImageFormat aFormat) :
@@ -756,11 +750,6 @@ public:
   }
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
-
-  virtual PlanarYCbCrImage* AsPlanarYCbCrImage() MOZ_OVERRIDE
-  {
-    return this;
-  }
 
 protected:
   /**

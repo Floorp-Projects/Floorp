@@ -19,7 +19,6 @@
 #include "YCbCrUtils.h"                 // for YCbCr conversions
 #ifdef MOZ_WIDGET_GONK
 #include "GrallocImages.h"
-#include "GonkCameraImage.h"
 #endif
 #include "gfx2DGlue.h"
 #include "mozilla/gfx/2D.h"
@@ -59,10 +58,6 @@ ImageFactory::CreateImage(ImageFormat aFormat,
   }
   if (aFormat == ImageFormat::OVERLAY_IMAGE) {
     img = new OverlayImage();
-    return img.forget();
-  }
-  if (aFormat == ImageFormat::GONK_CAMERA_IMAGE) {
-    img = new GonkCameraImage(aRecycleBin);
     return img.forget();
   }
 #endif
