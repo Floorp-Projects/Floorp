@@ -22,6 +22,7 @@ function startTest() {
 
     mStream = stream;
     element.mozSrcObject = mStream;
+    element.play();
   })
   .catch(function(reason) {
     ok(false, "unexpected error = " + reason.message);
