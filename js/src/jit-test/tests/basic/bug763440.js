@@ -9,7 +9,8 @@ function reportCompare (expected, actual, description) {
 }
 reportCompare(true, eval++, "Function.prototype.isGenerator present");
 var p = Proxy.create({
-    has : function(id) {}
+    has : function(id) {},
+    set : function() {}
 });
 Object.prototype.__proto__ = p;
 new TestCase;

@@ -64,7 +64,7 @@ public:
     virtual int GetPrevFBAcquireFd() = 0;
 
     float xdpi;
-    uint32_t surfaceformat;
+    int32_t surfaceformat;
 };
 
 MOZ_EXPORT __attribute__ ((weak))

@@ -38,8 +38,8 @@ namespace dom {
 namespace gonk {
 class RecoverTask;
 class AudioChannelVolInitCallback;
-class AudioManager : public nsIAudioManager
-                   , public nsIObserver
+class AudioManager MOZ_FINAL : public nsIAudioManager
+                             , public nsIObserver
 {
 public:
   static already_AddRefed<AudioManager> GetInstance();

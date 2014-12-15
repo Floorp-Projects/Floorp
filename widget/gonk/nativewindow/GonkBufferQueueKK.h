@@ -321,7 +321,7 @@ public:
     virtual status_t setTransformHint(uint32_t hint);
 
     // dump our state in a String
-    virtual void dump(String8& result, const char* prefix) const;
+    virtual void dumpToString(String8& result, const char* prefix) const;
 
      mozilla::TemporaryRef<TextureClient> getTextureClientFromBuffer(ANativeWindowBuffer* buffer);
 

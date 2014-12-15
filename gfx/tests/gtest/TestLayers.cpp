@@ -193,6 +193,7 @@ already_AddRefed<Layer> CreateLayerTree(
       nsRefPtr<Layer> layer = CreateLayer(aLayerTreeDescription[i], manager.get());
       if (aVisibleRegions) {
         layer->SetVisibleRegion(aVisibleRegions[layerNumber]);
+        layer->SetEventRegions(EventRegions(aVisibleRegions[layerNumber]));
       }
       if (aTransforms) {
         layer->SetBaseTransform(aTransforms[layerNumber]);

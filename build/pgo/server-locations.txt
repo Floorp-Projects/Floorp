@@ -233,3 +233,8 @@ https://include-subdomains.pinning.example.com:443                privileged,cer
 # Hosts for sha1 console warning tests
 https://sha1ee.example.com:443                                    privileged,cert=sha1_end_entity
 https://sha256ee.example.com:443                                  privileged,cert=sha256_end_entity
+
+# Hosts for ssl3/rc4 console warning tests
+https://ssl3.example.com:443        privileged,ssl3
+https://rc4.example.com:443         privileged,rc4
+https://ssl3rc4.example.com:443     privileged,ssl3,rc4

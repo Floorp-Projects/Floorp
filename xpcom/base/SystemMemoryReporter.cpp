@@ -718,7 +718,7 @@ private:
     //   2) pid    - The ID of the allocating process, read as a uint32_t.
     //   3) size   - The size of the allocation in bytes, read as as a uint64_t.
     const char* const kFormatString = "%63s %" SCNu32 " %" SCNu64;
-    const size_t kNumFields = 3;
+    const int kNumFields = 3;
     const size_t kStringSize = 64;
     const char* const kIonIommuPath = "/sys/kernel/debug/ion/iommu";
 

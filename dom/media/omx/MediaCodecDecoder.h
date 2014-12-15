@@ -20,7 +20,7 @@ public:
 
   virtual MediaOmxCommonReader* CreateReader();
 
-  virtual MediaDecoderStateMachine* CreateStateMachine(MediaOmxCommonReader* aReader);
+  virtual MediaDecoderStateMachine* CreateStateMachineFromReader(MediaOmxCommonReader* aReader);
 };
 
 } // namespace mozilla

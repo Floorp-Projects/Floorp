@@ -34,6 +34,9 @@ function MarkerDetails(parent, splitter) {
 }
 
 MarkerDetails.prototype = {
+  /**
+   * Removes any node references from this view.
+   */
   destroy: function() {
     this.empty();
     this._parent = null;

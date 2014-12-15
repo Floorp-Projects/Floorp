@@ -11,9 +11,13 @@ function spawnTest () {
 
   yield startRecording(panel);
 
+  // Wait for the overview graph to be rendered while recording.
   yield once(OverviewView, EVENTS.OVERVIEW_RENDERED);
 
   yield stopRecording(panel);
+
+  // Wait for the overview graph to be rerendered *after* recording.
+  yield once(OverviewView, EVENTS.OVERVIEW_RENDERED);
 
   let graph = OverviewView.framerateGraph;
   let MAX = graph.width;
@@ -36,8 +40,6 @@ function spawnTest () {
 
   is(graph.hasSelection(), false, "selection no longer on graph.");
   is(params, undefined, "OVERVIEW_RANGE_CLEARED fired with no additional arguments.");
-
-  results = beginAt = endAt = graph = OverviewView = null;
 
   panel.panelWin.clearNamedTimeout("graph-scroll");
   yield teardown(panel);

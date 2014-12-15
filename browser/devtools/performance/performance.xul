@@ -38,10 +38,13 @@
                        label="&profilerUI.importButton;"/>
       </hbox>
     </toolbar>
-    <box id="overview-pane"
-         class="devtools-responsive-container">
-      <vbox id="time-framerate" flex="1"/>
-    </box>
+
+    <vbox id="overview-pane">
+      <hbox id="time-framerate"/>
+      <hbox id="markers-overview"/>
+      <hbox id="memory-overview"/>
+    </vbox>
+
     <toolbar id="details-toolbar" class="devtools-toolbar">
       <hbox class="devtools-toolbarbutton-group">
         <toolbarbutton id="select-waterfall-view"
@@ -54,13 +57,15 @@
                        data-view="calltree" />
       </hbox>
     </toolbar>
-    <deck id="details-pane"
-         class="devtools-responsive-container"
-         flex="1">
-      <hbox id="waterfall-view" flex="1">
+
+    <deck id="details-pane" flex="1">
+      <hbox id="waterfall-view">
         <vbox id="waterfall-graph" flex="1" />
         <splitter class="devtools-side-splitter"/>
-        <vbox id="waterfall-details" class="theme-sidebar" width="150" height="150"/>
+        <vbox id="waterfall-details"
+              class="theme-sidebar"
+              width="150"
+              height="150"/>
       </hbox>
 
       <vbox id="calltree-view" class="call-tree" flex="1">

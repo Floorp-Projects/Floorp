@@ -48,8 +48,14 @@ const LAYOUT_CHANGE_TIMER = 250;
  *      Fired when a property is expanded in the computed rules view
  * - computed-view-property-collapsed
  *      Fired when a property is collapsed in the computed rules view
+ * - computed-view-sourcelinks-updated
+ *      Fired when the stylesheet source links have been updated (when switching
+ *      to source-mapped files)
  * - rule-view-refreshed
  *      Fired when the rule view updates to a new node
+ * - rule-view-sourcelinks-updated
+ *      Fired when the stylesheet source links have been updated (when switching
+ *      to source-mapped files)
  */
 function InspectorPanel(iframeWindow, toolbox) {
   this._toolbox = toolbox;

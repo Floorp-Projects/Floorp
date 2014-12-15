@@ -127,7 +127,7 @@ BEGIN_TEST(testWeakMap_keyDelegates)
 
 static void DelegateObjectMoved(JSObject *obj, const JSObject *old)
 {
-    MOZ_ASSERT(keyDelegate == old);
+    MOZ_RELEASE_ASSERT(keyDelegate == old);
     keyDelegate = obj;
 }
 
@@ -135,7 +135,6 @@ static JSObject *GetKeyDelegate(JSObject *obj)
 {
     return keyDelegate;
 }
-
 
 JSObject *newKey()
 {

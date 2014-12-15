@@ -9,7 +9,9 @@
 #include "ARIAMap.h"
 #include "DocAccessible-inl.h"
 #include "DocAccessibleChild.h"
+#include "DocAccessibleParent.h"
 #include "nsAccessibilityService.h"
+#include "Platform.h"
 #include "RootAccessibleWrap.h"
 #include "xpcAccessibleDocument.h"
 
@@ -35,6 +37,8 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 using namespace mozilla::dom;
+
+StaticAutoPtr<nsTArray<DocAccessibleParent*>> DocManager::sRemoteDocuments;
 
 ////////////////////////////////////////////////////////////////////////////////
 // DocManager
@@ -533,3 +537,17 @@ DocManager::SearchIfDocIsRefreshing(const nsIDocument* aKey,
   return PL_DHASH_NEXT;
 }
 #endif
+
+void
+DocManager::RemoteDocAdded(DocAccessibleParent* aDoc)
+{
+  if (!sRemoteDocuments) {
+    sRemoteDocuments = new nsTArray<DocAccessibleParent*>;
+    ClearOnShutdown(&sRemoteDocuments);
+  }
+
+  MOZ_ASSERT(!sRemoteDocuments->Contains(aDoc),
+      "How did we already have the doc!");
+  sRemoteDocuments->AppendElement(aDoc);
+  ProxyCreated(aDoc);
+}
