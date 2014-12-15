@@ -108,6 +108,10 @@ class MessageLogger(object):
     VALID_ACTIONS = set(['suite_start', 'suite_end', 'test_start', 'test_end',
                          'test_status', 'log',
                          'buffering_on', 'buffering_off'])
+    TEST_PATH_PREFIXES = ['/tests/',
+                          'chrome://mochitests/content/browser/',
+                          'chrome://mochitests/content/chrome/']
+
 
     def __init__(self, logger, buffering=True):
         self.logger = logger
@@ -124,6 +128,16 @@ class MessageLogger(object):
         """True if the given object is a valid structured message (only does a superficial validation)"""
         return isinstance(obj, dict) and 'action' in obj and obj['action'] in MessageLogger.VALID_ACTIONS
 
+    def _fix_test_name(self, message):
+      """Normalize a logged test path to match the relative path from the sourcedir.
+      """
+      if 'test' in message:
+        test = message['test']
+        for prefix in MessageLogger.TEST_PATH_PREFIXES:
+          if test.startswith(prefix):
+            message['test'] = test[len(prefix):]
+            break
+
     def parse_line(self, line):
         """Takes a given line of input (structured or not) and returns a list of structured messages"""
         line = line.rstrip().decode("UTF-8", "replace")
@@ -138,6 +152,7 @@ class MessageLogger(object):
                     message = dict(action='log', level='info', message=fragment, unstructured=True)
             except ValueError:
                 message = dict(action='log', level='info', message=fragment, unstructured=True)
+            self._fix_test_name(message)
             messages.append(message)
 
         return messages
