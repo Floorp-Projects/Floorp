@@ -93,7 +93,7 @@ function addTab(aURI, aCallback) {
  * @param aURI The URI to load.
  */
 function navigateTo(aURI) {
-  let browser = gBrowser.selectedTab.linkedBrowser;
+  let browser = gBrowser.selectedBrowser;
   whenLoaded(browser);
   browser.loadURI(aURI);
 }
