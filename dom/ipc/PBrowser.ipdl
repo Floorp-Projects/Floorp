@@ -235,6 +235,16 @@ parent:
     prio(urgent) async NotifyIMEEditorRect(nsIntRect rect);
 
     /**
+     * Notifies chrome to position change
+     *
+     *  editorRect   Rect of current focused editor
+     *  compositionRects     Rects of current composition string
+     */
+    prio(urgent) async NotifyIMEPositionChange(nsIntRect editorRect,
+                                               nsIntRect[] compositionRects,
+                                               nsIntRect caretRect);
+
+    /**
      * Instructs chrome to end any pending composition
      *
      *  cancel       PR_TRUE if composition should be cancelled
