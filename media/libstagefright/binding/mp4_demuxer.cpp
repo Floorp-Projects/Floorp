@@ -26,13 +26,11 @@ struct StageFrightPrivate
 
   sp<MediaSource> mAudio;
   MediaSource::ReadOptions mAudioOptions;
-  nsAutoPtr<SampleIterator> mAudioIterator;
 
   sp<MediaSource> mVideo;
   MediaSource::ReadOptions mVideoOptions;
-  nsAutoPtr<SampleIterator> mVideoIterator;
 
-  nsTArray<nsRefPtr<Index>> mIndexes;
+  nsTArray<nsAutoPtr<Index>> mIndexes;
 };
 
 class DataSourceAdapter : public DataSource
@@ -102,31 +100,21 @@ MP4Demuxer::Init()
     }
 
     if (!mPrivate->mAudio.get() && !strncmp(mimeType, "audio/", 6)) {
-      sp<MediaSource> track = e->getTrack(i);
-      if (track->start() != OK) {
+      mPrivate->mAudio = e->getTrack(i);
+      if (mPrivate->mAudio->start() != OK) {
         return false;
       }
-      mPrivate->mAudio = track;
       mAudioConfig.Update(metaData, mimeType);
-      nsRefPtr<Index> index = new Index(mPrivate->mAudio->exportIndex(),
-                                        mSource, mAudioConfig.mTrackId);
-      mPrivate->mIndexes.AppendElement(index);
-      if (index->IsFragmented()) {
-        mPrivate->mAudioIterator = new SampleIterator(index);
-      }
+      mPrivate->mIndexes.AppendElement(new Index(
+        mPrivate->mAudio->exportIndex(), mSource, mAudioConfig.mTrackId));
     } else if (!mPrivate->mVideo.get() && !strncmp(mimeType, "video/", 6)) {
-      sp<MediaSource> track = e->getTrack(i);
-      if (track->start() != OK) {
+      mPrivate->mVideo = e->getTrack(i);
+      if (mPrivate->mVideo->start() != OK) {
         return false;
       }
-      mPrivate->mVideo = track;
       mVideoConfig.Update(metaData, mimeType);
-      nsRefPtr<Index> index = new Index(mPrivate->mVideo->exportIndex(),
-                                        mSource, mVideoConfig.mTrackId);
-      mPrivate->mIndexes.AppendElement(index);
-      if (index->IsFragmented()) {
-        mPrivate->mVideoIterator = new SampleIterator(index);
-      }
+      mPrivate->mIndexes.AppendElement(new Index(
+        mPrivate->mVideo->exportIndex(), mSource, mVideoConfig.mTrackId));
     }
   }
   sp<MetaData> metaData = e->getMetaData();
@@ -162,32 +150,20 @@ MP4Demuxer::CanSeek()
 void
 MP4Demuxer::SeekAudio(Microseconds aTime)
 {
-  if (mPrivate->mAudioIterator) {
-    mPrivate->mAudioIterator->Seek(aTime);
-  } else {
-    mPrivate->mAudioOptions.setSeekTo(
-      aTime, MediaSource::ReadOptions::SEEK_PREVIOUS_SYNC);
-  }
+  mPrivate->mAudioOptions.setSeekTo(
+    aTime, MediaSource::ReadOptions::SEEK_PREVIOUS_SYNC);
 }
 
 void
 MP4Demuxer::SeekVideo(Microseconds aTime)
 {
-  if (mPrivate->mVideoIterator) {
-    mPrivate->mVideoIterator->Seek(aTime);
-  } else {
-    mPrivate->mVideoOptions.setSeekTo(
-      aTime, MediaSource::ReadOptions::SEEK_PREVIOUS_SYNC);
-  }
+  mPrivate->mVideoOptions.setSeekTo(
+    aTime, MediaSource::ReadOptions::SEEK_PREVIOUS_SYNC);
 }
 
 MP4Sample*
 MP4Demuxer::DemuxAudioSample()
 {
-  if (mPrivate->mAudioIterator) {
-    return mPrivate->mAudioIterator->GetNext();
-  }
-
   nsAutoPtr<MP4Sample> sample(new MP4Sample());
   status_t status =
     mPrivate->mAudio->read(&sample->mMediaBuffer, &mPrivate->mAudioOptions);
@@ -205,14 +181,6 @@ MP4Demuxer::DemuxAudioSample()
 MP4Sample*
 MP4Demuxer::DemuxVideoSample()
 {
-  if (mPrivate->mVideoIterator) {
-    nsAutoPtr<MP4Sample> sample(mPrivate->mVideoIterator->GetNext());
-    if (sample) {
-      sample->prefix_data = mVideoConfig.annex_b;
-    }
-    return sample.forget();
-  }
-
   nsAutoPtr<MP4Sample> sample(new MP4Sample());
   status_t status =
     mPrivate->mVideo->read(&sample->mMediaBuffer, &mPrivate->mVideoOptions);
