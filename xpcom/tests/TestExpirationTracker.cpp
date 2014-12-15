@@ -18,7 +18,6 @@
 #include "nsIFile.h"
 #include "prinrval.h"
 #include "nsThreadUtils.h"
-#include "gtest/gtest.h"
 
 namespace TestExpirationTracker {
 
@@ -40,6 +39,11 @@ static uint32_t iterations = 2;
 static bool logging = 0;
 static uint32_t sleepPeriodMS = 50;
 static uint32_t slackMS = 20; // allow this much error
+
+static void SignalError() {
+  printf("ERROR!\n");
+  error = true;
+}
 
 template <uint32_t K> class Tracker : public nsExpirationTracker<Object,K> {
 public:
@@ -121,7 +125,11 @@ protected:
              now, aObj->mLastUsed, timeDiffMS, lowerBoundMS, upperBoundMS);
     }
     if (timeDiffMS < lowerBoundMS || timeDiffMS > upperBoundMS) {
-      EXPECT_TRUE(timeDiffMS < periodMS && aObj->mExpired);
+      if (timeDiffMS < periodMS && aObj->mExpired) {
+        // This is probably OK, it probably just expired twice
+      } else {
+        SignalError();
+      }
     }
     aObj->Touch();
     aObj->mExpired = true;
@@ -173,12 +181,24 @@ static const struct Test {
   { nullptr, nullptr }
 };
 
-TEST(ExpirationTracker, main)
-{
-  for (const TestExpirationTracker::Test* t = tests;
-       t->name != nullptr; ++t) {
-    EXPECT_TRUE(t->func());
-  }
 }
 
+using namespace TestExpirationTracker;
+
+int main(int argc, char **argv) {
+  int count = 1;
+  if (argc > 1)
+    count = atoi(argv[1]);
+
+  if (NS_FAILED(NS_InitXPCOM2(nullptr, nullptr, nullptr)))
+    return -1;
+
+  while (count--) {
+    for (const Test* t = tests; t->name != nullptr; ++t) {
+      printf("%25s : %s\n", t->name, t->func() ? "SUCCESS" : "FAILURE");
+    }
+  }
+  
+  NS_ShutdownXPCOM(nullptr);
+  return 0;
 }
