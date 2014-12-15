@@ -671,9 +671,9 @@ class MochitestUtilsMixin(object):
       paths.append(test)
 
     # Bug 883865 - add this functionality into manifestparser
-    with open(os.path.join(SCRIPT_DIR, 'tests.json'), 'w') as manifestFile:
+    with open(os.path.join(SCRIPT_DIR, options.testRunManifestFile), 'w') as manifestFile:
       manifestFile.write(json.dumps({'tests': paths}))
-    options.manifestFile = 'tests.json'
+    options.manifestFile = options.testRunManifestFile
 
     return self.buildTestURL(options)
 
@@ -1315,9 +1315,10 @@ class Mochitest(MochitestUtilsMixin):
 
   def cleanup(self, options):
     """ remove temporary files and profile """
-    if self.manifest is not None:
+    if hasattr(self, 'manifest') and self.manifest is not None:
       os.remove(self.manifest)
-    del self.profile
+    if hasattr(self, 'profile'):
+        del self.profile
     if options.pidFile != "":
       try:
         os.remove(options.pidFile)
@@ -1822,8 +1823,8 @@ class Mochitest(MochitestUtilsMixin):
       testURL = self.buildTestPath(options, testsToFilter)
 
       # read the number of tests here, if we are not going to run any, terminate early
-      if os.path.exists(os.path.join(SCRIPT_DIR, 'tests.json')):
-        with open(os.path.join(SCRIPT_DIR, 'tests.json')) as fHandle:
+      if os.path.exists(os.path.join(SCRIPT_DIR, options.testRunManifestFile)):
+        with open(os.path.join(SCRIPT_DIR, options.testRunManifestFile)) as fHandle:
           tests = json.load(fHandle)
         count = 0
         for test in tests['tests']:
@@ -2119,7 +2120,7 @@ class Mochitest(MochitestUtilsMixin):
 
   def getTestManifest(self, options):
     if isinstance(options.manifestFile, TestManifest):
-        manifest = options.manifestFile
+      manifest = options.manifestFile
     elif options.manifestFile and os.path.isfile(options.manifestFile):
       manifestFileAbs = os.path.abspath(options.manifestFile)
       assert manifestFileAbs.startswith(SCRIPT_DIR)
@@ -2134,6 +2135,8 @@ class Mochitest(MochitestUtilsMixin):
 
       if os.path.exists(masterPath):
         manifest = TestManifest([masterPath], strict=False)
+      else:
+        self._log.warning('TestManifest masterPath %s does not exist' % masterPath)
 
     return manifest
 
