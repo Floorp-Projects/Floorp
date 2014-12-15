@@ -3168,12 +3168,10 @@ GCHelperState::init()
     if (!(done = PR_NewCondVar(rt->gc.lock)))
         return false;
 
-    if (CanUseExtraThreads()) {
+    if (CanUseExtraThreads())
         backgroundAllocation = (GetCPUCount() >= 2);
-        HelperThreadState().ensureInitialized();
-    } else {
+    else
         backgroundAllocation = false;
-    }
 
     return true;
 }
