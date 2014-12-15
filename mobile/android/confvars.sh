@@ -88,9 +88,7 @@ MOZ_ANDROID_SHARE_OVERLAY=1
 MOZ_ANDROID_MLS_STUMBLER=1
 
 # Enable adding to the system downloads list in pre-release builds.
-if test ! "$RELEASE_BUILD"; then
-  MOZ_ANDROID_DOWNLOADS_INTEGRATION=1
-fi
+MOZ_ANDROID_DOWNLOADS_INTEGRATION=1
 
 # Enable generational GC on mobile.
 JSGC_GENERATIONAL=1
