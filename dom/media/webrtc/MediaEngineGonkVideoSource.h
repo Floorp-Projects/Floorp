@@ -15,11 +15,6 @@
 #include "mozilla/Hal.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/dom/File.h"
-#include "GonkCameraSource.h"
-
-namespace android {
-class MOZ_EXPORT MediaBuffer;
-}
 
 namespace mozilla {
 
@@ -95,12 +90,6 @@ public:
   // current screen orientation.
   nsresult UpdatePhotoOrientation();
 
-  // It adds aBuffer to current preview image and sends this image to MediaStreamDirectListener
-  // via AppendToTrack(). Due to MediaBuffer is limited resource, it will clear
-  // image's MediaBuffer by calling GonkCameraImage::ClearBuffer() before leaving
-  // this function.
-  nsresult OnNewMediaBufferFrame(android::MediaBuffer* aBuffer);
-
 protected:
   ~MediaEngineGonkVideoSource()
   {
@@ -111,16 +100,11 @@ protected:
   void Shutdown();
   void ChooseCapability(const VideoTrackConstraintsN& aConstraints,
                         const MediaEnginePrefs& aPrefs);
-  // Initialize the recording frame (MediaBuffer) callback and Gonk camera.
-  // MediaBuffer will transfers to MediaStreamGraph via AppendToTrack.
-  nsresult InitDirectMediaBuffer();
 
   mozilla::ReentrantMonitor mCallbackMonitor; // Monitor for camera callback handling
   // This is only modified on MainThread (AllocImpl and DeallocImpl)
   nsRefPtr<ICameraControl> mCameraControl;
   nsCOMPtr<nsIDOMFile> mLastCapture;
-
-  android::sp<android::GonkCameraSource> mCameraSource;
 
   // These are protected by mMonitor in parent class
   nsTArray<nsRefPtr<PhotoCallback>> mPhotoCallbacks;

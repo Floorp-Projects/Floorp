@@ -46,7 +46,6 @@
 #include "GonkCameraSource.h"
 #include "GonkCameraListener.h"
 #include "GonkCameraHwMgr.h"
-#include "ICameraControl.h"
 
 using namespace mozilla;
 
@@ -156,16 +155,6 @@ GonkCameraSource *GonkCameraSource::Create(
                     videoSize, frameRate,
                     storeMetaDataInVideoBuffers);
     return source;
-}
-
-GonkCameraSource *GonkCameraSource::Create(
-    ICameraControl* aControl,
-    Size videoSize,
-    int32_t frameRate)
-{
-    mozilla::nsGonkCameraControl* control =
-        static_cast<mozilla::nsGonkCameraControl*>(aControl);
-    return Create(control->GetCameraHw(), videoSize, frameRate, false);
 }
 
 GonkCameraSource::GonkCameraSource(
@@ -607,10 +596,6 @@ status_t GonkCameraSource::reset() {
     }
     releaseCamera();
 
-    if (mDirectBufferListener.get()) {
-      mDirectBufferListener = nullptr;
-    }
-
     if (mCollectStats) {
         CS_LOGI("Frames received/encoded/dropped: %d/%d/%d in %lld us",
                 mNumFramesReceived, mNumFramesEncoded, mNumFramesDropped,
@@ -665,14 +650,6 @@ void GonkCameraSource::signalBufferReturned(MediaBuffer *buffer) {
         }
     }
     CHECK(!"signalBufferReturned: bogus buffer");
-}
-
-status_t GonkCameraSource::AddDirectBufferListener(DirectBufferListener* aListener) {
-    if (mDirectBufferListener.get()) {
-        return UNKNOWN_ERROR;
-    }
-    mDirectBufferListener = aListener;
-    return OK;
 }
 
 status_t GonkCameraSource::read(
@@ -783,15 +760,6 @@ void GonkCameraSource::dataCallbackTimestamp(int64_t timestampUs,
 
     if(prevRateLimit != rateLimit) {
         mCameraHw->OnRateLimitPreview(rateLimit);
-    }
-
-    if (mDirectBufferListener.get()) {
-        MediaBuffer* mediaBuffer;
-        if (read(&mediaBuffer) == OK) {
-            mDirectBufferListener->BufferAvailable(mediaBuffer);
-            // read() calls MediaBuffer->add_ref() so it needs to be released here.
-            mediaBuffer->release();
-        }
     }
 }
 
