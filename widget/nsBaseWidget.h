@@ -34,6 +34,8 @@ namespace layers {
 class BasicLayerManager;
 class CompositorChild;
 class CompositorParent;
+class APZCTreeManager;
+class GeckoContentController;
 }
 }
 
@@ -82,6 +84,8 @@ protected:
   typedef mozilla::layers::BufferMode BufferMode;
   typedef mozilla::layers::CompositorChild CompositorChild;
   typedef mozilla::layers::CompositorParent CompositorParent;
+  typedef mozilla::layers::APZCTreeManager APZCTreeManager;
+  typedef mozilla::layers::GeckoContentController GeckoContentController;
   typedef mozilla::ScreenRotation ScreenRotation;
 
   virtual ~nsBaseWidget();
@@ -300,6 +304,9 @@ protected:
                                      nsDeviceContext *aContext,
                                      nsWidgetInitData *aInitData);
 
+  virtual void ConfigureAPZCTreeManager();
+  virtual already_AddRefed<GeckoContentController> CreateRootContentController();
+
   const nsIntRegion RegionFromArray(const nsTArray<nsIntRect>& aRects);
   void ArrayFromRegion(const nsIntRegion& aRegion, nsTArray<nsIntRect>& aRects);
 
@@ -407,6 +414,7 @@ protected:
   nsRefPtr<LayerManager> mBasicLayerManager;
   nsRefPtr<CompositorChild> mCompositorChild;
   nsRefPtr<CompositorParent> mCompositorParent;
+  nsRefPtr<APZCTreeManager> mAPZC;
   nsRefPtr<WidgetShutdownObserver> mShutdownObserver;
   nsCursor          mCursor;
   bool              mUpdateCursor;

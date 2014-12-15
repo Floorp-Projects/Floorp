@@ -475,7 +475,7 @@ nsChildView::~nsChildView()
 
   DestroyCompositor();
 
-  if (mAPZCTreeManager) {
+  if (mAPZC) {
     gNumberOfWidgetsNeedingEventThread--;
     if (gNumberOfWidgetsNeedingEventThread == 0) {
       [EventThreadRunner stop];
@@ -1884,25 +1884,22 @@ nsChildView::CreateCompositor()
   }
 }
 
-CompositorParent*
-nsChildView::NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight)
+already_AddRefed<GeckoContentController>
+nsChildView::CreateRootContentController()
 {
-  CompositorParent *compositor = nsBaseWidget::NewCompositorParent(aSurfaceWidth, aSurfaceHeight);
+  nsRefPtr<APZCTMController> controller = new APZCTMController();
+  return controller.forget();
+}
 
-  if (gfxPrefs::AsyncPanZoomEnabled()) {
-    uint64_t rootLayerTreeId = compositor->RootLayerTreeId();
-    nsRefPtr<APZCTMController> controller = new APZCTMController();
-    CompositorParent::SetControllerForLayerTree(rootLayerTreeId, controller);
-    mAPZCTreeManager = CompositorParent::GetAPZCTreeManager(rootLayerTreeId);
-    mAPZCTreeManager->SetDPI(GetDPI());
+void
+nsChildView::ConfigureAPZCTreeManager()
+{
+  nsBaseWidget::ConfigureAPZCTreeManager();
 
-    if (gNumberOfWidgetsNeedingEventThread == 0) {
-      [EventThreadRunner start];
-    }
-    gNumberOfWidgetsNeedingEventThread++;
+  if (gNumberOfWidgetsNeedingEventThread == 0) {
+    [EventThreadRunner start];
   }
-
-  return compositor;
+  gNumberOfWidgetsNeedingEventThread++;
 }
 
 nsIntRect
