@@ -21,6 +21,7 @@
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/unused.h"
 #include "nsAutoPtr.h"
 #include "nsCRT.h"
@@ -751,6 +752,8 @@ PluginModuleParent::ActorDestroy(ActorDestroyReason why)
 #ifdef MOZ_CRASHREPORTER
         ProcessFirstMinidump();
 #endif
+        Telemetry::Accumulate(Telemetry::SUBPROCESS_ABNORMAL_ABORT,
+                              NS_LITERAL_CSTRING("plugin"), 1);
 
         mShutdown = true;
         // Defer the PluginCrashed method so that we don't re-enter
