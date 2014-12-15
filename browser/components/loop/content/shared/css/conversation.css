@@ -728,11 +728,6 @@ html, .fx-embedded, #main,
   height: 100%;
 }
 
-.standalone .room-conversation-wrapper {
-  height: calc(100% - 50px - 60px);
-  background: #000;
-}
-
 .room-conversation-wrapper header {
   background: #000;
   height: 50px;
@@ -744,10 +739,10 @@ html, .fx-embedded, #main,
   font-size: 1.5em;
   color: #fff;
   line-height: 50px;
-  text-indent: 50px;
+  text-indent: 60px;
   background-image: url("../img/firefox-logo.png");
   background-size: 30px;
-  background-position: 10px;
+  background-position: 20px;
   background-repeat: no-repeat;
   display: inline-block;
 }
@@ -817,29 +812,36 @@ html, .fx-embedded, #main,
 
 .standalone .room-conversation-wrapper {
   position: relative;
+  height: 100%;
+  background: #000;
 }
 
-.standalone .room-inner-info-area {
+.standalone .room-conversation-wrapper .video-layout-wrapper {
+  height: calc(100% - 50px - 60px);
+}
+
+.standalone .room-conversation-wrapper .room-inner-info-area {
   position: absolute;
-  top: 50%;
+  top: calc(50% - 1em);
   left: 0;
   right: 25%;
   z-index: 1000;
   margin: 0 auto;
+  padding: 0 1rem;
   width: 50%;
   color: #fff;
   font-weight: bold;
   font-size: 1.1em;
 }
 
-.standalone .room-inner-info-area button {
+.standalone .room-conversation-wrapper .room-inner-info-area button {
   border-radius: 3px;
   font-size: 1.2em;
   padding: .2em 1.2em;
   cursor: pointer;
 }
 
-.standalone .room-inner-info-area a.btn {
+.standalone .room-conversation-wrapper .room-inner-info-area a.btn {
   padding: .5em 3em .3em 3em;
   border-radius: 3px;
   font-weight: normal;
@@ -883,4 +885,50 @@ html, .fx-embedded, #main,
 .standalone .room-conversation-wrapper .ended-conversation {
   position: relative;
   height: auto;
+}
+
+
+@media screen and (max-width:640px) {
+  /* Rooms specific responsive styling */
+  .standalone .room-conversation {
+    background: #000;
+  }
+  .room-conversation-wrapper header {
+    width: 100%;
+  }
+  .standalone .room-conversation-wrapper .room-inner-info-area {
+    right: 0;
+    margin: auto;
+    width: 100%;
+  }
+  .standalone .room-conversation-wrapper .video-layout-wrapper {
+    /* 50px: header's height; 25px: footer's height */
+    height: calc(100% - 50px - 25px);
+  }
+  .standalone .room-conversation .video_wrapper.remote_wrapper {
+    width: 100%;
+  }
+  .standalone .room-conversation .local-stream {
+    /* Assumes 4:3 aspect ratio */
+    width: 180px;
+    height: 135px;
+  }
+  .standalone .conversation-toolbar {
+    height: 38px;
+    padding: 8px;
+  }
+  .standalone .media.nested {
+    /* This forces the remote video stream to fit within wrapper's height */
+    min-height: 0px;
+  }
+  .standalone .room-conversation-wrapper footer {
+    font-size: 80%;
+    height: 25px;
+  }
+  .standalone .room-conversation-wrapper footer p {
+    padding-top: 4px;
+  }
+  .standalone .room-conversation-wrapper footer .footer-logo {
+    display: none;
+  }
 }
