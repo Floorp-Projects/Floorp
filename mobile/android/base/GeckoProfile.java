@@ -215,9 +215,7 @@ public final class GeckoProfile {
             // If we're creating this guest session over the keyguard, don't lock it.
             // This will force the guest session to exit if the user unlocks their phone
             // and starts Fennec.
-            if (!GuestSession.isSecureKeyguardLocked(context)) {
-                profile.lock();
-            }
+            profile.lock();
 
             /*
              * Now do the things that createProfileDirectory normally does --
