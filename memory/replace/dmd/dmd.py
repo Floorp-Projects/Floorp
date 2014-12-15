@@ -346,6 +346,8 @@ def getDigestFromFile(args, inputFile):
     heapUsableSize = 0
     heapBlocks = 0
 
+    recordKeyPartCache = {}
+
     for block in blockList:
         # For each block we compute a |recordKey|, and all blocks with the same
         # |recordKey| are aggregated into a single record. The |recordKey| is
@@ -364,9 +366,19 @@ def getDigestFromFile(args, inputFile):
         # and we trim the final frame of each they should be considered
         # equivalent because the untrimmed frame descriptions (D1 and D2)
         # match.
+        #
+        # Having said all that, during a single invocation of dmd.py on a
+        # single DMD file, for a single frameKey value the record key will
+        # always be the same, and we might encounter it 1000s of times. So we
+        # cache prior results for speed.
         def makeRecordKeyPart(traceKey):
-            return str(map(lambda frameKey: frameTable[frameKey],
-                           traceTable[traceKey]))
+            if traceKey in recordKeyPartCache:
+                return recordKeyPartCache[traceKey]
+
+            recordKeyPart = str(map(lambda frameKey: frameTable[frameKey],
+                                    traceTable[traceKey]))
+            recordKeyPartCache[traceKey] = recordKeyPart
+            return recordKeyPart
 
         allocatedAtTraceKey = block['alloc']
         if mode in ['live', 'cumulative']:
