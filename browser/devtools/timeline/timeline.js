@@ -7,6 +7,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/devtools/Loader.jsm");
+Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 
 devtools.lazyRequireGetter(this, "promise");
 devtools.lazyRequireGetter(this, "EventEmitter",
@@ -20,6 +21,8 @@ devtools.lazyRequireGetter(this, "Waterfall",
   "devtools/timeline/waterfall", true);
 devtools.lazyRequireGetter(this, "MarkerDetails",
   "devtools/timeline/marker-details", true);
+devtools.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
+  "devtools/timeline/global", true);
 
 devtools.lazyImporter(this, "CanvasGraphUtils",
   "resource:///modules/devtools/Graphs.jsm");
@@ -29,6 +32,14 @@ devtools.lazyImporter(this, "PluralForm",
 
 const OVERVIEW_UPDATE_INTERVAL = 200;
 const OVERVIEW_INITIAL_SELECTION_RATIO = 0.15;
+
+/**
+ * Preference for devtools.timeline.hiddenMarkers.
+ * Stores which markers should be hidden.
+ */
+const Prefs = new ViewHelpers.Prefs("devtools.timeline", {
+  hiddenMarkers: ["Json", "hiddenMarkers"]
+});
 
 // The panel's window global is an EventEmitter firing the following events:
 const EVENTS = {
@@ -250,8 +261,9 @@ let TimelineView = {
    * Initialization function, called when the tool is started.
    */
   initialize: Task.async(function*() {
-    this.markersOverview = new MarkersOverview($("#markers-overview"));
-    this.waterfall = new Waterfall($("#timeline-waterfall"), $("#timeline-pane"));
+    let blueprint = this._getFilteredBluePrint();
+    this.markersOverview = new MarkersOverview($("#markers-overview"), blueprint);
+    this.waterfall = new Waterfall($("#timeline-waterfall"), $("#timeline-pane"), blueprint);
     this.markerDetails = new MarkerDetails($("#timeline-waterfall-details"), $("#timeline-waterfall-container > splitter"));
 
     this._onSelecting = this._onSelecting.bind(this);
@@ -265,7 +277,10 @@ let TimelineView = {
     this.waterfall.on("unselected", this._onMarkerSelected);
 
     yield this.markersOverview.ready();
+
     yield this.waterfall.recalculateBounds();
+
+    this._buildFilterPopup();
   }),
 
   /**
@@ -434,7 +449,101 @@ let TimelineView = {
   _onRefresh: function() {
     this.waterfall.recalculateBounds();
     this.updateWaterfall();
-  }
+  },
+
+  /**
+   * Rebuild a blueprint without hidden markers.
+   */
+  _getFilteredBluePrint: function() {
+    let hiddenMarkers = Prefs.hiddenMarkers;
+    let filteredBlueprint = Cu.cloneInto(TIMELINE_BLUEPRINT, {});
+    let maybeRemovedGroups = new Set();
+    let removedGroups = new Set();
+
+    // 1. Remove hidden markers from the blueprint.
+
+    for (let hiddenMarkerName of hiddenMarkers) {
+      maybeRemovedGroups.add(filteredBlueprint[hiddenMarkerName].group);
+      delete filteredBlueprint[hiddenMarkerName];
+    }
+
+    // 2. Get a list of all the groups that will be removed.
+
+    for (let removedGroup of maybeRemovedGroups) {
+      let markerNames = Object.keys(filteredBlueprint);
+      let allGroupsRemoved = markerNames.every(e => filteredBlueprint[e].group != removedGroup);
+      if (allGroupsRemoved) {
+        removedGroups.add(removedGroup);
+      }
+    }
+
+    // 3. Offset groups.
+
+    for (let removedGroup of removedGroups) {
+      for (let [, markerDetails] of Iterator(filteredBlueprint)) {
+        if (markerDetails.group > removedGroup) {
+          markerDetails.group--;
+        }
+      }
+    }
+
+    return filteredBlueprint;
+
+  },
+
+  /**
+   * When the list of hidden markers changes, update waterfall
+   * and overview.
+   */
+  _onHiddenMarkersChanged: function(e) {
+    let menuItems = $$("#timelineFilterPopup menuitem[marker-type]:not([checked])");
+    let hiddenMarkers = Array.map(menuItems, e => e.getAttribute("marker-type"));
+
+    Prefs.hiddenMarkers = hiddenMarkers;
+    let blueprint = this._getFilteredBluePrint();
+
+    this.waterfall.setBlueprint(blueprint);
+    this.updateWaterfall();
+
+    this.markersOverview.setBlueprint(blueprint);
+    this.markersOverview.refresh({ force: true });
+  },
+
+  /**
+   * Creates the filter popup.
+   */
+  _buildFilterPopup: function() {
+    let popup = $("#timelineFilterPopup");
+    let button = $("#filter-button");
+
+    popup.addEventListener("popupshowing", () => button.setAttribute("open", "true"));
+    popup.addEventListener("popuphiding",  () => button.removeAttribute("open"));
+
+    this._onHiddenMarkersChanged = this._onHiddenMarkersChanged.bind(this);
+
+    for (let [markerName, markerDetails] of Iterator(TIMELINE_BLUEPRINT)) {
+      let menuitem = document.createElement("menuitem");
+      menuitem.setAttribute("closemenu", "none");
+      menuitem.setAttribute("type", "checkbox");
+      menuitem.setAttribute("marker-type", markerName);
+      menuitem.setAttribute("label", markerDetails.label);
+      menuitem.setAttribute("flex", "1");
+      menuitem.setAttribute("align", "center");
+
+      menuitem.addEventListener("command", this._onHiddenMarkersChanged);
+
+      if (Prefs.hiddenMarkers.indexOf(markerName) == -1) {
+        menuitem.setAttribute("checked", "true");
+      }
+
+      // Style used by pseudo element ::before in timeline.css.in
+      let bulletStyle = `--bullet-bg: ${markerDetails.fill};`
+      bulletStyle += `--bullet-border: ${markerDetails.stroke}`;
+      menuitem.setAttribute("style", bulletStyle);
+
+      popup.appendChild(menuitem);
+    }
+  },
 };
 
 /**
