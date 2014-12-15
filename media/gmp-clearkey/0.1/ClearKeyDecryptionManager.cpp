@@ -194,7 +194,7 @@ ClearKeyDecryptionManager::UpdateSession(uint32_t aPromiseId,
   vector<KeyIdPair> keyPairs;
   if (!ClearKeyUtils::ParseJWK(aResponse, aResponseSize, keyPairs)) {
     CK_LOGW("ClearKey CDM failed to parse JSON Web Key.");
-    mCallback->RejectPromise(aPromiseId, kGMPAbortError, nullptr, 0);
+    mCallback->RejectPromise(aPromiseId, kGMPInvalidAccessError, nullptr, 0);
     return;
   }
   mCallback->ResolvePromise(aPromiseId);
