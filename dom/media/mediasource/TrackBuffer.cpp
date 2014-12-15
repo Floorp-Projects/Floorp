@@ -348,6 +348,10 @@ TrackBuffer::NewDecoder()
 bool
 TrackBuffer::QueueInitializeDecoder(SourceBufferDecoder* aDecoder)
 {
+  if (NS_WARN_IF(!mTaskQueue)) {
+    return false;
+  }
+
   RefPtr<nsIRunnable> task =
     NS_NewRunnableMethodWithArg<SourceBufferDecoder*>(this,
                                                       &TrackBuffer::InitializeDecoder,
