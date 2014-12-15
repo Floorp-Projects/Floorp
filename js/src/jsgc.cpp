@@ -3492,9 +3492,6 @@ GCHelperState::init()
     if (!(done = PR_NewCondVar(rt->gc.lock)))
         return false;
 
-    if (CanUseExtraThreads())
-        HelperThreadState().ensureInitialized();
-
     return true;
 }
 
