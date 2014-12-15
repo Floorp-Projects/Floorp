@@ -12,7 +12,6 @@ namespace mp4_demuxer {
 
 class Stream;
 class Box;
-class BoxContext;
 class Moof;
 
 class Tkhd
@@ -142,7 +141,6 @@ public:
   }
   void RebuildFragmentedIndex(
     const nsTArray<mozilla::MediaByteRange>& aByteRanges);
-  void RebuildFragmentedIndex(BoxContext& aContext);
   Interval<Microseconds> GetCompositionRange(
     const nsTArray<mozilla::MediaByteRange>& aByteRanges);
   bool ReachedEnd();
@@ -150,8 +148,6 @@ public:
   void ParseTrak(Box& aBox);
   void ParseMdia(Box& aBox, Tkhd& aTkhd);
   void ParseMvex(Box& aBox);
-
-  bool BlockingReadNextMoof();
 
   mozilla::MediaByteRange mInitRange;
   nsRefPtr<Stream> mSource;
