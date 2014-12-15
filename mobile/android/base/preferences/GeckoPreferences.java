@@ -299,10 +299,6 @@ OnSharedPreferenceChangeListener
         // Make sure RestrictedProfiles is ready.
         RestrictedProfiles.initWithProfile(GeckoProfile.get(this));
 
-        if (GeckoProfile.get(this).inGuestMode()) {
-            GuestSession.configureWindow(getWindow());
-        }
-
         // Apply the current user-selected locale, if necessary.
         checkLocale();
 
