@@ -266,6 +266,14 @@ MediaDecoder::DecodedStreamGraphListener::NotifyEvent(MediaStreamGraph* aGraph,
     aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
   }
 }
+
+void MediaDecoder::RecreateDecodedStreamIfNecessary(int64_t aStartTimeUSecs)
+{
+  if (mInitialAudioCaptured) {
+    RecreateDecodedStream(aStartTimeUSecs);
+  }
+}
+
 void MediaDecoder::DestroyDecodedStream()
 {
   MOZ_ASSERT(NS_IsMainThread());
