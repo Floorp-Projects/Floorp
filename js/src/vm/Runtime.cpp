@@ -279,6 +279,9 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
     if (!threadPool.init())
         return false;
 
+    if (CanUseExtraThreads())
+        EnsureHelperThreadsInitialized();
+
     if (!gc.init(maxbytes, maxNurseryBytes))
         return false;
 
