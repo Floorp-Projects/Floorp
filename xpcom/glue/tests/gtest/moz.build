@@ -7,6 +7,7 @@
 UNIFIED_SOURCES += [
     'TestArray.cpp',
     'TestCRT.cpp',
+    'TestEncoding.cpp',
     'TestFileUtils.cpp',
     'TestGCPostBarriers.cpp',
     'TestStrings.cpp',
