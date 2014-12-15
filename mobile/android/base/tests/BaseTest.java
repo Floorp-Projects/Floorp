@@ -70,7 +70,7 @@ abstract class BaseTest extends BaseRobocopTest {
     private static final int GECKO_READY_WAIT_MS = 180000;
     public static final int MAX_WAIT_BLOCK_FOR_EVENT_DATA_MS = 90000;
 
-    private static final String URL_HTTP_PREFIX = "http://";
+    protected static final String URL_HTTP_PREFIX = "http://";
 
     private Activity mActivity;
     private int mPreferenceRequestID = 0;
@@ -530,23 +530,16 @@ abstract class BaseTest extends BaseRobocopTest {
         }
     }
 
-    public final void verifyPageTitle(final String title, String url) {
-        // We are asserting visible state - we shouldn't know if the title is null.
-        mAsserter.isnot(title, null, "The title argument is not null");
+    public final void verifyUrlBarTitle(String url) {
         mAsserter.isnot(url, null, "The url argument is not null");
 
-        // TODO: We should also check the title bar preference.
         final String expected;
-        if (!NewTabletUI.isEnabled(mActivity)) {
-            expected = title;
+        if (StringHelper.ABOUT_HOME_URL.equals(url)) {
+            expected = StringHelper.ABOUT_HOME_TITLE;
+        } else if (url.startsWith(URL_HTTP_PREFIX)) {
+            expected = url.substring(URL_HTTP_PREFIX.length());
         } else {
-            if (StringHelper.ABOUT_HOME_URL.equals(url)) {
-                expected = StringHelper.ABOUT_HOME_TITLE;
-            } else if (url.startsWith(URL_HTTP_PREFIX)) {
-                expected = url.substring(URL_HTTP_PREFIX.length());
-            } else {
-                expected = url;
-            }
+            expected = url;
         }
 
         final TextView urlBarTitle = (TextView) mSolo.getView(R.id.url_bar_title);
@@ -554,7 +547,7 @@ abstract class BaseTest extends BaseRobocopTest {
         if (urlBarTitle != null) {
             // Wait for the title to make sure it has been displayed in case the view
             // does not update fast enough
-            waitForCondition(new VerifyTextViewText(urlBarTitle, title), MAX_WAIT_VERIFY_PAGE_TITLE_MS);
+            waitForCondition(new VerifyTextViewText(urlBarTitle, expected), MAX_WAIT_VERIFY_PAGE_TITLE_MS);
             pageTitle = urlBarTitle.getText().toString();
         }
         mAsserter.is(pageTitle, expected, "Page title is correct");

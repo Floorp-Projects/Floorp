@@ -12,30 +12,26 @@ public class testSessionHistory extends UITest {
 
         String url = StringHelper.ROBOCOP_BLANK_PAGE_01_URL;
         NavigationHelper.enterAndLoadUrl(url);
-        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE, url);
+        mToolbar.assertTitle(url);
 
         url = StringHelper.ROBOCOP_BLANK_PAGE_02_URL;
         NavigationHelper.enterAndLoadUrl(url);
-        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE, url);
+        mToolbar.assertTitle(url);
 
         url = StringHelper.ROBOCOP_BLANK_PAGE_03_URL;
         NavigationHelper.enterAndLoadUrl(url);
-        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_03_TITLE, url);
+        mToolbar.assertTitle(url);
 
         NavigationHelper.goBack();
-        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE,
-                StringHelper.ROBOCOP_BLANK_PAGE_02_URL);
+        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_02_URL);
 
         NavigationHelper.goBack();
-        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE,
-                StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
+        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
 
         NavigationHelper.goForward();
-        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE,
-                StringHelper.ROBOCOP_BLANK_PAGE_02_URL);
+        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_02_URL);
 
         NavigationHelper.reload();
-        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE,
-                StringHelper.ROBOCOP_BLANK_PAGE_02_URL);
+        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_02_URL);
     }
 }
