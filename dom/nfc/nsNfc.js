@@ -573,6 +573,10 @@ NFCTechDiscoveredWrapper.prototype = {
       let peer = aWindow.MozNFCPeer._create(aWindow, peerImpl);
       aMessage.peer = peer;
     }
+
+    delete aMessage.isP2P;
+    delete aMessage.sessionToken;
+
     return aMessage;
   },
 
