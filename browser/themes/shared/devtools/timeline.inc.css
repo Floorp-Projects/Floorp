@@ -5,6 +5,7 @@
 
 #record-button {
   list-style-image: url(profiler-stopwatch.svg);
+  min-width: 24px;
 }
 
 #record-button[checked] {
@@ -13,6 +14,35 @@
 
 #record-button:not([checked]) ~ #record-label {
   visibility: hidden;
+}
+
+#memory-checkbox .checkbox-label {
+  line-height: 100%;
+}
+
+#filter-button {
+  list-style-image: url(timeline-filter.svg#filter);
+  min-width: 24px;
+}
+
+#filter-button[disabled] {
+  list-style-image: url(timeline-filter.svg#filter-disabled);
+}
+
+#filter-button[open] {
+  list-style-image: url(timeline-filter.svg#filter-open);
+}
+
+#timelineFilterPopup > menuitem:before {
+  content: "";
+  display: block;
+  width: 8px;
+  height: 8px;
+  margin: 0 8px;
+  border: 1px solid;
+  border-radius: 1px;
+  background-color: var(--bullet-bg);
+  border-color: var(--bullet-border);
 }
 
 .notice-container {
@@ -185,7 +215,6 @@
 .marker-details-bullet {
   width: 8px;
   height: 8px;
-  margin: 0 8px;
   border: 1px solid;
   border-radius: 1px;
 }

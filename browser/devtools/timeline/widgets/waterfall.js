@@ -12,8 +12,6 @@ const {Ci, Cu} = require("chrome");
 
 loader.lazyRequireGetter(this, "L10N",
   "devtools/timeline/global", true);
-loader.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
-  "devtools/timeline/global", true);
 
 loader.lazyImporter(this, "setNamedTimeout",
   "resource:///modules/devtools/ViewHelpers.jsm");
@@ -50,8 +48,10 @@ const WATERFALL_ROWCOUNT_ONPAGEUPDOWN = 10;
  *        The parent node holding the waterfall.
  * @param nsIDOMNode container
  *        The container node that key events should be bound to.
+ * @param Object blueprint
+ *        List of names and colors defining markers.
  */
-function Waterfall(parent, container) {
+function Waterfall(parent, container, blueprint) {
   EventEmitter.decorate(this);
 
   this._parent = parent;
@@ -75,7 +75,7 @@ function Waterfall(parent, container) {
 
   // Lazy require is a bit slow, and these are hot objects.
   this._l10n = L10N;
-  this._blueprint = TIMELINE_BLUEPRINT;
+  this._blueprint = blueprint
   this._setNamedTimeout = setNamedTimeout;
   this._clearNamedTimeout = clearNamedTimeout;
 
@@ -118,6 +118,14 @@ Waterfall.prototype = {
     this._buildHeader(this._headerContents, startTime - timeEpoch, dataScale);
     this._buildMarkers(this._listContents, markers, startTime, endTime, dataScale);
     this.selectRow(this._selectedRowIdx);
+  },
+
+  /**
+   * List of names and colors used to paint markers.
+   * @see TIMELINE_BLUEPRINT in timeline/widgets/global.js
+   */
+  setBlueprint: function(blueprint) {
+    this._blueprint = blueprint;
   },
 
   /**
@@ -251,6 +259,10 @@ Waterfall.prototype = {
       if (!isMarkerInRange(marker, startTime, endTime)) {
         continue;
       }
+      if (!(marker.name in this._blueprint)) {
+        continue;
+      }
+
       // Only build and display a finite number of markers initially, to
       // preserve a snappy UI. After a certain delay, continue building the
       // outstanding markers while there's (hopefully) no user interaction.

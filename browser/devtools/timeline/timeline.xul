@@ -17,6 +17,10 @@
   <script src="chrome://browser/content/devtools/theme-switching.js"/>
   <script type="application/javascript" src="timeline.js"/>
 
+  <popupset id="timelinePopupset">
+    <menupopup id="timelineFilterPopup" position="after_start"/>
+  </popupset>
+
   <vbox class="theme-body" flex="1">
     <toolbar id="timeline-toolbar"
              class="devtools-toolbar">
@@ -27,6 +31,10 @@
                        class="devtools-toolbarbutton"
                        oncommand="TimelineController.toggleRecording()"
                        tooltiptext="&timelineUI.recordButton.tooltip;"/>
+        <toolbarbutton id="filter-button"
+                       popup="timelineFilterPopup"
+                       class="devtools-toolbarbutton"
+                       tooltiptext="&timelineUI.filterButton.tooltip;"/>
         <checkbox id="memory-checkbox"
                   label="&timelineUI.memoryCheckbox.label;"
                   oncommand="TimelineController.updateMemoryRecording()"
