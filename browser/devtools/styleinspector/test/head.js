@@ -342,7 +342,7 @@ function wait(ms) {
 function waitForContentMessage(name) {
   info("Expecting message " + name + " from content");
 
-  let mm = gBrowser.selectedTab.linkedBrowser.messageManager;
+  let mm = gBrowser.selectedBrowser.messageManager;
 
   let def = promise.defer();
   mm.addMessageListener(name, function onMessage(msg) {
@@ -366,7 +366,7 @@ function waitForContentMessage(name) {
  */
 function executeInContent(name, data={}, objects={}, expectResponse=true) {
   info("Sending message " + name + " to content");
-  let mm = gBrowser.selectedTab.linkedBrowser.messageManager;
+  let mm = gBrowser.selectedBrowser.messageManager;
 
   mm.sendAsyncMessage(name, data, objects);
   if (expectResponse) {
