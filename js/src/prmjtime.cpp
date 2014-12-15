@@ -21,11 +21,11 @@
 #include "jsutil.h"
 
 #ifdef XP_WIN
+#include <crtdbg.h>   /* for _CrtSetReportMode */
+#include <mmsystem.h> /* for timeBegin/EndPeriod */
+#include <stdlib.h>   /* for _set_invalid_parameter_handler */
 #include <windef.h>
 #include <winbase.h>
-#include <mmsystem.h> /* for timeBegin/EndPeriod */
-#include <crtdbg.h>   /* for _CrtSetReportMode */
-#include <stdlib.h>   /* for _set_invalid_parameter_handler */
 
 #include "prinit.h"
 
