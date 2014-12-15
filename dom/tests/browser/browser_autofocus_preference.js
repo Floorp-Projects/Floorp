@@ -6,12 +6,12 @@ function test() {
   var gAutofocusPref = prefs.getBoolPref("browser.autofocus");
   prefs.setBoolPref("browser.autofocus", false);
 
-  gBrowser.selectedTab.linkedBrowser.addEventListener("load", function () {
-    gBrowser.selectedTab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+  gBrowser.selectedBrowser.addEventListener("load", function () {
+    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
 
     executeSoon(function () {
-      is(gBrowser.selectedTab.linkedBrowser.contentDocument.activeElement,
-         gBrowser.selectedTab.linkedBrowser.contentDocument.body,
+      is(gBrowser.selectedBrowser.contentDocument.activeElement,
+         gBrowser.selectedBrowser.contentDocument.body,
          "foo");
 
       prefs.setBoolPref("browser.autofocus", gAutofocusPref);
@@ -20,5 +20,5 @@ function test() {
     });
   }, true);
 
-  gBrowser.selectedTab.linkedBrowser.loadURI("data:text/html,<!DOCTYPE html><html><body><input autofocus><button autofocus></button><textarea autofocus></textarea><select autofocus></select></body></html>");
+  gBrowser.selectedBrowser.loadURI("data:text/html,<!DOCTYPE html><html><body><input autofocus><button autofocus></button><textarea autofocus></textarea><select autofocus></select></body></html>");
 }

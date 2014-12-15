@@ -626,7 +626,7 @@ function once(target, eventName, useCapture=false) {
  * message has been received
  */
 function waitForContentMessage(name) {
-  let mm = gBrowser.selectedTab.linkedBrowser.messageManager;
+  let mm = gBrowser.selectedBrowser.messageManager;
 
   let def = promise.defer();
   mm.addMessageListener(name, function onMessage(msg) {
@@ -655,7 +655,7 @@ function wait(ms) {
  * immediately resolves otherwise
  */
 function executeInContent(name, data={}, objects={}, expectResponse=true) {
-  let mm = gBrowser.selectedTab.linkedBrowser.messageManager;
+  let mm = gBrowser.selectedBrowser.messageManager;
 
   mm.sendAsyncMessage(name, data, objects);
   if (expectResponse) {

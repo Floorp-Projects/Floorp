@@ -60,7 +60,7 @@ function* inspectPage(dropper, click=true) {
   let win = window;
 
   // get location of the <div> in the content, offset from browser window
-  let box = gBrowser.selectedTab.linkedBrowser.getBoundingClientRect();
+  let box = gBrowser.selectedBrowser.getBoundingClientRect();
   let x = box.left + 100;
   let y = box.top + 100;
 
