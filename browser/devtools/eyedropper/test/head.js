@@ -13,13 +13,6 @@ Services.scriptloader.loadSubScript(testDir + "../../../commandline/test/helpers
 
 waitForExplicitFinish();
 
-/**
- * Define an async test based on a generator function
- */
-function asyncTest(generator) {
-  return () => Task.spawn(generator).then(null, ok.bind(null, false)).then(finish);
-}
-
 function cleanup()
 {
   while (gBrowser.tabs.length > 1) {

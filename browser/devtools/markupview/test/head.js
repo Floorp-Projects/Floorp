@@ -48,13 +48,6 @@ const TEST_URL_ROOT = "http://mochi.test:8888/browser/browser/devtools/markupvie
 const CHROME_BASE = "chrome://mochitests/content/browser/browser/devtools/markupview/test/";
 
 /**
- * Define an async test based on a generator function
- */
-function asyncTest(generator) {
-  return () => Task.spawn(generator).then(null, ok.bind(null, false)).then(finish);
-}
-
-/**
  * Add a new test tab in the browser and load the given url.
  * @param {String} url The url to be loaded in the new tab
  * @return a promise that resolves to the tab object when the url is loaded
