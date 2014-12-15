@@ -553,7 +553,7 @@ HandleClosingGeneratorReturn(JSContext *cx, const JitFrameIterator &frame, jsbyt
 struct AutoDebuggerHandlingException
 {
     BaselineFrame *frame;
-    AutoDebuggerHandlingException(BaselineFrame *frame)
+    explicit AutoDebuggerHandlingException(BaselineFrame *frame)
       : frame(frame)
     {
         frame->setIsDebuggerHandlingException();

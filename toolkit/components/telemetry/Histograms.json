@@ -6968,5 +6968,17 @@
     "expires_in_version": "45",
     "kind": "count",
     "description": "How many onbeforeunload prompts has the user encountered in their session?"
+  },
+  "SUBPROCESS_ABNORMAL_ABORT": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "keyed": true,
+    "description": "Counts of plugin/content process abnormal shutdown, whether or not a crash report was available."
+  },
+  "SUBPROCESS_CRASHES_WITH_DUMP": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "keyed": true,
+    "description": "Counts of plugin and content process crashes which are reported with a crash dump."
   }
 }

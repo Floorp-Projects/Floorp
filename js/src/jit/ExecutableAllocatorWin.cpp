@@ -66,7 +66,7 @@ void *ExecutableAllocator::computeRandomAllocationAddress()
 # error "Unsupported architecture"
 #endif
     uint64_t rand = random_next(&rngSeed, 32) << chunkBits;
-    return (void *) (base | rand & mask);
+    return (void *) (base | (rand & mask));
 }
 
 static bool

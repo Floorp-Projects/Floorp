@@ -9,6 +9,7 @@ TEST_DIRS += [
     'component',
     'bug656331_component',
     'component_no_aslr',
+    'gtest',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
@@ -86,7 +87,6 @@ if CONFIG['MOZ_MEMORY']:
 #    'TestPipes',
 #    'TestPriorityQueue',
 #    'TestStorageStream',
-#    'TestStrings',
 #    'TestSynchronization',
 #    'TestTArray',
 #    'TestThreadPool',

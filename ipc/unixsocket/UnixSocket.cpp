@@ -309,7 +309,7 @@ UnixSocketConsumerIO::OnAccepted(int aFd,
   MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
   MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_LISTENING);
   MOZ_ASSERT(aAddr);
-  MOZ_ASSERT(aAddrLen <= sizeof(mAddr));
+  MOZ_ASSERT(aAddrLen > 0 && (size_t)aAddrLen <= sizeof(mAddr));
 
   memcpy (&mAddr, aAddr, aAddrLen);
   mAddrSize = aAddrLen;

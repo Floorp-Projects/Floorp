@@ -728,7 +728,7 @@ class AutoLockFutexAPI
 {
     JS::PerRuntimeFutexAPI * const fx;
   public:
-    AutoLockFutexAPI(JS::PerRuntimeFutexAPI *fx) : fx(fx) {
+    explicit AutoLockFutexAPI(JS::PerRuntimeFutexAPI *fx) : fx(fx) {
         fx->lock();
     }
     ~AutoLockFutexAPI() {

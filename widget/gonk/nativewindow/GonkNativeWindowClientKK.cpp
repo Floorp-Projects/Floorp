@@ -234,7 +234,6 @@ int GonkNativeWindowClient::cancelBuffer(android_native_buffer_t* buffer,
 
 int GonkNativeWindowClient::getSlotFromBufferLocked(
         android_native_buffer_t* buffer) const {
-    bool dumpedState = false;
     for (int i = 0; i < NUM_BUFFER_SLOTS; i++) {
         if (mSlots[i].buffer != NULL &&
                 mSlots[i].buffer->handle == buffer->handle) {

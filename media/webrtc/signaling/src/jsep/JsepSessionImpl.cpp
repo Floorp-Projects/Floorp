@@ -1399,7 +1399,11 @@ JsepSessionImpl::CreateGenericSDP(UniquePtr<Sdp>* sdpp)
   //     for <sess-id> is sufficient to accomplish this.
 
   auto origin =
-      SdpOrigin("-", mSessionId, mSessionVersion, sdp::kIPv4, "0.0.0.0");
+      SdpOrigin("mozilla...THIS_IS_SDPARTA-" MOZ_APP_UA_VERSION,
+                mSessionId,
+                mSessionVersion,
+                sdp::kIPv4,
+                "0.0.0.0");
 
   UniquePtr<Sdp> sdp = MakeUnique<SipccSdp>(origin);
 

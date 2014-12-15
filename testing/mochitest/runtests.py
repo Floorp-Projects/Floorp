@@ -671,9 +671,9 @@ class MochitestUtilsMixin(object):
       paths.append(test)
 
     # Bug 883865 - add this functionality into manifestparser
-    with open(os.path.join(SCRIPT_DIR, 'tests.json'), 'w') as manifestFile:
+    with open(os.path.join(SCRIPT_DIR, options.testRunManifestFile), 'w') as manifestFile:
       manifestFile.write(json.dumps({'tests': paths}))
-    options.manifestFile = 'tests.json'
+    options.manifestFile = options.testRunManifestFile
 
     return self.buildTestURL(options)
 
@@ -692,7 +692,7 @@ class MochitestUtilsMixin(object):
       with open(options.pidFile + ".xpcshell.pid", 'w') as f:
         f.write("%s" % self.server._process.pid)
 
-  def startServers(self, options, debuggerInfo):
+  def startServers(self, options, debuggerInfo, ignoreSSLTunnelExts = False):
     # start servers and set ports
     # TODO: pass these values, don't set on `self`
     self.webServer = options.webServer
@@ -710,7 +710,7 @@ class MochitestUtilsMixin(object):
     self.startWebSocketServer(options, debuggerInfo)
 
     # start SSL pipe
-    self.sslTunnel = SSLTunnel(options, logger=self.log)
+    self.sslTunnel = SSLTunnel(options, logger=self.log, ignoreSSLTunnelExts = ignoreSSLTunnelExts)
     self.sslTunnel.buildConfig(self.locations)
     self.sslTunnel.start()
 
@@ -857,7 +857,7 @@ overlay chrome://browser/content/browser.xul chrome://mochikit/content/jetpack-a
     return extensions
 
 class SSLTunnel:
-  def __init__(self, options, logger):
+  def __init__(self, options, logger, ignoreSSLTunnelExts = False):
     self.log = logger
     self.process = None
     self.utilityPath = options.utilityPath
@@ -867,6 +867,7 @@ class SSLTunnel:
     self.httpPort = options.httpPort
     self.webServer = options.webServer
     self.webSocketPort = options.webSocketPort
+    self.useSSLTunnelExts = not ignoreSSLTunnelExts
 
     self.customCertRE = re.compile("^cert=(?P<nickname>[0-9a-zA-Z_ ]+)")
     self.clientAuthRE = re.compile("^clientauth=(?P<clientauth>[a-z]+)")
@@ -892,7 +893,7 @@ class SSLTunnel:
         config.write("redirhost:%s:%s:%s:%s\n" %
                      (loc.host, loc.port, self.sslPort, redirhost))
 
-      if option in ('ssl3', 'rc4'):
+      if self.useSSLTunnelExts and option in ('ssl3', 'rc4'):
         config.write("%s:%s:%s:%s\n" % (option, loc.host, loc.port, self.sslPort))
 
   def buildConfig(self, locations):
@@ -1314,9 +1315,10 @@ class Mochitest(MochitestUtilsMixin):
 
   def cleanup(self, options):
     """ remove temporary files and profile """
-    if self.manifest is not None:
+    if hasattr(self, 'manifest') and self.manifest is not None:
       os.remove(self.manifest)
-    del self.profile
+    if hasattr(self, 'profile'):
+        del self.profile
     if options.pidFile != "":
       try:
         os.remove(options.pidFile)
@@ -1821,8 +1823,8 @@ class Mochitest(MochitestUtilsMixin):
       testURL = self.buildTestPath(options, testsToFilter)
 
       # read the number of tests here, if we are not going to run any, terminate early
-      if os.path.exists(os.path.join(SCRIPT_DIR, 'tests.json')):
-        with open(os.path.join(SCRIPT_DIR, 'tests.json')) as fHandle:
+      if os.path.exists(os.path.join(SCRIPT_DIR, options.testRunManifestFile)):
+        with open(os.path.join(SCRIPT_DIR, options.testRunManifestFile)) as fHandle:
           tests = json.load(fHandle)
         count = 0
         for test in tests['tests']:
@@ -2118,7 +2120,7 @@ class Mochitest(MochitestUtilsMixin):
 
   def getTestManifest(self, options):
     if isinstance(options.manifestFile, TestManifest):
-        manifest = options.manifestFile
+      manifest = options.manifestFile
     elif options.manifestFile and os.path.isfile(options.manifestFile):
       manifestFileAbs = os.path.abspath(options.manifestFile)
       assert manifestFileAbs.startswith(SCRIPT_DIR)
@@ -2133,6 +2135,8 @@ class Mochitest(MochitestUtilsMixin):
 
       if os.path.exists(masterPath):
         manifest = TestManifest([masterPath], strict=False)
+      else:
+        self._log.warning('TestManifest masterPath %s does not exist' % masterPath)
 
     return manifest
 

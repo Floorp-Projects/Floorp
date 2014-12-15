@@ -232,10 +232,13 @@ public:
 
   int32_t GetSerial() { return mSerial; }
 
+  SyncObject* GetSyncObject() { return mSyncObject; }
+
 protected:
   TextureFactoryIdentifier mTextureFactoryIdentifier;
   nsTArray<RefPtr<TextureClient> > mTexturesToRemove;
   std::vector<uint64_t> mTransactionsToRespond;
+  RefPtr<SyncObject> mSyncObject;
   const int32_t mSerial;
   static mozilla::Atomic<int32_t> sSerialCounter;
 };
