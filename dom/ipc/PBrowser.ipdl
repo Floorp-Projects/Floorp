@@ -228,6 +228,13 @@ parent:
       returns (bool consumedByIME);
 
     /**
+     * Notifies chrome to currect editor rect
+     *
+     *  rect         Rect of current focused editor
+     */
+    prio(urgent) async NotifyIMEEditorRect(nsIntRect rect);
+
+    /**
      * Instructs chrome to end any pending composition
      *
      *  cancel       PR_TRUE if composition should be cancelled
