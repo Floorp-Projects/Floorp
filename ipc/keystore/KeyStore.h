@@ -48,9 +48,6 @@ static const int KEY_SIZE = ((NAME_MAX - 15) / 2);
 static const int VALUE_SIZE = 32768;
 static const int PASSWORD_SIZE = VALUE_SIZE;
 
-static const char *CA_BEGIN = "-----BEGIN ",
-                  *CA_END   = "-----END ",
-                  *CA_TAILER = "-----\n";
 static const int CA_LINE_SIZE = 64;
 
 struct ProtocolCommand {

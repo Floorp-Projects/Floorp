@@ -41,7 +41,7 @@
 #include "nsWildCard.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/ScriptSettings.h"
-
+#include "nsIXULRuntime.h"
 #include "nsIXPConnect.h"
 
 #include "nsIObserverService.h"
@@ -322,11 +322,21 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
     prefGroupKey.AssignLiteral("dom.ipc.plugins.enabled.a11y.");
 #endif
 
-  // Java plugins include a number of different file names,
-  // so use the mime type (mIsJavaPlugin) and a special pref.
-  if (aPluginTag->mIsJavaPlugin &&
-      !Preferences::GetBool("dom.ipc.plugins.java.enabled", true)) {
-    return false;
+  if (BrowserTabsRemoteAutostart()) {
+    // dom.ipc.plugins.java.enabled is obsolete in Nightly w/e10s, we've
+    // flipped the default to ON and now have a force-disable pref. This
+    // way we don't break non-e10s browsers.
+    if (aPluginTag->mIsJavaPlugin &&
+        Preferences::GetBool("dom.ipc.plugins.java.force-disable", false)) {
+      return false;
+    }
+  } else {
+    // Java plugins include a number of different file names,
+    // so use the mime type (mIsJavaPlugin) and a special pref.
+    if (aPluginTag->mIsJavaPlugin &&
+        !Preferences::GetBool("dom.ipc.plugins.java.enabled", true)) {
+      return false;
+    }
   }
 
   uint32_t prefCount;
@@ -399,7 +409,7 @@ GetNewPluginLibrary(nsPluginTag *aPluginTag)
   }
 
   if (nsNPAPIPlugin::RunPluginOOP(aPluginTag)) {
-    return PluginModuleChromeParent::LoadModule(aPluginTag->mFullPath.get(), aPluginTag->mId);
+    return PluginModuleChromeParent::LoadModule(aPluginTag->mFullPath.get(), aPluginTag->mId, aPluginTag);
   }
   return new PluginPRLibrary(aPluginTag->mFullPath.get(), aPluginTag->mLibrary);
 }
@@ -434,13 +444,11 @@ nsNPAPIPlugin::CreatePlugin(nsPluginTag *aPluginTag, nsNPAPIPlugin** aResult)
   plugin->mLibrary = pluginLib;
   pluginLib->SetPlugin(plugin);
 
-  NPError pluginCallError;
-  nsresult rv;
-
 // Exchange NPAPI entry points.
 #if defined(XP_WIN)
   // NP_GetEntryPoints must be called before NP_Initialize on Windows.
-  rv = pluginLib->NP_GetEntryPoints(&plugin->mPluginFuncs, &pluginCallError);
+  NPError pluginCallError;
+  nsresult rv = pluginLib->NP_GetEntryPoints(&plugin->mPluginFuncs, &pluginCallError);
   if (rv != NS_OK || pluginCallError != NPERR_NO_ERROR) {
     return NS_ERROR_FAILURE;
   }
@@ -453,7 +461,8 @@ nsNPAPIPlugin::CreatePlugin(nsPluginTag *aPluginTag, nsNPAPIPlugin** aResult)
 #elif defined(XP_MACOSX)
   // NP_Initialize must be called before NP_GetEntryPoints on Mac OS X.
   // We need to match WebKit's behavior.
-  rv = pluginLib->NP_Initialize(&sBrowserFuncs, &pluginCallError);
+  NPError pluginCallError;
+  nsresult rv = pluginLib->NP_Initialize(&sBrowserFuncs, &pluginCallError);
   if (rv != NS_OK || pluginCallError != NPERR_NO_ERROR) {
     return NS_ERROR_FAILURE;
   }
@@ -464,7 +473,8 @@ nsNPAPIPlugin::CreatePlugin(nsPluginTag *aPluginTag, nsNPAPIPlugin** aResult)
   }
 #elif defined(MOZ_WIDGET_GONK)
 #else
-  rv = pluginLib->NP_Initialize(&sBrowserFuncs, &plugin->mPluginFuncs, &pluginCallError);
+  NPError pluginCallError;
+  nsresult rv = pluginLib->NP_Initialize(&sBrowserFuncs, &plugin->mPluginFuncs, &pluginCallError);
   if (rv != NS_OK || pluginCallError != NPERR_NO_ERROR) {
     return NS_ERROR_FAILURE;
   }

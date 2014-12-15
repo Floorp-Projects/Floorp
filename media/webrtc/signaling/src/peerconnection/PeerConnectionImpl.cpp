@@ -951,17 +951,6 @@ PeerConnectionImpl::CreateFakeMediaStream(uint32_t aHint, DOMMediaStream** aRetv
   return NS_OK;
 }
 
-// Stubbing this call out for now.
-// We can remove it when we are confident of datachannels being started
-// correctly on SDP negotiation (bug 852908)
-NS_IMETHODIMP
-PeerConnectionImpl::ConnectDataConnection(uint16_t aLocalport,
-                                          uint16_t aRemoteport,
-                                          uint16_t aNumstreams)
-{
-  return NS_OK; // InitializeDataChannel(aLocalport, aRemoteport, aNumstreams);
-}
-
 // Data channels won't work without a window, so in order for the C++ unit
 // tests to work (it doesn't have a window available) we ifdef the following
 // two implementations.

@@ -1337,17 +1337,26 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   if (mStyleDisplay->mPosition == NS_STYLE_POSITION_FIXED &&
       // Exclude cases inside -moz-transform where fixed is like absolute.
       nsLayoutUtils::IsReallyFixedPos(frame)) {
-    // In this case, cbrs->frame will always be an ancestor of
+    // In this case, cbrs->frame will likely be an ancestor of
     // aContainingBlock, so can just walk our way up the frame tree.
     // Make sure to not add positions of frames whose parent is a
     // scrollFrame, since we're doing fixed positioning, which assumes
     // everything is scrolled to (0,0).
     cbOffset.MoveTo(0, 0);
     do {
-      NS_ASSERTION(aContainingBlock,
-                   "Should hit cbrs->frame before we run off the frame tree!");
       cbOffset += aContainingBlock->GetPositionIgnoringScrolling();
-      aContainingBlock = aContainingBlock->GetParent();
+      nsContainerFrame* parent = aContainingBlock->GetParent();
+      if (!parent) {
+        // Oops, our absolute containing block isn't an ancestor of the
+        // placeholder's containing block. This can happen if the placeholder
+        // is pushed to a different page in a printing context.  'cbOffset' is
+        // currently relative to the root frame (aContainingBlock) - so just
+        // subtract the offset to the absolute containing block to make it
+        // relative to that.
+        cbOffset -= aContainingBlock->GetOffsetTo(cbrs->frame);
+        break;
+      }
+      aContainingBlock = parent;
     } while (aContainingBlock != cbrs->frame);
   } else {
     // XXXldb We need to either ignore scrolling for the absolute

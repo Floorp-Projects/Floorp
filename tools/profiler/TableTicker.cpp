@@ -915,9 +915,7 @@ void mozilla_sampler_print_location1()
 
   printf_stderr("Backtrace:\n");
   syncProfile->IterateTags(print_callback);
-  ThreadInfo* info = syncProfile->GetThreadInfo();
   delete syncProfile;
-  delete info;
 }
 
 

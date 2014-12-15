@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1088489 - Test for pseudo ruby box generation</title>
+  <link rel="stylesheet" href="common.css">
+  <link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1088489#c13">
+</head>
+<body class="large">
+
+  <p>|<ruby>
+      <rbc><rb>a</rb></rbc> <rbc><rb>b</rb></rbc>
+      <rtc><rt>c</rt></rtc> <rtc><rt>d</rt></rtc>
+      <rbc><rb>e</rb></rbc> <span>f</span>
+      <rbc><rb>g</rb></rbc> <rb>h</rb>
+      <rbc><rb>i</rb></rbc> <rt>j</rt>
+      <rtc><rt>k</rt></rtc> <rt>l</rt>
+      <span>m</span> <span>n</span>
+      <rb>o</rb> <rb>p</rb>
+      <span>q</span> <rtc><rt>r</rt></rtc>
+      <rb>s</rb> <rtc><rt>t</rt></rtc>
+      <span>u</span> <rt>v</rt>
+      <rt>w</rt> <rb>x</rb>
+      <rt>y</rt> <rbc><rb>z</rb></rbc>
+  </ruby>|</p>
+
+  <p>| <rbc><rb>a</rb></rbc> <rbc><rb>b</rb></rbc>
+       <rtc><rt>c</rt></rtc> <rtc><rt>d</rt></rtc>
+       <rbc><rb>e</rb></rbc> <span>f</span>
+       <rbc><rb>g</rb></rbc> <rb>h</rb>
+       <rbc><rb>i</rb></rbc> <rt>j</rt>
+       <rtc><rt>k</rt></rtc> <rt>l</rt>
+       <span>m</span> <span>n</span>
+       <rb>o</rb> <rb>p</rb>
+       <span>q</span> <rtc><rt>r</rt></rtc>
+       <rb>s</rb> <rtc><rt>t</rt></rtc>
+       <span>u</span> <rt>v</rt>
+       <rt>w</rt> <rb>x</rb>
+       <rt>y</rt> <rbc><rb>z</rb></rbc> |</p>
+
+</body>
+</html>

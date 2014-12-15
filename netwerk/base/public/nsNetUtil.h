@@ -193,9 +193,16 @@ NS_NewFileURI(nsIURI* *result,
 * NS_NewInputStreamChannel, NS_NewChannelInternal
 * and it's variations:
 *
-* Please note, if you provide both a loadingNode and a loadingPrincipal,
-* then loadingPrincipal must be equal to loadingNode->NodePrincipal().
-* But less error prone is to just supply a loadingNode.
+* What specific API function to use:
+* * The NS_NewChannelInternal functions should almost never be directly
+*   called outside of necko code.
+* * If possible, use NS_NewChannel() providing a loading *nsINode*
+* * If no loading *nsINode* is avaialable, call NS_NewChannel() providing
+*   a loading *nsIPrincipal*.
+* * Call NS_NewChannelWithTriggeringPrincipal if the triggeringPrincipal
+*   is different from the loadingPrincipal.
+* * Call NS_NewChannelInternal() providing aLoadInfo object in cases where
+*   you already have loadInfo object, e.g in case of a channel redirect.
 *
 * @param aURI
 *        nsIURI from which to make a channel
@@ -247,16 +254,9 @@ NS_NewFileURI(nsIURI* *result,
 *        The contentPolicyType of the channel.
 *        Any of the content types defined in nsIContentPolicy.idl
 *
-* What specific API function to use:
-* * The NS_NewChannelInternal functions should almost never be directly
-*   called outside of necko code.
-* * If possible, use NS_NewChannel() providing a loading *nsINode*
-* * If no loading *nsINode* is avaialable, call NS_NewChannel() providing
-*   a loading *nsIPrincipal*.
-* * Call NS_NewChannelWithTriggeringPrincipal if the triggeringPrincipal
-*   is different from the loadingPrincipal.
-* * Call NS_NewChannelInternal() providing aLoadInfo object in cases where
-*   you already have loadInfo object, e.g in case of a channel redirect.
+* Please note, if you provide both a loadingNode and a loadingPrincipal,
+* then loadingPrincipal must be equal to loadingNode->NodePrincipal().
+* But less error prone is to just supply a loadingNode.
 */
 inline nsresult
 NS_NewChannelInternal(nsIChannel**           outChannel,

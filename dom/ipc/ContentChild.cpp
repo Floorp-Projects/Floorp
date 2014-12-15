@@ -2321,8 +2321,6 @@ public:
 static void
 DoNuwaFork()
 {
-    NS_ASSERTION(NuwaSpawnPrepare != nullptr,
-                 "NuwaSpawnPrepare() is not available!");
     NuwaSpawnPrepare();       // NuwaSpawn will be blocked.
 
     {
@@ -2331,8 +2329,6 @@ DoNuwaFork()
     }
 
     // IOThread should be blocked here for waiting NuwaSpawn().
-    NS_ASSERTION(NuwaSpawnWait != nullptr,
-                 "NuwaSpawnWait() is not available!");
     NuwaSpawnWait();        // Now! NuwaSpawn can go.
     // Here, we can make sure the spawning was finished.
 }

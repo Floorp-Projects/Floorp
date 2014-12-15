@@ -2312,7 +2312,9 @@ CCGraphBuilder::NoteNativeChild(void* aChild,
   }
 
   MOZ_ASSERT(aParticipant, "Need a nsCycleCollectionParticipant!");
-  NoteChild(aChild, aParticipant, edgeName);
+  if (!aParticipant->CanSkipThis(aChild) || WantAllTraces()) {
+    NoteChild(aChild, aParticipant, edgeName);
+  }
 }
 
 NS_IMETHODIMP_(void)
@@ -2447,7 +2449,11 @@ NS_IMETHODIMP_(void)
 ChildFinder::NoteNativeChild(void* aChild,
                              nsCycleCollectionParticipant* aHelper)
 {
-  if (aChild) {
+  if (!aChild) {
+    return;
+  }
+  MOZ_ASSERT(aHelper, "Native child must have a participant");
+  if (!aHelper->CanSkip(aChild, true)) {
     mMayHaveChild = true;
   }
 }
@@ -3207,9 +3213,14 @@ nsCycleCollector::CollectWhite()
     if (pinfo->mColor == white && pinfo->mParticipant) {
       if (pinfo->IsGrayJS()) {
         ++numWhiteGCed;
+        JS::Zone* zone;
         if (MOZ_UNLIKELY(pinfo->mParticipant == zoneParticipant)) {
           ++numWhiteJSZones;
+          zone = static_cast<JS::Zone*>(pinfo->mPointer);
+        } else {
+          zone = JS::GetTenuredGCThingZone(pinfo->mPointer);
         }
+        mJSRuntime->AddZoneWaitingForGC(zone);
       } else {
         whiteNodes.InfallibleAppend(pinfo);
         pinfo->mParticipant->Root(pinfo->mPointer);

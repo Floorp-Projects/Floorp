@@ -129,6 +129,21 @@ function MockFxAccounts() {
   });
 }
 
+add_test(function test_non_https_remote_server_uri_with_requireHttps_false() {
+  Services.prefs.setBoolPref(
+    "identity.fxaccounts.allowHttp",
+    true);
+  Services.prefs.setCharPref(
+    "identity.fxaccounts.remote.signup.uri",
+    "http://example.com/browser/browser/base/content/test/general/accounts_testRemoteCommands.html");
+  do_check_eq(fxAccounts.getAccountsSignUpURI(),
+              "http://example.com/browser/browser/base/content/test/general/accounts_testRemoteCommands.html");
+
+  Services.prefs.clearUserPref("identity.fxaccounts.remote.signup.uri");
+  Services.prefs.clearUserPref("identity.fxaccounts.allowHttp");
+  run_next_test();
+});
+
 add_test(function test_non_https_remote_server_uri() {
   Services.prefs.setCharPref(
     "identity.fxaccounts.remote.signup.uri",

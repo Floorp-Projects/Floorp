@@ -31,8 +31,8 @@
 namespace android {
 
 struct MOZ_EXPORT MetaData;
-struct MOZ_EXPORT ABuffer;
-struct MOZ_EXPORT ALooper;
+struct ABuffer;
+struct ALooper;
 struct MOZ_EXPORT AnotherPacketSource;
 struct RtspConnectionHandler;
 

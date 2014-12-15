@@ -63,11 +63,20 @@ function MarkersOverview(parent, ...args) {
 }
 
 MarkersOverview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
-  fixedHeight: OVERVIEW_HEADER_HEIGHT + OVERVIEW_BODY_HEIGHT,
   clipheadLineColor: OVERVIEW_CLIPHEAD_LINE_COLOR,
   selectionLineColor: OVERVIEW_SELECTION_LINE_COLOR,
   selectionBackgroundColor: OVERVIEW_SELECTION_BACKGROUND_COLOR,
   selectionStripesColor: OVERVIEW_SELECTION_STRIPES_COLOR,
+  headerHeight: OVERVIEW_HEADER_HEIGHT,
+  bodyHeight: OVERVIEW_BODY_HEIGHT,
+  groupPadding: OVERVIEW_GROUP_VERTICAL_PADDING,
+
+  /**
+   * Compute the height of the overview.
+   */
+  get fixedHeight() {
+    return this.headerHeight + this.bodyHeight;
+  },
 
   /**
    * List of names and colors used to paint this overview.
@@ -100,7 +109,7 @@ MarkersOverview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     let { interval, markers } = this._data;
     let { startTime, endTime } = interval;
 
-    let { canvas, ctx } = this._getNamedCanvas("overview-data");
+    let { canvas, ctx } = this._getNamedCanvas("markers-overview-data");
     let canvasWidth = this._width;
     let canvasHeight = this._height;
     let safeBounds = OVERVIEW_HEADER_SAFE_BOUNDS * this._pixelRatio;
@@ -116,9 +125,9 @@ MarkersOverview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     // Calculate each group's height, and the time-based scaling.
 
     let totalGroups = this._lastGroup + 1;
-    let headerHeight = OVERVIEW_HEADER_HEIGHT * this._pixelRatio;
-    let groupHeight = OVERVIEW_BODY_HEIGHT * this._pixelRatio / totalGroups;
-    let groupPadding = OVERVIEW_GROUP_VERTICAL_PADDING * this._pixelRatio;
+    let headerHeight = this.headerHeight * this._pixelRatio;
+    let groupHeight = this.bodyHeight * this._pixelRatio / totalGroups;
+    let groupPadding = this.groupPadding * this._pixelRatio;
 
     let totalTime = (endTime - startTime) || 0;
     let dataScale = this.dataScaleX = availableWidth / totalTime;
