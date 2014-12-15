@@ -2496,16 +2496,24 @@ nsWindow::NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight)
 mozilla::layers::APZCTreeManager*
 nsWindow::GetAPZCTreeManager()
 {
-    if (!sApzcTreeManager) {
-        CompositorParent* compositor = sCompositorParent;
-        if (!compositor) {
-            return nullptr;
-        }
-        uint64_t rootLayerTreeId = compositor->RootLayerTreeId();
-        CompositorParent::SetControllerForLayerTree(rootLayerTreeId, mozilla::widget::android::APZCCallbackHandler::GetInstance());
-        sApzcTreeManager = CompositorParent::GetAPZCTreeManager(rootLayerTreeId);
-    }
     return sApzcTreeManager;
+}
+
+void
+nsWindow::ConfigureAPZCTreeManager()
+{
+    nsBaseWidget::ConfigureAPZCTreeManager();
+    if (!sApzcTreeManager) {
+        sApzcTreeManager = mAPZC;
+    }
+}
+
+already_AddRefed<GeckoContentController>
+nsWindow::CreateRootContentController()
+{
+    nsRefPtr<widget::android::APZCCallbackHandler> controller =
+        widget::android::APZCCallbackHandler::GetInstance();
+    return controller.forget();
 }
 
 uint64_t
