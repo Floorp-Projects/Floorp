@@ -55,10 +55,6 @@ int __real_pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mtx);
 int __real_pthread_cond_timedwait(pthread_cond_t *cond,
                                   pthread_mutex_t *mtx,
                                   const struct timespec *abstime);
-int __real___pthread_cond_timedwait(pthread_cond_t *cond,
-                                    pthread_mutex_t *mtx,
-                                    const struct timespec *abstime,
-                                    clockid_t clock);
 int __real_pthread_mutex_lock(pthread_mutex_t *mtx);
 int __real_poll(struct pollfd *fds, nfds_t nfds, int timeout);
 int __real_epoll_create(int size);
@@ -1123,47 +1119,6 @@ __wrap_pthread_cond_timedwait(pthread_cond_t *cond,
   return rv;
 }
 
-extern "C" int __pthread_cond_timedwait(pthread_cond_t *cond,
-                                        pthread_mutex_t *mtx,
-                                        const struct timespec *abstime,
-                                        clockid_t clock);
-
-extern "C" MFBT_API int
-__wrap___pthread_cond_timedwait(pthread_cond_t *cond,
-                                pthread_mutex_t *mtx,
-                                const struct timespec *abstime,
-                                clockid_t clock) {
-  int rv = 0;
-
-  THREAD_FREEZE_POINT1_VIP();
-  if (freezePoint2) {
-    RECREATE_CONTINUE();
-    RECREATE_PASS_VIP();
-    RECREATE_GATE_VIP();
-    return rv;
-  }
-  if (recreated && mtx) {
-    if (!freezePoint1) {
-      tinfo->condMutex = mtx;
-      if (!pthread_mutex_trylock(mtx)) {
-        tinfo->condMutexNeedsBalancing = true;
-      }
-    }
-    RECREATE_CONTINUE();
-    RECREATE_PASS_VIP();
-  }
-  rv = REAL(__pthread_cond_timedwait)(cond, mtx, abstime, clock);
-  if (recreated && mtx) {
-    if (tinfo->condMutex) {
-      tinfo->condMutexNeedsBalancing = false;
-      pthread_mutex_unlock(mtx);
-    }
-    RECREATE_GATE_VIP();
-  }
-  THREAD_FREEZE_POINT2_VIP();
-
-  return rv;
-}
 
 extern "C" MFBT_API int
 __wrap_pthread_mutex_lock(pthread_mutex_t *mtx) {
