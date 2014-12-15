@@ -742,9 +742,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     break;
   case NS_QUERY_EDITOR_RECT:
     {
-      if (RemoteQueryContentEvent(aEvent)) {
-        break;
-      }
+      // XXX remote event
       ContentEventHandler handler(mPresContext);
       handler.OnQueryEditorRect(aEvent->AsQueryContentEvent());
     }

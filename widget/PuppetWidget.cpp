@@ -530,7 +530,6 @@ PuppetWidget::NotifyIMEOfFocusChange(bool aFocus)
     IMENotification notification(NOTIFY_IME_OF_SELECTION_CHANGE);
     notification.mSelectionChangeData.mCausedByComposition = false;
     NotifyIMEOfSelectionChange(notification); // Update selection
-    NotifyIMEOfEditorRect();
   } else {
     mIMELastBlurSeqno = chromeSeqno;
   }
@@ -577,25 +576,6 @@ PuppetWidget::NotifyIMEOfUpdateComposition()
                                                   caretRect.mReply.mRect);
   return NS_OK;
 }
-
-nsresult
-PuppetWidget::NotifyIMEOfEditorRect()
-{
-#ifndef MOZ_CROSS_PROCESS_IME
-  return NS_OK;
-#endif
-
-  nsEventStatus status;
-  WidgetQueryContentEvent editorRectEvent(true, NS_QUERY_EDITOR_RECT, this);
-  InitEvent(editorRectEvent);
-  DispatchEvent(&editorRectEvent, status);
-  if (editorRectEvent.mSucceeded) {
-    mTabChild->SendNotifyIMEEditorRect(editorRectEvent.mReply.mRect);
-  }
-
-  return NS_OK;
-}
-
 
 nsIMEUpdatePreference
 PuppetWidget::GetIMEUpdatePreference()
