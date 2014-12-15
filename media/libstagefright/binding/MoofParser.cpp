@@ -247,16 +247,18 @@ Moof::ParseTraf(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts)
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("tfhd")) {
       tfhd = Tfhd(box, aTrex);
-    } else if (!aTrex.mTrackId || tfhd.mTrackId == aTrex.mTrackId) {
-      if (box.IsType("tfdt")) {
+    } else if (box.IsType("tfdt")) {
+      if (!aTrex.mTrackId || tfhd.mTrackId == aTrex.mTrackId) {
         tfdt = Tfdt(box);
-      } else if (box.IsType("trun")) {
-        ParseTrun(box, tfhd, tfdt, aMdhd, aEdts);
-      } else if (box.IsType("saiz")) {
-        mSaizs.AppendElement(Saiz(box));
-      } else if (box.IsType("saio")) {
-        mSaios.AppendElement(Saio(box));
       }
+    } else if (box.IsType("trun")) {
+      if (!aTrex.mTrackId || tfhd.mTrackId == aTrex.mTrackId) {
+        ParseTrun(box, tfhd, tfdt, aMdhd, aEdts);
+      }
+    } else if (box.IsType("saiz")) {
+      mSaizs.AppendElement(Saiz(box));
+    } else if (box.IsType("saio")) {
+      mSaios.AppendElement(Saio(box));
     }
   }
 }
