@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<head>
+  <style>
+    body {
+      border:  0px;
+      margin:  0px;
+      padding: 0px;
+    }
+    img {
+      width: 100px;
+      height: 100px;
+      transform-origin: 0 0 0;
+    }
+  </style>
+</head>
+<body>
+  <img src="blue-square-in-square.svg">
+
+  <script>
+    var scales = location.search.substring(1).split("&");
+    var xScale = scales[0];
+    var yScale = scales[1];
+    var zScale = scales[2];
+
+    // Create a style representing a 3d transform.
+    var style = 'transform: matrix3d(' + xScale + ', 0, 0, 0,' +
+                                     '0, ' + yScale + ', 0, 0,' +
+                                     '0, 0, ' + zScale + ', 0,' +
+                                     '0, 0, 0, 1);';
+
+    // Apply the style to the image.
+    var img = document.getElementsByTagName("img")[0];
+    img.style = style;
+  </script>
+</body>
