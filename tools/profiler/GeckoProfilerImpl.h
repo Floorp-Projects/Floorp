@@ -16,6 +16,7 @@
 #include "GeckoProfilerFunc.h"
 #include "PseudoStack.h"
 #include "nsISupports.h"
+#include "ProfilerBacktrace.h"
 
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
@@ -74,9 +75,9 @@ void profiler_shutdown()
 }
 
 static inline
-void profiler_start(int aProfileEntries, int aInterval,
-                       const char** aFeatures, uint32_t aFeatureCount,
-                       const char** aThreadNameFilters, uint32_t aFilterCount)
+void profiler_start(int aProfileEntries, double aInterval,
+                    const char** aFeatures, uint32_t aFeatureCount,
+                    const char** aThreadNameFilters, uint32_t aFilterCount)
 {
   mozilla_sampler_start(aProfileEntries, aInterval, aFeatures, aFeatureCount, aThreadNameFilters, aFilterCount);
 }
@@ -248,12 +249,10 @@ static inline void profiler_tracing(const char* aCategory, const char* aInfo,
                                     ProfilerBacktrace* aCause,
                                     TracingMetadata aMetaData = TRACING_DEFAULT)
 {
-  if (!stack_key_initialized)
-    return;
-
   // Don't insert a marker if we're not profiling to avoid
   // the heap copy (malloc).
-  if (!profiler_is_active()) {
+  if (!stack_key_initialized || !profiler_is_active()) {
+    delete aCause;
     return;
   }
 
@@ -456,7 +455,7 @@ inline void mozilla_sampler_call_exit(void *aHandle)
     return;
 
   PseudoStack *stack = (PseudoStack*)aHandle;
-  stack->pop();
+  stack->popAndMaybeDelete();
 }
 
 void mozilla_sampler_add_marker(const char *aMarker, ProfilerMarkerPayload *aPayload);

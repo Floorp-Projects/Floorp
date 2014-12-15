@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html class="reftest-print">
+<head>
+  <meta charset="utf-8">
+  <style type="text/css" media="all">
+@font-face {
+  font-family: 'dvsm';
+  font-style: normal;
+  font-weight: 200;
+  src: url(../fonts/DejaVuSansMono.woff) format('truetype');
+}
+body,html {margin:0; padding:0;}
+.header{
+  font-family: 'dvsm';
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+}
+</style>
+</head>
+<body>
+
+  <div class="header">This is a header!</div>
+
+    <p>I'm a paragraph (0)</p>
+    <div style="page-break-before:always;"></div>
+    <div style="height:1px; font-family: 'dvsm';">This is a header!</div>
+    <p style="margin-top:-1px; padding-top:2em;">I'm a paragraph (1)</p>
+  
+
+</body>
+</html>

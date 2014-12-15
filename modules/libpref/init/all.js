@@ -1590,7 +1590,6 @@ pref("network.predictor.max-queue-size", 50);
 pref("network.predictor.max-db-size", 157286400); // bytes
 pref("network.predictor.preserve", 80); // percentage of predictor data to keep when cleaning up
 
-
 // The following prefs pertain to the negotiate-auth extension (see bug 17578),
 // which provides transparent Kerberos or NTLM authentication using the SPNEGO
 // protocol.  Each pref is a comma-separated list of keys, where each key has
@@ -2354,6 +2353,8 @@ pref("dom.ipc.tabs.shutdownTimeoutSecs", 0);
 pref("dom.ipc.plugins.java.enabled", false);
 #endif
 
+pref("dom.ipc.plugins.flash.disable-protected-mode", false);
+
 pref("dom.ipc.plugins.flash.subprocess.crashreporter.enabled", true);
 pref("dom.ipc.plugins.reportCrashURL", true);
 
@@ -2615,7 +2616,6 @@ pref("font.size.inflation.lineThreshold", 400);
  * large enough. This means that when s=0, i is always equal to m.
  */
 pref("font.size.inflation.mappingIntercept", 1);
-
 
 /*
  * This controls the percentage that fonts will be inflated, if font
@@ -3301,9 +3301,6 @@ pref("ui.panel.default_level_parent", false);
 
 pref("ui.plugin.cancel_composition_at_input_source_changed", false);
 
-// The min width of composition window for plugins
-pref("ui.plugin.panel.min-width", 500);
-
 pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
 
 // Macbook touchpad two finger pixel scrolling
@@ -3853,7 +3850,6 @@ pref("webgl.angle.force-d3d11", false);
 #ifdef MOZ_WIDGET_GONK
 pref("gfx.gralloc.fence-with-readpixels", false);
 #endif
-
 
 // Stagefright prefs
 pref("stagefright.force-enabled", false);

@@ -51,10 +51,12 @@ using namespace mozilla;
 nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
                            nsFloatManager* aFloatManager,
                            const nsHTMLReflowState* aOuterReflowState,
-                           const nsLineList::iterator* aLine)
+                           const nsLineList::iterator* aLine,
+                           nsLineLayout* aBaseLineLayout)
   : mPresContext(aPresContext),
     mFloatManager(aFloatManager),
     mBlockReflowState(aOuterReflowState),
+    mBaseLineLayout(aBaseLineLayout ? aBaseLineLayout->mBaseLineLayout : this),
     mLastOptionalBreakFrame(nullptr),
     mForceBreakFrame(nullptr),
     mBlockRS(nullptr),/* XXX temporary */
@@ -191,6 +193,11 @@ nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
   psd->mIEnd = aICoord + aISize;
   mContainerWidth = aContainerWidth;
 
+  PerFrameData* pfd = NewPerFrameData(mBlockReflowState->frame);
+  pfd->mAscent = 0;
+  pfd->mSpan = psd;
+  psd->mFrame = pfd;
+
   // If we're in a constrained height frame, then we don't allow a
   // max line box width to take effect.
   if (!(LineContainerFrame()->GetStateBits() &
@@ -244,7 +251,12 @@ nsLineLayout::EndLineReflow()
   printf(": EndLineReflow: width=%d\n", mRootSpan->mICoord - mRootSpan->mIStart);
 #endif
 
-  FreeSpan(mRootSpan);
+  NS_ASSERTION(mBaseLineLayout == this ||
+               (!mSpansAllocated && !mSpansFreed && !mSpanFreeList &&
+                !mFramesAllocated && !mFramesFreed && !mFrameFreeList),
+               "Allocated frames or spans on non-base line layout?");
+
+  UnlinkFrame(mRootSpan->mFrame);
   mCurrentSpan = mRootSpan = nullptr;
 
   NS_ASSERTION(mSpansAllocated == mSpansFreed, "leak");
@@ -362,18 +374,18 @@ nsLineLayout::UpdateBand(WritingMode aWM,
 nsLineLayout::PerSpanData*
 nsLineLayout::NewPerSpanData()
 {
-  PerSpanData* psd = mSpanFreeList;
+  PerSpanData* psd = mBaseLineLayout->mSpanFreeList;
   if (!psd) {
     void *mem;
     size_t sz = sizeof(PerSpanData);
-    PL_ARENA_ALLOCATE(mem, &mArena, sz);
+    PL_ARENA_ALLOCATE(mem, &mBaseLineLayout->mArena, sz);
     if (!mem) {
       NS_ABORT_OOM(sz);
     }
     psd = reinterpret_cast<PerSpanData*>(mem);
   }
   else {
-    mSpanFreeList = psd->mNextFreeSpan;
+    mBaseLineLayout->mSpanFreeList = psd->mNextFreeSpan;
   }
   psd->mParent = nullptr;
   psd->mFrame = nullptr;
@@ -384,7 +396,7 @@ nsLineLayout::NewPerSpanData()
   psd->mHasNonemptyContent = false;
 
 #ifdef DEBUG
-  mSpansAllocated++;
+  mBaseLineLayout->mSpansAllocated++;
 #endif
   return psd;
 }
@@ -445,6 +457,22 @@ nsLineLayout::EndSpan(nsIFrame* aFrame)
   return iSizeResult;
 }
 
+void
+nsLineLayout::AttachFrameToBaseLineLayout(PerFrameData* aFrame)
+{
+  NS_PRECONDITION(this != mBaseLineLayout,
+                  "This method must not be called in a base line layout.");
+
+  PerFrameData* baseFrame = mBaseLineLayout->LastFrame();
+  MOZ_ASSERT(aFrame && baseFrame);
+  MOZ_ASSERT(!aFrame->GetFlag(PFD_ISLINKEDTOBASE),
+             "The frame must not have been linked with the base");
+
+  aFrame->mNextAnnotation = baseFrame->mNextAnnotation;
+  baseFrame->mNextAnnotation = aFrame;
+  aFrame->SetFlag(PFD_ISLINKEDTOBASE, true);
+}
+
 int32_t
 nsLineLayout::GetCurrentSpanCount() const
 {
@@ -477,20 +505,8 @@ nsLineLayout::SplitLineTo(int32_t aNewCount)
       pfd->mNext = nullptr;
       psd->mLastFrame = pfd;
 
-      // Now release all of the frames following pfd
-      pfd = next;
-      while (nullptr != pfd) {
-        next = pfd->mNext;
-        pfd->mNext = mFrameFreeList;
-        mFrameFreeList = pfd;
-#ifdef DEBUG
-        mFramesFreed++;
-#endif
-        if (nullptr != pfd->mSpan) {
-          FreeSpan(pfd->mSpan);
-        }
-        pfd = next;
-      }
+      // Now unlink all of the frames following pfd
+      UnlinkFrame(next);
       break;
     }
     pfd = pfd->mNext;
@@ -527,15 +543,9 @@ nsLineLayout::PushFrame(nsIFrame* aFrame)
     psd->mLastFrame = prevFrame;
   }
 
-  // Now free it, and if it has a span, free that too
-  pfd->mNext = mFrameFreeList;
-  mFrameFreeList = pfd;
-#ifdef DEBUG
-  mFramesFreed++;
-#endif
-  if (nullptr != pfd->mSpan) {
-    FreeSpan(pfd->mSpan);
-  }
+  // Now unlink the frame
+  MOZ_ASSERT(!pfd->mNext);
+  UnlinkFrame(pfd);
 #ifdef NOISY_PUSHING
   nsFrame::IndentBy(stdout, mSpanDepth);
   printf("PushFrame: %p after:\n", psd);
@@ -544,28 +554,60 @@ nsLineLayout::PushFrame(nsIFrame* aFrame)
 }
 
 void
-nsLineLayout::FreeSpan(PerSpanData* psd)
+nsLineLayout::UnlinkFrame(PerFrameData* pfd)
 {
-  // Free its frames
-  PerFrameData* pfd = psd->mFirstFrame;
   while (nullptr != pfd) {
-    if (nullptr != pfd->mSpan) {
-      FreeSpan(pfd->mSpan);
-    }
     PerFrameData* next = pfd->mNext;
-    pfd->mNext = mFrameFreeList;
-    mFrameFreeList = pfd;
-#ifdef DEBUG
-    mFramesFreed++;
-#endif
+    if (pfd->GetFlag(PFD_ISLINKEDTOBASE)) {
+      // This frame is linked to a ruby base, and should not be freed
+      // now. Just unlink it from the span. It will be freed when its
+      // base frame gets unlinked.
+      pfd->mNext = pfd->mPrev = nullptr;
+      pfd = next;
+      continue;
+    }
+
+    // It is a ruby base frame. If there are any annotations
+    // linked to this frame, free them first.
+    PerFrameData* annotationPFD = pfd->mNextAnnotation;
+    while (annotationPFD) {
+      PerFrameData* nextAnnotation = annotationPFD->mNextAnnotation;
+      MOZ_ASSERT(annotationPFD->mNext == nullptr &&
+                 annotationPFD->mPrev == nullptr,
+                 "PFD in annotations should have been unlinked.");
+      FreeFrame(annotationPFD);
+      annotationPFD = nextAnnotation;
+    }
+
+    FreeFrame(pfd);
     pfd = next;
   }
+}
+
+void
+nsLineLayout::FreeFrame(PerFrameData* pfd)
+{
+  if (nullptr != pfd->mSpan) {
+    FreeSpan(pfd->mSpan);
+  }
+  pfd->mNext = mBaseLineLayout->mFrameFreeList;
+  mBaseLineLayout->mFrameFreeList = pfd;
+#ifdef DEBUG
+  mBaseLineLayout->mFramesFreed++;
+#endif
+}
+
+void
+nsLineLayout::FreeSpan(PerSpanData* psd)
+{
+  // Unlink its frames
+  UnlinkFrame(psd->mFirstFrame);
 
   // Now put the span on the free list since it's free too
-  psd->mNextFreeSpan = mSpanFreeList;
-  mSpanFreeList = psd;
+  psd->mNextFreeSpan = mBaseLineLayout->mSpanFreeList;
+  mBaseLineLayout->mSpanFreeList = psd;
 #ifdef DEBUG
-  mSpansFreed++;
+  mBaseLineLayout->mSpansFreed++;
 #endif
 }
 
@@ -586,22 +628,23 @@ nsLineLayout::IsZeroBSize()
 nsLineLayout::PerFrameData*
 nsLineLayout::NewPerFrameData(nsIFrame* aFrame)
 {
-  PerFrameData* pfd = mFrameFreeList;
+  PerFrameData* pfd = mBaseLineLayout->mFrameFreeList;
   if (!pfd) {
     void *mem;
     size_t sz = sizeof(PerFrameData);
-    PL_ARENA_ALLOCATE(mem, &mArena, sz);
+    PL_ARENA_ALLOCATE(mem, &mBaseLineLayout->mArena, sz);
     if (!mem) {
       NS_ABORT_OOM(sz);
     }
     pfd = reinterpret_cast<PerFrameData*>(mem);
   }
   else {
-    mFrameFreeList = pfd->mNext;
+    mBaseLineLayout->mFrameFreeList = pfd->mNext;
   }
   pfd->mSpan = nullptr;
   pfd->mNext = nullptr;
   pfd->mPrev = nullptr;
+  pfd->mNextAnnotation = nullptr;
   pfd->mFlags = 0;  // all flags default to false
   pfd->mFrame = aFrame;
 
@@ -617,7 +660,7 @@ nsLineLayout::NewPerFrameData(nsIFrame* aFrame)
 
 #ifdef DEBUG
   pfd->mBlockDirAlign = 0xFF;
-  mFramesAllocated++;
+  mBaseLineLayout->mFramesAllocated++;
 #endif
   return pfd;
 }
@@ -1198,9 +1241,6 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
   if (nullptr != psd->mFrame) {
     nsFrame::ListTag(stdout, psd->mFrame->mFrame);
   }
-  else {
-    nsFrame::ListTag(stdout, mBlockReflowState->frame);
-  } 
   printf(": aNotSafeToBreak=%s frame=", aNotSafeToBreak ? "true" : "false");
   nsFrame::ListTag(stdout, pfd->mFrame);
   printf(" frameWidth=%d, margins=%d,%d\n",
@@ -1395,12 +1435,6 @@ nsLineLayout::DumpPerSpanData(PerSpanData* psd, int32_t aIndent)
 void
 nsLineLayout::VerticalAlignLine()
 {
-  // Synthesize a PerFrameData for the block frame
-  PerFrameData rootPFD(mBlockReflowState->frame->GetWritingMode());
-  rootPFD.mFrame = mBlockReflowState->frame;
-  rootPFD.mAscent = 0;
-  mRootSpan->mFrame = &rootPFD;
-
   // Partially place the children of the block frame. The baseline for
   // this operation is set to zero so that the y coordinates for all
   // of the placed children will be relative to there.
@@ -1493,9 +1527,6 @@ nsLineLayout::VerticalAlignLine()
     mLineBox->GetBounds().ISize(lineWM), mLineBox->GetBounds().BSize(lineWM),
     mFinalLineBSize, mLineBox->GetLogicalAscent());
 #endif
-
-  // Undo root-span mFrame pointer to prevent brane damage later on...
-  mRootSpan->mFrame = nullptr;
 }
 
 // Place frames with CSS property vertical-align: top or bottom.
@@ -2304,9 +2335,7 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
   pfd = pfd->Last();
   while (nullptr != pfd) {
 #ifdef REALLY_NOISY_TRIM
-    nsFrame::ListTag(stdout, (psd == mRootSpan
-                              ? mBlockReflowState->frame
-                              : psd->mFrame->mFrame));
+    nsFrame::ListTag(stdout, psd->mFrame->mFrame);
     printf(": attempting trim of ");
     nsFrame::ListTag(stdout, pfd->mFrame);
     printf("\n");
@@ -2372,9 +2401,7 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
       nsTextFrame::TrimOutput trimOutput = static_cast<nsTextFrame*>(pfd->mFrame)->
           TrimTrailingWhiteSpace(mBlockReflowState->rendContext);
 #ifdef NOISY_TRIM
-      nsFrame::ListTag(stdout, (psd == mRootSpan
-                                ? mBlockReflowState->frame
-                                : psd->mFrame->mFrame));
+      nsFrame::ListTag(stdout, psd->mFrame->mFrame);
       printf(": trim of ");
       nsFrame::ListTag(stdout, pfd->mFrame);
       printf(" returned %d\n", trimOutput.mDeltaWidth);
@@ -2680,7 +2707,7 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflo
 {
   nsOverflowAreas overflowAreas;
   WritingMode wm = psd->mWritingMode;
-  if (nullptr != psd->mFrame) {
+  if (psd != mRootSpan) {
     // The span's overflow areas come in three parts:
     // -- this frame's width and height
     // -- pfd->mOverflowAreas, which is the area of a bullet or the union
@@ -2782,7 +2809,7 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflo
 
   // If we just computed a spans combined area, we need to update its
   // overflow rect...
-  if (psd->mFrame) {
+  if (psd != mRootSpan) {
     PerFrameData* spanPFD = psd->mFrame;
     nsIFrame* frame = spanPFD->mFrame;
     frame->FinishAndStoreOverflow(overflowAreas, frame->GetSize());

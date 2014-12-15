@@ -378,7 +378,7 @@ class DeviceManagerADB(DeviceManager):
                 envCnt += 1
         if uri != "":
             acmd.append("-d")
-            acmd.append(''.join(['\'',uri, '\'']));
+            acmd.append(uri);
         self._logger.info(acmd)
         self._checkCmd(acmd)
         return outputFile

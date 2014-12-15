@@ -786,6 +786,23 @@ function getComputedViewProperty(view, name) {
 }
 
 /**
+ * Get an instance of PropertyView from the computed-view.
+ * @param {CssHtmlTree} view The instance of the computed view panel
+ * @param {String} name The name of the property to retrieve
+ * @return {PropertyView}
+ */
+function getComputedViewPropertyView(view, name) {
+  let propView;
+  for (let propertyView of view.propertyViews) {
+    if (propertyView._propertyInfo.name === name) {
+      propView = propertyView;
+      break;
+    }
+  }
+  return propView;
+}
+
+/**
  * Get a reference to the property-content element for a given property name in
  * the computed-view.
  * A property-content element always follows (nextSibling) the property itself

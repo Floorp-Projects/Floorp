@@ -182,7 +182,7 @@ void GonkConsumerBase::dumpLocked(String8& result, const char* prefix,
     result.append(buffer);
 
     if (!mAbandoned) {
-        mBufferQueue->dump(result, prefix, buffer, SIZE);
+        mBufferQueue->dumpToString(result, prefix, buffer, SIZE);
     }
 }
 

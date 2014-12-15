@@ -8,9 +8,6 @@ function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, CallTreeView } = panel.panelWin;
 
-  let updated = 0;
-  CallTreeView.on(EVENTS.CALL_TREE_RENDERED, () => updated++);
-
   yield startRecording(panel);
   yield busyWait(100);
 

@@ -718,11 +718,10 @@ void ARTPConnection::onInjectPacket(const sp<AMessage> &msg) {
 
     StreamInfo *s = &*it;
 
-    status_t err;
     if (it->mInterleavedRTPIdx == index) {
-        err = parseRTP(s, buffer);
+        parseRTP(s, buffer);
     } else {
-        err = parseRTCP(s, buffer);
+        parseRTCP(s, buffer);
     }
 }
 

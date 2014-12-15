@@ -81,13 +81,13 @@ BEGIN_TEST(testJitGVN_FixupOSROnlyLoop)
 
     // The loops are no longer reachable from the normal entry. They are
     // doinated by the osrEntry.
-    MOZ_ASSERT(func.graph.osrBlock() == osrEntry);
+    MOZ_RELEASE_ASSERT(func.graph.osrBlock() == osrEntry);
     MBasicBlock *newInner = FollowTrivialGotos(osrEntry->lastIns()->toGoto()->target());
     MBasicBlock *newOuter = FollowTrivialGotos(newInner->lastIns()->toTest()->ifFalse());
     MBasicBlock *newExit = FollowTrivialGotos(entry);
-    MOZ_ASSERT(newInner->isLoopHeader());
-    MOZ_ASSERT(newOuter->isLoopHeader());
-    MOZ_ASSERT(newExit->lastIns()->isReturn());
+    MOZ_RELEASE_ASSERT(newInner->isLoopHeader());
+    MOZ_RELEASE_ASSERT(newOuter->isLoopHeader());
+    MOZ_RELEASE_ASSERT(newExit->lastIns()->isReturn());
 
     // One more time.
     ClearDominatorTree(func.graph);
@@ -96,13 +96,13 @@ BEGIN_TEST(testJitGVN_FixupOSROnlyLoop)
 
     // The loops are no longer reachable from the normal entry. They are
     // doinated by the osrEntry.
-    MOZ_ASSERT(func.graph.osrBlock() == osrEntry);
+    MOZ_RELEASE_ASSERT(func.graph.osrBlock() == osrEntry);
     newInner = FollowTrivialGotos(osrEntry->lastIns()->toGoto()->target());
     newOuter = FollowTrivialGotos(newInner->lastIns()->toTest()->ifFalse());
     newExit = FollowTrivialGotos(entry);
-    MOZ_ASSERT(newInner->isLoopHeader());
-    MOZ_ASSERT(newOuter->isLoopHeader());
-    MOZ_ASSERT(newExit->lastIns()->isReturn());
+    MOZ_RELEASE_ASSERT(newInner->isLoopHeader());
+    MOZ_RELEASE_ASSERT(newOuter->isLoopHeader());
+    MOZ_RELEASE_ASSERT(newExit->lastIns()->isReturn());
 
     return true;
 }
@@ -175,15 +175,15 @@ BEGIN_TEST(testJitGVN_FixupOSROnlyLoopNested)
 
     // The loops are no longer reachable from the normal entry. They are
     // doinated by the osrEntry.
-    MOZ_ASSERT(func.graph.osrBlock() == osrEntry);
+    MOZ_RELEASE_ASSERT(func.graph.osrBlock() == osrEntry);
     MBasicBlock *newInner = FollowTrivialGotos(osrEntry->lastIns()->toGoto()->target());
     MBasicBlock *newMiddle = FollowTrivialGotos(newInner->lastIns()->toTest()->ifFalse());
     MBasicBlock *newOuter = FollowTrivialGotos(newMiddle->lastIns()->toTest()->ifFalse());
     MBasicBlock *newExit = FollowTrivialGotos(entry);
-    MOZ_ASSERT(newInner->isLoopHeader());
-    MOZ_ASSERT(newMiddle->isLoopHeader());
-    MOZ_ASSERT(newOuter->isLoopHeader());
-    MOZ_ASSERT(newExit->lastIns()->isReturn());
+    MOZ_RELEASE_ASSERT(newInner->isLoopHeader());
+    MOZ_RELEASE_ASSERT(newMiddle->isLoopHeader());
+    MOZ_RELEASE_ASSERT(newOuter->isLoopHeader());
+    MOZ_RELEASE_ASSERT(newExit->lastIns()->isReturn());
 
     // One more time.
     ClearDominatorTree(func.graph);
@@ -192,15 +192,15 @@ BEGIN_TEST(testJitGVN_FixupOSROnlyLoopNested)
 
     // The loops are no longer reachable from the normal entry. They are
     // doinated by the osrEntry.
-    MOZ_ASSERT(func.graph.osrBlock() == osrEntry);
+    MOZ_RELEASE_ASSERT(func.graph.osrBlock() == osrEntry);
     newInner = FollowTrivialGotos(osrEntry->lastIns()->toGoto()->target());
     newMiddle = FollowTrivialGotos(newInner->lastIns()->toTest()->ifFalse());
     newOuter = FollowTrivialGotos(newMiddle->lastIns()->toTest()->ifFalse());
     newExit = FollowTrivialGotos(entry);
-    MOZ_ASSERT(newInner->isLoopHeader());
-    MOZ_ASSERT(newMiddle->isLoopHeader());
-    MOZ_ASSERT(newOuter->isLoopHeader());
-    MOZ_ASSERT(newExit->lastIns()->isReturn());
+    MOZ_RELEASE_ASSERT(newInner->isLoopHeader());
+    MOZ_RELEASE_ASSERT(newMiddle->isLoopHeader());
+    MOZ_RELEASE_ASSERT(newOuter->isLoopHeader());
+    MOZ_RELEASE_ASSERT(newExit->lastIns()->isReturn());
 
     return true;
 }

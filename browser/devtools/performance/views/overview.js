@@ -8,7 +8,15 @@
 // in toolkit/devtools/server/actors/timeline.js
 const OVERVIEW_UPDATE_INTERVAL = 200; // ms
 
-const FRAMERATE_GRAPH_HEIGHT = 60; // px
+const FRAMERATE_GRAPH_LOW_RES_INTERVAL = 100; // ms
+const FRAMERATE_GRAPH_HIGH_RES_INTERVAL = 16; // ms
+
+const FRAMERATE_GRAPH_HEIGHT = 45; // px
+const MARKERS_GRAPH_HEADER_HEIGHT = 12; // px
+const MARKERS_GRAPH_BODY_HEIGHT = 45; // 9px * 5 groups
+const MARKERS_GROUP_VERTICAL_PADDING = 3.5; // px
+const MEMORY_GRAPH_HEIGHT = 30; // px
+
 const GRAPH_SCROLL_EVENTS_DRAIN = 50; // ms
 
 /**
@@ -20,23 +28,25 @@ let OverviewView = {
    * Sets up the view with event binding.
    */
   initialize: Task.async(function *() {
-    this._framerateEl = $("#time-framerate");
-    this._ticksData = [];
-
     this._start = this._start.bind(this);
     this._stop = this._stop.bind(this);
-    this._onTimelineData = this._onTimelineData.bind(this);
     this._onRecordingTick = this._onRecordingTick.bind(this);
     this._onGraphMouseUp = this._onGraphMouseUp.bind(this);
     this._onGraphScroll = this._onGraphScroll.bind(this);
 
-    yield this._initializeFramerateGraph();
+    yield this._showFramerateGraph();
+    yield this._showMarkersGraph();
+    yield this._showMemoryGraph();
 
     this.framerateGraph.on("mouseup", this._onGraphMouseUp);
     this.framerateGraph.on("scroll", this._onGraphScroll);
+    this.markersOverview.on("mouseup", this._onGraphMouseUp);
+    this.markersOverview.on("scroll", this._onGraphScroll);
+    this.memoryOverview.on("mouseup", this._onGraphMouseUp);
+    this.memoryOverview.on("scroll", this._onGraphScroll);
+
     PerformanceController.on(EVENTS.RECORDING_STARTED, this._start);
     PerformanceController.on(EVENTS.RECORDING_STOPPED, this._stop);
-    PerformanceController.on(EVENTS.TIMELINE_DATA, this._onTimelineData);
   }),
 
   /**
@@ -45,11 +55,81 @@ let OverviewView = {
   destroy: function () {
     this.framerateGraph.off("mouseup", this._onGraphMouseUp);
     this.framerateGraph.off("scroll", this._onGraphScroll);
+    this.markersOverview.off("mouseup", this._onGraphMouseUp);
+    this.markersOverview.off("scroll", this._onGraphScroll);
+    this.memoryOverview.off("mouseup", this._onGraphMouseUp);
+    this.memoryOverview.off("scroll", this._onGraphScroll);
+
     clearNamedTimeout("graph-scroll");
     PerformanceController.off(EVENTS.RECORDING_STARTED, this._start);
     PerformanceController.off(EVENTS.RECORDING_STOPPED, this._stop);
-    PerformanceController.off(EVENTS.TIMELINE_DATA, this._onTimelineData);
   },
+
+  /**
+   * Sets up the framerate graph.
+   */
+  _showFramerateGraph: Task.async(function *() {
+    this.framerateGraph = new LineGraphWidget($("#time-framerate"), L10N.getStr("graphs.fps"));
+    this.framerateGraph.fixedHeight = FRAMERATE_GRAPH_HEIGHT;
+    yield this.framerateGraph.ready();
+  }),
+
+  /**
+   * Sets up the markers overivew graph.
+   */
+  _showMarkersGraph: Task.async(function *() {
+    this.markersOverview = new MarkersOverview($("#markers-overview"));
+    this.markersOverview.headerHeight = MARKERS_GRAPH_HEADER_HEIGHT;
+    this.markersOverview.bodyHeight = MARKERS_GRAPH_BODY_HEIGHT;
+    this.markersOverview.groupPadding = MARKERS_GROUP_VERTICAL_PADDING;
+    yield this.markersOverview.ready();
+
+    CanvasGraphUtils.linkAnimation(this.framerateGraph, this.markersOverview);
+    CanvasGraphUtils.linkSelection(this.framerateGraph, this.markersOverview);
+  }),
+
+  /**
+   * Sets up the memory overview graph.
+   */
+  _showMemoryGraph: Task.async(function *() {
+    this.memoryOverview = new MemoryOverview($("#memory-overview"));
+    this.memoryOverview.fixedHeight = MEMORY_GRAPH_HEIGHT;
+    yield this.memoryOverview.ready();
+
+    CanvasGraphUtils.linkAnimation(this.framerateGraph, this.memoryOverview);
+    CanvasGraphUtils.linkSelection(this.framerateGraph, this.memoryOverview);
+  }),
+
+  /**
+   * Method for handling all the set up for rendering the overview graphs.
+   *
+   * @param number resolution
+   *        The fps graph resolution. @see Graphs.jsm
+   */
+  render: Task.async(function *(resolution) {
+    let interval = PerformanceController.getInterval();
+    let markers = PerformanceController.getMarkers();
+    let memory = PerformanceController.getMemory();
+    let timestamps = PerformanceController.getTicks();
+
+    // Compute an approximate ending time for the view. This is
+    // needed to ensure that the view updates even when new data is
+    // not being generated.
+    let fakeTime = interval.startTime + interval.localElapsedTime;
+    interval.endTime = fakeTime;
+
+    this.markersOverview.setData({ interval, markers });
+    this.emit(EVENTS.MARKERS_GRAPH_RENDERED);
+
+    this.memoryOverview.setData({ interval, memory });
+    this.emit(EVENTS.MEMORY_GRAPH_RENDERED);
+
+    yield this.framerateGraph.setDataFromTimestamps(timestamps, resolution);
+    this.emit(EVENTS.FRAMERATE_GRAPH_RENDERED);
+
+    // Finished rendering all graphs in this overview.
+    this.emit(EVENTS.OVERVIEW_RENDERED);
+  }),
 
   /**
    * Called at most every OVERVIEW_UPDATE_INTERVAL milliseconds
@@ -57,12 +137,7 @@ let OverviewView = {
    * data into all the corresponding overview graphs.
    */
   _onRecordingTick: Task.async(function *() {
-    // The `ticks` event on the TimelineFront returns all ticks for the
-    // recording session, so just convert to plottable values and draw.
-    let [, timestamps] = this._ticksData;
-    yield this.framerateGraph.setDataFromTimestamps(timestamps);
-
-    this.emit(EVENTS.OVERVIEW_RENDERED);
+    yield this.render(FRAMERATE_GRAPH_LOW_RES_INTERVAL);
     this._prepareNextTick();
   }),
 
@@ -84,7 +159,10 @@ let OverviewView = {
    * Fires an event to be handled elsewhere.
    */
   _onGraphMouseUp: function () {
-    this._onSelectionChange();
+    // Only fire a selection change event if the selection is actually enabled.
+    if (this.framerateGraph.selectionEnabled) {
+      this._onSelectionChange();
+    }
   },
 
   /**
@@ -98,18 +176,6 @@ let OverviewView = {
   },
 
   /**
-   * Sets up the framerate graph.
-   */
-  _initializeFramerateGraph: Task.async(function *() {
-    let graph = new LineGraphWidget(this._framerateEl, L10N.getStr("graphs.fps"));
-    graph.fixedHeight = FRAMERATE_GRAPH_HEIGHT;
-    graph.selectionEnabled = false;
-    this.framerateGraph = graph;
-
-    yield graph.ready();
-  }),
-
-  /**
    * Called to refresh the timer to keep firing _onRecordingTick.
    */
   _prepareNextTick: function () {
@@ -121,28 +187,29 @@ let OverviewView = {
   },
 
   /**
-   * Event handlers
+   * Called when recording starts.
    */
-
   _start: function () {
     this._timeoutId = setTimeout(this._onRecordingTick, OVERVIEW_UPDATE_INTERVAL);
-    this.framerateGraph.dropSelection();
-  },
 
-  _stop: function () {
-    clearTimeout(this._timeoutId);
-    this.framerateGraph.selectionEnabled = true;
+    this.framerateGraph.dropSelection();
+    this.framerateGraph.selectionEnabled = false;
+    this.markersOverview.selectionEnabled = false;
+    this.memoryOverview.selectionEnabled = false;
   },
 
   /**
-   * Called when the TimelineFront has new data for
-   * framerate, markers or memory, and stores the data
-   * to be plotted subsequently.
+   * Called when recording stops.
    */
-  _onTimelineData: function (_, eventName, ...data) {
-    if (eventName === "ticks") {
-      this._ticksData = data;
-    }
+  _stop: function () {
+    clearTimeout(this._timeoutId);
+    this._timeoutId = null;
+
+    this.render(FRAMERATE_GRAPH_HIGH_RES_INTERVAL);
+
+    this.framerateGraph.selectionEnabled = true;
+    this.markersOverview.selectionEnabled = true;
+    this.memoryOverview.selectionEnabled = true;
   }
 };
 

@@ -1472,32 +1472,38 @@ js::DefineNativeProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId 
             }
         }
     } else if (!(attrs & JSPROP_IGNORE_VALUE)) {
-        /*
-         * We might still want to ignore redefining some of our attributes, if the
-         * request came through a proxy after Object.defineProperty(), but only if we're redefining
-         * a data property.
-         * FIXME: All this logic should be removed when Proxies use PropDesc, but we need to
-         *        remove JSPropertyOp getters and setters first.
-         * FIXME: This is still wrong for various array types, and will set the wrong attributes
-         *        by accident, but we can't use NativeLookupOwnProperty in this case, because of resolve
-         *        loops.
-         */
-        shape = obj->lookup(cx, id);
+        // If we did a normal lookup here, it would cause resolve hook recursion in
+        // the following case. Suppose the first script we run in a lazy global is
+        // |parseInt()|.
+        //   - js_InitNumber is called to resolve parseInt.
+        //   - js_InitNumber tries to define the Number constructor on the global.
+        //   - We end up here.
+        //   - This lookup for 'Number' triggers the global resolve hook.
+        //   - js_InitNumber is called again, this time to resolve Number.
+        //   - It creates a second Number constructor, which trips an assertion.
+        //
+        // Therefore we do a special lookup that does not call the resolve hook.
+        NativeLookupOwnPropertyNoResolve(cx, obj, id, &shape);
+
         if (shape) {
-            if (shape->isAccessorDescriptor() &&
-                !CheckAccessorRedefinition(cx, obj, shape, getter, setter, id, attrs))
-            {
-                return false;
-            }
-            if (shape->isDataDescriptor())
+            // If any other JSPROP_IGNORE_* attributes are present, copy the
+            // corresponding JSPROP_* attributes from the existing property.
+            if (IsImplicitDenseOrTypedArrayElement(shape)) {
+                attrs = ApplyAttributes(attrs, true, true, !IsAnyTypedArray(obj));
+            } else {
                 attrs = ApplyOrDefaultAttributes(attrs, shape);
+
+                // Do not redefine a nonconfigurable accessor property.
+                if (shape->isAccessorDescriptor()) {
+                    if (!CheckAccessorRedefinition(cx, obj, shape, getter, setter, id, attrs))
+                        return false;
+                }
+            }
         }
     } else {
-        /*
-         * We have been asked merely to update some attributes by a caller of
-         * Object.defineProperty, laundered through the proxy system, and returning here. We can
-         * get away with just using JSObject::changeProperty here.
-         */
+        // We have been asked merely to update some attributes. If the
+        // property already exists and it's a data property, we can just
+        // call JSObject::changeProperty.
         if (!NativeLookupOwnProperty(cx, obj, id, &shape))
             return false;
 
@@ -1699,67 +1705,6 @@ js::NativeGet(JSContext *cx, HandleObject obj, HandleNativeObject pobj, HandleSh
               MutableHandleValue vp)
 {
     return NativeGetInline<CanGC>(cx, obj, obj, pobj, shape, vp);
-}
-
-template <ExecutionMode mode>
-static bool
-NativeSet(typename ExecutionModeTraits<mode>::ContextType cxArg, HandleNativeObject obj,
-          HandleObject receiver, HandleShape shape, bool strict, MutableHandleValue vp)
-{
-    MOZ_ASSERT(cxArg->isThreadLocal(obj));
-    MOZ_ASSERT(obj->isNative());
-
-    if (shape->hasSlot()) {
-        /* If shape has a stub setter, just store vp. */
-        if (shape->hasDefaultSetter()) {
-            if (mode == ParallelExecution) {
-                if (!obj->setSlotIfHasType(shape, vp))
-                    return false;
-            } else {
-                // Global properties declared with 'var' will be initially
-                // defined with an undefined value, so don't treat the initial
-                // assignments to such properties as overwrites.
-                bool overwriting = !obj->is<GlobalObject>() || !obj->getSlot(shape->slot()).isUndefined();
-                obj->setSlotWithType(cxArg->asExclusiveContext(), shape, vp, overwriting);
-            }
-
-            return true;
-        }
-    }
-
-    if (mode == ParallelExecution)
-        return false;
-    JSContext *cx = cxArg->asJSContext();
-
-    if (!shape->hasSlot()) {
-        /*
-         * Allow API consumers to create shared properties with stub setters.
-         * Such properties effectively function as data descriptors which are
-         * not writable, so attempting to set such a property should do nothing
-         * or throw if we're in strict mode.
-         */
-        if (!shape->hasGetterValue() && shape->hasDefaultSetter())
-            return js_ReportGetterOnlyAssignment(cx, strict);
-    }
-
-    RootedValue ovp(cx, vp);
-
-    uint32_t sample = cx->runtime()->propertyRemovals;
-    if (!shape->set(cx, obj, receiver, strict, vp))
-        return false;
-
-    /*
-     * Update any slot for the shape with the value produced by the setter,
-     * unless the setter deleted the shape.
-     */
-    if (shape->hasSlot() &&
-        (MOZ_LIKELY(cx->runtime()->propertyRemovals == sample) ||
-         obj->contains(cx, shape)))
-    {
-        obj->setSlot(shape->slot(), vp);
-    }
-
-    return true;
 }
 
 /*
@@ -1974,42 +1919,80 @@ MaybeReportUndeclaredVarAssignment(JSContext *cx, JSString *propname)
                                         JSMSG_UNDECLARED_VAR, bytes.ptr());
 }
 
+
+/*** [[Set]] *************************************************************************************/
+
 /*
  * When a [[Set]] operation finds no existing property with the given id
  * or finds a writable data property on the prototype chain, we end up here.
  * Finish the [[Set]] by defining a new property on receiver.
  *
- * This should follow ES6 draft rev 28, 9.1.9 [[Set]] steps 5.c-f, but it
- * is really old code and we're not there yet.
+ * This implements ES6 draft rev 28, 9.1.9 [[Set]] steps 5.c-f, but it
+ * is really old code and there are a few barnacles.
  */
 template <ExecutionMode mode>
 static bool
 SetPropertyByDefining(typename ExecutionModeTraits<mode>::ContextType cxArg,
-                      HandleObject receiver, HandleId id, HandleValue v, bool strict)
+                      HandleNativeObject obj, HandleObject receiver, HandleId id,
+                      HandleValue v, bool strict, bool objHasOwn)
 {
-    // If receiver is inextensible, stop. (According to the specification, this
-    // is supposed to be enforced by [[DefineOwnProperty]], but we haven't
-    // implemented that yet.)
-    bool extensible;
-    if (mode == ParallelExecution) {
-        if (receiver->is<ProxyObject>())
+    // Step 5.c-d: Test whether receiver has an existing own property
+    // receiver[id]. The spec calls [[GetOwnProperty]]; js::HasOwnProperty is
+    // the same thing except faster in the non-proxy case. Sometimes we can
+    // even optimize away the HasOwnProperty call.
+    bool existing;
+    if (receiver == obj) {
+        // The common case. The caller has necessarily done a property lookup
+        // on obj and passed us the answer as objHasOwn.
+#ifdef DEBUG
+        // Check that objHasOwn is correct. This could fail if receiver or a
+        // native object on its prototype chain has a nondeterministic resolve
+        // hook. We shouldn't have any that are quite that badly behaved.
+        if (mode == SequentialExecution) {
+            if (!HasOwnProperty(cxArg->asJSContext(), receiver, id, &existing))
+                return false;
+            MOZ_ASSERT(existing == objHasOwn);
+        }
+#endif
+        existing = objHasOwn;
+    } else if (mode == ParallelExecution) {
+        // Not the fastest possible implementation, but the fastest possible
+        // without refactoring LookupPropertyPure or duplicating code.
+        NativeObject *npobj;
+        Shape *shape;
+        if (!LookupPropertyPure(cxArg, receiver, id, &npobj, &shape))
             return false;
-        extensible = receiver->nonProxyIsExtensible();
+        existing = (npobj == receiver);
     } else {
-        if (!JSObject::isExtensible(cxArg->asJSContext(), receiver, &extensible))
+        if (!HasOwnProperty(cxArg->asJSContext(), receiver, id, &existing))
             return false;
     }
-    if (!extensible) {
-        // Error in strict mode code, warn with extra warnings option,
-        // otherwise do nothing.
-        if (strict)
-            return receiver->reportNotExtensible(cxArg);
-        if (mode == SequentialExecution &&
-            cxArg->asJSContext()->compartment()->options().extraWarnings(cxArg->asJSContext()))
-        {
-            return receiver->reportNotExtensible(cxArg, JSREPORT_STRICT | JSREPORT_WARNING);
+
+    // If the property doesn't already exist, check for an inextensible
+    // receiver. (According to the specification, this is supposed to be
+    // enforced by [[DefineOwnProperty]], but we haven't implemented that yet.)
+    if (!existing) {
+        bool extensible;
+        if (mode == ParallelExecution) {
+            if (receiver->is<ProxyObject>())
+                return false;
+            extensible = receiver->nonProxyIsExtensible();
+        } else {
+            if (!JSObject::isExtensible(cxArg->asJSContext(), receiver, &extensible))
+                return false;
         }
-        return true;
+        if (!extensible) {
+            // Error in strict mode code, warn with extra warnings option,
+            // otherwise do nothing.
+            if (strict)
+                return receiver->reportNotExtensible(cxArg);
+            if (mode == SequentialExecution &&
+                cxArg->asJSContext()->compartment()->options().extraWarnings(cxArg->asJSContext()))
+            {
+                return receiver->reportNotExtensible(cxArg, JSREPORT_STRICT | JSREPORT_WARNING);
+            }
+            return true;
+        }
     }
 
     // Invalidate SpiderMonkey-specific caches or bail.
@@ -2026,7 +2009,11 @@ SetPropertyByDefining(typename ExecutionModeTraits<mode>::ContextType cxArg,
             return false;
     }
 
-    // Define the new data property.
+    // Step 5.e-f. Define the new data property.
+    unsigned attrs =
+        existing
+        ? JSPROP_IGNORE_ENUMERATE | JSPROP_IGNORE_READONLY | JSPROP_IGNORE_PERMANENT
+        : JSPROP_ENUMERATE;
     JSPropertyOp getter = clasp->getProperty;
     JSStrictPropertyOp setter = clasp->setProperty;
     MOZ_ASSERT(getter != JS_PropertyStub);
@@ -2035,11 +2022,11 @@ SetPropertyByDefining(typename ExecutionModeTraits<mode>::ContextType cxArg,
         if (mode == ParallelExecution)
             return false;
         return JSObject::defineGeneric(cxArg->asJSContext(), receiver, id, v, getter, setter,
-                                       JSPROP_ENUMERATE);
+                                       attrs);
     }
     Rooted<NativeObject*> nativeReceiver(cxArg, &receiver->as<NativeObject>());
     return DefinePropertyOrElement<mode>(cxArg, nativeReceiver, id, getter, setter,
-                                         JSPROP_ENUMERATE, v, true, strict);
+                                         attrs, v, true, strict);
 }
 
 /*
@@ -2054,8 +2041,8 @@ SetPropertyByDefining(typename ExecutionModeTraits<mode>::ContextType cxArg,
 template <ExecutionMode mode>
 static bool
 SetNonexistentProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
-                       HandleObject receiver, HandleId id, baseops::QualifiedBool qualified,
-                       HandleValue v, bool strict)
+                       HandleNativeObject obj, HandleObject receiver, HandleId id,
+                       baseops::QualifiedBool qualified, HandleValue v, bool strict)
 {
     // We should never add properties to lexical blocks.
     MOZ_ASSERT(!receiver->is<BlockObject>());
@@ -2068,77 +2055,148 @@ SetNonexistentProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
             return false;
     }
 
-    return SetPropertyByDefining<mode>(cxArg, receiver, id, v, strict);
+    return SetPropertyByDefining<mode>(cxArg, obj, receiver, id, v, strict, false);
 }
 
+/*
+ * Set an existing own property obj[index] that's a dense element or typed
+ * array element.
+ */
 template <ExecutionMode mode>
-bool
-baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg,
-                           HandleNativeObject obj, HandleObject receiver, HandleId id,
-                           QualifiedBool qualified, MutableHandleValue vp, bool strict)
+static bool
+SetDenseOrTypedArrayElement(typename ExecutionModeTraits<mode>::ContextType cxArg,
+                            HandleNativeObject obj, uint32_t index, MutableHandleValue vp,
+                            bool strict)
 {
-    MOZ_ASSERT(cxArg->isThreadLocal(obj));
-
-    if (MOZ_UNLIKELY(obj->watched())) {
-        if (mode == ParallelExecution)
-            return false;
-
-        /* Fire watchpoints, if any. */
-        JSContext *cx = cxArg->asJSContext();
-        WatchpointMap *wpmap = cx->compartment()->watchpointMap;
-        if (wpmap && !wpmap->triggerWatchpoint(cx, obj, id, vp))
-            return false;
-    }
-
-    RootedObject pobj(cxArg);
-    RootedShape shape(cxArg);
-    if (mode == ParallelExecution) {
-        NativeObject *npobj;
-        if (!LookupPropertyPure(cxArg, obj, id, &npobj, shape.address()))
-            return false;
-        pobj = npobj;
-    } else {
-        JSContext *cx = cxArg->asJSContext();
-        if (!LookupNativeProperty(cx, obj, id, &pobj, &shape))
-            return false;
-    }
-
-    if (!shape)
-        return SetNonexistentProperty<mode>(cxArg, receiver, id, qualified, vp, strict);
-
-    if (!pobj->isNative()) {
-        if (pobj->is<ProxyObject>()) {
-            if (mode == ParallelExecution)
+    if (IsAnyTypedArray(obj)) {
+        double d;
+        if (mode == ParallelExecution) {
+            // Bail if converting the value might invoke user-defined
+            // conversions.
+            if (vp.isObject())
                 return false;
-
-            JSContext *cx = cxArg->asJSContext();
-            Rooted<PropertyDescriptor> pd(cx);
-            if (!Proxy::getPropertyDescriptor(cx, pobj, id, &pd))
+            if (!NonObjectToNumber(cxArg, vp, &d))
                 return false;
-
-            if ((pd.attributes() & (JSPROP_SHARED | JSPROP_SHADOWABLE)) == JSPROP_SHARED) {
-                return !pd.setter() ||
-                       CallSetter(cx, receiver, id, pd.setter(), pd.attributes(), strict, vp);
-            }
-
-            if (pd.isReadonly()) {
-                if (strict)
-                    return JSObject::reportReadOnly(cx, id, JSREPORT_ERROR);
-                if (cx->compartment()->options().extraWarnings(cx))
-                    return JSObject::reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
-                return true;
-            }
+        } else {
+            if (!ToNumber(cxArg->asJSContext(), vp, &d))
+                return false;
         }
 
-        return SetPropertyByDefining<mode>(cxArg, receiver, id, vp, strict);
+        // Silently do nothing for out-of-bounds sets, for consistency with
+        // current behavior.  (ES6 currently says to throw for this in
+        // strict mode code, so we may eventually need to change.)
+        uint32_t len = AnyTypedArrayLength(obj);
+        if (index < len) {
+            if (obj->is<TypedArrayObject>())
+                TypedArrayObject::setElement(obj->as<TypedArrayObject>(), index, d);
+            else
+                SharedTypedArrayObject::setElement(obj->as<SharedTypedArrayObject>(), index, d);
+        }
+        return true;
     }
 
-    /* Now shape is non-null and obj[id] was found directly in pobj, which is native. */
-    unsigned attrs = JSPROP_ENUMERATE;
+    bool definesPast;
+    if (!WouldDefinePastNonwritableLength(cxArg, obj, index, strict, &definesPast))
+        return false;
+    if (definesPast) {
+        /* Bail out of parallel execution if we are strict to throw. */
+        if (mode == ParallelExecution)
+            return !strict;
+        return true;
+    }
+
+    if (!obj->maybeCopyElementsForWrite(cxArg))
+        return false;
+
+    if (mode == ParallelExecution)
+        return obj->setDenseElementIfHasType(index, vp);
+
+    obj->setDenseElementWithType(cxArg->asJSContext(), index, vp);
+    return true;
+}
+
+/*
+ * Finish assignment to a shapeful property of a native object obj. This
+ * conforms to no standard and there is a lot of legacy baggage here.
+ */
+template <ExecutionMode mode>
+static bool
+NativeSet(typename ExecutionModeTraits<mode>::ContextType cxArg, HandleNativeObject obj,
+          HandleObject receiver, HandleShape shape, bool strict, MutableHandleValue vp)
+{
+    MOZ_ASSERT(cxArg->isThreadLocal(obj));
+    MOZ_ASSERT(obj->isNative());
+
+    if (shape->hasSlot()) {
+        /* If shape has a stub setter, just store vp. */
+        if (shape->hasDefaultSetter()) {
+            if (mode == ParallelExecution) {
+                if (!obj->setSlotIfHasType(shape, vp))
+                    return false;
+            } else {
+                // Global properties declared with 'var' will be initially
+                // defined with an undefined value, so don't treat the initial
+                // assignments to such properties as overwrites.
+                bool overwriting = !obj->is<GlobalObject>() || !obj->getSlot(shape->slot()).isUndefined();
+                obj->setSlotWithType(cxArg->asExclusiveContext(), shape, vp, overwriting);
+            }
+
+            return true;
+        }
+    }
+
+    if (mode == ParallelExecution)
+        return false;
+    JSContext *cx = cxArg->asJSContext();
+
+    if (!shape->hasSlot()) {
+        /*
+         * Allow API consumers to create shared properties with stub setters.
+         * Such properties effectively function as data descriptors which are
+         * not writable, so attempting to set such a property should do nothing
+         * or throw if we're in strict mode.
+         */
+        if (!shape->hasGetterValue() && shape->hasDefaultSetter())
+            return js_ReportGetterOnlyAssignment(cx, strict);
+    }
+
+    RootedValue ovp(cx, vp);
+
+    uint32_t sample = cx->runtime()->propertyRemovals;
+    if (!shape->set(cx, obj, receiver, strict, vp))
+        return false;
+
+    /*
+     * Update any slot for the shape with the value produced by the setter,
+     * unless the setter deleted the shape.
+     */
+    if (shape->hasSlot() &&
+        (MOZ_LIKELY(cx->runtime()->propertyRemovals == sample) ||
+         obj->contains(cx, shape)))
+    {
+        obj->setSlot(shape->slot(), vp);
+    }
+
+    return true;
+}
+
+/*
+ * Implement "the rest of" assignment to receiver[id] when an existing property
+ * (shape) has been found on a native object (pobj).
+ *
+ * It is necessary to pass both id and shape because shape could be an implicit
+ * dense or typed array element (i.e. not actually a pointer to a Shape).
+ */
+template <ExecutionMode mode>
+static bool
+SetExistingProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
+                    HandleNativeObject obj, HandleObject receiver, HandleId id,
+                    HandleNativeObject pobj, HandleShape shape, MutableHandleValue vp, bool strict)
+{
     if (IsImplicitDenseOrTypedArrayElement(shape)) {
         /* ES5 8.12.4 [[Put]] step 2, for a dense data property on pobj. */
-        if (pobj != obj)
-            shape = nullptr;
+        if (pobj == receiver)
+            return SetDenseOrTypedArrayElement<mode>(cxArg, pobj, JSID_TO_INT(id), vp, strict);
     } else {
         /* ES5 8.12.4 [[Put]] step 2. */
         if (shape->isAccessorDescriptor()) {
@@ -2171,86 +2229,131 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
             }
         }
 
-        if (pobj == obj) {
-            attrs = shape->attributes();
-        } else {
-            // We found id in a prototype object: prepare to share or shadow.
-
-            if (!shape->shadowable()) {
-                if (shape->hasDefaultSetter() && !shape->hasGetterValue())
-                    return true;
-
-                if (mode == ParallelExecution)
-                    return false;
-
-                return shape->set(cxArg->asJSContext(), obj, receiver, strict, vp);
+        if (pobj == receiver) {
+            if (pobj->is<ArrayObject>() && id == NameToId(cxArg->names().length)) {
+                Rooted<ArrayObject*> arr(cxArg, &pobj->as<ArrayObject>());
+                return ArraySetLength<mode>(cxArg, arr, id, shape->attributes(), vp, strict);
             }
-
-            // Forget we found the proto-property since we're shadowing it.
-            shape = nullptr;
-        }
-    }
-
-    if (IsImplicitDenseOrTypedArrayElement(shape)) {
-        uint32_t index = JSID_TO_INT(id);
-
-        if (IsAnyTypedArray(obj)) {
-            double d;
-            if (mode == ParallelExecution) {
-                // Bail if converting the value might invoke user-defined
-                // conversions.
-                if (vp.isObject())
-                    return false;
-                if (!NonObjectToNumber(cxArg, vp, &d))
-                    return false;
-            } else {
-                if (!ToNumber(cxArg->asJSContext(), vp, &d))
-                    return false;
-            }
-
-            // Silently do nothing for out-of-bounds sets, for consistency with
-            // current behavior.  (ES6 currently says to throw for this in
-            // strict mode code, so we may eventually need to change.)
-            uint32_t len = AnyTypedArrayLength(obj);
-            if (index < len) {
-                if (obj->is<TypedArrayObject>())
-                    TypedArrayObject::setElement(obj->as<TypedArrayObject>(), index, d);
-                else
-                    SharedTypedArrayObject::setElement(obj->as<SharedTypedArrayObject>(), index, d);
-            }
-            return true;
+            return NativeSet<mode>(cxArg, obj, receiver, shape, strict, vp);
         }
 
-        bool definesPast;
-        if (!WouldDefinePastNonwritableLength(cxArg, obj, index, strict, &definesPast))
-            return false;
-        if (definesPast) {
-            /* Bail out of parallel execution if we are strict to throw. */
+        // pobj[id] is not an own property of receiver. Call the setter or shadow it.
+        if (!shape->shadowable() &&
+            !(pobj->is<ArrayObject>() && id == NameToId(cxArg->names().length)))
+        {
+            // Weird special case: slotless property with default setter.
+            if (shape->hasDefaultSetter() && !shape->hasGetterValue())
+                return true;
+
+            // We're setting an accessor property.
             if (mode == ParallelExecution)
-                return !strict;
-            return true;
+                return false;
+            return shape->set(cxArg->asJSContext(), obj, receiver, strict, vp);
         }
+    }
 
-        if (!obj->maybeCopyElementsForWrite(cxArg))
+    // Shadow pobj[id] by defining a new data property receiver[id].
+    return SetPropertyByDefining<mode>(cxArg, obj, receiver, id, vp, strict, obj == pobj);
+}
+
+template <ExecutionMode mode>
+bool
+baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg,
+                           HandleNativeObject obj, HandleObject receiver, HandleId id,
+                           QualifiedBool qualified, MutableHandleValue vp, bool strict)
+{
+    MOZ_ASSERT(cxArg->isThreadLocal(obj));
+
+    // Fire watchpoints, if any.
+    if (MOZ_UNLIKELY(obj->watched())) {
+        if (mode == ParallelExecution)
             return false;
 
-        if (mode == ParallelExecution)
-            return obj->setDenseElementIfHasType(index, vp);
-
-        obj->setDenseElementWithType(cxArg->asJSContext(), index, vp);
-        return true;
+        JSContext *cx = cxArg->asJSContext();
+        WatchpointMap *wpmap = cx->compartment()->watchpointMap;
+        if (wpmap && !wpmap->triggerWatchpoint(cx, obj, id, vp))
+            return false;
     }
 
-    if (obj->is<ArrayObject>() && id == NameToId(cxArg->names().length)) {
-        Rooted<ArrayObject*> arr(cxArg, &obj->as<ArrayObject>());
-        return ArraySetLength<mode>(cxArg, arr, id, attrs, vp, strict);
+    // Step numbers below reference ES6 rev 27 9.1.9, the [[Set]] internal
+    // method for ordinary objects. We substitute our own names for these names
+    // used in the spec: O -> pobj, P -> id, V -> *vp, ownDesc -> shape.
+    RootedShape shape(cxArg);
+    RootedNativeObject pobj(cxArg, obj);
+
+    // This loop isn't explicit in the spec algorithm. See the comment on step
+    // 4.c.i below.
+    for (;;) {
+        // Steps 2-3. ('done' is a SpiderMonkey-specific thing, used below.)
+        bool done;
+        if (mode == ParallelExecution) {
+            // Use the loop in LookupPropertyPure instead of this loop.
+            // It amounts to the same thing.
+            NativeObject *ancestor;
+            if (!LookupPropertyPure(cxArg, pobj, id, &ancestor, shape.address()))
+                return false;
+            done = true;
+            if (shape)
+                pobj = ancestor;
+        } else {
+            RootedObject ancestor(cxArg);
+            if (!LookupOwnPropertyInline<CanGC>(cxArg->asJSContext(), pobj, id, &ancestor,
+                                                &shape, &done))
+            {
+                return false;
+            }
+            if (!done || ancestor != pobj)
+                shape = nullptr;
+        }
+
+        if (shape) {
+            // Steps 5-6.
+            return SetExistingProperty<mode>(cxArg, obj, receiver, id, pobj, shape, vp, strict);
+        }
+
+        // Steps 4.a-b. The check for 'done' on this next line is tricky.
+        // done can be true in exactly these unlikely-sounding cases:
+        // - We're looking up an element, and pobj is a TypedArray that
+        //   doesn't have that many elements.
+        // - We're being called from a resolve hook to assign to the property
+        //   being resolved.
+        // - We're running in parallel mode so we've already done the whole
+        //   lookup (in LookupPropertyPure above).
+        // What they all have in common is we do not want to keep walking
+        // the prototype chain.
+        RootedObject proto(cxArg, done ? nullptr : pobj->getProto());
+        if (!proto) {
+            // Step 4.d.i (and step 5).
+            return SetNonexistentProperty<mode>(cxArg, obj, receiver, id, qualified, vp, strict);
+        }
+
+        // Step 4.c.i. If the prototype is also native, this step is a
+        // recursive tail call, and we don't need to go through all the
+        // plumbing of JSObject::setGeneric; the top of the loop is where
+        // we're going to end up anyway. But if pobj is non-native,
+        // that optimization would be incorrect.
+        if (!proto->isNative()) {
+            if (mode == ParallelExecution)
+                return false;
+
+            // Unqualified assignments are not specified to go through [[Set]]
+            // at all, but they do go through this function. So check for
+            // unqualified assignment to a nonexistent global (a strict error).
+            if (!qualified) {
+                RootedObject pobj(cxArg);
+                if (!JSObject::lookupGeneric(cxArg->asJSContext(), proto, id, &pobj, &shape))
+                    return false;
+                if (!shape) {
+                    return SetNonexistentProperty<mode>(cxArg, obj, receiver, id, qualified, vp,
+                                                        strict);
+                }
+            }
+
+            return JSObject::setGeneric(cxArg->asJSContext(), proto, receiver, id, vp,
+                                        strict);
+        }
+        pobj = &proto->as<NativeObject>();
     }
-
-    if (shape)
-        return NativeSet<mode>(cxArg, obj, receiver, shape, strict, vp);
-
-    MOZ_ASSERT(attrs == JSPROP_ENUMERATE);
-    return SetPropertyByDefining<mode>(cxArg, receiver, id, vp, strict);
 }
 
 template bool

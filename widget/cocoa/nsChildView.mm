@@ -84,7 +84,7 @@
 #include "GeckoProfiler.h"
 
 #include "nsIDOMWheelEvent.h"
-#include "mozilla/layers/APZCCallbackHelper.h"
+#include "mozilla/layers/ChromeProcessController.h"
 #include "nsLayoutUtils.h"
 #include "InputData.h"
 #include "VibrancyManager.h"
@@ -393,48 +393,6 @@ protected:
   GLuint mQuadVBO;
 };
 
-class APZCTMController : public mozilla::layers::GeckoContentController
-{
-  typedef mozilla::layers::FrameMetrics FrameMetrics;
-  typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
-
-public:
-  // GeckoContentController interface
-  virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics)
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    nsCOMPtr<nsIContent> targetContent = nsLayoutUtils::FindContentFor(aFrameMetrics.GetScrollId());
-    if (targetContent) {
-      FrameMetrics metrics = aFrameMetrics;
-      APZCCallbackHelper::UpdateSubFrame(targetContent, metrics);
-    }
-  }
-
-  virtual void PostDelayedTask(Task* aTask, int aDelayMs) MOZ_OVERRIDE
-  {
-    MessageLoop::current()->PostDelayedTask(FROM_HERE, aTask, aDelayMs);
-  }
-
-  virtual void AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollId,
-                                       const uint32_t& aScrollGeneration) MOZ_OVERRIDE
-  {
-    APZCCallbackHelper::AcknowledgeScrollUpdate(aScrollId, aScrollGeneration);
-  }
-
-  virtual void HandleDoubleTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
-                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
-  virtual void HandleSingleTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
-                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
-  virtual void HandleLongTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
-                               const ScrollableLayerGuid& aGuid,
-                               uint64_t aInputBlockId) MOZ_OVERRIDE {}
-  virtual void HandleLongTapUp(const CSSPoint& aPoint, int32_t aModifiers,
-                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
-  virtual void SendAsyncScrollDOMEvent(bool aIsRoot, const mozilla::CSSRect &aContentRect,
-                                       const mozilla::CSSSize &aScrollableSize) MOZ_OVERRIDE {}
-};
-
 } // unnamed namespace
 
 #pragma mark -
@@ -475,7 +433,7 @@ nsChildView::~nsChildView()
 
   DestroyCompositor();
 
-  if (mAPZCTreeManager) {
+  if (mAPZC) {
     gNumberOfWidgetsNeedingEventThread--;
     if (gNumberOfWidgetsNeedingEventThread == 0) {
       [EventThreadRunner stop];
@@ -1884,25 +1842,15 @@ nsChildView::CreateCompositor()
   }
 }
 
-CompositorParent*
-nsChildView::NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight)
+void
+nsChildView::ConfigureAPZCTreeManager()
 {
-  CompositorParent *compositor = nsBaseWidget::NewCompositorParent(aSurfaceWidth, aSurfaceHeight);
+  nsBaseWidget::ConfigureAPZCTreeManager();
 
-  if (gfxPrefs::AsyncPanZoomEnabled()) {
-    uint64_t rootLayerTreeId = compositor->RootLayerTreeId();
-    nsRefPtr<APZCTMController> controller = new APZCTMController();
-    CompositorParent::SetControllerForLayerTree(rootLayerTreeId, controller);
-    mAPZCTreeManager = CompositorParent::GetAPZCTreeManager(rootLayerTreeId);
-    mAPZCTreeManager->SetDPI(GetDPI());
-
-    if (gNumberOfWidgetsNeedingEventThread == 0) {
-      [EventThreadRunner start];
-    }
-    gNumberOfWidgetsNeedingEventThread++;
+  if (gNumberOfWidgetsNeedingEventThread == 0) {
+    [EventThreadRunner start];
   }
-
-  return compositor;
+  gNumberOfWidgetsNeedingEventThread++;
 }
 
 nsIntRect
@@ -4199,7 +4147,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // tolerating a small vertical element to a true horizontal swipe.  The number
   // '8' was arrived at by trial and error.
   if (anOverflowX != 0.0 && deltaX != 0.0 &&
-      fabsf(deltaX) > fabsf(deltaY) * 8) {
+      std::abs(deltaX) > std::abs(deltaY) * 8) {
     // Only initiate horizontal tracking for gestures that have just begun --
     // otherwise a scroll to one side of the page can have a swipe tacked on
     // to it.
@@ -4217,7 +4165,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // at least two times larger than its horizontal element. This minimizes
   // performance problems. The number '2' was arrived at by trial and error.
   else if (anOverflowY != 0.0 && deltaY != 0.0 &&
-           fabsf(deltaY) > fabsf(deltaX) * 2) {
+           std::abs(deltaY) > std::abs(deltaX) * 2) {
     if (deltaY < 0.0) {
       direction = (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_DOWN;
     } else {
