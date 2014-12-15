@@ -44,6 +44,7 @@
 #include "GLConsts.h"
 #include "mozilla/unused.h"
 #include "mozilla/layers/APZCTreeManager.h"
+#include "mozilla/layers/ChromeProcessController.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -915,7 +916,8 @@ void nsBaseWidget::CreateCompositor()
 already_AddRefed<GeckoContentController>
 nsBaseWidget::CreateRootContentController()
 {
-  return nullptr;
+  nsRefPtr<GeckoContentController> controller = new ChromeProcessController();
+  return controller.forget();
 }
 
 void nsBaseWidget::ConfigureAPZCTreeManager()

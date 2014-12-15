@@ -84,7 +84,7 @@
 #include "GeckoProfiler.h"
 
 #include "nsIDOMWheelEvent.h"
-#include "mozilla/layers/APZCCallbackHelper.h"
+#include "mozilla/layers/ChromeProcessController.h"
 #include "nsLayoutUtils.h"
 #include "InputData.h"
 #include "VibrancyManager.h"
@@ -391,48 +391,6 @@ protected:
   nsAutoPtr<mozilla::layers::ShaderProgramOGL> mRGBARectProgram;
   gfx::Matrix4x4 mProjMatrix;
   GLuint mQuadVBO;
-};
-
-class APZCTMController : public mozilla::layers::GeckoContentController
-{
-  typedef mozilla::layers::FrameMetrics FrameMetrics;
-  typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
-
-public:
-  // GeckoContentController interface
-  virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics)
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    nsCOMPtr<nsIContent> targetContent = nsLayoutUtils::FindContentFor(aFrameMetrics.GetScrollId());
-    if (targetContent) {
-      FrameMetrics metrics = aFrameMetrics;
-      APZCCallbackHelper::UpdateSubFrame(targetContent, metrics);
-    }
-  }
-
-  virtual void PostDelayedTask(Task* aTask, int aDelayMs) MOZ_OVERRIDE
-  {
-    MessageLoop::current()->PostDelayedTask(FROM_HERE, aTask, aDelayMs);
-  }
-
-  virtual void AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollId,
-                                       const uint32_t& aScrollGeneration) MOZ_OVERRIDE
-  {
-    APZCCallbackHelper::AcknowledgeScrollUpdate(aScrollId, aScrollGeneration);
-  }
-
-  virtual void HandleDoubleTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
-                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
-  virtual void HandleSingleTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
-                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
-  virtual void HandleLongTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
-                               const ScrollableLayerGuid& aGuid,
-                               uint64_t aInputBlockId) MOZ_OVERRIDE {}
-  virtual void HandleLongTapUp(const CSSPoint& aPoint, int32_t aModifiers,
-                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
-  virtual void SendAsyncScrollDOMEvent(bool aIsRoot, const mozilla::CSSRect &aContentRect,
-                                       const mozilla::CSSSize &aScrollableSize) MOZ_OVERRIDE {}
 };
 
 } // unnamed namespace
@@ -1882,13 +1840,6 @@ nsChildView::CreateCompositor()
   if (mCompositorChild) {
     [(ChildView *)mView setUsingOMTCompositor:true];
   }
-}
-
-already_AddRefed<GeckoContentController>
-nsChildView::CreateRootContentController()
-{
-  nsRefPtr<APZCTMController> controller = new APZCTMController();
-  return controller.forget();
 }
 
 void
