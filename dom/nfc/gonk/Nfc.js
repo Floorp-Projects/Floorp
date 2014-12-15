@@ -471,7 +471,11 @@ Nfc.prototype = {
         delete message.sessionId;
 
         if (SessionHelper.isP2PSession(sessionId)) {
-          gMessageManager.onPeerEvent(NFC.PEER_EVENT_FOUND, message.sessionToken);
+          if (message.records) {
+            // TODO: Bug 1082493.
+          } else {
+            gMessageManager.onPeerEvent(NFC.PEER_EVENT_FOUND, message.sessionToken);
+          }
         } else {
           gMessageManager.onTagFound(message);
         }
