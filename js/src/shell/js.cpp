@@ -5901,15 +5901,15 @@ main(int argc, char **argv, char **envp)
     if (op.getBoolOption("no-threads"))
         js::DisableExtraThreads();
 
+    // Start the engine.
+    if (!JS_Init())
+        return 1;
+
     // The fake thread count must be set before initializing the Runtime,
     // which spins up the thread pool.
     int32_t threadCount = op.getIntOption("thread-count");
     if (threadCount >= 0)
         SetFakeCPUCount(threadCount);
-
-    // Start the engine.
-    if (!JS_Init())
-        return 1;
 
     size_t nurseryBytes = JS::DefaultNurseryBytes;
     nurseryBytes = op.getIntOption("nursery-size") * 1024L * 1024L;
