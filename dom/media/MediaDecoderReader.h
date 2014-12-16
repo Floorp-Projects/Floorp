@@ -19,7 +19,6 @@ namespace dom {
 class TimeRanges;
 }
 
-class RequestSampleCallback;
 class MediaDecoderReader;
 class SharedDecoderManager;
 
@@ -72,7 +71,6 @@ public:
   // thread.
   virtual nsRefPtr<ShutdownPromise> Shutdown();
 
-  virtual void SetCallback(RequestSampleCallback* aDecodedSampleCallback);
   MediaTaskQueue* EnsureTaskQueue();
 
   virtual bool OnDecodeThread()
@@ -242,11 +240,6 @@ protected:
     return false;
   }
 
-  RequestSampleCallback* GetCallback() {
-    MOZ_ASSERT(mSampleDecodedCallback);
-    return mSampleDecodedCallback;
-  }
-
   // Queue of audio frames. This queue is threadsafe, and is accessed from
   // the audio, decoder, state machine, and main threads.
   MediaQueue<AudioData> mAudioQueue;
@@ -285,8 +278,6 @@ protected:
   bool mHitAudioDecodeError;
 
 private:
-  nsRefPtr<RequestSampleCallback> mSampleDecodedCallback;
-
   // Promises used only for the base-class (sync->async adapter) implementation
   // of Request{Audio,Video}Data.
   MediaPromiseHolder<AudioDataPromise> mBaseAudioPromise;
@@ -300,21 +291,6 @@ private:
   bool mAudioDiscontinuity;
   bool mVideoDiscontinuity;
   bool mShutdown;
-};
-
-// Interface that callers to MediaDecoderReader::Request{Audio,Video}Data()
-// must implement to receive the requested samples asynchronously.
-// This object is refcounted, and cycles must be broken by calling
-// BreakCycles() during shutdown.
-class RequestSampleCallback {
-public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RequestSampleCallback)
-
-  // Called during shutdown to break any reference cycles.
-  virtual void BreakCycles() = 0;
-
-protected:
-  virtual ~RequestSampleCallback() {}
 };
 
 } // namespace mozilla
