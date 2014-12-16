@@ -248,7 +248,7 @@ class AssemblerX86Shared : public AssemblerShared
         NoParity = X86Assembler::ConditionNP
     };
 
-    // If this bit is set, the ucomisd operands have to be inverted.
+    // If this bit is set, the vucomisd operands have to be inverted.
     static const int DoubleConditionBitInvert = 0x10;
 
     // Bit set when a DoubleCondition does not map to a single x86 condition.
@@ -1623,25 +1623,25 @@ class AssemblerX86Shared : public AssemblerShared
         MOZ_ASSERT(HasSSE2());
         masm.vcvtdq2ps_rr(src.code(), dest.code());
     }
-    void movmskpd(FloatRegister src, Register dest) {
+    void vmovmskpd(FloatRegister src, Register dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.movmskpd_rr(src.code(), dest.code());
+        masm.vmovmskpd_rr(src.code(), dest.code());
     }
-    void movmskps(FloatRegister src, Register dest) {
+    void vmovmskps(FloatRegister src, Register dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.movmskps_rr(src.code(), dest.code());
+        masm.vmovmskps_rr(src.code(), dest.code());
     }
-    void ptest(FloatRegister rhs, FloatRegister lhs) {
+    void vptest(FloatRegister rhs, FloatRegister lhs) {
         MOZ_ASSERT(HasSSE41());
-        masm.ptest_rr(rhs.code(), lhs.code());
+        masm.vptest_rr(rhs.code(), lhs.code());
     }
-    void ucomisd(FloatRegister rhs, FloatRegister lhs) {
+    void vucomisd(FloatRegister rhs, FloatRegister lhs) {
         MOZ_ASSERT(HasSSE2());
-        masm.ucomisd_rr(rhs.code(), lhs.code());
+        masm.vucomisd_rr(rhs.code(), lhs.code());
     }
-    void ucomiss(FloatRegister rhs, FloatRegister lhs) {
+    void vucomiss(FloatRegister rhs, FloatRegister lhs) {
         MOZ_ASSERT(HasSSE2());
-        masm.ucomiss_rr(rhs.code(), lhs.code());
+        masm.vucomiss_rr(rhs.code(), lhs.code());
     }
     void vpcmpeqw(FloatRegister rhs, FloatRegister lhs, FloatRegister dst) {
         MOZ_ASSERT(HasSSE2());
@@ -2080,13 +2080,13 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_CRASH("unexpected operand kind");
         }
     }
-    void movhlps(FloatRegister src, FloatRegister dest) {
+    void vmovhlps(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.movhlps_rr(src.code(), dest.code());
+        masm.vmovhlps_rr(src1.code(), src0.code(), dest.code());
     }
-    void movlhps(FloatRegister src, FloatRegister dest) {
+    void vmovlhps(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.movlhps_rr(src.code(), dest.code());
+        masm.vmovlhps_rr(src1.code(), src0.code(), dest.code());
     }
     void vunpcklps(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
@@ -2282,13 +2282,13 @@ class AssemblerX86Shared : public AssemblerShared
         MOZ_ASSERT(HasSSE2());
         masm.vandps_rr(src1.code(), src0.code(), dest.code());
     }
-    void sqrtsd(FloatRegister src, FloatRegister dest) {
+    void vsqrtsd(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.sqrtsd_rr(src.code(), dest.code());
+        masm.vsqrtsd_rr(src1.code(), src0.code(), dest.code());
     }
-    void sqrtss(FloatRegister src, FloatRegister dest) {
+    void vsqrtss(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.sqrtss_rr(src.code(), dest.code());
+        masm.vsqrtss_rr(src1.code(), src0.code(), dest.code());
     }
     void roundsd(X86Assembler::RoundingMode mode, FloatRegister src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE41());
@@ -2350,81 +2350,81 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_CRASH("unexpected operand kind");
         }
     }
-    void movsldup(FloatRegister src, FloatRegister dest) {
+    void vmovsldup(FloatRegister src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE3());
-        masm.movsldup_rr(src.code(), dest.code());
+        masm.vmovsldup_rr(src.code(), dest.code());
     }
-    void movsldup(const Operand &src, FloatRegister dest) {
+    void vmovsldup(const Operand &src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE3());
         switch (src.kind()) {
           case Operand::FPREG:
-            masm.movsldup_rr(src.fpu(), dest.code());
+            masm.vmovsldup_rr(src.fpu(), dest.code());
             break;
           case Operand::MEM_REG_DISP:
-            masm.movsldup_mr(src.disp(), src.base(), dest.code());
+            masm.vmovsldup_mr(src.disp(), src.base(), dest.code());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
         }
     }
-    void movshdup(FloatRegister src, FloatRegister dest) {
+    void vmovshdup(FloatRegister src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE3());
-        masm.movshdup_rr(src.code(), dest.code());
+        masm.vmovshdup_rr(src.code(), dest.code());
     }
-    void movshdup(const Operand &src, FloatRegister dest) {
+    void vmovshdup(const Operand &src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE3());
         switch (src.kind()) {
           case Operand::FPREG:
-            masm.movshdup_rr(src.fpu(), dest.code());
+            masm.vmovshdup_rr(src.fpu(), dest.code());
             break;
           case Operand::MEM_REG_DISP:
-            masm.movshdup_mr(src.disp(), src.base(), dest.code());
+            masm.vmovshdup_mr(src.disp(), src.base(), dest.code());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
         }
     }
-    void minsd(FloatRegister src, FloatRegister dest) {
+    void vminsd(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.minsd_rr(src.code(), dest.code());
+        masm.vminsd_rr(src1.code(), src0.code(), dest.code());
     }
-    void minsd(const Operand &src, FloatRegister dest) {
+    void vminsd(const Operand &src1, FloatRegister src0, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
-        switch (src.kind()) {
+        switch (src1.kind()) {
           case Operand::FPREG:
-            masm.minsd_rr(src.fpu(), dest.code());
+            masm.vminsd_rr(src1.fpu(), src0.code(), dest.code());
             break;
           case Operand::MEM_REG_DISP:
-            masm.minsd_mr(src.disp(), src.base(), dest.code());
+            masm.vminsd_mr(src1.disp(), src1.base(), src0.code(), dest.code());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
         }
     }
-    void minss(FloatRegister src, FloatRegister dest) {
+    void vminss(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.minss_rr(src.code(), dest.code());
+        masm.vminss_rr(src1.code(), src0.code(), dest.code());
     }
-    void maxsd(FloatRegister src, FloatRegister dest) {
+    void vmaxsd(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.maxsd_rr(src.code(), dest.code());
+        masm.vmaxsd_rr(src1.code(), src0.code(), dest.code());
     }
-    void maxsd(const Operand &src, FloatRegister dest) {
+    void vmaxsd(const Operand &src1, FloatRegister src0, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
-        switch (src.kind()) {
+        switch (src1.kind()) {
           case Operand::FPREG:
-            masm.maxsd_rr(src.fpu(), dest.code());
+            masm.vmaxsd_rr(src1.fpu(), src0.code(), dest.code());
             break;
           case Operand::MEM_REG_DISP:
-            masm.maxsd_mr(src.disp(), src.base(), dest.code());
+            masm.vmaxsd_mr(src1.disp(), src1.base(), src0.code(), dest.code());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
         }
     }
-    void maxss(FloatRegister src, FloatRegister dest) {
+    void vmaxss(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.maxss_rr(src.code(), dest.code());
+        masm.vmaxss_rr(src1.code(), src0.code(), dest.code());
     }
     void fisttp(const Operand &dest) {
         MOZ_ASSERT(HasSSE3());
