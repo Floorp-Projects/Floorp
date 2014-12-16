@@ -36,6 +36,7 @@ from ..frontend.data import (
     Exports,
     ExternalLibrary,
     FinalTargetFiles,
+    GeneratedFile,
     GeneratedInclude,
     GeneratedSources,
     HostLibrary,
@@ -403,6 +404,9 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, Exports):
             self._process_exports(obj, obj.exports, backend_file)
+
+        elif isinstance(obj, GeneratedFile):
+            backend_file.write('GENERATED_FILES += %s\n' % obj.filename)
 
         elif isinstance(obj, TestHarnessFiles):
             self._process_test_harness_files(obj, backend_file)

@@ -32,6 +32,7 @@ from .data import (
     Exports,
     FinalTargetFiles,
     GeneratedEventWebIDLFile,
+    GeneratedFile,
     GeneratedInclude,
     GeneratedSources,
     GeneratedWebIDLFile,
@@ -410,7 +411,6 @@ class TreeMetadataEmitter(LoggingMixin):
             'EXTRA_PP_COMPONENTS',
             'FAIL_ON_WARNINGS',
             'USE_STATIC_LIBS',
-            'GENERATED_FILES',
             'IS_GYP_DIR',
             'MSVC_ENABLE_PGO',
             'NO_DIST_INSTALL',
@@ -517,6 +517,11 @@ class TreeMetadataEmitter(LoggingMixin):
         if exports:
             yield Exports(context, exports,
                 dist_install=not context.get('NO_DIST_INSTALL', False))
+
+        generated_files = context.get('GENERATED_FILES')
+        if generated_files:
+            for f in generated_files:
+                yield GeneratedFile(context, f)
 
         test_harness_files = context.get('TEST_HARNESS_FILES')
         if test_harness_files:

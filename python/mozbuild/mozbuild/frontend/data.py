@@ -853,6 +853,18 @@ class FinalTargetFiles(ContextDerived):
         self.target = target
 
 
+class GeneratedFile(ContextDerived):
+    """Represents a generated file."""
+
+    __slots__ = (
+        'filename',
+    )
+
+    def __init__(self, context, filename):
+        ContextDerived.__init__(self, context)
+        self.filename = filename
+
+
 class ClassPathEntry(object):
     """Represents a classpathentry in an Android Eclipse project."""
 
