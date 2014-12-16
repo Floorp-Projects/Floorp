@@ -3420,7 +3420,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
 
         const gfxTextRun::DetailedGlyph *d = mTextRun->GetDetailedGlyphs(i);
 
-        if (glyphs[i].IsMissing()) {
+        if (glyphs[i].IsMissing() && d->mAdvance > 0) {
           newGlyph.mIndex = 0;
           if (rtl) {
             inlinePos = baselineOriginInline - advanceSum -

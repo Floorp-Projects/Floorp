@@ -1102,9 +1102,14 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_FN("NewArrayIterator",        intrinsic_NewArrayIterator,        0,0),
     JS_FN("IsArrayIterator",         intrinsic_IsArrayIterator,         1,0),
+    JS_FN("CallArrayIteratorMethodIfWrapped",
+          CallNonGenericSelfhostedMethod<Is<ArrayIteratorObject>>,      2,0),
+
 
     JS_FN("NewStringIterator",       intrinsic_NewStringIterator,       0,0),
     JS_FN("IsStringIterator",        intrinsic_IsStringIterator,        1,0),
+    JS_FN("CallStringIteratorMethodIfWrapped",
+          CallNonGenericSelfhostedMethod<Is<StringIteratorObject>>,     2,0),
 
     JS_FN("IsStarGeneratorObject",   intrinsic_IsStarGeneratorObject,   1,0),
     JS_FN("StarGeneratorObjectIsClosed", intrinsic_StarGeneratorObjectIsClosed, 1,0),

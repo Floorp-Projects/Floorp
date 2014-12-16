@@ -207,9 +207,10 @@ function StringIteratorIdentity() {
 }
 
 function StringIteratorNext() {
-    // FIXME: Cross-compartment wrapper StringIterator objects should pass this test.  Bug 1111170.
-    if (!IsObject(this) || !IsStringIterator(this))
-        ThrowError(JSMSG_INCOMPATIBLE_METHOD, "StringIterator", "next", ToString(this));
+    if (!IsObject(this) || !IsStringIterator(this)) {
+        return callFunction(CallStringIteratorMethodIfWrapped, this,
+                            "StringIteratorNext");
+    }
 
     var S = UnsafeGetReservedSlot(this, STRING_ITERATOR_SLOT_ITERATED_OBJECT);
     var index = UnsafeGetReservedSlot(this, STRING_ITERATOR_SLOT_NEXT_INDEX);
