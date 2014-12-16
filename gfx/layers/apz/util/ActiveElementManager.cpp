@@ -4,14 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ActiveElementManager.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Services.h"
-#include "inIDOMUtils.h"
 #include "base/message_loop.h"
 #include "base/task.h"
 #include "mozilla/dom/Element.h"
 #include "nsIDocument.h"
+#include "nsStyleSet.h"
 
 #define AEM_LOG(...)
 // #define AEM_LOG(...) printf_stderr("AEM: " __VA_ARGS__)
@@ -23,10 +23,10 @@ static int32_t sActivationDelayMs = 100;
 static bool sActivationDelayMsSet = false;
 
 ActiveElementManager::ActiveElementManager()
-  : mDomUtils(services::GetInDOMUtils()),
-    mCanBePan(false),
+  : mCanBePan(false),
     mCanBePanSet(false),
-    mSetActiveTask(nullptr)
+    mSetActiveTask(nullptr),
+    mActiveElementUsesStyle(false)
 {
   if (!sActivationDelayMsSet) {
     Preferences::AddIntVarCache(&sActivationDelayMs,
@@ -129,13 +129,51 @@ ActiveElementManager::HandleTouchEnd(bool aWasClick)
   ResetTouchBlockState();
 }
 
+bool
+ActiveElementManager::ActiveElementUsesStyle() const
+{
+  return mActiveElementUsesStyle;
+}
+
+static nsPresContext*
+GetPresContextFor(nsIContent* aContent)
+{
+  if (!aContent) {
+    return nullptr;
+  }
+  nsIPresShell* shell = aContent->OwnerDoc()->GetShell();
+  if (!shell) {
+    return nullptr;
+  }
+  return shell->GetPresContext();
+}
+
+static bool
+ElementHasActiveStyle(dom::Element* aElement)
+{
+  nsPresContext* pc = GetPresContextFor(aElement);
+  if (!pc) {
+    return false;
+  }
+  nsStyleSet* styleSet = pc->StyleSet();
+  for (dom::Element* e = aElement; e; e = e->GetParentElement()) {
+    if (styleSet->HasStateDependentStyle(pc, e, NS_EVENT_STATE_ACTIVE)) {
+      AEM_LOG("Element %p's style is dependent on the active state\n", e);
+      return true;
+    }
+  }
+  AEM_LOG("Element %p doesn't use active styles\n", aElement);
+  return false;
+}
+
 void
 ActiveElementManager::SetActive(dom::Element* aTarget)
 {
   AEM_LOG("Setting active %p\n", aTarget);
-  if (mDomUtils) {
-    nsCOMPtr<nsIDOMElement> target = do_QueryInterface(aTarget);
-    mDomUtils->SetContentState(target, NS_EVENT_STATE_ACTIVE.GetInternalValue());
+
+  if (nsPresContext* pc = GetPresContextFor(aTarget)) {
+    pc->EventStateManager()->SetContentState(aTarget, NS_EVENT_STATE_ACTIVE);
+    mActiveElementUsesStyle = ElementHasActiveStyle(aTarget);
   }
 }
 
