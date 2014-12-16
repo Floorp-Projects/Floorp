@@ -613,6 +613,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     bool argumentList(Node listNode, bool *isSpread);
     Node letBlock(LetContext letContext);
     Node destructuringExpr(BindData<ParseHandler> *data, TokenKind tt);
+    Node destructuringExprWithoutYield(BindData<ParseHandler> *data, TokenKind tt, unsigned msg);
 
     Node identifierName();
 
