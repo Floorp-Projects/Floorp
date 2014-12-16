@@ -40,7 +40,7 @@ RematerializedFrame::RematerializedFrame(JSContext *cx, uint8_t *top, unsigned n
 {
     CopyValueToRematerializedFrame op(slots_);
     MaybeReadFallback fallback(MagicValue(JS_OPTIMIZED_OUT));
-    iter.readFrameArgsAndLocals(cx, op, op, &scopeChain_, &returnValue_,
+    iter.readFrameArgsAndLocals(cx, op, op, &scopeChain_, &hasCallObj_, &returnValue_,
                                 &argsObj_, &thisValue_, ReadFrame_Actuals,
                                 fallback);
 }
@@ -139,6 +139,7 @@ RematerializedFrame::initFunctionScopeObjects(JSContext *cx)
     if (!callobj)
         return false;
     pushOnScopeChain(*callobj);
+    hasCallObj_ = true;
     return true;
 }
 
