@@ -1650,7 +1650,7 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
                 data.pn = ParseHandler::null();
                 data.op = JSOP_DEFVAR;
                 data.binder = bindDestructuringArg;
-                Node lhs = destructuringExpr(&data, tt);
+                Node lhs = destructuringExprWithoutYield(&data, tt, JSMSG_YIELD_IN_DEFAULT);
                 if (!lhs)
                     return false;
 
@@ -3501,6 +3501,21 @@ Parser<ParseHandler>::destructuringExpr(BindData<ParseHandler> *data, TokenKind 
     if (!checkDestructuring(data, pn))
         return null();
     return pn;
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::destructuringExprWithoutYield(BindData<ParseHandler> *data, TokenKind tt,
+                                                    unsigned msg)
+{
+    uint32_t startYieldOffset = pc->lastYieldOffset;
+    Node res = destructuringExpr(data, tt);
+    if (res && pc->lastYieldOffset != startYieldOffset) {
+        reportWithOffset(ParseError, false, pc->lastYieldOffset,
+                         msg, js_yield_str);
+        return null();
+    }
+    return res;
 }
 
 template <typename ParseHandler>

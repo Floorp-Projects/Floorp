@@ -3246,3 +3246,4 @@ dtoa
 		*rve = s;
 	return s0;
 	}
+#undef CONST

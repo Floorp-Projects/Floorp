@@ -448,6 +448,9 @@
 @BINPATH@/components/nsAsyncShutdown.manifest
 @BINPATH@/components/nsAsyncShutdown.js
 
+@BINPATH@/components/Downloads.manifest
+@BINPATH@/components/DownloadLegacy.js
+
 ; Modules
 @BINPATH@/modules/*
 

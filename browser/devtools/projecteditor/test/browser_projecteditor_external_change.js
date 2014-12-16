@@ -8,7 +8,7 @@ loadHelperScript("helper_edits.js");
 
 // Test ProjectEditor reaction to external changes (made outside of the)
 // editor.
-let test = asyncTest(function*() {
+add_task(function*() {
   let projecteditor = yield addProjectEditorTabForTempDirectory();
   let TEMP_PATH = projecteditor.project.allPaths()[0];
 

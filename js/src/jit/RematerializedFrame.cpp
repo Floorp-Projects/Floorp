@@ -40,7 +40,7 @@ RematerializedFrame::RematerializedFrame(JSContext *cx, uint8_t *top, unsigned n
 {
     CopyValueToRematerializedFrame op(slots_);
     MaybeReadFallback fallback(MagicValue(JS_OPTIMIZED_OUT));
-    iter.readFrameArgsAndLocals(cx, op, op, &scopeChain_, &returnValue_,
+    iter.readFrameArgsAndLocals(cx, op, op, &scopeChain_, &hasCallObj_, &returnValue_,
                                 &argsObj_, &thisValue_, ReadFrame_Actuals,
                                 fallback);
 }
@@ -49,16 +49,16 @@ RematerializedFrame::RematerializedFrame(JSContext *cx, uint8_t *top, unsigned n
 RematerializedFrame::New(JSContext *cx, uint8_t *top, InlineFrameIterator &iter)
 {
     unsigned numFormals = iter.isFunctionFrame() ? iter.callee()->nargs() : 0;
-    unsigned numActualArgs = Max(numFormals, iter.numActualArgs());
+    unsigned argSlots = Max(numFormals, iter.numActualArgs());
     size_t numBytes = sizeof(RematerializedFrame) +
-        (numActualArgs + iter.script()->nfixed()) * sizeof(Value) -
+        (argSlots + iter.script()->nfixed()) * sizeof(Value) -
         sizeof(Value); // 1 Value included in sizeof(RematerializedFrame)
 
     void *buf = cx->pod_calloc<uint8_t>(numBytes);
     if (!buf)
         return nullptr;
 
-    return new (buf) RematerializedFrame(cx, top, numActualArgs, iter);
+    return new (buf) RematerializedFrame(cx, top, iter.numActualArgs(), iter);
 }
 
 /* static */ bool
@@ -139,6 +139,7 @@ RematerializedFrame::initFunctionScopeObjects(JSContext *cx)
     if (!callobj)
         return false;
     pushOnScopeChain(*callobj);
+    hasCallObj_ = true;
     return true;
 }
 

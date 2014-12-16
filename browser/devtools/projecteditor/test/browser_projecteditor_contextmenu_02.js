@@ -8,7 +8,7 @@ loadHelperScript("helper_edits.js");
 
 // Test context menu enabled / disabled state in editor
 
-let test = asyncTest(function*() {
+add_task(function*() {
   let projecteditor = yield addProjectEditorTabForTempDirectory();
   ok (projecteditor, "ProjectEditor has loaded");
 

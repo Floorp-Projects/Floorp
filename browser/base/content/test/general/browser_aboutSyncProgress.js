@@ -11,7 +11,7 @@ let gTests = [ {
     Services.prefs.setCharPref("services.sync.firstSync", "newAccount");
   },
   run: function () {
-    let doc = gBrowser.selectedTab.linkedBrowser.contentDocument;
+    let doc = gBrowser.selectedBrowser.contentDocument;
     let progressBar = doc.getElementById("uploadProgressBar");
 
     let win = doc.defaultView;
@@ -28,7 +28,7 @@ let gTests = [ {
        Ci.nsIPrefBranch.PREF_INVALID, "pref DNE" );
   },
   run: function () {
-    let doc = gBrowser.selectedTab.linkedBrowser.contentDocument;
+    let doc = gBrowser.selectedBrowser.contentDocument;
     let progressBar = doc.getElementById("uploadProgressBar");
 
     let win = doc.defaultView;
@@ -42,7 +42,7 @@ let gTests = [ {
   setup: function () {
   },
   run: function () {
-     let doc = gBrowser.selectedTab.linkedBrowser.contentDocument;
+     let doc = gBrowser.selectedBrowser.contentDocument;
      let progressBar = doc.getElementById("uploadProgressBar");
 
      Services.obs.notifyObservers(null, "weave:engine:sync:finish", null);
@@ -64,7 +64,7 @@ let gTests = [ {
       gBrowser.tabContainer.removeEventListener("TabClose", onTabClosed, false);
       executeSoon(runNextTest);
     }
-    let doc = gBrowser.selectedTab.linkedBrowser.contentDocument;
+    let doc = gBrowser.selectedBrowser.contentDocument;
     let button = doc.getElementById('closeButton');
     let window = doc.defaultView;
     gBrowser.tabContainer.addEventListener("TabClose", onTabClosed, false);

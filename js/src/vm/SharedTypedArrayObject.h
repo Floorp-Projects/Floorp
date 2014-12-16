@@ -34,7 +34,7 @@ class SharedTypedArrayObject : public NativeObject
     static const size_t DATA_SLOT        = TypedArrayLayout::DATA_SLOT;
 
   public:
-    typedef SharedTypedArrayObject AnyTypedArray;
+    typedef SharedTypedArrayObject SomeTypedArray;
     typedef SharedArrayBufferObject BufferType;
 
     template<typename T> struct OfType;

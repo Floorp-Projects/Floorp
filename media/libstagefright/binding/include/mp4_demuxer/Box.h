@@ -11,6 +11,7 @@
 #include "nsTArray.h"
 #include "MediaResource.h"
 #include "mozilla/Endian.h"
+#include "mp4_demuxer/AtomType.h"
 #include "mp4_demuxer/ByteReader.h"
 
 using namespace mozilla;
@@ -27,7 +28,7 @@ public:
   {
   }
 
-  Stream* mSource;
+  nsRefPtr<Stream> mSource;
   const nsTArray<MediaByteRange>& mByteRanges;
 };
 
@@ -42,13 +43,8 @@ public:
   uint64_t Length() const { return mRange.mEnd - mRange.mStart; }
   uint64_t NextOffset() const { return mRange.mEnd; }
   const MediaByteRange& Range() const { return mRange; }
-
   const Box* Parent() const { return mParent; }
-
-  bool IsType(const char* aType) const
-  {
-    return mType == BigEndian::readUint32(aType);
-  }
+  bool IsType(const char* aType) const { return mType == AtomType(aType); }
 
   Box Next() const;
   Box FirstChild() const;
@@ -59,7 +55,7 @@ private:
   BoxContext* mContext;
   mozilla::MediaByteRange mRange;
   uint64_t mChildOffset;
-  uint32_t mType;
+  AtomType mType;
   const Box* mParent;
 };
 
