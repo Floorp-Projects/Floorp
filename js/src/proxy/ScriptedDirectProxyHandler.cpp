@@ -800,33 +800,6 @@ ScriptedDirectProxyHandler::enumerate(JSContext *cx, HandleObject proxy,
     return true;
 }
 
-// Non-standard, try to convert iterator result to ids
-bool
-ScriptedDirectProxyHandler::getEnumerablePropertyKeys(JSContext *cx, HandleObject proxy, AutoIdVector &props) const
-{
-    RootedObject iterator(cx);
-    if (!enumerate(cx, proxy, &iterator))
-        return false;
-
-    do {
-        RootedValue rval(cx);
-        if (!IteratorMore(cx, iterator, &rval))
-            return false;
-
-        if (rval.isMagic(JS_NO_ITER_VALUE))
-            break;
-
-        RootedId id(cx);
-        if (!ValueToId<CanGC>(cx, rval, &id))
-            return false;
-
-        if (!props.append(id))
-            return false;
-    } while (true);
-
-    return true;
-}
-
 // ES6 (22 May, 2014) 9.5.7 Proxy.[[HasProperty]](P)
 bool
 ScriptedDirectProxyHandler::has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const

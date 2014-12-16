@@ -441,8 +441,6 @@ class XrayWrapper : public Base {
                         bool *bp) const MOZ_OVERRIDE;
     virtual bool getOwnEnumerablePropertyKeys(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                               JS::AutoIdVector &props) const MOZ_OVERRIDE;
-    virtual bool getEnumerablePropertyKeys(JSContext *cx, JS::Handle<JSObject*> wrapper,
-                                           JS::AutoIdVector &props) const MOZ_OVERRIDE;
 
     virtual const char *className(JSContext *cx, JS::HandleObject proxy) const MOZ_OVERRIDE;
     virtual bool defaultValue(JSContext *cx, JS::HandleObject wrapper,

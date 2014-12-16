@@ -650,8 +650,6 @@ public:
                       JS::Handle<jsid> id, bool *bp) const MOZ_OVERRIDE;
   virtual bool getOwnEnumerablePropertyKeys(JSContext *cx, JS::Handle<JSObject*> proxy,
                                             JS::AutoIdVector &props) const MOZ_OVERRIDE;
-  virtual bool getEnumerablePropertyKeys(JSContext *cx, JS::Handle<JSObject*> proxy,
-                                         JS::AutoIdVector &props) const MOZ_OVERRIDE;
   virtual const char *className(JSContext *cx,
                                 JS::Handle<JSObject*> wrapper) const MOZ_OVERRIDE;
 
@@ -927,27 +925,11 @@ nsOuterWindowProxy::getOwnEnumerablePropertyKeys(JSContext *cx, JS::Handle<JSObj
 }
 
 bool
-nsOuterWindowProxy::getEnumerablePropertyKeys(JSContext *cx, JS::Handle<JSObject*> proxy,
-                                              JS::AutoIdVector &props) const
-{
-  // Just our indexed stuff followed by our "normal" own property names.
-  if (!AppendIndexedPropertyNames(cx, proxy, props)) {
-    return false;
-  }
-
-  JS::AutoIdVector innerProps(cx);
-  if (!js::Wrapper::getEnumerablePropertyKeys(cx, proxy, innerProps)) {
-    return false;
-  }
-  return js::AppendUnique(cx, props, innerProps);
-}
-
-bool
 nsOuterWindowProxy::enumerate(JSContext *cx, JS::Handle<JSObject*> proxy,
                               JS::MutableHandle<JSObject*> objp) const
 {
   // BaseProxyHandler::enumerate seems to do what we want here: fall
-  // back on the property names returned from getEnumerablePropertyKeys()
+  // back on the property names returned from js::GetPropertyKeys()
   return js::BaseProxyHandler::enumerate(cx, proxy, objp);
 }
 

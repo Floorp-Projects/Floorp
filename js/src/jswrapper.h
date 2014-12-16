@@ -145,8 +145,6 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
     virtual bool hasOwn(JSContext *cx, HandleObject wrapper, HandleId id, bool *bp) const MOZ_OVERRIDE;
     virtual bool getOwnEnumerablePropertyKeys(JSContext *cx, HandleObject wrapper,
                                               AutoIdVector &props) const MOZ_OVERRIDE;
-    virtual bool getEnumerablePropertyKeys(JSContext *cx, HandleObject wrapper,
-                                           AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                             CallArgs args) const MOZ_OVERRIDE;
     virtual bool hasInstance(JSContext *cx, HandleObject wrapper, MutableHandleValue v,

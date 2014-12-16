@@ -188,16 +188,6 @@ CrossCompartmentWrapper::getOwnEnumerablePropertyKeys(JSContext *cx, HandleObjec
            NOTHING);
 }
 
-bool
-CrossCompartmentWrapper::getEnumerablePropertyKeys(JSContext *cx, HandleObject wrapper,
-                                                   AutoIdVector &props) const
-{
-    PIERCE(cx, wrapper,
-           NOTHING,
-           Wrapper::getEnumerablePropertyKeys(cx, wrapper, props),
-           NOTHING);
-}
-
 /*
  * We can reify non-escaping iterator objects instead of having to wrap them. This
  * allows fast iteration over objects across a compartment boundary.

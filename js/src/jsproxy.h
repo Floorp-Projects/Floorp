@@ -258,7 +258,8 @@ class JS_FRIEND_API(BaseProxyHandler)
     /*
      * Because [[Enumerate]] is one of the standard traps it should be overridden.
      * However for convenience BaseProxyHandler includes a pure virtual implementation,
-     * that turns the properties returned by getEnumerablePropertyKeys into an Iterator object.
+     * that turns the properties returned by getOwnEnumerablePropertyKeys (and proto walking)
+     * into an Iterator object.
      */
     virtual bool enumerate(JSContext *cx, HandleObject proxy, MutableHandleObject objp) const = 0;
 
@@ -311,8 +312,6 @@ class JS_FRIEND_API(BaseProxyHandler)
     virtual bool hasOwn(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const;
     virtual bool getOwnEnumerablePropertyKeys(JSContext *cx, HandleObject proxy,
                                               AutoIdVector &props) const;
-    virtual bool getEnumerablePropertyKeys(JSContext *cx, HandleObject proxy,
-                                           AutoIdVector &props) const = 0;
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args) const;
     virtual bool hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v, bool *bp) const;
     virtual bool objectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx) const;
@@ -398,8 +397,6 @@ class JS_PUBLIC_API(DirectProxyHandler) : public BaseProxyHandler
                         bool *bp) const MOZ_OVERRIDE;
     virtual bool getOwnEnumerablePropertyKeys(JSContext *cx, HandleObject proxy,
                                               AutoIdVector &props) const MOZ_OVERRIDE;
-    virtual bool getEnumerablePropertyKeys(JSContext *cx, HandleObject proxy,
-                                           AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                             CallArgs args) const MOZ_OVERRIDE;
     virtual bool hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v,
