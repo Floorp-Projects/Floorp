@@ -204,7 +204,7 @@ class Assembler : public AssemblerX86Shared
     // Actual assembly emitting functions.
 
     void push(ImmGCPtr ptr) {
-        push(Imm32(uintptr_t(ptr.value)));
+        masm.push_i32(int32_t(ptr.value));
         writeDataRelocation(ptr);
     }
     void push(ImmMaybeNurseryPtr ptr) {
@@ -222,7 +222,7 @@ class Assembler : public AssemblerX86Shared
     }
 
     CodeOffsetLabel pushWithPatch(ImmWord word) {
-        push(Imm32(word.value));
+        masm.push_i32(int32_t(word.value));
         return CodeOffsetLabel(masm.currentOffset());
     }
 
