@@ -55,7 +55,8 @@ public:
   void OnVideoDecoded(VideoData* aSample);
   void OnVideoNotDecoded(NotDecodedReason aReason);
 
-  void OnSeekCompleted(nsresult aResult);
+  void OnSeekCompleted();
+  void OnSeekFailed(nsresult aResult);
 
   bool HasVideo() MOZ_OVERRIDE
   {
@@ -84,8 +85,9 @@ public:
 
   nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags) MOZ_OVERRIDE;
   void ReadUpdatedMetadata(MediaInfo* aInfo) MOZ_OVERRIDE;
-  void Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
-            int64_t aCurrentTime) MOZ_OVERRIDE;
+  nsRefPtr<SeekPromise>
+  Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
+       int64_t aCurrentTime) MOZ_OVERRIDE;
 
   // Acquires the decoder monitor, and is thus callable on any thread.
   nsresult GetBuffered(dom::TimeRanges* aBuffered) MOZ_OVERRIDE;
@@ -129,6 +131,7 @@ private:
                                                     const nsTArray<nsRefPtr<SourceBufferDecoder>>& aTrackDecoders);
 
   void AttemptSeek();
+  void FinalizeSeek();
 
   nsRefPtr<MediaDecoderReader> mAudioReader;
   nsRefPtr<MediaDecoderReader> mVideoReader;
@@ -152,6 +155,7 @@ private:
 
   // Temporary seek information while we wait for the data
   // to be added to the track buffer.
+  MediaPromiseHolder<SeekPromise> mSeekPromise;
   int64_t mPendingSeekTime;
   int64_t mPendingStartTime;
   int64_t mPendingEndTime;
