@@ -8,6 +8,7 @@
 #define nsDocShellTreeOwner_h__
 
 // Helper Classes
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
@@ -127,9 +128,9 @@ protected:
 
     // the objects that listen for chrome events like context menus and tooltips.
     // They are separate objects to avoid circular references between |this|
-    // and the DOM. These are strong, owning refs.
-   ChromeTooltipListener*         mChromeTooltipListener;
-   ChromeContextMenuListener*     mChromeContextMenuListener;
+    // and the DOM.
+   nsRefPtr<ChromeTooltipListener>     mChromeTooltipListener;
+   nsRefPtr<ChromeContextMenuListener> mChromeContextMenuListener;
 
    nsCOMPtr<nsIPrompt>     mPrompter;
    nsCOMPtr<nsIAuthPrompt> mAuthPrompter;
