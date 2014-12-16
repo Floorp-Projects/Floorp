@@ -1,0 +1,6 @@
+. "$topsrcdir/browser/config/mozconfigs/linux64/nightly"
+
+MOZ_CODE_COVERAGE=1
+export CFLAGS="-fprofile-arcs -ftest-coverage"
+export CXXFLAGS="-fprofile-arcs -ftest-coverage"
+export LDFLAGS="-fprofile-arcs -ftest-coverage -lgcov"
