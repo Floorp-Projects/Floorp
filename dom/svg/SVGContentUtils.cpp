@@ -199,7 +199,7 @@ SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
 
   switch (styleSVG->mStrokeLinejoin) {
   case NS_STYLE_STROKE_LINEJOIN_MITER:
-    aStrokeOptions->mLineJoin = JoinStyle::MITER;
+    aStrokeOptions->mLineJoin = JoinStyle::MITER_OR_BEVEL;
     break;
   case NS_STYLE_STROKE_LINEJOIN_ROUND:
     aStrokeOptions->mLineJoin = JoinStyle::ROUND;

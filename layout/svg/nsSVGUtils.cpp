@@ -1507,7 +1507,7 @@ nsSVGUtils::SetupCairoStrokeGeometry(nsIFrame* aFrame,
 
   switch (style->mStrokeLinejoin) {
   case NS_STYLE_STROKE_LINEJOIN_MITER:
-    aContext->SetLineJoin(JoinStyle::MITER);
+    aContext->SetLineJoin(JoinStyle::MITER_OR_BEVEL);
     break;
   case NS_STYLE_STROKE_LINEJOIN_ROUND:
     aContext->SetLineJoin(JoinStyle::ROUND);
