@@ -55,8 +55,8 @@ InputQueue::ReceiveInputEvent(const nsRefPtr<AsyncPanZoomController>& aTarget,
 
 bool
 InputQueue::MaybeHandleCurrentBlock(const nsRefPtr<AsyncPanZoomController>& aTarget,
-                                           CancelableBlockState *block,
-                                           const InputData& aEvent) {
+                                    CancelableBlockState *block,
+                                    const InputData& aEvent) {
   if (block == CurrentBlock() && block->IsReadyForHandling()) {
     INPQ_LOG("current block is ready with target %p preventdefault %d\n",
         aTarget.get(), block->IsDefaultPrevented());
@@ -162,7 +162,7 @@ InputQueue::ReceiveScrollWheelInput(const nsRefPtr<AsyncPanZoomController>& aTar
     block->AddEvent(aEvent.AsScrollWheelInput());
   }
 
-  return nsEventStatus_eIgnore;
+  return nsEventStatus_eConsumeDoDefault;
 }
 
 void
