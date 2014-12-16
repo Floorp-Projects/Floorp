@@ -257,13 +257,14 @@ bool WaveReader::DecodeVideoFrame(bool &aKeyframeSkip,
   return false;
 }
 
-void WaveReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime)
+nsRefPtr<MediaDecoderReader::SeekPromise>
+WaveReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
   LOG(PR_LOG_DEBUG, ("%p About to seek to %lld", mDecoder, aTarget));
+
   if (NS_FAILED(ResetDecode())) {
-    GetCallback()->OnSeekCompleted(NS_ERROR_FAILURE);
-    return;
+    return SeekPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
   double d = BytesToTime(GetDataLength());
   NS_ASSERTION(d < INT64_MAX / USECS_PER_S, "Duration overflow");
@@ -273,7 +274,11 @@ void WaveReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime, int
   NS_ASSERTION(INT64_MAX - mWavePCMOffset > position, "Integer overflow during wave seek");
   position += mWavePCMOffset;
   nsresult res = mDecoder->GetResource()->Seek(nsISeekableStream::NS_SEEK_SET, position);
-  GetCallback()->OnSeekCompleted(res);
+  if (NS_FAILED(res)) {
+    return SeekPromise::CreateAndReject(res, __func__);
+  } else {
+    return SeekPromise::CreateAndResolve(true, __func__);
+  }
 }
 
 static double RoundToUsecs(double aSeconds) {

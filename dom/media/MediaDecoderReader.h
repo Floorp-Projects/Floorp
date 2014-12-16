@@ -40,6 +40,7 @@ public:
 
   typedef MediaPromise<nsRefPtr<AudioData>, NotDecodedReason> AudioDataPromise;
   typedef MediaPromise<nsRefPtr<VideoData>, NotDecodedReason> VideoDataPromise;
+  typedef MediaPromise<bool, nsresult> SeekPromise;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderReader)
 
@@ -131,15 +132,12 @@ public:
   // ReadUpdatedMetadata will always be called once ReadMetadata has succeeded.
   virtual void ReadUpdatedMetadata(MediaInfo* aInfo) { };
 
-  // Requests the Reader to seek and call OnSeekCompleted on the callback
-  // once completed.
   // Moves the decode head to aTime microseconds. aStartTime and aEndTime
   // denote the start and end times of the media in usecs, and aCurrentTime
   // is the current playback position in microseconds.
-  virtual void Seek(int64_t aTime,
-                    int64_t aStartTime,
-                    int64_t aEndTime,
-                    int64_t aCurrentTime) = 0;
+  virtual nsRefPtr<SeekPromise>
+  Seek(int64_t aTime, int64_t aStartTime,
+       int64_t aEndTime, int64_t aCurrentTime) = 0;
 
   // Called to move the reader into idle state. When the reader is
   // created it is assumed to be active (i.e. not idle). When the media
@@ -311,8 +309,6 @@ private:
 class RequestSampleCallback {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RequestSampleCallback)
-
-  virtual void OnSeekCompleted(nsresult aResult) = 0;
 
   // Called during shutdown to break any reference cycles.
   virtual void BreakCycles() = 0;
