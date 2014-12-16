@@ -1060,19 +1060,15 @@ WebrtcVideoConduit::SendVideoFrame(unsigned char* video_frame,
     return kMediaConduitMalformedArgument;
   }
 
-  webrtc::RawVideoType type;
-  switch (video_type) {
-    case kVideoI420:
-      type = webrtc::kVideoI420;
-      break;
-    case kVideoNV21:
-      type = webrtc::kVideoNV21;
-      break;
-    default:
-      CSFLogError(logTag,  "%s VideoType Invalid. Only 1420 and NV21 Supported",__FUNCTION__);
-      MOZ_ASSERT(PR_FALSE);
-      return kMediaConduitMalformedArgument;
+  // NOTE: update when common_types.h changes
+  if (video_type > kVideoBGRA) {
+    CSFLogError(logTag,  "%s VideoType %d Invalid", __FUNCTION__, video_type);
+    MOZ_ASSERT(PR_FALSE);
+    return kMediaConduitMalformedArgument;
   }
+  // RawVideoType == VideoType
+  webrtc::RawVideoType type = static_cast<webrtc::RawVideoType>((int)video_type);
+
   //Transmission should be enabled before we insert any frames.
   if(!mEngineTransmitting)
   {

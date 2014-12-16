@@ -2058,8 +2058,8 @@ bool
 GlobalObject::initIntlObject(JSContext *cx, Handle<GlobalObject*> global)
 {
     RootedObject Intl(cx);
-    Intl = NewObjectWithGivenProto(cx, &IntlClass, global->getOrCreateObjectPrototype(cx),
-                                   global, SingletonObject);
+    RootedObject proto(cx, global->getOrCreateObjectPrototype(cx));
+    Intl = NewObjectWithGivenProto(cx, &IntlClass, proto, global, SingletonObject);
     if (!Intl)
         return false;
 

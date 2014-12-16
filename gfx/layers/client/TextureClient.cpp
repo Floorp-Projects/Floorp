@@ -386,6 +386,10 @@ TextureClient::CreateForDrawing(ISurfaceAllocator* aAllocator,
     return texture;
   }
 
+  if (aAllocFlags & ALLOC_DISALLOW_BUFFERTEXTURECLIENT) {
+    return nullptr;
+  }
+
   if (texture) {
     NS_WARNING("Failed to allocate a TextureClient, falling back to BufferTextureClient.");
   }

@@ -481,6 +481,26 @@ public:
     }
   }
 
+  // Container-width for the line is changing (and therefore if writing mode
+  // was vertical-rl, the line will move physically; this is like SlideBy,
+  // but it is the container width instead of the line's own logical coord
+  // that is changing.
+  nscoord UpdateContainerWidth(nscoord aNewContainerWidth)
+  {
+    NS_ASSERTION(mContainerWidth != -1, "container width not set");
+    nscoord delta = mContainerWidth - aNewContainerWidth;
+    mContainerWidth = aNewContainerWidth;
+    // this has a physical-coordinate effect only in vertical-rl mode
+    if (mWritingMode.IsVerticalRL() && mData) {
+      nsPoint physicalDelta = mozilla::LogicalPoint(mWritingMode, 0, delta).
+                                         GetPhysicalPoint(mWritingMode, 0);
+      NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
+        mData->mOverflowAreas.Overflow(otype) += physicalDelta;
+      }
+    }
+    return delta;
+  }
+
   void IndentBy(nscoord aDICoord, nscoord aContainerWidth) {
     NS_ASSERTION(aContainerWidth == mContainerWidth || mContainerWidth == -1,
                  "container width doesn't match");
