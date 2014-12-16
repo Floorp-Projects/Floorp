@@ -119,7 +119,7 @@ struct Sample
 class Saiz
 {
 public:
-  Saiz(Box& aBox);
+  explicit Saiz(Box& aBox);
 
   AtomType mAuxInfoType;
   uint32_t mAuxInfoTypeParameter;
@@ -129,7 +129,7 @@ public:
 class Saio
 {
 public:
-  Saio(Box& aBox);
+  explicit Saio(Box& aBox);
 
   AtomType mAuxInfoType;
   uint32_t mAuxInfoTypeParameter;
