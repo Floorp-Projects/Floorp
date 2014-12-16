@@ -147,12 +147,12 @@ protected:
 class ChromeTooltipListener MOZ_FINAL : public nsIDOMEventListener
 {
 protected:
-  virtual ~ChromeTooltipListener ( ) ;
+  virtual ~ChromeTooltipListener();
 
 public:
   NS_DECL_ISUPPORTS
 
-  ChromeTooltipListener ( nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome ) ;
+  ChromeTooltipListener(nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome);
 
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
   NS_IMETHOD MouseMove(nsIDOMEvent* aMouseEvent);
@@ -173,8 +173,8 @@ private:
   NS_IMETHOD AddTooltipListener();
   NS_IMETHOD RemoveTooltipListener();
 
-  NS_IMETHOD ShowTooltip ( int32_t inXCoords, int32_t inYCoords, const nsAString & inTipText ) ;
-  NS_IMETHOD HideTooltip ( ) ;
+  NS_IMETHOD ShowTooltip(int32_t inXCoords, int32_t inYCoords, const nsAString & inTipText);
+  NS_IMETHOD HideTooltip();
 
   nsWebBrowser* mWebBrowser;
   nsCOMPtr<mozilla::dom::EventTarget> mEventTarget;
@@ -189,7 +189,7 @@ private:
   bool mTooltipListenerInstalled;
 
   nsCOMPtr<nsITimer> mTooltipTimer;
-  static void sTooltipCallback ( nsITimer* aTimer, void* aListener ) ;
+  static void sTooltipCallback(nsITimer* aTimer, void* aListener);
   int32_t mMouseClientX, mMouseClientY;       // mouse coordinates for last mousemove event we saw
   int32_t mMouseScreenX, mMouseScreenY;       // mouse coordinates for tooltip event
   bool mShowingTooltip;
@@ -218,12 +218,12 @@ private:
 class ChromeContextMenuListener : public nsIDOMEventListener
 {
 protected:
-  virtual ~ChromeContextMenuListener ( ) ;
+  virtual ~ChromeContextMenuListener();
 
 public:
   NS_DECL_ISUPPORTS
 
-  ChromeContextMenuListener ( nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome ) ;
+  ChromeContextMenuListener(nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome);
 
   // nsIDOMContextMenuListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
