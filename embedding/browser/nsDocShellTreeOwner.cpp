@@ -741,7 +741,7 @@ nsDocShellTreeOwner::OnSecurityChange(nsIWebProgress *aWebProgress,
 void
 nsDocShellTreeOwner::WebBrowser(nsWebBrowser* aWebBrowser)
 {
-  if ( !aWebBrowser )
+  if (!aWebBrowser)
     RemoveChromeListeners();
   if (aWebBrowser != mWebBrowser) {
     mPrompter = 0;
@@ -819,13 +819,13 @@ nsDocShellTreeOwner::AddChromeListeners()
     return NS_ERROR_FAILURE;
 
   // install tooltips
-  if ( !mChromeTooltipListener ) {
+  if (!mChromeTooltipListener) {
     nsCOMPtr<nsITooltipListener>
                            tooltipListener(do_QueryInterface(webBrowserChrome));
-    if ( tooltipListener ) {
+    if (tooltipListener) {
       mChromeTooltipListener = new ChromeTooltipListener(mWebBrowser,
                                                          webBrowserChrome);
-      if ( mChromeTooltipListener ) {
+      if (mChromeTooltipListener) {
         NS_ADDREF(mChromeTooltipListener);
         rv = mChromeTooltipListener->AddChromeListeners();
       }
@@ -835,15 +835,15 @@ nsDocShellTreeOwner::AddChromeListeners()
   }
 
   // install context menus
-  if ( !mChromeContextMenuListener ) {
+  if (!mChromeContextMenuListener) {
     nsCOMPtr<nsIContextMenuListener2>
                           contextListener2(do_QueryInterface(webBrowserChrome));
     nsCOMPtr<nsIContextMenuListener>
                            contextListener(do_QueryInterface(webBrowserChrome));
-    if ( contextListener2 || contextListener ) {
+    if (contextListener2 || contextListener) {
       mChromeContextMenuListener =
                    new ChromeContextMenuListener(mWebBrowser, webBrowserChrome);
-      if ( mChromeContextMenuListener ) {
+      if (mChromeContextMenuListener) {
         NS_ADDREF(mChromeContextMenuListener);
         rv = mChromeContextMenuListener->AddChromeListeners();
       }
@@ -872,11 +872,11 @@ nsDocShellTreeOwner::AddChromeListeners()
 NS_IMETHODIMP
 nsDocShellTreeOwner::RemoveChromeListeners()
 {
-  if ( mChromeTooltipListener ) {
+  if (mChromeTooltipListener) {
     mChromeTooltipListener->RemoveChromeListeners();
     NS_RELEASE(mChromeTooltipListener);
   }
-  if ( mChromeContextMenuListener ) {
+  if (mChromeContextMenuListener) {
     mChromeContextMenuListener->RemoveChromeListeners();
     NS_RELEASE(mChromeContextMenuListener);
   }
@@ -1063,7 +1063,7 @@ DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, char16_t **aText,
 
   while ( !found && current ) {
     nsCOMPtr<nsIDOMElement> currElement ( do_QueryInterface(current) );
-    if ( currElement ) {
+    if (currElement) {
       nsCOMPtr<nsIContent> content(do_QueryInterface(currElement));
       if (content) {
         nsIAtom *tagAtom = content->Tag();
@@ -1072,7 +1072,7 @@ DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, char16_t **aText,
             tagAtom != mTag_window) {
           // first try the normal title attribute...
           currElement->GetAttribute(NS_LITERAL_STRING("title"), outText);
-          if ( outText.Length() )
+          if (outText.Length())
             found = true;
           else {
             // ...ok, that didn't work, try it in the XLink namespace
@@ -1082,7 +1082,7 @@ DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, char16_t **aText,
               nsCOMPtr<nsIURI> uri(linkContent->GetURIExternal());
               if (uri) {
                 currElement->GetAttributeNS(NS_LITERAL_STRING("http://www.w3.org/1999/xlink"), NS_LITERAL_STRING("title"), outText);
-                if ( outText.Length() )
+                if (outText.Length())
                   found = true;
               }
             }
@@ -1097,7 +1097,7 @@ DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, char16_t **aText,
                   nsIContent* child = childNodes->Item(i);
                   if (child->IsSVG(nsGkAtoms::title)) {
                     static_cast<dom::SVGTitleElement*>(child)->GetTextContent(outText);
-                    if ( outText.Length() )
+                    if (outText.Length())
                       found = true;
                     break;
                   }
@@ -1110,7 +1110,7 @@ DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, char16_t **aText,
     }
 
     // not found here, walk up to the parent and keep trying
-    if ( !found ) {
+    if (!found) {
       nsCOMPtr<nsIDOMNode> temp ( current );
       temp->GetParentNode(getter_AddRefs(current));
     }
@@ -1170,9 +1170,9 @@ ChromeTooltipListener::AddChromeListeners()
   // the embedding chrome cares.
   nsresult rv = NS_OK;
   nsCOMPtr<nsITooltipListener> tooltipListener ( do_QueryInterface(mWebBrowserChrome) );
-  if ( tooltipListener && !mTooltipListenerInstalled ) {
+  if (tooltipListener && !mTooltipListenerInstalled) {
     rv = AddTooltipListener();
-    if ( NS_FAILED(rv) )
+    if (NS_FAILED(rv))
       return rv;
   }
 
@@ -1222,7 +1222,7 @@ ChromeTooltipListener::RemoveChromeListeners ( )
 {
   HideTooltip();
 
-  if ( mTooltipListenerInstalled )
+  if (mTooltipListenerInstalled)
     RemoveTooltipListener();
 
   mEventTarget = nullptr;
@@ -1306,7 +1306,7 @@ ChromeTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
   int32_t newMouseX, newMouseY;
   mouseEvent->GetClientX(&newMouseX);
   mouseEvent->GetClientY(&newMouseY);
-  if ( mMouseClientX == newMouseX && mMouseClientY == newMouseY )
+  if (mMouseClientX == newMouseX && mMouseClientY == newMouseY)
     return NS_OK;
 
   // Filter out minor mouse movements.
@@ -1319,17 +1319,17 @@ ChromeTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
   mouseEvent->GetScreenX(&mMouseScreenX);
   mouseEvent->GetScreenY(&mMouseScreenY);
 
-  if ( mTooltipTimer ) {
+  if (mTooltipTimer) {
     mTooltipTimer->Cancel();
   }
 
   if (!mShowingTooltip && !mTooltipShownOnce) {
     mTooltipTimer = do_CreateInstance("@mozilla.org/timer;1");
-    if ( mTooltipTimer ) {
+    if (mTooltipTimer) {
       nsCOMPtr<EventTarget> eventTarget = aMouseEvent->InternalDOMEvent()->GetTarget();
-      if ( eventTarget )
+      if (eventTarget)
         mPossibleTooltipNode = do_QueryInterface(eventTarget);
-      if ( mPossibleTooltipNode ) {
+      if (mPossibleTooltipNode) {
         nsresult rv =
           mTooltipTimer->InitWithFuncCallback(sTooltipCallback, this,
             LookAndFeel::GetInt(LookAndFeel::eIntID_TooltipDelay, 500),
@@ -1364,9 +1364,9 @@ ChromeTooltipListener::ShowTooltip(int32_t inXCoords, int32_t inYCoords,
 
   // do the work to call the client
   nsCOMPtr<nsITooltipListener> tooltipListener ( do_QueryInterface(mWebBrowserChrome) );
-  if ( tooltipListener ) {
+  if (tooltipListener) {
     rv = tooltipListener->OnShowTooltip ( inXCoords, inYCoords, PromiseFlatString(inTipText).get() );
-    if ( NS_SUCCEEDED(rv) )
+    if (NS_SUCCEEDED(rv))
       mShowingTooltip = true;
   }
 
@@ -1387,7 +1387,7 @@ ChromeTooltipListener::HideTooltip()
   nsresult rv = NS_OK;
 
   // shut down the relevant timers
-  if ( mTooltipTimer ) {
+  if (mTooltipTimer) {
     mTooltipTimer->Cancel();
     mTooltipTimer = nullptr;
     // release tooltip target
@@ -1395,11 +1395,11 @@ ChromeTooltipListener::HideTooltip()
   }
 
   // if we're showing the tip, tell the chrome to hide it
-  if ( mShowingTooltip ) {
+  if (mShowingTooltip) {
     nsCOMPtr<nsITooltipListener> tooltipListener ( do_QueryInterface(mWebBrowserChrome) );
-    if ( tooltipListener ) {
+    if (tooltipListener) {
       rv = tooltipListener->OnHideTooltip ( );
-      if ( NS_SUCCEEDED(rv) )
+      if (NS_SUCCEEDED(rv))
         mShowingTooltip = false;
     }
   }
@@ -1427,7 +1427,7 @@ ChromeTooltipListener::sTooltipCallback(nsITimer *aTimer,
 {
   ChromeTooltipListener* self = static_cast<ChromeTooltipListener*>
                                            (aChromeTooltipListener);
-  if ( self && self->mPossibleTooltipNode ){
+  if (self && self->mPossibleTooltipNode) {
     // The actual coordinates we want to put the tooltip at are relative to the
     // toplevel docshell of our mWebBrowser.  We know what the screen
     // coordinates of the mouse event were, which means we just need the screen
@@ -1568,7 +1568,7 @@ ChromeContextMenuListener::AddChromeListeners()
 
   nsCOMPtr<nsIContextMenuListener2> contextListener2 ( do_QueryInterface(mWebBrowserChrome) );
   nsCOMPtr<nsIContextMenuListener> contextListener ( do_QueryInterface(mWebBrowserChrome) );
-  if ( (contextListener || contextListener2) && !mContextMenuListenerInstalled )
+  if ((contextListener || contextListener2) && !mContextMenuListenerInstalled)
     rv = AddContextMenuListener();
 
   return rv;
@@ -1584,7 +1584,7 @@ ChromeContextMenuListener::AddChromeListeners()
 NS_IMETHODIMP
 ChromeContextMenuListener::RemoveChromeListeners()
 {
-  if ( mContextMenuListenerInstalled )
+  if (mContextMenuListenerInstalled)
     RemoveContextMenuListener();
 
   mEventTarget = nullptr;
@@ -1769,14 +1769,14 @@ ChromeContextMenuListener::HandleEvent(nsIDOMEvent* aMouseEvent)
   }
 
   // Tell the listener all about the event
-  if ( menuListener2 ) {
+  if (menuListener2) {
     menuInfoImpl->SetMouseEvent(aMouseEvent);
     menuInfoImpl->SetDOMNode(targetDOMnode);
     menuListener2->OnShowContextMenu(flags2, menuInfo);
   }
   else {
     nsCOMPtr<nsIContextMenuListener> menuListener(do_QueryInterface(mWebBrowserChrome));
-    if ( menuListener )
+    if (menuListener)
       menuListener->OnShowContextMenu(flags, aMouseEvent, targetDOMnode);
   }
 
