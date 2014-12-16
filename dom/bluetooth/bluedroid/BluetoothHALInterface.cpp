@@ -395,7 +395,7 @@ BluetoothHALInterface::Init(
   BluetoothNotificationHandler* aNotificationHandler,
   BluetoothResultHandler* aRes)
 {
-  static bt_callbacks_t sBluetoothCallbacks = {
+  static const bt_callbacks_t sBluetoothCallbacks = {
     sizeof(sBluetoothCallbacks),
     BluetoothCallback::AdapterStateChanged,
     BluetoothCallback::AdapterProperties,
