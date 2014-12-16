@@ -301,12 +301,17 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp,
         reportp->flags |= JSREPORT_EXCEPTION;
     }
 
+    if (cx->options().autoJSAPIOwnsErrorReporting() || JS_IsRunning(cx)) {
+        if (js_ErrorToException(cx, message, reportp, callback, userRef)) {
+            return;
+        }
+    }
+
     /*
      * Call the error reporter only if an exception wasn't raised.
      */
-    if (!JS_IsRunning(cx) || !js_ErrorToException(cx, message, reportp, callback, userRef)) {
-        if (message)
-            CallErrorReporter(cx, message, reportp);
+    if (message) {
+        CallErrorReporter(cx, message, reportp);
     }
 }
 
