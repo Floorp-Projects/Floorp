@@ -401,6 +401,8 @@
 @BINPATH@/components/nsSidebar.js
 @BINPATH@/components/nsAsyncShutdown.manifest
 @BINPATH@/components/nsAsyncShutdown.js
+@RESPATH@/components/htmlMenuBuilder.js
+@RESPATH@/components/htmlMenuBuilder.manifest
 
 ; WiFi, NetworkManager, NetworkStats
 #ifdef MOZ_WIDGET_GONK
