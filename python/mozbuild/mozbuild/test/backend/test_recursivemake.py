@@ -378,9 +378,17 @@ class TestRecursiveMakeBackend(BackendTester):
 
         expected = [
             'GENERATED_FILES += bar.c',
+            'bar.c: %s/generate-bar.py' % env.topsrcdir,
+            '$(call py_action,file_generate,%s/generate-bar.py bar.c)' % env.topsrcdir,
+            '',
             'GENERATED_FILES += foo.c',
+            'foo.c: %s/generate-foo.py %s/foo-data' % (env.topsrcdir, env.topsrcdir),
+            '$(call py_action,file_generate,%s/generate-foo.py foo.c %s/foo-data)' % (env.topsrcdir, env.topsrcdir),
+            '',
+            'GENERATED_FILES += quux.c',
         ]
 
+        self.maxDiff = None
         self.assertEqual(lines, expected)
 
     def test_resources(self):

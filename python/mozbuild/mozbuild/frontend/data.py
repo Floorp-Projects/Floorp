@@ -857,12 +857,16 @@ class GeneratedFile(ContextDerived):
     """Represents a generated file."""
 
     __slots__ = (
-        'filename',
+        'script',
+        'output',
+        'inputs',
     )
 
-    def __init__(self, context, filename):
+    def __init__(self, context, script, output, inputs):
         ContextDerived.__init__(self, context)
-        self.filename = filename
+        self.script = script
+        self.output = output
+        self.inputs = inputs
 
 
 class ClassPathEntry(object):
