@@ -157,7 +157,7 @@
   opacity: 1;
 }
 .conversation-toolbar .media-control:hover {
-  background-color: rgba(255, 255, 255, .35);
+  background-color: rgba(255,255,255,.35);
   opacity: 1;
 }
 .conversation-toolbar .media-control.muted {
@@ -208,7 +208,7 @@
 .standalone .local-stream {
   /* required to have it superimposed to the control toolbar */
   z-index: 1001;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 2px 4px rgba(0,0,0,.5);
 }
 
 /* Side by side video elements */
@@ -320,7 +320,7 @@
   position: absolute; /* element can be wider than the parent */
   background: #fff;
   margin: 0;
-  box-shadow: 0 4px 5px rgba(30, 30, 30, .3);
+  box-shadow: 0 4px 5px rgba(30,30,30,.3);
   border-style: solid;
   border-width: 1px 1px 1px 2px;
   border-color: #aaa #111 #111 #aaa;
@@ -473,7 +473,7 @@
   width: 30%;
   height: 28%;
   max-height: 105px;
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.5);
+  box-shadow: 0px 2px 4px rgba(0,0,0,.5);
 }
 
 .fx-embedded .local-stream.room-preview {
@@ -566,7 +566,7 @@
   background-color: #4ba6e7;
   background-size: contain;
   overflow: hidden;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.3);
   float: left;
   -moz-margin-end: 1em;
 }
@@ -776,7 +776,7 @@ html, .fx-embedded, #main,
 
 .room-invitation-overlay {
   position: absolute;
-  background: rgba(0, 0, 0, .6);
+  background: rgba(0,0,0,.6);
   /* This matches .fx-embedded .conversation toolbar height */
   top: 26px;
   right: 0;
@@ -787,18 +787,36 @@ html, .fx-embedded, #main,
   z-index: 1010;
 }
 
+.room-invitation-overlay .error-display-area.error,
+.room-invitation-overlay input[type="text"] {
+  display: block;
+  background-color: rgba(0,0,0,.5);
+  border-radius: 3px;
+  padding: .5em;
+}
+
+.room-invitation-overlay .error-display-area {
+  display: none;
+}
+
+.room-invitation-overlay .error-display-area.error {
+  position: absolute;
+  top: 2em;
+  left: 1em;
+  right: 1em;
+  text-align: start;
+  width: calc(258px - 2em);
+  color: #d74345;
+}
+
 .room-invitation-overlay form {
   padding: 8em 0 2.5em 0;
 }
 
 .room-invitation-overlay input[type="text"] {
-  display: block;
-  background: rgba(0, 0, 0, .5);
   color: #fff;
   font-size: 1.2em;
   border: none;
-  border-radius: 3px;
-  padding: .5em;
   width: 200px;
   margin: 0 auto;
 }
