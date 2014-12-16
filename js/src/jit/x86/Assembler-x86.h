@@ -204,7 +204,7 @@ class Assembler : public AssemblerX86Shared
     // Actual assembly emitting functions.
 
     void push(ImmGCPtr ptr) {
-        push(Imm32(uintptr_t(ptr.value)));
+        masm.push_i32(int32_t(ptr.value));
         writeDataRelocation(ptr);
     }
     void push(ImmMaybeNurseryPtr ptr) {
@@ -222,7 +222,7 @@ class Assembler : public AssemblerX86Shared
     }
 
     CodeOffsetLabel pushWithPatch(ImmWord word) {
-        push(Imm32(word.value));
+        masm.push_i32(int32_t(word.value));
         return CodeOffsetLabel(masm.currentOffset());
     }
 
@@ -329,43 +329,47 @@ class Assembler : public AssemblerX86Shared
         }
     }
 
-    void cmpl(const Register src, ImmWord ptr) {
-        masm.cmpl_ir(ptr.value, src.code());
+    void cmpl(ImmWord rhs, Register lhs) {
+        masm.cmpl_ir(rhs.value, lhs.code());
     }
-    void cmpl(const Register src, ImmPtr imm) {
-        cmpl(src, ImmWord(uintptr_t(imm.value)));
+    void cmpl(ImmPtr rhs, Register lhs) {
+        cmpl(ImmWord(uintptr_t(rhs.value)), lhs);
     }
-    void cmpl(const Register src, ImmGCPtr ptr) {
-        masm.cmpl_ir(uintptr_t(ptr.value), src.code());
-        writeDataRelocation(ptr);
+    void cmpl(ImmGCPtr rhs, Register lhs) {
+        masm.cmpl_i32r(uintptr_t(rhs.value), lhs.code());
+        writeDataRelocation(rhs);
     }
-    void cmpl(Register lhs, Register rhs) {
+    void cmpl(Register rhs, Register lhs) {
         masm.cmpl_rr(rhs.code(), lhs.code());
     }
-    void cmpl(const Operand &op, ImmGCPtr imm) {
-        switch (op.kind()) {
+    void cmpl(ImmGCPtr rhs, const Operand &lhs) {
+        switch (lhs.kind()) {
           case Operand::REG:
-            masm.cmpl_ir_force32(uintptr_t(imm.value), op.reg());
-            writeDataRelocation(imm);
+            masm.cmpl_i32r(uintptr_t(rhs.value), lhs.reg());
+            writeDataRelocation(rhs);
             break;
           case Operand::MEM_REG_DISP:
-            masm.cmpl_im_force32(uintptr_t(imm.value), op.disp(), op.base());
-            writeDataRelocation(imm);
+            masm.cmpl_i32m(uintptr_t(rhs.value), lhs.disp(), lhs.base());
+            writeDataRelocation(rhs);
             break;
           case Operand::MEM_ADDRESS32:
-            masm.cmpl_im(uintptr_t(imm.value), op.address());
-            writeDataRelocation(imm);
+            masm.cmpl_i32m(uintptr_t(rhs.value), lhs.address());
+            writeDataRelocation(rhs);
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
         }
     }
-    void cmpl(const Operand &op, ImmMaybeNurseryPtr imm) {
-        cmpl(op, noteMaybeNurseryPtr(imm));
+    void cmpl(ImmMaybeNurseryPtr rhs, const Operand &lhs) {
+        cmpl(noteMaybeNurseryPtr(rhs), lhs);
     }
-    void cmpl(AsmJSAbsoluteAddress lhs, Register rhs) {
-        masm.cmpl_rm_force32(rhs.code(), (void*)-1);
+    void cmpl(Register rhs, AsmJSAbsoluteAddress lhs) {
+        masm.cmpl_rm_disp32(rhs.code(), (void*)-1);
         append(AsmJSAbsoluteLink(CodeOffsetLabel(masm.currentOffset()), lhs.kind()));
+    }
+    void cmpl(Imm32 rhs, AsmJSAbsoluteAddress lhs) {
+        JmpSrc src = masm.cmpl_im_disp32(rhs.value, (void*)-1);
+        append(AsmJSAbsoluteLink(CodeOffsetLabel(src.offset()), lhs.kind()));
     }
 
     void jmp(ImmPtr target, Relocation::Kind reloc = Relocation::HARDCODED) {

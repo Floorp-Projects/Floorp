@@ -7,6 +7,7 @@
 EXPORTS += [
     'MP4Decoder.h',
     'MP4Reader.h',
+    'MP4Stream.h',
     'PlatformDecoderModule.h',
     'SharedDecoderManager.h',
 ]
@@ -14,6 +15,7 @@ EXPORTS += [
 UNIFIED_SOURCES += [
     'BlankDecoderModule.cpp',
     'MP4Decoder.cpp',
+    'MP4Stream.cpp',
     'PlatformDecoderModule.cpp',
     'SharedDecoderManager.cpp',
 ]

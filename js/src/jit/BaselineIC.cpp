@@ -7848,6 +7848,13 @@ ICGetProp_ArgumentsCallee::Compiler::generateStubCode(MacroAssembler &masm)
     return true;
 }
 
+/* static */ ICGetProp_Generic *
+ICGetProp_Generic::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
+                         ICGetProp_Generic &other)
+{
+    return New(space, other.jitCode(), firstMonitorStub);
+}
+
 static bool
 DoGetPropGeneric(JSContext *cx, BaselineFrame *frame, ICGetProp_Generic *stub, MutableHandleValue val, MutableHandleValue res)
 {

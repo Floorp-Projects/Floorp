@@ -154,6 +154,120 @@ this.NetUtil = {
     },
 
     /**
+     * Asynchronously opens a source and fetches the response.  A source can be
+     * an nsIURI, nsIFile, string spec, nsIChannel, or nsIInputStream.  The
+     * provided callback will get an input stream containing the response, the
+     * result code, and a reference to the request.
+     *
+     * Please note, if aSource is an instance of an nsIChannel, then
+     * aLoadingNode, aLoadingPrincipal, aTriggeringPrincipal, aSecurityFlags,
+     * aContentPolicyType must be "undefined".
+     *
+     * @param aSource
+     *        The nsIURI, nsIFile, string spec, nsIChannel, or nsIInputStream
+     *        to open.
+     * @param aCallback
+     *        The callback function that will be notified upon completion.  It
+     *        will get two arguments:
+     *        1) An nsIInputStream containing the data from aSource, if any.
+     *        2) The status code from opening the source.
+     *        3) Reference to the nsIRequest.
+     * @param aLoadingNode, aLoadingPrincipal, aTriggeringPrincipal
+     *        aSecurityFlags, aContentPolicyType
+     *        See param description in NetUtil_newChannel2.
+     *
+     * Note: As an interim we have asyncFetch as well as asyncFetch2.
+     *       Once Bug 1087720 (which converts all js callers to use
+     *       asyncFetch2) lands, we can remove asyncFetch completely.
+     */
+    asyncFetch2: function NetUtil_asyncFetch2(aSource,
+                                              aCallback,
+                                              aLoadingNode,
+                                              aLoadingPrincipal,
+                                              aTriggeringPrincipal,
+                                              aSecurityFlags,
+                                              aContentPolicyType)
+    {
+        if (!aSource || !aCallback) {
+            let exception = new Components.Exception(
+                "Must have a source and a callback",
+                Cr.NS_ERROR_INVALID_ARG,
+                Components.stack.caller
+            );
+            throw exception;
+        }
+
+        // if aSource is an instance of an nsIChannel, all the individual
+        // args to create a loadInfo must be "undefined".
+        if (aSource instanceof Ci.nsIChannel) {
+          if ((typeof aLoadingNode != "undefined") ||
+              (typeof aLoadingPrincipal != "undefined") ||
+              (typeof aTriggeringPrincipal != "undefined") ||
+              (typeof aSecurityFlags != "undefined") ||
+              (typeof aContentPolicyType != "undefined")) {
+
+            let exception = new Components.Exception(
+                "LoadInfo arguments must be undefined",
+                Cr.NS_ERROR_INVALID_ARG,
+                Components.stack.caller
+            );
+            throw exception;
+          }
+        }
+
+        // Create a pipe that will create our output stream that we can use once
+        // we have gotten all the data.
+        let pipe = Cc["@mozilla.org/pipe;1"].
+                   createInstance(Ci.nsIPipe);
+        pipe.init(true, true, 0, PR_UINT32_MAX, null);
+
+        // Create a listener that will give data to the pipe's output stream.
+        let listener = Cc["@mozilla.org/network/simple-stream-listener;1"].
+                       createInstance(Ci.nsISimpleStreamListener);
+        listener.init(pipe.outputStream, {
+            onStartRequest: function(aRequest, aContext) {},
+            onStopRequest: function(aRequest, aContext, aStatusCode) {
+                pipe.outputStream.close();
+                aCallback(pipe.inputStream, aStatusCode, aRequest);
+            }
+        });
+
+        // Input streams are handled slightly differently from everything else.
+        if (aSource instanceof Ci.nsIInputStream) {
+            let pump = Cc["@mozilla.org/network/input-stream-pump;1"].
+                       createInstance(Ci.nsIInputStreamPump);
+            pump.init(aSource, -1, -1, 0, 0, true);
+            pump.asyncRead(listener, null);
+            return;
+        }
+
+        let channel = aSource;
+        if (!(channel instanceof Ci.nsIChannel)) {
+            channel = this.newChannel2(aSource,
+                                       aLoadingNode,
+                                       aLoadingPrincipal,
+                                       aTriggeringPrincipal,
+                                       aSecurityFlags,
+                                       aContentPolicyType);
+
+        }
+
+        try {
+            channel.asyncOpen(listener, null);
+        }
+        catch (e) {
+            let exception = new Components.Exception(
+                "Failed to open input source '" + channel.originalURI.spec + "'",
+                e.result,
+                Components.stack.caller,
+                aSource,
+                e
+            );
+            throw exception;
+        }
+    },
+
+    /**
      * Constructs a new URI for the given spec, character set, and base URI, or
      * an nsIFile.
      *
@@ -219,6 +333,102 @@ this.NetUtil = {
         }
 
         return this.ioService.newChannelFromURI(uri);
+    },
+
+    /**
+     * Constructs a new channel for the given spec, character set, and base URI,
+     * or nsIURI, or nsIFile.
+     *
+     * @param aWhatToLoad
+     *        The string spec for the desired URI, an nsIURI, or an nsIFile.
+     * @param aOriginCharset
+     *        The character set for the URI.  Only used if aWhatToLoad is a
+     *        string.
+     * @param aBaseURI
+     *        The base URI for the spec.  Only used if aWhatToLoad is a string.
+     * @param aLoadingNode
+     *        The loadingDocument of the channel.
+     *        The element or document where the result of this request will be
+     *        used. This is the document/element that will get access to the
+     *        result of this request. For example for an image load, it's the
+     *        document in which the image will be loaded. And for a CSS
+     *        stylesheet it's the document whose rendering will be affected by
+     *        the stylesheet.
+     *        If possible, pass in the element which is performing the load. But
+     *        if the load is coming from a JS API (such as XMLHttpRequest) or if
+     *        the load might be coalesced across multiple elements (such as
+     *        for <img>) then pass in the Document node instead.
+     *        For loads that are not related to any document, such as loads coming
+     *        from addons or internal browser features, use null here.
+     * @param aLoadingPrincipal
+     *        The loadingPrincipal of the channel.
+     *        The principal of the document where the result of this request will
+     *        be used.
+     *        This is generally the principal of the aLoadingNode. However for
+     *        loads where aLoadingNode is null this argument still needs to be
+     *        passed. For example for loads from a WebWorker, pass the principal
+     *        of that worker. For loads from an addon or from internal browser
+     *        features, pass the system principal.
+     *        This principal should almost always be the system principal if
+     *        aLoadingNode is null. The only exception to this is for loads
+     *        from WebWorkers since they don't have any nodes to be passed as
+     *        aLoadingNode.
+     *        Please note, aLoadingPrincipal is *not* the principal of the
+     *        resource being loaded. But rather the principal of the context
+     *        where the resource will be used.
+     * @param aTriggeringPrincipal
+     *        The triggeringPrincipal of the load.
+     *        The triggeringPrincipal is the principal of the resource that caused
+     *        this particular URL to be loaded.
+     *        Most likely the triggeringPrincipal and the loadingPrincipal are
+     *        identical, in which case the triggeringPrincipal can be left out.
+     *        In some cases the loadingPrincipal and the triggeringPrincipal are
+     *        different however, e.g. a stylesheet may import a subresource. In
+     *        that case the principal of the stylesheet which contains the
+     *        import command is the triggeringPrincipal, and the principal of
+     *        the document whose rendering is affected is the loadingPrincipal.
+     * @param aSecurityFlags
+     *        The securityFlags of the channel.
+     *        Any of the securityflags defined in nsILoadInfo.idl
+     * @param aContentPolicyType
+     *        The contentPolicyType of the channel.
+     *        Any of the content types defined in nsIContentPolicy.idl
+     * @return an nsIChannel object.
+     *
+     * Note: As an interim we have newChannel as well as newChannel2.
+     *       Once Bug 1087720 (which converts all js callers to use
+     *       newChannel2) lands, we can remove newChannel completely.
+     */
+    newChannel2: function NetUtil_newChannel2(aWhatToLoad,
+                                              aOriginCharset,
+                                              aBaseURI,
+                                              aLoadingNode,
+                                              aLoadingPrincipal,
+                                              aTriggeringPrincipal,
+                                              aSecurityFlags,
+                                              aContentPolicyType)
+    {
+        if (!aWhatToLoad) {
+            let exception = new Components.Exception(
+                "Must have a non-null string spec, nsIURI, or nsIFile object",
+                Cr.NS_ERROR_INVALID_ARG,
+                Components.stack.caller
+            );
+            throw exception;
+        }
+
+        let uri = aWhatToLoad;
+        if (!(aWhatToLoad instanceof Ci.nsIURI)) {
+            // We either have a string or an nsIFile that we'll need a URI for.
+            uri = this.newURI(aWhatToLoad, aOriginCharset, aBaseURI);
+        }
+
+        return this.ioService.newChannelFromURI2(uri,
+                                                 aLoadingNode,
+                                                 aLoadingPrincipal,
+                                                 aTriggeringPrincipal,
+                                                 aSecurityFlags,
+                                                 aContentPolicyType);
     },
 
     /**

@@ -2027,7 +2027,8 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mAudioChannelFaded(false),
     mPlayingThroughTheAudioChannel(false),
     mDisableVideo(false),
-    mWaitingFor(MediaWaitingFor::None)
+    mWaitingFor(MediaWaitingFor::None),
+    mElementInTreeState(ELEMENT_NOT_INTREE)
 {
 #ifdef PR_LOGGING
   if (!gMediaElementLog) {
@@ -2479,8 +2480,14 @@ nsresult HTMLMediaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParen
     UpdatePreloadAction();
   }
   if (mDecoder) {
-    mDecoder->SetDormantIfNecessary(false);
+    // When the MediaElement is binding to tree, the dormant status is
+    // aligned to document's hidden status.
+    nsIDocument* ownerDoc = OwnerDoc();
+    if (ownerDoc) {
+      mDecoder->SetDormantIfNecessary(ownerDoc->Hidden());
+    }
   }
+  mElementInTreeState = ELEMENT_INTREE;
 
   return rv;
 }
@@ -2494,6 +2501,7 @@ void HTMLMediaElement::UnbindFromTree(bool aDeep,
   if (mDecoder) {
     mDecoder->SetDormantIfNecessary(true);
   }
+  mElementInTreeState = ELEMENT_NOT_INTREE_HAD_INTREE;
 
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
@@ -3561,7 +3569,15 @@ void HTMLMediaElement::NotifyOwnerDocumentActivityChanged()
 
   if (mDecoder) {
     mDecoder->SetElementVisibility(!ownerDoc->Hidden());
-    mDecoder->SetDormantIfNecessary(ownerDoc->Hidden());
+
+    if (mElementInTreeState == ELEMENT_NOT_INTREE_HAD_INTREE) {
+      mDecoder->SetDormantIfNecessary(true);
+    } else if (mElementInTreeState == ELEMENT_NOT_INTREE ||
+               mElementInTreeState == ELEMENT_INTREE) {
+      // The MediaElement had never been binded to tree, or in the tree now,
+      // align to document.
+      mDecoder->SetDormantIfNecessary(ownerDoc->Hidden());
+    }
   }
 
   // SetVisibilityState will update mMuted with MUTED_BY_AUDIO_CHANNEL via the
