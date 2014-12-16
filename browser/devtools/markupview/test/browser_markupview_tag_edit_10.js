@@ -8,7 +8,7 @@
 
 const TEST_URL = "data:text/html;charset=utf-8,<div></div>";
 
-let test = asyncTest(function*() {
+add_task(function*() {
   let {toolbox, inspector} = yield addTab(TEST_URL).then(openInspector);
   yield inspector.markup.expandAll();
   yield selectNode("div", inspector);

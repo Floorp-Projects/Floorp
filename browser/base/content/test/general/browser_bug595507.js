@@ -36,5 +36,5 @@ function test()
   }, true);
 
   gBrowser.selectedTab = tab;
-  gBrowser.selectedTab.linkedBrowser.loadURI(uri);
+  gBrowser.selectedBrowser.loadURI(uri);
 }

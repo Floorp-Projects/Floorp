@@ -807,7 +807,7 @@ BrowserGlue.prototype = {
         Cu.import("resource://gre/modules/RokuApp.jsm");
         return new RokuApp(aService);
       },
-      mirror: false,
+      mirror: true,
       types: ["video/mp4"],
       extensions: ["mp4"]
     };
