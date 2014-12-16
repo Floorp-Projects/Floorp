@@ -824,12 +824,8 @@ nsDocShellTreeOwner::AddChromeListeners()
     if (tooltipListener) {
       mChromeTooltipListener = new ChromeTooltipListener(mWebBrowser,
                                                          webBrowserChrome);
-      if (mChromeTooltipListener) {
-        NS_ADDREF(mChromeTooltipListener);
-        rv = mChromeTooltipListener->AddChromeListeners();
-      } else {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-      }
+      NS_ADDREF(mChromeTooltipListener);
+      rv = mChromeTooltipListener->AddChromeListeners();
     }
   }
 
@@ -842,12 +838,8 @@ nsDocShellTreeOwner::AddChromeListeners()
     if (contextListener2 || contextListener) {
       mChromeContextMenuListener =
                    new ChromeContextMenuListener(mWebBrowser, webBrowserChrome);
-      if (mChromeContextMenuListener) {
-        NS_ADDREF(mChromeContextMenuListener);
-        rv = mChromeContextMenuListener->AddChromeListeners();
-      } else {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-      }
+      NS_ADDREF(mChromeContextMenuListener);
+      rv = mChromeContextMenuListener->AddChromeListeners();
     }
   }
 
