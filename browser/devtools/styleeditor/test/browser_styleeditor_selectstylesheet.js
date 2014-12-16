@@ -23,7 +23,7 @@ function test()
   waitForExplicitFinish();
 
   addTabAndOpenStyleEditors(2, function(panel) {
-    gContentWin = gBrowser.selectedTab.linkedBrowser.contentWindow.wrappedJSObject;
+    gContentWin = gBrowser.selectedBrowser.contentWindow.wrappedJSObject;
     gUI = panel.UI;
     gUI.editors[0].getSourceEditor().then(runTests);
   });

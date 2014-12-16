@@ -44,7 +44,7 @@ let tests = [
                                "https://example.com/");
 
     loadUITourTestPage(function(contentWindow) {
-      let tabBrowser = gBrowser.selectedTab.linkedBrowser;
+      let tabBrowser = gBrowser.selectedBrowser;
       // This command will replace the current tab - so add a load event
       // handler which will fire when that happens.
       tabBrowser.addEventListener("load", function onload(evt) {

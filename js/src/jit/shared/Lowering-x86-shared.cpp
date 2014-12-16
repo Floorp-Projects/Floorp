@@ -60,7 +60,7 @@ LIRGeneratorX86Shared::visitPowHalf(MPowHalf *ins)
     MDefinition *input = ins->input();
     MOZ_ASSERT(input->type() == MIRType_Double);
     LPowHalfD *lir = new(alloc()) LPowHalfD(useRegisterAtStart(input));
-    defineReuseInput(lir, ins, 0);
+    define(lir, ins);
 }
 
 void
@@ -96,29 +96,13 @@ LIRGeneratorX86Shared::lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition
     defineReuseInput(ins, mir, 0);
 }
 
-static bool
-UseAVXEncoding(MIRType type)
-{
-    if (!Assembler::HasAVX())
-        return false;
-
-    // TODO: For now, we just do this for floating-point types, until the rest
-    // of the assembler support is done.
-    if (IsFloatingPointType(type))
-        return true;
-    if (IsSimdType(type) && IsFloatingPointType(SimdTypeToScalarType(type)))
-        return true;
-
-    return false;
-}
-
 template<size_t Temps>
 void
 LIRGeneratorX86Shared::lowerForFPU(LInstructionHelper<1, 2, Temps> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
 {
     // Without AVX, we'll need to use the x86 encodings where one of the
     // inputs must be the same location as the output.
-    if (!UseAVXEncoding(mir->type())) {
+    if (!Assembler::HasAVX()) {
         ins->setOperand(0, useRegisterAtStart(lhs));
         ins->setOperand(1, lhs != rhs ? use(rhs) : useAtStart(rhs));
         defineReuseInput(ins, mir, 0);

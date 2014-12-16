@@ -91,7 +91,7 @@ function testDebuggerStatement([aGrip, aResponse]) {
     });
   });
 
-  let debuggee = getMostRecentBrowserWindow().gBrowser.selectedTab.linkedBrowser.contentWindow.wrappedJSObject;
+  let debuggee = getMostRecentBrowserWindow().gBrowser.selectedBrowser.contentWindow.wrappedJSObject;
   debuggee.runDebuggerStatement();
   ok(true, 'called runDebuggerStatement');
 

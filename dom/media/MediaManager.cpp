@@ -1580,7 +1580,7 @@ MediaManager::GetUserMedia(
   NS_ENSURE_TRUE(aOnFailure, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(aOnSuccess, NS_ERROR_NULL_POINTER);
 
-  bool privileged = nsContentUtils::IsChromeDoc(aWindow->GetExtantDoc());
+  bool privileged = nsContentUtils::IsCallerChrome();
 
   nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> onSuccess(aOnSuccess);
   nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onFailure(aOnFailure);
