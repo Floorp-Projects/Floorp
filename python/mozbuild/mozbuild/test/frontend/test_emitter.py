@@ -14,6 +14,7 @@ from mozbuild.frontend.data import (
     Defines,
     DirectoryTraversal,
     Exports,
+    GeneratedFile,
     GeneratedInclude,
     GeneratedSources,
     HostSources,
@@ -181,6 +182,18 @@ class TestEmitterBasic(unittest.TestCase):
         self.maxDiff = None
         self.assertEqual(wanted, variables)
         self.maxDiff = maxDiff
+
+    def test_generated_files(self):
+        reader = self.reader('generated-files')
+        objs = self.read_topsrcdir(reader)
+
+        self.assertEqual(len(objs), 2)
+        for o in objs:
+            self.assertIsInstance(o, GeneratedFile)
+
+        expected = ['bar.c', 'foo.c']
+        for o, expected_filename in zip(objs, expected):
+            self.assertEqual(o.filename, expected_filename)
 
     def test_exports(self):
         reader = self.reader('exports')
