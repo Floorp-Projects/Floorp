@@ -9,5 +9,5 @@ task:
     cache:
       build-emulator-kk-opt: /home/worker/object-folder
     env:
-      B2G_CONFIG: 'emulator-kk'
+      TARGET: 'emulator-kk'
 
