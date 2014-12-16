@@ -472,7 +472,7 @@ typedef mozilla::Vector<SimpleEdge, 8, js::TempAllocPolicy> SimpleEdgeVector;
 //
 // RootList::init itself causes a minor collection, but once the list of roots
 // has been created, GC must not occur, as the referent ubi::Nodes are not
-// stable across GC. The init calls emplace |gcp|'s AutoCheckCannotGC, whose
+// stable across GC. The init calls emplace on |noGC|'s AutoCheckCannotGC, whose
 // lifetime must extend at least as long as the RootList itself.
 //
 // Example usage:
@@ -480,7 +480,7 @@ typedef mozilla::Vector<SimpleEdge, 8, js::TempAllocPolicy> SimpleEdgeVector;
 //    {
 //        mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
 //        JS::ubi::RootList rootList(cx, maybeNoGC);
-//        if (!rootList.init(cx))
+//        if (!rootList.init())
 //            return false;
 //
 //        // The AutoCheckCannotGC is guaranteed to exist if init returned true.
@@ -492,6 +492,7 @@ typedef mozilla::Vector<SimpleEdge, 8, js::TempAllocPolicy> SimpleEdgeVector;
 //    }
 class MOZ_STACK_CLASS RootList {
     Maybe<AutoCheckCannotGC> &noGC;
+    JSContext                *cx;
 
   public:
     SimpleEdgeVector edges;
@@ -500,11 +501,16 @@ class MOZ_STACK_CLASS RootList {
     RootList(JSContext *cx, Maybe<AutoCheckCannotGC> &noGC, bool wantNames = false);
 
     // Find all GC roots.
-    bool init(JSContext *cx);
+    bool init();
     // Find only GC roots in the provided set of |Zone|s.
-    bool init(JSContext *cx, ZoneSet &debuggees);
+    bool init(ZoneSet &debuggees);
     // Find only GC roots in the given Debugger object's set of debuggee zones.
-    bool init(JSContext *cx, HandleObject debuggees);
+    bool init(HandleObject debuggees);
+
+    // Explicitly add the given Node as a root in this RootList. If wantNames is
+    // true, you must pass an edgeName. The RootList does not take ownership of
+    // edgeName.
+    bool addRoot(Node node, const char16_t *edgeName = nullptr);
 };
 
 
