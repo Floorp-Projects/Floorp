@@ -252,7 +252,7 @@ BluetoothAvrcpHALInterface::Init(
   BluetoothAvrcpResultHandler* aRes)
 {
 #if ANDROID_VERSION >= 18
-  static const btrc_callbacks_t sCallbacks = {
+  static btrc_callbacks_t sCallbacks = {
     sizeof(sCallbacks),
 #if ANDROID_VERSION >= 19
     BluetoothAvrcpCallback::RemoteFeature,

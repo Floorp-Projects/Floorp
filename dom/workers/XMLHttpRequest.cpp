@@ -1219,7 +1219,7 @@ EventRunnable::PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
         if (doClone) {
           // Anything subject to GC must be cloned.
-          const JSStructuredCloneCallbacks* callbacks =
+          JSStructuredCloneCallbacks* callbacks =
             aWorkerPrivate->IsChromeWorker() ?
             workers::ChromeWorkerStructuredCloneCallbacks(true) :
             workers::WorkerStructuredCloneCallbacks(true);
@@ -1331,7 +1331,7 @@ EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
         JSAutoStructuredCloneBuffer responseBuffer(Move(mResponseBuffer));
 
-        const JSStructuredCloneCallbacks* callbacks =
+        JSStructuredCloneCallbacks* callbacks =
           aWorkerPrivate->IsChromeWorker() ?
           workers::ChromeWorkerStructuredCloneCallbacks(false) :
           workers::WorkerStructuredCloneCallbacks(false);
@@ -1515,7 +1515,7 @@ SendRunnable::MainThreadRun()
 
     nsresult rv = NS_OK;
 
-    const JSStructuredCloneCallbacks* callbacks =
+    JSStructuredCloneCallbacks* callbacks =
       mWorkerPrivate->IsChromeWorker() ?
       workers::ChromeWorkerStructuredCloneCallbacks(true) :
       workers::WorkerStructuredCloneCallbacks(true);
@@ -2139,7 +2139,7 @@ XMLHttpRequest::Send(JS::Handle<JSObject*> aBody, ErrorResult& aRv)
     valToClone.setString(bodyStr);
   }
 
-  const JSStructuredCloneCallbacks* callbacks =
+  JSStructuredCloneCallbacks* callbacks =
     mWorkerPrivate->IsChromeWorker() ?
     ChromeWorkerStructuredCloneCallbacks(false) :
     WorkerStructuredCloneCallbacks(false);
@@ -2177,7 +2177,7 @@ XMLHttpRequest::Send(File& aBody, ErrorResult& aRv)
     return;
   }
 
-  const JSStructuredCloneCallbacks* callbacks =
+  JSStructuredCloneCallbacks* callbacks =
     mWorkerPrivate->IsChromeWorker() ?
     ChromeWorkerStructuredCloneCallbacks(false) :
     WorkerStructuredCloneCallbacks(false);

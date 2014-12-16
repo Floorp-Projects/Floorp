@@ -60,16 +60,16 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
   {
     // Locale information for |rt| was associated using xpc_LocalizeRuntime;
     // assert and double-check this.
-    const JSLocaleCallbacks* lc = JS_GetLocaleCallbacks(rt);
+    JSLocaleCallbacks* lc = JS_GetLocaleCallbacks(rt);
     MOZ_ASSERT(lc);
     MOZ_ASSERT(lc->localeToUpperCase == LocaleToUpperCase);
     MOZ_ASSERT(lc->localeToLowerCase == LocaleToLowerCase);
     MOZ_ASSERT(lc->localeCompare == LocaleCompare);
     MOZ_ASSERT(lc->localeToUnicode == LocaleToUnicode);
 
-    const XPCLocaleCallbacks* ths = static_cast<const XPCLocaleCallbacks*>(lc);
+    XPCLocaleCallbacks* ths = static_cast<XPCLocaleCallbacks*>(lc);
     ths->AssertThreadSafety();
-    return const_cast<XPCLocaleCallbacks*>(ths);
+    return ths;
   }
 
   static bool
@@ -233,7 +233,7 @@ private:
     return false;
   }
 
-  void AssertThreadSafety() const
+  void AssertThreadSafety()
   {
     MOZ_ASSERT(mThread == PR_GetCurrentThread(),
                "XPCLocaleCallbacks used unsafely!");
@@ -273,7 +273,7 @@ xpc_LocalizeRuntime(JSRuntime *rt)
 void
 xpc_DelocalizeRuntime(JSRuntime *rt)
 {
-  const XPCLocaleCallbacks* lc = XPCLocaleCallbacks::This(rt);
+  XPCLocaleCallbacks* lc = XPCLocaleCallbacks::This(rt);
   JS_SetLocaleCallbacks(rt, nullptr);
   delete lc;
 }

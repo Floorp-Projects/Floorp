@@ -287,7 +287,7 @@ PostMessageFreeTransferStructuredClone(uint32_t aTag, JS::TransferableOwnership 
   }
 }
 
-const JSStructuredCloneCallbacks kPostMessageCallbacks = {
+JSStructuredCloneCallbacks kPostMessageCallbacks = {
   PostMessageReadStructuredClone,
   PostMessageWriteStructuredClone,
   nullptr,

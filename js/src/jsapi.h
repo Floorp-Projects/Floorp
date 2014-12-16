@@ -1928,7 +1928,7 @@ typedef struct JSCTypesCallbacks JSCTypesCallbacks;
  * to call this function again.
  */
 extern JS_PUBLIC_API(void)
-JS_SetCTypesCallbacks(JSObject *ctypesObj, const JSCTypesCallbacks *callbacks);
+JS_SetCTypesCallbacks(JSObject *ctypesObj, JSCTypesCallbacks *callbacks);
 #endif
 
 typedef bool
@@ -4694,13 +4694,13 @@ struct JSLocaleCallbacks {
  * JSRuntime.  Passing nullptr restores the default behaviour.
  */
 extern JS_PUBLIC_API(void)
-JS_SetLocaleCallbacks(JSRuntime *rt, const JSLocaleCallbacks *callbacks);
+JS_SetLocaleCallbacks(JSRuntime *rt, JSLocaleCallbacks *callbacks);
 
 /*
  * Return the address of the current locale callbacks struct, which may
  * be nullptr.
  */
-extern JS_PUBLIC_API(const JSLocaleCallbacks *)
+extern JS_PUBLIC_API(JSLocaleCallbacks *)
 JS_GetLocaleCallbacks(JSRuntime *rt);
 
 /************************************************************************/

@@ -386,7 +386,7 @@ struct WorkerStructuredCloneCallbacks
   }
 };
 
-const JSStructuredCloneCallbacks gWorkerStructuredCloneCallbacks = {
+JSStructuredCloneCallbacks gWorkerStructuredCloneCallbacks = {
   WorkerStructuredCloneCallbacks::Read,
   WorkerStructuredCloneCallbacks::Write,
   WorkerStructuredCloneCallbacks::Error,
@@ -483,7 +483,7 @@ struct MainThreadWorkerStructuredCloneCallbacks
   }
 };
 
-const JSStructuredCloneCallbacks gMainThreadWorkerStructuredCloneCallbacks = {
+JSStructuredCloneCallbacks gMainThreadWorkerStructuredCloneCallbacks = {
   MainThreadWorkerStructuredCloneCallbacks::Read,
   MainThreadWorkerStructuredCloneCallbacks::Write,
   MainThreadWorkerStructuredCloneCallbacks::Error,
@@ -516,7 +516,7 @@ struct ChromeWorkerStructuredCloneCallbacks
   }
 };
 
-const JSStructuredCloneCallbacks gChromeWorkerStructuredCloneCallbacks = {
+JSStructuredCloneCallbacks gChromeWorkerStructuredCloneCallbacks = {
   ChromeWorkerStructuredCloneCallbacks::Read,
   ChromeWorkerStructuredCloneCallbacks::Write,
   ChromeWorkerStructuredCloneCallbacks::Error,
@@ -577,7 +577,7 @@ struct MainThreadChromeWorkerStructuredCloneCallbacks
   }
 };
 
-const JSStructuredCloneCallbacks gMainThreadChromeWorkerStructuredCloneCallbacks = {
+JSStructuredCloneCallbacks gMainThreadChromeWorkerStructuredCloneCallbacks = {
   MainThreadChromeWorkerStructuredCloneCallbacks::Read,
   MainThreadChromeWorkerStructuredCloneCallbacks::Write,
   MainThreadChromeWorkerStructuredCloneCallbacks::Error,
@@ -2663,7 +2663,7 @@ WorkerPrivateParent<Derived>::PostMessageInternal(
     }
   }
 
-  const JSStructuredCloneCallbacks* callbacks;
+  JSStructuredCloneCallbacks* callbacks;
   if (GetParent()) {
     if (IsChromeWorker()) {
       callbacks = &gChromeWorkerStructuredCloneCallbacks;
@@ -5161,7 +5161,7 @@ WorkerPrivate::PostMessageToParentInternal(
     transferable.setObject(*array);
   }
 
-  const JSStructuredCloneCallbacks* callbacks =
+  JSStructuredCloneCallbacks* callbacks =
     IsChromeWorker() ?
     &gChromeWorkerStructuredCloneCallbacks :
     &gWorkerStructuredCloneCallbacks;
@@ -6184,7 +6184,7 @@ GetWorkerCrossThreadDispatcher(JSContext* aCx, JS::Value aWorker)
   return w->GetCrossThreadDispatcher();
 }
 
-const JSStructuredCloneCallbacks*
+JSStructuredCloneCallbacks*
 WorkerStructuredCloneCallbacks(bool aMainRuntime)
 {
   return aMainRuntime ?
@@ -6192,7 +6192,7 @@ WorkerStructuredCloneCallbacks(bool aMainRuntime)
          &gWorkerStructuredCloneCallbacks;
 }
 
-const JSStructuredCloneCallbacks*
+JSStructuredCloneCallbacks*
 ChromeWorkerStructuredCloneCallbacks(bool aMainRuntime)
 {
   return aMainRuntime ?

@@ -112,7 +112,7 @@ BluetoothA2dpHALInterface::Init(
   BluetoothA2dpNotificationHandler* aNotificationHandler,
   BluetoothA2dpResultHandler* aRes)
 {
-  static const btav_callbacks_t sCallbacks = {
+  static btav_callbacks_t sCallbacks = {
     sizeof(sCallbacks),
     BluetoothA2dpHALCallback::ConnectionState,
     BluetoothA2dpHALCallback::AudioState
