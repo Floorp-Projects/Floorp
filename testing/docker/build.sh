@@ -56,7 +56,14 @@ build() {
   test -n "$version" || usage_err "$folder_ver is empty aborting..."
 
   local tag="$registry/$folder:$version"
-  docker build -t $tag $folder
+
+  if [ -f $folder/build.sh ]; then
+    shift
+    $folder/build.sh -t $tag $*
+  else
+    docker build -t $tag $folder
+  fi
+
   echo "Success built $folder and tagged with $tag"
   echo "If deploying now you can run 'docker push $tag'"
 }
@@ -78,4 +85,4 @@ then
   exit 1
 fi
 
-build $1
+build $*
