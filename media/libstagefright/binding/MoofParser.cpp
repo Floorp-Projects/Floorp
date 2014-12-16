@@ -210,6 +210,7 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd, Edts& aEdts)
     sample.mByteRange = MediaByteRange(offset, offset + sampleSize);
     offset += sampleSize;
 
+    sample.mDecodeTime = decodeTime;
     sample.mCompositionRange = Interval<Microseconds>(
       aMdhd.ToMicroseconds(decodeTime + ctsOffset - aEdts.mMediaStart),
       aMdhd.ToMicroseconds(decodeTime + ctsOffset + sampleDuration - aEdts.mMediaStart));
