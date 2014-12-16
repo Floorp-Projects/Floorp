@@ -32,6 +32,8 @@ public:
 
   explicit TextureClientRecycleAllocator(ISurfaceAllocator* aAllocator);
 
+  void SetMaxPoolSize(uint32_t aMax);
+
   // Creates and allocates a TextureClient.
   TemporaryRef<TextureClient>
   CreateOrRecycleForDrawing(gfx::SurfaceFormat aFormat,
