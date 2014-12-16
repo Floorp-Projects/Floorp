@@ -38,6 +38,15 @@ public:
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
 
+  virtual mozilla::WritingMode GetWritingMode() const MOZ_OVERRIDE
+  {
+    nsIFrame* firstChild = mFrames.FirstChild();
+    if (firstChild) {
+      return firstChild->GetWritingMode();
+    }
+    return nsIFrame::GetWritingMode();
+  }
+
 #ifdef DEBUG
   virtual void SetInitialChildList(ChildListID     aListID,
                                    nsFrameList&    aChildList) MOZ_OVERRIDE;

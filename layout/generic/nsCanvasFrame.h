@@ -42,6 +42,18 @@ public:
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
+  virtual mozilla::WritingMode GetWritingMode() const MOZ_OVERRIDE
+  {
+    nsIContent* rootElem = GetContent();
+    if (rootElem) {
+      nsIFrame* rootElemFrame = rootElem->GetPrimaryFrame();
+      if (rootElemFrame) {
+        return rootElemFrame->GetWritingMode();
+      }
+    }
+    return nsIFrame::GetWritingMode();
+  }
+
 #ifdef DEBUG
   virtual void SetInitialChildList(ChildListID     aListID,
                                    nsFrameList&    aChildList) MOZ_OVERRIDE;
