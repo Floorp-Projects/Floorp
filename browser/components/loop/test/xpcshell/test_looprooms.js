@@ -5,6 +5,7 @@
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource:///modules/loop/LoopRooms.jsm");
 Cu.import("resource:///modules/Chat.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
 
 let openChatOrig = Chat.open;
 
@@ -127,6 +128,7 @@ let gExpectedUpdates = [];
 let gExpectedDeletes = [];
 let gExpectedJoins = {};
 let gExpectedLeaves = {};
+let gExpectedRefresh = false;
 
 const onRoomAdded = function(e, room) {
   let expectedIds = gExpectedAdds.map(room => room.roomToken);
@@ -169,6 +171,11 @@ const onRoomLeft = function(e, room, participant) {
   if (!participants.length) {
     delete gExpectedLeaves[room.roomToken];
   }
+};
+
+const onRefresh = function(e) {
+  Assert.ok(gExpectedRefresh, "A refresh event should've been expected");
+  gExpectedRefresh = false;
 };
 
 const parseQueryString = function(qs) {
@@ -312,6 +319,34 @@ add_task(function* test_openRoom() {
   Assert.equal(windowData.roomToken, "fakeToken", "window data should have the roomToken");
 });
 
+// Test if the rooms cache is refreshed after FxA signin or signout.
+add_task(function* test_refresh() {
+  gExpectedAdds.push(...kRooms.values());
+  gExpectedRefresh = true;
+  // Make the switch.
+  MozLoopServiceInternal.fxAOAuthTokenData = { token_type: "bearer" };
+  MozLoopServiceInternal.fxAOAuthProfile = {
+    email: "fake@invalid.com",
+    uid: "fake"
+  };
+
+  yield waitForCondition(() => !gExpectedRefresh);
+  yield waitForCondition(() => gExpectedAdds.length === 0);
+
+  gExpectedAdds.push(...kRooms.values());
+  gExpectedRefresh = true;
+  // Simulate a logout.
+  MozLoopServiceInternal.fxAOAuthTokenData = null;
+  MozLoopServiceInternal.fxAOAuthProfile = null;
+
+  yield waitForCondition(() => !gExpectedRefresh);
+  yield waitForCondition(() => gExpectedAdds.length === 0);
+
+  // Simulating a logout again shouldn't yield a refresh event.
+  MozLoopServiceInternal.fxAOAuthTokenData = null;
+  MozLoopServiceInternal.fxAOAuthProfile = null;
+});
+
 // Test if push updates function as expected.
 add_task(function* test_roomUpdates() {
   gExpectedUpdates.push("_nxD4V4FflQ");
@@ -433,6 +468,11 @@ add_task(function* () {
   Assert.strictEqual(gExpectedAdds.length, 0, "No room additions should be expected anymore");
   Assert.strictEqual(gExpectedUpdates.length, 0, "No room updates should be expected anymore");
   Assert.strictEqual(gExpectedDeletes.length, 0, "No room deletes should be expected anymore");
+  Assert.strictEqual(Object.getOwnPropertyNames(gExpectedJoins).length, 0,
+                     "No room joins should be expected anymore");
+  Assert.strictEqual(Object.getOwnPropertyNames(gExpectedLeaves).length, 0,
+                     "No room leaves should be expected anymore");
+  Assert.ok(!gExpectedRefresh, "No refreshes should be expected anymore");
  });
 
 function run_test() {
@@ -443,6 +483,7 @@ function run_test() {
   LoopRooms.on("delete", onRoomDeleted);
   LoopRooms.on("joined", onRoomJoined);
   LoopRooms.on("left", onRoomLeft);
+  LoopRooms.on("refresh", onRefresh);
 
   do_register_cleanup(function () {
     // Revert original Chat.open implementation
@@ -456,6 +497,7 @@ function run_test() {
     LoopRooms.off("delete", onRoomDeleted);
     LoopRooms.off("joined", onRoomJoined);
     LoopRooms.off("left", onRoomLeft);
+    LoopRooms.off("refresh", onRefresh);
   });
 
   run_next_test();

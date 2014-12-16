@@ -145,6 +145,14 @@ describe("loop.store.RoomStore", function () {
           })).eql(false);
         });
       });
+
+      describe("refresh", function() {
+        it ("should clear the list of rooms", function() {
+          fakeMozLoop.rooms.trigger("refresh", "refresh");
+
+          expect(store.getStoreState().rooms).to.have.length.of(0);
+        });
+      })
     });
 
     describe("#findNextAvailableRoomNumber", function() {
