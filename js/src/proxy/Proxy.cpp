@@ -366,7 +366,7 @@ Proxy::getEnumerablePropertyKeys(JSContext *cx, HandleObject proxy, AutoIdVector
 }
 
 bool
-Proxy::iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleObject objp)
+Proxy::enumerate(JSContext *cx, HandleObject proxy, MutableHandleObject objp)
 {
     JS_CHECK_RECURSION(cx, return false);
     const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
@@ -378,18 +378,15 @@ Proxy::iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleO
         // to hand a valid (empty) iterator object to the caller.
         if (!policy.allowed()) {
             return policy.returnValue() &&
-                   NewEmptyPropertyIterator(cx, flags, objp);
+                   NewEmptyPropertyIterator(cx, 0, objp);
         }
-        return handler->iterate(cx, proxy, flags, objp);
+        return handler->enumerate(cx, proxy, objp);
     }
     AutoIdVector props(cx);
     // The other Proxy::foo methods do the prototype-aware work for us here.
-    if ((flags & JSITER_OWNONLY)
-        ? !Proxy::getOwnEnumerablePropertyKeys(cx, proxy, props)
-        : !Proxy::getEnumerablePropertyKeys(cx, proxy, props)) {
+    if (!Proxy::getEnumerablePropertyKeys(cx, proxy, props))
         return false;
-    }
-    return EnumeratedIdVectorToIterator(cx, proxy, flags, props, objp);
+    return EnumeratedIdVectorToIterator(cx, proxy, 0, props, objp);
 }
 
 bool

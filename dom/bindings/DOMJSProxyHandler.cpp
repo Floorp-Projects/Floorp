@@ -310,6 +310,13 @@ BaseDOMProxyHandler::getEnumerablePropertyKeys(JSContext* cx,
 }
 
 bool
+BaseDOMProxyHandler::enumerate(JSContext *cx, JS::Handle<JSObject*> proxy,
+                               JS::MutableHandle<JSObject*> objp) const
+{
+  return BaseProxyHandler::enumerate(cx, proxy, objp);
+}
+
+bool
 DOMProxyHandler::has(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id, bool* bp) const
 {
   if (!hasOwn(cx, proxy, id, bp)) {

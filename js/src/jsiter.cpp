@@ -669,6 +669,16 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleOb
         return true;
     }
 
+    // We should only call the enumerate trap for "for-in".
+    // Or when we call GetIterator from the Proxy [[Enumerate]] hook.
+    // In the future also for Reflect.enumerate.
+    // JSITER_ENUMERATE is just an optimization and the same
+    // as flags == 0 otherwise.
+    if (flags == 0 || flags == JSITER_ENUMERATE) {
+        if (obj->is<ProxyObject>())
+            return Proxy::enumerate(cx, obj, objp);
+    }
+
     Vector<Shape *, 8> shapes(cx);
     uint32_t key = 0;
     if (flags == JSITER_ENUMERATE) {
@@ -747,9 +757,6 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleOb
     }
 
   miss:
-    if (obj->is<ProxyObject>())
-        return Proxy::iterate(cx, obj, flags, objp);
-
     if (!GetCustomIterator(cx, obj, flags, objp))
         return false;
     if (objp)
@@ -1262,7 +1269,7 @@ js::SuppressDeletedElements(JSContext *cx, HandleObject obj, uint32_t begin, uin
 bool
 js::IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
 {
-    /* Fast path for native iterators */
+    // Fast path for native iterators.
     if (iterobj->is<PropertyIteratorObject>()) {
         NativeIterator *ni = iterobj->as<PropertyIteratorObject>().getNativeIterator();
         bool done;
@@ -1274,14 +1281,15 @@ js::IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
         return true;
     }
 
-    /* We're reentering below and can call anything. */
+    // We're reentering below and can call anything.
     JS_CHECK_RECURSION(cx, return false);
 
-    /* Call the iterator object's .next method. */
+    // Call the iterator object's .next method.
     if (!JSObject::getProperty(cx, iterobj, iterobj, cx->names().next, rval))
         return false;
+    // We try to support the old and new iterator protocol at the same time!
     if (!Invoke(cx, ObjectValue(*iterobj), rval, 0, nullptr, rval)) {
-        /* Check for StopIteration. */
+        // We still check for StopIterator
         if (!cx->isExceptionPending())
             return false;
         RootedValue exception(cx);
@@ -1295,7 +1303,39 @@ js::IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
         return true;
     }
 
-    return true;
+    if (!rval.isObject()) {
+        // Old style generators might return primitive values
+        return true;
+    }
+
+    // If the object has both the done and value property, we assume
+    // it's using the new style protocol. Otherwise just return the object.
+    RootedObject result(cx, &rval.toObject());
+    bool found = false;
+    if (!JSObject::hasProperty(cx, result, cx->names().done, &found))
+        return false;
+    if (!found)
+        return true;
+    if (!JSObject::hasProperty(cx, result, cx->names().value, &found))
+        return false;
+    if (!found)
+        return true;
+
+    // At this point we hopefully have a new style iterator result
+
+    // 7.4.4 IteratorComplete
+    // Get iterResult.done
+    if (!JSObject::getProperty(cx, result, result, cx->names().done, rval))
+        return false;
+
+    bool done = ToBoolean(rval);
+    if (done) {
+         rval.setMagic(JS_NO_ITER_VALUE);
+         return true;
+     }
+
+    // 7.4.5 IteratorValue
+    return JSObject::getProperty(cx, result, result, cx->names().value, rval);
 }
 
 static bool

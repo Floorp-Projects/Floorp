@@ -262,12 +262,12 @@ Reify(JSContext *cx, JSCompartment *origin, MutableHandleObject objp)
 }
 
 bool
-CrossCompartmentWrapper::iterate(JSContext *cx, HandleObject wrapper, unsigned flags,
-                                 MutableHandleObject objp) const
+CrossCompartmentWrapper::enumerate(JSContext *cx, HandleObject wrapper,
+                                   MutableHandleObject objp) const
 {
     {
         AutoCompartment call(cx, wrappedObject(wrapper));
-        if (!Wrapper::iterate(cx, wrapper, flags, objp))
+        if (!Wrapper::enumerate(cx, wrapper, objp))
             return false;
     }
 
