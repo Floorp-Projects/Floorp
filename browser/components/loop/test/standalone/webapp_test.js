@@ -1169,8 +1169,7 @@ describe("loop.webapp", function() {
       before(function() {
         model = new loop.webapp.FxOSConversationModel({
           loopToken: "fakeToken",
-          callerId: "callerId",
-          callType: "callType"
+          callerId: "callerId"
         });
 
         realMozActivity = window.MozActivity;
@@ -1214,13 +1213,44 @@ describe("loop.webapp", function() {
 
         beforeEach(function() {
           trigger = sandbox.stub(model, "trigger");
+          _activityProps = undefined;
         });
 
         afterEach(function() {
           trigger.restore();
         });
 
-        it("Activity properties", function() {
+        it("Activity properties with video call", function() {
+          expect(_activityProps).to.not.exist;
+          model.setupOutgoingCall("audio-video");
+          expect(_activityProps).to.exist;
+          expect(_activityProps).eql({
+            name: "loop-call",
+            data: {
+              type: "loop/token",
+              token: "fakeToken",
+              callerId: "callerId",
+              video: true
+            }
+          });
+        });
+
+        it("Activity properties with audio call", function() {
+          expect(_activityProps).to.not.exist;
+          model.setupOutgoingCall("audio");
+          expect(_activityProps).to.exist;
+          expect(_activityProps).eql({
+            name: "loop-call",
+            data: {
+              type: "loop/token",
+              token: "fakeToken",
+              callerId: "callerId",
+              video: false
+            }
+          });
+        });
+
+        it("Activity properties by default", function() {
           expect(_activityProps).to.not.exist;
           model.setupOutgoingCall();
           expect(_activityProps).to.exist;
@@ -1230,7 +1260,7 @@ describe("loop.webapp", function() {
               type: "loop/token",
               token: "fakeToken",
               callerId: "callerId",
-              callType: "callType"
+              video: false
             }
           });
         });
