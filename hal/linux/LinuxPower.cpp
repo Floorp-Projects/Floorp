@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Hal.h"
+#include "HalLog.h"
 
 #include <unistd.h>
 #include <sys/reboot.h>
