@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mp4_demuxer/ByteReader.h"
 #include "mp4_demuxer/Index.h"
 #include "mp4_demuxer/Interval.h"
 #include "mp4_demuxer/MoofParser.h"
@@ -84,27 +85,54 @@ SampleIterator::SampleIterator(Index* aIndex)
 
 MP4Sample* SampleIterator::GetNext()
 {
-  nsAutoPtr<MP4Sample> sample(Get());
-  if (!sample) {
+  Sample* s(Get());
+  if (!s) {
     return nullptr;
   }
+
+  Next();
+
+  nsAutoPtr<MP4Sample> sample(new MP4Sample());
+  sample->decode_timestamp = s->mDecodeTime;
+  sample->composition_timestamp = s->mCompositionRange.start;
+  sample->duration = s->mCompositionRange.Length();
+  sample->byte_offset = s->mByteRange.mStart;
+  sample->is_sync_point = s->mSync;
+  sample->size = s->mByteRange.Length();
 
   // Do the blocking read
   sample->data = sample->extra_buffer = new uint8_t[sample->size];
 
   size_t bytesRead;
-  mIndex->mSource->ReadAt(sample->byte_offset, sample->data, sample->size,
-                          &bytesRead);
+  if (!mIndex->mSource->ReadAt(sample->byte_offset, sample->data, sample->size,
+                               &bytesRead) || bytesRead != sample->size) {
+    return nullptr;
+  }
 
-  // Lets just return what we've got so that we propagate the error
-  sample->size = bytesRead;
-
-  Next();
+  if (!s->mCencRange.IsNull()) {
+    // The size comes from an 8 bit field
+    nsAutoTArray<uint8_t, 256> cenc;
+    cenc.SetLength(s->mCencRange.Length());
+    if (!mIndex->mSource->ReadAt(s->mCencRange.mStart, &cenc[0], cenc.Length(),
+                                 &bytesRead) || bytesRead != cenc.Length()) {
+      return nullptr;
+    }
+    ByteReader reader(cenc);
+    sample->crypto.valid = true;
+    reader.ReadArray(sample->crypto.iv, 16);
+    if (reader.Remaining()) {
+      uint16_t count = reader.ReadU16();
+      for (size_t i = 0; i < count; i++) {
+        sample->crypto.plain_sizes.AppendElement(reader.ReadU16());
+        sample->crypto.encrypted_sizes.AppendElement(reader.ReadU32());
+      }
+    }
+  }
 
   return sample.forget();
 }
 
-MP4Sample* SampleIterator::Get()
+Sample* SampleIterator::Get()
 {
   if (!mIndex->mMoofParser) {
     return nullptr;
@@ -114,7 +142,7 @@ MP4Sample* SampleIterator::Get()
   while (true) {
     if (mCurrentMoof == moofs.Length()) {
       if (!mIndex->mMoofParser->BlockingReadNextMoof()) {
-        return nsAutoPtr<MP4Sample>();
+        return nullptr;
       }
       MOZ_ASSERT(mCurrentMoof < moofs.Length());
     }
@@ -124,17 +152,7 @@ MP4Sample* SampleIterator::Get()
     mCurrentSample = 0;
     ++mCurrentMoof;
   }
-  Sample& s = moofs[mCurrentMoof].mIndex[mCurrentSample];
-  nsAutoPtr<MP4Sample> sample(new MP4Sample());
-  sample->decode_timestamp = s.mDecodeTime;
-  sample->composition_timestamp = s.mCompositionRange.start;
-  sample->duration = s.mCompositionRange.end - s.mCompositionRange.start;
-  sample->byte_offset = s.mByteRange.mStart;
-  sample->is_sync_point = s.mSync;
-
-  sample->size = s.mByteRange.mEnd - s.mByteRange.mStart;
-
-  return sample.forget();
+  return &moofs[mCurrentMoof].mIndex[mCurrentSample];
 }
 
 void SampleIterator::Next()
@@ -148,16 +166,16 @@ void SampleIterator::Seek(Microseconds aTime)
   size_t syncSample = 0;
   mCurrentMoof = 0;
   mCurrentSample = 0;
-  while (true) {
-    nsAutoPtr<MP4Sample> sample(Get());
-    if (sample->composition_timestamp > aTime) {
+  Sample* sample;
+  while (!!(sample = Get())) {
+    if (sample->mCompositionRange.start > aTime) {
       break;
     }
-    if (sample->is_sync_point) {
+    if (sample->mSync) {
       syncMoof = mCurrentMoof;
       syncSample = mCurrentSample;
     }
-    if (sample->composition_timestamp == aTime) {
+    if (sample->mCompositionRange.start == aTime) {
       break;
     }
     Next();
