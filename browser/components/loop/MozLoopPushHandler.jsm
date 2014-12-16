@@ -444,13 +444,16 @@ let MozLoopPushHandler = {
   },
 
    /**
-    * Start registration of a PushServer notification channel.
-    * connection, it will automatically say hello and register the channel
-    * id with the server.
+    * Assign a channel to be registered with the PushServer
+    * This channel will be registered when a connection to the PushServer
+    * has been established or re-registered after a connection has been lost
+    * and re-established. Calling this more than once for the same channel
+    * has no additional effect.
     *
     * onRegistered callback parameters:
     * - {String|null} err: Encountered error, if any
     * - {String} url: The push url obtained from the server
+    * - {String} channelID The channelID on which the notification was sent.
     *
     * onNotification parameters:
     * - {String} version The version string received from the push server for
@@ -478,19 +481,44 @@ let MozLoopPushHandler = {
     }
 
     consoleLog.info("PushHandler: channel registration: ", channelID);
-    // If the channel is already registered, callback with an error immediately
-    // so we don't leave code hanging waiting for an onRegistered callback.
     if (this.channels.has(channelID)) {
-      consoleLog.error("PushHandler: channel already registered");
-      onRegistered("error: channel already registered: " + channelID);
+      // If this channel has an active registration with the PushServer
+      // call the onRegister callback with the URL.
+      if (this.registeredChannels[channelID]) {
+        onRegistered(null, this.registeredChannels[channelID], channelID);
+      }
+      // Update the channel record.
+      this.channels.set(channelID, {onRegistered: onRegistered,
+                        onNotification: onNotification});
       return;
     }
 
     this.channels.set(channelID, {onRegistered: onRegistered,
                                   onNotification: onNotification});
-
     this._channelsToRegister.push(channelID);
     this._registerChannels();
+  },
+  
+  /**
+   * Un-register a notification channel.
+   *
+   * @param {String} channelID Notification channel ID.
+   */
+  unregister: function(channelID) {
+    consoleLog.info("MozLoopPushHandler: un-register channel ", channelID);
+    if (!this.channels.has(channelID)) {
+      return;
+    }
+
+    this.channels.delete(channelID);
+
+    if (this.registeredChannels[channelID]) {
+      delete this.registeredChannels[channelID];
+      if (this.connectionState === CONNECTION_STATE_OPEN) {
+        this._pushSocket.send({messageType: "unregister",
+                               channelID: channelID});
+      }
+    }
   },
 
   /**
@@ -618,7 +646,7 @@ let MozLoopPushHandler = {
       // Re-register all channels.
       this._channelsToRegister = [...this.channels.keys()];
       this.registeredChannels = {};
-     }
+    }
     // Allow queued registrations to start (or all if cleared above).
     this._registerChannels();
   },
@@ -703,8 +731,7 @@ let MozLoopPushHandler = {
       case 409:
         consoleLog.error("PushHandler: received a 409 response from the PushServer: ",
                          msg.channelID);
-        this.channels.get(this._pendingChannelID).onRegistered(
-          "error: PushServer ChannelID already in use: " + msg.channelID);
+        this.channels.get(this._pendingChannelID).onRegistered("409");
         // Remove this channel from the channel list.
         this.channels.delete(this._pendingChannelID);
         this._registerNext();
@@ -713,8 +740,7 @@ let MozLoopPushHandler = {
       default:
         consoleLog.error("PushHandler: received error ", msg.status,
                          " from the PushServer: ", msg.channelID);
-        this.channels.get(this._pendingChannelID).onRegistered(
-          "error: PushServer registration failure, status = " + msg.status);
+        this.channels.get(this._pendingChannelID).onRegistered(msg.status);
         this.channels.delete(this._pendingChannelID);
         this._registerNext();
         break;
