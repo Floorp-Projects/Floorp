@@ -89,7 +89,7 @@ const TEST_DATA = [
   }
 ];
 
-let test = asyncTest(function*() {
+add_task(function*() {
   let {inspector} = yield addTab(TEST_URL).then(openInspector);
 
   for (let data of TEST_DATA) {

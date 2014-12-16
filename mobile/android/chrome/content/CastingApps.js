@@ -98,7 +98,7 @@ var CastingApps = {
           let callbackFunc = function(aService) {
             let app = SimpleServiceDiscovery.findAppForService(aService);
             if (app) {
-              app.mirror(function() {}, window, BrowserApp.selectedTab.getViewport(), this._mirrorStarted.bind(this));
+              app.mirror(function() {}, window, BrowserApp.selectedTab.getViewport(), this._mirrorStarted.bind(this), window.BrowserApp.selectedBrowser.contentWindow);
             }
           }.bind(this);
 

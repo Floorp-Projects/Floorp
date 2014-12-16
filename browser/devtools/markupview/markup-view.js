@@ -19,7 +19,7 @@ const {UndoStack} = require("devtools/shared/undo");
 const {editableField, InplaceEditor} = require("devtools/shared/inplace-editor");
 const {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 const {HTMLEditor} = require("devtools/markupview/html-editor");
-const promise = require("devtools/toolkit/deprecated-sync-thenables");
+const promise = require("resource://gre/modules/Promise.jsm").Promise;
 const {Tooltip} = require("devtools/shared/widgets/Tooltip");
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const Heritage = require("sdk/core/heritage");
@@ -365,12 +365,21 @@ MarkupView.prototype = {
       }
 
       this.showNode(selection.nodeFront, true).then(() => {
+        if (this._destroyer) {
+          return promise.reject("markupview destroyed");
+        }
         if (selection.reason !== "treepanel") {
           this.markNodeAsSelected(selection.nodeFront);
         }
         done();
-      }, (e) => {
-        console.error(e);
+      }).then(null, e => {
+        if (!this._destroyer) {
+          console.error(e);
+        } else {
+          console.warn("Could not mark node as selected, the markup-view was " +
+            "destroyed while showing the node.");
+        }
+
         done();
       });
     } else {
@@ -756,6 +765,9 @@ MarkupView.prototype = {
     }
 
     return this._waitForChildren().then(() => {
+      if (this._destroyer) {
+        return promise.reject("markupview destroyed");
+      }
       return this._ensureVisible(aNode);
     }).then(() => {
       // Why is this not working?

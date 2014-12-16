@@ -18,7 +18,7 @@ function runTests() {
 
   // wait until about:newtab loads before calling provider callback
   addNewTabPageTab();
-  let browser = gWindow.gBrowser.selectedTab.linkedBrowser;
+  let browser = gWindow.gBrowser.selectedBrowser;
   yield browser.addEventListener("load", function onLoad() {
     browser.removeEventListener("load", onLoad, true);
     // afterLoadProvider.callback has to be called asynchronously to make grid

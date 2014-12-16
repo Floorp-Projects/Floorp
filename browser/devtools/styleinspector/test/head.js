@@ -65,7 +65,7 @@ registerCleanupFunction(() => {
  *   yield someAsyncTestFunction(view);
  * });
  *
- * asyncTest is the way to define the testcase in the test file. It accepts
+ * add_task is the way to define the testcase in the test file. It accepts
  * a single generator-function argument.
  * The generator function should yield any async call.
  *
@@ -73,10 +73,10 @@ registerCleanupFunction(() => {
  * automatically.
  *
  * It is advised not to store any references on the global scope. There shouldn't
- * be a need to anyway. Thanks to asyncTest, test steps, even though asynchronous,
+ * be a need to anyway. Thanks to add_task, test steps, even though asynchronous,
  * can be described in a nice flat way, and if/for/while/... control flow can be
  * used as in sync code, making it possible to write the outline of the test case
- * all in asyncTest, and delegate actual processing and assertions to other
+ * all in add_task, and delegate actual processing and assertions to other
  * functions.
  */
 
@@ -342,7 +342,7 @@ function wait(ms) {
 function waitForContentMessage(name) {
   info("Expecting message " + name + " from content");
 
-  let mm = gBrowser.selectedTab.linkedBrowser.messageManager;
+  let mm = gBrowser.selectedBrowser.messageManager;
 
   let def = promise.defer();
   mm.addMessageListener(name, function onMessage(msg) {
@@ -366,7 +366,7 @@ function waitForContentMessage(name) {
  */
 function executeInContent(name, data={}, objects={}, expectResponse=true) {
   info("Sending message " + name + " to content");
-  let mm = gBrowser.selectedTab.linkedBrowser.messageManager;
+  let mm = gBrowser.selectedBrowser.messageManager;
 
   mm.sendAsyncMessage(name, data, objects);
   if (expectResponse) {

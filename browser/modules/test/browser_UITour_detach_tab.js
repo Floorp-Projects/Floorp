@@ -52,7 +52,7 @@ let tests = [
     // NB: we're using this rather than gContentWindow.document because the latter wouldn't
     // have an XRayWrapper, and we need to compare this to the doc we get using this method
     // later on...
-    gContentDoc = gBrowser.selectedTab.linkedBrowser.contentDocument;
+    gContentDoc = gBrowser.selectedBrowser.contentDocument;
     gContentDoc.addEventListener("visibilitychange", onVisibilityChange, false);
     gContentAPI.showHighlight("appMenu");
 

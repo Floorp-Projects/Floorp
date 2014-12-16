@@ -180,7 +180,7 @@ add_task(function* testExperimentLearnMore() {
     info("Telemetry privacy policy window opened.");
     window.removeEventListener("DOMContentLoaded", onLoad, false);
 
-    let browser = gBrowser.selectedTab.linkedBrowser;
+    let browser = gBrowser.selectedBrowser;
     let expected = Services.prefs.getCharPref("toolkit.telemetry.infoURL");
     Assert.equal(browser.currentURI.spec, expected, "New tab should have loaded privacy policy.");
     browser.contentWindow.close();

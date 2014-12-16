@@ -17,7 +17,7 @@ waitForExplicitFinish();
 const TEST_URL = "data:text/html;charset=utf8," +
                  "<style>div{color:red}</style><div>highlighter test</div>";
 
-let test = asyncTest(function*() {
+add_task(function*() {
   let {UI} = yield addTabAndOpenStyleEditors(1, null, TEST_URL);
   let editor = UI.editors[0];
 

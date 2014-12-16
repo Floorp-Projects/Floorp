@@ -8,7 +8,7 @@
 
 const TEST_URL = TEST_BASE_HTTP + "doc_uncached.html";
 
-let test = asyncTest(function() {
+add_task(function() {
   waitForExplicitFinish();
 
   info("Opening netmonitor");
