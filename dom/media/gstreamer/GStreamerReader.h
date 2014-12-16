@@ -166,9 +166,11 @@ private:
   static void PlayElementAddedCb(GstBin *aBin, GstElement *aElement,
                                  gpointer *aUserData);
 
-  /* Called during decoding, to decide whether a (sub)stream should be decoded or
-   * ignored */
+  /* Called during decoding, to decide whether a (sub)stream should be
+   * decoded or ignored. */
   static bool ShouldAutoplugFactory(GstElementFactory* aFactory, GstCaps* aCaps);
+  /* Called from ShouldAutoplugFactory to check for blacklisted elements. */
+  static bool IsFactoryBlacklisted(GstElementFactory* aFactory);
 
   /* Called by decodebin during autoplugging. We use it to apply our
    * container/codec whitelist.
