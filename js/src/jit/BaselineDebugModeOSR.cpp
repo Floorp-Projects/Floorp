@@ -217,7 +217,7 @@ CollectJitStackScripts(JSContext *cx, const Debugger::ExecutionObservableSet &ob
                     // *after* the bytecode that threw the exception, which
                     // may have no ICEntry.
                     MOZ_ASSERT(iter.baselineFrame()->isDebuggerHandlingException());
-                    jsbytecode *pc = script->baselineScript()->pcForReturnAddress(script, retAddr);
+                    jsbytecode *pc = script->baselineScript()->pcForNativeAddress(script, retAddr);
                     if (!entries.append(DebugModeOSREntry(script, script->pcToOffset(pc))))
                         return false;
                 }
