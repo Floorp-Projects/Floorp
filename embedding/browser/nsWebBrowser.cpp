@@ -76,8 +76,7 @@ nsWebBrowser::nsWebBrowser() :
    mPersistCurrentState(nsIWebBrowserPersist::PERSIST_STATE_READY),
    mPersistResult(NS_OK),
    mPersistFlags(nsIWebBrowserPersist::PERSIST_FLAGS_NONE),
-   mParentWidget(nullptr),
-   mListenerArray(nullptr)
+   mParentWidget(nullptr)
 {
     mWWatch = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
     NS_ASSERTION(mWWatch, "failed to get WindowWatcher");
@@ -110,7 +109,6 @@ NS_IMETHODIMP nsWebBrowser::InternalDestroy()
          nsWebBrowserListenerState *state = mListenerArray->ElementAt(i);
          delete state;
       }
-      delete mListenerArray;
       mListenerArray = nullptr;
    }
 
@@ -264,7 +262,6 @@ NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsIWeakReference *aListener
                nsWebBrowserListenerState *state = mListenerArray->ElementAt(i);
                delete state;
             }
-            delete mListenerArray;
             mListenerArray = nullptr;
         }
 
@@ -1188,7 +1185,6 @@ NS_IMETHODIMP nsWebBrowser::Create()
          nsWebBrowserListenerState *state = mListenerArray->ElementAt(i);
          delete state;
       }
-      delete mListenerArray;
       mListenerArray = nullptr;
    }
 
