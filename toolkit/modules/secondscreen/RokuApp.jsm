@@ -147,16 +147,16 @@ RokuApp.prototype = {
     }
   },
 
-  mirror: function(callback, win, viewport, mirrorStartedCallback) {
+  mirror: function(callback, win, viewport, mirrorStartedCallback, contentWindow) {
     if (this.mirrorAppID == -1) {
       // The status function may not have been called yet if mirrorAppID is -1
-      this.status(this._createRemoteMirror.bind(this, callback, win, viewport, mirrorStartedCallback));
+      this.status(this._createRemoteMirror.bind(this, callback, win, viewport, mirrorStartedCallback, contentWindow));
     } else {
-      this._createRemoteMirror(callback, win, viewport, mirrorStartedCallback);
+      this._createRemoteMirror(callback, win, viewport, mirrorStartedCallback, contentWindow);
     }
   },
 
-  _createRemoteMirror: function(callback, win, viewport, mirrorStartedCallback) {
+  _createRemoteMirror: function(callback, win, viewport, mirrorStartedCallback, contentWindow) {
     if (this.mirrorAppID == -1) {
       // TODO: Inform user to install Roku WebRTC Player Channel.
       log("RokuApp: Failed to find Mirror App ID.");
@@ -169,7 +169,7 @@ RokuApp.prototype = {
       xhr.addEventListener("load", (function() {
         // 204 seems to be returned if the channel is already running
         if ((xhr.status == 200) || (xhr.status == 204)) {
-          this.remoteMirror = new RemoteMirror(this.resourceURL, win, viewport, mirrorStartedCallback);
+          this.remoteMirror = new RemoteMirror(this.resourceURL, win, viewport, mirrorStartedCallback, contentWindow);
         }
       }).bind(this), false);
 
@@ -279,7 +279,7 @@ RemoteMedia.prototype = {
   }
 }
 
-function RemoteMirror(url, win, viewport, mirrorStartedCallback) {
+function RemoteMirror(url, win, viewport, mirrorStartedCallback, contentWindow) {
   this._serverURI = Services.io.newURI(url , null, null);
   this._window = win;
   this._iceCandidates = [];
@@ -287,7 +287,7 @@ function RemoteMirror(url, win, viewport, mirrorStartedCallback) {
 
   // This code insures the generated tab mirror is not wider than 800 nor taller than 600
   // Better dimensions should be chosen after the Roku Channel is working.
-  let windowId = win.BrowserApp.selectedBrowser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+  let windowId = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
   let cWidth =  Math.max(viewport.cssWidth, viewport.width);
   let cHeight = Math.max(viewport.cssHeight, viewport.height);
 

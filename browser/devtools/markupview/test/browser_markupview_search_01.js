@@ -10,7 +10,7 @@
 
 const TEST_URL = TEST_URL_ROOT + "doc_markup_search.html";
 
-let test = asyncTest(function*() {
+add_task(function*() {
   let {inspector, toolbox} = yield addTab(TEST_URL).then(openInspector);
 
   let container = yield getContainerForSelector("em", inspector);

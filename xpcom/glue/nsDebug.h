@@ -440,6 +440,33 @@ void fprintf_stderr(FILE* aFile, const char* aFmt, ...) MOZ_FORMAT_PRINTF(2, 3);
 // advanced performance debugging and display/layers visualization.
 void set_stderr_callback(StderrCallback aCallback);
 
+#if defined(ANDROID) && !defined(RELEASE_BUILD)
+// Call this if you want a copy of stderr logging sent to a file. This is
+// useful to get around logcat overflow problems on android devices, which use
+// a circular logcat buffer and can intermittently drop messages if there's too
+// much spew.
+//
+// This is intended for local debugging only, DO NOT USE IN PRODUCTION CODE.
+// (This is ifndef RELEASE_BUILD to catch uses of it that accidentally get
+// checked in). Using this will also prevent the profiler from getting a copy of
+// the stderr messages which it uses for various visualization features.
+//
+// This function can be called from any thread, but if it is called multiple
+// times all invocations must be on the same thread. Invocations after the
+// first one are ignored, so you can safely put it inside a loop, for example.
+// Once this is called there is no way to turn it off; all stderr output from
+// that point forward will go to the file. Note that the output is subject to
+// buffering so make sure you have enough output to flush the messages you care
+// about before you terminate the process.
+//
+// The file passed in should be writable, so on Android devices a path like
+// "/data/local/tmp/blah" is a good one to use as it is world-writable and will
+// work even in B2G child processes which have reduced privileges. Note that the
+// actual file created will have the PID appended to the path you pass in, so
+// that on B2G the output from each process goes to a separate file.
+void copy_stderr_to_file(const char* aFile);
+#endif
+
 #ifdef __cplusplus
 }
 #endif

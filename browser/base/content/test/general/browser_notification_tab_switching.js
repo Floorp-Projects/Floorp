@@ -46,7 +46,7 @@ function onLoad() {
         setTimeout(waitUntilNewWindowHasFocus, 50);
       } else {
         // Focus another window so that new window gets blur event.
-        gBrowser.selectedTab.linkedBrowser.contentWindow.focus();
+        gBrowser.selectedBrowser.contentWindow.focus();
       }
     }
     win.newWindow.focus();
@@ -88,7 +88,7 @@ function openSecondNotification() {
 
 function onTabSelect() {
   gBrowser.tabContainer.removeEventListener("TabSelect", onTabSelect);
-  is(gBrowser.selectedTab.linkedBrowser.contentWindow.location.href, notificationURL,
+  is(gBrowser.selectedBrowser.contentWindow.location.href, notificationURL,
      "Notification tab should be selected.");
 
   finish();

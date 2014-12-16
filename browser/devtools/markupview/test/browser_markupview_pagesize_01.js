@@ -37,7 +37,7 @@ const TEST_DATA = [{
   expected: "*more*uvwxy*more*"
 }];
 
-let test = asyncTest(function*() {
+add_task(function*() {
   let {inspector} = yield addTab(TEST_URL).then(openInspector);
 
   info("Start iterating through the test data");

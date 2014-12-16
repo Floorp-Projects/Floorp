@@ -7,7 +7,7 @@
 loadHelperScript("helper_edits.js");
 
 // Test that a prompt shows up when requested if a file is unsaved.
-let test = asyncTest(function*() {
+add_task(function*() {
   let projecteditor = yield addProjectEditorTabForTempDirectory();
   ok(true, "ProjectEditor has loaded");
 
