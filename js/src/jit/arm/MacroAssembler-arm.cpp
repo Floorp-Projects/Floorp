@@ -4175,7 +4175,7 @@ MacroAssemblerARMCompat::callWithABI(Register fun, MoveOp::Type result)
 }
 
 void
-MacroAssemblerARMCompat::handleFailureWithHandler(void *handler)
+MacroAssemblerARMCompat::handleFailureWithHandlerTail(void *handler)
 {
     // Reserve space for exception information.
     int size = (sizeof(ResumeFromException) + 7) & ~7;
@@ -4183,18 +4183,11 @@ MacroAssemblerARMCompat::handleFailureWithHandler(void *handler)
     ma_sub(Imm32(size), sp);
     ma_mov(sp, r0);
 
-    // Ask for an exception handler.
+    // Call the handler.
     setupUnalignedABICall(1, r1);
     passABIArg(r0);
     callWithABI(handler);
 
-    JitCode *excTail = GetJitContext()->runtime->jitRuntime()->getExceptionTail();
-    branch(excTail);
-}
-
-void
-MacroAssemblerARMCompat::handleFailureWithHandlerTail()
-{
     Label entryFrame;
     Label catch_;
     Label finally;
