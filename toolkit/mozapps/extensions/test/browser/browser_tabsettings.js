@@ -46,7 +46,7 @@ add_test(function() {
   if (gUseInContentUI) {
     EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
 
-    var browser = gBrowser.selectedTab.linkedBrowser;
+    var browser = gBrowser.selectedBrowser;
     browser.addEventListener("DOMContentLoaded", function() {
       browser.removeEventListener("DOMContentLoaded", arguments.callee, false);
       is(browser.currentURI.spec, addon.mAddon.optionsURL, "New tab should have loaded the options URL");

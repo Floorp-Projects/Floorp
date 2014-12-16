@@ -130,6 +130,12 @@ public:
   bool HasTextDecorationLines() const
     { return !!(mBits & NS_STYLE_HAS_TEXT_DECORATION_LINES); }
 
+  // Whether this style context or any of its inline-level ancestors
+  // is directly contained by a ruby box? It is used to inlinize
+  // block-level descendants and suppress line breaks inside ruby.
+  bool IsDirectlyInsideRuby() const
+    { return !!(mBits & NS_STYLE_IS_DIRECTLY_INSIDE_RUBY); }
+
   // Does this style context represent the style for a pseudo-element or
   // inherit data from such a style context?  Whether this returns true
   // is equivalent to whether it or any of its ancestors returns

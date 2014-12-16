@@ -26,7 +26,7 @@ function test() {
 function continueTest(aOldFrecency) {
   // Used to verify errors are not marked as typed.
   PlacesUtils.history.markPageAsTyped(TEST_URI);
-  gBrowser.selectedTab.linkedBrowser.loadURI(TEST_URI.spec);
+  gBrowser.selectedBrowser.loadURI(TEST_URI.spec);
 
   // Create and add history observer.
   let historyObserver = {

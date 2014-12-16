@@ -21,7 +21,7 @@ const TEST_DATA = [
   {selector: "#visibility-hidden", isDisplayed: true}
 ];
 
-let test = asyncTest(function*() {
+add_task(function*() {
   let {inspector} = yield addTab(TEST_URL).then(openInspector);
 
   for (let {selector, isDisplayed} of TEST_DATA) {
