@@ -65,7 +65,7 @@ static NS_DEFINE_CID(kChildCID, NS_CHILD_CID);
 //*****************************************************************************
 
 nsWebBrowser::nsWebBrowser() :
-   mInitInfo(nullptr),
+   mInitInfo(new nsWebBrowserInitInfo()),
    mContentType(typeContentWrapper),
    mActivating(false),
    mShouldEnableHistory(true),
@@ -80,7 +80,6 @@ nsWebBrowser::nsWebBrowser() :
    mParentWidget(nullptr),
    mListenerArray(nullptr)
 {
-    mInitInfo = new nsWebBrowserInitInfo();
     mWWatch = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
     NS_ASSERTION(mWWatch, "failed to get WindowWatcher");
 }
@@ -92,7 +91,6 @@ nsWebBrowser::~nsWebBrowser()
 
 NS_IMETHODIMP nsWebBrowser::InternalDestroy()
 {
-
    if (mInternalWidget) {
      mInternalWidget->SetWidgetListener(nullptr);
      mInternalWidget->Destroy();
@@ -105,11 +103,8 @@ NS_IMETHODIMP nsWebBrowser::InternalDestroy()
       mDocShellTreeOwner->WebBrowser(nullptr);
       mDocShellTreeOwner = nullptr;
    }
-   if (mInitInfo)
-      {
-      delete mInitInfo;
-      mInitInfo = nullptr;
-      }
+
+   mInitInfo = nullptr;
 
    if (mListenerArray) {
       for (uint32_t i = 0, end = mListenerArray->Length(); i < end; i++) {
@@ -1259,7 +1254,6 @@ NS_IMETHODIMP nsWebBrowser::Create()
    mDocShellTreeOwner->AddToWatcher(); // evil twin of Remove in SetDocShell(0)
    mDocShellTreeOwner->AddChromeListeners();
 
-   delete mInitInfo;
    mInitInfo = nullptr;
 
    return NS_OK;
@@ -1269,8 +1263,9 @@ NS_IMETHODIMP nsWebBrowser::Destroy()
 {
    InternalDestroy();
 
-   if (!mInitInfo)
+   if (!mInitInfo) {
       mInitInfo = new nsWebBrowserInitInfo();
+   }
 
    return NS_OK;
 }
