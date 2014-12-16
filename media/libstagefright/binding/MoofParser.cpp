@@ -44,7 +44,7 @@ MoofParser::RebuildFragmentedIndex(BoxContext& aContext)
 
 class BlockingStream : public Stream {
 public:
-  BlockingStream(Stream* aStream) : mStream(aStream)
+  explicit BlockingStream(Stream* aStream) : mStream(aStream)
   {
   }
 
@@ -75,7 +75,7 @@ MoofParser::BlockingReadNextMoof()
   nsTArray<MediaByteRange> byteRanges;
   byteRanges.AppendElement(
     MediaByteRange(0, std::numeric_limits<int64_t>::max()));
-  mp4_demuxer::BlockingStream* stream = new BlockingStream(mSource);
+  nsRefPtr<mp4_demuxer::BlockingStream> stream = new BlockingStream(mSource);
 
   BoxContext context(stream, byteRanges);
   for (Box box(&context, mOffset); box.IsAvailable(); box = box.Next()) {

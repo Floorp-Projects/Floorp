@@ -18,8 +18,8 @@ class AtomType
 {
 public:
   AtomType() : mType(0) { }
-  AtomType(uint32_t aType) : mType(aType) { }
-  AtomType(const char* aType) : mType(BigEndian::readUint32(aType)) { }
+  MOZ_IMPLICIT AtomType(uint32_t aType) : mType(aType) { }
+  MOZ_IMPLICIT AtomType(const char* aType) : mType(BigEndian::readUint32(aType)) { }
   bool operator==(const AtomType& aType) const { return mType == aType.mType; }
 
 private:
