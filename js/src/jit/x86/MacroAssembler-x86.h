@@ -867,12 +867,12 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     // Note: this function clobbers the source register.
     void boxDouble(FloatRegister src, const ValueOperand &dest) {
         if (Assembler::HasSSE41()) {
-            movd(src, dest.payloadReg());
+            vmovd(src, dest.payloadReg());
             pextrd(1, src, dest.typeReg());
         } else {
-            movd(src, dest.payloadReg());
+            vmovd(src, dest.payloadReg());
             psrldq(Imm32(4), src);
-            movd(src, dest.typeReg());
+            vmovd(src, dest.typeReg());
         }
     }
     void boxNonDouble(JSValueType type, Register src, const ValueOperand &dest) {
@@ -904,12 +904,12 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void unboxDouble(const ValueOperand &src, FloatRegister dest) {
         MOZ_ASSERT(dest != ScratchDoubleReg);
         if (Assembler::HasSSE41()) {
-            movd(src.payloadReg(), dest);
+            vmovd(src.payloadReg(), dest);
             pinsrd(1, src.typeReg(), dest);
         } else {
-            movd(src.payloadReg(), dest);
-            movd(src.typeReg(), ScratchDoubleReg);
-            unpcklps(ScratchDoubleReg, dest);
+            vmovd(src.payloadReg(), dest);
+            vmovd(src.typeReg(), ScratchDoubleReg);
+            vunpcklps(ScratchDoubleReg, dest, dest);
         }
     }
     void unboxDouble(const Operand &payload, const Operand &type,
@@ -917,15 +917,15 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         MOZ_ASSERT(dest != ScratchDoubleReg);
         if (Assembler::HasSSE41()) {
             movl(payload, scratch);
-            movd(scratch, dest);
+            vmovd(scratch, dest);
             movl(type, scratch);
             pinsrd(1, scratch, dest);
         } else {
             movl(payload, scratch);
-            movd(scratch, dest);
+            vmovd(scratch, dest);
             movl(type, scratch);
-            movd(scratch, ScratchDoubleReg);
-            unpcklps(ScratchDoubleReg, dest);
+            vmovd(scratch, ScratchDoubleReg);
+            vunpcklps(ScratchDoubleReg, dest, dest);
         }
     }
     void unboxValue(const ValueOperand &src, AnyRegister dest) {
@@ -996,18 +996,18 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void loadConstantFloat32x4(const SimdConstant &v, FloatRegister dest);
 
     void branchTruncateDouble(FloatRegister src, Register dest, Label *fail) {
-        cvttsd2si(src, dest);
+        vcvttsd2si(src, dest);
 
-        // cvttsd2si returns 0x80000000 on failure. Test for it by
+        // vcvttsd2si returns 0x80000000 on failure. Test for it by
         // subtracting 1 and testing overflow (this permits the use of a
         // smaller immediate field).
         cmp32(dest, Imm32(1));
         j(Assembler::Overflow, fail);
     }
     void branchTruncateFloat32(FloatRegister src, Register dest, Label *fail) {
-        cvttss2si(src, dest);
+        vcvttss2si(src, dest);
 
-        // cvttss2si returns 0x80000000 on failure. Test for it by
+        // vcvttss2si returns 0x80000000 on failure. Test for it by
         // subtracting 1 and testing overflow (this permits the use of a
         // smaller immediate field).
         cmp32(dest, Imm32(1));

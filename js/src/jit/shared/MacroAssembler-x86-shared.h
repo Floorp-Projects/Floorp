@@ -611,14 +611,14 @@ class MacroAssemblerX86Shared : public Assembler
     }
 
     void convertInt32ToDouble(Register src, FloatRegister dest) {
-        // cvtsi2sd and friends write only part of their output register, which
+        // vcvtsi2sd and friends write only part of their output register, which
         // causes slowdowns on out-of-order processors. Explicitly break
         // dependencies with vxorpd (and vxorps elsewhere), which are handled
         // specially in modern CPUs, for this purpose. See sections 8.14, 9.8,
         // 10.8, 12.9, 13.16, 14.14, and 15.8 of Agner's Microarchitecture
         // document.
         zeroDouble(dest);
-        cvtsi2sd(src, dest);
+        vcvtsi2sd(src, dest, dest);
     }
     void convertInt32ToDouble(const Address &src, FloatRegister dest) {
         convertInt32ToDouble(Operand(src), dest);
@@ -626,12 +626,12 @@ class MacroAssemblerX86Shared : public Assembler
     void convertInt32ToDouble(const Operand &src, FloatRegister dest) {
         // Clear the output register first to break dependencies; see above;
         zeroDouble(dest);
-        cvtsi2sd(Operand(src), dest);
+        vcvtsi2sd(Operand(src), dest, dest);
     }
     void convertInt32ToFloat32(Register src, FloatRegister dest) {
         // Clear the output register first to break dependencies; see above;
         zeroFloat32(dest);
-        cvtsi2ss(src, dest);
+        vcvtsi2ss(src, dest, dest);
     }
     void convertInt32ToFloat32(const Address &src, FloatRegister dest) {
         convertInt32ToFloat32(Operand(src), dest);
@@ -639,7 +639,7 @@ class MacroAssemblerX86Shared : public Assembler
     void convertInt32ToFloat32(const Operand &src, FloatRegister dest) {
         // Clear the output register first to break dependencies; see above;
         zeroFloat32(dest);
-        cvtsi2ss(src, dest);
+        vcvtsi2ss(src, dest, dest);
     }
     Condition testDoubleTruthy(bool truthy, FloatRegister reg) {
         zeroDouble(ScratchDoubleReg);
@@ -788,14 +788,14 @@ class MacroAssemblerX86Shared : public Assembler
     }
     void negateDouble(FloatRegister reg) {
         // From MacroAssemblerX86Shared::maybeInlineDouble
-        pcmpeqw(ScratchDoubleReg, ScratchDoubleReg);
+        vpcmpeqw(ScratchDoubleReg, ScratchDoubleReg, ScratchDoubleReg);
         psllq(Imm32(63), ScratchDoubleReg);
 
         // XOR the float in a float register with -0.0.
         vxorpd(ScratchDoubleReg, reg, reg); // s ^ 0x80000000000000
     }
     void negateFloat(FloatRegister reg) {
-        pcmpeqw(ScratchFloat32Reg, ScratchFloat32Reg);
+        vpcmpeqw(ScratchFloat32Reg, ScratchFloat32Reg, ScratchFloat32Reg);
         psllq(Imm32(31), ScratchFloat32Reg);
 
         // XOR the float in a float register with -0.0.
@@ -817,10 +817,10 @@ class MacroAssemblerX86Shared : public Assembler
         vaddss(src, dest, dest);
     }
     void convertFloat32ToDouble(FloatRegister src, FloatRegister dest) {
-        cvtss2sd(src, dest);
+        vcvtss2sd(src, dest, dest);
     }
     void convertDoubleToFloat32(FloatRegister src, FloatRegister dest) {
-        cvtsd2ss(src, dest);
+        vcvtsd2ss(src, dest, dest);
     }
 
     void convertFloat32x4ToInt32x4(FloatRegister src, FloatRegister dest) {
@@ -829,10 +829,10 @@ class MacroAssemblerX86Shared : public Assembler
         // least signed int32, or NaN), this will return the undefined integer
         // value (0x8000000). Spec should define what to do in such cases. See
         // also bug 1068020.
-        cvttps2dq(src, dest);
+        vcvttps2dq(src, dest);
     }
     void convertInt32x4ToFloat32x4(FloatRegister src, FloatRegister dest) {
-        cvtdq2ps(src, dest);
+        vcvtdq2ps(src, dest);
     }
 
     void bitwiseAndX4(const Operand &src, FloatRegister dest) {
@@ -893,10 +893,10 @@ class MacroAssemblerX86Shared : public Assembler
         movdqu(src, dest);
     }
     void packedEqualInt32x4(const Operand &src, FloatRegister dest) {
-        pcmpeqd(src, dest);
+        vpcmpeqd(src, dest, dest);
     }
     void packedGreaterThanInt32x4(const Operand &src, FloatRegister dest) {
-        pcmpgtd(src, dest);
+        vpcmpgtd(src, dest, dest);
     }
     void packedAddInt32(const Operand &src, FloatRegister dest) {
         vpaddd(src, dest, dest);
@@ -908,14 +908,14 @@ class MacroAssemblerX86Shared : public Assembler
         // This function is an approximation of the result, this might need
         // fix up if the spec requires a given precision for this operation.
         // TODO See also bug 1068028.
-        rcpps(src, dest);
+        vrcpps(src, dest);
     }
     void packedReciprocalSqrtFloat32x4(const Operand &src, FloatRegister dest) {
         // TODO See comment above. See also bug 1068028.
-        rsqrtps(src, dest);
+        vrsqrtps(src, dest);
     }
     void packedSqrtFloat32x4(const Operand &src, FloatRegister dest) {
-        sqrtps(src, dest);
+        vsqrtps(src, dest);
     }
 
     void packedLeftShiftByScalar(FloatRegister src, FloatRegister dest) {
@@ -999,7 +999,7 @@ class MacroAssemblerX86Shared : public Assembler
         pshufd(mask, src, dest);
     }
     void moveLowInt32(FloatRegister src, Register dest) {
-        movd(src, dest);
+        vmovd(src, dest);
     }
 
     void moveHighPairToLowPairFloat32(FloatRegister src, FloatRegister dest) {
@@ -1022,20 +1022,20 @@ class MacroAssemblerX86Shared : public Assembler
     }
 
     void moveFloatAsDouble(Register src, FloatRegister dest) {
-        movd(src, dest);
-        cvtss2sd(dest, dest);
+        vmovd(src, dest);
+        vcvtss2sd(dest, dest, dest);
     }
     void loadFloatAsDouble(const Address &src, FloatRegister dest) {
         movss(src, dest);
-        cvtss2sd(dest, dest);
+        vcvtss2sd(dest, dest, dest);
     }
     void loadFloatAsDouble(const BaseIndex &src, FloatRegister dest) {
         movss(src, dest);
-        cvtss2sd(dest, dest);
+        vcvtss2sd(dest, dest, dest);
     }
     void loadFloatAsDouble(const Operand &src, FloatRegister dest) {
         loadFloat32(src, dest);
-        cvtss2sd(dest, dest);
+        vcvtss2sd(dest, dest, dest);
     }
     void loadFloat32(const Address &src, FloatRegister dest) {
         movss(src, dest);
@@ -1088,8 +1088,8 @@ class MacroAssemblerX86Shared : public Assembler
         if (negativeZeroCheck)
             branchNegativeZero(src, dest, fail);
 
-        cvttsd2si(src, dest);
-        cvtsi2sd(dest, ScratchDoubleReg);
+        vcvttsd2si(src, dest);
+        convertInt32ToDouble(dest, ScratchDoubleReg);
         ucomisd(ScratchDoubleReg, src);
         j(Assembler::Parity, fail);
         j(Assembler::NotEqual, fail);
@@ -1106,7 +1106,7 @@ class MacroAssemblerX86Shared : public Assembler
         if (negativeZeroCheck)
             branchNegativeZeroFloat32(src, dest, fail);
 
-        cvttss2si(src, dest);
+        vcvttss2si(src, dest);
         convertInt32ToFloat32(dest, ScratchFloat32Reg);
         ucomiss(ScratchFloat32Reg, src);
         j(Assembler::Parity, fail);
@@ -1133,7 +1133,7 @@ class MacroAssemblerX86Shared : public Assembler
             return true;
         }
 
-        // It is also possible to load several common constants using pcmpeqw
+        // It is also possible to load several common constants using vpcmpeqw
         // to get all ones and then psllq and psrlq to get zeros at the ends,
         // as described in "13.4 Generating constants" of
         // "2. Optimizing subroutines in assembly language" by Agner Fog, and as
@@ -1163,7 +1163,7 @@ class MacroAssemblerX86Shared : public Assembler
             return true;
         }
         if (v == minusOne) {
-            pcmpeqw(dest, dest);
+            vpcmpeqw(dest, dest, dest);
             return true;
         }
         return false;
