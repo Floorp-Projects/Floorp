@@ -139,24 +139,27 @@ class ElementSpecific
      * case the two memory ranges overlap.
      */
     static bool
-    setFromTypedArray(JSContext *cx,
-                       Handle<SomeTypedArray*> target, Handle<SomeTypedArray*> source,
-                       uint32_t offset)
+    setFromAnyTypedArray(JSContext *cx,
+                         Handle<SomeTypedArray*> target, HandleObject source,
+                         uint32_t offset)
     {
         MOZ_ASSERT(SpecificArray::ArrayTypeID() == target->type(),
-                   "calling wrong setFromTypedArray specialization");
+                   "calling wrong setFromAnyTypedArray specialization");
 
         MOZ_ASSERT(offset <= target->length());
-        MOZ_ASSERT(source->length() <= target->length() - offset);
+        MOZ_ASSERT(AnyTypedArrayLength(source) <= target->length() - offset);
 
-        if (SomeTypedArray::sameBuffer(target, source))
-            return setFromOverlappingTypedArray(cx, target, source, offset);
+        if (source->is<SomeTypedArray>()) {
+            Rooted<SomeTypedArray*> src(cx, source.as<SomeTypedArray>());
+            if (SomeTypedArray::sameBuffer(target, src))
+                return setFromOverlappingTypedArray(cx, target, src, offset);
+        }
 
         T *dest = static_cast<T*>(target->viewData()) + offset;
-        uint32_t count = source->length();
+        uint32_t count = AnyTypedArrayLength(source);
 
-        if (source->type() == target->type()) {
-            mozilla::PodCopy(dest, static_cast<T*>(source->viewData()), count);
+        if (AnyTypedArrayType(source) == target->type()) {
+            mozilla::PodCopy(dest, static_cast<T*>(AnyTypedArrayViewData(source)), count);
             return true;
         }
 
@@ -166,8 +169,8 @@ class ElementSpecific
 #  define JS_VOLATILE_ARM /* nothing */
 #endif
 
-        void *data = source->viewData();
-        switch (source->type()) {
+        void *data = AnyTypedArrayViewData(source);
+        switch (AnyTypedArrayType(source)) {
           case Scalar::Int8: {
             JS_VOLATILE_ARM
             int8_t *src = static_cast<int8_t*>(data);
@@ -227,7 +230,7 @@ class ElementSpecific
             break;
           }
           default:
-            MOZ_CRASH("setFromTypedArray with a typed array with bogus type");
+            MOZ_CRASH("setFromAnyTypedArray with a typed array with bogus type");
         }
 
 #undef JS_VOLATILE_ARM
@@ -246,8 +249,8 @@ class ElementSpecific
     {
         MOZ_ASSERT(target->type() == SpecificArray::ArrayTypeID(),
                    "target type and NativeType must match");
-        MOZ_ASSERT(!source->is<SomeTypedArray>(),
-                   "use setFromTypedArray instead of this method");
+        MOZ_ASSERT(!IsAnyTypedArray(source),
+                   "use setFromAnyTypedArray instead of this method");
 
         uint32_t i = 0;
         if (source->isNative()) {
@@ -669,14 +672,13 @@ class TypedArrayMethods
         }
 
         RootedObject arg0(cx, &args[0].toObject());
-        if (arg0->is<SomeTypedArray>()) {
-            Rooted<SomeTypedArray*> source(cx, &arg0->as<SomeTypedArray>());
-            if (source->length() > target->length() - offset) {
+        if (IsAnyTypedArray(arg0)) {
+            if (AnyTypedArrayLength(arg0) > target->length() - offset) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
                 return false;
             }
 
-            if (!setFromTypedArray(cx, target, source, offset))
+            if (!setFromAnyTypedArray(cx, target, arg0, offset))
                 return false;
         } else {
             uint32_t len;
@@ -703,38 +705,38 @@ class TypedArrayMethods
         MOZ_ASSERT(offset <= target->length());
         MOZ_ASSERT(len <= target->length() - offset);
 
-        if (source->is<SomeTypedArray>()) {
-            Rooted<SomeTypedArray*> src(cx, &source->as<SomeTypedArray>());
-            return setFromTypedArray(cx, target, src, offset);
-        }
+        if (IsAnyTypedArray(source))
+            return setFromAnyTypedArray(cx, target, source, offset);
 
         return setFromNonTypedArray(cx, target, source, len, offset);
     }
 
   private:
     static bool
-    setFromTypedArray(JSContext *cx, Handle<SomeTypedArray*> target, Handle<SomeTypedArray*> source,
-                      uint32_t offset)
+    setFromAnyTypedArray(JSContext *cx, Handle<SomeTypedArray*> target, HandleObject source,
+                         uint32_t offset)
     {
+        MOZ_ASSERT(IsAnyTypedArray(source), "use setFromNonTypedArray");
+
         switch (target->type()) {
           case Scalar::Int8:
-            return ElementSpecific<Int8ArrayType>::setFromTypedArray(cx, target, source, offset);
+            return ElementSpecific<Int8ArrayType>::setFromAnyTypedArray(cx, target, source, offset);
           case Scalar::Uint8:
-            return ElementSpecific<Uint8ArrayType>::setFromTypedArray(cx, target, source, offset);
+            return ElementSpecific<Uint8ArrayType>::setFromAnyTypedArray(cx, target, source, offset);
           case Scalar::Int16:
-            return ElementSpecific<Int16ArrayType>::setFromTypedArray(cx, target, source, offset);
+            return ElementSpecific<Int16ArrayType>::setFromAnyTypedArray(cx, target, source, offset);
           case Scalar::Uint16:
-            return ElementSpecific<Uint16ArrayType>::setFromTypedArray(cx, target, source, offset);
+            return ElementSpecific<Uint16ArrayType>::setFromAnyTypedArray(cx, target, source, offset);
           case Scalar::Int32:
-            return ElementSpecific<Int32ArrayType>::setFromTypedArray(cx, target, source, offset);
+            return ElementSpecific<Int32ArrayType>::setFromAnyTypedArray(cx, target, source, offset);
           case Scalar::Uint32:
-            return ElementSpecific<Uint32ArrayType>::setFromTypedArray(cx, target, source, offset);
+            return ElementSpecific<Uint32ArrayType>::setFromAnyTypedArray(cx, target, source, offset);
           case Scalar::Float32:
-            return ElementSpecific<Float32ArrayType>::setFromTypedArray(cx, target, source, offset);
+            return ElementSpecific<Float32ArrayType>::setFromAnyTypedArray(cx, target, source, offset);
           case Scalar::Float64:
-            return ElementSpecific<Float64ArrayType>::setFromTypedArray(cx, target, source, offset);
+            return ElementSpecific<Float64ArrayType>::setFromAnyTypedArray(cx, target, source, offset);
           case Scalar::Uint8Clamped:
-            return ElementSpecific<Uint8ClampedArrayType>::setFromTypedArray(cx, target, source, offset);
+            return ElementSpecific<Uint8ClampedArrayType>::setFromAnyTypedArray(cx, target, source, offset);
           case Scalar::Float32x4:
           case Scalar::Int32x4:
           case Scalar::MaxTypedArrayViewType:
@@ -748,7 +750,7 @@ class TypedArrayMethods
     setFromNonTypedArray(JSContext *cx, Handle<SomeTypedArray*> target, HandleObject source,
                          uint32_t len, uint32_t offset)
     {
-        MOZ_ASSERT(!source->is<SomeTypedArray>(), "use setFromTypedArray");
+        MOZ_ASSERT(!IsAnyTypedArray(source), "use setFromAnyTypedArray");
 
         switch (target->type()) {
           case Scalar::Int8:
