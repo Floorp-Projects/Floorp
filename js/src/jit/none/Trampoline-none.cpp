@@ -25,7 +25,7 @@ JitCode *JitRuntime::generateBailoutHandler(JSContext *, ExecutionMode) { MOZ_CR
 JitCode *JitRuntime::generateVMWrapper(JSContext *, const VMFunction &) { MOZ_CRASH(); }
 JitCode *JitRuntime::generatePreBarrier(JSContext *, MIRType) { MOZ_CRASH(); }
 JitCode *JitRuntime::generateDebugTrapHandler(JSContext *) { MOZ_CRASH(); }
-JitCode *JitRuntime::generateExceptionTailStub(JSContext *) { MOZ_CRASH(); }
+JitCode *JitRuntime::generateExceptionTailStub(JSContext *, void *) { MOZ_CRASH(); }
 JitCode *JitRuntime::generateBailoutTailStub(JSContext *) { MOZ_CRASH(); }
 JitCode *JitRuntime::generateForkJoinGetSliceStub(JSContext *) { MOZ_CRASH(); }
 
