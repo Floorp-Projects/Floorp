@@ -367,6 +367,10 @@ class Assembler : public AssemblerX86Shared
         masm.cmpl_rm_disp32(rhs.code(), (void*)-1);
         append(AsmJSAbsoluteLink(CodeOffsetLabel(masm.currentOffset()), lhs.kind()));
     }
+    void cmpl(AsmJSAbsoluteAddress lhs, Imm32 rhs) {
+        JmpSrc src = masm.cmpl_im_disp32(rhs.value, (void*)-1);
+        append(AsmJSAbsoluteLink(CodeOffsetLabel(src.offset()), lhs.kind()));
+    }
 
     void jmp(ImmPtr target, Relocation::Kind reloc = Relocation::HARDCODED) {
         JmpSrc src = masm.jmp();

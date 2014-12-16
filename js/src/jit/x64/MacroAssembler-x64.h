@@ -629,6 +629,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             branch32(cond, Address(ScratchReg, 0), rhs, label);
         }
     }
+    void branch32(Condition cond, AsmJSAbsoluteAddress lhs, Imm32 rhs, Label *label) {
+        mov(AsmJSImmPtr(lhs.kind()), ScratchReg);
+        branch32(cond, Address(ScratchReg, 0), rhs, label);
+    }
     void branch32(Condition cond, AbsoluteAddress lhs, Register rhs, Label *label) {
         if (X86Assembler::isAddressImmediate(lhs.addr)) {
             branch32(cond, Operand(lhs), rhs, label);

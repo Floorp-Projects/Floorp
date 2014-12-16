@@ -632,6 +632,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cmpl(Operand(lhs), rhs);
         j(cond, label);
     }
+    void branch32(Condition cond, AsmJSAbsoluteAddress lhs, Imm32 rhs, Label *label) {
+        cmpl(lhs, rhs);
+        j(cond, label);
+    }
     void branch32(Condition cond, AbsoluteAddress lhs, Register rhs, Label *label) {
         cmpl(Operand(lhs), rhs);
         j(cond, label);
