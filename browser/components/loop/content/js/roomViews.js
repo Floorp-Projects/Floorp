@@ -67,8 +67,18 @@ loop.roomViews = (function(mozL10n) {
     getInitialState: function() {
       return {
         copiedUrl: false,
-        newRoomName: ""
+        newRoomName: "",
+        error: null,
       };
+    },
+
+    componentWillMount: function() {
+      this.listenTo(this.props.roomStore, "change:error",
+                    this.onRoomError);
+    },
+
+    componentWillUnmount: function() {
+      this.stopListening(this.props.roomStore);
     },
 
     handleFormSubmit: function(event) {
@@ -101,9 +111,23 @@ loop.roomViews = (function(mozL10n) {
       this.setState({copiedUrl: true});
     },
 
+    onRoomError: function() {
+      // Only update the state if we're mounted, to avoid the problem where
+      // stopListening doesn't nuke the active listeners during a event
+      // processing.
+      if (this.isMounted()) {
+        this.setState({error: this.props.roomStore.getStoreState("error")});
+      }
+    },
+
     render: function() {
+      var cx = React.addons.classSet;
       return (
         React.DOM.div({className: "room-invitation-overlay"}, 
+          React.DOM.p({className: cx({"error": !!this.state.error,
+                            "error-display-area": true})}, 
+            mozL10n.get("rooms_name_change_failed_label")
+          ), 
           React.DOM.form({onSubmit: this.handleFormSubmit}, 
             React.DOM.input({type: "text", className: "input-room-name", 
               valueLink: this.linkState("newRoomName"), 

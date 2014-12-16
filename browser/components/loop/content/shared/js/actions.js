@@ -265,6 +265,14 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Renaming a room error.
+     * XXX: should move to some roomActions module - refs bug 1079284
+     */
+    RenameRoomError: Action.define("renameRoomError", {
+      error: [Error, Object]
+    }),
+
+    /**
      * Copy a room url into the user's clipboard.
      * XXX: should move to some roomActions module - refs bug 1079284
      */
