@@ -1496,6 +1496,11 @@ AsmJSModule::serializedSize() const
 uint8_t *
 AsmJSModule::serialize(uint8_t *cursor) const
 {
+    MOZ_ASSERT(!dynamicallyLinked_);
+    MOZ_ASSERT(!loadedFromCache_);
+    MOZ_ASSERT(!profilingEnabled_);
+    MOZ_ASSERT(!interrupted_);
+
     cursor = WriteBytes(cursor, &pod, sizeof(pod));
     cursor = WriteBytes(cursor, code_, pod.codeBytes_);
     cursor = SerializeName(cursor, globalArgumentName_);
@@ -1589,6 +1594,16 @@ AsmJSModule::clone(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *moduleOut) con
 
     out.loadedFromCache_ = loadedFromCache_;
     out.profilingEnabled_ = profilingEnabled_;
+
+    if (profilingEnabled_) {
+        if (!out.profilingLabels_.resize(profilingLabels_.length()))
+            return false;
+        for (size_t i = 0; i < profilingLabels_.length(); i++) {
+            out.profilingLabels_[i] = DuplicateString(cx, profilingLabels_[i].get());
+            if (!out.profilingLabels_[i])
+                return false;
+        }
+    }
 
     // We already know the exact extent of areas that need to be patched, just make sure we
     // flush all of them at once.

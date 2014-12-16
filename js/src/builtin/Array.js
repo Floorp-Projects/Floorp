@@ -651,9 +651,10 @@ function ArrayIteratorIdentity() {
 }
 
 function ArrayIteratorNext() {
-    // FIXME: Cross-compartment wrapper ArrayIterator objects should pass this test.  Bug 1111170.
-    if (!IsObject(this) || !IsArrayIterator(this))
-        ThrowError(JSMSG_INCOMPATIBLE_METHOD, "ArrayIterator", "next", ToString(this));
+    if (!IsObject(this) || !IsArrayIterator(this)) {
+        return callFunction(CallArrayIteratorMethodIfWrapped, this,
+                            "ArrayIteratorNext");
+    }
 
     var a = UnsafeGetReservedSlot(this, ARRAY_ITERATOR_SLOT_ITERATED_OBJECT);
     var index = UnsafeGetReservedSlot(this, ARRAY_ITERATOR_SLOT_NEXT_INDEX);
