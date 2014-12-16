@@ -645,7 +645,7 @@ class AsmJSModule
         bool clone(ExclusiveContext *cx, Name *out) const;
     };
 
-    typedef mozilla::UniquePtr<char, JS::FreePolicy> ProfilingLabel;
+    typedef mozilla::UniquePtr<char[], JS::FreePolicy> ProfilingLabel;
 
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
     // Function information to add to the VTune JIT profiler following linking.
