@@ -1629,29 +1629,39 @@ public:
         }
     }
 
-    void cmpl_im_disp32(int imm, int offset, RegisterID base)
+    MOZ_WARN_UNUSED_RESULT JmpSrc
+    cmpl_im_disp32(int imm, int offset, RegisterID base)
     {
         spew("cmpl       $0x%x, %s0x%04x(%s)",
              imm, PRETTY_PRINT_OFFSET(offset), nameIReg(base));
+        JmpSrc r;
         if (CAN_SIGN_EXTEND_8_32(imm)) {
             m_formatter.oneByteOp_disp32(OP_GROUP1_EvIb, offset, base, GROUP1_OP_CMP);
+            r = JmpSrc(m_formatter.size());
             m_formatter.immediate8(imm);
         } else {
             m_formatter.oneByteOp_disp32(OP_GROUP1_EvIz, offset, base, GROUP1_OP_CMP);
+            r = JmpSrc(m_formatter.size());
             m_formatter.immediate32(imm);
         }
+        return r;
     }
 
-    void cmpl_im_disp32(int imm, const void *addr)
+    MOZ_WARN_UNUSED_RESULT JmpSrc
+    cmpl_im_disp32(int imm, const void *addr)
     {
         spew("cmpl       $0x%x, %p", imm, addr);
+        JmpSrc r;
         if (CAN_SIGN_EXTEND_8_32(imm)) {
             m_formatter.oneByteOp_disp32(OP_GROUP1_EvIb, addr, GROUP1_OP_CMP);
+            r = JmpSrc(m_formatter.size());
             m_formatter.immediate8(imm);
         } else {
             m_formatter.oneByteOp_disp32(OP_GROUP1_EvIz, addr, GROUP1_OP_CMP);
+            r = JmpSrc(m_formatter.size());
             m_formatter.immediate32(imm);
         }
+        return r;
     }
 
     void cmpl_i32m(int imm, int offset, RegisterID base)
