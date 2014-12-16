@@ -133,9 +133,7 @@ var tabPreviewPanelHelper = {
       host.suspendGUI();
 
     if (host._prevFocus) {
-      Cc["@mozilla.org/focus-manager;1"]
-        .getService(Ci.nsIFocusManager)
-        .setFocus(host._prevFocus, Ci.nsIFocusManager.FLAG_NOSCROLL);
+      Services.focus.setFocus(host._prevFocus, Ci.nsIFocusManager.FLAG_NOSCROLL);
       host._prevFocus = null;
     } else
       gBrowser.selectedBrowser.focus();
