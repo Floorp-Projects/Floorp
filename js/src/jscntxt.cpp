@@ -1199,6 +1199,9 @@ JSContext::mark(JSTracer *trc)
         MarkValueRoot(trc, &unwrappedException_, "unwrapped exception");
 
     TraceCycleDetectionSet(trc, cycleDetectorSet);
+
+    if (compartment_)
+        compartment_->mark();
 }
 
 void *
