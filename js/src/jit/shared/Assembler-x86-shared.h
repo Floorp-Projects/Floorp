@@ -1274,13 +1274,13 @@ class AssemblerX86Shared : public AssemblerShared
         masm.imull_r(multiplier.code());
     }
     void imull(Imm32 imm, Register dest) {
-        masm.imull_i32r(dest.code(), imm.value, dest.code());
+        masm.imull_ir(imm.value, dest.code(), dest.code());
     }
     void imull(Register src, Register dest) {
         masm.imull_rr(src.code(), dest.code());
     }
     void imull(Imm32 imm, Register src, Register dest) {
-        masm.imull_i32r(src.code(), imm.value, dest.code());
+        masm.imull_ir(imm.value, src.code(), dest.code());
     }
     void imull(const Operand &src, Register dest) {
         switch (src.kind()) {
@@ -1441,7 +1441,7 @@ class AssemblerX86Shared : public AssemblerShared
     }
 
     void push(const Imm32 imm) {
-        masm.push_i32(imm.value);
+        masm.push_i(imm.value);
     }
 
     void push(const Operand &src) {

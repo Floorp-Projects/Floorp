@@ -264,6 +264,8 @@ private:
         PRE_SSE_66                      = 0x66,
         OP_PUSH_Iz                      = 0x68,
         OP_IMUL_GvEvIz                  = 0x69,
+        OP_PUSH_Ib                      = 0x6a,
+        OP_IMUL_GvEvIb                  = 0x6b,
         OP_GROUP1_EbIb                  = 0x80,
         OP_GROUP1_EvIz                  = 0x81,
         OP_GROUP1_EvIb                  = 0x83,
@@ -561,6 +563,18 @@ public:
     {
         spew("pop        %s", nameIReg(reg));
         m_formatter.oneByteOp(OP_POP_EAX, reg);
+    }
+
+    void push_i(int imm)
+    {
+        spew("push       %s$0x%x", PRETTY_PRINT_OFFSET(imm));
+        if (CAN_SIGN_EXTEND_8_32(imm)) {
+            m_formatter.oneByteOp(OP_PUSH_Ib);
+            m_formatter.immediate8(imm);
+        } else {
+            m_formatter.oneByteOp(OP_PUSH_Iz);
+            m_formatter.immediate32(imm);
+        }
     }
 
     void push_i32(int imm)
@@ -1439,11 +1453,16 @@ public:
         m_formatter.twoByteOp(OP2_IMUL_GvEv, offset, base, dst);
     }
 
-    void imull_i32r(RegisterID src, int32_t value, RegisterID dst)
+    void imull_ir(int32_t value, RegisterID src, RegisterID dst)
     {
         spew("imull      $%d, %s, %s", value, nameIReg(4, src), nameIReg(4, dst));
-        m_formatter.oneByteOp(OP_IMUL_GvEvIz, src, dst);
-        m_formatter.immediate32(value);
+        if (CAN_SIGN_EXTEND_8_32(value)) {
+            m_formatter.oneByteOp(OP_IMUL_GvEvIb, src, dst);
+            m_formatter.immediate8(value);
+        } else {
+            m_formatter.oneByteOp(OP_IMUL_GvEvIz, src, dst);
+            m_formatter.immediate32(value);
+        }
     }
 
     void idivl_r(RegisterID divisor)
