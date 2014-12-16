@@ -2302,12 +2302,6 @@ nsJSContext::KillICCTimer()
   }
 }
 
-void
-nsJSContext::GC(JS::gcreason::Reason aReason)
-{
-  PokeGC(aReason);
-}
-
 class NotifyGCEndRunnable : public nsRunnable
 {
   nsString mMessage;
