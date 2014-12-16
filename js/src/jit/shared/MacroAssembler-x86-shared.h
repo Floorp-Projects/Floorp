@@ -38,9 +38,9 @@ class MacroAssemblerX86Shared : public Assembler
 
     void compareDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs) {
         if (cond & DoubleConditionBitInvert)
-            ucomisd(lhs, rhs);
+            vucomisd(lhs, rhs);
         else
-            ucomisd(rhs, lhs);
+            vucomisd(rhs, lhs);
     }
     void branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs, Label *label)
     {
@@ -65,9 +65,9 @@ class MacroAssemblerX86Shared : public Assembler
 
     void compareFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs) {
         if (cond & DoubleConditionBitInvert)
-            ucomiss(lhs, rhs);
+            vucomiss(lhs, rhs);
         else
-            ucomiss(rhs, lhs);
+            vucomiss(rhs, lhs);
     }
     void branchFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs, Label *label)
     {
@@ -643,7 +643,7 @@ class MacroAssemblerX86Shared : public Assembler
     }
     Condition testDoubleTruthy(bool truthy, FloatRegister reg) {
         zeroDouble(ScratchDoubleReg);
-        ucomisd(reg, ScratchDoubleReg);
+        vucomisd(reg, ScratchDoubleReg);
         return truthy ? NonZero : Zero;
     }
     void branchTestDoubleTruthy(bool truthy, FloatRegister reg, Label *label) {
@@ -1003,7 +1003,7 @@ class MacroAssemblerX86Shared : public Assembler
     }
 
     void moveHighPairToLowPairFloat32(FloatRegister src, FloatRegister dest) {
-        movhlps(src, dest);
+        vmovhlps(src, dest, dest);
     }
     void shuffleFloat32(uint32_t mask, FloatRegister src, FloatRegister dest) {
         // The shuffle instruction on x86 is such that it moves 2 words from
@@ -1090,7 +1090,7 @@ class MacroAssemblerX86Shared : public Assembler
 
         vcvttsd2si(src, dest);
         convertInt32ToDouble(dest, ScratchDoubleReg);
-        ucomisd(ScratchDoubleReg, src);
+        vucomisd(ScratchDoubleReg, src);
         j(Assembler::Parity, fail);
         j(Assembler::NotEqual, fail);
 
@@ -1108,7 +1108,7 @@ class MacroAssemblerX86Shared : public Assembler
 
         vcvttss2si(src, dest);
         convertInt32ToFloat32(dest, ScratchFloat32Reg);
-        ucomiss(ScratchFloat32Reg, src);
+        vucomiss(ScratchFloat32Reg, src);
         j(Assembler::Parity, fail);
         j(Assembler::NotEqual, fail);
     }

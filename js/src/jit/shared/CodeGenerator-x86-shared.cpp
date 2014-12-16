@@ -125,7 +125,7 @@ CodeGeneratorX86Shared::visitTestDAndBranch(LTestDAndBranch *test)
 {
     const LAllocation *opd = test->input();
 
-    // ucomisd flags:
+    // vucomisd flags:
     //             Z  P  C
     //            ---------
     //      NaN    1  1  1
@@ -136,7 +136,7 @@ CodeGeneratorX86Shared::visitTestDAndBranch(LTestDAndBranch *test)
     // NaN is falsey, so comparing against 0 and then using the Z flag is
     // enough to determine which branch to take.
     masm.zeroDouble(ScratchDoubleReg);
-    masm.ucomisd(ScratchDoubleReg, ToFloatRegister(opd));
+    masm.vucomisd(ScratchDoubleReg, ToFloatRegister(opd));
     emitBranch(Assembler::NotEqual, test->ifTrue(), test->ifFalse());
 }
 
@@ -144,9 +144,9 @@ void
 CodeGeneratorX86Shared::visitTestFAndBranch(LTestFAndBranch *test)
 {
     const LAllocation *opd = test->input();
-    // ucomiss flags are the same as doubles; see comment above
+    // vucomiss flags are the same as doubles; see comment above
     masm.zeroFloat32(ScratchFloat32Reg);
-    masm.ucomiss(ScratchFloat32Reg, ToFloatRegister(opd));
+    masm.vucomiss(ScratchFloat32Reg, ToFloatRegister(opd));
     emitBranch(Assembler::NotEqual, test->ifTrue(), test->ifFalse());
 }
 
@@ -492,12 +492,12 @@ CodeGeneratorX86Shared::visitMinMaxD(LMinMaxD *ins)
 
     Label done, nan, minMaxInst;
 
-    // Do a ucomisd to catch equality and NaNs, which both require special
+    // Do a vucomisd to catch equality and NaNs, which both require special
     // handling. If the operands are ordered and inequal, we branch straight to
     // the min/max instruction. If we wanted, we could also branch for less-than
     // or greater-than here instead of using min/max, however these conditions
     // will sometimes be hard on the branch predictor.
-    masm.ucomisd(second, first);
+    masm.vucomisd(second, first);
     masm.j(Assembler::NotEqual, &minMaxInst);
     if (!ins->mir()->range() || ins->mir()->range()->canBeNaN())
         masm.j(Assembler::Parity, &nan);
@@ -516,7 +516,7 @@ CodeGeneratorX86Shared::visitMinMaxD(LMinMaxD *ins)
     // NaN, so we explicitly check for a NaN in the read-write operand.
     if (!ins->mir()->range() || ins->mir()->range()->canBeNaN()) {
         masm.bind(&nan);
-        masm.ucomisd(first, first);
+        masm.vucomisd(first, first);
         masm.j(Assembler::Parity, &done);
     }
 
@@ -524,9 +524,9 @@ CodeGeneratorX86Shared::visitMinMaxD(LMinMaxD *ins)
     // return the value we need.
     masm.bind(&minMaxInst);
     if (ins->mir()->isMax())
-        masm.maxsd(second, first);
+        masm.vmaxsd(second, first, first);
     else
-        masm.minsd(second, first);
+        masm.vminsd(second, first, first);
 
     masm.bind(&done);
 }
@@ -543,12 +543,12 @@ CodeGeneratorX86Shared::visitMinMaxF(LMinMaxF *ins)
 
     Label done, nan, minMaxInst;
 
-    // Do a ucomiss to catch equality and NaNs, which both require special
+    // Do a vucomiss to catch equality and NaNs, which both require special
     // handling. If the operands are ordered and inequal, we branch straight to
     // the min/max instruction. If we wanted, we could also branch for less-than
     // or greater-than here instead of using min/max, however these conditions
     // will sometimes be hard on the branch predictor.
-    masm.ucomiss(second, first);
+    masm.vucomiss(second, first);
     masm.j(Assembler::NotEqual, &minMaxInst);
     if (!ins->mir()->range() || ins->mir()->range()->canBeNaN())
         masm.j(Assembler::Parity, &nan);
@@ -567,7 +567,7 @@ CodeGeneratorX86Shared::visitMinMaxF(LMinMaxF *ins)
     // NaN, so we explicitly check for a NaN in the read-write operand.
     if (!ins->mir()->range() || ins->mir()->range()->canBeNaN()) {
         masm.bind(&nan);
-        masm.ucomiss(first, first);
+        masm.vucomiss(first, first);
         masm.j(Assembler::Parity, &done);
     }
 
@@ -575,9 +575,9 @@ CodeGeneratorX86Shared::visitMinMaxF(LMinMaxF *ins)
     // return the value we need.
     masm.bind(&minMaxInst);
     if (ins->mir()->isMax())
-        masm.maxss(second, first);
+        masm.vmaxss(second, first, first);
     else
-        masm.minss(second, first);
+        masm.vminss(second, first, first);
 
     masm.bind(&done);
 }
@@ -630,7 +630,7 @@ CodeGeneratorX86Shared::visitSqrtD(LSqrtD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
     FloatRegister output = ToFloatRegister(ins->output());
-    masm.sqrtsd(input, output);
+    masm.vsqrtsd(input, output, output);
 }
 
 void
@@ -638,14 +638,14 @@ CodeGeneratorX86Shared::visitSqrtF(LSqrtF *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
     FloatRegister output = ToFloatRegister(ins->output());
-    masm.sqrtss(input, output);
+    masm.vsqrtss(input, output, output);
 }
 
 void
 CodeGeneratorX86Shared::visitPowHalfD(LPowHalfD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
-    MOZ_ASSERT(input == ToFloatRegister(ins->output()));
+    FloatRegister output = ToFloatRegister(ins->output());
 
     Label done, sqrt;
 
@@ -672,7 +672,7 @@ CodeGeneratorX86Shared::visitPowHalfD(LPowHalfD *ins)
         masm.addDouble(ScratchDoubleReg, input);
     }
 
-    masm.sqrtsd(input, input);
+    masm.vsqrtsd(input, output, output);
 
     masm.bind(&done);
 }
@@ -1710,7 +1710,7 @@ CodeGeneratorX86Shared::visitCeil(LCeil *lir)
                       scratch, &lessThanMinusOne);
 
     // Test for remaining values with the sign bit set, i.e. ]-1; -0]
-    masm.movmskpd(input, output);
+    masm.vmovmskpd(input, output);
     masm.branchTest32(Assembler::NonZero, output, Imm32(1), &bailout);
     bailoutFrom(&bailout, lir->snapshot());
 
@@ -1762,7 +1762,7 @@ CodeGeneratorX86Shared::visitCeilF(LCeilF *lir)
                      scratch, &lessThanMinusOne);
 
     // Test for remaining values with the sign bit set, i.e. ]-1; -0]
-    masm.movmskps(input, output);
+    masm.vmovmskps(input, output);
     masm.branchTest32(Assembler::NonZero, output, Imm32(1), &bailout);
     bailoutFrom(&bailout, lir->snapshot());
 
@@ -2252,7 +2252,7 @@ CodeGeneratorX86Shared::visitSimdSignMaskX4(LSimdSignMaskX4 *ins)
     Register output = ToRegister(ins->output());
 
     // For Float32x4 and Int32x4.
-    masm.movmskps(input, output);
+    masm.vmovmskps(input, output);
 }
 
 void
@@ -2283,11 +2283,11 @@ CodeGeneratorX86Shared::visitSimdSwizzleF(LSimdSwizzleF *ins)
 
     if (AssemblerX86Shared::HasSSE3()) {
         if (ins->lanesMatch(0, 0, 2, 2)) {
-            masm.movsldup(input, output);
+            masm.vmovsldup(input, output);
             return;
         }
         if (ins->lanesMatch(1, 1, 3, 3)) {
-            masm.movshdup(input, output);
+            masm.vmovshdup(input, output);
             return;
         }
     }
@@ -2295,14 +2295,14 @@ CodeGeneratorX86Shared::visitSimdSwizzleF(LSimdSwizzleF *ins)
     // TODO Here and below, arch specific lowering could identify this pattern
     // and use defineReuseInput to avoid this move (bug 1084404)
     if (ins->lanesMatch(2, 3, 2, 3)) {
-        masm.movaps(input, output);
-        masm.movhlps(input, output);
+        FloatRegister inputCopy = masm.reusedInputFloat32x4(input, output);
+        masm.vmovhlps(input, inputCopy, output);
         return;
     }
 
     if (ins->lanesMatch(0, 1, 0, 1)) {
-        masm.movaps(input, output);
-        masm.movlhps(input, output);
+        FloatRegister inputCopy = masm.reusedInputFloat32x4(input, output);
+        masm.vmovlhps(input, inputCopy, output);
         return;
     }
 
@@ -2447,19 +2447,23 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle *ins)
     // TODO Here and below, symmetric case would be more handy to avoid a move,
     // but can't be reached because operands would get swapped (bug 1084404).
     if (ins->lanesMatch(2, 3, 6, 7)) {
-        masm.movaps(rhs, ScratchSimdReg);
-        masm.movhlps(lhs, ScratchSimdReg);
-        masm.movaps(ScratchSimdReg, out);
+        if (AssemblerX86Shared::HasAVX()) {
+            masm.vmovhlps(lhs, rhs, out);
+        } else {
+            masm.movaps(rhs, ScratchSimdReg);
+            masm.vmovhlps(lhs, ScratchSimdReg, ScratchSimdReg);
+            masm.movaps(ScratchSimdReg, out);
+        }
         return;
     }
 
     if (ins->lanesMatch(0, 1, 4, 5)) {
-        masm.movlhps(rhs, lhs);
+        masm.vmovlhps(rhs, lhs, out);
         return;
     }
 
     if (ins->lanesMatch(0, 4, 1, 5)) {
-        masm.vunpcklps(rhs, lhs, lhs);
+        masm.vunpcklps(rhs, lhs, out);
         return;
     }
 
