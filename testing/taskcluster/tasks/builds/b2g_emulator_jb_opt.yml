@@ -10,4 +10,4 @@ task:
     cache:
       build-emulator-jb-opt: /home/worker/object-folder
     env:
-      B2G_CONFIG: 'emulator-jb'
+      TARGET: 'emulator-jb'

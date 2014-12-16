@@ -11,5 +11,5 @@ task:
       build-emulator-ics-opt: /home/worker/object-folder/
 
     env:
-      B2G_CONFIG: 'emulator-ics'
+      TARGET: 'emulator-ics'
 

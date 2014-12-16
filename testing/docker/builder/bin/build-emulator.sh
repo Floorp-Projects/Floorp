@@ -4,7 +4,6 @@
 test $GECKO_HEAD_REPOSITORY # Should be an hg repository url to pull from
 test $GECKO_HEAD_REV # Should be an hg revision to pull down
 test $TARGET
-test $B2G_CONFIG
 
 # First check if the mozharness directory is available. This is intended to be
 # used locally in development to test mozharness changes:
@@ -37,7 +36,7 @@ fi
   --work-dir=$OBJDIR/B2G \
   --log-level=debug \
   --target=$TARGET \
-  --b2g-config-dir=$B2G_CONFIG \
+  --b2g-config-dir=$TARGET \
   --checkout-revision=$GECKO_HEAD_REV \
   --repo=$GECKO_HEAD_REPOSITORY
 
