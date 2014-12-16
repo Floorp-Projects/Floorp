@@ -336,7 +336,7 @@ class Assembler : public AssemblerX86Shared
         cmpl(src, ImmWord(uintptr_t(imm.value)));
     }
     void cmpl(const Register src, ImmGCPtr ptr) {
-        masm.cmpl_ir(uintptr_t(ptr.value), src.code());
+        masm.cmpl_i32r(uintptr_t(ptr.value), src.code());
         writeDataRelocation(ptr);
     }
     void cmpl(Register lhs, Register rhs) {
@@ -345,15 +345,15 @@ class Assembler : public AssemblerX86Shared
     void cmpl(const Operand &op, ImmGCPtr imm) {
         switch (op.kind()) {
           case Operand::REG:
-            masm.cmpl_ir_force32(uintptr_t(imm.value), op.reg());
+            masm.cmpl_i32r(uintptr_t(imm.value), op.reg());
             writeDataRelocation(imm);
             break;
           case Operand::MEM_REG_DISP:
-            masm.cmpl_im_force32(uintptr_t(imm.value), op.disp(), op.base());
+            masm.cmpl_i32m(uintptr_t(imm.value), op.disp(), op.base());
             writeDataRelocation(imm);
             break;
           case Operand::MEM_ADDRESS32:
-            masm.cmpl_im(uintptr_t(imm.value), op.address());
+            masm.cmpl_i32m(uintptr_t(imm.value), op.address());
             writeDataRelocation(imm);
             break;
           default:
@@ -364,7 +364,7 @@ class Assembler : public AssemblerX86Shared
         cmpl(op, noteMaybeNurseryPtr(imm));
     }
     void cmpl(AsmJSAbsoluteAddress lhs, Register rhs) {
-        masm.cmpl_rm_force32(rhs.code(), (void*)-1);
+        masm.cmpl_rm_disp32(rhs.code(), (void*)-1);
         append(AsmJSAbsoluteLink(CodeOffsetLabel(masm.currentOffset()), lhs.kind()));
     }
 

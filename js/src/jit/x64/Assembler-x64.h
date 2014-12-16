@@ -692,7 +692,7 @@ class Assembler : public AssemblerX86Shared
     }
 
     void testq(Register lhs, Imm32 rhs) {
-        masm.testq_i32r(rhs.value, lhs.code());
+        masm.testq_ir(rhs.value, lhs.code());
     }
     void testq(Register lhs, Register rhs) {
         masm.testq_rr(rhs.code(), lhs.code());
@@ -700,7 +700,7 @@ class Assembler : public AssemblerX86Shared
     void testq(const Operand &lhs, Imm32 rhs) {
         switch (lhs.kind()) {
           case Operand::REG:
-            masm.testq_i32r(rhs.value, lhs.reg());
+            masm.testq_ir(rhs.value, lhs.reg());
             break;
           case Operand::MEM_REG_DISP:
             masm.testq_i32m(rhs.value, lhs.disp(), lhs.base());

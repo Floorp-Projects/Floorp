@@ -524,7 +524,7 @@ CodeGeneratorX86::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap *ins)
     // Add in the actual heap pointer explicitly, to avoid opening up
     // the abstraction that is compareExchangeToTypedIntArray at this time.
     uint32_t before = masm.size();
-    masm.addl_wide(Imm32(0), ptrReg);
+    masm.addlWithPatch(Imm32(0), ptrReg);
     uint32_t after = masm.size();
     masm.append(AsmJSHeapAccess(before, after, mir->viewType(), maybeCmpOffset));
 
@@ -570,7 +570,7 @@ CodeGeneratorX86::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap *ins)
     // Add in the actual heap pointer explicitly, to avoid opening up
     // the abstraction that is atomicBinopToTypedIntArray at this time.
     uint32_t before = masm.size();
-    masm.addl_wide(Imm32(0), ptrReg);
+    masm.addlWithPatch(Imm32(0), ptrReg);
     uint32_t after = masm.size();
     masm.append(AsmJSHeapAccess(before, after, mir->viewType(), maybeCmpOffset));
 
