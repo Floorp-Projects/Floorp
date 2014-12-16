@@ -84,7 +84,7 @@ protected:
     virtual ~nsDocShellTreeOwner();
 
     void WebBrowser(nsWebBrowser* aWebBrowser);
-    
+
     nsWebBrowser* WebBrowser();
     NS_IMETHOD SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner);
     NS_IMETHOD SetWebBrowserChrome(nsIWebBrowserChrome* aWebBrowserChrome);
@@ -117,7 +117,7 @@ protected:
    // Weak References
    nsWebBrowser*           mWebBrowser;
    nsIDocShellTreeOwner*   mTreeOwner;
-   nsIDocShellTreeItem*    mPrimaryContentShell; 
+   nsIDocShellTreeItem*    mPrimaryContentShell;
 
    nsIWebBrowserChrome*    mWebBrowserChrome;
    nsIEmbeddingSiteWindow* mOwnerWin;
@@ -125,7 +125,7 @@ protected:
 
    nsWeakPtr               mWebBrowserChromeWeak;   // nsIWebBrowserChrome
 
-    // the objects that listen for chrome events like context menus and tooltips. 
+    // the objects that listen for chrome events like context menus and tooltips.
     // They are separate objects to avoid circular references between |this|
     // and the DOM. These are strong, owning refs.
    ChromeTooltipListener*         mChromeTooltipListener;
@@ -151,7 +151,7 @@ protected:
 
 public:
   NS_DECL_ISUPPORTS
-  
+
   ChromeTooltipListener ( nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome ) ;
 
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
@@ -222,7 +222,7 @@ protected:
 
 public:
   NS_DECL_ISUPPORTS
-  
+
   ChromeContextMenuListener ( nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome ) ;
 
   // nsIDOMContextMenuListener
@@ -249,15 +249,3 @@ private:
 
 
 #endif /* nsDocShellTreeOwner_h__ */
-
-
-
-
-
-
-
-
-
-
-
-
