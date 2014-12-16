@@ -1222,8 +1222,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_orr(Imm32(type), frameSizeReg);
     }
 
-    void handleFailureWithHandler(void *handler);
-    void handleFailureWithHandlerTail();
+    void handleFailureWithHandlerTail(void *handler);
 
     /////////////////////////////////////////////////////////////////
     // Common interface.
