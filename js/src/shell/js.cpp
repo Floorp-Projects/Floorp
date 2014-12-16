@@ -4567,10 +4567,10 @@ static bool
 PrintHelp(JSContext *cx, HandleObject obj)
 {
     RootedValue usage(cx);
-    if (!JS_LookupProperty(cx, obj, "usage", &usage))
+    if (!JS_GetProperty(cx, obj, "usage", &usage))
         return false;
     RootedValue help(cx);
-    if (!JS_LookupProperty(cx, obj, "help", &help))
+    if (!JS_GetProperty(cx, obj, "help", &help))
         return false;
 
     if (usage.isUndefined() || help.isUndefined())
@@ -4595,7 +4595,7 @@ Help(JSContext *cx, unsigned argc, jsval *vp)
         for (size_t i = 0; i < ida.length(); i++) {
             RootedValue v(cx);
             RootedId id(cx, ida[i]);
-            if (!JS_LookupPropertyById(cx, global, id, &v))
+            if (!JS_GetPropertyById(cx, global, id, &v))
                 return false;
             if (v.isPrimitive()) {
                 JS_ReportError(cx, "primitive arg");

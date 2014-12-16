@@ -2263,108 +2263,13 @@ JS_DeepFreezeObject(JSContext *cx, HandleObject obj)
     return true;
 }
 
-static bool
-LookupPropertyById(JSContext *cx, HandleObject obj, HandleId id,
-                   MutableHandleObject objp, MutableHandleShape propp)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, id);
-
-    return JSObject::lookupGeneric(cx, obj, id, objp, propp);
-}
-
-#define AUTO_NAMELEN(s,n)   (((n) == (size_t)-1) ? js_strlen(s) : (n))
-
-static bool
-LookupResult(JSContext *cx, HandleObject obj, HandleObject obj2, HandleId id,
-             HandleShape shape, MutableHandleValue vp)
-{
-    if (!shape) {
-        /* XXX bad API: no way to tell "not defined" from "void value" */
-        vp.setUndefined();
-        return true;
-    }
-
-    if (!obj2->isNative()) {
-        if (obj2->is<ProxyObject>()) {
-            Rooted<PropertyDescriptor> desc(cx);
-            if (!Proxy::getPropertyDescriptor(cx, obj2, id, &desc))
-                return false;
-            if (!desc.isShared()) {
-                vp.set(desc.value());
-                return true;
-            }
-        }
-    } else if (IsImplicitDenseOrTypedArrayElement(shape)) {
-        vp.set(obj2->as<NativeObject>().getDenseOrTypedArrayElement(JSID_TO_INT(id)));
-        return true;
-    } else {
-        /* Peek at the native property's slot value, without doing a Get. */
-        if (shape->hasSlot()) {
-            vp.set(obj2->as<NativeObject>().getSlot(shape->slot()));
-            return true;
-        }
-    }
-
-    /* XXX bad API: no way to return "defined but value unknown" */
-    vp.setBoolean(true);
-    return true;
-}
-
-JS_PUBLIC_API(bool)
-JS_LookupPropertyById(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
-{
-    RootedObject obj2(cx);
-    RootedShape prop(cx);
-
-    return LookupPropertyById(cx, obj, id, &obj2, &prop) &&
-           LookupResult(cx, obj, obj2, id, prop, vp);
-}
-
-JS_PUBLIC_API(bool)
-JS_LookupElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleValue vp)
-{
-    CHECK_REQUEST(cx);
-    RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return JS_LookupPropertyById(cx, obj, id, vp);
-}
-
-JS_PUBLIC_API(bool)
-JS_LookupProperty(JSContext *cx, HandleObject objArg, const char *name, MutableHandleValue vp)
-{
-    RootedObject obj(cx, objArg);
-    JSAtom *atom = Atomize(cx, name, strlen(name));
-    if (!atom)
-        return false;
-
-    RootedId id(cx, AtomToId(atom));
-    return JS_LookupPropertyById(cx, obj, id, vp);
-}
-
-JS_PUBLIC_API(bool)
-JS_LookupUCProperty(JSContext *cx, HandleObject objArg, const char16_t *name, size_t namelen,
-                    MutableHandleValue vp)
-{
-    RootedObject obj(cx, objArg);
-    JSAtom *atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
-    if (!atom)
-        return false;
-
-    RootedId id(cx, AtomToId(atom));
-    return JS_LookupPropertyById(cx, obj, id, vp);
-}
-
 JS_PUBLIC_API(bool)
 JS_HasPropertyById(JSContext *cx, HandleObject obj, HandleId id, bool *foundp)
 {
-    RootedObject obj2(cx);
-    RootedShape prop(cx);
-    bool ok = LookupPropertyById(cx, obj, id, &obj2, &prop);
-    *foundp = (prop != nullptr);
-    return ok;
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+
+    return JSObject::hasProperty(cx, obj, id, foundp);
 }
 
 JS_PUBLIC_API(bool)
@@ -2388,6 +2293,8 @@ JS_HasProperty(JSContext *cx, HandleObject obj, const char *name, bool *foundp)
     return JS_HasPropertyById(cx, obj, id, foundp);
 }
 
+#define AUTO_NAMELEN(s,n)   (((n) == (size_t)-1) ? js_strlen(s) : (n))
+
 JS_PUBLIC_API(bool)
 JS_HasUCProperty(JSContext *cx, HandleObject obj, const char16_t *name, size_t namelen, bool *foundp)
 {
@@ -2405,15 +2312,8 @@ JS_AlreadyHasOwnPropertyById(JSContext *cx, HandleObject obj, HandleId id, bool 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
 
-    if (!obj->isNative()) {
-        RootedObject obj2(cx);
-        RootedShape prop(cx);
-
-        if (!LookupPropertyById(cx, obj, id, &obj2, &prop))
-            return false;
-        *foundp = (obj == obj2);
-        return true;
-    }
+    if (!obj->isNative())
+        return js::HasOwnProperty(cx, obj, id, foundp);
 
     RootedNativeObject nativeObj(cx, &obj->as<NativeObject>());
     RootedShape prop(cx);
@@ -3023,7 +2923,7 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id,
     RootedObject obj2(cx);
     RootedShape shape(cx);
 
-    if (!LookupPropertyById(cx, obj, id, &obj2, &shape))
+    if (!JSObject::lookupGeneric(cx, obj, id, &obj2, &shape))
         return false;
 
     desc.clear();
