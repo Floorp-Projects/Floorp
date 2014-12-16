@@ -255,12 +255,12 @@ ContentHostTexture::SetCompositor(Compositor* aCompositor)
   }
 }
 
-#ifdef MOZ_DUMP_PAINTING
 void
 ContentHostTexture::Dump(std::stringstream& aStream,
                          const char* aPrefix,
                          bool aDumpHtml)
 {
+#ifdef MOZ_DUMP_PAINTING
   if (!aDumpHtml) {
     return;
   }
@@ -278,8 +278,8 @@ ContentHostTexture::Dump(std::stringstream& aStream,
     aStream << "> Front buffer on white </a> </li> ";
   }
   aStream << "</ul>";
-}
 #endif
+}
 
 static inline void
 AddWrappedRegion(const nsIntRegion& aInput, nsIntRegion& aOutput,
