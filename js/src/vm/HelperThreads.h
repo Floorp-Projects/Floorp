@@ -21,7 +21,6 @@
 
 #include "frontend/TokenStream.h"
 #include "jit/Ion.h"
-#include "vm/Compression.h"
 
 namespace js {
 
@@ -309,12 +308,6 @@ struct HelperThread
     /* Any source being compressed on this thread. */
     SourceCompressionTask *compressionTask;
 
-    /*
-     * Compressor that is used for servicing SourceCompressionTasks on this
-     * thread.
-     */
-    Compressor sourceCompressor;
-
     /* Any GC state for background sweeping or allocating being performed. */
     GCHelperState *gcHelperState;
 
@@ -550,7 +543,7 @@ struct SourceCompressionTask
         complete();
     }
 
-    ResultType work(Compressor &comp);
+    ResultType work();
     bool complete();
     void abort() { abort_ = true; }
     bool active() const { return !!ss; }
