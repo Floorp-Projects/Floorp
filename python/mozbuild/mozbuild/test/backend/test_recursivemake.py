@@ -369,6 +369,20 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertIn('mozilla/mozilla1.h', m)
         self.assertIn('mozilla/dom/dom2.h', m)
 
+    def test_generated_files(self):
+        """Ensure GENERATED_FILES is handled properly."""
+        env = self._consume('generated-files', RecursiveMakeBackend)
+
+        backend_path = mozpath.join(env.topobjdir, 'backend.mk')
+        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
+
+        expected = [
+            'GENERATED_FILES += bar.c',
+            'GENERATED_FILES += foo.c',
+        ]
+
+        self.assertEqual(lines, expected)
+
     def test_resources(self):
         """Ensure RESOURCE_FILES is handled properly."""
         env = self._consume('resources', RecursiveMakeBackend)
