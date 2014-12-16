@@ -238,7 +238,7 @@ nsGonkCameraControl::Initialize()
       while (i > 0) {
         --i;
         if (modes[i].EqualsASCII(kCenterWeighted)) {
-          mParams.Set(CAMERA_PARAM_METERINGMODE, kCenterWeighted);
+          mParams.Set(CAMERA_PARAM_METERINGMODE, modes[i]);
           PushParametersImpl();
           break;
         }

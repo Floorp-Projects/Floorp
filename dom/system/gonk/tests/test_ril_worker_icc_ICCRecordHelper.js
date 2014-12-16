@@ -714,10 +714,16 @@ add_test(function test_handling_iccid() {
     do_check_eq(ril.iccInfo.iccid, expectedICCID);
   }
 
-  // Invalid char at high nibbile + low nibbile contains 0xF.
+  // Invalid value 0xE at high nibbile + low nibbile contains 0xF.
   do_test("9868002E90909F001519", "89860020909");
-  // Invalid char at low nibbile.
-  do_test("986800E2909090001519", "8986002090909005191");
+  // Invalid value 0xD at low nibbile.
+  do_test("986800D2909090001519", "8986002090909005191");
+  // Invalid value 0xC at low nibbile.
+  do_test("986800C2909090001519", "8986002090909005191");
+  // Invalid value 0xB at low nibbile.
+  do_test("986800B2909090001519", "8986002090909005191");
+  // Invalid value 0xA at low nibbile.
+  do_test("986800A2909090001519", "8986002090909005191");
   // Valid ICCID.
   do_test("98101430121181157002", "89014103211118510720");
 

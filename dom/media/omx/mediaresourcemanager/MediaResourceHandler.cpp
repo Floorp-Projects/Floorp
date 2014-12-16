@@ -5,21 +5,27 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaResourceHandler.h"
-
 #include "mozilla/NullPtr.h"
 
 namespace android {
 
 MediaResourceHandler::MediaResourceHandler(const wp<ResourceListener> &aListener)
   : mListener(aListener)
-  , mState(MediaResourceManagerClient::CLIENT_STATE_WAIT_FOR_RESOURCE)
   , mType(IMediaResourceManagerService::INVALID_RESOURCE_TYPE)
+  , mWaitingResource(false)
 {
 }
 
 MediaResourceHandler::~MediaResourceHandler()
 {
   cancelResource();
+}
+
+bool
+MediaResourceHandler::IsWaitingResource()
+{
+  Mutex::Autolock al(mLock);
+  return mWaitingResource;
 }
 
 bool
@@ -45,6 +51,7 @@ MediaResourceHandler::requestResource(IMediaResourceManagerService::ResourceType
   mClient = client;
   mService = service;
   mType = aType;
+  mWaitingResource = true;
 
   return true;
 }
@@ -58,6 +65,7 @@ MediaResourceHandler::cancelResource()
     mService->cancelClient(mClient, (int)mType);
   }
 
+  mWaitingResource = false;
   mClient = nullptr;
   mService = nullptr;
 }
@@ -70,19 +78,15 @@ MediaResourceHandler::statusChanged(int aEvent)
 
   Mutex::Autolock autoLock(mLock);
 
-  MediaResourceManagerClient::State state = (MediaResourceManagerClient::State)aEvent;
-  if (state == mState) {
-    return;
-  }
-
-  mState = state;
-
   listener = mListener.promote();
   if (listener == nullptr) {
     return;
   }
 
-  if (mState == MediaResourceManagerClient::CLIENT_STATE_RESOURCE_ASSIGNED) {
+  mWaitingResource = false;
+
+  MediaResourceManagerClient::State state = (MediaResourceManagerClient::State)aEvent;
+  if (state == MediaResourceManagerClient::CLIENT_STATE_RESOURCE_ASSIGNED) {
     listener->resourceReserved();
   } else {
     listener->resourceCanceled();
