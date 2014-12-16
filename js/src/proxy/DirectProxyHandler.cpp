@@ -63,6 +63,15 @@ DirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool
 }
 
 bool
+DirectProxyHandler::enumerate(JSContext *cx, HandleObject proxy, MutableHandleObject objp) const
+{
+    assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
+    MOZ_ASSERT(!hasPrototype()); // Should never be called if there's a prototype.
+    RootedObject target(cx, proxy->as<ProxyObject>().target());
+    return GetIterator(cx, target, 0, objp);
+}
+
+bool
 DirectProxyHandler::call(JSContext *cx, HandleObject proxy, const CallArgs &args) const
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID, CALL);
@@ -241,16 +250,6 @@ DirectProxyHandler::getEnumerablePropertyKeys(JSContext *cx, HandleObject proxy,
     MOZ_ASSERT(!hasPrototype()); // Should never be called if there's a prototype.
     RootedObject target(cx, proxy->as<ProxyObject>().target());
     return GetPropertyKeys(cx, target, 0, &props);
-}
-
-bool
-DirectProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigned flags,
-                            MutableHandleObject objp) const
-{
-    assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
-    MOZ_ASSERT(!hasPrototype()); // Should never be called if there's a prototype.
-    RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return GetIterator(cx, target, flags, objp);
 }
 
 bool

@@ -94,6 +94,7 @@ class CPOWProxyHandler : public BaseProxyHandler
     virtual bool ownPropertyKeys(JSContext *cx, HandleObject proxy,
                                  AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const MOZ_OVERRIDE;
+    virtual bool enumerate(JSContext *cx, HandleObject proxy, MutableHandleObject objp) const MOZ_OVERRIDE;
     virtual bool preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const MOZ_OVERRIDE;
     virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const MOZ_OVERRIDE;
     virtual bool has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const MOZ_OVERRIDE;
@@ -265,6 +266,14 @@ WrapperOwner::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
     LOG_STACK();
 
     return ok(cx, status);
+}
+
+bool
+CPOWProxyHandler::enumerate(JSContext *cx, HandleObject proxy, MutableHandleObject objp) const
+{
+    // Using a CPOW for the Iterator would slow down for .. in performance, instead
+    // call the base hook, that will use our implementation of getEnumerablePropertyKeys.
+    return BaseProxyHandler::enumerate(cx, proxy, objp);
 }
 
 bool

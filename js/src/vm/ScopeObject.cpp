@@ -1780,6 +1780,11 @@ class DebugScopeProxy : public BaseProxyHandler
         return getScopePropertyNames(cx, proxy, props, 0);
     }
 
+    bool enumerate(JSContext *cx, HandleObject proxy, MutableHandleObject objp) const MOZ_OVERRIDE
+    {
+        return BaseProxyHandler::enumerate(cx, proxy, objp);
+    }
+
     bool has(JSContext *cx, HandleObject proxy, HandleId id_, bool *bp) const MOZ_OVERRIDE
     {
         RootedId id(cx, id_);

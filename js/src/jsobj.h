@@ -566,8 +566,11 @@ class JSObject : public js::gc::Cell
 
     MOZ_ALWAYS_INLINE void finalize(js::FreeOp *fop);
 
-    static inline bool hasProperty(JSContext *cx, js::HandleObject obj,
-                                   js::HandleId id, bool *foundp);
+    static inline bool hasProperty(JSContext *cx, js::HandleObject obj, js::HandleId id,
+                                   bool *foundp);
+
+    static inline bool hasProperty(JSContext *cx, js::HandleObject obj, js::PropertyName *name,
+                                   bool *foundp);
 
   public:
     static bool reportReadOnly(js::ThreadSafeContext *cx, jsid id, unsigned report = JSREPORT_ERROR);

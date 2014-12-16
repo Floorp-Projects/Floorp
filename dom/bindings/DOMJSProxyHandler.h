@@ -62,6 +62,8 @@ public:
                              JS::Handle<jsid> id,
                              JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
 
+  virtual bool enumerate(JSContext *cx, JS::Handle<JSObject*> proxy,
+                         JS::MutableHandle<JSObject*> objp) const MOZ_OVERRIDE;
 
   // We override getOwnEnumerablePropertyKeys() and implement it directly
   // instead of using the default implementation, which would call

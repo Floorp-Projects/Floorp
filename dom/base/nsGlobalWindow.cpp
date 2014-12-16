@@ -621,6 +621,8 @@ public:
   virtual bool delete_(JSContext *cx, JS::Handle<JSObject*> proxy,
                        JS::Handle<jsid> id,
                        bool *bp) const MOZ_OVERRIDE;
+  virtual bool enumerate(JSContext *cx, JS::Handle<JSObject*> proxy,
+                         JS::MutableHandle<JSObject*> vp) const MOZ_OVERRIDE;
   virtual bool preventExtensions(JSContext *cx,
                                  JS::Handle<JSObject*> proxy,
                                  bool *succeeded) const MOZ_OVERRIDE;
@@ -650,9 +652,6 @@ public:
                                             JS::AutoIdVector &props) const MOZ_OVERRIDE;
   virtual bool getEnumerablePropertyKeys(JSContext *cx, JS::Handle<JSObject*> proxy,
                                          JS::AutoIdVector &props) const MOZ_OVERRIDE;
-  virtual bool iterate(JSContext *cx, JS::Handle<JSObject*> proxy,
-                       unsigned flags,
-                       JS::MutableHandle<JSObject*> objp) const MOZ_OVERRIDE;
   virtual const char *className(JSContext *cx,
                                 JS::Handle<JSObject*> wrapper) const MOZ_OVERRIDE;
 
@@ -944,12 +943,12 @@ nsOuterWindowProxy::getEnumerablePropertyKeys(JSContext *cx, JS::Handle<JSObject
 }
 
 bool
-nsOuterWindowProxy::iterate(JSContext *cx, JS::Handle<JSObject*> proxy,
-                            unsigned flags, JS::MutableHandle<JSObject*> objp) const
+nsOuterWindowProxy::enumerate(JSContext *cx, JS::Handle<JSObject*> proxy,
+                              JS::MutableHandle<JSObject*> objp) const
 {
-  // BaseProxyHandler::iterate seems to do what we want here: fall
-  // back on the property names returned from keys() and enumerate().
-  return js::BaseProxyHandler::iterate(cx, proxy, flags, objp);
+  // BaseProxyHandler::enumerate seems to do what we want here: fall
+  // back on the property names returned from getEnumerablePropertyKeys()
+  return js::BaseProxyHandler::enumerate(cx, proxy, objp);
 }
 
 bool
