@@ -19,7 +19,7 @@ class Index;
 class SampleIterator
 {
 public:
-  SampleIterator(Index* aIndex);
+  explicit SampleIterator(Index* aIndex);
   MP4Sample* GetNext();
   void Seek(Microseconds aTime);
 
