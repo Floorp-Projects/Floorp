@@ -102,6 +102,10 @@ let mockPushHandler = {
     registerCallback(this.registrationResult, this.registrationPushURL, channelId);
   },
 
+  unregister: function(channelID) {
+    return;
+  },
+
   /**
    * Test-only API to simplify notifying a push notification result.
    */

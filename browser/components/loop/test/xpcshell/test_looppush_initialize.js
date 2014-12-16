@@ -68,19 +68,15 @@
         MozLoopPushHandler.register(
           "chan-2",
           function(err, url, id) {
-            Assert.notEqual(err, null, "Should have returned an error");
-            // Notify the first registration to make sure that still works.
-            mockWebSocket.notify(16);
+            Assert.equal(err, null, "Should return null for success");
+            Assert.equal(id, "chan-2", "Should have channel id = chan-2");
+            run_next_test();
           },
-          function(version, id) {
-            Assert.ok(false, "The 2nd onNotification callback shouldn't be called");
-        });
+          dummyCallback
+        );
       },
-      function(version, id) {
-        Assert.equal(version, 16, "Should have version number 16");
-        Assert.equal(id, "chan-2", "Should have channel id = chan-2");
-        run_next_test();
-      });
+      dummyCallback
+    );
   });
 
   // Test that the PushHander will re-connect after the near-end disconnect.
@@ -122,9 +118,8 @@
         mockWebSocket.stop();
         setTimeout(run_next_test(), 0);
       },
-      function(version, id) {
-        return;
-      });
+      dummyCallback
+    );
   });
 
   add_test(function test_ping_websocket() {
@@ -154,9 +149,8 @@
           do_throw("should have sent ping");
         });
       },
-      function(version) {
-        return;
-      });
+      dummyCallback
+    );
   });
 
   add_test(function test_retry_pushurl() {
