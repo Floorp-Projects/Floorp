@@ -417,10 +417,10 @@ HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromEx
     RootedScript script(cx, frame.script());
     jsbytecode *pc = frame.pc();
 
-    if (cx->compartment()->isDebuggee()) {
-        // We need to bail when we are the debuggee of a Debugger with a live
-        // onExceptionUnwind hook, or if a Debugger has observed this frame
-        // (e.g., for onPop).
+    if (cx->compartment()->isDebuggee() && cx->isExceptionPending()) {
+        // We need to bail when there is a catchable exception, and we are the
+        // debuggee of a Debugger with a live onExceptionUnwind hook, or if a
+        // Debugger has observed this frame (e.g., for onPop).
         bool shouldBail = Debugger::hasLiveHook(cx->global(), Debugger::OnExceptionUnwind);
         if (!shouldBail) {
             JitActivation *act = cx->mainThread().activation()->asJit();
