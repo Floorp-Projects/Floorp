@@ -108,9 +108,7 @@ nsDocShellTreeOwner::nsDocShellTreeOwner() :
    mPrimaryContentShell(nullptr),
    mWebBrowserChrome(nullptr),
    mOwnerWin(nullptr),
-   mOwnerRequestor(nullptr),
-   mChromeTooltipListener(nullptr),
-   mChromeContextMenuListener(nullptr)
+   mOwnerRequestor(nullptr)
 {
 }
 
@@ -823,7 +821,6 @@ nsDocShellTreeOwner::AddChromeListeners()
     if (tooltipListener) {
       mChromeTooltipListener = new ChromeTooltipListener(mWebBrowser,
                                                          webBrowserChrome);
-      NS_ADDREF(mChromeTooltipListener);
       rv = mChromeTooltipListener->AddChromeListeners();
     }
   }
@@ -837,7 +834,6 @@ nsDocShellTreeOwner::AddChromeListeners()
     if (contextListener2 || contextListener) {
       mChromeContextMenuListener =
                    new ChromeContextMenuListener(mWebBrowser, webBrowserChrome);
-      NS_ADDREF(mChromeContextMenuListener);
       rv = mChromeContextMenuListener->AddChromeListeners();
     }
   }
@@ -864,11 +860,11 @@ nsDocShellTreeOwner::RemoveChromeListeners()
 {
   if (mChromeTooltipListener) {
     mChromeTooltipListener->RemoveChromeListeners();
-    NS_RELEASE(mChromeTooltipListener);
+    mChromeTooltipListener = nullptr;
   }
   if (mChromeContextMenuListener) {
     mChromeContextMenuListener->RemoveChromeListeners();
-    NS_RELEASE(mChromeContextMenuListener);
+    mChromeContextMenuListener = nullptr;
   }
 
   nsCOMPtr<EventTarget> piTarget;
