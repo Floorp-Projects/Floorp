@@ -117,7 +117,7 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         Label header, footer;
         masm.bind(&header);
 
-        masm.cmpq(r13, reg_argv);
+        masm.cmpPtr(r13, reg_argv);
         masm.j(AssemblerX86Shared::BelowOrEqual, &footer);
 
         masm.subq(Imm32(8), r13);

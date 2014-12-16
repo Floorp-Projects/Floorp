@@ -127,7 +127,7 @@ CodeGeneratorX86::visitUnbox(LUnbox *unbox)
     MUnbox *mir = unbox->mir();
 
     if (mir->fallible()) {
-        masm.cmpl(ToOperand(unbox->type()), Imm32(MIRTypeToTag(mir->type())));
+        masm.cmp32(ToOperand(unbox->type()), Imm32(MIRTypeToTag(mir->type())));
         bailoutIf(Assembler::NotEqual, unbox->snapshot());
     }
 }
@@ -303,7 +303,7 @@ CodeGeneratorX86::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic 
             addOutOfLineCode(ool, ins->mir());
         }
 
-        masm.cmpl(ptr, Imm32(mir->length()));
+        masm.cmpPtr(ptr, ImmWord(mir->length()));
         if (ool)
             masm.j(Assembler::AboveOrEqual, ool->entry());
         else
@@ -385,7 +385,7 @@ CodeGeneratorX86::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
     OutOfLineLoadTypedArrayOutOfBounds *ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out), vt);
     addOutOfLineCode(ool, mir);
 
-    CodeOffsetLabel cmp = masm.cmplWithPatch(ptrReg, Imm32(0));
+    CodeOffsetLabel cmp = masm.cmp32WithPatch(ptrReg, Imm32(0));
     masm.j(Assembler::AboveOrEqual, ool->entry());
 
     uint32_t before = masm.size();
@@ -443,7 +443,7 @@ CodeGeneratorX86::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStati
     }
 
     MOZ_ASSERT(offset == 0);
-    masm.cmpl(ptr, Imm32(mir->length()));
+    masm.cmpPtr(ptr, ImmWord(mir->length()));
     Label rejoin;
     masm.j(Assembler::AboveOrEqual, &rejoin);
 
@@ -482,7 +482,7 @@ CodeGeneratorX86::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
         return;
     }
 
-    CodeOffsetLabel cmp = masm.cmplWithPatch(ptrReg, Imm32(0));
+    CodeOffsetLabel cmp = masm.cmp32WithPatch(ptrReg, Imm32(0));
     Label rejoin;
     masm.j(Assembler::AboveOrEqual, &rejoin);
 
@@ -511,7 +511,7 @@ CodeGeneratorX86::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap *ins)
     uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
 
     if (mir->needsBoundsCheck()) {
-        maybeCmpOffset = masm.cmplWithPatch(ptrReg, Imm32(0)).offset();
+        maybeCmpOffset = masm.cmp32WithPatch(ptrReg, Imm32(0)).offset();
         Label goahead;
         masm.j(Assembler::Below, &goahead);
         memoryBarrier(MembarFull);
@@ -557,7 +557,7 @@ CodeGeneratorX86::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap *ins)
     uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
 
     if (mir->needsBoundsCheck()) {
-        maybeCmpOffset = masm.cmplWithPatch(ptrReg, Imm32(0)).offset();
+        maybeCmpOffset = masm.cmp32WithPatch(ptrReg, Imm32(0)).offset();
         Label goahead;
         masm.j(Assembler::Below, &goahead);
         memoryBarrier(MembarFull);
@@ -846,7 +846,7 @@ CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate *ool)
         // This has to be an exact conversion, as otherwise the truncation works
         // incorrectly on the modified value.
         masm.zeroDouble(ScratchDoubleReg);
-        masm.ucomisd(input, ScratchDoubleReg);
+        masm.ucomisd(ScratchDoubleReg, input);
         masm.j(Assembler::Parity, &fail);
 
         {
@@ -866,7 +866,7 @@ CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate *ool)
         masm.cvttsd2si(temp, output);
         masm.cvtsi2sd(output, ScratchDoubleReg);
 
-        masm.ucomisd(temp, ScratchDoubleReg);
+        masm.ucomisd(ScratchDoubleReg, temp);
         masm.j(Assembler::Parity, &fail);
         masm.j(Assembler::Equal, ool->rejoin());
     }
@@ -920,7 +920,7 @@ CodeGeneratorX86::visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32 *ool)
         masm.fisttp(Operand(esp, 0));
 
         // Load low word, pop 64bits and jump back.
-        masm.movl(Operand(esp, 0), output);
+        masm.load32(Address(esp, 0), output);
         masm.addl(Imm32(sizeof(uint64_t)), esp);
         masm.jump(ool->rejoin());
 
@@ -935,7 +935,7 @@ CodeGeneratorX86::visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32 *ool)
         // This has to be an exact conversion, as otherwise the truncation works
         // incorrectly on the modified value.
         masm.zeroFloat32(ScratchFloat32Reg);
-        masm.ucomiss(input, ScratchFloat32Reg);
+        masm.ucomiss(ScratchFloat32Reg, input);
         masm.j(Assembler::Parity, &fail);
 
         {
@@ -955,7 +955,7 @@ CodeGeneratorX86::visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32 *ool)
         masm.cvttss2si(temp, output);
         masm.cvtsi2ss(output, ScratchFloat32Reg);
 
-        masm.ucomiss(temp, ScratchFloat32Reg);
+        masm.ucomiss(ScratchFloat32Reg, temp);
         masm.j(Assembler::Parity, &fail);
         masm.j(Assembler::Equal, ool->rejoin());
     }

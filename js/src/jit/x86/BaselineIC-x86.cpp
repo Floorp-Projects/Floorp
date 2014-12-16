@@ -28,7 +28,7 @@ ICCompare_Int32::Compiler::generateStubCode(MacroAssembler &masm)
 
     // Compare payload regs of R0 and R1.
     Assembler::Condition cond = JSOpToCondition(op, /* signed = */true);
-    masm.cmpl(R0.payloadReg(), R1.payloadReg());
+    masm.cmp32(R0.payloadReg(), R1.payloadReg());
     masm.setCC(cond, R0.payloadReg());
     masm.movzbl(R0.payloadReg(), R0.payloadReg());
 
@@ -81,7 +81,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
         masm.imull(R1.payloadReg(), scratchReg);
         masm.j(Assembler::Overflow, &failure);
 
-        masm.testl(scratchReg, scratchReg);
+        masm.test32(scratchReg, scratchReg);
         masm.j(Assembler::Zero, &maybeNegZero);
 
         masm.movl(scratchReg, R0.payloadReg());
@@ -173,7 +173,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
 
         masm.movl(R1.payloadReg(), ecx);
         masm.shrl_cl(R0.payloadReg());
-        masm.testl(R0.payloadReg(), R0.payloadReg());
+        masm.test32(R0.payloadReg(), R0.payloadReg());
         if (allowDouble_) {
             Label toUint;
             masm.j(Assembler::Signed, &toUint);

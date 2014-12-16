@@ -153,7 +153,7 @@ CodeGeneratorX64::visitCompareB(LCompareB *lir)
         masm.boxValue(JSVAL_TYPE_BOOLEAN, ToRegister(rhs), ScratchReg);
 
     // Perform the comparison.
-    masm.cmpq(lhs.valueReg(), ScratchReg);
+    masm.cmpPtr(lhs.valueReg(), ScratchReg);
     masm.emitSet(JSOpToCondition(mir->compareType(), mir->jsop()), output);
 }
 
@@ -174,7 +174,7 @@ CodeGeneratorX64::visitCompareBAndBranch(LCompareBAndBranch *lir)
         masm.boxValue(JSVAL_TYPE_BOOLEAN, ToRegister(rhs), ScratchReg);
 
     // Perform the comparison.
-    masm.cmpq(lhs.valueReg(), ScratchReg);
+    masm.cmpPtr(lhs.valueReg(), ScratchReg);
     emitBranch(JSOpToCondition(mir->compareType(), mir->jsop()), lir->ifTrue(), lir->ifFalse());
 }
 
@@ -188,7 +188,7 @@ CodeGeneratorX64::visitCompareV(LCompareV *lir)
 
     MOZ_ASSERT(IsEqualityOp(mir->jsop()));
 
-    masm.cmpq(lhs.valueReg(), rhs.valueReg());
+    masm.cmpPtr(lhs.valueReg(), rhs.valueReg());
     masm.emitSet(JSOpToCondition(mir->compareType(), mir->jsop()), output);
 }
 
@@ -203,7 +203,7 @@ CodeGeneratorX64::visitCompareVAndBranch(LCompareVAndBranch *lir)
     MOZ_ASSERT(mir->jsop() == JSOP_EQ || mir->jsop() == JSOP_STRICTEQ ||
                mir->jsop() == JSOP_NE || mir->jsop() == JSOP_STRICTNE);
 
-    masm.cmpq(lhs.valueReg(), rhs.valueReg());
+    masm.cmpPtr(lhs.valueReg(), rhs.valueReg());
     emitBranch(JSOpToCondition(mir->compareType(), mir->jsop()), lir->ifTrue(), lir->ifFalse());
 }
 
@@ -278,7 +278,7 @@ CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
         ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out), vt);
         addOutOfLineCode(ool, ins->mir());
 
-        CodeOffsetLabel cmp = masm.cmplWithPatch(ToRegister(ptr), Imm32(0));
+        CodeOffsetLabel cmp = masm.cmp32WithPatch(ToRegister(ptr), Imm32(0));
         masm.j(Assembler::AboveOrEqual, ool->entry());
         maybeCmpOffset = cmp.offset();
     }
@@ -326,7 +326,7 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
     Label rejoin;
     uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
     if (mir->needsBoundsCheck()) {
-        CodeOffsetLabel cmp = masm.cmplWithPatch(ToRegister(ptr), Imm32(0));
+        CodeOffsetLabel cmp = masm.cmp32WithPatch(ToRegister(ptr), Imm32(0));
         masm.j(Assembler::AboveOrEqual, &rejoin);
         maybeCmpOffset = cmp.offset();
     }
@@ -388,7 +388,7 @@ CodeGeneratorX64::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap *ins)
     Label rejoin;
     uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
     if (mir->needsBoundsCheck()) {
-        maybeCmpOffset = masm.cmplWithPatch(ToRegister(ptr), Imm32(0)).offset();
+        maybeCmpOffset = masm.cmp32WithPatch(ToRegister(ptr), Imm32(0)).offset();
         Label goahead;
         masm.j(Assembler::Below, &goahead);
         memoryBarrier(MembarFull);
@@ -425,7 +425,7 @@ CodeGeneratorX64::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap *ins)
     Label rejoin;
     uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
     if (mir->needsBoundsCheck()) {
-        maybeCmpOffset = masm.cmplWithPatch(ToRegister(ptr), Imm32(0)).offset();
+        maybeCmpOffset = masm.cmp32WithPatch(ToRegister(ptr), Imm32(0)).offset();
         Label goahead;
         masm.j(Assembler::Below, &goahead);
         memoryBarrier(MembarFull);
