@@ -501,9 +501,14 @@ var ctrlTab = {
   },
 
   filterForThumbnailExpiration: function (aCallback) {
+    // Save a few more thumbnails than we actually display, so that when tabs
+    // are closed, the previews we add instead still get thumbnails.
+    const extraThumbnails = 3;
+    const thumbnailCount = Math.min(this.tabPreviewCount + extraThumbnails,
+                                    this.tabCount);
+
     let urls = [];
-    let previewCount = this.tabPreviewCount;
-    for (let i = 0; i < previewCount; i++)
+    for (let i = 0; i < thumbnailCount; i++)
       urls.push(this.tabList[i].linkedBrowser.currentURI.spec);
 
     aCallback(urls);
