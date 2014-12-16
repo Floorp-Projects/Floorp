@@ -199,21 +199,14 @@ NS_IMETHODIMP nsWebBrowser::AddWebBrowserListener(nsIWeakReference *aListener, c
         // registered when the window gets created.
         nsAutoPtr<nsWebBrowserListenerState> state;
         state = new nsWebBrowserListenerState();
-        if (!state) return NS_ERROR_OUT_OF_MEMORY;
-
         state->mWeakPtr = aListener;
         state->mID = aIID;
 
         if (!mListenerArray) {
             mListenerArray = new nsTArray<nsWebBrowserListenerState*>();
-            if (!mListenerArray) {
-                return NS_ERROR_OUT_OF_MEMORY;
-            }
         }
 
-        if (!mListenerArray->AppendElement(state)) {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
+        mListenerArray->AppendElement(state);
 
         // We're all set now; don't delete |state| after this point
         state.forget();
@@ -1640,7 +1633,6 @@ NS_IMETHODIMP nsWebBrowser::EnsureDocShellTreeOwner()
       return NS_OK;
 
    mDocShellTreeOwner = new nsDocShellTreeOwner();
-   NS_ENSURE_TRUE(mDocShellTreeOwner, NS_ERROR_OUT_OF_MEMORY);
 
    NS_ADDREF(mDocShellTreeOwner);
    mDocShellTreeOwner->WebBrowser(this);
@@ -1815,9 +1807,6 @@ NS_IMETHODIMP nsWebBrowser::OpenStream(nsIURI *aBaseURI, const nsACString& aCont
 
   if (!mStream) {
     mStream = new nsEmbedStream();
-        if (!mStream)
-             return NS_ERROR_OUT_OF_MEMORY;
-
     mStreamGuard = do_QueryInterface(mStream);
     mStream->InitOwner(this);
     rv = mStream->Init();
