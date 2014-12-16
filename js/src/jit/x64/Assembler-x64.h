@@ -639,10 +639,10 @@ class Assembler : public AssemblerX86Shared
         append(AsmJSGlobalAccess(label, AsmJSHeapGlobalDataOffset));
     }
 
-    // The below cmpq methods switch the lhs and rhs when it invokes the
-    // macroassembler to conform with intel standard.  When calling this
-    // function put the left operand on the left as you would expect.
-    void cmpq(const Operand &lhs, Register rhs) {
+    void cmpq(Register rhs, Register lhs) {
+        masm.cmpq_rr(rhs.code(), lhs.code());
+    }
+    void cmpq(Register rhs, const Operand &lhs) {
         switch (lhs.kind()) {
           case Operand::REG:
             masm.cmpq_rr(rhs.code(), lhs.reg());
@@ -657,7 +657,10 @@ class Assembler : public AssemblerX86Shared
             MOZ_CRASH("unexpected operand kind");
         }
     }
-    void cmpq(const Operand &lhs, Imm32 rhs) {
+    void cmpq(Imm32 rhs, Register lhs) {
+        masm.cmpq_ir(rhs.value, lhs.code());
+    }
+    void cmpq(Imm32 rhs, const Operand &lhs) {
         switch (lhs.kind()) {
           case Operand::REG:
             masm.cmpq_ir(rhs.value, lhs.reg());
@@ -672,7 +675,7 @@ class Assembler : public AssemblerX86Shared
             MOZ_CRASH("unexpected operand kind");
         }
     }
-    void cmpq(Register lhs, const Operand &rhs) {
+    void cmpq(const Operand &rhs, Register lhs) {
         switch (rhs.kind()) {
           case Operand::REG:
             masm.cmpq_rr(rhs.reg(), lhs.code());
@@ -684,20 +687,14 @@ class Assembler : public AssemblerX86Shared
             MOZ_CRASH("unexpected operand kind");
         }
     }
-    void cmpq(Register lhs, Register rhs) {
-        masm.cmpq_rr(rhs.code(), lhs.code());
-    }
-    void cmpq(Register lhs, Imm32 rhs) {
-        masm.cmpq_ir(rhs.value, lhs.code());
-    }
 
-    void testq(Register lhs, Imm32 rhs) {
+    void testq(Imm32 rhs, Register lhs) {
         masm.testq_ir(rhs.value, lhs.code());
     }
-    void testq(Register lhs, Register rhs) {
+    void testq(Register rhs, Register lhs) {
         masm.testq_rr(rhs.code(), lhs.code());
     }
-    void testq(const Operand &lhs, Imm32 rhs) {
+    void testq(Imm32 rhs, const Operand &lhs) {
         switch (lhs.kind()) {
           case Operand::REG:
             masm.testq_ir(rhs.value, lhs.reg());
