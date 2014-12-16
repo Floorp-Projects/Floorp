@@ -108,6 +108,7 @@ public:
 struct Sample
 {
   mozilla::MediaByteRange mByteRange;
+  Microseconds mDecodeTime;
   Interval<Microseconds> mCompositionRange;
   bool mSync;
 };

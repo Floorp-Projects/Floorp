@@ -75,8 +75,94 @@ RangeFinder::Contains(MediaByteRange aByteRange)
   return false;
 }
 
+SampleIterator::SampleIterator(Index* aIndex)
+  : mIndex(aIndex)
+  , mCurrentMoof(0)
+  , mCurrentSample(0)
+{
+}
+
+MP4Sample* SampleIterator::GetNext()
+{
+  nsAutoPtr<MP4Sample> sample(Get());
+  if (!sample) {
+    return nullptr;
+  }
+
+  // Do the blocking read
+  sample->data = sample->extra_buffer = new uint8_t[sample->size];
+
+  size_t bytesRead;
+  mIndex->mSource->ReadAt(sample->byte_offset, sample->data, sample->size,
+                          &bytesRead);
+
+  // Lets just return what we've got so that we propagate the error
+  sample->size = bytesRead;
+
+  Next();
+
+  return sample.forget();
+}
+
+MP4Sample* SampleIterator::Get()
+{
+  if (!mIndex->mMoofParser) {
+    return nullptr;
+  }
+
+  nsTArray<Moof>& moofs = mIndex->mMoofParser->mMoofs;
+  while (true) {
+    if (mCurrentMoof >= moofs.Length()) {
+      return nsAutoPtr<MP4Sample>();
+    }
+    if (mCurrentSample < moofs[mCurrentMoof].mIndex.Length()) {
+      break;
+    }
+    mCurrentSample = 0;
+    ++mCurrentMoof;
+  }
+  Sample& s = moofs[mCurrentMoof].mIndex[mCurrentSample];
+  nsAutoPtr<MP4Sample> sample(new MP4Sample());
+  sample->decode_timestamp = s.mDecodeTime;
+  sample->composition_timestamp = s.mCompositionRange.start;
+  sample->duration = s.mCompositionRange.end - s.mCompositionRange.start;
+  sample->byte_offset = s.mByteRange.mStart;
+  sample->is_sync_point = s.mSync;
+
+  sample->size = s.mByteRange.mEnd - s.mByteRange.mStart;
+
+  return sample.forget();
+}
+
+void SampleIterator::Next()
+{
+  ++mCurrentSample;
+}
+
+void SampleIterator::Seek(Microseconds aTime)
+{
+  size_t syncMoof = 0;
+  size_t syncSample = 0;
+  mCurrentMoof = 0;
+  mCurrentSample = 0;
+  while (true) {
+    nsAutoPtr<MP4Sample> sample(Get());
+    if (sample->composition_timestamp > aTime) {
+      break;
+    }
+    if (sample->is_sync_point) {
+      syncMoof = mCurrentMoof;
+      syncSample = mCurrentSample;
+    }
+    Next();
+  }
+  mCurrentMoof = syncMoof;
+  mCurrentSample = syncSample;
+}
+
 Index::Index(const stagefright::Vector<MediaSource::Indice>& aIndex,
              Stream* aSource, uint32_t aTrackId)
+  : mSource(aSource)
 {
   if (aIndex.isEmpty()) {
     mMoofParser = new MoofParser(aSource, aTrackId);
