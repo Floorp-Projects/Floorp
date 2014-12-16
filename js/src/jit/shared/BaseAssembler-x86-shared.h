@@ -4383,9 +4383,9 @@ private:
                           int ripOffset, XMMRegisterID src0, XMMRegisterID dst)
     {
         if (useLegacySSEEncoding(src0, dst)) {
-            spew("%-11s?%+d(%%rip), %s", legacySSEOpName(name), ripOffset, nameFPReg(src0));
+            spew("%-11s?%+d(%%rip), %s", legacySSEOpName(name), ripOffset, nameFPReg(dst));
             m_formatter.legacySSEPrefix(ty);
-            m_formatter.twoByteRipOp(opcode, ripOffset, src0);
+            m_formatter.twoByteRipOp(opcode, ripOffset, dst);
             return;
         }
 
@@ -4398,9 +4398,9 @@ private:
                        XMMRegisterID rm, XMMRegisterID src0, XMMRegisterID dst)
     {
         if (useLegacySSEEncoding(src0, dst)) {
-            spew("%-11s%s, %s", legacySSEOpName(name), nameFPReg(rm), nameFPReg(src0));
+            spew("%-11s%s, %s", legacySSEOpName(name), nameFPReg(rm), nameFPReg(dst));
             m_formatter.legacySSEPrefix(ty);
-            m_formatter.twoByteOp(opcode, (RegisterID)rm, src0);
+            m_formatter.twoByteOp(opcode, (RegisterID)rm, dst);
             return;
         }
 
@@ -4413,9 +4413,9 @@ private:
     {
         if (useLegacySSEEncoding(src0, dst)) {
             spew("%-11s%s0x%x(%s), %s", legacySSEOpName(name),
-                 PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(src0));
+                 PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
             m_formatter.legacySSEPrefix(ty);
-            m_formatter.twoByteOp(opcode, offset, base, src0);
+            m_formatter.twoByteOp(opcode, offset, base, dst);
             return;
         }
 
@@ -4429,9 +4429,9 @@ private:
     {
         if (useLegacySSEEncoding(src0, dst)) {
             spew("%-11s%s0x%04x(%s), %s", legacySSEOpName(name),
-                 PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(src0));
+                 PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
             m_formatter.legacySSEPrefix(ty);
-            m_formatter.twoByteOp_disp32(opcode, offset, base, src0);
+            m_formatter.twoByteOp_disp32(opcode, offset, base, dst);
             return;
         }
 
@@ -4447,9 +4447,9 @@ private:
         if (useLegacySSEEncoding(src0, dst)) {
             spew("%-11s%s0x%x(%s,%s,%d), %s", legacySSEOpName(name),
                  PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameIReg(index), scale,
-                 nameFPReg(src0));
+                 nameFPReg(dst));
             m_formatter.legacySSEPrefix(ty);
-            m_formatter.twoByteOp(opcode, offset, base, index, scale, src0);
+            m_formatter.twoByteOp(opcode, offset, base, index, scale, dst);
             return;
         }
 
@@ -4462,9 +4462,9 @@ private:
                        const void* address, XMMRegisterID src0, XMMRegisterID dst)
     {
         if (useLegacySSEEncoding(src0, dst)) {
-            spew("%-11s%p, %s", legacySSEOpName(name), address, nameFPReg(src0));
+            spew("%-11s%p, %s", legacySSEOpName(name), address, nameFPReg(dst));
             m_formatter.legacySSEPrefix(ty);
-            m_formatter.twoByteOp(opcode, address, src0);
+            m_formatter.twoByteOp(opcode, address, dst);
             return;
         }
 
@@ -4477,9 +4477,9 @@ private:
                          XMMRegisterID rm, XMMRegisterID src0, XMMRegisterID dst)
     {
         if (useLegacySSEEncoding(src0, dst)) {
-            spew("%-11s%s, %s", legacySSEOpName(name), nameFPReg(rm), nameFPReg(src0));
+            spew("%-11s%s, %s", legacySSEOpName(name), nameFPReg(rm), nameFPReg(dst));
             m_formatter.legacySSEPrefix(ty);
-            m_formatter.threeByteOp(opcode, escape, (RegisterID)rm, src0);
+            m_formatter.threeByteOp(opcode, escape, (RegisterID)rm, dst);
             return;
         }
 
@@ -4493,9 +4493,9 @@ private:
     {
         if (useLegacySSEEncoding(src0, dst)) {
             spew("%-11s%s0x%x(%s), %s", legacySSEOpName(name),
-                 PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(src0));
+                 PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
             m_formatter.legacySSEPrefix(ty);
-            m_formatter.threeByteOp(opcode, escape, offset, base, src0);
+            m_formatter.threeByteOp(opcode, escape, offset, base, dst);
             return;
         }
 
@@ -4509,10 +4509,10 @@ private:
     void vblendvOpSimd(XMMRegisterID mask, XMMRegisterID rm, XMMRegisterID src0, XMMRegisterID dst)
     {
         if (useLegacySSEEncodingForVblendv(mask, src0, dst)) {
-            spew("blendvps   %s, %s", nameFPReg(rm), nameFPReg(src0));
+            spew("blendvps   %s, %s", nameFPReg(rm), nameFPReg(dst));
             // Even though a "ps" instruction, vblendv is encoded with the "pd" prefix.
             m_formatter.legacySSEPrefix(VEX_PD);
-            m_formatter.threeByteOp(OP3_BLENDVPS_VdqWdq, ESCAPE_BLENDVPS, (RegisterID)rm, src0);
+            m_formatter.threeByteOp(OP3_BLENDVPS_VdqWdq, ESCAPE_BLENDVPS, (RegisterID)rm, dst);
             return;
         }
 
@@ -4527,10 +4527,10 @@ private:
     {
         if (useLegacySSEEncodingForVblendv(mask, src0, dst)) {
             spew("blendvps   %s0x%x(%s), %s",
-                 PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(src0));
+                 PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
             // Even though a "ps" instruction, vblendv is encoded with the "pd" prefix.
             m_formatter.legacySSEPrefix(VEX_PD);
-            m_formatter.threeByteOp(OP3_BLENDVPS_VdqWdq, ESCAPE_BLENDVPS, offset, base, src0);
+            m_formatter.threeByteOp(OP3_BLENDVPS_VdqWdq, ESCAPE_BLENDVPS, offset, base, dst);
             return;
         }
 
