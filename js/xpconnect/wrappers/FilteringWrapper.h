@@ -41,8 +41,8 @@ class FilteringWrapper : public Base {
                                               JS::AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool getEnumerablePropertyKeys(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                            JS::AutoIdVector &props) const MOZ_OVERRIDE;
-    virtual bool iterate(JSContext *cx, JS::Handle<JSObject*> wrapper, unsigned flags,
-                         JS::MutableHandle<JSObject*> objp) const MOZ_OVERRIDE;
+    virtual bool enumerate(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                           JS::MutableHandle<JSObject*> objp) const MOZ_OVERRIDE;
 
     virtual bool call(JSContext *cx, JS::Handle<JSObject*> wrapper,
                       const JS::CallArgs &args) const MOZ_OVERRIDE;
