@@ -101,7 +101,7 @@ Write(JSContext* aCx, JSStructuredCloneWriter* aWriter,
   return NS_DOMWriteStructuredClone(aCx, aWriter, aObj, nullptr);
 }
 
-const JSStructuredCloneCallbacks gCallbacks = {
+JSStructuredCloneCallbacks gCallbacks = {
   Read,
   Write,
   Error,
