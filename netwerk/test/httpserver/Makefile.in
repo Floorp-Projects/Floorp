@@ -5,12 +5,3 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 NO_INTERFACES_MANIFEST = 1
-
-ifdef XPI_NAME
-NO_JS_MANIFEST = 1
-USE_EXTENSION_MANIFEST = 1
-else
-EXTRA_COMPONENTS += \
-                   httpd.manifest \
-                   $(NULL)
-endif
