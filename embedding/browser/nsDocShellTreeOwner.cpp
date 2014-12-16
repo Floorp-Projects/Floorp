@@ -1123,8 +1123,7 @@ ChromeTooltipListener::ChromeTooltipListener(nsWebBrowser* inBrowser,
 {
   mTooltipTextProvider = do_GetService(NS_TOOLTIPTEXTPROVIDER_CONTRACTID);
   if (!mTooltipTextProvider) {
-    nsISupports *pProvider = (nsISupports *) new DefaultTooltipTextProvider;
-    mTooltipTextProvider = do_QueryInterface(pProvider);
+    mTooltipTextProvider = new DefaultTooltipTextProvider();
   }
 } // ctor
 
