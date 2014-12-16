@@ -323,6 +323,8 @@ public:
    * filter specified or not.
    * @note If more than one valid filter is found, the "All Supported Types"
    * filter is added, which is the concatenation of all valid filters.
+   * @note Duplicate filters and similar filters (i.e. filters whose file
+   * extensions already exist in another filter) are ignored.
    * @note "All Files" filter will be selected by default if unknown mime types
    * have been specified and no file extension filter has been specified.
    * Otherwise, specified filter or "All Supported Types" filter will be
