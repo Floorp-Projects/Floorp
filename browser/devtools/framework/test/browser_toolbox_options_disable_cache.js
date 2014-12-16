@@ -27,7 +27,7 @@ let tabs = [
   startToolbox: false
 }];
 
-let test = asyncTest(function*() {
+add_task(function*() {
   // Initialise tabs: 1 and 2 with a toolbox, 3 and 4 without.
   for (let tab of tabs) {
     yield initTab(tab, tab.startToolbox);

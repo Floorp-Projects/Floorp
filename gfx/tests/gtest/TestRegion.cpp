@@ -370,7 +370,7 @@ struct RegionBitmap {
   void clear() {
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
-	bitmap[x + y * width] = 0;
+        bitmap[x + y * width] = 0;
       }
     }
   }
@@ -381,8 +381,8 @@ struct RegionBitmap {
     for (const nsRect* r = iter.Next(); r; r = iter.Next()) {
       for (int y = r->y; y < r->YMost(); y++) {
         for (int x = r->x; x < r->XMost(); x++) {
-	  bitmap[x + y * width] = REGION_VALUE;
-	}
+          bitmap[x + y * width] = REGION_VALUE;
+        }
       }
     }
   }
@@ -390,21 +390,21 @@ struct RegionBitmap {
   void dilate() {
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
-	if (bitmap[x + y * width] == REGION_VALUE) {
-	  for (int yn = max(y - 1, 0); yn <= min(y + 1, height - 1); yn++) {
-	    for (int xn = max(x - 1, 0); xn <= min(x + 1, width - 1); xn++) {
-	      if (bitmap[xn + yn * width] == 0)
-		bitmap[xn + yn * width] = DILATE_VALUE;
-	    }
-	  }
-	}
+        if (bitmap[x + y * width] == REGION_VALUE) {
+          for (int yn = max(y - 1, 0); yn <= min(y + 1, height - 1); yn++) {
+            for (int xn = max(x - 1, 0); xn <= min(x + 1, width - 1); xn++) {
+              if (bitmap[xn + yn * width] == 0)
+                bitmap[xn + yn * width] = DILATE_VALUE;
+            }
+          }
+        }
       }
     }
   }
   void compare(RegionBitmap &reference) {
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
-	EXPECT_EQ(bitmap[x + y * width], reference.bitmap[x + y * width]);
+        EXPECT_EQ(bitmap[x + y * width], reference.bitmap[x + y * width]);
       }
     }
   }

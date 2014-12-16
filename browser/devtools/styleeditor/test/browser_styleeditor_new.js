@@ -18,7 +18,7 @@ let gUI;
 
 waitForExplicitFinish();
 
-let test = asyncTest(function*() {
+add_task(function*() {
   let panel = yield addTabAndOpenStyleEditors(2, null, TESTCASE_URI);
   gUI = panel.UI;
 

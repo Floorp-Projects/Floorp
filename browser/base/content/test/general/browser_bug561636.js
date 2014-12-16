@@ -89,7 +89,7 @@ function()
   }, true);
 
   gBrowser.selectedTab = tab;
-  gBrowser.selectedTab.linkedBrowser.loadURI(uri);
+  gBrowser.selectedBrowser.loadURI(uri);
 },
 
 /**
@@ -124,7 +124,7 @@ function()
   }, true);
 
   gBrowser.selectedTab = tab;
-  gBrowser.selectedTab.linkedBrowser.loadURI(uri);
+  gBrowser.selectedBrowser.loadURI(uri);
 },
 
 /**
@@ -159,7 +159,7 @@ function()
   }, true);
 
   gBrowser.selectedTab = tab;
-  gBrowser.selectedTab.linkedBrowser.loadURI(uri);
+  gBrowser.selectedBrowser.loadURI(uri);
 },
 
 /**
@@ -200,7 +200,7 @@ function()
   }, true);
 
   gBrowser.selectedTab = tab;
-  gBrowser.selectedTab.linkedBrowser.loadURI(uri);
+  gBrowser.selectedBrowser.loadURI(uri);
 },
 
 /**
@@ -241,7 +241,7 @@ function()
   }, true);
 
   gBrowser.selectedTab = tab;
-  gBrowser.selectedTab.linkedBrowser.loadURI(uri);
+  gBrowser.selectedBrowser.loadURI(uri);
 },
 
 /**
@@ -282,7 +282,7 @@ function()
   }, true);
 
   gBrowser.selectedTab = tab;
-  gBrowser.selectedTab.linkedBrowser.loadURI(uri);
+  gBrowser.selectedBrowser.loadURI(uri);
 },
 
 /**
@@ -322,7 +322,7 @@ function()
   }, true);
 
   gBrowser.selectedTab = tab;
-  gBrowser.selectedTab.linkedBrowser.loadURI(uri);
+  gBrowser.selectedBrowser.loadURI(uri);
 },
 
 /**
@@ -364,7 +364,7 @@ function()
   }, true);
 
   gBrowser.selectedTab = tab;
-  gBrowser.selectedTab.linkedBrowser.loadURI(uri);
+  gBrowser.selectedBrowser.loadURI(uri);
 },
 
 /**
@@ -405,7 +405,7 @@ function()
       let browser = e.currentTarget;
       browser.removeEventListener("load", arguments.callee, true);
 
-      isnot(gBrowser.selectedTab.linkedBrowser, browser,
+      isnot(gBrowser.selectedBrowser, browser,
             "This tab should have been loaded in background");
       executeSoon(function() {
         browser.contentDocument.getElementById('s').click();
@@ -449,7 +449,7 @@ function()
   }, true);
 
   gBrowser.selectedTab = tab;
-  gBrowser.selectedTab.linkedBrowser.loadURI(uri);
+  gBrowser.selectedBrowser.loadURI(uri);
 },
 
 /**
@@ -498,7 +498,7 @@ function()
   }, true);
 
   gBrowser.selectedTab = tab;
-  gBrowser.selectedTab.linkedBrowser.loadURI(uri);
+  gBrowser.selectedBrowser.loadURI(uri);
 },
 
 ];

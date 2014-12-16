@@ -67,7 +67,7 @@ let gTests = [
   run: function (aSnippetsMap)
   {
     let deferred = Promise.defer();
-    let doc = gBrowser.selectedTab.linkedBrowser.contentDocument;
+    let doc = gBrowser.selectedBrowser.contentDocument;
 
     let snippetsElt = doc.getElementById("snippets");
     ok(snippetsElt, "Found snippets element");
@@ -99,7 +99,7 @@ let gTests = [
   run: function (aSnippetsMap)
   {
     let deferred = Promise.defer();
-    let doc = gBrowser.selectedTab.linkedBrowser.contentDocument;
+    let doc = gBrowser.selectedBrowser.contentDocument;
 
     let snippetsElt = doc.getElementById("snippets");
     ok(snippetsElt, "Found snippets element");

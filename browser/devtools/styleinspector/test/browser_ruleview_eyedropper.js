@@ -124,7 +124,7 @@ function inspectPage(dropper, click=true) {
   let win = window;
 
   // get location of the content, offset from browser window
-  let box = gBrowser.selectedTab.linkedBrowser.getBoundingClientRect();
+  let box = gBrowser.selectedBrowser.getBoundingClientRect();
   let x = box.left + 1;
   let y = box.top + 1;
 

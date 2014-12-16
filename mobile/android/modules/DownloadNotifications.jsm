@@ -1,0 +1,284 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+this.EXPORTED_SYMBOLS = ["DownloadNotifications"];
+
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Downloads", "resource://gre/modules/Downloads.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils", "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Notifications", "resource://gre/modules/Notifications.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
+
+let Log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.i.bind(null, "DownloadNotifications"); 
+
+XPCOMUtils.defineLazyGetter(this, "strings",
+                            () => Services.strings.createBundle("chrome://browser/locale/browser.properties"));
+
+/**
+ * CID of Downloads.jsm's implementation of nsITransfer.
+ */
+const kTransferCid = Components.ID("{1b4c85df-cbdd-4bb6-b04e-613caece083c}");
+
+/**
+ * Contract ID of the service implementing nsITransfer.
+ */
+const kTransferContractId = "@mozilla.org/transfer;1";
+
+// Override Toolkit's nsITransfer implementation with the one from the
+// JavaScript API for downloads.  This will eventually be removed when
+// nsIDownloadManager will not be available anymore (bug 851471).  The
+// old code in this module will be removed in bug 899110.
+Components.manager.QueryInterface(Ci.nsIComponentRegistrar)
+                  .registerFactory(kTransferCid, "",
+                                   kTransferContractId, null);
+
+Object.defineProperty(this, "window",
+                      { get: () => Services.wm.getMostRecentWindow("navigator:browser") });
+
+const kButtons = {
+  PAUSE: new DownloadNotificationButton("pause",
+                                        "drawable://pause",
+                                        "alertDownloadsPause"),
+  RESUME: new DownloadNotificationButton("resume",
+                                         "drawable://play",
+                                         "alertDownloadsResume"),
+  CANCEL: new DownloadNotificationButton("cancel",
+                                         "drawable://close",
+                                         "alertDownloadsCancel")
+};
+
+let notifications = new Map();
+
+var DownloadNotifications = {
+  _notificationKey: "downloads",
+
+  init: function () {
+    if (!this._viewAdded) {
+      Downloads.getList(Downloads.ALL)
+               .then(list => list.addView(this))
+               .then(null, Cu.reportError);
+
+      this._viewAdded = true;
+
+      // All click, cancel, and button presses will be handled by this handler as part of the Notifications callback API.
+      Notifications.registerHandler(this._notificationKey, this);
+    }
+  },
+
+  uninit: function () {
+    if (this._viewAdded) {
+      Downloads.getList(Downloads.ALL)
+               .then(list => list.removeView(this))
+               .then(null, Cu.reportError);
+
+      for (let notification of notifications.values()) {
+        notification.hide();
+      }
+
+      this._viewAdded = false;
+    }
+  },
+
+  onDownloadAdded: function (download) {
+    let notification = new DownloadNotification(download);
+    notifications.set(download, notification);
+    notification.showOrUpdate();
+
+    // If this is the start of the download, show a toast as well
+    if (download.currentBytes == 0) {
+      window.NativeWindow.toast.show(strings.GetStringFromName("alertDownloadsToast"), "long");
+    }
+  },
+
+  onDownloadChanged: function (download) {
+    let notification = notifications.get(download);
+    if (!notification) {
+      Cu.reportError("Download doesn't have a notification.");
+      return;
+    }
+
+    notification.showOrUpdate();
+  },
+
+  onDownloadRemoved: function (download) {
+    let notification = notifications.get(download);
+    if (!notification) {
+      Cu.reportError("Download doesn't have a notification.");
+      return;
+    }
+
+    notification.hide();
+    notifications.delete(download);
+  },
+
+  _findDownloadForCookie: function(cookie) {
+    return Downloads.getList(Downloads.ALL)
+      .then(list => list.getAll())
+      .then((downloads) => {
+        for (let download of downloads) {
+          let cookie2 = getCookieFromDownload(download);
+          if (cookie2 === cookie) {
+            return download;
+          }
+        }
+
+        throw "Couldn't find download for " + cookie;
+      });
+  },
+
+  onCancel: function(cookie) {
+    // TODO: I'm not sure what we do here...
+  },
+
+  showInAboutDownloads: function (download) {
+    let hash = "#" + window.encodeURIComponent(download.target.path);
+
+    // we can't use selectOrOpenTab, since it uses string equality to find a tab
+    window.BrowserApp.selectOrOpenTab("about:downloads" + hash, { startsWith: true });
+  },
+
+  onClick: function(cookie) {
+    this._findDownloadForCookie(cookie).then((download) => {
+      if (download.succeeded) {
+        // We don't call Download.launch(), because there's (currently) no way to
+        // tell if the file was actually launched or not, and we want to show
+        // about:downloads if the launch failed.
+        let file = new FileUtils.File(download.target.path);
+        try {
+          file.launch();
+        } catch (ex) {
+          this.showInAboutDownloads(id, download);
+        }
+      } else {
+        ConfirmCancelPrompt.show(download);
+      }
+    }).catch(Cu.reportError);
+  },
+
+  onButtonClick: function(button, cookie) {
+    this._findDownloadForCookie(cookie).then((download) => {
+      if (button === kButtons.PAUSE.buttonId) {
+        download.cancel().catch(Cu.reportError);
+      } else if (button === kButtons.RESUME.buttonId) {
+        download.start().catch(Cu.reportError);
+      } else if (button === kButtons.CANCEL.buttonId) {
+        download.cancel().catch(Cu.reportError);
+        download.removePartialData().catch(Cu.reportError);
+      }
+    }).catch(Cu.reportError);
+  },
+};
+
+function getCookieFromDownload(download) {
+  return download.target.path +
+         download.source.url +
+         download.startTime;
+}
+
+function DownloadNotification(download) {
+  this.download = download;
+  this._fileName = OS.Path.basename(download.target.path);
+
+  this.id = null;
+}
+
+DownloadNotification.prototype = {
+  _updateFromDownload: function () {
+    this._downloading = !this.download.stopped;
+    this._paused = this.download.canceled && this.download.hasPartialData;
+    this._succeeded = this.download.succeeded;
+
+    this._show = this._downloading || this._paused || this._succeeded;
+  },
+
+  get options() {
+    if (!this._show) {
+      return null;
+    }
+
+    let options = {
+      icon: "drawable://alert_download",
+      cookie: getCookieFromDownload(this.download),
+      handlerKey: DownloadNotifications._notificationKey
+    };
+
+    if (this._downloading) {
+      options.icon = "drawable://alert_download_animation";
+      if (this.download.currentBytes == 0) {
+        this._updateOptionsForStatic(options, "alertDownloadsStart2");
+      } else {
+        let buttons = this.download.hasPartialData ? [kButtons.PAUSE, kButtons.CANCEL] :
+                                                     [kButtons.CANCEL]
+        this._updateOptionsForOngoing(options, buttons);
+      }
+    } else if (this._paused) {
+      this._updateOptionsForOngoing(options, [kButtons.RESUME, kButtons.CANCEL]);
+    } else if (this._succeeded) {
+      options.persistent = false;
+      this._updateOptionsForStatic(options, "alertDownloadsDone2");
+    }
+
+    return options;
+  },
+
+  _updateOptionsForStatic : function (options, titleName) {
+    options.title = strings.GetStringFromName(titleName);
+    options.message = this._fileName;
+  },
+
+  _updateOptionsForOngoing: function (options, buttons) {
+    options.title = this._fileName;
+    options.message = this.download.progress + "%";
+    options.buttons = buttons;
+    options.ongoing = true;
+    options.progress = this.download.progress;
+    options.persistent = true;
+  },
+
+  showOrUpdate: function () {
+    this._updateFromDownload();
+
+    if (this._show) {
+      if (!this.id) {
+        this.id = Notifications.create(this.options);
+      } else {
+        Notifications.update(this.id, this.options);
+      }
+    } else {
+      this.hide();
+    }
+  },
+
+  hide: function () {
+    if (this.id) {
+      Notifications.cancel(this.id);
+      this.id = null;
+    }
+  },
+};
+
+let ConfirmCancelPrompt = {
+  show: function (download) {
+    // Open a prompt that offers a choice to cancel the download
+    let title = strings.GetStringFromName("downloadCancelPromptTitle");
+    let message = strings.GetStringFromName("downloadCancelPromptMessage");
+
+    if (Services.prompt.confirm(null, title, message)) {
+      download.cancel().catch(Cu.reportError);
+      download.removePartialData().catch(Cu.reportError);
+    }
+  }
+};
+
+function DownloadNotificationButton(buttonId, iconUrl, titleStringName, onClicked) {
+  this.buttonId = buttonId;
+  this.title = strings.GetStringFromName(titleStringName);
+  this.icon = iconUrl;
+}

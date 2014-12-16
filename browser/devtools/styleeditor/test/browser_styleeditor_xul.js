@@ -8,7 +8,7 @@ waitForExplicitFinish();
 
 const TEST_URL = "about:config";
 
-let test = asyncTest(function*() {
+add_task(function*() {
   let tab = yield addTab(TEST_URL);
   let target = TargetFactory.forTab(tab);
 
