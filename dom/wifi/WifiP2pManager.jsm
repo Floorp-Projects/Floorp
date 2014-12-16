@@ -1181,7 +1181,7 @@ function P2pStateMachine(aP2pCommand, aNetUtil) {
     enter: function() {
       this.groupOwner = {
         macAddress: _groupInfo.goAddress,
-        ipAddress:  _groupInfo.networkInterface.gateway,
+        ipAddress:  _groupInfo.networkInterface.gateways[0],
         passphrase: _groupInfo.passphrase,
         ssid:       _groupInfo.ssid,
         freq:       _groupInfo.freq,
