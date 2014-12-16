@@ -8,7 +8,6 @@
 #include "prlog.h"
 #include "mozilla/dom/TimeRanges.h"
 #include "DecoderTraits.h"
-#include "MediaDataDecodedListener.h"
 #include "MediaDecoderOwner.h"
 #include "MediaSourceDecoder.h"
 #include "MediaSourceUtils.h"
@@ -454,13 +453,6 @@ MediaSourceReader::CreateSubDecoder(const nsACString& aType)
   // all Request*Data implementations fully async), and then get rid of the
   // borrowing.
   reader->SetBorrowedTaskQueue(GetTaskQueue());
-
-  // Set a callback on the subreader that forwards calls to this reader.
-  // This reader will then forward them onto the state machine via this
-  // reader's callback.
-  RefPtr<MediaDataDecodedListener<MediaSourceReader>> callback =
-    new MediaDataDecodedListener<MediaSourceReader>(this, reader->GetTaskQueue());
-  reader->SetCallback(callback);
 
 #ifdef MOZ_FMP4
   reader->SetSharedDecoderManager(mSharedDecoderManager);

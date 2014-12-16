@@ -1100,12 +1100,6 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoderStateMachine* aCloneDonor)
   nsresult rv = mScheduler->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Note: This creates a cycle, broken in shutdown.
-  mMediaDecodedListener =
-    new MediaDataDecodedListener<MediaDecoderStateMachine>(this,
-                                                           DecodeTaskQueue());
-  mReader->SetCallback(mMediaDecodedListener);
-
   rv = mReader->Init(cloneReader);
   NS_ENSURE_SUCCESS(rv, rv);
 
