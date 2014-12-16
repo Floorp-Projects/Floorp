@@ -507,8 +507,8 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
   //   # The computed 'display' of a flex item is determined
   //   # by applying the table in CSS 2.1 Chapter 9.7.
   // ...which converts inline-level elements to their block-level equivalents.
-  // Any direct children of elements with Ruby display values which are
-  // block-level are converted to their inline-level equivalents.
+  // Any block-level element directly contained by elements with ruby display
+  // values are converted to their inline-level equivalents.
   if (!aSkipParentDisplayBasedStyleFixup && mParent) {
     // Skip display:contents ancestors to reach the potential container.
     // (If there are only display:contents ancestors between this node and
@@ -558,12 +558,17 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
           mutable_display->mDisplay = displayVal;
         }
       }
-    } else if (containerDisp->IsRubyDisplayType()) {
+    }
+
+    // The display change should only occur for "in-flow" children
+    if (!disp->IsOutOfFlowStyle() &&
+        ((containerDisp->mDisplay == NS_STYLE_DISPLAY_INLINE &&
+          containerContext->IsDirectlyInsideRuby()) ||
+         containerDisp->IsRubyDisplayType())) {
+      mBits |= NS_STYLE_IS_DIRECTLY_INSIDE_RUBY;
       uint8_t displayVal = disp->mDisplay;
       nsRuleNode::EnsureInlineDisplay(displayVal);
-      // The display change should only occur for "in-flow" children
-      if (displayVal != disp->mDisplay && 
-          !disp->IsOutOfFlowStyle()) {
+      if (displayVal != disp->mDisplay) {
         nsStyleDisplay *mutable_display =
           static_cast<nsStyleDisplay*>(GetUniqueStyleData(eStyleStruct_Display));
         mutable_display->mDisplay = displayVal;

@@ -1405,7 +1405,7 @@ SpecialPowersAPI.prototype = {
         self.getDOMWindowUtils(win).cycleCollect();
         if (++count < 2) {
           Cu.schedulePreciseGC(genGCCallback(cb));
-        } else {
+        } else if (cb) {
           cb();
         }
       }

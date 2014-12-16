@@ -78,7 +78,7 @@ class TypedArrayLayout
 class TypedArrayObject : public NativeObject
 {
   public:
-    typedef TypedArrayObject AnyTypedArray;
+    typedef TypedArrayObject SomeTypedArray;
     typedef ArrayBufferObject BufferType;
 
     template<typename T> struct OfType;

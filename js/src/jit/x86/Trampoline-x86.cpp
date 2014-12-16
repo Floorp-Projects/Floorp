@@ -105,7 +105,7 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         Label header, footer;
         masm.bind(&header);
 
-        masm.cmpl(eax, ebx);
+        masm.cmp32(eax, ebx);
         masm.j(Assembler::BelowOrEqual, &footer);
 
         // eax -= 8  --move to previous argument

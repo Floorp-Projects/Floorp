@@ -291,7 +291,7 @@ MacroAssemblerX86::callWithABIPre(uint32_t *stackAdjust)
     {
         // Check call alignment.
         Label good;
-        testl(esp, Imm32(ABIStackAlignment - 1));
+        test32(esp, Imm32(ABIStackAlignment - 1));
         j(Equal, &good);
         breakpoint();
         bind(&good);
@@ -443,15 +443,15 @@ MacroAssemblerX86::branchTestValue(Condition cond, const ValueOperand &value, co
 {
     jsval_layout jv = JSVAL_TO_IMPL(v);
     if (v.isMarkable())
-        cmpl(value.payloadReg(), ImmGCPtr(reinterpret_cast<gc::Cell *>(v.toGCThing())));
+        cmpPtr(value.payloadReg(), ImmGCPtr(reinterpret_cast<gc::Cell *>(v.toGCThing())));
     else
-        cmpl(value.payloadReg(), Imm32(jv.s.payload.i32));
+        cmpPtr(value.payloadReg(), ImmWord(jv.s.payload.i32));
 
     if (cond == Equal) {
         Label done;
         j(NotEqual, &done);
         {
-            cmpl(value.typeReg(), Imm32(jv.s.tag));
+            cmp32(value.typeReg(), Imm32(jv.s.tag));
             j(Equal, label);
         }
         bind(&done);
@@ -459,7 +459,7 @@ MacroAssemblerX86::branchTestValue(Condition cond, const ValueOperand &value, co
         MOZ_ASSERT(cond == NotEqual);
         j(NotEqual, label);
 
-        cmpl(value.typeReg(), Imm32(jv.s.tag));
+        cmp32(value.typeReg(), Imm32(jv.s.tag));
         j(NotEqual, label);
     }
 }

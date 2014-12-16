@@ -4,7 +4,7 @@
 
 struct MOZ_NONHEAP_CLASS NonHeap {
   int i;
-  void *operator new(size_t x) { return 0; }
+  void *operator new(size_t x) throw() { return 0; }
   void *operator new(size_t blah, char *buffer) { return buffer; }
 };
 

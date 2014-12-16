@@ -11,6 +11,7 @@ interface nsIURI;
 interface nsIFile;
 interface nsIDOMNode;
 interface nsIPrincipal;
+interface nsILoadInfo;
 
 /**
  * nsIIOService provides a set of network utility functions.  This interface
@@ -21,7 +22,7 @@ interface nsIPrincipal;
  * as a convenience to the programmer and in some cases to improve performance
  * by eliminating intermediate data structures and interfaces.
  */
-[scriptable, uuid(d8555f58-203a-465a-a33e-442ae4c6c4cf)]
+[scriptable, uuid(b1c3c61d-2df9-4240-ae16-0355b51a2770)]
 interface nsIIOService : nsISupports
 {
     /**
@@ -128,6 +129,12 @@ interface nsIIOService : nsISupports
                                   in nsIPrincipal aTriggeringPrincipal,
                                   in unsigned long aSecurityFlags,
                                   in unsigned long aContentPolicyType);
+
+    /**
+     * Equivalent to newChannelFromURI2(aURI, aLoadingNode, ...)
+     */
+    nsIChannel newChannelFromURIWithLoadInfo(in nsIURI aURI,
+                                             in nsILoadInfo aLoadInfo);
 
     /**
      * Creates a channel for a given URI.
