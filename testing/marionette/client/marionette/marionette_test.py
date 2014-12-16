@@ -648,3 +648,14 @@ class MarionetteJSTestCase(CommonTestCase):
 
         self.marionette.execute_script("log('TEST-END: %s');" % self.jsFile.replace('\\', '\\\\'))
         self.marionette.test_name = None
+
+    def get_test_class_name(self):
+        # returns a dot separated folders as class name
+        dirname = os.path.dirname(self.jsFile).replace('\\', '/')
+        if dirname.startswith('/'):
+            dirname = dirname[1:]
+        return '.'.join(dirname.split('/'))
+
+    def get_test_method_name(self):
+        # returns the js filename without extension as method name
+        return os.path.splitext(os.path.basename(self.jsFile))[0]
