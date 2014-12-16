@@ -216,7 +216,6 @@ MediaEngineTabVideoSource::Draw() {
   IntSize size(mBufW, mBufH);
 
   nsresult rv;
-  float scale = 1.0;
 
   nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mWindow);
 
@@ -237,25 +236,14 @@ MediaEngineTabVideoSource::Draw() {
     return;
   }
 
-  float left, top, width, height;
-  rect->GetLeft(&left);
-  rect->GetTop(&top);
+  float width, height;
   rect->GetWidth(&width);
   rect->GetHeight(&height);
-
-  if (mScrollWithPage) {
-    nsPoint point;
-    utils->GetScrollXY(false, &point.x, &point.y);
-    left += point.x;
-    top += point.y;
-  }
 
   if (width == 0 || height == 0) {
     return;
   }
 
-  int32_t srcX = left;
-  int32_t srcY = top;
   int32_t srcW;
   int32_t srcH;
 
@@ -276,14 +264,15 @@ MediaEngineTabVideoSource::Draw() {
   if (!presContext) {
     return;
   }
+
   nscolor bgColor = NS_RGB(255, 255, 255);
   nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
-  uint32_t renderDocFlags = (nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING |
-                             nsIPresShell::RENDER_DOCUMENT_RELATIVE);
-  nsRect r(nsPresContext::CSSPixelsToAppUnits(srcX / scale),
-           nsPresContext::CSSPixelsToAppUnits(srcY / scale),
-           nsPresContext::CSSPixelsToAppUnits(srcW / scale),
-           nsPresContext::CSSPixelsToAppUnits(srcH / scale));
+  uint32_t renderDocFlags = nsIPresShell::RENDER_DOCUMENT_RELATIVE;
+  if (!mScrollWithPage) {
+    renderDocFlags |= nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING;
+  }
+  nsRect r(0, 0, nsPresContext::CSSPixelsToAppUnits((float)srcW),
+           nsPresContext::CSSPixelsToAppUnits((float)srcH));
 
   gfxImageFormat format = gfxImageFormat::RGB24;
   uint32_t stride = gfxASurface::FormatStrideForWidth(format, size.width);
@@ -299,9 +288,9 @@ MediaEngineTabVideoSource::Draw() {
     return;
   }
   nsRefPtr<gfxContext> context = new gfxContext(dt);
-  context->SetMatrix(
-    context->CurrentMatrix().Scale(scale * size.width / srcW,
-                                   scale * size.height / srcH));
+  context->SetMatrix(context->CurrentMatrix().Scale((float)size.width/srcW,
+                                                    (float)size.height/srcH));
+
   rv = presShell->RenderDocument(r, renderDocFlags, bgColor, context);
 
   NS_ENSURE_SUCCESS_VOID(rv);
