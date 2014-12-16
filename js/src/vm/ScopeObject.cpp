@@ -2351,7 +2351,7 @@ DebugScopes::hasLiveScope(ScopeObject &scope)
 }
 
 /* static */ void
-DebugScopes::rekeyMissingScopes(JSContext *cx, AbstractFramePtr from, AbstractFramePtr to)
+DebugScopes::forwardLiveFrame(JSContext *cx, AbstractFramePtr from, AbstractFramePtr to)
 {
     DebugScopes *scopes = cx->compartment()->debugScopes;
     if (!scopes)
@@ -2363,6 +2363,12 @@ DebugScopes::rekeyMissingScopes(JSContext *cx, AbstractFramePtr from, AbstractFr
             key.updateFrame(to);
             e.rekeyFront(key);
         }
+    }
+
+    for (LiveScopeMap::Enum e(scopes->liveScopes); !e.empty(); e.popFront()) {
+        ScopeIterVal &val = e.front().value();
+        if (val.frame() == from)
+            val.updateFrame(to);
     }
 }
 
