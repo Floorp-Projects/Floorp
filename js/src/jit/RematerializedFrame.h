@@ -29,6 +29,9 @@ class RematerializedFrame
     // Propagated to the Baseline frame once this is popped.
     bool isDebuggee_;
 
+    // Has a call object been pushed?
+    bool hasCallObj_;
+
     // The fp of the top frame associated with this possibly inlined frame.
     uint8_t *top_;
 
@@ -107,9 +110,8 @@ class RematerializedFrame
     bool initFunctionScopeObjects(JSContext *cx);
 
     bool hasCallObj() const {
-        return maybeFun() &&
-               fun()->isHeavyweight() &&
-               scopeChain()->is<CallObject>();
+        MOZ_ASSERT(fun()->isHeavyweight());
+        return hasCallObj_;
     }
     CallObject &callObj() const;
 

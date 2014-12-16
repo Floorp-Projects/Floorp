@@ -4196,6 +4196,9 @@ class ICGetProp_Generic : public ICMonitoredStub
         return space->allocate<ICGetProp_Generic>(code, firstMonitorStub);
     }
 
+    static ICGetProp_Generic *Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
+                                    ICGetProp_Generic &other);
+
     class Compiler : public ICStubCompiler {
       protected:
         bool generateStubCode(MacroAssembler &masm);
