@@ -133,6 +133,7 @@ loop.store = loop.store || {};
       this._mozLoop.rooms.on("add", this._onRoomAdded.bind(this));
       this._mozLoop.rooms.on("update", this._onRoomUpdated.bind(this));
       this._mozLoop.rooms.on("delete", this._onRoomRemoved.bind(this));
+      this._mozLoop.rooms.on("refresh", this._onRoomsRefresh.bind(this));
     },
 
     /**
@@ -182,6 +183,17 @@ loop.store = loop.store || {};
         roomList: this._storeState.rooms.filter(function(room) {
           return room.roomToken !== removedRoomData.roomToken;
         })
+      }));
+    },
+
+    /**
+     * Executed when the user switches accounts.
+     *
+     * @param {String} eventName The event name (unused).
+     */
+    _onRoomsRefresh: function(eventName) {
+      this.dispatchAction(new sharedActions.UpdateRoomList({
+        roomList: []
       }));
     },
 
