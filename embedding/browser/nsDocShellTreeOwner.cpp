@@ -969,7 +969,7 @@ class DefaultTooltipTextProvider MOZ_FINAL : public nsITooltipTextProvider
 public:
     DefaultTooltipTextProvider();
 
-    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_ISUPPORTS
     NS_DECL_NSITOOLTIPTEXTPROVIDER
 
 protected:
