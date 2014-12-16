@@ -637,7 +637,6 @@ struct ScrollableLayerGuid {
     , mPresShellId(0)
     , mScrollId(0)
   {
-    MOZ_COUNT_CTOR(ScrollableLayerGuid);
   }
 
   ScrollableLayerGuid(uint64_t aLayersId, uint32_t aPresShellId,
@@ -646,7 +645,6 @@ struct ScrollableLayerGuid {
     , mPresShellId(aPresShellId)
     , mScrollId(aScrollId)
   {
-    MOZ_COUNT_CTOR(ScrollableLayerGuid);
   }
 
   ScrollableLayerGuid(uint64_t aLayersId, const FrameMetrics& aMetrics)
@@ -654,7 +652,6 @@ struct ScrollableLayerGuid {
     , mPresShellId(aMetrics.GetPresShellId())
     , mScrollId(aMetrics.GetScrollId())
   {
-    MOZ_COUNT_CTOR(ScrollableLayerGuid);
   }
 
   ScrollableLayerGuid(const ScrollableLayerGuid& other)
@@ -662,12 +659,10 @@ struct ScrollableLayerGuid {
     , mPresShellId(other.mPresShellId)
     , mScrollId(other.mScrollId)
   {
-    MOZ_COUNT_CTOR(ScrollableLayerGuid);
   }
 
   ~ScrollableLayerGuid()
   {
-    MOZ_COUNT_DTOR(ScrollableLayerGuid);
   }
 
   bool operator==(const ScrollableLayerGuid& other) const
