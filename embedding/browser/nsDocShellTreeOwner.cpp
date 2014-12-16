@@ -765,8 +765,7 @@ nsDocShellTreeOwner::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner)
     NS_ENSURE_TRUE(webBrowserChrome, NS_ERROR_INVALID_ARG);
     NS_ENSURE_SUCCESS(SetWebBrowserChrome(webBrowserChrome), NS_ERROR_INVALID_ARG);
     mTreeOwner = aTreeOwner;
-  }
-  else {
+  } else {
     mTreeOwner = nullptr;
     nsCOMPtr<nsIWebBrowserChrome> webBrowserChrome = GetWebBrowserChrome();
     if (!webBrowserChrome)
@@ -828,9 +827,9 @@ nsDocShellTreeOwner::AddChromeListeners()
       if (mChromeTooltipListener) {
         NS_ADDREF(mChromeTooltipListener);
         rv = mChromeTooltipListener->AddChromeListeners();
-      }
-      else
+      } else {
         rv = NS_ERROR_OUT_OF_MEMORY;
+      }
     }
   }
 
@@ -846,9 +845,9 @@ nsDocShellTreeOwner::AddChromeListeners()
       if (mChromeContextMenuListener) {
         NS_ADDREF(mChromeContextMenuListener);
         rv = mChromeContextMenuListener->AddChromeListeners();
-      }
-      else
+      } else {
         rv = NS_ERROR_OUT_OF_MEMORY;
+      }
     }
   }
 
@@ -928,8 +927,7 @@ nsDocShellTreeOwner::HandleEvent(nsIDOMEvent* aEvent)
         if (!link.IsEmpty()) {
           webnav->LoadURI(link.get(), 0, nullptr, nullptr, nullptr);
         }
-      }
-      else {
+      } else {
         aEvent->StopPropagation();
         aEvent->PreventDefault();
       }
@@ -1072,9 +1070,9 @@ DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, char16_t **aText,
             tagAtom != mTag_window) {
           // first try the normal title attribute...
           currElement->GetAttribute(NS_LITERAL_STRING("title"), outText);
-          if (outText.Length())
+          if (outText.Length()) {
             found = true;
-          else {
+          } else {
             // ...ok, that didn't work, try it in the XLink namespace
             NS_NAMED_LITERAL_STRING(xlinkNS, "http://www.w3.org/1999/xlink");
             nsCOMPtr<mozilla::dom::Link> linkContent(do_QueryInterface(currElement));
@@ -1085,8 +1083,7 @@ DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, char16_t **aText,
                 if (outText.Length())
                   found = true;
               }
-            }
-            else {
+            } else {
               if (lookingForSVGTitle) {
                 lookingForSVGTitle = UseSVGTitle(currElement);
               }
@@ -1272,13 +1269,11 @@ ChromeTooltipListener::HandleEvent(nsIDOMEvent* aEvent)
   if (eventType.EqualsLiteral("keydown") ||
       eventType.EqualsLiteral("mousedown")) {
     return HideTooltip();
-  }
-  else if (eventType.EqualsLiteral("mouseout")) {
+  } else if (eventType.EqualsLiteral("mouseout")) {
     // Reset flag so that tooltip will display on the next MouseMove
     mTooltipShownOnce = false;
     return HideTooltip();
-  }
-  else if (eventType.EqualsLiteral("mousemove")) {
+  } else if (eventType.EqualsLiteral("mousemove")) {
     return MouseMove(aEvent);
   }
 
@@ -1338,10 +1333,10 @@ ChromeTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
           mPossibleTooltipNode = nullptr;
       }
     }
-    else
+    else {
       NS_WARNING ( "Could not create a timer for tooltip tracking" );
-  }
-  else {
+    }
+  } else {
     mTooltipShownOnce = true;
     return HideTooltip();
   }
@@ -1773,8 +1768,7 @@ ChromeContextMenuListener::HandleEvent(nsIDOMEvent* aMouseEvent)
     menuInfoImpl->SetMouseEvent(aMouseEvent);
     menuInfoImpl->SetDOMNode(targetDOMnode);
     menuListener2->OnShowContextMenu(flags2, menuInfo);
-  }
-  else {
+  } else {
     nsCOMPtr<nsIContextMenuListener> menuListener(do_QueryInterface(mWebBrowserChrome));
     if (menuListener)
       menuListener->OnShowContextMenu(flags, aMouseEvent, targetDOMnode);
