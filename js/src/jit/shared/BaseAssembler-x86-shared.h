@@ -5396,14 +5396,21 @@ private:
                         int opcode)
         {
             m_buffer.ensureSpace(maxInstructionSize);
-            // Three byte VEX.
-            m_buffer.putByteUnchecked(0xC4);
-            m_buffer.putByteUnchecked(((r << 7) | (x << 6) | (b << 5) | m) ^ 0xe0);
 
             if (v == X86Registers::invalid_xmm)
                 v = XMMRegisterID(0);
 
-            m_buffer.putByteUnchecked(((w << 7) | (v << 3) | (l << 2) | p) ^ 0x78);
+            if (x == 0 && b == 0 && m == 1 && w == 0) {
+                // Two byte VEX.
+                m_buffer.putByteUnchecked(0xC5);
+                m_buffer.putByteUnchecked(((r << 7) | (v << 3) | (l << 2) | p) ^ 0xf8);
+            } else {
+                // Three byte VEX.
+                m_buffer.putByteUnchecked(0xC4);
+                m_buffer.putByteUnchecked(((r << 7) | (x << 6) | (b << 5) | m) ^ 0xe0);
+                m_buffer.putByteUnchecked(((w << 7) | (v << 3) | (l << 2) | p) ^ 0x78);
+            }
+
             m_buffer.putByteUnchecked(opcode);
         }
 
