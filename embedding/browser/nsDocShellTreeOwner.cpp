@@ -146,7 +146,7 @@ nsDocShellTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
 {
   NS_ENSURE_ARG_POINTER(aSink);
 
-  if(NS_SUCCEEDED(QueryInterface(aIID, aSink)))
+  if (NS_SUCCEEDED(QueryInterface(aIID, aSink)))
     return NS_OK;
 
   if (aIID.Equals(NS_GET_IID(nsIWebBrowserChromeFocus))) {
@@ -207,14 +207,14 @@ nsDocShellTreeOwner::FindItemWithName(const char16_t* aName,
     return NS_OK; // stymied
 
   /* special cases */
-  if(name.IsEmpty())
+  if (name.IsEmpty())
     return NS_OK;
-  if(name.LowerCaseEqualsLiteral("_blank"))
+  if (name.LowerCaseEqualsLiteral("_blank"))
     return NS_OK;
   // _main is an IE target which should be case-insensitive but isn't
   // see bug 217886 for details
   // XXXbz what if our browser isn't targetable?  We need to handle that somehow.
-  if(name.LowerCaseEqualsLiteral("_content") || name.EqualsLiteral("_main")) {
+  if (name.LowerCaseEqualsLiteral("_content") || name.EqualsLiteral("_main")) {
     *aFoundItem = mWebBrowser->mDocShell;
     NS_IF_ADDREF(*aFoundItem);
     return NS_OK;
@@ -231,7 +231,7 @@ nsDocShellTreeOwner::FindItemWithName(const char16_t* aName,
   }
 
   // next, if we have a parent and it isn't the requestor, ask it
-  if(mTreeOwner) {
+  if (mTreeOwner) {
     nsCOMPtr<nsIDocShellTreeOwner> reqAsTreeOwner(do_QueryInterface(aRequestor));
     if (mTreeOwner != reqAsTreeOwner)
       return mTreeOwner->FindItemWithName(aName, mWebBrowser->mDocShell,
@@ -326,7 +326,7 @@ nsDocShellTreeOwner::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
                                        bool aPrimary, bool aTargetable,
                                        const nsAString& aID)
 {
-   if(mTreeOwner)
+   if (mTreeOwner)
       return mTreeOwner->ContentShellAdded(aContentShell, aPrimary,
                                            aTargetable, aID);
 
@@ -338,10 +338,10 @@ nsDocShellTreeOwner::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
 NS_IMETHODIMP
 nsDocShellTreeOwner::ContentShellRemoved(nsIDocShellTreeItem* aContentShell)
 {
-  if(mTreeOwner)
+  if (mTreeOwner)
     return mTreeOwner->ContentShellRemoved(aContentShell);
 
-  if(mPrimaryContentShell == aContentShell)
+  if (mPrimaryContentShell == aContentShell)
     mPrimaryContentShell = nullptr;
 
   return NS_OK;
@@ -369,10 +369,10 @@ nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
 
    NS_ENSURE_STATE(mTreeOwner || webBrowserChrome);
 
-   if(mTreeOwner)
+   if (mTreeOwner)
       return mTreeOwner->SizeShellTo(aShellItem, aCX, aCY);
 
-   if(aShellItem == mWebBrowser->mDocShell)
+   if (aShellItem == mWebBrowser->mDocShell)
       return webBrowserChrome->SizeBrowserTo(aCX, aCY);
 
    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(aShellItem));
@@ -430,7 +430,7 @@ nsDocShellTreeOwner::GetPersistence(bool* aPersistPosition,
 NS_IMETHODIMP
 nsDocShellTreeOwner::GetTargetableShellCount(uint32_t* aResult)
 {
-  if(mTreeOwner) {
+  if (mTreeOwner) {
     mTreeOwner->GetTargetableShellCount(aResult);
   } else {
     *aResult = 0;
@@ -760,7 +760,7 @@ nsDocShellTreeOwner::WebBrowser()
 NS_IMETHODIMP
 nsDocShellTreeOwner::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner)
 {
-  if(aTreeOwner) {
+  if (aTreeOwner) {
     nsCOMPtr<nsIWebBrowserChrome> webBrowserChrome(do_GetInterface(aTreeOwner));
     NS_ENSURE_TRUE(webBrowserChrome, NS_ERROR_INVALID_ARG);
     NS_ENSURE_SUCCESS(SetWebBrowserChrome(webBrowserChrome), NS_ERROR_INVALID_ARG);
@@ -779,7 +779,7 @@ nsDocShellTreeOwner::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner)
 NS_IMETHODIMP
 nsDocShellTreeOwner::SetWebBrowserChrome(nsIWebBrowserChrome* aWebBrowserChrome)
 {
-  if(!aWebBrowserChrome) {
+  if (!aWebBrowserChrome) {
     mWebBrowserChrome = nullptr;
     mOwnerWin = nullptr;
     mOwnerRequestor = nullptr;
