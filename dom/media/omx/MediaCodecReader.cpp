@@ -999,7 +999,7 @@ MediaCodecReader::DecodeVideoFrameSync(int64_t aTimeThreshold)
   return result;
 }
 
-void
+nsRefPtr<MediaDecoderReader::SeekPromise>
 MediaCodecReader::Seek(int64_t aTime,
                        int64_t aStartTime,
                        int64_t aEndTime,
@@ -1031,8 +1031,7 @@ MediaCodecReader::Seek(int64_t aTime,
     options.setSeekTo(aTime, MediaSource::ReadOptions::SEEK_PREVIOUS_SYNC);
     if (mVideoTrack.mSource->read(&source_buffer, &options) != OK ||
         source_buffer == nullptr) {
-      GetCallback()->OnSeekCompleted(NS_ERROR_FAILURE);
-      return;
+      return SeekPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
     }
     sp<MetaData> format = source_buffer->meta_data();
     if (format != nullptr) {
@@ -1056,7 +1055,7 @@ MediaCodecReader::Seek(int64_t aTime,
     MOZ_ASSERT(mAudioTrack.mTaskQueue->IsEmpty());
     DispatchAudioTask();
   }
-  GetCallback()->OnSeekCompleted(NS_OK);
+  return SeekPromise::CreateAndResolve(true, __func__);
 }
 
 bool

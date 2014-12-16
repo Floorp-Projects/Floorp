@@ -36,20 +36,6 @@ public:
     mTaskQueue = nullptr;
   }
 
-  virtual void OnSeekCompleted(nsresult aResult) MOZ_OVERRIDE {
-    MonitorAutoLock lock(mMonitor);
-    if (!mTarget || !mTaskQueue) {
-      // We've been shutdown, abort.
-      return;
-    }
-    RefPtr<nsIRunnable> task(NS_NewRunnableMethodWithArg<nsresult>(mTarget,
-                                                                   &Target::OnSeekCompleted,
-                                                                   aResult));
-    if (NS_FAILED(mTaskQueue->Dispatch(task))) {
-      NS_WARNING("Failed to dispatch OnSeekCompleted task");
-    }
-  }
-
 private:
   Monitor mMonitor;
   RefPtr<MediaTaskQueue> mTaskQueue;

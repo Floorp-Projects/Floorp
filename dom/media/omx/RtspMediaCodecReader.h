@@ -36,8 +36,9 @@ public:
   virtual ~RtspMediaCodecReader();
 
   // Implement a time-based seek instead of byte-based.
-  virtual void Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
-                    int64_t aCurrentTime) MOZ_OVERRIDE;
+  virtual nsRefPtr<SeekPromise>
+  Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
+       int64_t aCurrentTime) MOZ_OVERRIDE;
 
   // Override GetBuffered() to do nothing for below reasons:
   // 1. Because the Rtsp stream is a/v separated. The buffered data in a/v

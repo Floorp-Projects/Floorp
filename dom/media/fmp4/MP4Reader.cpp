@@ -783,7 +783,7 @@ MP4Reader::SkipVideoDemuxToNextKeyFrame(int64_t aTimeThreshold, uint32_t& parsed
   return true;
 }
 
-void
+nsRefPtr<MediaDecoderReader::SeekPromise>
 MP4Reader::Seek(int64_t aTime,
                 int64_t aStartTime,
                 int64_t aEndTime,
@@ -793,8 +793,7 @@ MP4Reader::Seek(int64_t aTime,
   MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());
   if (!mDecoder->GetResource()->IsTransportSeekable() || !mDemuxer->CanSeek()) {
     VLOG("Seek() END (Unseekable)");
-    GetCallback()->OnSeekCompleted(NS_ERROR_FAILURE);
-    return;
+    return SeekPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
   mQueuedVideoSample = nullptr;
@@ -807,7 +806,7 @@ MP4Reader::Seek(int64_t aTime,
       mQueuedVideoSample ? mQueuedVideoSample->composition_timestamp : aTime);
   }
   LOG("MP4Reader::Seek(%lld) exit", aTime);
-  GetCallback()->OnSeekCompleted(NS_OK);
+  return SeekPromise::CreateAndResolve(true, __func__);
 }
 
 void
