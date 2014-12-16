@@ -312,14 +312,31 @@ Snapshot(JSContext *cx, HandleObject pobj_, unsigned flags, AutoIdVector *props)
                 // will filter out unwanted keys, per the flags.
                 if (!Proxy::ownPropertyKeys(cx, pobj, proxyProps))
                     return false;
+
+                Rooted<PropertyDescriptor> desc(cx);
+                for (size_t n = 0, len = proxyProps.length(); n < len; n++) {
+                    bool enumerable = false;
+
+                    // We need to filter, if the caller just wants enumerable
+                    // symbols.
+                    if (!(flags & JSITER_HIDDEN)) {
+                        if (!Proxy::getOwnPropertyDescriptor(cx, pobj, proxyProps[n], &desc))
+                            return false;
+                        enumerable = desc.isEnumerable();
+                    }
+
+                    if (!Enumerate(cx, pobj, proxyProps[n], enumerable, flags, ht, props))
+                        return false;
+                }
             } else {
+                // Returns enumerable property names (no symbols).
                 if (!Proxy::getOwnEnumerablePropertyKeys(cx, pobj, proxyProps))
                     return false;
-            }
 
-            for (size_t n = 0, len = proxyProps.length(); n < len; n++) {
-                if (!Enumerate(cx, pobj, proxyProps[n], true, flags, ht, props))
-                    return false;
+                for (size_t n = 0, len = proxyProps.length(); n < len; n++) {
+                    if (!Enumerate(cx, pobj, proxyProps[n], true, flags, ht, props))
+                        return false;
+                }
             }
         } else {
             MOZ_CRASH("non-native objects must have an enumerate op");
