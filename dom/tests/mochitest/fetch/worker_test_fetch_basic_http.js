@@ -1,13 +1,11 @@
 if (typeof ok !== "function") {
   function ok(a, msg) {
-    dump("OK: " + !!a + "  =>  " + a + " " + msg + "\n");
     postMessage({type: 'status', status: !!a, msg: a + ": " + msg });
   }
 }
 
 if (typeof is !== "function") {
   function is(a, b, msg) {
-    dump("IS: " + (a===b) + "  =>  " + a + " | " + b + " " + msg + "\n");
     postMessage({type: 'status', status: a === b, msg: a + " === " + b + ": " + msg });
   }
 }
@@ -67,6 +65,80 @@ function testRequestGET() {
   return Promise.all(promises);
 }
 
+function arraybuffer_equals_to(ab, s) {
+  is(ab.byteLength, s.length, "arraybuffer byteLength should match");
+
+  var u8v = new Uint8Array(ab);
+  is(String.fromCharCode.apply(String, u8v), s, "arraybuffer bytes should match");
+}
+
+function testResponses() {
+  var fetches = [
+    fetch(path + 'file_XHR_pass2.txt').then((res) => {
+      is(res.status, 200, "status should match");
+      return res.text().then((v) => is(v, "hello pass\n", "response should match"));
+    }),
+
+    fetch(path + 'file_XHR_binary1.bin').then((res) => {
+      is(res.status, 200, "status should match");
+      return res.arrayBuffer().then((v) =>
+        arraybuffer_equals_to(v, "\xaa\xee\0\x03\xff\xff\xff\xff\xbb\xbb\xbb\xbb")
+      )
+    }),
+
+    new Promise((resolve, reject) => {
+      var jsonBody = JSON.stringify({title: "aBook", author: "john"});
+      var req = new Request(path + 'responseIdentical.sjs', {
+                              method: 'POST',
+                              body: jsonBody,
+                            });
+      var p = fetch(req).then((res) => {
+        is(res.status, 200, "status should match");
+        return res.json().then((v) => {
+          is(JSON.stringify(v), jsonBody, "json response should match");
+        });
+      });
+      resolve(p);
+    }),
+
+    // FIXME(nsm): Enable once Bug 1107777 and Bug 1072144 have been fixed.
+    //new Promise((resolve, reject) => {
+    //  var req = new Request(path + 'responseIdentical.sjs', {
+    //                          method: 'POST',
+    //                          body: '{',
+    //                        });
+    //  var p = fetch(req).then((res) => {
+    //    is(res.status, 200, "wrong status");
+    //    return res.json().then(
+    //      (v) => ok(false, "expected json parse failure"),
+    //      (e) => ok(true, "expected json parse failure")
+    //    );
+    //  });
+    //  resolve(p);
+    //}),
+  ];
+
+  return Promise.all(fetches);
+}
+
+function testBlob() {
+  return fetch(path + '/file_XHR_binary2.bin').then((r) => {
+    ok(r.status, 200, "status should match");
+    return r.blob().then((b) => {
+      ok(b.size, 65536, "blob should have size 65536");
+      var frs = new FileReaderSync();
+      var buf = frs.readAsArrayBuffer(b);
+      var u8 = new Uint8Array(buf);
+      for (var i = 0; i < 65536; i++) {
+        if (u8[i] !== (i & 255)) {
+          break;
+        }
+      }
+      is(i, 65536, "wrong value at offset " + i);
+    });
+  });
+}
+
 function runTest() {
   var done = function() {
     if (typeof SimpleTest === "object") {
@@ -80,12 +152,14 @@ function runTest() {
     .then(testURL)
     .then(testURLFail)
     .then(testRequestGET)
+    .then(testResponses)
+    .then(testBlob)
     // Put more promise based tests here.
     .then(done)
     .catch(function(e) {
-      ok(false, "Some Response tests failed " + e);
+      ok(false, "Some test failed " + e);
       done();
-    })
+    });
 }
 
 onmessage = runTest;
