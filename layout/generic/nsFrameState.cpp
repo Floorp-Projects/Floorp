@@ -17,7 +17,6 @@
 #include "nsImageFrame.h"
 #include "nsInlineFrame.h"
 #include "nsPlaceholderFrame.h"
-#include "nsRubyTextFrame.h"
 #include "nsSVGContainerFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsTableRowFrame.h"
