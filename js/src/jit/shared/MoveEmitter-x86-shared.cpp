@@ -85,9 +85,9 @@ MoveEmitterX86::maybeEmitOptimizedCycle(const MoveResolver &moves, size_t i,
         // it's cheap to do an XOR swap.
         FloatRegister a = moves.getMove(i).to().floatReg();
         FloatRegister b = moves.getMove(i + 1).to().floatReg();
-        masm.xorpd(a, b);
-        masm.xorpd(b, a);
-        masm.xorpd(a, b);
+        masm.vxorpd(a, b, b);
+        masm.vxorpd(b, a, a);
+        masm.vxorpd(a, b, b);
         return true;
     }
 

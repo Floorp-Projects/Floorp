@@ -25,6 +25,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 #include "nsCycleCollector.h"
 #include "nsIXPConnect.h"
 #include "nsJSUtils.h"
@@ -3077,6 +3078,28 @@ WrappedJSToDictionary(JSContext* aCx, nsISupports* aObject, T& aDictionary)
   JSAutoCompartment ac(aCx, obj);
   JS::Rooted<JS::Value> v(aCx, JS::ObjectValue(*obj));
   return aDictionary.Init(aCx, v);
+}
+
+template<class T>
+inline bool
+WrappedJSToDictionary(nsISupports* aObject, T& aDictionary)
+{
+  nsCOMPtr<nsIXPConnectWrappedJS> wrappedObj = do_QueryInterface(aObject);
+  NS_ENSURE_TRUE(wrappedObj, false);
+  JS::Rooted<JSObject*> obj(CycleCollectedJSRuntime::Get()->Runtime(),
+                            wrappedObj->GetJSObject());
+  NS_ENSURE_TRUE(obj, false);
+
+  nsIGlobalObject* global = xpc::NativeGlobal(obj);
+  NS_ENSURE_TRUE(global, false);
+
+  // we need this AutoEntryScript here because the spec requires us to execute
+  // getters when parsing a dictionary
+  AutoEntryScript aes(global);
+  aes.TakeOwnershipOfErrorReporting();
+
+  JS::Rooted<JS::Value> v(aes.cx(), JS::ObjectValue(*obj));
+  return aDictionary.Init(aes.cx(), v);
 }
 
 

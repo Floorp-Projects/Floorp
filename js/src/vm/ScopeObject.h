@@ -812,6 +812,7 @@ class ScopeIterVal
         hasScopeObject_(si.hasScopeObject_) {}
 
     AbstractFramePtr frame() const { return frame_; }
+    void updateFrame(AbstractFramePtr frame) { frame_ = frame; }
 };
 
 /*****************************************************************************/
@@ -942,7 +943,10 @@ class DebugScopes
     static bool updateLiveScopes(JSContext *cx);
     static ScopeIterVal *hasLiveScope(ScopeObject &scope);
 
-    static void rekeyMissingScopes(JSContext *cx, AbstractFramePtr from, AbstractFramePtr to);
+    // When a frame bails out from Ion to Baseline, there might be missing
+    // scopes keyed on, and live scopes containing, the old
+    // RematerializedFrame. Forward those values to the new BaselineFrame.
+    static void forwardLiveFrame(JSContext *cx, AbstractFramePtr from, AbstractFramePtr to);
 
     // In debug-mode, these must be called whenever exiting a scope that might
     // have stack-allocated locals.
