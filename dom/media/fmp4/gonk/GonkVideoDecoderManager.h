@@ -52,6 +52,8 @@ public:
 
   virtual nsresult Flush() MOZ_OVERRIDE;
 
+  virtual void AllocateMediaResources();
+
   virtual void ReleaseMediaResources();
 
   static void RecycleCallback(TextureClient* aClient, void* aClosure);
