@@ -156,24 +156,22 @@ nsDocShellTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
   }
 
   if (aIID.Equals(NS_GET_IID(nsIPrompt))) {
-    nsIPrompt *prompt;
+    nsCOMPtr<nsIPrompt> prompt;
     EnsurePrompter();
     prompt = mPrompter;
     if (prompt) {
-      NS_ADDREF(prompt);
-      *aSink = prompt;
+      prompt.forget(aSink);
       return NS_OK;
     }
     return NS_NOINTERFACE;
   }
 
   if (aIID.Equals(NS_GET_IID(nsIAuthPrompt))) {
-    nsIAuthPrompt *prompt;
+    nsCOMPtr<nsIAuthPrompt> prompt;
     EnsureAuthPrompter();
     prompt = mAuthPrompter;
     if (prompt) {
-      NS_ADDREF(prompt);
-      *aSink = prompt;
+      prompt.forget(aSink);
       return NS_OK;
     }
     return NS_NOINTERFACE;
@@ -215,8 +213,8 @@ nsDocShellTreeOwner::FindItemWithName(const char16_t* aName,
   // see bug 217886 for details
   // XXXbz what if our browser isn't targetable?  We need to handle that somehow.
   if (name.LowerCaseEqualsLiteral("_content") || name.EqualsLiteral("_main")) {
-    *aFoundItem = mWebBrowser->mDocShell;
-    NS_IF_ADDREF(*aFoundItem);
+    nsCOMPtr<nsIDocShell> foundItem = mWebBrowser->mDocShell;
+    foundItem.forget(aFoundItem);
     return NS_OK;
   }
 
@@ -355,8 +353,9 @@ nsDocShellTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
    if (mTreeOwner)
        return mTreeOwner->GetPrimaryContentShell(aShell);
 
-   *aShell = (mPrimaryContentShell ? mPrimaryContentShell : mWebBrowser->mDocShell);
-   NS_IF_ADDREF(*aShell);
+   nsCOMPtr<nsIDocShellTreeItem> shell;
+   shell = (mPrimaryContentShell ? mPrimaryContentShell : mWebBrowser->mDocShell);
+   shell.forget(aShell);
 
    return NS_OK;
 }
