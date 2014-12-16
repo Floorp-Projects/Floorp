@@ -193,7 +193,25 @@ class TestEmitterBasic(unittest.TestCase):
 
         expected = ['bar.c', 'foo.c']
         for o, expected_filename in zip(objs, expected):
-            self.assertEqual(o.filename, expected_filename)
+            self.assertEqual(o.output, expected_filename)
+
+    def test_generated_files_no_script(self):
+        reader = self.reader('generated-files-no-script')
+        with self.assertRaisesRegexp(SandboxValidationError,
+            'Script for generating bar.c does not exist'):
+            objs = self.read_topsrcdir(reader)
+
+    def test_generated_files_no_inputs(self):
+        reader = self.reader('generated-files-no-inputs')
+        with self.assertRaisesRegexp(SandboxValidationError,
+            'Input for generating foo.c does not exist'):
+            objs = self.read_topsrcdir(reader)
+
+    def test_generated_files_no_python_script(self):
+        reader = self.reader('generated-files-no-python-script')
+        with self.assertRaisesRegexp(SandboxValidationError,
+            'Script for generating bar.c does not end in .py'):
+            objs = self.read_topsrcdir(reader)
 
     def test_exports(self):
         reader = self.reader('exports')

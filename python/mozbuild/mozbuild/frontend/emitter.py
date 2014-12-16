@@ -521,7 +521,29 @@ class TreeMetadataEmitter(LoggingMixin):
         generated_files = context.get('GENERATED_FILES')
         if generated_files:
             for f in generated_files:
-                yield GeneratedFile(context, f)
+                flags = generated_files[f]
+                output = f
+                if flags.script:
+                    script = mozpath.join(context.srcdir, flags.script)
+                    inputs = [mozpath.join(context.srcdir, i) for i in flags.inputs]
+
+                    if not os.path.exists(script):
+                        raise SandboxValidationError(
+                            'Script for generating %s does not exist: %s'
+                            % (f, script), context)
+                    if os.path.splitext(script)[1] != '.py':
+                        raise SandboxValidationError(
+                            'Script for generating %s does not end in .py: %s'
+                            % (f, script), context)
+                    for i in inputs:
+                        if not os.path.exists(i):
+                            raise SandboxValidationError(
+                                'Input for generating %s does not exist: %s'
+                                % (f, i), context)
+                else:
+                    script = None
+                    inputs = []
+                yield GeneratedFile(context, script, output, inputs)
 
         test_harness_files = context.get('TEST_HARNESS_FILES')
         if test_harness_files:
