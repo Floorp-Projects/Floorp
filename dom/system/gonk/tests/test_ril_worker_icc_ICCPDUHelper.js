@@ -61,7 +61,7 @@ add_test(function test_read_dialling_number() {
     return 0x81;
   };
 
-  helper.readSwappedNibbleBcdString = function(len) {
+  helper.readSwappedNibbleExtendedBcdString = function(len) {
     return str.substring(0, len);
   };
 
