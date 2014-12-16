@@ -347,17 +347,6 @@ ScriptedIndirectProxyHandler::getOwnEnumerablePropertyKeys(JSContext *cx, Handle
 }
 
 bool
-ScriptedIndirectProxyHandler::getEnumerablePropertyKeys(JSContext *cx, HandleObject proxy,
-                                                        AutoIdVector &props) const
-{
-    RootedObject handler(cx, GetIndirectProxyHandlerObject(proxy));
-    RootedValue fval(cx), value(cx);
-    return GetFundamentalTrap(cx, handler, cx->names().enumerate, &fval) &&
-           Trap(cx, handler, fval, 0, nullptr, &value) &&
-           ArrayToIdVector(cx, value, props);
-}
-
-bool
 ScriptedIndirectProxyHandler::nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                                          CallArgs args) const
 {

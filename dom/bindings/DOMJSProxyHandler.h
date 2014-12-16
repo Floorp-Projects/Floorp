@@ -71,8 +71,6 @@ public:
   // unnecessary work during enumeration.
   virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, JS::Handle<JSObject*> proxy,
                                             JS::AutoIdVector &props) const MOZ_OVERRIDE;
-  bool getEnumerablePropertyKeys(JSContext* cx, JS::Handle<JSObject*> proxy,
-                                 JS::AutoIdVector& props) const MOZ_OVERRIDE;
 
   bool watch(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
              JS::Handle<JSObject*> callable) const MOZ_OVERRIDE;
