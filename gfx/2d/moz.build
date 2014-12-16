@@ -85,25 +85,23 @@ if CONFIG['MOZ_ENABLE_SKIA']:
 
 # Are we targeting x86 or x64?  If so, build SSE2 files.
 if CONFIG['INTEL_ARCHITECTURE']:
-    # VC2005 doesn't support _mm_castsi128_ps, so SSE2 is turned off
-    if CONFIG['_MSC_VER'] != '1400':
+    SOURCES += [
+        'BlurSSE2.cpp',
+        'FilterProcessingSSE2.cpp',
+        'ImageScalingSSE2.cpp',
+    ]
+    if CONFIG['MOZ_ENABLE_SKIA']:
         SOURCES += [
-            'BlurSSE2.cpp',
-            'FilterProcessingSSE2.cpp',
-            'ImageScalingSSE2.cpp',
+            'convolverSSE2.cpp',
         ]
-        if CONFIG['MOZ_ENABLE_SKIA']:
-            SOURCES += [
-                'convolverSSE2.cpp',
-            ]
-        DEFINES['USE_SSE2'] = True
-        # The file uses SSE2 intrinsics, so it needs special compile flags on some
-        # compilers.
-        SOURCES['BlurSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
-        SOURCES['FilterProcessingSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
-        SOURCES['ImageScalingSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
-        if CONFIG['MOZ_ENABLE_SKIA']:
-            SOURCES['convolverSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
+    DEFINES['USE_SSE2'] = True
+    # The file uses SSE2 intrinsics, so it needs special compile flags on some
+    # compilers.
+    SOURCES['BlurSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
+    SOURCES['FilterProcessingSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
+    SOURCES['ImageScalingSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
+    if CONFIG['MOZ_ENABLE_SKIA']:
+        SOURCES['convolverSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
 UNIFIED_SOURCES += [
     'Blur.cpp',
