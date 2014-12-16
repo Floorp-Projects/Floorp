@@ -1053,7 +1053,7 @@ class AssemblerX86Shared : public AssemblerShared
         cmpl(op, ImmWord(uintptr_t(imm.value)));
     }
     CodeOffsetLabel cmplWithPatch(Register lhs, Imm32 rhs) {
-        masm.cmpl_ir_force32(rhs.value, lhs.code());
+        masm.cmpl_i32r(rhs.value, lhs.code());
         return CodeOffsetLabel(masm.currentOffset());
     }
     void cmpw(Register lhs, Register rhs) {
@@ -1074,12 +1074,12 @@ class AssemblerX86Shared : public AssemblerShared
         masm.testl_rr(rhs.code(), lhs.code());
     }
     void testl(Register lhs, Imm32 rhs) {
-        masm.testl_i32r(rhs.value, lhs.code());
+        masm.testl_ir(rhs.value, lhs.code());
     }
     void testl(const Operand &lhs, Imm32 rhs) {
         switch (lhs.kind()) {
           case Operand::REG:
-            masm.testl_i32r(rhs.value, lhs.reg());
+            masm.testl_ir(rhs.value, lhs.reg());
             break;
           case Operand::MEM_REG_DISP:
             masm.testl_i32m(rhs.value, lhs.disp(), lhs.base());
@@ -1096,8 +1096,9 @@ class AssemblerX86Shared : public AssemblerShared
     void addl(Imm32 imm, Register dest) {
         masm.addl_ir(imm.value, dest.code());
     }
-    void addl_wide(Imm32 imm, Register dest) {
-        masm.addl_ir_wide(imm.value, dest.code());
+    CodeOffsetLabel addlWithPatch(Imm32 imm, Register dest) {
+        masm.addl_i32r(imm.value, dest.code());
+        return CodeOffsetLabel(masm.currentOffset());
     }
     void addl(Imm32 imm, const Operand &op) {
         switch (op.kind()) {
