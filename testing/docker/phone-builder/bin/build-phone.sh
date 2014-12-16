@@ -5,6 +5,11 @@ test $GECKO_HEAD_REPOSITORY # Should be an hg repository url to pull from
 test $GECKO_HEAD_REV # Should be an hg revision to pull down
 test $TARGET
 
+if ! validate_task.py; then
+    echo "Not a valid task" >&2
+    exit 1
+fi
+
 # First check if the mozharness directory is available. This is intended to be
 # used locally in development to test mozharness changes:
 #
