@@ -235,6 +235,9 @@ description > html|a {
   background-color: #fbfbfb;
   color: #424e5a;
   font-size: 14px;
+  /* `transparent` will use the dialogText color in high-contrast themes and
+     when page colors are disabled */
+  border: 1px solid transparent;
   border-radius: 2.5px;
   box-shadow: 0 2px 4px 0 rgba(0,0,0,0.5);
   display: -moz-box;
