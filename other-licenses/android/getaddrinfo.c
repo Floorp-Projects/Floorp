@@ -414,6 +414,14 @@ extern int
 __wrap_getaddrinfo(const char *hostname, const char *servname,
     const struct addrinfo *hints, struct addrinfo **res);
 
+extern const char *
+__real_gai_strerror(int ecode);
+extern void
+__real_freeaddrinfo(struct addrinfo *ai);
+extern int
+__real_getaddrinfo(const char *hostname, const char *servname,
+    const struct addrinfo *hints, struct addrinfo **res);
+
 int android_sdk_version;
 
 #pragma GCC visibility pop
@@ -434,7 +442,7 @@ const char *
 __wrap_gai_strerror(int ecode)
 {
 	if (honeycomb_or_later())
-		return gai_strerror(ecode);
+		return __real_gai_strerror(ecode);
 	if (ecode < 0 || ecode > EAI_MAX)
 		ecode = EAI_MAX;
 	return ai_errlist[ecode];
@@ -446,7 +454,7 @@ __wrap_freeaddrinfo(struct addrinfo *ai)
 	struct addrinfo *next;
 
 	if (honeycomb_or_later()) {
-		freeaddrinfo(ai);
+		__real_freeaddrinfo(ai);
 		return;
 	}
 
@@ -545,7 +553,7 @@ __wrap_getaddrinfo(const char *hostname, const char *servname,
 	const struct explore *ex;
 
 	if (honeycomb_or_later())
-		return getaddrinfo(hostname, servname, hints, res);
+		return __real_getaddrinfo(hostname, servname, hints, res);
 
 	/* hostname is allowed to be NULL */
 	/* servname is allowed to be NULL */
