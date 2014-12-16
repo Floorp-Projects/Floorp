@@ -72,20 +72,22 @@ bool isInIgnoredNamespace(const Decl *decl) {
     ND = cast<NamespaceDecl>(ParentDC);
   }
 
+  const auto& name = ND->getName();
+
   // namespace std and icu are ignored for now
-  return ND->getName() == "std" ||              // standard C++ lib
-         ND->getName() == "__gnu_cxx" ||        // gnu C++ lib
-         ND->getName() == "boost" ||            // boost
-         ND->getName() == "webrtc" ||           // upstream webrtc
-         ND->getName() == "icu_52" ||           // icu
-         ND->getName() == "google" ||           // protobuf
-         ND->getName() == "google_breakpad" ||  // breakpad
-         ND->getName() == "soundtouch" ||       // libsoundtouch
-         ND->getName() == "stagefright" ||      // libstagefright
-         ND->getName() == "MacFileUtilities" || // MacFileUtilities
-         ND->getName() == "dwarf2reader" ||     // dwarf2reader
-         ND->getName() == "arm_ex_to_module" || // arm_ex_to_module
-         ND->getName() == "testing";            // gtest
+  return name == "std" ||              // standard C++ lib
+         name == "__gnu_cxx" ||        // gnu C++ lib
+         name == "boost" ||            // boost
+         name == "webrtc" ||           // upstream webrtc
+         name == "icu_52" ||           // icu
+         name == "google" ||           // protobuf
+         name == "google_breakpad" ||  // breakpad
+         name == "soundtouch" ||       // libsoundtouch
+         name == "stagefright" ||      // libstagefright
+         name == "MacFileUtilities" || // MacFileUtilities
+         name == "dwarf2reader" ||     // dwarf2reader
+         name == "arm_ex_to_module" || // arm_ex_to_module
+         name == "testing";            // gtest
 }
 
 bool isIgnoredPath(const Decl *decl) {
@@ -175,8 +177,10 @@ public:
         // The way that Clang checks if a method M overrides its parent method
         // is if the method has the same name but would not overload.
         if (M->getName() == (*it)->getName() &&
-            !CI.getSema().IsOverload(*M, (*it), false))
+            !CI.getSema().IsOverload(*M, (*it), false)) {
           overridden = true;
+          break;
+        }
       }
       if (!overridden) {
         unsigned overrideID = Diag.getDiagnosticIDs()->getCustomDiagID(
