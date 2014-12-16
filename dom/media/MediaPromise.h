@@ -65,6 +65,24 @@ public:
     PROMISE_LOG("%s creating MediaPromise (%p)", mCreationSite, this);
   }
 
+  static nsRefPtr<MediaPromise<ResolveValueT, RejectValueT>>
+  CreateAndResolve(ResolveValueType aResolveValue, const char* aResolveSite)
+  {
+    nsRefPtr<MediaPromise<ResolveValueT, RejectValueT>> p =
+      new MediaPromise<ResolveValueT, RejectValueT>(aResolveSite);
+    p->Resolve(aResolveValue, aResolveSite);
+    return p;
+  }
+
+  static nsRefPtr<MediaPromise<ResolveValueT, RejectValueT>>
+  CreateAndReject(RejectValueType aRejectValue, const char* aRejectSite)
+  {
+    nsRefPtr<MediaPromise<ResolveValueT, RejectValueT>> p =
+      new MediaPromise<ResolveValueT, RejectValueT>(aRejectSite);
+    p->Reject(aRejectValue, aRejectSite);
+    return p;
+  }
+
 protected:
 
   /*
