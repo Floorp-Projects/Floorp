@@ -685,6 +685,7 @@ RecompileBaselineScriptForDebugMode(JSContext *cx, JSScript *script,
     _(GetProp_CallDOMProxyNative)               \
     _(GetProp_CallDOMProxyWithGenerationNative) \
     _(GetProp_DOMProxyShadowed)                 \
+    _(GetProp_Generic)                          \
     _(SetProp_CallScripted)                     \
     _(SetProp_CallNative)
 
