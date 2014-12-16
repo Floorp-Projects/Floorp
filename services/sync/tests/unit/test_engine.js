@@ -209,7 +209,7 @@ add_test(function test_disabled_no_track() {
 
   tracker.addChangedID("abcdefghijkl");
   do_check_true(0 < tracker.changedIDs["abcdefghijkl"]);
-  engine.enabled = false;
+  Svc.Prefs.set("engine." + engine.prefName, false);
   do_check_false(tracker._isTracking);
   do_check_empty(tracker.changedIDs);
 

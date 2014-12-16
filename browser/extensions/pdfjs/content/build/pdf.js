@@ -22,8 +22,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.0.937';
-PDFJS.build = '308646d';
+PDFJS.version = '1.0.978';
+PDFJS.build = '20bf84a';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -547,10 +547,10 @@ var Util = PDFJS.Util = (function UtilClosure() {
 
   // makeCssRgb() can be called thousands of times. Using |rgbBuf| avoids
   // creating many intermediate strings.
-  Util.makeCssRgb = function Util_makeCssRgb(rgb) {
-    rgbBuf[1] = rgb[0];
-    rgbBuf[3] = rgb[1];
-    rgbBuf[5] = rgb[2];
+  Util.makeCssRgb = function Util_makeCssRgb(r, g, b) {
+    rgbBuf[1] = r;
+    rgbBuf[3] = g;
+    rgbBuf[5] = b;
     return rgbBuf.join('');
   };
 
@@ -3412,9 +3412,9 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
   function composeSMaskLuminosity(maskData, layerData) {
     var length = maskData.length;
     for (var i = 3; i < length; i += 4) {
-      var y = ((maskData[i - 3] * 77) +     // * 0.3 / 255 * 0x10000
-               (maskData[i - 2] * 152) +    // * 0.59 ....
-               (maskData[i - 1] * 28)) | 0; // * 0.11 ....
+      var y = (maskData[i - 3] * 77) +  // * 0.3 / 255 * 0x10000
+              (maskData[i - 2] * 152) + // * 0.59 ....
+              (maskData[i - 1] * 28);   // * 0.11 ....
       layerData[i] = (layerData[i] * y) >> 16;
     }
   }
@@ -3434,7 +3434,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     }
 
     // processing image in chunks to save memory
-    var PIXELS_TO_PROCESS = 65536;
+    var PIXELS_TO_PROCESS = 1048576;
     var chunkSize = Math.min(height, Math.ceil(PIXELS_TO_PROCESS / width));
     for (var row = 0; row < height; row += chunkSize) {
       var chunkHeight = Math.min(chunkSize, height - row);
@@ -4326,12 +4326,12 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       this.current.fillColor = this.getColorN_Pattern(arguments);
     },
     setStrokeRGBColor: function CanvasGraphics_setStrokeRGBColor(r, g, b) {
-      var color = Util.makeCssRgb(arguments);
+      var color = Util.makeCssRgb(r, g, b);
       this.ctx.strokeStyle = color;
       this.current.strokeColor = color;
     },
     setFillRGBColor: function CanvasGraphics_setFillRGBColor(r, g, b) {
-      var color = Util.makeCssRgb(arguments);
+      var color = Util.makeCssRgb(r, g, b);
       this.ctx.fillStyle = color;
       this.current.fillColor = color;
     },
@@ -4955,7 +4955,7 @@ var WebGLUtils = (function WebGLUtilsClosure() {
   }
 
   var currentGL, currentCanvas;
-  function generageGL() {
+  function generateGL() {
     if (currentGL) {
       return;
     }
@@ -5013,7 +5013,7 @@ var WebGLUtils = (function WebGLUtilsClosure() {
   function initSmaskGL() {
     var canvas, gl;
 
-    generageGL();
+    generateGL();
     canvas = currentCanvas;
     currentCanvas = null;
     gl = currentGL;
@@ -5145,7 +5145,7 @@ var WebGLUtils = (function WebGLUtilsClosure() {
   function initFiguresGL() {
     var canvas, gl;
 
-    generageGL();
+    generateGL();
     canvas = currentCanvas;
     currentCanvas = null;
     gl = currentGL;
@@ -5313,7 +5313,7 @@ var WebGLUtils = (function WebGLUtilsClosure() {
       }
       var enabled = false;
       try {
-        generageGL();
+        generateGL();
         enabled = !!currentGL;
       } catch (e) { }
       return shadow(this, 'isEnabled', enabled);
@@ -5706,7 +5706,7 @@ var TilingPattern = (function TilingPatternClosure() {
             context.strokeStyle = ctx.strokeStyle;
             break;
           case PaintType.UNCOLORED:
-            var cssColor = Util.makeCssRgb(color);
+            var cssColor = Util.makeCssRgb(color[0], color[1], color[2]);
             context.fillStyle = cssColor;
             context.strokeStyle = cssColor;
             break;
@@ -5868,11 +5868,9 @@ var AnnotationUtils = (function AnnotationUtilsClosure() {
     container.style.backgroundColor = item.color;
 
     var color = item.color;
-    var rgb = [];
-    for (var i = 0; i < 3; ++i) {
-      rgb[i] = Math.round(color[i] * 255);
-    }
-    item.colorCssRgb = Util.makeCssRgb(rgb);
+    item.colorCssRgb = Util.makeCssRgb(Math.round(color[0] * 255),
+                                       Math.round(color[1] * 255),
+                                       Math.round(color[2] * 255));
 
     var highlight = document.createElement('div');
     highlight.className = 'annotationHighlight';
@@ -5942,13 +5940,15 @@ var AnnotationUtils = (function AnnotationUtilsClosure() {
     var i, ii;
     if (item.hasBgColor) {
       var color = item.color;
-      var rgb = [];
-      for (i = 0; i < 3; ++i) {
-        // Enlighten the color (70%)
-        var c = Math.round(color[i] * 255);
-        rgb[i] = Math.round((255 - c) * 0.7) + c;
-      }
-      content.style.backgroundColor = Util.makeCssRgb(rgb);
+
+      // Enlighten the color (70%)
+      var BACKGROUND_ENLIGHT = 0.7;
+      var r = BACKGROUND_ENLIGHT * (1.0 - color[0]) + color[0];
+      var g = BACKGROUND_ENLIGHT * (1.0 - color[1]) + color[1];
+      var b = BACKGROUND_ENLIGHT * (1.0 - color[2]) + color[2];
+      content.style.backgroundColor = Util.makeCssRgb((r * 255) | 0,
+                                                      (g * 255) | 0,
+                                                      (b * 255) | 0);
     }
 
     var title = document.createElement('h1');
