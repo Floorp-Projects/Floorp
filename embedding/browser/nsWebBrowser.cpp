@@ -76,7 +76,6 @@ nsWebBrowser::nsWebBrowser() :
    mPersistCurrentState(nsIWebBrowserPersist::PERSIST_STATE_READY),
    mPersistResult(NS_OK),
    mPersistFlags(nsIWebBrowserPersist::PERSIST_FLAGS_NONE),
-   mStream(nullptr),
    mParentWidget(nullptr),
    mListenerArray(nullptr)
 {
@@ -1799,7 +1798,6 @@ NS_IMETHODIMP nsWebBrowser::OpenStream(nsIURI *aBaseURI, const nsACString& aCont
 
   if (!mStream) {
     mStream = new nsEmbedStream();
-    mStreamGuard = do_QueryInterface(mStream);
     mStream->InitOwner(this);
     rv = mStream->Init();
     if (NS_FAILED(rv))
@@ -1828,9 +1826,7 @@ NS_IMETHODIMP nsWebBrowser::CloseStream()
     return NS_ERROR_FAILURE;
   rv = mStream->CloseStream();
 
-  // release
   mStream = nullptr;
-  mStreamGuard = nullptr;
 
   return rv;
 }
