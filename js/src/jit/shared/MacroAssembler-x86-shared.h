@@ -38,9 +38,9 @@ class MacroAssemblerX86Shared : public Assembler
 
     void compareDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs) {
         if (cond & DoubleConditionBitInvert)
-            ucomisd(rhs, lhs);
-        else
             ucomisd(lhs, rhs);
+        else
+            ucomisd(rhs, lhs);
     }
     void branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs, Label *label)
     {
@@ -65,9 +65,9 @@ class MacroAssemblerX86Shared : public Assembler
 
     void compareFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs) {
         if (cond & DoubleConditionBitInvert)
-            ucomiss(rhs, lhs);
-        else
             ucomiss(lhs, rhs);
+        else
+            ucomiss(rhs, lhs);
     }
     void branchFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs, Label *label)
     {
@@ -133,30 +133,42 @@ class MacroAssemblerX86Shared : public Assembler
         negl(reg);
     }
     void test32(Register lhs, Register rhs) {
-        testl(lhs, rhs);
+        testl(rhs, lhs);
     }
     void test32(const Address &addr, Imm32 imm) {
-        testl(Operand(addr), imm);
+        testl(imm, Operand(addr));
+    }
+    void test32(const Operand lhs, Imm32 imm) {
+        testl(imm, lhs);
     }
     void test32(Register lhs, Imm32 rhs) {
-        testl(lhs, rhs);
+        testl(rhs, lhs);
     }
     void cmp32(Register lhs, Imm32 rhs) {
-        cmpl(lhs, rhs);
+        cmpl(rhs, lhs);
     }
-    void cmp32(Register a, Register b) {
-        cmpl(a, b);
+    void cmp32(Register lhs, Register rhs) {
+        cmpl(rhs, lhs);
     }
     void cmp32(const Operand &lhs, Imm32 rhs) {
-        cmpl(lhs, rhs);
+        cmpl(rhs, lhs);
     }
     void cmp32(const Operand &lhs, Register rhs) {
-        cmpl(lhs, rhs);
+        cmpl(rhs, lhs);
+    }
+    void cmp32(Register lhs, const Operand &rhs) {
+        cmpl(rhs, lhs);
+    }
+    CodeOffsetLabel cmp32WithPatch(Register lhs, Imm32 rhs) {
+        return cmplWithPatch(rhs, lhs);
     }
     void add32(Register src, Register dest) {
         addl(src, dest);
     }
     void add32(Imm32 imm, Register dest) {
+        addl(imm, dest);
+    }
+    void add32(Imm32 imm, const Operand &dest) {
         addl(imm, dest);
     }
     void add32(Imm32 imm, const Address &dest) {
@@ -165,7 +177,13 @@ class MacroAssemblerX86Shared : public Assembler
     void sub32(Imm32 imm, Register dest) {
         subl(imm, dest);
     }
+    void sub32(const Operand &src, Register dest) {
+        subl(src, dest);
+    }
     void sub32(Register src, Register dest) {
+        subl(src, dest);
+    }
+    void sub32(Register src, const Operand &dest) {
         subl(src, dest);
     }
     template <typename T>
@@ -483,58 +501,58 @@ class MacroAssemblerX86Shared : public Assembler
     }
 
     void branch16(Condition cond, Register lhs, Register rhs, Label *label) {
-        cmpw(lhs, rhs);
+        cmpw(rhs, lhs);
         j(cond, label);
     }
     void branch32(Condition cond, const Operand &lhs, Register rhs, Label *label) {
-        cmpl(lhs, rhs);
+        cmp32(lhs, rhs);
         j(cond, label);
     }
     void branch32(Condition cond, const Operand &lhs, Imm32 rhs, Label *label) {
-        cmpl(lhs, rhs);
+        cmp32(lhs, rhs);
         j(cond, label);
     }
     void branch32(Condition cond, const Address &lhs, Register rhs, Label *label) {
-        cmpl(Operand(lhs), rhs);
+        cmp32(Operand(lhs), rhs);
         j(cond, label);
     }
     void branch32(Condition cond, const Address &lhs, Imm32 imm, Label *label) {
-        cmpl(Operand(lhs), imm);
+        cmp32(Operand(lhs), imm);
         j(cond, label);
     }
     void branch32(Condition cond, const BaseIndex &lhs, Register rhs, Label *label) {
-        cmpl(Operand(lhs), rhs);
+        cmp32(Operand(lhs), rhs);
         j(cond, label);
     }
     void branch32(Condition cond, const BaseIndex &lhs, Imm32 imm, Label *label) {
-        cmpl(Operand(lhs), imm);
+        cmp32(Operand(lhs), imm);
         j(cond, label);
     }
     void branch32(Condition cond, Register lhs, Imm32 imm, Label *label) {
-        cmpl(lhs, imm);
+        cmp32(lhs, imm);
         j(cond, label);
     }
     void branch32(Condition cond, Register lhs, Register rhs, Label *label) {
-        cmpl(lhs, rhs);
+        cmp32(lhs, rhs);
         j(cond, label);
     }
     void branchTest16(Condition cond, Register lhs, Register rhs, Label *label) {
-        testw(lhs, rhs);
+        testw(rhs, lhs);
         j(cond, label);
     }
     void branchTest32(Condition cond, Register lhs, Register rhs, Label *label) {
         MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
-        testl(lhs, rhs);
+        test32(lhs, rhs);
         j(cond, label);
     }
     void branchTest32(Condition cond, Register lhs, Imm32 imm, Label *label) {
         MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
-        testl(lhs, imm);
+        test32(lhs, imm);
         j(cond, label);
     }
     void branchTest32(Condition cond, const Address &address, Imm32 imm, Label *label) {
         MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
-        testl(Operand(address), imm);
+        test32(Operand(address), imm);
         j(cond, label);
     }
 
@@ -625,7 +643,7 @@ class MacroAssemblerX86Shared : public Assembler
     }
     Condition testDoubleTruthy(bool truthy, FloatRegister reg) {
         zeroDouble(ScratchDoubleReg);
-        ucomisd(ScratchDoubleReg, reg);
+        ucomisd(reg, ScratchDoubleReg);
         return truthy ? NonZero : Zero;
     }
     void branchTestDoubleTruthy(bool truthy, FloatRegister reg, Label *label) {
@@ -1072,7 +1090,7 @@ class MacroAssemblerX86Shared : public Assembler
 
         cvttsd2si(src, dest);
         cvtsi2sd(dest, ScratchDoubleReg);
-        ucomisd(src, ScratchDoubleReg);
+        ucomisd(ScratchDoubleReg, src);
         j(Assembler::Parity, fail);
         j(Assembler::NotEqual, fail);
 
@@ -1090,7 +1108,7 @@ class MacroAssemblerX86Shared : public Assembler
 
         cvttss2si(src, dest);
         convertInt32ToFloat32(dest, ScratchFloat32Reg);
-        ucomiss(src, ScratchFloat32Reg);
+        ucomiss(ScratchFloat32Reg, src);
         j(Assembler::Parity, fail);
         j(Assembler::NotEqual, fail);
     }

@@ -980,13 +980,10 @@ class AssemblerX86Shared : public AssemblerShared
     static bool SupportsSimd() { return CPUInfo::IsSSE2Present(); }
     static bool HasAVX() { return CPUInfo::IsAVXPresent(); }
 
-    // The below cmpl methods switch the lhs and rhs when it invokes the
-    // macroassembler to conform with intel standard.  When calling this
-    // function put the left operand on the left as you would expect.
-    void cmpl(Register lhs, Register rhs) {
+    void cmpl(Register rhs, Register lhs) {
         masm.cmpl_rr(rhs.code(), lhs.code());
     }
-    void cmpl(Register lhs, const Operand &rhs) {
+    void cmpl(const Operand &rhs, Register lhs) {
         switch (rhs.kind()) {
           case Operand::REG:
             masm.cmpl_rr(rhs.reg(), lhs.code());
@@ -994,32 +991,14 @@ class AssemblerX86Shared : public AssemblerShared
           case Operand::MEM_REG_DISP:
             masm.cmpl_mr(rhs.disp(), rhs.base(), lhs.code());
             break;
-          default:
-            MOZ_CRASH("unexpected operand kind");
-        }
-    }
-    void cmpl(Register src, Imm32 imm) {
-        masm.cmpl_ir(imm.value, src.code());
-    }
-    void cmpl(const Operand &op, Imm32 imm) {
-        switch (op.kind()) {
-          case Operand::REG:
-            masm.cmpl_ir(imm.value, op.reg());
-            break;
-          case Operand::MEM_REG_DISP:
-            masm.cmpl_im(imm.value, op.disp(), op.base());
-            break;
-          case Operand::MEM_SCALE:
-            masm.cmpl_im(imm.value, op.disp(), op.base(), op.index(), op.scale());
-            break;
           case Operand::MEM_ADDRESS32:
-            masm.cmpl_im(imm.value, op.address());
+            masm.cmpl_mr(rhs.address(), lhs.code());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
         }
     }
-    void cmpl(const Operand &lhs, Register rhs) {
+    void cmpl(Register rhs, const Operand &lhs) {
         switch (lhs.kind()) {
           case Operand::REG:
             masm.cmpl_rr(rhs.code(), lhs.reg());
@@ -1034,49 +1013,52 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_CRASH("unexpected operand kind");
         }
     }
-    void cmpl(const Operand &op, ImmWord imm) {
-        switch (op.kind()) {
+    void cmpl(Imm32 rhs, Register lhs) {
+        masm.cmpl_ir(rhs.value, lhs.code());
+    }
+    void cmpl(Imm32 rhs, const Operand &lhs) {
+        switch (lhs.kind()) {
           case Operand::REG:
-            masm.cmpl_ir(imm.value, op.reg());
+            masm.cmpl_ir(rhs.value, lhs.reg());
             break;
           case Operand::MEM_REG_DISP:
-            masm.cmpl_im(imm.value, op.disp(), op.base());
+            masm.cmpl_im(rhs.value, lhs.disp(), lhs.base());
+            break;
+          case Operand::MEM_SCALE:
+            masm.cmpl_im(rhs.value, lhs.disp(), lhs.base(), lhs.index(), lhs.scale());
             break;
           case Operand::MEM_ADDRESS32:
-            masm.cmpl_im(imm.value, op.address());
+            masm.cmpl_im(rhs.value, lhs.address());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
         }
     }
-    void cmpl(const Operand &op, ImmPtr imm) {
-        cmpl(op, ImmWord(uintptr_t(imm.value)));
-    }
-    CodeOffsetLabel cmplWithPatch(Register lhs, Imm32 rhs) {
+    CodeOffsetLabel cmplWithPatch(Imm32 rhs, Register lhs) {
         masm.cmpl_i32r(rhs.value, lhs.code());
         return CodeOffsetLabel(masm.currentOffset());
     }
-    void cmpw(Register lhs, Register rhs) {
-        masm.cmpw_rr(lhs.code(), rhs.code());
+    void cmpw(Register rhs, Register lhs) {
+        masm.cmpw_rr(rhs.code(), lhs.code());
     }
     void setCC(Condition cond, Register r) {
         masm.setCC_r(static_cast<X86Assembler::Condition>(cond), r.code());
     }
-    void testb(Register lhs, Register rhs) {
-        MOZ_ASSERT(GeneralRegisterSet(Registers::SingleByteRegs).has(lhs));
+    void testb(Register rhs, Register lhs) {
         MOZ_ASSERT(GeneralRegisterSet(Registers::SingleByteRegs).has(rhs));
+        MOZ_ASSERT(GeneralRegisterSet(Registers::SingleByteRegs).has(lhs));
         masm.testb_rr(rhs.code(), lhs.code());
     }
-    void testw(Register lhs, Register rhs) {
-        masm.testw_rr(rhs.code(), lhs.code());
+    void testw(Register rhs, Register lhs) {
+        masm.testw_rr(lhs.code(), rhs.code());
     }
-    void testl(Register lhs, Register rhs) {
-        masm.testl_rr(rhs.code(), lhs.code());
+    void testl(Register rhs, Register lhs) {
+        masm.testl_rr(lhs.code(), rhs.code());
     }
-    void testl(Register lhs, Imm32 rhs) {
+    void testl(Imm32 rhs, Register lhs) {
         masm.testl_ir(rhs.value, lhs.code());
     }
-    void testl(const Operand &lhs, Imm32 rhs) {
+    void testl(Imm32 rhs, const Operand &lhs) {
         switch (lhs.kind()) {
           case Operand::REG:
             masm.testl_ir(rhs.value, lhs.reg());
@@ -1649,19 +1631,19 @@ class AssemblerX86Shared : public AssemblerShared
         MOZ_ASSERT(HasSSE2());
         masm.movmskps_rr(src.code(), dest.code());
     }
-    void ptest(FloatRegister lhs, FloatRegister rhs) {
+    void ptest(FloatRegister rhs, FloatRegister lhs) {
         MOZ_ASSERT(HasSSE41());
         masm.ptest_rr(rhs.code(), lhs.code());
     }
-    void ucomisd(FloatRegister lhs, FloatRegister rhs) {
+    void ucomisd(FloatRegister rhs, FloatRegister lhs) {
         MOZ_ASSERT(HasSSE2());
         masm.ucomisd_rr(rhs.code(), lhs.code());
     }
-    void ucomiss(FloatRegister lhs, FloatRegister rhs) {
+    void ucomiss(FloatRegister rhs, FloatRegister lhs) {
         MOZ_ASSERT(HasSSE2());
         masm.ucomiss_rr(rhs.code(), lhs.code());
     }
-    void pcmpeqw(FloatRegister lhs, FloatRegister rhs) {
+    void pcmpeqw(FloatRegister rhs, FloatRegister lhs) {
         MOZ_ASSERT(HasSSE2());
         masm.pcmpeqw_rr(rhs.code(), lhs.code());
     }

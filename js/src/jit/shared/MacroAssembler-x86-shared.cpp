@@ -232,7 +232,7 @@ MacroAssemblerX86Shared::branchNegativeZero(FloatRegister reg,
     bind(&nonZero);
 #elif defined(JS_CODEGEN_X64)
     movq(reg, scratch);
-    cmpq(scratch, Imm32(1));
+    cmpq(Imm32(1), scratch);
     j(Overflow, label);
 #endif
 }
@@ -243,6 +243,6 @@ MacroAssemblerX86Shared::branchNegativeZeroFloat32(FloatRegister reg,
                                                    Label *label)
 {
     movd(reg, scratch);
-    cmpl(scratch, Imm32(1));
+    cmp32(scratch, Imm32(1));
     j(Overflow, label);
 }
