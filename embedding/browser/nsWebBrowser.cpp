@@ -1696,7 +1696,7 @@ bool nsWebBrowser::PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion)
 
 NS_IMETHODIMP nsWebBrowser::GetPrimaryContentWindow(nsIDOMWindow** aDOMWindow)
 {
-  *aDOMWindow = 0;
+  *aDOMWindow = nullptr;
 
   nsCOMPtr<nsIDocShellTreeItem> item;
   NS_ENSURE_TRUE(mDocShellTreeOwner, NS_ERROR_FAILURE);
@@ -1834,8 +1834,8 @@ NS_IMETHODIMP nsWebBrowser::CloseStream()
   rv = mStream->CloseStream();
 
   // release
-  mStream = 0;
-  mStreamGuard = 0;
+  mStream = nullptr;
+  mStreamGuard = nullptr;
 
   return rv;
 }
