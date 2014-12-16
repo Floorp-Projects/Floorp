@@ -271,7 +271,7 @@ BluetoothHandsfreeHALInterface::Init(
   BluetoothHandsfreeNotificationHandler* aNotificationHandler,
   BluetoothHandsfreeResultHandler* aRes)
 {
-  static bthf_callbacks_t sCallbacks = {
+  static const bthf_callbacks_t sCallbacks = {
     sizeof(sCallbacks),
     BluetoothHandsfreeHALCallback::ConnectionState,
     BluetoothHandsfreeHALCallback::AudioState,
