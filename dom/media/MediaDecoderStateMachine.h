@@ -382,7 +382,8 @@ public:
     OnNotDecoded(MediaData::VIDEO_DATA, aReason);
   }
 
-  void OnSeekCompleted(nsresult aResult);
+  void OnSeekCompleted();
+  void OnSeekFailed(nsresult aResult);
 
 private:
   void AcquireMonitorAndInvokeDecodeError();

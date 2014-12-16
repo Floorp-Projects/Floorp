@@ -33,10 +33,11 @@ public:
   virtual nsresult ReadMetadata(MediaInfo* aInfo,
                                 MetadataTags** aTags) MOZ_OVERRIDE;
 
-  virtual void Seek(int64_t aTime,
-                    int64_t aStartTime,
-                    int64_t aEndTime,
-                    int64_t aCurrentTime) MOZ_OVERRIDE;
+  virtual nsRefPtr<SeekPromise>
+  Seek(int64_t aTime,
+       int64_t aStartTime,
+       int64_t aEndTime,
+       int64_t aCurrentTime) MOZ_OVERRIDE;
 
   void AudioSampleCallback(UInt32 aNumBytes,
                            UInt32 aNumPackets,

@@ -492,7 +492,7 @@ AppleMP3Reader::SetupDecoder()
 }
 
 
-void
+nsRefPtr<MediaDecoderReader::SeekPromise>
 AppleMP3Reader::Seek(int64_t aTime,
                      int64_t aStartTime,
                      int64_t aEndTime,
@@ -518,8 +518,7 @@ AppleMP3Reader::Seek(int64_t aTime,
 
   if (rv) {
     LOGE("Couldn't seek demuxer. Error code %x\n", rv);
-    GetCallback()->OnSeekCompleted(NS_ERROR_FAILURE);
-    return;
+    return SeekPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
   LOGD("computed byte offset = %lld; estimated = %s\n",
@@ -530,7 +529,7 @@ AppleMP3Reader::Seek(int64_t aTime,
 
   ResetDecode();
 
-  GetCallback()->OnSeekCompleted(NS_OK);
+  return SeekPromise::CreateAndResolve(true, __func__);
 }
 
 void
