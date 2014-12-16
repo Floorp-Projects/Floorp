@@ -7,7 +7,6 @@
 /* rendering object for CSS "display: ruby-base-container" */
 
 #include "nsRubyBaseContainerFrame.h"
-#include "nsContentUtils.h"
 #include "nsLineLayout.h"
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
@@ -524,40 +523,15 @@ nsRubyBaseContainerFrame::ReflowOnePair(nsPresContext* aPresContext,
   nscoord istart = aReflowState.mLineLayout->GetCurrentICoord();
   nscoord pairISize = 0;
 
-  nsAutoString baseText;
-  if (aBaseFrame) {
-    if (!nsContentUtils::GetNodeTextContent(aBaseFrame->GetContent(),
-                                            true, baseText)) {
-      NS_RUNTIMEABORT("OOM");
-    }
-  }
-
   // Reflow text frames
   for (uint32_t i = 0; i < rtcCount; i++) {
-    nsIFrame* textFrame = aTextFrames[i];
-    if (textFrame) {
-      MOZ_ASSERT(textFrame->GetType() == nsGkAtoms::rubyTextFrame);
-      nsAutoString annotationText;
-      if (!nsContentUtils::GetNodeTextContent(textFrame->GetContent(),
-                                              true, annotationText)) {
-        NS_RUNTIMEABORT("OOM");
-      }
-      // Per CSS Ruby spec, the content comparison for auto-hiding
-      // takes place prior to white spaces collapsing (white-space)
-      // and text transformation (text-transform), and ignores elements
-      // (considers only the textContent of the boxes). Which means
-      // using the content tree text comparison is correct.
-      if (annotationText.Equals(baseText)) {
-        textFrame->AddStateBits(NS_RUBY_TEXT_FRAME_AUTOHIDE);
-      } else {
-        textFrame->RemoveStateBits(NS_RUBY_TEXT_FRAME_AUTOHIDE);
-      }
-
+    if (aTextFrames[i]) {
+      MOZ_ASSERT(aTextFrames[i]->GetType() == nsGkAtoms::rubyTextFrame);
       nsReflowStatus reflowStatus;
       nsHTMLReflowMetrics metrics(*aReflowStates[i]);
 
       bool pushedFrame;
-      aReflowStates[i]->mLineLayout->ReflowFrame(textFrame, reflowStatus,
+      aReflowStates[i]->mLineLayout->ReflowFrame(aTextFrames[i], reflowStatus,
                                                  &metrics, pushedFrame);
       if (NS_INLINE_IS_BREAK(reflowStatus)) {
         // If any breaking occurs when reflowing a ruby text frame,
