@@ -933,10 +933,9 @@ add_task(function* test_readOnly_clone() {
   // Just check that it works.
   yield clone.execute("SELECT 1");
   // But should not be able to write.
-  try {
-    yield clone.execute("CREATE TABLE test (id INTEGER PRIMARY KEY)");
-    do_throw(new Error("Should not be able to write to a read-only clone."));
-  } catch (ex) {}
+
+  yield Assert.rejects(clone.execute("CREATE TABLE test (id INTEGER PRIMARY KEY)"),
+                       /readonly/);
   // Closing order should not matter.
   yield c.close();
   yield clone.close();

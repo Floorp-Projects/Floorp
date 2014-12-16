@@ -54,6 +54,8 @@ this.Tracker = function Tracker(name, engine) {
 
   Svc.Obs.add("weave:engine:start-tracking", this);
   Svc.Obs.add("weave:engine:stop-tracking", this);
+
+  Svc.Prefs.observe("engine." + this.engine.prefName, this);
 };
 
 Tracker.prototype = {
@@ -222,6 +224,11 @@ Tracker.prototype = {
         if (this._isTracking) {
           this.stopTracking();
           this._isTracking = false;
+        }
+        return;
+      case "nsPref:changed":
+        if (data == PREFS_BRANCH + "engine." + this.engine.prefName) {
+          this.onEngineEnabledChanged(this.engine.enabled);
         }
         return;
     }
@@ -628,7 +635,6 @@ Engine.prototype = {
 
   set enabled(val) {
     Svc.Prefs.set("engine." + this.prefName, !!val);
-    this._tracker.onEngineEnabledChanged(val);
   },
 
   get score() this._tracker.score,
