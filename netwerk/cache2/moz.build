@@ -21,16 +21,6 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
-    'CacheHashUtils.cpp',
-    'CacheIOThread.cpp',
-    'CacheObserver.cpp',
-]
-
-# AppCacheStorage.cpp cannot be built in unified mode because it uses plarena.h.
-# The rest of these files cannot be built in unified mode because they rely oni
-# including prlog.h after nsCache.h.
-SOURCES += [
-    'AppCacheStorage.cpp',
     'CacheEntry.cpp',
     'CacheFile.cpp',
     'CacheFileChunk.cpp',
@@ -40,13 +30,21 @@ SOURCES += [
     'CacheFileMetadata.cpp',
     'CacheFileOutputStream.cpp',
     'CacheFileUtils.cpp',
+    'CacheHashUtils.cpp',
     'CacheIndex.cpp',
     'CacheIndexContextIterator.cpp',
     'CacheIndexIterator.cpp',
+    'CacheIOThread.cpp',
     'CacheLog.cpp',
+    'CacheObserver.cpp',
     'CacheStorage.cpp',
     'CacheStorageService.cpp',
     'OldWrappers.cpp',
+]
+
+# AppCacheStorage.cpp cannot be built in unified mode because it uses plarena.h.
+SOURCES += [
+    'AppCacheStorage.cpp',
 ]
 
 LOCAL_INCLUDES += [
