@@ -101,12 +101,12 @@ NS_IMETHODIMP nsWebBrowser::InternalDestroy()
 
    SetDocShell(nullptr);
 
-   if(mDocShellTreeOwner)
+   if (mDocShellTreeOwner)
       {
       mDocShellTreeOwner->WebBrowser(nullptr);
       NS_RELEASE(mDocShellTreeOwner);
       }
-   if(mInitInfo)
+   if (mInitInfo)
       {
       delete mInitInfo;
       mInitInfo = nullptr;
@@ -158,7 +158,7 @@ NS_IMETHODIMP nsWebBrowser::GetInterface(const nsIID& aIID, void** aSink)
 {
    NS_ENSURE_ARG_POINTER(aSink);
 
-   if(NS_SUCCEEDED(QueryInterface(aIID, aSink)))
+   if (NS_SUCCEEDED(QueryInterface(aIID, aSink)))
       return NS_OK;
 
    if (mDocShell) {
@@ -324,7 +324,7 @@ NS_IMETHODIMP nsWebBrowser::GetContainerWindow(nsIWebBrowserChrome** aTopWindow)
 {
    NS_ENSURE_ARG_POINTER(aTopWindow);
 
-   if(mDocShellTreeOwner) {
+   if (mDocShellTreeOwner) {
       *aTopWindow = mDocShellTreeOwner->GetWebBrowserChrome().take();
    } else {
       *aTopWindow = nullptr;
@@ -395,7 +395,7 @@ NS_IMETHODIMP nsWebBrowser::SetIsActive(bool aIsActive)
 
 NS_IMETHODIMP nsWebBrowser::GetName(nsAString& aName)
 {
-   if(mDocShell)
+   if (mDocShell)
       mDocShell->GetName(aName);
    else
       aName = mInitInfo->name;
@@ -405,7 +405,7 @@ NS_IMETHODIMP nsWebBrowser::GetName(nsAString& aName)
 
 NS_IMETHODIMP nsWebBrowser::SetName(const nsAString& aName)
 {
-   if(mDocShell)
+   if (mDocShell)
       {
       return mDocShell->SetName(aName);
       }
@@ -419,7 +419,7 @@ NS_IMETHODIMP nsWebBrowser::NameEquals(const char16_t *aName, bool *_retval)
 {
     NS_ENSURE_ARG_POINTER(aName);
     NS_ENSURE_ARG_POINTER(_retval);
-    if(mDocShell)
+    if (mDocShell)
     {
         return mDocShell->NameEquals(aName, _retval);
     }
@@ -528,7 +528,7 @@ NS_IMETHODIMP nsWebBrowser::GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner)
 {
     NS_ENSURE_ARG_POINTER(aTreeOwner);
     *aTreeOwner = nullptr;
-    if(mDocShellTreeOwner)
+    if (mDocShellTreeOwner)
     {
         if (mDocShellTreeOwner->mTreeOwner)
         {
@@ -690,7 +690,7 @@ NS_IMETHODIMP nsWebBrowser::GetReferringURI(nsIURI** aURI)
 
 NS_IMETHODIMP nsWebBrowser::SetSessionHistory(nsISHistory* aSessionHistory)
 {
-   if(mDocShell)
+   if (mDocShell)
       return mDocShellAsNav->SetSessionHistory(aSessionHistory);
    else
       mInitInfo->sessionHistory = aSessionHistory;
@@ -701,7 +701,7 @@ NS_IMETHODIMP nsWebBrowser::SetSessionHistory(nsISHistory* aSessionHistory)
 NS_IMETHODIMP nsWebBrowser::GetSessionHistory(nsISHistory** aSessionHistory)
 {
    NS_ENSURE_ARG_POINTER(aSessionHistory);
-   if(mDocShell)
+   if (mDocShell)
       return mDocShellAsNav->GetSessionHistory(aSessionHistory);
    else
       *aSessionHistory = mInitInfo->sessionHistory;
@@ -1136,7 +1136,7 @@ NS_IMETHODIMP nsWebBrowser::InitWindow(nativeWindow aParentNativeWindow,
    NS_ENSURE_ARG(aParentNativeWindow || aParentWidget);
    NS_ENSURE_STATE(!mDocShell || mInitInfo);
 
-   if(aParentWidget)
+   if (aParentWidget)
       NS_ENSURE_SUCCESS(SetParentWidget(aParentWidget), NS_ERROR_FAILURE);
    else
       NS_ENSURE_SUCCESS(SetParentNativeWindow(aParentNativeWindow),
@@ -1156,7 +1156,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
     NS_ENSURE_SUCCESS(rv, rv);
 
    nsCOMPtr<nsIWidget> docShellParentWidget(mParentWidget);
-   if(!mParentWidget) // We need to create a widget
+   if (!mParentWidget) // We need to create a widget
       {
       // Create the widget
         mInternalWidget = do_CreateInstance(kChildCID, &rv);
@@ -1276,7 +1276,7 @@ NS_IMETHODIMP nsWebBrowser::Destroy()
 {
    InternalDestroy();
 
-   if(!mInitInfo)
+   if (!mInitInfo)
       mInitInfo = new nsWebBrowserInitInfo();
 
    return NS_OK;
@@ -1321,7 +1321,7 @@ NS_IMETHODIMP nsWebBrowser::GetSize(int32_t* aCX, int32_t* aCY)
 NS_IMETHODIMP nsWebBrowser::SetPositionAndSize(int32_t aX, int32_t aY,
    int32_t aCX, int32_t aCY, bool aRepaint)
 {
-   if(!mDocShell)
+   if (!mDocShell)
       {
       mInitInfo->x = aX;
       mInitInfo->y = aY;
@@ -1336,7 +1336,7 @@ NS_IMETHODIMP nsWebBrowser::SetPositionAndSize(int32_t aX, int32_t aY,
       // If there is an internal widget we need to make the docShell coordinates
       // relative to the internal widget rather than the calling app's parent.
       // We also need to resize our widget then.
-      if(mInternalWidget)
+      if (mInternalWidget)
          {
          doc_x = doc_y = 0;
          NS_ENSURE_SUCCESS(mInternalWidget->Resize(aX, aY, aCX, aCY, aRepaint),
@@ -1353,31 +1353,31 @@ NS_IMETHODIMP nsWebBrowser::SetPositionAndSize(int32_t aX, int32_t aY,
 NS_IMETHODIMP nsWebBrowser::GetPositionAndSize(int32_t* aX, int32_t* aY,
    int32_t* aCX, int32_t* aCY)
 {
-   if(!mDocShell)
+   if (!mDocShell)
       {
-      if(aX)
+      if (aX)
          *aX = mInitInfo->x;
-      if(aY)
+      if (aY)
          *aY = mInitInfo->y;
-      if(aCX)
+      if (aCX)
          *aCX = mInitInfo->cx;
-      if(aCY)
+      if (aCY)
          *aCY = mInitInfo->cy;
       }
    else
       {
-      if(mInternalWidget)
+      if (mInternalWidget)
          {
          nsIntRect bounds;
          NS_ENSURE_SUCCESS(mInternalWidget->GetBounds(bounds), NS_ERROR_FAILURE);
 
-         if(aX)
+         if (aX)
             *aX = bounds.x;
-         if(aY)
+         if (aY)
             *aY = bounds.y;
-         if(aCX)
+         if (aCX)
             *aCX = bounds.width;
-         if(aCY)
+         if (aCY)
             *aCY = bounds.height;
          return NS_OK;
          }
@@ -1409,7 +1409,7 @@ NS_IMETHODIMP nsWebBrowser::SetParentWidget(nsIWidget* aParentWidget)
    NS_ENSURE_STATE(!mDocShell);
 
    mParentWidget = aParentWidget;
-   if(mParentWidget)
+   if (mParentWidget)
       mParentNativeWindow = mParentWidget->GetNativeData(NS_NATIVE_WIDGET);
    else
       mParentNativeWindow = nullptr;
@@ -1445,7 +1445,7 @@ NS_IMETHODIMP nsWebBrowser::GetVisibility(bool* visibility)
 {
    NS_ENSURE_ARG_POINTER(visibility);
 
-   if(!mDocShell)
+   if (!mDocShell)
       *visibility = mInitInfo->visible;
    else
       NS_ENSURE_SUCCESS(mDocShellAsWin->GetVisibility(visibility), NS_ERROR_FAILURE);
@@ -1455,12 +1455,12 @@ NS_IMETHODIMP nsWebBrowser::GetVisibility(bool* visibility)
 
 NS_IMETHODIMP nsWebBrowser::SetVisibility(bool aVisibility)
 {
-   if(!mDocShell)
+   if (!mDocShell)
       mInitInfo->visible = aVisibility;
    else
       {
       NS_ENSURE_SUCCESS(mDocShellAsWin->SetVisibility(aVisibility), NS_ERROR_FAILURE);
-      if(mInternalWidget)
+      if (mInternalWidget)
          mInternalWidget->Show(aVisibility);
       }
 
@@ -1488,7 +1488,7 @@ NS_IMETHODIMP nsWebBrowser::GetMainWidget(nsIWidget** mainWidget)
 {
    NS_ENSURE_ARG_POINTER(mainWidget);
 
-   if(mInternalWidget)
+   if (mInternalWidget)
       *mainWidget = mInternalWidget;
    else
       *mainWidget = mParentWidget;
@@ -1583,7 +1583,7 @@ NS_IMETHODIMP nsWebBrowser::ScrollByPages(int32_t aNumPages)
 NS_IMETHODIMP nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
 {
      nsCOMPtr<nsIDocShell> kungFuDeathGrip(mDocShell);
-     if(aDocShell)
+     if (aDocShell)
      {
          NS_ENSURE_TRUE(!mDocShell, NS_ERROR_FAILURE);
 
@@ -1635,7 +1635,7 @@ NS_IMETHODIMP nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
 
 NS_IMETHODIMP nsWebBrowser::EnsureDocShellTreeOwner()
 {
-   if(mDocShellTreeOwner)
+   if (mDocShellTreeOwner)
       return NS_OK;
 
    mDocShellTreeOwner = new nsDocShellTreeOwner();
