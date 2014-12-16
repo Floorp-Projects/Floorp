@@ -64,7 +64,7 @@ static NS_DEFINE_CID(kChildCID, NS_CHILD_CID);
 //***    nsWebBrowser: Object Management
 //*****************************************************************************
 
-nsWebBrowser::nsWebBrowser() : mDocShellTreeOwner(nullptr),
+nsWebBrowser::nsWebBrowser() :
    mInitInfo(nullptr),
    mContentType(typeContentWrapper),
    mActivating(false),
@@ -101,11 +101,10 @@ NS_IMETHODIMP nsWebBrowser::InternalDestroy()
 
    SetDocShell(nullptr);
 
-   if (mDocShellTreeOwner)
-      {
+   if (mDocShellTreeOwner) {
       mDocShellTreeOwner->WebBrowser(nullptr);
-      NS_RELEASE(mDocShellTreeOwner);
-      }
+      mDocShellTreeOwner = nullptr;
+   }
    if (mInitInfo)
       {
       delete mInitInfo;
@@ -502,8 +501,8 @@ NS_IMETHODIMP nsWebBrowser::FindItemWithName(const char16_t *aName,
    NS_ASSERTION(mDocShellTreeOwner, "This should always be set when in this situation");
 
    return mDocShell->FindItemWithName(aName,
-      static_cast<nsIDocShellTreeOwner*>(mDocShellTreeOwner),
-      aOriginalRequestor, _retval);
+                                      static_cast<nsIDocShellTreeOwner*>(mDocShellTreeOwner),
+                                      aOriginalRequestor, _retval);
 }
 
 nsIDocument*
@@ -1633,8 +1632,6 @@ NS_IMETHODIMP nsWebBrowser::EnsureDocShellTreeOwner()
       return NS_OK;
 
    mDocShellTreeOwner = new nsDocShellTreeOwner();
-
-   NS_ADDREF(mDocShellTreeOwner);
    mDocShellTreeOwner->WebBrowser(this);
 
    return NS_OK;

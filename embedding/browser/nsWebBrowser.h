@@ -11,6 +11,7 @@
 #include "nsDocShellTreeOwner.h"
 
 // Core Includes
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 
 // Interfaces needed
@@ -125,7 +126,7 @@ protected:
     virtual bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion) MOZ_OVERRIDE;
 
 protected:
-   nsDocShellTreeOwner*       mDocShellTreeOwner;
+   nsRefPtr<nsDocShellTreeOwner> mDocShellTreeOwner;
    nsCOMPtr<nsIDocShell>      mDocShell;
    nsCOMPtr<nsIInterfaceRequestor> mDocShellAsReq;
    nsCOMPtr<nsIBaseWindow>    mDocShellAsWin;
