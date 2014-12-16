@@ -443,8 +443,8 @@ Debugger::getScriptFrameWithIter(JSContext *cx, AbstractFramePtr frame,
     if (!p) {
         /* Create and populate the Debugger.Frame object. */
         JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject();
-        NativeObject *frameobj =
-            NewNativeObjectWithGivenProto(cx, &DebuggerFrame_class, proto, nullptr);
+        RootedNativeObject frameobj(cx, NewNativeObjectWithGivenProto(cx, &DebuggerFrame_class,
+                                                                      proto, nullptr));
         if (!frameobj)
             return false;
 
@@ -461,13 +461,13 @@ Debugger::getScriptFrameWithIter(JSContext *cx, AbstractFramePtr frame,
 
         frameobj->setReservedSlot(JSSLOT_DEBUGFRAME_OWNER, ObjectValue(*object));
 
+        if (!ensureExecutionObservabilityOfFrame(cx, frame))
+            return false;
+
         if (!frames.add(p, frame, frameobj)) {
             js_ReportOutOfMemory(cx);
             return false;
         }
-
-        if (!ensureExecutionObservabilityOfFrame(cx, frame))
-            return false;
     }
     vp.setObject(*p->value());
     return true;
