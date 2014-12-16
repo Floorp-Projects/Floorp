@@ -171,6 +171,8 @@ SurfaceFormatForPixelFormat(android::PixelFormat aFormat)
     return gfx::SurfaceFormat::R8G8B8X8;
   case PIXEL_FORMAT_RGB_565:
     return gfx::SurfaceFormat::R5G6B5;
+  case HAL_PIXEL_FORMAT_YV12:
+    return gfx::SurfaceFormat::YUV;
   default:
     MOZ_CRASH("Unknown gralloc pixel format");
   }
@@ -229,6 +231,9 @@ GrallocTextureClientOGL::AllocateForSurface(gfx::IntSize aSize,
     break;
   case gfx::SurfaceFormat::R5G6B5:
     format = android::PIXEL_FORMAT_RGB_565;
+    break;
+  case gfx::SurfaceFormat::YUV:
+    format = HAL_PIXEL_FORMAT_YV12;
     break;
   case gfx::SurfaceFormat::A8:
     NS_WARNING("gralloc does not support gfx::SurfaceFormat::A8");

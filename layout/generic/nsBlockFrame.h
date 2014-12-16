@@ -414,6 +414,12 @@ protected:
   void SlideLine(nsBlockReflowState& aState,
                  nsLineBox* aLine, nscoord aDeltaBCoord);
 
+  void UpdateLineContainerWidth(nsLineBox* aLine,
+                                nscoord aNewContainerWidth);
+
+  // helper for SlideLine and UpdateLineContainerWidth
+  void MoveChildFramesOfLine(nsLineBox* aLine, nscoord aDeltaBCoord);
+
   void ComputeFinalSize(const nsHTMLReflowState& aReflowState,
                         nsBlockReflowState&      aState,
                         nsHTMLReflowMetrics&     aMetrics,

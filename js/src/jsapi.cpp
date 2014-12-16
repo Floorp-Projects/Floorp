@@ -571,6 +571,9 @@ JS_Init(void)
         return false;
 #endif // EXPOSE_INTL_API
 
+    if (!CreateHelperThreadsState())
+        return false;
+
     jsInitState = Running;
     return true;
 }
@@ -590,7 +593,7 @@ JS_ShutDown(void)
     }
 #endif
 
-    HelperThreadState().finish();
+    DestroyHelperThreadsState();
 
     PRMJ_NowShutdown();
 

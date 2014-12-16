@@ -493,6 +493,9 @@ XRE_InitChildProcess(int aArgc,
       // Content processes need the XPCOM/chromium frankenventloop
       uiLoopType = MessageLoop::TYPE_MOZILLA_CHILD;
       break;
+  case GeckoProcessType_GMPlugin:
+      uiLoopType = MessageLoop::TYPE_DEFAULT;
+      break;
   default:
       uiLoopType = MessageLoop::TYPE_UI;
       break;
@@ -741,7 +744,7 @@ struct RunnableMethodTraits<ContentChild>
 void
 XRE_ShutdownChildProcess()
 {
-  NS_ABORT_IF_FALSE(MessageLoopForUI::current(), "Wrong thread!");
+  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Wrong thread!");
 
   mozilla::DebugOnly<MessageLoop*> ioLoop = XRE_GetIOMessageLoop();
   NS_ABORT_IF_FALSE(!!ioLoop, "Bad shutdown order");

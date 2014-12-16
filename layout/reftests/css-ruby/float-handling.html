@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+  <link rel="stylesheet" href="common.css">
+  <style>
+    ruby div {
+      width: 10px; height: 10px;
+      background-color: grey;
+    }
+    .left { float: left; }
+    .right { float: right; }
+  </style>
+</head>
+<body>
+  <div><ruby><rb>hello world</rb><rt><div class="left"></div>hello world</rt></ruby></div>
+  <div><ruby><rb>hello world</rb><rt>hello<div class="left"></div> world</rt></ruby></div>
+  <div><ruby><rb>hello world</rb><rt><div class="right"></div>hello world</rt></ruby></div>
+  <div><ruby><rb>hello world</rb><rt>hello<div class="right"></div> world</rt></ruby></div>
+</body>
+</html>
