@@ -4,10 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-UNIFIED_SOURCES += [
+SOURCES += [
     'MockMediaResource.cpp',
     'TestAudioCompactor.cpp',
     'TestGMPCrossOrigin.cpp',
+    'TestMP4Demuxer.cpp',
     'TestMP4Reader.cpp',
     'TestTrackEncoder.cpp',
     'TestVideoSegment.cpp',
@@ -15,14 +16,17 @@ UNIFIED_SOURCES += [
 ]
 
 if CONFIG['MOZ_WEBM_ENCODER']:
-    UNIFIED_SOURCES += [
+    SOURCES += [
         'TestVideoTrackEncoder.cpp',
         'TestVorbisTrackEncoder.cpp',
         'TestWebMWriter.cpp',
     ]
 
 TEST_HARNESS_FILES.gtest += [
+    '../test/gizmo-frag.mp4',
     '../test/gizmo.mp4',
+    '../test/short-cenc.mp4',
+    'dash_dashinit.mp4',
     'mediasource_test.mp4',
     'test.webm',
 ]
