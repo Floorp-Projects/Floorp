@@ -13,7 +13,7 @@ using namespace mozilla;
 namespace mp4_demuxer {
 
 Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
-  : mContext(aContext), mType(0), mParent(aParent)
+  : mContext(aContext), mParent(aParent)
 {
   uint8_t header[8];
   MediaByteRange headerRange(aOffset, aOffset + sizeof(header));
@@ -69,7 +69,7 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
 }
 
 Box::Box()
-  : mContext(nullptr), mType(0)
+  : mContext(nullptr)
 {}
 
 Box

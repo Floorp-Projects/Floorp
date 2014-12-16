@@ -24,7 +24,7 @@ public:
   void Seek(Microseconds aTime);
 
 private:
-  MP4Sample* Get();
+  Sample* Get();
   void Next();
   nsRefPtr<Index> mIndex;
   size_t mCurrentMoof;
