@@ -5498,7 +5498,8 @@ GCRuntime::endSweepPhase(bool lastGC)
         ZoneList zones;
         for (GCZonesIter zone(rt); !zone.done(); zone.next())
             zones.append(zone);
-        sweepBackgroundThings(zones, MainThread);
+        if (!zones.isEmpty())
+            sweepBackgroundThings(zones, MainThread);
 
         /*
          * Destroy arenas after we finished the sweeping so finalizers can
