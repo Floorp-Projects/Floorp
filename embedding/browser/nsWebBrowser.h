@@ -135,7 +135,7 @@ protected:
    nsCOMPtr<nsITextScroll>    mDocShellAsTextScroll;
    nsCOMPtr<nsIWidget>        mInternalWidget;
    nsCOMPtr<nsIWindowWatcher> mWWatch;
-   nsWebBrowserInitInfo*      mInitInfo;
+   nsAutoPtr<nsWebBrowserInitInfo> mInitInfo;
    uint32_t                   mContentType;
    bool                       mActivating;
    bool                       mShouldEnableHistory;
