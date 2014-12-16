@@ -469,19 +469,16 @@ MP4Reader::RequestVideoData(bool aSkipToNextKeyframe,
   MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());
   VLOG("RequestVideoData skip=%d time=%lld", aSkipToNextKeyframe, aTimeThreshold);
 
-  // Record number of frames decoded and parsed. Automatically update the
-  // stats counters using the AutoNotifyDecoded stack-based class.
-  uint32_t parsed = 0, decoded = 0;
-  AbstractMediaDecoder::AutoNotifyDecoded autoNotify(mDecoder, parsed, decoded);
-
   MOZ_ASSERT(HasVideo() && mPlatform && mVideo.mDecoder);
 
   bool eos = false;
   if (aSkipToNextKeyframe) {
+    uint32_t parsed = 0;
     eos = !SkipVideoDemuxToNextKeyFrame(aTimeThreshold, parsed);
     if (!eos && NS_FAILED(mVideo.mDecoder->Flush())) {
       NS_WARNING("Failed to skip/flush video when skipping-to-next-keyframe.");
     }
+    mDecoder->NotifyDecodedFrames(parsed, 0);
   }
 
   MonitorAutoLock lock(mVideo.mMonitor);
@@ -491,12 +488,6 @@ MP4Reader::RequestVideoData(bool aSkipToNextKeyframe,
   } else {
     ScheduleUpdate(kVideo);
   }
-
-  // Report the number of "decoded" frames as the difference in the
-  // mNumSamplesOutput field since the last time we were called.
-  uint64_t delta = mVideo.mNumSamplesOutput - mLastReportedNumDecodedFrames;
-  decoded = static_cast<uint32_t>(delta);
-  mLastReportedNumDecodedFrames = mVideo.mNumSamplesOutput;
 
   return p;
 }
@@ -550,6 +541,11 @@ MP4Reader::Update(TrackType aTrack)
 {
   MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());
 
+  // Record number of frames decoded and parsed. Automatically update the
+  // stats counters using the AutoNotifyDecoded stack-based class.
+  uint32_t parsed = 0, decoded = 0;
+  AbstractMediaDecoder::AutoNotifyDecoded autoNotify(mDecoder, parsed, decoded);
+
   bool needInput = false;
   bool needOutput = false;
   auto& decoder = GetDecoderData(aTrack);
@@ -560,6 +556,11 @@ MP4Reader::Update(TrackType aTrack)
       needInput = true;
       decoder.mInputExhausted = false;
       decoder.mNumSamplesInput++;
+    }
+    if (aTrack == kVideo) {
+      uint64_t delta = decoder.mNumSamplesOutput - mLastReportedNumDecodedFrames;
+      decoded = static_cast<uint32_t>(delta);
+      mLastReportedNumDecodedFrames = decoder.mNumSamplesOutput;
     }
     if (decoder.HasPromise()) {
       needOutput = true;
@@ -584,6 +585,9 @@ MP4Reader::Update(TrackType aTrack)
     MP4Sample* sample = PopSample(aTrack);
     if (sample) {
       decoder.mDecoder->Input(sample);
+      if (aTrack == kVideo) {
+        parsed++;
+      }
     } else {
       {
         MonitorAutoLock lock(decoder.mMonitor);
