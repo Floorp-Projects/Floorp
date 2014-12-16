@@ -863,8 +863,8 @@ CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate *ool)
         }
 
         masm.addDouble(input, temp);
-        masm.cvttsd2si(temp, output);
-        masm.cvtsi2sd(output, ScratchDoubleReg);
+        masm.vcvttsd2si(temp, output);
+        masm.vcvtsi2sd(output, ScratchDoubleReg, ScratchDoubleReg);
 
         masm.ucomisd(ScratchDoubleReg, temp);
         masm.j(Assembler::Parity, &fail);
@@ -952,8 +952,8 @@ CodeGeneratorX86::visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32 *ool)
         }
 
         masm.addFloat32(input, temp);
-        masm.cvttss2si(temp, output);
-        masm.cvtsi2ss(output, ScratchFloat32Reg);
+        masm.vcvttss2si(temp, output);
+        masm.vcvtsi2ss(output, ScratchFloat32Reg, ScratchFloat32Reg);
 
         masm.ucomiss(ScratchFloat32Reg, temp);
         masm.j(Assembler::Parity, &fail);
@@ -966,7 +966,7 @@ CodeGeneratorX86::visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32 *ool)
 
         masm.push(input);
         masm.setupUnalignedABICall(1, output);
-        masm.cvtss2sd(input, input);
+        masm.vcvtss2sd(input, input, input);
         masm.passABIArg(input, MoveOp::DOUBLE);
 
         if (gen->compilingAsmJS())
