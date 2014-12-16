@@ -250,9 +250,9 @@ public:
     , mImageFlags(aImageFlags)
   {}
   virtual bool operator()(gfxContext* aContext,
-                            const gfxRect& aFillRect,
-                            const GraphicsFilter& aFilter,
-                            const gfxMatrix& aTransform);
+                          const gfxRect& aFillRect,
+                          const GraphicsFilter& aFilter,
+                          const gfxMatrix& aTransform);
 private:
   nsRefPtr<SVGDocumentWrapper> mSVGDocumentWrapper;
   const nsIntRect              mViewport;
@@ -756,13 +756,11 @@ struct SVGDrawingParameters
 
 //******************************************************************************
 /* [noscript] void draw(in gfxContext aContext,
- *                      in gfxGraphicsFilter aFilter,
- *                      [const] in gfxMatrix aUserSpaceToImageSpace,
- *                      [const] in gfxRect aFill,
- *                      [const] in nsIntRect aSubimage,
- *                      [const] in nsIntSize aViewportSize,
- *                      [const] in SVGImageContext aSVGContext,
+ *                      [const] in nsIntSize aSize,
+ *                      [const] in ImageRegion aRegion,
  *                      in uint32_t aWhichFrame,
+ *                      in gfxGraphicsFilter aFilter,
+ *                      [const] in MaybeSVGImageContext aSVGContext,
  *                      in uint32_t aFlags); */
 NS_IMETHODIMP
 VectorImage::Draw(gfxContext* aContext,

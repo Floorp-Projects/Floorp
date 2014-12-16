@@ -4,8 +4,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXTRA_PP_COMPONENTS += [
-    'reftest-cmdline.js',
-]
+if CONFIG['MOZ_BUILD_APP'] in ('b2g', 'b2g/dev', 'mobile/android'):
+    DEFINES['BOOTSTRAP'] = True
+    if CONFIG['MOZ_BUILD_APP'] in ('b2g', 'b2g/dev'):
+        DEFINES['REFTEST_B2G'] = True
+else:
+    EXTRA_PP_COMPONENTS += [
+        'reftest-cmdline.js',
+        'reftest-cmdline.manifest',
+    ]
 
 JAR_MANIFESTS += ['jar.mn']
+
+XPI_NAME = 'reftest'

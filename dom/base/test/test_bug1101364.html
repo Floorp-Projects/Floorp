@@ -1,0 +1,73 @@
+<!DOCTYPE>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1101364
+-->
+<head>
+<title>Test for Bug 1101364</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+    #test1 {
+      -moz-user-select: none;
+    }
+
+    #testDiv, #test2 {
+      -moz-user-select: text;
+    }
+  </style>
+</head>
+<body id='body'>
+
+<iframe id="test1" src="data:text/html,<h1 id='test1' style='-moz-user-select:none'>Header</h1><div id='testDiv'>test1</div>"></iframe>
+<iframe id="test2" src="data:text/html,<div contenteditable id='test2'>AAA<span id='test2Inner'>BBB</span></div>"></iframe>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function test()
+{
+  var iframe1 = document.getElementById('test1');
+  iframe1.focus();
+  var Ci = SpecialPowers.Ci;
+  var webnav = SpecialPowers.wrap(iframe1.contentWindow).QueryInterface(Ci.nsIInterfaceRequestor)
+                                                        .getInterface(Ci.nsIWebNavigation)
+  var docShell = webnav.QueryInterface(Ci.nsIDocShell);
+
+  // test1
+  docShell.doCommand("cmd_selectAll");
+  var withoutContenteditable = snapshotWindow(iframe1.contentWindow);
+
+  iframe1.contentDocument.getElementById('testDiv').setAttribute('contentEditable', true);
+  docShell.doCommand("cmd_selectAll");
+  var withContenteditable = snapshotWindow(iframe1.contentWindow);
+  dump(withoutContenteditable.toDataURL());
+  dump(withContenteditable.toDataURL());
+
+  ok(compareSnapshots(withoutContenteditable, withContenteditable, true)[0], 'Select all should look identical');
+
+  // test2
+  var iframe2 = document.getElementById('test2');
+  iframe2.focus();
+  var webnav = SpecialPowers.wrap(iframe2.contentWindow).QueryInterface(Ci.nsIInterfaceRequestor)
+                                                        .getInterface(Ci.nsIWebNavigation)
+  var docShell = webnav.QueryInterface(Ci.nsIDocShell);
+  var test2Inner = iframe2.contentDocument.getElementById('test2Inner');
+  test2Inner.style.MozUserSelect = 'text';
+  docShell.doCommand("cmd_selectAll");
+  var withoutUserSelect = snapshotWindow(iframe2.contentWindow);
+
+  test2Inner.style.MozUserSelect = 'none';
+  docShell.doCommand("cmd_selectAll");
+  var withUserSelect = snapshotWindow(iframe2.contentWindow);
+  ok(compareSnapshots(withoutUserSelect, withUserSelect, true)[0], 'Editable fields should ignore user select style');
+
+  SimpleTest.finish();
+}
+window.onload = function() { setTimeout(test, 0); };
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

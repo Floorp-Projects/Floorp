@@ -4119,11 +4119,6 @@ pref("layout.css.touch_action.enabled", false);
 // enable JS dump() function.
 pref("browser.dom.window.dump.enabled", false);
 
-// SPS Profiler
-pref("profiler.enabled", false);
-pref("profiler.interval", 10);
-pref("profiler.entries", 100000);
-
 #if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
 // Network Information API
 pref("dom.netinfo.enabled", true);

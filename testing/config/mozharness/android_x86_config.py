@@ -22,7 +22,7 @@ config = {
                 "--remote-webserver=%(remote_webserver)s", "--xre-path=%(xre_path)s",
                 "--utility-path=%(utility_path)s", "--deviceIP=%(device_ip)s",
                 "--devicePort=%(device_port)s", "--http-port=%(http_port)s",
-                "--ssl-port=%(ssl_port)s", "--httpd-path", "reftest/components",
+                "--ssl-port=%(ssl_port)s", "--httpd-path", "%(modules_dir)s",
                 "--symbols-path=%(symbols_path)s",
             ],
         },

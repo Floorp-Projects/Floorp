@@ -16,6 +16,9 @@
 
 #ifdef _MSC_VER
 # include <intrin.h> // for __cpuid
+# if defined(_M_X64) && (_MSC_FULL_VER >= 160040219)
+#  include <immintrin.h> // for _xgetbv
+# endif
 #endif
 
 using namespace js;
@@ -141,6 +144,30 @@ CPUInfo::SSEVersion CPUInfo::maxEnabledSSEVersion = UnknownSSE;
 bool CPUInfo::avxPresent = false;
 bool CPUInfo::avxEnabled = true;
 
+static uintptr_t
+ReadXGETBV()
+{
+    // We use a variety of low-level mechanisms to get at the xgetbv
+    // instruction, including spelling out the xgetbv instruction as bytes,
+    // because older compilers and assemblers may not recognize the instruction
+    // by name.
+    size_t xcr0EAX = 0;
+#if defined(_XCR_XFEATURE_ENABLED_MASK)
+    xcr0EAX = _xgetbv(_XCR_XFEATURE_ENABLED_MASK);
+#elif defined(__GNUC__)
+    // xgetbv returns its results in %eax and %edx, and for our purposes here,
+    // we're only interested in the %eax value.
+    asm(".byte 0x0f, 0x01, 0xd0" : "=a"(xcr0EAX) : "c"(0) : "%edx");
+#elif defined(_MSC_VER) && defined(_M_IX86)
+    __asm {
+        xor ecx, ecx
+        _asm _emit 0x0f _asm _emit 0x01 _asm _emit 0xd0
+        mov xcr0EAX, eax
+    }
+#endif
+    return xcr0EAX;
+}
+
 void
 CPUInfo::SetSSEVersion()
 {
@@ -202,4 +229,12 @@ CPUInfo::SetSSEVersion()
     static const int AVXBit = 1 << 28;
     static const int XSAVEBit = 1 << 27;
     avxPresent = (flagsECX & AVXBit) && (flagsECX & XSAVEBit) && avxEnabled;
+
+    // If the hardware supports AVX, check whether the OS supports it too.
+    if (avxPresent) {
+        size_t xcr0EAX = ReadXGETBV();
+        static const int xcr0SSEBit = 1 << 1;
+        static const int xcr0AVXBit = 1 << 2;
+        avxPresent = (xcr0EAX & xcr0SSEBit) && (xcr0EAX & xcr0AVXBit);
+    }
 }

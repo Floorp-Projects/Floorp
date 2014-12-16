@@ -851,6 +851,9 @@ public:
   // The decoder monitor must be held.
   bool IsLogicallyPlaying();
 
+  // Re-create a decoded stream if audio being captured
+  void RecreateDecodedStreamIfNecessary(int64_t aStartTimeUSecs);
+
 #ifdef MOZ_EME
   // This takes the decoder monitor.
   virtual nsresult SetCDMProxy(CDMProxy* aProxy) MOZ_OVERRIDE;

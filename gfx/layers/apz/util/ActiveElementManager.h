@@ -53,8 +53,13 @@ public:
    * @param aWasClick whether the touch was a click
    */
   void HandleTouchEnd(bool aWasClick);
+  /**
+   * @return true iff the currently active element (or one of its ancestors)
+   * actually had a style for the :active pseudo-class. The currently active
+   * element is the root element if no other elements are active.
+   */
+  bool ActiveElementUsesStyle() const;
 private:
-  nsCOMPtr<inIDOMUtils> mDomUtils;
   /**
    * The target of the first touch point in the current touch block.
    */
@@ -73,6 +78,10 @@ private:
    * A task for calling SetActive() after a timeout.
    */
   CancelableTask* mSetActiveTask;
+  /**
+   * See ActiveElementUsesStyle() documentation.
+   */
+  bool mActiveElementUsesStyle;
 
   // Helpers
   void TriggerElementActivation();

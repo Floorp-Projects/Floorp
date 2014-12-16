@@ -992,6 +992,20 @@ NS_NewLoadGroup(nsILoadGroup      **result,
     return rv;
 }
 
+// Create a new nsILoadGroup that will match the given principal.
+nsresult
+NS_NewLoadGroup(nsILoadGroup** aResult, nsIPrincipal* aPrincipal);
+
+// Determine if the given loadGroup/principal pair will produce a principal
+// with similar permissions when passed to NS_NewChannel().  This checks for
+// things like making sure the appId and browser element flags match.  Without
+// an appropriate load group these values can be lost when getting the result
+// principal back out of the channel.  Null principals are also always allowed
+// as they do not have permissions to actually use the load group.
+bool
+NS_LoadGroupMatchesPrincipal(nsILoadGroup* aLoadGroup,
+                             nsIPrincipal* aPrincipal);
+
 inline nsresult
 NS_NewDownloader(nsIStreamListener   **result,
                  nsIDownloadObserver  *observer,
