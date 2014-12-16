@@ -506,9 +506,9 @@ CodeGeneratorX86Shared::visitMinMaxD(LMinMaxD *ins)
     // and negative zero. These instructions merge the sign bits in that
     // case, and are no-ops otherwise.
     if (ins->mir()->isMax())
-        masm.andpd(second, first);
+        masm.vandpd(second, first, first);
     else
-        masm.orpd(second, first);
+        masm.vorpd(second, first, first);
     masm.jump(&done);
 
     // x86's min/max are not symmetric; if either operand is a NaN, they return
@@ -557,9 +557,9 @@ CodeGeneratorX86Shared::visitMinMaxF(LMinMaxF *ins)
     // and negative zero. These instructions merge the sign bits in that
     // case, and are no-ops otherwise.
     if (ins->mir()->isMax())
-        masm.andps(second, first);
+        masm.vandps(second, first, first);
     else
-        masm.orps(second, first);
+        masm.vorps(second, first, first);
     masm.jump(&done);
 
     // x86's min/max are not symmetric; if either operand is a NaN, they return
@@ -590,7 +590,7 @@ CodeGeneratorX86Shared::visitAbsD(LAbsD *ins)
     // Load a value which is all ones except for the sign bit.
     masm.loadConstantDouble(SpecificNaN<double>(0, FloatingPoint<double>::kSignificandBits),
                             ScratchDoubleReg);
-    masm.andpd(ScratchDoubleReg, input);
+    masm.vandpd(ScratchDoubleReg, input, input);
 }
 
 void
@@ -601,7 +601,7 @@ CodeGeneratorX86Shared::visitAbsF(LAbsF *ins)
     // Same trick as visitAbsD above.
     masm.loadConstantFloat32(SpecificNaN<float>(0, FloatingPoint<float>::kSignificandBits),
                              ScratchFloat32Reg);
-    masm.andps(ScratchFloat32Reg, input);
+    masm.vandps(ScratchFloat32Reg, input, input);
 }
 
 void
@@ -2616,15 +2616,15 @@ CodeGeneratorX86Shared::visitSimdBinaryArithIx4(LSimdBinaryArithIx4 *ins)
 {
     FloatRegister lhs = ToFloatRegister(ins->lhs());
     Operand rhs = ToOperand(ins->rhs());
-    MOZ_ASSERT(ToFloatRegister(ins->output()) == lhs);
+    FloatRegister output = ToFloatRegister(ins->output());
 
     MSimdBinaryArith::Operation op = ins->operation();
     switch (op) {
       case MSimdBinaryArith::Add:
-        masm.packedAddInt32(rhs, lhs);
+        masm.vpaddd(rhs, lhs, output);
         return;
       case MSimdBinaryArith::Sub:
-        masm.packedSubInt32(rhs, lhs);
+        masm.vpsubd(rhs, lhs, output);
         return;
       case MSimdBinaryArith::Mul: {
         if (AssemblerX86Shared::HasSSE41()) {
@@ -2695,15 +2695,15 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *ins)
         masm.vmaxps(Operand(lhs), rhsCopy, tmp);
         masm.vmaxps(rhs, lhs, output);
 
-        masm.andps(tmp, output);
-        masm.orps(ScratchSimdReg, output); // or in the all-ones NaNs
+        masm.vandps(tmp, output, output);
+        masm.vorps(ScratchSimdReg, output, output); // or in the all-ones NaNs
         return;
       }
       case MSimdBinaryArith::Min: {
         FloatRegister rhsCopy = masm.reusedInputAlignedFloat32x4(rhs, ScratchSimdReg);
         masm.vminps(Operand(lhs), rhsCopy, ScratchSimdReg);
         masm.vminps(rhs, lhs, output);
-        masm.orps(ScratchSimdReg, output); // NaN or'd with arbitrary bits is NaN
+        masm.vorps(ScratchSimdReg, output, output); // NaN or'd with arbitrary bits is NaN
         return;
       }
       case MSimdBinaryArith::MinNum: {
@@ -2713,11 +2713,11 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *ins)
 
         FloatRegister mask = ScratchSimdReg;
         masm.pcmpeqd(Operand(lhs), mask);
-        masm.andps(tmp, mask);
+        masm.vandps(tmp, mask, mask);
 
         FloatRegister lhsCopy = masm.reusedInputFloat32x4(lhs, tmp);
         masm.vminps(rhs, lhsCopy, tmp);
-        masm.orps(mask, tmp);
+        masm.vorps(mask, tmp, tmp);
 
         FloatRegister rhsCopy = masm.reusedInputAlignedFloat32x4(rhs, mask);
         masm.vcmpneqps(rhs, rhsCopy, mask);
@@ -2730,9 +2730,9 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *ins)
             // it requires the mask to be in xmm0.
             if (lhs != output)
                 masm.movaps(lhs, output);
-            masm.andps(Operand(mask), output);
-            masm.andnps(Operand(tmp), mask);
-            masm.orps(Operand(mask), output);
+            masm.vandps(Operand(mask), output, output);
+            masm.vandnps(Operand(tmp), mask, mask);
+            masm.vorps(Operand(mask), output, output);
         }
         return;
       }
@@ -2743,11 +2743,11 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *ins)
 
         FloatRegister tmp = ToFloatRegister(ins->temp());
         masm.loadConstantInt32x4(SimdConstant::SplatX4(int32_t(0x80000000)), tmp);
-        masm.andps(tmp, mask);
+        masm.vandps(tmp, mask, mask);
 
         FloatRegister lhsCopy = masm.reusedInputFloat32x4(lhs, tmp);
         masm.vmaxps(rhs, lhsCopy, tmp);
-        masm.andnps(Operand(tmp), mask);
+        masm.vandnps(Operand(tmp), mask, mask);
 
         // Ensure tmp always contains the temporary result
         mask = tmp;
@@ -2764,9 +2764,9 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *ins)
             // it requires the mask to be in xmm0.
             if (lhs != output)
                 masm.movaps(lhs, output);
-            masm.andps(Operand(mask), output);
-            masm.andnps(Operand(tmp), mask);
-            masm.orps(Operand(mask), output);
+            masm.vandps(Operand(mask), output, output);
+            masm.vandnps(Operand(tmp), mask, mask);
+            masm.vorps(Operand(mask), output, output);
         }
         return;
       }
@@ -2784,7 +2784,7 @@ CodeGeneratorX86Shared::visitSimdUnaryArithIx4(LSimdUnaryArithIx4 *ins)
 
     switch (ins->operation()) {
       case MSimdUnaryArith::neg:
-        masm.pxor(out, out);
+        masm.zeroInt32x4(out);
         masm.packedSubInt32(in, out);
         return;
       case MSimdUnaryArith::not_:
@@ -2848,18 +2848,27 @@ CodeGeneratorX86Shared::visitSimdBinaryBitwiseX4(LSimdBinaryBitwiseX4 *ins)
 {
     FloatRegister lhs = ToFloatRegister(ins->lhs());
     Operand rhs = ToOperand(ins->rhs());
-    MOZ_ASSERT(ToFloatRegister(ins->output()) == lhs);
+    FloatRegister output = ToFloatRegister(ins->output());
 
     MSimdBinaryBitwise::Operation op = ins->operation();
     switch (op) {
       case MSimdBinaryBitwise::and_:
-        masm.bitwiseAndX4(rhs, lhs);
+        if (ins->type() == MIRType_Float32x4)
+            masm.vandps(rhs, lhs, output);
+        else
+            masm.vpand(rhs, lhs, output);
         return;
       case MSimdBinaryBitwise::or_:
-        masm.bitwiseOrX4(rhs, lhs);
+        if (ins->type() == MIRType_Float32x4)
+            masm.vorps(rhs, lhs, output);
+        else
+            masm.vpor(rhs, lhs, output);
         return;
       case MSimdBinaryBitwise::xor_:
-        masm.bitwiseXorX4(rhs, lhs);
+        if (ins->type() == MIRType_Float32x4)
+            masm.vxorps(rhs, lhs, output);
+        else
+            masm.vpxor(rhs, lhs, output);
         return;
     }
     MOZ_CRASH("unexpected SIMD bitwise op");

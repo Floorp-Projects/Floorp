@@ -595,7 +595,7 @@ class MacroAssemblerX86Shared : public Assembler
     void convertInt32ToDouble(Register src, FloatRegister dest) {
         // cvtsi2sd and friends write only part of their output register, which
         // causes slowdowns on out-of-order processors. Explicitly break
-        // dependencies with xorpd (and xorps elsewhere), which are handled
+        // dependencies with vxorpd (and vxorps elsewhere), which are handled
         // specially in modern CPUs, for this purpose. See sections 8.14, 9.8,
         // 10.8, 12.9, 13.16, 14.14, and 15.8 of Agner's Microarchitecture
         // document.
@@ -763,10 +763,10 @@ class MacroAssemblerX86Shared : public Assembler
         movapd(src, dest);
     }
     void zeroDouble(FloatRegister reg) {
-        xorpd(reg, reg);
+        vxorpd(reg, reg, reg);
     }
     void zeroFloat32(FloatRegister reg) {
-        xorps(reg, reg);
+        vxorps(reg, reg, reg);
     }
     void negateDouble(FloatRegister reg) {
         // From MacroAssemblerX86Shared::maybeInlineDouble
@@ -774,14 +774,14 @@ class MacroAssemblerX86Shared : public Assembler
         psllq(Imm32(63), ScratchDoubleReg);
 
         // XOR the float in a float register with -0.0.
-        xorpd(ScratchDoubleReg, reg); // s ^ 0x80000000000000
+        vxorpd(ScratchDoubleReg, reg, reg); // s ^ 0x80000000000000
     }
     void negateFloat(FloatRegister reg) {
         pcmpeqw(ScratchFloat32Reg, ScratchFloat32Reg);
         psllq(Imm32(31), ScratchFloat32Reg);
 
         // XOR the float in a float register with -0.0.
-        xorps(ScratchFloat32Reg, reg); // s ^ 0x80000000
+        vxorps(ScratchFloat32Reg, reg, reg); // s ^ 0x80000000
     }
     void addDouble(FloatRegister src, FloatRegister dest) {
         vaddsd(src, dest, dest);
@@ -820,16 +820,22 @@ class MacroAssemblerX86Shared : public Assembler
     void bitwiseAndX4(const Operand &src, FloatRegister dest) {
         // TODO Using the "ps" variant for all types incurs a domain crossing
         // penalty for integer types and double.
-        andps(src, dest);
+        vandps(src, dest, dest);
     }
     void bitwiseAndNotX4(const Operand &src, FloatRegister dest) {
-        andnps(src, dest);
+        vandnps(src, dest, dest);
     }
     void bitwiseOrX4(const Operand &src, FloatRegister dest) {
-        orps(src, dest);
+        vorps(src, dest, dest);
     }
     void bitwiseXorX4(const Operand &src, FloatRegister dest) {
-        xorps(src, dest);
+        vxorps(src, dest, dest);
+    }
+    void zeroFloat32x4(FloatRegister dest) {
+        vxorps(dest, dest, dest);
+    }
+    void zeroInt32x4(FloatRegister dest) {
+        vpxor(dest, dest, dest);
     }
 
     void loadAlignedInt32x4(const Address &src, FloatRegister dest) {
@@ -875,10 +881,10 @@ class MacroAssemblerX86Shared : public Assembler
         pcmpgtd(src, dest);
     }
     void packedAddInt32(const Operand &src, FloatRegister dest) {
-        paddd(src, dest);
+        vpaddd(src, dest, dest);
     }
     void packedSubInt32(const Operand &src, FloatRegister dest) {
-        psubd(src, dest);
+        vpsubd(src, dest, dest);
     }
     void packedReciprocalFloat32x4(const Operand &src, FloatRegister dest) {
         // This function is an approximation of the result, this might need
@@ -1105,7 +1111,7 @@ class MacroAssemblerX86Shared : public Assembler
 
         // Loading zero with xor is specially optimized in hardware.
         if (u == 0) {
-            xorpd(dest, dest);
+            zeroDouble(dest);
             return true;
         }
 
@@ -1125,7 +1131,7 @@ class MacroAssemblerX86Shared : public Assembler
 
         // See comment above
         if (u == 0) {
-            xorps(dest, dest);
+            zeroFloat32(dest);
             return true;
         }
         return false;
@@ -1135,7 +1141,7 @@ class MacroAssemblerX86Shared : public Assembler
         static const SimdConstant zero = SimdConstant::CreateX4(0, 0, 0, 0);
         static const SimdConstant minusOne = SimdConstant::CreateX4(-1, -1, -1, -1);
         if (v == zero) {
-            pxor(dest, dest);
+            zeroInt32x4(dest);
             return true;
         }
         if (v == minusOne) {
@@ -1149,7 +1155,7 @@ class MacroAssemblerX86Shared : public Assembler
         if (v == zero) {
             // This won't get inlined if the SimdConstant v contains -0 in any
             // lane, as operator== here does a memcmp.
-            xorps(dest, dest);
+            zeroFloat32x4(dest);
             return true;
         }
         return false;

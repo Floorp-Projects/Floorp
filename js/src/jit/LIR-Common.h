@@ -447,6 +447,9 @@ class LSimdBinaryBitwiseX4 : public LInstructionHelper<1, 2, 0>
     MSimdBinaryBitwise::Operation operation() const {
         return mir_->toSimdBinaryBitwise()->operation();
     }
+    MIRType type() const {
+        return mir_->type();
+    }
 };
 
 class LSimdShift : public LInstructionHelper<1, 2, 0>
