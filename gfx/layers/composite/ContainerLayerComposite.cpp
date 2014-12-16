@@ -258,11 +258,6 @@ ContainerPrepare(ContainerT* aContainer,
     return;
   }
 
-  gfx::IntRect surfaceRect = ContainerVisibleRect(aContainer);
-  if (surfaceRect.IsEmpty()) {
-    return;
-  }
-
   /**
    * Determine which layers to draw.
    */
@@ -305,6 +300,7 @@ ContainerPrepare(ContainerT* aContainer,
       RefPtr<CompositingRenderTarget> surface = nullptr;
 
       RefPtr<CompositingRenderTarget>& lastSurf = aContainer->mLastIntermediateSurface;
+      gfx::IntRect surfaceRect = ContainerVisibleRect(aContainer);
       if (lastSurf && !aContainer->mChildrenChanged && lastSurf->GetRect().IsEqualEdges(surfaceRect)) {
         surface = lastSurf;
       }
