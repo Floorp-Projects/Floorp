@@ -3,7 +3,7 @@
 
 struct MOZ_STACK_CLASS Stack {
   int i;
-  void *operator new(size_t x) { return 0; }
+  void *operator new(size_t x) throw() { return 0; }
   void *operator new(size_t blah, char *buffer) { return buffer; }
 };
 

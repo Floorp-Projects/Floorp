@@ -148,11 +148,18 @@ class Record(object):
         return cmp(abs(r1.slopSize), abs(r2.slopSize)) or \
                Record.cmpByIsSampled(r1, r2)
 
+    @staticmethod
+    def cmpByNumBlocks(r1, r2):
+        # Sort by block counts, then by usable size.
+        return cmp(abs(r1.numBlocks), abs(r2.numBlocks)) or \
+               Record.cmpByUsableSize(r1, r2)
+
 
 sortByChoices = {
-    'usable': Record.cmpByUsableSize,   # the default
-    'req':    Record.cmpByReqSize,
-    'slop':   Record.cmpBySlopSize,
+    'usable':     Record.cmpByUsableSize,   # the default
+    'req':        Record.cmpByReqSize,
+    'slop':       Record.cmpBySlopSize,
+    'num-blocks': Record.cmpByNumBlocks,
 }
 
 
@@ -185,7 +192,7 @@ variable is used to find breakpad symbols for stack fixing.
                    help='maximum number of frames to consider in each trace')
 
     p.add_argument('-s', '--sort-by', choices=sortByChoices.keys(),
-                   default=sortByChoices.keys()[0],
+                   default='usable',
                    help='sort the records by a particular metric')
 
     p.add_argument('-a', '--ignore-alloc-fns', action='store_true',
@@ -346,6 +353,8 @@ def getDigestFromFile(args, inputFile):
     heapUsableSize = 0
     heapBlocks = 0
 
+    recordKeyPartCache = {}
+
     for block in blockList:
         # For each block we compute a |recordKey|, and all blocks with the same
         # |recordKey| are aggregated into a single record. The |recordKey| is
@@ -364,9 +373,19 @@ def getDigestFromFile(args, inputFile):
         # and we trim the final frame of each they should be considered
         # equivalent because the untrimmed frame descriptions (D1 and D2)
         # match.
+        #
+        # Having said all that, during a single invocation of dmd.py on a
+        # single DMD file, for a single frameKey value the record key will
+        # always be the same, and we might encounter it 1000s of times. So we
+        # cache prior results for speed.
         def makeRecordKeyPart(traceKey):
-            return str(map(lambda frameKey: frameTable[frameKey],
-                           traceTable[traceKey]))
+            if traceKey in recordKeyPartCache:
+                return recordKeyPartCache[traceKey]
+
+            recordKeyPart = str(map(lambda frameKey: frameTable[frameKey],
+                                    traceTable[traceKey]))
+            recordKeyPartCache[traceKey] = recordKeyPart
+            return recordKeyPart
 
         allocatedAtTraceKey = block['alloc']
         if mode in ['live', 'cumulative']:

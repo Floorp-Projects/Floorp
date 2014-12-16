@@ -122,7 +122,7 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
     // Truncate to int32 and ensure the result <= 255. This relies on the
     // processor setting output to a value > 255 for doubles outside the int32
     // range (for instance 0x80000000).
-    cvttsd2si(input, output);
+    vcvttsd2si(input, output);
     branch32(Assembler::Above, output, Imm32(255), &outOfRange);
     {
         // Check if we had a tie.
@@ -217,13 +217,13 @@ MacroAssemblerX86Shared::branchNegativeZero(FloatRegister reg,
     // if not already compared to zero
     if (maybeNonZero) {
         // Compare to zero. Lets through {0, -0}.
-        xorpd(ScratchDoubleReg, ScratchDoubleReg);
+        zeroDouble(ScratchDoubleReg);
 
         // If reg is non-zero, jump to nonZero.
         branchDouble(DoubleNotEqual, reg, ScratchDoubleReg, &nonZero);
     }
     // Input register is either zero or negative zero. Retrieve sign of input.
-    movmskpd(reg, scratch);
+    vmovmskpd(reg, scratch);
 
     // If reg is 1 or 3, input is negative zero.
     // If reg is 0 or 2, input is a normal zero.
@@ -232,7 +232,7 @@ MacroAssemblerX86Shared::branchNegativeZero(FloatRegister reg,
     bind(&nonZero);
 #elif defined(JS_CODEGEN_X64)
     movq(reg, scratch);
-    cmpq(scratch, Imm32(1));
+    cmpq(Imm32(1), scratch);
     j(Overflow, label);
 #endif
 }
@@ -242,7 +242,7 @@ MacroAssemblerX86Shared::branchNegativeZeroFloat32(FloatRegister reg,
                                                    Register scratch,
                                                    Label *label)
 {
-    movd(reg, scratch);
-    cmpl(scratch, Imm32(1));
+    vmovd(reg, scratch);
+    cmp32(scratch, Imm32(1));
     j(Overflow, label);
 }

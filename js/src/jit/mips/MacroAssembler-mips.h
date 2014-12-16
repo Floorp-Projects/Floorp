@@ -841,6 +841,11 @@ public:
         loadPtr(lhs, ScratchRegister);
         ma_b(ScratchRegister, rhs, label, cond);
     }
+    void branch32(Condition cond, AsmJSAbsoluteAddress addr, Imm32 imm,
+                  Label *label) {
+        loadPtr(addr, ScratchRegister);
+        ma_b(ScratchRegister, imm, label, cond);
+    }
 
     void loadUnboxedValue(Address address, MIRType type, AnyRegister dest) {
         if (dest.isFloat())

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1087872 - Test for dynamic insertion of ruby frames</title>
+  <link rel="stylesheet" href="common.css">
+  <script src="dynamic-insertion.js"></script>
+</head>
+<body>
+
+  <p>'a' and 'b' should be paired with 'x' and 'y' respectively:</p>
+
+  <!-- split -->
+  <!--     pseudo ruby -->
+  <p><rb data-insert="after" data-tag="span"></rb><rb>a</rb><rb>b</rb><rt>x</rt><rt>y</rt></p>
+  <!--     pseudo ruby base container -->
+  <p><rb data-insert="after" data-tag="rt"></rb><rb>a</rb><rb>b</rb><rt>x</rt><rt>y</rt></p>
+  <!--     pseudo ruby text container -->
+  <p><rb>a</rb><rt data-insert="after" data-tag="rb" data-text="b">x</rt><rt>y</rt></p>
+  <!--     pseudo ruby base -->
+  <p><rbc><span data-insert="after" data-tag="rb">a</span>b</rbc><rt>x</rt><rt></rt><rt>y</rt></p>
+  <!--     pseudo ruby text -->
+  <p><rb>a</rb><rb></rb><rb>b</rb><rtc><span data-insert="after" data-tag="rt">x</span>y</rtc></p>
+
+</body>
+</html>

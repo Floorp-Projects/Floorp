@@ -595,6 +595,19 @@ nsIOService::NewChannelFromURI2(nsIURI* aURI,
 }
 
 NS_IMETHODIMP
+nsIOService::NewChannelFromURIWithLoadInfo(nsIURI* aURI,
+                                           nsILoadInfo* aLoadInfo,
+                                           nsIChannel** result)
+{
+  NS_ENSURE_ARG_POINTER(aLoadInfo);
+  return NewChannelFromURIWithProxyFlagsInternal(aURI,
+                                                 nullptr, // aProxyURI
+                                                 0,       // aProxyFlags
+                                                 aLoadInfo,
+                                                 result);
+}
+
+NS_IMETHODIMP
 nsIOService::NewChannelFromURI(nsIURI *aURI, nsIChannel **result)
 {
   return NewChannelFromURI2(aURI,
@@ -606,16 +619,12 @@ nsIOService::NewChannelFromURI(nsIURI *aURI, nsIChannel **result)
                             result);
 }
 
-NS_IMETHODIMP
-nsIOService::NewChannelFromURIWithProxyFlags2(nsIURI* aURI,
-                                              nsIURI* aProxyURI,
-                                              uint32_t aProxyFlags,
-                                              nsIDOMNode* aLoadingNode,
-                                              nsIPrincipal* aLoadingPrincipal,
-                                              nsIPrincipal* aTriggeringPrincipal,
-                                              uint32_t aSecurityFlags,
-                                              uint32_t aContentPolicyType,
-                                              nsIChannel** result)
+nsresult
+nsIOService::NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
+                                                     nsIURI* aProxyURI,
+                                                     uint32_t aProxyFlags,
+                                                     nsILoadInfo* aLoadInfo,
+                                                     nsIChannel** result)
 {
     nsresult rv;
     NS_ENSURE_ARG_POINTER(aURI);
@@ -642,34 +651,12 @@ nsIOService::NewChannelFromURIWithProxyFlags2(nsIURI* aURI,
     // calling NewChannel2(); if that fails we fall back to creating a channel by calling
     // NewChannel();
 
-    nsCOMPtr<nsILoadInfo> loadInfo;
-    // Unfortunately not all callsites (see Bug 1087720, and 1099296) have been updated
-    // yet to call NewChannel2() instead of NewChannel(), hence those callsites do not
-    // provide the necessary loadinfo arguments yet.
-    // Since creating a new loadInfo requires 'aLoadingPrincipal' or 'aLoadingNode' we
-    // can branch on those arguments as an interim solution.
-    //
-    // BUG 1087720: Once that bug lands, we should have a loadInfo for all callers of
-    // NewChannelFromURIWithProxyFlags2() and should remove the *if* before creating a
-    // a new loadinfo.
-    if (aLoadingNode || aLoadingPrincipal) {
-      nsCOMPtr<nsINode> loadingNode(do_QueryInterface(aLoadingNode));
-      loadInfo = new mozilla::LoadInfo(aLoadingPrincipal,
-                                       aTriggeringPrincipal,
-                                       loadingNode,
-                                       aSecurityFlags,
-                                       aContentPolicyType);
-      if (!loadInfo) {
-        return NS_ERROR_UNEXPECTED;
-      }
-    }
-
     bool newChannel2Succeeded = true;
 
     nsCOMPtr<nsIProxiedProtocolHandler> pph = do_QueryInterface(handler);
     if (pph) {
         rv = pph->NewProxiedChannel2(aURI, nullptr, aProxyFlags, aProxyURI,
-                                     loadInfo, result);
+                                     aLoadInfo, result);
         // if calling NewProxiedChannel2() fails we try to fall back to
         // creating a new proxied channel by calling NewProxiedChannel().
         if (NS_FAILED(rv)) {
@@ -679,7 +666,7 @@ nsIOService::NewChannelFromURIWithProxyFlags2(nsIURI* aURI,
         }
     }
     else {
-        rv = handler->NewChannel2(aURI, loadInfo, result);
+        rv = handler->NewChannel2(aURI, aLoadInfo, result);
         // if calling newChannel2() fails we try to fall back to
         // creating a new channel by calling NewChannel().
         if (NS_FAILED(rv)) {
@@ -689,7 +676,7 @@ nsIOService::NewChannelFromURIWithProxyFlags2(nsIURI* aURI,
     }
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if ((aLoadingNode || aLoadingPrincipal) && newChannel2Succeeded) {
+    if (aLoadInfo && newChannel2Succeeded) {
       // Make sure that all the individual protocolhandlers attach
       // a loadInfo within it's implementation of ::newChannel2().
       // Once Bug 1087720 lands, we should remove the surrounding
@@ -728,6 +715,47 @@ nsIOService::NewChannelFromURIWithProxyFlags2(nsIURI* aURI,
     }
 
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIOService::NewChannelFromURIWithProxyFlags2(nsIURI* aURI,
+                                              nsIURI* aProxyURI,
+                                              uint32_t aProxyFlags,
+                                              nsIDOMNode* aLoadingNode,
+                                              nsIPrincipal* aLoadingPrincipal,
+                                              nsIPrincipal* aTriggeringPrincipal,
+                                              uint32_t aSecurityFlags,
+                                              uint32_t aContentPolicyType,
+                                              nsIChannel** result)
+{
+    // Ideally all callers of NewChannelFromURIWithProxyFlags2 provide the
+    // necessary arguments to create a loadinfo. Keep in mind that addons
+    // might still call NewChannelFromURIWithProxyFlags() which forwards
+    // its calls to NewChannelFromURIWithProxyFlags2 using *null* values
+    // as the arguments for aLoadingNode, aLoadingPrincipal, and also
+    // aTriggeringPrincipal.
+    // We do not want to break those addons, hence we only create a Loadinfo
+    // if 'aLoadingNode' or 'aLoadingPrincipal' are provided. Note, that
+    // either aLoadingNode or aLoadingPrincipal is required to succesfully
+    // create a LoadInfo object.
+    nsCOMPtr<nsILoadInfo> loadInfo;
+
+    if (aLoadingNode || aLoadingPrincipal) {
+      nsCOMPtr<nsINode> loadingNode(do_QueryInterface(aLoadingNode));
+      loadInfo = new mozilla::LoadInfo(aLoadingPrincipal,
+                                       aTriggeringPrincipal,
+                                       loadingNode,
+                                       aSecurityFlags,
+                                       aContentPolicyType);
+      if (!loadInfo) {
+        return NS_ERROR_UNEXPECTED;
+      }
+    }
+    return NewChannelFromURIWithProxyFlagsInternal(aURI,
+                                                   aProxyURI,
+                                                   aProxyFlags,
+                                                   loadInfo,
+                                                   result);
 }
 
 NS_IMETHODIMP
