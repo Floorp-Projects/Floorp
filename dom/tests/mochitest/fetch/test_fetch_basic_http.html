@@ -30,7 +30,7 @@ function testOnWorker(done) {
   }
 
   worker.onerror = function(event) {
-    ok(false, "Worker had an error: " + event.data);
+    ok(false, "Worker had an error: " + event.message);
     ok(true, "=== Finish Worker Tests ===");
     done();
   };
