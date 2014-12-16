@@ -2345,10 +2345,13 @@ InlineFrameIterator::findNextFrame()
 }
 
 JSObject *
-InlineFrameIterator::computeScopeChain(Value scopeChainValue) const
+InlineFrameIterator::computeScopeChain(Value scopeChainValue, bool *hasCallObj) const
 {
-    if (scopeChainValue.isObject())
+    if (scopeChainValue.isObject()) {
+        if (hasCallObj)
+            *hasCallObj = isFunctionFrame() && callee()->isHeavyweight();
         return &scopeChainValue.toObject();
+    }
 
     // Note we can hit this case even for heavyweight functions, in case we
     // are walking the frame during the function prologue, before the scope
