@@ -1296,10 +1296,10 @@ enum WorkerStructuredDataType
   DOMWORKER_SCTAG_END
 };
 
-const JSStructuredCloneCallbacks*
+JSStructuredCloneCallbacks*
 WorkerStructuredCloneCallbacks(bool aMainRuntime);
 
-const JSStructuredCloneCallbacks*
+JSStructuredCloneCallbacks*
 ChromeWorkerStructuredCloneCallbacks(bool aMainRuntime);
 
 class AutoSyncLoopHolder
