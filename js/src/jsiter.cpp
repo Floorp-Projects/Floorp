@@ -306,19 +306,14 @@ Snapshot(JSContext *cx, HandleObject pobj_, unsigned flags, AutoIdVector *props)
                 return false;
         } else if (pobj->is<ProxyObject>()) {
             AutoIdVector proxyProps(cx);
-            if (flags & JSITER_OWNONLY) {
-                if (flags & JSITER_HIDDEN) {
-                    // This gets all property keys, both strings and
-                    // symbols.  The call to Enumerate in the loop below
-                    // will filter out unwanted keys, per the flags.
-                    if (!Proxy::ownPropertyKeys(cx, pobj, proxyProps))
-                        return false;
-                 } else {
-                    if (!Proxy::getOwnEnumerablePropertyKeys(cx, pobj, proxyProps))
-                         return false;
-                }
+            if (flags & JSITER_HIDDEN || flags & JSITER_SYMBOLS) {
+                // This gets all property keys, both strings and
+                // symbols.  The call to Enumerate in the loop below
+                // will filter out unwanted keys, per the flags.
+                if (!Proxy::ownPropertyKeys(cx, pobj, proxyProps))
+                    return false;
             } else {
-                if (!Proxy::getEnumerablePropertyKeys(cx, pobj, proxyProps))
+                if (!Proxy::getOwnEnumerablePropertyKeys(cx, pobj, proxyProps))
                     return false;
             }
 
@@ -326,10 +321,6 @@ Snapshot(JSContext *cx, HandleObject pobj_, unsigned flags, AutoIdVector *props)
                 if (!Enumerate(cx, pobj, proxyProps[n], true, flags, ht, props))
                     return false;
             }
-
-            // Proxy objects enumerate the prototype on their own, so we're
-            // done here.
-            break;
         } else {
             MOZ_CRASH("non-native objects must have an enumerate op");
         }
@@ -337,7 +328,10 @@ Snapshot(JSContext *cx, HandleObject pobj_, unsigned flags, AutoIdVector *props)
         if (flags & JSITER_OWNONLY)
             break;
 
-    } while ((pobj = pobj->getProto()) != nullptr);
+        if (!JSObject::getProto(cx, pobj, &pobj))
+            return false;
+
+    } while (pobj != nullptr);
 
 #ifdef JS_MORE_DETERMINISTIC
 

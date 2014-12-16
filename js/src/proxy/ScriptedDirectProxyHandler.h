@@ -63,8 +63,6 @@ class ScriptedDirectProxyHandler : public DirectProxyHandler {
                                               AutoIdVector &props) const MOZ_OVERRIDE {
         return BaseProxyHandler::getOwnEnumerablePropertyKeys(cx, proxy, props);
     }
-    virtual bool getEnumerablePropertyKeys(JSContext *cx, HandleObject proxy,
-                                           AutoIdVector &props) const MOZ_OVERRIDE;
 
     virtual bool isCallable(JSObject *obj) const MOZ_OVERRIDE;
     virtual bool isConstructor(JSObject *obj) const MOZ_OVERRIDE {

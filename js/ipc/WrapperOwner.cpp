@@ -110,8 +110,6 @@ class CPOWProxyHandler : public BaseProxyHandler
     virtual bool hasOwn(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const MOZ_OVERRIDE;
     virtual bool getOwnEnumerablePropertyKeys(JSContext *cx, HandleObject proxy,
                                               AutoIdVector &props) const MOZ_OVERRIDE;
-    virtual bool getEnumerablePropertyKeys(JSContext *cx, HandleObject proxy,
-                                           AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool hasInstance(JSContext *cx, HandleObject proxy,
                              MutableHandleValue v, bool *bp) const MOZ_OVERRIDE;
     virtual bool objectClassIs(HandleObject obj, js::ESClassValue classValue,
@@ -272,7 +270,8 @@ bool
 CPOWProxyHandler::enumerate(JSContext *cx, HandleObject proxy, MutableHandleObject objp) const
 {
     // Using a CPOW for the Iterator would slow down for .. in performance, instead
-    // call the base hook, that will use our implementation of getEnumerablePropertyKeys.
+    // call the base hook, that will use our implementation of getOwnEnumerablePropertyKeys
+    // and follow the proto chain.
     return BaseProxyHandler::enumerate(cx, proxy, objp);
 }
 
@@ -478,18 +477,6 @@ bool
 WrapperOwner::getOwnEnumerablePropertyKeys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
     return getPropertyKeys(cx, proxy, JSITER_OWNONLY, props);
-}
-
-bool
-CPOWProxyHandler::getEnumerablePropertyKeys(JSContext *cx, HandleObject proxy, AutoIdVector &props) const
-{
-    FORWARD(getEnumerablePropertyKeys, (cx, proxy, props));
-}
-
-bool
-WrapperOwner::getEnumerablePropertyKeys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
-{
-    return getPropertyKeys(cx, proxy, 0, props);
 }
 
 bool

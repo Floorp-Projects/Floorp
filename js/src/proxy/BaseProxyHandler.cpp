@@ -234,9 +234,12 @@ BaseProxyHandler::enumerate(JSContext *cx, HandleObject proxy, MutableHandleObje
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
 
+    // GetPropertyKeys will invoke getOwnEnumerablePropertyKeys along the proto
+    // chain for us.
     AutoIdVector props(cx);
-    if (!getEnumerablePropertyKeys(cx, proxy, props))
+    if (!GetPropertyKeys(cx, proxy, 0, &props))
         return false;
+
     return EnumeratedIdVectorToIterator(cx, proxy, 0, props, objp);
 }
 
