@@ -71,16 +71,6 @@ JSSHELL_BINS  = \
   $(DIST)/bin/$(DLL_PREFIX)mozglue$(DLL_SUFFIX) \
   $(NULL)
 ifndef MOZ_NATIVE_NSPR
-ifeq ($(_MSC_VER),1400)
-JSSHELL_BINS += $(DIST)/bin/Microsoft.VC80.CRT.manifest
-JSSHELL_BINS += $(DIST)/bin/msvcr80.dll
-JSSHELL_BINS += $(DIST)/bin/msvcp80.dll
-endif
-ifeq ($(_MSC_VER),1500)
-JSSHELL_BINS += $(DIST)/bin/Microsoft.VC90.CRT.manifest
-JSSHELL_BINS += $(DIST)/bin/msvcr90.dll
-JSSHELL_BINS += $(DIST)/bin/msvcp90.dll
-endif
 ifeq ($(_MSC_VER),1600)
 JSSHELL_BINS += $(DIST)/bin/msvcr100.dll
 JSSHELL_BINS += $(DIST)/bin/msvcp100.dll
