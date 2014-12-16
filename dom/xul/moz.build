@@ -12,7 +12,6 @@ if CONFIG['MOZ_XUL']:
     DIRS += ['templates']
 
     XPIDL_SOURCES += [
-        'nsIXULContextMenuBuilder.idl',
         'nsIXULOverlayProvider.idl',
     ]
 
@@ -23,7 +22,6 @@ if CONFIG['MOZ_XUL']:
     UNIFIED_SOURCES += [
         'nsXULCommandDispatcher.cpp',
         'nsXULContentSink.cpp',
-        'nsXULContextMenuBuilder.cpp',
         'nsXULElement.cpp',
         'nsXULPopupListener.cpp',
         'nsXULPrototypeCache.cpp',
