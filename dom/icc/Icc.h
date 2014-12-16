@@ -5,7 +5,7 @@
 #ifndef mozilla_dom_Icc_h
 #define mozilla_dom_Icc_h
 
-#include "mozilla/dom/MozIccBinding.h" // For IccCardState
+#include "mozilla/dom/MozIccBinding.h"
 #include "mozilla/DOMEventTargetHelper.h"
 
 class nsIIccInfo;
@@ -78,18 +78,16 @@ public:
                        ErrorResult& aRv);
 
   already_AddRefed<DOMRequest>
-  GetCardLock(const nsAString& aLockType, ErrorResult& aRv);
+  GetCardLock(IccLockType aLockType, ErrorResult& aRv);
 
   already_AddRefed<DOMRequest>
-  UnlockCardLock(const JSContext* aCx, JS::Handle<JS::Value> aInfo,
-                 ErrorResult& aRv);
+  UnlockCardLock(const IccUnlockCardLockOptions& aOptions, ErrorResult& aRv);
 
   already_AddRefed<DOMRequest>
-  SetCardLock(const JSContext* aCx, JS::Handle<JS::Value> aInfo,
-              ErrorResult& aRv);
+  SetCardLock(const IccSetCardLockOptions& aOptions, ErrorResult& aRv);
 
   already_AddRefed<DOMRequest>
-  GetCardLockRetryCount(const nsAString& aLockType, ErrorResult& aRv);
+  GetCardLockRetryCount(IccLockType aLockType, ErrorResult& aRv);
 
   already_AddRefed<DOMRequest>
   ReadContacts(const nsAString& aContactType, ErrorResult& aRv);
