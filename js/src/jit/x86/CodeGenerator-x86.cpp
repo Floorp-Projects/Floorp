@@ -846,7 +846,7 @@ CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate *ool)
         // This has to be an exact conversion, as otherwise the truncation works
         // incorrectly on the modified value.
         masm.zeroDouble(ScratchDoubleReg);
-        masm.ucomisd(ScratchDoubleReg, input);
+        masm.vucomisd(ScratchDoubleReg, input);
         masm.j(Assembler::Parity, &fail);
 
         {
@@ -866,7 +866,7 @@ CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate *ool)
         masm.vcvttsd2si(temp, output);
         masm.vcvtsi2sd(output, ScratchDoubleReg, ScratchDoubleReg);
 
-        masm.ucomisd(ScratchDoubleReg, temp);
+        masm.vucomisd(ScratchDoubleReg, temp);
         masm.j(Assembler::Parity, &fail);
         masm.j(Assembler::Equal, ool->rejoin());
     }
@@ -935,7 +935,7 @@ CodeGeneratorX86::visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32 *ool)
         // This has to be an exact conversion, as otherwise the truncation works
         // incorrectly on the modified value.
         masm.zeroFloat32(ScratchFloat32Reg);
-        masm.ucomiss(ScratchFloat32Reg, input);
+        masm.vucomiss(ScratchFloat32Reg, input);
         masm.j(Assembler::Parity, &fail);
 
         {
@@ -955,7 +955,7 @@ CodeGeneratorX86::visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32 *ool)
         masm.vcvttss2si(temp, output);
         masm.vcvtsi2ss(output, ScratchFloat32Reg, ScratchFloat32Reg);
 
-        masm.ucomiss(ScratchFloat32Reg, temp);
+        masm.vucomiss(ScratchFloat32Reg, temp);
         masm.j(Assembler::Parity, &fail);
         masm.j(Assembler::Equal, ool->rejoin());
     }

@@ -223,7 +223,7 @@ MacroAssemblerX86Shared::branchNegativeZero(FloatRegister reg,
         branchDouble(DoubleNotEqual, reg, ScratchDoubleReg, &nonZero);
     }
     // Input register is either zero or negative zero. Retrieve sign of input.
-    movmskpd(reg, scratch);
+    vmovmskpd(reg, scratch);
 
     // If reg is 1 or 3, input is negative zero.
     // If reg is 0 or 2, input is a normal zero.

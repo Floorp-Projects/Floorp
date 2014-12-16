@@ -60,7 +60,7 @@ LIRGeneratorX86Shared::visitPowHalf(MPowHalf *ins)
     MDefinition *input = ins->input();
     MOZ_ASSERT(input->type() == MIRType_Double);
     LPowHalfD *lir = new(alloc()) LPowHalfD(useRegisterAtStart(input));
-    defineReuseInput(lir, ins, 0);
+    define(lir, ins);
 }
 
 void
