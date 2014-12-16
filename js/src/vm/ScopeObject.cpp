@@ -1488,13 +1488,33 @@ class DebugScopeProxy : public BaseProxyHandler
     }
 
     /*
+     * Check if the value is the magic value JS_OPTIMIZED_ARGUMENTS. The
+     * arguments analysis may have optimized out the 'arguments', and this
+     * magic value could have propagated to other local slots. e.g.,
+     *
+     *   function f() { var a = arguments; h(); }
+     *   function h() { evalInFrame(1, "a.push(0)"); }
+     *
+     * where evalInFrame(N, str) means to evaluate str N frames up.
+     *
+     * In this case we don't know we need to recover a missing arguments
+     * object until after we've performed the property get.
+     */
+    static bool isMagicMissingArgumentsValue(JSContext *cx, ScopeObject &scope, HandleValue v)
+    {
+        bool isMagic = v.isMagic() && v.whyMagic() == JS_OPTIMIZED_ARGUMENTS;
+        MOZ_ASSERT_IF(isMagic, isFunctionScope(scope) &&
+                               !scope.as<CallObject>().callee().nonLazyScript()->needsArgsObj());
+        return isMagic;
+    }
+
+    /*
      * Create a missing arguments object. If the function returns true but
      * argsObj is null, it means the scope is dead.
      */
-    static bool createMissingArguments(JSContext *cx, jsid id, ScopeObject &scope,
+    static bool createMissingArguments(JSContext *cx, ScopeObject &scope,
                                        MutableHandleArgumentsObject argsObj)
     {
-        MOZ_ASSERT(isMissingArguments(cx, id, scope));
         argsObj.set(nullptr);
 
         ScopeIterVal *maybeScope = DebugScopes::hasLiveScope(scope);
@@ -1532,30 +1552,37 @@ class DebugScopeProxy : public BaseProxyHandler
         return getOwnPropertyDescriptor(cx, proxy, id, desc);
     }
 
+    bool getMissingArgumentsPropertyDescriptor(JSContext *cx,
+                                               Handle<DebugScopeObject *> debugScope,
+                                               ScopeObject &scope,
+                                               MutableHandle<PropertyDescriptor> desc) const
+    {
+        RootedArgumentsObject argsObj(cx);
+        if (!createMissingArguments(cx, scope, &argsObj))
+            return false;
+
+        if (!argsObj) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEBUG_NOT_LIVE,
+                                 "Debugger scope");
+            return false;
+        }
+
+        desc.object().set(debugScope);
+        desc.setAttributes(JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT);
+        desc.value().setObject(*argsObj);
+        desc.setGetter(nullptr);
+        desc.setSetter(nullptr);
+        return true;
+    }
+
     bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
-                                  MutableHandle<PropertyDescriptor> desc) const MOZ_OVERRIDE
+                                  MutableHandle<PropertyDescriptor> desc) const
     {
         Rooted<DebugScopeObject*> debugScope(cx, &proxy->as<DebugScopeObject>());
         Rooted<ScopeObject*> scope(cx, &debugScope->scope());
 
-        if (isMissingArguments(cx, id, *scope)) {
-            RootedArgumentsObject argsObj(cx);
-            if (!createMissingArguments(cx, id, *scope, &argsObj))
-                return false;
-
-            if (!argsObj) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEBUG_NOT_LIVE,
-                                     "Debugger scope");
-                return false;
-            }
-
-            desc.object().set(debugScope);
-            desc.setAttributes(JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT);
-            desc.value().setObject(*argsObj);
-            desc.setGetter(nullptr);
-            desc.setSetter(nullptr);
-            return true;
-        }
+        if (isMissingArguments(cx, id, *scope))
+            return getMissingArgumentsPropertyDescriptor(cx, debugScope, *scope, desc);
 
         RootedValue v(cx);
         AccessResult access;
@@ -1564,6 +1591,8 @@ class DebugScopeProxy : public BaseProxyHandler
 
         switch (access) {
           case ACCESS_UNALIASED:
+            if (isMagicMissingArgumentsValue(cx, *scope, v))
+                return getMissingArgumentsPropertyDescriptor(cx, debugScope, *scope, desc);
             desc.object().set(debugScope);
             desc.setAttributes(JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT);
             desc.value().set(v);
@@ -1580,26 +1609,30 @@ class DebugScopeProxy : public BaseProxyHandler
         }
     }
 
+    bool getMissingArguments(JSContext *cx, ScopeObject &scope, MutableHandleValue vp) const
+    {
+        RootedArgumentsObject argsObj(cx);
+        if (!createMissingArguments(cx, scope, &argsObj))
+            return false;
+
+        if (!argsObj) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEBUG_NOT_LIVE,
+                                 "Debugger scope");
+            return false;
+        }
+
+        vp.setObject(*argsObj);
+        return true;
+    }
+
     bool get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
              MutableHandleValue vp) const MOZ_OVERRIDE
     {
         Rooted<DebugScopeObject*> debugScope(cx, &proxy->as<DebugScopeObject>());
         Rooted<ScopeObject*> scope(cx, &proxy->as<DebugScopeObject>().scope());
 
-        if (isMissingArguments(cx, id, *scope)) {
-            RootedArgumentsObject argsObj(cx);
-            if (!createMissingArguments(cx, id, *scope, &argsObj))
-                return false;
-
-            if (!argsObj) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEBUG_NOT_LIVE,
-                                     "Debugger scope");
-                return false;
-            }
-
-            vp.setObject(*argsObj);
-            return true;
-        }
+        if (isMissingArguments(cx, id, *scope))
+            return getMissingArguments(cx, *scope, vp);
 
         AccessResult access;
         if (!handleUnaliasedAccess(cx, debugScope, scope, id, GET, vp, &access))
@@ -1607,6 +1640,8 @@ class DebugScopeProxy : public BaseProxyHandler
 
         switch (access) {
           case ACCESS_UNALIASED:
+            if (isMagicMissingArgumentsValue(cx, *scope, vp))
+                return getMissingArguments(cx, *scope, vp);
             return true;
           case ACCESS_GENERIC:
             return JSObject::getGeneric(cx, scope, scope, id, vp);
@@ -1618,6 +1653,16 @@ class DebugScopeProxy : public BaseProxyHandler
         }
     }
 
+    bool getMissingArgumentsMaybeSentinelValue(JSContext *cx, ScopeObject &scope,
+                                               MutableHandleValue vp) const
+    {
+        RootedArgumentsObject argsObj(cx);
+        if (!createMissingArguments(cx, scope, &argsObj))
+            return false;
+        vp.set(argsObj ? ObjectValue(*argsObj) : MagicValue(JS_OPTIMIZED_ARGUMENTS));
+        return true;
+    }
+
     /*
      * Like 'get', but returns sentinel values instead of throwing on
      * exceptional cases.
@@ -1627,13 +1672,8 @@ class DebugScopeProxy : public BaseProxyHandler
     {
         Rooted<ScopeObject*> scope(cx, &debugScope->scope());
 
-        if (isMissingArguments(cx, id, *scope)) {
-            RootedArgumentsObject argsObj(cx);
-            if (!createMissingArguments(cx, id, *scope, &argsObj))
-                return false;
-            vp.set(argsObj ? ObjectValue(*argsObj) : MagicValue(JS_OPTIMIZED_ARGUMENTS));
-            return true;
-        }
+        if (isMissingArguments(cx, id, *scope))
+            return getMissingArgumentsMaybeSentinelValue(cx, *scope, vp);
 
         AccessResult access;
         if (!handleUnaliasedAccess(cx, debugScope, scope, id, GET, vp, &access))
@@ -1641,6 +1681,8 @@ class DebugScopeProxy : public BaseProxyHandler
 
         switch (access) {
           case ACCESS_UNALIASED:
+            if (isMagicMissingArgumentsValue(cx, *scope, vp))
+                return getMissingArgumentsMaybeSentinelValue(cx, *scope, vp);
             return true;
           case ACCESS_GENERIC:
             return JSObject::getGeneric(cx, scope, scope, id, vp);
