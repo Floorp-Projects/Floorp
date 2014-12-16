@@ -747,17 +747,17 @@ class Assembler : public AssemblerX86Shared
     // Do not mask shared implementations.
     using AssemblerX86Shared::call;
 
-    void cvttsd2sq(FloatRegister src, Register dest) {
-        masm.cvttsd2sq_rr(src.code(), dest.code());
+    void vcvttsd2sq(FloatRegister src, Register dest) {
+        masm.vcvttsd2sq_rr(src.code(), dest.code());
     }
-    void cvttss2sq(FloatRegister src, Register dest) {
-        masm.cvttss2sq_rr(src.code(), dest.code());
+    void vcvttss2sq(FloatRegister src, Register dest) {
+        masm.vcvttss2sq_rr(src.code(), dest.code());
     }
-    void cvtsq2sd(Register src, FloatRegister dest) {
-        masm.cvtsq2sd_rr(src.code(), dest.code());
+    void vcvtsq2sd(Register src1, FloatRegister src0, FloatRegister dest) {
+        masm.vcvtsq2sd_rr(src1.code(), src0.code(), dest.code());
     }
-    void cvtsq2ss(Register src, FloatRegister dest) {
-        masm.cvtsq2ss_rr(src.code(), dest.code());
+    void vcvtsq2ss(Register src1, FloatRegister src0, FloatRegister dest) {
+        masm.vcvtsq2ss_rr(src1.code(), src0.code(), dest.code());
     }
 };
 

@@ -2090,7 +2090,7 @@ CodeGeneratorX86Shared::visitSimdValueInt32x4(LSimdValueInt32x4 *ins)
 
     FloatRegister output = ToFloatRegister(ins->output());
     if (AssemblerX86Shared::HasSSE41()) {
-        masm.movd(ToRegister(ins->getOperand(0)), output);
+        masm.vmovd(ToRegister(ins->getOperand(0)), output);
         for (size_t i = 1; i < 4; ++i) {
             Register r = ToRegister(ins->getOperand(i));
             masm.pinsrd(i, r, output);
@@ -2119,9 +2119,9 @@ CodeGeneratorX86Shared::visitSimdValueFloat32x4(LSimdValueFloat32x4 *ins)
     FloatRegister r2 = ToFloatRegister(ins->getOperand(2));
     FloatRegister r3 = ToFloatRegister(ins->getOperand(3));
 
-    masm.unpcklps(r3, r1);
-    masm.unpcklps(r2, r0);
-    masm.unpcklps(r1, r0);
+    masm.vunpcklps(r3, r1, r1);
+    masm.vunpcklps(r2, r0, r0);
+    masm.vunpcklps(r1, r0, r0);
 }
 
 void
@@ -2136,7 +2136,7 @@ CodeGeneratorX86Shared::visitSimdSplatX4(LSimdSplatX4 *ins)
     switch (mir->type()) {
       case MIRType_Int32x4: {
         Register r = ToRegister(ins->getOperand(0));
-        masm.movd(r, output);
+        masm.vmovd(r, output);
         masm.pshufd(0, output, output);
         break;
       }
@@ -2200,8 +2200,8 @@ CodeGeneratorX86Shared::visitSimdInsertElementI(LSimdInsertElementI *ins)
 
     unsigned component = unsigned(ins->lane());
 
-    // Note that, contrarily to float32x4, we cannot use movd if the inserted
-    // value goes into the first component, as movd clears out the higher lanes
+    // Note that, contrarily to float32x4, we cannot use vmovd if the inserted
+    // value goes into the first component, as vmovd clears out the higher lanes
     // of the output.
     if (AssemblerX86Shared::HasSSE41()) {
         masm.pinsrd(component, value, output);
@@ -2307,14 +2307,14 @@ CodeGeneratorX86Shared::visitSimdSwizzleF(LSimdSwizzleF *ins)
     }
 
     if (ins->lanesMatch(0, 0, 1, 1)) {
-        masm.movaps(input, output);
-        masm.unpcklps(input, output);
+        FloatRegister inputCopy = masm.reusedInputFloat32x4(input, output);
+        masm.vunpcklps(input, inputCopy, output);
         return;
     }
 
     if (ins->lanesMatch(2, 2, 3, 3)) {
-        masm.movaps(input, output);
-        masm.unpckhps(input, output);
+        FloatRegister inputCopy = masm.reusedInputFloat32x4(input, output);
+        masm.vunpckhps(input, inputCopy, output);
         return;
     }
 
@@ -2459,28 +2459,36 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle *ins)
     }
 
     if (ins->lanesMatch(0, 4, 1, 5)) {
-        masm.unpcklps(rhs, lhs);
+        masm.vunpcklps(rhs, lhs, lhs);
         return;
     }
 
     // TODO swapped case would be better (bug 1084404)
     if (ins->lanesMatch(4, 0, 5, 1)) {
-        masm.movaps(rhs, ScratchSimdReg);
-        masm.unpcklps(lhs, ScratchSimdReg);
-        masm.movaps(ScratchSimdReg, out);
+        if (AssemblerX86Shared::HasAVX()) {
+            masm.vunpcklps(lhs, rhs, out);
+        } else {
+            masm.movaps(rhs, ScratchSimdReg);
+            masm.vunpcklps(lhs, ScratchSimdReg, ScratchSimdReg);
+            masm.movaps(ScratchSimdReg, out);
+        }
         return;
     }
 
     if (ins->lanesMatch(2, 6, 3, 7)) {
-        masm.unpckhps(rhs, lhs);
+        masm.vunpckhps(rhs, lhs, lhs);
         return;
     }
 
     // TODO swapped case would be better (bug 1084404)
     if (ins->lanesMatch(6, 2, 7, 3)) {
-        masm.movaps(rhs, ScratchSimdReg);
-        masm.unpckhps(lhs, ScratchSimdReg);
-        masm.movaps(ScratchSimdReg, out);
+        if (AssemblerX86Shared::HasAVX()) {
+            masm.vunpckhps(lhs, rhs, out);
+        } else {
+            masm.movaps(rhs, ScratchSimdReg);
+            masm.vunpckhps(lhs, ScratchSimdReg, ScratchSimdReg);
+            masm.movaps(ScratchSimdReg, out);
+        }
         return;
     }
 
@@ -2708,11 +2716,11 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *ins)
       }
       case MSimdBinaryArith::MinNum: {
         FloatRegister tmp = ToFloatRegister(ins->temp());
-        masm.loadConstantInt32x4(SimdConstant::SplatX4(int32_t(0x80000000)), ScratchSimdReg);
-        masm.movdqa(ScratchSimdReg, tmp);
+        masm.loadConstantInt32x4(SimdConstant::SplatX4(int32_t(0x80000000)), tmp);
 
         FloatRegister mask = ScratchSimdReg;
-        masm.pcmpeqd(Operand(lhs), mask);
+        FloatRegister tmpCopy = masm.reusedInputFloat32x4(tmp, ScratchSimdReg);
+        masm.vpcmpeqd(Operand(lhs), tmpCopy, mask);
         masm.vandps(tmp, mask, mask);
 
         FloatRegister lhsCopy = masm.reusedInputFloat32x4(lhs, tmp);
@@ -2739,7 +2747,7 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *ins)
       case MSimdBinaryArith::MaxNum: {
         FloatRegister mask = ScratchSimdReg;
         masm.loadConstantInt32x4(SimdConstant::SplatX4(0), mask);
-        masm.pcmpeqd(Operand(lhs), mask);
+        masm.vpcmpeqd(Operand(lhs), mask, mask);
 
         FloatRegister tmp = ToFloatRegister(ins->temp());
         masm.loadConstantInt32x4(SimdConstant::SplatX4(int32_t(0x80000000)), tmp);
@@ -2905,7 +2913,7 @@ CodeGeneratorX86Shared::visitSimdShift(LSimdShift *ins)
 
     MOZ_ASSERT(val->isRegister());
     FloatRegister tmp = ScratchFloat32Reg;
-    masm.movd(ToRegister(val), tmp);
+    masm.vmovd(ToRegister(val), tmp);
 
     switch (ins->operation()) {
       case MSimdShift::lsh:

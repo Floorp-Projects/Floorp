@@ -2718,55 +2718,35 @@ public:
 
     // SSE operations:
 
-    void pcmpeqw_rr(XMMRegisterID src, XMMRegisterID dst)
+    void vpcmpeqw_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("pcmpeqw    %s, %s", nameFPReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_PCMPEQW, (RegisterID)src, (RegisterID)dst); /* right order ? */
+        twoByteOpSimd("vpcmpeqw", VEX_PD, OP2_PCMPEQW, src1, src0, dst);
     }
 
-    void pcmpeqd_rr(XMMRegisterID src, XMMRegisterID dst)
+    void vpcmpeqd_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("pcmpeqd    %s, %s", nameFPReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_PCMPEQD_VdqWdq, (RegisterID)src, (RegisterID)dst);
+        twoByteOpSimd("vpcmpeqd", VEX_PD, OP2_PCMPEQD_VdqWdq, src1, src0, dst);
+    }
+    void vpcmpeqd_mr(int offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpcmpeqd", VEX_PD, OP2_PCMPEQD_VdqWdq, offset, base, src0, dst);
+    }
+    void vpcmpeqd_mr(const void* address, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpcmpeqd", VEX_PD, OP2_PCMPEQD_VdqWdq, address, src0, dst);
     }
 
-    void pcmpeqd_mr(int offset, RegisterID base, XMMRegisterID dst)
+    void vpcmpgtd_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("pcmpeqd    %s0x%x(%s), %s",
-             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_PCMPEQD_VdqWdq, offset, base, (RegisterID)dst);
+        twoByteOpSimd("vpcmpgtd", VEX_PD, OP2_PCMPGTD_VdqWdq, src1, src0, dst);
     }
-
-    void pcmpeqd_mr(const void* address, XMMRegisterID dst)
+    void vpcmpgtd_mr(int offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("pcmpeqd    %p, %s", address, nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_PCMPEQD_VdqWdq, address, (RegisterID)dst);
+        twoByteOpSimd("vpcmpgtd", VEX_PD, OP2_PCMPGTD_VdqWdq, offset, base, src0, dst);
     }
-
-    void pcmpgtd_rr(XMMRegisterID src, XMMRegisterID dst)
+    void vpcmpgtd_mr(const void* address, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("pcmpgtd    %s, %s", nameFPReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_PCMPGTD_VdqWdq, (RegisterID)src, (RegisterID)dst);
-    }
-
-    void pcmpgtd_mr(int offset, RegisterID base, XMMRegisterID dst)
-    {
-        spew("pcmpgtd    %s0x%x(%s), %s",
-             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_PCMPGTD_VdqWdq, offset, base, (RegisterID)dst);
-    }
-
-    void pcmpgtd_mr(const void* address, XMMRegisterID dst)
-    {
-        spew("pcmpgtd    %p, %s",  address, nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_PCMPGTD_VdqWdq, address, (RegisterID)dst);
+        twoByteOpSimd("vpcmpgtd", VEX_PD, OP2_PCMPGTD_VdqWdq, address, src0, dst);
     }
 
     void vcmpps_rr(uint8_t order, XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
@@ -2785,55 +2765,34 @@ public:
         m_formatter.immediate8(order);
     }
 
-    void rcpps_rr(XMMRegisterID src, XMMRegisterID dst){
-        spew("rcpps      %s, %s", nameFPReg(src), nameFPReg(dst));
-        m_formatter.twoByteOp(OP2_RCPPS_VpsWps, (RegisterID)src, (RegisterID)dst);
+    void vrcpps_rr(XMMRegisterID src, XMMRegisterID dst) {
+        twoByteOpSimd("vrcpps", VEX_PS, OP2_RCPPS_VpsWps, src, X86Registers::invalid_xmm, dst);
     }
-    void rcpps_mr(int offset, RegisterID base, XMMRegisterID dst){
-        spew("rcpps      %s0x%x(%s), %s",
-             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
-        m_formatter.twoByteOp(OP2_RCPPS_VpsWps, offset, base, (RegisterID)dst);
+    void vrcpps_mr(int offset, RegisterID base, XMMRegisterID dst) {
+        twoByteOpSimd("vrcpps", VEX_PS, OP2_RCPPS_VpsWps, offset, base, X86Registers::invalid_xmm, dst);
     }
-    void rcpps_mr(const void* address, XMMRegisterID dst){
-        spew("rcpps      %p, %s", address, nameFPReg(dst));
-        m_formatter.twoByteOp(OP2_RCPPS_VpsWps, address, (RegisterID)dst);
+    void vrcpps_mr(const void* address, XMMRegisterID dst) {
+        twoByteOpSimd("vrcpps", VEX_PS, OP2_RCPPS_VpsWps, address, X86Registers::invalid_xmm, dst);
     }
 
-    void rsqrtps_rr(XMMRegisterID src, XMMRegisterID dst){
-        spew("rsqrtps    %s, %s", nameFPReg(src), nameFPReg(dst));
-        m_formatter.twoByteOp(OP2_RSQRTPS_VpsWps, (RegisterID)src, (RegisterID)dst);
+    void vrsqrtps_rr(XMMRegisterID src, XMMRegisterID dst) {
+        twoByteOpSimd("vrsqrtps", VEX_PS, OP2_RSQRTPS_VpsWps, src, X86Registers::invalid_xmm, dst);
     }
-    void rsqrtps_mr(int offset, RegisterID base, XMMRegisterID dst){
-        spew("rsqrtps    %s0x%x(%s), %s",
-             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
-        m_formatter.twoByteOp(OP2_RSQRTPS_VpsWps, offset, base, (RegisterID)dst);
+    void vrsqrtps_mr(int offset, RegisterID base, XMMRegisterID dst) {
+        twoByteOpSimd("vrsqrtps", VEX_PS, OP2_RSQRTPS_VpsWps, offset, base, X86Registers::invalid_xmm, dst);
     }
-    void rsqrtps_mr(const void* address, XMMRegisterID dst){
-        spew("rsqrtps    %p, %s", address, nameFPReg(dst));
-        m_formatter.twoByteOp(OP2_RSQRTPS_VpsWps, address, (RegisterID)dst);
+    void vrsqrtps_mr(const void* address, XMMRegisterID dst) {
+        twoByteOpSimd("vrsqrtps", VEX_PS, OP2_RSQRTPS_VpsWps, address, X86Registers::invalid_xmm, dst);
     }
 
-    void sqrtps_rr(XMMRegisterID src, XMMRegisterID dst){
-        spew("sqrtps     %s, %s", nameFPReg(src), nameFPReg(dst));
-        m_formatter.twoByteOp(OP2_SQRTPS_VpsWps, (RegisterID)src, (RegisterID)dst);
+    void vsqrtps_rr(XMMRegisterID src, XMMRegisterID dst) {
+        twoByteOpSimd("vsqrtps", VEX_PS, OP2_SQRTPS_VpsWps, src, X86Registers::invalid_xmm, dst);
     }
-
-    void sqrtps_mr(int offset, RegisterID base, XMMRegisterID dst){
-        spew("sqrtps     %s0x%x(%s), %s",
-             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
-        m_formatter.twoByteOp(OP2_SQRTPS_VpsWps, offset, base, (RegisterID)dst);
+    void vsqrtps_mr(int offset, RegisterID base, XMMRegisterID dst) {
+        twoByteOpSimd("vsqrtps", VEX_PS, OP2_SQRTPS_VpsWps, offset, base, X86Registers::invalid_xmm, dst);
     }
-
-    void sqrtps_mr(const void* address, XMMRegisterID dst){
-        spew("sqrtps     %p, %s", address, nameFPReg(dst));
-        m_formatter.twoByteOp(OP2_SQRTPS_VpsWps, address, (RegisterID)dst);
-    }
-
-    void addsd_rr(XMMRegisterID src, XMMRegisterID dst)
-    {
-        spew("addsd      %s, %s", nameFPReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F2);
-        m_formatter.twoByteOp(OP2_ADDSD_VsdWsd, (RegisterID)src, (RegisterID)dst);
+    void vsqrtps_mr(const void* address, XMMRegisterID dst) {
+        twoByteOpSimd("vsqrtps", VEX_PS, OP2_SQRTPS_VpsWps, address, X86Registers::invalid_xmm, dst);
     }
 
     void vaddsd_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
@@ -2865,150 +2824,109 @@ public:
         twoByteOpSimd("vaddss", VEX_SS, OP2_ADDSD_VsdWsd, address, src0, dst);
     }
 
-    void cvtss2sd_rr(XMMRegisterID src, XMMRegisterID dst)
+    void vcvtss2sd_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("cvtss2sd   %s, %s", nameFPReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F3);
-        m_formatter.twoByteOp(OP2_CVTSS2SD_VsdEd, (RegisterID)src, (RegisterID)dst);
+        twoByteOpSimd("vcvtss2sd", VEX_SS, OP2_CVTSS2SD_VsdEd, src1, src0, dst);
     }
 
-    void cvtsd2ss_rr(XMMRegisterID src, XMMRegisterID dst)
+    void vcvtsd2ss_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("cvtsd2ss   %s, %s", nameFPReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F2);
-        m_formatter.twoByteOp(OP2_CVTSD2SS_VsdEd, (RegisterID)src, (RegisterID)dst);
+        twoByteOpSimd("vcvtsd2ss", VEX_SD, OP2_CVTSD2SS_VsdEd, src1, src0, dst);
     }
 
-    void cvtsi2ss_rr(RegisterID src, XMMRegisterID dst)
+    void vcvtsi2ss_rr(RegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("cvtsi2ss   %s, %s", nameIReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F3);
-        m_formatter.twoByteOp(OP2_CVTSI2SD_VsdEd, src, (RegisterID)dst);
+        twoByteOpInt32Simd("vcvtsi2ss", VEX_SS, OP2_CVTSI2SD_VsdEd, src1, src0, dst);
     }
 
-    void cvtsi2sd_rr(RegisterID src, XMMRegisterID dst)
+    void vcvtsi2sd_rr(RegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("cvtsi2sd   %s, %s", nameIReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F2);
-        m_formatter.twoByteOp(OP2_CVTSI2SD_VsdEd, src, (RegisterID)dst);
+        twoByteOpInt32Simd("vcvtsi2sd", VEX_SD, OP2_CVTSI2SD_VsdEd, src1, src0, dst);
     }
 
-    void cvttps2dq_rr(XMMRegisterID src, XMMRegisterID dst)
+    void vcvttps2dq_rr(XMMRegisterID src, XMMRegisterID dst)
     {
-        spew("cvttps2dq  %s, %s", nameFPReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F3);
-        m_formatter.twoByteOp(OP2_CVTTPS2DQ_VdqWps, (RegisterID)src, (RegisterID)dst);
+        twoByteOpSimd("vcvttps2dq", VEX_SS, OP2_CVTTPS2DQ_VdqWps, src, X86Registers::invalid_xmm, dst);
     }
 
-    void cvtdq2ps_rr(XMMRegisterID src, XMMRegisterID dst)
+    void vcvtdq2ps_rr(XMMRegisterID src, XMMRegisterID dst)
     {
-        spew("cvtdq2ps   %s, %s", nameFPReg(src), nameFPReg(dst));
-        m_formatter.twoByteOp(OP2_CVTDQ2PS_VpsWdq, (RegisterID)src, (RegisterID)dst);
+        twoByteOpSimd("vcvtdq2ps", VEX_PS, OP2_CVTDQ2PS_VpsWdq, src, X86Registers::invalid_xmm, dst);
     }
 
 #ifdef JS_CODEGEN_X64
-    void cvtsq2sd_rr(RegisterID src, XMMRegisterID dst)
+    void vcvtsq2sd_rr(RegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("cvtsq2sd   %s, %s", nameIReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F2);
-        m_formatter.twoByteOp64(OP2_CVTSI2SD_VsdEd, src, (RegisterID)dst);
+        twoByteOpInt64Simd("vcvtsi2sd", VEX_SD, OP2_CVTSI2SD_VsdEd, src1, src0, dst);
     }
-    void cvtsq2ss_rr(RegisterID src, XMMRegisterID dst)
+    void vcvtsq2ss_rr(RegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("cvtsq2ss   %s, %s", nameIReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F3);
-        m_formatter.twoByteOp64(OP2_CVTSI2SD_VsdEd, src, (RegisterID)dst);
+        twoByteOpInt64Simd("vcvtsi2ss", VEX_SS, OP2_CVTSI2SD_VsdEd, src1, src0, dst);
     }
 #endif
 
-    void cvtsi2sd_mr(int offset, RegisterID base, XMMRegisterID dst)
+    void vcvtsi2sd_mr(int offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("cvtsi2sd   %s0x%x(%s), %s",
-             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F2);
-        m_formatter.twoByteOp(OP2_CVTSI2SD_VsdEd, offset, base, (RegisterID)dst);
+        twoByteOpSimd("vcvtsi2sd", VEX_SD, OP2_CVTSI2SD_VsdEd, offset, base, src0, dst);
     }
 
-    void cvtsi2sd_mr(int offset, RegisterID base, RegisterID index, int scale, XMMRegisterID dst)
+    void vcvtsi2sd_mr(int offset, RegisterID base, RegisterID index, int scale, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("cvtsi2sd   %d(%s,%s,%d), %s",
-             offset, nameIReg(base), nameIReg(index), 1<<scale, nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F2);
-        m_formatter.twoByteOp(OP2_CVTSI2SD_VsdEd, offset, base, index, scale, (RegisterID)dst);
+        twoByteOpSimd("vcvtsi2sd", VEX_SD, OP2_CVTSI2SD_VsdEd, offset, base, index, scale, src0, dst);
     }
 
-    void cvtsi2ss_mr(int offset, RegisterID base, XMMRegisterID dst)
+    void vcvtsi2ss_mr(int offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("cvtsi2ss   %s0x%x(%s), %s",
-             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F3);
-        m_formatter.twoByteOp(OP2_CVTSI2SD_VsdEd, offset, base, (RegisterID)dst);
+        twoByteOpSimd("vcvtsi2ss", VEX_SS, OP2_CVTSI2SD_VsdEd, offset, base, src0, dst);
     }
 
-    void cvtsi2ss_mr(int offset, RegisterID base, RegisterID index, int scale, XMMRegisterID dst)
+    void vcvtsi2ss_mr(int offset, RegisterID base, RegisterID index, int scale, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("cvtsi2ss   %d(%s,%s,%d), %s",
-             offset, nameIReg(base), nameIReg(index), 1<<scale, nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F3);
-        m_formatter.twoByteOp(OP2_CVTSI2SD_VsdEd, offset, base, index, scale, (RegisterID)dst);
+        twoByteOpSimd("vcvtsi2ss", VEX_SS, OP2_CVTSI2SD_VsdEd, offset, base, index, scale, src0, dst);
     }
 
 #ifdef JS_CODEGEN_X86
-    void cvtsi2sd_mr(const void* address, XMMRegisterID dst)
+    void vcvtsi2sd_mr(const void* address, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("cvtsi2sd   %p, %s", address, nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F2);
-        m_formatter.twoByteOp(OP2_CVTSI2SD_VsdEd, address, (RegisterID)dst);
+        twoByteOpSimd("vcvtsi2sd", VEX_SD, OP2_CVTSI2SD_VsdEd, address, src0, dst);
     }
 #endif
 
-    void cvttsd2si_rr(XMMRegisterID src, RegisterID dst)
+    void vcvttsd2si_rr(XMMRegisterID src, RegisterID dst)
     {
-        spew("cvttsd2si  %s, %s", nameFPReg(src), nameIReg(4, dst));
-        m_formatter.prefix(PRE_SSE_F2);
-        m_formatter.twoByteOp(OP2_CVTTSD2SI_GdWsd, (RegisterID)src, dst);
+        twoByteOpSimdInt32("vcvttsd2si", VEX_SD, OP2_CVTTSD2SI_GdWsd, src, dst);
     }
 
-    void cvttss2si_rr(XMMRegisterID src, RegisterID dst)
+    void vcvttss2si_rr(XMMRegisterID src, RegisterID dst)
     {
-        spew("cvttss2si  %s, %s", nameFPReg(src), nameIReg(4, dst));
-        m_formatter.prefix(PRE_SSE_F3);
-        m_formatter.twoByteOp(OP2_CVTTSD2SI_GdWsd, (RegisterID)src, dst);
+        twoByteOpSimdInt32("vcvttss2si", VEX_SS, OP2_CVTTSD2SI_GdWsd, src, dst);
     }
 
 #ifdef JS_CODEGEN_X64
-    void cvttsd2sq_rr(XMMRegisterID src, RegisterID dst)
+    void vcvttsd2sq_rr(XMMRegisterID src, RegisterID dst)
     {
-        spew("cvttsd2si  %s, %s", nameFPReg(src), nameIReg(dst));
-        m_formatter.prefix(PRE_SSE_F2);
-        m_formatter.twoByteOp64(OP2_CVTTSD2SI_GdWsd, (RegisterID)src, dst);
+        twoByteOpSimdInt64("vcvttsd2si", VEX_SD, OP2_CVTTSD2SI_GdWsd, src, dst);
     }
 
-    void cvttss2sq_rr(XMMRegisterID src, RegisterID dst)
+    void vcvttss2sq_rr(XMMRegisterID src, RegisterID dst)
     {
-        spew("cvttss2si  %s, %s", nameFPReg(src), nameIReg(dst));
-        m_formatter.prefix(PRE_SSE_F3);
-        m_formatter.twoByteOp64(OP2_CVTTSD2SI_GdWsd, (RegisterID)src, dst);
+        twoByteOpSimdInt64("vcvttss2si", VEX_SS, OP2_CVTTSD2SI_GdWsd, src, dst);
     }
 #endif
 
-    void unpcklps_rr(XMMRegisterID src, XMMRegisterID dst)
+    void vunpcklps_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("unpcklps   %s, %s", nameFPReg(src), nameFPReg(dst));
-        m_formatter.twoByteOp(OP2_UNPCKLPS_VsdWsd, (RegisterID)src, (RegisterID)dst);
+        twoByteOpSimd("vunpcklps", VEX_PS, OP2_UNPCKLPS_VsdWsd, src1, src0, dst);
     }
 
-    void unpckhps_rr(XMMRegisterID src, XMMRegisterID dst)
+    void vunpckhps_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("unpckhps   %s, %s", nameFPReg(src), nameFPReg(dst));
-        m_formatter.twoByteOp(OP2_UNPCKHPS_VsdWsd, (RegisterID)src, (RegisterID)dst);
+        twoByteOpSimd("vunpckhps", VEX_PS, OP2_UNPCKHPS_VsdWsd, src1, src0, dst);
     }
 
-    void movd_rr(RegisterID src, XMMRegisterID dst)
+    void vmovd_rr(RegisterID src, XMMRegisterID dst)
     {
-        spew("movd       %s, %s", nameIReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_MOVD_VdEd, src, (RegisterID)dst);
+        movdOpSimd(src, dst);
     }
 
     void vpand_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
@@ -3211,11 +3129,9 @@ public:
         m_formatter.threeByteOp(OP3_PTEST_VdVd, ESCAPE_PTEST, (RegisterID)rhs, (RegisterID)lhs);
     }
 
-    void movd_rr(XMMRegisterID src, RegisterID dst)
+    void vmovd_rr(XMMRegisterID src, RegisterID dst)
     {
-        spew("movd       %s, %s", nameFPReg(src), nameIReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_MOVD_EdVd, dst, (RegisterID)src);
+        movdOpSimd(src, dst);
     }
 
 #ifdef JS_CODEGEN_X64
@@ -4348,7 +4264,7 @@ private:
     {
         // If we don't have AVX or it's disabled, use the legacy SSE encoding.
         if (!useVEX_) {
-            MOZ_ASSERT(src0 == dst);
+            MOZ_ASSERT(src0 == X86Registers::invalid_xmm || src0 == dst);
             return true;
         }
 
@@ -4370,6 +4286,11 @@ private:
         }
 
         return src0 == dst && mask == X86Registers::xmm0;
+    }
+
+    bool useLegacySSEEncodingForOtherOutput()
+    {
+        return !useVEX_;
     }
 
     const char *legacySSEOpName(const char *name)
@@ -4472,6 +4393,66 @@ private:
         m_formatter.twoByteOpVex(ty, opcode, address, src0, dst);
     }
 
+    void twoByteOpInt32Simd(const char *name, VexOperandType ty, TwoByteOpcodeID opcode,
+                            RegisterID rm, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        if (useLegacySSEEncoding(src0, dst)) {
+            spew("%-11s%s, %s", legacySSEOpName(name), nameIReg(4, rm), nameFPReg(dst));
+            m_formatter.legacySSEPrefix(ty);
+            m_formatter.twoByteOp(opcode, rm, dst);
+            return;
+        }
+
+        spew("%-11s%s, %s, %s", name, nameIReg(4, rm), nameFPReg(src0), nameFPReg(dst));
+        m_formatter.twoByteOpVex(ty, opcode, rm, src0, dst);
+    }
+
+#ifdef JS_CODEGEN_X64
+    void twoByteOpInt64Simd(const char *name, VexOperandType ty, TwoByteOpcodeID opcode,
+                            RegisterID rm, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        if (useLegacySSEEncoding(src0, dst)) {
+            spew("%-11s%s, %s", legacySSEOpName(name), nameIReg(rm), nameFPReg(dst));
+            m_formatter.legacySSEPrefix(ty);
+            m_formatter.twoByteOp64(opcode, rm, dst);
+            return;
+        }
+
+        spew("%-11s%s, %s, %s", name, nameIReg(rm), nameFPReg(src0), nameFPReg(dst));
+        m_formatter.twoByteOpVex64(ty, opcode, rm, src0, dst);
+    }
+#endif
+
+    void twoByteOpSimdInt32(const char *name, VexOperandType ty, TwoByteOpcodeID opcode,
+                            XMMRegisterID rm, RegisterID dst)
+    {
+        if (useLegacySSEEncodingForOtherOutput()) {
+            spew("%-11s%s, %s", legacySSEOpName(name), nameFPReg(rm), nameIReg(4, dst));
+            m_formatter.legacySSEPrefix(ty);
+            m_formatter.twoByteOp(opcode, (RegisterID)rm, dst);
+            return;
+        }
+
+        spew("%-11s%s, %s", name, nameFPReg(rm), nameIReg(4, dst));
+        m_formatter.twoByteOpVex(ty, opcode, (RegisterID)rm, X86Registers::invalid_xmm, dst);
+    }
+
+#ifdef JS_CODEGEN_X64
+    void twoByteOpSimdInt64(const char *name, VexOperandType ty, TwoByteOpcodeID opcode,
+                            XMMRegisterID rm, RegisterID dst)
+    {
+        if (useLegacySSEEncodingForOtherOutput()) {
+            spew("%-11s%s, %s", legacySSEOpName(name), nameFPReg(rm), nameIReg(dst));
+            m_formatter.legacySSEPrefix(ty);
+            m_formatter.twoByteOp64(opcode, (RegisterID)rm, dst);
+            return;
+        }
+
+        spew("%-11s%s, %s", name, nameFPReg(rm), nameIReg(dst));
+        m_formatter.twoByteOpVex64(ty, opcode, (RegisterID)rm, X86Registers::invalid_xmm, (XMMRegisterID)dst);
+    }
+#endif
+
     void threeByteOpSimd(const char *name, VexOperandType ty, ThreeByteOpcodeID opcode,
                          ThreeByteEscape escape,
                          XMMRegisterID rm, XMMRegisterID src0, XMMRegisterID dst)
@@ -4542,21 +4523,33 @@ private:
                                  mask, offset, base, src0, dst);
     }
 
-#ifdef JS_CODEGEN_X64
-    void twoByteOpSimd64(const char *name, VexOperandType ty, TwoByteOpcodeID opcode,
-                         XMMRegisterID rm, XMMRegisterID src0, XMMRegisterID dst)
-    {
-        if (useLegacySSEEncoding(src0, dst)) {
-            spew("%-11s%s, %s", legacySSEOpName(name), nameFPReg(rm), nameFPReg(src0));
-            m_formatter.legacySSEPrefix(ty);
-            m_formatter.twoByteOp64(opcode, (RegisterID)rm, src0);
+    // XMM-to-GPR movd is a two-byte op, but the operands are encoded in reverse
+    // order, so we handle it specially.
+    void movdOpSimd(XMMRegisterID src, RegisterID dst) {
+        if (useLegacySSEEncodingForOtherOutput()) {
+            spew("movd       %s, %s", nameFPReg(src), nameIReg(4, dst));
+            m_formatter.prefix(PRE_SSE_66);
+            m_formatter.twoByteOp(OP2_MOVD_EdVd, dst, (RegisterID)src);
             return;
         }
 
-        spew("%-11s%s, %s, %s", name, nameFPReg(rm), nameFPReg(src0), nameFPReg(dst));
-        m_formatter.twoByteOpVex64(ty, opcode, (RegisterID)rm, src0, dst);
+        spew("vmovd      %s, %s", nameFPReg(src), nameIReg(4, dst));
+        m_formatter.twoByteOpVex(VEX_PD, OP2_MOVD_EdVd, dst, X86Registers::invalid_xmm, src);
     }
-#endif
+
+    // GPR-to-XMM movd is a two-byte op, but it doesn't have an extra XMM
+    // input, so we handle it specially.
+    void movdOpSimd(RegisterID src, XMMRegisterID dst) {
+        if (useLegacySSEEncodingForOtherOutput()) {
+            spew("movd       %s, %s", nameIReg(4, src), nameFPReg(dst));
+            m_formatter.prefix(PRE_SSE_66);
+            m_formatter.twoByteOp(OP2_MOVD_VdEd, src, dst);
+            return;
+        }
+
+        spew("vmovd      %s, %s", nameIReg(4, src), nameFPReg(dst));
+        m_formatter.twoByteOpVex(VEX_PD, OP2_MOVD_VdEd, src, X86Registers::invalid_xmm, dst);
+    }
 
     static int32_t getInt32(void* where)
     {
