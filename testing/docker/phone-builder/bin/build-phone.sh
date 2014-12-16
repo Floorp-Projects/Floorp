@@ -1,8 +1,8 @@
 #! /bin/bash -vex
 
 ### Check that require variables are defined
-test $REPOSITORY  # Should be an hg repository url to pull from
-test $REVISION    # Should be an hg revision to pull down
+test $GECKO_HEAD_REPOSITORY # Should be an hg repository url to pull from
+test $GECKO_HEAD_REV # Should be an hg revision to pull down
 test $TARGET
 
 # First check if the mozharness directory is available. This is intended to be
@@ -14,7 +14,7 @@ if [ ! -d mozharness ]; then
   git clone https://github.com/walac/build-mozharness.git mozharness
 fi
 
-OBJDIR="$HOME/object-folder-$TARGET-$B2G_DEBUG"
+OBJDIR="$HOME/object-folder"
 
 if [ ! -d $OBJDIR ]; then
   mkdir -p $OBJDIR
@@ -45,8 +45,8 @@ fi
   --log-level=debug \
   --target=$TARGET \
   --b2g-config-dir=$TARGET \
-  --checkout-revision=$REVISION \
-  --repo=$REPOSITORY
+  --checkout-revision=$GECKO_HEAD_REV \
+  --repo=$GECKO_HEAD_REPOSITORY
 
 # Don't cache backups
 rm -rf $OBJDIR/B2G/backup-*
