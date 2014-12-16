@@ -3175,6 +3175,7 @@
                                           browser: browser,
                                           editFlags: aMessage.data.editFlags,
                                           spellInfo: spellInfo,
+                                          customMenuItems: aMessage.data.customMenuItems,
                                           addonInfo: aMessage.data.addonInfo };
               let popup = browser.ownerDocument.getElementById("contentAreaContextMenu");
               let event = gContextMenuContentData.event;
