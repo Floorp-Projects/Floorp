@@ -5,6 +5,7 @@
 #ifndef MOOF_PARSER_H_
 #define MOOF_PARSER_H_
 
+#include "mp4_demuxer/AtomType.h"
 #include "mp4_demuxer/mp4_demuxer.h"
 #include "MediaResource.h"
 
@@ -109,15 +110,49 @@ public:
 struct Sample
 {
   mozilla::MediaByteRange mByteRange;
+  mozilla::MediaByteRange mCencRange;
   Microseconds mDecodeTime;
   Interval<Microseconds> mCompositionRange;
   bool mSync;
+};
+
+class Saiz
+{
+public:
+  Saiz(Box& aBox);
+
+  AtomType mAuxInfoType;
+  uint32_t mAuxInfoTypeParameter;
+  nsTArray<uint8_t> mSampleInfoSize;
+};
+
+class Saio
+{
+public:
+  Saio(Box& aBox);
+
+  AtomType mAuxInfoType;
+  uint32_t mAuxInfoTypeParameter;
+  nsTArray<uint64_t> mOffsets;
+};
+
+class AuxInfo {
+public:
+  AuxInfo(int64_t aMoofOffset, Saiz& aSaiz, Saio& aSaio);
+  bool GetByteRanges(nsTArray<MediaByteRange>* aByteRanges);
+
+private:
+
+  int64_t mMoofOffset;
+  Saiz& mSaiz;
+  Saio& mSaio;
 };
 
 class Moof
 {
 public:
   Moof(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts);
+  bool GetAuxInfo(AtomType aType, nsTArray<MediaByteRange>* aByteRanges);
   void FixRounding(const Moof& aMoof);
 
   mozilla::MediaByteRange mRange;
@@ -125,9 +160,15 @@ public:
   Interval<Microseconds> mTimeRange;
   nsTArray<Sample> mIndex;
 
+  nsTArray<Saiz> mSaizs;
+  nsTArray<Saio> mSaios;
+
 private:
   void ParseTraf(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts);
   void ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd, Edts& aEdts);
+  void ParseSaiz(Box& aBox);
+  void ParseSaio(Box& aBox);
+  bool ProcessCenc();
   uint64_t mMaxRoundingError;
 };
 

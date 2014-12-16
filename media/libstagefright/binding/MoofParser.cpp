@@ -173,6 +173,71 @@ Moof::Moof(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts) :
       ParseTraf(box, aTrex, aMdhd, aEdts);
     }
   }
+  ProcessCenc();
+}
+
+bool
+Moof::GetAuxInfo(AtomType aType, nsTArray<MediaByteRange>* aByteRanges)
+{
+  aByteRanges->Clear();
+
+  Saiz* saiz = nullptr;
+  for (int i = 0; ; i++) {
+    if (i == mSaizs.Length()) {
+      return false;
+    }
+    if (mSaizs[i].mAuxInfoType == aType) {
+      saiz = &mSaizs[i];
+      break;
+    }
+  }
+  Saio* saio = nullptr;
+  for (int i = 0; ; i++) {
+    if (i == mSaios.Length()) {
+      return false;
+    }
+    if (mSaios[i].mAuxInfoType == aType) {
+      saio = &mSaios[i];
+      break;
+    }
+  }
+
+  if (saio->mOffsets.Length() == 1) {
+    aByteRanges->SetCapacity(saiz->mSampleInfoSize.Length());
+    uint64_t offset = mRange.mStart + saio->mOffsets[0];
+    for (size_t i = 0; i < saiz->mSampleInfoSize.Length(); i++) {
+      aByteRanges->AppendElement(
+        MediaByteRange(offset, offset + saiz->mSampleInfoSize[i]));
+      offset += saiz->mSampleInfoSize[i];
+    }
+    return true;
+  }
+
+  if (saio->mOffsets.Length() == saiz->mSampleInfoSize.Length()) {
+    aByteRanges->SetCapacity(saiz->mSampleInfoSize.Length());
+    for (size_t i = 0; i < saio->mOffsets.Length(); i++) {
+      uint64_t offset = mRange.mStart + saio->mOffsets[i];
+      aByteRanges->AppendElement(
+        MediaByteRange(offset, offset + saiz->mSampleInfoSize[i]));
+    }
+    return true;
+  }
+
+  return false;
+}
+
+bool
+Moof::ProcessCenc()
+{
+  nsTArray<MediaByteRange> cencRanges;
+  if (!GetAuxInfo(AtomType("cenc"), &cencRanges) ||
+      cencRanges.Length() != mIndex.Length()) {
+    return false;
+  }
+  for (int i = 0; i < cencRanges.Length(); i++) {
+    mIndex[i].mCencRange = cencRanges[i];
+  }
+  return true;
 }
 
 void
@@ -191,6 +256,10 @@ Moof::ParseTraf(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts)
       if (!aTrex.mTrackId || tfhd.mTrackId == aTrex.mTrackId) {
         ParseTrun(box, tfhd, tfdt, aMdhd, aEdts);
       }
+    } else if (box.IsType("saiz")) {
+      mSaizs.AppendElement(Saiz(box));
+    } else if (box.IsType("saio")) {
+      mSaios.AppendElement(Saio(box));
     }
   }
 }
@@ -285,7 +354,7 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd, Edts& aEdts)
   }
   ctsOrder.Sort(CtsComparator());
 
-  for (int i = 0; i < ctsOrder.Length(); i++) {
+  for (size_t i = 0; i < ctsOrder.Length(); i++) {
     if (i + 1 < ctsOrder.Length()) {
       ctsOrder[i]->mCompositionRange.end = ctsOrder[i + 1]->mCompositionRange.start;
     }
@@ -416,5 +485,49 @@ Edts::Edts(Box& aBox)
   }
   NS_ASSERTION(segment_duration == 0, "Can't handle edits with fixed durations");
   reader->DiscardRemaining();
+}
+
+Saiz::Saiz(Box& aBox) : mAuxInfoType("sinf"), mAuxInfoTypeParameter(0)
+{
+  BoxReader reader(aBox);
+  uint32_t flags = reader->ReadU32();
+  uint8_t version = flags >> 24;
+
+  if (flags & 1) {
+    mAuxInfoType = reader->ReadU32();
+    mAuxInfoTypeParameter = reader->ReadU32();
+  }
+  uint8_t defaultSampleInfoSize = reader->ReadU8();
+  uint32_t count = reader->ReadU32();
+  if (defaultSampleInfoSize) {
+    for (int i = 0; i < count; i++) {
+      mSampleInfoSize.AppendElement(defaultSampleInfoSize);
+    }
+  } else {
+    reader->ReadArray(mSampleInfoSize, count);
+  }
+}
+
+Saio::Saio(Box& aBox) : mAuxInfoType("sinf"), mAuxInfoTypeParameter(0)
+{
+  BoxReader reader(aBox);
+  uint32_t flags = reader->ReadU32();
+  uint8_t version = flags >> 24;
+
+  if (flags & 1) {
+    mAuxInfoType = reader->ReadU32();
+    mAuxInfoTypeParameter = reader->ReadU32();
+  }
+  size_t count = reader->ReadU32();
+  mOffsets.SetCapacity(count);
+  if (version == 0) {
+    for (size_t i = 0; i < count; i++) {
+      mOffsets.AppendElement(reader->ReadU32());
+    }
+  } else {
+    for (size_t i = 0; i < count; i++) {
+      mOffsets.AppendElement(reader->ReadU64());
+    }
+  }
 }
 }

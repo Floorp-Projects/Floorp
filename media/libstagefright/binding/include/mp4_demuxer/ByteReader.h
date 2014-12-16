@@ -23,6 +23,12 @@ public:
     : mPtr(aData), mRemaining(aSize)
   {
   }
+  template<size_t S>
+  ByteReader(const nsAutoTArray<uint8_t, S>& aData)
+    : mPtr(&aData[0]), mRemaining(aData.Length())
+  {
+  }
+
   void SetData(const nsTArray<uint8_t>& aData)
   {
     MOZ_ASSERT(!mPtr && !mRemaining);
