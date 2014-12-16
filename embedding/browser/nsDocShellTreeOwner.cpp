@@ -744,8 +744,8 @@ nsDocShellTreeOwner::WebBrowser(nsWebBrowser* aWebBrowser)
   if (!aWebBrowser)
     RemoveChromeListeners();
   if (aWebBrowser != mWebBrowser) {
-    mPrompter = 0;
-    mAuthPrompter = 0;
+    mPrompter = nullptr;
+    mAuthPrompter = nullptr;
   }
 
   mWebBrowser = aWebBrowser;
@@ -782,7 +782,7 @@ nsDocShellTreeOwner::SetWebBrowserChrome(nsIWebBrowserChrome* aWebBrowserChrome)
     mWebBrowserChrome = nullptr;
     mOwnerWin = nullptr;
     mOwnerRequestor = nullptr;
-    mWebBrowserChromeWeak = 0;
+    mWebBrowserChromeWeak = nullptr;
   } else {
     nsCOMPtr<nsISupportsWeakReference> supportsweak =
                                            do_QueryInterface(aWebBrowserChrome);
