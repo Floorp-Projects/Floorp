@@ -160,7 +160,7 @@ protected:
 
    //Weak Reference interfaces...
    nsIWidget*                            mParentWidget;
-   nsAutoPtr<nsTArray<nsWebBrowserListenerState*>> mListenerArray;
+   nsAutoPtr<nsTArray<nsWebBrowserListenerState>> mListenerArray;
 };
 
 #endif /* nsWebBrowser_h__ */

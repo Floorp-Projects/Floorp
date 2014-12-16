@@ -104,13 +104,7 @@ NS_IMETHODIMP nsWebBrowser::InternalDestroy()
 
    mInitInfo = nullptr;
 
-   if (mListenerArray) {
-      for (uint32_t i = 0, end = mListenerArray->Length(); i < end; i++) {
-         nsWebBrowserListenerState *state = mListenerArray->ElementAt(i);
-         delete state;
-      }
-      mListenerArray = nullptr;
-   }
+   mListenerArray = nullptr;
 
    return NS_OK;
 }
@@ -188,19 +182,13 @@ NS_IMETHODIMP nsWebBrowser::AddWebBrowserListener(nsIWeakReference *aListener, c
     if (!mWebProgress) {
         // The window hasn't been created yet, so queue up the listener. They'll be
         // registered when the window gets created.
-        nsAutoPtr<nsWebBrowserListenerState> state;
-        state = new nsWebBrowserListenerState();
-        state->mWeakPtr = aListener;
-        state->mID = aIID;
-
         if (!mListenerArray) {
-            mListenerArray = new nsTArray<nsWebBrowserListenerState*>();
+            mListenerArray = new nsTArray<nsWebBrowserListenerState>();
         }
 
-        mListenerArray->AppendElement(state);
-
-        // We're all set now; don't delete |state| after this point
-        state.forget();
+        nsWebBrowserListenerState* state = mListenerArray->AppendElement();
+        state->mWeakPtr = aListener;
+        state->mID = aIID;
     } else {
         nsCOMPtr<nsISupports> supports(do_QueryReferent(aListener));
         if (!supports) return NS_ERROR_INVALID_ARG;
@@ -245,11 +233,7 @@ NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsIWeakReference *aListener
         // iterate the array and remove the queued listener
         int32_t count = mListenerArray->Length();
         while (count > 0) {
-            nsWebBrowserListenerState *state = mListenerArray->ElementAt(count);
-            NS_ASSERTION(state, "list construction problem");
-
-            if (state->Equals(aListener, aIID)) {
-                // this is the one, pull it out.
+            if (mListenerArray->ElementAt(count).Equals(aListener, aIID)) {
                 mListenerArray->RemoveElementAt(count);
                 break;
             }
@@ -258,10 +242,6 @@ NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsIWeakReference *aListener
 
         // if we've emptied the array, get rid of it.
         if (0 >= mListenerArray->Length()) {
-            for (uint32_t i = 0, end = mListenerArray->Length(); i < end; i++) {
-               nsWebBrowserListenerState *state = mListenerArray->ElementAt(i);
-               delete state;
-            }
             mListenerArray = nullptr;
         }
 
@@ -1174,16 +1154,11 @@ NS_IMETHODIMP nsWebBrowser::Create()
       uint32_t i = 0;
       NS_ASSERTION(count > 0, "array construction problem");
       while (i < count) {
-          nsWebBrowserListenerState *state = mListenerArray->ElementAt(i);
-          NS_ASSERTION(state, "array construction problem");
-          nsCOMPtr<nsISupports> listener = do_QueryReferent(state->mWeakPtr);
+          nsWebBrowserListenerState& state = mListenerArray->ElementAt(i);
+          nsCOMPtr<nsISupports> listener = do_QueryReferent(state.mWeakPtr);
           NS_ASSERTION(listener, "bad listener");
-          (void)BindListener(listener, state->mID);
+          (void)BindListener(listener, state.mID);
           i++;
-      }
-      for (uint32_t i = 0, end = mListenerArray->Length(); i < end; i++) {
-         nsWebBrowserListenerState *state = mListenerArray->ElementAt(i);
-         delete state;
       }
       mListenerArray = nullptr;
    }
