@@ -336,7 +336,7 @@ CPOWToString(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject callee(cx, &args.callee());
     RootedValue cpowValue(cx);
-    if (!JS_LookupProperty(cx, callee, "__cpow__", &cpowValue))
+    if (!JS_GetProperty(cx, callee, "__cpow__", &cpowValue))
         return false;
 
     if (!cpowValue.isObject() || !IsCPOW(&cpowValue.toObject())) {
