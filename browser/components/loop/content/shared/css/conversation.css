@@ -810,15 +810,20 @@ html, .fx-embedded, #main,
 }
 
 .room-invitation-overlay form {
-  padding: 8em 0 2.5em 0;
+  padding: 6em 0 2em 0;
 }
 
-.room-invitation-overlay input[type="text"] {
+.room-invitation-overlay textarea {
+  display: block;
+  background: rgba(0, 0, 0, .5);
   color: #fff;
+  font-family: "Helvetica Neue", Arial, sans;
   font-size: 1.2em;
   border: none;
   width: 200px;
   margin: 0 auto;
+  padding: .2em .4em;
+  border-radius: .5em;
 }
 
 .room-invitation-overlay .btn-group {
