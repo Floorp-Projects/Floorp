@@ -17,7 +17,7 @@ function test() {
     waitForFocus(init, content);
   }, true);
 
-  content.location = "data:text/html,browser_css_color.js";
+  content.location = "data:text/html;charset=utf-8,browser_css_color.js";
 }
 
 function init() {
