@@ -1,0 +1,80 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="../testcommon.js"></script>
+<div id="log"></div>
+<style>
+@keyframes abc {
+  to { transform: translate(10px) }
+}
+</style>
+<script>
+'use strict';
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = 'abc 100s';
+  var player = div.getAnimationPlayers()[0];
+
+  var originalReadyPromise = player.ready;
+  player.ready.then(function() {
+    assert_equals(player.ready, originalReadyPromise,
+                  'Ready promise is the same object when playing completes');
+    player.pause();
+    // TODO: When we implement deferred pausing (bug 1109390), change this to
+    // assert_not_equals and wait on the new promise before continuing.
+    assert_equals(player.ready, originalReadyPromise,
+                  'Ready promise does not change when pausing (for now)');
+    player.play();
+    assert_not_equals(player.ready, originalReadyPromise,
+                      'Ready promise object identity differs after calling'
+                      + ' play()');
+    t.done();
+  });
+}, 'A new ready promise is created each time play() is called'
+   + ' the animation property');
+
+test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = 'abc 100s paused';
+  var player = div.getAnimationPlayers()[0];
+
+  var originalReadyPromise = player.ready;
+  div.style.animationPlayState = 'running';
+  // FIXME: Flush style when fetching ready promise
+  window.getComputedStyle(div).animationPlayState;
+  assert_not_equals(player.ready, originalReadyPromise,
+                    'After updating animation-play-state a new ready promise'
+                    + ' object is created');
+}, 'A new ready promise is created when setting animation-play-state: running');
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = 'abc 100s';
+  var player = div.getAnimationPlayers()[0];
+
+  player.ready.then(function() {
+    var promiseBeforeCallingPlay = player.ready;
+    player.play();
+    assert_equals(player.ready, promiseBeforeCallingPlay,
+                  'Ready promise has same object identity after redundant call'
+                  + ' to play()');
+    t.done();
+  });
+}, 'Redundant calls to play() do not generate new ready promise objects');
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = 'abc 100s';
+  var player = div.getAnimationPlayers()[0];
+
+  player.ready.then(function(resolvedPlayer) {
+    assert_equals(resolvedPlayer, player,
+                  'Object identity of player passed to Promise callback'
+                  + ' matches the player object owning the Promise');
+    t.done();
+  });
+}, 'The ready promise is fulfilled with its AnimationPlayer');
+
+</script>
