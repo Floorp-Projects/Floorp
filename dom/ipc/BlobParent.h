@@ -221,6 +221,12 @@ private:
   RecvResolveMystery(const ResolveMysteryParams& aParams) MOZ_OVERRIDE;
 
   virtual bool
+  RecvBlobStreamSync(const uint64_t& aStart,
+                     const uint64_t& aLength,
+                     InputStreamParams* aParams,
+                     OptionalFileDescriptorSet* aFDs) MOZ_OVERRIDE;
+
+  virtual bool
   RecvWaitForSliceCreation() MOZ_OVERRIDE;
 
   virtual bool

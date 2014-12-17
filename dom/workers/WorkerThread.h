@@ -72,6 +72,9 @@ public:
   Dispatch(const WorkerThreadFriendKey& aKey,
            WorkerRunnable* aWorkerRunnable);
 
+  uint32_t
+  RecursionDepth(const WorkerThreadFriendKey& aKey) const;
+
   NS_DECL_ISUPPORTS_INHERITED
 
 private:

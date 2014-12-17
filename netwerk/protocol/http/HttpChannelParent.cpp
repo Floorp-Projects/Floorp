@@ -304,6 +304,9 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     MOZ_ASSERT(!fds.IsEmpty());
 
     unused << fdSetActor->Send__delete__(fdSetActor);
+  } else if (aFds.type() == OptionalFileDescriptorSet::TArrayOfFileDescriptor) {
+    const_cast<OptionalFileDescriptorSet&>(aFds).
+      get_ArrayOfFileDescriptor().SwapElements(fds);
   }
 
   nsCOMPtr<nsIInputStream> stream = DeserializeInputStream(uploadStream, fds);

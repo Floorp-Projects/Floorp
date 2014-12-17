@@ -94,7 +94,11 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     { name: "DataStoreCursor", b2g: true },
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    "DOMError",
+// IMPORTANT: Do not change this list without review from a DOM peer!
     "DOMException",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DOMStringList",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Event",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -105,6 +109,26 @@ var interfaceNamesInGlobalScope =
     "FileReaderSync",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     { name: "Headers", pref: "dom.fetch.enabled" },
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBCursor",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBDatabase",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBFactory",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBIndex",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBKeyRange",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBObjectStore",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBOpenDBRequest",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBRequest",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBTransaction",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBVersionChangeEvent",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "ImageData",
 // IMPORTANT: Do not change this list without review from a DOM peer!
