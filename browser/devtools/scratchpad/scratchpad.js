@@ -468,7 +468,7 @@ var Scratchpad = {
     return connection.then(({ debuggerClient, webConsoleClient }) => {
       let deferred = promise.defer();
 
-      webConsoleClient.evaluateJS(aString, aResponse => {
+      webConsoleClient.evaluateJSAsync(aString, aResponse => {
         this.debuggerClient = debuggerClient;
         this.webConsoleClient = webConsoleClient;
         if (aResponse.error) {
