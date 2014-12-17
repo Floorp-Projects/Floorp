@@ -2234,7 +2234,7 @@ LIRGenerator::visitLoadSlot(MLoadSlot *ins)
 {
     switch (ins->type()) {
       case MIRType_Value:
-        defineBox(new(alloc()) LLoadSlotV(useRegister(ins->slots())), ins);
+        defineBox(new(alloc()) LLoadSlotV(useRegisterAtStart(ins->slots())), ins);
         break;
 
       case MIRType_Undefined:
@@ -2242,7 +2242,7 @@ LIRGenerator::visitLoadSlot(MLoadSlot *ins)
         MOZ_CRASH("typed load must have a payload");
 
       default:
-        define(new(alloc()) LLoadSlotT(useRegister(ins->slots())), ins);
+        define(new(alloc()) LLoadSlotT(useRegisterAtStart(ins->slots())), ins);
         break;
     }
 }
@@ -3091,10 +3091,10 @@ LIRGenerator::visitLoadFixedSlot(MLoadFixedSlot *ins)
     MOZ_ASSERT(ins->object()->type() == MIRType_Object);
 
     if (ins->type() == MIRType_Value) {
-        LLoadFixedSlotV *lir = new(alloc()) LLoadFixedSlotV(useRegister(ins->object()));
+        LLoadFixedSlotV *lir = new(alloc()) LLoadFixedSlotV(useRegisterAtStart(ins->object()));
         defineBox(lir, ins);
     } else {
-        LLoadFixedSlotT *lir = new(alloc()) LLoadFixedSlotT(useRegister(ins->object()));
+        LLoadFixedSlotT *lir = new(alloc()) LLoadFixedSlotT(useRegisterAtStart(ins->object()));
         define(lir, ins);
     }
 }
@@ -3834,7 +3834,7 @@ LIRGenerator::visitGetDOMMember(MGetDOMMember *ins)
     MOZ_ASSERT(ins->domAliasSet() != JSJitInfo::AliasEverything,
                "Member gets had better not alias the world");
     LGetDOMMember *lir =
-        new(alloc()) LGetDOMMember(useRegister(ins->object()));
+        new(alloc()) LGetDOMMember(useRegisterAtStart(ins->object()));
     defineBox(lir, ins);
 }
 
