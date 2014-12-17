@@ -1435,7 +1435,7 @@ TypedObject::GetBuffer(JSContext *cx, unsigned argc, Value *vp)
     else
         buffer = obj.as<InlineTransparentTypedObject>().getOrCreateBuffer(cx);
     if (!buffer)
-        MOZ_CRASH();
+        return false;
     args.rval().setObject(*buffer);
     return true;
 }
