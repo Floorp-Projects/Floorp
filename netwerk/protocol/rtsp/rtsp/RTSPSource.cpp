@@ -29,6 +29,7 @@
 #include "nsString.h"
 #include "nsStringStream.h"
 #include "nsAutoPtr.h"
+#include "mozilla/DebugOnly.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -595,7 +596,7 @@ void RTSPSource::onConnected(bool isSeekable)
         meta->SetTotalTracks(numTracks);
         meta->SetMimeType(mimeType);
 
-        bool success;
+        DebugOnly<bool> success;
         success = format->findInt64(kKeyDuration, &int64Value);
         MOZ_ASSERT(success);
         meta->SetDuration(int64Value);
@@ -713,7 +714,7 @@ void RTSPSource::onTrackDataAvailable(size_t trackIndex)
     meta = new mozilla::net::RtspMetaData();
 
     MOZ_ASSERT(accessUnit != NULL);
-    bool success = accessUnit->meta()->findInt64("timeUs", &int64Value);
+    DebugOnly<bool> success = accessUnit->meta()->findInt64("timeUs", &int64Value);
     MOZ_ASSERT(success);
     meta->SetTimeStamp(int64Value);
 
