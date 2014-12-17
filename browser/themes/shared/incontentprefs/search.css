@@ -1,0 +1,54 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#defaultEngine > .menulist-label-box > .menulist-icon {
+  height: 16px;
+}
+
+/* work around a display: none in Linux's menu.css, see bug 1112310 */
+.searchengine-menuitem > .menu-iconic-left {
+  display: -moz-box;
+}
+
+#engineList {
+  margin: .5em 6px;
+}
+
+#engineList treechildren::-moz-tree-image(engineShown, checked) {
+  /* Unfortunately check.svg can't be used in XUL trees. */
+  list-style-image: url("check.png");
+  -moz-margin-start: 5px;
+  width: 12px;
+  height: 12px;
+}
+
+@media (min-resolution: 2dppx) {
+  #engineList treechildren::-moz-tree-image(engineShown, checked) {
+    list-style-image: url("check@2x.png");
+  }
+}
+
+#engineList treechildren::-moz-tree-image(engineName) {
+  -moz-margin-end: 10px;
+  -moz-margin-start: 1px;
+  width: 16px;
+  height: 16px;
+}
+
+#engineList treechildren::-moz-tree-row {
+  min-height: 36px;
+}
+
+#engineList treechildren::-moz-tree-cell-text {
+  /* Override to avoid text in the selected row being white on light gray. */
+  color: -moz-FieldText;
+}
+
+#engineList treechildren::-moz-tree-drop-feedback {
+  background-color: Highlight;
+  width: 10000px; /* 100% doesn't work; 10k is hopefully larger than any window
+                     we may have, overflow isn't visible. */
+  height: 2px;
+  -moz-margin-start: 0;
+}
