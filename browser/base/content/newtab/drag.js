@@ -18,15 +18,15 @@ let gDrag = {
    * The site that is dragged.
    */
   _draggedSite: null,
-  get draggedSite() this._draggedSite,
+  get draggedSite() { return this._draggedSite; },
 
   /**
    * The cell width/height at the point the drag started.
    */
   _cellWidth: null,
   _cellHeight: null,
-  get cellWidth() this._cellWidth,
-  get cellHeight() this._cellHeight,
+  get cellWidth() { return this._cellWidth; },
+  get cellHeight() { return this._cellHeight; },
 
   /**
    * Start a new drag operation.
@@ -146,6 +146,6 @@ let gDrag = {
 
     // After the 'dragstart' event has been processed we can remove the
     // temporary drag element from the DOM.
-    setTimeout(function () scrollbox.removeChild(dragElement), 0);
+    setTimeout(() => scrollbox.removeChild(dragElement), 0);
   }
 };
