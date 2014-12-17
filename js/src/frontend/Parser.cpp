@@ -1047,7 +1047,7 @@ Parser<ParseHandler>::functionBody(FunctionSyntaxKind kind, FunctionBodyType typ
         if (!kid)
             return null();
 
-        pn = handler.newReturnStatement(kid, handler.getPosition(kid));
+        pn = handler.newReturnStatement(kid, null(), handler.getPosition(kid));
         if (!pn)
             return null();
     }
@@ -1086,6 +1086,14 @@ Parser<ParseHandler>::functionBody(FunctionSyntaxKind kind, FunctionBodyType typ
             return null();
         if (!pc->define(tokenStream, context->names().dotGenerator, generator, Definition::VAR))
             return null();
+
+        if (pc->isStarGenerator()) {
+            Node genrval = newName(context->names().dotGenRVal);
+            if (!genrval)
+                return null();
+            if (!pc->define(tokenStream, context->names().dotGenRVal, genrval, Definition::VAR))
+                return null();
+        }
 
         generator = newName(context->names().dotGenerator);
         if (!generator)
@@ -3111,7 +3119,7 @@ LexicalLookup(ContextT *ct, HandleAtom atom, int *slotp, typename ContextT::Stmt
          * can potentially override any static bindings introduced by statements
          * further up the stack, we have to abort the search.
          */
-        if (stmt->type == STMT_WITH && atom != ct->sc->context->names().dotGenerator)
+        if (stmt->type == STMT_WITH && !ct->sc->isDotVariable(atom))
             break;
 
         // Skip statements that do not introduce a new scope
@@ -5288,7 +5296,18 @@ Parser<ParseHandler>::returnStatement()
     if (!MatchOrInsertSemicolon(tokenStream))
         return null();
 
-    Node pn = handler.newReturnStatement(exprNode, TokenPos(begin, pos().end));
+    Node genrval = null();
+    if (pc->isStarGenerator()) {
+        genrval = newName(context->names().dotGenRVal);
+        if (!genrval)
+            return null();
+        if (!noteNameUse(context->names().dotGenRVal, genrval))
+            return null();
+        if (!checkAndMarkAsAssignmentLhs(genrval, PlainAssignment))
+            return null();
+    }
+
+    Node pn = handler.newReturnStatement(exprNode, genrval, TokenPos(begin, pos().end));
     if (!pn)
         return null();
 
@@ -5486,7 +5505,7 @@ Parser<FullParseHandler>::withStatement()
     for (AtomDefnRange r = pc->lexdeps->all(); !r.empty(); r.popFront()) {
         DefinitionNode defn = r.front().value().get<FullParseHandler>();
         DefinitionNode lexdep = handler.resolve(defn);
-        if (lexdep->name() != context->names().dotGenerator)
+        if (!pc->sc->isDotVariable(lexdep->name()))
             handler.deoptimizeUsesWithin(lexdep, TokenPos(begin, pos().begin));
     }
 
@@ -6556,10 +6575,9 @@ LegacyCompExprTransplanter::transplant(ParseNode *pn)
             MOZ_ASSERT(!stmt || stmt != pc->topStmt);
 #endif
             if (isGenexp && !dn->isOp(JSOP_CALLEE)) {
-                MOZ_ASSERT_IF(atom != parser->context->names().dotGenerator,
-                              !pc->decls().lookupFirst(atom));
+                MOZ_ASSERT_IF(!pc->sc->isDotVariable(atom), !pc->decls().lookupFirst(atom));
 
-                if (atom == parser->context->names().dotGenerator) {
+                if (pc->sc->isDotVariable(atom)) {
                     if (dn->dn_uses == pn) {
                         if (!BumpStaticLevel(parser->tokenStream, dn, pc))
                             return false;
