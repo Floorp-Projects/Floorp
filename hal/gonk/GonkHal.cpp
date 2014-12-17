@@ -27,11 +27,7 @@
 #include <sys/syscall.h>
 #include <sys/resource.h>
 #include <time.h>
-#if ANDROID_VERSION >= 21
-#include <limits.h>
-#else
-#include <asm/page.h>
-#endif
+#include <unistd.h>
 
 #include "mozilla/DebugOnly.h"
 
@@ -1321,6 +1317,8 @@ EnsureKernelLowMemKillerParamsSet()
   int32_t lowerBoundOfNextKillUnderKB = 0;
   int32_t countOfLowmemorykillerParametersSets = 0;
 
+  long page_size = sysconf(_SC_PAGESIZE);
+
   for (int i = NUM_PROCESS_PRIORITY - 1; i >= 0; i--) {
     // The system doesn't function correctly if we're missing these prefs, so
     // crash loudly.
@@ -1358,7 +1356,7 @@ EnsureKernelLowMemKillerParamsSet()
     adjParams.AppendPrintf("%d,", OomAdjOfOomScoreAdj(oomScoreAdj));
 
     // minfree is in pages.
-    minfreeParams.AppendPrintf("%d,", killUnderKB * 1024 / PAGE_SIZE);
+    minfreeParams.AppendPrintf("%ld,", killUnderKB * 1024 / page_size);
 
     lowerBoundOfNextOomScoreAdj = oomScoreAdj;
     lowerBoundOfNextKillUnderKB = killUnderKB;
@@ -1381,7 +1379,7 @@ EnsureKernelLowMemKillerParamsSet()
 
     // notify_trigger is in pages.
     WriteToFile("/sys/module/lowmemorykiller/parameters/notify_trigger",
-      nsPrintfCString("%d", lowMemNotifyThresholdKB * 1024 / PAGE_SIZE).get());
+      nsPrintfCString("%ld", lowMemNotifyThresholdKB * 1024 / page_size).get());
   }
 
   // Ensure OOM events appear in logcat
