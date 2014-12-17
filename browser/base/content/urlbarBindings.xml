@@ -939,12 +939,24 @@
             this.closePopup();
             controller.handleEscape();
 
-            // Fill in the search bar's value
-            searchBar.value = search;
-
             // open the search results according to the clicking subtlety
             var where = whereToOpenLink(aEvent, false, true);
+
+            // But open ctrl/cmd clicks on autocomplete items in a new background tab.
+            if (where == "tab" && (aEvent instanceof MouseEvent) &&
+                (aEvent.button == 1 ||
+#ifdef XP_MACOSX
+                 aEvent.metaKey))
+#else
+                 aEvent.ctrlKey))
+#endif
+              where = "tab-background";
+
             searchBar.doSearch(search, where);
+            if (where == "tab-background")
+              searchBar.focus();
+            else
+              searchBar.value = search;
           }
         ]]></body>
       </method>
