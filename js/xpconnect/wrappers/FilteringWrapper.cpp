@@ -113,26 +113,15 @@ FilteringWrapper<Base, Policy>::getOwnEnumerablePropertyKeys(JSContext *cx,
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::getEnumerablePropertyKeys(JSContext *cx,
-                                                          HandleObject wrapper,
-                                                          AutoIdVector &props) const
+FilteringWrapper<Base, Policy>::enumerate(JSContext *cx, HandleObject wrapper,
+                                          MutableHandleObject objp) const
 {
     assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
-    return Base::getEnumerablePropertyKeys(cx, wrapper, props) &&
-           Filter<Policy>(cx, wrapper, props);
-}
-
-template <typename Base, typename Policy>
-bool
-FilteringWrapper<Base, Policy>::iterate(JSContext *cx, HandleObject wrapper,
-                                        unsigned flags, MutableHandleObject objp) const
-{
-    assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
-    // We refuse to trigger the iterator hook across chrome wrappers because
+    // We refuse to trigger the enumerate hook across chrome wrappers because
     // we don't know how to censor custom iterator objects. Instead we trigger
-    // the default proxy iterate trap, which will ask enumerate() for the list
-    // of (censored) ids.
-    return js::BaseProxyHandler::iterate(cx, wrapper, flags, objp);
+    // the default proxy enumerate trap, which will use js::GetPropertyKeys
+    // for the list of (censored) ids.
+    return js::BaseProxyHandler::enumerate(cx, wrapper, objp);
 }
 
 template <typename Base, typename Policy>
@@ -257,14 +246,6 @@ CrossOriginXrayWrapper::delete_(JSContext *cx, JS::Handle<JSObject*> wrapper,
 {
     JS_ReportError(cx, "Permission denied to delete property on cross-origin object");
     return false;
-}
-
-bool
-CrossOriginXrayWrapper::getEnumerablePropertyKeys(JSContext *cx, JS::Handle<JSObject*> wrapper,
-                                                  JS::AutoIdVector &props) const
-{
-    // Cross-origin properties are non-enumerable.
-    return true;
 }
 
 #define XOW FilteringWrapper<CrossOriginXrayWrapper, CrossOriginAccessiblePropertiesOnly>

@@ -60,10 +60,11 @@ public:
   nsresult ReadMetadata(MediaInfo* aInfo,
                         MetadataTags** aTags) MOZ_OVERRIDE;
 
-  void Seek(int64_t aTime,
-            int64_t aStartTime,
-            int64_t aEndTime,
-            int64_t aCurrentTime) MOZ_OVERRIDE;
+  nsRefPtr<SeekPromise>
+  Seek(int64_t aTime,
+       int64_t aStartTime,
+       int64_t aEndTime,
+       int64_t aCurrentTime) MOZ_OVERRIDE;
 
   void NotifyDataArrived(const char* aBuffer,
                          uint32_t aLength,

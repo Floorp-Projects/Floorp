@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>This page will be modified by the add-on</title>
+    <script>
+function sendAlertsForNode(node) {
+  alert(node.textContent);
+  var color = window.getComputedStyle(node).getPropertyValue("color");
+  alert(color);
+}
+
+function run() {
+  sendAlertsForNode(document.getElementById("header"));
+  sendAlertsForNode(document.getElementById("header2"));
+}
+    </script>
+  </head>
+  <body onload="run()">
+    <h1 id="header">Lorem ipsum</h1>
+    <h2 id="header2">Uncustomized content</h2>
+  </body>
+</html>

@@ -446,7 +446,7 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
 
   mSession->Compressor()->EncodeHeaderBlock(mFlatHttpRequestHeaders,
                                             head->Method(),
-                                            head->RequestURI(),
+                                            head->Path(),
                                             authorityHeader,
                                             scheme,
                                             head->IsConnect(),

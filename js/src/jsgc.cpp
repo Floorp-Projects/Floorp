@@ -830,8 +830,8 @@ Chunk::init(JSRuntime *rt)
     JS_POISON(this, JS_FRESH_TENURED_PATTERN, ChunkSize);
 
     /*
-     * We clear the bitmap to guard against xpc_IsGrayGCThing being called on
-     * uninitialized data, which would happen before the first GC cycle.
+     * We clear the bitmap to guard against JS::GCThingIsMarkedGray being called
+     * on uninitialized data, which would happen before the first GC cycle.
      */
     bitmap.clear();
 
@@ -3103,7 +3103,7 @@ GCRuntime::refillFreeListFromAnyThread(ThreadSafeContext *cx, AllocKind thingKin
     if (cx->isJSContext())
         return refillFreeListFromMainThread<allowGC>(cx->asJSContext(), thingKind);
 
-    if (cx->allocator()->zone_->runtimeFromAnyThread()->exclusiveThreadsPresent())
+    if (cx->isExclusiveContext())
         return refillFreeListOffMainThread(cx->asExclusiveContext(), thingKind);
 
     return refillFreeListPJS(cx->asForkJoinContext(), thingKind);

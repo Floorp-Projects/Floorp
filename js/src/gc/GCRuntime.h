@@ -697,7 +697,7 @@ class GCRuntime
      */
     bool grayBitsValid;
 
-    volatile uintptr_t majorGCRequested;
+    mozilla::Atomic<uintptr_t> majorGCRequested;
     JS::gcreason::Reason majorGCTriggerReason;
 
     bool minorGCRequested;
@@ -792,7 +792,7 @@ class GCRuntime
      * frame, rather than at the beginning. In this case, the next slice will be
      * delayed so that we don't get back-to-back slices.
      */
-    volatile uintptr_t interFrameGC;
+    mozilla::Atomic<uintptr_t> interFrameGC;
 
     /* Default budget for incremental GC slice. See SliceBudget in jsgc.h. */
     int64_t sliceBudget;
@@ -836,7 +836,7 @@ class GCRuntime
 
     bool poked;
 
-    volatile js::HeapState heapState;
+    mozilla::Atomic<js::HeapState> heapState;
 
     /*
      * ForkJoin workers enter and leave GC independently; this counter

@@ -306,30 +306,38 @@ Snapshot(JSContext *cx, HandleObject pobj_, unsigned flags, AutoIdVector *props)
                 return false;
         } else if (pobj->is<ProxyObject>()) {
             AutoIdVector proxyProps(cx);
-            if (flags & JSITER_OWNONLY) {
-                if (flags & JSITER_HIDDEN) {
-                    // This gets all property keys, both strings and
-                    // symbols.  The call to Enumerate in the loop below
-                    // will filter out unwanted keys, per the flags.
-                    if (!Proxy::ownPropertyKeys(cx, pobj, proxyProps))
+            if (flags & JSITER_HIDDEN || flags & JSITER_SYMBOLS) {
+                // This gets all property keys, both strings and
+                // symbols.  The call to Enumerate in the loop below
+                // will filter out unwanted keys, per the flags.
+                if (!Proxy::ownPropertyKeys(cx, pobj, proxyProps))
+                    return false;
+
+                Rooted<PropertyDescriptor> desc(cx);
+                for (size_t n = 0, len = proxyProps.length(); n < len; n++) {
+                    bool enumerable = false;
+
+                    // We need to filter, if the caller just wants enumerable
+                    // symbols.
+                    if (!(flags & JSITER_HIDDEN)) {
+                        if (!Proxy::getOwnPropertyDescriptor(cx, pobj, proxyProps[n], &desc))
+                            return false;
+                        enumerable = desc.isEnumerable();
+                    }
+
+                    if (!Enumerate(cx, pobj, proxyProps[n], enumerable, flags, ht, props))
                         return false;
-                 } else {
-                    if (!Proxy::getOwnEnumerablePropertyKeys(cx, pobj, proxyProps))
-                         return false;
                 }
             } else {
-                if (!Proxy::getEnumerablePropertyKeys(cx, pobj, proxyProps))
+                // Returns enumerable property names (no symbols).
+                if (!Proxy::getOwnEnumerablePropertyKeys(cx, pobj, proxyProps))
                     return false;
-            }
 
-            for (size_t n = 0, len = proxyProps.length(); n < len; n++) {
-                if (!Enumerate(cx, pobj, proxyProps[n], true, flags, ht, props))
-                    return false;
+                for (size_t n = 0, len = proxyProps.length(); n < len; n++) {
+                    if (!Enumerate(cx, pobj, proxyProps[n], true, flags, ht, props))
+                        return false;
+                }
             }
-
-            // Proxy objects enumerate the prototype on their own, so we're
-            // done here.
-            break;
         } else {
             MOZ_CRASH("non-native objects must have an enumerate op");
         }
@@ -337,7 +345,10 @@ Snapshot(JSContext *cx, HandleObject pobj_, unsigned flags, AutoIdVector *props)
         if (flags & JSITER_OWNONLY)
             break;
 
-    } while ((pobj = pobj->getProto()) != nullptr);
+        if (!JSObject::getProto(cx, pobj, &pobj))
+            return false;
+
+    } while (pobj != nullptr);
 
 #ifdef JS_MORE_DETERMINISTIC
 
@@ -669,6 +680,16 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleOb
         return true;
     }
 
+    // We should only call the enumerate trap for "for-in".
+    // Or when we call GetIterator from the Proxy [[Enumerate]] hook.
+    // In the future also for Reflect.enumerate.
+    // JSITER_ENUMERATE is just an optimization and the same
+    // as flags == 0 otherwise.
+    if (flags == 0 || flags == JSITER_ENUMERATE) {
+        if (obj->is<ProxyObject>())
+            return Proxy::enumerate(cx, obj, objp);
+    }
+
     Vector<Shape *, 8> shapes(cx);
     uint32_t key = 0;
     if (flags == JSITER_ENUMERATE) {
@@ -747,9 +768,6 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleOb
     }
 
   miss:
-    if (obj->is<ProxyObject>())
-        return Proxy::iterate(cx, obj, flags, objp);
-
     if (!GetCustomIterator(cx, obj, flags, objp))
         return false;
     if (objp)
@@ -850,6 +868,38 @@ js::IteratorConstructor(JSContext *cx, unsigned argc, Value *vp)
 }
 
 MOZ_ALWAYS_INLINE bool
+NativeIteratorNext(JSContext *cx, NativeIterator *ni, MutableHandleValue rval, bool *done)
+{
+    *done = false;
+
+    if (ni->props_cursor >= ni->props_end) {
+        *done = true;
+        return true;
+    }
+
+    if (MOZ_LIKELY(ni->isKeyIter())) {
+        rval.setString(*ni->current());
+        ni->incCursor();
+        return true;
+    }
+
+    // Non-standard Iterator for "for each"
+    RootedId id(cx);
+    RootedValue current(cx, StringValue(*ni->current()));
+    if (!ValueToId<CanGC>(cx, current, &id))
+        return false;
+    ni->incCursor();
+    RootedObject obj(cx, ni->obj);
+    if (!JSObject::getGeneric(cx, obj, obj, id, rval))
+        return false;
+
+    // JS 1.7 only: for each (let [k, v] in obj)
+    if (ni->flags & JSITER_KEYVALUE)
+        return NewKeyValuePair(cx, id, rval, rval);
+    return true;
+}
+
+MOZ_ALWAYS_INLINE bool
 IsIterator(HandleValue v)
 {
     return v.isObject() && v.toObject().hasClass(&PropertyIteratorObject::class_);
@@ -862,14 +912,19 @@ iterator_next_impl(JSContext *cx, CallArgs args)
 
     RootedObject thisObj(cx, &args.thisv().toObject());
 
-    if (!IteratorMore(cx, thisObj, args.rval()))
-        return false;
+    NativeIterator *ni = thisObj.as<PropertyIteratorObject>()->getNativeIterator();
+    RootedValue value(cx);
+    bool done;
+    if (!NativeIteratorNext(cx, ni, &value, &done))
+         return false;
 
-    if (args.rval().isMagic(JS_NO_ITER_VALUE)) {
+    // Use old iterator protocol for compatibility reasons.
+    if (done) {
         ThrowStopIteration(cx);
         return false;
     }
 
+    args.rval().set(value);
     return true;
 }
 
@@ -1225,46 +1280,27 @@ js::SuppressDeletedElements(JSContext *cx, HandleObject obj, uint32_t begin, uin
 bool
 js::IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
 {
-    /* Fast path for native iterators */
-    NativeIterator *ni = nullptr;
+    // Fast path for native iterators.
     if (iterobj->is<PropertyIteratorObject>()) {
-        /* Key iterators are handled by fast-paths. */
-        ni = iterobj->as<PropertyIteratorObject>().getNativeIterator();
-        if (ni->props_cursor >= ni->props_end) {
+        NativeIterator *ni = iterobj->as<PropertyIteratorObject>().getNativeIterator();
+        bool done;
+        if (!NativeIteratorNext(cx, ni, rval, &done))
+            return false;
+
+        if (done)
             rval.setMagic(JS_NO_ITER_VALUE);
-            return true;
-        }
-        if (ni->isKeyIter()) {
-            rval.setString(*ni->current());
-            ni->incCursor();
-            return true;
-        }
-    }
-
-    /* We're reentering below and can call anything. */
-    JS_CHECK_RECURSION(cx, return false);
-
-    /* Fetch and cache the next value from the iterator. */
-    if (ni) {
-        MOZ_ASSERT(!ni->isKeyIter());
-        RootedId id(cx);
-        RootedValue current(cx, StringValue(*ni->current()));
-        if (!ValueToId<CanGC>(cx, current, &id))
-            return false;
-        ni->incCursor();
-        RootedObject obj(cx, ni->obj);
-        if (!JSObject::getGeneric(cx, obj, obj, id, rval))
-            return false;
-        if ((ni->flags & JSITER_KEYVALUE) && !NewKeyValuePair(cx, id, rval, rval))
-            return false;
         return true;
     }
 
-    /* Call the iterator object's .next method. */
+    // We're reentering below and can call anything.
+    JS_CHECK_RECURSION(cx, return false);
+
+    // Call the iterator object's .next method.
     if (!JSObject::getProperty(cx, iterobj, iterobj, cx->names().next, rval))
         return false;
+    // We try to support the old and new iterator protocol at the same time!
     if (!Invoke(cx, ObjectValue(*iterobj), rval, 0, nullptr, rval)) {
-        /* Check for StopIteration. */
+        // We still check for StopIterator
         if (!cx->isExceptionPending())
             return false;
         RootedValue exception(cx);
@@ -1278,7 +1314,39 @@ js::IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
         return true;
     }
 
-    return true;
+    if (!rval.isObject()) {
+        // Old style generators might return primitive values
+        return true;
+    }
+
+    // If the object has both the done and value property, we assume
+    // it's using the new style protocol. Otherwise just return the object.
+    RootedObject result(cx, &rval.toObject());
+    bool found = false;
+    if (!JSObject::hasProperty(cx, result, cx->names().done, &found))
+        return false;
+    if (!found)
+        return true;
+    if (!JSObject::hasProperty(cx, result, cx->names().value, &found))
+        return false;
+    if (!found)
+        return true;
+
+    // At this point we hopefully have a new style iterator result
+
+    // 7.4.4 IteratorComplete
+    // Get iterResult.done
+    if (!JSObject::getProperty(cx, result, result, cx->names().done, rval))
+        return false;
+
+    bool done = ToBoolean(rval);
+    if (done) {
+         rval.setMagic(JS_NO_ITER_VALUE);
+         return true;
+     }
+
+    // 7.4.5 IteratorValue
+    return JSObject::getProperty(cx, result, result, cx->names().value, rval);
 }
 
 static bool

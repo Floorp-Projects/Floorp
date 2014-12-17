@@ -1,0 +1,5 @@
+{
+  "name": "Addon app",
+  "description": "Let me inject script and css!",
+  "package_path" : "application.zip"
+}

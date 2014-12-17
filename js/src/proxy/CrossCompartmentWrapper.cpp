@@ -188,16 +188,6 @@ CrossCompartmentWrapper::getOwnEnumerablePropertyKeys(JSContext *cx, HandleObjec
            NOTHING);
 }
 
-bool
-CrossCompartmentWrapper::getEnumerablePropertyKeys(JSContext *cx, HandleObject wrapper,
-                                                   AutoIdVector &props) const
-{
-    PIERCE(cx, wrapper,
-           NOTHING,
-           Wrapper::getEnumerablePropertyKeys(cx, wrapper, props),
-           NOTHING);
-}
-
 /*
  * We can reify non-escaping iterator objects instead of having to wrap them. This
  * allows fast iteration over objects across a compartment boundary.
@@ -262,12 +252,12 @@ Reify(JSContext *cx, JSCompartment *origin, MutableHandleObject objp)
 }
 
 bool
-CrossCompartmentWrapper::iterate(JSContext *cx, HandleObject wrapper, unsigned flags,
-                                 MutableHandleObject objp) const
+CrossCompartmentWrapper::enumerate(JSContext *cx, HandleObject wrapper,
+                                   MutableHandleObject objp) const
 {
     {
         AutoCompartment call(cx, wrappedObject(wrapper));
-        if (!Wrapper::iterate(cx, wrapper, flags, objp))
+        if (!Wrapper::enumerate(cx, wrapper, objp))
             return false;
     }
 

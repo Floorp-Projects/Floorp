@@ -652,7 +652,7 @@ XPCJSRuntime::SuspectWrappedNative(XPCWrappedNative *wrapper,
     // Only record objects that might be part of a cycle as roots, unless
     // the callback wants all traces (a debug feature).
     JSObject* obj = wrapper->GetFlatJSObjectPreserveColor();
-    if (xpc_IsGrayGCThing(obj) || cb.WantAllTraces())
+    if (JS::ObjectIsMarkedGray(obj) || cb.WantAllTraces())
         cb.NoteJSRoot(obj);
 }
 
@@ -665,8 +665,8 @@ XPCJSRuntime::TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback &c
         XPCTraceableVariant* v = static_cast<XPCTraceableVariant*>(e);
         if (nsCCUncollectableMarker::InGeneration(cb,
                                                   v->CCGeneration())) {
-           jsval val = v->GetJSValPreserveColor();
-           if (val.isObject() && !xpc_IsGrayGCThing(&val.toObject()))
+           JS::Value val = v->GetJSValPreserveColor();
+           if (val.isObject() && !JS::ObjectIsMarkedGray(&val.toObject()))
                continue;
         }
         cb.NoteXPCOMRoot(v);

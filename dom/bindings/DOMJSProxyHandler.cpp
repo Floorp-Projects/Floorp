@@ -297,16 +297,10 @@ BaseDOMProxyHandler::getOwnEnumerablePropertyKeys(JSContext* cx,
 }
 
 bool
-BaseDOMProxyHandler::getEnumerablePropertyKeys(JSContext* cx,
-                                               JS::Handle<JSObject*> proxy,
-                                               AutoIdVector& props) const
+BaseDOMProxyHandler::enumerate(JSContext *cx, JS::Handle<JSObject*> proxy,
+                               JS::MutableHandle<JSObject*> objp) const
 {
-  JS::Rooted<JSObject*> proto(cx);
-  if (!JS_GetPrototype(cx, proxy, &proto))  {
-    return false;
-  }
-  return getOwnEnumerablePropertyKeys(cx, proxy, props) &&
-         (!proto || js::GetPropertyKeys(cx, proto, 0, &props));
+  return BaseProxyHandler::enumerate(cx, proxy, objp);
 }
 
 bool

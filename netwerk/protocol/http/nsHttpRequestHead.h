@@ -26,12 +26,14 @@ public:
     void SetMethod(const nsACString &method);
     void SetVersion(nsHttpVersion version) { mVersion = version; }
     void SetRequestURI(const nsCSubstring &s) { mRequestURI = s; }
+    void SetPath(const nsCSubstring &s) { mPath = s; }
 
     const nsHttpHeaderArray &Headers() const { return mHeaders; }
     nsHttpHeaderArray & Headers()          { return mHeaders; }
     const nsCString &Method()        const { return mMethod; }
     nsHttpVersion       Version()    const { return mVersion; }
     const nsCSubstring &RequestURI() const { return mRequestURI; }
+    const nsCSubstring &Path()       const { return mPath.IsEmpty() ? mRequestURI : mPath; }
 
     void SetHTTPS(bool val) { mHTTPS = val; }
     bool IsHTTPS() const { return mHTTPS; }
@@ -100,7 +102,12 @@ private:
     nsHttpHeaderArray mHeaders;
     nsCString         mMethod;
     nsHttpVersion     mVersion;
+
+    // mRequestURI and mPath are strings instead of an nsIURI
+    // because this is used off the main thread
     nsCString         mRequestURI;
+    nsCString         mPath;
+
     nsCString         mOrigin;
     ParsedMethodType  mParsedMethod;
     bool              mHTTPS;
