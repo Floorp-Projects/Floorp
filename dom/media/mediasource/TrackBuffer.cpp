@@ -14,6 +14,7 @@
 #include "SourceBufferResource.h"
 #include "VideoUtils.h"
 #include "mozilla/dom/TimeRanges.h"
+#include "mozilla/Preferences.h"
 #include "nsError.h"
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
@@ -43,6 +44,7 @@ TrackBuffer::TrackBuffer(MediaSourceDecoder* aParentDecoder, const nsACString& a
   mParser = ContainerParser::CreateForMIMEType(aType);
   mTaskQueue = new MediaTaskQueue(GetMediaDecodeThreadPool());
   aParentDecoder->AddTrackBuffer(this);
+  mDecoderPerSegment = Preferences::GetBool("media.mediasource.decoder-per-segment", false);
 }
 
 TrackBuffer::~TrackBuffer()
@@ -150,7 +152,8 @@ TrackBuffer::AppendData(const uint8_t* aData, uint32_t aLength)
   if (mParser->ParseStartAndEndTimestamps(aData, aLength, start, end)) {
     if (mParser->IsMediaSegmentPresent(aData, aLength) &&
         mLastEndTimestamp &&
-        !mParser->TimestampsFuzzyEqual(start, mLastEndTimestamp.value())) {
+        (!mParser->TimestampsFuzzyEqual(start, mLastEndTimestamp.value()) ||
+         mDecoderPerSegment)) {
       MSE_DEBUG("TrackBuffer(%p)::AppendData: Data last=[%lld, %lld] overlaps [%lld, %lld]",
                 this, mLastStartTimestamp, mLastEndTimestamp.value(), start, end);
 
