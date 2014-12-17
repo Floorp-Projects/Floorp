@@ -173,16 +173,6 @@ description > html|a {
   cursor: pointer;
 }
 
-#offlineAppsList,
-#syncEnginesList {
-  -moz-appearance: none;
-  color: #333333;
-  padding: 10px;
-  border: 1px solid #C1C1C1;
-  border-radius: 2px;
-  background-color: #FBFBFB;
-}
-
 #noFxaAccount {
   /* Overriding the margins from the base preferences.css theme file.
      These overrides can be simplified by fixing bug 1027174 */
