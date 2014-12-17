@@ -20,6 +20,7 @@ Cu.import("resource://gre/modules/ThirdPartyCookieProbe.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/AsyncShutdown.jsm", this);
+Cu.import("resource://gre/modules/Preferences.jsm");
 
 // When modifying the payload in incompatible ways, please bump this version number
 const PAYLOAD_VERSION = 1;
@@ -32,6 +33,7 @@ const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_SERVER = PREF_BRANCH + "server";
 const PREF_ENABLED = PREF_BRANCH + "enabled";
 const PREF_PREVIOUS_BUILDID = PREF_BRANCH + "previousBuildID";
+const PREF_CACHED_CLIENTID = PREF_BRANCH + "cachedClientID"
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 
 // Do not gather data more than once a minute
@@ -955,6 +957,12 @@ let Impl = {
       return;
     }
 
+    // For very short session durations, we may never load the client
+    // id from disk.
+    // We try to cache it in prefs to avoid this, even though this may
+    // lead to some stale client ids.
+    this._clientID = Preferences.get(PREF_CACHED_CLIENTID, null);
+
     AsyncShutdown.sendTelemetry.addBlocker(
       "Telemetry: shutting down",
       function condition(){
@@ -998,6 +1006,11 @@ let Impl = {
                       .getService(Ci.nsISupports)
                       .wrappedJSObject;
           this._clientID = yield drs.getClientID();
+          // Update cached client id.
+          Preferences.set(PREF_CACHED_CLIENTID, this._clientID);
+        } else {
+          // Nuke potentially cached client id.
+          Preferences.reset(PREF_CACHED_CLIENTID);
         }
 
         this.attachObservers();
@@ -1058,6 +1071,7 @@ let Impl = {
 #ifdef MOZ_WIDGET_ANDROID
     Services.obs.removeObserver(this, "application-background", false);
 #endif
+    this._clientID = null;
   },
 
   getPayload: function getPayload() {
