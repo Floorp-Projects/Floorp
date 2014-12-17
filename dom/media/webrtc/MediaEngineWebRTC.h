@@ -97,7 +97,8 @@ public:
   virtual void NotifyPull(MediaStreamGraph* aGraph,
                           SourceMediaStream* aSource,
                           TrackID aId,
-                          StreamTime aDesiredTime) MOZ_OVERRIDE;
+                          StreamTime aDesiredTime,
+                          StreamTime &aLastEndTime);
 
   virtual const MediaSourceType GetMediaSource() {
     return mMediaSource;
@@ -179,7 +180,8 @@ public:
   virtual void NotifyPull(MediaStreamGraph* aGraph,
                           SourceMediaStream* aSource,
                           TrackID aId,
-                          StreamTime aDesiredTime) MOZ_OVERRIDE;
+                          StreamTime aDesiredTime,
+                          StreamTime &aLastEndTime);
 
   virtual bool IsFake() {
     return false;
