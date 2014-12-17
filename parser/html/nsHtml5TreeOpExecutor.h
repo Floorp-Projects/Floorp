@@ -266,6 +266,7 @@ class nsHtml5TreeOpExecutor MOZ_FINAL : public nsHtml5DocumentBuilder,
 
     void SetSpeculationBase(const nsAString& aURL);
 
+    void SetSpeculationReferrerPolicy(ReferrerPolicy aReferrerPolicy);
     void SetSpeculationReferrerPolicy(const nsAString& aReferrerPolicy);
     
     void AddBase(const nsAString& aURL);
