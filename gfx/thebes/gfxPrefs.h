@@ -330,6 +330,9 @@ private:
 
   DECL_GFX_PREF(Once, "dom.vr.enabled",                        VREnabled, bool, false);
   DECL_GFX_PREF(Once, "dom.vr.add-test-devices",               VRAddTestDevices, int32_t, 1);
+
+  // This and code dependent on it should be removed once containerless scrolling looks stable.
+  DECL_GFX_PREF(Once, "layout.scroll.root-frame-containers",   LayoutUseContainersForRootFrames, bool, true);
 public:
   // Manage the singleton:
   static gfxPrefs& GetSingleton()
