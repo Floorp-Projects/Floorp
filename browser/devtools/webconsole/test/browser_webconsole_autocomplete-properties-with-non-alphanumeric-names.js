@@ -28,7 +28,7 @@ let test = asyncTest(function*() {
   let { jsterm } = yield openConsole();
   let popup = jsterm.autocompletePopup;
 
-  jsterm.execute("let testObject = {$$aaab: '', $$aaac: ''}");
+  yield jsterm.execute("let testObject = {$$aaab: '', $$aaac: ''}");
 
   // Should work with bug 967468.
   yield autocomplete("Object.__d");

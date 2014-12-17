@@ -43,7 +43,7 @@ function consoleOpened(hud) {
     oldScrollTop = scrollNode.scrollTop;
     isnot(oldScrollTop, 0, "scroll location is not at the top");
 
-    hud.jsterm.execute("'hello world'", onExecute);
+    hud.jsterm.execute("'hello world'").then(onExecute);
   });
 
   function onExecute(msg)

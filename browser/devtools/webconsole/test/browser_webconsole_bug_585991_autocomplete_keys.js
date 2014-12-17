@@ -22,20 +22,20 @@ let test = asyncTest(function*() {
   HUD = popup = jsterm = inputNode = completeNode = null;
 });
 
-function consoleOpened(aHud) {
+let consoleOpened = Task.async(function*(aHud) {
   let deferred = promise.defer();
   HUD = aHud;
   info("web console opened");
 
   jsterm = HUD.jsterm;
 
-  jsterm.execute("window.foobarBug585991={" +
+  yield jsterm.execute("window.foobarBug585991={" +
     "'item0': 'value0'," +
     "'item1': 'value1'," +
     "'item2': 'value2'," +
     "'item3': 'value3'" +
   "}");
-  jsterm.execute("window.testBug873250a = 'hello world';"
+  yield jsterm.execute("window.testBug873250a = 'hello world';"
     + "window.testBug873250b = 'hello world 2';");
   popup = jsterm.autocompletePopup;
   completeNode = jsterm.completeNode;
@@ -133,7 +133,7 @@ function consoleOpened(aHud) {
   EventUtils.synthesizeKey(".", {});
 
   return deferred.promise;
-}
+});
 
 function popupHideAfterTab()
 {

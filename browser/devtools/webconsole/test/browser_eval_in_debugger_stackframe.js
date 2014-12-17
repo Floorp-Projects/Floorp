@@ -21,7 +21,7 @@ function consoleOpened(hud)
 {
   gWebConsole = hud;
   gJSTerm = hud.jsterm;
-  gJSTerm.execute("foo", onExecuteFoo);
+  gJSTerm.execute("foo").then(onExecuteFoo);
 }
 
 function onExecuteFoo()
@@ -33,7 +33,7 @@ function onExecuteFoo()
 
   // Test for Bug 690529 - Web Console and Scratchpad should evaluate
   // expressions in the scope of the content window, not in a sandbox.
-  executeSoon(() => gJSTerm.execute("foo2 = 'newFoo'; window.foo2", onNewFoo2));
+  executeSoon(() => gJSTerm.execute("foo2 = 'newFoo'; window.foo2").then(onNewFoo2));
 }
 
 function onNewFoo2(msg)
@@ -62,7 +62,7 @@ function debuggerOpened(aResult)
   info("openConsole");
   executeSoon(() =>
     openConsole().then(() =>
-      gJSTerm.execute("foo + foo2", onExecuteFooAndFoo2)
+      gJSTerm.execute("foo + foo2").then(onExecuteFooAndFoo2)
     )
   );
 }
@@ -91,7 +91,7 @@ function onFramesAdded()
   info("onFramesAdded, openConsole() now");
   executeSoon(() =>
     openConsole().then(() =>
-      gJSTerm.execute("foo + foo2", onExecuteFooAndFoo2InSecondCall)
+      gJSTerm.execute("foo + foo2").then(onExecuteFooAndFoo2InSecondCall)
     )
   );
 }
@@ -113,7 +113,7 @@ function onExecuteFooAndFoo2InSecondCall()
       info("openConsole");
       executeSoon(() =>
         openConsole().then(() =>
-          gJSTerm.execute("foo + foo2 + foo3", onExecuteFoo23InFirstCall)
+          gJSTerm.execute("foo + foo2 + foo3").then(onExecuteFoo23InFirstCall)
         )
       );
     });
@@ -127,7 +127,7 @@ function onExecuteFoo23InFirstCall()
         "|foo + foo2 + foo3| from |firstCall()|");
 
   executeSoon(() =>
-    gJSTerm.execute("foo = 'abba'; foo3 = 'bug783499'; foo + foo3",
+    gJSTerm.execute("foo = 'abba'; foo3 = 'bug783499'; foo + foo3").then(
                     onExecuteFooAndFoo3ChangesInFirstCall));
 }
 

@@ -51,7 +51,7 @@ function onFramesAdded()
 
   executeSoon(() =>
     openConsole().then(() =>
-      gJSTerm.execute("fooObj", onExecuteFooObj)
+      gJSTerm.execute("fooObj").then(onExecuteFooObj)
     )
   );
 }
@@ -114,7 +114,7 @@ function onUpdatedTestPropFound(aResults)
   ok(prop, "matched the updated |testProp2| property value");
 
   // Check that testProp2 was updated.
-  executeSoon(() => gJSTerm.execute("fooObj.testProp2", onExecuteFooObjTestProp2));
+  executeSoon(() => gJSTerm.execute("fooObj.testProp2").then(onExecuteFooObjTestProp2));
 }
 
 function onExecuteFooObjTestProp2()
