@@ -37,6 +37,7 @@ SOURCES += ['libui/' + src for src in [
     'KeyCharacterMap.cpp',
     'KeyLayoutMap.cpp',
     'PointerController.cpp',
+    'sha1.c',
     'SpriteController.cpp',
     'Tokenizer.cpp',
     'VelocityControl.cpp',
