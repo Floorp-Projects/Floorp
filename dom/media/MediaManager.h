@@ -89,8 +89,6 @@ public:
     mStream = aStream;
     mAudioSource = aAudioSource;
     mVideoSource = aVideoSource;
-    mLastEndTimeAudio = 0;
-    mLastEndTimeVideo = 0;
 
     mStream->AddListener(this);
   }
@@ -187,10 +185,10 @@ public:
     // Currently audio sources ignore NotifyPull, but they could
     // watch it especially for fake audio.
     if (mAudioSource) {
-      mAudioSource->NotifyPull(aGraph, mStream, kAudioTrack, aDesiredTime, mLastEndTimeAudio);
+      mAudioSource->NotifyPull(aGraph, mStream, kAudioTrack, aDesiredTime);
     }
     if (mVideoSource) {
-      mVideoSource->NotifyPull(aGraph, mStream, kVideoTrack, aDesiredTime, mLastEndTimeVideo);
+      mVideoSource->NotifyPull(aGraph, mStream, kVideoTrack, aDesiredTime);
     }
   }
 
@@ -239,8 +237,6 @@ private:
   nsRefPtr<MediaEngineSource> mAudioSource; // threadsafe refcnt
   nsRefPtr<MediaEngineSource> mVideoSource; // threadsafe refcnt
   nsRefPtr<SourceMediaStream> mStream; // threadsafe refcnt
-  StreamTime mLastEndTimeAudio;
-  StreamTime mLastEndTimeVideo;
   bool mFinished;
 
   // Accessed from MainThread and MSG thread
