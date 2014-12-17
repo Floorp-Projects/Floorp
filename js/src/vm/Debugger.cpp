@@ -3522,8 +3522,11 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery
   public:
     /* Construct an ObjectQuery to use matching scripts for |dbg|. */
     ObjectQuery(JSContext *cx, Debugger *dbg) :
-        cx(cx), dbg(dbg), className(cx)
-    {}
+        objects(cx), cx(cx), dbg(dbg), className(cx)
+    { }
+
+    /* The vector that we are accumulating results in. */
+    AutoObjectVector objects;
 
     /*
      * Parse the query object |query|, and prepare to match only the objects it
@@ -3555,17 +3558,9 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery
      * Traverse the heap to find all relevant objects and add them to the
      * provided vector.
      */
-    bool findObjects(AutoObjectVector &objs) {
+    bool findObjects() {
         if (!prepareQuery())
             return false;
-
-        // Ensure that all of our debuggee globals are rooted so that they are
-        // visible in the RootList.
-        JS::AutoObjectVector debuggees(cx);
-        for (GlobalObjectSet::Range r = dbg->allDebuggees(); !r.empty(); r.popFront()) {
-            if (!debuggees.append(r.front()))
-                return false;
-        }
 
         {
             /*
@@ -3575,7 +3570,7 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery
             Maybe<JS::AutoCheckCannotGC> maybeNoGC;
             RootedObject dbgObj(cx, dbg->object);
             JS::ubi::RootList rootList(cx, maybeNoGC);
-            if (!rootList.init(cx, dbgObj))
+            if (!rootList.init(dbgObj))
                 return false;
 
             Traversal traversal(cx, *this, maybeNoGC.ref());
@@ -3583,35 +3578,8 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery
                 return false;
             traversal.wantNames = false;
 
-            if (!traversal.addStart(JS::ubi::Node(&rootList)) ||
-                !traversal.traverse())
-            {
-                return false;
-            }
-
-            /*
-             * Iterate over the visited set of nodes and accumulate all
-             * |JSObject|s matching our criteria in the given vector.
-             */
-            for (Traversal::NodeMap::Range r = traversal.visited.all(); !r.empty(); r.popFront()) {
-                JS::ubi::Node node = r.front().key();
-                if (!node.is<JSObject>())
-                    continue;
-                MOZ_ASSERT(dbg->isDebuggee(node.compartment()));
-
-                JSObject *obj = node.as<JSObject>();
-
-                if (!className.isUndefined()) {
-                    const char *objClassName = obj->getClass()->name;
-                    if (strcmp(objClassName, classNameCString.ptr()) != 0)
-                        continue;
-                }
-
-                if (!objs.append(obj))
-                    return false;
-            }
-
-            return true;
+            return traversal.addStart(JS::ubi::Node(&rootList)) &&
+                   traversal.traverse();
         }
     }
 
@@ -3623,12 +3591,46 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery
     bool operator() (Traversal &traversal, JS::ubi::Node origin, const JS::ubi::Edge &edge,
                      NodeData *, bool first)
     {
-        /* Only follow edges within our set of debuggee compartments. */
-        JSCompartment *comp = edge.referent.compartment();
-        if (first && comp && !dbg->isDebuggee(edge.referent.compartment()))
-            traversal.abandonReferent();
+        if (!first)
+            return true;
 
-        return true;
+        JS::ubi::Node referent = edge.referent;
+        /*
+         * Only follow edges within our set of debuggee compartments; we don't
+         * care about the heap's subgraphs outside of our debuggee compartments,
+         * so we abandon the referent. Either (1) there is not a path from this
+         * non-debuggee node back to a node in our debuggee compartments, and we
+         * don't need to follow edges to or from this node, or (2) there does
+         * exist some path from this non-debuggee node back to a node in our
+         * debuggee compartments. However, if that were true, then the incoming
+         * cross compartment edge back into a debuggee compartment is already
+         * listed as an edge in the RootList we started traversal with, and
+         * therefore we don't need to follow edges to or from this non-debuggee
+         * node.
+         */
+        JSCompartment *comp = referent.compartment();
+        if (comp && !dbg->isDebuggee(comp)) {
+            traversal.abandonReferent();
+            return true;
+        }
+
+        /*
+         * If the referent is an object and matches our query's restrictions,
+         * add it to the vector accumulating results.
+         */
+
+        if (!referent.is<JSObject>())
+            return true;
+
+        JSObject *obj = referent.as<JSObject>();
+
+        if (!className.isUndefined()) {
+            const char *objClassName = obj->getClass()->name;
+            if (strcmp(objClassName, classNameCString.ptr()) != 0)
+                return true;
+        }
+
+        return objects.append(obj);
     }
 
   private:
@@ -3676,17 +3678,10 @@ Debugger::findObjects(JSContext *cx, unsigned argc, Value *vp)
         query.omittedQuery();
     }
 
-    /*
-     * Accumulate the objects in an AutoObjectVector, instead of creating the JS
-     * array as we go, because we mustn't allocate JS objects or GC while we
-     * traverse the heap graph.
-     */
-    AutoObjectVector objects(cx);
-
-    if (!query.findObjects(objects))
+    if (!query.findObjects())
         return false;
 
-    size_t length = objects.length();
+    size_t length = query.objects.length();
     RootedArrayObject result(cx, NewDenseFullyAllocatedArray(cx, length));
     if (!result)
         return false;
@@ -3694,7 +3689,7 @@ Debugger::findObjects(JSContext *cx, unsigned argc, Value *vp)
     result->ensureDenseInitializedLength(cx, 0, length);
 
     for (size_t i = 0; i < length; i++) {
-        RootedValue debuggeeVal(cx, ObjectValue(*objects[i]));
+        RootedValue debuggeeVal(cx, ObjectValue(*query.objects[i]));
         if (!dbg->wrapDebuggeeValue(cx, &debuggeeVal))
             return false;
         result->setDenseElement(i, debuggeeVal);

@@ -749,9 +749,10 @@ ScriptedDirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId 
     return true;
 }
 
-// ES6 (22 May, 2014) 9.5.11 Proxy.[[Enumerate]]
+// ES6 (14 October, 2014) 9.5.11 Proxy.[[Enumerate]]
 bool
-ScriptedDirectProxyHandler::getEnumerablePropertyKeys(JSContext *cx, HandleObject proxy, AutoIdVector &props) const
+ScriptedDirectProxyHandler::enumerate(JSContext *cx, HandleObject proxy,
+                                      MutableHandleObject objp) const
 {
     // step 1
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
@@ -762,19 +763,20 @@ ScriptedDirectProxyHandler::getEnumerablePropertyKeys(JSContext *cx, HandleObjec
         return false;
     }
 
-    // step 3
+    // step 3: unnecessary assert
+    // step 4
     RootedObject target(cx, proxy->as<ProxyObject>().target());
 
-    // step 4-5
+    // step 5-6
     RootedValue trap(cx);
     if (!JSObject::getProperty(cx, handler, handler, cx->names().enumerate, &trap))
         return false;
 
-    // step 6
+    // step 7
     if (trap.isUndefined())
-        return DirectProxyHandler::getEnumerablePropertyKeys(cx, proxy, props);
+        return DirectProxyHandler::enumerate(cx, proxy, objp);
 
-    // step 7-8
+    // step 8-9
     Value argv[] = {
         ObjectOrNullValue(target)
     };
@@ -782,7 +784,7 @@ ScriptedDirectProxyHandler::getEnumerablePropertyKeys(JSContext *cx, HandleObjec
     if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
         return false;
 
-    // step 9
+    // step 10
     if (trapResult.isPrimitive()) {
         JSAutoByteString bytes;
         if (!AtomToPrintableString(cx, cx->names().enumerate, &bytes))
@@ -793,10 +795,9 @@ ScriptedDirectProxyHandler::getEnumerablePropertyKeys(JSContext *cx, HandleObjec
         return false;
     }
 
-    // step 10
-    // FIXME: the trap should return an iterator object, see bug 783826. Since this isn't very
-    // useful for us internally, we convery to an id vector.
-    return ArrayToIdVector(cx, proxy, target, trapResult, props, 0, cx->names().enumerate);
+    // step 11
+    objp.set(&trapResult.toObject());
+    return true;
 }
 
 // ES6 (22 May, 2014) 9.5.7 Proxy.[[HasProperty]](P)
@@ -1008,13 +1009,6 @@ ScriptedDirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject 
     return true;
 }
 
-bool
-ScriptedDirectProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigned flags,
-                                    MutableHandleObject objp) const
-{
-    // FIXME: Provide a proper implementation for this trap, see bug 787004
-    return DirectProxyHandler::iterate(cx, proxy, flags, objp);
-}
 
 // ES6 (22 May, 2014) 9.5.13 Proxy.[[Call]]
 bool

@@ -5,21 +5,19 @@
 
 // Tests the console history feature accessed via the up and down arrow keys.
 
+"use strict";
+
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
 
 // Constants used for defining the direction of JSTerm input history navigation.
 const HISTORY_BACK = -1;
 const HISTORY_FORWARD = 1;
 
-function test() {
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, testHistory);
-  }, true);
-}
+let test = asyncTest(function*() {
+  yield loadTab(TEST_URI);
+  let hud = yield openConsole();
+  hud.jsterm.clearOutput();
 
-function testHistory(hud) {
   let jsterm = hud.jsterm;
   let input = jsterm.inputNode;
 
@@ -27,7 +25,7 @@ function testHistory(hud) {
 
   for each (var item in executeList) {
     input.value = item;
-    jsterm.execute();
+    yield jsterm.execute();
   }
 
   for (var i = executeList.length - 1; i != -1; i--) {
@@ -60,7 +58,4 @@ function testHistory(hud) {
   let idxLast = executeList.length - 1;
   jsterm.historyPeruse(HISTORY_BACK);
   is (input.value, executeList[idxLast], "check history next idx:" + idxLast);
-
-  executeSoon(finishTest);
-}
-
+});

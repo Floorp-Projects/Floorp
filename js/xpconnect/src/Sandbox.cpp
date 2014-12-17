@@ -737,10 +737,10 @@ xpc::SandboxProxyHandler::getOwnEnumerablePropertyKeys(JSContext *cx,
 }
 
 bool
-xpc::SandboxProxyHandler::iterate(JSContext *cx, JS::Handle<JSObject*> proxy,
-                                  unsigned flags, JS::MutableHandle<JSObject*> objp) const
+xpc::SandboxProxyHandler::enumerate(JSContext *cx, JS::Handle<JSObject*> proxy,
+                                    JS::MutableHandle<JSObject*> objp) const
 {
-    return BaseProxyHandler::iterate(cx, proxy, flags, objp);
+    return BaseProxyHandler::enumerate(cx, proxy, objp);
 }
 
 bool

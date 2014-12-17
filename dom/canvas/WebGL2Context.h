@@ -14,6 +14,10 @@ class WebGLSampler;
 class WebGLSync;
 class WebGLTransformFeedback;
 class WebGLVertexArrayObject;
+namespace dom {
+class OwningUnsignedLongOrUint32ArrayOrBoolean;
+class OwningWebGLBufferOrLongLong;
+}
 
 class WebGL2Context
     : public WebGLContext
@@ -231,14 +235,23 @@ public:
     void BindBufferBase(GLenum target, GLuint index, WebGLBuffer* buffer);
     void BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer, GLintptr offset, GLsizeiptr size);
 */
-    void GetIndexedParameter(JSContext*, GLenum target, GLuint index, JS::MutableHandleValue retval);
-    void GetUniformIndices(WebGLProgram* program, const dom::Sequence<nsString>& uniformNames, dom::Nullable< nsTArray<GLuint> >& retval);
-    void GetActiveUniforms(WebGLProgram* program, const dom::Sequence<GLuint>& uniformIndices, GLenum pname,
+    void GetIndexedParameter(GLenum target, GLuint index,
+                             dom::Nullable<dom::OwningWebGLBufferOrLongLong>& retval);
+    void GetUniformIndices(WebGLProgram* program,
+                           const dom::Sequence<nsString>& uniformNames,
+                           dom::Nullable< nsTArray<GLuint> >& retval);
+    void GetActiveUniforms(WebGLProgram* program,
+                           const dom::Sequence<GLuint>& uniformIndices, GLenum pname,
                            dom::Nullable< nsTArray<GLint> >& retval);
     GLuint GetUniformBlockIndex(WebGLProgram* program, const nsAString& uniformBlockName);
-    void GetActiveUniformBlockParameter(JSContext*, WebGLProgram* program, GLuint uniformBlockIndex, GLenum pname, JS::MutableHandleValue retval);
-    void GetActiveUniformBlockName(WebGLProgram* program, GLuint uniformBlockIndex, dom::DOMString& retval);
-    void UniformBlockBinding(WebGLProgram* program, GLuint uniformBlockIndex, GLuint uniformBlockBinding);
+    void GetActiveUniformBlockParameter(JSContext*, WebGLProgram* program,
+                                        GLuint uniformBlockIndex, GLenum pname,
+                                        dom::Nullable<dom::OwningUnsignedLongOrUint32ArrayOrBoolean>& retval,
+                                        ErrorResult& rv);
+    void GetActiveUniformBlockName(WebGLProgram* program, GLuint uniformBlockIndex,
+                                   nsAString& retval);
+    void UniformBlockBinding(WebGLProgram* program, GLuint uniformBlockIndex,
+                             GLuint uniformBlockBinding);
 
 
     // -------------------------------------------------------------------------

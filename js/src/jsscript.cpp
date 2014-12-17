@@ -1752,7 +1752,7 @@ ScriptSource::setSourceCopy(ExclusiveContext *cx, SourceBufferHolder &srcBuf,
 }
 
 SourceCompressionTask::ResultType
-SourceCompressionTask::work(Compressor &comp)
+SourceCompressionTask::work()
 {
     // Try to keep the maximum memory usage down by only allocating half the
     // size of the string, first.
@@ -1762,7 +1762,8 @@ SourceCompressionTask::work(Compressor &comp)
     if (!compressed)
         return OOM;
 
-    if (!comp.prepare(reinterpret_cast<const unsigned char *>(ss->uncompressedChars()), inputBytes))
+    Compressor comp(reinterpret_cast<const unsigned char *>(ss->uncompressedChars()), inputBytes);
+    if (!comp.init())
         return OOM;
 
     comp.setOutput((unsigned char *) compressed, firstSize);

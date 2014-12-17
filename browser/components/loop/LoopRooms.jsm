@@ -34,6 +34,8 @@ const roomsPushNotification = function(version, channelID) {
 // of date. The Push server may notify us of this event, which will set the global
 // 'dirty' flag to TRUE.
 let gDirty = true;
+// Global variable that keeps track of the currently used account.
+let gCurrentUser = null;
 
 /**
  * Extend a `target` object with the properties defined in `source`.
@@ -479,6 +481,26 @@ let LoopRoomsInternal = {
     gDirty = true;
     this.getAll(version, () => {});
   },
+
+  /**
+   * When a user logs in or out, this method should be invoked to check whether
+   * the rooms cache needs to be refreshed.
+   *
+   * @param {String|null} user The FxA userID or NULL
+   */
+  maybeRefresh: function(user = null) {
+    if (gCurrentUser == user) {
+      return;
+    }
+
+    gCurrentUser = user;
+    if (!gDirty) {
+      gDirty = true;
+      this.rooms.clear();
+      eventEmitter.emit("refresh");
+      this.getAll(null, () => {});
+    }
+  }
 };
 Object.freeze(LoopRoomsInternal);
 
@@ -542,6 +564,10 @@ this.LoopRooms = {
 
   getGuestCreatedRoom: function() {
     return LoopRoomsInternal.getGuestCreatedRoom();
+  },
+
+  maybeRefresh: function(user) {
+    return LoopRoomsInternal.maybeRefresh(user);
   },
 
   promise: function(method, ...params) {

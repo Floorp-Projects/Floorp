@@ -10,6 +10,9 @@
 
 let menuitems = [], menupopups = [], huds = [], tabs = [], runCount = 0;
 
+const TEST_URI1 = "data:text/html;charset=utf-8,Web Console test for bug 602572: log bodies checkbox. tab 1";
+const TEST_URI2 = "data:text/html;charset=utf-8,Web Console test for bug 602572: log bodies checkbox. tab 2";
+
 function test()
 {
   if (runCount == 0) {
@@ -17,26 +20,20 @@ function test()
   }
 
   // open tab 1
-  addTab("data:text/html;charset=utf-8,Web Console test for bug 602572: log bodies checkbox. tab 1");
-  tabs.push(tab);
+  loadTab(TEST_URI1).then((tab) => {
+    tabs.push(tab.tab);
+    openConsole().then((hud) => {
+      hud.iframeWindow.mozRequestAnimationFrame(() => {
+        info("iframe1 root height " + hud.ui.rootElement.clientHeight);
 
-  browser.addEventListener("load", function onLoad1(aEvent) {
-    browser.removeEventListener(aEvent.type, onLoad1, true);
-
-    openConsole(null, (hud) => hud.iframeWindow.mozRequestAnimationFrame(() => {
-      info("iframe1 root height " + hud.ui.rootElement.clientHeight);
-
-      // open tab 2
-      addTab("data:text/html;charset=utf-8,Web Console test for bug 602572: log bodies checkbox. tab 2");
-      tabs.push(tab);
-
-      browser.addEventListener("load", function onLoad2(aEvent) {
-        browser.removeEventListener(aEvent.type, onLoad2, true);
-
-        openConsole(null, (hud) => hud.iframeWindow.mozRequestAnimationFrame(startTest));
-      }, true);
-    }));
-  }, true);
+        // open tab 2
+        loadTab(TEST_URI2).then((tab) => {
+          tabs.push(tab.tab);
+          openConsole().then((hud) => hud.iframeWindow.mozRequestAnimationFrame(startTest));
+        });
+      });
+    });
+  });
 }
 
 function startTest()
@@ -154,7 +151,7 @@ function testpopup2c(aEvent) {
     info("menupopups[1] hidden");
 
     // Done if on second run
-    closeConsole(gBrowser.selectedTab, function() {
+    closeConsole(gBrowser.selectedTab).then(function() {
       if (runCount == 0) {
         runCount++;
         info("start second run");

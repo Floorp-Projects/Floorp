@@ -6,116 +6,94 @@
 // Check that native getters and setters for DOM elements work as expected in
 // variables view - bug 870220.
 
+"use strict";
+
 const TEST_URI = "data:text/html;charset=utf8,<title>bug870220</title>\n" +
                  "<p>hello world\n<p>native getters!";
 
-let gWebConsole, gJSTerm, gVariablesView;
+let test = asyncTest(function*() {
+  yield loadTab(TEST_URI);
+  let hud = yield openConsole();
+  let jsterm = hud.jsterm;
 
-function test()
-{
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, consoleOpened);
-  }, true);
-}
+  jsterm.execute("document");
 
-function consoleOpened(hud)
-{
-  gWebConsole = hud;
-  gJSTerm = hud.jsterm;
-
-  gJSTerm.execute("document");
-
-  waitForMessages({
+  let [result] = yield waitForMessages({
     webconsole: hud,
     messages: [{
       text: "HTMLDocument \u2192 data:text/html;charset=utf8",
       category: CATEGORY_OUTPUT,
       objects: true,
     }],
-  }).then(onEvalResult);
-}
+  });
 
-function onEvalResult(aResults)
-{
-  let clickable = aResults[0].clickableElements[0];
+  let clickable = result.clickableElements[0];
   ok(clickable, "clickable object found");
 
-  gJSTerm.once("variablesview-fetched", onDocumentFetch);
-  EventUtils.synthesizeMouse(clickable, 2, 2, {}, gWebConsole.iframeWindow)
-}
+  executeSoon(() => {
+    EventUtils.synthesizeMouse(clickable, 2, 2, {}, hud.iframeWindow);
+  });
 
-function onDocumentFetch(aEvent, aVar)
-{
-  gVariablesView = aVar._variablesView;
-  ok(gVariablesView, "variables view object");
+  let fetchedVar = yield jsterm.once("variablesview-fetched");
 
-  findVariableViewProperties(aVar, [
+  let variablesView = fetchedVar._variablesView;
+  ok(variablesView, "variables view object");
+
+  let results = yield findVariableViewProperties(fetchedVar, [
     { name: "title", value: "bug870220" },
     { name: "bgColor" },
-  ], { webconsole: gWebConsole }).then(onDocumentPropsFound);
-}
+  ], { webconsole: hud });
 
-function onDocumentPropsFound(aResults)
-{
-  let prop = aResults[1].matchedProp;
+  let prop = results[1].matchedProp;
   ok(prop, "matched the |bgColor| property in the variables view");
 
   // Check that property value updates work.
-  updateVariablesViewProperty({
+  let updatedVar = yield updateVariablesViewProperty({
     property: prop,
     field: "value",
     string: "'red'",
-    webconsole: gWebConsole,
-    callback: onFetchAfterBackgroundUpdate,
+    webconsole: hud,
   });
-}
 
-function onFetchAfterBackgroundUpdate(aEvent, aVar)
-{
-  info("onFetchAfterBackgroundUpdate");
+  info("on fetch after background update");
 
-  is(content.document.bgColor, "red", "document background color changed");
+  jsterm.clearOutput(true);
+  jsterm.execute("document.bgColor");
 
-  findVariableViewProperties(aVar, [
+  [result] = yield waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "red",
+      category: CATEGORY_OUTPUT,
+    }],
+  });
+
+  yield findVariableViewProperties(updatedVar, [
     { name: "bgColor", value: "red" },
-  ], { webconsole: gWebConsole }).then(testParagraphs);
-}
+  ], { webconsole: hud });
 
-function testParagraphs()
-{
-  gJSTerm.execute("$$('p')");
+  jsterm.execute("$$('p')");
 
-  waitForMessages({
-    webconsole: gWebConsole,
+  [result] = yield waitForMessages({
+    webconsole: hud,
     messages: [{
       text: "NodeList [",
       category: CATEGORY_OUTPUT,
       objects: true,
     }],
-  }).then(onEvalNodeList);
-}
+  });
 
-function onEvalNodeList(aResults)
-{
-  let clickable = aResults[0].clickableElements[0];
+  clickable = result.clickableElements[0];
   ok(clickable, "clickable object found");
 
-  gJSTerm.once("variablesview-fetched", onNodeListFetch);
-  EventUtils.synthesizeMouse(clickable, 2, 2, {}, gWebConsole.iframeWindow)
-}
+  executeSoon(() => {
+    EventUtils.synthesizeMouse(clickable, 2, 2, {}, hud.iframeWindow);
+  });
 
-function onNodeListFetch(aEvent, aVar)
-{
-  gVariablesView = aVar._variablesView;
-  ok(gVariablesView, "variables view object");
+  fetchedVar = yield jsterm.once("variablesview-fetched");
 
-  findVariableViewProperties(aVar, [
+  yield findVariableViewProperties(fetchedVar, [
     { name: "0.textContent", value: /hello world/ },
     { name: "1.textContent", value: /native getters/ },
-  ], { webconsole: gWebConsole }).then(() => {
-    gWebConsole = gJSTerm = gVariablesView = null;
-    finishTest();
-  });
-}
+  ], { webconsole: hud });
+});

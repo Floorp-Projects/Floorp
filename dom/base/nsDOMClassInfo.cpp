@@ -1026,17 +1026,17 @@ nsDOMClassInfo::Resolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   JS::Rooted<JSObject*> global(cx, ::JS_GetGlobalForObject(cx, obj));
 
-  JS::Rooted<JS::Value> val(cx);
-  if (!::JS_LookupProperty(cx, global, mData->mName, &val)) {
+  JS::Rooted<JSPropertyDescriptor> desc(cx);
+  if (!JS_GetPropertyDescriptor(cx, global, mData->mName, &desc)) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (!val.isPrimitive()) {
+  if (desc.object() && !desc.hasGetterOrSetter() && desc.value().isObject()) {
     // If val is not an (non-null) object there either is no
     // constructor for this class, or someone messed with
     // window.classname, just fall through and let the JS engine
     // return the Object constructor.
-    if (!::JS_DefinePropertyById(cx, obj, id, val,
+    if (!::JS_DefinePropertyById(cx, obj, id, desc.value(),
                                  JSPROP_ENUMERATE,
                                  JS_STUBGETTER, JS_STUBSETTER)) {
       return NS_ERROR_UNEXPECTED;
@@ -1620,16 +1620,16 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
   if (!name_struct) {
     // This isn't a normal DOM object, see if this constructor lives on its
     // prototype chain.
-    JS::Rooted<JS::Value> val(cx);
-    if (!JS_GetProperty(cx, obj, "prototype", &val)) {
+    JS::Rooted<JSPropertyDescriptor> desc(cx);
+    if (!JS_GetPropertyDescriptor(cx, obj, "prototype", &desc)) {
       return NS_ERROR_UNEXPECTED;
     }
 
-    if (val.isPrimitive()) {
+    if (!desc.object() || desc.hasGetterOrSetter() || !desc.value().isObject()) {
       return NS_OK;
     }
 
-    JS::Rooted<JSObject*> dot_prototype(cx, val.toObjectOrNull());
+    JS::Rooted<JSObject*> dot_prototype(cx, &desc.value().toObject());
 
     JS::Rooted<JSObject*> proto(cx, dom_obj);
     for (;;) {
@@ -1933,19 +1933,19 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
     if (class_parent_name) {
       JSAutoCompartment ac(cx, winobj);
 
-      JS::Rooted<JS::Value> val(cx);
-      if (!JS_LookupProperty(cx, winobj, CutPrefix(class_parent_name), &val)) {
+      JS::Rooted<JSPropertyDescriptor> desc(cx);
+      if (!JS_GetPropertyDescriptor(cx, winobj, CutPrefix(class_parent_name), &desc)) {
         return NS_ERROR_UNEXPECTED;
       }
 
-      if (val.isObject()) {
-        JS::Rooted<JSObject*> obj(cx, &val.toObject());
-        if (!JS_LookupProperty(cx, obj, "prototype", &val)) {
+      if (desc.object() && !desc.hasGetterOrSetter() && desc.value().isObject()) {
+        JS::Rooted<JSObject*> obj(cx, &desc.value().toObject());
+        if (!JS_GetPropertyDescriptor(cx, obj, "prototype", &desc)) {
           return NS_ERROR_UNEXPECTED;
         }
 
-        if (val.isObject()) {
-          proto = &val.toObject();
+        if (desc.object() && !desc.hasGetterOrSetter() && desc.value().isObject()) {
+          proto = &desc.value().toObject();
         }
       }
     }

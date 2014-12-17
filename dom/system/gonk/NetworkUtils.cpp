@@ -123,7 +123,7 @@ static nsTArray<nsCString> gReason;
 static NetworkParams *gWifiTetheringParms = 0;
 
 
-CommandFunc NetworkUtils::sWifiEnableChain[] = {
+const CommandFunc NetworkUtils::sWifiEnableChain[] = {
   NetworkUtils::clearWifiTetherParms,
   NetworkUtils::wifiFirmwareReload,
   NetworkUtils::startAccessPointDriver,
@@ -139,7 +139,7 @@ CommandFunc NetworkUtils::sWifiEnableChain[] = {
   NetworkUtils::wifiTetheringSuccess
 };
 
-CommandFunc NetworkUtils::sWifiDisableChain[] = {
+const CommandFunc NetworkUtils::sWifiDisableChain[] = {
   NetworkUtils::clearWifiTetherParms,
   NetworkUtils::stopSoftAP,
   NetworkUtils::stopAccessPointDriver,
@@ -153,14 +153,14 @@ CommandFunc NetworkUtils::sWifiDisableChain[] = {
   NetworkUtils::wifiTetheringSuccess
 };
 
-CommandFunc NetworkUtils::sWifiFailChain[] = {
+const CommandFunc NetworkUtils::sWifiFailChain[] = {
   NetworkUtils::clearWifiTetherParms,
   NetworkUtils::stopSoftAP,
   NetworkUtils::setIpForwardingEnabled,
   NetworkUtils::stopTethering
 };
 
-CommandFunc NetworkUtils::sWifiRetryChain[] = {
+const CommandFunc NetworkUtils::sWifiRetryChain[] = {
   NetworkUtils::clearWifiTetherParms,
   NetworkUtils::stopSoftAP,
   NetworkUtils::stopTethering,
@@ -180,12 +180,12 @@ CommandFunc NetworkUtils::sWifiRetryChain[] = {
   NetworkUtils::wifiTetheringSuccess
 };
 
-CommandFunc NetworkUtils::sWifiOperationModeChain[] = {
+const CommandFunc NetworkUtils::sWifiOperationModeChain[] = {
   NetworkUtils::wifiFirmwareReload,
   NetworkUtils::wifiOperationModeSuccess
 };
 
-CommandFunc NetworkUtils::sUSBEnableChain[] = {
+const CommandFunc NetworkUtils::sUSBEnableChain[] = {
   NetworkUtils::setInterfaceUp,
   NetworkUtils::enableNat,
   NetworkUtils::setIpForwardingEnabled,
@@ -196,7 +196,7 @@ CommandFunc NetworkUtils::sUSBEnableChain[] = {
   NetworkUtils::usbTetheringSuccess
 };
 
-CommandFunc NetworkUtils::sUSBDisableChain[] = {
+const CommandFunc NetworkUtils::sUSBDisableChain[] = {
   NetworkUtils::untetherInterface,
   NetworkUtils::preTetherInterfaceList,
   NetworkUtils::postTetherInterfaceList,
@@ -206,48 +206,48 @@ CommandFunc NetworkUtils::sUSBDisableChain[] = {
   NetworkUtils::usbTetheringSuccess
 };
 
-CommandFunc NetworkUtils::sUSBFailChain[] = {
+const CommandFunc NetworkUtils::sUSBFailChain[] = {
   NetworkUtils::stopSoftAP,
   NetworkUtils::setIpForwardingEnabled,
   NetworkUtils::stopTethering
 };
 
-CommandFunc NetworkUtils::sUpdateUpStreamChain[] = {
+const CommandFunc NetworkUtils::sUpdateUpStreamChain[] = {
   NetworkUtils::cleanUpStream,
   NetworkUtils::createUpStream,
   NetworkUtils::updateUpStreamSuccess
 };
 
-CommandFunc NetworkUtils::sStartDhcpServerChain[] = {
+const CommandFunc NetworkUtils::sStartDhcpServerChain[] = {
   NetworkUtils::setInterfaceUp,
   NetworkUtils::startTethering,
   NetworkUtils::setDhcpServerSuccess
 };
 
-CommandFunc NetworkUtils::sStopDhcpServerChain[] = {
+const CommandFunc NetworkUtils::sStopDhcpServerChain[] = {
   NetworkUtils::stopTethering,
   NetworkUtils::setDhcpServerSuccess
 };
 
-CommandFunc NetworkUtils::sNetworkInterfaceEnableAlarmChain[] = {
+const CommandFunc NetworkUtils::sNetworkInterfaceEnableAlarmChain[] = {
   NetworkUtils::enableAlarm,
   NetworkUtils::setQuota,
   NetworkUtils::setAlarm,
   NetworkUtils::networkInterfaceAlarmSuccess
 };
 
-CommandFunc NetworkUtils::sNetworkInterfaceDisableAlarmChain[] = {
+const CommandFunc NetworkUtils::sNetworkInterfaceDisableAlarmChain[] = {
   NetworkUtils::removeQuota,
   NetworkUtils::disableAlarm,
   NetworkUtils::networkInterfaceAlarmSuccess
 };
 
-CommandFunc NetworkUtils::sNetworkInterfaceSetAlarmChain[] = {
+const CommandFunc NetworkUtils::sNetworkInterfaceSetAlarmChain[] = {
   NetworkUtils::setAlarm,
   NetworkUtils::networkInterfaceAlarmSuccess
 };
 
-CommandFunc NetworkUtils::sSetDnsChain[] = {
+const CommandFunc NetworkUtils::sSetDnsChain[] = {
   NetworkUtils::setDefaultInterface,
   NetworkUtils::setInterfaceDns
 };
