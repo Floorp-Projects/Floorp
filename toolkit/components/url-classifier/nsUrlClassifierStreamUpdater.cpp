@@ -340,14 +340,19 @@ NS_IMETHODIMP
 nsUrlClassifierStreamUpdater::StreamFinished(nsresult status,
                                              uint32_t requestedDelay)
 {
+  // We are a service and may not be reset with Init between calls, so reset
+  // mBeganStream manually.
+  mBeganStream = false;
   LOG(("nsUrlClassifierStreamUpdater::StreamFinished [%x, %d]", status, requestedDelay));
   if (NS_FAILED(status) || mPendingUpdates.Length() == 0) {
     // We're done.
+    LOG(("nsUrlClassifierStreamUpdater::Done [this=%p]", this));
     mDBService->FinishUpdate();
     return NS_OK;
   }
 
   // Wait the requested amount of time before starting a new stream.
+  // This appears to be a duplicate timer (see bug 1110891)
   nsresult rv;
   mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   if (NS_SUCCEEDED(rv)) {
@@ -378,7 +383,12 @@ nsUrlClassifierStreamUpdater::UpdateSuccess(uint32_t requestedTimeout)
   nsAutoCString strTimeout;
   strTimeout.AppendInt(requestedTimeout);
   if (successCallback) {
+    LOG(("nsUrlClassifierStreamUpdater::UpdateSuccess callback [this=%p]",
+         this));
     successCallback->HandleEvent(strTimeout);
+  } else {
+    LOG(("nsUrlClassifierStreamUpdater::UpdateSuccess skipping callback [this=%p]",
+         this));
   }
   // Now fetch the next request
   LOG(("stream updater: calling into fetch next request"));
@@ -452,19 +462,20 @@ nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request,
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);
   if (httpChannel) {
     rv = httpChannel->GetStatus(&status);
+    LOG(("nsUrlClassifierStreamUpdater::OnStartRequest (status=%x, this=%p)",
+         status, this));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (NS_ERROR_CONNECTION_REFUSED == status ||
-        NS_ERROR_NET_TIMEOUT == status) {
+    if (NS_FAILED(status)) {
       // Assume we're overloading the server and trigger backoff.
       downloadError = true;
-    }
-
-    if (NS_SUCCEEDED(status)) {
+    } else {
       bool succeeded = false;
       rv = httpChannel->GetRequestSucceeded(&succeeded);
       NS_ENSURE_SUCCESS(rv, rv);
 
+      LOG(("nsUrlClassifierStreamUpdater::OnStartRequest (%s)", succeeded ?
+           "succeeded" : "failed"));
       if (!succeeded) {
         // 404 or other error, pass error status back
         LOG(("HTTP request returned failure code."));
@@ -481,11 +492,13 @@ nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request,
   }
 
   if (downloadError) {
+    LOG(("nsUrlClassifierStreamUpdater::Download error [this=%p]", this));
     mDownloadErrorCallback->HandleEvent(strStatus);
     mDownloadError = true;
     status = NS_ERROR_ABORT;
   } else if (NS_SUCCEEDED(status)) {
     mBeganStream = true;
+    LOG(("nsUrlClassifierStreamUpdater::Beginning stream [this=%p]", this));
     rv = mDBService->BeginStream(mStreamTable);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -528,7 +541,8 @@ nsUrlClassifierStreamUpdater::OnStopRequest(nsIRequest *request, nsISupports* co
   if (!mDBService)
     return NS_ERROR_NOT_INITIALIZED;
 
-  LOG(("OnStopRequest (status %x)", aStatus));
+  LOG(("OnStopRequest (status %x, beganStream %s, this=%p)", aStatus,
+       mBeganStream ? "true" : "false", this));
 
   nsresult rv;
 
@@ -536,10 +550,12 @@ nsUrlClassifierStreamUpdater::OnStopRequest(nsIRequest *request, nsISupports* co
     // Success, finish this stream and move on to the next.
     rv = mDBService->FinishStream();
   } else if (mBeganStream) {
+    LOG(("OnStopRequest::Canceling update [this=%p]", this));
     // We began this stream and couldn't finish it.  We have to cancel the
     // update, it's not in a consistent state.
     rv = mDBService->CancelUpdate();
   } else {
+    LOG(("OnStopRequest::Finishing update [this=%p]", this));
     // The fetch failed, but we didn't start the stream (probably a
     // server or connection error).  We can commit what we've applied
     // so far, and request again later.
@@ -548,7 +564,12 @@ nsUrlClassifierStreamUpdater::OnStopRequest(nsIRequest *request, nsISupports* co
 
   mChannel = nullptr;
 
-  return rv;
+  // If the fetch failed, return the network status rather than NS_OK, the
+  // result of finishing a possibly-empty update
+  if (NS_SUCCEEDED(aStatus)) {
+    return rv;
+  }
+  return aStatus;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -8,7 +8,6 @@
 #include "prlog.h"
 #include "mozilla/dom/TimeRanges.h"
 #include "DecoderTraits.h"
-#include "MediaDataDecodedListener.h"
 #include "MediaDecoderOwner.h"
 #include "MediaSourceDecoder.h"
 #include "MediaSourceUtils.h"
@@ -296,6 +295,8 @@ MediaSourceReader::OnVideoNotDecoded(NotDecodedReason aReason)
 nsRefPtr<ShutdownPromise>
 MediaSourceReader::Shutdown()
 {
+  mSeekPromise.RejectIfExists(NS_ERROR_FAILURE, __func__);
+
   MOZ_ASSERT(mMediaSourceShutdownPromise.IsEmpty());
   nsRefPtr<ShutdownPromise> p = mMediaSourceShutdownPromise.Ensure(__func__);
 
@@ -453,13 +454,6 @@ MediaSourceReader::CreateSubDecoder(const nsACString& aType)
   // borrowing.
   reader->SetBorrowedTaskQueue(GetTaskQueue());
 
-  // Set a callback on the subreader that forwards calls to this reader.
-  // This reader will then forward them onto the state machine via this
-  // reader's callback.
-  RefPtr<MediaDataDecodedListener<MediaSourceReader>> callback =
-    new MediaDataDecodedListener<MediaSourceReader>(this, reader->GetTaskQueue());
-  reader->SetCallback(callback);
-
 #ifdef MOZ_FMP4
   reader->SetSharedDecoderManager(mSharedDecoderManager);
 #endif
@@ -538,16 +532,19 @@ MediaSourceReader::NotifyTimeRangesChanged()
   }
 }
 
-void
+nsRefPtr<MediaDecoderReader::SeekPromise>
 MediaSourceReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
                         int64_t aCurrentTime)
 {
   MSE_DEBUG("MediaSourceReader(%p)::Seek(aTime=%lld, aStart=%lld, aEnd=%lld, aCurrent=%lld)",
             this, aTime, aStartTime, aEndTime, aCurrentTime);
 
+  mSeekPromise.RejectIfExists(NS_OK, __func__);
+  nsRefPtr<SeekPromise> p = mSeekPromise.Ensure(__func__);
+
   if (IsShutdown()) {
-    GetCallback()->OnSeekCompleted(NS_ERROR_FAILURE);
-    return;
+    mSeekPromise.Reject(NS_ERROR_FAILURE, __func__);
+    return p;
   }
 
   // Store pending seek target in case the track buffers don't contain
@@ -575,20 +572,38 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
   }
 
   AttemptSeek();
+  return p;
 }
 
 void
-MediaSourceReader::OnSeekCompleted(nsresult aResult)
+MediaSourceReader::OnSeekCompleted()
+{
+  mPendingSeeks--;
+  FinalizeSeek();
+}
+
+void
+MediaSourceReader::OnSeekFailed(nsresult aResult)
 {
   mPendingSeeks--;
   // Keep the most recent failed result (if any)
   if (NS_FAILED(aResult)) {
     mSeekResult = aResult;
   }
+  FinalizeSeek();
+}
+
+void
+MediaSourceReader::FinalizeSeek()
+{
   // Only dispatch the final event onto the state machine
   // since it's only expecting one response.
   if (!mPendingSeeks) {
-    GetCallback()->OnSeekCompleted(mSeekResult);
+    if (NS_FAILED(mSeekResult)) {
+      mSeekPromise.Reject(mSeekResult, __func__);
+    } else {
+      mSeekPromise.Resolve(true, __func__);
+    }
     mSeekResult = NS_OK;
   }
 }
@@ -620,7 +635,10 @@ MediaSourceReader::AttemptSeek()
     mAudioReader->Seek(mPendingSeekTime,
                        mPendingStartTime,
                        mPendingEndTime,
-                       mPendingCurrentTime);
+                       mPendingCurrentTime)
+                ->Then(GetTaskQueue(), __func__, this,
+                       &MediaSourceReader::OnSeekCompleted,
+                       &MediaSourceReader::OnSeekFailed);
     MSE_DEBUG("MediaSourceReader(%p)::Seek audio reader=%p", this, mAudioReader.get());
   }
   if (mVideoTrack) {
@@ -629,7 +647,10 @@ MediaSourceReader::AttemptSeek()
     mVideoReader->Seek(mPendingSeekTime,
                        mPendingStartTime,
                        mPendingEndTime,
-                       mPendingCurrentTime);
+                       mPendingCurrentTime)
+                ->Then(GetTaskQueue(), __func__, this,
+                       &MediaSourceReader::OnSeekCompleted,
+                       &MediaSourceReader::OnSeekFailed);
     MSE_DEBUG("MediaSourceReader(%p)::Seek video reader=%p", this, mVideoReader.get());
   }
   {

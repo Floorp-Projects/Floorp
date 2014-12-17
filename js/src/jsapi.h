@@ -1928,7 +1928,7 @@ typedef struct JSCTypesCallbacks JSCTypesCallbacks;
  * to call this function again.
  */
 extern JS_PUBLIC_API(void)
-JS_SetCTypesCallbacks(JSObject *ctypesObj, JSCTypesCallbacks *callbacks);
+JS_SetCTypesCallbacks(JSObject *ctypesObj, const JSCTypesCallbacks *callbacks);
 #endif
 
 typedef bool
@@ -2999,13 +2999,6 @@ JS_HasProperty(JSContext *cx, JS::HandleObject obj, const char *name, bool *foun
 extern JS_PUBLIC_API(bool)
 JS_HasPropertyById(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *foundp);
 
-extern JS_PUBLIC_API(bool)
-JS_LookupProperty(JSContext *cx, JS::HandleObject obj, const char *name, JS::MutableHandleValue vp);
-
-extern JS_PUBLIC_API(bool)
-JS_LookupPropertyById(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
-                      JS::MutableHandleValue vp);
-
 struct JSPropertyDescriptor {
     JSObject           *obj;
     unsigned           attrs;
@@ -3282,11 +3275,6 @@ JS_HasUCProperty(JSContext *cx, JS::HandleObject obj,
                  bool *vp);
 
 extern JS_PUBLIC_API(bool)
-JS_LookupUCProperty(JSContext *cx, JS::HandleObject obj,
-                    const char16_t *name, size_t namelen,
-                    JS::MutableHandleValue vp);
-
-extern JS_PUBLIC_API(bool)
 JS_GetUCProperty(JSContext *cx, JS::HandleObject obj,
                  const char16_t *name, size_t namelen,
                  JS::MutableHandleValue vp);
@@ -3353,9 +3341,6 @@ JS_AlreadyHasOwnElement(JSContext *cx, JS::HandleObject obj, uint32_t index, boo
 
 extern JS_PUBLIC_API(bool)
 JS_HasElement(JSContext *cx, JS::HandleObject obj, uint32_t index, bool *foundp);
-
-extern JS_PUBLIC_API(bool)
-JS_LookupElement(JSContext *cx, JS::HandleObject obj, uint32_t index, JS::MutableHandleValue vp);
 
 extern JS_PUBLIC_API(bool)
 JS_GetElement(JSContext *cx, JS::HandleObject obj, uint32_t index, JS::MutableHandleValue vp);
@@ -4694,13 +4679,13 @@ struct JSLocaleCallbacks {
  * JSRuntime.  Passing nullptr restores the default behaviour.
  */
 extern JS_PUBLIC_API(void)
-JS_SetLocaleCallbacks(JSRuntime *rt, JSLocaleCallbacks *callbacks);
+JS_SetLocaleCallbacks(JSRuntime *rt, const JSLocaleCallbacks *callbacks);
 
 /*
  * Return the address of the current locale callbacks struct, which may
  * be nullptr.
  */
-extern JS_PUBLIC_API(JSLocaleCallbacks *)
+extern JS_PUBLIC_API(const JSLocaleCallbacks *)
 JS_GetLocaleCallbacks(JSRuntime *rt);
 
 /************************************************************************/

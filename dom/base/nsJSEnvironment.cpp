@@ -2302,12 +2302,6 @@ nsJSContext::KillICCTimer()
   }
 }
 
-void
-nsJSContext::GC(JS::gcreason::Reason aReason)
-{
-  PokeGC(aReason);
-}
-
 class NotifyGCEndRunnable : public nsRunnable
 {
   nsString mMessage;
@@ -2754,7 +2748,7 @@ nsJSContext::EnsureStatics()
   sPrevGCSliceCallback = JS::SetGCSliceCallback(sRuntime, DOMGCSliceCallback);
 
   // Set up the structured clone callbacks.
-  static JSStructuredCloneCallbacks cloneCallbacks = {
+  static const JSStructuredCloneCallbacks cloneCallbacks = {
     NS_DOMReadStructuredClone,
     NS_DOMWriteStructuredClone,
     NS_DOMStructuredCloneError,
@@ -2765,7 +2759,7 @@ nsJSContext::EnsureStatics()
   JS_SetStructuredCloneCallbacks(sRuntime, &cloneCallbacks);
 
   // Set up the asm.js cache callbacks
-  static JS::AsmJSCacheOps asmJSCacheOps = {
+  static const JS::AsmJSCacheOps asmJSCacheOps = {
     AsmJSCacheOpenEntryForRead,
     asmjscache::CloseEntryForRead,
     AsmJSCacheOpenEntryForWrite,

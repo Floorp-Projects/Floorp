@@ -498,7 +498,6 @@ ExposeGCThingToActiveJS(JS::GCCellPtr thing)
 {
     MOZ_ASSERT(thing.kind() != JSTRACE_SHAPE);
 
-    JS::shadow::Runtime *rt = GetGCThingRuntime(thing.asCell());
     /*
      * GC things residing in the nursery cannot be gray: they have no mark bits.
      * All live objects in the nursery are moved to tenured at the beginning of
@@ -506,9 +505,10 @@ ExposeGCThingToActiveJS(JS::GCCellPtr thing)
      */
     if (IsInsideNursery(thing.asCell()))
         return;
+    JS::shadow::Runtime *rt = detail::GetGCThingRuntime(thing.unsafeAsUIntPtr());
     if (IsIncrementalBarrierNeededOnTenuredGCThing(rt, thing))
         JS::IncrementalReferenceBarrier(thing);
-    else if (JS::GCThingIsMarkedGray(thing.asCell()))
+    else if (JS::GCThingIsMarkedGray(thing))
         JS::UnmarkGrayGCThingRecursively(thing);
 }
 

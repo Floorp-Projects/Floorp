@@ -119,12 +119,6 @@ public:
 
 } // namespace mozilla
 
-inline bool
-AddToCCKind(JSGCTraceKind aKind)
-{
-  return aKind == JSTRACE_OBJECT || aKind == JSTRACE_SCRIPT;
-}
-
 static void
 TraceWeakMappingChild(JSTracer* aTrc, void** aThingp, JSGCTraceKind aKind);
 
@@ -147,25 +141,24 @@ static void
 TraceWeakMappingChild(JSTracer* aTrc, void** aThingp, JSGCTraceKind aKind)
 {
   MOZ_ASSERT(aTrc->callback == TraceWeakMappingChild);
-  void* thing = *aThingp;
   NoteWeakMapChildrenTracer* tracer =
     static_cast<NoteWeakMapChildrenTracer*>(aTrc);
+  JS::GCCellPtr thing(*aThingp, aKind);
 
-  if (aKind == JSTRACE_STRING) {
+  if (thing.isString()) {
     return;
   }
 
-  if (!xpc_IsGrayGCThing(thing) && !tracer->mCb.WantAllTraces()) {
+  if (!JS::GCThingIsMarkedGray(thing) && !tracer->mCb.WantAllTraces()) {
     return;
   }
 
-  if (AddToCCKind(aKind)) {
+  if (AddToCCKind(thing.kind())) {
     tracer->mCb.NoteWeakMapping(tracer->mMap, tracer->mKey,
-                                tracer->mKeyDelegate,
-                                JS::GCCellPtr(thing, aKind));
+                                tracer->mKeyDelegate, thing);
     tracer->mTracedAny = true;
   } else {
-    JS_TraceChildren(aTrc, thing, aKind);
+    JS_TraceChildren(aTrc, thing.asCell(), thing.kind());
   }
 }
 
@@ -188,9 +181,9 @@ TraceWeakMapping(js::WeakMapTracer* aTrc, JSObject* aMap,
   NoteWeakMapsTracer* tracer = static_cast<NoteWeakMapsTracer*>(aTrc);
 
   // If nothing that could be held alive by this entry is marked gray, return.
-  if ((!aKey || !xpc_IsGrayGCThing(aKey.asCell())) &&
+  if ((!aKey || !JS::GCThingIsMarkedGray(aKey)) &&
       MOZ_LIKELY(!tracer->mCb.WantAllTraces())) {
-    if (!aValue || !xpc_IsGrayGCThing(aValue.asCell()) || aValue.isString()) {
+    if (!aValue || !JS::GCThingIsMarkedGray(aValue) || aValue.isString()) {
       return;
     }
   }
@@ -229,7 +222,7 @@ TraceWeakMapping(js::WeakMapTracer* aTrc, JSObject* aMap,
     // The delegate could hold alive the key, so report something to the CC
     // if we haven't already.
     if (!tracer->mChildTracer.mTracedAny &&
-        aKey && xpc_IsGrayGCThing(aKey.asCell()) && kdelegate) {
+        aKey && JS::GCThingIsMarkedGray(aKey) && kdelegate) {
       tracer->mCb.NoteWeakMapping(aMap, aKey, kdelegate,
                                   JS::GCCellPtr::NullPtr());
     }
@@ -263,8 +256,8 @@ private:
       static_cast<FixWeakMappingGrayBitsTracer*>(aTrc);
 
     // If nothing that could be held alive by this entry is marked gray, return.
-    bool delegateMightNeedMarking = aKey && xpc_IsGrayGCThing(aKey.asCell());
-    bool valueMightNeedMarking = aValue && xpc_IsGrayGCThing(aValue.asCell()) &&
+    bool delegateMightNeedMarking = aKey && JS::GCThingIsMarkedGray(aKey);
+    bool valueMightNeedMarking = aValue && JS::GCThingIsMarkedGray(aValue) &&
                                  aValue.kind() != JSTRACE_STRING;
     if (!delegateMightNeedMarking && !valueMightNeedMarking) {
       return;
@@ -276,16 +269,16 @@ private:
 
     if (delegateMightNeedMarking && aKey.isObject()) {
       JSObject* kdelegate = js::GetWeakmapKeyDelegate(aKey.toObject());
-      if (kdelegate && !xpc_IsGrayGCThing(kdelegate)) {
+      if (kdelegate && !JS::ObjectIsMarkedGray(kdelegate)) {
         if (JS::UnmarkGrayGCThingRecursively(aKey)) {
           tracer->mAnyMarked = true;
         }
       }
     }
 
-    if (aValue && xpc_IsGrayGCThing(aValue.asCell()) &&
-        (!aKey || !xpc_IsGrayGCThing(aKey.asCell())) &&
-        (!aMap || !xpc_IsGrayGCThing(aMap)) &&
+    if (aValue && JS::GCThingIsMarkedGray(aValue) &&
+        (!aKey || !JS::GCThingIsMarkedGray(aKey)) &&
+        (!aMap || !JS::ObjectIsMarkedGray(aMap)) &&
         aValue.kind() != JSTRACE_SHAPE) {
       if (JS::UnmarkGrayGCThingRecursively(aValue)) {
         tracer->mAnyMarked = true;
@@ -308,7 +301,7 @@ struct Closure
 };
 
 static void
-CheckParticipatesInCycleCollection(void* aThing, const char* aName,
+CheckParticipatesInCycleCollection(JS::GCCellPtr aThing, const char* aName,
                                    void* aClosure)
 {
   Closure* closure = static_cast<Closure*>(aClosure);
@@ -317,8 +310,7 @@ CheckParticipatesInCycleCollection(void* aThing, const char* aName,
     return;
   }
 
-  if (AddToCCKind(js::GCThingTraceKind(aThing)) &&
-      xpc_IsGrayGCThing(aThing)) {
+  if (AddToCCKind(aThing.kind()) && JS::GCThingIsMarkedGray(aThing)) {
     closure->mCycleCollectionEnabled = true;
   }
 }
@@ -392,10 +384,11 @@ struct TraversalTracer : public JSTracer
 static void
 NoteJSChild(JSTracer* aTrc, void* aThing, JSGCTraceKind aTraceKind)
 {
+  JS::GCCellPtr thing(aThing, aTraceKind);
   TraversalTracer* tracer = static_cast<TraversalTracer*>(aTrc);
 
   // Don't traverse non-gray objects, unless we want all traces.
-  if (!xpc_IsGrayGCThing(aThing) && !tracer->mCb.WantAllTraces()) {
+  if (!JS::GCThingIsMarkedGray(thing) && !tracer->mCb.WantAllTraces()) {
     return;
   }
 
@@ -424,7 +417,11 @@ NoteJSChild(JSTracer* aTrc, void* aThing, JSGCTraceKind aTraceKind)
         tracer->mCb.NoteNextEdgeName(static_cast<const char*>(tracer->debugPrintArg()));
       }
     }
-    tracer->mCb.NoteJSChild(aThing);
+    if (thing.isObject()) {
+      tracer->mCb.NoteJSObject(thing.toObject());
+    } else {
+      tracer->mCb.NoteJSScript(thing.toScript());
+    }
   } else if (aTraceKind == JSTRACE_SHAPE) {
     JS_TraceShapeCycleCollectorChildren(aTrc, aThing);
   } else if (aTraceKind != JSTRACE_STRING) {
@@ -640,7 +637,7 @@ CycleCollectedJSRuntime::TraverseGCThing(TraverseSelect aTs, void* aThing,
                                          nsCycleCollectionTraversalCallback& aCb)
 {
   MOZ_ASSERT(aTraceKind == js::GCThingTraceKind(aThing));
-  bool isMarkedGray = xpc_IsGrayGCThing(aThing);
+  bool isMarkedGray = JS::GCThingIsMarkedGray(JS::GCCellPtr(aThing, aTraceKind));
 
   if (aTs == TRAVERSE_FULL) {
     DescribeGCThing(!isMarkedGray, aThing, aTraceKind, aCb);
@@ -915,7 +912,7 @@ CycleCollectedJSRuntime::IsJSHolder(void* aHolder)
 }
 
 static void
-AssertNoGcThing(void* aGCThing, const char* aName, void* aClosure)
+AssertNoGcThing(JS::GCCellPtr aGCThing, const char* aName, void* aClosure)
 {
   MOZ_ASSERT(!aGCThing);
 }
@@ -998,7 +995,7 @@ CycleCollectedJSRuntime::UsefulToMergeZones() const
     // Grab the inner from the outer.
     obj = JS_ObjectToInnerObject(cx, obj);
     MOZ_ASSERT(!js::GetObjectParent(obj));
-    if (JS::GCThingIsMarkedGray(obj) &&
+    if (JS::ObjectIsMarkedGray(obj) &&
         !js::IsSystemCompartment(js::GetObjectCompartment(obj))) {
       return true;
     }

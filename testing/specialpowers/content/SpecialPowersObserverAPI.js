@@ -353,6 +353,13 @@ SpecialPowersObserverAPI.prototype = {
             let val = Webapps.DOMApplicationRegistry.allAppsLaunchable;
             Webapps.DOMApplicationRegistry.allAppsLaunchable = aMessage.json.launchable;
             return val;
+          case "allow-unsigned-addons":
+            {
+              let utils = {};
+              Components.utils.import("resource://gre/modules/AppsUtils.jsm", utils);
+              utils.AppsUtils.allowUnsignedAddons = true;
+              return;
+            }
           default:
             throw new SpecialPowersException("Invalid operation for SPWebAppsService");
         }

@@ -1614,241 +1614,6 @@ JS_RemoveExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
     return rt->gc.removeBlackRootsTracer(traceOp, data);
 }
 
-#ifdef DEBUG
-
-typedef struct JSHeapDumpNode JSHeapDumpNode;
-
-struct JSHeapDumpNode {
-    void            *thing;
-    JSGCTraceKind   kind;
-    JSHeapDumpNode  *next;          /* next sibling */
-    JSHeapDumpNode  *parent;        /* node with the thing that refer to thing
-                                       from this node */
-    char            edgeName[1];    /* name of the edge from parent->thing
-                                       into thing */
-};
-
-typedef HashSet<void *, PointerHasher<void *, 3>, SystemAllocPolicy> VisitedSet;
-
-class DumpingTracer
-{
-  public:
-    DumpingTracer(JSRuntime *rt, JSTraceCallback callback)
-      : base(rt, callback)
-    {}
-
-    JSTracer            base;
-    VisitedSet          visited;
-    bool                ok;
-    void                *startThing;
-    void                *thingToFind;
-    void                *thingToIgnore;
-    JSHeapDumpNode      *parentNode;
-    JSHeapDumpNode      **lastNodep;
-    char                buffer[200];
-};
-
-static void
-DumpNotify(JSTracer *trc, void **thingp, JSGCTraceKind kind)
-{
-    MOZ_ASSERT(trc->callback == DumpNotify);
-
-    DumpingTracer *dtrc = (DumpingTracer *)trc;
-    void *thing = *thingp;
-
-    if (!dtrc->ok || thing == dtrc->thingToIgnore)
-        return;
-
-    /*
-     * Check if we have already seen thing unless it is thingToFind to include
-     * it to the graph each time we reach it and print all live things that
-     * refer to thingToFind.
-     *
-     * This does not print all possible paths leading to thingToFind since
-     * when a thing A refers directly or indirectly to thingToFind and A is
-     * present several times in the graph, we will print only the first path
-     * leading to A and thingToFind, other ways to reach A will be ignored.
-     */
-    if (dtrc->thingToFind != thing) {
-        /*
-         * The startThing check allows to avoid putting startThing into the
-         * hash table before tracing startThing in JS_DumpHeap.
-         */
-        if (thing == dtrc->startThing)
-            return;
-        VisitedSet::AddPtr p = dtrc->visited.lookupForAdd(thing);
-        if (p)
-            return;
-        if (!dtrc->visited.add(p, thing)) {
-            dtrc->ok = false;
-            return;
-        }
-    }
-
-    const char *edgeName = dtrc->base.getTracingEdgeName(dtrc->buffer, sizeof(dtrc->buffer));
-    size_t edgeNameSize = strlen(edgeName) + 1;
-    size_t bytes = offsetof(JSHeapDumpNode, edgeName) + edgeNameSize;
-    JSHeapDumpNode *node = (JSHeapDumpNode *) js_malloc(bytes);
-    if (!node) {
-        dtrc->ok = false;
-        return;
-    }
-
-    node->thing = thing;
-    node->kind = kind;
-    node->next = nullptr;
-    node->parent = dtrc->parentNode;
-    js_memcpy(node->edgeName, edgeName, edgeNameSize);
-
-    MOZ_ASSERT(!*dtrc->lastNodep);
-    *dtrc->lastNodep = node;
-    dtrc->lastNodep = &node->next;
-}
-
-/* Dump node and the chain that leads to thing it contains. */
-static bool
-DumpNode(DumpingTracer *dtrc, FILE* fp, JSHeapDumpNode *node)
-{
-    JSHeapDumpNode *prev, *following;
-    size_t chainLimit;
-    enum { MAX_PARENTS_TO_PRINT = 10 };
-
-    JS_GetTraceThingInfo(dtrc->buffer, sizeof dtrc->buffer,
-                         &dtrc->base, node->thing, node->kind, true);
-    if (fprintf(fp, "%p %-22s via ", node->thing, dtrc->buffer) < 0)
-        return false;
-
-    /*
-     * We need to print the parent chain in the reverse order. To do it in
-     * O(N) time where N is the chain length we first reverse the chain while
-     * searching for the top and then print each node while restoring the
-     * chain order.
-     */
-    chainLimit = MAX_PARENTS_TO_PRINT;
-    prev = nullptr;
-    for (;;) {
-        following = node->parent;
-        node->parent = prev;
-        prev = node;
-        node = following;
-        if (!node)
-            break;
-        if (chainLimit == 0) {
-            if (fputs("...", fp) < 0)
-                return false;
-            break;
-        }
-        --chainLimit;
-    }
-
-    node = prev;
-    prev = following;
-    bool ok = true;
-    do {
-        /* Loop must continue even when !ok to restore the parent chain. */
-        if (ok) {
-            if (!prev) {
-                /* Print edge from some runtime root or startThing. */
-                if (fputs(node->edgeName, fp) < 0)
-                    ok = false;
-            } else {
-                JS_GetTraceThingInfo(dtrc->buffer, sizeof dtrc->buffer,
-                                     &dtrc->base, prev->thing, prev->kind,
-                                     false);
-                if (fprintf(fp, "(%p %s).%s",
-                           prev->thing, dtrc->buffer, node->edgeName) < 0) {
-                    ok = false;
-                }
-            }
-        }
-        following = node->parent;
-        node->parent = prev;
-        prev = node;
-        node = following;
-    } while (node);
-
-    return ok && putc('\n', fp) >= 0;
-}
-
-JS_PUBLIC_API(bool)
-JS_DumpHeap(JSRuntime *rt, FILE *fp, void* startThing, JSGCTraceKind startKind,
-            void *thingToFind, size_t maxDepth, void *thingToIgnore)
-{
-    if (maxDepth == 0)
-        return true;
-
-    DumpingTracer dtrc(rt, DumpNotify);
-    if (!dtrc.visited.init())
-        return false;
-    dtrc.ok = true;
-    dtrc.startThing = startThing;
-    dtrc.thingToFind = thingToFind;
-    dtrc.thingToIgnore = thingToIgnore;
-    dtrc.parentNode = nullptr;
-    JSHeapDumpNode *node = nullptr;
-    dtrc.lastNodep = &node;
-    if (!startThing) {
-        MOZ_ASSERT(startKind == JSTRACE_OBJECT);
-        TraceRuntime(&dtrc.base);
-    } else {
-        JS_TraceChildren(&dtrc.base, startThing, startKind);
-    }
-
-    if (!node)
-        return dtrc.ok;
-
-    size_t depth = 1;
-    JSHeapDumpNode *children, *next, *parent;
-    bool thingToFindWasTraced = thingToFind && thingToFind == startThing;
-    for (;;) {
-        /*
-         * Loop must continue even when !dtrc.ok to free all nodes allocated
-         * so far.
-         */
-        if (dtrc.ok) {
-            if (thingToFind == nullptr || thingToFind == node->thing)
-                dtrc.ok = DumpNode(&dtrc, fp, node);
-
-            /* Descend into children. */
-            if (dtrc.ok &&
-                depth < maxDepth &&
-                (thingToFind != node->thing || !thingToFindWasTraced)) {
-                dtrc.parentNode = node;
-                children = nullptr;
-                dtrc.lastNodep = &children;
-                JS_TraceChildren(&dtrc.base, node->thing, node->kind);
-                if (thingToFind == node->thing)
-                    thingToFindWasTraced = true;
-                if (children != nullptr) {
-                    ++depth;
-                    node = children;
-                    continue;
-                }
-            }
-        }
-
-        /* Move to next or parents next and free the node. */
-        for (;;) {
-            next = node->next;
-            parent = node->parent;
-            js_free(node);
-            node = next;
-            if (node)
-                break;
-            if (!parent)
-                return dtrc.ok;
-            MOZ_ASSERT(depth > 1);
-            --depth;
-            node = parent;
-        }
-    }
-
-    MOZ_ASSERT(depth == 1);
-    return dtrc.ok;
-}
-
-#endif /* DEBUG */
-
 extern JS_PUBLIC_API(bool)
 JS_IsGCMarkingTracer(JSTracer *trc)
 {
@@ -2299,39 +2064,6 @@ JS_GetConstructor(JSContext *cx, HandleObject proto)
     return &cval.toObject();
 }
 
-namespace {
-
-class AutoCompartmentRooter : private JS::CustomAutoRooter
-{
-  public:
-    explicit AutoCompartmentRooter(JSContext *cx, JSCompartment *comp
-                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : CustomAutoRooter(cx), compartment(comp)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    operator JSCompartment *() {
-        return compartment;
-    }
-
-    JSCompartment *operator->() {
-        return compartment;
-    }
-
-  protected:
-    virtual void trace(JSTracer *trc)
-    {
-        compartment->mark();
-    }
-
-  private:
-    JSCompartment *compartment;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-} /* anonymous namespace */
-
 bool
 JS::CompartmentOptions::extraWarnings(JSRuntime *rt) const
 {
@@ -2383,42 +2115,8 @@ JS_NewGlobalObject(JSContext *cx, const JSClass *clasp, JSPrincipals *principals
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
-    MOZ_ASSERT(!cx->isExceptionPending());
 
-    JSRuntime *rt = cx->runtime();
-
-    Zone *zone;
-    if (options.zoneSpecifier() == JS::SystemZone)
-        zone = rt->gc.systemZone;
-    else if (options.zoneSpecifier() == JS::FreshZone)
-        zone = nullptr;
-    else
-        zone = static_cast<Zone *>(options.zonePointer());
-
-    AutoCompartmentRooter compartment(cx, NewCompartment(cx, zone, principals, options));
-    if (!compartment)
-        return nullptr;
-
-    // Lazily create the system zone.
-    if (!rt->gc.systemZone && options.zoneSpecifier() == JS::SystemZone) {
-        rt->gc.systemZone = compartment->zone();
-        rt->gc.systemZone->isSystem = true;
-    }
-
-    Rooted<GlobalObject *> global(cx);
-    {
-        AutoCompartment ac(cx, compartment);
-        global = GlobalObject::create(cx, Valueify(clasp));
-    }
-
-    if (!global)
-        return nullptr;
-
-    if (hookOption == JS::FireOnNewGlobalHook)
-        JS_FireOnNewGlobalObject(cx, global);
-
-    return global;
+    return GlobalObject::new_(cx, Valueify(clasp), principals, hookOption, options);
 }
 
 JS_PUBLIC_API(void)
@@ -2565,108 +2263,13 @@ JS_DeepFreezeObject(JSContext *cx, HandleObject obj)
     return true;
 }
 
-static bool
-LookupPropertyById(JSContext *cx, HandleObject obj, HandleId id,
-                   MutableHandleObject objp, MutableHandleShape propp)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, id);
-
-    return JSObject::lookupGeneric(cx, obj, id, objp, propp);
-}
-
-#define AUTO_NAMELEN(s,n)   (((n) == (size_t)-1) ? js_strlen(s) : (n))
-
-static bool
-LookupResult(JSContext *cx, HandleObject obj, HandleObject obj2, HandleId id,
-             HandleShape shape, MutableHandleValue vp)
-{
-    if (!shape) {
-        /* XXX bad API: no way to tell "not defined" from "void value" */
-        vp.setUndefined();
-        return true;
-    }
-
-    if (!obj2->isNative()) {
-        if (obj2->is<ProxyObject>()) {
-            Rooted<PropertyDescriptor> desc(cx);
-            if (!Proxy::getPropertyDescriptor(cx, obj2, id, &desc))
-                return false;
-            if (!desc.isShared()) {
-                vp.set(desc.value());
-                return true;
-            }
-        }
-    } else if (IsImplicitDenseOrTypedArrayElement(shape)) {
-        vp.set(obj2->as<NativeObject>().getDenseOrTypedArrayElement(JSID_TO_INT(id)));
-        return true;
-    } else {
-        /* Peek at the native property's slot value, without doing a Get. */
-        if (shape->hasSlot()) {
-            vp.set(obj2->as<NativeObject>().getSlot(shape->slot()));
-            return true;
-        }
-    }
-
-    /* XXX bad API: no way to return "defined but value unknown" */
-    vp.setBoolean(true);
-    return true;
-}
-
-JS_PUBLIC_API(bool)
-JS_LookupPropertyById(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
-{
-    RootedObject obj2(cx);
-    RootedShape prop(cx);
-
-    return LookupPropertyById(cx, obj, id, &obj2, &prop) &&
-           LookupResult(cx, obj, obj2, id, prop, vp);
-}
-
-JS_PUBLIC_API(bool)
-JS_LookupElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleValue vp)
-{
-    CHECK_REQUEST(cx);
-    RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return JS_LookupPropertyById(cx, obj, id, vp);
-}
-
-JS_PUBLIC_API(bool)
-JS_LookupProperty(JSContext *cx, HandleObject objArg, const char *name, MutableHandleValue vp)
-{
-    RootedObject obj(cx, objArg);
-    JSAtom *atom = Atomize(cx, name, strlen(name));
-    if (!atom)
-        return false;
-
-    RootedId id(cx, AtomToId(atom));
-    return JS_LookupPropertyById(cx, obj, id, vp);
-}
-
-JS_PUBLIC_API(bool)
-JS_LookupUCProperty(JSContext *cx, HandleObject objArg, const char16_t *name, size_t namelen,
-                    MutableHandleValue vp)
-{
-    RootedObject obj(cx, objArg);
-    JSAtom *atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
-    if (!atom)
-        return false;
-
-    RootedId id(cx, AtomToId(atom));
-    return JS_LookupPropertyById(cx, obj, id, vp);
-}
-
 JS_PUBLIC_API(bool)
 JS_HasPropertyById(JSContext *cx, HandleObject obj, HandleId id, bool *foundp)
 {
-    RootedObject obj2(cx);
-    RootedShape prop(cx);
-    bool ok = LookupPropertyById(cx, obj, id, &obj2, &prop);
-    *foundp = (prop != nullptr);
-    return ok;
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+
+    return JSObject::hasProperty(cx, obj, id, foundp);
 }
 
 JS_PUBLIC_API(bool)
@@ -2690,6 +2293,8 @@ JS_HasProperty(JSContext *cx, HandleObject obj, const char *name, bool *foundp)
     return JS_HasPropertyById(cx, obj, id, foundp);
 }
 
+#define AUTO_NAMELEN(s,n)   (((n) == (size_t)-1) ? js_strlen(s) : (n))
+
 JS_PUBLIC_API(bool)
 JS_HasUCProperty(JSContext *cx, HandleObject obj, const char16_t *name, size_t namelen, bool *foundp)
 {
@@ -2707,15 +2312,8 @@ JS_AlreadyHasOwnPropertyById(JSContext *cx, HandleObject obj, HandleId id, bool 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
 
-    if (!obj->isNative()) {
-        RootedObject obj2(cx);
-        RootedShape prop(cx);
-
-        if (!LookupPropertyById(cx, obj, id, &obj2, &prop))
-            return false;
-        *foundp = (obj == obj2);
-        return true;
-    }
+    if (!obj->isNative())
+        return js::HasOwnProperty(cx, obj, id, foundp);
 
     RootedNativeObject nativeObj(cx, &obj->as<NativeObject>());
     RootedShape prop(cx);
@@ -3325,7 +2923,7 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id,
     RootedObject obj2(cx);
     RootedShape shape(cx);
 
-    if (!LookupPropertyById(cx, obj, id, &obj2, &shape))
+    if (!JSObject::lookupGeneric(cx, obj, id, &obj2, &shape))
         return false;
 
     desc.clear();
@@ -5944,13 +5542,13 @@ JS_ResetDefaultLocale(JSRuntime *rt)
 }
 
 JS_PUBLIC_API(void)
-JS_SetLocaleCallbacks(JSRuntime *rt, JSLocaleCallbacks *callbacks)
+JS_SetLocaleCallbacks(JSRuntime *rt, const JSLocaleCallbacks *callbacks)
 {
     AssertHeapIsIdle(rt);
     rt->localeCallbacks = callbacks;
 }
 
-JS_PUBLIC_API(JSLocaleCallbacks *)
+JS_PUBLIC_API(const JSLocaleCallbacks *)
 JS_GetLocaleCallbacks(JSRuntime *rt)
 {
     /* This function can be called by a finalizer. */

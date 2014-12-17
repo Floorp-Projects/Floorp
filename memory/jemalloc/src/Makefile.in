@@ -48,7 +48,7 @@ cfgoutputs_in := $(addprefix $(srcroot),@cfgoutputs_in@)
 cfgoutputs_out := @cfgoutputs_out@
 enable_autogen := @enable_autogen@
 enable_code_coverage := @enable_code_coverage@
-enable_experimental := @enable_experimental@
+enable_valgrind := @enable_valgrind@
 enable_zone_allocator := @enable_zone_allocator@
 DSO_LDFLAGS = @DSO_LDFLAGS@
 SOREV = @SOREV@
@@ -83,6 +83,9 @@ C_SRCS := $(srcroot)src/jemalloc.c $(srcroot)src/arena.c \
 	$(srcroot)src/mb.c $(srcroot)src/mutex.c $(srcroot)src/prof.c \
 	$(srcroot)src/quarantine.c $(srcroot)src/rtree.c $(srcroot)src/stats.c \
 	$(srcroot)src/tcache.c $(srcroot)src/util.c $(srcroot)src/tsd.c
+ifeq ($(enable_valgrind), 1)
+C_SRCS += $(srcroot)src/valgrind.c
+endif
 ifeq ($(enable_zone_allocator), 1)
 C_SRCS += $(srcroot)src/zone.c
 endif
@@ -98,26 +101,36 @@ DSOS := $(objroot)lib/$(LIBJEMALLOC).$(SOREV)
 ifneq ($(SOREV),$(SO))
 DSOS += $(objroot)lib/$(LIBJEMALLOC).$(SO)
 endif
+PC := $(objroot)jemalloc.pc
 MAN3 := $(objroot)doc/jemalloc$(install_suffix).3
 DOCS_XML := $(objroot)doc/jemalloc$(install_suffix).xml
 DOCS_HTML := $(DOCS_XML:$(objroot)%.xml=$(srcroot)%.html)
 DOCS_MAN3 := $(DOCS_XML:$(objroot)%.xml=$(srcroot)%.3)
 DOCS := $(DOCS_HTML) $(DOCS_MAN3)
-C_TESTLIB_SRCS := $(srcroot)test/src/math.c $(srcroot)test/src/mtx.c \
-	$(srcroot)test/src/SFMT.c $(srcroot)test/src/test.c \
-	$(srcroot)test/src/thd.c
+C_TESTLIB_SRCS := $(srcroot)test/src/btalloc.c $(srcroot)test/src/btalloc_0.c \
+	$(srcroot)test/src/btalloc_1.c $(srcroot)test/src/math.c \
+	$(srcroot)test/src/mtx.c $(srcroot)test/src/SFMT.c \
+	$(srcroot)test/src/test.c $(srcroot)test/src/thd.c \
+	$(srcroot)test/src/timer.c
 C_UTIL_INTEGRATION_SRCS := $(srcroot)src/util.c
-TESTS_UNIT := $(srcroot)test/unit/bitmap.c \
+TESTS_UNIT := $(srcroot)test/unit/atomic.c \
+	$(srcroot)test/unit/bitmap.c \
 	$(srcroot)test/unit/ckh.c \
 	$(srcroot)test/unit/hash.c \
 	$(srcroot)test/unit/junk.c \
+	$(srcroot)test/unit/junk_alloc.c \
+	$(srcroot)test/unit/junk_free.c \
+	$(srcroot)test/unit/lg_chunk.c \
 	$(srcroot)test/unit/mallctl.c \
 	$(srcroot)test/unit/math.c \
 	$(srcroot)test/unit/mq.c \
 	$(srcroot)test/unit/mtx.c \
 	$(srcroot)test/unit/prof_accum.c \
+	$(srcroot)test/unit/prof_active.c \
 	$(srcroot)test/unit/prof_gdump.c \
 	$(srcroot)test/unit/prof_idump.c \
+	$(srcroot)test/unit/prof_reset.c \
+	$(srcroot)test/unit/prof_thread_name.c \
 	$(srcroot)test/unit/ql.c \
 	$(srcroot)test/unit/qr.c \
 	$(srcroot)test/unit/quarantine.c \
@@ -128,23 +141,18 @@ TESTS_UNIT := $(srcroot)test/unit/bitmap.c \
 	$(srcroot)test/unit/tsd.c \
 	$(srcroot)test/unit/util.c \
 	$(srcroot)test/unit/zero.c
-TESTS_UNIT_AUX := $(srcroot)test/unit/prof_accum_a.c \
-	$(srcroot)test/unit/prof_accum_b.c
 TESTS_INTEGRATION := $(srcroot)test/integration/aligned_alloc.c \
 	$(srcroot)test/integration/allocated.c \
+	$(srcroot)test/integration/sdallocx.c \
 	$(srcroot)test/integration/mallocx.c \
-	$(srcroot)test/integration/mremap.c \
+	$(srcroot)test/integration/MALLOCX_ARENA.c \
 	$(srcroot)test/integration/posix_memalign.c \
 	$(srcroot)test/integration/rallocx.c \
 	$(srcroot)test/integration/thread_arena.c \
 	$(srcroot)test/integration/thread_tcache_enabled.c \
-	$(srcroot)test/integration/xallocx.c
-ifeq ($(enable_experimental), 1)
-TESTS_INTEGRATION += $(srcroot)test/integration/allocm.c \
-	$(srcroot)test/integration/MALLOCX_ARENA.c \
-	$(srcroot)test/integration/rallocm.c
-endif
-TESTS_STRESS :=
+	$(srcroot)test/integration/xallocx.c \
+	$(srcroot)test/integration/chunk.c
+TESTS_STRESS := $(srcroot)test/stress/microbench.c
 TESTS := $(TESTS_UNIT) $(TESTS_INTEGRATION) $(TESTS_STRESS)
 
 C_OBJS := $(C_SRCS:$(srcroot)%.c=$(objroot)%.$(O))
@@ -157,10 +165,9 @@ C_TESTLIB_STRESS_OBJS := $(C_TESTLIB_SRCS:$(srcroot)%.c=$(objroot)%.stress.$(O))
 C_TESTLIB_OBJS := $(C_TESTLIB_UNIT_OBJS) $(C_TESTLIB_INTEGRATION_OBJS) $(C_UTIL_INTEGRATION_OBJS) $(C_TESTLIB_STRESS_OBJS)
 
 TESTS_UNIT_OBJS := $(TESTS_UNIT:$(srcroot)%.c=$(objroot)%.$(O))
-TESTS_UNIT_AUX_OBJS := $(TESTS_UNIT_AUX:$(srcroot)%.c=$(objroot)%.$(O))
 TESTS_INTEGRATION_OBJS := $(TESTS_INTEGRATION:$(srcroot)%.c=$(objroot)%.$(O))
 TESTS_STRESS_OBJS := $(TESTS_STRESS:$(srcroot)%.c=$(objroot)%.$(O))
-TESTS_OBJS := $(TESTS_UNIT_OBJS) $(TESTS_UNIT_AUX_OBJS) $(TESTS_INTEGRATION_OBJS) $(TESTS_STRESS_OBJS)
+TESTS_OBJS := $(TESTS_UNIT_OBJS) $(TESTS_INTEGRATION_OBJS) $(TESTS_STRESS_OBJS)
 
 .PHONY: all dist build_doc_html build_doc_man build_doc
 .PHONY: install_bin install_include install_lib
@@ -209,18 +216,12 @@ $(C_TESTLIB_STRESS_OBJS): $(objroot)test/src/%.stress.$(O): $(srcroot)test/src/%
 $(C_TESTLIB_STRESS_OBJS): CPPFLAGS += -DJEMALLOC_STRESS_TEST -DJEMALLOC_STRESS_TESTLIB
 $(C_TESTLIB_OBJS): CPPFLAGS += -I$(srcroot)test/include -I$(objroot)test/include
 $(TESTS_UNIT_OBJS): CPPFLAGS += -DJEMALLOC_UNIT_TEST
-$(TESTS_UNIT_AUX_OBJS): CPPFLAGS += -DJEMALLOC_UNIT_TEST
-define make-unit-link-dep
-$(1): TESTS_UNIT_LINK_OBJS += $(2)
-$(1): $(2)
-endef
-$(foreach test, $(TESTS_UNIT:$(srcroot)test/unit/%.c=$(objroot)test/unit/%$(EXE)), $(eval $(call make-unit-link-dep,$(test),$(filter $(test:%=%_a.$(O)) $(test:%=%_b.$(O)),$(TESTS_UNIT_AUX_OBJS)))))
 $(TESTS_INTEGRATION_OBJS): CPPFLAGS += -DJEMALLOC_INTEGRATION_TEST
 $(TESTS_STRESS_OBJS): CPPFLAGS += -DJEMALLOC_STRESS_TEST
 $(TESTS_OBJS): $(objroot)test/%.$(O): $(srcroot)test/%.c
 $(TESTS_OBJS): CPPFLAGS += -I$(srcroot)test/include -I$(objroot)test/include
 ifneq ($(IMPORTLIB),$(SO))
-$(C_OBJS): CPPFLAGS += -DDLLEXPORT
+$(C_OBJS) $(C_JET_OBJS): CPPFLAGS += -DDLLEXPORT
 endif
 
 ifndef CC_MM
@@ -229,7 +230,7 @@ HEADER_DIRS = $(srcroot)include/jemalloc/internal \
 	$(objroot)include/jemalloc $(objroot)include/jemalloc/internal
 HEADERS = $(wildcard $(foreach dir,$(HEADER_DIRS),$(dir)/*.h))
 $(C_OBJS) $(C_PIC_OBJS) $(C_JET_OBJS) $(C_TESTLIB_OBJS) $(TESTS_OBJS): $(HEADERS)
-$(TESTS_OBJS): $(objroot)test/unit/jemalloc_test.h
+$(TESTS_OBJS): $(objroot)test/include/test/jemalloc_test.h
 endif
 
 $(C_OBJS) $(C_PIC_OBJS) $(C_JET_OBJS) $(C_TESTLIB_OBJS) $(TESTS_OBJS): %.$(O):
@@ -301,7 +302,14 @@ install_lib_static: $(STATIC_LIBS)
 	install -m 755 $$l $(LIBDIR); \
 done
 
-install_lib: install_lib_shared install_lib_static
+install_lib_pc: $(PC)
+	install -d $(LIBDIR)/pkgconfig
+	@for l in $(PC); do \
+	echo "install -m 644 $$l $(LIBDIR)/pkgconfig"; \
+	install -m 644 $$l $(LIBDIR)/pkgconfig; \
+done
+
+install_lib: install_lib_shared install_lib_static install_lib_pc
 
 install_doc_html:
 	install -d $(DATADIR)/doc/jemalloc$(install_suffix)
@@ -400,7 +408,6 @@ clean:
 	rm -f $(objroot)*.gcov.*
 
 distclean: clean
-	rm -rf $(objroot)autom4te.cache
 	rm -f $(objroot)bin/jemalloc.sh
 	rm -f $(objroot)config.log
 	rm -f $(objroot)config.status

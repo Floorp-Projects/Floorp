@@ -89,7 +89,6 @@ hardware (via AudioStream).
 #include "MediaDecoderReader.h"
 #include "MediaDecoderOwner.h"
 #include "MediaMetadataManager.h"
-#include "MediaDataDecodedListener.h"
 
 class nsITimer;
 
@@ -387,7 +386,8 @@ public:
     OnNotDecoded(MediaData::VIDEO_DATA, aReason);
   }
 
-  void OnSeekCompleted(nsresult aResult);
+  void OnSeekCompleted();
+  void OnSeekFailed(nsresult aResult);
 
 private:
   void AcquireMonitorAndInvokeDecodeError();
@@ -443,8 +443,6 @@ protected:
   MediaQueue<VideoData>& VideoQueue() { return mVideoQueue; }
 
   nsresult FinishDecodeFirstFrame();
-
-  RefPtr<MediaDataDecodedListener<MediaDecoderStateMachine>> mMediaDecodedListener;
 
   nsAutoPtr<MetadataTags> mMetadataTags;
 
