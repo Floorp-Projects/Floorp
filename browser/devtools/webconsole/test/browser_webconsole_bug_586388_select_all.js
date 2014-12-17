@@ -20,15 +20,15 @@ let test = asyncTest(function* () {
   performTestsAfterOutput(hud);
 })
 
-function testSelectionWhenMovingBetweenBoxes(aHud) {
+let testSelectionWhenMovingBetweenBoxes = Task.async(function *(aHud) {
   let hud = aHud;
   let jsterm = hud.jsterm;
 
   // Fill the console with some output.
   jsterm.clearOutput();
-  jsterm.execute("1 + 2");
-  jsterm.execute("3 + 4");
-  jsterm.execute("5 + 6");
+  yield jsterm.execute("1 + 2");
+  yield jsterm.execute("3 + 4");
+  yield jsterm.execute("5 + 6");
 
   return waitForMessages({
     webconsole: hud,
@@ -45,7 +45,7 @@ function testSelectionWhenMovingBetweenBoxes(aHud) {
       category: CATEGORY_OUTPUT,
     }],
   });
-}
+});
 
 function performTestsAfterOutput(aHud) {
   let hud = aHud;

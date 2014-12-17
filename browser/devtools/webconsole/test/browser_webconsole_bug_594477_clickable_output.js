@@ -114,7 +114,7 @@ function networkPanelHidden() {
 
     // Done with the network output. Now test the jsterm output and the property
     // panel.
-    HUD.jsterm.execute("document", (msg) => {
+    HUD.jsterm.execute("document").then((msg) => {
       info("jsterm execute 'document' callback");
 
       HUD.jsterm.once("variablesview-open", deferred.resolve);

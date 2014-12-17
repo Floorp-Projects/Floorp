@@ -69,7 +69,7 @@ let test = asyncTest(function* () {
   yield complete(jsterm.COMPLETE_HINT_ONLY);
 
   is(jsterm.completeNode.value, "    ment", "'docu' completion");
-  jsterm.execute();
+  yield jsterm.execute();
   is(jsterm.completeNode.value, "", "clear completion on execute()");
 
   // Test multi-line completion works

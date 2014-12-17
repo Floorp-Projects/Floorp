@@ -24,7 +24,7 @@ function consoleOpened(hud)
   gWebConsole = hud;
   gJSTerm = hud.jsterm;
   gToolbox = gDevTools.getToolbox(hud.target);
-  gJSTerm.execute("document.querySelectorAll('p')", onQSAexecuted);
+  gJSTerm.execute("document.querySelectorAll('p')").then(onQSAexecuted);
 }
 
 function onQSAexecuted(msg)

@@ -25,7 +25,7 @@ let test = asyncTest(function*() {
 
   for each (var item in executeList) {
     input.value = item;
-    jsterm.execute();
+    yield jsterm.execute();
   }
 
   for (var i = executeList.length - 1; i != -1; i--) {
