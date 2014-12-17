@@ -271,6 +271,23 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
                                          borderPadding, lineWM, frameWM);
 }
 
+#ifdef DEBUG
+static void
+SanityCheckRubyPosition(int8_t aRubyPosition)
+{
+  uint8_t horizontalPosition = aRubyPosition &
+    (NS_STYLE_RUBY_POSITION_LEFT | NS_STYLE_RUBY_POSITION_RIGHT);
+  MOZ_ASSERT(horizontalPosition == NS_STYLE_RUBY_POSITION_LEFT ||
+             horizontalPosition == NS_STYLE_RUBY_POSITION_RIGHT);
+  uint8_t verticalPosition = aRubyPosition &
+    (NS_STYLE_RUBY_POSITION_OVER | NS_STYLE_RUBY_POSITION_UNDER |
+     NS_STYLE_RUBY_POSITION_INTER_CHARACTER);
+  MOZ_ASSERT(verticalPosition == NS_STYLE_RUBY_POSITION_OVER ||
+             verticalPosition == NS_STYLE_RUBY_POSITION_UNDER ||
+             verticalPosition == NS_STYLE_RUBY_POSITION_INTER_CHARACTER);
+}
+#endif
+
 void
 nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
                            const nsHTMLReflowState& aReflowState,
@@ -356,6 +373,16 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
   }
 
   nsRect baseRect = aBaseContainer->GetRect();
+  // We need to position our rtc frames on one side or the other of the
+  // base container's rect, using a coordinate space that's relative to
+  // the ruby frame. Right now, the base container's rect's block-axis
+  // position is relative to the block container frame containing the
+  // lines, so we use 0 instead. (i.e. we assume that the base container
+  // is adjacent to the ruby frame's block-start edge.)
+  // XXX We may need to add border/padding here. See bug 1055667.
+  (lineWM.IsVertical() ? baseRect.x : baseRect.y) = 0;
+  // The rect for offsets of text containers.
+  nsRect offsetRect = baseRect;
   for (uint32_t i = 0; i < rtcCount; i++) {
     nsRubyTextContainerFrame* textContainer = textContainers[i];
     nsReflowStatus textReflowStatus;
@@ -376,14 +403,36 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
                  "Ruby text container must not break itself inside");
     textContainer->SetSize(LogicalSize(lineWM, textMetrics.ISize(lineWM),
                                        textMetrics.BSize(lineWM)));
+
     nscoord x, y;
     nscoord bsize = textMetrics.BSize(lineWM);
+    uint8_t rubyPosition = textContainer->StyleText()->mRubyPosition;
+#ifdef DEBUG
+    SanityCheckRubyPosition(rubyPosition);
+#endif
     if (lineWM.IsVertical()) {
-      x = lineWM.IsVerticalLR() ? -bsize : baseRect.XMost();
-      y = baseRect.Y();
+      // writing-mode is vertical, so bsize is the annotation's *width*
+      if (rubyPosition & NS_STYLE_RUBY_POSITION_LEFT) {
+        x = offsetRect.X() - bsize;
+        offsetRect.SetLeftEdge(x);
+      } else {
+        x = offsetRect.XMost();
+        offsetRect.SetRightEdge(x + bsize);
+      }
+      y = offsetRect.Y();
     } else {
-      x = baseRect.X();
-      y = -bsize;
+      // writing-mode is horizontal, so bsize is the annotation's *height*
+      x = offsetRect.X();
+      if (rubyPosition & NS_STYLE_RUBY_POSITION_OVER) {
+        y = offsetRect.Y() - bsize;
+        offsetRect.SetTopEdge(y);
+      } else if (rubyPosition & NS_STYLE_RUBY_POSITION_UNDER) {
+        y = offsetRect.YMost();
+        offsetRect.SetBottomEdge(y + bsize);
+      } else {
+        // XXX inter-character support in bug 1055672
+        MOZ_ASSERT_UNREACHABLE("Unsupported ruby-position");
+      }
     }
     FinishReflowChild(textContainer, aPresContext, textMetrics,
                       &textReflowState, x, y, 0);
