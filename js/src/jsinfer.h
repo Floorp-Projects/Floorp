@@ -985,6 +985,8 @@ class TypeNewScript
         js_free(initializerList);
     }
 
+    static inline void writeBarrierPre(TypeNewScript *newScript);
+
     bool analyzed() const {
         if (preliminaryObjects) {
             MOZ_ASSERT(!templateObject());
