@@ -13,6 +13,7 @@
 #include "mozilla/dom/Animation.h" // for Animation
 #include "mozilla/dom/AnimationPlayerBinding.h" // for AnimationPlayState
 #include "mozilla/dom/AnimationTimeline.h" // for AnimationTimeline
+#include "mozilla/dom/Promise.h" // for Promise
 #include "nsCSSProperty.h" // for nsCSSProperty
 
 // X11 has a #define for CurrentTime.
@@ -66,6 +67,7 @@ public:
   Nullable<TimeDuration> GetStartTime() const { return mStartTime; }
   Nullable<TimeDuration> GetCurrentTime() const;
   AnimationPlayState PlayState() const;
+  Promise* GetReady(ErrorResult& aRv);
   virtual void Play();
   virtual void Pause();
   bool IsRunningOnCompositor() const { return mIsRunningOnCompositor; }
@@ -141,6 +143,12 @@ protected:
   // The beginning of the delay period.
   Nullable<TimeDuration> mStartTime; // Timeline timescale
   Nullable<TimeDuration> mHoldTime;  // Player timescale
+
+  // A Promise that is replaced with a new object on each call to Play()
+  // (and in future Pause()) and fulfilled when Play() is successfully
+  // completed. The initial object is created lazily by GetReady().
+  nsRefPtr<Promise> mReady;
+
   bool mIsRunningOnCompositor;
   // Indicates whether we were in the finished state during our
   // most recent unthrottled sample (our last ComposeStyle call).
