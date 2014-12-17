@@ -7738,7 +7738,8 @@ XPCOMUtils.defineLazyGetter(ResponsiveUI, "ResponsiveUIManager", function() {
 });
 
 function openEyedropper() {
-  var eyedropper = new this.Eyedropper(this);
+  var eyedropper = new this.Eyedropper(this, { context: "menu",
+                                               copyOnSelect: true });
   eyedropper.open();
 }
 
