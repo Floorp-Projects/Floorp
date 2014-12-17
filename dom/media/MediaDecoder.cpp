@@ -1629,6 +1629,10 @@ void MediaDecoder::UnpinForSeek()
 bool MediaDecoder::CanPlayThrough()
 {
   Statistics stats = GetStatistics();
+  if ((stats.mTotalBytes < 0 && stats.mDownloadRateReliable) ||
+      (stats.mTotalBytes >= 0 && stats.mTotalBytes == stats.mDownloadPosition)) {
+    return true;
+  }
   if (!stats.mDownloadRateReliable || !stats.mPlaybackRateReliable) {
     return false;
   }
@@ -1652,8 +1656,7 @@ bool MediaDecoder::CanPlayThrough()
   // required near the start of the media, when not much data is downloaded.
   int64_t readAheadMargin =
     static_cast<int64_t>(stats.mPlaybackRate * CAN_PLAY_THROUGH_MARGIN);
-  return stats.mTotalBytes == stats.mDownloadPosition ||
-         stats.mDownloadPosition > stats.mPlaybackPosition + readAheadMargin;
+  return stats.mDownloadPosition > stats.mPlaybackPosition + readAheadMargin;
 }
 
 #ifdef MOZ_EME
