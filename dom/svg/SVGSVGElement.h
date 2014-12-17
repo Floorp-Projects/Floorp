@@ -148,14 +148,6 @@ public:
   // public helpers:
 
   /**
-   * Returns the user-unit width/height if those dimensions are not specified
-   * as percentage values. If they are specified as percentage values then this
-   * element does not have intrinsic width/height and these methods return NaN.
-   */
-  float GetIntrinsicWidth() const;
-  float GetIntrinsicHeight() const;
-
-  /**
    * Returns true if this element has a base/anim value for its "viewBox"
    * attribute that defines a viewBox rectangle with finite values, or
    * if there is a view element overriding this element's viewBox and it
