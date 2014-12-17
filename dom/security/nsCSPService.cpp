@@ -271,26 +271,30 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
 {
   nsAsyncRedirectAutoCallback autoCallback(callback);
 
+  nsCOMPtr<nsIURI> newUri;
+  nsresult rv = newChannel->GetURI(getter_AddRefs(newUri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // No need to continue processing if CSP is disabled or if the protocol
+  // is *not* subject to CSP.
+  // Please note, the correct way to opt-out of CSP using a custom
+  // protocolHandler is to set one of the nsIProtocolHandler flags
+  // that are whitelistet in subjectToCSP()
+  if (!sCSPEnabled || !subjectToCSP(newUri)) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsILoadInfo> loadInfo;
-  nsresult rv = oldChannel->GetLoadInfo(getter_AddRefs(loadInfo));
+  rv = oldChannel->GetLoadInfo(getter_AddRefs(loadInfo));
 
   // if no loadInfo on the channel, nothing for us to do
   if (!loadInfo) {
     return NS_OK;
   }
 
-  // The loadInfo must not necessarily contain a Node, hence we try to query
-  // the CSP in the following order:
-  //   a) Get the Node, the Principal of that Node, and the CSP of that Principal
-  //   b) Get the Principal and the CSP of that Principal
-
-  nsCOMPtr<nsINode> loadingNode = loadInfo->LoadingNode();
-  nsCOMPtr<nsIPrincipal> principal = loadingNode ?
-                                     loadingNode->NodePrincipal() :
-                                     loadInfo->LoadingPrincipal();
-  NS_ASSERTION(principal, "Can not evaluate CSP without a principal");
+  // Get the LoadingPrincipal and CSP from the loadInfo
   nsCOMPtr<nsIContentSecurityPolicy> csp;
-  rv = principal->GetCsp(getter_AddRefs(csp));
+  rv = loadInfo->LoadingPrincipal()->GetCsp(getter_AddRefs(csp));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // if there is no CSP, nothing for us to do
@@ -305,10 +309,6 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
    * We check if the CSP permits this host for this type of load, if not,
    * we cancel the load now.
    */
-
-  nsCOMPtr<nsIURI> newUri;
-  rv = newChannel->GetURI(getter_AddRefs(newUri));
-  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIURI> originalUri;
   rv = oldChannel->GetOriginalURI(getter_AddRefs(originalUri));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -331,12 +331,14 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
            ("CSPService::AsyncOnChannelRedirect called for %s",
             newUriSpec.get()));
   }
-  if (aDecision == 1)
+  if (aDecision == true) {
     PR_LOG(gCspPRLog, PR_LOG_DEBUG,
            ("CSPService::AsyncOnChannelRedirect ALLOWING request."));
-  else
+  }
+  else {
     PR_LOG(gCspPRLog, PR_LOG_DEBUG,
            ("CSPService::AsyncOnChannelRedirect CANCELLING request."));
+  }
 #endif
 
   // if ShouldLoad doesn't accept the load, cancel the request
