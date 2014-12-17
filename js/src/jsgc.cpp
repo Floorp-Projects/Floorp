@@ -5594,8 +5594,23 @@ GCRuntime::compactPhase(bool lastGC)
 #ifdef DEBUG
     CheckHashTablesAfterMovingGC(rt);
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-        if (CanRelocateZone(rt, zone) && !zone->isPreservingCode())
+        if (CanRelocateZone(rt, zone)) {
+            MOZ_ASSERT(!zone->isPreservingCode());
             zone->allocator.arenas.checkEmptyFreeLists();
+
+            // Check that we did as much compaction as we should have. There
+            // should always be less than one arena's worth of free cells.
+            for (size_t i = 0; i < FINALIZE_LIMIT; i++) {
+                size_t thingsPerArena = Arena::thingsPerArena(Arena::thingSize(AllocKind(i)));
+                if (CanRelocateAllocKind(AllocKind(i))) {
+                    ArenaList &al = zone->allocator.arenas.arenaLists[i];
+                    size_t freeCells = 0;
+                    for (ArenaHeader *arena = al.arenaAfterCursor(); arena; arena = arena->next)
+                        freeCells += arena->countFreeCells();
+                    MOZ_ASSERT(freeCells < thingsPerArena);
+                }
+            }
+        }
     }
 #endif
 
