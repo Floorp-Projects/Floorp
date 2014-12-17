@@ -40,9 +40,7 @@ class Telephony MOZ_FINAL : public DOMEventTargetHelper,
    * also bug 775997 comment #51.
    */
   class Listener;
-  class EnumerationAck;
 
-  friend class EnumerationAck;
   friend class telephony::TelephonyDialCallback;
 
   nsCOMPtr<nsITelephonyService> mService;
@@ -53,7 +51,7 @@ class Telephony MOZ_FINAL : public DOMEventTargetHelper,
 
   nsRefPtr<TelephonyCallGroup> mGroup;
 
-  bool mEnumerated;
+  nsRefPtr<Promise> mReadyPromise;
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -109,7 +107,9 @@ public:
   already_AddRefed<TelephonyCallGroup>
   ConferenceGroup() const;
 
-  IMPL_EVENT_HANDLER(ready)
+  already_AddRefed<Promise>
+  GetReady(ErrorResult& aRv) const;
+
   IMPL_EVENT_HANDLER(incoming)
   IMPL_EVENT_HANDLER(callschanged)
   IMPL_EVENT_HANDLER(remoteheld)
@@ -145,8 +145,6 @@ public:
   {
     return mCalls;
   }
-
-  virtual void EventListenerAdded(nsIAtom* aType) MOZ_OVERRIDE;
 
 private:
   explicit Telephony(nsPIDOMWindow* aOwner);
@@ -197,9 +195,6 @@ private:
 
   nsresult
   DispatchCallEvent(const nsAString& aType, TelephonyCall* aCall);
-
-  void
-  EnqueueEnumerationAck();
 
   already_AddRefed<TelephonyCall>
   GetCall(uint32_t aServiceId, uint32_t aCallIndex);
