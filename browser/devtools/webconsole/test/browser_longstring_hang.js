@@ -4,61 +4,50 @@
 
 // Test that very long strings do not hang the browser.
 
-function test()
-{
-  addTab("http://example.com/browser/browser/devtools/webconsole/test/test-bug-859170-longstring-hang.html");
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-859170-longstring-hang.html";
 
-  let hud = null;
+let test = asyncTest(function* () {
+  yield loadTab(TEST_URI);
 
-  gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
-    gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
-    openConsole(null, performTest);
-  }, true);
+  let hud = yield openConsole();
 
-  function performTest(aHud)
-  {
-    hud = aHud;
-    info("wait for the initial long string");
+  info("wait for the initial long string");
 
-    waitForMessages({
-      webconsole: hud,
-      messages: [
-        {
-          name: "find 'foobar', no 'foobaz', in long string output",
-          text: "foobar",
-          noText: "foobaz",
-          category: CATEGORY_WEBDEV,
-          longString: true,
-        },
-      ],
-    }).then(onInitialString);
-  }
+  let results = yield waitForMessages({
+    webconsole: hud,
+    messages: [
+      {
+        name: "find 'foobar', no 'foobaz', in long string output",
+        text: "foobar",
+        noText: "foobaz",
+        category: CATEGORY_WEBDEV,
+        longString: true,
+      },
+    ],
+  });
 
-  function onInitialString(aResults)
-  {
-    let clickable = aResults[0].longStrings[0];
-    ok(clickable, "long string ellipsis is shown");
-    clickable.scrollIntoView(false);
+  let clickable = results[0].longStrings[0];
+  ok(clickable, "long string ellipsis is shown");
+  clickable.scrollIntoView(false);
 
-    EventUtils.synthesizeMouse(clickable, 2, 2, {}, hud.iframeWindow);
+  EventUtils.synthesizeMouse(clickable, 2, 2, {}, hud.iframeWindow);
 
-    info("wait for long string expansion");
+  info("wait for long string expansion");
 
-    waitForMessages({
-      webconsole: hud,
-      messages: [
-        {
-          name: "find 'foobaz' after expand, but no 'boom!' at the end",
-          text: "foobaz",
-          noText: "boom!",
-          category: CATEGORY_WEBDEV,
-          longString: false,
-        },
-        {
-          text: "too long to be displayed",
-          longString: false,
-        },
-      ],
-    }).then(finishTest);
-  }
-}
+  yield waitForMessages({
+    webconsole: hud,
+    messages: [
+      {
+        name: "find 'foobaz' after expand, but no 'boom!' at the end",
+        text: "foobaz",
+        noText: "boom!",
+        category: CATEGORY_WEBDEV,
+        longString: false,
+      },
+      {
+        text: "too long to be displayed",
+        longString: false,
+      },
+    ],
+  });
+});

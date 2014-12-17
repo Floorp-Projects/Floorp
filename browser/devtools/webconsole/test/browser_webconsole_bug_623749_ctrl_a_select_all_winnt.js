@@ -4,16 +4,14 @@
 // Test for https://bugzilla.mozilla.org/show_bug.cgi?id=623749
 // Map Control + A to Select All, In the web console input, on Windows
 
-function test() {
-  addTab("data:text/html;charset=utf-8,Test console for bug 623749");
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, runTest);
-  }, true);
-}
+const TEST_URI = "data:text/html;charset=utf-8,Test console for bug 623749";
 
-function runTest(HUD) {
-  let jsterm = HUD.jsterm;
+let test = asyncTest(function* () {
+  yield loadTab(TEST_URI);
+
+  let hud = yield openConsole();
+
+  let jsterm = hud.jsterm;
   jsterm.setInputValue("Ignore These Four Words");
   let inputNode = jsterm.inputNode;
 
@@ -27,6 +25,4 @@ function runTest(HUD) {
   inputNode.selectionStart = 0;
   EventUtils.synthesizeKey("e", { ctrlKey: true });
   is(inputNode.selectionStart, 0, "Control + E does not move to end of input");
-
-  executeSoon(finishTest);
-}
+});

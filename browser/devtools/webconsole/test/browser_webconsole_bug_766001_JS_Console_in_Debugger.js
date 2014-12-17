@@ -19,6 +19,7 @@ function test() {
 
   function* runner() {
     expectUncaughtException();
+
     let {tab} = yield loadTab(TEST_URI);
     hud = yield openConsole(tab);
 

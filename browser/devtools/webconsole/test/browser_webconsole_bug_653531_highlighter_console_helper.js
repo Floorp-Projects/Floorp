@@ -6,13 +6,13 @@
 ///////////////////
 //
 // Whitelisting this test.
-// As part of bug 1077403, the leaking uncaught rejection should be fixed. 
+// As part of bug 1077403, the leaking uncaught rejection should be fixed.
 //
 thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Protocol error (unknownError): TypeError: this.conn.getActor(...) is null");
 
 // Tests that the $0 console helper works as intended.
 
-let inspector, h1;
+let inspector, h1, outputNode;
 
 function createDocument() {
   let doc = content.document;
@@ -50,7 +50,7 @@ function createDocument() {
 
 function setupHighlighterTests() {
   ok(h1, "we have the header node");
-  openInspector(runSelectionTests);
+  openInspector().then(runSelectionTests);
 }
 
 let runSelectionTests = Task.async(function*(aInspector) {
@@ -95,7 +95,7 @@ function performWebConsoleTests(hud) {
     is(inspector.selection.node.textContent, "bug653531",
        "node successfully updated");
 
-    inspector = h1 = null;
+    inspector = h1 = outputNode = null;
     gBrowser.removeCurrentTab();
     finishTest();
   }

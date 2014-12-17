@@ -7,35 +7,51 @@
  *   Mihai Sucan <mihai.sucan@gmail.com>
  */
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-630733-response-redirect-headers.sjs";
+const TEST_URI = "data:text/html;charset=utf-8,<p>Web Console test for bug 630733";
+const TEST_URI2 = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-630733-response-redirect-headers.sjs";
 
 let lastFinishedRequests = {};
 let webConsoleClient;
 
+let test = asyncTest(function* () {
+  yield loadTab(TEST_URI);
+
+  let hud = yield openConsole();
+
+  yield consoleOpened(hud);
+  yield getHeaders();
+  yield getContent();
+
+  performTest();
+});
+
 function consoleOpened(hud)
 {
+  let deferred = promise.defer();
+
   webConsoleClient = hud.ui.webConsoleClient;
   hud.ui.setSaveRequestAndResponseBodies(true).then(() => {
     ok(hud.ui._saveRequestAndResponseBodies,
       "The saveRequestAndResponseBodies property was successfully set.");
 
-    HUDService.lastFinishedRequest.callback = requestDoneCallback;
-    content.location = TEST_URI;
+    HUDService.lastFinishedRequest.callback = (aHttpRequest)  => {
+      let status = aHttpRequest.response.status;
+      lastFinishedRequests[status] = aHttpRequest;
+      if ("301" in lastFinishedRequests &&
+          "404" in lastFinishedRequests) {
+        deferred.resolve();
+      }
+    }
+    content.location = TEST_URI2;
   });
-}
 
-function requestDoneCallback(aHttpRequest)
-{
-  let status = aHttpRequest.response.status;
-  lastFinishedRequests[status] = aHttpRequest;
-  if ("301" in lastFinishedRequests &&
-      "404" in lastFinishedRequests) {
-    getHeaders();
-  }
+  return deferred.promise;
 }
 
 function getHeaders()
 {
+  let deferred = promise.defer();
+
   HUDService.lastFinishedRequest.callback = null;
 
   ok("301" in lastFinishedRequests, "request 1: 301 Moved Permanently");
@@ -48,13 +64,16 @@ function getHeaders()
       webConsoleClient.getResponseHeaders(lastFinishedRequests["404"].actor,
         function (aResponse) {
           lastFinishedRequests["404"].response.headers = aResponse.headers;
-          executeSoon(getContent);
+          executeSoon(deferred.resolve);
         });
     });
+  return deferred.promise;
 }
 
 function getContent()
 {
+  let deferred = promise.defer();
+
   webConsoleClient.getResponseContent(lastFinishedRequests["301"].actor,
     function (aResponse) {
       lastFinishedRequests["301"].response.content = aResponse.content;
@@ -67,9 +86,10 @@ function getContent()
             aResponse.contentDiscarded;
 
           webConsoleClient = null;
-          executeSoon(performTest);
+          executeSoon(deferred.resolve);
         });
     });
+  return deferred.promise;
 }
 
 function performTest()
@@ -106,16 +126,5 @@ function performTest()
   isnot(body.indexOf("404"), -1,
         "body is correct for request 2");
 
-  lastFinishedRequests = null;
-  executeSoon(finishTest);
-}
-
-function test()
-{
-  addTab("data:text/html;charset=utf-8,<p>Web Console test for bug 630733");
-
-  browser.addEventListener("load", function onLoad(aEvent) {
-    browser.removeEventListener(aEvent.type, onLoad, true);
-    openConsole(null, consoleOpened);
-  }, true);
+  lastFinishedRequests = webConsoleClient = null;
 }

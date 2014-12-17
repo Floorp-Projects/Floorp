@@ -5,6 +5,8 @@
 // Tests that if a link without an onclick callback is clicked the link is
 // opened in a new tab and no exception occurs (bug 999236).
 
+"use strict";
+
 function test() {
   function* runner() {
     const TEST_EVAL_STRING = "document";
