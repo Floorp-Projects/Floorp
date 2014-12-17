@@ -5942,15 +5942,15 @@ AutoGCRooter::AutoGCRooter(ContextFriendFields *cx, ptrdiff_t tag)
     *stackTop = this;
 }
 
-#ifdef DEBUG
+#ifdef JS_DEBUG
 JS_PUBLIC_API(void)
-JS::AssertArgumentsAreSane(JSContext *cx, HandleValue value)
+JS::detail::AssertArgumentsAreSane(JSContext *cx, HandleValue value)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value);
 }
-#endif /* DEBUG */
+#endif /* JS_DEBUG */
 
 JS_PUBLIC_API(void *)
 JS_EncodeScript(JSContext *cx, HandleScript scriptArg, uint32_t *lengthp)
