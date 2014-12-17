@@ -26,10 +26,10 @@
 
 #include "ds/Sort.h"
 #include "gc/Heap.h"
+#include "js/Conversions.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ForkJoin.h"
 #include "vm/Interpreter.h"
-#include "vm/NumericConversions.h"
 #include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 #include "vm/TypedArrayCommon.h"
@@ -53,6 +53,7 @@ using mozilla::DebugOnly;
 using mozilla::IsNaN;
 
 using JS::AutoCheckCannotGC;
+using JS::ToUint32;
 
 bool
 js::GetLengthProperty(JSContext *cx, HandleObject obj, uint32_t *lengthp)

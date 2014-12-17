@@ -6,6 +6,7 @@
 
 #include "jit/BaselineIC.h"
 
+#include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/TemplateLib.h"
 
@@ -23,6 +24,7 @@
 # include "jit/PerfSpewer.h"
 #endif
 #include "jit/VMFunctions.h"
+#include "js/Conversions.h"
 #include "vm/Opcodes.h"
 #include "vm/TypedArrayCommon.h"
 
@@ -34,6 +36,7 @@
 #include "vm/ScopeObject-inl.h"
 #include "vm/StringObject-inl.h"
 
+using mozilla::BitwiseCast;
 using mozilla::DebugOnly;
 
 namespace js {
@@ -3053,7 +3056,7 @@ ICBinaryArith_DoubleWithInt32::Compiler::generateStubCode(MacroAssembler &masm)
         masm.push(intReg);
         masm.setupUnalignedABICall(1, scratchReg);
         masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js::ToInt32));
+        masm.callWithABI(mozilla::BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32));
         masm.storeCallResult(scratchReg);
         masm.pop(intReg);
 
@@ -3202,7 +3205,7 @@ ICUnaryArith_Double::Compiler::generateStubCode(MacroAssembler &masm)
         masm.bind(&truncateABICall);
         masm.setupUnalignedABICall(1, scratchReg);
         masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js::ToInt32));
+        masm.callWithABI(BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32));
         masm.storeCallResult(scratchReg);
 
         masm.bind(&doneTruncate);

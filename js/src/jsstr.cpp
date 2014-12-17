@@ -32,12 +32,12 @@
 
 #include "builtin/Intl.h"
 #include "builtin/RegExp.h"
+#include "js/Conversions.h"
 #if ENABLE_INTL_API
 #include "unicode/unorm.h"
 #endif
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
-#include "vm/NumericConversions.h"
 #include "vm/Opcodes.h"
 #include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"
@@ -57,6 +57,8 @@ using namespace js::unicode;
 
 using JS::Symbol;
 using JS::SymbolCode;
+using JS::ToInt32;
+using JS::ToUint32;
 
 using mozilla::AssertedCast;
 using mozilla::CheckedInt;
@@ -1662,7 +1664,7 @@ js::str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
             if (!ToNumber(cx, args[1], &d))
                 return false;
             if (!IsNaN(d)) {
-                d = ToInteger(d);
+                d = JS::ToInteger(d);
                 if (d <= 0)
                     start = 0;
                 else if (d < start)

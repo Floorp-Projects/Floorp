@@ -31,10 +31,10 @@
 #include "asmjs/AsmJSValidate.h"
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
+#include "js/Conversions.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
-#include "vm/NumericConversions.h"
 #include "vm/SharedArrayObject.h"
 #include "vm/TypedArrayCommon.h"
 #include "vm/WrapperObject.h"
@@ -55,6 +55,8 @@ using mozilla::PodCopy;
 using mozilla::PositiveInfinity;
 using JS::CanonicalizeNaN;
 using JS::GenericNaN;
+using JS::ToInt32;
+using JS::ToUint32;
 
 TypedArrayLayout SharedTypedArrayObject::layout_(true, // shared
                                                  false, // neuterable
