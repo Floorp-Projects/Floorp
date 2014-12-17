@@ -58,16 +58,16 @@ BrowserStreamParent::AnswerNPN_RequestRead(const IPCByteRanges& ranges,
   if (!mStream)
     return false;
 
-  if (ranges.size() > INT32_MAX)
+  if (ranges.Length() > INT32_MAX)
     return false;
 
-  nsAutoArrayPtr<NPByteRange> rp(new NPByteRange[ranges.size()]);
-  for (uint32_t i = 0; i < ranges.size(); ++i) {
+  nsAutoArrayPtr<NPByteRange> rp(new NPByteRange[ranges.Length()]);
+  for (uint32_t i = 0; i < ranges.Length(); ++i) {
     rp[i].offset = ranges[i].offset;
     rp[i].length = ranges[i].length;
     rp[i].next = &rp[i + 1];
   }
-  rp[ranges.size() - 1].next = nullptr;
+  rp[ranges.Length() - 1].next = nullptr;
 
   *result = mNPP->mNPNIface->requestread(mStream, rp);
   return true;
