@@ -705,7 +705,11 @@ LIRGeneratorX86Shared::visitSimdSplatX4(MSimdSplatX4 *ins)
         define(lir, ins);
         break;
       case MIRType_Float32x4:
-        defineReuseInput(lir, ins, 0);
+        // (Non-AVX) codegen actually wants the input and the output to be in
+        // the same register, but we can't currently use defineReuseInput
+        // because they have different types (scalar vs vector), so a spill slot
+        // for one may not be suitable for the other.
+        define(lir, ins);
         break;
       default:
         MOZ_CRASH("Unknown SIMD kind");

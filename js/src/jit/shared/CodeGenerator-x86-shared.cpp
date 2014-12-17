@@ -2142,8 +2142,9 @@ CodeGeneratorX86Shared::visitSimdSplatX4(LSimdSplatX4 *ins)
       }
       case MIRType_Float32x4: {
         FloatRegister r = ToFloatRegister(ins->getOperand(0));
-        MOZ_ASSERT(r == output);
-        masm.shufps(0, r, output);
+        if (r != output)
+            masm.movaps(r, output);
+        masm.shufps(0, output, output);
         break;
       }
       default:
