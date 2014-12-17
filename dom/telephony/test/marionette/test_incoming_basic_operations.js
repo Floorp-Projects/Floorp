@@ -19,16 +19,6 @@ function answer() {
     .then(() => gCheckAll(inCall, [inCall], "", [], [inInfo.active]));
 }
 
-function hangUp() {
-  return gHangUp(inCall)
-    .then(() => gCheckAll(null, [], "", [], []));
-}
-
-function remoteHangUp() {
-  return gRemoteHangUp(inCall)
-    .then(() => gCheckAll(null, [], "", [], []));
-}
-
 function hold() {
   return gHold(inCall)
     .then(() => gCheckAll(null, [inCall], "", [], [inInfo.held]));
@@ -37,6 +27,16 @@ function hold() {
 function resume() {
   return gResume(inCall)
     .then(() => gCheckAll(inCall, [inCall], "", [], [inInfo.active]));
+}
+
+function hangUp() {
+  return gHangUp(inCall)
+    .then(() => gCheckAll(null, [], "", [], []));
+}
+
+function remoteHangUp() {
+  return gRemoteHangUp(inCall)
+    .then(() => gCheckAll(null, [], "", [], []));
 }
 
 // Test cases.
