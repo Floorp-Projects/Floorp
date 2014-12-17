@@ -25,6 +25,7 @@ public:
     , mMonitor(aMonitorName)
     , mWidth(0)
     , mHeight(0)
+    , mProducedDuration(0)
     , mInitDone(false)
     , mHasDirectListeners(false)
     , mCaptureIndex(aIndex)
@@ -90,6 +91,8 @@ protected:
   // end of data protected by mMonitor
 
   nsTArray<SourceMediaStream*> mSources; // When this goes empty, we shut down HW
+
+  StreamTime mProducedDuration;
 
   bool mInitDone;
   bool mHasDirectListeners;

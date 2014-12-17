@@ -61,6 +61,8 @@ bool MediaEngineCameraVideoSource::AppendToTrack(SourceMediaStream* aSource,
   IntSize size(image ? mWidth : 0, image ? mHeight : 0);
   segment.AppendFrame(image.forget(), delta, size);
 
+  mProducedDuration += delta;
+
   // This is safe from any thread, and is safe if the track is Finished
   // or Destroyed.
   // This can fail if either a) we haven't added the track yet, or b)
