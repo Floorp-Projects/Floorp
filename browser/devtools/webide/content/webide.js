@@ -401,8 +401,10 @@ let UI = {
 
   autoConnectRuntime: function () {
     // Automatically reconnect to the previously selected runtime,
-    // if available and has an ID
-    if (AppManager.selectedRuntime || !this.lastConnectedRuntime) {
+    // if available and has an ID and feature is enabled
+    if (AppManager.selectedRuntime ||
+        !Services.prefs.getBoolPref("devtools.webide.autoConnectRuntime") ||
+        !this.lastConnectedRuntime) {
       return;
     }
     let [_, type, id] = this.lastConnectedRuntime.match(/^(\w+):(.+)$/);
