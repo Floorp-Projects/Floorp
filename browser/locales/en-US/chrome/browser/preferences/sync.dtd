@@ -78,6 +78,3 @@ both, to better adapt this sentence to their language.
 <!ENTITY welcome.createAccount.label "Create Account">
 
 <!ENTITY welcome.useOldSync.label "Using an older version of Sync?">
-
-<!-- Sync Migration -->
-<!ENTITY migrate.upgradeNeeded      "The sync account system is being discontinued. A new Firefox Account is required to sync.">
