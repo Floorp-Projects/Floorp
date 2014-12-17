@@ -14,6 +14,7 @@
 #include "nsIDocument.h"
 
 struct JSContext;
+class nsRefreshDriver;
 
 namespace mozilla {
 namespace dom {
@@ -26,6 +27,10 @@ public:
   {
   }
 
+protected:
+  virtual ~AnimationTimeline() { }
+
+public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AnimationTimeline)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(AnimationTimeline)
 
@@ -47,8 +52,7 @@ public:
 
 protected:
   TimeStamp GetCurrentTimeStamp() const;
-
-  virtual ~AnimationTimeline() { }
+  nsRefreshDriver* GetRefreshDriver() const;
 
   nsCOMPtr<nsIDocument> mDocument;
 
