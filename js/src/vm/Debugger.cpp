@@ -1061,7 +1061,7 @@ Debugger::newCompletionValue(JSContext *cx, JSTrapStatus status, Value value_,
     RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!obj ||
         !wrapDebuggeeValue(cx, &value) ||
-        !DefineNativeProperty(cx, obj, key, value, nullptr, nullptr, JSPROP_ENUMERATE))
+        !NativeDefineProperty(cx, obj, key, value, nullptr, nullptr, JSPROP_ENUMERATE))
     {
         return false;
     }
@@ -1126,7 +1126,7 @@ Debugger::parseResumptionValue(Maybe<AutoCompartment> &ac, bool ok, const Value 
     HandleNativeObject nobj = obj.as<NativeObject>();
 
     RootedValue v(cx, vp.get());
-    if (!NativeGet(cx, obj, nobj, shape, &v) || !unwrapDebuggeeValue(cx, &v))
+    if (!NativeGetExistingProperty(cx, obj, nobj, shape, &v) || !unwrapDebuggeeValue(cx, &v))
         return handleUncaughtException(ac, &v, callHook);
 
     ac.reset();
@@ -5739,7 +5739,7 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
         MOZ_ASSERT(frame.numActualArgs() <= 0x7fffffff);
         unsigned fargc = frame.numActualArgs();
         RootedValue fargcVal(cx, Int32Value(fargc));
-        if (!DefineNativeProperty(cx, argsobj, cx->names().length, fargcVal, nullptr, nullptr,
+        if (!NativeDefineProperty(cx, argsobj, cx->names().length, fargcVal, nullptr, nullptr,
                                   JSPROP_PERMANENT | JSPROP_READONLY))
         {
             return false;
@@ -5755,7 +5755,7 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
                 return false;
             id = INT_TO_JSID(i);
             if (!getobj ||
-                !DefineNativeProperty(cx, argsobj, id, UndefinedHandleValue,
+                !NativeDefineProperty(cx, argsobj, id, UndefinedHandleValue,
                                       JS_DATA_TO_FUNC_PTR(PropertyOp, getobj.get()), nullptr,
                                       JSPROP_ENUMERATE | JSPROP_SHARED | JSPROP_GETTER))
             {
@@ -6066,7 +6066,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
             id = keys[i];
             MutableHandleValue val = values[i];
             if (!cx->compartment()->wrap(cx, val) ||
-                !DefineNativeProperty(cx, nenv, id, val, nullptr, nullptr, 0))
+                !NativeDefineProperty(cx, nenv, id, val, nullptr, nullptr, 0))
             {
                 return false;
             }

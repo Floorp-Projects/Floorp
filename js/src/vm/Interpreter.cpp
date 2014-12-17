@@ -312,8 +312,8 @@ SetObjectProperty(JSContext *cx, JSOp op, HandleValue lval, HandleId id, Mutable
 
     bool strict = op == JSOP_STRICTSETPROP;
     if (MOZ_LIKELY(!obj->getOps()->setProperty)) {
-        if (!baseops::SetPropertyHelper(cx, obj.as<NativeObject>(), obj.as<NativeObject>(),
-                                        id, baseops::Qualified, rref, strict))
+        if (!NativeSetProperty(cx, obj.as<NativeObject>(), obj.as<NativeObject>(), id,
+                               Qualified, rref, strict))
         {
             return false;
         }
@@ -3182,7 +3182,7 @@ CASE(JSOP_INITPROP)
     RootedId &id = rootId0;
     id = NameToId(name);
 
-    if (!DefineNativeProperty(cx, obj, id, rval, nullptr, nullptr, JSPROP_ENUMERATE))
+    if (!NativeDefineProperty(cx, obj, id, rval, nullptr, nullptr, JSPROP_ENUMERATE))
         goto error;
 
     REGS.sp--;

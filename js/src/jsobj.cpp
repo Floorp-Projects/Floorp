@@ -616,13 +616,13 @@ DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const
         if (desc.isGenericDescriptor() || desc.isDataDescriptor()) {
             MOZ_ASSERT(!obj->getOps()->defineProperty);
             RootedValue v(cx, desc.hasValue() ? desc.value() : UndefinedValue());
-            return baseops::DefineGeneric(cx, obj, id, v, nullptr, nullptr, desc.attributes());
+            return NativeDefineProperty(cx, obj, id, v, nullptr, nullptr, desc.attributes());
         }
 
         MOZ_ASSERT(desc.isAccessorDescriptor());
 
-        return baseops::DefineGeneric(cx, obj, id, UndefinedHandleValue,
-                                      desc.getter(), desc.setter(), desc.attributes());
+        return NativeDefineProperty(cx, obj, id, UndefinedHandleValue,
+                                    desc.getter(), desc.setter(), desc.attributes());
     }
 
     /* 8.12.9 steps 5-6 (note 5 is merely a special case of 6). */
@@ -702,7 +702,7 @@ DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const
                     return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, id, rval);
                 }
 
-                if (!NativeGet(cx, obj, obj2.as<NativeObject>(), shape, &v))
+                if (!NativeGetExistingProperty(cx, obj, obj2.as<NativeObject>(), shape, &v))
                     return false;
             }
 
@@ -888,7 +888,7 @@ DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const
             return false;
     }
 
-    return baseops::DefineGeneric(cx, obj, id, v, getter, setter, attrs);
+    return NativeDefineProperty(cx, obj, id, v, getter, setter, attrs);
 }
 
 /* ES6 20130308 draft 8.4.2.1 [[DefineOwnProperty]] */
@@ -2120,7 +2120,7 @@ js::XDRObjectLiteral(XDRState<mode> *xdr, MutableHandleNativeObject obj)
                 return false;
 
             if (mode == XDR_DECODE) {
-                if (!DefineNativeProperty(cx, obj, id, tmpValue, nullptr, nullptr,
+                if (!NativeDefineProperty(cx, obj, id, tmpValue, nullptr, nullptr,
                                           JSPROP_ENUMERATE))
                 {
                     return false;
@@ -2821,7 +2821,7 @@ js::FindClassObject(ExclusiveContext *cx, MutableHandleObject protop, const Clas
 
     RootedObject pobj(cx);
     RootedShape shape(cx);
-    if (!LookupNativeProperty(cx, cx->global(), id, &pobj, &shape))
+    if (!NativeLookupProperty<CanGC>(cx, cx->global(), id, &pobj, &shape))
         return false;
     RootedValue v(cx);
     if (shape && pobj->isNative()) {
@@ -2898,7 +2898,7 @@ JSObject::defineGeneric(ExclusiveContext *cx, HandleObject obj,
             return false;
         return op(cx->asJSContext(), obj, id, value, getter, setter, attrs);
     }
-    return baseops::DefineGeneric(cx, obj.as<NativeObject>(), id, value, getter, setter, attrs);
+    return NativeDefineProperty(cx, obj.as<NativeObject>(), id, value, getter, setter, attrs);
 }
 
 /* static */ bool
@@ -2924,7 +2924,7 @@ JSObject::defineElement(ExclusiveContext *cx, HandleObject obj,
             return false;
         return op(cx->asJSContext(), obj, index, value, getter, setter, attrs);
     }
-    return baseops::DefineElement(cx, obj.as<NativeObject>(), index, value, getter, setter, attrs);
+    return NativeDefineElement(cx, obj.as<NativeObject>(), index, value, getter, setter, attrs);
 }
 
 /* static */ bool
@@ -2938,7 +2938,7 @@ JSObject::lookupGeneric(JSContext *cx, HandleObject obj, js::HandleId id,
     LookupGenericOp op = obj->getOps()->lookupGeneric;
     if (op)
         return op(cx, obj, id, objp, propp);
-    return baseops::LookupProperty<CanGC>(cx, obj.as<NativeObject>(), id, objp, propp);
+    return NativeLookupProperty<CanGC>(cx, obj.as<NativeObject>(), id, objp, propp);
 }
 
 bool
@@ -3266,7 +3266,7 @@ js::WatchGuts(JSContext *cx, JS::HandleObject origObj, JS::HandleId id, JS::Hand
 }
 
 bool
-baseops::Watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject callable)
+js::NativeWatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject callable)
 {
     if (!obj->isNative() || IsAnyTypedArray(obj)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
@@ -3289,7 +3289,7 @@ js::UnwatchGuts(JSContext *cx, JS::HandleObject origObj, JS::HandleId id)
 }
 
 bool
-baseops::Unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id)
+js::NativeUnwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id)
 {
     return UnwatchGuts(cx, obj, id);
 }
