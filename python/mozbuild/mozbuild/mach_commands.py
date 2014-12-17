@@ -978,6 +978,13 @@ class RunProgram(MachCommandBase):
             if show_dump_stats:
                 dmd_params.append('--show-dump-stats=yes')
 
+            bin_dir = os.path.dirname(binpath)
+            lib_name = self.substs['DLL_PREFIX'] + 'dmd' + self.substs['DLL_SUFFIX']
+            dmd_lib = os.path.join(bin_dir, lib_name)
+            if not os.path.exists(dmd_lib):
+                print("Please build with |--enable-dmd| to use DMD.")
+                return 1
+
             env_vars = {
                 "Darwin": {
                     "DYLD_INSERT_LIBRARIES": dmd_lib,
@@ -994,13 +1001,6 @@ class RunProgram(MachCommandBase):
 
             if dmd_params:
                 env_vars["DMD"] = " ".join(dmd_params)
-
-            bin_dir = os.path.dirname(binpath)
-            lib_name = self.substs['DLL_PREFIX'] + 'dmd' + self.substs['DLL_SUFFIX']
-            dmd_lib = os.path.join(bin_dir, lib_name)
-            if not os.path.exists(dmd_lib):
-                print("Please build with |--enable-dmd| to use DMD.")
-                return 1
 
             extra_env.update(env_vars.get(self.substs['OS_ARCH'], {}))
 
