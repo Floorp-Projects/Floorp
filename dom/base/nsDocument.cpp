@@ -1995,6 +1995,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStateObjectCached)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mUndoManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnimationTimeline)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingPlayerTracker)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTemplateContentsOwner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildrenCollection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRegistry)
@@ -2078,6 +2079,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCachedEncoder)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mUndoManager)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAnimationTimeline)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingPlayerTracker)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTemplateContentsOwner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChildrenCollection)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRegistry)
@@ -7389,6 +7391,16 @@ nsDocument::GetAnimationController()
   }
 
   return mAnimationController;
+}
+
+PendingPlayerTracker*
+nsDocument::GetOrCreatePendingPlayerTracker()
+{
+  if (!mPendingPlayerTracker) {
+    mPendingPlayerTracker = new PendingPlayerTracker();
+  }
+
+  return mPendingPlayerTracker;
 }
 
 /**
