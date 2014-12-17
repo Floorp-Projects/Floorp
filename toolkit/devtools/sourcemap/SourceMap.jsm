@@ -83,6 +83,11 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
       throw new Error('Unsupported version: ' + version);
     }
 
+    // Some source maps produce relative source paths like "./foo.js" instead of
+    // "foo.js".  Normalize these first so that future comparisons will succeed.
+    // See bugzil.la/1090768.
+    sources = sources.map(util.normalize);
+
     // Pass `true` below to allow duplicate names and sources. While source maps
     // are intended to be compressed and deduplicated, the TypeScript compiler
     // sometimes generates source maps with duplicates in them. See Github issue
@@ -308,6 +313,33 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
     };
 
   /**
+   * Compute the last column for each generated mapping. The last column is
+   * inclusive.
+   */
+  SourceMapConsumer.prototype.computeColumnSpans =
+    function SourceMapConsumer_computeColumnSpans() {
+      for (var index = 0; index < this._generatedMappings.length; ++index) {
+        var mapping = this._generatedMappings[index];
+
+        // Mappings do not contain a field for the last generated columnt. We
+        // can come up with an optimistic estimate, however, by assuming that
+        // mappings are contiguous (i.e. given two consecutive mappings, the
+        // first mapping ends where the second one starts).
+        if (index + 1 < this._generatedMappings.length) {
+          var nextMapping = this._generatedMappings[index + 1];
+
+          if (mapping.generatedLine === nextMapping.generatedLine) {
+            mapping.lastGeneratedColumn = nextMapping.generatedColumn - 1;
+            continue;
+          }
+        }
+
+        // The last mapping for each line spans the entire line.
+        mapping.lastGeneratedColumn = Infinity;
+      }
+    };
+
+  /**
    * Returns the original source, line, and column information for the generated
    * source's line and column positions provided. The only argument is an object
    * with the following properties:
@@ -329,23 +361,27 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
         generatedColumn: util.getArg(aArgs, 'column')
       };
 
-      var mapping = this._findMapping(needle,
-                                      this._generatedMappings,
-                                      "generatedLine",
-                                      "generatedColumn",
-                                      util.compareByGeneratedPositions);
+      var index = this._findMapping(needle,
+                                    this._generatedMappings,
+                                    "generatedLine",
+                                    "generatedColumn",
+                                    util.compareByGeneratedPositions);
 
-      if (mapping && mapping.generatedLine === needle.generatedLine) {
-        var source = util.getArg(mapping, 'source', null);
-        if (source != null && this.sourceRoot != null) {
-          source = util.join(this.sourceRoot, source);
+      if (index >= 0) {
+        var mapping = this._generatedMappings[index];
+
+        if (mapping.generatedLine === needle.generatedLine) {
+          var source = util.getArg(mapping, 'source', null);
+          if (source != null && this.sourceRoot != null) {
+            source = util.join(this.sourceRoot, source);
+          }
+          return {
+            source: source,
+            line: util.getArg(mapping, 'originalLine', null),
+            column: util.getArg(mapping, 'originalColumn', null),
+            name: util.getArg(mapping, 'name', null)
+          };
         }
-        return {
-          source: source,
-          line: util.getArg(mapping, 'originalLine', null),
-          column: util.getArg(mapping, 'originalColumn', null),
-          name: util.getArg(mapping, 'name', null)
-        };
       }
 
       return {
@@ -423,23 +459,80 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
         needle.source = util.relative(this.sourceRoot, needle.source);
       }
 
-      var mapping = this._findMapping(needle,
-                                      this._originalMappings,
-                                      "originalLine",
-                                      "originalColumn",
-                                      util.compareByOriginalPositions);
+      var index = this._findMapping(needle,
+                                    this._originalMappings,
+                                    "originalLine",
+                                    "originalColumn",
+                                    util.compareByOriginalPositions);
 
-      if (mapping) {
+      if (index >= 0) {
+        var mapping = this._originalMappings[index];
+
         return {
           line: util.getArg(mapping, 'generatedLine', null),
-          column: util.getArg(mapping, 'generatedColumn', null)
+          column: util.getArg(mapping, 'generatedColumn', null),
+          lastColumn: util.getArg(mapping, 'lastGeneratedColumn', null)
         };
       }
 
       return {
         line: null,
-        column: null
+        column: null,
+        lastColumn: null
       };
+    };
+
+  /**
+   * Returns all generated line and column information for the original source
+   * and line provided. The only argument is an object with the following
+   * properties:
+   *
+   *   - source: The filename of the original source.
+   *   - line: The line number in the original source.
+   *
+   * and an array of objects is returned, each with the following properties:
+   *
+   *   - line: The line number in the generated source, or null.
+   *   - column: The column number in the generated source, or null.
+   */
+  SourceMapConsumer.prototype.allGeneratedPositionsFor =
+    function SourceMapConsumer_allGeneratedPositionsFor(aArgs) {
+      // When there is no exact match, SourceMapConsumer.prototype._findMapping
+      // returns the index of the closest mapping less than the needle. By
+      // setting needle.originalColumn to Infinity, we thus find the last
+      // mapping for the given line, provided such a mapping exists.
+      var needle = {
+        source: util.getArg(aArgs, 'source'),
+        originalLine: util.getArg(aArgs, 'line'),
+        originalColumn: Infinity
+      };
+
+      if (this.sourceRoot != null) {
+        needle.source = util.relative(this.sourceRoot, needle.source);
+      }
+
+      var mappings = [];
+
+      var index = this._findMapping(needle,
+                                    this._originalMappings,
+                                    "originalLine",
+                                    "originalColumn",
+                                    util.compareByOriginalPositions);
+      if (index >= 0) {
+        var mapping = this._originalMappings[index];
+
+        while (mapping && mapping.originalLine === needle.originalLine) {
+          mappings.push({
+            line: util.getArg(mapping, 'generatedLine', null),
+            column: util.getArg(mapping, 'generatedColumn', null),
+            lastColumn: util.getArg(mapping, 'lastGeneratedColumn', null)
+          });
+
+          mapping = this._originalMappings[--index];
+        }
+      }
+
+      return mappings.reverse();
     };
 
   SourceMapConsumer.GENERATED_ORDER = 1;
@@ -836,17 +929,17 @@ define('source-map/binary-search', ['require', 'exports', 'module' , ], function
     //
     //   1. We find the exact element we are looking for.
     //
-    //   2. We did not find the exact element, but we can return the next
-    //      closest element that is less than that element.
+    //   2. We did not find the exact element, but we can return the index of
+    //      the next closest element that is less than that element.
     //
     //   3. We did not find the exact element, and there is no next-closest
     //      element which is less than the one we are searching for, so we
-    //      return null.
+    //      return -1.
     var mid = Math.floor((aHigh - aLow) / 2) + aLow;
     var cmp = aCompare(aNeedle, aHaystack[mid], true);
     if (cmp === 0) {
       // Found the element we are looking for.
-      return aHaystack[mid];
+      return mid;
     }
     else if (cmp > 0) {
       // aHaystack[mid] is greater than our needle.
@@ -856,7 +949,7 @@ define('source-map/binary-search', ['require', 'exports', 'module' , ], function
       }
       // We did not find an exact match, return the next closest one
       // (termination case 2).
-      return aHaystack[mid];
+      return mid;
     }
     else {
       // aHaystack[mid] is less than our needle.
@@ -866,18 +959,16 @@ define('source-map/binary-search', ['require', 'exports', 'module' , ], function
       }
       // The exact needle element was not found in this haystack. Determine if
       // we are in termination case (2) or (3) and return the appropriate thing.
-      return aLow < 0
-        ? null
-        : aHaystack[aLow];
+      return aLow < 0 ? -1 : aLow;
     }
   }
 
   /**
    * This is an implementation of binary search which will always try and return
-   * the next lowest value checked if there is no exact hit. This is because
-   * mappings between original and generated line/col pairs are single points,
-   * and there is an implicit region between each of them, so a miss just means
-   * that you aren't on the very start of a region.
+   * the index of next lowest value checked if there is no exact hit. This is
+   * because mappings between original and generated line/col pairs are single
+   * points, and there is an implicit region between each of them, so a miss
+   * just means that you aren't on the very start of a region.
    *
    * @param aNeedle The element you are looking for.
    * @param aHaystack The array that is being searched.
@@ -886,9 +977,10 @@ define('source-map/binary-search', ['require', 'exports', 'module' , ], function
    *     than, equal to, or greater than the element, respectively.
    */
   exports.search = function search(aNeedle, aHaystack, aCompare) {
-    return aHaystack.length > 0
-      ? recursiveSearch(-1, aHaystack.length, aNeedle, aHaystack, aCompare)
-      : null;
+    if (aHaystack.length === 0) {
+      return -1;
+    }
+    return recursiveSearch(-1, aHaystack.length, aNeedle, aHaystack, aCompare)
   };
 
 });
