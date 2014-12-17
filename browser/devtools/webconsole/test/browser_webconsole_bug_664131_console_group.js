@@ -16,7 +16,7 @@ let test = asyncTest(function* () {
 
   hud.jsterm.clearOutput();
 
-  jsterm.execute("console.group('bug664131a')")
+  yield jsterm.execute("console.group('bug664131a')")
 
   yield waitForMessages({
     webconsole: hud,
@@ -26,7 +26,7 @@ let test = asyncTest(function* () {
     }],
   });
 
-  jsterm.execute("console.log('bug664131a-inside')")
+  yield jsterm.execute("console.log('bug664131a-inside')")
 
   yield waitForMessages({
     webconsole: hud,
@@ -38,8 +38,8 @@ let test = asyncTest(function* () {
     }],
   });
 
-  jsterm.execute('console.groupEnd("bug664131a")');
-  jsterm.execute('console.log("bug664131-outside")');
+  yield jsterm.execute('console.groupEnd("bug664131a")');
+  yield jsterm.execute('console.log("bug664131-outside")');
 
   yield waitForMessages({
     webconsole: hud,
@@ -51,7 +51,7 @@ let test = asyncTest(function* () {
     }],
   });
 
-  jsterm.execute('console.groupCollapsed("bug664131b")');
+  yield jsterm.execute('console.groupCollapsed("bug664131b")');
 
   yield waitForMessages({
     webconsole: hud,
@@ -63,7 +63,7 @@ let test = asyncTest(function* () {
 
   // Test that clearing the console removes the indentation.
   hud.jsterm.clearOutput();
-  jsterm.execute('console.log("bug664131-cleared")');
+  yield jsterm.execute('console.log("bug664131-cleared")');
 
   yield waitForMessages({
     webconsole: hud,

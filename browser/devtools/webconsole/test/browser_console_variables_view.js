@@ -18,7 +18,7 @@ let test = asyncTest(function* () {
 
   gWebConsole = hud;
   gJSTerm = hud.jsterm;
-  let msg = yield execute(hud, "fooObj");
+  let msg = yield gJSTerm.execute("fooObj");
 
   ok(msg, "output message found");
   ok(msg.textContent.contains('{ testProp: "testValue" }'), "message text check");
@@ -186,10 +186,4 @@ function testPropDelete(aProp)
     timeout: 60000,
     validator: () => !("testUpdatedProp" in content.wrappedJSObject.fooObj)
   });
-}
-
-function execute(hud, str) {
-  let deferred = promise.defer();
-  hud.jsterm.execute(str, deferred.resolve);
-  return deferred.promise;
 }
