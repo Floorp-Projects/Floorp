@@ -62,27 +62,17 @@ public:
   }
 };
 
-class Telephony::EnumerationAck : public nsRunnable
-{
-  nsRefPtr<Telephony> mTelephony;
-
-public:
-  explicit EnumerationAck(Telephony* aTelephony)
-  : mTelephony(aTelephony)
-  {
-    MOZ_ASSERT(mTelephony);
-  }
-
-  NS_IMETHOD Run()
-  {
-    mTelephony->NotifyEvent(NS_LITERAL_STRING("ready"));
-    return NS_OK;
-  }
-};
-
 Telephony::Telephony(nsPIDOMWindow* aOwner)
-  : DOMEventTargetHelper(aOwner), mEnumerated(false)
+  : DOMEventTargetHelper(aOwner)
 {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aOwner);
+  MOZ_ASSERT(global);
+
+  ErrorResult rv;
+  nsRefPtr<Promise> promise = Promise::Create(global, rv);
+  MOZ_ASSERT(!rv.Failed());
+
+  mReadyPromise = promise;
 }
 
 Telephony::~Telephony()
@@ -327,6 +317,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(Telephony,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCalls)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCallsList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGroup)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReadyPromise)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(Telephony,
@@ -335,6 +326,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(Telephony,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCalls)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCallsList)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGroup)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadyPromise)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(Telephony)
@@ -462,14 +454,16 @@ Telephony::ConferenceGroup() const
   return group.forget();
 }
 
-// EventTarget
-
-void
-Telephony::EventListenerAdded(nsIAtom* aType)
+already_AddRefed<Promise>
+Telephony::GetReady(ErrorResult& aRv) const
 {
-  if (aType == nsGkAtoms::onready) {
-    EnqueueEnumerationAck();
+  if (!mReadyPromise) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
   }
+
+  nsRefPtr<Promise> promise = mReadyPromise;
+  return promise.forget();
 }
 
 // nsITelephonyListener
@@ -548,8 +542,6 @@ Telephony::ConferenceCallStateChanged(uint16_t aCallState)
 NS_IMETHODIMP
 Telephony::EnumerateCallStateComplete()
 {
-  MOZ_ASSERT(!mEnumerated);
-
   // Set conference state.
   if (mGroup->CallsArray().Length() >= 2) {
     const nsTArray<nsRefPtr<TelephonyCall> > &calls = mGroup->CallsArray();
@@ -565,10 +557,8 @@ Telephony::EnumerateCallStateComplete()
     mGroup->ChangeState(callState);
   }
 
-  mEnumerated = true;
-
-  if (NS_FAILED(NotifyEvent(NS_LITERAL_STRING("ready")))) {
-    NS_WARNING("Failed to notify ready!");
+  if (mReadyPromise) {
+    mReadyPromise->MaybeResolve(JS::UndefinedHandleValue);
   }
 
   if (NS_FAILED(mService->RegisterListener(mListener))) {
@@ -691,19 +681,6 @@ Telephony::DispatchCallEvent(const nsAString& aType,
   nsRefPtr<CallEvent> event = CallEvent::Constructor(this, aType, init);
 
   return DispatchTrustedEvent(event);
-}
-
-void
-Telephony::EnqueueEnumerationAck()
-{
-  if (!mEnumerated) {
-    return;
-  }
-
-  nsCOMPtr<nsIRunnable> task = new EnumerationAck(this);
-  if (NS_FAILED(NS_DispatchToCurrentThread(task))) {
-    NS_WARNING("Failed to dispatch to current thread!");
-  }
 }
 
 already_AddRefed<nsITelephonyService>

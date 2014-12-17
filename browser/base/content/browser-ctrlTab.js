@@ -133,9 +133,7 @@ var tabPreviewPanelHelper = {
       host.suspendGUI();
 
     if (host._prevFocus) {
-      Cc["@mozilla.org/focus-manager;1"]
-        .getService(Ci.nsIFocusManager)
-        .setFocus(host._prevFocus, Ci.nsIFocusManager.FLAG_NOSCROLL);
+      Services.focus.setFocus(host._prevFocus, Ci.nsIFocusManager.FLAG_NOSCROLL);
       host._prevFocus = null;
     } else
       gBrowser.selectedBrowser.focus();
@@ -503,9 +501,14 @@ var ctrlTab = {
   },
 
   filterForThumbnailExpiration: function (aCallback) {
+    // Save a few more thumbnails than we actually display, so that when tabs
+    // are closed, the previews we add instead still get thumbnails.
+    const extraThumbnails = 3;
+    const thumbnailCount = Math.min(this.tabPreviewCount + extraThumbnails,
+                                    this.tabCount);
+
     let urls = [];
-    let previewCount = this.tabPreviewCount;
-    for (let i = 0; i < previewCount; i++)
+    for (let i = 0; i < thumbnailCount; i++)
       urls.push(this.tabList[i].linkedBrowser.currentURI.spec);
 
     aCallback(urls);

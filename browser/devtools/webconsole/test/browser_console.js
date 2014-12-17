@@ -7,24 +7,23 @@
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html?" + Date.now();
 
-function test()
-{
-  Services.obs.addObserver(function observer(aSubject) {
-    Services.obs.removeObserver(observer, "web-console-created");
-    aSubject.QueryInterface(Ci.nsISupportsString);
+"use strict";
 
-    let hud = HUDService.getBrowserConsole();
-    ok(hud, "browser console is open");
-    is(aSubject.data, hud.hudId, "notification hudId is correct");
+let test = asyncTest(function*() {
+  yield loadTab(TEST_URI);
 
-    executeSoon(() => consoleOpened(hud));
-  }, "web-console-created", false);
+  let opened = waitForConsole();
 
   let hud = HUDService.getBrowserConsole();
   ok(!hud, "browser console is not open");
   info("wait for the browser console to open with ctrl-shift-j");
   EventUtils.synthesizeKey("j", { accelKey: true, shiftKey: true }, window);
-}
+
+  hud = yield opened;
+  ok(hud, "browser console opened");
+
+  yield consoleOpened(hud);
+});
 
 function consoleOpened(hud)
 {
@@ -50,7 +49,7 @@ function consoleOpened(hud)
   xhr.open("get", TEST_URI, true);
   xhr.send();
 
-  waitForMessages({
+  return waitForMessages({
     webconsole: hud,
     messages: [
       {
@@ -84,5 +83,22 @@ function consoleOpened(hud)
         severity: SEVERITY_LOG,
       },
     ],
-  }).then(finishTest);
+  });
+}
+
+function waitForConsole() {
+  let deferred = promise.defer();
+
+  Services.obs.addObserver(function observer(aSubject) {
+    Services.obs.removeObserver(observer, "web-console-created");
+    aSubject.QueryInterface(Ci.nsISupportsString);
+
+    let hud = HUDService.getBrowserConsole();
+    ok(hud, "browser console is open");
+    is(aSubject.data, hud.hudId, "notification hudId is correct");
+
+    executeSoon(() => deferred.resolve(hud));
+  }, "web-console-created", false);
+
+  return deferred.promise;
 }

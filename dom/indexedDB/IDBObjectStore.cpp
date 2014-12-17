@@ -1001,7 +1001,7 @@ IDBObjectStore::DeserializeValue(JSContext* aCx,
 
   JSAutoRequest ar(aCx);
 
-  static JSStructuredCloneCallbacks callbacks = {
+  static const JSStructuredCloneCallbacks callbacks = {
     CommonStructuredCloneReadCallback<ValueDeserializationHelper>,
     nullptr,
     nullptr,
@@ -1042,7 +1042,7 @@ IDBObjectStore::DeserializeIndexValue(JSContext* aCx,
 
   JSAutoRequest ar(aCx);
 
-  static JSStructuredCloneCallbacks callbacks = {
+  static const JSStructuredCloneCallbacks callbacks = {
     CommonStructuredCloneReadCallback<IndexDeserializationHelper>,
     nullptr,
     nullptr

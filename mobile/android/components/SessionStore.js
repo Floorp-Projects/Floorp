@@ -86,6 +86,7 @@ SessionStore.prototype = {
         observerService.addObserver(this, "ClosedTabs:StartNotifications", true);
         observerService.addObserver(this, "ClosedTabs:StopNotifications", true);
         observerService.addObserver(this, "last-pb-context-exited", true);
+        observerService.addObserver(this, "Session:RestoreRecentTabs", true);
         break;
       case "final-ui-startup":
         observerService.removeObserver(this, "final-ui-startup");
@@ -176,6 +177,11 @@ SessionStore.prototype = {
         }
         this._lastClosedTabIndex = -1;
         break;
+      case "Session:RestoreRecentTabs": {
+        let data = JSON.parse(aData);
+        this._restoreTabsWithHistory(data);
+        break;
+      }
     }
   },
 
@@ -758,7 +764,23 @@ SessionStore.prototype = {
     return shEntry;
   },
 
-  _restoreHistory: function _restoreHistory(aTabData, aHistory) {
+  // This function iterates through a list of tab data restoring history for each of them.
+  _restoreTabsWithHistory: function ss_restoreTabsWithHistory(data) {
+    let window = Services.wm.getMostRecentWindow("navigator:browser");
+    for (let i = 0; i < data.tabs.length; i++) {
+      let tabData = JSON.parse(data.tabs[i]);
+      let params = {
+        selected: (i == data.tabs.length - 1),
+        isPrivate: tabData.isPrivate,
+        desktopMode: tabData.desktopMode,
+      };
+
+      let tab = window.BrowserApp.addTab(tabData.entries[tabData.index - 1].url, params);
+      this._restoreHistory(tabData, tab.browser.sessionHistory);
+    }
+  },
+
+  _restoreHistory: function ss_restoreHistory(aTabData, aHistory) {
     if (aHistory.count > 0)
       aHistory.PurgeHistory(aHistory.count);
     aHistory.QueryInterface(Ci.nsISHistoryInternal);
@@ -934,7 +956,8 @@ SessionStore.prototype = {
         let lastEntry = tab.entries[tab.entries.length - 1];
         return {
           url: lastEntry.url,
-          title: lastEntry.title || ""
+          title: lastEntry.title || "",
+          data: tab
         };
       });
 

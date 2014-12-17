@@ -4,10 +4,7 @@
 let gOnSearchComplete = null;
 
 function* promise_first_result(inputText) {
-  gURLBar.focus();
-  gURLBar.value = inputText.slice(0, -1);
-  EventUtils.synthesizeKey(inputText.slice(-1) , {});
-  yield promiseSearchComplete();
+  yield promiseAutocompleteResultPopup(inputText);
 
   let firstResult = gURLBar.popup.richlistbox.firstChild;
   return firstResult;

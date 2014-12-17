@@ -3,12 +3,42 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
+const PREF = "devtools.webconsole.persistlog";
 const TEST_FILE = "test-network.html";
+const TEST_URI = "data:text/html;charset=utf8,<p>test file URI";
 
-function tabReload(aEvent) {
-  browser.removeEventListener(aEvent.type, tabReload, true);
+let hud;
 
-  waitForMessages({
+let test = asyncTest(function* () {
+  Services.prefs.setBoolPref(PREF, true);
+
+  let jar = getJar(getRootDirectory(gTestPath));
+  let dir = jar ?
+            extractJarToTmp(jar) :
+            getChromeDir(getResolvedURI(gTestPath));
+
+  dir.append(TEST_FILE);
+  let uri = Services.io.newFileURI(dir);
+
+  let { browser } = yield loadTab(TEST_URI);
+
+  hud = yield openConsole();
+  hud.jsterm.clearOutput();
+
+  let loaded = loadBrowser(browser);
+  content.location = uri.spec;
+  yield loaded;
+
+  yield testMessages();
+
+  Services.prefs.clearUserPref(PREF);
+  hud = null;
+});
+
+function testMessages() {
+  return waitForMessages({
     webconsole: hud,
     messages: [{
       text: "running network console logging tests",
@@ -30,30 +60,5 @@ function tabReload(aEvent) {
       category: CATEGORY_NETWORK,
       severity: SEVERITY_LOG,
     }],
-  }).then(finishTest);
-}
-
-function test() {
-  let jar = getJar(getRootDirectory(gTestPath));
-  let dir = jar ?
-            extractJarToTmp(jar) :
-            getChromeDir(getResolvedURI(gTestPath));
-  dir.append(TEST_FILE);
-
-  let uri = Services.io.newFileURI(dir);
-
-  const PREF = "devtools.webconsole.persistlog";
-  Services.prefs.setBoolPref(PREF, true);
-  registerCleanupFunction(() => Services.prefs.clearUserPref(PREF));
-
-  addTab("data:text/html;charset=utf8,<p>test file URI");
-  browser.addEventListener("load", function tabLoad() {
-    browser.removeEventListener("load", tabLoad, true);
-    openConsole(null, function(aHud) {
-      hud = aHud;
-      hud.jsterm.clearOutput();
-      browser.addEventListener("load", tabReload, true);
-      content.location = uri.spec;
-    });
-  }, true);
+  })
 }

@@ -19,17 +19,16 @@ const TEST_IMG_BASE64 =
   "A16/JvfiigMSYyzqJXlw/XKUyOORMUaBor6YavgdjKa8xGOnidadmwtwsnMu18q83/kHSou+bFND" +
   "Dr4AAAAASUVORK5CYII=";
 
-let testDriver;
+let testDriver, hud;
 
 function test() {
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, testNetworkPanel);
-  }, true);
+  loadTab(TEST_URI).then(() => {
+    openConsole().then(testNetworkPanel);
+  });
 }
 
-function testNetworkPanel() {
+function testNetworkPanel(aHud) {
+  hud = aHud;
   testDriver = testGen();
   testDriver.next();
 }
@@ -71,7 +70,6 @@ function checkNodeKeyValue(aPanel, aId, aKey, aValue) {
 }
 
 function testGen() {
-  let hud = HUDService.getHudByWindow(content);
   let filterBox = hud.ui.filterBox;
 
   let httpActivity = {
@@ -536,7 +534,7 @@ function testGen() {
   networkPanel.panel.hidePopup(); */
 
   // All done!
-  testDriver = null;
+  testDriver = hud = null;
   executeSoon(finishTest);
 
   yield undefined;

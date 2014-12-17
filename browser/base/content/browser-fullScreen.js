@@ -143,7 +143,7 @@ var FullScreen = {
       return;
     }
 
-    let focusManager = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+    let focusManager = Services.focus;
     if (focusManager.activeWindow != window) {
       // The top-level window has lost focus since the request to enter
       // full-screen was made. Cancel full-screen.

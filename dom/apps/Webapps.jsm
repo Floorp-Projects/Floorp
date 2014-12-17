@@ -43,6 +43,23 @@ Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "UserCustomizations", function() {
+  let enabled = false;
+  try {
+    enabled = Services.prefs.getBoolPref("dom.apps.customization.enabled");
+  } catch(e) {}
+
+  if (enabled) {
+    return Cu.import("resource://gre/modules/UserCustomizations.jsm", {})
+             .UserCustomizations;
+  } else {
+    return {
+      register: function() {},
+      unregister: function() {}
+    };
+  }
+});
+
 XPCOMUtils.defineLazyModuleGetter(this, "TrustedRootCertificate",
   "resource://gre/modules/StoreTrustAnchor.jsm");
 
@@ -406,6 +423,7 @@ this.DOMApplicationRegistry = {
           app.redirects = this.sanitizeRedirects(aResult.redirects);
         }
         app.kind = this.appKind(app, aResult.manifest);
+        UserCustomizations.register(aResult.manifest, app);
       });
 
       // Nothing else to do but notifying we're ready.
@@ -1097,6 +1115,7 @@ this.DOMApplicationRegistry = {
         this._registerSystemMessages(manifest, app);
         this._registerInterAppConnections(manifest, app);
         appsToRegister.push({ manifest: manifest, app: app });
+        UserCustomizations.register(manifest, app);
       });
       this._safeToClone.resolve();
       this._registerActivitiesForApps(appsToRegister, aRunUpdate);
@@ -1991,7 +2010,8 @@ this.DOMApplicationRegistry = {
   // Updates the redirect mapping, activities and system message handlers.
   // aOldManifest can be null if we don't have any handler to unregister.
   updateAppHandlers: function(aOldManifest, aNewManifest, aApp) {
-    debug("updateAppHandlers: old=" + aOldManifest + " new=" + aNewManifest);
+    debug("updateAppHandlers: old=" + uneval(aOldManifest) +
+          " new=" + uneval(aNewManifest));
     this.notifyAppsRegistryStart();
     if (aApp.appStatus >= Ci.nsIPrincipal.APP_STATUS_PRIVILEGED) {
       aApp.redirects = this.sanitizeRedirects(aNewManifest.redirects);
@@ -2000,6 +2020,8 @@ this.DOMApplicationRegistry = {
     let manifest =
       new ManifestHelper(aNewManifest, aApp.origin, aApp.manifestURL);
     this._saveWidgetsFullPath(manifest, aApp);
+
+    aApp.role = manifest.role ? manifest.role : "";
 
     if (supportSystemMessages()) {
       if (aOldManifest) {
@@ -2012,6 +2034,12 @@ this.DOMApplicationRegistry = {
       // Nothing else to do but notifying we're ready.
       this.notifyAppsRegistryReady();
     }
+
+    // Update user customizations.
+    if (aOldManifest) {
+      UserCustomizations.unregister(aOldManifest, aApp);
+    }
+    UserCustomizations.register(aNewManifest, aApp);
   },
 
   checkForUpdate: function(aData, aMm) {
@@ -4019,6 +4047,7 @@ this.DOMApplicationRegistry = {
     if (supportSystemMessages()) {
       this._unregisterActivities(aApp.manifest, aApp);
     }
+    UserCustomizations.unregister(aApp.manifest, aApp);
 
     let dir = this._getAppDir(id);
     try {
@@ -4387,6 +4416,12 @@ this.DOMApplicationRegistry = {
         id: app.id
       });
       this.broadcastMessage("Webapps:SetEnabled:Return", app);
+    });
+
+    // Update customization.
+    this.getManifestFor(app.manifestURL).then((aManifest) => {
+      app.enabled ? UserCustomizations.register(aManifest, app)
+                  : UserCustomizations.unregister(aManifest, app);
     });
   },
 

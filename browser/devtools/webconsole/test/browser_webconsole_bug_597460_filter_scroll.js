@@ -9,9 +9,23 @@
  * ***** END LICENSE BLOCK ***** */
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-network.html";
+const PREF = "devtools.webconsole.persistlog";
 
-function consoleOpened(aHud) {
-  hud = aHud;
+let test = asyncTest(function* () {
+  Services.prefs.setBoolPref(PREF, true);
+
+  yield loadTab(TEST_URI);
+  let hud = yield openConsole();
+
+  let results = yield consoleOpened(hud);
+
+  testScroll(results, hud);
+
+  Services.prefs.clearUserPref(PREF);
+});
+
+function consoleOpened(hud) {
+  let deferred = promise.defer();
 
   for (let i = 0; i < 200; i++) {
     content.console.log("test message " + i);
@@ -39,12 +53,15 @@ function consoleOpened(aHud) {
         category: CATEGORY_NETWORK,
         severity: SEVERITY_LOG,
       }],
-    }).then(testScroll);
+    }).then(deferred.resolve);
+
     content.location.reload();
   });
+
+  return deferred.promise;
 }
 
-function testScroll([result]) {
+function testScroll([result], hud) {
   let scrollNode = hud.outputNode.parentNode;
   let msgNode = [...result.matched][0];
   ok(msgNode.classList.contains("filtered-by-type"),
@@ -62,18 +79,4 @@ function testScroll([result]) {
 
   hud.setFilterState("network", true);
   hud.setFilterState("networkinfo", true);
-
-  executeSoon(finishTest);
-}
-
-function test() {
-  const PREF = "devtools.webconsole.persistlog";
-  Services.prefs.setBoolPref(PREF, true);
-  registerCleanupFunction(() => Services.prefs.clearUserPref(PREF));
-
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, consoleOpened);
-  }, true);
 }

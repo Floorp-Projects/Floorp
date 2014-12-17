@@ -5,66 +5,73 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,<p>Web Console test for notifications";
 
-function test() {
-  observer.init();
-  addTab(TEST_URI);
-  browser.addEventListener("load", onLoad, true);
-}
+let test = asyncTest(function* () {
+  yield loadTab(TEST_URI);
 
-function webConsoleCreated(aID)
-{
-  Services.obs.removeObserver(observer, "web-console-created");
-  ok(HUDService.getHudReferenceById(aID), "We have a hud reference");
-  content.wrappedJSObject.console.log("adding a log message");
-}
+  let gotEvents = waitForEvents();
 
-function webConsoleDestroyed(aID)
-{
-  Services.obs.removeObserver(observer, "web-console-destroyed");
-  ok(!HUDService.getHudReferenceById(aID), "We do not have a hud reference");
-  executeSoon(finishTest);
-}
+  let hud = yield openConsole();
 
-function webConsoleMessage(aID, aNodeID)
-{
-  Services.obs.removeObserver(observer, "web-console-message-created");
-  ok(aID, "we have a console ID");
-  is(typeof aNodeID, "string", "message node id is a string");
-  executeSoon(closeConsole);
-}
+  yield gotEvents;
+});
 
-let observer = {
+function waitForEvents() {
+  let deferred = promise.defer();
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
-
-  observe: function observe(aSubject, aTopic, aData)
+  function webConsoleCreated(aID)
   {
-    aSubject = aSubject.QueryInterface(Ci.nsISupportsString);
-
-    switch(aTopic) {
-      case "web-console-created":
-        webConsoleCreated(aSubject.data);
-        break;
-      case "web-console-destroyed":
-        webConsoleDestroyed(aSubject.data);
-        break;
-      case "web-console-message-created":
-        webConsoleMessage(aSubject, aData);
-        break;
-      default:
-        break;
-    }
-  },
-
-  init: function init()
-  {
-    Services.obs.addObserver(this, "web-console-created", false);
-    Services.obs.addObserver(this, "web-console-destroyed", false);
-    Services.obs.addObserver(this, "web-console-message-created", false);
+    Services.obs.removeObserver(observer, "web-console-created");
+    ok(HUDService.getHudReferenceById(aID), "We have a hud reference");
+    content.wrappedJSObject.console.log("adding a log message");
   }
-};
 
-function onLoad() {
-  browser.removeEventListener("load", onLoad, true);
-  openConsole();
+  function webConsoleDestroyed(aID)
+  {
+    Services.obs.removeObserver(observer, "web-console-destroyed");
+    ok(!HUDService.getHudReferenceById(aID), "We do not have a hud reference");
+    executeSoon(deferred.resolve);
+  }
+
+  function webConsoleMessage(aID, aNodeID)
+  {
+    Services.obs.removeObserver(observer, "web-console-message-created");
+    ok(aID, "we have a console ID");
+    is(typeof aNodeID, "string", "message node id is a string");
+    executeSoon(closeConsole);
+  }
+
+  let observer = {
+
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+
+    observe: function observe(aSubject, aTopic, aData)
+    {
+      aSubject = aSubject.QueryInterface(Ci.nsISupportsString);
+
+      switch(aTopic) {
+        case "web-console-created":
+          webConsoleCreated(aSubject.data);
+          break;
+        case "web-console-destroyed":
+          webConsoleDestroyed(aSubject.data);
+          break;
+        case "web-console-message-created":
+          webConsoleMessage(aSubject, aData);
+          break;
+        default:
+          break;
+      }
+    },
+
+    init: function init()
+    {
+      Services.obs.addObserver(this, "web-console-created", false);
+      Services.obs.addObserver(this, "web-console-destroyed", false);
+      Services.obs.addObserver(this, "web-console-message-created", false);
+    }
+  }
+
+  observer.init();
+
+  return deferred.promise;
 }
