@@ -42,8 +42,6 @@ test(function(t) {
 
   var originalReadyPromise = player.ready;
   div.style.animationPlayState = 'running';
-  // FIXME: Flush style when fetching ready promise
-  window.getComputedStyle(div).animationPlayState;
   assert_not_equals(player.ready, originalReadyPromise,
                     'After updating animation-play-state a new ready promise'
                     + ' object is created');
