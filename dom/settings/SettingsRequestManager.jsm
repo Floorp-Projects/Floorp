@@ -17,12 +17,15 @@ Cu.import("resource://gre/modules/PermissionsTable.jsm");
 
 let DEBUG = false;
 let VERBOSE = false;
+let TRACK = false;
 
 try {
   DEBUG   =
     Services.prefs.getBoolPref("dom.mozSettings.SettingsRequestManager.debug.enabled");
   VERBOSE =
     Services.prefs.getBoolPref("dom.mozSettings.SettingsRequestManager.verbose.enabled");
+  TRACK =
+    Services.prefs.getBoolPref("dom.mozSettings.trackTasksUsage");
 } catch (ex) { }
 
 let allowForceReadOnly = false;
@@ -207,7 +210,12 @@ let SettingsRequestManager = {
   // for message managers and check permissions on them before we send
   // settings notifications to child processes.
   observerPrincipalCache: new Map(),
-  tasksConsumed: 0,
+  totalProcessed: 0,
+  tasksConsumed: {},
+  totalSetProcessed: 0,
+  tasksSetConsumed: {},
+  totalGetProcessed: 0,
+  tasksGetConsumed: {},
 
   init: function() {
     if (VERBOSE) debug("init");
@@ -650,6 +658,13 @@ let SettingsRequestManager = {
     }
     let currentTask = lock.tasks.shift();
     let promises = [];
+    if (TRACK) {
+      if (this.tasksConsumed[aLockID] === undefined) {
+        this.tasksConsumed[aLockID] = 0;
+        this.tasksGetConsumed[aLockID] = 0;
+        this.tasksSetConsumed[aLockID] = 0;
+      }
+    }
     while (currentTask) {
       if (VERBOSE) debug("Running Operation " + currentTask.operation);
       if (lock.finalizing) {
@@ -659,12 +674,23 @@ let SettingsRequestManager = {
         currentTask.defer.reject("Cannot call new task after finalizing");
       } else {
       let p;
-      this.tasksConsumed++;
+      this.totalProcessed++;
+      if (TRACK) {
+        this.tasksConsumed[aLockID]++;
+      }
       switch (currentTask.operation) {
         case "get":
+          this.totalGetProcessed++;
+          if (TRACK) {
+            this.tasksGetConsumed[aLockID]++;
+          }
           p = this.taskGet(currentTask);
           break;
         case "set":
+          this.totalSetProcessed++;
+          if (TRACK) {
+            this.tasksSetConsumed[aLockID]++;
+          }
           p = this.taskSet(currentTask);
           break;
         case "clear":
@@ -753,23 +779,75 @@ let SettingsRequestManager = {
         continue;
       }
 
-      let path = "settings-locks/tasks/queue-length(id=" + lockId + ")";
+      let path = "settings-locks/tasks/lock(id=" + lockId + ")/";
 
-      aCallback.callback("", path,
+      aCallback.callback("", path + "alive",
                          Ci.nsIMemoryReporter.KIND_OTHER,
                          Ci.nsIMemoryReporter.UNITS_COUNT,
                          length,
-                         "Tasks queue length for this lock",
+                         "Alive tasks for this lock",
                          aData);
     }
 
     aCallback.callback("",
-                       "settings-locks/tasks/processed",
+                       "settings-locks/tasks-total/processed",
                        Ci.nsIMemoryReporter.KIND_OTHER,
                        Ci.nsIMemoryReporter.UNITS_COUNT,
-                       this.tasksConsumed,
-                       "The number of tasks that were executed.",
+                       this.totalProcessed,
+                       "The total number of tasks that were executed.",
                        aData);
+
+    aCallback.callback("",
+                       "settings-locks/tasks-total/set",
+                       Ci.nsIMemoryReporter.KIND_OTHER,
+                       Ci.nsIMemoryReporter.UNITS_COUNT,
+                       this.totalSetProcessed,
+                       "The total number of set tasks that were executed.",
+                       aData);
+
+    aCallback.callback("",
+                       "settings-locks/tasks-total/get",
+                       Ci.nsIMemoryReporter.KIND_OTHER,
+                       Ci.nsIMemoryReporter.UNITS_COUNT,
+                       this.totalGetProcessed,
+                       "The total number of get tasks that were executed.",
+                       aData);
+
+    // if TRACK is not enabled, then, no details are available
+    if (!TRACK) {
+      return;
+    }
+
+    for (let lockId of Object.keys(this.tasksConsumed)) {
+      let lock = this.lockInfo[lockId];
+      let length = 0;
+      if (lock) {
+        length = lock.tasks.length;
+      }
+
+      let path = "settings-locks/tasks/lock(id=" + lockId + ")/";
+
+      aCallback.callback("", path + "set",
+                         Ci.nsIMemoryReporter.KIND_OTHER,
+                         Ci.nsIMemoryReporter.UNITS_COUNT,
+                         this.tasksSetConsumed[lockId],
+                         "Set tasks for this lock.",
+                         aData);
+
+      aCallback.callback("", path + "get",
+                         Ci.nsIMemoryReporter.KIND_OTHER,
+                         Ci.nsIMemoryReporter.UNITS_COUNT,
+                         this.tasksGetConsumed[lockId],
+                         "Get tasks for this lock.",
+                         aData);
+
+      aCallback.callback("", path + "processed",
+                         Ci.nsIMemoryReporter.KIND_OTHER,
+                         Ci.nsIMemoryReporter.UNITS_COUNT,
+                         this.tasksConsumed[lockId],
+                         "Number of tasks that were executed.",
+                         aData);
+    }
   },
 
   sendSettingsChange: function(aKey, aValue, aIsServiceLock) {
