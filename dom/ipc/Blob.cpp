@@ -209,6 +209,74 @@ EventTargetIsOnCurrentThread(nsIEventTarget* aEventTarget)
   return current;
 }
 
+class CancelableRunnableWrapper MOZ_FINAL
+  : public nsCancelableRunnable
+{
+  nsCOMPtr<nsIRunnable> mRunnable;
+#ifdef DEBUG
+  nsCOMPtr<nsIEventTarget> mDEBUGEventTarget;
+#endif
+
+public:
+  CancelableRunnableWrapper(nsIRunnable* aRunnable,
+                            nsIEventTarget* aEventTarget)
+    : mRunnable(aRunnable)
+#ifdef DEBUG
+    , mDEBUGEventTarget(aEventTarget)
+#endif
+  {
+    MOZ_ASSERT(aRunnable);
+    MOZ_ASSERT(aEventTarget);
+  }
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+private:
+  ~CancelableRunnableWrapper()
+  { }
+
+  NS_DECL_NSIRUNNABLE
+  NS_DECL_NSICANCELABLERUNNABLE
+};
+
+NS_IMPL_ISUPPORTS_INHERITED0(CancelableRunnableWrapper, nsCancelableRunnable)
+
+NS_IMETHODIMP
+CancelableRunnableWrapper::Run()
+{
+  DebugOnly<bool> onTarget;
+  MOZ_ASSERT(mDEBUGEventTarget);
+  MOZ_ASSERT(NS_SUCCEEDED(mDEBUGEventTarget->IsOnCurrentThread(&onTarget)));
+  MOZ_ASSERT(onTarget);
+
+  nsCOMPtr<nsIRunnable> runnable;
+  mRunnable.swap(runnable);
+
+  if (runnable) {
+    return runnable->Run();
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CancelableRunnableWrapper::Cancel()
+{
+  DebugOnly<bool> onTarget;
+  MOZ_ASSERT(mDEBUGEventTarget);
+  MOZ_ASSERT(NS_SUCCEEDED(mDEBUGEventTarget->IsOnCurrentThread(&onTarget)));
+  MOZ_ASSERT(onTarget);
+
+  if (NS_WARN_IF(!mRunnable)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  unused << Run();
+  MOZ_ASSERT(!mRunnable);
+
+  return NS_OK;
+}
+
 // Ensure that a nsCOMPtr/nsRefPtr is released on the target thread.
 template <template <class> class SmartPtr, class T>
 void
@@ -227,6 +295,10 @@ ReleaseOnTarget(SmartPtr<T>& aDoomed, nsIEventTarget* aTarget)
   MOZ_ASSERT(releaseRunnable);
 
   if (aTarget) {
+    // If we're targeting a non-main thread then make sure the runnable is
+    // cancelable.
+    releaseRunnable = new CancelableRunnableWrapper(releaseRunnable, aTarget);
+
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aTarget->Dispatch(releaseRunnable,
                                                    NS_DISPATCH_NORMAL)));
   } else {
@@ -2195,6 +2267,9 @@ RemoteBlobImpl::Destroy()
     NS_NewNonOwningRunnableMethod(this, &RemoteBlobImpl::Destroy);
 
   if (mActorTarget) {
+    destroyRunnable =
+      new CancelableRunnableWrapper(destroyRunnable, mActorTarget);
+
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mActorTarget->Dispatch(destroyRunnable,
                                                         NS_DISPATCH_NORMAL)));
   } else {
@@ -2588,6 +2663,9 @@ RemoteBlobImpl::Destroy()
     NS_NewNonOwningRunnableMethod(this, &RemoteBlobImpl::Destroy);
 
   if (mActorTarget) {
+    destroyRunnable =
+      new CancelableRunnableWrapper(destroyRunnable, mActorTarget);
+
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mActorTarget->Dispatch(destroyRunnable,
                                                         NS_DISPATCH_NORMAL)));
   } else {
@@ -3442,6 +3520,8 @@ BlobChild::NoteDyingRemoteBlobImpl()
       NS_NewNonOwningRunnableMethod(this, &BlobChild::NoteDyingRemoteBlobImpl);
 
     if (mEventTarget) {
+      runnable = new CancelableRunnableWrapper(runnable, mEventTarget);
+
       MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mEventTarget->Dispatch(runnable,
                                                           NS_DISPATCH_NORMAL)));
     } else {
@@ -4015,6 +4095,8 @@ BlobParent::NoteDyingRemoteBlobImpl()
       NS_NewNonOwningRunnableMethod(this, &BlobParent::NoteDyingRemoteBlobImpl);
 
     if (mEventTarget) {
+      runnable = new CancelableRunnableWrapper(runnable, mEventTarget);
+
       MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mEventTarget->Dispatch(runnable,
                                                           NS_DISPATCH_NORMAL)));
     } else {
