@@ -245,15 +245,33 @@ AnimationPlayer::DoPlay()
 void
 AnimationPlayer::DoPause()
 {
-  if (IsPaused()) {
-    return;
+  // Cancel a pending play
+  if (mIsPending) {
+    nsIDocument* doc = GetRenderedDocument();
+    if (doc) {
+      PendingPlayerTracker* tracker = doc->GetPendingPlayerTracker();
+      if (tracker) {
+        tracker->RemovePlayPending(*this);
+      }
+    }
+
+    mIsPending = false;
+
+    // Resolve the ready promise since we currently only use it for
+    // players that are waiting to play. Later (in bug 1109390), we will
+    // use this for players waiting to pause as well and then we won't
+    // want to resolve it just yet.
+    if (mReady) {
+      mReady->MaybeResolve(this);
+    }
   }
+
   // Mark this as no longer running on the compositor so that next time
   // we update animations we won't throttle them and will have a chance
   // to remove the animation from any layer it might be on.
   mIsRunningOnCompositor = false;
 
-  // Bug 927349 - check for null result here and go to pending state
+  // Bug 1109390 - check for null result here and go to pending state
   mHoldTime = GetCurrentTime();
   mStartTime.SetNull();
 }
