@@ -216,24 +216,11 @@ Factory::HasSSE2()
 #endif
 }
 
-// If the size is "reasonable", we want gfxCriticalError to assert, so
-// this is the option set up for it.
-inline int LoggerOptionsBasedOnSize(const IntSize& aSize)
-{
-  return CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(aSize));
-}
-
-bool
-Factory::ReasonableSurfaceSize(const IntSize &aSize)
-{
-  return Factory::CheckSurfaceSize(aSize,8192);
-}
-
 bool
 Factory::CheckSurfaceSize(const IntSize &sz, int32_t limit)
 {
-  if (sz.width <= 0 || sz.height <= 0) {
-    gfxDebug() << "Surface width or height <= 0!";
+  if (sz.width < 0 || sz.height < 0) {
+    gfxDebug() << "Surface width or height < 0!";
     return false;
   }
 
@@ -278,7 +265,7 @@ TemporaryRef<DrawTarget>
 Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFormat aFormat)
 {
   if (!CheckSurfaceSize(aSize)) {
-    gfxCriticalError(LoggerOptionsBasedOnSize(aSize)) << "Failed to allocate a surface due to invalid size " << aSize;
+    gfxCriticalError() << "Failed to allocate a surface due to invalid size " << aSize;
     return nullptr;
   }
 
@@ -350,9 +337,9 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
 
   if (!retVal) {
     // Failed
-    gfxCriticalError(LoggerOptionsBasedOnSize(aSize)) << "Failed to create DrawTarget, Type: " << int(aBackend) << " Size: " << aSize;
+    gfxCriticalError() << "Failed to create DrawTarget, Type: " << int(aBackend) << " Size: " << aSize;
   }
-
+  
   return retVal.forget();
 }
 
@@ -363,15 +350,15 @@ Factory::CreateRecordingDrawTarget(DrawEventRecorder *aRecorder, DrawTarget *aDT
 }
 
 TemporaryRef<DrawTarget>
-Factory::CreateDrawTargetForData(BackendType aBackend,
-                                 unsigned char *aData,
-                                 const IntSize &aSize,
-                                 int32_t aStride,
+Factory::CreateDrawTargetForData(BackendType aBackend, 
+                                 unsigned char *aData, 
+                                 const IntSize &aSize, 
+                                 int32_t aStride, 
                                  SurfaceFormat aFormat)
 {
   MOZ_ASSERT(aData);
   if (!CheckSurfaceSize(aSize)) {
-    gfxCriticalError(LoggerOptionsBasedOnSize(aSize)) << "Failed to allocate a surface due to invalid size " << aSize;
+    gfxCriticalError() << "Failed to allocate a surface due to invalid size " << aSize;
     return nullptr;
   }
 
@@ -799,7 +786,7 @@ Factory::CreateDataSourceSurface(const IntSize &aSize,
                                  bool aZero)
 {
   if (!CheckSurfaceSize(aSize)) {
-    gfxCriticalError(LoggerOptionsBasedOnSize(aSize)) << "Failed to allocate a surface due to invalid size " << aSize;
+    gfxCriticalError() << "Failed to allocate a surface due to invalid size " << aSize;
     return nullptr;
   }
 
@@ -819,7 +806,7 @@ Factory::CreateDataSourceSurfaceWithStride(const IntSize &aSize,
                                            bool aZero)
 {
   if (aStride < aSize.width * BytesPerPixel(aFormat)) {
-    gfxCriticalError(LoggerOptionsBasedOnSize(aSize)) << "CreateDataSourceSurfaceWithStride failed with bad stride " << aStride << ", " << aSize << ", " << aFormat;
+    gfxCriticalError() << "CreateDataSourceSurfaceWithStride failed with bad stride";
     return nullptr;
   }
 
@@ -828,7 +815,7 @@ Factory::CreateDataSourceSurfaceWithStride(const IntSize &aSize,
     return newSurf.forget();
   }
 
-  gfxCriticalError(LoggerOptionsBasedOnSize(aSize)) << "CreateDataSourceSurfaceWithStride failed to initialize " << aSize << ", " << aFormat << ", " << aStride << ", " << aZero;
+  gfxCriticalError() << "CreateDataSourceSurfaceWithStride failed to initialize";
   return nullptr;
 }
 

@@ -1361,7 +1361,7 @@ DrawTargetD2D::Init(const IntSize &aSize, SurfaceFormat aFormat)
   hr = mDevice->CreateTexture2D(&desc, nullptr, byRef(mTexture));
 
   if (FAILED(hr)) {
-    gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(aSize))) << "Failed to init Direct2D DrawTarget. Size: " << mSize << " Code: " << hexa(hr);
+    gfxCriticalError() << "Failed to init Direct2D DrawTarget. Size: " << mSize << " Code: " << hexa(hr);
     return false;
   }
 
