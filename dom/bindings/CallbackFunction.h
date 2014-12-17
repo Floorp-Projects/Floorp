@@ -39,7 +39,7 @@ public:
   bool HasGrayCallable() const
   {
     // Play it safe in case this gets called after unlink.
-    return mCallback && xpc_IsGrayGCThing(mCallback);
+    return mCallback && JS::ObjectIsMarkedGray(mCallback);
   }
 
 protected:

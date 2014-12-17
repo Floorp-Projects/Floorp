@@ -216,14 +216,12 @@ public:
   }
   bool IsAttached() { return mAttached; }
 
-#ifdef MOZ_DUMP_PAINTING
   virtual void Dump(std::stringstream& aStream,
                     const char* aPrefix="",
                     bool aDumpHtml=false) { }
   static void DumpTextureHost(std::stringstream& aStream, TextureHost* aTexture);
 
   virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() { return nullptr; }
-#endif
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) = 0;
 

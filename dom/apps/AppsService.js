@@ -15,6 +15,11 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
+try {
+  if (Services.prefs.getBoolPref("dom.apps.customization.enabled")) {
+    Cu.import("resource://gre/modules/UserCustomizations.jsm");
+  }
+} catch(e) {}
 
 const APPS_SERVICE_CID = Components.ID("{05072afa-92fe-45bf-ae22-39b69c117058}");
 

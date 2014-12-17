@@ -1984,7 +1984,8 @@ js::TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
 static void
 AssertNonGrayGCThing(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
-    MOZ_ASSERT(!JS::GCThingIsMarkedGray(*thingp));
+    DebugOnly<Cell *> thing(static_cast<Cell *>(*thingp));
+    MOZ_ASSERT_IF(thing->isTenured(), !thing->asTenured().isMarked(js::gc::GRAY));
 }
 #endif
 
@@ -2015,7 +2016,7 @@ struct UnmarkGrayTracer : public JSTracer
     bool tracingShape;
 
     /* If tracingShape, shape child or nullptr. Otherwise, nullptr. */
-    void *previousShape;
+    Shape *previousShape;
 
     /* Whether we unmarked anything. */
     bool unmarkedAny;
@@ -2054,9 +2055,10 @@ struct UnmarkGrayTracer : public JSTracer
 static void
 UnmarkGrayChildren(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
-    void *thing = *thingp;
     int stackDummy;
-    if (!JS_CHECK_STACK_SIZE(trc->runtime()->mainThread.nativeStackLimit[StackForSystemCode], &stackDummy)) {
+    if (!JS_CHECK_STACK_SIZE(trc->runtime()->mainThread.nativeStackLimit[StackForSystemCode],
+                             &stackDummy))
+    {
         /*
          * If we run out of stack, we take a more drastic measure: require that
          * we GC again before the next CC.
@@ -2065,53 +2067,59 @@ UnmarkGrayChildren(JSTracer *trc, void **thingp, JSGCTraceKind kind)
         return;
     }
 
-#ifdef DEBUG
-    if (gc::IsInsideNursery(static_cast<gc::Cell *>(thing))) {
-        JSTracer nongray(trc->runtime(), AssertNonGrayGCThing);
-        JS_TraceChildren(&nongray, thing, kind);
-    }
-#endif
+    Cell *cell = static_cast<Cell *>(*thingp);
 
-    if (!JS::GCThingIsMarkedGray(thing))
+    // Cells in the nursery cannot be gray, and therefore must necessarily point
+    // to only black edges.
+    if (!cell->isTenured()) {
+#ifdef DEBUG
+        JSTracer nongray(trc->runtime(), AssertNonGrayGCThing);
+        TraceChildren(&nongray, cell, kind);
+#endif
         return;
+    }
+
+    TenuredCell &tenured = cell->asTenured();
+    if (!tenured.isMarked(js::gc::GRAY))
+        return;
+    tenured.unmark(js::gc::GRAY);
 
     UnmarkGrayTracer *tracer = static_cast<UnmarkGrayTracer *>(trc);
-    TenuredCell::fromPointer(thing)->unmark(js::gc::GRAY);
     tracer->unmarkedAny = true;
 
-    /*
-     * Trace children of |thing|. If |thing| and its parent are both shapes,
-     * |thing| will get saved to mPreviousShape without being traced. The parent
-     * will later trace |thing|. This is done to avoid increasing the stack
-     * depth during shape tracing. It is safe to do because a shape can only
-     * have one child that is a shape.
-     */
+    // Trace children of |tenured|. If |tenured| and its parent are both
+    // shapes, |tenured| will get saved to mPreviousShape without being traced.
+    // The parent will later trace |tenured|. This is done to avoid increasing
+    // the stack depth during shape tracing. It is safe to do because a shape
+    // can only have one child that is a shape.
     UnmarkGrayTracer childTracer(tracer, kind == JSTRACE_SHAPE);
 
     if (kind != JSTRACE_SHAPE) {
-        JS_TraceChildren(&childTracer, thing, kind);
+        TraceChildren(&childTracer, &tenured, kind);
         MOZ_ASSERT(!childTracer.previousShape);
         tracer->unmarkedAny |= childTracer.unmarkedAny;
         return;
     }
 
+    MOZ_ASSERT(kind == JSTRACE_SHAPE);
+    Shape *shape = static_cast<Shape *>(&tenured);
     if (tracer->tracingShape) {
         MOZ_ASSERT(!tracer->previousShape);
-        tracer->previousShape = thing;
+        tracer->previousShape = shape;
         return;
     }
 
     do {
-        MOZ_ASSERT(!JS::GCThingIsMarkedGray(thing));
-        JS_TraceChildren(&childTracer, thing, JSTRACE_SHAPE);
-        thing = childTracer.previousShape;
+        MOZ_ASSERT(!shape->isMarked(js::gc::GRAY));
+        TraceChildren(&childTracer, shape, JSTRACE_SHAPE);
+        shape = childTracer.previousShape;
         childTracer.previousShape = nullptr;
-    } while (thing);
+    } while (shape);
     tracer->unmarkedAny |= childTracer.unmarkedAny;
 }
 
-static bool
-UnmarkGrayCellRecursively(gc::Cell *cell, JSGCTraceKind kind)
+bool
+js::UnmarkGrayCellRecursively(gc::Cell *cell, JSGCTraceKind kind)
 {
     MOZ_ASSERT(cell);
 
@@ -2132,7 +2140,7 @@ UnmarkGrayCellRecursively(gc::Cell *cell, JSGCTraceKind kind)
     }
 
     UnmarkGrayTracer trc(rt);
-    JS_TraceChildren(&trc, cell, kind);
+    TraceChildren(&trc, cell, kind);
 
     return unmarkedArg || trc.unmarkedAny;
 }
@@ -2140,11 +2148,11 @@ UnmarkGrayCellRecursively(gc::Cell *cell, JSGCTraceKind kind)
 bool
 js::UnmarkGrayShapeRecursively(Shape *shape)
 {
-    return UnmarkGrayCellRecursively(shape, JSTRACE_SHAPE);
+    return js::UnmarkGrayCellRecursively(shape, JSTRACE_SHAPE);
 }
 
 JS_FRIEND_API(bool)
 JS::UnmarkGrayGCThingRecursively(JS::GCCellPtr thing)
 {
-    return UnmarkGrayCellRecursively(thing.asCell(), thing.kind());
+    return js::UnmarkGrayCellRecursively(thing.asCell(), thing.kind());
 }

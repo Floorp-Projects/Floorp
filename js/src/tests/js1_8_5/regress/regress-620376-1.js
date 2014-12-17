@@ -10,7 +10,7 @@ function test() {
     if (typeof timeout != "function")
 	return;
 
-    var p = Proxy.create({ enumerate: function() { return Array(1e9); }});
+    var p = Proxy.create({ keys: function() { return Array(1e9); }});
 
     expectExitCode(6);
     timeout(0.001);

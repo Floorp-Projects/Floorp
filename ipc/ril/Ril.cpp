@@ -148,17 +148,14 @@ ConnectWorkerToRIL::RunTask(JSContext *aCx)
     JS::Rooted<JSObject*> workerGlobal(aCx, JS::CurrentGlobalOrNull(aCx));
 
     // Check whether |postRILMessage| has been defined.  No one but this class
-    // should ever define |postRILMessage| in a RIL worker, so we call to
-    // |JS_LookupProperty| instead of |JS_GetProperty| here.
+    // should ever define |postRILMessage| in a RIL worker.
     JS::Rooted<JS::Value> val(aCx);
-    if (!JS_LookupProperty(aCx, workerGlobal, "postRILMessage", &val)) {
+    if (!JS_GetProperty(aCx, workerGlobal, "postRILMessage", &val)) {
         JS_ReportPendingException(aCx);
         return false;
     }
 
-    // |JS_LookupProperty| could still return JS_TRUE with an "undefined"
-    // |postRILMessage|, so we have to make sure that with an additional call
-    // to |JS_TypeOfValue|.
+    // Make sure that |postRILMessage| is a function.
     if (JSTYPE_FUNCTION == JS_TypeOfValue(aCx, val)) {
         return true;
     }

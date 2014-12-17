@@ -403,33 +403,6 @@ const gSessionHistoryObserver = {
   }
 };
 
-const gGatherTelemetryObserver = {
-  observe: function(subject, topic, data) {
-    if (topic != "gather-telemetry") {
-      return;
-    }
-
-    let engine;
-    try {
-      engine = Services.search.defaultEngine;
-    } catch (e) {}
-    let name;
-
-    if (!engine) {
-      name = "NONE";
-    } else if (engine.identifier) {
-      name = engine.identifier;
-    } else if (engine.name) {
-      name = "other-" + engine.name;
-    } else {
-      name = "UNDEFINED";
-    }
-
-    let engines = Services.telemetry.getKeyedHistogramById("SEARCH_DEFAULT_ENGINE");
-    engines.add(name, true)
-  },
-};
-
 /**
  * Given a starting docshell and a URI to look up, find the docshell the URI
  * is loaded in.
@@ -1213,7 +1186,6 @@ var gBrowserInit = {
     Services.obs.addObserver(gXPInstallObserver, "addon-install-blocked", false);
     Services.obs.addObserver(gXPInstallObserver, "addon-install-failed", false);
     Services.obs.addObserver(gXPInstallObserver, "addon-install-complete", false);
-    Services.obs.addObserver(gGatherTelemetryObserver, "gather-telemetry", false);
     window.messageManager.addMessageListener("Browser:URIFixup", gKeywordURIFixup);
     window.messageManager.addMessageListener("Browser:LoadURI", RedirectLoad);
 
@@ -1534,7 +1506,6 @@ var gBrowserInit = {
       Services.obs.removeObserver(gXPInstallObserver, "addon-install-blocked");
       Services.obs.removeObserver(gXPInstallObserver, "addon-install-failed");
       Services.obs.removeObserver(gXPInstallObserver, "addon-install-complete");
-      Services.obs.removeObserver(gGatherTelemetryObserver, "gather-telemetry");
       window.messageManager.removeMessageListener("Browser:URIFixup", gKeywordURIFixup);
       window.messageManager.removeMessageListener("Browser:LoadURI", RedirectLoad);
 
