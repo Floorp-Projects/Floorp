@@ -26,6 +26,13 @@ using mozilla::dom::Animation;
 using mozilla::dom::AnimationPlayer;
 using mozilla::CSSAnimationPlayer;
 
+mozilla::dom::Promise*
+CSSAnimationPlayer::GetReady(ErrorResult& aRv)
+{
+  FlushStyle();
+  return AnimationPlayer::GetReady(aRv);
+}
+
 void
 CSSAnimationPlayer::Play()
 {
