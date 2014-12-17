@@ -15,46 +15,51 @@
 const TEST_URI = "https://example.com/browser/browser/devtools/webconsole/test/test-mixedcontent-securityerrors.html";
 const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Security/MixedContent";
 
-function test()
+
+let test = asyncTest(function* () {
+  yield pushPrefEnv();
+
+  let { browser } = yield loadTab(TEST_URI);
+
+  let hud = yield openConsole();
+
+  let results = yield waitForMessages({
+    webconsole: hud,
+    messages: [
+      {
+        name: "Logged blocking mixed active content",
+        text: "Blocked loading mixed active content \"http://example.com/\"",
+        category: CATEGORY_SECURITY,
+        severity: SEVERITY_ERROR,
+        objects: true,
+      },
+      {
+        name: "Logged blocking mixed passive content - image",
+        text: "Blocked loading mixed active content \"http://example.com/\"",
+        category: CATEGORY_SECURITY,
+        severity: SEVERITY_ERROR,
+        objects: true,
+      },
+    ],
+  });
+
+  testClickOpenNewTab(hud, results[0]);
+
+  let results2 = yield mixedContentOverrideTest2(hud, browser);
+
+  testClickOpenNewTab(hud, results2[0]);
+});
+
+function pushPrefEnv()
 {
-  SpecialPowers.pushPrefEnv({"set": [["security.mixed_content.block_active_content", true],
-                            ["security.mixed_content.block_display_content", true]]}, blockMixedContentTest1);
+  let deferred = promise.defer();
+  let options = {"set": [["security.mixed_content.block_active_content", true],
+                            ["security.mixed_content.block_display_content", true]]};
+  SpecialPowers.pushPrefEnv(options, deferred.resolve);
+  return deferred.promise;
 }
 
-function blockMixedContentTest1()
-{
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad(aEvent) {
-    browser.removeEventListener(aEvent.type, onLoad, true);
-    openConsole(null, function testSecurityErrorLogged (hud) {
-      waitForMessages({
-        webconsole: hud,
-        messages: [
-          {
-            name: "Logged blocking mixed active content",
-            text: "Blocked loading mixed active content \"http://example.com/\"",
-            category: CATEGORY_SECURITY,
-            severity: SEVERITY_ERROR,
-            objects: true,
-          },
-          {
-            name: "Logged blocking mixed passive content - image",
-            text: "Blocked loading mixed active content \"http://example.com/\"",
-            category: CATEGORY_SECURITY,
-            severity: SEVERITY_ERROR,
-            objects: true,
-          },
-        ],
-      }).then(([result]) => {
-        testClickOpenNewTab(hud, result);
-        // Call the second (MCB override) test.
-        mixedContentOverrideTest2(hud);
-      });
-    });
-  }, true);
-}
-
-function mixedContentOverrideTest2(hud)
+function mixedContentOverrideTest2(hud, browser)
 {
   var notification = PopupNotifications.getNotification("bad-content", browser);
   ok(notification, "Mixed Content Doorhanger did appear");
@@ -64,7 +69,7 @@ function mixedContentOverrideTest2(hud)
   PopupNotifications.panel.firstChild.disableMixedContentProtection();
   notification.remove();
 
-  waitForMessages({
+  return waitForMessages({
     webconsole: hud,
     messages: [
       {
@@ -84,9 +89,6 @@ function mixedContentOverrideTest2(hud)
         objects: true,
       },
     ],
-  }).then(([result]) => {
-    testClickOpenNewTab(hud, result);
-    finishTest();
   });
 }
 
@@ -109,5 +111,4 @@ function testClickOpenNewTab(hud, match) {
                              warningNode.ownerDocument.defaultView);
   ok(linkOpened, "Clicking the Learn More Warning node opens the desired page");
   window.openUILinkIn = oldOpenUILinkIn;
-
 }

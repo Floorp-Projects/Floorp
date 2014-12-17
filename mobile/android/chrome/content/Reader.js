@@ -4,21 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
-                                  "resource://services-common/utils.js");
-
 let Reader = {
-  // Version of the cache schema.
-  CACHE_VERSION: 1,
-
-  DEBUG: 0,
-
-  // Don't try to parse the page if it has too many elements (for memory and
-  // performance reasons)
-  MAX_ELEMS_TO_PARSE: 3000,
-
-  _requests: {},
-
   get isEnabledForParseOnLoad() {
     delete this.isEnabledForParseOnLoad;
 
@@ -84,14 +70,7 @@ let Reader = {
     switch(aTopic) {
       case "Reader:Removed": {
         let uri = Services.io.newURI(aData, null, null);
-        this.removeArticleFromCache(uri).catch(e => Cu.reportError("Error removing article from cache: " + e));
-        break;
-      }
-
-      case "nsPref:changed": {
-        if (aData.startsWith("reader.parse-on-load.")) {
-          this.isEnabledForParseOnLoad = this._getStateForParseOnLoad();
-        }
+        ReaderMode.removeArticleFromCache(uri).catch(e => Cu.reportError("Error removing article from cache: " + e));
         break;
       }
     }
@@ -133,7 +112,7 @@ let Reader = {
       excerpt: article.excerpt || "",
     });
 
-    this.storeArticleInCache(article).catch(e => Cu.reportError("Error storing article in cache: " + e));
+    ReaderMode.storeArticleInCache(article).catch(e => Cu.reportError("Error storing article in cache: " + e));
   },
 
   _getStateForParseOnLoad: function () {
@@ -159,16 +138,14 @@ let Reader = {
     if (tab) {
       let article = tab.savedArticle;
       if (article && article.url == url) {
-        this.log("Saved article found in tab");
         return article;
       }
     }
 
     // Next, try to find a parsed article in the cache.
     let uri = Services.io.newURI(url, null, null);
-    let article = yield this.getArticleFromCache(uri);
+    let article = yield ReaderMode.getArticleFromCache(uri);
     if (article) {
-      this.log("Saved article found in cache");
       return article;
     }
 
@@ -176,146 +153,6 @@ let Reader = {
     // download the page and parse the article out of it.
     return yield this._downloadAndParseDocument(url);
   }),
-
-  /**
-   * Gets an article from a loaded tab's document. This method will parse the document
-   * if it does not find the article in the tab data or the cache.
-   *
-   * @param tab The loaded tab.
-   * @return {Promise}
-   * @resolves JS object representing the article, or null if no article is found.
-   */
-  parseDocumentFromTab: Task.async(function* (tab) {
-    let uri = tab.browser.currentURI;
-    if (!this._shouldCheckUri(uri)) {
-      this.log("Reader mode disabled for URI");
-      return null;
-    }
-
-    // First, try to find a parsed article in the cache.
-    let article = yield this.getArticleFromCache(uri);
-    if (article) {
-      this.log("Page found in cache, return article immediately");
-      return article;
-    }
-
-    let doc = tab.browser.contentWindow.document;
-    return yield this._readerParse(uri, doc);
-  }),
-
-  /**
-   * Retrieves an article from the cache given an article URI.
-   *
-   * @param uri The article URI.
-   * @return {Promise}
-   * @resolves JS object representing the article, or null if no article is found.
-   * @rejects OS.File.Error
-   */
-  getArticleFromCache: Task.async(function* (uri) {
-    let path = this._toHashedPath(uri.specIgnoringRef);
-    try {
-      let array = yield OS.File.read(path);
-      return JSON.parse(new TextDecoder().decode(array));
-    } catch (e if e instanceof OS.File.Error && e.becauseNoSuchFile) {
-      return null;
-    }
-  }),
-
-  /**
-   * Stores an article in the cache.
-   *
-   * @param article JS object representing article.
-   * @return {Promise}
-   * @resolves When the article is stored.
-   * @rejects OS.File.Error
-   */
-  storeArticleInCache: Task.async(function* (article) {
-    let array = new TextEncoder().encode(JSON.stringify(article));
-    let path = this._toHashedPath(article.url);
-    yield this._ensureCacheDir();
-    yield OS.File.writeAtomic(path, array, { tmpPath: path + ".tmp" });
-  }),
-
-  /**
-   * Removes an article from the cache given an article URI.
-   *
-   * @param uri The article URI.
-   * @return {Promise}
-   * @resolves When the article is removed.
-   * @rejects OS.File.Error
-   */
-  removeArticleFromCache: Task.async(function* (uri) {
-    let path = this._toHashedPath(uri.specIgnoringRef);
-    yield OS.File.remove(path);
-  }),
-
-  log: function(msg) {
-    if (this.DEBUG)
-      dump("Reader: " + msg);
-  },
-
-  _shouldCheckUri: function (uri) {
-    if ((uri.prePath + "/") === uri.spec) {
-      this.log("Not parsing home page: " + uri.spec);
-      return false;
-    }
-
-    if (!(uri.schemeIs("http") || uri.schemeIs("https") || uri.schemeIs("file"))) {
-      this.log("Not parsing URI scheme: " + uri.scheme);
-      return false;
-    }
-
-    return true;
-  },
-
-  _readerParse: function (uri, doc) {
-    return new Promise((resolve, reject) => {
-      let numTags = doc.getElementsByTagName("*").length;
-      if (numTags > this.MAX_ELEMS_TO_PARSE) {
-        this.log("Aborting parse for " + uri.spec + "; " + numTags + " elements found");
-        resolve(null);
-        return;
-      }
-
-      let worker = new ChromeWorker("readerWorker.js");
-      worker.onmessage = evt => {
-        let article = evt.data;
-
-        if (!article) {
-          this.log("Worker did not return an article");
-          resolve(null);
-          return;
-        }
-
-        // Append URL to the article data. specIgnoringRef will ignore any hash
-        // in the URL.
-        article.url = uri.specIgnoringRef;
-        let flags = Ci.nsIDocumentEncoder.OutputSelectionOnly | Ci.nsIDocumentEncoder.OutputAbsoluteLinks;
-        article.title = Cc["@mozilla.org/parserutils;1"].getService(Ci.nsIParserUtils)
-                                                        .convertToPlainText(article.title, flags, 0);
-        resolve(article);
-      };
-
-      worker.onerror = evt => {
-        reject("Error in worker: " + evt.message);
-      };
-
-      try {
-        worker.postMessage({
-          uri: {
-            spec: uri.spec,
-            host: uri.host,
-            prePath: uri.prePath,
-            scheme: uri.scheme,
-            pathBase: Services.io.newURI(".", null, uri).spec
-          },
-          doc: new XMLSerializer().serializeToString(doc)
-        });
-      } catch (e) {
-        reject("Reader: could not build Readability arguments: " + e);
-      }
-    });
-  },
 
   _downloadDocument: function (url) {
     return new Promise((resolve, reject) => {
@@ -344,7 +181,6 @@ let Reader = {
           return;
         }
 
-        this.log("Done loading: " + doc);
         if (doc.location.href == "about:blank") {
           reject("about:blank loaded; aborting");
 
@@ -362,64 +198,16 @@ let Reader = {
   },
 
   _downloadAndParseDocument: Task.async(function* (url) {
-    this.log("Needs to fetch page, creating request: " + url);
     let { browser, doc } = yield this._downloadDocument(url);
-    this.log("Finished loading page: " + doc);
 
     try {
       let uri = Services.io.newURI(url, null, null);
-      let article = yield this._readerParse(uri, doc);
-      this.log("Document parsed successfully");
+      let article = yield ReaderMode.readerParse(uri, doc);
       return article;
     } finally {
       browser.parentNode.removeChild(browser);
     }
   }),
-
-  get _cryptoHash() {
-    delete this._cryptoHash;
-    return this._cryptoHash = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
-  },
-
-  get _unicodeConverter() {
-    delete this._unicodeConverter;
-    this._unicodeConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                              .createInstance(Ci.nsIScriptableUnicodeConverter);
-    this._unicodeConverter.charset = "utf8";
-    return this._unicodeConverter;
-  },
-
-  /**
-   * Calculate the hashed path for a stripped article URL.
-   *
-   * @param url The article URL. This should have referrers removed.
-   * @return The file path to the cached article.
-   */
-  _toHashedPath: function (url) {
-    let value = this._unicodeConverter.convertToByteArray(url);
-    this._cryptoHash.init(this._cryptoHash.MD5);
-    this._cryptoHash.update(value, value.length);
-
-    let hash = CommonUtils.encodeBase32(this._cryptoHash.finish(false));
-    let fileName = hash.substring(0, hash.indexOf("=")) + ".json";
-    return OS.Path.join(OS.Constants.Path.profileDir, "readercache", fileName);
-  },
-
-  /**
-   * Ensures the cache directory exists.
-   *
-   * @return Promise
-   * @resolves When the cache directory exists.
-   * @rejects OS.File.Error
-   */
-  _ensureCacheDir: function () {
-    let dir = OS.Path.join(OS.Constants.Path.profileDir, "readercache");
-    return OS.File.exists(dir).then(exists => {
-      if (!exists) {
-        return OS.File.makeDir(dir);
-      }
-    });
-  },
 
   /**
    * Migrates old indexedDB reader mode cache to new JSON cache.
@@ -458,7 +246,7 @@ let Reader = {
     });
 
     for (let article of articles) {
-      yield this.storeArticleInCache(article);
+      yield ReaderMode.storeArticleInCache(article);
     }
 
     // Delete the database.

@@ -10,83 +10,82 @@
 
 const TEST_URI = "http://example.com/";
 
-function test() {
-  let hud;
+"use strict";
 
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, testSelectionWhenMovingBetweenBoxes);
-  }, true);
+let test = asyncTest(function* () {
+  yield loadTab(TEST_URI);
 
-  function testSelectionWhenMovingBetweenBoxes(aHud) {
-    hud = aHud;
-    let jsterm = hud.jsterm;
+  let hud = yield openConsole();
+  yield testSelectionWhenMovingBetweenBoxes(hud);
+  performTestsAfterOutput(hud);
+})
 
-    // Fill the console with some output.
-    jsterm.clearOutput();
-    jsterm.execute("1 + 2");
-    jsterm.execute("3 + 4");
-    jsterm.execute("5 + 6");
+let testSelectionWhenMovingBetweenBoxes = Task.async(function *(aHud) {
+  let hud = aHud;
+  let jsterm = hud.jsterm;
 
-    waitForMessages({
-      webconsole: hud,
-      messages: [{
-        text: "3",
-        category: CATEGORY_OUTPUT,
-      },
-      {
-        text: "7",
-        category: CATEGORY_OUTPUT,
-      },
-      {
-        text: "11",
-        category: CATEGORY_OUTPUT,
-      }],
-    }).then(performTestsAfterOutput);
-  }
+  // Fill the console with some output.
+  jsterm.clearOutput();
+  yield jsterm.execute("1 + 2");
+  yield jsterm.execute("3 + 4");
+  yield jsterm.execute("5 + 6");
 
-  function performTestsAfterOutput() {
-    let outputNode = hud.outputNode;
+  return waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "3",
+      category: CATEGORY_OUTPUT,
+    },
+    {
+      text: "7",
+      category: CATEGORY_OUTPUT,
+    },
+    {
+      text: "11",
+      category: CATEGORY_OUTPUT,
+    }],
+  });
+});
 
-    ok(outputNode.childNodes.length >= 3, "the output node has children after " +
-       "executing some JavaScript");
+function performTestsAfterOutput(aHud) {
+  let hud = aHud;
+  let outputNode = hud.outputNode;
 
-    // Test that the global Firefox "Select All" functionality (e.g. Edit >
-    // Select All) works properly in the Web Console.
-    let commandController = hud.ui._commandController;
-    ok(commandController != null, "the window has a command controller object");
+  ok(outputNode.childNodes.length >= 3, "the output node has children after " +
+     "executing some JavaScript");
 
-    commandController.selectAll();
+  // Test that the global Firefox "Select All" functionality (e.g. Edit >
+  // Select All) works properly in the Web Console.
+  let commandController = hud.ui._commandController;
+  ok(commandController != null, "the window has a command controller object");
 
-    let selectedCount = hud.ui.output.getSelectedMessages().length;
-    is(selectedCount, outputNode.childNodes.length,
-       "all console messages are selected after performing a regular browser " +
-       "select-all operation");
+  commandController.selectAll();
 
-    hud.iframeWindow.getSelection().removeAllRanges();
+  let selectedCount = hud.ui.output.getSelectedMessages().length;
+  is(selectedCount, outputNode.childNodes.length,
+     "all console messages are selected after performing a regular browser " +
+     "select-all operation");
 
-    // Test the context menu "Select All" (which has a different code path) works
-    // properly as well.
-    let contextMenuId = outputNode.parentNode.getAttribute("context");
-    let contextMenu = hud.ui.document.getElementById(contextMenuId);
-    ok(contextMenu != null, "the output node has a context menu");
+  hud.iframeWindow.getSelection().removeAllRanges();
 
-    let selectAllItem = contextMenu.querySelector("*[command='cmd_selectAll']");
-    ok(selectAllItem != null,
-       "the context menu on the output node has a \"Select All\" item");
+  // Test the context menu "Select All" (which has a different code path) works
+  // properly as well.
+  let contextMenuId = outputNode.parentNode.getAttribute("context");
+  let contextMenu = hud.ui.document.getElementById(contextMenuId);
+  ok(contextMenu != null, "the output node has a context menu");
 
-    outputNode.focus();
+  let selectAllItem = contextMenu.querySelector("*[command='cmd_selectAll']");
+  ok(selectAllItem != null,
+     "the context menu on the output node has a \"Select All\" item");
 
-    selectAllItem.doCommand();
+  outputNode.focus();
 
-    selectedCount = hud.ui.output.getSelectedMessages().length;
-    is(selectedCount, outputNode.childNodes.length,
-       "all console messages are selected after performing a select-all " +
-       "operation from the context menu");
+  selectAllItem.doCommand();
 
-    hud.iframeWindow.getSelection().removeAllRanges();
+  selectedCount = hud.ui.output.getSelectedMessages().length;
+  is(selectedCount, outputNode.childNodes.length,
+     "all console messages are selected after performing a select-all " +
+     "operation from the context menu");
 
-    finishTest();
-  }
+  hud.iframeWindow.getSelection().removeAllRanges();
 }

@@ -4,61 +4,61 @@
 
 const TEST_URI = 'data:text/html;charset=utf-8,<div style="-moz-opacity:0;">test repeated' +
                  ' css warnings</div><p style="-moz-opacity:0">hi</p>';
+let hud;
+
+"use strict";
+
+/**
+ * Unit test for bug 611795:
+ * Repeated CSS messages get collapsed into one.
+ */
+
+let test = asyncTest(function* () {
+  yield loadTab(TEST_URI);
+
+  hud = yield openConsole();
+  hud.jsterm.clearOutput(true);
+
+  BrowserReload();
+  yield loadBrowser(gBrowser.selectedBrowser);
+
+  yield onContentLoaded();
+  yield testConsoleLogRepeats();
+
+  hud = null;
+});
 
 function onContentLoaded()
 {
-  browser.removeEventListener("load", onContentLoaded, true);
-
-  let HUD = HUDService.getHudByWindow(content);
-
   let cssWarning = "Unknown property '-moz-opacity'.  Declaration dropped.";
 
-  waitForMessages({
-    webconsole: HUD,
+  return waitForMessages({
+    webconsole: hud,
     messages: [{
       text: cssWarning,
       category: CATEGORY_CSS,
       severity: SEVERITY_WARNING,
       repeats: 2,
     }],
-  }).then(testConsoleLogRepeats);
+  });
 }
 
 function testConsoleLogRepeats()
 {
-  let HUD = HUDService.getHudByWindow(content);
-  let jsterm = HUD.jsterm;
+  let jsterm = hud.jsterm;
 
   jsterm.clearOutput();
 
   jsterm.setInputValue("for (let i = 0; i < 10; ++i) console.log('this is a line of reasonably long text that I will use to verify that the repeated text node is of an appropriate size.');");
   jsterm.execute();
 
-  waitForMessages({
-    webconsole: HUD,
+  return waitForMessages({
+    webconsole: hud,
     messages: [{
       text: "this is a line of reasonably long text",
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_LOG,
       repeats: 10,
     }],
-  }).then(finishTest);
-}
-
-/**
- * Unit test for bug 611795:
- * Repeated CSS messages get collapsed into one.
- */
-function test()
-{
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, function(aHud) {
-      // Clear cached messages that are shown once the Web Console opens.
-      aHud.jsterm.clearOutput(true);
-      browser.addEventListener("load", onContentLoaded, true);
-      content.location.reload();
-    });
-  }, true);
+  });
 }

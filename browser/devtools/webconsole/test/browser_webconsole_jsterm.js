@@ -5,24 +5,18 @@
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
 
-let jsterm, testDriver;
+let jsterm;
 
-function test() {
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, function(hud) {
-      testDriver = testJSTerm(hud);
-      testDriver.next();
-    });
-  }, true);
-}
-
-function nextTest() {
-  testDriver.next();
-}
+let test = asyncTest(function* () {
+  yield loadTab(TEST_URI);
+  let hud = yield openConsole();
+  jsterm = hud.jsterm;
+  yield testJSTerm(hud);
+  jsterm  = null;
+});
 
 function checkResult(msg, desc) {
+  let def = promise.defer();
   waitForMessages({
     webconsole: jsterm.hud.owner,
     messages: [{
@@ -39,59 +33,49 @@ function checkResult(msg, desc) {
       ok(msg(node), "correct message shown for " + desc);
     }
 
-    nextTest();
+    def.resolve();
   });
+  return def.promise;
 }
 
 function testJSTerm(hud)
 {
-  jsterm = hud.jsterm;
   const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
 
   jsterm.clearOutput();
-  jsterm.execute("$('#header').getAttribute('id')");
-  checkResult('"header"', "$() worked");
-  yield undefined;
+  yield jsterm.execute("$('#header').getAttribute('id')");
+  yield checkResult('"header"', "$() worked");
 
   jsterm.clearOutput();
-  jsterm.execute("$$('h1').length");
-  checkResult("1", "$$() worked");
-  yield undefined;
+  yield jsterm.execute("$$('h1').length");
+  yield checkResult("1", "$$() worked");
 
   jsterm.clearOutput();
-  jsterm.execute("$x('.//*', document.body)[0] == $$('h1')[0]");
-  checkResult("true", "$x() worked");
-  yield undefined;
+  yield jsterm.execute("$x('.//*', document.body)[0] == $$('h1')[0]");
+  yield checkResult("true", "$x() worked");
 
   // no jsterm.clearOutput() here as we clear the output using the clear() fn.
-  jsterm.execute("clear()");
+  yield jsterm.execute("clear()");
 
-  waitForSuccess({
+  yield waitForSuccess({
     name: "clear() worked",
-    validatorFn: function()
+    validator: function()
     {
       return jsterm.outputNode.childNodes.length == 0;
-    },
-    successFn: nextTest,
-    failureFn: nextTest,
+    }
   });
 
-  yield undefined;
+  jsterm.clearOutput();
+  yield jsterm.execute("keys({b:1})[0] == 'b'");
+  yield checkResult("true", "keys() worked", 1);
 
   jsterm.clearOutput();
-  jsterm.execute("keys({b:1})[0] == 'b'");
-  checkResult("true", "keys() worked", 1);
-  yield undefined;
-
-  jsterm.clearOutput();
-  jsterm.execute("values({b:1})[0] == 1");
-  checkResult("true", "values() worked", 1);
-  yield undefined;
+  yield jsterm.execute("values({b:1})[0] == 1");
+  yield checkResult("true", "values() worked", 1);
 
   jsterm.clearOutput();
 
   let openedLinks = 0;
-  let onExecuteCalls = 0;
   let oldOpenLink = hud.openLink;
   hud.openLink = (url) => {
     if (url == HELP_URL) {
@@ -99,17 +83,9 @@ function testJSTerm(hud)
     }
   };
 
-  function onExecute() {
-    onExecuteCalls++;
-    if (onExecuteCalls == 3) {
-      nextTest();
-    }
-  }
-
-  jsterm.execute("help()", onExecute);
-  jsterm.execute("help", onExecute);
-  jsterm.execute("?", onExecute);
-  yield undefined;
+  yield jsterm.execute("help()");
+  yield jsterm.execute("help");
+  yield jsterm.execute("?");
 
   let output = jsterm.outputNode.querySelector(".message[category='output']");
   ok(!output, "no output for help() calls");
@@ -117,66 +93,52 @@ function testJSTerm(hud)
   hud.openLink = oldOpenLink;
 
   jsterm.clearOutput();
-  jsterm.execute("pprint({b:2, a:1})");
-  checkResult("\"  b: 2\n  a: 1\"", "pprint()");
-  yield undefined;
+  yield jsterm.execute("pprint({b:2, a:1})");
+  yield checkResult("\"  b: 2\n  a: 1\"", "pprint()");
 
   // check instanceof correctness, bug 599940
   jsterm.clearOutput();
-  jsterm.execute("[] instanceof Array");
-  checkResult("true", "[] instanceof Array == true");
-  yield undefined;
+  yield jsterm.execute("[] instanceof Array");
+  yield checkResult("true", "[] instanceof Array == true");
 
   jsterm.clearOutput();
-  jsterm.execute("({}) instanceof Object");
-  checkResult("true", "({}) instanceof Object == true");
-  yield undefined;
+  yield jsterm.execute("({}) instanceof Object");
+  yield checkResult("true", "({}) instanceof Object == true");
 
   // check for occurrences of Object XRayWrapper, bug 604430
   jsterm.clearOutput();
-  jsterm.execute("document");
-  checkResult(function(node) {
+  yield jsterm.execute("document");
+  yield checkResult(function(node) {
     return node.textContent.search(/\[object xraywrapper/i) == -1;
   }, "document - no XrayWrapper");
-  yield undefined;
 
   // check that pprint(window) and keys(window) don't throw, bug 608358
   jsterm.clearOutput();
-  jsterm.execute("pprint(window)");
-  checkResult(null, "pprint(window)");
-  yield undefined;
+  yield jsterm.execute("pprint(window)");
+  yield checkResult(null, "pprint(window)");
 
   jsterm.clearOutput();
-  jsterm.execute("keys(window)");
-  checkResult(null, "keys(window)");
-  yield undefined;
+  yield jsterm.execute("keys(window)");
+  yield checkResult(null, "keys(window)");
 
   // bug 614561
   jsterm.clearOutput();
-  jsterm.execute("pprint('hi')");
-  checkResult("\"  0: \"h\"\n  1: \"i\"\"", "pprint('hi')");
-  yield undefined;
+  yield jsterm.execute("pprint('hi')");
+  yield checkResult("\"  0: \"h\"\n  1: \"i\"\"", "pprint('hi')");
 
   // check that pprint(function) shows function source, bug 618344
   jsterm.clearOutput();
-  jsterm.execute("pprint(function() { var someCanaryValue = 42; })");
-  checkResult(function(node) {
+  yield jsterm.execute("pprint(function() { var someCanaryValue = 42; })");
+  yield checkResult(function(node) {
     return node.textContent.indexOf("someCanaryValue") > -1;
   }, "pprint(function) shows source");
-  yield undefined;
 
   // check that an evaluated null produces "null", bug 650780
   jsterm.clearOutput();
-  jsterm.execute("null");
-  checkResult("null", "null is null");
-  yield undefined;
+  yield jsterm.execute("null");
+  yield checkResult("null", "null is null");
 
   jsterm.clearOutput();
-  jsterm.execute("undefined");
-  checkResult("undefined", "undefined is printed");
-  yield undefined;
-
-  jsterm = testDriver = null;
-  executeSoon(finishTest);
-  yield undefined;
+  yield jsterm.execute("undefined");
+  yield checkResult("undefined", "undefined is printed");
 }

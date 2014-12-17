@@ -6,26 +6,37 @@
 const TEST_URI = "data:text/html;charset=utf-8,<p>bug 585991 - autocomplete popup keyboard usage test";
 let HUD, popup, jsterm, inputNode, completeNode;
 
-function test() {
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, consoleOpened);
-  }, true);
-}
+let test = asyncTest(function*() {
+  yield loadTab(TEST_URI);
+  let hud = yield openConsole();
 
-function consoleOpened(aHud) {
+  yield consoleOpened(hud);
+  yield popupHideAfterTab();
+  yield testReturnKey();
+  yield dontShowArrayNumbers();
+  yield testReturnWithNoSelection();
+  yield popupHideAfterReturnWithNoSelection();
+  yield testCompletionInText();
+  yield popupHideAfterCompletionInText();
+
+  HUD = popup = jsterm = inputNode = completeNode = null;
+});
+
+let consoleOpened = Task.async(function*(aHud) {
+  let deferred = promise.defer();
   HUD = aHud;
   info("web console opened");
 
   jsterm = HUD.jsterm;
 
-  jsterm.execute("window.foobarBug585991={" +
+  yield jsterm.execute("window.foobarBug585991={" +
     "'item0': 'value0'," +
     "'item1': 'value1'," +
     "'item2': 'value2'," +
     "'item3': 'value3'" +
   "}");
+  yield jsterm.execute("window.testBug873250a = 'hello world';"
+    + "window.testBug873250b = 'hello world 2';");
   popup = jsterm.autocompletePopup;
   completeNode = jsterm.completeNode;
   inputNode = jsterm.inputNode;
@@ -110,20 +121,25 @@ function consoleOpened(aHud) {
     is(popup.selectedIndex, 0, "index is first after Home");
 
     info("press Tab and wait for popup to hide");
-    popup._panel.addEventListener("popuphidden", popupHideAfterTab, false);
+    popup._panel.addEventListener("popuphidden", function popupHidden() {
+      popup._panel.removeEventListener("popuphidden", popupHidden, false);
+      deferred.resolve();
+    }, false);
     EventUtils.synthesizeKey("VK_TAB", {});
   }, false);
 
   info("wait for completion: window.foobarBug585991.");
   jsterm.setInputValue("window.foobarBug585991");
   EventUtils.synthesizeKey(".", {});
-}
+
+  return deferred.promise;
+});
 
 function popupHideAfterTab()
 {
-  // At this point the completion suggestion should be accepted.
-  popup._panel.removeEventListener("popuphidden", popupHideAfterTab, false);
+  let deferred = promise.defer();
 
+  // At this point the completion suggestion should be accepted.
   ok(!popup.isOpen, "popup is not open");
 
   is(inputNode.value, "window.foobarBug585991.watch",
@@ -158,7 +174,7 @@ function popupHideAfterTab()
 
       ok(!completeNode.value, "completeNode is empty");
 
-      executeSoon(testReturnKey);
+      deferred.resolve();
     }, false);
 
     info("press Escape to close the popup");
@@ -172,10 +188,14 @@ function popupHideAfterTab()
     jsterm.setInputValue("window.foobarBug585991");
     EventUtils.synthesizeKey(".", {});
   });
+
+  return deferred.promise;
 }
 
 function testReturnKey()
 {
+  let deferred = promise.defer();
+
   popup._panel.addEventListener("popupshown", function onShown() {
     popup._panel.removeEventListener("popupshown", onShown, false);
 
@@ -210,7 +230,7 @@ function testReturnKey()
 
       ok(!completeNode.value, "completeNode is empty");
 
-      dontShowArrayNumbers();
+      deferred.resolve();
     }, false);
 
     info("press Return to accept suggestion. wait for popup to hide");
@@ -225,10 +245,14 @@ function testReturnKey()
     EventUtils.synthesizeKey("1", {});
     EventUtils.synthesizeKey(".", {});
   });
+
+  return deferred.promise;
 }
 
 function dontShowArrayNumbers()
 {
+  let deferred = promise.defer();
+
   info("dontShowArrayNumbers");
   content.wrappedJSObject.foobarBug585991 = ["Sherlock Holmes"];
 
@@ -243,7 +267,10 @@ function dontShowArrayNumbers()
     ok(!sameItems.some(function(prop, index) { prop === "0"; }),
        "Completing on an array doesn't show numbers.");
 
-    popup._panel.addEventListener("popuphidden", testReturnWithNoSelection, false);
+    popup._panel.addEventListener("popuphidden", function popupHidden() {
+      popup._panel.removeEventListener("popuphidden", popupHidden, false);
+      deferred.resolve();
+    }, false);
 
     info("wait for popup to hide");
     executeSoon(() => EventUtils.synthesizeKey("VK_ESCAPE", {}));
@@ -254,15 +281,15 @@ function dontShowArrayNumbers()
     jsterm.setInputValue("window.foobarBug585991");
     EventUtils.synthesizeKey(".", {});
   });
+
+  return deferred.promise;
 }
 
 function testReturnWithNoSelection()
 {
-  popup._panel.removeEventListener("popuphidden", testReturnWithNoSelection, false);
+  let deferred = promise.defer();
 
   info("test pressing return with open popup, but no selection, see bug 873250");
-  content.wrappedJSObject.testBug873250a = "hello world";
-  content.wrappedJSObject.testBug873250b = "hello world 2";
 
   popup._panel.addEventListener("popupshown", function onShown() {
     popup._panel.removeEventListener("popupshown", onShown);
@@ -272,7 +299,10 @@ function testReturnWithNoSelection()
     isnot(popup.selectedIndex, -1, "popup.selectedIndex is correct");
 
     info("press Return and wait for popup to hide");
-    popup._panel.addEventListener("popuphidden", popupHideAfterReturnWithNoSelection);
+    popup._panel.addEventListener("popuphidden", function popupHidden() {
+      popup._panel.removeEventListener("popuphidden", popupHidden);
+      deferred.resolve();
+    });
     executeSoon(() => EventUtils.synthesizeKey("VK_RETURN", {}));
   });
 
@@ -281,12 +311,12 @@ function testReturnWithNoSelection()
     jsterm.setInputValue("window.testBu");
     EventUtils.synthesizeKey("g", {});
   });
+
+  return deferred.promise;
 }
 
 function popupHideAfterReturnWithNoSelection()
 {
-  popup._panel.removeEventListener("popuphidden", popupHideAfterReturnWithNoSelection);
-
   ok(!popup.isOpen, "popup is not open after VK_RETURN");
 
   is(inputNode.value, "", "inputNode is empty after VK_RETURN");
@@ -294,12 +324,14 @@ function popupHideAfterReturnWithNoSelection()
   is(jsterm.history[jsterm.history.length-1], "window.testBug",
      "jsterm history is correct");
 
-  executeSoon(testCompletionInText);
+  return promise.resolve();
 }
 
 function testCompletionInText()
 {
   info("test that completion works inside text, see bug 812618");
+
+  let deferred = promise.defer();
 
   popup._panel.addEventListener("popupshown", function onShown() {
     popup._panel.removeEventListener("popupshown", onShown);
@@ -317,20 +349,22 @@ function testCompletionInText()
     ok(sameItems, "getItems returns the items we expect");
 
     info("press Tab and wait for popup to hide");
-    popup._panel.addEventListener("popuphidden", popupHideAfterCompletionInText);
+    popup._panel.addEventListener("popuphidden", function popupHidden() {
+      popup._panel.removeEventListener("popuphidden", popupHidden);
+      deferred.resolve();
+    });
     EventUtils.synthesizeKey("VK_TAB", {});
   });
 
   jsterm.setInputValue("dump(window.testBu)");
   inputNode.selectionStart = inputNode.selectionEnd = 18;
   EventUtils.synthesizeKey("g", {});
+  return deferred.promise;
 }
 
 function popupHideAfterCompletionInText()
 {
   // At this point the completion suggestion should be accepted.
-  popup._panel.removeEventListener("popuphidden", popupHideAfterCompletionInText);
-
   ok(!popup.isOpen, "popup is not open");
   is(inputNode.value, "dump(window.testBug873250b)",
      "completion was successful after VK_TAB");
@@ -338,10 +372,5 @@ function popupHideAfterCompletionInText()
   is(inputNode.selectionStart, inputNode.selectionEnd, "cursor location (confirmed)");
   ok(!completeNode.value, "completeNode is empty");
 
-  finishUp();
-}
-
-function finishUp() {
-  HUD = popup = jsterm = inputNode = completeNode = null;
-  finishTest();
+  return promise.resolve();
 }

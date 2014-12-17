@@ -7,13 +7,17 @@
  *   Mihai Șucan <mihai.sucan@gmail.com>
  */
 
-let hud, testDriver;
+"use strict";
 
-function testNext() {
-  testDriver.next();
-}
+const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 613642: maintain scroll with pruning of old messages";
 
-function testGen() {
+let hud;
+
+let test = asyncTest(function* () {
+  yield loadTab(TEST_URI);
+
+  let hud = yield openConsole();
+
   hud.jsterm.clearOutput();
 
   let outputNode = hud.outputNode;
@@ -25,16 +29,14 @@ function testGen() {
     content.console.log("test message " + i);
   }
 
-  waitForMessages({
+  yield waitForMessages({
     webconsole: hud,
     messages: [{
       text: "test message 149",
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_LOG,
     }],
-  }).then(testNext);
-
-  yield undefined;
+  });
 
   let oldScrollTop = scrollBoxElement.scrollTop;
   isnot(oldScrollTop, 0, "scroll location is not at the top");
@@ -56,16 +58,14 @@ function testGen() {
   // add a message
   content.console.log("hello world");
 
-  waitForMessages({
+  yield waitForMessages({
     webconsole: hud,
     messages: [{
       text: "hello world",
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_LOG,
     }],
-  }).then(testNext);
-
-  yield undefined;
+  });
 
   // Scroll location needs to change, because one message is also removed, and
   // we need to scroll a bit towards the top, to keep the current view in sync.
@@ -77,21 +77,5 @@ function testGen() {
 
   Services.prefs.clearUserPref("devtools.hud.loglimit.console");
 
-  hud = testDriver = null;
-  finishTest();
-
-  yield undefined;
-}
-
-function test() {
-  addTab("data:text/html;charset=utf-8,Web Console test for bug 613642: maintain scroll with pruning of old messages");
-  browser.addEventListener("load", function tabLoad(aEvent) {
-    browser.removeEventListener(aEvent.type, tabLoad, true);
-
-    openConsole(null, function(aHud) {
-      hud = aHud;
-      testDriver = testGen();
-      testDriver.next();
-    });
-  }, true);
-}
+  hud = null;
+});

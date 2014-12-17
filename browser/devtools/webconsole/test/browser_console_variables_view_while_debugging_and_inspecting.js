@@ -13,10 +13,8 @@ let gWebConsole, gJSTerm, gDebuggerWin, gThread, gDebuggerController,
 
 function test()
 {
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, consoleOpened);
+  loadTab(TEST_URI).then(() => {
+    openConsole().then(consoleOpened);
   }, true);
 }
 
@@ -31,16 +29,18 @@ function consoleOpened(hud)
 
 function debuggerOpened(aResult)
 {
+  info("debugger opened");
   gDebuggerWin = aResult.panelWin;
   gDebuggerController = gDebuggerWin.DebuggerController;
   gThread = gDebuggerController.activeThread;
   gStackframes = gDebuggerController.StackFrames;
 
-  openInspector(inspectorOpened);
+  openInspector().then(inspectorOpened);
 }
 
 function inspectorOpened(aPanel)
 {
+  info("inspector opened");
   gThread.addOneTimeListener("framesadded", onFramesAdded);
 
   info("firstCall()");
@@ -51,7 +51,7 @@ function onFramesAdded()
 {
   info("onFramesAdded");
 
-  openConsole(null, () => gJSTerm.execute("fooObj", onExecuteFooObj));
+  openConsole().then(() => gJSTerm.execute("fooObj").then(onExecuteFooObj));
 }
 
 function onExecuteFooObj(msg)
@@ -90,12 +90,11 @@ function onTestPropFound(aResults)
     property: prop,
     field: "value",
     string: "document.title + foo2 + $('p')",
-    webconsole: gWebConsole,
-    callback: onFooObjFetchAfterUpdate,
-  });
+    webconsole: gWebConsole
+  }).then(onFooObjFetchAfterUpdate);
 }
 
-function onFooObjFetchAfterUpdate(aEvent, aVar)
+function onFooObjFetchAfterUpdate(aVar)
 {
   info("onFooObjFetchAfterUpdate");
   let para = content.wrappedJSObject.document.querySelector("p");
@@ -112,7 +111,7 @@ function onUpdatedTestPropFound(aResults)
   ok(prop, "matched the updated |testProp2| property value");
 
   // Check that testProp2 was updated.
-  gJSTerm.execute("fooObj.testProp2", onExecuteFooObjTestProp2);
+  gJSTerm.execute("fooObj.testProp2").then(onExecuteFooObjTestProp2);
 }
 
 function onExecuteFooObjTestProp2()

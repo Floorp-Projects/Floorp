@@ -5,6 +5,8 @@
 // Tests that if a link in console is double clicked, the console frame doesn't
 // navigate to that destination (bug 975707).
 
+"use strict";
+
 function test() {
   let originalNetPref = Services.prefs.getBoolPref("devtools.webconsole.filter.networkinfo");
   registerCleanupFunction(() => {

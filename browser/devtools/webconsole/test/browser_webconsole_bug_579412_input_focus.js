@@ -5,21 +5,15 @@
 
 // Tests that the input field is focused when the console is opened.
 
+"use strict";
+
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
 
-function test() {
-  addTab(TEST_URI);
-  browser.addEventListener("DOMContentLoaded", testInputFocus, false);
-}
+let test = asyncTest(function*() {
+  yield loadTab(TEST_URI);
+  let hud = yield openConsole();
+  hud.jsterm.clearOutput();
 
-function testInputFocus() {
-  browser.removeEventListener("DOMContentLoaded", testInputFocus, false);
-
-  openConsole(null, function(hud) {
-    let inputNode = hud.jsterm.inputNode;
-    ok(inputNode.getAttribute("focused"), "input node is focused");
-
-    finishTest();
-  });
-}
-
+  let inputNode = hud.jsterm.inputNode;
+  ok(inputNode.getAttribute("focused"), "input node is focused");
+});

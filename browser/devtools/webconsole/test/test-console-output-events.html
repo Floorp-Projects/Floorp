@@ -10,6 +10,7 @@
 </head>
 <body>
   <p>hello world!</p>
+
   <script type="text/javascript">
 function testDOMEvents() {
   function eventLogger(ev) {
@@ -17,6 +18,24 @@ function testDOMEvents() {
   }
   document.addEventListener("mousemove", eventLogger);
   document.addEventListener("keypress", eventLogger);
+
+  synthesizeMouseMove();
+  synthesizeKeyPress("a", {shiftKey: true});
+}
+
+function synthesizeMouseMove(element) {
+  var mouseEvent = document.createEvent("MouseEvent");
+  mouseEvent.initMouseEvent("mousemove", true, true, window, 0, 0, 0, 0, 0,
+                            false, false, false, false, 0, null);
+
+  document.dispatchEvent(mouseEvent);
+}
+
+function synthesizeKeyPress(key, options) {
+  var keyboardEvent = document.createEvent("KeyboardEvent");
+  keyboardEvent.initKeyEvent("keypress", true, true, window, false, false,
+                             options.shiftKey, false, key.charCodeAt(0), 0);
+  document.dispatchEvent(keyboardEvent);
 }
   </script>
 </body>
