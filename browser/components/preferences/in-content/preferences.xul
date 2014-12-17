@@ -14,7 +14,7 @@
 <?xml-stylesheet
   href="chrome://browser/content/preferences/handlers.css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/applications.css"?>
-<?xml-stylesheet href="chrome://browser/content/preferences/in-content/search.css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/in-content/search.css"?>
 
 <!DOCTYPE page [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
