@@ -1190,6 +1190,10 @@
                 // We need to explicitly focus the new tab, because
                 // tabbox.xml does this only in some cases.
                 this.mCurrentTab.focus();
+              } else if (gMultiProcessBrowser) {
+                // Clear focus so that _adjustFocusAfterTabSwitch can detect if
+                // some element has been focused and respect that.
+                document.activeElement.blur();
               }
 
               if (!gMultiProcessBrowser)
@@ -1207,11 +1211,11 @@
       <method name="_adjustFocusAfterTabSwitch">
         <parameter name="newTab"/>
         <body><![CDATA[
-        let newBrowser = this.getBrowserForTab(newTab);
-
         // Don't steal focus from the tab bar.
         if (document.activeElement == newTab)
           return;
+
+        let newBrowser = this.getBrowserForTab(newTab);
 
         // If there's a tabmodal prompt showing, focus it.
         if (newBrowser.hasAttribute("tabmodalPromptShowing")) {
@@ -1226,7 +1230,6 @@
         // In full screen mode, only bother making the location bar visible
         // if the tab is a blank one.
         if (newBrowser._urlbarFocused && gURLBar) {
-
           // Explicitly close the popup if the URL bar retains focus
           gURLBar.closePopup();
 
@@ -1248,20 +1251,13 @@
           return;
         }
 
-        // Otherwise, focus the content area. If we're not using remote tabs, we
-        // can focus the content area right away, since tab switching is synchronous.
-        // If we're using remote tabs, we have to wait until after we've finalized
-        // switching the tabs.
-
-        if (newTab._skipContentFocus) {
-          // It's possible the tab we're switching to is ready to focus asynchronously,
-          // when we've already focused something else. In that case, this
-          // _skipContentFocus property can be set so that we skip focusing the
-          // content after we switch tabs.
-          delete newTab._skipContentFocus;
+        // Don't focus the content area if something has been focused after the
+        // tab switch was initiated.
+        if (gMultiProcessBrowser &&
+            document.activeElement != document.documentElement)
           return;
-        }
 
+        // We're now committed to focusing the content area.
         let fm = Services.focus;
         let focusFlags = fm.FLAG_NOSCROLL;
 
