@@ -150,6 +150,10 @@ AnimationPlayer::ResolveStartTime()
   MOZ_ASSERT(!readyTime.IsNull(), "Missing or inactive timeline");
   mStartTime.SetValue(readyTime.Value() - mHoldTime.Value());
   mHoldTime.SetNull();
+
+  if (mReady) {
+    mReady->MaybeResolve(this);
+  }
 }
 
 bool
@@ -220,6 +224,13 @@ AnimationPlayer::DoPlay()
   } else if (mHoldTime.IsNull()) {
     // If the hold time is null, we are already playing normally
     return;
+  }
+
+  // Create a new pending ready promise
+  nsIGlobalObject* global = mTimeline->GetParentObject();
+  if (global) {
+    ErrorResult rv;
+    mReady = Promise::Create(global, rv);
   }
 
   ResolveStartTime();
