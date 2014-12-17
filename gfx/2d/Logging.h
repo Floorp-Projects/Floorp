@@ -112,6 +112,34 @@ private:
   static PreferenceAccess* sAccess;
 };
 
+/// Graphics logging is available in both debug and release builds and is
+/// controlled with a gfx.logging.level preference. If not set, the default
+/// for the preference is 5 in the debug builds, 1 in the release builds.
+///
+/// gfxDebug only works in the debug builds, and is used for information
+/// level messages, helping with debugging.  In addition to only working
+/// in the debug builds, the value of the above preference of 3 or higher
+/// is required.
+///
+/// gfxWarning messages are available in both debug and release builds,
+/// on by default in the debug builds, and off by default in the release builds.
+/// Setting the preference gfx.logging.level to a value of 2 or higher will
+/// show the warnings.
+///
+/// gfxCriticalError is available in debug and release builds by default.
+/// It is only unavailable if gfx.logging.level is set to 0 (or less.)
+/// It outputs the message to stderr or equivalent, like gfxWarning.
+/// In the event of a crash, the crash report is annotated with first and
+/// the last few of these errors, under the key GraphicsCriticalError.
+/// The total number of errors stored in the crash report is controlled
+/// by preference gfx.logging.crash.length (default is six, so by default,
+/// the first as well as the last five would show up in the crash log.)
+///
+/// On platforms that support PR_LOGGING, the story is slightly more involved.
+/// In that case, unless gfx.logging.level is set to 4 or higher, the output
+/// is further controlled by "gfx2d" PR logging module.  However, in the case
+/// where such module would disable the output, in all but gfxDebug cases,
+/// we will still send a printf.
 struct BasicLogger
 {
   // For efficiency, this method exists and copies the logic of the
@@ -192,7 +220,8 @@ public:
 
 MOZ_BEGIN_ENUM_CLASS(LogOptions, int)
   NoNewline = 0x01,
-  AutoPrefix = 0x02
+  AutoPrefix = 0x02,
+  AssertOnCall = 0x04
 MOZ_END_ENUM_CLASS(LogOptions)
 
 template<typename T>
@@ -207,12 +236,27 @@ template<int L, typename Logger = BasicLogger>
 class Log
 {
 public:
-  explicit Log(int aOptions = (int)LogOptions::AutoPrefix)
+  // The default is to have the prefix, have the new line, and for critical
+  // logs assert on each call.
+  static int DefaultOptions(bool aWithAssert = true) {
+    return (int(LogOptions::AutoPrefix) |
+            (aWithAssert ? int(LogOptions::AssertOnCall) : 0));
+  }
+
+  // Note that we're calling BasicLogger::ShouldOutputMessage, rather than
+  // Logger::ShouldOutputMessage.  Since we currently don't have a different
+  // version of that method for different loggers, this is OK. Once we do,
+  // change BasicLogger::ShouldOutputMessage to Logger::ShouldOutputMessage.
+  explicit Log(int aOptions = Log::DefaultOptions(L == LOG_CRITICAL))
     : mOptions(aOptions)
     , mLogIt(BasicLogger::ShouldOutputMessage(L))
   {
     if (mLogIt && AutoPrefix()) {
-      mMessage << "[GFX" << L << "]: ";
+      if (mOptions & int(LogOptions::AssertOnCall)) {
+        mMessage << "[GFX" << L << "]: ";
+      } else {
+        mMessage << "[GFX" << L << "-]: ";
+      }
     }
   }
   ~Log() {
@@ -433,6 +477,9 @@ private:
   void WriteLog(const std::string &aString) {
     if (MOZ_UNLIKELY(LogIt())) {
       Logger::OutputMessage(aString, L, NoNewline());
+      if (mOptions & int(LogOptions::AssertOnCall)) {
+        MOZ_ASSERT(false, "An assert from the graphics logger");
+      }
     }
   }
 
