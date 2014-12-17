@@ -50,6 +50,9 @@ public:
   nsRefPtr<VideoDataPromise>
   RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold) MOZ_OVERRIDE;
 
+  virtual size_t SizeOfVideoQueueInFrames() MOZ_OVERRIDE;
+  virtual size_t SizeOfAudioQueueInFrames() MOZ_OVERRIDE;
+
   void OnAudioDecoded(AudioData* aSample);
   void OnAudioNotDecoded(NotDecodedReason aReason);
   void OnVideoDecoded(VideoData* aSample);

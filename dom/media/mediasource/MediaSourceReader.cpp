@@ -93,6 +93,26 @@ MediaSourceReader::IsWaitingMediaResources()
   return !mHasEssentialTrackBuffers;
 }
 
+size_t
+MediaSourceReader::SizeOfVideoQueueInFrames()
+{
+  if (!mVideoReader) {
+    MSE_DEBUG("MediaSourceReader(%p)::SizeOfVideoQueue called with no video reader", this);
+    return 0;
+  }
+  return mVideoReader->SizeOfVideoQueueInFrames();
+}
+
+size_t
+MediaSourceReader::SizeOfAudioQueueInFrames()
+{
+  if (!mAudioReader) {
+    MSE_DEBUG("MediaSourceReader(%p)::SizeOfAudioQueue called with no audio reader", this);
+    return 0;
+  }
+  return mAudioReader->SizeOfAudioQueueInFrames();
+}
+
 nsRefPtr<MediaDecoderReader::AudioDataPromise>
 MediaSourceReader::RequestAudioData()
 {
