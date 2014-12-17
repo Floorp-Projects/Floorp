@@ -150,7 +150,10 @@ let InspectorView = {
         value: value,
         writable: !flags || !flags.readonly,
       };
-      audioParamsScope.addItem(param, descriptor);
+      let item = audioParamsScope.addItem(param, descriptor);
+
+      // No items should currently display a dropdown
+      item.twisty = false;
     });
 
     audioParamsScope.expanded = true;
