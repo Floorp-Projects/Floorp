@@ -1109,8 +1109,7 @@ nsSVGUtils::GetNonScalingStrokeTransform(nsIFrame *aFrame,
     aFrame = aFrame->GetParent();
   }
 
-  if (aFrame->StyleSVGReset()->mVectorEffect !=
-        NS_STYLE_VECTOR_EFFECT_NON_SCALING_STROKE) {
+  if (!aFrame->StyleSVGReset()->HasNonScalingStroke()) {
     return false;
   }
 
