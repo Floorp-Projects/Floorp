@@ -704,7 +704,11 @@
   }
 
   window.addEventListener("DOMContentLoaded", function() {
-    React.renderComponent(<App />, document.body);
+    try {
+      React.renderComponent(<App />, document.body);
+    } catch(err) {
+      console.log(err);
+    }
 
     _renderComponentsInIframes();
 
