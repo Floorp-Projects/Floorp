@@ -145,9 +145,9 @@ protected:
   Nullable<TimeDuration> mStartTime; // Timeline timescale
   Nullable<TimeDuration> mHoldTime;  // Player timescale
 
-  // A Promise that is replaced with a new object on each call to Play()
-  // (and in future Pause()) and fulfilled when Play() is successfully
-  // completed. The initial object is created lazily by GetReady().
+  // A Promise that is replaced on each call to Play() (and in future Pause())
+  // and fulfilled when Play() is successfully completed.
+  // This object is lazily created by GetReady.
   nsRefPtr<Promise> mReady;
 
   // Indicates if the player is in the pending state. We use this rather

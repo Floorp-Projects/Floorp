@@ -80,8 +80,7 @@ AnimationPlayer::GetReady(ErrorResult& aRv)
     nsIGlobalObject* global = mTimeline->GetParentObject();
     if (global) {
       mReady = Promise::Create(global, aRv);
-      // The ready promise should be initially resolved
-      if (mReady) {
+      if (mReady && PlayState() != AnimationPlayState::Pending) {
         mReady->MaybeResolve(this);
       }
     }
@@ -232,12 +231,8 @@ AnimationPlayer::DoPlay()
     return;
   }
 
-  // Create a new pending ready promise
-  nsIGlobalObject* global = mTimeline->GetParentObject();
-  if (global) {
-    ErrorResult rv;
-    mReady = Promise::Create(global, rv);
-  }
+  // Clear ready promise. We'll create a new one lazily.
+  mReady = nullptr;
 
   ResolveStartTime();
 }
