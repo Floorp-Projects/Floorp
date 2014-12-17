@@ -124,7 +124,8 @@ void
 MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
                                          SourceMediaStream* aSource,
                                          TrackID aID,
-                                         StreamTime aDesiredTime)
+                                         StreamTime aDesiredTime,
+                                         StreamTime &aLastEndTime)
 {
   VideoSegment segment;
 
@@ -133,7 +134,7 @@ MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
   // So mState could be kReleased here.  We really don't care about the state,
   // though.
 
-  StreamTime delta = aDesiredTime - mProducedDuration;
+  StreamTime delta = aDesiredTime - aLastEndTime;
   LOGFRAME(("NotifyPull, desired = %ld, delta = %ld %s", (int64_t) aDesiredTime,
             (int64_t) delta, mImage.get() ? "" : "<null>"));
 
@@ -149,7 +150,9 @@ MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
   // Doing so means a negative delta and thus messes up handling of the graph
   if (delta > 0) {
     // nullptr images are allowed
-    AppendToTrack(aSource, mImage, aID, delta);
+    if (AppendToTrack(aSource, mImage, aID, delta)) {
+      aLastEndTime = aDesiredTime;
+    }
   }
 }
 
