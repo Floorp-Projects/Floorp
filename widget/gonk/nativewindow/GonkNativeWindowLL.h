@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2012 The Android Open Source Project
- * Copyright (C) 2013 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,60 +14,53 @@
  * limitations under the License.
  */
 
-#ifndef NATIVEWINDOW_GONKNATIVEWINDOW_JB_H
-#define NATIVEWINDOW_GONKNATIVEWINDOW_JB_H
+#ifndef ANDROID_GUI_BUFFERITEMCONSUMER_H
+#define ANDROID_GUI_BUFFERITEMCONSUMER_H
+
+#include <gui/ConsumerBase.h>
 
 #include <ui/GraphicBuffer.h>
+
 #include <utils/String8.h>
 #include <utils/Vector.h>
 #include <utils/threads.h>
 
-#include "CameraCommon.h"
-#include "GonkConsumerBaseJB.h"
-#include "GrallocImages.h"
-#include "mozilla/layers/LayersSurfaces.h"
-
-namespace mozilla {
-namespace layers {
-    class PGrallocBufferChild;
-}
-}
+#define ANDROID_GRAPHICS_BUFFERITEMCONSUMER_JNI_ID "mBufferItemConsumer"
 
 namespace android {
 
-// The user of GonkNativeWindow who wants to receive notification of
-// new frames should implement this interface.
-class GonkNativeWindowNewFrameCallback {
-public:
-    virtual void OnNewFrame() = 0;
-};
+class BufferQueue;
 
 /**
- * GonkNativeWindow is a GonkBufferQueue consumer endpoint that allows clients
- * access to the whole BufferItem entry from GonkBufferQueue. Multiple buffers may
+ * BufferItemConsumer is a BufferQueue consumer endpoint that allows clients
+ * access to the whole BufferItem entry from BufferQueue. Multiple buffers may
  * be acquired at once, to be used concurrently by the client. This consumer can
  * operate either in synchronous or asynchronous mode.
  */
-class GonkNativeWindow: public GonkConsumerBase
+class BufferItemConsumer: public ConsumerBase
 {
-    typedef mozilla::layers::TextureClient TextureClient;
   public:
-    typedef GonkConsumerBase::FrameAvailableListener FrameAvailableListener;
+    typedef ConsumerBase::FrameAvailableListener FrameAvailableListener;
 
-    typedef GonkBufferQueue::BufferItem BufferItem;
+    typedef BufferQueue::BufferItem BufferItem;
 
-    enum { INVALID_BUFFER_SLOT = GonkBufferQueue::INVALID_BUFFER_SLOT };
-    enum { NO_BUFFER_AVAILABLE = GonkBufferQueue::NO_BUFFER_AVAILABLE };
+    enum { DEFAULT_MAX_BUFFERS = -1 };
+    enum { INVALID_BUFFER_SLOT = BufferQueue::INVALID_BUFFER_SLOT };
+    enum { NO_BUFFER_AVAILABLE = BufferQueue::NO_BUFFER_AVAILABLE };
 
     // Create a new buffer item consumer. The consumerUsage parameter determines
     // the consumer usage flags passed to the graphics allocator. The
     // bufferCount parameter specifies how many buffers can be locked for user
     // access at the same time.
-    GonkNativeWindow(int bufferCount = GonkBufferQueue::MIN_UNDEQUEUED_BUFFERS);
+    // controlledByApp tells whether this consumer is controlled by the
+    // application.
+    BufferItemConsumer(const sp<IGraphicBufferConsumer>& consumer,
+            uint32_t consumerUsage, int bufferCount = DEFAULT_MAX_BUFFERS,
+            bool controlledByApp = false);
 
-    virtual ~GonkNativeWindow();
+    virtual ~BufferItemConsumer();
 
-    // set the name of the GonkNativeWindow that will be used to identify it in
+    // set the name of the BufferItemConsumer that will be used to identify it in
     // log messages.
     void setName(const String8& name);
 
@@ -84,21 +76,17 @@ class GonkNativeWindow: public GonkConsumerBase
     //
     // If waitForFence is true, and the acquired BufferItem has a valid fence object,
     // acquireBuffer will wait on the fence with no timeout before returning.
-#if ANDROID_VERSION >= 18
-    status_t acquireBuffer(BufferItem *item, bool waitForFence = true);
-#endif
+    status_t acquireBuffer(BufferItem *item, nsecs_t presentWhen,
+        bool waitForFence = true);
+
     // Returns an acquired buffer to the queue, allowing it to be reused. Since
     // only a fixed number of buffers may be acquired at a time, old buffers
     // must be released by calling releaseBuffer to ensure new buffers can be
     // acquired by acquireBuffer. Once a BufferItem is released, the caller must
     // not access any members of the BufferItem, and should immediately remove
     // all of its references to the BufferItem itself.
-#if ANDROID_VERSION >= 18
     status_t releaseBuffer(const BufferItem &item,
             const sp<Fence>& releaseFence = Fence::NO_FENCE);
-#endif
-
-    sp<IGraphicBufferProducer> getProducerInterface() const { return getBufferQueue(); }
 
     // setDefaultBufferSize is used to set the size of buffers returned by
     // requestBuffers when a with and height of zero is requested.
@@ -108,27 +96,8 @@ class GonkNativeWindow: public GonkConsumerBase
     // GraphicBuffers of a defaultFormat if no format is specified
     // in dequeueBuffer
     status_t setDefaultBufferFormat(uint32_t defaultFormat);
-
-    // Get next frame from the queue, caller owns the returned buffer.
-    mozilla::TemporaryRef<TextureClient> getCurrentBuffer();
-
-    // Return the buffer to the queue and mark it as FREE. After that
-    // the buffer is useable again for the decoder.
-    void returnBuffer(TextureClient* client);
-
-    mozilla::TemporaryRef<TextureClient> getTextureClientFromBuffer(ANativeWindowBuffer* buffer);
-
-    void setNewFrameCallback(GonkNativeWindowNewFrameCallback* callback);
-
-    static void RecycleCallback(TextureClient* client, void* closure);
-
-protected:
-    virtual void onFrameAvailable();
-
-private:
-    GonkNativeWindowNewFrameCallback* mNewFrameCallback;
 };
 
 } // namespace android
 
-#endif // NATIVEWINDOW_GONKNATIVEWINDOW_JB_H
+#endif // ANDROID_GUI_CPUCONSUMER_H
