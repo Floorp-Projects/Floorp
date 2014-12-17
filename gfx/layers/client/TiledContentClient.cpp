@@ -1150,8 +1150,6 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
   }
 
   if (usingTiledDrawTarget) {
-    aTile.Flip();
-
     if (createdTextureClient) {
       if (!mCompositableClient->AddTextureClient(backBuffer)) {
         NS_WARNING("Failed to add tile TextureClient.");
@@ -1180,6 +1178,7 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
     moz2DTile.mTileOrigin = gfx::IntPoint(aTileOrigin.x * mResolution, aTileOrigin.y * mResolution);
     if (!dt || (backBufferOnWhite && !dtOnWhite)) {
       aTile.DiscardFrontBuffer();
+      aTile.DiscardBackBuffer();
       return aTile;
     }
 
@@ -1195,13 +1194,10 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
                          dirtyRect->height);
       drawRect.Scale(mResolution);
 
-      gfx::IntRect copyRect(NS_roundf((dirtyRect->x - mSinglePaintBufferOffset.x) * mResolution),
-                            NS_roundf((dirtyRect->y - mSinglePaintBufferOffset.y) * mResolution),
-                            drawRect.width,
-                            drawRect.height);
-      gfx::IntPoint copyTarget(NS_roundf(drawRect.x), NS_roundf(drawRect.y));
-      // Mark the newly updated area as invalid in the back buffer
-      aTile.mInvalidBack.Or(aTile.mInvalidBack, nsIntRect(copyTarget.x, copyTarget.y, copyRect.width, copyRect.height));
+      // Mark the newly updated area as invalid in the front buffer
+      aTile.mInvalidFront.Or(aTile.mInvalidFront,
+        nsIntRect(NS_roundf(drawRect.x), NS_roundf(drawRect.y),
+                  drawRect.width, drawRect.height));
 
       if (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
         dt->FillRect(drawRect, ColorPattern(Color(0.0, 0.0, 0.0, 1.0)));
@@ -1212,8 +1208,10 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
     }
 
     // The new buffer is now validated, remove the dirty region from it.
-    aTile.mInvalidFront.Sub(nsIntRect(0, 0, GetTileSize().width, GetTileSize().height),
-                            offsetScaledDirtyRegion);
+    aTile.mInvalidBack.Sub(nsIntRect(0, 0, GetTileSize().width, GetTileSize().height),
+                           offsetScaledDirtyRegion);
+
+    aTile.Flip();
 
     return aTile;
   }
