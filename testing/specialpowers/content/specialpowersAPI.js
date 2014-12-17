@@ -1099,6 +1099,13 @@ SpecialPowersAPI.prototype = {
     });
   },
 
+  // Allow tests to install addons without signing the package, for convenience.
+  allowUnsignedAddons: function() {
+    this._sendSyncMessage("SPWebAppService", {
+      op: "allow-unsigned-addons"
+    });
+  },
+
   // Restore the launchable property to its default value.
   flushAllAppsLaunchable: function() {
     this._sendSyncMessage("SPWebAppService", {

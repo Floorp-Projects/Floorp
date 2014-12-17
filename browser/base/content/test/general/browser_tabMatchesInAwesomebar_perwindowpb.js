@@ -71,52 +71,35 @@ function test() {
         ok(!testTab.hasAttribute("busy"),
            "The test tab doesn't have the busy attribute");
 
-        let urlbar = aDestWindow.gURLBar;
-        let controller = urlbar.controller;
-
-        // Focus URL bar, enter value, and start searching.
-        urlbar.focus();
-        urlbar.value = testURL;
-        controller.startSearch(testURL);
-
         // Wait for the Awesomebar popup to appear.
-        let popup = aDestWindow.gURLBar.popup;
-        promisePopupShown(popup).then(() => {
-          function searchIsComplete() {
-            return controller.searchStatus ==
-              Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH;
+        promiseAutocompleteResultPopup(testURL, aDestWindow).then(() => {
+          if (aExpectSwitch) {
+            // If we expect a tab switch then the current tab
+            // will be closed and we switch to the other tab.
+            let tabContainer = aDestWindow.gBrowser.tabContainer;
+            tabContainer.addEventListener("TabClose", function onClose(event) {
+              if (event.target == testTab) {
+                tabContainer.removeEventListener("TabClose", onClose);
+                executeSoon(aCallback);
+              }
+            });
+          } else {
+            // If we don't expect a tab switch then wait for the tab to load.
+            testTab.addEventListener("load", function onLoad() {
+              testTab.removeEventListener("load", onLoad, true);
+              executeSoon(aCallback);
+            }, true);
           }
 
-          // Wait until the search is complete.
-          waitForCondition(searchIsComplete, function () {
-            if (aExpectSwitch) {
-              // If we expect a tab switch then the current tab
-              // will be closed and we switch to the other tab.
-              let tabContainer = aDestWindow.gBrowser.tabContainer;
-              tabContainer.addEventListener("TabClose", function onClose(event) {
-                if (event.target == testTab) {
-                  tabContainer.removeEventListener("TabClose", onClose);
-                  executeSoon(aCallback);
-                }
-              });
-            } else {
-              // If we don't expect a tab switch then wait for the tab to load.
-              testTab.addEventListener("load", function onLoad() {
-                testTab.removeEventListener("load", onLoad, true);
-                executeSoon(aCallback);
-              }, true);
-            }
+          // Make sure the last match is selected.
+          let {controller, popup} = aDestWindow.gURLBar;
+          while (popup.selectedIndex < controller.matchCount - 1) {
+            controller.handleKeyNavigation(KeyEvent.DOM_VK_DOWN);
+          }
 
-            // Make sure the last match is selected.
-            while (popup.selectedIndex < controller.matchCount - 1) {
-              controller.handleKeyNavigation(KeyEvent.DOM_VK_DOWN);
-            }
-
-            // Execute the selected action.
-            controller.handleEnter(true);
-          });
+          // Execute the selected action.
+          controller.handleEnter(true);
         });
-
       }, aDestWindow);
     }, true);
   }

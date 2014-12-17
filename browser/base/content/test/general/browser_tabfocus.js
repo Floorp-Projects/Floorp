@@ -39,7 +39,7 @@ function test() {
     window.addEventListener("blur", _browser_tabfocus_test_eventOccured, true);
 
     // make sure that the focus initially starts out blank
-    var fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+    var fm = Services.focus;
     var focusedWindow = {};
     is(fm.getFocusedElementForWindow(browser1.contentWindow, false, focusedWindow), null, "initial focus in tab 1");
     is(focusedWindow.value, browser1.contentWindow, "initial frame focus in tab 1");
@@ -259,7 +259,7 @@ function expectFocusShift(callback, expectedWindow, expectedElement, focusChange
   is(_browser_tabfocus_test_events, expectedEvents, testid + " events");
   _browser_tabfocus_test_events = "";
 
-  var fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+  var fm = Services.focus;
 
   var focusedElement = fm.focusedElement;
   is(focusedElement ? getId(focusedElement) : "none",

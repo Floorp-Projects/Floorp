@@ -6,22 +6,17 @@
 // Check that the Browser Console does not use the same filter prefs as the Web
 // Console. See bug 878186.
 
+"use strict";
+
 const TEST_URI = "data:text/html;charset=utf8,<p>browser console filters";
 const WEB_CONSOLE_PREFIX = "devtools.webconsole.filter.";
 const BROWSER_CONSOLE_PREFIX = "devtools.browserconsole.filter.";
 
-function test()
-{
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    info("open the web console");
-    openConsole(null, consoleOpened);
-  }, true);
-}
+let test = asyncTest(function*() {
+  yield loadTab(TEST_URI);
 
-function consoleOpened(hud)
-{
+  info("open the web console");
+  let hud = yield openConsole();
   ok(hud, "web console opened");
 
   is(Services.prefs.getBoolPref(BROWSER_CONSOLE_PREFIX + "exception"), true,
@@ -39,17 +34,13 @@ function consoleOpened(hud)
 
   hud.setFilterState("exception", true);
 
-  executeSoon(() => closeConsole(null, onWebConsoleClose));
-}
+  // We need to let the console opening event loop to finish.
+  let deferred = promise.defer();
+  executeSoon(() => closeConsole().then(() => deferred.resolve(null)));
+  yield deferred.promise;
 
-function onWebConsoleClose()
-{
   info("web console closed");
-  HUDService.toggleBrowserConsole().then(onBrowserConsoleOpen);
-}
-
-function onBrowserConsoleOpen(hud)
-{
+  hud = yield HUDService.toggleBrowserConsole();
   ok(hud, "browser console opened");
 
   is(Services.prefs.getBoolPref(BROWSER_CONSOLE_PREFIX + "exception"), true,
@@ -66,6 +57,4 @@ function onBrowserConsoleOpen(hud)
      "'exception' filter is enabled (web console)");
 
   hud.setFilterState("exception", true);
-
-  executeSoon(finishTest);
-}
+});

@@ -10,25 +10,47 @@
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-597756-reopen-closed-tab.html";
 
-let newTabIsOpen = false;
+let HUD;
 
-function tabLoaded(aEvent) {
-  gBrowser.selectedBrowser.removeEventListener(aEvent.type, tabLoaded, true);
+let test = asyncTest(function* () {
+  expectUncaughtException();
 
-  openConsole(gBrowser.selectedTab, function() {
-    gBrowser.selectedBrowser.addEventListener("load", tabReloaded, true);
-    expectUncaughtException();
-    content.location.reload();
-  });
+  let { browser } = yield loadTab(TEST_URI);
+  HUD = yield openConsole();
+
+  expectUncaughtException();
+
+  yield reload(browser);
+
+  yield testMessages();
+
+  yield closeConsole();
+
+  // Close and reopen
+  gBrowser.removeCurrentTab();
+
+  expectUncaughtException();
+
+  let tab = yield loadTab(TEST_URI);
+  HUD = yield openConsole();
+
+  expectUncaughtException();
+
+  yield reload(tab.browser);
+
+  yield testMessages();
+
+  HUD = null;
+});
+
+function reload(browser) {
+  let loaded = loadBrowser(browser);
+  content.location.reload();
+  return loaded;
 }
 
-function tabReloaded(aEvent) {
-  gBrowser.selectedBrowser.removeEventListener(aEvent.type, tabReloaded, true);
-
-  let HUD = HUDService.getHudByWindow(content);
-  ok(HUD, "Web Console is open");
-
-  waitForMessages({
+function testMessages() {
+  return waitForMessages({
     webconsole: HUD,
     messages: [{
       name: "error message displayed",
@@ -36,29 +58,5 @@ function tabReloaded(aEvent) {
       category: CATEGORY_JS,
       severity: SEVERITY_ERROR,
     }],
-  }).then(() => {
-    if (newTabIsOpen) {
-      finishTest();
-      return;
-    }
-
-    closeConsole(gBrowser.selectedTab, () => {
-      gBrowser.removeCurrentTab();
-
-      let newTab = gBrowser.addTab();
-      gBrowser.selectedTab = newTab;
-
-      newTabIsOpen = true;
-      gBrowser.selectedBrowser.addEventListener("load", tabLoaded, true);
-      expectUncaughtException();
-      content.location = TEST_URI;
-    });
   });
 }
-
-function test() {
-  expectUncaughtException();
-  addTab(TEST_URI);
-  browser.addEventListener("load", tabLoaded, true);
-}
-

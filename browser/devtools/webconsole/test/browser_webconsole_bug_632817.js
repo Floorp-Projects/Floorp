@@ -11,8 +11,11 @@ const TEST_IMG = "http://example.com/browser/browser/devtools/webconsole/test/te
 const TEST_DATA_JSON_CONTENT =
   '{ id: "test JSON data", myArray: [ "foo", "bar", "baz", "biff" ] }';
 
+const TEST_URI = "data:text/html;charset=utf-8,Web Console network logging tests";
+
 let lastRequest = null;
 let requestCallback = null;
+let hud, browser;
 
 function test()
 {
@@ -25,12 +28,9 @@ function test()
     Services.prefs.clearUserPref(PREF);
   });
 
-  addTab("data:text/html;charset=utf-8,Web Console network logging tests");
-
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-
-    openConsole(null, function(aHud) {
+  loadTab(TEST_URI).then((tab) => {
+    browser = tab.browser;
+    openConsole().then((aHud) => {
       hud = aHud;
 
       HUDService.lastFinishedRequest.callback = function(aRequest) {
@@ -41,8 +41,8 @@ function test()
       };
 
       executeSoon(testPageLoad);
-    });
-  }, true);
+    })
+  });
 }
 
 function testPageLoad()
@@ -186,6 +186,7 @@ function testLiveFilteringOnSearchStrings() {
   HUDService.lastFinishedRequest.callback = null;
   lastRequest = null;
   requestCallback = null;
+  hud = browser = null;
   finishTest();
 }
 

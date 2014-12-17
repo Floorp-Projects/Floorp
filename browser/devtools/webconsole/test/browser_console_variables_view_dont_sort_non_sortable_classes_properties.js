@@ -57,7 +57,7 @@ function test() {
 
     // Create an ArrayBuffer of 80 bytes to test TypedArrays. 80 bytes is
     // enough to get 10 items in all different TypedArrays.
-    jsterm.execute("let buf = new ArrayBuffer(80);");
+    yield jsterm.execute("let buf = new ArrayBuffer(80);");
 
     // Array
     yield testNotSorted("Array(0,1,2,3,4,5,6,7,8,9,10)");

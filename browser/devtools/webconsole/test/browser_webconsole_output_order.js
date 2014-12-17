@@ -6,24 +6,21 @@
 // Tests that any output created from calls to the console API comes after the
 // echoed JavaScript.
 
+"use strict";
+
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
 
-function test() {
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, testOutputOrder);
-  }, true);
-}
+let test = asyncTest(function*() {
+  yield loadTab(TEST_URI);
+  let hud = yield openConsole();
 
-function testOutputOrder(hud) {
   let jsterm = hud.jsterm;
   let outputNode = jsterm.outputNode;
 
   jsterm.clearOutput();
   jsterm.execute("console.log('foo', 'bar');");
 
-  waitForMessages({
+  let [function_call, result, console_message] = yield waitForMessages({
     webconsole: hud,
     messages: [{
       text: "console.log('foo', 'bar');",
@@ -38,14 +35,13 @@ function testOutputOrder(hud) {
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_LOG,
     }],
-  }).then(([function_call, result, console_message]) => {
-    let fncall_node = [...function_call.matched][0];
-    let result_node = [...result.matched][0];
-    let console_message_node = [...console_message.matched][0];
-    is(fncall_node.nextElementSibling, result_node,
-       "console.log() is followed by undefined");
-    is(result_node.nextElementSibling, console_message_node,
-       "undefined is followed by 'foo' 'bar'");
-    finishTest();
   });
-}
+
+  let fncall_node = [...function_call.matched][0];
+  let result_node = [...result.matched][0];
+  let console_message_node = [...console_message.matched][0];
+  is(fncall_node.nextElementSibling, result_node,
+     "console.log() is followed by undefined");
+  is(result_node.nextElementSibling, console_message_node,
+     "undefined is followed by 'foo' 'bar'");
+});

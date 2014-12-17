@@ -4,8 +4,7 @@
 const TEST_VALUE = "example.com";
 const START_VALUE = "example.org";
 
-let gFocusManager = Cc["@mozilla.org/focus-manager;1"].
-                    getService(Ci.nsIFocusManager);
+let gFocusManager = Services.focus;
 
 function test() {
   waitForExplicitFinish();

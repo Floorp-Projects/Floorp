@@ -40,6 +40,7 @@ EXTRA_JS_MODULES.devtools.shared += [
     'observable-object.js',
     'telemetry.js',
     'theme-switching.js',
+    'theme.js',
     'undo.js',
 ]
 
