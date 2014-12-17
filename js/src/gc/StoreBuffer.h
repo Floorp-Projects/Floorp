@@ -307,8 +307,8 @@ class StoreBuffer
             return !(*this == other);
         }
 
-        bool maybeInRememberedSet(const Nursery &) const {
-            return !IsInsideNursery(JS::AsCell(reinterpret_cast<JSObject *>(object())));
+        bool maybeInRememberedSet(const Nursery &n) const {
+            return !IsInsideNursery(reinterpret_cast<Cell *>(object()));
         }
 
         void mark(JSTracer *trc) const;

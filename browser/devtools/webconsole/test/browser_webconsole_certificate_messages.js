@@ -4,7 +4,9 @@
 
 // Tests that the Web Console shows weak crypto warnings (SHA-1 Certificate, SSLv3, and RC4)
 
+const TEST_URI = "data:text/html;charset=utf8,Web Console weak crypto warnings test";
 const TEST_URI_PATH = "/browser/browser/devtools/webconsole/test/test-certificate-messages.html";
+
 let gWebconsoleTests = [
   {url: "https://sha1ee.example.com" + TEST_URI_PATH,
    name: "SHA1 warning displayed successfully",
@@ -26,31 +28,31 @@ let gWebconsoleTests = [
 ];
 const TRIGGER_MSG = "If you haven't seen ssl warnings yet, you won't";
 
-let gHud = undefined;
+let gHud = undefined, gContentBrowser;
 let gCurrentTest;
 
 function test() {
   registerCleanupFunction(function () {
-    gHud = null;
+    gHud = gContentBrowser = null;
   });
 
-  addTab("data:text/html;charset=utf8,Web Console weak crypto warnings test");
-  browser.addEventListener("load", function _onLoad() {
-    browser.removeEventListener("load", _onLoad, true);
-    openConsole(null, runTestLoop);
-  }, true);
+  loadTab(TEST_URI).then(({browser}) => {
+    gContentBrowser = browser;
+    openConsole().then(runTestLoop);
+  });
 }
 
 function runTestLoop(theHud) {
   gCurrentTest = gWebconsoleTests.shift();
   if (!gCurrentTest) {
     finishTest();
+    return;
   }
   if (!gHud) {
     gHud = theHud;
   }
   gHud.jsterm.clearOutput();
-  browser.addEventListener("load", onLoad, true);
+  gContentBrowser.addEventListener("load", onLoad, true);
   if (gCurrentTest.pref) {
     SpecialPowers.pushPrefEnv({"set": gCurrentTest.pref},
       function() {
@@ -62,12 +64,12 @@ function runTestLoop(theHud) {
 }
 
 function onLoad(aEvent) {
-  browser.removeEventListener("load", onLoad, true);
+  gContentBrowser.removeEventListener("load", onLoad, true);
   let aOutputNode = gHud.outputNode;
 
   waitForSuccess({
       name: gCurrentTest.name,
-      validatorFn: function() {
+      validator: function() {
         if (gHud.outputNode.textContent.indexOf(TRIGGER_MSG) >= 0) {
           for (let warning of gCurrentTest.warning) {
             if (gHud.outputNode.textContent.indexOf(warning) < 0) {
@@ -81,8 +83,6 @@ function onLoad(aEvent) {
           }
           return true;
         }
-      },
-      successFn: runTestLoop,
-      failureFn: finishTest,
-    });
+      }
+    }).then(runTestLoop);
 }

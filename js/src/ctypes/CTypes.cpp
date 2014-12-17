@@ -1320,7 +1320,7 @@ IsCTypesGlobal(HandleValue v)
 }
 
 // Get the JSCTypesCallbacks struct from the 'ctypes' object 'obj'.
-JSCTypesCallbacks*
+const JSCTypesCallbacks*
 GetCallbacks(JSObject* obj)
 {
   MOZ_ASSERT(IsCTypesGlobal(obj));
@@ -1329,7 +1329,7 @@ GetCallbacks(JSObject* obj)
   if (result.isUndefined())
     return nullptr;
 
-  return static_cast<JSCTypesCallbacks*>(result.toPrivate());
+  return static_cast<const JSCTypesCallbacks*>(result.toPrivate());
 }
 
 // Utility function to access a property of an object as an object
@@ -1406,13 +1406,14 @@ JS_InitCTypesClass(JSContext* cx, HandleObject global)
 }
 
 JS_PUBLIC_API(void)
-JS_SetCTypesCallbacks(JSObject *ctypesObj, JSCTypesCallbacks* callbacks)
+JS_SetCTypesCallbacks(JSObject *ctypesObj, const JSCTypesCallbacks* callbacks)
 {
   MOZ_ASSERT(callbacks);
   MOZ_ASSERT(IsCTypesGlobal(ctypesObj));
 
   // Set the callbacks on a reserved slot.
-  JS_SetReservedSlot(ctypesObj, SLOT_CALLBACKS, PRIVATE_TO_JSVAL(callbacks));
+  JS_SetReservedSlot(ctypesObj, SLOT_CALLBACKS,
+                     PRIVATE_TO_JSVAL(const_cast<JSCTypesCallbacks*>(callbacks)));
 }
 
 namespace js {

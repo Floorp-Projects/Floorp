@@ -176,20 +176,6 @@ xpc_FastGetCachedWrapper(JSContext *cx, nsWrapperCache *cache, JS::MutableHandle
     return nullptr;
 }
 
-// The JS GC marks objects gray that are held alive directly or
-// indirectly by an XPConnect root. The cycle collector explores only
-// this subset of the JS heap.
-inline bool
-xpc_IsGrayGCThing(void *thing)
-{
-    return JS::GCThingIsMarkedGray(thing);
-}
-
-// The cycle collector only cares about some kinds of GCthings that are
-// reachable from an XPConnect root. Implemented in nsXPConnect.cpp.
-extern bool
-xpc_GCThingIsGrayCCThing(void *thing);
-
 inline JSScript *
 xpc_UnmarkGrayScript(JSScript *script)
 {

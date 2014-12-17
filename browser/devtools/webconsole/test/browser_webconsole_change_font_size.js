@@ -8,18 +8,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+"use strict";
+
 const TEST_URI = "http://example.com/";
 
-function test() {
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    Services.prefs.setIntPref("devtools.webconsole.fontSize", 10);
-    HUDService.toggleBrowserConsole().then(testFontSizeChange);
-  }, true);
-}
+let test = asyncTest(function*() {
+  yield loadTab(TEST_URI);
+  Services.prefs.setIntPref("devtools.webconsole.fontSize", 10);
+  let hud = yield HUDService.toggleBrowserConsole();
 
-function testFontSizeChange(hud) {
   let inputNode = hud.jsterm.inputNode;
   let outputNode = hud.jsterm.outputNode;
   outputNode.focus();
@@ -39,6 +36,4 @@ function testFontSizeChange(hud) {
   EventUtils.synthesizeKey("0", { accelKey: true }, hud.iframeWindow);
   is(inputNode.style.fontSize, "", "font reset with ctrl+0");
   is(outputNode.style.fontSize, inputNode.style.fontSize, "output font stays at same size with ctrl+0");
-
-  finishTest();
-}
+});

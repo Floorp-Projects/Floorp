@@ -529,10 +529,10 @@ js::ReportUsageError(JSContext *cx, HandleObject callee, const char *msg)
     MOZ_ASSERT(shape->hasDefaultGetter());
 
     RootedValue usage(cx);
-    if (!JS_LookupProperty(cx, callee, "usage", &usage))
+    if (!JS_GetProperty(cx, callee, "usage", &usage))
         return;
 
-    if (usage.isUndefined()) {
+    if (!usage.isString()) {
         JS_ReportError(cx, "%s", msg);
     } else {
         JSString *str = usage.toString();
@@ -1199,6 +1199,9 @@ JSContext::mark(JSTracer *trc)
         MarkValueRoot(trc, &unwrappedException_, "unwrapped exception");
 
     TraceCycleDetectionSet(trc, cycleDetectorSet);
+
+    if (compartment_)
+        compartment_->mark();
 }
 
 void *

@@ -52,7 +52,8 @@ nsAutoCompleteController::nsAutoCompleteController() :
   mSearchesOngoing(0),
   mSearchesFailed(0),
   mFirstSearchResult(false),
-  mImmediateSearchesCount(0)
+  mImmediateSearchesCount(0),
+  mCompletedSelectionIndex(-1)
 {
 }
 
@@ -122,6 +123,7 @@ nsAutoCompleteController::SetInput(nsIAutoCompleteInput *aInput)
   mSearchStatus = nsIAutoCompleteController::STATUS_NONE;
   mRowCount = 0;
   mSearchesOngoing = 0;
+  mCompletedSelectionIndex = -1;
 
   // Initialize our list of search objects
   uint32_t searchCount;
@@ -421,10 +423,12 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool *_retval)
             input->SetTextValue(value);
             input->SelectTextRange(value.Length(), value.Length());
           }
+          mCompletedSelectionIndex = selectedIndex;
         } else {
           // Nothing is selected, so fill in the last typed value
           input->SetTextValue(mSearchString);
           input->SelectTextRange(mSearchString.Length(), mSearchString.Length());
+          mCompletedSelectionIndex = -1;
         }
       }
     } else {
@@ -1244,17 +1248,29 @@ nsAutoCompleteController::EnterMatch(bool aIsPopupSelection)
     int32_t selectedIndex;
     popup->GetSelectedIndex(&selectedIndex);
     if (selectedIndex >= 0) {
+      nsAutoString finalValue;
       // If completeselectedindex is false or a row was selected from the popup,
-      // enter it into the textbox. If completeselectedindex is true, or
-      // EnterMatch was called via other means, for instance pressing Enter,
-      // don't fill in the value as it will have already been filled in as
-      // needed, unless the final complete value differs.
-      nsAutoString finalValue, inputValue;
-      GetResultValueAt(selectedIndex, true, finalValue);
-      input->GetTextValue(inputValue);
-      if (!completeSelection || aIsPopupSelection ||
-          !finalValue.Equals(inputValue)) {
+      // enter it into the textbox.
+      if (!completeSelection || aIsPopupSelection) {
+        GetResultValueAt(selectedIndex, true, finalValue);
         value = finalValue;
+      } else if (mCompletedSelectionIndex != -1) {
+        // If completeselectedindex is true, and EnterMatch was not invoked by
+        // mouse-clicking a match (for example the user pressed Enter),
+        // don't fill in the value as it will have already been filled in as
+        // needed, unless the selected match has a final complete value that
+        // differs from the user-facing value.
+        GetResultValueAt(mCompletedSelectionIndex, true, finalValue);
+        nsAutoString inputValue;
+        input->GetTextValue(inputValue);
+        if (!finalValue.Equals(inputValue)) {
+          value = finalValue;
+        }
+        // Note that if the user opens the popup, mouses over entries without
+        // ever selecting one with the keyboard, and then hits enter, none of
+        // the above cases will be hitt, since mouseover doesn't activate
+        // completeselectedindex and thus mCompletedSelectionIndex would be
+        // -1.
       }
     }
     else if (shouldComplete) {

@@ -8,6 +8,7 @@ UNIFIED_SOURCES += [
     'TestArray.cpp',
     'TestCRT.cpp',
     'TestEncoding.cpp',
+    'TestExpirationTracker.cpp',
     'TestFileUtils.cpp',
     'TestGCPostBarriers.cpp',
     'TestStrings.cpp',

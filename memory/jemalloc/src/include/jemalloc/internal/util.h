@@ -27,13 +27,21 @@
 #  define JEMALLOC_CC_SILENCE_INIT(v)
 #endif
 
+#ifdef __GNUC__
+#define likely(x) __builtin_expect(!!(x), 1)
+#define unlikely(x) __builtin_expect(!!(x), 0)
+#else
+#define likely(x) !!(x)
+#define unlikely(x) !!(x)
+#endif
+
 /*
  * Define a custom assert() in order to reduce the chances of deadlock during
  * assertion failure.
  */
 #ifndef assert
 #define	assert(e) do {							\
-	if (config_debug && !(e)) {					\
+	if (unlikely(config_debug && !(e))) {				\
 		malloc_printf(						\
 		    "<jemalloc>: %s:%d: Failed assertion: \"%s\"\n",	\
 		    __FILE__, __LINE__, #e);				\
@@ -65,14 +73,14 @@
 
 #ifndef assert_not_implemented
 #define	assert_not_implemented(e) do {					\
-	if (config_debug && !(e))					\
+	if (unlikely(config_debug && !(e)))				\
 		not_implemented();					\
 } while (0)
 #endif
 
 /* Use to assert a particular configuration, e.g., cassert(config_debug). */
 #define	cassert(c) do {							\
-	if ((c) == false)						\
+	if (unlikely(!(c)))						\
 		not_reached();						\
 } while (0)
 
@@ -112,13 +120,14 @@ void	malloc_printf(const char *format, ...)
 int	jemalloc_ffsl(long bitmap);
 int	jemalloc_ffs(int bitmap);
 size_t	pow2_ceil(size_t x);
+size_t	lg_floor(size_t x);
 void	set_errno(int errnum);
 int	get_errno(void);
 #endif
 
 #if (defined(JEMALLOC_ENABLE_INLINE) || defined(JEMALLOC_UTIL_C_))
 
-/* Sanity check: */
+/* Sanity check. */
 #if !defined(JEMALLOC_INTERNAL_FFSL) || !defined(JEMALLOC_INTERNAL_FFS)
 #  error Both JEMALLOC_INTERNAL_FFSL && JEMALLOC_INTERNAL_FFS should have been defined by configure
 #endif
@@ -155,7 +164,74 @@ pow2_ceil(size_t x)
 	return (x);
 }
 
-/* Sets error code */
+#if (defined(__i386__) || defined(__amd64__) || defined(__x86_64__))
+JEMALLOC_INLINE size_t
+lg_floor(size_t x)
+{
+	size_t ret;
+
+	asm ("bsr %1, %0"
+	    : "=r"(ret) // Outputs.
+	    : "r"(x)    // Inputs.
+	    );
+	return (ret);
+}
+#elif (defined(_MSC_VER))
+JEMALLOC_INLINE size_t
+lg_floor(size_t x)
+{
+    unsigned long ret;
+
+#if (LG_SIZEOF_PTR == 3)
+    _BitScanReverse64(&ret, x);
+#elif (LG_SIZEOF_PTR == 2)
+    _BitScanReverse(&ret, x);
+#else
+#  error "Unsupported type sizes for lg_floor()"
+#endif
+    return (ret);
+}
+#elif (defined(JEMALLOC_HAVE_BUILTIN_CLZ))
+JEMALLOC_INLINE size_t
+lg_floor(size_t x)
+{
+
+#if (LG_SIZEOF_PTR == LG_SIZEOF_INT)
+	return (((8 << LG_SIZEOF_PTR) - 1) - __builtin_clz(x));
+#elif (LG_SIZEOF_PTR == LG_SIZEOF_LONG)
+	return (((8 << LG_SIZEOF_PTR) - 1) - __builtin_clzl(x));
+#else
+#  error "Unsupported type sizes for lg_floor()"
+#endif
+}
+#else
+JEMALLOC_INLINE size_t
+lg_floor(size_t x)
+{
+
+	x |= (x >> 1);
+	x |= (x >> 2);
+	x |= (x >> 4);
+	x |= (x >> 8);
+	x |= (x >> 16);
+#if (LG_SIZEOF_PTR == 3 && LG_SIZEOF_PTR == LG_SIZEOF_LONG)
+	x |= (x >> 32);
+	if (x == KZU(0xffffffffffffffff))
+		return (63);
+	x++;
+	return (jemalloc_ffsl(x) - 2);
+#elif (LG_SIZEOF_PTR == 2)
+	if (x == KZU(0xffffffff))
+		return (31);
+	x++;
+	return (jemalloc_ffs(x) - 2);
+#else
+#  error "Unsupported type sizes for lg_floor()"
+#endif
+}
+#endif
+
+/* Set error code. */
 JEMALLOC_INLINE void
 set_errno(int errnum)
 {
@@ -167,7 +243,7 @@ set_errno(int errnum)
 #endif
 }
 
-/* Get last error code */
+/* Get last error code. */
 JEMALLOC_INLINE int
 get_errno(void)
 {

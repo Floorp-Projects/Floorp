@@ -59,7 +59,7 @@ DefineChromeWorkerFunctions(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
       return false;
     }
 
-    static JSCTypesCallbacks callbacks = {
+    static const JSCTypesCallbacks callbacks = {
       UnicodeToNative
     };
 

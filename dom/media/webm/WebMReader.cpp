@@ -951,11 +951,16 @@ void WebMReader::PushVideoPacket(NesteggPacketHolder* aItem)
     mVideoPackets.PushFront(aItem);
 }
 
-void WebMReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime,
+nsRefPtr<MediaDecoderReader::SeekPromise>
+WebMReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime,
                       int64_t aCurrentTime)
 {
   nsresult res = SeekInternal(aTarget, aStartTime);
-  GetCallback()->OnSeekCompleted(res);
+  if (NS_FAILED(res)) {
+    return SeekPromise::CreateAndReject(res, __func__);
+  } else {
+    return SeekPromise::CreateAndResolve(true, __func__);
+  }
 }
 
 nsresult WebMReader::SeekInternal(int64_t aTarget, int64_t aStartTime)

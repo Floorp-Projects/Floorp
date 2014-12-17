@@ -8,6 +8,7 @@
 #define nsDocShellTreeOwner_h__
 
 // Helper Classes
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
@@ -84,7 +85,7 @@ protected:
     virtual ~nsDocShellTreeOwner();
 
     void WebBrowser(nsWebBrowser* aWebBrowser);
-    
+
     nsWebBrowser* WebBrowser();
     NS_IMETHOD SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner);
     NS_IMETHOD SetWebBrowserChrome(nsIWebBrowserChrome* aWebBrowserChrome);
@@ -117,7 +118,7 @@ protected:
    // Weak References
    nsWebBrowser*           mWebBrowser;
    nsIDocShellTreeOwner*   mTreeOwner;
-   nsIDocShellTreeItem*    mPrimaryContentShell; 
+   nsIDocShellTreeItem*    mPrimaryContentShell;
 
    nsIWebBrowserChrome*    mWebBrowserChrome;
    nsIEmbeddingSiteWindow* mOwnerWin;
@@ -125,11 +126,11 @@ protected:
 
    nsWeakPtr               mWebBrowserChromeWeak;   // nsIWebBrowserChrome
 
-    // the objects that listen for chrome events like context menus and tooltips. 
+    // the objects that listen for chrome events like context menus and tooltips.
     // They are separate objects to avoid circular references between |this|
-    // and the DOM. These are strong, owning refs.
-   ChromeTooltipListener*         mChromeTooltipListener;
-   ChromeContextMenuListener*     mChromeContextMenuListener;
+    // and the DOM.
+   nsRefPtr<ChromeTooltipListener>     mChromeTooltipListener;
+   nsRefPtr<ChromeContextMenuListener> mChromeContextMenuListener;
 
    nsCOMPtr<nsIPrompt>     mPrompter;
    nsCOMPtr<nsIAuthPrompt> mAuthPrompter;
@@ -147,12 +148,12 @@ protected:
 class ChromeTooltipListener MOZ_FINAL : public nsIDOMEventListener
 {
 protected:
-  virtual ~ChromeTooltipListener ( ) ;
+  virtual ~ChromeTooltipListener();
 
 public:
   NS_DECL_ISUPPORTS
-  
-  ChromeTooltipListener ( nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome ) ;
+
+  ChromeTooltipListener(nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome);
 
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
   NS_IMETHOD MouseMove(nsIDOMEvent* aMouseEvent);
@@ -173,8 +174,8 @@ private:
   NS_IMETHOD AddTooltipListener();
   NS_IMETHOD RemoveTooltipListener();
 
-  NS_IMETHOD ShowTooltip ( int32_t inXCoords, int32_t inYCoords, const nsAString & inTipText ) ;
-  NS_IMETHOD HideTooltip ( ) ;
+  NS_IMETHOD ShowTooltip(int32_t inXCoords, int32_t inYCoords, const nsAString & inTipText);
+  NS_IMETHOD HideTooltip();
 
   nsWebBrowser* mWebBrowser;
   nsCOMPtr<mozilla::dom::EventTarget> mEventTarget;
@@ -189,7 +190,7 @@ private:
   bool mTooltipListenerInstalled;
 
   nsCOMPtr<nsITimer> mTooltipTimer;
-  static void sTooltipCallback ( nsITimer* aTimer, void* aListener ) ;
+  static void sTooltipCallback(nsITimer* aTimer, void* aListener);
   int32_t mMouseClientX, mMouseClientY;       // mouse coordinates for last mousemove event we saw
   int32_t mMouseScreenX, mMouseScreenY;       // mouse coordinates for tooltip event
   bool mShowingTooltip;
@@ -218,12 +219,12 @@ private:
 class ChromeContextMenuListener : public nsIDOMEventListener
 {
 protected:
-  virtual ~ChromeContextMenuListener ( ) ;
+  virtual ~ChromeContextMenuListener();
 
 public:
   NS_DECL_ISUPPORTS
-  
-  ChromeContextMenuListener ( nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome ) ;
+
+  ChromeContextMenuListener(nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome);
 
   // nsIDOMContextMenuListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
@@ -249,15 +250,3 @@ private:
 
 
 #endif /* nsDocShellTreeOwner_h__ */
-
-
-
-
-
-
-
-
-
-
-
-

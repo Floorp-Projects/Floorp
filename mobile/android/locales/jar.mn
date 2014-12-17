@@ -20,7 +20,6 @@
   locale/@AB_CD@/browser/aboutHome.dtd            (%chrome/aboutHome.dtd)
   locale/@AB_CD@/browser/aboutHome.properties     (%chrome/aboutHome.properties)
   locale/@AB_CD@/browser/aboutPrivateBrowsing.dtd (%chrome/aboutPrivateBrowsing.dtd)
-  locale/@AB_CD@/browser/aboutReader.properties   (%chrome/aboutReader.properties)
 #ifdef MOZ_SERVICES_HEALTHREPORT
   locale/@AB_CD@/browser/aboutHealthReport.dtd    (%chrome/aboutHealthReport.dtd)
 #endif

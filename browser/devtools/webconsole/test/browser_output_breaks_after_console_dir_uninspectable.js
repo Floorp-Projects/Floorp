@@ -5,27 +5,20 @@
 // Make sure that the Web Console output does not break after we try to call
 // console.dir() for objects that are not inspectable.
 
-function test()
-{
-  waitForExplicitFinish();
+const TEST_URI = "data:text/html;charset=utf8,test for bug 773466";
 
-  addTab("data:text/html;charset=utf8,test for bug 773466");
+let test = asyncTest(function* () {
+  yield loadTab(TEST_URI);
 
-  gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
-    gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
-    openConsole(null, performTest);
-  }, true);
-}
+  let hud = yield openConsole();
 
-function performTest(hud)
-{
   hud.jsterm.clearOutput(true);
 
   hud.jsterm.execute("console.log('fooBug773466a')");
   hud.jsterm.execute("myObj = Object.create(null)");
   hud.jsterm.execute("console.dir(myObj)");
 
-  waitForMessages({
+  yield waitForMessages({
     webconsole: hud,
     messages: [{
       text: "fooBug773466a",
@@ -36,15 +29,16 @@ function performTest(hud)
       name: "console.dir output",
       consoleDir: "[object Object]",
     }],
-  }).then(() => {
-    content.console.log("fooBug773466b");
-    waitForMessages({
-      webconsole: hud,
-      messages: [{
-        text: "fooBug773466b",
-        category: CATEGORY_WEBDEV,
-        severity: SEVERITY_LOG,
-      }],
-    }).then(finishTest);
+  })
+
+  content.console.log("fooBug773466b");
+
+  yield waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "fooBug773466b",
+      category: CATEGORY_WEBDEV,
+      severity: SEVERITY_LOG,
+    }],
   });
-}
+});

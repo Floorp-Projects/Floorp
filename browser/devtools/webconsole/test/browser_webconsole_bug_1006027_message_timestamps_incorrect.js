@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 function test() {
   Task.spawn(runner).then(finishTest);
 
@@ -37,4 +39,3 @@ function test() {
     ok(Math.abs(maxTimestamp - minTimestamp) < 1000, "console.log message timestamp spread < 1000ms confirmed");
   }
 }
-

@@ -639,7 +639,7 @@ js::ZoneGlobalsAreAllGray(JS::Zone *zone)
 {
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
         JSObject *obj = comp->maybeGlobal();
-        if (!obj || !JS::GCThingIsMarkedGray(obj))
+        if (!obj || !JS::ObjectIsMarkedGray(obj))
             return false;
     }
     return true;

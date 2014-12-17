@@ -5,7 +5,7 @@
  */
 
 function test() {
-    var p = Proxy.create({ enumerate: function() { return { get length() { throw 1; }}; }});
+    var p = Proxy.create({ keys: function() { return { get length() { throw 1; }}; }});
 
     try {
 	for (i in p);
