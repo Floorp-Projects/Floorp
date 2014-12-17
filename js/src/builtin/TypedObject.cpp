@@ -1595,6 +1595,8 @@ TypedObject::createZeroed(JSContext *cx, HandleTypeDescr descr, int32_t length, 
     // If possible, create an object with inline data.
     if ((size_t) descr->size() <= InlineTypedObject::MaximumSize) {
         InlineTypedObject *obj = InlineTypedObject::create(cx, descr, heap);
+        if (!obj)
+            return nullptr;
         descr->initInstances(cx->runtime(), obj->inlineTypedMem(), 1);
         return obj;
     }
