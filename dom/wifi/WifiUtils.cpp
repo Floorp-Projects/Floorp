@@ -13,7 +13,7 @@ using namespace mozilla::dom;
 
 #define BUFFER_SIZE        4096
 #define COMMAND_SIZE       256
-#define PROPERTY_VALUE_MAX 80
+const uint32_t kPropertyValueMax = 80;
 
 // Intentionally not trying to dlclose() this handle. That's playing
 // Russian roulette with security bugs.
@@ -38,7 +38,7 @@ GetSharedLibrary()
 static bool
 GetWifiP2pSupported()
 {
-  char propP2pSupported[PROPERTY_VALUE_MAX];
+  char propP2pSupported[kPropertyValueMax];
   property_get("ro.moz.wifi.p2p_supported", propP2pSupported, "0");
   return (0 == strcmp(propP2pSupported, "1"));
 }
@@ -379,7 +379,7 @@ public:
 // Concrete class to use to access the wpa supplicant.
 WpaSupplicant::WpaSupplicant()
 {
-  char propVersion[PROPERTY_VALUE_MAX];
+  char propVersion[kPropertyValueMax];
   property_get("ro.build.version.sdk", propVersion, "0");
   mSdkVersion = strtol(propVersion, nullptr, 10);
 
