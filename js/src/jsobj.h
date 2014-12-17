@@ -1171,15 +1171,11 @@ Throw(JSContext *cx, jsid id, unsigned errorNumber);
 extern bool
 Throw(JSContext *cx, JSObject *obj, unsigned errorNumber);
 
-namespace baseops {
+extern bool
+NativeWatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject callable);
 
 extern bool
-Watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject callable);
-
-extern bool
-Unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id);
-
-} /* namespace baseops */
+NativeUnwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id);
 
 }  /* namespace js */
 

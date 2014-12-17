@@ -78,11 +78,11 @@ js::CreateRegExpMatchResult(JSContext *cx, HandleString input, const MatchPairs 
 #ifdef DEBUG
     RootedValue test(cx);
     RootedId id(cx, NameToId(cx->names().index));
-    if (!baseops::GetProperty(cx, arr, id, &test))
+    if (!NativeGetProperty(cx, arr, id, &test))
         return false;
     MOZ_ASSERT(test == arr->getSlot(0));
     id = NameToId(cx->names().input);
-    if (!baseops::GetProperty(cx, arr, id, &test))
+    if (!NativeGetProperty(cx, arr, id, &test))
         return false;
     MOZ_ASSERT(test == arr->getSlot(1));
 #endif

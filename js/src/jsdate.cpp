@@ -3012,9 +3012,9 @@ FinishDateClassInit(JSContext *cx, HandleObject ctor, HandleObject proto)
     RootedValue toUTCStringFun(cx);
     RootedId toUTCStringId(cx, NameToId(cx->names().toUTCString));
     RootedId toGMTStringId(cx, NameToId(cx->names().toGMTString));
-    return baseops::GetProperty(cx, proto.as<DateObject>(), toUTCStringId, &toUTCStringFun) &&
-           baseops::DefineGeneric(cx, proto.as<DateObject>(), toGMTStringId, toUTCStringFun,
-                                  nullptr, nullptr, 0);
+    return NativeGetProperty(cx, proto.as<DateObject>(), toUTCStringId, &toUTCStringFun) &&
+           NativeDefineProperty(cx, proto.as<DateObject>(), toGMTStringId, toUTCStringFun,
+                                nullptr, nullptr, 0);
 }
 
 const Class DateObject::class_ = {

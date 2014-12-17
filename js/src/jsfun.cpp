@@ -514,7 +514,7 @@ js::fun_resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp)
             attrs = JSPROP_READONLY | JSPROP_PERMANENT;
         }
 
-        if (!DefineNativeProperty(cx, fun, id, v, nullptr, nullptr, attrs))
+        if (!NativeDefineProperty(cx, fun, id, v, nullptr, nullptr, attrs))
             return false;
 
         if (isLength)
