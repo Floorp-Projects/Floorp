@@ -512,6 +512,15 @@ FRAME_STATE_GROUP(Inline, nsInlineFrame)
 FRAME_STATE_BIT(Inline, 21, NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET)
 FRAME_STATE_BIT(Inline, 22, NS_INLINE_FRAME_BIDI_VISUAL_IS_FIRST)
 FRAME_STATE_BIT(Inline, 23, NS_INLINE_FRAME_BIDI_VISUAL_IS_LAST)
+// nsRubyTextFrame inherits from nsInlineFrame
+
+
+// == Frame state bits that apply to ruby text frames =========================
+
+FRAME_STATE_GROUP(RubyText, nsRubyTextFrame)
+
+// inherits from nsInlineFrame
+FRAME_STATE_BIT(RubyText, 24, NS_RUBY_TEXT_FRAME_AUTOHIDE)
 
 
 // == Frame state bits that apply to placeholder frames =======================
