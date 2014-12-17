@@ -878,7 +878,6 @@ ContentHostIncremental::GenEffect(const gfx::Filter& aFilter)
   return CreateTexturedEffect(mSource, mSourceOnWhite, aFilter, true);
 }
 
-#ifdef MOZ_DUMP_PAINTING
 TemporaryRef<gfx::DataSourceSurface>
 ContentHostTexture::GetAsSurface()
 {
@@ -888,8 +887,6 @@ ContentHostTexture::GetAsSurface()
 
   return mTextureHost->GetAsSurface();
 }
-
-#endif
 
 
 } // namespace
