@@ -3034,9 +3034,11 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
             scrollItem->IsDisplayPortOpaque();
         newLayerEntry->mBaseFrameMetrics =
             scrollItem->ComputeFrameMetrics(ownLayer, mParameters);
-      } else if (itemType == nsDisplayItem::TYPE_SUBDOCUMENT ||
-                 itemType == nsDisplayItem::TYPE_ZOOM ||
-                 itemType == nsDisplayItem::TYPE_RESOLUTION) {
+      } else if ((itemType == nsDisplayItem::TYPE_SUBDOCUMENT ||
+                  itemType == nsDisplayItem::TYPE_ZOOM ||
+                  itemType == nsDisplayItem::TYPE_RESOLUTION) &&
+                 gfxPrefs::LayoutUseContainersForRootFrames())
+      {
         newLayerEntry->mBaseFrameMetrics =
           static_cast<nsDisplaySubDocument*>(item)->ComputeFrameMetrics(ownLayer, mParameters);
       }

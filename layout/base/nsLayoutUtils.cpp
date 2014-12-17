@@ -1014,7 +1014,7 @@ nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
                             aMargins, aPriority),
                         nsINode::DeleteProperty<DisplayPortMarginsPropertyData>);
 
-  if (nsLayoutUtils::UsesAsyncScrolling()) {
+  if (nsLayoutUtils::UsesAsyncScrolling() && gfxPrefs::LayoutUseContainersForRootFrames()) {
     nsIFrame* rootScrollFrame = aPresShell->GetRootScrollFrame();
     if (rootScrollFrame && aContent == rootScrollFrame->GetContent()) {
       // We are setting a root displayport for a document.
