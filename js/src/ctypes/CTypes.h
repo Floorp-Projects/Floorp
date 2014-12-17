@@ -344,7 +344,7 @@ struct ClosureInfo
 bool IsCTypesGlobal(HandleValue v);
 bool IsCTypesGlobal(JSObject* obj);
 
-JSCTypesCallbacks* GetCallbacks(JSObject* obj);
+const JSCTypesCallbacks* GetCallbacks(JSObject* obj);
 
 /*******************************************************************************
 ** JSClass reserved slot definitions
@@ -461,7 +461,7 @@ namespace CType {
   JSString* GetName(JSContext* cx, HandleObject obj);
   JSObject* GetProtoFromCtor(JSObject* obj, CTypeProtoSlot slot);
   JSObject* GetProtoFromType(JSContext* cx, JSObject* obj, CTypeProtoSlot slot);
-  JSCTypesCallbacks* GetCallbacksFromType(JSObject* obj);
+  const JSCTypesCallbacks* GetCallbacksFromType(JSObject* obj);
 }
 
 namespace PointerType {
