@@ -15,7 +15,8 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AnimationPlayer, mTimeline, mSource)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AnimationPlayer, mTimeline,
+                                      mSource, mReady)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(AnimationPlayer)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(AnimationPlayer)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AnimationPlayer)
@@ -64,6 +65,27 @@ AnimationPlayer::PlayState() const
   }
 
   return AnimationPlayState::Running;
+}
+
+Promise*
+AnimationPlayer::GetReady(ErrorResult& aRv)
+{
+  // Lazily create the ready promise if it doesn't exist
+  if (!mReady) {
+    nsIGlobalObject* global = mTimeline->GetParentObject();
+    if (global) {
+      mReady = Promise::Create(global, aRv);
+      // The ready promise should be initially resolved
+      if (mReady) {
+        mReady->MaybeResolve(this);
+      }
+    }
+  }
+  if (!mReady) {
+    aRv.Throw(NS_ERROR_FAILURE);
+  }
+
+  return mReady;
 }
 
 void
