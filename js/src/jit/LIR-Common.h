@@ -476,7 +476,7 @@ class LSimdShift : public LInstructionHelper<1, 2, 0>
 
 // SIMD selection of lanes from two int32x4 or float32x4 arguments based on a
 // int32x4 argument.
-class LSimdSelect : public LInstructionHelper<1, 3, 0>
+class LSimdSelect : public LInstructionHelper<1, 3, 1>
 {
   public:
     LIR_HEADER(SimdSelect);
@@ -488,6 +488,9 @@ class LSimdSelect : public LInstructionHelper<1, 3, 0>
     }
     const LAllocation *rhs() {
         return getOperand(2);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
     }
     MSimdTernaryBitwise::Operation operation() const {
         return mir_->toSimdTernaryBitwise()->operation();

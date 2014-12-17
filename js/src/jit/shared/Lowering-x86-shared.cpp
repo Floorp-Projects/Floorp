@@ -677,18 +677,16 @@ LIRGeneratorX86Shared::visitSimdTernaryBitwise(MSimdTernaryBitwise *ins)
 
     if (ins->type() == MIRType_Int32x4 || ins->type() == MIRType_Float32x4) {
         LSimdSelect *lins = new(alloc()) LSimdSelect;
+        MDefinition *r0 = ins->getOperand(0);
+        MDefinition *r1 = ins->getOperand(1);
+        MDefinition *r2 = ins->getOperand(2);
 
-        // This must be useRegisterAtStart() because it is destroyed.
-        lins->setOperand(0, useRegisterAtStart(ins->getOperand(0)));
-        // This must be useRegisterAtStart() because it is destroyed.
-        lins->setOperand(1, useRegisterAtStart(ins->getOperand(1)));
-        // This could be useRegister(), but combining it with
-        // useRegisterAtStart() is broken see bug 772830.
-        lins->setOperand(2, useRegisterAtStart(ins->getOperand(2)));
-        // The output is constrained to be in the same register as the second
-        // argument to avoid redundantly copying the result into place. The
-        // register allocator will move the result if necessary.
-        defineReuseInput(lins, ins, 1);
+        lins->setOperand(0, useRegister(r0));
+        lins->setOperand(1, useRegister(r1));
+        lins->setOperand(2, useRegister(r2));
+        lins->setTemp(0, temp(LDefinition::FLOAT32X4));
+
+        define(lins, ins);
     } else {
         MOZ_CRASH("Unknown SIMD kind when doing bitwise operations");
     }
