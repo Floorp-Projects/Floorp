@@ -53,7 +53,6 @@ async_test(function(t) {
 
   player.pause();
   div.style.animationPlayState = 'running';
-  cs.animationPlayState; // Trigger style resolution
 
   player.ready.then(waitForFrame).then(t.step_func(function() {
     assert_equals(cs.animationPlayState, 'running',
