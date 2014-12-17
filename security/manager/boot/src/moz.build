@@ -24,6 +24,10 @@ LOCAL_INCLUDES += [
     '../../../pkix/include',
 ]
 
+GENERATED_INCLUDES += [
+    '/dist/public/nss',
+]
+
 FAIL_ON_WARNINGS = True
 
 MSVC_ENABLE_PGO = True
