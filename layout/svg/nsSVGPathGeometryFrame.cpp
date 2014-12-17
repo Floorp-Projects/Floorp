@@ -440,9 +440,7 @@ nsSVGPathGeometryFrame::NotifySVGChanged(uint32_t aFlags)
     }
   }
 
-  if ((aFlags & TRANSFORM_CHANGED) &&
-      StyleSVGReset()->mVectorEffect ==
-        NS_STYLE_VECTOR_EFFECT_NON_SCALING_STROKE) {
+  if ((aFlags & TRANSFORM_CHANGED) && StyleSVGReset()->HasNonScalingStroke()) {
     // Stroke currently contributes to our mRect, and our stroke depends on
     // the transform to our outer-<svg> if |vector-effect:non-scaling-stroke|.
     nsSVGUtils::ScheduleReflowSVG(this);
