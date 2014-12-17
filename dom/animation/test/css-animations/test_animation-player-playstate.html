@@ -10,13 +10,19 @@
 <script>
 'use strict';
 
-test(function(t) {
+async_test(function(t) {
   var div = addDiv(t);
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s';
 
   var player = div.getAnimationPlayers()[0];
   assert_equals(player.playState, 'running');
+  // Bug 927349: Check for pending state here
+
+  player.ready.then(t.step_func(function() {
+    assert_equals(player.playState, 'running');
+    t.done();
+  }));
 }, 'Player returns correct playState when running');
 
 test(function(t) {
@@ -46,6 +52,7 @@ test(function(t) {
   var player = div.getAnimationPlayers()[0];
   div.style.animationPlayState = 'running';
   // This test also checks that calling playState flushes style
+  // Bug 927349: Make this check for 'pending'
   assert_equals(player.playState, 'running');
 }, 'Player.playState updates when resumed by setting style');
 

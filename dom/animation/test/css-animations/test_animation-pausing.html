@@ -28,13 +28,13 @@ async_test(function(t) {
                 'Initial value of margin-left is zero');
   var previousAnimVal = getMarginLeft(cs);
 
-  waitForFrame().then(t.step_func(function() {
+  player.ready.then(waitForFrame).then(t.step_func(function() {
     assert_true(getMarginLeft(cs) > previousAnimVal,
                 'margin-left is initially increasing');
     previousAnimVal = getMarginLeft(cs);
 
     player.pause();
-    return waitForFrame();
+    return player.ready.then(waitForFrame);
   })).then(t.step_func(function() {
     assert_equals(getMarginLeft(cs), previousAnimVal,
                   'margin-left does not increase after calling pause()');
@@ -55,7 +55,7 @@ async_test(function(t) {
   div.style.animationPlayState = 'running';
   cs.animationPlayState; // Trigger style resolution
 
-  waitForFrame().then(t.step_func(function() {
+  player.ready.then(waitForFrame).then(t.step_func(function() {
     assert_equals(cs.animationPlayState, 'running',
                   'animation-play-state is running');
     assert_equals(getMarginLeft(cs), 0,
@@ -76,7 +76,7 @@ async_test(function(t) {
 
   player.play();
 
-  waitForFrame().then(t.step_func(function() {
+  player.ready.then(waitForFrame).then(t.step_func(function() {
     assert_true(getMarginLeft(cs) > 0,
                 'Playing value of margin-left is greater than zero');
     t.done();
@@ -93,12 +93,14 @@ async_test(function(t) {
                 'Initial value of margin-left is zero');
 
   player.play();
-  div.style.animationPlayState = 'running';
-  cs.animationPlayState; // Trigger style resolution
 
   var previousAnimVal;
 
-  waitForFrame().then(t.step_func(function() {
+  player.ready.then(function() {
+    div.style.animationPlayState = 'running';
+    cs.animationPlayState; // Trigger style resolution
+    return waitForFrame();
+  }).then(t.step_func(function() {
     assert_equals(cs.animationPlayState, 'running',
                   'animation-play-state is running');
     previousAnimVal = getMarginLeft(cs);
@@ -131,7 +133,7 @@ async_test(function(t) {
   player.play();
   var previousAnimVal = getMarginLeft(cs);
 
-  waitForFrame().then(t.step_func(function() {
+  player.ready.then(waitForFrame).then(t.step_func(function() {
     assert_equals(cs.animationPlayState, 'paused',
                   'animation-play-state is paused');
     assert_true(getMarginLeft(cs) > previousAnimVal,

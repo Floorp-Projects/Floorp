@@ -34,20 +34,27 @@ async_test(function(t) {
   var players = div.getAnimationPlayers();
   assert_equals(players.length, 1,
     'getAnimationPlayers returns a player running CSS Animations');
-  var startTime = players[0].startTime;
-  assert_true(startTime > 0 && startTime <= document.timeline.currentTime,
-    'CSS animation has a sensible start time');
+  players[0].ready.then(t.step_func(function() {
+    var startTime = players[0].startTime;
+    assert_true(startTime > 0 && startTime <= document.timeline.currentTime,
+      'CSS animation has a sensible start time');
 
-  // Wait a moment then add a second animation.
-  //
-  // We wait for the next frame so that we can test that the start times of
-  // the animations differ.
-  window.requestAnimationFrame(t.step_func(function() {
+    // Wait a moment then add a second animation.
+    //
+    // We wait for the next frame so that we can test that the start times of
+    // the animations differ.
+    return waitForFrame();
+  })).then(t.step_func(function() {
     div.style.animation = 'anim1 100s, anim2 100s';
     players = div.getAnimationPlayers();
     assert_equals(players.length, 2,
       'getAnimationPlayers returns one player for each value of'
       + ' animation-name');
+    // Wait until both players are ready
+    // (We don't make any assumptions about the order of the players since
+    //  that is the purpose of the following test.)
+    return waitForAllPlayers(players);
+  })).then(t.step_func(function() {
     assert_true(players[0].startTime < players[1].startTime,
       'Additional players for CSS animations start after the original'
       + ' animation and appear later in the list');
@@ -73,17 +80,20 @@ async_test(function(t) {
   div.style.animation = 'anim1 100s';
   window.getComputedStyle(div).backgroundColor;
 
-  // Wait a moment then add a transition
-  window.requestAnimationFrame(t.step_func(function() {
+  // Wait until a frame after the animation starts, then add a transition
+  var players = div.getAnimationPlayers();
+  players[0].ready.then(waitForFrame).then(t.step_func(function() {
     div.style.transition = 'all 100s';
     div.style.backgroundColor = 'green';
 
-    var players = div.getAnimationPlayers();
+    players = div.getAnimationPlayers();
     assert_equals(players.length, 2,
-      'getAnimationPlayers returns players for both animations and '
+      'getAnimationPlayers returns players for both animations and'
       + ' transitions that run simultaneously');
+    return waitForAllPlayers(players);
+  })).then(t.step_func(function() {
     assert_true(players[0].startTime > players[1].startTime,
-      'players for transitions appear before animations even if they '
+      'players for transitions appear before animations even if they'
       + ' start later');
     t.done();
   }));
@@ -159,13 +169,15 @@ async_test(function(t) {
     'getAnimationPlayers initally only returns players for CSS Animations whose'
     + ' animation-name is found');
 
-  window.requestAnimationFrame(t.step_func(function() {
+  players[0].ready.then(waitForFrame).then(t.step_func(function() {
     var keyframes = '@keyframes notyet { to { left: 100px; } }';
     document.styleSheets[0].insertRule(keyframes, 0);
     players = div.getAnimationPlayers();
     assert_equals(players.length, 2,
       'getAnimationPlayers includes player when @keyframes rule is added'
       + ' later');
+    return waitForAllPlayers(players);
+  })).then(t.step_func(function() {
     assert_true(players[0].startTime < players[1].startTime,
       'Newly added player has a later start time');
     document.styleSheets[0].deleteRule(0);
@@ -190,16 +202,19 @@ test(function(t) {
     + ' empty keyframes rule');
 }, 'getAnimationPlayers for CSS Animations with empty keyframes rule');
 
-test(function(t) {
+async_test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'anim1 100s 100s';
   var players = div.getAnimationPlayers();
   assert_equals(players.length, 1,
     'getAnimationPlayers returns animations for CSS animations whose'
     + ' delay makes them start later');
-  assert_true(players[0].startTime <= document.timeline.currentTime,
-    'For CSS Animations in delay phase, the start time of the player is'
-    + ' not in the future');
+  players[0].ready.then(waitForFrame).then(t.step_func(function() {
+    assert_true(players[0].startTime <= document.timeline.currentTime,
+      'For CSS Animations in delay phase, the start time of the player is'
+      + ' not in the future');
+    t.done();
+  }));
 }, 'getAnimationPlayers for CSS animations in delay phase');
 
 test(function(t) {
