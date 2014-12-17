@@ -2,6 +2,7 @@
 <meta charset=utf-8>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="../testcommon.js"></script>
 <div id="log"></div>
 <style>
 @keyframes anim { }
@@ -9,14 +10,8 @@
 <script>
 'use strict';
 
-function addDiv() {
-  var div = document.createElement('div');
-  document.body.appendChild(div);
-  return div;
-}
-
-test(function() {
-  var div = addDiv();
+test(function(t) {
+  var div = addDiv(t);
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s';
 
@@ -24,8 +19,8 @@ test(function() {
   assert_equals(player.playState, 'running');
 }, 'Player returns correct playState when running');
 
-test(function() {
-  var div = addDiv();
+test(function(t) {
+  var div = addDiv(t);
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
 
@@ -33,8 +28,8 @@ test(function() {
   assert_equals(player.playState, 'paused');
 }, 'Player returns correct playState when paused');
 
-test(function() {
-  var div = addDiv();
+test(function(t) {
+  var div = addDiv(t);
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s';
 
@@ -43,8 +38,8 @@ test(function() {
   assert_equals(player.playState, 'paused');
 }, 'Player.playState updates when paused by script');
 
-test(function() {
-  var div = addDiv();
+test(function(t) {
+  var div = addDiv(t);
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
 
