@@ -48,9 +48,11 @@ public:
     : MediaEngineCameraVideoSource(aIndex, "GonkCamera.Monitor")
     , mCallbackMonitor("GonkCamera.CallbackMonitor")
     , mCameraControl(nullptr)
+    , mProducedDuration(0)
     , mRotation(0)
     , mBackCamera(false)
-    , mOrientationChanged(true) // Correct the orientation at first time takePhoto.
+    , mOrientationChanged(true)
+    // Correct the orientation at first time takePhoto.
     {
       Init();
     }
@@ -63,8 +65,7 @@ public:
   virtual void NotifyPull(MediaStreamGraph* aGraph,
                           SourceMediaStream* aSource,
                           TrackID aId,
-                          StreamTime aDesiredTime,
-                          StreamTime &aLastEndTime) MOZ_OVERRIDE;
+                          StreamTime aDesiredTime) MOZ_OVERRIDE;
   virtual bool SatisfiesConstraintSets(
       const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets)
   {
@@ -106,6 +107,7 @@ protected:
   // This is only modified on MainThread (AllocImpl and DeallocImpl)
   nsRefPtr<ICameraControl> mCameraControl;
   nsCOMPtr<nsIDOMFile> mLastCapture;
+  StreamTime mProducedDuration;
 
   // These are protected by mMonitor in parent class
   nsTArray<nsRefPtr<PhotoCallback>> mPhotoCallbacks;

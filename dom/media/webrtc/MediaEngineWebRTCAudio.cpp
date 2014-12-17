@@ -398,15 +398,11 @@ void
 MediaEngineWebRTCAudioSource::NotifyPull(MediaStreamGraph* aGraph,
                                          SourceMediaStream *aSource,
                                          TrackID aID,
-                                         StreamTime aDesiredTime,
-                                         StreamTime &aLastEndTime)
+                                         StreamTime aDesiredTime)
 {
   // Ignore - we push audio data
 #ifdef DEBUG
-  StreamTime delta = aDesiredTime - aLastEndTime;
-  LOG(("Audio: NotifyPull: aDesiredTime %ld, delta %ld",(int64_t) aDesiredTime,
-       (int64_t) delta));
-  aLastEndTime = aDesiredTime;
+  LOG(("Audio: NotifyPull: aDesiredTime %ld", aDesiredTime));
 #endif
 }
 
