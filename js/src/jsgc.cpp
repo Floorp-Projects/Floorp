@@ -2586,8 +2586,10 @@ GCRuntime::updateAllCellPointersParallel(ArenasToUpdate &source)
 {
     AutoDisableProxyCheck noProxyCheck(rt); // These checks assert when run in parallel.
 
+    const size_t minTasks = 2;
     const size_t maxTasks = 8;
-    unsigned taskCount = Min(HelperThreadState().cpuCount, maxTasks);
+    unsigned taskCount = Min(Max(HelperThreadState().cpuCount / 2, minTasks),
+                             maxTasks);
     UpdateCellPointersTask updateTasks[maxTasks];
 
     AutoLockHelperThreadState lock;
