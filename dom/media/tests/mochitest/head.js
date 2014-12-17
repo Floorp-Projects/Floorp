@@ -128,6 +128,7 @@ function runTest(aCallback) {
   if (window.SimpleTest) {
     // Running as a Mochitest.
     SimpleTest.waitForExplicitFinish();
+    SimpleTest.requestFlakyTimeout("WebRTC inherently depends on timeouts");
     SpecialPowers.pushPrefEnv({'set': [
       ['dom.messageChannel.enabled', true],
       ['media.peerconnection.enabled', true],
