@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2010 The Android Open Source Project
- * Copyright (C) 2013 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +14,11 @@
  * limitations under the License.
  */
 
-#ifndef NATIVEWINDOW_GONKNATIVEWINDOWCLIENT_JB_H
-#define NATIVEWINDOW_GONKNATIVEWINDOWCLIENT_JB_H
+#ifndef ANDROID_GUI_SURFACE_H
+#define ANDROID_GUI_SURFACE_H
 
-#if ANDROID_VERSION == 17
-#include <gui/ISurfaceTexture.h>
-#else
 #include <gui/IGraphicBufferProducer.h>
-#endif
+#include <gui/BufferQueue.h>
 
 #include <ui/ANativeObjectBase.h>
 #include <ui/Region.h>
@@ -30,9 +26,6 @@
 #include <utils/RefBase.h>
 #include <utils/threads.h>
 #include <utils/KeyedVector.h>
-
-#include "mozilla/Types.h"
-#include "GonkBufferQueue.h"
 
 struct ANativeWindow_Buffer;
 
@@ -47,54 +40,74 @@ namespace android {
  * and have the frames they create forwarded to SurfaceFlinger for
  * compositing.  For example, a video decoder could render a frame and call
  * eglSwapBuffers(), which invokes ANativeWindow callbacks defined by
- * GonkNativeWindowClient.  GonkNativeWindowClient then forwards the buffers through Binder IPC
+ * Surface.  Surface then forwards the buffers through Binder IPC
  * to the BufferQueue's producer interface, providing the new frame to a
  * consumer such as GLConsumer.
  */
-class GonkNativeWindowClient
-    : public ANativeObjectBase<ANativeWindow, GonkNativeWindowClient, RefBase>
+class Surface
+    : public ANativeObjectBase<ANativeWindow, Surface, RefBase>
 {
 public:
 
     /*
-     * creates a GonkNativeWindowClient from the given IGraphicBufferProducer (which concrete
+     * creates a Surface from the given IGraphicBufferProducer (which concrete
      * implementation is a BufferQueue).
      *
-     * GonkNativeWindowClient is mainly state-less while it's disconnected, it can be
+     * Surface is mainly state-less while it's disconnected, it can be
      * viewed as a glorified IGraphicBufferProducer holder. It's therefore
-     * safe to create other GonkNativeWindowClients from the same IGraphicBufferProducer.
+     * safe to create other Surfaces from the same IGraphicBufferProducer.
      *
-     * However, once a GonkNativeWindowClient is connected, it'll prevent other GonkNativeWindowClients
+     * However, once a Surface is connected, it'll prevent other Surfaces
      * referring to the same IGraphicBufferProducer to become connected and
      * therefore prevent them to be used as actual producers of buffers.
+     *
+     * the controlledByApp flag indicates that this Surface (producer) is
+     * controlled by the application. This flag is used at connect time.
      */
-    GonkNativeWindowClient(const sp<IGraphicBufferProducer>& bufferProducer);
+    Surface(const sp<IGraphicBufferProducer>& bufferProducer, bool controlledByApp = false);
 
     /* getIGraphicBufferProducer() returns the IGraphicBufferProducer this
-     * GonkNativeWindowClient was created with. Usually it's an error to use the
-     * IGraphicBufferProducer while the GonkNativeWindowClient is connected.
+     * Surface was created with. Usually it's an error to use the
+     * IGraphicBufferProducer while the Surface is connected.
      */
-#if ANDROID_VERSION == 17
-    sp<IGraphicBufferProducer> getISurfaceTexture() const;
-#else
     sp<IGraphicBufferProducer> getIGraphicBufferProducer() const;
-#endif
 
     /* convenience function to check that the given surface is non NULL as
      * well as its IGraphicBufferProducer */
-#if ANDROID_VERSION >= 18
-    static bool isValid(const sp<GonkNativeWindowClient>& surface) {
+    static bool isValid(const sp<Surface>& surface) {
         return surface != NULL && surface->getIGraphicBufferProducer() != NULL;
     }
-#endif
+
+    /* Attaches a sideband buffer stream to the Surface's IGraphicBufferProducer.
+     *
+     * A sideband stream is a device-specific mechanism for passing buffers
+     * from the producer to the consumer without using dequeueBuffer/
+     * queueBuffer. If a sideband stream is present, the consumer can choose
+     * whether to acquire buffers from the sideband stream or from the queued
+     * buffers.
+     *
+     * Passing NULL or a different stream handle will detach the previous
+     * handle if any.
+     */
+    void setSidebandStream(const sp<NativeHandle>& stream);
+
+    /* Allocates buffers based on the current dimensions/format.
+     *
+     * This function will allocate up to the maximum number of buffers
+     * permitted by the current BufferQueue configuration. It will use the
+     * default format and dimensions. This is most useful to avoid an allocation
+     * delay during dequeueBuffer. If there are already the maximum number of
+     * buffers allocated, this function has no effect.
+     */
+    void allocateBuffers();
 
 protected:
-    virtual ~GonkNativeWindowClient();
+    virtual ~Surface();
 
 private:
     // can't be copied
-    GonkNativeWindowClient& operator = (const GonkNativeWindowClient& rhs);
-    GonkNativeWindowClient(const GonkNativeWindowClient& rhs);
+    Surface& operator = (const Surface& rhs);
+    Surface(const Surface& rhs);
 
     // ANativeWindow hooks
     static int hook_cancelBuffer(ANativeWindow* window,
@@ -125,12 +138,14 @@ private:
     int dispatchSetBuffersFormat(va_list args);
     int dispatchSetScalingMode(va_list args);
     int dispatchSetBuffersTransform(va_list args);
+    int dispatchSetBuffersStickyTransform(va_list args);
     int dispatchSetBuffersTimestamp(va_list args);
     int dispatchSetCrop(va_list args);
     int dispatchSetPostTransformCrop(va_list args);
     int dispatchSetUsage(va_list args);
     int dispatchLock(va_list args);
     int dispatchUnlockAndPost(va_list args);
+    int dispatchSetSidebandStream(va_list args);
 
 protected:
     virtual int dequeueBuffer(ANativeWindowBuffer** buffer, int* fenceFd);
@@ -150,6 +165,7 @@ protected:
     virtual int setBuffersFormat(int format);
     virtual int setScalingMode(int mode);
     virtual int setBuffersTransform(int transform);
+    virtual int setBuffersStickyTransform(int transform);
     virtual int setBuffersTimestamp(int64_t timestamp);
     virtual int setCrop(Rect const* rect);
     virtual int setUsage(uint32_t reqUsage);
@@ -159,7 +175,7 @@ public:
     virtual int unlockAndPost();
 
 protected:
-    enum { NUM_BUFFER_SLOTS = GonkBufferQueue::NUM_BUFFER_SLOTS };
+    enum { NUM_BUFFER_SLOTS = BufferQueue::NUM_BUFFER_SLOTS };
     enum { DEFAULT_FORMAT = PIXEL_FORMAT_RGBA_8888 };
 
 private:
@@ -174,7 +190,8 @@ private:
     // mSurfaceTexture is the interface to the surface texture server. All
     // operations on the surface texture client ultimately translate into
     // interactions with the server using this interface.
-    sp<IGraphicBufferProducer> mBufferProducer;
+    // TODO: rename to mBufferProducer
+    sp<IGraphicBufferProducer> mGraphicBufferProducer;
 
     // mSlots stores the buffers that have been allocated for each buffer slot.
     // It is initialized to null pointers, and gets filled in with the result of
@@ -217,6 +234,12 @@ private:
     // buffer that gets queued. It is set by calling setTransform.
     uint32_t mTransform;
 
+    // mStickyTransform is a transform that is applied on top of mTransform
+    // in each buffer that is queued.  This is typically used to force the
+    // compositor to apply a transform, and will prevent the transform hint
+    // from being set by the compositor.
+    uint32_t mStickyTransform;
+
      // mDefaultWidth is default width of the buffers, regardless of the
      // native_window_set_buffers_dimensions call.
      uint32_t mDefaultWidth;
@@ -239,12 +262,20 @@ private:
     // window. this is only a hint, actual transform may differ.
     uint32_t mTransformHint;
 
+    // mProducerControlledByApp whether this buffer producer is controlled
+    // by the application
+    bool mProducerControlledByApp;
+
+    // mSwapIntervalZero set if we should drop buffers at queue() time to
+    // achieve an asynchronous swap interval
+    bool mSwapIntervalZero;
+
     // mConsumerRunningBehind whether the consumer is running more than
     // one buffer behind the producer.
     mutable bool mConsumerRunningBehind;
 
     // mMutex is the mutex used to prevent concurrent access to the member
-    // variables of GonkNativeWindowClient objects. It must be locked whenever the
+    // variables of Surface objects. It must be locked whenever the
     // member variables are accessed.
     mutable Mutex mMutex;
 
@@ -259,4 +290,4 @@ private:
 
 }; // namespace android
 
-#endif  // NATIVEWINDOW_GONKNATIVEWINDOWCLIENT_JB_H
+#endif  // ANDROID_GUI_SURFACE_H

@@ -14,7 +14,5 @@
  */
 
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 19
-# include "GonkBufferQueueKK.h"
-#elif defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-# include "GonkBufferQueueJB.h"
+# include "IGonkGraphicBufferConsumerKK.h"
 #endif
