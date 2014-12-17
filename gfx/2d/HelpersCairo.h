@@ -216,6 +216,35 @@ CairoContentToGfxFormat(cairo_content_t content)
   return SurfaceFormat::B8G8R8A8;
 }
 
+static inline SurfaceFormat
+CairoFormatToGfxFormat(cairo_format_t format)
+{
+  switch (format) {
+    case CAIRO_FORMAT_ARGB32:
+      return SurfaceFormat::B8G8R8A8;
+    case CAIRO_FORMAT_RGB24:
+      return SurfaceFormat::B8G8R8X8;
+    case CAIRO_FORMAT_A8:
+      return SurfaceFormat::A8;
+    case CAIRO_FORMAT_RGB16_565:
+      return SurfaceFormat::R5G6B5;
+    default:
+      gfxWarning() << "Unknown cairo format";
+      MOZ_ASSERT(false, "Unknown cairo format");
+      return SurfaceFormat::UNKNOWN;
+  }
+}
+
+static inline SurfaceFormat
+GfxFormatForCairoSurface(cairo_surface_t* surface)
+{
+  if (cairo_surface_get_type(surface) == CAIRO_SURFACE_TYPE_IMAGE) {
+    return CairoFormatToGfxFormat(cairo_image_surface_get_format(surface));
+  }
+
+  return CairoContentToGfxFormat(cairo_surface_get_content(surface));
+}
+
 static inline void
 GfxMatrixToCairoMatrix(const Matrix& mat, cairo_matrix_t& retval)
 {
