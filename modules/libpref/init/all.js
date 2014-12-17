@@ -128,6 +128,9 @@ pref("dom.workers.maxPerDomain", 20);
 // Whether or not Shared Web Workers are enabled.
 pref("dom.workers.sharedWorkers.enabled", true);
 
+// WebSocket in workers are enabled.
+pref("dom.workers.websocket.enabled", true);
+
 // Service workers
 pref("dom.serviceWorkers.enabled", false);
 
@@ -1293,9 +1296,6 @@ pref("network.ftp.data.qos", 0);
 pref("network.ftp.control.qos", 0);
 
 // </http>
-
-// <ws>: WebSocket
-pref("network.websocket.enabled", true);
 
 // 2147483647 == PR_INT32_MAX == ~2 GB
 pref("network.websocket.max-message-size", 2147483647);
