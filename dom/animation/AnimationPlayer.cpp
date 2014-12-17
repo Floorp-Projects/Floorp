@@ -11,6 +11,7 @@
 #include "nsIDocument.h" // For nsIDocument
 #include "nsIPresShell.h" // For nsIPresShell
 #include "nsLayoutUtils.h" // For PostRestyleEvent (remove after bug 1073336)
+#include "PendingPlayerTracker.h" // For PendingPlayerTracker
 
 namespace mozilla {
 namespace dom {
@@ -51,6 +52,10 @@ AnimationPlayer::GetCurrentTime() const
 AnimationPlayState
 AnimationPlayer::PlayState() const
 {
+  if (mIsPending) {
+    return AnimationPlayState::Pending;
+  }
+
   Nullable<TimeDuration> currentTime = GetCurrentTime();
   if (currentTime.IsNull()) {
     return AnimationPlayState::Idle;
@@ -202,7 +207,8 @@ AnimationPlayer::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
   }
 
   AnimationPlayState playState = PlayState();
-  if (playState == AnimationPlayState::Running) {
+  if (playState == AnimationPlayState::Running ||
+      playState == AnimationPlayState::Pending) {
     aNeedsRefreshes = true;
   }
 
