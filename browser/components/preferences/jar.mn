@@ -45,7 +45,6 @@ browser.jar:
     content/browser/preferences/sync.js
 #endif
     content/browser/preferences/search.xul
-    content/browser/preferences/search.css
     content/browser/preferences/search.js
 *   content/browser/preferences/tabs.xul
 *   content/browser/preferences/tabs.js
