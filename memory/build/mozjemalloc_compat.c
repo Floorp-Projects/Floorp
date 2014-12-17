@@ -21,7 +21,7 @@ je_(mallctlnametomib)(const char *name, size_t *mibp, size_t *miblenp);
 MOZ_IMPORT_API int
 je_(mallctlbymib)(const size_t *mib, size_t miblen, void *oldp, size_t *oldlenp, void *newp, size_t newlen);
 MOZ_IMPORT_API int
-je_(nallocm)(size_t *rsize, size_t size, int flags);
+je_(nallocx)(size_t size, int flags);
 
 #else
 #  include "jemalloc/jemalloc.h"
@@ -50,15 +50,12 @@ je_(nallocm)(size_t *rsize, size_t size, int flags);
 MOZ_MEMORY_API size_t
 malloc_good_size_impl(size_t size)
 {
-  size_t ret;
-  /* je_nallocm crashes when given a size of 0. As
+  /* je_nallocx crashes when given a size of 0. As
    * malloc_usable_size(malloc(0)) and malloc_usable_size(malloc(1))
    * return the same value, use a size of 1. */
   if (size == 0)
     size = 1;
-  if (!je_(nallocm)(&ret, size, 0))
-    return ret;
-  return size;
+  return je_(nallocx)(size, 0);
 }
 
 MOZ_JEMALLOC_API void
