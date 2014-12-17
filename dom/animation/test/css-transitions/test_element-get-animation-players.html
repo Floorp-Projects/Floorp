@@ -22,18 +22,21 @@ async_test(function(t) {
   var players = div.getAnimationPlayers();
   assert_equals(players.length, 2,
     'getAnimationPlayers() returns one player per transitioning property');
-  var startTime = players[0].startTime;
-  assert_true(startTime > 0 && startTime <= document.timeline.currentTime,
-    'CSS transitions have sensible start times');
-  assert_equals(players[0].startTime, players[1].startTime,
-    'CSS transitions started together have the same start time');
-
-  // Wait a moment then add a third transition
-  window.requestAnimationFrame(t.step_func(function() {
+  waitForAllPlayers(players).then(t.step_func(function() {
+    var startTime = players[0].startTime;
+    assert_true(startTime > 0 && startTime <= document.timeline.currentTime,
+                'CSS transitions have sensible start times');
+    assert_equals(players[0].startTime, players[1].startTime,
+      'CSS transitions started together have the same start time');
+    // Wait a moment then add a third transition
+    return waitForFrame();
+  })).then(t.step_func(function() {
     div.style.backgroundColor = 'green';
     players = div.getAnimationPlayers();
     assert_equals(players.length, 3,
       'getAnimationPlayers returns players for all running CSS Transitions');
+    return waitForAllPlayers(players);
+  })).then(t.step_func(function() {
     assert_true(players[1].startTime < players[2].startTime,
       'Player for additional CSS transition starts after the original'
       + ' transitions and appears later in the list');

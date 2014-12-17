@@ -25,3 +25,12 @@ function waitForFrame() {
     window.requestAnimationFrame(resolve);
   });
 }
+
+/**
+ * Wrapper that takes a sequence of N players and returns:
+ *
+ *   Promise.all([players[0].ready, players[1].ready, ... players[N-1].ready]);
+ */
+function waitForAllPlayers(players) {
+  return Promise.all(players.map(function(player) { return player.ready; }));
+}

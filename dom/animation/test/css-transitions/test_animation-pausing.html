@@ -26,7 +26,7 @@ async_test(function(t) {
                 'Initial value of margin-left is zero');
   var previousAnimVal = getMarginLeft(cs);
 
-  waitForFrame().then(t.step_func(function() {
+  player.ready.then(waitForFrame).then(t.step_func(function() {
     assert_true(getMarginLeft(cs) > previousAnimVal,
                 'margin-left is initially increasing');
     previousAnimVal = getMarginLeft(cs);
@@ -37,7 +37,7 @@ async_test(function(t) {
                   'margin-left does not increase after calling pause()');
     previousAnimVal = getMarginLeft(cs);
     player.play();
-    return waitForFrame();
+    return player.ready.then(waitForFrame);
   })).then(t.step_func(function() {
     assert_true(getMarginLeft(cs) > previousAnimVal,
                 'margin-left increases after calling play()');
