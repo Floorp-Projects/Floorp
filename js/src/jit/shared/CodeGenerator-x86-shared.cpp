@@ -2940,11 +2940,17 @@ CodeGeneratorX86Shared::visitSimdSelect(LSimdSelect *ins)
     FloatRegister mask = ToFloatRegister(ins->mask());
     FloatRegister onTrue = ToFloatRegister(ins->lhs());
     FloatRegister onFalse = ToFloatRegister(ins->rhs());
+    FloatRegister output = ToFloatRegister(ins->output());
+    FloatRegister temp = ToFloatRegister(ins->temp());
 
-    MOZ_ASSERT(onTrue == ToFloatRegister(ins->output()));
-    masm.bitwiseAndX4(Operand(mask), onTrue);
-    masm.bitwiseAndNotX4(Operand(onFalse), mask);
-    masm.bitwiseOrX4(Operand(mask), onTrue);
+    if (onTrue != output)
+        masm.movaps(onTrue, output);
+    if (mask != temp)
+        masm.movaps(mask, temp);
+
+    masm.bitwiseAndX4(Operand(mask), output);
+    masm.bitwiseAndNotX4(Operand(onFalse), temp);
+    masm.bitwiseOrX4(Operand(temp), output);
 }
 
 void
