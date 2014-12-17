@@ -1632,7 +1632,7 @@ public:
   bool MainThreadRun() MOZ_OVERRIDE
   {
     AssertIsOnMainThread();
-    mEnabled = WebSocket::PrefEnabled(nullptr, nullptr);
+    mEnabled = Preferences::GetBool("dom.workers.websocket.enabled", false);
     return true;
   }
 
@@ -1650,19 +1650,20 @@ private:
 bool
 WebSocket::PrefEnabled(JSContext* /* aCx */, JSObject* /* aGlobal */)
 {
+  // WebSockets are always enabled on main-thread.
   if (NS_IsMainThread()) {
-    return Preferences::GetBool("network.websocket.enabled", true);
-  } else {
-    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-    MOZ_ASSERT(workerPrivate);
-    workerPrivate->AssertIsOnWorkerThread();
-
-    nsRefPtr<PrefEnabledRunnable> runnable =
-      new PrefEnabledRunnable(workerPrivate);
-    runnable->Dispatch(workerPrivate->GetJSContext());
-
-    return runnable->IsEnabled();
+    return true;
   }
+
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(workerPrivate);
+  workerPrivate->AssertIsOnWorkerThread();
+
+  nsRefPtr<PrefEnabledRunnable> runnable =
+    new PrefEnabledRunnable(workerPrivate);
+  runnable->Dispatch(workerPrivate->GetJSContext());
+
+  return runnable->IsEnabled();
 }
 
 nsresult
