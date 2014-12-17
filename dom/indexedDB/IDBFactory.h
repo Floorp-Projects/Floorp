@@ -35,6 +35,7 @@ class PrincipalInfo;
 namespace dom {
 
 struct IDBOpenDBOptions;
+template <typename> class Optional;
 class TabChild;
 
 namespace indexedDB {
@@ -93,6 +94,16 @@ public:
   CreateForDatastore(JSContext* aCx,
                     JS::Handle<JSObject*> aOwningObject,
                     IDBFactory** aFactory);
+
+  static nsresult
+  CreateForWorker(JSContext* aCx,
+                  JS::Handle<JSObject*> aOwningObject,
+                  const PrincipalInfo& aPrincipalInfo,
+                  uint64_t aInnerWindowID,
+                  IDBFactory** aFactory);
+
+  static bool
+  AllowedForWindow(nsPIDOMWindow* aWindow);
 
   void
   AssertIsOnOwningThread() const
@@ -198,10 +209,21 @@ private:
   ~IDBFactory();
 
   static nsresult
+  CreateForMainThreadJSInternal(JSContext* aCx,
+                                JS::Handle<JSObject*> aOwningObject,
+                                nsAutoPtr<PrincipalInfo>& aPrincipalInfo,
+                                IDBFactory** aFactory);
+
+  static nsresult
   CreateForJSInternal(JSContext* aCx,
                       JS::Handle<JSObject*> aOwningObject,
                       nsAutoPtr<PrincipalInfo>& aPrincipalInfo,
+                      uint64_t aInnerWindowID,
                       IDBFactory** aFactory);
+
+  static nsresult
+  AllowedForWindowInternal(nsPIDOMWindow* aWindow,
+                           nsIPrincipal** aPrincipal);
 
   already_AddRefed<IDBOpenDBRequest>
   OpenInternal(nsIPrincipal* aPrincipal,

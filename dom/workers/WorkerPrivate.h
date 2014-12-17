@@ -17,6 +17,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
@@ -47,6 +48,9 @@ struct RuntimeStats;
 namespace mozilla {
 namespace dom {
 class Function;
+}
+namespace ipc {
+class PrincipalInfo;
 }
 }
 
@@ -131,6 +135,8 @@ protected:
   class EventTarget;
   friend class EventTarget;
 
+  typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
+
 public:
   struct LocationInfo
   {
@@ -157,20 +163,22 @@ public:
     nsCOMPtr<nsIChannel> mChannel;
     nsCOMPtr<nsILoadGroup> mLoadGroup;
 
+    nsAutoPtr<PrincipalInfo> mPrincipalInfo;
     nsCString mDomain;
 
+    uint64_t mWindowID;
+
+    bool mFromWindow;
     bool mEvalAllowed;
     bool mReportCSPViolations;
     bool mXHRParamsAllowed;
     bool mPrincipalIsSystem;
     bool mIsInPrivilegedApp;
     bool mIsInCertifiedApp;
+    bool mIndexedDBAllowed;
 
-    LoadInfo()
-    : mEvalAllowed(false), mReportCSPViolations(false),
-      mXHRParamsAllowed(false), mPrincipalIsSystem(false),
-      mIsInPrivilegedApp(false), mIsInCertifiedApp(false)
-    { }
+    LoadInfo();
+    ~LoadInfo();
 
     void
     StealFrom(LoadInfo& aOther)
@@ -199,13 +207,19 @@ public:
       MOZ_ASSERT(!mLoadGroup);
       aOther.mLoadGroup.swap(mLoadGroup);
 
+      MOZ_ASSERT(!mPrincipalInfo);
+      mPrincipalInfo = aOther.mPrincipalInfo.forget();
+
       mDomain = aOther.mDomain;
+      mWindowID = aOther.mWindowID;
+      mFromWindow = aOther.mFromWindow;
       mEvalAllowed = aOther.mEvalAllowed;
       mReportCSPViolations = aOther.mReportCSPViolations;
       mXHRParamsAllowed = aOther.mXHRParamsAllowed;
       mPrincipalIsSystem = aOther.mPrincipalIsSystem;
       mIsInPrivilegedApp = aOther.mIsInPrivilegedApp;
       mIsInCertifiedApp = aOther.mIsInCertifiedApp;
+      mIndexedDBAllowed = aOther.mIndexedDBAllowed;
     }
   };
 
@@ -404,9 +418,6 @@ public:
                                JSAutoStructuredCloneBuffer&& aBuffer,
                                nsTArray<nsCOMPtr<nsISupports>>& aClonedObjects);
 
-  uint64_t
-  GetInnerWindowId();
-
   void
   UpdateRuntimeOptions(JSContext* aCx,
                        const JS::RuntimeOptions& aRuntimeOptions);
@@ -511,6 +522,18 @@ public:
     return mLoadInfo.mDomain;
   }
 
+  bool
+  IsFromWindow() const
+  {
+    return mLoadInfo.mFromWindow;
+  }
+
+  uint64_t
+  WindowID() const
+  {
+    return mLoadInfo.mWindowID;
+  }
+
   nsIURI*
   GetBaseURI() const
   {
@@ -580,6 +603,12 @@ public:
   IsInCertifiedApp() const
   {
     return mLoadInfo.mIsInCertifiedApp;
+  }
+
+  const PrincipalInfo&
+  GetPrincipalInfo() const
+  {
+    return *mLoadInfo.mPrincipalInfo;
   }
 
   already_AddRefed<nsIChannel>
@@ -713,6 +742,12 @@ public:
     return mMessagePortSerial++;
   }
 
+  bool
+  IsIndexedDBAllowed() const
+  {
+    return mLoadInfo.mIndexedDBAllowed;
+  }
+
   void
   GetAllSharedWorkers(nsTArray<nsRefPtr<SharedWorker>>& aSharedWorkers);
 
@@ -832,6 +867,9 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   // AssertValidSyncLoop function iterates it on other threads. Therefore
   // modifications are done with mMutex held *only* in DEBUG builds.
   nsTArray<nsAutoPtr<SyncLoopInfo>> mSyncLoopStack;
+
+  struct PreemptingRunnableInfo;
+  nsTArray<PreemptingRunnableInfo> mPreemptingRunnableInfos;
 
   nsCOMPtr<nsITimer> mTimer;
 
@@ -1166,6 +1204,11 @@ public:
     AssertIsOnWorkerThread();
     return mWorkerScriptExecutedSuccessfully;
   }
+
+  // Just like nsIAppShell::RunBeforeNextEvent. May only be called on the worker
+  // thread.
+  bool
+  RunBeforeNextEvent(nsIRunnable* aRunnable);
 
 private:
   WorkerPrivate(JSContext* aCx, WorkerPrivate* aParent,

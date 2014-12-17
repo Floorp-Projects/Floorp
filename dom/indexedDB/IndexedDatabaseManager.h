@@ -21,6 +21,7 @@ struct PRLogModuleInfo;
 
 namespace mozilla {
 
+class DOMEventTargetHelper;
 class EventChainPostVisitor;
 
 namespace dom {
@@ -31,6 +32,7 @@ namespace indexedDB {
 
 class FileManager;
 class FileManagerInfo;
+class IDBFactory;
 
 class IndexedDatabaseManager MOZ_FINAL : public nsIObserver
 {
@@ -106,6 +108,9 @@ public:
   }
 #endif
 
+  static bool
+  ExperimentalFeaturesEnabled(JSContext* aCx, JSObject* aGlobal);
+
   already_AddRefed<FileManager>
   GetFileManager(PersistenceType aPersistenceType,
                  const nsACString& aOrigin,
@@ -153,8 +158,9 @@ public:
   }
 
   static nsresult
-  FireWindowOnError(nsPIDOMWindow* aOwner,
-                    EventChainPostVisitor& aVisitor);
+  CommonPostHandleEvent(DOMEventTargetHelper* aEventTarget,
+                        IDBFactory* aFactory,
+                        EventChainPostVisitor& aVisitor);
 
   static bool
   TabContextMayAccessOrigin(const mozilla::dom::TabContext& aContext,

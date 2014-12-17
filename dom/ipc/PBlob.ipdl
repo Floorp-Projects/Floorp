@@ -6,8 +6,10 @@ include protocol PBackground;
 include protocol PBlobStream;
 include protocol PContent;
 include protocol PContentBridge;
+include protocol PFileDescriptorSet;
 
 include DOMTypes;
+include InputStreamParams;
 
 namespace mozilla {
 namespace dom {
@@ -30,6 +32,9 @@ parent:
   PBlobStream(uint64_t begin, uint64_t length);
 
   ResolveMystery(ResolveMysteryParams params);
+
+  sync BlobStreamSync(uint64_t begin, uint64_t length)
+    returns (InputStreamParams params, OptionalFileDescriptorSet fds);
 
   sync WaitForSliceCreation();
 

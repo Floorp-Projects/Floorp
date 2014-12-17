@@ -7821,13 +7821,8 @@ bool
 NormalTransaction::SendCompleteNotification(nsresult aResult)
 {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!IsActorDestroyed());
 
-  if (NS_WARN_IF(!SendComplete(aResult))) {
-    return false;
-  }
-
-  return true;
+  return IsActorDestroyed() || !NS_WARN_IF(!SendComplete(aResult));
 }
 
 void
@@ -8106,7 +8101,6 @@ VersionChangeTransaction::SendCompleteNotification(nsresult aResult)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mOpenDatabaseOp);
-  MOZ_ASSERT(!IsActorDestroyed());
 
   nsRefPtr<OpenDatabaseOp> openDatabaseOp;
   mOpenDatabaseOp.swap(openDatabaseOp);
@@ -8117,7 +8111,7 @@ VersionChangeTransaction::SendCompleteNotification(nsresult aResult)
 
   openDatabaseOp->mState = OpenDatabaseOp::State_SendingResults;
 
-  bool result = SendComplete(aResult);
+  bool result = IsActorDestroyed() || !NS_WARN_IF(!SendComplete(aResult));
 
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(openDatabaseOp->Run()));
 
@@ -10550,10 +10544,23 @@ FactoryOp::Open()
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
-  // This has to be started on the main thread currently.
-  if (NS_WARN_IF(!IndexedDatabaseManager::GetOrCreate())) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  {
+    // These services have to be started on the main thread currently.
+    if (NS_WARN_IF(!IndexedDatabaseManager::GetOrCreate())) {
+      IDB_REPORT_INTERNAL_ERR();
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+
+    nsCOMPtr<mozIStorageService> ss;
+    if (NS_WARN_IF(!(ss = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID)))) {
+      IDB_REPORT_INTERNAL_ERR();
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+
+    if (NS_WARN_IF(!QuotaManager::GetOrCreate())) {
+      IDB_REPORT_INTERNAL_ERR();
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
   }
 
   const DatabaseMetadata& metadata = mCommonParams.metadata();
@@ -11936,8 +11943,7 @@ OpenDatabaseOp::SendResults()
     mVersionChangeTransaction = nullptr;
   }
 
-  if (!IsActorDestroyed() &&
-      (!mDatabase || !mDatabase->IsInvalidated())) {
+  if (!IsActorDestroyed()) {
     FactoryRequestResponse response;
 
     if (NS_SUCCEEDED(mResultCode)) {
@@ -11976,6 +11982,10 @@ OpenDatabaseOp::SendResults()
     mOfflineStorage->CloseOnOwningThread();
     DatabaseOfflineStorage::UnregisterOnOwningThread(mOfflineStorage.forget());
   }
+
+  // Make sure to release the database on this thread.
+  nsRefPtr<Database> database;
+  mDatabase.swap(database);
 
   FinishSendResults();
 }
@@ -13377,9 +13387,7 @@ CommitOp::TransactionFinishedAfterUnblock()
 
   mTransaction->ReleaseBackgroundThreadObjects();
 
-  if (!mTransaction->IsActorDestroyed()) {
-    mTransaction->SendCompleteNotification(ClampResultCode(mResultCode));
-  }
+  mTransaction->SendCompleteNotification(ClampResultCode(mResultCode));
 
   mTransaction->GetDatabase()->UnregisterTransaction(mTransaction);
 

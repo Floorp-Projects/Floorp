@@ -23,6 +23,7 @@ dictionary IDBOpenDBOptions
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBFactory
  * for more information.
  */
+[Exposed=(Window,Worker)]
 interface IDBFactory {
   [Throws]
   IDBOpenDBRequest
