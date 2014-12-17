@@ -91,10 +91,10 @@ def main():
         r'operator new\[\]\(unsigned',
 
         r'memalign',
-        # These two aren't available on all Linux configurations.
+        # These three aren't available on all Linux configurations.
         #r'posix_memalign',
         #r'aligned_alloc',
-        r'valloc',
+        #r'valloc',
     ]
 
     if args.aggressive:
