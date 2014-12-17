@@ -140,7 +140,7 @@ private:
         off64_t offset;
         uint32_t size;
         uint32_t duration;
-        int64_t ctsOffset;
+        int32_t ctsOffset;
         uint32_t flags;
         uint8_t iv[16];
         Vector<uint16_t> clearsizes;
@@ -3161,11 +3161,7 @@ status_t MPEG4Source::parseTrackFragmentRun(off64_t offset, off64_t size) {
         tmp.offset = dataOffset;
         tmp.size = sampleSize;
         tmp.duration = sampleDuration;
-        if (version == 0) {
-          tmp.ctsOffset = sampleCtsOffset;
-        } else {
-          tmp.ctsOffset = (int32_t)sampleCtsOffset;
-        }
+        tmp.ctsOffset = (int32_t)sampleCtsOffset;
         mCurrentSamples.add(tmp);
 
         dataOffset += sampleSize;
