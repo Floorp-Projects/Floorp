@@ -60,3 +60,37 @@ nsRubyTextFrame::IsFrameOfType(uint32_t aFlags) const
   }
   return nsRubyTextFrameSuper::IsFrameOfType(aFlags);
 }
+
+
+/* virtual */ void
+nsRubyTextFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                  const nsRect&           aDirtyRect,
+                                  const nsDisplayListSet& aLists)
+{
+  if (GetStateBits() & NS_RUBY_TEXT_FRAME_AUTOHIDE) {
+    return;
+  }
+
+  nsRubyTextFrameSuper::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+}
+
+/* virtual */ void
+nsRubyTextFrame::Reflow(nsPresContext* aPresContext,
+                        nsHTMLReflowMetrics& aDesiredSize,
+                        const nsHTMLReflowState& aReflowState,
+                        nsReflowStatus& aStatus)
+{
+  // Even if we want to hide this frame, we have to reflow it first.
+  // If we leave it dirty, changes to its content will never be
+  // propagated to the ancestors, then it won't be displayed even if
+  // the content is no longer the same, until next reflow triggered by
+  // some other change. In general, we always reflow all the frames we
+  // created. There might be other problems if we don't do that.
+  nsRubyTextFrameSuper::Reflow(aPresContext, aDesiredSize,
+                               aReflowState, aStatus);
+
+  if (GetStateBits() & NS_RUBY_TEXT_FRAME_AUTOHIDE) {
+    aDesiredSize.ClearSize();
+    aDesiredSize.SetOverflowAreasToDesiredBounds();
+  }
+}

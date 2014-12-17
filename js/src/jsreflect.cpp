@@ -2522,16 +2522,23 @@ ASTSerializer::statement(ParseNode *pn, MutableHandleValue dst)
       }
 
       case PNK_THROW:
-      case PNK_RETURN:
       {
         MOZ_ASSERT_IF(pn->pn_kid, pn->pn_pos.encloses(pn->pn_kid->pn_pos));
 
         RootedValue arg(cx);
 
         return optExpression(pn->pn_kid, &arg) &&
-               (pn->isKind(PNK_THROW)
-                ? builder.throwStatement(arg, &pn->pn_pos, dst)
-                : builder.returnStatement(arg, &pn->pn_pos, dst));
+               builder.throwStatement(arg, &pn->pn_pos, dst);
+      }
+
+      case PNK_RETURN:
+      {
+        MOZ_ASSERT_IF(pn->pn_left, pn->pn_pos.encloses(pn->pn_left->pn_pos));
+
+        RootedValue arg(cx);
+
+        return optExpression(pn->pn_left, &arg) &&
+               builder.returnStatement(arg, &pn->pn_pos, dst);
       }
 
       case PNK_DEBUGGER:
@@ -3295,7 +3302,7 @@ ASTSerializer::functionArgsAndBody(ParseNode *pn, NodeVector &args, NodeVector &
     switch (pnbody->getKind()) {
       case PNK_RETURN: /* expression closure, no destructured args */
         return functionArgs(pn, pnargs, nullptr, pnbody, args, defaults, rest) &&
-               expression(pnbody->pn_kid, body);
+               expression(pnbody->pn_left, body);
 
       case PNK_SEQ:    /* expression closure with destructured args */
       {
@@ -3303,7 +3310,7 @@ ASTSerializer::functionArgsAndBody(ParseNode *pn, NodeVector &args, NodeVector &
         LOCAL_ASSERT(pnstart && pnstart->isKind(PNK_RETURN));
 
         return functionArgs(pn, pnargs, pndestruct, pnbody, args, defaults, rest) &&
-               expression(pnstart->pn_kid, body);
+               expression(pnstart->pn_left, body);
       }
 
       case PNK_STATEMENTLIST:     /* statement closure */
