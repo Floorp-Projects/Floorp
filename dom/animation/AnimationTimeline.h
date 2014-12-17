@@ -29,7 +29,10 @@ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AnimationTimeline)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(AnimationTimeline)
 
-  nsISupports* GetParentObject() const { return mDocument; }
+  nsIGlobalObject* GetParentObject() const
+  {
+    return mDocument->GetParentObject();
+  }
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   // AnimationTimeline methods
