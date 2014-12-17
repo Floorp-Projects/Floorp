@@ -7,7 +7,21 @@
  *   Mihai Șucan <mihai.sucan@gmail.com>
  */
 
+const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 614793: jsterm result scroll";
+
+"use strict";
+
+let test = asyncTest(function* () {
+  let { browser } = yield loadTab(TEST_URI);
+
+  let hud = yield openConsole();
+
+  yield consoleOpened(hud);
+});
+
 function consoleOpened(hud) {
+  let deferred = promise.defer();
+
   hud.jsterm.clearOutput();
 
   let scrollNode = hud.outputNode.parentNode;
@@ -29,7 +43,7 @@ function consoleOpened(hud) {
     oldScrollTop = scrollNode.scrollTop;
     isnot(oldScrollTop, 0, "scroll location is not at the top");
 
-    hud.jsterm.execute("'hello world'", onExecute);
+    hud.jsterm.execute("'hello world'").then(onExecute);
   });
 
   function onExecute(msg)
@@ -42,15 +56,8 @@ function consoleOpened(hud) {
 
     is(scrollNode.scrollTop, oldScrollTop, "scroll location is the same");
 
-    finishTest();
+    deferred.resolve();
   }
-}
 
-function test() {
-  addTab("data:text/html;charset=utf-8,Web Console test for bug 614793: jsterm result scroll");
-  browser.addEventListener("load", function onLoad(aEvent) {
-    browser.removeEventListener(aEvent.type, onLoad, true);
-    openConsole(null, consoleOpened);
-  }, true);
+  return deferred.promise;
 }
-

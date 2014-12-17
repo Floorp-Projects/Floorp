@@ -7,13 +7,13 @@
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
 
-function test() {
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, testCompletion);
-  }, true);
-}
+let test = asyncTest(function* () {
+  yield loadTab(TEST_URI);
+
+  let hud = yield openConsole();
+
+  testCompletion(hud);
+});
 
 function testCompletion(hud) {
   var jsterm = hud.jsterm;
@@ -27,7 +27,7 @@ function testCompletion(hud) {
   is(jsterm.completeNode.value, "", "no completion");
   EventUtils.synthesizeKey("VK_RETURN", {});
   is(jsterm.completeNode.value, "", "clear completion on execute()");
-  
+
   // Test typing 'var a = d' and press RETURN
   jsterm.setInputValue("var a = ");
   EventUtils.synthesizeKey("d", {});
@@ -35,8 +35,5 @@ function testCompletion(hud) {
   is(jsterm.completeNode.value, "", "no completion");
   EventUtils.synthesizeKey("VK_RETURN", {});
   is(jsterm.completeNode.value, "", "clear completion on execute()");
-  
-  jsterm = input = null;
-  finishTest();
 }
 

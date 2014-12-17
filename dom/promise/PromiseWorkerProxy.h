@@ -67,7 +67,7 @@ class PromiseWorkerProxy : public PromiseNativeHandler,
 public:
   PromiseWorkerProxy(workers::WorkerPrivate* aWorkerPrivate,
                      Promise* aWorkerPromise,
-                     JSStructuredCloneCallbacks* aCallbacks = nullptr);
+                     const JSStructuredCloneCallbacks* aCallbacks = nullptr);
 
   workers::WorkerPrivate* GetWorkerPrivate() const;
 
@@ -104,7 +104,7 @@ private:
 
   bool mCleanedUp; // To specify if the cleanUp() has been done.
 
-  JSStructuredCloneCallbacks* mCallbacks;
+  const JSStructuredCloneCallbacks* mCallbacks;
 
   // Aimed to keep objects alive when doing the structured-clone read/write,
   // which can be added by calling StoreISupports() on the main thread.

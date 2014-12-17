@@ -13,11 +13,9 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/te
 let getterValue = null;
 
 function test() {
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, consoleOpened);
-  }, true);
+  loadTab(TEST_URI).then(() => {
+    openConsole().then(consoleOpened);
+  });
 }
 
 function consoleOpened(hud) {
@@ -46,6 +44,7 @@ function onViewOpened(hud, event, view)
     is(textContent.indexOf("document.body.client"), -1,
        "no document.width/height warning displayed");
 
+    getterValue = null;
     finishTest();
   });
 }

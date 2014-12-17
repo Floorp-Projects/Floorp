@@ -5,19 +5,16 @@
 
 // Tests that the input box expands as the user types long lines.
 
+"use strict";
+
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
 
-function test() {
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, testJSInputExpansion);
-  }, true);
-}
+let test = asyncTest(function*() {
+  yield loadTab(TEST_URI);
+  let hud = yield openConsole();
+  hud.jsterm.clearOutput();
 
-function testJSInputExpansion(hud) {
-  let jsterm = hud.jsterm;
-  let input = jsterm.inputNode;
+  let input = hud.jsterm.inputNode;
   input.focus();
 
   is(input.getAttribute("multiline"), "true", "multiline is enabled");
@@ -55,6 +52,4 @@ function testJSInputExpansion(hud) {
   info("initialHeight: " + initialHeight);
   let finalHeightDifference = Math.abs(initialHeight - height);
   ok(finalHeightDifference <= 1, "height shrank to original size within 1px");
-
-  finishTest();
-}
+});

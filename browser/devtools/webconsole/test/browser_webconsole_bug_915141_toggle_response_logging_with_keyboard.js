@@ -65,6 +65,7 @@ function test() {
        "Console net menu: 'log responses' is NOT checked after menuitem was selected with keyboard.");
     is(hud.ui._saveRequestAndResponseBodies, false,
        "Responses are NOT saved after menuitem was selected with keyboard.");
+    hud = null;
   })
   .then(finishTest);
 }

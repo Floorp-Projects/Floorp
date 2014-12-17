@@ -1262,7 +1262,7 @@
           return;
         }
 
-        let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+        let fm = Services.focus;
         let focusFlags = fm.FLAG_NOSCROLL;
 
         if (!gMultiProcessBrowser) {

@@ -6,6 +6,8 @@
 // When strings containing URLs are entered into the webconsole,
 // check its output and ensure that the output can be clicked to open those URLs.
 
+"use strict";
+
 const TEST_URI = "data:text/html;charset=utf8,Bug 1005909 - Clickable URLS";
 
 let inputTests = [
