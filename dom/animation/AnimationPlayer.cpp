@@ -16,9 +16,12 @@ namespace mozilla {
 namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AnimationPlayer, mTimeline, mSource)
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AnimationPlayer, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AnimationPlayer, Release)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(AnimationPlayer)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(AnimationPlayer)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AnimationPlayer)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
 
 JSObject*
 AnimationPlayer::WrapObject(JSContext* aCx)
