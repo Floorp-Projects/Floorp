@@ -1639,8 +1639,8 @@ Detecting(JSContext *cx, JSScript *script, jsbytecode *pc)
 }
 
 /*
- * Finish getting the property `obj[id]` after looking at every object on the
- * prototype chain and not finding any such property.
+ * Finish getting the property `receiver[id]` after looking at every object on
+ * the prototype chain and not finding any such property.
  *
  * Per the spec, this should just set the result to `undefined` and call it a
  * day. However:
@@ -1648,8 +1648,8 @@ Detecting(JSContext *cx, JSScript *script, jsbytecode *pc)
  * 1.  We add support for the nonstandard JSClass::getProperty hook.
  *
  * 2.  This function also runs when we're evaluating an expression that's an
- *     Identifier (that is, unqualified name lookups), so we need to figure out
- *     if that's what's happening and throw a ReferenceError if so.
+ *     Identifier (that is, an unqualified name lookup), so we need to figure
+ *     out if that's what's happening and throw a ReferenceError if so.
  *
  * 3.  We also emit an optional warning for this. (It's not super useful on the
  *     web, as there are too many false positives, but anecdotally useful in
@@ -1661,8 +1661,9 @@ GetNonexistentProperty(JSContext *cx, HandleNativeObject obj, HandleId id,
 {
     vp.setUndefined();
 
-    // Non-standard extension: Call the getProperty class hook. It may set vp;
-    // if it doesn't, fall through to the warning/error checks below.
+    // Non-standard extension: Call the getProperty hook. If it sets vp to a
+    // value other than undefined, we're done. If not, fall through to the
+    // warning/error checks below.
     if (JSPropertyOp getProperty = obj->getClass()->getProperty) {
         if (!CallJSPropertyOp(cx, getProperty, obj, id, vp))
             return false;
@@ -1716,14 +1717,32 @@ GetNonexistentProperty(JSContext *cx, HandleNativeObject obj, HandleId id,
 
     // Ok, bad undefined property reference: whine about it.
     RootedValue val(cx, IdToValue(id));
-    if (!js_ReportValueErrorFlags(cx, flags, JSMSG_UNDEFINED_PROP,
-                                  JSDVG_IGNORE_STACK, val, js::NullPtr(),
-                                  nullptr, nullptr))
-    {
-        return false;
-    }
+    return js_ReportValueErrorFlags(cx, flags, JSMSG_UNDEFINED_PROP, JSDVG_IGNORE_STACK, val,
+                                    js::NullPtr(), nullptr, nullptr);
+}
 
-    return true;
+/* The NoGC version of GetNonexistentProperty, present only to make types line up. */
+bool
+GetNonexistentProperty(JSContext *cx, NativeObject *obj, jsid id, JSObject *receiver,
+                       FakeMutableHandle<Value> vp)
+{
+    return false;
+}
+
+static inline bool
+GeneralizedGetProperty(JSContext *cx, HandleObject obj, HandleId id, HandleObject receiver,
+                       MutableHandleValue vp)
+{
+    JS_CHECK_RECURSION(cx, return false);
+    return GetProperty(cx, obj, receiver, id, vp);
+}
+
+static inline bool
+GeneralizedGetProperty(JSContext *cx, JSObject *obj, jsid id, JSObject *receiver,
+                       FakeMutableHandle<Value> vp)
+{
+    JS_CHECK_RECURSION_DONT_REPORT(cx, return false);
+    return GetPropertyNoGC(cx, obj, receiver, id, vp.address());
 }
 
 template <AllowGC allowGC>
@@ -1734,45 +1753,52 @@ NativeGetPropertyInline(JSContext *cx,
                         typename MaybeRooted<jsid, allowGC>::HandleType id,
                         typename MaybeRooted<Value, allowGC>::MutableHandleType vp)
 {
-    // This call site is hot -- use the always-inlined LookupPropertyInline().
-    typename MaybeRooted<JSObject*, allowGC>::RootType obj2(cx);
+    typename MaybeRooted<NativeObject*, allowGC>::RootType pobj(cx, obj);
     typename MaybeRooted<Shape*, allowGC>::RootType shape(cx);
-    if (!LookupPropertyInline<allowGC>(cx, obj, id, &obj2, &shape))
-        return false;
 
-    if (!shape) {
-        if (!allowGC)
+    // This loop isn't explicit in the spec algorithm. See the comment on step
+    // 4.d below.
+    for (;;) {
+        // Steps 2-3. ('done' is a SpiderMonkey-specific thing, used below.)
+        bool done;
+        if (!LookupOwnPropertyInline<allowGC>(cx, pobj, id, &shape, &done))
             return false;
 
-        return GetNonexistentProperty(cx,
-                                      MaybeRooted<NativeObject*, allowGC>::toHandle(obj),
-                                      MaybeRooted<jsid, allowGC>::toHandle(id),
-                                      MaybeRooted<JSObject*, allowGC>::toHandle(receiver),
-                                      MaybeRooted<Value, allowGC>::toMutableHandle(vp));
+        if (shape) {
+            // Steps 5-8. Special case for dense elements because
+            // GetExistingProperty doesn't support those.
+            if (IsImplicitDenseOrTypedArrayElement(shape)) {
+                vp.set(pobj->getDenseOrTypedArrayElement(JSID_TO_INT(id)));
+                return true;
+            }
+            return GetExistingProperty<allowGC>(cx, receiver, pobj, shape, vp);
+        }
+
+        // Steps 4.a-b. The check for 'done' on this next line is tricky.
+        // done can be true in exactly these unlikely-sounding cases:
+        // - We're looking up an element, and pobj is a TypedArray that
+        //   doesn't have that many elements.
+        // - We're being called from a resolve hook to assign to the property
+        //   being resolved.
+        // What they all have in common is we do not want to keep walking
+        // the prototype chain.
+        RootedObject proto(cx, done ? nullptr : pobj->getProto());
+
+        // Step 4.c. The spec algorithm simply returns undefined if proto is
+        // null, but see the comment on GetNonexistentProperty.
+        if (!proto)
+            return GetNonexistentProperty(cx, obj, id, receiver, vp);
+
+        // Step 4.d. If the prototype is also native, this step is a
+        // recursive tail call, and we don't need to go through all the
+        // plumbing of JSObject::getGeneric; the top of the loop is where
+        // we're going to end up anyway. But if pobj is non-native,
+        // that optimization would be incorrect.
+        if (!proto->isNative())
+            return GeneralizedGetProperty(cx, proto, id, receiver, vp);
+
+        pobj = &proto->as<NativeObject>();
     }
-
-    if (!obj2->isNative()) {
-        if (!allowGC)
-            return false;
-        HandleObject obj2Handle = MaybeRooted<JSObject*, allowGC>::toHandle(obj2);
-        HandleObject receiverHandle = MaybeRooted<JSObject*, allowGC>::toHandle(receiver);
-        HandleId idHandle = MaybeRooted<jsid, allowGC>::toHandle(id);
-        MutableHandleValue vpHandle = MaybeRooted<Value, allowGC>::toMutableHandle(vp);
-        return obj2->template is<ProxyObject>()
-               ? Proxy::get(cx, obj2Handle, receiverHandle, idHandle, vpHandle)
-               : GetProperty(cx, obj2Handle, obj2Handle, idHandle, vpHandle);
-    }
-
-    typename MaybeRooted<NativeObject*, allowGC>::HandleType nobj2 =
-        MaybeRooted<JSObject*, allowGC>::template downcastHandle<NativeObject>(obj2);
-
-    if (IsImplicitDenseOrTypedArrayElement(shape)) {
-        vp.set(nobj2->getDenseOrTypedArrayElement(JSID_TO_INT(id)));
-        return true;
-    }
-
-    // This call site is hot -- use the always-inlined GetExistingProperty().
-    return GetExistingProperty<allowGC>(cx, receiver, nobj2, shape, vp);
 }
 
 bool
@@ -2086,7 +2112,8 @@ js::NativeSetProperty(JSContext *cx, HandleNativeObject obj, HandleObject receiv
     RootedNativeObject pobj(cx, obj);
 
     // This loop isn't explicit in the spec algorithm. See the comment on step
-    // 4.c.i below.
+    // 4.c.i below. (There's a very similar loop in the NativeGetProperty
+    // implementation, but unfortunately not similar enough to common up.)
     for (;;) {
         // Steps 2-3. ('done' is a SpiderMonkey-specific thing, used below.)
         bool done;
