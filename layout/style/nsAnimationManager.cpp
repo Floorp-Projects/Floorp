@@ -331,6 +331,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
           // Although we're doing this while iterating this is safe because
           // we're not changing the length of newPlayers and we've finished
           // iterating over the list of old iterations.
+          newPlayer->Cancel();
           newPlayer = nullptr;
           newPlayers.ReplaceElementAt(newIdx, oldPlayer);
           collection->mPlayers.RemoveElementAt(oldIdx);
@@ -343,6 +344,11 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     collection->mPlayers.SwapElements(newPlayers);
     collection->mNeedsRefreshes = true;
     collection->Tick();
+
+    // Cancel removed animations
+    for (size_t newPlayerIdx = newPlayers.Length(); newPlayerIdx-- != 0; ) {
+      newPlayers[newPlayerIdx]->Cancel();
+    }
 
     TimeStamp refreshTime = mPresContext->RefreshDriver()->MostRecentRefresh();
     UpdateStyleAndEvents(collection, refreshTime,

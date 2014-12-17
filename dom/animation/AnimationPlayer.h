@@ -92,6 +92,7 @@ public:
   // This should only be called on a player that is currently waiting to play
   // (and therefore has a null start time but a fixed hold time).
   void ResolveStartTime();
+  void Cancel();
 
   const nsString& Name() const {
     return mSource ? mSource->Name() : EmptyString();
@@ -132,6 +133,10 @@ protected:
 
   void FlushStyle() const;
   void PostUpdate();
+  // Remove this player from the pending player tracker and resets mIsPending
+  // as necessary. The caller is responsible for resolving or aborting the
+  // mReady promise as necessary.
+  void CancelPendingPlay();
   StickyTimeDuration SourceContentEnd() const;
 
   nsIDocument* GetRenderedDocument() const;
