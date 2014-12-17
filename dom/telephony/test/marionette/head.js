@@ -1046,6 +1046,10 @@ let emulator = (function() {
     let desiredRadioState = enabled ? 'enabled' : 'disabled';
     log("Set radio: " + desiredRadioState);
 
+    if (connection.radioState === desiredRadioState) {
+      return Promise.resolve();
+    }
+
     let promises = [];
 
     let promise = gWaitForEvent(connection, "radiostatechange", event => {

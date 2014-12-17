@@ -4,13 +4,36 @@
 MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = 'head.js';
 
-startTest(function() {
-  let outCall;
+let outCall;
 
-  gDialEmergency("911")
+function testEmergencyNumber() {
+  return gDialEmergency("911")
     .then(call => outCall = call)
     .then(() => gRemoteAnswer(outCall))
-    .then(() => gHangUp(outCall))
+    .then(() => gHangUp(outCall));
+}
+
+function testNormalNumber() {
+  return gDialEmergency("0912345678")
+    .catch(cause => {
+      is(cause, "BadNumberError");
+      return gCheckAll(null, [], "", [], []);
+    });
+}
+
+function testBadNumber() {
+  return gDialEmergency("not a valid emergency number")
+    .catch(cause => {
+      is(cause, "BadNumberError");
+      return gCheckAll(null, [], "", [], []);
+    });
+}
+
+startTest(function() {
+  Promise.resolve()
+    .then(() => testEmergencyNumber())
+    .then(() => testNormalNumber())
+    .then(() => testBadNumber())
     .catch(error => ok(false, "Promise reject: " + error))
     .then(finish);
 });
