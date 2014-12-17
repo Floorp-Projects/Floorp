@@ -899,7 +899,14 @@ nsCSPPolicy::toString(nsAString& outStr) const
 {
   uint32_t length = mDirectives.Length();
   for (uint32_t i = 0; i < length; ++i) {
-    mDirectives[i]->toString(outStr);
+
+    if (mDirectives[i]->equals(nsIContentSecurityPolicy::REFERRER_DIRECTIVE)) {
+      outStr.AppendASCII(CSP_CSPDirectiveToString(nsIContentSecurityPolicy::REFERRER_DIRECTIVE));
+      outStr.AppendASCII(" ");
+      outStr.Append(mReferrerPolicy);
+    } else {
+      mDirectives[i]->toString(outStr);
+    }
     if (i != (length - 1)) {
       outStr.AppendASCII("; ");
     }

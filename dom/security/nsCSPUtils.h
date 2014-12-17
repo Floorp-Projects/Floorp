@@ -73,7 +73,8 @@ static const char* CSPStrDirectives[] = {
   "frame-ancestors", // FRAME_ANCESTORS_DIRECTIVE
   "reflected-xss",   // REFLECTED_XSS_DIRECTIVE
   "base-uri",        // BASE_URI_DIRECTIVE
-  "form-action"      // FORM_ACTION_DIRECTIVE
+  "form-action",     // FORM_ACTION_DIRECTIVE
+  "referrer"         // REFERRER_DIRECTIVE
 };
 
 inline const char* CSP_CSPDirectiveToString(CSPDirective aDir)
@@ -332,6 +333,12 @@ class nsCSPPolicy {
     inline bool getReportOnlyFlag() const
       { return mReportOnly; }
 
+    inline void setReferrerPolicy(const nsAString* aValue)
+      { mReferrerPolicy = *aValue; }
+
+    inline void getReferrerPolicy(nsAString& outPolicy) const
+      { outPolicy.Assign(mReferrerPolicy); }
+
     void getReportURIs(nsTArray<nsString> &outReportURIs) const;
 
     void getDirectiveStringForContentType(nsContentPolicyType aContentType,
@@ -345,6 +352,7 @@ class nsCSPPolicy {
   private:
     nsTArray<nsCSPDirective*> mDirectives;
     bool                      mReportOnly;
+    nsString                  mReferrerPolicy;
 };
 
 #endif /* nsCSPUtils_h___ */
