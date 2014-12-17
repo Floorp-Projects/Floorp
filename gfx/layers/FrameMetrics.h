@@ -309,13 +309,17 @@ public:
   // resolution. This information is provided by Gecko at layout/paint time.
   LayoutDeviceToLayerScale mCumulativeResolution;
 
-  // The conversion factor between CSS pixels and device pixels for this frame.
-  // This can vary based on a variety of things, such as reflowing-zoom. The
-  // conversion factor for device pixels to layers pixels is just the
-  // resolution.
-  CSSToLayoutDeviceScale mDevPixelsPerCSSPixel;
-
 public:
+  void SetDevPixelsPerCSSPixel(const CSSToLayoutDeviceScale& aDevPixelsPerCSSPixel)
+  {
+    mDevPixelsPerCSSPixel = aDevPixelsPerCSSPixel;
+  }
+
+  CSSToLayoutDeviceScale GetDevPixelsPerCSSPixel() const
+  {
+    return mDevPixelsPerCSSPixel;
+  }
+
   void SetIsRoot(bool aIsRoot)
   {
     mIsRoot = aIsRoot;
@@ -526,6 +530,12 @@ public:
 private:
   // New fields from now on should be made private and old fields should
   // be refactored to be private.
+
+  // The conversion factor between CSS pixels and device pixels for this frame.
+  // This can vary based on a variety of things, such as reflowing-zoom. The
+  // conversion factor for device pixels to layers pixels is just the
+  // resolution.
+  CSSToLayoutDeviceScale mDevPixelsPerCSSPixel;
 
   // Whether or not this frame may have touch or scroll wheel listeners.
   bool mMayHaveTouchListeners;

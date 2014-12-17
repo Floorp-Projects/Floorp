@@ -871,7 +871,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   // appears to be that metrics.mZoom is poorly initialized in some scenarios. In these scenarios,
   // however, we can assume there is no async zooming in progress and so the following statement
   // works fine.
-  CSSToParentLayerScale userZoom(metrics.mDevPixelsPerCSSPixel * metrics.mCumulativeResolution * LayerToParentLayerScale(1));
+  CSSToParentLayerScale userZoom(metrics.GetDevPixelsPerCSSPixel() * metrics.mCumulativeResolution * LayerToParentLayerScale(1));
   ParentLayerPoint userScroll = metrics.GetScrollOffset() * userZoom;
   SyncViewportInfo(displayPort, geckoZoom, mLayersUpdated,
                    userScroll, userZoom, fixedLayerMargins,
