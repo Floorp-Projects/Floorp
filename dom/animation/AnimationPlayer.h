@@ -37,7 +37,8 @@ class CSSTransitionPlayer;
 
 namespace dom {
 
-class AnimationPlayer : public nsWrapperCache
+class AnimationPlayer : public nsISupports,
+                        public nsWrapperCache
 {
 protected:
   virtual ~AnimationPlayer() { }
@@ -50,8 +51,8 @@ public:
   {
   }
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AnimationPlayer)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(AnimationPlayer)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AnimationPlayer)
 
   AnimationTimeline* GetParentObject() const { return mTimeline; }
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
