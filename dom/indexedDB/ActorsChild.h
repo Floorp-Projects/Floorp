@@ -514,7 +514,7 @@ public:
 #endif
 
   void
-  SendDeleteMeInternal();
+  SendDeleteMeInternal(bool aFailedConstructor);
 
 private:
   // Only created by BackgroundDatabaseChild.

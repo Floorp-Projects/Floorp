@@ -284,6 +284,14 @@ WorkerThread::Dispatch(nsIRunnable* aRunnable, uint32_t aFlags)
   return NS_OK;
 }
 
+uint32_t
+WorkerThread::RecursionDepth(const WorkerThreadFriendKey& /* aKey */) const
+{
+  MOZ_ASSERT(PR_GetCurrentThread() == mThread);
+
+  return mRunningEvent;
+}
+
 NS_IMPL_ISUPPORTS(WorkerThread::Observer, nsIThreadObserver)
 
 NS_IMETHODIMP

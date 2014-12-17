@@ -67,6 +67,29 @@ const char kCycleCollectionObserverTopic[] = "cycle-collector-end";
 const char kMemoryPressureObserverTopic[] = "memory-pressure";
 const char kWindowObserverTopic[] = "inner-window-destroyed";
 
+class CancelableRunnableWrapper MOZ_FINAL
+  : public nsICancelableRunnable
+{
+  nsCOMPtr<nsIRunnable> mRunnable;
+
+public:
+  explicit
+  CancelableRunnableWrapper(nsIRunnable* aRunnable)
+    : mRunnable(aRunnable)
+  {
+    MOZ_ASSERT(aRunnable);
+  }
+
+  NS_DECL_ISUPPORTS
+
+private:
+  ~CancelableRunnableWrapper()
+  { }
+
+  NS_DECL_NSIRUNNABLE
+  NS_DECL_NSICANCELABLERUNNABLE
+};
+
 // XXX This should either be ported to PBackground or removed someday.
 class CreateFileHelper MOZ_FINAL
   : public nsRunnable
@@ -155,6 +178,46 @@ private:
 };
 
 } // anonymous namespace
+
+class IDBDatabase::LogWarningRunnable MOZ_FINAL
+  : public nsRunnable
+{
+  nsCString mMessageName;
+  nsString mFilename;
+  uint32_t mLineNumber;
+  uint64_t mInnerWindowID;
+  bool mIsChrome;
+
+public:
+  LogWarningRunnable(const char* aMessageName,
+                     const nsAString& aFilename,
+                     uint32_t aLineNumber,
+                     bool aIsChrome,
+                     uint64_t aInnerWindowID)
+    : mMessageName(aMessageName)
+    , mFilename(aFilename)
+    , mLineNumber(aLineNumber)
+    , mInnerWindowID(aInnerWindowID)
+    , mIsChrome(aIsChrome)
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+  }
+
+  static void
+  LogWarning(const char* aMessageName,
+             const nsAString& aFilename,
+             uint32_t aLineNumber,
+             bool aIsChrome,
+             uint64_t aInnerWindowID);
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+private:
+  ~LogWarningRunnable()
+  { }
+
+  NS_DECL_NSIRUNNABLE
+};
 
 class IDBDatabase::Observer MOZ_FINAL
   : public nsIObserver
@@ -680,7 +743,11 @@ IDBDatabase::Transaction(const Sequence<nsString>& aStoreNames,
 
   nsRefPtr<IDBTransaction> transaction =
     IDBTransaction::Create(this, sortedStoreNames, mode);
-  MOZ_ASSERT(transaction);
+  if (NS_WARN_IF(!transaction)) {
+    IDB_REPORT_INTERNAL_ERR();
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    return nullptr;
+  }
 
   BackgroundTransactionChild* actor =
     new BackgroundTransactionChild(transaction);
@@ -1006,6 +1073,12 @@ IDBDatabase::DelayedMaybeExpireFileActors()
                                       /* aExpireAll */ false);
   MOZ_ASSERT(runnable);
 
+  if (!NS_IsMainThread()) {
+    // Wrap as a nsICancelableRunnable to make workers happy.
+    nsCOMPtr<nsIRunnable> cancelable = new CancelableRunnableWrapper(runnable);
+    cancelable.swap(runnable);
+  }
+
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(runnable)));
 }
 
@@ -1170,10 +1243,9 @@ IDBDatabase::NoteFinishedMutableFile(IDBMutableFile* aMutableFile)
 void
 IDBDatabase::InvalidateMutableFiles()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   if (!mLiveMutableFiles.IsEmpty()) {
     MOZ_ASSERT(IndexedDatabaseManager::IsMainProcess());
+    MOZ_ASSERT(NS_IsMainThread());
 
     for (uint32_t count = mLiveMutableFiles.Length(), index = 0;
          index < count;
@@ -1205,55 +1277,21 @@ IDBDatabase::LogWarning(const char* aMessageName,
   AssertIsOnOwningThread();
   MOZ_ASSERT(aMessageName);
 
-  // For now this is main-thread only.
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsXPIDLString localizedMessage;
-  if (NS_WARN_IF(NS_FAILED(
-    nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                       aMessageName,
-                                       localizedMessage)))) {
-    return;
-  }
-
-  nsAutoCString category;
-  if (mFactory->IsChrome()) {
-    category.AssignLiteral("chrome ");
+  if (NS_IsMainThread()) {
+    LogWarningRunnable::LogWarning(aMessageName,
+                                   aFilename,
+                                   aLineNumber,
+                                   mFactory->IsChrome(),
+                                   mFactory->InnerWindowID());
   } else {
-    category.AssignLiteral("content ");
+    nsRefPtr<LogWarningRunnable> runnable =
+      new LogWarningRunnable(aMessageName,
+                             aFilename,
+                             aLineNumber,
+                             mFactory->IsChrome(),
+                             mFactory->InnerWindowID());
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
   }
-  category.AppendLiteral("javascript");
-
-  nsCOMPtr<nsIConsoleService> consoleService =
-    do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-  MOZ_ASSERT(consoleService);
-
-  nsCOMPtr<nsIScriptError> scriptError =
-    do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
-  MOZ_ASSERT(consoleService);
-
-  if (mFactory->GetParentObject()) {
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      scriptError->InitWithWindowID(localizedMessage,
-                                    aFilename,
-                                    /* aSourceLine */ EmptyString(),
-                                    aLineNumber,
-                                    /* aColumnNumber */ 0,
-                                    nsIScriptError::warningFlag,
-                                    category,
-                                    mFactory->InnerWindowID())));
-  } else {
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      scriptError->Init(localizedMessage,
-                        aFilename,
-                        /* aSourceLine */ EmptyString(),
-                        aLineNumber,
-                        /* aColumnNumber */ 0,
-                        nsIScriptError::warningFlag,
-                        category.get())));
-  }
-
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(consoleService->LogMessage(scriptError)));
 }
 
 NS_IMPL_ADDREF_INHERITED(IDBDatabase, IDBWrapperCache)
@@ -1295,13 +1333,45 @@ IDBDatabase::LastRelease()
 nsresult
 IDBDatabase::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
-  return IndexedDatabaseManager::FireWindowOnError(GetOwner(), aVisitor);
+  nsresult rv =
+    IndexedDatabaseManager::CommonPostHandleEvent(this, mFactory, aVisitor);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
 }
 
 JSObject*
 IDBDatabase::WrapObject(JSContext* aCx)
 {
   return IDBDatabaseBinding::Wrap(aCx, this);
+}
+
+NS_IMPL_ISUPPORTS(CancelableRunnableWrapper, nsIRunnable, nsICancelableRunnable)
+
+NS_IMETHODIMP
+CancelableRunnableWrapper::Run()
+{
+  nsCOMPtr<nsIRunnable> runnable;
+  mRunnable.swap(runnable);
+
+  if (runnable) {
+    return runnable->Run();
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CancelableRunnableWrapper::Cancel()
+{
+  if (mRunnable) {
+    mRunnable = nullptr;
+    return NS_OK;
+  }
+
+  return NS_ERROR_UNEXPECTED;
 }
 
 CreateFileHelper::CreateFileHelper(IDBDatabase* aDatabase,
@@ -1482,6 +1552,84 @@ CreateFileHelper::Run()
   }
 
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(this)));
+
+  return NS_OK;
+}
+
+
+// static
+void
+IDBDatabase::
+LogWarningRunnable::LogWarning(const char* aMessageName,
+                               const nsAString& aFilename,
+                               uint32_t aLineNumber,
+                               bool aIsChrome,
+                               uint64_t aInnerWindowID)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aMessageName);
+
+  nsXPIDLString localizedMessage;
+  if (NS_WARN_IF(NS_FAILED(
+    nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                       aMessageName,
+                                       localizedMessage)))) {
+    return;
+  }
+
+  nsAutoCString category;
+  if (aIsChrome) {
+    category.AssignLiteral("chrome ");
+  } else {
+    category.AssignLiteral("content ");
+  }
+  category.AppendLiteral("javascript");
+
+  nsCOMPtr<nsIConsoleService> consoleService =
+    do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+  MOZ_ASSERT(consoleService);
+
+  nsCOMPtr<nsIScriptError> scriptError =
+    do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
+  MOZ_ASSERT(consoleService);
+
+  if (aInnerWindowID) {
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      scriptError->InitWithWindowID(localizedMessage,
+                                    aFilename,
+                                    /* aSourceLine */ EmptyString(),
+                                    aLineNumber,
+                                    /* aColumnNumber */ 0,
+                                    nsIScriptError::warningFlag,
+                                    category,
+                                    aInnerWindowID)));
+  } else {
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      scriptError->Init(localizedMessage,
+                        aFilename,
+                        /* aSourceLine */ EmptyString(),
+                        aLineNumber,
+                        /* aColumnNumber */ 0,
+                        nsIScriptError::warningFlag,
+                        category.get())));
+  }
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(consoleService->LogMessage(scriptError)));
+}
+
+NS_IMPL_ISUPPORTS_INHERITED0(IDBDatabase::LogWarningRunnable, nsRunnable)
+
+NS_IMETHODIMP
+IDBDatabase::
+LogWarningRunnable::Run()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  LogWarning(mMessageName.get(),
+             mFilename,
+             mLineNumber,
+             mIsChrome,
+             mInnerWindowID);
 
   return NS_OK;
 }

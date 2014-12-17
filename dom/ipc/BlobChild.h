@@ -135,7 +135,7 @@ private:
 
   BlobChild(nsIContentChild* aManager, BlobChild* aOther);
 
-  BlobChild(PBackgroundChild* aManager, BlobChild* aOther);
+  BlobChild(PBackgroundChild* aManager, BlobChild* aOther, FileImpl* aBlobImpl);
 
   // These constructors are called on the receiving side.
   BlobChild(nsIContentChild* aManager,
@@ -160,7 +160,7 @@ private:
   CommonInit(FileImpl* aBlobImpl);
 
   void
-  CommonInit(BlobChild* aOther);
+  CommonInit(BlobChild* aOther, FileImpl* aBlobImpl);
 
   void
   CommonInit(const ChildBlobConstructorParams& aParams);
@@ -185,11 +185,13 @@ private:
 
   static BlobChild*
   MaybeGetActorFromRemoteBlob(nsIRemoteBlob* aRemoteBlob,
-                              nsIContentChild* aManager);
+                              nsIContentChild* aManager,
+                              FileImpl* aBlobImpl);
 
   static BlobChild*
   MaybeGetActorFromRemoteBlob(nsIRemoteBlob* aRemoteBlob,
-                              PBackgroundChild* aManager);
+                              PBackgroundChild* aManager,
+                              FileImpl* aBlobImpl);
 
   void
   NoteDyingRemoteBlobImpl();

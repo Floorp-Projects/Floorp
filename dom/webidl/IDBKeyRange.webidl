@@ -9,6 +9,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Exposed=(Window,Worker)]
 interface IDBKeyRange {
   [Throws]
   readonly attribute any     lower;

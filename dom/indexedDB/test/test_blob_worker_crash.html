@@ -27,7 +27,6 @@
     let iframe = document.getElementById("iframe1");
     window.addEventListener("message", grabEventAndContinueHandler, false);
     // Put it in a different origin to be safe
-    //allowUnlimitedQuota("http://example.org/");
     iframe.src = //"http://example.org" +
                  window.location.pathname.replace(
                    "test_blob_worker_crash.html",

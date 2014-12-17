@@ -2122,7 +2122,7 @@ ServiceWorkerManager::CreateServiceWorker(const nsACString& aScriptSpec,
     return NS_ERROR_FAILURE;
   }
 
-  rv = rs->CreateServiceWorkerFromLoadInfo(cx, info, NS_ConvertUTF8toUTF16(aScriptSpec), aScope,
+  rv = rs->CreateServiceWorkerFromLoadInfo(cx, &info, NS_ConvertUTF8toUTF16(aScriptSpec), aScope,
                                            getter_AddRefs(serviceWorker));
 
   if (NS_WARN_IF(NS_FAILED(rv))) {

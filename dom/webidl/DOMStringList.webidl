@@ -10,6 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Exposed=(Window,Worker)]
 interface DOMStringList {
   readonly attribute unsigned long length;
   getter DOMString? item(unsigned long index);
