@@ -88,10 +88,10 @@ public:
 
   void SetSource(Animation* aSource);
   void Tick();
-  // Sets the start time of the player to the current time of its timeline.
-  // This should only be called on a player that is currently waiting to play
-  // (and therefore has a null start time but a fixed hold time).
-  void ResolveStartTime();
+
+  // Sets the start time of a player that is waiting to play to the current
+  // time of its timeline.
+  void StartNow();
   void Cancel();
 
   const nsString& Name() const {

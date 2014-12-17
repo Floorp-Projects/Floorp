@@ -139,7 +139,7 @@ AnimationPlayer::Tick()
 }
 
 void
-AnimationPlayer::ResolveStartTime()
+AnimationPlayer::StartNow()
 {
   // Currently we only expect this method to be called when we are in the
   // middle of initiating/resuming playback so we should have an unresolved
@@ -248,7 +248,7 @@ AnimationPlayer::DoPlay()
   // Clear ready promise. We'll create a new one lazily.
   mReady = nullptr;
 
-  ResolveStartTime();
+  StartNow();
 }
 
 void
