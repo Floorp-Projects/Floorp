@@ -257,8 +257,8 @@ public:
     : mWidth(0)
     , mHeight(0)
     , mStarted(false)
-    , mDecodedFrameLock("WebRTC decoded frame lock")
     , mCallback(aCallback)
+    , mDecodedFrameLock("WebRTC decoded frame lock")
     , mEnding(false)
   {
     // Create binder thread pool required by stagefright.
