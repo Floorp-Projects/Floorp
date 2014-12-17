@@ -647,6 +647,26 @@ MP4Reader::PopSample(TrackType aTrack)
   }
 }
 
+size_t
+MP4Reader::SizeOfVideoQueueInFrames()
+{
+  return SizeOfQueue(kVideo);
+}
+
+size_t
+MP4Reader::SizeOfAudioQueueInFrames()
+{
+  return SizeOfQueue(kAudio);
+}
+
+size_t
+MP4Reader::SizeOfQueue(TrackType aTrack)
+{
+  auto& decoder = GetDecoderData(aTrack);
+  MonitorAutoLock lock(decoder.mMonitor);
+  return decoder.mOutput.Length() + (decoder.mNumSamplesInput - decoder.mNumSamplesOutput);
+}
+
 nsresult
 MP4Reader::ResetDecode()
 {
