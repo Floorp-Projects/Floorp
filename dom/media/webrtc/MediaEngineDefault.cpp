@@ -47,7 +47,6 @@ MediaEngineDefaultVideoSource::MediaEngineDefaultVideoSource()
   , mTimer(nullptr)
   , mMonitor("Fake video")
   , mCb(16), mCr(16)
-  , mProducedDuration(0)
 {
   mImageContainer = layers::LayerManager::CreateImageContainer();
 }
@@ -245,7 +244,8 @@ void
 MediaEngineDefaultVideoSource::NotifyPull(MediaStreamGraph* aGraph,
                                           SourceMediaStream *aSource,
                                           TrackID aID,
-                                          StreamTime aDesiredTime)
+                                          StreamTime aDesiredTime,
+                                          StreamTime &aLastEndTime)
 {
   // AddTrack takes ownership of segment
   VideoSegment segment;
@@ -256,7 +256,7 @@ MediaEngineDefaultVideoSource::NotifyPull(MediaStreamGraph* aGraph,
 
   // Note: we're not giving up mImage here
   nsRefPtr<layers::Image> image = mImage;
-  StreamTime delta = aDesiredTime - mProducedDuration;
+  StreamTime delta = aDesiredTime - aLastEndTime;
 
   if (delta > 0) {
     // nullptr images are allowed
@@ -265,7 +265,7 @@ MediaEngineDefaultVideoSource::NotifyPull(MediaStreamGraph* aGraph,
     // This can fail if either a) we haven't added the track yet, or b)
     // we've removed or finished the track.
     if (aSource->AppendToTrack(aID, &segment)) {
-      mProducedDuration = aDesiredTime;
+      aLastEndTime = aDesiredTime;
     }
     // Generate null data for fake tracks.
     if (mHasFakeTracks) {

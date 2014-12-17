@@ -53,7 +53,8 @@ public:
   virtual void NotifyPull(MediaStreamGraph* aGraph,
                           SourceMediaStream *aSource,
                           TrackID aId,
-                          StreamTime aDesiredTime) MOZ_OVERRIDE;
+                          StreamTime aDesiredTime,
+                          StreamTime &aLastEndTime);
   virtual bool SatisfiesConstraintSets(
       const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets)
   {
@@ -95,8 +96,6 @@ protected:
   MediaEnginePrefs mOpts;
   int mCb;
   int mCr;
-
-  StreamTime mProducedDuration;
 };
 
 class SineWaveGenerator;
@@ -123,7 +122,8 @@ public:
   virtual void NotifyPull(MediaStreamGraph* aGraph,
                           SourceMediaStream *aSource,
                           TrackID aId,
-                          StreamTime aDesiredTime) {}
+                          StreamTime aDesiredTime,
+                          StreamTime &aLastEndTime) {}
 
   virtual bool IsFake() {
     return true;
