@@ -718,14 +718,15 @@ void
 LIRGeneratorX86Shared::visitSimdValueX4(MSimdValueX4 *ins)
 {
     if (ins->type() == MIRType_Float32x4) {
-        // As x is used at start and reused for the output, other inputs can't
-        // be used at start.
-        LAllocation x = useRegisterAtStart(ins->getOperand(0));
+        // Ideally, x would be used at start and reused for the output, however
+        // register allocation currently doesn't permit us to tie together two
+        // virtual registers with different types.
+        LAllocation x = useRegister(ins->getOperand(0));
         LAllocation y = useRegister(ins->getOperand(1));
         LAllocation z = useRegister(ins->getOperand(2));
         LAllocation w = useRegister(ins->getOperand(3));
-        LDefinition copyY = tempCopy(ins->getOperand(1), 1);
-        defineReuseInput(new (alloc()) LSimdValueFloat32x4(x, y, z, w, copyY), ins, 0);
+        LDefinition t = temp(LDefinition::FLOAT32X4);
+        define(new (alloc()) LSimdValueFloat32x4(x, y, z, w, t), ins);
     } else {
         MOZ_ASSERT(ins->type() == MIRType_Int32x4);
 

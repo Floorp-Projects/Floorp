@@ -2113,15 +2113,18 @@ CodeGeneratorX86Shared::visitSimdValueFloat32x4(LSimdValueFloat32x4 *ins)
     MOZ_ASSERT(ins->mir()->type() == MIRType_Float32x4);
 
     FloatRegister r0 = ToFloatRegister(ins->getOperand(0));
-    MOZ_ASSERT(r0 == ToFloatRegister(ins->output())); // defineReuseInput(0)
-
-    FloatRegister r1 = ToFloatRegister(ins->getTemp(0));
+    FloatRegister r1 = ToFloatRegister(ins->getOperand(1));
     FloatRegister r2 = ToFloatRegister(ins->getOperand(2));
     FloatRegister r3 = ToFloatRegister(ins->getOperand(3));
+    FloatRegister tmp = ToFloatRegister(ins->getTemp(0));
+    FloatRegister output = ToFloatRegister(ins->output());
 
-    masm.vunpcklps(r3, r1, r1);
-    masm.vunpcklps(r2, r0, r0);
-    masm.vunpcklps(r1, r0, r0);
+    FloatRegister r0Copy = masm.reusedInputFloat32x4(r0, output);
+    FloatRegister r1Copy = masm.reusedInputFloat32x4(r1, tmp);
+
+    masm.vunpcklps(r3, r1Copy, tmp);
+    masm.vunpcklps(r2, r0Copy, output);
+    masm.vunpcklps(tmp, output, output);
 }
 
 void
