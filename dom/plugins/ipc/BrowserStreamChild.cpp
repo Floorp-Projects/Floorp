@@ -171,7 +171,7 @@ BrowserStreamChild::NPN_RequestRead(NPByteRange* aRangeList)
   IPCByteRanges ranges;
   for (; aRangeList; aRangeList = aRangeList->next) {
     IPCByteRange br = {aRangeList->offset, aRangeList->length};
-    ranges.push_back(br);
+    ranges.AppendElement(br);
   }
 
   NPError result;
