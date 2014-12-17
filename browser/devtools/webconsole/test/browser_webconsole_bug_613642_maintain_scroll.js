@@ -7,13 +7,13 @@
  *   Mihai Șucan <mihai.sucan@gmail.com>
  */
 
-let hud, testDriver;
+let TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 613642: remember scroll location";
 
-function testNext() {
-  testDriver.next();
-}
+let test = asyncTest(function* () {
+  yield loadTab(TEST_URI);
 
-function testGen() {
+  let hud = yield openConsole();
+
   hud.jsterm.clearOutput();
   let outputNode = hud.outputNode;
   let scrollBox = outputNode.parentNode;
@@ -22,21 +22,21 @@ function testGen() {
     content.console.log("test message " + i);
   }
 
-  waitForMessages({
+  yield waitForMessages({
     webconsole: hud,
     messages: [{
       text: "test message 149",
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_LOG,
     }],
-  }).then(testNext);
-
-  yield undefined;
+  });
 
   ok(scrollBox.scrollTop > 0, "scroll location is not at the top");
 
   // scroll to the first node
   outputNode.focus();
+
+  let scrolled = promise.defer();
 
   scrollBox.onscroll = () => {
     info("onscroll top " + scrollBox.scrollTop);
@@ -46,26 +46,26 @@ function testGen() {
     }
     scrollBox.onscroll = null;
     is(scrollBox.scrollTop, 0, "scroll location updated (moved to top)");
-    testNext();
+    scrolled.resolve();
   };
   EventUtils.synthesizeKey("VK_HOME", {}, hud.iframeWindow);
 
-  yield undefined;
+  yield scrolled.promise;
+
 
   // add a message and make sure scroll doesn't change
   content.console.log("test message 150");
 
-  waitForMessages({
+  yield waitForMessages({
     webconsole: hud,
     messages: [{
       text: "test message 150",
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_LOG,
     }],
-  }).then(testNext);
+  });
 
-  yield undefined;
-
+  scrolled = promise.defer();
   scrollBox.onscroll = () => {
     if (scrollBox.scrollTop != 0) {
       // Wait for scroll to stabilize at the top.
@@ -73,18 +73,19 @@ function testGen() {
     }
     scrollBox.onscroll = null;
     is(scrollBox.scrollTop, 0, "scroll location is still at the top");
-    testNext();
+    scrolled.resolve();
   };
 
   // Make sure that scroll stabilizes at the top. executeSoon() is needed for
   // the yield to work.
   executeSoon(scrollBox.onscroll);
 
-  yield undefined;
+  yield scrolled.promise;
 
   // scroll back to the bottom
   outputNode.lastChild.focus();
 
+  scrolled = promise.defer();
   scrollBox.onscroll = () => {
     if (scrollBox.scrollTop == 0) {
       // Wait for scroll to bottom.
@@ -92,15 +93,16 @@ function testGen() {
     }
     scrollBox.onscroll = null;
     isnot(scrollBox.scrollTop, 0, "scroll location updated (moved to bottom)");
-    testNext();
+    scrolled.resolve();
   };
   EventUtils.synthesizeKey("VK_END", {});
-  yield undefined;
+  yield scrolled.promise;
 
   let oldScrollTop = scrollBox.scrollTop;
 
   content.console.log("test message 151");
 
+  scrolled = promise.defer();
   scrollBox.onscroll = () => {
     if (scrollBox.scrollTop == oldScrollTop) {
       // Wait for scroll to change.
@@ -108,21 +110,7 @@ function testGen() {
     }
     scrollBox.onscroll = null;
     isnot(scrollBox.scrollTop, oldScrollTop, "scroll location updated (moved to bottom again)");
-    hud = testDriver = null;
-    finishTest();
+    scrolled.resolve();
   };
-
-  yield undefined;
-}
-
-function test() {
-  addTab("data:text/html;charset=utf-8,Web Console test for bug 613642: remember scroll location");
-  browser.addEventListener("load", function tabLoad(aEvent) {
-    browser.removeEventListener(aEvent.type, tabLoad, true);
-    openConsole(null, function(aHud) {
-      hud = aHud;
-      testDriver = testGen();
-      testDriver.next();
-    });
-  }, true);
-}
+  yield scrolled.promise;
+});

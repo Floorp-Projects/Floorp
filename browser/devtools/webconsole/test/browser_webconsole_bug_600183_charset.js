@@ -8,10 +8,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const INIT_URI = "data:text/html;charset=utf-8,Web Console - bug 600183 test";
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-600183-charset.html";
 
 function performTest(lastFinishedRequest, aConsole)
 {
+  let deferred = promise.defer();
+
   ok(lastFinishedRequest, "charset test page was loaded and logged");
   HUDService.lastFinishedRequest.callback = null;
 
@@ -28,26 +31,36 @@ function performTest(lastFinishedRequest, aConsole)
           "found the chinese simplified string");
 
         HUDService.lastFinishedRequest.callback = null;
-        executeSoon(finishTest);
+        executeSoon(deferred.resolve);
       });
   });
+
+  return deferred.promise;
 }
 
-function test()
-{
-  addTab("data:text/html;charset=utf-8,Web Console - bug 600183 test");
-
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-
-    openConsole(null, function(hud) {
-      hud.ui.setSaveRequestAndResponseBodies(true).then(() => {
-        ok(hud.ui._saveRequestAndResponseBodies,
-          "The saveRequestAndResponseBodies property was successfully set.");
-
-        HUDService.lastFinishedRequest.callback = performTest;
-        content.location = TEST_URI;
-      });
-    });
-  }, true);
+function waitForRequest() {
+  let deferred = promise.defer();
+  HUDService.lastFinishedRequest.callback = (req, console) => {
+    performTest(req, console).then(deferred.resolve);
+  };
+  return deferred.promise;
 }
+
+let test = asyncTest(function* () {
+  let { browser } = yield loadTab(INIT_URI);
+
+  let hud = yield openConsole();
+
+  yield hud.ui.setSaveRequestAndResponseBodies(true);
+
+  ok(hud.ui._saveRequestAndResponseBodies,
+    "The saveRequestAndResponseBodies property was successfully set.");
+
+  let gotLastRequest = waitForRequest();
+
+  let loaded = loadBrowser(browser);
+  content.location = TEST_URI;
+  yield loaded;
+
+  yield gotLastRequest;
+});

@@ -7,16 +7,17 @@
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console-assert.html";
 
-function test() {
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, consoleOpened);
-  }, true);
-}
+let test = asyncTest(function* () {
+  yield loadTab(TEST_URI);
+
+  let hud = yield openConsole();
+  yield consoleOpened(hud);
+});
 
 function consoleOpened(hud) {
-  waitForMessages({
+  hud.jsterm.execute("test()");
+
+  return waitForMessages({
     webconsole: hud,
     messages: [{
       text: "start",
@@ -40,11 +41,6 @@ function consoleOpened(hud) {
     }],
   }).then(() => {
     let nodes = hud.outputNode.querySelectorAll(".message");
-    is(nodes.length, 4, "only four messages are displayed, no output from the true assert");
-    finishTest();
+    is(nodes.length, 6, "only six messages are displayed, no output from the true assert");
   });
-
-  let button = content.document.querySelector("button");
-  ok(button, "we have the button");
-  EventUtils.sendMouseEvent({ type: "click" }, button, content);
 }

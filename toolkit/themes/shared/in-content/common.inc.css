@@ -212,7 +212,7 @@ xul|button[type="menu"] > xul|*.button-box > xul|*.button-menu-dropmarker {
 xul|*.help-button {
   min-width: 30px;
   border-radius: 2px;
-  border: 1px solid #c1c1c1;
+  border-width: 0;
   background-color: #ffcb00;
   background-image: none;
   box-shadow: none;

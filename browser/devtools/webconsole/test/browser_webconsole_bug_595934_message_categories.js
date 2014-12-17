@@ -8,6 +8,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 595934 - message categories coverage.";
 const TESTS_PATH = "http://example.com/browser/browser/devtools/webconsole/test/";
 const TESTS = [
   { // #0
@@ -195,10 +196,8 @@ function startNextTest() {
 function test() {
   requestLongerTimeout(2);
 
-  addTab("data:text/html;charset=utf-8,Web Console test for bug 595934 - message categories coverage.");
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, consoleOpened);
-  }, true);
+  loadTab(TEST_URI).then(() => {
+    openConsole().then(consoleOpened);
+  });
 }
 

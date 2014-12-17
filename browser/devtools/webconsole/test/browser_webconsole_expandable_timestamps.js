@@ -4,54 +4,53 @@
 // Test for the message timestamps option: check if the preference toggles the
 // display of messages in the console output. See bug 722267.
 
-function test()
+const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 722267 - " +
+               "preference for toggling timestamps in messages";
+const PREF_MESSAGE_TIMESTAMP = "devtools.webconsole.timestampMessages";
+let hud;
+
+let test = asyncTest(function* () {
+  yield loadTab(TEST_URI);
+
+  hud = yield openConsole();
+  let panel = yield consoleOpened();
+
+  yield onOptionsPanelSelected(panel);
+  onPrefChanged();
+
+  Services.prefs.clearUserPref(PREF_MESSAGE_TIMESTAMP);
+  hud = null;
+});
+
+function consoleOpened()
 {
-  const PREF_MESSAGE_TIMESTAMP = "devtools.webconsole.timestampMessages";
-  let hud;
+  info("console opened");
+  let prefValue = Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP);
+  ok(!prefValue, "messages have no timestamp by default (pref check)");
+  ok(hud.outputNode.classList.contains("hideTimestamps"),
+     "messages have no timestamp (class name check)");
 
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref(PREF_MESSAGE_TIMESTAMP);
-  });
+  let toolbox = gDevTools.getToolbox(hud.target);
+  return toolbox.selectTool("options");
+}
 
-  addTab("data:text/html;charset=utf-8,Web Console test for bug 722267 - " +
-         "preference for toggling timestamps in messages");
+function onOptionsPanelSelected(panel)
+{
+  info("options panel opened");
 
-  browser.addEventListener("load", function tabLoad() {
-    browser.removeEventListener("load", tabLoad, true);
-    openConsole(null, consoleOpened);
-  }, true);
+  let prefChanged = gDevTools.once("pref-changed", onPrefChanged);
 
-  function consoleOpened(aHud)
-  {
-    hud = aHud;
+  let checkbox = panel.panelDoc.getElementById("webconsole-timestamp-messages");
+  checkbox.click();
 
-    info("console opened");
-    let prefValue = Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP);
-    ok(!prefValue, "messages have no timestamp by default (pref check)");
-    ok(hud.outputNode.classList.contains("hideTimestamps"),
-       "messages have no timestamp (class name check)");
+  return prefChanged;
+}
 
-    let toolbox = gDevTools.getToolbox(hud.target);
-    toolbox.selectTool("options").then(onOptionsPanelSelected);
-  }
-
-  function onOptionsPanelSelected(panel)
-  {
-    info("options panel opened");
-
-    gDevTools.once("pref-changed", onPrefChanged);
-
-    let checkbox = panel.panelDoc.getElementById("webconsole-timestamp-messages");
-    checkbox.click();
-  }
-
-  function onPrefChanged()
-  {
-    info("pref changed");
-    let prefValue = Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP);
-    ok(prefValue, "messages have timestamps (pref check)");
-    ok(!hud.outputNode.classList.contains("hideTimestamps"),
-       "messages have timestamps (class name check)");
-    finishTest();
-  }
+function onPrefChanged()
+{
+  info("pref changed");
+  let prefValue = Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP);
+  ok(prefValue, "messages have timestamps (pref check)");
+  ok(!hud.outputNode.classList.contains("hideTimestamps"),
+     "messages have timestamps (class name check)");
 }

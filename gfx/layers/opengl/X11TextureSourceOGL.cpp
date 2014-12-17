@@ -101,7 +101,7 @@ X11TextureSourceOGL::ContentTypeToSurfaceFormat(gfxContentType aType)
   }
 }
 
-#endif
+}
+}
 
-}
-}
+#endif
