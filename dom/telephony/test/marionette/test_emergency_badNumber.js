@@ -4,29 +4,12 @@
 MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = 'head.js';
 
-let number = "not a valid emergency number";
-
-function dial() {
-  log("Make an outgoing call to an invalid number.");
-
-  telephony.dialEmergency(number).then(null, cause => {
-    log("Received promise 'reject'");
-
-    is(telephony.active, null);
-    is(telephony.calls.length, 0);
-    is(cause, "BadNumberError");
-
-    emulator.runCmdWithCallback("gsm list", function(result) {
-      log("Initial call list: " + result);
-      cleanUp();
-    });
-  });
-}
-
-function cleanUp() {
-  finish();
-}
-
 startTest(function() {
-  dial();
+  gDialEmergency("not a valid emergency number")
+    .catch(cause => {
+      is(cause, "BadNumberError");
+      return gCheckAll(null, [], "", [], []);
+    })
+    .catch(error => ok(false, "Promise reject: " + error))
+    .then(finish);
 });

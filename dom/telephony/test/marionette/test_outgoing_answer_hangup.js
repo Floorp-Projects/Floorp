@@ -4,84 +4,21 @@
 MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = 'head.js';
 
-let number = "5555552368";
-let outgoing;
-let calls;
-
-function dial() {
-  log("Make an outgoing call.");
-
-  telephony.dial(number).then(call => {
-    outgoing = call;
-    ok(outgoing);
-    is(outgoing.id.number, number);
-    is(outgoing.state, "dialing");
-
-    is(outgoing, telephony.active);
-    //ok(telephony.calls === calls); // bug 717414
-    is(telephony.calls.length, 1);
-    is(telephony.calls[0], outgoing);
-
-    outgoing.onalerting = function onalerting(event) {
-      log("Received 'onalerting' call event.");
-      is(outgoing, event.call);
-      is(outgoing.state, "alerting");
-
-      emulator.runCmdWithCallback("gsm list", function(result) {
-        log("Call list is now: " + result);
-        is(result[0], "outbound to  " + number + " : ringing");
-        answer();
-      });
-    };
-  });
-}
-
-function answer() {
-  log("Answering the outgoing call.");
-
-  // We get no "connecting" event when the remote party answers the call.
-
-  outgoing.onconnected = function onconnected(event) {
-    log("Received 'connected' call event.");
-    is(outgoing, event.call);
-    is(outgoing.state, "connected");
-
-    is(outgoing, telephony.active);
-
-    emulator.runCmdWithCallback("gsm list", function(result) {
-      log("Call list is now: " + result);
-      is(result[0], "outbound to  " + number + " : active");
-      hangUp();
-    });
-  };
-  emulator.runCmdWithCallback("gsm accept " + number);
-}
-
-function hangUp() {
-  log("Hanging up the outgoing call.");
-
-  // We get no "disconnecting" event when the remote party terminates the call.
-
-  outgoing.ondisconnected = function ondisconnected(event) {
-    log("Received 'disconnected' call event.");
-    is(outgoing, event.call);
-    is(outgoing.state, "disconnected");
-
-    is(telephony.active, null);
-    is(telephony.calls.length, 0);
-
-    emulator.runCmdWithCallback("gsm list", function(result) {
-      log("Call list is now: " + result);
-      cleanUp();
-    });
-  };
-  emulator.runCmdWithCallback("gsm cancel " + number);
-}
-
-function cleanUp() {
-  finish();
-}
+const outNumber = "5555551111";
+const outInfo = gOutCallStrPool(outNumber);
+let outCall;
 
 startTest(function() {
-  dial();
+  gDial(outNumber)
+    .then(call => outCall = call)
+    .then(() => gCheckAll(outCall, [outCall], "", [], [outInfo.ringing]))
+    .then(() => gRemoteAnswer(outCall))
+    .then(() => gCheckAll(outCall, [outCall], "", [], [outInfo.active]))
+
+    // Hang-up
+    .then(() => gRemoteHangUp(outCall))
+    .then(() => gCheckAll(null, [], "", [], []))
+
+    .catch(error => ok(false, "Promise reject: " + error))
+    .then(finish);
 });
