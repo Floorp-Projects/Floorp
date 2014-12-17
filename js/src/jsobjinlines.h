@@ -32,7 +32,7 @@ JSObject::setGenericAttributes(JSContext *cx, js::HandleObject obj,
     js::GenericAttributesOp op = obj->getOps()->setGenericAttributes;
     if (op)
         return op(cx, obj, id, attrsp);
-    return js::baseops::SetAttributes(cx, obj.as<js::NativeObject>(), id, attrsp);
+    return js::NativeSetPropertyAttributes(cx, obj.as<js::NativeObject>(), id, attrsp);
 }
 
 /* static */ inline bool
@@ -43,7 +43,7 @@ JSObject::deleteGeneric(JSContext *cx, js::HandleObject obj, js::HandleId id,
     js::DeleteGenericOp op = obj->getOps()->deleteGeneric;
     if (op)
         return op(cx, obj, id, succeeded);
-    return js::baseops::DeleteGeneric(cx, obj.as<js::NativeObject>(), id, succeeded);
+    return js::NativeDeleteProperty(cx, obj.as<js::NativeObject>(), id, succeeded);
 }
 
 /* static */ inline bool
@@ -60,14 +60,14 @@ JSObject::watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                 JS::HandleObject callable)
 {
     js::WatchOp op = obj->getOps()->watch;
-    return (op ? op : js::baseops::Watch)(cx, obj, id, callable);
+    return (op ? op : js::NativeWatch)(cx, obj, id, callable);
 }
 
 /* static */ inline bool
 JSObject::unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id)
 {
     js::UnwatchOp op = obj->getOps()->unwatch;
-    return (op ? op : js::baseops::Unwatch)(cx, obj, id);
+    return (op ? op : js::NativeUnwatch)(cx, obj, id);
 }
 
 inline void
@@ -865,26 +865,6 @@ NewObjectMetadata(ExclusiveContext *cxArg, JSObject **pmetadata)
     }
     return true;
 }
-
-namespace baseops {
-
-inline bool
-LookupProperty(ExclusiveContext *cx, HandleNativeObject obj, PropertyName *name,
-               MutableHandleObject objp, MutableHandleShape propp)
-{
-    Rooted<jsid> id(cx, NameToId(name));
-    return LookupProperty<CanGC>(cx, obj, id, objp, propp);
-}
-
-inline bool
-DefineProperty(ExclusiveContext *cx, HandleNativeObject obj, PropertyName *name, HandleValue value,
-               JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs)
-{
-    Rooted<jsid> id(cx, NameToId(name));
-    return DefineGeneric(cx, obj, id, value, getter, setter, attrs);
-}
-
-} /* namespace baseops */
 
 static inline unsigned
 ApplyAttributes(unsigned attrs, bool enumerable, bool writable, bool configurable)

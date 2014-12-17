@@ -1556,7 +1556,7 @@ js_InitArrayBufferClass(JSContext *cx, HandleObject obj)
     if (!getter)
         return nullptr;
 
-    if (!DefineNativeProperty(cx, arrayBufferProto, byteLengthId, UndefinedHandleValue,
+    if (!NativeDefineProperty(cx, arrayBufferProto, byteLengthId, UndefinedHandleValue,
                               JS_DATA_TO_FUNC_PTR(PropertyOp, getter), nullptr, attrs))
         return nullptr;
 

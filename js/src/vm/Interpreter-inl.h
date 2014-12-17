@@ -250,7 +250,7 @@ FetchName(JSContext *cx, HandleObject obj, HandleObject obj2, HandlePropertyName
             MOZ_ASSERT(shape->hasSlot());
             vp.set(obj2->as<NativeObject>().getSlot(shape->slot()));
         } else {
-            if (!NativeGet(cx, normalized, obj2.as<NativeObject>(), shape, vp))
+            if (!NativeGetExistingProperty(cx, normalized, obj2.as<NativeObject>(), shape, vp))
                 return false;
         }
     }
@@ -317,14 +317,14 @@ SetNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleObject s
 
     /*
      * In strict-mode, we need to trigger an error when trying to assign to an
-     * undeclared global variable. To do this, we call SetPropertyHelper
+     * undeclared global variable. To do this, we call NativeSetProperty
      * directly and pass Unqualified.
      */
     if (scope->isUnqualifiedVarObj()) {
         MOZ_ASSERT(!scope->getOps()->setProperty);
         RootedId id(cx, NameToId(name));
-        return baseops::SetPropertyHelper(cx, scope.as<NativeObject>(), scope.as<NativeObject>(),
-                                          id, baseops::Unqualified, &valCopy, strict);
+        return NativeSetProperty(cx, scope.as<NativeObject>(), scope.as<NativeObject>(), id,
+                                 Unqualified, &valCopy, strict);
     }
 
     return JSObject::setProperty(cx, scope, scope, name, &valCopy, strict);
