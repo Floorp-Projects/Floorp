@@ -32,6 +32,7 @@ using namespace android;
 #include "nsThreadUtils.h"
 #include "OMXCodecWrapper.h"
 #include "TextureClient.h"
+#include "mozilla/IntegerPrintfMacros.h"
 
 #define DEQUEUE_BUFFER_TIMEOUT_US (100 * 1000ll) // 100ms.
 #define START_DEQUEUE_BUFFER_TIMEOUT_US (10 * DEQUEUE_BUFFER_TIMEOUT_US) // 1s.
@@ -524,8 +525,8 @@ public:
     }
     MOZ_ASSERT(timestamp >= 0 && renderTimeMs >= 0);
 
-    CODEC_LOGD("Decoder NewFrame: %d bytes, %dx%d, timestamp %lld, renderTimeMs %lld",
-               buffer->GetSize(), grallocData.mPicSize.width, grallocData.mPicSize.height, timestamp, renderTimeMs);
+    CODEC_LOGD("Decoder NewFrame: %dx%d, timestamp %lld, renderTimeMs %lld",
+               grallocData.mPicSize.width, grallocData.mPicSize.height, timestamp, renderTimeMs);
 
     nsAutoPtr<webrtc::I420VideoFrame> videoFrame(
       new webrtc::TextureVideoFrame(new ImageNativeHandle(grallocImage.forget()),
@@ -719,7 +720,7 @@ protected:
       encoded.capture_time_ms_ = input_frame.mRenderTimeMs;
       encoded._completeFrame = true;
 
-      CODEC_LOGD("Encoded frame: %d bytes, %dx%d, is_param %d, is_iframe %d, timestamp %u, captureTimeMs %u",
+      CODEC_LOGD("Encoded frame: %d bytes, %dx%d, is_param %d, is_iframe %d, timestamp %u, captureTimeMs %" PRIu64,
                  encoded._length, encoded._encodedWidth, encoded._encodedHeight,
                  isParamSets, isIFrame, encoded._timeStamp, encoded.capture_time_ms_);
       // Prepend SPS/PPS to I-frames unless they were sent last time.
@@ -757,7 +758,7 @@ private:
       nalu._length = mParamSets.Length();
       nalu._buffer = mParamSets.Elements();
       // Break into NALUs and send.
-      CODEC_LOGD("Prepending SPS/PPS: %d bytes, timestamp %u, captureTimeMs %u",
+      CODEC_LOGD("Prepending SPS/PPS: %d bytes, timestamp %u, captureTimeMs %" PRIu64,
                  nalu._length, nalu._timeStamp, nalu.capture_time_ms_);
       SendEncodedDataToCallback(nalu, false);
     }
@@ -967,7 +968,7 @@ WebrtcOMXH264VideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
   // SetDataNoCopy() doesn't need AllocateAndGetNewBuffer(); OMXVideoEncoder is ok with this
   img.SetDataNoCopy(yuvData);
 
-  CODEC_LOGD("Encode frame: %dx%d, timestamp %u (%lld), renderTimeMs %u",
+  CODEC_LOGD("Encode frame: %dx%d, timestamp %u (%lld), renderTimeMs %" PRIu64,
              aInputImage.width(), aInputImage.height(),
              aInputImage.timestamp(), aInputImage.timestamp() * 1000ll / 90,
              aInputImage.render_time_ms());
