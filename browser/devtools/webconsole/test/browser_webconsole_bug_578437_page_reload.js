@@ -6,18 +6,18 @@
 // Tests that the console object still exists after a page reload.
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
 
+let browser;
+
 function test() {
-  addTab(TEST_URI);
+  loadTab(TEST_URI).then({
+    openConsole().then((tab) => {
+      browser = tab.browser;
+
+      browser.addEventListener("DOMContentLoaded", testPageReload, false);
+      content.location.reload();
+    });
+  });
   browser.addEventListener("DOMContentLoaded", onLoad, false);
-}
-
-function onLoad() {
-  browser.removeEventListener("DOMContentLoaded", onLoad, false);
-
-  openConsole();
-
-  browser.addEventListener("DOMContentLoaded", testPageReload, false);
-  content.location.reload();
 }
 
 function testPageReload() {
@@ -33,6 +33,7 @@ function testPageReload() {
   is(typeof console.error, "function", "console.error is a function");
   is(typeof console.exception, "function", "console.exception is a function");
 
+  browser = null;
   finishTest();
 }
 

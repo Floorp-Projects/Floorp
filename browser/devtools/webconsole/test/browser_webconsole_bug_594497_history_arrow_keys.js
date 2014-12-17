@@ -10,27 +10,35 @@
 
 let inputNode, values;
 
-function tabLoad(aEvent) {
-  browser.removeEventListener(aEvent.type, tabLoad, true);
+let TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 594497 and bug 619598";
+"use strict";
 
-  openConsole(null, function(HUD) {
-    inputNode = HUD.jsterm.inputNode;
+let test = asyncTest(function* () {
+  yield loadTab(TEST_URI);
 
-    inputNode.focus();
+  let hud = yield openConsole();
 
-    ok(!inputNode.value, "inputNode.value is empty");
+  setup(hud);
+  performTests();
 
-    values = ["document", "window", "document.body"];
-    values.push(values.join(";\n"), "document.location");
+  inputNode = values = null;
+});
 
-    // Execute each of the values;
-    for (let i = 0; i < values.length; i++) {
-      HUD.jsterm.setInputValue(values[i]);
-      HUD.jsterm.execute();
-    }
+function setup(HUD) {
+  inputNode = HUD.jsterm.inputNode;
 
-    performTests();
-  });
+  inputNode.focus();
+
+  ok(!inputNode.value, "inputNode.value is empty");
+
+  values = ["document", "window", "document.body"];
+  values.push(values.join(";\n"), "document.location");
+
+  // Execute each of the values;
+  for (let i = 0; i < values.length; i++) {
+    HUD.jsterm.setInputValue(values[i]);
+    HUD.jsterm.execute();
+  }
 }
 
 function performTests() {
@@ -145,13 +153,4 @@ function performTests() {
 
   ok(!inputNode.value,
      "VK_DOWN: inputNode.value is empty");
-
-  inputNode = values = null;
-  executeSoon(finishTest);
 }
-
-function test() {
-  addTab("data:text/html;charset=utf-8,Web Console test for bug 594497 and bug 619598");
-  browser.addEventListener("load", tabLoad, true);
-}
-

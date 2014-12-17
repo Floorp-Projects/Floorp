@@ -80,7 +80,7 @@ Library::Name(JSContext* cx, unsigned argc, jsval *vp)
 }
 
 JSObject*
-Library::Create(JSContext* cx, jsval path_, JSCTypesCallbacks* callbacks)
+Library::Create(JSContext* cx, jsval path_, const JSCTypesCallbacks* callbacks)
 {
   RootedValue path(cx, path_);
   RootedObject libraryObj(cx,

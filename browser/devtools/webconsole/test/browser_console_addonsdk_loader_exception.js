@@ -7,6 +7,8 @@
 // opened correctly in View Source from the Browser Console.
 // See bug 866950.
 
+"use strict";
+
 const TEST_URI = "data:text/html;charset=utf8,<p>hello world from bug 866950";
 
 function test()

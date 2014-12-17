@@ -13,11 +13,9 @@ function test()
 {
   let hud;
 
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
+  loadTab(TEST_URI).then(() => {
     HUDService.toggleBrowserConsole().then(browserConsoleOpened);
-  }, true);
+  });
 
   function browserConsoleOpened(aHud)
   {

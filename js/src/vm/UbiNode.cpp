@@ -9,11 +9,13 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Scoped.h"
+#include "mozilla/UniquePtr.h"
 
 #include "jscntxt.h"
 #include "jsinfer.h"
 #include "jsobj.h"
 #include "jsscript.h"
+#include "jsstr.h"
 
 #include "jit/IonCode.h"
 #include "js/Debug.h"
@@ -263,13 +265,14 @@ namespace ubi {
 
 RootList::RootList(JSContext *cx, Maybe<AutoCheckCannotGC> &noGC, bool wantNames /* = false */)
   : noGC(noGC),
+    cx(cx),
     edges(cx),
     wantNames(wantNames)
 { }
 
 
 bool
-RootList::init(JSContext *cx)
+RootList::init()
 {
     SimpleEdgeVectorTracer tracer(cx, &edges, wantNames);
     JS_TraceRuntime(&tracer);
@@ -280,7 +283,7 @@ RootList::init(JSContext *cx)
 }
 
 bool
-RootList::init(JSContext *cx, ZoneSet &debuggees)
+RootList::init(ZoneSet &debuggees)
 {
     SimpleEdgeVector allRootEdges(cx);
     SimpleEdgeVectorTracer tracer(cx, &allRootEdges, wantNames);
@@ -306,7 +309,7 @@ RootList::init(JSContext *cx, ZoneSet &debuggees)
 }
 
 bool
-RootList::init(JSContext *cx, HandleObject debuggees)
+RootList::init(HandleObject debuggees)
 {
     MOZ_ASSERT(debuggees && JS::dbg::IsDebugger(ObjectValue(*debuggees)));
     js::Debugger *dbg = js::Debugger::fromJSObject(debuggees);
@@ -320,7 +323,35 @@ RootList::init(JSContext *cx, HandleObject debuggees)
             return false;
     }
 
-    return init(cx, debuggeeZones);
+    if (!init(debuggeeZones))
+        return false;
+
+    // Ensure that each of our debuggee globals are in the root list.
+    for (js::GlobalObjectSet::Range r = dbg->allDebuggees(); !r.empty(); r.popFront()) {
+        if (!addRoot(JS::ubi::Node(static_cast<JSObject *>(r.front())),
+                     MOZ_UTF16("debuggee global")))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool
+RootList::addRoot(Node node, const char16_t *edgeName)
+{
+    MOZ_ASSERT(noGC.isSome());
+    MOZ_ASSERT_IF(wantNames, edgeName);
+
+    mozilla::UniquePtr<char16_t[], JS::FreePolicy> name;
+    if (edgeName) {
+        name = DuplicateString(cx, edgeName);
+        if (!name)
+            return false;
+    }
+
+    return edges.append(mozilla::Move(SimpleEdge(name.release(), node)));
 }
 
 // An EdgeRange concrete class that holds a pre-existing vector of SimpleEdges.

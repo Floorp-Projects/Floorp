@@ -11920,7 +11920,8 @@ OpenDatabaseOp::SendResults()
   nsRefPtr<OpenDatabaseOp> kungFuDeathGrip;
 
   DatabaseActorInfo* info;
-  if (gLiveDatabaseHashtable->Get(mDatabaseId, &info) &&
+  if (gLiveDatabaseHashtable &&
+      gLiveDatabaseHashtable->Get(mDatabaseId, &info) &&
       info->mWaitingFactoryOp) {
     MOZ_ASSERT(info->mWaitingFactoryOp == this);
     kungFuDeathGrip =

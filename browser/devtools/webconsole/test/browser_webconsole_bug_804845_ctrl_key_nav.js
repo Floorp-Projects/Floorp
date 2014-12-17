@@ -11,15 +11,21 @@
 
 // Test navigation of webconsole contents via ctrl-a, ctrl-e, ctrl-p, ctrl-n
 // see https://bugzilla.mozilla.org/show_bug.cgi?id=804845
+"use strict";
+
+const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 804845 and bug 619598";
 
 let jsterm, inputNode;
-function test() {
-  addTab("data:text/html;charset=utf-8,Web Console test for bug 804845 and bug 619598");
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, doTests);
-  }, true);
-}
+
+let test = asyncTest(function* () {
+  yield loadTab(TEST_URI);
+
+  let hud = yield openConsole();
+
+  doTests(hud);
+
+  jsterm = inputNode = null;
+});
 
 function doTests(HUD) {
   jsterm = HUD.jsterm;
@@ -31,9 +37,6 @@ function doTests(HUD) {
   testSingleLineInputNavNoHistory();
   testMultiLineInputNavNoHistory();
   testNavWithHistory();
-
-  jsterm = inputNode = null;
-  executeSoon(finishTest);
 }
 
 function testSingleLineInputNavNoHistory() {

@@ -12,25 +12,22 @@ const TEST_DUMMY_URI = "http://example.com/browser/browser/devtools/webconsole/t
 let tab1, tab2;
 
 function test() {
-  addTab(TEST_URI);
-  tab1 = tab;
-  browser.addEventListener("load", tab1Loaded, true);
-}
+  loadTab(TEST_URI).then(({tab}) => {
+    tab1 = tab;
 
-function tab1Loaded(aEvent) {
-  browser.removeEventListener(aEvent.type, tab1Loaded, true);
-  content.console.log("FOO");
-  openConsole(null, function() {
-    tab2 = gBrowser.addTab(TEST_DUMMY_URI);
-    gBrowser.selectedTab = tab2;
-    gBrowser.selectedBrowser.addEventListener("load", tab2Loaded, true);
+    content.console.log("FOO");
+    openConsole().then(() => {
+      tab2 = gBrowser.addTab(TEST_DUMMY_URI);
+      gBrowser.selectedTab = tab2;
+      gBrowser.selectedBrowser.addEventListener("load", tab2Loaded, true);
+    });
   });
 }
 
 function tab2Loaded(aEvent) {
   tab2.linkedBrowser.removeEventListener(aEvent.type, tab2Loaded, true);
 
-  openConsole(gBrowser.selectedTab, function() {
+  openConsole(gBrowser.selectedTab).then(() => {
     tab1.linkedBrowser.addEventListener("load", tab1Reloaded, true);
     tab1.linkedBrowser.contentWindow.location.reload();
   });
@@ -59,7 +56,7 @@ function tab1Reloaded(aEvent) {
     let msg = "Didn't find the iframe network request in tab2";
     testLogEntry(outputNode2, TEST_IFRAME_URI, msg, true, true);
 
-    closeConsole(tab2, function() {
+    closeConsole(tab2).then(() => {
       gBrowser.removeTab(tab2);
       tab1 = tab2 = null;
       executeSoon(finishTest);

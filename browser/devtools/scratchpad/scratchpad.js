@@ -468,7 +468,7 @@ var Scratchpad = {
     return connection.then(({ debuggerClient, webConsoleClient }) => {
       let deferred = promise.defer();
 
-      webConsoleClient.evaluateJS(aString, aResponse => {
+      webConsoleClient.evaluateJSAsync(aString, aResponse => {
         this.debuggerClient = debuggerClient;
         this.webConsoleClient = webConsoleClient;
         if (aResponse.error) {
@@ -572,20 +572,11 @@ var Scratchpad = {
       return;
     }
 
-    let browser = this.gBrowser.selectedBrowser;
-
-    this._reloadAndRunEvent = evt => {
-      if (evt.target !== browser.contentDocument) {
-        return;
-      }
-
-      browser.removeEventListener("load", this._reloadAndRunEvent, true);
-
-      this.run().then(aResults => deferred.resolve(aResults));
-    };
-
-    browser.addEventListener("load", this._reloadAndRunEvent, true);
-    browser.contentWindow.location.reload();
+    let target = TargetFactory.forTab(this.gBrowser.selectedTab);
+    target.once("navigate", () => {
+      this.run().then(results => deferred.resolve(results));
+    });
+    target.makeRemote().then(() => target.activeTab.reload());
 
     return deferred.promise;
   },
@@ -2067,8 +2058,8 @@ ScratchpadTab.prototype = {
   /**
    * Initialize a debugger client and connect it to the debugger server.
    *
- * @param object aSubject
- *        The tab or window to obtain the connection for.
+   * @param object aSubject
+   *        The tab or window to obtain the connection for.
    * @return Promise
    *         The promise for the result of connecting to this tab or window.
    */
@@ -2113,8 +2104,8 @@ ScratchpadTab.prototype = {
   /**
    * Attach to this tab.
    *
- * @param object aSubject
- *        The tab or window to obtain the connection for.
+   * @param object aSubject
+   *        The tab or window to obtain the connection for.
    * @return Promise
    *         The promise for the TabTarget for this tab.
    */

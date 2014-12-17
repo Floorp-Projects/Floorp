@@ -108,6 +108,8 @@ if (typeof Symbol !== "undefined") {
 longString = initialString = null;
 
 function test() {
+  requestLongerTimeout(2);
+
   registerCleanupFunction(() => {
     DebuggerServer.LONG_STRING_LENGTH = LONG_STRING_LENGTH;
     DebuggerServer.LONG_STRING_INITIAL_LENGTH = LONG_STRING_INITIAL_LENGTH;
@@ -121,6 +123,6 @@ function test() {
 }
 
 function finishUp() {
-  inputTests = null;
+  longString = initialString = inputTests = null;
   finishTest();
 }

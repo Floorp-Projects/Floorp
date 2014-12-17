@@ -125,7 +125,7 @@ struct Statistics
     void endSlice();
 
     void startTimingMutator();
-    void stopTimingMutator(double &mutator_ms, double &gc_ms);
+    bool stopTimingMutator(double &mutator_ms, double &gc_ms);
 
     void reset(const char *reason) { slices.back().resetReason = reason; }
     void nonincremental(const char *reason) { nonincrementalReason = reason; }
@@ -188,9 +188,6 @@ struct Statistics
     /* Most recent time when the given phase started. */
     int64_t phaseStartTimes[PHASE_LIMIT];
 
-    /* Are we currently timing mutator vs GC time? */
-    bool timingMutator;
-
     /* Bookkeeping for GC timings when timingMutator is true */
     int64_t timedGCStart;
     int64_t timedGCTime;
@@ -214,6 +211,15 @@ struct Statistics
     static const size_t MAX_NESTING = 8;
     Phase phaseNesting[MAX_NESTING];
     size_t phaseNestingDepth;
+
+    /*
+     * To avoid recursive nesting, we discontinue a callback phase when any
+     * other phases are started. Remember what phase to resume when the inner
+     * phases are complete. (And because GCs can nest within the callbacks any
+     * number of times, we need a whole stack of of phases to resume.)
+     */
+    Phase suspendedPhases[MAX_NESTING];
+    size_t suspendedPhaseNestingDepth;
 
     /* Sweep times for SCCs of compartments. */
     Vector<int64_t, 0, SystemAllocPolicy> sccTimes;

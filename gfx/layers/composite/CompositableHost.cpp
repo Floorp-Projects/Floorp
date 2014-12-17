@@ -207,7 +207,6 @@ CompositableHost::Create(const TextureInfo& aTextureInfo)
   return result;
 }
 
-#ifdef MOZ_DUMP_PAINTING
 void
 CompositableHost::DumpTextureHost(std::stringstream& aStream, TextureHost* aTexture)
 {
@@ -220,7 +219,6 @@ CompositableHost::DumpTextureHost(std::stringstream& aStream, TextureHost* aText
   }
   aStream << gfxUtils::GetAsLZ4Base64Str(dSurf).get();
 }
-#endif
 
 namespace CompositableMap {
 

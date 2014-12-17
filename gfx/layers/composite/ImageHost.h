@@ -72,13 +72,11 @@ public:
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
-#ifdef MOZ_DUMP_PAINTING
   virtual void Dump(std::stringstream& aStream,
                     const char* aPrefix = "",
                     bool aDumpHtml = false) MOZ_OVERRIDE;
 
   virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE;
-#endif
 
   virtual bool Lock() MOZ_OVERRIDE;
 

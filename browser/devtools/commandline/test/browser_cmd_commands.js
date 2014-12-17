@@ -28,8 +28,7 @@ function spawnTest() {
   let hud = HUDService.getHudReferenceById(subject.data);
   ok(hud, "console open");
 
-  let jstermExecute = helpers.promiseify(hud.jsterm.execute, hud.jsterm);
-  let msg = yield jstermExecute("pprint(window)");
+  let msg = yield hud.jsterm.execute("pprint(window)");
 
   ok(msg, "output for pprint(window)");
 

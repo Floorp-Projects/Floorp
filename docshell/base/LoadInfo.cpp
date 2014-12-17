@@ -20,16 +20,23 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    nsSecurityFlags aSecurityFlags,
                    nsContentPolicyType aContentPolicyType,
                    nsIURI* aBaseURI)
-  : mLoadingPrincipal(aLoadingPrincipal)
+  : mLoadingPrincipal(aLoadingContext ?
+                        aLoadingContext->NodePrincipal() : aLoadingPrincipal)
   , mTriggeringPrincipal(aTriggeringPrincipal ?
-                         aTriggeringPrincipal : aLoadingPrincipal)
+                           aTriggeringPrincipal : mLoadingPrincipal.get())
   , mLoadingContext(do_GetWeakReference(aLoadingContext))
   , mSecurityFlags(aSecurityFlags)
   , mContentPolicyType(aContentPolicyType)
   , mBaseURI(aBaseURI)
 {
-  MOZ_ASSERT(aLoadingPrincipal);
+  MOZ_ASSERT(mLoadingPrincipal);
   MOZ_ASSERT(mTriggeringPrincipal);
+
+  // if consumers pass both, aLoadingContext and aLoadingPrincipal
+  // then the loadingPrincipal must be the same as the node's principal
+  MOZ_ASSERT(!aLoadingContext || !aLoadingPrincipal ||
+             aLoadingContext->NodePrincipal() == aLoadingPrincipal);
+
   // if the load is sandboxed, we can not also inherit the principal
   if (mSecurityFlags & nsILoadInfo::SEC_SANDBOXED) {
     mSecurityFlags ^= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;

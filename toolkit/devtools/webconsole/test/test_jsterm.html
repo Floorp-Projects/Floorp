@@ -19,6 +19,17 @@ let gState;
 let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let {MAX_AUTOCOMPLETE_ATTEMPTS,MAX_AUTOCOMPLETIONS} = devtools.require("devtools/toolkit/webconsole/utils");
 
+// This test runs all of its assertions twice - once with
+// evaluateJS and once with evaluateJSAsync.
+let evaluatingSync = true;
+function evaluateJS(input, callback) {
+  if (evaluatingSync) {
+    gState.client.evaluateJS(input, callback);
+  } else {
+    gState.client.evaluateJSAsync(input, callback);
+  }
+}
+
 function startTest()
 {
   removeEventListener("load", startTest);
@@ -162,7 +173,7 @@ function onAutocompleteLarge2(aResponse)
 function doSimpleEval()
 {
   info("test eval '2+2'");
-  gState.client.evaluateJS("2+2", onSimpleEval);
+  evaluateJS("2+2", onSimpleEval);
 }
 
 function onSimpleEval(aResponse)
@@ -182,7 +193,7 @@ function onSimpleEval(aResponse)
 function doWindowEval()
 {
   info("test eval 'document'");
-  gState.client.evaluateJS("document", onWindowEval);
+  evaluateJS("document", onWindowEval);
 }
 
 function onWindowEval(aResponse)
@@ -206,7 +217,7 @@ function onWindowEval(aResponse)
 function doEvalWithException()
 {
   info("test eval with exception");
-  gState.client.evaluateJS("window.doTheImpossible()", onEvalWithException);
+  evaluateJS("window.doTheImpossible()", onEvalWithException);
 }
 
 function onEvalWithException(aResponse)
@@ -229,7 +240,7 @@ function onEvalWithException(aResponse)
 function doEvalWithHelper()
 {
   info("test eval with helper");
-  gState.client.evaluateJS("clear()", onEvalWithHelper);
+  evaluateJS("clear()", onEvalWithHelper);
 }
 
 function onEvalWithHelper(aResponse)
@@ -250,7 +261,7 @@ function onEvalWithHelper(aResponse)
 
 function doEvalString()
 {
-  gState.client.evaluateJS("window.foobarObject.strfoo", onEvalString);
+  evaluateJS("window.foobarObject.strfoo", onEvalString);
 }
 
 function onEvalString(aResponse)
@@ -266,7 +277,7 @@ function onEvalString(aResponse)
 
 function doEvalLongString()
 {
-  gState.client.evaluateJS("window.foobarObject.omgstr", onEvalLongString);
+  evaluateJS("window.foobarObject.omgstr", onEvalLongString);
 }
 
 function onEvalLongString(aResponse)
@@ -289,9 +300,16 @@ function onEvalLongString(aResponse)
 
 function testEnd()
 {
+  // If this is the first run, reload the page and do it again.
+  // Otherwise, end the test.
   closeDebugger(gState, function() {
     gState = null;
-    SimpleTest.finish();
+    if (evaluatingSync) {
+      evaluatingSync = false;
+      startTest();
+    } else {
+      SimpleTest.finish();
+    }
   });
 }
 
