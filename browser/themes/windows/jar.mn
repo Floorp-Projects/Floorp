@@ -118,9 +118,9 @@ browser.jar:
         skin/classic/browser/webRTC-microphone-white-16.png          (../shared/webrtc/microphone-white-16.png)
         skin/classic/browser/webRTC-screen-white-16.png              (../shared/webrtc/screen-white-16.png)
         skin/classic/browser/loop/menuPanel.png                      (loop/menuPanel.png)
-        skin/classic/browser/loop/toolbar.png                        (loop/toolbar-XPVista7.png)
-        skin/classic/browser/loop/toolbar-lunaSilver.png             (loop/toolbar-lunaSilver.png)
+        skin/classic/browser/loop/toolbar.png                        (loop/toolbar-XP.png)
         skin/classic/browser/loop/toolbar-inverted.png               (loop/toolbar-inverted.png)
+        skin/classic/browser/loop/toolbar-lunaSilver.png             (loop/toolbar-lunaSilver.png)
         skin/classic/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
         skin/classic/browser/customizableui/customizeFavicon.ico  (../shared/customizableui/customizeFavicon.ico)
         skin/classic/browser/customizableui/customize-illustration.png  (../shared/customizableui/customize-illustration.png)
@@ -570,9 +570,10 @@ browser.jar:
         skin/classic/aero/browser/webRTC-camera-white-16.png              (../shared/webrtc/camera-white-16.png)
         skin/classic/aero/browser/webRTC-microphone-white-16.png          (../shared/webrtc/microphone-white-16.png)
         skin/classic/aero/browser/webRTC-screen-white-16.png              (../shared/webrtc/screen-white-16.png)
-        skin/classic/aero/browser/loop/menuPanel.png                      (loop/menuPanel-aero.png)
+        skin/classic/aero/browser/loop/menuPanel.png                      (loop/menuPanel.png)
+        skin/classic/aero/browser/loop/menuPanel-aero.png                 (loop/menuPanel-aero.png)
         skin/classic/aero/browser/loop/toolbar.png                        (loop/toolbar.png)
-        skin/classic/aero/browser/loop/toolbar-XPVista7.png               (loop/toolbar-XPVista7.png)
+        skin/classic/aero/browser/loop/toolbar-aero.png                   (loop/toolbar-aero.png)
         skin/classic/aero/browser/loop/toolbar-inverted.png               (loop/toolbar-inverted.png)
         skin/classic/aero/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
         skin/classic/aero/browser/customizableui/customize-illustration.png  (../shared/customizableui/customize-illustration.png)
@@ -933,5 +934,8 @@ browser.jar:
 % override chrome://browser/skin/tabbrowser/tab-arrow-left.png     chrome://browser/skin/tabbrowser/tab-arrow-left-XPVista7.png    os=WINNT osversion=6
 % override chrome://browser/skin/tabbrowser/tab-arrow-left.png     chrome://browser/skin/tabbrowser/tab-arrow-left-XPVista7.png    os=WINNT osversion=6.1
 
-% override chrome://browser/skin/loop/toolbar.png          chrome://browser/skin/loop/toolbar-XPVista7.png         os=WINNT osversion=6
-% override chrome://browser/skin/loop/toolbar.png          chrome://browser/skin/loop/toolbar-XPVista7.png         os=WINNT osversion=6.1
+% override chrome://browser/skin/loop/toolbar.png          chrome://browser/skin/loop/toolbar-aero.png             os=WINNT osversion=6
+% override chrome://browser/skin/loop/toolbar.png          chrome://browser/skin/loop/toolbar-aero.png             os=WINNT osversion=6.1
+
+% override chrome://browser/skin/loop/menuPanel.png        chrome://browser/skin/loop/menuPanel-aero.png           os=WINNT osversion=6
+% override chrome://browser/skin/loop/menuPanel.png        chrome://browser/skin/loop/menuPanel-aero.png           os=WINNT osversion=6.1
