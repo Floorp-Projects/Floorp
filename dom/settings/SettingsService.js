@@ -32,8 +32,12 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsIMessageSender");
+XPCOMUtils.defineLazyServiceGetter(this, "mrm",
+                                   "@mozilla.org/memory-reporter-manager;1",
+                                   "nsIMemoryReporterManager");
 
-const nsIClassInfo            = Ci.nsIClassInfo;
+const nsIClassInfo                   = Ci.nsIClassInfo;
+const kXpcomShutdownObserverTopic    = "xpcom-shutdown";
 
 const SETTINGSSERVICELOCK_CONTRACTID = "@mozilla.org/settingsServiceLock;1";
 const SETTINGSSERVICELOCK_CID        = Components.ID("{d7a395a0-e292-11e1-834e-1761d57f5f99}");
@@ -85,6 +89,7 @@ SettingsServiceLock.prototype = {
 
   runOrFinalizeQueries: function() {
     if (!this._requests || Object.keys(this._requests).length == 0) {
+      this._settingsService.unregisterLock(this._id);
       cpmm.sendAsyncMessage("Settings:Finalize", {lockID: this._id}, undefined, Services.scriptSecurityManager.getSystemPrincipal());
     } else {
       cpmm.sendAsyncMessage("Settings:Run", {lockID: this._id}, undefined, Services.scriptSecurityManager.getSystemPrincipal());
@@ -229,17 +234,81 @@ const SETTINGSSERVICE_CID        = Components.ID("{f656f0c0-f776-11e1-a21f-08002
 function SettingsService()
 {
   if (VERBOSE) debug("settingsService Constructor");
+  this._locks = [];
+  this._createdLocks = 0;
+  this._unregisteredLocks = 0;
+  this.init();
 }
 
 SettingsService.prototype = {
 
+  init: function() {
+    Services.obs.addObserver(this, kXpcomShutdownObserverTopic, false);
+    mrm.registerStrongReporter(this);
+  },
+
+  uninit: function() {
+    Services.obs.removeObserver(this, kXpcomShutdownObserverTopic);
+    mrm.unregisterStrongReporter(this);
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    if (VERBOSE) debug("observe: " + aTopic);
+    if (aTopic === kXpcomShutdownObserverTopic) {
+      this.uninit();
+    }
+  },
+
   createLock: function createLock(aCallback) {
     var lock = new SettingsServiceLock(this, aCallback);
+    this.registerLock(lock._id);
     return lock;
   },
 
+  registerLock: function(aLockID) {
+    this._locks.push(aLockID);
+    this._createdLocks++;
+  },
+
+  unregisterLock: function(aLockID) {
+    let lock_index = this._locks.indexOf(aLockID);
+    if (lock_index != -1) {
+      if (VERBOSE) debug("Unregistering lock " + aLockID);
+      this._locks.splice(lock_index, 1);
+      this._unregisteredLocks++;
+    }
+  },
+
+  collectReports: function(aCallback, aData, aAnonymize) {
+    aCallback.callback("",
+                       "settings-service-locks/alive",
+                       Ci.nsIMemoryReporter.KIND_OTHER,
+                       Ci.nsIMemoryReporter.UNITS_COUNT,
+                       this._locks.length,
+                       "The number of service locks that are currently alives.",
+                       aData);
+
+    aCallback.callback("",
+                       "settings-service-locks/created",
+                       Ci.nsIMemoryReporter.KIND_OTHER,
+                       Ci.nsIMemoryReporter.UNITS_COUNT,
+                       this._createdLocks,
+                       "The number of service locks that were created.",
+                       aData);
+
+    aCallback.callback("",
+                       "settings-service-locks/deleted",
+                       Ci.nsIMemoryReporter.KIND_OTHER,
+                       Ci.nsIMemoryReporter.UNITS_COUNT,
+                       this._unregisteredLocks,
+                       "The number of service locks that were deleted.",
+                       aData);
+  },
+
   classID : SETTINGSSERVICE_CID,
-  QueryInterface : XPCOMUtils.generateQI([Ci.nsISettingsService])
+  QueryInterface : XPCOMUtils.generateQI([Ci.nsISettingsService,
+                                          Ci.nsIObserver,
+                                          Ci.nsIMemoryReporter])
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SettingsService, SettingsServiceLock]);
