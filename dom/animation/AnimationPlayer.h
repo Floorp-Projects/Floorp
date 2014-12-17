@@ -47,6 +47,7 @@ protected:
 public:
   explicit AnimationPlayer(AnimationTimeline* aTimeline)
     : mTimeline(aTimeline)
+    , mIsPending(false)
     , mIsRunningOnCompositor(false)
     , mIsPreviousStateFinished(false)
   {
@@ -149,6 +150,12 @@ protected:
   // completed. The initial object is created lazily by GetReady().
   nsRefPtr<Promise> mReady;
 
+  // Indicates if the player is in the pending state. We use this rather
+  // than checking if this player is tracked by a PendingPlayerTracker.
+  // This is because the PendingPlayerTracker is associated with the source
+  // content's document but we need to know if we're pending even if the
+  // source content loses association with its document.
+  bool mIsPending;
   bool mIsRunningOnCompositor;
   // Indicates whether we were in the finished state during our
   // most recent unthrottled sample (our last ComposeStyle call).
