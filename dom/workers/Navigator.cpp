@@ -194,7 +194,7 @@ GetDataStoresStructuredCloneCallbacksWrite(JSContext* aCx,
   return true;
 }
 
-static JSStructuredCloneCallbacks kGetDataStoresStructuredCloneCallbacks = {
+static const JSStructuredCloneCallbacks kGetDataStoresStructuredCloneCallbacks = {
   GetDataStoresStructuredCloneCallbacksRead,
   GetDataStoresStructuredCloneCallbacksWrite,
   nullptr

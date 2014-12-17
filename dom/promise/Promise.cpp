@@ -1246,7 +1246,7 @@ class PromiseWorkerProxyRunnable : public workers::WorkerRunnable
 {
 public:
   PromiseWorkerProxyRunnable(PromiseWorkerProxy* aPromiseWorkerProxy,
-                             JSStructuredCloneCallbacks* aCallbacks,
+                             const JSStructuredCloneCallbacks* aCallbacks,
                              JSAutoStructuredCloneBuffer&& aBuffer,
                              PromiseWorkerProxy::RunCallbackFunc aFunc)
     : WorkerRunnable(aPromiseWorkerProxy->GetWorkerPrivate(),
@@ -1292,7 +1292,7 @@ protected:
 
 private:
   nsRefPtr<PromiseWorkerProxy> mPromiseWorkerProxy;
-  JSStructuredCloneCallbacks* mCallbacks;
+  const JSStructuredCloneCallbacks* mCallbacks;
   JSAutoStructuredCloneBuffer mBuffer;
 
   // Function pointer for calling Promise::{ResolveInternal,RejectInternal}.
@@ -1301,7 +1301,7 @@ private:
 
 PromiseWorkerProxy::PromiseWorkerProxy(WorkerPrivate* aWorkerPrivate,
                                        Promise* aWorkerPromise,
-                                       JSStructuredCloneCallbacks* aCallbacks)
+                                       const JSStructuredCloneCallbacks* aCallbacks)
   : mWorkerPrivate(aWorkerPrivate)
   , mWorkerPromise(aWorkerPromise)
   , mCleanedUp(false)
