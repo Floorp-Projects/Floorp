@@ -61,6 +61,7 @@
 #include "gc/Marking.h"
 #include "jit/JitCommon.h"
 #include "js/CharacterEncoding.h"
+#include "js/Conversions.h"
 #include "js/SliceBudget.h"
 #include "js/StructuredClone.h"
 #if ENABLE_INTL_API
@@ -72,7 +73,6 @@
 #include "vm/ErrorObject.h"
 #include "vm/HelperThreads.h"
 #include "vm/Interpreter.h"
-#include "vm/NumericConversions.h"
 #include "vm/RegExpStatics.h"
 #include "vm/Runtime.h"
 #include "vm/SavedStacks.h"
@@ -105,6 +105,9 @@ using mozilla::PodZero;
 using mozilla::UniquePtr;
 
 using JS::AutoGCRooter;
+using JS::ToInt32;
+using JS::ToInteger;
+using JS::ToUint32;
 
 using js::frontend::Parser;
 

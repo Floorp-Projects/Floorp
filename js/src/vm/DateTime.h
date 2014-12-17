@@ -12,8 +12,8 @@
 
 #include <stdint.h>
 
+#include "js/Conversions.h"
 #include "js/Value.h"
-#include "vm/NumericConversions.h"
 
 namespace js {
 
@@ -50,7 +50,7 @@ TimeClip(double time)
         return JS::GenericNaN();
 
     /* Step 3. */
-    return ToInteger(time + (+0.0));
+    return JS::ToInteger(time + (+0.0));
 }
 
 /*
