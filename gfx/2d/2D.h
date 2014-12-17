@@ -1075,6 +1075,11 @@ public:
    */
   static bool CheckSurfaceSize(const IntSize &sz, int32_t limit = 0);
 
+  /** Make sure the given dimension satisfies the CheckSurfaceSize and is
+   * within 8k limit.  The 8k value is chosen a bit randomly.
+   */
+  static bool ReasonableSurfaceSize(const IntSize &aSize);
+
   static TemporaryRef<DrawTarget> CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface, const IntSize& aSize, SurfaceFormat* aFormat = nullptr);
 
   static TemporaryRef<DrawTarget>
