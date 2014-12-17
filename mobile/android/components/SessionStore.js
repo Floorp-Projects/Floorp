@@ -434,6 +434,10 @@ SessionStore.prototype = {
         normalWin[prop] = data[prop];
       }
       normalWin.tabs = [];
+
+      // Save normal closed tabs. Forget about private closed tabs.
+      normalWin.closedTabs = win.closedTabs.filter(tab => !tab.isPrivate);
+
       normalData.windows.push(normalWin);
       privateData.windows.push({ tabs: [] });
 
@@ -865,6 +869,11 @@ SessionStore.prototype = {
 
       tab.browser.__SS_extdata = tabData.extData;
     }
+
+    // Restore the closed tabs array on the current window.
+    if (state.windows[0].closedTabs) {
+      this._windows[window.__SSID].closedTabs = state.windows[0].closedTabs;
+    }
   },
 
   getClosedTabCount: function ss_getClosedTabCount(aWindow) {
@@ -994,26 +1003,9 @@ SessionStore.prototype = {
     let notifyMessage = "";
 
     try {
-      // Normally, we'll receive the session string from Java, but there are
-      // cases where we may want to restore that Java cannot detect (e.g., if
-      // browser.sessionstore.resume_session_once is true). In these cases, the
-      // session will be read from sessionstore.bak (which is also used for
-      // "tabs from last time").
-      let data = aSessionString;
-
-      if (data == null) {
-        let bytes = yield OS.File.read(this._sessionFileBackup.path);
-        data = JSON.parse(new TextDecoder().decode(bytes) || "");
-      }
-
-      this._restoreWindow(data);
+      this._restoreWindow(aSessionString);
     } catch (e) {
-      if (e instanceof OS.File.Error) {
-        Cu.reportError("SessionStore: " + e.message);
-      } else {
-        Cu.reportError("SessionStore: " + e);
-      }
-
+      Cu.reportError("SessionStore: " + e);
       notifyMessage = "fail";
     }
 
