@@ -23,7 +23,7 @@ namespace Library
 {
   bool Name(JSContext* cx, unsigned argc, JS::Value *vp);
 
-  JSObject* Create(JSContext* cx, JS::Value path, JSCTypesCallbacks* callbacks);
+  JSObject* Create(JSContext* cx, JS::Value path, const JSCTypesCallbacks* callbacks);
 
   bool IsLibrary(JSObject* obj);
   PRLibrary* GetLibrary(JSObject* obj);
