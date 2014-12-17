@@ -5268,7 +5268,7 @@ nsIDocument::RemoveAnonymousContent(AnonymousContent& aContent,
                                     ErrorResult& aRv)
 {
   nsIPresShell* shell = GetShell();
-  if (!shell) {
+  if (!shell || !shell->GetCanvasFrame()) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return;
   }
