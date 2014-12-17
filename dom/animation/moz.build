@@ -14,11 +14,16 @@ EXPORTS.mozilla.dom += [
     'AnimationTimeline.h',
 ]
 
+EXPORTS.mozilla += [
+    'PendingPlayerTracker.h',
+]
+
 UNIFIED_SOURCES += [
     'Animation.cpp',
     'AnimationEffect.cpp',
     'AnimationPlayer.cpp',
     'AnimationTimeline.cpp',
+    'PendingPlayerTracker.cpp',
 ]
 
 FAIL_ON_WARNINGS = True
