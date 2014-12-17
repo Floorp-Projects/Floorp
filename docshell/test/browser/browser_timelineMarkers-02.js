@@ -15,6 +15,7 @@ let URL = '<!DOCTYPE html><style>' +
 
 let TESTS = [{
   desc: "Changing the width of the test element",
+  searchFor: "Paint",
   setup: function(div) {
     div.setAttribute("class", "resize-change-color");
   },
@@ -27,6 +28,7 @@ let TESTS = [{
   }
 }, {
   desc: "Changing the test element's background color",
+  searchFor: "Paint",
   setup: function(div) {
     div.setAttribute("class", "change-color");
   },
@@ -38,6 +40,7 @@ let TESTS = [{
   }
 }, {
   desc: "Changing the test element's classname",
+  searchFor: "Paint",
   setup: function(div) {
     div.setAttribute("class", "change-color add-class");
   },
@@ -63,7 +66,7 @@ let test = Task.async(function*() {
   info("Start recording");
   docShell.recordProfileTimelineMarkers = true;
 
-  for (let {desc, setup, check} of TESTS) {
+  for (let {desc, searchFor, setup, check} of TESTS) {
 
     info("Running test: " + desc);
 
@@ -71,7 +74,7 @@ let test = Task.async(function*() {
     docShell.popProfileTimelineMarkers();
 
     info("Running the test setup function");
-    let onMarkers = waitForMarkers(docShell);
+    let onMarkers = waitForMarkers(docShell, searchFor);
     setup(div);
     info("Waiting for new markers on the docShell");
     let markers = yield onMarkers;
@@ -101,20 +104,19 @@ function openUrl(url) {
   });
 }
 
-function waitForMarkers(docshell) {
+function waitForMarkers(docshell, searchFor) {
   return new Promise(function(resolve, reject) {
     let waitIterationCount = 0;
     let maxWaitIterationCount = 10; // Wait for 2sec maximum
+    let markers = [];
 
     let interval = setInterval(() => {
-      let markers = docshell.popProfileTimelineMarkers();
-      if (markers.length > 0) {
+      let newMarkers = docshell.popProfileTimelineMarkers();
+      markers = [...markers, ...newMarkers];
+      if (newMarkers.some(m => m.name == searchFor) ||
+          waitIterationCount > maxWaitIterationCount) {
         clearInterval(interval);
         resolve(markers);
-      }
-      if (waitIterationCount > maxWaitIterationCount) {
-        clearInterval(interval);
-        resolve([]);
       }
       waitIterationCount++;
     }, 200);
