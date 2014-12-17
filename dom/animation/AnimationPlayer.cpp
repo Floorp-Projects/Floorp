@@ -160,6 +160,20 @@ AnimationPlayer::ResolveStartTime()
   }
 }
 
+void
+AnimationPlayer::Cancel()
+{
+  if (mIsPending) {
+    CancelPendingPlay();
+    if (mReady) {
+      mReady->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    }
+  }
+
+  mHoldTime.SetNull();
+  mStartTime.SetNull();
+}
+
 bool
 AnimationPlayer::IsRunning() const
 {
@@ -240,18 +254,8 @@ AnimationPlayer::DoPlay()
 void
 AnimationPlayer::DoPause()
 {
-  // Cancel a pending play
   if (mIsPending) {
-    nsIDocument* doc = GetRenderedDocument();
-    if (doc) {
-      PendingPlayerTracker* tracker = doc->GetPendingPlayerTracker();
-      if (tracker) {
-        tracker->RemovePlayPending(*this);
-      }
-    }
-
-    mIsPending = false;
-
+    CancelPendingPlay();
     // Resolve the ready promise since we currently only use it for
     // players that are waiting to play. Later (in bug 1109390), we will
     // use this for players waiting to pause as well and then we won't
@@ -287,6 +291,24 @@ AnimationPlayer::PostUpdate()
   if (collection) {
     collection->NotifyPlayerUpdated();
   }
+}
+
+void
+AnimationPlayer::CancelPendingPlay()
+{
+  if (!mIsPending) {
+    return;
+  }
+
+  nsIDocument* doc = GetRenderedDocument();
+  if (doc) {
+    PendingPlayerTracker* tracker = doc->GetPendingPlayerTracker();
+    if (tracker) {
+      tracker->RemovePlayPending(*this);
+    }
+  }
+
+  mIsPending = false;
 }
 
 StickyTimeDuration
