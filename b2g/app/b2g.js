@@ -1037,6 +1037,9 @@ pref("browser.autofocus", false);
 // Enable wakelock
 pref("dom.wakelock.enabled", true);
 
+// Enable webapps add-ons
+pref("dom.apps.customization.enabled", true);
+
 // Enable touch caret by default
 pref("touchcaret.enabled", true);
 

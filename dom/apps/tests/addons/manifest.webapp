@@ -1,0 +1,12 @@
+{
+  "name": "Addon app",
+  "description": "Let me inject script and css!",
+  "customizations" : [
+    {
+      "filter": "http://mochi.test:8888/tests/dom/apps/tests/addons",
+      "css": ["style.css", "style2.css", "invalid.css", "style.css"],
+      "scripts": ["script.js", "script2.js", "invalid.js", "script.js"]
+    }
+  ],
+  "role": "addon"
+}

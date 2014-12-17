@@ -479,14 +479,23 @@ this.AppsUtils = {
     return true;
   },
 
+  allowUnsignedAddons: false, // for testing purposes.
+
   /**
-   * Checks if the app role is allowed.
+   * Checks if the app role is allowed:
    * Only certified apps can be themes.
+   * Only privileged or certified apps can be addons.
    * @param aRole   : the role assigned to this app.
    * @param aStatus : the APP_STATUS_* for this app.
    */
   checkAppRole: function(aRole, aStatus) {
     if (aRole == "theme" && aStatus !== Ci.nsIPrincipal.APP_STATUS_CERTIFIED) {
+      return false;
+    }
+    if (!this.allowUnsignedAddons &&
+        (aRole == "addon" &&
+         aStatus !== Ci.nsIPrincipal.APP_STATUS_CERTIFIED &&
+         aStatus !== Ci.nsIPrincipal.APP_STATUS_PRIVILEGED)) {
       return false;
     }
     return true;
@@ -718,6 +727,11 @@ this.AppsUtils = {
 
     // Convert the binary hash data to a hex string.
     return [toHexString(hash.charCodeAt(i)) for (i in hash)].join("");
+  },
+
+  // Returns the hash for a JS object.
+  computeObjectHash: function(aObject) {
+    return this.computeHash(JSON.stringify(aObject));
   }
 }
 
