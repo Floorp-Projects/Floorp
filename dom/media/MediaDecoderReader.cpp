@@ -104,6 +104,16 @@ size_t MediaDecoderReader::SizeOfAudioQueueInBytes() const
   return functor.mSize;
 }
 
+size_t MediaDecoderReader::SizeOfVideoQueueInFrames()
+{
+  return mVideoQueue.GetSize();
+}
+
+size_t MediaDecoderReader::SizeOfAudioQueueInFrames()
+{
+  return mAudioQueue.GetSize();
+}
+
 nsresult MediaDecoderReader::ResetDecode()
 {
   nsresult res = NS_OK;
