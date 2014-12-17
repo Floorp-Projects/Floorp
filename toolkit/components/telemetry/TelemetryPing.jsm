@@ -740,14 +740,7 @@ let Impl = {
       payloadObj.slowSQLStartup = this._slowSQLStartup;
     }
 
-    let fhrUploadEnabled = false;
-    try {
-      fhrUploadEnabled = Services.prefs.getBoolPref(PREF_FHR_UPLOAD_ENABLED);
-    } catch (e) {
-      // Pref not set.
-    }
-
-    if (this._clientID && fhrUploadEnabled) {
+    if (this._clientID && Preferences.get(PREF_FHR_UPLOAD_ENABLED, false)) {
       payloadObj.clientID = this._clientID;
     }
 
@@ -920,18 +913,13 @@ let Impl = {
 
     // Record old value and update build ID preference if this is the first
     // run with a new build ID.
-    let previousBuildID = undefined;
-    try {
-      previousBuildID = Services.prefs.getCharPref(PREF_PREVIOUS_BUILDID);
-    } catch (e) {
-      // Preference was not set.
-    }
+    let previousBuildID = Preferences.get(PREF_PREVIOUS_BUILDID, undefined);
     let thisBuildID = Services.appinfo.appBuildID;
     // If there is no previousBuildID preference, this._previousBuildID remains
     // undefined so no value is sent in the telemetry metadata.
     if (previousBuildID != thisBuildID) {
       this._previousBuildID = previousBuildID;
-      Services.prefs.setCharPref(PREF_PREVIOUS_BUILDID, thisBuildID);
+      Preferences.set(PREF_PREVIOUS_BUILDID, thisBuildID);
     }
 
 #ifdef MOZILLA_OFFICIAL
@@ -943,13 +931,9 @@ let Impl = {
       return;
     }
 #endif
-    let enabled = false;
-    try {
-      enabled = Services.prefs.getBoolPref(PREF_ENABLED);
-      this._server = Services.prefs.getCharPref(PREF_SERVER);
-    } catch (e) {
-      // Prerequesite prefs aren't set
-    }
+
+    let enabled = Preferences.get(PREF_ENABLED, false);
+    this._server = Preferences.get(PREF_SERVER, undefined);
     if (!enabled) {
       // Turn off local telemetry if telemetry is disabled.
       // This may change once about:telemetry is added.
