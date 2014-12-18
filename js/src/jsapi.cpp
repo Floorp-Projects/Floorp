@@ -3741,7 +3741,7 @@ struct AutoLastFrameCheck
     ~AutoLastFrameCheck() {
         if (cx->isExceptionPending() &&
             !JS_IsRunning(cx) &&
-            !cx->options().dontReportUncaught()) {
+            (!cx->options().dontReportUncaught() && !cx->options().autoJSAPIOwnsErrorReporting())) {
             js_ReportUncaughtException(cx);
         }
     }

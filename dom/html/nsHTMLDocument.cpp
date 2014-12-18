@@ -673,10 +673,15 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   nsCOMPtr<nsIWyciwygChannel> wyciwygChannel;
   
-  // For error reporting
+  // For error reporting and referrer policy setting
   nsHtml5TreeOpExecutor* executor = nullptr;
   if (loadAsHtml5) {
     executor = static_cast<nsHtml5TreeOpExecutor*> (mParser->GetContentSink());
+    if (mReferrerPolicySet) {
+      // CSP may have set the referrer policy, so a speculative parser should
+      // start with the new referrer policy.
+      executor->SetSpeculationReferrerPolicy(static_cast<ReferrerPolicy>(mReferrerPolicy));
+    }
   }
 
   if (!IsHTML() || !docShell) { // no docshell for text/html XHR
@@ -1641,6 +1646,15 @@ nsHTMLDocument::Open(JSContext* cx,
   mParserAborted = false;
   mParser = nsHtml5Module::NewHtml5Parser();
   nsHtml5Module::Initialize(mParser, this, uri, shell, channel);
+  if (mReferrerPolicySet) {
+    // CSP may have set the referrer policy, so a speculative parser should
+    // start with the new referrer policy.
+    nsHtml5TreeOpExecutor* executor = nullptr;
+    executor = static_cast<nsHtml5TreeOpExecutor*> (mParser->GetContentSink());
+    if (executor && mReferrerPolicySet) {
+      executor->SetSpeculationReferrerPolicy(static_cast<ReferrerPolicy>(mReferrerPolicy));
+    }
+  }
 
   // This will be propagated to the parser when someone actually calls write()
   SetContentTypeInternal(contentType);

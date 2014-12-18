@@ -223,11 +223,25 @@ public:
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
 
+    // this might return null if the worker has started the close handler.
     mPromiseWorkerProxy =
-      new PromiseWorkerProxy(aWorkerPrivate,
-                             aWorkerPromise,
-                             &kGetDataStoresStructuredCloneCallbacks);
+      PromiseWorkerProxy::Create(aWorkerPrivate,
+                                 aWorkerPromise,
+                                 &kGetDataStoresStructuredCloneCallbacks);
   }
+
+  bool Dispatch(JSContext* aCx)
+  {
+    if (mPromiseWorkerProxy) {
+      return WorkerMainThreadRunnable::Dispatch(aCx);
+    }
+
+    // If the creation of mProxyWorkerProxy failed, the worker is terminating.
+    // In this case we don't want to dispatch the runnable and we should stop
+    // the promise chain here.
+    return true;
+  }
+
 
 protected:
   virtual bool

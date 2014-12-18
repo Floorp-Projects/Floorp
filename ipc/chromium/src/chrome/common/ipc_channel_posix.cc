@@ -26,7 +26,6 @@
 #include "base/singleton.h"
 #include "chrome/common/chrome_switches.h"
 #include "chrome/common/file_descriptor_set_posix.h"
-#include "chrome/common/ipc_logging.h"
 #include "chrome/common/ipc_message_utils.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/UniquePtr.h"
@@ -773,9 +772,6 @@ bool Channel::ChannelImpl::Send(Message* message) {
              << " (" << output_queue_.size() << " in queue)";
 #endif
 
-#ifdef IPC_MESSAGE_LOG_ENABLED
-  Logging::current()->OnSendMessage(message, L"");
-#endif
 
   // If the channel has been closed, ProcessOutgoingMessages() is never going
   // to pop anything off output_queue; output_queue will only get emptied when

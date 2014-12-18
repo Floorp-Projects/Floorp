@@ -20,6 +20,7 @@ Cu.import("resource://gre/modules/ThirdPartyCookieProbe.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/AsyncShutdown.jsm", this);
+Cu.import("resource://gre/modules/Preferences.jsm");
 
 // When modifying the payload in incompatible ways, please bump this version number
 const PAYLOAD_VERSION = 1;
@@ -32,6 +33,7 @@ const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_SERVER = PREF_BRANCH + "server";
 const PREF_ENABLED = PREF_BRANCH + "enabled";
 const PREF_PREVIOUS_BUILDID = PREF_BRANCH + "previousBuildID";
+const PREF_CACHED_CLIENTID = PREF_BRANCH + "cachedClientID"
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 
 // Do not gather data more than once a minute
@@ -738,14 +740,7 @@ let Impl = {
       payloadObj.slowSQLStartup = this._slowSQLStartup;
     }
 
-    let fhrUploadEnabled = false;
-    try {
-      fhrUploadEnabled = Services.prefs.getBoolPref(PREF_FHR_UPLOAD_ENABLED);
-    } catch (e) {
-      // Pref not set.
-    }
-
-    if (this._clientID && fhrUploadEnabled) {
+    if (this._clientID && Preferences.get(PREF_FHR_UPLOAD_ENABLED, false)) {
       payloadObj.clientID = this._clientID;
     }
 
@@ -918,18 +913,13 @@ let Impl = {
 
     // Record old value and update build ID preference if this is the first
     // run with a new build ID.
-    let previousBuildID = undefined;
-    try {
-      previousBuildID = Services.prefs.getCharPref(PREF_PREVIOUS_BUILDID);
-    } catch (e) {
-      // Preference was not set.
-    }
+    let previousBuildID = Preferences.get(PREF_PREVIOUS_BUILDID, undefined);
     let thisBuildID = Services.appinfo.appBuildID;
     // If there is no previousBuildID preference, this._previousBuildID remains
     // undefined so no value is sent in the telemetry metadata.
     if (previousBuildID != thisBuildID) {
       this._previousBuildID = previousBuildID;
-      Services.prefs.setCharPref(PREF_PREVIOUS_BUILDID, thisBuildID);
+      Preferences.set(PREF_PREVIOUS_BUILDID, thisBuildID);
     }
 
 #ifdef MOZILLA_OFFICIAL
@@ -941,19 +931,21 @@ let Impl = {
       return;
     }
 #endif
-    let enabled = false;
-    try {
-      enabled = Services.prefs.getBoolPref(PREF_ENABLED);
-      this._server = Services.prefs.getCharPref(PREF_SERVER);
-    } catch (e) {
-      // Prerequesite prefs aren't set
-    }
+
+    let enabled = Preferences.get(PREF_ENABLED, false);
+    this._server = Preferences.get(PREF_SERVER, undefined);
     if (!enabled) {
       // Turn off local telemetry if telemetry is disabled.
       // This may change once about:telemetry is added.
       Telemetry.canRecord = false;
       return;
     }
+
+    // For very short session durations, we may never load the client
+    // id from disk.
+    // We try to cache it in prefs to avoid this, even though this may
+    // lead to some stale client ids.
+    this._clientID = Preferences.get(PREF_CACHED_CLIENTID, null);
 
     AsyncShutdown.sendTelemetry.addBlocker(
       "Telemetry: shutting down",
@@ -998,6 +990,11 @@ let Impl = {
                       .getService(Ci.nsISupports)
                       .wrappedJSObject;
           this._clientID = yield drs.getClientID();
+          // Update cached client id.
+          Preferences.set(PREF_CACHED_CLIENTID, this._clientID);
+        } else {
+          // Nuke potentially cached client id.
+          Preferences.reset(PREF_CACHED_CLIENTID);
         }
 
         this.attachObservers();
@@ -1058,6 +1055,7 @@ let Impl = {
 #ifdef MOZ_WIDGET_ANDROID
     Services.obs.removeObserver(this, "application-background", false);
 #endif
+    this._clientID = null;
   },
 
   getPayload: function getPayload() {

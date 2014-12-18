@@ -654,17 +654,6 @@ nsHttpConnection::InitSSLParams(bool connectingToProxy, bool proxyStartSSL)
         mNPNComplete = false;
     }
 
-    // transaction caps apply only to origin. we don't track
-    // proxy history.
-    if (!connectingToProxy &&
-        (mTransactionCaps & NS_HTTP_ALLOW_RSA_FALSESTART)) {
-        LOG(("nsHttpConnection::InitSSLParams %p "
-             ">= RSA Key Exchange Expected\n", this));
-        ssl->SetKEAExpected(ssl_kea_rsa);
-    } else {
-        ssl->SetKEAExpected(nsISSLSocketControl::KEY_EXCHANGE_UNKNOWN);
-    }
-
     return NS_OK;
 }
 

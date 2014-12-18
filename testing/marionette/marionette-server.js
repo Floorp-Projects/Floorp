@@ -673,27 +673,29 @@ MarionetteServerConnection.prototype = {
 
   /**
    * Update the sessionCapabilities object with the keys that have been
-   * passed in when a new session is created
-   * This part of the WebDriver spec is currently in flux see
+   * passed in when a new session is created.
+   *
+   * This part of the WebDriver spec is currently in flux, see
    * http://lists.w3.org/Archives/Public/public-browser-tools-testing/2014OctDec/0000.html
    *
-   * This is not a public API, only available when a new Session is created
+   * This is not a public API, only available when a new session is
+   * created.
    *
-   * @param Object capabilities holds all the keys for capabilities
-   *
+   * @param Object newCaps key/value dictionary to overwrite
+   *   session's current capabilities
    */
-  setSessionCapabilities: function MDA_setSessionCapabilities (capabilities) {
-    this.command_id = this.getCommandId();
-    var tempCapabilities = {};
-    for (var caps in this.sessionCapabilities) {
-      tempCapabilities[caps] = this.sessionCapabilities[caps];
-    }
+  setSessionCapabilities: function(newCaps) {
+    const copy = (from, to={}) => {
+      for (let key in from) {
+        to[key] = from[key];
+      }
+      return to;
+    };
 
-    for (var caps in capabilities) {
-      tempCapabilities[caps] = capabilities[caps];
-    }
-
-    this.sessionCapabilities = tempCapabilities;
+    // Clone, overwrite, and set.
+    let caps = copy(this.sessionCapabilities);
+    caps = copy(newCaps, caps);
+    this.sessionCapabilities = caps;
   },
 
   /**
@@ -889,7 +891,7 @@ MarionetteServerConnection.prototype = {
       if (that.inactivityTimer != null) {
        that.inactivityTimer.initWithCallback(function() {
         inactivityTimeoutHandler("timed out due to inactivity", 28);
-       }, inactivityTimeout, Ci.nsITimer.TYPE_ONESHOT);
+       }, inactivityTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
       }
      }
      setTimer();
@@ -1052,7 +1054,7 @@ MarionetteServerConnection.prototype = {
      if (this.inactivityTimer != null) {
       this.inactivityTimer.initWithCallback(function() {
        chromeAsyncReturnFunc("timed out due to inactivity", 28);
-      }, inactivityTimeout, Ci.nsITimer.TYPE_ONESHOT);
+      }, inactivityTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
      }
      this.heartbeatCallback = function resetInactivityTimer() {
       that.inactivityTimer.cancel();
@@ -1060,7 +1062,7 @@ MarionetteServerConnection.prototype = {
       if (that.inactivityTimer != null) {
        that.inactivityTimer.initWithCallback(function() {
         chromeAsyncReturnFunc("timed out due to inactivity", 28);
-       }, inactivityTimeout, Ci.nsITimer.TYPE_ONESHOT);
+       }, inactivityTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
       }
      }
     }
@@ -1128,7 +1130,7 @@ MarionetteServerConnection.prototype = {
       if (this.timer != null) {
         this.timer.initWithCallback(function() {
           chromeAsyncReturnFunc("timed out", 28);
-        }, that.timeout, Ci.nsITimer.TYPE_ONESHOT);
+        }, that.timeout, Ci.nsITimer.TYPE_ONE_SHOT);
       }
 
       _chromeSandbox.returnFunc = chromeAsyncReturnFunc;
@@ -2097,28 +2099,20 @@ MarionetteServerConnection.prototype = {
    *        'id' member holds the reference id to
    *        the element that will be checked
    */
-  isElementEnabled: function MDA_isElementEnabled(aRequest) {
+  isElementEnabled: function(aRequest) {
     let command_id = this.command_id = this.getCommandId();
+    let id = aRequest.parameters.id;
     if (this.context == "chrome") {
       try {
-        //Selenium atom doesn't quite work here
-        let el = this.curBrowser.elementManager.getKnownElement(
-            aRequest.parameters.id, this.getCurrentWindow());
-        if (el.disabled != undefined) {
-          this.sendResponse(!!!el.disabled, command_id);
-        }
-        else {
-        this.sendResponse(true, command_id);
-        }
-      }
-      catch (e) {
+        // Selenium atom doesn't quite work here
+        let win = this.getCurrentWindow();
+        let el = this.curBrowser.elementManager.getKnownElement(id, win);
+        this.sendResponse(!!!el.disabled, command_id);
+      } catch (e) {
         this.sendError(e.message, e.code, e.stack, command_id);
       }
-    }
-    else {
-      this.sendAsync("isElementEnabled",
-                     { id:aRequest.parameters.id },
-                     command_id);
+    } else {
+      this.sendAsync("isElementEnabled", {id: id}, command_id);
     }
   },
 

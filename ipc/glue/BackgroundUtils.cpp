@@ -139,10 +139,20 @@ PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
     return rv;
   }
 
-  uint32_t appId;
-  rv = aPrincipal->GetAppId(&appId);
+  bool isUnknownAppId;
+  rv = aPrincipal->GetUnknownAppId(&isUnknownAppId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
+
+  uint32_t appId;
+  if (isUnknownAppId) {
+    appId = nsIScriptSecurityManager::UNKNOWN_APP_ID;
+  } else {
+    rv = aPrincipal->GetAppId(&appId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   bool isInBrowserElement;

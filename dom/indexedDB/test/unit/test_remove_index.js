@@ -50,6 +50,9 @@ function testSteps()
   is(objectStore.indexNames.item(0), indexName, "Correct recreacted name");
   is(objectStore.index(indexName), index2, "Correct instance");
 
+  event.target.transaction.oncomplete = grabEventAndContinueHandler;
+  event = yield undefined;
+
   finishTest();
   yield undefined;
 }

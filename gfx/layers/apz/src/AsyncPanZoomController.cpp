@@ -1451,7 +1451,7 @@ AsyncPanZoomController::ConvertToGecko(const ParentLayerPoint& aPoint, CSSPoint*
     LayoutDevicePoint layoutPoint = TransformTo<LayoutDevicePixel>(transformToGecko, aPoint);
     { // scoped lock to access mFrameMetrics
       ReentrantMonitorAutoEnter lock(mMonitor);
-      *aOut = layoutPoint / mFrameMetrics.mDevPixelsPerCSSPixel;
+      *aOut = layoutPoint / mFrameMetrics.GetDevPixelsPerCSSPixel();
     }
     return true;
   }
@@ -1487,7 +1487,7 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEve
       // zoom includes any device : css pixel zoom, we convert to CSS pixels
       // before applying the zoom.
       LayoutDevicePoint devicePixelDelta(-deltaX, -deltaY);
-      ParentLayerPoint delta = (devicePixelDelta / mFrameMetrics.mDevPixelsPerCSSPixel) *
+      ParentLayerPoint delta = (devicePixelDelta / mFrameMetrics.GetDevPixelsPerCSSPixel()) *
                                mFrameMetrics.GetZoom();
 
       PanGestureInput move(PanGestureInput::PANGESTURE_PAN, aEvent.mTime, aEvent.mTimeStamp,
@@ -1506,7 +1506,7 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEve
     }
 
     case ScrollWheelInput::SCROLLMODE_SMOOTH: {
-      CSSPoint delta = LayoutDevicePoint(deltaX, deltaY) / mFrameMetrics.mDevPixelsPerCSSPixel;
+      CSSPoint delta = LayoutDevicePoint(deltaX, deltaY) / mFrameMetrics.GetDevPixelsPerCSSPixel();
 
       // If we're already in a smooth scroll animation, don't cancel it. This
       // lets us preserve the existing scrolling velocity.
@@ -2655,7 +2655,7 @@ Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint() const {
 
   LayerPoint scrollChange =
     (mLastContentPaintMetrics.GetScrollOffset() - mLastDispatchedPaintMetrics.GetScrollOffset())
-    * mLastContentPaintMetrics.mDevPixelsPerCSSPixel
+    * mLastContentPaintMetrics.GetDevPixelsPerCSSPixel()
     * mLastContentPaintMetrics.mCumulativeResolution
       // This transform ("LD" in the terminology of the comment above
       // GetScreenToApzcTransform() in APZCTreeManager.h) is applied in a
@@ -2757,7 +2757,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
     // determined by Gecko and our copy in mFrameMetrics may be stale.
 
     if (FuzzyEqualsAdditive(mFrameMetrics.mCompositionBounds.width, aLayerMetrics.mCompositionBounds.width) &&
-        mFrameMetrics.mDevPixelsPerCSSPixel == aLayerMetrics.mDevPixelsPerCSSPixel) {
+        mFrameMetrics.GetDevPixelsPerCSSPixel() == aLayerMetrics.GetDevPixelsPerCSSPixel()) {
       // Any change to the pres shell resolution was requested by APZ and is
       // already included in our zoom; however, other components of the
       // cumulative resolution (a parent document's pres-shell resolution, or
@@ -2774,7 +2774,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
       // Take the new zoom as either device scale or composition width or both
       // got changed (e.g. due to orientation change).
       mFrameMetrics.SetZoom(aLayerMetrics.GetZoom());
-      mFrameMetrics.mDevPixelsPerCSSPixel.scale = aLayerMetrics.mDevPixelsPerCSSPixel.scale;
+      mFrameMetrics.SetDevPixelsPerCSSPixel(aLayerMetrics.GetDevPixelsPerCSSPixel());
     }
     if (!mFrameMetrics.mScrollableRect.IsEqualEdges(aLayerMetrics.mScrollableRect)) {
       mFrameMetrics.mScrollableRect = aLayerMetrics.mScrollableRect;

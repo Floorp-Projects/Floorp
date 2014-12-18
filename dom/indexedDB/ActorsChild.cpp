@@ -18,6 +18,7 @@
 #include "IndexedDatabaseInlines.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/TypeTraits.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBDatabaseFileChild.h"
@@ -187,7 +188,9 @@ class MOZ_STACK_CLASS ResultHelper MOZ_FINAL
 
   union
   {
-    nsISupports* mISupports;
+    IDBDatabase* mDatabase;
+    IDBCursor* mCursor;
+    IDBMutableFile* mMutableFile;
     StructuredCloneReadInfo* mStructuredClone;
     const nsTArray<StructuredCloneReadInfo>* mStructuredCloneArray;
     const Key* mKey;
@@ -198,7 +201,9 @@ class MOZ_STACK_CLASS ResultHelper MOZ_FINAL
 
   enum
   {
-    ResultTypeISupports,
+    ResultTypeDatabase,
+    ResultTypeCursor,
+    ResultTypeMutableFile,
     ResultTypeStructuredClone,
     ResultTypeStructuredCloneArray,
     ResultTypeKey,
@@ -210,16 +215,39 @@ class MOZ_STACK_CLASS ResultHelper MOZ_FINAL
 public:
   ResultHelper(IDBRequest* aRequest,
                IDBTransaction* aTransaction,
-               nsISupports* aResult)
+               IDBDatabase* aResult)
     : mRequest(aRequest)
     , mAutoTransaction(aTransaction)
-    , mResultType(ResultTypeISupports)
+    , mResultType(ResultTypeDatabase)
   {
-    MOZ_ASSERT(NS_IsMainThread(), "This won't work off the main thread!");
     MOZ_ASSERT(aRequest);
     MOZ_ASSERT(aResult);
 
-    mResult.mISupports = aResult;
+    mResult.mDatabase = aResult;
+  }
+
+  ResultHelper(IDBRequest* aRequest,
+               IDBTransaction* aTransaction,
+               IDBCursor* aResult)
+    : mRequest(aRequest)
+    , mAutoTransaction(aTransaction)
+    , mResultType(ResultTypeCursor)
+  {
+    MOZ_ASSERT(aRequest);
+
+    mResult.mCursor = aResult;
+  }
+
+  ResultHelper(IDBRequest* aRequest,
+               IDBTransaction* aTransaction,
+               IDBMutableFile* aResult)
+    : mRequest(aRequest)
+    , mAutoTransaction(aTransaction)
+    , mResultType(ResultTypeMutableFile)
+  {
+    MOZ_ASSERT(aRequest);
+
+    mResult.mMutableFile = aResult;
   }
 
   ResultHelper(IDBRequest* aRequest,
@@ -318,8 +346,14 @@ public:
     MOZ_ASSERT(mRequest);
 
     switch (mResultType) {
-      case ResultTypeISupports:
-        return GetResult(aCx, mResult.mISupports, aResult);
+      case ResultTypeDatabase:
+        return GetResult(aCx, mResult.mDatabase, aResult);
+
+      case ResultTypeCursor:
+        return GetResult(aCx, mResult.mCursor, aResult);
+
+      case ResultTypeMutableFile:
+        return GetResult(aCx, mResult.mMutableFile, aResult);
 
       case ResultTypeStructuredClone:
         return GetResult(aCx, mResult.mStructuredClone, aResult);
@@ -349,20 +383,22 @@ public:
   }
 
 private:
-  nsresult
+  template <class T>
+  typename EnableIf<IsSame<T, IDBDatabase>::value ||
+                    IsSame<T, IDBCursor>::value ||
+                    IsSame<T, IDBMutableFile>::value,
+                    nsresult>::Type
   GetResult(JSContext* aCx,
-            nsISupports* aSupports,
+            T* aDOMObject,
             JS::MutableHandle<JS::Value> aResult)
   {
-    MOZ_ASSERT(NS_IsMainThread(), "This won't work off the main thread!");
-
-    if (!aSupports) {
+    if (!aDOMObject) {
       aResult.setNull();
       return NS_OK;
     }
 
-    nsresult rv = nsContentUtils::WrapNative(aCx, aSupports, aResult);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    bool ok = GetOrCreateDOMReflector(aCx, aDOMObject, aResult);
+    if (NS_WARN_IF(!ok)) {
       IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
@@ -609,9 +645,7 @@ DispatchErrorEvent(IDBRequest* aRequest,
                                     nsDependentString(kErrorEventType),
                                     eDoesBubble,
                                     eCancelable);
-    if (NS_WARN_IF(!errorEvent)) {
-      return;
-    }
+    MOZ_ASSERT(errorEvent);
 
     aEvent = errorEvent;
   }
@@ -687,9 +721,7 @@ DispatchSuccessEvent(ResultHelper* aResultHelper,
                                       nsDependentString(kSuccessEventType),
                                       eDoesNotBubble,
                                       eNotCancelable);
-    if (NS_WARN_IF(!successEvent)) {
-      return;
-    }
+    MOZ_ASSERT(successEvent);
 
     aEvent = successEvent;
   }
@@ -987,8 +1019,7 @@ BackgroundFactoryRequestChild::HandleResponse(
   IDBDatabase* database = databaseActor->GetDOMObject();
   MOZ_ASSERT(database);
 
-  ResultHelper helper(mRequest, nullptr,
-                      static_cast<IDBWrapperCache*>(database));
+  ResultHelper helper(mRequest, nullptr, database);
 
   DispatchSuccessEvent(&helper);
 
@@ -1009,9 +1040,7 @@ BackgroundFactoryRequestChild::HandleResponse(
     IDBVersionChangeEvent::Create(mRequest,
                                   nsDependentString(kSuccessEventType),
                                   aResponse.previousVersion());
-  if (NS_WARN_IF(!successEvent)) {
-    return false;
-  }
+  MOZ_ASSERT(successEvent);
 
   DispatchSuccessEvent(&helper, successEvent);
 
@@ -1026,6 +1055,13 @@ BackgroundFactoryRequestChild::ActorDestroy(ActorDestroyReason aWhy)
   MaybeCollectGarbageOnIPCMessage();
 
   NoteActorDestroyed();
+
+  if (aWhy != Deletion) {
+    IDBOpenDBRequest* openRequest = GetOpenDBRequest();
+    if (openRequest) {
+      openRequest->NoteComplete();
+    }
+  }
 }
 
 bool
@@ -1037,21 +1073,35 @@ BackgroundFactoryRequestChild::Recv__delete__(
 
   MaybeCollectGarbageOnIPCMessage();
 
+  bool result;
+
   switch (aResponse.type()) {
     case FactoryRequestResponse::Tnsresult:
-      return HandleResponse(aResponse.get_nsresult());
+      result = HandleResponse(aResponse.get_nsresult());
+      break;
 
     case FactoryRequestResponse::TOpenDatabaseRequestResponse:
-      return HandleResponse(aResponse.get_OpenDatabaseRequestResponse());
+      result = HandleResponse(aResponse.get_OpenDatabaseRequestResponse());
+      break;
 
     case FactoryRequestResponse::TDeleteDatabaseRequestResponse:
-      return HandleResponse(aResponse.get_DeleteDatabaseRequestResponse());
+      result = HandleResponse(aResponse.get_DeleteDatabaseRequestResponse());
+      break;
 
     default:
       MOZ_CRASH("Unknown response type!");
   }
 
-  MOZ_CRASH("Should never get here!");
+  IDBOpenDBRequest* request = GetOpenDBRequest();
+  MOZ_ASSERT(request);
+  
+  request->NoteComplete();
+
+  if (NS_WARN_IF(!result)) {
+    return false;
+  }
+
+  return true;
 }
 
 bool
@@ -1121,16 +1171,14 @@ BackgroundFactoryRequestChild::RecvBlocked(const uint64_t& aCurrentVersion)
   if (mIsDeleteOp) {
     blockedEvent =
       IDBVersionChangeEvent::Create(mRequest, type, aCurrentVersion);
+    MOZ_ASSERT(blockedEvent);
   } else {
     blockedEvent =
       IDBVersionChangeEvent::Create(mRequest,
                                     type,
                                     aCurrentVersion,
                                     mRequestedVersion);
-  }
-
-  if (NS_WARN_IF(!blockedEvent)) {
-    return false;
+    MOZ_ASSERT(blockedEvent);
   }
 
   nsRefPtr<IDBRequest> kungFuDeathGrip = mRequest;
@@ -1315,7 +1363,7 @@ BackgroundDatabaseChild::RecvPBackgroundIDBVersionChangeTransactionConstructor(
 
   EnsureDOMObject();
 
-  auto actor = static_cast<BackgroundVersionChangeTransactionChild*>(aActor);
+  auto* actor = static_cast<BackgroundVersionChangeTransactionChild*>(aActor);
 
   nsRefPtr<IDBOpenDBRequest> request = mOpenRequestActor->GetOpenDBRequest();
   MOZ_ASSERT(request);
@@ -1327,7 +1375,15 @@ BackgroundDatabaseChild::RecvPBackgroundIDBVersionChangeTransactionConstructor(
                                         aNextObjectStoreId,
                                         aNextIndexId);
   if (NS_WARN_IF(!transaction)) {
-    return false;
+    // This can happen if we receive events after a worker has begun its
+    // shutdown process.
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    // Report this to the console.
+    IDB_REPORT_INTERNAL_ERR();
+
+    MOZ_ALWAYS_TRUE(aActor->SendDeleteMe());
+    return true;
   }
 
   transaction->AssertIsOnOwningThread();
@@ -1343,12 +1399,9 @@ BackgroundDatabaseChild::RecvPBackgroundIDBVersionChangeTransactionConstructor(
                                   nsDependentString(kUpgradeNeededEventType),
                                   aCurrentVersion,
                                   aRequestedVersion);
-  if (NS_WARN_IF(!upgradeNeededEvent)) {
-    return false;
-  }
+  MOZ_ASSERT(upgradeNeededEvent);
 
-  ResultHelper helper(request, transaction,
-                      static_cast<IDBWrapperCache*>(mDatabase));
+  ResultHelper helper(request, transaction, mDatabase);
 
   DispatchSuccessEvent(&helper, upgradeNeededEvent);
 
@@ -1411,6 +1464,7 @@ BackgroundDatabaseChild::RecvVersionChange(const uint64_t& aOldVersion,
     case NullableVersion::Tnull_t:
       versionChangeEvent =
         IDBVersionChangeEvent::Create(mDatabase, type, aOldVersion);
+      MOZ_ASSERT(versionChangeEvent);
       break;
 
     case NullableVersion::Tuint64_t:
@@ -1419,14 +1473,11 @@ BackgroundDatabaseChild::RecvVersionChange(const uint64_t& aOldVersion,
                                       type,
                                       aOldVersion,
                                       aNewVersion.get_uint64_t());
+      MOZ_ASSERT(versionChangeEvent);
       break;
 
     default:
       MOZ_CRASH("Should never get here!");
-  }
-
-  if (NS_WARN_IF(!versionChangeEvent)) {
-    return false;
   }
 
   IDB_LOG_MARK("IndexedDB %s: Child : Firing \"versionchange\" event",
@@ -1670,11 +1721,12 @@ BackgroundVersionChangeTransactionChild::AssertIsOnOwningThread() const
 #endif // DEBUG
 
 void
-BackgroundVersionChangeTransactionChild::SendDeleteMeInternal()
+BackgroundVersionChangeTransactionChild::SendDeleteMeInternal(
+                                                        bool aFailedConstructor)
 {
   AssertIsOnOwningThread();
 
-  if (mTransaction) {
+  if (mTransaction || aFailedConstructor) {
     NoteActorDestroyed();
 
     MOZ_ALWAYS_TRUE(PBackgroundIDBVersionChangeTransactionChild::
@@ -2014,13 +2066,14 @@ BackgroundRequestChild::Recv__delete__(const RequestResponse& aResponse)
  ******************************************************************************/
 
 class BackgroundCursorChild::DelayedDeleteRunnable MOZ_FINAL
-  : public nsIRunnable
+  : public nsICancelableRunnable
 {
   BackgroundCursorChild* mActor;
   nsRefPtr<IDBRequest> mRequest;
 
 public:
-  explicit DelayedDeleteRunnable(BackgroundCursorChild* aActor)
+  explicit
+  DelayedDeleteRunnable(BackgroundCursorChild* aActor)
     : mActor(aActor)
     , mRequest(aActor->mRequest)
   {
@@ -2037,6 +2090,7 @@ private:
   { }
 
   NS_DECL_NSIRUNNABLE
+  NS_DECL_NSICANCELABLERUNNABLE
 };
 
 BackgroundCursorChild::BackgroundCursorChild(IDBRequest* aRequest,
@@ -2405,7 +2459,8 @@ DispatchMutableFileResult(IDBRequest* aRequest,
 }
 
 NS_IMPL_ISUPPORTS(BackgroundCursorChild::DelayedDeleteRunnable,
-                  nsIRunnable)
+                  nsIRunnable,
+                  nsICancelableRunnable)
 
 NS_IMETHODIMP
 BackgroundCursorChild::
@@ -2419,6 +2474,20 @@ DelayedDeleteRunnable::Run()
 
   mActor = nullptr;
   mRequest = nullptr;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BackgroundCursorChild::
+DelayedDeleteRunnable::Cancel()
+{
+  if (NS_WARN_IF(!mActor)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // This must always run to clean up our state.
+  Run();
 
   return NS_OK;
 }

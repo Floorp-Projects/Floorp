@@ -243,7 +243,6 @@ private:
     nsresult EnsureAssocReq();
     void     ProcessSSLInformation();
     bool     IsHTTPS();
-    void     RetrieveSSLOptions();
 
     nsresult ContinueOnStartRequest1(nsresult);
     nsresult ContinueOnStartRequest2(nsresult);

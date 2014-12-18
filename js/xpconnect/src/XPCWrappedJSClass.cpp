@@ -277,7 +277,8 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
             }
 
             // Don't report if reporting was disabled by someone else.
-            if (!ContextOptionsRef(cx).dontReportUncaught())
+            if (!ContextOptionsRef(cx).dontReportUncaught() &&
+                !ContextOptionsRef(cx).autoJSAPIOwnsErrorReporting())
                 JS_ReportPendingException(cx);
         } else if (!success) {
             NS_WARNING("QI hook ran OOMed - this is probably a bug!");

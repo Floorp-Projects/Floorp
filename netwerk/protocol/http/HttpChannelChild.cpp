@@ -34,11 +34,27 @@
 #include "nsPerformance.h"
 #include "mozIThirdPartyUtil.h"
 
+#ifdef OS_POSIX
+#include "chrome/common/file_descriptor_set_posix.h"
+#endif
+
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace net {
+
+namespace {
+
+const uint32_t kMaxFileDescriptorsPerMessage = 250;
+
+#ifdef OS_POSIX
+// Keep this in sync with other platforms.
+static_assert(FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE == 250,
+              "MAX_DESCRIPTORS_PER_MESSAGE mismatch!");
+#endif
+
+}
 
 //-----------------------------------------------------------------------------
 // HttpChannelChild
@@ -1483,21 +1499,23 @@ HttpChannelChild::ContinueAsyncOpen()
   nsTArray<mozilla::ipc::FileDescriptor> fds;
   SerializeInputStream(mUploadStream, openArgs.uploadStream(), fds);
 
-  PFileDescriptorSetChild* fdSet = nullptr;
-  if (!fds.IsEmpty()) {
+  OptionalFileDescriptorSet optionalFDs;
+
+  if (fds.IsEmpty()) {
+    optionalFDs = mozilla::void_t();
+  } else if (fds.Length() <= kMaxFileDescriptorsPerMessage) {
+    optionalFDs = nsTArray<mozilla::ipc::FileDescriptor>();
+    optionalFDs.get_ArrayOfFileDescriptor().SwapElements(fds);
+  } else {
     MOZ_ASSERT(gNeckoChild->Manager());
 
-    fdSet = gNeckoChild->Manager()->SendPFileDescriptorSetConstructor(fds[0]);
+    PFileDescriptorSetChild* fdSet =
+      gNeckoChild->Manager()->SendPFileDescriptorSetConstructor(fds[0]);
     for (uint32_t i = 1; i < fds.Length(); ++i) {
       unused << fdSet->SendAddFileDescriptor(fds[i]);
     }
-  }
 
-  OptionalFileDescriptorSet optionalFDs;
-  if (fdSet) {
     optionalFDs = fdSet;
-  } else {
-    optionalFDs = mozilla::void_t();
   }
 
   nsCOMPtr<mozIThirdPartyUtil> util(do_GetService(THIRDPARTYUTIL_CONTRACTID));
@@ -1546,9 +1564,11 @@ HttpChannelChild::ContinueAsyncOpen()
                                            IPC::SerializedLoadContext(this),
                                            openArgs);
 
-  if (fdSet) {
+  if (optionalFDs.type() ==
+        OptionalFileDescriptorSet::TPFileDescriptorSetChild) {
     FileDescriptorSetChild* fdSetActor =
-      static_cast<FileDescriptorSetChild*>(fdSet);
+      static_cast<FileDescriptorSetChild*>(
+        optionalFDs.get_PFileDescriptorSetChild());
 
     fdSetActor->ForgetFileDescriptors(fds);
   }

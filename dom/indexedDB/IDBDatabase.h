@@ -52,6 +52,9 @@ class IDBDatabase MOZ_FINAL
   typedef mozilla::dom::StorageType StorageType;
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
 
+  class LogWarningRunnable;
+  friend class LogWarningRunnable;
+
   class Observer;
   friend class Observer;
 

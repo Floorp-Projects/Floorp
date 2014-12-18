@@ -2113,15 +2113,18 @@ CodeGeneratorX86Shared::visitSimdValueFloat32x4(LSimdValueFloat32x4 *ins)
     MOZ_ASSERT(ins->mir()->type() == MIRType_Float32x4);
 
     FloatRegister r0 = ToFloatRegister(ins->getOperand(0));
-    MOZ_ASSERT(r0 == ToFloatRegister(ins->output())); // defineReuseInput(0)
-
-    FloatRegister r1 = ToFloatRegister(ins->getTemp(0));
+    FloatRegister r1 = ToFloatRegister(ins->getOperand(1));
     FloatRegister r2 = ToFloatRegister(ins->getOperand(2));
     FloatRegister r3 = ToFloatRegister(ins->getOperand(3));
+    FloatRegister tmp = ToFloatRegister(ins->getTemp(0));
+    FloatRegister output = ToFloatRegister(ins->output());
 
-    masm.vunpcklps(r3, r1, r1);
-    masm.vunpcklps(r2, r0, r0);
-    masm.vunpcklps(r1, r0, r0);
+    FloatRegister r0Copy = masm.reusedInputFloat32x4(r0, output);
+    FloatRegister r1Copy = masm.reusedInputFloat32x4(r1, tmp);
+
+    masm.vunpcklps(r3, r1Copy, tmp);
+    masm.vunpcklps(r2, r0Copy, output);
+    masm.vunpcklps(tmp, output, output);
 }
 
 void
@@ -2142,8 +2145,9 @@ CodeGeneratorX86Shared::visitSimdSplatX4(LSimdSplatX4 *ins)
       }
       case MIRType_Float32x4: {
         FloatRegister r = ToFloatRegister(ins->getOperand(0));
-        MOZ_ASSERT(r == output);
-        masm.shufps(0, r, output);
+        if (r != output)
+            masm.movaps(r, output);
+        masm.shufps(0, output, output);
         break;
       }
       default:
@@ -2939,11 +2943,17 @@ CodeGeneratorX86Shared::visitSimdSelect(LSimdSelect *ins)
     FloatRegister mask = ToFloatRegister(ins->mask());
     FloatRegister onTrue = ToFloatRegister(ins->lhs());
     FloatRegister onFalse = ToFloatRegister(ins->rhs());
+    FloatRegister output = ToFloatRegister(ins->output());
+    FloatRegister temp = ToFloatRegister(ins->temp());
 
-    MOZ_ASSERT(onTrue == ToFloatRegister(ins->output()));
-    masm.bitwiseAndX4(Operand(mask), onTrue);
-    masm.bitwiseAndNotX4(Operand(onFalse), mask);
-    masm.bitwiseOrX4(Operand(mask), onTrue);
+    if (onTrue != output)
+        masm.movaps(onTrue, output);
+    if (mask != temp)
+        masm.movaps(mask, temp);
+
+    masm.bitwiseAndX4(Operand(mask), output);
+    masm.bitwiseAndNotX4(Operand(onFalse), temp);
+    masm.bitwiseOrX4(Operand(temp), output);
 }
 
 void

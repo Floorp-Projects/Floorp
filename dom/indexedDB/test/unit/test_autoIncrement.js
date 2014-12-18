@@ -3,6 +3,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+let disableWorkerTest = "Need to implement a gc() function for worker tests";
+
 if (!this.window) {
   this.runTest = function() {
     todo(false, "Test disabled in xpcshell test suite for now");
@@ -373,7 +375,7 @@ function testSteps()
   yield undefined; yield undefined;
   db.close();
 
-  SpecialPowers.gc();
+  gc();
 
   openRequest = indexedDB.open(dbname, 2);
   openRequest.onerror = errorHandler;

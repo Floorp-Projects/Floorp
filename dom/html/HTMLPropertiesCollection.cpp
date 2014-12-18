@@ -14,6 +14,8 @@
 #include "nsWrapperCacheInlines.h"
 #include "mozilla/dom/HTMLPropertiesCollectionBinding.h"
 #include "jsapi.h"
+#include "MainThreadUtils.h"
+#include "mozilla/Assertions.h"
 
 namespace mozilla {
 namespace dom {
@@ -509,6 +511,8 @@ NS_INTERFACE_MAP_END_INHERITING(DOMStringList)
 void
 PropertyStringList::EnsureFresh()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   mCollection->EnsureFresh();
 }
 
