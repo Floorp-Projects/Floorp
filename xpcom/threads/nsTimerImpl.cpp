@@ -559,6 +559,13 @@ nsTimerImpl::Fire()
     return;
   }
 
+#ifdef MOZ_NUWA_PROCESS
+  if (IsNuwaProcess() && IsNuwaReady()) {
+    // A timer event fired after Nuwa frozen can freeze main thread.
+    return;
+  }
+#endif
+
   PROFILER_LABEL("Timer", "Fire",
                  js::ProfileEntry::Category::OTHER);
 

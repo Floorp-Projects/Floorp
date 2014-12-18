@@ -43,6 +43,7 @@
 #include "nsISSLSocketControl.h"
 #include "sslt.h"
 #include "nsContentUtils.h"
+#include "nsIClassOfService.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
@@ -835,6 +836,7 @@ nsHttpChannel::SetupTransaction()
         return rv;
     }
 
+    mTransaction->SetClassOfService(mClassOfService);
     SetupTransactionLoadGroupInfo();
 
     rv = nsInputStreamPump::Create(getter_AddRefs(mTransactionPump),
@@ -2784,10 +2786,8 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
     }
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Don't consider mLoadUnblocked here, since it's not indication of a demand
-    // to load prioritly. It's mostly used to load XHR requests, but those should
-    // not be considered as influencing the page load performance.
-    if (mLoadAsBlocking || (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI))
+    if ((mClassOfService & nsIClassOfService::Leader) ||
+        (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI))
         cacheEntryOpenFlags |= nsICacheStorage::OPEN_PRIORITY;
 
     // Only for backward compatibility with the old cache back end.
@@ -4594,6 +4594,7 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsIHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsICacheInfoChannel)
     NS_INTERFACE_MAP_ENTRY(nsICachingChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIClassOfService)
     NS_INTERFACE_MAP_ENTRY(nsIUploadChannel)
     NS_INTERFACE_MAP_ENTRY(nsIUploadChannel2)
     NS_INTERFACE_MAP_ENTRY(nsICacheEntryOpenCallback)
@@ -4912,10 +4913,12 @@ nsHttpChannel::BeginConnect()
         mCaps &= ~(NS_HTTP_ALLOW_KEEPALIVE | NS_HTTP_ALLOW_PIPELINING);
 
     if (gHttpHandler->CriticalRequestPrioritization()) {
-        if (mLoadAsBlocking)
+        if (mClassOfService & nsIClassOfService::Leader) {
             mCaps |= NS_HTTP_LOAD_AS_BLOCKING;
-        if (mLoadUnblocked)
+        }
+        if (mClassOfService & nsIClassOfService::Unblocked) {
             mCaps |= NS_HTTP_LOAD_UNBLOCKED;
+        }
     }
 
     // Force-Reload should reset the persistent connection pool for this host
@@ -4980,6 +4983,30 @@ nsHttpChannel::SetPriority(int32_t value)
     mPriority = newValue;
     if (mTransaction)
         gHttpHandler->RescheduleTransaction(mTransaction, mPriority);
+    return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// HttpChannel::nsIClassOfService
+//-----------------------------------------------------------------------------
+NS_IMETHODIMP
+nsHttpChannel::SetClassFlags(uint32_t inFlags)
+{
+    mClassOfService = inFlags;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::AddClassFlags(uint32_t inFlags)
+{
+    mClassOfService |= inFlags;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::ClearClassFlags(uint32_t inFlags)
+{
+    mClassOfService &= ~inFlags;
     return NS_OK;
 }
 
