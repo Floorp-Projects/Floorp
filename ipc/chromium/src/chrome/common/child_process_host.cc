@@ -14,7 +14,6 @@
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/ipc/Transport.h"
 typedef mozilla::ipc::BrowserProcessSubThread ChromeThread;
-#include "chrome/common/ipc_logging.h"
 #include "chrome/common/notification_service.h"
 #include "chrome/common/notification_type.h"
 #include "chrome/common/process_watcher.h"
@@ -156,16 +155,6 @@ ChildProcessHost::ListenerHook::ListenerHook(ChildProcessHost* host)
 
 void ChildProcessHost::ListenerHook::OnMessageReceived(
     const IPC::Message& msg) {
-#ifdef IPC_MESSAGE_LOG_ENABLED
-  IPC::Logging* logger = IPC::Logging::current();
-  if (msg.type() == IPC_LOGGING_ID) {
-    logger->OnReceivedLoggingMessage(msg);
-    return;
-  }
-
-  if (logger->Enabled())
-    logger->OnPreDispatchMessage(msg);
-#endif
 
   bool msg_is_ok = true;
   bool handled = false;
@@ -177,10 +166,6 @@ void ChildProcessHost::ListenerHook::OnMessageReceived(
   if (!msg_is_ok)
     base::KillProcess(host_->handle(), ResultCodes::KILLED_BAD_MESSAGE, false);
 
-#ifdef IPC_MESSAGE_LOG_ENABLED
-  if (logger->Enabled())
-    logger->OnPostDispatchMessage(msg, host_->channel_id_);
-#endif
 }
 
 void ChildProcessHost::ListenerHook::OnChannelConnected(int32_t peer_pid) {

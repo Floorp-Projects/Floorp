@@ -15,8 +15,6 @@ function abortListener(evt)
 
 function testSteps()
 {
-  const Ci = Components.interfaces;
-
   const name = this.window ? window.location.pathname : "Splendid Test";
 
   let request = indexedDB.open(name, 1);

@@ -445,12 +445,6 @@ protected:
 
   void UnlockTile(TileClient aTile);
 
-  // If this returns true, we perform the paint operation into a single large
-  // buffer and copy it out to the tiles instead of calling PaintThebes() on
-  // each tile individually. Somewhat surprisingly, this turns out to be faster
-  // on Android.
-  bool UseSinglePaintBuffer() { return !gfxPrefs::PerTileDrawing(); }
-
   void ReleaseTile(TileClient aTile) { aTile.Release(); }
 
   void SwapTiles(TileClient& aTileA, TileClient& aTileB) { std::swap(aTileA, aTileB); }

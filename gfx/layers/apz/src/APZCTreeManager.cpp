@@ -217,7 +217,7 @@ ComputeTouchSensitiveRegion(GeckoContentController* aController,
           aMetrics.mCumulativeResolution
         / ParentLayerToLayerScale(aMetrics.mPresShellResolution);
     visible = visible.Intersect(touchSensitiveRegion
-                                * aMetrics.mDevPixelsPerCSSPixel
+                                * aMetrics.GetDevPixelsPerCSSPixel()
                                 * parentCumulativeResolution);
   }
 
@@ -565,7 +565,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(TreeBuildingState& aState,
             / ParentLayerToLayerScale(aLayer.Metrics().mPresShellResolution);
         subtreeEventRegions.AndWith(ParentLayerIntRect::ToUntyped(
             RoundedIn(touchSensitiveRegion
-                    * aLayer.Metrics().mDevPixelsPerCSSPixel
+                    * aLayer.Metrics().GetDevPixelsPerCSSPixel()
                     * parentCumulativeResolution)));
       }
       apzc->AddHitTestRegions(subtreeEventRegions);

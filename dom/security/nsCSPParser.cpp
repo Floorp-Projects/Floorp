@@ -14,6 +14,7 @@
 #include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsUnicharUtils.h"
+#include "mozilla/net/ReferrerPolicy.h"
 
 using namespace mozilla;
 
@@ -858,6 +859,30 @@ nsCSPParser::sourceList(nsTArray<nsCSPBaseSrc*>& outSrcs)
 }
 
 void
+nsCSPParser::referrerDirectiveValue()
+{
+  // directive-value   = "none" / "none-when-downgrade" / "origin" / "origin-when-cross-origin" / "unsafe-url"
+  // directive name is token 0, we need to examine the remaining tokens (and
+  // there should only be one token in the value).
+  CSPPARSERLOG(("nsCSPParser::referrerDirectiveValue"));
+
+  if (mCurDir.Length() > 2) {
+    CSPPARSERLOG(("Too many tokens in referrer directive, got %d expected 1",
+                 mCurDir.Length() - 1));
+    return;
+  }
+
+  if (!mozilla::net::IsValidReferrerPolicy(mCurDir[1])) {
+    CSPPARSERLOG(("invalid value for referrer directive: %s",
+                  NS_ConvertUTF16toUTF8(mCurDir[1]).get()));
+    return;
+  }
+
+  // the referrer policy is valid, so go ahead and use it.
+  mPolicy->setReferrerPolicy(&mCurDir[1]);
+}
+
+void
 nsCSPParser::reportURIList(nsTArray<nsCSPBaseSrc*>& outSrcs)
 {
   nsCOMPtr<nsIURI> uri;
@@ -900,6 +925,14 @@ nsCSPParser::directiveValue(nsTArray<nsCSPBaseSrc*>& outSrcs)
     reportURIList(outSrcs);
     return;
   }
+
+  // special case handling of the referrer directive (since it doesn't contain
+  // source lists)
+  if (CSP_IsDirective(mCurDir[0], nsIContentSecurityPolicy::REFERRER_DIRECTIVE)) {
+    referrerDirectiveValue();
+    return;
+  }
+
   // Otherwise just forward to sourceList
   sourceList(outSrcs);
 }

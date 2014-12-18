@@ -304,7 +304,7 @@ FindJSContext(nsIGlobalObject* aGlobalObject)
 AutoJSAPI::AutoJSAPI()
   : mCx(nullptr)
   , mOwnErrorReporting(false)
-  , mOldDontReportUncaught(false)
+  , mOldAutoJSAPIOwnsErrorReporting(false)
 {
 }
 
@@ -312,7 +312,7 @@ AutoJSAPI::~AutoJSAPI()
 {
   if (mOwnErrorReporting) {
     MOZ_ASSERT(NS_IsMainThread(), "See corresponding assertion in TakeOwnershipOfErrorReporting()");
-    JS::ContextOptionsRef(cx()).setDontReportUncaught(mOldDontReportUncaught);
+    JS::ContextOptionsRef(cx()).setAutoJSAPIOwnsErrorReporting(mOldAutoJSAPIOwnsErrorReporting);
 
     if (HasException()) {
 
@@ -377,7 +377,7 @@ AutoJSAPI::AutoJSAPI(nsIGlobalObject* aGlobalObject,
                      bool aIsMainThread,
                      JSContext* aCx)
   : mOwnErrorReporting(false)
-  , mOldDontReportUncaught(false)
+  , mOldAutoJSAPIOwnsErrorReporting(false)
 {
   MOZ_ASSERT(aGlobalObject);
   MOZ_ASSERT(aGlobalObject->GetGlobalJSObject(), "Must have a JS global");
@@ -472,11 +472,12 @@ AutoJSAPI::InitWithLegacyErrorReporting(nsGlobalWindow* aWindow)
   return InitWithLegacyErrorReporting(static_cast<nsIGlobalObject*>(aWindow));
 }
 
-// Even with dontReportUncaught, the JS engine still sends warning reports
-// to the JSErrorReporter as soon as they are generated. These go directly to
-// the console, so we can handle them easily here.
+// Even with autoJSAPIOwnsErrorReporting, the JS engine still sends warning
+// reports to the JSErrorReporter as soon as they are generated. These go
+// directly to the console, so we can handle them easily here.
 //
-// Eventually, SpiderMonkey will have a special-purpose callback for warnings only.
+// Eventually, SpiderMonkey will have a special-purpose callback for warnings
+// only.
 void
 WarningOnlyErrorReporter(JSContext* aCx, const char* aMessage, JSErrorReport* aRep)
 {
@@ -496,8 +497,8 @@ AutoJSAPI::TakeOwnershipOfErrorReporting()
   mOwnErrorReporting = true;
 
   JSRuntime *rt = JS_GetRuntime(cx());
-  mOldDontReportUncaught = JS::ContextOptionsRef(cx()).dontReportUncaught();
-  JS::ContextOptionsRef(cx()).setDontReportUncaught(true);
+  mOldAutoJSAPIOwnsErrorReporting = JS::ContextOptionsRef(cx()).autoJSAPIOwnsErrorReporting();
+  JS::ContextOptionsRef(cx()).setAutoJSAPIOwnsErrorReporting(true);
   JS_SetErrorReporter(rt, WarningOnlyErrorReporter);
 }
 

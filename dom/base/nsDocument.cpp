@@ -1440,6 +1440,8 @@ nsDOMStyleSheetSetList::nsDOMStyleSheetSetList(nsIDocument* aDocument)
 void
 nsDOMStyleSheetSetList::EnsureFresh()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   mNames.Clear();
 
   if (!mDocument) {
@@ -2983,6 +2985,33 @@ nsDocument::InitCSP(nsIChannel* aChannel)
       // stop!  ERROR page!
       aChannel->Cancel(NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION);
     }
+  }
+
+  // ----- Set up any Referrer Policy specified by CSP
+  bool hasReferrerPolicy = false;
+  uint32_t referrerPolicy = mozilla::net::RP_Default;
+  rv = csp->GetReferrerPolicy(&referrerPolicy, &hasReferrerPolicy);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (hasReferrerPolicy) {
+    // Referrer policy spec (section 6.1) says that once the referrer policy
+    // is set, any future attempts to change it result in No-Referrer.
+    if (!mReferrerPolicySet) {
+      mReferrerPolicy = static_cast<ReferrerPolicy>(referrerPolicy);
+      mReferrerPolicySet = true;
+    } else if (mReferrerPolicy != referrerPolicy) {
+      mReferrerPolicy = mozilla::net::RP_No_Referrer;
+#ifdef PR_LOGGING
+      {
+        PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("%s %s",
+                "CSP wants to set referrer, but nsDocument"
+                "already has it set. No referrers will be sent"));
+      }
+#endif
+    }
+
+    // Referrer Policy is set separately for the speculative parser in
+    // nsHTMLDocument::StartDocumentLoad() so there's nothing to do here for
+    // speculative loads.
   }
 
   rv = principal->SetCsp(csp);

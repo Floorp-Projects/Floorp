@@ -20,7 +20,7 @@ interface nsIURI;
 
 typedef unsigned short CSPDirective;
 
-[scriptable, uuid(69b7663e-117a-4a3b-81bd-d86420b7c79e)]
+[scriptable, uuid(68434447-b816-4473-a731-efc4f6d59902)]
 interface nsIContentSecurityPolicy : nsISerializable
 {
   /**
@@ -47,6 +47,7 @@ interface nsIContentSecurityPolicy : nsISerializable
   const unsigned short REFLECTED_XSS_DIRECTIVE    = 12;
   const unsigned short BASE_URI_DIRECTIVE         = 13;
   const unsigned short FORM_ACTION_DIRECTIVE      = 14;
+  const unsigned short REFERRER_DIRECTIVE         = 15;
 
   /**
    * Accessor method for a read-only string version of the policy at a given
@@ -59,6 +60,21 @@ interface nsIContentSecurityPolicy : nsISerializable
    * getPolicy().
    */
   readonly attribute unsigned long policyCount;
+
+  /**
+   * Obtains the referrer policy (as integer) for this browsing context as
+   * specified in CSP.  If there are multiple policies and...
+   *  - only one sets a referrer policy: that policy is returned
+   *  - more than one sets different referrer policies: no-referrer is returned
+   *  - more than one set equivalent policies: that policy is returned
+   * For the enumeration of policies see ReferrerPolicy.h and nsIHttpChannel.
+   *
+   * @param aPolicy
+   *        The referrer policy to use for the protected resource.
+   * @return
+   *        true if a referrer policy is specified, false if it's unspecified.
+   */
+  bool getReferrerPolicy(out unsigned long policy);
 
   /**
    * Remove a policy associated with this CSP context.

@@ -114,6 +114,7 @@ LOCAL_INCLUDES += [
     '/dom/media/webspeech/synth/ipc',
     '/dom/mobilemessage/ipc',
     '/dom/storage',
+    '/dom/workers',
     '/editor/libeditor',
     '/embedding/components/printingui/ipc',
     '/extensions/cookie',

@@ -822,7 +822,7 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   metrics.mCumulativeResolution = LayoutDeviceToLayerScale(2);
   metrics.mPresShellResolution = 2.0f;
   metrics.SetZoom(CSSToParentLayerScale(6));
-  metrics.mDevPixelsPerCSSPixel = CSSToLayoutDeviceScale(3);
+  metrics.SetDevPixelsPerCSSPixel(CSSToLayoutDeviceScale(3));
   metrics.SetScrollId(FrameMetrics::START_SCROLL_ID);
 
   FrameMetrics childMetrics = metrics;

@@ -494,12 +494,7 @@ case "$target" in
         AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
         AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
 
-        if test "$_CC_MAJOR_VERSION" = "16"; then
-            _CC_SUITE=10
-            MSVS_VERSION=2010
-            MSVC_C_RUNTIME_DLL=msvcr100.dll
-            MSVC_CXX_RUNTIME_DLL=msvcp100.dll
-        elif test "$_CC_MAJOR_VERSION" = "17"; then
+        if test "$_CC_MAJOR_VERSION" = "17"; then
             _CC_SUITE=11
             MSVS_VERSION=2012
             MSVC_C_RUNTIME_DLL=msvcr110.dll

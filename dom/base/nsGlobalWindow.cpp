@@ -172,7 +172,6 @@
 #include "nsFrameLoader.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPCOMCID.h"
-#include "mozIThirdPartyUtil.h"
 #include "prlog.h"
 #include "prenv.h"
 #include "prprf.h"
@@ -260,6 +259,7 @@ using namespace mozilla::dom;
 using namespace mozilla::dom::ipc;
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
+using mozilla::dom::indexedDB::IDBFactory;
 
 nsGlobalWindow::WindowByIdTable *nsGlobalWindow::sWindowsById = nullptr;
 bool nsGlobalWindow::sWarnedAboutWindowInternal = false;
@@ -10584,71 +10584,11 @@ nsGlobalWindow::GetLocalStorage(nsISupports** aLocalStorage)
   return rv.ErrorCode();
 }
 
-static bool
-GetIndexedDBEnabledForAboutURI(nsIURI *aURI)
-{
-  nsCOMPtr<nsIAboutModule> module;
-  nsresult rv = NS_GetAboutModule(aURI, getter_AddRefs(module));
-  NS_ENSURE_SUCCESS(rv, false);
-
-  uint32_t flags;
-  rv = module->GetURIFlags(aURI, &flags);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  return flags & nsIAboutModule::ENABLE_INDEXED_DB;
-}
-
-mozilla::dom::indexedDB::IDBFactory*
+IDBFactory*
 nsGlobalWindow::GetIndexedDB(ErrorResult& aError)
 {
-  using mozilla::dom::indexedDB::IDBFactory;
-
   if (!mIndexedDB) {
-    // If the document has the sandboxed origin flag set
-    // don't allow access to indexedDB.
-    if (mDoc && (mDoc->GetSandboxFlags() & SANDBOXED_ORIGIN)) {
-      aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
-      return nullptr;
-    }
-
-    if (!IsChromeWindow()) {
-      // Whitelist about:home, since it doesn't have a base domain it would not
-      // pass the thirdPartyUtil check, though it should be able to use
-      // indexedDB.
-      bool skipThirdPartyCheck = false;
-      nsIPrincipal *principal = GetPrincipal();
-      if (principal) {
-        nsCOMPtr<nsIURI> uri;
-        principal->GetURI(getter_AddRefs(uri));
-
-        if (uri) {
-          bool isAbout = false;
-          if (NS_SUCCEEDED(uri->SchemeIs("about", &isAbout)) && isAbout) {
-            skipThirdPartyCheck = GetIndexedDBEnabledForAboutURI(uri);
-          }
-        }
-      }
-
-      if (!skipThirdPartyCheck) {
-        nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-          do_GetService(THIRDPARTYUTIL_CONTRACTID);
-        if (!thirdPartyUtil) {
-          aError.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-          return nullptr;
-        }
-
-        bool isThirdParty;
-        aError = thirdPartyUtil->IsThirdPartyWindow(this, nullptr,
-                                                    &isThirdParty);
-        if (aError.Failed() || isThirdParty) {
-          NS_WARN_IF_FALSE(aError.Failed(),
-                           "IndexedDB is not permitted in a third-party window.");
-          return nullptr;
-        }
-      }
-    }
-
-    // This may be null if being created from a file.
+    // This may keep mIndexedDB null without setting an error.
     aError = IDBFactory::CreateForWindow(this, getter_AddRefs(mIndexedDB));
   }
 
