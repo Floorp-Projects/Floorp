@@ -509,8 +509,6 @@ AutoIncumbentScript::AutoIncumbentScript(nsIGlobalObject* aGlobalObject)
 AutoNoJSAPI::AutoNoJSAPI(bool aIsMainThread)
   : ScriptSettingsStackEntry()
 {
-  MOZ_ASSERT_IF(nsContentUtils::GetCurrentJSContextForThread(),
-                !JS_IsExceptionPending(nsContentUtils::GetCurrentJSContextForThread()));
   if (aIsMainThread) {
     mCxPusher.emplace(static_cast<JSContext*>(nullptr),
                       /* aAllowNull = */ true);
