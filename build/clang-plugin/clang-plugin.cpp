@@ -329,49 +329,6 @@ AST_MATCHER(QualType, nonheapClassAggregate) {
 AST_MATCHER(FunctionDecl, heapAllocator) {
   return MozChecker::hasCustomAnnotation(&Node, "moz_heap_allocator");
 }
-
-/// This matcher will match any declaration that is marked as not accepting
-/// arithmetic expressions in its arguments.
-AST_MATCHER(Decl, noArithmeticExprInArgs) {
-  return MozChecker::hasCustomAnnotation(&Node, "moz_no_arith_expr_in_arg");
-}
-
-/// This matcher will match all arithmetic binary operators.
-AST_MATCHER(BinaryOperator, binaryArithmeticOperator) {
-  BinaryOperatorKind opcode = Node.getOpcode();
-  return opcode == BO_Mul ||
-         opcode == BO_Div ||
-         opcode == BO_Rem ||
-         opcode == BO_Add ||
-         opcode == BO_Sub ||
-         opcode == BO_Shl ||
-         opcode == BO_Shr ||
-         opcode == BO_And ||
-         opcode == BO_Xor ||
-         opcode == BO_Or ||
-         opcode == BO_MulAssign ||
-         opcode == BO_DivAssign ||
-         opcode == BO_RemAssign ||
-         opcode == BO_AddAssign ||
-         opcode == BO_SubAssign ||
-         opcode == BO_ShlAssign ||
-         opcode == BO_ShrAssign ||
-         opcode == BO_AndAssign ||
-         opcode == BO_XorAssign ||
-         opcode == BO_OrAssign;
-}
-
-/// This matcher will match all arithmetic unary operators.
-AST_MATCHER(UnaryOperator, unaryArithmeticOperator) {
-  UnaryOperatorKind opcode = Node.getOpcode();
-  return opcode == UO_PostInc ||
-         opcode == UO_PostDec ||
-         opcode == UO_PreInc ||
-         opcode == UO_PreDec ||
-         opcode == UO_Plus ||
-         opcode == UO_Minus ||
-         opcode == UO_Not;
-}
 }
 }
 
@@ -410,33 +367,6 @@ DiagnosticsMatcher::DiagnosticsMatcher() {
   astMatcher.addMatcher(callExpr(callee(functionDecl(allOf(heapAllocator(),
       returns(pointerType(pointee(stackClassAggregate()))))))).bind("node"),
     &stackClassChecker);
-
-  astMatcher.addMatcher(callExpr(allOf(hasDeclaration(noArithmeticExprInArgs()),
-          anyOf(
-              hasDescendant(binaryOperator(allOf(binaryArithmeticOperator(),
-                  hasLHS(hasDescendant(declRefExpr())),
-                  hasRHS(hasDescendant(declRefExpr()))
-              )).bind("node")),
-              hasDescendant(unaryOperator(allOf(unaryArithmeticOperator(),
-                  hasUnaryOperand(allOf(hasType(builtinType()),
-                                        anyOf(hasDescendant(declRefExpr()), declRefExpr())))
-              )).bind("node"))
-          )
-      )).bind("call"),
-    &arithmeticArgChecker);
-  astMatcher.addMatcher(constructExpr(allOf(hasDeclaration(noArithmeticExprInArgs()),
-          anyOf(
-              hasDescendant(binaryOperator(allOf(binaryArithmeticOperator(),
-                  hasLHS(hasDescendant(declRefExpr())),
-                  hasRHS(hasDescendant(declRefExpr()))
-              )).bind("node")),
-              hasDescendant(unaryOperator(allOf(unaryArithmeticOperator(),
-                  hasUnaryOperand(allOf(hasType(builtinType()),
-                                        anyOf(hasDescendant(declRefExpr()), declRefExpr())))
-              )).bind("node"))
-          )
-      )).bind("call"),
-    &arithmeticArgChecker);
 }
 
 void DiagnosticsMatcher::StackClassChecker::run(
@@ -540,19 +470,6 @@ void DiagnosticsMatcher::NonHeapClassChecker::noteInferred(QualType T,
   
   // Recursively follow this back.
   noteInferred(cast<ValueDecl>(cause)->getType(), Diag);
-}
-
-void DiagnosticsMatcher::ArithmeticArgChecker::run(
-    const MatchFinder::MatchResult &Result) {
-  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-  unsigned errorID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error, "cannot pass an arithmetic expression of built-in types to %0");
-  const Expr *expr = Result.Nodes.getNodeAs<Expr>("node");
-  if (const CallExpr *call = Result.Nodes.getNodeAs<CallExpr>("call")) {
-    Diag.Report(expr->getLocStart(), errorID) << call->getDirectCallee();
-  } else if (const CXXConstructExpr *ctr = Result.Nodes.getNodeAs<CXXConstructExpr>("call")) {
-    Diag.Report(expr->getLocStart(), errorID) << ctr->getConstructor();
-  }
 }
 
 class MozCheckAction : public PluginASTAction {
