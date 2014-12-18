@@ -176,6 +176,8 @@ public:
   Iterator TilesBegin() { return mRetainedTiles.Elements(); }
   Iterator TilesEnd() { return mRetainedTiles.Elements() + mRetainedTiles.Length(); }
 
+  void Dump(std::stringstream& aStream, const char* aPrefix, bool aDumpHtml);
+
 protected:
   // The implementor should call Update() to change
   // the new valid region. This implementation will call
@@ -305,6 +307,38 @@ TiledLayerBuffer<Derived, Tile>::RemoveTile(int x, int y, Tile& aRemovedTile)
     return true;
   }
   return false;
+}
+
+template<typename Derived, typename Tile> void
+TiledLayerBuffer<Derived, Tile>::Dump(std::stringstream& aStream,
+                                      const char* aPrefix,
+                                      bool aDumpHtml)
+{
+  nsIntRect visibleRect = GetValidRegion().GetBounds();
+  gfx::IntSize scaledTileSize = GetScaledTileSize();
+  for (int32_t x = visibleRect.x; x < visibleRect.x + visibleRect.width;) {
+    int32_t tileStartX = GetTileStart(x, scaledTileSize.width);
+    int32_t w = scaledTileSize.width - tileStartX;
+
+    for (int32_t y = visibleRect.y; y < visibleRect.y + visibleRect.height;) {
+      int32_t tileStartY = GetTileStart(y, scaledTileSize.height);
+      Tile tileTexture =
+        GetTile(nsIntPoint(RoundDownToTileEdge(x, scaledTileSize.width),
+                           RoundDownToTileEdge(y, scaledTileSize.height)));
+      int32_t h = scaledTileSize.height - tileStartY;
+
+      aStream << "\n" << aPrefix << "Tile (x=" <<
+        RoundDownToTileEdge(x, scaledTileSize.width) << ", y=" <<
+        RoundDownToTileEdge(y, scaledTileSize.height) << "): ";
+      if (tileTexture != AsDerived().GetPlaceholderTile()) {
+        tileTexture.DumpTexture(aStream);
+      } else {
+        aStream << "empty tile";
+      }
+      y += h;
+    }
+    x += w;
+  }
 }
 
 template<typename Derived, typename Tile> void

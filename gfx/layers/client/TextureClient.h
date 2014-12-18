@@ -281,6 +281,10 @@ public:
     return gfx::SurfaceFormat::UNKNOWN;
   }
 
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() { return nullptr; }
+
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
+
   /**
    * Copies a rectangle from this texture client to a position in aTarget.
    * It is assumed that the necessary locks are in place; so this should at
@@ -583,6 +587,8 @@ public:
   virtual bool AllocateForYCbCr(gfx::IntSize aYSize,
                                 gfx::IntSize aCbCrSize,
                                 StereoMode aStereoMode) MOZ_OVERRIDE;
+
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE;
 
   virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE { return mFormat; }
 

@@ -106,6 +106,11 @@ public:
     }
   }
 
+  void DumpTexture(std::stringstream& aStream) {
+    // TODO We should combine the OnWhite/OnBlack here an just output a single image.
+    CompositableHost::DumpTextureHost(aStream, mTextureHost);
+  }
+
   RefPtr<gfxSharedReadLock> mSharedLock;
   CompositableTextureHostRef mTextureHost;
   CompositableTextureHostRef mTextureHostOnWhite;

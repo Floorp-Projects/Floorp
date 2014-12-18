@@ -22,6 +22,10 @@
 #include "mozilla/layers/PTextureChild.h"
 #include "SharedSurface.h"
 #include "GLContext.h"
+#include "mozilla/gfx/DataSurfaceHelpers.h" // for CreateDataSourceSurfaceByCloning
+#include "nsPrintfCString.h"            // for nsPrintfCString
+#include "LayersLogging.h"              // for AppendToString
+#include "gfxUtils.h"                   // for gfxUtils::GetAsLZ4Base64Str
 
 #ifdef XP_WIN
 #include "mozilla/layers/TextureD3D9.h"
@@ -572,6 +576,28 @@ TextureClient::ShouldDeallocateInDestructor() const
   return !IsSharedWithCompositor() || (GetFlags() & TextureFlags::DEALLOCATE_CLIENT);
 }
 
+void
+TextureClient::PrintInfo(std::stringstream& aStream, const char* aPrefix)
+{
+  aStream << aPrefix;
+  aStream << nsPrintfCString("TextureClient (0x%p)", this).get();
+  AppendToString(aStream, GetSize(), " [size=", "]");
+  AppendToString(aStream, GetFormat(), " [format=", "]");
+  AppendToString(aStream, mFlags, " [flags=", "]");
+
+#ifdef MOZ_DUMP_PAINTING
+  if (gfxPrefs::LayersDumpTexture() || profiler_feature_active("layersdump")) {
+    nsAutoCString pfx(aPrefix);
+    pfx += "  ";
+
+    aStream << "\n" << pfx.get() << "Surface: ";
+    RefPtr<gfx::DataSourceSurface> dSurf = GetAsSurface();
+    if (dSurf) {
+      aStream << gfxUtils::GetAsLZ4Base64Str(dSurf).get();
+    }
+  }
+#endif
+}
 bool
 ShmemTextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aDescriptor)
 {
@@ -864,6 +890,20 @@ BufferTextureClient::GetLockedData() const
   MOZ_ASSERT(serializer.IsValid());
 
   return serializer.GetData();
+}
+
+TemporaryRef<gfx::DataSourceSurface>
+BufferTextureClient::GetAsSurface()
+{
+  ImageDataSerializer serializer(GetBuffer(), GetBufferSize());
+  MOZ_ASSERT(serializer.IsValid());
+
+  RefPtr<gfx::DataSourceSurface> wrappingSurf =
+    gfx::Factory::CreateWrappingDataSourceSurface(serializer.GetData(),
+                                                  serializer.GetStride(),
+                                                  serializer.GetSize(),
+                                                  serializer.GetFormat());
+  return gfx::CreateDataSourceSurfaceByCloning(wrappingSurf);
 }
 
 ////////////////////////////////////////////////////////////////////////
