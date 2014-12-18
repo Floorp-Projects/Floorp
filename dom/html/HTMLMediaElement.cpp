@@ -2991,6 +2991,14 @@ void HTMLMediaElement::Error(uint16_t aErrorCode)
                aErrorCode == nsIDOMMediaError::MEDIA_ERR_NETWORK ||
                aErrorCode == nsIDOMMediaError::MEDIA_ERR_ABORTED,
                "Only use nsIDOMMediaError codes!");
+
+  // Since we have multiple paths calling into DecodeError, e.g.
+  // MediaKeys::Terminated and EMEH264Decoder::Error. We should take the 1st
+  // one only in order not to fire multiple 'error' events.
+  if (mError) {
+    return;
+  }
+
   mError = new MediaError(this, aErrorCode);
   DispatchAsyncEvent(NS_LITERAL_STRING("error"));
   if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
