@@ -1082,7 +1082,6 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "mail.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "market.android.com", true, false, false, -1, &kPinset_google_root_pems },
   { "mbasic.facebook.com", true, true, false, -1, &kPinset_facebook },
-  { "media.mozilla.com", true, false, true, -1, &kPinset_mozilla },
   { "mobile.twitter.com", true, false, false, -1, &kPinset_twitterCom },
   { "mtouch.facebook.com", true, true, false, -1, &kPinset_facebook },
   { "oauth.twitter.com", true, false, false, -1, &kPinset_twitterCom },
@@ -1144,7 +1143,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "ytimg.com", true, false, false, -1, &kPinset_google_root_pems },
 };
 
-// Pinning Preload List Length = 349;
+// Pinning Preload List Length = 348;
 
 static const int32_t kUnknownId = -1;
 
