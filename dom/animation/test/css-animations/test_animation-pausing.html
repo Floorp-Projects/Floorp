@@ -2,6 +2,7 @@
 <meta charset=utf-8>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="../testcommon.js"></script>
 <div id="log"></div>
 <style>
 @keyframes anim { 
@@ -12,24 +13,12 @@
 <script>
 'use strict';
 
-function addDiv() {
-  var div = document.createElement('div');
-  document.body.appendChild(div);
-  return div;
-}
-
-function waitForFrame() {
-  return new Promise(function(resolve, reject) {
-    window.requestAnimationFrame(resolve);
-  });
-}
-
 function getMarginLeft(cs) {
   return parseFloat(cs.marginLeft);
 }
 
 async_test(function(t) {
-  var div = addDiv();
+  var div = addDiv(t);
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s';
 
@@ -39,27 +28,22 @@ async_test(function(t) {
                 'Initial value of margin-left is zero');
   var previousAnimVal = getMarginLeft(cs);
 
-  waitForFrame().then(function() {
-    t.step(function() {
-      assert_true(getMarginLeft(cs) > previousAnimVal,
-                  'margin-left is initially increasing');
-      previousAnimVal = getMarginLeft(cs);
+  player.ready.then(waitForFrame).then(t.step_func(function() {
+    assert_true(getMarginLeft(cs) > previousAnimVal,
+                'margin-left is initially increasing');
+    previousAnimVal = getMarginLeft(cs);
 
-      player.pause();
-    });
-    return waitForFrame();
-  }).then(function() {
-    t.step(function() {
-      assert_equals(getMarginLeft(cs), previousAnimVal,
-                    'margin-left does not increase after calling pause()');
-    });
-    div.remove();
+    player.pause();
+    return player.ready.then(waitForFrame);
+  })).then(t.step_func(function() {
+    assert_equals(getMarginLeft(cs), previousAnimVal,
+                  'margin-left does not increase after calling pause()');
     t.done();
-  });
+  }));
 }, 'pause() a running animation');
 
 async_test(function(t) {
-  var div = addDiv();
+  var div = addDiv(t);
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
 
@@ -69,22 +53,18 @@ async_test(function(t) {
 
   player.pause();
   div.style.animationPlayState = 'running';
-  cs.animationPlayState; // Trigger style resolution
 
-  waitForFrame().then(function() {
-    t.step(function() {
-      assert_equals(cs.animationPlayState, 'running',
-                    'animation-play-state is running');
-      assert_equals(getMarginLeft(cs), 0,
-                    'Paused value of margin-left is zero');
-    });
-    div.remove();
+  player.ready.then(waitForFrame).then(t.step_func(function() {
+    assert_equals(cs.animationPlayState, 'running',
+                  'animation-play-state is running');
+    assert_equals(getMarginLeft(cs), 0,
+                  'Paused value of margin-left is zero');
     t.done();
-  });
+  }));
 }, 'pause() overrides animation-play-state');
 
 async_test(function(t) {
-  var div = addDiv();
+  var div = addDiv(t);
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
 
@@ -95,18 +75,15 @@ async_test(function(t) {
 
   player.play();
 
-  waitForFrame().then(function() {
-    t.step(function() {
-      assert_true(getMarginLeft(cs) > 0,
-                  'Playing value of margin-left is greater than zero');
-    });
-    div.remove();
+  player.ready.then(waitForFrame).then(t.step_func(function() {
+    assert_true(getMarginLeft(cs) > 0,
+                'Playing value of margin-left is greater than zero');
     t.done();
-  });
+  }));
 }, 'play() overrides animation-play-state');
 
 async_test(function(t) {
-  var div = addDiv();
+  var div = addDiv(t);
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
 
@@ -115,35 +92,32 @@ async_test(function(t) {
                 'Initial value of margin-left is zero');
 
   player.play();
-  div.style.animationPlayState = 'running';
-  cs.animationPlayState; // Trigger style resolution
 
   var previousAnimVal;
 
-  waitForFrame().then(function() {
-    t.step(function() {
-      assert_equals(cs.animationPlayState, 'running',
-                    'animation-play-state is running');
-      previousAnimVal = getMarginLeft(cs);
-      div.style.animationPlayState = 'paused';
-      cs.animationPlayState; // Trigger style resolution
-    });
+  player.ready.then(function() {
+    div.style.animationPlayState = 'running';
+    cs.animationPlayState; // Trigger style resolution
     return waitForFrame();
-  }).then(function() {
-    t.step(function() {
-      assert_equals(cs.animationPlayState, 'paused',
-                    'animation-play-state is paused');
-      assert_equals(getMarginLeft(cs), previousAnimVal,
-                    'Animated value of margin-left does not change when'
-                    + ' paused by style');
-    });
-    div.remove();
+  }).then(t.step_func(function() {
+    assert_equals(cs.animationPlayState, 'running',
+                  'animation-play-state is running');
+    previousAnimVal = getMarginLeft(cs);
+    div.style.animationPlayState = 'paused';
+    cs.animationPlayState; // Trigger style resolution
+    return waitForFrame();
+  })).then(t.step_func(function() {
+    assert_equals(cs.animationPlayState, 'paused',
+                  'animation-play-state is paused');
+    assert_equals(getMarginLeft(cs), previousAnimVal,
+                  'Animated value of margin-left does not change when'
+                  + ' paused by style');
     t.done();
-  });
+  }));
 }, 'play() is overridden by later setting "animation-play-state: paused"');
 
 async_test(function(t) {
-  var div = addDiv();
+  var div = addDiv(t);
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s';
 
@@ -158,20 +132,17 @@ async_test(function(t) {
   player.play();
   var previousAnimVal = getMarginLeft(cs);
 
-  waitForFrame().then(function() {
-    t.step(function() {
-      assert_equals(cs.animationPlayState, 'paused',
-                    'animation-play-state is paused');
-      assert_true(getMarginLeft(cs) > previousAnimVal,
-                  'Playing value of margin-left is increasing');
-    });
-    div.remove();
+  player.ready.then(waitForFrame).then(t.step_func(function() {
+    assert_equals(cs.animationPlayState, 'paused',
+                  'animation-play-state is paused');
+    assert_true(getMarginLeft(cs) > previousAnimVal,
+                'Playing value of margin-left is increasing');
     t.done();
-  });
+  }));
 }, 'play() flushes pending changes to animation-play-state first');
 
 async_test(function(t) {
-  var div = addDiv();
+  var div = addDiv(t);
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
 
@@ -193,16 +164,13 @@ async_test(function(t) {
   player.pause();
   var previousAnimVal = getMarginLeft(cs);
 
-  waitForFrame().then(function() {
-    t.step(function() {
-      assert_equals(cs.animationPlayState, 'running',
-                    'animation-play-state is paused');
-      assert_equals(getMarginLeft(cs), previousAnimVal,
-                    'Paused value of margin-left does not change');
-    });
-    div.remove();
+  waitForFrame().then(t.step_func(function() {
+    assert_equals(cs.animationPlayState, 'running',
+                  'animation-play-state is paused');
+    assert_equals(getMarginLeft(cs), previousAnimVal,
+                  'Paused value of margin-left does not change');
     t.done();
-  });
+  }));
 }, 'pause() applies pending changes to animation-play-state first');
 // (Note that we can't actually test for this; see comment above, in test-body.)
 
