@@ -4,44 +4,36 @@
 MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = 'head.js';
 
-let number = "****5555552368****";
-let outgoing;
+const number = "****5555552368****";
+let outCall;
 
-
-function dial() {
-  log("Make an outgoing call to an invalid number.");
+function testDialOutInvalidNumber() {
+  log("Make an outCall call to an invalid number.");
 
   // Note: The number is valid from the view of phone and the call could be
   // dialed out successfully. However, it will later receive the BadNumberError
   // from network side.
-  telephony.dial(number).then(call => {
-    outgoing = call;
-    ok(outgoing);
-    is(outgoing.id.number, number);
-    is(outgoing.state, "dialing");
+  return telephony.dial(number).then(call => {
+    outCall = call;
+    ok(outCall);
+    is(outCall.id.number, number);
+    is(outCall.state, "dialing");
 
-    is(outgoing, telephony.active);
+    is(outCall, telephony.active);
     is(telephony.calls.length, 1);
-    is(telephony.calls[0], outgoing);
+    is(telephony.calls[0], outCall);
 
-    outgoing.onerror = function onerror(event) {
-      log("Received 'error' event.");
-      is(event.call, outgoing);
+    return gWaitForEvent(outCall, "error").then(event => {
+      is(event.call, outCall);
       ok(event.call.error);
       is(event.call.error.name, "BadNumberError");
-
-      emulator.runCmdWithCallback("gsm list", function(result) {
-        log("Initial call list: " + result);
-        cleanUp();
-      });
-    };
+    })
+    .then(() => gCheckAll(null, [], "", [], []));
   });
 }
 
-function cleanUp() {
-  finish();
-}
-
 startTest(function() {
-  dial();
+  testDialOutInvalidNumber()
+    .catch(error => ok(false, "Promise reject: " + error))
+    .then(finish);
 });

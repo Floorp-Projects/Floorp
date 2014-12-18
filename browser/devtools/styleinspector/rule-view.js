@@ -2822,32 +2822,10 @@ TextPropertyEditor.prototype = {
    * Validate this property. Does it make sense for this value to be assigned
    * to this property name? This does not apply the property value
    *
-   * @param {string} [aValue]
-   *        The property value used for validation.
-   *        Defaults to the current value for this.prop
-   *
    * @return {bool} true if the property value is valid, false otherwise.
    */
-  isValid: function(aValue) {
-    let name = this.prop.name;
-    let value = typeof aValue == "undefined" ? this.prop.value : aValue;
-    let val = parseSingleValue(value);
-
-    let style = this.doc.createElementNS(HTML_NS, "div").style;
-    let prefs = Services.prefs;
-
-    // We toggle output of errors whilst the user is typing a property value.
-    let prefVal = prefs.getBoolPref("layout.css.report_errors");
-    prefs.setBoolPref("layout.css.report_errors", false);
-
-    let validValue = false;
-    try {
-      style.setProperty(name, val.value, val.priority);
-      validValue = style.getPropertyValue(name) !== "" || val.value === "";
-    } finally {
-      prefs.setBoolPref("layout.css.report_errors", prefVal);
-    }
-    return validValue;
+  isValid: function() {
+    return domUtils.cssPropertyIsValid(this.prop.name, this.prop.value);
   }
 };
 

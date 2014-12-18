@@ -5,23 +5,44 @@ MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = 'head.js';
 
 let connection;
+const normalNumber = "0912345678";
+const emergencyNumber = "112";
+let outCall;
 
-function setRadioEnabled(enabled) {
-  let desiredRadioState = enabled ? 'enabled' : 'disabled';
-  log("Set radio: " + desiredRadioState);
+function testDial_NormalNumber() {
+  return gSetRadioEnabled(connection, false)
+    .then(() => gDial(normalNumber))
+    .catch(cause => {
+      is(cause, "RadioNotAvailable");
+      return gCheckAll(null, [], "", [], []);
+    });
+}
 
-  let promises = [];
+function testDial_EmergencyNumber() {
+  return gSetRadioEnabled(connection, false)
+    .then(() => gDial(emergencyNumber))
+    .then(call => { outCall = call; })
+    .then(() => gRemoteAnswer(outCall))
+    .then(() => gDelay(1000))  // See Bug 1018051 for the purpose of the delay.
+    .then(() => gRemoteHangUp(outCall));
+}
 
-  let promise = gWaitForEvent(connection, "radiostatechange", event => {
-    let state = connection.radioState;
-    log("current radioState: " + state);
-    return state == desiredRadioState;
-  });
-  promises.push(promise);
+function testDialEmergency_NormalNumber() {
+  return gSetRadioEnabled(connection, false)
+    .then(() => gDialEmergency(normalNumber))
+    .catch(cause => {
+      is(cause, "RadioNotAvailable");
+      return gCheckAll(null, [], "", [], []);
+    });
+}
 
-  promises.push(connection.setRadioEnabled(enabled));
-
-  return Promise.all(promises);
+function testDialEmergency_EmergencyNumber() {
+  return gSetRadioEnabled(connection, false)
+    .then(() => gDialEmergency(emergencyNumber))
+    .then(call => { outCall = call; })
+    .then(() => gRemoteAnswer(outCall))
+    .then(() => gDelay(1000))  // See Bug 1018051 for the purpose of the delay.
+    .then(() => gRemoteHangUp(outCall));
 }
 
 startTestWithPermissions(['mobileconnection'], function() {
@@ -29,14 +50,12 @@ startTestWithPermissions(['mobileconnection'], function() {
   ok(connection instanceof MozMobileConnection,
      "connection is instanceof " + connection.constructor);
 
-  setRadioEnabled(false)
-    .then(() => gDial("0912345678"))
-    .catch(cause => {
-      is(telephony.active, null);
-      is(telephony.calls.length, 0);
-      is(cause, "RadioNotAvailable");
-    })
-    .then(() => setRadioEnabled(true))
+  Promise.resolve()
+    .then(() => testDial_NormalNumber())
+    .then(() => testDial_EmergencyNumber())
+    .then(() => testDialEmergency_NormalNumber())
+    .then(() => testDialEmergency_EmergencyNumber())
+    .then(() => gSetRadioEnabled(connection, true))
     .catch(error => ok(false, "Promise reject: " + error))
     .then(finish);
 });

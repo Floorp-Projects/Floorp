@@ -34,6 +34,8 @@
 
     <script type="application/javascript" src="chrome://browser/content/preferences/search.js"/>
 
+    <stringbundle id="engineManagerBundle" src="chrome://browser/locale/engineManager.properties"/>
+
     <!-- Default Search Engine -->
     <groupbox id="defaultEngineGroup" align="start">
       <caption label="&defaultSearchEngine.label;"/>
@@ -51,8 +53,34 @@
       <caption label="&oneClickSearchEngines.label;"/>
       <label>&chooseWhichOneToDisplay.label;</label>
 
-      <richlistbox id="oneClickProvidersList"/>
-      <hbox pack="end" style="margin-bottom: 1em">
+      <tree id="engineList" flex="1" rows="8" hidecolumnpicker="true" editable="true"
+            seltype="single" onselect="gSearchPane.onTreeSelect();"
+            onkeypress="gSearchPane.onTreeKeyPress(event);">
+        <treechildren id="engineChildren" flex="1"
+                      ondragstart="onDragEngineStart(event);"/>
+        <treecols>
+          <treecol id="engineShown" type="checkbox" style="min-width: 26px;" editable="true"/>
+          <treecol id="engineName" flex="4" label="&engineNameColumn.label;"/>
+          <treecol id="engineKeyword" flex="1" label="&engineKeywordColumn.label;" editable="true"/>
+        </treecols>
+      </tree>
+
+      <hbox>
+        <button id="restoreDefaultSearchEngines"
+                label="&restoreDefaultSearchEngines.label;"
+                accesskey="&restoreDefaultSearchEngines.accesskey;"
+                oncommand="gSearchPane.onRestoreDefaults();"/>
+        <spacer flex="1"/>
+        <button id="removeEngineButton"
+                label="&removeEngine.label;"
+                accesskey="&removeEngine.accesskey;"
+                disabled="true"
+                oncommand="gSearchPane.remove();"/>
+      </hbox>
+
+      <separator class="thin"/>
+
+      <hbox pack="start" style="margin-bottom: 1em">
         <label id="addEngines" class="text-link" value="&addMoreSearchEngines.label;"
                onclick="if (event.button == 0) { Services.wm.getMostRecentWindow('navigator:browser').BrowserSearch.loadAddEngines(); }"/>
       </hbox>
