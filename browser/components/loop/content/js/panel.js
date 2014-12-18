@@ -730,6 +730,15 @@ loop.panel = (function(_, mozL10n) {
       this.stopListening(this.props.store);
     },
 
+    componentWillUpdate: function(nextProps, nextState) {
+      // If we've just created a room, close the panel - the store will open
+      // the room.
+      if (this.state.pendingCreation &&
+          !nextState.pendingCreation && !nextState.error) {
+        this.closeWindow();
+      }
+    },
+
     _onStoreStateChanged: function() {
       this.setState(this.props.store.getStoreState());
     },
@@ -747,8 +756,6 @@ loop.panel = (function(_, mozL10n) {
     },
 
     handleCreateButtonClick: function() {
-      this.closeWindow();
-
       this.props.dispatcher.dispatch(new sharedActions.CreateRoom({
         nameTemplate: mozL10n.get("rooms_default_room_name_template"),
         roomOwner: this.props.userDisplayName
@@ -1003,7 +1010,8 @@ loop.panel = (function(_, mozL10n) {
     var notifications = new sharedModels.NotificationCollection();
     var dispatcher = new loop.Dispatcher();
     var roomStore = new loop.store.RoomStore(dispatcher, {
-      mozLoop: navigator.mozLoop
+      mozLoop: navigator.mozLoop,
+      notifications: notifications
     });
 
     React.renderComponent(PanelView({
