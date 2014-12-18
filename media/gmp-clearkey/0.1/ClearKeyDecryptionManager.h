@@ -13,14 +13,14 @@
 #include "ClearKeyUtils.h"
 #include "gmp-api/gmp-decryption.h"
 #include "ScopedNSSTypes.h"
+#include "RefCounted.h"
 
 class ClearKeyDecryptor;
-
 class ClearKeyDecryptionManager MOZ_FINAL : public GMPDecryptor
+                                          , public RefCounted
 {
 public:
   ClearKeyDecryptionManager();
-  ~ClearKeyDecryptionManager();
 
   virtual void Init(GMPDecryptorCallback* aCallback) MOZ_OVERRIDE;
 
@@ -58,7 +58,18 @@ public:
 
   virtual void DecryptingComplete() MOZ_OVERRIDE;
 
+  void PersistentSessionDataLoaded(GMPErr aStatus,
+                                   uint32_t aPromiseId,
+                                   const std::string& aSessionId,
+                                   const uint8_t* aKeyData,
+                                   uint32_t aKeyDataSize);
+
 private:
+  ~ClearKeyDecryptionManager();
+
+  void ClearInMemorySessionData(ClearKeySession* aSession);
+  void Serialize(const ClearKeySession* aSession, std::vector<uint8_t>& aOutKeyData);
+
   GMPDecryptorCallback* mCallback;
 
   std::map<KeyId, ClearKeyDecryptor*> mDecryptors;
