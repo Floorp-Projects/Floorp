@@ -913,7 +913,7 @@ obj_freeze(JSContext *cx, unsigned argc, Value *vp)
 
     // Steps 2-5.
     RootedObject obj(cx, &args.get(0).toObject());
-    return JSObject::freeze(cx, obj);
+    return SetIntegrityLevel(cx, obj, IntegrityLevel::Frozen);
 }
 
 // ES6 draft rev27 (2014/08/24) 19.1.2.12 Object.isFrozen(O)
@@ -928,7 +928,7 @@ obj_isFrozen(JSContext *cx, unsigned argc, Value *vp)
     // Step 2.
     if (args.get(0).isObject()) {
         RootedObject obj(cx, &args.get(0).toObject());
-        if (!JSObject::isFrozen(cx, obj, &frozen))
+        if (!TestIntegrityLevel(cx, obj, IntegrityLevel::Frozen, &frozen))
             return false;
     }
     args.rval().setBoolean(frozen);
@@ -948,7 +948,7 @@ obj_seal(JSContext *cx, unsigned argc, Value *vp)
 
     // Steps 2-5.
     RootedObject obj(cx, &args.get(0).toObject());
-    return JSObject::seal(cx, obj);
+    return SetIntegrityLevel(cx, obj, IntegrityLevel::Sealed);
 }
 
 // ES6 draft rev27 (2014/08/24) 19.1.2.13 Object.isSealed(O)
@@ -963,7 +963,7 @@ obj_isSealed(JSContext *cx, unsigned argc, Value *vp)
     // Step 2.
     if (args.get(0).isObject()) {
         RootedObject obj(cx, &args.get(0).toObject());
-        if (!JSObject::isSealed(cx, obj, &sealed))
+        if (!TestIntegrityLevel(cx, obj, IntegrityLevel::Sealed, &sealed))
             return false;
     }
     args.rval().setBoolean(sealed);

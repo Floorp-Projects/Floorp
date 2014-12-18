@@ -498,34 +498,6 @@ class JSObject : public js::gc::Cell
         return !lastProperty()->hasObjectFlag(js::BaseShape::NOT_EXTENSIBLE);
     }
 
-  private:
-    enum ImmutabilityType { SEAL, FREEZE };
-
-    /*
-     * The guts of Object.seal (ES5 15.2.3.8) and Object.freeze (ES5 15.2.3.9): mark the
-     * object as non-extensible, and adjust each property's attributes appropriately: each
-     * property becomes non-configurable, and if |freeze|, data properties become
-     * read-only as well.
-     */
-    static bool sealOrFreeze(JSContext *cx, js::HandleObject obj, ImmutabilityType it);
-
-    static bool isSealedOrFrozen(JSContext *cx, js::HandleObject obj, ImmutabilityType it, bool *resultp);
-
-    static inline unsigned getSealedOrFrozenAttributes(unsigned attrs, ImmutabilityType it);
-
-  public:
-    /* ES5 15.2.3.8: non-extensible, all props non-configurable */
-    static inline bool seal(JSContext *cx, js::HandleObject obj) { return sealOrFreeze(cx, obj, SEAL); }
-    /* ES5 15.2.3.9: non-extensible, all properties non-configurable, all data props read-only */
-    static inline bool freeze(JSContext *cx, js::HandleObject obj) { return sealOrFreeze(cx, obj, FREEZE); }
-
-    static inline bool isSealed(JSContext *cx, js::HandleObject obj, bool *resultp) {
-        return isSealedOrFrozen(cx, obj, SEAL, resultp);
-    }
-    static inline bool isFrozen(JSContext *cx, js::HandleObject obj, bool *resultp) {
-        return isSealedOrFrozen(cx, obj, FREEZE, resultp);
-    }
-
     /* toString support. */
     static const char *className(JSContext *cx, js::HandleObject obj);
 
@@ -1265,6 +1237,33 @@ NativeWatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObje
 
 extern bool
 NativeUnwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id);
+
+enum class IntegrityLevel {
+    Sealed,
+    Frozen
+};
+
+/*
+ * ES6 rev 29 (6 Dec 2014) 7.3.13. Mark obj as non-extensible, and adjust each
+ * of obj's own properties' attributes appropriately: each property becomes
+ * non-configurable, and if level == Frozen, data properties become
+ * non-writable as well.
+ */
+extern bool
+SetIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level);
+
+inline bool
+FreezeObject(JSContext *cx, HandleObject obj)
+{
+    return SetIntegrityLevel(cx, obj, IntegrityLevel::Frozen);
+}
+
+/*
+ * ES6 rev 29 (6 Dec 2014) 7.3.14. Code shared by Object.isSealed and
+ * Object.isFrozen.
+ */
+extern bool
+TestIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level, bool *resultp);
 
 }  /* namespace js */
 

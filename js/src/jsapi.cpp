@@ -2248,7 +2248,7 @@ JS_FreezeObject(JSContext *cx, HandleObject obj)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    return JSObject::freeze(cx, obj);
+    return FreezeObject(cx, obj);
 }
 
 JS_PUBLIC_API(bool)
@@ -2265,7 +2265,7 @@ JS_DeepFreezeObject(JSContext *cx, HandleObject obj)
     if (!extensible)
         return true;
 
-    if (!JSObject::freeze(cx, obj))
+    if (!FreezeObject(cx, obj))
         return false;
 
     /* Walk slots in obj and if any value is a non-null object, seal it. */

@@ -1440,7 +1440,7 @@ GlobalObject::initStopIterationClass(JSContext *cx, Handle<GlobalObject *> globa
         return true;
 
     RootedObject proto(cx, global->createBlankPrototype(cx, &StopIterationObject::class_));
-    if (!proto || !JSObject::freeze(cx, proto))
+    if (!proto || !FreezeObject(cx, proto))
         return false;
 
     // This should use a non-JSProtoKey'd slot, but this is easier for now.
