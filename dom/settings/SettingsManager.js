@@ -462,6 +462,17 @@ SettingsManager.prototype = {
 
   cleanup: function() {
     Services.obs.removeObserver(this, "inner-window-destroyed");
+    // At this point, the window is dying, so there's nothing left	
+    // that we could do with our lock. Go ahead and run finalize on	
+    // it to make sure changes are commited.	
+    for (let i = 0; i < this._locks.length; ++i) {	
+      if (DEBUG) debug("Lock alive at destroy, finalizing: " + this._locks[i]);
+      // Due to bug 1105511 we should be able to send this without
+      // cached principals. However, this is scary because any iframe
+      // in the process could run this?
+      cpmm.sendAsyncMessage("Settings:Finalize",	
+                            {lockID: this._locks[i]});	
+    }
     cpmm.removeMessageListener("Settings:Change:Return:OK", this);
     mrm.unregisterStrongReporter(this);
     this.innerWindowID = null;
