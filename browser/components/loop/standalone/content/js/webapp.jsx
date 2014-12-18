@@ -127,32 +127,11 @@ loop.webapp = (function($, _, OT, mozL10n) {
     }
   });
 
-  /**
-   * The Firefox Marketplace exposes a web page that contains a postMesssage
-   * based API that wraps a small set of functionality from the WebApps API
-   * that allow us to request the installation of apps given their manifest
-   * URL. We will be embedding the content of this web page within an hidden
-   * iframe in case that we need to request the installation of the FxOS Loop
-   * client.
-   */
-  var FxOSHiddenMarketplace = React.createClass({
-    render: function() {
-      return <iframe id="marketplace" src={this.props.marketplaceSrc} hidden/>;
-    },
-
-    componentDidUpdate: function() {
-      // This happens only once when we change the 'src' property of the iframe.
-      if (this.props.onMarketplaceMessage) {
-        // The reason for listening on the global window instead of on the
-        // iframe content window is because the Marketplace is doing a
-        // window.top.postMessage.
-        window.addEventListener("message", this.props.onMarketplaceMessage);
-      }
-    }
-  });
-
   var FxOSConversationModel = Backbone.Model.extend({
-    setupOutgoingCall: function() {
+    setupOutgoingCall: function(selectedCallType) {
+      if (selectedCallType) {
+        this.set("selectedCallType", selectedCallType);
+      }
       // The FxOS Loop client exposes a "loop-call" activity. If we get the
       // activity onerror callback it means that there is no "loop-call"
       // activity handler available and so no FxOS Loop client installed.
@@ -162,7 +141,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
           type: "loop/token",
           token: this.get("loopToken"),
           callerId: this.get("callerId"),
-          callType: this.get("callType")
+          video: this.get("selectedCallType") === "audio-video"
         }
       });
 
@@ -565,7 +544,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
                dangerouslySetInnerHTML={{__html: tosHTML}}></p>
           </div>
 
-          <FxOSHiddenMarketplace
+          <loop.fxOSMarketplaceViews.FxOSHiddenMarketplaceView
             marketplaceSrc={this.state.marketplaceSrc}
             onMarketplaceMessage= {this.state.onMarketplaceMessage} />
 
@@ -959,8 +938,10 @@ loop.webapp = (function($, _, OT, mozL10n) {
       // XXX New types for flux style
       standaloneAppStore: React.PropTypes.instanceOf(
         loop.store.StandaloneAppStore).isRequired,
-      activeRoomStore: React.PropTypes.instanceOf(
-        loop.store.ActiveRoomStore).isRequired,
+      activeRoomStore: React.PropTypes.oneOfType([
+        React.PropTypes.instanceOf(loop.store.ActiveRoomStore),
+        React.PropTypes.instanceOf(loop.store.FxOSActiveRoomStore)
+      ]).isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       feedbackStore: React.PropTypes.instanceOf(loop.store.FeedbackStore)
     },
@@ -1036,14 +1017,6 @@ loop.webapp = (function($, _, OT, mozL10n) {
 
     // Older non-flux based items.
     var notifications = new sharedModels.NotificationCollection();
-    var conversation
-    if (helper.isFirefoxOS(navigator.userAgent)) {
-      conversation = new FxOSConversationModel();
-    } else {
-      conversation = new sharedModels.ConversationModel({}, {
-        sdk: OT
-      });
-    }
 
     var feedbackApiClient = new loop.FeedbackAPIClient(
       loop.config.feedbackApiUrl, {
@@ -1061,6 +1034,29 @@ loop.webapp = (function($, _, OT, mozL10n) {
       dispatcher: dispatcher,
       sdk: OT
     });
+    var conversation;
+    var activeRoomStore;
+    if (helper.isFirefoxOS(navigator.userAgent)) {
+      if (loop.config.fxosApp) {
+        conversation = new FxOSConversationModel();
+        if (loop.config.fxosApp.rooms) {
+          activeRoomStore = new loop.store.FxOSActiveRoomStore(dispatcher, {
+          mozLoop: standaloneMozLoop
+          });
+        }
+      }
+    }
+
+    conversation = conversation ||
+      new sharedModels.ConversationModel({}, {
+        sdk: OT
+    });
+    activeRoomStore = activeRoomStore ||
+      new loop.store.ActiveRoomStore(dispatcher, {
+        mozLoop: standaloneMozLoop,
+        sdkDriver: sdkDriver
+    });
+
     var feedbackClient = new loop.FeedbackAPIClient(
       loop.config.feedbackApiUrl, {
       product: loop.config.feedbackProductName,
@@ -1074,10 +1070,6 @@ loop.webapp = (function($, _, OT, mozL10n) {
       dispatcher: dispatcher,
       helper: helper,
       sdk: OT
-    });
-    var activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, {
-      mozLoop: standaloneMozLoop,
-      sdkDriver: sdkDriver
     });
     var feedbackStore = new loop.store.FeedbackStore(dispatcher, {
       feedbackClient: feedbackClient
