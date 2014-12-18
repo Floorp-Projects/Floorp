@@ -7382,6 +7382,28 @@ HTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
     }
   }
 
+  // Remove similar filters
+  // Iterate over a copy, as we might modify the original filters list
+  nsTArray<nsFilePickerFilter> filtersCopy;
+  filtersCopy = filters;
+  for (uint32_t i = 0; i < filtersCopy.Length(); ++i) {
+    const nsFilePickerFilter& filterToCheck = filtersCopy[i];
+    if (filterToCheck.mFilterMask) {
+      continue;
+    }
+    for (uint32_t j = 0; j < filtersCopy.Length(); ++j) {
+      if (i == j) {
+        continue;
+      }
+      if (FindInReadable(filterToCheck.mFilter, filtersCopy[j].mFilter)) {
+        // We already have a similar, less restrictive filter (i.e.
+        // filterToCheck extensionList is just a subset of another filter
+        // extension list): remove this one
+        filters.RemoveElement(filterToCheck);
+      }
+    }
+  }
+
   // Add "All Supported Types" filter
   if (filters.Length() > 1) {
     nsXPIDLString title;
