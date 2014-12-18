@@ -270,6 +270,7 @@
               }
             }
           }
+          BrowserSearch.updateSearchButton();
         ]]></body>
       </method>
 
@@ -295,6 +296,7 @@
               }
             }
           }
+          BrowserSearch.updateSearchButton();
         ]]></body>
       </method>
 
@@ -605,6 +607,7 @@
           <xul:hbox class="searchbar-search-button-container">
             <xul:image class="searchbar-search-button"
                        anonid="searchbar-search-button"
+                       xbl:inherits="addengines"
                        tooltiptext="&searchEndCap.label;"/>
           </xul:hbox>
           <xul:button class="searchbar-engine-button"
