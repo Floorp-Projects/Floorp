@@ -176,6 +176,17 @@ ClientLayerManager::CreatePaintedLayerWithHint(PaintedLayerCreationHint aHint)
   }
 }
 
+void
+ClientPaintedLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
+{
+  PaintedLayer::PrintInfo(aStream, aPrefix);
+  if (mContentClient) {
+    aStream << "\n";
+    nsAutoCString pfx(aPrefix);
+    pfx += "  ";
+    mContentClient->PrintInfo(aStream, pfx.get());
+  }
+}
 
 }
 }
