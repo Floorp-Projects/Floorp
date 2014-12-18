@@ -1916,7 +1916,7 @@ JS_DefaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue
     CHECK_REQUEST(cx);
     MOZ_ASSERT(obj != nullptr);
     MOZ_ASSERT(hint == JSTYPE_VOID || hint == JSTYPE_STRING || hint == JSTYPE_NUMBER);
-    return JSObject::defaultValue(cx, obj, hint, vp);
+    return ToPrimitive(cx, obj, hint, vp);
 }
 
 JS_PUBLIC_API(bool)
@@ -2966,7 +2966,7 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id,
     } else {
         if (obj2->is<ProxyObject>())
             return Proxy::getPropertyDescriptor(cx, obj2, id, desc);
-        if (!JSObject::getGenericAttributes(cx, obj2, id, &desc.attributesRef()))
+        if (!GetPropertyAttributes(cx, obj2, id, &desc.attributesRef()))
             return false;
         MOZ_ASSERT(desc.getter() == nullptr);
         MOZ_ASSERT(desc.setter() == nullptr);

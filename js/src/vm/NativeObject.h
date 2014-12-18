@@ -1397,14 +1397,12 @@ js::SetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t 
     return NativeSetElement(cx, obj.as<NativeObject>(), receiver, index, vp, strict);
 }
 
-/* static */ inline bool
-JSObject::getGenericAttributes(JSContext *cx, js::HandleObject obj,
-                               js::HandleId id, unsigned *attrsp)
+inline bool
+js::GetPropertyAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp)
 {
-    js::GenericAttributesOp op = obj->getOps()->getGenericAttributes;
-    if (op)
+    if (GenericAttributesOp op = obj->getOps()->getGenericAttributes)
         return op(cx, obj, id, attrsp);
-    return NativeGetPropertyAttributes(cx, obj.as<js::NativeObject>(), id, attrsp);
+    return NativeGetPropertyAttributes(cx, obj.as<NativeObject>(), id, attrsp);
 }
 
 #endif /* vm_NativeObject_h */

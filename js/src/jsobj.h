@@ -498,9 +498,6 @@ class JSObject : public js::gc::Cell
         return !lastProperty()->hasObjectFlag(js::BaseShape::NOT_EXTENSIBLE);
     }
 
-    /* toString support. */
-    static const char *className(JSContext *cx, js::HandleObject obj);
-
   public:
     /*
      * Iterator-specific getters and setters.
@@ -538,28 +535,6 @@ class JSObject : public js::gc::Cell
     static bool nonNativeSetElement(JSContext *cx, js::HandleObject obj,
                                     js::HandleObject receiver, uint32_t index,
                                     js::MutableHandleValue vp, bool strict);
-
-    static inline bool getGenericAttributes(JSContext *cx, js::HandleObject obj,
-                                            js::HandleId id, unsigned *attrsp);
-
-    static inline bool setGenericAttributes(JSContext *cx, js::HandleObject obj,
-                                            js::HandleId id, unsigned *attrsp);
-
-    static inline bool watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
-                             JS::HandleObject callable);
-    static inline bool unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id);
-
-    static bool defaultValue(JSContext *cx, js::HandleObject obj, JSType hint,
-                             js::MutableHandleValue vp);
-
-    static JSObject *thisObject(JSContext *cx, js::HandleObject obj)
-    {
-        if (js::ObjectOp op = obj->getOps()->thisObject)
-            return op(cx, obj);
-        return obj;
-    }
-
-    static bool thisObject(JSContext *cx, const js::Value &v, js::Value *vp);
 
     static bool swap(JSContext *cx, JS::HandleObject a, JS::HandleObject b);
 
@@ -728,24 +703,6 @@ inline bool
 IsConstructor(const Value &v)
 {
     return v.isObject() && v.toObject().isConstructor();
-}
-
-inline JSObject *
-GetInnerObject(JSObject *obj)
-{
-    if (js::InnerObjectOp op = obj->getClass()->ext.innerObject) {
-        JS::AutoSuppressGCAnalysis nogc;
-        return op(obj);
-    }
-    return obj;
-}
-
-inline JSObject *
-GetOuterObject(JSContext *cx, js::HandleObject obj)
-{
-    if (js::ObjectOp op = obj->getClass()->ext.outerObject)
-        return op(cx, obj);
-    return obj;
 }
 
 } /* namespace js */
@@ -995,6 +952,128 @@ NonProxyLookupOwnProperty(JSContext *cx, LookupGenericOp lookup,
                           typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
                           typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp);
 
+/*
+ * Deprecated. An easier-to-use version of LookupProperty that returns only the
+ * property attributes.
+ */
+inline bool
+GetPropertyAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp);
+
+/*
+ * Deprecated. Search the prototype chain for `obj[id]` and redefine it to have
+ * the given property attributes.
+ */
+inline bool
+SetPropertyAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp);
+
+/*
+ * Set a watchpoint: a synchronous callback when the given property of the
+ * given object is set.
+ *
+ * Watchpoints are nonstandard and do not fit in well with the way ES6
+ * specifies [[Set]]. They are also insufficient for implementing
+ * Object.observe.
+ */
+extern bool
+WatchProperty(JSContext *cx, HandleObject obj, HandleId id, HandleObject callable);
+
+/* Clear a watchpoint. */
+extern bool
+UnwatchProperty(JSContext *cx, HandleObject obj, HandleId id);
+
+/*
+ * ToPrimitive support, currently implemented like an internal method (JSClass::convert).
+ * In ES6 this is just a method, @@toPrimitive. See bug 1054756.
+ */
+extern bool
+ToPrimitive(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp);
+
+MOZ_ALWAYS_INLINE bool
+ToPrimitive(JSContext *cx, MutableHandleValue vp);
+
+MOZ_ALWAYS_INLINE bool
+ToPrimitive(JSContext *cx, JSType preferredType, MutableHandleValue vp);
+
+/*
+ * toString support. (This isn't called GetClassName because there's a macro in
+ * <windows.h> with that name.)
+ */
+extern const char *
+GetObjectClassName(JSContext *cx, HandleObject obj);
+
+/*
+ * Inner and outer objects
+ *
+ * GetInnerObject and GetOuterObject (and also GetThisObject, somewhat) have to
+ * do with Windows and WindowProxies. There's a screwy invariant that actual
+ * Window objects (the global objects of web pages) are never directly exposed
+ * to script. Instead we often substitute a WindowProxy.
+ *
+ * As a result, we have calls to these three "substitute-this-object-for-that-
+ * object" functions sprinkled at apparently arbitrary (but actually *very*
+ * carefully and nervously selected) places throughout the engine and indeed
+ * the universe.
+ */
+
+/*
+ * If obj a WindowProxy, return its current inner Window. Otherwise return obj.
+ *
+ * GetInnerObject is called when we need a scope chain; you never want a
+ * WindowProxy on a scope chain.
+ *
+ * It's also called in a few places where an object comes in from script, and
+ * the user probably intends to operate on the Window, not the
+ * WindowProxy. Object.prototype.watch and various Debugger features do
+ * this. (Users can't simply pass the Window, because the Window isn't exposed
+ * to scripts.)
+ */
+inline JSObject *
+GetInnerObject(JSObject *obj)
+{
+    if (InnerObjectOp op = obj->getClass()->ext.innerObject) {
+        JS::AutoSuppressGCAnalysis nogc;
+        return op(obj);
+    }
+    return obj;
+}
+
+/*
+ * If obj is a Window object, return the WindowProxy. Otherwise return obj.
+ *
+ * This must be called before passing an object to script, if the object might
+ * be a Window. (But usually those cases involve scope objects, and for those,
+ * it is better to call GetThisObject instead.)
+ */
+inline JSObject *
+GetOuterObject(JSContext *cx, HandleObject obj)
+{
+    if (ObjectOp op = obj->getClass()->ext.outerObject)
+        return op(cx, obj);
+    return obj;
+}
+
+/*
+ * Return an object that may be used as `this` in place of obj. For most
+ * objects this just returns obj.
+ *
+ * Some JSObjects shouldn't be exposed directly to script. This includes (at
+ * least) DynamicWithObjects and Window objects. However, since both of those
+ * can be on scope chains, we sometimes would expose those as `this` if we
+ * were not so vigilant about calling GetThisObject where appropriate.
+ *
+ * See comments at ComputeImplicitThis.
+ */
+inline JSObject *
+GetThisObject(JSContext *cx, HandleObject obj)
+{
+    if (ObjectOp op = obj->getOps()->thisObject)
+        return op(cx, obj);
+    return obj;
+}
+
+
+/* * */
+
 typedef JSObject *(*ClassInitializerOp)(JSContext *cx, JS::HandleObject obj);
 
 /* Fast access to builtin constructors and prototypes. */
@@ -1040,10 +1119,6 @@ extern const char js_defineSetter_str[];
 extern const char js_lookupGetter_str[];
 extern const char js_lookupSetter_str[];
 #endif
-
-extern bool
-js_PopulateObject(JSContext *cx, js::HandleObject newborn, js::HandleObject props);
-
 
 namespace js {
 
@@ -1231,12 +1306,6 @@ Throw(JSContext *cx, jsid id, unsigned errorNumber);
 
 extern bool
 Throw(JSContext *cx, JSObject *obj, unsigned errorNumber);
-
-extern bool
-NativeWatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject callable);
-
-extern bool
-NativeUnwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id);
 
 enum class IntegrityLevel {
     Sealed,

@@ -334,7 +334,7 @@ JS_BasicObjectToString(JSContext *cx, HandleObject obj)
     if (obj->is<NumberObject>())
         return cx->names().objectNumber;
 
-    const char *className = JSObject::className(cx, obj);
+    const char *className = GetObjectClassName(cx, obj);
 
     if (strcmp(className, "Window") == 0)
         return cx->names().objectWindow;
@@ -535,7 +535,7 @@ obj_watch(JSContext *cx, unsigned argc, Value *vp)
     if (!ValueToId<CanGC>(cx, args[0], &propid))
         return false;
 
-    if (!JSObject::watch(cx, obj, propid, callable))
+    if (!WatchProperty(cx, obj, propid, callable))
         return false;
 
     args.rval().setUndefined();
@@ -562,7 +562,7 @@ obj_unwatch(JSContext *cx, unsigned argc, Value *vp)
         id = JSID_VOID;
     }
 
-    if (!JSObject::unwatch(cx, obj, id))
+    if (!UnwatchProperty(cx, obj, id))
         return false;
 
     args.rval().setUndefined();

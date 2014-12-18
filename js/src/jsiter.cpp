@@ -1178,7 +1178,7 @@ SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate p
                             unsigned attrs;
                             if (obj2->isNative())
                                 attrs = GetShapeAttributes(obj2, prop);
-                            else if (!JSObject::getGenericAttributes(cx, obj2, id, &attrs))
+                            else if (!GetPropertyAttributes(cx, obj2, id, &attrs))
                                 return false;
 
                             if (attrs & JSPROP_ENUMERATE)
