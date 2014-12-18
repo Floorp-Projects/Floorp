@@ -704,7 +704,9 @@ js::obj_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     // Steps 5-7.
-    return GetOwnPropertyDescriptor(cx, obj, id, args.rval());
+    Rooted<PropertyDescriptor> desc(cx);
+    return GetOwnPropertyDescriptor(cx, obj, id, &desc) &&
+           NewPropertyDescriptorObject(cx, desc, args.rval());
 }
 
 // ES6 draft rev27 (2014/08/24) 19.1.2.14 Object.keys(O)

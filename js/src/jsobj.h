@@ -927,6 +927,17 @@ IsExtensible(ExclusiveContext *cx, HandleObject obj, bool *extensible);
 extern bool
 PreventExtensions(JSContext *cx, HandleObject obj, bool *succeeded);
 
+/*
+ * ES6 [[GetOwnPropertyDescriptor]]. Get a description of one of obj's own
+ * properties.
+ *
+ * If no such property exists on obj, return true with desc.object() set to
+ * null.
+ */
+extern bool
+GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
+                         MutableHandle<PropertyDescriptor> desc);
+
 
 /*** SpiderMonkey nonstandard internal methods ***************************************************/
 
@@ -1138,6 +1149,15 @@ namespace js {
 bool
 LookupPropertyPure(ExclusiveContext *cx, JSObject *obj, jsid id, NativeObject **objp,
                    Shape **propp);
+
+bool
+GetPropertyPure(ExclusiveContext *cx, JSObject *obj, jsid id, Value *vp);
+
+inline bool
+GetPropertyPure(ExclusiveContext *cx, JSObject *obj, PropertyName *name, Value *vp)
+{
+    return GetPropertyPure(cx, obj, NameToId(name), vp);
+}
 
 bool
 GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
