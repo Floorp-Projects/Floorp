@@ -4416,3 +4416,20 @@ pref("intl.collation.mac.use_icu", true);
 
 // Enable meta-viewport support in remote APZ-enabled frames.
 pref("dom.meta-viewport.enabled", false);
+
+// MozSettings debugging prefs for each component
+pref("dom.mozSettings.SettingsDB.debug.enabled", false);
+pref("dom.mozSettings.SettingsManager.debug.enabled", false);
+pref("dom.mozSettings.SettingsRequestManager.debug.enabled", false);
+pref("dom.mozSettings.SettingsService.debug.enabled", false);
+
+// MozSettings verbose mode to track everything
+pref("dom.mozSettings.SettingsDB.verbose.enabled", false);
+pref("dom.mozSettings.SettingsManager.verbose.enabled", false);
+pref("dom.mozSettings.SettingsRequestManager.verbose.enabled", false);
+pref("dom.mozSettings.SettingsService.verbose.enabled", false);
+
+// Controlling whether we want to allow forcing some Settings
+// IndexedDB transactions to be opened as readonly or keep everything as
+// readwrite.
+pref("dom.mozSettings.allowForceReadOnly", false);

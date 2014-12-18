@@ -2,6 +2,7 @@
 <meta charset=utf-8>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="../testcommon.js"></script>
 <div id="log"></div>
 <style>
 @keyframes xyz {
@@ -11,35 +12,26 @@
 <script>
 'use strict';
 
-function addDiv() {
-  var div = document.createElement('div');
-  document.body.appendChild(div);
-  return div;
-}
-
-test(function() {
-  var div = addDiv();
+test(function(t) {
+  var div = addDiv(t);
   div.style.animation = 'xyz 100s';
   assert_equals(div.getAnimationPlayers()[0].source.effect.name, 'xyz',
                 'Animation effect name matches keyframes rule name');
-  div.remove();
 }, 'Effect name makes keyframe rule');
 
-test(function() {
-  var div = addDiv();
+test(function(t) {
+  var div = addDiv(t);
   div.style.animation = 'x\\yz 100s';
   assert_equals(div.getAnimationPlayers()[0].source.effect.name, 'xyz',
                 'Escaped animation effect name matches keyframes rule name');
-  div.remove();
 }, 'Escaped animation name');
 
-test(function() {
-  var div = addDiv();
+test(function(t) {
+  var div = addDiv(t);
   div.style.animation = 'x\\79 z 100s';
   assert_equals(div.getAnimationPlayers()[0].source.effect.name, 'xyz',
                 'Hex-escaped animation effect name matches keyframes rule'
                 + ' name');
-  div.remove();
 }, 'Animation name with hex-escape');
 
 </script>

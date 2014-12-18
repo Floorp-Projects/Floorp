@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for bad initial configuration</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="camera_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<video id="viewfinder" width="200" height="200" autoplay></video>
+<img src="#" alt="This image is going to load" id="testimage"/>
+<script class="testbody" type="text/javascript;version=1.7">
+
+var whichCamera = navigator.mozCameras.getListOfCameras()[0];
+var config = {
+  mode: 'picture',
+  recorderProfile: 'foobar',
+};
+
+var Camera = {
+  cameraObj: null,
+
+  get viewfinder() {
+    return document.getElementById('viewfinder');
+  },
+
+  start: function test_start() {
+    function getCamera_onSuccess(d) {
+      ok(false, "Get camera should have failed");
+      SimpleTest.finish();
+    }
+
+    function getCamera_onError(e) {
+      ok(true, "Get camera failed as expected: " + JSON.stringify(e));
+      SimpleTest.finish();
+    }
+
+    navigator.mozCameras.getCamera(whichCamera, config).then(getCamera_onSuccess, getCamera_onError);
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+window.addEventListener('beforeunload', function() {
+  Camera.viewfinder.mozSrcObject = null;
+  if (Camera.cameraObj) {
+    Camera.cameraObj.release();
+    Camera.cameraObj = null;
+  }
+});
+
+Camera.start();
+
+</script>
+</body>
+
+</html>

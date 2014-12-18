@@ -2,13 +2,13 @@
 <meta charset=utf-8>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="../testcommon.js"></script>
 <div id="log"></div>
 <script>
 'use strict';
 
-test(function() {
-  var div = document.createElement('div');
-  document.body.appendChild(div);
+test(function(t) {
+  var div = addDiv(t);
 
   // Add a transition
   div.style.left = '0px';
@@ -18,7 +18,6 @@ test(function() {
 
   assert_equals(div.getAnimationPlayers()[0].source.effect.name, '',
                 'Animation effects for transitions have an empty name');
-  div.remove();
 }, 'Effect name for transitions');
 
 </script>

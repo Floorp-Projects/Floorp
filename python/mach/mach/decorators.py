@@ -91,11 +91,46 @@ def CommandProvider(cls):
 
         Registrar.register_command_handler(handler)
 
+    # Now do another pass to get sub-commands. We do this in two passes so
+    # we can check the parent command existence without having to hold
+    # state and reconcile after traversal.
+    for attr in sorted(cls.__dict__.keys()):
+        value = cls.__dict__[attr]
+
+        if not isinstance(value, types.FunctionType):
+            continue
+
+        command, subcommand, description = getattr(value, '_mach_subcommand',
+            (None, None, None))
+
+        if not command:
+            continue
+
+        if command not in Registrar.command_handlers:
+            raise MachError('Command referenced by sub-command does not '
+                'exist: %s' % command)
+
+        arguments = getattr(value, '_mach_command_args', None)
+        argument_group_names = getattr(value, '_mach_command_arg_group_names', None)
+
+        handler = MethodHandler(cls, attr, subcommand, description=description,
+            arguments=arguments, argument_group_names=argument_group_names,
+            pass_context=pass_context)
+        parent = Registrar.command_handlers[command]
+
+        if parent.parser:
+            raise MachError('cannot declare sub commands against a command '
+                'that has a parser installed: %s' % command)
+        if subcommand in parent.subcommand_handlers:
+            raise MachError('sub-command already defined: %s' % subcommand)
+
+        parent.subcommand_handlers[subcommand] = handler
+
     return cls
 
 
 class Command(object):
-    """Decorator for functions or methods that provide a mach subcommand.
+    """Decorator for functions or methods that provide a mach command.
 
     The decorator accepts arguments that define basic attributes of the
     command. The following arguments are recognized:
@@ -128,6 +163,33 @@ class Command(object):
 
         return func
 
+class SubCommand(object):
+    """Decorator for functions or methods that provide a sub-command.
+
+    Mach commands can have sub-commands. e.g. ``mach command foo`` or
+    ``mach command bar``. Each sub-command has its own parser and is
+    effectively its own mach command.
+
+    The decorator accepts arguments that define basic attributes of the
+    sub command:
+
+        command -- The string of the command this sub command should be
+        attached to.
+
+        subcommand -- The string name of the sub command to register.
+
+        description -- A textual description for this sub command.
+    """
+    def __init__(self, command, subcommand, description=None):
+        self._command = command
+        self._subcommand = subcommand
+        self._description = description
+
+    def __call__(self, func):
+        func._mach_subcommand = (self._command, self._subcommand,
+            self._description)
+
+        return func
 
 class CommandArgument(object):
     """Decorator for additional arguments to mach subcommands.
@@ -162,7 +224,7 @@ class CommandArgument(object):
 
 
 class CommandArgumentGroup(object):
-    """Decorator for additional argument groups to mach subcommands.
+    """Decorator for additional argument groups to mach commands.
 
     This decorator should be used to add arguments groups to mach commands.
     Arguments to the decorator are proxied to

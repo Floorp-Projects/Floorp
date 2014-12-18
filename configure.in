@@ -3856,7 +3856,6 @@ if test -n "$MOZ_FMP4"; then
 else
   MOZ_FMP4=
 fi
-MOZ_EME=1
 MOZ_FFMPEG=
 MOZ_WEBRTC=1
 MOZ_PEERCONNECTION=
@@ -5327,6 +5326,7 @@ MOZ_ARG_DISABLE_BOOL(fmp4,
 
 if test -n "$MOZ_FMP4"; then
     AC_DEFINE(MOZ_FMP4)
+    MOZ_EME=1
 fi;
 
 dnl ========================================================
@@ -5339,6 +5339,9 @@ MOZ_ARG_DISABLE_BOOL(eme,
     MOZ_EME=1)
 
 if test -n "$MOZ_EME"; then
+    if test -z "$MOZ_FMP4"; then
+        AC_MSG_ERROR([Encrypted Media Extension support requires Fragmented MP4 support])
+    fi
     AC_DEFINE(MOZ_EME)
 fi;
 

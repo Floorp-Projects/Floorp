@@ -264,7 +264,6 @@ CreateSimdClass(JSContext *cx,
     typeDescr->initReservedSlot(JS_DESCR_SLOT_SIZE, Int32Value(SimdTypeDescr::size(type)));
     typeDescr->initReservedSlot(JS_DESCR_SLOT_OPAQUE, BooleanValue(false));
     typeDescr->initReservedSlot(JS_DESCR_SLOT_TYPE, Int32Value(T::type));
-    typeDescr->initReservedSlot(JS_DESCR_SLOT_TRACE_LIST, PrivateValue(nullptr));
 
     if (!CreateUserSizeAndAlignmentProperties(cx, typeDescr))
         return nullptr;

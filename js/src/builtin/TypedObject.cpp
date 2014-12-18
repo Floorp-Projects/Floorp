@@ -1435,7 +1435,7 @@ TypedObject::GetBuffer(JSContext *cx, unsigned argc, Value *vp)
     else
         buffer = obj.as<InlineTransparentTypedObject>().getOrCreateBuffer(cx);
     if (!buffer)
-        MOZ_CRASH();
+        return false;
     args.rval().setObject(*buffer);
     return true;
 }
@@ -1595,6 +1595,8 @@ TypedObject::createZeroed(JSContext *cx, HandleTypeDescr descr, int32_t length, 
     // If possible, create an object with inline data.
     if ((size_t) descr->size() <= InlineTypedObject::MaximumSize) {
         InlineTypedObject *obj = InlineTypedObject::create(cx, descr, heap);
+        if (!obj)
+            return nullptr;
         descr->initInstances(cx->runtime(), obj->inlineTypedMem(), 1);
         return obj;
     }
@@ -3182,10 +3184,8 @@ CreateTraceList(JSContext *cx, HandleTypeDescr descr)
     // for larger objects, both to limit the size of the trace lists and
     // because tracing outline typed objects is considerably more complicated
     // than inline ones.
-    if ((size_t) descr->size() > InlineTypedObject::MaximumSize || descr->transparent()) {
-        descr->initReservedSlot(JS_DESCR_SLOT_TRACE_LIST, PrivateValue(nullptr));
+    if ((size_t) descr->size() > InlineTypedObject::MaximumSize || descr->transparent())
         return true;
-    }
 
     TraceListVisitor visitor;
     visitReferences(*descr, nullptr, visitor);
@@ -3196,10 +3196,8 @@ CreateTraceList(JSContext *cx, HandleTypeDescr descr)
 
     // Trace lists aren't necessary for descriptors with no references.
     MOZ_ASSERT(entries.length() >= 3);
-    if (entries.length() == 3) {
-        descr->initReservedSlot(JS_DESCR_SLOT_TRACE_LIST, PrivateValue(nullptr));
+    if (entries.length() == 3)
         return true;
-    }
 
     int32_t *list = cx->pod_malloc<int32_t>(entries.length());
     if (!list)
@@ -3214,5 +3212,6 @@ CreateTraceList(JSContext *cx, HandleTypeDescr descr)
 /* static */ void
 TypeDescr::finalize(FreeOp *fop, JSObject *obj)
 {
-    js_free(const_cast<int32_t *>(obj->as<TypeDescr>().traceList()));
+    if (obj->as<TypeDescr>().hasTraceList())
+        js_free(const_cast<int32_t *>(obj->as<TypeDescr>().traceList()));
 }

@@ -362,21 +362,26 @@ MediaEngineGonkVideoSource::OnHardwareStateChange(HardwareState aState,
                                                   nsresult aReason)
 {
   ReentrantMonitorAutoEnter sync(mCallbackMonitor);
-  if (aState == CameraControlListener::kHardwareClosed) {
-    // When the first CameraControl listener is added, it gets pushed
-    // the current state of the camera--normally 'closed'. We only
-    // pay attention to that state if we've progressed out of the
-    // allocated state.
-    if (mState != kAllocated) {
+  switch (aState) {
+    case CameraControlListener::kHardwareClosed:
+    case CameraControlListener::kHardwareOpenFailed:
       mState = kReleased;
       mCallbackMonitor.Notify();
-    }
-  } else {
-    // Can't read this except on MainThread (ugh)
-    NS_DispatchToMainThread(WrapRunnable(nsRefPtr<MediaEngineGonkVideoSource>(this),
-                                         &MediaEngineGonkVideoSource::GetRotation));
-    mState = kStarted;
-    mCallbackMonitor.Notify();
+      break;
+    case CameraControlListener::kHardwareOpen:
+      // Can't read this except on MainThread (ugh)
+      NS_DispatchToMainThread(WrapRunnable(nsRefPtr<MediaEngineGonkVideoSource>(this),
+                                           &MediaEngineGonkVideoSource::GetRotation));
+      mState = kStarted;
+      mCallbackMonitor.Notify();
+      break;
+    case CameraControlListener::kHardwareUninitialized:
+      // When the first CameraControl listener is added, it gets pushed
+      // the current state of the camera--normally 'uninitialized'.
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unanticipated camera hardware state");
+      break;
   }
 }
 

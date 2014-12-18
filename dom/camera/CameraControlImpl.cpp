@@ -20,10 +20,11 @@ using namespace mozilla;
 CameraControlImpl::CameraControlImpl()
   : mListenerLock(PR_NewRWLock(PR_RWLOCK_RANK_NONE, "CameraControlImpl.Listeners.Lock"))
   , mPreviewState(CameraControlListener::kPreviewStopped)
-  , mHardwareState(CameraControlListener::kHardwareClosed)
+  , mHardwareState(CameraControlListener::kHardwareUninitialized)
   , mHardwareStateChangeReason(NS_OK)
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  mCurrentConfiguration.mMode = ICameraControl::kUnspecifiedMode;
 
   // reuse the same camera thread to conserve resources
   nsCOMPtr<nsIThread> ct = do_QueryInterface(sCameraThread);
@@ -79,7 +80,7 @@ CameraControlImpl::OnHardwareStateChange(CameraControlListener::HardwareState aN
   }
 
 #ifdef PR_LOGGING
-  const char* state[] = { "closed", "open", "failed" };
+  const char* state[] = { "uninitialized", "closed", "open", "failed" };
   MOZ_ASSERT(aNewState >= 0);
   if (static_cast<unsigned int>(aNewState) < sizeof(state) / sizeof(state[0])) {
     DOM_CAMERA_LOGI("New hardware state is '%s' (reason=0x%x)\n",
