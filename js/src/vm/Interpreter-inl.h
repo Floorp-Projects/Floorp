@@ -658,9 +658,9 @@ ProcessCallSiteObjOperation(JSContext *cx, RootedObject &cso, RootedObject &raw,
         JSAtom *name = cx->names().raw;
         if (!DefineProperty(cx, cso, name->asPropertyName(), rawValue, nullptr, nullptr, 0))
             return false;
-        if (!JSObject::freeze(cx, raw))
+        if (!FreezeObject(cx, raw))
             return false;
-        if (!JSObject::freeze(cx, cso))
+        if (!FreezeObject(cx, cso))
             return false;
     }
     return true;

@@ -6720,9 +6720,9 @@ DebuggerObject_sealHelper(JSContext *cx, unsigned argc, Value *vp, SealHelperOp 
     ErrorCopier ec(ac);
     bool ok;
     if (op == OpSeal) {
-        ok = JSObject::seal(cx, obj);
+        ok = SetIntegrityLevel(cx, obj, IntegrityLevel::Sealed);
     } else if (op == OpFreeze) {
-        ok = JSObject::freeze(cx, obj);
+        ok = SetIntegrityLevel(cx, obj, IntegrityLevel::Frozen);
     } else {
         MOZ_ASSERT(op == OpPreventExtensions);
         bool succeeded;
@@ -6769,10 +6769,10 @@ DebuggerObject_isSealedHelper(JSContext *cx, unsigned argc, Value *vp, SealHelpe
     ErrorCopier ec(ac);
     bool r;
     if (op == OpSeal) {
-        if (!JSObject::isSealed(cx, obj, &r))
+        if (!TestIntegrityLevel(cx, obj, IntegrityLevel::Sealed, &r))
             return false;
     } else if (op == OpFreeze) {
-        if (!JSObject::isFrozen(cx, obj, &r))
+        if (!TestIntegrityLevel(cx, obj, IntegrityLevel::Frozen, &r))
             return false;
     } else {
         if (!IsExtensible(cx, obj, &r))

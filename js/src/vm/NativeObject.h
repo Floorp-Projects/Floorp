@@ -185,6 +185,8 @@ class ObjectElements
     friend class ArrayObject;
     friend class Nursery;
 
+    friend bool js::SetIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level);
+
     friend bool
     ArraySetLength(JSContext *cx, Handle<ArrayObject*> obj, HandleId id,
                    unsigned attrs, HandleValue value, bool setterIsStrict);
