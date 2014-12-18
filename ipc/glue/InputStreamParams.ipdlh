@@ -89,6 +89,7 @@ struct MIMEInputStreamParams
 union OptionalFileDescriptorSet
 {
   PFileDescriptorSet;
+  FileDescriptor[];
   void_t;
 };
 

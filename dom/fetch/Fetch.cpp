@@ -214,8 +214,8 @@ public:
 };
 
 WorkerFetchResolver::WorkerFetchResolver(WorkerPrivate* aWorkerPrivate, Promise* aPromise)
-  : mPromiseProxy(new PromiseWorkerProxy(aWorkerPrivate, aPromise))
 {
+  mPromiseProxy = PromiseWorkerProxy::Create(aWorkerPrivate, aPromise);
 }
 
 WorkerFetchResolver::~WorkerFetchResolver()

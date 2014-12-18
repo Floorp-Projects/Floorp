@@ -84,12 +84,8 @@ typedef uint8_t nsHttpVersion;
 // group is currently blocking on some resources
 #define NS_HTTP_LOAD_UNBLOCKED       (1<<8)
 
-// These flags allow a transaction to use TLS false start with
-// weaker security profiles based on past history
-#define NS_HTTP_ALLOW_RSA_FALSESTART (1<<9)
-
 // This flag indicates the transaction should accept associated pushes
-#define NS_HTTP_ONPUSH_LISTENER      (1<<10)
+#define NS_HTTP_ONPUSH_LISTENER      (1<<9)
 
 //-----------------------------------------------------------------------------
 // some default values

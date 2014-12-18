@@ -758,13 +758,13 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
     * nsLayoutUtils::GetTransformToAncestorScale(aScrollFrame ? aScrollFrame : aForFrame).width);
   metrics.SetExtraResolution(metrics.mCumulativeResolution / resolutionToScreen);
 
-  metrics.mDevPixelsPerCSSPixel = CSSToLayoutDeviceScale(
-    (float)nsPresContext::AppUnitsPerCSSPixel() / auPerDevPixel);
+  metrics.SetDevPixelsPerCSSPixel(CSSToLayoutDeviceScale(
+    (float)nsPresContext::AppUnitsPerCSSPixel() / auPerDevPixel));
 
   // Initially, AsyncPanZoomController should render the content to the screen
   // at the painted resolution.
   const LayerToParentLayerScale layerToParentLayerScale(1.0f);
-  metrics.SetZoom(metrics.mCumulativeResolution * metrics.mDevPixelsPerCSSPixel
+  metrics.SetZoom(metrics.mCumulativeResolution * metrics.GetDevPixelsPerCSSPixel()
                   * layerToParentLayerScale);
 
   if (presShell) {

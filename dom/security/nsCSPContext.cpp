@@ -36,6 +36,7 @@
 #include "nsString.h"
 #include "prlog.h"
 #include "mozilla/dom/CSPReportBinding.h"
+#include "mozilla/net/ReferrerPolicy.h"
 
 using namespace mozilla;
 
@@ -302,6 +303,34 @@ NS_IMETHODIMP
 nsCSPContext::GetPolicyCount(uint32_t *outPolicyCount)
 {
   *outPolicyCount = mPolicies.Length();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSPContext::GetReferrerPolicy(uint32_t* outPolicy, bool* outIsSet)
+{
+  *outIsSet = false;
+  *outPolicy = mozilla::net::RP_Default;
+  nsAutoString refpol;
+  mozilla::net::ReferrerPolicy previousPolicy = mozilla::net::RP_Default;
+  for (uint32_t i = 0; i < mPolicies.Length(); i++) {
+    mPolicies[i]->getReferrerPolicy(refpol);
+    // an empty string in refpol means it wasn't set (that's the default in
+    // nsCSPPolicy).
+    if (!refpol.IsEmpty()) {
+      // if there are two policies that specify a referrer policy, then they
+      // must agree or the employed policy is no-referrer.
+      uint32_t currentPolicy = mozilla::net::ReferrerPolicyFromString(refpol);
+      if (*outIsSet && previousPolicy != currentPolicy) {
+        *outPolicy = mozilla::net::RP_No_Referrer;
+        return NS_OK;
+      }
+
+      *outPolicy = currentPolicy;
+      *outIsSet = true;
+    }
+  }
+
   return NS_OK;
 }
 

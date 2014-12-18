@@ -318,13 +318,9 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd, Edts& aEdts)
       flags & 0x400 ? reader->ReadU32() : hasFirstSampleFlags && i == 0
                                             ? firstSampleFlags
                                             : aTfhd.mDefaultSampleFlags;
-    int64_t ctsOffset = 0;
+    int32_t ctsOffset = 0;
     if (flags & 0x800) {
-      if (version == 0) {
-        ctsOffset = reader->ReadU32();
-      } else {
-        ctsOffset = reader->Read32();
-      }
+      ctsOffset = reader->Read32();
     }
 
     Sample sample;

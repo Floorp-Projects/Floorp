@@ -43,6 +43,8 @@
 #include "nsCOMPtr.h"
 #include "ProfilerHelpers.h"
 #include "ReportInternalError.h"
+#include "WorkerPrivate.h"
+#include "WorkerScope.h"
 
 // Include this last to avoid path problems on Windows.
 #include "ActorsChild.h"
@@ -52,6 +54,7 @@ namespace dom {
 namespace indexedDB {
 
 using namespace mozilla::dom::quota;
+using namespace mozilla::dom::workers;
 using namespace mozilla::ipc;
 
 struct IDBObjectStore::StructuredCloneWriteInfo
@@ -294,8 +297,6 @@ StructuredCloneWriteCallback(JSContext* aCx,
 
     return true;
   }
-
-  MOZ_ASSERT(NS_IsMainThread(), "This can't work off the main thread!");
 
   {
     File* blob = nullptr;
@@ -605,16 +606,23 @@ public:
                aData.tag == SCTAG_DOM_BLOB);
     MOZ_ASSERT(aFile.mFile);
 
-    MOZ_ASSERT(NS_IsMainThread(),
-               "This wrapping currently only works on the main thread!");
-
     // It can happen that this IDB is chrome code, so there is no parent, but
     // still we want to set a correct parent for the new File object.
     nsCOMPtr<nsISupports> parent;
-    if (aDatabase && aDatabase->GetParentObject()) {
-      parent = aDatabase->GetParentObject();
+    if (NS_IsMainThread()) {
+      if (aDatabase && aDatabase->GetParentObject()) {
+        parent = aDatabase->GetParentObject();
+      } else {
+        parent = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+      }
     } else {
-      parent  = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+      WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+      MOZ_ASSERT(workerPrivate);
+
+      WorkerGlobalScope* globalScope = workerPrivate->GlobalScope();
+      MOZ_ASSERT(globalScope);
+
+      parent = do_QueryObject(globalScope);
     }
 
     MOZ_ASSERT(parent);
@@ -973,9 +981,6 @@ IDBObjectStore::ClearCloneReadInfo(StructuredCloneReadInfo& aReadInfo)
   if (!aReadInfo.mCloneBuffer.data() && !aReadInfo.mFiles.Length()) {
     return;
   }
-
-  // If there's something to clear, we should be on the main thread.
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   ClearStructuredCloneBuffer(aReadInfo.mCloneBuffer);
   aReadInfo.mFiles.Clear();
@@ -1515,8 +1520,6 @@ IDBObjectStore::GetKeyPath(JSContext* aCx,
                            JS::MutableHandle<JS::Value> aResult,
                            ErrorResult& aRv)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
   if (!mCachedKeyPath.isUndefined()) {
     JS::ExposeValueToActiveJS(mCachedKeyPath);
     aResult.set(mCachedKeyPath);

@@ -19,6 +19,7 @@
 #include "mozilla/Hal.h"
 #include "mozilla/ipc/DocumentRendererParent.h"
 #include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/net/NeckoChild.h"
@@ -2103,6 +2104,20 @@ TabParent::MaybeForwardEventToRenderFrame(WidgetInputEvent& aEvent,
                                           ScrollableLayerGuid* aOutTargetGuid,
                                           uint64_t* aOutInputBlockId)
 {
+  if (aEvent.mClass == eWheelEventClass) {
+    // Wheel events must be sent to APZ directly from the widget. New APZ-
+    // aware events should follow suit and move there as well. However, we
+    // do need to inform the child process of the correct target and block
+    // id.
+    if (aOutTargetGuid) {
+      *aOutTargetGuid = InputAPZContext::GetTargetLayerGuid();
+    }
+    if (aOutInputBlockId) {
+      *aOutInputBlockId = InputAPZContext::GetInputBlockId();
+    }
+    return nsEventStatus_eIgnore;
+  }
+
   if (RenderFrameParent* rfp = GetRenderFrame()) {
     return rfp->NotifyInputEvent(aEvent, aOutTargetGuid, aOutInputBlockId);
   }

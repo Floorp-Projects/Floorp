@@ -326,7 +326,6 @@ nsHttpChannel::Connect()
     mConnectionInfo->SetNoSpdy(mCaps & NS_HTTP_DISALLOW_SPDY);
 
     // Consider opening a TCP connection right away
-    RetrieveSSLOptions();
     SpeculativeConnect();
 
     // Don't allow resuming when cache must be used
@@ -455,8 +454,7 @@ nsHttpChannel::SpeculativeConnect()
         return;
 
     gHttpHandler->SpeculativeConnect(
-        mConnectionInfo, callbacks,
-        mCaps & (NS_HTTP_ALLOW_RSA_FALSESTART | NS_HTTP_DISALLOW_SPDY));
+        mConnectionInfo, callbacks, mCaps & NS_HTTP_DISALLOW_SPDY);
 }
 
 void
@@ -619,31 +617,6 @@ nsHttpChannel::SetupTransactionLoadGroupInfo()
     rootLoadGroup->GetConnectionInfo(getter_AddRefs(ci));
     if (ci)
         mTransaction->SetLoadGroupConnectionInfo(ci);
-}
-
-void
-nsHttpChannel::RetrieveSSLOptions()
-{
-    if (!IsHTTPS() || mPrivateBrowsing)
-        return;
-
-    nsIPrincipal *principal = GetPrincipal(true);
-    if (!principal)
-        return;
-
-    nsCOMPtr<nsIPermissionManager> permMgr =
-        services::GetPermissionManager();
-    if (!permMgr)
-        return;
-
-    uint32_t perm;
-    nsresult rv = permMgr->TestPermissionFromPrincipal(principal,
-                                                       "falsestart-rsa", &perm);
-    if (NS_SUCCEEDED(rv) && perm == nsIPermissionManager::ALLOW_ACTION) {
-        LOG(("nsHttpChannel::RetrieveSSLOptions [this=%p] "
-             "falsestart-rsa permission found\n", this));
-        mCaps |= NS_HTTP_ALLOW_RSA_FALSESTART;
-    }
 }
 
 static bool
@@ -1226,10 +1199,9 @@ nsHttpChannel::ProcessSSLInformation()
         !IsHTTPS() || mPrivateBrowsing)
         return;
 
-    nsCOMPtr<nsISSLSocketControl> ssl = do_QueryInterface(mSecurityInfo);
     nsCOMPtr<nsISSLStatusProvider> statusProvider =
         do_QueryInterface(mSecurityInfo);
-    if (!ssl || !statusProvider)
+    if (!statusProvider)
         return;
     nsCOMPtr<nsISSLStatus> sslstat;
     statusProvider->GetSSLStatus(getter_AddRefs(sslstat));
@@ -1276,45 +1248,6 @@ nsHttpChannel::ProcessSSLInformation()
                 AddSecurityMessage(consoleErrorTag, consoleErrorMessage);
             }
         }
-    }
-
-    // If certificate exceptions are being used don't record this information
-    // in the permission manager.
-    bool trustCheck;
-    if (NS_FAILED(sslstat->GetIsDomainMismatch(&trustCheck)) || trustCheck)
-        return;
-    if (NS_FAILED(sslstat->GetIsNotValidAtThisTime(&trustCheck)) || trustCheck)
-        return;
-    if (NS_FAILED(sslstat->GetIsUntrusted(&trustCheck)) || trustCheck)
-        return;
-
-    int16_t kea = ssl->GetKEAUsed();
-
-    nsIPrincipal *principal = GetPrincipal(true);
-    if (!principal)
-        return;
-
-    // set a permission manager flag that future transactions can
-    // use via RetrieveSSLOptions(()
-
-    nsCOMPtr<nsIPermissionManager> permMgr =
-        services::GetPermissionManager();
-    if (!permMgr)
-        return;
-
-    // Allow this to stand for a week
-    int64_t expireTime = (PR_Now() / PR_USEC_PER_MSEC) +
-        (86400 * 7 * PR_MSEC_PER_SEC);
-
-    if (kea == ssl_kea_rsa) {
-        permMgr->AddFromPrincipal(principal, "falsestart-rsa",
-                                  nsIPermissionManager::ALLOW_ACTION,
-                                  nsIPermissionManager::EXPIRE_TIME,
-                                  expireTime);
-        LOG(("nsHttpChannel::ProcessSSLInformation [this=%p] "
-             "falsestart-rsa permission granted for this host\n", this));
-    } else {
-        permMgr->RemoveFromPrincipal(principal, "falsestart-rsa");
     }
 }
 
@@ -1435,7 +1368,7 @@ nsHttpChannel::ProcessAltService()
 
         gHttpHandler->
             UpdateAltServiceMapping(mapping, proxyInfo, callbacks,
-                                    mCaps & (NS_HTTP_ALLOW_RSA_FALSESTART | NS_HTTP_DISALLOW_SPDY));
+                                    mCaps & NS_HTTP_DISALLOW_SPDY);
     }
 }
 

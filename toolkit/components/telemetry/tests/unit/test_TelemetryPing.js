@@ -21,6 +21,7 @@ Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
 Cu.import("resource://gre/modules/TelemetryFile.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
+Cu.import("resource://gre/modules/Preferences.jsm");
 
 const IGNORE_HISTOGRAM = "test::ignore_me";
 const IGNORE_HISTOGRAM_TO_CLONE = "MEMORY_HEAP_ALLOCATED";
@@ -496,6 +497,12 @@ add_task(function* asyncSetup() {
 
   if ("@mozilla.org/datareporting/service;1" in Cc) {
     gDataReportingClientID = yield gDatareportingService.getClientID();
+
+    // We should have cached the client id now. Lets confirm that by
+    // checking the client id before the async ping setup is finished.
+    let promisePingSetup = TelemetryPing.reset();
+    do_check_eq(TelemetryPing.clientID, gDataReportingClientID);
+    yield promisePingSetup;
   }
 });
 

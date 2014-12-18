@@ -175,7 +175,6 @@ if CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
         'renderer/d3d/d3d11/VertexBuffer11.cpp',
     ]
     SOURCES += ['renderer/d3d/d3d11/SwapChain11.cpp']
-    SOURCES['renderer/d3d/d3d11/SwapChain11.cpp'].flags += ['-DANGLE_RESOURCE_SHARE_TYPE=D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX']
 
 
 if CONFIG['GNU_CXX']:
