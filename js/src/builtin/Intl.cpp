@@ -1343,7 +1343,7 @@ NewUNumberFormat(JSContext *cx, HandleObject numberFormat)
 
     RootedId id(cx, NameToId(cx->names().minimumSignificantDigits));
     bool hasP;
-    if (!JSObject::hasProperty(cx, internals, id, &hasP))
+    if (!HasProperty(cx, internals, id, &hasP))
         return nullptr;
     if (hasP) {
         if (!JSObject::getProperty(cx, internals, internals, cx->names().minimumSignificantDigits,
@@ -1858,7 +1858,7 @@ NewUDateFormat(JSContext *cx, HandleObject dateTimeFormat)
 
     RootedId id(cx, NameToId(cx->names().timeZone));
     bool hasP;
-    if (!JSObject::hasProperty(cx, internals, id, &hasP))
+    if (!HasProperty(cx, internals, id, &hasP))
         return nullptr;
 
     AutoStableStringChars timeZoneChars(cx);

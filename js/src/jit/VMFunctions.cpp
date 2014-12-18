@@ -598,7 +598,7 @@ OperatorIn(JSContext *cx, HandleValue key, HandleObject obj, bool *out)
 
     RootedObject obj2(cx);
     RootedShape prop(cx);
-    if (!JSObject::lookupGeneric(cx, obj, id, &obj2, &prop))
+    if (!LookupProperty(cx, obj, id, &obj2, &prop))
         return false;
 
     *out = !!prop;

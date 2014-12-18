@@ -337,7 +337,7 @@ DefVarOrConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName dn
 
     RootedShape prop(cx);
     RootedObject obj2(cx);
-    if (!JSObject::lookupProperty(cx, varobj, dn, &obj2, &prop))
+    if (!LookupProperty(cx, varobj, dn, &obj2, &prop))
         return false;
 
     /* Steps 8c, 8d. */
