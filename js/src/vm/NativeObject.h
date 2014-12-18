@@ -1360,16 +1360,6 @@ MaybeNativeObject(JSObject *obj)
 /*** Inline functions declared in jsobj.h that use the native declarations above *****************/
 
 /* static */ inline bool
-JSObject::lookupElement(JSContext *cx, js::HandleObject obj, uint32_t index,
-                        js::MutableHandleObject objp, js::MutableHandleShape propp)
-{
-    js::LookupElementOp op = obj->getOps()->lookupElement;
-    if (op)
-        return op(cx, obj, index, objp, propp);
-    return NativeLookupElement(cx, obj.as<js::NativeObject>(), index, objp, propp);
-}
-
-/* static */ inline bool
 JSObject::getGeneric(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
                      js::HandleId id, js::MutableHandleValue vp)
 {

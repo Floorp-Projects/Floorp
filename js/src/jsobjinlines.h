@@ -164,6 +164,9 @@ JSObject::setType(js::types::TypeObject *newType)
     type_ = newType;
 }
 
+
+/*** Standard internal methods *******************************************************************/
+
 inline bool
 js::GetPrototype(JSContext *cx, js::HandleObject obj, js::MutableHandleObject protop)
 {
@@ -188,6 +191,29 @@ js::IsExtensible(ExclusiveContext *cx, HandleObject obj, bool *extensible)
     *extensible = obj->nonProxyIsExtensible();
     return true;
 }
+
+inline bool
+js::HasProperty(JSContext *cx, HandleObject obj, HandleId id, bool *found)
+{
+    RootedObject pobj(cx);
+    RootedShape prop(cx);
+    if (!LookupProperty(cx, obj, id, &pobj, &prop)) {
+        *found = false;  /* initialize to shut GCC up */
+        return false;
+    }
+    *found = !!prop;
+    return true;
+}
+
+inline bool
+js::HasProperty(JSContext *cx, HandleObject obj, PropertyName *name, bool *found)
+{
+    RootedId id(cx, NameToId(name));
+    return HasProperty(cx, obj, id, found);
+}
+
+
+/* * */
 
 inline bool
 JSObject::isQualifiedVarObj()
@@ -282,26 +308,6 @@ inline void
 JSObject::setInitialElementsMaybeNonNative(js::HeapSlot *elements)
 {
     static_cast<js::NativeObject *>(this)->elements_ = elements;
-}
-
-/* static */ inline bool
-JSObject::hasProperty(JSContext *cx, js::HandleObject obj, js::HandleId id, bool *foundp)
-{
-    JS::RootedObject pobj(cx);
-    js::RootedShape prop(cx);
-    if (!lookupGeneric(cx, obj, id, &pobj, &prop)) {
-        *foundp = false;  /* initialize to shut GCC up */
-        return false;
-    }
-    *foundp = !!prop;
-    return true;
-}
-
-/* static */ inline bool
-JSObject::hasProperty(JSContext *cx, js::HandleObject obj, js::PropertyName *name, bool *foundp)
-{
-    JS::RootedId id(cx, js::NameToId(name));
-    return hasProperty(cx, obj, id, foundp);
 }
 
 /* static */ inline bool

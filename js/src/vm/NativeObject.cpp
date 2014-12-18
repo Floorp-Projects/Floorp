@@ -2109,7 +2109,7 @@ js::NativeSetProperty(JSContext *cx, HandleNativeObject obj, HandleObject receiv
             // unqualified assignment to a nonexistent global (a strict error).
             if (!qualified) {
                 RootedObject pobj(cx);
-                if (!JSObject::lookupGeneric(cx, proto, id, &pobj, &shape))
+                if (!LookupProperty(cx, proto, id, &pobj, &shape))
                     return false;
                 if (!shape)
                     return SetNonexistentProperty(cx, obj, receiver, id, qualified, vp, strict);

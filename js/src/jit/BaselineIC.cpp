@@ -3368,7 +3368,7 @@ EffectlesslyLookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName n
     }
 
     if (checkObj->hasIdempotentProtoChain()) {
-        if (!JSObject::lookupProperty(cx, checkObj, name, holder, shape))
+        if (!LookupProperty(cx, checkObj, name, holder, shape))
             return false;
     } else if (checkObj->isNative()) {
         shape.set(checkObj->as<NativeObject>().lookup(cx, NameToId(name)));

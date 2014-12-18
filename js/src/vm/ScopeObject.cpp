@@ -465,7 +465,7 @@ with_LookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
                    MutableHandleObject objp, MutableHandleShape propp)
 {
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-    return JSObject::lookupGeneric(cx, actual, id, objp, propp);
+    return LookupProperty(cx, actual, id, objp, propp);
 }
 
 static bool

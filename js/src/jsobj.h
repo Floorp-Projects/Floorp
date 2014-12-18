@@ -546,12 +546,6 @@ class JSObject : public js::gc::Cell
 
     MOZ_ALWAYS_INLINE void finalize(js::FreeOp *fop);
 
-    static inline bool hasProperty(JSContext *cx, js::HandleObject obj, js::HandleId id,
-                                   bool *foundp);
-
-    static inline bool hasProperty(JSContext *cx, js::HandleObject obj, js::PropertyName *name,
-                                   bool *foundp);
-
   public:
     static bool reportReadOnly(JSContext *cx, jsid id, unsigned report = JSREPORT_ERROR);
     bool reportNotConfigurable(JSContext *cx, jsid id, unsigned report = JSREPORT_ERROR);
@@ -565,19 +559,6 @@ class JSObject : public js::gc::Cell
      */
     bool callMethod(JSContext *cx, js::HandleId id, unsigned argc, js::Value *argv,
                     js::MutableHandleValue vp);
-
-    static bool lookupGeneric(JSContext *cx, js::HandleObject obj, js::HandleId id,
-                              js::MutableHandleObject objp, js::MutableHandleShape propp);
-
-    static bool lookupProperty(JSContext *cx, js::HandleObject obj, js::PropertyName *name,
-                               js::MutableHandleObject objp, js::MutableHandleShape propp)
-    {
-        JS::RootedId id(cx, js::NameToId(name));
-        return lookupGeneric(cx, obj, id, objp, propp);
-    }
-
-    static inline bool lookupElement(JSContext *cx, js::HandleObject obj, uint32_t index,
-                                     js::MutableHandleObject objp, js::MutableHandleShape propp);
 
     static inline bool getGeneric(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
                                   js::HandleId id, js::MutableHandleValue vp);
@@ -957,6 +938,16 @@ DefineElement(ExclusiveContext *cx, HandleObject obj, uint32_t index, HandleValu
               JSStrictPropertyOp setter = nullptr,
               unsigned attrs = JSPROP_ENUMERATE);
 
+/*
+ * ES6 [[HasProperty]]. Set *foundp to true if `id in obj` (that is, if obj has
+ * an own or inherited property obj[id]), false otherwise.
+ */
+inline bool
+HasProperty(JSContext *cx, HandleObject obj, HandleId id, bool *foundp);
+
+inline bool
+HasProperty(JSContext *cx, HandleObject obj, PropertyName *name, bool *foundp);
+
 
 /*** SpiderMonkey nonstandard internal methods ***************************************************/
 
@@ -969,9 +960,26 @@ DefineElement(ExclusiveContext *cx, HandleObject obj, uint32_t index, HandleValu
 extern bool
 SetImmutablePrototype(js::ExclusiveContext *cx, JS::HandleObject obj, bool *succeeded);
 
-/* Set *resultp to tell whether obj has an own property with the given id. */
+/*
+ * Deprecated. A version of HasProperty that also returns the object on which
+ * the property was found (but that information is unreliable for proxies), and
+ * the Shape of the property, if native.
+ */
 extern bool
-HasOwnProperty(JSContext *cx, HandleObject obj, HandleId id, bool *resultp);
+LookupProperty(JSContext *cx, HandleObject obj, HandleId id,
+               MutableHandleObject objp, MutableHandleShape propp);
+
+inline bool
+LookupProperty(JSContext *cx, HandleObject obj, PropertyName *name,
+               MutableHandleObject objp, MutableHandleShape propp)
+{
+    RootedId id(cx, NameToId(name));
+    return LookupProperty(cx, obj, id, objp, propp);
+}
+
+/* Set *result to tell whether obj has an own property with the given id. */
+extern bool
+HasOwnProperty(JSContext *cx, HandleObject obj, HandleId id, bool *result);
 
 template <AllowGC allowGC>
 extern bool

@@ -131,7 +131,7 @@ GetPropertyDefault(JSContext *cx, HandleObject obj, HandleId id, HandleValue def
                    MutableHandleValue result)
 {
     bool found;
-    if (!JSObject::hasProperty(cx, obj, id, &found))
+    if (!HasProperty(cx, obj, id, &found))
         return false;
     if (!found) {
         result.set(defaultValue);
