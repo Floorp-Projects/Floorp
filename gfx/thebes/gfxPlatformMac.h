@@ -9,7 +9,12 @@
 #include "nsTArrayForwardDeclare.h"
 #include "gfxPlatform.h"
 
-namespace mozilla { namespace gfx { class DrawTarget; }}
+namespace mozilla {
+namespace gfx {
+class DrawTarget;
+class VsyncSource;
+} // gfx
+} // mozilla
 
 class gfxPlatformMac : public gfxPlatform {
 public:
@@ -67,7 +72,7 @@ public:
 
     virtual bool UseTiling() MOZ_OVERRIDE;
     virtual bool UseProgressivePaint() MOZ_OVERRIDE;
-    virtual void InitHardwareVsync() MOZ_OVERRIDE;
+    virtual already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource() MOZ_OVERRIDE;
 
     // lower threshold on font anti-aliasing
     uint32_t GetAntiAliasingThreshold() { return mFontAntiAliasingThreshold; }
