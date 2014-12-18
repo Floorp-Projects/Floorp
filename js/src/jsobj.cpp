@@ -282,14 +282,6 @@ js::GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
 }
 
 bool
-js::GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
-{
-    Rooted<PropertyDescriptor> desc(cx);
-    return GetOwnPropertyDescriptor(cx, obj, id, &desc) &&
-           NewPropertyDescriptorObject(cx, desc, vp);
-}
-
-bool
 js::GetFirstArgumentAsObject(JSContext *cx, const CallArgs &args, const char *method,
                              MutableHandleObject objp)
 {
@@ -315,7 +307,8 @@ js::GetFirstArgumentAsObject(JSContext *cx, const CallArgs &args, const char *me
 }
 
 static bool
-HasProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp, bool *foundp)
+GetPropertyIfPresent(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp,
+                     bool *foundp)
 {
     if (!JSObject::hasProperty(cx, obj, id, foundp))
         return false;
@@ -324,13 +317,7 @@ HasProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp,
         return true;
     }
 
-    /*
-     * We must go through the method read barrier in case id is 'get' or 'set'.
-     * There is no obvious way to defer cloning a joined function object whose
-     * identity will be used by DefinePropertyOnObject, e.g., or reflected via
-     * js::GetOwnPropertyDescriptor, as the getter or setter callable object.
-     */
-    return !!JSObject::getGeneric(cx, obj, obj, id, vp);
+    return JSObject::getGeneric(cx, obj, obj, id, vp);
 }
 
 bool
@@ -360,7 +347,7 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
 
     /* 8.10.5 step 3 */
     id = NameToId(cx->names().enumerable);
-    if (!HasProperty(cx, desc, id, &v, &found))
+    if (!GetPropertyIfPresent(cx, desc, id, &v, &found))
         return false;
     if (found) {
         hasEnumerable_ = true;
@@ -370,7 +357,7 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
 
     /* 8.10.5 step 4 */
     id = NameToId(cx->names().configurable);
-    if (!HasProperty(cx, desc, id, &v, &found))
+    if (!GetPropertyIfPresent(cx, desc, id, &v, &found))
         return false;
     if (found) {
         hasConfigurable_ = true;
@@ -380,7 +367,7 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
 
     /* 8.10.5 step 5 */
     id = NameToId(cx->names().value);
-    if (!HasProperty(cx, desc, id, &v, &found))
+    if (!GetPropertyIfPresent(cx, desc, id, &v, &found))
         return false;
     if (found) {
         hasValue_ = true;
@@ -389,7 +376,7 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
 
     /* 8.10.6 step 6 */
     id = NameToId(cx->names().writable);
-    if (!HasProperty(cx, desc, id, &v, &found))
+    if (!GetPropertyIfPresent(cx, desc, id, &v, &found))
         return false;
     if (found) {
         hasWritable_ = true;
@@ -399,7 +386,7 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
 
     /* 8.10.7 step 7 */
     id = NameToId(cx->names().get);
-    if (!HasProperty(cx, desc, id, &v, &found))
+    if (!GetPropertyIfPresent(cx, desc, id, &v, &found))
         return false;
     if (found) {
         hasGet_ = true;
@@ -412,7 +399,7 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
 
     /* 8.10.7 step 8 */
     id = NameToId(cx->names().set);
-    if (!HasProperty(cx, desc, id, &v, &found))
+    if (!GetPropertyIfPresent(cx, desc, id, &v, &found))
         return false;
     if (found) {
         hasSet_ = true;
