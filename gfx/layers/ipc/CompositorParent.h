@@ -100,12 +100,12 @@ class CompositorVsyncObserver MOZ_FINAL : public VsyncObserver
   friend class CompositorParent;
 
 public:
-  explicit CompositorVsyncObserver(CompositorParent* aCompositorParent);
+  explicit CompositorVsyncObserver(CompositorParent* aCompositorParent, nsIWidget* aWidget);
   virtual bool NotifyVsync(TimeStamp aVsyncTimestamp) MOZ_OVERRIDE;
   void SetNeedsComposite(bool aSchedule);
   bool NeedsComposite();
   void CancelCurrentCompositeTask();
- 
+
 private:
   virtual ~CompositorVsyncObserver();
 
@@ -118,6 +118,7 @@ private:
   bool mNeedsComposite;
   bool mIsObservingVsync;
   nsRefPtr<CompositorParent> mCompositorParent;
+  nsRefPtr<VsyncDispatcher> mVsyncDispatcher;
 
   mozilla::Monitor mCurrentCompositeTaskMonitor;
   CancelableTask* mCurrentCompositeTask;

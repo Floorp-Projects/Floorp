@@ -510,6 +510,12 @@ NS_IMPL_ISUPPORTS(BackgroundChildPrimer, nsIIPCBackgroundChildCreateCallback)
 
 ContentChild* ContentChild::sSingleton;
 
+static void
+PostForkPreload()
+{
+    TabChild::PostForkPreload();
+}
+
 // Performs initialization that is not fork-safe, i.e. that must be done after
 // forking from the Nuwa process.
 static void
@@ -520,6 +526,7 @@ InitOnContentProcessCreated()
     if (IsNuwaProcess()) {
         return;
     }
+    PostForkPreload();
 #endif
 
     // This will register cross-process observer.
@@ -1243,7 +1250,6 @@ ContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
 {
     // This runs after AllocPBrowserChild() returns and the IPC machinery for this
     // PBrowserChild has been set up.
-
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os) {
         nsITabChild* tc =
@@ -1991,8 +1997,11 @@ bool
 ContentChild::RecvFlushMemory(const nsString& reason)
 {
 #ifdef MOZ_NUWA_PROCESS
-    if (IsNuwaProcess()) {
+    if (IsNuwaProcess() || ManagedPBrowserChild().Length() == 0) {
         // Don't flush memory in the nuwa process: the GC thread could be frozen.
+        // If there's no PBrowser child, don't flush memory, either. GC writes
+        // to copy-on-write pages and makes preallocated process take more memory
+        // before it actually becomes an app.
         return true;
     }
 #endif
@@ -2080,12 +2089,28 @@ ContentChild::RecvAppInfo(const nsCString& version, const nsCString& buildID,
     // BrowserElementChild.js.
     if ((mIsForApp || mIsForBrowser)
 #ifdef MOZ_NUWA_PROCESS
-        && !IsNuwaProcess()
+        && IsNuwaProcess()
 #endif
        ) {
         PreloadSlowThings();
+#ifndef MOZ_NUWA_PROCESS
+        PostForkPreload();
+#endif
     }
 
+#ifdef MOZ_NUWA_PROCESS
+    // Some modules are initialized in preloading. We need to wait until the
+    // tasks they dispatched to chrome process are done.
+    if (IsNuwaProcess()) {
+        SendNuwaWaitForFreeze();
+    }
+#endif
+    return true;
+}
+
+bool
+ContentChild::RecvNuwaFreeze()
+{
 #ifdef MOZ_NUWA_PROCESS
     if (IsNuwaProcess()) {
         ContentChild::GetSingleton()->RecvGarbageCollect();
@@ -2093,7 +2118,6 @@ ContentChild::RecvAppInfo(const nsCString& version, const nsCString& buildID,
             FROM_HERE, NewRunnableFunction(OnFinishNuwaPreparation));
     }
 #endif
-
     return true;
 }
 
@@ -2344,6 +2368,36 @@ RunNuwaFork()
       DoNuwaFork();
     }
 }
+
+class NuwaForkCaller: public nsRunnable
+{
+public:
+    NS_IMETHODIMP
+    Run() {
+        // We want to ensure that the PBackground actor gets cloned in the Nuwa
+        // process before we freeze. Also, we have to do this to avoid deadlock.
+        // Protocols that are "opened" (e.g. PBackground, PCompositor) block the
+        // main thread to wait for the IPC thread during the open operation.
+        // NuwaSpawnWait() blocks the IPC thread to wait for the main thread when
+        // the Nuwa process is forked. Unless we ensure that the two cannot happen
+        // at the same time then we risk deadlock. Spinning the event loop here
+        // guarantees the ordering is safe for PBackground.
+        if (!BackgroundChild::GetForCurrentThread()) {
+            // Dispatch ourself again.
+            NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL);
+        } else {
+            MessageLoop* ioloop = XRE_GetIOMessageLoop();
+            ioloop->PostTask(FROM_HERE, NewRunnableFunction(RunNuwaFork));
+        }
+        return NS_OK;
+    }
+private:
+    virtual
+    ~NuwaForkCaller()
+    {
+    }
+};
+
 #endif
 
 bool
@@ -2355,22 +2409,9 @@ ContentChild::RecvNuwaFork()
     }
     sNuwaForking = true;
 
-    // We want to ensure that the PBackground actor gets cloned in the Nuwa
-    // process before we freeze. Also, we have to do this to avoid deadlock.
-    // Protocols that are "opened" (e.g. PBackground, PCompositor) block the
-    // main thread to wait for the IPC thread during the open operation.
-    // NuwaSpawnWait() blocks the IPC thread to wait for the main thread when
-    // the Nuwa process is forked. Unless we ensure that the two cannot happen
-    // at the same time then we risk deadlock. Spinning the event loop here
-    // guarantees the ordering is safe for PBackground.
-    while (!BackgroundChild::GetForCurrentThread()) {
-        if (NS_WARN_IF(!NS_ProcessNextEvent())) {
-            return false;
-        }
-    }
+    nsRefPtr<NuwaForkCaller> runnable = new NuwaForkCaller();
+    NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL);
 
-    MessageLoop* ioloop = XRE_GetIOMessageLoop();
-    ioloop->PostTask(FROM_HERE, NewRunnableFunction(RunNuwaFork));
     return true;
 #else
     return false; // Makes the underlying IPC channel abort.

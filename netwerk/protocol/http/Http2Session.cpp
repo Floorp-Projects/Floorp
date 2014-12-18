@@ -66,7 +66,7 @@ do {                             \
   return NS_ERROR_ILLEGAL_VALUE; \
   } while (0)
 
-Http2Session::Http2Session(nsISocketTransport *aSocketTransport)
+Http2Session::Http2Session(nsISocketTransport *aSocketTransport, uint32_t version)
   : mSocketTransport(aSocketTransport)
   , mSegmentReader(nullptr)
   , mSegmentWriter(nullptr)
@@ -103,6 +103,8 @@ Http2Session::Http2Session(nsISocketTransport *aSocketTransport)
   , mPreviousUsed(false)
   , mWaitingForSettingsAck(false)
   , mGoAwayOnPush(false)
+  , mUseH2Deps(false)
+  , mVersion(version)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -125,7 +127,7 @@ Http2Session::Http2Session(nsISocketTransport *aSocketTransport)
 
   mPingThreshold = gHttpHandler->SpdyPingThreshold();
 
-  mNegotiatedToken.AssignLiteral(NS_HTTP2_DRAFT_TOKEN);
+  mNegotiatedToken.AssignLiteral(HTTP2_DRAFT_LATEST_TOKEN);
 }
 
 // Copy the 32 bit number into the destination, using network byte order
@@ -789,20 +791,26 @@ Http2Session::GenerateGoAway(uint32_t aStatusCode)
   FlushOutputQueue();
 }
 
-// The Hello is comprised of 24 octets of magic, which are designed to
-// flush out silent but broken intermediaries, followed by a settings
-// frame which sets a small flow control window for pushes and a
-// window update frame which creates a large session flow control window
+// The Hello is comprised of
+// 1] 24 octets of magic, which are designed to
+// flush out silent but broken intermediaries
+// 2] a settings frame which sets a small flow control window for pushes
+// 3] a window update frame which creates a large session flow control window
+// 4] 5 priority frames for streams which will never be opened with headers
+//    these streams (3, 5, 7, 9, b) build a dependency tree that all other
+//    streams will be direct leaves of.
 void
 Http2Session::SendHello()
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
   LOG3(("Http2Session::SendHello %p\n", this));
 
-  // sized for magic + 4 settings and a session window update to follow
-  // 24 magic, 33 for settings (9 header + 4 settings @6), 13 for window update
+  // sized for magic + 4 settings and a session window update and 5 priority frames
+  // 24 magic, 33 for settings (9 header + 4 settings @6), 13 for window update,
+  // 5 priority frames at 14 (9 + 5) each
   static const uint32_t maxSettings = 4;
-  static const uint32_t maxDataLen = 24 + kFrameHeaderBytes + maxSettings * 6 + 13;
+  static const uint32_t prioritySize = 5 * (kFrameHeaderBytes + 5);
+  static const uint32_t maxDataLen = 24 + kFrameHeaderBytes + maxSettings * 6 + 13 + prioritySize;
   char *packet = EnsureOutputBuffer(maxDataLen);
   memcpy(packet, kMagicHello, 24);
   mOutputQueueUsed += 24;
@@ -855,23 +863,59 @@ Http2Session::SendHello()
 
   // now bump the local session window from 64KB
   uint32_t sessionWindowBump = ASpdySession::kInitialRwin - kDefaultRwin;
-  if (kDefaultRwin >= ASpdySession::kInitialRwin)
-    goto sendHello_complete;
+  if (kDefaultRwin < ASpdySession::kInitialRwin) {
+    // send a window update for the session (Stream 0) for something large
+    mLocalSessionWindow = ASpdySession::kInitialRwin;
 
-  // send a window update for the session (Stream 0) for something large
-  mLocalSessionWindow = ASpdySession::kInitialRwin;
+    packet = mOutputQueueBuffer.get() + mOutputQueueUsed;
+    CreateFrameHeader(packet, 4, FRAME_TYPE_WINDOW_UPDATE, 0, 0);
+    mOutputQueueUsed += kFrameHeaderBytes + 4;
+    CopyAsNetwork32(packet + kFrameHeaderBytes, sessionWindowBump);
 
-  packet = mOutputQueueBuffer.get() + mOutputQueueUsed;
-  CreateFrameHeader(packet, 4, FRAME_TYPE_WINDOW_UPDATE, 0, 0);
-  mOutputQueueUsed += kFrameHeaderBytes + 4;
-  CopyAsNetwork32(packet + kFrameHeaderBytes, sessionWindowBump);
+    LOG3(("Session Window increase at start of session %p %u\n",
+          this, sessionWindowBump));
+    LogIO(this, nullptr, "Session Window Bump ", packet, kFrameHeaderBytes + 4);
+  }
 
-  LOG3(("Session Window increase at start of session %p %u\n",
-        this, sessionWindowBump));
-  LogIO(this, nullptr, "Session Window Bump ", packet, kFrameHeaderBytes + 4);
+  // draft-14 and draft-15 are the only versions we support that do not
+  // allow our priority scheme. Blacklist them here - they are aliased
+  // as draft-15
+  if ((mVersion != HTTP_VERSION_2_DRAFT_15) &&
+      gHttpHandler->UseH2Deps() && gHttpHandler->CriticalRequestPrioritization()) {
+    mUseH2Deps = true;
+    MOZ_ASSERT(mNextStreamID == kLeaderGroupID);
+    CreatePriorityNode(kLeaderGroupID, 0, 200, "leader");
+    mNextStreamID += 2;
+    MOZ_ASSERT(mNextStreamID == kOtherGroupID);
+    CreatePriorityNode(kOtherGroupID, 0, 100, "other");
+    mNextStreamID += 2;
+    MOZ_ASSERT(mNextStreamID == kBackgroundGroupID);
+    CreatePriorityNode(kBackgroundGroupID, 0, 0, "background");
+    mNextStreamID += 2;
+    MOZ_ASSERT(mNextStreamID == kSpeculativeGroupID);
+    CreatePriorityNode(kSpeculativeGroupID, kBackgroundGroupID, 0, "speculative");
+    mNextStreamID += 2;
+    MOZ_ASSERT(mNextStreamID == kFollowerGroupID);
+    CreatePriorityNode(kFollowerGroupID, kLeaderGroupID, 0, "follower");
+    mNextStreamID += 2;
+  }
 
-sendHello_complete:
   FlushOutputQueue();
+}
+
+void
+Http2Session::CreatePriorityNode(uint32_t streamID, uint32_t dependsOn, uint8_t weight,
+                                 const char *label)
+{
+  char *packet = mOutputQueueBuffer.get() + mOutputQueueUsed;
+  CreateFrameHeader(packet, 5, FRAME_TYPE_PRIORITY, 0, streamID);
+  mOutputQueueUsed += kFrameHeaderBytes + 5;
+  CopyAsNetwork32(packet + kFrameHeaderBytes, dependsOn); // depends on
+  packet[kFrameHeaderBytes + 4] = weight; // weight
+
+  LOG3(("Http2Session %p generate Priority Frame 0x%X depends on 0x%X "
+        "weight %d for %s class\n", this, streamID, dependsOn, weight, label));
+  LogIO(this, nullptr, "Priority dep node", packet, kFrameHeaderBytes + 5);
 }
 
 // perform a bunch of integrity checks on the stream.
@@ -3322,7 +3366,7 @@ Http2Session::ConfirmTLSProfile()
     // Fallback to showing the draft version, just in case
     LOG3(("Http2Session::ConfirmTLSProfile %p could not get negotiated token. "
           "Falling back to draft token.", this));
-    mNegotiatedToken.AssignLiteral(NS_HTTP2_DRAFT_TOKEN);
+    mNegotiatedToken.AssignLiteral(HTTP2_DRAFT_LATEST_TOKEN);
   }
 
   mTLSProfileConfirmed = true;

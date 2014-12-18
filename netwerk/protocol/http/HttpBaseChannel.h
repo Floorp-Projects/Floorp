@@ -28,6 +28,7 @@
 #include "nsIEffectiveTLDService.h"
 #include "nsIStringEnumerator.h"
 #include "nsISupportsPriority.h"
+#include "nsIClassOfService.h"
 #include "nsIApplicationCache.h"
 #include "nsIResumableChannel.h"
 #include "nsITraceableChannel.h"
@@ -65,6 +66,7 @@ class HttpBaseChannel : public nsHashPropertyBag
                       , public nsIUploadChannel
                       , public nsIUploadChannel2
                       , public nsISupportsPriority
+                      , public nsIClassOfService
                       , public nsIResumableChannel
                       , public nsITraceableChannel
                       , public PrivateBrowsingChannel<HttpBaseChannel>
@@ -176,10 +178,6 @@ public:
   NS_IMETHOD GetRemotePort(int32_t* port);
   NS_IMETHOD GetAllowSpdy(bool *aAllowSpdy);
   NS_IMETHOD SetAllowSpdy(bool aAllowSpdy);
-  NS_IMETHOD GetLoadAsBlocking(bool *aLoadAsBlocking);
-  NS_IMETHOD SetLoadAsBlocking(bool aLoadAsBlocking);
-  NS_IMETHOD GetLoadUnblocked(bool *aLoadUnblocked);
-  NS_IMETHOD SetLoadUnblocked(bool aLoadUnblocked);
   NS_IMETHOD GetApiRedirectToURI(nsIURI * *aApiRedirectToURI);
   NS_IMETHOD AddSecurityMessage(const nsAString &aMessageTag, const nsAString &aMessageCategory);
   NS_IMETHOD TakeAllSecurityMessages(nsCOMArray<nsISecurityConsoleMessage> &aMessages);
@@ -201,6 +199,9 @@ public:
   // nsISupportsPriority
   NS_IMETHOD GetPriority(int32_t *value);
   NS_IMETHOD AdjustPriority(int32_t delta);
+
+  // nsIClassOfService
+  NS_IMETHOD GetClassFlags(uint32_t *outFlags) { *outFlags = mClassOfService; return NS_OK; }
 
   // nsIResumableChannel
   NS_IMETHOD GetEntityID(nsACString& aEntityID);
@@ -334,6 +335,7 @@ protected:
   nsresult                          mStatus;
   uint32_t                          mLoadFlags;
   uint32_t                          mCaps;
+  uint32_t                          mClassOfService;
   int16_t                           mPriority;
   uint8_t                           mRedirectionLimit;
 
@@ -356,8 +358,6 @@ protected:
   // True if timing collection is enabled
   uint32_t                          mTimingEnabled              : 1;
   uint32_t                          mAllowSpdy                  : 1;
-  uint32_t                          mLoadAsBlocking             : 1;
-  uint32_t                          mLoadUnblocked              : 1;
   uint32_t                          mResponseTimeoutEnabled     : 1;
   // A flag that should be false only if a cross-domain redirect occurred
   uint32_t                          mAllRedirectsSameOrigin     : 1;
