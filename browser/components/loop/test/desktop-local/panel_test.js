@@ -946,11 +946,15 @@ describe("loop.panel", function() {
         }));
       });
 
-    it("should close the panel when 'Start a Conversation' is clicked",
+    it("should close the panel once a room is created and there is no error",
       function() {
         var view = createTestComponent();
 
-        TestUtils.Simulate.click(view.getDOMNode().querySelector("button"));
+        roomStore.setStoreState({pendingCreation: true});
+
+        sinon.assert.notCalled(fakeWindow.close);
+
+        roomStore.setStoreState({pendingCreation: false});
 
         sinon.assert.calledOnce(fakeWindow.close);
       });
