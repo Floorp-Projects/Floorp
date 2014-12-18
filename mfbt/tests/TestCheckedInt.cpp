@@ -521,7 +521,7 @@ void test()
                                                     : sizeof(T) >= sizeof(U)); \
   }
   #define VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(U) \
-    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE2(U,U,+0) \
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE2(U,U,+zero) \
     VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE2(U,CheckedInt<U>,.toChecked<T>())
 
   VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(int8_t)
