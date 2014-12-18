@@ -195,7 +195,7 @@ js::ObjectToSource(JSContext *cx, HandleObject obj)
         RootedId id(cx, idv[i]);
         RootedObject obj2(cx);
         RootedShape shape(cx);
-        if (!JSObject::lookupGeneric(cx, obj, id, &obj2, &shape))
+        if (!LookupProperty(cx, obj, id, &obj2, &shape))
             return nullptr;
 
         /*  Decide early whether we prefer get/set or old getter/setter syntax. */

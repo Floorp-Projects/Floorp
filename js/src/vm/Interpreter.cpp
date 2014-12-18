@@ -1877,7 +1877,7 @@ CASE(JSOP_IN)
     FETCH_ELEMENT_ID(-2, id);
     RootedObject &obj2 = rootObject1;
     RootedShape &prop = rootShape0;
-    if (!JSObject::lookupGeneric(cx, obj, id, &obj2, &prop))
+    if (!LookupProperty(cx, obj, id, &obj2, &prop))
         goto error;
     bool cond = prop != nullptr;
     prop = nullptr;
@@ -3702,7 +3702,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
 
     RootedShape shape(cx);
     RootedObject pobj(cx);
-    if (!JSObject::lookupProperty(cx, parent, name, &pobj, &shape))
+    if (!LookupProperty(cx, parent, name, &pobj, &shape))
         return false;
 
     RootedValue rval(cx, ObjectValue(*fun));

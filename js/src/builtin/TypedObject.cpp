@@ -1714,7 +1714,7 @@ TypedObject::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
         return true;
     }
 
-    return JSObject::lookupGeneric(cx, proto, id, objp, propp);
+    return LookupProperty(cx, proto, id, objp, propp);
 }
 
 bool

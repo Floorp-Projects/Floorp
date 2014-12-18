@@ -7324,7 +7324,7 @@ DebuggerEnv_find(JSContext *cx, unsigned argc, Value *vp)
         RootedShape prop(cx);
         RootedObject pobj(cx);
         for (; env && !prop; env = env->enclosingScope()) {
-            if (!JSObject::lookupGeneric(cx, env, id, &pobj, &prop))
+            if (!LookupProperty(cx, env, id, &pobj, &prop))
                 return false;
             if (prop)
                 break;
@@ -7398,7 +7398,7 @@ DebuggerEnv_setVariable(JSContext *cx, unsigned argc, Value *vp)
 
         /* Make sure the environment actually has the specified binding. */
         bool has;
-        if (!JSObject::hasProperty(cx, env, id, &has))
+        if (!HasProperty(cx, env, id, &has))
             return false;
         if (!has) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEBUG_VARIABLE_NOT_FOUND);

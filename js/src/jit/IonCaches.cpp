@@ -2273,7 +2273,7 @@ IsCacheableDOMProxyUnshadowedSetterCall(JSContext *cx, HandleObject obj, HandleP
     if (!checkObj)
         return true;
 
-    if (!JSObject::lookupProperty(cx, obj, name, holder, shape))
+    if (!LookupProperty(cx, obj, name, holder, shape))
         return false;
 
     if (!holder)

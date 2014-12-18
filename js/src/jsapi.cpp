@@ -2289,7 +2289,7 @@ JS_HasPropertyById(JSContext *cx, HandleObject obj, HandleId id, bool *foundp)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    return JSObject::hasProperty(cx, obj, id, foundp);
+    return HasProperty(cx, obj, id, foundp);
 }
 
 JS_PUBLIC_API(bool)
@@ -2943,7 +2943,7 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id,
     RootedObject obj2(cx);
     RootedShape shape(cx);
 
-    if (!JSObject::lookupGeneric(cx, obj, id, &obj2, &shape))
+    if (!LookupProperty(cx, obj, id, &obj2, &shape))
         return false;
 
     desc.clear();

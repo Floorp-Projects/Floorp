@@ -601,11 +601,11 @@ LookupPropertyInline(ExclusiveContext *cx,
         if (!proto->isNative()) {
             if (!cx->shouldBeJSContext() || !allowGC)
                 return false;
-            return JSObject::lookupGeneric(cx->asJSContext(),
-                                           MaybeRooted<JSObject*, allowGC>::toHandle(proto),
-                                           MaybeRooted<jsid, allowGC>::toHandle(id),
-                                           MaybeRooted<JSObject*, allowGC>::toMutableHandle(objp),
-                                           MaybeRooted<Shape*, allowGC>::toMutableHandle(propp));
+            return LookupProperty(cx->asJSContext(),
+                                  MaybeRooted<JSObject*, allowGC>::toHandle(proto),
+                                  MaybeRooted<jsid, allowGC>::toHandle(id),
+                                  MaybeRooted<JSObject*, allowGC>::toMutableHandle(objp),
+                                  MaybeRooted<Shape*, allowGC>::toMutableHandle(propp));
         }
 
         current = &proto->template as<NativeObject>();

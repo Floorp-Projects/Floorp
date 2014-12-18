@@ -1172,7 +1172,7 @@ SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate p
                         RootedValue idv(cx, StringValue(*idp));
                         if (!ValueToId<CanGC>(cx, idv, &id))
                             return false;
-                        if (!JSObject::lookupGeneric(cx, proto, id, &obj2, &prop))
+                        if (!LookupProperty(cx, proto, id, &obj2, &prop))
                             return false;
                         if (prop) {
                             unsigned attrs;
@@ -1330,11 +1330,11 @@ js::IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
     // it's using the new style protocol. Otherwise just return the object.
     RootedObject result(cx, &rval.toObject());
     bool found = false;
-    if (!JSObject::hasProperty(cx, result, cx->names().done, &found))
+    if (!HasProperty(cx, result, cx->names().done, &found))
         return false;
     if (!found)
         return true;
-    if (!JSObject::hasProperty(cx, result, cx->names().value, &found))
+    if (!HasProperty(cx, result, cx->names().value, &found))
         return false;
     if (!found)
         return true;

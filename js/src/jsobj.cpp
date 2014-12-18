@@ -262,7 +262,7 @@ static bool
 GetPropertyIfPresent(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp,
                      bool *foundp)
 {
-    if (!JSObject::hasProperty(cx, obj, id, foundp))
+    if (!HasProperty(cx, obj, id, foundp))
         return false;
     if (!*foundp) {
         vp.setUndefined();
@@ -2803,16 +2803,15 @@ JSObject::constructHook() const
     return nullptr;
 }
 
-/* static */ bool
-JSObject::lookupGeneric(JSContext *cx, HandleObject obj, js::HandleId id,
-                        MutableHandleObject objp, MutableHandleShape propp)
+bool
+js::LookupProperty(JSContext *cx, HandleObject obj, js::HandleId id,
+                   MutableHandleObject objp, MutableHandleShape propp)
 {
     /* NB: The logic of lookupGeneric is implicitly reflected in
      *     BaselineIC.cpp's |EffectlesslyLookupProperty| logic.
      *     If this changes, please remember to update the logic there as well.
      */
-    LookupGenericOp op = obj->getOps()->lookupGeneric;
-    if (op)
+    if (LookupGenericOp op = obj->getOps()->lookupGeneric)
         return op(cx, obj, id, objp, propp);
     return NativeLookupProperty<CanGC>(cx, obj.as<NativeObject>(), id, objp, propp);
 }
@@ -2824,7 +2823,7 @@ js::LookupName(JSContext *cx, HandlePropertyName name, HandleObject scopeChain,
     RootedId id(cx, NameToId(name));
 
     for (RootedObject scope(cx, scopeChain); scope; scope = scope->enclosingScope()) {
-        if (!JSObject::lookupGeneric(cx, scope, id, pobjp, propp))
+        if (!LookupProperty(cx, scope, id, pobjp, propp))
             return false;
         if (propp) {
             objp.set(scope);
@@ -2871,7 +2870,7 @@ js::LookupNameWithGlobalDefault(JSContext *cx, HandlePropertyName name, HandleOb
 
     RootedObject scope(cx, scopeChain);
     for (; !scope->is<GlobalObject>(); scope = scope->enclosingScope()) {
-        if (!JSObject::lookupGeneric(cx, scope, id, &pobj, &shape))
+        if (!LookupProperty(cx, scope, id, &pobj, &shape))
             return false;
         if (shape)
             break;
@@ -2892,7 +2891,7 @@ js::LookupNameUnqualified(JSContext *cx, HandlePropertyName name, HandleObject s
 
     RootedObject scope(cx, scopeChain);
     for (; !scope->isUnqualifiedVarObj(); scope = scope->enclosingScope()) {
-        if (!JSObject::lookupGeneric(cx, scope, id, &pobj, &shape))
+        if (!LookupProperty(cx, scope, id, &pobj, &shape))
             return false;
         if (shape)
             break;
@@ -2977,17 +2976,17 @@ js::NonProxyLookupOwnProperty<NoGC>(JSContext *cx, LookupGenericOp lookup,
                                     FakeMutableHandle<Shape*> propp);
 
 bool
-js::HasOwnProperty(JSContext *cx, HandleObject obj, HandleId id, bool *resultp)
+js::HasOwnProperty(JSContext *cx, HandleObject obj, HandleId id, bool *result)
 {
     if (obj->is<ProxyObject>())
-        return Proxy::hasOwn(cx, obj, id, resultp);
+        return Proxy::hasOwn(cx, obj, id, result);
 
     RootedObject pobj(cx);
     RootedShape shape(cx);
     LookupGenericOp lookupOp = obj->getOps()->lookupGeneric;
     if (!NonProxyLookupOwnProperty<CanGC>(cx, lookupOp, obj, id, &pobj, &shape))
         return false;
-    *resultp = (shape != nullptr);
+    *result = (shape != nullptr);
     return true;
 }
 
