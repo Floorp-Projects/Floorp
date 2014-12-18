@@ -64,7 +64,7 @@ describe("loop.store.RoomStore", function () {
   });
 
   describe("constructed", function() {
-    var fakeMozLoop, store;
+    var fakeMozLoop, fakeNotifications, store;
 
     var defaultStoreState = {
       error: undefined,
@@ -86,7 +86,14 @@ describe("loop.store.RoomStore", function () {
           on: sandbox.stub()
         }
       };
-      store = new loop.store.RoomStore(dispatcher, {mozLoop: fakeMozLoop});
+      fakeNotifications = {
+        set: sinon.stub(),
+        remove: sinon.stub()
+      };
+      store = new loop.store.RoomStore(dispatcher, {
+        mozLoop: fakeMozLoop,
+        notifications: fakeNotifications
+      });
       store.setStoreState(defaultStoreState);
     });
 
@@ -153,7 +160,7 @@ describe("loop.store.RoomStore", function () {
 
           expect(store.getStoreState().rooms).to.have.length.of(0);
         });
-      })
+      });
     });
 
     describe("#findNextAvailableRoomNumber", function() {
@@ -203,7 +210,18 @@ describe("loop.store.RoomStore", function () {
       };
 
       beforeEach(function() {
+        sandbox.stub(dispatcher, "dispatch");
         store.setStoreState({pendingCreation: false, rooms: []});
+      });
+
+      it("should clear any existing room errors", function() {
+        sandbox.stub(fakeMozLoop.rooms, "create");
+
+        store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
+
+        sinon.assert.calledOnce(fakeNotifications.remove);
+        sinon.assert.calledWithExactly(fakeNotifications.remove,
+          "create-room-error");
       });
 
       it("should request creation of a new room", function() {
@@ -219,17 +237,6 @@ describe("loop.store.RoomStore", function () {
         });
       });
 
-      it("should store any creation encountered error", function() {
-        var err = new Error("fake");
-        sandbox.stub(fakeMozLoop.rooms, "create", function(data, cb) {
-          cb(err);
-        });
-
-        store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
-
-        expect(store.getStoreState().error).eql(err);
-      });
-
       it("should switch the pendingCreation state flag to true", function() {
         sandbox.stub(fakeMozLoop.rooms, "create");
 
@@ -238,31 +245,89 @@ describe("loop.store.RoomStore", function () {
         expect(store.getStoreState().pendingCreation).eql(true);
       });
 
-      it("should switch the pendingCreation state flag to false once the " +
-         "operation is done", function() {
-        sandbox.stub(fakeMozLoop.rooms, "create", function(data, cb) {
-          cb(null, {roomToken: "fakeToken"});
-        });
-
-        store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
-
-        expect(store.getStoreState().pendingCreation).eql(false);
-      });
-
-      it("should dispatch an OpenRoom action once the operation is done",
+      it("should dispatch a CreatedRoom action once the operation is done",
         function() {
-          var dispatch = sandbox.stub(dispatcher, "dispatch");
           sandbox.stub(fakeMozLoop.rooms, "create", function(data, cb) {
             cb(null, {roomToken: "fakeToken"});
           });
 
           store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
 
-          sinon.assert.calledOnce(dispatch);
-          sinon.assert.calledWithExactly(dispatch, new sharedActions.OpenRoom({
+          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch,
+            new sharedActions.CreatedRoom({
+              roomToken: "fakeToken"
+            }));
+        });
+
+      it("should dispatch a CreateRoomError action if the operation fails",
+        function() {
+          var err = new Error("fake");
+          sandbox.stub(fakeMozLoop.rooms, "create", function(data, cb) {
+            cb(err);
+          });
+
+          store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
+
+          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch,
+            new sharedActions.CreateRoomError({
+              error: err
+            }));
+        });
+   });
+
+   describe("#createdRoom", function() {
+      beforeEach(function() {
+        sandbox.stub(dispatcher, "dispatch");
+      });
+
+      it("should switch the pendingCreation state flag to false", function() {
+        store.setStoreState({pendingCreation:true});
+
+        store.createdRoom(new sharedActions.CreatedRoom({
+          roomToken: "fakeToken"
+        }));
+
+        expect(store.getStoreState().pendingCreation).eql(false);
+      });
+
+      it("should dispatch an OpenRoom action once the operation is done",
+        function() {
+          store.createdRoom(new sharedActions.CreatedRoom({
             roomToken: "fakeToken"
           }));
+
+          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch,
+            new sharedActions.OpenRoom({
+              roomToken: "fakeToken"
+            }));
         });
+    });
+
+    describe("#createRoomError", function() {
+      it("should switch the pendingCreation state flag to false", function() {
+        store.setStoreState({pendingCreation:true});
+
+        store.createRoomError({
+          error: new Error("fake")
+        });
+
+        expect(store.getStoreState().pendingCreation).eql(false);
+      });
+
+      it("should set a notification", function() {
+        store.createRoomError({
+          error: new Error("fake")
+        });
+
+        sinon.assert.calledOnce(fakeNotifications.set);
+        sinon.assert.calledWithMatch(fakeNotifications.set, {
+          id: "create-room-error",
+          level: "error"
+        });
+      });
     });
 
     describe("#copyRoomUrl", function() {
