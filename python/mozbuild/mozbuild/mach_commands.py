@@ -765,10 +765,11 @@ class GTestCommands(MachCommandBase):
             # current OS.
             debugger = mozdebug.get_default_debugger_name(mozdebug.DebuggerSearch.KeepLooking)
 
-        debuggerInfo = mozdebug.get_debugger_info(debugger, debugger_args)
-        if not debuggerInfo:
-            print("Could not find a suitable debugger in your PATH.")
-            return 1
+        if debugger:
+            debuggerInfo = mozdebug.get_debugger_info(debugger, debugger_args)
+            if not debuggerInfo:
+                print("Could not find a suitable debugger in your PATH.")
+                return 1
 
         # Parameters come from the CLI. We need to convert them before
         # their use.
@@ -942,10 +943,11 @@ class RunProgram(MachCommandBase):
                 # current OS.
                 debugger = mozdebug.get_default_debugger_name(mozdebug.DebuggerSearch.KeepLooking)
 
-            self.debuggerInfo = mozdebug.get_debugger_info(debugger, debugparams)
-            if not self.debuggerInfo:
-                print("Could not find a suitable debugger in your PATH.")
-                return 1
+            if debugger:
+                self.debuggerInfo = mozdebug.get_debugger_info(debugger, debugparams)
+                if not self.debuggerInfo:
+                    print("Could not find a suitable debugger in your PATH.")
+                    return 1
 
             # Parameters come from the CLI. We need to convert them before
             # their use.
