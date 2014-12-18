@@ -52,3 +52,5 @@ EXTRA_PP_JS_MODULES += [
 ]
 
 FINAL_LIBRARY = 'browsercomps'
+
+FAIL_ON_WARNINGS = True
