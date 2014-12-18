@@ -1059,7 +1059,7 @@ AtomicsObject::initClass(JSContext *cx, Handle<GlobalObject *> global)
     RootedValue AtomicsValue(cx, ObjectValue(*Atomics));
 
     // Everything is set up, install Atomics on the global object.
-    if (!JSObject::defineProperty(cx, global, cx->names().Atomics, AtomicsValue, nullptr, nullptr, 0))
+    if (!DefineProperty(cx, global, cx->names().Atomics, AtomicsValue, nullptr, nullptr, 0))
         return nullptr;
 
     global->setConstructor(JSProto_Atomics, AtomicsValue);

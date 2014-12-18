@@ -829,11 +829,11 @@ js::CreateItrResultObject(JSContext *cx, HandleValue value, bool done)
     if (!obj)
         return nullptr;
 
-    if (!JSObject::defineProperty(cx, obj, cx->names().value, value))
+    if (!DefineProperty(cx, obj, cx->names().value, value))
         return nullptr;
 
     RootedValue doneBool(cx, BooleanValue(done));
-    if (!JSObject::defineProperty(cx, obj, cx->names().done, doneBool))
+    if (!DefineProperty(cx, obj, cx->names().done, doneBool))
         return nullptr;
 
     return obj;

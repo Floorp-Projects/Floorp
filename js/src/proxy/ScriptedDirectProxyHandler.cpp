@@ -1203,8 +1203,8 @@ js::proxy_revocable(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     RootedValue revokeVal(cx, ObjectValue(*revoker));
-    if (!JSObject::defineProperty(cx, result, cx->names().proxy, proxyVal) ||
-        !JSObject::defineProperty(cx, result, cx->names().revoke, revokeVal))
+    if (!DefineProperty(cx, result, cx->names().proxy, proxyVal) ||
+        !DefineProperty(cx, result, cx->names().revoke, revokeVal))
     {
         return false;
     }

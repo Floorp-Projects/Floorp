@@ -467,8 +467,8 @@ array_length_setter(JSContext *cx, HandleObject obj, HandleId id, bool strict, M
         // chain. Ideally the setter should not have been called, but since
         // we're here, do an impression of SetPropertyByDefining.
         const Class *clasp = obj->getClass();
-        return JSObject::defineProperty(cx, obj, cx->names().length, vp,
-                                        clasp->getProperty, clasp->setProperty, JSPROP_ENUMERATE);
+        return DefineProperty(cx, obj, cx->names().length, vp,
+                              clasp->getProperty, clasp->setProperty, JSPROP_ENUMERATE);
     }
 
     Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
@@ -2442,7 +2442,7 @@ js::array_splice_impl(JSContext *cx, unsigned argc, Value *vp, bool returnValueI
             bool hole;
             if (!CheckForInterrupt(cx) ||
                 !GetElement(cx, obj, actualStart + k, &hole, &fromValue) ||
-                (!hole && !JSObject::defineElement(cx, arr, k, fromValue)))
+                (!hole && !DefineElement(cx, arr, k, fromValue)))
             {
                 return false;
             }
@@ -2807,7 +2807,7 @@ SliceSlowly(JSContext* cx, HandleObject obj, HandleObject receiver,
         {
             return false;
         }
-        if (!hole && !JSObject::defineElement(cx, result, slot - begin, value))
+        if (!hole && !DefineElement(cx, result, slot - begin, value))
             return false;
     }
     return true;
@@ -2835,7 +2835,7 @@ SliceSparse(JSContext *cx, HandleObject obj, uint32_t begin, uint32_t end, Handl
         if (!GetElement(cx, obj, obj, index, &hole, &value))
             return false;
 
-        if (!hole && !JSObject::defineElement(cx, result, index - begin, value))
+        if (!hole && !DefineElement(cx, result, index - begin, value))
             return false;
     }
 
@@ -3091,7 +3091,7 @@ array_of(JSContext *cx, unsigned argc, Value *vp)
 
     // Step 8.
     for (unsigned k = 0; k < args.length(); k++) {
-        if (!JSObject::defineElement(cx, obj, k, args[k]))
+        if (!DefineElement(cx, obj, k, args[k]))
             return false;
     }
 
