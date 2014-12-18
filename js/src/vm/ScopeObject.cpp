@@ -448,7 +448,7 @@ DynamicWithObject::create(JSContext *cx, HandleObject object, HandleObject enclo
     if (!obj)
         return nullptr;
 
-    JSObject *thisp = JSObject::thisObject(cx, object);
+    JSObject *thisp = GetThisObject(cx, object);
     if (!thisp)
         return nullptr;
 
@@ -566,14 +566,14 @@ static bool
 with_GetGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp)
 {
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-    return JSObject::getGenericAttributes(cx, actual, id, attrsp);
+    return GetPropertyAttributes(cx, actual, id, attrsp);
 }
 
 static bool
 with_SetGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp)
 {
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-    return JSObject::setGenericAttributes(cx, actual, id, attrsp);
+    return SetPropertyAttributes(cx, actual, id, attrsp);
 }
 
 static bool

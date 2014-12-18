@@ -161,7 +161,7 @@ DirectProxyHandler::className(JSContext *cx, HandleObject proxy) const
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID, GET);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JSObject::className(cx, target);
+    return GetObjectClassName(cx, target);
 }
 
 JSString *

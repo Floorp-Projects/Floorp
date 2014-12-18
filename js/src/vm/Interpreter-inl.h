@@ -351,7 +351,7 @@ DefVarOrConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName dn
          */
         unsigned oldAttrs;
         RootedId id(cx, NameToId(dn));
-        if (!JSObject::getGenericAttributes(cx, varobj, id, &oldAttrs))
+        if (!GetPropertyAttributes(cx, varobj, id, &oldAttrs))
             return false;
 
         JSAutoByteString bytes;

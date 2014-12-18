@@ -88,7 +88,7 @@ js::BoxNonStrictThis(JSContext *cx, HandleValue thisv)
 
     if (thisv.isNullOrUndefined()) {
         Rooted<GlobalObject*> global(cx, cx->global());
-        return JSObject::thisObject(cx, global);
+        return GetThisObject(cx, global);
     }
 
     if (thisv.isObject())
@@ -544,7 +544,7 @@ js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, 
             fval.toObject().as<JSFunction>().jitInfo()->needsOuterizedThisObject())
         {
             RootedObject thisObj(cx, &args.thisv().toObject());
-            JSObject *thisp = JSObject::thisObject(cx, thisObj);
+            JSObject *thisp = GetThisObject(cx, thisObj);
             if (!thisp)
                 return false;
             args.setThis(ObjectValue(*thisp));
@@ -685,7 +685,7 @@ js::Execute(JSContext *cx, HandleScript script, JSObject &scopeChainArg, Value *
     }
 
     /* Use the scope chain as 'this', modulo outerization. */
-    JSObject *thisObj = JSObject::thisObject(cx, scopeChain);
+    JSObject *thisObj = GetThisObject(cx, scopeChain);
     if (!thisObj)
         return false;
     Value thisv = ObjectValue(*thisObj);
@@ -1180,7 +1180,7 @@ JS_STATIC_ASSERT(JSOP_IFNE == JSOP_IFEQ + 1);
  * (an object on the scope chain).
  *
  * We can avoid computing |this| eagerly and push the implicit callee-coerced
- * |this| value, undefined, if any of these conditions hold:
+ * |this| value, undefined, if either of these conditions hold:
  *
  * 1. The nominal |this|, obj, is a global object.
  *
@@ -1188,8 +1188,9 @@ JS_STATIC_ASSERT(JSOP_IFNE == JSOP_IFEQ + 1);
  *    is what IsCacheableNonGlobalScope tests). Such objects-as-scopes must be
  *    censored with undefined.
  *
- * Otherwise, we bind |this| to obj->thisObject(). Only names inside |with|
- * statements and embedding-specific scope objects fall into this category.
+ * Otherwise, we bind |this| to GetThisObject(cx, obj). Only names inside
+ * |with| statements and embedding-specific scope objects fall into this
+ * category.
  *
  * If the callee is a strict mode function, then code implementing JSOP_THIS
  * in the interpreter and JITs will leave undefined as |this|. If funval is a
@@ -1210,7 +1211,7 @@ ComputeImplicitThis(JSContext *cx, HandleObject obj, MutableHandleValue vp)
     if (IsCacheableNonGlobalScope(obj))
         return true;
 
-    JSObject *nobj = JSObject::thisObject(cx, obj);
+    JSObject *nobj = GetThisObject(cx, obj);
     if (!nobj)
         return false;
 

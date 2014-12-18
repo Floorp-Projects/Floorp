@@ -989,12 +989,6 @@ js::DefineProperties(JSContext *cx, HandleObject obj, HandleObject props)
     return true;
 }
 
-extern bool
-js_PopulateObject(JSContext *cx, HandleObject newborn, HandleObject props)
-{
-    return DefineProperties(cx, newborn, props);
-}
-
 js::types::TypeObject*
 JSObject::uninlinedGetType(JSContext *cx)
 {
@@ -1090,7 +1084,7 @@ js::SetIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level)
             id = keys[i];
 
             unsigned attrs;
-            if (!JSObject::getGenericAttributes(cx, obj, id, &attrs))
+            if (!GetPropertyAttributes(cx, obj, id, &attrs))
                 return false;
 
             unsigned new_attrs = GetSealedOrFrozenAttributes(attrs, level);
@@ -1100,7 +1094,7 @@ js::SetIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level)
                 continue;
 
             attrs |= new_attrs;
-            if (!JSObject::setGenericAttributes(cx, obj, id, &attrs))
+            if (!SetPropertyAttributes(cx, obj, id, &attrs))
                 return false;
         }
     }
@@ -1160,7 +1154,7 @@ js::TestIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level, bo
         id = props[i];
 
         unsigned attrs;
-        if (!JSObject::getGenericAttributes(cx, obj, id, &attrs))
+        if (!GetPropertyAttributes(cx, obj, id, &attrs))
             return false;
 
         // If the property is configurable, this object is neither sealed nor
@@ -1181,17 +1175,7 @@ js::TestIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level, bo
 }
 
 
-/* static */
-const char *
-JSObject::className(JSContext *cx, HandleObject obj)
-{
-    assertSameCompartment(cx, obj);
-
-    if (obj->is<ProxyObject>())
-        return Proxy::className(cx, obj);
-
-    return obj->getClass()->name;
-}
+/* * */
 
 /*
  * Get the GC kind to use for scripted 'new' on the given class.
@@ -3225,9 +3209,6 @@ js::PreventExtensions(JSContext *cx, HandleObject obj, bool *succeeded)
     return obj->setFlag(cx, BaseShape::NOT_EXTENSIBLE, JSObject::GENERATE_SHAPE);
 }
 
-
-/*** SpiderMonkey nonstandard internal methods ***************************************************/
-
 bool
 js::GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
                              MutableHandle<PropertyDescriptor> desc)
@@ -3263,7 +3244,7 @@ js::GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
             desc.attributesRef() &= ~JSPROP_SHARED;
         }
     } else {
-        if (!JSObject::getGenericAttributes(cx, pobj, id, &desc.attributesRef()))
+        if (!GetPropertyAttributes(cx, pobj, id, &desc.attributesRef()))
             return false;
     }
 
@@ -3318,6 +3299,9 @@ js::DefineElement(ExclusiveContext *cx, HandleObject obj, uint32_t index, Handle
     return NativeDefineElement(cx, obj.as<NativeObject>(), index, value, getter, setter, attrs);
 }
 
+
+/*** SpiderMonkey nonstandard internal methods ***************************************************/
+
 bool
 js::SetImmutablePrototype(ExclusiveContext *cx, HandleObject obj, bool *succeeded)
 {
@@ -3333,27 +3317,16 @@ js::SetImmutablePrototype(ExclusiveContext *cx, HandleObject obj, bool *succeede
     return true;
 }
 
-/* static */ bool
-JSObject::defaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp)
+bool
+js::ToPrimitive(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp)
 {
-    JSConvertOp op = obj->getClass()->convert;
     bool ok;
-    if (!op)
-        ok = JS::OrdinaryToPrimitive(cx, obj, hint, vp);
-    else
+    if (JSConvertOp op = obj->getClass()->convert)
         ok = op(cx, obj, hint, vp);
+    else
+        ok = JS::OrdinaryToPrimitive(cx, obj, hint, vp);
     MOZ_ASSERT_IF(ok, vp.isPrimitive());
     return ok;
-}
-
-bool
-JSObject::callMethod(JSContext *cx, HandleId id, unsigned argc, Value *argv, MutableHandleValue vp)
-{
-    RootedValue fval(cx);
-    RootedObject obj(cx, this);
-    if (!GetProperty(cx, obj, obj, id, &fval))
-        return false;
-    return Invoke(cx, ObjectValue(*obj), fval, argc, argv, vp);
 }
 
 bool
@@ -3383,18 +3356,6 @@ js::WatchGuts(JSContext *cx, JS::HandleObject origObj, JS::HandleId id, JS::Hand
 }
 
 bool
-js::NativeWatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject callable)
-{
-    if (!obj->isNative() || IsAnyTypedArray(obj)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
-                             obj->getClass()->name);
-        return false;
-    }
-
-    return WatchGuts(cx, obj, id, callable);
-}
-
-bool
 js::UnwatchGuts(JSContext *cx, JS::HandleObject origObj, JS::HandleId id)
 {
     // Looking in the map for an unsupported object will never hit, so we don't
@@ -3406,9 +3367,48 @@ js::UnwatchGuts(JSContext *cx, JS::HandleObject origObj, JS::HandleId id)
 }
 
 bool
-js::NativeUnwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id)
+js::WatchProperty(JSContext *cx, HandleObject obj, HandleId id, HandleObject callable)
 {
+    if (WatchOp op = obj->getOps()->watch)
+        return op(cx, obj, id, callable);
+
+    if (!obj->isNative() || IsAnyTypedArray(obj)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
+                             obj->getClass()->name);
+        return false;
+    }
+
+    return WatchGuts(cx, obj, id, callable);
+}
+
+bool
+js::UnwatchProperty(JSContext *cx, HandleObject obj, HandleId id)
+{
+    if (UnwatchOp op = obj->getOps()->unwatch)
+        return op(cx, obj, id);
+
     return UnwatchGuts(cx, obj, id);
+}
+
+const char *
+js::GetObjectClassName(JSContext *cx, HandleObject obj)
+{
+    assertSameCompartment(cx, obj);
+
+    if (obj->is<ProxyObject>())
+        return Proxy::className(cx, obj);
+
+    return obj->getClass()->name;
+}
+
+bool
+JSObject::callMethod(JSContext *cx, HandleId id, unsigned argc, Value *argv, MutableHandleValue vp)
+{
+    RootedValue fval(cx);
+    RootedObject obj(cx, this);
+    if (!GetProperty(cx, obj, obj, id, &fval))
+        return false;
+    return Invoke(cx, ObjectValue(*obj), fval, argc, argv, vp);
 }
 
 

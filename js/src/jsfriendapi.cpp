@@ -268,7 +268,7 @@ js_ObjectClassIs(JSContext *cx, HandleObject obj, ESClassValue classValue)
 JS_FRIEND_API(const char *)
 js_ObjectClassName(JSContext *cx, HandleObject obj)
 {
-    return JSObject::className(cx, obj);
+    return GetObjectClassName(cx, obj);
 }
 
 JS_FRIEND_API(JS::Zone *)

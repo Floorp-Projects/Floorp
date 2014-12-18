@@ -6048,7 +6048,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
          * should have a thisObject hook that returns the appropriate outer
          * object.
          */
-        JSObject *thisObj = JSObject::thisObject(cx, scope);
+        JSObject *thisObj = GetThisObject(cx, scope);
         if (!thisObj)
             return false;
         thisv = ObjectValue(*thisObj);
@@ -6251,7 +6251,7 @@ DebuggerObject_getClass(JSContext *cx, unsigned argc, Value *vp)
     const char *className;
     {
         AutoCompartment ac(cx, refobj);
-        className = JSObject::className(cx, refobj);
+        className = GetObjectClassName(cx, refobj);
     }
     JSAtom *str = Atomize(cx, className, strlen(className));
     if (!str)

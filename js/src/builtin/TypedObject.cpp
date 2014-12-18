@@ -2030,7 +2030,7 @@ TypedObject::obj_getGenericAttributes(JSContext *cx, HandleObject obj,
         return true;
     }
 
-    return JSObject::getGenericAttributes(cx, proto, id, attrsp);
+    return GetPropertyAttributes(cx, proto, id, attrsp);
 }
 
 static bool
@@ -2069,7 +2069,7 @@ TypedObject::obj_setGenericAttributes(JSContext *cx, HandleObject obj,
         return true;
     }
 
-    return JSObject::setGenericAttributes(cx, proto, id, attrsp);
+    return SetPropertyAttributes(cx, proto, id, attrsp);
 }
 
 bool
