@@ -2143,7 +2143,7 @@ js::NativeGetPropertyAttributes(JSContext *cx, HandleNativeObject obj, HandleId 
         return true;
     }
     if (!nobj->isNative())
-        return JSObject::getGenericAttributes(cx, nobj, id, attrsp);
+        return GetPropertyAttributes(cx, nobj, id, attrsp);
 
     *attrsp = GetShapeAttributes(nobj, shape);
     return true;
@@ -2177,7 +2177,7 @@ js::NativeSetPropertyAttributes(JSContext *cx, HandleNativeObject obj, HandleId 
             types::MarkTypePropertyNonWritable(cx, nobj, id);
         return true;
     } else {
-        return JSObject::setGenericAttributes(cx, nobj, id, attrsp);
+        return SetPropertyAttributes(cx, nobj, id, attrsp);
     }
 }
 

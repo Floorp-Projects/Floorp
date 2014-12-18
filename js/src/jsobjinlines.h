@@ -24,32 +24,6 @@
 #include "jsgcinlines.h"
 #include "jsinferinlines.h"
 
-/* static */ inline bool
-JSObject::setGenericAttributes(JSContext *cx, js::HandleObject obj,
-                               js::HandleId id, unsigned *attrsp)
-{
-    js::types::MarkTypePropertyNonData(cx, obj, id);
-    js::GenericAttributesOp op = obj->getOps()->setGenericAttributes;
-    if (op)
-        return op(cx, obj, id, attrsp);
-    return js::NativeSetPropertyAttributes(cx, obj.as<js::NativeObject>(), id, attrsp);
-}
-
-/* static */ inline bool
-JSObject::watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
-                JS::HandleObject callable)
-{
-    js::WatchOp op = obj->getOps()->watch;
-    return (op ? op : js::NativeWatch)(cx, obj, id, callable);
-}
-
-/* static */ inline bool
-JSObject::unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id)
-{
-    js::UnwatchOp op = obj->getOps()->unwatch;
-    return (op ? op : js::NativeUnwatch)(cx, obj, id);
-}
-
 inline void
 JSObject::finalize(js::FreeOp *fop)
 {
@@ -236,6 +210,16 @@ js::DeleteElement(JSContext *cx, HandleObject obj, uint32_t index, bool *succeed
 
 
 /* * */
+
+inline bool
+js::SetPropertyAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp)
+{
+    types::MarkTypePropertyNonData(cx, obj, id);
+    GenericAttributesOp op = obj->getOps()->setGenericAttributes;
+    if (op)
+        return op(cx, obj, id, attrsp);
+    return NativeSetPropertyAttributes(cx, obj.as<NativeObject>(), id, attrsp);
+}
 
 inline bool
 JSObject::isQualifiedVarObj()
@@ -453,7 +437,7 @@ HasObjectValueOf(JSObject *obj, JSContext *cx)
 }
 
 /* ES5 9.1 ToPrimitive(input). */
-static MOZ_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 ToPrimitive(JSContext *cx, MutableHandleValue vp)
 {
     if (vp.isPrimitive())
@@ -482,18 +466,18 @@ ToPrimitive(JSContext *cx, MutableHandleValue vp)
     }
 
     RootedObject objRoot(cx, obj);
-    return JSObject::defaultValue(cx, objRoot, JSTYPE_VOID, vp);
+    return ToPrimitive(cx, objRoot, JSTYPE_VOID, vp);
 }
 
 /* ES5 9.1 ToPrimitive(input, PreferredType). */
-static MOZ_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE bool
 ToPrimitive(JSContext *cx, JSType preferredType, MutableHandleValue vp)
 {
     MOZ_ASSERT(preferredType != JSTYPE_VOID); /* Use the other ToPrimitive! */
     if (vp.isPrimitive())
         return true;
     RootedObject obj(cx, &vp.toObject());
-    return JSObject::defaultValue(cx, obj, preferredType, vp);
+    return ToPrimitive(cx, obj, preferredType, vp);
 }
 
 /*
