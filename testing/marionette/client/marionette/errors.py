@@ -13,6 +13,7 @@ class ErrorCodes(object):
     ELEMENT_NOT_VISIBLE = 11
     INVALID_ELEMENT_STATE = 12
     UNKNOWN_ERROR = 13
+    ELEMENT_NOT_ACCESSIBLE = 56
     ELEMENT_IS_NOT_SELECTABLE = 15
     JAVASCRIPT_ERROR = 17
     XPATH_LOOKUP_ERROR = 19
@@ -112,6 +113,9 @@ class ElementNotVisibleException(MarionetteException):
                  stacktrace=None, cause=None):
         super(ElementNotVisibleException, self).__init__(
             message, status=status, cause=cause, stacktrace=stacktrace)
+
+class ElementNotAccessibleException(MarionetteException):
+    pass
 
 class NoSuchFrameException(MarionetteException):
     pass

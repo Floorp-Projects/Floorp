@@ -8,6 +8,7 @@ from marionette import Marionette, HTMLElement, Actions, MultiActions
 from marionette_test import MarionetteTestCase, MarionetteJSTestCase, CommonTestCase, expectedFailure, skip, SkipTest
 from errors import (
     ElementNotVisibleException,
+    ElementNotAccessibleException,
     ErrorCodes,
     FrameSendFailureError,
     FrameSendNotInitializedError,
