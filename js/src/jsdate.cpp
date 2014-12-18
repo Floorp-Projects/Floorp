@@ -522,7 +522,7 @@ date_convert(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp
     MOZ_ASSERT(hint == JSTYPE_NUMBER || hint == JSTYPE_STRING || hint == JSTYPE_VOID);
     MOZ_ASSERT(obj->is<DateObject>());
 
-    return DefaultValue(cx, obj, (hint == JSTYPE_VOID) ? JSTYPE_STRING : hint, vp);
+    return JS::OrdinaryToPrimitive(cx, obj, hint == JSTYPE_VOID ? JSTYPE_STRING : hint, vp);
 }
 
 /* for use by date_parse */

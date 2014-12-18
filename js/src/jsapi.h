@@ -1199,7 +1199,8 @@ ToObject(JSContext *cx, HandleValue vp)
  * as a fallback.
  */
 extern JS_PUBLIC_API(bool)
-OrdinaryToPrimitive(JSContext *cx, HandleObject obj, JSType type, MutableHandleValue vp);
+OrdinaryToPrimitive(JSContext *cx, JS::HandleObject obj, JSType type,
+                    JS::MutableHandleValue vp);
 
 } /* namespace JS */
 
