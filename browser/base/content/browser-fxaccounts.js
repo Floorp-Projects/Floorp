@@ -331,7 +331,9 @@ let gFxAccounts = {
       fxaMigrator.createFxAccount(window);
       break;
     case "migrate-verify":
-      fxaMigrator.resendVerificationMail();
+      // Instead of using the migrator module directly here the UX calls for
+      // us to open prefs which has a "resend" button.
+      this.openPreferences();
       break;
     default:
       this.openAccountsPage(null, { entryPoint: "menupanel" });
