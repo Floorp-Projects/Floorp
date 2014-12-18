@@ -1043,8 +1043,8 @@ private:
                           bool aSuppressWhiteSpaceOptimizations,
                           nsTArray<nsIAnonymousContentCreator::ContentInfo>* aAnonChildren) :
       mFCData(aFCData), mContent(aContent), mTag(aTag),
-      mNameSpaceID(aNameSpaceID),
       mPendingBinding(aPendingBinding), mStyleContext(aStyleContext),
+      mNameSpaceID(aNameSpaceID),
       mSuppressWhiteSpaceOptimizations(aSuppressWhiteSpaceOptimizations),
       mIsText(false), mIsGeneratedContent(false),
       mIsAnonymousContentCreatorContent(false),
@@ -1088,14 +1088,31 @@ private:
       return mIsBlock || (mFCData->mBits & FCDATA_IS_LINE_BREAK);
     }
 
+    // Child frame construction items.
+    FrameConstructionItemList mChildItems;
+
+    // ContentInfo list for children that have yet to have
+    // FrameConstructionItem objects created for them. This exists because
+    // AddFrameConstructionItemsInternal needs a valid frame, but in the case
+    // that nsIAnonymousContentCreator::CreateAnonymousContent returns items
+    // that have their own children (so we have a tree of ContentInfo objects
+    // rather than a flat list) we don't yet have a frame to provide to
+    // AddFrameConstructionItemsInternal in order to create the items for the
+    // grandchildren. That prevents FrameConstructionItems from being created
+    // for these grandchildren (and any descendants that they may have),
+    // otherwise they could have been added to the mChildItems member of their
+    // parent FrameConstructionItem. As it is, the grandchildren ContentInfo
+    // list has to be stored in this mAnonChildren member in order to delay
+    // construction of the FrameConstructionItems for the grandchildren until
+    // a frame has been created for their parent item.
+    nsTArray<nsIAnonymousContentCreator::ContentInfo> mAnonChildren;
+
     // The FrameConstructionData to use.
     const FrameConstructionData* mFCData;
     // The nsIContent node to use when initializing the new frame.
     nsIContent* mContent;
     // The XBL-resolved tag name to use for frame construction.
     nsIAtom* mTag;
-    // The XBL-resolved namespace to use for frame construction.
-    int32_t mNameSpaceID;
     // The PendingBinding for this frame construction item, if any.  May be
     // null.  We maintain a list of PendingBindings in the frame construction
     // state in the order in which AddToAttachedQueue should be called on them:
@@ -1107,6 +1124,8 @@ private:
     PendingBinding* mPendingBinding;
     // The style context to use for creating the new frame.
     nsRefPtr<nsStyleContext> mStyleContext;
+    // The XBL-resolved namespace to use for frame construction.
+    int32_t mNameSpaceID;
     // Whether optimizations to skip constructing textframes around
     // this content need to be suppressed.
     bool mSuppressWhiteSpaceOptimizations;
@@ -1142,25 +1161,6 @@ private:
     bool mIsLineParticipant;
     // Whether this item is for an SVG <a> element
     bool mIsForSVGAElement;
-
-    // Child frame construction items.
-    FrameConstructionItemList mChildItems;
-
-    // ContentInfo list for children that have yet to have
-    // FrameConstructionItem objects created for them. This exists because
-    // AddFrameConstructionItemsInternal needs a valid frame, but in the case
-    // that nsIAnonymousContentCreator::CreateAnonymousContent returns items
-    // that have their own children (so we have a tree of ContentInfo objects
-    // rather than a flat list) we don't yet have a frame to provide to
-    // AddFrameConstructionItemsInternal in order to create the items for the
-    // grandchildren. That prevents FrameConstructionItems from being created
-    // for these grandchildren (and any descendants that they may have),
-    // otherwise they could have been added to the mChildItems member of their
-    // parent FrameConstructionItem. As it is, the grandchildren ContentInfo
-    // list has to be stored in this mAnonChildren member in order to delay
-    // construction of the FrameConstructionItems for the grandchildren until
-    // a frame has been created for their parent item.
-    nsTArray<nsIAnonymousContentCreator::ContentInfo> mAnonChildren;
 
   private:
     FrameConstructionItem(const FrameConstructionItem& aOther) MOZ_DELETE; /* not implemented */
