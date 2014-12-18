@@ -27,8 +27,6 @@
 
 namespace android {
 
-class Fence;
-
 struct GonkBufferSlot {
     typedef mozilla::layers::TextureClient TextureClient;
 
