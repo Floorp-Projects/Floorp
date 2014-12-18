@@ -285,11 +285,11 @@ let gSyncPane = {
     Components.utils.import("resource://gre/modules/FxAccounts.jsm");
     fxAccounts.resendVerificationEmail().then(() => {
       fxAccounts.getSignedInUser().then(data => {
-        let sb = this._stringBundle;
-        let title = sb.GetStringFromName("firefoxAccountsVerificationSentTitle");
-        let heading = sb.formatStringFromName("firefoxAccountsVerificationSentHeading",
+        let sb = Services.strings.createBundle("chrome://browser/locale/accounts.properties");
+        let title = sb.GetStringFromName("verificationSentTitle");
+        let heading = sb.formatStringFromName("verificationSentHeading",
                                               [data.email], 1);
-        let description = sb.GetStringFromName("firefoxAccountVerificationSentDescription");
+        let description = sb.GetStringFromName("verificationSentDescription");
 
         Services.prompt.alert(window, title, heading + "\n\n" + description);
       });

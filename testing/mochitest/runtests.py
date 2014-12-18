@@ -1801,9 +1801,11 @@ class Mochitest(MochitestUtilsMixin):
     # TODO: use mozrunner.local.debugger_arguments:
     # https://github.com/mozilla/mozbase/blob/master/mozrunner/mozrunner/local.py#L42
 
-    debuggerInfo = mozdebug.get_debugger_info(options.debugger,
-                                              options.debuggerArgs,
-                                              options.debuggerInteractive)
+    debuggerInfo = None
+    if options.debugger:
+        debuggerInfo = mozdebug.get_debugger_info(options.debugger,
+                                                  options.debuggerArgs,
+                                                  options.debuggerInteractive)
 
     if options.useTestMediaDevices:
       devices = findTestMediaDevices(self.log)

@@ -1099,6 +1099,33 @@ this.MozLoopService = {
       }
     });
 
+    // Resume the tour (re-opening the tab, if necessary) if someone else joins
+    // a room of ours and it's currently open.
+    LoopRooms.on("joined", (e, room, participant) => {
+      let isOwnerInRoom = false;
+      let isOtherInRoom = false;
+
+      if (!room.participants) {
+        return;
+      }
+
+      // The particpant that joined isn't necessarily included in room.participants (depending on
+      // when the broadcast happens) so concatenate.
+      for (let participant of room.participants.concat(participant)) {
+        if (participant.owner) {
+          isOwnerInRoom = true;
+        } else {
+          isOtherInRoom = true;
+        }
+      }
+
+      if (!isOwnerInRoom || !isOtherInRoom) {
+        return;
+      }
+
+      this.resumeTour("open");
+    });
+
     // If expiresTime is not in the future and the user hasn't
     // previously authenticated then skip registration.
     if (!MozLoopServiceInternal.urlExpiryTimeIsInFuture() &&
@@ -1477,22 +1504,63 @@ this.MozLoopService = {
   }),
 
   /**
+   * Gets the tour URL.
+   *
+   * @param {String} aSrc A string representing the entry point to begin the tour, optional.
+   * @param {Object} aAdditionalParams An object with keys used as query parameter names
+   */
+  getTourURL: function(aSrc = null, aAdditionalParams = {}) {
+    let urlStr = this.getLoopPref("gettingStarted.url");
+    let url = new URL(Services.urlFormatter.formatURL(urlStr));
+    for (let paramName in aAdditionalParams) {
+      url.searchParams.append(paramName, aAdditionalParams[paramName]);
+    }
+    if (aSrc) {
+      url.searchParams.set("utm_source", "firefox-browser");
+      url.searchParams.set("utm_medium", "firefox-browser");
+      url.searchParams.set("utm_campaign", aSrc);
+    }
+    return url;
+  },
+
+  resumeTour: function(aIncomingConversationState) {
+    let url = this.getTourURL("resume-with-conversation", {
+      incomingConversation: aIncomingConversationState,
+    });
+
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+
+    this.setLoopPref("gettingStarted.resumeOnFirstJoin", false);
+
+    // The query parameters of the url can vary but we always want to re-use a Loop tour tab that's
+    // already open so we ignore the fragment and query string.
+    let hadExistingTab = win.switchToTabHavingURI(url, true, {
+      ignoreFragment: true,
+      ignoreQueryString: true,
+    });
+
+    // If the tab was already open, send an event instead of using the query
+    // parameter above (that we don't replace on existing tabs to avoid a reload).
+    if (hadExistingTab) {
+      UITour.notify("Loop:IncomingConversation", {
+        conversationOpen: aIncomingConversationState === "open",
+      });
+    }
+  },
+
+  /**
    * Opens the Getting Started tour in the browser.
    *
-   * @param {String} aSrc
-   *   - The UI element that the user used to begin the tour, optional.
+   * @param {String} [aSrc] A string representing the entry point to begin the tour, optional.
    */
   openGettingStartedTour: Task.async(function(aSrc = null) {
     try {
-      let urlStr = Services.prefs.getCharPref("loop.gettingStarted.url");
-      let url = new URL(Services.urlFormatter.formatURL(urlStr));
-      if (aSrc) {
-        url.searchParams.set("utm_source", "firefox-browser");
-        url.searchParams.set("utm_medium", "firefox-browser");
-        url.searchParams.set("utm_campaign", aSrc);
-      }
+      let url = this.getTourURL(aSrc);
       let win = Services.wm.getMostRecentWindow("navigator:browser");
-      win.switchToTabHavingURI(url, true, {replaceQueryString: true});
+      win.switchToTabHavingURI(url, true, {
+        ignoreFragment: true,
+        replaceQueryString: true,
+      });
     } catch (ex) {
       log.error("Error opening Getting Started tour", ex);
     }

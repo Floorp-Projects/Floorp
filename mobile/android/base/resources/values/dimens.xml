@@ -148,6 +148,9 @@
 
     <!-- Banner -->
     <dimen name="home_banner_height">72dp</dimen>
+    <dimen name="home_banner_close_width">42dp</dimen>
+    <dimen name="home_banner_icon_height">48dip</dimen>
+    <dimen name="home_banner_icon_width">48dip</dimen>
 
     <!-- Icon Grid -->
     <dimen name="icongrid_columnwidth">128dp</dimen>

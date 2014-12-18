@@ -4,6 +4,7 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 const {rgbToHsl} = require("devtools/css-color").colorUtils;
+const Telemetry = require("devtools/shared/telemetry");
 const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js");
 const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 const {setTimeout, clearTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
@@ -61,13 +62,13 @@ let EyedropperManager = {
     return this._instances.get(chromeWindow);
   },
 
-  createInstance: function(chromeWindow) {
+  createInstance: function(chromeWindow, options) {
     let dropper = this.getInstance(chromeWindow);
     if (dropper) {
       return dropper;
     }
 
-    dropper = new Eyedropper(chromeWindow);
+    dropper = new Eyedropper(chromeWindow, options);
     this._instances.set(chromeWindow, dropper);
 
     dropper.on("destroy", () => {
@@ -100,9 +101,9 @@ exports.EyedropperManager = EyedropperManager;
  * @param {DOMWindow} chromeWindow
  *        window to inspect
  * @param {object} opts
- *        optional options object, with 'copyOnSelect'
+ *        optional options object, with 'copyOnSelect', 'context'
  */
-function Eyedropper(chromeWindow, opts = { copyOnSelect: true }) {
+function Eyedropper(chromeWindow, opts = { copyOnSelect: true, context: "other" }) {
   this.copyOnSelect = opts.copyOnSelect;
 
   this._onFirstMouseMove = this._onFirstMouseMove.bind(this);
@@ -133,6 +134,18 @@ function Eyedropper(chromeWindow, opts = { copyOnSelect: true }) {
 
   let mm = this._contentTab.linkedBrowser.messageManager;
   mm.loadFrameScript("resource:///modules/devtools/eyedropper/eyedropper-child.js", true);
+
+  // record if this was opened via the picker or standalone
+  var telemetry = new Telemetry();
+  if (opts.context == "command") {
+    telemetry.toolOpened("eyedropper");
+  }
+  else if (opts.context == "menu") {
+    telemetry.toolOpened("menueyedropper");
+  }
+  else if (opts.context == "picker") {
+    telemetry.toolOpened("pickereyedropper");
+  }
 
   EventEmitter.decorate(this);
 }

@@ -202,6 +202,7 @@ nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId,
   , mGetCameraPromise(aPromise)
   , mWindow(aWindow)
   , mPreviewState(CameraControlListener::kPreviewStopped)
+  , mSetInitialConfig(false)
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
   mInput = new CameraPreviewMediaStream(this);
@@ -236,8 +237,14 @@ nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId,
   }
 
   if (haveInitialConfig) {
-    config.mPreviewSize.width = aInitialConfig.mPreviewSize.mWidth;
-    config.mPreviewSize.height = aInitialConfig.mPreviewSize.mHeight;
+    rv = SelectPreviewSize(aInitialConfig.mPreviewSize, config.mPreviewSize);
+    if (NS_FAILED(rv)) {
+      mListener->OnUserError(DOMCameraControlListener::kInStartCamera, rv);
+      return;
+    }
+
+    config.mPictureSize.width = aInitialConfig.mPictureSize.mWidth;
+    config.mPictureSize.height = aInitialConfig.mPictureSize.mHeight;
     config.mRecorderProfile = aInitialConfig.mRecorderProfile;
   }
 
@@ -274,6 +281,9 @@ nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId,
     // Start the camera...
     if (haveInitialConfig) {
       rv = mCameraControl->Start(&config);
+      if (NS_SUCCEEDED(rv)) {
+        mSetInitialConfig = true;
+      }
     } else {
       rv = mCameraControl->Start();
     }
@@ -281,6 +291,9 @@ nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId,
   } else {
     if (haveInitialConfig) {
       rv = mCameraControl->SetConfiguration(config);
+      if (NS_SUCCEEDED(rv)) {
+        mSetInitialConfig = true;
+      }
     } else {
       rv = NS_OK;
     }
@@ -306,6 +319,46 @@ bool
 nsDOMCameraControl::IsWindowStillActive()
 {
   return nsDOMCameraManager::IsWindowStillActive(mWindow->WindowID());
+}
+
+nsresult
+nsDOMCameraControl::SelectPreviewSize(const CameraSize& aRequestedPreviewSize, ICameraControl::Size& aSelectedPreviewSize)
+{
+  if (aRequestedPreviewSize.mWidth && aRequestedPreviewSize.mHeight) {
+    aSelectedPreviewSize.width = aRequestedPreviewSize.mWidth;
+    aSelectedPreviewSize.height = aRequestedPreviewSize.mHeight;
+  } else {
+    /* Use the window width and height if no preview size is provided.
+       Note that the width and height are actually reversed from the
+       camera perspective. */
+    int32_t width = 0;
+    int32_t height = 0;
+    float ratio = 0.0;
+    nsresult rv;
+
+    rv = mWindow->GetDevicePixelRatio(&ratio);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = mWindow->GetInnerWidth(&height);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = mWindow->GetInnerHeight(&width);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    MOZ_ASSERT(width > 0);
+    MOZ_ASSERT(height > 0);
+    MOZ_ASSERT(ratio > 0.0);
+    aSelectedPreviewSize.width = std::ceil(width * ratio);
+    aSelectedPreviewSize.height = std::ceil(height * ratio);
+  }
+
+  return NS_OK;
 }
 
 // Setter for weighted regions: { top, bottom, left, right, weight }
@@ -801,9 +854,14 @@ nsDOMCameraControl::SetConfiguration(const CameraConfiguration& aConfiguration,
   }
 
   ICameraControl::Configuration config;
+  aRv = SelectPreviewSize(aConfiguration.mPreviewSize, config.mPreviewSize);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
   config.mRecorderProfile = aConfiguration.mRecorderProfile;
-  config.mPreviewSize.width = aConfiguration.mPreviewSize.mWidth;
-  config.mPreviewSize.height = aConfiguration.mPreviewSize.mHeight;
+  config.mPictureSize.width = aConfiguration.mPictureSize.mWidth;
+  config.mPictureSize.height = aConfiguration.mPictureSize.mHeight;
   config.mMode = ICameraControl::kPictureMode;
   if (aConfiguration.mMode == CameraMode::Video) {
     config.mMode = ICameraControl::kVideoMode;
@@ -1041,6 +1099,20 @@ nsDOMCameraControl::DispatchStateEvent(const nsString& aType, const nsString& aS
   DispatchTrustedEvent(event);
 }
 
+void
+nsDOMCameraControl::OnGetCameraComplete()
+{
+  // The hardware is open, so we can return a camera to JS, even if
+  // the preview hasn't started yet.
+  nsRefPtr<Promise> promise = mGetCameraPromise.forget();
+  if (promise) {
+    CameraGetPromiseData data;
+    data.mCamera = this;
+    data.mConfiguration = *mCurrentConfiguration;
+    promise->MaybeResolve(data);
+  }
+}
+
 // Camera Control event handlers--must only be called from the Main Thread!
 void
 nsDOMCameraControl::OnHardwareStateChange(CameraControlListener::HardwareState aState,
@@ -1055,22 +1127,16 @@ nsDOMCameraControl::OnHardwareStateChange(CameraControlListener::HardwareState a
     case CameraControlListener::kHardwareOpen:
       DOM_CAMERA_LOGI("DOM OnHardwareStateChange: open\n");
       MOZ_ASSERT(aReason == NS_OK);
-      {
+      if (!mSetInitialConfig) {
         // The hardware is open, so we can return a camera to JS, even if
         // the preview hasn't started yet.
-        nsRefPtr<Promise> promise = mGetCameraPromise.forget();
-        if (promise) {
-          CameraGetPromiseData data;
-          data.mCamera = this;
-          data.mConfiguration = *mCurrentConfiguration;
-          promise->MaybeResolve(data);
-        }
+        OnGetCameraComplete();
       }
       break;
 
     case CameraControlListener::kHardwareClosed:
       DOM_CAMERA_LOGI("DOM OnHardwareStateChange: closed\n");
-      {
+      if (!mSetInitialConfig) {
         nsRefPtr<Promise> promise = mReleasePromise.forget();
         if (promise) {
           promise->MaybeResolve(JS::UndefinedHandleValue);
@@ -1102,6 +1168,9 @@ nsDOMCameraControl::OnHardwareStateChange(CameraControlListener::HardwareState a
                                          NS_LITERAL_STRING("close"),
                                          eventInit);
         DispatchTrustedEvent(event);
+      } else {
+        // The configuration failed and we forced the camera to shutdown.
+        OnUserError(DOMCameraControlListener::kInStartCamera, NS_ERROR_NOT_AVAILABLE);
       }
       break;
 
@@ -1109,6 +1178,9 @@ nsDOMCameraControl::OnHardwareStateChange(CameraControlListener::HardwareState a
       DOM_CAMERA_LOGI("DOM OnHardwareStateChange: open failed\n");
       MOZ_ASSERT(aReason == NS_ERROR_NOT_AVAILABLE);
       OnUserError(DOMCameraControlListener::kInStartCamera, NS_ERROR_NOT_AVAILABLE);
+      break;
+
+    case CameraControlListener::kHardwareUninitialized:
       break;
 
     default:
@@ -1227,8 +1299,16 @@ nsDOMCameraControl::OnConfigurationChange(DOMCameraConfiguration* aConfiguration
     mCurrentConfiguration->mMaxMeteringAreas);
   DOM_CAMERA_LOGI("    preview size (w x h)   : %d x %d\n",
     mCurrentConfiguration->mPreviewSize.mWidth, mCurrentConfiguration->mPreviewSize.mHeight);
+  DOM_CAMERA_LOGI("    picture size (w x h)   : %d x %d\n",
+    mCurrentConfiguration->mPictureSize.mWidth, mCurrentConfiguration->mPictureSize.mHeight);
   DOM_CAMERA_LOGI("    recorder profile       : %s\n",
     NS_ConvertUTF16toUTF8(mCurrentConfiguration->mRecorderProfile).get());
+
+  if (mSetInitialConfig) {
+    OnGetCameraComplete();
+    mSetInitialConfig = false;
+    return;
+  }
 
   nsRefPtr<Promise> promise = mSetConfigurationPromise.forget();
   if (promise) {
@@ -1241,6 +1321,9 @@ nsDOMCameraControl::OnConfigurationChange(DOMCameraConfiguration* aConfiguration
   eventInit.mPreviewSize = new DOMRect(static_cast<DOMMediaStream*>(this), 0, 0,
                                        mCurrentConfiguration->mPreviewSize.mWidth,
                                        mCurrentConfiguration->mPreviewSize.mHeight);
+  eventInit.mPictureSize = new DOMRect(static_cast<DOMMediaStream*>(this), 0, 0,
+                                       mCurrentConfiguration->mPictureSize.mWidth,
+                                       mCurrentConfiguration->mPictureSize.mHeight);
 
   nsRefPtr<CameraConfigurationEvent> event =
     CameraConfigurationEvent::Constructor(this,
@@ -1359,6 +1442,16 @@ nsDOMCameraControl::OnUserError(CameraControlListener::UserContext aContext, nsr
       break;
 
     case CameraControlListener::kInSetConfiguration:
+      if (mSetInitialConfig) {
+        // If the SetConfiguration() call in the constructor fails, there
+        // is nothing we can do except release the camera hardware. This
+        // will trigger a hardware state change, and when the flag that
+        // got us here is set in that handler, we replace the normal reason
+        // code with one that indicates the hardware isn't available.
+        DOM_CAMERA_LOGI("Failed to configure cached camera, stopping\n");
+        mCameraControl->Stop();
+        return;
+      }
       promise = mSetConfigurationPromise.forget();
       break;
 

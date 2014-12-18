@@ -558,7 +558,7 @@ MobileConnectionProvider.prototype = {
   deliverListenerEvent: function(aName, aArgs) {
     let listeners = this._listeners.slice();
     for (let listener of listeners) {
-      if (listeners.indexOf(listener) === -1) {
+      if (this._listeners.indexOf(listener) === -1) {
         continue;
       }
       let handler = listener[aName];

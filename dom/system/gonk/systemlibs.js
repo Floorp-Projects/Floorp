@@ -15,7 +15,7 @@
 
 if (!this.ctypes) {
   // We're likely being loaded as a JSM.
-  this.EXPORTED_SYMBOLS = [ "libcutils", "libnetutils", "netHelpers" ];
+  this.EXPORTED_SYMBOLS = [ "libcutils", "netHelpers" ];
   Components.utils.import("resource://gre/modules/ctypes.jsm");
 }
 
@@ -100,96 +100,6 @@ this.libcutils = (function() {
     }
 
   };
-})();
-
-/**
- * Network-related functions from libnetutils.
- */
-this.libnetutils = (function() {
-  let library;
-  try {
-    library = ctypes.open("libnetutils.so");
-  } catch(ex) {
-    if (DEBUG) {
-      dump("Could not load libnetutils.so!\n");
-    }
-    // For now we just fake the ctypes library interfacer to return
-    // no-op functions when library.declare() is called.
-    library = {
-      declare: function() {
-        return function fake_libnetutils_function() {};
-      }
-    };
-  }
-
-  let iface = {
-    ifc_enable: library.declare("ifc_enable", ctypes.default_abi,
-                                ctypes.int,
-                                ctypes.char.ptr),
-    ifc_disable: library.declare("ifc_disable", ctypes.default_abi,
-                                 ctypes.int,
-                                 ctypes.char.ptr),
-    ifc_add_host_route: library.declare("ifc_add_host_route",
-                                        ctypes.default_abi,
-                                        ctypes.int,
-                                        ctypes.char.ptr,
-                                        ctypes.int),
-    ifc_remove_host_routes: library.declare("ifc_remove_host_routes",
-                                            ctypes.default_abi,
-                                            ctypes.int,
-                                            ctypes.char.ptr),
-    ifc_set_default_route: library.declare("ifc_set_default_route",
-                                           ctypes.default_abi,
-                                           ctypes.int,
-                                           ctypes.char.ptr,
-                                           ctypes.int),
-    ifc_get_default_route: library.declare("ifc_get_default_route",
-                                           ctypes.default_abi,
-                                           ctypes.int,
-                                           ctypes.char.ptr),
-    ifc_remove_default_route: library.declare("ifc_remove_default_route",
-                                              ctypes.default_abi,
-                                              ctypes.int,
-                                              ctypes.char.ptr),
-    ifc_configure: library.declare("ifc_configure", ctypes.default_abi,
-                                   ctypes.int,
-                                   ctypes.char.ptr,
-                                   ctypes.int,
-                                   ctypes.int,
-                                   ctypes.int,
-                                   ctypes.int,
-                                   ctypes.int),
-    ifc_add_route: library.declare("ifc_add_route", ctypes.default_abi,
-                                   ctypes.int, // return value
-                                   ctypes.char.ptr, // ifname
-                                   ctypes.char.ptr, // dst
-                                   ctypes.int, // prefix_length
-                                   ctypes.char.ptr), // gw
-    ifc_remove_route: library.declare("ifc_remove_route", ctypes.default_abi,
-                                      ctypes.int, // return value
-                                      ctypes.char.ptr, // ifname
-                                      ctypes.char.ptr, // dst
-                                      ctypes.int, // prefix_length
-                                      ctypes.char.ptr), // gw
-    dhcp_stop: library.declare("dhcp_stop", ctypes.default_abi,
-                               ctypes.int,
-                               ctypes.char.ptr),
-    dhcp_release_lease: library.declare("dhcp_release_lease", ctypes.default_abi,
-                                        ctypes.int,
-                                        ctypes.char.ptr),
-    dhcp_get_errmsg: library.declare("dhcp_get_errmsg", ctypes.default_abi,
-                                     ctypes.char.ptr),
-
-    // Constants for ifc_reset_connections.
-    // NOTE: Ignored in versions before ICS.
-    RESET_IPV4_ADDRESSES: 0x01,
-    RESET_IPV6_ADDRESSES: 0x02,
-  };
-
-  iface.RESET_ALL_ADDRESSES = iface.RESET_IPV4_ADDRESSES |
-                              iface.RESET_IPV6_ADDRESSES;
-
-  return iface;
 })();
 
 /**
