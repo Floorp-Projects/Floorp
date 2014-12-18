@@ -27,6 +27,10 @@
 
 #include "GonkCameraHwMgr.h"
 
+namespace mozilla {
+class ICameraControl;
+}
+
 namespace android {
 
 class IMemory;
@@ -38,6 +42,10 @@ public:
                                     Size videoSize,
                                     int32_t frameRate,
                                     bool storeMetaDataInVideoBuffers = false);
+
+    static GonkCameraSource *Create(mozilla::ICameraControl* aControl,
+                                    Size videoSize,
+                                    int32_t frameRate);
 
     virtual ~GonkCameraSource();
 
@@ -74,6 +82,24 @@ public:
     bool isMetaDataStoredInVideoBuffers() const;
 
     virtual void signalBufferReturned(MediaBuffer* buffer);
+
+    /**
+     * It sends recording frames to listener directly in the same thread.
+     * Because recording frame is critical resource and it should not be
+     * propagated to other thread as much as possible or there could be frame
+     * rate jitter due to camera HAL waiting for resource.
+     */
+    class DirectBufferListener : public RefBase {
+    public:
+        DirectBufferListener() {};
+
+        virtual status_t BufferAvailable(MediaBuffer* aBuffer) = 0;
+
+    protected:
+        virtual ~DirectBufferListener() {}
+    };
+
+    status_t AddDirectBufferListener(DirectBufferListener* aListener);
 
 protected:
 
@@ -136,6 +162,7 @@ private:
     bool mCollectStats;
     bool mIsMetaDataStoredInVideoBuffers;
     sp<GonkCameraHardware> mCameraHw;
+    sp<DirectBufferListener> mDirectBufferListener;
 
     void releaseQueuedFrames();
     void releaseOneRecordingFrame(const sp<IMemory>& frame);
