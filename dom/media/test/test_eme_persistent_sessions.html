@@ -1,0 +1,156 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+function UsableKeyIdsMatch(usableKeyIds, expectedKeyIds) {
+  var hexKeyIds = usableKeyIds.map(function(keyId) {
+    return Base64ToHex(window.btoa(ArrayBufferToString(keyId)));
+  }).sort();
+  var expected = Object.keys(expectedKeyIds).sort();
+  if (expected.length != hexKeyIds.length) {
+    return false;
+  }
+  for (var i = 0; i < hexKeyIds.length; i++) {
+    if (hexKeyIds[i] != expected[i]){
+      return false;
+    }
+  }
+  return true;
+}
+
+function AwaitAllKeysUsable(session, keys, token) {
+  return new Promise(function(resolve, reject) {
+    function listener(event) {
+      session.getUsableKeyIds().then(function(usableKeyIds) {
+        var u = UsableKeyIdsMatch(usableKeyIds, keys);
+        if (UsableKeyIdsMatch(usableKeyIds, keys)) {
+          Log(token, "resolving AwaitAllKeysUsable promise");
+          session.removeEventListener("keyschange", listener);
+          resolve();
+        }
+      }, bail(token + " failed to get usableKeyIds"));
+    }
+    session.addEventListener("keyschange", listener);
+  });
+}
+
+function AwaitAllKeysNotUsable(session, token) {
+  return new Promise(function(resolve, reject) {
+    function listener(event) {
+      session.getUsableKeyIds().then(function(usableKeyIds) {
+        if (usableKeyIds.length == 0) {
+          session.removeEventListener("keyschange", listener);
+          resolve();
+        }
+      }, bail(token + " failed to get usableKeyIds"));
+    }
+    session.addEventListener("keyschange", listener);
+  });
+}
+
+function startTest(test, token)
+{
+  manager.started(token);
+
+  var recreatedSession; // will have remove() called on it.
+
+  var keySystemAccess;
+
+  var v = SetupEME(test, token,
+    {
+      onsessioncreated: function(session) {
+        Log(token, "Session created");
+        var sessionId;
+        initialSession = session;
+
+        // Once the session has loaded and has all its keys usable, close
+        // all sessions without calling remove() on them.
+        AwaitAllKeysUsable(session, test.keys, token).then(
+          function() {
+            sessionId = session.sessionId;
+            Log(token, "Closing session with id=" + sessionId);
+            session.close();
+          }
+        );
+
+        // Once the session is closed, reload the MediaKeys and reload the session
+        session.closed.then(function() {
+          return navigator.requestMediaKeySystemAccess(KEYSYSTEM_TYPE)
+        }, bail("close promise rejected"))
+
+        .then(function(requestedKeySystemAccess) {
+          keySystemAccess = requestedKeySystemAccess;
+          return keySystemAccess.createMediaKeys();
+        }, bail(token + " Failed to request key system access."))
+
+        .then(function(mediaKeys) {
+          Log(token, "re-created MediaKeys object ok");
+          recreatedSession = mediaKeys.createSession("persistent");
+          Log(token, "Created recreatedSession, loading sessionId=" + sessionId);
+          return Promise.all([AwaitAllKeysUsable(recreatedSession, test.keys, token), recreatedSession.load(sessionId)]);
+        }, bail(token + " failed to create mediaKeys"))
+
+        .then(function() {
+          Log(token, "re-loaded persistent session, all keys still usable");
+          return Promise.all([AwaitAllKeysNotUsable(recreatedSession, token), recreatedSession.remove()]);
+        }, bail(token + " failed to get reload session or keys"))
+
+        .then(function() {
+          Log(token, "removed session, all keys unusable.");
+          // Attempt to recreate the session, the attempt should fail.
+          return keySystemAccess.createMediaKeys();
+        }, bail(token + " failed to remove session"))
+
+        .then(function(mediaKeys) {
+          Log(token, "re-re-created MediaKeys object ok");
+          // Trying to load the removed persistent session should fail.
+          return mediaKeys.createSession("persistent").load(sessionId);
+        }, bail(token + " failed to create mediaKeys"))
+
+        .then(function(suceeded) {
+          is(suceeded, false, token + " we expect the third session creation to fail, as the session should have been removed.");
+          manager.finished(token);
+        }, bail(token + " failure to load session."));
+
+      },
+      sessionType: "persistent",
+    }
+  );
+
+  v.addEventListener("error", bail(token + " got error event"));
+
+  LoadTest(test, v, token);
+}
+
+function beginTest() {
+  manager.runTests(gEMETests, startTest);
+}
+
+var prefs = [
+  [ "media.mediasource.enabled", true ],
+  [ "media.mediasource.mp4.enabled", true ],
+];
+
+if (/Linux/.test(navigator.userAgent) ||
+    !document.createElement('video').canPlayType("video/mp4")) {
+  // XXX remove once we have mp4 PlatformDecoderModules on all platforms.
+  prefs.push([ "media.fragmented-mp4.exposed", true ]);
+  prefs.push([ "media.fragmented-mp4.use-blank-decoder", true ]);
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({ "set" : prefs }, beginTest);
+</script>
+</pre>
+</body>
+</html>
