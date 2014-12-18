@@ -9024,7 +9024,8 @@ dnl ========================================================
 #   B2G:      bug 866301
 
 if test "$MOZ_WIDGET_TOOLKIT" = "android" ||
-   test "$MOZ_BUILD_APP" = "b2g"; then
+   test "$MOZ_BUILD_APP" = "b2g" ||
+   test "$MOZ_BUILD_APP" = "b2g/dev"; then
     _INTL_API=no
 else
     _INTL_API=yes
