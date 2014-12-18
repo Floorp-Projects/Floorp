@@ -34,7 +34,7 @@ export PATH="$(perl -le 'print join ":", grep { -d $_ } split ":", $ENV{PATH}')"
 if ! which mozmake 2>/dev/null; then
     export PATH="$PATH:$SOURCE/.."
     if ! which mozmake 2>/dev/null; then
-	TT_SERVER=${TT_SERVER:-http://runtime-binaries.pvt.build.mozilla.org/tooltool}
+	TT_SERVER=${TT_SERVER:-http://tooltool.pvt.build.mozilla.org/build}
 	( cd $SOURCE/..; ./scripts/scripts/tooltool/tooltool_wrapper.sh $SOURCE/browser/config/tooltool-manifests/${platform:-win32}/releng.manifest $TT_SERVER setup.sh c:/mozilla-build/python27/python.exe C:/mozilla-build/tooltool.py )
     fi
 fi
