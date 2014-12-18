@@ -310,6 +310,13 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                           KeyUsage::digitalSignature,
                           KeyPurposeId::id_kp_emailProtection,
                           CertPolicyId::anyPolicy, stapledOCSPResponse);
+      if (rv == Result::ERROR_INADEQUATE_KEY_USAGE) {
+        rv = BuildCertChain(trustDomain, certDER, time,
+                            EndEntityOrCA::MustBeEndEntity,
+                            KeyUsage::nonRepudiation,
+                            KeyPurposeId::id_kp_emailProtection,
+                            CertPolicyId::anyPolicy, stapledOCSPResponse);
+      }
       break;
     }
 
