@@ -108,7 +108,9 @@ public:
 
 protected:
   void PaintThebes();
-  
+
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) MOZ_OVERRIDE;
+
   void DestroyBackBuffer()
   {
     mContentClient = nullptr;

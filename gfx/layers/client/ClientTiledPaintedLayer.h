@@ -47,6 +47,8 @@ public:
 protected:
   ~ClientTiledPaintedLayer();
 
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) MOZ_OVERRIDE;
+
 public:
   // Override name to distinguish it from ClientPaintedLayer in layer dumps
   virtual const char* Name() const { return "TiledPaintedLayer"; }
