@@ -16,7 +16,7 @@
    -->
 <?xml-stylesheet href="chrome://browser/content/preferences/handlers.css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/applications.css"?>
-<?xml-stylesheet href="chrome://browser/content/preferences/search.css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/search.css"?>
 
 <!DOCTYPE prefwindow [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">

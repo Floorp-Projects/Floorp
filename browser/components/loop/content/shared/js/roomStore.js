@@ -298,6 +298,7 @@ loop.store = loop.store || {};
      */
     copyRoomUrl: function(actionData) {
       this._mozLoop.copyString(actionData.roomUrl);
+      this._mozLoop.notifyUITour("Loop:RoomURLCopied");
     },
 
     /**
@@ -307,6 +308,7 @@ loop.store = loop.store || {};
      */
     emailRoomUrl: function(actionData) {
       loop.shared.utils.composeCallUrlEmail(actionData.roomUrl);
+      this._mozLoop.notifyUITour("Loop:RoomURLEmailed");
     },
 
     /**

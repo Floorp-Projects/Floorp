@@ -81,6 +81,16 @@ loop.roomViews = (function(mozL10n) {
       this.stopListening(this.props.roomStore);
     },
 
+    handleTextareaKeyDown: function(event) {
+      // Submit the form as soon as the user press Enter in that field
+      // Note: We're using a textarea instead of a simple text input to display
+      // placeholder and entered text on two lines, to circumvent l10n
+      // rendering/UX issues for some locales.
+      if (event.which === 13) {
+        this.handleFormSubmit(event);
+      }
+    },
+
     handleFormSubmit: function(event) {
       event.preventDefault();
 
@@ -129,9 +139,10 @@ loop.roomViews = (function(mozL10n) {
             {mozL10n.get("rooms_name_change_failed_label")}
           </p>
           <form onSubmit={this.handleFormSubmit}>
-            <input type="text" className="input-room-name"
+            <textarea rows="2" type="text" className="input-room-name"
               valueLink={this.linkState("newRoomName")}
               onBlur={this.handleFormSubmit}
+              onKeyDown={this.handleTextareaKeyDown}
               placeholder={mozL10n.get("rooms_name_this_room_label")} />
           </form>
           <p>{mozL10n.get("invite_header_text")}</p>
