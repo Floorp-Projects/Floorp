@@ -2403,10 +2403,8 @@ GetRequestBody(nsIDOMDocument* aDoc, nsIInputStream** aResult,
   aContentType.AssignLiteral("application/xml");
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDoc));
   NS_ENSURE_STATE(doc);
-  aCharset = doc->GetDocumentCharacterSet();
+  aCharset.AssignLiteral("UTF-8");
 
-  // Serialize to a stream so that the encoding used will
-  // match the document's.
   nsresult rv;
   nsCOMPtr<nsIDOMSerializer> serializer =
     do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv);
