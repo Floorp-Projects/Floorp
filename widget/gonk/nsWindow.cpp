@@ -213,6 +213,21 @@ nsWindow::DoDraw(void)
     }
 }
 
+/* static */ void
+nsWindow::NotifyVsync(TimeStamp aVsyncTimestamp)
+{
+    if (!gFocusedWindow) {
+      return;
+    }
+
+    VsyncDispatcher* vsyncDispatcher = gFocusedWindow->GetVsyncDispatcher();
+    // During bootup, there is a delay between when the nsWindow is created
+    // and when the Compositor is created, but vsync is already turned on
+    if (vsyncDispatcher) {
+      vsyncDispatcher->NotifyVsync(aVsyncTimestamp);
+    }
+}
+
 nsEventStatus
 nsWindow::DispatchInputEvent(WidgetGUIEvent& aEvent, bool* aWasCaptured)
 {
