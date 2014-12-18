@@ -145,10 +145,9 @@ ClearKeyDecryptionManager::CreateSession(uint32_t aPromiseId,
   const vector<KeyId>& sessionKeys = session->GetKeyIds();
   vector<KeyId> neededKeys;
   for (auto it = sessionKeys.begin(); it != sessionKeys.end(); it++) {
-    if (mDecryptors.find(*it) == mDecryptors.end()) {
+    if (!Contains(mDecryptors, *it)) {
       // Need to request this key ID from the client.
       neededKeys.push_back(*it);
-      mDecryptors[*it] = nullptr;
     } else {
       // We already have a key for this key ID. Mark as usable.
       mCallback->KeyIdUsable(sessionId.c_str(), sessionId.length(),
@@ -272,7 +271,7 @@ ClearKeyDecryptionManager::UpdateSession(uint32_t aPromiseId,
   for (auto it = keyPairs.begin(); it != keyPairs.end(); it++) {
     KeyId& keyId = it->mKeyId;
 
-    if (mDecryptors.find(keyId) != mDecryptors.end()) {
+    if (!Contains(mDecryptors, keyId)) {
       mDecryptors[keyId] = new ClearKeyDecryptor(mCallback, it->mKey);
       mCallback->KeyIdUsable(aSessionId, aSessionIdLength,
                              &keyId[0], keyId.size());
@@ -349,8 +348,7 @@ ClearKeyDecryptionManager::ClearInMemorySessionData(ClearKeySession* aSession)
 
   const vector<KeyId>& keyIds = aSession->GetKeyIds();
   for (auto it = keyIds.begin(); it != keyIds.end(); it++) {
-    MOZ_ASSERT(mDecryptors.find(*it) != mDecryptors.end());
-
+    MOZ_ASSERT(Contains(mDecryptors, *it));
     if (!mDecryptors[*it]->Release()) {
       mDecryptors.erase(*it);
       mCallback->KeyIdNotUsable(aSession->Id().c_str(), aSession->Id().size(),
@@ -420,8 +418,7 @@ ClearKeyDecryptionManager::Decrypt(GMPBuffer* aBuffer,
   CK_LOGD("ClearKeyDecryptionManager::Decrypt");
   KeyId keyId(aMetadata->KeyId(), aMetadata->KeyId() + aMetadata->KeyIdSize());
 
-  auto itr = mDecryptors.find(keyId);
-  if (itr == mDecryptors.end() || !(itr->second)) {
+  if (!Contains(mDecryptors, keyId)) {
     CK_LOGD("ClearKeyDecryptionManager::Decrypt GMPNoKeyErr");
     mCallback->Decrypted(aBuffer, GMPNoKeyErr);
     return;
@@ -438,10 +435,12 @@ ClearKeyDecryptionManager::DecryptingComplete()
   for (auto it = mSessions.begin(); it != mSessions.end(); it++) {
     delete it->second;
   }
+  mSessions.clear();
 
   for (auto it = mDecryptors.begin(); it != mDecryptors.end(); it++) {
     delete it->second;
   }
+  mDecryptors.clear();
 
   Release();
 }
