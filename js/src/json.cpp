@@ -212,7 +212,7 @@ PreprocessValue(JSContext *cx, HandleObject holder, KeyType key, MutableHandleVa
     if (vp.isObject()) {
         RootedValue toJSON(cx);
         RootedObject obj(cx, &vp.toObject());
-        if (!JSObject::getProperty(cx, obj, obj, cx->names().toJSON, &toJSON))
+        if (!GetProperty(cx, obj, obj, cx->names().toJSON, &toJSON))
             return false;
 
         if (IsCallable(toJSON)) {
@@ -347,7 +347,7 @@ JO(JSContext *cx, HandleObject obj, StringifyContext *scx)
          */
         id = propertyList[i];
         RootedValue outputValue(cx);
-        if (!JSObject::getGeneric(cx, obj, obj, id, &outputValue))
+        if (!GetProperty(cx, obj, obj, id, &outputValue))
             return false;
         if (!PreprocessValue(cx, obj, HandleId(id), &outputValue, scx))
             return false;
@@ -428,7 +428,7 @@ JA(JSContext *cx, HandleObject obj, StringifyContext *scx)
              * and the replacer and maybe unboxing, and interpreting some
              * values as |null| in separate steps.
              */
-            if (!JSObject::getElement(cx, obj, obj, i, &outputValue))
+            if (!GetElement(cx, obj, obj, i, &outputValue))
                 return false;
             if (!PreprocessValue(cx, obj, i, &outputValue, scx))
                 return false;
@@ -582,7 +582,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
                     return false;
 
                 /* Step 4b(iv)(2). */
-                if (!JSObject::getElement(cx, replacer, replacer, i, &v))
+                if (!GetElement(cx, replacer, replacer, i, &v))
                     return false;
 
                 RootedId id(cx);
@@ -685,7 +685,7 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, HandleValue reviver, Mut
 
     /* Step 1. */
     RootedValue val(cx);
-    if (!JSObject::getGeneric(cx, holder, holder, name, &val))
+    if (!GetProperty(cx, holder, holder, name, &val))
         return false;
 
     /* Step 2. */

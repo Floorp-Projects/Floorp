@@ -288,13 +288,13 @@ intrinsic_SetScriptHints(JSContext *cx, unsigned argc, Value *vp)
     RootedValue propv(cx);
 
     id = AtomToId(Atomize(cx, "cloneAtCallsite", strlen("cloneAtCallsite")));
-    if (!JSObject::getGeneric(cx, flags, flags, id, &propv))
+    if (!GetProperty(cx, flags, flags, id, &propv))
         return false;
     if (ToBoolean(propv))
         funScript->setShouldCloneAtCallsite();
 
     id = AtomToId(Atomize(cx, "inline", strlen("inline")));
-    if (!JSObject::getGeneric(cx, flags, flags, id, &propv))
+    if (!GetProperty(cx, flags, flags, id, &propv))
         return false;
     if (ToBoolean(propv))
         funScript->setShouldInline();
@@ -385,7 +385,7 @@ js::intrinsic_UnsafePutElements(JSContext *cx, unsigned argc, Value *vp)
             MOZ_ASSERT_IF(arrobj->is<TypedObject>(), idx < uint32_t(arrobj->as<TypedObject>().length()));
             RootedValue tmp(cx, args[elemi]);
             // XXX: Always non-strict.
-            if (!JSObject::setElement(cx, arrobj, arrobj, idx, &tmp, false))
+            if (!SetElement(cx, arrobj, arrobj, idx, &tmp, false))
                 return false;
         } else {
             MOZ_ASSERT(idx < arrobj->as<ArrayObject>().getDenseInitializedLength());

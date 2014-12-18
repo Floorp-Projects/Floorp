@@ -6927,7 +6927,7 @@ ComputeGetPropResult(JSContext *cx, BaselineFrame *frame, JSOp op, HandlePropert
             return false;
 
         RootedId id(cx, NameToId(name));
-        if (!JSObject::getGeneric(cx, obj, obj, id, res))
+        if (!GetProperty(cx, obj, obj, id, res))
             return false;
 
 #if JS_HAS_NO_SUCH_METHOD

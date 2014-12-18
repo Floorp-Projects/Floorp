@@ -220,7 +220,7 @@ js::ObjectToSource(JSContext *cx, HandleObject obj)
             if (doGet) {
                 valcnt = 1;
                 gsop[0].set(nullptr);
-                if (!JSObject::getGeneric(cx, obj, obj, id, val[0]))
+                if (!GetProperty(cx, obj, obj, id, val[0]))
                     return nullptr;
             }
         }

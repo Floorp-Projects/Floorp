@@ -137,7 +137,7 @@ GetPropertyDefault(JSContext *cx, HandleObject obj, HandleId id, HandleValue def
         result.set(defaultValue);
         return true;
     }
-    return JSObject::getGeneric(cx, obj, obj, id, result);
+    return GetProperty(cx, obj, obj, id, result);
 }
 
 /*
@@ -737,7 +737,7 @@ NodeBuilder::newArray(NodeVector &elts, MutableHandleValue dst)
         if (val.isMagic(JS_SERIALIZE_NO_NODE))
             continue;
 
-        if (!JSObject::setElement(cx, array, array, i, &val, false))
+        if (!SetElement(cx, array, array, i, &val, false))
             return false;
     }
 

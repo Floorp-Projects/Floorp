@@ -560,44 +560,6 @@ class JSObject : public js::gc::Cell
     bool callMethod(JSContext *cx, js::HandleId id, unsigned argc, js::Value *argv,
                     js::MutableHandleValue vp);
 
-    static inline bool getGeneric(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
-                                  js::HandleId id, js::MutableHandleValue vp);
-
-    static inline bool getGenericNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
-                                      jsid id, js::Value *vp);
-
-    static bool getProperty(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
-                            js::PropertyName *name, js::MutableHandleValue vp)
-    {
-        JS::RootedId id(cx, js::NameToId(name));
-        return getGeneric(cx, obj, receiver, id, vp);
-    }
-
-    static bool getPropertyNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
-                                js::PropertyName *name, js::Value *vp)
-    {
-        return getGenericNoGC(cx, obj, receiver, js::NameToId(name), vp);
-    }
-
-    static inline bool getElement(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
-                                  uint32_t index, js::MutableHandleValue vp);
-    static inline bool getElementNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
-                                      uint32_t index, js::Value *vp);
-
-    static inline bool setGeneric(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
-                                  js::HandleId id, js::MutableHandleValue vp, bool strict);
-
-    static bool setProperty(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
-                            js::PropertyName *name,
-                            js::MutableHandleValue vp, bool strict)
-    {
-        JS::RootedId id(cx, js::NameToId(name));
-        return setGeneric(cx, obj, receiver, id, vp, strict);
-    }
-
-    static inline bool setElement(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
-                                  uint32_t index, js::MutableHandleValue vp, bool strict);
-
     static bool nonNativeSetProperty(JSContext *cx, js::HandleObject obj,
                                      js::HandleObject receiver, js::HandleId id,
                                      js::MutableHandleValue vp, bool strict);
@@ -948,6 +910,74 @@ HasProperty(JSContext *cx, HandleObject obj, HandleId id, bool *foundp);
 inline bool
 HasProperty(JSContext *cx, HandleObject obj, PropertyName *name, bool *foundp);
 
+/*
+ * ES6 [[Get]]. Get the value of the property `obj[id]`, or undefined if no
+ * such property exists.
+ *
+ * Typically obj == receiver; if obj != receiver then the caller is most likely
+ * a proxy using GetProperty to finish a property get that started out as
+ * `receiver[id]`, and we've already searched the prototype chain up to `obj`.
+ */
+inline bool
+GetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
+            MutableHandleValue vp);
+
+inline bool
+GetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, PropertyName *name,
+            MutableHandleValue vp)
+{
+    RootedId id(cx, NameToId(name));
+    return GetProperty(cx, obj, receiver, id, vp);
+}
+
+inline bool
+GetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index,
+           MutableHandleValue vp);
+
+inline bool
+GetPropertyNoGC(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp);
+
+inline bool
+GetPropertyNoGC(JSContext *cx, JSObject *obj, JSObject *receiver, PropertyName *name, Value *vp)
+{
+    return GetPropertyNoGC(cx, obj, receiver, NameToId(name), vp);
+}
+
+inline bool
+GetElementNoGC(JSContext *cx, JSObject *obj, JSObject *receiver, uint32_t index, Value *vp);
+
+/*
+ * ES6 [[Set]]. Carry out the assignment `obj[id] = vp`.
+ *
+ * The `receiver` argument has to do with how [[Set]] interacts with the
+ * prototype chain and proxies. It's hard to explain and ES6 doesn't really
+ * try. Long story short, if you just want bog-standard assignment, pass the
+ * same object as both obj and receiver.
+ *
+ * When obj != receiver, it's a reasonable guess that a proxy is involved, obj
+ * is the proxy's target, and the proxy is using SetProperty to finish an
+ * assignment that started out as `receiver[id] = vp`, by delegating it to obj.
+ *
+ * Strict errors: ES6 specifies that this method returns a boolean value
+ * indicating whether assignment "succeeded". We currently take a `strict`
+ * argument instead, but this has to change. See bug 1113369.
+ */
+inline bool
+SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
+            MutableHandleValue vp, bool strict);
+
+inline bool
+SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, PropertyName *name,
+            MutableHandleValue vp, bool strict)
+{
+    RootedId id(cx, NameToId(name));
+    return SetProperty(cx, obj, receiver, id, vp, strict);
+}
+
+inline bool
+SetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index,
+           MutableHandleValue vp, bool strict);
+
 
 /*** SpiderMonkey nonstandard internal methods ***************************************************/
 
@@ -1155,15 +1185,6 @@ namespace js {
 bool
 LookupPropertyPure(ExclusiveContext *cx, JSObject *obj, jsid id, NativeObject **objp,
                    Shape **propp);
-
-bool
-GetPropertyPure(ExclusiveContext *cx, JSObject *obj, jsid id, Value *vp);
-
-inline bool
-GetPropertyPure(ExclusiveContext *cx, JSObject *obj, PropertyName *name, Value *vp)
-{
-    return GetPropertyPure(cx, obj, NameToId(name), vp);
-}
 
 bool
 GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
