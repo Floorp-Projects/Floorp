@@ -5922,6 +5922,21 @@
     "kind": "boolean",
     "description": "How many times has the devtool's Responsive View been opened via the toolbox button?"
   },
+  "DEVTOOLS_EYEDROPPER_OPENED_BOOLEAN": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "How many times has the devtool's Eyedropper tool been opened?"
+  },
+  "DEVTOOLS_MENU_EYEDROPPER_OPENED_BOOLEAN": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "How many times has the devtool's eyedropper been opened via the devtools menu?"
+  },
+  "DEVTOOLS_PICKER_EYEDROPPER_OPENED_BOOLEAN": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "How many times has the devtool's eyedropper been opened via the color picker?"
+  },
   "DEVTOOLS_DEVELOPERTOOLBAR_OPENED_BOOLEAN": {
     "expires_in_version": "never",
     "kind": "boolean",
@@ -6046,6 +6061,21 @@
     "expires_in_version": "never",
     "kind": "flag",
     "description": "How many users have opened the devtool's Responsive View been opened via the toolbox button?"
+  },
+  "DEVTOOLS_EYEDROPPER_OPENED_PER_USER_FLAG": {
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Eyedropper via the toolbox button?"
+  },
+  "DEVTOOLS_MENU_EYEDROPPER_OPENED_PER_USER_FLAG": {
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Eyedropper via the devtools menu?"
+  },
+  "DEVTOOLS_PICKER_EYEDROPPER_OPENED_PER_USER_FLAG": {
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Eyedropper via the color picker?"
   },
   "DEVTOOLS_DEVELOPERTOOLBAR_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
