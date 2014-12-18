@@ -27,30 +27,17 @@ outputVersion = 3
 # we hit a non-matching frame, any subsequent frames won't be removed even if
 # they do match.)
 allocatorFns = [
-    'replace_malloc',
-    'replace_calloc',
-    'replace_realloc',
-    'replace_memalign',
-    'replace_posix_memalign',
-    'moz_xmalloc',
-    'moz_xcalloc',
-    'moz_xrealloc',
+    # Matches malloc, replace_malloc, moz_xmalloc, vpx_malloc, js_malloc, pod_malloc, malloc_zone_*, g_malloc.
+    'malloc',
+    # Matches calloc, replace_calloc, moz_xcalloc, vpx_calloc, js_calloc, pod_calloc, malloc_zone_calloc, pod_callocCanGC.
+    'calloc',
+    # Matches realloc, replace_realloc, moz_xrealloc, vpx_realloc, js_realloc, pod_realloc, pod_reallocCanGC.
+    'realloc',
+    # Matches memalign, posix_memalign, replace_memalign, replace_posix_memalign, moz_xmemalign, moz_xposix_memalign, vpx_memalign, malloc_zone_memalign.
+    'memalign',
     'operator new(',
     'operator new[](',
-    'g_malloc',
     'g_slice_alloc',
-    'callocCanGC',
-    'reallocCanGC',
-    'vpx_malloc',
-    'vpx_calloc',
-    'vpx_realloc',
-    'vpx_memalign',
-    'js_malloc',
-    'js_calloc',
-    'js_realloc',
-    'pod_malloc',
-    'pod_calloc',
-    'pod_realloc',
     # This one necessary to fully filter some sequences of allocation functions
     # that happen in practice. Note that ??? entries that follow non-allocation
     # functions won't be stripped, as explained above.
