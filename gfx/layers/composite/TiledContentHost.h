@@ -283,7 +283,8 @@ private:
                   const gfx::Rect& aClipRect,
                   const nsIntRegion& aScreenRegion,
                   const gfx::IntPoint& aTextureOffset,
-                  const gfx::IntSize& aTextureBounds);
+                  const gfx::IntSize& aTextureBounds,
+                  const gfx::Rect& aVisibleRect);
 
   void EnsureTileStore() {}
 

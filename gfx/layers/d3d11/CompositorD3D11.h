@@ -94,7 +94,8 @@ public:
                         const gfx::Rect &aClipRect,
                         const EffectChain &aEffectChain,
                         gfx::Float aOpacity,
-                        const gfx::Matrix4x4 &aTransform) override;
+                        const gfx::Matrix4x4& aTransform,
+                        const gfx::Rect& aVisibleRect) override;
 
   /* Helper for when the primary effect is VR_DISTORTION */
   void DrawVRDistortion(const gfx::Rect &aRect,
