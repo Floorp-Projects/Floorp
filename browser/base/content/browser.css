@@ -14,6 +14,30 @@
 %endif
 }
 
+/* These values are chosen to keep the Loop detached chat window from
+ * getting too small.  When it's too small, three bad things happen:
+ *
+ * - It looks terrible
+ * - It's not really usable
+ * - It's possible for the user to be transmitting video that's cropped by the
+ *   the edge of the window, so that they're not aware of it, which is a
+ *   privacy problem
+ *
+ * Note that if the chat window grows more users than Loop who want this
+ * ability, we'll need to generalize.  A partial patch for this is in
+ * bug 1112264.
+ */
+
+#chat-window {
+ /*
+  * In some ideal world, we'd have a simple way to express "block resizing
+  * along any dimension beyond the point at which an overflow event would
+  * occur".  But none of -moz-{fit,max,min}-content do what we want here. So..
+  */
+  min-width: 320px;
+  min-height: 280px;
+}
+
 #main-window[customize-entered] {
   min-width: -moz-fit-content;
 }
@@ -849,7 +873,7 @@ toolbarbutton[type="socialmark"] {
 
 toolbarbutton.badged-button > .toolbarbutton-badge-container > .toolbarbutton-icon,
 toolbarbutton[type="socialmark"] > .toolbarbutton-icon {
-  max-width: 16px;
+  max-width: 18px;
 }
 toolbarpaletteitem[place="palette"] > toolbarbutton.badged-button > .toolbarbutton-badge-container > .toolbarbutton-icon {
   max-width: 32px;
