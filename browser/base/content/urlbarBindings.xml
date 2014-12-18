@@ -1040,6 +1040,8 @@
                                                      [currentEngine.name], 1);
         document.getAnonymousElementByAttribute(this, "anonid", "searchbar-engine-name")
                 .setAttribute("value", headerText);
+        document.getAnonymousElementByAttribute(this, "anonid", "searchbar-engine")
+                .engine = currentEngine;
 
         // Update the 'Search for <keywords> with:" header.
         let headerSearchText =
@@ -1198,11 +1200,13 @@
           return; // ignore right clicks.
 
         let button = event.originalTarget;
-        if (button.localName != "button" || !button.engine)
+        let engine = button.engine || button.parentNode.engine;
+
+        if (!engine)
           return;
 
         let searchbar = document.getElementById("searchbar");
-        searchbar.handleSearchCommand(event, button.engine);
+        searchbar.handleSearchCommand(event, engine);
       ]]></handler>
 
       <handler event="command"><![CDATA[
