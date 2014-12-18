@@ -349,6 +349,8 @@ var BrowserApp = {
 #endif
 #ifdef NIGHTLY_BUILD
         WebcompatReporter.init();
+        Telemetry.addData("TRACKING_PROTECTION_ENABLED",
+          Services.prefs.getBoolPref("privacy.trackingprotection.enabled"));
 #endif
       } catch(ex) { console.log(ex); }
     }, false);
@@ -6788,15 +6790,18 @@ var IdentityHandler = {
 
   getTrackingMode: function getTrackingMode(aState) {
     if (aState & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT) {
+      Telemetry.addData("TRACKING_PROTECTION_SHIELD", 2);
       return this.TRACKING_MODE_CONTENT_BLOCKED;
     }
 
     // Only show an indicator for loaded tracking content if the pref to block it is enabled
     if ((aState & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT) &&
          Services.prefs.getBoolPref("privacy.trackingprotection.enabled")) {
+      Telemetry.addData("TRACKING_PROTECTION_SHIELD", 1);
       return this.TRACKING_MODE_CONTENT_LOADED;
     }
 
+    Telemetry.addData("TRACKING_PROTECTION_SHIELD", 0);
     return this.TRACKING_MODE_UNKNOWN;
   },
 

@@ -42,7 +42,11 @@ add_task(function() {
   FullZoom.enlarge();
   yield zoomChangePromise;
   is(parseInt(zoomResetButton.label, 10), 110, "Zoom is changed to 110% for about:mozilla");
+  let attributeChangePromise = promiseAttributeMutation(zoomResetButton, "label", (v) => {
+    return parseInt(v, 10) == 100;
+  });
   yield promiseTabLoadEvent(tab1, "about:home");
+  yield attributeChangePromise;
   is(parseInt(zoomResetButton.label, 10), 100, "Default zoom is 100% for about:home");
   yield promiseTabHistoryNavigation(-1, function() {
     return parseInt(zoomResetButton.label, 10) == 110;

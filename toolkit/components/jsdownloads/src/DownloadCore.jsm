@@ -254,6 +254,11 @@ this.Download.prototype = {
    * Indicates whether, at this time, there is any partially downloaded data
    * that can be used when restarting a failed or canceled download.
    *
+   * Even if the download has partial data on disk, hasPartialData will be false
+   * if that data cannot be used to restart the download. In order to determine
+   * if a part file is being used which contains partial data the
+   * Download.target.partFilePath should be checked.
+   *
    * This property is relevant while the download is in progress, and also if it
    * failed or has been canceled.  If the download has been completed
    * successfully, this property is always false.
@@ -262,6 +267,13 @@ this.Download.prototype = {
    * download source, and may not be known before the download is started.
    */
   hasPartialData: false,
+
+  /**
+   * Indicates whether, at this time, there is any data that has been blocked.
+   * Since reputation blocking takes place after the download has fully
+   * completed a value of true also indicates 100% of the data is present.
+   */
+  hasBlockedData: false,
 
   /**
    * This can be set to a function that is called after other properties change.
@@ -353,11 +365,18 @@ this.Download.prototype = {
                                 message: "Cannot start after finalization."}));
     }
 
+    if (this.error && this.error.becauseBlockedByReputationCheck) {
+      return Promise.reject(new DownloadError({
+                                message: "Cannot start after being blocked " +
+                                         "by a reputation check."}));
+    }
+
     // Initialize all the status properties for a new or restarted download.
     this.stopped = false;
     this.canceled = false;
     this.error = null;
     this.hasProgress = false;
+    this.hasBlockedData = false;
     this.progress = 0;
     this.totalBytes = 0;
     this.currentBytes = 0;
@@ -448,20 +467,16 @@ this.Download.prototype = {
         yield this.saver.execute(DS_setProgressBytes.bind(this),
                                  DS_setProperties.bind(this));
 
-        // Check for application reputation, which requires the entire file to
-        // be downloaded.  After that, check for the last time if the download
-        // has been canceled.  Both cases require the target file to be deleted,
-        // thus we process both in the same block of code.
-        if ((yield DownloadIntegration.shouldBlockForReputationCheck(this)) ||
-            this._promiseCanceled) {
+        // Check for the last time if the download has been canceled.
+        if (this._promiseCanceled) {
           try {
             yield OS.File.remove(this.target.path);
           } catch (ex) {
             Cu.reportError(ex);
           }
-          // If this is actually a cancellation, this exception will be changed
-          // in the catch block below.
-          throw new DownloadError({ becauseBlockedByReputationCheck: true });
+
+          // Cancellation exceptions will be changed in the catch block below.
+          throw new DownloadError();
         }
 
         // Update the status properties for a successful download.
@@ -513,24 +528,7 @@ this.Download.prototype = {
           this.speed = 0;
           this._notifyChange();
           if (this.succeeded) {
-            yield DownloadIntegration.downloadDone(this);
-
-            this._deferSucceeded.resolve();
-
-            if (this.launchWhenSucceeded) {
-              this.launch().then(null, Cu.reportError);
-
-              // Always schedule files to be deleted at the end of the private browsing
-              // mode, regardless of the value of the pref.
-              if (this.source.isPrivate) {
-                gExternalAppLauncher.deleteTemporaryPrivateFileWhenPossible(
-                                     new FileUtils.File(this.target.path));
-              } else if (Services.prefs.getBoolPref(
-                          "browser.helperApps.deleteTempFileOnExit")) {
-                gExternalAppLauncher.deleteTemporaryFileOnExit(
-                                     new FileUtils.File(this.target.path));
-              }
-            }
+            yield this._succeed();
           }
         }
       }
@@ -539,6 +537,133 @@ this.Download.prototype = {
     // Notify the new download state before returning.
     this._notifyChange();
     return currentAttempt;
+  },
+
+  /**
+   * Perform the actions necessary when a Download succeeds.
+   *
+   * @return {Promise}
+   * @resolves When the steps to take after success have completed.
+   * @rejects  JavaScript exception if any of the operations failed.
+   */
+  _succeed: Task.async(function* () {
+    yield DownloadIntegration.downloadDone(this);
+
+    this._deferSucceeded.resolve();
+
+    if (this.launchWhenSucceeded) {
+      this.launch().then(null, Cu.reportError);
+
+      // Always schedule files to be deleted at the end of the private browsing
+      // mode, regardless of the value of the pref.
+      if (this.source.isPrivate) {
+        gExternalAppLauncher.deleteTemporaryPrivateFileWhenPossible(
+                             new FileUtils.File(this.target.path));
+      } else if (Services.prefs.getBoolPref(
+                  "browser.helperApps.deleteTempFileOnExit")) {
+        gExternalAppLauncher.deleteTemporaryFileOnExit(
+                             new FileUtils.File(this.target.path));
+      }
+    }
+  }),
+
+  /**
+   * When a request to unblock the download is received, contains a promise
+   * that will be resolved when the unblock request is completed. This property
+   * will then continue to hold the promise indefinitely.
+   */
+  _promiseUnblock: null,
+
+  /**
+   * When a request to confirm the block of the download is received, contains
+   * a promise that will be resolved when cleaning up the download has
+   * completed. This property will then continue to hold the promise
+   * indefinitely.
+   */
+  _promiseConfirmBlock: null,
+
+  /**
+   * Unblocks a download which had been blocked by reputation.
+   *
+   * The file will be moved out of quarantine and the download will be
+   * marked as succeeded.
+   *
+   * @return {Promise}
+   * @resolves When the Download has been unblocked and succeeded.
+   * @rejects  JavaScript exception if any of the operations failed.
+   */
+  unblock: function() {
+    if (this._promiseUnblock) {
+      return this._promiseUnblock;
+    }
+
+    if (this._promiseConfirmBlock) {
+      return Promise.reject(new Error(
+        "Download block has been confirmed, cannot unblock."));
+    }
+
+    if (!this.hasBlockedData) {
+      return Promise.reject(new Error(
+        "unblock may only be called on Downloads with blocked data."));
+    }
+
+    this._promiseUnblock = Task.spawn(function* () {
+      try {
+        yield OS.File.move(this.target.partFilePath, this.target.path);
+      } catch (ex) {
+        yield this.refresh();
+        this._promiseUnblock = null;
+        throw ex;
+      }
+
+      this.succeeded = true;
+      this.hasBlockedData = false;
+      this._notifyChange();
+      yield this._succeed();
+    }.bind(this));
+
+    return this._promiseUnblock;
+  },
+
+  /**
+   * Confirms that a blocked download should be cleaned up.
+   *
+   * If a download was blocked but retained on disk this method can be used
+   * to remove the file.
+   *
+   * @return {Promise}
+   * @resolves When the Download's data has been removed.
+   * @rejects  JavaScript exception if any of the operations failed.
+   */
+  confirmBlock: function() {
+    if (this._promiseConfirmBlock) {
+      return this._promiseConfirmBlock;
+    }
+
+    if (this._promiseUnblock) {
+      return Promise.reject(new Error(
+        "Download is being unblocked, cannot confirmBlock."));
+    }
+
+    if (!this.hasBlockedData) {
+      return Promise.reject(new Error(
+        "confirmBlock may only be called on Downloads with blocked data."));
+    }
+
+    this._promiseConfirmBlock = Task.spawn(function* () {
+      try {
+        yield OS.File.remove(this.target.partFilePath);
+      } catch (ex) {
+        yield this.refresh();
+        this._promiseConfirmBlock = null;
+        throw ex;
+      }
+
+      this.hasBlockedData = false;
+      this._notifyChange();
+    }.bind(this));
+
+    return this._promiseConfirmBlock;
   },
 
   /*
@@ -772,21 +897,34 @@ this.Download.prototype = {
       }
 
       // Update the current progress from disk if we retained partial data.
-      if (this.hasPartialData && this.target.partFilePath) {
-        let stat = yield OS.File.stat(this.target.partFilePath);
+      if ((this.hasPartialData || this.hasBlockedData) &&
+          this.target.partFilePath) {
 
-        // Ignore the result if the state has changed meanwhile.
-        if (!this.stopped || this._finalized) {
-          return;
+        try {
+          let stat = yield OS.File.stat(this.target.partFilePath);
+
+          // Ignore the result if the state has changed meanwhile.
+          if (!this.stopped || this._finalized) {
+            return;
+          }
+
+          // Update the bytes transferred and the related progress properties.
+          this.currentBytes = stat.size;
+          if (this.totalBytes > 0) {
+            this.hasProgress = true;
+            this.progress = Math.floor(this.currentBytes /
+                                           this.totalBytes * 100);
+          }
+        } catch (ex if ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
+          // Ignore the result if the state has changed meanwhile.
+          if (!this.stopped || this._finalized) {
+            return;
+          }
+
+          this.hasBlockedData = false;
+          this.hasPartialData = false;
         }
 
-        // Update the bytes transferred and the related progress properties.
-        this.currentBytes = stat.size;
-        if (this.totalBytes > 0) {
-          this.hasProgress = true;
-          this.progress = Math.floor(this.currentBytes /
-                                         this.totalBytes * 100);
-        }
         this._notifyChange();
       }
     }.bind(this)).then(null, Cu.reportError);
@@ -984,6 +1122,7 @@ const kPlainSerializableDownloadProperties = [
   "canceled",
   "totalBytes",
   "hasPartialData",
+  "hasBlockedData",
   "tryToKeepPartialData",
   "launcherPath",
   "launchWhenSucceeded",
@@ -1818,11 +1957,6 @@ this.DownloadCopySaver.prototype = {
                 // background file saver that the operation can finish.  If the
                 // data transfer failed, the saver has been already stopped.
                 if (Components.isSuccessCode(aStatusCode)) {
-                  if (partFilePath) {
-                    // Move to the final target if we were using a part file.
-                    backgroundFileSaver.setTarget(
-                                        new FileUtils.File(targetPath), false);
-                  }
                   backgroundFileSaver.finish(Cr.NS_OK);
                 }
               }
@@ -1855,6 +1989,8 @@ this.DownloadCopySaver.prototype = {
         // We will wait on this promise in case no error occurred while setting
         // up the chain of objects for the download.
         yield deferSaveComplete.promise;
+
+        yield this._checkReputationAndMove();
       } catch (ex) {
         // Ensure we always remove the placeholder for the final target file on
         // failure, independently of which code path failed.  In some cases, the
@@ -1875,6 +2011,47 @@ this.DownloadCopySaver.prototype = {
       }
     }.bind(this));
   },
+
+  /**
+   * Perform the reputation check and cleanup the downloaded data if required.
+   * If the download passes the reputation check and is using a part file we
+   * will move it to the target path since reputation checking is the final
+   * step in the saver.
+   *
+   * @return {Promise}
+   * @resolves When the reputation check and cleanup is complete.
+   * @rejects DownloadError if the download should be blocked.
+   */
+  _checkReputationAndMove: Task.async(function* () {
+    let download = this.download;
+    let targetPath = this.download.target.path;
+    let partFilePath = this.download.target.partFilePath;
+
+    if (yield DownloadIntegration.shouldBlockForReputationCheck(download)) {
+      download.progress = 100;
+      download.hasPartialData = false;
+
+      // We will remove the potentially dangerous file if instructed by
+      // DownloadIntegration. We will always remove the file when the
+      // download did not use a partial file path, meaning it
+      // currently has its final filename.
+      if (!DownloadIntegration.shouldKeepBlockedData() || !partFilePath) {
+        try {
+          yield OS.File.remove(partFilePath || targetPath);
+        } catch (ex) {
+          Cu.reportError(ex);
+        }
+      } else {
+        download.hasBlockedData = true;
+      }
+
+      throw new DownloadError({ becauseBlockedByReputationCheck: true });
+    }
+
+    if (partFilePath) {
+      yield OS.File.move(partFilePath, targetPath);
+    }
+  }),
 
   /**
    * Implements "DownloadSaver.cancel".
@@ -2171,13 +2348,12 @@ this.DownloadLegacySaver.prototype = {
         // to its final target path when the download succeeds.  In this case,
         // an empty ".part" file is created even if no data was received from
         // the source.
-        if (this.download.target.partFilePath) {
-          yield OS.File.move(this.download.target.partFilePath,
-                             this.download.target.path);
-        } else {
-          // The download implementation may not have created the target file if
-          // no data was received from the source.  In this case, ensure that an
-          // empty file is created as expected.
+        //
+        // When no ".part" file path is provided the download implementation may
+        // not have created the target file (if no data was received from the
+        // source).  In this case, ensure that an empty file is created as
+        // expected.
+        if (!this.download.target.partFilePath) {
           try {
             // This atomic operation is more efficient than an existence check.
             let file = yield OS.File.open(this.download.target.path,
@@ -2185,6 +2361,9 @@ this.DownloadLegacySaver.prototype = {
             yield file.close();
           } catch (ex if ex instanceof OS.File.Error && ex.becauseExists) { }
         }
+
+        yield this._checkReputationAndMove();
+
       } catch (ex) {
         // Ensure we always remove the final target file on failure,
         // independently of which code path failed.  In some cases, the
@@ -2215,6 +2394,10 @@ this.DownloadLegacySaver.prototype = {
         this.firstExecutionFinished = true;
       }
     }.bind(this));
+  },
+
+  _checkReputationAndMove: function () {
+    return DownloadCopySaver.prototype._checkReputationAndMove.call(this);
   },
 
   /**

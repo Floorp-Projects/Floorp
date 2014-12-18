@@ -332,6 +332,26 @@ describe("loop.standaloneRoomViews", function() {
               .not.eql(null);
           });
       });
+
+      describe("Marketplace hidden iframe", function() {
+
+        it("should set src when the store state change",
+           function(done) {
+
+          var marketplace = view.getDOMNode().querySelector("#marketplace");
+          expect(marketplace.src).to.be.equal("");
+
+          activeRoomStore.setStoreState({
+            marketplaceSrc: "http://market/",
+            onMarketplaceMessage: function () {}
+          });
+
+          view.forceUpdate(function() {
+            expect(marketplace.src).to.be.equal("http://market/");
+            done();
+          });
+        });
+      });
     });
   });
 });
