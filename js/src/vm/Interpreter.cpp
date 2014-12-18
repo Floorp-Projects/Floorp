@@ -3157,7 +3157,7 @@ CASE(JSOP_MUTATEPROTO)
         MOZ_ASSERT(obj->is<PlainObject>());
 
         bool succeeded;
-        if (!JSObject::setProto(cx, obj, newProto, &succeeded))
+        if (!SetPrototype(cx, obj, newProto, &succeeded))
             goto error;
         MOZ_ASSERT(succeeded);
     }

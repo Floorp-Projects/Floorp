@@ -78,6 +78,10 @@ class NormalArgumentsObject;
 class SetObject;
 class StrictArgumentsObject;
 
+// Forward declarations, required for later friend declarations.
+bool PreventExtensions(JSContext *cx, JS::HandleObject obj, bool *succeeded);
+bool SetImmutablePrototype(js::ExclusiveContext *cx, JS::HandleObject obj, bool *succeeded);
+
 }  /* namespace js */
 
 /*
@@ -113,6 +117,9 @@ class JSObject : public js::gc::Cell
     friend class js::GCMarker;
     friend class js::NewObjectCache;
     friend class js::Nursery;
+    friend bool js::PreventExtensions(JSContext *cx, JS::HandleObject obj, bool *succeeded);
+    friend bool js::SetImmutablePrototype(js::ExclusiveContext *cx, JS::HandleObject obj,
+                                          bool *succeeded);
 
     /* Make the type object to use for LAZY_TYPE objects. */
     static js::types::TypeObject *makeLazyType(JSContext *cx, js::HandleObject obj);
@@ -337,7 +344,7 @@ class JSObject : public js::gc::Cell
      * 1. obj->getProto() returns the prototype, but asserts if obj is a proxy.
      * 2. obj->getTaggedProto() returns a TaggedProto, which can be tested to
      *    check if the proto is an object, nullptr, or lazily computed.
-     * 3. JSObject::getProto(cx, obj, &proto) computes the proto of an object.
+     * 3. js::GetPrototype(cx, obj, &proto) computes the proto of an object.
      *    If obj is a proxy and the proto is lazy, this code may allocate or
      *    GC in order to compute the proto. Currently, it will not run JS code.
      */
@@ -384,19 +391,6 @@ class JSObject : public js::gc::Cell
         MOZ_ASSERT(!hasLazyPrototype());
         return lastProperty()->hasObjectFlag(js::BaseShape::IMMUTABLE_PROTOTYPE);
     }
-
-    // Attempt to make |obj|'s [[Prototype]] immutable, such that subsequently
-    // trying to change it will not work.  If an internal error occurred,
-    // returns false.  Otherwise, |*succeeded| is set to true iff |obj|'s
-    // [[Prototype]] is now immutable.
-    static bool
-    setImmutablePrototype(js::ExclusiveContext *cx, JS::HandleObject obj, bool *succeeded);
-
-    static inline bool getProto(JSContext *cx, js::HandleObject obj,
-                                js::MutableHandleObject protop);
-    // Returns false on error, success of operation in outparam.
-    static inline bool setProto(JSContext *cx, JS::HandleObject obj,
-                                JS::HandleObject proto, bool *succeeded);
 
     // uninlinedSetType() is the same as setType(), but not inlined.
     inline void setType(js::types::TypeObject *newType);
@@ -493,9 +487,6 @@ class JSObject : public js::gc::Cell
      */
 
   public:
-    static inline bool
-    isExtensible(js::ExclusiveContext *cx, js::HandleObject obj, bool *extensible);
-
     // Indicates whether a non-proxy is extensible.  Don't call on proxies!
     // This method really shouldn't exist -- but there are a few internal
     // places that want it (JITs and the like), and it'd be a pain to mark them
@@ -506,12 +497,6 @@ class JSObject : public js::gc::Cell
         // [[Extensible]] for ordinary non-proxy objects is an object flag.
         return !lastProperty()->hasObjectFlag(js::BaseShape::NOT_EXTENSIBLE);
     }
-
-    // Attempt to change the [[Extensible]] bit on |obj| to false.  Indicate
-    // success or failure through the |*succeeded| outparam, or actual error
-    // through the return value.
-    static bool
-    preventExtensions(JSContext *cx, js::HandleObject obj, bool *succeeded);
 
   private:
     enum ImmutabilityType { SEAL, FREEZE };
@@ -891,8 +876,71 @@ class ValueArray {
 
 namespace js {
 
+/*** Standard internal methods ********************************************************************
+ *
+ * The functions below are the fundamental operations on objects.
+ *
+ * ES6 specifies 14 internal methods that define how objects behave.  The spec
+ * is actually quite good on this topic, though you may have to read it a few
+ * times. See ES6 draft rev 29 (6 Dec 2014) 6.1.7.2 and 6.1.7.3.
+ *
+ * When 'obj' is an ordinary object, these functions have boring standard
+ * behavior as specified by ES6 draft rev 29 section 9.1; see the section about
+ * internal methods in vm/NativeObject.h.
+ *
+ * Proxies override the behavior of internal methods. So when 'obj' is a proxy,
+ * any one of the functions below could do just about anything. See jsproxy.h.
+ */
+
+/*
+ * ES6 [[GetPrototypeOf]]. Get obj's prototype, storing it in protop.
+ *
+ * If obj is definitely not a proxy, the infallible obj->getProto() can be used
+ * instead. See the comment on JSObject::getTaggedProto().
+ */
+inline bool
+GetPrototype(JSContext *cx, HandleObject obj, MutableHandleObject protop);
+
+/*
+ * ES6 [[SetPrototypeOf]]. Change obj's prototype to proto.
+ *
+ * Returns false on error, success of operation in outparam. For example, if
+ * obj is not extensible, its prototype is fixed. js::SetPrototype will return
+ * true, because no exception is thrown for this; but *succeeded will be false.
+ */
+extern bool
+SetPrototype(JSContext *cx, HandleObject obj, HandleObject proto, bool *succeeded);
+
+/*
+ * ES6 [[IsExtensible]]. Extensible objects can have new properties defined on
+ * them. Inextensible objects can't, and their [[Prototype]] slot is fixed as
+ * well.
+ */
+inline bool
+IsExtensible(ExclusiveContext *cx, HandleObject obj, bool *extensible);
+
+/*
+ * ES6 [[PreventExtensions]]. Attempt to change the [[Extensible]] bit on |obj|
+ * to false.  Indicate success or failure through the |*succeeded| outparam, or
+ * actual error through the return value.
+ */
+extern bool
+PreventExtensions(JSContext *cx, HandleObject obj, bool *succeeded);
+
+
+/*** SpiderMonkey nonstandard internal methods ***************************************************/
+
+/*
+ * Attempt to make |obj|'s [[Prototype]] immutable, such that subsequently
+ * trying to change it will not work.  If an internal error occurred,
+ * returns false.  Otherwise, |*succeeded| is set to true iff |obj|'s
+ * [[Prototype]] is now immutable.
+ */
+extern bool
+SetImmutablePrototype(js::ExclusiveContext *cx, JS::HandleObject obj, bool *succeeded);
+
 /* Set *resultp to tell whether obj has an own property with the given id. */
-bool
+extern bool
 HasOwnProperty(JSContext *cx, HandleObject obj, HandleId id, bool *resultp);
 
 template <AllowGC allowGC>

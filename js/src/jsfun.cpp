@@ -894,7 +894,7 @@ CreateFunctionPrototype(JSContext *cx, JSProtoKey key)
     bool succeeded;
     RootedFunction throwTypeError(cx, NewFunction(cx, tte, ThrowTypeError, 0,
                                                   JSFunction::NATIVE_FUN, self, js::NullPtr()));
-    if (!throwTypeError || !JSObject::preventExtensions(cx, throwTypeError, &succeeded))
+    if (!throwTypeError || !PreventExtensions(cx, throwTypeError, &succeeded))
         return nullptr;
     if (!succeeded) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_CHANGE_EXTENSIBILITY);

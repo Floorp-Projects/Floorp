@@ -421,7 +421,7 @@ js::obj_getPrototypeOf(JSContext *cx, unsigned argc, Value *vp)
 
     /* Step 3. */
     RootedObject proto(cx);
-    if (!JSObject::getProto(cx, obj, &proto))
+    if (!GetPrototype(cx, obj, &proto))
         return false;
     args.rval().setObjectOrNull(proto);
     return true;
@@ -467,7 +467,7 @@ obj_setPrototypeOf(JSContext *cx, unsigned argc, Value *vp)
     RootedObject newProto(cx, args[1].toObjectOrNull());
 
     bool success;
-    if (!JSObject::setProto(cx, obj, newProto, &success))
+    if (!SetPrototype(cx, obj, newProto, &success))
         return false;
 
     /* Step 7. */
@@ -859,7 +859,7 @@ obj_isExtensible(JSContext *cx, unsigned argc, Value *vp)
     // Step 2.
     if (args.get(0).isObject()) {
         RootedObject obj(cx, &args.get(0).toObject());
-        if (!JSObject::isExtensible(cx, obj, &extensible))
+        if (!IsExtensible(cx, obj, &extensible))
             return false;
     }
     args.rval().setBoolean(extensible);
@@ -881,7 +881,7 @@ obj_preventExtensions(JSContext *cx, unsigned argc, Value *vp)
     RootedObject obj(cx, &args.get(0).toObject());
 
     bool status;
-    if (!JSObject::preventExtensions(cx, obj, &status))
+    if (!PreventExtensions(cx, obj, &status))
         return false;
 
     // Step 4.
@@ -978,7 +978,7 @@ ProtoGetter(JSContext *cx, unsigned argc, Value *vp)
 
     RootedObject obj(cx, &args.thisv().toObject());
     RootedObject proto(cx);
-    if (!JSObject::getProto(cx, obj, &proto))
+    if (!GetPrototype(cx, obj, &proto))
         return false;
     args.rval().setObjectOrNull(proto);
     return true;
@@ -1025,7 +1025,7 @@ ProtoSetter(JSContext *cx, unsigned argc, Value *vp)
     Rooted<JSObject*> newProto(cx, args[0].toObjectOrNull());
 
     bool success;
-    if (!JSObject::setProto(cx, obj, newProto, &success))
+    if (!SetPrototype(cx, obj, newProto, &success))
         return false;
 
     if (!success) {

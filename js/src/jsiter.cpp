@@ -352,7 +352,7 @@ Snapshot(JSContext *cx, HandleObject pobj_, unsigned flags, AutoIdVector *props)
         if (flags & JSITER_OWNONLY)
             break;
 
-        if (!JSObject::getProto(cx, pobj, &pobj))
+        if (!GetPrototype(cx, pobj, &pobj))
             return false;
 
     } while (pobj != nullptr);
@@ -1163,7 +1163,7 @@ SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate p
                      * became visible as a result of this deletion.
                      */
                     RootedObject proto(cx);
-                    if (!JSObject::getProto(cx, obj, &proto))
+                    if (!GetPrototype(cx, obj, &proto))
                         return false;
                     if (proto) {
                         RootedObject obj2(cx);

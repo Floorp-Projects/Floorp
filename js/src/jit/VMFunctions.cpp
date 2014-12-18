@@ -203,7 +203,7 @@ MutatePrototype(JSContext *cx, HandlePlainObject obj, HandleValue value)
     RootedObject newProto(cx, value.toObjectOrNull());
 
     bool succeeded;
-    if (!JSObject::setProto(cx, obj, newProto, &succeeded))
+    if (!SetPrototype(cx, obj, newProto, &succeeded))
         return false;
     MOZ_ASSERT(succeeded);
     return true;
