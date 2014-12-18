@@ -174,6 +174,7 @@ function MarionetteServerConnection(aPrefix, aTransport, aServer)
     // Supported features
     "handlesAlerts": false,
     "nativeEvents": false,
+    "raisesAccessibilityExceptions": false,
     "rotatable": appName == "B2G",
     "secureSsl": false,
     "takesElementScreenshot": true,
@@ -2899,8 +2900,10 @@ MarionetteServerConnection.prototype = {
         this.curBrowser.elementManager.seenItems[reg.id] = Cu.getWeakReference(listenerWindow);
         if (nullPrevious && (this.curBrowser.curFrameId != null)) {
           if (!this.sendAsync("newSession",
-                              { B2G: (appName == "B2G") },
-                              this.newSessionCommandId)) {
+              { B2G: (appName == "B2G"),
+                raisesAccessibilityExceptions:
+                  this.sessionCapabilities.raisesAccessibilityExceptions },
+              this.newSessionCommandId)) {
             return;
           }
           if (this.curBrowser.newSession) {
