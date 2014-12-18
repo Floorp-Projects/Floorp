@@ -72,6 +72,7 @@ browser.jar:
   skin/classic/browser/search-indicator-add-engine.png      (../shared/search/search-indicator-add-engine.png)
   skin/classic/browser/search-engine-placeholder.png        (../shared/search/search-engine-placeholder.png)
   skin/classic/browser/badge-add-engine.png                 (../shared/search/badge-add-engine.png)
+  skin/classic/browser/search-indicator-badge-add.png       (../shared/search/search-indicator-badge-add.png)
   skin/classic/browser/Secure.png
   skin/classic/browser/Security-broken.png
   skin/classic/browser/setDesktopBackground.css
