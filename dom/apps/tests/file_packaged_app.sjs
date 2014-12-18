@@ -17,6 +17,13 @@ var gAppName = "appname";
 var gDevName = "devname";
 var gDevUrl = "http://dev.url";
 
+var gIconData =
+"iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAMAAAAMCGV4AAAABGdBTUEAANbY1E9YMgAAABl0RVh0" +
+"U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAA5UExURbVCQs6UlM6EhJwhIa0hIc5zc5wQ" +
+"EL1SUu/W1rVjY6UQELUAAOfGxue1tZwAAIwAAP///3sAAK0AAOytg2MAAABmSURBVHjabIkLEsJA" +
+"CEOz249aIUDvf1ihVWe208ADQvDeh8I+6s7zSw0wJ6vPA5z7o+u8LbrUD4SXnkln5XSHJnAhDWau" +
+"tia1jeXlz7SeeRy5TC6wkBaWhLZoL4RF9Q/EqKv/CDAAFpEM3avxBREAAAAASUVORK5CYII=";
+
 function handleRequest(request, response) {
   var query = getQuery(request);
 
@@ -86,6 +93,9 @@ function handleRequest(request, response) {
       var app = makeResource(appTemplate, version, packagePath, packageSize,
                              appName, devName, devUrl);
       addZipEntry(zipWriter, app, "index.html");
+
+      var iconString = atob(gIconData);
+      addZipEntry(zipWriter, iconString, "icon.png");
 
       zipWriter.close();
     }
