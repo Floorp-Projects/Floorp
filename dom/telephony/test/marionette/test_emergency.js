@@ -4,85 +4,36 @@
 MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = 'head.js';
 
-let number = "911";
-let outgoing;
-let calls;
+let outCall;
 
-function dial() {
-  log("Make an emergency call.");
-
-  telephony.dialEmergency(number).then(call => {
-    outgoing = call;
-    ok(outgoing);
-    is(outgoing.id.number, number);
-    is(outgoing.state, "dialing");
-
-    is(outgoing, telephony.active);
-    //ok(telephony.calls === calls); // bug 717414
-    is(telephony.calls.length, 1);
-    is(telephony.calls[0], outgoing);
-
-    outgoing.onalerting = function onalerting(event) {
-      log("Received 'onalerting' call event.");
-      is(outgoing, event.call);
-      is(outgoing.state, "alerting");
-      is(outgoing.emergency, true);
-
-      emulator.runCmdWithCallback("gsm list", function(result) {
-        log("Call list is now: " + result);
-        is(result[0], "outbound to  " + number + "        : ringing");
-        answer();
-      });
-    };
-  });
+function testEmergencyNumber() {
+  return gDialEmergency("911")
+    .then(call => outCall = call)
+    .then(() => gRemoteAnswer(outCall))
+    .then(() => gHangUp(outCall));
 }
 
-function answer() {
-  log("Answering the emergency call.");
-
-  // We get no "connecting" event when the remote party answers the call.
-
-  outgoing.onconnected = function onconnected(event) {
-    log("Received 'connected' call event.");
-    is(outgoing, event.call);
-    is(outgoing.state, "connected");
-
-    is(outgoing, telephony.active);
-
-    emulator.runCmdWithCallback("gsm list", function(result) {
-      log("Call list is now: " + result);
-      is(result[0], "outbound to  " + number + "        : active");
-      hangUp();
+function testNormalNumber() {
+  return gDialEmergency("0912345678")
+    .catch(cause => {
+      is(cause, "BadNumberError");
+      return gCheckAll(null, [], "", [], []);
     });
-  };
-  emulator.runCmdWithCallback("gsm accept " + number);
 }
 
-function hangUp() {
-  log("Hanging up the emergency call.");
-
-  // We get no "disconnecting" event when the remote party terminates the call.
-
-  outgoing.ondisconnected = function ondisconnected(event) {
-    log("Received 'disconnected' call event.");
-    is(outgoing, event.call);
-    is(outgoing.state, "disconnected");
-
-    is(telephony.active, null);
-    is(telephony.calls.length, 0);
-
-    emulator.runCmdWithCallback("gsm list", function(result) {
-      log("Call list is now: " + result);
-      cleanUp();
+function testBadNumber() {
+  return gDialEmergency("not a valid emergency number")
+    .catch(cause => {
+      is(cause, "BadNumberError");
+      return gCheckAll(null, [], "", [], []);
     });
-  };
-  emulator.runCmdWithCallback("gsm cancel " + number);
-}
-
-function cleanUp() {
-  finish();
 }
 
 startTest(function() {
-  dial();
+  Promise.resolve()
+    .then(() => testEmergencyNumber())
+    .then(() => testNormalNumber())
+    .then(() => testBadNumber())
+    .catch(error => ok(false, "Promise reject: " + error))
+    .then(finish);
 });

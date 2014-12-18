@@ -471,14 +471,18 @@ Nfc.prototype = {
         delete message.sessionId;
 
         if (SessionHelper.isP2PSession(sessionId)) {
-          gMessageManager.onPeerEvent(NFC.PEER_EVENT_FOUND, message.sessionToken);
+          if (message.records) {
+            // TODO: Bug 1082493.
+          } else {
+            gMessageManager.onPeerEvent(NFC.PEER_EVENT_FOUND, message.sessionToken);
+          }
         } else {
           gMessageManager.onTagFound(message);
         }
 
         let sysMsg = new NfcTechDiscoveredSysMsg(message.sessionToken,
                                                  message.isP2P,
-                                                 message.records);
+                                                 message.records || null);
         gSystemMessenger.broadcastMessage("nfc-manager-tech-discovered", sysMsg);
         break;
       case "TechLostNotification":

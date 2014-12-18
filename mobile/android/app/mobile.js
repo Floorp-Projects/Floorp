@@ -280,13 +280,13 @@ pref("browser.search.noCurrentEngine", true);
 pref("browser.search.official", true);
 #endif
 
-// Control media casting feature
+// Control media casting & mirroring features
 pref("browser.casting.enabled", true);
+pref("browser.mirroring.enabled", true);
 #ifdef RELEASE_BUILD
-pref("browser.mirroring.enabled", false);
+// Roku does not yet support mirroring in production
 pref("browser.mirroring.enabled.roku", false);
 #else
-pref("browser.mirroring.enabled", true);
 pref("browser.mirroring.enabled.roku", true);
 #endif
 

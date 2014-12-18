@@ -1035,17 +1035,17 @@
                                                   "searchbar-oneoffheader-searchtext");
         let textbox = searchbar.textbox;
         let self = this;
-        let keyPressHandler = function() {
+        let inputHandler = function() {
           headerSearchText.setAttribute("value", textbox.value);
           if (textbox.value)
             self.removeAttribute("showonlysettings");
         };
-        textbox.addEventListener("keyup", keyPressHandler);
+        textbox.addEventListener("input", inputHandler);
         this.addEventListener("popuphiding", function hiding() {
-          textbox.removeEventListener("keyup", keyPressHandler);
+          textbox.removeEventListener("input", inputHandler);
           this.removeEventListener("popuphiding", hiding);
         });
-        keyPressHandler();
+        inputHandler();
 
         // Handle opensearch items. This needs to be done before building the
         // list of one off providers, as that code will return early if all the
@@ -1060,8 +1060,6 @@
 
         let addEngines = gBrowser.selectedBrowser.engines;
         if (addEngines && addEngines.length > 0) {
-          const kBundleURI = "chrome://browser/locale/search.properties";
-          let bundle = Services.strings.createBundle(kBundleURI);
           for (let engine of addEngines) {
             let button = document.createElementNS(kXULNS, "button");
             let label = bundle.formatStringFromName("cmd_addFoundEngine",
