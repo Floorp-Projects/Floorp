@@ -3106,8 +3106,11 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
 #ifdef MOZ_DUMP_PAINTING
   FILE* savedDumpFile = gfxUtils::sDumpPaintFile;
 
+  bool profilerNeedsDisplayList = profiler_feature_active("displaylistdump");
+  bool consoleNeedsDisplayList = gfxUtils::DumpPaintList() || gfxUtils::sDumpPainting;
+
   UniquePtr<std::stringstream> ss = MakeUnique<std::stringstream>();
-  if (gfxUtils::DumpPaintList() || gfxUtils::sDumpPainting) {
+  if (consoleNeedsDisplayList || profilerNeedsDisplayList) {
     if (gfxUtils::sDumpPaintingToFile) {
       nsCString string("dump-");
       string.AppendInt(gPaintCount);
@@ -3127,7 +3130,12 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
     } else {
       // Flush stream now to avoid reordering dump output relative to
       // messages dumped by PaintRoot below.
-      fprint_stderr(gfxUtils::sDumpPaintFile, *ss);
+      if (profilerNeedsDisplayList && !consoleNeedsDisplayList) {
+        profiler_log(ss->str().c_str());
+      } else {
+        // Send to the console which will send to the profiler if required.
+        fprint_stderr(gfxUtils::sDumpPaintFile, *ss);
+      }
       ss = MakeUnique<std::stringstream>();
     }
   }
@@ -3171,7 +3179,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
                                  paintStart);
 
 #ifdef MOZ_DUMP_PAINTING
-  if (gfxUtils::DumpPaintList() || gfxUtils::sDumpPainting) {
+  if (consoleNeedsDisplayList || profilerNeedsDisplayList) {
     if (gfxUtils::sDumpPaintingToFile) {
       *ss << "</script>";
     }
@@ -3187,7 +3195,12 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
       *ss << "</body></html>";
     }
 
-    fprint_stderr(gfxUtils::sDumpPaintFile, *ss);
+    if (profilerNeedsDisplayList && !consoleNeedsDisplayList) {
+      profiler_log(ss->str().c_str());
+    } else {
+      // Send to the console which will send to the profiler if required.
+      fprint_stderr(gfxUtils::sDumpPaintFile, *ss);
+    }
 
     if (gfxUtils::sDumpPaintingToFile) {
       fclose(gfxUtils::sDumpPaintFile);
