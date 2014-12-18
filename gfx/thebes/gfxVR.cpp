@@ -10,6 +10,7 @@
 #include "prenv.h"
 #include "gfxPrefs.h"
 #include "gfxVR.h"
+#include "nsString.h"
 #include "mozilla/Preferences.h"
 
 #include "ovr_capi_dynamic.h"
