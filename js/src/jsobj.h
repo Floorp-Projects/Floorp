@@ -573,11 +573,6 @@ class JSObject : public js::gc::Cell
     static inline bool setGenericAttributes(JSContext *cx, js::HandleObject obj,
                                             js::HandleId id, unsigned *attrsp);
 
-    static inline bool deleteGeneric(JSContext *cx, js::HandleObject obj, js::HandleId id,
-                                     bool *succeeded);
-    static inline bool deleteElement(JSContext *cx, js::HandleObject obj, uint32_t index,
-                                     bool *succeeded);
-
     static inline bool watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                              JS::HandleObject callable);
     static inline bool unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id);
@@ -977,6 +972,15 @@ SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, PropertyName
 inline bool
 SetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index,
            MutableHandleValue vp, bool strict);
+
+/*
+ * ES6 [[Delete]]. Equivalent to the JS code `delete obj[id]`.
+ */
+inline bool
+DeleteProperty(JSContext *cx, js::HandleObject obj, js::HandleId id, bool *succeeded);
+
+inline bool
+DeleteElement(JSContext *cx, js::HandleObject obj, uint32_t index, bool *succeeded);
 
 
 /*** SpiderMonkey nonstandard internal methods ***************************************************/

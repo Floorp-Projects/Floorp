@@ -410,7 +410,7 @@ DeleteArrayElement(JSContext *cx, HandleObject obj, double index, bool *succeede
     RootedId id(cx);
     if (!ToId(cx, index, &id))
         return false;
-    return JSObject::deleteGeneric(cx, obj, id, succeeded);
+    return DeleteProperty(cx, obj, id, succeeded);
 }
 
 /* ES6 20130308 draft 9.3.5 */
@@ -628,7 +628,7 @@ js::ArraySetLength(JSContext *cx, Handle<ArrayObject*> arr, HandleId id,
 
                 /* Steps 15b-d. */
                 bool deleteSucceeded;
-                if (!JSObject::deleteElement(cx, arr, oldLen, &deleteSucceeded))
+                if (!DeleteElement(cx, arr, oldLen, &deleteSucceeded))
                     return false;
                 if (!deleteSucceeded) {
                     newLen = oldLen + 1;
@@ -688,7 +688,7 @@ js::ArraySetLength(JSContext *cx, Handle<ArrayObject*> arr, HandleId id,
 
                 /* Steps 15b-d. */
                 bool deleteSucceeded;
-                if (!JSObject::deleteElement(cx, arr, index, &deleteSucceeded))
+                if (!DeleteElement(cx, arr, index, &deleteSucceeded))
                     return false;
                 if (!deleteSucceeded) {
                     newLen = index + 1;
