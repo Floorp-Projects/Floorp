@@ -390,7 +390,11 @@ class BaseMarionetteOptions(OptionParser):
                         action='store',
                         default='Marionette-based Tests',
                         help='Define the name to associate with the logger used')
-
+        self.add_option('--jsdebugger',
+                        dest='jsdebugger',
+                        action='store_true',
+                        default=False,
+                        help='Enable the jsdebugger for marionette javascript.')
 
     def parse_args(self, args=None, values=None):
         options, tests = OptionParser.parse_args(self, args, values)
@@ -439,6 +443,9 @@ class BaseMarionetteOptions(OptionParser):
                 self.error('Total chunks must be greater than 1.')
             if not 1 <= options.this_chunk <= options.total_chunks:
                 self.error('Chunk to run must be between 1 and %s.' % options.total_chunks)
+
+        if options.jsdebugger:
+            options.app_args.append('-jsdebugger')
 
         for handler in self.verify_usage_handlers:
             handler(options, tests)
