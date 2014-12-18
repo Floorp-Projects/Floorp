@@ -29,6 +29,26 @@
     // this derived one needs to invoke it.
     // Using 'apply' style to mark it's a parent method calling explicitly.
     Buf._init.apply(this);
+
+    // Remapping the request type to different values based on RIL version.
+    // We only have to do this for SUBSCRIPTION right now, so I just make it
+    // simple. A generic logic or structure could be discussed if we have more
+    // use cases, especially the cases from different partners.
+    this._requestMap = {};
+    // RIL version 8.
+    // For the CAF's proprietary parcels. Please see
+    // https://www.codeaurora.org/cgit/quic/la/platform/hardware/ril/tree/include/telephony/ril.h?h=b2g_jb_3.2
+    let map = {};
+    map[REQUEST_SET_UICC_SUBSCRIPTION] = 114;
+    map[REQUEST_SET_DATA_SUBSCRIPTION] = 115;
+    this._requestMap[8] = map;
+    // RIL version 9.
+    // For the CAF's proprietary parcels. Please see
+    // https://www.codeaurora.org/cgit/quic/la/platform/hardware/ril/tree/include/telephony/ril.h?h=b2g_kk_3.5
+    map = {};
+    map[REQUEST_SET_UICC_SUBSCRIPTION] = 115;
+    map[REQUEST_SET_DATA_SUBSCRIPTION] = 116;
+    this._requestMap[9] = map;
   };
 
   /**
@@ -124,19 +144,18 @@
    * use cases, especially the cases from different partners.
    */
   BufObject.prototype._reMapRequestType = function(type) {
-    let newType = type;
-    switch (type) {
-      case REQUEST_SET_UICC_SUBSCRIPTION:
-      case REQUEST_SET_DATA_SUBSCRIPTION:
-        if (this.context.RIL.version < 9) {
-          // Shift the CAF's proprietary parcels. Please see
-          // https://www.codeaurora.org/cgit/quic/la/platform/hardware/ril/tree/include/telephony/ril.h?h=b2g_jb_3.2
-          newType = type - 1;
+    for (let version in this._requestMap) {
+      if (this.context.RIL.version <= version) {
+        let newType = this._requestMap[version][type];
+        if (newType) {
+          if (DEBUG) {
+            this.context.debug("Remap request type to " + newType);
+          }
+          return newType;
         }
-        break;
+      }
     }
-
-    return newType;
+    return type;
   };
 
   // Before we make sure to form it as a module would not add extra
