@@ -14,7 +14,11 @@ var gManagerWindow;
 const URI_ABOUT_DEFAULT = "chrome://mozapps/content/extensions/about.xul";
 const URI_ABOUT_CUSTOM = CHROMEROOT + "addon_about.xul";
 
- add_task(function* test() {
+function test() {
+  requestLongerTimeout(2);
+
+  waitForExplicitFinish();
+
   var gProvider = new MockProvider();
   gProvider.createAddons([{
     id: "test1@tests.mozilla.org",
@@ -28,67 +32,53 @@ const URI_ABOUT_CUSTOM = CHROMEROOT + "addon_about.xul";
     aboutURL: URI_ABOUT_CUSTOM
   }]);
 
-  gManagerWindow = yield open_manager("addons://list/extension");
+  open_manager("addons://list/extension", function(aManager) {
+    gManagerWindow = aManager;
 
-  yield test_about_window("Test add-on 1", URI_ABOUT_DEFAULT);
-  yield test_about_window("Test add-on 2", URI_ABOUT_CUSTOM);
-  yield close_manager(gManagerWindow);
-});
-
-function test_about_window(aAddonItemName, aExpectedAboutUri) {
-  return new Promise((resolve, reject) => {
-    let addonList = gManagerWindow.document.getElementById("addon-list");
-    let selectedItem = null;
-
-    for (let addonItem of addonList.childNodes) {
-      if (addonItem.hasAttribute("name") &&
-          addonItem.getAttribute("name") === aAddonItemName) {
-        selectedItem = addonItem;
-        break;
-      }
-    }
-    ok(selectedItem, "Found addon item for " + aAddonItemName);
-
-    info("Waiting for about dialog");
-    // This gets notified inside a modal dialog that spins the event loop, so we're
-    // stuck with callbacks rather than Task/Promise.
-    Services.ww.registerNotification(function TEST_ww_observer(aSubject, aTopic,
-                                                               aData) {
-      if (aTopic == "domwindowclosed") {
-        Services.ww.unregisterNotification(TEST_ww_observer);
-
-        info("About dialog closing, waiting for focus on browser window");
-      } else if (aTopic == "domwindowopened") {
-        // Always let the stack unwind...
-        executeSoon(() => {
-          info("About dialog opened, waiting for focus");
-
-          let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
-          waitForFocus(function() {
-            info("Saw about dialog");
-
-            is(win.location,
-               aExpectedAboutUri,
-               "The correct add-on about window should have opened");
-
-            is(win.arguments && win.arguments[0] && win.arguments[0].name,
-               aAddonItemName,
-               "window.arguments[0] should refer to the add-on object");
-
-            win.close();
-          }, win);
-        });
-      } else {
-        info("Got window notification " + aTopic);
-      }
+    test_about_window("Test add-on 1", URI_ABOUT_DEFAULT, function() {
+      test_about_window("Test add-on 2", URI_ABOUT_CUSTOM, function() {
+        close_manager(gManagerWindow, finish);
+      });
     });
-
-    // This opens a modal dialog, so the main execution thread doesn't get control
-    // (and the event loop spins under us) until the WindowWatcher domwindowopened
-    // callback closes it.
-    gManagerWindow.gViewController.doCommand("cmd_showItemAbout",
-                                             selectedItem.mAddon);
-    // wait for focus back on manager window
-    waitForFocus(resolve);
   });
+}
+
+function test_about_window(aAddonItemName, aExpectedAboutUri, aCallback) {
+  var addonList = gManagerWindow.document.getElementById("addon-list");
+  for (var addonItem of addonList.childNodes) {
+    if (addonItem.hasAttribute("name") &&
+        addonItem.getAttribute("name") === aAddonItemName)
+      break;
+  }
+
+  info("Waiting for about dialog");
+  Services.ww.registerNotification(function TEST_ww_observer(aSubject, aTopic,
+                                                             aData) {
+    if (aTopic == "domwindowclosed") {
+      Services.ww.unregisterNotification(TEST_ww_observer);
+
+      info("About dialog closed, waiting for focus on browser window");
+      waitForFocus(() => executeSoon(aCallback));
+    } else if (aTopic == "domwindowopened") {
+      info("About dialog opened, waiting for focus");
+
+      let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
+      waitForFocus(function() {
+        info("Saw about dialog");
+
+        is(win.location,
+           aExpectedAboutUri,
+           "The correct add-on about window should have opened");
+
+        is(win.arguments && win.arguments[0] && win.arguments[0].name,
+           aAddonItemName,
+           "window.arguments[0] should refer to the add-on object");
+
+        executeSoon(() => win.close());
+      }, win);
+    }
+  });
+
+  gManagerWindow.gViewController.doCommand("cmd_showItemAbout",
+                                           addonItem.mAddon);
 }
