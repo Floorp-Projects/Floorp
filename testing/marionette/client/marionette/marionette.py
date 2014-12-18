@@ -677,8 +677,6 @@ class Marionette(object):
             raise errors.StaleElementException(message=message, status=status, stacktrace=stacktrace)
         elif status == errors.ErrorCodes.ELEMENT_NOT_VISIBLE:
             raise errors.ElementNotVisibleException(message=message, status=status, stacktrace=stacktrace)
-        elif status == errors.ErrorCodes.ELEMENT_NOT_ACCESSIBLE:
-            raise errors.ElementNotAccessibleException(message=message, status=status, stacktrace=stacktrace)
         elif status == errors.ErrorCodes.INVALID_ELEMENT_STATE:
             raise errors.InvalidElementStateException(message=message, status=status, stacktrace=stacktrace)
         elif status == errors.ErrorCodes.UNKNOWN_ERROR:
