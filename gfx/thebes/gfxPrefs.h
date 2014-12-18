@@ -293,6 +293,7 @@ private:
   DECL_GFX_PREF(Live, "layers.composer2d.enabled",             Composer2DCompositionEnabled, bool, false);
   DECL_GFX_PREF(Once, "layers.d3d11.disable-warp",             LayersD3D11DisableWARP, bool, false);
   DECL_GFX_PREF(Once, "layers.d3d11.force-warp",               LayersD3D11ForceWARP, bool, false);
+  DECL_GFX_PREF(Live, "layers.deaa.enabled",                   LayersDEAAEnabled, bool, false);
   DECL_GFX_PREF(Live, "layers.draw-bigimage-borders",          DrawBigImageBorders, bool, false);
   DECL_GFX_PREF(Live, "layers.draw-borders",                   DrawLayerBorders, bool, false);
   DECL_GFX_PREF(Live, "layers.draw-tile-borders",              DrawTileBorders, bool, false);

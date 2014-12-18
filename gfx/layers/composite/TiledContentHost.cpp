@@ -435,7 +435,8 @@ TiledContentHost::RenderTile(TileHost& aTile,
                              const gfx::Rect& aClipRect,
                              const nsIntRegion& aScreenRegion,
                              const IntPoint& aTextureOffset,
-                             const nsIntSize& aTextureBounds)
+                             const nsIntSize& aTextureBounds,
+                             const gfx::Rect& aVisibleRect)
 {
   if (aTile.IsPlaceholderTile()) {
     // This shouldn't ever happen, but let's fail semi-gracefully. No need
@@ -490,7 +491,7 @@ TiledContentHost::RenderTile(TileHost& aTile,
                                   textureRect.y / aTextureBounds.height,
                                   textureRect.width / aTextureBounds.width,
                                   textureRect.height / aTextureBounds.height);
-    mCompositor->DrawQuad(graphicsRect, aClipRect, aEffectChain, aOpacity, aTransform);
+    mCompositor->DrawQuad(graphicsRect, aClipRect, aEffectChain, aOpacity, aTransform, aVisibleRect);
   }
   DiagnosticFlags flags = DiagnosticFlags::CONTENT | DiagnosticFlags::TILE;
   if (aTile.mTextureHostOnWhite) {
@@ -582,7 +583,9 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
           gfx::IntSize tileSize = aLayerBuffer.GetTileSize();
           RenderTile(tileTexture, aBackgroundColor, aEffectChain, aOpacity, aTransform,
                      aFilter, aClipRect, tileDrawRegion, tileOffset,
-                     nsIntSize(tileSize.width, tileSize.height));
+                     nsIntSize(tileSize.width, tileSize.height),
+                     gfx::Rect(visibleRect.x, visibleRect.y,
+                               visibleRect.width, visibleRect.height));
           if (tileTexture.mTextureHostOnWhite) {
             componentAlphaDiagnostic = DiagnosticFlags::COMPONENT_ALPHA;
           }
