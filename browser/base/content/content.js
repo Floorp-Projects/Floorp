@@ -95,8 +95,8 @@ addMessageListener("MixedContent:ReenableProtection", function() {
 addMessageListener("SecondScreen:tab-mirror", function(message) {
   let app = SimpleServiceDiscovery.findAppForService(message.data.service);
   if (app) {
-    let width = content.scrollWidth;
-    let height = content.scrollHeight;
+    let width = content.innerWidth;
+    let height = content.innerHeight;
     let viewport = {cssWidth: width, cssHeight: height, width: width, height: height};
     app.mirror(function() {}, content, viewport, function() {}, content);
   }

@@ -103,6 +103,58 @@ let tests = [
     });
     LoopRooms.open("fakeTourRoom");
   },
+  function test_notifyLoopRoomURLCopied(done) {
+    gContentAPI.observe((event, params) => {
+      is(event, "Loop:ChatWindowOpened", "Loop chat window should've opened");
+      gContentAPI.observe((event, params) => {
+        is(event, "Loop:ChatWindowShown", "Check Loop:ChatWindowShown notification");
+
+        let chat = document.querySelector("#pinnedchats > chatbox");
+        gContentAPI.observe((event, params) => {
+          is(event, "Loop:RoomURLCopied", "Check Loop:RoomURLCopied notification");
+          gContentAPI.observe((event, params) => {
+            is(event, "Loop:ChatWindowClosed", "Check Loop:ChatWindowClosed notification");
+          });
+          chat.close();
+          done();
+        });
+        chat.content.contentDocument.querySelector(".btn-copy").click();
+      });
+    });
+    setupFakeRoom();
+    LoopRooms.open("fakeTourRoom");
+  },
+  function test_notifyLoopRoomURLEmailed(done) {
+    gContentAPI.observe((event, params) => {
+      is(event, "Loop:ChatWindowOpened", "Loop chat window should've opened");
+      gContentAPI.observe((event, params) => {
+        is(event, "Loop:ChatWindowShown", "Check Loop:ChatWindowShown notification");
+
+        let chat = document.querySelector("#pinnedchats > chatbox");
+        let composeEmailCalled = false;
+
+        gContentAPI.observe((event, params) => {
+          is(event, "Loop:RoomURLEmailed", "Check Loop:RoomURLEmailed notification");
+          ok(composeEmailCalled, "mozLoop.composeEmail should be called");
+          gContentAPI.observe((event, params) => {
+            is(event, "Loop:ChatWindowClosed", "Check Loop:ChatWindowClosed notification");
+          });
+          chat.close();
+          done();
+        });
+
+        let chatWin = chat.content.contentWindow;
+        let oldComposeEmail = chatWin.navigator.wrappedJSObject.mozLoop.composeEmail;
+        chatWin.navigator.wrappedJSObject.mozLoop.composeEmail = function(recipient, subject, body) {
+          ok(recipient, "composeEmail should be invoked with at least a recipient value");
+          composeEmailCalled = true;
+          chatWin.navigator.wrappedJSObject.mozLoop.composeEmail = oldComposeEmail;
+        };
+        chatWin.document.querySelector(".btn-email").click();
+      });
+    });
+    LoopRooms.open("fakeTourRoom");
+  },
   taskify(function* test_arrow_panel_position() {
     ise(loopButton.open, false, "Menu should initially be closed");
     let popup = document.getElementById("UITourTooltip");
@@ -130,6 +182,15 @@ function checkLoopPanelIsHidden() {
   ok(!loopPanel.hasAttribute("panelopen"), "The panel shouldn't have @panelopen");
   isnot(loopPanel.state, "open", "The panel shouldn't be open");
   is(loopButton.hasAttribute("open"), false, "Loop button should know that the panel is closed");
+}
+
+function setupFakeRoom() {
+  let room = {};
+  for (let prop of ["roomToken", "roomName", "roomOwner", "roomUrl", "participants"])
+    room[prop] = "fakeTourRoom";
+  LoopRooms.stubCache(new Map([
+    [room.roomToken, room]
+  ]));
 }
 
 if (Services.prefs.getBoolPref("loop.enabled")) {

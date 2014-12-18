@@ -23,6 +23,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "hookWindowCloseForPanelClose",
                                         "resource://gre/modules/MozSocialAPI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                         "resource://gre/modules/PluralForm.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UITour",
+                                        "resource:///modules/UITour.jsm");
 XPCOMUtils.defineLazyGetter(this, "appInfo", function() {
   return Cc["@mozilla.org/xre/app-info;1"]
            .getService(Ci.nsIXULAppInfo)
@@ -735,7 +737,21 @@ function injectLoopAPI(targetWindow) {
           callId: callid
         });
       }
-    }
+    },
+
+    /**
+     * Notifies the UITour module that an event occurred that it might be
+     * interested in.
+     *
+     * @param {String} subject Subject of the notification
+     */
+    notifyUITour: {
+      enumerable: true,
+      writable: true,
+      value: function(subject) {
+        UITour.notify(subject);
+      }
+    },
   };
 
   function onStatusChanged(aSubject, aTopic, aData) {

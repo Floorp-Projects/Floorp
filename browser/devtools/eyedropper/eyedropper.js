@@ -6,6 +6,7 @@ const {Cc, Ci, Cu} = require("chrome");
 const {rgbToHsl} = require("devtools/css-color").colorUtils;
 const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js");
 const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+const {setTimeout, clearTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
 
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -546,7 +547,7 @@ Eyedropper.prototype = {
    *         Callback to be called when the color is in the clipboard.
    */
   copyColor: function(callback) {
-    Services.appShell.hiddenDOMWindow.clearTimeout(this._copyTimeout);
+    clearTimeout(this._copyTimeout);
 
     let color = this._colorValue.value;
     clipboardHelper.copyString(color);
@@ -554,7 +555,7 @@ Eyedropper.prototype = {
     this._colorValue.classList.add("highlight");
     this._colorValue.value = "✓ " + l10n.GetStringFromName("colorValue.copied");
 
-    this._copyTimeout = Services.appShell.hiddenDOMWindow.setTimeout(() => {
+    this._copyTimeout = setTimeout(() => {
       this._colorValue.classList.remove("highlight");
       this._colorValue.value = color;
 

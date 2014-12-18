@@ -90,10 +90,10 @@ public:
   GetCardLockRetryCount(IccLockType aLockType, ErrorResult& aRv);
 
   already_AddRefed<DOMRequest>
-  ReadContacts(const nsAString& aContactType, ErrorResult& aRv);
+  ReadContacts(IccContactType aContactType, ErrorResult& aRv);
 
   already_AddRefed<DOMRequest>
-  UpdateContact(const JSContext* aCx, const nsAString& aContactType,
+  UpdateContact(const JSContext* aCx, IccContactType aContactType,
                 JS::Handle<JS::Value> aContact, const nsAString& aPin2,
                 ErrorResult& aRv);
 

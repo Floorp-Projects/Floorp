@@ -422,19 +422,38 @@ extern int
 __real_getaddrinfo(const char *hostname, const char *servname,
     const struct addrinfo *hints, struct addrinfo **res);
 
-int android_sdk_version;
-
 #pragma GCC visibility pop
 
-int android_sdk_version = -1;
+static int get_android_sdk_version()
+{
+  char version_str[PROP_VALUE_MAX];
+  memset(version_str, 0, PROP_VALUE_MAX);
+  int len = __system_property_get("ro.build.version.sdk", version_str);
+  if (len < 1) {
+#ifdef MOZ_GETADDRINFO_LOG_VERBOSE
+    __android_log_print(ANDROID_LOG_INFO, "getaddrinfo",
+      "Failed to get Android SDK version\n");
+#endif
+
+    return len;
+  }
+
+  return (int)strtol(version_str, NULL, 10);
+}
 
 static int honeycomb_or_later()
 {
+  static int android_sdk_version = 0;
+  if (android_sdk_version == 0) {
+    android_sdk_version = get_android_sdk_version();
+  }
+
 #ifdef MOZ_GETADDRINFO_LOG_VERBOSE
 	__android_log_print(ANDROID_LOG_INFO, "getaddrinfo",
 		"I am%s Honeycomb\n",
 		(android_sdk_version >= 11) ? "" : " not");
 #endif
+
 	return android_sdk_version >= 11;
 }
 
