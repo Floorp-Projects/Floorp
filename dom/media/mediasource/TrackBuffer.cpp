@@ -39,12 +39,14 @@ TrackBuffer::TrackBuffer(MediaSourceDecoder* aParentDecoder, const nsACString& a
   : mParentDecoder(aParentDecoder)
   , mType(aType)
   , mLastStartTimestamp(0)
+  , mShutdown(false)
 {
   MOZ_COUNT_CTOR(TrackBuffer);
   mParser = ContainerParser::CreateForMIMEType(aType);
   mTaskQueue = new MediaTaskQueue(GetMediaDecodeThreadPool());
   aParentDecoder->AddTrackBuffer(this);
   mDecoderPerSegment = Preferences::GetBool("media.mediasource.decoder-per-segment", false);
+  MSE_DEBUG("TrackBuffer(%p) created for parent decoder %p", this, aParentDecoder);
 }
 
 TrackBuffer::~TrackBuffer()
@@ -101,6 +103,9 @@ private:
 nsRefPtr<ShutdownPromise>
 TrackBuffer::Shutdown()
 {
+  mParentDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+  mShutdown = true;
+
   MOZ_ASSERT(mShutdownPromise.IsEmpty());
   nsRefPtr<ShutdownPromise> p = mShutdownPromise.Ensure(__func__);
 
@@ -370,23 +375,42 @@ TrackBuffer::QueueInitializeDecoder(SourceBufferDecoder* aDecoder)
 void
 TrackBuffer::InitializeDecoder(SourceBufferDecoder* aDecoder)
 {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-
-  // ReadMetadata may block the thread waiting on data, so it must not be
-  // called with the monitor held.
+  // ReadMetadata may block the thread waiting on data, so we must be able
+  // to leave the monitor while we call it. For the rest of this function
+  // we want to hold the monitor though, since we run on a different task queue
+  // from the reader and interact heavily with it.
   mParentDecoder->GetReentrantMonitor().AssertNotCurrentThreadIn();
+  ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
 
+  // We may be shut down at any time by the reader on another thread. So we need
+  // to check for this each time we acquire the monitor. If that happens, we
+  // need to abort immediately, because the reader has forgotten about us, and
+  // important pieces of our state (like mTaskQueue) have also been torn down.
+  if (mShutdown) {
+    MSE_DEBUG("TrackBuffer(%p) was shut down. Aborting initialization.", this);
+    return;
+  }
+
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   MediaDecoderReader* reader = aDecoder->GetReader();
   MSE_DEBUG("TrackBuffer(%p): Initializing subdecoder %p reader %p",
             this, aDecoder, reader);
 
   MediaInfo mi;
   nsAutoPtr<MetadataTags> tags; // TODO: Handle metadata.
-  nsresult rv = reader->ReadMetadata(&mi, getter_Transfers(tags));
+  nsresult rv;
+  {
+    ReentrantMonitorAutoExit mon(mParentDecoder->GetReentrantMonitor());
+    rv = reader->ReadMetadata(&mi, getter_Transfers(tags));
+  }
+
   reader->SetIdle();
+  if (mShutdown) {
+    MSE_DEBUG("TrackBuffer(%p) was shut down while reading metadata. Aborting initialization.", this);
+    return;
+  }
 
   if (NS_SUCCEEDED(rv) && reader->IsWaitingOnCDMResource()) {
-    ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
     mWaitingDecoders.AppendElement(aDecoder);
     return;
   }
@@ -442,7 +466,7 @@ TrackBuffer::ValidateTrackFormats(const MediaInfo& aInfo)
 bool
 TrackBuffer::RegisterDecoder(SourceBufferDecoder* aDecoder)
 {
-  ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
+  mParentDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
   const MediaInfo& info = aDecoder->GetReader()->GetMediaInfo();
   // Initialize the track info since this is the first decoder.
   if (mInitializedDecoders.IsEmpty()) {
