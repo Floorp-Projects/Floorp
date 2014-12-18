@@ -1,13 +1,19 @@
 {
   "name": "My W3C Web App",
   "short_name": "My App",
-  "icons": [
-    {
-      "src": "/favicon.ico",
-      "sizes": "64x64",
-      "type": "image/png"
-    }
-  ],
+  "icons": {
+    "15": "/tests/dom/apps/tests/icon15.png",
+    "48": "/tests/dom/apps/tests/icon48.png"
+  },
   "start_url": "/index.html",
-  "display": "standalone"
+  "display": "standalone",
+  "entry_points": {
+    "ep1": {
+      "name": "This is an entry point",
+      "icons": {
+        "15": "/tests/dom/apps/tests/icon15alternate.png",
+        "48": "/tests/dom/apps/tests/icon48.png"
+      }
+    }
+  }
 }

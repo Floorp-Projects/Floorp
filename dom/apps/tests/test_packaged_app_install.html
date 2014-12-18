@@ -76,6 +76,15 @@ function checkInstalledApp(aMiniManifestURL,
   };
 }
 
+var gIconData =
+"iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAMAAAAMCGV4AAAABGdBTUEAANbY1E9YMgAAABl0RVh0" +
+"U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAA5UExURbVCQs6UlM6EhJwhIa0hIc5zc5wQ" +
+"EL1SUu/W1rVjY6UQELUAAOfGxue1tZwAAIwAAP///3sAAK0AAOytg2MAAABmSURBVHjabIkLEsJA" +
+"CEOz249aIUDvf1ihVWe208ADQvDeh8I+6s7zSw0wJ6vPA5z7o+u8LbrUD4SXnkln5XSHJnAhDWau" +
+"tia1jeXlz7SeeRy5TC6wkBaWhLZoL4RF9Q/EqKv/CDAAFpEM3avxBREAAAAASUVORK5CYII=";
+
+var gIconSize = 15;
+
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
 
@@ -195,6 +204,7 @@ var steps = [
     info("== TEST == Install packaged app");
     var miniManifestURL = PackagedTestHelper.gSJS +
                           "?getManifest=true";
+
     navigator.mozApps.mgmt.oninstall = function(evt) {
       info("Got oninstall event");
       PackagedTestHelper.gApp = evt.application;
@@ -230,6 +240,25 @@ var steps = [
   },
   function() {
     PackagedTestHelper.setAppVersion(3, PackagedTestHelper.next, false, true);
+  },
+  function() {
+    info("== TEST == Get icon");
+    var app = PackagedTestHelper.gApp;
+
+    navigator.mozApps.mgmt.getIcon(app, gIconSize).then((blob) => {
+      var reader = new FileReader();
+
+      reader.onloadend = function() {
+        var success = btoa(reader.result) == gIconData;
+        ok(success, "== TEST == Icon matches expected icon");
+        PackagedTestHelper.next();
+      }
+
+      reader.readAsBinaryString(blob);
+    }, (err) => {
+      ok(false, "Can't get icon: " + err);
+      PackagedTestHelper.finish();
+    });
   },
   function() {
     info("== TEST == Install packaged app with a cancel/resume");
