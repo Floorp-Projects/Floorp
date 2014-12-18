@@ -11,6 +11,7 @@
 
 #include <stdint.h>
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/IntegerTypeTraits.h"
 
 namespace mozilla {
@@ -525,7 +526,7 @@ public:
    * argument is valid.
    */
   template<typename U>
-  CheckedInt(U aValue)
+  CheckedInt(U aValue) MOZ_NO_ARITHMETIC_EXPR_IN_ARGUMENT
     : mValue(T(aValue)),
       mIsValid(detail::IsInRange<T>(aValue))
   {
