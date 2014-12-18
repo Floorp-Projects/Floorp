@@ -3717,13 +3717,13 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
 
     /* Steps 5d, 5f. */
     if (!shape || pobj != parent)
-        return JSObject::defineProperty(cx, parent, name, rval, nullptr, nullptr, attrs);
+        return DefineProperty(cx, parent, name, rval, nullptr, nullptr, attrs);
 
     /* Step 5e. */
     MOZ_ASSERT(parent->isNative());
     if (parent->is<GlobalObject>()) {
         if (shape->configurable())
-            return JSObject::defineProperty(cx, parent, name, rval, nullptr, nullptr, attrs);
+            return DefineProperty(cx, parent, name, rval, nullptr, nullptr, attrs);
 
         if (shape->isAccessorDescriptor() || !shape->writable() || !shape->enumerable()) {
             JSAutoByteString bytes;
@@ -3982,7 +3982,7 @@ js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, H
     }
 
     RootedValue scratch(cx);
-    return JSObject::defineGeneric(cx, obj, id, scratch, getter, setter, attrs);
+    return DefineProperty(cx, obj, id, scratch, getter, setter, attrs);
 }
 
 bool

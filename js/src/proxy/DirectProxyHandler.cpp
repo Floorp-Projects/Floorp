@@ -41,8 +41,8 @@ DirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, HandleId i
     RootedValue v(cx, desc.value());
     return CheckDefineProperty(cx, target, id, v, desc.attributes(),
                                desc.getter(), desc.setter()) &&
-           JSObject::defineGeneric(cx, target, id, v, desc.getter(), desc.setter(),
-                                   desc.attributes());
+           DefineProperty(cx, target, id, v, desc.getter(), desc.setter(),
+                          desc.attributes());
 }
 
 bool

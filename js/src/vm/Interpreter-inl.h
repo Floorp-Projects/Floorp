@@ -342,11 +342,8 @@ DefVarOrConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName dn
 
     /* Steps 8c, 8d. */
     if (!prop || (obj2 != varobj && varobj->is<GlobalObject>())) {
-        if (!JSObject::defineProperty(cx, varobj, dn, UndefinedHandleValue, nullptr, nullptr,
-                                      attrs))
-        {
+        if (!DefineProperty(cx, varobj, dn, UndefinedHandleValue, nullptr, nullptr, attrs))
             return false;
-        }
     } else if (attrs & JSPROP_READONLY) {
         /*
          * Extension: ordinarily we'd be done here -- but for |const|.  If we
@@ -615,7 +612,7 @@ InitElemOperation(JSContext *cx, HandleObject obj, HandleValue idval, HandleValu
     if (!ValueToId<CanGC>(cx, idval, &id))
         return false;
 
-    return JSObject::defineGeneric(cx, obj, id, val, nullptr, nullptr, JSPROP_ENUMERATE);
+    return DefineProperty(cx, obj, id, val, nullptr, nullptr, JSPROP_ENUMERATE);
 }
 
 static MOZ_ALWAYS_INLINE bool
@@ -627,7 +624,7 @@ InitArrayElemOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, uint32_t
     MOZ_ASSERT(obj->is<ArrayObject>());
 
     /*
-     * If val is a hole, do not call JSObject::defineElement.
+     * If val is a hole, do not call DefineElement.
      *
      * Furthermore, if the current op is JSOP_INITELEM_INC, always call
      * SetLengthProperty even if it is not the last element initialiser,
@@ -644,7 +641,7 @@ InitArrayElemOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, uint32_t
                 return false;
         }
     } else {
-        if (!JSObject::defineElement(cx, obj, index, val, nullptr, nullptr, JSPROP_ENUMERATE))
+        if (!DefineElement(cx, obj, index, val, nullptr, nullptr, JSPROP_ENUMERATE))
             return false;
     }
 
@@ -665,11 +662,8 @@ ProcessCallSiteObjOperation(JSContext *cx, RootedObject &cso, RootedObject &raw,
         return false;
     if (extensible) {
         JSAtom *name = cx->names().raw;
-        if (!JSObject::defineProperty(cx, cso, name->asPropertyName(), rawValue,
-                                      nullptr, nullptr, 0))
-        {
+        if (!DefineProperty(cx, cso, name->asPropertyName(), rawValue, nullptr, nullptr, 0))
             return false;
-        }
         if (!JSObject::freeze(cx, raw))
             return false;
         if (!JSObject::freeze(cx, cso))

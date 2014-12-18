@@ -1275,9 +1275,9 @@ JS_ResolveStandardClass(JSContext *cx, HandleObject obj, HandleId id, bool *reso
     JSAtom *undefinedAtom = cx->names().undefined;
     if (idstr == undefinedAtom) {
         *resolved = true;
-        return JSObject::defineProperty(cx, obj, undefinedAtom->asPropertyName(),
-                                        UndefinedHandleValue, nullptr, nullptr,
-                                        JSPROP_PERMANENT | JSPROP_READONLY);
+        return DefineProperty(cx, obj, undefinedAtom->asPropertyName(),
+                              UndefinedHandleValue, nullptr, nullptr,
+                              JSPROP_PERMANENT | JSPROP_READONLY);
     }
 
     /* Try for class constructors/prototypes named by well-known atoms. */
@@ -2481,7 +2481,7 @@ DefinePropertyById(JSContext *cx, HandleObject obj, HandleId id, HandleValue val
         getter = nullptr;
     if (setter == JS_StrictPropertyStub)
         setter = nullptr;
-    return JSObject::defineGeneric(cx, obj, id, value, getter, setter, attrs);
+    return DefineProperty(cx, obj, id, value, getter, setter, attrs);
 }
 
 JS_PUBLIC_API(bool)
@@ -3725,7 +3725,7 @@ JS_DefineFunctions(JSContext *cx, HandleObject obj, const JSFunctionSpec *fs,
             RootedValue funVal(cx);
             if (!cx->global()->getSelfHostedFunction(cx, shName, name, fs->nargs, &funVal))
                 return false;
-            if (!JSObject::defineGeneric(cx, obj, id, funVal, nullptr, nullptr, flags))
+            if (!DefineProperty(cx, obj, id, funVal, nullptr, nullptr, flags))
                 return false;
         } else {
             JSFunction *fun = DefineFunction(cx, obj, id, fs->call.op, fs->nargs, flags);

@@ -1867,7 +1867,7 @@ SetPropertyByDefining(JSContext *cx, HandleNativeObject obj, HandleObject receiv
     MOZ_ASSERT(getter != JS_PropertyStub);
     MOZ_ASSERT(setter != JS_StrictPropertyStub);
     if (!receiver->is<NativeObject>())
-        return JSObject::defineGeneric(cx, receiver, id, v, getter, setter, attrs);
+        return DefineProperty(cx, receiver, id, v, getter, setter, attrs);
 
     Rooted<NativeObject*> nativeReceiver(cx, &receiver->as<NativeObject>());
     return DefinePropertyOrElement(cx, nativeReceiver, id, getter, setter, attrs, v, true, strict);

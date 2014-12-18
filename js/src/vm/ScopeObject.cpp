@@ -491,7 +491,7 @@ with_DefineGeneric(JSContext *cx, HandleObject obj, HandleId id, HandleValue val
                    JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs)
 {
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-    return JSObject::defineGeneric(cx, actual, id, value, getter, setter, attrs);
+    return DefineProperty(cx, actual, id, value, getter, setter, attrs);
 }
 
 static bool

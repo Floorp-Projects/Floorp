@@ -389,7 +389,7 @@ str_enumerate(JSContext *cx, HandleObject obj)
         if (!str1)
             return false;
         value.setString(str1);
-        if (!JSObject::defineElement(cx, obj, i, value, nullptr, nullptr, STRING_ELEMENT_ATTRS))
+        if (!DefineElement(cx, obj, i, value, nullptr, nullptr, STRING_ELEMENT_ATTRS))
             return false;
     }
 
@@ -410,11 +410,8 @@ js::str_resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp)
         if (!str1)
             return false;
         RootedValue value(cx, StringValue(str1));
-        if (!JSObject::defineElement(cx, obj, uint32_t(slot), value, nullptr, nullptr,
-                                     STRING_ELEMENT_ATTRS))
-        {
+        if (!DefineElement(cx, obj, uint32_t(slot), value, nullptr, nullptr, STRING_ELEMENT_ATTRS))
             return false;
-        }
         *resolvedp = true;
     }
     return true;
@@ -2335,9 +2332,9 @@ BuildFlatMatchArray(JSContext *cx, HandleString textstr, const FlatMatch &fm, Ca
     RootedValue matchVal(cx, Int32Value(fm.match()));
     RootedValue textVal(cx, StringValue(textstr));
 
-    if (!JSObject::defineElement(cx, obj, 0, patternVal) ||
-        !JSObject::defineProperty(cx, obj, cx->names().index, matchVal) ||
-        !JSObject::defineProperty(cx, obj, cx->names().input, textVal))
+    if (!DefineElement(cx, obj, 0, patternVal) ||
+        !DefineProperty(cx, obj, cx->names().index, matchVal) ||
+        !DefineProperty(cx, obj, cx->names().input, textVal))
     {
         return false;
     }
