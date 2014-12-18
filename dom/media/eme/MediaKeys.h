@@ -104,6 +104,10 @@ public:
 
   void Shutdown();
 
+  // Called by CDMProxy when CDM crashes or shuts down. It is different from
+  // Shutdown which is called from the script/dom side.
+  void Terminated();
+
   // Returns true if this MediaKeys has been bound to a media element.
   bool IsBoundToMediaElement() const;
 

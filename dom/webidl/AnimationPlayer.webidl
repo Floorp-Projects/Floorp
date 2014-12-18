@@ -28,9 +28,10 @@ interface AnimationPlayer {
            attribute double             playbackRate; */
   [BinaryName="playStateFromJS"]
   readonly attribute AnimationPlayState playState;
+  [Throws]
+  readonly attribute Promise<AnimationPlayer> ready;
   /*
-  readonly attribute Promise            ready;
-  readonly attribute Promise            finished;
+  readonly attribute Promise<AnimationPlayer> finished;
   void cancel ();
   void finish ();
   */
