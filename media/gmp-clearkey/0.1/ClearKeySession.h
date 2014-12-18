@@ -6,34 +6,39 @@
 #define __ClearKeySession_h__
 
 #include "ClearKeyUtils.h"
+#include "gmp-decryption.h"
 
 class GMPBuffer;
 class GMPDecryptorCallback;
 class GMPDecryptorHost;
 class GMPEncryptedBufferMetadata;
 
-/**
- * Currently useless; will be fleshed out later with support for persistent
- * key sessions.
- */
-
 class ClearKeySession
 {
 public:
-  ClearKeySession(const std::string& aSessionId,
-                  GMPDecryptorCallback* aCallback);
+  explicit ClearKeySession(const std::string& aSessionId,
+                           GMPDecryptorCallback* aCallback,
+                           GMPSessionType aSessionType);
 
   ~ClearKeySession();
 
-  const std::vector<KeyId>& GetKeyIds() { return mKeyIds; }
+  const std::vector<KeyId>& GetKeyIds() const { return mKeyIds; }
 
   void Init(uint32_t aPromiseId,
             const uint8_t* aInitData, uint32_t aInitDataSize);
+
+  GMPSessionType Type() const;
+
+  void AddKeyId(const KeyId& aKeyId);
+
+  const std::string Id() const { return mSessionId; }
+
 private:
-  std::string mSessionId;
+  const std::string mSessionId;
   std::vector<KeyId> mKeyIds;
 
   GMPDecryptorCallback* mCallback;
+  const GMPSessionType mSessionType;
 };
 
 #endif // __ClearKeySession_h__
