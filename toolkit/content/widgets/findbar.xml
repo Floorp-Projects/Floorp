@@ -631,6 +631,7 @@
           this._findField.blur();
 
           this._cancelTimers();
+          this.toggleHighlight(false);
 
           this._findFailedString = null;
         ]]></body>
