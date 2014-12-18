@@ -36,6 +36,7 @@ class CompositorChild;
 class CompositorParent;
 class APZCTreeManager;
 class GeckoContentController;
+struct ScrollableLayerGuid;
 }
 
 class VsyncDispatcher;
@@ -88,6 +89,7 @@ protected:
   typedef mozilla::layers::CompositorParent CompositorParent;
   typedef mozilla::layers::APZCTreeManager APZCTreeManager;
   typedef mozilla::layers::GeckoContentController GeckoContentController;
+  typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
   typedef mozilla::ScreenRotation ScreenRotation;
 
   virtual ~nsBaseWidget();
@@ -310,6 +312,12 @@ protected:
 
   virtual void ConfigureAPZCTreeManager();
   virtual already_AddRefed<GeckoContentController> CreateRootContentController();
+
+  // Dispatch an event that has been routed through APZ directly from the
+  // widget.
+  nsEventStatus DispatchEventForAPZ(mozilla::WidgetGUIEvent* aEvent,
+                                    const ScrollableLayerGuid& aGuid,
+                                    uint64_t aInputBlockId);
 
   const nsIntRegion RegionFromArray(const nsTArray<nsIntRect>& aRects);
   void ArrayFromRegion(const nsIntRegion& aRegion, nsTArray<nsIntRect>& aRects);

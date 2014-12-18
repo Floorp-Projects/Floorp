@@ -2150,6 +2150,11 @@ TabParent::MaybeForwardEventToRenderFrame(WidgetInputEvent& aEvent,
     if (aOutInputBlockId) {
       *aOutInputBlockId = InputAPZContext::GetInputBlockId();
     }
+
+    // Let the widget know that the event will be sent to the child process,
+    // which will (hopefully) send a confirmation notice back to APZ.
+    InputAPZContext::SetRoutedToChildProcess();
+
     return nsEventStatus_eIgnore;
   }
 
