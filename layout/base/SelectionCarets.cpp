@@ -1086,6 +1086,7 @@ void
 SelectionCarets::NotifyBlur()
 {
   SetVisibility(false);
+  CancelLongTapDetector();
   DispatchSelectionStateChangedEvent(nullptr, SelectionState::Blur);
 }
 
