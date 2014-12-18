@@ -673,17 +673,7 @@ class JSObject : public js::gc::Cell
     static inline bool unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id);
 
     static bool defaultValue(JSContext *cx, js::HandleObject obj, JSType hint,
-                             js::MutableHandleValue vp)
-    {
-        JSConvertOp op = obj->getClass()->convert;
-        bool ok;
-        if (!op)
-            ok = js::DefaultValue(cx, obj, hint, vp);
-        else
-            ok = op(cx, obj, hint, vp);
-        MOZ_ASSERT_IF(ok, vp.isPrimitive());
-        return ok;
-    }
+                             js::MutableHandleValue vp);
 
     static JSObject *thisObject(JSContext *cx, js::HandleObject obj)
     {
