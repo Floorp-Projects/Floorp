@@ -338,9 +338,10 @@ function AbstractHealthReporter(branch, policy, sessionRecorder) {
   this._initHistogram = hasFirstRun ? TELEMETRY_INIT : TELEMETRY_INIT_FIRSTRUN;
   this._dbOpenHistogram = hasFirstRun ? TELEMETRY_DB_OPEN : TELEMETRY_DB_OPEN_FIRSTRUN;
 
-  // This is set to the name of the provider that we are currently shutting down, if any.
-  // It is used for AsyncShutdownTimeout diagnostics.
+  // This is set to the name for the provider that we are currently initializing
+  // or shutting down, if any. This is used for AsyncShutdownTimeout diagnostics.
   this._currentProviderInShutdown = null;
+  this._currentProviderInInit = null;
 }
 
 AbstractHealthReporter.prototype = Object.freeze({
@@ -413,6 +414,7 @@ AbstractHealthReporter.prototype = Object.freeze({
             hasStorage: !!this._storage,
             shutdownComplete: this._shutdownComplete,
             currentProviderInShutdown: this._currentProviderInShutdown,
+            currentProviderInInit: this._currentProviderInInit,
           }));
 
       try {
@@ -500,8 +502,10 @@ AbstractHealthReporter.prototype = Object.freeze({
     let catString = this._prefs.get("service.providerCategories") || "";
     if (catString.length) {
       for (let category of catString.split(",")) {
-        yield this._providerManager.registerProvidersFromCategoryManager(category);
+        yield this._providerManager.registerProvidersFromCategoryManager(category,
+                     providerName => this._currentProviderInInit = providerName);
       }
+      this._currentProviderInInit = null;
     }
   }),
 
