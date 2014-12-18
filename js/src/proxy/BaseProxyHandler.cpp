@@ -138,8 +138,8 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
         const Class *clasp = receiver->getClass();
         MOZ_ASSERT(clasp->getProperty != JS_PropertyStub);
         MOZ_ASSERT(clasp->setProperty != JS_StrictPropertyStub);
-        return JSObject::defineGeneric(cx, receiver, id, vp,
-                                       clasp->getProperty, clasp->setProperty, attrs);
+        return DefineProperty(cx, receiver, id, vp,
+                              clasp->getProperty, clasp->setProperty, attrs);
     }
 
     // Step 6.
@@ -186,16 +186,15 @@ js::SetPropertyIgnoringNamedGetter(JSContext *cx, const BaseProxyHandler *handle
             MOZ_ASSERT(desc.object() == proxy);
             return handler->defineProperty(cx, proxy, id, desc);
         }
-        return JSObject::defineGeneric(cx, receiver, id, desc.value(),
-                                       desc.getter(), desc.setter(), desc.attributes());
+        return DefineProperty(cx, receiver, id, desc.value(),
+                              desc.getter(), desc.setter(), desc.attributes());
     }
     desc.object().set(receiver);
     desc.value().set(vp.get());
     desc.setAttributes(JSPROP_ENUMERATE);
     desc.setGetter(nullptr);
     desc.setSetter(nullptr); // Pick up the class getter/setter.
-    return JSObject::defineGeneric(cx, receiver, id, desc.value(), nullptr, nullptr,
-                                   JSPROP_ENUMERATE);
+    return DefineProperty(cx, receiver, id, desc.value(), nullptr, nullptr, JSPROP_ENUMERATE);
 }
 
 bool

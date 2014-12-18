@@ -1863,7 +1863,7 @@ JSStructuredCloneReader::read(MutableHandleValue vp)
             if (!ValueToId<CanGC>(context(), key, &id))
                 return false;
 
-            if (!JSObject::defineGeneric(context(), obj, id, val))
+            if (!DefineProperty(context(), obj, id, val))
                 return false;
          }
     }

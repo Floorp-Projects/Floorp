@@ -505,7 +505,7 @@ class NodeBuilder
 
         /* Represent "no node" as null and ensure users are not exposed to magic values. */
         RootedValue optVal(cx, val.isMagic(JS_SERIALIZE_NO_NODE) ? NullValue() : val);
-        return JSObject::defineProperty(cx, obj, atom->asPropertyName(), optVal);
+        return DefineProperty(cx, obj, atom->asPropertyName(), optVal);
     }
 
     bool newNodeLoc(TokenPos *pos, MutableHandleValue dst);

@@ -203,11 +203,11 @@ DebuggerMemory::drainAllocationsLog(JSContext *cx, unsigned argc, Value *vp)
         // pop and delete together.
         Debugger::AllocationSite *allocSite = dbg->allocationsLog.getFirst();
         RootedValue frame(cx, ObjectOrNullValue(allocSite->frame));
-        if (!JSObject::defineProperty(cx, obj, cx->names().frame, frame))
+        if (!DefineProperty(cx, obj, cx->names().frame, frame))
             return false;
 
         RootedValue timestampValue(cx, NumberValue(allocSite->when));
-        if (!JSObject::defineProperty(cx, obj, cx->names().timestamp, timestampValue))
+        if (!DefineProperty(cx, obj, cx->names().timestamp, timestampValue))
             return false;
 
         result->setDenseElement(i, ObjectValue(*obj));
@@ -367,7 +367,7 @@ class Tally {
         RootedPlainObject obj(census.cx, NewBuiltinClassInstance<PlainObject>(census.cx));
         RootedValue countValue(census.cx, NumberValue(total_));
         if (!obj ||
-            !JSObject::defineProperty(census.cx, obj, census.cx->names().count, countValue))
+            !DefineProperty(census.cx, obj, census.cx->names().count, countValue))
         {
             return false;
         }
@@ -442,22 +442,22 @@ class ByJSType {
 
         RootedValue objectsReport(cx);
         if (!objects.report(census, &objectsReport) ||
-            !JSObject::defineProperty(cx, obj, cx->names().objects, objectsReport))
+            !DefineProperty(cx, obj, cx->names().objects, objectsReport))
             return false;
 
         RootedValue scriptsReport(cx);
         if (!scripts.report(census, &scriptsReport) ||
-            !JSObject::defineProperty(cx, obj, cx->names().scripts, scriptsReport))
+            !DefineProperty(cx, obj, cx->names().scripts, scriptsReport))
             return false;
 
         RootedValue stringsReport(cx);
         if (!strings.report(census, &stringsReport) ||
-            !JSObject::defineProperty(cx, obj, cx->names().strings, stringsReport))
+            !DefineProperty(cx, obj, cx->names().strings, stringsReport))
             return false;
 
         RootedValue otherReport(cx);
         if (!other.report(census, &otherReport) ||
-            !JSObject::defineProperty(cx, obj, cx->names().other, otherReport))
+            !DefineProperty(cx, obj, cx->names().other, otherReport))
             return false;
 
         report.setObject(*obj);
@@ -584,7 +584,7 @@ class ByObjectClass {
             }
 #endif
 
-            if (!JSObject::defineGeneric(cx, obj, entryId, assorterReport))
+            if (!DefineProperty(cx, obj, entryId, assorterReport))
                 return false;
         }
 
@@ -679,7 +679,7 @@ class ByUbinodeType {
                 return false;
             RootedId entryId(cx, AtomToId(atom));
 
-            if (!JSObject::defineGeneric(cx, obj, entryId, assorterReport))
+            if (!DefineProperty(cx, obj, entryId, assorterReport))
                 return false;
         }
 

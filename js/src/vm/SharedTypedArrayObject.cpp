@@ -750,10 +750,10 @@ SharedTypedArrayObjectTemplate<NativeType>::FinishClassInit(JSContext *cx,
 {
     RootedValue bytesValue(cx, Int32Value(BYTES_PER_ELEMENT));
 
-    if (!JSObject::defineProperty(cx, ctor, cx->names().BYTES_PER_ELEMENT, bytesValue,
-                                  nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY) ||
-        !JSObject::defineProperty(cx, proto, cx->names().BYTES_PER_ELEMENT, bytesValue,
-                                  nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY))
+    if (!DefineProperty(cx, ctor, cx->names().BYTES_PER_ELEMENT, bytesValue,
+                        nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY) ||
+        !DefineProperty(cx, proto, cx->names().BYTES_PER_ELEMENT, bytesValue,
+                        nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY))
     {
         return false;
     }

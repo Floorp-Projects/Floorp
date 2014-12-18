@@ -718,7 +718,7 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, HandleValue reviver, Mut
                     /* Step 2a(iii)(3). */
                     // XXX This definition should ignore success/failure, when
                     //     our property-definition APIs indicate that.
-                    if (!JSObject::defineGeneric(cx, obj, id, newElement))
+                    if (!DefineProperty(cx, obj, id, newElement))
                         return false;
                 }
             }
@@ -746,7 +746,7 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, HandleValue reviver, Mut
                     /* Step 2b(ii)(3). */
                     // XXX This definition should ignore success/failure, when
                     //     our property-definition APIs indicate that.
-                    if (!JSObject::defineGeneric(cx, obj, id, newElement))
+                    if (!DefineProperty(cx, obj, id, newElement))
                         return false;
                 }
             }
@@ -780,7 +780,7 @@ Revive(JSContext *cx, HandleValue reviver, MutableHandleValue vp)
     if (!obj)
         return false;
 
-    if (!JSObject::defineProperty(cx, obj, cx->names().empty, vp))
+    if (!DefineProperty(cx, obj, cx->names().empty, vp))
         return false;
 
     Rooted<jsid> id(cx, NameToId(cx->names().empty));

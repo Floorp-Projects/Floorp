@@ -814,8 +814,12 @@ js::obj_defineProperty(JSContext *cx, unsigned argc, Value *vp)
     if (!ValueToId<CanGC>(cx, args.get(1), &id))
         return false;
 
-    bool junk;
-    if (!DefineOwnProperty(cx, obj, id, args.get(2), &junk))
+    Rooted<PropDesc> desc(cx);
+    if (!desc.initialize(cx, args.get(2)))
+        return false;
+
+    bool ignored;
+    if (!StandardDefineProperty(cx, obj, id, desc, true, &ignored))
         return false;
 
     args.rval().setObject(*obj);
@@ -1160,8 +1164,8 @@ FinishObjectClassInit(JSContext *cx, JS::HandleObject ctor, JS::HandleObject pro
     self->setIntrinsicsHolder(intrinsicsHolder);
     /* Define a property 'global' with the current global as its value. */
     RootedValue global(cx, ObjectValue(*self));
-    if (!JSObject::defineProperty(cx, intrinsicsHolder, cx->names().global, global,
-                                  nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY))
+    if (!DefineProperty(cx, intrinsicsHolder, cx->names().global, global,
+                        nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY))
     {
         return false;
     }

@@ -457,8 +457,8 @@ intl_availableLocales(JSContext *cx, CountAvailable countAvailable,
         RootedAtom a(cx, Atomize(cx, lang, strlen(lang)));
         if (!a)
             return false;
-        if (!JSObject::defineProperty(cx, locales, a->asPropertyName(), t, nullptr, nullptr,
-                                      JSPROP_ENUMERATE))
+        if (!DefineProperty(cx, locales, a->asPropertyName(), t, nullptr, nullptr,
+                            JSPROP_ENUMERATE))
         {
             return false;
         }
@@ -703,9 +703,9 @@ InitCollatorClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> global
     RootedValue getter(cx);
     if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().CollatorCompareGet, &getter))
         return nullptr;
-    if (!JSObject::defineProperty(cx, proto, cx->names().compare, UndefinedHandleValue,
-                                  JS_DATA_TO_FUNC_PTR(JSPropertyOp, &getter.toObject()),
-                                  nullptr, JSPROP_GETTER | JSPROP_SHARED))
+    if (!DefineProperty(cx, proto, cx->names().compare, UndefinedHandleValue,
+                        JS_DATA_TO_FUNC_PTR(JSPropertyOp, &getter.toObject()),
+                        nullptr, JSPROP_GETTER | JSPROP_SHARED))
     {
         return nullptr;
     }
@@ -720,7 +720,7 @@ InitCollatorClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> global
 
     // 8.1
     RootedValue ctorValue(cx, ObjectValue(*ctor));
-    if (!JSObject::defineProperty(cx, Intl, cx->names().Collator, ctorValue, nullptr, nullptr, 0))
+    if (!DefineProperty(cx, Intl, cx->names().Collator, ctorValue, nullptr, nullptr, 0))
         return nullptr;
 
     return ctor;
@@ -808,7 +808,7 @@ js::intl_availableCollations(JSContext *cx, unsigned argc, Value *vp)
         if (!jscollation)
             return false;
         RootedValue element(cx, StringValue(jscollation));
-        if (!JSObject::defineElement(cx, collations, index++, element))
+        if (!DefineElement(cx, collations, index++, element))
             return false;
     }
 
@@ -1191,9 +1191,9 @@ InitNumberFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> gl
     RootedValue getter(cx);
     if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().NumberFormatFormatGet, &getter))
         return nullptr;
-    if (!JSObject::defineProperty(cx, proto, cx->names().format, UndefinedHandleValue,
-                                  JS_DATA_TO_FUNC_PTR(JSPropertyOp, &getter.toObject()),
-                                  nullptr, JSPROP_GETTER | JSPROP_SHARED))
+    if (!DefineProperty(cx, proto, cx->names().format, UndefinedHandleValue,
+                        JS_DATA_TO_FUNC_PTR(JSPropertyOp, &getter.toObject()),
+                        nullptr, JSPROP_GETTER | JSPROP_SHARED))
     {
         return nullptr;
     }
@@ -1208,11 +1208,8 @@ InitNumberFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> gl
 
     // 8.1
     RootedValue ctorValue(cx, ObjectValue(*ctor));
-    if (!JSObject::defineProperty(cx, Intl, cx->names().NumberFormat, ctorValue, nullptr, nullptr,
-                                  0))
-    {
+    if (!DefineProperty(cx, Intl, cx->names().NumberFormat, ctorValue, nullptr, nullptr, 0))
         return nullptr;
-    }
 
     return ctor;
 }
@@ -1647,9 +1644,9 @@ InitDateTimeFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> 
     RootedValue getter(cx);
     if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().DateTimeFormatFormatGet, &getter))
         return nullptr;
-    if (!JSObject::defineProperty(cx, proto, cx->names().format, UndefinedHandleValue,
-                                  JS_DATA_TO_FUNC_PTR(JSPropertyOp, &getter.toObject()),
-                                  nullptr, JSPROP_GETTER | JSPROP_SHARED))
+    if (!DefineProperty(cx, proto, cx->names().format, UndefinedHandleValue,
+                        JS_DATA_TO_FUNC_PTR(JSPropertyOp, &getter.toObject()),
+                        nullptr, JSPROP_GETTER | JSPROP_SHARED))
     {
         return nullptr;
     }
@@ -1664,11 +1661,8 @@ InitDateTimeFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> 
 
     // 8.1
     RootedValue ctorValue(cx, ObjectValue(*ctor));
-    if (!JSObject::defineProperty(cx, Intl, cx->names().DateTimeFormat, ctorValue,
-                                  nullptr, nullptr, 0))
-    {
+    if (!DefineProperty(cx, Intl, cx->names().DateTimeFormat, ctorValue, nullptr, nullptr, 0))
         return nullptr;
-    }
 
     return ctor;
 }
@@ -1740,7 +1734,7 @@ js::intl_availableCalendars(JSContext *cx, unsigned argc, Value *vp)
     if (!jscalendar)
         return false;
     RootedValue element(cx, StringValue(jscalendar));
-    if (!JSObject::defineElement(cx, calendars, index++, element))
+    if (!DefineElement(cx, calendars, index++, element))
         return false;
 
     // Now get the calendars that "would make a difference", i.e., not the default.
@@ -1768,7 +1762,7 @@ js::intl_availableCalendars(JSContext *cx, unsigned argc, Value *vp)
         if (!jscalendar)
             return false;
         element = StringValue(jscalendar);
-        if (!JSObject::defineElement(cx, calendars, index++, element))
+        if (!DefineElement(cx, calendars, index++, element))
             return false;
     }
 
@@ -2036,7 +2030,7 @@ js_InitIntlClass(JSContext *cx, HandleObject obj)
         return nullptr;
 
     RootedValue IntlValue(cx, ObjectValue(*Intl));
-    if (!JSObject::defineProperty(cx, global, cx->names().Intl, IntlValue, nullptr, nullptr, 0))
+    if (!DefineProperty(cx, global, cx->names().Intl, IntlValue, nullptr, nullptr, 0))
         return nullptr;
 
     if (!JS_DefineFunctions(cx, Intl, intl_static_methods))
