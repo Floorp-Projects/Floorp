@@ -89,6 +89,9 @@ let gSubDialog = {
     this._overlay.style.visibility = "";
     // Clear the sizing inline styles.
     this._frame.removeAttribute("style");
+    // Clear the sizing attributes
+    this._box.removeAttribute("width");
+    this._box.removeAttribute("height");
 
     setTimeout(() => {
       // Unload the dialog after the event listeners run so that the load of about:blank isn't

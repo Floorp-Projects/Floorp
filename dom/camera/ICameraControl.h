@@ -145,6 +145,7 @@ public:
   struct Configuration {
     Mode      mMode;
     Size      mPreviewSize;
+    Size      mPictureSize;
     nsString  mRecorderProfile;
   };
 

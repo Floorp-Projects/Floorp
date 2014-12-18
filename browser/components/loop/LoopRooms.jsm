@@ -155,7 +155,7 @@ let LoopRoomsInternal = {
    *                             `Error` object or `null`. The second argument will
    *                             be the list of rooms, if it was fetched successfully.
    */
-  getAll: function(version = null, callback) {
+  getAll: function(version = null, callback = null) {
     if (!callback) {
       callback = version;
       version = null;

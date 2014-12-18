@@ -135,6 +135,7 @@ add_task(function* test_emptytitle_export()
   // 9. empty bookmarks db and continue
 
   yield BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
+  yield promiseAsyncUpdates();
 
   const NOTITLE_URL = "http://notitle.mozilla.org/";
   let id = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
@@ -144,6 +145,7 @@ add_task(function* test_emptytitle_export()
   test_bookmarks.unfiled.push({ title: "", url: NOTITLE_URL });
 
   yield BookmarkHTMLUtils.exportToFile(gBookmarksFileNew);
+  yield promiseAsyncUpdates();
   remove_all_bookmarks();
 
   yield BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
@@ -177,6 +179,7 @@ add_task(function* test_import_chromefavicon()
   const CHROME_FAVICON_URI_2 = NetUtil.newURI("chrome://global/skin/icons/error-16.png");
 
   yield BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
+  yield promiseAsyncUpdates();
   let id = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                                 PAGE_URI,
                                                 PlacesUtils.bookmarks.DEFAULT_INDEX,
@@ -201,6 +204,7 @@ add_task(function* test_import_chromefavicon()
     { title: "Test", url: PAGE_URI.spec, icon: base64Icon });
 
   yield BookmarkHTMLUtils.exportToFile(gBookmarksFileNew);
+  yield promiseAsyncUpdates();
 
   // Change the favicon to check it's really imported again later.
   deferred = Promise.defer();
@@ -236,7 +240,10 @@ add_task(function* test_import_ontop()
   // 4. run the test-suite
 
   yield BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
+  yield promiseAsyncUpdates();
   yield BookmarkHTMLUtils.exportToFile(gBookmarksFileNew);
+  yield promiseAsyncUpdates();
+
   yield BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
   yield promiseAsyncUpdates();
   yield testImportedBookmarks();
