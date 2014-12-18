@@ -30,6 +30,7 @@ AddUniforms(ProgramProfileOGL& aProfile)
     // This needs to be kept in sync with the KnownUniformName enum
     static const char *sKnownUniformNames[] = {
         "uLayerTransform",
+        "uLayerTransformInverse",
         "uMaskTransform",
         "uLayerRects",
         "uMatrixProj",
@@ -53,6 +54,9 @@ AddUniforms(ProgramProfileOGL& aProfile)
         "uBlurOffset",
         "uBlurAlpha",
         "uBlurGaussianKernel",
+        "uSSEdges",
+        "uViewportSize",
+        "uVisibleCenter",
         nullptr
     };
 
@@ -142,6 +146,12 @@ ShaderConfigOGL::SetPremultiply(bool aEnabled)
   SetFeature(ENABLE_PREMULTIPLY, aEnabled);
 }
 
+void
+ShaderConfigOGL::SetDEAA(bool aEnabled)
+{
+  SetFeature(ENABLE_DEAA, aEnabled);
+}
+
 /* static */ ProgramProfileOGL
 ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
 {
@@ -153,8 +163,13 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   vs << "uniform mat4 uMatrixProj;" << endl;
   vs << "uniform vec4 uLayerRects[4];" << endl;
   vs << "uniform mat4 uLayerTransform;" << endl;
-  vs << "uniform vec4 uRenderTargetOffset;" << endl;
-
+  if (aConfig.mFeatures & ENABLE_DEAA) {
+    vs << "uniform mat4 uLayerTransformInverse;" << endl;
+    vs << "uniform vec3 uSSEdges[4];" << endl;
+    vs << "uniform vec2 uVisibleCenter;" << endl;
+    vs << "uniform vec2 uViewportSize;" << endl;
+  }
+  vs << "uniform vec2 uRenderTargetOffset;" << endl;
   vs << "attribute vec4 aCoord;" << endl;
 
   if (!(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
@@ -174,27 +189,78 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   vs << "  vec4 layerRect = uLayerRects[vertexID];" << endl;
   vs << "  vec4 finalPosition = vec4(aCoord.xy * layerRect.zw + layerRect.xy, 0.0, 1.0);" << endl;
   vs << "  finalPosition = uLayerTransform * finalPosition;" << endl;
-  vs << "  finalPosition.xyz /= finalPosition.w;" << endl;
 
-  if (aConfig.mFeatures & ENABLE_MASK_3D) {
-    vs << "  vMaskCoord.xy = (uMaskTransform * vec4(finalPosition.xyz, 1.0)).xy;" << endl;
-    // correct for perspective correct interpolation, see comment in D3D10 shader
-    vs << "  vMaskCoord.z = 1.0;" << endl;
-    vs << "  vMaskCoord *= finalPosition.w;" << endl;
-  } else if (aConfig.mFeatures & ENABLE_MASK_2D) {
-    vs << "  vMaskCoord.xy = (uMaskTransform * finalPosition).xy;" << endl;
-  }
+  if (aConfig.mFeatures & ENABLE_DEAA) {
+    // XXX kip - The DEAA shader could be made simpler if we switch to
+    //           using dynamic vertex buffers instead of sending everything
+    //           in through uniforms.  This would enable passing information
+    //           about how to dilate each vertex explicitly and eliminate the
+    //           need to extrapolate this with the sub-pixel coverage
+    //           calculation in the vertex shader.
 
-  vs << "  finalPosition = finalPosition - uRenderTargetOffset;" << endl;
-  vs << "  finalPosition.xyz *= finalPosition.w;" << endl;
-  vs << "  finalPosition = uMatrixProj * finalPosition;" << endl;
+    // Calculate the screen space position of this vertex, in screen pixels
+    vs << "  vec4 ssPos = finalPosition;" << endl;
+    vs << "  ssPos.xy -= uRenderTargetOffset * finalPosition.w;" << endl;
+    vs << "  ssPos = uMatrixProj * ssPos;" << endl;
+    vs << "  ssPos.xy = ((ssPos.xy/ssPos.w)*0.5+0.5)*uViewportSize;" << endl;
 
-  if (!(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
+    if (aConfig.mFeatures & ENABLE_MASK_2D ||
+        aConfig.mFeatures & ENABLE_MASK_3D ||
+        !(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
+      vs << "  vec4 coordAdjusted;" << endl;
+      vs << "  coordAdjusted.xy = aCoord.xy;" << endl;
+    }
+
+    // It is necessary to dilate edges away from uVisibleCenter to ensure that
+    // fragments with less than 50% sub-pixel coverage will be shaded.
+    // This offset is applied when the sub-pixel coverage of the vertex is
+    // less than 100%.  Expanding by 0.5 pixels in screen space is sufficient
+    // to include these pixels.
+    vs << "  if (dot(uSSEdges[0], vec3(ssPos.xy, 1.0)) < 1.5 ||" << endl;
+    vs << "      dot(uSSEdges[1], vec3(ssPos.xy, 1.0)) < 1.5 ||" << endl;
+    vs << "      dot(uSSEdges[2], vec3(ssPos.xy, 1.0)) < 1.5 ||" << endl;
+    vs << "      dot(uSSEdges[3], vec3(ssPos.xy, 1.0)) < 1.5) {" << endl;
+    // If the shader reaches this branch, then this vertex is on the edge of
+    // the layer's visible rect and should be dilated away from the center of
+    // the visible rect.  We don't want to hit this for inner facing
+    // edges between tiles, as the pixels may be covered twice without clipping
+    // against uSSEdges.  If all edges were dilated, it would result in
+    // artifacts visible within semi-transparent layers with multiple tiles.
+    vs << "    vec4 visibleCenter = uLayerTransform * vec4(uVisibleCenter, 0.0, 1.0);" << endl;
+    vs << "    vec2 dilateDir = finalPosition.xy / finalPosition.w - visibleCenter.xy / visibleCenter.w;" << endl;
+    vs << "    vec2 offset = sign(dilateDir) * 0.5;" << endl;
+    vs << "    finalPosition.xy += offset * finalPosition.w;" << endl;
+    if (!(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
+      // We must adjust the texture coordinates to compensate for the dilation
+      vs << "    coordAdjusted = uLayerTransformInverse * finalPosition;" << endl;
+      vs << "    coordAdjusted /= coordAdjusted.w;" << endl;
+      vs << "    coordAdjusted.xy -= layerRect.xy;" << endl;
+      vs << "    coordAdjusted.xy /= layerRect.zw;" << endl;
+    }
+    vs << "  }" << endl;
+
+    if (!(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
+      vs << "  vec4 textureRect = uTextureRects[vertexID];" << endl;
+      vs << "  vec2 texCoord = coordAdjusted.xy * textureRect.zw + textureRect.xy;" << endl;
+      vs << "  vTexCoord = (uTextureTransform * vec4(texCoord, 0.0, 1.0)).xy;" << endl;
+    }
+
+  } else if (!(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
     vs << "  vec4 textureRect = uTextureRects[vertexID];" << endl;
     vs << "  vec2 texCoord = aCoord.xy * textureRect.zw + textureRect.xy;" << endl;
     vs << "  vTexCoord = (uTextureTransform * vec4(texCoord, 0.0, 1.0)).xy;" << endl;
   }
-
+  if (aConfig.mFeatures & ENABLE_MASK_2D ||
+      aConfig.mFeatures & ENABLE_MASK_3D) {
+    vs << "  vMaskCoord.xy = (uMaskTransform * (finalPosition / finalPosition.w)).xy;" << endl;
+    if (aConfig.mFeatures & ENABLE_MASK_3D) {
+      // correct for perspective correct interpolation, see comment in D3D10 shader
+      vs << "  vMaskCoord.z = 1.0;" << endl;
+      vs << "  vMaskCoord *= finalPosition.w;" << endl;
+    }
+  }
+  vs << "  finalPosition.xy -= uRenderTargetOffset * finalPosition.w;" << endl;
+  vs << "  finalPosition = uMatrixProj * finalPosition;" << endl;
   vs << "  gl_Position = finalPosition;" << endl;
   vs << "}" << endl;
 
@@ -259,6 +325,10 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
       aConfig.mFeatures & ENABLE_MASK_3D) {
     fs << "varying vec3 vMaskCoord;" << endl;
     fs << "uniform sampler2D uMaskTexture;" << endl;
+  }
+
+  if (aConfig.mFeatures & ENABLE_DEAA) {
+    fs << "uniform vec3 uSSEdges[4];" << endl;
   }
 
   if (!(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
@@ -352,6 +422,16 @@ For [0,1] instead of [0,255], and to 5 places:
     if (aConfig.mFeatures & ENABLE_PREMULTIPLY) {
       fs << " color.rgb *= color.a;" << endl;
     }
+  }
+  if (aConfig.mFeatures & ENABLE_DEAA) {
+    // Calculate the sub-pixel coverage of the pixel and modulate its opacity
+    // by that amount to perform DEAA.
+    fs << "  vec3 ssPos = vec3(gl_FragCoord.xy, 1.0);" << endl;
+    fs << "  float deaaCoverage = clamp(dot(uSSEdges[0], ssPos), 0.0, 1.0);" << endl;
+    fs << "  deaaCoverage *= clamp(dot(uSSEdges[1], ssPos), 0.0, 1.0);" << endl;
+    fs << "  deaaCoverage *= clamp(dot(uSSEdges[2], ssPos), 0.0, 1.0);" << endl;
+    fs << "  deaaCoverage *= clamp(dot(uSSEdges[3], ssPos), 0.0, 1.0);" << endl;
+    fs << "  color *= deaaCoverage;" << endl;
   }
   if (aConfig.mFeatures & ENABLE_MASK_3D) {
     fs << "  vec2 maskCoords = vMaskCoord.xy / vMaskCoord.z;" << endl;
