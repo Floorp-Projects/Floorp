@@ -331,7 +331,7 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
            ("CSPService::AsyncOnChannelRedirect called for %s",
             newUriSpec.get()));
   }
-  if (aDecision == true) {
+  if (aDecision == 1) {
     PR_LOG(gCspPRLog, PR_LOG_DEBUG,
            ("CSPService::AsyncOnChannelRedirect ALLOWING request."));
   }
