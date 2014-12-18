@@ -1172,8 +1172,8 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
 
   ImageFormat format = img->GetFormat();
 #ifdef WEBRTC_GONK
-  if (format == ImageFormat::GRALLOC_PLANAR_YCBCR) {
-    layers::GrallocImage *nativeImage = static_cast<layers::GrallocImage*>(img);
+  layers::GrallocImage* nativeImage = img->AsGrallocImage();
+  if (nativeImage) {
     android::sp<android::GraphicBuffer> graphicBuffer = nativeImage->GetGraphicBuffer();
     int pixelFormat = graphicBuffer->getPixelFormat(); /* PixelFormat is an enum == int */
     mozilla::VideoType destFormat;
