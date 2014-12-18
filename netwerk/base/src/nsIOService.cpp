@@ -688,7 +688,7 @@ nsIOService::NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
 
       // If we're sandboxed, make sure to clear any owner the channel
       // might already have.
-      if (loadInfo && loadInfo->GetLoadingSandboxed()) {
+      if (loadInfo->GetLoadingSandboxed()) {
         (*result)->SetOwner(nullptr);
       }
     }
