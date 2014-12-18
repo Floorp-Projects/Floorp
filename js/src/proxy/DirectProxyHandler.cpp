@@ -117,35 +117,35 @@ bool
 DirectProxyHandler::getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop) const
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JSObject::getProto(cx, target, protop);
+    return GetPrototype(cx, target, protop);
 }
 
 bool
 DirectProxyHandler::setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto, bool *bp) const
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JSObject::setProto(cx, target, proto, bp);
+    return SetPrototype(cx, target, proto, bp);
 }
 
 bool
 DirectProxyHandler::setImmutablePrototype(JSContext *cx, HandleObject proxy, bool *succeeded) const
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JSObject::setImmutablePrototype(cx, target, succeeded);
+    return SetImmutablePrototype(cx, target, succeeded);
 }
 
 bool
 DirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JSObject::preventExtensions(cx, target, succeeded);
+    return PreventExtensions(cx, target, succeeded);
 }
 
 bool
 DirectProxyHandler::isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JSObject::isExtensible(cx, target, extensible);
+    return IsExtensible(cx, target, extensible);
 }
 
 bool

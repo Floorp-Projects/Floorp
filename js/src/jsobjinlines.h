@@ -164,8 +164,8 @@ JSObject::setType(js::types::TypeObject *newType)
     type_ = newType;
 }
 
-/* static */ inline bool
-JSObject::getProto(JSContext *cx, js::HandleObject obj, js::MutableHandleObject protop)
+inline bool
+js::GetPrototype(JSContext *cx, js::HandleObject obj, js::MutableHandleObject protop)
 {
     if (obj->getTaggedProto().isLazy()) {
         MOZ_ASSERT(obj->is<js::ProxyObject>());
@@ -176,89 +176,13 @@ JSObject::getProto(JSContext *cx, js::HandleObject obj, js::MutableHandleObject 
     }
 }
 
-/* static */ inline bool
-JSObject::setProto(JSContext *cx, JS::HandleObject obj, JS::HandleObject proto, bool *succeeded)
+inline bool
+js::IsExtensible(ExclusiveContext *cx, HandleObject obj, bool *extensible)
 {
-    /*
-     * If |obj| has a "lazy" [[Prototype]], it is 1) a proxy 2) whose handler's
-     * {get,set}PrototypeOf and setImmutablePrototype methods mediate access to
-     * |obj.[[Prototype]]|.  The Proxy subsystem is responsible for responding
-     * to such attempts.
-     */
-    if (obj->hasLazyPrototype()) {
-        MOZ_ASSERT(obj->is<js::ProxyObject>());
-        return js::Proxy::setPrototypeOf(cx, obj, proto, succeeded);
-    }
-
-    /* Disallow mutation of immutable [[Prototype]]s. */
-    if (obj->nonLazyPrototypeIsImmutable()) {
-        *succeeded = false;
-        return true;
-    }
-
-    /*
-     * Disallow mutating the [[Prototype]] on ArrayBuffer objects, which
-     * due to their complicated delegate-object shenanigans can't easily
-     * have a mutable [[Prototype]].
-     */
-    if (obj->is<js::ArrayBufferObject>()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SETPROTOTYPEOF_FAIL,
-                             "incompatible ArrayBuffer");
-        return false;
-    }
-
-    /*
-     * Disallow mutating the [[Prototype]] on Typed Objects, per the spec.
-     */
-    if (obj->is<js::TypedObject>()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SETPROTOTYPEOF_FAIL,
-                             "incompatible TypedObject");
-        return false;
-    }
-
-    /*
-     * Explicitly disallow mutating the [[Prototype]] of Location objects
-     * for flash-related security reasons.
-     */
-    if (!strcmp(obj->getClass()->name, "Location")) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SETPROTOTYPEOF_FAIL,
-                             "incompatible Location object");
-        return false;
-    }
-
-    /* ES6 9.1.2 step 5 forbids changing [[Prototype]] if not [[Extensible]]. */
-    bool extensible;
-    if (!JSObject::isExtensible(cx, obj, &extensible))
-        return false;
-    if (!extensible) {
-        *succeeded = false;
-        return true;
-    }
-
-    /* ES6 9.1.2 step 6 forbids generating cyclical prototype chains. */
-    js::RootedObject obj2(cx);
-    for (obj2 = proto; obj2; ) {
-        if (obj2 == obj) {
-            *succeeded = false;
-            return true;
-        }
-
-        if (!JSObject::getProto(cx, obj2, &obj2))
-            return false;
-    }
-
-    JS::Rooted<js::TaggedProto> taggedProto(cx, js::TaggedProto(proto));
-    *succeeded = SetClassAndProto(cx, obj, obj->getClass(), taggedProto);
-    return *succeeded;
-}
-
-/* static */ inline bool
-JSObject::isExtensible(js::ExclusiveContext *cx, js::HandleObject obj, bool *extensible)
-{
-    if (obj->is<js::ProxyObject>()) {
+    if (obj->is<ProxyObject>()) {
         if (!cx->shouldBeJSContext())
             return false;
-        return js::Proxy::isExtensible(cx->asJSContext(), obj, extensible);
+        return Proxy::isExtensible(cx->asJSContext(), obj, extensible);
     }
 
     *extensible = obj->nonProxyIsExtensible();

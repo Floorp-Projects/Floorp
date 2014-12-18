@@ -92,7 +92,7 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
         // The spec calls this variable "parent", but that word has weird
         // connotations in SpiderMonkey, so let's go with "proto".
         RootedObject proto(cx);
-        if (!JSObject::getProto(cx, proxy, &proto))
+        if (!GetPrototype(cx, proxy, &proto))
             return false;
         if (proto)
             return JSObject::setGeneric(cx, proto, receiver, id, vp, strict);
