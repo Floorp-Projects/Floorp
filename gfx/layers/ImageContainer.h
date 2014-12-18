@@ -105,6 +105,7 @@ class TextureClient;
 class CompositableClient;
 class CompositableForwarder;
 class SurfaceDescriptor;
+class GrallocImage;
 
 struct ImageBackendData
 {
@@ -166,6 +167,11 @@ public:
   bool IsSentToCompositor() { return mSent; }
 
   virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() = 0;
+
+  virtual GrallocImage* AsGrallocImage()
+  {
+    return nullptr;
+  }
 
 protected:
   Image(void* aImplData, ImageFormat aFormat) :
