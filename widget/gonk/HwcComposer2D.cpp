@@ -30,6 +30,7 @@
 #include "mozilla/StaticPtr.h"
 #include "cutils/properties.h"
 #include "gfx2DGlue.h"
+#include "nsWindow.h"
 
 #if ANDROID_VERSION >= 17
 #include "libdisplay/FramebufferSurface.h"
@@ -224,7 +225,7 @@ HwcComposer2D::Vsync(int aDisplay, nsecs_t aVsyncTimestamp)
       LOGE("Non-uniform vsync interval: %lld\n", vsyncInterval);
     }
     mLastVsyncTime = aVsyncTimestamp;
-    VsyncDispatcher::GetInstance()->NotifyVsync(vsyncTime);
+    nsWindow::NotifyVsync(vsyncTime);
 }
 
 // Called on the "invalidator" thread (run from HAL).

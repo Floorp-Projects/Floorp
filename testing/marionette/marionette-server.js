@@ -611,7 +611,24 @@ MarionetteServerConnection.prototype = {
         win.addEventListener("load", listener, true);
       }
       else {
-        this.startBrowser(win, true);
+        let clickToStart;
+        try {
+          clickToStart = Services.prefs.getBoolPref('marionette.debugging.clicktostart');
+          Services.prefs.setBoolPref('marionette.debugging.clicktostart', false);
+        } catch (e) { }
+        if (clickToStart && (appName != "B2G")) {
+          let nbox = win.gBrowser.getNotificationBox();
+          let message = "Starting marionette tests with chrome debugging enabled...";
+          let buttons = [{
+            label: "Start execution of marionette tests",
+            accessKey: 'S',
+            callback: () => this.startBrowser(win, true)
+          }];
+          nbox.appendNotification(message, null, null,
+                                  nbox.PRIORITY_WARNING_MEDIUM, buttons);
+        } else {
+          this.startBrowser(win, true);
+        }
       }
     }
 
