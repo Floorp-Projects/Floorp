@@ -1801,7 +1801,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
                                                        NS_ConvertUTF16toUTF8(mAppManifestURL));
                 }
 
-                if (mCalledKillHard) {
+                if (mCreatedPairedMinidumps) {
                     // We killed the child with KillHard, so two minidumps should already
                     // exist - one for the content process, and one for the browser process.
                     // The "main" minidump of this crash report is the content processes,
@@ -1946,6 +1946,7 @@ ContentParent::InitializeMembers()
     mCalledClose = false;
     mCalledCloseWithError = false;
     mCalledKillHard = false;
+    mCreatedPairedMinidumps = false;
 }
 
 ContentParent::ContentParent(mozIApplication* aApp,
@@ -3104,7 +3105,7 @@ ContentParent::KillHard()
     mCalledKillHard = true;
     mForceKillTask = nullptr;
 
-#ifdef MOZ_CRASHREPORTER
+#if defined(MOZ_CRASHREPORTER) && !defined(MOZ_B2G)
     if (ManagedPCrashReporterParent().Length() > 0) {
         CrashReporterParent* crashReporter =
             static_cast<CrashReporterParent*>(ManagedPCrashReporterParent()[0]);
@@ -3116,6 +3117,7 @@ ContentParent::KillHard()
         // actual report gets generated, once the child process has
         // finally died.
         if (crashReporter->GeneratePairedMinidump(this)) {
+            mCreatedPairedMinidumps = true;
             // GeneratePairedMinidump created two minidumps for us - the main
             // one is for the content process we're about to kill, and the other
             // one is for the main browser process. That second one is the extra
