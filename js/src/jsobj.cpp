@@ -2498,7 +2498,7 @@ bad:
     if (named) {
         bool succeeded;
         RootedId id(cx, AtomToId(atom));
-        JSObject::deleteGeneric(cx, obj, id, &succeeded);
+        DeleteProperty(cx, obj, id, &succeeded);
     }
     if (cached)
         ClearClassObject(obj, key);

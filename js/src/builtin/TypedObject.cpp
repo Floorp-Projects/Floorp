@@ -2084,7 +2084,7 @@ TypedObject::obj_deleteGeneric(JSContext *cx, HandleObject obj, HandleId id, boo
         return true;
     }
 
-    return JSObject::deleteGeneric(cx, proto, id, succeeded);
+    return DeleteProperty(cx, proto, id, succeeded);
 }
 
 bool

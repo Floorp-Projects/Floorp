@@ -712,7 +712,7 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, HandleValue reviver, Mut
                 if (newElement.isUndefined()) {
                     /* Step 2a(iii)(2). */
                     bool succeeded;
-                    if (!JSObject::deleteGeneric(cx, obj, id, &succeeded))
+                    if (!DeleteProperty(cx, obj, id, &succeeded))
                         return false;
                 } else {
                     /* Step 2a(iii)(3). */
@@ -740,7 +740,7 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, HandleValue reviver, Mut
                 if (newElement.isUndefined()) {
                     /* Step 2b(ii)(2). */
                     bool succeeded;
-                    if (!JSObject::deleteGeneric(cx, obj, id, &succeeded))
+                    if (!DeleteProperty(cx, obj, id, &succeeded))
                         return false;
                 } else {
                     /* Step 2b(ii)(3). */

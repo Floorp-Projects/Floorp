@@ -580,7 +580,7 @@ static bool
 with_DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)
 {
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-    return JSObject::deleteGeneric(cx, actual, id, succeeded);
+    return DeleteProperty(cx, actual, id, succeeded);
 }
 
 static JSObject *
