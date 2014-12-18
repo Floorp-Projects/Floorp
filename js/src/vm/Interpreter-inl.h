@@ -661,7 +661,7 @@ ProcessCallSiteObjOperation(JSContext *cx, RootedObject &cso, RootedObject &raw,
                             RootedValue &rawValue)
 {
     bool extensible;
-    if (!JSObject::isExtensible(cx, cso, &extensible))
+    if (!IsExtensible(cx, cso, &extensible))
         return false;
     if (extensible) {
         JSAtom *name = cx->names().raw;

@@ -2018,7 +2018,7 @@ JS_GetInstancePrivate(JSContext *cx, HandleObject obj, const JSClass *clasp, Cal
 JS_PUBLIC_API(bool)
 JS_GetPrototype(JSContext *cx, JS::Handle<JSObject*> obj, JS::MutableHandle<JSObject*> protop)
 {
-    return JSObject::getProto(cx, obj, protop);
+    return GetPrototype(cx, obj, protop);
 }
 
 JS_PUBLIC_API(bool)
@@ -2029,7 +2029,7 @@ JS_SetPrototype(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<JSObject*> 
     assertSameCompartment(cx, obj, proto);
 
     bool succeeded;
-    if (!JSObject::setProto(cx, obj, proto, &succeeded))
+    if (!SetPrototype(cx, obj, proto, &succeeded))
         return false;
 
     if (!succeeded) {
@@ -2039,6 +2039,18 @@ JS_SetPrototype(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<JSObject*> 
     }
 
     return true;
+}
+
+JS_PUBLIC_API(bool)
+JS_IsExtensible(JSContext *cx, HandleObject obj, bool *extensible)
+{
+    return IsExtensible(cx, obj, extensible);
+}
+
+JS_PUBLIC_API(bool)
+JS_PreventExtensions(JSContext *cx, JS::HandleObject obj, bool *succeeded)
+{
+    return PreventExtensions(cx, obj, succeeded);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -2219,12 +2231,6 @@ JS_NewObjectForConstructor(JSContext *cx, const JSClass *clasp, const CallArgs& 
 }
 
 JS_PUBLIC_API(bool)
-JS_IsExtensible(JSContext *cx, HandleObject obj, bool *extensible)
-{
-    return JSObject::isExtensible(cx, obj, extensible);
-}
-
-JS_PUBLIC_API(bool)
 JS_IsNative(JSObject *obj)
 {
     return obj->isNative();
@@ -2254,7 +2260,7 @@ JS_DeepFreezeObject(JSContext *cx, HandleObject obj)
 
     /* Assume that non-extensible objects are already deep-frozen, to avoid divergence. */
     bool extensible;
-    if (!JSObject::isExtensible(cx, obj, &extensible))
+    if (!IsExtensible(cx, obj, &extensible))
         return false;
     if (!extensible)
         return true;
@@ -6117,12 +6123,6 @@ JS_DecodeInterpretedFunction(JSContext *cx, const void *data, uint32_t length)
     if (!decoder.codeFunction(&funobj))
         return nullptr;
     return funobj;
-}
-
-JS_PUBLIC_API(bool)
-JS_PreventExtensions(JSContext *cx, JS::HandleObject obj, bool *succeeded)
-{
-    return JSObject::preventExtensions(cx, obj, succeeded);
 }
 
 JS_PUBLIC_API(void)

@@ -204,7 +204,7 @@ ArrayToIdVector(JSContext *cx, HandleObject proxy, HandleObject target, HandleVa
 
         // step v
         bool extensible;
-        if (!JSObject::isExtensible(cx, target, &extensible))
+        if (!IsExtensible(cx, target, &extensible))
             return false;
         if (!extensible && !isFixed) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_REPORT_NEW);
@@ -251,7 +251,7 @@ ArrayToIdVector(JSContext *cx, HandleObject proxy, HandleObject target, HandleVa
 
         // step iii
         bool extensible;
-        if (!JSObject::isExtensible(cx, target, &extensible))
+        if (!IsExtensible(cx, target, &extensible))
             return false;
         if (!extensible && isFixed) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_REPORT_E_AS_NE);
@@ -345,7 +345,7 @@ ScriptedDirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy,
     // Step 11.
     if (booleanTrapResult) {
         bool extensible;
-        if (!JSObject::isExtensible(cx, target, &extensible))
+        if (!IsExtensible(cx, target, &extensible))
             return false;
         if (extensible) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_REPORT_AS_NON_EXTENSIBLE);
@@ -396,7 +396,7 @@ ScriptedDirectProxyHandler::isExtensible(JSContext *cx, HandleObject proxy, bool
 
     // step 10-11
     bool targetResult;
-    if (!JSObject::isExtensible(cx, target, &targetResult))
+    if (!IsExtensible(cx, target, &targetResult))
         return false;
 
     // step 12
@@ -423,7 +423,7 @@ ScriptedDirectProxyHandler::getPropertyDescriptor(JSContext *cx, HandleObject pr
     if (desc.object())
         return true;
     RootedObject proto(cx);
-    if (!JSObject::getProto(cx, proxy, &proto))
+    if (!GetPrototype(cx, proxy, &proto))
         return false;
     if (!proto) {
         MOZ_ASSERT(!desc.object());
@@ -498,7 +498,7 @@ ScriptedDirectProxyHandler::getOwnPropertyDescriptor(JSContext *cx, HandleObject
 
         // substep c-e
         bool extensibleTarget;
-        if (!JSObject::isExtensible(cx, target, &extensibleTarget))
+        if (!IsExtensible(cx, target, &extensibleTarget))
             return false;
         if (!extensibleTarget) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_REPORT_E_AS_NE);
@@ -512,7 +512,7 @@ ScriptedDirectProxyHandler::getOwnPropertyDescriptor(JSContext *cx, HandleObject
 
     // step 14-15
     bool extensibleTarget;
-    if (!JSObject::isExtensible(cx, target, &extensibleTarget))
+    if (!IsExtensible(cx, target, &extensibleTarget))
         return false;
 
     // step 16-17
@@ -606,7 +606,7 @@ ScriptedDirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, Ha
 
         // step 16-17
         bool extensibleTarget;
-        if (!JSObject::isExtensible(cx, target, &extensibleTarget))
+        if (!IsExtensible(cx, target, &extensibleTarget))
             return false;
 
         // step 18-19
@@ -853,7 +853,7 @@ ScriptedDirectProxyHandler::has(JSContext *cx, HandleObject proxy, HandleId id, 
             }
 
             bool extensible;
-            if (!JSObject::isExtensible(cx, target, &extensible))
+            if (!IsExtensible(cx, target, &extensible))
                 return false;
             if (!extensible) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_REPORT_E_AS_NE);

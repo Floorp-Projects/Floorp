@@ -136,21 +136,6 @@ ObjectElements::MakeElementsCopyOnWrite(ExclusiveContext *cx, NativeObject *obj)
     return true;
 }
 
-/* static */ bool
-JSObject::setImmutablePrototype(ExclusiveContext *cx, HandleObject obj, bool *succeeded)
-{
-    if (obj->hasLazyPrototype()) {
-        if (!cx->shouldBeJSContext())
-            return false;
-        return Proxy::setImmutablePrototype(cx->asJSContext(), obj, succeeded);
-    }
-
-    if (!obj->setFlag(cx, BaseShape::IMMUTABLE_PROTOTYPE))
-        return false;
-    *succeeded = true;
-    return true;
-}
-
 #ifdef DEBUG
 void
 js::NativeObject::checkShapeConsistency()
@@ -1852,7 +1837,7 @@ SetPropertyByDefining(JSContext *cx, HandleNativeObject obj, HandleObject receiv
     // enforced by [[DefineOwnProperty]], but we haven't implemented that yet.)
     if (!existing) {
         bool extensible;
-        if (!JSObject::isExtensible(cx, receiver, &extensible))
+        if (!IsExtensible(cx, receiver, &extensible))
             return false;
         if (!extensible) {
             // Error in strict mode code, warn with extra warnings option,

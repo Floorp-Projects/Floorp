@@ -2211,7 +2211,7 @@ SetImmutablePrototype(JSContext *cx, unsigned argc, Value *vp)
     RootedObject obj(cx, &args[0].toObject());
 
     bool succeeded;
-    if (!JSObject::setImmutablePrototype(cx, obj, &succeeded))
+    if (!js::SetImmutablePrototype(cx, obj, &succeeded))
         return false;
 
     args.rval().setBoolean(succeeded);

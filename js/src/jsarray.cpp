@@ -453,7 +453,7 @@ array_length_getter(JSContext *cx, HandleObject obj_, HandleId id, MutableHandle
             vp.setNumber(obj->as<ArrayObject>().length());
             return true;
         }
-        if (!JSObject::getProto(cx, obj, &obj))
+        if (!GetPrototype(cx, obj, &obj))
             return false;
     } while (obj);
     return true;
