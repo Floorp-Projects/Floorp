@@ -216,6 +216,7 @@ namespace dom {
 TabParent* sEventCapturer;
 
 TabParent *TabParent::mIMETabParent = nullptr;
+TabParent::LayerToTabParentTable* TabParent::sLayerToTabParentTable = nullptr;
 
 NS_IMPL_ISUPPORTS(TabParent,
                   nsITabParent,
@@ -259,6 +260,37 @@ TabParent::TabParent(nsIContentParent* aManager,
 
 TabParent::~TabParent()
 {
+}
+
+TabParent*
+TabParent::GetTabParentFromLayersId(uint64_t aLayersId)
+{
+  if (!sLayerToTabParentTable) {
+    return nullptr;
+  }
+  return sLayerToTabParentTable->Get(aLayersId);
+}
+
+void
+TabParent::AddTabParentToTable(uint64_t aLayersId, TabParent* aTabParent)
+{
+  if (!sLayerToTabParentTable) {
+    sLayerToTabParentTable = new LayerToTabParentTable();
+  }
+  sLayerToTabParentTable->Put(aLayersId, aTabParent);
+}
+
+void
+TabParent::RemoveTabParentFromTable(uint64_t aLayersId)
+{
+  if (!sLayerToTabParentTable) {
+    return;
+  }
+  sLayerToTabParentTable->Remove(aLayersId);
+  if (sLayerToTabParentTable->Count() == 0) {
+    delete sLayerToTabParentTable;
+    sLayerToTabParentTable = nullptr;
+  }
 }
 
 void
@@ -306,6 +338,7 @@ TabParent::Destroy()
   unused << SendDestroy();
 
   if (RenderFrameParent* frame = GetRenderFrame()) {
+    RemoveTabParentFromTable(frame->GetLayersId());
     frame->Destroy();
   }
   mIsDestroyed = true;
@@ -600,6 +633,7 @@ TabParent::Show(const nsIntSize& size)
                                     &layersId,
                                     &success);
           MOZ_ASSERT(success);
+          AddTabParentToTable(layersId, this);
           unused << SendPRenderFrameConstructor(renderFrame);
         }
     }
@@ -2009,6 +2043,7 @@ TabParent::AllocPRenderFrameParent()
                             &layersId,
                             &success);
     MOZ_ASSERT(success);
+    AddTabParentToTable(layersId, this);
     return renderFrame;
   } else {
     return nullptr;
