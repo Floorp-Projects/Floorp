@@ -78,7 +78,7 @@ InitializeOculusCAPI()
     const char *libName = OVR_LIB_NAME;
 
     // If the pref is present, we override libName
-    nsAdoptingCString prefLibName = Preferences::GetCString("dom.vr.ovr_lib_path");
+    nsAdoptingCString prefLibName = mozilla::Preferences::GetCString("dom.vr.ovr_lib_path");
     if (prefLibName && prefLibName.get()) {
       libName = prefLibName.get();
     }
