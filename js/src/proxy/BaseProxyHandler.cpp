@@ -95,7 +95,7 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
         if (!GetPrototype(cx, proxy, &proto))
             return false;
         if (proto)
-            return JSObject::setGeneric(cx, proto, receiver, id, vp, strict);
+            return SetProperty(cx, proto, receiver, id, vp, strict);
 
         // Change ownDesc to be a complete descriptor for a configurable,
         // writable, enumerable data property. Then fall through to step 5.

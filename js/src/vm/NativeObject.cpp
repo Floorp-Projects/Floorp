@@ -1725,7 +1725,7 @@ GetPropertyHelperInline(JSContext *cx,
         MutableHandleValue vpHandle = MaybeRooted<Value, allowGC>::toMutableHandle(vp);
         return obj2->template is<ProxyObject>()
                ? Proxy::get(cx, obj2Handle, receiverHandle, idHandle, vpHandle)
-               : JSObject::getGeneric(cx, obj2Handle, obj2Handle, idHandle, vpHandle);
+               : GetProperty(cx, obj2Handle, obj2Handle, idHandle, vpHandle);
     }
 
     typename MaybeRooted<NativeObject*, allowGC>::HandleType nobj2 =
@@ -2100,9 +2100,9 @@ js::NativeSetProperty(JSContext *cx, HandleNativeObject obj, HandleObject receiv
 
         // Step 4.c.i. If the prototype is also native, this step is a
         // recursive tail call, and we don't need to go through all the
-        // plumbing of JSObject::setGeneric; the top of the loop is where
-        // we're going to end up anyway. But if pobj is non-native,
-        // that optimization would be incorrect.
+        // plumbing of SetProperty; the top of the loop is where we're going to
+        // end up anyway. But if pobj is non-native, that optimization would be
+        // incorrect.
         if (!proto->isNative()) {
             // Unqualified assignments are not specified to go through [[Set]]
             // at all, but they do go through this function. So check for
@@ -2115,7 +2115,7 @@ js::NativeSetProperty(JSContext *cx, HandleNativeObject obj, HandleObject receiv
                     return SetNonexistentProperty(cx, obj, receiver, id, qualified, vp, strict);
             }
 
-            return JSObject::setGeneric(cx, proto, receiver, id, vp, strict);
+            return SetProperty(cx, proto, receiver, id, vp, strict);
         }
         pobj = &proto->as<NativeObject>();
     }

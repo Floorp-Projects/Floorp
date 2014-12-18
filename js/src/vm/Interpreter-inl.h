@@ -239,7 +239,7 @@ FetchName(JSContext *cx, HandleObject obj, HandleObject obj2, HandlePropertyName
     /* Take the slow path if shape was not found in a native object. */
     if (!obj->isNative() || !obj2->isNative()) {
         Rooted<jsid> id(cx, NameToId(name));
-        if (!JSObject::getGeneric(cx, obj, obj, id, vp))
+        if (!GetProperty(cx, obj, obj, id, vp))
             return false;
     } else {
         RootedObject normalized(cx, obj);
@@ -327,7 +327,7 @@ SetNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleObject s
                                  Unqualified, &valCopy, strict);
     }
 
-    return JSObject::setProperty(cx, scope, scope, name, &valCopy, strict);
+    return SetProperty(cx, scope, scope, name, &valCopy, strict);
 }
 
 inline bool
@@ -422,31 +422,28 @@ GetObjectElementOperation(JSContext *cx, JSOp op, JS::HandleObject receiver,
     do {
         uint32_t index;
         if (IsDefinitelyIndex(key, &index)) {
-            if (JSObject::getElementNoGC(cx, receiver, receiver, index, res.address()))
+            if (GetElementNoGC(cx, receiver, receiver, index, res.address()))
                 break;
 
-            if (!JSObject::getElement(cx, receiver, receiver, index, res))
+            if (!GetElement(cx, receiver, receiver, index, res))
                 return false;
             break;
         }
 
         if (IsSymbolOrSymbolWrapper(key)) {
             RootedId id(cx, SYMBOL_TO_JSID(ToSymbolPrimitive(key)));
-            if (!JSObject::getGeneric(cx, receiver, receiver, id, res))
+            if (!GetProperty(cx, receiver, receiver, id, res))
                 return false;
             break;
         }
 
         if (JSAtom *name = ToAtom<NoGC>(cx, key)) {
             if (name->isIndex(&index)) {
-                if (JSObject::getElementNoGC(cx, receiver, receiver, index, res.address()))
+                if (GetElementNoGC(cx, receiver, receiver, index, res.address()))
                     break;
             } else {
-                if (JSObject::getPropertyNoGC(cx, receiver, receiver, name->asPropertyName(),
-                                              res.address()))
-                {
+                if (GetPropertyNoGC(cx, receiver, receiver, name->asPropertyName(), res.address()))
                     break;
-                }
             }
         }
 
@@ -455,10 +452,10 @@ GetObjectElementOperation(JSContext *cx, JSOp op, JS::HandleObject receiver,
             return false;
 
         if (name->isIndex(&index)) {
-            if (!JSObject::getElement(cx, receiver, receiver, index, res))
+            if (!GetElement(cx, receiver, receiver, index, res))
                 return false;
         } else {
-            if (!JSObject::getProperty(cx, receiver, receiver, name->asPropertyName(), res))
+            if (!GetProperty(cx, receiver, receiver, name->asPropertyName(), res))
                 return false;
         }
     } while (false);
@@ -489,31 +486,28 @@ GetPrimitiveElementOperation(JSContext *cx, JSOp op, JS::HandleValue receiver,
     do {
         uint32_t index;
         if (IsDefinitelyIndex(key, &index)) {
-            if (JSObject::getElementNoGC(cx, boxed, boxed, index, res.address()))
+            if (GetElementNoGC(cx, boxed, boxed, index, res.address()))
                 break;
 
-            if (!JSObject::getElement(cx, boxed, boxed, index, res))
+            if (!GetElement(cx, boxed, boxed, index, res))
                 return false;
             break;
         }
 
         if (IsSymbolOrSymbolWrapper(key)) {
             RootedId id(cx, SYMBOL_TO_JSID(ToSymbolPrimitive(key)));
-            if (!JSObject::getGeneric(cx, boxed, boxed, id, res))
+            if (!GetProperty(cx, boxed, boxed, id, res))
                 return false;
             break;
         }
 
         if (JSAtom *name = ToAtom<NoGC>(cx, key)) {
             if (name->isIndex(&index)) {
-                if (JSObject::getElementNoGC(cx, boxed, boxed, index, res.address()))
+                if (GetElementNoGC(cx, boxed, boxed, index, res.address()))
                     break;
             } else {
-                if (JSObject::getPropertyNoGC(cx, boxed, boxed, name->asPropertyName(),
-                                              res.address()))
-                {
+                if (GetPropertyNoGC(cx, boxed, boxed, name->asPropertyName(), res.address()))
                     break;
-                }
             }
         }
 
@@ -522,10 +516,10 @@ GetPrimitiveElementOperation(JSContext *cx, JSOp op, JS::HandleValue receiver,
             return false;
 
         if (name->isIndex(&index)) {
-            if (!JSObject::getElement(cx, boxed, boxed, index, res))
+            if (!GetElement(cx, boxed, boxed, index, res))
                 return false;
         } else {
-            if (!JSObject::getProperty(cx, boxed, boxed, name->asPropertyName(), res))
+            if (!GetProperty(cx, boxed, boxed, name->asPropertyName(), res))
                 return false;
         }
     } while (false);

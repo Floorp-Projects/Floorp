@@ -514,7 +514,7 @@ SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValu
             strict);
     }
 
-    return JSObject::setGeneric(cx, obj, obj, id, &v, strict);
+    return SetProperty(cx, obj, obj, id, &v, strict);
 }
 
 bool

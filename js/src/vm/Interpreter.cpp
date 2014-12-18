@@ -164,7 +164,7 @@ js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, MutableHandle
     RootedValue idval(cx, idval_);
 
     RootedValue value(cx);
-    if (!JSObject::getProperty(cx, obj, obj, cx->names().noSuchMethod, &value))
+    if (!GetProperty(cx, obj, obj, cx->names().noSuchMethod, &value))
         return false;
 
     if (value.isObject()) {
@@ -248,7 +248,7 @@ GetPropertyOperation(JSContext *cx, InterpreterFrame *fp, HandleScript script, j
 
     bool wasObject = lval.isObject();
 
-    if (!JSObject::getGeneric(cx, obj, obj, id, vp))
+    if (!GetProperty(cx, obj, obj, id, vp))
         return false;
 
 #if JS_HAS_NO_SUCH_METHOD
@@ -318,7 +318,7 @@ SetObjectProperty(JSContext *cx, JSOp op, HandleValue lval, HandleId id, Mutable
             return false;
         }
     } else {
-        if (!JSObject::setGeneric(cx, obj, obj, id, rref, strict))
+        if (!SetProperty(cx, obj, obj, id, rref, strict))
             return false;
     }
 
@@ -1342,7 +1342,7 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
         return false;
 
     RootedValue tmp(cx, value);
-    return JSObject::setGeneric(cx, obj, obj, id, &tmp, strict);
+    return SetProperty(cx, obj, obj, id, &tmp, strict);
 }
 
 static MOZ_NEVER_INLINE bool
@@ -3568,7 +3568,7 @@ js::GetProperty(JSContext *cx, HandleValue v, HandlePropertyName name, MutableHa
     RootedObject obj(cx, ToObjectFromStack(cx, v));
     if (!obj)
         return false;
-    return JSObject::getProperty(cx, obj, obj, name, vp);
+    return GetProperty(cx, obj, obj, name, vp);
 }
 
 bool
@@ -3604,7 +3604,7 @@ js::GetScopeName(JSContext *cx, HandleObject scopeChain, HandlePropertyName name
         return false;
     }
 
-    if (!JSObject::getProperty(cx, obj, obj, name, vp))
+    if (!GetProperty(cx, obj, obj, name, vp))
         return false;
 
     // See note in FetchName.
@@ -3629,7 +3629,7 @@ js::GetScopeNameForTypeOf(JSContext *cx, HandleObject scopeChain, HandleProperty
         return true;
     }
 
-    if (!JSObject::getProperty(cx, obj, obj, name, vp))
+    if (!GetProperty(cx, obj, obj, name, vp))
         return false;
 
     // See note in FetchName.
@@ -3744,7 +3744,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
      */
 
     /* Step 5f. */
-    return JSObject::setProperty(cx, parent, parent, name, &rval, script->strict());
+    return SetProperty(cx, parent, parent, name, &rval, script->strict());
 }
 
 bool
@@ -3771,7 +3771,7 @@ bool
 js::SetProperty(JSContext *cx, HandleObject obj, HandleId id, const Value &value)
 {
     RootedValue v(cx, value);
-    return JSObject::setGeneric(cx, obj, obj, id, &v, strict);
+    return SetProperty(cx, obj, obj, id, &v, strict);
 }
 
 template bool js::SetProperty<true> (JSContext *cx, HandleObject obj, HandleId id, const Value &value);
