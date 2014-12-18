@@ -9,6 +9,12 @@ XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function () {
   return Components.utils.import("resource://gre/modules/FxAccountsCommon.js", {});
 });
 
+XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
+  "resource://gre/modules/FxAccounts.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "fxaMigrator",
+  "resource://services-sync/FxaMigrator.jsm");
+
 const PAGE_NO_ACCOUNT = 0;
 const PAGE_HAS_ACCOUNT = 1;
 const PAGE_NEEDS_UPDATE = 2;
@@ -25,7 +31,6 @@ const FXA_LOGIN_UNVERIFIED = 1;
 const FXA_LOGIN_FAILED = 2;
 
 let gSyncPane = {
-  _stringBundle: null,
   prefArray: ["engine.bookmarks", "engine.passwords", "engine.prefs",
               "engine.tabs", "engine.history"],
 
@@ -91,6 +96,7 @@ let gSyncPane = {
                   "weave:service:setup-complete",
                   "weave:service:logout:finish",
                   FxAccountsCommon.ONVERIFIED_NOTIFICATION];
+    let migrateTopic = "fxa-migration:state-changed";
 
     // Add the observers now and remove them on unload
     //XXXzpao This should use Services.obs.* but Weave's Obs does nice handling
@@ -98,14 +104,30 @@ let gSyncPane = {
     topics.forEach(function (topic) {
       Weave.Svc.Obs.add(topic, this.updateWeavePrefs, this);
     }, this);
+    // The FxA migration observer is a special case.
+    Weave.Svc.Obs.add(migrateTopic, this.updateMigrationState, this);
+
     window.addEventListener("unload", function() {
       topics.forEach(function (topic) {
         Weave.Svc.Obs.remove(topic, this.updateWeavePrefs, this);
       }, gSyncPane);
+      Weave.Svc.Obs.remove(migrateTopic, gSyncPane.updateMigrationState, gSyncPane);
     }, false);
 
-    this._stringBundle =
-      Services.strings.createBundle("chrome://browser/locale/preferences/preferences.properties");
+    // ask the migration module to broadcast its current state (and nothing will
+    // happen if it's not loaded - which is good, as that means no migration
+    // is pending/necessary) - we don't want to suck that module in just to
+    // find there's nothing to do.
+    Services.obs.notifyObservers(null, "fxa-migration:state-request", null);
+
+    XPCOMUtils.defineLazyGetter(this, '_stringBundle', () => {
+      return Services.strings.createBundle("chrome://browser/locale/preferences/preferences.properties");
+    }),
+
+    XPCOMUtils.defineLazyGetter(this, '_accountsStringBundle', () => {
+      return Services.strings.createBundle("chrome://browser/locale/accounts.properties");
+    }),
+
     this.updateWeavePrefs();
   },
 
@@ -192,6 +214,17 @@ let gSyncPane = {
     });
     setEventListener("tosPP-small-ToS", "click", gSyncPane.openToS);
     setEventListener("tosPP-small-PP", "click", gSyncPane.openPrivacyPolicy);
+    setEventListener("sync-migrate-upgrade", "click", function () {
+      let win = Services.wm.getMostRecentWindow("navigator:browser");
+      fxaMigrator.createFxAccount(win);
+    });
+    setEventListener("sync-migrate-forget", "click", function () {
+      fxaMigrator.forgetFxAccount();
+    });
+    setEventListener("sync-migrate-resend", "click", function () {
+      let win = Services.wm.getMostRecentWindow("navigator:browser");
+      fxaMigrator.resendVerificationMail(win);
+    });
   },
 
   updateWeavePrefs: function () {
@@ -203,7 +236,6 @@ let gSyncPane = {
     if (service.fxAccountsEnabled) {
       // determine the fxa status...
       this.page = PAGE_PLEASE_WAIT;
-      Components.utils.import("resource://gre/modules/FxAccounts.jsm");
       fxAccounts.getSignedInUser().then(data => {
         if (!data) {
           this.page = FXA_PAGE_LOGGED_OUT;
@@ -260,6 +292,45 @@ let gSyncPane = {
       document.getElementById("syncComputerName").value = Weave.Service.clientsEngine.localName;
       document.getElementById("tosPP-normal").hidden = this._usingCustomServer;
     }
+  },
+
+  updateMigrationState: function(subject, state) {
+    let selIndex;
+    switch (state) {
+      case fxaMigrator.STATE_USER_FXA: {
+        let sb = this._accountsStringBundle;
+        let button = document.getElementById("sync-migrate-upgrade");
+        button.setAttribute("label", sb.GetStringFromName("upgradeToFxA.label"));
+        button.setAttribute("accesskey", sb.GetStringFromName("upgradeToFxA.accessKey"));
+        selIndex = 0;
+        break;
+      }
+      case fxaMigrator.STATE_USER_FXA_VERIFIED: {
+        let sb = this._accountsStringBundle;
+        let email = subject.QueryInterface(Components.interfaces.nsISupportsString).data;
+        let label = sb.formatStringFromName("needVerifiedUserLong", [email], 1);
+        let elt = document.getElementById("sync-migrate-verify-label");
+        elt.setAttribute("value", label);
+        // The "resend" button.
+        let button = document.getElementById("sync-migrate-resend");
+        button.setAttribute("label", sb.GetStringFromName("resendVerificationEmail.label"));
+        button.setAttribute("accesskey", sb.GetStringFromName("resendVerificationEmail.accessKey"));
+        // The "forget" button.
+        button = document.getElementById("sync-migrate-forget");
+        button.setAttribute("label", sb.GetStringFromName("forgetMigration.label"));
+        button.setAttribute("accesskey", sb.GetStringFromName("forgetMigration.accessKey"));
+        selIndex = 1;
+        break;
+      }
+      default:
+        if (state) { // |null| is expected, but everything else is not.
+          Cu.reportError("updateMigrationState has unknown state: " + state);
+        }
+        document.getElementById("sync-migration").hidden = true;
+        return;
+    }
+    document.getElementById("sync-migration").hidden = false;
+    document.getElementById("sync-migration-deck").selectedIndex = selIndex;
   },
 
   startOver: function (showDialog) {
@@ -375,14 +446,13 @@ let gSyncPane = {
   },
 
   verifyFirefoxAccount: function() {
-    Components.utils.import("resource://gre/modules/FxAccounts.jsm");
     fxAccounts.resendVerificationEmail().then(() => {
       fxAccounts.getSignedInUser().then(data => {
-        let sb = this._stringBundle;
-        let title = sb.GetStringFromName("firefoxAccountsVerificationSentTitle");
-        let heading = sb.formatStringFromName("firefoxAccountsVerificationSentHeading",
+        let sb = this._accountsStringBundle;
+        let title = sb.GetStringFromName("verificationSentTitle");
+        let heading = sb.formatStringFromName("verificationSentHeading",
                                               [data.email], 1);
-        let description = sb.GetStringFromName("firefoxAccountVerificationSentDescription");
+        let description = sb.GetStringFromName("verificationSentDescription");
 
         let factory = Cc["@mozilla.org/prompter;1"]
                         .getService(Ci.nsIPromptFactory);
@@ -430,7 +500,6 @@ let gSyncPane = {
         return;
       }
     }
-    Cu.import("resource://gre/modules/FxAccounts.jsm");
     fxAccounts.signOut().then(() => {
       this.updateWeavePrefs();
     });

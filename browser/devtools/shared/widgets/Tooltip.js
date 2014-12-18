@@ -1086,7 +1086,8 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
       chromeWindow = Services.wm.getMostRecentWindow("navigator:browser");
       chromeWindow.focus();
     }
-    let dropper = new Eyedropper(chromeWindow, { copyOnSelect: false });
+    let dropper = new Eyedropper(chromeWindow, { copyOnSelect: false,
+                                                 context: "picker" });
 
     dropper.once("select", (event, color) => {
       if (toolboxWindow) {

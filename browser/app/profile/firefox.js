@@ -1663,6 +1663,7 @@ pref("loop.server", "https://loop.services.mozilla.com/v0");
 pref("loop.seenToS", "unseen");
 pref("loop.gettingStarted.seen", false);
 pref("loop.gettingStarted.url", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/hello/start");
+pref("loop.gettingStarted.resumeOnFirstJoin", false);
 pref("loop.learnMoreUrl", "https://www.firefox.com/hello/");
 pref("loop.legal.ToS_url", "https://www.mozilla.org/about/legal/terms/firefox-hello/");
 pref("loop.legal.privacy_url", "https://www.mozilla.org/privacy/firefox-hello/");

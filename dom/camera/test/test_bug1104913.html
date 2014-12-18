@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test for bug 1037322</title>
+  <title>Test for bug 1104913</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="camera_common.js"></script>
@@ -15,7 +15,11 @@
 var whichCamera = navigator.mozCameras.getListOfCameras()[0];
 var config = {
   mode: 'picture',
-  recorderProfile: 'high',
+  recorderProfile: 'qvga',
+  pictureSize: {
+    width: 640,
+    height: 480
+  },
   previewSize: {
     width: 320,
     height: 240
@@ -34,18 +38,6 @@ var Camera = {
   },
 
   start: function test_start() {
-    function setConfig_onSuccess(cfg) {
-      // Check our specific configuration
-      ok(cfg.mode === config.mode, "Configured mode = " + cfg.mode);
-      ok(cfg.previewSize.width === config.previewSize.width &&
-         cfg.previewSize.height === config.previewSize.height,
-         "Configured preview size = " + cfg.previewSize.width + "x" + cfg.previewSize.height);
-      ok(cfg.recorderProfile === config.recorderProfile,
-         "Configured recorder profile = '" + cfg.recorderProfile + "'");
-
-      SimpleTest.finish();
-    }
-
     function getCamera_onSuccess(d) {
       var camera = d.camera;
       var cfg = d.configuration;
@@ -54,20 +46,20 @@ var Camera = {
       Camera.viewfinder.play();
 
       // Check the default configuration
-      ok(cfg.mode === "unspecified", "Initial mode = " + cfg.mode);
-      ok(cfg.previewSize.width === 0 && cfg.previewSize.height === 0,
+      ok(cfg.mode === config.mode, "Initial mode = " + cfg.mode);
+      ok(cfg.previewSize.width === config.previewSize.width &&
+         cfg.previewSize.height === config.previewSize.height,
          "Initial preview size = " + cfg.previewSize.width + "x" + cfg.previewSize.height);
-      ok(cfg.recorderProfile === "default",
+      ok(cfg.pictureSize.width === config.pictureSize.width &&
+         cfg.pictureSize.height === config.pictureSize.height,
+         "Initial picture size = " + cfg.pictureSize.width + "x" + cfg.pictureSize.height);
+      ok(cfg.recorderProfile === config.recorderProfile,
          "Initial recorder profile = '" + cfg.recorderProfile + "'");
 
-      // Apply our specific configuration
-      camera.setConfiguration(config).then(setConfig_onSuccess, onError);
+      SimpleTest.finish();
     }
 
-    var cfg = {
-      mode: 'unspecified',
-    };
-    navigator.mozCameras.getCamera(whichCamera, cfg).then(getCamera_onSuccess, onError);
+    navigator.mozCameras.getCamera(whichCamera, {}).then(getCamera_onSuccess, onError);
   }
 }
 
