@@ -104,6 +104,7 @@ __RCSID("$NetBSD: res_init.c,v 1.8 2006/03/19 03:10:08 christos Exp $");
 #include <arpa/inet.h>
 #include "arpa_nameser.h"
 
+#include <assert.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -729,8 +730,50 @@ net_mask(in)		/* XXX - should really use system's version of this */
 	return (htonl(IN_CLASSC_NET));
 }
 
+#ifdef ANDROID_CHANGES
+/*
+ * Based on following AOSP Bionic changesets released with Android 4.1.1 r1
+ *  - b23f193dcc0fa74b5be1978f85cc1c6811493c86 (bug 6535492)
+ *  - 1781ed7774671d5a750839650b9582ff0abbcf42
+ */
+static int
+real_randomid(u_int *random_value) {
+	/* open the nonblocking random device, returning -1 on failure */
+	int random_device = open("/dev/urandom", O_RDONLY | O_CLOEXEC);
+	if (random_device < 0) {
+		return -1;
+	}
+
+	/* read from the random device, returning -1 on failure (or too many retries)*/
+	u_int retry = 5;
+	for (retry; retry > 0; retry--) {
+		int retval = read(random_device, random_value, sizeof(u_int));
+		if (retval == sizeof(u_int)) {
+			*random_value &= 0xffff;
+			close(random_device);
+			return 0;
+		} else if ((retval < 0) && (errno != EINTR)) {
+			break;
+		}
+	}
+
+	close(random_device);
+	return -1;
+}
+#endif /* ANDROID_CHANGES */
+
 u_int
 res_randomid(void) {
+#ifdef ANDROID_CHANGES
+	int status = 0;
+	u_int output = 0;
+	status = real_randomid(&output);
+	if (status != -1) {
+		return output;
+	}
+	/* There was an unexpected issue with reading from /dev/urandom. */
+	assert(status != -1);
+#endif /* ANDROID_CHANGES */
 	struct timeval now;
 
 	gettimeofday(&now, NULL);
