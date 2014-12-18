@@ -7513,6 +7513,7 @@ function switchToTabHavingURI(aURI, aOpenNew, aOpenParams={}) {
   // not be used as a parameter for the new load.
   delete aOpenParams.ignoreFragment;
   delete aOpenParams.ignoreQueryString;
+  delete aOpenParams.replaceQueryString;
 
   // This will switch to the tab in aWindow having aURI, if present.
   function switchIfURIInWindow(aWindow) {
