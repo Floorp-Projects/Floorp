@@ -20,6 +20,9 @@ namespace mozilla {
 namespace css {
 class Declaration;
 } /* namespace css */
+namespace dom {
+class Promise;
+} /* namespace dom */
 
 struct AnimationEventInfo {
   nsRefPtr<mozilla::dom::Element> mElement;
@@ -63,6 +66,7 @@ public:
   virtual CSSAnimationPlayer*
   AsCSSAnimationPlayer() MOZ_OVERRIDE { return this; }
 
+  virtual dom::Promise* GetReady(ErrorResult& aRv) MOZ_OVERRIDE;
   virtual void Play() MOZ_OVERRIDE;
   virtual void Pause() MOZ_OVERRIDE;
 

@@ -1300,6 +1300,17 @@ TypeObject::getProperty(unsigned i)
     return propertySet[i];
 }
 
+inline void
+TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
+{
+    if (!newScript->fun->runtimeFromAnyThread()->needsIncrementalBarrier())
+        return;
+
+    JS::Zone *zone = newScript->fun->zoneFromAnyThread();
+    if (zone->needsIncrementalBarrier())
+        newScript->trace(zone->barrierTracer());
+}
+
 } } /* namespace js::types */
 
 inline js::types::TypeScript *

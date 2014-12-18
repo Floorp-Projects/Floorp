@@ -39,3 +39,5 @@ for var in ('MOZ_APP_NAME', 'MOZ_MACBUNDLE_NAME'):
 LOCAL_INCLUDES += [
     '../build',
 ]
+
+FAIL_ON_WARNINGS = True

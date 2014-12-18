@@ -47,3 +47,6 @@ else:
     ]
 
 FINAL_LIBRARY = 'xul'
+
+if CONFIG['GNU_CXX']:
+    FAIL_ON_WARNINGS = True

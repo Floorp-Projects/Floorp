@@ -215,6 +215,8 @@ DOMCameraControlListener::OnConfigurationChange(const CameraListenerConfiguratio
       config->mRecorderProfile = mConfiguration.mRecorderProfile;
       config->mPreviewSize.mWidth = mConfiguration.mPreviewSize.width;
       config->mPreviewSize.mHeight = mConfiguration.mPreviewSize.height;
+      config->mPictureSize.mWidth = mConfiguration.mPictureSize.width;
+      config->mPictureSize.mHeight = mConfiguration.mPictureSize.height;
       config->mMaxMeteringAreas = mConfiguration.mMaxMeteringAreas;
       config->mMaxFocusAreas = mConfiguration.mMaxFocusAreas;
 

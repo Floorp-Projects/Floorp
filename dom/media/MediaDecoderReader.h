@@ -188,6 +188,9 @@ public:
   // the audio queue.
   size_t SizeOfAudioQueueInBytes() const;
 
+  virtual size_t SizeOfVideoQueueInFrames();
+  virtual size_t SizeOfAudioQueueInFrames();
+
   // Only used by WebMReader and MediaOmxReader for now, so stub here rather
   // than in every reader than inherits from MediaDecoderReader.
   virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset) {}

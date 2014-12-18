@@ -23,3 +23,5 @@ FINAL_LIBRARY = 'xul'
 # macros which conflicts with std::min/max.  Suppress the macros:
 if CONFIG['OS_ARCH'] == 'WINNT':
     DEFINES['NOMINMAX'] = True
+
+FAIL_ON_WARNINGS = True
