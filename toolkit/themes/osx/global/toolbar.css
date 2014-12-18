@@ -22,6 +22,10 @@ menubar {
   min-width: 1px;
 }
 
+.toolbar-primary {
+  min-height: 24px;
+}
+
 toolbarseparator {
   -moz-appearance: none;
   margin: 3px 4px;
