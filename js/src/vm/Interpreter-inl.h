@@ -421,72 +421,76 @@ ToIdOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue ob
 }
 
 static MOZ_ALWAYS_INLINE bool
-GetObjectElementOperation(JSContext *cx, JSOp op, JSObject *objArg, bool wasObject,
-                          HandleValue rref, MutableHandleValue res)
+GetObjectElementOperation(JSContext *cx, JSOp op, JS::HandleObject receiver,
+                          HandleValue key, MutableHandleValue res)
 {
     MOZ_ASSERT(op == JSOP_GETELEM || op == JSOP_CALLELEM);
 
     do {
         uint32_t index;
-        if (IsDefinitelyIndex(rref, &index)) {
-            if (JSObject::getElementNoGC(cx, objArg, objArg, index, res.address()))
+        if (IsDefinitelyIndex(key, &index)) {
+            if (JSObject::getElementNoGC(cx, receiver, receiver, index, res.address()))
                 break;
 
-            RootedObject obj(cx, objArg);
-            if (!JSObject::getElement(cx, obj, obj, index, res))
+            if (!JSObject::getElement(cx, receiver, receiver, index, res))
                 return false;
-            objArg = obj;
             break;
         }
 
-        if (IsSymbolOrSymbolWrapper(rref)) {
-            RootedObject obj(cx, objArg);
-            RootedId id(cx, SYMBOL_TO_JSID(ToSymbolPrimitive(rref)));
-            if (!JSObject::getGeneric(cx, obj, obj, id, res))
+        if (IsSymbolOrSymbolWrapper(key)) {
+            RootedId id(cx, SYMBOL_TO_JSID(ToSymbolPrimitive(key)));
+            if (!JSObject::getGeneric(cx, receiver, receiver, id, res))
                 return false;
-
-            objArg = obj;
             break;
         }
 
-        JSAtom *name = ToAtom<NoGC>(cx, rref);
-        if (name) {
+        if (JSAtom *name = ToAtom<NoGC>(cx, key)) {
             if (name->isIndex(&index)) {
-                if (JSObject::getElementNoGC(cx, objArg, objArg, index, res.address()))
+                if (JSObject::getElementNoGC(cx, receiver, receiver, index, res.address()))
                     break;
             } else {
-                if (JSObject::getPropertyNoGC(cx, objArg, objArg, name->asPropertyName(), res.address()))
+                if (JSObject::getPropertyNoGC(cx, receiver, receiver, name->asPropertyName(),
+                                              res.address()))
+                {
                     break;
+                }
             }
         }
 
-        RootedObject obj(cx, objArg);
-
-        name = ToAtom<CanGC>(cx, rref);
+        JSAtom *name = ToAtom<CanGC>(cx, key);
         if (!name)
             return false;
 
         if (name->isIndex(&index)) {
-            if (!JSObject::getElement(cx, obj, obj, index, res))
+            if (!JSObject::getElement(cx, receiver, receiver, index, res))
                 return false;
         } else {
-            if (!JSObject::getProperty(cx, obj, obj, name->asPropertyName(), res))
+            if (!JSObject::getProperty(cx, receiver, receiver, name->asPropertyName(), res))
                 return false;
         }
-
-        objArg = obj;
-    } while (0);
+    } while (false);
 
 #if JS_HAS_NO_SUCH_METHOD
-    if (op == JSOP_CALLELEM && MOZ_UNLIKELY(res.isUndefined()) && wasObject) {
-        RootedObject obj(cx, objArg);
-        if (!OnUnknownMethod(cx, obj, rref, res))
+    if (op == JSOP_CALLELEM && MOZ_UNLIKELY(res.isUndefined())) {
+        if (!OnUnknownMethod(cx, receiver, key, res))
             return false;
     }
 #endif
 
     assertSameCompartmentDebugOnly(cx, res);
     return true;
+}
+
+static MOZ_ALWAYS_INLINE bool
+GetPrimitiveElementOperation(JSContext *cx, JSOp op, JS::HandleValue receiver,
+                             HandleValue key, MutableHandleValue res)
+{
+    // FIXME: We shouldn't be boxing here (bug 603201).
+    RootedObject boxed(cx, ToObjectFromStack(cx, receiver));
+    if (!boxed)
+        return false;
+
+    return GetObjectElementOperation(cx, op, boxed, key, res);
 }
 
 static MOZ_ALWAYS_INLINE bool
@@ -533,11 +537,11 @@ GetElementOperation(JSContext *cx, JSOp op, MutableHandleValue lref, HandleValue
         }
     }
 
-    bool isObject = lref.isObject();
-    JSObject *obj = ToObjectFromStack(cx, lref);
-    if (!obj)
-        return false;
-    return GetObjectElementOperation(cx, op, obj, isObject, rref, res);
+    if (lref.isPrimitive())
+        return GetPrimitiveElementOperation(cx, op, lref, rref, res);
+
+    RootedObject thisv(cx, &lref.toObject());
+    return GetObjectElementOperation(cx, op, thisv, rref, res);
 }
 
 static MOZ_ALWAYS_INLINE JSString *
