@@ -595,7 +595,6 @@
                    autocompletesearchparam="searchbar-history"
                    maxrows="10"
                    completeselectedindex="true"
-                   tabscrolling="true"
                    xbl:inherits="disabled,disableautocomplete,searchengine,src,newlines">
         <!--
         Empty <box> to properly position the icon within the autocomplete
@@ -1022,15 +1021,12 @@
               }
             }
             else {
-              // If no selection, select the first or last one-off button.
-              if (aEvent.shiftKey) {
-                selectedButton = list.lastChild;
-                while (selectedButton.classList.contains("dummy"))
-                  selectedButton = selectedButton.previousSibling;
-              }
-              else {
-                selectedButton = list.firstChild;
-              }
+              // If no selection, let the focus escape the panel for shift+<tab>
+              if (aEvent.shiftKey)
+                return;
+
+              // and select the first one-off button for <tab>.
+              selectedButton = list.firstChild;
             }
             selectedButton.setAttribute("selected", "true");
 
