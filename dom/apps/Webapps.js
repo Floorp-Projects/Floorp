@@ -831,6 +831,7 @@ WebappsApplicationMgmt.prototype = {
                                         "Webapps:Uninstall:Return:KO",
                                         "Webapps:Install:Return:OK",
                                         "Webapps:GetNotInstalled:Return:OK",
+                                        "Webapps:GetIcon:Return",
                                         "Webapps:Import:Return",
                                         "Webapps:ExtractManifest:Return",
                                         "Webapps:SetEnabled:Return"]);
@@ -894,6 +895,21 @@ WebappsApplicationMgmt.prototype = {
     });
 
     return request;
+  },
+
+  getIcon: function(aApp, aIconID, aEntryPoint) {
+    return this.createPromise(function(aResolve, aReject) {
+      cpmm.sendAsyncMessage("Webapps:GetIcon", {
+        oid: this._id,
+        manifestURL: aApp.manifestURL,
+        iconID: aIconID,
+        entryPoint: aEntryPoint,
+        requestID: this.getPromiseResolverId({
+          resolve: aResolve,
+          reject: aReject
+        })
+      });
+    }.bind(this));
   },
 
   getNotInstalled: function() {
@@ -970,7 +986,8 @@ WebappsApplicationMgmt.prototype = {
     let msg = aMessage.data;
     let req;
 
-    if (["Webapps:Import:Return",
+    if (["Webapps:GetIcon:Return",
+         "Webapps:Import:Return",
          "Webapps:ExtractManifest:Return"]
          .indexOf(aMessage.name) != -1) {
       req = this.takePromiseResolver(msg.requestID);
@@ -1036,7 +1053,18 @@ WebappsApplicationMgmt.prototype = {
           this.__DOM_IMPL__.dispatchEvent(event);
         }
         break;
+      case "Webapps:GetIcon:Return":
+        if (msg.blob) {
+          req.resolve(Cu.cloneInto(msg.blob, this._window));
+        } else if (msg.error && msg.error == "NETWORK_ERROR"
+                             && !this._window.navigator.onLine) {
+          req.reject(new this._window.DOMError("NETWORK_OFFLINE"));
+        } else {
+          req.reject(new this._window.DOMError(msg.error || ""));
+        }
+        break;
     }
+
     if (aMessage.name !== "Webapps:Uninstall:Broadcast:Return:OK") {
       this.removeRequest(msg.requestID);
     }
