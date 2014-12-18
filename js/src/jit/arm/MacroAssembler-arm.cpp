@@ -1760,10 +1760,11 @@ MacroAssemblerARM::ma_vstr(VFPRegister src, const Operand &addr, Condition cc)
     return ma_vdtr(IsStore, addr, src, cc);
 }
 BufferOffset
-MacroAssemblerARM::ma_vstr(VFPRegister src, Register base, Register index, int32_t shift, Condition cc)
+MacroAssemblerARM::ma_vstr(VFPRegister src, Register base, Register index, int32_t shift,
+                           int32_t offset, Condition cc)
 {
     as_add(ScratchRegister, base, lsl(index, shift), NoSetCond, cc);
-    return ma_vstr(src, Operand(ScratchRegister, 0), cc);
+    return ma_vstr(src, Operand(ScratchRegister, offset), cc);
 }
 
 void
@@ -3631,7 +3632,6 @@ void
 MacroAssemblerARMCompat::storePayload(const Value &val, const BaseIndex &dest)
 {
     unsigned shift = ScaleToShift(dest.scale);
-    MOZ_ASSERT(dest.offset == 0);
 
     jsval_layout jv = JSVAL_TO_IMPL(val);
     if (val.isMarkable())
@@ -3644,8 +3644,17 @@ MacroAssemblerARMCompat::storePayload(const Value &val, const BaseIndex &dest)
     // be integrated into the as_dtr call.
     JS_STATIC_ASSERT(NUNBOX32_PAYLOAD_OFFSET == 0);
 
+    // If an offset is used, modify the base so that a [base + index << shift]
+    // instruction format can be used.
+    if (dest.offset != 0)
+        ma_add(dest.base, Imm32(dest.offset), dest.base);
+
     as_dtr(IsStore, 32, Offset, ScratchRegister,
            DTRAddr(dest.base, DtrRegImmShift(dest.index, LSL, shift)));
+
+    // Restore the original value of the base, if necessary.
+    if (dest.offset != 0)
+        ma_sub(dest.base, Imm32(dest.offset), dest.base);
 }
 
 void
@@ -3653,16 +3662,22 @@ MacroAssemblerARMCompat::storePayload(Register src, const BaseIndex &dest)
 {
     unsigned shift = ScaleToShift(dest.scale);
     MOZ_ASSERT(shift < 32);
-    MOZ_ASSERT(dest.offset == 0);
 
     // If NUNBOX32_PAYLOAD_OFFSET is not zero, the memory operand [base + index
     // << shift + imm] cannot be encoded into a single instruction, and cannot
     // be integrated into the as_dtr call.
     JS_STATIC_ASSERT(NUNBOX32_PAYLOAD_OFFSET == 0);
 
+    // Save/restore the base if the BaseIndex has an offset, as above.
+    if (dest.offset != 0)
+        ma_add(dest.base, Imm32(dest.offset), dest.base);
+
     // Technically, shift > -32 can be handle by changing LSL to ASR, but should
     // never come up, and this is one less code path to get wrong.
     as_dtr(IsStore, 32, Offset, src, DTRAddr(dest.base, DtrRegImmShift(dest.index, LSL, shift)));
+
+    if (dest.offset != 0)
+        ma_sub(dest.base, Imm32(dest.offset), dest.base);
 }
 
 void
@@ -3683,7 +3698,6 @@ MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, const BaseIndex &dest)
     Register base = dest.base;
     Register index = dest.index;
     unsigned shift = ScaleToShift(dest.scale);
-    MOZ_ASSERT(dest.offset == 0);
     MOZ_ASSERT(base != ScratchRegister);
     MOZ_ASSERT(index != ScratchRegister);
 
@@ -3693,10 +3707,10 @@ MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, const BaseIndex &dest)
     // immediate that is being stored into said memory location. Work around
     // this by modifying the base so the valid [base + index << shift] format
     // can be used, then restore it.
-    ma_add(base, Imm32(NUNBOX32_TYPE_OFFSET), base);
+    ma_add(base, Imm32(NUNBOX32_TYPE_OFFSET + dest.offset), base);
     ma_mov(tag, ScratchRegister);
     ma_str(ScratchRegister, DTRAddr(base, DtrRegImmShift(index, LSL, shift)));
-    ma_sub(base, Imm32(NUNBOX32_TYPE_OFFSET), base);
+    ma_sub(base, Imm32(NUNBOX32_TYPE_OFFSET + dest.offset), base);
 }
 
 // ARM says that all reads of pc will return 8 higher than the address of the
