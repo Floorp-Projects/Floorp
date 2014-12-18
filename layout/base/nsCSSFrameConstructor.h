@@ -1128,39 +1128,39 @@ private:
     int32_t mNameSpaceID;
     // Whether optimizations to skip constructing textframes around
     // this content need to be suppressed.
-    bool mSuppressWhiteSpaceOptimizations;
+    bool mSuppressWhiteSpaceOptimizations:1;
     // Whether this is a text content item.
-    bool mIsText;
+    bool mIsText:1;
     // Whether this is a generated content container.
     // If it is, mContent is a strong pointer.
-    bool mIsGeneratedContent;
+    bool mIsGeneratedContent:1;
     // Whether this is an item for nsIAnonymousContentCreator content.
-    bool mIsAnonymousContentCreatorContent;
+    bool mIsAnonymousContentCreatorContent:1;
     // Whether this is an item for the root popupgroup.
-    bool mIsRootPopupgroup;
+    bool mIsRootPopupgroup:1;
     // Whether construction from this item will create only frames that are
     // IsInlineOutside() in the principal child list.  This is not precise, but
     // conservative: if true the frames will really be inline, whereas if false
     // they might still all be inline.
-    bool mIsAllInline;
+    bool mIsAllInline:1;
     // Whether construction from this item will create only frames that are
     // IsBlockOutside() in the principal child list.  This is not precise, but
     // conservative: if true the frames will really be blocks, whereas if false
     // they might still be blocks (and in particular, out-of-flows that didn't
     // find a containing block).
-    bool mIsBlock;
+    bool mIsBlock:1;
     // Whether construction from this item will give leading and trailing
     // inline frames.  This is equal to mIsAllInline, except for inline frame
     // items, where it's always true, whereas mIsAllInline might be false due
     // to {ib} splits.
-    bool mHasInlineEnds;
+    bool mHasInlineEnds:1;
     // Whether construction from this item will create a popup that needs to
     // go into the global popup items.
-    bool mIsPopup;
+    bool mIsPopup:1;
     // Whether this item should be treated as a line participant
-    bool mIsLineParticipant;
+    bool mIsLineParticipant:1;
     // Whether this item is for an SVG <a> element
-    bool mIsForSVGAElement;
+    bool mIsForSVGAElement:1;
 
   private:
     FrameConstructionItem(const FrameConstructionItem& aOther) MOZ_DELETE; /* not implemented */
