@@ -203,6 +203,14 @@ function test_http2_basic() {
   chan.asyncOpen(listener, null);
 }
 
+function test_http2_basic_unblocked_dep() {
+  var chan = makeChan("https://localhost:6944/basic_unblocked_dep");
+  var cos = chan.QueryInterface(Ci.nsIClassOfService);
+  cos.addClassFlags(Ci.nsIClassOfService.Unblocked);
+  var listener = new Http2CheckListener();
+  chan.asyncOpen(listener, null);
+}
+
 // make sure we don't use h2 when disallowed
 function test_http2_nospdy() {
   var chan = makeChan("https://localhost:6944/");
@@ -521,6 +529,7 @@ function test_complete() {
 // a stalled stream when a SETTINGS frame arrives
 var tests = [ test_http2_post_big
             , test_http2_basic
+            , test_http2_basic_unblocked_dep
             , test_http2_nospdy
             , test_http2_push1
             , test_http2_push2
