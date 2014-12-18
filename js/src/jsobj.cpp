@@ -1007,46 +1007,51 @@ JSObject::uninlinedSetType(js::types::TypeObject *newType)
     setType(newType);
 }
 
-/* static */ inline unsigned
-JSObject::getSealedOrFrozenAttributes(unsigned attrs, ImmutabilityType it)
+
+/*** Seal and freeze *****************************************************************************/
+
+static unsigned
+GetSealedOrFrozenAttributes(unsigned attrs, IntegrityLevel level)
 {
     /* Make all attributes permanent; if freezing, make data attributes read-only. */
-    if (it == FREEZE && !(attrs & (JSPROP_GETTER | JSPROP_SETTER)))
+    if (level == IntegrityLevel::Frozen && !(attrs & (JSPROP_GETTER | JSPROP_SETTER)))
         return JSPROP_PERMANENT | JSPROP_READONLY;
     return JSPROP_PERMANENT;
 }
 
-/* static */ bool
-JSObject::sealOrFreeze(JSContext *cx, HandleObject obj, ImmutabilityType it)
+/* ES6 draft rev 29 (6 Dec 2014) 7.3.13. */
+bool
+js::SetIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level)
 {
     assertSameCompartment(cx, obj);
-    MOZ_ASSERT(it == SEAL || it == FREEZE);
 
-    bool succeeded;
-    if (!PreventExtensions(cx, obj, &succeeded))
+    // Steps 3-5. (Steps 1-2 are redundant assertions.)
+    bool status;
+    if (!PreventExtensions(cx, obj, &status))
         return false;
-    if (!succeeded) {
+    if (!status) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_CHANGE_EXTENSIBILITY);
         return false;
     }
 
-    AutoIdVector props(cx);
-    if (!GetPropertyKeys(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY | JSITER_SYMBOLS, &props))
+    // Steps 6-7.
+    AutoIdVector keys(cx);
+    if (!GetPropertyKeys(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY | JSITER_SYMBOLS, &keys))
         return false;
 
-    /* preventExtensions must sparsify dense objects, so we can assign to holes without checks. */
+    // PreventExtensions must sparsify dense objects, so we can assign to holes
+    // without checks.
     MOZ_ASSERT_IF(obj->isNative(), obj->as<NativeObject>().getDenseCapacity() == 0);
 
+    // Steps 8-9, loosely interpreted.
     if (obj->isNative() && !obj->as<NativeObject>().inDictionaryMode() && !IsAnyTypedArray(obj)) {
         HandleNativeObject nobj = obj.as<NativeObject>();
 
-        /*
-         * Seal/freeze non-dictionary objects by constructing a new shape
-         * hierarchy mirroring the original one, which can be shared if many
-         * objects with the same structure are sealed/frozen. If we use the
-         * generic path below then any non-empty object will be converted to
-         * dictionary mode.
-         */
+        // Seal/freeze non-dictionary objects by constructing a new shape
+        // hierarchy mirroring the original one, which can be shared if many
+        // objects with the same structure are sealed/frozen. If we use the
+        // generic path below then any non-empty object will be converted to
+        // dictionary mode.
         RootedShape last(cx, EmptyShape::getInitialShape(cx, nobj->getClass(),
                                                          nobj->getTaggedProto(),
                                                          nobj->getParent(),
@@ -1056,7 +1061,7 @@ JSObject::sealOrFreeze(JSContext *cx, HandleObject obj, ImmutabilityType it)
         if (!last)
             return false;
 
-        /* Get an in order list of the shapes in this object. */
+        // Get an in-order list of the shapes in this object.
         AutoShapeVector shapes(cx);
         for (Shape::Range<NoGC> r(nobj->lastProperty()); !r.empty(); r.popFront()) {
             if (!shapes.append(&r.front()))
@@ -1067,9 +1072,9 @@ JSObject::sealOrFreeze(JSContext *cx, HandleObject obj, ImmutabilityType it)
         for (size_t i = 0; i < shapes.length(); i++) {
             StackShape unrootedChild(shapes[i]);
             RootedGeneric<StackShape*> child(cx, &unrootedChild);
-            child->attrs |= getSealedOrFrozenAttributes(child->attrs, it);
+            child->attrs |= GetSealedOrFrozenAttributes(child->attrs, level);
 
-            if (!JSID_IS_EMPTY(child->propid) && it == FREEZE)
+            if (!JSID_IS_EMPTY(child->propid) && level == IntegrityLevel::Frozen)
                 MarkTypePropertyNonWritable(cx, nobj, child->propid);
 
             last = cx->compartment()->propertyTree.getChild(cx, last, *child);
@@ -1081,21 +1086,21 @@ JSObject::sealOrFreeze(JSContext *cx, HandleObject obj, ImmutabilityType it)
         JS_ALWAYS_TRUE(NativeObject::setLastProperty(cx, nobj, last));
     } else {
         RootedId id(cx);
-        for (size_t i = 0; i < props.length(); i++) {
-            id = props[i];
+        for (size_t i = 0; i < keys.length(); i++) {
+            id = keys[i];
 
             unsigned attrs;
-            if (!getGenericAttributes(cx, obj, id, &attrs))
+            if (!JSObject::getGenericAttributes(cx, obj, id, &attrs))
                 return false;
 
-            unsigned new_attrs = getSealedOrFrozenAttributes(attrs, it);
+            unsigned new_attrs = GetSealedOrFrozenAttributes(attrs, level);
 
-            /* If we already have the attributes we need, skip the setAttributes call. */
+            // If we already have the attributes we need, skip the setAttributes call.
             if ((attrs | new_attrs) == attrs)
                 continue;
 
             attrs |= new_attrs;
-            if (!setGenericAttributes(cx, obj, id, &attrs))
+            if (!JSObject::setGenericAttributes(cx, obj, id, &attrs))
                 return false;
         }
     }
@@ -1109,7 +1114,7 @@ JSObject::sealOrFreeze(JSContext *cx, HandleObject obj, ImmutabilityType it)
     // arrays with non-writable length.  We don't need to do anything special
     // for that, because capacity was zeroed out by preventExtensions.  (See
     // the assertion before the if-else above.)
-    if (it == FREEZE && obj->is<ArrayObject>()) {
+    if (level == IntegrityLevel::Frozen && obj->is<ArrayObject>()) {
         if (!obj->as<ArrayObject>().maybeCopyElementsForWrite(cx))
             return false;
         obj->as<ArrayObject>().getElementsHeader()->setNonwritableArrayLength();
@@ -1118,58 +1123,63 @@ JSObject::sealOrFreeze(JSContext *cx, HandleObject obj, ImmutabilityType it)
     return true;
 }
 
-/* static */ bool
-JSObject::isSealedOrFrozen(JSContext *cx, HandleObject obj, ImmutabilityType it, bool *resultp)
+/* ES6 rev 29 (6 Dec 2014) 7.3.14. */
+bool
+js::TestIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level, bool *result)
 {
-    bool extensible;
-    if (!IsExtensible(cx, obj, &extensible))
+    // Steps 3-6. (Steps 1-2 are redundant assertions.)
+    bool status;
+    if (!IsExtensible(cx, obj, &status))
         return false;
-    if (extensible) {
-        *resultp = false;
+    if (status) {
+        *result = false;
         return true;
     }
 
     if (IsAnyTypedArray(obj)) {
-        if (it == SEAL) {
-            // Typed arrays are always sealed.
-            *resultp = true;
+        if (level == IntegrityLevel::Sealed) {
+            // Typed arrays are considered sealed (bug 1120503).
+            *result = true;
         } else {
             // Typed arrays cannot be frozen, but an empty typed array is
-            // trivially frozen.
-            *resultp = (AnyTypedArrayLength(obj) == 0);
+            // considered frozen (bug 1120503).
+            *result = (AnyTypedArrayLength(obj) == 0);
         }
         return true;
     }
 
+    // Steps 7-8.
     AutoIdVector props(cx);
     if (!GetPropertyKeys(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY | JSITER_SYMBOLS, &props))
         return false;
 
+    // Steps 9-11. The spec does not permit stopping as soon as we find out the
+    // answer is false, so we are cheating a little here (bug 1120512).
     RootedId id(cx);
     for (size_t i = 0, len = props.length(); i < len; i++) {
         id = props[i];
 
         unsigned attrs;
-        if (!getGenericAttributes(cx, obj, id, &attrs))
+        if (!JSObject::getGenericAttributes(cx, obj, id, &attrs))
             return false;
 
-        /*
-         * If the property is configurable, this object is neither sealed nor
-         * frozen. If the property is a writable data property, this object is
-         * not frozen.
-         */
+        // If the property is configurable, this object is neither sealed nor
+        // frozen. If the property is a writable data property, this object is
+        // not frozen.
         if (!(attrs & JSPROP_PERMANENT) ||
-            (it == FREEZE && !(attrs & (JSPROP_READONLY | JSPROP_GETTER | JSPROP_SETTER))))
+            (level == IntegrityLevel::Frozen &&
+             !(attrs & (JSPROP_READONLY | JSPROP_GETTER | JSPROP_SETTER))))
         {
-            *resultp = false;
+            *result = false;
             return true;
         }
     }
 
-    /* All properties checked out. This object is sealed/frozen. */
-    *resultp = true;
+    // All properties checked out. This object is sealed/frozen.
+    *result = true;
     return true;
 }
+
 
 /* static */
 const char *
@@ -2080,7 +2090,7 @@ js::XDRObjectLiteral(XDRState<mode> *xdr, MutableHandleNativeObject obj)
         if (!xdr->codeUint32(&frozen))
             return false;
         if (mode == XDR_DECODE && frozen == 1) {
-            if (!JSObject::freeze(cx, obj))
+            if (!FreezeObject(cx, obj))
                 return false;
         }
     }
