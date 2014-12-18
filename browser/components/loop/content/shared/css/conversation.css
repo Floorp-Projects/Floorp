@@ -208,7 +208,10 @@
 .standalone .local-stream {
   /* required to have it superimposed to the control toolbar */
   z-index: 1001;
-  box-shadow: 0 2px 4px rgba(0,0,0,.5);
+}
+
+.standalone .room-conversation .local-stream {
+  box-shadow: none;
 }
 
 /* Side by side video elements */
@@ -476,6 +479,10 @@
   box-shadow: 0px 2px 4px rgba(0,0,0,.5);
 }
 
+.fx-embedded .room-conversation .local-stream {
+  box-shadow: none;
+}
+
 .fx-embedded .local-stream.room-preview {
   top: 0px;
   left: 0px;
@@ -540,6 +547,13 @@
 
 .room-conversation .OT_publisher .OT_video-container video {
   background-color: transparent; /* avoid visually obvious letterboxing */
+}
+
+.fx-embedded .room-conversation .room-preview .OT_publisher .OT_video-container,
+.fx-embedded .room-conversation .room-preview .OT_publisher .OT_video-container video {
+  /* Desktop conversation window room preview local stream actually wants
+     a black background */
+  background-color: #000;
 }
 
 .fx-embedded .media.nested {
