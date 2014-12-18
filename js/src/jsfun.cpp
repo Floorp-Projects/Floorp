@@ -706,7 +706,7 @@ fun_hasInstance(JSContext *cx, HandleObject objArg, MutableHandleValue v, bool *
         obj = obj->as<JSFunction>().getBoundFunctionTarget();
 
     RootedValue pval(cx);
-    if (!JSObject::getProperty(cx, obj, obj, cx->names().prototype, &pval))
+    if (!GetProperty(cx, obj, obj, cx->names().prototype, &pval))
         return false;
 
     if (pval.isPrimitive()) {

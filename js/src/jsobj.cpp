@@ -269,7 +269,7 @@ GetPropertyIfPresent(JSContext *cx, HandleObject obj, HandleId id, MutableHandle
         return true;
     }
 
-    return JSObject::getGeneric(cx, obj, obj, id, vp);
+    return GetProperty(cx, obj, obj, id, vp);
 }
 
 bool
@@ -938,7 +938,7 @@ js::ReadPropertyDescriptors(JSContext *cx, HandleObject props, bool checkAccesso
         id = (*ids)[i];
         Rooted<PropDesc> desc(cx);
         RootedValue v(cx);
-        if (!JSObject::getGeneric(cx, props, props, id, &v) ||
+        if (!GetProperty(cx, props, props, id, &v) ||
             !desc.initialize(cx, v, checkAccessors) ||
             !descs->append(desc))
         {
@@ -1506,7 +1506,7 @@ JSObject*
 js::CreateThis(JSContext *cx, const Class *newclasp, HandleObject callee)
 {
     RootedValue protov(cx);
-    if (!JSObject::getProperty(cx, callee, callee, cx->names().prototype, &protov))
+    if (!GetProperty(cx, callee, callee, cx->names().prototype, &protov))
         return nullptr;
 
     JSObject *proto = protov.isObjectOrNull() ? protov.toObjectOrNull() : nullptr;
@@ -1609,7 +1609,7 @@ PlainObject *
 js::CreateThisForFunction(JSContext *cx, HandleObject callee, NewObjectKind newKind)
 {
     RootedValue protov(cx);
-    if (!JSObject::getProperty(cx, callee, callee, cx->names().prototype, &protov))
+    if (!GetProperty(cx, callee, callee, cx->names().prototype, &protov))
         return nullptr;
     JSObject *proto;
     if (protov.isObject())
@@ -3258,7 +3258,7 @@ js::GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
     }
 
     RootedValue value(cx);
-    if (doGet && !JSObject::getGeneric(cx, obj, obj, id, &value))
+    if (doGet && !GetProperty(cx, obj, obj, id, &value))
         return false;
 
     desc.value().set(value);
@@ -3341,7 +3341,7 @@ JSObject::callMethod(JSContext *cx, HandleId id, unsigned argc, Value *argv, Mut
 {
     RootedValue fval(cx);
     RootedObject obj(cx, this);
-    if (!JSObject::getGeneric(cx, obj, obj, id, &fval))
+    if (!GetProperty(cx, obj, obj, id, &fval))
         return false;
     return Invoke(cx, ObjectValue(*obj), fval, argc, argv, vp);
 }
@@ -3433,7 +3433,7 @@ js::HasDataProperty(JSContext *cx, NativeObject *obj, jsid id, Value *vp)
 static bool
 MaybeCallMethod(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
-    if (!JSObject::getGeneric(cx, obj, obj, id, vp))
+    if (!GetProperty(cx, obj, obj, id, vp))
         return false;
     if (!IsCallable(vp)) {
         vp.setObject(*obj);
@@ -3588,11 +3588,8 @@ js::FindClassPrototype(ExclusiveContext *cx, MutableHandleObject protop, const C
         JSFunction *nctor = &ctor->as<JSFunction>();
         RootedValue v(cx);
         if (cx->isJSContext()) {
-            if (!JSObject::getProperty(cx->asJSContext(),
-                                       ctor, ctor, cx->names().prototype, &v))
-            {
+            if (!GetProperty(cx->asJSContext(), ctor, ctor, cx->names().prototype, &v))
                 return false;
-            }
         } else {
             Shape *shape = nctor->lookup(cx, cx->names().prototype);
             if (!shape || !NativeGetPureInline(nctor, shape, v.address()))

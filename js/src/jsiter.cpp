@@ -427,7 +427,7 @@ GetCustomIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandle
     RootedValue rval(cx);
     /* Check whether we have a valid __iterator__ method. */
     HandlePropertyName name = cx->names().iteratorIntrinsic;
-    if (!JSObject::getProperty(cx, obj, obj, name, &rval))
+    if (!GetProperty(cx, obj, obj, name, &rval))
         return false;
 
     /* If there is no custom __iterator__ method, we are done here. */
@@ -897,7 +897,7 @@ NativeIteratorNext(JSContext *cx, NativeIterator *ni, MutableHandleValue rval, b
         return false;
     ni->incCursor();
     RootedObject obj(cx, ni->obj);
-    if (!JSObject::getGeneric(cx, obj, obj, id, rval))
+    if (!GetProperty(cx, obj, obj, id, rval))
         return false;
 
     // JS 1.7 only: for each (let [k, v] in obj)
@@ -1303,7 +1303,7 @@ js::IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
     JS_CHECK_RECURSION(cx, return false);
 
     // Call the iterator object's .next method.
-    if (!JSObject::getProperty(cx, iterobj, iterobj, cx->names().next, rval))
+    if (!GetProperty(cx, iterobj, iterobj, cx->names().next, rval))
         return false;
     // We try to support the old and new iterator protocol at the same time!
     if (!Invoke(cx, ObjectValue(*iterobj), rval, 0, nullptr, rval)) {
@@ -1343,7 +1343,7 @@ js::IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
 
     // 7.4.4 IteratorComplete
     // Get iterResult.done
-    if (!JSObject::getProperty(cx, result, result, cx->names().done, rval))
+    if (!GetProperty(cx, result, result, cx->names().done, rval))
         return false;
 
     bool done = ToBoolean(rval);
@@ -1353,7 +1353,7 @@ js::IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
      }
 
     // 7.4.5 IteratorValue
-    return JSObject::getProperty(cx, result, result, cx->names().value, rval);
+    return GetProperty(cx, result, result, cx->names().value, rval);
 }
 
 static bool

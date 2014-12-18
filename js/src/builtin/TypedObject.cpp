@@ -179,7 +179,7 @@ static JSObject *
 GetPrototype(JSContext *cx, HandleObject obj)
 {
     RootedValue prototypeVal(cx);
-    if (!JSObject::getProperty(cx, obj, obj, cx->names().prototype,
+    if (!GetProperty(cx, obj, obj, cx->names().prototype,
                                &prototypeVal))
     {
         return nullptr;
@@ -794,7 +794,7 @@ StructMetaTypeDescr::create(JSContext *cx,
 
         // Load the value for the current field from the `fields` object.
         // The value should be a type descriptor.
-        if (!JSObject::getGeneric(cx, fields, fields, id, &fieldTypeVal))
+        if (!GetProperty(cx, fields, fields, id, &fieldTypeVal))
             return nullptr;
         fieldType = ToObjectIf<TypeDescr>(fieldTypeVal);
         if (!fieldType) {
@@ -1840,7 +1840,7 @@ TypedObject::obj_getGeneric(JSContext *cx, HandleObject obj, HandleObject receiv
         return true;
     }
 
-    return JSObject::getGeneric(cx, proto, receiver, id, vp);
+    return GetProperty(cx, proto, receiver, id, vp);
 }
 
 bool
@@ -1876,7 +1876,7 @@ TypedObject::obj_getElement(JSContext *cx, HandleObject obj, HandleObject receiv
         return true;
     }
 
-    return JSObject::getElement(cx, proto, receiver, index, vp);
+    return GetElement(cx, proto, receiver, index, vp);
 }
 
 /*static*/ bool

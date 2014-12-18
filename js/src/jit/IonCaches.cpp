@@ -1759,7 +1759,7 @@ GetPropertyIC::update(JSContext *cx, size_t cacheIndex,
     }
 
     RootedId id(cx, NameToId(name));
-    if (!JSObject::getGeneric(cx, obj, obj, id, vp))
+    if (!GetProperty(cx, obj, obj, id, vp))
         return false;
 
     if (!cache.idempotent()) {

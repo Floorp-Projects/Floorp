@@ -212,6 +212,30 @@ js::HasProperty(JSContext *cx, HandleObject obj, PropertyName *name, bool *found
     return HasProperty(cx, obj, id, found);
 }
 
+inline bool
+js::GetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index,
+               MutableHandleValue vp)
+{
+    if (ElementIdOp op = obj->getOps()->getElement)
+        return op(cx, obj, receiver, index, vp);
+
+    RootedId id(cx);
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return GetProperty(cx, obj, receiver, id, vp);
+}
+
+inline bool
+js::GetElementNoGC(JSContext *cx, JSObject *obj, JSObject *receiver, uint32_t index, Value *vp)
+{
+    if (obj->getOps()->getElement)
+        return false;
+
+    if (index > JSID_INT_MAX)
+        return false;
+    return GetPropertyNoGC(cx, obj, receiver, INT_TO_JSID(index), vp);
+}
+
 
 /* * */
 
@@ -308,33 +332,6 @@ inline void
 JSObject::setInitialElementsMaybeNonNative(js::HeapSlot *elements)
 {
     static_cast<js::NativeObject *>(this)->elements_ = elements;
-}
-
-/* static */ inline bool
-JSObject::getElement(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
-                     uint32_t index, js::MutableHandleValue vp)
-{
-    js::ElementIdOp op = obj->getOps()->getElement;
-    if (op)
-        return op(cx, obj, receiver, index, vp);
-
-    JS::RootedId id(cx);
-    if (!js::IndexToId(cx, index, &id))
-        return false;
-    return getGeneric(cx, obj, receiver, id, vp);
-}
-
-/* static */ inline bool
-JSObject::getElementNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
-                         uint32_t index, js::Value *vp)
-{
-    js::ElementIdOp op = obj->getOps()->getElement;
-    if (op)
-        return false;
-
-    if (index > JSID_INT_MAX)
-        return false;
-    return getGenericNoGC(cx, obj, receiver, INT_TO_JSID(index), vp);
 }
 
 inline js::GlobalObject &

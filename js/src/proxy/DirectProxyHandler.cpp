@@ -221,7 +221,7 @@ DirectProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject receiver
 {
     assertEnteredPolicy(cx, proxy, id, GET);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JSObject::getGeneric(cx, target, receiver, id, vp);
+    return GetProperty(cx, target, receiver, id, vp);
 }
 
 bool
@@ -230,7 +230,7 @@ DirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver
 {
     assertEnteredPolicy(cx, proxy, id, SET);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JSObject::setGeneric(cx, target, receiver, id, vp, strict);
+    return SetProperty(cx, target, receiver, id, vp, strict);
 }
 
 bool

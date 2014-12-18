@@ -298,7 +298,7 @@ CallObject::createHollowForDebug(JSContext *cx, HandleFunction callee)
     RootedScript script(cx, callee->nonLazyScript());
     for (BindingIter bi(script); !bi.done(); bi++) {
         id = NameToId(bi->name());
-        if (!JSObject::setGeneric(cx, callobj, callobj, id, &optimizedOut, true))
+        if (!SetProperty(cx, callobj, callobj, id, &optimizedOut, true))
             return nullptr;
     }
 
@@ -517,7 +517,7 @@ with_GetGeneric(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId
                 MutableHandleValue vp)
 {
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-    return JSObject::getGeneric(cx, actual, actual, id, vp);
+    return GetProperty(cx, actual, actual, id, vp);
 }
 
 static bool
@@ -543,7 +543,7 @@ with_SetGeneric(JSContext *cx, HandleObject obj, HandleId id,
                 MutableHandleValue vp, bool strict)
 {
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-    return JSObject::setGeneric(cx, actual, actual, id, vp, strict);
+    return SetProperty(cx, actual, actual, id, vp, strict);
 }
 
 static bool
@@ -551,7 +551,7 @@ with_SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
                  MutableHandleValue vp, bool strict)
 {
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-    return JSObject::setProperty(cx, actual, actual, name, vp, strict);
+    return SetProperty(cx, actual, actual, name, vp, strict);
 }
 
 static bool
@@ -559,7 +559,7 @@ with_SetElement(JSContext *cx, HandleObject obj, uint32_t index,
                 MutableHandleValue vp, bool strict)
 {
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-    return JSObject::setElement(cx, actual, actual, index, vp, strict);
+    return SetElement(cx, actual, actual, index, vp, strict);
 }
 
 static bool
@@ -1682,7 +1682,7 @@ class DebugScopeProxy : public BaseProxyHandler
                 return getMissingArguments(cx, *scope, vp);
             return true;
           case ACCESS_GENERIC:
-            return JSObject::getGeneric(cx, scope, scope, id, vp);
+            return GetProperty(cx, scope, scope, id, vp);
           case ACCESS_LOST:
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEBUG_OPTIMIZED_OUT);
             return false;
@@ -1723,7 +1723,7 @@ class DebugScopeProxy : public BaseProxyHandler
                 return getMissingArgumentsMaybeSentinelValue(cx, *scope, vp);
             return true;
           case ACCESS_GENERIC:
-            return JSObject::getGeneric(cx, scope, scope, id, vp);
+            return GetProperty(cx, scope, scope, id, vp);
           case ACCESS_LOST:
             vp.setMagic(JS_OPTIMIZED_OUT);
             return true;
@@ -1749,7 +1749,7 @@ class DebugScopeProxy : public BaseProxyHandler
           case ACCESS_UNALIASED:
             return true;
           case ACCESS_GENERIC:
-            return JSObject::setGeneric(cx, scope, scope, id, vp, strict);
+            return SetProperty(cx, scope, scope, id, vp, strict);
           default:
             MOZ_CRASH("bad AccessResult");
         }

@@ -507,7 +507,7 @@ js::GetGeneric(JSContext *cx, JSObject *objArg, JSObject *receiverArg, jsid idAr
     RootedObject obj(cx, objArg), receiver(cx, receiverArg);
     RootedId id(cx, idArg);
     RootedValue value(cx);
-    if (!JSObject::getGeneric(cx, obj, receiver, id, &value))
+    if (!GetProperty(cx, obj, receiver, id, &value))
         return false;
     *vp = value;
     return true;
@@ -829,7 +829,7 @@ FormatFrame(JSContext *cx, const ScriptFrameIter &iter, char *buf, int num,
             RootedValue key(cx, IdToValue(id));
             RootedValue v(cx);
 
-            if (!JSObject::getGeneric(cx, obj, obj, id, &v)) {
+            if (!GetProperty(cx, obj, obj, id, &v)) {
                 buf = JS_sprintf_append(buf, "    <Failed to fetch property while inspecting stack frame>\n");
                 cx->clearPendingException();
                 continue;

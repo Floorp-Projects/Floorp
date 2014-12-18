@@ -2080,7 +2080,7 @@ JS_GetConstructor(JSContext *cx, HandleObject proto)
     assertSameCompartment(cx, proto);
 
     RootedValue cval(cx);
-    if (!JSObject::getProperty(cx, proto, proto, cx->names().constructor, &cval))
+    if (!GetProperty(cx, proto, proto, cx->names().constructor, &cval))
         return nullptr;
     if (!IsFunctionObject(cval)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NO_CONSTRUCTOR,
@@ -3026,10 +3026,9 @@ JS_ForwardGetPropertyTo(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, id);
-    assertSameCompartment(cx, onBehalfOf);
+    assertSameCompartment(cx, obj, id, onBehalfOf);
 
-    return JSObject::getGeneric(cx, obj, onBehalfOf, id, vp);
+    return GetProperty(cx, obj, onBehalfOf, id, vp);
 }
 
 JS_PUBLIC_API(bool)
@@ -3046,7 +3045,7 @@ JS_ForwardGetElementTo(JSContext *cx, HandleObject obj, uint32_t index, HandleOb
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
 
-    return JSObject::getElement(cx, obj, onBehalfOf, index, vp);
+    return GetElement(cx, obj, onBehalfOf, index, vp);
 }
 
 JS_PUBLIC_API(bool)
@@ -3078,7 +3077,7 @@ JS_SetPropertyById(JSContext *cx, HandleObject obj, HandleId id, HandleValue v)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
 
-    return JSObject::setGeneric(cx, obj, obj, id, &value, false);
+    return SetProperty(cx, obj, obj, id, &value, false);
 }
 
 JS_PUBLIC_API(bool)
@@ -3096,7 +3095,7 @@ JS_ForwardSetPropertyTo(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS
         return false;
 
     RootedValue value(cx, v);
-    return JSObject::setGeneric(cx, obj, receiver, id, &value, strict);
+    return SetProperty(cx, obj, receiver, id, &value, strict);
 }
 
 static bool
@@ -3106,7 +3105,7 @@ SetElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleValue v
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, vp);
 
-    return JSObject::setElement(cx, obj, obj, index, vp, false);
+    return SetElement(cx, obj, obj, index, vp, false);
 }
 
 JS_PUBLIC_API(bool)
@@ -4567,7 +4566,7 @@ JS_CallFunctionName(JSContext *cx, HandleObject obj, const char *name, const Han
 
     RootedValue v(cx);
     RootedId id(cx, AtomToId(atom));
-    if (!JSObject::getGeneric(cx, obj, obj, id, &v))
+    if (!GetProperty(cx, obj, obj, id, &v))
         return false;
 
     return Invoke(cx, ObjectOrNullValue(obj), v, args.length(), args.begin(), rval);
