@@ -516,6 +516,7 @@ ClearKeyDecryptor::ClearKeyDecryptor(GMPDecryptorCallback* aCallback,
                                      const Key& aKey)
   : mRefCnt(0)
   , mCallback(aCallback)
+  , mThread(nullptr)
   , mKey(aKey)
 {
   if (GetPlatform()->createthread(&mThread) != GMPNoErr) {
@@ -542,8 +543,11 @@ ClearKeyDecryptor::Release()
   uint32_t newCount = --mRefCnt;
   if (!newCount) {
     if (mThread) {
-      mThread->Post(new DestroyTask(this));
-      mThread->Join();
+      // Shutdown mThread. We cache a pointer to mThread, as the DestroyTask
+      // may run and delete |this| before Post() returns.
+      GMPThread* thread = mThread;
+      thread->Post(new DestroyTask(this));
+      thread->Join();
     } else {
       delete this;
     }
