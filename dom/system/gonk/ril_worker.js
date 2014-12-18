@@ -2150,8 +2150,9 @@ RilObject.prototype = {
     let numConfigs = config ? config.length / 2 : 0;
     Buf.writeInt32(numConfigs);
     for (let i = 0; i < config.length;) {
+      // convert [from, to) to [from, to - 1]
       Buf.writeInt32(config[i++]);
-      Buf.writeInt32(config[i++]);
+      Buf.writeInt32(config[i++] - 1);
       Buf.writeInt32(0x00);
       Buf.writeInt32(0xFF);
       Buf.writeInt32(1);
