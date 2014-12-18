@@ -571,7 +571,7 @@ window[sizemode="maximized"] #content .notification-inner {
 
 /* Hide extension toolbars that neglected to set the proper class */
 window[chromehidden~="location"][chromehidden~="toolbar"] toolbar:not(.chromeclass-menubar),
-window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-menubar) {
+window[chromehidden~="toolbar"] toolbar:not(#nav-bar):not(#TabsToolbar):not(#print-preview-toolbar):not(.chromeclass-menubar) {
   display: none;
 }
 
