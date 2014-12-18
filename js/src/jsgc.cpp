@@ -1110,7 +1110,7 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
 #ifdef JS_GC_MARKING_VALIDATION
     markingValidator(nullptr),
 #endif
-    interFrameGC(0),
+    interFrameGC(false),
     sliceBudget(SliceBudget::Unlimited),
     incrementalAllowed(true),
     generationalDisabled(0),
@@ -6297,6 +6297,8 @@ GCRuntime::finishGC(JS::gcreason::Reason reason)
 void
 GCRuntime::notifyDidPaint()
 {
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+
 #ifdef JS_GC_ZEAL
     if (zealMode == ZealFrameVerifierPreValue) {
         verifyPreBarriers();
