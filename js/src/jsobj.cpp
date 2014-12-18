@@ -3229,6 +3229,19 @@ JSObject::reportNotExtensible(JSContext *cx, unsigned report)
                                     nullptr, nullptr);
 }
 
+/* static */ bool
+JSObject::defaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp)
+{
+    JSConvertOp op = obj->getClass()->convert;
+    bool ok;
+    if (!op)
+        ok = JS::OrdinaryToPrimitive(cx, obj, hint, vp);
+    else
+        ok = op(cx, obj, hint, vp);
+    MOZ_ASSERT_IF(ok, vp.isPrimitive());
+    return ok;
+}
+
 bool
 JSObject::callMethod(JSContext *cx, HandleId id, unsigned argc, Value *argv, MutableHandleValue vp)
 {
@@ -3332,8 +3345,8 @@ MaybeCallMethod(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue
     return Invoke(cx, ObjectValue(*obj), vp, 0, nullptr, vp);
 }
 
-JS_FRIEND_API(bool)
-js::DefaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp)
+bool
+JS::OrdinaryToPrimitive(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp)
 {
     MOZ_ASSERT(hint == JSTYPE_NUMBER || hint == JSTYPE_STRING || hint == JSTYPE_VOID);
 

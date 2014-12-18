@@ -1941,14 +1941,6 @@ JS_ResolveStub(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp)
 }
 #endif  /* GCC 4.4 */
 
-JS_PUBLIC_API(bool)
-JS::OrdinaryToPrimitive(JSContext *cx, HandleObject obj, JSType type, MutableHandleValue vp)
-{
-    MOZ_ASSERT(type != JSTYPE_OBJECT && type != JSTYPE_FUNCTION);
-    MOZ_ASSERT(obj);
-    return DefaultValue(cx, obj, type, vp);
-}
-
 JS_PUBLIC_API(JSObject *)
 JS_InitClass(JSContext *cx, HandleObject obj, HandleObject parent_proto,
              const JSClass *clasp, JSNative constructor, unsigned nargs,

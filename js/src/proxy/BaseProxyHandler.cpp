@@ -291,7 +291,7 @@ bool
 BaseProxyHandler::defaultValue(JSContext *cx, HandleObject proxy, JSType hint,
                                MutableHandleValue vp) const
 {
-    return DefaultValue(cx, proxy, hint, vp);
+    return OrdinaryToPrimitive(cx, proxy, hint, vp);
 }
 
 bool
