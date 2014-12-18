@@ -10,7 +10,9 @@ FINAL_TARGET = 'dist/bin/gmp-clearkey/0.1'
 
 UNIFIED_SOURCES += [
     'ClearKeyDecryptionManager.cpp',
+    'ClearKeyPersistence.cpp',
     'ClearKeySession.cpp',
+    'ClearKeyStorage.cpp',
     'ClearKeyUtils.cpp',
     'gmp-clearkey.cpp',
     'openaes/oaes_lib.c',

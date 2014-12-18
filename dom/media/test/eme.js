@@ -3,9 +3,12 @@ const KEYSYSTEM_TYPE = "org.w3.clearkey";
 function bail(message)
 {
   return function(err) {
+    if (err) {
+      message +=  "; " + String(err)
+    }
     ok(false, message);
     if (err) {
-      info(err);
+      info(String(err));
     }
     SimpleTest.finish();
   }
@@ -70,13 +73,13 @@ function Log(token, msg) {
   info(TimeStamp(token) + " " + msg);
 }
 
-function UpdateSessionFunc(test, token) {
+function UpdateSessionFunc(test, token, sessionType) {
   return function(ev) {
     var msgStr = ArrayBufferToString(ev.message);
     var msg = JSON.parse(msgStr);
 
     Log(token, "got message from CDM: " + msgStr);
-    is(msg.type, test.sessionType, TimeStamp(token) + " key session type should match");
+    is(msg.type, sessionType, TimeStamp(token) + " key session type should match");
     ok(msg.kids, TimeStamp(token) + " message event should contain key ID array");
 
     var outKeys = [];
@@ -211,24 +214,24 @@ function SetupEME(test, token, params)
       .then(function(keySystemAccess) {
         return keySystemAccess.createMediaKeys();
       }, bail(token + " Failed to request key system access."))
-      
+
       .then(function(mediaKeys) {
         Log(token, "created MediaKeys object ok");
         mediaKeys.sessions = [];
         return v.setMediaKeys(mediaKeys);
       }, bail("failed to create MediaKeys object"))
-      
+
       .then(function() {
         Log(token, "set MediaKeys on <video> element ok");
-
-        var session = v.mediaKeys.createSession(test.sessionType);
+        var sessionType = (params && params.sessionType) ? params.sessionType : "temporary";
+        var session = v.mediaKeys.createSession(sessionType);
         if (params && params.onsessioncreated) {
           params.onsessioncreated(session);
         }
-        session.addEventListener("message", UpdateSessionFunc(test, token));
+        session.addEventListener("message", UpdateSessionFunc(test, token, sessionType));
         return session.generateRequest(ev.initDataType, ev.initData);
       }, onSetKeysFail)
-      
+
       .then(function() {
         Log(token, "generated request");
       }, bail(token + " Failed to request key system access2."));
