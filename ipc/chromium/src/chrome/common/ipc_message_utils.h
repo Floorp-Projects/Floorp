@@ -384,98 +384,6 @@ struct ParamTraitsStd<std::wstring> {
   }
 };
 
-template <>
-struct ParamTraitsStd<std::vector<unsigned char> > {
-  typedef std::vector<unsigned char> param_type;
-  static void Write(Message* m, const param_type& p) {
-    if (p.size() == 0) {
-      m->WriteData(NULL, 0);
-    } else {
-      m->WriteData(reinterpret_cast<const char*>(&p.front()),
-                   static_cast<int>(p.size()));
-    }
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    const char *data;
-    int data_size = 0;
-    if (!m->ReadData(iter, &data, &data_size) || data_size < 0)
-      return false;
-    r->resize(data_size);
-    if (data_size)
-      memcpy(&r->front(), data, data_size);
-    return true;
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    for (size_t i = 0; i < p.size(); ++i)
-      l->push_back(p[i]);
-  }
-};
-
-template <>
-struct ParamTraitsStd<std::vector<char> > {
-  typedef std::vector<char> param_type;
-  static void Write(Message* m, const param_type& p) {
-    if (p.size() == 0) {
-      m->WriteData(NULL, 0);
-    } else {
-      m->WriteData(&p.front(), static_cast<int>(p.size()));
-    }
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    const char *data;
-    int data_size = 0;
-    if (!m->ReadData(iter, &data, &data_size) || data_size < 0)
-      return false;
-    r->resize(data_size);
-    if (data_size)
-      memcpy(&r->front(), data, data_size);
-    return true;
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    for (size_t i = 0; i < p.size(); ++i)
-      l->push_back(p[i]);
-  }
-};
-
-template <class P>
-struct ParamTraitsStd<std::vector<P> > {
-  typedef std::vector<P> param_type;
-  static void Write(Message* m, const param_type& p) {
-    WriteParam(m, static_cast<int>(p.size()));
-    for (size_t i = 0; i < p.size(); i++)
-      WriteParam(m, p[i]);
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    int size;
-    if (!m->ReadLength(iter, &size))
-      return false;
-    // Resizing beforehand is not safe, see BUG 1006367 for details.
-    if (m->IteratorHasRoomFor(*iter, size * sizeof(P))) {
-      r->resize(size);
-      for (int i = 0; i < size; i++) {
-        if (!ReadParam(m, iter, &(*r)[i]))
-          return false;
-      }
-    } else {
-      for (int i = 0; i < size; i++) {
-        P element;
-        if (!ReadParam(m, iter, &element))
-          return false;
-        r->push_back(element);
-      }
-    }
-    return true;
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    for (size_t i = 0; i < p.size(); ++i) {
-      if (i != 0)
-        l->append(L" ");
-
-      LogParam((p[i]), l);
-    }
-  }
-};
-
 template <class K, class V>
 struct ParamTraitsStd<std::map<K, V> > {
   typedef std::map<K, V> param_type;
@@ -513,68 +421,8 @@ struct ParamTraitsWindows : ParamTraitsStd<P> {};
 
 #if defined(OS_WIN)
 template <>
-struct ParamTraitsWindows<LOGFONT> {
-  typedef LOGFONT param_type;
-  static void Write(Message* m, const param_type& p) {
-    m->WriteData(reinterpret_cast<const char*>(&p), sizeof(LOGFONT));
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    const char *data;
-    int data_size = 0;
-    bool result = m->ReadData(iter, &data, &data_size);
-    if (result && data_size == sizeof(LOGFONT)) {
-      memcpy(r, data, sizeof(LOGFONT));
-    } else {
-      result = false;
-      NOTREACHED();
-    }
-
-    return result;
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"<LOGFONT>"));
-  }
-};
-
-template <>
-struct ParamTraitsWindows<MSG> {
-  typedef MSG param_type;
-  static void Write(Message* m, const param_type& p) {
-    m->WriteData(reinterpret_cast<const char*>(&p), sizeof(MSG));
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    const char *data;
-    int data_size = 0;
-    bool result = m->ReadData(iter, &data, &data_size);
-    if (result && data_size == sizeof(MSG)) {
-      memcpy(r, data, sizeof(MSG));
-    } else {
-      result = false;
-      NOTREACHED();
-    }
-
-    return result;
-  }
-};
-
-template <>
 struct ParamTraitsWindows<HANDLE> {
   typedef HANDLE param_type;
-  static void Write(Message* m, const param_type& p) {
-    m->WriteIntPtr(reinterpret_cast<intptr_t>(p));
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    DCHECK_EQ(sizeof(param_type), sizeof(intptr_t));
-    return m->ReadIntPtr(iter, reinterpret_cast<intptr_t*>(r));
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"0x%X", p));
-  }
-};
-
-template <>
-struct ParamTraitsWindows<HCURSOR> {
-  typedef HCURSOR param_type;
   static void Write(Message* m, const param_type& p) {
     m->WriteIntPtr(reinterpret_cast<intptr_t>(p));
   }
@@ -601,76 +449,12 @@ struct ParamTraitsWindows<HWND> {
     l->append(StringPrintf(L"0x%X", p));
   }
 };
-
-template <>
-struct ParamTraitsWindows<HACCEL> {
-  typedef HACCEL param_type;
-  static void Write(Message* m, const param_type& p) {
-    m->WriteIntPtr(reinterpret_cast<intptr_t>(p));
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    DCHECK_EQ(sizeof(param_type), sizeof(intptr_t));
-    return m->ReadIntPtr(iter, reinterpret_cast<intptr_t*>(r));
-  }
-};
-
-template <>
-struct ParamTraitsWindows<POINT> {
-  typedef POINT param_type;
-  static void Write(Message* m, const param_type& p) {
-    m->WriteInt(p.x);
-    m->WriteInt(p.y);
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    int x, y;
-    if (!m->ReadInt(iter, &x) || !m->ReadInt(iter, &y))
-      return false;
-    r->x = x;
-    r->y = y;
-    return true;
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"(%d, %d)", p.x, p.y));
-  }
-};
-
-template <>
-struct ParamTraitsWindows<XFORM> {
-  typedef XFORM param_type;
-  static void Write(Message* m, const param_type& p) {
-    m->WriteData(reinterpret_cast<const char*>(&p), sizeof(XFORM));
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    const char *data;
-    int data_size = 0;
-    bool result = m->ReadData(iter, &data, &data_size);
-    if (result && data_size == sizeof(XFORM)) {
-      memcpy(r, data, sizeof(XFORM));
-    } else {
-      result = false;
-      NOTREACHED();
-    }
-
-    return result;
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(L"<XFORM>");
-  }
-};
 #endif  // defined(OS_WIN)
 
 // Various ipc/chromium types.
 
 template <class P>
 struct ParamTraitsIPC : ParamTraitsWindows<P> {};
-
-template <>
-struct ParamTraitsIPC<base::Time> {
-  typedef base::Time param_type;
-  static inline void Write(Message* m, const param_type& p);
-  static inline bool Read(const Message* m, void** iter, param_type* r);
-  static inline void Log(const param_type& p, std::wstring* l);
-};
 
 #if defined(OS_POSIX)
 // FileDescriptors may be serialised over IPC channels on POSIX. On the
@@ -724,14 +508,6 @@ struct ParamTraitsIPC<base::FileDescriptor> {
 };
 #endif // defined(OS_POSIX)
 
-template <>
-struct ParamTraitsIPC<FilePath> {
-  typedef FilePath param_type;
-  static void Write(Message* m, const param_type& p);
-  static bool Read(const Message* m, void** iter, param_type* r);
-  static void Log(const param_type& p, std::wstring* l);
-};
-
 #if defined(OS_WIN)
 template<>
 struct ParamTraitsIPC<TransportDIB::Id> {
@@ -753,183 +529,6 @@ struct ParamTraitsIPC<TransportDIB::Id> {
   }
 };
 #endif
-
-template <>
-struct ParamTraitsIPC<Message> {
-  static void Write(Message* m, const Message& p) {
-    m->WriteInt(p.size());
-    m->WriteData(reinterpret_cast<const char*>(p.data()), p.size());
-  }
-  static bool Read(const Message* m, void** iter, Message* r) {
-    int size;
-    if (!m->ReadInt(iter, &size))
-      return false;
-    const char* data;
-    if (!m->ReadData(iter, &data, &size))
-      return false;
-    *r = Message(data, size);
-    return true;
-  }
-  static void Log(const Message& p, std::wstring* l) {
-    l->append(L"<IPC::Message>");
-  }
-};
-
-template <>
-struct ParamTraitsIPC<Tuple0> {
-  typedef Tuple0 param_type;
-  static void Write(Message* m, const param_type& p) {
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    return true;
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-  }
-};
-
-template <class A>
-struct ParamTraitsIPC< Tuple1<A> > {
-  typedef Tuple1<A> param_type;
-  static void Write(Message* m, const param_type& p) {
-    WriteParam(m, p.a);
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    return ReadParam(m, iter, &r->a);
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    LogParam(p.a, l);
-  }
-};
-
-template <class A, class B>
-struct ParamTraitsIPC< Tuple2<A, B> > {
-  typedef Tuple2<A, B> param_type;
-  static void Write(Message* m, const param_type& p) {
-    WriteParam(m, p.a);
-    WriteParam(m, p.b);
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    return (ReadParam(m, iter, &r->a) &&
-            ReadParam(m, iter, &r->b));
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    LogParam(p.a, l);
-    l->append(L", ");
-    LogParam(p.b, l);
-  }
-};
-
-template <class A, class B, class C>
-struct ParamTraitsIPC< Tuple3<A, B, C> > {
-  typedef Tuple3<A, B, C> param_type;
-  static void Write(Message* m, const param_type& p) {
-    WriteParam(m, p.a);
-    WriteParam(m, p.b);
-    WriteParam(m, p.c);
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    return (ReadParam(m, iter, &r->a) &&
-            ReadParam(m, iter, &r->b) &&
-            ReadParam(m, iter, &r->c));
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    LogParam(p.a, l);
-    l->append(L", ");
-    LogParam(p.b, l);
-    l->append(L", ");
-    LogParam(p.c, l);
-  }
-};
-
-template <class A, class B, class C, class D>
-struct ParamTraitsIPC< Tuple4<A, B, C, D> > {
-  typedef Tuple4<A, B, C, D> param_type;
-  static void Write(Message* m, const param_type& p) {
-    WriteParam(m, p.a);
-    WriteParam(m, p.b);
-    WriteParam(m, p.c);
-    WriteParam(m, p.d);
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    return (ReadParam(m, iter, &r->a) &&
-            ReadParam(m, iter, &r->b) &&
-            ReadParam(m, iter, &r->c) &&
-            ReadParam(m, iter, &r->d));
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    LogParam(p.a, l);
-    l->append(L", ");
-    LogParam(p.b, l);
-    l->append(L", ");
-    LogParam(p.c, l);
-    l->append(L", ");
-    LogParam(p.d, l);
-  }
-};
-
-template <class A, class B, class C, class D, class E>
-struct ParamTraitsIPC< Tuple5<A, B, C, D, E> > {
-  typedef Tuple5<A, B, C, D, E> param_type;
-  static void Write(Message* m, const param_type& p) {
-    WriteParam(m, p.a);
-    WriteParam(m, p.b);
-    WriteParam(m, p.c);
-    WriteParam(m, p.d);
-    WriteParam(m, p.e);
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    return (ReadParam(m, iter, &r->a) &&
-            ReadParam(m, iter, &r->b) &&
-            ReadParam(m, iter, &r->c) &&
-            ReadParam(m, iter, &r->d) &&
-            ReadParam(m, iter, &r->e));
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    LogParam(p.a, l);
-    l->append(L", ");
-    LogParam(p.b, l);
-    l->append(L", ");
-    LogParam(p.c, l);
-    l->append(L", ");
-    LogParam(p.d, l);
-    l->append(L", ");
-    LogParam(p.e, l);
-  }
-};
-
-template <class A, class B, class C, class D, class E, class F>
-struct ParamTraitsIPC< Tuple6<A, B, C, D, E, F> > {
-  typedef Tuple6<A, B, C, D, E, F> param_type;
-  static void Write(Message* m, const param_type& p) {
-    WriteParam(m, p.a);
-    WriteParam(m, p.b);
-    WriteParam(m, p.c);
-    WriteParam(m, p.d);
-    WriteParam(m, p.e);
-    WriteParam(m, p.f);
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    return (ReadParam(m, iter, &r->a) &&
-            ReadParam(m, iter, &r->b) &&
-            ReadParam(m, iter, &r->c) &&
-            ReadParam(m, iter, &r->d) &&
-            ReadParam(m, iter, &r->e) &&
-            ReadParam(m, iter, &r->f));
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    LogParam(p.a, l);
-    l->append(L", ");
-    LogParam(p.b, l);
-    l->append(L", ");
-    LogParam(p.c, l);
-    l->append(L", ");
-    LogParam(p.d, l);
-    l->append(L", ");
-    LogParam(p.e, l);
-    l->append(L", ");
-    LogParam(p.f, l);
-  }
-};
 
 // Mozilla-specific types.
 
@@ -953,41 +552,6 @@ struct ParamTraitsMozilla<nsresult> {
 // Finally, ParamTraits itself.
 
 template <class P> struct ParamTraits : ParamTraitsMozilla<P> {};
-
-// Now go back and define inlines dependent upon various ParamTraits<P>.
-inline void
-ParamTraitsIPC<base::Time>::Write(Message* m, const param_type& p) {
-  ParamTraits<int64_t>::Write(m, p.ToInternalValue());
-}
-inline bool
-ParamTraitsIPC<base::Time>::Read(const Message* m, void** iter, param_type* r) {
-  int64_t value;
-  if (!ParamTraits<int64_t>::Read(m, iter, &value))
-    return false;
-  *r = base::Time::FromInternalValue(value);
-  return true;
-}
-inline void
-ParamTraitsIPC<base::Time>::Log(const param_type& p, std::wstring* l) {
-  ParamTraits<int64_t>::Log(p.ToInternalValue(), l);
-}
-
-inline void
-ParamTraitsIPC<FilePath>::Write(Message* m, const param_type& p) {
-  ParamTraits<FilePath::StringType>::Write(m, p.value());
-}
-inline bool
-ParamTraitsIPC<FilePath>::Read(const Message* m, void** iter, param_type* r) {
-  FilePath::StringType value;
-  if (!ParamTraits<FilePath::StringType>::Read(m, iter, &value))
-    return false;
-  *r = FilePath(value);
-  return true;
-}
-inline void
-ParamTraitsIPC<FilePath>::Log(const param_type& p, std::wstring* l) {
-  ParamTraits<FilePath::StringType>::Log(p.value(), l);
-}
 
 //-----------------------------------------------------------------------------
 // Generic message subclasses
