@@ -7,7 +7,7 @@
 var loop = loop || {};
 loop.store = loop.store || {};
 
-(function() {
+(function(mozL10n) {
   "use strict";
 
   /**
@@ -67,6 +67,8 @@ loop.store = loop.store || {};
    * - {mozLoop}         mozLoop          The MozLoop API object.
    * - {ActiveRoomStore} activeRoomStore  An optional substore for active room
    *                                      state.
+   * - {Notifications}   notifications    An optional notifications item that is
+   *                                      required if create actions are to be used
    */
   loop.store.RoomStore = loop.store.createStore({
     /**
@@ -89,6 +91,7 @@ loop.store = loop.store || {};
      */
     actions: [
       "createRoom",
+      "createdRoom",
       "createRoomError",
       "copyRoomUrl",
       "deleteRoom",
@@ -107,6 +110,7 @@ loop.store = loop.store || {};
         throw new Error("Missing option mozLoop");
       }
       this._mozLoop = options.mozLoop;
+      this._notifications = options.notifications;
 
       if (options.activeRoomStore) {
         this.activeRoomStore = options.activeRoomStore;
@@ -257,7 +261,10 @@ loop.store = loop.store || {};
      * @param {sharedActions.CreateRoom} actionData The new room information.
      */
     createRoom: function(actionData) {
-      this.setStoreState({pendingCreation: true});
+      this.setStoreState({
+        pendingCreation: true,
+        error: null,
+      });
 
       var roomCreationData = {
         roomName:  this._generateNewRoomName(actionData.nameTemplate),
@@ -266,17 +273,30 @@ loop.store = loop.store || {};
         expiresIn: this.defaultExpiresIn
       };
 
+      this._notifications.remove("create-room-error");
+
       this._mozLoop.rooms.create(roomCreationData, function(err, createdRoom) {
-        this.setStoreState({pendingCreation: false});
         if (err) {
           this.dispatchAction(new sharedActions.CreateRoomError({error: err}));
           return;
         }
-        // Opens the newly created room
-        this.dispatchAction(new sharedActions.OpenRoom({
+
+        this.dispatchAction(new sharedActions.CreatedRoom({
           roomToken: createdRoom.roomToken
         }));
       }.bind(this));
+    },
+
+    /**
+     * Executed when a room has been created
+     */
+    createdRoom: function(actionData) {
+      this.setStoreState({pendingCreation: false});
+
+      // Opens the newly created room
+      this.dispatchAction(new sharedActions.OpenRoom({
+        roomToken: actionData.roomToken
+      }));
     },
 
     /**
@@ -288,6 +308,13 @@ loop.store = loop.store || {};
       this.setStoreState({
         error: actionData.error,
         pendingCreation: false
+      });
+
+      // XXX Needs a more descriptive error - bug 1109151.
+      this._notifications.set({
+        id: "create-room-error",
+        level: "error",
+        message: mozL10n.get("generic_failure_title")
       });
     },
 
@@ -406,4 +433,4 @@ loop.store = loop.store || {};
       this.setStoreState({error: actionData.error});
     }
   });
-})();
+})(document.mozL10n || navigator.mozL10n);
