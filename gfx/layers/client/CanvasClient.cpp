@@ -373,6 +373,11 @@ CanvasClientSharedSurface::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
     newTex = TexClientFromReadback(surf, forwarder, flags, layersBackend);
   }
   MOZ_ASSERT(newTex);
+  if (!newTex) {
+    // May happen in a release build in case of memory pressure.
+    gfxCriticalError() << "Failed to allocate a TextureClient for SharedSurface Canvas. size: " << aSize;
+    return;
+  }
 
   // Add the new TexClient.
   MOZ_ALWAYS_TRUE( AddTextureClient(newTex) );

@@ -41,7 +41,7 @@ public:
   NS_DECL_NSAHTTPSEGMENTREADER
   NS_DECL_NSAHTTPSEGMENTWRITER
 
-  explicit Http2Session(nsISocketTransport *);
+ Http2Session(nsISocketTransport *, uint32_t version);
 
   bool AddStream(nsAHttpTransaction *, int32_t,
                  bool, nsIInterfaceRequestor *);
@@ -161,6 +161,14 @@ public:
   const static uint8_t kFrameHeaderBytes = kFrameLengthBytes + kFrameFlagBytes +
     kFrameTypeBytes + kFrameStreamIDBytes;
 
+  enum {
+    kLeaderGroupID =     0x3,
+    kOtherGroupID =       0x5,
+    kBackgroundGroupID =  0x7,
+    kSpeculativeGroupID = 0x9,
+    kFollowerGroupID =    0xB
+  };
+
   static nsresult RecvHeaders(Http2Session *);
   static nsresult RecvPriority(Http2Session *);
   static nsresult RecvRstStream(Http2Session *);
@@ -218,6 +226,8 @@ public:
 
   void SendPing() MOZ_OVERRIDE;
 
+  bool UseH2Deps() { return mUseH2Deps; }
+
 private:
 
   // These internal states do not correspond to the states of the HTTP/2 specification
@@ -260,6 +270,7 @@ private:
   void        ActivateStream(Http2Stream *);
   void        ProcessPending();
   nsresult    SetInputFrameDataStream(uint32_t);
+  void        CreatePriorityNode(uint32_t, uint32_t, uint8_t, const char *);
   bool        VerifyStream(Http2Stream *, uint32_t);
   void        SetNeedsCleanup();
 
@@ -468,6 +479,9 @@ private:
 
   // For caching whether we negotiated "h2" or "h2-<draft>"
   nsCString mNegotiatedToken;
+
+  bool mUseH2Deps;
+  uint32_t mVersion; // HTTP2_VERSION_ from nsHttp.h remove when draft support removed
 
 private:
 /// connect tunnels

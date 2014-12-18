@@ -121,6 +121,11 @@ public:
     NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey);
     // nsISupportsPriority
     NS_IMETHOD SetPriority(int32_t value);
+    // nsIClassOfService
+    NS_IMETHOD SetClassFlags(uint32_t inFlags);
+    NS_IMETHOD AddClassFlags(uint32_t inFlags);
+    NS_IMETHOD ClearClassFlags(uint32_t inFlags);
+
     // nsIResumableChannel
     NS_IMETHOD ResumeAt(uint64_t startPos, const nsACString& entityID);
 

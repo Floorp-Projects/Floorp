@@ -100,7 +100,7 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
                        a.referrerPolicy(), a.apiRedirectTo(), a.topWindowURI(),
                        a.loadFlags(), a.requestHeaders(),
                        a.requestMethod(), a.uploadStream(),
-                       a.uploadStreamHasHeaders(), a.priority(),
+                       a.uploadStreamHasHeaders(), a.priority(), a.classOfService(),
                        a.redirectionLimit(), a.allowPipelining(), a.allowSTS(),
                        a.thirdPartyFlags(), a.resumeAt(), a.startPos(),
                        a.entityID(), a.chooseApplicationCache(),
@@ -181,6 +181,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const OptionalInputStreamParams& uploadStream,
                                  const bool&                uploadStreamHasHeaders,
                                  const uint16_t&            priority,
+                                 const uint32_t&            classOfService,
                                  const uint8_t&             redirectionLimit,
                                  const bool&                allowPipelining,
                                  const bool&                allowSTS,
@@ -315,8 +316,12 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     mChannel->SetUploadStreamHasHeaders(uploadStreamHasHeaders);
   }
 
-  if (priority != nsISupportsPriority::PRIORITY_NORMAL)
+  if (priority != nsISupportsPriority::PRIORITY_NORMAL) {
     mChannel->SetPriority(priority);
+  }
+  if (classOfService) {
+    mChannel->SetClassFlags(classOfService);
+  }
   mChannel->SetRedirectionLimit(redirectionLimit);
   mChannel->SetAllowPipelining(allowPipelining);
   mChannel->SetAllowSTS(allowSTS);
@@ -423,6 +428,15 @@ HttpChannelParent::RecvSetPriority(const uint16_t& priority)
   if (priorityRedirectChannel)
     priorityRedirectChannel->SetPriority(priority);
 
+  return true;
+}
+
+bool
+HttpChannelParent::RecvSetClassOfService(const uint32_t& cos)
+{
+  if (mChannel) {
+    mChannel->SetClassFlags(cos);
+  }
   return true;
 }
 

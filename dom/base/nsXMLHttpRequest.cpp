@@ -66,6 +66,7 @@
 #include "nsIPermissionManager.h"
 #include "nsMimeTypes.h"
 #include "nsIHttpChannelInternal.h"
+#include "nsIClassOfService.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsFormData.h"
 #include "nsStreamListenerWrapper.h"
@@ -2403,10 +2404,8 @@ GetRequestBody(nsIDOMDocument* aDoc, nsIInputStream** aResult,
   aContentType.AssignLiteral("application/xml");
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDoc));
   NS_ENSURE_STATE(doc);
-  aCharset = doc->GetDocumentCharacterSet();
+  aCharset.AssignLiteral("UTF-8");
 
-  // Serialize to a stream so that the encoding used will
-  // match the document's.
   nsresult rv;
   nsCOMPtr<nsIDOMSerializer> serializer =
     do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv);
@@ -2891,14 +2890,17 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
   // the channel slow by default for pipeline purposes
   AddLoadFlags(mChannel, nsIRequest::INHIBIT_PIPELINE);
 
-  nsCOMPtr<nsIHttpChannelInternal>
-    internalHttpChannel(do_QueryInterface(mChannel));
-  if (internalHttpChannel) {
+  nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(mChannel));
+  if (cos) {
     // we never let XHR be blocked by head CSS/JS loads to avoid
     // potential deadlock where server generation of CSS/JS requires
     // an XHR signal.
-    internalHttpChannel->SetLoadUnblocked(true);
+    cos->AddClassFlags(nsIClassOfService::Unblocked);
+  }
 
+  nsCOMPtr<nsIHttpChannelInternal>
+    internalHttpChannel(do_QueryInterface(mChannel));
+  if (internalHttpChannel) {
     // Disable Necko-internal response timeouts.
     internalHttpChannel->SetResponseTimeoutEnabled(false);
   }

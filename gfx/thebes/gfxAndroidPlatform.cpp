@@ -23,6 +23,7 @@
 #include "nsServiceManagerUtils.h"
 #include "gfxPrefs.h"
 #include "cairo.h"
+#include "VsyncSource.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
@@ -30,6 +31,8 @@
 
 #ifdef MOZ_WIDGET_GONK
 #include <cutils/properties.h>
+#include "mozilla/layers/CompositorParent.h"
+#include "HwcComposer2D.h"
 #endif
 
 #include "ft2build.h"
@@ -419,4 +422,73 @@ bool gfxAndroidPlatform::HaveChoiceOfHWAndSWCanvas()
     }
 #endif
     return gfxPlatform::HaveChoiceOfHWAndSWCanvas();
+}
+
+#ifdef MOZ_WIDGET_GONK
+class GonkVsyncSource MOZ_FINAL : public VsyncSource
+{
+public:
+  GonkVsyncSource()
+  {
+  }
+
+  virtual Display& GetGlobalDisplay() MOZ_OVERRIDE
+  {
+    return mGlobalDisplay;
+  }
+
+protected:
+  class GonkDisplay MOZ_FINAL : public VsyncSource::Display
+  {
+  public:
+    GonkDisplay() : mVsyncEnabled(false)
+    {
+      EnableVsync();
+    }
+
+    ~GonkDisplay()
+    {
+      DisableVsync();
+    }
+
+    virtual void EnableVsync() MOZ_OVERRIDE
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+      mVsyncEnabled = HwcComposer2D::GetInstance()->EnableVsync(true);
+    }
+
+    virtual void DisableVsync() MOZ_OVERRIDE
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+      mVsyncEnabled = HwcComposer2D::GetInstance()->EnableVsync(false);
+    }
+
+    virtual bool IsVsyncEnabled() MOZ_OVERRIDE
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+      return mVsyncEnabled;
+    }
+  private:
+    bool mVsyncEnabled;
+  }; // GonkDisplay
+
+private:
+  virtual ~GonkVsyncSource()
+  {
+  }
+
+  GonkDisplay mGlobalDisplay;
+}; // GonkVsyncSource
+#endif
+
+already_AddRefed<mozilla::gfx::VsyncSource>
+gfxAndroidPlatform::CreateHardwareVsyncSource()
+{
+#ifdef MOZ_WIDGET_GONK
+    nsRefPtr<VsyncSource> vsyncSource = new GonkVsyncSource();
+    return vsyncSource.forget();
+#else
+    NS_WARNING("Hardware vsync not supported on android yet");
+    return nullptr;
+#endif
 }

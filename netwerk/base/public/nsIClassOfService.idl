@@ -1,0 +1,45 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * nsIClassOfService.idl
+ *
+ * Used to express class dependencies and characteristics - complimentary to
+ * nsISupportsPriority which is used to express weight
+ *
+ * Channels that implement this interface may make use of this
+ * information in different ways.
+ *
+ * The default gecko HTTP/1 stack makes Followers wait for Leaders to
+ * complete before dispatching followers. Other classes run in
+ * parallel - neither being blocked nor blocking. All grouping is done
+ * based on the Load Group - separate load groups proceed
+ * independently.
+ *
+ * HTTP/2 does not use the load group, but prioritization is done per
+ * HTTP/2 session. HTTP/2 dispatches all the requests as soon as
+ * possible.
+ * The various classes are assigned logical priority
+ * dependency groups and then transactions of that class depend on the
+ * group. In this model Followers block on Leaders and Speculative
+ * depends on Background. See Http2Stream.cpp for weighting details.
+ *
+ */
+
+[scriptable, uuid(1ccb58ec-5e07-4cf9-a30d-ac5490d23b41)]
+interface nsIClassOfService : nsISupports
+{
+  attribute unsigned long classFlags;
+
+  void clearClassFlags(in unsigned long flags);
+  void addClassFlags(in unsigned long flags);
+
+  const unsigned long Leader = 1 << 0;
+  const unsigned long Follower = 1 << 1;
+  const unsigned long Speculative = 1 << 2;
+  const unsigned long Background = 1 << 3;
+  const unsigned long Unblocked = 1 << 4;
+};

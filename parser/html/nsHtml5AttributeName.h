@@ -396,6 +396,7 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_ONDRAGEND;
     static nsHtml5AttributeName* ATTR_ONMOVEEND;
     static nsHtml5AttributeName* ATTR_ONINVALID;
+    static nsHtml5AttributeName* ATTR_INTEGRITY;
     static nsHtml5AttributeName* ATTR_ONKEYDOWN;
     static nsHtml5AttributeName* ATTR_ONFOCUSIN;
     static nsHtml5AttributeName* ATTR_ONMOUSEUP;
