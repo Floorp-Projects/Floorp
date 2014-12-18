@@ -831,6 +831,7 @@ private:
     // aSuppressWhiteSpaceOptimizations is true if optimizations that
     // skip constructing whitespace frames for this item or items
     // around it cannot be performed.
+    // Also, the return value is always non-null, thanks to infallible 'new'.
     FrameConstructionItem* AppendItem(const FrameConstructionData* aFCData,
                                       nsIContent* aContent,
                                       nsIAtom* aTag,
