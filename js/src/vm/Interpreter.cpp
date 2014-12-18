@@ -2287,7 +2287,7 @@ CASE(JSOP_STRICTDELPROP)
     FETCH_OBJECT(cx, -1, obj);
 
     bool succeeded;
-    if (!JSObject::deleteGeneric(cx, obj, id, &succeeded))
+    if (!DeleteProperty(cx, obj, id, &succeeded))
         goto error;
     if (!succeeded && JSOp(*REGS.pc) == JSOP_STRICTDELPROP) {
         obj->reportNotConfigurable(cx, id);
@@ -2314,7 +2314,7 @@ CASE(JSOP_STRICTDELELEM)
     RootedId &id = rootId0;
     if (!ValueToId<CanGC>(cx, propval, &id))
         goto error;
-    if (!JSObject::deleteGeneric(cx, obj, id, &succeeded))
+    if (!DeleteProperty(cx, obj, id, &succeeded))
         goto error;
     if (!succeeded && JSOp(*REGS.pc) == JSOP_STRICTDELELEM) {
         obj->reportNotConfigurable(cx, id);
@@ -3786,7 +3786,7 @@ js::DeleteProperty(JSContext *cx, HandleValue v, HandlePropertyName name, bool *
         return false;
 
     RootedId id(cx, NameToId(name));
-    if (!JSObject::deleteGeneric(cx, obj, id, bp))
+    if (!DeleteProperty(cx, obj, id, bp))
         return false;
 
     if (strict && !*bp) {
@@ -3810,7 +3810,7 @@ js::DeleteElement(JSContext *cx, HandleValue val, HandleValue index, bool *bp)
     RootedId id(cx);
     if (!ValueToId<CanGC>(cx, index, &id))
         return false;
-    if (!JSObject::deleteGeneric(cx, obj, id, bp))
+    if (!DeleteProperty(cx, obj, id, bp))
         return false;
 
     if (strict && !*bp) {
@@ -3922,7 +3922,7 @@ js::DeleteNameOperation(JSContext *cx, HandlePropertyName name, HandleObject sco
 
     bool succeeded;
     RootedId id(cx, NameToId(name));
-    if (!JSObject::deleteGeneric(cx, scope, id, &succeeded))
+    if (!DeleteProperty(cx, scope, id, &succeeded))
         return false;
     res.setBoolean(succeeded);
     return true;

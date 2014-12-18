@@ -36,26 +36,6 @@ JSObject::setGenericAttributes(JSContext *cx, js::HandleObject obj,
 }
 
 /* static */ inline bool
-JSObject::deleteGeneric(JSContext *cx, js::HandleObject obj, js::HandleId id,
-                         bool *succeeded)
-{
-    js::types::MarkTypePropertyNonData(cx, obj, id);
-    js::DeleteGenericOp op = obj->getOps()->deleteGeneric;
-    if (op)
-        return op(cx, obj, id, succeeded);
-    return js::NativeDeleteProperty(cx, obj.as<js::NativeObject>(), id, succeeded);
-}
-
-/* static */ inline bool
-JSObject::deleteElement(JSContext *cx, js::HandleObject obj, uint32_t index, bool *succeeded)
-{
-    JS::RootedId id(cx);
-    if (!js::IndexToId(cx, index, &id))
-        return false;
-    return deleteGeneric(cx, obj, id, succeeded);
-}
-
-/* static */ inline bool
 JSObject::watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                 JS::HandleObject callable)
 {
@@ -234,6 +214,24 @@ js::GetElementNoGC(JSContext *cx, JSObject *obj, JSObject *receiver, uint32_t in
     if (index > JSID_INT_MAX)
         return false;
     return GetPropertyNoGC(cx, obj, receiver, INT_TO_JSID(index), vp);
+}
+
+inline bool
+js::DeleteProperty(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)
+{
+    types::MarkTypePropertyNonData(cx, obj, id);
+    if (DeleteGenericOp op = obj->getOps()->deleteGeneric)
+        return op(cx, obj, id, succeeded);
+    return NativeDeleteProperty(cx, obj.as<NativeObject>(), id, succeeded);
+}
+
+inline bool
+js::DeleteElement(JSContext *cx, HandleObject obj, uint32_t index, bool *succeeded)
+{
+    RootedId id(cx);
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return DeleteProperty(cx, obj, id, succeeded);
 }
 
 

@@ -59,7 +59,7 @@ DirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool
 {
     assertEnteredPolicy(cx, proxy, id, SET);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JSObject::deleteGeneric(cx, target, id, bp);
+    return DeleteProperty(cx, target, id, bp);
 }
 
 bool
