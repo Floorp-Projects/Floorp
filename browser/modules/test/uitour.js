@@ -223,6 +223,13 @@ if (typeof Mozilla == 'undefined') {
 		});
 	};
 
+	Mozilla.UITour.setConfiguration = function(configName, configValue) {
+		_sendEvent('setConfiguration', {
+			configuration: configName,
+			value: configValue,
+		});
+	};
+
 	Mozilla.UITour.showFirefoxAccounts = function() {
 		_sendEvent('showFirefoxAccounts');
 	};
