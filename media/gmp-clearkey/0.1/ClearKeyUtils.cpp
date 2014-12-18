@@ -177,7 +177,8 @@ ClearKeyUtils::ParseInitData(const uint8_t* aInitData, uint32_t aInitDataSize,
 
 /* static */ void
 ClearKeyUtils::MakeKeyRequest(const vector<KeyId>& aKeyIDs,
-                              string& aOutRequest)
+                              string& aOutRequest,
+                              GMPSessionType aSessionType)
 {
   MOZ_ASSERT(aKeyIDs.size() && aOutRequest.empty());
 
@@ -195,9 +196,10 @@ ClearKeyUtils::MakeKeyRequest(const vector<KeyId>& aKeyIDs,
     aOutRequest.append("\"");
   }
   aOutRequest.append("], \"type\":");
-  // TODO implement "persistent" session type
-  aOutRequest.append("\"temporary\"");
-  aOutRequest.append("}");
+
+  aOutRequest.append("\"");
+  aOutRequest.append(SessionTypeToString(aSessionType));
+  aOutRequest.append("\"}");
 }
 
 #define EXPECT_SYMBOL(CTX, X) do { \
@@ -509,7 +511,8 @@ ParseKeys(ParserContext& aCtx, vector<KeyIdPair>& aOutKeys)
 
 /* static */ bool
 ClearKeyUtils::ParseJWK(const uint8_t* aKeyData, uint32_t aKeyDataSize,
-                        vector<KeyIdPair>& aOutKeys)
+                        vector<KeyIdPair>& aOutKeys,
+                        GMPSessionType aSessionType)
 {
   ParserContext ctx;
   ctx.mIter = aKeyData;
@@ -531,8 +534,7 @@ ClearKeyUtils::ParseJWK(const uint8_t* aKeyData, uint32_t aKeyDataSize,
       // Consume type string.
       string type;
       if (!GetNextLabel(ctx, type)) return false;
-      // XXX todo support "persistent" session type
-      if (type != "temporary") {
+      if (type != SessionTypeToString(aSessionType)) {
         return false;
       }
     } else {
@@ -551,5 +553,34 @@ ClearKeyUtils::ParseJWK(const uint8_t* aKeyData, uint32_t aKeyDataSize,
   // Consume '}' from end of object.
   EXPECT_SYMBOL(ctx, '}');
 
+  return true;
+}
+
+/* static */ const char*
+ClearKeyUtils::SessionTypeToString(GMPSessionType aSessionType)
+{
+  switch (aSessionType) {
+    case kGMPTemporySession: return "temporary";
+    case kGMPPersistentSession: return "persistent";
+    default: {
+      MOZ_ASSERT(false, "Should not reach here.");
+      return "invalid";
+    }
+  }
+}
+
+/* static */ bool
+ClearKeyUtils::IsValidSessionId(const char* aBuff, uint32_t aLength)
+{
+  if (aLength > 10) {
+    // 10 is the max number of characters in UINT32_MAX when
+    // represented as a string; ClearKey session ids are integers.
+    return false;
+  }
+  for (uint32_t i = 0; i < aLength; i++) {
+    if (!isdigit(aBuff[i])) {
+      return false;
+    }
+  }
   return true;
 }
