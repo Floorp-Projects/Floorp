@@ -166,11 +166,14 @@ loop.panel = (function(_, mozL10n) {
   });
 
   var GettingStartedView = React.createClass({displayName: 'GettingStartedView',
+    mixins: [sharedMixins.WindowCloseMixin],
+
     handleButtonClick: function() {
       navigator.mozLoop.openGettingStartedTour("getting-started");
       navigator.mozLoop.setLoopPref("gettingStarted.seen", true);
       var event = new CustomEvent("GettingStartedSeen");
       window.dispatchEvent(event);
+      this.closeWindow();
     },
 
     render: function() {
@@ -269,7 +272,7 @@ loop.panel = (function(_, mozL10n) {
    * Panel settings (gear) menu.
    */
   var SettingsDropdown = React.createClass({displayName: 'SettingsDropdown',
-    mixins: [sharedMixins.DropdownMenuMixin],
+    mixins: [sharedMixins.DropdownMenuMixin, sharedMixins.WindowCloseMixin],
 
     handleClickSettingsEntry: function() {
       // XXX to be implemented at the same time as unhiding the entry
@@ -300,6 +303,7 @@ loop.panel = (function(_, mozL10n) {
 
     openGettingStartedTour: function() {
       navigator.mozLoop.openGettingStartedTour("settings-menu");
+      this.closeWindow();
     },
 
     render: function() {
