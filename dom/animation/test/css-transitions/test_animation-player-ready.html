@@ -1,0 +1,38 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="../testcommon.js"></script>
+<div id="log"></div>
+<script>
+'use strict';
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.transform = 'translate(0px)';
+  window.getComputedStyle(div).transform;
+  div.style.transition = 'transform 100s';
+  div.style.transform = 'translate(10px)';
+  window.getComputedStyle(div).transform;
+
+  var player = div.getAnimationPlayers()[0];
+  var originalReadyPromise = player.ready;
+
+  player.ready.then(t.step_func(function() {
+    assert_equals(player.ready, originalReadyPromise,
+                  'Ready promise is the same object when playing completes');
+    player.pause();
+    // TODO: When we implement deferred pausing, change this to
+    // assert_not_equals and wait on the new promise before continuing.
+    assert_equals(player.ready, originalReadyPromise,
+                  'Ready promise does not change when pausing (for now)');
+    player.play();
+    assert_not_equals(player.ready, originalReadyPromise,
+                      'Ready promise object identity differs after calling'
+                      + ' play()');
+    t.done();
+  }));
+}, 'A new ready promise is created each time play() is called'
+   + ' the animation property');
+
+</script>

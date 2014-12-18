@@ -54,3 +54,5 @@ DISABLE_STL_WRAPPING = True
 OS_LIBS += [
     'shell32',
 ]
+
+FAIL_ON_WARNINGS = True

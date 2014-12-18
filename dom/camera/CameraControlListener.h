@@ -34,6 +34,7 @@ public:
 
   enum HardwareState
   {
+    kHardwareUninitialized,
     kHardwareClosed,
     kHardwareOpen,
     kHardwareOpenFailed

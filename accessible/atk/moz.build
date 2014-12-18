@@ -51,3 +51,5 @@ if CONFIG['MOZ_ENABLE_DBUS']:
     CXXFLAGS += CONFIG['MOZ_DBUS_CFLAGS']
 
 include('/ipc/chromium/chromium-config.mozbuild')
+
+FAIL_ON_WARNINGS = True

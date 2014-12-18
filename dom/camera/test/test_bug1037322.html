@@ -15,10 +15,10 @@
 var whichCamera = navigator.mozCameras.getListOfCameras()[0];
 var config = {
   mode: 'picture',
-  recorderProfile: 'cif',
+  recorderProfile: 'high',
   previewSize: {
-    width: 352,
-    height: 288
+    width: 320,
+    height: 240
   }
 };
 
@@ -57,14 +57,17 @@ var Camera = {
       ok(cfg.mode === "unspecified", "Initial mode = " + cfg.mode);
       ok(cfg.previewSize.width === 0 && cfg.previewSize.height === 0,
          "Initial preview size = " + cfg.previewSize.width + "x" + cfg.previewSize.height);
-      ok(cfg.recorderProfile === "",
+      ok(cfg.recorderProfile === "default",
          "Initial recorder profile = '" + cfg.recorderProfile + "'");
 
       // Apply our specific configuration
       camera.setConfiguration(config).then(setConfig_onSuccess, onError);
     }
 
-    navigator.mozCameras.getCamera(whichCamera, {}).then(getCamera_onSuccess, onError);
+    var cfg = {
+      mode: 'unspecified',
+    };
+    navigator.mozCameras.getCamera(whichCamera, cfg).then(getCamera_onSuccess, onError);
   }
 }
 

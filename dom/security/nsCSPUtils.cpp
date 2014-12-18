@@ -149,10 +149,6 @@ CSP_ContentTypeToDirective(nsContentPolicyType aType)
     case nsIContentPolicy::TYPE_MEDIA:
       return nsIContentSecurityPolicy::MEDIA_SRC_DIRECTIVE;
 
-    // TYPE_DOCUMENT shouldn't be used since it's specifically whitelisted by
-    // the CSPService, but in case we do want to know which directive to check,
-    // FRAME_SRC is the best fit.
-    case nsIContentPolicy::TYPE_DOCUMENT:
     case nsIContentPolicy::TYPE_SUBDOCUMENT:
       return nsIContentSecurityPolicy::FRAME_SRC_DIRECTIVE;
 
@@ -172,8 +168,13 @@ CSP_ContentTypeToDirective(nsContentPolicyType aType)
     case nsIContentPolicy::TYPE_OTHER:
       return nsIContentSecurityPolicy::DEFAULT_SRC_DIRECTIVE;
 
-    // CSP can not block csp reports, fall through to error
+    // csp shold not block top level loads, e.g. in case
+    // of a redirect.
+    case nsIContentPolicy::TYPE_DOCUMENT:
+    // CSP can not block csp reports
     case nsIContentPolicy::TYPE_CSP_REPORT:
+      return nsIContentSecurityPolicy::NO_DIRECTIVE;
+
     // Fall through to error for all other directives
     default:
       MOZ_ASSERT(false, "Can not map nsContentPolicyType to CSPDirective");

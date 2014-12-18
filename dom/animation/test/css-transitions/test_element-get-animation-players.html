@@ -2,18 +2,13 @@
 <meta charset=utf-8>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="../testcommon.js"></script>
 <div id="log"></div>
 <script>
 'use strict';
 
-function addDiv() {
-  var div = document.createElement('div');
-  document.body.appendChild(div);
-  return div;
-}
-
 async_test(function(t) {
-  var div = addDiv();
+  var div = addDiv(t);
 
   // Add a couple of transitions
   div.style.left = '0px';
@@ -27,34 +22,35 @@ async_test(function(t) {
   var players = div.getAnimationPlayers();
   assert_equals(players.length, 2,
     'getAnimationPlayers() returns one player per transitioning property');
-  var startTime = players[0].startTime;
-  assert_true(startTime > 0 && startTime <= document.timeline.currentTime,
-    'CSS transitions have sensible start times');
-  assert_equals(players[0].startTime, players[1].startTime,
-    'CSS transitions started together have the same start time');
-
-  // Wait a moment then add a third transition
-  window.requestAnimationFrame(t.step_func(function() {
+  waitForAllPlayers(players).then(t.step_func(function() {
+    var startTime = players[0].startTime;
+    assert_true(startTime > 0 && startTime <= document.timeline.currentTime,
+                'CSS transitions have sensible start times');
+    assert_equals(players[0].startTime, players[1].startTime,
+      'CSS transitions started together have the same start time');
+    // Wait a moment then add a third transition
+    return waitForFrame();
+  })).then(t.step_func(function() {
     div.style.backgroundColor = 'green';
     players = div.getAnimationPlayers();
     assert_equals(players.length, 3,
       'getAnimationPlayers returns players for all running CSS Transitions');
+    return waitForAllPlayers(players);
+  })).then(t.step_func(function() {
     assert_true(players[1].startTime < players[2].startTime,
       'Player for additional CSS transition starts after the original'
       + ' transitions and appears later in the list');
-    div.remove();
     t.done();
   }));
 }, 'getAnimationPlayers for CSS Transitions');
 
 async_test(function(t) {
-  var div = addDiv();
+  var div = addDiv(t);
 
   // Set up event listener
   div.addEventListener('transitionend', t.step_func(function() {
     assert_equals(div.getAnimationPlayers().length, 0,
       'getAnimationPlayers does not return finished CSS Transitions');
-    div.remove();
     t.done();
   }));
 
@@ -67,8 +63,8 @@ async_test(function(t) {
   window.getComputedStyle(div).left;
 }, 'getAnimationPlayers for CSS Transitions that have finished');
 
-test(function() {
-  var div = addDiv();
+test(function(t) {
+  var div = addDiv(t);
 
   // Try to transition non-animatable property animation-duration
   div.style.animationDuration = '10s';
@@ -80,11 +76,10 @@ test(function() {
   assert_equals(div.getAnimationPlayers().length, 0,
     'getAnimationPlayers returns an empty sequence for a transition'
     + ' of a non-animatable property');
-  div.remove();
 }, 'getAnimationPlayers for transition on non-animatable property');
 
-test(function() {
-  var div = addDiv();
+test(function(t) {
+  var div = addDiv(t);
 
   div.style.setProperty('-vendor-unsupported', '0px', '');
   window.getComputedStyle(div).transitionProperty;
@@ -94,7 +89,6 @@ test(function() {
   assert_equals(div.getAnimationPlayers().length, 0,
     'getAnimationPlayers returns an empty sequence for a transition'
     + ' of an unsupported property');
-  div.remove();
 }, 'getAnimationPlayers for transition on unsupported property');
 
 </script>

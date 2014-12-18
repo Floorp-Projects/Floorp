@@ -18,3 +18,5 @@ else:
     ]
     DEFINES['B2G_NAME'] = '"%s-bin%s"' % (PROGRAM, CONFIG['BIN_SUFFIX'])
     DEFINES['GAIA_PATH'] = '"gaia/profile"'
+
+FAIL_ON_WARNINGS = True
