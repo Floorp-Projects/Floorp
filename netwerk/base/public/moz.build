@@ -30,6 +30,7 @@ XPIDL_SOURCES += [
     'nsIChannel.idl',
     'nsIChannelEventSink.idl',
     'nsIChildChannel.idl',
+    'nsIClassOfService.idl',
     'nsIContentSniffer.idl',
     'nsICryptoFIPSInfo.idl',
     'nsICryptoHash.idl',
