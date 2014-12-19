@@ -6,7 +6,7 @@
  * the audio graph if both pages have an AudioContext.
  */
 
-function spawnTest() {
+add_task(function*() {
   let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $ } = panelWin;
@@ -40,6 +40,5 @@ function spawnTest() {
   ise(nodes, 14, "after navigation, should have 14 nodes");
   ise(edges, 0, "after navigation, should have 0 edges.");
 
-  yield teardown(panel);
-  finish();
-}
+  yield teardown(target);
+});
