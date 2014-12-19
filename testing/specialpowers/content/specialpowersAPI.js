@@ -1587,10 +1587,10 @@ SpecialPowersAPI.prototype = {
 
     var xferable = Components.classes["@mozilla.org/widget/transferable;1"].
                    createInstance(Components.interfaces.nsITransferable);
-    // in e10s b-c tests |content.window| is null whereas |window| works fine.
+    // in e10s b-c tests |content.window| is a CPOW whereas |window| works fine.
     // for some non-e10s mochi tests, |window| is null whereas |content.window|
     // works fine.  So we take whatever is non-null!
-    xferable.init(this._getDocShell(content.window || window)
+    xferable.init(this._getDocShell(typeof(window) == "undefined" ? content.window : window)
                       .QueryInterface(Components.interfaces.nsILoadContext));
     xferable.addDataFlavor(flavor);
     this._cb.getData(xferable, whichClipboard);
