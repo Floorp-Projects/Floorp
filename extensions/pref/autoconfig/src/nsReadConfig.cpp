@@ -239,12 +239,12 @@ nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName, int32_t obsc
     nsCOMPtr<nsIInputStream> inStr;
     if (isBinDir) {
         nsCOMPtr<nsIFile> jsFile;
-        rv = NS_GetSpecialDirectory(XRE_EXECUTABLE_FILE,
+        rv = NS_GetSpecialDirectory(NS_GRE_DIR,
                                     getter_AddRefs(jsFile));
         if (NS_FAILED(rv)) 
             return rv;
 
-        rv = jsFile->SetNativeLeafName(nsDependentCString(aFileName));
+        rv = jsFile->AppendNative(nsDependentCString(aFileName));
         if (NS_FAILED(rv)) 
             return rv;
 
