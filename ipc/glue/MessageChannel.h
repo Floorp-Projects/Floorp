@@ -331,6 +331,16 @@ class MessageChannel : HasResultCodes
         return mDispatchingSyncMessagePriority;
     }
 
+    bool DispatchingAsyncMessage() const {
+        AssertWorkerThread();
+        return mDispatchingAsyncMessage;
+    }
+
+    int DispatchingAsyncMessagePriority() const {
+        AssertWorkerThread();
+        return mDispatchingAsyncMessagePriority;
+    }
+
     bool Connected() const;
 
   private:
@@ -464,6 +474,9 @@ class MessageChannel : HasResultCodes
     // worker thread.
     bool mDispatchingSyncMessage;
     int mDispatchingSyncMessagePriority;
+
+    bool mDispatchingAsyncMessage;
+    int mDispatchingAsyncMessagePriority;
 
     // When we send an urgent request from the parent process, we could race
     // with an RPC message that was issued by the child beforehand. In this
