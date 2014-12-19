@@ -54,7 +54,10 @@ class RValueAllocation
         UNTYPED_REG         = 0x06,
         UNTYPED_STACK       = 0x07,
 #endif
+
+        // Recover instructions.
         RECOVER_INSTRUCTION = 0x0a,
+        RI_WITH_DEFAULT_CST = 0x0b,
 
         // The JSValueType is packed in the Mode.
         TYPED_REG_MIN       = 0x10,
@@ -260,6 +263,11 @@ class RValueAllocation
     static RValueAllocation RecoverInstruction(uint32_t index) {
         return RValueAllocation(RECOVER_INSTRUCTION, payloadOfIndex(index));
     }
+    static RValueAllocation RecoverInstruction(uint32_t riIndex, uint32_t cstIndex) {
+        return RValueAllocation(RI_WITH_DEFAULT_CST,
+                                payloadOfIndex(riIndex),
+                                payloadOfIndex(cstIndex));
+    }
 
     void writeHeader(CompactBufferWriter &writer, JSValueType type, uint32_t regCode) const;
   public:
@@ -293,6 +301,10 @@ class RValueAllocation
         return arg1_.type;
     }
 
+    uint32_t index2() const {
+        MOZ_ASSERT(layoutFromMode(mode()).type2 == PAYLOAD_INDEX);
+        return arg2_.index;
+    }
     int32_t stackOffset2() const {
         MOZ_ASSERT(layoutFromMode(mode()).type2 == PAYLOAD_STACK_OFFSET);
         return arg2_.stackOffset;
