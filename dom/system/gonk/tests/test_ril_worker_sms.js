@@ -3,6 +3,14 @@
 
 subscriptLoader.loadSubScript("resource://gre/modules/ril_consts.js", this);
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "gSmsSegmentHelper", function() {
+  let ns = {};
+  Cu.import("resource://gre/modules/SmsSegmentHelper.jsm", ns);
+  return ns.SmsSegmentHelper;
+});
+
 const ESCAPE = "\uffff";
 const RESCTL = "\ufffe";
 
@@ -146,14 +154,11 @@ function add_test_receiving_sms(expected, pdu) {
   });
 }
 
-let test_receiving_7bit_alphabets__ril;
 let test_receiving_7bit_alphabets__worker;
 function test_receiving_7bit_alphabets(lst, sst) {
-  if (!test_receiving_7bit_alphabets__ril) {
-    test_receiving_7bit_alphabets__ril = newRadioInterface();
+  if (!test_receiving_7bit_alphabets__worker) {
     test_receiving_7bit_alphabets__worker = newWriteHexOctetAsUint8Worker();
   }
-  let ril = test_receiving_7bit_alphabets__ril;
   let worker = test_receiving_7bit_alphabets__worker;
   let context = worker.ContextPool._contexts[0];
   let helper = context.GsmPDUHelper;
@@ -174,7 +179,8 @@ function test_receiving_7bit_alphabets(lst, sst) {
   for (let i = 0; i < text.length;) {
     let len = Math.min(70, text.length - i);
     let expected = text.substring(i, i + len);
-    let septets = ril._countGsm7BitSeptets(expected, langTable, langShiftTable);
+    let septets =
+      gSmsSegmentHelper.countGsm7BitSeptets(expected, langTable, langShiftTable);
     let rawBytes = get7bitRawBytes(expected);
     let pdu = compose7bitPdu(lst, sst, rawBytes, septets);
     add_test_receiving_sms(expected, pdu);

@@ -1,0 +1,95 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+#include "nsISmsService.idl"
+
+%{C++
+#define GONK_SMSSERVICE_CONTRACTID \
+        "@mozilla.org/sms/gonksmsservice;1"
+%}
+
+[scriptable, uuid(4dda515e-05ec-47b1-b750-e42c74576c43)]
+interface nsIGonkSmsService : nsISmsService
+{
+  const unsigned short SMS_MESSAGE_ENCODING_7BITS_ALPHABET = 0x00;
+  const unsigned short SMS_MESSAGE_ENCODING_8BITS_ALPHABET = 0x04;
+  const unsigned short SMS_MESSAGE_ENCODING_16BITS_ALPHABET = 0x08;
+
+  const unsigned long SMS_APPLICATION_PORT_INVALID = 0xFFFFFFFF;
+
+  /**
+   * Called when a short message has been received by the network.
+   *
+   * @param aServiceId
+   *        The ID of the service where this message is received from.
+   * @param aSMSC
+   *        SMS Center address.
+   * @param aSentTimestamp
+   *        The time stamp when message is arrived to SMSC.
+   * @param aSender
+   *        The sender's address of this message.
+   * @param aPid
+   *        Protocol Identifier, See TS 23.040, subcluase 9.2.3.9.
+   *        Set to 0 if invalid.
+   * @param aEncoding
+   *        The encoding of message body.
+   *        SMS_MESSAGE_ENCODING_*.
+   * @param aMessageClass
+   *        A predefined constant of nsISmsService.MESSAGE_CLASS_TYPE_*.
+   * @param aLanguage
+   *        ISO-639-1 language code for this message. Null if unspecified.
+   * @param aSegmentRef, aSegmentSeq, aSegmentMaxSeq
+   *        Concatenation info. See TS 23.040, subclause 9.2.3.24.1.
+   *        All set to 1 if no need for concatenatenation.
+   * @param aOriginatorPort, aDestinationPort
+   *        Application Port Addressing. See TS 23.040 subclause 9.2.3.24.3~4.
+   *        All set to 1 if no need for concatenatenation.
+   * @param aMwiPresent
+   *        True if MWI is presented in this message.
+   * @param aMwiDiscard
+   *        True if MWI has to be discarded after received.
+   * @param aMwiMsgCount
+   *        The number of messages waiting in the voicemail server.
+   *        -1 if number is unknown from the decoded MWI.
+   * @param aMwiActive
+   *        True if there are messages waiting in the voicemail server.
+   * @param aCdmaMessageType
+   *        CDMA SMS Message Type, as defined in 3GPP2 C.S0015-A v2.0, Table 3.4-1
+   *        Set to 0 if invalid.
+   * @param aCdmaTeleservice
+   *        SMS Teleservice Identitifier, as defined in 3GPP2 N.S0005, Table 175.
+   *        Set to 0 if invalid.
+   * @param aCdmaServiceCategory
+   *        CDMA Service Category, 3GPP2 C.R1001-D v2.0, 9.3 Service Category.
+   *        Set to 0 if invalid.
+   * @param aBody
+   *        Text message body.
+   * @param aData
+   *        Binary message body.
+   */
+  void notifyMessageReceived(in unsigned long aServiceId,
+                             in DOMString aSMSC,
+                             in DOMTimeStamp aSentTimestamp,
+                             in DOMString aSender,
+                             in unsigned short aPid,
+                             in unsigned short aEncoding,
+                             in unsigned long aMessageClass,
+                             in DOMString aLanguage,
+                             in unsigned short aSegmentRef,
+                             in unsigned short aSegmentSeq,
+                             in unsigned short aSegmentMaxSeq,
+                             in unsigned long aOriginatorPort,
+                             in unsigned long aDestinationPort,
+                             in boolean aMwiPresent,
+                             in boolean aMwiDiscard,
+                             in short aMwiMsgCount,
+                             in boolean aMwiActive,
+                             in unsigned short aCdmaMessageType,
+                             in unsigned long aCdmaTeleservice,
+                             in unsigned long aCdmaServiceCategory,
+                             in DOMString aBody,
+                             [array, size_is(aDataLength)] in octet aData,
+                             in uint32_t aDataLength);
+};

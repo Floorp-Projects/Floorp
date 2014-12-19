@@ -12,10 +12,10 @@ Cu.import("resource://gre/modules/Services.jsm");
 let MMDB = {};
 Cu.import("resource://gre/modules/MobileMessageDB.jsm", MMDB);
 
-const RIL_MOBILEMESSAGEDATABASESERVICE_CONTRACTID =
-  "@mozilla.org/mobilemessage/rilmobilemessagedatabaseservice;1";
-const RIL_MOBILEMESSAGEDATABASESERVICE_CID =
-  Components.ID("{29785f90-6b5b-11e2-9201-3b280170b2ec}");
+const GONK_MOBILEMESSAGEDATABASESERVICE_CONTRACTID =
+  "@mozilla.org/mobilemessage/gonkmobilemessagedatabaseservice;1";
+const GONK_MOBILEMESSAGEDATABASESERVICE_CID =
+  Components.ID("{7db05024-8038-11e4-b7fa-a3edb6f1bf0c}");
 
 const DB_NAME = "sms";
 
@@ -33,8 +33,8 @@ function MobileMessageDatabaseService() {
 }
 MobileMessageDatabaseService.prototype = {
 
-  classID: RIL_MOBILEMESSAGEDATABASESERVICE_CID,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIRilMobileMessageDatabaseService,
+  classID: GONK_MOBILEMESSAGEDATABASESERVICE_CID,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIGonkMobileMessageDatabaseService,
                                          Ci.nsIMobileMessageDatabaseService,
                                          Ci.nsIObserver]),
 
@@ -49,7 +49,7 @@ MobileMessageDatabaseService.prototype = {
   observe: function() {},
 
   /**
-   * nsIRilMobileMessageDatabaseService API
+   * nsIGonkMobileMessageDatabaseService API
    */
 
   saveReceivedMessage: function(aMessage, aCallback) {
