@@ -28,7 +28,6 @@
   /* Tabs */
   --tabs-toolbar-color: #F5F7FA;
   --tab-background-color: #1C2126;
-  --tab-color: #ced3d9;
   --tab-hover-background-color: #07090a;
   --tab-separator-color: #474C50;
   --tab-selection-color: #f5f7fa;
@@ -88,10 +87,8 @@
   --chrome-selection-color: #f5f7fa;
   --chrome-selection-background-color: #4c9ed9;
 
-  --tab-color: #18191a;
   --tab-background-color: #E3E4E6;
   --tab-hover-background-color: #D7D8DA;
-  --tab-color: #18191a;
   --tab-separator-color: #C6C6C7;
   --tab-selection-color: #f5f7fa;
   --tab-selection-background-color: #4c9ed9;
@@ -283,7 +280,6 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
   /* We normally rely on other tab elements for pointer events, but this
      theme hides those so we need it set here instead */
   pointer-events: auto;
-  color: var(--tab-color);
   background-color: var(--tab-background-color);
 }
 
@@ -298,7 +294,6 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):hover,
 .tabbrowser-tab:hover {
   background-color: var(--tab-hover-background-color);
-  color: var(--tab-hover-color);
 }
 
 .tabbrowser-tab[selected] {
