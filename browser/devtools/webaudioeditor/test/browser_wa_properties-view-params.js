@@ -6,7 +6,7 @@
  * correctly, with default values and correct types.
  */
 
-function spawnTest() {
+add_task(function*() {
   let { target, panel } = yield initWebAudioEditor(SIMPLE_NODES_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, InspectorView } = panelWin;
@@ -34,6 +34,5 @@ function spawnTest() {
     checkVariableView(gVars, 0, NODE_DEFAULT_VALUES[types[i]], types[i]);
   }
 
-  yield teardown(panel);
-  finish();
-}
+  yield teardown(target);
+});

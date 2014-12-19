@@ -6,7 +6,7 @@
  * from the AudioNode actors.
  */
 
-function spawnTest() {
+add_task(function*() {
   let { target, front } = yield initBackend(SIMPLE_NODES_URL);
   let [_, nodes] = yield Promise.all([
     front.setup({ reload: true }),
@@ -26,8 +26,7 @@ function spawnTest() {
   });
 
   yield removeTab(target.tab);
-  finish();
-}
+});
 
 function compare (actual, expected, type) {
   actual.forEach(({ value, param }) => {
