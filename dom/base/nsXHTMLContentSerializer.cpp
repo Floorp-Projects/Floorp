@@ -33,6 +33,8 @@
 #include "nsIScriptElement.h"
 #include "nsAttrName.h"
 #include "nsParserConstants.h"
+#include "nsComputedDOMStyle.h"
+#include "mozilla/dom/Element.h"
 
 static const int32_t kLongLineLen = 128;
 
@@ -850,7 +852,7 @@ nsXHTMLContentSerializer::MaybeEnterInPreContent(nsIContent* aNode)
 
   nsIAtom *name = aNode->Tag();
 
-  if (name == nsGkAtoms::pre ||
+  if (IsElementPreformatted(aNode) ||
       name == nsGkAtoms::script ||
       name == nsGkAtoms::style ||
       name == nsGkAtoms::noscript ||
@@ -868,7 +870,7 @@ nsXHTMLContentSerializer::MaybeLeaveFromPreContent(nsIContent* aNode)
   }
 
   nsIAtom *name = aNode->Tag();
-  if (name == nsGkAtoms::pre ||
+  if (IsElementPreformatted(aNode) ||
       name == nsGkAtoms::script ||
       name == nsGkAtoms::style ||
       name == nsGkAtoms::noscript ||
@@ -876,6 +878,22 @@ nsXHTMLContentSerializer::MaybeLeaveFromPreContent(nsIContent* aNode)
     ) {
     --mPreLevel;
   }
+}
+
+bool
+nsXHTMLContentSerializer::IsElementPreformatted(nsIContent* aNode)
+{
+  if (!aNode->IsElement()) {
+    return false;
+  }
+  nsRefPtr<nsStyleContext> styleContext =
+    nsComputedDOMStyle::GetStyleContextForElementNoFlush(aNode->AsElement(),
+                                                         nullptr, nullptr);
+  if (styleContext) {
+    const nsStyleText* textStyle = styleContext->StyleText();
+    return textStyle->WhiteSpaceOrNewlineIsSignificant();
+  }
+  return false;
 }
 
 void 
