@@ -591,6 +591,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         append(desc, currentOffset(), framePushed_);
     }
     void callAndPushReturnAddress(Label *label) {
+        AutoForbidPools afp(this, 2);
         ma_push(pc);
         call(label);
     }

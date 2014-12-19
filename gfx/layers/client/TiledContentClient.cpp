@@ -1598,5 +1598,27 @@ ClientTiledLayerBuffer::ProgressiveUpdate(nsIntRegion& aValidRegion,
   return isBufferChanged;
 }
 
+void
+TiledContentClient::PrintInfo(std::stringstream& aStream, const char* aPrefix)
+{
+  aStream << aPrefix;
+  aStream << nsPrintfCString("TiledContentClient (0x%p)", this).get();
+
+  if (profiler_feature_active("displaylistdump")) {
+    nsAutoCString pfx(aPrefix);
+    pfx += "  ";
+
+    Dump(aStream, pfx.get(), false);
+  }
+}
+
+void
+TiledContentClient::Dump(std::stringstream& aStream,
+                       const char* aPrefix,
+                       bool aDumpHtml)
+{
+  mTiledBuffer.Dump(aStream, aPrefix, aDumpHtml);
+}
+
 }
 }

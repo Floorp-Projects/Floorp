@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 1109571</title>
+    <style type="text/css">
+* {
+    color:black; background:none; font-size:16px; padding:0; margin:0; font-family:monospace;
+}
+
+.c {
+  height: 2.2em;
+  line-height: 1em;
+  border: dotted;
+  white-space: pre;
+  position: relative;
+}
+
+g { display:inline-block; width:2em; }
+z { position:absolute; top:0; bottom:0; color:white; border-right:2px solid blue; margin-left:-1px; }
+o { position:absolute; top:0; right:0; width:0; }
+x { position:relative; z-index:1; } /* to render it above the blue bar */
+    </style>
+</head>
+<body>
+
+
+<div style="width:250px; border:1px solid">
+<table cellpadding=0 cellspacing=0><td><div class="c"><z style="padding-left:1em">&nbsp;&nbsp;&nbsp;&nbsp;</z><x>xxxx</x><g></g><x>xxxx</x><br><x>xxxx</x><g></g><x>xxxx</x></div></td><td><x>xxxxxxxxxxxxxxxxxxxxxxxxx</x></table>
+</div>
+<div style="width:250px; border:1px solid">
+<table cellpadding=0 cellspacing=0><td><div class="c"><z>&nbsp;&nbsp;&nbsp;&nbsp;</z><x>xxxxxxxx</x><br><x>xxxxxxxx</x></div></td><td><x>xxxxxxxxxxxxxxxxxxxxxxxxx</x></table>
+</div>
+
+<div style="width:250px; border:1px solid">
+<table cellpadding=0 cellspacing=0><td><div class="c"><z style="padding-left:1em">&nbsp;&nbsp;&nbsp;&nbsp;</z><x>xxxx</x><br><x>xxxx</x><o><g></g><x>xxxx</x><br><g></g><x>xxxx</x></o></div></td><td><x>xxxxxxxxxxxxxxxxxxxxxxxxx</x></table>
+</div>
+
+<div style="width:250px; border:1px solid">
+<table cellpadding=0 cellspacing=0><td><div class="c"><z>&nbsp;&nbsp;&nbsp;&nbsp;</z><x>xxxx</x><br><x>xxxx</x><o><x>xxxx</x><br><x>xxxx</x></o></div></td><td><x>xxxxxxxxxxxxxxxxxxxxxxxxx</x></table>
+</div>
+
+</body>
+</html>

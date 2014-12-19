@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set sw=4 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -131,14 +131,18 @@ ScreenManagerParent::RecvScreenForBrowser(PBrowserParent* aBrowser,
   // the nsIScreen it's on.
   TabParent* tabParent = static_cast<TabParent*>(aBrowser);
   nsCOMPtr<nsIWidget> widget = tabParent->GetWidget();
-  if (!widget) {
-    return true;
-  }
 
   nsCOMPtr<nsIScreen> screen;
-  if (widget->GetNativeData(NS_NATIVE_WINDOW)) {
-    mScreenMgr->ScreenForNativeWidget(widget->GetNativeData(NS_NATIVE_WINDOW),
-                                      getter_AddRefs(screen));
+  if (widget) {
+    if (widget->GetNativeData(NS_NATIVE_WINDOW)) {
+      mScreenMgr->ScreenForNativeWidget(widget->GetNativeData(NS_NATIVE_WINDOW),
+                                        getter_AddRefs(screen));
+    }
+  } else {
+    nsresult rv = mScreenMgr->GetPrimaryScreen(getter_AddRefs(screen));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return true;
+    }
   }
 
   NS_ENSURE_TRUE(screen, true);

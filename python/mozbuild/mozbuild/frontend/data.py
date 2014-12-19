@@ -726,6 +726,55 @@ class JavaJarData(object):
         self.javac_flags = list(javac_flags)
 
 
+class BaseSources(ContextDerived):
+    """Base class for files to be compiled during the build."""
+
+    __slots__ = (
+        'files',
+        'canonical_suffix',
+    )
+
+    def __init__(self, context, files, canonical_suffix):
+        ContextDerived.__init__(self, context)
+
+        self.files = files
+        self.canonical_suffix = canonical_suffix
+
+
+class Sources(BaseSources):
+    """Represents files to be compiled during the build."""
+
+    def __init__(self, context, files, canonical_suffix):
+        BaseSources.__init__(self, context, files, canonical_suffix)
+
+
+class GeneratedSources(BaseSources):
+    """Represents generated files to be compiled during the build."""
+
+    def __init__(self, context, files, canonical_suffix):
+        BaseSources.__init__(self, context, files, canonical_suffix)
+
+
+class HostSources(BaseSources):
+    """Represents files to be compiled for the host during the build."""
+
+    def __init__(self, context, files, canonical_suffix):
+        BaseSources.__init__(self, context, files, canonical_suffix)
+
+
+class UnifiedSources(BaseSources):
+    """Represents files to be compiled in a unified fashion during the build."""
+
+    __slots__ = (
+        'files_per_unified_file',
+    )
+
+    def __init__(self, context, files, canonical_suffix, files_per_unified_file=16):
+        BaseSources.__init__(self, context, files, canonical_suffix)
+
+        self.files_per_unified_file = files_per_unified_file
+
+
 class InstallationTarget(ContextDerived):
     """Describes the rules that affect where files get installed to."""
 
