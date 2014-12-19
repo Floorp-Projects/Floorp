@@ -83,6 +83,9 @@ var gSearchPane = {
   onTreeKeyPress: function(aEvent) {
     let index = gEngineView.selectedIndex;
     let tree = document.getElementById("engineList");
+    if (tree.hasAttribute("editing"))
+      return;
+
     if (aEvent.charCode == KeyEvent.DOM_VK_SPACE) {
       // Space toggles the checkbox.
       let newValue = !gEngineView._engineStore.engines[index].shown;
