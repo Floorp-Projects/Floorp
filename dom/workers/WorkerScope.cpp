@@ -462,14 +462,14 @@ GetterOnlyJSNative(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
 
 namespace {
 
-class UnregisterRunnable;
+class WorkerScopeUnregisterRunnable;
 class UnregisterResultRunnable MOZ_FINAL : public WorkerRunnable
 {
 public:
   enum State { Succeeded, Failed };
 
   UnregisterResultRunnable(WorkerPrivate* aWorkerPrivate,
-                           UnregisterRunnable* aRunnable,
+                           WorkerScopeUnregisterRunnable* aRunnable,
                            State aState, bool aValue)
     : WorkerRunnable(aWorkerPrivate,
                      WorkerThreadUnchangedBusyCount)
@@ -483,14 +483,14 @@ public:
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE;
 
 private:
-  nsRefPtr<UnregisterRunnable> mRunnable;
+  nsRefPtr<WorkerScopeUnregisterRunnable> mRunnable;
   State mState;
   bool mValue;
 };
 
-class UnregisterRunnable MOZ_FINAL : public nsRunnable
-                                   , public nsIServiceWorkerUnregisterCallback
-                                   , public WorkerFeature
+class WorkerScopeUnregisterRunnable MOZ_FINAL : public nsRunnable
+                                              , public nsIServiceWorkerUnregisterCallback
+                                              , public WorkerFeature
 {
   WorkerPrivate* mWorkerPrivate;
   nsRefPtr<Promise> mWorkerPromise;
@@ -500,9 +500,9 @@ class UnregisterRunnable MOZ_FINAL : public nsRunnable
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  UnregisterRunnable(WorkerPrivate* aWorkerPrivate,
-                     Promise* aWorkerPromise,
-                     const nsAString& aScope)
+  WorkerScopeUnregisterRunnable(WorkerPrivate* aWorkerPrivate,
+                                Promise* aWorkerPromise,
+                                const nsAString& aScope)
     : mWorkerPrivate(aWorkerPrivate)
     , mWorkerPromise(aWorkerPromise)
     , mScope(aScope)
@@ -564,7 +564,7 @@ public:
   }
 
 private:
-  ~UnregisterRunnable()
+  ~WorkerScopeUnregisterRunnable()
   {
     MOZ_ASSERT(mCleanedUp);
   }
@@ -604,7 +604,7 @@ private:
   }
 };
 
-NS_IMPL_ISUPPORTS_INHERITED(UnregisterRunnable, nsRunnable,
+NS_IMPL_ISUPPORTS_INHERITED(WorkerScopeUnregisterRunnable, nsRunnable,
                             nsIServiceWorkerUnregisterCallback)
 
 bool
@@ -635,8 +635,8 @@ ServiceWorkerGlobalScope::Unregister(ErrorResult& aRv)
     return nullptr;
   }
 
-  nsRefPtr<UnregisterRunnable> runnable =
-    new UnregisterRunnable(mWorkerPrivate, promise, mScope);
+  nsRefPtr<WorkerScopeUnregisterRunnable> runnable =
+    new WorkerScopeUnregisterRunnable(mWorkerPrivate, promise, mScope);
   NS_DispatchToMainThread(runnable);
 
   return promise.forget();
