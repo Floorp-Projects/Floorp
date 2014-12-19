@@ -1724,8 +1724,9 @@ ObjectAddress(JSContext *cx, unsigned argc, jsval *vp)
 #ifdef JS_MORE_DETERMINISTIC
     args.rval().setInt32(0);
 #else
+    void *ptr = js::UncheckedUnwrap(&args[0].toObject(), true);
     char buffer[64];
-    JS_snprintf(buffer, sizeof(buffer), "%p", &args[0].toObject());
+    JS_snprintf(buffer, sizeof(buffer), "%p", ptr);
 
     JSString *str = JS_NewStringCopyZ(cx, buffer);
     if (!str)
