@@ -43,6 +43,10 @@ ul {
   background-position: right 0;
 }
 
+#errorTitleText[sslv3=true] {
+  background-image: url("aboutNetError_alert.svg");
+}
+
 #errorTryAgain {
   margin-top: 1.2em;
   min-width: 150px
