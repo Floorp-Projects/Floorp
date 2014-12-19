@@ -273,6 +273,17 @@ BluetoothService::RegisterBluetoothSignalHandler(
   }
 
   ol->AddObserver(aHandler);
+
+  // Distribute pending pairing requests when pairing listener has been added
+  // to signal observer table.
+  if (IsMainProcess() &&
+      !mPendingPairReqSignals.IsEmpty() &&
+      aNodeName.EqualsLiteral(KEY_PAIRING_LISTENER)) {
+    for (uint32_t i = 0; i < mPendingPairReqSignals.Length(); ++i) {
+      DistributeSignal(mPendingPairReqSignals[i]);
+    }
+    mPendingPairReqSignals.Clear();
+  }
 }
 
 void
@@ -331,8 +342,19 @@ BluetoothService::DistributeSignal(const BluetoothSignal& aSignal)
 
   BluetoothSignalObserverList* ol;
   if (!mBluetoothSignalObserverTable.Get(aSignal.path(), &ol)) {
-    BT_WARNING("No observer registered for path %s",
-               NS_ConvertUTF16toUTF8(aSignal.path()).get());
+    // If there is no BluetoohPairingListener in observer table, put the signal
+    // into a pending queue of pairing requests and send a system message to
+    // launch bluetooth certified app.
+    if (aSignal.path().EqualsLiteral(KEY_PAIRING_LISTENER)) {
+      mPendingPairReqSignals.AppendElement(aSignal);
+
+      BT_ENSURE_TRUE_VOID_BROADCAST_SYSMSG(
+        NS_LITERAL_STRING(SYS_MSG_BT_PAIRING_REQ),
+        BluetoothValue(EmptyString()));
+    } else {
+      BT_WARNING("No observer registered for path %s",
+                 NS_ConvertUTF16toUTF8(aSignal.path()).get());
+    }
     return;
   }
 
