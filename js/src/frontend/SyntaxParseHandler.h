@@ -231,6 +231,9 @@ class SyntaxParseHandler
         // strict mode parsing.
         return (pn == NodeString) ? NodeGeneric : pn;
     }
+    Node setLikelyIIFE(Node pn) {
+        return pn; // Remain in syntax-parse mode.
+    }
     void setPrologue(Node pn) {}
 
     bool isConstant(Node pn) { return false; }
