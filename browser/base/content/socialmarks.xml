@@ -204,15 +204,37 @@
               });
             }
           }.bind(this);
-          contentWindow.addEventListener("socialMarkUpdate", markUpdate);
-          contentWindow.addEventListener("unload", function unload() {
+          let unload = () => {
             contentWindow.removeEventListener("unload", unload);
             contentWindow.removeEventListener("socialMarkUpdate", markUpdate);
-          });
+            if (this.content.socialErrorListener)
+              this.content.socialErrorListener.remove();
+          }
+          contentWindow.addEventListener("socialMarkUpdate", markUpdate);
+          contentWindow.addEventListener("unload", unload);
         }
         this.content.addEventListener("DOMContentLoaded", DOMContentLoaded, true);
+        Social.setErrorListener(this.content, this.setErrorMessage.bind(this));
         this._loading = true;
         this.content.setAttribute("src", endpoint);
+        ]]></body>
+      </method>
+
+      <method name="setErrorMessage">
+        <parameter name="aNotificationFrame"/>
+        <body><![CDATA[
+        if (!aNotificationFrame)
+          return;
+
+        let src = aNotificationFrame.getAttribute("src");
+        aNotificationFrame.removeAttribute("src");
+        let origin = aNotificationFrame.getAttribute("origin");
+        aNotificationFrame.webNavigation.loadURI("about:socialerror?mode=tryAgainOnly&url=" +
+                                                encodeURIComponent(src) + "&origin=" +
+                                                encodeURIComponent(origin),
+                                                null, null, null, null);
+        // ensure the panel is open if error occurs on first click
+        this.openPanel();
         ]]></body>
       </method>
 
