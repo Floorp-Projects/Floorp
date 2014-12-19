@@ -89,6 +89,11 @@ public:
   virtual ~ContentClient()
   {}
 
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
+
+  virtual void Dump(std::stringstream& aStream,
+                    const char* aPrefix="",
+                    bool aDumpHtml=false) {};
 
   virtual void Clear() = 0;
   virtual RotatedContentBuffer::PaintState BeginPaintBuffer(PaintedLayer* aLayer,
@@ -207,6 +212,10 @@ public:
     mTextureClient = nullptr;
     mTextureClientOnWhite = nullptr;
   }
+
+  virtual void Dump(std::stringstream& aStream,
+                    const char* aPrefix="",
+                    bool aDumpHtml=false) MOZ_OVERRIDE;
 
   virtual PaintState BeginPaintBuffer(PaintedLayer* aLayer,
                                       uint32_t aFlags) MOZ_OVERRIDE

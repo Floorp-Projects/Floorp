@@ -3422,10 +3422,9 @@ AccumulateFrameBounds(nsIFrame* aContainerFrame,
           nsIFrame *trash1;
           int32_t trash2;
           nsRect lineBounds;
-          uint32_t trash3;
 
           if (NS_SUCCEEDED(aLines->GetLine(index, &trash1, &trash2,
-                                           lineBounds, &trash3))) {
+                                           lineBounds))) {
             frameBounds += frame->GetOffsetTo(f);
             frame = f;
             if (lineBounds.y < frameBounds.y) {

@@ -460,4 +460,16 @@ inline void mozilla_sampler_call_exit(void *aHandle)
 
 void mozilla_sampler_add_marker(const char *aMarker, ProfilerMarkerPayload *aPayload);
 
+static inline
+void profiler_log(const char *str)
+{
+  profiler_tracing("log", str, TRACING_EVENT);
+}
+
+static inline
+void profiler_log(const char *fmt, va_list args)
+{
+  mozilla_sampler_log(fmt, args);
+}
+
 #endif /* ndef TOOLS_SPS_SAMPLER_H_ */

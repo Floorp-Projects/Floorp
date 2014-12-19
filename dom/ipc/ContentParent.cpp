@@ -927,7 +927,7 @@ ContentParent::RecvCreateChildProcess(const IPCTabContext& aContext,
 }
 
 bool
-ContentParent::AnswerBridgeToChildProcess(const ContentParentId& aCpId)
+ContentParent::RecvBridgeToChildProcess(const ContentParentId& aCpId)
 {
     ContentProcessManager *cpm = ContentProcessManager::GetSingleton();
     ContentParent* cp = cpm->GetContentProcessById(aCpId);
@@ -966,7 +966,7 @@ static nsIDocShell* GetOpenerDocShellHelper(Element* aFrameElement)
 }
 
 bool
-ContentParent::AnswerLoadPlugin(const uint32_t& aPluginId)
+ContentParent::RecvLoadPlugin(const uint32_t& aPluginId)
 {
     return mozilla::plugins::SetupBridge(aPluginId, this);
 }
@@ -1219,7 +1219,7 @@ ContentParent::CreateContentBridgeParent(const TabContext& aContext,
     if (cpId == 0) {
         return nullptr;
     }
-    if (!child->CallBridgeToChildProcess(cpId)) {
+    if (!child->SendBridgeToChildProcess(cpId)) {
         return nullptr;
     }
     ContentBridgeParent* parent = child->GetLastBridge();
@@ -2011,6 +2011,9 @@ ContentParent::ContentParent(mozIApplication* aApp,
                  true  /* Send registered chrome */);
 
     ContentProcessManager::GetSingleton()->AddContentProcess(this);
+
+    // Set a reply timeout for CPOWs.
+    SetReplyTimeoutMs(Preferences::GetInt("dom.ipc.cpow.timeout", 0));
 }
 
 #ifdef MOZ_NUWA_PROCESS
@@ -2866,7 +2869,7 @@ ContentParent::Observe(nsISupports* aSubject,
         nsCOMPtr<nsIProfileSaveEvent> pse = do_QueryInterface(aSubject);
         if (pse) {
             nsCString result;
-            unused << CallGetProfile(&result);
+            unused << SendGetProfile(&result);
             if (!result.IsEmpty()) {
                 pse->AddSubProfile(result.get());
             }
@@ -4263,11 +4266,11 @@ ContentParent::RecvOpenAnonymousTemporaryFile(FileDescriptor *aFD)
 static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
 
 bool
-ContentParent::RecvFormProcessValue(const nsString& oldValue,
-                                    const nsString& challenge,
-                                    const nsString& keytype,
-                                    const nsString& keyparams,
-                                    nsString* newValue)
+ContentParent::RecvKeygenProcessValue(const nsString& oldValue,
+                                      const nsString& challenge,
+                                      const nsString& keytype,
+                                      const nsString& keyparams,
+                                      nsString* newValue)
 {
     nsCOMPtr<nsIFormProcessor> formProcessor =
       do_GetService(kFormProcessorCID);
@@ -4282,8 +4285,8 @@ ContentParent::RecvFormProcessValue(const nsString& oldValue,
 }
 
 bool
-ContentParent::RecvFormProvideContent(nsString* aAttribute,
-                                      nsTArray<nsString>* aContent)
+ContentParent::RecvKeygenProvideContent(nsString* aAttribute,
+                                        nsTArray<nsString>* aContent)
 {
     nsCOMPtr<nsIFormProcessor> formProcessor =
       do_GetService(kFormProcessorCID);

@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include "gmp-decryption.h"
 
 #define CLEARKEY_KEY_LEN ((size_t)16)
 
@@ -44,10 +45,22 @@ public:
                             std::vector<Key>& aOutKeys);
 
   static void MakeKeyRequest(const std::vector<KeyId>& aKeyIds,
-                             std::string& aOutRequest);
+                             std::string& aOutRequest,
+                             GMPSessionType aSessionType);
 
   static bool ParseJWK(const uint8_t* aKeyData, uint32_t aKeyDataSize,
-                       std::vector<KeyIdPair>& aOutKeys);
+                       std::vector<KeyIdPair>& aOutKeys,
+                       GMPSessionType aSessionType);
+  static const char* SessionTypeToString(GMPSessionType aSessionType);
+
+  static bool IsValidSessionId(const char* aBuff, uint32_t aLength);
 };
+
+template<class Container, class Element>
+inline bool
+Contains(const Container& aContainer, const Element& aElement)
+{
+  return aContainer.find(aElement) != aContainer.end();
+}
 
 #endif // __ClearKeyUtils_h__

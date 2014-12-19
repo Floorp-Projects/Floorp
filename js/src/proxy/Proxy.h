@@ -71,6 +71,8 @@ class Proxy
     static bool getElements(JSContext *cx, HandleObject obj, uint32_t begin, uint32_t end,
                             ElementAdder *adder);
 
+    static void trace(JSTracer *trc, JSObject *obj);
+
     /* IC entry path for handling __noSuchMethod__ on access. */
     static bool callProp(JSContext *cx, HandleObject proxy, HandleObject reveiver, HandleId id,
                          MutableHandleValue vp);

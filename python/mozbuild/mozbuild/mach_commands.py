@@ -547,7 +547,11 @@ class Build(MachCommandBase):
         try:
             webbrowser.get(browser).open_new_tab(server.url)
         except Exception:
-            print('Please open %s in a browser.' % server.url)
+            print('Cannot get browser specified, trying the default instead.')
+            try:
+                browser = webbrowser.get().open_new_tab(server.url)
+            except Exception:
+                print('Please open %s in a browser.' % server.url)
 
         print('Hit CTRL+c to stop server.')
         server.run()

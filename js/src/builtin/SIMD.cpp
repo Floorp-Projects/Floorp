@@ -241,9 +241,7 @@ const JSFunctionSpec js::Int32x4Defn::TypedObjectMethods[] = {
 
 template<typename T>
 static JSObject *
-CreateSimdClass(JSContext *cx,
-              Handle<GlobalObject*> global,
-              HandlePropertyName stringRepr)
+CreateSimdClass(JSContext *cx, Handle<GlobalObject*> global, HandlePropertyName stringRepr)
 {
     const SimdTypeDescr::Type type = T::type;
 
@@ -254,7 +252,7 @@ CreateSimdClass(JSContext *cx,
     // Create type constructor itself and initialize its reserved slots.
 
     Rooted<SimdTypeDescr*> typeDescr(cx);
-    typeDescr = NewObjectWithProto<SimdTypeDescr>(cx, funcProto, global, TenuredObject);
+    typeDescr = NewObjectWithProto<SimdTypeDescr>(cx, funcProto, global, SingletonObject);
     if (!typeDescr)
         return nullptr;
 
@@ -274,7 +272,7 @@ CreateSimdClass(JSContext *cx,
     if (!objProto)
         return nullptr;
     Rooted<TypedProto*> proto(cx);
-    proto = NewObjectWithProto<TypedProto>(cx, objProto, nullptr, TenuredObject);
+    proto = NewObjectWithProto<TypedProto>(cx, objProto, nullptr, SingletonObject);
     if (!proto)
         return nullptr;
     typeDescr->initReservedSlot(JS_DESCR_SLOT_TYPROTO, ObjectValue(*proto));
