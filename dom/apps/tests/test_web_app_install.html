@@ -19,19 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={1075716}
 <pre id="test">
 <script class="testbody" type="application/javascript;version=1.7">
 
-var gIconData =
-"iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAMAAAAMCGV4AAAABGdBTUEAANbY1E9YMgAAABl0RVh0" +
-"U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAA5UExURbVCQs6UlM6EhJwhIa0hIc5zc5wQ" +
-"EL1SUu/W1rVjY6UQELUAAOfGxue1tZwAAIwAAP///3sAAK0AAOytg2MAAABmSURBVHjabIkLEsJA" +
-"CEOz249aIUDvf1ihVWe208ADQvDeh8I+6s7zSw0wJ6vPA5z7o+u8LbrUD4SXnkln5XSHJnAhDWau" +
-"tia1jeXlz7SeeRy5TC6wkBaWhLZoL4RF9Q/EqKv/CDAAFpEM3avxBREAAAAASUVORK5CYII=";
-
-var gAlternateIconData =
-"iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAIAAAC0tAIdAAAAp0lEQVQoFWNklZ3AQDRgIlolSOFQ" +
-"Vc0C8eWvR/nI3n1544a4hgZEZG9nm+dUbggbxZcLfFxv79wGlAAqBbKBCMhWcnCCKAWSULOBLKC6" +
-"W9ePPM+/VHnjJYQNUfTnwzu4aoTZLAJCQNHPvz8BSQgbogiFDdcHMePD779AEWTzIAqAHrt/8gTU" +
-"JUDWs/sPgEoFWJnhbKA6oJOA4kDGwRnTHl88zzho0gkAc2hLRzn46hoAAAAASUVORK5CYII=";
-
 var gGenerator = runTest();
 
 function go() {
@@ -56,20 +43,6 @@ function cbError(aEvent) {
   ok(false, "Error callback invoked " +
             aEvent.target.error.name + " " + aEvent.target.error.message);
   finish();
-}
-
-function iconTest(app, iconSize, entryPoint, testFunction) {
-  navigator.mozApps.mgmt.getIcon(app, iconSize, entryPoint).then((blob) => {
-    var reader = new FileReader();
-    reader.onloadend = function() {
-      testFunction(reader.result);
-      continueTest();
-    }
-    reader.readAsBinaryString(blob);
-  }, (err) => {
-    ok(false, "Couldn't get icon.");
-    finish();
-  });
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -103,30 +76,6 @@ function runTest() {
   var app = request.result;
   ok(app, "App is non-null");
   is(app.manifestURL, manifestURL, "App manifest url is correct.");
-
-  info("Fetching 15x15 icon");
-  iconTest(app, 15, undefined, (iconData) => {
-    is(btoa(iconData), gIconData, "Fetches 15x15 icon successfully.")
-  });
-  yield undefined;
-
-  info("Fetching 48x48 icon");
-  iconTest(app, 48, "ep1", (iconData) => {
-    ok(iconData.length == 4762, "Fetches 48x48 icon successfully.")
-  });
-  yield undefined;
-
-  info("Fetching 30x30 icon");
-  iconTest(app, 30, undefined, (iconData) => {
-    is(btoa(iconData), gIconData, "Fetches 15x15 icon as best fit for 30x30.")
-  });
-  yield undefined;
-
-  info("Fetching entry-point icon");
-  iconTest(app, 15, "ep1", (iconData) => {
-    is(btoa(iconData), gAlternateIconData, "Entry-point Icon fetched successfully.")
-  });
-  yield undefined;
 
   request = navigator.mozApps.mgmt.uninstall(app);
   request.onerror = cbError;
