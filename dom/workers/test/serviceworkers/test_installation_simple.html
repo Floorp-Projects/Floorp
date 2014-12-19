@@ -95,15 +95,15 @@
   }
 
   function networkError404() {
-    return navigator.serviceWorker.register("404.js").then(function(w) {
-        todo(false, "Should fail with NetworkError");
+    return navigator.serviceWorker.register("404.js", { scope: "network_error/"}).then(function(w) {
+        ok(false, "Should fail with NetworkError");
       }, function(e) {
-        todo(e.name === "NetworkError", "Should fail with NetworkError");
+        ok(e.name === "NetworkError", "Should fail with NetworkError");
       });
   }
 
   function parseError() {
-    var p = navigator.serviceWorker.register("parse_error_worker.js");
+    var p = navigator.serviceWorker.register("parse_error_worker.js", { scope: "parse_error/" });
     return p.then(function(wr) {
       ok(false, "Registration should fail with parse error");
     }, function(e) {
