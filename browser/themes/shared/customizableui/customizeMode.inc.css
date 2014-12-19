@@ -275,6 +275,10 @@ toolbarpaletteitem[place="toolbar"] {
   min-height: 48px;
 }
 
+#personal-bookmarks[cui-areatype="toolbar"]:not([overflowedItem=true]) > #bookmarks-toolbar-placeholder > .toolbarbutton-icon {
+  -moz-margin-end: 5px;
+}
+
 #customization-palette > toolbarpaletteitem > label {
   text-align: center;
   margin-left: 0;
