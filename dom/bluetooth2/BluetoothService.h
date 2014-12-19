@@ -8,6 +8,7 @@
 #define mozilla_dom_bluetooth_bluetootheventservice_h__
 
 #include "BluetoothCommon.h"
+#include "BluetoothInterface.h"
 #include "BluetoothProfileManagerBase.h"
 #include "nsAutoPtr.h"
 #include "nsClassHashtable.h"
@@ -400,6 +401,8 @@ protected:
   BluetoothSignalObserverTable;
 
   BluetoothSignalObserverTable mBluetoothSignalObserverTable;
+
+  nsTArray<BluetoothSignal> mPendingPairReqSignals;
 
   bool mEnabled;
 };

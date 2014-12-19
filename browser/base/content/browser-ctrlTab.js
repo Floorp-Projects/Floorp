@@ -161,6 +161,18 @@ var ctrlTab = {
     delete this.previews;
     return this.previews = this.panel.getElementsByClassName("ctrlTab-preview");
   },
+  get maxTabPreviews () {
+    delete this.maxTabPreviews;
+    return this.maxTabPreviews = this.previews.length - 1;
+  },
+  get canvasWidth () {
+    delete this.canvasWidth;
+    return this.canvasWidth = Math.ceil(screen.availWidth * .85 / this.maxTabPreviews);
+  },
+  get canvasHeight () {
+    delete this.canvasHeight;
+    return this.canvasHeight = Math.round(this.canvasWidth * tabPreviews.aspectRatio);
+  },
   get keys () {
     var keys = {};
     ["close", "find", "selectAll"].forEach(function (key) {
@@ -177,9 +189,7 @@ var ctrlTab = {
                     this.previews.item(this._selectedIndex),
   get isOpen   () this.panel.state == "open" || this.panel.state == "showing" || this._timer,
   get tabCount () this.tabList.length,
-  get tabPreviewCount () Math.min(this.previews.length - 1, this.tabCount),
-  get canvasWidth () Math.ceil(screen.availWidth * .85 / this.tabPreviewCount),
-  get canvasHeight () Math.round(this.canvasWidth * tabPreviews.aspectRatio),
+  get tabPreviewCount () Math.min(this.maxTabPreviews, this.tabCount),
 
   get tabList () {
     return this._recentlyUsedTabs;

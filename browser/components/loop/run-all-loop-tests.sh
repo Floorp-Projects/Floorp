@@ -15,6 +15,11 @@ set -e
 
 ./mach mochitest \
   browser/components/loop/test/mochitest \
-  browser/base/content/test/general/browser_parsable_css.js \
+  browser/modules/test/browser_UITour_loop.js \
   browser/base/content/test/general/browser_devices_get_user_media_about_urls.js
 
+# This is currently disabled because the test itself is busted.  Once bug
+# 1062821 is landed, we should see if things work again, and then re-enable it.
+# The re-enabling is tracked in bug 1113350.
+#
+#  browser/base/content/test/general/browser_parsable_css.js \
