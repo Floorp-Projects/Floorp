@@ -722,13 +722,13 @@ private:
     RecvOpenAnonymousTemporaryFile(FileDescriptor* aFD) MOZ_OVERRIDE;
 
     virtual bool
-    RecvFormProcessValue(const nsString& oldValue, const nsString& challenge,
-                         const nsString& keytype, const nsString& keyparams,
-                         nsString* newValue) MOZ_OVERRIDE;
+    RecvKeygenProcessValue(const nsString& oldValue, const nsString& challenge,
+                           const nsString& keytype, const nsString& keyparams,
+                           nsString* newValue) MOZ_OVERRIDE;
 
     virtual bool
-    RecvFormProvideContent(nsString* aAttribute,
-                           nsTArray<nsString>* aContent) MOZ_OVERRIDE;
+    RecvKeygenProvideContent(nsString* aAttribute,
+                             nsTArray<nsString>* aContent) MOZ_OVERRIDE;
 
     virtual PFileDescriptorSetParent*
     AllocPFileDescriptorSetParent(const mozilla::ipc::FileDescriptor&) MOZ_OVERRIDE;
