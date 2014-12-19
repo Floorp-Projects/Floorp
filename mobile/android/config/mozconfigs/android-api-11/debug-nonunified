@@ -1,4 +1,4 @@
-. "$topsrcdir/mobile/android/config/mozconfigs/android-api-10/debug"
+. "$topsrcdir/mobile/android/config/mozconfigs/android-api-11/debug"
 
 ac_add_options --disable-unified-compilation
 
