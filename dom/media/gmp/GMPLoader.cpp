@@ -163,14 +163,12 @@ GMPLoaderImpl::Load(const char* aLibPath,
     nodeId = std::string(aOriginSalt, aOriginSalt + aOriginSaltLen);
   }
 
-#if defined(MOZ_GMP_SANDBOX)
   // Start the sandbox now that we've generated the device bound node id.
   // This must happen after the node id is bound to the device id, as
   // generating the device id requires privileges.
   if (mSandboxStarter) {
     mSandboxStarter->Start(aLibPath);
   }
-#endif
 
   // Load the GMP.
   PRLibSpec libSpec;
