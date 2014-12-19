@@ -516,18 +516,6 @@ class SnapshotIterator
 
     void traceAllocation(JSTracer *trc);
 
-    void readCommonFrameSlots(Value *scopeChain, Value *rval, MaybeReadFallback &fallback) {
-        if (scopeChain)
-            *scopeChain = maybeRead(fallback);
-        else
-            skip();
-
-        if (rval)
-            *rval = read();
-        else
-            skip();
-    }
-
     template <class Op>
     void readFunctionFrameArgs(Op &op, ArgumentsObject **argsObj, Value *thisv,
                                unsigned start, unsigned end, JSScript *script,
@@ -660,12 +648,21 @@ class InlineFrameIterator
     {
         SnapshotIterator s(si_);
 
-        // Read frame slots common to both function and global frames.
-        Value scopeChainValue;
-        s.readCommonFrameSlots(&scopeChainValue, rval, fallback);
+        // Read the scope chain.
+        if (scopeChain) {
+            MOZ_ASSERT(!fallback.canRecoverResults());
+            JS::AutoSuppressGCAnalysis nogc; // If we cannot recover then we cannot GC.
+            Value scopeChainValue = s.maybeRead(fallback);
+            *scopeChain = computeScopeChain(scopeChainValue, fallback, hasCallObj);
+        } else {
+            s.skip();
+        }
 
-        if (scopeChain)
-            *scopeChain = computeScopeChain(scopeChainValue, hasCallObj, fallback);
+        // Read return value.
+        if (rval)
+            *rval = s.read();
+        else
+            s.skip();
 
         // Read arguments, which only function frames have.
         if (isFunctionFrame()) {
@@ -703,7 +700,8 @@ class InlineFrameIterator
 
                     // Get the overflown arguments
                     MaybeReadFallback unusedFallback;
-                    parent_s.readCommonFrameSlots(nullptr, nullptr, unusedFallback);
+                    parent_s.skip(); // scope chain
+                    parent_s.skip(); // return value
                     parent_s.readFunctionFrameArgs(argOp, nullptr, nullptr,
                                                    nformal, nactual, it.script(),
                                                    fallback);
