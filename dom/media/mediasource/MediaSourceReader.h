@@ -61,10 +61,6 @@ public:
   void OnSeekCompleted();
   void OnSeekFailed(nsresult aResult);
 
-  virtual bool IsWaitForDataSupported() MOZ_OVERRIDE { return true; }
-  virtual nsRefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType) MOZ_OVERRIDE;
-  void MaybeNotifyHaveData();
-
   bool HasVideo() MOZ_OVERRIDE
   {
     return mInfo.HasVideo();
@@ -82,11 +78,11 @@ public:
   // as chrome/blink and assumes that we always start at t=0.
   virtual int64_t ComputeStartTime(const VideoData* aVideo, const AudioData* aAudio) MOZ_OVERRIDE { return 0; }
 
-  // Buffering heuristics don't make sense for MSE, because the arrival of data
-  // is at least partly controlled by javascript, and javascript does not expect
-  // us to sit on unplayed data just because it may not be enough to play
-  // through.
-  bool UseBufferingHeuristics() MOZ_OVERRIDE { return false; }
+  // Buffering waits (in which we decline to present decoded frames because we
+  // "don't have enough") don't really make sense for MSE. The delay is
+  // essentially a streaming heuristic, but JS is supposed to take care of that
+  // in the MSE world. Avoid injecting inexplicable delays.
+  virtual uint32_t GetBufferingWait() { return 0; }
 
   bool IsMediaSeekable() { return true; }
 
@@ -136,7 +132,6 @@ private:
   // available in the range requested by aTarget.
   already_AddRefed<MediaDecoderReader> SelectReader(int64_t aTarget,
                                                     const nsTArray<nsRefPtr<SourceBufferDecoder>>& aTrackDecoders);
-  bool HaveData(int64_t aTarget, MediaData::Type aType);
 
   void AttemptSeek();
   void FinalizeSeek();
@@ -152,13 +147,6 @@ private:
 
   MediaPromiseHolder<AudioDataPromise> mAudioPromise;
   MediaPromiseHolder<VideoDataPromise> mVideoPromise;
-
-  MediaPromiseHolder<WaitForDataPromise> mAudioWaitPromise;
-  MediaPromiseHolder<WaitForDataPromise> mVideoWaitPromise;
-  MediaPromiseHolder<WaitForDataPromise>& WaitPromise(MediaData::Type aType)
-  {
-    return aType == MediaData::AUDIO_DATA ? mAudioWaitPromise : mVideoWaitPromise;
-  }
 
 #ifdef MOZ_EME
   nsRefPtr<CDMProxy> mCDMProxy;
