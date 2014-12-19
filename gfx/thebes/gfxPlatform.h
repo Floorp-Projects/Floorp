@@ -274,7 +274,6 @@ public:
 
     /// These should be used instead of directly accessing the preference,
     /// as different platforms may override the behaviour.
-    virtual bool UseTiling() { return gfxPrefs::LayersTilesEnabledDoNotUseDirectly(); }
     virtual bool UseProgressivePaint() { return gfxPrefs::ProgressivePaintDoNotUseDirectly(); }
 
     void GetAzureBackendInfo(mozilla::widget::InfoObject &aObj) {

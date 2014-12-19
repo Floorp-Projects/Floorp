@@ -162,7 +162,7 @@ ClientLayerManager::CreatePaintedLayerWithHint(PaintedLayerCreationHint aHint)
 #ifdef MOZ_B2G
       aHint == SCROLLABLE &&
 #endif
-      gfxPlatform::GetPlatform()->UseTiling()
+      gfxPrefs::LayersTilesEnabled()
 #ifndef MOZ_X11
       && (AsShadowForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_OPENGL ||
           AsShadowForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_D3D9 ||
