@@ -2411,8 +2411,17 @@ InlineFrameIterator::computeScopeChain(Value scopeChainValue, MaybeReadFallback 
                                        bool *hasCallObj) const
 {
     if (scopeChainValue.isObject()) {
-        if (hasCallObj)
-            *hasCallObj = isFunctionFrame() && callee(fallback)->isHeavyweight();
+        if (hasCallObj) {
+            if (fallback.canRecoverResults()) {
+                RootedObject obj(fallback.maybeCx, &scopeChainValue.toObject());
+                *hasCallObj = isFunctionFrame() && callee(fallback)->isHeavyweight();
+                return obj;
+            } else {
+                JS::AutoSuppressGCAnalysis nogc; // If we cannot recover then we cannot GC.
+                *hasCallObj = isFunctionFrame() && callee(fallback)->isHeavyweight();
+            }
+        }
+
         return &scopeChainValue.toObject();
     }
 
