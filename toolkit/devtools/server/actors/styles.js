@@ -40,6 +40,8 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const FONT_PREVIEW_TEXT = "Abc";
 const FONT_PREVIEW_FONT_SIZE = 40;
 const FONT_PREVIEW_FILLSTYLE = "black";
+const NORMAL_FONT_WEIGHT = 400;
+const BOLD_FONT_WEIGHT = 700;
 
 // Predeclare the domnode actor type for use in requests.
 types.addActorType("domnode");
@@ -276,10 +278,26 @@ var PageStyleActor = protocol.ActorClass({
         fontFace.ruleText = font.rule.cssText;
       }
 
+      // Get the weight and style of this font for the preview and sort order
+      let weight = NORMAL_FONT_WEIGHT, style = "";
+      if (font.rule) {
+        weight = font.rule.style.getPropertyValue("font-weight")
+                 || NORMAL_FONT_WEIGHT;
+        if (weight == "bold") {
+          weight = BOLD_FONT_WEIGHT;
+        } else if (weight == "normal") {
+          weight = NORMAL_FONT_WEIGHT;
+        }
+        style = font.rule.style.getPropertyValue("font-style") || "";
+      }
+      fontFace.weight = weight;
+      fontFace.style = style;
+
       if (options.includePreviews) {
         let opts = {
           previewText: options.previewText,
           previewFontSize: options.previewFontSize,
+          fontStyle: weight + " " + style,
           fillStyle: options.previewFillStyle
         }
         let { dataURL, size } = getFontPreviewData(font.CSSFamilyName,
@@ -293,6 +311,9 @@ var PageStyleActor = protocol.ActorClass({
     }
 
     // @font-face fonts at the top, then alphabetically, then by weight
+    fontsArray.sort(function(a, b) {
+      return a.weight > b.weight ? 1 : -1;
+    });
     fontsArray.sort(function(a, b) {
       if (a.CSSFamilyName == b.CSSFamilyName) {
         return 0;

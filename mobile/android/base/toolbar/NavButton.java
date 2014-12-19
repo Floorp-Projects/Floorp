@@ -63,7 +63,7 @@ abstract class NavButton extends ShapedButton {
     public void onLightweightThemeChanged() {
         final Drawable drawable;
         if (!NewTabletUI.isEnabled(getContext())) {
-            drawable = mTheme.getDrawable(this);
+            drawable = getTheme().getDrawable(this);
         } else {
             drawable = BrowserToolbar.getLightweightThemeDrawable(this, getResources(), getTheme(),
                     R.color.background_normal);

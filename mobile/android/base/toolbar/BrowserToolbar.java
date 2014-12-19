@@ -140,7 +140,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     private final Paint shadowPaint;
     private final int shadowSize;
 
-    private final LightweightTheme theme;
     private final ToolbarPrefs prefs;
 
     public abstract boolean isAnimating();
@@ -179,7 +178,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         setWillNotDraw(false);
 
         isNewTablet = NewTabletUI.isEnabled(context);
-        theme = ((GeckoApplication) context.getApplicationContext()).getLightweightTheme();
 
         // BrowserToolbar is attached to BrowserApp only.
         activity = (BrowserApp) context;
