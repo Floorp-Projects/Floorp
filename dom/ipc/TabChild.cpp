@@ -435,7 +435,7 @@ TabChildBase::HandlePossibleViewportChange(const ScreenIntSize& aOldScreenSize)
   // This is the root layer, so the cumulative resolution is the same
   // as the resolution.
   metrics.mPresShellResolution = metrics.GetCumulativeResolution().scale;
-  utils->SetResolution(metrics.mPresShellResolution, metrics.mPresShellResolution);
+  utils->SetResolutionAndScaleTo(metrics.mPresShellResolution, metrics.mPresShellResolution);
 
   CSSSize scrollPort = metrics.CalculateCompositedSizeInCssPixels();
   utils->SetScrollPositionClampingScrollPortSize(scrollPort.width, scrollPort.height);

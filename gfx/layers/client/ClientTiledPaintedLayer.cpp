@@ -72,8 +72,8 @@ GetTransformToAncestorsParentLayer(Layer* aStart, const LayerMetricsWrapper& aAn
        ancestorParent ? iter != ancestorParent : iter.IsValid();
        iter = iter.GetParent()) {
     transform = transform * iter.GetTransform();
-    // If the layer has a non-transient async transform then we need to apply it here
-    // because it will get applied by the APZ in the compositor as well
+    // If the layer has a pres shell resolution, the compositor will apply
+    // a scale to scale to this transform. Apply it here too.
     const FrameMetrics& metrics = iter.Metrics();
     transform.PostScale(metrics.mPresShellResolution, metrics.mPresShellResolution, 1.f);
   }
