@@ -19,22 +19,22 @@
     visible: true
   });
 
-  var domLoaded = new Promise(r => addEventListener("DOMContentLoaded", e => r()));
-  var test;
-  var stream;
-  var waitUntil = func => new Promise(resolve => {
-    var ival = setInterval(() => func() && resolve(clearInterval(ival)), 200);
+  var metadataLoaded = new Promise(resolve => {
+    if (v1.readyState < v1.HAVE_METADATA) {
+      v1.onloadedmetadata = e => resolve();
+      return;
+    }
+    resolve();
   });
 
   runNetworkTest(function() {
-    test = new PeerConnectionTest();
+    var test = new PeerConnectionTest();
     test.setOfferOptions({ offerToReceiveVideo: false,
                            offerToReceiveAudio: false });
     test.chain.insertAfter("PC_LOCAL_GUM", [["PC_LOCAL_CAPTUREVIDEO", function (test) {
-      domLoaded
-      .then(() => waitUntil(() => v1.videoWidth > 0)) // TODO: Bug 1096723
+      metadataLoaded
       .then(function() {
-        stream = v1.mozCaptureStreamUntilEnded();
+        var stream = v1.mozCaptureStreamUntilEnded();
         is(stream.getTracks().length, 2, "Captured stream has 2 tracks");
         stream.getTracks().forEach(tr => test.pcLocal._pc.addTrack(tr, stream));
         test.pcLocal.constraints = [{ video: true, audio:true }]; // fool tests
