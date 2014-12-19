@@ -21,34 +21,34 @@ describe("loop.store.RoomStore", function () {
   var sharedActions = loop.shared.actions;
   var sharedUtils = loop.shared.utils;
   var sandbox, dispatcher;
-
-  var fakeRoomList = [{
-    roomToken: "_nxD4V4FflQ",
-    roomUrl: "http://sample/_nxD4V4FflQ",
-    roomName: "First Room Name",
-    maxSize: 2,
-    participants: [],
-    ctime: 1405517546
-  }, {
-    roomToken: "QzBbvGmIZWU",
-    roomUrl: "http://sample/QzBbvGmIZWU",
-    roomName: "Second Room Name",
-    maxSize: 2,
-    participants: [],
-    ctime: 1405517418
-  }, {
-    roomToken: "3jKS_Els9IU",
-    roomUrl: "http://sample/3jKS_Els9IU",
-    roomName: "Third Room Name",
-    maxSize: 3,
-    clientMaxSize: 2,
-    participants: [],
-    ctime: 1405518241
-  }];
+  var fakeRoomList;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
     dispatcher = new loop.Dispatcher();
+    fakeRoomList = [{
+      roomToken: "_nxD4V4FflQ",
+      roomUrl: "http://sample/_nxD4V4FflQ",
+      roomName: "First Room Name",
+      maxSize: 2,
+      participants: [],
+      ctime: 1405517546
+    }, {
+      roomToken: "QzBbvGmIZWU",
+      roomUrl: "http://sample/QzBbvGmIZWU",
+      roomName: "Second Room Name",
+      maxSize: 2,
+      participants: [],
+      ctime: 1405517418
+    }, {
+      roomToken: "3jKS_Els9IU",
+      roomUrl: "http://sample/3jKS_Els9IU",
+      roomName: "Third Room Name",
+      maxSize: 3,
+      clientMaxSize: 2,
+      participants: [],
+      ctime: 1405518241
+    }];
   });
 
   afterEach(function() {
@@ -120,6 +120,17 @@ describe("loop.store.RoomStore", function () {
           });
 
           expect(store.getStoreState().rooms).to.have.length.of(4);
+        });
+
+        it("should avoid adding a duplicate room", function() {
+          var sampleRoom = fakeRoomList[0];
+
+          fakeMozLoop.rooms.trigger("add", "add", sampleRoom);
+
+          expect(store.getStoreState().rooms).to.have.length.of(3);
+          expect(store.getStoreState().rooms.reduce(function(count, room) {
+            return count += room.roomToken === sampleRoom.roomToken ? 1 : 0;
+          }, 0)).eql(1);
         });
       });
 
