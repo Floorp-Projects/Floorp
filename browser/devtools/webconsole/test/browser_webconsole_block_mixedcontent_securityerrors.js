@@ -59,38 +59,17 @@ function pushPrefEnv()
   return deferred.promise;
 }
 
-function waitForNotificationShown(notification, callback)
-{
-  if (PopupNotifications.panel.state == "open") {
-    executeSoon(callback);
-    return;
-  }
-  PopupNotifications.panel.addEventListener("popupshown", function onShown(e) {
-    PopupNotifications.panel.removeEventListener("popupshown", onShown);
-    callback();
-  }, false);
-  notification.reshow();
-}
-
 function mixedContentOverrideTest2(hud, browser)
 {
   var notification = PopupNotifications.getNotification("bad-content", browser);
   ok(notification, "Mixed Content Doorhanger did appear");
-  let deferred = promise.defer();
-  waitForNotificationShown(notification, () => {
-    afterNotificationShown(hud, notification, deferred);
-  });
-  return deferred.promise;
-}
-
-function afterNotificationShown(hud, notification, deferred)
-{
+  notification.reshow();
   ok(PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked");
   // Click on the doorhanger.
   PopupNotifications.panel.firstChild.disableMixedContentProtection();
   notification.remove();
 
-  waitForMessages({
+  return waitForMessages({
     webconsole: hud,
     messages: [
       {
@@ -110,7 +89,7 @@ function afterNotificationShown(hud, notification, deferred)
         objects: true,
       },
     ],
-  }).then(msgs => deferred.resolve(msgs), Cu.reportError);
+  });
 }
 
 function testClickOpenNewTab(hud, match) {
