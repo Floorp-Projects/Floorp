@@ -356,6 +356,18 @@ class SnapshotIterator
     IonScript *ionScript_;
     RInstructionResults *instructionResults_;
 
+    enum ReadMethod {
+        // Read the normal value.
+        RM_Normal          = 1 << 0,
+
+        // Read the default value, or the normal value if there is no default.
+        RM_AlwaysDefault   = 1 << 1,
+
+        // Try to read the normal value if it is readable, otherwise default to
+        // the Default value.
+        RM_NormalOrDefault = RM_Normal | RM_AlwaysDefault,
+    };
+
   private:
     // Read a spilled register from the machine state.
     bool hasRegister(Register reg) const {
@@ -383,8 +395,8 @@ class SnapshotIterator
     }
     Value fromInstructionResult(uint32_t index) const;
 
-    Value allocationValue(const RValueAllocation &a);
-    bool allocationReadable(const RValueAllocation &a);
+    Value allocationValue(const RValueAllocation &a, ReadMethod rm = RM_Normal);
+    bool allocationReadable(const RValueAllocation &a, ReadMethod rm = RM_Normal);
     void writeAllocationValuePayload(const RValueAllocation &a, Value v);
     void warnUnreadableAllocation();
 
@@ -480,6 +492,14 @@ class SnapshotIterator
 
     Value read() {
         return allocationValue(readAllocation());
+    }
+
+    // Read the |Normal| value unless it is not available and that the snapshot
+    // provides a |Default| value. This is useful to avoid invalidations of the
+    // frame while we are only interested in a few properties which are provided
+    // by the |Default| value.
+    Value readWithDefault() {
+        return allocationValue(readAllocation(), RM_NormalOrDefault);
     }
 
     Value maybeRead(MaybeReadFallback &fallback) {
