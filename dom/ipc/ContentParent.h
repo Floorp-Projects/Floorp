@@ -150,9 +150,9 @@ public:
                                         bool* aIsForApp,
                                         bool* aIsForBrowser,
                                         TabId* aTabId) MOZ_OVERRIDE;
-    virtual bool AnswerBridgeToChildProcess(const ContentParentId& aCpId) MOZ_OVERRIDE;
+    virtual bool RecvBridgeToChildProcess(const ContentParentId& aCpId) MOZ_OVERRIDE;
 
-    virtual bool AnswerLoadPlugin(const uint32_t& aPluginId) MOZ_OVERRIDE;
+    virtual bool RecvLoadPlugin(const uint32_t& aPluginId) MOZ_OVERRIDE;
     virtual bool RecvFindPlugins(const uint32_t& aPluginEpoch,
                                  nsTArray<PluginTag>* aPlugins,
                                  uint32_t* aNewPluginEpoch) MOZ_OVERRIDE;

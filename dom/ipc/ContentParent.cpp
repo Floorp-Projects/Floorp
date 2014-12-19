@@ -927,7 +927,7 @@ ContentParent::RecvCreateChildProcess(const IPCTabContext& aContext,
 }
 
 bool
-ContentParent::AnswerBridgeToChildProcess(const ContentParentId& aCpId)
+ContentParent::RecvBridgeToChildProcess(const ContentParentId& aCpId)
 {
     ContentProcessManager *cpm = ContentProcessManager::GetSingleton();
     ContentParent* cp = cpm->GetContentProcessById(aCpId);
@@ -966,7 +966,7 @@ static nsIDocShell* GetOpenerDocShellHelper(Element* aFrameElement)
 }
 
 bool
-ContentParent::AnswerLoadPlugin(const uint32_t& aPluginId)
+ContentParent::RecvLoadPlugin(const uint32_t& aPluginId)
 {
     return mozilla::plugins::SetupBridge(aPluginId, this);
 }
@@ -1219,7 +1219,7 @@ ContentParent::CreateContentBridgeParent(const TabContext& aContext,
     if (cpId == 0) {
         return nullptr;
     }
-    if (!child->CallBridgeToChildProcess(cpId)) {
+    if (!child->SendBridgeToChildProcess(cpId)) {
         return nullptr;
     }
     ContentBridgeParent* parent = child->GetLastBridge();

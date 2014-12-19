@@ -557,7 +557,7 @@ parent:
                             ProcessPriority priority,
                             TabId openerTabId)
         returns (ContentParentId cpId, bool isForApp, bool isForBrowser, TabId tabId);
-    intr BridgeToChildProcess(ContentParentId cpId);
+    sync BridgeToChildProcess(ContentParentId cpId);
 
     /**
      * This call connects the content process to a plugin process. While this
@@ -566,7 +566,7 @@ parent:
      * process. We use intr semantics here to ensure that the PluginModuleParent
      * allocation message is dispatched before LoadPlugin returns.
      */
-    intr LoadPlugin(uint32_t pluginId);
+    sync LoadPlugin(uint32_t pluginId);
 
     /**
      * This call returns the set of plugins loaded in the chrome
