@@ -215,7 +215,7 @@ pref(layout.css.masking.enabled,true) fuzzy-if(d2d,1,6400) == mask-type-03.svg m
 pref(layout.css.masking.enabled,true) fuzzy-if(d2d,1,6400) == mask-type-04.svg mask-type-01-ref.svg
 == nested-viewBox-01.svg pass.svg
 == nesting-invalid-01.svg nesting-invalid-01-ref.svg
-fuzzy-if(d2d&&/^Windows\x20NT\x206\.1/.test(http.oscpu),1,168) fuzzy-if(azureQuartz&&OSX=="10.8",1,122) == non-scaling-stroke-01.svg non-scaling-stroke-01-ref.svg # bug 1074161 for Win7 and OSX 10.8
+fuzzy-if(d2d&&/^Windows\x20NT\x206\.1/.test(http.oscpu),1,168) fuzzy-if(azureQuartz,1,122) == non-scaling-stroke-01.svg non-scaling-stroke-01-ref.svg # bug 1074161 for Win7 and OSX 10.8
 fuzzy-if(Android||B2G,1,99) fuzzy-if(!contentSameGfxBackendAsCanvas,9,99) == non-scaling-stroke-02.svg non-scaling-stroke-02-ref.svg
 == non-scaling-stroke-03.svg non-scaling-stroke-03-ref.svg
 == objectBoundingBox-and-clipPath.svg pass.svg
@@ -275,7 +275,7 @@ pref(svg.paint-order.enabled,true) == paint-order-03.svg paint-order-03-ref.svg
 # == pseudo-classes-02.svg pseudo-classes-02-ref.svg
 == radialGradient-basic-01.svg pass.svg
 == radialGradient-basic-02.svg pass.svg
-fuzzy-if(OSX==10.6&&azureQuartz,4,24) fuzzy-if(OSX==10.8&&azureQuartz,4,15038) fuzzy-if(winWidget,4,92) == radialGradient-basic-03.svg radialGradient-basic-03-ref.svg
+fuzzy-if(azureQuartz,4,15982) fuzzy-if(winWidget,4,92) == radialGradient-basic-03.svg radialGradient-basic-03-ref.svg
 == radialGradient-basic-04.svg pass.svg
 == rect-01.svg pass.svg
 == rect-02.svg pass.svg
