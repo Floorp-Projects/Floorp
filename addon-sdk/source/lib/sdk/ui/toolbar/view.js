@@ -96,7 +96,7 @@ const addView = curry((options, {document}) => {
   view.setAttribute("mode", "icons");
   view.setAttribute("iconsize", "small");
   view.setAttribute("context", "toolbar-context-menu");
-  view.setAttribute("class", "toolbar-primary chromeclass-toolbar");
+  view.setAttribute("class", "chromeclass-toolbar");
 
   let label = document.createElementNS(XUL_NS, "label");
   label.setAttribute("value", options.title);

@@ -6,8 +6,8 @@
 #include "nsISupports.idl"
 #include "nsIMobileMessageDatabaseService.idl"
 
-[scriptable, function, uuid(92986322-8d56-11e2-8816-73a531c493c2)]
-interface nsIRilMobileMessageDatabaseCallback : nsISupports
+[scriptable, function, uuid(2ae081ac-8038-11e4-a472-1ba11eb89d79)]
+interface nsIGonkMobileMessageDatabaseCallback : nsISupports
 {
   /**
    * |aDomMessage|: the nsIDOMMoz{Mms,Sms}Message
@@ -15,8 +15,8 @@ interface nsIRilMobileMessageDatabaseCallback : nsISupports
   void notify(in nsresult aRv, in nsISupports aDomMessage);
 };
 
-[scriptable, function, uuid(32b02bbe-60a1-45e0-a748-ad40709b09dd)]
-interface nsIRilMobileMessageDatabaseRecordCallback : nsISupports
+[scriptable, function, uuid(2f7a6fde-8038-11e4-9d93-5b9ffba492fb)]
+interface nsIGonkMobileMessageDatabaseRecordCallback : nsISupports
 {
   /**
    * |aMessageRecord| Object: the mobile-message database record
@@ -25,8 +25,8 @@ interface nsIRilMobileMessageDatabaseRecordCallback : nsISupports
   void notify(in nsresult aRv, in jsval aMessageRecord, in nsISupports aDomMessage);
 };
 
-[scriptable, function, uuid(1b0ff03c-a2bc-11e3-a443-838d034c9805)]
-interface nsIRilMobileMessageDatabaseConcatenationCallback : nsISupports
+[scriptable, function, uuid(36f9732c-8038-11e4-b634-3f7e3df5232a)]
+interface nsIGonkMobileMessageDatabaseConcatenationCallback : nsISupports
 {
   /**
    * |aCompleteMessage|: jsval: the completely concatenated message. Noted, this value might be null.
@@ -35,14 +35,14 @@ interface nsIRilMobileMessageDatabaseConcatenationCallback : nsISupports
 };
 
 %{C++
-#define RIL_MOBILE_MESSAGE_DATABASE_SERVICE_CID \
-  { 0x29785f90, 0x6b5b, 0x11e2, { 0x92, 0x01, 0x3b, 0x28, 0x01, 0x70, 0xb2, 0xec } }
-#define RIL_MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID \
-  "@mozilla.org/mobilemessage/rilmobilemessagedatabaseservice;1"
+#define GONK_MOBILE_MESSAGE_DATABASE_SERVICE_CID \
+  { 0x7db05024, 0x8038, 0x11e4, { 0xb7, 0xfa, 0xa3, 0xed, 0xb6, 0xf1, 0xbf, 0x0c } }
+#define GONK_MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID \
+  "@mozilla.org/mobilemessage/gonkmobilemessagedatabaseservice;1"
 %}
 
-[scriptable, uuid(0b437a5c-a2bc-11e3-bd1b-dbb173eb35f8)]
-interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
+[scriptable, uuid(48a3c28a-8038-11e4-b7b9-0f2df5b53100)]
+interface nsIGonkMobileMessageDatabaseService : nsIMobileMessageDatabaseService
 {
   /**
    * |aMessage| Object: should contain the following properties for internal use:
@@ -64,7 +64,7 @@ interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
    *     - |phoneNumber| DOMString: [optional] my own phone number.
    */
   void saveReceivedMessage(in jsval aMessage,
-                [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
+                [optional] in nsIGonkMobileMessageDatabaseCallback aCallback);
 
   /**
    * |aMessage| Object: should contain the following properties for internal use:
@@ -81,7 +81,7 @@ interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
    *     - |receivers| DOMString Array: the phone numbers of receivers
    */
   void saveSendingMessage(in jsval aMessage,
-               [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
+               [optional] in nsIGonkMobileMessageDatabaseCallback aCallback);
 
   /**
    * |aMessageId| Number: the message's DB record ID.
@@ -89,52 +89,52 @@ interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
    * |aDelivery| DOMString: the new delivery value to update (can be null).
    * |aDeliveryStatus| DOMString: the new delivery status to update (can be null).
    * |aEnvelopeId| DOMString: the "message-id" specified in the MMS PDU headers.
-   * |aCallback| nsIRilMobileMessageDatabaseCallback: an optional callback.
+   * |aCallback| nsIGonkMobileMessageDatabaseCallback: an optional callback.
    */
   void setMessageDeliveryByMessageId(in long aMessageId,
                                      in DOMString aReceiver,
                                      in DOMString aDelivery,
                                      in DOMString aDeliveryStatus,
                                      in DOMString aEnvelopeId,
-                          [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
+                          [optional] in nsIGonkMobileMessageDatabaseCallback aCallback);
 
   /**
    * |aEnvelopeId| DOMString: the "message-id" specified in the MMS PDU headers.
    * |aReceiver| DOMString: the phone number of receiver (for MMS; can be null).
    * |aDeliveryStatus| DOMString: the new delivery status to be updated (can be null).
-   * |aCallback| nsIRilMobileMessageDatabaseCallback: an optional callback.
+   * |aCallback| nsIGonkMobileMessageDatabaseCallback: an optional callback.
    */
   void setMessageDeliveryStatusByEnvelopeId(in DOMString aEnvelopeId,
                                             in DOMString aReceiver,
                                             in DOMString aDeliveryStatus,
-                                 [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
+                                 [optional] in nsIGonkMobileMessageDatabaseCallback aCallback);
 
   /**
    * |aEnvelopeId| DOMString: the "message-id" specified in the MMS PDU headers.
    * |aReceiver| DOMString: the phone number of receiver (for MMS; can be null).
    * |aReadStatus| DOMString: the new read status to be updated.
-   * |aCallback| nsIRilMobileMessageDatabaseCallback: an optional callback.
+   * |aCallback| nsIGonkMobileMessageDatabaseCallback: an optional callback.
    */
   void setMessageReadStatusByEnvelopeId(in DOMString aEnvelopeId,
                                         in DOMString aReceiver,
                                         in DOMString aReadStatus,
-                             [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
+                             [optional] in nsIGonkMobileMessageDatabaseCallback aCallback);
 
   /**
    * |aMessageId| Number: the message's DB record ID.
-   * |aCallback| nsIRilMobileMessageDatabaseRecordCallback: a callback which
+   * |aCallback| nsIGonkMobileMessageDatabaseRecordCallback: a callback which
    *   takes result flag, message record and domMessage as parameters.
    */
   void getMessageRecordById(in long aMessageId,
-                            in nsIRilMobileMessageDatabaseRecordCallback aCallback);
+                            in nsIGonkMobileMessageDatabaseRecordCallback aCallback);
 
   /**
    * |aTransactionId| DOMString: the transaction ID of MMS PDU.
-   * |aCallback| nsIRilMobileMessageDatabaseRecordCallback: a callback which
+   * |aCallback| nsIGonkMobileMessageDatabaseRecordCallback: a callback which
    *   takes result flag and message record as parameters.
    */
   void getMessageRecordByTransactionId(in DOMString aTransactionId,
-                                       in nsIRilMobileMessageDatabaseRecordCallback aCallback);
+                                       in nsIGonkMobileMessageDatabaseRecordCallback aCallback);
 
   /**
    * |aCrError| nsresult: the NS_ERROR defined in Components.results.
@@ -145,9 +145,9 @@ interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
 
   /**
    * |aSmsSegment| jsval: Decoded Single SMS PDU.
-   * |aCallback| nsIRilMobileMessageDatabaseConcatenationCallback: a callback which
+   * |aCallback| nsIGonkMobileMessageDatabaseConcatenationCallback: a callback which
    *   takes result flag, and complete mesage as parameters.
    */
   void saveSmsSegment(in jsval aSmsSegment,
-                      in nsIRilMobileMessageDatabaseConcatenationCallback aCallback);
+                      in nsIGonkMobileMessageDatabaseConcatenationCallback aCallback);
 };
