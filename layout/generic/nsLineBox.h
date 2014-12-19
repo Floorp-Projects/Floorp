@@ -1721,8 +1721,7 @@ public:
   NS_IMETHOD GetLine(int32_t aLineNumber,
                      nsIFrame** aFirstFrameOnLine,
                      int32_t* aNumFramesOnLine,
-                     nsRect& aLineBounds,
-                     uint32_t* aLineFlags) MOZ_OVERRIDE;
+                     nsRect& aLineBounds) MOZ_OVERRIDE;
   virtual int32_t FindLineContaining(nsIFrame* aFrame, int32_t aStartLine = 0) MOZ_OVERRIDE;
   NS_IMETHOD FindFrameAt(int32_t aLineNumber,
                          nsPoint aPos,

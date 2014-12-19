@@ -10,6 +10,8 @@
 #include "prenv.h"
 #include "gfxPrefs.h"
 #include "gfxVR.h"
+#include "nsString.h"
+#include "mozilla/Preferences.h"
 
 #include "ovr_capi_dynamic.h"
 
@@ -76,12 +78,19 @@ InitializeOculusCAPI()
   if (!ovrlib) {
     const char *libName = OVR_LIB_NAME;
 
+    // If the pref is present, we override libName
+    nsAdoptingCString prefLibName = mozilla::Preferences::GetCString("dom.vr.ovr_lib_path");
+    if (prefLibName && prefLibName.get()) {
+      libName = prefLibName.get();
+    }
+
+    // If the env var is present, we override libName
     if (PR_GetEnv("OVR_LIB_NAME")) {
       libName = PR_GetEnv("OVR_LIB_NAME");
     }
 
     if (!libName) {
-      printf_stderr("Don't know how to find Oculus VR library; missing OVR_LIB_NAME\n");
+      printf_stderr("Don't know how to find Oculus VR library; missing dom.vr.ovr_lib_path or OVR_LIB_NAME\n");
       return false;
     }
 

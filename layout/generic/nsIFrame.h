@@ -247,14 +247,6 @@ typedef uint32_t nsReflowStatus;
 #define NS_FRAME_SET_OVERFLOW_INCOMPLETE(status) \
   status = (status & ~NS_FRAME_NOT_COMPLETE) | NS_FRAME_OVERFLOW_INCOMPLETE
 
-// This macro tests to see if an nsReflowStatus is an error value
-// or just a regular return value
-#define NS_IS_REFLOW_ERROR(_status) (int32_t(_status) < 0)
-
-/**
- * Extensions to the reflow status bits defined by nsIFrameReflow
- */
-
 // This bit is set, when a break is requested. This bit is orthogonal
 // to the nsIFrame::nsReflowStatus completion bits.
 #define NS_INLINE_BREAK              0x0100

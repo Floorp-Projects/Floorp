@@ -932,7 +932,7 @@ WrapperOwner::toObjectVariant(JSContext *cx, JSObject *objArg, ObjectVariant *ob
     // Whenever operating on an object that comes from the table, we wrap it
     // in findObjectById.
     unsigned wrapperFlags = 0;
-    obj = js::UncheckedUnwrap(obj, false, &wrapperFlags);
+    obj = js::UncheckedUnwrap(obj, true, &wrapperFlags);
     if (obj && IsCPOW(obj) && OwnerOf(obj) == this) {
         *objVarp = LocalObject(idOf(obj).serialize());
         return true;

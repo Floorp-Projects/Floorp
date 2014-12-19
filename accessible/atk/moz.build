@@ -52,4 +52,8 @@ if CONFIG['MOZ_ENABLE_DBUS']:
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+if CONFIG['CLANG_CXX']:
+    # Suppress clang warning about unused function from gobject's RTTI macros.
+    CXXFLAGS += ['-Wno-unused-function']
+
 FAIL_ON_WARNINGS = True

@@ -5,7 +5,7 @@
     },
     "global": {
         "talos_repo": "https://hg.mozilla.org/build/talos",
-        "talos_revision": "f21edb5a25b5"
+        "talos_revision": "ebc4327b8cb8"
     },
     "extra_options": {
         "android": [ "--apkPath=%(apk_path)s" ]
@@ -92,7 +92,7 @@
             }
         },
         "xperf": {
-            "tests": ["tp5n", "ts_paint_cold"],
+            "tests": ["tp5n"],
             "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
             "pagesets_parent_dir_path": "talos/page_load_test/",
             "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5n.manifest",
@@ -107,7 +107,7 @@
             ]
         },
         "xperf-e10s": {
-            "tests": ["tp5n", "ts_paint_cold"],
+            "tests": ["tp5n"],
             "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
             "pagesets_parent_dir_path": "talos/page_load_test/",
             "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5n.manifest",

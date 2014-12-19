@@ -639,4 +639,45 @@ ServiceWorkerGlobalScope::Unregister(ErrorResult& aRv)
   return promise.forget();
 }
 
+namespace {
+
+class UpdateRunnable MOZ_FINAL : public nsRunnable
+{
+  nsString mScope;
+
+public:
+  explicit UpdateRunnable(const nsAString& aScope)
+    : mScope(aScope)
+  { }
+
+  NS_IMETHODIMP
+  Run()
+  {
+    AssertIsOnMainThread();
+
+    nsresult rv;
+    nsCOMPtr<nsIServiceWorkerManager> swm =
+      do_GetService(SERVICEWORKERMANAGER_CONTRACTID, &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return NS_OK;
+    }
+
+    swm->Update(mScope);
+    return NS_OK;
+  }
+};
+
+} //anonymous namespace
+
+void
+ServiceWorkerGlobalScope::Update()
+{
+  mWorkerPrivate->AssertIsOnWorkerThread();
+  MOZ_ASSERT(mWorkerPrivate->IsServiceWorker());
+
+  nsRefPtr<UpdateRunnable> runnable =
+    new UpdateRunnable(mScope);
+  NS_DispatchToMainThread(runnable);
+}
+
 END_WORKERS_NAMESPACE

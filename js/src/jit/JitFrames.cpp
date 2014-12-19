@@ -395,7 +395,7 @@ CloseLiveIterator(JSContext *cx, const InlineFrameIterator &frame, uint32_t loca
     SnapshotIterator si = frame.snapshotIterator();
 
     // Skip stack slots until we reach the iterator object.
-    uint32_t base = CountArgSlots(frame.script(), frame.maybeCallee()) + frame.script()->nfixed();
+    uint32_t base = CountArgSlots(frame.script(), frame.maybeCalleeTemplate()) + frame.script()->nfixed();
     uint32_t skipSlots = base + localSlot - 1;
 
     for (unsigned i = 0; i < skipSlots; i++)
@@ -1749,8 +1749,16 @@ FromTypedPayload(JSValueType type, uintptr_t payload)
 }
 
 bool
-SnapshotIterator::allocationReadable(const RValueAllocation &alloc)
+SnapshotIterator::allocationReadable(const RValueAllocation &alloc, ReadMethod rm)
 {
+    // If we have to recover stores, and if we are not interested in the
+    // default value of the instruction, then we have to check if the recover
+    // instruction results are available.
+    if (alloc.needSideEffect() && !(rm & RM_AlwaysDefault)) {
+        if (!hasInstructionResults())
+            return false;
+    }
+
     switch (alloc.mode()) {
       case RValueAllocation::DOUBLE_REG:
         return hasRegister(alloc.fpuReg());
@@ -1776,6 +1784,8 @@ SnapshotIterator::allocationReadable(const RValueAllocation &alloc)
 
       case RValueAllocation::RECOVER_INSTRUCTION:
         return hasInstructionResult(alloc.index());
+      case RValueAllocation::RI_WITH_DEFAULT_CST:
+        return rm & RM_AlwaysDefault || hasInstructionResult(alloc.index());
 
       default:
         return true;
@@ -1783,7 +1793,7 @@ SnapshotIterator::allocationReadable(const RValueAllocation &alloc)
 }
 
 Value
-SnapshotIterator::allocationValue(const RValueAllocation &alloc)
+SnapshotIterator::allocationValue(const RValueAllocation &alloc, ReadMethod rm)
 {
     switch (alloc.mode()) {
       case RValueAllocation::CONSTANT:
@@ -1887,9 +1897,34 @@ SnapshotIterator::allocationValue(const RValueAllocation &alloc)
       case RValueAllocation::RECOVER_INSTRUCTION:
         return fromInstructionResult(alloc.index());
 
+      case RValueAllocation::RI_WITH_DEFAULT_CST:
+        if (rm & RM_Normal && hasInstructionResult(alloc.index()))
+            return fromInstructionResult(alloc.index());
+        MOZ_ASSERT(rm & RM_AlwaysDefault);
+        return ionScript_->getConstant(alloc.index2());
+
       default:
         MOZ_CRASH("huh?");
     }
+}
+
+Value
+SnapshotIterator::maybeRead(const RValueAllocation &a, MaybeReadFallback &fallback)
+{
+    if (allocationReadable(a))
+        return allocationValue(a);
+
+    if (fallback.canRecoverResults()) {
+        if (!initInstructionResults(fallback))
+            js::CrashAtUnhandlableOOM("Unable to recover allocations.");
+
+        if (allocationReadable(a))
+            return allocationValue(a);
+
+        MOZ_ASSERT_UNREACHABLE("All allocations should be readable.");
+    }
+
+    return fallback.unreadablePlaceholder();
 }
 
 void
@@ -1956,6 +1991,12 @@ SnapshotIterator::writeAllocationValuePayload(const RValueAllocation &alloc, Val
         MOZ_CRASH("Recover instructions are handled by the JitActivation.");
         break;
 
+      case RValueAllocation::RI_WITH_DEFAULT_CST:
+        // Assume that we are always going to be writing on the default value
+        // while tracing.
+        ionScript_->getConstant(alloc.index2()) = v;
+        break;
+
       default:
         MOZ_CRASH("huh?");
     }
@@ -1965,10 +2006,10 @@ void
 SnapshotIterator::traceAllocation(JSTracer *trc)
 {
     RValueAllocation alloc = readAllocation();
-    if (!allocationReadable(alloc))
+    if (!allocationReadable(alloc, RM_AlwaysDefault))
         return;
 
-    Value v = allocationValue(alloc);
+    Value v = allocationValue(alloc, RM_AlwaysDefault);
     if (!v.isMarkable())
         return;
 
@@ -2218,14 +2259,16 @@ JitFrameIterator::osiIndex() const
 }
 
 InlineFrameIterator::InlineFrameIterator(ThreadSafeContext *cx, const JitFrameIterator *iter)
-  : callee_(cx),
+  : calleeTemplate_(cx),
+    calleeRVA_(),
     script_(cx)
 {
     resetOn(iter);
 }
 
 InlineFrameIterator::InlineFrameIterator(JSRuntime *rt, const JitFrameIterator *iter)
-  : callee_(rt),
+  : calleeTemplate_(rt),
+    calleeRVA_(),
     script_(rt)
 {
     resetOn(iter);
@@ -2235,7 +2278,8 @@ InlineFrameIterator::InlineFrameIterator(ThreadSafeContext *cx, const InlineFram
   : frame_(iter ? iter->frame_ : nullptr),
     framesRead_(0),
     frameCount_(iter ? iter->frameCount_ : UINT32_MAX),
-    callee_(cx),
+    calleeTemplate_(cx),
+    calleeRVA_(),
     script_(cx)
 {
     if (frame_) {
@@ -2269,7 +2313,8 @@ InlineFrameIterator::findNextFrame()
     si_ = start_;
 
     // Read the initial frame out of the C stack.
-    callee_ = frame_->maybeCallee();
+    calleeTemplate_ = frame_->maybeCallee();
+    calleeRVA_ = RValueAllocation();
     script_ = frame_->script();
     MOZ_ASSERT(script_->hasBaselineScript());
 
@@ -2313,8 +2358,12 @@ InlineFrameIterator::findNextFrame()
         for (unsigned j = 0; j < skipCount; j++)
             si_.skip();
 
-        // The JSFunction is a constant, otherwise we would not have inlined it.
-        Value funval = si_.read();
+        // This value should correspond to the function which is being inlined.
+        // The value must be readable to iterate over the inline frame. Most of
+        // the time, these functions are stored as JSFunction constants,
+        // register which are holding the JSFunction pointer, or recover
+        // instruction with Default value.
+        Value funval = si_.readWithDefault(&calleeRVA_);
 
         // Skip extra value allocations.
         while (si_.moreAllocations())
@@ -2322,12 +2371,12 @@ InlineFrameIterator::findNextFrame()
 
         si_.nextFrame();
 
-        callee_ = &funval.toObject().as<JSFunction>();
+        calleeTemplate_ = &funval.toObject().as<JSFunction>();
 
         // Inlined functions may be clones that still point to the lazy script
         // for the executed script, if they are clones. The actual script
         // exists though, just make sure the function points to it.
-        script_ = callee_->existingScriptForInlinedFunction();
+        script_ = calleeTemplate_->existingScriptForInlinedFunction();
         MOZ_ASSERT(script_->hasBaselineScript());
 
         pc_ = script_->offsetToPC(si_.pcOffset());
@@ -2344,12 +2393,35 @@ InlineFrameIterator::findNextFrame()
     framesRead_++;
 }
 
+JSFunction *
+InlineFrameIterator::callee(MaybeReadFallback &fallback) const
+{
+    MOZ_ASSERT(isFunctionFrame());
+    if (calleeRVA_.mode() == RValueAllocation::INVALID || !fallback.canRecoverResults())
+        return calleeTemplate_;
+
+    SnapshotIterator s(si_);
+    // :TODO: Handle allocation failures from recover instruction.
+    Value funval = s.maybeRead(calleeRVA_, fallback);
+    return &funval.toObject().as<JSFunction>();
+}
+
 JSObject *
-InlineFrameIterator::computeScopeChain(Value scopeChainValue, bool *hasCallObj) const
+InlineFrameIterator::computeScopeChain(Value scopeChainValue, MaybeReadFallback &fallback,
+                                       bool *hasCallObj) const
 {
     if (scopeChainValue.isObject()) {
-        if (hasCallObj)
-            *hasCallObj = isFunctionFrame() && callee()->isHeavyweight();
+        if (hasCallObj) {
+            if (fallback.canRecoverResults()) {
+                RootedObject obj(fallback.maybeCx, &scopeChainValue.toObject());
+                *hasCallObj = isFunctionFrame() && callee(fallback)->isHeavyweight();
+                return obj;
+            } else {
+                JS::AutoSuppressGCAnalysis nogc; // If we cannot recover then we cannot GC.
+                *hasCallObj = isFunctionFrame() && callee(fallback)->isHeavyweight();
+            }
+        }
+
         return &scopeChainValue.toObject();
     }
 
@@ -2357,7 +2429,7 @@ InlineFrameIterator::computeScopeChain(Value scopeChainValue, bool *hasCallObj) 
     // are walking the frame during the function prologue, before the scope
     // chain has been initialized.
     if (isFunctionFrame())
-        return callee()->environment();
+        return callee(fallback)->environment();
 
     // Ion does not handle scripts that are not compile-and-go.
     MOZ_ASSERT(!script()->isForEval());
@@ -2368,7 +2440,7 @@ InlineFrameIterator::computeScopeChain(Value scopeChainValue, bool *hasCallObj) 
 bool
 InlineFrameIterator::isFunctionFrame() const
 {
-    return !!callee_;
+    return !!calleeTemplate_;
 }
 
 MachineState
@@ -2506,6 +2578,8 @@ JitFrameIterator::dumpBaseline() const
 void
 InlineFrameIterator::dump() const
 {
+    MaybeReadFallback fallback(UndefinedValue());
+
     if (more())
         fprintf(stderr, " JS frame (inlined)\n");
     else
@@ -2516,7 +2590,7 @@ InlineFrameIterator::dump() const
         isFunction = true;
         fprintf(stderr, "  callee fun: ");
 #ifdef DEBUG
-        js_DumpObject(callee());
+        js_DumpObject(callee(fallback));
 #else
         fprintf(stderr, "?\n");
 #endif
@@ -2535,7 +2609,6 @@ InlineFrameIterator::dump() const
     }
 
     SnapshotIterator si = snapshotIterator();
-    MaybeReadFallback fallback(UndefinedValue());
     fprintf(stderr, "  slots: %u\n", si.numAllocations() - 1);
     for (unsigned i = 0; i < si.numAllocations() - 1; i++) {
         if (isFunction) {
@@ -2543,15 +2616,15 @@ InlineFrameIterator::dump() const
                 fprintf(stderr, "  scope chain: ");
             else if (i == 1)
                 fprintf(stderr, "  this: ");
-            else if (i - 2 < callee()->nargs())
+            else if (i - 2 < calleeTemplate()->nargs())
                 fprintf(stderr, "  formal (arg %d): ", i - 2);
             else {
-                if (i - 2 == callee()->nargs() && numActualArgs() > callee()->nargs()) {
-                    DumpOp d(callee()->nargs());
+                if (i - 2 == calleeTemplate()->nargs() && numActualArgs() > calleeTemplate()->nargs()) {
+                    DumpOp d(calleeTemplate()->nargs());
                     unaliasedForEachActual(GetJSContextFromJitCode(), d, ReadFrame_Overflown, fallback);
                 }
 
-                fprintf(stderr, "  slot %d: ", int(i - 2 - callee()->nargs()));
+                fprintf(stderr, "  slot %d: ", int(i - 2 - calleeTemplate()->nargs()));
             }
         } else
             fprintf(stderr, "  slot %u: ", i);

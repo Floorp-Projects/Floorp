@@ -819,7 +819,7 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   metrics.mDisplayPort = CSSRect(-1, -1, 6, 6);
   metrics.SetScrollOffset(CSSPoint(10, 10));
   metrics.mScrollableRect = CSSRect(0, 0, 50, 50);
-  metrics.mCumulativeResolution = LayoutDeviceToLayerScale(2);
+  metrics.SetCumulativeResolution(LayoutDeviceToLayerScale(2));
   metrics.mPresShellResolution = 2.0f;
   metrics.SetZoom(CSSToParentLayerScale(6));
   metrics.SetDevPixelsPerCSSPixel(CSSToLayoutDeviceScale(3));

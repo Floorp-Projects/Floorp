@@ -17,7 +17,7 @@ interface nsIServiceWorkerUnregisterCallback : nsISupports
   [noscript] void UnregisterFailed();
 };
 
-[builtinclass, uuid(79ad5b57-d65d-46d3-b5e9-32d27e16052d)]
+[builtinclass, uuid(78fdfe7c-0e2c-4157-ac6e-3952b61df36a)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
@@ -82,6 +82,11 @@ interface nsIServiceWorkerManager : nsISupports
    * Returns a ServiceWorker.
    */
   [noscript] nsISupports GetDocumentController(in nsIDOMWindow aWindow);
+
+  /*
+   * This implements the update algorithm.
+   */
+  void update(in DOMString aScope);
 
   // Testing
   DOMString getScopeForUrl(in DOMString path);

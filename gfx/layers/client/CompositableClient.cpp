@@ -16,6 +16,7 @@
 #include "mozilla/layers/TextureD3D11.h"
 #include "mozilla/layers/TextureD3D9.h"
 #endif
+#include "gfxUtils.h"
 
 namespace mozilla {
 namespace layers {
@@ -256,6 +257,19 @@ CompositableClient::GetTextureClientRecycler()
   mTextureClientRecycler =
     new layers::TextureClientRecycleAllocator(mForwarder);
   return mTextureClientRecycler;
+}
+
+void
+CompositableClient::DumpTextureClient(std::stringstream& aStream, TextureClient* aTexture)
+{
+  if (!aTexture) {
+    return;
+  }
+  RefPtr<gfx::DataSourceSurface> dSurf = aTexture->GetAsSurface();
+  if (!dSurf) {
+    return;
+  }
+  aStream << gfxUtils::GetAsLZ4Base64Str(dSurf).get();
 }
 
 } // namespace layers

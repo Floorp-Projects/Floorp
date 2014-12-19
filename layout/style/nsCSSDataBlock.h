@@ -207,9 +207,13 @@ public:
      * an important block will only be allocated if there are
      * !important properties in the expanded block; otherwise
      * |*aImportantBlock| will be set to null.
+     *
+     * aOrder is an array of nsCSSProperty values specifying the order
+     * to store values in the two data blocks.
      */
     void Compress(nsCSSCompressedDataBlock **aNormalBlock,
-                  nsCSSCompressedDataBlock **aImportantBlock);
+                  nsCSSCompressedDataBlock **aImportantBlock,
+                  const nsTArray<uint32_t>& aOrder);
 
     /**
      * Copy a value into this expanded block.  This does NOT destroy

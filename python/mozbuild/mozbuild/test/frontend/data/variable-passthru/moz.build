@@ -2,19 +2,8 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-SOURCES += ['fans.asm', 'tans.s']
-
 EXTRA_COMPONENTS=['fans.js', 'tans.js']
 EXTRA_PP_COMPONENTS=['fans.pp.js', 'tans.pp.js']
-
-HOST_SOURCES += ['fans.cpp', 'tans.cpp']
-HOST_SOURCES += ['fans.c', 'tans.c']
-
-SOURCES += ['fans.c', 'tans.c']
-
-SOURCES += ['fans.mm', 'tans.mm']
-
-SOURCES += ['bans.S', 'fans.S']
 
 FAIL_ON_WARNINGS = True
 MSVC_ENABLE_PGO = True

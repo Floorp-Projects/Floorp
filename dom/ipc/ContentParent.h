@@ -150,9 +150,9 @@ public:
                                         bool* aIsForApp,
                                         bool* aIsForBrowser,
                                         TabId* aTabId) MOZ_OVERRIDE;
-    virtual bool AnswerBridgeToChildProcess(const ContentParentId& aCpId) MOZ_OVERRIDE;
+    virtual bool RecvBridgeToChildProcess(const ContentParentId& aCpId) MOZ_OVERRIDE;
 
-    virtual bool AnswerLoadPlugin(const uint32_t& aPluginId) MOZ_OVERRIDE;
+    virtual bool RecvLoadPlugin(const uint32_t& aPluginId) MOZ_OVERRIDE;
     virtual bool RecvFindPlugins(const uint32_t& aPluginEpoch,
                                  nsTArray<PluginTag>* aPlugins,
                                  uint32_t* aNewPluginEpoch) MOZ_OVERRIDE;
@@ -722,13 +722,13 @@ private:
     RecvOpenAnonymousTemporaryFile(FileDescriptor* aFD) MOZ_OVERRIDE;
 
     virtual bool
-    RecvFormProcessValue(const nsString& oldValue, const nsString& challenge,
-                         const nsString& keytype, const nsString& keyparams,
-                         nsString* newValue) MOZ_OVERRIDE;
+    RecvKeygenProcessValue(const nsString& oldValue, const nsString& challenge,
+                           const nsString& keytype, const nsString& keyparams,
+                           nsString* newValue) MOZ_OVERRIDE;
 
     virtual bool
-    RecvFormProvideContent(nsString* aAttribute,
-                           nsTArray<nsString>* aContent) MOZ_OVERRIDE;
+    RecvKeygenProvideContent(nsString* aAttribute,
+                             nsTArray<nsString>* aContent) MOZ_OVERRIDE;
 
     virtual PFileDescriptorSetParent*
     AllocPFileDescriptorSetParent(const mozilla::ipc::FileDescriptor&) MOZ_OVERRIDE;

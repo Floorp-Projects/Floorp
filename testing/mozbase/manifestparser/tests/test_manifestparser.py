@@ -167,6 +167,20 @@ class TestManifestParser(unittest.TestCase):
         self.assertEqual(buffer.getvalue().strip(),
                          '[DEFAULT]\nx = level_3\n\n[test_3]\nsubsuite =')
 
+    def test_parent_defaults_include(self):
+        parent_example = os.path.join(here, 'parent', 'include', 'manifest.ini')
+        parser = ManifestParser(manifests=(parent_example,))
+
+        # global defaults should inherit all includes
+        self.assertEqual(parser.get('name', top='data'),
+                         ['testFirst.js', 'testSecond.js'])
+
+        # include specific defaults should only inherit the actual include
+        self.assertEqual(parser.get('name', disabled='YES'),
+                         ['testFirst.js'])
+        self.assertEqual(parser.get('name', disabled='NO'),
+                         ['testSecond.js'])
+
     def test_server_root(self):
         """
         Test server_root properly expands as an absolute path
