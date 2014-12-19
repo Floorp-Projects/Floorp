@@ -145,7 +145,7 @@ APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
     // last paint.
     float presShellResolution = aMetrics.mPresShellResolution
                               * aMetrics.GetAsyncZoom().scale;
-    aUtils->SetResolution(presShellResolution, presShellResolution);
+    aUtils->SetResolutionAndScaleTo(presShellResolution, presShellResolution);
 
     // Finally, we set the displayport.
     nsCOMPtr<nsIContent> content = nsLayoutUtils::FindContentFor(aMetrics.GetScrollId());
