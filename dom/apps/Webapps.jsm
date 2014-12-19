@@ -725,6 +725,18 @@ this.DOMApplicationRegistry = {
 
       yield this.loadCurrentRegistry();
 
+      // Sanity check and roll back previous incomplete app updates.
+      for (let id in this.webapps) {
+        let oldDir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id + ".old"], false, true);
+        if (oldDir.exists()) {
+          let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], false, true);
+          if (dir.exists()) {
+            dir.remove(true);
+          }
+          oldDir.moveTo(null, id);
+        }
+      }
+
       try {
         let systemManifestURL =
           Services.prefs.getCharPref("b2g.system_manifest_url");
@@ -1854,8 +1866,6 @@ this.DOMApplicationRegistry = {
     app.readyToApplyDownload = true;
     app.updateTime = Date.now();
 
-    yield this._saveApps();
-
     this.broadcastMessage("Webapps:UpdateState", {
       app: app,
       id: app.id
@@ -1890,18 +1900,33 @@ this.DOMApplicationRegistry = {
     let appFile = tmpDir.clone();
     appFile.append("application.zip");
 
-    let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
+    // In order to better control the potential inconsistency due to unexpected
+    // shutdown during the update process, a separate folder is used to accommodate
+    // the updated files and to replace the current one. Some sanity check and
+    // correspondent rollback logic may be necessary during the initialization
+    // of this component to recover it at next system boot-up.
+    let oldDir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
+    let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id + ".new"], true, true);
     appFile.moveTo(dir, "application.zip");
     manFile.moveTo(dir, "manifest.webapp");
 
-    // Move the staged update manifest to a non staged one.
-    let staged = dir.clone();
+    // Copy the staged update manifest to a non staged one.
+    let staged = oldDir.clone();
     staged.append("staged-update.webapp");
 
     // If we are applying after a restarted download, we have no
     // staged update manifest.
     if (staged.exists()) {
-      staged.moveTo(dir, "update.webapp");
+      staged.copyTo(dir, "update.webapp");
+    }
+
+    oldDir.moveTo(null, id + ".old");
+    dir.moveTo(null, id);
+
+    try {
+      oldDir.remove(true);
+    } catch(e) {
+      oldDir.moveTo(tmpDir, "old." + app.updateTime);
     }
 
     try {

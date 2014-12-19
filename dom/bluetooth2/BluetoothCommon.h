@@ -143,6 +143,7 @@ extern bool gBluetoothDebugFlag;
 #define KEY_REMOTE_AGENT      "/B2G/bluetooth/remote_device_agent"
 #define KEY_MANAGER           "/B2G/bluetooth/manager"
 #define KEY_ADAPTER           "/B2G/bluetooth/adapter"
+#define KEY_PAIRING_LISTENER  "/B2G/bluetooth/pairing_listener"
 
 /**
  * When the connection status of a Bluetooth profile is changed, we'll notify
@@ -169,6 +170,18 @@ extern bool gBluetoothDebugFlag;
 #define PAIRING_REQ_TYPE_ENTERPINCODE         "enterpincodereq"
 #define PAIRING_REQ_TYPE_CONFIRMATION         "pairingconfirmationreq"
 #define PAIRING_REQ_TYPE_CONSENT              "pairingconsentreq"
+
+/**
+ * System message to launch bluetooth app if no pairing listener is ready to
+ * receive pairing requests.
+ */
+#define SYS_MSG_BT_PAIRING_REQ                "bluetooth-pairing-request"
+
+/**
+ * The app origin of bluetooth app, which is responsible for listening pairing
+ * requests.
+ */
+#define BLUETOOTH_APP_ORIGIN                  "app://bluetooth.gaiamobile.org"
 
 /**
  * When a remote device gets paired / unpaired with local bluetooth adapter,

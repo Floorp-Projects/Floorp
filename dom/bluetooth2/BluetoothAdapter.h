@@ -249,13 +249,6 @@ private:
   void HandleDeviceFound(const BluetoothValue& aValue);
 
   /**
-   * Handle "PairingRequest" bluetooth signal.
-   *
-   * @param aValue [in] Array of information about the pairing request.
-   */
-  void HandlePairingRequest(const BluetoothValue& aValue);
-
-  /**
    * Fire BluetoothAttributeEvent to trigger onattributechanged event handler.
    */
   void DispatchAttributeEvent(const nsTArray<nsString>& aTypes);
@@ -286,6 +279,13 @@ private:
    */
   bool IsAdapterAttributeChanged(BluetoothAdapterAttribute aType,
                                  const BluetoothValue& aValue);
+
+  /**
+   * Check whether this adapter is owned by Bluetooth certified app.
+   *
+   * @return a boolean value to indicate whether it's owned by Bluetooth app.
+   */
+  bool IsBluetoothCertifiedApp();
 
   /****************************************************************************
    * Variables
