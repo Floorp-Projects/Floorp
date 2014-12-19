@@ -98,7 +98,7 @@
 
   <addon>
     <name>Repo Add-on 3</name>
-    <type id="9999">Unknown</type>
+    <type id="2">Theme</type>
     <guid>test_AddonRepository_3@tests.mozilla.org</guid>
     <version>2.3</version>
     <icon size="32">http://localhost/repo/3/icon.png</icon>
