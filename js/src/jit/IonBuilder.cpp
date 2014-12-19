@@ -10623,7 +10623,9 @@ IonBuilder::jsop_lambda(JSFunction *fun)
     if (fun->isNative() && IsAsmJSModuleNative(fun->native()))
         return abort("asm.js module function");
 
-    MLambda *ins = MLambda::New(alloc(), constraints(), current->scopeChain(), fun);
+    MConstant *cst = MConstant::NewConstraintlessObject(alloc(), fun);
+    current->add(cst);
+    MLambda *ins = MLambda::New(alloc(), constraints(), current->scopeChain(), cst);
     current->add(ins);
     current->push(ins);
 
