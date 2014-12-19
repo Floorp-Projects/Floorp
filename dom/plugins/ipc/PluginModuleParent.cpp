@@ -571,6 +571,7 @@ PluginModuleChromeParent::ShouldContinueFromReplyTimeout()
     FinishHangUI();
 #endif // XP_WIN
     TerminateChildProcess(MessageLoop::current());
+    GetIPCChannel()->CloseWithTimeout();
     return false;
 }
 

@@ -2011,6 +2011,9 @@ ContentParent::ContentParent(mozIApplication* aApp,
                  true  /* Send registered chrome */);
 
     ContentProcessManager::GetSingleton()->AddContentProcess(this);
+
+    // Set a reply timeout for CPOWs.
+    SetReplyTimeoutMs(Preferences::GetInt("dom.ipc.cpow.timeout", 0));
 }
 
 #ifdef MOZ_NUWA_PROCESS
