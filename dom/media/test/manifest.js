@@ -14,7 +14,7 @@ var gSmallTests = [
   { name:"seek.webm", type:"video/webm", width:320, height:240, duration:3.966 },
   { name:"vp9.webm", type:"video/webm", width:320, height:240, duration:4 },
   { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 },
-  { name:"gizmo.mp4", type:"video/mp4", duration:5.56 },
+  { name:"gizmo.mp4", type:"video/mp4", width:560, height:320, duration:5.56 },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
