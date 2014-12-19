@@ -10,11 +10,10 @@
 
 // Disable automatic network detection, so tests work correctly when
 // not connected to a network.
-let (ios = Cc["@mozilla.org/network/io-service;1"]
-           .getService(Ci.nsIIOService2)) {
-  ios.manageOfflineStatus = false;
-  ios.offline = false;
-}
+let ios = Cc["@mozilla.org/network/io-service;1"]
+          .getService(Ci.nsIIOService2);
+ios.manageOfflineStatus = false;
+ios.offline = false;
 
 var server; // for use in the shutdown handler, if necessary
 
