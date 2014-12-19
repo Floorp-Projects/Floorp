@@ -1129,15 +1129,17 @@ FrameIter::unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing) const
 }
 
 JSObject *
-FrameIter::scopeChain() const
+FrameIter::scopeChain(JSContext *cx) const
 {
     switch (data_.state_) {
       case DONE:
       case ASMJS:
         break;
       case JIT:
-        if (data_.jitFrames_.isIonScripted())
-            return ionInlineFrames_.scopeChain();
+        if (data_.jitFrames_.isIonScripted()) {
+            jit::MaybeReadFallback recover(cx, activation()->asJit(), &data_.jitFrames_);
+            return ionInlineFrames_.scopeChain(recover);
+        }
         return data_.jitFrames_.baselineFrame()->scopeChain();
       case INTERP:
         return interpFrame()->scopeChain();
@@ -1146,11 +1148,11 @@ FrameIter::scopeChain() const
 }
 
 CallObject &
-FrameIter::callObj() const
+FrameIter::callObj(JSContext *cx) const
 {
     MOZ_ASSERT(callee()->isHeavyweight());
 
-    JSObject *pobj = scopeChain();
+    JSObject *pobj = scopeChain(cx);
     while (!pobj->is<CallObject>())
         pobj = pobj->enclosingScope();
     return pobj->as<CallObject>();
@@ -1173,7 +1175,7 @@ bool
 FrameIter::computeThis(JSContext *cx) const
 {
     MOZ_ASSERT(!done() && !isAsmJS());
-    assertSameCompartment(cx, scopeChain());
+    assertSameCompartment(cx, scopeChain(cx));
     return ComputeThis(cx, abstractFramePtr());
 }
 
@@ -1184,7 +1186,7 @@ FrameIter::computedThisValue() const
 }
 
 Value
-FrameIter::thisv(JSContext *cx)
+FrameIter::thisv(JSContext *cx) const
 {
     switch (data_.state_) {
       case DONE:
@@ -1326,7 +1328,7 @@ AbstractFramePtr::evalPrevScopeChain(JSContext *cx) const
     while (iter.isIon() || iter.abstractFramePtr() != *this)
         ++iter;
     ++iter;
-    return iter.scopeChain();
+    return iter.scopeChain(cx);
 }
 
 bool
