@@ -831,6 +831,7 @@ private:
     // aSuppressWhiteSpaceOptimizations is true if optimizations that
     // skip constructing whitespace frames for this item or items
     // around it cannot be performed.
+    // Also, the return value is always non-null, thanks to infallible 'new'.
     FrameConstructionItem* AppendItem(const FrameConstructionData* aFCData,
                                       nsIContent* aContent,
                                       nsIAtom* aTag,
@@ -1042,8 +1043,8 @@ private:
                           bool aSuppressWhiteSpaceOptimizations,
                           nsTArray<nsIAnonymousContentCreator::ContentInfo>* aAnonChildren) :
       mFCData(aFCData), mContent(aContent), mTag(aTag),
-      mNameSpaceID(aNameSpaceID),
       mPendingBinding(aPendingBinding), mStyleContext(aStyleContext),
+      mNameSpaceID(aNameSpaceID),
       mSuppressWhiteSpaceOptimizations(aSuppressWhiteSpaceOptimizations),
       mIsText(false), mIsGeneratedContent(false),
       mIsAnonymousContentCreatorContent(false),
@@ -1087,61 +1088,6 @@ private:
       return mIsBlock || (mFCData->mBits & FCDATA_IS_LINE_BREAK);
     }
 
-    // The FrameConstructionData to use.
-    const FrameConstructionData* mFCData;
-    // The nsIContent node to use when initializing the new frame.
-    nsIContent* mContent;
-    // The XBL-resolved tag name to use for frame construction.
-    nsIAtom* mTag;
-    // The XBL-resolved namespace to use for frame construction.
-    int32_t mNameSpaceID;
-    // The PendingBinding for this frame construction item, if any.  May be
-    // null.  We maintain a list of PendingBindings in the frame construction
-    // state in the order in which AddToAttachedQueue should be called on them:
-    // depth-first, post-order traversal order.  Since we actually traverse the
-    // DOM in a mix of breadth-first and depth-first, it is the responsibility
-    // of whoever constructs FrameConstructionItem kids of a given
-    // FrameConstructionItem to push its mPendingBinding as the current
-    // insertion point before doing so and pop it afterward.
-    PendingBinding* mPendingBinding;
-    // The style context to use for creating the new frame.
-    nsRefPtr<nsStyleContext> mStyleContext;
-    // Whether optimizations to skip constructing textframes around
-    // this content need to be suppressed.
-    bool mSuppressWhiteSpaceOptimizations;
-    // Whether this is a text content item.
-    bool mIsText;
-    // Whether this is a generated content container.
-    // If it is, mContent is a strong pointer.
-    bool mIsGeneratedContent;
-    // Whether this is an item for nsIAnonymousContentCreator content.
-    bool mIsAnonymousContentCreatorContent;
-    // Whether this is an item for the root popupgroup.
-    bool mIsRootPopupgroup;
-    // Whether construction from this item will create only frames that are
-    // IsInlineOutside() in the principal child list.  This is not precise, but
-    // conservative: if true the frames will really be inline, whereas if false
-    // they might still all be inline.
-    bool mIsAllInline;
-    // Whether construction from this item will create only frames that are
-    // IsBlockOutside() in the principal child list.  This is not precise, but
-    // conservative: if true the frames will really be blocks, whereas if false
-    // they might still be blocks (and in particular, out-of-flows that didn't
-    // find a containing block).
-    bool mIsBlock;
-    // Whether construction from this item will give leading and trailing
-    // inline frames.  This is equal to mIsAllInline, except for inline frame
-    // items, where it's always true, whereas mIsAllInline might be false due
-    // to {ib} splits.
-    bool mHasInlineEnds;
-    // Whether construction from this item will create a popup that needs to
-    // go into the global popup items.
-    bool mIsPopup;
-    // Whether this item should be treated as a line participant
-    bool mIsLineParticipant;
-    // Whether this item is for an SVG <a> element
-    bool mIsForSVGAElement;
-
     // Child frame construction items.
     FrameConstructionItemList mChildItems;
 
@@ -1160,6 +1106,61 @@ private:
     // construction of the FrameConstructionItems for the grandchildren until
     // a frame has been created for their parent item.
     nsTArray<nsIAnonymousContentCreator::ContentInfo> mAnonChildren;
+
+    // The FrameConstructionData to use.
+    const FrameConstructionData* mFCData;
+    // The nsIContent node to use when initializing the new frame.
+    nsIContent* mContent;
+    // The XBL-resolved tag name to use for frame construction.
+    nsIAtom* mTag;
+    // The PendingBinding for this frame construction item, if any.  May be
+    // null.  We maintain a list of PendingBindings in the frame construction
+    // state in the order in which AddToAttachedQueue should be called on them:
+    // depth-first, post-order traversal order.  Since we actually traverse the
+    // DOM in a mix of breadth-first and depth-first, it is the responsibility
+    // of whoever constructs FrameConstructionItem kids of a given
+    // FrameConstructionItem to push its mPendingBinding as the current
+    // insertion point before doing so and pop it afterward.
+    PendingBinding* mPendingBinding;
+    // The style context to use for creating the new frame.
+    nsRefPtr<nsStyleContext> mStyleContext;
+    // The XBL-resolved namespace to use for frame construction.
+    int32_t mNameSpaceID;
+    // Whether optimizations to skip constructing textframes around
+    // this content need to be suppressed.
+    bool mSuppressWhiteSpaceOptimizations:1;
+    // Whether this is a text content item.
+    bool mIsText:1;
+    // Whether this is a generated content container.
+    // If it is, mContent is a strong pointer.
+    bool mIsGeneratedContent:1;
+    // Whether this is an item for nsIAnonymousContentCreator content.
+    bool mIsAnonymousContentCreatorContent:1;
+    // Whether this is an item for the root popupgroup.
+    bool mIsRootPopupgroup:1;
+    // Whether construction from this item will create only frames that are
+    // IsInlineOutside() in the principal child list.  This is not precise, but
+    // conservative: if true the frames will really be inline, whereas if false
+    // they might still all be inline.
+    bool mIsAllInline:1;
+    // Whether construction from this item will create only frames that are
+    // IsBlockOutside() in the principal child list.  This is not precise, but
+    // conservative: if true the frames will really be blocks, whereas if false
+    // they might still be blocks (and in particular, out-of-flows that didn't
+    // find a containing block).
+    bool mIsBlock:1;
+    // Whether construction from this item will give leading and trailing
+    // inline frames.  This is equal to mIsAllInline, except for inline frame
+    // items, where it's always true, whereas mIsAllInline might be false due
+    // to {ib} splits.
+    bool mHasInlineEnds:1;
+    // Whether construction from this item will create a popup that needs to
+    // go into the global popup items.
+    bool mIsPopup:1;
+    // Whether this item should be treated as a line participant
+    bool mIsLineParticipant:1;
+    // Whether this item is for an SVG <a> element
+    bool mIsForSVGAElement:1;
 
   private:
     FrameConstructionItem(const FrameConstructionItem& aOther) MOZ_DELETE; /* not implemented */

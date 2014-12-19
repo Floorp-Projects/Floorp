@@ -15,6 +15,7 @@
 #include "nsPresContext.h"
 #include "nsIFrameInlines.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/Preferences.h"
 #include <algorithm>
 
 #ifdef DEBUG
@@ -23,6 +24,9 @@
 
 using namespace mozilla;
 using namespace mozilla::layout;
+
+static bool sFloatFragmentsInsideColumnEnabled;
+static bool sFloatFragmentsInsideColumnPrefCached;
 
 nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
                                        nsPresContext* aPresContext,
@@ -46,6 +50,13 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     mFloatBreakType(NS_STYLE_CLEAR_NONE),
     mConsumedBSize(aConsumedBSize)
 {
+  if (!sFloatFragmentsInsideColumnPrefCached) {
+    sFloatFragmentsInsideColumnPrefCached = true;
+    Preferences::AddBoolVarCache(&sFloatFragmentsInsideColumnEnabled,
+                                 "layout.float-fragments-inside-column.enabled");
+  }
+  SetFlag(BRS_FLOAT_FRAGMENTS_INSIDE_COLUMN_ENABLED, sFloatFragmentsInsideColumnEnabled);
+  
   WritingMode wm = aReflowState.GetWritingMode();
   SetFlag(BRS_ISFIRSTINFLOW, aFrame->GetPrevInFlow() == nullptr);
   SetFlag(BRS_ISOVERFLOWCONTAINER, IS_TRUE_OVERFLOW_CONTAINER(aFrame));
@@ -422,11 +433,19 @@ nsBlockReflowState::SetupPushedFloatList()
 }
 
 void
-nsBlockReflowState::AppendPushedFloat(nsIFrame* aFloatCont)
+nsBlockReflowState::AppendPushedFloatChain(nsIFrame* aFloatCont)
 {
   SetupPushedFloatList();
-  aFloatCont->AddStateBits(NS_FRAME_IS_PUSHED_FLOAT);
-  mPushedFloats->AppendFrame(mBlock, aFloatCont);
+  while (true) {
+    aFloatCont->AddStateBits(NS_FRAME_IS_PUSHED_FLOAT);
+    mPushedFloats->AppendFrame(mBlock, aFloatCont);
+    aFloatCont = aFloatCont->GetNextInFlow();
+    if (!aFloatCont || aFloatCont->GetParent() != mBlock) {
+      break;
+    }
+    DebugOnly<nsresult> rv = mBlock->StealFrame(aFloatCont);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "StealFrame should succeed");
+  }
 }
 
 /**
@@ -859,12 +878,13 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
 
   // In the case that we're in columns and not splitting floats, we need
   // to check here that the float's height fit, and if it didn't, bail.
-  // (This code is only for DISABLE_FLOAT_BREAKING_IN_COLUMNS .)
+  // (controlled by the pref "layout.float-fragments-inside-column.enabled")
   //
   // Likewise, if none of the float fit, and it needs to be pushed in
   // its entirety to the next page (NS_FRAME_IS_TRUNCATED or
   // NS_INLINE_IS_BREAK_BEFORE), we need to do the same.
   if ((ContentBSize() != NS_UNCONSTRAINEDSIZE &&
+       !GetFlag(BRS_FLOAT_FRAGMENTS_INSIDE_COLUMN_ENABLED) &&
        adjustedAvailableSpace.BSize(wm) == NS_UNCONSTRAINEDSIZE &&
        !mustPlaceFloat &&
        aFloat->BSize(wm) + floatMargin.BStartEnd(wm) >
@@ -954,6 +974,8 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
 
   if (!NS_FRAME_IS_FULLY_COMPLETE(reflowStatus)) {
     mBlock->SplitFloat(*this, aFloat, reflowStatus);
+  } else {
+    MOZ_ASSERT(!aFloat->GetNextInFlow());
   }
 
 #ifdef NOISY_FLOATMANAGER
@@ -1005,8 +1027,7 @@ nsBlockReflowState::PushFloatPastBreak(nsIFrame *aFloat)
   // isn't actually a continuation.
   DebugOnly<nsresult> rv = mBlock->StealFrame(aFloat);
   NS_ASSERTION(NS_SUCCEEDED(rv), "StealFrame should succeed");
-  AppendPushedFloat(aFloat);
-
+  AppendPushedFloatChain(aFloat);
   NS_FRAME_SET_OVERFLOW_INCOMPLETE(mReflowStatus);
 }
 

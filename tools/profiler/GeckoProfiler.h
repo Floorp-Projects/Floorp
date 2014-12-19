@@ -201,6 +201,9 @@ static inline double profiler_time(const mozilla::TimeStamp& aTime) { return 0; 
 
 static inline bool profiler_in_privacy_mode() { return false; }
 
+static inline void profiler_log(const char *str) {}
+static inline void profiler_log(const char *fmt, va_list args) {}
+
 #else
 
 #include "GeckoProfilerImpl.h"

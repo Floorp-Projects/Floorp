@@ -1415,6 +1415,10 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
         } else {
             ok = GetPrincipalOrSOP(cx, obj, getter_AddRefs(prinOrSop));
         }
+    } else if (args[0].isNull()) {
+        // Null means that we just pass prinOrSop = nullptr, and get an
+        // nsNullPrincipal.
+        ok = true;
     }
 
     if (!ok)

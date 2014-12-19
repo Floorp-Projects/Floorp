@@ -229,6 +229,12 @@ public:
                      const nsTArray<ScrollableLayerGuid>& aTargets);
 
   /**
+   * Helper function for SetTargetAPZC when used with single-target events,
+   * such as mouse wheel events.
+   */
+  void SetTargetAPZC(uint64_t aInputBlockId, const ScrollableLayerGuid& aTarget);
+
+  /**
    * Updates any zoom constraints contained in the <meta name="viewport"> tag.
    */
   void UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,

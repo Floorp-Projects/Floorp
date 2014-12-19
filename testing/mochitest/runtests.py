@@ -1712,7 +1712,7 @@ class Mochitest(MochitestUtilsMixin):
         testsToRun = bisect.pre_test(options, testsToRun, status)
         # To inform that we are in the process of bisection, and to look for bleedthrough
         if options.bisectChunk != "default" and not bisection_log:
-            log.info("TEST-UNEXPECTED-FAIL | Bisection | Please ignore repeats and look for 'Bleedthrough' (if any) at the end of the failure list")
+            self.log.info("TEST-UNEXPECTED-FAIL | Bisection | Please ignore repeats and look for 'Bleedthrough' (if any) at the end of the failure list")
             bisection_log = 1
 
       result = self.doTests(options, onLaunch, testsToRun)

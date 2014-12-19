@@ -71,6 +71,7 @@ SamplerState LayerTextureSamplerLinear
 float4 TransformedPosition(float2 aInPosition)
 {
   // the current vertex's position on the quad
+  // [x,y,0,1] is mandated by the CSS Transforms spec as the point value to transform
   float4 position = float4(0, 0, 0, 1);
 
   // We use 4 component floats to uniquely describe a rectangle, by the structure

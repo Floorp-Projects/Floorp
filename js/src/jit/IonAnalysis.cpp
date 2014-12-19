@@ -2036,6 +2036,64 @@ jit::AssertGraphCoherency(MIRGraph &graph)
 }
 
 #ifdef DEBUG
+static bool
+IsResumableMIRType(MIRType type)
+{
+    // see CodeGeneratorShared::encodeAllocation
+    switch (type) {
+      case MIRType_Undefined:
+      case MIRType_Null:
+      case MIRType_Boolean:
+      case MIRType_Int32:
+      case MIRType_Double:
+      case MIRType_Float32:
+      case MIRType_String:
+      case MIRType_Symbol:
+      case MIRType_Object:
+      case MIRType_MagicOptimizedArguments:
+      case MIRType_MagicOptimizedOut:
+      case MIRType_MagicUninitializedLexical:
+      case MIRType_Value:
+        return true;
+
+      case MIRType_MagicHole:
+      case MIRType_MagicIsConstructing:
+      case MIRType_ObjectOrNull:
+      case MIRType_None:
+      case MIRType_Slots:
+      case MIRType_Elements:
+      case MIRType_Pointer:
+      case MIRType_Shape:
+      case MIRType_TypeObject:
+      case MIRType_ForkJoinContext:
+      case MIRType_Float32x4:
+      case MIRType_Int32x4:
+      case MIRType_Doublex2:
+        return false;
+    }
+    MOZ_CRASH("Unknown MIRType.");
+}
+
+static void
+AssertResumableOperands(MNode *node)
+{
+    for (size_t i = 0, e = node->numOperands(); i < e; ++i) {
+        MDefinition *op = node->getOperand(i);
+        if (op->isRecoveredOnBailout())
+            continue;
+        MOZ_ASSERT(IsResumableMIRType(op->type()),
+                   "Resume point cannot encode its operands");
+    }
+}
+
+static void
+AssertIfResumableInstruction(MDefinition *def)
+{
+    if (!def->isRecoveredOnBailout())
+        return;
+    AssertResumableOperands(def);
+}
+
 static void
 AssertResumePointDominatedByOperands(MResumePoint *resume)
 {
@@ -2133,15 +2191,22 @@ jit::AssertExtendedGraphCoherency(MIRGraph &graph)
                     } while (*opIter != ins);
                 }
             }
-            if (MResumePoint *resume = ins->resumePoint())
+            AssertIfResumableInstruction(ins);
+            if (MResumePoint *resume = ins->resumePoint()) {
                 AssertResumePointDominatedByOperands(resume);
+                AssertResumableOperands(resume);
+            }
         }
 
         // Verify that the block resume points are dominated by their operands.
-        if (MResumePoint *resume = block->entryResumePoint())
+        if (MResumePoint *resume = block->entryResumePoint()) {
             AssertResumePointDominatedByOperands(resume);
-        if (MResumePoint *resume = block->outerResumePoint())
+            AssertResumableOperands(resume);
+        }
+        if (MResumePoint *resume = block->outerResumePoint()) {
             AssertResumePointDominatedByOperands(resume);
+            AssertResumableOperands(resume);
+        }
     }
 #endif
 }

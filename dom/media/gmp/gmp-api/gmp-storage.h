@@ -118,6 +118,7 @@ class GMPRecordClient {
 class GMPRecordIterator {
 public:
   // Retrieve the name for the current record.
+  // aOutName is null terminated at character  at index (*aOutNameLength).
   // Returns GMPNoErr if successful, or GMPEndOfEnumeration if iteration has
   // reached the end.
   virtual GMPErr GetName(const char ** aOutName, uint32_t * aOutNameLength) = 0;
