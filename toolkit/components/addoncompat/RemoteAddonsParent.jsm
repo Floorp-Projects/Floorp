@@ -421,13 +421,17 @@ let EventTargetParent = {
     // If there's already an identical listener, don't do anything.
     for (let i = 0; i < forType.length; i++) {
       if (forType[i].listener === listener &&
+          forType[i].target === target &&
           forType[i].useCapture === useCapture &&
           forType[i].wantsUntrusted === wantsUntrusted) {
         return;
       }
     }
 
-    forType.push({listener: listener, wantsUntrusted: wantsUntrusted, useCapture: useCapture});
+    forType.push({listener: listener,
+                  target: target,
+                  wantsUntrusted: wantsUntrusted,
+                  useCapture: useCapture});
   },
 
   removeEventListener: function(target, type, listener, useCapture) {
@@ -445,7 +449,9 @@ let EventTargetParent = {
     let forType = setDefault(listeners, type, []);
 
     for (let i = 0; i < forType.length; i++) {
-      if (forType[i].listener === listener && forType[i].useCapture === useCapture) {
+      if (forType[i].listener === listener &&
+          forType[i].target === target &&
+          forType[i].useCapture === useCapture) {
         forType.splice(i, 1);
         NotificationTracker.remove(["event", type, useCapture]);
         break;
@@ -473,18 +479,29 @@ let EventTargetParent = {
 
       // Make a copy in case they call removeEventListener in the listener.
       let handlers = [];
-      for (let {listener, wantsUntrusted, useCapture} of forType) {
+      for (let {listener, target, wantsUntrusted, useCapture} of forType) {
         if ((wantsUntrusted || isTrusted) && useCapture == capturing) {
-          handlers.push(listener);
+          handlers.push([listener, target]);
         }
       }
 
-      for (let handler of handlers) {
+      for (let [handler, target] of handlers) {
+        let EventProxy = {
+          get: function(actualEvent, name) {
+            if (name == "currentTarget") {
+              return target;
+            } else {
+              return actualEvent[name];
+            }
+          }
+        };
+        let proxyEvent = new Proxy(event, EventProxy);
+
         try {
           if ("handleEvent" in handler) {
-            handler.handleEvent(event);
+            handler.handleEvent(proxyEvent);
           } else {
-            handler.call(event.target, event);
+            handler.call(event.target, proxyEvent);
           }
         } catch (e) {
           Cu.reportError(e);
