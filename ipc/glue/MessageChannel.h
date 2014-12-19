@@ -84,6 +84,8 @@ class MessageChannel : HasResultCodes
     // for process links only, not thread links.
     void CloseWithError();
 
+    void CloseWithTimeout();
+
     void SetAbortOnError(bool abort)
     {
         mAbortOnError = true;
@@ -518,9 +520,28 @@ class MessageChannel : HasResultCodes
        int32_t mOldTransaction;
     };
 
+    // If a sync message times out, we store its sequence number here. Any
+    // future sync messages will fail immediately. Once the reply for original
+    // sync message is received, we allow sync messages again.
+    //
+    // When a message times out, nothing is done to inform the other side. The
+    // other side will eventually dispatch the message and send a reply. Our
+    // side is responsible for replying to all sync messages sent by the other
+    // side when it dispatches the timed out message. The response is always an
+    // error.
+    //
+    // A message is only timed out if it initiated a transaction. This avoids
+    // hitting a lot of corner cases with message nesting that we don't really
+    // care about.
+    int32_t mTimedOutMessageSeqno;
+
     // If waiting for the reply to a sync out-message, it will be saved here
     // on the I/O thread and then read and cleared by the worker thread.
     nsAutoPtr<Message> mRecvd;
+
+    // If a sync message reply that is an error arrives, we increment this
+    // counter rather than storing it in mRecvd.
+    size_t mRecvdErrors;
 
     // Queue of all incoming messages, except for replies to sync and urgent
     // messages, which are delivered directly to mRecvd, and any pending urgent
