@@ -969,3 +969,29 @@ html, .fx-embedded, #main,
     display: none;
   }
 }
+
+.self-view-hidden-message {
+  /* Not displayed by default; display is turned on elsewhere when the
+   * self-view is actually hidden.
+   */
+  display: none;
+}
+
+/* Avoid the privacy problem where a user can size the window so small that
+ * part of the self view is not shown.  If the self view isn't completely
+ * displayable...
+ */
+@media screen and (max-height:160px) {
+
+  /* disable the self view */
+  .standalone .OT_publisher {
+    display: none;
+  }
+
+  /* and enable a message telling the user how to get it back */
+  .standalone .self-view-hidden-message {
+    display: inline;
+    position: relative;
+    top: 90px;
+  }
+}
