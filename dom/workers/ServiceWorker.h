@@ -41,9 +41,21 @@ public:
   }
 
   void
+  SetState(ServiceWorkerState aState)
+  {
+    mState = aState;
+  }
+
+  void
   GetScriptURL(nsString& aURL) const
   {
     aURL = mURL;
+  }
+
+  void
+  DispatchStateChange()
+  {
+    DOMEventTargetHelper::DispatchTrustedEvent(NS_LITERAL_STRING("statechange"));
   }
 
   WorkerPrivate*

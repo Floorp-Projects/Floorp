@@ -68,21 +68,20 @@ ServiceWorkerRegistrationInfo::Clear()
 {
   if (mInstallingWorker) {
     // FIXME(nsm): Terminate installing worker.
-    // Bug 1043701 Set state to redundant.
-    // Fire statechange.
+    mInstallingWorker->UpdateState(ServiceWorkerState::Redundant);
     mInstallingWorker = nullptr;
     // FIXME(nsm): Abort any inflight requests from installing worker.
   }
 
   if (mWaitingWorker) {
-    // FIXME(nsm): Bug 1043701 Set state to redundant.
+    mWaitingWorker->UpdateState(ServiceWorkerState::Redundant);
     // Fire statechange.
     mWaitingWorker = nullptr;
     mWaitingToActivate = false;
   }
 
   if (mActiveWorker) {
-    // FIXME(nsm): Bug 1043701 Set state to redundant.
+    mActiveWorker->UpdateState(ServiceWorkerState::Redundant);
     mActiveWorker = nullptr;
   }
 
@@ -328,7 +327,7 @@ public:
 
       if (mRegistration) {
         nsRefPtr<ServiceWorkerInfo> newest = mRegistration->Newest();
-        if (newest && mScriptSpec.Equals(newest->GetScriptSpec()) &&
+        if (newest && mScriptSpec.Equals(newest->ScriptSpec()) &&
             mScriptSpec.Equals(mRegistration->mScriptSpec)) {
           mRegistration->mPendingUninstall = false;
           Succeed();
@@ -403,7 +402,7 @@ private:
     AssertIsOnMainThread();
     if (mRegistration->mInstallingWorker) {
       // FIXME(nsm): "Terminate installing worker".
-      // "Run the update state"
+      mRegistration->mInstallingWorker->UpdateState(ServiceWorkerState::Redundant);
       mRegistration->mInstallingWorker = nullptr;
     }
 
@@ -476,12 +475,13 @@ private:
   {
     if (mRegistration->mInstallingWorker) {
       // FIXME(nsm): Terminate and stuff
+      mRegistration->mInstallingWorker->UpdateState(ServiceWorkerState::Redundant);
     }
 
     nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     swm->InvalidateServiceWorkerRegistrationWorker(mRegistration,
                                                    WhichServiceWorker::INSTALLING_WORKER);
-    mRegistration->mInstallingWorker = new ServiceWorkerInfo(mRegistration->mScriptSpec);
+    mRegistration->mInstallingWorker = new ServiceWorkerInfo(mRegistration, mRegistration->mScriptSpec);
     mRegistration->mInstallingWorker->UpdateState(ServiceWorkerState::Installing);
 
     Succeed();
@@ -498,13 +498,13 @@ private:
 
     nsRefPtr<ServiceWorker> serviceWorker;
     nsresult rv =
-      swm->CreateServiceWorker(mRegistration->mInstallingWorker->GetScriptSpec(),
+      swm->CreateServiceWorker(mRegistration->mInstallingWorker->ScriptSpec(),
                                mRegistration->mScope,
                                getter_AddRefs(serviceWorker));
 
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      // FIXME(nsm):
-      MOZ_CRASH("Shouldn't happen yet");
+      ContinueAfterInstallEvent(false /* success */, false /* activate immediately */);
+      return;
     }
 
     nsRefPtr<InstallEventRunnable> r =
@@ -976,12 +976,12 @@ ServiceWorkerRegistrationInfo::Activate()
   MOZ_ASSERT(mActiveWorker);
   nsRefPtr<ServiceWorker> serviceWorker;
   nsresult rv =
-    swm->CreateServiceWorker(mActiveWorker->GetScriptSpec(),
+    swm->CreateServiceWorker(mActiveWorker->ScriptSpec(),
                              mScope,
                              getter_AddRefs(serviceWorker));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    // FIXME(nsm): Do the same thing as when "activate" event failed to
-    // dispatch.
+    FinishActivate(false /* success */);
+    return;
   }
 
   nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo> handle(
@@ -1466,6 +1466,48 @@ ServiceWorkerRegistrationInfo::FinishActivate(bool aSuccess)
   }
 }
 
+void
+ServiceWorkerRegistrationInfo::QueueStateChangeEvent(ServiceWorkerInfo* aInfo,
+                                                     ServiceWorkerState aState) const
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aInfo);
+  MOZ_ASSERT(aInfo == mInstallingWorker ||
+             aInfo == mWaitingWorker ||
+             aInfo == mActiveWorker);
+
+  nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  nsRefPtr<ServiceWorkerManager::ServiceWorkerDomainInfo> domainInfo =
+    swm->GetDomainInfo(mScope);
+
+  if (domainInfo) {
+    WhichServiceWorker whichOne;
+    if (aInfo == mInstallingWorker) {
+      whichOne = WhichServiceWorker::INSTALLING_WORKER;
+    } else if (aInfo == mWaitingWorker) {
+      whichOne = WhichServiceWorker::WAITING_WORKER;
+    } else if (aInfo == mActiveWorker) {
+      whichOne = WhichServiceWorker::ACTIVE_WORKER;
+    } else {
+      MOZ_CRASH("Hit unexpected case");
+    }
+
+    // Refactor this iteration pattern across this and 2 other call-sites.
+    nsTObserverArray<ServiceWorkerRegistration*>::ForwardIterator it(domainInfo->mServiceWorkerRegistrations);
+    while (it.HasMore()) {
+      nsRefPtr<ServiceWorkerRegistration> target = it.GetNext();
+      nsAutoString regScope;
+      target->GetScope(regScope);
+      MOZ_ASSERT(!regScope.IsEmpty());
+
+      NS_ConvertUTF16toUTF8 utf8Scope(regScope);
+      if (utf8Scope.Equals(mScope)) {
+        target->QueueStateChangeEvent(whichOne, aState);
+      }
+    }
+  }
+}
+
 NS_IMETHODIMP
 ServiceWorkerManager::CreateServiceWorkerForWindow(nsPIDOMWindow* aWindow,
                                                    const nsACString& aScriptSpec,
@@ -1846,13 +1888,14 @@ ServiceWorkerManager::GetServiceWorkerForScope(nsIDOMWindow* aWindow,
 
   nsRefPtr<ServiceWorker> serviceWorker;
   rv = CreateServiceWorkerForWindow(window,
-                                    info->GetScriptSpec(),
+                                    info->ScriptSpec(),
                                     registration->mScope,
                                     getter_AddRefs(serviceWorker));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
+  serviceWorker->SetState(info->State());
   serviceWorker.forget(aServiceWorker);
   return NS_OK;
 }
@@ -1890,7 +1933,7 @@ ServiceWorkerManager::GetDocumentController(nsIDOMWindow* aWindow, nsISupports**
 
   nsRefPtr<ServiceWorker> serviceWorker;
   nsresult rv = CreateServiceWorkerForWindow(window,
-                                             registration->mActiveWorker->GetScriptSpec(),
+                                             registration->mActiveWorker->ScriptSpec(),
                                              registration->mScope,
                                              getter_AddRefs(serviceWorker));
   if (NS_WARN_IF(NS_FAILED(rv))) {
