@@ -1,13 +1,13 @@
-window.tests.set('globalArrayNewObject', (function() {
+window.tests.set('globalArrayObjectLiteral', (function() {
 var garbage = [];
 var garbageIndex = 0;
 return {
-    description: "var foo = [new Object(), ....]",
+    description: "var foo = [{}, ....]",
     load: (N) => { garbage = new Array(N); },
     unload: () => { garbage = []; garbageIndex = 0; },
     makeGarbage: (N) => {
         for (var i = 0; i < N; i++) {
-            garbage[garbageIndex++] = new Object();
+            garbage[garbageIndex++] = {a: 'foo', b: 'bar', 0: 'foo', 1: 'bar'};
             if (garbageIndex == garbage.length)
                 garbageIndex = 0;
         }
