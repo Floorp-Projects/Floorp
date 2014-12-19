@@ -2869,7 +2869,7 @@ ContentParent::Observe(nsISupports* aSubject,
         nsCOMPtr<nsIProfileSaveEvent> pse = do_QueryInterface(aSubject);
         if (pse) {
             nsCString result;
-            unused << CallGetProfile(&result);
+            unused << SendGetProfile(&result);
             if (!result.IsEmpty()) {
                 pse->AddSubProfile(result.get());
             }

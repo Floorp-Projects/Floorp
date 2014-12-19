@@ -521,7 +521,7 @@ child:
     async StartProfiler(uint32_t aEntries, double aInterval, nsCString[] aFeatures,
                         nsCString[] aThreadNameFilters);
     async StopProfiler();
-    intr GetProfile()
+    prio(high) sync GetProfile()
       returns (nsCString aProfile);
 
     NuwaFreeze();
