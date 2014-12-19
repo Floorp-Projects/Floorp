@@ -327,7 +327,6 @@ MediaSourceReader::Shutdown()
 void
 MediaSourceReader::ContinueShutdown()
 {
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   if (mTrackBuffers.Length()) {
     mTrackBuffers[0]->Shutdown()->Then(GetTaskQueue(), __func__, this,
                                        &MediaSourceReader::ContinueShutdown,
