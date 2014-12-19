@@ -68,7 +68,10 @@ public class AboutHomeComponent extends BaseComponent {
     }
 
     private View getHomeBannerView() {
-        return mSolo.getView(R.id.home_banner);
+        if (mSolo.waitForView(R.id.home_banner)) {
+            return mSolo.getView(R.id.home_banner);
+        }
+        return null;
     }
 
     public AboutHomeComponent assertCurrentPanel(final PanelType expectedPanel) {
@@ -98,6 +101,7 @@ public class AboutHomeComponent extends BaseComponent {
         View banner = getHomeBannerView();
         fAssertTrue("The HomeBanner is not visible",
                     getHomePagerContainer().getVisibility() != View.VISIBLE ||
+                    banner == null ||
                     banner.getVisibility() != View.VISIBLE ||
                     banner.getTranslationY() == banner.getHeight());
         return this;
