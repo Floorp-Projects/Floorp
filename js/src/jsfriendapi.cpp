@@ -761,7 +761,7 @@ FormatFrame(JSContext *cx, const ScriptFrameIter &iter, char *buf, int num,
     RootedScript script(cx, iter.script());
     jsbytecode* pc = iter.pc();
 
-    RootedObject scopeChain(cx, iter.scopeChain());
+    RootedObject scopeChain(cx, iter.scopeChain(cx));
     JSAutoCompartment ac(cx, scopeChain);
 
     const char *filename = script->filename();
@@ -796,7 +796,7 @@ FormatFrame(JSContext *cx, const ScriptFrameIter &iter, char *buf, int num,
             if (i < iter.numFormalArgs() && script->formalIsAliased(i)) {
                 for (AliasedFormalIter fi(script); ; fi++) {
                     if (fi.frameIndex() == i) {
-                        arg = iter.callObj().aliasedVar(fi);
+                        arg = iter.callObj(cx).aliasedVar(fi);
                         break;
                     }
                 }

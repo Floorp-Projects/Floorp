@@ -1605,8 +1605,8 @@ class FrameIter
     Value       unaliasedActual(unsigned i, MaybeCheckAliasing = CHECK_ALIASING) const;
     template <class Op> inline void unaliasedForEachActual(JSContext *cx, Op op);
 
-    JSObject   *scopeChain() const;
-    CallObject &callObj() const;
+    JSObject   *scopeChain(JSContext *cx) const;
+    CallObject &callObj(JSContext *cx) const;
 
     bool        hasArgsObj() const;
     ArgumentsObject &argsObj() const;
@@ -1621,7 +1621,7 @@ class FrameIter
     // Both methods exist because of speed. thisv() will never rematerialize
     // an Ion frame, whereas computedThisValue() will.
     Value       computedThisValue() const;
-    Value       thisv(JSContext *cx);
+    Value       thisv(JSContext *cx) const;
 
     Value       returnValue() const;
     void        setReturnValue(const Value &v);
