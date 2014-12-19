@@ -55,7 +55,7 @@ InterpreterFrame::initExecuteFrame(JSContext *cx, JSScript *script, AbstractFram
             MOZ_ASSERT(iter.isFunctionFrame() || iter.isGlobalFrame());
             MOZ_ASSERT(!iter.isAsmJS());
             if (iter.isFunctionFrame()) {
-                callee = iter.callee();
+                callee = iter.callee(cx);
                 flags_ |= FUNCTION;
             } else {
                 flags_ |= GLOBAL;
