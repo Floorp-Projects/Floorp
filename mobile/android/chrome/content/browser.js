@@ -109,6 +109,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "SharedPreferences",
 XPCOMUtils.defineLazyModuleGetter(this, "Notifications",
                                   "resource://gre/modules/Notifications.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "AboutReader",
+                                  "resource://gre/modules/AboutReader.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
                                   "resource://gre/modules/ReaderMode.jsm");
 
@@ -119,7 +122,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "GMPInstallManager",
 [
   ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
   ["InputWidgetHelper", "chrome://browser/content/InputWidgetHelper.js"],
-  ["AboutReader", "chrome://global/content/reader/aboutReader.js"],
   ["MasterPassword", "chrome://browser/content/MasterPassword.js"],
   ["PluginHelper", "chrome://browser/content/PluginHelper.js"],
   ["OfflineApps", "chrome://browser/content/OfflineApps.js"],
