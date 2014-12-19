@@ -1518,22 +1518,38 @@ js::NativeDefineElement(ExclusiveContext *cx, HandleNativeObject obj, uint32_t i
     return NativeDefineProperty(cx, obj, id, value, getter, setter, attrs);
 }
 
+
+/*** [[Get]] *************************************************************************************/
+
+static inline bool
+CallGetter(JSContext* cx, HandleObject receiver, HandleShape shape, MutableHandleValue vp)
+{
+    MOZ_ASSERT(!shape->hasDefaultGetter());
+
+    if (shape->hasGetterValue()) {
+        Value fval = shape->getterValue();
+        return InvokeGetterOrSetter(cx, receiver, fval, 0, 0, vp);
+    }
+
+    RootedId id(cx, shape->propid());
+    return CallJSPropertyOp(cx, shape->getterOp(), receiver, id, vp);
+}
+
 template <AllowGC allowGC>
 static MOZ_ALWAYS_INLINE bool
-NativeGetExistingPropertyInline(JSContext *cx,
-                                typename MaybeRooted<JSObject*, allowGC>::HandleType obj,
-                                typename MaybeRooted<JSObject*, allowGC>::HandleType receiver,
-                                typename MaybeRooted<NativeObject*, allowGC>::HandleType pobj,
-                                typename MaybeRooted<Shape*, allowGC>::HandleType shape,
-                                typename MaybeRooted<Value, allowGC>::MutableHandleType vp)
+GetExistingProperty(JSContext *cx,
+                    typename MaybeRooted<JSObject*, allowGC>::HandleType receiver,
+                    typename MaybeRooted<NativeObject*, allowGC>::HandleType obj,
+                    typename MaybeRooted<Shape*, allowGC>::HandleType shape,
+                    typename MaybeRooted<Value, allowGC>::MutableHandleType vp)
 {
     if (shape->hasSlot()) {
-        vp.set(pobj->getSlot(shape->slot()));
+        vp.set(obj->getSlot(shape->slot()));
         MOZ_ASSERT_IF(!vp.isMagic(JS_UNINITIALIZED_LEXICAL) &&
-                      !pobj->hasSingletonType() &&
-                      !pobj->template is<ScopeObject>() &&
+                      !obj->hasSingletonType() &&
+                      !obj->template is<ScopeObject>() &&
                       shape->hasDefaultGetter(),
-                      js::types::TypeHasProperty(cx, pobj->type(), shape->propid(), vp));
+                      js::types::TypeHasProperty(cx, obj->type(), shape->propid(), vp));
     } else {
         vp.setUndefined();
     }
@@ -1559,40 +1575,41 @@ NativeGetExistingPropertyInline(JSContext *cx,
     if (!allowGC)
         return false;
 
-    if (!shape->get(cx,
+    if (!CallGetter(cx,
                     MaybeRooted<JSObject*, allowGC>::toHandle(receiver),
-                    MaybeRooted<JSObject*, allowGC>::toHandle(obj),
-                    MaybeRooted<JSObject*, allowGC>::toHandle(pobj),
+                    MaybeRooted<Shape*, allowGC>::toHandle(shape),
                     MaybeRooted<Value, allowGC>::toMutableHandle(vp)))
     {
         return false;
     }
 
-    /* Update slotful shapes according to the value produced by the getter. */
-    if (shape->hasSlot() && pobj->contains(cx, shape))
-        pobj->setSlot(shape->slot(), vp);
+    // Ancient nonstandard extension: via the JSAPI it's possible to create a
+    // data property that has both a slot and a getter. In that case, copy the
+    // value returned by the getter back into the slot.
+    if (shape->hasSlot() && obj->contains(cx, shape))
+        obj->setSlot(shape->slot(), vp);
 
     return true;
 }
 
 bool
-js::NativeGetExistingProperty(JSContext *cx, HandleObject obj, HandleNativeObject pobj,
+js::NativeGetExistingProperty(JSContext *cx, HandleObject receiver, HandleNativeObject obj,
                               HandleShape shape, MutableHandleValue vp)
 {
-    return NativeGetExistingPropertyInline<CanGC>(cx, obj, obj, pobj, shape, vp);
+    return GetExistingProperty<CanGC>(cx, receiver, obj, shape, vp);
 }
 
 /*
  * Given pc pointing after a property accessing bytecode, return true if the
- * access is "object-detecting" in the sense used by web scripts, e.g., when
- * checking whether document.all is defined.
+ * access is "property-detecting" -- that is, if we shouldn't warn about it
+ * even if no such property is found and strict warnings are enabled.
  */
 static bool
 Detecting(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     MOZ_ASSERT(script->containsPC(pc));
 
-    /* General case: a branch or equality op follows the access. */
+    // General case: a branch or equality op follows the access.
     JSOp op = JSOp(*pc);
     if (js_CodeSpec[op].format & JOF_DETECTING)
         return true;
@@ -1600,10 +1617,7 @@ Detecting(JSContext *cx, JSScript *script, jsbytecode *pc)
     jsbytecode *endpc = script->codeEnd();
 
     if (op == JSOP_NULL) {
-        /*
-         * Special case #1: handle (document.all == null).  Don't sweat
-         * about JS1.2's revision of the equality operators here.
-         */
+        // Special case #1: don't warn about (obj.prop == null).
         if (++pc < endpc) {
             op = JSOp(*pc);
             return op == JSOP_EQ || op == JSOP_NE;
@@ -1612,11 +1626,7 @@ Detecting(JSContext *cx, JSScript *script, jsbytecode *pc)
     }
 
     if (op == JSOP_GETGNAME || op == JSOP_GETNAME) {
-        /*
-         * Special case #2: handle (document.all == undefined).  Don't worry
-         * about a local variable named |undefined| shadowing the immutable
-         * global binding...because, really?
-         */
+        // Special case #2: don't warn about (obj.prop == undefined).
         JSAtom *atom = script->getAtom(GET_UINT32_INDEX(pc));
         if (atom == cx->names().undefined &&
             (pc += js_CodeSpec[op].length) < endpc) {
@@ -1630,13 +1640,13 @@ Detecting(JSContext *cx, JSScript *script, jsbytecode *pc)
 
 template <AllowGC allowGC>
 static MOZ_ALWAYS_INLINE bool
-GetPropertyHelperInline(JSContext *cx,
+NativeGetPropertyInline(JSContext *cx,
                         typename MaybeRooted<NativeObject*, allowGC>::HandleType obj,
                         typename MaybeRooted<JSObject*, allowGC>::HandleType receiver,
                         typename MaybeRooted<jsid, allowGC>::HandleType id,
                         typename MaybeRooted<Value, allowGC>::MutableHandleType vp)
 {
-    /* This call site is hot -- use the always-inlined variant of LookupNativeProperty(). */
+    /* This call site is hot -- use the always-inlined LookupPropertyInline(). */
     typename MaybeRooted<JSObject*, allowGC>::RootType obj2(cx);
     typename MaybeRooted<Shape*, allowGC>::RootType shape(cx);
     if (!LookupPropertyInline<allowGC>(cx, obj, id, &obj2, &shape))
@@ -1737,40 +1747,26 @@ GetPropertyHelperInline(JSContext *cx,
         return true;
     }
 
-    // This call site is hot -- use the always-inlined variant of
-    // NativeGetExistingProperty().
-    if (!NativeGetExistingPropertyInline<allowGC>(cx, obj, receiver, nobj2, shape, vp))
-        return false;
-
-    return true;
+    // This call site is hot -- use the always-inlined GetExistingProperty().
+    return GetExistingProperty<allowGC>(cx, receiver, nobj2, shape, vp);
 }
 
 bool
 js::NativeGetProperty(JSContext *cx, HandleNativeObject obj, HandleObject receiver, HandleId id,
                       MutableHandleValue vp)
 {
-    /* This call site is hot -- use the always-inlined variant of GetPropertyHelper(). */
-    return GetPropertyHelperInline<CanGC>(cx, obj, receiver, id, vp);
+    return NativeGetPropertyInline<CanGC>(cx, obj, receiver, id, vp);
 }
 
 bool
 js::NativeGetPropertyNoGC(JSContext *cx, NativeObject *obj, JSObject *receiver, jsid id, Value *vp)
 {
-    AutoAssertNoException nogc(cx);
-    return GetPropertyHelperInline<NoGC>(cx, obj, receiver, id, vp);
+    AutoAssertNoException noexc(cx);
+    return NativeGetPropertyInline<NoGC>(cx, obj, receiver, id, vp);
 }
 
-bool
-js::NativeGetElement(JSContext *cx, HandleNativeObject obj, HandleObject receiver, uint32_t index,
-                     MutableHandleValue vp)
-{
-    RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
-        return false;
 
-    /* This call site is hot -- use the always-inlined variant of js_GetPropertyHelper(). */
-    return GetPropertyHelperInline<CanGC>(cx, obj, receiver, id, vp);
-}
+/*** [[Set]] *************************************************************************************/
 
 static bool
 MaybeReportUndeclaredVarAssignment(JSContext *cx, JSString *propname)
@@ -1795,9 +1791,6 @@ MaybeReportUndeclaredVarAssignment(JSContext *cx, JSString *propname)
                                         js_GetErrorMessage, nullptr,
                                         JSMSG_UNDECLARED_VAR, bytes.ptr());
 }
-
-
-/*** [[Set]] *************************************************************************************/
 
 /*
  * When a [[Set]] operation finds no existing property with the given id
@@ -2127,6 +2120,9 @@ js::NativeSetElement(JSContext *cx, HandleNativeObject obj, HandleObject receive
         return false;
     return NativeSetProperty(cx, obj, receiver, id, Qualified, vp, strict);
 }
+
+
+/* * */
 
 bool
 js::NativeSetPropertyAttributes(JSContext *cx, HandleNativeObject obj, HandleId id,
