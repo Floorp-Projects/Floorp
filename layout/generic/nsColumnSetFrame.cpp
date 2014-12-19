@@ -389,9 +389,12 @@ nsColumnSetFrame::GetMinISize(nsRenderingContext *aRenderingContext)
     NS_ASSERTION(colStyle->mColumnCount > 0,
                  "column-count and column-width can't both be auto");
     // As available width reduces to zero, we still have mColumnCount columns,
-    // so multiply the child's min-width by the number of columns.
+    // so multiply the child's min-width by the number of columns (n) and
+    // include n-1 column gaps.
     colISize = iSize;
     iSize *= colStyle->mColumnCount;
+    nscoord colGap = GetColumnGap(this, colStyle);
+    iSize += colGap * (colStyle->mColumnCount - 1);
     // The multiplication above can make 'width' negative (integer overflow),
     // so use std::max to protect against that.
     iSize = std::max(iSize, colISize);
