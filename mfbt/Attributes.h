@@ -503,7 +503,7 @@
  *   attribute must be used for constructors which intend to provide implicit
  *   conversions.
  * MOZ_NO_ARITHMETIC_EXPR_IN_ARGUMENT: Applies to functions. Makes it a compile
- *   time error to path arithmetic expressions on variables to the function.
+ *   time error to pass arithmetic expressions on variables to the function.
  */
 #ifdef MOZ_CLANG_PLUGIN
 #  define MOZ_MUST_OVERRIDE __attribute__((annotate("moz_must_override")))
