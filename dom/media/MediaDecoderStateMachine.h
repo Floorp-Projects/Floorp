@@ -389,6 +389,23 @@ public:
   void OnSeekCompleted();
   void OnSeekFailed(nsresult aResult);
 
+  void OnWaitForDataResolved(MediaData::Type aType)
+  {
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    if (RequestStatusRef(aType) == RequestStatus::Waiting) {
+      RequestStatusRef(aType) = RequestStatus::Idle;
+      DispatchDecodeTasksIfNeeded();
+    }
+  }
+
+  void OnWaitForDataRejected(WaitForDataRejectValue aRejection)
+  {
+    MOZ_ASSERT(aRejection.mReason == WaitForDataRejectValue::SHUTDOWN);
+    if (RequestStatusRef(aRejection.mType) == RequestStatus::Waiting) {
+      RequestStatusRef(aRejection.mType) = RequestStatus::Idle;
+    }
+  }
+
 private:
   void AcquireMonitorAndInvokeDecodeError();
 
