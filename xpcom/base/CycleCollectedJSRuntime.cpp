@@ -1045,22 +1045,30 @@ CycleCollectedJSRuntime::DeferredFinalize(DeferredFinalizeAppendFunction aAppend
 void
 CycleCollectedJSRuntime::DeferredFinalize(nsISupports* aSupports)
 {
-#if defined(XP_MACOSX) && defined(__LP64__)
-  // We'll crash here if aSupports is poisoned (== 0x5a5a5a5a5a5a5a5a).  This
-  // is better (more informative) than crashing in ReleaseSliceNow().  See
-  // bug 997908.  This patch should get backed out when bug 997908 gets fixed,
-  // or if it doesn't actually help diagnose that bug.  Specifying a constraint
-  // of "r" for aSupports ensures %0 is a register.  Without this, clang
-  // sometimes mishandles this inline assembly code, causing crashes.  See
-  // bug 1091801.
-  __asm__ __volatile__("push %%rax;"
-                       "push %%rdx;"
-                       "movq %0, %%rax;"
-                       "movq (%%rax), %%rdx;"
-                       "pop %%rdx;"
-                       "pop %%rax;" : : "r" (aSupports));
-#endif
+#ifdef MOZ_CRASHREPORTER
+  // Bug 997908's crashes (in ReleaseSliceNow()) might be caused by
+  // intermittent failures here in nsTArray::AppendElement().  So if we see
+  // any failures, deliberately crash and include diagnostic information in
+  // the crash report.
+  size_t oldLength = mDeferredSupports.Length();
+  nsISupports** itemPtr = mDeferredSupports.AppendElement(aSupports);
+  size_t newLength = mDeferredSupports.Length();
+  nsISupports* item = mDeferredSupports.ElementAt(newLength - 1);
+  if ((newLength - oldLength != 1) || !itemPtr ||
+      (*itemPtr != aSupports) || (item != aSupports)) {
+    nsAutoCString debugInfo;
+    debugInfo.AppendPrintf("\noldLength [%u], newLength [%u], aSupports [%p], item [%p], itemPtr [%p], *itemPtr [%p]",
+                           oldLength, newLength, aSupports, item, itemPtr, itemPtr ? *itemPtr : NULL);
+    #define CRASH_MESSAGE "nsTArray::AppendElement() failed!"
+    CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("\nBug 997908: ") +
+                                               NS_LITERAL_CSTRING(CRASH_MESSAGE));
+    CrashReporter::AppendAppNotesToCrashReport(debugInfo);
+    MOZ_CRASH(CRASH_MESSAGE);
+    #undef CRASH_MESSAGE
+  }
+#else
   mDeferredSupports.AppendElement(aSupports);
+#endif
 }
 
 void
