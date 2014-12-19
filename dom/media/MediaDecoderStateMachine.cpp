@@ -1931,6 +1931,7 @@ int64_t MediaDecoderStateMachine::AudioDecodedUsecs()
 bool MediaDecoderStateMachine::HasLowDecodedData(int64_t aAudioUsecs)
 {
   AssertCurrentThreadInMonitor();
+  MOZ_ASSERT(mReader->UseBufferingHeuristics());
   // We consider ourselves low on decoded data if we're low on audio,
   // provided we've not decoded to the end of the audio stream, or
   // if we're low on video frames, provided
@@ -2627,12 +2628,6 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       TimeStamp now = TimeStamp::Now();
       NS_ASSERTION(!mBufferingStart.IsNull(), "Must know buffering start time.");
 
-      // When we enter buffering mode from playback, we push our most recent
-      // video frame back into the queue. So depending on how we started
-      // buffering, we may have one dummy frame in the queue. :-(
-      bool outOfAudio = IsAudioDecoding() && !AudioQueue().IsFinished() && AudioQueue().GetSize() == 0;
-      bool outOfVideo = IsVideoDecoding() && !VideoQueue().IsFinished() && VideoQueue().GetSize() <= 1;
-
       // With buffering heuristics we will remain in the buffering state if
       // we've not decoded enough data to begin playback, or if we've not
       // downloaded a reasonable amount of data inside our buffering time.
@@ -2651,15 +2646,16 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
           ScheduleStateMachine(USECS_PER_S);
           return NS_OK;
         }
-      } else if (outOfAudio || outOfVideo) {
+      } else if (OutOfDecodedAudio() || OutOfDecodedVideo()) {
         MOZ_ASSERT(mReader->IsWaitForDataSupported(),
                    "Don't yet have a strategy for non-heuristic + non-WaitForData");
         DispatchDecodeTasksIfNeeded();
-        MOZ_ASSERT_IF(outOfAudio, mAudioRequestStatus != RequestStatus::Idle);
-        MOZ_ASSERT_IF(outOfVideo, mVideoRequestStatus != RequestStatus::Idle);
+        MOZ_ASSERT_IF(OutOfDecodedAudio(), mAudioRequestStatus != RequestStatus::Idle);
+        MOZ_ASSERT_IF(OutOfDecodedVideo(), mVideoRequestStatus != RequestStatus::Idle);
         DECODER_LOG("In buffering mode, waiting to be notified: outOfAudio: %d, "
                     "mAudioStatus: %d, outOfVideo: %d, mVideoStatus: %d",
-                    outOfAudio, mAudioRequestStatus, outOfVideo, mVideoRequestStatus);
+                    OutOfDecodedAudio(), mAudioRequestStatus,
+                    OutOfDecodedVideo(), mVideoRequestStatus);
         return NS_OK;
       }
 
@@ -2923,9 +2919,16 @@ void MediaDecoderStateMachine::AdvanceFrame()
   // If we don't, switch to buffering mode.
   if (mState == DECODER_STATE_DECODING &&
       mDecoder->GetState() == MediaDecoder::PLAY_STATE_PLAYING &&
-      HasLowDecodedData(remainingTime + EXHAUSTED_DATA_MARGIN_USECS) &&
       mDecoder->IsExpectingMoreData()) {
-    if (!mReader->UseBufferingHeuristics() || JustExitedQuickBuffering() || HasLowUndecodedData()) {
+    bool shouldBuffer;
+    if (mReader->UseBufferingHeuristics()) {
+      shouldBuffer = HasLowDecodedData(remainingTime + EXHAUSTED_DATA_MARGIN_USECS) &&
+                     (JustExitedQuickBuffering() || HasLowUndecodedData());
+    } else {
+      MOZ_ASSERT(mReader->IsWaitForDataSupported());
+      shouldBuffer = OutOfDecodedAudio() || OutOfDecodedVideo();
+    }
+    if (shouldBuffer) {
       if (currentFrame) {
         VideoQueue().PushFront(currentFrame);
       }
