@@ -553,7 +553,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         entryResumePoint()->setCaller(caller);
     }
     size_t numEntrySlots() const {
-        return entryResumePoint()->numOperands();
+        return entryResumePoint()->stackDepth();
     }
     MDefinition *getEntrySlot(size_t i) const {
         MOZ_ASSERT(i < numEntrySlots());
