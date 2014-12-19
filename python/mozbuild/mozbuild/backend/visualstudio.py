@@ -20,9 +20,12 @@ from mozpack.files import FileFinder
 from .common import CommonBackend
 from ..frontend.data import (
     Defines,
+    GeneratedSources,
+    HostSources,
     Library,
     LocalInclude,
-    VariablePassthru,
+    Sources,
+    UnifiedSources,
 )
 
 
@@ -97,11 +100,17 @@ class VisualStudioBackend(CommonBackend):
         if hasattr(obj, 'config') and reldir not in self._paths_to_configs:
             self._paths_to_configs[reldir] = obj.config
 
-        if isinstance(obj, VariablePassthru):
-            for k, v in obj.variables.items():
-                if k.endswith('SRCS'):
-                    s = self._paths_to_sources.setdefault(reldir, set())
-                    s.update(v)
+        if isinstance(obj, Sources):
+            self._add_sources(self, reldir, obj)
+
+        elif isinstance(obj, HostSources):
+            self._add_sources(self, reldir, obj)
+
+        elif isinstance(obj, GeneratedSources):
+            self._add_sources(self, reldir, obj)
+
+        elif isinstance(obj, UnifiedSources):
+            self._addr_sources(self, reldir, obj)
 
         elif isinstance(obj, Library):
             self._libs_to_paths[obj.basename] = reldir
@@ -117,6 +126,10 @@ class VisualStudioBackend(CommonBackend):
                 includes.append(os.path.join('$(TopSrcDir)', p[1:]))
             else:
                 includes.append(os.path.join('$(TopSrcDir)', reldir, p))
+
+    def _add_sources(self, reldir, obj):
+        s = self._paths_to_sources.setdefault(reldir, set())
+        s.update(obj.files)
 
     def consume_finished(self):
         out_dir = self._out_dir

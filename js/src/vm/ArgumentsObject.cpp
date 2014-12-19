@@ -133,7 +133,7 @@ struct CopyScriptFrameIterArgs
 
         /* Define formals which are not part of the actuals. */
         unsigned numActuals = iter_.numActualArgs();
-        unsigned numFormals = iter_.callee()->nargs();
+        unsigned numFormals = iter_.calleeTemplate()->nargs();
         MOZ_ASSERT(numActuals <= totalArgs);
         MOZ_ASSERT(numFormals <= totalArgs);
         MOZ_ASSERT(Max(numActuals, numFormals) == totalArgs);
@@ -249,7 +249,7 @@ ArgumentsObject *
 ArgumentsObject::createUnexpected(JSContext *cx, ScriptFrameIter &iter)
 {
     RootedScript script(cx, iter.script());
-    RootedFunction callee(cx, iter.callee());
+    RootedFunction callee(cx, iter.callee(cx));
     CopyScriptFrameIterArgs copy(iter);
     return create(cx, script, callee, iter.numActualArgs(), copy);
 }

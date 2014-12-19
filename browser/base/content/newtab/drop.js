@@ -73,7 +73,7 @@ let gDrop = {
     });
 
     // Re-pin all shifted pinned cells.
-    pinnedSites.forEach(function (aSite) aSite.pin(sites.indexOf(aSite)), this);
+    pinnedSites.forEach(aSite => aSite.pin(sites.indexOf(aSite)));
   },
 
   /**

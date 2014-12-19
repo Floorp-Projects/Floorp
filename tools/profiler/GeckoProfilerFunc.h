@@ -97,5 +97,7 @@ void mozilla_sampler_tracing(const char* aCategory, const char* aInfo,
                              ProfilerBacktrace* aCause,
                              TracingMetadata aMetaData);
 
+void mozilla_sampler_log(const char *fmt, va_list args);
+
 #endif
 

@@ -1033,6 +1033,9 @@ nsXPConnect::OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait,
     // Record this event.
     mEventDepth++;
 
+    // Start the slow script timer.
+    mRuntime->OnProcessNextEvent();
+
     // Push a null JSContext so that we don't see any script during
     // event processing.
     bool ok = PushJSContextNoScriptContext(nullptr);

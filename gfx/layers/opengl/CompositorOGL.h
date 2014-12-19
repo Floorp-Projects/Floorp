@@ -35,6 +35,7 @@
 #ifdef MOZ_WIDGET_GONK
 #include <ui/GraphicBuffer.h>
 #endif
+#include "gfxVR.h"
 
 class nsIWidget;
 
@@ -151,6 +152,32 @@ protected:
   RefPtr<gl::GLContext> mGL;
   nsTArray<GLuint> mCreatedTextures;
   nsTArray<GLuint> mUnusedTextures;
+};
+
+struct CompositorOGLVRObjects {
+  bool mInitialized;
+
+  gfx::VRHMDConfiguration mConfiguration;
+
+  GLuint mDistortionVertices[2];
+  GLuint mDistortionIndices[2];
+  GLuint mDistortionIndexCount[2];
+
+  GLint mAPosition;
+  GLint mATexCoord0;
+  GLint mATexCoord1;
+  GLint mATexCoord2;
+  GLint mAGenericAttribs;
+
+  // The program here implements distortion rendering for VR devices
+  // (in this case Oculus only).  We'll need to extend this to support
+  // other device types in the future.
+
+  // 0 = TEXTURE_2D, 1 = TEXTURE_RECTANGLE for source
+  GLuint mDistortionProgram[2];
+  GLint mUTexture[2];
+  GLint mUVREyeToSource[2];
+  GLint mUVRDestionatinScaleAndOffset[2];
 };
 
 // If you want to make this class not MOZ_FINAL, first remove calls to virtual
@@ -283,6 +310,15 @@ private:
     return gfx::ToIntSize(mWidgetSize);
   }
 
+  bool InitializeVR();
+  void DestroyVR(GLContext *gl);
+
+  void DrawVRDistortion(const gfx::Rect& aRect,
+                        const gfx::Rect& aClipRect,
+                        const EffectChain& aEffectChain,
+                        gfx::Float aOpacity,
+                        const gfx::Matrix4x4& aTransform);
+
   /** Widget associated with this compositor */
   nsIWidget *mWidget;
   nsIntSize mWidgetSize;
@@ -409,6 +445,8 @@ private:
 
   FenceHandle mReleaseFenceHandle;
   ShaderProgramOGL *mCurrentProgram;
+
+  CompositorOGLVRObjects mVR;
 };
 
 }
