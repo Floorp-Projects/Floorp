@@ -422,7 +422,14 @@ loop.store = loop.store || {};
      * @param {sharedActions.RenameRoom} actionData
      */
     renameRoom: function(actionData) {
-      this._mozLoop.rooms.rename(actionData.roomToken, actionData.newRoomName,
+      var newRoomName = actionData.newRoomName.trim();
+
+      // Skip update if name is unchanged or empty.
+      if (!newRoomName || this.getStoreState("roomName") === newRoomName) {
+        return;
+      }
+
+      this._mozLoop.rooms.rename(actionData.roomToken, newRoomName,
         function(err) {
           if (err) {
             // XXX Give this a proper UI - bug 1100595.
