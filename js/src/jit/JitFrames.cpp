@@ -1900,6 +1900,25 @@ SnapshotIterator::allocationValue(const RValueAllocation &alloc, ReadMethod rm)
     }
 }
 
+Value
+SnapshotIterator::maybeRead(const RValueAllocation &a, MaybeReadFallback &fallback)
+{
+    if (allocationReadable(a))
+        return allocationValue(a);
+
+    if (fallback.canRecoverResults()) {
+        if (!initInstructionResults(fallback))
+            js::CrashAtUnhandlableOOM("Unable to recover allocations.");
+
+        if (allocationReadable(a))
+            return allocationValue(a);
+
+        MOZ_ASSERT_UNREACHABLE("All allocations should be readable.");
+    }
+
+    return fallback.unreadablePlaceholder();
+}
+
 void
 SnapshotIterator::writeAllocationValuePayload(const RValueAllocation &alloc, Value v)
 {
@@ -2232,14 +2251,16 @@ JitFrameIterator::osiIndex() const
 }
 
 InlineFrameIterator::InlineFrameIterator(ThreadSafeContext *cx, const JitFrameIterator *iter)
-  : callee_(cx),
+  : calleeTemplate_(cx),
+    calleeRVA_(),
     script_(cx)
 {
     resetOn(iter);
 }
 
 InlineFrameIterator::InlineFrameIterator(JSRuntime *rt, const JitFrameIterator *iter)
-  : callee_(rt),
+  : calleeTemplate_(rt),
+    calleeRVA_(),
     script_(rt)
 {
     resetOn(iter);
@@ -2249,7 +2270,8 @@ InlineFrameIterator::InlineFrameIterator(ThreadSafeContext *cx, const InlineFram
   : frame_(iter ? iter->frame_ : nullptr),
     framesRead_(0),
     frameCount_(iter ? iter->frameCount_ : UINT32_MAX),
-    callee_(cx),
+    calleeTemplate_(cx),
+    calleeRVA_(),
     script_(cx)
 {
     if (frame_) {
@@ -2283,7 +2305,8 @@ InlineFrameIterator::findNextFrame()
     si_ = start_;
 
     // Read the initial frame out of the C stack.
-    callee_ = frame_->maybeCallee();
+    calleeTemplate_ = frame_->maybeCallee();
+    calleeRVA_ = RValueAllocation();
     script_ = frame_->script();
     MOZ_ASSERT(script_->hasBaselineScript());
 
@@ -2332,7 +2355,7 @@ InlineFrameIterator::findNextFrame()
         // the time, these functions are stored as JSFunction constants,
         // register which are holding the JSFunction pointer, or recover
         // instruction with Default value.
-        Value funval = si_.readWithDefault();
+        Value funval = si_.readWithDefault(&calleeRVA_);
 
         // Skip extra value allocations.
         while (si_.moreAllocations())
@@ -2340,12 +2363,12 @@ InlineFrameIterator::findNextFrame()
 
         si_.nextFrame();
 
-        callee_ = &funval.toObject().as<JSFunction>();
+        calleeTemplate_ = &funval.toObject().as<JSFunction>();
 
         // Inlined functions may be clones that still point to the lazy script
         // for the executed script, if they are clones. The actual script
         // exists though, just make sure the function points to it.
-        script_ = callee_->existingScriptForInlinedFunction();
+        script_ = calleeTemplate_->existingScriptForInlinedFunction();
         MOZ_ASSERT(script_->hasBaselineScript());
 
         pc_ = script_->offsetToPC(si_.pcOffset());
@@ -2360,6 +2383,19 @@ InlineFrameIterator::findNextFrame()
     }
 
     framesRead_++;
+}
+
+JSFunction *
+InlineFrameIterator::callee(MaybeReadFallback &fallback) const
+{
+    MOZ_ASSERT(isFunctionFrame());
+    if (calleeRVA_.mode() == RValueAllocation::INVALID || !fallback.canRecoverResults())
+        return calleeTemplate_;
+
+    SnapshotIterator s(si_);
+    // :TODO: Handle allocation failures from recover instruction.
+    Value funval = s.maybeRead(calleeRVA_, fallback);
+    return &funval.toObject().as<JSFunction>();
 }
 
 JSObject *
@@ -2386,7 +2422,7 @@ InlineFrameIterator::computeScopeChain(Value scopeChainValue, bool *hasCallObj) 
 bool
 InlineFrameIterator::isFunctionFrame() const
 {
-    return !!callee_;
+    return !!calleeTemplate_;
 }
 
 MachineState
