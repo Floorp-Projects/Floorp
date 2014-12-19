@@ -5,7 +5,7 @@
  * Tests if the waterfall is properly built after finishing a recording.
  */
 
-let test = Task.async(function*() {
+add_task(function*() {
   let { target, panel } = yield initTimelinePanel(SIMPLE_URL);
   let { $, $$, EVENTS, TimelineController } = panel.panelWin;
 
@@ -62,7 +62,4 @@ let test = Task.async(function*() {
     "Some marker waterfall nodes should have been created.");
   ok($$(".waterfall-marker-item:not(spacer) > .waterfall-marker-bar").length,
     "Some marker color bars should have been created inside the waterfall.");
-
-  yield teardown(panel);
-  finish();
 });
