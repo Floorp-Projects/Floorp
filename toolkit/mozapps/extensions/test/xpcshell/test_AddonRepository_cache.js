@@ -152,6 +152,7 @@ const REPOSITORY_ADDONS = [{
   repositoryStatus:       9
 }, {
   id:                     ADDON_IDS[2],
+  type:                   "theme",
   name:                   "Repo Add-on 3",
   version:                "2.3",
   iconURL:                BASE_URL + "/repo/3/icon.png",

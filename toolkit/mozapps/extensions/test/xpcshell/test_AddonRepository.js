@@ -105,6 +105,7 @@ var GET_RESULTS = [{
                           }]
 }, {
   id:                     "test_AddonRepository_1@tests.mozilla.org",
+  type:                   "theme",
   version:                "1.4",
   repositoryStatus:       9999,
   icons:                  {}
