@@ -5907,10 +5907,10 @@ DebuggerFrame_setOnPop(JSContext *cx, unsigned argc, Value *vp)
  * environment; either way, |frame|'s scope is where newly declared variables
  * go. In this case, |frame| must have a computed 'this' value, equal to |thisv|.
  */
-bool
-js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFramePtr frame,
-                  jsbytecode *pc, mozilla::Range<const char16_t> chars, const char *filename,
-                  unsigned lineno, MutableHandleValue rval)
+static bool
+EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFramePtr frame,
+              jsbytecode *pc, mozilla::Range<const char16_t> chars, const char *filename,
+              unsigned lineno, MutableHandleValue rval)
 {
     assertSameCompartment(cx, env, frame);
     MOZ_ASSERT_IF(frame, thisv.get() == frame.thisValue());
