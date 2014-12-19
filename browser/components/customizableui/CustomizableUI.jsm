@@ -39,6 +39,7 @@ const kPrefCustomizationDebug        = "browser.uiCustomization.debug";
 const kPrefDrawInTitlebar            = "browser.tabs.drawInTitlebar";
 const kPrefDeveditionTheme           = "browser.devedition.theme.enabled";
 const kPrefWebIDEInNavbar            = "devtools.webide.widget.inNavbarByDefault";
+const kPrefLoopThrottled             = "loop.throttled2";
 
 /**
  * The keys are the handlers that are fired when the event type (the value)
@@ -210,11 +211,14 @@ let CustomizableUIInternal = {
       "bookmarks-menu-button",
       "downloads-button",
       "home-button",
-      "loop-button-throttled",
     ];
 
     if (Services.prefs.getBoolPref(kPrefWebIDEInNavbar)) {
       navbarPlacements.push("webide-button");
+    }
+
+    if (!Services.prefs.getBoolPref(kPrefLoopThrottled)) {
+      navbarPlacements.push("loop-button-throttled");
     }
 
     this.registerArea(CustomizableUI.AREA_NAVBAR, {
