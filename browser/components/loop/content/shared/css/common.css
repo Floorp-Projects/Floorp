@@ -81,7 +81,6 @@ p {
 
 .btn {
   display: inline-block;
-  overflow: hidden;
   margin: 0;
   padding: 0;
   border: none;
@@ -89,10 +88,14 @@ p {
   color: #fff;
   text-align: center;
   text-decoration: none;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   font-size: .9em;
   cursor: pointer;
+}
+
+.btn.btn-constrained {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .btn-info {
