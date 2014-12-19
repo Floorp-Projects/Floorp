@@ -291,6 +291,8 @@ MessageChannel::MessageChannel(MessageListener *aListener)
     mAwaitingSyncReplyPriority(0),
     mDispatchingSyncMessage(false),
     mDispatchingSyncMessagePriority(0),
+    mDispatchingAsyncMessage(false),
+    mDispatchingAsyncMessagePriority(0),
     mCurrentTransaction(0),
     mTimedOutMessageSeqno(0),
     mRecvdErrors(0),
@@ -554,10 +556,8 @@ MessageChannel::ShouldDeferMessage(const Message& aMsg)
     // Never defer messages that have the highest priority, even async
     // ones. This is safe because only the child can send these messages, so
     // they can never nest.
-    if (aMsg.priority() == IPC::Message::PRIORITY_URGENT) {
-        MOZ_ASSERT(mSide == ParentSide);
+    if (aMsg.priority() == IPC::Message::PRIORITY_URGENT)
         return false;
-    }
 
     // Unless they're urgent, we always defer async messages.
     if (!aMsg.is_sync()) {
@@ -735,6 +735,11 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
                "can't send sync message of a lesser priority than what's being dispatched");
     IPC_ASSERT(mAwaitingSyncReplyPriority <= aMsg->priority(),
                "nested sync message sends must be of increasing priority");
+
+    IPC_ASSERT(DispatchingSyncMessagePriority() != IPC::Message::PRIORITY_URGENT,
+               "not allowed to send messages while dispatching urgent messages");
+    IPC_ASSERT(DispatchingAsyncMessagePriority() != IPC::Message::PRIORITY_URGENT,
+               "not allowed to send messages while dispatching urgent messages");
 
     nsAutoPtr<Message> msg(aMsg);
 
@@ -1168,7 +1173,14 @@ MessageChannel::DispatchAsyncMessage(const Message& aMsg)
         NS_RUNTIMEABORT("unhandled special message!");
     }
 
-    MaybeHandleError(mListener->OnMessageReceived(aMsg), aMsg, "DispatchAsyncMessage");
+    Result rv;
+    {
+        int prio = aMsg.priority();
+        AutoSetValue<bool> async(mDispatchingAsyncMessage, true);
+        AutoSetValue<int> prioSet(mDispatchingAsyncMessagePriority, prio);
+        rv = mListener->OnMessageReceived(aMsg);
+    }
+    MaybeHandleError(rv, aMsg, "DispatchAsyncMessage");
 }
 
 void
