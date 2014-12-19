@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that a video element has set video dimensions on loadedmetadata</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+var startTest = function(test, token) {
+  manager.started(token);
+  var v1 = document.createElement('video');
+  var v2 = document.createElement('video');
+  var vout = document.createElement('video');
+
+  // Avoid a race for hardware resources between v1 and v2 on platforms with
+  // a hardware decoder, like B2G.
+  v1.preload = 'none';
+  v2.preload = 'none';
+
+  var numVideoElementsFinished = 0;
+
+  var onloadedmetadata = function(ev) {
+    var v = ev.target;
+    ok(!v.loadedmetadata, v.testName + " should only fire loadedmetadata once");
+    v.loadedmetadata = true;
+    is(v.videoWidth, test.width, v.testName + " video width should be set on loadedmetadata");
+    is(v.videoHeight, test.height, v.testName + " video height should be set on loadedmetadata");
+
+    numVideoElementsFinished += 1;
+    if (v === v1) {
+      removeNodeAndSource(v1);
+      v2.play();
+      vout.play();
+    }
+
+    if (numVideoElementsFinished === 3) {
+      removeNodeAndSource(v2);
+      removeNodeAndSource(vout);
+      manager.finished(token);
+    }
+  };
+  var setupElement = function(v, id) {
+    v.loadedmetadata = false;
+    v.onloadedmetadata = onloadedmetadata;
+    document.body.appendChild(v);
+  };
+
+  v1.testName = test.name;
+  v2.testName = test.name + " (Captured)";
+  vout.testName = test.name + " (Stream)";
+
+  v1.src = test.name;
+  v2.src = test.name;
+  vout.src = URL.createObjectURL(v2.mozCaptureStreamUntilEnded());
+
+  setupElement(v1, "v1");
+  setupElement(v2, "v2");
+  setupElement(vout, "vout");
+
+  v1.play();
+};
+
+manager.runTests(getPlayableVideos(gSmallTests), startTest);
+</script>
+</pre>
+</body>
+</html>
