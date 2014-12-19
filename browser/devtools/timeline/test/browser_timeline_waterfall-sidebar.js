@@ -5,7 +5,7 @@
  * Tests if the sidebar is properly updated when a marker is selected.
  */
 
-let test = Task.async(function*() {
+add_task(function*() {
   let { target, panel } = yield initTimelinePanel(SIMPLE_URL);
   let { $, $$, EVENTS, TimelineController, TimelineView } = panel.panelWin;
   let { L10N } = devtools.require("devtools/timeline/global");
@@ -53,7 +53,4 @@ let test = Task.async(function*() {
     is(toMs(m.end), printedEndTime, "sidebar end time is valid");
     is(toMs(m.end - m.start), printedDuration, "sidebar duration is valid");
   }
-
-  yield teardown(panel);
-  finish();
 });
