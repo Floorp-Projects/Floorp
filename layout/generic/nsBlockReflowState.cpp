@@ -433,11 +433,19 @@ nsBlockReflowState::SetupPushedFloatList()
 }
 
 void
-nsBlockReflowState::AppendPushedFloat(nsIFrame* aFloatCont)
+nsBlockReflowState::AppendPushedFloatChain(nsIFrame* aFloatCont)
 {
   SetupPushedFloatList();
-  aFloatCont->AddStateBits(NS_FRAME_IS_PUSHED_FLOAT);
-  mPushedFloats->AppendFrame(mBlock, aFloatCont);
+  while (true) {
+    aFloatCont->AddStateBits(NS_FRAME_IS_PUSHED_FLOAT);
+    mPushedFloats->AppendFrame(mBlock, aFloatCont);
+    aFloatCont = aFloatCont->GetNextInFlow();
+    if (!aFloatCont || aFloatCont->GetParent() != mBlock) {
+      break;
+    }
+    DebugOnly<nsresult> rv = mBlock->StealFrame(aFloatCont);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "StealFrame should succeed");
+  }
 }
 
 /**
@@ -966,6 +974,8 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
 
   if (!NS_FRAME_IS_FULLY_COMPLETE(reflowStatus)) {
     mBlock->SplitFloat(*this, aFloat, reflowStatus);
+  } else {
+    MOZ_ASSERT(!aFloat->GetNextInFlow());
   }
 
 #ifdef NOISY_FLOATMANAGER
@@ -1017,8 +1027,7 @@ nsBlockReflowState::PushFloatPastBreak(nsIFrame *aFloat)
   // isn't actually a continuation.
   DebugOnly<nsresult> rv = mBlock->StealFrame(aFloat);
   NS_ASSERTION(NS_SUCCEEDED(rv), "StealFrame should succeed");
-  AppendPushedFloat(aFloat);
-
+  AppendPushedFloatChain(aFloat);
   NS_FRAME_SET_OVERFLOW_INCOMPLETE(mReflowStatus);
 }
 
