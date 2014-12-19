@@ -80,14 +80,17 @@ let NotificationTracker = {
     }
   },
 
-  watch: function(component1, watcher) {
-    setDefault(this._watchers, component1, []).push(watcher);
-    this._registered.set(watcher, new Set());
+  findPaths: function(prefix) {
+    let tracked = this._paths;
+    for (let component of prefix) {
+      tracked = setDefault(tracked, component, {});
+    }
 
+    let result = [];
     let enumerate = (tracked, curPath) => {
       for (let component in tracked) {
         if (component == "_count") {
-          this.runCallback(watcher, curPath, tracked._count);
+          result.push([curPath, tracked._count]);
         } else {
           let path = curPath.slice();
           if (component === "true") {
@@ -100,7 +103,24 @@ let NotificationTracker = {
         }
       }
     }
-    enumerate(this._paths[component1] || {}, [component1]);
+    enumerate(tracked, prefix);
+
+    return result;
+  },
+
+  findSuffixes: function(prefix) {
+    let paths = this.findPaths(prefix);
+    return paths.map(([path, count]) => path[path.length - 1]);
+  },
+
+  watch: function(component1, watcher) {
+    setDefault(this._watchers, component1, []).push(watcher);
+    this._registered.set(watcher, new Set());
+
+    let paths = this.findPaths([component1]);
+    for (let [path, count] of paths) {
+      this.runCallback(watcher, path, count);
+    }
   },
 
   unwatch: function(component1, watcher) {
