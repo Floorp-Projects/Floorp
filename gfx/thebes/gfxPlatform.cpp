@@ -180,6 +180,7 @@ private:
   nsCString mCrashCriticalKey;
   uint32_t mMaxCapacity;
   int32_t mIndex;
+  Mutex mMutex;
 };
 
 CrashStatsLogForwarder::CrashStatsLogForwarder(const char* aKey)
@@ -187,11 +188,14 @@ CrashStatsLogForwarder::CrashStatsLogForwarder(const char* aKey)
   , mCrashCriticalKey(aKey)
   , mMaxCapacity(0)
   , mIndex(-1)
+  , mMutex("CrashStatsLogForwarder")
 {
 }
 
 void CrashStatsLogForwarder::SetCircularBufferSize(uint32_t aCapacity)
 {
+  MutexAutoLock lock(mMutex);
+
   mMaxCapacity = aCapacity;
   mBuffer.reserve(static_cast<size_t>(aCapacity));
 }
@@ -244,6 +248,8 @@ void CrashStatsLogForwarder::UpdateCrashReport()
   
 void CrashStatsLogForwarder::Log(const std::string& aString)
 {
+  MutexAutoLock lock(mMutex);
+
   if (UpdateStringsVector(aString)) {
     UpdateCrashReport();
   }
