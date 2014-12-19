@@ -307,6 +307,17 @@ CodeGeneratorShared::encodeAllocation(LSnapshot *snapshot, MDefinition *mir,
         // This MDefinition is recovered, thus it should be listed in the
         // LRecoverInfo.
         MOZ_ASSERT(it != end && mir == *it);
+
+        // Lambda should have a default value readable for iterating over the
+        // inner frames.
+        if (mir->isLambda()) {
+            MConstant *constant = mir->toLambda()->functionOperand();
+            uint32_t cstIndex;
+            masm.propagateOOM(graph.addConstantToPool(constant->value(), &cstIndex));
+            alloc = RValueAllocation::RecoverInstruction(index, cstIndex);
+            break;
+        }
+
         alloc = RValueAllocation::RecoverInstruction(index);
         break;
       }
