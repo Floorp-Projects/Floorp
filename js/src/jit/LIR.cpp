@@ -223,6 +223,7 @@ LRecoverInfo::appendDefinition(MDefinition *def)
 {
     MOZ_ASSERT(def->isRecoveredOnBailout());
     def->setInWorklist();
+
     if (!appendOperands(def))
         return false;
     return instructions_.append(def);
@@ -231,6 +232,12 @@ LRecoverInfo::appendDefinition(MDefinition *def)
 bool
 LRecoverInfo::appendResumePoint(MResumePoint *rp)
 {
+    // Stores should be recovered first.
+    for (auto iter(rp->storesBegin()), end(rp->storesEnd()); iter != end; ++iter) {
+        if (!appendDefinition(iter->operand))
+            return false;
+    }
+
     if (rp->caller() && !appendResumePoint(rp->caller()))
         return false;
 

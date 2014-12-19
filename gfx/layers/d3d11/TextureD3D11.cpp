@@ -306,7 +306,7 @@ TextureClientD3D11::Unlock()
     HRESULT hr = device->CreateTexture2D(&desc, nullptr, byRef(tex));
 
     if (FAILED(hr)) {
-      gfxCriticalError() << "[D3D11] CreateTexture2D failure " << mSize << " Code: " << gfx::hexa(hr);
+      gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(mSize))) << "[D3D11] CreateTexture2D failure " << mSize << " Code: " << gfx::hexa(hr);
       return;
     }
 
@@ -394,7 +394,7 @@ TextureClientD3D11::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlag
   }
 
   if (FAILED(hr)) {
-    gfxCriticalError() << "[D3D11] CreateTexture2D failure " << aSize << " Code: " << gfx::hexa(hr);
+    gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(aSize))) << "[D3D11] 2 CreateTexture2D failure " << aSize << " Code: " << gfx::hexa(hr);
     return false;
   }
 

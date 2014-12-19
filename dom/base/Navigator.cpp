@@ -1200,6 +1200,9 @@ Navigator::SendBeacon(const nsAString& aUrl,
                                                                principal,
                                                                true);
 
+  rv = cors->Init(channel, true);
+  NS_ENSURE_SUCCESS(rv, false);
+
   // Start a preflight if cross-origin and content type is not whitelisted
   rv = secMan->CheckSameOriginURI(documentURI, uri, false);
   bool crossOrigin = NS_FAILED(rv);

@@ -439,7 +439,8 @@ MBasicBlock::inherit(TempAllocator &alloc, BytecodeAnalysis *analysis, MBasicBlo
     MResumePoint *callerResumePoint = pred ? pred->callerResumePoint() : nullptr;
 
     // Create a resume point using our initial stack state.
-    entryResumePoint_ = new(alloc) MResumePoint(this, pc(), callerResumePoint, MResumePoint::ResumeAt);
+    entryResumePoint_ = new(alloc) MResumePoint(this, pc(), callerResumePoint,
+                                                MResumePoint::ResumeAt);
     if (!entryResumePoint_->init(alloc))
         return false;
 
@@ -496,7 +497,7 @@ bool
 MBasicBlock::inheritResumePoint(MBasicBlock *pred)
 {
     // Copy slots from the resume point.
-    stackPosition_ = entryResumePoint_->numOperands();
+    stackPosition_ = entryResumePoint_->stackDepth();
     for (uint32_t i = 0; i < stackPosition_; i++)
         slots_[i] = entryResumePoint_->getOperand(i);
 
@@ -1404,7 +1405,7 @@ void
 MBasicBlock::inheritPhis(MBasicBlock *header)
 {
     MResumePoint *headerRp = header->entryResumePoint();
-    size_t stackDepth = headerRp->numOperands();
+    size_t stackDepth = headerRp->stackDepth();
     for (size_t slot = 0; slot < stackDepth; slot++) {
         MDefinition *exitDef = getSlot(slot);
         MDefinition *loopDef = headerRp->getOperand(slot);
@@ -1437,7 +1438,7 @@ MBasicBlock::inheritPhisFromBackedge(MBasicBlock *backedge, bool *hadTypeChange)
     // We must be a pending loop header
     MOZ_ASSERT(kind_ == PENDING_LOOP_HEADER);
 
-    size_t stackDepth = entryResumePoint()->numOperands();
+    size_t stackDepth = entryResumePoint()->stackDepth();
     for (size_t slot = 0; slot < stackDepth; slot++) {
         // Get the value stack-slot of the back edge.
         MDefinition *exitDef = backedge->getSlot(slot);

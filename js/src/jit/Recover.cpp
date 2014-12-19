@@ -1219,6 +1219,34 @@ RCreateThisWithTemplate::recover(JSContext *cx, SnapshotIterator &iter) const
 }
 
 bool
+MLambda::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_Lambda));
+    return true;
+}
+
+RLambda::RLambda(CompactBufferReader &reader)
+{
+}
+
+bool
+RLambda::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedObject scopeChain(cx, &iter.read().toObject());
+    RootedFunction fun(cx, &iter.read().toObject().as<JSFunction>());
+
+    JSObject *resultObject = js::Lambda(cx, fun, scopeChain);
+    if (!resultObject)
+        return false;
+
+    RootedValue result(cx);
+    result.setObject(*resultObject);
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MObjectState::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
@@ -1235,7 +1263,7 @@ RObjectState::RObjectState(CompactBufferReader &reader)
 bool
 RObjectState::recover(JSContext *cx, SnapshotIterator &iter) const
 {
-    RootedPlainObject object(cx, &iter.read().toObject().as<PlainObject>());
+    RootedNativeObject object(cx, &iter.read().toObject().as<NativeObject>());
     MOZ_ASSERT(object->slotSpan() == numSlots());
 
     RootedValue val(cx);

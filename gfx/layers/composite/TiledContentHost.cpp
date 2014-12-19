@@ -642,38 +642,7 @@ TiledContentHost::Dump(std::stringstream& aStream,
                        const char* aPrefix,
                        bool aDumpHtml)
 {
-  nsIntRect visibleRect = mTiledBuffer.GetValidRegion().GetBounds();
-  gfx::IntSize scaledTileSize = mTiledBuffer.GetScaledTileSize();
-  for (int32_t x = visibleRect.x; x < visibleRect.x + visibleRect.width;) {
-    int32_t tileStartX = mTiledBuffer.GetTileStart(x, scaledTileSize.width);
-    int32_t w = scaledTileSize.width - tileStartX;
-    if (x + w > visibleRect.x + visibleRect.width) {
-      w = visibleRect.x + visibleRect.width - x;
-    }
-
-    for (int32_t y = visibleRect.y; y < visibleRect.y + visibleRect.height;) {
-      int32_t tileStartY = mTiledBuffer.GetTileStart(y, scaledTileSize.height);
-      TileHost tileTexture = mTiledBuffer.
-        GetTile(nsIntPoint(mTiledBuffer.RoundDownToTileEdge(x, scaledTileSize.width),
-                           mTiledBuffer.RoundDownToTileEdge(y, scaledTileSize.height)));
-      int32_t h = scaledTileSize.height - tileStartY;
-      if (y + h > visibleRect.y + visibleRect.height) {
-        h = visibleRect.y + visibleRect.height - y;
-      }
-
-      aStream << "\n" << aPrefix << "Tile (x=" <<
-        mTiledBuffer.RoundDownToTileEdge(x, scaledTileSize.width) << ", y=" <<
-        mTiledBuffer.RoundDownToTileEdge(y, scaledTileSize.height) << "): ";
-      if (tileTexture != mTiledBuffer.GetPlaceholderTile()) {
-        DumpTextureHost(aStream, tileTexture.mTextureHost);
-        // TODO We should combine the OnWhite/OnBlack here an just output a single image.
-      } else {
-        aStream << "empty tile";
-      }
-      y += h;
-    }
-    x += w;
-  }
+  mTiledBuffer.Dump(aStream, aPrefix, aDumpHtml);
 }
 
 } // namespace
