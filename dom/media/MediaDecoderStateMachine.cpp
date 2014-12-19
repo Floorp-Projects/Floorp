@@ -729,8 +729,10 @@ MediaDecoderStateMachine::OnAudioDecoded(AudioData* aAudioSample)
     }
 
     case DECODER_STATE_BUFFERING:
+      // If we're buffering, this may be the sample we need to stop buffering.
+      // Schedule the state machine and then fall through.
+      ScheduleStateMachine();
     case DECODER_STATE_DECODING: {
-      // In buffering and decoding state, we simply enqueue samples.
       Push(audio);
       return;
     }
@@ -833,15 +835,15 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
     return;
   }
 
-  // If the decoder is waiting for data, we need to make sure that the requests
-  // are cleared, which happened above. Additionally, if we're out of decoded
-  // samples, we need to switch to buffering mode.
+  // If the decoder is waiting for data, we tell it to call us back when the
+  // data arrives.
   if (aReason == MediaDecoderReader::WAITING_FOR_DATA) {
-    bool outOfSamples = isAudio ? !AudioQueue().GetSize() : !VideoQueue().GetSize();
-    if (outOfSamples) {
-      StartBuffering();
-    }
-
+    MOZ_ASSERT(mReader->IsWaitForDataSupported(),
+               "Readers that send WAITING_FOR_DATA need to implement WaitForData");
+    RequestStatusRef(aType) = RequestStatus::Waiting;
+    mReader->WaitForData(aType)->Then(DecodeTaskQueue(), __func__, this,
+                                      &MediaDecoderStateMachine::OnWaitForDataResolved,
+                                      &MediaDecoderStateMachine::OnWaitForDataRejected);
     return;
   }
 
@@ -941,6 +943,9 @@ MediaDecoderStateMachine::OnVideoDecoded(VideoData* aVideoSample)
     }
 
     case DECODER_STATE_BUFFERING:
+      // If we're buffering, this may be the sample we need to stop buffering.
+      // Schedule the state machine and then fall through.
+      ScheduleStateMachine();
     case DECODER_STATE_DECODING: {
       Push(video);
       // If the requested video sample was slow to arrive, increase the
@@ -2647,9 +2652,14 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
           return NS_OK;
         }
       } else if (outOfAudio || outOfVideo) {
-        DECODER_LOG("Out of decoded data - polling for 1s");
+        MOZ_ASSERT(mReader->IsWaitForDataSupported(),
+                   "Don't yet have a strategy for non-heuristic + non-WaitForData");
         DispatchDecodeTasksIfNeeded();
-        ScheduleStateMachine(USECS_PER_S);
+        MOZ_ASSERT_IF(outOfAudio, mAudioRequestStatus != RequestStatus::Idle);
+        MOZ_ASSERT_IF(outOfVideo, mVideoRequestStatus != RequestStatus::Idle);
+        DECODER_LOG("In buffering mode, waiting to be notified: outOfAudio: %d, "
+                    "mAudioStatus: %d, outOfVideo: %d, mVideoStatus: %d",
+                    outOfAudio, mAudioRequestStatus, outOfVideo, mVideoRequestStatus);
         return NS_OK;
       }
 
