@@ -20,6 +20,7 @@ import org.mozilla.gecko.tests.helpers.WaitHelper;
 import org.mozilla.gecko.util.HardwareUtils;
 
 import android.view.View;
+import android.widget.TextView;
 
 import com.jayway.android.robotium.solo.Condition;
 import com.jayway.android.robotium.solo.RobotiumUtils;
@@ -174,6 +175,18 @@ public class AppMenuComponent extends BaseComponent {
             }
         }
 
+        // On Android 2.3, menu items may be instances of
+        // com.android.internal.view.menu.ListMenuItemView, each with a child
+        // android.widget.RelativeLayout which in turn has a child
+        // TextView with the appropriate text.
+        final List<TextView> textViewList = RobotiumUtils.filterViews(TextView.class, views);
+        for (TextView textView : textViewList) {
+            if (textView.getText().equals(text)) {
+                View relativeLayout = (View) textView.getParent();
+                View listMenuItemView = (View)relativeLayout.getParent();
+                return listMenuItemView;
+            }
+        }
         return null;
     }
 
