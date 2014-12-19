@@ -437,7 +437,7 @@ let gTests = [
 
     yield checkSharingUI({video: true, audio: true});
 
-    yield promiseNotificationShown(PopupNotifications.getNotification("webRTC-sharingDevices"));
+    PopupNotifications.getNotification("webRTC-sharingDevices").reshow();
     activateSecondaryAction(kActionDeny);
 
     yield promiseObserverCalled("recording-device-events");
@@ -702,7 +702,7 @@ let gTests = [
       expectObserverCalled("recording-device-events");
       yield checkSharingUI({video: aRequestVideo, audio: aRequestAudio});
 
-      yield promiseNotificationShown(PopupNotifications.getNotification("webRTC-sharingDevices"));
+      PopupNotifications.getNotification("webRTC-sharingDevices").reshow();
       let expectedIcon = "webRTC-sharingDevices";
       if (aRequestAudio && !aRequestVideo)
         expectedIcon = "webRTC-sharingMicrophone";
