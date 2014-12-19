@@ -146,7 +146,8 @@ public:
     NS_ABORT_IF_FALSE(!mData, "oops");
     NS_ABORT_IF_FALSE(!mImportantData, "oops");
     aExpandedData->Compress(getter_Transfers(mData),
-                            getter_Transfers(mImportantData));
+                            getter_Transfers(mImportantData),
+                            mOrder);
     aExpandedData->AssertInitialState();
   }
 

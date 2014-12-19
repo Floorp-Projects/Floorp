@@ -395,7 +395,8 @@ nsCSSExpandedDataBlock::ComputeNumProps(uint32_t* aNumPropsNormal,
 
 void
 nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
-                                 nsCSSCompressedDataBlock **aImportantBlock)
+                                 nsCSSCompressedDataBlock **aImportantBlock,
+                                 const nsTArray<uint32_t>& aOrder)
 {
     nsAutoPtr<nsCSSCompressedDataBlock> result_normal, result_important;
     uint32_t i_normal = 0, i_important = 0;
@@ -418,29 +419,29 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
      * corresponding to the stored data in the expanded block, and then
      * clearing the data in the expanded block.
      */
-    for (size_t iHigh = 0; iHigh < nsCSSPropertySet::kChunkCount; ++iHigh) {
-        if (!mPropertiesSet.HasPropertyInChunk(iHigh))
+    for (size_t i = 0; i < aOrder.Length(); i++) {
+        nsCSSProperty iProp = static_cast<nsCSSProperty>(aOrder[i]);
+        if (iProp >= eCSSProperty_COUNT) {
+            // a custom property
             continue;
-        for (size_t iLow = 0; iLow < nsCSSPropertySet::kBitsInChunk; ++iLow) {
-            if (!mPropertiesSet.HasPropertyAt(iHigh, iLow))
-                continue;
-            nsCSSProperty iProp = nsCSSPropertySet::CSSPropertyAt(iHigh, iLow);
-            NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(iProp), "out of range");
-            bool important =
-                mPropertiesImportant.HasPropertyAt(iHigh, iLow);
-            nsCSSCompressedDataBlock *result =
-                important ? result_important : result_normal;
-            uint32_t* ip = important ? &i_important : &i_normal;
-            nsCSSValue* val = PropertyAt(iProp);
-            NS_ABORT_IF_FALSE(val->GetUnit() != eCSSUnit_Null,
-                              "Null value while compressing");
-            result->SetPropertyAtIndex(*ip, iProp);
-            result->RawCopyValueToIndex(*ip, val);
-            new (val) nsCSSValue();
-            (*ip)++;
-            result->mStyleBits |=
-                nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[iProp]);
         }
+        NS_ABORT_IF_FALSE(mPropertiesSet.HasProperty(iProp),
+                          "aOrder identifies a property not in the expanded "
+                          "data block");
+        NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(iProp), "out of range");
+        bool important = mPropertiesImportant.HasProperty(iProp);
+        nsCSSCompressedDataBlock *result =
+            important ? result_important : result_normal;
+        uint32_t* ip = important ? &i_important : &i_normal;
+        nsCSSValue* val = PropertyAt(iProp);
+        NS_ABORT_IF_FALSE(val->GetUnit() != eCSSUnit_Null,
+                          "Null value while compressing");
+        result->SetPropertyAtIndex(*ip, iProp);
+        result->RawCopyValueToIndex(*ip, val);
+        new (val) nsCSSValue();
+        (*ip)++;
+        result->mStyleBits |=
+            nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[iProp]);
     }
 
     NS_ABORT_IF_FALSE(numPropsNormal == i_normal, "bad numProps");
@@ -448,6 +449,27 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
     if (result_important) {
         NS_ABORT_IF_FALSE(numPropsImportant == i_important, "bad numProps");
     }
+
+#ifdef DEBUG
+    {
+      // assert that we didn't have any other properties on this expanded data
+      // block that we didn't find in aOrder
+      uint32_t numPropsInSet = 0;
+      for (size_t iHigh = 0; iHigh < nsCSSPropertySet::kChunkCount; iHigh++) {
+          if (!mPropertiesSet.HasPropertyInChunk(iHigh)) {
+              continue;
+          }
+          for (size_t iLow = 0; iLow < nsCSSPropertySet::kBitsInChunk; iLow++) {
+              if (mPropertiesSet.HasPropertyAt(iHigh, iLow)) {
+                  numPropsInSet++;
+              }
+          }
+      }
+      NS_ABORT_IF_FALSE(numPropsNormal + numPropsImportant == numPropsInSet,
+                        "aOrder missing properties from the expanded data "
+                        "block");
+    }
+#endif
 
     ClearSets();
     AssertInitialState();
