@@ -11,47 +11,6 @@ function gc() {
 
 let openChatWindow = Cu.import("resource://gre/modules/MozSocialAPI.jsm", {}).openChatWindow;
 
-// Support for going on and offline.
-// (via browser/base/content/test/browser_bookmark_titles.js)
-let origProxyType = Services.prefs.getIntPref('network.proxy.type');
-
-function toggleOfflineStatus(goOffline) {
-  // Bug 968887 fix.  when going on/offline, wait for notification before continuing
-  let deferred = Promise.defer();
-  if (!goOffline) {
-    Services.prefs.setIntPref('network.proxy.type', origProxyType);
-  }
-  if (goOffline != Services.io.offline) {
-    info("initial offline state " + Services.io.offline);
-    let expect = !Services.io.offline;
-    Services.obs.addObserver(function offlineChange(subject, topic, data) {
-      Services.obs.removeObserver(offlineChange, "network:offline-status-changed");
-      info("offline state changed to " + Services.io.offline);
-      is(expect, Services.io.offline, "network:offline-status-changed successful toggle");
-      deferred.resolve();
-    }, "network:offline-status-changed", false);
-    BrowserOffline.toggleOfflineStatus();
-  } else {
-    deferred.resolve();
-  }
-  if (goOffline) {
-    Services.prefs.setIntPref('network.proxy.type', 0);
-    // LOAD_FLAGS_BYPASS_CACHE isn't good enough. So clear the cache.
-    Services.cache2.clear();
-  }
-  return deferred.promise;
-}
-
-function goOffline() {
-  // Simulate a network outage with offline mode. (Localhost is still
-  // accessible in offline mode, so disable the test proxy as well.)
-  return toggleOfflineStatus(true);
-}
-
-function goOnline(callback) {
-  return toggleOfflineStatus(false);
-}
-
 function openPanel(url, panelCallback, loadCallback) {
   // open a flyout
   SocialFlyout.open(url, 0, panelCallback);
