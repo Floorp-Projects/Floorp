@@ -118,7 +118,7 @@ private:
   bool mNeedsComposite;
   bool mIsObservingVsync;
   nsRefPtr<CompositorParent> mCompositorParent;
-  nsRefPtr<VsyncDispatcher> mVsyncDispatcher;
+  nsRefPtr<CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
 
   mozilla::Monitor mCurrentCompositeTaskMonitor;
   CancelableTask* mCurrentCompositeTask;
