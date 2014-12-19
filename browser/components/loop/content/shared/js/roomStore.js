@@ -154,10 +154,13 @@ loop.store = loop.store || {};
      * @param {Object} addedRoomData The added room data.
      */
     _onRoomAdded: function(eventName, addedRoomData) {
-      addedRoomData.participants = [];
-      addedRoomData.ctime = new Date().getTime();
+      addedRoomData.participants = addedRoomData.participants || [];
+      addedRoomData.ctime = addedRoomData.ctime || new Date().getTime();
       this.dispatchAction(new sharedActions.UpdateRoomList({
-        roomList: this._storeState.rooms.concat(new Room(addedRoomData))
+        // Ensure the room isn't part of the list already, then add it.
+        roomList: this._storeState.rooms.filter(function(room) {
+          return addedRoomData.roomToken !== room.roomToken;
+        }).concat(new Room(addedRoomData))
       }));
     },
 
