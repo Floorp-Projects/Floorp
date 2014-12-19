@@ -10,6 +10,7 @@
 #include "SurfaceCache.h"
 
 #include <algorithm>
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"  // for MOZ_THIS_IN_INITIALIZER_LIST
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
@@ -752,7 +753,12 @@ SurfaceCache::Initialize()
     max(gfxPrefs::ImageMemSurfaceCacheSizeFactor(), 1u);
 
   // Compute the size of the surface cache.
-  uint64_t proposedSize = PR_GetPhysicalMemorySize() / surfaceCacheSizeFactor;
+  uint64_t memorySize = PR_GetPhysicalMemorySize();
+  if (memorySize == 0) {
+    MOZ_ASSERT_UNREACHABLE("PR_GetPhysicalMemorySize not implemented here");
+    memorySize = 256 * 1024 * 1024;  // Fall back to 256MB.
+  }
+  uint64_t proposedSize = memorySize / surfaceCacheSizeFactor;
   uint64_t surfaceCacheSizeBytes = min(proposedSize, surfaceCacheMaxSizeKB * 1024);
   uint32_t finalSurfaceCacheSizeBytes =
     min(surfaceCacheSizeBytes, uint64_t(UINT32_MAX));
