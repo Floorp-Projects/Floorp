@@ -37,6 +37,8 @@ allocatorFns = [
     'memalign',
     'operator new(',
     'operator new[](',
+    'NS_Alloc',
+    'NS_Realloc',
     'g_slice_alloc',
     # This one necessary to fully filter some sequences of allocation functions
     # that happen in practice. Note that ??? entries that follow non-allocation
