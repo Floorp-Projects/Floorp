@@ -29,7 +29,7 @@ Cell.prototype = {
   /**
    * The cell's DOM node.
    */
-  get node() this._node,
+  get node() { return this._node; },
 
   /**
    * The cell's offset in the grid.

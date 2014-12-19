@@ -259,7 +259,6 @@ class ServiceWorkerUpdateInstance MOZ_FINAL : public nsISupports
 {
   nsRefPtr<ServiceWorkerRegistrationInfo> mRegistration;
   nsCString mScriptSpec;
-  nsCOMPtr<nsPIDOMWindow> mWindow;
 
   bool mAborted;
 
@@ -268,12 +267,10 @@ class ServiceWorkerUpdateInstance MOZ_FINAL : public nsISupports
 public:
   NS_DECL_ISUPPORTS
 
-  ServiceWorkerUpdateInstance(ServiceWorkerRegistrationInfo *aRegistration,
-                              nsPIDOMWindow* aWindow)
+  explicit ServiceWorkerUpdateInstance(ServiceWorkerRegistrationInfo *aRegistration)
     : mRegistration(aRegistration),
       // Capture the current script spec in case register() gets called.
       mScriptSpec(aRegistration->mScriptSpec),
-      mWindow(aWindow),
       mAborted(false)
   {
     AssertIsOnMainThread();
@@ -300,10 +297,8 @@ public:
     MOZ_ASSERT(swm);
 
     nsRefPtr<ServiceWorker> serviceWorker;
-    nsresult rv = swm->CreateServiceWorkerForWindow(mWindow,
-                                                    mScriptSpec,
-                                                    mRegistration->mScope,
-                                                    getter_AddRefs(serviceWorker));
+    nsresult rv = swm->CreateServiceWorker(mScriptSpec, mRegistration->mScope,
+                                           getter_AddRefs(serviceWorker));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       swm->RejectUpdatePromiseObservers(mRegistration, rv);
       return;
@@ -332,7 +327,7 @@ public:
 
     nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     MOZ_ASSERT(swm);
-    swm->FinishFetch(mRegistration, mWindow);
+    swm->FinishFetch(mRegistration);
   }
 };
 
@@ -477,7 +472,7 @@ public:
 
     registration->mScriptSpec = spec;
 
-    rv = swm->Update(registration, mWindow);
+    rv = swm->Update(registration);
     MOZ_ASSERT(registration->HasUpdatePromise());
 
     // We append this register() call's promise after calling Update() because
@@ -950,9 +945,8 @@ ServiceWorkerManager::RejectUpdatePromiseObservers(ServiceWorkerRegistrationInfo
  * Update() does not return the Promise that the spec says it should. Callers
  * may access the registration's (new) Promise after calling this method.
  */
-NS_IMETHODIMP
-ServiceWorkerManager::Update(ServiceWorkerRegistrationInfo* aRegistration,
-                             nsPIDOMWindow* aWindow)
+nsresult
+ServiceWorkerManager::Update(ServiceWorkerRegistrationInfo* aRegistration)
 {
   if (aRegistration->HasUpdatePromise()) {
     NS_WARNING("Already had a UpdatePromise. Aborting that one!");
@@ -977,7 +971,7 @@ ServiceWorkerManager::Update(ServiceWorkerRegistrationInfo* aRegistration,
   // FIXME(nsm): Bug 931249. Force cache update if > 1 day.
 
   aRegistration->mUpdateInstance =
-    new ServiceWorkerUpdateInstance(aRegistration, aWindow);
+    new ServiceWorkerUpdateInstance(aRegistration);
   aRegistration->mUpdateInstance->Update();
 
   return NS_OK;
@@ -1101,8 +1095,7 @@ ServiceWorkerManager::ResolveRegisterPromises(ServiceWorkerRegistrationInfo* aRe
 
 // Must NS_Free() aString
 void
-ServiceWorkerManager::FinishFetch(ServiceWorkerRegistrationInfo* aRegistration,
-                                  nsPIDOMWindow* aWindow)
+ServiceWorkerManager::FinishFetch(ServiceWorkerRegistrationInfo* aRegistration)
 {
   AssertIsOnMainThread();
 
@@ -1117,10 +1110,9 @@ ServiceWorkerManager::FinishFetch(ServiceWorkerRegistrationInfo* aRegistration,
   // We have skipped Steps 3-8.3 of the Update algorithm here!
 
   nsRefPtr<ServiceWorker> worker;
-  nsresult rv = CreateServiceWorkerForWindow(aWindow,
-                                             aRegistration->mScriptSpec,
-                                             aRegistration->mScope,
-                                             getter_AddRefs(worker));
+  nsresult rv = CreateServiceWorker(aRegistration->mScriptSpec,
+                                    aRegistration->mScope,
+                                    getter_AddRefs(worker));
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     RejectUpdatePromiseObservers(aRegistration, rv);
@@ -2162,6 +2154,36 @@ ServiceWorkerManager::InvalidateServiceWorkerRegistrationWorker(ServiceWorkerReg
       target->InvalidateWorkerReference(aWhichOnes);
     }
   }
+}
+
+NS_IMETHODIMP
+ServiceWorkerManager::Update(const nsAString& aScope)
+{
+  NS_ConvertUTF16toUTF8 scope(aScope);
+
+  nsRefPtr<ServiceWorkerManager::ServiceWorkerDomainInfo> domainInfo =
+    GetDomainInfo(scope);
+  if (NS_WARN_IF(!domainInfo)) {
+    return NS_OK;
+  }
+
+  nsRefPtr<ServiceWorkerRegistrationInfo> registration;
+  domainInfo->mServiceWorkerRegistrationInfos.Get(scope,
+                                                  getter_AddRefs(registration));
+  if (NS_WARN_IF(!registration)) {
+    return NS_OK;
+  }
+
+  if (registration->mPendingUninstall) {
+    return NS_OK;
+  }
+
+  if (registration->mInstallingWorker) {
+    return NS_OK;
+  }
+
+  Update(registration);
+  return NS_OK;
 }
 
 namespace {

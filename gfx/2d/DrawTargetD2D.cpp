@@ -76,7 +76,7 @@ public:
 
     HRESULT hr = mDT->mDevice->CreateTexture2D(&desc, nullptr, byRef(tmpTexture));
     if (FAILED(hr)) {
-      gfxCriticalError() << "[D2D] CreateTexture2D failure " << size << " Code: " << hexa(hr);
+      gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(size))) << "[D2D] 1 CreateTexture2D failure " << size << " Code: " << hexa(hr);
       return;
     }
     mDT->mDevice->CopyResource(tmpTexture, mDT->mTexture);
@@ -531,7 +531,7 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
     hr = mDevice->CreateTexture2D(&desc, nullptr, byRef(mipTexture));
 
     if (FAILED(hr)) {
-      gfxCriticalError() << "[D2D] CreateTexture2D failure " << aSurface->GetSize() << " Code: " << hexa(hr);
+      gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(aSurface->GetSize()))) << "[D2D] 2 CreateTexture2D failure " << aSurface->GetSize() << " Code: " << hexa(hr);
       return;
     }
 
@@ -558,7 +558,7 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
     hr = mDevice->CreateTexture2D(&desc, nullptr, byRef(tmpDSTexture));
 
     if (FAILED(hr)) {
-      gfxCriticalError() << "[D2D] CreateTexture2D failure " << dsSize << " Code: " << hexa(hr);
+      gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(dsSize))) << "[D2D] 3 CreateTexture2D failure " << dsSize << " Code: " << hexa(hr);
       return;
     }
 
@@ -1361,7 +1361,7 @@ DrawTargetD2D::Init(const IntSize &aSize, SurfaceFormat aFormat)
   hr = mDevice->CreateTexture2D(&desc, nullptr, byRef(mTexture));
 
   if (FAILED(hr)) {
-    gfxCriticalError() << "Failed to init Direct2D DrawTarget. Size: " << mSize << " Code: " << hexa(hr);
+    gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(aSize))) << "Failed to init Direct2D DrawTarget. Size: " << mSize << " Code: " << hexa(hr);
     return false;
   }
 

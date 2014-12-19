@@ -93,6 +93,15 @@ class MachFormatter(base.BaseFormatter):
             test_id = tuple(test_id)
         return test_id
 
+    def _get_file_name(self, test_id):
+        if isinstance(test_id, (str, unicode)):
+            return test_id
+
+        if isinstance(test_id, tuple):
+            return "".join(test_id)
+
+        assert False, "unexpected test_id"
+
     def suite_start(self, data):
         self.summary_values = {"tests": 0,
                                "subtests": 0,
@@ -139,14 +148,16 @@ class MachFormatter(base.BaseFormatter):
             heading = "Unexpected Results"
             rv.extend([heading, "=" * len(heading), ""])
             if has_subtests:
-                for test, results in self.summary_unexpected:
+                for test_id, results in self.summary_unexpected:
+                    test = self._get_file_name(test_id)
                     rv.extend([test, "-" * len(test)])
                     for name, status, expected, message in results:
                         if name is None:
                             name = "[Parent]"
                         rv.append("%s %s" % (self.format_expected(status, expected), name))
             else:
-                for test, results in self.summary_unexpected:
+                for test_id, results in self.summary_unexpected:
+                    test = self._get_file_name(test_id)
                     assert len(results) == 1
                     name, status, expected, messge = results[0]
                     assert name is None

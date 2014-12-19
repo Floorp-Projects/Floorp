@@ -451,6 +451,8 @@
 @BINPATH@/components/RILContentHelper.js
 @BINPATH@/components/RILSystemMessengerHelper.js
 @BINPATH@/components/RILSystemMessengerHelper.manifest
+@BINPATH@/components/SmsService.js
+@BINPATH@/components/SmsService.manifest
 @BINPATH@/components/TelephonyAudioService.js
 @BINPATH@/components/TelephonyAudioService.manifest
 @BINPATH@/components/TelephonyService.js

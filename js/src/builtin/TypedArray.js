@@ -158,3 +158,41 @@ function TypedArrayLastIndexOf(searchElement, fromIndex = undefined) {
     // Step 12.
     return -1;
 }
+
+// ES6 draft rev29 (2014/12/06) 22.2.3.21 %TypedArray%.prototype.reverse().
+function TypedArrayReverse() {
+    // This function is not generic.
+    if (!IsObject(this) || !IsTypedArray(this)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, this, "TypedArrayReverse");
+    }
+
+    // Steps 1-2.
+    var O = this;
+
+    // Steps 3-5.
+    var len = TypedArrayLength(O);
+
+    // Step 6.
+    var middle = std_Math_floor(len / 2);
+
+    // Steps 7-8.
+    // Omit some steps, since there are no holes in typed arrays.
+    // Especially all the HasProperty/*exists checks always succeed.
+    for (var lower = 0; lower !== middle; lower++) {
+        // Step 8.a.
+        var upper = len - lower - 1;
+
+        // Step 8.f.i.
+        var lowerValue = O[lower];
+
+        // Step 8.i.i.
+        var upperValue = O[upper];
+
+        // We always end up in the step 8.j. case.
+        O[lower] = upperValue;
+        O[upper] = lowerValue;
+    }
+
+    // Step 9.
+    return O;
+}

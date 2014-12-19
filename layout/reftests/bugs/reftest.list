@@ -742,7 +742,8 @@ fails == 385823-2b.html 385823-2-ref.html
 == 386014-1c.html 386014-1-ref.html
 == 386065-1.html 386065-1-ref.html
 == 386065-2.html about:blank
-skip-if(B2G) fails == 386147-1.html 386147-1-ref.html # bug 447460
+test-pref(layout.float-fragments-inside-column.enabled,false) skip-if(B2G) fails == 386147-1.html 386147-1-ref.html
+test-pref(layout.float-fragments-inside-column.enabled,true) skip-if(B2G) == 386147-1.html 386147-1-ref.html
 == 386310-1a.html 386310-1-ref.html
 == 386310-1b.html 386310-1-ref.html
 == 386310-1c.html 386310-1-ref.html
@@ -1522,7 +1523,8 @@ skip-if(B2G) == 563584-2.html 563584-2-ref.html
 skip-if(B2G) == 563584-3.html 563584-3-ref.html
 skip-if(B2G) == 563584-4.html 563584-4-ref.html
 == 563584-5.html 563584-5-ref.html
-== 563584-6-columns.html 563584-6-columns-ref.html
+test-pref(layout.float-fragments-inside-column.enabled,false) == 563584-6-columns.html 563584-6-columns-ref.html
+test-pref(layout.float-fragments-inside-column.enabled,true) == 563584-6-columns.html 563584-6-columns-ref-enabled.html
 skip-if(B2G) == 563584-6-printing.html 563584-6-printing-ref.html
 skip-if(B2G) == 563584-7.html 563584-7-ref.html
 # FIXME: It would be nice to have variants of these -8 tests for the

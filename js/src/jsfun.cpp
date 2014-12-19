@@ -88,7 +88,7 @@ IsFunction(HandleValue v)
 }
 
 static bool
-AdvanceToActiveCallLinear(NonBuiltinScriptFrameIter &iter, HandleFunction fun)
+AdvanceToActiveCallLinear(JSContext *cx, NonBuiltinScriptFrameIter &iter, HandleFunction fun)
 {
     MOZ_ASSERT(!fun->isBuiltin());
     MOZ_ASSERT(!fun->isBoundFunction(), "all bound functions are currently native (ergo builtin)");
@@ -96,7 +96,7 @@ AdvanceToActiveCallLinear(NonBuiltinScriptFrameIter &iter, HandleFunction fun)
     for (; !iter.done(); ++iter) {
         if (!iter.isFunctionFrame() || iter.isEvalFrame())
             continue;
-        if (iter.callee() == fun)
+        if (iter.matchCallee(cx, fun))
             return true;
     }
     return false;
@@ -159,7 +159,7 @@ ArgumentsGetterImpl(JSContext *cx, CallArgs args)
 
     // Return null if this function wasn't found on the stack.
     NonBuiltinScriptFrameIter iter(cx);
-    if (!AdvanceToActiveCallLinear(iter, fun)) {
+    if (!AdvanceToActiveCallLinear(cx, iter, fun)) {
         args.rval().setNull();
         return true;
     }
@@ -252,7 +252,7 @@ CallerGetterImpl(JSContext *cx, CallArgs args)
 
     // Also return null if this function wasn't found on the stack.
     NonBuiltinScriptFrameIter iter(cx);
-    if (!AdvanceToActiveCallLinear(iter, fun)) {
+    if (!AdvanceToActiveCallLinear(cx, iter, fun)) {
         args.rval().setNull();
         return true;
     }
@@ -268,7 +268,7 @@ CallerGetterImpl(JSContext *cx, CallArgs args)
     // only call site-clonable scripts are for builtin, self-hosted functions
     // (see assertions in js::CloneFunctionAtCallsite).  So the callee can't be
     // a call site clone.
-    JSFunction *maybeClone = iter.callee();
+    JSFunction *maybeClone = iter.callee(cx);
     MOZ_ASSERT(!maybeClone->nonLazyScript()->isCallsiteClone(),
                "non-builtin functions aren't call site-clonable");
 
@@ -329,7 +329,7 @@ CallerSetterImpl(JSContext *cx, CallArgs args)
     // and throwing a TypeError if the resulting caller is strict.
 
     NonBuiltinScriptFrameIter iter(cx);
-    if (!AdvanceToActiveCallLinear(iter, fun))
+    if (!AdvanceToActiveCallLinear(cx, iter, fun))
         return true;
 
     ++iter;
@@ -341,7 +341,7 @@ CallerSetterImpl(JSContext *cx, CallArgs args)
     // only call site-clonable scripts are for builtin, self-hosted functions
     // (see assertions in js::CloneFunctionAtCallsite).  So the callee can't be
     // a call site clone.
-    JSFunction *maybeClone = iter.callee();
+    JSFunction *maybeClone = iter.callee(cx);
     MOZ_ASSERT(!maybeClone->nonLazyScript()->isCallsiteClone(),
                "non-builtin functions aren't call site-clonable");
 
@@ -1999,6 +1999,14 @@ js::NewFunctionWithProto(ExclusiveContext *cx, HandleObject funobjArg, Native na
     return fun;
 }
 
+bool
+js::CloneFunctionObjectUseSameScript(JSCompartment *compartment, HandleFunction fun)
+{
+    return compartment == fun->compartment() &&
+           !fun->hasSingletonType() &&
+           !types::UseNewTypeForClone(fun);
+}
+
 JSFunction *
 js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent, gc::AllocKind allocKind,
                         NewObjectKind newKindArg /* = GenericObject */)
@@ -2006,9 +2014,7 @@ js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent, 
     MOZ_ASSERT(parent);
     MOZ_ASSERT(!fun->isBoundFunction());
 
-    bool useSameScript = cx->compartment() == fun->compartment() &&
-                         !fun->hasSingletonType() &&
-                         !types::UseNewTypeForClone(fun);
+    bool useSameScript = CloneFunctionObjectUseSameScript(cx->compartment(), fun);
 
     if (!useSameScript && fun->isInterpretedLazy() && !fun->getOrCreateScript(cx))
         return nullptr;

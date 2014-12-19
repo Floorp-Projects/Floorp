@@ -45,9 +45,9 @@ nsKeygenFormProcessorContent::ProcessValue(nsIDOMHTMLElement* aElement,
 
   nsString oldValue(aValue);
   nsString newValue;
-  unused << child->SendFormProcessValue(oldValue, challengeValue,
-                                        keyTypeValue, keyParamsValue,
-                                        &newValue);
+  unused << child->SendKeygenProcessValue(oldValue, challengeValue,
+                                          keyTypeValue, keyParamsValue,
+                                          &newValue);
 
   aValue.Assign(newValue);
   return NS_OK;
@@ -70,7 +70,9 @@ nsKeygenFormProcessorContent::ProvideContent(const nsAString& aFormType,
                                              nsAString& aAttribute)
 {
   nsString attribute;
-  unused << ContentChild::GetSingleton()->SendFormProvideContent(&attribute, &aContent);
+  unused <<
+    ContentChild::GetSingleton()->SendKeygenProvideContent(&attribute,
+                                                           &aContent);
   aAttribute.Assign(attribute);
   return NS_OK;
 }

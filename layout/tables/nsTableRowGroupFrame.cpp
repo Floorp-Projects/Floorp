@@ -1668,17 +1668,14 @@ NS_IMETHODIMP
 nsTableRowGroupFrame::GetLine(int32_t    aLineNumber, 
                               nsIFrame** aFirstFrameOnLine, 
                               int32_t*   aNumFramesOnLine,
-                              nsRect&    aLineBounds, 
-                              uint32_t*  aLineFlags)
+                              nsRect&    aLineBounds)
 {
   NS_ENSURE_ARG_POINTER(aFirstFrameOnLine);
   NS_ENSURE_ARG_POINTER(aNumFramesOnLine);
-  NS_ENSURE_ARG_POINTER(aLineFlags);
 
   nsTableFrame* table = nsTableFrame::GetTableFrame(this);
   nsTableCellMap* cellMap = table->GetCellMap();
 
-  *aLineFlags = 0;
   *aFirstFrameOnLine = nullptr;
   *aNumFramesOnLine = 0;
   aLineBounds.SetRect(0, 0, 0, 0);

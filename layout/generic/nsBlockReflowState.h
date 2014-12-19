@@ -32,7 +32,9 @@ class nsOverflowContinuationTracker;
 #define BRS_ISOVERFLOWCONTAINER   0x00000100
 // Our mPushedFloats list is stored on the blocks' proptable
 #define BRS_PROPTABLE_FLOATCLIST  0x00000200
-#define BRS_LASTFLAG              BRS_PROPTABLE_FLOATCLIST
+// Set when the pref layout.float-fragments-inside-column.enabled is true.
+#define BRS_FLOAT_FRAGMENTS_INSIDE_COLUMN_ENABLED 0x00000400
+#define BRS_LASTFLAG              BRS_FLOAT_FRAGMENTS_INSIDE_COLUMN_ENABLED
 
 class nsBlockReflowState {
 public:
@@ -214,8 +216,14 @@ public:
   // This method makes sure pushed floats are accessible to
   // StealFrame. Call it before adding any frames to mPushedFloats.
   void SetupPushedFloatList();
-  // Use this method to append to mPushedFloats.
-  void AppendPushedFloat(nsIFrame* aFloatCont);
+  /**
+   * Append aFloatCont and its next-in-flows within the same block to
+   * mPushedFloats.  aFloatCont should not be on any child list when
+   * making this call.  Its next-in-flows will be removed from
+   * mBlock using StealFrame() before being added to mPushedFloats.
+   * All appended frames will be marked NS_FRAME_IS_PUSHED_FLOAT.
+   */
+  void AppendPushedFloatChain(nsIFrame* aFloatCont);
 
   // Track child overflow continuations.
   nsOverflowContinuationTracker* mOverflowTracker;

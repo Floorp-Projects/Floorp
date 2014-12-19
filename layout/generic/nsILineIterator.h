@@ -12,15 +12,6 @@
 class nsIFrame;
 struct nsRect;
 
-// Line Flags (see GetLine below)
-
-// This bit is set when the line is wrapping up a block frame. When
-// clear, it means that the line contains inline elements.
-#define NS_LINE_FLAG_IS_BLOCK           0x1
-
-// This bit is set when the line ends in some sort of break.
-#define NS_LINE_FLAG_ENDS_IN_BREAK      0x4
-
 /**
  * Line iterator API.
  *
@@ -64,14 +55,10 @@ public:
   // the line (which is based on the in-flow position of the frames on
   // the line; if a frame was moved because of relative positioning
   // then its coordinates may be outside the line bounds).
-  //
-  // In addition, aLineFlags will contain flag information about the
-  // line.
   NS_IMETHOD GetLine(int32_t aLineNumber,
                      nsIFrame** aFirstFrameOnLine,
                      int32_t* aNumFramesOnLine,
-                     nsRect& aLineBounds,
-                     uint32_t* aLineFlags) = 0;
+                     nsRect& aLineBounds) = 0;
 
   /**
    * Given a frame that's a child of the block, find which line its on

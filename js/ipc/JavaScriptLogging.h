@@ -11,6 +11,7 @@
 #include "nsString.h"
 #include "nsPrintfCString.h"
 #include "jsfriendapi.h"
+#include "jswrapper.h"
 
 namespace mozilla {
 namespace jsipc {
@@ -98,6 +99,7 @@ class Logging
 
     void formatObject(bool incoming, bool local, ObjectId id, nsCString &out) {
         const char *side, *objDesc;
+        void *ptr;
 
         if (local == incoming) {
             JS::RootedObject obj(cx);
@@ -110,12 +112,14 @@ class Logging
             }
 
             side = shared->isParent() ? "parent" : "child";
+            ptr = js::UncheckedUnwrap(obj, true);
         } else {
             objDesc = "<cpow>";
             side = shared->isParent() ? "child" : "parent";
+            ptr = nullptr;
         }
 
-        out = nsPrintfCString("<%s %s:%d>", side, objDesc, id);
+        out = nsPrintfCString("<%s %s:%d:%p>", side, objDesc, id, ptr);
     }
 
 

@@ -1443,7 +1443,7 @@ static bool sDumpPaintList = getenv("MOZ_DUMP_PAINT_LIST") != 0;
 
 /* static */ bool
 gfxUtils::DumpPaintList() {
-  return sDumpPaintList || gfxPrefs::LayoutDumpDisplayList() || profiler_feature_active("displaylistdump");
+  return sDumpPaintList || gfxPrefs::LayoutDumpDisplayList();
 }
 
 bool gfxUtils::sDumpPainting = getenv("MOZ_DUMP_PAINT") != 0;

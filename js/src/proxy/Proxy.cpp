@@ -537,6 +537,13 @@ Proxy::getElements(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t e
     return handler->getElements(cx, proxy, begin, end, adder);
 }
 
+/* static */ void
+Proxy::trace(JSTracer *trc, JSObject *proxy)
+{
+    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    handler->trace(trc, proxy);
+}
+
 JSObject *
 js::proxy_innerObject(JSObject *obj)
 {
@@ -730,6 +737,8 @@ ProxyObject::trace(JSTracer *trc, JSObject *obj)
      */
     if (!proxy->is<CrossCompartmentWrapperObject>())
         MarkValue(trc, proxy->slotOfExtra(1), "extra1");
+
+    Proxy::trace(trc, obj);
 }
 
 JSObject *

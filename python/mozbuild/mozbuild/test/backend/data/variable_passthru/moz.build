@@ -2,19 +2,8 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-SOURCES += ['bar.s', 'foo.asm']
-
 EXTRA_COMPONENTS = ['bar.js', 'foo.js']
 EXTRA_PP_COMPONENTS = ['bar.pp.js', 'foo.pp.js']
-
-HOST_SOURCES += ['bar.cpp', 'foo.cpp']
-HOST_SOURCES += ['bar.c', 'foo.c']
-
-SOURCES += ['bar.c', 'foo.c']
-
-SOURCES += ['bar.mm', 'foo.mm']
-
-SOURCES += ['baz.S', 'foo.S']
 
 FAIL_ON_WARNINGS = True
 MSVC_ENABLE_PGO = True

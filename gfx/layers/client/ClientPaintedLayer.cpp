@@ -162,10 +162,13 @@ ClientLayerManager::CreatePaintedLayerWithHint(PaintedLayerCreationHint aHint)
 #ifdef MOZ_B2G
       aHint == SCROLLABLE &&
 #endif
-      gfxPlatform::GetPlatform()->UseTiling() &&
-      (AsShadowForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_OPENGL ||
-       AsShadowForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_D3D9 ||
-       AsShadowForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_D3D11)) {
+      gfxPlatform::GetPlatform()->UseTiling()
+#ifndef MOZ_X11
+      && (AsShadowForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_OPENGL ||
+          AsShadowForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_D3D9 ||
+          AsShadowForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_D3D11)
+#endif
+  ) {
     nsRefPtr<ClientTiledPaintedLayer> layer = new ClientTiledPaintedLayer(this, aHint);
     CREATE_SHADOW(Painted);
     return layer.forget();
@@ -176,6 +179,17 @@ ClientLayerManager::CreatePaintedLayerWithHint(PaintedLayerCreationHint aHint)
   }
 }
 
+void
+ClientPaintedLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
+{
+  PaintedLayer::PrintInfo(aStream, aPrefix);
+  if (mContentClient) {
+    aStream << "\n";
+    nsAutoCString pfx(aPrefix);
+    pfx += "  ";
+    mContentClient->PrintInfo(aStream, pfx.get());
+  }
+}
 
 }
 }
