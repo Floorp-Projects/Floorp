@@ -1105,6 +1105,10 @@ this.MozLoopService = {
       let isOwnerInRoom = false;
       let isOtherInRoom = false;
 
+      if (!this.getLoopPref("gettingStarted.resumeOnFirstJoin")) {
+        return;
+      }
+
       if (!room.participants) {
         return;
       }
@@ -1524,6 +1528,10 @@ this.MozLoopService = {
   },
 
   resumeTour: function(aIncomingConversationState) {
+    if (!this.getLoopPref("gettingStarted.resumeOnFirstJoin")) {
+      return;
+    }
+
     let url = this.getTourURL("resume-with-conversation", {
       incomingConversation: aIncomingConversationState,
     });
