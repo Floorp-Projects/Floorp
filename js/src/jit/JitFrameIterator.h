@@ -303,7 +303,7 @@ struct MaybeReadFallback
 
     JSContext *maybeCx;
     JitActivation *activation;
-    JitFrameIterator *frame;
+    const JitFrameIterator *frame;
     const NoGCValue unreadablePlaceholder_;
     const FallbackConsequence consequence;
 
@@ -316,7 +316,7 @@ struct MaybeReadFallback
     {
     }
 
-    MaybeReadFallback(JSContext *cx, JitActivation *activation, JitFrameIterator *frame,
+    MaybeReadFallback(JSContext *cx, JitActivation *activation, const JitFrameIterator *frame,
                       FallbackConsequence consequence = Fallback_Invalidate)
       : maybeCx(cx),
         activation(activation),
@@ -489,7 +489,7 @@ class SnapshotIterator
 
         if (fallback.canRecoverResults()) {
             if (!initInstructionResults(fallback))
-                return fallback.unreadablePlaceholder();
+                js::CrashAtUnhandlableOOM("Unable to recover allocations.");
 
             if (allocationReadable(a))
                 return allocationValue(a);
@@ -502,9 +502,9 @@ class SnapshotIterator
 
     void traceAllocation(JSTracer *trc);
 
-    void readCommonFrameSlots(Value *scopeChain, Value *rval) {
+    void readCommonFrameSlots(Value *scopeChain, Value *rval, MaybeReadFallback &fallback) {
         if (scopeChain)
-            *scopeChain = read();
+            *scopeChain = maybeRead(fallback);
         else
             skip();
 
@@ -628,7 +628,7 @@ class InlineFrameIterator
 
         // Read frame slots common to both function and global frames.
         Value scopeChainValue;
-        s.readCommonFrameSlots(&scopeChainValue, rval);
+        s.readCommonFrameSlots(&scopeChainValue, rval, fallback);
 
         if (scopeChain)
             *scopeChain = computeScopeChain(scopeChainValue, hasCallObj);
@@ -668,7 +668,8 @@ class InlineFrameIterator
                         parent_s.skip();
 
                     // Get the overflown arguments
-                    parent_s.readCommonFrameSlots(nullptr, nullptr);
+                    MaybeReadFallback unusedFallback;
+                    parent_s.readCommonFrameSlots(nullptr, nullptr, unusedFallback);
                     parent_s.readFunctionFrameArgs(argOp, nullptr, nullptr,
                                                    nformal, nactual, it.script(),
                                                    fallback);
@@ -716,11 +717,11 @@ class InlineFrameIterator
     bool isFunctionFrame() const;
     bool isConstructing() const;
 
-    JSObject *scopeChain() const {
+    JSObject *scopeChain(MaybeReadFallback &fallback) const {
         SnapshotIterator s(si_);
 
         // scopeChain
-        Value v = s.read();
+        Value v = s.maybeRead(fallback);
         return computeScopeChain(v);
     }
 
