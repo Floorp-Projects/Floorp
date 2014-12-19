@@ -4066,6 +4066,9 @@ nsBlockFrame::SplitFloat(nsBlockReflowState& aState,
     if (oldParent != this) {
       ReparentFrame(nextInFlow, oldParent, this);
     }
+    if (!NS_FRAME_OVERFLOW_IS_INCOMPLETE(aFloatStatus)) {
+      nextInFlow->RemoveStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
+    }
   } else {
     nextInFlow = aState.mPresContext->PresShell()->FrameConstructor()->
       CreateContinuingFrame(aState.mPresContext, aFloat, this);
@@ -7223,10 +7226,11 @@ nsBlockFrame::ComputeFinalBSize(const nsHTMLReflowState& aReflowState,
                                               computedBSizeLeftOver),
                          aBorderPadding.BEnd(wm));
 
-  if (NS_FRAME_IS_NOT_COMPLETE(*aStatus)
-      && aFinalSize.BSize(wm) < aReflowState.AvailableBSize()) {
-    // We ran out of height on this page but we're incomplete
-    // Set status to complete except for overflow
+  if (NS_FRAME_IS_NOT_COMPLETE(*aStatus) &&
+      aFinalSize.BSize(wm) < aReflowState.AvailableBSize()) {
+    // We fit in the available space - change status to OVERFLOW_INCOMPLETE.
+    // XXXmats why didn't Reflow report OVERFLOW_INCOMPLETE in the first place?
+    // XXXmats and why exclude the case when our size == AvailableBSize?
     NS_FRAME_SET_OVERFLOW_INCOMPLETE(*aStatus);
   }
 
