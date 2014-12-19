@@ -88,6 +88,23 @@ abstract class UITest extends BaseRobocopTest
         super.tearDown();
     }
 
+    @Override
+    protected void runTest() throws Throwable {
+        try {
+            super.runTest();
+        } catch (Throwable t) {
+            // save screenshot -- written to /mnt/sdcard/Robotium-Screenshots
+            // as <filename>.jpg
+            mSolo.takeScreenshot("robocop-screenshot");
+            if (mAsserter != null) {
+                mAsserter.dumpLog("Exception caught during test!", t);
+                mAsserter.ok(false, "Exception caught", t.toString());
+            }
+            // re-throw to continue bail-out
+            throw t;
+        }
+    }
+
     private void initComponents() {
         mAboutHome = new AboutHomeComponent(this);
         mAppMenu = new AppMenuComponent(this);
