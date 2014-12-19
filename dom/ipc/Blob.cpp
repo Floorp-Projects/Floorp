@@ -2157,6 +2157,8 @@ CreateStreamHelper::GetStream(nsIInputStream** aInputStream)
   if (EventTargetIsOnCurrentThread(baseRemoteBlobImpl->GetActorEventTarget())) {
     RunInternal(baseRemoteBlobImpl, false);
   } else {
+    MOZ_ASSERT(!NS_IsMainThread());
+
     nsCOMPtr<nsIEventTarget> target = baseRemoteBlobImpl->GetActorEventTarget();
     if (!target) {
       target = do_GetMainThread();
