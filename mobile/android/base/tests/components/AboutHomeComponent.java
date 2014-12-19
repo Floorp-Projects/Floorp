@@ -205,6 +205,8 @@ public class AboutHomeComponent extends BaseComponent {
      */
     public AboutHomeComponent navigateToBuiltinPanelType(PanelType panelType) throws IllegalArgumentException {
         Tabs.getInstance().loadUrl(AboutPages.getURLForBuiltinPanelType(panelType));
+        final int expectedPanelIndex = getPanelIndexForDevice(panelType);
+        waitForPanelIndex(expectedPanelIndex);
         return this;
     }
 }
