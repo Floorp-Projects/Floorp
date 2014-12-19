@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1111995
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1111995</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1111995 **/
+
+  function doTest() {
+    SimpleTest.waitForExplicitFinish();
+
+    var clicks = 0;
+    var elms = document.querySelectorAll('.click');
+    for (var i = 0; i < elms.length; ++i) {
+      var e = elms[i];
+      e.addEventListener('click', function(event) {
+        ++clicks;
+      }, false);
+    }
+    
+    for (var i = 0; i < elms.length; ++i) {
+      var e = elms[i];
+      synthesizeMouse(e, 3, 3, {});
+    }
+    is(clicks, 0, "click events outside border with radius");
+
+    clicks = 0;
+    synthesizeMouse($("t3"), 17, 17, {});
+    synthesizeMouse($("t4"), 17, 17, {});
+    is(clicks, 2, "click events on border with radius");
+    
+    SimpleTest.finish();
+  }
+  </script>
+</head>
+<body onload="SimpleTest.waitForFocus(doTest, window)">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1111995">Mozilla Bug 1111995</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<input  class="click" id="t1" type=button style="width:100px; height:100px; padding:20px; border-radius:50%" value="Round button">
+<button class="click" id="t2"             style="width:100px; height:100px; padding:20px; border-radius:50%">Round button</button>
+<input  class="click" id="t3" type=button style="width:100px; height:100px; border-width:20px; border-radius:50%" value="Round button">
+<button class="click" id="t4"             style="width:100px; height:100px; border-width:20px; border-radius:50%">Round button</button>
+<input  class="click" id="t5" type=button style="width:100px; height:100px; border-radius:50%;overflow:hidden" value="Round button">
+<button class="click" id="t6"             style="width:100px; height:100px; border-radius:50%;overflow:hidden">Round button</button>
+
+</body>
+</html>
