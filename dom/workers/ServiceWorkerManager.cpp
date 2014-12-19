@@ -674,9 +674,15 @@ private:
       // FIXME(nsm): Terminate
       mRegistration->mWaitingWorker->UpdateState(ServiceWorkerState::Redundant);
     }
+
+    // Although the spec first sets waiting worker and then updates its state,
+    // our ServiceWorkerInfo does not hold a list of associated ServiceWorker
+    // objects in content JS. This means if we want to fire an event on
+    // ServiceWorkerRegistration.installing, we need to do it first, before
+    // swapping it with waiting worker.
+    mRegistration->mInstallingWorker->UpdateState(ServiceWorkerState::Installed);
     mRegistration->mWaitingWorker = mRegistration->mInstallingWorker.forget();
     mRegistration->mWaitingToActivate = false;
-    mRegistration->mWaitingWorker->UpdateState(ServiceWorkerState::Installed);
     swm->InvalidateServiceWorkerRegistrationWorker(mRegistration,
                                                    WhichServiceWorker::INSTALLING_WORKER | WhichServiceWorker::WAITING_WORKER);
 
@@ -922,15 +928,22 @@ InstallEventRunnable::DispatchInstallEvent(JSContext* aCx, WorkerPrivate* aWorke
   result = target->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 
   nsCOMPtr<nsIGlobalObject> sgo = aWorkerPrivate->GlobalScope();
-  if (!result.Failed()) {
+  WidgetEvent* internalEvent = event->GetInternalNSEvent();
+  if (!result.Failed() && !internalEvent->mFlags.mExceptionHasBeenRisen) {
     waitUntilPromise = event->GetPromise();
     if (!waitUntilPromise) {
       ErrorResult result;
       waitUntilPromise =
         Promise::Resolve(sgo, aCx, JS::UndefinedHandleValue, result);
+      if (NS_WARN_IF(result.Failed())) {
+        return true;
+      }
     }
   } else {
     // Continue with a canceled install.
+    // Although the spec has different routines to deal with popping stuff
+    // off it's internal queues, we can reuse the ContinueAfterInstallEvent()
+    // logic.
     waitUntilPromise = Promise::Reject(sgo, aCx,
                                        JS::UndefinedHandleValue, result);
   }
@@ -938,7 +951,6 @@ InstallEventRunnable::DispatchInstallEvent(JSContext* aCx, WorkerPrivate* aWorke
   if (result.Failed()) {
     return false;
   }
-  // FIXME(nsm): handle script errors.
 
   nsRefPtr<FinishInstallHandler> handler =
     new FinishInstallHandler(mJob, event->ActivateImmediately());
@@ -1041,7 +1053,8 @@ private:
     // FIXME(nsm): Install error handler for any listener errors.
     ErrorResult result;
     result = target->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
-    if (!result.Failed()) {
+    WidgetEvent* internalEvent = event->GetInternalNSEvent();
+    if (!result.Failed() && !internalEvent->mFlags.mExceptionHasBeenRisen) {
       waitUntilPromise = event->GetPromise();
       if (!waitUntilPromise) {
         nsCOMPtr<nsIGlobalObject> global =
