@@ -96,17 +96,6 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                            const nsRect&           aDirtyRect,
                                            const nsDisplayListSet& aLists)
 {
-  // Clip to our border area for event hit testing.
-  Maybe<DisplayListClipState::AutoSaveRestore> eventClipState;
-  const bool isForEventDelivery = aBuilder->IsForEventDelivery();
-  if (isForEventDelivery) {
-    eventClipState.emplace(aBuilder);
-    nsRect rect(aBuilder->ToReferenceFrame(this), GetSize());
-    nscoord radii[8];
-    bool hasRadii = GetBorderRadii(radii);
-    eventClipState->ClipContainingBlockDescendants(rect, hasRadii ? radii : nullptr);
-  }
-
   nsDisplayList onTop;
   if (IsVisibleForPainting(aBuilder)) {
     mRenderer.DisplayButton(aBuilder, aLists.BorderBackground(), &onTop);
@@ -115,7 +104,7 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsDisplayListCollection set;
 
   // Do not allow the child subtree to receive events.
-  if (!isForEventDelivery) {
+  if (!aBuilder->IsForEventDelivery()) {
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
 
     if (IsInput() || StyleDisplay()->mOverflowX != NS_STYLE_OVERFLOW_VISIBLE) {
