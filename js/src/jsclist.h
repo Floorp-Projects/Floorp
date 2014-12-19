@@ -90,7 +90,7 @@ typedef struct JSCListStr {
 ** circular list is not empty
 */
 #define JS_CLIST_IS_EMPTY(_l) \
-    ((_l)->next == (_l))
+    bool((_l)->next == (_l))
 
 /*
 ** Initialize a circular list
