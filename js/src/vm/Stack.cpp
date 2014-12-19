@@ -864,7 +864,7 @@ FrameIter::functionDisplayAtom() const
         break;
       case INTERP:
       case JIT:
-        return callee()->displayAtom();
+        return calleeTemplate()->displayAtom();
       case ASMJS:
         return data_.asmJSFrames_.functionDisplayAtom();
     }
@@ -1186,7 +1186,7 @@ FrameIter::scopeChain(JSContext *cx) const
 CallObject &
 FrameIter::callObj(JSContext *cx) const
 {
-    MOZ_ASSERT(callee()->isHeavyweight());
+    MOZ_ASSERT(calleeTemplate()->isHeavyweight());
 
     JSObject *pobj = scopeChain(cx);
     while (!pobj->is<CallObject>())
