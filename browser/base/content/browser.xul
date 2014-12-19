@@ -634,7 +634,6 @@
     </toolbar>
 
     <toolbar id="TabsToolbar"
-             class="toolbar-primary"
              fullscreentoolbar="true"
              customizable="true"
              mode="icons"
@@ -720,7 +719,7 @@
            to the default placements of buttons in CustomizableUI.jsm, so the
            customization code doesn't get confused.
       -->
-    <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar"
+    <toolbar id="nav-bar"
              aria-label="&navbarCmd.label;"
              fullscreentoolbar="true" mode="icons" customizable="true"
              iconsize="small"

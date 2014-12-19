@@ -460,7 +460,7 @@ js::GetOutermostEnclosingFunctionOfScriptedCaller(JSContext *cx)
     if (!iter.isFunctionFrame())
         return nullptr;
 
-    RootedFunction curr(cx, iter.callee());
+    RootedFunction curr(cx, iter.callee(cx));
     for (StaticScopeIter<NoGC> i(curr); !i.done(); i++) {
         if (i.type() == StaticScopeIter<NoGC>::FUNCTION)
             curr = &i.fun();
@@ -761,12 +761,12 @@ FormatFrame(JSContext *cx, const ScriptFrameIter &iter, char *buf, int num,
     RootedScript script(cx, iter.script());
     jsbytecode* pc = iter.pc();
 
-    RootedObject scopeChain(cx, iter.scopeChain());
+    RootedObject scopeChain(cx, iter.scopeChain(cx));
     JSAutoCompartment ac(cx, scopeChain);
 
     const char *filename = script->filename();
     unsigned lineno = PCToLineNumber(script, pc);
-    RootedFunction fun(cx, iter.maybeCallee());
+    RootedFunction fun(cx, iter.maybeCallee(cx));
     RootedString funname(cx);
     if (fun)
         funname = fun->atom();
@@ -796,7 +796,7 @@ FormatFrame(JSContext *cx, const ScriptFrameIter &iter, char *buf, int num,
             if (i < iter.numFormalArgs() && script->formalIsAliased(i)) {
                 for (AliasedFormalIter fi(script); ; fi++) {
                     if (fi.frameIndex() == i) {
-                        arg = iter.callObj().aliasedVar(fi);
+                        arg = iter.callObj(cx).aliasedVar(fi);
                         break;
                     }
                 }

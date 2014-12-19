@@ -20,6 +20,7 @@ import org.mozilla.gecko.tests.helpers.WaitHelper;
 import org.mozilla.gecko.util.HardwareUtils;
 
 import android.view.View;
+import android.widget.TextView;
 
 import com.jayway.android.robotium.solo.Condition;
 import com.jayway.android.robotium.solo.RobotiumUtils;
@@ -123,10 +124,19 @@ public class AppMenuComponent extends BaseComponent {
                 fAssertEquals("The parent 'page' menu item is visible", View.VISIBLE, parentMenuItemView.getVisibility());
             }
         } else {
-            // Legacy devices don't have parent menu item "page", check for menu item represented by pageMenuItem.
+            // Legacy devices (Android 2.3 and earlier) don't have the parent menu, "Page", so check directly for the menu
+            // item represented by pageMenuItem.
+            //
+            // We need to make sure the appropriate menu view is constructed
+            // so open the "More" menu to additionally construct those views.
+            openLegacyMoreMenu();
+
             final View pageMenuItemView = findAppMenuItemView(pageMenuItem.getString(mSolo));
             fAssertFalse("The page menu item is not enabled", pageMenuItemView.isEnabled());
             fAssertEquals("The page menu item is visible", View.VISIBLE, pageMenuItemView.getVisibility());
+
+            // Close the "More" menu.
+            mSolo.goBack();
         }
 
         // Close the App Menu.
@@ -140,7 +150,9 @@ public class AppMenuComponent extends BaseComponent {
     /**
      * Try to find a MenuItemActionBar/MenuItemDefault with the given text set as contentDescription / text.
      *
-     * Will return null when the Android legacy menu is in use.
+     * When using legacy menus, make sure the menu has been opened to the appropriate level
+     * (i.e. base menu or "More" menu) to ensure the appropriate menu views are in memory.
+     * TODO: ^ Maybe we just need to have opened the "More" menu and the current one doesn't matter.
      *
      * This method is dependent on not having two views with equivalent contentDescription / text.
      */
@@ -163,6 +175,18 @@ public class AppMenuComponent extends BaseComponent {
             }
         }
 
+        // On Android 2.3, menu items may be instances of
+        // com.android.internal.view.menu.ListMenuItemView, each with a child
+        // android.widget.RelativeLayout which in turn has a child
+        // TextView with the appropriate text.
+        final List<TextView> textViewList = RobotiumUtils.filterViews(TextView.class, views);
+        for (TextView textView : textViewList) {
+            if (textView.getText().equals(text)) {
+                View relativeLayout = (View) textView.getParent();
+                View listMenuItemView = (View)relativeLayout.getParent();
+                return listMenuItemView;
+            }
+        }
         return null;
     }
 
@@ -229,6 +253,25 @@ public class AppMenuComponent extends BaseComponent {
         waitForMenuOpen();
     }
 
+    /**
+     * Opens the "More" options menu on legacy Android devices. Assumes the base menu
+     * (i.e. {@link #openAppMenu()}) has already been called and thus the menu is open.
+     */
+    private void openLegacyMoreMenu() {
+        fAssertTrue("The base menu is already open", isMenuOpen());
+
+        // Since there may be more views with "More" on the screen,
+        // this is not robust. However, there may not be a better way.
+        mSolo.clickOnText("^More$");
+
+        WaitHelper.waitFor("legacy \"More\" menu to open", new Condition() {
+            @Override
+            public boolean isSatisfied() {
+                return isLegacyMoreMenuOpen();
+            }
+        });
+    }
+
     private void pressOverflowMenuButton() {
         final View overflowMenuButton = getOverflowMenuButtonView();
 
@@ -247,6 +290,11 @@ public class AppMenuComponent extends BaseComponent {
         return isMenuOpen(MenuItem.NEW_TAB.getString(mSolo));
     }
 
+    private boolean isLegacyMoreMenuOpen() {
+        // Check if the first menu option is visible.
+        return mSolo.searchText(mSolo.getString(R.string.share), true);
+    }
+
     /**
      * Determines whether the app menu is open by searching for the text in menuItemTitle.
      *
@@ -255,7 +303,7 @@ public class AppMenuComponent extends BaseComponent {
      * @return true if app menu is open.
      */
     private boolean isMenuOpen(String menuItemTitle) {
-        return mSolo.searchText(menuItemTitle);
+        return mSolo.searchText(menuItemTitle, true);
     }
 
     private void waitForMenuOpen() {

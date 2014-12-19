@@ -288,7 +288,7 @@ def denormalize_path(path):
 
 ### .ini reader
 
-def read_ini(fp, variables=None, default='DEFAULT',
+def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
              comments=';#', separators=('=', ':'),
              strict=True):
     """
@@ -296,6 +296,7 @@ def read_ini(fp, variables=None, default='DEFAULT',
     - fp : file pointer or path to read
     - variables : default set of variables
     - default : name of the section for the default section
+    - defaults_only : if True, return the default section only
     - comments : characters that if they start a line denote a comment
     - separators : strings that denote key, value separation in order
     - strict : whether to be strict about parsing
@@ -379,19 +380,23 @@ def read_ini(fp, variables=None, default='DEFAULT',
                 raise Exception("Error parsing manifest file '%s', line %s" %
                                 (filename, linenum))
 
+    # server-root is a special os path declared relative to the manifest file.
+    # inheritance demands we expand it as absolute
+    if 'server-root' in variables:
+        root = os.path.join(os.path.dirname(fp.name),
+                            variables['server-root'])
+        variables['server-root'] = os.path.abspath(root)
+
+    # return the default section only if requested
+    if defaults_only:
+        return [(default, variables)]
+
     # interpret the variables
     def interpret_variables(global_dict, local_dict):
         variables = global_dict.copy()
         if 'skip-if' in local_dict and 'skip-if' in variables:
             local_dict['skip-if'] = "(%s) || (%s)" % (variables['skip-if'].split('#')[0], local_dict['skip-if'].split('#')[0])
         variables.update(local_dict)
-
-        # server-root is an os path declared relative to the manifest file.
-        # inheritance demands we expand it as absolute
-        if 'server-root' in variables:
-            root = os.path.join(os.path.dirname(fp.name),
-                                variables['server-root'])
-            variables['server-root'] = os.path.abspath(root)
 
         return variables
 
@@ -430,6 +435,7 @@ class ManifestParser(object):
         :param defaults_only: If True will only gather options, not include
                               tests. Used for upstream parent includes
                               (default False)
+        :param parentmanifest: Filename of the parent manifest (default None)
         """
         def read_file(type):
             include_file = section.split(type, 1)[-1]
@@ -467,23 +473,27 @@ class ManifestParser(object):
         sections = read_ini(fp=fp, variables=defaults, strict=self.strict)
         self.manifest_defaults[filename] = defaults
 
+        parent_section_found = False
+
         # get the tests
         for section, data in sections:
             subsuite = ''
             if 'subsuite' in data:
                 subsuite = data['subsuite']
 
+            # In case of defaults only, no other section than parent: has to
+            # be processed.
+            if defaults_only and not section.startswith('parent:'):
+                continue
+
             # read the parent manifest if specified
             if section.startswith('parent:'):
+                parent_section_found = True
+
                 include_file = read_file('parent:')
                 if include_file:
                     self._read(root, include_file, {}, True)
                 continue
-
-            # If this is a parent include we only load the defaults into ancestor
-            if defaults_only:
-                self._ancestor_defaults = dict(data.items() + self._ancestor_defaults.items())
-                break
 
             # a file to include
             # TODO: keep track of included file structure:
@@ -543,6 +553,13 @@ class ManifestParser(object):
 
             # append the item
             self.tests.append(test)
+
+        # if no parent: section was found for defaults-only, only read the
+        # defaults section of the manifest without interpreting variables
+        if defaults_only and not parent_section_found:
+            sections = read_ini(fp=fp, variables=defaults, defaults_only=True,
+                                strict=self.strict)
+            (section, self._ancestor_defaults) = sections[0]
 
     def read(self, *filenames, **defaults):
         """
