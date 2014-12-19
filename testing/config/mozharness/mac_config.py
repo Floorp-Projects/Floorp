@@ -40,4 +40,5 @@ config = {
     "mozbase_options": [
         "-b", "%(binary_path)s"
     ],
+    "mac_res_subdir": "MacOS",
 }
