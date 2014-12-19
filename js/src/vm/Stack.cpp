@@ -30,8 +30,8 @@ using mozilla::PodCopy;
 /*****************************************************************************/
 
 void
-InterpreterFrame::initExecuteFrame(JSContext *cx, JSScript *script, AbstractFramePtr evalInFramePrev,
-                                   const Value &thisv, JSObject &scopeChain, ExecuteType type)
+InterpreterFrame::initExecuteFrame(JSContext *cx, HandleScript script, AbstractFramePtr evalInFramePrev,
+                                   const Value &thisv, HandleObject scopeChain, ExecuteType type)
 {
     /*
      * See encoding of ExecuteType. When GLOBAL isn't set, we are executing a
@@ -79,7 +79,7 @@ InterpreterFrame::initExecuteFrame(JSContext *cx, JSScript *script, AbstractFram
 #endif
     }
 
-    scopeChain_ = &scopeChain;
+    scopeChain_ = scopeChain.get();
     prev_ = nullptr;
     prevpc_ = nullptr;
     prevsp_ = nullptr;
@@ -458,7 +458,7 @@ InterpreterStack::pushExecuteFrame(JSContext *cx, HandleScript script, const Val
 
     InterpreterFrame *fp = reinterpret_cast<InterpreterFrame *>(buffer + 2 * sizeof(Value));
     fp->mark_ = mark;
-    fp->initExecuteFrame(cx, script, evalInFrame, thisv, *scopeChain, type);
+    fp->initExecuteFrame(cx, script, evalInFrame, thisv, scopeChain, type);
     fp->initLocals();
 
     return fp;

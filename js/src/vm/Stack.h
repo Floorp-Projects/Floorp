@@ -385,8 +385,8 @@ class InterpreterFrame
                        InterpreterFrame::Flags flags);
 
     /* Used for global and eval frames. */
-    void initExecuteFrame(JSContext *cx, JSScript *script, AbstractFramePtr prev,
-                          const Value &thisv, JSObject &scopeChain, ExecuteType type);
+    void initExecuteFrame(JSContext *cx, HandleScript script, AbstractFramePtr prev,
+                          const Value &thisv, HandleObject scopeChain, ExecuteType type);
 
   public:
     /*
