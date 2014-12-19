@@ -10,7 +10,7 @@ topsrcdir="$SOURCE"
 # When running on a developer machine, several variables will already
 # have the right settings and we will need to keep them since the
 # Windows mozconfigs overwrite them.
-export OLD_INCLUDE="$INCLUDE"
+export OLD_INCLUDE=$(IFS=';'; for d in $INCLUDE; do ( cd "$d" && echo -n $(pwd): ); done)
 export OLD_LIB=$(IFS=';'; for d in $LIB; do ( cd "$d" && echo -n $(pwd): ); done)
 export OLD_LIBPATH=$(IFS=';'; for d in $LIBPATH; do ( cd "$d" && echo -n $(pwd): ); done)
 
@@ -46,6 +46,6 @@ fi
 #
 # Note that the mozconfig will use msys-style paths and OLD_INCLUDE will use
 # Windows-style paths, but perl and cl.exe both seem ok with either.
-export INCLUDE="$(perl -le 'print join ":", grep { -d $_ } split(":", $ENV{INCLUDE}),split(";", $ENV{OLD_INCLUDE})')"
+export INCLUDE="$(perl -le 'print join ":", grep { -d $_ } split(":", $ENV{INCLUDE}),split(":", $ENV{OLD_INCLUDE})')"
 export LIB="$(perl -le 'print join ":", grep { -d $_ } split(":", $ENV{LIB}),split(":", $ENV{OLD_LIB})')"
 export LIBPATH="$(perl -le 'print join ":", grep { -d $_ } split(":", $ENV{LIBPATH}),split(":", $ENV{OLD_LIBPATH})')"
