@@ -425,7 +425,8 @@ asserts(0-1) load 592118.html
 load 594808-1.html
 load 595435-1.xhtml
 load 595740-1.html
-load 600100.xhtml
+pref(layout.float-fragments-inside-column.enabled,true) asserts(1) load 600100.xhtml # bug 866955
+pref(layout.float-fragments-inside-column.enabled,false) load 600100.xhtml
 load 603490-1.html
 load 603510-1.html
 load 604314-1.html
