@@ -87,8 +87,7 @@ var tests = {
     // we expect the addon install dialog to appear, we need to accept the
     // install from the dialog.
     let panel = document.getElementById("servicesInstall-notification");
-    PopupNotifications.panel.addEventListener("popupshown", function onpopupshown() {
-      PopupNotifications.panel.removeEventListener("popupshown", onpopupshown);
+    ensureEventFired(PopupNotifications.panel, "popupshown").then(() => {
       info("servicesInstall-notification panel opened");
       panel.button.click();
     });
@@ -121,8 +120,7 @@ var tests = {
 
   testButtonOnEnable: function(next) {
     let panel = document.getElementById("servicesInstall-notification");
-    PopupNotifications.panel.addEventListener("popupshown", function onpopupshown() {
-      PopupNotifications.panel.removeEventListener("popupshown", onpopupshown);
+    ensureEventFired(PopupNotifications.panel, "popupshown").then(() => {
       info("servicesInstall-notification panel opened");
       panel.button.click();
     });
@@ -187,8 +185,8 @@ var tests = {
             // synthesize so the command event happens
             EventUtils.synthesizeMouseAtCenter(btn, {});
             // wait for the button to be marked, click to open panel
+            is(btn.panel.state, "closed", "panel should not be visible yet");
             waitForCondition(function() btn.isMarked, function() {
-              is(btn.panel.state, "closed", "panel should not be visible yet");
               EventUtils.synthesizeMouseAtCenter(btn, {});
             }, "button is marked");
             break;
@@ -196,29 +194,60 @@ var tests = {
             ok(true, "got the panel message " + e.data.result);
             if (e.data.result == "shown") {
               // unmark the page via the button in the page
-              let doc = btn.contentDocument;
-              let unmarkBtn = doc.getElementById("unmark");
-              ok(unmarkBtn, "got the panel unmark button");
-              EventUtils.sendMouseEvent({type: "click"}, unmarkBtn, btn.contentWindow);
+              ensureFrameLoaded(btn.content).then(() => {
+                let doc = btn.contentDocument;
+                let unmarkBtn = doc.getElementById("unmark");
+                ok(unmarkBtn, "testMarkPanel - got the panel unmark button");
+                EventUtils.sendMouseEvent({type: "click"}, unmarkBtn, btn.contentWindow);
+              });
             } else {
               // page should no longer be marked
               port.close();
               waitForCondition(function() !btn.isMarked, function() {
                 // cleanup after the page has been unmarked
-                gBrowser.tabContainer.addEventListener("TabClose", function onTabClose() {
-                  gBrowser.tabContainer.removeEventListener("TabClose", onTabClose);
-                    executeSoon(function () {
-                      ok(btn.disabled, "button is disabled");
-                      next();
-                    });
+                ensureBrowserTabClosed(tab).then(() => {
+                  ok(btn.disabled, "button is disabled");
+                  next();
                 });
-                gBrowser.removeTab(tab);
               }, "button unmarked");
             }
             break;
         }
       };
       port.postMessage({topic: "test-init"});
+    });
+  },
+
+  testMarkPanelOffline: function(next) {
+    // click on panel to open and wait for visibility
+    let provider = Social._getProviderFromOrigin(manifest2.origin);
+    ok(provider.enabled, "provider is enabled");
+    let id = SocialMarks._toolbarHelper.idFromOrigin(manifest2.origin);
+    let widget = CustomizableUI.getWidget(id);
+    let btn = widget.forWindow(window).node;
+    ok(btn, "got a mark button");
+
+    // verify markbutton is disabled when there is no browser url
+    ok(btn.disabled, "button is disabled");
+    let activationURL = manifest2.origin + "/browser/browser/base/content/test/social/social_activate.html"
+    addTab(activationURL, function(tab) {
+      ok(!btn.disabled, "button is enabled");
+      goOffline().then(function() {
+        info("testing offline error page");
+        // wait for popupshown
+        ensureEventFired(btn.panel, "popupshown").then(() => {
+          info("marks panel is open");
+          ensureFrameLoaded(btn.content).then(() => {
+            is(btn.contentDocument.location.href.indexOf("about:socialerror?"), 0, "social error page is showing");
+            // cleanup after the page has been unmarked
+            ensureBrowserTabClosed(tab).then(() => {
+              ok(btn.disabled, "button is disabled");
+              goOnline().then(next);
+            });
+          });
+        });
+        btn.markCurrentPage();
+      });
     });
   },
 
@@ -259,23 +288,21 @@ var tests = {
               // our test marks the page during the load event (see
               // social_mark.html) regardless of login state, unmark the page
               // via the button in the page
-              let doc = btn.contentDocument;
-              let unmarkBtn = doc.getElementById("unmark");
-              ok(unmarkBtn, "got the panel unmark button");
-              EventUtils.sendMouseEvent({type: "click"}, unmarkBtn, btn.contentWindow);
+              ensureFrameLoaded(btn.content).then(() => {
+                let doc = btn.contentDocument;
+                let unmarkBtn = doc.getElementById("unmark");
+                ok(unmarkBtn, "testMarkPanelLoggedOut - got the panel unmark button");
+                EventUtils.sendMouseEvent({type: "click"}, unmarkBtn, btn.contentWindow);
+              });
             } else {
               // page should no longer be marked
               port.close();
               waitForCondition(function() !btn.isMarked, function() {
                 // cleanup after the page has been unmarked
-                gBrowser.tabContainer.addEventListener("TabClose", function onTabClose() {
-                  gBrowser.tabContainer.removeEventListener("TabClose", onTabClose);
-                    executeSoon(function () {
-                      ok(btn.disabled, "button is disabled");
-                      next();
-                    });
+                ensureBrowserTabClosed(tab).then(() => {
+                  ok(btn.disabled, "button is disabled");
+                  next();
                 });
-                gBrowser.removeTab(tab);
               }, "button unmarked");
             }
             break;
@@ -323,11 +350,10 @@ var tests = {
       }
       info("INSTALLING " + manifest.origin);
       let panel = document.getElementById("servicesInstall-notification");
-      PopupNotifications.panel.addEventListener("popupshown", function onpopupshown() {
-        PopupNotifications.panel.removeEventListener("popupshown", onpopupshown);
+      ensureEventFired(PopupNotifications.panel, "popupshown").then(() => {
         info("servicesInstall-notification panel opened");
         panel.button.click();
-      })
+      });
 
       let activationURL = manifest.origin + "/browser/browser/base/content/test/social/social_activate.html"
       let id = SocialMarks._toolbarHelper.idFromOrigin(manifest.origin);
