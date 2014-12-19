@@ -550,5 +550,16 @@ describe("loop.store.RoomStore", function () {
 
       expect(store.getStoreState().error).eql(err);
     });
+
+    it("should ensure only submitting a non-empty room name", function() {
+      fakeMozLoop.rooms.rename = sinon.spy();
+
+      dispatcher.dispatch(new sharedActions.RenameRoom({
+        roomToken: "42abc",
+        newRoomName: " \t  \t "
+      }));
+
+      sinon.assert.notCalled(fakeMozLoop.rooms.rename);
+    });
   });
 });
