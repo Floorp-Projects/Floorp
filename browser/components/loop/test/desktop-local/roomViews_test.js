@@ -128,14 +128,14 @@ describe("loop.roomViews", function () {
         });
 
         roomNameBox = view.getDOMNode().querySelector('.input-room-name');
-
-        React.addons.TestUtils.Simulate.change(roomNameBox, { target: {
-          value: "reallyFake"
-        }});
       });
 
       it("should dispatch a RenameRoom action when the focus is lost",
         function() {
+          React.addons.TestUtils.Simulate.change(roomNameBox, { target: {
+            value: "reallyFake"
+          }});
+
           React.addons.TestUtils.Simulate.blur(roomNameBox);
 
           sinon.assert.calledOnce(dispatcher.dispatch);
@@ -148,6 +148,10 @@ describe("loop.roomViews", function () {
 
       it("should dispatch a RenameRoom action when Enter key is pressed",
         function() {
+          React.addons.TestUtils.Simulate.change(roomNameBox, { target: {
+            value: "reallyFake"
+          }});
+
           TestUtils.Simulate.keyDown(roomNameBox, {key: "Enter", which: 13});
 
           sinon.assert.calledOnce(dispatcher.dispatch);
