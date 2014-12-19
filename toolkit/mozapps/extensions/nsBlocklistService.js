@@ -74,10 +74,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gVersionChecker",
                                    "@mozilla.org/xpcom/version-comparator;1",
                                    "nsIVersionComparator");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gCertBlocklistService",
-                                   "@mozilla.org/security/certblocklist;1",
-                                   "nsICertBlocklist");
-
 XPCOMUtils.defineLazyGetter(this, "gPref", function bls_gPref() {
   return Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).
          QueryInterface(Ci.nsIPrefBranch);
@@ -729,13 +725,6 @@ Blocklist.prototype = {
 #          <match name="description" exp="1[.]2[.]3"/>
 #        </pluginItem>
 #      </pluginItems>
-#      <certItems>
-#        <!-- issuerName is the DER issuer name data base64 encoded... -->
-#        <certItem issuerName="MA0xCzAJBgNVBAMMAmNh">
-#          <!-- ... as is the serial number DER data -->
-#          <serialNumber>AkHVNA==</serialNumber>
-#        </certItem>
-#      </certItems>
 #    </blocklist>
    */
 
@@ -873,17 +862,12 @@ Blocklist.prototype = {
           this._pluginEntries = this._processItemNodes(element.childNodes, "plugin",
                                                        this._handlePluginItemNode);
           break;
-        case "certItems":
-          this._processItemNodes(element.childNodes, "cert",
-                                 this._handleCertItemNode.bind(this));
-          break;
         default:
           Services.obs.notifyObservers(element,
                                        "blocklist-data-" + element.localName,
                                        null);
         }
       }
-      gCertBlocklistService.saveEntries();
     }
     catch (e) {
       LOG("Blocklist::_loadBlocklistFromFile: Error constructing blocklist " + e);
@@ -903,20 +887,6 @@ Blocklist.prototype = {
       handler(blocklistElement, result);
     }
     return result;
-  },
-
-  _handleCertItemNode: function Blocklist_handleCertItemNode(blocklistElement,
-                                                             result) {
-    let issuer = blocklistElement.getAttribute("issuerName");
-    for (let snElement of blocklistElement.children) {
-      try {
-        gCertBlocklistService.addRevokedCert(issuer, snElement.textContent);
-      } catch (e) {
-        // we want to keep trying other elements since missing all items
-        // is worse than missing one
-        LOG("Blocklist::_handleCertItemNode: Error adding revoked cert " + e);
-      }
-    }
   },
 
   _handleEmItemNode: function Blocklist_handleEmItemNode(blocklistElement, result) {
