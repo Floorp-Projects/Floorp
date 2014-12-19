@@ -60,12 +60,6 @@ Sink(MIRGenerator *mir, MIRGraph &graph)
             if (ins->isGuard() || ins->isRecoveredOnBailout() || !ins->canRecoverOnBailout())
                 continue;
 
-            // To move effectful instruction, we would have to verify that the
-            // side-effect is not observed. In the mean time, we just inhibit
-            // this optimization on effectful instructions.
-            if (ins->isEffectful())
-                continue;
-
             // Compute a common dominator for all uses of the current
             // instruction.
             bool hasLiveUses = false;
@@ -112,6 +106,12 @@ Sink(MIRGenerator *mir, MIRGraph &graph)
             // the Dead Code elimination used to move instructions with no-live
             // uses to the bailout path.
             if (!sinkEnabled)
+                continue;
+
+            // To move an effectful instruction, we would have to verify that the
+            // side-effect is not observed. In the mean time, we just inhibit
+            // this optimization on effectful instructions.
+            if (ins->isEffectful())
                 continue;
 
             // If all the uses are under a loop, we might not want to work
