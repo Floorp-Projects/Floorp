@@ -169,7 +169,7 @@
    -->
   <addon>
     <name>PASS</name>
-    <type id="9999">Unknown</type>
+    <type id="2">Theme</type>
     <guid>test_AddonRepository_1@tests.mozilla.org</guid>
     <version>1.4</version>
     <status id="9999">Unknown</status>
