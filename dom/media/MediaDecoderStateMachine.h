@@ -389,23 +389,6 @@ public:
   void OnSeekCompleted();
   void OnSeekFailed(nsresult aResult);
 
-  void OnWaitForDataResolved(MediaData::Type aType)
-  {
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    if (RequestStatusRef(aType) == RequestStatus::Waiting) {
-      RequestStatusRef(aType) = RequestStatus::Idle;
-      DispatchDecodeTasksIfNeeded();
-    }
-  }
-
-  void OnWaitForDataRejected(WaitForDataRejectValue aRejection)
-  {
-    MOZ_ASSERT(aRejection.mReason == WaitForDataRejectValue::SHUTDOWN);
-    if (RequestStatusRef(aRejection.mType) == RequestStatus::Waiting) {
-      RequestStatusRef(aRejection.mType) = RequestStatus::Idle;
-    }
-  }
-
 private:
   void AcquireMonitorAndInvokeDecodeError();
 
@@ -479,22 +462,7 @@ protected:
 
   // Returns true if we've got less than aAudioUsecs microseconds of decoded
   // and playable data. The decoder monitor must be held.
-  //
-  // May not be invoked when mReader->UseBufferingHeuristics() is false.
   bool HasLowDecodedData(int64_t aAudioUsecs);
-
-  bool OutOfDecodedAudio()
-  {
-    return IsAudioDecoding() && !AudioQueue().IsFinished() && AudioQueue().GetSize() == 0;
-  }
-
-  bool OutOfDecodedVideo()
-  {
-    // In buffering mode, we keep the last already-played frame in the queue.
-    int emptyVideoSize = mState == DECODER_STATE_BUFFERING ? 1 : 0;
-    return IsVideoDecoding() && !VideoQueue().IsFinished() && VideoQueue().GetSize() <= emptyVideoSize;
-  }
-
 
   // Returns true if we're running low on data which is not yet decoded.
   // The decoder monitor must be held.
@@ -943,22 +911,11 @@ protected:
   bool mIsAudioPrerolling;
   bool mIsVideoPrerolling;
 
-  MOZ_BEGIN_NESTED_ENUM_CLASS(RequestStatus)
-    Idle,
-    Pending,
-    Waiting
-  MOZ_END_NESTED_ENUM_CLASS(RequestStatus)
-
   // True when we have dispatched a task to the decode task queue to request
   // decoded audio/video, and/or we are waiting for the requested sample to be
   // returned by callback from the Reader.
-  RequestStatus mAudioRequestStatus;
-  RequestStatus mVideoRequestStatus;
-
-  RequestStatus& RequestStatusRef(MediaData::Type aType)
-  {
-    return aType == MediaData::AUDIO_DATA ? mAudioRequestStatus : mVideoRequestStatus;
-  }
+  bool mAudioRequestPending;
+  bool mVideoRequestPending;
 
   // True if we shouldn't play our audio (but still write it to any capturing
   // streams). When this is true, mStopAudioThread is always true and
