@@ -460,7 +460,7 @@ js::GetOutermostEnclosingFunctionOfScriptedCaller(JSContext *cx)
     if (!iter.isFunctionFrame())
         return nullptr;
 
-    RootedFunction curr(cx, iter.callee());
+    RootedFunction curr(cx, iter.callee(cx));
     for (StaticScopeIter<NoGC> i(curr); !i.done(); i++) {
         if (i.type() == StaticScopeIter<NoGC>::FUNCTION)
             curr = &i.fun();
@@ -766,7 +766,7 @@ FormatFrame(JSContext *cx, const ScriptFrameIter &iter, char *buf, int num,
 
     const char *filename = script->filename();
     unsigned lineno = PCToLineNumber(script, pc);
-    RootedFunction fun(cx, iter.maybeCallee());
+    RootedFunction fun(cx, iter.maybeCallee(cx));
     RootedString funname(cx);
     if (fun)
         funname = fun->atom();
