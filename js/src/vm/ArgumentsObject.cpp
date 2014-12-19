@@ -249,7 +249,7 @@ ArgumentsObject *
 ArgumentsObject::createUnexpected(JSContext *cx, ScriptFrameIter &iter)
 {
     RootedScript script(cx, iter.script());
-    RootedFunction callee(cx, iter.callee());
+    RootedFunction callee(cx, iter.callee(cx));
     CopyScriptFrameIterArgs copy(iter);
     return create(cx, script, callee, iter.numActualArgs(), copy);
 }

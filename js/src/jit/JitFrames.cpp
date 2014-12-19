@@ -2399,11 +2399,12 @@ InlineFrameIterator::callee(MaybeReadFallback &fallback) const
 }
 
 JSObject *
-InlineFrameIterator::computeScopeChain(Value scopeChainValue, bool *hasCallObj) const
+InlineFrameIterator::computeScopeChain(Value scopeChainValue, MaybeReadFallback &fallback,
+                                       bool *hasCallObj) const
 {
     if (scopeChainValue.isObject()) {
         if (hasCallObj)
-            *hasCallObj = isFunctionFrame() && callee()->isHeavyweight();
+            *hasCallObj = isFunctionFrame() && callee(fallback)->isHeavyweight();
         return &scopeChainValue.toObject();
     }
 
@@ -2411,7 +2412,7 @@ InlineFrameIterator::computeScopeChain(Value scopeChainValue, bool *hasCallObj) 
     // are walking the frame during the function prologue, before the scope
     // chain has been initialized.
     if (isFunctionFrame())
-        return callee()->environment();
+        return callee(fallback)->environment();
 
     // Ion does not handle scripts that are not compile-and-go.
     MOZ_ASSERT(!script()->isForEval());

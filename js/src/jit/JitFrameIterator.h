@@ -610,7 +610,8 @@ class InlineFrameIterator
 
   private:
     void findNextFrame();
-    JSObject *computeScopeChain(Value scopeChainValue, bool *hasCallObj = nullptr) const;
+    JSObject *computeScopeChain(Value scopeChainValue, MaybeReadFallback &fallback,
+                                bool *hasCallObj = nullptr) const;
 
   public:
     InlineFrameIterator(ThreadSafeContext *cx, const JitFrameIterator *iter);
@@ -664,7 +665,7 @@ class InlineFrameIterator
         s.readCommonFrameSlots(&scopeChainValue, rval, fallback);
 
         if (scopeChain)
-            *scopeChain = computeScopeChain(scopeChainValue, hasCallObj);
+            *scopeChain = computeScopeChain(scopeChainValue, hasCallObj, fallback);
 
         // Read arguments, which only function frames have.
         if (isFunctionFrame()) {
@@ -755,7 +756,7 @@ class InlineFrameIterator
 
         // scopeChain
         Value v = s.maybeRead(fallback);
-        return computeScopeChain(v);
+        return computeScopeChain(v, fallback);
     }
 
     Value thisValue(MaybeReadFallback &fallback) const {
