@@ -911,11 +911,22 @@ protected:
   bool mIsAudioPrerolling;
   bool mIsVideoPrerolling;
 
+  MOZ_BEGIN_NESTED_ENUM_CLASS(RequestStatus)
+    Idle,
+    Pending,
+    Waiting
+  MOZ_END_NESTED_ENUM_CLASS(RequestStatus)
+
   // True when we have dispatched a task to the decode task queue to request
   // decoded audio/video, and/or we are waiting for the requested sample to be
   // returned by callback from the Reader.
-  bool mAudioRequestPending;
-  bool mVideoRequestPending;
+  RequestStatus mAudioRequestStatus;
+  RequestStatus mVideoRequestStatus;
+
+  RequestStatus& RequestStatusRef(MediaData::Type aType)
+  {
+    return aType == MediaData::AUDIO_DATA ? mAudioRequestStatus : mVideoRequestStatus;
+  }
 
   // True if we shouldn't play our audio (but still write it to any capturing
   // streams). When this is true, mStopAudioThread is always true and

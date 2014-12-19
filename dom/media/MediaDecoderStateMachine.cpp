@@ -195,8 +195,8 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mAmpleVideoFrames(2),
   mLowAudioThresholdUsecs(LOW_AUDIO_USECS),
   mAmpleAudioThresholdUsecs(AMPLE_AUDIO_USECS),
-  mAudioRequestPending(false),
-  mVideoRequestPending(false),
+  mAudioRequestStatus(RequestStatus::Idle),
+  mVideoRequestStatus(RequestStatus::Idle),
   mAudioCaptured(false),
   mPositionChangeQueued(false),
   mAudioCompleted(false),
@@ -579,7 +579,7 @@ MediaDecoderStateMachine::DecodeVideo()
     if (mState != DECODER_STATE_DECODING &&
         mState != DECODER_STATE_BUFFERING &&
         mState != DECODER_STATE_SEEKING) {
-      mVideoRequestPending = false;
+      mVideoRequestStatus = RequestStatus::Idle;
       DispatchDecodeTasksIfNeeded();
       return;
     }
@@ -658,7 +658,7 @@ MediaDecoderStateMachine::DecodeAudio()
     if (mState != DECODER_STATE_DECODING &&
         mState != DECODER_STATE_BUFFERING &&
         mState != DECODER_STATE_SEEKING) {
-      mAudioRequestPending = false;
+      mAudioRequestStatus = RequestStatus::Idle;
       DispatchDecodeTasksIfNeeded();
       mon.NotifyAll();
       return;
@@ -713,7 +713,7 @@ MediaDecoderStateMachine::OnAudioDecoded(AudioData* aAudioSample)
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   nsRefPtr<AudioData> audio(aAudioSample);
   MOZ_ASSERT(audio);
-  mAudioRequestPending = false;
+  mAudioRequestStatus = RequestStatus::Idle;
   mDecodedAudioEndTime = audio->GetEndTime();
 
   SAMPLE_LOG("OnAudioDecoded [%lld,%lld] disc=%d",
@@ -825,11 +825,7 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
   MOZ_ASSERT_IF(!isAudio, aType == MediaData::VIDEO_DATA);
 
   // This callback means that the pending request is dead.
-  if (isAudio) {
-    mAudioRequestPending = false;
-  } else {
-    mVideoRequestPending = false;
-  }
+  RequestStatusRef(aType) = RequestStatus::Idle;
 
   // If this is a decode error, delegate to the generic error path.
   if (aReason == MediaDecoderReader::DECODE_ERROR) {
@@ -930,7 +926,7 @@ MediaDecoderStateMachine::OnVideoDecoded(VideoData* aVideoSample)
   MOZ_ASSERT(OnDecodeThread());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   nsRefPtr<VideoData> video(aVideoSample);
-  mVideoRequestPending = false;
+  mVideoRequestStatus = RequestStatus::Idle;
 
   SAMPLE_LOG("OnVideoDecoded [%lld,%lld] disc=%d",
              (video ? video->mTime : -1),
@@ -1745,9 +1741,9 @@ MediaDecoderStateMachine::DispatchDecodeTasksIfNeeded()
                   !needToDecodeVideo &&
                   !IsPlaying();
 
-  SAMPLE_LOG("DispatchDecodeTasksIfNeeded needAudio=%d dispAudio=%d needVideo=%d dispVid=%d needIdle=%d",
-             needToDecodeAudio, mAudioRequestPending,
-             needToDecodeVideo, mVideoRequestPending,
+  SAMPLE_LOG("DispatchDecodeTasksIfNeeded needAudio=%d audioStatus=%d needVideo=%d videoStatus=%d needIdle=%d",
+             needToDecodeAudio, mAudioRequestStatus,
+             needToDecodeVideo, mVideoRequestStatus,
              needIdle);
 
   if (needToDecodeAudio) {
@@ -1817,8 +1813,8 @@ MediaDecoderStateMachine::EnsureAudioDecodeTaskQueued()
   NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
                "Should be on state machine or decode thread.");
 
-  SAMPLE_LOG("EnsureAudioDecodeTaskQueued isDecoding=%d dispatched=%d",
-              IsAudioDecoding(), mAudioRequestPending);
+  SAMPLE_LOG("EnsureAudioDecodeTaskQueued isDecoding=%d status=%d",
+              IsAudioDecoding(), mAudioRequestStatus);
 
   if (mState >= DECODER_STATE_COMPLETED) {
     return NS_OK;
@@ -1826,12 +1822,12 @@ MediaDecoderStateMachine::EnsureAudioDecodeTaskQueued()
 
   MOZ_ASSERT(mState > DECODER_STATE_DECODING_FIRSTFRAME);
 
-  if (IsAudioDecoding() && !mAudioRequestPending && !mWaitingForDecoderSeek) {
+  if (IsAudioDecoding() && mAudioRequestStatus == RequestStatus::Idle && !mWaitingForDecoderSeek) {
     RefPtr<nsIRunnable> task(
       NS_NewRunnableMethod(this, &MediaDecoderStateMachine::DecodeAudio));
     nsresult rv = DecodeTaskQueue()->Dispatch(task);
     if (NS_SUCCEEDED(rv)) {
-      mAudioRequestPending = true;
+      mAudioRequestStatus = RequestStatus::Pending;
     } else {
       DECODER_WARN("Failed to dispatch task to decode audio");
     }
@@ -1859,8 +1855,8 @@ MediaDecoderStateMachine::EnsureVideoDecodeTaskQueued()
 {
   AssertCurrentThreadInMonitor();
 
-  SAMPLE_LOG("EnsureVideoDecodeTaskQueued isDecoding=%d dispatched=%d",
-             IsVideoDecoding(), mVideoRequestPending);
+  SAMPLE_LOG("EnsureVideoDecodeTaskQueued isDecoding=%d status=%d",
+             IsVideoDecoding(), mVideoRequestStatus);
 
   NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
                "Should be on state machine or decode thread.");
@@ -1871,12 +1867,12 @@ MediaDecoderStateMachine::EnsureVideoDecodeTaskQueued()
 
   MOZ_ASSERT(mState > DECODER_STATE_DECODING_FIRSTFRAME);
 
-  if (IsVideoDecoding() && !mVideoRequestPending && !mWaitingForDecoderSeek) {
+  if (IsVideoDecoding() && mVideoRequestStatus == RequestStatus::Idle && !mWaitingForDecoderSeek) {
     RefPtr<nsIRunnable> task(
       NS_NewRunnableMethod(this, &MediaDecoderStateMachine::DecodeVideo));
     nsresult rv = DecodeTaskQueue()->Dispatch(task);
     if (NS_SUCCEEDED(rv)) {
-      mVideoRequestPending = true;
+      mVideoRequestStatus = RequestStatus::Pending;
     } else {
       DECODER_WARN("Failed to dispatch task to decode video");
     }
@@ -2760,8 +2756,8 @@ MediaDecoderStateMachine::FlushDecoding()
   // These flags will be reset when the decoded data returned in OnAudioDecoded()
   // and OnVideoDecoded(). Because the decode tasks are flushed, these flags need
   // to be reset here.
-  mAudioRequestPending = false;
-  mVideoRequestPending = false;
+  mAudioRequestStatus = RequestStatus::Idle;
+  mVideoRequestStatus = RequestStatus::Idle;
 
   // We must reset playback so that all references to frames queued
   // in the state machine are dropped, else subsequent calls to Shutdown()
