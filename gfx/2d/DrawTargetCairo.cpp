@@ -12,6 +12,7 @@
 #include "BorrowedContext.h"
 #include "FilterNodeSoftware.h"
 #include "mozilla/Scoped.h"
+#include "mozilla/Vector.h"
 
 #include "cairo.h"
 #include "cairo-tee.h"
@@ -1148,8 +1149,16 @@ DrawTargetCairo::FillGlyphs(ScaledFont *aFont,
 
   cairo_set_antialias(mContext, GfxAntialiasToCairoAntialias(aOptions.mAntialiasMode));
 
-  // Convert our GlyphBuffer into an array of Cairo glyphs.
-  std::vector<cairo_glyph_t> glyphs(aBuffer.mNumGlyphs);
+  // Convert our GlyphBuffer into a vector of Cairo glyphs. This code can
+  // execute millions of times in short periods, so we want to avoid heap
+  // allocation whenever possible. So we use an inline vector capacity of 1024
+  // bytes (the maximum allowed by mozilla::Vector), which gives an inline
+  // length of 1024 / 24 = 42 elements, which is enough to typically avoid heap
+  // allocation in ~99% of cases.
+  Vector<cairo_glyph_t, 1024 / sizeof(cairo_glyph_t)> glyphs;
+  if (!glyphs.resizeUninitialized(aBuffer.mNumGlyphs)) {
+    MOZ_CRASH("glyphs allocation failed");
+  }
   for (uint32_t i = 0; i < aBuffer.mNumGlyphs; ++i) {
     glyphs[i].index = aBuffer.mGlyphs[i].mIndex;
     glyphs[i].x = aBuffer.mGlyphs[i].mPosition.x;
