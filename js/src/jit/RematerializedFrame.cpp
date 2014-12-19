@@ -48,7 +48,7 @@ RematerializedFrame::RematerializedFrame(JSContext *cx, uint8_t *top, unsigned n
 /* static */ RematerializedFrame *
 RematerializedFrame::New(JSContext *cx, uint8_t *top, InlineFrameIterator &iter)
 {
-    unsigned numFormals = iter.isFunctionFrame() ? iter.callee()->nargs() : 0;
+    unsigned numFormals = iter.isFunctionFrame() ? iter.calleeTemplate()->nargs() : 0;
     unsigned argSlots = Max(numFormals, iter.numActualArgs());
     size_t numBytes = sizeof(RematerializedFrame) +
         (argSlots + iter.script()->nfixed()) * sizeof(Value) -

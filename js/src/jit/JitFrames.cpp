@@ -395,7 +395,7 @@ CloseLiveIterator(JSContext *cx, const InlineFrameIterator &frame, uint32_t loca
     SnapshotIterator si = frame.snapshotIterator();
 
     // Skip stack slots until we reach the iterator object.
-    uint32_t base = CountArgSlots(frame.script(), frame.maybeCallee()) + frame.script()->nfixed();
+    uint32_t base = CountArgSlots(frame.script(), frame.maybeCalleeTemplate()) + frame.script()->nfixed();
     uint32_t skipSlots = base + localSlot - 1;
 
     for (unsigned i = 0; i < skipSlots; i++)
@@ -2560,6 +2560,8 @@ JitFrameIterator::dumpBaseline() const
 void
 InlineFrameIterator::dump() const
 {
+    MaybeReadFallback fallback(UndefinedValue());
+
     if (more())
         fprintf(stderr, " JS frame (inlined)\n");
     else
@@ -2570,7 +2572,7 @@ InlineFrameIterator::dump() const
         isFunction = true;
         fprintf(stderr, "  callee fun: ");
 #ifdef DEBUG
-        js_DumpObject(callee());
+        js_DumpObject(callee(fallback));
 #else
         fprintf(stderr, "?\n");
 #endif
@@ -2589,7 +2591,6 @@ InlineFrameIterator::dump() const
     }
 
     SnapshotIterator si = snapshotIterator();
-    MaybeReadFallback fallback(UndefinedValue());
     fprintf(stderr, "  slots: %u\n", si.numAllocations() - 1);
     for (unsigned i = 0; i < si.numAllocations() - 1; i++) {
         if (isFunction) {
@@ -2597,15 +2598,15 @@ InlineFrameIterator::dump() const
                 fprintf(stderr, "  scope chain: ");
             else if (i == 1)
                 fprintf(stderr, "  this: ");
-            else if (i - 2 < callee()->nargs())
+            else if (i - 2 < calleeTemplate()->nargs())
                 fprintf(stderr, "  formal (arg %d): ", i - 2);
             else {
-                if (i - 2 == callee()->nargs() && numActualArgs() > callee()->nargs()) {
-                    DumpOp d(callee()->nargs());
+                if (i - 2 == calleeTemplate()->nargs() && numActualArgs() > calleeTemplate()->nargs()) {
+                    DumpOp d(calleeTemplate()->nargs());
                     unaliasedForEachActual(GetJSContextFromJitCode(), d, ReadFrame_Overflown, fallback);
                 }
 
-                fprintf(stderr, "  slot %d: ", int(i - 2 - callee()->nargs()));
+                fprintf(stderr, "  slot %d: ", int(i - 2 - calleeTemplate()->nargs()));
             }
         } else
             fprintf(stderr, "  slot %u: ", i);

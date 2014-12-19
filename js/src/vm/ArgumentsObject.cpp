@@ -133,7 +133,7 @@ struct CopyScriptFrameIterArgs
 
         /* Define formals which are not part of the actuals. */
         unsigned numActuals = iter_.numActualArgs();
-        unsigned numFormals = iter_.callee()->nargs();
+        unsigned numFormals = iter_.calleeTemplate()->nargs();
         MOZ_ASSERT(numActuals <= totalArgs);
         MOZ_ASSERT(numFormals <= totalArgs);
         MOZ_ASSERT(Max(numActuals, numFormals) == totalArgs);

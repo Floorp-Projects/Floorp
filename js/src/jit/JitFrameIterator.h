@@ -669,7 +669,7 @@ class InlineFrameIterator
         // Read arguments, which only function frames have.
         if (isFunctionFrame()) {
             unsigned nactual = numActualArgs();
-            unsigned nformal = callee()->nargs();
+            unsigned nformal = calleeTemplate()->nargs();
 
             // Get the non overflown arguments, which are taken from the inlined
             // frame, because it will have the updated value when JSOP_SETARG is
