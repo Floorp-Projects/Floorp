@@ -12,7 +12,7 @@ thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Error: Connection closed");
  * Tests that the reloading/onContentLoaded hooks work.
  */
 
-function spawnTest() {
+add_task(function*() {
   let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { gFront, $ } = panel.panelWin;
 
@@ -46,6 +46,5 @@ function spawnTest() {
   is($("#content").hidden, false,
     "The tool's content should not be hidden anymore.");
 
-  yield teardown(panel);
-  finish();
-}
+  yield teardown(target);
+});
