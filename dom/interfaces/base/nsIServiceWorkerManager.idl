@@ -8,7 +8,7 @@
 interface nsIDocument;
 interface nsIURI;
 
-[builtinclass, uuid(d6a9d4b6-39b0-4cd2-957d-28a57df5a031)]
+[builtinclass, uuid(d4367ffe-e435-4195-95f8-0a51b1bbfdfb)]
 interface nsIServiceWorkerUnregisterCallback : nsISupports
 {
   // aState is true if the unregistration succeded.
@@ -28,7 +28,7 @@ interface nsIServiceWorkerManager : nsISupports
    *
    * Returns a Promise.
    */
-  nsISupports register(in DOMString aScope, in DOMString aScriptURI);
+  nsISupports register(in nsIDOMWindow aWindow, in DOMString aScope, in DOMString aScriptURI);
 
   /**
    * Unregister an existing ServiceWorker registration for `aScope`.

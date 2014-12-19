@@ -81,7 +81,7 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
     return nullptr;
   }
 
-  aRv = swm->Register(aOptions.mScope, aScriptURL, getter_AddRefs(promise));
+  aRv = swm->Register(GetOwner(), aOptions.mScope, aScriptURL, getter_AddRefs(promise));
   if (aRv.Failed()) {
     return nullptr;
   }
