@@ -393,6 +393,9 @@ class SnapshotIterator
     bool hasInstructionResult(uint32_t index) const {
         return instructionResults_;
     }
+    bool hasInstructionResults() const {
+        return instructionResults_;
+    }
     Value fromInstructionResult(uint32_t index) const;
 
     Value allocationValue(const RValueAllocation &a, ReadMethod rm = RM_Normal);

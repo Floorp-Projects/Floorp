@@ -101,6 +101,15 @@ MIRType MIRTypeFromValue(const js::Value &vp)
      */                                                                         \
     _(RecoveredOnBailout)                                                       \
                                                                                 \
+    /* Some instructions might represent an object, but the memory of these
+     * objects might be incomplete if we have not recovered all the stores which
+     * were supposed to happen before. This flag is used to annotate
+     * instructions which might return a pointer to a memory area which is not
+     * yet fully initialized. This flag is used to ensure that stores are
+     * executed before returning the value.
+     */                                                                         \
+    _(IncompleteObject)                                                         \
+                                                                                \
     /* The current instruction got discarded from the MIR Graph. This is useful
      * when we want to iterate over resume points and instructions, while
      * handling instructions which are discarded without reporting to the

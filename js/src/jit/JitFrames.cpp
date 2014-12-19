@@ -1751,6 +1751,14 @@ FromTypedPayload(JSValueType type, uintptr_t payload)
 bool
 SnapshotIterator::allocationReadable(const RValueAllocation &alloc, ReadMethod rm)
 {
+    // If we have to recover stores, and if we are not interested in the
+    // default value of the instruction, then we have to check if the recover
+    // instruction results are available.
+    if (alloc.needSideEffect() && !(rm & RM_AlwaysDefault)) {
+        if (!hasInstructionResults())
+            return false;
+    }
+
     switch (alloc.mode()) {
       case RValueAllocation::DOUBLE_REG:
         return hasRegister(alloc.fpuReg());
