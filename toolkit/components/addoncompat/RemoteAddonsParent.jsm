@@ -240,12 +240,8 @@ let AboutProtocolParent = {
     let module = Cc[contractID].getService(Ci.nsIAboutModule);
     try {
       let channel = module.newChannel(uri, null);
-      channel.notificationCallbacks = msg.objects.notificationCallbacks;
-      if (msg.objects.loadGroupNotificationCallbacks) {
-        channel.loadGroup = {notificationCallbacks: msg.objects.loadGroupNotificationCallbacks};
-      } else {
-        channel.loadGroup = null;
-      }
+      channel.notificationCallbacks = null;
+      channel.loadGroup = null;
       let stream = channel.open();
       let data = NetUtil.readInputStreamToString(stream, stream.available(), {});
       return {
