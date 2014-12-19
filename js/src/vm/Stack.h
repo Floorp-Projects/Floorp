@@ -1598,8 +1598,22 @@ class FrameIter
     bool        isConstructing() const;
     jsbytecode *pc() const { MOZ_ASSERT(!done()); return data_.pc_; }
     void        updatePcQuadratic();
-    JSFunction *callee() const;
-    Value       calleev() const;
+
+    // The function |calleeTemplate()| returns either the function from which
+    // the current |callee| was cloned or the |callee| if it can be read. As
+    // long as we do not have to investigate the scope chain or build a new
+    // frame, we should prefer to use |calleeTemplate| instead of |callee|, as
+    // requesting the |callee| might cause the invalidation of the frame. (see
+    // js::Lambda)
+    JSFunction *calleeTemplate() const;
+    JSFunction *callee(JSContext *cx) const;
+
+    JSFunction *maybeCallee(JSContext *cx) const {
+        return isFunctionFrame() ? callee(cx) : nullptr;
+    }
+
+    bool        matchCallee(JSContext *cx, HandleFunction fun) const;
+
     unsigned    numActualArgs() const;
     unsigned    numFormalArgs() const;
     Value       unaliasedActual(unsigned i, MaybeCheckAliasing = CHECK_ALIASING) const;
@@ -1625,10 +1639,6 @@ class FrameIter
 
     Value       returnValue() const;
     void        setReturnValue(const Value &v);
-
-    JSFunction *maybeCallee() const {
-        return isFunctionFrame() ? callee() : nullptr;
-    }
 
     // These are only valid for the top frame.
     size_t      numFrameSlots() const;

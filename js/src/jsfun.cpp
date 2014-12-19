@@ -1999,6 +1999,14 @@ js::NewFunctionWithProto(ExclusiveContext *cx, HandleObject funobjArg, Native na
     return fun;
 }
 
+bool
+js::CloneFunctionObjectUseSameScript(JSCompartment *compartment, HandleFunction fun)
+{
+    return compartment == fun->compartment() &&
+           !fun->hasSingletonType() &&
+           !types::UseNewTypeForClone(fun);
+}
+
 JSFunction *
 js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent, gc::AllocKind allocKind,
                         NewObjectKind newKindArg /* = GenericObject */)
@@ -2006,9 +2014,7 @@ js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent, 
     MOZ_ASSERT(parent);
     MOZ_ASSERT(!fun->isBoundFunction());
 
-    bool useSameScript = cx->compartment() == fun->compartment() &&
-                         !fun->hasSingletonType() &&
-                         !types::UseNewTypeForClone(fun);
+    bool useSameScript = CloneFunctionObjectUseSameScript(cx->compartment(), fun);
 
     if (!useSameScript && fun->isInterpretedLazy() && !fun->getOrCreateScript(cx))
         return nullptr;
