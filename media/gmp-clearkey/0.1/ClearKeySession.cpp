@@ -4,6 +4,8 @@
 
 #include "ClearKeySession.h"
 #include "ClearKeyUtils.h"
+#include "ClearKeyStorage.h"
+#include "gmp-task-utils.h"
 
 #include "gmp-api/gmp-decryption.h"
 #include "mozilla/Endian.h"
@@ -12,9 +14,11 @@
 using namespace mozilla;
 
 ClearKeySession::ClearKeySession(const std::string& aSessionId,
-                                 GMPDecryptorCallback* aCallback)
+                                 GMPDecryptorCallback* aCallback,
+                                 GMPSessionType aSessionType)
   : mSessionId(aSessionId)
   , mCallback(aCallback)
+  , mSessionType(aSessionType)
 {
   CK_LOGD("ClearKeySession ctor %p", this);
 }
@@ -36,7 +40,18 @@ ClearKeySession::Init(uint32_t aPromiseId,
     mCallback->RejectPromise(aPromiseId, kGMPAbortError, message, strlen(message));
     return;
   }
-
   mCallback->ResolveNewSessionPromise(aPromiseId,
                                       mSessionId.data(), mSessionId.length());
+}
+
+GMPSessionType
+ClearKeySession::Type() const
+{
+  return mSessionType;
+}
+
+void
+ClearKeySession::AddKeyId(const KeyId& aKeyId)
+{
+  mKeyIds.push_back(aKeyId);
 }

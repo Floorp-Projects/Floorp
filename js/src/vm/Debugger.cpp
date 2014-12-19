@@ -5322,7 +5322,7 @@ DebuggerFrame_getThis(JSContext *cx, unsigned argc, Value *vp)
     THIS_FRAME_ITER(cx, argc, vp, "get this", args, thisobj, _, iter);
     RootedValue thisv(cx);
     {
-        AutoCompartment ac(cx, iter.scopeChain());
+        AutoCompartment ac(cx, iter.scopeChain(cx));
         if (!iter.computeThis(cx))
             return false;
         thisv = iter.computedThisValue();
@@ -5726,7 +5726,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
 
     Maybe<AutoCompartment> ac;
     if (iter)
-        ac.emplace(cx, iter->scopeChain());
+        ac.emplace(cx, iter->scopeChain(cx));
     else
         ac.emplace(cx, scope);
 

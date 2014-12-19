@@ -171,7 +171,7 @@ JavaScriptShared::JavaScriptShared(JSRuntime *rt)
 
         if (PR_GetEnv("MOZ_CPOW_LOG")) {
             sLoggingEnabled = true;
-            sStackLoggingEnabled = true;
+            sStackLoggingEnabled = strstr(PR_GetEnv("MOZ_CPOW_LOG"), "stacks");
         } else {
             Preferences::AddBoolVarCache(&sLoggingEnabled,
                                          "dom.ipc.cpows.log.enabled", false);

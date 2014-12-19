@@ -307,6 +307,17 @@ CodeGeneratorShared::encodeAllocation(LSnapshot *snapshot, MDefinition *mir,
         // This MDefinition is recovered, thus it should be listed in the
         // LRecoverInfo.
         MOZ_ASSERT(it != end && mir == *it);
+
+        // Lambda should have a default value readable for iterating over the
+        // inner frames.
+        if (mir->isLambda()) {
+            MConstant *constant = mir->toLambda()->functionOperand();
+            uint32_t cstIndex;
+            masm.propagateOOM(graph.addConstantToPool(constant->value(), &cstIndex));
+            alloc = RValueAllocation::RecoverInstruction(index, cstIndex);
+            break;
+        }
+
         alloc = RValueAllocation::RecoverInstruction(index);
         break;
       }
@@ -387,6 +398,12 @@ CodeGeneratorShared::encodeAllocation(LSnapshot *snapshot, MDefinition *mir,
         break;
       }
     }
+
+    // This set an extra bit as part of the RValueAllocation, such that we know
+    // that recover instruction have to be executed without wrapping the
+    // instruction in a no-op recover instruction.
+    if (mir->isIncompleteObject())
+        alloc.setNeedSideEffect();
 
     snapshots_.add(alloc);
     *allocIndex += mir->isRecoveredOnBailout() ? 0 : 1;

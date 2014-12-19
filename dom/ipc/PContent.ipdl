@@ -521,7 +521,7 @@ child:
     async StartProfiler(uint32_t aEntries, double aInterval, nsCString[] aFeatures,
                         nsCString[] aThreadNameFilters);
     async StopProfiler();
-    intr GetProfile()
+    prio(high) sync GetProfile()
       returns (nsCString aProfile);
 
     NuwaFreeze();
@@ -557,7 +557,7 @@ parent:
                             ProcessPriority priority,
                             TabId openerTabId)
         returns (ContentParentId cpId, bool isForApp, bool isForBrowser, TabId tabId);
-    intr BridgeToChildProcess(ContentParentId cpId);
+    sync BridgeToChildProcess(ContentParentId cpId);
 
     /**
      * This call connects the content process to a plugin process. While this
@@ -566,7 +566,7 @@ parent:
      * process. We use intr semantics here to ensure that the PluginModuleParent
      * allocation message is dispatched before LoadPlugin returns.
      */
-    intr LoadPlugin(uint32_t pluginId);
+    sync LoadPlugin(uint32_t pluginId);
 
     /**
      * This call returns the set of plugins loaded in the chrome
@@ -798,16 +798,17 @@ parent:
      * before one is submitted. This is urgent because an extension might use
      * a CPOW to synchronously submit a keygen element.
      */
-    prio(urgent) sync FormProcessValue(nsString oldValue,
-                                       nsString challenge,
-                                       nsString keytype,
-                                       nsString keyparams)
+    prio(urgent) sync KeygenProcessValue(nsString oldValue,
+                                         nsString challenge,
+                                         nsString keytype,
+                                         nsString keyparams)
         returns (nsString newValue);
 
     /**
      * Called to provide the options for <keygen> elements.
      */
-    sync FormProvideContent() returns (nsString aAttribute, nsString[] aContent);
+    sync KeygenProvideContent()
+        returns (nsString aAttribute, nsString[] aContent);
 
     // Use only for testing!
     sync GetFileReferences(PersistenceType persistenceType,

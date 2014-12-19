@@ -61,3 +61,10 @@ xul|*.text-link:-moz-focusring,
 xul|*.inline-link:-moz-focusring {
   border: 1px dotted -moz-DialogText;
 }
+
+xul|radio:not([focused="true"]) > xul|*.radio-label-box,
+xul|checkbox:not(:-moz-focusring) > xul|*.checkbox-label-box {
+  border-width: 0;
+  margin: 1px;
+  -moz-margin-start: 0;
+}

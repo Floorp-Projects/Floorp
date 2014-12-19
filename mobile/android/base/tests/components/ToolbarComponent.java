@@ -122,8 +122,8 @@ public class ToolbarComponent extends BaseComponent {
     /**
      * Returns the View for the edit cancel button in the browser toolbar.
      */
-    private ImageButton getEditCancelButton() {
-        return (ImageButton) getToolbarView().findViewById(R.id.edit_cancel);
+    private View getEditCancelButton() {
+        return getToolbarView().findViewById(R.id.edit_cancel);
     }
 
     private String getTitle() {
@@ -185,7 +185,15 @@ public class ToolbarComponent extends BaseComponent {
     public ToolbarComponent dismissEditingMode() {
         assertIsEditing();
 
-        mSolo.clickOnView(getEditCancelButton());
+        if (DeviceHelper.isTablet()) {
+            final EditText urlEditText = getUrlEditText();
+            if (urlEditText.isFocused()) {
+                mSolo.goBack();
+            }
+            mSolo.goBack();
+        } else {
+            mSolo.clickOnView(getEditCancelButton());
+        }
 
         waitForNotEditing();
 

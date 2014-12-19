@@ -451,7 +451,7 @@ IonBuilder::analyzeNewLoopTypes(MBasicBlock *entry, jsbytecode *start, jsbytecod
             // already discarded their operands.
             if (!oldEntry->isDead()) {
                 MResumePoint *oldEntryRp = oldEntry->entryResumePoint();
-                size_t stackDepth = oldEntryRp->numOperands();
+                size_t stackDepth = oldEntryRp->stackDepth();
                 for (size_t slot = 0; slot < stackDepth; slot++) {
                     MDefinition *oldDef = oldEntryRp->getOperand(slot);
                     if (!oldDef->isPhi()) {
@@ -901,11 +901,11 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
 
     initLocals();
 
-    JitSpew(JitSpew_Inlining, "Inline entry block MResumePoint %p, %u operands",
-            (void *) current->entryResumePoint(), current->entryResumePoint()->numOperands());
+    JitSpew(JitSpew_Inlining, "Inline entry block MResumePoint %p, %u stack slots",
+            (void *) current->entryResumePoint(), current->entryResumePoint()->stackDepth());
 
     // +2 for the scope chain and |this|, maybe another +1 for arguments object slot.
-    MOZ_ASSERT(current->entryResumePoint()->numOperands() == info().totalSlots());
+    MOZ_ASSERT(current->entryResumePoint()->stackDepth() == info().totalSlots());
 
     if (script_->argumentsHasVarBinding()) {
         lazyArguments_ = MConstant::New(alloc(), MagicValue(JS_OPTIMIZED_ARGUMENTS));
@@ -1208,7 +1208,7 @@ IonBuilder::maybeAddOsrTypeBarriers()
     MOZ_ASSERT(preheader->getPredecessor(OSR_PHI_POSITION) == osrBlock);
 
     MResumePoint *headerRp = header->entryResumePoint();
-    size_t stackDepth = headerRp->numOperands();
+    size_t stackDepth = headerRp->stackDepth();
     MOZ_ASSERT(stackDepth == osrBlock->stackDepth());
     for (uint32_t slot = info().startArgSlot(); slot < stackDepth; slot++) {
         // Aliased slots are never accessed, since they need to go through
@@ -4910,7 +4910,7 @@ IonBuilder::inlineTypeObjectFallback(CallInfo &callInfo, MBasicBlock *dispatchBl
     if (!preCallResumePoint)
         return false;
 
-    DebugOnly<size_t> preCallFuncIndex = preCallResumePoint->numOperands() - callInfo.numFormals();
+    DebugOnly<size_t> preCallFuncIndex = preCallResumePoint->stackDepth() - callInfo.numFormals();
     MOZ_ASSERT(preCallResumePoint->getOperand(preCallFuncIndex) == fallbackInfo.fun());
 
     // In the dispatch block, replace the function's slot entry with Undefined.
@@ -5075,7 +5075,7 @@ IonBuilder::inlineCalls(CallInfo &callInfo, ObjectVector &targets,
         dispatchBlock->add(funcDef);
 
         // Use the MConstant in the inline resume point and on stack.
-        int funIndex = inlineBlock->entryResumePoint()->numOperands() - callInfo.numFormals();
+        int funIndex = inlineBlock->entryResumePoint()->stackDepth() - callInfo.numFormals();
         inlineBlock->entryResumePoint()->replaceOperand(funIndex, funcDef);
         inlineBlock->rewriteSlot(funIndex, funcDef);
 
@@ -10623,7 +10623,9 @@ IonBuilder::jsop_lambda(JSFunction *fun)
     if (fun->isNative() && IsAsmJSModuleNative(fun->native()))
         return abort("asm.js module function");
 
-    MLambda *ins = MLambda::New(alloc(), constraints(), current->scopeChain(), fun);
+    MConstant *cst = MConstant::NewConstraintlessObject(alloc(), fun);
+    current->add(cst);
+    MLambda *ins = MLambda::New(alloc(), constraints(), current->scopeChain(), cst);
     current->add(ins);
     current->push(ins);
 

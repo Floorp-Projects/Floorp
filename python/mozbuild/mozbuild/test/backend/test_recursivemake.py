@@ -260,18 +260,6 @@ class TestRecursiveMakeBackend(BackendTester):
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
 
         expected = {
-            'ASFILES': [
-                'ASFILES += bar.s',
-                'ASFILES += foo.asm',
-            ],
-            'CMMSRCS': [
-                'CMMSRCS += bar.mm',
-                'CMMSRCS += foo.mm',
-            ],
-            'CSRCS': [
-                'CSRCS += bar.c',
-                'CSRCS += foo.c',
-            ],
             'DISABLE_STL_WRAPPING': [
                 'DISABLE_STL_WRAPPING := 1',
             ],
@@ -286,20 +274,8 @@ class TestRecursiveMakeBackend(BackendTester):
             'FAIL_ON_WARNINGS': [
                 'FAIL_ON_WARNINGS := 1',
             ],
-            'HOST_CPPSRCS': [
-                'HOST_CPPSRCS += bar.cpp',
-                'HOST_CPPSRCS += foo.cpp',
-            ],
-            'HOST_CSRCS': [
-                'HOST_CSRCS += bar.c',
-                'HOST_CSRCS += foo.c',
-            ],
             'MSVC_ENABLE_PGO': [
                 'MSVC_ENABLE_PGO := 1',
-            ],
-            'SSRCS': [
-                'SSRCS += baz.S',
-                'SSRCS += foo.S',
             ],
             'VISIBILITY_FLAGS': [
                 'VISIBILITY_FLAGS :=',
@@ -340,6 +316,44 @@ class TestRecursiveMakeBackend(BackendTester):
 
         for var, val in expected.items():
             # print("test_variable_passthru[%s]" % (var))
+            found = [str for str in lines if str.startswith(var)]
+            self.assertEqual(found, val)
+
+    def test_sources(self):
+        """Ensure SOURCES and HOST_SOURCES are handled properly."""
+        env = self._consume('sources', RecursiveMakeBackend)
+
+        backend_path = mozpath.join(env.topobjdir, 'backend.mk')
+        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
+
+        expected = {
+            'ASFILES': [
+                'ASFILES += bar.s',
+                'ASFILES += foo.asm',
+            ],
+            'CMMSRCS': [
+                'CMMSRCS += bar.mm',
+                'CMMSRCS += foo.mm',
+            ],
+            'CSRCS': [
+                'CSRCS += bar.c',
+                'CSRCS += foo.c',
+            ],
+            'HOST_CPPSRCS': [
+                'HOST_CPPSRCS += bar.cpp',
+                'HOST_CPPSRCS += foo.cpp',
+            ],
+            'HOST_CSRCS': [
+                'HOST_CSRCS += bar.c',
+                'HOST_CSRCS += foo.c',
+            ],
+            'SSRCS': [
+                'SSRCS += baz.S',
+                'SSRCS += foo.S',
+            ],
+        }
+
+        for var, val in expected.items():
             found = [str for str in lines if str.startswith(var)]
             self.assertEqual(found, val)
 

@@ -385,8 +385,8 @@ class InterpreterFrame
                        InterpreterFrame::Flags flags);
 
     /* Used for global and eval frames. */
-    void initExecuteFrame(JSContext *cx, JSScript *script, AbstractFramePtr prev,
-                          const Value &thisv, JSObject &scopeChain, ExecuteType type);
+    void initExecuteFrame(JSContext *cx, HandleScript script, AbstractFramePtr prev,
+                          const Value &thisv, HandleObject scopeChain, ExecuteType type);
 
   public:
     /*
@@ -1598,15 +1598,29 @@ class FrameIter
     bool        isConstructing() const;
     jsbytecode *pc() const { MOZ_ASSERT(!done()); return data_.pc_; }
     void        updatePcQuadratic();
-    JSFunction *callee() const;
-    Value       calleev() const;
+
+    // The function |calleeTemplate()| returns either the function from which
+    // the current |callee| was cloned or the |callee| if it can be read. As
+    // long as we do not have to investigate the scope chain or build a new
+    // frame, we should prefer to use |calleeTemplate| instead of |callee|, as
+    // requesting the |callee| might cause the invalidation of the frame. (see
+    // js::Lambda)
+    JSFunction *calleeTemplate() const;
+    JSFunction *callee(JSContext *cx) const;
+
+    JSFunction *maybeCallee(JSContext *cx) const {
+        return isFunctionFrame() ? callee(cx) : nullptr;
+    }
+
+    bool        matchCallee(JSContext *cx, HandleFunction fun) const;
+
     unsigned    numActualArgs() const;
     unsigned    numFormalArgs() const;
     Value       unaliasedActual(unsigned i, MaybeCheckAliasing = CHECK_ALIASING) const;
     template <class Op> inline void unaliasedForEachActual(JSContext *cx, Op op);
 
-    JSObject   *scopeChain() const;
-    CallObject &callObj() const;
+    JSObject   *scopeChain(JSContext *cx) const;
+    CallObject &callObj(JSContext *cx) const;
 
     bool        hasArgsObj() const;
     ArgumentsObject &argsObj() const;
@@ -1621,14 +1635,10 @@ class FrameIter
     // Both methods exist because of speed. thisv() will never rematerialize
     // an Ion frame, whereas computedThisValue() will.
     Value       computedThisValue() const;
-    Value       thisv(JSContext *cx);
+    Value       thisv(JSContext *cx) const;
 
     Value       returnValue() const;
     void        setReturnValue(const Value &v);
-
-    JSFunction *maybeCallee() const {
-        return isFunctionFrame() ? callee() : nullptr;
-    }
 
     // These are only valid for the top frame.
     size_t      numFrameSlots() const;

@@ -318,6 +318,11 @@ BaseProxyHandler::objectClassIs(HandleObject proxy, ESClassValue classValue, JSC
 }
 
 void
+BaseProxyHandler::trace(JSTracer *trc, JSObject *proxy) const
+{
+}
+
+void
 BaseProxyHandler::finalize(JSFreeOp *fop, JSObject *proxy) const
 {
 }

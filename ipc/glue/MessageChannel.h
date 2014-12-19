@@ -84,6 +84,8 @@ class MessageChannel : HasResultCodes
     // for process links only, not thread links.
     void CloseWithError();
 
+    void CloseWithTimeout();
+
     void SetAbortOnError(bool abort)
     {
         mAbortOnError = true;
@@ -211,20 +213,6 @@ class MessageChannel : HasResultCodes
     // Send OnChannelConnected notification to listeners.
     void DispatchOnChannelConnected();
 
-    // Any protocol that requires blocking until a reply arrives, will send its
-    // outgoing message through this function. Currently, two protocols do this:
-    //
-    //  sync, which can only initiate messages from child to parent.
-    //  urgent, which can only initiate messages from parent to child.
-    //
-    // SendAndWait() expects that the worker thread owns the monitor, and that
-    // the message has been prepared to be sent over the link. It returns as
-    // soon as a reply has been received, or an error has occurred.
-    //
-    // Note that while the child is blocked waiting for a sync reply, it can wake
-    // up to process urgent calls from the parent.
-    bool SendAndWait(Message* aMsg, Message* aReply);
-
     bool InterruptEventOccurred();
 
     bool ProcessPendingRequest(const Message &aUrgent);
@@ -341,6 +329,16 @@ class MessageChannel : HasResultCodes
     int DispatchingSyncMessagePriority() const {
         AssertWorkerThread();
         return mDispatchingSyncMessagePriority;
+    }
+
+    bool DispatchingAsyncMessage() const {
+        AssertWorkerThread();
+        return mDispatchingAsyncMessage;
+    }
+
+    int DispatchingAsyncMessagePriority() const {
+        AssertWorkerThread();
+        return mDispatchingAsyncMessagePriority;
     }
 
     bool Connected() const;
@@ -477,6 +475,9 @@ class MessageChannel : HasResultCodes
     bool mDispatchingSyncMessage;
     int mDispatchingSyncMessagePriority;
 
+    bool mDispatchingAsyncMessage;
+    int mDispatchingAsyncMessagePriority;
+
     // When we send an urgent request from the parent process, we could race
     // with an RPC message that was issued by the child beforehand. In this
     // case, if the parent were to wake up while waiting for the urgent reply,
@@ -501,13 +502,13 @@ class MessageChannel : HasResultCodes
     class AutoEnterTransaction
     {
       public:
-       explicit AutoEnterTransaction(MessageChannel *aChan)
+       explicit AutoEnterTransaction(MessageChannel *aChan, int32_t aMsgSeqno)
         : mChan(aChan),
           mOldTransaction(mChan->mCurrentTransaction)
        {
            mChan->mMonitor->AssertCurrentThreadOwns();
            if (mChan->mCurrentTransaction == 0)
-               mChan->mCurrentTransaction = mChan->NextSeqno();
+               mChan->mCurrentTransaction = aMsgSeqno;
        }
        explicit AutoEnterTransaction(MessageChannel *aChan, const Message &aMessage)
         : mChan(aChan),
@@ -532,9 +533,28 @@ class MessageChannel : HasResultCodes
        int32_t mOldTransaction;
     };
 
+    // If a sync message times out, we store its sequence number here. Any
+    // future sync messages will fail immediately. Once the reply for original
+    // sync message is received, we allow sync messages again.
+    //
+    // When a message times out, nothing is done to inform the other side. The
+    // other side will eventually dispatch the message and send a reply. Our
+    // side is responsible for replying to all sync messages sent by the other
+    // side when it dispatches the timed out message. The response is always an
+    // error.
+    //
+    // A message is only timed out if it initiated a transaction. This avoids
+    // hitting a lot of corner cases with message nesting that we don't really
+    // care about.
+    int32_t mTimedOutMessageSeqno;
+
     // If waiting for the reply to a sync out-message, it will be saved here
     // on the I/O thread and then read and cleared by the worker thread.
     nsAutoPtr<Message> mRecvd;
+
+    // If a sync message reply that is an error arrives, we increment this
+    // counter rather than storing it in mRecvd.
+    size_t mRecvdErrors;
 
     // Queue of all incoming messages, except for replies to sync and urgent
     // messages, which are delivered directly to mRecvd, and any pending urgent

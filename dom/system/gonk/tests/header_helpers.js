@@ -11,7 +11,7 @@ let subscriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
 
 /**
  * Start a new RIL worker.
- * 
+ *
  * @param custom_ns
  *        Namespace with symbols to be injected into the new worker
  *        namespace.
@@ -190,21 +190,6 @@ function newIncomingParcel(fakeParcelSize, response, request, data) {
   }
 
   return bytes;
-}
-
-/**
- *
- */
-let ril_ns;
-function newRadioInterface() {
-  if (!ril_ns) {
-    ril_ns = {};
-    subscriptLoader.loadSubScript("resource://gre/components/RadioInterfaceLayer.js", ril_ns);
-  }
-
-  return {
-    __proto__: ril_ns.RadioInterface.prototype,
-  };
 }
 
 /**

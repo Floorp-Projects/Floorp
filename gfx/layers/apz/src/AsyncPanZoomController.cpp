@@ -2656,7 +2656,7 @@ Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint() const {
   LayerPoint scrollChange =
     (mLastContentPaintMetrics.GetScrollOffset() - mLastDispatchedPaintMetrics.GetScrollOffset())
     * mLastContentPaintMetrics.GetDevPixelsPerCSSPixel()
-    * mLastContentPaintMetrics.mCumulativeResolution
+    * mLastContentPaintMetrics.GetCumulativeResolution()
       // This transform ("LD" in the terminology of the comment above
       // GetScreenToApzcTransform() in APZCTreeManager.h) is applied in a
       // coordinate space that includes the APZC's CSS transform ("LC").
@@ -2765,8 +2765,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
       // our zoom to reflect that. Note that we can't just take
       // aLayerMetrics.mZoom because the APZ may have additional async zoom
       // since the repaint request.
-      float totalResolutionChange = aLayerMetrics.mCumulativeResolution.scale
-                                  / mFrameMetrics.mCumulativeResolution.scale;
+      float totalResolutionChange = aLayerMetrics.GetCumulativeResolution().scale
+                                  / mFrameMetrics.GetCumulativeResolution().scale;
       float presShellResolutionChange = aLayerMetrics.mPresShellResolution
                                       / mFrameMetrics.mPresShellResolution;
       mFrameMetrics.ZoomBy(totalResolutionChange / presShellResolutionChange);
@@ -2783,7 +2783,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
     mFrameMetrics.mCompositionBounds = aLayerMetrics.mCompositionBounds;
     mFrameMetrics.SetRootCompositionSize(aLayerMetrics.GetRootCompositionSize());
     mFrameMetrics.mPresShellResolution = aLayerMetrics.mPresShellResolution;
-    mFrameMetrics.mCumulativeResolution = aLayerMetrics.mCumulativeResolution;
+    mFrameMetrics.SetCumulativeResolution(aLayerMetrics.GetCumulativeResolution());
     mFrameMetrics.SetHasScrollgrab(aLayerMetrics.GetHasScrollgrab());
 
     if (scrollOffsetUpdated) {

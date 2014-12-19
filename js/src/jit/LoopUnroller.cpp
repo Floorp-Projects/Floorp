@@ -101,14 +101,14 @@ MResumePoint *
 LoopUnroller::makeReplacementResumePoint(MBasicBlock *block, MResumePoint *rp)
 {
     MDefinitionVector inputs(alloc);
-    for (size_t i = 0; i < rp->stackDepth(); i++) {
+    for (size_t i = 0; i < rp->numOperands(); i++) {
         MDefinition *old = rp->getOperand(i);
         MDefinition *replacement = old->isUnused() ? old : getReplacementDefinition(old);
         if (!inputs.append(replacement))
             CrashAtUnhandlableOOM("LoopUnroller::makeReplacementResumePoint");
     }
 
-    MResumePoint *clone = MResumePoint::New(alloc, block, rp->pc(), rp->caller(), rp->mode(), inputs);
+    MResumePoint *clone = MResumePoint::New(alloc, block, rp, inputs);
     if (!clone)
         CrashAtUnhandlableOOM("LoopUnroller::makeReplacementResumePoint");
 
