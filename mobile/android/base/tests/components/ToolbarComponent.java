@@ -185,7 +185,15 @@ public class ToolbarComponent extends BaseComponent {
     public ToolbarComponent dismissEditingMode() {
         assertIsEditing();
 
-        mSolo.clickOnView(getEditCancelButton());
+        if (DeviceHelper.isTablet()) {
+            final EditText urlEditText = getUrlEditText();
+            if (urlEditText.isFocused()) {
+                mSolo.goBack();
+            }
+            mSolo.goBack();
+        } else {
+            mSolo.clickOnView(getEditCancelButton());
+        }
 
         waitForNotEditing();
 
