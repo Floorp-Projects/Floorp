@@ -33,6 +33,49 @@ namespace mozilla { namespace pkix {
 
 static const unsigned int FATAL_ERROR_FLAG = 0x800;
 
+// ----------------------------------------------------------------------------
+// SELECTED ERROR CODE EXPLANATIONS
+//
+// Result::ERROR_UNTRUSTED_CERT
+//         means that the end-entity certificate was actively distrusted.
+// Result::ERROR_UNTRUSTED_ISSUER
+//         means that path building failed because of active distrust.
+// Result::ERROR_INVALID_TIME
+//         means the DER-encoded time was unexpected, such as being before the
+//         UNIX epoch (allowed by X500, but not valid here).
+// Result::ERROR_EXPIRED_CERTIFICATE
+//         means the end entity certificate expired.
+// Result::ERROR_EXPIRED_ISSUER_CERTIFICATE
+//         means the CA certificate expired.
+// Result::ERROR_UNKNOWN_ISSUER
+//         means that the CA could not be found in the root store.
+// Result::ERROR_POLICY_VALIDATION_FAILED
+//         means that an encoded policy could not be applied or wasn't present
+//         when expected. Usually this is in the context of Extended Validation.
+// Result::ERROR_BAD_CERT_DOMAIN
+//         means that the certificate's name couldn't be matched to the
+//         reference identifier.
+// Result::ERROR_CERT_NOT_IN_NAME_SPACE
+//         typically means the certificate violates name constraints applied
+//         by the issuer.
+// Result::ERROR_BAD_DER
+//         means the input was improperly encoded.
+// Result::ERROR_UNKNOWN_ERROR
+//         means that an external library (NSS) provided an error we didn't
+//         anticipate. See the map below in Result.h to add new ones.
+// Result::FATAL_ERROR_LIBRARY_FAILURE
+//         is an unexpected fatal error indicating a library had an unexpected
+//         failure, and we can't proceed.
+// Result::FATAL_ERROR_INVALID_ARGS
+//         means that we violated our own expectations on inputs and there's a
+//         bug somewhere.
+// Result::FATAL_ERROR_INVALID_STATE
+//         means that we violated our own expectations on state and there's a
+//         bug somewhere.
+// Result::FATAL_ERROR_NO_MEMORY
+//         means a memory allocation failed, prohibiting validation.
+// ----------------------------------------------------------------------------
+
 // The first argument to MOZILLA_PKIX_MAP() is used for building the mapping
 // from error code to error name in MapResultToName.
 //
