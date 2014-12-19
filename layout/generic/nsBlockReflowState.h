@@ -216,8 +216,14 @@ public:
   // This method makes sure pushed floats are accessible to
   // StealFrame. Call it before adding any frames to mPushedFloats.
   void SetupPushedFloatList();
-  // Use this method to append to mPushedFloats.
-  void AppendPushedFloat(nsIFrame* aFloatCont);
+  /**
+   * Append aFloatCont and its next-in-flows within the same block to
+   * mPushedFloats.  aFloatCont should not be on any child list when
+   * making this call.  Its next-in-flows will be removed from
+   * mBlock using StealFrame() before being added to mPushedFloats.
+   * All appended frames will be marked NS_FRAME_IS_PUSHED_FLOAT.
+   */
+  void AppendPushedFloatChain(nsIFrame* aFloatCont);
 
   // Track child overflow continuations.
   nsOverflowContinuationTracker* mOverflowTracker;
