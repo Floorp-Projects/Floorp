@@ -11,6 +11,7 @@ pref("devtools.webide.autoinstallFxdtAdapters", true);
 #else
 pref("devtools.webide.autoinstallFxdtAdapters", false);
 #endif
+pref("devtools.webide.autoConnectRuntime", true);
 pref("devtools.webide.restoreLastProject", true);
 pref("devtools.webide.enableLocalRuntime", false);
 pref("devtools.webide.addonsURL", "https://ftp.mozilla.org/pub/mozilla.org/labs/fxos-simulator/index.json");

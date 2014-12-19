@@ -114,6 +114,8 @@
 <!ENTITY prefs_general_title "General">
 <!ENTITY prefs_restore "Restore Defaults">
 <!ENTITY prefs_manage_components "Manage Extra Components">
+<!ENTITY prefs_options_autoconnectruntime "Reconnect to previous runtime">
+<!ENTITY prefs_options_autoconnectruntime_tooltip "Reconnect to previous runtime when WebIDE starts">
 <!ENTITY prefs_options_rememberlastproject "Remember last project">
 <!ENTITY prefs_options_rememberlastproject_tooltip "Restore previous project when WebIDE starts">
 <!ENTITY prefs_options_templatesurl "Templates URL">

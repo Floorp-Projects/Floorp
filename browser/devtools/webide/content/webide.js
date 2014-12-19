@@ -94,8 +94,6 @@ let UI = {
     Services.prefs.setBoolPref("devtools.webide.autoinstallADBHelper", false);
     Services.prefs.setBoolPref("devtools.webide.autoinstallFxdtAdapters", false);
 
-    this.lastConnectedRuntime = Services.prefs.getCharPref("devtools.webide.lastConnectedRuntime");
-
     if (Services.prefs.getBoolPref("devtools.webide.widget.autoinstall") &&
         !Services.prefs.getBoolPref("devtools.webide.widget.enabled")) {
       Services.prefs.setBoolPref("devtools.webide.widget.enabled", true);
@@ -393,10 +391,20 @@ let UI = {
     }
   },
 
+  get lastConnectedRuntime() {
+    return Services.prefs.getCharPref("devtools.webide.lastConnectedRuntime");
+  },
+
+  set lastConnectedRuntime(runtime) {
+    Services.prefs.setCharPref("devtools.webide.lastConnectedRuntime", runtime);
+  },
+
   autoConnectRuntime: function () {
     // Automatically reconnect to the previously selected runtime,
-    // if available and has an ID
-    if (AppManager.selectedRuntime || !this.lastConnectedRuntime) {
+    // if available and has an ID and feature is enabled
+    if (AppManager.selectedRuntime ||
+        !Services.prefs.getBoolPref("devtools.webide.autoConnectRuntime") ||
+        !this.lastConnectedRuntime) {
       return;
     }
     let [_, type, id] = this.lastConnectedRuntime.match(/^(\w+):(.+)$/);
@@ -415,6 +423,8 @@ let UI = {
         // Some runtimes do not expose an id and don't support autoconnect (like
         // remote connection)
         if (runtime.id == id) {
+          // Only want one auto-connect attempt, so clear last runtime value
+          this.lastConnectedRuntime = "";
           this.connectToRuntime(runtime);
         }
       }
@@ -446,8 +456,6 @@ let UI = {
     } else {
       this.lastConnectedRuntime = "";
     }
-    Services.prefs.setCharPref("devtools.webide.lastConnectedRuntime",
-                               this.lastConnectedRuntime);
   },
 
   _actionsToLog: new Set(),
