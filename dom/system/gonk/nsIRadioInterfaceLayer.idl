@@ -40,7 +40,7 @@ interface nsIRilSendWorkerMessageCallback : nsISupports
   boolean handleResponse(in jsval response);
 };
 
-[scriptable, uuid(864a47d6-a576-4a5c-b8b8-9ca312345f52)]
+[scriptable, uuid(fe01c648-867a-11e4-915f-033b36e8177b)]
 interface nsIRadioInterface : nsISupports
 {
   readonly attribute nsIRilContext rilContext;
@@ -58,22 +58,9 @@ interface nsIRadioInterface : nsISupports
 
   void updateRILNetworkInterface();
 
-  /**
-   * SMS-related functionality.
-   */
-  void getSegmentInfoForText(in DOMString text,
-                             in nsIMobileMessageCallback request);
-
-  void sendSMS(in DOMString number,
-               in DOMString message,
-               in boolean silent,
-               in nsIMobileMessageCallback request);
-
   void sendWorkerMessage(in DOMString type,
               [optional] in jsval message,
               [optional] in nsIRilSendWorkerMessageCallback callback);
-
-  void getSmscAddress(in nsIMobileMessageCallback request);
 };
 
 [scriptable, uuid(78b65e8c-68e7-4510-9a05-65bba12b283e)]

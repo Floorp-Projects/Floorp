@@ -84,7 +84,7 @@ this.WapPushManager = {
     let msg;
     let authInfo = null;
     if (contentType === "application/vnd.wap.mms-message") {
-      let mmsService = Cc["@mozilla.org/mms/rilmmsservice;1"]
+      let mmsService = Cc["@mozilla.org/mms/gonkmmsservice;1"]
                        .getService(Ci.nsIMmsService);
       mmsService.QueryInterface(Ci.nsIWapPushApplication)
                 .receiveWapPush(data.array, data.array.length, data.offset, options);
