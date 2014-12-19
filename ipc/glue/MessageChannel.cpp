@@ -704,23 +704,6 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     IPC_ASSERT(mAwaitingSyncReplyPriority <= aMsg->priority(),
                "nested sync message sends must be of increasing priority");
 
-    AutoSetValue<bool> replies(mAwaitingSyncReply, true);
-    AutoSetValue<int> prio(mAwaitingSyncReplyPriority, aMsg->priority());
-    AutoEnterTransaction transact(this);
-    aMsg->set_transaction_id(mCurrentTransaction);
-
-    if (!SendAndWait(aMsg, aReply))
-        return false;
-
-    NS_ABORT_IF_FALSE(aReply->is_sync(), "reply is not sync");
-    return true;
-}
-
-bool
-MessageChannel::SendAndWait(Message* aMsg, Message* aReply)
-{
-    mMonitor->AssertCurrentThreadOwns();
-
     nsAutoPtr<Message> msg(aMsg);
 
     if (!Connected()) {
@@ -732,6 +715,13 @@ MessageChannel::SendAndWait(Message* aMsg, Message* aReply)
 
     DebugOnly<int32_t> replySeqno = msg->seqno();
     DebugOnly<msgid_t> replyType = msg->type() + 1;
+
+    AutoSetValue<bool> replies(mAwaitingSyncReply, true);
+    AutoSetValue<int> prio(mAwaitingSyncReplyPriority, msg->priority());
+    AutoEnterTransaction transact(this, msg->seqno());
+
+    int32_t transaction = mCurrentTransaction;
+    msg->set_transaction_id(transaction);
 
     mLink->SendMessage(msg.forget());
 
@@ -770,6 +760,7 @@ MessageChannel::SendAndWait(Message* aMsg, Message* aReply)
 
             MOZ_ASSERT(mRecvd->type() == replyType, "wrong reply type");
             MOZ_ASSERT(mRecvd->seqno() == replySeqno);
+            MOZ_ASSERT(mRecvd->is_sync());
 
             *aReply = Move(*mRecvd);
             mRecvd = nullptr;

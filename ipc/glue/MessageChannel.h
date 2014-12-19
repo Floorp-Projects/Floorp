@@ -211,20 +211,6 @@ class MessageChannel : HasResultCodes
     // Send OnChannelConnected notification to listeners.
     void DispatchOnChannelConnected();
 
-    // Any protocol that requires blocking until a reply arrives, will send its
-    // outgoing message through this function. Currently, two protocols do this:
-    //
-    //  sync, which can only initiate messages from child to parent.
-    //  urgent, which can only initiate messages from parent to child.
-    //
-    // SendAndWait() expects that the worker thread owns the monitor, and that
-    // the message has been prepared to be sent over the link. It returns as
-    // soon as a reply has been received, or an error has occurred.
-    //
-    // Note that while the child is blocked waiting for a sync reply, it can wake
-    // up to process urgent calls from the parent.
-    bool SendAndWait(Message* aMsg, Message* aReply);
-
     bool InterruptEventOccurred();
 
     bool ProcessPendingRequest(const Message &aUrgent);
@@ -501,13 +487,13 @@ class MessageChannel : HasResultCodes
     class AutoEnterTransaction
     {
       public:
-       explicit AutoEnterTransaction(MessageChannel *aChan)
+       explicit AutoEnterTransaction(MessageChannel *aChan, int32_t aMsgSeqno)
         : mChan(aChan),
           mOldTransaction(mChan->mCurrentTransaction)
        {
            mChan->mMonitor->AssertCurrentThreadOwns();
            if (mChan->mCurrentTransaction == 0)
-               mChan->mCurrentTransaction = mChan->NextSeqno();
+               mChan->mCurrentTransaction = aMsgSeqno;
        }
        explicit AutoEnterTransaction(MessageChannel *aChan, const Message &aMessage)
         : mChan(aChan),
