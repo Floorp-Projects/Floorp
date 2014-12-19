@@ -236,8 +236,11 @@ OnProxyAvailable(nsICancelable *request, nsIURI *uri, nsIProxyInfo *proxyinfo,
     }
   }
 
-  pcm_->mProxyResolveCompleted = true;
-  pcm_->GatherIfReady();
+  if (result != NS_ERROR_ABORT) {
+    // NS_ERROR_ABORT means that the PeerConnectionMedia is no longer waiting
+    pcm_->mProxyResolveCompleted = true;
+    pcm_->GatherIfReady();
+  }
 
   return NS_OK;
 }
@@ -536,6 +539,8 @@ PeerConnectionMedia::AddIceCandidate_s(const std::string& aCandidate,
 
 void
 PeerConnectionMedia::GatherIfReady() {
+  ASSERT_ON_THREAD(mMainThread);
+
   if (mTransportsUpdated && mProxyResolveCompleted) {
     RUN_ON_THREAD(GetSTSThread(),
         WrapRunnable(
@@ -727,6 +732,10 @@ PeerConnectionMedia::SelfDestruct()
     mRemoteSourceStreams[i]->DetachMedia_m();
   }
 
+  // Make sure we don't try to start gathering if our http proxy lookup hasn't
+  // finished yet.
+  mProxyResolveCompleted = false;
+
   // Shutdown the transport (async)
   RUN_ON_THREAD(mSTSThread, WrapRunnable(
       this, &PeerConnectionMedia::ShutdownMediaTransport_s),
@@ -740,12 +749,12 @@ PeerConnectionMedia::SelfDestruct_m()
 {
   CSFLogDebug(logTag, "%s: ", __FUNCTION__);
 
-  nsresult status = NS_OK;
+  ASSERT_ON_THREAD(mMainThread);
+
   if (mProxyRequest) {
-    mProxyRequest->Cancel(status);
+    mProxyRequest->Cancel(NS_ERROR_ABORT);
   }
 
-  ASSERT_ON_THREAD(mMainThread);
   mLocalSourceStreams.Clear();
   mRemoteSourceStreams.Clear();
 
