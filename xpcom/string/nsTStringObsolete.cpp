@@ -505,7 +505,7 @@ nsTString_CharT::ReplaceSubstring( const self_type& aTarget, const self_type& aN
     return;
   if (oldData) {
     // Copy all of the old data to the new buffer.
-    char_traits::copy(mData, oldData, XPCOM_MAX(mLength, newLength));
+    char_traits::copy(mData, oldData, XPCOM_MIN(mLength, newLength));
     ::ReleaseData(oldData, oldFlags);
   }
 
