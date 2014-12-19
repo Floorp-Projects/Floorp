@@ -303,13 +303,17 @@ public:
   // it does not convert between any coordinate spaces for which we have names.
   float mPresShellResolution;
 
-  // The cumulative resolution that the current frame has been painted at.
-  // This is the product of the pres-shell resolutions of the document
-  // containing this scroll frame and its ancestors, and any css-driven
-  // resolution. This information is provided by Gecko at layout/paint time.
-  LayoutDeviceToLayerScale mCumulativeResolution;
-
 public:
+  void SetCumulativeResolution(const LayoutDeviceToLayerScale& aCumulativeResolution)
+  {
+    mCumulativeResolution = aCumulativeResolution;
+  }
+
+  LayoutDeviceToLayerScale GetCumulativeResolution() const
+  {
+    return mCumulativeResolution;
+  }
+
   void SetDevPixelsPerCSSPixel(const CSSToLayoutDeviceScale& aDevPixelsPerCSSPixel)
   {
     mDevPixelsPerCSSPixel = aDevPixelsPerCSSPixel;
@@ -528,6 +532,12 @@ public:
   }
 
 private:
+  // The cumulative resolution that the current frame has been painted at.
+  // This is the product of the pres-shell resolutions of the document
+  // containing this scroll frame and its ancestors, and any css-driven
+  // resolution. This information is provided by Gecko at layout/paint time.
+  LayoutDeviceToLayerScale mCumulativeResolution;
+
   // New fields from now on should be made private and old fields should
   // be refactored to be private.
 
