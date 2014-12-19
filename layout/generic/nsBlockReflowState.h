@@ -32,7 +32,9 @@ class nsOverflowContinuationTracker;
 #define BRS_ISOVERFLOWCONTAINER   0x00000100
 // Our mPushedFloats list is stored on the blocks' proptable
 #define BRS_PROPTABLE_FLOATCLIST  0x00000200
-#define BRS_LASTFLAG              BRS_PROPTABLE_FLOATCLIST
+// Set when the pref layout.float-fragments-inside-column.enabled is true.
+#define BRS_FLOAT_FRAGMENTS_INSIDE_COLUMN_ENABLED 0x00000400
+#define BRS_LASTFLAG              BRS_FLOAT_FRAGMENTS_INSIDE_COLUMN_ENABLED
 
 class nsBlockReflowState {
 public:

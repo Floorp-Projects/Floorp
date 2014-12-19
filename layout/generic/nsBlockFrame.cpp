@@ -58,8 +58,6 @@ static const int MIN_LINES_NEEDING_CURSOR = 20;
 
 static const char16_t kDiscCharacter = 0x2022;
 
-#define DISABLE_FLOAT_BREAKING_IN_COLUMNS
-
 using namespace mozilla;
 using namespace mozilla::css;
 using namespace mozilla::layout;
@@ -5862,8 +5860,8 @@ nsBlockFrame::AdjustFloatAvailableSpace(nsBlockReflowState& aState,
                        ? NS_UNCONSTRAINEDSIZE
                        : std::max(0, aState.ContentBEnd() - aState.mBCoord);
 
-#ifdef DISABLE_FLOAT_BREAKING_IN_COLUMNS
   if (availBSize != NS_UNCONSTRAINEDSIZE &&
+      !aState.GetFlag(BRS_FLOAT_FRAGMENTS_INSIDE_COLUMN_ENABLED) &&
       nsLayoutUtils::GetClosestFrameOfType(this, nsGkAtoms::columnSetFrame)) {
     // Tell the float it has unrestricted block-size, so it won't break.
     // If the float doesn't actually fit in the column it will fail to be
@@ -5871,7 +5869,6 @@ nsBlockFrame::AdjustFloatAvailableSpace(nsBlockReflowState& aState,
     // overflow.
     availBSize = NS_UNCONSTRAINEDSIZE;
   }
-#endif
 
   return LogicalRect(wm, aState.ContentIStart(), aState.ContentBStart(),
                      availISize, availBSize);
