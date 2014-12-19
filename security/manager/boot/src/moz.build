@@ -9,6 +9,7 @@ EXPORTS.mozilla += [
 ]
 
 UNIFIED_SOURCES += [
+    'CertBlocklist.cpp',
     'DataStorage.cpp',
     'nsBOOTModule.cpp',
     'nsEntropyCollector.cpp',
