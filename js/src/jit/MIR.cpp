@@ -3404,11 +3404,13 @@ MObjectState::MObjectState(MDefinition *obj)
     // This instruction is only used as a summary for bailout paths.
     setResultType(MIRType_Object);
     setRecoveredOnBailout();
-    PlainObject *templateObject = nullptr;
+    NativeObject *templateObject = nullptr;
     if (obj->isNewObject())
         templateObject = obj->toNewObject()->templateObject();
-    else
+    else if (obj->isCreateThisWithTemplate())
         templateObject = obj->toCreateThisWithTemplate()->templateObject();
+    else
+        templateObject = obj->toNewCallObject()->templateObject();
     numSlots_ = templateObject->slotSpan();
     numFixedSlots_ = templateObject->numFixedSlots();
 }

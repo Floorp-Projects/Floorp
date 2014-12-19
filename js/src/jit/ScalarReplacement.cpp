@@ -132,16 +132,21 @@ EmulateStateOf<MemoryView>::run(MemoryView &view)
 // For the moment, this code is dumb as it only supports objects which are not
 // changing shape, and which are known by TI at the object creation.
 static bool
-IsObjectEscaped(MInstruction *ins)
+IsObjectEscaped(MInstruction *ins, JSObject *objDefault = nullptr)
 {
     MOZ_ASSERT(ins->type() == MIRType_Object);
-    MOZ_ASSERT(ins->isNewObject() || ins->isGuardShape() || ins->isCreateThisWithTemplate());
+    MOZ_ASSERT(ins->isNewObject() || ins->isGuardShape() || ins->isCreateThisWithTemplate() ||
+               ins->isNewCallObject() || ins->isFunctionEnvironment());
 
     JSObject *obj = nullptr;
     if (ins->isNewObject())
         obj = ins->toNewObject()->templateObject();
     else if (ins->isCreateThisWithTemplate())
         obj = ins->toCreateThisWithTemplate()->templateObject();
+    else if (ins->isNewCallObject())
+        obj = ins->toNewCallObject()->templateObject();
+    else
+        obj = objDefault;
 
     // Check if the object is escaped. If the object is not the first argument
     // of either a known Store / Load, then we consider it as escaped. This is a
@@ -193,10 +198,37 @@ IsObjectEscaped(MInstruction *ins)
                 JitSpewDef(JitSpew_Escape, "  has a non-matching guard shape\n", guard);
                 return true;
             }
-            if (IsObjectEscaped(def->toInstruction()))
+            if (IsObjectEscaped(def->toInstruction(), obj))
                 return true;
             break;
           }
+
+          case MDefinition::Op_Lambda: {
+            MLambda *lambda = def->toLambda();
+            // The scope chain is not escaped if none of the Lambdas which are
+            // capturing it are escaped.
+            for (MUseIterator i(lambda->usesBegin()); i != lambda->usesEnd(); i++) {
+                MNode *consumer = (*i)->consumer();
+                if (!consumer->isDefinition()) {
+                    // Cannot optimize if it is observable from fun.arguments or others.
+                    if (!consumer->toResumePoint()->isRecoverableOperand(*i)) {
+                        JitSpewDef(JitSpew_Escape, "Observable object cannot be recovered\n", ins);
+                        return true;
+                    }
+                    continue;
+                }
+
+                MDefinition *def = consumer->toDefinition();
+                if (!def->isFunctionEnvironment() || IsObjectEscaped(def->toInstruction(), obj)) {
+                    JitSpewDef(JitSpew_Escape, "Object ", ins);
+                    JitSpewDef(JitSpew_Escape, "  is escaped through a lambda by\n", def);
+                    return true;
+                }
+            }
+
+            break;
+          }
+
           default:
             JitSpewDef(JitSpew_Escape, "Object ", ins);
             JitSpewDef(JitSpew_Escape, "  is escaped by\n", def);
@@ -243,6 +275,7 @@ class ObjectMemoryView : public MDefinitionVisitorDefaultNoop
     void visitStoreSlot(MStoreSlot *ins);
     void visitLoadSlot(MLoadSlot *ins);
     void visitGuardShape(MGuardShape *ins);
+    void visitFunctionEnvironment(MFunctionEnvironment *ins);
 };
 
 const char *ObjectMemoryView::phaseName = "Scalar Replacement of Object";
@@ -383,8 +416,8 @@ ObjectMemoryView::assertSuccess()
 
         // The only remaining uses would be removed by DCE, which will also
         // recover the object on bailouts.
-        MOZ_ASSERT(def->isSlots());
-        MOZ_ASSERT(!def->hasOneUse());
+        MOZ_ASSERT(def->isSlots() || def->isLambda());
+        MOZ_ASSERT(!def->hasDefUses());
     }
 }
 #endif
@@ -471,6 +504,21 @@ ObjectMemoryView::visitGuardShape(MGuardShape *ins)
         return;
 
     // Replace the shape guard by its object.
+    ins->replaceAllUsesWith(obj_);
+
+    // Remove original instruction.
+    ins->block()->discard(ins);
+}
+
+void
+ObjectMemoryView::visitFunctionEnvironment(MFunctionEnvironment *ins)
+{
+    // Skip function environment which are not aliases of the NewCallObject.
+    MDefinition *input = ins->input();
+    if (!input->isLambda() || input->toLambda()->scopeChain() != obj_)
+        return;
+
+    // Replace the function environment by the scope chain of the lambda.
     ins->replaceAllUsesWith(obj_);
 
     // Remove original instruction.
@@ -952,7 +1000,9 @@ ScalarReplacement(MIRGenerator *mir, MIRGraph &graph)
             return false;
 
         for (MInstructionIterator ins = block->begin(); ins != block->end(); ins++) {
-            if ((ins->isNewObject() || ins->isCreateThisWithTemplate()) && !IsObjectEscaped(*ins)) {
+            if ((ins->isNewObject() || ins->isCreateThisWithTemplate() || ins->isNewCallObject()) &&
+                !IsObjectEscaped(*ins))
+            {
                 ObjectMemoryView view(graph.alloc(), *ins);
                 if (!replaceObject.run(view))
                     return false;
