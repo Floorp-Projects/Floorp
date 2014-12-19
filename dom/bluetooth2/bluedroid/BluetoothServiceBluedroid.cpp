@@ -1473,7 +1473,7 @@ BluetoothServiceBluedroid::PinRequestNotification(const nsAString& aRemoteBdAddr
                         NS_LITERAL_STRING(PAIRING_REQ_TYPE_ENTERPINCODE));
 
   DistributeSignal(BluetoothSignal(NS_LITERAL_STRING("PairingRequest"),
-                                   NS_LITERAL_STRING(KEY_ADAPTER),
+                                   NS_LITERAL_STRING(KEY_PAIRING_LISTENER),
                                    BluetoothValue(propertiesArray)));
 }
 
@@ -1518,7 +1518,7 @@ BluetoothServiceBluedroid::SspRequestNotification(
   BT_APPEND_NAMED_VALUE(propertiesArray, "type", pairingType);
 
   DistributeSignal(BluetoothSignal(NS_LITERAL_STRING("PairingRequest"),
-                                   NS_LITERAL_STRING(KEY_ADAPTER),
+                                   NS_LITERAL_STRING(KEY_PAIRING_LISTENER),
                                    BluetoothValue(propertiesArray)));
 }
 
