@@ -4266,11 +4266,11 @@ ContentParent::RecvOpenAnonymousTemporaryFile(FileDescriptor *aFD)
 static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
 
 bool
-ContentParent::RecvFormProcessValue(const nsString& oldValue,
-                                    const nsString& challenge,
-                                    const nsString& keytype,
-                                    const nsString& keyparams,
-                                    nsString* newValue)
+ContentParent::RecvKeygenProcessValue(const nsString& oldValue,
+                                      const nsString& challenge,
+                                      const nsString& keytype,
+                                      const nsString& keyparams,
+                                      nsString* newValue)
 {
     nsCOMPtr<nsIFormProcessor> formProcessor =
       do_GetService(kFormProcessorCID);
@@ -4285,8 +4285,8 @@ ContentParent::RecvFormProcessValue(const nsString& oldValue,
 }
 
 bool
-ContentParent::RecvFormProvideContent(nsString* aAttribute,
-                                      nsTArray<nsString>* aContent)
+ContentParent::RecvKeygenProvideContent(nsString* aAttribute,
+                                        nsTArray<nsString>* aContent)
 {
     nsCOMPtr<nsIFormProcessor> formProcessor =
       do_GetService(kFormProcessorCID);
