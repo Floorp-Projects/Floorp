@@ -115,7 +115,7 @@ PluginModuleContentParent::LoadModule(uint32_t aPluginId)
      * sSavedModuleParent. We fetch it from there after LoadPlugin finishes.
      */
     dom::ContentChild* cp = dom::ContentChild::GetSingleton();
-    if (!cp->CallLoadPlugin(aPluginId)) {
+    if (!cp->SendLoadPlugin(aPluginId)) {
         return nullptr;
     }
 
