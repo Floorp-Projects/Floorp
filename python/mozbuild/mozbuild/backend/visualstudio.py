@@ -101,16 +101,16 @@ class VisualStudioBackend(CommonBackend):
             self._paths_to_configs[reldir] = obj.config
 
         if isinstance(obj, Sources):
-            self._add_sources(self, reldir, obj)
+            self._add_sources(reldir, obj)
 
         elif isinstance(obj, HostSources):
-            self._add_sources(self, reldir, obj)
+            self._add_sources(reldir, obj)
 
         elif isinstance(obj, GeneratedSources):
-            self._add_sources(self, reldir, obj)
+            self._add_sources(reldir, obj)
 
         elif isinstance(obj, UnifiedSources):
-            self._addr_sources(self, reldir, obj)
+            self._add_sources(reldir, obj)
 
         elif isinstance(obj, Library):
             self._libs_to_paths[obj.basename] = reldir
