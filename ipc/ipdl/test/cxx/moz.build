@@ -46,6 +46,7 @@ SOURCES += [
     'TestSyncHang.cpp',
     'TestSyncWakeup.cpp',
     'TestUrgency.cpp',
+    'TestUrgentHangs.cpp',
 ]
 
 if CONFIG['OS_ARCH'] == 'Linux':
@@ -120,6 +121,7 @@ IPDL_SOURCES += [
     'PTestSyncWakeup.ipdl',
     'PTestSysVShmem.ipdl',
     'PTestUrgency.ipdl',
+    'PTestUrgentHangs.ipdl',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
