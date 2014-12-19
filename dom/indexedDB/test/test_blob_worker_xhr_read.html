@@ -1,0 +1,114 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Blob Read From Worker</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  /**
+   * Create an IndexedDB-backed Blob, send it to the worker, try and read the
+   * contents of the Blob from the worker using an XHR.  Ideally, we don't
+   * deadlock the main thread.
+   */
+  function testSteps()
+  {
+    const BLOB_DATA = ["Green"];
+    const BLOB_TYPE = "text/plain";
+    const BLOB_SIZE = BLOB_DATA.join("").length;
+
+    info("Setting up");
+
+    let request = indexedDB.open(window.location.pathname, 1);
+    request.onerror = errorHandler;
+    request.onupgradeneeded = grabEventAndContinueHandler;
+    request.onsuccess = unexpectedSuccessHandler;
+    let event = yield undefined;
+
+    let db = event.target.result;
+    db.onerror = errorHandler;
+
+    ok(db, "Created database");
+
+    info("Creating objectStore");
+
+    let objectStore = db.createObjectStore("foo", { autoIncrement: true });
+
+    request.onupgradeneeded = unexpectedSuccessHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    ok(true, "Opened database");
+
+    let blob = new Blob(BLOB_DATA, { type: BLOB_TYPE });
+
+    info("Adding blob to database");
+
+    objectStore = db.transaction("foo", "readwrite").objectStore("foo");
+    objectStore.add(blob).onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    let blobKey = event.target.result;
+    ok(blobKey, "Got a key for the blob");
+
+    info("Getting blob from the database");
+
+    objectStore = db.transaction("foo").objectStore("foo");
+    objectStore.get(blobKey).onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    blob = event.target.result;
+
+    ok(blob instanceof Blob, "Got a blob");
+    is(blob.size, BLOB_SIZE, "Correct size");
+    is(blob.type, BLOB_TYPE, "Correct type");
+
+    info("Sending blob to a worker");
+
+    function workerScript() {
+      onmessage = function(event) {
+        var blob = event.data;
+        var blobUrl = URL.createObjectURL(blob);
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', blobUrl, true);
+        xhr.responseType = 'text';
+        xhr.onload = function() {
+          postMessage({ data: xhr.response });
+          URL.revokeObjectURL(blobUrl);
+        };
+        xhr.onerror = function() {
+          postMessage({ data: null });
+          URL.revokeObjectURL(blobUrl);
+        }
+        xhr.send();
+      }
+    }
+
+    let workerScriptUrl =
+      URL.createObjectURL(new Blob(["(", workerScript.toSource(), ")()"]));
+
+    let xhrWorker = new Worker(workerScriptUrl);
+    xhrWorker.postMessage(blob);
+    xhrWorker.onmessage = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    is(event.data.data, "Green", "XHR returned expected payload.");
+    xhrWorker.terminate();
+
+    URL.revokeObjectURL(workerScriptUrl);
+
+    finishTest();
+    yield undefined;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>
