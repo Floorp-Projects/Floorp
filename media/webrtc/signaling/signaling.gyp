@@ -259,6 +259,13 @@
           'cflags_mozilla': [
           ],
         }],
+        ['OS=="android" or moz_widget_toolkit_gonk==1', {
+          'cflags_mozilla': [
+            # This warning complains about important MOZ_EXPORT attributes
+            # on forward declarations for Android API types.
+            '-Wno-error=attributes',
+          ],
+        }],
         ['OS=="win"', {
           'include_dirs': [
           ],
