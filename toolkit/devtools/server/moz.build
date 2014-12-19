@@ -71,7 +71,8 @@ EXTRA_JS_MODULES.devtools.server.actors += [
 
 EXTRA_JS_MODULES.devtools.server.actors.utils += [
     'actors/utils/make-debugger.js',
-    'actors/utils/map-uri-to-addon-id.js'
+    'actors/utils/map-uri-to-addon-id.js',
+    'actors/utils/ScriptStore.js'
 ]
 
 FAIL_ON_WARNINGS = True
