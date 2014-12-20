@@ -32,7 +32,7 @@
                      android:id="@+id/find_matchcase"
                      android:layout_width="wrap_content"
                      android:layout_height="wrap_content"
-                     android:layout_marginRight="@dimen/find_in_page_matchcase_margin_right"
+                     android:padding="@dimen/find_in_page_matchcase_padding"
                      android:checked="false"
                      android:text="@string/find_matchcase"
                      android:textColor="@drawable/find_matchcase_selector"/>
