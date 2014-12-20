@@ -12,21 +12,21 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 
 void
-VsyncSource::AddVsyncDispatcher(VsyncDispatcher* aVsyncDispatcher)
+VsyncSource::AddCompositorVsyncDispatcher(CompositorVsyncDispatcher* aCompositorVsyncDispatcher)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  GetGlobalDisplay().AddVsyncDispatcher(aVsyncDispatcher);
+  GetGlobalDisplay().AddCompositorVsyncDispatcher(aCompositorVsyncDispatcher);
 }
 
 void
-VsyncSource::RemoveVsyncDispatcher(VsyncDispatcher* aVsyncDispatcher)
+VsyncSource::RemoveCompositorVsyncDispatcher(CompositorVsyncDispatcher* aCompositorVsyncDispatcher)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  GetGlobalDisplay().RemoveVsyncDispatcher(aVsyncDispatcher);
+  GetGlobalDisplay().RemoveCompositorVsyncDispatcher(aCompositorVsyncDispatcher);
 }
 
 VsyncSource::Display&
-VsyncSource::FindDisplay(VsyncDispatcher* aVsyncDispatcher)
+VsyncSource::FindDisplay(CompositorVsyncDispatcher* aCompositorVsyncDispatcher)
 {
   return GetGlobalDisplay();
 }
@@ -35,8 +35,8 @@ void
 VsyncSource::Display::NotifyVsync(TimeStamp aVsyncTimestamp)
 {
   // Called on the hardware vsync thread
-  for (size_t i = 0; i < mVsyncDispatchers.Length(); i++) {
-    mVsyncDispatchers[i]->NotifyVsync(aVsyncTimestamp);
+  for (size_t i = 0; i < mCompositorVsyncDispatchers.Length(); i++) {
+    mCompositorVsyncDispatchers[i]->NotifyVsync(aVsyncTimestamp);
   }
 }
 
@@ -48,19 +48,19 @@ VsyncSource::Display::Display()
 VsyncSource::Display::~Display()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mVsyncDispatchers.Clear();
+  mCompositorVsyncDispatchers.Clear();
 }
 
 void
-VsyncSource::Display::AddVsyncDispatcher(VsyncDispatcher* aVsyncDispatcher)
+VsyncSource::Display::AddCompositorVsyncDispatcher(CompositorVsyncDispatcher* aCompositorVsyncDispatcher)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mVsyncDispatchers.AppendElement(aVsyncDispatcher);
+  mCompositorVsyncDispatchers.AppendElement(aCompositorVsyncDispatcher);
 }
 
 void
-VsyncSource::Display::RemoveVsyncDispatcher(VsyncDispatcher* aVsyncDispatcher)
+VsyncSource::Display::RemoveCompositorVsyncDispatcher(CompositorVsyncDispatcher* aCompositorVsyncDispatcher)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mVsyncDispatchers.RemoveElement(aVsyncDispatcher);
+  mCompositorVsyncDispatchers.RemoveElement(aCompositorVsyncDispatcher);
 }

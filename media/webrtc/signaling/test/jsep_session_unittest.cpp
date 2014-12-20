@@ -1200,6 +1200,62 @@ TEST_F(JsepSessionTest, TestRtcpFbStar)
   }
 }
 
+TEST_F(JsepSessionTest, TestUniquePayloadTypes)
+{
+  // The audio payload types will all appear more than once, but the video
+  // payload types will be unique.
+  AddTracks(&mSessionOff, "audio,audio,video");
+  AddTracks(&mSessionAns, "audio,audio,video");
+
+  std::string offer = CreateOffer();
+  SetLocalOffer(offer, CHECK_SUCCESS);
+  SetRemoteOffer(offer, CHECK_SUCCESS);
+  std::string answer = CreateAnswer();
+  SetLocalAnswer(answer, CHECK_SUCCESS);
+  SetRemoteAnswer(answer, CHECK_SUCCESS);
+
+  ASSERT_EQ(3U, mSessionOff.GetNegotiatedTrackPairCount());
+  ASSERT_EQ(3U, mSessionAns.GetNegotiatedTrackPairCount());
+
+  const JsepTrackPair* pair;
+  ASSERT_EQ(NS_OK, mSessionOff.GetNegotiatedTrackPair(0, &pair));
+  ASSERT_TRUE(pair->mReceiving);
+  ASSERT_TRUE(pair->mReceiving->GetNegotiatedDetails());
+  ASSERT_EQ(0U,
+      pair->mReceiving->GetNegotiatedDetails()->GetUniquePayloadTypes().size());
+
+  ASSERT_EQ(NS_OK, mSessionOff.GetNegotiatedTrackPair(1, &pair));
+  ASSERT_TRUE(pair->mReceiving);
+  ASSERT_TRUE(pair->mReceiving->GetNegotiatedDetails());
+  ASSERT_EQ(0U,
+      pair->mReceiving->GetNegotiatedDetails()->GetUniquePayloadTypes().size());
+
+  ASSERT_EQ(NS_OK, mSessionOff.GetNegotiatedTrackPair(2, &pair));
+  ASSERT_TRUE(pair->mReceiving);
+  ASSERT_TRUE(pair->mReceiving->GetNegotiatedDetails());
+  ASSERT_NE(0U,
+      pair->mReceiving->GetNegotiatedDetails()->GetUniquePayloadTypes().size());
+
+  ASSERT_EQ(NS_OK, mSessionAns.GetNegotiatedTrackPair(0, &pair));
+  ASSERT_TRUE(pair->mReceiving);
+  ASSERT_TRUE(pair->mReceiving->GetNegotiatedDetails());
+  ASSERT_EQ(0U,
+      pair->mReceiving->GetNegotiatedDetails()->GetUniquePayloadTypes().size());
+
+  ASSERT_EQ(NS_OK, mSessionAns.GetNegotiatedTrackPair(1, &pair));
+  ASSERT_TRUE(pair->mReceiving);
+  ASSERT_TRUE(pair->mReceiving->GetNegotiatedDetails());
+  ASSERT_EQ(0U,
+      pair->mReceiving->GetNegotiatedDetails()->GetUniquePayloadTypes().size());
+
+  ASSERT_EQ(NS_OK, mSessionAns.GetNegotiatedTrackPair(2, &pair));
+  ASSERT_TRUE(pair->mReceiving);
+  ASSERT_TRUE(pair->mReceiving->GetNegotiatedDetails());
+  ASSERT_NE(0U,
+      pair->mReceiving->GetNegotiatedDetails()->GetUniquePayloadTypes().size());
+
+}
+
 } // namespace mozilla
 
 int
