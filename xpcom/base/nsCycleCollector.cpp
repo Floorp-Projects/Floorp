@@ -2082,11 +2082,6 @@ private:
     mCurrPi->SetLastChild(mEdgeBuilder.Mark());
   }
 
-  void DescribeNode(uint32_t aRefCount, const char* aObjName)
-  {
-    mCurrPi->mRefCount = aRefCount;
-  }
-
 public:
   // nsCycleCollectionNoteRootCallback methods.
   NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports* aRoot);
@@ -2338,7 +2333,7 @@ CCGraphBuilder::DescribeRefCountedNode(nsrefcnt aRefCount, const char* aObjName)
                                     aObjName);
   }
 
-  DescribeNode(aRefCount, aObjName);
+  mCurrPi->mRefCount = aRefCount;
 }
 
 NS_IMETHODIMP_(void)
@@ -2353,7 +2348,7 @@ CCGraphBuilder::DescribeGCedNode(bool aIsMarked, const char* aObjName,
                               aObjName, aCompartmentAddress);
   }
 
-  DescribeNode(refCount, aObjName);
+  mCurrPi->mRefCount = refCount;
 }
 
 NS_IMETHODIMP_(void)
