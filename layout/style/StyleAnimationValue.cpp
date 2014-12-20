@@ -3610,9 +3610,9 @@ StyleAnimationValue::operator=(const StyleAnimationValue& aOther)
       NS_ABORT_IF_FALSE(aOther.mValue.mCSSRect, "rects may not be null");
       mValue.mCSSRect = new nsCSSRect(*aOther.mValue.mCSSRect);
       break;
-    case eUnit_Filter:
     case eUnit_Dasharray:
     case eUnit_Shadow:
+    case eUnit_Filter:
     case eUnit_BackgroundPosition:
       NS_ABORT_IF_FALSE(mUnit == eUnit_Shadow || mUnit == eUnit_Filter ||
                         aOther.mValue.mCSSValueList,
@@ -3848,8 +3848,8 @@ StyleAnimationValue::operator==(const StyleAnimationValue& aOther) const
     case eUnit_CSSRect:
       return *mValue.mCSSRect == *aOther.mValue.mCSSRect;
     case eUnit_Dasharray:
-    case eUnit_Filter:
     case eUnit_Shadow:
+    case eUnit_Filter:
     case eUnit_BackgroundPosition:
       return nsCSSValueList::Equal(mValue.mCSSValueList,
                                    aOther.mValue.mCSSValueList);

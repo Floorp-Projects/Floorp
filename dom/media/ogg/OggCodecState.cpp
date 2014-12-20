@@ -936,7 +936,7 @@ int64_t OpusState::Time(int aPreSkip, int64_t aGranulepos)
     return -1;
 
   // Ogg Opus always runs at a granule rate of 48 kHz.
-  CheckedInt64 t = CheckedInt64(aGranulepos - aPreSkip) * USECS_PER_S;
+  CheckedInt64 t = (CheckedInt64(aGranulepos) - aPreSkip) * USECS_PER_S;
   return t.isValid() ? t.value() / 48000 : -1;
 }
 
@@ -1197,7 +1197,8 @@ bool SkeletonState::DecodeIndex(ogg_packet* aPacket)
   }
 
   // Extract the start time.
-  CheckedInt64 t = CheckedInt64(LittleEndian::readInt64(p + INDEX_FIRST_NUMER_OFFSET)) * USECS_PER_S;
+  int64_t timeRawInt = LittleEndian::readInt64(p + INDEX_FIRST_NUMER_OFFSET);
+  CheckedInt64 t = CheckedInt64(timeRawInt) * USECS_PER_S;
   if (!t.isValid()) {
     return (mActive = false);
   } else {
@@ -1205,7 +1206,8 @@ bool SkeletonState::DecodeIndex(ogg_packet* aPacket)
   }
 
   // Extract the end time.
-  t = LittleEndian::readInt64(p + INDEX_LAST_NUMER_OFFSET) * USECS_PER_S;
+  timeRawInt = LittleEndian::readInt64(p + INDEX_LAST_NUMER_OFFSET);
+  t = CheckedInt64(timeRawInt) * USECS_PER_S;
   if (!t.isValid()) {
     return (mActive = false);
   } else {

@@ -230,8 +230,10 @@ public:
 
   int GetChannel() { return mChannel; }
   webrtc::VideoEngine* GetVideoEngine() { return mVideoEngine; }
-  bool GetLocalSSRC(unsigned int* ssrc);
+  bool GetLocalSSRC(unsigned int* ssrc) MOZ_OVERRIDE;
+  bool SetLocalSSRC(unsigned int ssrc);
   bool GetRemoteSSRC(unsigned int* ssrc);
+  bool SetLocalCNAME(const char* cname) MOZ_OVERRIDE;
   bool GetVideoEncoderStats(double* framerateMean,
                             double* framerateStdDev,
                             double* bitrateMean,
