@@ -2065,8 +2065,6 @@ public:
   }
 
   PtrInfo* AddNode(void* aPtr, nsCycleCollectionParticipant* aParticipant);
-  PtrInfo* AddWeakMapNode(JS::GCCellPtr aThing);
-  PtrInfo* AddWeakMapNode(JSObject* aObject);
 
   // This is called when all roots have been added to the graph, to prepare for BuildGraph().
   void DoneAddingRoots();
@@ -2075,6 +2073,9 @@ public:
   bool BuildGraph(SliceBudget& aBudget);
 
 private:
+  PtrInfo* AddWeakMapNode(JS::GCCellPtr aThing);
+  PtrInfo* AddWeakMapNode(JSObject* aObject);
+
   void SetLastChild()
   {
     mCurrPi->SetLastChild(mEdgeBuilder.Mark());
