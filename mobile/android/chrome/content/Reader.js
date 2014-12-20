@@ -5,14 +5,6 @@
 "use strict";
 
 let Reader = {
-
-  // These values should match those defined in BrowserContract.java
-  STATUS_UNFETCHED: 0,
-  STATUS_FETCH_FAILED_TEMPORARY: 1,
-  STATUS_FETCH_FAILED_PERMANENT: 2,
-  STATUS_FETCH_FAILED_UNSUPPORTED_FORMAT: 3,
-  STATUS_FETCHED_ARTICLE: 4,
-
   get isEnabledForParseOnLoad() {
     delete this.isEnabledForParseOnLoad;
 
@@ -100,13 +92,7 @@ let Reader = {
     if (!article) {
       // If there was a problem getting the article, just store the
       // URL and title from the tab.
-      article = {
-        url: urlWithoutRef,
-        title: tab.browser.contentDocument.title,
-        status: this.STATUS_FETCH_FAILED_UNSUPPORTED_FORMAT,
-      };
-    } else {
-      article.status = this.STATUS_FETCHED_ARTICLE;
+      article = { url: urlWithoutRef, title: tab.browser.contentDocument.title };
     }
 
     this.addArticleToReadingList(article);
@@ -124,7 +110,6 @@ let Reader = {
       title: truncate(article.title || "", MAX_TITLE_LENGTH),
       length: article.length || 0,
       excerpt: article.excerpt || "",
-      status: article.status,
     });
 
     ReaderMode.storeArticleInCache(article).catch(e => Cu.reportError("Error storing article in cache: " + e));
@@ -261,7 +246,7 @@ let Reader = {
     });
 
     for (let article of articles) {
-      yield this.storeArticleInCache(article);
+      yield ReaderMode.storeArticleInCache(article);
     }
 
     // Delete the database.
