@@ -327,6 +327,9 @@ function SocialErrorListener(iframe, errorHandler) {
   this.setErrorMessage = errorHandler;
   this.iframe = iframe;
   iframe.socialErrorListener = this;
+  // Force a layout flush by calling .clientTop so that the docShell of this
+  // frame is created for the error listener
+  iframe.clientTop;
   iframe.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                                    .getInterface(Ci.nsIWebProgress)
                                    .addProgressListener(this,

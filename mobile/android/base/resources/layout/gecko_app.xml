@@ -3,7 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<org.mozilla.gecko.OuterLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 xmlns:gecko="http://schemas.android.com/apk/res-auto"
                 android:id="@+id/root_layout"
                 android:layout_width="match_parent"
@@ -134,4 +134,4 @@
               android:layout="@layout/button_toast"
               style="@style/Toast"/>
 
-</RelativeLayout>
+</org.mozilla.gecko.OuterLayout>
