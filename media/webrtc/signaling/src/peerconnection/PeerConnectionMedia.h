@@ -271,8 +271,6 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
   void StorePipeline(int aMLine, bool aIsVideo,
                      mozilla::RefPtr<mozilla::MediaPipelineReceive> aPipeline);
 
-  bool SetUsingBundle_m(int aMLine, bool decision);
-
   void DetachTransport_s();
   void DetachMedia_m();
 
@@ -359,7 +357,6 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   RemoteSourceStreamInfo* GetRemoteStreamByIndex(size_t index);
   RemoteSourceStreamInfo* GetRemoteStreamById(const std::string& id);
 
-  bool SetUsingBundle_m(int aMLine, bool decision);
   bool UpdateFilterFromRemoteDescription_m(
       int aMLine,
       nsAutoPtr<mozilla::MediaPipelineFilter> filter);

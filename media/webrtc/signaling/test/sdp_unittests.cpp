@@ -1159,6 +1159,7 @@ const std::string kBasicAudioVideoOffer =
 "a=candidate:6 2 UDP 16515070 162.222.183.171 50340 typ relay raddr 162.222.183.171 rport 50340" CRLF
 "a=candidate:0 2 UDP 2130379006 10.0.0.36 55428 typ host" CRLF
 "a=end-of-candidates" CRLF
+"a=ssrc:5150" CRLF
 "m=video 9 RTP/SAVPF 120" CRLF
 "c=IN IP6 ::1" CRLF
 "a=mid:second" CRLF
@@ -1181,6 +1182,8 @@ const std::string kBasicAudioVideoOffer =
 "a=candidate:3 1 UDP 100401151 162.222.183.171 62935 typ relay raddr 162.222.183.171 rport 62935" CRLF
 "a=candidate:3 2 UDP 100401150 162.222.183.171 61026 typ relay raddr 162.222.183.171 rport 61026" CRLF
 "a=end-of-candidates" CRLF
+"a=ssrc:1111 foo" CRLF
+"a=ssrc:1111 foo:bar" CRLF
 "m=audio 9 RTP/SAVPF 0" CRLF
 "a=mid:third" CRLF
 "a=rtpmap:0 PCMU/8000" CRLF
@@ -1327,6 +1330,29 @@ TEST_P(NewSdpTest, CheckSetup) {
       mSdp->GetMediaSection(1).GetAttributeList().GetSetup().mRole);
   ASSERT_FALSE(mSdp->GetMediaSection(2).GetAttributeList().HasAttribute(
         SdpAttribute::kSetupAttribute));
+}
+
+TEST_P(NewSdpTest, CheckSsrc)
+{
+  ParseSdp(kBasicAudioVideoOffer);
+  ASSERT_TRUE(mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";
+
+  ASSERT_TRUE(mSdp->GetMediaSection(0).GetAttributeList().HasAttribute(
+      SdpAttribute::kSsrcAttribute));
+  auto ssrcs = mSdp->GetMediaSection(0).GetAttributeList().GetSsrc().mSsrcs;
+  ASSERT_EQ(1U, ssrcs.size());
+  ASSERT_EQ(5150U, ssrcs[0].ssrc);
+  ASSERT_EQ("", ssrcs[0].attribute);
+
+  ASSERT_TRUE(mSdp->GetMediaSection(1).GetAttributeList().HasAttribute(
+      SdpAttribute::kSsrcAttribute));
+  ssrcs = mSdp->GetMediaSection(1).GetAttributeList().GetSsrc().mSsrcs;
+  ASSERT_EQ(2U, ssrcs.size());
+  ASSERT_EQ(1111U, ssrcs[0].ssrc);
+  ASSERT_EQ("foo", ssrcs[0].attribute);
+  ASSERT_EQ(1111U, ssrcs[1].ssrc);
+  ASSERT_EQ("foo:bar", ssrcs[1].attribute);
 }
 
 TEST_P(NewSdpTest, CheckRtpmap) {

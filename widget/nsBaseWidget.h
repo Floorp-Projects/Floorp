@@ -39,7 +39,7 @@ class GeckoContentController;
 struct ScrollableLayerGuid;
 }
 
-class VsyncDispatcher;
+class CompositorVsyncDispatcher;
 }
 
 namespace base {
@@ -142,8 +142,8 @@ public:
                                           LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                                           bool* aAllowRetaining = nullptr);
 
-  VsyncDispatcher*        GetVsyncDispatcher() MOZ_OVERRIDE;
-  virtual void            CreateVsyncDispatcher();
+  CompositorVsyncDispatcher* GetCompositorVsyncDispatcher() MOZ_OVERRIDE;
+  virtual void            CreateCompositorVsyncDispatcher();
   virtual CompositorParent* NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight);
   virtual void            CreateCompositor();
   virtual void            CreateCompositor(int aWidth, int aHeight);
@@ -426,7 +426,7 @@ protected:
   nsRefPtr<LayerManager> mBasicLayerManager;
   nsRefPtr<CompositorChild> mCompositorChild;
   nsRefPtr<CompositorParent> mCompositorParent;
-  nsRefPtr<mozilla::VsyncDispatcher> mVsyncDispatcher;
+  nsRefPtr<mozilla::CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
   nsRefPtr<APZCTreeManager> mAPZC;
   nsRefPtr<WidgetShutdownObserver> mShutdownObserver;
   nsCursor          mCursor;

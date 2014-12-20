@@ -15,11 +15,11 @@ if test -n "$ENABLE_CLANG_PLUGIN"; then
 
     AC_MSG_CHECKING([for llvm-config])
     if test -z "$LLVMCONFIG"; then
-      LLVMCONFIG=`which llvm-config`
+      LLVMCONFIG=`$CXX -print-prog-name=llvm-config`
     fi
 
     if test -z "$LLVMCONFIG"; then
-      LLVMCONFIG=`$CXX -print-prog-name=llvm-config`
+      LLVMCONFIG=`which llvm-config`
     fi
 
     if test ! -x "$LLVMCONFIG"; then

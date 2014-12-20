@@ -8,6 +8,7 @@ SOURCES += [
     'TestBadImplicitConversionCtor.cpp',
     'TestCustomHeap.cpp',
     'TestMustOverride.cpp',
+    'TestNoArithmeticExprInArgument.cpp',
     'TestNonHeapClass.cpp',
     'TestStackClass.cpp',
 ]
