@@ -63,6 +63,21 @@ public:
     return nullptr;
   }
 
+  virtual std::vector<uint8_t> GetUniquePayloadTypes() const
+  {
+    return mUniquePayloadTypes;
+  }
+
+  virtual void AddUniquePayloadType(uint8_t pt) MOZ_OVERRIDE
+  {
+    mUniquePayloadTypes.push_back(pt);
+  }
+
+  virtual void ClearUniquePayloadTypes() MOZ_OVERRIDE
+  {
+    mUniquePayloadTypes.clear();
+  }
+
 private:
   // Make these friends to JsepSessionImpl to avoid having to
   // write setters.
@@ -72,6 +87,7 @@ private:
   Maybe<std::string> mBandwidth;
   std::vector<JsepCodecDescription*> mCodecs;
   std::map<std::string, SdpExtmapAttributeList::Extmap> mExtmap;
+  std::vector<uint8_t> mUniquePayloadTypes;
 };
 
 } // namespace mozilla
