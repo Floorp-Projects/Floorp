@@ -2064,7 +2064,7 @@ public:
     return nsCycleCollectionNoteRootCallback::WantAllTraces();
   }
 
-  PtrInfo* AddNode(void* aPtr, nsCycleCollectionParticipant* aParticipant);
+  bool AddPurpleRoot(void* aRoot, nsCycleCollectionParticipant* aParti);
 
   // This is called when all roots have been added to the graph, to prepare for BuildGraph().
   void DoneAddingRoots();
@@ -2073,6 +2073,7 @@ public:
   bool BuildGraph(SliceBudget& aBudget);
 
 private:
+  PtrInfo* AddNode(void* aPtr, nsCycleCollectionParticipant* aParticipant);
   PtrInfo* AddWeakMapNode(JS::GCCellPtr aThing);
   PtrInfo* AddWeakMapNode(JSObject* aObject);
 
@@ -2213,6 +2214,21 @@ CCGraphBuilder::AddNode(void* aPtr, nsCycleCollectionParticipant* aParticipant)
                "nsCycleCollectionParticipant shouldn't change!");
   }
   return result;
+}
+
+bool
+CCGraphBuilder::AddPurpleRoot(void* aRoot, nsCycleCollectionParticipant* aParti)
+{
+  CanonicalizeParticipant(&aRoot, &aParti);
+
+  if (WantAllTraces() || !aParti->CanSkipInCC(aRoot)) {
+    PtrInfo* pinfo = AddNode(aRoot, aParti);
+    if (!pinfo) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 void
@@ -2463,16 +2479,7 @@ static bool
 AddPurpleRoot(CCGraphBuilder& aBuilder, void* aRoot,
               nsCycleCollectionParticipant* aParti)
 {
-  CanonicalizeParticipant(&aRoot, &aParti);
-
-  if (aBuilder.WantAllTraces() || !aParti->CanSkipInCC(aRoot)) {
-    PtrInfo* pinfo = aBuilder.AddNode(aRoot, aParti);
-    if (!pinfo) {
-      return false;
-    }
-  }
-
-  return true;
+  return aBuilder.AddPurpleRoot(aRoot, aParti);
 }
 
 // MayHaveChild() will be false after a Traverse if the object does
