@@ -2067,13 +2067,6 @@ public:
   PtrInfo* AddNode(void* aPtr, nsCycleCollectionParticipant* aParticipant);
   PtrInfo* AddWeakMapNode(JS::GCCellPtr aThing);
   PtrInfo* AddWeakMapNode(JSObject* aObject);
-  void Traverse(PtrInfo* aPtrInfo);
-  void SetLastChild();
-
-  bool RanOutOfMemory() const
-  {
-    return mRanOutOfMemory;
-  }
 
   // This is called when all roots have been added to the graph, to prepare for BuildGraph().
   void DoneAddingRoots();
@@ -2082,6 +2075,11 @@ public:
   bool BuildGraph(SliceBudget& aBudget);
 
 private:
+  void SetLastChild()
+  {
+    mCurrPi->SetLastChild(mEdgeBuilder.Mark());
+  }
+
   void DescribeNode(uint32_t aRefCount, const char* aObjName)
   {
     mCurrPi->mRefCount = aRefCount;
@@ -2225,7 +2223,7 @@ CCGraphBuilder::DoneAddingRoots()
   mCurrNode = new NodePool::Enumerator(mGraph.mNodes);
 }
 
-bool
+MOZ_NEVER_INLINE bool
 CCGraphBuilder::BuildGraph(SliceBudget& aBudget)
 {
   const intptr_t kNumNodesBetweenTimeChecks = 1000;
@@ -2239,12 +2237,23 @@ CCGraphBuilder::BuildGraph(SliceBudget& aBudget)
       MOZ_CRASH();
     }
 
-    // We need to call Traverse() method on deleted nodes, to set their
+    mCurrPi = pi;
+
+    // We need to call SetFirstChild even on deleted nodes, to set their
     // firstChild() that may be read by a prior non-deleted neighbor.
-    Traverse(pi);
+    mCurrPi->SetFirstChild(mEdgeBuilder.Mark());
+
+    if (pi->mParticipant) {
+      nsresult rv = pi->mParticipant->Traverse(pi->mPointer, *this);
+      if (NS_FAILED(rv)) {
+        Fault("script pointer traversal failed", pi);
+      }
+    }
+
     if (mCurrNode->AtBlockEnd()) {
       SetLastChild();
     }
+
     aBudget.step(kStep);
   }
 
@@ -2256,7 +2265,7 @@ CCGraphBuilder::BuildGraph(SliceBudget& aBudget)
     SetLastChild();
   }
 
-  if (RanOutOfMemory()) {
+  if (mRanOutOfMemory) {
     MOZ_ASSERT(false, "Ran out of memory while building cycle collector graph");
     CC_TELEMETRY(_OOM, true);
   }
@@ -2264,29 +2273,6 @@ CCGraphBuilder::BuildGraph(SliceBudget& aBudget)
   mCurrNode = nullptr;
 
   return true;
-}
-
-MOZ_NEVER_INLINE void
-CCGraphBuilder::Traverse(PtrInfo* aPtrInfo)
-{
-  mCurrPi = aPtrInfo;
-
-  mCurrPi->SetFirstChild(mEdgeBuilder.Mark());
-
-  if (!aPtrInfo->mParticipant) {
-    return;
-  }
-
-  nsresult rv = aPtrInfo->mParticipant->Traverse(aPtrInfo->mPointer, *this);
-  if (NS_FAILED(rv)) {
-    Fault("script pointer traversal failed", aPtrInfo);
-  }
-}
-
-void
-CCGraphBuilder::SetLastChild()
-{
-  mCurrPi->SetLastChild(mEdgeBuilder.Mark());
 }
 
 NS_IMETHODIMP_(void)
