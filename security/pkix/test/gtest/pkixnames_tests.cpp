@@ -1804,6 +1804,15 @@ static const NameConstraintParams NAME_CONSTRAINT_PARAMS[] =
     GeneralSubtree(DNSName("host.example.com")),
     Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
   },
+  { ByteString(), RFC822Name("a@host.example.com"),
+    GeneralSubtree(RFC822Name("host.example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { // This test case is an example from RFC 5280.
+    ByteString(), RFC822Name("a@host1.example.com"),
+    GeneralSubtree(RFC822Name("host.example.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
 
   // Q: When the name constraint does not start with ".", do subdomain
   //    presented identifiers match it? For example, does the presented
@@ -1813,12 +1822,23 @@ static const NameConstraintParams NAME_CONSTRAINT_PARAMS[] =
     GeneralSubtree(DNSName(    "host.example.com")),
     Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
   },
+  { // The subdomain matching rule for host names that do not start with "." is
+    // different for RFC822Names than for DNSNames!
+    ByteString(),  RFC822Name("a@www.host.example.com"),
+    GeneralSubtree(RFC822Name(      "host.example.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE,
+    Success
+  },
 
   // Q: When the name constraint does not start with ".", does a
   //    non-subdomain prefix match it? For example, does "bigfoo.bar.com"
   //    match "foo.bar.com"?
   { ByteString(), DNSName("bigfoo.bar.com"),
-    GeneralSubtree(DNSName("foo.bar.com")),
+    GeneralSubtree(DNSName(  "foo.bar.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+  { ByteString(), RFC822Name("a@bigfoo.bar.com"),
+    GeneralSubtree(RFC822Name(    "foo.bar.com")),
     Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
   },
 
@@ -1827,17 +1847,39 @@ static const NameConstraintParams NAME_CONSTRAINT_PARAMS[] =
   //    "www.example.com" match a constraint of ".example.com"? Does a
   //    presented ID of "example.com" match a constraint of ".example.com"?
   { ByteString(), DNSName("www.example.com"),
-    GeneralSubtree(DNSName(".example.com")),
+    GeneralSubtree(DNSName(  ".example.com")),
     Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
   },
+  { // When there is no Local-part, an RFC822 name constraint's domain may
+    // start with '.', and the semantics are the same as for DNSNames.
+    ByteString(), RFC822Name("a@www.example.com"),
+    GeneralSubtree(RFC822Name(    ".example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { // When there is a Local-part, an RFC822 name constraint's domain must not
+    // start with '.'.
+    ByteString(), RFC822Name("a@www.example.com"),
+    GeneralSubtree(RFC822Name(  "a@.example.com")),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
   { // Check that we only allow subdomains to match.
-    ByteString(), DNSName("example.com"),
+    ByteString(), DNSName(  "example.com"),
     GeneralSubtree(DNSName(".example.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+  { // Check that we only allow subdomains to match.
+    ByteString(), RFC822Name("a@example.com"),
+    GeneralSubtree(RFC822Name(".example.com")),
     Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
   },
   { // Check that we don't get confused and consider "b" == "."
     ByteString(), DNSName("bexample.com"),
     GeneralSubtree(DNSName(".example.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+  { // Check that we don't get confused and consider "b" == "."
+    ByteString(), RFC822Name("a@bexample.com"),
+    GeneralSubtree(RFC822Name( ".example.com")),
     Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
   },
 
@@ -1847,12 +1889,16 @@ static const NameConstraintParams NAME_CONSTRAINT_PARAMS[] =
 
   // Q: Are name constraints allowed to be specified as absolute names?
   //    For example, does a presented ID of "example.com" match a name
-  //    constraint of "example.com." and vice versa.
+  //    constraint of "example.com." and vice versa?
   //
   { // The DNSName in the constraint is not valid because constraint DNS IDs
     // are not allowed to be absolute.
     ByteString(), DNSName("example.com"),
     GeneralSubtree(DNSName("example.com.")),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER,
+  },
+  { ByteString(), RFC822Name("a@example.com"),
+    GeneralSubtree(RFC822Name( "example.com.")),
     Result::ERROR_BAD_DER, Result::ERROR_BAD_DER,
   },
   { // The DNSName in the SAN is not valid because presented DNS IDs are not
@@ -1861,7 +1907,11 @@ static const NameConstraintParams NAME_CONSTRAINT_PARAMS[] =
     GeneralSubtree(DNSName("example.com")),
     Result::ERROR_BAD_DER, Result::ERROR_BAD_DER,
   },
-  { // The presented ID is the same length as the constraint, because the
+  { ByteString(), RFC822Name("a@example.com."),
+    GeneralSubtree(RFC822Name( "example.com")),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER,
+  },
+  { // The presented DNSName is the same length as the constraint, because the
     // subdomain is only one character long and because the constraint both
     // begins and ends with ".". But, it doesn't matter because absolute names
     // are not allowed for DNSName constraints.
@@ -1869,9 +1919,22 @@ static const NameConstraintParams NAME_CONSTRAINT_PARAMS[] =
     GeneralSubtree(DNSName(".example.com.")),
     Result::ERROR_BAD_DER, Result::ERROR_BAD_DER,
   },
+  { // The presented DNSName is the same length as the constraint, because the
+    // subdomain is only one character long and because the constraint both
+    // begins and ends with ".".
+    ByteString(), RFC822Name("a@p.example.com"),
+    GeneralSubtree(RFC822Name(  ".example.com.")),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER,
+  },
   { // Same as previous test case, but using a wildcard presented ID.
     ByteString(), DNSName("*.example.com"),
     GeneralSubtree(DNSName(".example.com.")),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // Same as previous test case, but using a wildcard presented ID, which is
+    // invalid in an RFC822Name.
+    ByteString(), RFC822Name("a@*.example.com"),
+    GeneralSubtree(RFC822Name(  ".example.com.")),
     Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
   },
 
@@ -1880,18 +1943,35 @@ static const NameConstraintParams NAME_CONSTRAINT_PARAMS[] =
     GeneralSubtree(DNSName("")),
     Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
   },
+  { ByteString(), RFC822Name("a@example.com"),
+    GeneralSubtree(RFC822Name("")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
   { // The malformed (absolute) presented ID does not match.
     ByteString(), DNSName("example.com."),
     GeneralSubtree(DNSName("")),
     Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
   },
-  { // Invalid syntax in name constraint.
+  { ByteString(), RFC822Name("a@example.com."),
+    GeneralSubtree(RFC822Name("")),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // Invalid syntax in name constraint
     ByteString(), DNSName("example.com"),
     GeneralSubtree(DNSName(".")),
     Result::ERROR_BAD_DER, Result::ERROR_BAD_DER,
   },
+  { // Invalid syntax in name constraint
+    ByteString(), RFC822Name("a@example.com"),
+    GeneralSubtree(RFC822Name(".")),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER,
+  },
   { ByteString(), DNSName("example.com."),
     GeneralSubtree(DNSName(".")),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { ByteString(), RFC822Name("a@example.com."),
+    GeneralSubtree(RFC822Name(".")),
     Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
   },
 
@@ -2053,6 +2133,9 @@ static const NameConstraintParams NAME_CONSTRAINT_PARAMS[] =
   { ByteString(), NO_SAN, GeneralSubtree(IPAddress(ipv6_addr_overlong_bytes)),
     Success, Success
   },
+  { ByteString(), NO_SAN, GeneralSubtree(RFC822Name("\0")),
+    Success, Success
+  },
 
   /////////////////////////////////////////////////////////////////////////////
   // Basic CN-ID DNSName constraint tests.
@@ -2190,6 +2273,54 @@ static const NameConstraintParams NAME_CONSTRAINT_PARAMS[] =
     RDN(CN("a.example.com")) + RDN(CN("b.example.com")), NO_SAN,
     GeneralSubtree(DNSName("b.example.com")),
     Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Additional RFC822 name constraint tests. There are more tests regarding
+  // the DNSName part of the constraint mixed into the DNSName constraint
+  // tests.
+
+  { ByteString(), RFC822Name("a@example.com"),
+    GeneralSubtree(RFC822Name("a@example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+
+  // Bug 1056773: name constraints that omit Local-part but include '@' are
+  // invalid.
+  { ByteString(), RFC822Name("a@example.com"),
+    GeneralSubtree(RFC822Name("@example.com")),
+    Result::ERROR_BAD_DER,
+    Result::ERROR_BAD_DER
+  },
+  { ByteString(), RFC822Name("@example.com"),
+    GeneralSubtree(RFC822Name("@example.com")),
+    Result::ERROR_BAD_DER,
+    Result::ERROR_BAD_DER
+  },
+  { ByteString(), RFC822Name("example.com"),
+    GeneralSubtree(RFC822Name("@example.com")),
+    Result::ERROR_BAD_DER,
+    Result::ERROR_BAD_DER
+  },
+  { ByteString(), RFC822Name("a@mail.example.com"),
+    GeneralSubtree(RFC822Name("a@*.example.com")),
+    Result::ERROR_BAD_DER,
+    Result::ERROR_BAD_DER
+  },
+  { ByteString(), RFC822Name("a@*.example.com"),
+    GeneralSubtree(RFC822Name(".example.com")),
+    Result::ERROR_BAD_DER,
+    Result::ERROR_BAD_DER
+  },
+  { ByteString(), RFC822Name("@example.com"),
+    GeneralSubtree(RFC822Name(".example.com")),
+    Result::ERROR_BAD_DER,
+    Result::ERROR_BAD_DER
+  },
+  { ByteString(), RFC822Name("@a.example.com"),
+    GeneralSubtree(RFC822Name(".example.com")),
+    Result::ERROR_BAD_DER,
+    Result::ERROR_BAD_DER
   },
 };
 
