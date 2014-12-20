@@ -1,12 +1,16 @@
 // -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
-let Reader = {
+const { utils: Cu } = Components;
 
-  // These values should match those defined in BrowserContract.java
+Cu.import("resource://gre/modules/ReaderMode.jsm");
+
+let Reader = {
+  // These values should match those defined in BrowserContract.java.
   STATUS_UNFETCHED: 0,
   STATUS_FETCH_FAILED_TEMPORARY: 1,
   STATUS_FETCH_FAILED_PERMANENT: 2,
@@ -261,7 +265,7 @@ let Reader = {
     });
 
     for (let article of articles) {
-      yield this.storeArticleInCache(article);
+      yield ReaderMode.storeArticleInCache(article);
     }
 
     // Delete the database.
