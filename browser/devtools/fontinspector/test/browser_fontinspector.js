@@ -10,6 +10,19 @@ let TEST_URI = "http://mochi.test:8888/browser/browser/devtools/fontinspector/te
 
 let view, viewDoc;
 
+const BASE_URI = "http://mochi.test:8888/browser/browser/devtools/fontinspector/test/"
+
+const FONTS = [
+  {name: "Ostrich Sans Medium", remote: true, url: BASE_URI + "ostrich-regular.ttf",
+   format: "truetype", cssName: "bar"},
+  {name: "Ostrich Sans Black", remote: true, url: BASE_URI + "ostrich-black.ttf",
+   format: "", cssName: "bar"},
+  {name: "Ostrich Sans Black", remote: true, url: BASE_URI + "ostrich-black.ttf",
+   format: "", cssName: "bar"},
+  {name: "Ostrich Sans Medium", remote: true, url: BASE_URI + "ostrich-regular.ttf",
+   format: "", cssName: "barnormal"},
+];
+
 add_task(function*() {
   yield loadTab(TEST_URI);
   let {toolbox, inspector} = yield openInspector();
@@ -39,32 +52,41 @@ add_task(function*() {
 
 function* testBodyFonts(inspector) {
   let s = viewDoc.querySelectorAll("#all-fonts > section");
-  is(s.length, 2, "Found 2 fonts");
+  is(s.length, 5, "Found 5 fonts");
 
-  // test first web font
-  is(s[0].querySelector(".font-name").textContent,
-     "Ostrich Sans Medium", "font 0: Right font name");
-  ok(s[0].classList.contains("is-remote"),
-     "font 0: is remote");
-  is(s[0].querySelector(".font-url").value,
-     "http://mochi.test:8888/browser/browser/devtools/fontinspector/test/ostrich-regular.ttf",
-     "font 0: right url");
-  is(s[0].querySelector(".font-format").textContent,
-     "truetype", "font 0: right font format");
-  is(s[0].querySelector(".font-css-name").textContent,
-     "bar", "font 0: right css name");
+  for (let i = 0; i < FONTS.length; i++) {
+    let section = s[i];
+    let font = FONTS[i];
+    is(section.querySelector(".font-name").textContent, font.name,
+       "font " + i + " right font name");
+    is(section.classList.contains("is-remote"), font.remote,
+       "font " + i + " remote value correct");
+    is(section.querySelector(".font-url").value, font.url,
+       "font " + i + " url correct");
+    is(section.querySelector(".font-format").hidden, !font.format,
+       "font " + i + " format hidden value correct");
+    is(section.querySelector(".font-format").textContent,
+       font.format, "font " + i + " format correct");
+    is(section.querySelector(".font-css-name").textContent,
+       font.cssName, "font " + i + " css name correct");
+  }
+
+  // test that the bold and regular fonts have different previews
+  let regSrc = s[0].querySelector(".font-preview").src;
+  let boldSrc = s[1].querySelector(".font-preview").src;
+  isnot(regSrc, boldSrc, "preview for bold font is different from regular");
 
   // test system font
-  let font2Name = s[1].querySelector(".font-name").textContent;
-  let font2CssName = s[1].querySelector(".font-css-name").textContent;
+  let localFontName = s[4].querySelector(".font-name").textContent;
+  let localFontCSSName = s[4].querySelector(".font-css-name").textContent;
 
   // On Linux test machines, the Arial font doesn't exist.
   // The fallback is "Liberation Sans"
-  ok((font2Name == "Arial") || (font2Name == "Liberation Sans"),
-     "font 1: Right font name");
-  ok(s[1].classList.contains("is-local"), "font 2: is local");
-  ok((font2CssName == "Arial") || (font2CssName == "Liberation Sans"),
-     "Arial", "font 2: right css name");
+  ok((localFontName == "Arial") || (localFontName == "Liberation Sans"),
+     "local font right font name");
+  ok(s[4].classList.contains("is-local"), "local font is local");
+  ok((localFontCSSName == "Arial") || (localFontCSSName == "Liberation Sans"),
+     "Arial", "local font has right css name");
 }
 
 function* testDivFonts(inspector) {
@@ -87,5 +109,5 @@ function* testShowAllFonts(inspector) {
 
   is(inspector.selection.nodeFront.nodeName, "BODY", "Show all fonts selected the body node");
   let sections = viewDoc.querySelectorAll("#all-fonts > section");
-  is(sections.length, 2, "And font-inspector still shows 2 fonts for body");
+  is(sections.length, 5, "And font-inspector still shows 5 fonts for body");
 }
