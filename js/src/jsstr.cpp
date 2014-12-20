@@ -3326,9 +3326,122 @@ StrReplaceString(JSContext *cx, ReplaceData &rdata, const FlatMatch &fm, Mutable
 
 static const uint32_t ReplaceOptArg = 2;
 
+template <typename StrChar, typename RepChar>
+static bool
+StrFlatReplaceGlobal(JSContext *cx, JSLinearString *str, JSLinearString *pat, JSLinearString *rep,
+                     StringBuffer &sb)
+{
+    MOZ_ASSERT(str->length() > 0);
+
+    AutoCheckCannotGC nogc;
+    const StrChar *strChars = str->chars<StrChar>(nogc);
+    const RepChar *repChars = rep->chars<RepChar>(nogc);
+
+    // The pattern is empty, so we interleave the replacement string in-between
+    // each character.
+    if (!pat->length()) {
+        CheckedInt<uint32_t> strLength(str->length());
+        CheckedInt<uint32_t> repLength(rep->length());
+        CheckedInt<uint32_t> length = repLength * (strLength - 1) + strLength;
+        if (!length.isValid()) {
+            js_ReportAllocationOverflow(cx);
+            return false;
+        }
+
+        if (!sb.reserve(length.value()))
+            return false;
+
+        for (unsigned i = 0; i < str->length() - 1; ++i, ++strChars) {
+            sb.infallibleAppend(*strChars);
+            sb.infallibleAppend(repChars, rep->length());
+        }
+        sb.infallibleAppend(*strChars);
+        return true;
+    }
+
+    // If it's true, we are sure that the result's length is, at least, the same
+    // length as |str->length()|.
+    if (rep->length() >= pat->length()) {
+        if (!sb.reserve(str->length()))
+            return false;
+    }
+
+    uint32_t start = 0;
+    for (;;) {
+        int match = StringMatch(str, pat, start);
+        if (match < 0)
+            break;
+        if (!sb.append(strChars + start, match - start))
+            return false;
+        if (!sb.append(repChars, rep->length()))
+            return false;
+        start = match + pat->length();
+    }
+
+    if (!sb.append(strChars + start, str->length() - start))
+        return false;
+
+    return true;
+}
+
+// This is identical to "str.split(pattern).join(replacement)" except that we
+// do some deforestation optimization in Ion.
+JSString *
+js::str_flat_replace_string(JSContext *cx, HandleString string, HandleString pattern,
+                            HandleString replacement)
+{
+    MOZ_ASSERT(string);
+    MOZ_ASSERT(pattern);
+    MOZ_ASSERT(replacement);
+
+    if (!string->length())
+        return string;
+
+    RootedLinearString linearRepl(cx, replacement->ensureLinear(cx));
+    if (!linearRepl)
+        return nullptr;
+
+    RootedLinearString linearPat(cx, pattern->ensureLinear(cx));
+    if (!linearPat)
+        return nullptr;
+
+    RootedLinearString linearStr(cx, string->ensureLinear(cx));
+    if (!linearStr)
+        return nullptr;
+
+    StringBuffer sb(cx);
+    if (linearStr->hasTwoByteChars()) {
+        if (!sb.ensureTwoByteChars())
+            return nullptr;
+        if (linearRepl->hasTwoByteChars()) {
+            if (!StrFlatReplaceGlobal<char16_t, char16_t>(cx, linearStr, linearPat, linearRepl, sb))
+                return nullptr;
+        } else {
+            if (!StrFlatReplaceGlobal<char16_t, Latin1Char>(cx, linearStr, linearPat, linearRepl, sb))
+                return nullptr;
+        }
+    } else {
+        if (linearRepl->hasTwoByteChars()) {
+            if (!sb.ensureTwoByteChars())
+                return nullptr;
+            if (!StrFlatReplaceGlobal<Latin1Char, char16_t>(cx, linearStr, linearPat, linearRepl, sb))
+                return nullptr;
+        } else {
+            if (!StrFlatReplaceGlobal<Latin1Char, Latin1Char>(cx, linearStr, linearPat, linearRepl, sb))
+                return nullptr;
+        }
+    }
+
+    JSString *str = sb.finishString();
+    if (!str)
+        return nullptr;
+
+    return str;
+}
+
 bool
 js::str_replace_string_raw(JSContext *cx, HandleString string, HandleString pattern,
-                          HandleString replacement, MutableHandleValue rval)
+                           HandleString replacement, MutableHandleValue rval)
 {
     ReplaceData rdata(cx);
 
