@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1417038570000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1419010612000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -139,6 +139,14 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i800" id="{424b0d11-e7fe-4a04-b7df-8f2c77f58aaf}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+                  <pref>browser.startup.homepage</pref>
+                  <pref>browser.search.defaultenginename</pref>
+              </prefs>
+    </emItem>
       <emItem  blockID="i62" id="jid0-EcdqvFOgWLKHNJPuqAnawlykCGZ@jetpack">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -261,12 +269,6 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i370" id="happylyrics@hpyproductions.net">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
-                    </versionRange>
-                    <prefs>
-              </prefs>
-    </emItem>
       <emItem  blockID="i17" id="{3252b9ae-c69a-4eaf-9502-dc9c1f6c009e}">
                         <versionRange  minVersion="2.2" maxVersion="2.2">
                     </versionRange>
@@ -308,6 +310,12 @@
               </prefs>
     </emItem>
       <emItem  blockID="i504" id="aytac@abc.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i808" id="{c96d1ae6-c4cf-4984-b110-f5f561b33b5a}">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
@@ -441,6 +449,15 @@
     </emItem>
       <emItem  blockID="i431" id="chinaescapeone@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i806" id="{d9284e50-81fc-11da-a72b-0800200c9a66}">
+                        <versionRange  minVersion="0" maxVersion="7.7.34" severity="1">
+                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="34.0a1" maxVersion="*" />
+                          </targetApplication>
                     </versionRange>
                     <prefs>
               </prefs>
@@ -767,12 +784,10 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  name="/Astromenda/" blockID="i738">
+      <emItem  blockID="i370" id="happylyrics@hpyproductions.net">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
-                  <pref>browser.startup.homepage</pref>
-                  <pref>browser.search.defaultenginename</pref>
               </prefs>
     </emItem>
       <emItem  blockID="i22" id="ShopperReports@ShopperReports.com">
@@ -855,6 +870,14 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i804" id="{ad7ce998-a77b-4062-9ffb-1d0b7cb23183}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+                  <pref>browser.startup.homepage</pref>
+                  <pref>browser.search.defaultenginename</pref>
               </prefs>
     </emItem>
       <emItem  blockID="i533" id="extension@Fast_Free_Converter.com">
@@ -1565,6 +1588,14 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i802" id="{18d5a8fe-5428-485b-968f-b97b05a92b54}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+                  <pref>browser.startup.homepage</pref>
+                  <pref>browser.search.defaultenginename</pref>
               </prefs>
     </emItem>
       <emItem  blockID="i780" id="{b6ef1336-69bb-45b6-8cba-e578fc0e4433}">
@@ -2713,6 +2744,18 @@
       <pluginItem  blockID="p594">
                   <match name="filename" exp="npCiscoWebCommunicator\.dll" />                      <versionRange  minVersion="0" maxVersion="3.0.5.99999999999999" severity="0" vulnerabilitystatus="1"></versionRange>
                         </pluginItem>
+      <pluginItem  blockID="p794">
+                  <match name="filename" exp="(NPSWF32.*\.dll)|(Flash\ Player\.plugin)" />                      <versionRange  minVersion="10.3.183.66" maxVersion="13.0.0.258" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p796">
+                  <match name="filename" exp="libflashplayer\.so" />                      <versionRange  minVersion="0" maxVersion="11.2.202.424" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p798">
+                  <match name="filename" exp="(NPSWF32.*\.dll)|(Flash\ Player\.plugin)" />                      <versionRange  minVersion="14.0" maxVersion="15.0.0.242" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
     </pluginItems>
 
   <gfxItems>
