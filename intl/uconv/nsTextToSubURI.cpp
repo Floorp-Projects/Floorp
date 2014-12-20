@@ -245,7 +245,7 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeURIForUI(const nsACString & aCharset,
       nsString chars;
       blacklist->ToString(getter_Copies(chars));
       chars.StripChars(" "); // we allow SPACE in this method
-      mUnsafeChars.AppendElements(chars.Data(), chars.Length());
+      mUnsafeChars.AppendElements(static_cast<const char16_t*>(chars.Data()), chars.Length());
     } else {
       NS_WARNING("Failed to get the 'network.IDN.blacklist_chars' preference");
     }
