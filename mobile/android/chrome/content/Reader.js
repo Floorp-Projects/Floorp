@@ -1,10 +1,22 @@
 // -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
+const { utils: Cu } = Components;
+
+Cu.import("resource://gre/modules/ReaderMode.jsm");
+
 let Reader = {
+  // These values should match those defined in BrowserContract.java.
+  STATUS_UNFETCHED: 0,
+  STATUS_FETCH_FAILED_TEMPORARY: 1,
+  STATUS_FETCH_FAILED_PERMANENT: 2,
+  STATUS_FETCH_FAILED_UNSUPPORTED_FORMAT: 3,
+  STATUS_FETCHED_ARTICLE: 4,
+
   get isEnabledForParseOnLoad() {
     delete this.isEnabledForParseOnLoad;
 
@@ -92,7 +104,13 @@ let Reader = {
     if (!article) {
       // If there was a problem getting the article, just store the
       // URL and title from the tab.
-      article = { url: urlWithoutRef, title: tab.browser.contentDocument.title };
+      article = {
+        url: urlWithoutRef,
+        title: tab.browser.contentDocument.title,
+        status: this.STATUS_FETCH_FAILED_UNSUPPORTED_FORMAT,
+      };
+    } else {
+      article.status = this.STATUS_FETCHED_ARTICLE;
     }
 
     this.addArticleToReadingList(article);
@@ -110,6 +128,7 @@ let Reader = {
       title: truncate(article.title || "", MAX_TITLE_LENGTH),
       length: article.length || 0,
       excerpt: article.excerpt || "",
+      status: article.status,
     });
 
     ReaderMode.storeArticleInCache(article).catch(e => Cu.reportError("Error storing article in cache: " + e));
