@@ -19,6 +19,7 @@ const PromiseDebugging = require("PromiseDebugging");
 const Debugger = require("Debugger");
 const xpcInspector = require("xpcInspector");
 const mapURIToAddonID = require("./utils/map-uri-to-addon-id");
+const ScriptStore = require("./utils/ScriptStore");
 
 const { defer, resolve, reject, all } = require("devtools/toolkit/deprecated-sync-thenables");
 const { CssLogic } = require("devtools/styleinspector/css-logic");
@@ -433,6 +434,8 @@ function ThreadActor(aParent, aGlobal)
   this._gripDepth = 0;
   this._threadLifetimePool = null;
   this._tabClosed = false;
+  this._scripts = null;
+  this._sources = null;
 
   this._options = {
     useSourceMaps: false,
@@ -496,6 +499,14 @@ ThreadActor.prototype = {
       this._threadLifetimePool.objectActors = new WeakMap();
     }
     return this._threadLifetimePool;
+  },
+
+  get scripts() {
+    if (!this._scripts) {
+      this._scripts = new ScriptStore();
+      this._scripts.addScripts(this.dbg.findScripts());
+    }
+    return this._scripts;
   },
 
   get sources() {
@@ -574,6 +585,7 @@ ThreadActor.prototype = {
       this.dbg.removeAllDebuggees();
     }
     this._sources = null;
+    this._scripts = null;
   },
 
   /**
@@ -1320,9 +1332,11 @@ ThreadActor.prototype = {
    * Get the script and source lists from the debugger.
    */
   _discoverSources: function () {
-    // Only get one script per url.
+    // Only get one script per Debugger.Source.
     const sourcesToScripts = new Map();
-    for (let s of this.dbg.findScripts()) {
+    const scripts = this.scripts.getAllScripts();
+    for (let i = 0, len = scripts.length; i < len; i++) {
+      let s = scripts[i];
       if (s.source) {
         sourcesToScripts.set(s.source, s);
       }
@@ -1944,6 +1958,15 @@ ThreadActor.prototype = {
    */
   onNewScript: function (aScript, aGlobal) {
     this.sources.sourcesForScript(aScript);
+
+    // XXX: The scripts must be added to the ScriptStore before restoring
+    // breakpoints in _addScript. If we try to add them to the ScriptStore
+    // inside _addScript, we can accidentally set a breakpoint in a top level
+    // script as a "closest match" because we wouldn't have added the child
+    // scripts to the ScriptStore yet.
+    this.scripts.addScript(aScript);
+    this.scripts.addScripts(aScript.getChildScripts());
+
     this._addScript(aScript);
 
     // |onNewScript| is only fired for top level scripts (AKA staticLevel == 0),
@@ -1982,7 +2005,7 @@ ThreadActor.prototype = {
       return;
     }
 
-    for (let s of this.dbg.findScripts()) {
+    for (let s of this.scripts.getAllScripts()) {
       this._addScript(s);
     }
   },
@@ -2238,6 +2261,7 @@ SourceActor.prototype = {
 
   get threadActor() { return this._threadActor; },
   get dbg() { return this.threadActor.dbg; },
+  get scripts() { return this.threadActor.scripts; },
   get source() { return this._source; },
   get generatedSource() { return this._generatedSource; },
   get breakpointActorMap() { return this.threadActor.breakpointActorMap; },
@@ -2422,7 +2446,7 @@ SourceActor.prototype = {
    **/
   getExecutableOffsets: function  (source, onlyLine) {
     let offsets = new Set();
-    for (let s of this.threadActor.dbg.findScripts({ source: source })) {
+    for (let s of this.threadActor.scripts.getScriptsBySource(source)) {
       for (let offset of s.getAllColumnOffsets()) {
         offsets.add(onlyLine ? offset.lineNumber : offset);
       }
@@ -2893,16 +2917,13 @@ SourceActor.prototype = {
     };
     const actor = location.actor = this._getOrCreateBreakpointActor(location);
 
-    // Find all scripts matching the given location. We will almost
-    // always have a `source` object to query, but inline HTML scripts
-    // are all represented by 1 SourceActor even though they have
-    // separate source objects, so we need to query based on the url
-    // of the page for them.
-    const scripts = this.dbg.findScripts({
-      source: this.source || undefined,
-      url: this._originalUrl || undefined,
-      line: location.line,
-    });
+    // Find all scripts matching the given location. We will almost always have
+    // a `source` object to query, but multiple inline HTML scripts are all
+    // represented by a single SourceActor even though they have separate source
+    // objects, so we need to query based on the url of the page for them.
+    const scripts = this.source
+      ? this.scripts.getScriptsBySourceAndLine(this.source, location.line)
+      : this.scripts.getScriptsByURLAndLine(this._originalUrl, location.line);
 
     if (scripts.length === 0) {
       // Since we did not find any scripts to set the breakpoint on now, return
@@ -4966,6 +4987,9 @@ Debugger.Script.prototype.toString = function() {
   let output = "";
   if (this.url) {
     output += this.url;
+  }
+  if (typeof this.staticLevel != "undefined") {
+    output += ":L" + this.staticLevel;
   }
   if (typeof this.startLine != "undefined") {
     output += ":" + this.startLine;

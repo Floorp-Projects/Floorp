@@ -367,6 +367,9 @@ loop.standaloneRoomViews = (function(mozL10n) {
             React.DOM.div({className: "conversation room-conversation"}, 
               React.DOM.h2({className: "room-name"}, this.state.roomName), 
               React.DOM.div({className: "media nested"}, 
+                React.DOM.span({className: "self-view-hidden-message"}, 
+                  mozL10n.get("self_view_hidden_message")
+                ), 
                 React.DOM.div({className: "video_wrapper remote_wrapper"}, 
                   React.DOM.div({className: "video_inner remote"})
                 ), 
