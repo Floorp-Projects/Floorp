@@ -499,13 +499,16 @@ nsTString_CharT::ReplaceSubstring( const self_type& aTarget, const self_type& aN
   }
 
   // Make sure that we can mutate our buffer.
+  // Note that we always allocate at least an mLength sized buffer, because the
+  // rest of the algorithm relies on having access to all of the original
+  // string.  In other words, we over-allocate in the shrinking case.
   char_type* oldData;
   uint32_t oldFlags;
   if (!MutatePrep(XPCOM_MAX(mLength, newLength), &oldData, &oldFlags))
     return;
   if (oldData) {
     // Copy all of the old data to the new buffer.
-    char_traits::copy(mData, oldData, XPCOM_MAX(mLength, newLength));
+    char_traits::copy(mData, oldData, mLength);
     ::ReleaseData(oldData, oldFlags);
   }
 
