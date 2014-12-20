@@ -391,7 +391,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
         React.DOM.div({className: "standalone-btn-chevron-menu-group"}, 
           React.DOM.div({className: "btn-group-chevron"}, 
             React.DOM.div({className: "btn-group"}, 
-              React.DOM.button({className: "btn btn-large btn-accept", 
+              React.DOM.button({className: "btn btn-constrained btn-large btn-accept", 
                       onClick: this.props.startCall("audio-video"), 
                       disabled: this.props.disabled, 
                       title: mozL10n.get("initiate_audio_video_call_tooltip2")}, 
