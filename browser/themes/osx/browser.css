@@ -355,8 +355,7 @@ toolbarbutton.bookmark-item > menupopup {
 }
 
 .bookmark-item > .toolbarbutton-icon[label]:not([label=""]),
-.bookmark-item > .toolbarbutton-icon[type="menu"],
-#personal-bookmarks[cui-areatype="toolbar"]:not([overflowedItem=true]) > #bookmarks-toolbar-placeholder > .toolbarbutton-icon[label]:not([label=""]) {
+.bookmark-item > .toolbarbutton-icon[type="menu"] {
   -moz-margin-end: 5px;
 }
 
