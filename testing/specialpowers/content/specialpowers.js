@@ -24,20 +24,19 @@ function SpecialPowers(window) {
   this._pongHandlers = [];
   this._messageListener = this._messageReceived.bind(this);
   addMessageListener("SPPingService", this._messageListener);
-  let (self = this) {
-    Services.obs.addObserver(function onInnerWindowDestroyed(subject, topic, data) {
-      var id = subject.QueryInterface(Components.interfaces.nsISupportsPRUint64).data;
-      if (self._windowID === id) {
-        Services.obs.removeObserver(onInnerWindowDestroyed, "inner-window-destroyed");
-        try {
-          removeMessageListener("SPPingService", self._messageListener);
-        } catch (e if e.result == Components.results.NS_ERROR_ILLEGAL_VALUE) {
-          // Ignore the exception which the message manager has been destroyed.
-          ;
-        }
+  let self = this;
+  Services.obs.addObserver(function onInnerWindowDestroyed(subject, topic, data) {
+    var id = subject.QueryInterface(Components.interfaces.nsISupportsPRUint64).data;
+    if (self._windowID === id) {
+      Services.obs.removeObserver(onInnerWindowDestroyed, "inner-window-destroyed");
+      try {
+        removeMessageListener("SPPingService", self._messageListener);
+      } catch (e if e.result == Components.results.NS_ERROR_ILLEGAL_VALUE) {
+        // Ignore the exception which the message manager has been destroyed.
+        ;
       }
-    }, "inner-window-destroyed", false);
-  }
+    }
+  }, "inner-window-destroyed", false);
 }
 
 SpecialPowers.prototype = new SpecialPowersAPI();

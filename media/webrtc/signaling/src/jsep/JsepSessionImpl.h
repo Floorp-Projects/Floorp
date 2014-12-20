@@ -208,6 +208,8 @@ private:
   nsresult CreateGenericSDP(UniquePtr<Sdp>* sdp);
   void AddCodecs(SdpMediaSection* msection) const;
   void AddExtmap(SdpMediaSection* msection) const;
+  void AddMid(const std::string& mid, SdpMediaSection* msection) const;
+  void AddLocalSsrcs(const JsepTrack& track, SdpMediaSection* msection) const;
   JsepCodecDescription* FindMatchingCodec(
       const std::string& pt,
       const SdpMediaSection& msection) const;
@@ -241,6 +243,7 @@ private:
   nsresult AddOfferMSectionsByType(SdpMediaSection::MediaType type,
                                    Maybe<size_t> offerToReceive,
                                    Sdp* sdp);
+  void SetupBundle(Sdp* sdp) const;
   nsresult CreateOfferMSection(SdpMediaSection::MediaType type,
                                SdpDirectionAttribute::Direction direction,
                                SdpMediaSection::Protocol proto,
@@ -269,6 +272,18 @@ private:
                              const std::string& mid,
                              uint16_t level);
 
+  const SdpMediaSection* FindMsectionByMid(const Sdp& sdp,
+                                           const std::string& mid) const;
+
+  const SdpGroupAttributeList::Group* FindBundleGroup(const Sdp& sdp) const;
+
+  void DisableMsection(Sdp& sdp, SdpMediaSection& msection) const;
+
+  nsresult SetUniquePayloadTypes();
+  nsresult GetAllPayloadTypes(const JsepTrackNegotiatedDetails& trackDetails,
+                              std::vector<uint8_t>* payloadTypesOut);
+  std::string GetCNAME(const SdpMediaSection& msection) const;
+
   std::vector<JsepSendingTrack> mLocalTracks;
   std::vector<JsepReceivingTrack> mRemoteTracks;
   std::vector<RefPtr<JsepTransport> > mTransports;
@@ -287,6 +302,7 @@ private:
   std::vector<SdpExtmapAttributeList::Extmap> mVideoRtpExtensions;
   UniquePtr<JsepUuidGenerator> mUuidGen;
   std::string mDefaultRemoteStreamId;
+  std::string mCNAME;
   UniquePtr<Sdp> mGeneratedLocalDescription; // Created but not set.
   UniquePtr<Sdp> mCurrentLocalDescription;
   UniquePtr<Sdp> mCurrentRemoteDescription;
