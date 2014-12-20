@@ -96,6 +96,7 @@ public final class ReadingListHelper implements GeckoEventListener, NativeEventL
                     values.put(ReadingListItems.TITLE, message.optString("title"));
                     values.put(ReadingListItems.LENGTH, message.optInt("length"));
                     values.put(ReadingListItems.EXCERPT, message.optString("excerpt"));
+                    values.put(ReadingListItems.CONTENT_STATUS, message.optInt("status"));
                     BrowserDB.addReadingListItem(cr, values);
 
                     showToast(R.string.reading_list_added, Toast.LENGTH_SHORT);
