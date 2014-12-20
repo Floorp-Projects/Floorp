@@ -48,15 +48,13 @@ struct hb_buffer_t {
   ASSERT_POD ();
 
   /* Information about how the text in the buffer should be treated */
-
   hb_unicode_funcs_t *unicode; /* Unicode functions */
-  hb_segment_properties_t props; /* Script, language, direction */
   hb_buffer_flags_t flags; /* BOT / EOT / etc. */
   hb_codepoint_t replacement; /* U+FFFD or something else. */
 
   /* Buffer contents */
-
   hb_buffer_content_type_t content_type;
+  hb_segment_properties_t props; /* Script, language, direction */
 
   bool in_error; /* Allocation failed */
   bool have_output; /* Whether we have an output buffer going on */
@@ -182,6 +180,9 @@ struct hb_buffer_t {
 
   inline bool ensure (unsigned int size)
   { return likely (!size || size < allocated) ? true : enlarge (size); }
+
+  inline bool ensure_inplace (unsigned int size)
+  { return likely (!size || size < allocated); }
 
   HB_INTERNAL bool make_room_for (unsigned int num_in, unsigned int num_out);
   HB_INTERNAL bool shift_forward (unsigned int count);

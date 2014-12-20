@@ -102,7 +102,10 @@ hb_blob_create (const char        *data,
 {
   hb_blob_t *blob;
 
-  if (!length || !(blob = hb_object_create<hb_blob_t> ())) {
+  if (!length ||
+      length >= 1u << 31 ||
+      data + length < data /* overflows */ ||
+      !(blob = hb_object_create<hb_blob_t> ())) {
     if (destroy)
       destroy (user_data);
     return hb_blob_get_empty ();
