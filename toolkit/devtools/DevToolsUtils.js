@@ -338,7 +338,7 @@ exports.dbg_assert = function dbg_assert(cond, e) {
   if (!cond) {
     return e;
   }
-}
+};
 
 
 /**

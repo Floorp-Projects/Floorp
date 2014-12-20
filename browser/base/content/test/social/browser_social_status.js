@@ -57,8 +57,7 @@ var tests = {
     // we expect the addon install dialog to appear, we need to accept the
     // install from the dialog.
     let panel = document.getElementById("servicesInstall-notification");
-    PopupNotifications.panel.addEventListener("popupshown", function onpopupshown() {
-      PopupNotifications.panel.removeEventListener("popupshown", onpopupshown);
+    ensureEventFired(PopupNotifications.panel, "popupshown").then(() => {
       info("servicesInstall-notification panel opened");
       panel.button.click();
     })
@@ -89,8 +88,7 @@ var tests = {
   },
   testButtonOnEnable: function(next) {
     let panel = document.getElementById("servicesInstall-notification");
-    PopupNotifications.panel.addEventListener("popupshown", function onpopupshown() {
-      PopupNotifications.panel.removeEventListener("popupshown", onpopupshown);
+    ensureEventFired(PopupNotifications.panel, "popupshown").then(() => {
       info("servicesInstall-notification panel opened");
       panel.button.click();
     });
@@ -165,6 +163,39 @@ var tests = {
     };
     port.postMessage({topic: "test-init"});
   },
+
+  testPanelOffline: function(next) {
+    // click on panel to open and wait for visibility
+    let provider = Social._getProviderFromOrigin(manifest2.origin);
+    ok(provider.enabled, "provider is enabled");
+    let id = SocialStatus._toolbarHelper.idFromOrigin(manifest2.origin);
+    let widget = CustomizableUI.getWidget(id);
+    let btn = widget.forWindow(window).node;
+    ok(btn, "got a status button");
+    let frameId = btn.getAttribute("notificationFrameId");
+    let frame = document.getElementById(frameId);
+    let port = provider.getWorkerPort();
+    port.postMessage({topic: "test-init"});
+
+    goOffline().then(function() {
+      info("testing offline error page");
+      // wait for popupshown
+      let panel = document.getElementById("social-notification-panel");
+      ensureEventFired(panel, "popupshown").then(() => {
+        ensureFrameLoaded(frame).then(() => {
+          is(frame.contentDocument.location.href.indexOf("about:socialerror?"), 0, "social error page is showing "+frame.contentDocument.location.href);
+          panel.hidePopup();
+          goOnline().then(next);
+        });
+      });
+      // reload after going offline, wait for unload to open panel
+      ensureEventFired(frame, "unload").then(() => {
+        btn.click();
+      });
+      frame.contentDocument.location.reload();
+    });
+  },
+
   testButtonOnDisable: function(next) {
     // enable the provider now
     let provider = Social._getProviderFromOrigin(manifest2.origin);
