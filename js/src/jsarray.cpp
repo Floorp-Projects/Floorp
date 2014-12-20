@@ -179,19 +179,17 @@ DoGetElement(JSContext *cx, HandleObject obj, HandleObject receiver,
     if (!ToId(cx, index, &id))
         return false;
 
-    RootedObject obj2(cx);
-    RootedShape prop(cx);
-    if (!LookupProperty(cx, obj, id, &obj2, &prop))
+    bool found;
+    if (!HasProperty(cx, obj, id, &found))
         return false;
 
-    if (!prop) {
-        vp.setUndefined();
-        *hole = true;
-    } else {
+    if (found) {
         if (!GetProperty(cx, obj, receiver, id, vp))
             return false;
-        *hole = false;
+    } else {
+        vp.setUndefined();
     }
+    *hole = !found;
     return true;
 }
 
