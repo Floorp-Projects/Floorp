@@ -23,13 +23,15 @@
 #ifdef XP_WIN
 #include <windef.h>
 #include <winbase.h>
-#include <mmsystem.h> /* for timeBegin/EndPeriod */
 /* VC++ 8.0 or later */
 #if _MSC_VER >= 1400
 #define NS_HAVE_INVALID_PARAMETER_HANDLER 1
 #endif
 #ifdef NS_HAVE_INVALID_PARAMETER_HANDLER
 #include <crtdbg.h>   /* for _CrtSetReportMode */
+#endif
+#include <mmsystem.h> /* for timeBegin/EndPeriod */
+#ifdef NS_HAVE_INVALID_PARAMETER_HANDLER
 #include <stdlib.h>   /* for _set_invalid_parameter_handler */
 #endif
 
