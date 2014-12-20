@@ -91,10 +91,6 @@ public class testReadingListProvider extends ContentProviderTest {
             try {
                 mAsserter.ok(c.moveToFirst(), "Inserted item found", "");
                 assertRowEqualsContentValues(c, b);
-
-                mAsserter.is(c.getInt(c.getColumnIndex(ReadingListItems.CONTENT_STATUS)),
-                             ReadingListItems.STATUS_UNFETCHED,
-                             "Inserted item has correct default content status");
             } finally {
                 c.close();
             }
