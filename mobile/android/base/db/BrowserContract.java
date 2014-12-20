@@ -352,6 +352,16 @@ public class BrowserContract {
         public static final String EXCERPT = "excerpt";
         public static final String READ = "read";
         public static final String LENGTH = "length";
+
+        public static final String CONTENT_STATUS = "content_status";
+
+        // CONTENT_STATUS represents the result of an attempt to fetch content for the reading list item.
+        public static final int STATUS_UNFETCHED = 0;
+        public static final int STATUS_FETCH_FAILED_TEMPORARY = 1;
+        public static final int STATUS_FETCH_FAILED_PERMANENT = 2;
+        public static final int STATUS_FETCH_FAILED_UNSUPPORTED_FORMAT = 3;
+        public static final int STATUS_FETCHED_ARTICLE = 4;
+
         public static final String DEFAULT_SORT_ORDER = DATE_MODIFIED + " DESC";
         public static final String[] DEFAULT_PROJECTION = new String[] { _ID, URL, TITLE, EXCERPT, LENGTH };
 
