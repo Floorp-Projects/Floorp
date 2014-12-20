@@ -634,9 +634,9 @@ struct UniqueSelector<T[N]>
  * possible.  (This pays off best if a class is only ever created through a
  * factory method on the class, using a private constructor.)
  *
- * Second, initializing a UniquePtr using a |new| expression requires renaming
- * the new'd type, whereas MakeUnique in concert with the |auto| keyword names
- * it only once:
+ * Second, initializing a UniquePtr using a |new| expression requires repeating
+ * the name of the new'd type, whereas MakeUnique in concert with the |auto|
+ * keyword names it only once:
  *
  *   UniquePtr<char> ptr1(new char()); // repetitive
  *   auto ptr2 = MakeUnique<char>();   // shorter
