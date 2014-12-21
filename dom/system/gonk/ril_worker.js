@@ -2655,7 +2655,7 @@ RilObject.prototype = {
 
     options.ussd = mmi.fullMMI;
 
-    if (options.startNewSession && this._ussdSession) {
+    if (this._ussdSession) {
       if (DEBUG) this.context.debug("Cancel existing ussd session.");
       this.cachedUSSDRequest = options;
       this.cancelUSSD({});
