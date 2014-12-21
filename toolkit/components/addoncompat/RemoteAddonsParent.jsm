@@ -240,8 +240,12 @@ let AboutProtocolParent = {
     let module = Cc[contractID].getService(Ci.nsIAboutModule);
     try {
       let channel = module.newChannel(uri, null);
-      channel.notificationCallbacks = null;
-      channel.loadGroup = null;
+      channel.notificationCallbacks = msg.objects.notificationCallbacks;
+      if (msg.objects.loadGroupNotificationCallbacks) {
+        channel.loadGroup = {notificationCallbacks: msg.objects.loadGroupNotificationCallbacks};
+      } else {
+        channel.loadGroup = null;
+      }
       let stream = channel.open();
       let data = NetUtil.readInputStreamToString(stream, stream.available(), {});
       return {
@@ -421,17 +425,13 @@ let EventTargetParent = {
     // If there's already an identical listener, don't do anything.
     for (let i = 0; i < forType.length; i++) {
       if (forType[i].listener === listener &&
-          forType[i].target === target &&
           forType[i].useCapture === useCapture &&
           forType[i].wantsUntrusted === wantsUntrusted) {
         return;
       }
     }
 
-    forType.push({listener: listener,
-                  target: target,
-                  wantsUntrusted: wantsUntrusted,
-                  useCapture: useCapture});
+    forType.push({listener: listener, wantsUntrusted: wantsUntrusted, useCapture: useCapture});
   },
 
   removeEventListener: function(addon, target, type, listener, useCapture) {
@@ -449,9 +449,7 @@ let EventTargetParent = {
     let forType = setDefault(listeners, type, []);
 
     for (let i = 0; i < forType.length; i++) {
-      if (forType[i].listener === listener &&
-          forType[i].target === target &&
-          forType[i].useCapture === useCapture) {
+      if (forType[i].listener === listener && forType[i].useCapture === useCapture) {
         forType.splice(i, 1);
         NotificationTracker.remove(["event", type, useCapture, addon]);
         break;
@@ -479,29 +477,18 @@ let EventTargetParent = {
 
       // Make a copy in case they call removeEventListener in the listener.
       let handlers = [];
-      for (let {listener, target, wantsUntrusted, useCapture} of forType) {
+      for (let {listener, wantsUntrusted, useCapture} of forType) {
         if ((wantsUntrusted || isTrusted) && useCapture == capturing) {
-          handlers.push([listener, target]);
+          handlers.push(listener);
         }
       }
 
-      for (let [handler, target] of handlers) {
-        let EventProxy = {
-          get: function(actualEvent, name) {
-            if (name == "currentTarget") {
-              return target;
-            } else {
-              return actualEvent[name];
-            }
-          }
-        };
-        let proxyEvent = new Proxy(event, EventProxy);
-
+      for (let handler of handlers) {
         try {
           if ("handleEvent" in handler) {
-            handler.handleEvent(proxyEvent);
+            handler.handleEvent(event);
           } else {
-            handler.call(event.target, proxyEvent);
+            handler.call(event.target, event);
           }
         } catch (e) {
           Cu.reportError(e);
