@@ -107,7 +107,7 @@ We will install a modern version of Clang through %s.
 PACKAGE_MANAGER_CHOICE = '''
 Please choose a package manager you'd like:
 1. Homebrew
-2. MacPorts
+2. MacPorts (Does not yet support bootstrapping Firefox for Android.)
 Your choice:
 '''
 
@@ -160,6 +160,11 @@ Once this is done, start a new shell (likely Command+T) and run
 this bootstrap again.
 '''
 
+JAVA_LICENSE_NOTICE = '''
+We installed a recent Java toolchain for you. We agreed to the Oracle Java
+license for you by downloading the JDK. If this is unacceptable you should
+uninstall.
+'''
 
 class OSXBootstrapper(BaseBootstrapper):
     def __init__(self, version):
@@ -181,6 +186,12 @@ class OSXBootstrapper(BaseBootstrapper):
 
     def install_browser_packages(self):
         getattr(self, 'ensure_%s_browser_packages' % self.package_manager)()
+
+    def install_mobile_android_packages(self):
+        getattr(self, 'ensure_%s_mobile_android_packages' % self.package_manager)()
+
+    def suggest_mobile_android_mozconfig(self):
+        getattr(self, 'suggest_%s_mobile_android_mozconfig' % self.package_manager)()
 
     def ensure_xcode(self):
         if self.os_version < StrictVersion('10.7'):
@@ -310,6 +321,37 @@ class OSXBootstrapper(BaseBootstrapper):
             subprocess.check_call([self.brew, '-v', 'install', 'llvm',
                 '--with-clang', '--all-targets'])
 
+    def ensure_homebrew_mobile_android_packages(self):
+        import android
+
+        # We don't need wget because we install the Android SDK and NDK from
+        # packages.  If we used the android.py module, we'd need wget.
+        packages = [
+            ('android-sdk', 'android-sdk'),
+            ('android-ndk', 'android-ndk-r8e.rb'), # This is a locally provided brew formula!
+            ('ant', 'ant'),
+            ('brew-cask', 'caskroom/cask/brew-cask'), # For installing Java later.
+        ]
+        self._ensure_homebrew_packages(packages)
+
+        casks = [
+            ('java', 'java'),
+        ]
+        installed = self._ensure_homebrew_casks(casks)
+        if installed:
+            print(JAVA_LICENSE_NOTICE) # We accepted a license agreement for the user.
+
+        # We could probably fish this path from |brew info android-sdk|.
+        android_tool = '/usr/local/opt/android-sdk/tools/android'
+        android.ensure_android_packages(android_tool)
+
+    def suggest_homebrew_mobile_android_mozconfig(self):
+        import android
+        # We could probably fish this path from |brew info android-sdk|.
+        sdk_path = '/usr/local/opt/android-sdk/platform/%s' % android.ANDROID_PLATFORM
+        ndk_path = '/usr/local/opt/android-ndk'
+        android.suggest_mozconfig(sdk_path=sdk_path, ndk_path=ndk_path)
+
     def _ensure_macports_packages(self, packages):
         self.port = self.which('port')
         assert self.port is not None
@@ -339,6 +381,16 @@ class OSXBootstrapper(BaseBootstrapper):
             print(PACKAGE_MANAGER_OLD_CLANG % ('MacPorts',))
             self.run_as_root([self.port, '-v', 'install', MACPORTS_CLANG_PACKAGE])
             self.run_as_root([self.port, 'select', '--set', 'clang', 'mp-' + MACPORTS_CLANG_PACKAGE])
+
+    def ensure_macports_mobile_android_packages(self):
+        raise NotImplementedError("We don't yet support bootstrapping Firefox for Android with Macports. " +
+                                  "We don't know of a package that installs the Java 7 JDK. " +
+                                  "See https://bugzilla.mozilla.org/show_bug.cgi?id=1114382.")
+
+    def suggest_macports_mobile_android_mozconfig(self):
+        raise NotImplementedError("We don't yet support bootstrapping Firefox for Android with Macports. " +
+                                  "We don't know of a package that installs the Java 7 JDK." +
+                                  "See https://bugzilla.mozilla.org/show_bug.cgi?id=1114382.")
 
     def ensure_package_manager(self):
         '''
