@@ -1,5 +1,6 @@
 /*
  * Copyright 2014 The Android Open Source Project
+ * Copyright (C) 2014 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +15,16 @@
  * limitations under the License.
  */
 
-#include <gui/BufferSlot.h>
+#include "GonkBufferSlot.h"
 
 namespace android {
 
-const char* BufferSlot::bufferStateName(BufferState state) {
+const char* GonkBufferSlot::bufferStateName(BufferState state) {
     switch (state) {
-        case BufferSlot::DEQUEUED: return "DEQUEUED";
-        case BufferSlot::QUEUED: return "QUEUED";
-        case BufferSlot::FREE: return "FREE";
-        case BufferSlot::ACQUIRED: return "ACQUIRED";
+        case GonkBufferSlot::DEQUEUED: return "DEQUEUED";
+        case GonkBufferSlot::QUEUED: return "QUEUED";
+        case GonkBufferSlot::FREE: return "FREE";
+        case GonkBufferSlot::ACQUIRED: return "ACQUIRED";
         default: return "Unknown";
     }
 }

@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2012 The Android Open Source Project
+ * Copyright (C) 2014 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_GUI_BUFFERITEMCONSUMER_H
-#define ANDROID_GUI_BUFFERITEMCONSUMER_H
-
-#include <gui/ConsumerBase.h>
+#ifndef NATIVEWINDOW_GONKNATIVEWINDOW_LL_H
+#define NATIVEWINDOW_GONKNATIVEWINDOW_LL_H
 
 #include <ui/GraphicBuffer.h>
 
@@ -25,28 +24,34 @@
 #include <utils/Vector.h>
 #include <utils/threads.h>
 
-#define ANDROID_GRAPHICS_BUFFERITEMCONSUMER_JNI_ID "mBufferItemConsumer"
+#include "GonkConsumerBaseLL.h"
+#include "IGonkGraphicBufferConsumerLL.h"
 
 namespace android {
 
-class BufferQueue;
+// The user of GonkNativeWindow who wants to receive notification of
+// new frames should implement this interface.
+class GonkNativeWindowNewFrameCallback {
+public:
+    virtual void OnNewFrame() = 0;
+};
 
 /**
- * BufferItemConsumer is a BufferQueue consumer endpoint that allows clients
- * access to the whole BufferItem entry from BufferQueue. Multiple buffers may
+ * GonkNativeWindow is a GonkBufferQueue consumer endpoint that allows clients
+ * access to the whole BufferItem entry from GonkBufferQueue. Multiple buffers may
  * be acquired at once, to be used concurrently by the client. This consumer can
  * operate either in synchronous or asynchronous mode.
  */
-class BufferItemConsumer: public ConsumerBase
+class GonkNativeWindow: public GonkConsumerBase
 {
+    typedef mozilla::layers::TextureClient TextureClient;
   public:
-    typedef ConsumerBase::FrameAvailableListener FrameAvailableListener;
-
-    typedef BufferQueue::BufferItem BufferItem;
+    typedef GonkConsumerBase::FrameAvailableListener FrameAvailableListener;
+    typedef GonkBufferQueue::BufferItem BufferItem;
 
     enum { DEFAULT_MAX_BUFFERS = -1 };
-    enum { INVALID_BUFFER_SLOT = BufferQueue::INVALID_BUFFER_SLOT };
-    enum { NO_BUFFER_AVAILABLE = BufferQueue::NO_BUFFER_AVAILABLE };
+    enum { INVALID_BUFFER_SLOT = GonkBufferQueue::INVALID_BUFFER_SLOT };
+    enum { NO_BUFFER_AVAILABLE = GonkBufferQueue::NO_BUFFER_AVAILABLE };
 
     // Create a new buffer item consumer. The consumerUsage parameter determines
     // the consumer usage flags passed to the graphics allocator. The
@@ -54,13 +59,15 @@ class BufferItemConsumer: public ConsumerBase
     // access at the same time.
     // controlledByApp tells whether this consumer is controlled by the
     // application.
-    BufferItemConsumer(const sp<IGraphicBufferConsumer>& consumer,
+    GonkNativeWindow(const sp<IGonkGraphicBufferConsumer>& consumer,
+            int bufferCount = DEFAULT_MAX_BUFFERS);
+    GonkNativeWindow(const sp<IGonkGraphicBufferConsumer>& consumer,
             uint32_t consumerUsage, int bufferCount = DEFAULT_MAX_BUFFERS,
             bool controlledByApp = false);
 
-    virtual ~BufferItemConsumer();
+    virtual ~GonkNativeWindow();
 
-    // set the name of the BufferItemConsumer that will be used to identify it in
+    // set the name of the GonkNativeWindow that will be used to identify it in
     // log messages.
     void setName(const String8& name);
 
@@ -92,12 +99,31 @@ class BufferItemConsumer: public ConsumerBase
     // requestBuffers when a with and height of zero is requested.
     status_t setDefaultBufferSize(uint32_t w, uint32_t h);
 
-    // setDefaultBufferFormat allows the BufferQueue to create
+    // setDefaultBufferFormat allows the GonkBufferQueue to create
     // GraphicBuffers of a defaultFormat if no format is specified
     // in dequeueBuffer
     status_t setDefaultBufferFormat(uint32_t defaultFormat);
+
+    // Get next frame from the queue, caller owns the returned buffer.
+    mozilla::TemporaryRef<TextureClient> getCurrentBuffer();
+
+    // Return the buffer to the queue and mark it as FREE. After that
+    // the buffer is useable again for the decoder.
+    void returnBuffer(TextureClient* client);
+
+    mozilla::TemporaryRef<TextureClient> getTextureClientFromBuffer(ANativeWindowBuffer* buffer);
+
+    void setNewFrameCallback(GonkNativeWindowNewFrameCallback* callback);
+
+    static void RecycleCallback(TextureClient* client, void* closure);
+
+protected:
+    virtual void onFrameAvailable();
+
+private:
+    GonkNativeWindowNewFrameCallback* mNewFrameCallback;
 };
 
 } // namespace android
 
-#endif // ANDROID_GUI_CPUCONSUMER_H
+#endif // NATIVEWINDOW_GONKNATIVEWINDOW_LL_H

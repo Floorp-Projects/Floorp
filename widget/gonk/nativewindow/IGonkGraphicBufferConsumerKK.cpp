@@ -25,7 +25,7 @@
 #include <binder/IInterface.h>
 
 #include <gui/IConsumerListener.h>
-#include "IGonkGraphicBufferConsumer.h"
+#include "IGonkGraphicBufferConsumerKK.h"
 
 #include <ui/GraphicBuffer.h>
 #include <ui/Fence.h>
