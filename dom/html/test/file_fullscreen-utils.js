@@ -32,6 +32,11 @@ function ok(condition, msg) {
 // test failures, so work around it on Linux until we can get a proper fix.
 const workAroundFullscreenTransition = navigator.userAgent.indexOf("Linux") != -1;
 
+if (workAroundFullscreenTransition) {
+  SimpleTest.requestFlakyTimeout("We need to wait an arbitrary and non-zero " +
+    "amount of time in case of the Linux specific workaround to avoid busy-waiting.");
+}
+
 // Adds a listener that will be called once a fullscreen transition
 // is complete. When type==='enter', callback is called when we've
 // received a fullscreenchange event, and the fullscreen transition is
