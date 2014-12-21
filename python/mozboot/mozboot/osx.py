@@ -259,12 +259,32 @@ class OSXBootstrapper(BaseBootstrapper):
         print('Once the install has finished, please relaunch this script.')
         sys.exit(1)
 
-    def ensure_homebrew_system_packages(self):
+    def _ensure_homebrew_packages(self, packages, extra_brew_args=[]):
         self.brew = self.which('brew')
         assert self.brew is not None
+        cmd = [self.brew] + extra_brew_args
 
-        installed = self.check_output([self.brew, 'list']).split()
+        installed = self.check_output(cmd + ['list']).split()
 
+        printed = False
+
+        for name, package in packages:
+            if name in installed:
+                continue
+
+            if not printed:
+                print(PACKAGE_MANAGER_PACKAGES % ('Homebrew',))
+                printed = True
+
+            subprocess.check_call(cmd + ['install', package])
+
+        return printed
+
+    def _ensure_homebrew_casks(self, casks):
+        # Change |brew install cask| into |brew cask install cask|.
+        return self._ensure_homebrew_packages(casks, extra_brew_args=['cask'])
+
+    def ensure_homebrew_system_packages(self):
         packages = [
             # We need to install Python because Mercurial requires the Python
             # development headers which are missing from OS X (at least on
@@ -273,78 +293,48 @@ class OSXBootstrapper(BaseBootstrapper):
             ('python', 'python'),
             ('mercurial', 'mercurial'),
             ('git', 'git'),
-            ('yasm', 'yasm'),
             ('autoconf213', HOMEBREW_AUTOCONF213),
         ]
-
-        # terminal-notifier is only available in Mountain Lion or newer.
-        if self.os_version >= StrictVersion('10.8'):
-            packages.append(('terminal-notifier', 'terminal-notifier'))
-
-        printed = False
-
-        for name, package in packages:
-            if name in installed:
-                continue
-
-            if not printed:
-                print(PACKAGE_MANAGER_PACKAGES % ('Homebrew',))
-                printed = True
-
-            subprocess.check_call([self.brew, '-v', 'install', package])
+        self._ensure_homebrew_packages(packages)
 
     def ensure_homebrew_browser_packages(self):
-        installed = self.check_output([self.brew, 'list']).split()
-
         packages = [
             ('yasm', 'yasm'),
         ]
+        self._ensure_homebrew_packages(packages)
 
-        printed = False
-
-        for name, package in packages:
-            if name in installed:
-                continue
-
-            if not printed:
-                print(PACKAGE_MANAGER_PACKAGES % ('Homebrew',))
-                printed = True
-
-            subprocess.check_call([self.brew, '-v', 'install', package])
-
+        installed = self.check_output([self.brew, 'list']).split()
         if self.os_version < StrictVersion('10.7') and 'llvm' not in installed:
             print(PACKAGE_MANAGER_OLD_CLANG % ('Homebrew',))
 
             subprocess.check_call([self.brew, '-v', 'install', 'llvm',
                 '--with-clang', '--all-targets'])
 
-    def ensure_macports_system_packages(self):
+    def _ensure_macports_packages(self, packages):
         self.port = self.which('port')
         assert self.port is not None
 
         installed = set(self.check_output([self.port, 'installed']).split())
 
+        missing = [package for package in packages if package not in installed]
+        if missing:
+            print(PACKAGE_MANAGER_PACKAGES % ('MacPorts',))
+            self.run_as_root([self.port, '-v', 'install'] + missing)
+
+    def ensure_macports_system_packages(self):
         packages = ['python27',
                     'mercurial',
                     'autoconf213']
 
-        missing = [package for package in packages if package not in installed]
-        if missing:
-            print(PACKAGE_MANAGER_PACKAGES % ('MacPorts',))
-            self.run_as_root([self.port, '-v', 'install'] + missing)
-
+        self._ensure_macports_packages(packages)
         self.run_as_root([self.port, 'select', '--set', 'python', 'python27'])
 
     def ensure_macports_browser_packages(self):
-        installed = set(self.check_output([self.port, 'installed']).split())
-
         packages = ['yasm']
 
-        missing = [package for package in packages if package not in installed]
-        if missing:
-            print(PACKAGE_MANAGER_PACKAGES % ('MacPorts',))
-            self.run_as_root([self.port, '-v', 'install'] + missing)
+        self._ensure_macports_packages(packages)
 
+        installed = set(self.check_output([self.port, 'installed']).split())
         if self.os_version < StrictVersion('10.7') and MACPORTS_CLANG_PACKAGE not in installed:
             print(PACKAGE_MANAGER_OLD_CLANG % ('MacPorts',))
             self.run_as_root([self.port, '-v', 'install', MACPORTS_CLANG_PACKAGE])
