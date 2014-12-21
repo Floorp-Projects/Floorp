@@ -273,7 +273,7 @@ partial interface Navigator {
 
 // nsIDOMNavigatorCamera
 partial interface Navigator {
-  [Throws, Func="Navigator::HasCameraSupport"]
+  [Throws, Func="Navigator::HasCameraSupport", UnsafeInPrerendering]
   readonly attribute CameraManager mozCameras;
 };
 
