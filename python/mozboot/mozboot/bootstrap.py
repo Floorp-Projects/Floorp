@@ -17,9 +17,19 @@ from mozboot.osx import OSXBootstrapper
 from mozboot.openbsd import OpenBSDBootstrapper
 from mozboot.ubuntu import UbuntuBootstrapper
 
+APPLICATION_CHOICE = '''
+Please choose the version of Firefox you want to build:
+%s
+Your choice:
+'''
+
+APPLICATIONS = [
+    ('Firefox for Desktop', 'browser'),
+    ('Firefox for Android', 'mobile_android'),
+]
 
 FINISHED = '''
-Your system should be ready to build Firefox! If you have not already,
+Your system should be ready to build %s! If you have not already,
 obtain a copy of the source code by running:
 
     hg clone https://hg.mozilla.org/mozilla-central
@@ -93,8 +103,21 @@ class Bootstrapper(object):
 
 
     def bootstrap(self):
+        # Like ['1. Firefox for Desktop', '2. Firefox for Android'].
+        labels = [ '%s. %s' % (i + 1, name) for (i, (name, _)) in enumerate(APPLICATIONS) ]
+        prompt = APPLICATION_CHOICE % '\n'.join(labels)
+        choice = self.instance.prompt_int(prompt=prompt, low=1, high=len(APPLICATIONS))
+        name, application = APPLICATIONS[choice-1]
+
         self.instance.install_system_packages()
+
+        # Like 'install_browser_packages' or 'install_mobile_android_packages'.
+        getattr(self.instance, 'install_%s_packages' % application)()
+
         self.instance.ensure_mercurial_modern()
         self.instance.ensure_python_modern()
 
-        print(self.finished)
+        print(self.finished % name)
+
+        # Like 'suggest_browser_mozconfig' or 'suggest_mobile_android_mozconfig'.
+        getattr(self.instance, 'suggest_%s_mozconfig' % application)()

@@ -12,13 +12,7 @@ class OpenBSDBootstrapper(BaseBootstrapper):
 
         self.packages = [
             'mercurial',
-            'llvm',
             'autoconf-2.13',
-            'yasm',
-            'gtk+2',
-            'dbus-glib',
-            'gstreamer-plugins-base',
-            'pulseaudio',
             'gmake',
             'gtar',
             'wget',
@@ -26,6 +20,19 @@ class OpenBSDBootstrapper(BaseBootstrapper):
             'zip',
         ]
 
+        self.browser_packages = [
+            'llvm',
+            'yasm',
+            'gtk+2',
+            'dbus-glib',
+            'gstreamer-plugins-base',
+            'pulseaudio',
+        ]
+
     def install_system_packages(self):
         # we use -z because there's no other way to say "any autoconf-2.13"
         self.run_as_root(['pkg_add', '-z'] + self.packages)
+
+    def install_browser_packages(self):
+        # we use -z because there's no other way to say "any autoconf-2.13"
+        self.run_as_root(['pkg_add', '-z'] + self.browser_packages)
