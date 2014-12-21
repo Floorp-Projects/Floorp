@@ -16,19 +16,25 @@ class FedoraBootstrapper(BaseBootstrapper):
         self.group_packages = [
             'Development Tools',
             'Development Libraries',
-            'GNOME Software Development',
         ]
 
         self.packages = [
-            'alsa-lib-devel',
             'autoconf213',
+            'mercurial',
+        ]
+
+        self.browser_group_packages = [
+            'GNOME Software Development',
+        ]
+
+        self.browser_packages = [
+            'alsa-lib-devel',
             'gcc-c++',
             'glibc-static',
             'gstreamer-devel',
             'gstreamer-plugins-base-devel',
             'libstdc++-static',
             'libXt-devel',
-            'mercurial',
             'mesa-libGL-devel',
             'pulseaudio-libs-devel',
             'wireless-tools-devel',
@@ -38,6 +44,10 @@ class FedoraBootstrapper(BaseBootstrapper):
     def install_system_packages(self):
         self.yum_groupinstall(*self.group_packages)
         self.yum_install(*self.packages)
+
+    def install_browser_packages(self):
+        self.yum_groupinstall(*self.browser_group_packages)
+        self.yum_install(*self.browser_packages)
 
     def upgrade_mercurial(self, current):
         self.yum_update('mercurial')

@@ -87,7 +87,49 @@ class BaseBootstrapper(object):
         self.package_manager_updated = False
 
     def install_system_packages(self):
-        raise NotImplemented('%s must implement install_system_packages()' %
+        '''
+        Install packages shared by all applications. These are usually
+        packages required by the development (like mercurial) or the
+        build system (like autoconf).
+        '''
+        raise NotImplementedError('%s must implement install_system_packages()' %
+            __name__)
+
+    def install_browser_packages(self):
+        '''
+        Install packages required to build Firefox for Desktop (application
+        'browser').
+        '''
+        raise NotImplementedError('Cannot bootstrap Firefox for Desktop: '
+            '%s does not yet implement install_browser_packages()' % __name__)
+
+    def suggest_browser_mozconfig(self):
+        '''
+        Print a message to the console detailing what the user's mozconfig
+        should contain.
+
+        Firefox for Desktop can in simple cases determine its build environment
+        entirely from configure.
+        '''
+        pass
+
+    def install_mobile_android_packages(self):
+        '''
+        Install packages required to build Firefox for Android (application
+        'mobile/android', also known as Fennec).
+        '''
+        raise NotImplementedError('Cannot bootstrap Firefox for Android: '
+            '%s does not yet implement install_mobile_android_packages()' % __name__)
+
+    def suggest_mobile_android_mozconfig(self):
+        '''
+        Print a message to the console detailing what the user's mozconfig
+        should contain.
+
+        Firefox for Android needs an application and an ABI set, and it needs
+        paths to the Android SDK and NDK.
+        '''
+        raise NotImplementedError('%s does not yet implement suggest_mobile_android_mozconfig()' %
             __name__)
 
     def which(self, name):

@@ -177,7 +177,10 @@ class OSXBootstrapper(BaseBootstrapper):
 
         choice = self.ensure_package_manager()
         self.package_manager = choice
-        getattr(self, 'ensure_%s_packages' % choice)()
+        getattr(self, 'ensure_%s_system_packages' % self.package_manager)()
+
+    def install_browser_packages(self):
+        getattr(self, 'ensure_%s_browser_packages' % self.package_manager)()
 
     def ensure_xcode(self):
         if self.os_version < StrictVersion('10.7'):
@@ -256,7 +259,7 @@ class OSXBootstrapper(BaseBootstrapper):
         print('Once the install has finished, please relaunch this script.')
         sys.exit(1)
 
-    def ensure_homebrew_packages(self):
+    def ensure_homebrew_system_packages(self):
         self.brew = self.which('brew')
         assert self.brew is not None
 
@@ -290,13 +293,32 @@ class OSXBootstrapper(BaseBootstrapper):
 
             subprocess.check_call([self.brew, '-v', 'install', package])
 
+    def ensure_homebrew_browser_packages(self):
+        installed = self.check_output([self.brew, 'list']).split()
+
+        packages = [
+            ('yasm', 'yasm'),
+        ]
+
+        printed = False
+
+        for name, package in packages:
+            if name in installed:
+                continue
+
+            if not printed:
+                print(PACKAGE_MANAGER_PACKAGES % ('Homebrew',))
+                printed = True
+
+            subprocess.check_call([self.brew, '-v', 'install', package])
+
         if self.os_version < StrictVersion('10.7') and 'llvm' not in installed:
             print(PACKAGE_MANAGER_OLD_CLANG % ('Homebrew',))
 
             subprocess.check_call([self.brew, '-v', 'install', 'llvm',
                 '--with-clang', '--all-targets'])
 
-    def ensure_macports_packages(self):
+    def ensure_macports_system_packages(self):
         self.port = self.which('port')
         assert self.port is not None
 
@@ -304,8 +326,19 @@ class OSXBootstrapper(BaseBootstrapper):
 
         packages = ['python27',
                     'mercurial',
-                    'yasm',
                     'autoconf213']
+
+        missing = [package for package in packages if package not in installed]
+        if missing:
+            print(PACKAGE_MANAGER_PACKAGES % ('MacPorts',))
+            self.run_as_root([self.port, '-v', 'install'] + missing)
+
+        self.run_as_root([self.port, 'select', '--set', 'python', 'python27'])
+
+    def ensure_macports_browser_packages(self):
+        installed = set(self.check_output([self.port, 'installed']).split())
+
+        packages = ['yasm']
 
         missing = [package for package in packages if package not in installed]
         if missing:
@@ -316,8 +349,6 @@ class OSXBootstrapper(BaseBootstrapper):
             print(PACKAGE_MANAGER_OLD_CLANG % ('MacPorts',))
             self.run_as_root([self.port, '-v', 'install', MACPORTS_CLANG_PACKAGE])
             self.run_as_root([self.port, 'select', '--set', 'clang', 'mp-' + MACPORTS_CLANG_PACKAGE])
-
-        self.run_as_root([self.port, 'select', '--set', 'python', 'python27'])
 
     def ensure_package_manager(self):
         '''

@@ -11,6 +11,18 @@ class DebianBootstrapper(BaseBootstrapper):
         'autoconf2.13',
         'build-essential',
         'ccache',
+        'mercurial',
+        'python-dev',
+        'python-setuptools',
+        'unzip',
+        'uuid',
+        'zip',
+    ]
+
+    # Subclasses can add packages to this variable to have them installed.
+    DISTRO_PACKAGES = []
+
+    BROWSER_COMMON_PACKAGES = [
         'libasound2-dev',
         'libcurl4-openssl-dev',
         'libdbus-1-dev',
@@ -23,20 +35,14 @@ class DebianBootstrapper(BaseBootstrapper):
         'libnotify-dev',
         'libpulse-dev',
         'libxt-dev',
-        'mercurial',
         'mesa-common-dev',
         'python-dbus',
-        'python-dev',
-        'python-setuptools',
-        'unzip',
-        'uuid',
         'yasm',
         'xvfb',
-        'zip',
     ]
 
     # Subclasses can add packages to this variable to have them installed.
-    DISTRO_PACKAGES = []
+    BROWSER_DISTRO_PACKAGES = []
 
     def __init__(self, version, dist_id):
         BaseBootstrapper.__init__(self)
@@ -45,9 +51,13 @@ class DebianBootstrapper(BaseBootstrapper):
         self.dist_id = dist_id
 
         self.packages = self.COMMON_PACKAGES + self.DISTRO_PACKAGES
+        self.browser_packages = self.BROWSER_COMMON_PACKAGES + self.BROWSER_DISTRO_PACKAGES
 
     def install_system_packages(self):
         self.apt_install(*self.packages)
+
+    def install_browser_packages(self):
+        self.apt_install(*self.browser_packages)
 
     def _update_package_manager(self):
         self.run_as_root(['apt-get', 'update'])
