@@ -12,7 +12,7 @@ interface nsIMobileNetworkInfo;
 interface nsINeighboringCellIdsCallback;
 interface nsIVariant;
 
-[scriptable, uuid(c00abd30-5b2e-11e4-8ed6-0800200c9a66)]
+[scriptable, uuid(6e6468a4-84fb-11e4-9b66-17dbe13c059e)]
 interface nsIMobileConnectionListener : nsISupports
 {
   /**
@@ -24,17 +24,6 @@ interface nsIMobileConnectionListener : nsISupports
    * Notify when data info is changed.
    */
   void notifyDataChanged();
-
-  /**
-   * Notify when ussd is received.
-   *
-   * @param message
-   *        The ussd request in string format.
-   * @param sessionEnded
-   *        Indicates whether the session is ended.
-   */
-  void notifyUssdReceived(in DOMString message,
-                          in boolean sessionEnded);
 
   /**
    * Notify when data call is failed to establish.
@@ -124,7 +113,7 @@ interface nsIMobileConnectionListener : nsISupports
 #define NO_ADDITIONAL_INFORMATION 0
 %}
 
-[scriptable, builtinclass, uuid(16e77f19-0298-46de-ae49-9b2fb92a28c0)]
+[scriptable, builtinclass, uuid(14d66926-8434-11e4-8c3f-f724194bb5f1)]
 interface nsIMobileConnectionCallback : nsISupports
 {
   /**
@@ -137,26 +126,8 @@ interface nsIMobileConnectionCallback : nsISupports
   void notifyGetNetworksSuccess(in uint32_t count,
                                 [array, size_is(count)] in nsIMobileNetworkInfo networks);
 
-  void notifySendCancelMmiSuccess(in DOMString aServiceCode,
-                                  in DOMString aStatusMessage);
-
-  void notifySendCancelMmiSuccessWithInteger(in DOMString aServiceCode,
-                                             in DOMString aStatusMessage,
-                                             in unsigned short aAdditionalInformation);
-
-  void notifySendCancelMmiSuccessWithStrings(in DOMString aServiceCode,
-                                             in DOMString aStatusMessage,
-                                             in unsigned long aLength,
-                                             [array, size_is(aLength)] in wstring aAdditionalInformation);
-
-  void notifySendCancelMmiSuccessWithCallForwardingOptions(in DOMString aServiceCode,
-                                                           in DOMString aStatusMessage,
-                                                           in unsigned long aLength,
-                                                           [array, size_is(aLength)] in nsIMobileCallForwardingOptions aAdditionalInformation);
-
   void notifyGetCallForwardingSuccess(in uint32_t count,
                                       [array, size_is(count)] in nsIMobileCallForwardingOptions results);
-
 
   void notifyGetCallBarringSuccess(in unsigned short program,
                                    in boolean enabled,
@@ -171,45 +142,7 @@ interface nsIMobileConnectionCallback : nsISupports
   /**
    * notifyError() will be called, when request is failed.
    */
-  [optional_argc]
-  void notifyError(in DOMString name,
-                   [optional] in DOMString message,
-                   [optional] in DOMString serviceCode,
-                   [optional] in unsigned short additionalInformation);
-
-%{C++
-  // non-virtual so it won't affect the vtable
-  inline nsresult NotifyError(const nsAString& aName)
-  {
-    return NotifyError(aName, EmptyString(), EmptyString(),
-                       NO_ADDITIONAL_INFORMATION, 0 /* ARGC = 0 */);
-  }
-  // non-virtual so it won't affect the vtable
-  inline nsresult NotifyError(const nsAString& aName,
-                              const nsAString& aMessage)
-  {
-    return NotifyError(aName, aMessage, EmptyString(), NO_ADDITIONAL_INFORMATION,
-                       1 /* ARGC = 1 */);
-  }
-  // non-virtual so it won't affect the vtable
-  inline nsresult NotifyError(const nsAString& aName,
-                              const nsAString& aMessage,
-                              const nsAString& aServiceCode)
-  {
-    return NotifyError(aName, aMessage, aServiceCode, NO_ADDITIONAL_INFORMATION,
-                       2 /* ARGC = 2 */);
-  }
-  // non-virtual so it won't affect the vtable
-  inline nsresult NotifyError(const nsAString& aName,
-                              const nsAString& aMessage,
-                              const nsAString& aServiceCode,
-                              uint16_t aAdditionInformation)
-  {
-    return NotifyError(aName, aMessage, aServiceCode, aAdditionInformation,
-                       3 /* ARGC = 3 */);
-  }
-%}
-
+  void notifyError(in DOMString name);
 };
 
 %{C++
@@ -235,7 +168,7 @@ already_AddRefed<nsIMobileConnectionService>
 NS_CreateMobileConnectionService();
 %}
 
-[scriptable, uuid(99e43353-5fc4-497e-88a2-5fa6862ee64c)]
+[scriptable, uuid(2b3d0122-8054-11e4-964e-c727f38fd7e6)]
 interface nsIMobileConnection : nsISupports
 {
   /*
@@ -548,36 +481,6 @@ interface nsIMobileConnection : nsISupports
    * 'GenericFailure'.
    */
   void getVoicePrivacyMode(in nsIMobileConnectionCallback requestCallback);
-
-  /**
-   * Send a MMI message.
-   *
-   * @param mmi
-   *        DOMString containing an MMI string that can be associated to a
-   *        USSD request or other RIL functionality.
-   * @param requestCallback
-   *        Called when request is finished.
-   *
-   * If successful, the notifySendCancelMmiSuccess*() will be called. And the
-   * result will contain the information about the mmi operation.
-   *
-   * Otherwise, the notifyError() will be called.
-   */
-  void sendMMI(in DOMString mmi,
-               in nsIMobileConnectionCallback requestCallback);
-
-  /**
-   * Cancel the current MMI request if one exists.
-   *
-   * @param requestCallback
-   *        Called when request is finished.
-   *
-   * If successful, the notifySendCancelMmiSuccess*() will be called. And the
-   * result will contain the information about the mmi operation.
-   *
-   * Otherwise, the notifyError() will be called.
-   */
-  void cancelMMI(in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Queries current call forwarding options.
