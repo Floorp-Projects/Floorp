@@ -264,49 +264,6 @@ interface MozMobileConnection : EventTarget
   DOMRequest getVoicePrivacyMode();
 
   /**
-   * Send a MMI message.
-   *
-   * @param mmi
-   *        DOMString containing an MMI string that can be associated to a
-   *        USSD request or other RIL functionality.
-   *
-   * @return a DOMRequest.
-   *
-   * If successful, the request's onsuccess will be called. And the request's
-   * result will be an object containing information about the operation.
-   * @see MozMMIResult for the detail of result.
-   *
-   * Otherwise, the request's onerror will be called, and the request's error
-   * will be a DOMMMIError.
-   * @see DOMMMIError for the detail of error.
-   *
-   * Note: In case that the MMI code requires sending an USSD request, the
-   * DOMrequest 'success' event means that the RIL has successfully processed
-   * and sent the USSD request to the network. The network reply will be
-   * reported via 'onussdreceived' event. If the MMI code is not associated to
-   * a USSD but to other RIL request its result, if one is needed, will be
-   * notified via the returned DOMRequest 'success' or 'error' event.
-   */
-  [Throws, CheckPermissions="mobileconnection"]
-  DOMRequest sendMMI(DOMString mmi);
-
-  /**
-   * Cancel the current MMI request if one exists.
-   *
-   * @return a DOMRequest.
-   *
-   * If successful, the request's onsuccess will be called. And the request's
-   * result will be an object containing information about the operation.
-   * @see MozMMIResult for the detail of result.
-   *
-   * Otherwise, the request's onerror will be called, and the request's error
-   * will be a DOMMMIError.
-   * @see DOMMMIError for the detail of error.
-   */
-  [Throws, CheckPermissions="mobileconnection"]
-  DOMRequest cancelMMI();
-
-  /**
    * Configures call forward options.
    *
    * @param options
@@ -521,12 +478,6 @@ interface MozMobileConnection : EventTarget
    * changes values.
    */
   attribute EventHandler ondatachange;
-
-  /**
-   * The 'ussdreceived' event is notified whenever a new USSD message is
-   * received.
-   */
-  attribute EventHandler onussdreceived;
 
   /**
    * The 'dataerror' event is notified whenever the data connection object
