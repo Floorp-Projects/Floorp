@@ -1,5 +1,6 @@
 /*
  * Copyright 2014 The Android Open Source Project
+ * Copyright (C) 2014 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +15,22 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_GUI_BUFFERQUEUECOREDEFS_H
-#define ANDROID_GUI_BUFFERQUEUECOREDEFS_H
+#ifndef NATIVEWINDOW_BUFFERQUEUECOREDEFS_H
+#define NATIVEWINDOW_BUFFERQUEUECOREDEFS_H
 
-#include <gui/BufferSlot.h>
+#include "GonkBufferSlot.h"
 
 namespace android {
-    class BufferQueueCore;
+    class GonkBufferQueueCore;
 
-    namespace BufferQueueDefs {
-        // BufferQueue will keep track of at most this value of buffers.
+    namespace GonkBufferQueueDefs {
+        // GonkBufferQueue will keep track of at most this value of buffers.
         // Attempts at runtime to increase the number of buffers past this
         // will fail.
         enum { NUM_BUFFER_SLOTS = 64 };
 
-        typedef BufferSlot SlotsType[NUM_BUFFER_SLOTS];
-    } // namespace BufferQueueDefs
+        typedef GonkBufferSlot SlotsType[NUM_BUFFER_SLOTS];
+    } // namespace GonkBufferQueueDefs
 } // namespace android
 
 #endif

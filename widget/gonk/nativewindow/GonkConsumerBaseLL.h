@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2014 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_GUI_CONSUMERBASE_H
-#define ANDROID_GUI_CONSUMERBASE_H
-
-#include <gui/BufferQueue.h>
+#ifndef NATIVEWINDOW_GONKCONSUMERBASE_LL_H
+#define NATIVEWINDOW_GONKCONSUMERBASE_LL_H
 
 #include <ui/GraphicBuffer.h>
 
@@ -26,15 +25,17 @@
 #include <utils/threads.h>
 #include <gui/IConsumerListener.h>
 
+#include "GonkBufferQueueLL.h"
+
 namespace android {
 // ----------------------------------------------------------------------------
 
 class String8;
 
-// ConsumerBase is a base class for BufferQueue consumer end-points. It
-// handles common tasks like management of the connection to the BufferQueue
+// GonkConsumerBase is a base class for GonkBufferQueue consumer end-points. It
+// handles common tasks like management of the connection to the GonkBufferQueue
 // and the buffer pool.
-class ConsumerBase : public virtual RefBase,
+class GonkConsumerBase : public virtual RefBase,
         protected ConsumerListener {
 public:
     struct FrameAvailableListener : public virtual RefBase {
@@ -49,20 +50,20 @@ public:
         virtual void onFrameAvailable() = 0;
     };
 
-    virtual ~ConsumerBase();
+    virtual ~GonkConsumerBase();
 
-    // abandon frees all the buffers and puts the ConsumerBase into the
-    // 'abandoned' state.  Once put in this state the ConsumerBase can never
+    // abandon frees all the buffers and puts the GonkConsumerBase into the
+    // 'abandoned' state.  Once put in this state the GonkConsumerBase can never
     // leave it.  When in the 'abandoned' state, all methods of the
     // IGraphicBufferProducer interface will fail with the NO_INIT error.
     //
     // Note that while calling this method causes all the buffers to be freed
-    // from the perspective of the the ConsumerBase, if there are additional
+    // from the perspective of the the GonkConsumerBase, if there are additional
     // references on the buffers (e.g. if a buffer is referenced by a client
     // or by OpenGL ES as a texture) then those buffer will remain allocated.
     void abandon();
 
-    // set the name of the ConsumerBase that will be used to identify it in
+    // set the name of the GonkConsumerBase that will be used to identify it in
     // log messages.
     void setName(const String8& name);
 
@@ -77,34 +78,34 @@ public:
     void setFrameAvailableListener(const wp<FrameAvailableListener>& listener);
 
 private:
-    ConsumerBase(const ConsumerBase&);
-    void operator=(const ConsumerBase&);
+    GonkConsumerBase(const GonkConsumerBase&);
+    void operator=(const GonkConsumerBase&);
 
 protected:
-    // ConsumerBase constructs a new ConsumerBase object to consume image
-    // buffers from the given IGraphicBufferConsumer.
+    // GonkConsumerBase constructs a new GonkConsumerBase object to consume image
+    // buffers from the given IGonkGraphicBufferConsumer.
     // The controlledByApp flag indicates that this consumer is under the application's
     // control.
-    ConsumerBase(const sp<IGraphicBufferConsumer>& consumer, bool controlledByApp = false);
+    GonkConsumerBase(const sp<IGonkGraphicBufferConsumer>& consumer, bool controlledByApp = false);
 
     // onLastStrongRef gets called by RefBase just before the dtor of the most
-    // derived class.  It is used to clean up the buffers so that ConsumerBase
+    // derived class.  It is used to clean up the buffers so that GonkConsumerBase
     // can coordinate the clean-up by calling into virtual methods implemented
     // by the derived classes.  This would not be possible from the
     // ConsuemrBase dtor because by the time that gets called the derived
     // classes have already been destructed.
     //
     // This methods should not need to be overridden by derived classes, but
-    // if they are overridden the ConsumerBase implementation must be called
+    // if they are overridden the GonkConsumerBase implementation must be called
     // from the derived class.
     virtual void onLastStrongRef(const void* id);
 
     // Implementation of the IConsumerListener interface.  These
-    // calls are used to notify the ConsumerBase of asynchronous events in the
-    // BufferQueue.  The onFrameAvailable and onBuffersReleased methods should
+    // calls are used to notify the GonkConsumerBase of asynchronous events in the
+    // GonkBufferQueue.  The onFrameAvailable and onBuffersReleased methods should
     // not need to be overridden by derived classes, but if they are overridden
-    // the ConsumerBase implementation must be called from the derived class.
-    // The ConsumerBase version of onSidebandStreamChanged does nothing and can
+    // the GonkConsumerBase implementation must be called from the derived class.
+    // The GonkConsumerBase version of onSidebandStreamChanged does nothing and can
     // be overriden by derived classes if they want the notification.
     virtual void onFrameAvailable();
     virtual void onBuffersReleased();
@@ -116,24 +117,24 @@ protected:
     //
     // Derived classes should override this method to clean up any state they
     // keep per slot.  If it is overridden, the derived class's implementation
-    // must call ConsumerBase::freeBufferLocked.
+    // must call GonkConsumerBase::freeBufferLocked.
     //
     // This method must be called with mMutex locked.
     virtual void freeBufferLocked(int slotIndex);
 
-    // abandonLocked puts the BufferQueue into the abandoned state, causing
+    // abandonLocked puts the GonkBufferQueue into the abandoned state, causing
     // all future operations on it to fail. This method rather than the public
     // abandon method should be overridden by child classes to add abandon-
     // time behavior.
     //
     // Derived classes should override this method to clean up any object
     // state they keep (as opposed to per-slot state).  If it is overridden,
-    // the derived class's implementation must call ConsumerBase::abandonLocked.
+    // the derived class's implementation must call GonkConsumerBase::abandonLocked.
     //
     // This method must be called with mMutex locked.
     virtual void abandonLocked();
 
-    // dumpLocked dumps the current state of the ConsumerBase object to the
+    // dumpLocked dumps the current state of the GonkConsumerBase object to the
     // result string.  Each line is prefixed with the string pointed to by the
     // prefix argument.  The buffer argument points to a buffer that may be
     // used for intermediate formatting data, and the size of that buffer is
@@ -141,31 +142,29 @@ protected:
     //
     // Derived classes should override this method to dump their internal
     // state.  If this method is overridden the derived class's implementation
-    // should call ConsumerBase::dumpLocked.
+    // should call GonkConsumerBase::dumpLocked.
     //
     // This method must be called with mMutex locked.
     virtual void dumpLocked(String8& result, const char* prefix) const;
 
-    // acquireBufferLocked fetches the next buffer from the BufferQueue and
+    // acquireBufferLocked fetches the next buffer from the GonkBufferQueue and
     // updates the buffer slot for the buffer returned.
     //
     // Derived classes should override this method to perform any
     // initialization that must take place the first time a buffer is assigned
     // to a slot.  If it is overridden the derived class's implementation must
-    // call ConsumerBase::acquireBufferLocked.
-    virtual status_t acquireBufferLocked(IGraphicBufferConsumer::BufferItem *item,
+    // call GonkConsumerBase::acquireBufferLocked.
+    virtual status_t acquireBufferLocked(IGonkGraphicBufferConsumer::BufferItem *item,
         nsecs_t presentWhen);
 
     // releaseBufferLocked relinquishes control over a buffer, returning that
-    // control to the BufferQueue.
+    // control to the GonkBufferQueue.
     //
     // Derived classes should override this method to perform any cleanup that
-    // must take place when a buffer is released back to the BufferQueue.  If
+    // must take place when a buffer is released back to the GonkBufferQueue.  If
     // it is overridden the derived class's implementation must call
-    // ConsumerBase::releaseBufferLocked.e
-    virtual status_t releaseBufferLocked(int slot,
-            const sp<GraphicBuffer> graphicBuffer,
-            EGLDisplay display, EGLSyncKHR eglFence);
+    // GonkConsumerBase::releaseBufferLocked.
+    virtual status_t releaseBufferLocked(int slot, const sp<GraphicBuffer> graphicBuffer);
 
     // returns true iff the slot still has the graphicBuffer in it.
     bool stillTracking(int slot, const sp<GraphicBuffer> graphicBuffer);
@@ -181,7 +180,7 @@ protected:
             const sp<GraphicBuffer> graphicBuffer, const sp<Fence>& fence);
 
     // Slot contains the information and object references that
-    // ConsumerBase maintains about a BufferQueue buffer slot.
+    // GonkConsumerBase maintains about a GonkBufferQueue buffer slot.
     struct Slot {
         // mGraphicBuffer is the Gralloc buffer store in the slot or NULL if
         // no Gralloc buffer is in the slot.
@@ -197,23 +196,23 @@ protected:
         uint64_t mFrameNumber;
     };
 
-    // mSlots stores the buffers that have been allocated by the BufferQueue
+    // mSlots stores the buffers that have been allocated by the GonkBufferQueue
     // for each buffer slot.  It is initialized to null pointers, and gets
-    // filled in with the result of BufferQueue::acquire when the
+    // filled in with the result of GonkBufferQueue::acquire when the
     // client dequeues a buffer from a
     // slot that has not yet been used. The buffer allocated to a slot will also
     // be replaced if the requested buffer usage or geometry differs from that
     // of the buffer allocated to a slot.
-    Slot mSlots[BufferQueue::NUM_BUFFER_SLOTS];
+    Slot mSlots[GonkBufferQueue::NUM_BUFFER_SLOTS];
 
-    // mAbandoned indicates that the BufferQueue will no longer be used to
+    // mAbandoned indicates that the GonkBufferQueue will no longer be used to
     // consume images buffers pushed to it using the IGraphicBufferProducer
     // interface. It is initialized to false, and set to true in the abandon
-    // method.  A BufferQueue that has been abandoned will return the NO_INIT
+    // method.  A GonkBufferQueue that has been abandoned will return the NO_INIT
     // error from all IConsumerBase methods capable of returning an error.
     bool mAbandoned;
 
-    // mName is a string used to identify the ConsumerBase in log messages.
+    // mName is a string used to identify the GonkConsumerBase in log messages.
     // It can be set by the setName method.
     String8 mName;
 
@@ -222,12 +221,12 @@ protected:
     // queueBuffer.
     wp<FrameAvailableListener> mFrameAvailableListener;
 
-    // The ConsumerBase has-a BufferQueue and is responsible for creating this object
+    // The GonkConsumerBase has-a GonkBufferQueue and is responsible for creating this object
     // if none is supplied
-    sp<IGraphicBufferConsumer> mConsumer;
+    sp<IGonkGraphicBufferConsumer> mConsumer;
 
     // mMutex is the mutex used to prevent concurrent access to the member
-    // variables of ConsumerBase objects. It must be locked whenever the
+    // variables of GonkConsumerBase objects. It must be locked whenever the
     // member variables are accessed or when any of the *Locked methods are
     // called.
     //
@@ -238,4 +237,4 @@ protected:
 // ----------------------------------------------------------------------------
 }; // namespace android
 
-#endif // ANDROID_GUI_CONSUMERBASE_H
+#endif // NATIVEWINDOW_GONKCONSUMERBASE_LL_H

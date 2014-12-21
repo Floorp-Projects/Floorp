@@ -23,6 +23,10 @@
 #include <gui/IDisplayEventConnection.h>
 #include <gui/GraphicBufferAlloc.h>
 
+#if ANDROID_VERSION >= 21
+#include <ui/Rect.h>
+#endif
+
 #include "FakeSurfaceComposer.h"
 
 namespace android {
@@ -89,31 +93,84 @@ sp<IDisplayEventConnection> FakeSurfaceComposer::createDisplayEventConnection() 
     return nullptr;
 }
 
-status_t FakeSurfaceComposer::captureScreen(const sp<IBinder>& display,
-        const sp<IGraphicBufferProducer>& producer,
-        uint32_t reqWidth, uint32_t reqHeight,
-        uint32_t minLayerZ, uint32_t maxLayerZ,
-        bool isCpuConsumer) {
+status_t
+FakeSurfaceComposer::captureScreen(const sp<IBinder>& display
+                                 , const sp<IGraphicBufferProducer>& producer
+#if ANDROID_VERSION >= 21
+                                 , Rect sourceCrop
+#endif
+                                 , uint32_t reqWidth
+                                 , uint32_t reqHeight
+                                 , uint32_t minLayerZ
+                                 , uint32_t maxLayerZ
+#if ANDROID_VERSION >= 21
+                                 , bool useIdentityTransform
+                                 , Rotation rotation
+#elif ANDROID_VERSION < 19
+                                 , bool isCpuConsumer
+#endif
+                                  )
+{
     return INVALID_OPERATION;
 }
 
-#if ANDROID_VERSION >= 19
-status_t FakeSurfaceComposer::captureScreen(const sp<IBinder>& display,
-    const sp<IGraphicBufferProducer>& producer,
-    uint32_t reqWidth, uint32_t reqHeight,
-    uint32_t minLayerZ, uint32_t maxLayerZ) {
+#if ANDROID_VERSION >= 21
+void
+FakeSurfaceComposer::setPowerMode(const sp<IBinder>& display, int mode)
+{
+}
+
+status_t
+FakeSurfaceComposer::getDisplayConfigs(const sp<IBinder>& display, Vector<DisplayInfo>* configs)
+{
+    return INVALID_OPERATION;
+}
+
+status_t
+FakeSurfaceComposer::getDisplayStats(const sp<IBinder>& display, DisplayStatInfo* stats)
+{
+    return INVALID_OPERATION;
+}
+
+int
+FakeSurfaceComposer::getActiveConfig(const sp<IBinder>& display)
+{
+    return INVALID_OPERATION;
+}
+
+status_t
+FakeSurfaceComposer::setActiveConfig(const sp<IBinder>& display, int id)
+{
+    return INVALID_OPERATION;
+}
+
+status_t
+FakeSurfaceComposer::clearAnimationFrameStats()
+{
+    return INVALID_OPERATION;
+}
+
+status_t
+FakeSurfaceComposer::getAnimationFrameStats(FrameStats* outStats) const
+{
+    return INVALID_OPERATION;
+}
+#else
+void
+FakeSurfaceComposer::blank(const sp<IBinder>& display)
+{
+}
+
+void
+FakeSurfaceComposer::unblank(const sp<IBinder>& display)
+{
+}
+
+status_t
+FakeSurfaceComposer::getDisplayInfo(const sp<IBinder>& display, DisplayInfo* info)
+{
     return INVALID_OPERATION;
 }
 #endif
-
-void FakeSurfaceComposer::blank(const sp<IBinder>& display) {
-}
-
-void FakeSurfaceComposer::unblank(const sp<IBinder>& display) {
-}
-
-status_t FakeSurfaceComposer::getDisplayInfo(const sp<IBinder>& display, DisplayInfo* info) {
-    return INVALID_OPERATION;
-}
 
 }; // namespace android

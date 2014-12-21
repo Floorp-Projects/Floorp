@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2012 The Android Open Source Project
+ * Copyright (C) 2014 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +15,11 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_GUI_BUFFERQUEUE_H
-#define ANDROID_GUI_BUFFERQUEUE_H
+#ifndef NATIVEWINDOW_GONKBUFFERQUEUE_LL_H
+#define NATIVEWINDOW_GONKBUFFERQUEUE_LL_H
 
-#include <gui/BufferQueueDefs.h>
-#include <gui/IGraphicBufferConsumer.h>
+#include "GonkBufferQueueDefs.h"
+#include "IGonkGraphicBufferConsumerLL.h"
 #include <gui/IGraphicBufferProducer.h>
 #include <gui/IConsumerListener.h>
 
@@ -28,17 +29,17 @@
 
 namespace android {
 
-class BufferQueue {
+class GonkBufferQueue {
 public:
-    // BufferQueue will keep track of at most this value of buffers.
+    // GonkBufferQueue will keep track of at most this value of buffers.
     // Attempts at runtime to increase the number of buffers past this will fail.
-    enum { NUM_BUFFER_SLOTS = BufferQueueDefs::NUM_BUFFER_SLOTS };
+    enum { NUM_BUFFER_SLOTS = GonkBufferQueueDefs::NUM_BUFFER_SLOTS };
     // Used as a placeholder slot# when the value isn't pointing to an existing buffer.
-    enum { INVALID_BUFFER_SLOT = IGraphicBufferConsumer::BufferItem::INVALID_BUFFER_SLOT };
-    // Alias to <IGraphicBufferConsumer.h> -- please scope from there in future code!
+    enum { INVALID_BUFFER_SLOT = IGonkGraphicBufferConsumer::BufferItem::INVALID_BUFFER_SLOT };
+    // Alias to <IGonkGraphicBufferConsumer.h> -- please scope from there in future code!
     enum {
-        NO_BUFFER_AVAILABLE = IGraphicBufferConsumer::NO_BUFFER_AVAILABLE,
-        PRESENT_LATER = IGraphicBufferConsumer::PRESENT_LATER,
+        NO_BUFFER_AVAILABLE = IGonkGraphicBufferConsumer::NO_BUFFER_AVAILABLE,
+        PRESENT_LATER = IGonkGraphicBufferConsumer::PRESENT_LATER,
     };
 
     // When in async mode we reserve two slots in order to guarantee that the
@@ -47,16 +48,16 @@ public:
 
     // for backward source compatibility
     typedef ::android::ConsumerListener ConsumerListener;
-    typedef IGraphicBufferConsumer::BufferItem BufferItem;
+    typedef IGonkGraphicBufferConsumer::BufferItem BufferItem;
 
     // ProxyConsumerListener is a ConsumerListener implementation that keeps a weak
     // reference to the actual consumer object.  It forwards all calls to that
     // consumer object so long as it exists.
     //
     // This class exists to avoid having a circular reference between the
-    // BufferQueue object and the consumer object.  The reason this can't be a weak
-    // reference in the BufferQueue class is because we're planning to expose the
-    // consumer side of a BufferQueue as a binder interface, which doesn't support
+    // GonkBufferQueue object and the consumer object.  The reason this can't be a weak
+    // reference in the GonkBufferQueue class is because we're planning to expose the
+    // consumer side of a GonkBufferQueue as a binder interface, which doesn't support
     // weak references.
     class ProxyConsumerListener : public BnConsumerListener {
     public:
@@ -71,18 +72,18 @@ public:
         wp<ConsumerListener> mConsumerListener;
     };
 
-    // BufferQueue manages a pool of gralloc memory slots to be used by
+    // GonkBufferQueue manages a pool of gralloc memory slots to be used by
     // producers and consumers. allocator is used to allocate all the
     // needed gralloc buffers.
     static void createBufferQueue(sp<IGraphicBufferProducer>* outProducer,
-            sp<IGraphicBufferConsumer>* outConsumer,
+            sp<IGonkGraphicBufferConsumer>* outConsumer,
             const sp<IGraphicBufferAlloc>& allocator = NULL);
 
 private:
-    BufferQueue(); // Create through createBufferQueue
+    GonkBufferQueue(); // Create through createBufferQueue
 };
 
 // ----------------------------------------------------------------------------
 }; // namespace android
 
-#endif // ANDROID_GUI_BUFFERQUEUE_H
+#endif // NATIVEWINDOW_GONKBUFFERQUEUE_LL_H

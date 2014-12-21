@@ -1,5 +1,6 @@
 /*
  * Copyright 2014 The Android Open Source Project
+ * Copyright (C) 2014 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +15,11 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_GUI_BUFFERQUEUECORE_H
-#define ANDROID_GUI_BUFFERQUEUECORE_H
+#ifndef NATIVEWINDOW_GONKBUFFERQUEUECORE_LL_H
+#define NATIVEWINDOW_GONKBUFFERQUEUECORE_LL_H
 
-#include <gui/BufferQueueDefs.h>
-#include <gui/BufferSlot.h>
+#include "GonkBufferQueueDefs.h"
+#include "GonkBufferSlot.h"
 
 #include <utils/Condition.h>
 #include <utils/Mutex.h>
@@ -29,31 +30,25 @@
 #include <utils/Trace.h>
 #include <utils/Vector.h>
 
-#define BQ_LOGV(x, ...) ALOGV("[%s] "x, mConsumerName.string(), ##__VA_ARGS__)
-#define BQ_LOGD(x, ...) ALOGD("[%s] "x, mConsumerName.string(), ##__VA_ARGS__)
-#define BQ_LOGI(x, ...) ALOGI("[%s] "x, mConsumerName.string(), ##__VA_ARGS__)
-#define BQ_LOGW(x, ...) ALOGW("[%s] "x, mConsumerName.string(), ##__VA_ARGS__)
-#define BQ_LOGE(x, ...) ALOGE("[%s] "x, mConsumerName.string(), ##__VA_ARGS__)
+#include "mozilla/layers/TextureClient.h"
 
-#define ATRACE_BUFFER_INDEX(index)                                   \
-    if (ATRACE_ENABLED()) {                                          \
-        char ___traceBuf[1024];                                      \
-        snprintf(___traceBuf, 1024, "%s: %d",                        \
-                mCore->mConsumerName.string(), (index));             \
-        android::ScopedTrace ___bufTracer(ATRACE_TAG, ___traceBuf);  \
-    }
+#define ATRACE_BUFFER_INDEX(index)
+
+using namespace mozilla;
+using namespace mozilla::gfx;
+using namespace mozilla::layers;
 
 namespace android {
 
-class BufferItem;
+class GonkBufferItem;
 class IConsumerListener;
 class IGraphicBufferAlloc;
 class IProducerListener;
 
-class BufferQueueCore : public virtual RefBase {
+class GonkBufferQueueCore : public virtual RefBase {
 
-    friend class BufferQueueProducer;
-    friend class BufferQueueConsumer;
+    friend class GonkBufferQueueProducer;
+    friend class GonkBufferQueueConsumer;
 
 public:
     // Used as a placeholder slot number when the value isn't pointing to an
@@ -62,22 +57,25 @@ public:
 
     // We reserve two slots in order to guarantee that the producer and
     // consumer can run asynchronously.
-    enum { MAX_MAX_ACQUIRED_BUFFERS = BufferQueueDefs::NUM_BUFFER_SLOTS - 2 };
+    enum { MAX_MAX_ACQUIRED_BUFFERS = GonkBufferQueueDefs::NUM_BUFFER_SLOTS - 2 };
 
     // The default API number used to indicate that no producer is connected
     enum { NO_CONNECTED_API = 0 };
 
-    typedef Vector<BufferItem> Fifo;
+    typedef Vector<GonkBufferItem> Fifo;
+    typedef mozilla::layers::TextureClient TextureClient;
 
-    // BufferQueueCore manages a pool of gralloc memory slots to be used by
+    // GonkBufferQueueCore manages a pool of gralloc memory slots to be used by
     // producers and consumers. allocator is used to allocate all the needed
     // gralloc buffers.
-    BufferQueueCore(const sp<IGraphicBufferAlloc>& allocator = NULL);
-    virtual ~BufferQueueCore();
+    GonkBufferQueueCore(const sp<IGraphicBufferAlloc>& allocator = NULL);
+    virtual ~GonkBufferQueueCore();
 
 private:
     // Dump our state in a string
     void dump(String8& result, const char* prefix) const;
+
+    int getSlotFromTextureClientLocked(TextureClient* client) const;
 
     // getMinUndequeuedBufferCountLocked returns the minimum number of buffers
     // that must remain in a state other than DEQUEUED. The async parameter
@@ -85,7 +83,7 @@ private:
     int getMinUndequeuedBufferCountLocked(bool async) const;
 
     // getMinMaxBufferCountLocked returns the minimum number of buffers allowed
-    // given the current BufferQueue state. The async parameter tells whether
+    // given the current GonkBufferQueue state. The async parameter tells whether
     // we're in asynchonous mode.
     int getMinMaxBufferCountLocked(bool async) const;
 
@@ -118,7 +116,7 @@ private:
 
     // stillTracking returns true iff the buffer item is still being tracked
     // in one of the slots.
-    bool stillTracking(const BufferItem* item) const;
+    bool stillTracking(const GonkBufferItem* item) const;
 
     // waitWhileAllocatingLocked blocks until mIsAllocating is false.
     void waitWhileAllocatingLocked() const;
@@ -128,14 +126,14 @@ private:
     sp<IGraphicBufferAlloc> mAllocator;
 
     // mMutex is the mutex used to prevent concurrent access to the member
-    // variables of BufferQueueCore objects. It must be locked whenever any
+    // variables of GonkBufferQueueCore objects. It must be locked whenever any
     // member variable is accessed.
     mutable Mutex mMutex;
 
-    // mIsAbandoned indicates that the BufferQueue will no longer be used to
+    // mIsAbandoned indicates that the GonkBufferQueue will no longer be used to
     // consume image buffers pushed to it using the IGraphicBufferProducer
     // interface. It is initialized to false, and set to true in the
-    // consumerDisconnect method. A BufferQueue that is abandoned will return
+    // consumerDisconnect method. A GonkBufferQueue that is abandoned will return
     // the NO_INIT error from all IGraphicBufferProducer methods capable of
     // returning an error.
     bool mIsAbandoned;
@@ -144,7 +142,7 @@ private:
     // controlled by the application.
     bool mConsumerControlledByApp;
 
-    // mConsumerName is a string used to identify the BufferQueue in log
+    // mConsumerName is a string used to identify the GonkBufferQueue in log
     // messages. It is set by the IGraphicBufferConsumer::setConsumerName
     // method.
     String8 mConsumerName;
@@ -159,7 +157,7 @@ private:
     uint32_t mConsumerUsageBits;
 
     // mConnectedApi indicates the producer API that is currently connected
-    // to this BufferQueue. It defaults to NO_CONNECTED_API, and gets updated
+    // to this GonkBufferQueue. It defaults to NO_CONNECTED_API, and gets updated
     // by the connect and disconnect methods.
     int mConnectedApi;
 
@@ -172,7 +170,7 @@ private:
     // and consumer without sending a GraphicBuffer over Binder. The entire
     // array is initialized to NULL at construction time, and buffers are
     // allocated for a slot when requestBuffer is called with that slot's index.
-    BufferQueueDefs::SlotsType mSlots;
+    GonkBufferQueueDefs::SlotsType mSlots;
 
     // mQueue is a FIFO of queued buffers used in synchronous mode.
     Fifo mQueue;
@@ -218,7 +216,7 @@ private:
     // mMaxAcquiredBufferCount is the number of buffers that the consumer may
     // acquire at one time. It defaults to 1, and can be changed by the consumer
     // via setMaxAcquiredBufferCount, but this may only be done while no
-    // producer is connected to the BufferQueue. This value is used to derive
+    // producer is connected to the GonkBufferQueue. This value is used to derive
     // the value returned for the MIN_UNDEQUEUED_BUFFERS query to the producer.
     int mMaxAcquiredBufferCount;
 
@@ -246,7 +244,7 @@ private:
     // mIsAllocatingCondition is a condition variable used by producers to wait until mIsAllocating
     // becomes false.
     mutable Condition mIsAllocatingCondition;
-}; // class BufferQueueCore
+}; // class GonkBufferQueueCore
 
 } // namespace android
 

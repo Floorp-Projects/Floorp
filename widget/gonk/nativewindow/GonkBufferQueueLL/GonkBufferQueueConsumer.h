@@ -1,5 +1,6 @@
 /*
  * Copyright 2014 The Android Open Source Project
+ * Copyright (C) 2014 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,27 +15,24 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_GUI_BUFFERQUEUECONSUMER_H
-#define ANDROID_GUI_BUFFERQUEUECONSUMER_H
+#ifndef NATIVEWINDOW_GONKBUFFERQUEUECONSUMER_LL_H
+#define NATIVEWINDOW_GONKBUFFERQUEUECONSUMER_LL_H
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-
-#include <gui/BufferQueueDefs.h>
-#include <gui/IGraphicBufferConsumer.h>
+#include "GonkBufferQueueDefs.h"
+#include "IGonkGraphicBufferConsumerLL.h"
 
 namespace android {
 
-class BufferQueueCore;
+class GonkBufferQueueCore;
 
-class BufferQueueConsumer : public BnGraphicBufferConsumer {
+class GonkBufferQueueConsumer : public BnGonkGraphicBufferConsumer {
 
 public:
-    BufferQueueConsumer(const sp<BufferQueueCore>& core);
-    virtual ~BufferQueueConsumer();
+    GonkBufferQueueConsumer(const sp<GonkBufferQueueCore>& core);
+    virtual ~GonkBufferQueueConsumer();
 
     // acquireBuffer attempts to acquire ownership of the next pending buffer in
-    // the BufferQueue. If no buffer is pending then it returns
+    // the GonkBufferQueue. If no buffer is pending then it returns
     // NO_BUFFER_AVAILABLE. If a buffer is successfully acquired, the
     // information about the buffer is returned in BufferItem.  If the buffer
     // returned had previously been acquired then the BufferItem::mGraphicBuffer
@@ -49,14 +47,14 @@ public:
     virtual status_t acquireBuffer(BufferItem* outBuffer,
             nsecs_t expectedPresent);
 
-    // See IGraphicBufferConsumer::detachBuffer
+    // See IGonkGraphicBufferConsumer::detachBuffer
     virtual status_t detachBuffer(int slot);
 
-    // See IGraphicBufferConsumer::attachBuffer
+    // See IGonkGraphicBufferConsumer::attachBuffer
     virtual status_t attachBuffer(int* slot, const sp<GraphicBuffer>& buffer);
 
     // releaseBuffer releases a buffer slot from the consumer back to the
-    // BufferQueue.  This may be done while the buffer's contents are still
+    // GonkBufferQueue.  This may be done while the buffer's contents are still
     // being accessed.  The fence will signal when the buffer is no longer
     // in use. frameNumber is used to indentify the exact buffer returned.
     //
@@ -64,17 +62,13 @@ public:
     // any references to the just-released buffer that it might have, as if it
     // had received a onBuffersReleased() call with a mask set for the released
     // buffer.
-    //
-    // Note that the dependencies on EGL will be removed once we switch to using
-    // the Android HW Sync HAL.
     virtual status_t releaseBuffer(int slot, uint64_t frameNumber,
-            const sp<Fence>& releaseFence, EGLDisplay display,
-            EGLSyncKHR fence);
+            const sp<Fence>& releaseFence);
 
-    // connect connects a consumer to the BufferQueue.  Only one
+    // connect connects a consumer to the GonkBufferQueue.  Only one
     // consumer may be connected, and when that consumer disconnects the
-    // BufferQueue is placed into the "abandoned" state, causing most
-    // interactions with the BufferQueue by the producer to fail.
+    // GonkBufferQueue is placed into the "abandoned" state, causing most
+    // interactions with the GonkBufferQueue by the producer to fail.
     // controlledByApp indicates whether the consumer is controlled by
     // the application.
     //
@@ -82,14 +76,14 @@ public:
     virtual status_t connect(const sp<IConsumerListener>& consumerListener,
             bool controlledByApp);
 
-    // disconnect disconnects a consumer from the BufferQueue. All
-    // buffers will be freed and the BufferQueue is placed in the "abandoned"
-    // state, causing most interactions with the BufferQueue by the producer to
+    // disconnect disconnects a consumer from the GonkBufferQueue. All
+    // buffers will be freed and the GonkBufferQueue is placed in the "abandoned"
+    // state, causing most interactions with the GonkBufferQueue by the producer to
     // fail.
     virtual status_t disconnect();
 
     // getReleasedBuffers sets the value pointed to by outSlotMask to a bit mask
-    // indicating which buffer slots have been released by the BufferQueue
+    // indicating which buffer slots have been released by the GonkBufferQueue
     // but have not yet been released by the consumer.
     //
     // This should be called from the onBuffersReleased() callback.
@@ -117,13 +111,13 @@ public:
 
     // setMaxAcquiredBufferCount sets the maximum number of buffers that can
     // be acquired by the consumer at one time (default 1).  This call will
-    // fail if a producer is connected to the BufferQueue.
+    // fail if a producer is connected to the GonkBufferQueue.
     virtual status_t setMaxAcquiredBufferCount(int maxAcquiredBuffers);
 
     // setConsumerName sets the name used in logging
     virtual void setConsumerName(const String8& name);
 
-    // setDefaultBufferFormat allows the BufferQueue to create
+    // setDefaultBufferFormat allows the GonkBufferQueue to create
     // GraphicBuffers of a defaultFormat if no format is specified
     // in dequeueBuffer.  Formats are enumerated in graphics.h; the
     // initial default is HAL_PIXEL_FORMAT_RGBA_8888.
@@ -145,16 +139,14 @@ public:
     // dump our state in a String
     virtual void dump(String8& result, const char* prefix) const;
 
+    // Added by mozilla
+    virtual mozilla::TemporaryRef<GonkBufferSlot::TextureClient> getTextureClientFromBuffer(ANativeWindowBuffer* buffer);
+
+    virtual int getSlotFromTextureClientLocked(GonkBufferSlot::TextureClient* client) const;
+
     // Functions required for backwards compatibility.
-    // These will be modified/renamed in IGraphicBufferConsumer and will be
+    // These will be modified/renamed in IGonkGraphicBufferConsumer and will be
     // removed from this class at that time. See b/13306289.
-
-    virtual status_t releaseBuffer(int buf, uint64_t frameNumber,
-            EGLDisplay display, EGLSyncKHR fence,
-            const sp<Fence>& releaseFence) {
-        return releaseBuffer(buf, frameNumber, releaseFence, display, fence);
-    }
-
     virtual status_t consumerConnect(const sp<IConsumerListener>& consumer,
             bool controlledByApp) {
         return connect(consumer, controlledByApp);
@@ -165,16 +157,16 @@ public:
     // End functions required for backwards compatibility
 
 private:
-    sp<BufferQueueCore> mCore;
+    sp<GonkBufferQueueCore> mCore;
 
     // This references mCore->mSlots. Lock mCore->mMutex while accessing.
-    BufferQueueDefs::SlotsType& mSlots;
+    GonkBufferQueueDefs::SlotsType& mSlots;
 
-    // This is a cached copy of the name stored in the BufferQueueCore.
+    // This is a cached copy of the name stored in the GonkBufferQueueCore.
     // It's updated during setConsumerName.
     String8 mConsumerName;
 
-}; // class BufferQueueConsumer
+}; // class GonkBufferQueueConsumer
 
 } // namespace android
 
