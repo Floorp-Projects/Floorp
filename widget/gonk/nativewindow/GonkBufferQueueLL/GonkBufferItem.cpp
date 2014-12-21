@@ -1,5 +1,6 @@
 /*
  * Copyright 2014 The Android Open Source Project
+ * Copyright (C) 2014 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <gui/BufferItem.h>
+#include "GonkBufferItem.h"
 
 #include <ui/Fence.h>
 #include <ui/GraphicBuffer.h>
@@ -23,7 +24,7 @@
 
 namespace android {
 
-BufferItem::BufferItem() :
+GonkBufferItem::GonkBufferItem() :
     mTransform(0),
     mScalingMode(NATIVE_WINDOW_SCALING_MODE_FREEZE),
     mTimestamp(0),
@@ -36,8 +37,8 @@ BufferItem::BufferItem() :
     mCrop.makeInvalid();
 }
 
-BufferItem::operator IGraphicBufferConsumer::BufferItem() const {
-    IGraphicBufferConsumer::BufferItem bufferItem;
+GonkBufferItem::operator IGonkGraphicBufferConsumer::BufferItem() const {
+    IGonkGraphicBufferConsumer::BufferItem bufferItem;
     bufferItem.mGraphicBuffer = mGraphicBuffer;
     bufferItem.mFence = mFence;
     bufferItem.mCrop = mCrop;
@@ -53,7 +54,7 @@ BufferItem::operator IGraphicBufferConsumer::BufferItem() const {
     return bufferItem;
 }
 
-size_t BufferItem::getPodSize() const {
+size_t GonkBufferItem::getPodSize() const {
     size_t c =  sizeof(mCrop) +
             sizeof(mTransform) +
             sizeof(mScalingMode) +
@@ -67,7 +68,7 @@ size_t BufferItem::getPodSize() const {
     return c;
 }
 
-size_t BufferItem::getFlattenedSize() const {
+size_t GonkBufferItem::getFlattenedSize() const {
     size_t c = 0;
     if (mGraphicBuffer != 0) {
         c += mGraphicBuffer->getFlattenedSize();
@@ -80,7 +81,7 @@ size_t BufferItem::getFlattenedSize() const {
     return sizeof(int32_t) + c + getPodSize();
 }
 
-size_t BufferItem::getFdCount() const {
+size_t GonkBufferItem::getFdCount() const {
     size_t c = 0;
     if (mGraphicBuffer != 0) {
         c += mGraphicBuffer->getFdCount();
@@ -91,11 +92,11 @@ size_t BufferItem::getFdCount() const {
     return c;
 }
 
-status_t BufferItem::flatten(
+status_t GonkBufferItem::flatten(
         void*& buffer, size_t& size, int*& fds, size_t& count) const {
 
     // make sure we have enough space
-    if (count < BufferItem::getFlattenedSize()) {
+    if (count < GonkBufferItem::getFlattenedSize()) {
         return NO_MEMORY;
     }
 
@@ -138,7 +139,7 @@ status_t BufferItem::flatten(
     return NO_ERROR;
 }
 
-status_t BufferItem::unflatten(
+status_t GonkBufferItem::unflatten(
         void const*& buffer, size_t& size, int const*& fds, size_t& count) {
 
     if (size < sizeof(uint32_t))
@@ -180,7 +181,7 @@ status_t BufferItem::unflatten(
     return NO_ERROR;
 }
 
-const char* BufferItem::scalingModeName(uint32_t scalingMode) {
+const char* GonkBufferItem::scalingModeName(uint32_t scalingMode) {
     switch (scalingMode) {
         case NATIVE_WINDOW_SCALING_MODE_FREEZE: return "FREEZE";
         case NATIVE_WINDOW_SCALING_MODE_SCALE_TO_WINDOW: return "SCALE_TO_WINDOW";

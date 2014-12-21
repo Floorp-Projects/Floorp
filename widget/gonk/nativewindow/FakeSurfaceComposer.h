@@ -45,10 +45,28 @@ public:
     // Instantiate MediaResourceManagerService and register to service manager.
     // If service manager is not present, wait until service manager becomes present.
     static  void instantiate();
+
 #if ANDROID_VERSION >= 19
     virtual void destroyDisplay(const sp<android::IBinder>& display);
-    virtual status_t captureScreen(const sp<IBinder>& display, const sp<IGraphicBufferProducer>& producer,
-            uint32_t reqWidth, uint32_t reqHeight, uint32_t minLayerZ, uint32_t maxLayerZ);
+#endif
+
+#if ANDROID_VERSION >= 21
+    virtual status_t captureScreen(const sp<IBinder>& display,
+                                   const sp<IGraphicBufferProducer>& producer,
+                                   Rect sourceCrop, uint32_t reqWidth, uint32_t reqHeight,
+                                   uint32_t minLayerZ, uint32_t maxLayerZ,
+                                   bool useIdentityTransform,
+                                   Rotation rotation = eRotateNone);
+#elif ANDROID_VERSION >= 19
+    virtual status_t captureScreen(const sp<IBinder>& display,
+                                   const sp<IGraphicBufferProducer>& producer,
+                                   uint32_t reqWidth, uint32_t reqHeight,
+                                   uint32_t minLayerZ, uint32_t maxLayerZ);
+#else
+    virtual status_t captureScreen(const sp<IBinder>& display,
+                                   const sp<IGraphicBufferProducer>& producer,
+                                   uint32_t reqWidth, uint32_t reqHeight,
+                                   uint32_t minLayerZ, uint32_t maxLayerZ, bool isCpuConsumer);
 #endif
 
 private:
@@ -69,15 +87,21 @@ private:
     virtual bool authenticateSurfaceTexture(
         const sp<IGraphicBufferProducer>& bufferProducer) const;
     virtual sp<IDisplayEventConnection> createDisplayEventConnection();
-    virtual status_t captureScreen(const sp<IBinder>& display,
-            const sp<IGraphicBufferProducer>& producer,
-            uint32_t reqWidth, uint32_t reqHeight,
-            uint32_t minLayerZ, uint32_t maxLayerZ, bool isCpuConsumer);
+#if ANDROID_VERSION >= 21
+    virtual void setPowerMode(const sp<IBinder>& display, int mode);
+    virtual status_t getDisplayConfigs(const sp<IBinder>& display, Vector<DisplayInfo>* configs);
+    virtual status_t getDisplayStats(const sp<IBinder>& display, DisplayStatInfo* stats);
+    virtual int getActiveConfig(const sp<IBinder>& display);
+    virtual status_t setActiveConfig(const sp<IBinder>& display, int id);
+    virtual status_t clearAnimationFrameStats();
+    virtual status_t getAnimationFrameStats(FrameStats* outStats) const;
+#elif ANDROID_VERSION >= 17
     // called when screen needs to turn off
     virtual void blank(const sp<IBinder>& display);
     // called when screen is turning back on
     virtual void unblank(const sp<IBinder>& display);
     virtual status_t getDisplayInfo(const sp<IBinder>& display, DisplayInfo* info);
+#endif
 
 };
 

@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2012 The Android Open Source Project
+ * Copyright (C) 2014 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,24 +16,33 @@
  */
 
 //#define LOG_NDEBUG 0
-#define LOG_TAG "BufferItemConsumer"
+#define LOG_TAG "GonkNativeWindow"
 #define ATRACE_TAG ATRACE_TAG_GRAPHICS
 #include <utils/Log.h>
 
-#include <gui/BufferItemConsumer.h>
+#include "GonkNativeWindowLL.h"
 
-#define BI_LOGV(x, ...) ALOGV("[%s] "x, mName.string(), ##__VA_ARGS__)
-#define BI_LOGD(x, ...) ALOGD("[%s] "x, mName.string(), ##__VA_ARGS__)
-#define BI_LOGI(x, ...) ALOGI("[%s] "x, mName.string(), ##__VA_ARGS__)
-#define BI_LOGW(x, ...) ALOGW("[%s] "x, mName.string(), ##__VA_ARGS__)
-#define BI_LOGE(x, ...) ALOGE("[%s] "x, mName.string(), ##__VA_ARGS__)
+using namespace mozilla;
+using namespace mozilla::layers;
 
 namespace android {
 
-BufferItemConsumer::BufferItemConsumer(
-        const sp<IGraphicBufferConsumer>& consumer, uint32_t consumerUsage,
+GonkNativeWindow::GonkNativeWindow(
+        const sp<IGonkGraphicBufferConsumer>& consumer, int bufferCount) :
+    GonkConsumerBase(consumer, false),
+    mNewFrameCallback(nullptr)
+{
+    if (bufferCount != DEFAULT_MAX_BUFFERS) {
+        status_t err = mConsumer->setMaxAcquiredBufferCount(bufferCount);
+        LOG_ALWAYS_FATAL_IF(err != OK,
+                "Failed to set max acquired buffer count to %d", bufferCount);
+    }
+}
+
+GonkNativeWindow::GonkNativeWindow(
+        const sp<IGonkGraphicBufferConsumer>& consumer, uint32_t consumerUsage,
         int bufferCount, bool controlledByApp) :
-    ConsumerBase(consumer, controlledByApp)
+    GonkConsumerBase(consumer, controlledByApp)
 {
     status_t err = mConsumer->setConsumerUsageBits(consumerUsage);
     LOG_ALWAYS_FATAL_IF(err != OK,
@@ -44,16 +54,16 @@ BufferItemConsumer::BufferItemConsumer(
     }
 }
 
-BufferItemConsumer::~BufferItemConsumer() {
+GonkNativeWindow::~GonkNativeWindow() {
 }
 
-void BufferItemConsumer::setName(const String8& name) {
+void GonkNativeWindow::setName(const String8& name) {
     Mutex::Autolock _l(mMutex);
     mName = name;
     mConsumer->setConsumerName(name);
 }
 
-status_t BufferItemConsumer::acquireBuffer(BufferItem *item,
+status_t GonkNativeWindow::acquireBuffer(BufferItem *item,
         nsecs_t presentWhen, bool waitForFence) {
     status_t err;
 
@@ -64,15 +74,15 @@ status_t BufferItemConsumer::acquireBuffer(BufferItem *item,
     err = acquireBufferLocked(item, presentWhen);
     if (err != OK) {
         if (err != NO_BUFFER_AVAILABLE) {
-            BI_LOGE("Error acquiring buffer: %s (%d)", strerror(err), err);
+            ALOGE("Error acquiring buffer: %s (%d)", strerror(err), err);
         }
         return err;
     }
 
     if (waitForFence) {
-        err = item->mFence->waitForever("BufferItemConsumer::acquireBuffer");
+        err = item->mFence->waitForever("GonkNativeWindow::acquireBuffer");
         if (err != OK) {
-            BI_LOGE("Failed to wait for fence of acquired buffer: %s (%d)",
+            ALOGE("Failed to wait for fence of acquired buffer: %s (%d)",
                     strerror(-err), err);
             return err;
         }
@@ -83,7 +93,7 @@ status_t BufferItemConsumer::acquireBuffer(BufferItem *item,
     return OK;
 }
 
-status_t BufferItemConsumer::releaseBuffer(const BufferItem &item,
+status_t GonkNativeWindow::releaseBuffer(const BufferItem &item,
         const sp<Fence>& releaseFence) {
     status_t err;
 
@@ -91,23 +101,99 @@ status_t BufferItemConsumer::releaseBuffer(const BufferItem &item,
 
     err = addReleaseFenceLocked(item.mBuf, item.mGraphicBuffer, releaseFence);
 
-    err = releaseBufferLocked(item.mBuf, item.mGraphicBuffer, EGL_NO_DISPLAY,
-            EGL_NO_SYNC_KHR);
+    err = releaseBufferLocked(item.mBuf, item.mGraphicBuffer);
     if (err != OK) {
-        BI_LOGE("Failed to release buffer: %s (%d)",
+        ALOGE("Failed to release buffer: %s (%d)",
                 strerror(-err), err);
     }
     return err;
 }
 
-status_t BufferItemConsumer::setDefaultBufferSize(uint32_t w, uint32_t h) {
+status_t GonkNativeWindow::setDefaultBufferSize(uint32_t w, uint32_t h) {
     Mutex::Autolock _l(mMutex);
     return mConsumer->setDefaultBufferSize(w, h);
 }
 
-status_t BufferItemConsumer::setDefaultBufferFormat(uint32_t defaultFormat) {
+status_t GonkNativeWindow::setDefaultBufferFormat(uint32_t defaultFormat) {
     Mutex::Autolock _l(mMutex);
     return mConsumer->setDefaultBufferFormat(defaultFormat);
+}
+
+TemporaryRef<TextureClient>
+GonkNativeWindow::getCurrentBuffer() {
+    Mutex::Autolock _l(mMutex);
+    BufferItem item;
+
+    // In asynchronous mode the list is guaranteed to be one buffer
+    // deep, while in synchronous mode we use the oldest buffer.
+    status_t err = acquireBufferLocked(&item, 0); //???
+    if (err != NO_ERROR) {
+        return NULL;
+    }
+
+    RefPtr<TextureClient> textureClient =
+        mConsumer->getTextureClientFromBuffer(item.mGraphicBuffer.get());
+    if (!textureClient) {
+        return NULL;
+    }
+    textureClient->SetRecycleCallback(GonkNativeWindow::RecycleCallback, this);
+    return textureClient;
+}
+
+/* static */ void
+GonkNativeWindow::RecycleCallback(TextureClient* client, void* closure) {
+    GonkNativeWindow* nativeWindow =
+        static_cast<GonkNativeWindow*>(closure);
+
+    client->ClearRecycleCallback();
+    nativeWindow->returnBuffer(client);
+}
+
+void GonkNativeWindow::returnBuffer(TextureClient* client) {
+    ALOGD("GonkNativeWindow::returnBuffer");
+    Mutex::Autolock lock(mMutex);
+
+    int index = mConsumer->getSlotFromTextureClientLocked(client);
+    if (index < 0) {
+        return;
+    }
+
+    sp<Fence> fence = client->GetReleaseFenceHandle().mFence;
+    if (!fence.get()) {
+        fence = Fence::NO_FENCE;
+    }
+
+    status_t err;
+    err = addReleaseFenceLocked(index,
+                                mSlots[index].mGraphicBuffer,
+                                fence);
+
+    err = releaseBufferLocked(index, mSlots[index].mGraphicBuffer);
+
+    if (err != OK) {
+        ALOGE("Failed to return buffer: %s (%d)", strerror(-err), err);
+    }
+}
+
+TemporaryRef<TextureClient>
+GonkNativeWindow::getTextureClientFromBuffer(ANativeWindowBuffer* buffer) {
+    Mutex::Autolock lock(mMutex);
+    return mConsumer->getTextureClientFromBuffer(buffer);
+}
+
+void GonkNativeWindow::setNewFrameCallback(
+        GonkNativeWindowNewFrameCallback* callback) {
+    ALOGD("setNewFrameCallback");
+    Mutex::Autolock lock(mMutex);
+    mNewFrameCallback = callback;
+}
+
+void GonkNativeWindow::onFrameAvailable() {
+    GonkConsumerBase::onFrameAvailable();
+
+    if (mNewFrameCallback) {
+        mNewFrameCallback->OnNewFrame();
+    }
 }
 
 } // namespace android

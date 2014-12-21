@@ -1,5 +1,6 @@
 /*
  * Copyright 2014 The Android Open Source Project
+ * Copyright (C) 2014 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,29 +15,27 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_GUI_BUFFERSLOT_H
-#define ANDROID_GUI_BUFFERSLOT_H
+#ifndef NATIVEWINDOW_GONKBUFFERSLOT_LL_H
+#define NATIVEWINDOW_GONKBUFFERSLOT_LL_H
 
 #include <ui/Fence.h>
 #include <ui/GraphicBuffer.h>
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-
 #include <utils/StrongPointer.h>
+
+#include "mozilla/layers/TextureClient.h"
 
 namespace android {
 
 class Fence;
 
-struct BufferSlot {
+struct GonkBufferSlot {
+    typedef mozilla::layers::TextureClient TextureClient;
 
-    BufferSlot()
-    : mEglDisplay(EGL_NO_DISPLAY),
-      mBufferState(BufferSlot::FREE),
+    GonkBufferSlot()
+    : mBufferState(GonkBufferSlot::FREE),
       mRequestBufferCalled(false),
       mFrameNumber(0),
-      mEglFence(EGL_NO_SYNC_KHR),
       mAcquireCalled(false),
       mNeedsCleanupOnRelease(false),
       mAttachedByConsumer(false) {
@@ -45,9 +44,6 @@ struct BufferSlot {
     // mGraphicBuffer points to the buffer allocated for this slot or is NULL
     // if no buffer has been allocated.
     sp<GraphicBuffer> mGraphicBuffer;
-
-    // mEglDisplay is the EGLDisplay used to create EGLSyncKHR objects.
-    EGLDisplay mEglDisplay;
 
     // BufferState represents the different states in which a buffer slot
     // can be.  All slots are initially FREE.
@@ -105,13 +101,6 @@ struct BufferSlot {
     // may be released before their release fence is signaled).
     uint64_t mFrameNumber;
 
-    // mEglFence is the EGL sync object that must signal before the buffer
-    // associated with this buffer slot may be dequeued. It is initialized
-    // to EGL_NO_SYNC_KHR when the buffer is created and may be set to a
-    // new sync object in releaseBuffer.  (This is deprecated in favor of
-    // mFence, below.)
-    EGLSyncKHR mEglFence;
-
     // mFence is a fence which will signal when work initiated by the
     // previous owner of the buffer is finished. When the buffer is FREE,
     // the fence indicates when the consumer has finished reading
@@ -135,6 +124,9 @@ struct BufferSlot {
     // If so, it needs to set the BUFFER_NEEDS_REALLOCATION flag when dequeued
     // to prevent the producer from using a stale cached buffer.
     bool mAttachedByConsumer;
+
+    // mTextureClient is a thin abstraction over remotely allocated GraphicBuffer.
+    mozilla::RefPtr<TextureClient> mTextureClient;
 };
 
 } // namespace android

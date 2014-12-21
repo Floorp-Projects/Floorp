@@ -1,5 +1,6 @@
 /*
  * Copyright 2014 The Android Open Source Project
+ * Copyright (C) 2014 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +15,10 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_GUI_BUFFERITEM_H
-#define ANDROID_GUI_BUFFERITEM_H
+#ifndef NATIVEWINDOW_GONKBUFFERITEM_LL_H
+#define NATIVEWINDOW_GONKBUFFERITEM_LL_H
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-
-#include <gui/IGraphicBufferConsumer.h>
+#include "IGonkGraphicBufferConsumerLL.h"
 
 #include <ui/Rect.h>
 
@@ -32,8 +30,8 @@ namespace android {
 class Fence;
 class GraphicBuffer;
 
-class BufferItem : public Flattenable<BufferItem> {
-    friend class Flattenable<BufferItem>;
+class GonkBufferItem : public Flattenable<GonkBufferItem> {
+    friend class Flattenable<GonkBufferItem>;
     size_t getPodSize() const;
     size_t getFlattenedSize() const;
     size_t getFdCount() const;
@@ -43,8 +41,8 @@ class BufferItem : public Flattenable<BufferItem> {
     public:
     // The default value of mBuf, used to indicate this doesn't correspond to a slot.
     enum { INVALID_BUFFER_SLOT = -1 };
-    BufferItem();
-    operator IGraphicBufferConsumer::BufferItem() const;
+    GonkBufferItem();
+    operator IGonkGraphicBufferConsumer::BufferItem() const;
 
     static const char* scalingModeName(uint32_t scalingMode);
 

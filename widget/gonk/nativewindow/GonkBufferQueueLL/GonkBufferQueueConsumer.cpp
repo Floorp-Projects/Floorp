@@ -1,5 +1,6 @@
 /*
  * Copyright 2014 The Android Open Source Project
+ * Copyright (C) 2014 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,26 +17,26 @@
 
 #include <inttypes.h>
 
-#define LOG_TAG "BufferQueueConsumer"
+#define LOG_TAG "GonkBufferQueueConsumer"
 #define ATRACE_TAG ATRACE_TAG_GRAPHICS
 //#define LOG_NDEBUG 0
 
-#include <gui/BufferItem.h>
-#include <gui/BufferQueueConsumer.h>
-#include <gui/BufferQueueCore.h>
+#include "GonkBufferItem.h"
+#include "GonkBufferQueueConsumer.h"
+#include "GonkBufferQueueCore.h"
 #include <gui/IConsumerListener.h>
 #include <gui/IProducerListener.h>
 
 namespace android {
 
-BufferQueueConsumer::BufferQueueConsumer(const sp<BufferQueueCore>& core) :
+GonkBufferQueueConsumer::GonkBufferQueueConsumer(const sp<GonkBufferQueueCore>& core) :
     mCore(core),
     mSlots(core->mSlots),
     mConsumerName() {}
 
-BufferQueueConsumer::~BufferQueueConsumer() {}
+GonkBufferQueueConsumer::~GonkBufferQueueConsumer() {}
 
-status_t BufferQueueConsumer::acquireBuffer(BufferItem* outBuffer,
+status_t GonkBufferQueueConsumer::acquireBuffer(BufferItem* outBuffer,
         nsecs_t expectedPresent) {
     ATRACE_CALL();
     Mutex::Autolock lock(mCore->mMutex);
@@ -45,13 +46,13 @@ status_t BufferQueueConsumer::acquireBuffer(BufferItem* outBuffer,
     // buffer so that the consumer can successfully set up the newly acquired
     // buffer before releasing the old one.
     int numAcquiredBuffers = 0;
-    for (int s = 0; s < BufferQueueDefs::NUM_BUFFER_SLOTS; ++s) {
-        if (mSlots[s].mBufferState == BufferSlot::ACQUIRED) {
+    for (int s = 0; s < GonkBufferQueueDefs::NUM_BUFFER_SLOTS; ++s) {
+        if (mSlots[s].mBufferState == GonkBufferSlot::ACQUIRED) {
             ++numAcquiredBuffers;
         }
     }
     if (numAcquiredBuffers >= mCore->mMaxAcquiredBufferCount + 1) {
-        BQ_LOGE("acquireBuffer: max acquired buffer count reached: %d (max %d)",
+        ALOGE("acquireBuffer: max acquired buffer count reached: %d (max %d)",
                 numAcquiredBuffers, mCore->mMaxAcquiredBufferCount);
         return INVALID_OPERATION;
     }
@@ -63,7 +64,7 @@ status_t BufferQueueConsumer::acquireBuffer(BufferItem* outBuffer,
         return NO_BUFFER_AVAILABLE;
     }
 
-    BufferQueueCore::Fifo::iterator front(mCore->mQueue.begin());
+    GonkBufferQueueCore::Fifo::iterator front(mCore->mQueue.begin());
 
     // If expectedPresent is specified, we may not want to return a buffer yet.
     // If it's specified and there's more than one buffer queued, we may want
@@ -106,7 +107,7 @@ status_t BufferQueueConsumer::acquireBuffer(BufferItem* outBuffer,
                 // This buffer is set to display in the near future, or
                 // desiredPresent is garbage. Either way we don't want to drop
                 // the previous buffer just to get this on the screen sooner.
-                BQ_LOGV("acquireBuffer: nodrop desire=%" PRId64 " expect=%"
+                ALOGV("acquireBuffer: nodrop desire=%" PRId64 " expect=%"
                         PRId64 " (%" PRId64 ") now=%" PRId64,
                         desiredPresent, expectedPresent,
                         desiredPresent - expectedPresent,
@@ -114,12 +115,12 @@ status_t BufferQueueConsumer::acquireBuffer(BufferItem* outBuffer,
                 break;
             }
 
-            BQ_LOGV("acquireBuffer: drop desire=%" PRId64 " expect=%" PRId64
+            ALOGV("acquireBuffer: drop desire=%" PRId64 " expect=%" PRId64
                     " size=%zu",
                     desiredPresent, expectedPresent, mCore->mQueue.size());
             if (mCore->stillTracking(front)) {
                 // Front buffer is still in mSlots, so mark the slot as free
-                mSlots[front->mSlot].mBufferState = BufferSlot::FREE;
+                mSlots[front->mSlot].mBufferState = GonkBufferSlot::FREE;
             }
             mCore->mQueue.erase(front);
             front = mCore->mQueue.begin();
@@ -129,7 +130,7 @@ status_t BufferQueueConsumer::acquireBuffer(BufferItem* outBuffer,
         nsecs_t desiredPresent = front->mTimestamp;
         if (desiredPresent > expectedPresent &&
                 desiredPresent < expectedPresent + MAX_REASONABLE_NSEC) {
-            BQ_LOGV("acquireBuffer: defer desire=%" PRId64 " expect=%" PRId64
+            ALOGV("acquireBuffer: defer desire=%" PRId64 " expect=%" PRId64
                     " (%" PRId64 ") now=%" PRId64,
                     desiredPresent, expectedPresent,
                     desiredPresent - expectedPresent,
@@ -137,32 +138,37 @@ status_t BufferQueueConsumer::acquireBuffer(BufferItem* outBuffer,
             return PRESENT_LATER;
         }
 
-        BQ_LOGV("acquireBuffer: accept desire=%" PRId64 " expect=%" PRId64 " "
+        ALOGV("acquireBuffer: accept desire=%" PRId64 " expect=%" PRId64 " "
                 "(%" PRId64 ") now=%" PRId64, desiredPresent, expectedPresent,
                 desiredPresent - expectedPresent,
                 systemTime(CLOCK_MONOTONIC));
     }
 
     int slot = front->mSlot;
-    *outBuffer = *front;
+    //*outBuffer = *front;
+    outBuffer->mGraphicBuffer = mSlots[slot].mGraphicBuffer;
+    outBuffer->mFrameNumber = mSlots[slot].mFrameNumber;
+    outBuffer->mBuf = slot;
+    outBuffer->mFence = mSlots[slot].mFence;
+
     ATRACE_BUFFER_INDEX(slot);
 
-    BQ_LOGV("acquireBuffer: acquiring { slot=%d/%" PRIu64 " buffer=%p }",
+    ALOGV("acquireBuffer: acquiring { slot=%d/%" PRIu64 " buffer=%p }",
             slot, front->mFrameNumber, front->mGraphicBuffer->handle);
     // If the front buffer is still being tracked, update its slot state
     if (mCore->stillTracking(front)) {
         mSlots[slot].mAcquireCalled = true;
         mSlots[slot].mNeedsCleanupOnRelease = false;
-        mSlots[slot].mBufferState = BufferSlot::ACQUIRED;
+        mSlots[slot].mBufferState = GonkBufferSlot::ACQUIRED;
         mSlots[slot].mFence = Fence::NO_FENCE;
     }
 
     // If the buffer has previously been acquired by the consumer, set
     // mGraphicBuffer to NULL to avoid unnecessarily remapping this buffer
     // on the consumer side
-    if (outBuffer->mAcquireCalled) {
-        outBuffer->mGraphicBuffer = NULL;
-    }
+    //if (outBuffer->mAcquireCalled) {
+    //    outBuffer->mGraphicBuffer = NULL;
+    //}
 
     mCore->mQueue.erase(front);
 
@@ -171,28 +177,26 @@ status_t BufferQueueConsumer::acquireBuffer(BufferItem* outBuffer,
     // decrease.
     mCore->mDequeueCondition.broadcast();
 
-    ATRACE_INT(mCore->mConsumerName.string(), mCore->mQueue.size());
-
     return NO_ERROR;
 }
 
-status_t BufferQueueConsumer::detachBuffer(int slot) {
+status_t GonkBufferQueueConsumer::detachBuffer(int slot) {
     ATRACE_CALL();
     ATRACE_BUFFER_INDEX(slot);
-    BQ_LOGV("detachBuffer(C): slot %d", slot);
+    ALOGV("detachBuffer(C): slot %d", slot);
     Mutex::Autolock lock(mCore->mMutex);
 
     if (mCore->mIsAbandoned) {
-        BQ_LOGE("detachBuffer(C): BufferQueue has been abandoned");
+        ALOGE("detachBuffer(C): GonkBufferQueue has been abandoned");
         return NO_INIT;
     }
 
-    if (slot < 0 || slot >= BufferQueueDefs::NUM_BUFFER_SLOTS) {
-        BQ_LOGE("detachBuffer(C): slot index %d out of range [0, %d)",
-                slot, BufferQueueDefs::NUM_BUFFER_SLOTS);
+    if (slot < 0 || slot >= GonkBufferQueueDefs::NUM_BUFFER_SLOTS) {
+        ALOGE("detachBuffer(C): slot index %d out of range [0, %d)",
+                slot, GonkBufferQueueDefs::NUM_BUFFER_SLOTS);
         return BAD_VALUE;
-    } else if (mSlots[slot].mBufferState != BufferSlot::ACQUIRED) {
-        BQ_LOGE("detachBuffer(C): slot %d is not owned by the consumer "
+    } else if (mSlots[slot].mBufferState != GonkBufferSlot::ACQUIRED) {
+        ALOGE("detachBuffer(C): slot %d is not owned by the consumer "
                 "(state = %d)", slot, mSlots[slot].mBufferState);
         return BAD_VALUE;
     }
@@ -203,15 +207,15 @@ status_t BufferQueueConsumer::detachBuffer(int slot) {
     return NO_ERROR;
 }
 
-status_t BufferQueueConsumer::attachBuffer(int* outSlot,
+status_t GonkBufferQueueConsumer::attachBuffer(int* outSlot,
         const sp<android::GraphicBuffer>& buffer) {
     ATRACE_CALL();
 
     if (outSlot == NULL) {
-        BQ_LOGE("attachBuffer(P): outSlot must not be NULL");
+        ALOGE("attachBuffer(P): outSlot must not be NULL");
         return BAD_VALUE;
     } else if (buffer == NULL) {
-        BQ_LOGE("attachBuffer(P): cannot attach NULL buffer");
+        ALOGE("attachBuffer(P): cannot attach NULL buffer");
         return BAD_VALUE;
     }
 
@@ -220,12 +224,12 @@ status_t BufferQueueConsumer::attachBuffer(int* outSlot,
     // Make sure we don't have too many acquired buffers and find a free slot
     // to put the buffer into (the oldest if there are multiple).
     int numAcquiredBuffers = 0;
-    int found = BufferQueueCore::INVALID_BUFFER_SLOT;
-    for (int s = 0; s < BufferQueueDefs::NUM_BUFFER_SLOTS; ++s) {
-        if (mSlots[s].mBufferState == BufferSlot::ACQUIRED) {
+    int found = GonkBufferQueueCore::INVALID_BUFFER_SLOT;
+    for (int s = 0; s < GonkBufferQueueDefs::NUM_BUFFER_SLOTS; ++s) {
+        if (mSlots[s].mBufferState == GonkBufferSlot::ACQUIRED) {
             ++numAcquiredBuffers;
-        } else if (mSlots[s].mBufferState == BufferSlot::FREE) {
-            if (found == BufferQueueCore::INVALID_BUFFER_SLOT ||
+        } else if (mSlots[s].mBufferState == GonkBufferSlot::FREE) {
+            if (found == GonkBufferQueueCore::INVALID_BUFFER_SLOT ||
                     mSlots[s].mFrameNumber < mSlots[found].mFrameNumber) {
                 found = s;
             }
@@ -233,28 +237,28 @@ status_t BufferQueueConsumer::attachBuffer(int* outSlot,
     }
 
     if (numAcquiredBuffers >= mCore->mMaxAcquiredBufferCount + 1) {
-        BQ_LOGE("attachBuffer(P): max acquired buffer count reached: %d "
+        ALOGE("attachBuffer(P): max acquired buffer count reached: %d "
                 "(max %d)", numAcquiredBuffers,
                 mCore->mMaxAcquiredBufferCount);
         return INVALID_OPERATION;
     }
-    if (found == BufferQueueCore::INVALID_BUFFER_SLOT) {
-        BQ_LOGE("attachBuffer(P): could not find free buffer slot");
+    if (found == GonkBufferQueueCore::INVALID_BUFFER_SLOT) {
+        ALOGE("attachBuffer(P): could not find free buffer slot");
         return NO_MEMORY;
     }
 
     *outSlot = found;
     ATRACE_BUFFER_INDEX(*outSlot);
-    BQ_LOGV("attachBuffer(C): returning slot %d", *outSlot);
+    ALOGV("attachBuffer(C): returning slot %d", *outSlot);
 
     mSlots[*outSlot].mGraphicBuffer = buffer;
-    mSlots[*outSlot].mBufferState = BufferSlot::ACQUIRED;
+    mSlots[*outSlot].mBufferState = GonkBufferSlot::ACQUIRED;
     mSlots[*outSlot].mAttachedByConsumer = true;
     mSlots[*outSlot].mNeedsCleanupOnRelease = false;
     mSlots[*outSlot].mFence = Fence::NO_FENCE;
     mSlots[*outSlot].mFrameNumber = 0;
 
-    // mAcquireCalled tells BufferQueue that it doesn't need to send a valid
+    // mAcquireCalled tells GonkBufferQueue that it doesn't need to send a valid
     // GraphicBuffer pointer on the next acquireBuffer call, which decreases
     // Binder traffic by not un/flattening the GraphicBuffer. However, it
     // requires that the consumer maintain a cached copy of the slot <--> buffer
@@ -274,13 +278,11 @@ status_t BufferQueueConsumer::attachBuffer(int* outSlot,
     return NO_ERROR;
 }
 
-status_t BufferQueueConsumer::releaseBuffer(int slot, uint64_t frameNumber,
-        const sp<Fence>& releaseFence, EGLDisplay eglDisplay,
-        EGLSyncKHR eglFence) {
+status_t GonkBufferQueueConsumer::releaseBuffer(int slot, uint64_t frameNumber,
+        const sp<Fence>& releaseFence) {
     ATRACE_CALL();
-    ATRACE_BUFFER_INDEX(slot);
 
-    if (slot < 0 || slot >= BufferQueueDefs::NUM_BUFFER_SLOTS ||
+    if (slot < 0 || slot >= GonkBufferQueueDefs::NUM_BUFFER_SLOTS ||
             releaseFence == NULL) {
         return BAD_VALUE;
     }
@@ -291,35 +293,33 @@ status_t BufferQueueConsumer::releaseBuffer(int slot, uint64_t frameNumber,
 
         // If the frame number has changed because the buffer has been reallocated,
         // we can ignore this releaseBuffer for the old buffer
-        if (frameNumber != mSlots[slot].mFrameNumber) {
-            return STALE_BUFFER_SLOT;
-        }
+        //if (frameNumber != mSlots[slot].mFrameNumber) {
+        //    return STALE_BUFFER_SLOT;
+        //}
 
         // Make sure this buffer hasn't been queued while acquired by the consumer
-        BufferQueueCore::Fifo::iterator current(mCore->mQueue.begin());
+        GonkBufferQueueCore::Fifo::iterator current(mCore->mQueue.begin());
         while (current != mCore->mQueue.end()) {
             if (current->mSlot == slot) {
-                BQ_LOGE("releaseBuffer: buffer slot %d pending release is "
+                ALOGE("releaseBuffer: buffer slot %d pending release is "
                         "currently queued", slot);
                 return BAD_VALUE;
             }
             ++current;
         }
 
-        if (mSlots[slot].mBufferState == BufferSlot::ACQUIRED) {
-            mSlots[slot].mEglDisplay = eglDisplay;
-            mSlots[slot].mEglFence = eglFence;
+        if (mSlots[slot].mBufferState == GonkBufferSlot::ACQUIRED) {
             mSlots[slot].mFence = releaseFence;
-            mSlots[slot].mBufferState = BufferSlot::FREE;
+            mSlots[slot].mBufferState = GonkBufferSlot::FREE;
             listener = mCore->mConnectedProducerListener;
-            BQ_LOGV("releaseBuffer: releasing slot %d", slot);
+            ALOGV("releaseBuffer: releasing slot %d", slot);
         } else if (mSlots[slot].mNeedsCleanupOnRelease) {
-            BQ_LOGV("releaseBuffer: releasing a stale buffer slot %d "
+            ALOGV("releaseBuffer: releasing a stale buffer slot %d "
                     "(state = %d)", slot, mSlots[slot].mBufferState);
             mSlots[slot].mNeedsCleanupOnRelease = false;
             return STALE_BUFFER_SLOT;
         } else {
-            BQ_LOGV("releaseBuffer: attempted to release buffer slot %d "
+            ALOGV("releaseBuffer: attempted to release buffer slot %d "
                     "but its state was %d", slot, mSlots[slot].mBufferState);
             return BAD_VALUE;
         }
@@ -335,22 +335,22 @@ status_t BufferQueueConsumer::releaseBuffer(int slot, uint64_t frameNumber,
     return NO_ERROR;
 }
 
-status_t BufferQueueConsumer::connect(
+status_t GonkBufferQueueConsumer::connect(
         const sp<IConsumerListener>& consumerListener, bool controlledByApp) {
     ATRACE_CALL();
 
     if (consumerListener == NULL) {
-        BQ_LOGE("connect(C): consumerListener may not be NULL");
+        ALOGE("connect(C): consumerListener may not be NULL");
         return BAD_VALUE;
     }
 
-    BQ_LOGV("connect(C): controlledByApp=%s",
+    ALOGV("connect(C): controlledByApp=%s",
             controlledByApp ? "true" : "false");
 
     Mutex::Autolock lock(mCore->mMutex);
 
     if (mCore->mIsAbandoned) {
-        BQ_LOGE("connect(C): BufferQueue has been abandoned");
+        ALOGE("connect(C): GonkBufferQueue has been abandoned");
         return NO_INIT;
     }
 
@@ -360,15 +360,15 @@ status_t BufferQueueConsumer::connect(
     return NO_ERROR;
 }
 
-status_t BufferQueueConsumer::disconnect() {
+status_t GonkBufferQueueConsumer::disconnect() {
     ATRACE_CALL();
 
-    BQ_LOGV("disconnect(C)");
+    ALOGV("disconnect(C)");
 
     Mutex::Autolock lock(mCore->mMutex);
 
     if (mCore->mConsumerListener == NULL) {
-        BQ_LOGE("disconnect(C): no consumer is connected");
+        ALOGE("disconnect(C): no consumer is connected");
         return BAD_VALUE;
     }
 
@@ -380,23 +380,23 @@ status_t BufferQueueConsumer::disconnect() {
     return NO_ERROR;
 }
 
-status_t BufferQueueConsumer::getReleasedBuffers(uint64_t *outSlotMask) {
+status_t GonkBufferQueueConsumer::getReleasedBuffers(uint64_t *outSlotMask) {
     ATRACE_CALL();
 
     if (outSlotMask == NULL) {
-        BQ_LOGE("getReleasedBuffers: outSlotMask may not be NULL");
+        ALOGE("getReleasedBuffers: outSlotMask may not be NULL");
         return BAD_VALUE;
     }
 
     Mutex::Autolock lock(mCore->mMutex);
 
     if (mCore->mIsAbandoned) {
-        BQ_LOGE("getReleasedBuffers: BufferQueue has been abandoned");
+        ALOGE("getReleasedBuffers: GonkBufferQueue has been abandoned");
         return NO_INIT;
     }
 
     uint64_t mask = 0;
-    for (int s = 0; s < BufferQueueDefs::NUM_BUFFER_SLOTS; ++s) {
+    for (int s = 0; s < GonkBufferQueueDefs::NUM_BUFFER_SLOTS; ++s) {
         if (!mSlots[s].mAcquireCalled) {
             mask |= (1ULL << s);
         }
@@ -405,7 +405,7 @@ status_t BufferQueueConsumer::getReleasedBuffers(uint64_t *outSlotMask) {
     // Remove from the mask queued buffers for which acquire has been called,
     // since the consumer will not receive their buffer addresses and so must
     // retain their cached information
-    BufferQueueCore::Fifo::iterator current(mCore->mQueue.begin());
+    GonkBufferQueueCore::Fifo::iterator current(mCore->mQueue.begin());
     while (current != mCore->mQueue.end()) {
         if (current->mAcquireCalled) {
             mask &= ~(1ULL << current->mSlot);
@@ -413,22 +413,22 @@ status_t BufferQueueConsumer::getReleasedBuffers(uint64_t *outSlotMask) {
         ++current;
     }
 
-    BQ_LOGV("getReleasedBuffers: returning mask %#" PRIx64, mask);
+    ALOGV("getReleasedBuffers: returning mask %#" PRIx64, mask);
     *outSlotMask = mask;
     return NO_ERROR;
 }
 
-status_t BufferQueueConsumer::setDefaultBufferSize(uint32_t width,
+status_t GonkBufferQueueConsumer::setDefaultBufferSize(uint32_t width,
         uint32_t height) {
     ATRACE_CALL();
 
     if (width == 0 || height == 0) {
-        BQ_LOGV("setDefaultBufferSize: dimensions cannot be 0 (width=%u "
+        ALOGV("setDefaultBufferSize: dimensions cannot be 0 (width=%u "
                 "height=%u)", width, height);
         return BAD_VALUE;
     }
 
-    BQ_LOGV("setDefaultBufferSize: width=%u height=%u", width, height);
+    ALOGV("setDefaultBufferSize: width=%u height=%u", width, height);
 
     Mutex::Autolock lock(mCore->mMutex);
     mCore->mDefaultWidth = width;
@@ -436,88 +436,122 @@ status_t BufferQueueConsumer::setDefaultBufferSize(uint32_t width,
     return NO_ERROR;
 }
 
-status_t BufferQueueConsumer::setDefaultMaxBufferCount(int bufferCount) {
+status_t GonkBufferQueueConsumer::setDefaultMaxBufferCount(int bufferCount) {
     ATRACE_CALL();
     Mutex::Autolock lock(mCore->mMutex);
     return mCore->setDefaultMaxBufferCountLocked(bufferCount);
 }
 
-status_t BufferQueueConsumer::disableAsyncBuffer() {
+status_t GonkBufferQueueConsumer::disableAsyncBuffer() {
     ATRACE_CALL();
 
     Mutex::Autolock lock(mCore->mMutex);
 
     if (mCore->mConsumerListener != NULL) {
-        BQ_LOGE("disableAsyncBuffer: consumer already connected");
+        ALOGE("disableAsyncBuffer: consumer already connected");
         return INVALID_OPERATION;
     }
 
-    BQ_LOGV("disableAsyncBuffer");
+    ALOGV("disableAsyncBuffer");
     mCore->mUseAsyncBuffer = false;
     return NO_ERROR;
 }
 
-status_t BufferQueueConsumer::setMaxAcquiredBufferCount(
+status_t GonkBufferQueueConsumer::setMaxAcquiredBufferCount(
         int maxAcquiredBuffers) {
     ATRACE_CALL();
 
     if (maxAcquiredBuffers < 1 ||
-            maxAcquiredBuffers > BufferQueueCore::MAX_MAX_ACQUIRED_BUFFERS) {
-        BQ_LOGE("setMaxAcquiredBufferCount: invalid count %d",
+            maxAcquiredBuffers > GonkBufferQueueCore::MAX_MAX_ACQUIRED_BUFFERS) {
+        ALOGE("setMaxAcquiredBufferCount: invalid count %d",
                 maxAcquiredBuffers);
         return BAD_VALUE;
     }
 
     Mutex::Autolock lock(mCore->mMutex);
 
-    if (mCore->mConnectedApi != BufferQueueCore::NO_CONNECTED_API) {
-        BQ_LOGE("setMaxAcquiredBufferCount: producer is already connected");
+    if (mCore->mConnectedApi != GonkBufferQueueCore::NO_CONNECTED_API) {
+        ALOGE("setMaxAcquiredBufferCount: producer is already connected");
         return INVALID_OPERATION;
     }
 
-    BQ_LOGV("setMaxAcquiredBufferCount: %d", maxAcquiredBuffers);
+    ALOGV("setMaxAcquiredBufferCount: %d", maxAcquiredBuffers);
     mCore->mMaxAcquiredBufferCount = maxAcquiredBuffers;
     return NO_ERROR;
 }
 
-void BufferQueueConsumer::setConsumerName(const String8& name) {
+void GonkBufferQueueConsumer::setConsumerName(const String8& name) {
     ATRACE_CALL();
-    BQ_LOGV("setConsumerName: '%s'", name.string());
+    ALOGV("setConsumerName: '%s'", name.string());
     Mutex::Autolock lock(mCore->mMutex);
     mCore->mConsumerName = name;
     mConsumerName = name;
 }
 
-status_t BufferQueueConsumer::setDefaultBufferFormat(uint32_t defaultFormat) {
+status_t GonkBufferQueueConsumer::setDefaultBufferFormat(uint32_t defaultFormat) {
     ATRACE_CALL();
-    BQ_LOGV("setDefaultBufferFormat: %u", defaultFormat);
+    ALOGV("setDefaultBufferFormat: %u", defaultFormat);
     Mutex::Autolock lock(mCore->mMutex);
     mCore->mDefaultBufferFormat = defaultFormat;
     return NO_ERROR;
 }
 
-status_t BufferQueueConsumer::setConsumerUsageBits(uint32_t usage) {
+status_t GonkBufferQueueConsumer::setConsumerUsageBits(uint32_t usage) {
     ATRACE_CALL();
-    BQ_LOGV("setConsumerUsageBits: %#x", usage);
+    ALOGV("setConsumerUsageBits: %#x", usage);
     Mutex::Autolock lock(mCore->mMutex);
     mCore->mConsumerUsageBits = usage;
     return NO_ERROR;
 }
 
-status_t BufferQueueConsumer::setTransformHint(uint32_t hint) {
+status_t GonkBufferQueueConsumer::setTransformHint(uint32_t hint) {
     ATRACE_CALL();
-    BQ_LOGV("setTransformHint: %#x", hint);
+    ALOGV("setTransformHint: %#x", hint);
     Mutex::Autolock lock(mCore->mMutex);
     mCore->mTransformHint = hint;
     return NO_ERROR;
 }
 
-sp<NativeHandle> BufferQueueConsumer::getSidebandStream() const {
+sp<NativeHandle> GonkBufferQueueConsumer::getSidebandStream() const {
     return mCore->mSidebandStream;
 }
 
-void BufferQueueConsumer::dump(String8& result, const char* prefix) const {
+void GonkBufferQueueConsumer::dump(String8& result, const char* prefix) const {
     mCore->dump(result, prefix);
 }
 
+TemporaryRef<GonkBufferSlot::TextureClient>
+GonkBufferQueueConsumer::getTextureClientFromBuffer(ANativeWindowBuffer* buffer)
+{
+    Mutex::Autolock _l(mCore->mMutex);
+    if (buffer == NULL) {
+        ALOGE("getSlotFromBufferLocked: encountered NULL buffer");
+        return nullptr;
+    }
+
+    for (int i = 0; i < GonkBufferQueueDefs::NUM_BUFFER_SLOTS; i++) {
+        if (mSlots[i].mGraphicBuffer != NULL && mSlots[i].mGraphicBuffer->handle == buffer->handle) {
+            return mSlots[i].mTextureClient;
+        }
+    }
+    ALOGE("getSlotFromBufferLocked: unknown buffer: %p", buffer->handle);
+    return nullptr;
+}
+
+int
+GonkBufferQueueConsumer::getSlotFromTextureClientLocked(GonkBufferSlot::TextureClient* client) const
+{
+    if (client == NULL) {
+        ALOGE("getSlotFromBufferLocked: encountered NULL buffer");
+        return BAD_VALUE;
+    }
+
+    for (int i = 0; i < GonkBufferQueueDefs::NUM_BUFFER_SLOTS; i++) {
+        if (mSlots[i].mTextureClient == client) {
+            return i;
+        }
+    }
+    ALOGE("getSlotFromBufferLocked: unknown TextureClient: %p", client);
+    return BAD_VALUE;
+}
 } // namespace android

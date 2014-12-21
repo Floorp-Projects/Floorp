@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2014 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +15,10 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_GUI_SURFACE_H
-#define ANDROID_GUI_SURFACE_H
+#ifndef NATIVEWINDOW_GONKNATIVEWINDOWCLIENT_LL_H
+#define NATIVEWINDOW_GONKNATIVEWINDOWCLIENT_LL_H
 
 #include <gui/IGraphicBufferProducer.h>
-#include <gui/BufferQueue.h>
 
 #include <ui/ANativeObjectBase.h>
 #include <ui/Region.h>
@@ -27,58 +27,60 @@
 #include <utils/threads.h>
 #include <utils/KeyedVector.h>
 
+#include "GonkBufferQueueLL.h"
+
 struct ANativeWindow_Buffer;
 
 namespace android {
 
 /*
  * An implementation of ANativeWindow that feeds graphics buffers into a
- * BufferQueue.
+ * GonkBufferQueue.
  *
  * This is typically used by programs that want to render frames through
  * some means (maybe OpenGL, a software renderer, or a hardware decoder)
  * and have the frames they create forwarded to SurfaceFlinger for
  * compositing.  For example, a video decoder could render a frame and call
  * eglSwapBuffers(), which invokes ANativeWindow callbacks defined by
- * Surface.  Surface then forwards the buffers through Binder IPC
- * to the BufferQueue's producer interface, providing the new frame to a
+ * GonkNativeWindowClient.  GonkNativeWindowClient then forwards the buffers through Binder IPC
+ * to the GonkBufferQueue's producer interface, providing the new frame to a
  * consumer such as GLConsumer.
  */
-class Surface
-    : public ANativeObjectBase<ANativeWindow, Surface, RefBase>
+class GonkNativeWindowClient
+    : public ANativeObjectBase<ANativeWindow, GonkNativeWindowClient, RefBase>
 {
 public:
 
     /*
-     * creates a Surface from the given IGraphicBufferProducer (which concrete
-     * implementation is a BufferQueue).
+     * creates a GonkNativeWindowClient from the given IGraphicBufferProducer (which concrete
+     * implementation is a GonkBufferQueue).
      *
-     * Surface is mainly state-less while it's disconnected, it can be
+     * GonkNativeWindowClient is mainly state-less while it's disconnected, it can be
      * viewed as a glorified IGraphicBufferProducer holder. It's therefore
-     * safe to create other Surfaces from the same IGraphicBufferProducer.
+     * safe to create other GonkNativeWindowClients from the same IGraphicBufferProducer.
      *
-     * However, once a Surface is connected, it'll prevent other Surfaces
+     * However, once a GonkNativeWindowClient is connected, it'll prevent other GonkNativeWindowClients
      * referring to the same IGraphicBufferProducer to become connected and
      * therefore prevent them to be used as actual producers of buffers.
      *
-     * the controlledByApp flag indicates that this Surface (producer) is
+     * the controlledByApp flag indicates that this GonkNativeWindowClient (producer) is
      * controlled by the application. This flag is used at connect time.
      */
-    Surface(const sp<IGraphicBufferProducer>& bufferProducer, bool controlledByApp = false);
+    GonkNativeWindowClient(const sp<IGraphicBufferProducer>& bufferProducer, bool controlledByApp = false);
 
     /* getIGraphicBufferProducer() returns the IGraphicBufferProducer this
-     * Surface was created with. Usually it's an error to use the
-     * IGraphicBufferProducer while the Surface is connected.
+     * GonkNativeWindowClient was created with. Usually it's an error to use the
+     * IGraphicBufferProducer while the GonkNativeWindowClient is connected.
      */
     sp<IGraphicBufferProducer> getIGraphicBufferProducer() const;
 
     /* convenience function to check that the given surface is non NULL as
      * well as its IGraphicBufferProducer */
-    static bool isValid(const sp<Surface>& surface) {
+    static bool isValid(const sp<GonkNativeWindowClient>& surface) {
         return surface != NULL && surface->getIGraphicBufferProducer() != NULL;
     }
 
-    /* Attaches a sideband buffer stream to the Surface's IGraphicBufferProducer.
+    /* Attaches a sideband buffer stream to the GonkNativeWindowClient's IGraphicBufferProducer.
      *
      * A sideband stream is a device-specific mechanism for passing buffers
      * from the producer to the consumer without using dequeueBuffer/
@@ -94,7 +96,7 @@ public:
     /* Allocates buffers based on the current dimensions/format.
      *
      * This function will allocate up to the maximum number of buffers
-     * permitted by the current BufferQueue configuration. It will use the
+     * permitted by the current GonkBufferQueue configuration. It will use the
      * default format and dimensions. This is most useful to avoid an allocation
      * delay during dequeueBuffer. If there are already the maximum number of
      * buffers allocated, this function has no effect.
@@ -102,12 +104,12 @@ public:
     void allocateBuffers();
 
 protected:
-    virtual ~Surface();
+    virtual ~GonkNativeWindowClient();
 
 private:
     // can't be copied
-    Surface& operator = (const Surface& rhs);
-    Surface(const Surface& rhs);
+    GonkNativeWindowClient& operator = (const GonkNativeWindowClient& rhs);
+    GonkNativeWindowClient(const GonkNativeWindowClient& rhs);
 
     // ANativeWindow hooks
     static int hook_cancelBuffer(ANativeWindow* window,
@@ -175,7 +177,7 @@ public:
     virtual int unlockAndPost();
 
 protected:
-    enum { NUM_BUFFER_SLOTS = BufferQueue::NUM_BUFFER_SLOTS };
+    enum { NUM_BUFFER_SLOTS = GonkBufferQueue::NUM_BUFFER_SLOTS };
     enum { DEFAULT_FORMAT = PIXEL_FORMAT_RGBA_8888 };
 
 private:
@@ -275,7 +277,7 @@ private:
     mutable bool mConsumerRunningBehind;
 
     // mMutex is the mutex used to prevent concurrent access to the member
-    // variables of Surface objects. It must be locked whenever the
+    // variables of GonkNativeWindowClient objects. It must be locked whenever the
     // member variables are accessed.
     mutable Mutex mMutex;
 
@@ -290,4 +292,4 @@ private:
 
 }; // namespace android
 
-#endif  // ANDROID_GUI_SURFACE_H
+#endif  // NATIVEWINDOW_GONKNATIVEWINDOWCLIENT_LL_H

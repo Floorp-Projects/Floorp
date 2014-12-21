@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2012 The Android Open Source Project
+ * Copyright (C) 2014 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,63 +15,63 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "BufferQueue"
+#define LOG_TAG "GonkBufferQueue"
 #define ATRACE_TAG ATRACE_TAG_GRAPHICS
-//#define LOG_NDEBUG 0
+#define LOG_NDEBUG 0
 
-#include <gui/BufferQueue.h>
-#include <gui/BufferQueueConsumer.h>
-#include <gui/BufferQueueCore.h>
-#include <gui/BufferQueueProducer.h>
+#include "GonkBufferQueue.h"
+#include "GonkBufferQueueConsumer.h"
+#include "GonkBufferQueueCore.h"
+#include "GonkBufferQueueProducer.h"
 
 namespace android {
 
-BufferQueue::ProxyConsumerListener::ProxyConsumerListener(
+GonkBufferQueue::ProxyConsumerListener::ProxyConsumerListener(
         const wp<ConsumerListener>& consumerListener):
         mConsumerListener(consumerListener) {}
 
-BufferQueue::ProxyConsumerListener::~ProxyConsumerListener() {}
+GonkBufferQueue::ProxyConsumerListener::~ProxyConsumerListener() {}
 
-void BufferQueue::ProxyConsumerListener::onFrameAvailable() {
+void GonkBufferQueue::ProxyConsumerListener::onFrameAvailable() {
     sp<ConsumerListener> listener(mConsumerListener.promote());
     if (listener != NULL) {
         listener->onFrameAvailable();
     }
 }
 
-void BufferQueue::ProxyConsumerListener::onBuffersReleased() {
+void GonkBufferQueue::ProxyConsumerListener::onBuffersReleased() {
     sp<ConsumerListener> listener(mConsumerListener.promote());
     if (listener != NULL) {
         listener->onBuffersReleased();
     }
 }
 
-void BufferQueue::ProxyConsumerListener::onSidebandStreamChanged() {
+void GonkBufferQueue::ProxyConsumerListener::onSidebandStreamChanged() {
     sp<ConsumerListener> listener(mConsumerListener.promote());
     if (listener != NULL) {
         listener->onSidebandStreamChanged();
     }
 }
 
-void BufferQueue::createBufferQueue(sp<IGraphicBufferProducer>* outProducer,
-        sp<IGraphicBufferConsumer>* outConsumer,
+void GonkBufferQueue::createBufferQueue(sp<IGraphicBufferProducer>* outProducer,
+        sp<IGonkGraphicBufferConsumer>* outConsumer,
         const sp<IGraphicBufferAlloc>& allocator) {
     LOG_ALWAYS_FATAL_IF(outProducer == NULL,
-            "BufferQueue: outProducer must not be NULL");
+            "GonkBufferQueue: outProducer must not be NULL");
     LOG_ALWAYS_FATAL_IF(outConsumer == NULL,
-            "BufferQueue: outConsumer must not be NULL");
+            "GonkBufferQueue: outConsumer must not be NULL");
 
-    sp<BufferQueueCore> core(new BufferQueueCore(allocator));
+    sp<GonkBufferQueueCore> core(new GonkBufferQueueCore(allocator));
     LOG_ALWAYS_FATAL_IF(core == NULL,
-            "BufferQueue: failed to create BufferQueueCore");
+            "GonkBufferQueue: failed to create GonkBufferQueueCore");
 
-    sp<IGraphicBufferProducer> producer(new BufferQueueProducer(core));
+    sp<IGraphicBufferProducer> producer(new GonkBufferQueueProducer(core));
     LOG_ALWAYS_FATAL_IF(producer == NULL,
-            "BufferQueue: failed to create BufferQueueProducer");
+            "GonkBufferQueue: failed to create GonkBufferQueueProducer");
 
-    sp<IGraphicBufferConsumer> consumer(new BufferQueueConsumer(core));
+    sp<IGonkGraphicBufferConsumer> consumer(new GonkBufferQueueConsumer(core));
     LOG_ALWAYS_FATAL_IF(consumer == NULL,
-            "BufferQueue: failed to create BufferQueueConsumer");
+            "GonkBufferQueue: failed to create GonkBufferQueueConsumer");
 
     *outProducer = producer;
     *outConsumer = consumer;

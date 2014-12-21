@@ -1,5 +1,6 @@
 /*
  * Copyright 2014 The Android Open Source Project
+ * Copyright (C) 2014 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +15,23 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_GUI_BUFFERQUEUEPRODUCER_H
-#define ANDROID_GUI_BUFFERQUEUEPRODUCER_H
+#ifndef NATIVEWINDOW_GONKBUFFERQUEUEPRODUCER_LL_H
+#define NATIVEWINDOW_GONKBUFFERQUEUEPRODUCER_LL_H
 
-#include <gui/BufferQueueDefs.h>
+#include "GonkBufferQueueDefs.h"
 #include <gui/IGraphicBufferProducer.h>
 
 namespace android {
 
-class BufferSlot;
+class GonkBufferSlot;
 
-class BufferQueueProducer : public BnGraphicBufferProducer,
+class GonkBufferQueueProducer : public BnGraphicBufferProducer,
                             private IBinder::DeathRecipient {
 public:
-    friend class BufferQueue; // Needed to access binderDied
+    friend class GonkBufferQueue; // Needed to access binderDied
 
-    BufferQueueProducer(const sp<BufferQueueCore>& core);
-    virtual ~BufferQueueProducer();
+    GonkBufferQueueProducer(const sp<GonkBufferQueueCore>& core);
+    virtual ~GonkBufferQueueProducer();
 
     // requestBuffer returns the GraphicBuffer for slot N.
     //
@@ -41,7 +42,7 @@ public:
 
     // setBufferCount updates the number of available buffer slots.  If this
     // method succeeds, buffer slots will be both unallocated and owned by
-    // the BufferQueue object (i.e. they are not owned by the producer or
+    // the GonkBufferQueue object (i.e. they are not owned by the producer or
     // consumer).
     //
     // This will fail if the producer has dequeued any buffers, or if
@@ -106,7 +107,7 @@ public:
     // See IGraphicBufferProducer::attachBuffer
     virtual status_t attachBuffer(int* outSlot, const sp<GraphicBuffer>& buffer);
 
-    // queueBuffer returns a filled buffer to the BufferQueue.
+    // queueBuffer returns a filled buffer to the GonkBufferQueue.
     //
     // Additional data is provided in the QueueBufferInput struct.  Notably,
     // a timestamp must be provided for the buffer. The timestamp is in
@@ -124,7 +125,7 @@ public:
     virtual status_t queueBuffer(int slot,
             const QueueBufferInput& input, QueueBufferOutput* output);
 
-    // cancelBuffer returns a dequeued buffer to the BufferQueue, but doesn't
+    // cancelBuffer returns a dequeued buffer to the GonkBufferQueue, but doesn't
     // queue it for use by the consumer.
     //
     // The buffer will not be overwritten until the fence signals.  The fence
@@ -135,25 +136,25 @@ public:
     // window.h (e.g. NATIVE_WINDOW_FORMAT).
     virtual int query(int what, int* outValue);
 
-    // connect attempts to connect a producer API to the BufferQueue.  This
+    // connect attempts to connect a producer API to the GonkBufferQueue.  This
     // must be called before any other IGraphicBufferProducer methods are
     // called except for getAllocator.  A consumer must already be connected.
     //
     // This method will fail if connect was previously called on the
-    // BufferQueue and no corresponding disconnect call was made (i.e. if
+    // GonkBufferQueue and no corresponding disconnect call was made (i.e. if
     // it's still connected to a producer).
     //
     // APIs are enumerated in window.h (e.g. NATIVE_WINDOW_API_CPU).
     virtual status_t connect(const sp<IProducerListener>& listener,
             int api, bool producerControlledByApp, QueueBufferOutput* output);
 
-    // disconnect attempts to disconnect a producer API from the BufferQueue.
+    // disconnect attempts to disconnect a producer API from the GonkBufferQueue.
     // Calling this method will cause any subsequent calls to other
     // IGraphicBufferProducer methods to fail except for getAllocator and connect.
     // Successfully calling connect after this will allow the other methods to
     // succeed again.
     //
-    // This method will fail if the the BufferQueue is not currently
+    // This method will fail if the the GonkBufferQueue is not currently
     // connected to the specified producer API.
     virtual status_t disconnect(int api);
 
@@ -181,23 +182,23 @@ private:
     // block if there are no available slots and we are not in non-blocking
     // mode (producer and consumer controlled by the application). If it blocks,
     // it will release mCore->mMutex while blocked so that other operations on
-    // the BufferQueue may succeed.
+    // the GonkBufferQueue may succeed.
     status_t waitForFreeSlotThenRelock(const char* caller, bool async,
             int* found, status_t* returnFlags) const;
 
-    sp<BufferQueueCore> mCore;
+    sp<GonkBufferQueueCore> mCore;
 
     // This references mCore->mSlots. Lock mCore->mMutex while accessing.
-    BufferQueueDefs::SlotsType& mSlots;
+    GonkBufferQueueDefs::SlotsType& mSlots;
 
-    // This is a cached copy of the name stored in the BufferQueueCore.
+    // This is a cached copy of the name stored in the GonkBufferQueueCore.
     // It's updated during connect and dequeueBuffer (which should catch
     // most updates).
     String8 mConsumerName;
 
     uint32_t mStickyTransform;
 
-}; // class BufferQueueProducer
+}; // class GonkBufferQueueProducer
 
 } // namespace android
 

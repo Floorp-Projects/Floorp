@@ -1,5 +1,6 @@
 /*
  * Copyright 2014 The Android Open Source Project
+ * Copyright (C) 2014 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +15,23 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "BufferQueueCore"
+#define LOG_TAG "GonkBufferQueueCore"
 #define ATRACE_TAG ATRACE_TAG_GRAPHICS
 //#define LOG_NDEBUG 0
 
-#define EGL_EGLEXT_PROTOTYPES
-
 #include <inttypes.h>
 
-#include <gui/BufferItem.h>
-#include <gui/BufferQueueCore.h>
+#include "GonkBufferItem.h"
+#include "GonkBufferQueueCore.h"
 #include <gui/IConsumerListener.h>
 #include <gui/IGraphicBufferAlloc.h>
 #include <gui/IProducerListener.h>
 #include <gui/ISurfaceComposer.h>
 #include <private/gui/ComposerService.h>
+
+#include <cutils/compiler.h>
+#include "mozilla/layers/GrallocTextureClient.h"
+#include "mozilla/layers/ImageBridgeChild.h"
 
 template <typename T>
 static inline T max(T a, T b) { return a > b ? a : b; }
@@ -41,7 +44,7 @@ static String8 getUniqueName() {
             android_atomic_inc(&counter));
 }
 
-BufferQueueCore::BufferQueueCore(const sp<IGraphicBufferAlloc>& allocator) :
+GonkBufferQueueCore::GonkBufferQueueCore(const sp<IGraphicBufferAlloc>& allocator) :
     mAllocator(allocator),
     mMutex(),
     mIsAbandoned(false),
@@ -68,18 +71,12 @@ BufferQueueCore::BufferQueueCore(const sp<IGraphicBufferAlloc>& allocator) :
     mIsAllocating(false),
     mIsAllocatingCondition()
 {
-    if (allocator == NULL) {
-        sp<ISurfaceComposer> composer(ComposerService::getComposerService());
-        mAllocator = composer->createGraphicBufferAlloc();
-        if (mAllocator == NULL) {
-            BQ_LOGE("createGraphicBufferAlloc failed");
-        }
-    }
+    ALOGV("GonkBufferQueueCore");
 }
 
-BufferQueueCore::~BufferQueueCore() {}
+GonkBufferQueueCore::~GonkBufferQueueCore() {}
 
-void BufferQueueCore::dump(String8& result, const char* prefix) const {
+void GonkBufferQueueCore::dump(String8& result, const char* prefix) const {
     Mutex::Autolock lock(mMutex);
 
     String8 fifo;
@@ -90,11 +87,11 @@ void BufferQueueCore::dump(String8& result, const char* prefix) const {
                 current->mSlot, current->mGraphicBuffer.get(),
                 current->mCrop.left, current->mCrop.top, current->mCrop.right,
                 current->mCrop.bottom, current->mTransform, current->mTimestamp,
-                BufferItem::scalingModeName(current->mScalingMode));
+                GonkBufferItem::scalingModeName(current->mScalingMode));
         ++current;
     }
 
-    result.appendFormat("%s-BufferQueue mMaxAcquiredBufferCount=%d, "
+    result.appendFormat("%s-GonkBufferQueue mMaxAcquiredBufferCount=%d, "
             "mDequeueBufferCannotBlock=%d, default-size=[%dx%d], "
             "default-format=%d, transform-hint=%02x, FIFO(%zu)={%s}\n",
             prefix, mMaxAcquiredBufferCount, mDequeueBufferCannotBlock,
@@ -103,9 +100,9 @@ void BufferQueueCore::dump(String8& result, const char* prefix) const {
 
     // Trim the free buffers so as to not spam the dump
     int maxBufferCount = 0;
-    for (int s = BufferQueueDefs::NUM_BUFFER_SLOTS - 1; s >= 0; --s) {
-        const BufferSlot& slot(mSlots[s]);
-        if (slot.mBufferState != BufferSlot::FREE ||
+    for (int s = GonkBufferQueueDefs::NUM_BUFFER_SLOTS - 1; s >= 0; --s) {
+        const GonkBufferSlot& slot(mSlots[s]);
+        if (slot.mBufferState != GonkBufferSlot::FREE ||
                 slot.mGraphicBuffer != NULL) {
             maxBufferCount = s + 1;
             break;
@@ -113,12 +110,12 @@ void BufferQueueCore::dump(String8& result, const char* prefix) const {
     }
 
     for (int s = 0; s < maxBufferCount; ++s) {
-        const BufferSlot& slot(mSlots[s]);
+        const GonkBufferSlot& slot(mSlots[s]);
         const sp<GraphicBuffer>& buffer(slot.mGraphicBuffer);
         result.appendFormat("%s%s[%02d:%p] state=%-8s", prefix,
-                (slot.mBufferState == BufferSlot::ACQUIRED) ? ">" : " ",
+                (slot.mBufferState == GonkBufferSlot::ACQUIRED) ? ">" : " ",
                 s, buffer.get(),
-                BufferSlot::bufferStateName(slot.mBufferState));
+                GonkBufferSlot::bufferStateName(slot.mBufferState));
 
         if (buffer != NULL) {
             result.appendFormat(", %p [%4ux%4u:%4u,%3X]", buffer->handle,
@@ -130,7 +127,7 @@ void BufferQueueCore::dump(String8& result, const char* prefix) const {
     }
 }
 
-int BufferQueueCore::getMinUndequeuedBufferCountLocked(bool async) const {
+int GonkBufferQueueCore::getMinUndequeuedBufferCountLocked(bool async) const {
     // If dequeueBuffer is allowed to error out, we don't have to add an
     // extra buffer.
     if (!mUseAsyncBuffer) {
@@ -144,11 +141,11 @@ int BufferQueueCore::getMinUndequeuedBufferCountLocked(bool async) const {
     return mMaxAcquiredBufferCount;
 }
 
-int BufferQueueCore::getMinMaxBufferCountLocked(bool async) const {
+int GonkBufferQueueCore::getMinMaxBufferCountLocked(bool async) const {
     return getMinUndequeuedBufferCountLocked(async) + 1;
 }
 
-int BufferQueueCore::getMaxBufferCountLocked(bool async) const {
+int GonkBufferQueueCore::getMaxBufferCountLocked(bool async) const {
     int minMaxBufferCount = getMinMaxBufferCountLocked(async);
 
     int maxBufferCount = max(mDefaultMaxBufferCount, minMaxBufferCount);
@@ -161,9 +158,9 @@ int BufferQueueCore::getMaxBufferCountLocked(bool async) const {
     // waiting to be consumed need to have their slots preserved. Such buffers
     // will temporarily keep the max buffer count up until the slots no longer
     // need to be preserved.
-    for (int s = maxBufferCount; s < BufferQueueDefs::NUM_BUFFER_SLOTS; ++s) {
-        BufferSlot::BufferState state = mSlots[s].mBufferState;
-        if (state == BufferSlot::QUEUED || state == BufferSlot::DEQUEUED) {
+    for (int s = maxBufferCount; s < GonkBufferQueueDefs::NUM_BUFFER_SLOTS; ++s) {
+        GonkBufferSlot::BufferState state = mSlots[s].mBufferState;
+        if (state == GonkBufferSlot::QUEUED || state == GonkBufferSlot::DEQUEUED) {
             maxBufferCount = s + 1;
         }
     }
@@ -171,51 +168,58 @@ int BufferQueueCore::getMaxBufferCountLocked(bool async) const {
     return maxBufferCount;
 }
 
-status_t BufferQueueCore::setDefaultMaxBufferCountLocked(int count) {
-    const int minBufferCount = mUseAsyncBuffer ? 2 : 1;
-    if (count < minBufferCount || count > BufferQueueDefs::NUM_BUFFER_SLOTS) {
-        BQ_LOGV("setDefaultMaxBufferCount: invalid count %d, should be in "
+status_t GonkBufferQueueCore::setDefaultMaxBufferCountLocked(int count) {
+    const int minBufferCount = 2;
+    if (count < minBufferCount || count > GonkBufferQueueDefs::NUM_BUFFER_SLOTS) {
+        ALOGV("setDefaultMaxBufferCount: invalid count %d, should be in "
                 "[%d, %d]",
-                count, minBufferCount, BufferQueueDefs::NUM_BUFFER_SLOTS);
+                count, minBufferCount, GonkBufferQueueDefs::NUM_BUFFER_SLOTS);
         return BAD_VALUE;
     }
 
-    BQ_LOGV("setDefaultMaxBufferCount: setting count to %d", count);
+    ALOGV("setDefaultMaxBufferCount: setting count to %d", count);
     mDefaultMaxBufferCount = count;
     mDequeueCondition.broadcast();
 
     return NO_ERROR;
 }
 
-void BufferQueueCore::freeBufferLocked(int slot) {
-    BQ_LOGV("freeBufferLocked: slot %d", slot);
+void GonkBufferQueueCore::freeBufferLocked(int slot) {
+    ALOGV("freeBufferLocked: slot %d", slot);
+
+    if (mSlots[slot].mTextureClient) {
+        mSlots[slot].mTextureClient->ClearRecycleCallback();
+        // release TextureClient in ImageBridge thread
+        TextureClientReleaseTask* task = new TextureClientReleaseTask(mSlots[slot].mTextureClient);
+        mSlots[slot].mTextureClient = NULL;
+        ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(FROM_HERE, task);
+    }
     mSlots[slot].mGraphicBuffer.clear();
-    if (mSlots[slot].mBufferState == BufferSlot::ACQUIRED) {
+    if (mSlots[slot].mBufferState == GonkBufferSlot::ACQUIRED) {
         mSlots[slot].mNeedsCleanupOnRelease = true;
     }
-    mSlots[slot].mBufferState = BufferSlot::FREE;
+    mSlots[slot].mBufferState = GonkBufferSlot::FREE;
     mSlots[slot].mFrameNumber = UINT32_MAX;
     mSlots[slot].mAcquireCalled = false;
 
-    // Destroy fence as BufferQueue now takes ownership
-    if (mSlots[slot].mEglFence != EGL_NO_SYNC_KHR) {
-        eglDestroySyncKHR(mSlots[slot].mEglDisplay, mSlots[slot].mEglFence);
-        mSlots[slot].mEglFence = EGL_NO_SYNC_KHR;
-    }
+    // Destroy fence as GonkBufferQueue now takes ownership
     mSlots[slot].mFence = Fence::NO_FENCE;
 }
 
-void BufferQueueCore::freeAllBuffersLocked() {
+void GonkBufferQueueCore::freeAllBuffersLocked() {
+    ALOGW_IF(!mQueue.isEmpty(),
+            "freeAllBuffersLocked called but mQueue is not empty");
+    mQueue.clear();
     mBufferHasBeenQueued = false;
-    for (int s = 0; s < BufferQueueDefs::NUM_BUFFER_SLOTS; ++s) {
+    for (int s = 0; s < GonkBufferQueueDefs::NUM_BUFFER_SLOTS; ++s) {
         freeBufferLocked(s);
     }
 }
 
-bool BufferQueueCore::stillTracking(const BufferItem* item) const {
-    const BufferSlot& slot = mSlots[item->mSlot];
+bool GonkBufferQueueCore::stillTracking(const GonkBufferItem* item) const {
+    const GonkBufferSlot& slot = mSlots[item->mSlot];
 
-    BQ_LOGV("stillTracking: item { slot=%d/%" PRIu64 " buffer=%p } "
+    ALOGV("stillTracking: item { slot=%d/%" PRIu64 " buffer=%p } "
             "slot { slot=%d/%" PRIu64 " buffer=%p }",
             item->mSlot, item->mFrameNumber,
             (item->mGraphicBuffer.get() ? item->mGraphicBuffer->handle : 0),
@@ -228,7 +232,7 @@ bool BufferQueueCore::stillTracking(const BufferItem* item) const {
            (item->mGraphicBuffer->handle == slot.mGraphicBuffer->handle);
 }
 
-void BufferQueueCore::waitWhileAllocatingLocked() const {
+void GonkBufferQueueCore::waitWhileAllocatingLocked() const {
     ATRACE_CALL();
     while (mIsAllocating) {
         mIsAllocatingCondition.wait(mMutex);

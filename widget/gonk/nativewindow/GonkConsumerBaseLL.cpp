@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2014 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,34 +17,20 @@
 
 #include <inttypes.h>
 
-#define LOG_TAG "ConsumerBase"
+#define LOG_TAG "GonkConsumerBase"
 #define ATRACE_TAG ATRACE_TAG_GRAPHICS
 //#define LOG_NDEBUG 0
 
 #define EGL_EGLEXT_PROTOTYPES
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-
 #include <hardware/hardware.h>
 
 #include <gui/IGraphicBufferAlloc.h>
-#include <gui/ISurfaceComposer.h>
-#include <gui/SurfaceComposerClient.h>
-#include <gui/ConsumerBase.h>
-
-#include <private/gui/ComposerService.h>
 
 #include <utils/Log.h>
 #include <utils/String8.h>
-#include <utils/Trace.h>
 
-// Macros for including the ConsumerBase name in log messages
-#define CB_LOGV(x, ...) ALOGV("[%s] "x, mName.string(), ##__VA_ARGS__)
-#define CB_LOGD(x, ...) ALOGD("[%s] "x, mName.string(), ##__VA_ARGS__)
-#define CB_LOGI(x, ...) ALOGI("[%s] "x, mName.string(), ##__VA_ARGS__)
-#define CB_LOGW(x, ...) ALOGW("[%s] "x, mName.string(), ##__VA_ARGS__)
-#define CB_LOGE(x, ...) ALOGE("[%s] "x, mName.string(), ##__VA_ARGS__)
+#include "GonkConsumerBaseLL.h"
 
 namespace android {
 
@@ -53,7 +40,7 @@ static int32_t createProcessUniqueId() {
     return android_atomic_inc(&globalCounter);
 }
 
-ConsumerBase::ConsumerBase(const sp<IGraphicBufferConsumer>& bufferQueue, bool controlledByApp) :
+GonkConsumerBase::GonkConsumerBase(const sp<IGonkGraphicBufferConsumer>& bufferQueue, bool controlledByApp) :
         mAbandoned(false),
         mConsumer(bufferQueue) {
     // Choose a name using the PID and a process-unique ID.
@@ -64,42 +51,42 @@ ConsumerBase::ConsumerBase(const sp<IGraphicBufferConsumer>& bufferQueue, bool c
     // dropping to 0 at the end of the ctor.  Since all we need is a wp<...>
     // that's what we create.
     wp<ConsumerListener> listener = static_cast<ConsumerListener*>(this);
-    sp<IConsumerListener> proxy = new BufferQueue::ProxyConsumerListener(listener);
+    sp<IConsumerListener> proxy = new GonkBufferQueue::ProxyConsumerListener(listener);
 
     status_t err = mConsumer->consumerConnect(proxy, controlledByApp);
     if (err != NO_ERROR) {
-        CB_LOGE("ConsumerBase: error connecting to BufferQueue: %s (%d)",
+        ALOGE("GonkConsumerBase: error connecting to GonkBufferQueue: %s (%d)",
                 strerror(-err), err);
     } else {
         mConsumer->setConsumerName(mName);
     }
 }
 
-ConsumerBase::~ConsumerBase() {
-    CB_LOGV("~ConsumerBase");
+GonkConsumerBase::~GonkConsumerBase() {
+    ALOGV("~GonkConsumerBase");
     Mutex::Autolock lock(mMutex);
 
     // Verify that abandon() has been called before we get here.  This should
-    // be done by ConsumerBase::onLastStrongRef(), but it's possible for a
+    // be done by GonkConsumerBase::onLastStrongRef(), but it's possible for a
     // derived class to override that method and not call
-    // ConsumerBase::onLastStrongRef().
-    LOG_ALWAYS_FATAL_IF(!mAbandoned, "[%s] ~ConsumerBase was called, but the "
+    // GonkConsumerBase::onLastStrongRef().
+    LOG_ALWAYS_FATAL_IF(!mAbandoned, "[%s] ~GonkConsumerBase was called, but the "
         "consumer is not abandoned!", mName.string());
 }
 
-void ConsumerBase::onLastStrongRef(const void* id __attribute__((unused))) {
+void GonkConsumerBase::onLastStrongRef(const void* id __attribute__((unused))) {
     abandon();
 }
 
-void ConsumerBase::freeBufferLocked(int slotIndex) {
-    CB_LOGV("freeBufferLocked: slotIndex=%d", slotIndex);
+void GonkConsumerBase::freeBufferLocked(int slotIndex) {
+    ALOGV("freeBufferLocked: slotIndex=%d", slotIndex);
     mSlots[slotIndex].mGraphicBuffer = 0;
     mSlots[slotIndex].mFence = Fence::NO_FENCE;
     mSlots[slotIndex].mFrameNumber = 0;
 }
 
-void ConsumerBase::onFrameAvailable() {
-    CB_LOGV("onFrameAvailable");
+void GonkConsumerBase::onFrameAvailable() {
+    ALOGV("onFrameAvailable");
 
     sp<FrameAvailableListener> listener;
     { // scope for the lock
@@ -108,15 +95,15 @@ void ConsumerBase::onFrameAvailable() {
     }
 
     if (listener != NULL) {
-        CB_LOGV("actually calling onFrameAvailable");
+        ALOGV("actually calling onFrameAvailable");
         listener->onFrameAvailable();
     }
 }
 
-void ConsumerBase::onBuffersReleased() {
+void GonkConsumerBase::onBuffersReleased() {
     Mutex::Autolock lock(mMutex);
 
-    CB_LOGV("onBuffersReleased");
+    ALOGV("onBuffersReleased");
 
     if (mAbandoned) {
         // Nothing to do if we're already abandoned.
@@ -125,18 +112,18 @@ void ConsumerBase::onBuffersReleased() {
 
     uint64_t mask = 0;
     mConsumer->getReleasedBuffers(&mask);
-    for (int i = 0; i < BufferQueue::NUM_BUFFER_SLOTS; i++) {
+    for (int i = 0; i < GonkBufferQueue::NUM_BUFFER_SLOTS; i++) {
         if (mask & (1ULL << i)) {
             freeBufferLocked(i);
         }
     }
 }
 
-void ConsumerBase::onSidebandStreamChanged() {
+void GonkConsumerBase::onSidebandStreamChanged() {
 }
 
-void ConsumerBase::abandon() {
-    CB_LOGV("abandon");
+void GonkConsumerBase::abandon() {
+    ALOGV("abandon");
     Mutex::Autolock lock(mMutex);
 
     if (!mAbandoned) {
@@ -145,9 +132,9 @@ void ConsumerBase::abandon() {
     }
 }
 
-void ConsumerBase::abandonLocked() {
-	CB_LOGV("abandonLocked");
-    for (int i =0; i < BufferQueue::NUM_BUFFER_SLOTS; i++) {
+void GonkConsumerBase::abandonLocked() {
+    ALOGV("abandonLocked");
+    for (int i =0; i < GonkBufferQueue::NUM_BUFFER_SLOTS; i++) {
         freeBufferLocked(i);
     }
     // disconnect from the BufferQueue
@@ -155,23 +142,23 @@ void ConsumerBase::abandonLocked() {
     mConsumer.clear();
 }
 
-void ConsumerBase::setFrameAvailableListener(
+void GonkConsumerBase::setFrameAvailableListener(
         const wp<FrameAvailableListener>& listener) {
-    CB_LOGV("setFrameAvailableListener");
+    ALOGV("setFrameAvailableListener");
     Mutex::Autolock lock(mMutex);
     mFrameAvailableListener = listener;
 }
 
-void ConsumerBase::dump(String8& result) const {
+void GonkConsumerBase::dump(String8& result) const {
     dump(result, "");
 }
 
-void ConsumerBase::dump(String8& result, const char* prefix) const {
+void GonkConsumerBase::dump(String8& result, const char* prefix) const {
     Mutex::Autolock _l(mMutex);
     dumpLocked(result, prefix);
 }
 
-void ConsumerBase::dumpLocked(String8& result, const char* prefix) const {
+void GonkConsumerBase::dumpLocked(String8& result, const char* prefix) const {
     result.appendFormat("%smAbandoned=%d\n", prefix, int(mAbandoned));
 
     if (!mAbandoned) {
@@ -179,7 +166,7 @@ void ConsumerBase::dumpLocked(String8& result, const char* prefix) const {
     }
 }
 
-status_t ConsumerBase::acquireBufferLocked(BufferQueue::BufferItem *item,
+status_t GonkConsumerBase::acquireBufferLocked(GonkBufferQueue::BufferItem *item,
         nsecs_t presentWhen) {
     status_t err = mConsumer->acquireBuffer(item, presentWhen);
     if (err != NO_ERROR) {
@@ -193,21 +180,21 @@ status_t ConsumerBase::acquireBufferLocked(BufferQueue::BufferItem *item,
     mSlots[item->mBuf].mFrameNumber = item->mFrameNumber;
     mSlots[item->mBuf].mFence = item->mFence;
 
-    CB_LOGV("acquireBufferLocked: -> slot=%d/%" PRIu64,
+    ALOGV("acquireBufferLocked: -> slot=%d/%" PRIu64,
             item->mBuf, item->mFrameNumber);
 
     return OK;
 }
 
-status_t ConsumerBase::addReleaseFence(int slot,
+status_t GonkConsumerBase::addReleaseFence(int slot,
         const sp<GraphicBuffer> graphicBuffer, const sp<Fence>& fence) {
     Mutex::Autolock lock(mMutex);
     return addReleaseFenceLocked(slot, graphicBuffer, fence);
 }
 
-status_t ConsumerBase::addReleaseFenceLocked(int slot,
+status_t GonkConsumerBase::addReleaseFenceLocked(int slot,
         const sp<GraphicBuffer> graphicBuffer, const sp<Fence>& fence) {
-    CB_LOGV("addReleaseFenceLocked: slot=%d", slot);
+    ALOGV("addReleaseFenceLocked: slot=%d", slot);
 
     // If consumer no longer tracks this graphicBuffer, we can safely
     // drop this fence, as it will never be received by the producer.
@@ -222,7 +209,7 @@ status_t ConsumerBase::addReleaseFenceLocked(int slot,
                 String8::format("%.28s:%d", mName.string(), slot),
                 mSlots[slot].mFence, fence);
         if (!mergedFence.get()) {
-            CB_LOGE("failed to merge release fences");
+            ALOGE("failed to merge release fences");
             // synchronization is broken, the best we can do is hope fences
             // signal in order so the new fence will act like a union
             mSlots[slot].mFence = fence;
@@ -234,9 +221,7 @@ status_t ConsumerBase::addReleaseFenceLocked(int slot,
     return OK;
 }
 
-status_t ConsumerBase::releaseBufferLocked(
-        int slot, const sp<GraphicBuffer> graphicBuffer,
-        EGLDisplay display, EGLSyncKHR eglFence) {
+status_t GonkConsumerBase::releaseBufferLocked(int slot, const sp<GraphicBuffer> graphicBuffer) {
     // If consumer no longer tracks this graphicBuffer (we received a new
     // buffer on the same slot), the buffer producer is definitely no longer
     // tracking it.
@@ -244,11 +229,10 @@ status_t ConsumerBase::releaseBufferLocked(
         return OK;
     }
 
-    CB_LOGV("releaseBufferLocked: slot=%d/%" PRIu64,
+    ALOGV("releaseBufferLocked: slot=%d/%" PRIu64,
             slot, mSlots[slot].mFrameNumber);
-    status_t err = mConsumer->releaseBuffer(slot, mSlots[slot].mFrameNumber,
-            display, eglFence, mSlots[slot].mFence);
-    if (err == IGraphicBufferConsumer::STALE_BUFFER_SLOT) {
+    status_t err = mConsumer->releaseBuffer(slot, mSlots[slot].mFrameNumber, mSlots[slot].mFence);
+    if (err == IGonkGraphicBufferConsumer::STALE_BUFFER_SLOT) {
         freeBufferLocked(slot);
     }
 
@@ -257,9 +241,9 @@ status_t ConsumerBase::releaseBufferLocked(
     return err;
 }
 
-bool ConsumerBase::stillTracking(int slot,
+bool GonkConsumerBase::stillTracking(int slot,
         const sp<GraphicBuffer> graphicBuffer) {
-    if (slot < 0 || slot >= BufferQueue::NUM_BUFFER_SLOTS) {
+    if (slot < 0 || slot >= GonkBufferQueue::NUM_BUFFER_SLOTS) {
         return false;
     }
     return (mSlots[slot].mGraphicBuffer != NULL &&
