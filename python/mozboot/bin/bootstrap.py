@@ -32,6 +32,7 @@ REPOSITORY_PATH_PREFIX = 'python/mozboot'
 
 REPOSITORY_PATHS = [
     'mozboot/__init__.py',
+    'mozboot/android.py',
     'mozboot/base.py',
     'mozboot/bootstrap.py',
     'mozboot/centos.py',
