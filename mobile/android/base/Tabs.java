@@ -92,7 +92,6 @@ public class Tabs implements GeckoEventListener {
             "Tab:Select",
             "Content:LocationChange",
             "Content:SecurityChange",
-            "Content:ReaderEnabled",
             "Content:StateChange",
             "Content:LoadError",
             "Content:PageShow",
@@ -455,9 +454,6 @@ public class Tabs implements GeckoEventListener {
             } else if (event.equals("Content:SecurityChange")) {
                 tab.updateIdentityData(message.getJSONObject("identity"));
                 notifyListeners(tab, TabEvents.SECURITY_CHANGE);
-            } else if (event.equals("Content:ReaderEnabled")) {
-                tab.setReaderEnabled(true);
-                notifyListeners(tab, TabEvents.READER_ENABLED);
             } else if (event.equals("Content:StateChange")) {
                 int state = message.getInt("state");
                 if ((state & GeckoAppShell.WPL_STATE_IS_NETWORK) != 0) {
@@ -577,7 +573,6 @@ public class Tabs implements GeckoEventListener {
         PAGE_SHOW,
         LINK_FEED,
         SECURITY_CHANGE,
-        READER_ENABLED,
         DESKTOP_MODE_CHANGE,
         VIEWPORT_CHANGE,
         RECORDING_CHANGE,

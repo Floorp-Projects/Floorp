@@ -53,7 +53,6 @@ public class Tab {
     private boolean mHasFeeds;
     private boolean mHasOpenSearch;
     private final SiteIdentity mSiteIdentity;
-    private boolean mReaderEnabled;
     private BitmapDrawable mThumbnail;
     private final int mParentId;
     private final boolean mExternal;
@@ -260,10 +259,6 @@ public class Tab {
 
     public SiteIdentity getSiteIdentity() {
         return mSiteIdentity;
-    }
-
-    public boolean getReaderEnabled() {
-        return mReaderEnabled;
     }
 
     public boolean isBookmark() {
@@ -474,11 +469,6 @@ public class Tab {
         mSiteIdentity.update(identityData);
     }
 
-    public void setReaderEnabled(boolean readerEnabled) {
-        mReaderEnabled = readerEnabled;
-        Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.MENU_UPDATED);
-    }
-
     void updateBookmark() {
         if (getURL() == null) {
             return;
@@ -529,7 +519,7 @@ public class Tab {
     public void toggleReaderMode() {
         if (AboutPages.isAboutReader(mUrl)) {
             Tabs.getInstance().loadUrl(ReaderModeUtils.getUrlFromAboutReader(mUrl));
-        } else if (mReaderEnabled) {
+        } else {
             mEnteringReaderMode = true;
             Tabs.getInstance().loadUrl(ReaderModeUtils.getAboutReaderForUrl(mUrl, mId));
         }
@@ -614,7 +604,6 @@ public class Tab {
         setHasFeeds(false);
         setHasOpenSearch(false);
         updateIdentityData(null);
-        setReaderEnabled(false);
         setZoomConstraints(new ZoomConstraints(true));
         setHasTouchListeners(false);
         setBackgroundColor(DEFAULT_BACKGROUND_COLOR);
@@ -632,7 +621,6 @@ public class Tab {
         setLoadProgress(LOAD_PROGRESS_START);
         setState((!restoring && shouldShowProgress(url)) ? STATE_LOADING : STATE_SUCCESS);
         updateIdentityData(null);
-        setReaderEnabled(false);
     }
 
     void handleDocumentStop(boolean success) {
