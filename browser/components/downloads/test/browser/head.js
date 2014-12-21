@@ -262,6 +262,16 @@ function task_clearHistory() {
   });
 }
 
+function openLibrary(aLeftPaneRoot) {
+  let library = window.openDialog("chrome://browser/content/places/places.xul",
+                                  "", "chrome,toolbar=yes,dialog=no,resizable",
+                                  aLeftPaneRoot);
+
+  return new Promise(resolve => {
+    waitForFocus(resolve, library);
+  });
+}
+
 function promiseAlertDialogOpen(buttonAction) {
   return new Promise(resolve => {
     Services.ww.registerNotification(function onOpen(subj, topic, data) {
