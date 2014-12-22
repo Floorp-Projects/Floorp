@@ -319,8 +319,7 @@ let finishTest = Task.async(function* () {
   finish();
 });
 
-function tearDown()
-{
+registerCleanupFunction(function*() {
   gDevTools.testing = false;
 
   dumpConsoles();
@@ -330,14 +329,12 @@ function tearDown()
   }
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  gDevTools.closeToolbox(target);
+  yield gDevTools.closeToolbox(target);
 
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeCurrentTab();
   }
-}
-
-registerCleanupFunction(tearDown);
+});
 
 waitForExplicitFinish();
 
