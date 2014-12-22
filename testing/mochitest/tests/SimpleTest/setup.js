@@ -4,14 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 TestRunner.logEnabled = true;
 TestRunner.logger = LogController;
 
 /* Helper function */
-parseQueryString = function(encodedString, useArrays) {
+function parseQueryString(encodedString, useArrays) {
   // strip a leading '?' from the encoded string
-  var qstr = (encodedString[0] == "?") ? encodedString.substring(1) :
-                                         encodedString;
+  var qstr = (encodedString.length > 0 && encodedString[0] == "?")
+             ? encodedString.substring(1)
+             : encodedString;
   var pairs = qstr.replace(/\+/g, "%20").split(/(\&amp\;|\&\#38\;|\&#x26;|\&)/);
   var o = {};
   var decode;
