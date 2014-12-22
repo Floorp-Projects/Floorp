@@ -9,9 +9,8 @@
 namespace mozilla {
 namespace layers {
 
-MacIOSurfaceTextureClientOGL::MacIOSurfaceTextureClientOGL(ISurfaceAllocator* aAllcator,
-                                                           TextureFlags aFlags)
-  : TextureClient(aAllcator, aFlags)
+MacIOSurfaceTextureClientOGL::MacIOSurfaceTextureClientOGL(TextureFlags aFlags)
+  : TextureClient(aFlags)
   , mIsLocked(false)
 {}
 

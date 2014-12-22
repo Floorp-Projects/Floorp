@@ -12,10 +12,8 @@ using namespace gfx;
 
 namespace layers {
 
-DIBTextureClient::DIBTextureClient(ISurfaceAllocator* aAllocator,
-                                   gfx::SurfaceFormat aFormat,
-                                   TextureFlags aFlags)
-  : TextureClient(aAllocator, aFlags)
+DIBTextureClient::DIBTextureClient(gfx::SurfaceFormat aFormat, TextureFlags aFlags)
+  : TextureClient(aFlags)
   , mFormat(aFormat)
   , mIsLocked(false)
 {
@@ -31,8 +29,7 @@ TemporaryRef<TextureClient>
 DIBTextureClient::CreateSimilar(TextureFlags aFlags,
                                 TextureAllocationFlags aAllocFlags) const
 {
-  RefPtr<TextureClient> tex = new DIBTextureClient(mAllocator, mFormat, 
-                                                   mFlags | aFlags);
+  RefPtr<TextureClient> tex = new DIBTextureClient(mFormat, mFlags | aFlags);
 
   if (!tex->AllocateForSurface(mSize, aAllocFlags)) {
     return nullptr;

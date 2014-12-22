@@ -4,8 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MacIOSurfaceImage.h"
-#include "mozilla/layers/CompositableClient.h"
-#include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/MacIOSurfaceTextureClientOGL.h"
 
 using namespace mozilla;
@@ -16,7 +14,7 @@ MacIOSurfaceImage::GetTextureClient(CompositableClient* aClient)
 {
   if (!mTextureClient) {
     RefPtr<MacIOSurfaceTextureClientOGL> buffer =
-      new MacIOSurfaceTextureClientOGL(aClient->GetForwarder(), TextureFlags::DEFAULT);
+      new MacIOSurfaceTextureClientOGL(TextureFlags::DEFAULT);
     buffer->InitWith(mSurface);
     mTextureClient = buffer;
   }
