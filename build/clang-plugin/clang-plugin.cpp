@@ -64,10 +64,16 @@ private:
     virtual void run(const MatchFinder::MatchResult &Result);
   };
 
+  class TrivialCtorDtorChecker : public MatchFinder::MatchCallback {
+  public:
+    virtual void run(const MatchFinder::MatchResult &Result);
+  };
+
   ScopeChecker stackClassChecker;
   ScopeChecker globalClassChecker;
   NonHeapClassChecker nonheapClassChecker;
   ArithmeticArgChecker arithmeticArgChecker;
+  TrivialCtorDtorChecker trivialCtorDtorChecker;
   MatchFinder astMatcher;
 };
 
@@ -368,6 +374,12 @@ AST_MATCHER(Decl, noArithmeticExprInArgs) {
   return MozChecker::hasCustomAnnotation(&Node, "moz_no_arith_expr_in_arg");
 }
 
+/// This matcher will match any C++ class that is marked as having a trivial
+/// constructor and destructor.
+AST_MATCHER(CXXRecordDecl, hasTrivialCtorDtor) {
+  return MozChecker::hasCustomAnnotation(&Node, "moz_trivial_ctor_dtor");
+}
+
 /// This matcher will match all arithmetic binary operators.
 AST_MATCHER(BinaryOperator, binaryArithmeticOperator) {
   BinaryOperatorKind opcode = Node.getOpcode();
@@ -484,6 +496,9 @@ DiagnosticsMatcher::DiagnosticsMatcher()
           )
       )).bind("call"),
     &arithmeticArgChecker);
+
+  astMatcher.addMatcher(recordDecl(hasTrivialCtorDtor()).bind("node"),
+    &trivialCtorDtorChecker);
 }
 
 void DiagnosticsMatcher::ScopeChecker::run(
@@ -618,6 +633,19 @@ void DiagnosticsMatcher::ArithmeticArgChecker::run(
   } else if (const CXXConstructExpr *ctr = Result.Nodes.getNodeAs<CXXConstructExpr>("call")) {
     Diag.Report(expr->getLocStart(), errorID) << ctr->getConstructor();
   }
+}
+
+void DiagnosticsMatcher::TrivialCtorDtorChecker::run(
+    const MatchFinder::MatchResult &Result) {
+  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
+  unsigned errorID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Error, "class %0 must have trivial constructors and destructors");
+  const CXXRecordDecl *node = Result.Nodes.getNodeAs<CXXRecordDecl>("node");
+
+  bool badCtor = !node->hasTrivialDefaultConstructor();
+  bool badDtor = !node->hasTrivialDestructor();
+  if (badCtor || badDtor)
+    Diag.Report(node->getLocStart(), errorID) << node;
 }
 
 class MozCheckAction : public PluginASTAction {
