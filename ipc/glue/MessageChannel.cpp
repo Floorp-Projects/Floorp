@@ -13,6 +13,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Move.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "nsDebug.h"
 #include "nsISupportsImpl.h"
 #include "nsContentUtils.h"
@@ -114,7 +115,6 @@ enum Direction
     IN_MESSAGE,
     OUT_MESSAGE
 };
-
 
 class MessageChannel::InterruptFrame
 {
