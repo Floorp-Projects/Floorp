@@ -11887,32 +11887,6 @@ class MIsObject
     }
 };
 
-class MHaveSameClass
-  : public MBinaryInstruction,
-    public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1> >::Data
-{
-    MHaveSameClass(MDefinition *left, MDefinition *right)
-      : MBinaryInstruction(left, right)
-    {
-        setResultType(MIRType_Boolean);
-        setMovable();
-    }
-
-  public:
-    INSTRUCTION_HEADER(HaveSameClass);
-
-    static MHaveSameClass *New(TempAllocator &alloc, MDefinition *left, MDefinition *right) {
-        return new(alloc) MHaveSameClass(left, right);
-    }
-
-    bool congruentTo(const MDefinition *ins) const {
-        return congruentIfOperandsEqual(ins);
-    }
-    AliasSet getAliasSet() const {
-        return AliasSet::None();
-    }
-};
-
 class MHasClass
     : public MUnaryInstruction,
       public SingleObjectPolicy::Data

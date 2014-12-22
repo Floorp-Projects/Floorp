@@ -185,8 +185,6 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
     // Utility intrinsics.
     if (native == intrinsic_IsCallable)
         return inlineIsCallable(callInfo);
-    if (native == intrinsic_HaveSameClass)
-        return inlineHaveSameClass(callInfo);
     if (native == intrinsic_ToObject)
         return inlineToObject(callInfo);
     if (native == intrinsic_IsObject)
@@ -2074,36 +2072,6 @@ IonBuilder::inlineUnsafeGetReservedSlot(CallInfo &callInfo)
     // We don't track reserved slot types, so always emit a barrier.
     if (!pushTypeBarrier(load, getInlineReturnTypeSet(), BarrierKind::TypeSet))
         return InliningStatus_Error;
-
-    return InliningStatus_Inlined;
-}
-
-IonBuilder::InliningStatus
-IonBuilder::inlineHaveSameClass(CallInfo &callInfo)
-{
-    if (callInfo.argc() != 2 || callInfo.constructing())
-        return InliningStatus_NotInlined;
-    if (callInfo.getArg(0)->type() != MIRType_Object)
-        return InliningStatus_NotInlined;
-    if (callInfo.getArg(1)->type() != MIRType_Object)
-        return InliningStatus_NotInlined;
-
-    types::TemporaryTypeSet *arg1Types = callInfo.getArg(0)->resultTypeSet();
-    types::TemporaryTypeSet *arg2Types = callInfo.getArg(1)->resultTypeSet();
-    const Class *arg1Clasp = arg1Types ? arg1Types->getKnownClass() : nullptr;
-    const Class *arg2Clasp = arg2Types ? arg2Types->getKnownClass() : nullptr;
-    if (arg1Clasp && arg2Clasp) {
-        MConstant *constant = MConstant::New(alloc(), BooleanValue(arg1Clasp == arg2Clasp));
-        current->add(constant);
-        current->push(constant);
-        return InliningStatus_Inlined;
-    }
-
-    callInfo.setImplicitlyUsedUnchecked();
-
-    MHaveSameClass *sameClass = MHaveSameClass::New(alloc(), callInfo.getArg(0), callInfo.getArg(1));
-    current->add(sameClass);
-    current->push(sameClass);
 
     return InliningStatus_Inlined;
 }
