@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/AnimationPlayer.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIDocument.h"
 #include "nsTHashtable.h"
 
 namespace mozilla {
@@ -15,6 +16,10 @@ namespace mozilla {
 class PendingPlayerTracker MOZ_FINAL
 {
 public:
+  explicit PendingPlayerTracker(nsIDocument* aDocument)
+    : mDocument(aDocument)
+  { }
+
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PendingPlayerTracker)
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(PendingPlayerTracker)
 
@@ -33,6 +38,7 @@ private:
     AnimationPlayerSet;
 
   AnimationPlayerSet mPlayPendingSet;
+  nsCOMPtr<nsIDocument> mDocument;
 };
 
 } // namespace mozilla
