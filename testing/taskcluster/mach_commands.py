@@ -36,6 +36,9 @@ REGISTRY = open(os.path.join(DOCKER_ROOT, 'REGISTRY')).read().strip()
 
 DEFINE_TASK = 'queue:define-task:aws-provisioner/{}'
 
+DEFAULT_TRY = 'try: -b do -p all -u all'
+DEFAULT_JOB_PATH = os.path.join(ROOT, 'tasks', 'job_flags.yml')
+
 def get_hg_url():
     ''' Determine the url for the mercurial repository'''
     try:
@@ -84,6 +87,7 @@ def docker_image(name):
 def get_task(task_id):
     return json.load(urllib2.urlopen("https://queue.taskcluster.net/v1/task/" + task_id))
 
+
 @CommandProvider
 class DecisionTask(object):
     @Command('taskcluster-decision', category="ci",
@@ -91,6 +95,9 @@ class DecisionTask(object):
     @CommandArgument('--project',
         required=True,
         help='Treeherder project name')
+    @CommandArgument('--repository',
+        required=True,
+        help='Gecko repository to use as head repository.')
     @CommandArgument('--revision',
         required=True,
         help='Revision for this project')
@@ -108,6 +115,7 @@ class DecisionTask(object):
             'source': 'http://todo.com/soon',
             'project': params['project'],
             'comment': params['comment'],
+            'repository_url': params['repository'],
             'revision': params['revision'],
             'owner': params['owner'],
             'as_slugid': SlugidJar(),
@@ -118,9 +126,9 @@ class DecisionTask(object):
         print(json.dumps(task, indent=4))
 
 @CommandProvider
-class TryGraph(object):
-    @Command('taskcluster-trygraph', category="ci",
-        description="Create taskcluster try server graph")
+class Graph(object):
+    @Command('taskcluster-graph', category="ci",
+        description="Create taskcluster task graph")
     @CommandArgument('--base-repository',
         default=os.environ.get('GECKO_BASE_REPOSITORY'),
         help='URL for "base" repository to clone')
@@ -134,17 +142,34 @@ class TryGraph(object):
         default=os.environ.get('GECKO_HEAD_REV'),
         help='Commit revision to use from head repository')
     @CommandArgument('--message',
+        help='Commit message to be parsed. Example: "try: -b do -p all -u all"')
+    @CommandArgument('--project',
         required=True,
-        help='Commit message to be parsed')
+        help='Project to use for creating task graph. Example: --project=try')
     @CommandArgument('--owner',
         required=True,
         help='email address of who owns this graph')
     @CommandArgument('--extend-graph',
         action="store_true", dest="ci", help='Omit create graph arguments')
     def create_graph(self, **params):
+        project = params['project']
+        message = params.get('message', '') if project == 'try' else DEFAULT_TRY
+
+        # Message would only be blank when not created from decision task
+        if project == 'try' and not message:
+            sys.stderr.write(
+                    "Must supply commit message when creating try graph. " \
+                    "Example: --message='try: -b do -p all -u all'"
+            )
+            sys.exit(1)
+
         templates = Templates(ROOT)
-        jobs = templates.load('job_flags.yml', {})
-        job_graph = parse_commit(params['message'], jobs)
+        job_path = os.path.join(ROOT, 'tasks', 'branches', project, 'job_flags.yml')
+        job_path = job_path if os.path.exists(job_path) else DEFAULT_JOB_PATH
+
+        jobs = templates.load(job_path, {})
+
+        job_graph = parse_commit(message, jobs)
         # Template parameters used when expanding the graph
         parameters = {
             'docker_image': docker_image,
@@ -168,8 +193,8 @@ class TryGraph(object):
             'source': 'http://todo.com/what/goes/here',
             'owner': params['owner'],
             # TODO: Add full mach commands to this example?
-            'description': 'Try task graph generated via ./mach trygraph',
-            'name': 'trygraph local'
+            'description': 'Task graph generated via ./mach taskcluster-graph',
+            'name': 'task graph local'
         }
 
         for build in job_graph:

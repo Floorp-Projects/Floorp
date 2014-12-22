@@ -2,8 +2,8 @@ $inherits:
   from: 'tasks/build.yml'
 task:
   metadata:
-    name: B2G Desktop Opt
-    description: B2G Desktop Opt
+    name: B2G Desktop {{build_type}}
+    description: B2G Desktop {{build_type}}
 
   scopes:
     - 'docker-worker:cache:sources-gecko'
