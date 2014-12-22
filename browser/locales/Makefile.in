@@ -77,7 +77,7 @@ SEARCHPLUGINS_PATH := $(FINAL_TARGET)/searchplugins
 # metro build call a searchplugins target for search engine plugins
 .PHONY: searchplugins
 SEARCHPLUGINS_TARGET := libs searchplugins
-SEARCHPLUGINS := $(foreach plugin,$(addsuffix .xml,$(SEARCHPLUGINS_NAMES)),$(or $(wildcard $(call MERGE_FILE,searchplugins/$(plugin))),$(info Missing searchplugin: $(plugin))))
+SEARCHPLUGINS := $(foreach plugin,$(addsuffix .xml,$(SEARCHPLUGINS_NAMES)),$(or $(wildcard $(call EN_US_OR_L10N_FILE,searchplugins/$(plugin))),$(info Missing searchplugin: $(plugin))))
 # Some locale-specific search plugins may have preprocessor directives, but the
 # default en-US ones do not.
 SEARCHPLUGINS_FLAGS := --silence-missing-directive-warnings
