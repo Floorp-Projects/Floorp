@@ -2021,18 +2021,11 @@ class MSimdShift : public MBinaryInstruction
     ALLOW_CLONE(MSimdShift)
 };
 
-class MSimdTernaryBitwise : public MTernaryInstruction
+class MSimdSelect : public MTernaryInstruction
 {
-  public:
-    enum Operation {
-        select
-    };
-
   private:
-    Operation operation_;
-
-    MSimdTernaryBitwise(MDefinition *mask, MDefinition *lhs, MDefinition *rhs, Operation op, MIRType type)
-      : MTernaryInstruction(mask, lhs, rhs), operation_(op)
+    MSimdSelect(MDefinition *mask, MDefinition *lhs, MDefinition *rhs, MIRType type)
+      : MTernaryInstruction(mask, lhs, rhs)
     {
         MOZ_ASSERT(IsSimdType(type));
         MOZ_ASSERT(mask->type() == MIRType_Int32x4);
@@ -2043,20 +2036,18 @@ class MSimdTernaryBitwise : public MTernaryInstruction
     }
 
   public:
-    INSTRUCTION_HEADER(SimdTernaryBitwise);
-    static MSimdTernaryBitwise *NewAsmJS(TempAllocator &alloc, MDefinition *mask, MDefinition *lhs,
-                                         MDefinition *rhs, Operation op, MIRType t)
+    INSTRUCTION_HEADER(SimdSelect);
+    static MSimdSelect *NewAsmJS(TempAllocator &alloc, MDefinition *mask, MDefinition *lhs,
+                                 MDefinition *rhs, MIRType t)
     {
-        return new(alloc) MSimdTernaryBitwise(mask, lhs, rhs, op, t);
+        return new(alloc) MSimdSelect(mask, lhs, rhs, t);
     }
 
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
 
-    Operation operation() const { return operation_; }
-
-    ALLOW_CLONE(MSimdTernaryBitwise)
+    ALLOW_CLONE(MSimdSelect)
 };
 
 // Deep clone a constant JSObject.

@@ -86,7 +86,7 @@ class LIRGeneratorNone : public LIRGeneratorShared
 
     LTableSwitch *newLTableSwitch(LAllocation, LDefinition, MTableSwitch *) { MOZ_CRASH(); }
     LTableSwitchV *newLTableSwitchV(MTableSwitch *) { MOZ_CRASH(); }
-    void visitSimdTernaryBitwise(MSimdTernaryBitwise *ins) { MOZ_CRASH(); }
+    void visitSimdSelect(MSimdSelect *ins) { MOZ_CRASH(); }
     void visitSimdSplatX4(MSimdSplatX4 *ins) { MOZ_CRASH(); }
     void visitSimdValueX4(MSimdValueX4 *lir) { MOZ_CRASH(); }
     void visitSubstr(MSubstr *) { MOZ_CRASH(); }
