@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <style type="text/css">
+    p {  border: 1px solid black; }
+        .layout-main-page-content { width: 75%; float: right;}
+        .layout-right-column { width: 25%; float: left; }
+    </style>
+    <script type="text/javascript">
+      function do_test() {
+        document.getElementById("image").removeAttribute("hidden");
+        document.documentElement.removeAttribute("class");
+      };
+    </script>
+  </head>
+  <body dir="rtl" onload="do_test()">
+    <div>
+      <div class="layout-main-page-content">
+        <img src="foo">
+        <p dir="rtl" id="p_10">0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789</p>
+        <p dir="rtl" id="p_20">0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789</p>
+      </div>
+    </div>
+    <div class="layout-right-column">
+      hoge hoge hoge hoge hoge hoge hoge hoge hoge hoge
+      <img id="image" hidden="true" style="height: 280px; overflow: hidden;" src="foo" width="100%">
+    </div>
+  </body>
+</html>
