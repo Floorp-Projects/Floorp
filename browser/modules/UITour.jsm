@@ -612,6 +612,12 @@ this.UITour = {
         }).then(null, Cu.reportError);
         break;
       }
+
+      case "ping": {
+        if (typeof data.callbackID == "string")
+          this.sendPageCallback(contentDocument, data.callbackID);
+        break;
+      }
     }
 
     if (!this.originTabs.has(window))
@@ -853,9 +859,18 @@ this.UITour = {
 
   sendPageCallback: function(aDocument, aCallbackID, aData = {}) {
     let detail = {data: aData, callbackID: aCallbackID};
-    log.debug("sendPageCallback", detail);
-    detail = Cu.cloneInto(detail, aDocument.defaultView);
-    let event = new aDocument.defaultView.CustomEvent("mozUITourResponse", {
+    this.sendPageEvent(aDocument, "Response", detail);
+  },
+
+  sendPageNotification: function(aDocument, aData = {}) {
+    this.sendPageEvent(aDocument, "Notification", aData);
+  },
+
+  sendPageEvent: function(aDocument, aType, aDetails = {}) {
+    log.debug("sendPageEvent", aDetails);
+    let detail = Cu.cloneInto(aDetails, aDocument.defaultView);
+    let eventName = "mozUITour" + aType;
+    let event = new aDocument.defaultView.CustomEvent(eventName, {
       bubbles: true,
       detail: detail
     });
@@ -1667,7 +1682,29 @@ this.UITour = {
         reject("Search engine not available");
       });
     });
-  }
+  },
+
+  notify(eventName, params) {
+    let winEnum = Services.wm.getEnumerator("navigator:browser");
+    while (winEnum.hasMoreElements()) {
+      let window = winEnum.getNext();
+      if (window.closed)
+        continue;
+
+      let originTabs = this.originTabs.get(window);
+      if (!originTabs)
+        continue;
+
+      for (let tab of originTabs) {
+        let document = tab.linkedBrowser.contentDocument;
+        let detail = {
+          event: eventName,
+          params: params,
+        };
+        this.sendPageNotification(document, detail);
+      }
+    }
+  },
 };
 
 this.UITour.init();
