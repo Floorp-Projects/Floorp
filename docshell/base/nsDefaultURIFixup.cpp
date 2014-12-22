@@ -1096,6 +1096,13 @@ nsDefaultURIFixup::KeywordURIFixup(const nsACString & aURIString,
             return NS_OK;
         }
 
+        // ... unless there are no dots, and a slash, and alpha characters, and this is a valid host:
+        if (firstDotLoc == uint32_t(kNotFound) && lastSlashLoc != uint32_t(kNotFound) &&
+            hasAsciiAlpha && isValidAsciiHost) {
+            return NS_OK;
+        }
+
+
         // If we get here, we don't have a valid URI, or we did but the
         // host is not whitelisted, so we do a keyword search *anyway*:
         rv = TryKeywordFixupForURIInfo(aFixupInfo->mOriginalInput, aFixupInfo, aPostData);
