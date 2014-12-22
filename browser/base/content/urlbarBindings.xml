@@ -1234,6 +1234,13 @@
     </handlers>
   </binding>
 
+  <!-- Used for additional open search providers in the search panel. -->
+  <binding id="addengine-icon" extends="xul:box">
+    <content>
+      <xul:image class="addengine-icon" xbl:inherits="src"/>
+      <xul:image class="addengine-badge"/>
+    </content>
+  </binding>
 
   <binding id="urlbar-rich-result-popup" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-rich-result-popup">
     <implementation>

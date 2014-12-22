@@ -121,13 +121,17 @@
 
         // Make sure to break the cycle from _textbox to us. Otherwise we leak
         // the world. But make sure it's actually pointing to us.
-        if (this._textbox.mController.input == this)
+        // Also make sure the textbox has ever been constructed, otherwise the
+        // _textbox getter will cause the textbox constructor to run, add an
+        // observer, and leak the world too.
+        if (this._textboxInitialized && this._textbox.mController.input == this)
           this._textbox.mController.input = null;
         ]]></body>
       </method>
 
       <field name="_stringBundle">document.getAnonymousElementByAttribute(this,
           "anonid", "searchbar-stringbundle");</field>
+      <field name="_textboxInitialized">false</field>
       <field name="_textbox">document.getAnonymousElementByAttribute(this,
           "anonid", "searchbar-textbox");</field>
       <field name="_popup">document.getAnonymousElementByAttribute(this,
@@ -270,6 +274,7 @@
               }
             }
           }
+          BrowserSearch.updateSearchButton();
         ]]></body>
       </method>
 
@@ -295,6 +300,7 @@
               }
             }
           }
+          BrowserSearch.updateSearchButton();
         ]]></body>
       </method>
 
@@ -605,6 +611,7 @@
           <xul:hbox class="searchbar-search-button-container">
             <xul:image class="searchbar-search-button"
                        anonid="searchbar-search-button"
+                       xbl:inherits="addengines"
                        tooltiptext="&searchEndCap.label;"/>
           </xul:hbox>
           <xul:button class="searchbar-engine-button"
@@ -777,6 +784,7 @@
         cxmenu.appendChild(element);
 
         this.controllers.appendController(this.searchbarController);
+        document.getBindingParent(this)._textboxInitialized = true;
 
         // Add observer for suggest preference
         var prefs = Components.classes["@mozilla.org/preferences-service;1"]
