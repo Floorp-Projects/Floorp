@@ -881,12 +881,15 @@ Float32x4Clamp(JSContext *cx, unsigned argc, Value *vp)
     return StoreResult<Float32x4>(cx, args, result);
 }
 
+template<typename V>
 static bool
-Int32x4Select(JSContext *cx, unsigned argc, Value *vp)
+BitSelect(JSContext *cx, unsigned argc, Value *vp)
 {
+    typedef typename V::Elem Elem;
+
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() != 3 || !IsVectorObject<Int32x4>(args[0]) ||
-        !IsVectorObject<Int32x4>(args[1]) || !IsVectorObject<Int32x4>(args[2]))
+        !IsVectorObject<V>(args[1]) || !IsVectorObject<V>(args[2]))
     {
         return ErrorBadArgs(cx);
     }
@@ -907,37 +910,32 @@ Int32x4Select(JSContext *cx, unsigned argc, Value *vp)
     for (unsigned i = 0; i < Int32x4::lanes; i++)
         orInt[i] = Or<int32_t>::apply(tr[i], fr[i]);
 
-    return StoreResult<Int32x4>(cx, args, orInt);
+    Elem *result = reinterpret_cast<Elem*>(orInt);
+    return StoreResult<V>(cx, args, result);
 }
 
+template<typename V>
 static bool
-Float32x4Select(JSContext *cx, unsigned argc, Value *vp)
+Select(JSContext *cx, unsigned argc, Value *vp)
 {
+    typedef typename V::Elem Elem;
+
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() != 3 || !IsVectorObject<Int32x4>(args[0]) ||
-        !IsVectorObject<Float32x4>(args[1]) || !IsVectorObject<Float32x4>(args[2]))
+        !IsVectorObject<V>(args[1]) || !IsVectorObject<V>(args[2]))
     {
         return ErrorBadArgs(cx);
     }
 
-    int32_t *val = TypedObjectMemory<int32_t *>(args[0]);
-    int32_t *tv = TypedObjectMemory<int32_t *>(args[1]);
-    int32_t *fv = TypedObjectMemory<int32_t *>(args[2]);
+    int32_t *mask = TypedObjectMemory<int32_t*>(args[0]);
+    Elem *tv = TypedObjectMemory<Elem *>(args[1]);
+    Elem *fv = TypedObjectMemory<Elem *>(args[2]);
 
-    int32_t tr[Int32x4::lanes];
-    for (unsigned i = 0; i < Int32x4::lanes; i++)
-        tr[i] = And<int32_t>::apply(val[i], tv[i]);
+    Elem result[V::lanes];
+    for (unsigned i = 0; i < V::lanes; i++)
+        result[i] = mask[i] < 0 ? tv[i] : fv[i];
 
-    int32_t fr[Int32x4::lanes];
-    for (unsigned i = 0; i < Int32x4::lanes; i++)
-        fr[i] = And<int32_t>::apply(Not<int32_t>::apply(val[i]), fv[i]);
-
-    int32_t orInt[Int32x4::lanes];
-    for (unsigned i = 0; i < Int32x4::lanes; i++)
-        orInt[i] = Or<int32_t>::apply(tr[i], fr[i]);
-
-    float *result = reinterpret_cast<float *>(orInt);
-    return StoreResult<Float32x4>(cx, args, result);
+    return StoreResult<V>(cx, args, result);
 }
 
 template<class VElem, unsigned NumElem>
