@@ -66,8 +66,7 @@ MediaSourceDecoder::Load(nsIStreamListener**, MediaDecoder*)
   NS_ENSURE_SUCCESS(rv, rv);
 
   SetStateMachineParameters();
-
-  return NS_OK;
+  return ScheduleStateMachineThread();
 }
 
 nsresult
