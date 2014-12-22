@@ -2647,7 +2647,8 @@ class FunctionCompiler
         return ins;
     }
 
-    MDefinition *selectSimd(MDefinition *mask, MDefinition *lhs, MDefinition *rhs, MIRType type)
+    MDefinition *selectSimd(MDefinition *mask, MDefinition *lhs, MDefinition *rhs, MIRType type,
+                            bool isElementWise)
     {
         if (inDeadCode())
             return nullptr;
@@ -2656,7 +2657,7 @@ class FunctionCompiler
         MOZ_ASSERT(mask->type() == MIRType_Int32x4);
         MOZ_ASSERT(IsSimdType(lhs->type()) && rhs->type() == lhs->type());
         MOZ_ASSERT(lhs->type() == type);
-        MSimdSelect *ins = MSimdSelect::NewAsmJS(alloc(), mask, lhs, rhs, type, /* isElementWise */ true);
+        MSimdSelect *ins = MSimdSelect::NewAsmJS(alloc(), mask, lhs, rhs, type, isElementWise);
         curBlock_->add(ins);
         return ins;
     }
@@ -5708,6 +5709,18 @@ CheckSimdStore(FunctionCompiler &f, ParseNode *call, AsmJSSimdType opType, MDefi
 }
 
 static bool
+CheckSimdSelect(FunctionCompiler &f, ParseNode *call, AsmJSSimdType opType, bool isElementWise,
+                MDefinition **def, Type *type)
+{
+    DefinitionVector defs;
+    if (!CheckSimdCallArgs(f, call, 3, CheckSimdSelectArgs(opType), &defs))
+        return false;
+    *type = opType;
+    *def = f.selectSimd(defs[0], defs[1], defs[2], type->toMIRType(), isElementWise);
+    return true;
+}
+
+static bool
 CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompiler::Global *global,
                        MDefinition **def, Type *type)
 {
@@ -5801,21 +5814,17 @@ CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompile
       case AsmJSSimdOperation_store:
         return CheckSimdStore(f, call, opType, def, type);
 
+      case AsmJSSimdOperation_bitselect:
+        return CheckSimdSelect(f, call, opType, /*isElementWise */ false, def, type);
+      case AsmJSSimdOperation_select:
+        return CheckSimdSelect(f, call, opType, /*isElementWise */ true, def, type);
+
       case AsmJSSimdOperation_splat: {
         DefinitionVector defs;
         if (!CheckSimdCallArgs(f, call, 1, CheckSimdScalarArgs(opType), &defs))
             return false;
         *type = opType;
         *def = f.splatSimd(defs[0], type->toMIRType());
-        return true;
-      }
-
-      case AsmJSSimdOperation_select: {
-        DefinitionVector defs;
-        if (!CheckSimdCallArgs(f, call, 3, CheckSimdSelectArgs(opType), &defs))
-            return false;
-        *type = opType;
-        *def = f.selectSimd(defs[0], defs[1], defs[2], type->toMIRType());
         return true;
       }
     }
