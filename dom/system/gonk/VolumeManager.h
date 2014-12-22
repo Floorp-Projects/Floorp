@@ -138,6 +138,8 @@ protected:
   virtual void OnFileCanWriteWithoutBlocking(int aFd);
   virtual void OnError();
 
+  static void DefaultConfig();
+
 private:
   bool OpenSocket();
 
