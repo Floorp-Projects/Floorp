@@ -234,7 +234,7 @@ struct hb_language_item_t {
 
 static hb_language_item_t *langs;
 
-#ifdef HAVE_ATEXIT
+#ifdef HB_USE_ATEXIT
 static inline
 void free_langs (void)
 {
@@ -269,7 +269,7 @@ retry:
     goto retry;
   }
 
-#ifdef HAVE_ATEXIT
+#ifdef HB_USE_ATEXIT
   if (!first_lang)
     atexit (free_langs); /* First person registers atexit() callback. */
 #endif

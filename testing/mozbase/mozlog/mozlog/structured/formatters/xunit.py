@@ -51,7 +51,8 @@ class XUnitFormatter(base.BaseFormatter):
     def _create_result(self, data):
         test = ElementTree.SubElement(self.root, "testcase")
         name = format_test_id(data["test"])
-        test.attrib["classname"] = name
+        extra = data.get('extra') or {}
+        test.attrib["classname"] = extra.get('class_name') or name
 
         if "subtest" in data:
             test.attrib["name"] = data["subtest"]
@@ -62,7 +63,7 @@ class XUnitFormatter(base.BaseFormatter):
                 test_name = name.rsplit(".", 1)[1]
             else:
                 test_name = name
-            test.attrib["name"] = test_name
+            test.attrib["name"] = extra.get('method_name') or test_name
             test.attrib["time"] = "%.2f" % ((data["time"] - self.test_start_time) / 1000.0)
 
         if ("expected" in data and data["expected"] != data["status"]):

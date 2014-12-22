@@ -883,7 +883,16 @@ Statistics::beginPhase(Phase phase)
     }
 
     // Guard against any other re-entry.
+#ifdef DEBUG
+    if (phaseStartTimes[phase]) {
+        fprintf(stderr, "phase %d already has start time of %ld; recursive entry detected!\n",
+                phase, phaseStartTimes[phase]);
+        for (int i = 0; i < phaseNestingDepth; i++)
+            fprintf(stderr, "  stack[%d]: %d\n", i, phaseNesting[i]);
+        MOZ_CRASH("My horse for a stack trace!\n");
+    }
     MOZ_ASSERT(!phaseStartTimes[phase]);
+#endif
 
 #ifdef DEBUG
     MOZ_ASSERT(phases[phase].index == phase);

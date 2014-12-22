@@ -22,8 +22,8 @@ fi
 
 echo "Checking that no object file has static initializers"
 for obj in $OBJS; do
-	if objdump -t "$obj" | grep '[.]ctors'; then
-		echo "Ouch, $obj has static initializers"
+	if objdump -t "$obj" | grep '[.][cd]tors' | grep -v '\<00*\>'; then
+		echo "Ouch, $obj has static initializers/finalizers"
 		stat=1
 	fi
 done

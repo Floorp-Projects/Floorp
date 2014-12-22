@@ -43,14 +43,12 @@ function run_test() {
   // Load the ca into mem
   load_ca("ca-rsa");
   load_ca("ca-p384");
-  load_ca("ca-dsa");
 
   clearOCSPCache();
   clearSessionCache();
 
   check_ca("ca-rsa");
   check_ca("ca-p384");
-  check_ca("ca-dsa");
 
   // mozilla::pkix does not allow CA certs to be validated for end-entity
   // usages.
@@ -65,19 +63,14 @@ function run_test() {
     'rsa-valid': ee_usage,
     'int-p384-valid': int_usage,
     'p384-valid': ee_usage,
-    'int-dsa-valid': int_usage,
-    'dsa-valid': ee_usage,
 
     'rsa-valid-int-tampered-ee': "",
     'p384-valid-int-tampered-ee': "",
-    'dsa-valid-int-tampered-ee': "",
 
     'int-rsa-tampered': "",
     'rsa-tampered-int-valid-ee': "",
     'int-p384-tampered': "",
     'p384-tampered-int-valid-ee': "",
-    'int-dsa-tampered': "",
-    'dsa-tampered-int-valid-ee': "",
 
   };
 
