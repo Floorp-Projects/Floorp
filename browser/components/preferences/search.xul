@@ -80,7 +80,7 @@
 
       <separator class="thin"/>
 
-      <hbox pack="start" style="margin-bottom: 1em">
+      <hbox pack="start">
         <label id="addEngines" class="text-link" value="&addMoreSearchEngines.label;"
                onclick="if (event.button == 0) { Services.wm.getMostRecentWindow('navigator:browser').BrowserSearch.loadAddEngines(); }"/>
       </hbox>
