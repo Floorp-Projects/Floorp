@@ -36,6 +36,16 @@ registerCleanupFunction(() => {
   Services.prefs.setBoolPref("devtools.timeline.enabled", gToolEnabled);
 });
 
+// Close the toolbox and all opened tabs automatically.
+registerCleanupFunction(function*() {
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  yield gDevTools.closeToolbox(target);
+
+  while (gBrowser.tabs.length > 1) {
+    gBrowser.removeCurrentTab();
+  }
+});
+
 function addTab(url) {
   info("Adding tab: " + url);
 
@@ -49,22 +59,6 @@ function addTab(url) {
     deferred.resolve(tab);
   }, true);
 
-  return deferred.promise;
-}
-
-function removeTab(tab) {
-  info("Removing tab.");
-
-  let deferred = promise.defer();
-  let tabContainer = gBrowser.tabContainer;
-
-  tabContainer.addEventListener("TabClose", function onClose(aEvent) {
-    tabContainer.removeEventListener("TabClose", onClose, false);
-    info("Tab removed and finished closing.");
-    deferred.resolve();
-  }, false);
-
-  gBrowser.removeTab(tab);
   return deferred.promise;
 }
 
@@ -91,25 +85,6 @@ function* initTimelinePanel(url) {
   let toolbox = yield gDevTools.showToolbox(target, "timeline");
   let panel = toolbox.getCurrentPanel();
   return { target, panel };
-}
-
-/**
- * Closes a tab and destroys the toolbox holding a timeline panel.
- *
- * Must be used within a task.
- *
- * @param object panel
- *        The timeline panel, created by the toolbox.
- * @return object
- *         A promise resolved once the timeline, toolbox and debuggee tab
- *         are destroyed.
- */
-function* teardown(panel) {
-  info("Destroying the specified timeline.");
-
-  let tab = panel.target.tab;
-  yield panel._toolbox.destroy();
-  yield removeTab(tab);
 }
 
 /**

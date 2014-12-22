@@ -130,6 +130,11 @@ FormAutoCompleteResult.prototype = {
    */
   getStyleAt: function(index) {
     this._checkIndexBounds(index);
+
+    if (this._formHistResult && index < this._formHistResult.matchCount) {
+      return "fromhistory";
+    }
+
     if (!this._comments[index]) {
       return null;  // not a category label, so no special styling
     }

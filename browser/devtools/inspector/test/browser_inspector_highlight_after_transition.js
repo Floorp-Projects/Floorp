@@ -17,8 +17,6 @@ add_task(function*() {
   let {inspector} = yield openInspector();
 
   yield checkDivHeight(inspector);
-
-  gBrowser.removeCurrentTab();
 });
 
 function* checkDivHeight(inspector) {

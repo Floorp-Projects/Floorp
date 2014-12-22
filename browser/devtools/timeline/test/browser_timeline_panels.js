@@ -6,7 +6,7 @@
  * recording starts and stops.
  */
 
-let test = Task.async(function*() {
+add_task(function*() {
   let { target, panel } = yield initTimelinePanel(SIMPLE_URL);
   let { $, EVENTS } = panel.panelWin;
 
@@ -36,7 +36,4 @@ let test = Task.async(function*() {
     "The record button should be unchecked again.");
   is($("#timeline-pane").selectedPanel, $("#timeline-waterfall-container"),
     "A waterfall view is now displayed.");
-
-  yield teardown(panel);
-  finish();
 });
