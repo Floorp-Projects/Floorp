@@ -67,6 +67,7 @@ public:
 };
 
 bool InputEqualsByteString(Input input, const ByteString& bs);
+ByteString InputToByteString(Input input);
 
 // python DottedOIDToCode.py --tlv id-kp-OCSPSigning 1.3.6.1.5.5.7.3.9
 static const uint8_t tlv_id_kp_OCSPSigning[] = {
