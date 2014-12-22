@@ -9,6 +9,9 @@
 #define __mozilla_widget_GfxInfoBase_h__
 
 #include "nsIGfxInfo.h"
+#ifdef XP_MACOSX
+#include "nsIGfxInfo2.h"
+#endif
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
@@ -25,6 +28,9 @@ namespace mozilla {
 namespace widget {  
 
 class GfxInfoBase : public nsIGfxInfo,
+#ifdef XP_MACOSX
+                    public nsIGfxInfo2,
+#endif
                     public nsIObserver,
                     public nsSupportsWeakReference
 #ifdef DEBUG
