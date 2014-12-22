@@ -645,6 +645,8 @@
         this.destroy();
       ]]></destructor>
 
+      <field name="_ignoreFocus">false</field>
+
       <method name="selectEngine">
         <body><![CDATA[
           // Override this method to avoid accidentally changing the default
@@ -688,16 +690,42 @@
     <handlers>
       <handler event="input" action="this.inputChanged();"/>
       <handler event="drop" action="this.inputChanged();"/>
-      <handler event="focus">
+
+      <handler event="blur">
       <![CDATA[
-        if (this._textbox.value)
-          this.openSuggestionsPanel();
+        // If the input field is still focused then a different window has
+        // received focus, ignore the next focus event.
+        this._ignoreFocus = (document.activeElement == this._textbox.inputField);
       ]]></handler>
 
-      <handler event="click">
+      <handler event="focus">
       <![CDATA[
-        if (event.originalTarget.getAttribute("anonid") == "searchbar-search-button")
+        if (this._ignoreFocus) {
+          // This window has been re-focused, don't show the suggestions
+          this._ignoreFocus = false;
+          return;
+        }
+
+        // Don't open the suggestions if there is no text in the textbox.
+        if (!this._textbox.value)
+          return;
+
+        // Don't open the suggestions if the mouse was used to focus the
+        // textbox, that will be taken care of in the click handler.
+        if (Services.focus.getLastFocusMethod(window) == Services.focus.FLAG_BYMOUSE)
+          return;
+
+        this.openSuggestionsPanel();
+      ]]></handler>
+
+      <handler event="click" button="0">
+      <![CDATA[
+        // Open the suggestions whenever clicking on the search icon or if there
+        // is text in the textbox.
+        if (event.originalTarget.getAttribute("anonid") == "searchbar-search-button" ||
+            this._textbox.value) {
           this.openSuggestionsPanel(true);
+        }
       ]]></handler>
 
     </handlers>

@@ -5,7 +5,7 @@
  * Tests that properties are updated when modifying the VariablesView.
  */
 
-function spawnTest() {
+add_task(function*() {
   let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, InspectorView } = panelWin;
@@ -52,9 +52,8 @@ function spawnTest() {
   yield setAndCheck(0, "gain", "0.1", 0.1, "sets float as float");
   yield setAndCheck(0, "gain", ".2", 0.2, "sets float without leading zero as float");
 
-  yield teardown(panel);
-  finish();
-}
+  yield teardown(target);
+});
 
 function setAndCheckVariable (panelWin, gVars) {
   return Task.async(function (varNum, prop, value, expected, desc) {
@@ -64,4 +63,3 @@ function setAndCheckVariable (panelWin, gVars) {
     checkVariableView(gVars, varNum, props, desc);
   });
 }
-

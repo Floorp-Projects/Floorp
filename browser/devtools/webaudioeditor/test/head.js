@@ -84,11 +84,6 @@ function removeTab(aTab, aWindow) {
   return deferred.promise;
 }
 
-function handleError(aError) {
-  ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
-  finish();
-}
-
 function once(aTarget, aEventName, aUseCapture = false) {
   info("Waiting for event: '" + aEventName + "' on " + aTarget + ".");
 
@@ -121,10 +116,10 @@ function navigate(aTarget, aUrl, aWaitForTargetEvent = "navigate") {
   return once(aTarget, aWaitForTargetEvent);
 }
 
-function test () {
-  Task.spawn(spawnTest).then(finish, handleError);
-}
-
+/**
+ * Adds a new tab, and instantiate a WebAudiFront object.
+ * This requires calling removeTab before the test ends.
+ */
 function initBackend(aUrl) {
   info("Initializing a web audio editor front.");
 
@@ -144,6 +139,11 @@ function initBackend(aUrl) {
   });
 }
 
+/**
+ * Adds a new tab, and open the toolbox for that tab, selecting the audio editor
+ * panel.
+ * This requires calling teardown before the test ends.
+ */
 function initWebAudioEditor(aUrl) {
   info("Initializing a web audio editor pane.");
 
@@ -160,18 +160,16 @@ function initWebAudioEditor(aUrl) {
   });
 }
 
-function teardown(aPanel) {
+/**
+ * Close the toolbox, destroying all panels, and remove the added test tabs.
+ */
+function teardown(aTarget) {
   info("Destroying the web audio editor.");
 
-  return Promise.all([
-    once(aPanel, "destroyed"),
-    removeTab(aPanel.target.tab)
-  ]).then(() => {
-    let gBrowser = window.gBrowser;
+  return gDevTools.closeToolbox(aTarget).then(() => {
     while (gBrowser.tabs.length > 1) {
       gBrowser.removeCurrentTab();
     }
-    gBrowser = null;
   });
 }
 

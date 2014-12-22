@@ -53,8 +53,6 @@ add_task(function*() {
   info("Hiding the transform highlighter");
   yield highlighter.hide();
   yield highlighter.finalize();
-
-  gBrowser.removeCurrentTab();
 });
 
 function* getAttribute(nodeID, name, {actorID}) {

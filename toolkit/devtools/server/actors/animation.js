@@ -24,10 +24,16 @@
  *   /dom/webidl/Animation*.webidl
  */
 
+const {Cu} = require("chrome");
+const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
+const {setInterval, clearInterval} = require("sdk/timers");
 const {ActorClass, Actor,
        FrontClass, Front,
        Arg, method, RetVal} = require("devtools/server/protocol");
 const {NodeActor} = require("devtools/server/actors/inspector");
+const EventEmitter = require("devtools/toolkit/event-emitter");
+
+const PLAYER_DEFAULT_AUTO_REFRESH_TIMEOUT = 500; // ms
 
 /**
  * The AnimationPlayerActor provides information about a given animation: its
@@ -179,8 +185,13 @@ let AnimationPlayerActor = ActorClass({
 });
 
 let AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
+  AUTO_REFRESH_EVENT: "updated-state",
+
   initialize: function(conn, form, detail, ctx) {
+    EventEmitter.decorate(this);
     Front.prototype.initialize.call(this, conn, form, detail, ctx);
+
+    this.state = {};
   },
 
   form: function(form, detail) {
@@ -189,9 +200,11 @@ let AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
       return;
     }
     this._form = form;
+    this.state = this.initialState;
   },
 
   destroy: function() {
+    this.stopAutoRefresh();
     Front.prototype.destroy.call(this);
   },
 
@@ -209,7 +222,75 @@ let AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
       iterationCount: this._form.iterationCount,
       isRunningOnCompositor: this._form.isRunningOnCompositor
     }
-  }
+  },
+
+  // About auto-refresh:
+  //
+  // The AnimationPlayerFront is capable of automatically refreshing its state
+  // by calling the getCurrentState method at regular intervals. This allows
+  // consumers to update their knowledge of the player's currentTime, playState,
+  // ... dynamically.
+  //
+  // Calling startAutoRefresh will start the automatic refreshing of the state,
+  // and calling stopAutoRefresh will stop it.
+  // Once the automatic refresh has been started, the AnimationPlayerFront emits
+  // "updated-state" events everytime the state changes.
+  //
+  // Note that given the time-related nature of animations, the actual state
+  // changes a lot more often than "updated-state" events are emitted. This is
+  // to avoid making many protocol requests.
+
+  /**
+   * Start auto-refreshing this player's state.
+   * @param {Number} interval Optional auto-refresh timer interval to override
+   * the default value.
+   */
+  startAutoRefresh: function(interval=PLAYER_DEFAULT_AUTO_REFRESH_TIMEOUT) {
+    if (this.autoRefreshTimer) {
+      return;
+    }
+
+    this.autoRefreshTimer = setInterval(this.refreshState.bind(this), interval);
+  },
+
+  /**
+   * Stop auto-refreshing this player's state.
+   */
+  stopAutoRefresh: function() {
+    if (!this.autoRefreshTimer) {
+      return;
+    }
+
+    clearInterval(this.autoRefreshTimer);
+    this.autoRefreshTimer = null;
+  },
+
+  /**
+   * Called automatically when auto-refresh is on. Doesn't return anything, but
+   * emits the "updated-state" event.
+   */
+  refreshState: Task.async(function*() {
+    let data = yield this.getCurrentState();
+
+    // By the time the new state is received, auto-refresh might be stopped.
+    if (!this.autoRefreshTimer) {
+      return;
+    }
+
+    // Check if something has changed
+    let hasChanged = false;
+    for (let key in data) {
+      if (this.state[key] !== data[key]) {
+        hasChanged = true;
+        break;
+      }
+    }
+
+    if (hasChanged) {
+      this.state = data;
+      this.emit(this.AUTO_REFRESH_EVENT, this.state);
+    }
+  })
 });
 
 /**
