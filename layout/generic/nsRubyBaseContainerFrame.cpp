@@ -372,6 +372,14 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
         isize = spanISize;
       }
     }
+    // When there are spans, ReflowPairs and ReflowOnePair won't
+    // record any optional break position. We have to record one
+    // at the end of this segment.
+    if (aReflowState.mLineLayout->NotifyOptionalBreakPosition(
+          this, INT32_MAX, startEdge + isize <= aReflowState.AvailableISize(),
+          gfxBreakPriority::eNormalBreak)) {
+      aStatus = NS_INLINE_LINE_BREAK_AFTER(aStatus);
+    }
   }
 
   DebugOnly<nscoord> lineSpanSize = aReflowState.mLineLayout->EndSpan(this);
@@ -462,14 +470,6 @@ nsRubyBaseContainerFrame::ReflowPairs(nsPresContext* aPresContext,
   }
   if (!e.AtEnd() || (GetNextInFlow() && !isComplete)) {
     NS_FRAME_SET_INCOMPLETE(aStatus);
-  } else {
-    // Completely reflow the whole segment, record a break position.
-    // We record an extra break position here because ReflowOnePair
-    // won't record any break position if there exist spans.
-    if (lineLayout->NotifyOptionalBreakPosition(
-          this, INT32_MAX, true, gfxBreakPriority::eNormalBreak)) {
-      reflowStatus = NS_INLINE_LINE_BREAK_AFTER(reflowStatus);
-    }
   }
 
   if (NS_INLINE_IS_BREAK_BEFORE(reflowStatus)) {
