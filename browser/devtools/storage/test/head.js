@@ -233,7 +233,7 @@ function finishTests() {
 
 // Sends a click event on the passed DOM node in an async manner
 function click(node) {
-  node.scrollIntoView()
+  node.scrollIntoView();
   executeSoon(() => EventUtils.synthesizeMouseAtCenter(node, {}, gPanelWindow));
 }
 
@@ -483,8 +483,35 @@ function selectTreeItem(ids) {
   // Expand tree as some/all items could be collapsed leading to click on an
   // incorrect tree item
   gUI.tree.expandAll();
-  click(gPanelWindow.document.querySelector("[data-id='" + JSON.stringify(ids) +
-        "'] > .tree-widget-item"));
+  let target = gPanelWindow.document.querySelector(
+                 "[data-id='" + JSON.stringify(ids) + "'] > .tree-widget-item");
+
+  // Look for an animating list
+  //
+  // If the list is still expanding we won't be able to click the requested
+  // item. We detect if a list (or one of its ancestor lists) is animating
+  // by checking if max-height is set. If the animation effect in
+  // widgets.inc.css changes this will likely break but until the Web
+  // Animations API is available (specifically, bug 1074630 and bug 1112422)
+  // there is no reliable way to detect if animations are running, particularly
+  // in the face of interactions that can cancel an animation without triggering
+  // an animationend event.
+  let animatingList = target.nextElementSibling;
+  while (animatingList) {
+    if (window.getComputedStyle(animatingList).maxHeight != "none") {
+      break;
+    }
+    animatingList = animatingList.parentNode.closest(".tree-widget-item + ul");
+  }
+
+  if (animatingList) {
+    animatingList.addEventListener("animationend", function animationend() {
+      animatingList.removeEventListener("animationend", animationend);
+      click(target);
+    });
+  } else {
+    click(target);
+  }
 }
 
 /**

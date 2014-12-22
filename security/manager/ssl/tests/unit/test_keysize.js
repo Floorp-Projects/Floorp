@@ -4,7 +4,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 "use strict";
 
-// Checks that RSA and DSA certs with key sizes below 1024 bits are rejected.
+// Checks that RSA certs with key sizes below 1024 bits are rejected.
 
 do_get_profile(); // must be called before getting nsIX509CertDB
 const certdb = Cc["@mozilla.org/security/x509certdb;1"]
@@ -88,7 +88,6 @@ function checkForKeyType(keyType, inadequateKeySize, adequateKeySize) {
 
 function run_test() {
   checkForKeyType("rsa", 1016, 1024);
-  checkForKeyType("dsa", 960, 1024);
 
   run_next_test();
 }

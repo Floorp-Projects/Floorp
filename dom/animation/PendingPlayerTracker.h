@@ -8,13 +8,20 @@
 
 #include "mozilla/dom/AnimationPlayer.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIDocument.h"
 #include "nsTHashtable.h"
+
+class nsIFrame;
 
 namespace mozilla {
 
 class PendingPlayerTracker MOZ_FINAL
 {
 public:
+  explicit PendingPlayerTracker(nsIDocument* aDocument)
+    : mDocument(aDocument)
+  { }
+
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PendingPlayerTracker)
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(PendingPlayerTracker)
 
@@ -22,13 +29,21 @@ public:
   void RemovePlayPending(dom::AnimationPlayer& aPlayer);
   bool IsWaitingToPlay(dom::AnimationPlayer const& aPlayer) const;
 
+  // Causes any pending players to resume at |aReadyTime| by first
+  // fast-forwarding their timeline to the corresponding time.
+  void StartPendingPlayers(const TimeStamp& aReadyTime);
+  bool HasPendingPlayers() const { return mPlayPendingSet.Count() > 0; }
+
 private:
   ~PendingPlayerTracker() { }
+
+  void EnsurePaintIsScheduled();
 
   typedef nsTHashtable<nsRefPtrHashKey<dom::AnimationPlayer>>
     AnimationPlayerSet;
 
   AnimationPlayerSet mPlayPendingSet;
+  nsCOMPtr<nsIDocument> mDocument;
 };
 
 } // namespace mozilla

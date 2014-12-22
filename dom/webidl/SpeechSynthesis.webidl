@@ -16,9 +16,11 @@ interface SpeechSynthesis {
   readonly attribute boolean speaking;
   readonly attribute boolean paused;
 
+  [UnsafeInPrerendering]
   void speak(SpeechSynthesisUtterance utterance);
   void cancel();
   void pause();
+  [UnsafeInPrerendering]
   void resume();
   sequence<SpeechSynthesisVoice> getVoices();
 };
