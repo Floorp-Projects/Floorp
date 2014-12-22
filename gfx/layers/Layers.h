@@ -670,6 +670,10 @@ public:
 
   virtual float RequestProperty(const nsAString& property) { return -1; }
 
+  const TimeStamp& GetAnimationReadyTime() const {
+    return mAnimationReadyTime;
+  }
+
 protected:
   nsRefPtr<Layer> mRoot;
   gfx::UserData mUserData;
@@ -693,6 +697,9 @@ protected:
   static PRLogModuleInfo* sLog;
   uint64_t mId;
   bool mInTransaction;
+  // The time when painting most recently finished. This is recorded so that
+  // we can time any play-pending animations from this point.
+  TimeStamp mAnimationReadyTime;
 private:
   struct FramesTimingRecording
   {
