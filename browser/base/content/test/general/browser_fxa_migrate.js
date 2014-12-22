@@ -11,7 +11,7 @@ add_task(function* test() {
   // Fake the state where we need an FxA user.
   let buttonPromise = promiseButtonMutation();
   Services.obs.notifyObservers(null, STATE_CHANGED_TOPIC,
-                               fxaMigrator.STATE_USER_FXA);
+                               imports.fxaMigrator.STATE_USER_FXA);
   let buttonState = yield buttonPromise;
   assertButtonState(buttonState, "migrate-signup", true);
   Assert.ok(Weave.Notifications.notifications.some(n => {
@@ -24,7 +24,7 @@ add_task(function* test() {
               createInstance(Ci.nsISupportsString);
   email.data = "foo@example.com";
   Services.obs.notifyObservers(email, STATE_CHANGED_TOPIC,
-                               fxaMigrator.STATE_USER_FXA_VERIFIED);
+                               imports.fxaMigrator.STATE_USER_FXA_VERIFIED);
   buttonState = yield buttonPromise;
   assertButtonState(buttonState, "migrate-verify", true,
                     "foo@example.com not verified");
