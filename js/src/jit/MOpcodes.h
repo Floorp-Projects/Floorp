@@ -27,7 +27,7 @@ namespace jit {
     _(SimdBinaryArith)                                                      \
     _(SimdBinaryBitwise)                                                    \
     _(SimdShift)                                                            \
-    _(SimdTernaryBitwise)                                                   \
+    _(SimdSelect)                                                           \
     _(CloneLiteral)                                                         \
     _(Parameter)                                                            \
     _(Callee)                                                               \

@@ -671,25 +671,23 @@ LIRGeneratorX86Shared::visitSimdBinaryArith(MSimdBinaryArith *ins)
 }
 
 void
-LIRGeneratorX86Shared::visitSimdTernaryBitwise(MSimdTernaryBitwise *ins)
+LIRGeneratorX86Shared::visitSimdSelect(MSimdSelect *ins)
 {
     MOZ_ASSERT(IsSimdType(ins->type()));
+    MOZ_ASSERT(ins->type() == MIRType_Int32x4 || ins->type() == MIRType_Float32x4,
+               "Unknown SIMD kind when doing bitwise operations");
 
-    if (ins->type() == MIRType_Int32x4 || ins->type() == MIRType_Float32x4) {
-        LSimdSelect *lins = new(alloc()) LSimdSelect;
-        MDefinition *r0 = ins->getOperand(0);
-        MDefinition *r1 = ins->getOperand(1);
-        MDefinition *r2 = ins->getOperand(2);
+    LSimdSelect *lins = new(alloc()) LSimdSelect;
+    MDefinition *r0 = ins->getOperand(0);
+    MDefinition *r1 = ins->getOperand(1);
+    MDefinition *r2 = ins->getOperand(2);
 
-        lins->setOperand(0, useRegister(r0));
-        lins->setOperand(1, useRegister(r1));
-        lins->setOperand(2, useRegister(r2));
-        lins->setTemp(0, temp(LDefinition::FLOAT32X4));
+    lins->setOperand(0, useRegister(r0));
+    lins->setOperand(1, useRegister(r1));
+    lins->setOperand(2, useRegister(r2));
+    lins->setTemp(0, temp(LDefinition::FLOAT32X4));
 
-        define(lins, ins);
-    } else {
-        MOZ_CRASH("Unknown SIMD kind when doing bitwise operations");
-    }
+    define(lins, ins);
 }
 
 void
