@@ -10,41 +10,21 @@ import pexpect
 import time
 import sys
 
-def init_dsa(db_dir, param_filename = 'dsa_param.pem', key_size = '2048'):
-    """
-    Initialize dsa parameters
-
-    Sets up a set of params to be reused for DSA key generation
-
-    Arguments:
-      db_dir     -- location of the temporary params for the certificate
-      param_filename -- the file name for the param file
-      key_size   -- public key size
-    """
-    dsa_key_params = db_dir + '/' + param_filename
-    os.system("openssl dsaparam -out " + dsa_key_params + ' ' + key_size)
-
-
 def generate_cert_generic(db_dir, dest_dir, serial_num,  key_type, name,
                           ext_text, signer_key_filename = "",
                           signer_cert_filename = "",
                           subject_string = "",
-                          dsa_param_filename = 'dsa_param.pem',
                           key_size = '2048'):
     """
     Generate an x509 certificate with a sha256 signature
-
-    Preconditions:
-      if dsa keys are to be generated init_dsa must have been called before.
-
 
     Arguments:
       db_dir     -- location of the temporary params for the certificate
       dest_dir   -- location of the x509 cert
       serial_num -- serial number for the cert (must be unique for each signer
                     key)
-      key_type   -- the type of key generated: potential values: 'rsa', 'dsa',
-                    or any of the curves found by 'openssl ecparam -list_curves'
+      key_type   -- the type of key generated: potential values: 'rsa' or any
+	                of the curves found by 'openssl ecparam -list_curves'
       name       -- the common name for the cert, will match the prefix of the
                     output cert
       ext_text   -- the text for the x509 extensions to be added to the
@@ -54,7 +34,6 @@ def generate_cert_generic(db_dir, dest_dir, serial_num,  key_type, name,
                     roots).
       signer_cert_filename -- the certificate that will sign the certificate
                     (used to extract signer info) it must be in DER format.
-      dsa_param_filename -- the filename for the DSA param file
       key_size   -- public key size for RSA certs
 
     output:
@@ -65,9 +44,6 @@ def generate_cert_generic(db_dir, dest_dir, serial_num,  key_type, name,
     if key_type == 'rsa':
       os.system ("openssl genpkey -algorithm RSA -out " + key_name +
                  " -pkeyopt rsa_keygen_bits:" + key_size)
-    elif key_type == 'dsa':
-      dsa_key_params = db_dir + '/' + dsa_param_filename
-      os.system("openssl gendsa -out " + key_name + "  " + dsa_key_params)
     else:
       #assume is ec
       os.system("openssl ecparam -out " + key_name + " -name "+ key_type +
@@ -126,8 +102,8 @@ def generate_int_and_ee(db_dir, dest_dir, ca_key, ca_cert, name, int_ext_text,
                     intermediate certificate
       ee_ext_text  -- the text for the x509 extensions to be added to the
                     end entity certificate
-      key_type   -- the type of key generated: potential values: 'rsa', 'dsa',
-                    or any of the curves found by 'openssl ecparam -list_curves'
+      key_type   -- the type of key generated: potential values: 'rsa' or any
+	                of the curves found by 'openssl ecparam -list_curves'
 
     output:
       int_key   -- the filename of the intermeidate key file (PEM format)

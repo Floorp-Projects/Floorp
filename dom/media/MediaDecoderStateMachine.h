@@ -389,6 +389,23 @@ public:
   void OnSeekCompleted();
   void OnSeekFailed(nsresult aResult);
 
+  void OnWaitForDataResolved(MediaData::Type aType)
+  {
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    if (RequestStatusRef(aType) == RequestStatus::Waiting) {
+      RequestStatusRef(aType) = RequestStatus::Idle;
+      DispatchDecodeTasksIfNeeded();
+    }
+  }
+
+  void OnWaitForDataRejected(WaitForDataRejectValue aRejection)
+  {
+    MOZ_ASSERT(aRejection.mReason == WaitForDataRejectValue::SHUTDOWN);
+    if (RequestStatusRef(aRejection.mType) == RequestStatus::Waiting) {
+      RequestStatusRef(aRejection.mType) = RequestStatus::Idle;
+    }
+  }
+
 private:
   void AcquireMonitorAndInvokeDecodeError();
 
@@ -462,7 +479,22 @@ protected:
 
   // Returns true if we've got less than aAudioUsecs microseconds of decoded
   // and playable data. The decoder monitor must be held.
+  //
+  // May not be invoked when mReader->UseBufferingHeuristics() is false.
   bool HasLowDecodedData(int64_t aAudioUsecs);
+
+  bool OutOfDecodedAudio()
+  {
+    return IsAudioDecoding() && !AudioQueue().IsFinished() && AudioQueue().GetSize() == 0;
+  }
+
+  bool OutOfDecodedVideo()
+  {
+    // In buffering mode, we keep the last already-played frame in the queue.
+    int emptyVideoSize = mState == DECODER_STATE_BUFFERING ? 1 : 0;
+    return IsVideoDecoding() && !VideoQueue().IsFinished() && VideoQueue().GetSize() <= emptyVideoSize;
+  }
+
 
   // Returns true if we're running low on data which is not yet decoded.
   // The decoder monitor must be held.
@@ -710,6 +742,10 @@ protected:
   // DECODER_STATE_WAIT_FOR_RESOURCES.
   void DoNotifyWaitingForResourcesStatusChanged();
 
+  // Return true if the video decoder's decode speed can not catch up the
+  // play time.
+  bool NeedToSkipToNextKeyframe();
+
   // The decoder object that created this state machine. The state machine
   // holds a strong reference to the decoder to ensure that the decoder stays
   // alive once media element has started the decoder shutdown process, and has
@@ -843,6 +879,10 @@ protected:
   // in microseconds. Accessed from the state machine thread.
   int64_t mVideoFrameEndTime;
 
+  // The end time of the last decoded video frame. Used to check if we are low
+  // on decoded video data.
+  int64_t mDecodedVideoEndTime;
+
   // Volume of playback. 0.0 = muted. 1.0 = full volume. Read/Written
   // from the state machine and main threads. Synchronised via decoder
   // monitor.
@@ -911,11 +951,22 @@ protected:
   bool mIsAudioPrerolling;
   bool mIsVideoPrerolling;
 
+  MOZ_BEGIN_NESTED_ENUM_CLASS(RequestStatus)
+    Idle,
+    Pending,
+    Waiting
+  MOZ_END_NESTED_ENUM_CLASS(RequestStatus)
+
   // True when we have dispatched a task to the decode task queue to request
   // decoded audio/video, and/or we are waiting for the requested sample to be
   // returned by callback from the Reader.
-  bool mAudioRequestPending;
-  bool mVideoRequestPending;
+  RequestStatus mAudioRequestStatus;
+  RequestStatus mVideoRequestStatus;
+
+  RequestStatus& RequestStatusRef(MediaData::Type aType)
+  {
+    return aType == MediaData::AUDIO_DATA ? mAudioRequestStatus : mVideoRequestStatus;
+  }
 
   // True if we shouldn't play our audio (but still write it to any capturing
   // streams). When this is true, mStopAudioThread is always true and

@@ -16,6 +16,28 @@ except ImportError:
 """Adapter used to output structuredlog messages from unittest
 testsuites"""
 
+def get_test_class_name(test):
+    """
+    This method is used to return the full class name from a
+    :class:`unittest.TestCase` instance.
+
+    It is used as a default to define the "class_name" extra value
+    passed in structured loggers. You can override the default by
+    implementing a "get_test_class_name" method on you TestCase subclass.
+    """
+    return "%s.%s" % (test.__class__.__module__,
+                      test.__class__.__name__)
+
+def get_test_method_name(test):
+    """
+    This method is used to return the full method name from a
+    :class:`unittest.TestCase` instance.
+
+    It is used as a default to define the "method_name" extra value
+    passed in structured loggers. You can override the default by
+    implementing a "get_test_method_name" method on you TestCase subclass.
+    """
+    return test._testMethodName
 
 class StructuredTestResult(TextTestResult):
     def __init__(self, *args, **kwargs):
@@ -80,9 +102,26 @@ class StructuredTestResult(TextTestResult):
             lines += traceback.format_tb(tb)
         return "".join(lines)
 
+    def _get_class_method_name(self, test):
+        if hasattr(test, 'get_test_class_name'):
+            class_name = test.get_test_class_name()
+        else:
+            class_name = get_test_class_name(test)
+
+        if hasattr(test, 'get_test_method_name'):
+            method_name = test.get_test_method_name()
+        else:
+            method_name = get_test_method_name(test)
+
+        return {
+            'class_name': class_name,
+            'method_name': method_name
+        }
+
     def addError(self, test, err):
         self.errors.append((test, self._exc_info_to_string(err, test)))
         extra = self.call_callbacks(test, "ERROR")
+        extra.update(self._get_class_method_name(test))
         self.logger.test_end(test.id(),
                              "ERROR",
                              message=self._extract_err_message(err),
@@ -92,6 +131,7 @@ class StructuredTestResult(TextTestResult):
 
     def addFailure(self, test, err):
         extra = self.call_callbacks(test, "ERROR")
+        extra.update(self._get_class_method_name(test))
         self.logger.test_end(test.id(),
                             "FAIL",
                              message=self._extract_err_message(err),
@@ -100,10 +140,12 @@ class StructuredTestResult(TextTestResult):
                              extra=extra)
 
     def addSuccess(self, test):
-        self.logger.test_end(test.id(), "PASS", expected="PASS")
+        extra = self._get_class_method_name(test)
+        self.logger.test_end(test.id(), "PASS", expected="PASS", extra=extra)
 
     def addExpectedFailure(self, test, err):
         extra = self.call_callbacks(test, "ERROR")
+        extra.update(self._get_class_method_name(test))
         self.logger.test_end(test.id(),
                             "FAIL",
                              message=self._extract_err_message(err),
@@ -113,6 +155,7 @@ class StructuredTestResult(TextTestResult):
 
     def addUnexpectedSuccess(self, test):
         extra = self.call_callbacks(test, "ERROR")
+        extra.update(self._get_class_method_name(test))
         self.logger.test_end(test.id(),
                              "PASS",
                              expected="FAIL",
@@ -120,6 +163,7 @@ class StructuredTestResult(TextTestResult):
 
     def addSkip(self, test, reason):
         extra = self.call_callbacks(test, "ERROR")
+        extra.update(self._get_class_method_name(test))
         self.logger.test_end(test.id(),
                              "SKIP",
                              message=reason,

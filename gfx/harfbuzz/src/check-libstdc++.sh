@@ -17,14 +17,14 @@ fi
 tested=false
 for suffix in so dylib; do
 	so=.libs/libharfbuzz.$suffix
-	if test -f "$so"; then
-		echo "Checking that we are not linking to libstdc++"
-		if ldd $so | grep 'libstdc[+][+]'; then
-			echo "Ouch, linked to libstdc++"
-			stat=1
-		fi
-		tested=true
+	if ! test -f "$so"; then continue; fi
+
+	echo "Checking that we are not linking to libstdc++"
+	if ldd $so | grep 'libstdc[+][+]'; then
+		echo "Ouch, linked to libstdc++"
+		stat=1
 	fi
+	tested=true
 done
 if ! $tested; then
 	echo "check-libstdc++.sh: libharfbuzz shared library not found; skipping test"

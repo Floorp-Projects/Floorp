@@ -345,6 +345,9 @@ MediaSourceReader::ContinueShutdown()
   MOZ_ASSERT(mAudioPromise.IsEmpty());
   MOZ_ASSERT(mVideoPromise.IsEmpty());
 
+  mAudioWaitPromise.RejectIfExists(WaitForDataRejectValue(MediaData::AUDIO_DATA, WaitForDataRejectValue::SHUTDOWN), __func__);
+  mVideoWaitPromise.RejectIfExists(WaitForDataRejectValue(MediaData::VIDEO_DATA, WaitForDataRejectValue::SHUTDOWN), __func__);
+
   MediaDecoderReader::Shutdown()->ChainTo(mMediaSourceShutdownPromise.Steal(), __func__);
 }
 
@@ -389,6 +392,15 @@ MediaSourceReader::SelectReader(int64_t aTarget,
   }
 
   return nullptr;
+}
+
+bool
+MediaSourceReader::HaveData(int64_t aTarget, MediaData::Type aType)
+{
+  TrackBuffer* trackBuffer = aType == MediaData::AUDIO_DATA ? mAudioTrack : mVideoTrack;
+  MOZ_ASSERT(trackBuffer);
+  nsRefPtr<MediaDecoderReader> reader = SelectReader(aTarget, trackBuffer->Decoders());
+  return !!reader;
 }
 
 bool
@@ -720,17 +732,42 @@ MediaSourceReader::GetBuffered(dom::TimeRanges* aBuffered)
   return NS_OK;
 }
 
+nsRefPtr<MediaDecoderReader::WaitForDataPromise>
+MediaSourceReader::WaitForData(MediaData::Type aType)
+{
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  nsRefPtr<WaitForDataPromise> p = WaitPromise(aType).Ensure(__func__);
+  MaybeNotifyHaveData();
+  return p;
+}
+
+void
+MediaSourceReader::MaybeNotifyHaveData()
+{
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  bool haveAudio = false, haveVideo = false;
+  if (!mAudioIsSeeking && mAudioTrack && HaveData(mLastAudioTime, MediaData::AUDIO_DATA)) {
+    haveAudio = true;
+    WaitPromise(MediaData::AUDIO_DATA).ResolveIfExists(MediaData::AUDIO_DATA, __func__);
+  }
+  if (!mVideoIsSeeking && mVideoTrack && HaveData(mLastVideoTime, MediaData::VIDEO_DATA)) {
+    haveVideo = true;
+    WaitPromise(MediaData::VIDEO_DATA).ResolveIfExists(MediaData::VIDEO_DATA, __func__);
+  }
+  MSE_DEBUG("MediaSourceReader(%p)::MaybeNotifyHaveData haveAudio=%d, haveVideo=%d", this,
+            haveAudio, haveVideo);
+}
+
 nsresult
 MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
 {
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+
   MSE_DEBUG("MediaSourceReader(%p)::ReadMetadata tracks=%u/%u audio=%p video=%p",
             this, mEssentialTrackBuffers.Length(), mTrackBuffers.Length(),
             mAudioTrack.get(), mVideoTrack.get());
 
-  {
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    mEssentialTrackBuffers.Clear();
-  }
+  mEssentialTrackBuffers.Clear();
   if (!mAudioTrack && !mVideoTrack) {
     MSE_DEBUG("MediaSourceReader(%p)::ReadMetadata missing track: mAudioTrack=%p mVideoTrack=%p",
               this, mAudioTrack.get(), mVideoTrack.get());

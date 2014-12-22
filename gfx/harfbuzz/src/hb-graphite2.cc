@@ -274,8 +274,8 @@ _hb_graphite2_shape (hb_shape_plan_t    *shape_plan,
   while ((DIV_CEIL (sizeof (hb_graphite2_cluster_t) * buffer->len, sizeof (*scratch)) +
 	  DIV_CEIL (sizeof (hb_codepoint_t) * glyph_count, sizeof (*scratch))) > scratch_size)
   {
-    buffer->ensure (buffer->allocated * 2);
-    if (unlikely (buffer->in_error)) {
+    if (unlikely (!buffer->ensure (buffer->allocated * 2)))
+    {
       if (feats) gr_featureval_destroy (feats);
       gr_seg_destroy (seg);
       return false;
