@@ -710,6 +710,10 @@ protected:
   // DECODER_STATE_WAIT_FOR_RESOURCES.
   void DoNotifyWaitingForResourcesStatusChanged();
 
+  // Return true if the video decoder's decode speed can not catch up the
+  // play time.
+  bool NeedToSkipToNextKeyframe();
+
   // The decoder object that created this state machine. The state machine
   // holds a strong reference to the decoder to ensure that the decoder stays
   // alive once media element has started the decoder shutdown process, and has
@@ -842,6 +846,10 @@ protected:
   // The presentation end time of the last video frame which has been displayed
   // in microseconds. Accessed from the state machine thread.
   int64_t mVideoFrameEndTime;
+
+  // The end time of the last decoded video frame. Used to check if we are low
+  // on decoded video data.
+  int64_t mDecodedVideoEndTime;
 
   // Volume of playback. 0.0 = muted. 1.0 = full volume. Read/Written
   // from the state machine and main threads. Synchronised via decoder
