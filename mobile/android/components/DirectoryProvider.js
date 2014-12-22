@@ -25,7 +25,7 @@ const XRE_APP_DISTRIBUTION_DIR = "XREAppDist";
 const XRE_UPDATE_ROOT_DIR     = "UpdRootD";
 const ENVVAR_UPDATE_DIR       = "UPDATES_DIRECTORY";
 const WEBAPPS_DIR             = "webappsDir";
-const DOWNLOAD_DIR            = "DfltDwnld"
+const DOWNLOAD_DIR            = "DfltDwnld";
 
 const SYSTEM_DIST_PATH = "/system/@ANDROID_PACKAGE_NAME@/distribution";
 
@@ -67,18 +67,18 @@ DirectoryProvider.prototype = {
       if (env.exists(ENVVAR_UPDATE_DIR)) {
         let path = env.get(ENVVAR_UPDATE_DIR);
         if (path) {
-          let localFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-          localFile.initWithPath(path);
-          return localFile;
+          return new FileUtils.File(path);
         }
       }
-      let dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
-      return dm.defaultDownloadsDirectory;
+      return new FileUtils.File(env.get("DOWNLOADS_DIRECTORY"));
     } else if (prop == DOWNLOAD_DIR) {
-      let dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
-      return dm.defaultDownloadsDirectory;
+      // Downloads.getSystemDownloadsDirectory is asynchronous, but getFile is
+      // synchronous, so just return what the getSystemDownloadsDirectory
+      // implementation would have returned.
+      let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+      return new FileUtils.File(env.get("DOWNLOADS_DIRECTORY"));
     }
-    
+
     // We are retuning null to show failure instead for throwing an error. The
     // interface is called quite a bit and throwing an error is noisy. Returning
     // null works with the way the interface is called [see bug 529077]
