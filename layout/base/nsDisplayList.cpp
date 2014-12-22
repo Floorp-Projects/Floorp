@@ -54,6 +54,7 @@
 #include "StickyScrollContainer.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/PendingPlayerTracker.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/UniquePtr.h"
 #include "ActiveLayerTracker.h"
@@ -1406,6 +1407,33 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
   return anyVisible;
 }
 
+static bool
+StartPendingAnimationsOnSubDocuments(nsIDocument* aDocument, void* aReadyTime)
+{
+  PendingPlayerTracker* tracker = aDocument->GetPendingPlayerTracker();
+  if (tracker) {
+    nsIPresShell* shell = aDocument->GetShell();
+    // If paint-suppression is in effect then we haven't finished painting
+    // this document yet so we shouldn't start animations
+    if (!shell || !shell->IsPaintingSuppressed()) {
+      tracker->StartPendingPlayers(*static_cast<TimeStamp*>(aReadyTime));
+    }
+  }
+  aDocument->EnumerateSubDocuments(StartPendingAnimationsOnSubDocuments,
+                                   aReadyTime);
+  return true;
+}
+
+static void
+StartPendingAnimations(nsIDocument* aDocument,
+                       const TimeStamp& aReadyTime) {
+  MOZ_ASSERT(!aReadyTime.IsNull(),
+             "Animation ready time is not set. Perhaps we're using a layer"
+             " manager that doesn't update it");
+  StartPendingAnimationsOnSubDocuments(aDocument,
+                                       const_cast<TimeStamp*>(&aReadyTime));
+}
+
 /**
  * We paint by executing a layer manager transaction, constructing a
  * single layer representing the display list, and then making it the
@@ -1566,6 +1594,10 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
                                aBuilder, flags);
   aBuilder->SetIsCompositingCheap(temp);
   layerBuilder->DidEndTransaction();
+
+  if (document) {
+    StartPendingAnimations(document, layerManager->GetAnimationReadyTime());
+  }
 
   nsIntRegion invalid;
   if (props) {
