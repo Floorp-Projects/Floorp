@@ -612,6 +612,7 @@ MP4Reader::ReturnEOS(TrackType aTrack)
 MP4Sample*
 MP4Reader::PopSample(TrackType aTrack)
 {
+  MonitorAutoLock mon(mIndexMonitor);
   switch (aTrack) {
     case kAudio:
       return mDemuxer->DemuxAudioSample();
