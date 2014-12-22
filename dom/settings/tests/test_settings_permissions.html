@@ -21,10 +21,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={678695}
 
 "use strict";
 
-if (SpecialPowers.isMainProcess()) {
-  SpecialPowers.Cu.import("resource://gre/modules/SettingsRequestManager.jsm");
-}
-
+var url = SimpleTest.getTestFileURL("file_loadserver.js");
+var script = SpecialPowers.loadChromeScript(url);
 SpecialPowers.removePermission("settings-read", document);
 SpecialPowers.removePermission("settings-write", document);
 SpecialPowers.addPermission("settings-api-read", true, document);
@@ -80,21 +78,19 @@ function check(o1, o2) {
 var req, req2, req3, req4, req5, req6;
 var index = 0;
 
-var mozSettings = navigator.mozSettings;
-
 var steps = [
   // Can't delete database here since that requires permissions we don't want
   // to give the page.
   function () {
     ok(true, "Setting wallpaper");
-    var lock = mozSettings.createLock();
+    var lock = navigator.mozSettings.createLock();
     req = lock.set(wallpaper);
     req.onsuccess = function () {
       ok(true, "set done");
     }
     req.onerror = onFailure;
 
-    var lock2 = mozSettings.createLock();
+    var lock2 = navigator.mozSettings.createLock();
     req2 = lock2.get("wallpaper.image");
     req2.onsuccess = function () {
       is(Object.keys(req2.result).length, 1, "length 1");
@@ -106,7 +102,7 @@ var steps = [
   },
   function () {
     ok(true, "Get Wifi");
-    var lock = mozSettings.createLock();
+    var lock = navigator.mozSettings.createLock();
     req = lock.get("wifi.enabled");
     req.onerror = function () {
       ok(true, "get failed (expected)");
@@ -116,7 +112,7 @@ var steps = [
   },
   function () {
     ok(true, "Set Wifi");
-    var lock = mozSettings.createLock();
+    var lock = navigator.mozSettings.createLock();
     req = lock.set(wifi);
     req.onerror = function () {
       ok(true, "set failed (expected)");
@@ -126,7 +122,7 @@ var steps = [
   },
   function () {
     ok(true, "Set combination (1 valid 1 not valid)");
-    var lock = mozSettings.createLock();
+    var lock = navigator.mozSettings.createLock();
     req = lock.set(combination);
     req.onerror = function () {
       ok(true, "set failed (expected)");
@@ -136,7 +132,7 @@ var steps = [
   },
   function () {
     ok(true, "All requests on a failed lock should fail");
-    var lock = mozSettings.createLock();
+    var lock = navigator.mozSettings.createLock();
     lock.onsettingstransactionfailure = function (evt) {
       ok(evt.error == "Lock failed a permissions check, all requests now failing.", "transaction failure on permissions error message correct.");
       ok(true, "transaction failed (expected) ");
@@ -157,7 +153,7 @@ var steps = [
   },
   function () {
     ok(true, "Set combination (1 valid 1 not valid)");
-    var lock = mozSettings.createLock();
+    var lock = navigator.mozSettings.createLock();
     req = lock.set(combination);
     req.onerror = function () {
       ok(true, "set failed (expected)");
