@@ -498,9 +498,6 @@ class LSimdSelect : public LInstructionHelper<1, 3, 1>
     const LDefinition *temp() {
         return getTemp(0);
     }
-    MSimdTernaryBitwise::Operation operation() const {
-        return mir_->toSimdTernaryBitwise()->operation();
-    }
 };
 
 // Constant 32-bit integer.

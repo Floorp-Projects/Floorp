@@ -2647,8 +2647,7 @@ class FunctionCompiler
         return ins;
     }
 
-    MDefinition *ternarySimd(MDefinition *mask, MDefinition *lhs, MDefinition *rhs,
-                             MSimdTernaryBitwise::Operation op, MIRType type)
+    MDefinition *selectSimd(MDefinition *mask, MDefinition *lhs, MDefinition *rhs, MIRType type)
     {
         if (inDeadCode())
             return nullptr;
@@ -2657,7 +2656,7 @@ class FunctionCompiler
         MOZ_ASSERT(mask->type() == MIRType_Int32x4);
         MOZ_ASSERT(IsSimdType(lhs->type()) && rhs->type() == lhs->type());
         MOZ_ASSERT(lhs->type() == type);
-        MSimdTernaryBitwise *ins = MSimdTernaryBitwise::NewAsmJS(alloc(), mask, lhs, rhs, op, type);
+        MSimdSelect *ins = MSimdSelect::NewAsmJS(alloc(), mask, lhs, rhs, type);
         curBlock_->add(ins);
         return ins;
     }
@@ -5816,8 +5815,7 @@ CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompile
         if (!CheckSimdCallArgs(f, call, 3, CheckSimdSelectArgs(opType), &defs))
             return false;
         *type = opType;
-        *def = f.ternarySimd(defs[0], defs[1], defs[2], MSimdTernaryBitwise::select,
-                             type->toMIRType());
+        *def = f.selectSimd(defs[0], defs[1], defs[2], type->toMIRType());
         return true;
       }
     }
