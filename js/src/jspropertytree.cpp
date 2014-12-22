@@ -6,6 +6,8 @@
 
 #include "jspropertytree.h"
 
+#include "mozilla/DebugOnly.h"
+
 #include "jscntxt.h"
 #include "jsgc.h"
 #include "jstypes.h"
