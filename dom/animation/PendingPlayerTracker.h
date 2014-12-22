@@ -11,6 +11,8 @@
 #include "nsIDocument.h"
 #include "nsTHashtable.h"
 
+class nsIFrame;
+
 namespace mozilla {
 
 class PendingPlayerTracker MOZ_FINAL
@@ -33,6 +35,8 @@ public:
 
 private:
   ~PendingPlayerTracker() { }
+
+  void EnsurePaintIsScheduled();
 
   typedef nsTHashtable<nsRefPtrHashKey<dom::AnimationPlayer>>
     AnimationPlayerSet;
