@@ -203,7 +203,7 @@ private:
 
 class MP4ContainerParser : public ContainerParser {
 public:
-  MP4ContainerParser() {}
+  MP4ContainerParser() :mMonitor("MP4ContainerParser Index Monitor") {}
 
   bool IsInitSegmentPresent(const uint8_t* aData, uint32_t aLength)
   {
@@ -244,10 +244,12 @@ public:
   bool ParseStartAndEndTimestamps(const uint8_t* aData, uint32_t aLength,
                                   int64_t& aStart, int64_t& aEnd)
   {
+    MonitorAutoLock mon(mMonitor); // We're not actually racing against anything,
+                                   // but mParser requires us to hold a monitor.
     bool initSegment = IsInitSegmentPresent(aData, aLength);
     if (initSegment) {
       mStream = new mp4_demuxer::BufferStream();
-      mParser = new mp4_demuxer::MoofParser(mStream, 0);
+      mParser = new mp4_demuxer::MoofParser(mStream, 0, &mMonitor);
     } else if (!mStream || !mParser) {
       return false;
     }
@@ -291,6 +293,7 @@ public:
 private:
   nsRefPtr<mp4_demuxer::BufferStream> mStream;
   nsAutoPtr<mp4_demuxer::MoofParser> mParser;
+  Monitor mMonitor;
 };
 
 /*static*/ ContainerParser*
