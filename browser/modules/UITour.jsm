@@ -143,13 +143,21 @@ this.UITour = {
       },
     }],
     ["loop-selectedRoomButtons", {
-      infoPanelPosition: "leftcenter bottomright",
+      infoPanelOffsetY: -20,
+      infoPanelPosition: "start_after",
       query: (aDocument) => {
         let chatbox = aDocument.querySelector("chatbox[src^='about\:loopconversation'][selected]");
-        if (!chatbox || !chatbox.contentDocument) {
+
+        // Check that the real target actually exists
+        if (!chatbox || !chatbox.contentDocument ||
+            !chatbox.contentDocument.querySelector(".call-action-group")) {
           return null;
         }
-        return chatbox.contentDocument.querySelector(".call-action-group");
+
+        // But anchor on the <browser> in the chatbox so the panel doesn't jump to undefined
+        // positions when the copy/email buttons disappear e.g. when the feedback form opens or
+        // somebody else joins the room.
+        return chatbox.content;
       },
     }],
     ["loop-signInUpLink", {
@@ -164,6 +172,7 @@ this.UITour = {
     ["privateWindow",  {query: "#privatebrowsing-button"}],
     ["quit",        {query: "#PanelUI-quit"}],
     ["search",      {
+      infoPanelOffsetX: 18,
       infoPanelPosition: "after_start",
       query: "#searchbar",
       widgetName: "search-container",
@@ -902,6 +911,8 @@ this.UITour = {
 
       deferred.resolve({
         addTargetListener: targetObject.addTargetListener,
+        infoPanelOffsetX: targetObject.infoPanelOffsetX,
+        infoPanelOffsetY: targetObject.infoPanelOffsetY,
         infoPanelPosition: targetObject.infoPanelPosition,
         node: node,
         removeTargetListener: targetObject.removeTargetListener,
@@ -1241,12 +1252,10 @@ this.UITour = {
         alignment = aAnchor.infoPanelPosition;
       }
 
-      let xOffset = 0, yOffset = 0;
-      if (aAnchor.targetName == "search") {
-        xOffset = 18;
-      }
+      let { infoPanelOffsetX: xOffset, infoPanelOffsetY: yOffset } = aAnchor;
+
       this._addAnnotationPanelMutationObserver(tooltip);
-      tooltip.openPopup(aAnchorEl, alignment, xOffset, yOffset);
+      tooltip.openPopup(aAnchorEl, alignment, xOffset || 0, yOffset || 0);
       if (tooltip.state == "closed") {
         document.defaultView.addEventListener("endmodalstate", function endModalStateHandler() {
           document.defaultView.removeEventListener("endmodalstate", endModalStateHandler);
