@@ -412,15 +412,15 @@ CloseLiveIterator(JSContext *cx, const InlineFrameIterator &frame, uint32_t loca
 
 static void
 HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromException *rfe,
-                   bool *overrecursed)
+                   bool *overrecursed, bool *poppedLastSPSFrameOut)
 {
     RootedScript script(cx, frame.script());
     jsbytecode *pc = frame.pc();
 
-    if (cx->compartment()->isDebuggee()) {
-        // We need to bail when we are the debuggee of a Debugger with a live
-        // onExceptionUnwind hook, or if a Debugger has observed this frame
-        // (e.g., for onPop).
+    if (cx->compartment()->isDebuggee() && cx->isExceptionPending()) {
+        // We need to bail when there is a catchable exception, and we are the
+        // debuggee of a Debugger with a live onExceptionUnwind hook, or if a
+        // Debugger has observed this frame (e.g., for onPop).
         bool shouldBail = Debugger::hasLiveHook(cx->global(), Debugger::OnExceptionUnwind);
         if (!shouldBail) {
             JitActivation *act = cx->mainThread().activation()->asJit();
@@ -444,7 +444,8 @@ HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromEx
             // to the stack depth at the snapshot, as we could've thrown in the
             // middle of a call.
             ExceptionBailoutInfo propagateInfo;
-            uint32_t retval = ExceptionHandlerBailout(cx, frame, rfe, propagateInfo, overrecursed);
+            uint32_t retval = ExceptionHandlerBailout(cx, frame, rfe, propagateInfo, overrecursed,
+                                                      poppedLastSPSFrameOut);
             if (retval == BAILOUT_RETURN_OK)
                 return;
         }
@@ -486,7 +487,8 @@ HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromEx
                 // Bailout at the start of the catch block.
                 jsbytecode *catchPC = script->main() + tn->start + tn->length;
                 ExceptionBailoutInfo excInfo(frame.frameNo(), catchPC, tn->stackDepth);
-                uint32_t retval = ExceptionHandlerBailout(cx, frame, rfe, excInfo, overrecursed);
+                uint32_t retval = ExceptionHandlerBailout(cx, frame, rfe, excInfo, overrecursed,
+                                                          poppedLastSPSFrameOut);
                 if (retval == BAILOUT_RETURN_OK)
                     return;
 
@@ -742,7 +744,8 @@ HandleException(ResumeFromException *rfe)
             bool invalidated = iter.checkInvalidation(&ionScript);
 
             for (;;) {
-                HandleExceptionIon(cx, frames, rfe, &overrecursed);
+                bool poppedLastSPSFrame = false;
+                HandleExceptionIon(cx, frames, rfe, &overrecursed, &poppedLastSPSFrame);
 
                 if (rfe->kind == ResumeFromException::RESUME_BAILOUT) {
                     if (invalidated)
@@ -762,6 +765,11 @@ HandleException(ResumeFromException *rfe)
 
                 // Don't pop an SPS frame for inlined frames, since they are not instrumented.
                 if (frames.more())
+                    popSPSFrame = false;
+
+                // Don't pop the last SPS frame if it's already been popped by
+                // bailing out.
+                if (poppedLastSPSFrame)
                     popSPSFrame = false;
 
                 // When profiling, each frame popped needs a notification that
@@ -874,7 +882,8 @@ HandleParallelFailure(ResumeFromException *rfe)
     SnapshotIterator snapIter(frameIter);
 
     cx->bailoutRecord->setIonBailoutKind(snapIter.bailoutKind());
-    cx->bailoutRecord->rematerializeFrames(cx, frameIter);
+    while (!frameIter.done())
+        ++frameIter;
 
     rfe->kind = ResumeFromException::RESUME_ENTRY_FRAME;
 
@@ -2341,10 +2350,13 @@ InlineFrameIterator::findNextFrame()
 }
 
 JSObject *
-InlineFrameIterator::computeScopeChain(Value scopeChainValue) const
+InlineFrameIterator::computeScopeChain(Value scopeChainValue, bool *hasCallObj) const
 {
-    if (scopeChainValue.isObject())
+    if (scopeChainValue.isObject()) {
+        if (hasCallObj)
+            *hasCallObj = isFunctionFrame() && callee()->isHeavyweight();
         return &scopeChainValue.toObject();
+    }
 
     // Note we can hit this case even for heavyweight functions, in case we
     // are walking the frame during the function prologue, before the scope
