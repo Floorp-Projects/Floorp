@@ -1,14 +1,14 @@
 // |reftest| skip-if(!this.hasOwnProperty("SIMD"))
 var BUGNUMBER = 946042;
 var float32x4 = SIMD.float32x4;
-var int32x4 = SIMD.int32x4;
+var float64x2 = SIMD.float64x2;
 
-var summary = 'float32x4 clamp';
+var summary = 'float32x4/float64x2 clamp';
 
 function test() {
   print(BUGNUMBER + ": " + summary);
 
-  // FIXME -- Bug 1068028: Amend to check for correctness of NaN border cases once the semantics are defined.
+  // FIXME -- Bug 1068028: Amend to check for correctness of NaN/-0 border cases once the semantics are defined.
 
   var a = float32x4(-20, 10, 30, 0.5);
   var lower = float32x4(2, 1, 50, 0);
@@ -36,6 +36,24 @@ function test() {
   assertEq(i.y, -Infinity);
   assertEq(i.z, 10);
   assertEq(i.w, -10);
+
+  var j = float64x2(-20, 10);
+  var k = float64x2(2.125, 3);
+  var lower3 = float64x2(2, 1);
+  var upper3 = float64x2(2.5, 5);
+  var l = float64x2.clamp(j, lower3, upper3);
+  assertEq(l.x, 2);
+  assertEq(l.y, 5);
+  var m = float64x2.clamp(k, lower3, upper3);
+  assertEq(m.x, 2.125);
+  assertEq(m.y, 3);
+
+  var n = float64x2(-5, 5);
+  var lower4 = float64x2(-Infinity, 0);
+  var upper4 = float64x2(+Infinity, +Infinity);
+  var p = float64x2.clamp(n, lower4, upper4);
+  assertEq(p.x, -5);
+  assertEq(p.y, 5);
 
   if (typeof reportCompare === "function")
     reportCompare(true, true);
