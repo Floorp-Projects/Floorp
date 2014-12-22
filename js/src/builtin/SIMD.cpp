@@ -302,7 +302,6 @@ bool
 SimdTypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    const unsigned LANES = 4;
 
     Rooted<SimdTypeDescr*> descr(cx, &args.callee().as<SimdTypeDescr>());
     if (args.length() == 1) {
@@ -316,12 +315,6 @@ SimdTypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    if (args.length() < LANES) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
-                             args.callee().getClass()->name, "3", "s");
-        return false;
-    }
-
     Rooted<TypedObject*> result(cx, TypedObject::createZeroed(cx, descr, 0));
     if (!result)
         return false;
@@ -330,7 +323,7 @@ SimdTypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
       case SimdTypeDescr::TYPE_INT32: {
         int32_t *mem = reinterpret_cast<int32_t*>(result->typedMem());
         for (unsigned i = 0; i < 4; i++) {
-            if (!ToInt32(cx, args[i], &mem[i]))
+            if (!ToInt32(cx, args.get(i), &mem[i]))
                 return false;
         }
         break;
@@ -338,7 +331,7 @@ SimdTypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
       case SimdTypeDescr::TYPE_FLOAT32: {
         float *mem = reinterpret_cast<float*>(result->typedMem());
         for (unsigned i = 0; i < 4; i++) {
-            if (!RoundFloat32(cx, args[i], &mem[i]))
+            if (!RoundFloat32(cx, args.get(i), &mem[i]))
                 return false;
         }
         break;
