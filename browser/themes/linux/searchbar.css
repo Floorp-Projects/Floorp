@@ -82,6 +82,10 @@ menuitem[cmd="cmd_clearhistory"][disabled] {
   margin: -2px -2px;
 }
 
+.searchbar-search-button[addengines="true"] {
+  list-style-image: url("chrome://browser/skin/search-indicator-badge-add.png");
+}
+
 .searchbar-search-button:hover {
   -moz-image-region: rect(0, 40px, 20px, 20px);
 }
@@ -202,8 +206,15 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
   color: HighlightText;
 }
 
-.addengine-item > .button-box > .button-icon {
+.addengine-icon {
   width: 16px;
+}
+
+.addengine-badge {
+  width: 16px;
+  height: 16px;
+  margin: -7px -9px 7px 9px;
+  list-style-image: url("chrome://browser/skin/badge-add-engine.png");
 }
 
 .addengine-item > .button-box > .button-text {
