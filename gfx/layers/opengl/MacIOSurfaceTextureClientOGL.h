@@ -16,7 +16,8 @@ namespace layers {
 class MacIOSurfaceTextureClientOGL : public TextureClient
 {
 public:
-  explicit MacIOSurfaceTextureClientOGL(TextureFlags aFlags);
+  explicit MacIOSurfaceTextureClientOGL(ISurfaceAllocator* aAllcator,
+                                        TextureFlags aFlags);
 
   virtual ~MacIOSurfaceTextureClientOGL();
 

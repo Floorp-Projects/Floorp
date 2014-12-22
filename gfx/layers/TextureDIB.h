@@ -23,7 +23,9 @@ namespace layers {
 class DIBTextureClient : public TextureClient
 {
 public:
-  DIBTextureClient(gfx::SurfaceFormat aFormat, TextureFlags aFlags);
+  DIBTextureClient(ISurfaceAllocator* aAllocator,
+                   gfx::SurfaceFormat aFormat,
+                   TextureFlags aFlags);
 
   virtual ~DIBTextureClient();
 
