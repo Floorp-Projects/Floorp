@@ -440,43 +440,20 @@ protected:
     mozilla::JustificationInfo mJustificationInfo;
     mozilla::JustificationAssignment mJustificationAssignment;
     
-// PerFrameData flags
-#define PFD_RELATIVEPOS                 0x00000001
-#define PFD_ISTEXTFRAME                 0x00000002
-#define PFD_ISNONEMPTYTEXTFRAME         0x00000004
-#define PFD_ISNONWHITESPACETEXTFRAME    0x00000008
-#define PFD_ISLETTERFRAME               0x00000010
-#define PFD_RECOMPUTEOVERFLOW           0x00000020
-#define PFD_ISBULLET                    0x00000040
-#define PFD_SKIPWHENTRIMMINGWHITESPACE  0x00000080
-#define PFD_ISEMPTY                     0x00000100
-#define PFD_ISLINKEDTOBASE              0x00000200
-#define PFD_LASTFLAG                    PFD_ISLINKEDTOBASE
+    // PerFrameData flags
+    bool mRelativePos : 1;
+    bool mIsTextFrame : 1;
+    bool mIsNonEmptyTextFrame : 1;
+    bool mIsNonWhitespaceTextFrame : 1;
+    bool mIsLetterFrame : 1;
+    bool mRecomputeOverflow : 1;
+    bool mIsBullet : 1;
+    bool mSkipWhenTrimmingWhitespace : 1;
+    bool mIsEmpty : 1;
+    bool mIsLinkedToBase : 1;
 
     // Other state we use
-    uint16_t mFlags;
     uint8_t mBlockDirAlign;
-
-    static_assert(PFD_LASTFLAG <= UINT16_MAX,
-                  "Flag value exceeds the length of flags variable.");
-
-    void SetFlag(uint32_t aFlag, bool aValue)
-    {
-      NS_ASSERTION(aFlag<=PFD_LASTFLAG, "bad flag");
-      if (aValue) { // set flag
-        mFlags |= aFlag;
-      }
-      else {        // unset flag
-        mFlags &= ~aFlag;
-      }
-    }
-
-    bool GetFlag(uint32_t aFlag) const
-    {
-      NS_ASSERTION(aFlag<=PFD_LASTFLAG, "bad flag");
-      return !!(mFlags & aFlag);
-    }
-
 
     PerFrameData* Last() {
       PerFrameData* pfd = this;
@@ -499,7 +476,7 @@ protected:
     bool ParticipatesInJustification() const
     {
       // Skip bullets and empty frames
-      return !GetFlag(PFD_ISBULLET) && !GetFlag(PFD_ISEMPTY);
+      return !mIsBullet && !mIsEmpty;
     }
   };
   PerFrameData* mFrameFreeList;
