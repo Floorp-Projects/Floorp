@@ -34,4 +34,6 @@ add_task(function*() {
   ok(TimelineController.getInterval().endTime >
      TimelineController.getInterval().startTime,
     "Some time has passed since the recording started.");
+
+  yield TimelineController.toggleRecording();
 });
