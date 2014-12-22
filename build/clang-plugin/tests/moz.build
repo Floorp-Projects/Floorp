@@ -12,6 +12,7 @@ SOURCES += [
     'TestNoArithmeticExprInArgument.cpp',
     'TestNonHeapClass.cpp',
     'TestStackClass.cpp',
+    'TestTrivialCtorDtor.cpp',
 ]
 
 DISABLE_STL_WRAPPING = True
