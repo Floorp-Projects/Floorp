@@ -11882,6 +11882,9 @@ class MIsObject
     MDefinition *object() const {
         return getOperand(0);
     }
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
