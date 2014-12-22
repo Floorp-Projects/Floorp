@@ -63,6 +63,10 @@
   margin: 0 -3px;
 }
 
+.searchbar-search-button[addengines="true"] {
+  list-style-image: url("chrome://browser/skin/search-indicator-badge-add.png");
+}
+
 .searchbar-search-button:hover {
   -moz-image-region: rect(0, 40px, 20px, 20px);
 }
@@ -103,6 +107,10 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
     list-style-image: url("chrome://browser/skin/search-indicator@2x.png");
     width: 20px;
     -moz-image-region: rect(0, 40px, 40px, 0);
+  }
+
+  .searchbar-search-button[addengines="true"] {
+    list-style-image: url("chrome://browser/skin/search-indicator-badge-add@2x.png");
   }
 
   .searchbar-search-button:hover {
@@ -213,8 +221,15 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
   color: HighlightText;
 }
 
-.addengine-item > .button-box > .button-icon {
+.addengine-icon {
   width: 16px;
+}
+
+.addengine-badge {
+  width: 16px;
+  height: 16px;
+  margin: -7px -9px 7px 9px;
+  list-style-image: url("chrome://browser/skin/badge-add-engine.png");
 }
 
 .addengine-item > .button-box > .button-text {
@@ -228,6 +243,10 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
 }
 
 @media (min-resolution: 2dppx) {
+  .addengine-badge {
+    list-style-image: url("chrome://browser/skin/badge-add-engine@2x.png");
+  }
+
   .addengine-item:not([image]) {
     list-style-image: url("chrome://browser/skin/search-engine-placeholder@2x.png");
   }
