@@ -65,6 +65,7 @@ class nsAnimationManager;
 class nsRefreshDriver;
 class nsIWidget;
 class nsDeviceContext;
+class gfxMissingFontRecorder;
 
 namespace mozilla {
 class EventStateManager;
@@ -876,6 +877,9 @@ public:
   // user font set is changed and fonts become unavailable).
   void UserFontSetUpdated();
 
+  gfxMissingFontRecorder *MissingFontRecorder() { return mMissingFonts; }
+  void NotifyMissingFonts();
+
   mozilla::dom::FontFaceSet* Fonts();
 
   void FlushCounterStyles();
@@ -1250,6 +1254,8 @@ protected:
 
   // text performance metrics
   nsAutoPtr<gfxTextPerfMetrics>   mTextPerf;
+
+  nsAutoPtr<gfxMissingFontRecorder> mMissingFonts;
 
   nsRect                mVisibleArea;
   nsSize                mPageSize;
