@@ -79,11 +79,13 @@ protected:
   nscoord CalculateMaxSpanISize(nsRenderingContext* aRenderingContext);
 
   nscoord ReflowPairs(nsPresContext* aPresContext,
+                      bool aAllowLineBreak,
                       const nsHTMLReflowState& aReflowState,
                       nsTArray<nsHTMLReflowState*>& aReflowStates,
                       nsReflowStatus& aStatus);
 
   nscoord ReflowOnePair(nsPresContext* aPresContext,
+                        bool aAllowLineBreak,
                         const nsHTMLReflowState& aReflowState,
                         nsTArray<nsHTMLReflowState*>& aReflowStates,
                         nsIFrame* aBaseFrame,
