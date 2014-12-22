@@ -26,6 +26,13 @@ let panel, anchor, arrow;
 let observer = {
   reflows: [],
   reflow: function (start, end) {
+    // Ignore reflows triggered by native code
+    // (Reflows from native code only have an empty stack after the first frame)
+    var path = (new Error().stack).split("\n").slice(1).join("");
+    if (path === "") {
+      return;
+    }
+
     this.reflows.push(new Error().stack);
   },
 

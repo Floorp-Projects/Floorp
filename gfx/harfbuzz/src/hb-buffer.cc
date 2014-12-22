@@ -178,6 +178,7 @@ hb_buffer_t::reset (void)
 
   hb_unicode_funcs_destroy (unicode);
   unicode = hb_unicode_funcs_get_default ();
+  flags = HB_BUFFER_FLAG_DEFAULT;
   replacement = HB_BUFFER_REPLACEMENT_CODEPOINT_DEFAULT;
 
   clear ();
@@ -191,7 +192,6 @@ hb_buffer_t::clear (void)
 
   hb_segment_properties_t default_props = HB_SEGMENT_PROPERTIES_DEFAULT;
   props = default_props;
-  flags = HB_BUFFER_FLAG_DEFAULT;
 
   content_type = HB_BUFFER_CONTENT_TYPE_INVALID;
   in_error = false;
@@ -702,11 +702,11 @@ hb_buffer_get_empty (void)
     HB_OBJECT_HEADER_STATIC,
 
     const_cast<hb_unicode_funcs_t *> (&_hb_unicode_funcs_nil),
-    HB_SEGMENT_PROPERTIES_DEFAULT,
     HB_BUFFER_FLAG_DEFAULT,
     HB_BUFFER_REPLACEMENT_CODEPOINT_DEFAULT,
 
     HB_BUFFER_CONTENT_TYPE_INVALID,
+    HB_SEGMENT_PROPERTIES_DEFAULT,
     true, /* in_error */
     true, /* have_output */
     true  /* have_positions */

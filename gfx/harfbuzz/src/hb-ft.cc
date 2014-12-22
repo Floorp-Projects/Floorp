@@ -136,7 +136,7 @@ hb_ft_get_glyph_v_origin (hb_font_t *font HB_UNUSED,
 			  void *user_data HB_UNUSED)
 {
   FT_Face ft_face = (FT_Face) font_data;
-  int load_flags = FT_LOAD_DEFAULT;
+  int load_flags = FT_LOAD_DEFAULT | FT_LOAD_NO_HINTING;
 
   if (unlikely (FT_Load_Glyph (ft_face, glyph, load_flags)))
     return false;
@@ -185,7 +185,7 @@ hb_ft_get_glyph_extents (hb_font_t *font HB_UNUSED,
 			 void *user_data HB_UNUSED)
 {
   FT_Face ft_face = (FT_Face) font_data;
-  int load_flags = FT_LOAD_DEFAULT;
+  int load_flags = FT_LOAD_DEFAULT | FT_LOAD_NO_HINTING;
 
   if (unlikely (FT_Load_Glyph (ft_face, glyph, load_flags)))
     return false;
@@ -455,7 +455,7 @@ retry:
       goto retry;
     }
 
-#ifdef HAVE_ATEXIT
+#ifdef HB_USE_ATEXIT
     atexit (free_ft_library); /* First person registers atexit() callback. */
 #endif
   }
