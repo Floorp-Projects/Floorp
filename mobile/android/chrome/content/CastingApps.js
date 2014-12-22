@@ -25,8 +25,7 @@ var matchstickDevice = {
   id: "matchstick:dial",
   target: "urn:dial-multiscreen-org:service:dial:1",
   filters: {
-    server: null,
-    modelName: "Eureka Dongle"
+    manufacturer: "openflint"
   },
   factory: function(aService) {
     Cu.import("resource://gre/modules/MatchstickApp.jsm");
