@@ -24,10 +24,15 @@ nsContextMenu.prototype = {
       return;
 
     this.hasPageMenu = false;
-    // FIXME (bug 1047751) - The page menu is disabled in e10s.
-    if (!aIsShift && !this.isRemote) {
-      this.hasPageMenu = PageMenu.maybeBuildAndAttachMenu(this.target,
-                                                          aXulMenu);
+    if (!aIsShift) {
+      if (this.isRemote) {
+        this.hasPageMenu =
+          PageMenuParent.addToPopup(gContextMenuContentData.customMenuItems,
+                                    this.browser, aXulMenu);
+      }
+      else {
+        this.hasPageMenu = PageMenuParent.buildAndAddToPopup(this.target, aXulMenu);
+      }
     }
 
     this.isFrameImage = document.getElementById("isFrameImage");
@@ -1766,7 +1771,7 @@ nsContextMenu.prototype = {
       }
 
       // Check if this is a page menu item:
-      if (e.target.hasAttribute(PageMenu.GENERATEDITEMID_ATTR)) {
+      if (e.target.hasAttribute(PageMenuParent.GENERATEDITEMID_ATTR)) {
         this._telemetryClickID = "custom-page-item";
       } else {
         this._telemetryClickID = (e.target.id || "unknown").replace(/^context-/i, "");
