@@ -25,8 +25,7 @@ class CompositableForwarder;
 class EGLImageTextureClient : public TextureClient
 {
 public:
-  EGLImageTextureClient(ISurfaceAllocator* aAllocator,
-                        TextureFlags aFlags,
+  EGLImageTextureClient(TextureFlags aFlags,
                         EGLImageImage* aImage,
                         gfx::IntSize aSize);
 
@@ -73,8 +72,7 @@ protected:
 class SurfaceTextureClient : public TextureClient
 {
 public:
-  SurfaceTextureClient(ISurfaceAllocator* aAllocator,
-                       TextureFlags aFlags,
+  SurfaceTextureClient(TextureFlags aFlags,
                        gl::AndroidSurfaceTexture* aSurfTex,
                        gfx::IntSize aSize,
                        bool aInverted);
