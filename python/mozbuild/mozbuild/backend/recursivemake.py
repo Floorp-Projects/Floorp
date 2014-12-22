@@ -632,6 +632,32 @@ class RecursiveMakeBackend(CommonBackend):
             just_the_filenames = list(filter_out_dummy(unified_group))
             yield '%s%d.%s' % (unified_prefix, i, unified_suffix), just_the_filenames
 
+    def _write_unified_file(self, unified_file, source_filenames,
+                            output_directory, poison_windows_h=False):
+        with self._write_file(mozpath.join(output_directory, unified_file)) as f:
+            f.write('#define MOZ_UNIFIED_BUILD\n')
+            includeTemplate = '#include "%(cppfile)s"'
+            if poison_windows_h:
+                includeTemplate += (
+                    '\n'
+                    '#ifdef _WINDOWS_\n'
+                    '#error "%(cppfile)s included windows.h"\n'
+                    "#endif")
+            includeTemplate += (
+                '\n'
+                '#ifdef PL_ARENA_CONST_ALIGN_MASK\n'
+                '#error "%(cppfile)s uses PL_ARENA_CONST_ALIGN_MASK, '
+                'so it cannot be built in unified mode."\n'
+                '#undef PL_ARENA_CONST_ALIGN_MASK\n'
+                '#endif\n'
+                '#ifdef INITGUID\n'
+                '#error "%(cppfile)s defines INITGUID, '
+                'so it cannot be built in unified mode."\n'
+                '#undef INITGUID\n'
+                '#endif')
+            f.write('\n'.join(includeTemplate % { "cppfile": s } for
+                              s in source_filenames))
+
     def _add_unified_build_rules(self, makefile, files, output_directory,
                                  unified_prefix='Unified',
                                  unified_suffix='cpp',
@@ -669,29 +695,9 @@ class RecursiveMakeBackend(CommonBackend):
             # blown away and we need to regenerate them.  The rule doesn't correctly
             # handle source files being added/removed/renamed.  Therefore, we
             # generate them here also to make sure everything's up-to-date.
-            with self._write_file(mozpath.join(output_directory, unified_file)) as f:
-                f.write('#define MOZ_UNIFIED_BUILD\n')
-                includeTemplate = '#include "%(cppfile)s"'
-                if poison_windows_h:
-                    includeTemplate += (
-                        '\n'
-                        '#ifdef _WINDOWS_\n'
-                        '#error "%(cppfile)s included windows.h"\n'
-                        "#endif")
-                includeTemplate += (
-                    '\n'
-                    '#ifdef PL_ARENA_CONST_ALIGN_MASK\n'
-                    '#error "%(cppfile)s uses PL_ARENA_CONST_ALIGN_MASK, '
-                    'so it cannot be built in unified mode."\n'
-                    '#undef PL_ARENA_CONST_ALIGN_MASK\n'
-                    '#endif\n'
-                    '#ifdef INITGUID\n'
-                    '#error "%(cppfile)s defines INITGUID, '
-                    'so it cannot be built in unified mode."\n'
-                    '#undef INITGUID\n'
-                    '#endif')
-                f.write('\n'.join(includeTemplate % { "cppfile": s } for
-                                  s in source_filenames))
+            self._write_unified_file(unified_file, source_filenames,
+                                     output_directory,
+                                     poison_windows_h=poison_windows_h)
 
         if include_curdir_build_rules:
             makefile.add_statement('\n'
