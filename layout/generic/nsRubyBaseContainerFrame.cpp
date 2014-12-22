@@ -256,12 +256,12 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
 {
   DO_GLOBAL_REFLOW_COUNT("nsRubyBaseContainerFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
+  aStatus = NS_FRAME_COMPLETE;
 
   if (!aReflowState.mLineLayout) {
     NS_ASSERTION(
       aReflowState.mLineLayout,
       "No line layout provided to RubyBaseContainerFrame reflow method.");
-    aStatus = NS_FRAME_COMPLETE;
     return;
   }
 
@@ -272,7 +272,6 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
     mTextContainers[i]->MoveOverflowToChildList();
   }
 
-  aStatus = NS_FRAME_COMPLETE;
   WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
   LogicalSize availSize(lineWM, aReflowState.AvailableWidth(),
                         aReflowState.AvailableHeight());
@@ -342,10 +341,18 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
   aReflowState.mLineLayout->BeginSpan(this, &aReflowState,
                                       startEdge, endEdge, &mBaseline);
 
-  // Reflow pairs excluding any span
-  nscoord pairsISize = ReflowPairs(aPresContext, aReflowState,
-                                   rtcReflowStates, aStatus);
-  nscoord isize = pairsISize;
+  if (aReflowState.mLineLayout->LineIsBreakable() &&
+      aReflowState.mLineLayout->NotifyOptionalBreakPosition(
+        this, 0, startEdge <= aReflowState.AvailableISize(),
+        gfxBreakPriority::eNormalBreak)) {
+    aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+  }
+
+  nscoord isize = 0;
+  if (aStatus == NS_FRAME_COMPLETE) {
+    // Reflow pairs excluding any span
+    isize = ReflowPairs(aPresContext, aReflowState, rtcReflowStates, aStatus);
+  }
 
   // If there exists any span, the pairs must either be completely
   // reflowed, or be not reflowed at all.
@@ -410,15 +417,6 @@ nsRubyBaseContainerFrame::ReflowPairs(nsPresContext* aPresContext,
                                       nsReflowStatus& aStatus)
 {
   nsLineLayout* lineLayout = aReflowState.mLineLayout;
-  if (!lineLayout->LineIsEmpty()) {
-    // Record break position only if the line is not empty.
-    if (lineLayout->NotifyOptionalBreakPosition(
-          this, 0, true, gfxBreakPriority::eNormalBreak)) {
-      aStatus = NS_INLINE_LINE_BREAK_BEFORE();
-      return 0;
-    }
-  }
-
   const uint32_t rtcCount = mTextContainers.Length();
   nscoord istart = lineLayout->GetCurrentICoord();
   nscoord icoord = istart;
