@@ -91,7 +91,7 @@ function waitForPopupShown(aPopupId, aCallback) {
   registerCleanupFunction(removePopupShownListener);
 }
 
-function* promiseEvent(aTarget, aEventName, aPreventDefault) {
+function promiseEvent(aTarget, aEventName, aPreventDefault) {
   let deferred = Promise.defer();
   aTarget.addEventListener(aEventName, function onEvent(aEvent) {
     aTarget.removeEventListener(aEventName, onEvent, true);
