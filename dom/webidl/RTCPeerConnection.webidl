@@ -102,8 +102,11 @@ interface mozRTCPeerConnection : EventTarget  {
   attribute DOMString id;
 
   RTCConfiguration      getConfiguration ();
+  [UnsafeInPrerendering]
   sequence<MediaStream> getLocalStreams ();
+  [UnsafeInPrerendering]
   sequence<MediaStream> getRemoteStreams ();
+  [UnsafeInPrerendering]
   MediaStream? getStreamById (DOMString streamId);
   void addStream (MediaStream stream);
   void removeStream (MediaStream stream);

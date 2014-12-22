@@ -3,13 +3,52 @@
 {
   let dummyCallback = () => {};
   let mockWebSocket = new MockWebSocketChannel();
+  let pushServerRequestCount = 0;
 
   add_test(function test_initalize_offline() {
     Services.io.offline = true;
     do_check_false(MozLoopPushHandler.initialize());
     Services.io.offline = false;
-    MozLoopPushHandler.initialize({mockWebSocket: mockWebSocket});
     run_next_test();
+  });
+
+  add_test(function test_initalize() {
+    loopServer.registerPathHandler("/push-server-config", (request, response) => {
+      // The PushHandler should retry the request for the push-server-config for
+      // each of these cases without throwing an error.
+      let n = 0;
+      switch (++pushServerRequestCount) {
+      case ++n:
+        // Non-200 response
+        response.setStatusLine(null, 500, "Retry");
+        response.processAsync();
+        response.finish();
+        break;
+      case ++n:
+        // missing parameter
+        response.setStatusLine(null, 200, "OK");
+        response.write(JSON.stringify({pushServerURI: null}));
+        response.processAsync();
+        response.finish();
+        break;
+      case ++n:
+        // json parse error
+        response.setStatusLine(null, 200, "OK");
+        response.processAsync();
+        response.finish();
+        break;
+      case ++n:
+        response.setStatusLine(null, 200, "OK");
+        response.write(JSON.stringify({pushServerURI: kServerPushUrl}));
+        response.processAsync();
+        response.finish();
+
+        run_next_test();
+        break;
+      }
+    });
+
+    do_check_true(MozLoopPushHandler.initialize({mockWebSocket: mockWebSocket}));
   });
 
   add_test(function test_initalize_missing_chanid() {
@@ -104,10 +143,12 @@
   function run_test() {
     setupFakeLoopServer();
 
-    Services.prefs.setCharPref("services.push.serverURL", kServerPushUrl);
-    Services.prefs.setCharPref("loop.server", kLoopServerUrl);
     Services.prefs.setIntPref("loop.retry_delay.start", 10); // 10 ms
     Services.prefs.setIntPref("loop.retry_delay.limit", 20); // 20 ms
+
+    do_register_cleanup(function() {
+      Services.prefs.setCharPref("loop.server", kLoopServerUrl);
+    });
 
     run_next_test();
   };

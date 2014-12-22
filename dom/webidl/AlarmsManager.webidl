@@ -12,6 +12,8 @@
  Pref="dom.mozAlarms.enabled"]
 interface AlarmsManager {
   DOMRequest getAll();
+  [UnsafeInPrerendering]
   DOMRequest add(any date, DOMString respectTimezone, optional any data);
+  [UnsafeInPrerendering]
   void remove(unsigned long id);
 };

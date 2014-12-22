@@ -320,12 +320,20 @@ public:
    *
    * @note You should not call this function if the element has no @accept.
    * @note "All Files" filter is always set, no matter if there is a valid
-   * filter specifed or not.
-   * @note If there is only one valid filter that is audio or video or image,
-   * it will be selected as the default filter. Otherwise "All files" remains
-   * the default filter.
+   * filter specified or not.
    * @note If more than one valid filter is found, the "All Supported Types"
    * filter is added, which is the concatenation of all valid filters.
+   * @note Duplicate filters and similar filters (i.e. filters whose file
+   * extensions already exist in another filter) are ignored.
+   * @note "All Files" filter will be selected by default if unknown mime types
+   * have been specified and no file extension filter has been specified.
+   * Otherwise, specified filter or "All Supported Types" filter will be
+   * selected by default.
+   * The logic behind is that having unknown mime type means we might restrict
+   * user's input too much, as some filters will be missing.
+   * However, if author has also specified some file extension filters, it's
+   * likely those are fallback for the unusual mime type we haven't been able
+   * to resolve; so it's better to select author specified filters in that case.
    */
   void SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker);
 

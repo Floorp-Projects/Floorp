@@ -8,7 +8,9 @@
  ChromeOnly]
 interface ActivityRequestHandler
 {
+    [UnsafeInPrerendering]
     void postResult(any result);
+    [UnsafeInPrerendering]
     void postError(DOMString error);
     [Pure, Cached, Frozen]
     readonly attribute ActivityOptions source;

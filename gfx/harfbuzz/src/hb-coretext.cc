@@ -27,6 +27,7 @@
  */
 
 #define HB_SHAPER coretext
+#define hb_coretext_shaper_face_data_t CGFont
 #include "hb-shaper-impl-private.hh"
 
 #include "hb-coretext.h"
@@ -77,10 +78,6 @@ HB_SHAPER_DATA_ENSURE_DECLARE(coretext, font)
  * shaper face data
  */
 
-struct hb_coretext_shaper_face_data_t {
-  CGFontRef cg_font;
-};
-
 static void
 release_data (void *info, const void *data, size_t size)
 {
@@ -93,13 +90,11 @@ release_data (void *info, const void *data, size_t size)
 hb_coretext_shaper_face_data_t *
 _hb_coretext_shaper_face_data_create (hb_face_t *face)
 {
-  hb_coretext_shaper_face_data_t *data = (hb_coretext_shaper_face_data_t *) calloc (1, sizeof (hb_coretext_shaper_face_data_t));
-  if (unlikely (!data))
-    return NULL;
+  hb_coretext_shaper_face_data_t *data = NULL;
 
   if (face->destroy == (hb_destroy_func_t) CGFontRelease)
   {
-    data->cg_font = CGFontRetain ((CGFontRef) face->user_data);
+    data = CGFontRetain ((CGFontRef) face->user_data);
   }
   else
   {
@@ -110,14 +105,15 @@ _hb_coretext_shaper_face_data_create (hb_face_t *face)
       DEBUG_MSG (CORETEXT, face, "Face has empty blob");
 
     CGDataProviderRef provider = CGDataProviderCreateWithData (blob, blob_data, blob_length, &release_data);
-    data->cg_font = CGFontCreateWithDataProvider (provider);
-    CGDataProviderRelease (provider);
+    if (likely (provider))
+    {
+      data = CGFontCreateWithDataProvider (provider);
+      CGDataProviderRelease (provider);
+    }
   }
 
-  if (unlikely (!data->cg_font)) {
+  if (unlikely (!data)) {
     DEBUG_MSG (CORETEXT, face, "Face CGFontCreateWithDataProvider() failed");
-    free (data);
-    return NULL;
   }
 
   return data;
@@ -126,8 +122,7 @@ _hb_coretext_shaper_face_data_create (hb_face_t *face)
 void
 _hb_coretext_shaper_face_data_destroy (hb_coretext_shaper_face_data_t *data)
 {
-  CFRelease (data->cg_font);
-  free (data);
+  CFRelease (data);
 }
 
 CGFontRef
@@ -135,7 +130,7 @@ hb_coretext_face_get_cg_font (hb_face_t *face)
 {
   if (unlikely (!hb_coretext_shaper_face_data_ensure (face))) return NULL;
   hb_coretext_shaper_face_data_t *face_data = HB_SHAPER_DATA_GET (face);
-  return face_data->cg_font;
+  return face_data;
 }
 
 
@@ -159,7 +154,7 @@ _hb_coretext_shaper_font_data_create (hb_font_t *font)
   hb_face_t *face = font->face;
   hb_coretext_shaper_face_data_t *face_data = HB_SHAPER_DATA_GET (face);
 
-  data->ct_font = CTFontCreateWithGraphicsFont (face_data->cg_font, font->y_scale, NULL, NULL);
+  data->ct_font = CTFontCreateWithGraphicsFont (face_data, font->y_scale, NULL, NULL);
   if (unlikely (!data->ct_font)) {
     DEBUG_MSG (CORETEXT, font, "Font CTFontCreateWithGraphicsFont() failed");
     free (data);
@@ -332,7 +327,7 @@ struct range_record_t {
 #define kUpperCaseType				38
 
 /* Table data courtesy of Apple. */
-struct feature_mapping_t {
+static const struct feature_mapping_t {
     FourCharCode otFeatureTag;
     uint16_t aatFeatureType;
     uint16_t selectorToEnable;
@@ -436,12 +431,29 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
   hb_coretext_shaper_face_data_t *face_data = HB_SHAPER_DATA_GET (face);
   hb_coretext_shaper_font_data_t *font_data = HB_SHAPER_DATA_GET (font);
 
+  /* Attach marks to their bases, to match the 'ot' shaper.
+   * Adapted from hb-ot-shape:hb_form_clusters().
+   * Note that this only makes us be closer to the 'ot' shaper,
+   * but by no means the same.  For example, if there's
+   * B1 M1 B2 M2, and B1-B2 form a ligature, M2's cluster will
+   * continue pointing to B2 even though B2 was merged into B1's
+   * cluster... */
+  {
+    hb_unicode_funcs_t *unicode = buffer->unicode;
+    unsigned int count = buffer->len;
+    hb_glyph_info_t *info = buffer->info;
+    for (unsigned int i = 1; i < count; i++)
+      if (HB_UNICODE_GENERAL_CATEGORY_IS_MARK (unicode->general_category (info[i].codepoint)))
+	buffer->merge_clusters (i - 1, i + 1);
+  }
+
+  hb_auto_array_t<feature_record_t> feature_records;
+  hb_auto_array_t<range_record_t> range_records;
+
   /*
    * Set up features.
    * (copied + modified from code from hb-uniscribe.cc)
    */
-  hb_auto_array_t<feature_record_t> feature_records;
-  hb_auto_array_t<range_record_t> range_records;
   if (num_features)
   {
     /* Sort features by start/end events. */
@@ -549,7 +561,6 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
 	  CFRelease (attributes);
 
 	  range->font = CTFontCreateCopyWithAttributes (font_data->ct_font, 0.0, NULL, font_desc);
-
 	  CFRelease (font_desc);
 	}
 	else
@@ -584,32 +595,26 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
     num_features = 0;
   }
 
-#define FAIL(...) \
-  HB_STMT_START { \
-    DEBUG_MSG (CORETEXT, NULL, __VA_ARGS__); \
-    return false; \
-  } HB_STMT_END;
-
   unsigned int scratch_size;
   hb_buffer_t::scratch_buffer_t *scratch = buffer->get_scratch_buffer (&scratch_size);
 
-#define ALLOCATE_ARRAY(Type, name, len) \
+#define ALLOCATE_ARRAY(Type, name, len, on_no_room) \
   Type *name = (Type *) scratch; \
   { \
     unsigned int _consumed = DIV_CEIL ((len) * sizeof (Type), sizeof (*scratch)); \
-    assert (_consumed <= scratch_size); \
+    if (unlikely (_consumed > scratch_size)) \
+    { \
+      on_no_room; \
+      assert (0); \
+    } \
     scratch += _consumed; \
     scratch_size -= _consumed; \
   }
 
-#define utf16_index() var1.u32
-
-  ALLOCATE_ARRAY (UniChar, pchars, buffer->len * 2);
-
+  ALLOCATE_ARRAY (UniChar, pchars, buffer->len * 2, /*nothing*/);
   unsigned int chars_len = 0;
   for (unsigned int i = 0; i < buffer->len; i++) {
     hb_codepoint_t c = buffer->info[i].codepoint;
-    buffer->info[i].utf16_index() = chars_len;
     if (likely (c <= 0xFFFFu))
       pchars[chars_len++] = c;
     else if (unlikely (c > 0x10FFFFu))
@@ -620,232 +625,439 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
     }
   }
 
-#undef utf16_index
-
-  CFStringRef string_ref = CFStringCreateWithCharactersNoCopy (NULL,
-                                                               pchars, chars_len,
-                                                               kCFAllocatorNull);
-
-  CFMutableAttributedStringRef attr_string = CFAttributedStringCreateMutable (NULL, chars_len);
-  CFAttributedStringReplaceString (attr_string, CFRangeMake (0, 0), string_ref);
-  CFAttributedStringSetAttribute (attr_string, CFRangeMake (0, chars_len),
-				  kCTFontAttributeName, font_data->ct_font);
-
-  if (num_features)
+  ALLOCATE_ARRAY (unsigned int, log_clusters, chars_len, /*nothing*/);
+  chars_len = 0;
+  for (unsigned int i = 0; i < buffer->len; i++)
   {
-    ALLOCATE_ARRAY (unsigned int, log_clusters, chars_len);
-
-    /* Need log_clusters to assign features. */
-    chars_len = 0;
-    for (unsigned int i = 0; i < buffer->len; i++)
-    {
-      hb_codepoint_t c = buffer->info[i].codepoint;
-      unsigned int cluster = buffer->info[i].cluster;
-      log_clusters[chars_len++] = cluster;
-      if (hb_in_range (c, 0x10000u, 0x10FFFFu))
-	log_clusters[chars_len++] = cluster; /* Surrogates. */
-    }
-
-    unsigned int start = 0;
-    range_record_t *last_range = &range_records[0];
-    for (unsigned int k = 0; k < chars_len; k++)
-    {
-      range_record_t *range = last_range;
-      while (log_clusters[k] < range->index_first)
-	range--;
-      while (log_clusters[k] > range->index_last)
-	range++;
-      if (range != last_range)
-      {
-        if (last_range->font)
-	  CFAttributedStringSetAttribute (attr_string, CFRangeMake (start, k - start),
-					  kCTFontAttributeName, last_range->font);
-
-	start = k;
-      }
-
-      last_range = range;
-    }
-    if (start != chars_len && last_range->font)
-      CFAttributedStringSetAttribute (attr_string, CFRangeMake (start, chars_len - start - 1),
-				      kCTFontAttributeName, last_range->font);
-
-    for (unsigned int i = 0; i < range_records.len; i++)
-      if (range_records[i].font)
-	CFRelease (range_records[i].font);
+    hb_codepoint_t c = buffer->info[i].codepoint;
+    unsigned int cluster = buffer->info[i].cluster;
+    log_clusters[chars_len++] = cluster;
+    if (hb_in_range (c, 0x10000u, 0x10FFFFu))
+      log_clusters[chars_len++] = cluster; /* Surrogates. */
   }
 
-  CTLineRef line = CTLineCreateWithAttributedString (attr_string);
-  CFRelease (attr_string);
+#define FAIL(...) \
+  HB_STMT_START { \
+    DEBUG_MSG (CORETEXT, NULL, __VA_ARGS__); \
+    ret = false; \
+    goto fail; \
+  } HB_STMT_END;
 
-  CFArrayRef glyph_runs = CTLineGetGlyphRuns (line);
-  unsigned int num_runs = CFArrayGetCount (glyph_runs);
+  bool ret = true;
+  CFStringRef string_ref = NULL;
+  CTLineRef line = NULL;
 
-  buffer->len = 0;
-
-  const CFRange range_all = CFRangeMake (0, 0);
-
-  for (unsigned int i = 0; i < num_runs; i++)
+  if (0)
   {
-    CTRunRef run = (CTRunRef) CFArrayGetValueAtIndex (glyph_runs, i);
+resize_and_retry:
+    DEBUG_MSG (CORETEXT, buffer, "Buffer resize");
+    /* string_ref uses the scratch-buffer for backing store, and line references
+     * string_ref (via attr_string).  We must release those before resizing buffer. */
+    assert (string_ref);
+    assert (line);
+    CFRelease (string_ref);
+    CFRelease (line);
+    string_ref = NULL;
+    line = NULL;
 
-    /* CoreText does automatic font fallback (AKA "cascading") for  characters
-     * not supported by the requested font, and provides no way to turn it off,
-     * so we detect if the returned run uses a font other than the requested
-     * one and fill in the buffer with .notdef glyphs instead of random glyph
-     * indices from a different font.
-     */
-    CFDictionaryRef attributes = CTRunGetAttributes (run);
-    CTFontRef run_ct_font = static_cast<CTFontRef>(CFDictionaryGetValue (attributes, kCTFontAttributeName));
-    CGFontRef run_cg_font = CTFontCopyGraphicsFont (run_ct_font, 0);
-    if (!CFEqual (run_cg_font, face_data->cg_font))
-    {
-        CFRelease (run_cg_font);
+    /* Get previous start-of-scratch-area, that we use later for readjusting
+     * our existing scratch arrays. */
+    unsigned int old_scratch_used;
+    hb_buffer_t::scratch_buffer_t *old_scratch;
+    old_scratch = buffer->get_scratch_buffer (&old_scratch_used);
+    old_scratch_used = scratch - old_scratch;
 
-	CFRange range = CTRunGetStringRange (run);
-	buffer->ensure (buffer->len + range.length);
-	if (buffer->in_error)
-	  FAIL ("Buffer resize failed");
-	hb_glyph_info_t *info = buffer->info + buffer->len;
+    if (unlikely (!buffer->ensure (buffer->allocated * 2)))
+      FAIL ("Buffer resize failed");
 
-	CGGlyph notdef = 0;
-	double advance = CTFontGetAdvancesForGlyphs (font_data->ct_font, kCTFontHorizontalOrientation, &notdef, NULL, 1);
-
-        for (CFIndex j = range.location; j < range.location + range.length; j++)
-	{
-	    UniChar ch = CFStringGetCharacterAtIndex (string_ref, j);
-	    if (hb_in_range<UniChar> (ch, 0xDC00u, 0xDFFFu) && range.location < j)
-	    {
-	      ch = CFStringGetCharacterAtIndex (string_ref, j - 1);
-	      if (hb_in_range<UniChar> (ch, 0xD800u, 0xDBFFu))
-	        /* This is the second of a surrogate pair.  Don't need .notdef
-		 * for this one. */
-	        continue;
-	    }
-
-            info->codepoint = notdef;
-	    /* TODO We have to fixup clusters later.  See vis_clusters in
-	     * hb-uniscribe.cc for example. */
-            info->cluster = j;
-
-            info->mask = advance;
-            info->var1.u32 = 0;
-            info->var2.u32 = 0;
-
-	    info++;
-	    buffer->len++;
-        }
-        continue;
-    }
-    CFRelease (run_cg_font);
-
-    unsigned int num_glyphs = CTRunGetGlyphCount (run);
-    if (num_glyphs == 0)
-      continue;
-
-    buffer->ensure (buffer->len + num_glyphs);
-
+    /* Adjust scratch, pchars, and log_cluster arrays.  This is ugly, but really the
+     * cleanest way to do without completely restructuring the rest of this shaper. */
     scratch = buffer->get_scratch_buffer (&scratch_size);
+    pchars = reinterpret_cast<UniChar *> (((char *) scratch + ((char *) pchars - (char *) old_scratch)));
+    log_clusters = reinterpret_cast<unsigned int *> (((char *) scratch + ((char *) log_clusters - (char *) old_scratch)));
+    scratch += old_scratch_used;
+    scratch_size -= old_scratch_used;
+  }
+retry:
+  {
+    string_ref = CFStringCreateWithCharactersNoCopy (NULL,
+						     pchars, chars_len,
+						     kCFAllocatorNull);
+    if (unlikely (!string_ref))
+      FAIL ("CFStringCreateWithCharactersNoCopy failed");
 
-    /* Testing indicates that CTRunGetGlyphsPtr, etc (almost?) always
-     * succeed, and so copying data to our own buffer will be rare. */
+    /* Create an attributed string, populate it, and create a line from it, then release attributed string. */
+    {
+      CFMutableAttributedStringRef attr_string = CFAttributedStringCreateMutable (kCFAllocatorDefault,
+										  chars_len);
+      if (unlikely (!attr_string))
+	FAIL ("CFAttributedStringCreateMutable failed");
+      CFAttributedStringReplaceString (attr_string, CFRangeMake (0, 0), string_ref);
+      if (HB_DIRECTION_IS_VERTICAL (buffer->props.direction))
+      {
+	CFAttributedStringSetAttribute (attr_string, CFRangeMake (0, chars_len),
+					kCTVerticalFormsAttributeName, kCFBooleanTrue);
+      }
 
-    const CGGlyph* glyphs = CTRunGetGlyphsPtr (run);
-    if (!glyphs) {
-      ALLOCATE_ARRAY (CGGlyph, glyph_buf, num_glyphs);
-      CTRunGetGlyphs (run, range_all, glyph_buf);
-      glyphs = glyph_buf;
+      if (buffer->props.language)
+      {
+/* What's the iOS equivalent of this check?
+ * The symbols was introduced in iOS 7.0.
+ * At any rate, our fallback is safe and works fine. */
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1090
+#  define kCTLanguageAttributeName CFSTR ("NSLanguage")
+#endif
+        CFStringRef lang = CFStringCreateWithCStringNoCopy (kCFAllocatorDefault,
+							    hb_language_to_string (buffer->props.language),
+							    kCFStringEncodingUTF8,
+							    kCFAllocatorNull);
+	if (unlikely (!lang))
+	  FAIL ("CFStringCreateWithCStringNoCopy failed");
+	CFAttributedStringSetAttribute (attr_string, CFRangeMake (0, chars_len),
+					kCTLanguageAttributeName, lang);
+	CFRelease (lang);
+      }
+      CFAttributedStringSetAttribute (attr_string, CFRangeMake (0, chars_len),
+				      kCTFontAttributeName, font_data->ct_font);
+
+      if (num_features)
+      {
+	unsigned int start = 0;
+	range_record_t *last_range = &range_records[0];
+	for (unsigned int k = 0; k < chars_len; k++)
+	{
+	  range_record_t *range = last_range;
+	  while (log_clusters[k] < range->index_first)
+	    range--;
+	  while (log_clusters[k] > range->index_last)
+	    range++;
+	  if (range != last_range)
+	  {
+	    if (last_range->font)
+	      CFAttributedStringSetAttribute (attr_string, CFRangeMake (start, k - start),
+					      kCTFontAttributeName, last_range->font);
+
+	    start = k;
+	  }
+
+	  last_range = range;
+	}
+	if (start != chars_len && last_range->font)
+	  CFAttributedStringSetAttribute (attr_string, CFRangeMake (start, chars_len - start),
+					  kCTFontAttributeName, last_range->font);
+      }
+
+      int level = HB_DIRECTION_IS_FORWARD (buffer->props.direction) ? 0 : 1;
+      CFNumberRef level_number = CFNumberCreate (kCFAllocatorDefault, kCFNumberIntType, &level);
+      CFDictionaryRef options = CFDictionaryCreate (kCFAllocatorDefault,
+						    (const void **) &kCTTypesetterOptionForcedEmbeddingLevel,
+						    (const void **) &level_number,
+						    1,
+						    &kCFTypeDictionaryKeyCallBacks,
+						    &kCFTypeDictionaryValueCallBacks);
+      if (unlikely (!options))
+        FAIL ("CFDictionaryCreate failed");
+
+      CTTypesetterRef typesetter = CTTypesetterCreateWithAttributedStringAndOptions (attr_string, options);
+      CFRelease (options);
+      CFRelease (attr_string);
+      if (unlikely (!typesetter))
+	FAIL ("CTTypesetterCreateWithAttributedStringAndOptions failed");
+
+      line = CTTypesetterCreateLine (typesetter, CFRangeMake(0, 0));
+      CFRelease (typesetter);
+      if (unlikely (!line))
+	FAIL ("CTTypesetterCreateLine failed");
     }
 
-    const CGPoint* positions = CTRunGetPositionsPtr (run);
-    if (!positions) {
-      ALLOCATE_ARRAY (CGPoint, position_buf, num_glyphs);
-      CTRunGetPositions (run, range_all, position_buf);
-      positions = position_buf;
-    }
+    CFArrayRef glyph_runs = CTLineGetGlyphRuns (line);
+    unsigned int num_runs = CFArrayGetCount (glyph_runs);
+    DEBUG_MSG (CORETEXT, NULL, "Num runs: %d", num_runs);
 
-    const CFIndex* string_indices = CTRunGetStringIndicesPtr (run);
-    if (!string_indices) {
-      ALLOCATE_ARRAY (CFIndex, index_buf, num_glyphs);
-      CTRunGetStringIndices (run, range_all, index_buf);
-      string_indices = index_buf;
-    }
+    buffer->len = 0;
+    uint32_t status_and = ~0, status_or = 0;
 
+    const CFRange range_all = CFRangeMake (0, 0);
+
+    for (unsigned int i = 0; i < num_runs; i++)
+    {
+      CTRunRef run = static_cast<CTRunRef>(CFArrayGetValueAtIndex (glyph_runs, i));
+      CTRunStatus run_status = CTRunGetStatus (run);
+      status_or  |= run_status;
+      status_and &= run_status;
+      DEBUG_MSG (CORETEXT, run, "CTRunStatus: %x", run_status);
+
+      /* CoreText does automatic font fallback (AKA "cascading") for  characters
+       * not supported by the requested font, and provides no way to turn it off,
+       * so we must detect if the returned run uses a font other than the requested
+       * one and fill in the buffer with .notdef glyphs instead of random glyph
+       * indices from a different font.
+       */
+      CFDictionaryRef attributes = CTRunGetAttributes (run);
+      CTFontRef run_ct_font = static_cast<CTFontRef>(CFDictionaryGetValue (attributes, kCTFontAttributeName));
+      if (!CFEqual (run_ct_font, font_data->ct_font))
+      {
+	/* The run doesn't use our main font instance.  We have to figure out
+	 * whether font fallback happened, or this is just CoreText giving us
+	 * another CTFont using the same underlying CGFont.  CoreText seems
+	 * to do that in a variety of situations, one of which being vertical
+	 * text, but also perhaps for caching reasons.
+	 *
+	 * First, see if it uses any of our subfonts created to set font features...
+	 *
+	 * Next, compare the CGFont to the one we used to create our fonts.
+	 * Even this doesn't work all the time.
+	 *
+	 * Finally, we compare PS names, which I don't think are unique...
+	 *
+	 * Looks like if we really want to be sure here we have to modify the
+	 * font to change the name table, similar to what we do in the uniscribe
+	 * backend.
+	 *
+	 * However, even that wouldn't work if we were passed in the CGFont to
+	 * begin with.
+	 *
+	 * Webkit uses a slightly different approach: it installs LastResort
+	 * as fallback chain, and then checks PS name of used font against
+	 * LastResort.  That one is safe for any font except for LastResort,
+	 * as opposed to ours, which can fail if we are using any uninstalled
+	 * font that has the same name as an installed font.
+	 *
+	 * See: http://github.com/behdad/harfbuzz/pull/36
+	 */
+	bool matched = false;
+	for (unsigned int i = 0; i < range_records.len; i++)
+	  if (range_records[i].font && CFEqual (run_ct_font, range_records[i].font))
+	  {
+	    matched = true;
+	    break;
+	  }
+	if (!matched)
+	{
+	  CGFontRef run_cg_font = CTFontCopyGraphicsFont (run_ct_font, 0);
+	  if (run_cg_font)
+	  {
+	    matched = CFEqual (run_cg_font, face_data);
+	    CFRelease (run_cg_font);
+	  }
+	}
+	if (!matched)
+	{
+	  CFStringRef font_ps_name = CTFontCopyName (font_data->ct_font, kCTFontPostScriptNameKey);
+	  CFStringRef run_ps_name = CTFontCopyName (run_ct_font, kCTFontPostScriptNameKey);
+	  CFComparisonResult result = CFStringCompare (run_ps_name, font_ps_name, 0);
+	  CFRelease (run_ps_name);
+	  CFRelease (font_ps_name);
+	  if (result == kCFCompareEqualTo)
+	    matched = true;
+	}
+	if (!matched)
+	{
+	  CFRange range = CTRunGetStringRange (run);
+          DEBUG_MSG (CORETEXT, run, "Run used fallback font: %ld..%ld",
+		     range.location, range.location + range.length);
+	  if (!buffer->ensure_inplace (buffer->len + range.length))
+	    goto resize_and_retry;
+	  hb_glyph_info_t *info = buffer->info + buffer->len;
+
+	  CGGlyph notdef = 0;
+	  double advance = CTFontGetAdvancesForGlyphs (font_data->ct_font, kCTFontHorizontalOrientation, &notdef, NULL, 1);
+
+	  unsigned int old_len = buffer->len;
+	  for (CFIndex j = range.location; j < range.location + range.length; j++)
+	  {
+	      UniChar ch = CFStringGetCharacterAtIndex (string_ref, j);
+	      if (hb_in_range<UniChar> (ch, 0xDC00u, 0xDFFFu) && range.location < j)
+	      {
+		ch = CFStringGetCharacterAtIndex (string_ref, j - 1);
+		if (hb_in_range<UniChar> (ch, 0xD800u, 0xDBFFu))
+		  /* This is the second of a surrogate pair.  Don't need .notdef
+		   * for this one. */
+		  continue;
+	      }
+
+	      info->codepoint = notdef;
+	      info->cluster = log_clusters[j];
+
+	      info->mask = advance;
+	      info->var1.u32 = 0;
+	      info->var2.u32 = 0;
+
+	      info++;
+	      buffer->len++;
+	  }
+	  if (HB_DIRECTION_IS_BACKWARD (buffer->props.direction))
+	    buffer->reverse_range (old_len, buffer->len);
+	  continue;
+	}
+      }
+
+      unsigned int num_glyphs = CTRunGetGlyphCount (run);
+      if (num_glyphs == 0)
+	continue;
+
+      if (!buffer->ensure_inplace (buffer->len + num_glyphs))
+	goto resize_and_retry;
+
+      hb_glyph_info_t *run_info = buffer->info + buffer->len;
+
+      /* Testing used to indicate that CTRunGetGlyphsPtr, etc (almost?) always
+       * succeed, and so copying data to our own buffer will be rare.  Reports
+       * have it that this changed in OS X 10.10 Yosemite, and NULL is returned
+       * frequently.  At any rate, we can test that codepath by setting USE_PTR
+       * to false. */
+
+#define USE_PTR true
+
+#define SCRATCH_SAVE() \
+  unsigned int scratch_size_saved = scratch_size; \
+  hb_buffer_t::scratch_buffer_t *scratch_saved = scratch
+
+#define SCRATCH_RESTORE() \
+  scratch_size = scratch_size_saved; \
+  scratch = scratch_saved;
+
+      {
+        SCRATCH_SAVE();
+	const CGGlyph* glyphs = USE_PTR ? CTRunGetGlyphsPtr (run) : NULL;
+	if (!glyphs) {
+	  ALLOCATE_ARRAY (CGGlyph, glyph_buf, num_glyphs, goto resize_and_retry);
+	  CTRunGetGlyphs (run, range_all, glyph_buf);
+	  glyphs = glyph_buf;
+	}
+	const CFIndex* string_indices = USE_PTR ? CTRunGetStringIndicesPtr (run) : NULL;
+	if (!string_indices) {
+	  ALLOCATE_ARRAY (CFIndex, index_buf, num_glyphs, goto resize_and_retry);
+	  CTRunGetStringIndices (run, range_all, index_buf);
+	  string_indices = index_buf;
+	}
+	hb_glyph_info_t *info = run_info;
+	for (unsigned int j = 0; j < num_glyphs; j++)
+	{
+	  info->codepoint = glyphs[j];
+	  info->cluster = log_clusters[string_indices[j]];
+	  info++;
+	}
+	SCRATCH_RESTORE();
+      }
+      {
+        SCRATCH_SAVE();
+	const CGPoint* positions = USE_PTR ? CTRunGetPositionsPtr (run) : NULL;
+	if (!positions) {
+	  ALLOCATE_ARRAY (CGPoint, position_buf, num_glyphs, goto resize_and_retry);
+	  CTRunGetPositions (run, range_all, position_buf);
+	  positions = position_buf;
+	}
+	double run_advance = CTRunGetTypographicBounds (run, range_all, NULL, NULL, NULL);
+	DEBUG_MSG (CORETEXT, run, "Run advance: %g", run_advance);
+	hb_glyph_info_t *info = run_info;
+	if (HB_DIRECTION_IS_HORIZONTAL (buffer->props.direction))
+	{
+	  for (unsigned int j = 0; j < num_glyphs; j++)
+	  {
+	    double advance = (j + 1 < num_glyphs ? positions[j + 1].x : positions[0].x + run_advance) - positions[j].x;
+	    info->mask = advance;
+	    info->var1.u32 = positions[0].x; /* Yes, zero. */
+	    info->var2.u32 = positions[j].y;
+	    info++;
+	  }
+	}
+	else
+	{
+	  run_advance = -run_advance;
+	  for (unsigned int j = 0; j < num_glyphs; j++)
+	  {
+	    double advance = (j + 1 < num_glyphs ? positions[j + 1].y : positions[0].y + run_advance) - positions[j].y;
+	    info->mask = advance;
+	    info->var1.u32 = positions[j].x;
+	    info->var2.u32 = positions[0].y; /* Yes, zero. */
+	    info++;
+	  }
+	}
+	SCRATCH_RESTORE();
+      }
+#undef SCRATCH_RESTORE
+#undef SCRATCH_SAVE
+#undef USE_PTR
 #undef ALLOCATE_ARRAY
 
-    double run_width = CTRunGetTypographicBounds (run, range_all, NULL, NULL, NULL);
-
-    for (unsigned int j = 0; j < num_glyphs; j++) {
-      double advance = (j + 1 < num_glyphs ? positions[j + 1].x : positions[0].x + run_width) - positions[j].x;
-
-      hb_glyph_info_t *info = &buffer->info[buffer->len];
-
-      info->codepoint = glyphs[j];
-      info->cluster = string_indices[j];
-
-      /* Currently, we do all x-positioning by setting the advance, we never use x-offset. */
-      info->mask = advance;
-      info->var1.u32 = 0;
-      info->var2.u32 = positions[j].y;
-
-      buffer->len++;
+      buffer->len += num_glyphs;
     }
-  }
 
-  buffer->clear_positions ();
+    /* Make sure all runs had the expected direction. */
+    bool backward = HB_DIRECTION_IS_BACKWARD (buffer->props.direction);
+    assert (bool (status_and & kCTRunStatusRightToLeft) == backward);
+    assert (bool (status_or  & kCTRunStatusRightToLeft) == backward);
 
-  unsigned int count = buffer->len;
-  for (unsigned int i = 0; i < count; ++i) {
-    hb_glyph_info_t *info = &buffer->info[i];
-    hb_glyph_position_t *pos = &buffer->pos[i];
+    buffer->clear_positions ();
 
-    /* TODO vertical */
-    pos->x_advance = info->mask;
-    pos->x_offset = info->var1.u32;
-    pos->y_offset = info->var2.u32;
-  }
-
-  /* Fix up clusters so that we never return out-of-order indices;
-   * if core text has reordered glyphs, we'll merge them to the
-   * beginning of the reordered cluster.
-   *
-   * This does *not* mean we'll form the same clusters as Uniscribe
-   * or the native OT backend, only that the cluster indices will be
-   * monotonic in the output buffer. */
-  if (HB_DIRECTION_IS_FORWARD (buffer->props.direction)) {
-    unsigned int prev_cluster = 0;
-    for (unsigned int i = 0; i < count; i++) {
-      unsigned int curr_cluster = buffer->info[i].cluster;
-      if (curr_cluster < prev_cluster) {
-        for (unsigned int j = i; j > 0; j--) {
-          if (buffer->info[j - 1].cluster > curr_cluster)
-            buffer->info[j - 1].cluster = curr_cluster;
-          else
-            break;
-        }
+    unsigned int count = buffer->len;
+    hb_glyph_info_t *info = buffer->info;
+    hb_glyph_position_t *pos = buffer->pos;
+    if (HB_DIRECTION_IS_HORIZONTAL (buffer->props.direction))
+      for (unsigned int i = 0; i < count; i++)
+      {
+	pos->x_advance = info->mask;
+	pos->x_offset = info->var1.u32;
+	pos->y_offset = info->var2.u32;
+	info++, pos++;
       }
-      prev_cluster = curr_cluster;
-    }
-  } else {
-    unsigned int prev_cluster = (unsigned int)-1;
-    for (unsigned int i = 0; i < count; i++) {
-      unsigned int curr_cluster = buffer->info[i].cluster;
-      if (curr_cluster > prev_cluster) {
-        for (unsigned int j = i; j > 0; j--) {
-          if (buffer->info[j - 1].cluster < curr_cluster)
-            buffer->info[j - 1].cluster = curr_cluster;
-          else
-            break;
-        }
+    else
+      for (unsigned int i = 0; i < count; i++)
+      {
+	pos->y_advance = info->mask;
+	pos->x_offset = info->var1.u32;
+	pos->y_offset = info->var2.u32;
+	info++, pos++;
       }
-      prev_cluster = curr_cluster;
+
+    /* Fix up clusters so that we never return out-of-order indices;
+     * if core text has reordered glyphs, we'll merge them to the
+     * beginning of the reordered cluster.  CoreText is nice enough
+     * to tell us whenever it has produced nonmonotonic results...
+     * Note that we assume the input clusters were nonmonotonic to
+     * begin with.
+     *
+     * This does *not* mean we'll form the same clusters as Uniscribe
+     * or the native OT backend, only that the cluster indices will be
+     * monotonic in the output buffer. */
+    if (count > 1 && (status_or & kCTRunStatusNonMonotonic))
+    {
+      hb_glyph_info_t *info = buffer->info;
+      if (HB_DIRECTION_IS_FORWARD (buffer->props.direction))
+      {
+	unsigned int cluster = info[count - 1].cluster;
+	for (unsigned int i = count - 1; i > 0; i--)
+	{
+	  cluster = MIN (cluster, info[i - 1].cluster);
+	  info[i - 1].cluster = cluster;
+	}
+      }
+      else
+      {
+	unsigned int cluster = info[0].cluster;
+	for (unsigned int i = 1; i < count; i++)
+	{
+	  cluster = MIN (cluster, info[i].cluster);
+	  info[i].cluster = cluster;
+	}
+      }
     }
   }
 
-  CFRelease (string_ref);
-  CFRelease (line);
+#undef FAIL
 
-  return true;
+fail:
+  if (string_ref)
+    CFRelease (string_ref);
+  if (line)
+    CFRelease (line);
+
+  for (unsigned int i = 0; i < range_records.len; i++)
+    if (range_records[i].font)
+      CFRelease (range_records[i].font);
+
+  return ret;
 }
 
 

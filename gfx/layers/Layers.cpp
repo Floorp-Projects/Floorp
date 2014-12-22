@@ -472,6 +472,28 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
 }
 
 void
+Layer::StartPendingAnimations(const TimeStamp& aReadyTime)
+{
+  bool updated = false;
+  for (size_t animIdx = 0, animEnd = mAnimations.Length();
+       animIdx < animEnd; animIdx++) {
+    Animation& anim = mAnimations[animIdx];
+    if (anim.startTime().IsNull()) {
+      anim.startTime() = aReadyTime - anim.initialCurrentTime();
+      updated = true;
+    }
+  }
+
+  if (updated) {
+    Mutated();
+  }
+
+  for (Layer* child = GetFirstChild(); child; child = child->GetNextSibling()) {
+    child->StartPendingAnimations(aReadyTime);
+  }
+}
+
+void
 Layer::SetAsyncPanZoomController(uint32_t aIndex, AsyncPanZoomController *controller)
 {
   MOZ_ASSERT(aIndex < GetFrameMetricsCount());
