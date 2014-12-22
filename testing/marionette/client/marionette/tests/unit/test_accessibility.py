@@ -55,6 +55,8 @@ class TestAccessibility(MarionetteTestCase):
 
     displayed_but_a11y_hidden_elementIDs = ["button7", "button8"]
 
+    disabled_elementIDs = ["button11", "no_accessible_but_disabled"]
+
     def run_element_test(self, ids, testFn):
         for id in ids:
             element = self.marionette.find_element("id", id)
@@ -126,3 +128,14 @@ class TestAccessibility(MarionetteTestCase):
         self.setup_accessibility()
         # No exception should be raised
         self.run_element_test(self.displayed_elementIDs, lambda element: element.is_displayed())
+
+    def test_is_element_is_not_enabled_to_accessbility(self):
+        self.setup_accessibility()
+        # Button is enabled but disabled via the accessibility API
+        self.assertRaises(ElementNotAccessibleException,
+                          self.marionette.find_element("id", "button12").is_enabled)
+
+    def test_element_is_enabled_to_accessibility(self):
+        self.setup_accessibility()
+        # No exception should be raised
+        self.run_element_test(self.disabled_elementIDs, lambda element: element.is_enabled())

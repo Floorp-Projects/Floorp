@@ -149,6 +149,19 @@ Accessibility.prototype = {
   },
 
   /**
+   * Verify if an accessible has a given state
+   * @param nsIAccessible object
+   * @param String stateName name of the state to match
+   * @return Boolean accessible has a state
+   */
+  matchState(accessible, stateName) {
+    let stateToMatch = Components.interfaces.nsIAccessibleStates[stateName];
+    let state = {};
+    accessible.getState(state, {});
+    return !!(state.value & stateToMatch);
+  },
+
+  /**
    * Check if an accessible is hidden from the user of the accessibility API
    * @param nsIAccessible object
    * @return Boolean an indicator that the element is hidden from the user
