@@ -859,8 +859,10 @@ NetworkManager.prototype = {
       gMobileConnectionService.getItemByServiceId(this._dataDefaultServiceId);
     let data = connection && connection.data;
     if (data && data.state === "registered") {
+      let ril = this.mRil.getRadioInterface(this._dataDefaultServiceId);
+
       this.dunRetryTimes = 0;
-      ril.setupDataCallByType(Ci.nsINetworkInterface.NETWORK_TYPE_DUN);
+      ril.setupDataCallByType(Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN);
       this.dunConnectTimer.cancel();
       this.dunConnectTimer.
         initWithCallback(this.onDunConnectTimerTimeout.bind(this),
@@ -903,7 +905,7 @@ NetworkManager.prototype = {
 
       if (dun && (dun.state == Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED)) {
         this.mRil.getRadioInterface(this._dataDefaultServiceId)
-          .deactivateDataCallByType(Ci.nsINetworkInterface.NETWORK_TYPE_DUN);
+          .deactivateDataCallByType(Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN);
       }
       return;
     }
