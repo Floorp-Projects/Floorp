@@ -45,7 +45,6 @@ from ..frontend.data import (
     HostSimpleProgram,
     HostSources,
     InstallationTarget,
-    IPDLFile,
     JARManifest,
     JavaJarData,
     JavaScriptModules,
@@ -277,7 +276,6 @@ class RecursiveMakeBackend(CommonBackend):
         CommonBackend._init(self)
 
         self._backend_files = {}
-        self._ipdl_sources = set()
 
         def detailed(summary):
             s = '{:d} total backend files; ' \
@@ -450,9 +448,6 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, JARManifest):
             backend_file.write('JAR_MANIFEST := %s\n' % obj.path)
-
-        elif isinstance(obj, IPDLFile):
-            self._ipdl_sources.add(mozpath.join(obj.srcdir, obj.basename))
 
         elif isinstance(obj, Program):
             self._process_program(obj.program, backend_file)
@@ -749,36 +744,6 @@ class RecursiveMakeBackend(CommonBackend):
                             continue
                         self._no_skip['tools'].add(mozpath.relpath(objdir,
                             self.environment.topobjdir))
-
-        # Write out a master list of all IPDL source files.
-        ipdl_dir = mozpath.join(self.environment.topobjdir, 'ipc', 'ipdl')
-        mk = Makefile()
-
-        sorted_ipdl_sources = list(sorted(self._ipdl_sources))
-        mk.add_statement('ALL_IPDLSRCS := %s' % ' '.join(sorted_ipdl_sources))
-
-        def files_from(ipdl):
-            base = mozpath.basename(ipdl)
-            root, ext = mozpath.splitext(base)
-
-            # Both .ipdl and .ipdlh become .cpp files
-            files = ['%s.cpp' % root]
-            if ext == '.ipdl':
-                # .ipdl also becomes Child/Parent.cpp files
-                files.extend(['%sChild.cpp' % root,
-                              '%sParent.cpp' % root])
-            return files
-
-        ipdl_cppsrcs = list(itertools.chain(*[files_from(p) for p in sorted_ipdl_sources]))
-        self._add_unified_build_rules(mk, ipdl_cppsrcs, ipdl_dir,
-                                      unified_prefix='UnifiedProtocols',
-                                      unified_files_makefile_variable='CPPSRCS')
-
-        mk.add_statement('IPDLDIRS := %s' % ' '.join(sorted(set(mozpath.dirname(p)
-            for p in self._ipdl_sources))))
-
-        with self._write_file(mozpath.join(ipdl_dir, 'ipdlsrcs.mk')) as ipdls:
-            mk.dump(ipdls, removal_guard=False)
 
         self._fill_root_mk()
 
@@ -1331,6 +1296,23 @@ INSTALL_TARGETS += %(prefix)s
             self.backend_input_files.add(obj.input_path)
 
         self.summary.makefile_out_count += 1
+
+    def _handle_ipdl_sources(self, sorted_ipdl_sources, ipdl_cppsrcs):
+        # Write out a master list of all IPDL source files.
+        ipdl_dir = mozpath.join(self.environment.topobjdir, 'ipc', 'ipdl')
+        mk = Makefile()
+
+        mk.add_statement('ALL_IPDLSRCS := %s' % ' '.join(sorted_ipdl_sources))
+
+        self._add_unified_build_rules(mk, ipdl_cppsrcs, ipdl_dir,
+                                      unified_prefix='UnifiedProtocols',
+                                      unified_files_makefile_variable='CPPSRCS')
+
+        mk.add_statement('IPDLDIRS := %s' % ' '.join(sorted(set(mozpath.dirname(p)
+            for p in self._ipdl_sources))))
+
+        with self._write_file(mozpath.join(ipdl_dir, 'ipdlsrcs.mk')) as ipdls:
+            mk.dump(ipdls, removal_guard=False)
 
     def _handle_webidl_collection(self, webidls):
         if not webidls.all_stems():

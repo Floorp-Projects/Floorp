@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import itertools
 import json
 import os
 import re
@@ -16,6 +17,7 @@ from ..frontend.data import (
     ConfigFileSubstitution,
     ExampleWebIDLInterface,
     HeaderFileSubstitution,
+    IPDLFile,
     GeneratedEventWebIDLFile,
     GeneratedWebIDLFile,
     PreprocessedTestWebIDLFile,
@@ -172,6 +174,7 @@ class CommonBackend(BuildBackend):
         self._test_manager = TestManager(self.environment)
         self._webidls = WebIDLCollection()
         self._configs = set()
+        self._ipdl_sources = set()
 
     def consume_object(self, obj):
         self._configs.add(obj.config)
@@ -225,6 +228,9 @@ class CommonBackend(BuildBackend):
         elif isinstance(obj, ExampleWebIDLInterface):
             self._webidls.example_interfaces.add(obj.name)
 
+        elif isinstance(obj, IPDLFile):
+            self._ipdl_sources.add(mozpath.join(obj.srcdir, obj.basename))
+
         else:
             return
 
@@ -235,6 +241,24 @@ class CommonBackend(BuildBackend):
             self._handle_idl_manager(self._idl_manager)
 
         self._handle_webidl_collection(self._webidls)
+
+        sorted_ipdl_sources = list(sorted(self._ipdl_sources))
+
+        def files_from(ipdl):
+            base = mozpath.basename(ipdl)
+            root, ext = mozpath.splitext(base)
+
+            # Both .ipdl and .ipdlh become .cpp files
+            files = ['%s.cpp' % root]
+            if ext == '.ipdl':
+                # .ipdl also becomes Child/Parent.cpp files
+                files.extend(['%sChild.cpp' % root,
+                              '%sParent.cpp' % root])
+            return files
+
+        ipdl_cppsrcs = list(itertools.chain(*[files_from(p) for p in sorted_ipdl_sources]))
+
+        self._handle_ipdl_sources(sorted_ipdl_sources, ipdl_cppsrcs)
 
         for config in self._configs:
             self.backend_input_files.add(config.source)
