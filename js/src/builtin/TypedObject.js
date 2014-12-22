@@ -152,6 +152,11 @@ function TypedObjectGetSimd(descr, typedObj, offset) {
     var w = Load_float32(typedObj, offset + 12);
     return GetFloat32x4TypeDescr()(x, y, z, w);
 
+  case JS_SIMDTYPEREPR_FLOAT64:
+    var x = Load_float64(typedObj, offset + 0);
+    var y = Load_float64(typedObj, offset + 8);
+    return GetFloat64x2TypeDescr()(x, y);
+
   case JS_SIMDTYPEREPR_INT32:
     var x = Load_int32(typedObj, offset + 0);
     var y = Load_int32(typedObj, offset + 4);
@@ -322,6 +327,10 @@ function TypedObjectSetSimd(descr, typedObj, offset, fromValue) {
       Store_float32(typedObj, offset + 8, Load_float32(fromValue, 8));
       Store_float32(typedObj, offset + 12, Load_float32(fromValue, 12));
       break;
+    case JS_SIMDTYPEREPR_FLOAT64:
+      Store_float64(typedObj, offset + 0, Load_float64(fromValue, 0));
+      Store_float64(typedObj, offset + 8, Load_float64(fromValue, 8));
+      break;
     case JS_SIMDTYPEREPR_INT32:
       Store_int32(typedObj, offset + 0, Load_int32(fromValue, 0));
       Store_int32(typedObj, offset + 4, Load_int32(fromValue, 4));
@@ -457,6 +466,21 @@ function SimdProtoString(type) {
     return "int32x4";
   case JS_SIMDTYPEREPR_FLOAT32:
     return "float32x4";
+  case JS_SIMDTYPEREPR_FLOAT64:
+    return "float64x2";
+  }
+
+  assert(false, "Unhandled type constant");
+  return undefined;
+}
+
+function SimdTypeToLength(type) {
+  switch (type) {
+  case JS_SIMDTYPEREPR_INT32:
+  case JS_SIMDTYPEREPR_FLOAT32:
+    return 4;
+  case JS_SIMDTYPEREPR_FLOAT64:
+    return 2;
   }
 
   assert(false, "Unhandled type constant");
@@ -473,7 +497,12 @@ function SimdToSource() {
     ThrowError(JSMSG_INCOMPATIBLE_PROTO, "SIMD", "toSource", typeof this);
 
   var type = DESCR_TYPE(descr);
-  return SimdProtoString(type)+"("+this.x+", "+this.y+", "+this.z+", "+this.w+")";
+  var protoString = SimdProtoString(type);
+  var length = SimdTypeToLength(type);
+  if (length == 4)
+    return protoString+"("+this.x+", "+this.y+", "+this.z+", "+this.w+")";
+  else if (length == 2)
+    return protoString+"("+this.x+", "+this.y+")";
 }
 
 ///////////////////////////////////////////////////////////////////////////
