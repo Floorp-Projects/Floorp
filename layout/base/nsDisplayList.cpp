@@ -67,6 +67,12 @@
 #include "nsCaret.h"
 #include "nsISelection.h"
 
+// GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
+// GetTickCount().
+#ifdef GetCurrentTime
+#undef GetCurrentTime
+#endif
+
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::dom;
@@ -358,6 +364,8 @@ AddAnimationForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
   const AnimationTiming& timing = aPlayer->GetSource()->Timing();
   animation->startTime() = aPlayer->Timeline()->ToTimeStamp(
                              aPlayer->GetStartTime().Value() + timing.mDelay);
+  animation->initialCurrentTime() = aPlayer->GetCurrentTime().Value()
+                                    - timing.mDelay;
   animation->duration() = timing.mIterationDuration;
   animation->iterationCount() = timing.mIterationCount;
   animation->direction() = timing.mDirection;
