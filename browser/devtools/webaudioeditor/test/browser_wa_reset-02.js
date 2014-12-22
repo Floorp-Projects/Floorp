@@ -6,7 +6,7 @@
  * the graph.
  */
 
-function spawnTest() {
+add_task(function*() {
   let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $ } = panelWin;
@@ -33,6 +33,5 @@ function spawnTest() {
   ise(nodes, 3, "after reload, should only be 3 nodes.");
   ise(edges, 2, "after reload, should only be 2 edges.");
 
-  yield teardown(panel);
-  finish();
-}
+  yield teardown(target);
+});

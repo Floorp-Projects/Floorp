@@ -12,7 +12,7 @@ thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Error: Connection closed");
  * Tests that switching to an iframe works fine.
  */
 
-function spawnTest() {
+add_task(function*() {
   Services.prefs.setBoolPref("devtools.command-button-frames.enabled", true);
 
   let { target, panel, toolbox } = yield initWebAudioEditor(IFRAME_CONTEXT_URL);
@@ -58,6 +58,5 @@ function spawnTest() {
   is($("#content").hidden, false,
     "The tool's content should appear after reload.");
 
-  yield teardown(panel);
-  finish();
-}
+  yield teardown(target);
+});

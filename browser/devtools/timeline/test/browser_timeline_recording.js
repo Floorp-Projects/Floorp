@@ -5,7 +5,7 @@
  * Tests if the timeline can properly start and stop a recording.
  */
 
-let test = Task.async(function*() {
+add_task(function*() {
   let { target, panel } = yield initTimelinePanel(SIMPLE_URL);
   let { $, gFront, TimelineController } = panel.panelWin;
 
@@ -35,6 +35,5 @@ let test = Task.async(function*() {
      TimelineController.getInterval().startTime,
     "Some time has passed since the recording started.");
 
-  yield teardown(panel);
-  finish();
+  yield TimelineController.toggleRecording();
 });

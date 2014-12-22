@@ -154,7 +154,7 @@ var DownloadNotifications = {
         try {
           file.launch();
         } catch (ex) {
-          this.showInAboutDownloads(id, download);
+          this.showInAboutDownloads(download);
         }
       } else {
         ConfirmCancelPrompt.show(download);

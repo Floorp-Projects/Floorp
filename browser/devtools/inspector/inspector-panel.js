@@ -549,7 +549,7 @@ InspectorPanel.prototype = {
     this._toolbox.off("select", this.updateDebuggerPausedWarning);
 
     this.sidebar.off("select", this._setDefaultSidebar);
-    this.sidebar.destroy();
+    let sidebarDestroyer = this.sidebar.destroy();
     this.sidebar = null;
 
     this.nodemenu.removeEventListener("popupshowing", this._setupNodeMenu, true);
@@ -561,7 +561,7 @@ InspectorPanel.prototype = {
     this.selection.off("before-new-node", this.onBeforeNewSelection);
     this.selection.off("before-new-node-front", this.onBeforeNewSelection);
     this.selection.off("detached-front", this.onDetached);
-    this._panelDestroyer = this._destroyMarkup();
+    let markupDestroyer = this._destroyMarkup();
     this.panelWin.inspector = null;
     this.target = null;
     this.panelDoc = null;
@@ -571,6 +571,11 @@ InspectorPanel.prototype = {
     this.lastNodemenuItem = null;
     this.nodemenu = null;
     this._toolbox = null;
+
+    this._panelDestroyer = promise.all([
+      sidebarDestroyer,
+      markupDestroyer
+    ]);
 
     return this._panelDestroyer;
   },
