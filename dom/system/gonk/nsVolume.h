@@ -31,7 +31,8 @@ public:
            const int32_t& aState, const int32_t& aMountGeneration,
            const bool& aIsMediaPresent, const bool& aIsSharing,
            const bool& aIsFormatting, const bool& aIsFake,
-           const bool& aIsUnmounting)
+           const bool& aIsUnmounting, const bool& aIsRemovable,
+           const bool& aIsHotSwappable)
     : mName(aName),
       mMountPoint(aMountPoint),
       mState(aState),
@@ -41,7 +42,9 @@ public:
       mIsMediaPresent(aIsMediaPresent),
       mIsSharing(aIsSharing),
       mIsFormatting(aIsFormatting),
-      mIsUnmounting(aIsUnmounting)
+      mIsUnmounting(aIsUnmounting),
+      mIsRemovable(aIsRemovable),
+      mIsHotSwappable(aIsHotSwappable)
   {
   }
 
@@ -56,7 +59,9 @@ public:
       mIsMediaPresent(false),
       mIsSharing(false),
       mIsFormatting(false),
-      mIsUnmounting(false)
+      mIsUnmounting(false),
+      mIsRemovable(false),
+      mIsHotSwappable(false)
   {
   }
 
@@ -82,6 +87,8 @@ public:
   bool IsSharing() const              { return mIsSharing; }
   bool IsFormatting() const           { return mIsFormatting; }
   bool IsUnmounting() const           { return mIsUnmounting; }
+  bool IsRemovable() const            { return mIsRemovable; }
+  bool IsHotSwappable() const         { return mIsHotSwappable; }
 
   typedef nsTArray<nsRefPtr<nsVolume> > Array;
 
@@ -93,6 +100,8 @@ private:
   void UpdateMountLock(bool aMountLocked);
 
   void SetIsFake(bool aIsFake);
+  void SetIsRemovable(bool aIsRemovable);
+  void SetIsHotSwappable(bool aIsHotSwappble);
   void SetState(int32_t aState);
   static void FormatVolumeIOThread(const nsCString& aVolume);
   static void MountVolumeIOThread(const nsCString& aVolume);
@@ -108,6 +117,8 @@ private:
   bool     mIsSharing;
   bool     mIsFormatting;
   bool     mIsUnmounting;
+  bool     mIsRemovable;
+  bool     mIsHotSwappable;
 };
 
 } // system
