@@ -8,6 +8,12 @@ package org.mozilla.gecko.util;
 import android.net.Uri;
 import android.text.TextUtils;
 
+import org.mozilla.gecko.AppConstants.Versions;
+
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 public class StringUtils {
     private static final String LOGTAG = "GeckoStringUtils";
 
@@ -186,5 +192,52 @@ public class StringUtils {
 
     public static String encodeUserEnteredUrl(String url) {
         return Uri.fromParts("user-entered", url, null).toString();
+    }
+
+    /**
+     * Compatibility layer for API < 11.
+     *
+     * Returns a set of the unique names of all query parameters. Iterating
+     * over the set will return the names in order of their first occurrence.
+     *
+     * @param uri
+     * @throws UnsupportedOperationException if this isn't a hierarchical URI
+     *
+     * @return a set of decoded names
+     */
+    public static Set<String> getQueryParameterNames(Uri uri) {
+        if (Versions.feature11Plus) {
+            return uri.getQueryParameterNames();
+        }
+
+        // Logic below copied from Uri.java included with Android 5.0.0.
+        if (uri.isOpaque()) {
+            throw new UnsupportedOperationException("This isn't a hierarchical URI.");
+        }
+
+        String query = uri.getEncodedQuery();
+        if (query == null) {
+            return Collections.emptySet();
+        }
+
+        Set<String> names = new LinkedHashSet<String>();
+        int start = 0;
+        do {
+            int next = query.indexOf('&', start);
+            int end = (next == -1) ? query.length() : next;
+
+            int separator = query.indexOf('=', start);
+            if (separator > end || separator == -1) {
+                separator = end;
+            }
+
+            String name = query.substring(start, separator);
+            names.add(Uri.decode(name));
+
+            // Move start to end of name.
+            start = end + 1;
+        } while (start < query.length());
+
+        return Collections.unmodifiableSet(names);
     }
 }
