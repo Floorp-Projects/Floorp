@@ -235,7 +235,7 @@ TextureClient::SetAddedToCompositableClient()
 bool
 TextureClient::InitIPDLActor(CompositableForwarder* aForwarder)
 {
-  MOZ_ASSERT(aForwarder);
+  MOZ_ASSERT(aForwarder && aForwarder == mAllocator);
   if (mActor && mActor->GetForwarder() == aForwarder) {
     return true;
   }
@@ -250,7 +250,6 @@ TextureClient::InitIPDLActor(CompositableForwarder* aForwarder)
   MOZ_ASSERT(mActor);
   mActor->mForwarder = aForwarder;
   mActor->mTextureClient = this;
-  mAllocator = aForwarder;
   mShared = true;
   return mActor->IPCOpen();
 }
@@ -331,7 +330,7 @@ TextureClient::CreateForDrawing(ISurfaceAllocator* aAllocator,
       gfxWindowsPlatform::GetPlatform()->GetD2DDevice() &&
       aSize.width <= maxTextureSize &&
       aSize.height <= maxTextureSize) {
-    texture = new TextureClientD3D11(aFormat, aTextureFlags);
+    texture = new TextureClientD3D11(aAllocator, aFormat, aTextureFlags);
   }
   if (parentBackend == LayersBackend::LAYERS_D3D9 &&
       aMoz2DBackend == gfx::BackendType::CAIRO &&
@@ -339,14 +338,14 @@ TextureClient::CreateForDrawing(ISurfaceAllocator* aAllocator,
       aSize.width <= maxTextureSize &&
       aSize.height <= maxTextureSize) {
     if (gfxWindowsPlatform::GetPlatform()->GetD3D9Device()) {
-      texture = new CairoTextureClientD3D9(aFormat, aTextureFlags);
+      texture = new CairoTextureClientD3D9(aAllocator, aFormat, aTextureFlags);
     }
   }
 
   if (!texture && aFormat == SurfaceFormat::B8G8R8X8 &&
       aAllocator->IsSameProcess() &&
       aMoz2DBackend == gfx::BackendType::CAIRO) {
-    texture = new DIBTextureClient(aFormat, aTextureFlags);
+    texture = new DIBTextureClient(aAllocator, aFormat, aTextureFlags);
   }
 
 #endif
@@ -479,8 +478,9 @@ TextureClient::CreateWithBufferSize(ISurfaceAllocator* aAllocator,
   return texture;
 }
 
-TextureClient::TextureClient(TextureFlags aFlags)
-  : mFlags(aFlags)
+TextureClient::TextureClient(ISurfaceAllocator* aAllocator, TextureFlags aFlags)
+  : mAllocator(aAllocator)
+  , mFlags(aFlags)
   , mShared(false)
   , mValid(true)
   , mAddedToCompositableClient(false)
@@ -710,8 +710,7 @@ BufferTextureClient::BufferTextureClient(ISurfaceAllocator* aAllocator,
                                          gfx::SurfaceFormat aFormat,
                                          gfx::BackendType aMoz2DBackend,
                                          TextureFlags aFlags)
-  : TextureClient(aFlags)
-  , mAllocator(aAllocator)
+  : TextureClient(aAllocator, aFlags)
   , mFormat(aFormat)
   , mBackend(aMoz2DBackend)
   , mOpenMode(OpenMode::OPEN_NONE)
@@ -732,12 +731,6 @@ BufferTextureClient::CreateSimilar(TextureFlags aFlags,
 
   RefPtr<TextureClient> newTex = newBufferTex.get();
   return newTex;
-}
-
-ISurfaceAllocator*
-BufferTextureClient::GetAllocator() const
-{
-  return mAllocator;
 }
 
 bool
@@ -907,9 +900,10 @@ BufferTextureClient::GetAsSurface()
 ////////////////////////////////////////////////////////////////////////
 // SharedSurfaceTextureClient
 
-SharedSurfaceTextureClient::SharedSurfaceTextureClient(TextureFlags aFlags,
+SharedSurfaceTextureClient::SharedSurfaceTextureClient(ISurfaceAllocator* aAllocator,
+                                                       TextureFlags aFlags,
                                                        gl::SharedSurface* surf)
-  : TextureClient(aFlags)
+  : TextureClient(aAllocator, aFlags)
   , mIsLocked(false)
   , mSurf(surf)
   , mGL(mSurf->mGL)
