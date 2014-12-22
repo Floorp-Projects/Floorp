@@ -56,8 +56,10 @@ class LoopTestServers:
 
     @staticmethod
     def start_content_server():
-        content_server_location = os.path.join(os.path.dirname(__file__),
-                                               "../../standalone")
+        content_server_location = os.environ.get('STANDALONE_SERVER')
+        if content_server_location is None:
+          content_server_location = os.path.join(os.path.dirname(__file__),
+                                                 "../../standalone")
         os.chdir(content_server_location)
 
         p = processhandler.ProcessHandler(CONTENT_SERVER_COMMAND,
