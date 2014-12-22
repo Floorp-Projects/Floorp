@@ -22,9 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1105308 - Cleanup BluetoothUtils.{cpp,h}
-
-This patch set moves some files around and requires a rebuild
-of the build system's dependency information.
-
-Merge day clobber
+Bug 1066383 - Clobber needed due to build system not reliably picking up an IDL removal.

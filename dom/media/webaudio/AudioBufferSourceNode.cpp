@@ -7,6 +7,7 @@
 #include "AudioBufferSourceNode.h"
 #include "mozilla/dom/AudioBufferSourceNodeBinding.h"
 #include "mozilla/dom/AudioParam.h"
+#include "mozilla/FloatingPoint.h"
 #include "nsMathUtils.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
@@ -110,7 +111,7 @@ public:
       mBeginProcessing = mStart + 0.5;
       break;
     case AudioBufferSourceNode::DOPPLERSHIFT:
-      mDopplerShift = aParam > 0 && aParam == aParam ? aParam : 1.0;
+      mDopplerShift = (aParam <= 0 || mozilla::IsNaN(aParam)) ? 1.0 : aParam;
       break;
     default:
       NS_ERROR("Bad AudioBufferSourceNodeEngine double parameter.");
@@ -415,7 +416,7 @@ public:
     } else {
       playbackRate = mPlaybackRateTimeline.GetValueAtTime(mSource->GetCurrentPosition());
     }
-    if (playbackRate <= 0 || playbackRate != playbackRate) {
+    if (playbackRate <= 0 || mozilla::IsNaN(playbackRate)) {
       playbackRate = 1.0f;
     }
 

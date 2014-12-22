@@ -2645,6 +2645,11 @@ this.GECKO_CARDCONTACT_TYPE_ADN = 0;
 this.GECKO_CARDCONTACT_TYPE_FDN = 1;
 this.GECKO_CARDCONTACT_TYPE_SDN = 2;
 
+// See nsIIccProvider::CARD_MVNO_TYPE_*
+this.GECKO_CARDMVNO_TYPE_IMSI = 0;
+this.GECKO_CARDMVNO_TYPE_SPN = 1;
+this.GECKO_CARDMVNO_TYPE_GID = 2;
+
 // See ril.h RIL_PersoSubstate
 this.PERSONSUBSTATE = {};
 PERSONSUBSTATE[CARD_PERSOSUBSTATE_UNKNOWN] = GECKO_CARDSTATE_UNKNOWN;
@@ -2999,6 +3004,10 @@ this.MMI_SC_CLIR = "31";
 // MMI call waiting service code
 this.MMI_SC_CALL_WAITING = "43";
 
+// MMI service code for registration new password as defined in TS 22.030 6.5.4
+this.MMI_SC_CHANGE_PASSWORD = "03";
+this.MMI_ZZ_BARRING_SERVICE = "330";
+
 // MMI call barring service codes
 this.MMI_SC_BAOC = "33";
 this.MMI_SC_BAOIC = "331";
@@ -3031,6 +3040,7 @@ this.MMI_KS_SC_PIN = "scPin";
 this.MMI_KS_SC_PIN2 = "scPin2";
 this.MMI_KS_SC_PUK = "scPuk";
 this.MMI_KS_SC_PUK2 = "scPuk2";
+this.MMI_KS_SC_CHANGE_PASSWORD = "scChangePassword"
 this.MMI_KS_SC_IMEI = "scImei";
 this.MMI_KS_SC_USSD = "scUssd";
 this.MMI_KS_SC_CALL = "scCall";
@@ -3040,13 +3050,16 @@ this.MMI_ERROR_KS_ERROR = "emMmiError";
 this.MMI_ERROR_KS_NOT_SUPPORTED = "emMmiErrorNotSupported";
 this.MMI_ERROR_KS_INVALID_ACTION = "emMmiErrorInvalidAction";
 this.MMI_ERROR_KS_MISMATCH_PIN = "emMmiErrorMismatchPin";
+this.MMI_ERROR_KS_MISMATCH_PASSWORD = "emMmiErrorMismatchPassword";
 this.MMI_ERROR_KS_BAD_PIN = "emMmiErrorBadPin";
 this.MMI_ERROR_KS_BAD_PUK = "emMmiErrorBadPuk";
 this.MMI_ERROR_KS_INVALID_PIN = "emMmiErrorInvalidPin";
+this.MMI_ERROR_KS_INVALID_PASSWORD = "emMmiErrorInvalidPassword";
 this.MMI_ERROR_KS_NEEDS_PUK = "emMmiErrorNeedsPuk";
 this.MMI_ERROR_KS_SIM_BLOCKED = "emMmiErrorSimBlocked";
 
 // MMI status message.
+this.MMI_SM_KS_PASSWORD_CHANGED = "smPasswordChanged";
 this.MMI_SM_KS_PIN_CHANGED = "smPinChanged";
 this.MMI_SM_KS_PIN2_CHANGED = "smPin2Changed";
 this.MMI_SM_KS_PIN_UNBLOCKED = "smPinUnblocked";

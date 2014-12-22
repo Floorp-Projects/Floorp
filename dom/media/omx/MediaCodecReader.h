@@ -139,6 +139,9 @@ protected:
     android::Vector<android::sp<android::ABuffer> > mInputBuffers;
     android::Vector<android::sp<android::ABuffer> > mOutputBuffers;
     android::sp<android::GonkNativeWindow> mNativeWindow;
+#if ANDROID_VERSION >= 21
+    android::sp<android::IGraphicBufferProducer> mGraphicBufferProducer;
+#endif
 
     // pipeline copier
     nsAutoPtr<TrackInputCopier> mInputCopier;

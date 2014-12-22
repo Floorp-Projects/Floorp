@@ -102,13 +102,6 @@ MobileConnectionListener::NotifyDataChanged()
 }
 
 NS_IMETHODIMP
-MobileConnectionListener::NotifyUssdReceived(const nsAString & message,
-                                             bool sessionEnded)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 MobileConnectionListener::NotifyDataError(const nsAString & message)
 {
   return NS_OK;

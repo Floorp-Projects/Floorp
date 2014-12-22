@@ -5,7 +5,7 @@
  */
 
 [Pref="dom.telephony.enabled",
- CheckPermissions="telephony mobileconnection",
+ CheckPermissions="telephony",
  AvailableIn="CertifiedApps",
  Constructor(DOMString type, optional USSDReceivedEventInit eventInitDict)]
 interface USSDReceivedEvent : Event
@@ -13,7 +13,6 @@ interface USSDReceivedEvent : Event
   readonly attribute unsigned long serviceId;
   readonly attribute DOMString? message;
   readonly attribute USSDSession? session;  // null if session is ended.
-  readonly attribute boolean sessionEnded;  // deprecated. Bug 1070831
 };
 
 dictionary USSDReceivedEventInit : EventInit
@@ -21,5 +20,4 @@ dictionary USSDReceivedEventInit : EventInit
   unsigned long serviceId = 0;
   DOMString? message = null;
   USSDSession? session = null;
-  boolean sessionEnded = false;
 };

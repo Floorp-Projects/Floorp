@@ -112,12 +112,6 @@ public:
   DoRequest(const GetVoicePrivacyModeRequest& aRequest);
 
   bool
-  DoRequest(const SendMmiRequest& aRequest);
-
-  bool
-  DoRequest(const CancelMmiRequest& aRequest);
-
-  bool
   DoRequest(const SetCallForwardingRequest& aRequest);
 
   bool
