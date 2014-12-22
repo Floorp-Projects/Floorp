@@ -19,10 +19,11 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
-TextureClientX11::TextureClientX11(ISurfaceAllocator* aAllocator, SurfaceFormat aFormat, TextureFlags aFlags)
-  : TextureClient(aFlags),
+TextureClientX11::TextureClientX11(ISurfaceAllocator* aAllocator,
+                                   SurfaceFormat aFormat,
+                                   TextureFlags aFlags)
+  : TextureClient(aAllocator, aFlags),
     mFormat(aFormat),
-    mAllocator(aAllocator),
     mLocked(false)
 {
   MOZ_COUNT_CTOR(TextureClientX11);
