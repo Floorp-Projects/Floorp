@@ -67,7 +67,7 @@ class TestAccessibility(MarionetteTestCase):
         # No exception should be raised
         self.run_element_test(self.valid_elementIDs, lambda button: button.tap())
 
-    def test_invalid_single_tap(self):
+    def test_single_tap_raises_element_not_accessible(self):
         self.setup_accessibility()
         self.run_element_test(self.invalid_elementIDs,
                               lambda button: self.assertRaises(ElementNotAccessibleException,
@@ -76,7 +76,7 @@ class TestAccessibility(MarionetteTestCase):
                               lambda button: self.assertRaises(ElementNotAccessibleException,
                                                                button.tap))
 
-    def test_invalid_single_tap_no_exceptions(self):
+    def test_single_tap_raises_no_exceptions(self):
         self.setup_accessibility(False, True)
         # No exception should be raised
         self.run_element_test(self.invalid_elementIDs, lambda button: button.tap())
@@ -84,3 +84,26 @@ class TestAccessibility(MarionetteTestCase):
         self.run_element_test(self.falsy_elements,
                               lambda button: self.assertRaises(ElementNotVisibleException,
                                                                button.tap))
+
+    def test_valid_click(self):
+        self.setup_accessibility()
+        # No exception should be raised
+        self.run_element_test(self.valid_elementIDs, lambda button: button.click())
+
+    def test_click_raises_element_not_accessible(self):
+        self.setup_accessibility()
+        self.run_element_test(self.invalid_elementIDs,
+                              lambda button: self.assertRaises(ElementNotAccessibleException,
+                                                               button.click))
+        self.run_element_test(self.falsy_elements,
+                              lambda button: self.assertRaises(ElementNotAccessibleException,
+                                                               button.click))
+
+    def test_click_raises_no_exceptions(self):
+        self.setup_accessibility(False, True)
+        # No exception should be raised
+        self.run_element_test(self.invalid_elementIDs, lambda button: button.click())
+        # Elements are invisible
+        self.run_element_test(self.falsy_elements,
+                              lambda button: self.assertRaises(ElementNotVisibleException,
+                                                               button.click))
