@@ -1,0 +1,38 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMDocumentFragment;
+
+/**
+ * An interface for initialization of XUL context menu builder
+ * and for triggering of menuitem actions with assigned identifiers.
+ */
+
+[scriptable, uuid(eb6b42c0-2f1c-4760-b5ca-bdc9b3ec77d4)]
+interface nsIXULContextMenuBuilder : nsISupports
+{
+
+  /**
+   * Initialize builder before building.
+   *
+   * @param aDocumentFragment the fragment that will be used to append top
+   *        level elements
+   *
+   * @param aGeneratedItemIdAttrName the name of the attribute that will be
+   *        used to mark elements as generated and for menuitem identification
+   */
+  void init(in nsIDOMDocumentFragment aDocumentFragment,
+            in AString aGeneratedItemIdAttrName);
+
+  /**
+   * Invoke the action of the menuitem with assigned id aGeneratedItemId.
+   *
+   * @param aGeneratedItemId the menuitem id
+   */
+  void click(in DOMString aGeneratedItemId);
+
+};

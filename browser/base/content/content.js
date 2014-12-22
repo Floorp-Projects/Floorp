@@ -43,11 +43,6 @@ XPCOMUtils.defineLazyGetter(this, "SimpleServiceDiscovery", function() {
   });
   return ssdp;
 });
-XPCOMUtils.defineLazyGetter(this, "PageMenuChild", function() {
-  let tmp = {};
-  Cu.import("resource://gre/modules/PageMenu.jsm", tmp);
-  return new tmp.PageMenuChild();
-});
 
 // TabChildGlobal
 var global = this;
@@ -107,10 +102,6 @@ addMessageListener("SecondScreen:tab-mirror", function(message) {
   }
 });
 
-addMessageListener("ContextMenu:DoCustomCommand", function(message) {
-  PageMenuChild.executeMenu(message.data);
-});
-
 addEventListener("DOMFormHasPassword", function(event) {
   InsecurePasswordUtils.checkForInsecurePasswords(event.target);
   LoginManagerContent.onFormPassword(event);
@@ -157,8 +148,7 @@ let handleContentContextMenu = function (event) {
         InlineSpellCheckerContent.initContextMenu(event, editFlags, this);
     }
 
-    let customMenuItems = PageMenuChild.build(event.target);
-    sendSyncMessage("contextmenu", { editFlags, spellInfo, customMenuItems, addonInfo }, { event, popupNode: event.target });
+    sendSyncMessage("contextmenu", { editFlags, spellInfo, addonInfo }, { event, popupNode: event.target });
   }
   else {
     // Break out to the parent window and pass the add-on info along
