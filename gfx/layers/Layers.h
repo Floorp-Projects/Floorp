@@ -1107,6 +1107,11 @@ public:
   // This is only called when the layer tree is updated. Do not call this from
   // layout code.  To add an animation to this layer, use AddAnimation.
   void SetAnimations(const AnimationArray& aAnimations);
+  // Go through all animations in this layer and its children and, for
+  // any animations with a null start time, update their start time such
+  // that at |aReadyTime| the animation's current time corresponds to its
+  // 'initial current time' value.
+  void StartPendingAnimations(const TimeStamp& aReadyTime);
 
   // These are a parallel to AddAnimation and clearAnimations, except
   // they add pending animations that apply only when the next
