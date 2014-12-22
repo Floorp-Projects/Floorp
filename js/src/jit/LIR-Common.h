@@ -6522,28 +6522,6 @@ class LIsObjectAndBranch : public LControlInstructionHelper<2, BOX_PIECES, 0>
     }
 };
 
-class LHaveSameClass : public LInstructionHelper<1, 2, 1>
-{
-  public:
-    LIR_HEADER(HaveSameClass);
-    LHaveSameClass(const LAllocation &left, const LAllocation &right,
-                   const LDefinition &temp) {
-        setOperand(0, left);
-        setOperand(1, right);
-        setTemp(0, temp);
-    }
-
-    const LAllocation *lhs() {
-        return getOperand(0);
-    }
-    const LAllocation *rhs() {
-        return getOperand(1);
-    }
-    MHaveSameClass *mir() const {
-        return mir_->toHaveSameClass();
-    }
-};
-
 class LHasClass : public LInstructionHelper<1, 1, 0>
 {
   public:
