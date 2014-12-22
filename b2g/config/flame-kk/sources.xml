@@ -137,9 +137,11 @@
   <!-- Flame specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="1bb28abbc215f45220620af5cd60a8ac1be93722"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="54c32c2ddef066fbdf611d29e4b7c47e0363599e"/>
-  <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="275ab3513688d7bc2256c5d6d0dbc5e296fe55f6"/>
+  <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="a814b2e2dfdda7140cb3a357617dc4fbb1435e76"/>
   <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="48b6a2c9fde18f2f7d9abddf05261c498c2bb2ba"/>
   <project name="kernel_lk" path="bootable/bootloader/lk" remote="b2g" revision="fda40423ffa573dc6cafd3780515010cb2a086be"/>
+  <remove-project name="platform/bootable/recovery"/>
+  <project name="platform_bootable_recovery" path="bootable/recovery" remote="b2g" revision="26e78a979f3090dc196219e268467620b6c40ec5"/>
   <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="30b96dfca99cb384bf520a16b81f3aba56f09907"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="5b71e40213f650459e95d35b6f14af7e88d8ab62"/>
   <project name="platform_external_libnfc-nci" path="external/libnfc-nci" remote="t2m" revision="4186bdecb4dae911b39a8202252cc2310d91b0be"/>
