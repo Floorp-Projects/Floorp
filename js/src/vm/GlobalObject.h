@@ -104,8 +104,9 @@ class GlobalObject : public NativeObject
     static const unsigned RUNTIME_CODEGEN_ENABLED = WARNED_PROTO_SETTING_SLOW + 1;
     static const unsigned DEBUGGERS               = RUNTIME_CODEGEN_ENABLED + 1;
     static const unsigned INTRINSICS              = DEBUGGERS + 1;
-    static const unsigned FLOAT32X4_TYPE_DESCR   = INTRINSICS + 1;
-    static const unsigned INT32X4_TYPE_DESCR     = FLOAT32X4_TYPE_DESCR + 1;
+    static const unsigned FLOAT32X4_TYPE_DESCR    = INTRINSICS + 1;
+    static const unsigned FLOAT64X2_TYPE_DESCR    = FLOAT32X4_TYPE_DESCR + 1;
+    static const unsigned INT32X4_TYPE_DESCR      = FLOAT64X2_TYPE_DESCR + 1;
     static const unsigned FOR_OF_PIC_CHAIN        = INT32X4_TYPE_DESCR + 1;
 
     /* Total reserved-slot count for global objects. */
@@ -406,6 +407,16 @@ class GlobalObject : public NativeObject
     JSObject &float32x4TypeDescr() {
         MOZ_ASSERT(getSlotRef(FLOAT32X4_TYPE_DESCR).isObject());
         return getSlotRef(FLOAT32X4_TYPE_DESCR).toObject();
+    }
+
+    void setFloat64x2TypeDescr(JSObject &obj) {
+        MOZ_ASSERT(getSlotRef(FLOAT64X2_TYPE_DESCR).isUndefined());
+        setSlot(FLOAT64X2_TYPE_DESCR, ObjectValue(obj));
+    }
+
+    JSObject &float64x2TypeDescr() {
+        MOZ_ASSERT(getSlotRef(FLOAT64X2_TYPE_DESCR).isObject());
+        return getSlotRef(FLOAT64X2_TYPE_DESCR).toObject();
     }
 
     void setInt32x4TypeDescr(JSObject &obj) {
