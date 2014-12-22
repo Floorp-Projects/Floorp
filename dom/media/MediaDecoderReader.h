@@ -13,6 +13,8 @@
 #include "MediaQueue.h"
 #include "AudioCompactor.h"
 
+#include "mozilla/TypedEnum.h"
+
 namespace mozilla {
 
 namespace dom {
@@ -21,6 +23,17 @@ class TimeRanges;
 
 class MediaDecoderReader;
 class SharedDecoderManager;
+
+struct WaitForDataRejectValue {
+  enum Reason {
+    SHUTDOWN
+  };
+
+  WaitForDataRejectValue(MediaData::Type aType, Reason aReason)
+    :mType(aType), mReason(aReason) {}
+  MediaData::Type mType;
+  Reason mReason;
+};
 
 // Encapsulates the decoding and reading of media data. Reading can either
 // synchronous and done on the calling "decode" thread, or asynchronous and
@@ -40,6 +53,7 @@ public:
   typedef MediaPromise<nsRefPtr<AudioData>, NotDecodedReason> AudioDataPromise;
   typedef MediaPromise<nsRefPtr<VideoData>, NotDecodedReason> VideoDataPromise;
   typedef MediaPromise<bool, nsresult> SeekPromise;
+  typedef MediaPromise<MediaData::Type, WaitForDataRejectValue> WaitForDataPromise;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderReader)
 
@@ -112,6 +126,12 @@ public:
   // the next keyframe at or after aTimeThreshold microseconds.
   virtual nsRefPtr<VideoDataPromise>
   RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold);
+
+  // By default, the state machine polls the reader once per second when it's
+  // in buffering mode. Some readers support a promise-based mechanism by which
+  // they notify the state machine when the data arrives.
+  virtual bool IsWaitForDataSupported() { return false; }
+  virtual nsRefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType) { MOZ_CRASH(); }
 
   virtual bool HasAudio() = 0;
   virtual bool HasVideo() = 0;
