@@ -23,7 +23,7 @@ namespace mozilla
 [ref] native nsCStringTArrayRef(nsTArray<nsCString>);
 [ref] native mozillaPkixTime(mozilla::pkix::Time);
 
-[scriptable, uuid(46555f70-3ab5-11e4-8613-180373d97f23)]
+[scriptable, uuid(e219eace-0e04-42ba-b203-58a8b327867c)]
 interface nsISiteSecurityService : nsISupports
 {
     const uint32_t HEADER_HSTS = 0;
@@ -99,12 +99,6 @@ interface nsISiteSecurityService : nsISupports
     boolean isSecureHost(in uint32_t aType,
                          in string aHost,
                          in uint32_t aFlags);
-
-    /**
-     * Checks if the given security info is for a host with a broken
-     * transport layer (certificate errors like invalid CN).
-     */
-    boolean shouldIgnoreHeaders(in nsISupports aSecurityInfo);
 
     /**
      * Checks whether or not the URI's hostname has a given security state set.
