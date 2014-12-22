@@ -216,7 +216,7 @@ SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
       fabsf(contentMetrics.mDisplayPort.x - compositorMetrics.mDisplayPort.x) <= 2 &&
       fabsf(contentMetrics.mDisplayPort.y - compositorMetrics.mDisplayPort.y) <= 2 &&
       fabsf(contentMetrics.mDisplayPort.width - compositorMetrics.mDisplayPort.width) <= 2 &&
-      fabsf(contentMetrics.mDisplayPort.height - compositorMetrics.mDisplayPort.height)) {
+      fabsf(contentMetrics.mDisplayPort.height - compositorMetrics.mDisplayPort.height) <= 2) {
     return false;
   }
 

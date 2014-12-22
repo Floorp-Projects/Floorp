@@ -691,39 +691,71 @@ MediaEngineGonkVideoSource::RotateImage(layers::Image* aImage, uint32_t aWidth, 
                                                          gfx::BackendType::NONE,
                                                          layers::TextureFlags::DEFAULT,
                                                          layers::ALLOC_DISALLOW_BUFFERTEXTURECLIENT);
-  if (!textureClient) {
-    return;
+  if (textureClient) {
+    RefPtr<layers::GrallocTextureClientOGL> grallocTextureClient =
+      static_cast<layers::GrallocTextureClientOGL*>(textureClient.get());
+
+    android::sp<android::GraphicBuffer> destBuffer = grallocTextureClient->GetGraphicBuffer();
+
+    void* destMem = nullptr;
+    destBuffer->lock(android::GraphicBuffer::USAGE_SW_WRITE_OFTEN, &destMem);
+    uint8_t* dstPtr = static_cast<uint8_t*>(destMem);
+
+    int32_t yStride = destBuffer->getStride();
+    // Align to 16 bytes boundary
+    int32_t uvStride = ((yStride / 2) + 15) & ~0x0F;
+
+    libyuv::ConvertToI420(srcPtr, size,
+                          dstPtr, yStride,
+                          dstPtr + (yStride * dstHeight + (uvStride * dstHeight / 2)), uvStride,
+                          dstPtr + (yStride * dstHeight), uvStride,
+                          0, 0,
+                          aWidth, aHeight,
+                          aWidth, aHeight,
+                          static_cast<libyuv::RotationMode>(mRotation),
+                          libyuv::FOURCC_NV21);
+    destBuffer->unlock();
+
+    layers::GrallocImage::GrallocData data;
+
+    data.mPicSize = gfx::IntSize(dstWidth, dstHeight);
+    data.mGraphicBuffer = textureClient;
+    videoImage->SetData(data);
+  } else {
+    // Handle out of gralloc case.
+    image = mImageContainer->CreateImage(ImageFormat::PLANAR_YCBCR);
+    layers::PlanarYCbCrImage* videoImage = static_cast<layers::PlanarYCbCrImage*>(image.get());
+    uint8_t* dstPtr = videoImage->AllocateAndGetNewBuffer(size);
+
+    libyuv::ConvertToI420(srcPtr, size,
+                          dstPtr, dstWidth,
+                          dstPtr + (dstWidth * dstHeight), half_width,
+                          dstPtr + (dstWidth * dstHeight * 5 / 4), half_width,
+                          0, 0,
+                          aWidth, aHeight,
+                          aWidth, aHeight,
+                          static_cast<libyuv::RotationMode>(mRotation),
+                          ConvertPixelFormatToFOURCC(graphicBuffer->getPixelFormat()));
+
+    const uint8_t lumaBpp = 8;
+    const uint8_t chromaBpp = 4;
+
+    layers::PlanarYCbCrData data;
+    data.mYChannel = dstPtr;
+    data.mYSize = IntSize(dstWidth, dstHeight);
+    data.mYStride = dstWidth * lumaBpp / 8;
+    data.mCbCrStride = dstWidth * chromaBpp / 8;
+    data.mCbChannel = dstPtr + dstHeight * data.mYStride;
+    data.mCrChannel = data.mCbChannel + data.mCbCrStride * (dstHeight / 2);
+    data.mCbCrSize = IntSize(dstWidth / 2, dstHeight / 2);
+    data.mPicX = 0;
+    data.mPicY = 0;
+    data.mPicSize = IntSize(dstWidth, dstHeight);
+    data.mStereoMode = StereoMode::MONO;
+
+    videoImage->SetDataNoCopy(data);
   }
-  RefPtr<layers::GrallocTextureClientOGL> grallocTextureClient =
-    static_cast<layers::GrallocTextureClientOGL*>(textureClient.get());
-
-  android::sp<android::GraphicBuffer> destBuffer = grallocTextureClient->GetGraphicBuffer();
-
-  void* destMem = nullptr;
-  destBuffer->lock(android::GraphicBuffer::USAGE_SW_WRITE_OFTEN, &destMem);
-  uint8_t* dstPtr = static_cast<uint8_t*>(destMem);
-
-  int32_t yStride = destBuffer->getStride();
-  // Align to 16 bytes boundary
-  int32_t uvStride = ((yStride / 2) + 15) & ~0x0F;
-
-  libyuv::ConvertToI420(srcPtr, size,
-                        dstPtr, yStride,
-                        dstPtr + (yStride * dstHeight + (uvStride * dstHeight / 2)), uvStride,
-                        dstPtr + (yStride * dstHeight), uvStride,
-                        0, 0,
-                        aWidth, aHeight,
-                        aWidth, aHeight,
-                        static_cast<libyuv::RotationMode>(mRotation),
-                        libyuv::FOURCC_NV21);
-  destBuffer->unlock();
   graphicBuffer->unlock();
-
-  layers::GrallocImage::GrallocData data;
-
-  data.mPicSize = gfx::IntSize(dstWidth, dstHeight);
-  data.mGraphicBuffer = textureClient;
-  videoImage->SetData(data);
 
   // Implicitly releases last preview image.
   mImage = image.forget();
@@ -767,9 +799,14 @@ MediaEngineGonkVideoSource::OnNewMediaBufferFrame(MediaBuffer* aBuffer)
 
   MonitorAutoLock enter(mMonitor);
   if (mImage) {
-    GonkCameraImage* cameraImage = static_cast<GonkCameraImage*>(mImage.get());
-
-    cameraImage->SetBuffer(aBuffer);
+    if (mImage->AsGrallocImage()) {
+      // MediaEngineGonkVideoSource expects that GrallocImage is GonkCameraImage.
+      // See Bug 938034.
+      GonkCameraImage* cameraImage = static_cast<GonkCameraImage*>(mImage.get());
+      cameraImage->SetBuffer(aBuffer);
+    } else {
+      LOG(("mImage is non-GrallocImage"));
+    }
 
     uint32_t len = mSources.Length();
     for (uint32_t i = 0; i < len; i++) {
@@ -780,12 +817,15 @@ MediaEngineGonkVideoSource::OnNewMediaBufferFrame(MediaBuffer* aBuffer)
         // Unfortunately, clock in gonk camera looks like is a different one
         // comparing to MSG. As result, it causes time inaccurate. (frames be
         // queued in MSG longer and longer as time going by in device like Frame)
-        AppendToTrack(mSources[i], cameraImage, mTrackID, 1);
+        AppendToTrack(mSources[i], mImage, mTrackID, 1);
       }
     }
-    // Clear MediaBuffer immediately, it prevents MediaBuffer is kept in
-    // MediaStreamGraph thread.
-    cameraImage->ClearBuffer();
+    if (mImage->AsGrallocImage()) {
+      GonkCameraImage* cameraImage = static_cast<GonkCameraImage*>(mImage.get());
+      // Clear MediaBuffer immediately, it prevents MediaBuffer is kept in
+      // MediaStreamGraph thread.
+      cameraImage->ClearBuffer();
+    }
   }
 
   return NS_OK;

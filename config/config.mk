@@ -614,6 +614,13 @@ MERGE_FILE = $(LOCALE_SRCDIR)/$(1)
 endif
 MERGE_FILES = $(foreach f,$(1),$(call MERGE_FILE,$(f)))
 
+# These marcros are similar to MERGE_FILE, but no merging, and en-US first.
+# They're used for searchplugins, for example.
+EN_US_OR_L10N_FILE = $(firstword \
+  $(wildcard $(srcdir)/en-US/$(1)) \
+  $(LOCALE_SRCDIR)/$(1) )
+EN_US_OR_L10N_FILES = $(foreach f,$(1),$(call EN_US_OR_L10N_FILE,$(f)))
+
 ifneq (WINNT,$(OS_ARCH))
 RUN_TEST_PROGRAM = $(LIBXUL_DIST)/bin/run-mozilla.sh
 endif # ! WINNT
