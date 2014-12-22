@@ -6,6 +6,8 @@
 #include "D3D9SurfaceImage.h"
 #include "gfx2DGlue.h"
 #include "mozilla/layers/TextureD3D9.h"
+#include "mozilla/layers/CompositableClient.h"
+#include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/gfx/Types.h"
 
 namespace mozilla {
@@ -132,7 +134,9 @@ D3D9SurfaceImage::GetTextureClient(CompositableClient* aClient)
   EnsureSynchronized();
   if (!mTextureClient) {
     RefPtr<SharedTextureClientD3D9> textureClient =
-      new SharedTextureClientD3D9(gfx::SurfaceFormat::B8G8R8X8, TextureFlags::DEFAULT);
+      new SharedTextureClientD3D9(aClient->GetForwarder(),
+                                  gfx::SurfaceFormat::B8G8R8X8,
+                                  TextureFlags::DEFAULT);
     textureClient->InitWith(mTexture, mShareHandle, mDesc);
     mTextureClient = textureClient;
   }
