@@ -4299,11 +4299,6 @@ Tab.prototype = {
 
           this.savedArticle = article;
           Reader.updatePageAction(this);
-
-          Messaging.sendRequest({
-            type: "Content:ReaderEnabled",
-            tabID: this.id
-          });
         }).catch(e => Cu.reportError("Error parsing document from tab: " + e));
       }
     }

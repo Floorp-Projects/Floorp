@@ -6,7 +6,7 @@
  * You can also use this initialization format as a template for other tests.
  */
 
-let test = Task.async(function*() {
+add_task(function*() {
   let { target, panel } = yield initTimelinePanel(SIMPLE_URL);
 
   ok(target, "Should have a target available.");
@@ -15,7 +15,4 @@ let test = Task.async(function*() {
   ok(panel.panelWin.gToolbox, "Should have a toolbox reference on the panel window.");
   ok(panel.panelWin.gTarget, "Should have a target reference on the panel window.");
   ok(panel.panelWin.gFront, "Should have a front reference on the panel window.");
-
-  yield teardown(panel);
-  finish();
 });
