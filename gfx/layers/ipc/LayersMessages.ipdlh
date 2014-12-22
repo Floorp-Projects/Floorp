@@ -173,6 +173,11 @@ struct Animation {
   // delay.  If the delay is changed dynamically, the layer's data will
   // be updated.
   TimeStamp startTime;
+  // The value of the animation's current time at the moment it was created.
+  // For animations that are waiting to start, their startTime will be null.
+  // Once the animation is ready to start, we calculate an appropriate value
+  // of startTime such that we begin playback from initialCurrentTime.
+  TimeDuration initialCurrentTime;
   TimeDuration duration;
   // For each frame, the interpolation point is computed based on the
   // startTime, the direction, the duration, and the current time.

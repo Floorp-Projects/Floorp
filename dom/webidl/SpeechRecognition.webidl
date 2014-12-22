@@ -28,7 +28,7 @@ interface SpeechRecognition : EventTarget {
     attribute DOMString serviceURI;
 
     // methods to drive the speech interaction
-    [Throws]
+    [Throws, UnsafeInPrerendering]
     void start(optional MediaStream stream);
     void stop();
     void abort();

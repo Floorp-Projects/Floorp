@@ -157,7 +157,7 @@ MP4Reader::Init(MediaDecoderReader* aCloneDonor)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
   PlatformDecoderModule::Init();
-  mDemuxer = new MP4Demuxer(new MP4Stream(mDecoder->GetResource()));
+  mDemuxer = new MP4Demuxer(new MP4Stream(mDecoder->GetResource(), &mIndexMonitor), &mIndexMonitor);
 
   InitLayersBackendType();
 
@@ -294,11 +294,10 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
                         MetadataTags** aTags)
 {
   if (!mDemuxerInitialized) {
-    bool ok = mDemuxer->Init();
-    NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
-
     {
       MonitorAutoLock mon(mIndexMonitor);
+      bool ok = mDemuxer->Init();
+      NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
       mIndexReady = true;
     }
 
@@ -632,6 +631,7 @@ MP4Reader::ReturnOutput(MediaData* aData, TrackType aTrack)
 MP4Sample*
 MP4Reader::PopSample(TrackType aTrack)
 {
+  MonitorAutoLock mon(mIndexMonitor);
   switch (aTrack) {
     case kAudio:
       return mDemuxer->DemuxAudioSample();

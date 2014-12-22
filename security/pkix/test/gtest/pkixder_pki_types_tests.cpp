@@ -349,16 +349,33 @@ static const AlgorithmIdentifierTestInfo<SignatureAlgorithm>
     9,
   },
 
-  // DSA
-  { SignatureAlgorithm::dsa_with_sha256,
+  // id-dsa-with-sha256 (2.16.840.1.101.3.4.3.2)
+  { SignatureAlgorithm::unsupported_algorithm,
     { 0x30, 0x0b, 0x06, 0x09,
       0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x03, 0x02 },
     13,
   },
-  { SignatureAlgorithm::dsa_with_sha1,
+
+  // id-dsa-with-sha1 (1.2.840.10040.4.3)
+  { SignatureAlgorithm::unsupported_algorithm,
     { 0x30, 0x09, 0x06, 0x07,
       0x2a, 0x86, 0x48, 0xce, 0x38, 0x04, 0x03 },
     11,
+  },
+
+  // RSA-with-MD5 (1.2.840.113549.1.1.4)
+  { SignatureAlgorithm::unsupported_algorithm,
+    { 0x30, 0x0b, 0x06, 0x09,
+      0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x04 },
+    13,
+  },
+
+  // id-sha256 (2.16.840.1.101.3.4.2.1). It is invalid because SHA-256 is not
+  // a signature algorithm.
+  { SignatureAlgorithm::unsupported_algorithm,
+    { 0x30, 0x0b, 0x06, 0x09,
+      0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01 },
+    13,
   },
 };
 
@@ -369,7 +386,7 @@ class pkixder_SignatureAlgorithmIdentifier
 {
 };
 
-TEST_P(pkixder_SignatureAlgorithmIdentifier, Valid)
+TEST_P(pkixder_SignatureAlgorithmIdentifier, ValidAndInvalid)
 {
   const AlgorithmIdentifierTestInfo<SignatureAlgorithm>& param(GetParam());
 
@@ -403,37 +420,5 @@ TEST_P(pkixder_SignatureAlgorithmIdentifier, Valid)
 INSTANTIATE_TEST_CASE_P(pkixder_SignatureAlgorithmIdentifier,
                         pkixder_SignatureAlgorithmIdentifier,
                         testing::ValuesIn(SIGNATURE_ALGORITHM_TEST_INFO));
-
-TEST_F(pkixder_SignatureAlgorithmIdentifier, Invalid_RSA_With_MD5)
-{
-  // The OID identifies RSA-with-MD5 (1.2.840.113549.1.1.4). It is invalid
-  // because no MD5-based signatures algorithms are supported by the parser.
-  static const uint8_t DER[] = {
-    0x30, 0x0b, 0x06, 0x09,
-    0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x04
-  };
-  Input input(DER);
-  Reader reader(input);
-
-  SignatureAlgorithm alg;
-  ASSERT_EQ(Success, SignatureAlgorithmIdentifier(reader, alg));
-  ASSERT_EQ(SignatureAlgorithm::unsupported_algorithm, alg);
-}
-
-TEST_F(pkixder_SignatureAlgorithmIdentifier, Invalid_SignatureAlgorithm_SHA256)
-{
-  // The OID identifies id-sha256 (2.16.840.1.101.3.4.2.1). It is invalid
-  // because SHA-256 is not a signature algorithm.
-  static const uint8_t DER[] = {
-    0x30, 0x0b, 0x06, 0x09,
-    0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01
-  };
-  Input input(DER);
-  Reader reader(input);
-
-  SignatureAlgorithm alg;
-  ASSERT_EQ(Success, SignatureAlgorithmIdentifier(reader, alg));
-  ASSERT_EQ(SignatureAlgorithm::unsupported_algorithm, alg);
-}
 
 } // unnamed namespace

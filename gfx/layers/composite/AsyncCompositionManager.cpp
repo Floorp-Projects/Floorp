@@ -447,6 +447,8 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
 
     activeAnimations = true;
 
+    MOZ_ASSERT(!animation.startTime().IsNull(),
+               "Failed to resolve start time of pending animations");
     TimeDuration elapsedDuration = aPoint - animation.startTime();
     // Skip animations that are yet to start.
     //
