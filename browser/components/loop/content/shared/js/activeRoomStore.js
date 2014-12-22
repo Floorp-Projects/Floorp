@@ -67,7 +67,12 @@ loop.store.ActiveRoomStore = (function() {
         roomState: ROOM_STATES.INIT,
         audioMuted: false,
         videoMuted: false,
-        failureReason: undefined
+        failureReason: undefined,
+        // Tracks if the room has been used during this
+        // session. 'Used' means at least one call has been placed
+        // with it. Entering and leaving the room without seeing
+        // anyone is not considered as 'used'
+        used: false
       };
     },
 
@@ -361,7 +366,10 @@ loop.store.ActiveRoomStore = (function() {
      * Handles recording when a remote peer has connected to the servers.
      */
     remotePeerConnected: function() {
-      this.setStoreState({roomState: ROOM_STATES.HAS_PARTICIPANTS});
+      this.setStoreState({
+        roomState: ROOM_STATES.HAS_PARTICIPANTS,
+        used: true
+      });
 
       // We've connected with a third-party, therefore stop displaying the ToS etc.
       this._mozLoop.setLoopPref("seenToS", "seen");
