@@ -160,6 +160,7 @@
     _(and)                           \
     _(or)                            \
     _(xor)                           \
+    _(bitselect)                     \
     _(select)                        \
     _(swizzle)                       \
     _(shuffle)                       \
