@@ -2,18 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function () {
-  return Cu.import("resource://gre/modules/FxAccountsCommon.js", {});
-});
-
-XPCOMUtils.defineLazyModuleGetter(this, "fxaMigrator",
-  "resource://services-sync/FxaMigrator.jsm");
-
-const PREF_SYNC_START_DOORHANGER = "services.sync.ui.showSyncStartDoorhanger";
-const DOORHANGER_ACTIVATE_DELAY_MS = 5000;
-const SYNC_MIGRATION_NOTIFICATION_TITLE = "fxa-migration";
-
 let gFxAccounts = {
+
+  PREF_SYNC_START_DOORHANGER: "services.sync.ui.showSyncStartDoorhanger",
+  DOORHANGER_ACTIVATE_DELAY_MS: 5000,
+  SYNC_MIGRATION_NOTIFICATION_TITLE: "fxa-migration",
 
   _initialized: false,
   _inCustomizationMode: false,
@@ -34,8 +27,8 @@ let gFxAccounts = {
       "weave:service:login:error",
       "weave:service:setup-complete",
       "fxa-migration:state-changed",
-      FxAccountsCommon.ONVERIFIED_NOTIFICATION,
-      FxAccountsCommon.ONLOGOUT_NOTIFICATION
+      this.FxAccountsCommon.ONVERIFIED_NOTIFICATION,
+      this.FxAccountsCommon.ONLOGOUT_NOTIFICATION
     ];
   },
 
@@ -108,8 +101,8 @@ let gFxAccounts = {
 
   observe: function (subject, topic, data) {
     switch (topic) {
-      case FxAccountsCommon.ONVERIFIED_NOTIFICATION:
-        Services.prefs.setBoolPref(PREF_SYNC_START_DOORHANGER, true);
+      case this.FxAccountsCommon.ONVERIFIED_NOTIFICATION:
+        Services.prefs.setBoolPref(this.PREF_SYNC_START_DOORHANGER, true);
         break;
       case "weave:service:sync:start":
         this.onSyncStart();
@@ -131,11 +124,11 @@ let gFxAccounts = {
     let showDoorhanger = false;
 
     try {
-      showDoorhanger = Services.prefs.getBoolPref(PREF_SYNC_START_DOORHANGER);
+      showDoorhanger = Services.prefs.getBoolPref(this.PREF_SYNC_START_DOORHANGER);
     } catch (e) { /* The pref might not exist. */ }
 
     if (showDoorhanger) {
-      Services.prefs.clearUserPref(PREF_SYNC_START_DOORHANGER);
+      Services.prefs.clearUserPref(this.PREF_SYNC_START_DOORHANGER);
       this.showSyncStartedDoorhanger();
     }
   },
@@ -155,7 +148,7 @@ let gFxAccounts = {
       // a short delay. Without this delay the doorhanger would not show up
       // or with a too small delay show up while we're still animating the
       // window.
-      setTimeout(() => this.onSyncStart(), DOORHANGER_ACTIVATE_DELAY_MS);
+      setTimeout(() => this.onSyncStart(), this.DOORHANGER_ACTIVATE_DELAY_MS);
     } else {
       this._inCustomizationMode = event.type == "customizationstarting";
       this.updateAppMenuItem();
@@ -251,12 +244,12 @@ let gFxAccounts = {
     let status = null;
     let label = null;
     switch (this._migrationInfo.state) {
-      case fxaMigrator.STATE_USER_FXA:
+      case this.fxaMigrator.STATE_USER_FXA:
         status = "migrate-signup";
         label = this.strings.formatStringFromName("needUserShort",
           [this.button.getAttribute("fxabrandname")], 1);
         break;
-      case fxaMigrator.STATE_USER_FXA_VERIFIED:
+      case this.fxaMigrator.STATE_USER_FXA_VERIFIED:
         status = "migrate-verify";
         label = this.strings.formatStringFromName("needVerifiedUserShort",
                                                   [this._migrationInfo.email],
@@ -270,7 +263,7 @@ let gFxAccounts = {
 
   updateMigrationNotification: Task.async(function* () {
     if (!this._migrationInfo) {
-      Weave.Notifications.removeAll(SYNC_MIGRATION_NOTIFICATION_TITLE);
+      Weave.Notifications.removeAll(this.SYNC_MIGRATION_NOTIFICATION_TITLE);
       return;
     }
     if (gBrowser.currentURI.spec.split("?")[0] == "about:accounts") {
@@ -280,7 +273,7 @@ let gFxAccounts = {
     }
     let note = null;
     switch (this._migrationInfo.state) {
-      case fxaMigrator.STATE_USER_FXA: {
+      case this.fxaMigrator.STATE_USER_FXA: {
         let msg = this.strings.GetStringFromName("needUserLong");
         let upgradeLabel =
           this.strings.GetStringFromName("upgradeToFxA.label");
@@ -289,13 +282,13 @@ let gFxAccounts = {
         note = new Weave.Notification(
           undefined, msg, undefined, Weave.Notifications.PRIORITY_WARNING, [
             new Weave.NotificationButton(upgradeLabel, upgradeAccessKey, () => {
-              fxaMigrator.createFxAccount(window);
+              this.fxaMigrator.createFxAccount(window);
             }),
           ]
         );
         break;
       }
-      case fxaMigrator.STATE_USER_FXA_VERIFIED: {
+      case this.fxaMigrator.STATE_USER_FXA_VERIFIED: {
         let msg =
           this.strings.formatStringFromName("needVerifiedUserLong",
                                             [this._migrationInfo.email], 1);
@@ -306,14 +299,14 @@ let gFxAccounts = {
         note = new Weave.Notification(
           undefined, msg, undefined, Weave.Notifications.PRIORITY_INFO, [
             new Weave.NotificationButton(resendLabel, resendAccessKey, () => {
-              fxaMigrator.resendVerificationMail();
+              this.fxaMigrator.resendVerificationMail();
             }),
           ]
         );
         break;
       }
     }
-    note.title = SYNC_MIGRATION_NOTIFICATION_TITLE;
+    note.title = this.SYNC_MIGRATION_NOTIFICATION_TITLE;
     Weave.Notifications.replaceTitle(note);
   }),
 
@@ -328,7 +321,7 @@ let gFxAccounts = {
       this.openSignInAgainPage("menupanel");
       break;
     case "migrate-signup":
-      fxaMigrator.createFxAccount(window);
+      this.fxaMigrator.createFxAccount(window);
       break;
     case "migrate-verify":
       // Instead of using the migrator module directly here the UX calls for
@@ -374,3 +367,10 @@ let gFxAccounts = {
     this.openAccountsPage("reauth", { entryPoint: entryPoint });
   },
 };
+
+XPCOMUtils.defineLazyGetter(gFxAccounts, "FxAccountsCommon", function () {
+  return Cu.import("resource://gre/modules/FxAccountsCommon.js", {});
+});
+
+XPCOMUtils.defineLazyModuleGetter(gFxAccounts, "fxaMigrator",
+  "resource://services-sync/FxaMigrator.jsm");
