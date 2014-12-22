@@ -1,0 +1,44 @@
+---
+# List of all possible flags for each category of tests used in the case where
+# "all" is specified.
+flags:
+  builds:
+    - emulator
+    - emulator-jb
+    - emulator-kk
+    - linux32_gecko  # b2g desktop linux 32 bit
+    - linux64_gecko  # b2g desktop linux 64 bit
+    - linux64-mulet  # Firefox desktop - b2g gecko linux 64 bit
+    - macosx64_gecko # b2g desktop osx 64 bit
+    - win32_gecko    # b2g desktop win 32 bit
+
+  tests:
+    - cppunit
+    - crashtest
+    - crashtest-ipc
+    - gaia-build
+    - gaia-build-unit
+    - gaia-js-integration
+    - gaia-linter
+    - gaia-unit
+    - gaia-unit-oop
+    - gaia-ui-test-oop
+    - gaia-ui-test-accessibility
+    - gaia-ui-test-functional
+    - gaia-ui-test-unit
+    - jetpack
+    - jittests
+    - jsreftest
+    - marionette
+    - marionette-webapi
+    - mochitest
+    - mochitest-media
+    - mochitest-oop
+    - mozmill
+    - reftest
+    - reftest-ipc
+    - reftest-no-accel
+    - reftest-sanity-oop
+    - web-platform-tests
+    - xpcshell
+

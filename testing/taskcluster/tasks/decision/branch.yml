@@ -1,8 +1,8 @@
 ---
 metadata:
-  name: 'Task graph used to build try jobs'
+  name: 'Task graph used to build {{project}} specific jobs'
   description: |
-    Try push for {{owner}} with {{comment}}.
+    {{project}} push for {{owner}} with comment: {{comment}}.
   owner: "{{owner}}"
   source: "{{source}}"
 
@@ -36,7 +36,7 @@ tasks:
       metadata:
         source: {{source}}
         owner: {{owner}}
-        name: Initial decision task for try
+        name: Initial decision task for {{project}} specific graphs
         description: |
           This is the single most important task as it decides how all other tasks
           get built.
@@ -77,8 +77,8 @@ tasks:
           - >
             source $(which entrypoint) &&
             ./mach taskcluster-graph
-            --project='{{project}}'
             --message='{{comment}}'
+            --project='{{project}}'
             --owner='{{owner}}'
             --extend-graph > /home/worker/graph.json
         graphs:
