@@ -92,8 +92,7 @@ protected:
 
   nscoord ReflowSpans(nsPresContext* aPresContext,
                       const nsHTMLReflowState& aReflowState,
-                      nsTArray<nsHTMLReflowState*>& aReflowStates,
-                      nsReflowStatus& aStatus);
+                      nsTArray<nsHTMLReflowState*>& aReflowStates);
 
   struct PullFrameState;
 
