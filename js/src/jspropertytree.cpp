@@ -21,6 +21,8 @@
 using namespace js;
 using namespace js::gc;
 
+using mozilla::DebugOnly;
+
 inline HashNumber
 ShapeHasher::hash(const Lookup &l)
 {
