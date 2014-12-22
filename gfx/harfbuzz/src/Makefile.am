@@ -234,8 +234,8 @@ hb-gobject-enums.%: hb-gobject-enums.%.tmpl $(HBHEADERS)
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
 		--identifier-prefix hb_ --symbol-prefix hb_gobject \
 		--template $^ | \
-	sed 's/_t_get_type/_get_type/g; s/_T (/ (/g' > "$@.tmp" && \
-	mv "$@.tmp" "$@" || ( $(RM) "@.tmp" && false )
+	sed 's/_t_get_type/_get_type/g; s/_T (/ (/g' > "$@" \
+	|| ($(RM) "$@"; false)
 endif
 EXTRA_DIST += \
 	harfbuzz-gobject.pc.in \
@@ -251,8 +251,8 @@ EXTRA_DIST += \
 		-e 's@%libdir%@$(libdir)@g' \
 		-e 's@%includedir%@$(includedir)@g' \
 		-e 's@%VERSION%@$(VERSION)@g' \
-	"$<" \
-	> "$@.tmp" && mv "$@.tmp" "$@" || ( $(RM) "$@.tmp"; false )
+	"$<" > "$@" \
+	|| ($(RM) "$@"; false)
 
 CLEANFILES += $(pkgconfig_DATA)
 
@@ -265,8 +265,9 @@ harfbuzz.def: $(HBHEADERS) $(HBNODISTHEADERS)
 	sed -e 's/ (.*//' | \
 	LANG=C sort; \
 	echo LIBRARY libharfbuzz-$(HB_VERSION_MAJOR).dll; \
-	) >"$@.tmp"
-	@ ! grep -q hb_ERROR "$@.tmp" && mv "$@.tmp" "$@" || ($(RM) "$@"; false)
+	) >"$@"
+	@ ! grep -q hb_ERROR "$@" \
+	|| ($(RM) "$@"; false)
 
 
 GENERATORS = \
@@ -278,26 +279,25 @@ EXTRA_DIST += $(GENERATORS)
 unicode-tables: arabic-table indic-table
 
 indic-table: gen-indic-table.py IndicSyllabicCategory.txt IndicMatraCategory.txt Blocks.txt
-	$(AM_V_GEN) $(builddir)/$^ > hb-ot-shape-complex-indic-table.cc.tmp && \
-	mv hb-ot-shape-complex-indic-table.cc.tmp $(srcdir)/hb-ot-shape-complex-indic-table.cc || \
-	($(RM) hb-ot-shape-complex-indic-table.cc.tmp; false)
+	$(AM_V_GEN) $(builddir)/$^ > hb-ot-shape-complex-indic-table.cc \
+	|| ($(RM) hb-ot-shape-complex-indic-table.cc; false)
 
 arabic-table: gen-arabic-table.py ArabicShaping.txt UnicodeData.txt Blocks.txt
-	$(AM_V_GEN) $(builddir)/$^ > hb-ot-shape-complex-arabic-table.hh.tmp && \
-	mv hb-ot-shape-complex-arabic-table.hh.tmp $(srcdir)/hb-ot-shape-complex-arabic-table.hh || \
-	($(RM) hb-ot-shape-complex-arabic-table.hh.tmp; false)
+	$(AM_V_GEN) $(builddir)/$^ > hb-ot-shape-complex-arabic-table.hh \
+	|| ($(RM) hb-ot-shape-complex-arabic-table.hh; false)
 
 built-sources: $(BUILT_SOURCES)
 
 .PHONY: unicode-tables arabic-table indic-table built-sources
 
-BUILT_SOURCES += \
-	hb-buffer-deserialize-json.hh \
-	hb-buffer-deserialize-text.hh \
-	hb-ot-shape-complex-indic-machine.hh \
-	hb-ot-shape-complex-myanmar-machine.hh \
-	hb-ot-shape-complex-sea-machine.hh \
+RAGEL_GENERATED = \
+	$(srcdir)/hb-buffer-deserialize-json.hh \
+	$(srcdir)/hb-buffer-deserialize-text.hh \
+	$(srcdir)/hb-ot-shape-complex-indic-machine.hh \
+	$(srcdir)/hb-ot-shape-complex-myanmar-machine.hh \
+	$(srcdir)/hb-ot-shape-complex-sea-machine.hh \
 	$(NULL)
+BUILT_SOURCES += $(RAGEL_GENERATED)
 EXTRA_DIST += \
 	hb-buffer-deserialize-json.rl \
 	hb-buffer-deserialize-text.rl \
@@ -305,9 +305,10 @@ EXTRA_DIST += \
 	hb-ot-shape-complex-myanmar-machine.rl \
 	hb-ot-shape-complex-sea-machine.rl \
 	$(NULL)
-.rl.hh:
-	$(AM_V_GEN)$(RAGEL) -e -F1 -o "$@.tmp" "$<" && \
-	mv "$@.tmp" "$@" || ( $(RM) "$@.tmp" && false )
+MAINTAINERCLEANFILES += $(RAGEL_GENERATED)
+$(srcdir)/%.hh: $(srcdir)/%.rl
+	$(AM_V_GEN)(cd $(srcdir) && $(RAGEL) -e -F1 -o "$*.hh" "$*.rl") \
+	|| ($(RM) "$@"; false)
 
 noinst_PROGRAMS = \
 	main \

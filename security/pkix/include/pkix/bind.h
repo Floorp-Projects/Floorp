@@ -56,6 +56,7 @@ using std::ref;
 using std::placeholders::_1;
 using std::placeholders::_2;
 using std::placeholders::_3;
+using std::placeholders::_4;
 
 #else
 
@@ -144,6 +145,25 @@ private:
   void operator=(const BindToMemberFunction4&) /*= delete*/;
 };
 
+template <typename R, typename P1, typename B1, typename B2, typename B3,
+          typename B4, typename B5>
+class Bind5
+{
+public:
+  typedef R (&F)(P1&, B1, B2, B3, B4, B5);
+  Bind5(F f, B1 b1, B2 b2, B3 b3, B4 b4, B5 b5)
+    : f(f), b1(b1), b2(b2), b3(b3), b4(b4), b5(b5) { }
+  R operator()(P1& p1) const { return f(p1, b1, b2, b3, b4, b5); }
+private:
+  const F f;
+  B1 b1;
+  B2 b2;
+  B3 b3;
+  B4 b4;
+  B5 b5;
+  void operator=(const Bind5&) /*= delete*/;
+};
+
 } // namespace internal
 
 template <typename R, typename P1, typename B1>
@@ -184,6 +204,15 @@ bind(R (C1::*f)(P1&, P2&, P3, P4&), C1* that, Placeholder1&, Placeholder2&,
      Placeholder3, Placeholder4&)
 {
   return internal::BindToMemberFunction4<R, C1, P1, P2, P3, P4>(f, that);
+}
+
+template <typename R, typename P1, typename B1, typename B2, typename B3,
+          typename B4, typename B5>
+inline internal::Bind5<R, P1, B1, B2, B3, B4, B5&>
+bind(R (&f)(P1&, B1, B2, B3, B4, B5&), Placeholder1&, B1 b1, B2 b2, B3 b3,
+     B4 b4, B5& b5)
+{
+  return internal::Bind5<R, P1, B1, B2, B3, B4, B5&>(f, b1, b2, b3, b4, b5);
 }
 
 #endif

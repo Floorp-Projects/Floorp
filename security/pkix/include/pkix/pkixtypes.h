@@ -69,12 +69,6 @@ MOZILLA_PKIX_ENUM_CLASS SignatureAlgorithm
   // sha-1WithRSAEncryption (OID 1.2.840.113549.1.1.5, RFC 3279 Section 2.2.1)
   rsa_pkcs1_with_sha1 = 16,
 
-  // id-dsa-with-sha256 (OID 2.16.840.1.101.3.4.3.2, RFC 5758 Section 3.1)
-  dsa_with_sha256 = 17,
-
-  // id-dsa-with-sha1 (OID 1.2.840.10040.4.3, RFC 3279 Section 2.2.2)
-  dsa_with_sha1 = 18,
-
   // Used to indicate any unsupported algorithm.
   unsupported_algorithm = 19,
 };

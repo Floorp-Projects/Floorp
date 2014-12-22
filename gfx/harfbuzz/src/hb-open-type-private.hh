@@ -194,10 +194,11 @@ struct hb_sanitize_context_t
   {
     this->start = hb_blob_get_data (this->blob, NULL);
     this->end = this->start + hb_blob_get_length (this->blob);
+    assert (this->start <= this->end); /* Must not overflow. */
     this->edit_count = 0;
     this->debug_depth = 0;
 
-    DEBUG_MSG_LEVEL (SANITIZE, this->blob, 0, +1,
+    DEBUG_MSG_LEVEL (SANITIZE, start, 0, +1,
 		     "start [%p..%p] (%lu bytes)",
 		     this->start, this->end,
 		     (unsigned long) (this->end - this->start));
@@ -205,7 +206,7 @@ struct hb_sanitize_context_t
 
   inline void end_processing (void)
   {
-    DEBUG_MSG_LEVEL (SANITIZE, this->blob, 0, -1,
+    DEBUG_MSG_LEVEL (SANITIZE, this->start, 0, -1,
 		     "end [%p..%p] %u edit requests",
 		     this->start, this->end, this->edit_count);
 
@@ -217,28 +218,31 @@ struct hb_sanitize_context_t
   inline bool check_range (const void *base, unsigned int len) const
   {
     const char *p = (const char *) base;
+    bool ok = this->start <= p && p <= this->end && (unsigned int) (this->end - p) >= len;
 
-    hb_auto_trace_t<HB_DEBUG_SANITIZE, bool> trace
-      (&this->debug_depth, "SANITIZE", this->blob, NULL,
-       "check_range [%p..%p] (%d bytes) in [%p..%p]",
+    DEBUG_MSG_LEVEL (SANITIZE, p, this->debug_depth+1, 0,
+       "check_range [%p..%p] (%d bytes) in [%p..%p] -> %s",
        p, p + len, len,
-       this->start, this->end);
+       this->start, this->end,
+       ok ? "OK" : "OUT-OF-RANGE");
 
-    return TRACE_RETURN (likely (this->start <= p && p <= this->end && (unsigned int) (this->end - p) >= len));
+    return likely (ok);
   }
 
   inline bool check_array (const void *base, unsigned int record_size, unsigned int len) const
   {
     const char *p = (const char *) base;
     bool overflows = _hb_unsigned_int_mul_overflows (len, record_size);
+    unsigned int array_size = record_size * len;
+    bool ok = !overflows && this->check_range (base, array_size);
 
-    hb_auto_trace_t<HB_DEBUG_SANITIZE, bool> trace
-      (&this->debug_depth, "SANITIZE", this->blob, NULL,
-       "check_array [%p..%p] (%d*%d=%ld bytes) in [%p..%p]",
-       p, p + (record_size * len), record_size, len, (unsigned long) record_size * len,
-       this->start, this->end);
+    DEBUG_MSG_LEVEL (SANITIZE, p, this->debug_depth+1, 0,
+       "check_array [%p..%p] (%d*%d=%d bytes) in [%p..%p] -> %s",
+       p, p + (record_size * len), record_size, len, (unsigned int) array_size,
+       this->start, this->end,
+       overflows ? "OVERFLOWS" : ok ? "OK" : "OUT-OF-RANGE");
 
-    return TRACE_RETURN (likely (!overflows && this->check_range (base, record_size * len)));
+    return likely (ok);
   }
 
   template <typename Type>
@@ -255,15 +259,14 @@ struct hb_sanitize_context_t
     const char *p = (const char *) base;
     this->edit_count++;
 
-    hb_auto_trace_t<HB_DEBUG_SANITIZE, bool> trace
-      (&this->debug_depth, "SANITIZE", this->blob, NULL,
+    DEBUG_MSG_LEVEL (SANITIZE, p, this->debug_depth+1, 0,
        "may_edit(%u) [%p..%p] (%d bytes) in [%p..%p] -> %s",
        this->edit_count,
        p, p + len, len,
        this->start, this->end,
        this->writable ? "GRANTED" : "DENIED");
 
-    return TRACE_RETURN (this->writable);
+    return this->writable;
   }
 
   template <typename Type, typename ValueType>
@@ -297,7 +300,7 @@ struct Sanitizer
     c->init (blob);
 
   retry:
-    DEBUG_MSG_FUNC (SANITIZE, blob, "start");
+    DEBUG_MSG_FUNC (SANITIZE, c->start, "start");
 
     c->start_processing ();
 
@@ -311,13 +314,13 @@ struct Sanitizer
     sane = t->sanitize (c);
     if (sane) {
       if (c->edit_count) {
-	DEBUG_MSG_FUNC (SANITIZE, blob, "passed first round with %d edits; going for second round", c->edit_count);
+	DEBUG_MSG_FUNC (SANITIZE, c->start, "passed first round with %d edits; going for second round", c->edit_count);
 
         /* sanitize again to ensure no toe-stepping */
         c->edit_count = 0;
 	sane = t->sanitize (c);
 	if (c->edit_count) {
-	  DEBUG_MSG_FUNC (SANITIZE, blob, "requested %d edits in second round; FAILLING", c->edit_count);
+	  DEBUG_MSG_FUNC (SANITIZE, c->start, "requested %d edits in second round; FAILLING", c->edit_count);
 	  sane = false;
 	}
       }
@@ -330,7 +333,7 @@ struct Sanitizer
 	if (c->start) {
 	  c->writable = true;
 	  /* ok, we made it writable by relocating.  try again */
-	  DEBUG_MSG_FUNC (SANITIZE, blob, "retry");
+	  DEBUG_MSG_FUNC (SANITIZE, c->start, "retry");
 	  goto retry;
 	}
       }
@@ -338,7 +341,7 @@ struct Sanitizer
 
     c->end_processing ();
 
-    DEBUG_MSG_FUNC (SANITIZE, blob, sane ? "PASSED" : "FAILED");
+    DEBUG_MSG_FUNC (SANITIZE, c->start, sane ? "PASSED" : "FAILED");
     if (sane)
       return blob;
     else {
@@ -533,31 +536,76 @@ template <typename Type>
 struct BEInt<Type, 2>
 {
   public:
-  inline void set (Type i) { hb_be_uint16_put (v,i); }
-  inline operator Type (void) const { return hb_be_uint16_get (v); }
-  inline bool operator == (const BEInt<Type, 2>& o) const { return hb_be_uint16_eq (v, o.v); }
+  inline void set (Type V)
+  {
+    v[0] = (V >>  8) & 0xFF;
+    v[1] = (V      ) & 0xFF;
+  }
+  inline operator Type (void) const
+  {
+    return (v[0] <<  8)
+         + (v[1]      );
+  }
+  inline bool operator == (const BEInt<Type, 2>& o) const
+  {
+    return v[0] == o.v[0]
+        && v[1] == o.v[1];
+  }
   inline bool operator != (const BEInt<Type, 2>& o) const { return !(*this == o); }
   private: uint8_t v[2];
-};
-template <typename Type>
-struct BEInt<Type, 4>
-{
-  public:
-  inline void set (Type i) { hb_be_uint32_put (v,i); }
-  inline operator Type (void) const { return hb_be_uint32_get (v); }
-  inline bool operator == (const BEInt<Type, 4>& o) const { return hb_be_uint32_eq (v, o.v); }
-  inline bool operator != (const BEInt<Type, 4>& o) const { return !(*this == o); }
-  private: uint8_t v[4];
 };
 template <typename Type>
 struct BEInt<Type, 3>
 {
   public:
-  inline void set (Type i) { hb_be_uint24_put (v,i); }
-  inline operator Type (void) const { return hb_be_uint24_get (v); }
-  inline bool operator == (const BEInt<Type, 3>& o) const { return hb_be_uint24_eq (v, o.v); }
+  inline void set (Type V)
+  {
+    v[0] = (V >> 16) & 0xFF;
+    v[1] = (V >>  8) & 0xFF;
+    v[2] = (V      ) & 0xFF;
+  }
+  inline operator Type (void) const
+  {
+    return (v[0] << 16)
+         + (v[1] <<  8)
+         + (v[2]      );
+  }
+  inline bool operator == (const BEInt<Type, 3>& o) const
+  {
+    return v[0] == o.v[0]
+        && v[1] == o.v[1]
+        && v[2] == o.v[2];
+  }
   inline bool operator != (const BEInt<Type, 3>& o) const { return !(*this == o); }
   private: uint8_t v[3];
+};
+template <typename Type>
+struct BEInt<Type, 4>
+{
+  public:
+  inline void set (Type V)
+  {
+    v[0] = (V >> 24) & 0xFF;
+    v[1] = (V >> 16) & 0xFF;
+    v[2] = (V >>  8) & 0xFF;
+    v[3] = (V      ) & 0xFF;
+  }
+  inline operator Type (void) const
+  {
+    return (v[0] << 24)
+         + (v[1] << 16)
+         + (v[2] <<  8)
+         + (v[3]      );
+  }
+  inline bool operator == (const BEInt<Type, 4>& o) const
+  {
+    return v[0] == o.v[0]
+        && v[1] == o.v[1]
+        && v[2] == o.v[2]
+        && v[3] == o.v[3];
+  }
+  inline bool operator != (const BEInt<Type, 4>& o) const { return !(*this == o); }
+  private: uint8_t v[4];
 };
 
 /* Integer types in big-endian order and no alignment requirement */

@@ -161,7 +161,6 @@ http://tracking.example.org:80
 
 # Bug 483437, 484111
 https://www.bank1.com:443           privileged,cert=escapeattack1
-https://www.bank2.com:443           privileged,cert=escapeattack2
 
 #
 # CONNECT for redirproxy results in a 302 redirect to
