@@ -215,11 +215,6 @@ SOURCES += [
     'PluginDocument.cpp',
 ]
 
-EXTRA_COMPONENTS += [
-    'htmlMenuBuilder.js',
-    'htmlMenuBuilder.manifest'
-]
-
 FAIL_ON_WARNINGS = True
 
 MSVC_ENABLE_PGO = True

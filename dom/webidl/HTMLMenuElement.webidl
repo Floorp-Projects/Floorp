@@ -40,11 +40,11 @@ partial interface HTMLMenuElement {
 
   /**
    * Creates a native menu builder. The builder type is dependent on menu type.
-   * Currently, it returns the @mozilla.org/content/html-menu-builder;1
-   * component. Toolbar menus are not yet supported (the method returns null).
+   * Currently, it returns nsXULContextMenuBuilder for context menus.
+   * Toolbar menus are not yet supported (the method returns null).
    */
   [ChromeOnly]
-  MenuBuilder? createBuilder();
+  MenuBuilder createBuilder();
 
   /*
    * Builds a menu by iterating over menu children.

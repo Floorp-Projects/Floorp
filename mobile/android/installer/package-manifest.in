@@ -408,8 +408,6 @@
 @BINPATH@/components/Webapps.manifest
 @BINPATH@/components/AppsService.js
 @BINPATH@/components/AppsService.manifest
-@RESPATH@/components/htmlMenuBuilder.js
-@RESPATH@/components/htmlMenuBuilder.manifest
 
 @BINPATH@/components/Activities.manifest
 @BINPATH@/components/ActivitiesGlue.js

@@ -9,12 +9,10 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/HTMLMenuElementBinding.h"
 #include "mozilla/dom/HTMLMenuItemElement.h"
-#include "nsIMenuBuilder.h"
 #include "nsAttrValueInlines.h"
 #include "nsContentUtils.h"
+#include "nsXULContextMenuBuilder.h"
 #include "nsIURI.h"
-
-#define HTMLMENUBUILDER_CONTRACTID "@mozilla.org/content/html-menu-builder;1"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Menu)
 
@@ -99,8 +97,12 @@ HTMLMenuElement::CreateBuilder(nsIMenuBuilder** _retval)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_DOM_SECURITY_ERR);
 
-  nsCOMPtr<nsIMenuBuilder> builder = CreateBuilder();
-  builder.swap(*_retval);
+  *_retval = nullptr;
+
+  if (mType == MENU_TYPE_CONTEXT) {
+    NS_ADDREF(*_retval = new nsXULContextMenuBuilder());
+  }
+
   return NS_OK;
 }
 
@@ -111,9 +113,8 @@ HTMLMenuElement::CreateBuilder()
     return nullptr;
   }
 
-  nsCOMPtr<nsIMenuBuilder> builder = do_CreateInstance(HTMLMENUBUILDER_CONTRACTID);
-  NS_WARN_IF(!builder);
-  return builder.forget();
+  nsCOMPtr<nsIMenuBuilder> ret = new nsXULContextMenuBuilder();
+  return ret.forget();
 }
 
 NS_IMETHODIMP
