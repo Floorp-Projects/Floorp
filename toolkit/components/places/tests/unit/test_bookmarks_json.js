@@ -78,6 +78,7 @@ add_task(function test_import_bookmarks() {
   let bookmarksFile = OS.Path.join(do_get_cwd().path, "bookmarks.json");
 
   yield BookmarkJSONUtils.importFromFile(bookmarksFile, true);
+  yield promiseAsyncUpdates();
   yield testImportedBookmarks();
 });
 
@@ -85,19 +86,24 @@ add_task(function test_export_bookmarks() {
   bookmarksExportedFile = OS.Path.join(OS.Constants.Path.profileDir,
                                        "bookmarks.exported.json");
   yield BookmarkJSONUtils.exportToFile(bookmarksExportedFile);
+  yield promiseAsyncUpdates();
 });
 
 add_task(function test_import_exported_bookmarks() {
   remove_all_bookmarks();
   yield BookmarkJSONUtils.importFromFile(bookmarksExportedFile, true);
+  yield promiseAsyncUpdates();
   yield testImportedBookmarks();
 });
 
 add_task(function test_import_ontop() {
   remove_all_bookmarks();
   yield BookmarkJSONUtils.importFromFile(bookmarksExportedFile, true);
+  yield promiseAsyncUpdates();
   yield BookmarkJSONUtils.exportToFile(bookmarksExportedFile);
+  yield promiseAsyncUpdates();
   yield BookmarkJSONUtils.importFromFile(bookmarksExportedFile, true);
+  yield promiseAsyncUpdates();
   yield testImportedBookmarks();
 });
 
@@ -202,7 +208,9 @@ function checkItem(aExpected, aNode) {
           folder.containerOpen = true;
           do_check_eq(folder.childCount, aExpected.children.length);
 
-          aExpected.children.forEach(function (item, index) checkItem(item, folder.getChild(index)));
+          for (let index = 0; index < aExpected.children.length; index++) {
+            yield checkItem(aExpected.children[index], folder.getChild(index));
+          }
 
           folder.containerOpen = false;
           break;
