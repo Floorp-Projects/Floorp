@@ -1479,7 +1479,11 @@ function clickElement(msg) {
   let el;
   try {
     el = elementManager.getKnownElement(msg.json.id, curFrame);
-    if (checkVisible(el)) {
+    let acc = accessibility.getAccessibleObject(el, true);
+    let visible = checkVisible(el);
+    checkVisibleAccessibility(acc, visible);
+    if (visible) {
+      checkActionableAccessibility(acc);
       if (utils.isElementEnabled(el)) {
         utils.synthesizeMouseAtCenter(el, {}, el.ownerDocument.defaultView)
       }
