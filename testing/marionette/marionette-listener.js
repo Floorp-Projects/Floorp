@@ -1551,7 +1551,9 @@ function isElementDisplayed(msg) {
   let command_id = msg.json.command_id;
   try {
     let el = elementManager.getKnownElement(msg.json.id, curFrame);
-    sendResponse({value: utils.isElementDisplayed(el)}, command_id);
+    let displayed = utils.isElementDisplayed(el);
+    checkVisibleAccessibility(accessibility.getAccessibleObject(el), displayed);
+    sendResponse({value: displayed}, command_id);
   }
   catch (e) {
     sendError(e.message, e.code, e.stack, command_id);
