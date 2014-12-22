@@ -133,9 +133,7 @@ AnimationPlayer::SetSource(Animation* aSource)
 void
 AnimationPlayer::Tick()
 {
-  if (mSource) {
-    mSource->SetParentTime(GetCurrentTime());
-  }
+  UpdateSourceContent();
 }
 
 void
@@ -273,6 +271,14 @@ AnimationPlayer::DoPause()
   // Bug 1109390 - check for null result here and go to pending state
   mHoldTime = GetCurrentTime();
   mStartTime.SetNull();
+}
+
+void
+AnimationPlayer::UpdateSourceContent()
+{
+  if (mSource) {
+    mSource->SetParentTime(GetCurrentTime());
+  }
 }
 
 void

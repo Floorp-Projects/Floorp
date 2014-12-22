@@ -131,6 +131,7 @@ protected:
   void DoPlay();
   void DoPause();
 
+  void UpdateSourceContent();
   void FlushStyle() const;
   void PostUpdate();
   // Remove this player from the pending player tracker and resets mIsPending
