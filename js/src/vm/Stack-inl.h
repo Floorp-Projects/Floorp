@@ -463,7 +463,9 @@ AbstractFramePtr::initFunctionScopeObjects(JSContext *cx)
 {
     if (isInterpreterFrame())
         return asInterpreterFrame()->initFunctionScopeObjects(cx);
-    return asBaselineFrame()->initFunctionScopeObjects(cx);
+    if (isBaselineFrame())
+        return asBaselineFrame()->initFunctionScopeObjects(cx);
+    return asRematerializedFrame()->initFunctionScopeObjects(cx);
 }
 
 inline JSCompartment *

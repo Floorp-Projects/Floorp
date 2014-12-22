@@ -438,8 +438,8 @@ Debugger::getScriptFrameWithIter(JSContext *cx, AbstractFramePtr frame,
     if (!p) {
         /* Create and populate the Debugger.Frame object. */
         JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject();
-        NativeObject *frameobj =
-            NewNativeObjectWithGivenProto(cx, &DebuggerFrame_class, proto, nullptr);
+        RootedNativeObject frameobj(cx, NewNativeObjectWithGivenProto(cx, &DebuggerFrame_class,
+                                                                      proto, nullptr));
         if (!frameobj)
             return false;
 
@@ -456,13 +456,13 @@ Debugger::getScriptFrameWithIter(JSContext *cx, AbstractFramePtr frame,
 
         frameobj->setReservedSlot(JSSLOT_DEBUGFRAME_OWNER, ObjectValue(*object));
 
+        if (!ensureExecutionObservabilityOfFrame(cx, frame))
+            return false;
+
         if (!frames.add(p, frame, frameobj)) {
             js_ReportOutOfMemory(cx);
             return false;
         }
-
-        if (!ensureExecutionObservabilityOfFrame(cx, frame))
-            return false;
     }
     vp.setObject(*p->value());
     return true;
@@ -595,11 +595,11 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool frame
     RootedValue value(cx);
     Debugger::resultToCompletion(cx, frameOk, frame.returnValue(), &status, &value);
 
-    // This path can be hit via unwinding the stack due to
-    // over-recursion. Only fire the frames' onPop handlers if we haven't
-    // over-recursed, because invoking more JS will only result in more
-    // over-recursion errors. See slowPathOnExceptionUnwind.
-    if (!cx->isThrowingOverRecursed()) {
+    // This path can be hit via unwinding the stack due to over-recursion or
+    // OOM. In those cases, don't fire the frames' onPop handlers, because
+    // invoking JS will only trigger the same condition. See
+    // slowPathOnExceptionUnwind.
+    if (!cx->isThrowingOverRecursed() && !cx->isThrowingOutOfMemory()) {
         /* Build a list of the recipients. */
         AutoObjectVector frames(cx);
         for (FrameRange r(frame, global); !r.empty(); r.popFront()) {
@@ -724,9 +724,9 @@ Debugger::slowPathOnDebuggerStatement(JSContext *cx, AbstractFramePtr frame)
 /* static */ JSTrapStatus
 Debugger::slowPathOnExceptionUnwind(JSContext *cx, AbstractFramePtr frame)
 {
-    // Invoking more JS on an over-recursed stack is only going to result in
-    // more over-recursion errors.
-    if (cx->isThrowingOverRecursed())
+    // Invoking more JS on an over-recursed stack or after OOM is only going
+    // to result in more of the same error.
+    if (cx->isThrowingOverRecursed() || cx->isThrowingOutOfMemory())
         return JSTRAP_CONTINUE;
 
     RootedValue rval(cx);
@@ -1859,20 +1859,15 @@ MarkBaselineScriptActiveIfObservable(JSScript *script, const Debugger::Execution
 }
 
 static bool
-AppendAndInvalidateScriptIfObservable(JSContext *cx, Zone *zone, JSScript *script,
-                                      const Debugger::ExecutionObservableSet &obs,
-                                      Vector<JSScript *> &scripts)
+AppendAndInvalidateScript(JSContext *cx, Zone *zone, JSScript *script, Vector<JSScript *> &scripts)
 {
-    if (obs.shouldRecompileOrInvalidate(script)) {
-        // Enter the script's compartment as addPendingRecompile attempts to
-        // cancel off-thread compilations, whose books are kept on the
-        // script's compartment.
-        MOZ_ASSERT(script->compartment()->zone() == zone);
-        AutoCompartment ac(cx, script->compartment());
-        zone->types.addPendingRecompile(cx, script);
-        return scripts.append(script);
-    }
-    return true;
+    // Enter the script's compartment as addPendingRecompile attempts to
+    // cancel off-thread compilations, whose books are kept on the
+    // script's compartment.
+    MOZ_ASSERT(script->compartment()->zone() == zone);
+    AutoCompartment ac(cx, script->compartment());
+    zone->types.addPendingRecompile(cx, script);
+    return scripts.append(script);
 }
 
 static bool
@@ -1920,13 +1915,19 @@ UpdateExecutionObservabilityOfScriptsInZone(JSContext *cx, Zone *zone,
     {
         types::AutoEnterAnalysis enter(fop, zone);
         if (JSScript *script = obs.singleScriptForZoneInvalidation()) {
-            if (!AppendAndInvalidateScriptIfObservable(cx, zone, script, obs, scripts))
-                return false;
+            if (obs.shouldRecompileOrInvalidate(script)) {
+                if (!AppendAndInvalidateScript(cx, zone, script, scripts))
+                    return false;
+            }
         } else {
             for (gc::ZoneCellIter iter(zone, gc::FINALIZE_SCRIPT); !iter.done(); iter.next()) {
                 JSScript *script = iter.get<JSScript>();
-                if (!AppendAndInvalidateScriptIfObservable(cx, zone, script, obs, scripts))
-                    return false;
+                if (obs.shouldRecompileOrInvalidate(script) &&
+                    !gc::IsScriptAboutToBeFinalized(&script))
+                {
+                    if (!AppendAndInvalidateScript(cx, zone, script, scripts))
+                        return false;
+                }
             }
         }
     }
@@ -4533,8 +4534,10 @@ Debugger::replaceFrameGuts(JSContext *cx, AbstractFramePtr from, AbstractFramePt
         }
     }
 
-    // Rekey missingScopes to maintain Debugger.Environment identity.
-    DebugScopes::rekeyMissingScopes(cx, from, to);
+    // Rekey missingScopes to maintain Debugger.Environment identity and
+    // forward liveScopes to point to the new frame, as the old frame will be
+    // gone.
+    DebugScopes::forwardLiveFrame(cx, from, to);
 
     return true;
 }

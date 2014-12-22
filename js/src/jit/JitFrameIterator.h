@@ -587,7 +587,7 @@ class InlineFrameIterator
 
   private:
     void findNextFrame();
-    JSObject *computeScopeChain(Value scopeChainValue) const;
+    JSObject *computeScopeChain(Value scopeChainValue, bool *hasCallObj = nullptr) const;
 
   public:
     InlineFrameIterator(ThreadSafeContext *cx, const JitFrameIterator *iter);
@@ -619,7 +619,7 @@ class InlineFrameIterator
 
     template <class ArgOp, class LocalOp>
     void readFrameArgsAndLocals(ThreadSafeContext *cx, ArgOp &argOp, LocalOp &localOp,
-                                JSObject **scopeChain, Value *rval,
+                                JSObject **scopeChain, bool *hasCallObj, Value *rval,
                                 ArgumentsObject **argsObj, Value *thisv,
                                 ReadFrameArgsBehavior behavior,
                                 MaybeReadFallback &fallback) const
@@ -631,7 +631,7 @@ class InlineFrameIterator
         s.readCommonFrameSlots(&scopeChainValue, rval);
 
         if (scopeChain)
-            *scopeChain = computeScopeChain(scopeChainValue);
+            *scopeChain = computeScopeChain(scopeChainValue, hasCallObj);
 
         // Read arguments, which only function frames have.
         if (isFunctionFrame()) {
@@ -695,12 +695,13 @@ class InlineFrameIterator
     }
 
     template <class Op>
-    void unaliasedForEachActual(ThreadSafeContext *cx, Op op,
+    void unaliasedForEachActual(JSContext *cx, Op op,
                                 ReadFrameArgsBehavior behavior,
                                 MaybeReadFallback &fallback) const
     {
         Nop nop;
-        readFrameArgsAndLocals(cx, op, nop, nullptr, nullptr, nullptr, nullptr, behavior, fallback);
+        readFrameArgsAndLocals(cx, op, nop, nullptr, nullptr, nullptr,
+                               nullptr, nullptr, behavior, fallback);
     }
 
     JSScript *script() const {

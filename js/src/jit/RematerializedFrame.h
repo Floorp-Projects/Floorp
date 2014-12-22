@@ -29,6 +29,9 @@ class RematerializedFrame
     // Propagated to the Baseline frame once this is popped.
     bool isDebuggee_;
 
+    // Has a call object been pushed?
+    bool hasCallObj_;
+
     // The fp of the top frame associated with this possibly inlined frame.
     uint8_t *top_;
 
@@ -46,16 +49,15 @@ class RematerializedFrame
     Value thisValue_;
     Value slots_[1];
 
-    RematerializedFrame(ThreadSafeContext *cx, uint8_t *top, unsigned numActualArgs,
+    RematerializedFrame(JSContext *cx, uint8_t *top, unsigned numActualArgs,
                         InlineFrameIterator &iter);
 
   public:
-    static RematerializedFrame *New(ThreadSafeContext *cx, uint8_t *top,
-                                    InlineFrameIterator &iter);
+    static RematerializedFrame *New(JSContext *cx, uint8_t *top, InlineFrameIterator &iter);
 
     // Rematerialize all remaining frames pointed to by |iter| into |frames|
     // in older-to-younger order, e.g., frames[0] is the oldest frame.
-    static bool RematerializeInlineFrames(ThreadSafeContext *cx, uint8_t *top,
+    static bool RematerializeInlineFrames(JSContext *cx, uint8_t *top,
                                           InlineFrameIterator &iter,
                                           Vector<RematerializedFrame *> &frames);
 
@@ -104,8 +106,12 @@ class RematerializedFrame
     JSObject *scopeChain() const {
         return scopeChain_;
     }
+    void pushOnScopeChain(ScopeObject &scope);
+    bool initFunctionScopeObjects(JSContext *cx);
+
     bool hasCallObj() const {
-        return maybeFun() && fun()->isHeavyweight();
+        MOZ_ASSERT(fun()->isHeavyweight());
+        return hasCallObj_;
     }
     CallObject &callObj() const;
 
