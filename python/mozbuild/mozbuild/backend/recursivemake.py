@@ -610,6 +610,28 @@ class RecursiveMakeBackend(CommonBackend):
                 mozpath.join(self.environment.topobjdir, 'root-deps.mk')) as root_deps:
             root_deps_mk.dump(root_deps, removal_guard=False)
 
+    def _group_unified_files(self, files, unified_prefix, unified_suffix,
+                             files_per_unified_file):
+        "Return an iterator of (unified_filename, source_filenames) tuples."
+        # Our last returned list of source filenames may be short, and we
+        # don't want the fill value inserted by izip_longest to be an
+        # issue.  So we do a little dance to filter it out ourselves.
+        dummy_fill_value = ("dummy",)
+        def filter_out_dummy(iterable):
+            return itertools.ifilter(lambda x: x != dummy_fill_value,
+                                     iterable)
+
+        # From the itertools documentation, slightly modified:
+        def grouper(n, iterable):
+            "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
+            args = [iter(iterable)] * n
+            return itertools.izip_longest(fillvalue=dummy_fill_value, *args)
+
+        for i, unified_group in enumerate(grouper(files_per_unified_file,
+                                                  files)):
+            just_the_filenames = list(filter_out_dummy(unified_group))
+            yield '%s%d.%s' % (unified_prefix, i, unified_suffix), just_the_filenames
+
     def _add_unified_build_rules(self, makefile, files, output_directory,
                                  unified_prefix='Unified',
                                  unified_suffix='cpp',
@@ -630,32 +652,15 @@ class RecursiveMakeBackend(CommonBackend):
             "# rebuild time, and compiler memory usage." % files_per_unified_file
         makefile.add_statement(explanation)
 
-        def unified_files():
-            "Return an iterator of (unified_filename, source_filenames) tuples."
-            # Our last returned list of source filenames may be short, and we
-            # don't want the fill value inserted by izip_longest to be an
-            # issue.  So we do a little dance to filter it out ourselves.
-            dummy_fill_value = ("dummy",)
-            def filter_out_dummy(iterable):
-                return itertools.ifilter(lambda x: x != dummy_fill_value,
-                                         iterable)
-
-            # From the itertools documentation, slightly modified:
-            def grouper(n, iterable):
-                "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
-                args = [iter(iterable)] * n
-                return itertools.izip_longest(fillvalue=dummy_fill_value, *args)
-
-            for i, unified_group in enumerate(grouper(files_per_unified_file,
-                                                      files)):
-                just_the_filenames = list(filter_out_dummy(unified_group))
-                yield '%s%d.%s' % (unified_prefix, i, unified_suffix), just_the_filenames
-
-        all_sources = ' '.join(source for source, _ in unified_files())
+        unified_source_mapping = list(self._group_unified_files(files,
+                                                                unified_prefix=unified_prefix,
+                                                                unified_suffix=unified_suffix,
+                                                                files_per_unified_file=files_per_unified_file))
+        all_sources = ' '.join(source for source, _ in unified_source_mapping)
         makefile.add_statement('%s := %s' % (unified_files_makefile_variable,
                                                all_sources))
 
-        for unified_file, source_filenames in unified_files():
+        for unified_file, source_filenames in unified_source_mapping:
             if extra_dependencies:
                 rule = makefile.create_rule([unified_file])
                 rule.add_dependencies(extra_dependencies)
