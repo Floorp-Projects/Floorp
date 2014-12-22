@@ -173,8 +173,7 @@ class TextureClient
   : public AtomicRefCountedWithFinalize<TextureClient>
 {
 public:
-  explicit TextureClient(ISurfaceAllocator* aAllocator,
-                         TextureFlags aFlags = TextureFlags::DEFAULT);
+  explicit TextureClient(TextureFlags aFlags = TextureFlags::DEFAULT);
   virtual ~TextureClient();
 
   // Creates and allocates a TextureClient usable with Moz2D.
@@ -603,12 +602,15 @@ public:
 
   virtual bool HasInternalBuffer() const MOZ_OVERRIDE { return true; }
 
+  ISurfaceAllocator* GetAllocator() const;
+
   virtual TemporaryRef<TextureClient>
   CreateSimilar(TextureFlags aFlags = TextureFlags::DEFAULT,
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const MOZ_OVERRIDE;
 
 protected:
   RefPtr<gfx::DrawTarget> mDrawTarget;
+  RefPtr<ISurfaceAllocator> mAllocator;
   gfx::SurfaceFormat mFormat;
   gfx::IntSize mSize;
   gfx::BackendType mBackend;
@@ -687,8 +689,7 @@ protected:
 class SharedSurfaceTextureClient : public TextureClient
 {
 public:
-  SharedSurfaceTextureClient(ISurfaceAllocator* aAllocator, TextureFlags aFlags,
-                             gl::SharedSurface* surf);
+  SharedSurfaceTextureClient(TextureFlags aFlags, gl::SharedSurface* surf);
 
 protected:
   ~SharedSurfaceTextureClient();

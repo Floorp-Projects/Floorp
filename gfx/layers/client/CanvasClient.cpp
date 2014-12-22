@@ -155,8 +155,7 @@ CanvasClientSharedSurface::CanvasClientSharedSurface(CompositableForwarder* aLay
 // Accelerated backends
 
 static TemporaryRef<TextureClient>
-TexClientFromShSurf(ISurfaceAllocator* aAllocator, SharedSurface* surf,
-                    TextureFlags flags)
+TexClientFromShSurf(SharedSurface* surf, TextureFlags flags)
 {
   switch (surf->mType) {
     case SharedSurfaceType::Basic:
@@ -168,7 +167,7 @@ TexClientFromShSurf(ISurfaceAllocator* aAllocator, SharedSurface* surf,
 #endif
 
     default:
-      return new SharedSurfaceTextureClient(aAllocator, flags, surf);
+      return new SharedSurfaceTextureClient(flags, surf);
   }
 }
 
@@ -365,7 +364,7 @@ CanvasClientSharedSurface::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
   auto flags = GetTextureFlags() | TextureFlags::IMMUTABLE;
 
   // Get a TexClient from our surf.
-  RefPtr<TextureClient> newTex = TexClientFromShSurf(GetForwarder(), surf, flags);
+  RefPtr<TextureClient> newTex = TexClientFromShSurf(surf, flags);
   if (!newTex) {
     auto manager = aLayer->ClientManager();
     auto shadowForwarder = manager->AsShadowForwarder();
