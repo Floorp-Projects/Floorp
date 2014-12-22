@@ -479,7 +479,22 @@ protected:
 
   // Returns true if we've got less than aAudioUsecs microseconds of decoded
   // and playable data. The decoder monitor must be held.
+  //
+  // May not be invoked when mReader->UseBufferingHeuristics() is false.
   bool HasLowDecodedData(int64_t aAudioUsecs);
+
+  bool OutOfDecodedAudio()
+  {
+    return IsAudioDecoding() && !AudioQueue().IsFinished() && AudioQueue().GetSize() == 0;
+  }
+
+  bool OutOfDecodedVideo()
+  {
+    // In buffering mode, we keep the last already-played frame in the queue.
+    int emptyVideoSize = mState == DECODER_STATE_BUFFERING ? 1 : 0;
+    return IsVideoDecoding() && !VideoQueue().IsFinished() && VideoQueue().GetSize() <= emptyVideoSize;
+  }
+
 
   // Returns true if we're running low on data which is not yet decoded.
   // The decoder monitor must be held.
