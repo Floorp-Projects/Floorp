@@ -28,7 +28,9 @@ class CompositorD3D11;
 class TextureClientD3D11 : public TextureClient
 {
 public:
-  TextureClientD3D11(gfx::SurfaceFormat aFormat, TextureFlags aFlags);
+  TextureClientD3D11(ISurfaceAllocator* aAllocator,
+                     gfx::SurfaceFormat aFormat,
+                     TextureFlags aFlags);
 
   virtual ~TextureClientD3D11();
 
