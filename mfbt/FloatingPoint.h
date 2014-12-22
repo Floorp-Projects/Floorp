@@ -115,9 +115,9 @@ struct FloatingPoint : public SelectTrait<T>
   static_assert(sizeof(T) == sizeof(Bits), "Bits must be same size as T");
 };
 
-/** Determines whether a double is NaN. */
+/** Determines whether a float/double is NaN. */
 template<typename T>
-static MOZ_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE MOZ_CONSTEXPR bool
 IsNaN(T aValue)
 {
   /*
@@ -126,9 +126,8 @@ IsNaN(T aValue)
    */
   typedef FloatingPoint<T> Traits;
   typedef typename Traits::Bits Bits;
-  Bits bits = BitwiseCast<Bits>(aValue);
-  return (bits & Traits::kExponentBits) == Traits::kExponentBits &&
-         (bits & Traits::kSignificandBits) != 0;
+  return (BitwiseCast<Bits>(aValue) & Traits::kExponentBits) == Traits::kExponentBits &&
+         (BitwiseCast<Bits>(aValue) & Traits::kSignificandBits) != 0;
 }
 
 /** Determines whether a float/double is +Infinity or -Infinity. */

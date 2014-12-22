@@ -3,12 +3,8 @@
 // Send these sites a custom user-agent. Bugs to remove each override after
 // evangelism are included.
 {
-  // bug 826335, globo.com
-  "globo.com": "\\(Mobile#(Android; Mobile",
   // bug 826347, msn.com
   "msn.com": "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19",
-  // bug 826348, linkedin.com
-  "linkedin.com": "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19",
   // bug 826353, itau.com.br
   "itau.com.br": "\\(Mobile#(Android; Mobile",
   // bug 826510, r7.com

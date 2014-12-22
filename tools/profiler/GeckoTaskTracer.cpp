@@ -111,7 +111,7 @@ CreateSourceEvent(SourceEventType aType)
   switch (aType) {
 #include "SourceEventTypeMap.h"
     default:
-      MOZ_CRASH(false);
+      MOZ_CRASH("Unknown SourceEvent.");
   };
 #undef CREATE_SOURCE_EVENT_NAME
 

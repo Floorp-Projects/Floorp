@@ -33,10 +33,12 @@ interface DOMDownloadManager : EventTarget {
 
   // Removes one download from the downloads set. Returns a promise resolved
   // with the finalized download.
+  [UnsafeInPrerendering]
   Promise<DOMDownload> remove(DOMDownload download);
 
   // Removes all the completed downloads from the set.  Returns an
   // array of the completed downloads that were removed.
+  [UnsafeInPrerendering]
   Promise<sequence<DOMDownload>> clearAllDone();
 
   // Fires when a new download starts.
@@ -85,10 +87,12 @@ interface DOMDownload : EventTarget {
   readonly attribute DOMError? error;
 
   // Pauses the download.
+  [UnsafeInPrerendering]
   Promise<DOMDownload> pause();
 
   // Resumes the download. This resolves only once the download has
   // succeeded.
+  [UnsafeInPrerendering]
   Promise<DOMDownload> resume();
 
   // This event is triggered anytime a property of the object changes:

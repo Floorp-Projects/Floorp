@@ -13,6 +13,8 @@
 #include "MediaQueue.h"
 #include "AudioCompactor.h"
 
+#include "mozilla/TypedEnum.h"
+
 namespace mozilla {
 
 namespace dom {
@@ -21,6 +23,17 @@ class TimeRanges;
 
 class MediaDecoderReader;
 class SharedDecoderManager;
+
+struct WaitForDataRejectValue {
+  enum Reason {
+    SHUTDOWN
+  };
+
+  WaitForDataRejectValue(MediaData::Type aType, Reason aReason)
+    :mType(aType), mReason(aReason) {}
+  MediaData::Type mType;
+  Reason mReason;
+};
 
 // Encapsulates the decoding and reading of media data. Reading can either
 // synchronous and done on the calling "decode" thread, or asynchronous and
@@ -40,6 +53,7 @@ public:
   typedef MediaPromise<nsRefPtr<AudioData>, NotDecodedReason> AudioDataPromise;
   typedef MediaPromise<nsRefPtr<VideoData>, NotDecodedReason> VideoDataPromise;
   typedef MediaPromise<bool, nsresult> SeekPromise;
+  typedef MediaPromise<MediaData::Type, WaitForDataRejectValue> WaitForDataPromise;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderReader)
 
@@ -113,6 +127,12 @@ public:
   virtual nsRefPtr<VideoDataPromise>
   RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold);
 
+  // By default, the state machine polls the reader once per second when it's
+  // in buffering mode. Some readers support a promise-based mechanism by which
+  // they notify the state machine when the data arrives.
+  virtual bool IsWaitForDataSupported() { return false; }
+  virtual nsRefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType) { MOZ_CRASH(); }
+
   virtual bool HasAudio() = 0;
   virtual bool HasVideo() = 0;
 
@@ -175,10 +195,11 @@ public:
 
   virtual int64_t ComputeStartTime(const VideoData* aVideo, const AudioData* aAudio);
 
-  // Wait this number of seconds when buffering, then leave and play
-  // as best as we can if the required amount of data hasn't been
-  // retrieved.
-  virtual uint32_t GetBufferingWait() { return 30; }
+  // The MediaDecoderStateMachine uses various heuristics that assume that
+  // raw media data is arriving sequentially from a network channel. This
+  // makes sense in the <video src="foo"> case, but not for more advanced use
+  // cases like MSE.
+  virtual bool UseBufferingHeuristics() { return true; }
 
   // Returns the number of bytes of memory allocated by structures/frames in
   // the video queue.

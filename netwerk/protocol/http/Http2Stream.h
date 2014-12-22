@@ -266,8 +266,8 @@ private:
   int64_t                      mRequestBodyLenRemaining;
 
   uint32_t                     mPriority; // geckoish weight
+  uint32_t                     mPriorityDependency; // h2 stream id 3 - 0xb
   uint8_t                      mPriorityWeight; // h2 weight
-  uint8_t                      mPriorityDependency; // h2 stream id 3 - 0xb
 
   // mClientReceiveWindow, mServerReceiveWindow, and mLocalUnacked are for flow control.
   // *window are signed because the race conditions in asynchronous SETTINGS

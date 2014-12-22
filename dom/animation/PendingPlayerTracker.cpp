@@ -5,11 +5,15 @@
 
 #include "PendingPlayerTracker.h"
 
+#include "mozilla/dom/AnimationTimeline.h"
+#include "nsIFrame.h"
+#include "nsIPresShell.h"
+
 using namespace mozilla;
 
 namespace mozilla {
 
-NS_IMPL_CYCLE_COLLECTION(PendingPlayerTracker, mPlayPendingSet)
+NS_IMPL_CYCLE_COLLECTION(PendingPlayerTracker, mPlayPendingSet, mDocument)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(PendingPlayerTracker, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(PendingPlayerTracker, Release)
@@ -18,6 +22,11 @@ void
 PendingPlayerTracker::AddPlayPending(dom::AnimationPlayer& aPlayer)
 {
   mPlayPendingSet.PutEntry(&aPlayer);
+
+  // Schedule a paint. Otherwise animations that don't trigger a paint by
+  // themselves (e.g. CSS animations with an empty keyframes rule) won't
+  // start until something else paints.
+  EnsurePaintIsScheduled();
 }
 
 void
@@ -30,6 +39,58 @@ bool
 PendingPlayerTracker::IsWaitingToPlay(dom::AnimationPlayer const& aPlayer) const
 {
   return mPlayPendingSet.Contains(const_cast<dom::AnimationPlayer*>(&aPlayer));
+}
+
+PLDHashOperator
+StartPlayerAtTime(nsRefPtrHashKey<dom::AnimationPlayer>* aKey,
+                  void* aReadyTime)
+{
+  dom::AnimationPlayer* player = aKey->GetKey();
+
+  // For animations that are waiting until their first frame has rendered
+  // before starting, we record the moment when they finish painting
+  // as the "ready time" and make any pending layer animations start at
+  // that time.
+  //
+  // Here we fast-forward the player's timeline to the same "ready time" and
+  // then tell the player to start at the timeline's current time.
+  //
+  // Redundant calls to FastForward with the same ready time are ignored by
+  // AnimationTimeline.
+  dom::AnimationTimeline* timeline = player->Timeline();
+  timeline->FastForward(*static_cast<const TimeStamp*>(aReadyTime));
+
+  player->StartNow();
+
+  return PL_DHASH_NEXT;
+}
+
+void
+PendingPlayerTracker::StartPendingPlayers(const TimeStamp& aReadyTime)
+{
+  mPlayPendingSet.EnumerateEntries(StartPlayerAtTime,
+                                   const_cast<TimeStamp*>(&aReadyTime));
+  mPlayPendingSet.Clear();
+}
+
+void
+PendingPlayerTracker::EnsurePaintIsScheduled()
+{
+  if (!mDocument) {
+    return;
+  }
+
+  nsIPresShell* presShell = mDocument->GetShell();
+  if (!presShell) {
+    return;
+  }
+
+  nsIFrame* rootFrame = presShell->GetRootFrame();
+  if (!rootFrame) {
+    return;
+  }
+
+  rootFrame->SchedulePaint();
 }
 
 } // namespace mozilla

@@ -54,6 +54,7 @@
 #include "StickyScrollContainer.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/PendingPlayerTracker.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/UniquePtr.h"
 #include "ActiveLayerTracker.h"
@@ -65,6 +66,12 @@
 #include "RestyleManager.h"
 #include "nsCaret.h"
 #include "nsISelection.h"
+
+// GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
+// GetTickCount().
+#ifdef GetCurrentTime
+#undef GetCurrentTime
+#endif
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -355,8 +362,12 @@ AddAnimationForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
     aLayer->AddAnimation();
 
   const AnimationTiming& timing = aPlayer->GetSource()->Timing();
-  animation->startTime() = aPlayer->Timeline()->ToTimeStamp(
+  animation->startTime() = aPlayer->GetStartTime().IsNull()
+                         ? TimeStamp()
+                         : aPlayer->Timeline()->ToTimeStamp(
                              aPlayer->GetStartTime().Value() + timing.mDelay);
+  animation->initialCurrentTime() = aPlayer->GetCurrentTime().Value()
+                                    - timing.mDelay;
   animation->duration() = timing.mIterationDuration;
   animation->iterationCount() = timing.mIterationCount;
   animation->direction() = timing.mDirection;
@@ -413,6 +424,23 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
           player->IsRunning())) {
       continue;
     }
+
+    // Don't add animations that are pending when their corresponding
+    // refresh driver is under test control. This is because any pending
+    // animations on layers will have their start time updated with the
+    // current timestamp but when the refresh driver is under test control
+    // its refresh times are unrelated to timestamp values.
+    //
+    // Instead we leave the animation running on the main thread and the
+    // next time the refresh driver is advanced it will trigger any pending
+    // animations.
+    if (player->PlayState() == AnimationPlayState::Pending) {
+      nsRefreshDriver* driver = player->Timeline()->GetRefreshDriver();
+      if (driver && driver->IsTestControllingRefreshesEnabled()) {
+        continue;
+      }
+    }
+
     AddAnimationForProperty(aFrame, aProperty, player, aLayer, aData, aPending);
     player->SetIsRunningOnCompositor();
   }
@@ -1406,6 +1434,33 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
   return anyVisible;
 }
 
+static bool
+StartPendingAnimationsOnSubDocuments(nsIDocument* aDocument, void* aReadyTime)
+{
+  PendingPlayerTracker* tracker = aDocument->GetPendingPlayerTracker();
+  if (tracker) {
+    nsIPresShell* shell = aDocument->GetShell();
+    // If paint-suppression is in effect then we haven't finished painting
+    // this document yet so we shouldn't start animations
+    if (!shell || !shell->IsPaintingSuppressed()) {
+      tracker->StartPendingPlayers(*static_cast<TimeStamp*>(aReadyTime));
+    }
+  }
+  aDocument->EnumerateSubDocuments(StartPendingAnimationsOnSubDocuments,
+                                   aReadyTime);
+  return true;
+}
+
+static void
+StartPendingAnimations(nsIDocument* aDocument,
+                       const TimeStamp& aReadyTime) {
+  MOZ_ASSERT(!aReadyTime.IsNull(),
+             "Animation ready time is not set. Perhaps we're using a layer"
+             " manager that doesn't update it");
+  StartPendingAnimationsOnSubDocuments(aDocument,
+                                       const_cast<TimeStamp*>(&aReadyTime));
+}
+
 /**
  * We paint by executing a layer manager transaction, constructing a
  * single layer representing the display list, and then making it the
@@ -1566,6 +1621,10 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
                                aBuilder, flags);
   aBuilder->SetIsCompositingCheap(temp);
   layerBuilder->DidEndTransaction();
+
+  if (document) {
+    StartPendingAnimations(document, layerManager->GetAnimationReadyTime());
+  }
 
   nsIntRegion invalid;
   if (props) {
