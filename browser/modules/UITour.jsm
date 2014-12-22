@@ -639,8 +639,12 @@ this.UITour = {
       }
 
       case "ping": {
-        if (typeof data.callbackID == "string")
-          this.sendPageCallback(contentDocument, data.callbackID);
+        if (typeof data.callbackID == "string") {
+          // We don't do this synchoronously since we need to update originTabs below before the
+          // callback has a chance to do another action.
+          let callback = () => this.sendPageCallback(contentDocument, data.callbackID);
+          Services.tm.currentThread.dispatch(callback, Ci.nsIThread.DISPATCH_NORMAL);
+        }
         break;
       }
     }
