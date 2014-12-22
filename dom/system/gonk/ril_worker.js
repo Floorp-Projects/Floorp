@@ -3894,7 +3894,8 @@ RilObject.prototype = {
    * Helpers for processing call state changes.
    */
   _processCalls: function(newCalls, failCause) {
-    if (DEBUG) this.context.debug("_processCalls: " + JSON.stringify(newCalls));
+    if (DEBUG) this.context.debug("_processCalls: " + JSON.stringify(newCalls) +
+                                  " failCause: " + failCause);
 
     // Let's get the failCause first if there are removed calls. Otherwise, we
     // need to trigger another async request when removing call and it cause
@@ -5455,7 +5456,16 @@ RilObject.prototype[REQUEST_UDUB] = function REQUEST_UDUB(length, options) {
 RilObject.prototype[REQUEST_LAST_CALL_FAIL_CAUSE] = function REQUEST_LAST_CALL_FAIL_CAUSE(length, options) {
   let Buf = this.context.Buf;
   let num = length ? Buf.readInt32() : 0;
-  let failCause = num ? RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[Buf.readInt32()] : null;
+  let failCause = null;
+
+  if (num) {
+    let causeNum = Buf.readInt32();
+    // To make _processCalls work as design, failCause couldn't be "undefined."
+    // See Bug 1112550 for details.
+    failCause = RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[causeNum] || null;
+  }
+  if (DEBUG) this.context.debug("Last call fail cause: " + failCause);
+
   if (options.callback) {
     options.callback(failCause);
   }
