@@ -11,7 +11,6 @@
 #include "CertVerifier.h"
 #include "nsCRTGlue.h"
 #include "nsISSLStatus.h"
-#include "nsISSLStatusProvider.h"
 #include "nsISocketProvider.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
@@ -962,39 +961,6 @@ nsSiteSecurityService::IsSecureHost(uint32_t aType, const char* aHost,
   }
 
   // Use whatever we ended up with, which defaults to false.
-  return NS_OK;
-}
-
-
-// Verify the trustworthiness of the security info (are there any cert errors?)
-NS_IMETHODIMP
-nsSiteSecurityService::ShouldIgnoreHeaders(nsISupports* aSecurityInfo,
-                                           bool* aResult)
-{
-  nsresult rv;
-  bool tlsIsBroken = false;
-  nsCOMPtr<nsISSLStatusProvider> sslprov = do_QueryInterface(aSecurityInfo);
-  NS_ENSURE_TRUE(sslprov, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsISSLStatus> sslstat;
-  rv = sslprov->GetSSLStatus(getter_AddRefs(sslstat));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(sslstat, NS_ERROR_FAILURE);
-
-  bool trustcheck;
-  rv = sslstat->GetIsDomainMismatch(&trustcheck);
-  NS_ENSURE_SUCCESS(rv, rv);
-  tlsIsBroken = tlsIsBroken || trustcheck;
-
-  rv = sslstat->GetIsNotValidAtThisTime(&trustcheck);
-  NS_ENSURE_SUCCESS(rv, rv);
-  tlsIsBroken = tlsIsBroken || trustcheck;
-
-  rv = sslstat->GetIsUntrusted(&trustcheck);
-  NS_ENSURE_SUCCESS(rv, rv);
-  tlsIsBroken = tlsIsBroken || trustcheck;
-
-  *aResult = tlsIsBroken;
   return NS_OK;
 }
 
