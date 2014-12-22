@@ -86,6 +86,7 @@ browser.jar:
         skin/classic/browser/search-indicator.png                    (../shared/search/search-indicator.png)
         skin/classic/browser/search-indicator-add-engine.png         (../shared/search/search-indicator-add-engine.png)
         skin/classic/browser/search-engine-placeholder.png           (../shared/search/search-engine-placeholder.png)
+        skin/classic/browser/search-history-icon.svg                 (../shared/search/history-icon.svg)
         skin/classic/browser/badge-add-engine.png                    (../shared/search/badge-add-engine.png)
         skin/classic/browser/Secure24.png
         skin/classic/browser/setDesktopBackground.css
@@ -530,6 +531,7 @@ browser.jar:
         skin/classic/aero/browser/search-indicator.png               (../shared/search/search-indicator.png)
         skin/classic/aero/browser/search-indicator-add-engine.png    (../shared/search/search-indicator-add-engine.png)
         skin/classic/aero/browser/search-engine-placeholder.png      (../shared/search/search-engine-placeholder.png)
+        skin/classic/aero/browser/search-history-icon.svg            (../shared/search/history-icon.svg)
         skin/classic/aero/browser/badge-add-engine.png               (../shared/search/badge-add-engine.png)
         skin/classic/aero/browser/Secure24.png                       (Secure24-aero.png)
         skin/classic/aero/browser/setDesktopBackground.css
