@@ -82,7 +82,6 @@ describe("loop.store.RoomStore", function () {
           create: function() {},
           getAll: function() {},
           open: function() {},
-          rename: function() {},
           on: sandbox.stub()
         }
       };
@@ -519,14 +518,13 @@ describe("loop.store.RoomStore", function () {
     beforeEach(function() {
       fakeMozLoop = {
         rooms: {
-          rename: null
+          rename: sinon.spy()
         }
       };
       store = new loop.store.RoomStore(dispatcher, {mozLoop: fakeMozLoop});
     });
 
     it("should rename the room via mozLoop", function() {
-      fakeMozLoop.rooms.rename = sinon.spy();
       dispatcher.dispatch(new sharedActions.RenameRoom({
         roomToken: "42abc",
         newRoomName: "silly name"
@@ -535,20 +533,6 @@ describe("loop.store.RoomStore", function () {
       sinon.assert.calledOnce(fakeMozLoop.rooms.rename);
       sinon.assert.calledWith(fakeMozLoop.rooms.rename, "42abc",
         "silly name");
-    });
-
-    it("should store any rename-encountered error", function() {
-      var err = new Error("fake");
-      sandbox.stub(fakeMozLoop.rooms, "rename", function(roomToken, roomName, cb) {
-        cb(err);
-      });
-
-      dispatcher.dispatch(new sharedActions.RenameRoom({
-        roomToken: "42abc",
-        newRoomName: "silly name"
-      }));
-
-      expect(store.getStoreState().error).eql(err);
     });
   });
 });
