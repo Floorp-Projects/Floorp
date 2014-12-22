@@ -242,8 +242,25 @@ searchbar[oneoffui] .searchbar-engine-button {
 }
 
 .search-panel-tree > .autocomplete-treebody::-moz-tree-cell {
-  -moz-padding-start: 15px;
   border-top: none !important;
+}
+
+.search-panel-tree > .autocomplete-treebody::-moz-tree-cell-text {
+  -moz-padding-start: 4px;
+}
+
+.search-panel-tree > .autocomplete-treebody::-moz-tree-image {
+  -moz-padding-start: 5px;
+  width: 14px;
+  height: 14px;
+}
+
+.search-panel-tree > .autocomplete-treebody::-moz-tree-image(fromhistory) {
+  list-style-image: url("chrome://browser/skin/search-history-icon.svg#search-history-icon");
+}
+
+.search-panel-tree > .autocomplete-treebody::-moz-tree-image(fromhistory, selected) {
+  list-style-image: url("chrome://browser/skin/search-history-icon.svg#search-history-icon-active");
 }
 
 searchbar[oneoffui] .searchbar-engine-image {
