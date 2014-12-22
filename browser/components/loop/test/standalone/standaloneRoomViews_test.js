@@ -300,7 +300,10 @@ describe("loop.standaloneRoomViews", function() {
 
       describe("Feedback", function() {
         beforeEach(function() {
-          activeRoomStore.setStoreState({roomState: ROOM_STATES.ENDED});
+          activeRoomStore.setStoreState({
+            roomState: ROOM_STATES.ENDED,
+            used: true
+          });
         });
 
         it("should display a feedback form when the user leaves the room",
@@ -318,6 +321,13 @@ describe("loop.standaloneRoomViews", function() {
             sinon.assert.calledOnce(dispatch);
             sinon.assert.calledWithExactly(dispatch, new sharedActions.FeedbackComplete());
           });
+
+        it("should NOT display a feedback form if the room has not been used",
+          function() {
+            activeRoomStore.setStoreState({used: false});
+            expect(view.getDOMNode().querySelector(".faces")).eql(null);
+          });
+
       });
 
       describe("Mute", function() {
