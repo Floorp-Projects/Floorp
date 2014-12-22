@@ -200,7 +200,7 @@ struct SingleSubst
     TRACE_SERIALIZE (this);
     if (unlikely (!c->extend_min (u.format))) return TRACE_RETURN (false);
     unsigned int format = 2;
-    int delta;
+    int delta = 0;
     if (num_glyphs) {
       format = 1;
       /* TODO(serialize) check for wrap-around */
@@ -222,7 +222,7 @@ struct SingleSubst
   template <typename context_t>
   inline typename context_t::return_t dispatch (context_t *c) const
   {
-    TRACE_DISPATCH (this);
+    TRACE_DISPATCH (this, u.format);
     switch (u.format) {
     case 1: return TRACE_RETURN (c->dispatch (u.format1));
     case 2: return TRACE_RETURN (c->dispatch (u.format2));
@@ -422,7 +422,7 @@ struct MultipleSubst
   template <typename context_t>
   inline typename context_t::return_t dispatch (context_t *c) const
   {
-    TRACE_DISPATCH (this);
+    TRACE_DISPATCH (this, u.format);
     switch (u.format) {
     case 1: return TRACE_RETURN (c->dispatch (u.format1));
     default:return TRACE_RETURN (c->default_return_value ());
@@ -573,7 +573,7 @@ struct AlternateSubst
   template <typename context_t>
   inline typename context_t::return_t dispatch (context_t *c) const
   {
-    TRACE_DISPATCH (this);
+    TRACE_DISPATCH (this, u.format);
     switch (u.format) {
     case 1: return TRACE_RETURN (c->dispatch (u.format1));
     default:return TRACE_RETURN (c->default_return_value ());
@@ -889,7 +889,7 @@ struct LigatureSubst
   template <typename context_t>
   inline typename context_t::return_t dispatch (context_t *c) const
   {
-    TRACE_DISPATCH (this);
+    TRACE_DISPATCH (this, u.format);
     switch (u.format) {
     case 1: return TRACE_RETURN (c->dispatch (u.format1));
     default:return TRACE_RETURN (c->default_return_value ());
@@ -1053,7 +1053,7 @@ struct ReverseChainSingleSubst
   template <typename context_t>
   inline typename context_t::return_t dispatch (context_t *c) const
   {
-    TRACE_DISPATCH (this);
+    TRACE_DISPATCH (this, u.format);
     switch (u.format) {
     case 1: return TRACE_RETURN (c->dispatch (u.format1));
     default:return TRACE_RETURN (c->default_return_value ());
@@ -1100,7 +1100,7 @@ struct SubstLookupSubTable
   template <typename context_t>
   inline typename context_t::return_t dispatch (context_t *c, unsigned int lookup_type) const
   {
-    TRACE_DISPATCH (this);
+    TRACE_DISPATCH (this, lookup_type);
     switch (lookup_type) {
     case Single:		return TRACE_RETURN (u.single.dispatch (c));
     case Multiple:		return TRACE_RETURN (u.multiple.dispatch (c));
@@ -1275,8 +1275,8 @@ struct SubstLookup : Lookup
   template <typename context_t>
   inline typename context_t::return_t dispatch (context_t *c) const
   {
-    TRACE_DISPATCH (this);
     unsigned int lookup_type = get_type ();
+    TRACE_DISPATCH (this, lookup_type);
     unsigned int count = get_subtable_count ();
     for (unsigned int i = 0; i < count; i++) {
       typename context_t::return_t r = get_subtable (i).dispatch (c, lookup_type);

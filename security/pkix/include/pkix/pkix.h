@@ -80,14 +80,29 @@ namespace mozilla { namespace pkix {
 // path), more specific errors will be returned.
 //
 // ----------------------------------------------------------------------------
-// Meaning of specific error codes
-//
-// Result::ERROR_UNTRUSTED_CERT means that the end-entity certificate was
-//                              actively distrusted.
-// Result::SEC_ERROR_UNTRUSTED_ISSUER means that path building failed because
-//                                    of active distrust.
-// TODO(bug 968451): Document more of these.
+// Meanings of specific error codes can be found in Result.h
 
+// This function attempts to find a trustworthy path from the supplied
+// certificate to a trust anchor. In the event that no trusted path is found,
+// the method returns an error result; the error ranking is described above.
+//
+// Parameters:
+//  time:
+//         Timestamp for which the chain should be valid; this is useful to
+//         analyze whether a record was trustworthy when it was made.
+//  requiredKeyUsageIfPresent:
+//         What key usage bits must be set, if the extension is present at all,
+//         to be considered a valid chain. Multiple values should be OR'd
+//         together. If you don't want to specify anything, use
+//         KeyUsage::noParticularKeyUsageRequired.
+//  requiredEKUIfPresent:
+//         What extended key usage bits must be set, if the EKU extension
+//         exists, to be considered a valid chain. Multiple values should be
+//         OR'd together. If you don't want to specify anything, use
+//         KeyPurposeId::anyExtendedKeyUsage.
+//  requiredPolicy:
+//         This is the policy to apply; typically included in EV certificates.
+//         If there is no policy, pass in CertPolicyId::anyPolicy.
 Result BuildCertChain(TrustDomain& trustDomain, Input cert,
                       Time time, EndEntityOrCA endEntityOrCA,
                       KeyUsage requiredKeyUsageIfPresent,
@@ -95,8 +110,16 @@ Result BuildCertChain(TrustDomain& trustDomain, Input cert,
                       const CertPolicyId& requiredPolicy,
                       /*optional*/ const Input* stapledOCSPResponse);
 
+// Verify that the given end-entity cert, which is assumed to have been already
+// validated with BuildCertChain, is valid for the given hostname. The matching
+// function attempts to implement RFC 6125 with a couple of differences:
+// - IP addresses are out of scope of RFC 6125, but this method accepts them for
+//   backward compatibility (see SearchNames in pkixnames.cpp)
+// - A wildcard in a DNS-ID may only appear as the entirety of the first label.
 Result CheckCertHostname(Input cert, Input hostname);
 
+// Construct an RFC-6960-encoded OCSP request, ready for submission to a
+// responder, for the provided CertID. The request has no extensions.
 static const size_t OCSP_REQUEST_MAX_LENGTH = 127;
 Result CreateEncodedOCSPRequest(TrustDomain& trustDomain,
                                 const struct CertID& certID,
@@ -105,7 +128,7 @@ Result CreateEncodedOCSPRequest(TrustDomain& trustDomain,
 
 // The out parameter expired will be true if the response has expired. If the
 // response also indicates a revoked or unknown certificate, that error
-// will be returned. Otherwise, REsult::ERROR_OCSP_OLD_RESPONSE will be
+// will be returned. Otherwise, Result::ERROR_OCSP_OLD_RESPONSE will be
 // returned for an expired response.
 //
 // The optional parameter thisUpdate will be the thisUpdate value of

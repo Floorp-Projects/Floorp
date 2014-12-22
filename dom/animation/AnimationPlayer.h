@@ -21,6 +21,12 @@
 #undef CurrentTime
 #endif
 
+// GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
+// GetTickCount().
+#ifdef GetCurrentTime
+#undef GetCurrentTime
+#endif
+
 struct JSContext;
 class nsCSSPropertySet;
 class nsIDocument;
@@ -131,6 +137,7 @@ protected:
   void DoPlay();
   void DoPause();
 
+  void UpdateSourceContent();
   void FlushStyle() const;
   void PostUpdate();
   // Remove this player from the pending player tracker and resets mIsPending

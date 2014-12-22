@@ -281,9 +281,9 @@ let MozLoopPushHandler = {
     }
 
     let pushServerURLFetchError = () => {
-      console.warn("MozLoopPushHandler - Could not retrieve push server URL from Loop server; using default");
-      this.pushServerUri = Services.prefs.getCharPref("services.push.serverURL");
-      performOpen();
+      console.warn("MozLoopPushHandler - Could not retrieve push server URL from Loop server, will retry");
+      this._retryOperation(() => this._openSocket());
+      return;
     }
 
     if (!this.pushServerUri) {
@@ -303,6 +303,7 @@ let MozLoopPushHandler = {
           }
           if (pushServerConfig.pushServerURI) {
             this.pushServerUri = pushServerConfig.pushServerURI;
+            this._retryEnd();
             performOpen();
           } else {
             console.warn("MozLoopPushHandler - push server URL config lacks pushServerURI parameter");

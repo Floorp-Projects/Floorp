@@ -207,7 +207,7 @@ struct arabic_fallback_plan_t
 
 static const arabic_fallback_plan_t arabic_fallback_plan_nil = {};
 
-#if (defined(_WIN32) || defined(__CYGWIN__)) && !defined(HB_WITH_WIN1256)
+#if (defined(_WIN32) || defined(__CYGWIN__)) && !defined(HB_NO_WIN1256)
 #define HB_WITH_WIN1256
 #endif
 

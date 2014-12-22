@@ -35,17 +35,128 @@
 #include "hb-ot-hmtx-table.hh"
 
 
+struct hb_ot_face_metrics_accelerator_t
+{
+  unsigned int num_metrics;
+  unsigned int num_advances;
+  unsigned int default_advance;
+  const OT::_mtx *table;
+  hb_blob_t *blob;
+
+  inline void init (hb_face_t *face,
+		    hb_tag_t _hea_tag, hb_tag_t _mtx_tag,
+		    unsigned int default_advance)
+  {
+    this->default_advance = default_advance;
+    this->num_metrics = face->get_num_glyphs ();
+
+    hb_blob_t *_hea_blob = OT::Sanitizer<OT::_hea>::sanitize (face->reference_table (_hea_tag));
+    const OT::_hea *_hea = OT::Sanitizer<OT::_hea>::lock_instance (_hea_blob);
+    this->num_advances = _hea->numberOfLongMetrics;
+    hb_blob_destroy (_hea_blob);
+
+    this->blob = OT::Sanitizer<OT::_mtx>::sanitize (face->reference_table (_mtx_tag));
+    if (unlikely (!this->num_advances ||
+		  2 * (this->num_advances + this->num_metrics) < hb_blob_get_length (this->blob)))
+    {
+      this->num_metrics = this->num_advances = 0;
+      hb_blob_destroy (this->blob);
+      this->blob = hb_blob_get_empty ();
+    }
+    this->table = OT::Sanitizer<OT::_mtx>::lock_instance (this->blob);
+  }
+
+  inline void fini (void)
+  {
+    hb_blob_destroy (this->blob);
+  }
+
+  inline unsigned int get_advance (hb_codepoint_t glyph) const
+  {
+    if (unlikely (glyph >= this->num_metrics))
+    {
+      /* If this->num_metrics is zero, it means we don't have the metrics table
+       * for this direction: return one EM.  Otherwise, it means that the glyph
+       * index is out of bound: return zero. */
+      if (this->num_metrics)
+	return 0;
+      else
+	return this->default_advance;
+    }
+
+    if (glyph >= this->num_advances)
+      glyph = this->num_advances - 1;
+
+    return this->table->longMetric[glyph].advance;
+  }
+};
+
+struct hb_ot_face_cmap_accelerator_t
+{
+  const OT::CmapSubtable *table;
+  const OT::CmapSubtable *uvs_table;
+  hb_blob_t *blob;
+
+  inline void init (hb_face_t *face)
+  {
+    this->blob = OT::Sanitizer<OT::cmap>::sanitize (face->reference_table (HB_OT_TAG_cmap));
+    const OT::cmap *cmap = OT::Sanitizer<OT::cmap>::lock_instance (this->blob);
+    const OT::CmapSubtable *subtable = NULL;
+    const OT::CmapSubtable *subtable_uvs = NULL;
+
+    /* 32-bit subtables. */
+    if (!subtable) subtable = cmap->find_subtable (3, 10);
+    if (!subtable) subtable = cmap->find_subtable (0, 6);
+    if (!subtable) subtable = cmap->find_subtable (0, 4);
+    /* 16-bit subtables. */
+    if (!subtable) subtable = cmap->find_subtable (3, 1);
+    if (!subtable) subtable = cmap->find_subtable (0, 3);
+    if (!subtable) subtable = cmap->find_subtable (0, 2);
+    if (!subtable) subtable = cmap->find_subtable (0, 1);
+    if (!subtable) subtable = cmap->find_subtable (0, 0);
+    /* Meh. */
+    if (!subtable) subtable = &OT::Null(OT::CmapSubtable);
+
+    /* UVS subtable. */
+    if (!subtable_uvs) subtable_uvs = cmap->find_subtable (0, 5);
+    /* Meh. */
+    if (!subtable_uvs) subtable_uvs = &OT::Null(OT::CmapSubtable);
+
+    this->table = subtable;
+    this->uvs_table = subtable_uvs;
+  }
+
+  inline void fini (void)
+  {
+    hb_blob_destroy (this->blob);
+  }
+
+  inline bool get_glyph (hb_codepoint_t  unicode,
+			 hb_codepoint_t  variation_selector,
+			 hb_codepoint_t *glyph) const
+  {
+    if (unlikely (variation_selector))
+    {
+      switch (this->uvs_table->get_glyph_variant (unicode,
+						  variation_selector,
+						  glyph))
+      {
+	case OT::GLYPH_VARIANT_NOT_FOUND:	return false;
+	case OT::GLYPH_VARIANT_FOUND:		return true;
+	case OT::GLYPH_VARIANT_USE_DEFAULT:	break;
+      }
+    }
+
+    return this->table->get_glyph (unicode, glyph);
+  }
+};
+
 
 struct hb_ot_font_t
 {
-  unsigned int num_glyphs;
-  unsigned int num_hmetrics;
-  const OT::hmtx *hmtx;
-  hb_blob_t *hmtx_blob;
-
-  const OT::CmapSubtable *cmap;
-  const OT::CmapSubtable *cmap_uvs;
-  hb_blob_t *cmap_blob;
+  hb_ot_face_cmap_accelerator_t cmap;
+  hb_ot_face_metrics_accelerator_t h_metrics;
+  hb_ot_face_metrics_accelerator_t v_metrics;
 };
 
 
@@ -53,50 +164,16 @@ static hb_ot_font_t *
 _hb_ot_font_create (hb_font_t *font)
 {
   hb_ot_font_t *ot_font = (hb_ot_font_t *) calloc (1, sizeof (hb_ot_font_t));
+  hb_face_t *face = font->face;
 
   if (unlikely (!ot_font))
     return NULL;
 
-  ot_font->num_glyphs = font->face->get_num_glyphs ();
+  unsigned int upem = face->get_upem ();
 
-  {
-    hb_blob_t *hhea_blob = OT::Sanitizer<OT::hhea>::sanitize (font->face->reference_table (HB_OT_TAG_hhea));
-    const OT::hhea *hhea = OT::Sanitizer<OT::hhea>::lock_instance (hhea_blob);
-    ot_font->num_hmetrics = hhea->numberOfHMetrics;
-    hb_blob_destroy (hhea_blob);
-  }
-  ot_font->hmtx_blob = OT::Sanitizer<OT::hmtx>::sanitize (font->face->reference_table (HB_OT_TAG_hmtx));
-  if (unlikely (!ot_font->num_hmetrics ||
-		2 * (ot_font->num_hmetrics + ot_font->num_glyphs) < hb_blob_get_length (ot_font->hmtx_blob)))
-  {
-    hb_blob_destroy (ot_font->hmtx_blob);
-    free (ot_font);
-    return NULL;
-  }
-  ot_font->hmtx = OT::Sanitizer<OT::hmtx>::lock_instance (ot_font->hmtx_blob);
-
-  ot_font->cmap_blob = OT::Sanitizer<OT::cmap>::sanitize (font->face->reference_table (HB_OT_TAG_cmap));
-  const OT::cmap *cmap = OT::Sanitizer<OT::cmap>::lock_instance (ot_font->cmap_blob);
-  const OT::CmapSubtable *subtable = NULL;
-  const OT::CmapSubtable *subtable_uvs = NULL;
-
-  /* 32-bit subtables. */
-  if (!subtable) subtable = cmap->find_subtable (0, 6);
-  if (!subtable) subtable = cmap->find_subtable (0, 4);
-  if (!subtable) subtable = cmap->find_subtable (3, 10);
-  /* 16-bit subtables. */
-  if (!subtable) subtable = cmap->find_subtable (0, 3);
-  if (!subtable) subtable = cmap->find_subtable (3, 1);
-  /* Meh. */
-  if (!subtable) subtable = &OT::Null(OT::CmapSubtable);
-
-  /* UVS subtable. */
-  if (!subtable_uvs) subtable_uvs = cmap->find_subtable (0, 5);
-  /* Meh. */
-  if (!subtable_uvs) subtable_uvs = &OT::Null(OT::CmapSubtable);
-
-  ot_font->cmap = subtable;
-  ot_font->cmap_uvs = subtable_uvs;
+  ot_font->cmap.init (face);
+  ot_font->h_metrics.init (face, HB_OT_TAG_hhea, HB_OT_TAG_hmtx, upem>>1);
+  ot_font->v_metrics.init (face, HB_OT_TAG_vhea, HB_OT_TAG_vmtx, upem); /* TODO Can we do this lazily? */
 
   return ot_font;
 }
@@ -104,8 +181,9 @@ _hb_ot_font_create (hb_font_t *font)
 static void
 _hb_ot_font_destroy (hb_ot_font_t *ot_font)
 {
-  hb_blob_destroy (ot_font->cmap_blob);
-  hb_blob_destroy (ot_font->hmtx_blob);
+  ot_font->cmap.fini ();
+  ot_font->h_metrics.fini ();
+  ot_font->v_metrics.fini ();
 
   free (ot_font);
 }
@@ -121,20 +199,7 @@ hb_ot_get_glyph (hb_font_t *font HB_UNUSED,
 
 {
   const hb_ot_font_t *ot_font = (const hb_ot_font_t *) font_data;
-
-  if (unlikely (variation_selector))
-  {
-    switch (ot_font->cmap_uvs->get_glyph_variant (unicode,
-						  variation_selector,
-						  glyph))
-    {
-      case OT::GLYPH_VARIANT_NOT_FOUND:		return false;
-      case OT::GLYPH_VARIANT_FOUND:		return true;
-      case OT::GLYPH_VARIANT_USE_DEFAULT:	break;
-    }
-  }
-
-  return ot_font->cmap->get_glyph (unicode, glyph);
+  return ot_font->cmap.get_glyph (unicode, variation_selector, glyph);
 }
 
 static hb_position_t
@@ -144,14 +209,7 @@ hb_ot_get_glyph_h_advance (hb_font_t *font HB_UNUSED,
 			   void *user_data HB_UNUSED)
 {
   const hb_ot_font_t *ot_font = (const hb_ot_font_t *) font_data;
-
-  if (unlikely (glyph >= ot_font->num_glyphs))
-    return 0; /* Maybe better to return notdef's advance instead? */
-
-  if (glyph >= ot_font->num_hmetrics)
-    glyph = ot_font->num_hmetrics - 1;
-
-  return font->em_scale_x (ot_font->hmtx->longHorMetric[glyph].advanceWidth);
+  return font->em_scale_x (ot_font->h_metrics.get_advance (glyph));
 }
 
 static hb_position_t
@@ -160,8 +218,8 @@ hb_ot_get_glyph_v_advance (hb_font_t *font HB_UNUSED,
 			   hb_codepoint_t glyph,
 			   void *user_data HB_UNUSED)
 {
-  /* TODO */
-  return 0;
+  const hb_ot_font_t *ot_font = (const hb_ot_font_t *) font_data;
+  return font->em_scale_y (-ot_font->v_metrics.get_advance (glyph));
 }
 
 static hb_bool_t
@@ -206,6 +264,7 @@ hb_ot_get_glyph_v_kerning (hb_font_t *font HB_UNUSED,
 			   hb_codepoint_t bottom_glyph HB_UNUSED,
 			   void *user_data HB_UNUSED)
 {
+  /* OpenType doesn't have vertical-kerning other than GPOS. */
   return 0;
 }
 
