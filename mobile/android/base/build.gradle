@@ -52,7 +52,6 @@ android {
             }
 
             res {
-                srcDir "newtablet/res"
                 srcDir "../branding/unofficial/res"
                 srcDir "${topobjdir}/mobile/android/base/res"
                 // The main resources are symlinked in here.
