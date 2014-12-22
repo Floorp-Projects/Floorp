@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {Cc, Ci, Cu} = require("chrome");
+const {Cc, Ci, Cu, Cr} = require("chrome");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -57,13 +57,33 @@ function NetworkResponseListener(aOwner, aHttpActivity)
   this.receivedData = "";
   this.httpActivity = aHttpActivity;
   this.bodySize = 0;
+  let channel = this.httpActivity.channel;
+  this._wrappedNotificationCallbacks = channel.notificationCallbacks;
+  channel.notificationCallbacks = this;
 }
 exports.NetworkResponseListener = NetworkResponseListener;
 
 NetworkResponseListener.prototype = {
   QueryInterface:
     XPCOMUtils.generateQI([Ci.nsIStreamListener, Ci.nsIInputStreamCallback,
-                           Ci.nsIRequestObserver, Ci.nsISupports]),
+                           Ci.nsIRequestObserver, Ci.nsIInterfaceRequestor,
+                           Ci.nsISupports]),
+
+  // nsIInterfaceRequestor implementation
+
+  /**
+   * This object implements nsIProgressEventSink, but also needs to forward
+   * interface requests to the notification callbacks of other objects.
+   */
+  getInterface(iid) {
+    if (iid.equals(Ci.nsIProgressEventSink)) {
+      return this;
+    }
+    if (this._wrappedNotificationCallbacks) {
+      return this._wrappedNotificationCallbacks.getInterface(iid);
+    }
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
 
   /**
    * This NetworkResponseListener tracks the NetworkMonitor.openResponses object
@@ -71,6 +91,12 @@ NetworkResponseListener.prototype = {
    * @private
    */
   _foundOpenResponse: false,
+
+  /**
+   * If the channel already had notificationCallbacks, hold them here internally
+   * so that we can forward getInterface requests to that object.
+   */
+  _wrappedNotificationCallbacks: null,
 
   /**
    * The response listener owner.
@@ -94,9 +120,14 @@ NetworkResponseListener.prototype = {
   receivedData: null,
 
   /**
-   * The network response body size.
+   * The uncompressed, decoded response body size.
    */
   bodySize: null,
+
+  /**
+   * Response body size on the wire, potentially compressed / encoded.
+   */
+  transferredSize: null,
 
   /**
    * The nsIRequest we are started for.
@@ -176,6 +207,18 @@ NetworkResponseListener.prototype = {
     this._findOpenResponse();
     this.sink.outputStream.close();
   },
+
+  // nsIProgressEventSink implementation
+
+  /**
+   * Handle progress event as data is transferred.  This is used to record the
+   * size on the wire, which may be compressed / encoded.
+   */
+  onProgress: function(request, context, progress, progressMax) {
+    this.transferredSize = progress;
+  },
+
+  onStatus: function () {},
 
   /**
    * Find the open response object associated to the current request. The
@@ -259,6 +302,7 @@ NetworkResponseListener.prototype = {
     };
 
     response.size = response.text.length;
+    response.transferredSize = this.transferredSize;
 
     try {
       response.mimeType = this.request.contentType;
@@ -279,6 +323,7 @@ NetworkResponseListener.prototype = {
     this.httpActivity.owner.
       addResponseContent(response, this.httpActivity.discardResponseBody);
 
+    this._wrappedNotificationCallbacks = null;
     this.httpActivity.channel = null;
     this.httpActivity.owner = null;
     this.httpActivity = null;

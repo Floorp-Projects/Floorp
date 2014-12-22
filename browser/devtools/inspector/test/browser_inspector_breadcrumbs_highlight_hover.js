@@ -35,6 +35,4 @@ add_task(function*() {
 
   highlightedNode = yield getHighlitNode(toolbox);
   is(highlightedNode, getNode("span"), "The highlighter highlights the right node");
-
-  gBrowser.removeCurrentTab();
 });

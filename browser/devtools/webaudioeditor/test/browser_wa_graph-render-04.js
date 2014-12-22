@@ -5,7 +5,7 @@
  * Tests audio param connection rendering.
  */
 
-function spawnTest() {
+add_task(function*() {
   let { target, panel } = yield initWebAudioEditor(CONNECT_MULTI_PARAM_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS } = panelWin;
@@ -34,7 +34,5 @@ function spawnTest() {
     ok(edge.classList.contains("param-connection"), "edge is classified as a param-connection");
   });
 
-  yield teardown(panel);
-  finish();
-}
-
+  yield teardown(target);
+});

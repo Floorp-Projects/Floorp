@@ -6,7 +6,7 @@
  * loads the correct node inside the inspector.
  */
 
-function spawnTest() {
+add_task(function*() {
   let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, InspectorView } = panelWin;
@@ -55,6 +55,5 @@ function spawnTest() {
   is($("#web-audio-inspector-title").value, "Gain",
     "Inspector title updates when a new node is selected.");
 
-  yield teardown(panel);
-  finish();
-}
+  yield teardown(target);
+});

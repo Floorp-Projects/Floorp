@@ -5,7 +5,7 @@
  * Tests if the markers and memory overviews are continuously updated.
  */
 
-let test = Task.async(function*() {
+add_task(function*() {
   let { target, panel } = yield initTimelinePanel("about:blank");
   let { $, EVENTS, TimelineView, TimelineController } = panel.panelWin;
 
@@ -68,7 +68,4 @@ let test = Task.async(function*() {
     "The selection should now be enabled for the memory overview.");
   is(TimelineView.memoryOverview.hasSelection(), false,
     "The memory overview should not have a selection after recording.");
-
-  yield teardown(panel);
-  finish();
 });

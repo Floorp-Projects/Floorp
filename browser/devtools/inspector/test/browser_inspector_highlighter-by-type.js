@@ -16,8 +16,6 @@ add_task(function*() {
   yield manyInstancesOfCustomHighlighters(inspector);
   yield showHideMethodsAreAvailable(inspector);
   yield unknownHighlighterTypeShouldntBeAccepted(inspector);
-
-  gBrowser.removeCurrentTab();
 });
 
 function* onlyOneInstanceOfMainHighlighter({inspector}) {

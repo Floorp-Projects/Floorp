@@ -44,6 +44,4 @@ add_task(function*() {
 
   info("Hide the box-model highlighter");
   yield toolbox.highlighter.hideBoxModel();
-
-  gBrowser.removeCurrentTab();
 });

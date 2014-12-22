@@ -70,10 +70,6 @@ protected:
   RecvNotifyDataInfoChanged(nsIMobileConnectionInfo* const& aInfo) MOZ_OVERRIDE;
 
   virtual bool
-  RecvNotifyUssdReceived(const nsString& aMessage,
-                         const bool& aSessionEnd) MOZ_OVERRIDE;
-
-  virtual bool
   RecvNotifyDataError(const nsString& aMessage) MOZ_OVERRIDE;
 
   virtual bool
@@ -149,9 +145,6 @@ public:
   DoReply(const MobileConnectionReplySuccessNetworks& aReply);
 
   bool
-  DoReply(const MobileConnectionReplySuccessMmi& aReply);
-
-  bool
   DoReply(const MobileConnectionReplySuccessCallForwarding& aReply);
 
   bool
@@ -168,9 +161,6 @@ public:
 
   bool
   DoReply(const MobileConnectionReplyError& aReply);
-
-  bool
-  DoReply(const MobileConnectionReplyErrorMmi& aReply);
 
 protected:
   virtual
