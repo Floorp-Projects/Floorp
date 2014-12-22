@@ -113,6 +113,8 @@ browser.jar:
   skin/classic/browser/search-engine-placeholder@2x.png        (../shared/search/search-engine-placeholder@2x.png)
   skin/classic/browser/badge-add-engine.png                    (../shared/search/badge-add-engine.png)
   skin/classic/browser/badge-add-engine@2x.png                 (../shared/search/badge-add-engine@2x.png)
+  skin/classic/browser/search-indicator-badge-add.png          (../shared/search/search-indicator-badge-add.png)
+  skin/classic/browser/search-indicator-badge-add@2x.png       (../shared/search/search-indicator-badge-add@2x.png)
   skin/classic/browser/Secure-Glyph.png
   skin/classic/browser/Secure-Glyph@2x.png
   skin/classic/browser/slowStartup-16.png
