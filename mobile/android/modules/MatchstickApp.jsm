@@ -7,307 +7,363 @@
 
 this.EXPORTED_SYMBOLS = ["MatchstickApp"];
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-// meta constants
-const HEADER_META = ".meta";
-const PROTO_CMD_KEY = "cmd";
-const PROTO_CMD_VALUE_CREATE_SESSION = "create-session";
-const PROTO_CMD_VALUE_END_SESSION = "end-session";
-const PROTO_CMD_VALUE_ATTACH_APP = "attach-app";
-const PROTO_CMD_VALUE_SET_WIFI = "set-wifi";
-const PROTO_CMD_RESPONSE_PREFIX = "~";
-const PROTO_CMD_VALUE_START_APP = "start-app";
-const PROTO_CMD_VALUE_CANCEL_START_APP = "cancel-start-app";
-const PROTO_CMD_VALUE_DOWNLODING_APP = "downloading-app";
-const PROTO_CMD_VALUE_ATTACH_APP_MANAGER = "attach-app-manager";
-const PROTO_CMD_VALUE_EXCEPTION = "exception";
-const PROTO_EXCEPTION_KEY = "exception";
-const PROTO_EXCEPTION_NO_KEY = "errno";
-const PROTO_STATUS_VALUE_APP_CLOSED = "app-closed";
-const PROTO_STATUS_VALUE_TRY_LATER = "try-later";
-const PROTO_STATUS_VALUE_CANCELLED = "cancelled";
-const PROTO_STATUS_VALUE_REFUSED = "refused";
-const PROTO_STATUS_VALUE_TIMEOUT = "time-out";
-const PROTO_STATUS_VALUE_INVALID_APP = "app_not_exist";
-const PROTO_STATUS_VALUE_APP_CHECK_FAIL = "app_check_fail";
-const PROTO_STATUS_VALUE_APP_INSTALL_FAIL = "app_install_fail";
-const PROTO_STATUS_VALUE_APP_DOWNLOAD_FAIL = "app_download_fail";
-const PROTO_STATUS_VALUE_APP_LAUNCH_FAIL = "app_launch_fail";
-const PROTO_STATUS_KEY = "status";
-const PROTO_STATUS_VALUE_OK = "OK";
-const PROTO_STATUS_VALUE_FAILED = "FAILED_REASON";
-const PROTO_EXCEPTION_NO_APP_NAME_NULL = 10;
-const PROTO_EXCEPTION_NO_MESSAGE_NULL = 11;
-const PROTO_EXCEPTION_NO_NEW_GROUP_START = 12;
-const PROTO_EXCEPTION_NO_UNKNOW_CMD = 13;
-const PROTO_EXCEPTION_NO_JSON_DATA_ERROR = 14;
-const PARAM_APP_NAME = "app-name";
-const PROTO_HOME_APP = "home";
-const PARAM_DOWNLOADING_PERCENT = "download-percent";
-const PARAM_KEEP_SESSION = "keep-session";
-const PROTO_SENDER_HOST_NAME_KEY = "sender-host-name";
-const PROTO_SENDER_PORT_KEY = "sender-port";
-const PROTO_APP_META_KEY = "app-meta";
-const PROTO_APP_META_NAME = "name";
-const PROTO_APP_META_TITLE = "title";
-const PROTO_APP_META_IMG_URI = "img-uri";
-const PROTO_MIME_DATA_KEY = "mime-data";
-const PROTO_APP_NAME_KEY = "app-name";
-const PARAM_WIFI_NAME = "wifi-name";
-const PARAM_WIFI_PASSWORD = "wifi-password";
-const PARAM_WIFI_TYPE = "wifi-type";
-const PARAM_WIFI_KEY = "key";
-const PROTO_MIME_DATA_KEY_TYPE = "type";
-const PROTO_MIME_DATA_KEY_DATA = "data";
+function log(msg) {
+  Services.console.logStringMessage(msg);
+}
 
-// RAMP constants
-const RAMP_CMD_KEY_ID = "cmd_id";
-const RAMP_CMD_KEY_TYPE = "type";
-const RAMP_CMD_KEY_STATUS = "status";
-const RAMP_CMD_KEY_URL = "url";
-const RAMP_CMD_KEY_VALUE = "value";
-const RAMP_CMD_KEY_VIDEO_NAME = "videoname";
-const RAMP_CMD_KEY_EVENT_SEQ = "event_sequence";
-const NAMESPACE_RAMP = "ramp";
-const RAMP_CMD_ID_START = 0;
-const RAMP_CMD_ID_INFO = 1;
-const RAMP_CMD_ID_PLAY = 2;
-const RAMP_CMD_ID_PAUSE = 3;
-const RAMP_CMD_ID_STOP = 4;
-const RAMP_CMD_ID_SEEKTO = 5;
-const RAMP_CMD_ID_SETVOLUME = 6;
-const RAMP_CMD_ID_MUTE = 7;
-const RAMP_CMD_ID_DECONSTE = 8;
-const RAMP_CMD_START = "START";
-const RAMP_CMD_INFO = "INFO";
-const RAMP_CMD_PLAY = "PLAY";
-const RAMP_CMD_PAUSE = "PAUSE";
-const RAMP_CMD_STOP = "STOP";
-const RAMP_CMD_SEEKTO = "SEEKTO";
-const RAMP_CMD_SETVOLUME = "SETVOLUME";
-const RAMP_CMD_MUTE = "MUTE";
-const RAMP_CMD_DECONSTE = "DECONSTE";
-const RAMP_CAST_STATUS_EVENT_SEQUENCE = "event_sequence";
-const RAMP_CAST_STATUS_STATE = "state";
-const RAMP_CAST_STATUS_CONTENT_ID = "content_id";
-const RAMP_CAST_STATUS_CURRENT_TIME = "current_time";
-const RAMP_CAST_STATUS_DURATION = "duration";
-const RAMP_CAST_STATUS_MUTED = "muted";
-const RAMP_CAST_STATUS_TIME_PROGRESS = "time_progress";
-const RAMP_CAST_STATUS_TITLE = "title";
-const RAMP_CAST_STATUS_VOLUME = "volume";
-const PLAYER_STATUS_PREPARING = 1;
-const PLAYER_STATUS_PLAYING = 2;
-const PLAYER_STATUS_PAUSE = 3;
-const PLAYER_STATUS_STOP = 4;
-const PLAYER_STATUS_IDLE = 5;
-const PLAYER_STATUS_BUFFERING = 6;
+const MATCHSTICK_PLAYER_URL = "http://openflint.github.io/flint-player/player.html";
 
-function MatchstickApp(service) {
-  let uri = Services.io.newURI(service.location, null, null);
-  this._ip = uri.host;
-};
+const STATUS_RETRY_COUNT = 5;   // Number of times we retry a partial status
+const STATUS_RETRY_WAIT = 1000; // Delay between attempts in milliseconds
+
+/* MatchstickApp is a wrapper for interacting with a DIAL server.
+ * The basic interactions all use a REST API.
+ * See: https://github.com/openflint/openflint.github.io/wiki/Flint%20Protocol%20Docs
+ */
+function MatchstickApp(aServer) {
+  this.server = aServer;
+  this.app = "~flintplayer";
+  this.resourceURL = this.server.appsURL + this.app;
+  this.token = null;
+  this.statusTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  this.statusRetry = 0;
+}
 
 MatchstickApp.prototype = {
-  _ip: null,
-  _port: 8888,
-  _cmd_socket: null,
-  _meta_callback: null,
-  _ramp_callbacks: {},
-  _mediaListener: null,
-  _event_sequence: 0,
-  status: "unloaded",
-  _have_session: false,
-  _info_timer: null,
+  status: function status(aCallback) {
+    // Query the server to see if an application is already running
+    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
+    xhr.open("GET", this.resourceURL, true);
+    xhr.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
+    xhr.setRequestHeader("Accept", "application/xml; charset=utf8");
+    xhr.setRequestHeader("Authorization", this.token);
 
-  _send_meta_cmd: function(cmd, callback, extras) {
-    this._meta_callback = callback;
-    let msg = extras ? extras : {};
-    msg.cmd = cmd;
-    this._send_cmd(JSON.stringify([HEADER_META, msg]), 0);
+    xhr.addEventListener("load", (function() {
+      if (xhr.status == 200) {
+        let doc = xhr.responseXML;
+        let state = doc.querySelector("state").textContent;
+
+        // The serviceURL can be missing if the player is not completely loaded
+        let serviceURL = null;
+        let serviceNode = doc.querySelector("channelBaseUrl");
+        if (serviceNode) {
+          serviceURL = serviceNode.textContent + "/senders/" + this.token;
+        }
+
+        if (aCallback)
+          aCallback({ state: state, serviceURL: serviceURL });
+      } else {
+        if (aCallback)
+          aCallback({ state: "error" });
+      }
+    }).bind(this), false);
+
+    xhr.addEventListener("error", (function() {
+      if (aCallback)
+        aCallback({ state: "error" });
+    }).bind(this), false);
+
+    xhr.send(null);
   },
 
-  _send_ramp_cmd: function(type, cmd_id, callback, extras) {
-    let msg = extras ? extras : {};
-    msg.cmd_id = cmd_id;
-    msg.type = type;
-    msg.event_sequence = this._event_sequence++;
-    this._send_cmd(JSON.stringify([NAMESPACE_RAMP, msg]), 0);
+  start: function start(aCallback) {
+    // Start a given app with any extra query data. Each app uses it's own data scheme.
+    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
+    xhr.open("POST", this.resourceURL, true);
+    xhr.overrideMimeType("text/xml");
+    xhr.setRequestHeader("Content-Type", "application/json");
+
+    xhr.addEventListener("load", (function() {
+      if (xhr.status == 200 || xhr.status == 201) {
+        this.statusRetry = 0;
+
+        let response = JSON.parse(xhr.responseText);
+        this.token = response.token;
+        this.pingInterval = response.interval;
+
+        if (aCallback)
+          aCallback(true);
+      } else {
+        if (aCallback)
+          aCallback(false);
+      }
+    }).bind(this), false);
+
+    xhr.addEventListener("error", (function() {
+      if (aCallback)
+        aCallback(false);
+    }).bind(this), false);
+
+    let data = {
+      type: "launch",
+      app_info: {
+        url: MATCHSTICK_PLAYER_URL,
+        useIpc: true,
+        maxInactive: -1
+      }
+    };
+
+    xhr.send(JSON.stringify(data));
   },
 
-  _send_cmd: function(str, recursionDepth) {
-    if (!this._cmd_socket) {
-      let baseSocket = Cc["@mozilla.org/tcp-socket;1"].createInstance(Ci.nsIDOMTCPSocket);
-      this._cmd_socket = baseSocket.open(this._ip, 8888, { useSecureTransport: false, binaryType: "string" });
-      if (!(this._cmd_socket)) {
-        dump("socket is null");
+  stop: function stop(aCallback) {
+    // Send command to kill an app, if it's already running.
+    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
+    xhr.open("DELETE", this.resourceURL + "/run", true);
+    xhr.overrideMimeType("text/plain");
+    xhr.setRequestHeader("Accept", "application/xml; charset=utf8");
+    xhr.setRequestHeader("Authorization", this.token);
+
+    xhr.addEventListener("load", (function() {
+      if (xhr.status == 200) {
+        if (aCallback)
+          aCallback(true);
+      } else {
+        if (aCallback)
+          aCallback(false);
+      }
+    }).bind(this), false);
+
+    xhr.addEventListener("error", (function() {
+      if (aCallback)
+        aCallback(false);
+    }).bind(this), false);
+
+    xhr.send(null);
+  },
+
+  remoteMedia: function remoteMedia(aCallback, aListener) {
+    this.status((aStatus) => {
+      if (aStatus.serviceURL) {
+        if (aCallback) {
+          aCallback(new RemoteMedia(aStatus.serviceURL, aListener, this));
+        }
         return;
       }
 
-      this._cmd_socket.ondata = function(response) {
-        try {
-          let data = JSON.parse(response.data);
-          let res = data[1];
-          switch (data[0]) {
-            case ".meta":
-              this._handle_meta_response(data[1]);
-              return;
-            case "ramp":
-              this._handle_ramp_response(data[1]);
-              return;
-            default:
-              dump("unknown response");
-          }
-        } catch(ex) {
-          dump("error handling response: " + ex);
-          if (!this._info_timer) {
-            this._info_timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-            this._info_timer.init(this, 200, Ci.nsITimer.TYPE_ONE_SHOT);
-          }
+      // It can take a few moments for the player app to load. Let's use a small delay
+      // and retry a few times.
+      if (this.statusRetry < STATUS_RETRY_COUNT) {
+        this.statusRetry++;
+        this.statusTimer.initWithCallback(() => {
+          this.remoteMedia(aCallback, aListener);
+        }, STATUS_RETRY_WAIT, Ci.nsITimer.TYPE_ONE_SHOT);
+      } else {
+        // Fail
+        if (aCallback) {
+          aCallback();
         }
-      }.bind(this);
-
-      this._cmd_socket.onerror = function(err) {
-        this.shutdown();
-        Cu.reportError("error: " + err.data.name);
-        this._cmd_socket = null;
-      }.bind(this);
-
-      this._cmd_socket.onclose = function() {
-        this.shutdown();
-        this._cmd_socket = null;
-        Cu.reportError("closed tcp socket")
-      }.bind(this);
-
-      this._cmd_socket.onopen = function() {
-        if (recursionDepth <= 2) {
-          this._send_cmd(str, ++recursionDepth);
-        }
-      }.bind(this);
-    } else {
-      try {
-        this._cmd_socket.send(str, str.length);
-        let data = JSON.parse(str);
-        if (data[1][PARAM_APP_NAME] == PROTO_HOME_APP) {
-          // assuming we got home OK
-          if (this._meta_callback) {
-            this._handle_meta_callback({ status: "OK" });
-          }
-        }
-      } catch (ex) {
-        this._cmd_socket = null;
-        this._send_cmd(str);
       }
-    }
-  },
-
-  observe: function(subject, data, topic) {
-    if (data === "timer-callback") {
-      this._info_timer = null;
-      this._send_ramp_cmd(RAMP_CMD_INFO, RAMP_CMD_ID_INFO, null)
-    }
-  },
-
-  start: function(func) {
-    let cmd = this._have_session ? PROTO_CMD_VALUE_START_APP : PROTO_CMD_VALUE_CREATE_SESSION ;
-    this._send_meta_cmd(cmd, func, { "app-name": "Remote Player" });
-  },
-
-  stop: function(func) {
-    if (func) {
-      func(true);
-    }
-  },
-
-  remoteMedia: function(func, listener) {
-    this._mediaListener = listener;
-    func(this);
-    if (listener) {
-      listener.onRemoteMediaStart(this);
-    }
-  },
-
-  _handle_meta_response: function(data) {
-    switch (data.cmd) {
-      case "create-session":
-      case "~create-session":
-        // if we get a response form start-app, assume we have a connection already
-      case "start-app":
-      case "~start-app":
-        this._have_session = (data.status == "OK");
-        break;
-      case "end-session":
-      case "~end-session":
-        this._have_session = (data.status != "OK");
-        break;
-    }
-
-    if (this._meta_callback) {
-      let callback = this._meta_callback;
-      this._meta_callback = null;
-      callback(data.status == "OK");
-    }
-  },
-
-  _handle_ramp_response: function(data) {
-    switch (data.status.state) {
-      case PLAYER_STATUS_PREPARING:
-        this.status = "preparing";
-        break;
-      case PLAYER_STATUS_PLAYING:
-        this.status = "started";
-        break;
-      case PLAYER_STATUS_PAUSE:
-        this.status = "paused";
-        break;
-      case PLAYER_STATUS_STOP:
-        this.status = "stopped";
-        break;
-      case PLAYER_STATUS_IDLE:
-        this.status = "idle";
-        break;
-      case PLAYER_STATUS_BUFFERING:
-        this.status = "buffering";
-        break;
-    }
-
-    if (data.status.state == PLAYER_STATUS_STOP && data.status.current_time > 0 && data.status.current_time == data.status.duration) {
-      this.status = "completed";
-    } else if (!this._info_timer) {
-      this._info_timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      this._info_timer.init(this, 200, Ci.nsITimer.TYPE_ONE_SHOT);
-    }
-
-    if (this._mediaListener) {
-      this._mediaListener.onRemoteMediaStatus(this);
-    }
-  },
-
-  load: function(data) {
-    let meta = {
-      url: data.source,
-      videoname: data.title
-    };
-    this._send_ramp_cmd(RAMP_CMD_START, RAMP_CMD_ID_START, null, meta);
-  },
-
-  play: function() {
-    this._send_ramp_cmd(RAMP_CMD_PLAY, RAMP_CMD_ID_PLAY, null);
-  },
-
-  pause: function() {
-    this._send_ramp_cmd(RAMP_CMD_PAUSE, RAMP_CMD_ID_PAUSE, null);
-  },
-
-  shutdown: function() {
-    this.stop(function() {
-      this._send_meta_cmd(PROTO_CMD_VALUE_END_SESSION);
-      if (this._mediaListener) {
-        this._mediaListener.onRemoteMediaStop(this);
-      }
-    }.bind(this));
+    });
   }
-};
+}
+
+/* RemoteMedia provides a wrapper for using WebSockets and Flint protocol to control
+ * the Matchstick media player
+ * See: https://github.com/openflint/openflint.github.io/wiki/Flint%20Protocol%20Docs
+ * See: https://github.com/openflint/flint-receiver-sdk/blob/gh-pages/v1/libs/mediaplayer.js
+ */
+function RemoteMedia(aURL, aListener, aApp) {
+  this._active = false;
+  this._status = "uninitialized";
+
+  this.app = aApp;
+  this.listener = aListener;
+
+  this.pingTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+
+  let uri = Services.io.newURI(aURL, null, null);
+  this.ws = Cc["@mozilla.org/network/protocol;1?name=ws"].createInstance(Ci.nsIWebSocketChannel);
+  this.ws.asyncOpen(uri, aURL, this, null);
+}
+
+// Used to give us a small gap between not pinging too often and pinging too late
+const PING_INTERVAL_BACKOFF = 200;
+
+RemoteMedia.prototype = {
+  _ping: function _ping() {
+    if (this.app.pingInterval == -1) {
+      return;
+    }
+
+    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
+    xhr.open("GET", this.app.resourceURL, true);
+    xhr.setRequestHeader("Accept", "application/xml; charset=utf8");
+    xhr.setRequestHeader("Authorization", this.app.token);
+
+    xhr.addEventListener("load", () => {
+      if (xhr.status == 200) {
+        this.pingTimer.initWithCallback(() => {
+          this._ping();
+        }, this.app.pingInterval - PING_INTERVAL_BACKOFF, Ci.nsITimer.TYPE_ONE_SHOT);
+      }
+    });
+
+    xhr.send(null);
+  },
+
+  _changeStatus: function _changeStatus(status) {
+    if (this._status != status) {
+      this._status = status;
+      if ("onRemoteMediaStatus" in this.listener) {
+        this.listener.onRemoteMediaStatus(this);
+      }
+    }
+  },
+
+  _teardown: function _teardown() {
+    if (!this._active) {
+      return;
+    }
+
+    // Stop any queued ping event
+    this.pingTimer.cancel();
+
+    // Let the listener know we are finished
+    this._active = false;
+    if (this.listener && "onRemoteMediaStop" in this.listener) {
+      this.listener.onRemoteMediaStop(this);
+    }
+  },
+
+  _sendMsg: function _sendMsg(params) {
+    // Convert payload to a string
+    params.payload = JSON.stringify(params.payload);
+
+    try {
+      this.ws.sendMsg(JSON.stringify(params));
+    } catch (e if e.result == Cr.NS_ERROR_NOT_CONNECTED) {
+      // This shouldn't happen unless something gets out of sync with the
+      // connection. Let's make sure we try to cleanup.
+      this._teardown();
+    } catch (e) {
+      log("Send Error: " + e)
+    }
+  },
+
+  get active() {
+    return this._active;
+  },
+
+  get status() {
+    return this._status;
+  },
+
+  shutdown: function shutdown() {
+    this.ws.close(Ci.nsIWebSocketChannel.CLOSE_NORMAL, "shutdown");
+  },
+
+  play: function play() {
+    if (!this._active) {
+      return;
+    }
+
+    let params = {
+      namespace: "urn:flint:org.openflint.fling.media",
+      payload: {
+        type: "PLAY",
+        requestId: "requestId-5",
+      }
+    };
+
+    this._sendMsg(params);
+  },
+
+  pause: function pause() {
+    if (!this._active) {
+      return;
+    }
+
+    let params = {
+      namespace: "urn:flint:org.openflint.fling.media",
+      payload: {
+        type: "PAUSE",
+        requestId: "requestId-4",
+      }
+    };
+
+    this._sendMsg(params);
+  },
+
+  load: function load(aData) {
+    if (!this._active) {
+      return;
+    }
+
+    let params = {
+      namespace: "urn:flint:org.openflint.fling.media",
+      payload: {
+        type: "LOAD",
+        requestId: "requestId-2",
+        media: {
+          contentId: aData.source,
+          contentType: "video/mp4",
+          metadata: {
+            title: "",
+            subtitle: ""
+          }
+        }
+      }
+    };
+
+    this._sendMsg(params);
+  },
+
+  onStart: function(aContext) {
+    this._active = true;
+    if (this.listener && "onRemoteMediaStart" in this.listener) {
+      this.listener.onRemoteMediaStart(this);
+    }
+
+    this._ping();
+  },
+
+  onStop: function(aContext, aStatusCode) {
+    // This will be called for internal socket failures and timeouts. Make
+    // sure we cleanup.
+    this._teardown();
+  },
+
+  onAcknowledge: function(aContext, aSize) {},
+  onBinaryMessageAvailable: function(aContext, aMessage) {},
+
+  onMessageAvailable: function(aContext, aMessage) {
+    let msg = JSON.parse(aMessage);
+    if (!msg) {
+      return;
+    }
+
+    let payload = JSON.parse(msg.payload);
+    if (!payload) {
+      return;
+    }
+
+    // Handle state changes using the player notifications
+    if (payload.type == "MEDIA_STATUS") {
+      let status = payload.status[0];
+      let state = status.playerState.toLowerCase();
+      if (state == "playing") {
+        this._changeStatus("started");
+      } else if (state == "paused") {
+        this._changeStatus("paused");
+      } else if (state == "idle" && "idleReason" in status) {
+        // Make sure we are really finished. IDLE can be sent at other times.
+        let reason = status.idleReason.toLowerCase();
+        if (reason == "finished") {
+          this._changeStatus("completed");
+        }
+      }
+    }
+  },
+
+  onServerClose: function(aContext, aStatusCode, aReason) {
+    // This will be fired from _teardown when we close the websocket, but it
+    // can also be called for other internal socket failures and timeouts. We
+    // make sure the _teardown bails on reentry.
+    this._teardown();
+  }
+}

@@ -648,6 +648,10 @@ var CastingApps = {
   },
 
   _shutdown: function() {
+    if (!this.session) {
+      return;
+    }
+
     this.session.app.stop();
     let video = this.session.videoRef.get();
     if (video) {
