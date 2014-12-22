@@ -39,6 +39,7 @@ let listenerId = null; //unique ID of this listener
 let curFrame = content;
 let previousFrame = null;
 let elementManager = new ElementManager([]);
+let accessibility = new Accessibility();
 let importedScripts = null;
 let inputSource = null;
 
@@ -210,6 +211,7 @@ function waitForReady() {
  */
 function newSession(msg) {
   isB2G = msg.json.B2G;
+  accessibility.strict = msg.json.raisesAccessibilityExceptions;
   resetValues();
   if (isB2G) {
     readyStateTimer.initWithCallback(waitForReady, 100, Ci.nsITimer.TYPE_ONE_SHOT);
@@ -945,11 +947,15 @@ function singleTap(msg) {
   let command_id = msg.json.command_id;
   try {
     let el = elementManager.getKnownElement(msg.json.id, curFrame);
+    let acc = accessibility.getAccessibleObject(el, true);
     // after this block, the element will be scrolled into view
-    if (!checkVisible(el, msg.json.corx, msg.json.cory)) {
-       sendError("Element is not currently visible and may not be manipulated", 11, null, command_id);
-       return;
+    let visible = checkVisible(el, msg.json.corx, msg.json.cory);
+    checkVisibleAccessibility(acc, visible);
+    if (!visible) {
+      sendError("Element is not currently visible and may not be manipulated", 11, null, command_id);
+      return;
     }
+    checkActionableAccessibility(acc);
     if (!curFrame.document.createTouch) {
       mouseEventsOnly = true;
     }
@@ -960,6 +966,48 @@ function singleTap(msg) {
   catch (e) {
     sendError(e.message, e.code, e.stack, msg.json.command_id);
   }
+}
+
+/**
+ * Check if the element's visible state corresponds to its accessibility API
+ * visibility
+ * @param nsIAccessible object
+ * @param Boolean visible element's visibility state
+ */
+function checkVisibleAccessibility(accesible, visible) {
+  if (!accesible) {
+    return;
+  }
+  let hiddenAccessibility = accessibility.isHidden(accesible);
+  let message;
+  if (visible && hiddenAccessibility) {
+    message = 'Element is not currently visible via the accessibility API ' +
+      'and may not be manipulated by it';
+  } else if (!visible && !hiddenAccessibility) {
+    message = 'Element is currently only visible via the accessibility API ' +
+      'and can be manipulated by it';
+  }
+  accessibility.handleErrorMessage(message);
+}
+
+/**
+ * Check if it is possible to activate an element with the accessibility API
+ * @param nsIAccessible object
+ */
+function checkActionableAccessibility(accesible) {
+  if (!accesible) {
+    return;
+  }
+  let message;
+  if (!accessibility.hasActionCount(accesible)) {
+    message = 'Element does not support any accessible actions';
+  } else if (!accessibility.isActionableRole(accesible)) {
+    message = 'Element does not have a correct accessibility role ' +
+      'and may not be manipulated via the accessibility API';
+  } else if (!accessibility.hasValidName(accesible)) {
+    message = 'Element is missing an accesible name';
+  }
+  accessibility.handleErrorMessage(message);
 }
 
 /**
