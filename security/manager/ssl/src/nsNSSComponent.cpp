@@ -1145,6 +1145,8 @@ nsNSSComponent::ShutdownNSS()
   }
 }
 
+static const bool SEND_LM_DEFAULT = false;
+
 NS_IMETHODIMP
 nsNSSComponent::Init()
 {
@@ -1179,6 +1181,10 @@ nsNSSComponent::Init()
     mNSSErrorsBundle->GetStringFromName(dummy_name.get(),
                                         getter_Copies(result));
   }
+
+  bool sendLM = Preferences::GetBool("network.ntlm.send-lm-response",
+                                     SEND_LM_DEFAULT);
+  nsNTLMAuthModule::SetSendLM(sendLM);
 
   // Do that before NSS init, to make sure we won't get unloaded.
   RegisterObservers();
@@ -1359,6 +1365,11 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
                prefName.EqualsLiteral("security.cert_pinning.enforcement_level")) {
       MutexAutoLock lock(mutex);
       setValidationOptions(false, lock);
+    } else if (prefName.EqualsLiteral("network.ntlm.send-lm-response")) {
+      bool sendLM = Preferences::GetBool("network.ntlm.send-lm-response",
+                                         SEND_LM_DEFAULT);
+      nsNTLMAuthModule::SetSendLM(sendLM);
+      clearSessionCache = false;
     } else {
       clearSessionCache = false;
     }
