@@ -752,6 +752,13 @@ class MDefinition : public MNode
     MIR_OPCODE_LIST(OPCODE_CASTS)
 #   undef OPCODE_CASTS
 
+    bool isConstantValue() {
+        return isConstant() || (isBox() && getOperand(0)->isConstant());
+    }
+    const Value &constantValue();
+    const Value *constantVp();
+    bool constantToBoolean();
+
     inline MInstruction *toInstruction();
     inline const MInstruction *toInstruction() const;
     bool isInstruction() const {

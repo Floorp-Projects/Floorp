@@ -378,7 +378,7 @@ IonBuilder::inlineArray(CallInfo &callInfo)
             return InliningStatus_NotInlined;
 
         MDefinition *arg = callInfo.getArg(0);
-        if (!arg->isConstant()) {
+        if (!arg->isConstantValue()) {
             callInfo.setImplicitlyUsedUnchecked();
             ArrayObject *templateArray = &templateObject->as<ArrayObject>();
             MNewArrayDynamicLength *ins =
@@ -391,7 +391,7 @@ IonBuilder::inlineArray(CallInfo &callInfo)
         }
 
         // Negative lengths generate a RangeError, unhandled by the inline path.
-        initLength = arg->toConstant()->value().toInt32();
+        initLength = arg->constantValue().toInt32();
         if (initLength >= NativeObject::NELEMENTS_LIMIT)
             return InliningStatus_NotInlined;
 
@@ -1038,10 +1038,10 @@ IonBuilder::inlineMathPow(CallInfo &callInfo)
     MDefinition *output = nullptr;
 
     // Optimize some constant powers.
-    if (callInfo.getArg(1)->isConstant() &&
-        callInfo.getArg(1)->toConstant()->value().isNumber())
+    if (callInfo.getArg(1)->isConstantValue() &&
+        callInfo.getArg(1)->constantValue().isNumber())
     {
-        double pow = callInfo.getArg(1)->toConstant()->value().toNumber();
+        double pow = callInfo.getArg(1)->constantValue().toNumber();
 
         // Math.pow(x, 0.5) is a sqrt with edge-case detection.
         if (pow == 0.5) {
@@ -1216,8 +1216,8 @@ IonBuilder::inlineMathMinMax(CallInfo &callInfo, bool max)
           case MIRType_Float32:
             // Don't force a double MMinMax for arguments that would be a NOP
             // when doing an integer MMinMax.
-            if (arg->isConstant()) {
-                double cte = arg->toConstant()->value().toDouble();
+            if (arg->isConstantValue()) {
+                double cte = arg->constantValue().toDouble();
                 // min(int32, cte >= INT32_MAX) = int32
                 if (cte >= INT32_MAX && !max)
                     break;
@@ -1368,14 +1368,14 @@ IonBuilder::inlineStrCharCodeAt(CallInfo &callInfo)
 IonBuilder::InliningStatus
 IonBuilder::inlineConstantCharCodeAt(CallInfo &callInfo)
 {
-    if (!callInfo.thisArg()->isConstant())
+    if (!callInfo.thisArg()->isConstantValue())
         return InliningStatus_NotInlined;
 
-    if (!callInfo.getArg(0)->isConstant())
+    if (!callInfo.getArg(0)->isConstantValue())
         return InliningStatus_NotInlined;
 
-    const js::Value *strval = callInfo.thisArg()->toConstant()->vp();
-    const js::Value *idxval  = callInfo.getArg(0)->toConstant()->vp();
+    const js::Value *strval = callInfo.thisArg()->constantVp();
+    const js::Value *idxval  = callInfo.getArg(0)->constantVp();
 
     if (!strval->isString() || !idxval->isInt32())
         return InliningStatus_NotInlined;
@@ -2033,9 +2033,9 @@ IonBuilder::inlineUnsafeSetReservedSlot(CallInfo &callInfo)
 
     // Don't inline if we don't have a constant slot.
     MDefinition *arg = callInfo.getArg(1);
-    if (!arg->isConstant())
+    if (!arg->isConstantValue())
         return InliningStatus_NotInlined;
-    uint32_t slot = arg->toConstant()->value().toPrivateUint32();
+    uint32_t slot = arg->constantValue().toPrivateUint32();
 
     callInfo.setImplicitlyUsedUnchecked();
 
@@ -2061,9 +2061,9 @@ IonBuilder::inlineUnsafeGetReservedSlot(CallInfo &callInfo)
 
     // Don't inline if we don't have a constant slot.
     MDefinition *arg = callInfo.getArg(1);
-    if (!arg->isConstant())
+    if (!arg->isConstantValue())
         return InliningStatus_NotInlined;
-    uint32_t slot = arg->toConstant()->value().toPrivateUint32();
+    uint32_t slot = arg->constantValue().toPrivateUint32();
 
     callInfo.setImplicitlyUsedUnchecked();
 
@@ -2259,9 +2259,9 @@ IonBuilder::inlineAssertFloat32(CallInfo &callInfo)
     MDefinition *secondArg = callInfo.getArg(1);
 
     MOZ_ASSERT(secondArg->type() == MIRType_Boolean);
-    MOZ_ASSERT(secondArg->isConstant());
+    MOZ_ASSERT(secondArg->isConstantValue());
 
-    bool mustBeFloat32 = secondArg->toConstant()->value().toBoolean();
+    bool mustBeFloat32 = secondArg->constantValue().toBoolean();
     current->add(MAssertFloat32::New(alloc(), callInfo.getArg(0), mustBeFloat32));
 
     MConstant *undefined = MConstant::New(alloc(), UndefinedValue());
