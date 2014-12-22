@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html>
+<svg id="s">
+  <style>
+    #b { display: none; }
+    rect { fill:orange; }
+  </style>
+  <rect width="10" height="10" fill="lime"/>
+</svg>
+<style>
+  #b { display: block; }
+  rect { fill:blue; }
+</style>
+<div id="b" style="border:2px solid black">
+  <svg>
+    <use xlink:href="#s"/>
+  </svg>
+</div>
