@@ -175,9 +175,9 @@ TrackBuffer::AppendData(const uint8_t* aData, uint32_t aLength)
     return false;
   }
 
-  // Schedule the state machine thread to ensure playback starts if required
-  // when data is appended.
-  mParentDecoder->ScheduleStateMachineThread();
+  // Tell our reader that we have more data to ensure that playback starts if
+  // required when data is appended.
+  mParentDecoder->GetReader()->MaybeNotifyHaveData();
   return true;
 }
 
@@ -352,6 +352,11 @@ TrackBuffer::InitializeDecoder(SourceBufferDecoder* aDecoder)
     RemoveDecoder(aDecoder);
     return;
   }
+
+  // Tell our reader that we have more data to ensure that playback starts if
+  // required when data is appended.
+  mParentDecoder->GetReader()->MaybeNotifyHaveData();
+
   MSE_DEBUG("TrackBuffer(%p): Reader %p activated", this, reader);
 }
 
