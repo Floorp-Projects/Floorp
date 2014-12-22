@@ -60,5 +60,4 @@ add_task(function*() {
   }
 
   yield highlighter.finalize();
-  gBrowser.removeCurrentTab();
 });

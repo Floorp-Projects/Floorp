@@ -10,62 +10,54 @@ let { isTargetSupported } = Tools.scratchpad;
 
 Tools.scratchpad.isTargetSupported = () => true;
 
-
-function test()
-{
+add_task(function*() {
   waitForExplicitFinish();
+  yield loadTab(TEST_URI);
 
-  loadTab(TEST_URI).then(() => {
-    info("Opening toolbox with Scratchpad panel");
+  info("Opening toolbox with Scratchpad panel");
 
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
-    gDevTools.showToolbox(target, "scratchpad", "window").then(runTests);
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  let toolbox = yield gDevTools.showToolbox(target, "scratchpad", "window");
+
+  let scratchpadPanel = toolbox.getPanel("scratchpad");
+  let { scratchpad } = scratchpadPanel;
+  is(toolbox.getCurrentPanel(), scratchpadPanel,
+    "Scratchpad is currently selected panel");
+
+  info("Switching to webconsole panel");
+
+  let webconsolePanel = yield toolbox.selectTool("webconsole");
+  let { hud } = webconsolePanel;
+  is(toolbox.getCurrentPanel(), webconsolePanel,
+    "Webconsole is currently selected panel");
+
+  info("console.log()ing from Scratchpad");
+
+  scratchpad.setText("console.log('foobar-from-scratchpad')");
+  scratchpad.run();
+  let messages = yield waitForMessages({
+    webconsole: hud,
+    messages: [{ text: "foobar-from-scratchpad" }]
   });
-}
 
-function runTests(aToolbox)
-{
-  Task.spawn(function*() {
-    let scratchpadPanel = aToolbox.getPanel("scratchpad");
-    let { scratchpad } = scratchpadPanel;
-    is(aToolbox.getCurrentPanel(), scratchpadPanel,
-      "Scratchpad is currently selected panel");
+  info("Clicking link to switch to and focus Scratchpad");
 
-    info("Switching to webconsole panel");
+  let [matched] = [...messages[0].matched];
+  ok(matched, "Found logged message from Scratchpad");
+  let anchor = matched.querySelector("a.message-location");
 
-    let webconsolePanel = yield aToolbox.selectTool("webconsole");
-    let { hud } = webconsolePanel;
-    is(aToolbox.getCurrentPanel(), webconsolePanel,
-      "Webconsole is currently selected panel");
+  toolbox.on("scratchpad-selected", function selected() {
+    toolbox.off("scratchpad-selected", selected);
 
-    info("console.log()ing from Scratchpad");
+    is(toolbox.getCurrentPanel(), scratchpadPanel,
+      "Clicking link switches to Scratchpad panel");
 
-    scratchpad.setText("console.log('foobar-from-scratchpad')");
-    scratchpad.run();
-    let messages = yield waitForMessages({
-      webconsole: hud,
-      messages: [{ text: "foobar-from-scratchpad" }]
-    });
+    is(Services.ww.activeWindow, toolbox.frame.ownerGlobal,
+       "Scratchpad's toolbox is focused");
 
-    info("Clicking link to switch to and focus Scratchpad");
-
-    let [matched] = [...messages[0].matched];
-    ok(matched, "Found logged message from Scratchpad");
-    let anchor = matched.querySelector("a.message-location");
-
-    aToolbox.on("scratchpad-selected", function selected() {
-      aToolbox.off("scratchpad-selected", selected);
-
-      is(aToolbox.getCurrentPanel(), scratchpadPanel,
-        "Clicking link switches to Scratchpad panel");
-      
-      is(Services.ww.activeWindow, aToolbox.frame.ownerGlobal,
-         "Scratchpad's toolbox is focused");
-
-      Tools.scratchpad.isTargetSupported = isTargetSupported;
-      finish();
-    });
-
-    EventUtils.synthesizeMouse(anchor, 2, 2, {}, hud.iframeWindow);
+    Tools.scratchpad.isTargetSupported = isTargetSupported;
+    finish();
   });
-}
+
+  EventUtils.synthesizeMouse(anchor, 2, 2, {}, hud.iframeWindow);
+});
