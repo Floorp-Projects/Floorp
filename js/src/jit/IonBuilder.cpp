@@ -2261,9 +2261,8 @@ IonBuilder::processDoWhileCondEnd(CFGState &state)
         return ControlStatus_Error;
 
     // Test for do {} while(false) and don't create a loop in that case.
-    if (vins->isConstant()) {
-        MConstant *cte = vins->toConstant();
-        if (cte->value().isBoolean() && !cte->value().toBoolean()) {
+    if (vins->isConstantValue() && !vins->constantValue().isMagic()) {
+        if (!vins->constantToBoolean()) {
             current->end(MGoto::New(alloc(), successor));
             current = nullptr;
 
@@ -4568,7 +4567,7 @@ IonBuilder::makeInliningDecision(JSObject *targetArg, CallInfo &callInfo)
                 bool hasOpportunities = false;
                 for (size_t i = 0, e = callInfo.argv().length(); !hasOpportunities && i < e; i++) {
                     MDefinition *arg = callInfo.argv()[i];
-                    hasOpportunities = arg->isLambda() || arg->isConstant();
+                    hasOpportunities = arg->isLambda() || arg->isConstantValue();
                 }
 
                 if (!hasOpportunities)
@@ -5930,10 +5929,10 @@ IonBuilder::jsop_eval(uint32_t argc)
         // name on the scope chain and the eval is performing a call on that
         // value. Use a dynamic scope chain lookup rather than a full eval.
         if (string->isConcat() &&
-            string->getOperand(1)->isConstant() &&
-            string->getOperand(1)->toConstant()->value().isString())
+            string->getOperand(1)->isConstantValue() &&
+            string->getOperand(1)->constantValue().isString())
         {
-            JSAtom *atom = &string->getOperand(1)->toConstant()->value().toString()->asAtom();
+            JSAtom *atom = &string->getOperand(1)->constantValue().toString()->asAtom();
 
             if (StringEqualsAscii(atom, "()")) {
                 MDefinition *name = string->getOperand(0);
@@ -7846,10 +7845,10 @@ IonBuilder::getElemTryArgumentsInlined(bool *emitted, MDefinition *obj, MDefinit
     MOZ_ASSERT(!info().argsObjAliasesFormals());
 
     // When the id is constant, we can just return the corresponding inlined argument
-    if (index->isConstant() && index->toConstant()->value().isInt32()) {
+    if (index->isConstantValue() && index->constantValue().isInt32()) {
         MOZ_ASSERT(inliningDepth_ > 0);
 
-        int32_t id = index->toConstant()->value().toInt32();
+        int32_t id = index->constantValue().toInt32();
         index->setImplicitlyUsedUnchecked();
 
         if (id < (int32_t)inlineCallInfo_->argc() && id >= 0)
@@ -8065,8 +8064,8 @@ IonBuilder::addTypedArrayLengthAndData(MDefinition *obj,
     MOZ_ASSERT((index != nullptr) == (elements != nullptr));
     JSObject *tarr = nullptr;
 
-    if (obj->isConstant() && obj->toConstant()->value().isObject())
-        tarr = &obj->toConstant()->value().toObject();
+    if (obj->isConstantValue() && obj->constantValue().isObject())
+        tarr = &obj->constantValue().toObject();
     else if (obj->resultTypeSet())
         tarr = obj->resultTypeSet()->getSingleton();
 
@@ -8123,8 +8122,8 @@ IonBuilder::convertShiftToMaskForStaticTypedArray(MDefinition *id,
 
     // If the index is an already shifted constant, undo the shift to get the
     // absolute offset being accessed.
-    if (id->isConstant() && id->toConstant()->value().isInt32()) {
-        int32_t index = id->toConstant()->value().toInt32();
+    if (id->isConstantValue() && id->constantValue().isInt32()) {
+        int32_t index = id->constantValue().toInt32();
         MConstant *offset = MConstant::New(alloc(), Int32Value(index << TypedArrayShift(viewType)));
         current->add(offset);
         return offset;
@@ -8132,9 +8131,9 @@ IonBuilder::convertShiftToMaskForStaticTypedArray(MDefinition *id,
 
     if (!id->isRsh() || id->isEffectful())
         return nullptr;
-    if (!id->getOperand(1)->isConstant())
+    if (!id->getOperand(1)->isConstantValue())
         return nullptr;
-    const Value &value = id->getOperand(1)->toConstant()->value();
+    const Value &value = id->getOperand(1)->constantValue();
     if (!value.isInt32() || uint32_t(value.toInt32()) != TypedArrayShift(viewType))
         return nullptr;
 
