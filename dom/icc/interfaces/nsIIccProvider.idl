@@ -58,7 +58,7 @@ interface nsIIccChannelCallback : nsISupports
 /**
  * XPCOM component (in the content process) that provides the ICC information.
  */
-[scriptable, uuid(bf985ee1-14c9-43c6-a471-8ab52fb24b0d)]
+[scriptable, uuid(821bda2b-7abd-44c6-813e-d4bc68d73a0c)]
 interface nsIIccProvider : nsISupports
 {
   // MUST match enum IccCardState in MozIcc.webidl!
@@ -127,6 +127,9 @@ interface nsIIccProvider : nsISupports
   const unsigned long CARD_MVNO_TYPE_IMSI = 0;
   const unsigned long CARD_MVNO_TYPE_SPN = 1;
   const unsigned long CARD_MVNO_TYPE_GID = 2;
+
+  // MUST match with enum IccService in MozIcc.webidl
+  const unsigned long CARD_SERVICE_FDN = 0;
 
   /**
    * Called when a content process registers receiving unsolicited messages from
@@ -239,4 +242,8 @@ interface nsIIccProvider : nsISupports
                              in nsIDOMWindow window,
                              in unsigned long mvnoType,
                              in DOMString mvnoData);
+
+  nsISupports getServiceState(in unsigned long clientId,
+                              in nsIDOMWindow window,
+                              in unsigned long service);
 };
