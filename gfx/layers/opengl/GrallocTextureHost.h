@@ -15,74 +15,6 @@
 namespace mozilla {
 namespace layers {
 
-class GrallocTextureHostOGL;
-
-// Progressively getting replaced by GLTextureSource
-class GrallocTextureSourceOGL : public TextureSource
-                              , public TextureSourceOGL
-{
-public:
-  friend class GrallocTextureHostOGL;
-
-  GrallocTextureSourceOGL(CompositorOGL* aCompositor,
-                          GrallocTextureHostOGL* aTextureHost,
-                          android::GraphicBuffer* aGraphicBuffer,
-                          gfx::SurfaceFormat aFormat);
-
-  virtual ~GrallocTextureSourceOGL();
-
-  virtual bool IsValid() const MOZ_OVERRIDE;
-
-  virtual void BindTexture(GLenum aTextureUnit, gfx::Filter aFilter) MOZ_OVERRIDE;
-
-  virtual gfx::IntSize GetSize() const MOZ_OVERRIDE;
-
-  virtual TextureSourceOGL* AsSourceOGL() MOZ_OVERRIDE { return this; }
-
-  virtual GLenum GetTextureTarget() const MOZ_OVERRIDE;
-
-  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE { return mFormat; }
-
-  virtual GLenum GetWrapMode() const MOZ_OVERRIDE
-  {
-    return LOCAL_GL_CLAMP_TO_EDGE;
-  }
-
-  void DeallocateDeviceData();
-
-  gl::GLContext* gl() const;
-
-  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
-
-  void ForgetBuffer()
-  {
-    mGraphicBuffer = nullptr;
-    mTextureHost = nullptr;
-  }
-
-  TemporaryRef<gfx::DataSourceSurface> GetAsSurface();
-
-  GLuint GetGLTexture();
-
-  void BindEGLImage();
-
-  EGLImage GetEGLImage()
-  {
-    return mEGLImage;
-  }
-
-  bool Lock();
-
-protected:
-  RefPtr<CompositorOGL> mCompositor;
-  GrallocTextureHostOGL* mTextureHost;
-  android::sp<android::GraphicBuffer> mGraphicBuffer;
-  EGLImage mEGLImage;
-  GLuint mTexture;
-  gfx::SurfaceFormat mFormat;
-  bool mNeedsReset;
-};
-
 class GrallocTextureHostOGL : public TextureHost
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
                             , public TextureHostOGL
@@ -144,8 +76,6 @@ private:
   NewSurfaceDescriptorGralloc mGrallocHandle;
   RefPtr<GLTextureSource> mGLTextureSource;
   RefPtr<CompositorOGL> mCompositor;
-  // only used for tiling, will be removed.
-  RefPtr<GrallocTextureSourceOGL> mTilingTextureSource;
   // Size reported by the GraphicBuffer
   gfx::IntSize mSize;
   // Size reported by TextureClient, can be different in some cases (video?),
