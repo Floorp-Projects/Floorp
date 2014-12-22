@@ -1656,7 +1656,7 @@ pref("loop.soft_start_hostname", "soft-start.loop.services.mozilla.com");
 pref("loop.server", "https://loop.services.mozilla.com/v0");
 pref("loop.seenToS", "unseen");
 pref("loop.gettingStarted.seen", false);
-pref("loop.gettingStarted.url", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/hello/start");
+pref("loop.gettingStarted.url", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/hello/start/");
 pref("loop.gettingStarted.resumeOnFirstJoin", false);
 pref("loop.learnMoreUrl", "https://www.firefox.com/hello/");
 pref("loop.legal.ToS_url", "https://www.mozilla.org/about/legal/terms/firefox-hello/");
