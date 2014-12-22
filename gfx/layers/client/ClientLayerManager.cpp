@@ -272,6 +272,7 @@ ClientLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
 
   if (!mIsRepeatTransaction) {
     mAnimationReadyTime = TimeStamp::Now();
+    GetRoot()->StartPendingAnimations(mAnimationReadyTime);
   }
 
   mPaintedLayerCallback = nullptr;
