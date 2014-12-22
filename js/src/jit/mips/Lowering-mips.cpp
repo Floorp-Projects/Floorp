@@ -470,11 +470,11 @@ LIRGeneratorMIPS::visitAsmJSLoadHeap(MAsmJSLoadHeap *ins)
 
     // For MIPS it is best to keep the 'ptr' in a register if a bounds check
     // is needed.
-    if (ptr->isConstantValue() && !ins->needsBoundsCheck()) {
-        int32_t ptrValue = ptr->constantValue().toInt32();
+    if (ptr->isConstant() && !ins->needsBoundsCheck()) {
+        int32_t ptrValue = ptr->toConstant()->value().toInt32();
         // A bounds check is only skipped for a positive index.
         MOZ_ASSERT(ptrValue >= 0);
-        ptrAlloc = LAllocation(ptr->constantVp());
+        ptrAlloc = LAllocation(ptr->toConstant()->vp());
     } else
         ptrAlloc = useRegisterAtStart(ptr);
 
@@ -488,9 +488,9 @@ LIRGeneratorMIPS::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
     MOZ_ASSERT(ptr->type() == MIRType_Int32);
     LAllocation ptrAlloc;
 
-    if (ptr->isConstantValue() && !ins->needsBoundsCheck()) {
-        MOZ_ASSERT(ptr->constantValue().toInt32() >= 0);
-        ptrAlloc = LAllocation(ptr->constantVp());
+    if (ptr->isConstant() && !ins->needsBoundsCheck()) {
+        MOZ_ASSERT(ptr->toConstant()->value().toInt32() >= 0);
+        ptrAlloc = LAllocation(ptr->toConstant()->vp());
     } else
         ptrAlloc = useRegisterAtStart(ptr);
 

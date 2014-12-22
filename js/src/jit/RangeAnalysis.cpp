@@ -174,12 +174,12 @@ RangeAnalysis::addBetaNodes()
             conservativeUpper = GenericNaN();
         }
 
-        if (left->isConstantValue() && left->constantValue().isNumber()) {
-            bound = left->constantValue().toNumber();
+        if (left->isConstant() && left->toConstant()->value().isNumber()) {
+            bound = left->toConstant()->value().toNumber();
             val = right;
             jsop = ReverseCompareOp(jsop);
-        } else if (right->isConstantValue() && right->constantValue().isNumber()) {
-            bound = right->constantValue().toNumber();
+        } else if (right->isConstant() && right->toConstant()->value().isNumber()) {
+            bound = right->toConstant()->value().toNumber();
             val = left;
         } else if (left->type() == MIRType_Int32 && right->type() == MIRType_Int32) {
             MDefinition *smaller = nullptr;
@@ -1310,14 +1310,14 @@ MLsh::computeRange(TempAllocator &alloc)
     left.wrapAroundToInt32();
 
     MDefinition *rhs = getOperand(1);
-    if (rhs->isConstantValue() && rhs->constantValue().isInt32()) {
-        int32_t c = rhs->constantValue().toInt32();
-        setRange(Range::lsh(alloc, &left, c));
+    if (!rhs->isConstant()) {
+        right.wrapAroundToShiftCount();
+        setRange(Range::lsh(alloc, &left, &right));
         return;
     }
 
-    right.wrapAroundToShiftCount();
-    setRange(Range::lsh(alloc, &left, &right));
+    int32_t c = rhs->toConstant()->value().toInt32();
+    setRange(Range::lsh(alloc, &left, c));
 }
 
 void
@@ -1328,14 +1328,14 @@ MRsh::computeRange(TempAllocator &alloc)
     left.wrapAroundToInt32();
 
     MDefinition *rhs = getOperand(1);
-    if (rhs->isConstantValue() && rhs->constantValue().isInt32()) {
-        int32_t c = rhs->constantValue().toInt32();
-        setRange(Range::rsh(alloc, &left, c));
+    if (!rhs->isConstant()) {
+        right.wrapAroundToShiftCount();
+        setRange(Range::rsh(alloc, &left, &right));
         return;
     }
 
-    right.wrapAroundToShiftCount();
-    setRange(Range::rsh(alloc, &left, &right));
+    int32_t c = rhs->toConstant()->value().toInt32();
+    setRange(Range::rsh(alloc, &left, c));
 }
 
 void
@@ -1353,11 +1353,11 @@ MUrsh::computeRange(TempAllocator &alloc)
     right.wrapAroundToShiftCount();
 
     MDefinition *rhs = getOperand(1);
-    if (rhs->isConstantValue() && rhs->constantValue().isInt32()) {
-        int32_t c = rhs->constantValue().toInt32();
-        setRange(Range::ursh(alloc, &left, c));
-    } else {
+    if (!rhs->isConstant()) {
         setRange(Range::ursh(alloc, &left, &right));
+    } else {
+        int32_t c = rhs->toConstant()->value().toInt32();
+        setRange(Range::ursh(alloc, &left, c));
     }
 
     MOZ_ASSERT(range()->lower() >= 0);
@@ -2734,7 +2734,7 @@ CloneForDeadBranches(TempAllocator &alloc, MInstruction *candidate)
 
     candidate->block()->insertBefore(candidate, clone);
 
-    if (!candidate->isConstantValue()) {
+    if (!candidate->isConstant()) {
         MOZ_ASSERT(clone->canRecoverOnBailout());
         clone->setRecoveredOnBailout();
     }
