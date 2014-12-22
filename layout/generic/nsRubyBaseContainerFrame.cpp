@@ -559,13 +559,8 @@ nsRubyBaseContainerFrame::ReflowOnePair(nsPresContext* aPresContext,
       bool pushedFrame;
       aReflowStates[i]->mLineLayout->ReflowFrame(textFrame, reflowStatus,
                                                  &metrics, pushedFrame);
-      if (NS_INLINE_IS_BREAK(reflowStatus)) {
-        // If any breaking occurs when reflowing a ruby text frame,
-        // we should abandon reflowing this pair.
-        aStatus = NS_INLINE_LINE_BREAK_BEFORE();
-        return 0;
-      }
-      MOZ_ASSERT(!pushedFrame, "Shouldn't push frame if there is no break");
+      MOZ_ASSERT(!NS_INLINE_IS_BREAK(reflowStatus) && !pushedFrame,
+                 "Any line break inside ruby box should has been suppressed");
       pairISize = std::max(pairISize, metrics.ISize(lineWM));
     }
   }
@@ -586,12 +581,8 @@ nsRubyBaseContainerFrame::ReflowOnePair(nsPresContext* aPresContext,
     bool pushedFrame;
     aReflowState.mLineLayout->ReflowFrame(aBaseFrame, reflowStatus,
                                           &metrics, pushedFrame);
-    if (NS_INLINE_IS_BREAK(reflowStatus)) {
-      // We cannot place the ruby base frame. Abandon this pair.
-      aStatus = NS_INLINE_LINE_BREAK_BEFORE();
-      return 0;
-    }
-    MOZ_ASSERT(!pushedFrame, "Shouldn't push frame if there is no break");
+    MOZ_ASSERT(!NS_INLINE_IS_BREAK(reflowStatus) && !pushedFrame,
+               "Any line break inside ruby box should has been suppressed");
     pairISize = std::max(pairISize, metrics.ISize(lineWM));
   }
 
@@ -676,9 +667,8 @@ nsRubyBaseContainerFrame::ReflowSpans(nsPresContext* aPresContext,
     bool pushedFrame;
     aReflowStates[i]->mLineLayout->ReflowFrame(rtFrame, reflowStatus,
                                                &metrics, pushedFrame);
-    // It should never cause break, since it is always
-    // at the beginning in its line layout.
-    MOZ_ASSERT(!NS_INLINE_IS_BREAK(reflowStatus) && !pushedFrame);
+    MOZ_ASSERT(!NS_INLINE_IS_BREAK(reflowStatus) && !pushedFrame,
+               "Any line break inside ruby box should has been suppressed");
     spanISize = std::max(spanISize, metrics.ISize(lineWM));
   }
 
