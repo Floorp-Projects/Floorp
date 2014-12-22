@@ -6,6 +6,12 @@
   height: 16px;
 }
 
+/* Reserve space so that localized labels can wrap without hiding the
+   'add more engines' link at the bottom. See bug 1112688. */
+#oneClickSearchProvidersGroup {
+  margin-bottom: 3em;
+}
+
 #engineList {
   margin: .5em 6px;
 }
