@@ -11,7 +11,6 @@
 #include "mozilla/dom/MozEmergencyCbModeEvent.h"
 #include "mozilla/dom/MozOtaStatusEvent.h"
 #include "mozilla/dom/ToJSValue.h"
-#include "mozilla/dom/USSDReceivedEvent.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "nsIDOMDOMRequest.h"
@@ -593,48 +592,6 @@ MobileConnection::GetVoicePrivacyMode(ErrorResult& aRv)
 }
 
 already_AddRefed<DOMRequest>
-MobileConnection::SendMMI(const nsAString& aMMIString, ErrorResult& aRv)
-{
-  if (!mMobileConnection) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());
-  nsRefPtr<MobileConnectionCallback> requestCallback =
-    new MobileConnectionCallback(GetOwner(), request);
-
-  nsresult rv = mMobileConnection->SendMMI(aMMIString, requestCallback);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
-
-  return request.forget();
-}
-
-already_AddRefed<DOMRequest>
-MobileConnection::CancelMMI(ErrorResult& aRv)
-{
-  if (!mMobileConnection) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());
-  nsRefPtr<MobileConnectionCallback> requestCallback =
-    new MobileConnectionCallback(GetOwner(), request);
-
-  nsresult rv = mMobileConnection->CancelMMI(requestCallback);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
-
-  return request.forget();
-}
-
-already_AddRefed<DOMRequest>
 MobileConnection::GetCallForwardingOption(uint16_t aReason, ErrorResult& aRv)
 {
   if (!mMobileConnection) {
@@ -988,26 +945,6 @@ MobileConnection::NotifyDataChanged()
   UpdateData();
 
   return DispatchTrustedEvent(NS_LITERAL_STRING("datachange"));
-}
-
-NS_IMETHODIMP
-MobileConnection::NotifyUssdReceived(const nsAString& aMessage,
-                                     bool aSessionEnded)
-{
-  if (!CheckPermission("mobileconnection")) {
-    return NS_OK;
-  }
-
-  USSDReceivedEventInit init;
-  init.mBubbles = false;
-  init.mCancelable = false;
-  init.mMessage = aMessage;
-  init.mSessionEnded = aSessionEnded;
-
-  nsRefPtr<USSDReceivedEvent> event =
-    USSDReceivedEvent::Constructor(this, NS_LITERAL_STRING("ussdreceived"), init);
-
-  return DispatchTrustedEvent(event);
 }
 
 NS_IMETHODIMP

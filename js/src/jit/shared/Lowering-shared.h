@@ -111,6 +111,8 @@ class LIRGeneratorShared : public MDefinitionVisitor
     inline LAllocation useRegisterOrNonNegativeConstantAtStart(MDefinition *mir);
     inline LAllocation useRegisterOrNonDoubleConstant(MDefinition *mir);
 
+    inline LUse useRegisterForTypedLoad(MDefinition *mir, MIRType type);
+
 #ifdef JS_NUNBOX32
     inline LUse useType(MDefinition *mir, LUse::Policy policy);
     inline LUse usePayload(MDefinition *mir, LUse::Policy policy);

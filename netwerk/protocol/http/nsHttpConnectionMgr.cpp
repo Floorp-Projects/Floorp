@@ -2377,13 +2377,15 @@ nsHttpConnectionMgr::OnMsgCancelTransaction(int32_t reason, void *param)
     LOG(("nsHttpConnectionMgr::OnMsgCancelTransaction [trans=%p]\n", param));
 
     nsresult closeCode = static_cast<nsresult>(reason);
-    nsHttpTransaction *trans = (nsHttpTransaction *) param;
+    nsRefPtr<nsHttpTransaction> trans =
+        dont_AddRef(static_cast<nsHttpTransaction *>(param));
+
     //
     // if the transaction owns a connection and the transaction is not done,
     // then ask the connection to close the transaction.  otherwise, close the
     // transaction directly (removing it from the pending queue first).
     //
-    nsAHttpConnection *conn = trans->Connection();
+    nsRefPtr<nsAHttpConnection> conn(trans->Connection());
     if (conn && !trans->IsDone()) {
         conn->CloseTransaction(trans, closeCode);
     } else {
@@ -2394,7 +2396,7 @@ nsHttpConnectionMgr::OnMsgCancelTransaction(int32_t reason, void *param)
             int32_t index = ent->mPendingQ.IndexOf(trans);
             if (index >= 0) {
                 LOG(("nsHttpConnectionMgr::OnMsgCancelTransaction [trans=%p]"
-                     " found in pending queue\n", trans));
+                     " found in pending queue\n", trans.get()));
                 ent->mPendingQ.RemoveElementAt(index);
                 nsHttpTransaction *temp = trans;
                 NS_RELEASE(temp); // b/c NS_RELEASE nulls its argument!
@@ -2429,12 +2431,11 @@ nsHttpConnectionMgr::OnMsgCancelTransaction(int32_t reason, void *param)
             if (liveTransaction && liveTransaction->IsNullTransaction()) {
                 LOG(("nsHttpConnectionMgr::OnMsgCancelTransaction [trans=%p] "
                      "also canceling Null Transaction %p on conn %p\n",
-                     trans, liveTransaction, activeConn));
+                     trans.get(), liveTransaction, activeConn));
                 activeConn->CloseTransaction(liveTransaction, closeCode);
             }
         }
     }
-    NS_RELEASE(trans);
 }
 
 void

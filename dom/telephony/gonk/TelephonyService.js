@@ -566,7 +566,7 @@ TelephonyService.prototype = {
           return;
         }
 
-        this._dialMMI(aClientId, mmi, aCallback, true);
+        this._dialMMI(aClientId, mmi, aCallback);
       }
     }
   },
@@ -664,15 +664,14 @@ TelephonyService.prototype = {
    * @param aStartNewSession
    *        True to start a new session for ussd request.
    */
-  _dialMMI: function(aClientId, aMmi, aCallback, aStartNewSession) {
+  _dialMMI: function(aClientId, aMmi, aCallback) {
     let mmiServiceCode = aMmi ?
       this._serviceCodeToKeyString(aMmi.serviceCode) : RIL.MMI_KS_SC_USSD;
 
     aCallback.notifyDialMMI(mmiServiceCode);
 
     this._sendToRilWorker(aClientId, "sendMMI",
-                          { mmi: aMmi,
-                            startNewSession: aStartNewSession }, response => {
+                          { mmi: aMmi }, response => {
       if (DEBUG) debug("MMI response: " + JSON.stringify(response));
 
       if (!response.success) {
@@ -907,6 +906,8 @@ TelephonyService.prototype = {
         return RIL.MMI_KS_SC_CALL_BARRING;
       case RIL.MMI_SC_CALL_WAITING:
         return RIL.MMI_KS_SC_CALL_WAITING;
+      case RIL.MMI_SC_CHANGE_PASSWORD:
+        return RIL.MMI_KS_SC_CHANGE_PASSWORD;
       default:
         return RIL.MMI_KS_SC_USSD;
     }
@@ -1302,13 +1303,7 @@ TelephonyService.prototype = {
             aMessage + " (sessionEnded : " + aSessionEnded + ")");
     }
 
-    gGonkMobileConnectionService.notifyUssdReceived(aClientId, aMessage,
-                                                    aSessionEnded);
-  },
-
-  dialMMI: function(aClientId, aMmiString, aCallback) {
-    let mmi = this._parseMMI(aMmiString, this._hasCalls(aClientId));
-    this._dialMMI(aClientId, mmi, aCallback, false);
+    gTelephonyMessenger.notifyUssdReceived(aClientId, aMessage, aSessionEnded);
   },
 
   /**
@@ -1355,7 +1350,6 @@ USSDReceivedWrapper.prototype = {
     let event = new aWindow.USSDReceivedEvent("ussdreceived", {
       serviceId: aMessage.serviceId,
       message: aMessage.message,
-      sessionEnded: aMessage.sessionEnded,
       session: session
     });
 
