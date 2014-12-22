@@ -3675,18 +3675,6 @@ LIRGenerator::visitIsObject(MIsObject *ins)
 }
 
 void
-LIRGenerator::visitHaveSameClass(MHaveSameClass *ins)
-{
-    MDefinition *lhs = ins->lhs();
-    MDefinition *rhs = ins->rhs();
-
-    MOZ_ASSERT(lhs->type() == MIRType_Object);
-    MOZ_ASSERT(rhs->type() == MIRType_Object);
-
-    define(new(alloc()) LHaveSameClass(useRegister(lhs), useRegister(rhs), temp()), ins);
-}
-
-void
 LIRGenerator::visitHasClass(MHasClass *ins)
 {
     MOZ_ASSERT(ins->object()->type() == MIRType_Object);
