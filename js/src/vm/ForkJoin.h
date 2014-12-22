@@ -370,8 +370,6 @@ struct ParallelBailoutRecord
         joinCause(ParallelBailoutExecution);
         ionBailoutKind = kind;
     }
-
-    void rematerializeFrames(ForkJoinContext *cx, jit::JitFrameIterator &frameIter);
 };
 
 class ForkJoinShared;
