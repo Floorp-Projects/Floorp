@@ -300,10 +300,16 @@ loop.roomViews = (function(mozL10n) {
           />;
         }
         case ROOM_STATES.ENDED: {
-          return <sharedViews.FeedbackView
-            feedbackStore={this.props.feedbackStore}
-            onAfterFeedbackReceived={this.closeWindow}
-          />;
+          if (this.state.used)
+            return <sharedViews.FeedbackView
+              feedbackStore={this.props.feedbackStore}
+              onAfterFeedbackReceived={this.closeWindow}
+            />;
+
+          // In case the room was not used (no one was here), we
+          // bypass the feedback form.
+          this.closeWindow();
+          return null;
         }
         default: {
           return (
