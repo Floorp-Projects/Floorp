@@ -262,12 +262,16 @@ function getSdcardPrefix() {
   return volumeService.getVolumeByName('sdcard').mountPoint;
 }
 
+function getLogDirectoryRoot() {
+  return 'logs';
+}
+
 function getLogDirectory() {
   let d = new Date();
   d = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
   let timestamp = d.toISOString().slice(0, -5).replace(/[:T]/g, '-');
   // return directory name of format 'logs/timestamp/'
-  return OS.Path.join('logs', timestamp);
+  return timestamp;
 }
 
 /**
@@ -281,9 +285,10 @@ function saveLogs(logArrays) {
     });
   }
 
-  let sdcardPrefix, dirName;
+  let sdcardPrefix, dirNameRoot, dirName;
   try {
     sdcardPrefix = getSdcardPrefix();
+    dirNameRoot = getLogDirectoryRoot();
     dirName = getLogDirectory();
   } catch(e) {
     // Return promise failed with exception e
@@ -291,33 +296,39 @@ function saveLogs(logArrays) {
     return Promise.reject(e);
   }
 
-  debug('making a directory all the way from '+sdcardPrefix+' to '+(sdcardPrefix + '/' + dirName));
-  return OS.File.makeDir(OS.Path.join(sdcardPrefix, dirName), {from: sdcardPrefix})
-    .then(function() {
-    // Now the directory is guaranteed to exist, save the logs
-    let logFilenames = [];
-    let saveRequests = [];
+  debug('making a directory all the way from '+sdcardPrefix+' to '+(sdcardPrefix + '/' + dirNameRoot + '/' + dirName));
+  let logsRoot = OS.Path.join(sdcardPrefix, dirNameRoot);
+  return OS.File.makeDir(logsRoot, {from: sdcardPrefix}).then(
+    function() {
+      let logsDir = OS.Path.join(logsRoot, dirName);
+      return OS.File.makeDir(logsDir, {ignoreExisting: false}).then(
+        function() {
+          // Now the directory is guaranteed to exist, save the logs
+          let logFilenames = [];
+          let saveRequests = [];
 
-    for (let logLocation in logArrays) {
-      debug('requesting save of ' + logLocation);
-      let logArray = logArrays[logLocation];
-      // The filename represents the relative path within the SD card, not the
-      // absolute path because Gaia will refer to it using the DeviceStorage
-      // API
-      let filename = OS.Path.join(dirName, getLogFilename(logLocation));
-      logFilenames.push(filename);
-      let saveRequest = OS.File.writeAtomic(OS.Path.join(sdcardPrefix, filename), logArray);
-      saveRequests.push(saveRequest);
-    }
+          for (let logLocation in logArrays) {
+            debug('requesting save of ' + logLocation);
+            let logArray = logArrays[logLocation];
+            // The filename represents the relative path within the SD card, not the
+            // absolute path because Gaia will refer to it using the DeviceStorage
+            // API
+            let filename = OS.Path.join(dirNameRoot, dirName, getLogFilename(logLocation));
+            logFilenames.push(filename);
+            let saveRequest = OS.File.writeAtomic(OS.Path.join(sdcardPrefix, filename), logArray);
+            saveRequests.push(saveRequest);
+          }
 
-    return Promise.all(saveRequests).then(function() {
-      debug('returning logfilenames: '+logFilenames.toSource());
-      return {
-        logFilenames: logFilenames,
-        logPrefix: dirName
-      };
+          return Promise.all(saveRequests).then(
+            function() {
+              debug('returning logfilenames: '+logFilenames.toSource());
+              return {
+                logFilenames: logFilenames,
+                logPrefix: OS.Path.join(dirNameRoot, dirName)
+              };
+            });
+        });
     });
-  });
 }
 
 LogShake.init();

@@ -27,8 +27,6 @@ const MOBILECELLINFO_CID =
   Components.ID("{0635d9ab-997e-4cdf-84e7-c1883752dff3}");
 const MOBILECALLFORWARDINGOPTIONS_CID =
   Components.ID("{e0cf4463-ee63-4b05-ab2e-d94bf764836c}");
-const TELEPHONYDIALCALLBACK_CID =
-  Components.ID("{c2af1a5d-3649-44ef-a1ff-18e9ac1dec51}");
 const NEIGHBORINGCELLINFO_CID =
   Components.ID("{6078cbf1-f34c-44fa-96f8-11a88d4bfdd3}");
 const GSMCELLINFO_CID =
@@ -278,62 +276,6 @@ CdmaCellInfo.prototype = {
   evdoDbm: INT32_MAX,
   evdoEcio: INT32_MAX,
   evdoSnr: INT32_MAX
-};
-
-/**
- * Wrap a MobileConnectionCallback to a TelephonyDialCallback.
- */
-function TelephonyDialCallback(aCallback) {
-  this.callback = aCallback;
-}
-TelephonyDialCallback.prototype = {
-  QueryInterface:   XPCOMUtils.generateQI([Ci.nsITelephonyDialCallback]),
-  classID:          TELEPHONYDIALCALLBACK_CID,
-
-  notifyDialMMI: function(mmiServiceCode) {
-    this.serviceCode = mmiServiceCode;
-  },
-
-  notifyDialMMISuccess: function(statusMessage) {
-    this.callback.notifySendCancelMmiSuccess(this.serviceCode, statusMessage);
-  },
-
-  notifyDialMMISuccessWithInteger: function(statusMessage, additionalInfo) {
-    this.callback.notifySendCancelMmiSuccessWithInteger(this.serviceCode,
-                                                        statusMessage,
-                                                        additionalInfo);
-  },
-
-  notifyDialMMISuccessWithStrings: function(statusMessage, count, additionalInfo) {
-    this.callback.notifySendCancelMmiSuccessWithStrings(this.serviceCode,
-                                                        statusMessage,
-                                                        count,
-                                                        additionalInfo);
-  },
-
-  notifyDialMMISuccessWithCallForwardingOptions: function(statusMessage, count, additionalInfo) {
-    this.callback.notifySendCancelMmiSuccessWithCallForwardingOptions(
-                                                        this.serviceCode,
-                                                        statusMessage,
-                                                        count,
-                                                        additionalInfo);
-  },
-
-  notifyDialMMIError: function(error) {
-    this.callback.notifyError(error, "", this.serviceCode);
-  },
-
-  notifyDialMMIErrorWithInfo: function(error, info) {
-    this.callback.notifyError(error, "", this.serviceCode, info);
-  },
-
-  notifyDialError: function() {
-    throw Cr.NS_ERROR_UNEXPECTED;
-  },
-
-  notifyDialSuccess: function() {
-    throw Cr.NS_ERROR_UNEXPECTED;
-  },
 };
 
 function MobileConnectionProvider(aClientId, aRadioInterface) {
@@ -833,24 +775,6 @@ MobileConnectionProvider.prototype = {
     }).bind(this));
   },
 
-  sendMMI: function(aMmi, aCallback) {
-    let callback = new TelephonyDialCallback(aCallback);
-    gGonkTelephonyService.dialMMI(this._clientId, aMmi, callback);
-  },
-
-  cancelMMI: function(aCallback) {
-    this._radioInterface.sendWorkerMessage("cancelUSSD", null,
-                                           (function(aResponse) {
-      if (aResponse.errorMsg) {
-        aCallback.notifyError(aResponse.errorMsg);
-        return false;
-      }
-
-      aCallback.notifySuccess();
-      return false;
-    }).bind(this));
-  },
-
   setCallForwarding: function(aAction, aReason, aNumber, aTimeSeconds,
                               aServiceClass, aCallback) {
     let options = {
@@ -1188,18 +1112,6 @@ MobileConnectionService.prototype = {
     }
 
     this.getItemByServiceId(aClientId).updateDataInfo(aDataInfo);
-  },
-
-  notifyUssdReceived: function(aClientId, aMessage, aSessionEnded) {
-    if (DEBUG) {
-      debug("notifyUssdReceived for " + aClientId + ": " +
-            aMessage + " (sessionEnded : " + aSessionEnded + ")");
-    }
-
-    gMobileConnectionMessenger.notifyUssdReceived(aClientId, aMessage, aSessionEnded);
-
-    this.getItemByServiceId(aClientId)
-        .deliverListenerEvent("notifyUssdReceived", [aMessage, aSessionEnded]);
   },
 
   notifyDataError: function(aClientId, aMessage) {

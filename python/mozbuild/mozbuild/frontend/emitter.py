@@ -345,6 +345,14 @@ class TreeMetadataEmitter(LoggingMixin):
 
         This is a generator of mozbuild.frontend.data.ContextDerived instances.
         """
+
+        # We only want to emit an InstallationTarget if one of the consulted
+        # variables is defined. Later on, we look up FINAL_TARGET, which has
+        # the side-effect of populating it. So, we need to do this lookup
+        # early.
+        if any(k in context for k in ('FINAL_TARGET', 'XPI_NAME', 'DIST_SUBDIR')):
+            yield InstallationTarget(context)
+
         # We always emit a directory traversal descriptor. This is needed by
         # the recursive make backend.
         for o in self._emit_directory_traversal_from_context(context): yield o
@@ -523,9 +531,9 @@ class TreeMetadataEmitter(LoggingMixin):
                 for s in strings:
                     if context.is_objdir_path(s):
                         if s.startswith('!/'):
-                            raise SandboxValidationError(
-                                'Topobjdir-relative file not allowed in TEST_HARNESS_FILES: %s' % s, context)
-                        objdir_files[path].append(s[1:])
+                            objdir_files[path].append('$(DEPTH)/%s' % s[2:])
+                        else:
+                            objdir_files[path].append(s[1:])
                     else:
                         resolved = context.resolve_path(s)
                         if '*' in s:
@@ -615,10 +623,6 @@ class TreeMetadataEmitter(LoggingMixin):
                 raise SandboxValidationError('Path specified in LOCAL_INCLUDES '
                     'does not exist: %s (resolved to %s)' % (local_include, actual_include), context)
             yield LocalInclude(context, local_include)
-
-        if context.get('FINAL_TARGET') or context.get('XPI_NAME') or \
-                context.get('DIST_SUBDIR'):
-            yield InstallationTarget(context)
 
         final_target_files = context.get('FINAL_TARGET_FILES')
         if final_target_files:

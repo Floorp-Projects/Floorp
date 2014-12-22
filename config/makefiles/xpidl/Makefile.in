@@ -22,48 +22,39 @@ include $(topsrcdir)/config/rules.mk
 # As an optimization to reduce overall CPU usage, we process all .idl
 # belonging to a module with a single command invocation. This prevents
 # redundant parsing of .idl files and significantly reduces CPU cycles.
-#
-# Future improvement: Headers are currently written to a local directory then
-# installed in the distribution directory. It is preferable to write headers
-# directly into the distribution directory. However, PGO builds remove the dist
-# directory via rm -rf (with no regards to manifests). Since the cost of
-# processing XPIDL files is not trivial, it is preferrable to cache the headers
-# and reinstall them rather than regenerate them. Ideally the dist pruning is
-# performed with manifests. At that time we can write headers directly to the
-# dist directory.
 
 # For dependency files.
 idl_deps_dir := .deps
-
-# Where we put our final, linked .xpt files.
-idl_xpt_dir := xpt
 
 dist_idl_dir := $(DIST)/idl
 dist_include_dir := $(DIST)/include
 process_py := $(topsrcdir)/python/mozbuild/mozbuild/action/xpidl-process.py
 
-# TODO we should use py_action, but that would require extra directories to be
-# in the virtualenv.
-idlprocess := $(PYTHON_PATH) $(PLY_INCLUDE) -I$(IDL_PARSER_DIR) -I$(IDL_PARSER_CACHE_DIR) \
-    $(process_py) --cache-dir $(IDL_PARSER_CACHE_DIR) $(dist_idl_dir) \
-        $(dist_include_dir) $(idl_xpt_dir) $(idl_deps_dir)
-
 ifdef LIBXUL_SDK
-idlprocess += -I$(LIBXUL_SDK)/idl
+libxul_sdk_includes := -I$(LIBXUL_SDK)/idl
 endif
 
+# TODO we should use py_action, but that would require extra directories to be
+# in the virtualenv.
+%.xpt:
+	@echo "$(@F)"
+	$(PYTHON_PATH) $(PLY_INCLUDE) -I$(IDL_PARSER_DIR) -I$(IDL_PARSER_CACHE_DIR) \
+		$(process_py) --cache-dir $(IDL_PARSER_CACHE_DIR) $(dist_idl_dir) \
+		$(dist_include_dir) $(@D) $(idl_deps_dir) $(libxul_sdk_includes) \
+		$(basename $(notdir $@ $(filter %.idl,$^)))
+
 xpidl_modules := @xpidl_modules@
+xpt_files := @xpt_files@
 
 @xpidl_rules@
 
-linked_xpt_files := $(addprefix $(idl_xpt_dir)/,$(addsuffix .xpt,$(xpidl_modules)))
 depends_files := $(foreach root,$(xpidl_modules),$(idl_deps_dir)/$(root).pp)
 
-GARBAGE += $(linked_xpt_files) $(depends_files)
+GARBAGE += $(xpt_files) $(depends_files)
 
-xpidl:: $(linked_xpt_files)
+xpidl:: $(xpt_files)
 
-$(linked_xpt_files): $(process_py) $(call mkdir_deps,$(idl_deps_dir) $(dist_include_dir) $(idl_xpt_dir))
+$(xpt_files): $(process_py) $(call mkdir_deps,$(idl_deps_dir) $(dist_include_dir))
 
 $(call include_deps,$(depends_files))
 

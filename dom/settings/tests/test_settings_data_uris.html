@@ -21,10 +21,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=806374
 
 "use strict";
 
-if (SpecialPowers.isMainProcess()) {
-  SpecialPowers.Cu.import("resource://gre/modules/SettingsRequestManager.jsm");
-}
-
+var url = SimpleTest.getTestFileURL("file_loadserver.js");
+var script = SpecialPowers.loadChromeScript(url);
 SpecialPowers.addPermission("settings-read", true, document);
 SpecialPowers.addPermission("settings-write", true, document);
 SpecialPowers.addPermission("settings-api-read", true, document);
@@ -45,7 +43,6 @@ function onFailure() {
   }
 }
 
-let mozSettings = window.navigator.mozSettings;
 let req;
 
 // A simple data URI that will be converted to a blob.
@@ -62,7 +59,7 @@ function checkBlob(blob) {
 
 let steps = [
   function() {
-    let lock = mozSettings.createLock();
+    let lock = navigator.mozSettings.createLock();
     req = lock.clear();
     req.onsuccess = next;
     req.onerror = onFailure("Deleting database");
@@ -70,19 +67,19 @@ let steps = [
   function() {
     function obs(e) {
       checkBlob(e.settingValue);
-      mozSettings.removeObserver("test1", obs);
+      navigator.mozSettings.removeObserver("test1", obs);
       next();
     }
-    mozSettings.addObserver("test1", obs);
+    navigator.mozSettings.addObserver("test1", obs);
     next();
   },
   function() {
     // next is called by the observer above
-    let req = mozSettings.createLock().set({"test1": dataURI});
+    let req = navigator.mozSettings.createLock().set({"test1": dataURI});
     req.onerror = onFailure("Saving blob");
   },
   function() {
-    let req = mozSettings.createLock().get("test1");
+    let req = navigator.mozSettings.createLock().get("test1");
     req.onsuccess = function(event) {
       checkBlob(event.target.result["test1"]);
       next();
@@ -90,12 +87,12 @@ let steps = [
     req.onerror = onFailure("Getting blob");
   },
   function() {
-    let req = mozSettings.createLock().set({"test2": [1, 2, dataURI, 4]});
+    let req = navigator.mozSettings.createLock().set({"test2": [1, 2, dataURI, 4]});
     req.onsuccess = next;
     req.onerror = onFailure("Saving array");
   },
   function() {
-    let req = mozSettings.createLock().get("test2");
+    let req = navigator.mozSettings.createLock().get("test2");
     req.onsuccess = function(event) {
       let val = event.target.result["test2"];
       ok(Array.isArray(val), "Result is an array");
@@ -106,12 +103,12 @@ let steps = [
     req.onerror = onFailure("Getting array");
   },
   function() {
-    let req = mozSettings.createLock().set({"test3": {foo: "bar", baz: {number: 1, arr: [dataURI]}}});
+    let req = navigator.mozSettings.createLock().set({"test3": {foo: "bar", baz: {number: 1, arr: [dataURI]}}});
     req.onsuccess = next();
     req.onerror = onFailure("Saving object");
   },
   function() {
-    let req = mozSettings.createLock().get("test3");
+    let req = navigator.mozSettings.createLock().get("test3");
     req.onsuccess = function(event) {
       let val = event.target.result["test3"];
       ok(typeof(val) == "object", "Result is an object");
@@ -126,7 +123,7 @@ let steps = [
     req.onerror = onFailure("Getting object");
   },
   function() {
-    let req = mozSettings.createLock().clear();
+    let req = navigator.mozSettings.createLock().clear();
     req.onsuccess = function() {
       next();
     };

@@ -20,13 +20,28 @@ EXPORTS += [
     'GonkNativeWindowClient.h',
 ]
 
-if CONFIG['ANDROID_VERSION'] == '19':
+if CONFIG['ANDROID_VERSION'] >= '19':
+    EXPORTS += [
+        'IGonkGraphicBufferConsumer.h',
+    ]
+
+if CONFIG['ANDROID_VERSION'] >= '21':
+    EXPORTS += [
+        'GonkBufferQueueLL/GonkBufferQueueDefs.h',
+        'GonkBufferQueueLL/GonkBufferQueueLL.h',
+        'GonkBufferQueueLL/GonkBufferSlot.h',
+        'GonkConsumerBaseLL.h',
+        'GonkNativeWindowClientLL.h',
+        'GonkNativeWindowLL.h',
+        'IGonkGraphicBufferConsumerLL.h',
+    ]
+elif CONFIG['ANDROID_VERSION'] >= '19':
     EXPORTS += [
         'GonkBufferQueueKK.h',
         'GonkConsumerBaseKK.h',
         'GonkNativeWindowClientKK.h',
         'GonkNativeWindowKK.h',
-        'IGonkGraphicBufferConsumer.h',
+        'IGonkGraphicBufferConsumerKK.h',
     ]
 elif CONFIG['ANDROID_VERSION'] in ('17', '18'):
     EXPORTS += [
@@ -42,13 +57,26 @@ elif CONFIG['ANDROID_VERSION'] == '15':
     ]
 
 if CONFIG['MOZ_B2G_CAMERA'] or CONFIG['MOZ_OMX_DECODER'] or CONFIG['MOZ_WEBRTC']:
-    if CONFIG['ANDROID_VERSION'] == '19':
+    if CONFIG['ANDROID_VERSION'] >= '21':
+        SOURCES += [
+            'GonkBufferQueueLL/GonkBufferItem.cpp',
+            'GonkBufferQueueLL/GonkBufferQueueConsumer.cpp',
+            'GonkBufferQueueLL/GonkBufferQueueCore.cpp',
+            'GonkBufferQueueLL/GonkBufferQueueLL.cpp',
+            'GonkBufferQueueLL/GonkBufferQueueProducer.cpp',
+            'GonkBufferQueueLL/GonkBufferSlot.cpp',
+            'GonkConsumerBaseLL.cpp',
+            'GonkNativeWindowClientLL.cpp',
+            'GonkNativeWindowLL.cpp',
+            'IGonkGraphicBufferConsumerLL.cpp',
+        ]
+    elif CONFIG['ANDROID_VERSION'] >= '19':
         SOURCES += [
             'GonkBufferQueueKK.cpp',
             'GonkConsumerBaseKK.cpp',
             'GonkNativeWindowClientKK.cpp',
             'GonkNativeWindowKK.cpp',
-            'IGonkGraphicBufferConsumer.cpp',
+            'IGonkGraphicBufferConsumerKK.cpp',
         ]
     elif CONFIG['ANDROID_VERSION'] in ('17', '18'):
         SOURCES += [
@@ -82,3 +110,5 @@ if CONFIG['GNU_CC']:
 FINAL_LIBRARY = 'xul'
 
 DISABLE_STL_WRAPPING = True
+
+NO_VISIBILITY_FLAGS = True
