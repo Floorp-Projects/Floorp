@@ -210,7 +210,7 @@ PropertyTree::lookupChild(ThreadSafeContext *cx, Shape *parent, const StackShape
     }
 
     if (shape) {
-        JS::Zone *zone = shape->arenaHeader()->zone;
+        DebugOnly<JS::Zone *> zone = shape->arenaHeader()->zone;
         MOZ_ASSERT(!zone->needsIncrementalBarrier());
         MOZ_ASSERT(!(zone->isGCSweeping() && !shape->isMarked() &&
                      !shape->arenaHeader()->allocatedDuringIncremental));
