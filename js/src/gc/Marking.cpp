@@ -437,6 +437,15 @@ template <typename T>
 static bool
 IsMarked(T **thingp)
 {
+    MOZ_ASSERT_IF(!ThingIsPermanentAtom(*thingp),
+                  CurrentThreadCanAccessRuntime((*thingp)->runtimeFromMainThread()));
+    return IsMarkedFromAnyThread(thingp);
+}
+
+template <typename T>
+static bool
+IsMarkedFromAnyThread(T **thingp)
+{
     MOZ_ASSERT(thingp);
     MOZ_ASSERT(*thingp);
 #ifdef JSGC_GENERATIONAL
@@ -459,8 +468,8 @@ IsMarked(T **thingp)
         }
     }
 #endif  // JSGC_GENERATIONAL
-    Zone *zone = (*thingp)->asTenured().zone();
-    if (!zone->isCollecting() || zone->isGCFinished())
+    Zone *zone = (*thingp)->asTenured().zoneFromAnyThread();
+    if (!zone->isCollectingFromAnyThread() || zone->isGCFinished())
         return true;
 #ifdef JSGC_COMPACTING
     if (zone->isGCCompacting() && IsForwarded(*thingp))
@@ -603,6 +612,12 @@ bool                                                                            
 Is##base##Marked(type **thingp)                                                                   \
 {                                                                                                 \
     return IsMarked<type>(thingp);                                                                \
+}                                                                                                 \
+                                                                                                  \
+bool                                                                                              \
+Is##base##MarkedFromAnyThread(BarrieredBase<type*> *thingp)                                       \
+{                                                                                                 \
+    return IsMarkedFromAnyThread<type>(thingp->unsafeGet());                                      \
 }                                                                                                 \
                                                                                                   \
 bool                                                                                              \
