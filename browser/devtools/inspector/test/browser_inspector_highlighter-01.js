@@ -28,6 +28,4 @@ add_task(function*() {
 
   let node = yield getHighlitNode(toolbox);
   is(node, getNode("h1"), "The highlighter highlights the right node");
-
-  gBrowser.removeCurrentTab();
 });

@@ -50,8 +50,6 @@ add_task(function*() {
   for (let currTest of testData) {
     yield testPosition(currTest, inspector);
   }
-
-  gBrowser.removeCurrentTab();
 });
 
 function* testPosition(test, inspector) {

@@ -9,7 +9,7 @@
  * All done in one test since this test takes a few seconds to clear GC.
  */
 
-function spawnTest() {
+add_task(function*() {
   let { target, panel } = yield initWebAudioEditor(DESTROY_NODES_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, gAudioNodes } = panelWin;
@@ -56,7 +56,5 @@ function spawnTest() {
   ok(isVisible($("#web-audio-editor-details-pane-empty")),
     "InspectorView empty message should show if the currently selected node gets collected.");
 
-  yield teardown(panel);
-  finish();
-}
-
+  yield teardown(target);
+});

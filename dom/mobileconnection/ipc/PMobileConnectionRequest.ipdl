@@ -40,13 +40,6 @@ struct MobileConnectionReplySuccessNetworks
   nsMobileNetworkInfo[] results;
 };
 
-struct MobileConnectionReplySuccessMmi
-{
-  nsString serviceCode;
-  nsString statusMessage;
-  AdditionalInformation additionalInformation;
-};
-
 struct MobileConnectionReplySuccessCallForwarding
 {
   nsMobileCallForwardingOptions[] results;
@@ -81,21 +74,12 @@ struct MobileConnectionReplyError
   nsString message;
 };
 
-struct MobileConnectionReplyErrorMmi
-{
-  nsString name;
-  nsString message;
-  nsString serviceCode;
-  AdditionalInformation additionalInformation;
-};
-
 union MobileConnectionReply
 {
   // Success
   MobileConnectionReplySuccess;
   MobileConnectionReplySuccessBoolean;
   MobileConnectionReplySuccessNetworks;
-  MobileConnectionReplySuccessMmi;
   MobileConnectionReplySuccessCallForwarding;
   MobileConnectionReplySuccessCallBarring;
   MobileConnectionReplySuccessClirStatus;
@@ -103,7 +87,6 @@ union MobileConnectionReply
   MobileConnectionReplySuccessRoamingPreference;
   // Error
   MobileConnectionReplyError;
-  MobileConnectionReplyErrorMmi;
 };
 
 } // namespace mobileconnection

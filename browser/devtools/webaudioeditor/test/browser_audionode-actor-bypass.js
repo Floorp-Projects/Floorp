@@ -5,7 +5,7 @@
  * Test AudioNode#bypass(), AudioNode#isBypassed()
  */
 
-function spawnTest () {
+add_task(function*() {
   let { target, front } = yield initBackend(SIMPLE_CONTEXT_URL);
   let [_, [destNode, oscNode, gainNode]] = yield Promise.all([
     front.setup({ reload: true }),
@@ -25,5 +25,4 @@ function spawnTest () {
   is((yield gainNode.isBypassed()), false, "Node back to being unbypassed.");
 
   yield removeTab(target.tab);
-  finish();
-}
+});
