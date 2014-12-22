@@ -778,7 +778,7 @@ uint32_t
 gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
                                 bool aLineBreakBefore, gfxFloat aWidth,
                                 PropertyProvider *aProvider,
-                                bool aSuppressInitialBreak,
+                                SuppressBreak aSuppressBreak,
                                 gfxFloat *aTrimWhitespace,
                                 Metrics *aMetrics,
                                 gfxFont::BoundingBoxType aBoundingBoxType,
@@ -847,7 +847,8 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
         // line: if the width is too small for even one character to fit, it 
         // could be the first and last break opportunity on the line, and that
         // would trigger an infinite loop.
-        if (!aSuppressInitialBreak || i > aStart) {
+        if (aSuppressBreak != eSuppressAllBreaks &&
+            (aSuppressBreak != eSuppressInitialBreak || i > aStart)) {
             bool atNaturalBreak = mCharacterGlyphs[i].CanBreakBefore() == 1;
             bool atHyphenationBreak =
                 !atNaturalBreak && haveHyphenation && hyphenBuffer[i - bufferStart];

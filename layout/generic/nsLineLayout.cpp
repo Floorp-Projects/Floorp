@@ -431,7 +431,8 @@ nsLineLayout::BeginSpan(nsIFrame* aFrame,
   psd->mBaseline = aBaseline;
 
   nsIFrame* frame = aSpanReflowState->frame;
-  psd->mNoWrap = !frame->StyleText()->WhiteSpaceCanWrap(frame);
+  psd->mNoWrap = !frame->StyleText()->WhiteSpaceCanWrap(frame) ||
+                 frame->StyleContext()->IsDirectlyInsideRuby();
   psd->mWritingMode = aSpanReflowState->GetWritingMode();
 
   // Switch to new span
