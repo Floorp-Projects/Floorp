@@ -158,6 +158,10 @@ let tests = [
     LoopRooms.open("fakeTourRoom");
   },
   taskify(function* test_arrow_panel_position() {
+    if (Services.appinfo.OS == "Linux") {
+      ok(true, "Skipping on Linux due to 'can't access dead object'");
+      return;
+    }
     ise(loopButton.open, false, "Menu should initially be closed");
     let popup = document.getElementById("UITourTooltip");
 
@@ -186,6 +190,11 @@ let tests = [
     Services.prefs.clearUserPref("loop.gettingStarted.resumeOnFirstJoin");
   }),
   taskify(function* test_resumeViaMenuPanel_roomClosedTabOpen() {
+    if (Services.appinfo.OS == "Linux") {
+      ok(true, "Skipping on Linux due to 'can't access dead object'");
+      return;
+    }
+
     Services.prefs.setBoolPref("loop.gettingStarted.resumeOnFirstJoin", true);
 
     // Create a fake room and then add a fake non-owner participant
@@ -214,6 +223,11 @@ let tests = [
     Services.prefs.clearUserPref("loop.gettingStarted.resumeOnFirstJoin");
   }),
   taskify(function* test_resumeViaMenuPanel_roomClosedTabClosed() {
+    if (Services.appinfo.OS == "Linux") {
+      ok(true, "Skipping on Linux due to 'can't access dead object'");
+      return;
+    }
+
     Services.prefs.setBoolPref("loop.gettingStarted.resumeOnFirstJoin", true);
 
     info("Create a fake room and then add a fake non-owner participant");
