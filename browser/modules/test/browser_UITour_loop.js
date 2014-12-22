@@ -19,7 +19,7 @@ function test() {
 let tests = [
   taskify(function* test_menu_show_hide() {
     ise(loopButton.open, false, "Menu should initially be closed");
-    gContentAPI.showMenu("loop");
+    yield gContentAPI.showMenu("loop");
 
     yield waitForConditionPromise(() => {
       return loopButton.open;
@@ -39,7 +39,7 @@ let tests = [
   }),
   // Test the menu was cleaned up in teardown.
   taskify(function* setup_menu_cleanup() {
-    gContentAPI.showMenu("loop");
+    yield gContentAPI.showMenu("loop");
 
     yield waitForConditionPromise(() => {
       return loopButton.open;
@@ -52,12 +52,13 @@ let tests = [
     checkLoopPanelIsHidden();
   }),
   function test_availableTargets(done) {
-    gContentAPI.showMenu("loop");
-    gContentAPI.getConfiguration("availableTargets", (data) => {
-      for (let targetName of ["loop-newRoom", "loop-roomList", "loop-signInUpLink"]) {
-        isnot(data.targets.indexOf(targetName), -1, targetName + " should exist");
-      }
-      done();
+    gContentAPI.showMenu("loop", () => {
+      gContentAPI.getConfiguration("availableTargets", (data) => {
+        for (let targetName of ["loop-newRoom", "loop-roomList", "loop-signInUpLink"]) {
+          isnot(data.targets.indexOf(targetName), -1, targetName + " should exist");
+        }
+        done();
+      });
     });
   },
   function test_hideMenuHidesAnnotations(done) {
@@ -96,10 +97,11 @@ let tests = [
           gContentAPI.observe((event, params) => {
             ok(false, "No more notifications should have arrived");
           });
+          done();
         });
-        done();
+        executeSoon(() => document.querySelector("#pinnedchats > chatbox").close());
       });
-      document.querySelector("#pinnedchats > chatbox").close();
+
     });
     LoopRooms.open("fakeTourRoom");
   },
@@ -118,7 +120,7 @@ let tests = [
           chat.close();
           done();
         });
-        chat.content.contentDocument.querySelector(".btn-copy").click();
+        executeSoon(() => chat.content.contentDocument.querySelector(".btn-copy").click());
       });
     });
     setupFakeRoom();
@@ -150,7 +152,7 @@ let tests = [
           composeEmailCalled = true;
           chatWin.navigator.wrappedJSObject.mozLoop.composeEmail = oldComposeEmail;
         };
-        chatWin.document.querySelector(".btn-email").click();
+        executeSoon(() => chatWin.document.querySelector(".btn-email").click());
       });
     });
     LoopRooms.open("fakeTourRoom");
@@ -214,20 +216,20 @@ let tests = [
   taskify(function* test_resumeViaMenuPanel_roomClosedTabClosed() {
     Services.prefs.setBoolPref("loop.gettingStarted.resumeOnFirstJoin", true);
 
-    // Create a fake room and then add a fake non-owner participant
+    info("Create a fake room and then add a fake non-owner participant");
     let roomsMap = setupFakeRoom();
     roomsMap.get("fakeTourRoom").participants = [{
       owner: false,
     }];
 
-    // Set the tour URL to a page that's not open yet
+    info("Set the tour URL to a page that's not open yet");
     Services.prefs.setCharPref("loop.gettingStarted.url", gBrowser.currentURI.prePath);
 
     let newTabPromise = waitForConditionPromise(() => {
       return gBrowser.currentURI.path.contains("incomingConversation=waiting");
     }, "New tab with incomingConversation=waiting should have opened");
 
-    // Now open the menu while that non-owner is in the fake room to trigger resuming the tour
+    info("Now open the menu while that non-owner is in the fake room to trigger resuming the tour");
     yield showMenuPromise("loop");
 
     yield newTabPromise;
