@@ -1,31 +1,36 @@
-project.buildDir = "${topobjdir}/mobile/android/gradle/omnijar/build"
-
 apply plugin: 'java'
 
-sourceSets {
-    main {
-        java {
-            // Remove the default directories entirely.
-            srcDirs = []
-            // Depend on everything in mobile/android that goes into
-            // the omnijar.
-            srcDir '../../locales'
-            srcDir '../../chrome'
-            srcDir '../../components'
-            srcDir '../../modules'
-            srcDir '../../themes/core'
-        }
-    }
-}
+// sourceSets {
+//     main {
+//         java {
+//             // Remove the default directories entirely.
+//             srcDirs = []
+//             // Depend on everything in mobile/android that goes into
+//             // the omnijar.
+//             srcDir 'src/main/java/locales'
+//             srcDir 'src/main/java/chrome'
+//             srcDir 'src/main/java/components'
+//             srcDir 'src/main/java/modules'
+//             srcDir 'src/main/java/themes'
+//         }
+//     }
+// }
 
 /**
  * This task runs when any input file is newer than the omnijar.
  */
 task rebuildOmnijar(type:Exec) {
     // Depend on all the inputs labeled as Java sources.
-    project.sourceSets.main.java.srcDirs.each { srcDir ->
-        inputs.sourceDir srcDir
-    }
+    // project.sourceSets.main.java.srcDirs.each { srcDir ->
+    //     inputs.sourceDir srcDir
+    // }
+
+    inputs.sourceDir 'src/main/java/locales'
+    inputs.sourceDir 'src/main/java/chrome'
+    inputs.sourceDir 'src/main/java/components'
+    inputs.sourceDir 'src/main/java/modules'
+    inputs.sourceDir 'src/main/java/themes'
+
     // Produce a single output file.
     outputs.file "${topobjdir}/dist/fennec/assets/omni.ja"
 
@@ -40,3 +45,10 @@ task rebuildOmnijar(type:Exec) {
 
 // Rebuild the omnijar before the earliest Java task.
 tasks.compileJava.dependsOn rebuildOmnijar
+
+apply plugin: 'idea'
+
+idea {
+    module {
+    }
+}
