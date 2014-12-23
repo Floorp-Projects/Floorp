@@ -1,19 +1,41 @@
-Changes & News
---------------
+Release History
+===============
 
-.. warning::
+12.0.2 (2014-12-23)
+~~~~~~~~~~~~~~~~~~~
 
-   Python bugfix releases 2.6.8, 2.7.3, 3.1.5 and 3.2.3 include a change that
-   will cause "import random" to fail with "cannot import name urandom" on any
-   virtualenv created on a Unix host with an earlier release of Python
-   2.6/2.7/3.1/3.2, if the underlying system Python is upgraded. This is due to
-   the fact that a virtualenv uses the system Python's standard library but
-   contains its own copy of the Python interpreter, so an upgrade to the system
-   Python results in a mismatch between the version of the Python interpreter
-   and the version of the standard library. It can be fixed by removing
-   ``$ENV/bin/python`` and re-running virtualenv on the same target directory
-   with the upgraded Python.
+* Upgraded pip to 6.0.2
 
+12.0.1 (2014-12-22)
+~~~~~~~~~~~~~~~~~~~
+
+* Upgraded pip to 6.0.1
+
+12.0 (2014-12-22)
+~~~~~~~~~~~~~~~~~
+
+* **PROCESS** Version numbers are now simply ``X.Y`` where the leading ``1``
+  has been dropped.
+* Split up documentation into structured pages
+* Now using pytest framework
+* Correct sys.path ordering for debian, issue #461
+* Correctly throws error on older Pythons, issue #619
+* Allow for empty $PATH, pull #601
+* Don't set prompt if $env:VIRTUAL_ENV_DISABLE_PROMPT is set for Powershell
+* Updated setuptools to 7.0
+
+1.11.6 (2014-05-16)
+~~~~~~~~~~~~~~~~~~~
+
+* Updated setuptools to 3.6
+* Updated pip to 1.5.6
+
+1.11.5 (2014-05-03)
+~~~~~~~~~~~~~~~~~~~
+
+* Updated setuptools to 3.4.4
+* Updated documentation to use https://virtualenv.pypa.io/
+* Updated pip to 1.5.5
 
 1.11.4 (2014-02-21)
 ~~~~~~~~~~~~~~~~~~~
@@ -197,7 +219,7 @@ Changes & News
   Branden Rolston.
 
 * Fix a bug in the config option parser that prevented setting negative
-  options with environemnt variables. Thanks Ralf Schmitt.
+  options with environment variables. Thanks Ralf Schmitt.
 
 * Allow setting ``--no-site-packages`` from the config file.
 
@@ -333,7 +355,7 @@ Changes & News
 * Updated embedded pip release to 1.0.2.
 
 * Fixed #141 - Be smarter about finding pkg_resources when using the
-  non-default Python intepreter (by using the ``-p`` option).
+  non-default Python interpreter (by using the ``-p`` option).
 
 * Fixed #112 - Fixed path in docs.
 

@@ -37,12 +37,14 @@ $env:VIRTUAL_ENV = $VIRTUAL_ENV
 
 $global:_OLD_VIRTUAL_PATH = $env:PATH
 $env:PATH = "$env:VIRTUAL_ENV/Scripts;" + $env:PATH
-function global:_old_virtual_prompt { "" }
-$function:_old_virtual_prompt = $function:prompt
-function global:prompt {
-    # Add a prefix to the current prompt, but don't discard it.
-    write-host "($(split-path $env:VIRTUAL_ENV -leaf)) " -nonewline
-    & $function:_old_virtual_prompt
+if (! $env:VIRTUAL_ENV_DISABLE_PROMPT) {
+    function global:_old_virtual_prompt { "" }
+    $function:_old_virtual_prompt = $function:prompt
+    function global:prompt {
+        # Add a prefix to the current prompt, but don't discard it.
+        write-host "($(split-path $env:VIRTUAL_ENV -leaf)) " -nonewline
+        & $function:_old_virtual_prompt
+    }
 }
 
 # SIG # Begin signature block
