@@ -2829,8 +2829,6 @@ ContentParent::Observe(nsISupports* aSubject,
         bool     isFormatting;
         bool     isFake;
         bool     isUnmounting;
-        bool     isRemovable;
-        bool     isHotSwappable;
 
         vol->GetName(volName);
         vol->GetMountPoint(mountPoint);
@@ -2841,8 +2839,6 @@ ContentParent::Observe(nsISupports* aSubject,
         vol->GetIsFormatting(&isFormatting);
         vol->GetIsFake(&isFake);
         vol->GetIsUnmounting(&isUnmounting);
-        vol->GetIsRemovable(&isRemovable);
-        vol->GetIsHotSwappable(&isHotSwappable);
 
 #ifdef MOZ_NUWA_PROCESS
         if (!(IsNuwaReady() && IsNuwaProcess()))
@@ -2851,7 +2847,7 @@ ContentParent::Observe(nsISupports* aSubject,
             unused << SendFileSystemUpdate(volName, mountPoint, state,
                                            mountGeneration, isMediaPresent,
                                            isSharing, isFormatting, isFake,
-                                           isUnmounting, isRemovable, isHotSwappable);
+                                           isUnmounting);
         }
     } else if (!strcmp(aTopic, "phone-state-changed")) {
         nsString state(aData);
