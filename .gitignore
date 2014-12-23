@@ -67,3 +67,6 @@ GPATH
 
 # Git clone directory for updating web-platform-tests
 testing/web-platform/sync/
+
+# Android Gradle artifacts.
+mobile/android/gradle/.gradle

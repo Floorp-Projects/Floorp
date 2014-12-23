@@ -171,10 +171,6 @@ var gPlayTests = [
   // Test playback of a WebM file with non-zero start time.
   { name:"split.webm", type:"video/webm", duration:1.967 },
 
-  // Test playback of a WebM file with vp9 video
-  //{ name:"vp9.webm", type:"video/webm", duration:4 },
-  { name:"vp9cake.webm", type:"video/webm", duration:7.966 },
-
   // Test playback of a raw file
   { name:"seek.yuv", type:"video/x-raw-yuv", duration:1.833 },
 
@@ -222,7 +218,11 @@ var gPlayTests = [
   { name:"vbr-head.mp3", type:"audio/mpeg", duration:10.00 },
 
   // Invalid file
-  { name:"bogus.duh", type:"bogus/duh", duration:Number.NaN }
+  { name:"bogus.duh", type:"bogus/duh", duration:Number.NaN },
+
+  // Test playback of a WebM file with vp9 video
+  //{ name:"vp9.webm", type:"video/webm", duration:4 },
+  { name:"vp9cake.webm", type:"video/webm", duration:7.966 }
 ];
 
 // A file for each type we can support.
