@@ -9,7 +9,6 @@
 
 #include <AudioToolbox/AudioToolbox.h>
 #include "PlatformDecoderModule.h"
-#include "mozilla/RefPtr.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/Vector.h"
 #include "nsIThread.h"
@@ -42,7 +41,7 @@ public:
   bool mFileStreamError;
 
 private:
-  RefPtr<MediaTaskQueue> mTaskQueue;
+  nsRefPtr<MediaTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
   AudioConverterRef mConverter;
   AudioStreamBasicDescription mOutputFormat;
