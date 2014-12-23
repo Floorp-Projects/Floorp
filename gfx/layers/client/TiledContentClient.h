@@ -239,7 +239,6 @@ struct TileClient
                                gfxContentType aContent, SurfaceMode aMode,
                                bool *aCreatedTextureClient,
                                nsIntRegion& aAddPaintedRegion,
-                               bool aCanRerasterizeValidRegion,
                                RefPtr<TextureClient>* aTextureClientOnWhite);
 
   void DiscardFrontBuffer();
@@ -279,7 +278,6 @@ private:
   // Copies dirty pixels from the front buffer into the back buffer,
   // and records the copied region in aAddPaintedRegion.
   void ValidateBackBufferFromFront(const nsIntRegion &aDirtyRegion,
-                                   bool aCanRerasterizeValidRegion,
                                    nsIntRegion& aAddPaintedRegion);
 };
 
