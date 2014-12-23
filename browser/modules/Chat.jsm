@@ -50,6 +50,38 @@ function getChromeWindow(contentWin) {
  */
 
 let Chat = {
+
+  /**
+   * Iterator of <chatbox> elements from this module in all windows.
+   */
+  get chatboxes() {
+    return function*() {
+      let winEnum = Services.wm.getEnumerator("navigator:browser");
+      while (winEnum.hasMoreElements()) {
+        let win = winEnum.getNext();
+        let chatbar = win.document.getElementById("pinnedchats");
+        if (!chatbar)
+          continue;
+
+        // Make a new array instead of the live NodeList so this iterator can be
+        // used for closing/deleting.
+        let chatboxes = [c for (c of chatbar.children)];
+        for (let chatbox of chatboxes) {
+          yield chatbox;
+        }
+      }
+
+      // include standalone chat windows
+      winEnum = Services.wm.getEnumerator("Social:Chat");
+      while (winEnum.hasMoreElements()) {
+        let win = winEnum.getNext();
+        if (win.closed)
+          continue;
+        yield win.document.getElementById("chatter");
+      }
+    }();
+  },
+
   /**
    * Open a new chatbox.
    *
@@ -108,26 +140,11 @@ let Chat = {
    *        The origin from which all chats should be closed.
    */
   closeAll: function(origin) {
-    // close all attached chat windows
-    let winEnum = Services.wm.getEnumerator("navigator:browser");
-    while (winEnum.hasMoreElements()) {
-      let win = winEnum.getNext();
-      let chatbar = win.document.getElementById("pinnedchats");
-      if (!chatbar)
+    for (let chatbox of this.chatboxes) {
+      if (chatbox.content.getAttribute("origin") != origin) {
         continue;
-      let chats = [c for (c of chatbar.children) if (c.content.getAttribute("origin") == origin)];
-      [c.close() for (c of chats)];
-    }
-
-    // close all standalone chat windows
-    winEnum = Services.wm.getEnumerator("Social:Chat");
-    while (winEnum.hasMoreElements()) {
-      let win = winEnum.getNext();
-      if (win.closed)
-        continue;
-      let chatOrigin = win.document.getElementById("chatter").content.getAttribute("origin");
-      if (origin == chatOrigin)
-        win.close();
+      }
+      chatbox.close();
     }
   },
 
