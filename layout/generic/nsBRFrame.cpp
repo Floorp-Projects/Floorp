@@ -95,9 +95,9 @@ BRFrame::Reflow(nsPresContext* aPresContext,
   aMetrics.SetBlockStartAscent(0);
 
   // Only when the BR is operating in a line-layout situation will it
-  // behave like a BR.
+  // behave like a BR. BR is suppressed when it is inside ruby frames.
   nsLineLayout* ll = aReflowState.mLineLayout;
-  if (ll) {
+  if (ll && !StyleContext()->IsDirectlyInsideRuby()) {
     // Note that the compatibility mode check excludes AlmostStandards
     // mode, since this is the inline box model.  See bug 161691.
     if ( ll->LineIsEmpty() ||

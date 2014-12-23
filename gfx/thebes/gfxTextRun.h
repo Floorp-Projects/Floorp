@@ -307,6 +307,14 @@ public:
                                  gfxFloat *aAdvanceWidthDelta,
                                  gfxContext *aRefContext);
 
+    enum SuppressBreak {
+      eNoSuppressBreak,
+      // Measure the range of text as if there is no break before it.
+      eSuppressInitialBreak,
+      // Measure the range of text as if it contains no break
+      eSuppressAllBreaks
+    };
+
     /**
      * Finds the longest substring that will fit into the given width.
      * Uses GetHyphenationBreaks and GetSpacing from aBreakProvider.
@@ -331,10 +339,7 @@ public:
      * is up to the end of the string
      * @param aLineBreakBefore set to true if and only if there is an actual
      * line break at the start of this string.
-     * @param aSuppressInitialBreak if true, then we assume there is no possible
-     * linebreak before aStart. If false, then we will check the internal
-     * line break opportunity state before deciding whether to return 0 as the
-     * character to break before.
+     * @param aSuppressBreak what break should be suppressed.
      * @param aTrimWhitespace if non-null, then we allow a trailing run of
      * spaces to be trimmed; the width of the space(s) will not be included in
      * the measured string width for comparison with the limit aWidth, and
@@ -368,7 +373,7 @@ public:
     uint32_t BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
                                  bool aLineBreakBefore, gfxFloat aWidth,
                                  PropertyProvider *aProvider,
-                                 bool aSuppressInitialBreak,
+                                 SuppressBreak aSuppressBreak,
                                  gfxFloat *aTrimWhitespace,
                                  Metrics *aMetrics,
                                  gfxFont::BoundingBoxType aBoundingBoxType,

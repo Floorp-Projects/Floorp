@@ -376,6 +376,14 @@ let testcases = [ {
     affectedByWhitelist: true,
     affectedByDNSForSingleHosts: true,
   }, {
+    input: "5/2",
+    fixedURI: "http://5/2",
+    alternateURI: "http://www.5.com/2",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByWhitelist: true,
+    affectedByDNSForSingleHosts: true,
+  }, {
     input: "moz ?.::%27",
     keywordLookup: true,
     protocolChange: true
@@ -448,6 +456,32 @@ let testcases = [ {
     keywordLookup: true,
     protocolChange: true,
     affectedByWhitelist: true
+  }, {
+    input: "mozilla/",
+    fixedURI: "http://mozilla/",
+    alternateURI: "http://www.mozilla.com/",
+    protocolChange: true,
+    affectedByWhitelist: true,
+  }, {
+    input: "mozilla",
+    fixedURI: "http://mozilla/",
+    alternateURI: "http://www.mozilla.com/",
+    protocolChange: true,
+    keywordLookup: true,
+    affectedByWhitelist: true,
+    affectedByDNSForSingleHosts: true,
+  }, {
+    input: "mozilla5/2",
+    fixedURI: "http://mozilla5/2",
+    alternateURI: "http://www.mozilla5.com/2",
+    protocolChange: true,
+    affectedByWhitelist: true,
+  }, {
+    input: "mozilla/foo",
+    fixedURI: "http://mozilla/foo",
+    alternateURI: "http://www.mozilla.com/foo",
+    protocolChange: true,
+    affectedByWhitelist: true,
   }];
 
 if (Services.appinfo.OS.toLowerCase().startsWith("win")) {
@@ -467,10 +501,8 @@ if (Services.appinfo.OS.toLowerCase().startsWith("win")) {
     input: "mozilla\\",
     fixedURI: "http://mozilla/",
     alternateURI: "http://www.mozilla.com/",
-    keywordLookup: true,
     protocolChange: true,
     affectedByWhitelist: true,
-    affectedByDNSForSingleHosts: true,
   });
 } else {
   testcases.push({
