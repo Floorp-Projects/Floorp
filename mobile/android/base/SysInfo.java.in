@@ -240,11 +240,4 @@ public final class SysInfo {
         // differ to add value.
         return android.os.Build.CPU_ABI;
     }
-
-    /**
-     * @return the default system locale, such as "en-US"
-     */
-    public static String getLocale() {
-        return java.util.Locale.getDefault().toString().replace('_', '-');
-    }
 }
