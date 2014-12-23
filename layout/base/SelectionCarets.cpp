@@ -218,7 +218,6 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
     } else {
       mDragMode = NONE;
       mActiveTouchId = -1;
-      SetVisibility(false);
       LaunchLongTapDetector();
     }
   } else if (aEvent->message == NS_TOUCH_END ||
@@ -1230,7 +1229,6 @@ SelectionCarets::FireScrollEnd(nsITimer* aTimer, void* aSelectionCarets)
                   "Unexpected timer");
 
   SELECTIONCARETS_LOG_STATIC("Update selection carets!");
-  self->SetVisibility(true);
   self->UpdateSelectionCarets();
   self->DispatchSelectionStateChangedEvent(self->GetSelection(),
                                            SelectionState::Updateposition);
