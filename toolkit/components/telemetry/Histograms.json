@@ -6483,6 +6483,18 @@
     "n_values": "7",
     "description": "Final status of the CacheFileInputStream (0=ok, 1=other error, 2=out of memory, 3=disk full, 4=file corrupted, 5=file not found, 6=binding aborted)"
   },
+  "DATABASE_LOCKED_EXCEPTION": {
+    "expires_in_version": "42",
+    "kind": "enumerated",
+    "description": "Record database locks when opening one of Fennec's databases. The index corresponds to how many attempts, beginning with 0.",
+    "n_values": "5"
+  },
+  "DATABASE_SUCCESSFUL_UNLOCK": {
+    "expires_in_version": "42",
+    "kind": "enumerated",
+    "description": "Record on which attempt we successfully unlocked a database. See DATABASE_LOCKED_EXCEPTION.",
+    "n_values": "5"
+  },
   "SQLITEBRIDGE_PROVIDER_PASSWORDS_LOCKED": {
     "expires_in_version": "40",
     "kind": "enumerated",
