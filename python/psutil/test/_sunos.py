@@ -6,8 +6,10 @@
 
 """Sun OS specific tests.  These are implicitly run by test_psutil.py."""
 
+import sys
+
+from test_psutil import sh, unittest
 import psutil
-from test_psutil import *
 
 
 class SunOSSpecificTestCase(unittest.TestCase):
