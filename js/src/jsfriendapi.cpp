@@ -1433,12 +1433,6 @@ js::ReportErrorWithId(JSContext *cx, const char *msg, HandleId id)
 }
 
 #ifdef DEBUG
-JS_PUBLIC_API(bool)
-js::IsInRequest(JSContext *cx)
-{
-    return !!cx->runtime()->requestDepth;
-}
-
 bool
 js::HasObjectMovedOp(JSObject *obj) {
     return !!GetObjectClass(obj)->ext.objectMovedOp;

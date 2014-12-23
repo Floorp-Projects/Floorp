@@ -232,7 +232,6 @@ namespace jit {
     _(SetDOMProperty)                                                       \
     _(IsCallable)                                                           \
     _(IsObject)                                                             \
-    _(HaveSameClass)                                                        \
     _(HasClass)                                                             \
     _(AsmJSNeg)                                                             \
     _(AsmJSUnsignedToDouble)                                                \

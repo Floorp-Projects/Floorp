@@ -54,6 +54,8 @@ typedef int64_t Microseconds;
 // "media.fragmented-mp4.use-blank-decoder" is true.
 class PlatformDecoderModule {
 public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PlatformDecoderModule)
+
   // Call on the main thread to initialize the static state
   // needed by Create().
   static void Init();
@@ -64,7 +66,13 @@ public:
   // PlatformDecoderModules alive at the same time. There is one
   // PlatformDecoderModule created per MP4Reader.
   // This is called on the decode task queue.
-  static PlatformDecoderModule* Create();
+  static already_AddRefed<PlatformDecoderModule> Create();
+  // As Create() but do not initialize the created PlatformDecoderModule.
+  static already_AddRefed<PlatformDecoderModule> CreatePDM();
+
+  // Perform any per-instance initialization.
+  // This is called on the decode task queue.
+  virtual nsresult Startup() { return NS_OK; };
 
 #ifdef MOZ_EME
   // Creates a PlatformDecoderModule that uses a CDMProxy to decrypt or
@@ -72,10 +80,11 @@ public:
   // does not decode, we create a PDM and use that to create MediaDataDecoders
   // that we use on on aTaskQueue to decode the decrypted stream.
   // This is called on the decode task queue.
-  static PlatformDecoderModule* CreateCDMWrapper(CDMProxy* aProxy,
-                                                 bool aHasAudio,
-                                                 bool aHasVideo,
-                                                 MediaTaskQueue* aTaskQueue);
+  static already_AddRefed<PlatformDecoderModule>
+  CreateCDMWrapper(CDMProxy* aProxy,
+                   bool aHasAudio,
+                   bool aHasVideo,
+                   MediaTaskQueue* aTaskQueue);
 #endif
 
   // Called to shutdown the decoder module and cleanup state. The PDM
@@ -124,10 +133,12 @@ public:
   virtual bool SupportsAudioMimeType(const char* aMimeType);
   virtual bool SupportsVideoMimeType(const char* aMimeType);
 
-  virtual ~PlatformDecoderModule() {}
+  // Indicates if the video decoder requires AVCC format.
+  virtual bool DecoderNeedsAVCC(const mp4_demuxer::VideoDecoderConfig& aConfig);
 
 protected:
   PlatformDecoderModule() {}
+  virtual ~PlatformDecoderModule() {}
   // Caches pref media.fragmented-mp4.use-blank-decoder
   static bool sUseBlankDecoder;
   static bool sFFmpegDecoderEnabled;

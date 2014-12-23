@@ -277,8 +277,8 @@ EMEH264Decoder::GmpInit()
 
   nsTArray<uint8_t> codecSpecific;
   codecSpecific.AppendElement(0); // mPacketizationMode.
-  codecSpecific.AppendElements(mConfig.extra_data.begin(),
-                               mConfig.extra_data.length());
+  codecSpecific.AppendElements(mConfig.extra_data->Elements(),
+                               mConfig.extra_data->Length());
 
   rv = mGMP->InitDecode(codec,
                         codecSpecific,

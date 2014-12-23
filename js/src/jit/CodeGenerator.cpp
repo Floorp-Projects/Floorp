@@ -9530,19 +9530,6 @@ CodeGenerator::loadJSScriptForBlock(MBasicBlock *block, Register reg)
 }
 
 void
-CodeGenerator::visitHaveSameClass(LHaveSameClass *ins)
-{
-    Register lhs = ToRegister(ins->lhs());
-    Register rhs = ToRegister(ins->rhs());
-    Register temp = ToRegister(ins->getTemp(0));
-    Register output = ToRegister(ins->output());
-
-    masm.loadObjClass(lhs, temp);
-    masm.loadObjClass(rhs, output);
-    masm.cmpPtrSet(Assembler::Equal, temp, output, output);
-}
-
-void
 CodeGenerator::visitHasClass(LHasClass *ins)
 {
     Register lhs = ToRegister(ins->lhs());

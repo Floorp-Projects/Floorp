@@ -12,6 +12,7 @@
  */
 
 this.EXPORTED_SYMBOLS = [
+  "Accessibility",
   "ElementManager",
   "CLASS_NAME",
   "SELECTOR",
@@ -46,6 +47,149 @@ function ElementException(msg, num, stack) {
   this.code = num;
   this.stack = stack;
 }
+
+this.Accessibility = function Accessibility() {
+  // A flag indicating whether the accessibility issue should be logged or cause
+  // an exception. Default: log to stdout.
+  this.strict = false;
+  // An interface for in-process accessibility clients
+  // Note: we access it lazily to not enable accessibility when it is not needed
+  Object.defineProperty(this, 'accessibleRetrieval', {
+    configurable: true,
+    get: function() {
+      delete this.accessibleRetrieval;
+      this.accessibleRetrieval = Components.classes[
+        '@mozilla.org/accessibleRetrieval;1'].getService(
+          Components.interfaces.nsIAccessibleRetrieval);
+      return this.accessibleRetrieval;
+    }
+  });
+};
+
+Accessibility.prototype = {
+  /**
+   * Accessible object roles that support some action
+   * @type Object
+   */
+  actionableRoles: new Set([
+    'pushbutton',
+    'checkbutton',
+    'combobox',
+    'key',
+    'link',
+    'menuitem',
+    'check menu item',
+    'radio menu item',
+    'option',
+    'radiobutton',
+    'slider',
+    'spinbutton',
+    'pagetab',
+    'entry',
+    'outlineitem'
+  ]),
+
+  /**
+   * Get an accessible object for a DOM element
+   * @param nsIDOMElement element
+   * @param Boolean mustHaveAccessible a flag indicating that the element must
+   * have an accessible object
+   * @return nsIAccessible object for the element
+   */
+  getAccessibleObject(element, mustHaveAccessible = false) {
+    let acc = this.accessibleRetrieval.getAccessibleFor(element);
+    if (!acc && mustHaveAccessible) {
+      this.handleErrorMessage('Element does not have an accessible object');
+    }
+    return acc;
+  },
+
+  /**
+   * Check if the accessible has a role that supports some action
+   * @param nsIAccessible object
+   * @return Boolean an indicator of role being actionable
+   */
+  isActionableRole(accessible) {
+    return this.actionableRoles.has(
+      this.accessibleRetrieval.getStringRole(accessible.role));
+  },
+
+  /**
+   * Determine if an accessible has at least one action that it supports
+   * @param nsIAccessible object
+   * @return Boolean an indicator of supporting at least one accessible action
+   */
+  hasActionCount(accessible) {
+    return accessible.actionCount > 0;
+  },
+
+  /**
+   * Determine if an accessible has a valid name
+   * @param nsIAccessible object
+   * @return Boolean an indicator that the element has a non empty valid name
+   */
+  hasValidName(accessible) {
+    return accessible.name && accessible.name.trim();
+  },
+
+  /**
+   * Check if an accessible has a set hidden attribute
+   * @param nsIAccessible object
+   * @return Boolean an indicator that the element has a hidden accessible
+   * attribute set to true
+   */
+  hasHiddenAttribute(accessible) {
+    let hidden;
+    try {
+      hidden = accessible.attributes.getStringProperty('hidden');
+    } finally {
+      // If the property is missing, exception will be thrown.
+      return hidden && hidden === 'true';
+    }
+  },
+
+  /**
+   * Verify if an accessible has a given state
+   * @param nsIAccessible object
+   * @param String stateName name of the state to match
+   * @return Boolean accessible has a state
+   */
+  matchState(accessible, stateName) {
+    let stateToMatch = Components.interfaces.nsIAccessibleStates[stateName];
+    let state = {};
+    accessible.getState(state, {});
+    return !!(state.value & stateToMatch);
+  },
+
+  /**
+   * Check if an accessible is hidden from the user of the accessibility API
+   * @param nsIAccessible object
+   * @return Boolean an indicator that the element is hidden from the user
+   */
+  isHidden(accessible) {
+    while (accessible) {
+      if (this.hasHiddenAttribute(accessible)) {
+        return true;
+      }
+      accessible = accessible.parent;
+    }
+    return false;
+  },
+
+  /**
+   * Send an error message or log the error message in the log
+   * @param String message
+   */
+  handleErrorMessage(message) {
+    if (!message) {
+      return;
+    }
+    if (this.strict) {
+      throw new ElementException(message, 56, null);
+    }
+    dump(Date.now() + " Marionette: " + message);
+  }
+};
 
 this.ElementManager = function ElementManager(notSupported) {
   this.seenItems = {};

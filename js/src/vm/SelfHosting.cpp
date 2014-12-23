@@ -580,18 +580,6 @@ js::intrinsic_UnsafeGetReservedSlot(JSContext *cx, unsigned argc, Value *vp)
 }
 
 bool
-js::intrinsic_HaveSameClass(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 2);
-    MOZ_ASSERT(args[0].isObject());
-    MOZ_ASSERT(args[1].isObject());
-
-    args.rval().setBoolean(args[0].toObject().getClass() == args[1].toObject().getClass());
-    return true;
-}
-
-bool
 js::intrinsic_IsPackedArray(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1087,7 +1075,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("_DefineDataProperty",     intrinsic_DefineDataProperty,      4,0),
     JS_FN("UnsafeSetReservedSlot",   intrinsic_UnsafeSetReservedSlot,   3,0),
     JS_FN("UnsafeGetReservedSlot",   intrinsic_UnsafeGetReservedSlot,   2,0),
-    JS_FN("HaveSameClass",           intrinsic_HaveSameClass,           2,0),
     JS_FN("IsPackedArray",           intrinsic_IsPackedArray,           1,0),
 
     JS_FN("GetIteratorPrototype",    intrinsic_GetIteratorPrototype,    0,0),
