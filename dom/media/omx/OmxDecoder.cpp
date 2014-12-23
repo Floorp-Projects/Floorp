@@ -65,13 +65,13 @@ OmxDecoder::OmxDecoder(MediaResource *aResource,
   mAudioChannels(-1),
   mAudioSampleRate(-1),
   mDurationUs(-1),
+  mVideoLastFrameTime(-1),
   mVideoBuffer(nullptr),
   mAudioBuffer(nullptr),
   mIsVideoSeeking(false),
   mAudioMetadataRead(false),
   mAudioPaused(false),
-  mVideoPaused(false),
-  mVideoLastFrameTime(-1)
+  mVideoPaused(false)
 {
   mLooper = new ALooper;
   mLooper->setName("OmxDecoder");
