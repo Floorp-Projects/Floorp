@@ -260,7 +260,7 @@ AppleVTDecoder::InitializeSession()
 
 #ifdef LOG_MEDIA_SHA1
   SHA1Sum avc_hash;
-  avc_hash.update(mConfig.extra_data.begin(), mConfig.extra_data.length());
+  avc_hash.update(mConfig.extra_data->Elements(), mConfig.extra_data->Length());
   uint8_t digest_buf[SHA1Sum::kHashSize];
   avc_hash.finish(digest_buf);
   nsAutoCString avc_digest;
@@ -268,7 +268,7 @@ AppleVTDecoder::InitializeSession()
     avc_digest.AppendPrintf("%02x", digest_buf[i]);
   }
   LOG("AVCDecoderConfig %ld bytes sha1 %s",
-      mConfig.extra_data.length(), avc_digest.get());
+      mConfig.extra_data->Length(), avc_digest.get());
 #endif // LOG_MEDIA_SHA1
 
   AutoCFRelease<CFDictionaryRef> extensions = CreateDecoderExtensions();
@@ -312,8 +312,8 @@ AppleVTDecoder::CreateDecoderExtensions()
 {
   AutoCFRelease<CFDataRef> avc_data =
     CFDataCreate(kCFAllocatorDefault,
-                 mConfig.extra_data.begin(),
-                 mConfig.extra_data.length());
+                 mConfig.extra_data->Elements(),
+                 mConfig.extra_data->Length());
 
   const void* atomsKey[] = { CFSTR("avcC") };
   const void* atomsValue[] = { avc_data };

@@ -36,7 +36,7 @@ public:
   const mp4_demuxer::AudioDecoderConfig& mConfig;
 
   // Use to extract magic cookie for HE-AAC detection.
-  mozilla::Vector<uint8_t> mMagicCookie;
+  nsTArray<uint8_t> mMagicCookie;
   // Will be set to true should an error occurred while attempting to retrieve
   // the magic cookie property.
   bool mFileStreamError;
@@ -53,7 +53,7 @@ private:
   void SubmitSample(nsAutoPtr<mp4_demuxer::MP4Sample> aSample);
   nsresult DecodeSample(mp4_demuxer::MP4Sample* aSample);
   nsresult GetInputAudioDescription(AudioStreamBasicDescription& aDesc,
-                                    const mozilla::Vector<uint8_t>& aExtraData);
+                                    const nsTArray<uint8_t>& aExtraData);
   // Setup AudioConverter once all information required has been gathered.
   // Will return NS_ERROR_NOT_INITIALIZED if more data is required.
   nsresult SetupDecoder(mp4_demuxer::MP4Sample* aSample);

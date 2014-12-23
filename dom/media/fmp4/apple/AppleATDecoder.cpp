@@ -293,7 +293,7 @@ AppleATDecoder::DecodeSample(mp4_demuxer::MP4Sample* aSample)
 
 nsresult
 AppleATDecoder::GetInputAudioDescription(AudioStreamBasicDescription& aDesc,
-                                         const mozilla::Vector<uint8_t>& aExtraData)
+                                         const nsTArray<uint8_t>& aExtraData)
 {
   // Request the properties from CoreAudio using the codec magic cookie
   AudioFormatInfo formatInfo;
@@ -302,8 +302,8 @@ AppleATDecoder::GetInputAudioDescription(AudioStreamBasicDescription& aDesc,
   if (mFormatID == kAudioFormatMPEG4AAC) {
     formatInfo.mASBD.mFormatFlags = mConfig.extended_profile;
   }
-  formatInfo.mMagicCookieSize = aExtraData.length();
-  formatInfo.mMagicCookie = aExtraData.begin();
+  formatInfo.mMagicCookieSize = aExtraData.Length();
+  formatInfo.mMagicCookie = aExtraData.Elements();
 
   UInt32 formatListSize;
   // Attempt to retrieve the default format using
@@ -374,7 +374,7 @@ AppleATDecoder::SetupDecoder(mp4_demuxer::MP4Sample* aSample)
     // This will provide us with an updated magic cookie for use with
     // GetInputAudioDescription.
     if (NS_SUCCEEDED(GetImplicitAACMagicCookie(aSample)) &&
-        !mMagicCookie.length()) {
+        !mMagicCookie.Length()) {
       // nothing found yet, will try again later
       return NS_ERROR_NOT_INITIALIZED;
     }
@@ -387,8 +387,8 @@ AppleATDecoder::SetupDecoder(mp4_demuxer::MP4Sample* aSample)
   PodZero(&inputFormat);
   nsresult rv =
     GetInputAudioDescription(inputFormat,
-                             mMagicCookie.length() ?
-                                 mMagicCookie : mConfig.extra_data);
+                             mMagicCookie.Length() ?
+                                 mMagicCookie : *mConfig.extra_data);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -449,7 +449,7 @@ _MetadataCallback(void* aAppleATDecoder,
       decoder->mFileStreamError = true;
       return;
     }
-    decoder->mMagicCookie.append(data.get(), size);
+    decoder->mMagicCookie.AppendElements(data.get(), size);
   }
 }
 
@@ -495,7 +495,7 @@ AppleATDecoder::GetImplicitAACMagicCookie(const mp4_demuxer::MP4Sample* aSample)
     NS_WARNING("Couldn't parse sample");
   }
 
-  if (status || mFileStreamError || mMagicCookie.length()) {
+  if (status || mFileStreamError || mMagicCookie.Length()) {
     // We have decoded a magic cookie or an error occurred as such
     // we won't need the stream any longer.
     AudioFileStreamClose(mStream);

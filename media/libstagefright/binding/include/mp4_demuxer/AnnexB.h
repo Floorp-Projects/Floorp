@@ -22,13 +22,13 @@ public:
   static void ConvertSample(MP4Sample* aSample);
 
   // Parse an AVCC box and construct the Annex B sample header.
-  static already_AddRefed<nsRcTArray<uint8_t>> ConvertExtraDataToAnnexB(
-    mozilla::Vector<uint8_t>& aExtraData);
+  static already_AddRefed<ByteBuffer> ConvertExtraDataToAnnexB(
+    const ByteBuffer* aExtraData);
 
 private:
   // AVCC box parser helper.
   static void ConvertSPSOrPPS(ByteReader& aReader, uint8_t aCount,
-                              nsTArray<uint8_t>* aAnnexB);
+                              ByteBuffer* aAnnexB);
 };
 
 } // namespace mp4_demuxer
