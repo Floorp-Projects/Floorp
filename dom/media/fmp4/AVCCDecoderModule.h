@@ -4,22 +4,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if !defined(WMFPlatformDecoderModule_h_)
-#define WMFPlatformDecoderModule_h_
+#ifndef mozilla_AVCCDecoderModule_h
+#define mozilla_AVCCDecoderModule_h
 
 #include "PlatformDecoderModule.h"
 
 namespace mozilla {
 
-class WMFDecoderModule : public PlatformDecoderModule {
+class AVCCMediaDataDecoder;
+
+// AVCCDecoderModule is a PlatformDecoderModule wrapper used to ensure that
+// only AVCC format is fed to the underlying PlatformDecoderModule.
+// The AVCCDecoderModule allows playback of content where the SPS NAL may not be
+// provided in the init segment (e.g. AVC3 or Annex B)
+// AVCCDecoderModule will monitor the input data, and will delay creation of the
+// MediaDataDecoder until a SPS and PPS NALs have been extracted.
+//
+// AVCC-only decoder modules are AppleVideoDecoder and EMEH264Decoder.
+
+class AVCCDecoderModule : public PlatformDecoderModule {
 public:
-  WMFDecoderModule();
-  virtual ~WMFDecoderModule();
+  explicit AVCCDecoderModule(PlatformDecoderModule* aPDM);
+  virtual ~AVCCDecoderModule();
 
-  // Initializes the module, loads required dynamic libraries, etc.
   virtual nsresult Startup() MOZ_OVERRIDE;
-
-  // Called when the decoders have shutdown.
   virtual nsresult Shutdown() MOZ_OVERRIDE;
 
   virtual already_AddRefed<MediaDataDecoder>
@@ -34,16 +42,13 @@ public:
                      MediaTaskQueue* aAudioTaskQueue,
                      MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
 
-  bool SupportsVideoMimeType(const char* aMimeType) MOZ_OVERRIDE;
-  bool SupportsAudioMimeType(const char* aMimeType) MOZ_OVERRIDE;
+  virtual bool SupportsAudioMimeType(const char* aMimeType) MOZ_OVERRIDE;
+  virtual bool SupportsVideoMimeType(const char* aMimeType) MOZ_OVERRIDE;
 
-  // Called on main thread.
-  static void Init();
 private:
-  static bool sIsWMFEnabled;
-  static bool sDXVAEnabled;
+  nsRefPtr<PlatformDecoderModule> mPDM;
 };
 
 } // namespace mozilla
 
-#endif
+#endif // mozilla_AVCCDecoderModule_h
