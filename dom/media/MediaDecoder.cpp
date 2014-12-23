@@ -281,6 +281,9 @@ void MediaDecoder::DestroyDecodedStream()
 
   if (GetDecodedStream()) {
     GetStateMachine()->ResyncMediaStreamClock();
+  } else {
+    // Avoid the redundant blocking to output stream.
+    return;
   }
 
   // All streams are having their SourceMediaStream disconnected, so they
@@ -842,7 +845,7 @@ void MediaDecoder::PlaybackEnded()
 
   if (mShuttingDown ||
       mPlayState == PLAY_STATE_SEEKING ||
-      (mPlayState == PLAY_STATE_LOADING)) {
+      mPlayState == PLAY_STATE_LOADING) {
     return;
   }
 
