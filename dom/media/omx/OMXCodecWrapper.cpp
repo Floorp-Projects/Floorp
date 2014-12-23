@@ -495,10 +495,10 @@ OMXVideoEncoder::AppendFrame(nsTArray<uint8_t>* aOutputBuf,
   }
   // Replace start code with data length.
   uint8_t length[] = {
-    (aSize >> 24) & 0xFF,
-    (aSize >> 16) & 0xFF,
-    (aSize >> 8) & 0xFF,
-    aSize & 0xFF,
+    uint8_t((aSize >> 24) & 0xFF),
+    uint8_t((aSize >> 16) & 0xFF),
+    uint8_t((aSize >> 8) & 0xFF),
+    uint8_t(aSize & 0xFF),
   };
   aOutputBuf->AppendElements(length, sizeof(length));
   aOutputBuf->AppendElements(aData + sizeof(length), aSize);
@@ -908,14 +908,14 @@ OMXAudioEncoder::AppendDecoderConfig(nsTArray<uint8_t>* aOutputBuf,
   // Decoder config descriptor
   const uint8_t decConfig[] = {
     0x04,                   // Decoder config descriptor tag.
-    15 + csdSize,           // Size: following bytes + csd size.
+    uint8_t(15 + csdSize),  // Size: following bytes + csd size.
     0x40,                   // Object type: MPEG-4 audio.
     0x15,                   // Stream type: audio, reserved: 1.
     0x00, 0x03, 0x00,       // Buffer size: 768 (kAACFrameSize).
     0x00, 0x01, 0x77, 0x00, // Max bitrate: 96000 (kAACBitrate).
     0x00, 0x01, 0x77, 0x00, // Avg bitrate: 96000 (kAACBitrate).
     0x05,                   // Decoder specific descriptor tag.
-    csdSize,                // Data size.
+    uint8_t(csdSize),       // Data size.
   };
   // SL config descriptor.
   const uint8_t slConfig[] = {

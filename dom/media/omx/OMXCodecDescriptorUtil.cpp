@@ -84,8 +84,8 @@ struct AVCParamSet {
   {
     // 2 bytes length value.
     uint8_t size[] = {
-      (mSize & 0xFF00) >> 8, // MSB.
-      mSize & 0x00FF,        // LSB.
+      uint8_t((mSize & 0xFF00) >> 8), // MSB.
+      uint8_t(mSize & 0x00FF),        // LSB.
     };
     aOutputBuf->AppendElements(size, sizeof(size));
 
