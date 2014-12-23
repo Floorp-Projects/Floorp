@@ -9,137 +9,197 @@
 import errno
 import os
 import sys
-import warnings
 
-import _psutil_bsd
-import _psutil_posix
+from psutil import _common
 from psutil import _psposix
-from psutil._error import AccessDenied, NoSuchProcess, TimeoutExpired
+from psutil._common import conn_tmap, usage_percent
 from psutil._compat import namedtuple, wraps
-from psutil._common import *
+import _psutil_bsd as cext
+import _psutil_posix
+
 
 __extra__all__ = []
 
 # --- constants
 
-# Since these constants get determined at import time we do not want to
-# crash immediately; instead we'll set them to None and most likely
-# we'll crash later as they're used for determining process CPU stats
-# and creation_time
-try:
-    NUM_CPUS = _psutil_bsd.get_num_cpus()
-except Exception:
-    NUM_CPUS = None
-    warnings.warn("couldn't determine platform's NUM_CPUS", RuntimeWarning)
-try:
-    TOTAL_PHYMEM = _psutil_bsd.get_virtual_mem()[0]
-except Exception:
-    TOTAL_PHYMEM = None
-    warnings.warn("couldn't determine platform's TOTAL_PHYMEM", RuntimeWarning)
-try:
-    BOOT_TIME = _psutil_bsd.get_system_boot_time()
-except Exception:
-    BOOT_TIME = None
-    warnings.warn("couldn't determine platform's BOOT_TIME", RuntimeWarning)
+PROC_STATUSES = {
+    cext.SSTOP: _common.STATUS_STOPPED,
+    cext.SSLEEP: _common.STATUS_SLEEPING,
+    cext.SRUN: _common.STATUS_RUNNING,
+    cext.SIDL: _common.STATUS_IDLE,
+    cext.SWAIT: _common.STATUS_WAITING,
+    cext.SLOCK: _common.STATUS_LOCKED,
+    cext.SZOMB: _common.STATUS_ZOMBIE,
+}
 
+TCP_STATUSES = {
+    cext.TCPS_ESTABLISHED: _common.CONN_ESTABLISHED,
+    cext.TCPS_SYN_SENT: _common.CONN_SYN_SENT,
+    cext.TCPS_SYN_RECEIVED: _common.CONN_SYN_RECV,
+    cext.TCPS_FIN_WAIT_1: _common.CONN_FIN_WAIT1,
+    cext.TCPS_FIN_WAIT_2: _common.CONN_FIN_WAIT2,
+    cext.TCPS_TIME_WAIT: _common.CONN_TIME_WAIT,
+    cext.TCPS_CLOSED: _common.CONN_CLOSE,
+    cext.TCPS_CLOSE_WAIT: _common.CONN_CLOSE_WAIT,
+    cext.TCPS_LAST_ACK: _common.CONN_LAST_ACK,
+    cext.TCPS_LISTEN: _common.CONN_LISTEN,
+    cext.TCPS_CLOSING: _common.CONN_CLOSING,
+    cext.PSUTIL_CONN_NONE: _common.CONN_NONE,
+}
 
-_PAGESIZE = os.sysconf("SC_PAGE_SIZE")
-_cputimes_ntuple = namedtuple('cputimes', 'user nice system idle irq')
+PAGESIZE = os.sysconf("SC_PAGE_SIZE")
 
-# --- public functions
+# extend base mem ntuple with BSD-specific memory metrics
+svmem = namedtuple(
+    'svmem', ['total', 'available', 'percent', 'used', 'free',
+              'active', 'inactive', 'buffers', 'cached', 'shared', 'wired'])
+scputimes = namedtuple(
+    'scputimes', ['user', 'nice', 'system', 'idle', 'irq'])
+pextmem = namedtuple('pextmem', ['rss', 'vms', 'text', 'data', 'stack'])
+pmmap_grouped = namedtuple(
+    'pmmap_grouped', 'path rss, private, ref_count, shadow_count')
+pmmap_ext = namedtuple(
+    'pmmap_ext', 'addr, perms path rss, private, ref_count, shadow_count')
 
-get_system_boot_time = _psutil_bsd.get_system_boot_time
+# set later from __init__.py
+NoSuchProcess = None
+AccessDenied = None
+TimeoutExpired = None
 
-nt_virtmem_info = namedtuple('vmem', ' '.join([
-    # all platforms
-    'total', 'available', 'percent', 'used', 'free',
-    # FreeBSD specific
-    'active',
-    'inactive',
-    'buffers',
-    'cached',
-    'shared',
-    'wired']))
 
 def virtual_memory():
     """System virtual memory as a namedutple."""
-    mem =  _psutil_bsd.get_virtual_mem()
+    mem = cext.virtual_mem()
     total, free, active, inactive, wired, cached, buffers, shared = mem
     avail = inactive + cached + free
-    used =  active + wired + cached
+    used = active + wired + cached
     percent = usage_percent((total - avail), total, _round=1)
-    return nt_virtmem_info(total, avail, percent, used, free,
-                           active, inactive, buffers, cached, shared, wired)
+    return svmem(total, avail, percent, used, free,
+                 active, inactive, buffers, cached, shared, wired)
+
 
 def swap_memory():
     """System swap memory as (total, used, free, sin, sout) namedtuple."""
-    total, used, free, sin, sout = \
-        [x * _PAGESIZE for x in _psutil_bsd.get_swap_mem()]
+    total, used, free, sin, sout = [x * PAGESIZE for x in cext.swap_mem()]
     percent = usage_percent(used, total, _round=1)
-    return nt_swapmeminfo(total, used, free, percent, sin, sout)
+    return _common.sswap(total, used, free, percent, sin, sout)
 
-def get_system_cpu_times():
+
+def cpu_times():
     """Return system per-CPU times as a named tuple"""
-    user, nice, system, idle, irq = _psutil_bsd.get_system_cpu_times()
-    return _cputimes_ntuple(user, nice, system, idle, irq)
+    user, nice, system, idle, irq = cext.cpu_times()
+    return scputimes(user, nice, system, idle, irq)
 
-def get_system_per_cpu_times():
-    """Return system CPU times as a named tuple"""
-    ret = []
-    for cpu_t in _psutil_bsd.get_system_per_cpu_times():
-        user, nice, system, idle, irq = cpu_t
-        item = _cputimes_ntuple(user, nice, system, idle, irq)
-        ret.append(item)
-    return ret
 
-# XXX
-# Ok, this is very dirty.
-# On FreeBSD < 8 we cannot gather per-cpu information, see:
-# http://code.google.com/p/psutil/issues/detail?id=226
-# If NUM_CPUS > 1, on first call we return single cpu times to avoid a
-# crash at psutil import time.
-# Next calls will fail with NotImplementedError
-if not hasattr(_psutil_bsd, "get_system_per_cpu_times"):
-    def get_system_per_cpu_times():
-        if NUM_CPUS == 1:
-            return [get_system_cpu_times]
-        if get_system_per_cpu_times.__called__:
+if hasattr(cext, "per_cpu_times"):
+    def per_cpu_times():
+        """Return system CPU times as a named tuple"""
+        ret = []
+        for cpu_t in cext.per_cpu_times():
+            user, nice, system, idle, irq = cpu_t
+            item = scputimes(user, nice, system, idle, irq)
+            ret.append(item)
+        return ret
+else:
+    # XXX
+    # Ok, this is very dirty.
+    # On FreeBSD < 8 we cannot gather per-cpu information, see:
+    # https://github.com/giampaolo/psutil/issues/226
+    # If num cpus > 1, on first call we return single cpu times to avoid a
+    # crash at psutil import time.
+    # Next calls will fail with NotImplementedError
+    def per_cpu_times():
+        if cpu_count_logical() == 1:
+            return [cpu_times()]
+        if per_cpu_times.__called__:
             raise NotImplementedError("supported only starting from FreeBSD 8")
-        get_system_per_cpu_times.__called__ = True
-        return [get_system_cpu_times]
-get_system_per_cpu_times.__called__ = False
+        per_cpu_times.__called__ = True
+        return [cpu_times()]
+
+    per_cpu_times.__called__ = False
+
+
+def cpu_count_logical():
+    """Return the number of logical CPUs in the system."""
+    return cext.cpu_count_logical()
+
+
+def cpu_count_physical():
+    """Return the number of physical CPUs in the system."""
+    # From the C module we'll get an XML string similar to this:
+    # http://manpages.ubuntu.com/manpages/precise/man4/smp.4freebsd.html
+    # We may get None in case "sysctl kern.sched.topology_spec"
+    # is not supported on this BSD version, in which case we'll mimic
+    # os.cpu_count() and return None.
+    s = cext.cpu_count_phys()
+    if s is not None:
+        # get rid of padding chars appended at the end of the string
+        index = s.rfind("</groups>")
+        if index != -1:
+            s = s[:index + 9]
+            if sys.version_info >= (2, 5):
+                import xml.etree.ElementTree as ET
+                root = ET.fromstring(s)
+                return len(root.findall('group/children/group/cpu')) or None
+            else:
+                s = s[s.find('<children>'):]
+                return s.count("<cpu") or None
+
+
+def boot_time():
+    """The system boot time expressed in seconds since the epoch."""
+    return cext.boot_time()
+
 
 def disk_partitions(all=False):
     retlist = []
-    partitions = _psutil_bsd.get_disk_partitions()
+    partitions = cext.disk_partitions()
     for partition in partitions:
         device, mountpoint, fstype, opts = partition
         if device == 'none':
             device = ''
         if not all:
-            if not os.path.isabs(device) \
-            or not os.path.exists(device):
+            if not os.path.isabs(device) or not os.path.exists(device):
                 continue
-        ntuple = nt_partition(device, mountpoint, fstype, opts)
+        ntuple = _common.sdiskpart(device, mountpoint, fstype, opts)
         retlist.append(ntuple)
     return retlist
 
-def get_system_users():
+
+def users():
     retlist = []
-    rawlist = _psutil_bsd.get_system_users()
+    rawlist = cext.users()
     for item in rawlist:
         user, tty, hostname, tstamp = item
         if tty == '~':
             continue  # reboot or shutdown
-        nt = nt_user(user, tty or None, hostname, tstamp)
+        nt = _common.suser(user, tty or None, hostname, tstamp)
         retlist.append(nt)
     return retlist
 
-get_pid_list = _psutil_bsd.get_pid_list
+
+def net_connections(kind):
+    if kind not in _common.conn_tmap:
+        raise ValueError("invalid %r kind argument; choose between %s"
+                         % (kind, ', '.join([repr(x) for x in conn_tmap])))
+    families, types = conn_tmap[kind]
+    ret = []
+    rawlist = cext.net_connections()
+    for item in rawlist:
+        fd, fam, type, laddr, raddr, status, pid = item
+        # TODO: apply filter at C level
+        if fam in families and type in types:
+            status = TCP_STATUSES[status]
+            nt = _common.sconn(fd, fam, type, laddr, raddr, status, pid)
+            ret.append(nt)
+    return ret
+
+
+pids = cext.pids
 pid_exists = _psposix.pid_exists
-get_disk_usage = _psposix.get_disk_usage
-net_io_counters = _psutil_bsd.get_net_io_counters
-disk_io_counters = _psutil_bsd.get_disk_io_counters
+disk_usage = _psposix.disk_usage
+net_io_counters = cext.net_io_counters
+disk_io_counters = cext.disk_io_counters
 
 
 def wrap_exceptions(fun):
@@ -151,66 +211,42 @@ def wrap_exceptions(fun):
         try:
             return fun(self, *args, **kwargs)
         except OSError:
+            # support for private module import
+            if NoSuchProcess is None or AccessDenied is None:
+                raise
             err = sys.exc_info()[1]
             if err.errno == errno.ESRCH:
-                raise NoSuchProcess(self.pid, self._process_name)
+                raise NoSuchProcess(self.pid, self._name)
             if err.errno in (errno.EPERM, errno.EACCES):
-                raise AccessDenied(self.pid, self._process_name)
+                raise AccessDenied(self.pid, self._name)
             raise
     return wrapper
-
-_status_map = {
-    _psutil_bsd.SSTOP : STATUS_STOPPED,
-    _psutil_bsd.SSLEEP : STATUS_SLEEPING,
-    _psutil_bsd.SRUN : STATUS_RUNNING,
-    _psutil_bsd.SIDL : STATUS_IDLE,
-    _psutil_bsd.SWAIT : STATUS_WAITING,
-    _psutil_bsd.SLOCK : STATUS_LOCKED,
-    _psutil_bsd.SZOMB : STATUS_ZOMBIE,
-}
-
-_conn_status_map = {_psutil_bsd.TCPS_ESTABLISHED : CONN_ESTABLISHED,
-                    _psutil_bsd.TCPS_SYN_SENT : CONN_SYN_SENT,
-                    _psutil_bsd.TCPS_SYN_RECEIVED : CONN_SYN_RECV,
-                    _psutil_bsd.TCPS_FIN_WAIT_1 : CONN_FIN_WAIT1,
-                    _psutil_bsd.TCPS_FIN_WAIT_2 : CONN_FIN_WAIT2,
-                    _psutil_bsd.TCPS_TIME_WAIT : CONN_TIME_WAIT,
-                    _psutil_bsd.TCPS_CLOSED : CONN_CLOSE,
-                    _psutil_bsd.TCPS_CLOSE_WAIT : CONN_CLOSE_WAIT,
-                    _psutil_bsd.TCPS_LAST_ACK : CONN_LAST_ACK,
-                    _psutil_bsd.TCPS_LISTEN : CONN_LISTEN,
-                    _psutil_bsd.TCPS_CLOSING : CONN_CLOSING,
-                    _psutil_bsd.PSUTIL_CONN_NONE : CONN_NONE,
-                    }
 
 
 class Process(object):
     """Wrapper class around underlying C implementation."""
 
-    __slots__ = ["pid", "_process_name"]
+    __slots__ = ["pid", "_name"]
 
     def __init__(self, pid):
         self.pid = pid
-        self._process_name = None
+        self._name = None
 
     @wrap_exceptions
-    def get_process_name(self):
-        """Return process name as a string of limited len (15)."""
-        return _psutil_bsd.get_process_name(self.pid)
+    def name(self):
+        return cext.proc_name(self.pid)
 
     @wrap_exceptions
-    def get_process_exe(self):
-        """Return process executable pathname."""
-        return _psutil_bsd.get_process_exe(self.pid)
+    def exe(self):
+        return cext.proc_exe(self.pid)
 
     @wrap_exceptions
-    def get_process_cmdline(self):
-        """Return process cmdline as a list of arguments."""
-        return _psutil_bsd.get_process_cmdline(self.pid)
+    def cmdline(self):
+        return cext.proc_cmdline(self.pid)
 
     @wrap_exceptions
-    def get_process_terminal(self):
-        tty_nr = _psutil_bsd.get_process_tty_nr(self.pid)
+    def terminal(self):
+        tty_nr = cext.proc_tty_nr(self.pid)
         tmap = _psposix._get_terminal_map()
         try:
             return tmap[tty_nr]
@@ -218,150 +254,136 @@ class Process(object):
             return None
 
     @wrap_exceptions
-    def get_process_ppid(self):
-        """Return process parent pid."""
-        return _psutil_bsd.get_process_ppid(self.pid)
-
-    # XXX - available on FreeBSD >= 8 only
-    if hasattr(_psutil_bsd, "get_process_cwd"):
-        @wrap_exceptions
-        def get_process_cwd(self):
-            """Return process current working directory."""
-            # sometimes we get an empty string, in which case we turn
-            # it into None
-            return _psutil_bsd.get_process_cwd(self.pid) or None
+    def ppid(self):
+        return cext.proc_ppid(self.pid)
 
     @wrap_exceptions
-    def get_process_uids(self):
-        """Return real, effective and saved user ids."""
-        real, effective, saved = _psutil_bsd.get_process_uids(self.pid)
-        return nt_uids(real, effective, saved)
+    def uids(self):
+        real, effective, saved = cext.proc_uids(self.pid)
+        return _common.puids(real, effective, saved)
 
     @wrap_exceptions
-    def get_process_gids(self):
-        """Return real, effective and saved group ids."""
-        real, effective, saved = _psutil_bsd.get_process_gids(self.pid)
-        return nt_gids(real, effective, saved)
+    def gids(self):
+        real, effective, saved = cext.proc_gids(self.pid)
+        return _common.pgids(real, effective, saved)
 
     @wrap_exceptions
-    def get_cpu_times(self):
-        """return a tuple containing process user/kernel time."""
-        user, system = _psutil_bsd.get_process_cpu_times(self.pid)
-        return nt_cputimes(user, system)
+    def cpu_times(self):
+        user, system = cext.proc_cpu_times(self.pid)
+        return _common.pcputimes(user, system)
 
     @wrap_exceptions
-    def get_memory_info(self):
-        """Return a tuple with the process' RSS and VMS size."""
-        rss, vms = _psutil_bsd.get_process_memory_info(self.pid)[:2]
-        return nt_meminfo(rss, vms)
-
-    _nt_ext_mem = namedtuple('meminfo', 'rss vms text data stack')
+    def memory_info(self):
+        rss, vms = cext.proc_memory_info(self.pid)[:2]
+        return _common.pmem(rss, vms)
 
     @wrap_exceptions
-    def get_ext_memory_info(self):
-        return self._nt_ext_mem(*_psutil_bsd.get_process_memory_info(self.pid))
+    def memory_info_ex(self):
+        return pextmem(*cext.proc_memory_info(self.pid))
 
     @wrap_exceptions
-    def get_process_create_time(self):
-        """Return the start time of the process as a number of seconds since
-        the epoch."""
-        return _psutil_bsd.get_process_create_time(self.pid)
+    def create_time(self):
+        return cext.proc_create_time(self.pid)
 
     @wrap_exceptions
-    def get_process_num_threads(self):
-        """Return the number of threads belonging to the process."""
-        return _psutil_bsd.get_process_num_threads(self.pid)
+    def num_threads(self):
+        return cext.proc_num_threads(self.pid)
 
     @wrap_exceptions
-    def get_num_ctx_switches(self):
-        return nt_ctxsw(*_psutil_bsd.get_process_num_ctx_switches(self.pid))
+    def num_ctx_switches(self):
+        return _common.pctxsw(*cext.proc_num_ctx_switches(self.pid))
 
     @wrap_exceptions
-    def get_num_fds(self):
-        """Return the number of file descriptors opened by this process."""
-        return _psutil_bsd.get_process_num_fds(self.pid)
-
-    @wrap_exceptions
-    def get_process_threads(self):
-        """Return the number of threads belonging to the process."""
-        rawlist = _psutil_bsd.get_process_threads(self.pid)
+    def threads(self):
+        rawlist = cext.proc_threads(self.pid)
         retlist = []
         for thread_id, utime, stime in rawlist:
-            ntuple = nt_thread(thread_id, utime, stime)
+            ntuple = _common.pthread(thread_id, utime, stime)
             retlist.append(ntuple)
         return retlist
 
     @wrap_exceptions
-    def get_open_files(self):
-        """Return files opened by process as a list of namedtuples."""
-        # XXX - C implementation available on FreeBSD >= 8 only
-        # else fallback on lsof parser
-        if hasattr(_psutil_bsd, "get_process_open_files"):
-            rawlist = _psutil_bsd.get_process_open_files(self.pid)
-            return [nt_openfile(path, fd) for path, fd in rawlist]
-        else:
-            lsof = _psposix.LsofParser(self.pid, self._process_name)
-            return lsof.get_process_open_files()
-
-    @wrap_exceptions
-    def get_connections(self, kind='inet'):
-        """Return etwork connections opened by a process as a list of
-        namedtuples.
-        """
+    def connections(self, kind='inet'):
         if kind not in conn_tmap:
             raise ValueError("invalid %r kind argument; choose between %s"
                              % (kind, ', '.join([repr(x) for x in conn_tmap])))
         families, types = conn_tmap[kind]
-        rawlist = _psutil_bsd.get_process_connections(self.pid, families, types)
+        rawlist = cext.proc_connections(self.pid, families, types)
         ret = []
         for item in rawlist:
             fd, fam, type, laddr, raddr, status = item
-            status = _conn_status_map[status]
-            nt = nt_connection(fd, fam, type, laddr, raddr, status)
+            status = TCP_STATUSES[status]
+            nt = _common.pconn(fd, fam, type, laddr, raddr, status)
             ret.append(nt)
         return ret
 
     @wrap_exceptions
-    def process_wait(self, timeout=None):
+    def wait(self, timeout=None):
         try:
             return _psposix.wait_pid(self.pid, timeout)
-        except TimeoutExpired:
-            raise TimeoutExpired(self.pid, self._process_name)
+        except _psposix.TimeoutExpired:
+            # support for private module import
+            if TimeoutExpired is None:
+                raise
+            raise TimeoutExpired(timeout, self.pid, self._name)
 
     @wrap_exceptions
-    def get_process_nice(self):
+    def nice_get(self):
         return _psutil_posix.getpriority(self.pid)
 
     @wrap_exceptions
-    def set_process_nice(self, value):
+    def nice_set(self, value):
         return _psutil_posix.setpriority(self.pid, value)
 
     @wrap_exceptions
-    def get_process_status(self):
-        code = _psutil_bsd.get_process_status(self.pid)
-        if code in _status_map:
-            return _status_map[code]
-        return constant(-1, "?")
+    def status(self):
+        code = cext.proc_status(self.pid)
+        if code in PROC_STATUSES:
+            return PROC_STATUSES[code]
+        # XXX is this legit? will we even ever get here?
+        return "?"
 
     @wrap_exceptions
-    def get_process_io_counters(self):
-        rc, wc, rb, wb = _psutil_bsd.get_process_io_counters(self.pid)
-        return nt_io(rc, wc, rb, wb)
+    def io_counters(self):
+        rc, wc, rb, wb = cext.proc_io_counters(self.pid)
+        return _common.pio(rc, wc, rb, wb)
 
-    nt_mmap_grouped = namedtuple('mmap',
-        'path rss, private, ref_count, shadow_count')
-    nt_mmap_ext = namedtuple('mmap',
-        'addr, perms path rss, private, ref_count, shadow_count')
+    nt_mmap_grouped = namedtuple(
+        'mmap', 'path rss, private, ref_count, shadow_count')
+    nt_mmap_ext = namedtuple(
+        'mmap', 'addr, perms path rss, private, ref_count, shadow_count')
 
-    @wrap_exceptions
-    def get_memory_maps(self):
-        return _psutil_bsd.get_process_memory_maps(self.pid)
+    # FreeBSD < 8 does not support functions based on kinfo_getfile()
+    # and kinfo_getvmmap()
+    if hasattr(cext, 'proc_open_files'):
 
-    # FreeBSD < 8 does not support kinfo_getfile() and kinfo_getvmmap()
-    if not hasattr(_psutil_bsd, 'get_process_open_files'):
+        @wrap_exceptions
+        def open_files(self):
+            """Return files opened by process as a list of namedtuples."""
+            rawlist = cext.proc_open_files(self.pid)
+            return [_common.popenfile(path, fd) for path, fd in rawlist]
+
+        @wrap_exceptions
+        def cwd(self):
+            """Return process current working directory."""
+            # sometimes we get an empty string, in which case we turn
+            # it into None
+            return cext.proc_cwd(self.pid) or None
+
+        @wrap_exceptions
+        def memory_maps(self):
+            return cext.proc_memory_maps(self.pid)
+
+        @wrap_exceptions
+        def num_fds(self):
+            """Return the number of file descriptors opened by this process."""
+            return cext.proc_num_fds(self.pid)
+
+    else:
         def _not_implemented(self):
             raise NotImplementedError("supported only starting from FreeBSD 8")
-        get_open_files = _not_implemented
-        get_process_cwd = _not_implemented
-        get_memory_maps = _not_implemented
-        get_num_fds = _not_implemented
+
+        open_files = _not_implemented
+        proc_cwd = _not_implemented
+        memory_maps = _not_implemented
+        num_fds = _not_implemented
