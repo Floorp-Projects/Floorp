@@ -171,63 +171,63 @@ TelephonyIPCService::Dial(uint32_t aClientId, const nsAString& aNumber,
 }
 
 NS_IMETHODIMP
-TelephonyIPCService::HangUp(uint32_t aClientId, uint32_t aCallIndex)
+TelephonyIPCService::AnswerCall(uint32_t aClientId, uint32_t aCallIndex,
+                                nsITelephonyCallback *aCallback)
 {
   if (!mPTelephonyChild) {
     NS_WARNING("TelephonyService used after shutdown has begun!");
     return NS_ERROR_FAILURE;
   }
 
-  mPTelephonyChild->SendHangUpCall(aClientId, aCallIndex);
-  return NS_OK;
+  return SendRequest(nullptr, aCallback, AnswerCallRequest(aClientId, aCallIndex));
 }
 
 NS_IMETHODIMP
-TelephonyIPCService::AnswerCall(uint32_t aClientId, uint32_t aCallIndex)
+TelephonyIPCService::HangUpCall(uint32_t aClientId, uint32_t aCallIndex,
+                                nsITelephonyCallback *aCallback)
 {
   if (!mPTelephonyChild) {
     NS_WARNING("TelephonyService used after shutdown has begun!");
     return NS_ERROR_FAILURE;
   }
 
-  mPTelephonyChild->SendAnswerCall(aClientId, aCallIndex);
-  return NS_OK;
+  return SendRequest(nullptr, aCallback, HangUpCallRequest(aClientId, aCallIndex));
 }
 
 NS_IMETHODIMP
-TelephonyIPCService::RejectCall(uint32_t aClientId, uint32_t aCallIndex)
+TelephonyIPCService::RejectCall(uint32_t aClientId, uint32_t aCallIndex,
+                                nsITelephonyCallback *aCallback)
 {
   if (!mPTelephonyChild) {
     NS_WARNING("TelephonyService used after shutdown has begun!");
     return NS_ERROR_FAILURE;
   }
 
-  mPTelephonyChild->SendRejectCall(aClientId, aCallIndex);
-  return NS_OK;
+  return SendRequest(nullptr, aCallback, RejectCallRequest(aClientId, aCallIndex));
 }
 
 NS_IMETHODIMP
-TelephonyIPCService::HoldCall(uint32_t aClientId, uint32_t aCallIndex)
+TelephonyIPCService::HoldCall(uint32_t aClientId, uint32_t aCallIndex,
+                              nsITelephonyCallback *aCallback)
 {
   if (!mPTelephonyChild) {
     NS_WARNING("TelephonyService used after shutdown has begun!");
     return NS_ERROR_FAILURE;
   }
 
-  mPTelephonyChild->SendHoldCall(aClientId, aCallIndex);
-  return NS_OK;
+  return SendRequest(nullptr, aCallback, HoldCallRequest(aClientId, aCallIndex));
 }
 
 NS_IMETHODIMP
-TelephonyIPCService::ResumeCall(uint32_t aClientId, uint32_t aCallIndex)
+TelephonyIPCService::ResumeCall(uint32_t aClientId, uint32_t aCallIndex,
+                                nsITelephonyCallback *aCallback)
 {
   if (!mPTelephonyChild) {
     NS_WARNING("TelephonyService used after shutdown has begun!");
     return NS_ERROR_FAILURE;
   }
 
-  mPTelephonyChild->SendResumeCall(aClientId, aCallIndex);
-  return NS_OK;
+  return SendRequest(nullptr, aCallback, ResumeCallRequest(aClientId, aCallIndex));
 }
 
 NS_IMETHODIMP
