@@ -67,6 +67,12 @@ public:
   // PlatformDecoderModule created per MP4Reader.
   // This is called on the decode task queue.
   static already_AddRefed<PlatformDecoderModule> Create();
+  // As Create() but do not initialize the created PlatformDecoderModule.
+  static already_AddRefed<PlatformDecoderModule> CreatePDM();
+
+  // Perform any per-instance initialization.
+  // This is called on the decode task queue.
+  virtual nsresult Startup() { return NS_OK; };
 
 #ifdef MOZ_EME
   // Creates a PlatformDecoderModule that uses a CDMProxy to decrypt or
