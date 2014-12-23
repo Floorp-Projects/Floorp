@@ -31,7 +31,7 @@ namespace mozilla { namespace pkix {
 
 // Similar to boost::scoped_ptr and std::unique_ptr. Does not support copying
 // or assignment.
-template <typename T, void (*Destroyer)(T*)>
+template <typename T, void (&Destroyer)(T*)>
 class ScopedPtr
 {
 public:
@@ -73,28 +73,28 @@ protected:
   void operator=(const ScopedPtr&) /* = delete */;
 };
 
-template <typename T, void(*Destroyer)(T*)>
+template <typename T, void(&Destroyer)(T*)>
 inline bool
 operator==(T* a, const ScopedPtr<T, Destroyer>& b)
 {
   return a == b.get();
 }
 
-template <typename T, void(*Destroyer)(T*)>
+template <typename T, void(&Destroyer)(T*)>
 inline bool
 operator==(const ScopedPtr<T, Destroyer>& a, T* b)
 {
   return a.get() == b;
 }
 
-template <typename T, void(*Destroyer)(T*)>
+template <typename T, void(&Destroyer)(T*)>
 inline bool
 operator!=(T* a, const ScopedPtr<T, Destroyer>& b)
 {
   return a != b.get();
 }
 
-template <typename T, void(*Destroyer)(T*)>
+template <typename T, void(&Destroyer)(T*)>
 inline bool
 operator!=(const ScopedPtr<T, Destroyer>& a, T* b)
 {
