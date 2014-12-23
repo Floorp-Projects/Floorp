@@ -847,8 +847,8 @@ WebrtcOMXH264VideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
   // Have to reconfigure for resolution or framerate changes :-(
   // ~220ms initial configure on 8x10, 50-100ms for re-configure it appears
   // XXX drop frames while this is happening?
-  if (aInputImage.width() < 0 || (uint32_t)aInputImage.width() != mWidth ||
-      aInputImage.height() < 0 || (uint32_t)aInputImage.height() != mHeight) {
+  if (aInputImage.width() != mWidth ||
+      aInputImage.height() != mHeight) {
     mWidth = aInputImage.width();
     mHeight = aInputImage.height();
     mOMXReconfigure = true;
