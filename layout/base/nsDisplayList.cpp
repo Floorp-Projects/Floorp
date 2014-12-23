@@ -716,9 +716,9 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
     }
     nsRect dp;
     if (nsLayoutUtils::GetDisplayPort(content, &dp)) {
-      metrics.mDisplayPort = CSSRect::FromAppUnits(dp);
+      metrics.SetDisplayPort(CSSRect::FromAppUnits(dp));
       nsLayoutUtils::LogTestDataForPaint(aLayer->Manager(), scrollId, "displayport",
-          metrics.mDisplayPort);
+          metrics.GetDisplayPort());
     }
     if (nsLayoutUtils::GetCriticalDisplayPort(content, &dp)) {
       metrics.mCriticalDisplayPort = CSSRect::FromAppUnits(dp);
