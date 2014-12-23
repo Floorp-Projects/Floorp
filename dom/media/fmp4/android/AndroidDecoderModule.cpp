@@ -66,7 +66,7 @@ public:
   }
 
   virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE {
-    mp4_demuxer::AnnexB::ConvertSample(aSample);
+    mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample);
     return MediaCodecDataDecoder::Input(aSample);
   }
 
@@ -262,8 +262,8 @@ AndroidDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& 
   if (!format->GetByteBuffer(NS_LITERAL_CSTRING("csd-0"))) {
     uint8_t* csd0 = new uint8_t[2];
 
-    csd0[0] = aConfig.audio_specific_config[0];
-    csd0[1] = aConfig.audio_specific_config[1];
+    csd0[0] = (*aConfig.audio_specific_config)[0];
+    csd0[1] = (*aConfig.audio_specific_config)[1];
 
     jobject buffer = env->NewDirectByteBuffer(csd0, 2);
     format->SetByteBuffer(NS_LITERAL_CSTRING("csd-0"), buffer);

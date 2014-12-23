@@ -363,6 +363,24 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
     rv = aNode->Clone(nodeInfo, getter_AddRefs(clone));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    if (clone->IsElement()) {
+      // The cloned node may be a custom element that may require
+      // enqueing created callback and prototype swizzling.
+      Element* elem = clone->AsElement();
+      if (nsContentUtils::IsCustomElementName(nodeInfo->NameAtom())) {
+        elem->OwnerDoc()->SetupCustomElement(elem, nodeInfo->NamespaceID());
+      } else {
+        // Check if node may be custom element by type extension.
+        // ex. <button is="x-button">
+        nsAutoString extension;
+        if (elem->GetAttr(kNameSpaceID_None, nsGkAtoms::is, extension) &&
+            !extension.IsEmpty()) {
+          elem->OwnerDoc()->SetupCustomElement(elem, nodeInfo->NamespaceID(),
+                                               &extension);
+        }
+      }
+    }
+
     if (aParent) {
       // If we're cloning we need to insert the cloned children into the cloned
       // parent.
