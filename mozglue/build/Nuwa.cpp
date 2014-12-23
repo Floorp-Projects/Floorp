@@ -909,11 +909,16 @@ static int sRecreateGatePassed = 0;
  * 3) Freeze point 2: blocks the current thread by acquiring sThreadFreezeLock.
  *    If freezing is not enabled then revert the counter change in freeze
  *    point 1.
+ *
+ * Note: the purpose of the '(void) variable;' statements is to avoid
+ *       -Wunused-but-set-variable warnings.
  */
 #define THREAD_FREEZE_POINT1()                                 \
   bool freezeCountChg = false;                                 \
   bool recreated = false;                                      \
+  (void) recreated;                                            \
   volatile bool freezePoint2 = false;                          \
+  (void) freezePoint2;                                         \
   thread_info_t *tinfo;                                        \
   if (sIsNuwaProcess &&                                        \
       (tinfo = CUR_THREAD_INFO) &&                             \
