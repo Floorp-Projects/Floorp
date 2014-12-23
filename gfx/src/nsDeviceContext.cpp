@@ -61,7 +61,8 @@ public:
     void Init(nsDeviceContext* aContext);
     void Destroy();
 
-    nsresult GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
+    nsresult GetMetricsFor(const nsFont& aFont,
+                           nsIAtom* aLanguage, bool aExplicitLanguage,
                            gfxFont::Orientation aOrientation,
                            gfxUserFontSet* aUserFontSet,
                            gfxTextPerfMetrics* aTextPerf,
@@ -122,7 +123,8 @@ nsFontCache::Observe(nsISupports*, const char* aTopic, const char16_t*)
 }
 
 nsresult
-nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
+nsFontCache::GetMetricsFor(const nsFont& aFont,
+                           nsIAtom* aLanguage, bool aExplicitLanguage,
                            gfxFont::Orientation aOrientation,
                            gfxUserFontSet* aUserFontSet,
                            gfxTextPerfMetrics* aTextPerf,
@@ -155,8 +157,8 @@ nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
 
     fm = new nsFontMetrics();
     NS_ADDREF(fm);
-    nsresult rv = fm->Init(aFont, aLanguage, aOrientation, mContext,
-                           aUserFontSet, aTextPerf);
+    nsresult rv = fm->Init(aFont, aLanguage, aExplicitLanguage, aOrientation,
+                           mContext, aUserFontSet, aTextPerf);
     if (NS_SUCCEEDED(rv)) {
         // the mFontMetrics list has the "head" at the end, because append
         // is cheaper than insert
@@ -175,8 +177,8 @@ nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
     Compact();
     fm = new nsFontMetrics();
     NS_ADDREF(fm);
-    rv = fm->Init(aFont, aLanguage, aOrientation, mContext, aUserFontSet,
-                  aTextPerf);
+    rv = fm->Init(aFont, aLanguage, aExplicitLanguage, aOrientation, mContext,
+                  aUserFontSet, aTextPerf);
     if (NS_SUCCEEDED(rv)) {
         mFontMetrics.AppendElement(fm);
         aMetrics = fm;
@@ -264,6 +266,7 @@ nsDeviceContext::~nsDeviceContext()
 nsresult
 nsDeviceContext::GetMetricsFor(const nsFont& aFont,
                                nsIAtom* aLanguage,
+                               bool aExplicitLanguage,
                                gfxFont::Orientation aOrientation,
                                gfxUserFontSet* aUserFontSet,
                                gfxTextPerfMetrics* aTextPerf,
@@ -275,8 +278,9 @@ nsDeviceContext::GetMetricsFor(const nsFont& aFont,
         mFontCache->Init(this);
     }
 
-    return mFontCache->GetMetricsFor(aFont, aLanguage, aOrientation,
-                                     aUserFontSet, aTextPerf, aMetrics);
+    return mFontCache->GetMetricsFor(aFont, aLanguage, aExplicitLanguage,
+                                     aOrientation, aUserFontSet, aTextPerf,
+                                     aMetrics);
 }
 
 nsresult

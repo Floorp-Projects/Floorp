@@ -3470,8 +3470,10 @@ nsLayoutUtils::GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
     font.size = NSToCoordRound(font.size * aInflation);
   }
   WritingMode wm(aStyleContext->StyleVisibility());
+  const nsStyleFont* styleFont = aStyleContext->StyleFont();
   return pc->DeviceContext()->GetMetricsFor(
-                  font, aStyleContext->StyleFont()->mLanguage,
+                  font, styleFont->mLanguage,
+                  styleFont->mExplicitLanguage,
                   wm.IsVertical() ? gfxFont::eVertical : gfxFont::eHorizontal,
                   fs, tp, *aFontMetrics);
 }

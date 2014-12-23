@@ -933,7 +933,8 @@ protected:
                      fillRule(mozilla::gfx::FillRule::FILL_WINDING),
                      lineCap(mozilla::gfx::CapStyle::BUTT),
                      lineJoin(mozilla::gfx::JoinStyle::MITER_OR_BEVEL),
-                     imageSmoothingEnabled(true)
+                     imageSmoothingEnabled(true),
+                     fontExplicitLanguage(false)
     { }
 
     ContextState(const ContextState& other)
@@ -964,7 +965,8 @@ protected:
           filterChainObserver(other.filterChainObserver),
           filter(other.filter),
           filterAdditionalImages(other.filterAdditionalImages),
-          imageSmoothingEnabled(other.imageSmoothingEnabled)
+          imageSmoothingEnabled(other.imageSmoothingEnabled),
+          fontExplicitLanguage(other.fontExplicitLanguage)
     { }
 
     void SetColorStyle(Style whichStyle, nscolor color)
@@ -1042,6 +1044,7 @@ protected:
     nsTArray<mozilla::RefPtr<mozilla::gfx::SourceSurface>> filterAdditionalImages;
 
     bool imageSmoothingEnabled;
+    bool fontExplicitLanguage;
   };
 
   nsAutoTArray<ContextState, 3> mStyleStack;
