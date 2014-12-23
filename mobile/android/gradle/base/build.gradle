@@ -1,0 +1,66 @@
+apply plugin: 'com.android.library'
+
+apply from: "${topsrcdir}/mobile/android/gradle/android.gradle"
+
+android {
+    defaultConfig {
+        applicationId 'org.mozilla.gecko'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFile getDefaultProguardFile('proguard-android.txt')
+        }
+    }
+
+    sourceSets {
+        main {
+            java {
+                exclude 'org/mozilla/gecko/tests/**'
+                exclude 'org/mozilla/gecko/resources/**'
+                if (!mozconfig.substs.MOZ_CRASHREPORTER) {
+                    exclude 'org/mozilla/gecko/CrashReporter.java'
+                }
+            }
+
+            res {
+                if (mozconfig.substs.MOZ_CRASHREPORTER) {
+                    srcDir "src/crashreporter/res"
+                }
+            }
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:support-v4:19.1.+'
+
+    if (mozconfig.substs.MOZ_NATIVE_DEVICES) {
+        compile 'com.android.support:appcompat-v7:19.1.+'
+        compile 'com.android.support:mediarouter-v7:19.1.+'
+        compile 'com.google.android.gms:play-services:5.+'
+    }
+
+    compile project(':branding')
+    compile project(':omnijar')
+    compile project(':preprocessed_code')
+    compile project(':preprocessed_resources')
+    compile project(':thirdparty')
+}
+
+android.libraryVariants.all { variant ->
+    variant.checkManifest.dependsOn generateCodeAndResources
+}
+
+apply plugin: 'idea'
+
+idea {
+    module {
+        // excludeDirs = []
+        excludeDirs += file('src/main/java/org/mozilla/gecko/tests')
+        excludeDirs += file('org/mozilla/gecko/tests')
+        excludeDirs += file('tests')
+    }
+}

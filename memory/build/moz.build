@@ -30,6 +30,8 @@ if CONFIG['MOZ_JEMALLOC3']:
     GENERATED_INCLUDES += ['../jemalloc/src/include']
     if CONFIG['_MSC_VER']:
         LOCAL_INCLUDES += ['/memory/jemalloc/src/include/msvc_compat']
+        if not CONFIG['HAVE_INTTYPES_H']:
+            LOCAL_INCLUDES += ['/memory/jemalloc/src/include/msvc_compat/C99']
 
 if CONFIG['MOZ_REPLACE_MALLOC']:
     SOURCES += [
