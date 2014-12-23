@@ -1,0 +1,30 @@
+From 4dd4193c59ff3f77e4ab36214ec63425ca834323 Mon Sep 17 00:00:00 2001
+From: Guilherme Goncalves <guilherme.p.gonc@gmail.com>
+Date: Thu, 18 Dec 2014 15:01:21 +0900
+Subject: [PATCH] Add a isblank definition for MSVC < 2013
+
+---
+ include/jemalloc/internal/jemalloc_internal_decls.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/include/jemalloc/internal/jemalloc_internal_decls.h b/include/jemalloc/internal/jemalloc_internal_decls.h
+index fb2effb..65f2e4b 100644
+--- a/include/jemalloc/internal/jemalloc_internal_decls.h
++++ b/include/jemalloc/internal/jemalloc_internal_decls.h
+@@ -52,6 +52,13 @@ typedef intptr_t ssize_t;
+ #  define __func__ __FUNCTION__
+ /* Disable warnings about deprecated system functions. */
+ #  pragma warning(disable: 4996)
++#if _MSC_VER < 1800
++static int
++isblank(int c)
++{
++	return (c == '\t' || c == ' ');
++}
++#endif
+ #else
+ #  include <unistd.h>
+ #endif
+-- 
+2.1.3
+

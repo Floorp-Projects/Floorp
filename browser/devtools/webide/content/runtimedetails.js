@@ -71,7 +71,7 @@ function CheckLockState() {
 
   let sYes = Strings.GetStringFromName("runtimedetails_checkyes");
   let sNo = Strings.GetStringFromName("runtimedetails_checkno");
-  let sUnknown = Strings.GetStringFromName("runtimedetails_checkunkown");
+  let sUnknown = Strings.GetStringFromName("runtimedetails_checkunknown");
   let sNotUSB = Strings.GetStringFromName("runtimedetails_notUSBDevice");
 
   flipCertPerfButton.setAttribute("disabled", "true");

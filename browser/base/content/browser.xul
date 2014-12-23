@@ -287,17 +287,22 @@
     <panel id="social-share-panel"
            class="social-panel"
            type="arrow"
-           orient="horizontal"
+           orient="vertical"
            onpopupshowing="SocialShare.onShowing()"
            onpopuphidden="SocialShare.onHidden()"
            hidden="true">
-      <vbox class="social-share-toolbar">
-        <arrowscrollbox id="social-share-provider-buttons" orient="vertical" flex="1">
+      <hbox class="social-share-toolbar">
+        <toolbarbutton id="manage-share-providers" class="toolbarbutton share-provider-button"
+                       tooltiptext="&social.addons.label;"
+                       oncommand="BrowserOpenAddonsMgr('addons://list/service');
+                                  this.parentNode.parentNode.hidePopup();"/>
+        <arrowscrollbox id="social-share-provider-buttons" orient="horizontal" flex="1" pack="end">
           <toolbarbutton id="add-share-provider" class="toolbarbutton share-provider-button" type="radio"
                          group="share-providers" tooltiptext="&findShareServices.label;"
                          oncommand="SocialShare.showDirectory()"/>
         </arrowscrollbox>
-      </vbox>
+      </hbox>
+      <hbox id="share-container" flex="1"/>
     </panel>
 
     <panel id="social-notification-panel"
