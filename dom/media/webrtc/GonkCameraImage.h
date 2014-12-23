@@ -24,8 +24,8 @@ namespace mozilla {
  * shared memory based on android binder (IMemory), the actual format in IMemory
  * is platform dependent.
  * This instance is created in MediaEngine when the preview image arrives.
- * The MediaBuffer is attached to the current created GonkCameraImage via SetMediaBuffer().
- * After sending this image to MediaStreamGraph by AppendToTrack(), ClearMediaBuffer()
+ * The MediaBuffer is attached to the current created GonkCameraImage via SetBuffer().
+ * After sending this image to MediaStreamGraph by AppendToTrack(), ClearBuffer()
  * must be called to clear MediaBuffer to avoid MediaBuffer be kept in MSG thread.
  * The reason to keep MediaBuffer be accessed from MSG thread is MediaBuffer is
  * limited resource and it could cause frame rate jitter if MediaBuffer stay too
@@ -37,8 +37,8 @@ namespace mozilla {
  * Third is the MSG thread via NotifyPull, the image should have preview image
  * only in NotifyPull.
  *
- * Note: SetMediaBuffer() and GetMediaBuffer() should be called from the same 
- *       thread. It is forbidden to call GetMediaBuffer() from other threads.
+ * Note: SetBuffer() and GetBuffer() should be called from the same thread. It
+ *       is forbidden to call GetBuffer() from other threads.
  */
 class GonkCameraImage : public layers::GrallocImage
 {
@@ -47,15 +47,15 @@ public:
 
   // The returned aBuffer has called aBuffer->add_ref() already, so it is caller's
   // duty to release aBuffer. It should be called from the same thread which
-  // called SetMediaBuffer().
-  nsresult GetMediaBuffer(android::MediaBuffer** aBuffer);
+  // called SetBuffer().
+  nsresult GetBuffer(android::MediaBuffer** aBuffer);
 
-  // Set MediaBuffer to image. It is caller's responsibility to call ClearMediaBuffer()
+  // Set MediaBuffer to image. It is caller's responsibility to call ClearBuffer()
   // after the MediaBuffer is sent via MediaStreamGraph.
-  nsresult SetMediaBuffer(android::MediaBuffer* aBuffer);
+  nsresult SetBuffer(android::MediaBuffer* aBuffer);
 
-  // It should be called from the same thread which called SetMediaBuffer().
-  nsresult ClearMediaBuffer();
+  // It should be called from the same thread which called SetBuffer().
+  nsresult ClearBuffer();
 
   bool HasMediaBuffer();
 
@@ -65,7 +65,7 @@ protected:
   // mMonitor protects mMediaBuffer and mThread.
   ReentrantMonitor mMonitor;
   android::MediaBuffer* mMediaBuffer;
-  // Check if current thread is the same one which called SetMediaBuffer().
+  // Check if current thread is the same one which called SetBuffer().
   // It doesn't need to hold reference count.
   DebugOnly<nsIThread*> mThread;
 };
