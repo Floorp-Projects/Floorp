@@ -788,6 +788,7 @@ png_inflate_read(png_structrp png_ptr, png_bytep read_buffer, uInt read_size,
 #endif
 
 /* Read and check the IDHR chunk */
+
 void /* PRIVATE */
 png_handle_IHDR(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 {
@@ -857,8 +858,7 @@ png_handle_IHDR(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
    }
 
    /* Set up other useful info */
-   png_ptr->pixel_depth = (png_byte)(png_ptr->bit_depth *
-   png_ptr->channels);
+   png_ptr->pixel_depth = (png_byte)(png_ptr->bit_depth * png_ptr->channels);
    png_ptr->rowbytes = PNG_ROWBYTES(png_ptr->pixel_depth, png_ptr->width);
    png_debug1(3, "bit_depth = %d", png_ptr->bit_depth);
    png_debug1(3, "channels = %d", png_ptr->channels);
@@ -3182,7 +3182,7 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
 {
    unsigned int pixel_depth = png_ptr->transformed_pixel_depth;
    png_const_bytep sp = png_ptr->row_buf + 1;
-   png_uint_32 row_width = png_ptr->width;
+   png_alloc_size_t row_width = png_ptr->width;
    unsigned int pass = png_ptr->pass;
    png_bytep end_ptr = 0;
    png_byte end_byte = 0;
@@ -3457,7 +3457,7 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
 
             /* But don't allow this number to exceed the actual row width. */
             if (bytes_to_copy > row_width)
-               bytes_to_copy = row_width;
+               bytes_to_copy = (unsigned int)/*SAFE*/row_width;
          }
 
          else /* normal row; Adam7 only ever gives us one pixel to copy. */
@@ -3637,7 +3637,7 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
                   dp += bytes_to_jump;
                   row_width -= bytes_to_jump;
                   if (bytes_to_copy > row_width)
-                     bytes_to_copy = row_width;
+                     bytes_to_copy = (unsigned int)/*SAFE*/row_width;
                }
          }
 
@@ -4443,7 +4443,7 @@ png_read_start_row(png_structrp png_ptr)
 
    max_pixel_depth = png_ptr->pixel_depth;
 
-   /* WARNING: * png_read_transform_info (pngrtran.c) performs a simpliar set of
+   /* WARNING: * png_read_transform_info (pngrtran.c) performs a simpler set of
     * calculations to calculate the final pixel depth, then
     * png_do_read_transforms actually does the transforms.  This means that the
     * code which effectively calculates this value is actually repeated in three
