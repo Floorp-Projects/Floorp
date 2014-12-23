@@ -148,7 +148,7 @@ void MediaResourceManagerService::onMessageReceived(const sp<AMessage> &msg)
     return;
   }
 
-  const sp<IBinder>& req = mResources.nextRequest(type);
+  sp<IBinder> req = mResources.nextRequest(type);
   mResources.aquireResource(req, type, found);
   // Notify resource assignment to the client.
   sp<IMediaResourceManagerClient> client = interface_cast<IMediaResourceManagerClient>(req);
@@ -292,7 +292,7 @@ uint32_t MediaResourceManagerService::ResourceTable::countRequests(ResourceType 
   return queue.size();
 }
 
-const sp<IBinder>& MediaResourceManagerService::ResourceTable::nextRequest(ResourceType type)
+sp<IBinder> MediaResourceManagerService::ResourceTable::nextRequest(ResourceType type)
 {
   ssize_t found = mMap.indexOfKey(type);
   if (found == NAME_NOT_FOUND) {
