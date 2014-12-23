@@ -692,12 +692,6 @@ struct GCMethods<JSFunction *>
     }
 };
 
-#ifdef JS_DEBUG
-/* This helper allows us to assert that Rooted<T> is scoped within a request. */
-extern JS_PUBLIC_API(bool)
-IsInRequest(JSContext *cx);
-#endif
-
 } /* namespace js */
 
 namespace JS {
@@ -730,9 +724,6 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
       : ptr(js::GCMethods<T>::initial())
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-#ifdef JS_DEBUG
-        MOZ_ASSERT(js::IsInRequest(cx));
-#endif
         init(js::ContextFriendFields::get(cx));
     }
 
@@ -741,9 +732,6 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
       : ptr(initial)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-#ifdef JS_DEBUG
-        MOZ_ASSERT(js::IsInRequest(cx));
-#endif
         init(js::ContextFriendFields::get(cx));
     }
 

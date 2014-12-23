@@ -321,7 +321,6 @@
     _(IsCallable)                   \
     _(IsObject)                     \
     _(IsObjectAndBranch)            \
-    _(HaveSameClass)                \
     _(HasClass)                     \
     _(AsmJSLoadHeap)                \
     _(AsmJSStoreHeap)               \

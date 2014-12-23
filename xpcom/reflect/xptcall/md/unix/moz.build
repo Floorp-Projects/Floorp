@@ -19,14 +19,14 @@ if CONFIG['OS_ARCH'] == 'Darwin':
     if '86' in CONFIG['OS_TEST'] and CONFIG['OS_TEST'] != 'x86_64':
         DEFINES['MOZ_NEED_LEADING_UNDERSCORE'] = True
 
-if CONFIG['OS_ARCH'] in ('NetBSD', 'GNU'):
+if CONFIG['OS_ARCH'] == 'GNU':
     if CONFIG['CPU_ARCH'] == 'x86':
         SOURCES += [
             'xptcinvoke_gcc_x86_unix.cpp',
             'xptcstubs_gcc_x86_unix.cpp'
         ]
 
-if CONFIG['OS_ARCH'] in ('Linux', 'FreeBSD', 'OpenBSD') or \
+if CONFIG['OS_ARCH'] in ('Linux', 'FreeBSD', 'NetBSD', 'OpenBSD') or \
    CONFIG['OS_ARCH'].startswith('GNU_'):
     if CONFIG['OS_TEST'] == 'x86_64':
         SOURCES += [

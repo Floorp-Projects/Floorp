@@ -116,6 +116,20 @@ function startTest(test, token) {
 
   document.body.appendChild(v);
   v.play();
+
+  if (test.name == "vp9cake.webm") {
+    // Log events for debugging.
+    var events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+                  "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
+                  "waiting", "pause"];
+    function logEvent(e) {
+      var v = e.target;
+      info(e.target.token + ": got " + e.type);
+    }
+    events.forEach(function(e) {
+      v.addEventListener(e, logEvent, false);
+    });
+  }
 }
 
 manager.runTests(gPlayTests, startTest);
