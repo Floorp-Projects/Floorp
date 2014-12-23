@@ -297,4 +297,25 @@ MP4Sample::Prepend(const uint8_t* aData, size_t aSize)
     }
   }
 }
+
+void
+MP4Sample::Replace(const uint8_t* aData, size_t aSize)
+{
+  // If the existing MediaBuffer has enough space then we just recycle it. If
+  // not then we copy to a new buffer.
+  uint8_t* newData = mMediaBuffer && aSize <= mMediaBuffer->size()
+                       ? data
+                       : new uint8_t[aSize];
+
+  memcpy(newData, aData, aSize);
+  size = aSize;
+
+  if (newData != data) {
+    extra_buffer = data = newData;
+    if (mMediaBuffer) {
+      mMediaBuffer->release();
+      mMediaBuffer = nullptr;
+    }
+  }
+}
 }
