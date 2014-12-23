@@ -784,6 +784,22 @@ let MozLoopServiceInternal = {
     }, pc.id);
   },
 
+  getChatWindowID: function(conversationWindowData) {
+    // Try getting a window ID that can (re-)identify this conversation, or resort
+    // to a globally unique one as a last resort.
+    // XXX We can clean this up once rooms and direct contact calling are the only
+    //     two modes left.
+    let windowId = ("contact" in conversationWindowData) ?
+                   conversationWindowData.contact._guid || gLastWindowId++ :
+                   conversationWindowData.roomToken || conversationWindowData.callId ||
+                   gLastWindowId++;
+    return windowId.toString();
+  },
+
+  getChatURL: function(chatWindowId) {
+    return "about:loopconversation#" + chatWindowId;
+  },
+
   /**
    * Opens the chat window
    *
@@ -794,20 +810,11 @@ let MozLoopServiceInternal = {
   openChatWindow: function(conversationWindowData) {
     // So I guess the origin is the loop server!?
     let origin = this.loopServerUri;
-    // Try getting a window ID that can (re-)identify this conversation, or resort
-    // to a globally unique one as a last resort.
-    // XXX We can clean this up once rooms and direct contact calling are the only
-    //     two modes left.
-    let windowId = ("contact" in conversationWindowData) ?
-                   conversationWindowData.contact._guid || gLastWindowId++ :
-                   conversationWindowData.roomToken || conversationWindowData.callId ||
-                   gLastWindowId++;
-    // Store the id as a string, as that's what we use elsewhere.
-    windowId = windowId.toString();
+    let windowId = this.getChatWindowID(conversationWindowData);
 
     gConversationWindowData.set(windowId, conversationWindowData);
 
-    let url = "about:loopconversation#" + windowId;
+    let url = this.getChatURL(windowId);
 
     let callback = chatbox => {
       // We need to use DOMContentLoaded as otherwise the injection will happen
@@ -1099,36 +1106,7 @@ this.MozLoopService = {
       }
     });
 
-    // Resume the tour (re-opening the tab, if necessary) if someone else joins
-    // a room of ours and it's currently open.
-    LoopRooms.on("joined", (e, room, participant) => {
-      let isOwnerInRoom = false;
-      let isOtherInRoom = false;
-
-      if (!this.getLoopPref("gettingStarted.resumeOnFirstJoin")) {
-        return;
-      }
-
-      if (!room.participants) {
-        return;
-      }
-
-      // The particpant that joined isn't necessarily included in room.participants (depending on
-      // when the broadcast happens) so concatenate.
-      for (let participant of room.participants.concat(participant)) {
-        if (participant.owner) {
-          isOwnerInRoom = true;
-        } else {
-          isOtherInRoom = true;
-        }
-      }
-
-      if (!isOwnerInRoom || !isOtherInRoom) {
-        return;
-      }
-
-      this.resumeTour("open");
-    });
+    LoopRooms.on("joined", this.maybeResumeTourOnRoomJoined.bind(this));
 
     // If expiresTime is not in the future and the user hasn't
     // previously authenticated then skip registration.
@@ -1143,6 +1121,49 @@ this.MozLoopService = {
 
     return deferredInitialization.promise;
   }),
+
+  /**
+   * Maybe resume the tour (re-opening the tab, if necessary) if someone else joins
+   * a room of ours and it's currently open.
+   */
+  maybeResumeTourOnRoomJoined: function(e, room, participant) {
+    let isOwnerInRoom = false;
+    let isOtherInRoom = false;
+
+    if (!this.getLoopPref("gettingStarted.resumeOnFirstJoin")) {
+      return;
+    }
+
+    if (!room.participants) {
+      return;
+    }
+
+    // The particpant that joined isn't necessarily included in room.participants (depending on
+    // when the broadcast happens) so concatenate.
+    for (let participant of room.participants.concat(participant)) {
+      if (participant.owner) {
+        isOwnerInRoom = true;
+      } else {
+        isOtherInRoom = true;
+      }
+    }
+
+    if (!isOwnerInRoom || !isOtherInRoom) {
+      return;
+    }
+
+    // Check that the room chatbox is still actually open using its URL
+    let chatboxesForRoom = [...Chat.chatboxes].filter(chatbox => {
+      return chatbox.src == MozLoopServiceInternal.getChatURL(room.roomToken);
+    });
+
+    if (!chatboxesForRoom.length) {
+      log.warn("Tried to resume the tour from a join when the chatbox was closed", room);
+      return;
+    }
+
+    this.resumeTour("open");
+  },
 
   /**
    * The core of the initialization work that happens once the browser is ready
