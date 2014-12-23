@@ -26,7 +26,7 @@ GonkCameraImage::~GonkCameraImage()
 }
 
 nsresult
-GonkCameraImage::GetMediaBuffer(android::MediaBuffer** aBuffer)
+GonkCameraImage::GetBuffer(android::MediaBuffer** aBuffer)
 {
   ReentrantMonitorAutoEnter mon(mMonitor);
 
@@ -50,7 +50,7 @@ GonkCameraImage::HasMediaBuffer()
 }
 
 nsresult
-GonkCameraImage::SetMediaBuffer(android::MediaBuffer* aBuffer)
+GonkCameraImage::SetBuffer(android::MediaBuffer* aBuffer)
 {
   ReentrantMonitorAutoEnter mon(mMonitor);
   MOZ_ASSERT(!mMediaBuffer);
@@ -63,7 +63,7 @@ GonkCameraImage::SetMediaBuffer(android::MediaBuffer* aBuffer)
 }
 
 nsresult
-GonkCameraImage::ClearMediaBuffer()
+GonkCameraImage::ClearBuffer()
 {
   ReentrantMonitorAutoEnter mon(mMonitor);
 
