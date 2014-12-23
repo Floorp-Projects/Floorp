@@ -16,7 +16,7 @@ namespace mp4_demuxer
 static const uint8_t kAnnexBDelimiter[] = { 0, 0, 0, 1 };
 
 void
-AnnexB::ConvertSample(MP4Sample* aSample)
+AnnexB::ConvertSampleToAnnexB(MP4Sample* aSample)
 {
   MOZ_ASSERT(aSample);
   if (!aSample->size) {
@@ -36,7 +36,8 @@ AnnexB::ConvertSample(MP4Sample* aSample)
 
   // Prepend the Annex B header with SPS and PPS tables to keyframes.
   if (aSample->is_sync_point) {
-    nsRefPtr<ByteBuffer> annexB = ConvertExtraDataToAnnexB(aSample->extra_data);
+    nsRefPtr<ByteBuffer> annexB =
+      ConvertExtraDataToAnnexB(aSample->extra_data);
     aSample->Prepend(annexB->Elements(), annexB->Length());
   }
 }
