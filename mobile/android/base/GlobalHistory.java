@@ -70,7 +70,7 @@ class GlobalHistory {
                         mVisitedCache = new SoftReference<Set<String>>(visitedSet);
                         final long end = SystemClock.uptimeMillis();
                         final long took = end - start;
-                        Telemetry.HistogramAdd(TELEMETRY_HISTOGRAM_BUILD_VISITED_LINK, (int) Math.min(took, Integer.MAX_VALUE));
+                        Telemetry.addToHistogram(TELEMETRY_HISTOGRAM_BUILD_VISITED_LINK, (int) Math.min(took, Integer.MAX_VALUE));
                     } finally {
                         c.close();
                     }
@@ -106,7 +106,7 @@ class GlobalHistory {
         BrowserDB.updateVisitedHistory(GeckoAppShell.getContext().getContentResolver(), uri);
         final long end = SystemClock.uptimeMillis();
         final long took = end - start;
-        Telemetry.HistogramAdd(TELEMETRY_HISTOGRAM_ADD, (int) Math.min(took, Integer.MAX_VALUE));
+        Telemetry.addToHistogram(TELEMETRY_HISTOGRAM_ADD, (int) Math.min(took, Integer.MAX_VALUE));
         addToGeckoOnly(uri);
     }
 
@@ -116,7 +116,7 @@ class GlobalHistory {
         BrowserDB.updateHistoryTitle(GeckoAppShell.getContext().getContentResolver(), uri, title);
         final long end = SystemClock.uptimeMillis();
         final long took = end - start;
-        Telemetry.HistogramAdd(TELEMETRY_HISTOGRAM_UPDATE, (int) Math.min(took, Integer.MAX_VALUE));
+        Telemetry.addToHistogram(TELEMETRY_HISTOGRAM_UPDATE, (int) Math.min(took, Integer.MAX_VALUE));
     }
 
     public void checkUriVisited(final String uri) {
