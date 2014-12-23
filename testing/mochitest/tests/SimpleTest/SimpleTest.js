@@ -820,7 +820,7 @@ SimpleTest.waitForClipboard = function(aExpectedStringOrValidatorFn, aSetupFn,
             reset();
             successFn();
         } else {
-            setTimeout(function() { return wait(validatorFn, successFn, failureFn, flavor); }, 100);
+            SimpleTest._originalSetTimeout.apply(window, [function() { return wait(validatorFn, successFn, failureFn, flavor); }, 100]);
         }
     }
 
