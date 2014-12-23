@@ -1,0 +1,21 @@
+apply plugin: 'com.android.library'
+
+apply from: "${topsrcdir}/mobile/android/gradle/android.gradle"
+
+android {
+    defaultConfig {
+        applicationId 'org.mozilla.gecko.thirdparty'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFile getDefaultProguardFile('proguard-android.txt')
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:support-v4:19.1.+'
+}

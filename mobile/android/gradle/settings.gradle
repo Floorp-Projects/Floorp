@@ -1,9 +1,50 @@
+// If our root project is in the object directory, we expect to be given
+// topsrcdir from our environment via gradle.properties.  If we don't get it,
+// our root project is in the source directory, so we extract topsrcdir relative
+// to the location of this script.
+if (!hasProperty('topsrcdir')) {
+    // In the source directory, we're not worried about links crossing directories.
+    binding.variables['topsrcdir'] = new File("../../..").getCanonicalPath()
+    logger.warn("topsrcdir is undefined: assuming source directory Gradle invocation with topsrcdir=${topsrcdir}.")
+}
+
+def command = ["${topsrcdir}/mach", "environment", "--format", "json", "--verbose"]
+def proc = command.execute(null, new File(topsrcdir))
+def sout = new StringBuffer()
+def serr = new StringBuffer()
+proc.consumeProcessOutput(sout, serr)
+proc.waitFor()
+
+if (proc.exitValue() != 0) {
+    throw new GradleException("Could not extract mozconfig/build environment from |${topsrcdir}/mach environment|!");
+}
+
+import groovy.json.JsonSlurper
+def slurper = new JsonSlurper()
+def json = slurper.parseText(sout.toString())
+
 include ':app'
 include ':base'
+include ':branding'
 include ':omnijar'
+include ':preprocessed_code'
+include ':preprocessed_resources'
 include ':thirdparty'
 
-project(':app').projectDir = new File("${topsrcdir}/mobile/android/app")
-project(':base').projectDir = new File("${topsrcdir}/mobile/android/base")
-project(':omnijar').projectDir = new File("${topsrcdir}/mobile/android/gradle/omnijar")
-project(':thirdparty').projectDir = new File("${topsrcdir}/mobile/android/thirdparty")
+def gradleRoot = new File("${json.topobjdir}/mobile/android/gradle")
+project(':app').projectDir = new File(gradleRoot, 'app')
+project(':base').projectDir = new File(gradleRoot, 'base')
+project(':branding').projectDir = new File(gradleRoot, 'branding')
+project(':omnijar').projectDir = new File(gradleRoot, 'omnijar')
+project(':preprocessed_code').projectDir = new File(gradleRoot, 'preprocessed_code')
+project(':preprocessed_resources').projectDir = new File(gradleRoot, 'preprocessed_resources')
+project(':thirdparty').projectDir = new File(gradleRoot, 'thirdparty')
+
+// The Gradle instance is shared between settings.gradle and all the
+// other build.gradle files (see
+// http://forums.gradle.org/gradle/topics/define_extension_properties_from_settings_xml).
+// We use this ext property to pass the per-object-directory mozconfig
+// between scripts.  This lets us execute set-up code before we gradle
+// tries to configure the project even once, and as a side benefit
+// saves invoking |mach environment| multiple times.
+gradle.ext.mozconfig = json

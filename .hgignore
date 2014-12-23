@@ -93,3 +93,6 @@ GPATH
 # including the following three lines
 ^browser/components/loop/standalone/content/legal/styles/.*\.css$
 ^browser/components/loop/standalone/content/legal/terms/en_US\.html$
+
+# Android Gradle artifacts.
+^mobile/android/gradle/.gradle
