@@ -57,7 +57,7 @@ public:
     memmove(data, aData, size);
   }
 
-  ~VP8Sample()
+  virtual ~VP8Sample()
   {
     delete data;
   }
