@@ -25,7 +25,7 @@ public:
 
   virtual void OpenComplete(GMPErr aStatus) MOZ_OVERRIDE {
     if (GMP_SUCCEEDED(aStatus)) {
-      mRecord->Write(&mData.front(), mData.size());
+      mRecord->Write(mData.size() ? &mData.front() : nullptr, mData.size());
     } else {
       GMPRunOnMainThread(mOnFailure);
       mOnSuccess->Destroy();
