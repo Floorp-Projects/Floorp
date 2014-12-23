@@ -7032,7 +7032,7 @@ var gIdentityHandler = {
          nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT     |
          nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT)) {
       this.showBadContentDoorhanger(state);
-    } else {
+    } else if (gPrefService.getBoolPref("privacy.trackingprotection.enabled")) {
       // We didn't show the shield
       Services.telemetry.getHistogramById("TRACKING_PROTECTION_SHIELD")
         .add(0);
@@ -7065,9 +7065,9 @@ var gIdentityHandler = {
     } else if (state &
                Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT) {
       histogram.add(2);
-    } else {
-      // The shield is due to mixed content, just keep a count so we can
-      // normalize later.
+    } else if (gPrefService.getBoolPref("privacy.trackingprotection.enabled")) {
+      // Tracking protection is enabled but no tracking elements are loaded,
+      // the shield is due to mixed content.
       histogram.add(3);
     }
     if (state &
