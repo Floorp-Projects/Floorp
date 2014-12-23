@@ -595,7 +595,6 @@ CopyFrontToBack(TextureClient* aFront,
 
 void
 TileClient::ValidateBackBufferFromFront(const nsIntRegion& aDirtyRegion,
-                                        bool aCanRerasterizeValidRegion,
                                         nsIntRegion& aAddPaintedRegion)
 {
   if (mBackBuffer && mFrontBuffer) {
@@ -614,9 +613,7 @@ TileClient::ValidateBackBufferFromFront(const nsIntRegion& aDirtyRegion,
 
       aAddPaintedRegion = regionToCopy;
 
-      if (regionToCopy.IsEmpty() ||
-          (aCanRerasterizeValidRegion &&
-           regionToCopy.Area() < tileSize.width * tileSize.height * MINIMUM_TILE_COPY_AREA)) {
+      if (regionToCopy.IsEmpty()) {
         // Just redraw it all.
         return;
       }
@@ -713,7 +710,6 @@ TileClient::GetBackBuffer(const nsIntRegion& aDirtyRegion,
                           SurfaceMode aMode,
                           bool *aCreatedTextureClient,
                           nsIntRegion& aAddPaintedRegion,
-                          bool aCanRerasterizeValidRegion,
                           RefPtr<TextureClient>* aBackBufferOnWhite)
 {
   // Try to re-use the front-buffer if possible
@@ -778,7 +774,7 @@ TileClient::GetBackBuffer(const nsIntRegion& aDirtyRegion,
     mInvalidBack = nsIntRect(0, 0, mBackBuffer->GetSize().width, mBackBuffer->GetSize().height);
   }
 
-  ValidateBackBufferFromFront(aDirtyRegion, aCanRerasterizeValidRegion, aAddPaintedRegion);
+  ValidateBackBufferFromFront(aDirtyRegion, aAddPaintedRegion);
 
   *aBackBufferOnWhite = mBackBufferOnWhite;
   return mBackBuffer;
@@ -1116,7 +1112,6 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
     aTile.GetBackBuffer(offsetScaledDirtyRegion,
                         content, mode,
                         &createdTextureClient, extraPainted,
-                        usingTiledDrawTarget,
                         &backBufferOnWhite);
 
   extraPainted.MoveBy(aTileOrigin);
