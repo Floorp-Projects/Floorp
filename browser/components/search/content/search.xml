@@ -467,6 +467,9 @@
 
           aEvent.preventDefault();
           aEvent.stopPropagation();
+
+          if (this.hasAttribute("oneoffui"))
+            this.openSuggestionsPanel();
         ]]></body>
       </method>
 
@@ -647,10 +650,9 @@
 
       <field name="_ignoreFocus">false</field>
 
-      <method name="selectEngine">
+      <method name="rebuildPopup">
         <body><![CDATA[
-          // Override this method to avoid accidentally changing the default
-          // engine using the keyboard shortcuts of the old UI.
+          this._textbox.popup.updateHeader();
         ]]></body>
       </method>
 
@@ -914,7 +916,11 @@
           <![CDATA[
             // Don't open search popup if history popup is open
             if (!this.popupOpen) {
-              document.getBindingParent(this).searchButton.open = true;
+              let searchBox = document.getBindingParent(this);
+              if (searchBox.hasAttribute("oneoffui"))
+                searchBox.openSuggestionsPanel();
+              else
+                searchBox.searchButton.open = true;
               return false;
             }
             return true;
@@ -980,7 +986,53 @@
           if (!list)
             return;
 
+          // accel + up/down changes the default engine and shouldn't affect
+          // the selection on the one-off buttons.
+#ifdef XP_MACOSX
+          if (aEvent.metaKey)
+#else
+          if (aEvent.ctrlKey)
+#endif
+            return;
+
           let selectedButton = this.getSelectedOneOff();
+
+          // Alt + up/down is very similar to (shift +) tab but differs in that
+          // it loops through the list, whereas tab will move the focus out.
+          if (aEvent.altKey &&
+              (aEvent.keyCode == KeyEvent.DOM_VK_DOWN ||
+               aEvent.keyCode == KeyEvent.DOM_VK_UP)) {
+            let forward = aEvent.keyCode == KeyEvent.DOM_VK_DOWN;
+            if (selectedButton) {
+              // cycle though the list of one-off buttons.
+              selectedButton.removeAttribute("selected");
+              if (forward)
+                selectedButton = selectedButton.nextSibling;
+              else
+                selectedButton = selectedButton.previousSibling;
+
+              // Avoid selecting dummy buttons.
+              if (selectedButton && selectedButton.classList.contains("dummy"))
+                selectedButton = null;
+            }
+            else {
+              // If no selection, select the first or last one-off button.
+              if (forward) {
+                selectedButton = list.firstChild;
+              }
+              else {
+                selectedButton = list.lastChild;
+                while (selectedButton.classList.contains("dummy"))
+                  selectedButton = selectedButton.previousSibling;
+              }
+            }
+            if (selectedButton)
+              selectedButton.setAttribute("selected", "true");
+
+            aEvent.preventDefault();
+            aEvent.stopPropagation();
+            return;
+          }
 
           // If the last suggestion is selected, DOWN selects the first one-off.
           if (aEvent.keyCode == KeyEvent.DOM_VK_DOWN &&
