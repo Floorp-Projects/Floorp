@@ -133,6 +133,9 @@ public:
   virtual bool SupportsAudioMimeType(const char* aMimeType);
   virtual bool SupportsVideoMimeType(const char* aMimeType);
 
+  // Indicates if the video decoder requires AVCC format.
+  virtual bool DecoderNeedsAVCC(const mp4_demuxer::VideoDecoderConfig& aConfig);
+
 protected:
   PlatformDecoderModule() {}
   virtual ~PlatformDecoderModule() {}
