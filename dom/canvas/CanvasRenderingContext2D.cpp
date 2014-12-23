@@ -2150,10 +2150,12 @@ class CanvasUserSpaceMetrics : public UserSpaceMetricsWithSize
 {
 public:
   CanvasUserSpaceMetrics(const gfx::IntSize& aSize, const nsFont& aFont,
-                         nsIAtom* aFontLanguage, nsPresContext* aPresContext)
+                         nsIAtom* aFontLanguage, bool aExplicitLanguage,
+                         nsPresContext* aPresContext)
     : mSize(aSize)
     , mFont(aFont)
     , mFontLanguage(aFontLanguage)
+    , mExplicitLanguage(aExplicitLanguage)
     , mPresContext(aPresContext)
   {
   }
@@ -2169,8 +2171,8 @@ public:
     gfxTextPerfMetrics* tp = mPresContext->GetTextPerfMetrics();
     nsRefPtr<nsFontMetrics> fontMetrics;
     nsDeviceContext* dc = mPresContext->DeviceContext();
-    dc->GetMetricsFor(mFont, mFontLanguage, gfxFont::eHorizontal,
-                      nullptr, tp,
+    dc->GetMetricsFor(mFont, mFontLanguage, mExplicitLanguage,
+                      gfxFont::eHorizontal, nullptr, tp,
                       *getter_AddRefs(fontMetrics));
     return NSAppUnitsToFloatPixels(fontMetrics->XHeight(),
                                    nsPresContext::AppUnitsPerCSSPixel());
@@ -2183,6 +2185,7 @@ private:
   gfx::IntSize mSize;
   const nsFont& mFont;
   nsIAtom* mFontLanguage;
+  bool mExplicitLanguage;
   nsPresContext* mPresContext;
 };
 
@@ -2200,6 +2203,7 @@ CanvasRenderingContext2D::UpdateFilter()
       CanvasUserSpaceMetrics(IntSize(mWidth, mHeight),
                              CurrentState().fontFont,
                              CurrentState().fontLanguage,
+                             CurrentState().fontExplicitLanguage,
                              presShell->GetPresContext()),
       gfxRect(0, 0, mWidth, mHeight),
       CurrentState().filterAdditionalImages);
@@ -2831,7 +2835,7 @@ CanvasRenderingContext2D::SetFont(const nsAString& font,
 
   const nsStyleFont* fontStyle = sc->StyleFont();
 
-  nsIAtom* language = sc->StyleFont()->mLanguage;
+  nsIAtom* language = fontStyle->mLanguage;
   if (!language) {
     language = presShell->GetPresContext()->GetLanguageFromCharset();
   }
@@ -2853,6 +2857,7 @@ CanvasRenderingContext2D::SetFont(const nsAString& font,
                      fontStyle->mFont.stretch,
                      NSAppUnitsToFloatPixels(fontStyle->mSize, float(aupcp)),
                      language,
+                     fontStyle->mExplicitLanguage,
                      fontStyle->mFont.sizeAdjust,
                      fontStyle->mFont.systemFont,
                      printerFont,
@@ -2873,6 +2878,7 @@ CanvasRenderingContext2D::SetFont(const nsAString& font,
   CurrentState().fontFont = fontStyle->mFont;
   CurrentState().fontFont.size = fontStyle->mSize;
   CurrentState().fontLanguage = fontStyle->mLanguage;
+  CurrentState().fontExplicitLanguage = fontStyle->mExplicitLanguage;
 }
 
 void
