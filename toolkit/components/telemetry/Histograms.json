@@ -4577,6 +4577,44 @@
     "extended_statistics_ok": true,
     "description": "Time (ms) it takes to build the cache of the search service"
   },
+  "SEARCH_SERVICE_COUNTRY_FETCH_MS": {
+    "alert_emails": ["mhammond@mozilla.com", "gavin@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "n_buckets": 20,
+    "high": 2000,
+    "description": "Time (ms) it takes to fetch the country code"
+  },
+  "SEARCH_SERVICE_COUNTRY_FETCH_TIMEOUT": {
+    "alert_emails": ["mhammond@mozilla.com", "gavin@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "If we saw a timeout fetching the country-code"
+  },
+  "SEARCH_SERVICE_COUNTRY_SUCCESS": {
+    "alert_emails": ["mhammond@mozilla.com", "gavin@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "If we successfully fetched the country-code."
+  },
+  "SEARCH_SERVICE_COUNTRY_SUCCESS_WITHOUT_DATA": {
+    "alert_emails": ["mhammond@mozilla.com", "gavin@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "If we got a success response but no country-code"
+  },
+  "SEARCH_SERVICE_US_COUNTRY_MISMATCHED_TIMEZONE": {
+    "alert_emails": ["mhammond@mozilla.com", "gavin@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "Set if the fetched country-code indicates US but the time-zone heuristic doesn't"
+  },
+  "SEARCH_SERVICE_US_TIMEZONE_MISMATCHED_COUNTRY": {
+    "alert_emails": ["mhammond@mozilla.com", "gavin@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "Set if the time-zone heuristic indicates US but the fetched country code doesn't"
+  },
   "SOCIAL_ENABLED_ON_SESSION": {
     "expires_in_version": "never",
     "kind": "flag",
