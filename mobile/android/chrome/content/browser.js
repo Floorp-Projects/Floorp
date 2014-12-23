@@ -109,9 +109,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "SharedPreferences",
 XPCOMUtils.defineLazyModuleGetter(this, "Notifications",
                                   "resource://gre/modules/Notifications.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AboutReader",
-                                  "resource://gre/modules/AboutReader.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
                                   "resource://gre/modules/ReaderMode.jsm");
 
@@ -507,6 +504,8 @@ var BrowserApp = {
     } catch (e) {
       // Tiles reporting is disabled.
     }
+
+    window.messageManager.loadFrameScript("chrome://browser/content/content.js", true);
 
     // Notify Java that Gecko has loaded.
     Messaging.sendRequest({ type: "Gecko:Ready" });
@@ -3978,14 +3977,6 @@ Tab.prototype = {
         }
 
         if (docURI.startsWith("about:reader")) {
-          // During browser restart / recovery, duplicate "DOMContentLoaded" messages are received here
-          // For the visible tab ... where more than one tab is being reloaded, the inital "DOMContentLoaded"
-          // Message can be received before the document body is available ... so we avoid instantiating an
-          // AboutReader object, expecting that an eventual valid message will follow.
-          let contentDocument = this.browser.contentDocument;
-          if (contentDocument.body) {
-            new AboutReader(contentDocument, this.browser.contentWindow);
-          }
           // Update the page action to show the "reader active" icon.
           Reader.updatePageAction(this);
         }
