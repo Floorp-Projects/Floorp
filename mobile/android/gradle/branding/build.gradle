@@ -3,10 +3,6 @@ apply plugin: 'com.android.library'
 apply from: "${topsrcdir}/mobile/android/gradle/android.gradle"
 
 android {
-    defaultConfig {
-        applicationId 'org.mozilla.gecko.branding'
-    }
-
     buildTypes {
         release {
             minifyEnabled false
