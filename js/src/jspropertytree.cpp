@@ -6,6 +6,8 @@
 
 #include "jspropertytree.h"
 
+#include "mozilla/DebugOnly.h"
+
 #include "jscntxt.h"
 #include "jsgc.h"
 #include "jstypes.h"
@@ -18,6 +20,8 @@
 
 using namespace js;
 using namespace js::gc;
+
+using mozilla::DebugOnly;
 
 inline HashNumber
 ShapeHasher::hash(const Lookup &l)
@@ -210,7 +214,7 @@ PropertyTree::lookupChild(ThreadSafeContext *cx, Shape *parent, const StackShape
     }
 
     if (shape) {
-        JS::Zone *zone = shape->arenaHeader()->zone;
+        DebugOnly<JS::Zone *> zone = shape->arenaHeader()->zone;
         MOZ_ASSERT(!zone->needsIncrementalBarrier());
         MOZ_ASSERT(!(zone->isGCSweeping() && !shape->isMarked() &&
                      !shape->arenaHeader()->allocatedDuringIncremental));

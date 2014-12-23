@@ -75,6 +75,12 @@ FindData(sp<MetaData>& aMetaData, uint32_t aKey, nsTArray<T>* aDest)
   return true;
 }
 
+static bool
+FindData(sp<MetaData>& aMetaData, uint32_t aKey, ByteBuffer* aDest)
+{
+  return FindData(aMetaData, aKey, static_cast<nsTArray<uint8_t>*>(aDest));
+}
+
 bool
 CryptoFile::DoUpdate(sp<MetaData>& aMetaData)
 {
@@ -146,14 +152,14 @@ AudioDecoderConfig::Update(sp<MetaData>& aMetaData, const char* aMimeType)
   frequency_index = Adts::GetFrequencyIndex(samples_per_second);
   aac_profile = FindInt32(aMetaData, kKeyAACProfile);
 
-  if (FindData(aMetaData, kKeyESDS, &extra_data)) {
-    ESDS esds(&extra_data[0], extra_data.length());
+  if (FindData(aMetaData, kKeyESDS, extra_data)) {
+    ESDS esds(extra_data->Elements(), extra_data->Length());
 
     const void* data;
     size_t size;
     if (esds.getCodecSpecificInfo(&data, &size) == OK) {
       const uint8_t* cdata = reinterpret_cast<const uint8_t*>(data);
-      audio_specific_config.append(cdata, size);
+      audio_specific_config->AppendElements(cdata, size);
       if (size > 1) {
         ABitReader br(cdata, size);
         extended_profile = br.getBits(5);
@@ -182,12 +188,7 @@ VideoDecoderConfig::Update(sp<MetaData>& aMetaData, const char* aMimeType)
   image_width = FindInt32(aMetaData, kKeyWidth);
   image_height = FindInt32(aMetaData, kKeyHeight);
 
-  if (FindData(aMetaData, kKeyAVCC, &extra_data) && extra_data.length() >= 7) {
-    // Set size of the NAL length to 4. The demuxer formats its output with
-    // this NAL length size.
-    extra_data[4] |= 3;
-    annex_b = AnnexB::ConvertExtraDataToAnnexB(extra_data);
-  }
+  FindData(aMetaData, kKeyAVCC, extra_data);
 }
 
 bool
@@ -205,6 +206,7 @@ MP4Sample::MP4Sample()
   , is_sync_point(0)
   , data(nullptr)
   , size(0)
+  , extra_data(nullptr)
 {
 }
 
@@ -217,7 +219,7 @@ MP4Sample::MP4Sample(const MP4Sample& copy)
   , is_sync_point(copy.is_sync_point)
   , size(copy.size)
   , crypto(copy.crypto)
-  , prefix_data(copy.prefix_data)
+  , extra_data(copy.extra_data)
 {
   extra_buffer = data = new uint8_t[size];
   memcpy(data, copy.data, size);
@@ -282,6 +284,27 @@ MP4Sample::Prepend(const uint8_t* aData, size_t aSize)
   memmove(newData + aSize, data, size);
   memmove(newData, aData, aSize);
   size = newSize;
+
+  if (newData != data) {
+    extra_buffer = data = newData;
+    if (mMediaBuffer) {
+      mMediaBuffer->release();
+      mMediaBuffer = nullptr;
+    }
+  }
+}
+
+void
+MP4Sample::Replace(const uint8_t* aData, size_t aSize)
+{
+  // If the existing MediaBuffer has enough space then we just recycle it. If
+  // not then we copy to a new buffer.
+  uint8_t* newData = mMediaBuffer && aSize <= mMediaBuffer->size()
+                       ? data
+                       : new uint8_t[aSize];
+
+  memcpy(newData, aData, aSize);
+  size = aSize;
 
   if (newData != data) {
     extra_buffer = data = newData;

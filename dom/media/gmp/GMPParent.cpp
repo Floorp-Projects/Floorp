@@ -148,27 +148,30 @@ GMPParent::LoadProcess()
 
     bool opened = Open(mProcess->GetChannel(), mProcess->GetChildProcessHandle());
     if (!opened) {
+      LOGD(("%s::%s: Failed to create new child process %p", __CLASS__, __FUNCTION__, (void *)mProcess));
       mProcess->Delete();
       mProcess = nullptr;
       return NS_ERROR_FAILURE;
     }
-    LOGD(("%s::%s: Created new process %p", __CLASS__, __FUNCTION__, (void *)mProcess));
+    LOGD(("%s::%s: Created new child process %p", __CLASS__, __FUNCTION__, (void *)mProcess));
 
     bool ok = SendSetNodeId(mNodeId);
     if (!ok) {
+      LOGD(("%s::%s: Failed to send node id to child process %p", __CLASS__, __FUNCTION__, (void *)mProcess));
       mProcess->Delete();
       mProcess = nullptr;
       return NS_ERROR_FAILURE;
     }
-    LOGD(("%s::%s: Failed to send node id %p", __CLASS__, __FUNCTION__, (void *)mProcess));
+    LOGD(("%s::%s: Sent node id to child process %p", __CLASS__, __FUNCTION__, (void *)mProcess));
 
     ok = SendStartPlugin();
     if (!ok) {
+      LOGD(("%s::%s: Failed to send start to child process %p", __CLASS__, __FUNCTION__, (void *)mProcess));
       mProcess->Delete();
       mProcess = nullptr;
       return NS_ERROR_FAILURE;
     }
-    LOGD(("%s::%s: Failed to send start %p", __CLASS__, __FUNCTION__, (void *)mProcess));
+    LOGD(("%s::%s: Sent StartPlugin to child process %p", __CLASS__, __FUNCTION__, (void *)mProcess));
   }
 
   mState = GMPStateLoaded;

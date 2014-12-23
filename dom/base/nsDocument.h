@@ -1557,11 +1557,12 @@ private:
 public:
   static void ProcessBaseElementQueue();
 
-  // Modify the prototype and "is" attribute of newly created custom elements.
-  virtual void SwizzleCustomElement(Element* aElement,
-                                    const nsAString& aTypeExtension,
-                                    uint32_t aNamespaceID,
-                                    mozilla::ErrorResult& rv);
+  // Enqueue created callback or register upgrade candidate for
+  // newly created custom elements, possibly extending an existing type.
+  // ex. <x-button>, <button is="x-button> (type extension)
+  virtual void SetupCustomElement(Element* aElement,
+                                  uint32_t aNamespaceID,
+                                  const nsAString* aTypeExtension);
 
   static bool IsWebComponentsEnabled(JSContext* aCx, JSObject* aObject);
 
