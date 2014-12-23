@@ -21,14 +21,14 @@ FFmpegRuntimeLinker::LinkStatus FFmpegRuntimeLinker::sLinkStatus =
 struct AvFormatLib
 {
   const char* Name;
-  PlatformDecoderModule* (*Factory)();
+  already_AddRefed<PlatformDecoderModule> (*Factory)();
   uint32_t Version;
 };
 
 template <int V> class FFmpegDecoderModule
 {
 public:
-  static PlatformDecoderModule* Create();
+  static already_AddRefed<PlatformDecoderModule> Create();
 };
 
 static const AvFormatLib sLibs[] = {
@@ -101,14 +101,14 @@ FFmpegRuntimeLinker::Bind(const char* aLibName, uint32_t Version)
   return true;
 }
 
-/* static */ PlatformDecoderModule*
+/* static */ already_AddRefed<PlatformDecoderModule>
 FFmpegRuntimeLinker::CreateDecoderModule()
 {
   if (!Link()) {
     return nullptr;
   }
-  PlatformDecoderModule* module = sLib->Factory();
-  return module;
+  nsRefPtr<PlatformDecoderModule> module = sLib->Factory();
+  return module.forget();
 }
 
 /* static */ void

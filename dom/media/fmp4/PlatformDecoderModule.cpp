@@ -31,7 +31,7 @@
 
 namespace mozilla {
 
-extern PlatformDecoderModule* CreateBlankDecoderModule();
+extern already_AddRefed<PlatformDecoderModule> CreateBlankDecoderModule();
 
 bool PlatformDecoderModule::sUseBlankDecoder = false;
 bool PlatformDecoderModule::sFFmpegDecoderEnabled = false;
@@ -76,7 +76,7 @@ PlatformDecoderModule::Init()
 
 #ifdef MOZ_EME
 /* static */
-PlatformDecoderModule*
+already_AddRefed<PlatformDecoderModule>
 PlatformDecoderModule::CreateCDMWrapper(CDMProxy* aProxy,
                                         bool aHasAudio,
                                         bool aHasVideo,
@@ -90,7 +90,7 @@ PlatformDecoderModule::CreateCDMWrapper(CDMProxy* aProxy,
     cdmDecodesVideo = caps.CanDecryptAndDecodeVideo();
   }
 
-  nsAutoPtr<PlatformDecoderModule> pdm;
+  nsRefPtr<PlatformDecoderModule> pdm;
   if ((!cdmDecodesAudio && aHasAudio) || (!cdmDecodesVideo && aHasVideo)) {
     // The CDM itself can't decode. We need to wrap a PDM to decode the
     // decrypted output of the CDM.
@@ -100,15 +100,16 @@ PlatformDecoderModule::CreateCDMWrapper(CDMProxy* aProxy,
     }
   }
 
-  return new EMEDecoderModule(aProxy,
-                              pdm.forget(),
-                              cdmDecodesAudio,
-                              cdmDecodesVideo);
+  nsRefPtr<PlatformDecoderModule> emepdm(new EMEDecoderModule(aProxy,
+                                                              pdm,
+                                                              cdmDecodesAudio,
+                                                              cdmDecodesVideo));
+  return emepdm.forget();
 }
 #endif
 
 /* static */
-PlatformDecoderModule*
+already_AddRefed<PlatformDecoderModule>
 PlatformDecoderModule::Create()
 {
   // Note: This runs on the decode thread.
@@ -116,40 +117,43 @@ PlatformDecoderModule::Create()
 
 #ifdef MOZ_WIDGET_ANDROID
   if(sAndroidMCDecoderPreferred && sAndroidMCDecoderEnabled){
-    return new AndroidDecoderModule();
+    nsRefPtr<PlatformDecoderModule> m(new AndroidDecoderModule());
+    return m.forget();
   }
 #endif
   if (sUseBlankDecoder) {
     return CreateBlankDecoderModule();
   }
 #ifdef XP_WIN
-  nsAutoPtr<WMFDecoderModule> m(new WMFDecoderModule());
+  nsRefPtr<WMFDecoderModule> m(new WMFDecoderModule());
   if (NS_SUCCEEDED(m->Startup())) {
     return m.forget();
   }
 #endif
 #ifdef MOZ_FFMPEG
   if (sFFmpegDecoderEnabled) {
-    nsAutoPtr<PlatformDecoderModule> m(FFmpegRuntimeLinker::CreateDecoderModule());
+    nsRefPtr<PlatformDecoderModule> m(FFmpegRuntimeLinker::CreateDecoderModule());
     if (m) {
       return m.forget();
     }
   }
 #endif
 #ifdef MOZ_APPLEMEDIA
-  nsAutoPtr<AppleDecoderModule> m(new AppleDecoderModule());
+  nsRefPtr<AppleDecoderModule> m(new AppleDecoderModule());
   if (NS_SUCCEEDED(m->Startup())) {
     return m.forget();
   }
 #endif
 #ifdef MOZ_GONK_MEDIACODEC
   if (sGonkDecoderEnabled) {
-    return new GonkDecoderModule();
+    nsRefPtr<PlatformDecoderModule> m(new GonkDecoderModule());
+    return m.forget();
   }
 #endif
 #ifdef MOZ_WIDGET_ANDROID
   if(sAndroidMCDecoderEnabled){
-    return new AndroidDecoderModule();
+    nsRefPtr<PlatformDecoderModule> m(new AndroidDecoderModule());
+    return m.forget();
   }
 #endif
   return nullptr;
