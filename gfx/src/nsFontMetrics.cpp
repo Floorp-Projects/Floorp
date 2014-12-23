@@ -103,7 +103,8 @@ nsFontMetrics::~nsFontMetrics()
 }
 
 nsresult
-nsFontMetrics::Init(const nsFont& aFont, nsIAtom* aLanguage,
+nsFontMetrics::Init(const nsFont& aFont,
+                    nsIAtom* aLanguage, bool aExplicitLanguage,
                     gfxFont::Orientation aOrientation,
                     nsDeviceContext *aContext,
                     gfxUserFontSet *aUserFontSet,
@@ -122,6 +123,7 @@ nsFontMetrics::Init(const nsFont& aFont, nsIAtom* aLanguage,
                        aFont.stretch,
                        gfxFloat(aFont.size) / mP2A,
                        aLanguage,
+                       aExplicitLanguage,
                        aFont.sizeAdjust,
                        aFont.systemFont,
                        mDeviceContext->IsPrinterSurface(),
