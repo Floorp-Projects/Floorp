@@ -304,6 +304,12 @@ TypedArrayShift(Scalar::Type viewType)
     MOZ_CRASH("Unexpected array type");
 }
 
+static inline unsigned
+TypedArrayElemSize(Scalar::Type viewType)
+{
+    return 1u << TypedArrayShift(viewType);
+}
+
 class DataViewObject : public NativeObject
 {
   private:
