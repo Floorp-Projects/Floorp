@@ -17,11 +17,11 @@ class MP4Sample;
 class AnnexB
 {
 public:
-  // Convert a sample from NAL unit syntax to Annex B.
+  // Convert a sample from AVCC format to Annex B.
   // Assumes size of NAL length field is 4 bytes.
-  static void ConvertSample(MP4Sample* aSample);
+  static void ConvertSampleToAnnexB(MP4Sample* aSample);
 
-  // Parse an AVCC box and construct the Annex B sample header.
+  // Parse an AVCC extradata and construct the Annex B sample header.
   static already_AddRefed<ByteBuffer> ConvertExtraDataToAnnexB(
     const ByteBuffer* aExtraData);
   static already_AddRefed<ByteBuffer> ExtractExtraData(
