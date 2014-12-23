@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Endian.h"
 #include "mp4_demuxer/AnnexB.h"
 #include "mp4_demuxer/ByteReader.h"
 #include "mp4_demuxer/DecoderData.h"
@@ -27,10 +28,7 @@ AnnexB::ConvertSample(MP4Sample* aSample)
 
   uint8_t* d = aSample->data;
   while (d + 4 < aSample->data + aSample->size) {
-    uint32_t nalLen = (uint32_t(d[0]) << 24) +
-                      (uint32_t(d[1]) << 16) +
-                      (uint32_t(d[2]) << 8) +
-                       uint32_t(d[3]);
+    uint32_t nalLen = mozilla::BigEndian::readUint32(d);
     // Overwrite the NAL length with the Annex B separator.
     memcpy(d, kAnnexBDelimiter, ArrayLength(kAnnexBDelimiter));
     d += 4 + nalLen;
@@ -92,6 +90,77 @@ AnnexB::ConvertSPSOrPPS(ByteReader& aReader, uint8_t aCount,
     aAnnexB->AppendElements(kAnnexBDelimiter, ArrayLength(kAnnexBDelimiter));
     aAnnexB->AppendElements(ptr, length);
   }
+}
+
+already_AddRefed<ByteBuffer>
+AnnexB::ExtractExtraData(const MP4Sample* aSample)
+{
+  nsRefPtr<ByteBuffer> extradata = new ByteBuffer;
+  mozilla::Vector<uint8_t> sps;
+  int numSps = 0;
+  mozilla::Vector<uint8_t> pps;
+  int numPps = 0;
+
+  // Find SPS and PPS NALUs in AVCC data
+  uint8_t* d = aSample->data;
+  while (d + 4 < aSample->data + aSample->size) {
+    uint32_t nalLen = mozilla::BigEndian::readUint32(d);
+    uint8_t nalType = d[4] & 0x1f;
+    if (nalType == 7) { /* SPS */
+      numSps++;
+      uint8_t val[2];
+      mozilla::BigEndian::writeInt16(&val[0], nalLen);
+      sps.append(&val[0], 2); // 16 bits size
+      sps.append(d + 4, nalLen);
+    } else if (nalType == 8) { /* PPS */
+      numPps++;
+      uint8_t val[2];
+      mozilla::BigEndian::writeInt16(&val[0], nalLen);
+      pps.append(&val[0], 2); // 16 bits size
+      pps.append(d + 4, nalLen);
+    }
+    d += 4 + nalLen;
+  }
+
+  if (numSps) {
+    extradata->AppendElement(1);        // version
+    extradata->AppendElement(sps[3]);   // profile
+    extradata->AppendElement(sps[4]);   // profile compat
+    extradata->AppendElement(sps[5]);   // level
+    extradata->AppendElement(0xfc | 3); // nal size - 1
+    extradata->AppendElement(0xe0 | numSps);
+    extradata->AppendElements(sps.begin(), sps.length());
+    extradata->AppendElement(numPps);
+    if (numPps) {
+      extradata->AppendElements(pps.begin(), pps.length());
+    }
+  }
+
+  return extradata.forget();
+}
+
+bool
+AnnexB::HasSPS(const MP4Sample* aSample)
+{
+  return HasSPS(aSample->extra_data);
+}
+
+bool
+AnnexB::HasSPS(const ByteBuffer* aExtraData)
+{
+  if (!aExtraData) {
+    return false;
+  }
+
+  ByteReader reader(*aExtraData);
+  const uint8_t* ptr = reader.Read(5);
+  if (!ptr || !reader.CanRead8()) {
+    return false;
+  }
+  uint8_t numSps = reader.ReadU8() & 0x1f;
+  reader.DiscardRemaining();
+
+  return numSps > 0;
 }
 
 } // namespace mp4_demuxer
