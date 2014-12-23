@@ -603,7 +603,7 @@ Shmem::GetSysVID() const
     return -1;
   }
 
-  SharedMemorySysV* seg = static_cast<SharedMemorySysV*>(mSegment);
+  SharedMemorySysV* seg = static_cast<SharedMemorySysV*>(mSegment.get());
   return seg->GetHandle();
 #else
   NS_ERROR("Can't call GetSysVID() with no support for SysV shared memory!");
@@ -633,7 +633,7 @@ Shmem::ShareTo(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
   }
 #ifdef MOZ_HAVE_SHAREDMEMORYSYSV
   else if (SharedMemory::TYPE_SYSV == mSegment->Type()) {
-    SharedMemorySysV* seg = static_cast<SharedMemorySysV*>(mSegment);
+    SharedMemorySysV* seg = static_cast<SharedMemorySysV*>(mSegment.get());
     return new ShmemCreated(routingId, mId, mSize, seg->GetHandle());
   }
 #endif
