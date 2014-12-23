@@ -624,7 +624,7 @@ Shmem::ShareTo(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
   }
 
   if (SharedMemory::TYPE_BASIC == mSegment->Type()) {
-    SharedMemoryBasic* seg = static_cast<SharedMemoryBasic*>(mSegment);
+    SharedMemoryBasic* seg = static_cast<SharedMemoryBasic*>(mSegment.get());
     SharedMemoryBasic::Handle handle;
     if (!seg->ShareToProcess(aProcess, &handle))
       return nullptr;
