@@ -1,0 +1,7 @@
+[{
+"size": 1803072,
+"digest":
+"474cd191bd9331dc855d25186beae1dd64259ff5b5408fd2d4508d988034472528cbd2390c69a6ff1836437704cb101e769ad8da277bbb624da16ae4a5c75bdd", 
+"algorithm": "sha512",
+"filename": "linux32-minidump_stackwalk"
+}]
