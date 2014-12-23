@@ -1169,6 +1169,7 @@ WebrtcOMXH264VideoDecoder::Decode(const webrtc::EncodedImage& aInputImage,
 
   bool feedFrame = true;
   while (feedFrame) {
+    int64_t timeUs;
     status_t err = mOMX->FillInput(aInputImage, !configured, aRenderTimeMs);
     feedFrame = (err == -EAGAIN); // No input buffer available. Try again.
   }
