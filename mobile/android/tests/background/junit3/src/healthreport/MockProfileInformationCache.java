@@ -16,6 +16,10 @@ public class MockProfileInformationCache extends ProfileInformationCache {
     super(profilePath);
   }
 
+  public MockProfileInformationCache(File mockFile) {
+      super(mockFile);
+  }
+
   public boolean isInitialized() {
     return this.initialized;
   }
