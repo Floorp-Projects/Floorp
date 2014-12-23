@@ -58,12 +58,17 @@ Request::Constructor(const GlobalObject& aGlobal,
 
   if (aInput.IsRequest()) {
     nsRefPtr<Request> inputReq = &aInput.GetAsRequest();
-    if (inputReq->BodyUsed()) {
-      aRv.ThrowTypeError(MSG_REQUEST_BODY_CONSUMED_ERROR);
-      return nullptr;
+    nsCOMPtr<nsIInputStream> body;
+    inputReq->GetBody(getter_AddRefs(body));
+    if (body) {
+      if (inputReq->BodyUsed()) {
+        aRv.ThrowTypeError(MSG_REQUEST_BODY_CONSUMED_ERROR);
+        return nullptr;
+      } else {
+        inputReq->SetBodyUsed();
+      }
     }
 
-    inputReq->SetBodyUsed();
     request = inputReq->GetInternalRequest();
   } else {
     request = new InternalRequest();
