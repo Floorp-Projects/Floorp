@@ -287,11 +287,11 @@ ConvertPlanarYCbCrToNV12(const PlanarYCbCrData* aSource, uint8_t* aDestination)
   size_t vPixStride = horiSubsample * (1 + aSource->mCrSkip);
   size_t lineStride = uvSize.height / uvHeight * aSource->mCbCrStride;
 
-  for (int i = 0; i < uvHeight; i++) {
+  for (size_t i = 0; i < uvHeight; i++) {
     // 1st pixel per line.
     uint8_t* uSrc = u;
     uint8_t* vSrc = v;
-    for (int j = 0; j < uvWidth; j++) {
+    for (size_t j = 0; j < uvWidth; j++) {
       *aDestination++ = *uSrc;
       *aDestination++ = *vSrc;
       // Pick next source pixel.

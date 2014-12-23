@@ -333,7 +333,7 @@ status_t MediaResourceManagerService::ResourceTable::dequeueRequest(ResourceType
 status_t MediaResourceManagerService::ResourceTable::forgetClient(const sp<IBinder>& client)
 {
   // Traverse all resources.
-  for (int i = 0; i < mMap.size(); i++) {
+  for (size_t i = 0; i < mMap.size(); i++) {
     forgetClient(client, mMap.keyAt(i));
   }
   return OK;
@@ -358,7 +358,7 @@ status_t MediaResourceManagerService::ResourceTable::forgetClient(const sp<IBind
 
   // Revoke ownership for given client.
   Slots& slots = resources.mSlots;
-  for (int i = 0; i < slots.size(); i++) {
+  for (size_t i = 0; i < slots.size(); i++) {
     ResourceSlot& slot = slots.editItemAt(i);
     if (client.get() == slot.mClient.get()) {
       slot.mClient = nullptr;
