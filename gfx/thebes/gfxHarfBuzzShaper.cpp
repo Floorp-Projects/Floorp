@@ -1228,11 +1228,13 @@ gfxHarfBuzzShaper::ShapeText(gfxContext      *aContext,
         language = hb_ot_tag_to_language(style->languageOverride);
     } else if (entry->mLanguageOverride) {
         language = hb_ot_tag_to_language(entry->mLanguageOverride);
-    } else {
+    } else if (style->explicitLanguage) {
         nsCString langString;
         style->language->ToUTF8String(langString);
         language =
             hb_language_from_string(langString.get(), langString.Length());
+    } else {
+        language = hb_ot_tag_to_language(HB_OT_TAG_DEFAULT_LANGUAGE);
     }
     hb_buffer_set_language(buffer, language);
 
