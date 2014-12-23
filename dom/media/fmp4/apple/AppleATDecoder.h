@@ -23,7 +23,7 @@ public:
   AppleATDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
                  MediaTaskQueue* aVideoTaskQueue,
                  MediaDataDecoderCallback* aCallback);
-  ~AppleATDecoder();
+  virtual ~AppleATDecoder();
 
   virtual nsresult Init() MOZ_OVERRIDE;
   virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
