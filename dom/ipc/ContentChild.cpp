@@ -2153,15 +2153,13 @@ ContentChild::RecvFileSystemUpdate(const nsString& aFsName,
                                    const bool& aIsSharing,
                                    const bool& aIsFormatting,
                                    const bool& aIsFake,
-                                   const bool& aIsUnmounting,
-                                   const bool& aIsRemovable,
-                                   const bool& aIsHotSwappable)
+                                   const bool& aIsUnmounting)
 {
 #ifdef MOZ_WIDGET_GONK
     nsRefPtr<nsVolume> volume = new nsVolume(aFsName, aVolumeName, aState,
                                              aMountGeneration, aIsMediaPresent,
                                              aIsSharing, aIsFormatting, aIsFake,
-                                             aIsUnmounting, aIsRemovable, aIsHotSwappable);
+                                             aIsUnmounting);
 
     nsRefPtr<nsVolumeService> vs = nsVolumeService::GetSingleton();
     if (vs) {
@@ -2178,8 +2176,6 @@ ContentChild::RecvFileSystemUpdate(const nsString& aFsName,
     unused << aIsFormatting;
     unused << aIsFake;
     unused << aIsUnmounting;
-    unused << aIsRemovable;
-    unused << aIsHotSwappable;
 #endif
     return true;
 }
