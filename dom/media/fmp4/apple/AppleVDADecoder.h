@@ -8,7 +8,6 @@
 #define mozilla_AppleVDADecoder_h
 
 #include "PlatformDecoderModule.h"
-#include "mozilla/RefPtr.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "MP4Reader.h"
 #include "MP4Decoder.h"
@@ -87,9 +86,9 @@ public:
   CFDictionaryRef CreateOutputConfiguration();
 
   const mp4_demuxer::VideoDecoderConfig& mConfig;
-  RefPtr<MediaTaskQueue> mTaskQueue;
+  nsRefPtr<MediaTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
-  layers::ImageContainer* mImageContainer;
+  nsRefPtr<layers::ImageContainer> mImageContainer;
   ReorderQueue mReorderQueue;
 
 private:
