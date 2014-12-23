@@ -330,32 +330,6 @@ GetThreadInfo(pthread_t threadID) {
   return tinfo;
 }
 
-/**
- * Get thread info using the specified native thread ID.
- *
- * @return thread_info_t with nativeThreadID == specified threadID
- */
-static thread_info_t*
-GetThreadInfo(pid_t threadID) {
-  if (sIsNuwaProcess) {
-    REAL(pthread_mutex_lock)(&sThreadCountLock);
-  }
-  thread_info_t *thrinfo = nullptr;
-  for (thread_info_t *tinfo = sAllThreads.getFirst();
-       tinfo;
-       tinfo = tinfo->getNext()) {
-    if (tinfo->origNativeThreadID == threadID) {
-      thrinfo = tinfo;
-      break;
-    }
-  }
-  if (sIsNuwaProcess) {
-    pthread_mutex_unlock(&sThreadCountLock);
-  }
-
-  return thrinfo;
-}
-
 #if !defined(HAVE_THREAD_TLS_KEYWORD)
 /**
  * Get thread info of the current thread.
