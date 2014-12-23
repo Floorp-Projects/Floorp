@@ -1124,8 +1124,12 @@ FrameIter::matchCallee(JSContext *cx, HandleFunction fun) const
     // expect both functions to have the same JSScript. If so, and if they are
     // different, then they cannot be equal.
     bool useSameScript = CloneFunctionObjectUseSameScript(fun->compartment(), currentCallee);
-    if (useSameScript && currentCallee->nonLazyScript() != fun->nonLazyScript())
+    if (useSameScript &&
+        (currentCallee->hasScript() != fun->hasScript() ||
+         currentCallee->nonLazyScript() != fun->nonLazyScript()))
+    {
         return false;
+    }
 
     // If none of the previous filters worked, then take the risk of
     // invalidating the frame to identify the JSFunction.
