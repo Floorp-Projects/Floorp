@@ -111,7 +111,7 @@ class MochitestRunner(MozbuildObject):
 
     def run_b2g_test(self, test_paths=None, b2g_home=None, xre_path=None,
                      total_chunks=None, this_chunk=None, no_window=None,
-                     repeat=0, run_until_failure=False, **kwargs):
+                     repeat=0, run_until_failure=False, chrome=False, **kwargs):
         """Runs a b2g mochitest.
 
         test_paths is an enumerable of paths to tests. It can be a relative path
@@ -146,7 +146,10 @@ class MochitestRunner(MozbuildObject):
         options = parser.parse_args([])[0]
 
         if test_path:
-            test_root_file = mozpack.path.join(self.mochitest_dir, 'tests', test_path)
+            if chrome:
+                test_root_file = mozpack.path.join(self.mochitest_dir, 'chrome', test_path)
+            else:
+                test_root_file = mozpack.path.join(self.mochitest_dir, 'tests', test_path)
             if not os.path.exists(test_root_file):
                 print('Specified test path does not exist: %s' % test_root_file)
                 return 1
@@ -184,6 +187,7 @@ class MochitestRunner(MozbuildObject):
         options.logdir = self.mochitest_dir
         options.httpdPath = self.mochitest_dir
         options.xrePath = xre_path
+        options.chrome = chrome
         return mochitest.run_remote_mochitests(parser, options)
 
     def run_desktop_test(self, context, suite=None, test_paths=None, debugger=None,
@@ -840,6 +844,13 @@ class B2GCommands(MachCommandBase):
         mochitest = self._spawn(MochitestRunner)
         return mochitest.run_b2g_test(b2g_home=self.b2g_home,
                 xre_path=self.xre_path, test_paths=test_paths, **kwargs)
+
+    @Command('mochitest-chrome-remote', category='testing',
+        description='Run a remote mochitest-chrome.',
+        conditions=[conditions.is_b2g, is_emulator])
+    @B2GCommand
+    def run_mochitest_chrome_remote(self, test_paths, **kwargs):
+        return self.run_mochitest_remote(test_paths, chrome=True, **kwargs)
 
     @Command('mochitest-b2g-desktop', category='testing',
         conditions=[conditions.is_b2g_desktop],
