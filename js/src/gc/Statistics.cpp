@@ -923,7 +923,7 @@ Statistics::endPhase(Phase phase)
     if (phaseNestingDepth == 0 && suspendedPhaseNestingDepth > 0) {
         Phase resumePhase = suspendedPhases[--suspendedPhaseNestingDepth];
         if (resumePhase == PHASE_MUTATOR)
-            timedGCTime += now - timedGCStart;
+            timedGCTime += PRMJ_Now() - timedGCStart;
         beginPhase(resumePhase);
     }
 }
