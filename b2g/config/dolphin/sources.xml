@@ -139,7 +139,7 @@
   <project name="platform/system/core" path="system/core" revision="53d584d4a4b4316e4de9ee5f210d662f89b44e7e"/>
   <project name="u-boot" path="u-boot" revision="982c1fd67b89d5573317c1796cf5b0143de44e8a"/>
   <project name="vendor/sprd/gps" path="vendor/sprd/gps" revision="6974f8e771d4d8e910357a6739ab124768891e8f"/>
-  <project name="vendor/sprd/open-source" path="vendor/sprd/open-source" revision="8ecfad58dfca5def20c7f7a51d251a89023c8c7c"/>
+  <project name="vendor/sprd/open-source" path="vendor/sprd/open-source" revision="1f4dea73da4f71e9f160a51c1d8cdad03f0a0ba6"/>
   <project name="vendor/sprd/partner" path="vendor/sprd/partner" revision="8649c7145972251af11b0639997edfecabfc7c2e"/>
   <project name="vendor/sprd/proprietories" path="vendor/sprd/proprietories" revision="d2466593022f7078aaaf69026adf3367c2adb7bb"/>
 </manifest>
