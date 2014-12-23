@@ -1,0 +1,141 @@
+---
+# For complete sample of all build and test jobs,
+# see <gecko>/testing/taskcluster/tasks/job_flags.yml
+
+$inherits:
+  from: tasks/branches/base_job_flags.yml
+
+builds:
+  linux64_gecko:
+    platforms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_desktop_opt.yml
+      debug:
+        task: tasks/builds/b2g_desktop_debug.yml
+  linux64-mulet:
+    platforms:
+      - Mulet Linux
+    types:
+      opt:
+        task: tasks/builds/mulet_linux.yml
+  emulator-kk:
+    platfoms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_emulator_kk_opt.yml
+      debug:
+        task: tasks/builds/b2g_emulator_kk_debug.yml
+  emulator-jb:
+    platfoms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_emulator_jb_opt.yml
+      debug:
+        task: tasks/builds/b2g_emulator_jb_debug.yml
+  emulator:
+    platfoms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_emulator_ics_opt.yml
+      debug:
+        task: tasks/builds/b2g_emulator_ics_debug.yml
+
+tests:
+  cppunit:
+    allowed_build_tasks:
+      tasks/builds/b2g_emulator_ics_opt.yml:
+        task: tasks/tests/b2g_emulator_cpp_unit.yml
+      tasks/builds/b2g_emulator_ics_debug.yml:
+        task: tasks/tests/b2g_emulator_cpp_unit.yml
+  crashtest:
+    allowed_build_tasks:
+      tasks/builds/b2g_emulator_ics_opt.yml:
+        task: tasks/tests/b2g_emulator_crashtest.yml
+        chunks: 3
+  gaia-build:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop_opt.yml:
+        task: tasks/tests/b2g_build_test.yml
+  gaia-build-unit:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop_opt.yml:
+        task: tasks/tests/b2g_build_unit.yml
+  gaia-js-integration:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop_opt.yml:
+        task: tasks/tests/b2g_gaia_js_integration_tests.yml
+        chunks: 4
+  gaia-linter:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop_opt.yml:
+        task: tasks/tests/b2g_linter.yml
+  gaia-ui-test-accessibility:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop_opt.yml:
+        task: tasks/tests/b2g_gaia_ui_test_accessibility.yml
+      tasks/builds/b2g_desktop_debug.yml:
+        task: tasks/tests/b2g_gaia_ui_test_accessibility.yml
+  gaia-ui-test-functional:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop_opt.yml:
+        task: tasks/tests/b2g_gaia_ui_test_functional.yml
+        chunks: 3
+      tasks/builds/b2g_desktop_debug.yml:
+        task: tasks/tests/b2g_gaia_ui_test_functional.yml
+        chunks: 3
+  gaia-ui-test-unit:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop_opt.yml:
+        task: tasks/tests/b2g_gaia_ui_test_unit.yml
+      tasks/builds/b2g_desktop_debug.yml:
+        task: tasks/tests/b2g_gaia_ui_test_unit.yml
+  gaia-unit:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop_opt.yml:
+        task: tasks/tests/b2g_gaia_unit.yml
+  marionette:
+    allowed_build_tasks:
+      tasks/builds/b2g_emulator_ics_opt.yml:
+        task: tasks/tests/b2g_emulator_marionette.yml
+  marionette-webapi:
+    allowed_build_tasks:
+      tasks/builds/b2g_emulator_ics_opt.yml:
+        task: tasks/tests/b2g_emulator_marionette_webapi.yml
+  mochitest:
+    allowed_build_tasks:
+      tasks/builds/b2g_emulator_ics_opt.yml:
+        task: tasks/tests/b2g_emulator_mochitest.yml
+        chunks: 9
+      tasks/builds/b2g_emulator_ics_debug.yml:
+        task: tasks/tests/b2g_emulator_mochitest.yml
+        chunks: 20
+      tasks/builds/mulet_linux.yml:
+        task: tasks/tests/mulet_mochitests.yml
+        chunks: 5
+  mochitest-oop:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop_opt.yml:
+        task: tasks/tests/b2g_mochitest_oop.yml
+        chunks: 1
+  reftest:
+    allowed_build_tasks:
+      tasks/builds/b2g_emulator_ics_opt.yml:
+        task: tasks/tests/b2g_emulator_reftest.yml
+        chunks: 20
+  reftest-sanity-oop:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop_opt.yml:
+        task: tasks/tests/b2g_reftests_sanity_oop.yml
+        chunks: 1
+  xpcshell:
+    allowed_build_tasks:
+      tasks/builds/b2g_emulator_ics_opt.yml:
+        task: tasks/tests/b2g_emulator_xpcshell.yml
+      tasks/builds/b2g_emulator_ics_debug.yml:
+        task: tasks/tests/b2g_emulator_xpcshell_chunked.yml
+        chunks: 2
