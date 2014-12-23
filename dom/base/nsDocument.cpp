@@ -445,13 +445,27 @@ CustomElementCallback::Call()
   ErrorResult rv;
   switch (mType) {
     case nsIDocument::eCreated:
+    {
       // For the duration of this callback invocation, the element is being created
       // flag must be set to true.
       mOwnerData->mElementIsBeingCreated = true;
+
+      // The callback hasn't actually been invoked yet, but we need to flip
+      // this now in order to enqueue the attached callback. This is a spec
+      // bug (w3c bug 27437).
       mOwnerData->mCreatedCallbackInvoked = true;
+
+      // If ELEMENT is in a document and this document has a browsing context,
+      // enqueue attached callback for ELEMENT.
+      nsIDocument* document = mThisObject->GetUncomposedDoc();
+      if (document && document->GetDocShell()) {
+        document->EnqueueLifecycleCallback(nsIDocument::eAttached, mThisObject);
+      }
+
       static_cast<LifecycleCreatedCallback *>(mCallback.get())->Call(mThisObject, rv);
       mOwnerData->mElementIsBeingCreated = false;
       break;
+    }
     case nsIDocument::eAttached:
       static_cast<LifecycleAttachedCallback *>(mCallback.get())->Call(mThisObject, rv);
       break;
@@ -6274,16 +6288,6 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
       }
 
       EnqueueLifecycleCallback(nsIDocument::eCreated, elem, nullptr, definition);
-      //XXXsmaug It is unclear if we should use GetComposedDoc() here.
-      if (elem->GetUncomposedDoc()) {
-        // Normally callbacks can not be enqueued until the created
-        // callback has been invoked, however, the attached callback
-        // in element upgrade is an exception so pretend the created
-        // callback has been invoked.
-        elem->GetCustomElementData()->mCreatedCallbackInvoked = true;
-
-        EnqueueLifecycleCallback(nsIDocument::eAttached, elem, nullptr, definition);
-      }
     }
   }
 
