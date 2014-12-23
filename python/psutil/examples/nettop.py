@@ -10,14 +10,33 @@
 Shows real-time network statistics.
 
 Author: Giampaolo Rodola' <g.rodola@gmail.com>
+
+$ python examples/nettop.py
+-----------------------------------------------------------
+total bytes:           sent: 1.49 G       received: 4.82 G
+total packets:         sent: 7338724      received: 8082712
+
+wlan0                     TOTAL         PER-SEC
+-----------------------------------------------------------
+bytes-sent               1.29 G        0.00 B/s
+bytes-recv               3.48 G        0.00 B/s
+pkts-sent               7221782               0
+pkts-recv               6753724               0
+
+eth1                      TOTAL         PER-SEC
+-----------------------------------------------------------
+bytes-sent             131.77 M        0.00 B/s
+bytes-recv               1.28 G        0.00 B/s
+pkts-sent                     0               0
+pkts-recv               1214470               0
 """
 
 import sys
 import os
 if os.name != 'posix':
     sys.exit('platform not supported')
-import curses
 import atexit
+import curses
 import time
 
 import psutil
@@ -34,6 +53,7 @@ win = curses.initscr()
 atexit.register(tear_down)
 curses.endwin()
 lineno = 0
+
 
 def print_line(line, highlight=False):
     """A thin wrapper around curses's addstr()."""
@@ -63,12 +83,13 @@ def bytes2human(n):
     symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
     prefix = {}
     for i, s in enumerate(symbols):
-        prefix[s] = 1 << (i+1)*10
+        prefix[s] = 1 << (i + 1) * 10
     for s in reversed(symbols):
         if n >= prefix[s]:
             value = float(n) / prefix[s]
             return '%.2f %s' % (value, s)
     return '%.2f B' % (n)
+
 
 def poll(interval):
     """Retrieve raw stats within an interval window."""
@@ -86,14 +107,12 @@ def refresh_window(tot_before, tot_after, pnic_before, pnic_after):
     global lineno
 
     # totals
-    print_line("total bytes:           sent: %-10s   received: %s" \
-          % (bytes2human(tot_after.bytes_sent),
-             bytes2human(tot_after.bytes_recv))
+    print_line("total bytes:           sent: %-10s   received: %s" % (
+        bytes2human(tot_after.bytes_sent),
+        bytes2human(tot_after.bytes_recv))
     )
-    print_line("total packets:         sent: %-10s   received: %s" \
-          % (tot_after.packets_sent, tot_after.packets_recv)
-    )
-
+    print_line("total packets:         sent: %-10s   received: %s" % (
+        tot_after.packets_sent, tot_after.packets_recv))
 
     # per-network interface details: let's sort network interfaces so
     # that the ones which generated more traffic are shown first
@@ -108,12 +127,14 @@ def refresh_window(tot_before, tot_after, pnic_before, pnic_after):
         print_line(templ % (
             "bytes-sent",
             bytes2human(stats_after.bytes_sent),
-            bytes2human(stats_after.bytes_sent - stats_before.bytes_sent) + '/s',
+            bytes2human(
+                stats_after.bytes_sent - stats_before.bytes_sent) + '/s',
         ))
         print_line(templ % (
             "bytes-recv",
             bytes2human(stats_after.bytes_recv),
-            bytes2human(stats_after.bytes_recv - stats_before.bytes_recv) + '/s',
+            bytes2human(
+                stats_after.bytes_recv - stats_before.bytes_recv) + '/s',
         ))
         print_line(templ % (
             "pkts-sent",
@@ -133,7 +154,7 @@ def refresh_window(tot_before, tot_after, pnic_before, pnic_after):
 def main():
     try:
         interval = 0
-        while 1:
+        while True:
             args = poll(interval)
             refresh_window(*args)
             interval = 1
