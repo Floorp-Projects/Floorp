@@ -216,7 +216,7 @@ MP4Demuxer::DemuxVideoSample()
   if (mPrivate->mVideoIterator) {
     nsAutoPtr<MP4Sample> sample(mPrivate->mVideoIterator->GetNext());
     if (sample) {
-      sample->prefix_data = mVideoConfig.annex_b;
+      sample->extra_data = mVideoConfig.extra_data;
       if (sample->crypto.valid) {
         sample->crypto.mode = mVideoConfig.crypto.mode;
         sample->crypto.key.AppendElements(mVideoConfig.crypto.key);
@@ -235,7 +235,7 @@ MP4Demuxer::DemuxVideoSample()
   }
 
   sample->Update(mVideoConfig.media_time);
-  sample->prefix_data = mVideoConfig.annex_b;
+  sample->extra_data = mVideoConfig.extra_data;
 
   return sample.forget();
 }
