@@ -8,15 +8,12 @@ let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
 
 this.EXPORTED_SYMBOLS = [ "AboutReader" ];
 
-Cu.import("resource://gre/modules/Messaging.jsm");
-Cu.import("resource://gre/modules/Services.jsm")
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode", "resource://gre/modules/ReaderMode.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Rect", "resource://gre/modules/Geometry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry", "resource://gre/modules/UITelemetry.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "gChromeWin", () => Services.wm.getMostRecentWindow("navigator:browser"));
 
 function dump(s) {
   Services.console.logStringMessage("AboutReader: " + s);
@@ -24,20 +21,18 @@ function dump(s) {
 
 let gStrings = Services.strings.createBundle("chrome://global/locale/aboutReader.properties");
 
-let AboutReader = function(doc, win) {
-  dump("Init()");
+let AboutReader = function(mm, win) {
+  let doc = win.document;
+
+  this._mm = mm;
+  this._mm.addMessageListener("Reader:Added", this);
+  this._mm.addMessageListener("Reader:Removed", this);
 
   this._docRef = Cu.getWeakReference(doc);
   this._winRef = Cu.getWeakReference(win);
 
-  Services.obs.addObserver(this, "Reader:FaviconReturn", false);
-  Services.obs.addObserver(this, "Reader:Added", false);
-  Services.obs.addObserver(this, "Reader:Removed", false);
-  Services.obs.addObserver(this, "Gesture:DoubleTap", false);
-
   this._article = null;
 
-  dump("Feching toolbar, header and content notes from about:reader");
   this._headerElementRef = Cu.getWeakReference(doc.getElementById("reader-header"));
   this._domainElementRef = Cu.getWeakReference(doc.getElementById("reader-domain"));
   this._titleElementRef = Cu.getWeakReference(doc.getElementById("reader-title"));
@@ -118,16 +113,13 @@ let AboutReader = function(doc, win) {
   this._setupSegmentedButton("font-size-buttons", fontSizeOptions, fontSize, this._setFontSize.bind(this));
   this._setFontSize(fontSize);
 
-  dump("Decoding query arguments");
   let queryArgs = this._decodeQueryString(win.location.href);
 
   // Track status of reader toolbar add/remove toggle button
   this._isReadingListItem = -1;
   this._updateToggleButton();
 
-  let url = queryArgs.url;
-  let tabId = queryArgs.tabId;
-  this._loadArticle(url, tabId);
+  this._loadArticle(queryArgs.url);
 }
 
 AboutReader.prototype = {
@@ -172,18 +164,11 @@ AboutReader.prototype = {
     return this._messageElementRef.get();
   },
 
-  observe: function Reader_observe(aMessage, aTopic, aData) {
-    switch(aTopic) {
-      case "Reader:FaviconReturn": {
-        let args = JSON.parse(aData);
-        this._loadFavicon(args.url, args.faviconUrl);
-        Services.obs.removeObserver(this, "Reader:FaviconReturn");
-        break;
-      }
-
+  receiveMessage: function (message) {
+    switch (message.name) {
       case "Reader:Added": {
         // Page can be added by long-press pageAction, or by tap on banner icon.
-        if (aData == this._article.url) {
+        if (message.data.url == this._article.url) {
           if (this._isReadingListItem != 1) {
             this._isReadingListItem = 1;
             this._updateToggleButton();
@@ -191,27 +176,13 @@ AboutReader.prototype = {
         }
         break;
       }
-
       case "Reader:Removed": {
-        if (aData == this._article.url) {
+        if (message.data.url == this._article.url) {
           if (this._isReadingListItem != 0) {
             this._isReadingListItem = 0;
             this._updateToggleButton();
           }
         }
-        break;
-      }
-
-      case "Gesture:DoubleTap": {
-        let args = JSON.parse(aData);
-        let scrollBy;
-        // Arbitary choice of innerHeight - 50 to give some context after scroll
-        if (args.y < (this._win.innerHeight / 2)) {
-          scrollBy = -this._win.innerHeight + 50;
-        } else {
-          scrollBy = this._win.innerHeight - 50;
-        }
-        this._scrollPage(scrollBy);
         break;
       }
     }
@@ -222,19 +193,14 @@ AboutReader.prototype = {
       return;
 
     switch (aEvent.type) {
-      case "touchstart":
-        this._scrolled = false;
-        break;
       case "click":
-        if (!this._scrolled)
-          this._toggleToolbarVisibility();
+        // XXX: Don't toggle the toolbar on double click. (See the "Gesture:DoubleTap" handler in Reader.js)
+        this._toggleToolbarVisibility();
         break;
       case "scroll":
-        if (!this._scrolled) {
-          let isScrollingUp = this._scrollOffset > aEvent.pageY;
-          this._setToolbarVisibility(isScrollingUp);
-          this._scrollOffset = aEvent.pageY;
-        }
+        let isScrollingUp = this._scrollOffset > aEvent.pageY;
+        this._setToolbarVisibility(isScrollingUp);
+        this._scrollOffset = aEvent.pageY;
         break;
       case "popstate":
         if (!aEvent.state)
@@ -253,22 +219,10 @@ AboutReader.prototype = {
         break;
 
       case "unload":
-        Services.obs.removeObserver(this, "Reader:Added");
-        Services.obs.removeObserver(this, "Reader:Removed");
-        Services.obs.removeObserver(this, "Gesture:DoubleTap");
+        this._mm.removeMessageListener("Reader:Added", this);
+        this._mm.removeMessageListener("Reader:Removed", this);
         break;
     }
-  },
-
-  _scrollPage: function Reader_scrollPage(scrollByPixels) {
-    let viewport = BrowserApp.selectedTab.getViewport();
-    let newY = Math.min(Math.max(viewport.cssY + scrollByPixels, viewport.cssPageTop), viewport.cssPageBottom);
-    let newRect = new Rect(viewport.cssX, newY, viewport.cssWidth, viewport.cssHeight);
-
-    this._setToolbarVisibility(false);
-    this._setBrowserToolbarVisiblity(false);
-    this._scrolled  = true;
-    ZoomHelper.zoomToRect(newRect, -1);
   },
 
   _updateToggleButton: function Reader_updateToggleButton() {
@@ -282,11 +236,10 @@ AboutReader.prototype = {
   },
 
   _requestReadingListStatus: function Reader_requestReadingListStatus() {
-    Messaging.sendRequestForResult({
-      type: "Reader:ListStatusRequest",
-      url: this._article.url
-    }).then((data) => {
-      let args = JSON.parse(data);
+    let handleListStatusData = (message) => {
+      this._mm.removeMessageListener("Reader:ListStatusData", handleListStatusData);
+
+      let args = message.data;
       if (args.url == this._article.url) {
         if (this._isReadingListItem != args.inReadingList) {
           let isInitialStateChange = (this._isReadingListItem == -1);
@@ -299,7 +252,10 @@ AboutReader.prototype = {
           }
         }
       }
-    });
+    };
+
+    this._mm.addMessageListener("Reader:ListStatusData", handleListStatusData);
+    this._mm.sendAsyncMessage("Reader:ListStatusRequest", { url: this._article.url });
   },
 
   _onReaderToggle: function Reader_onToggle() {
@@ -307,17 +263,10 @@ AboutReader.prototype = {
       return;
 
     if (this._isReadingListItem == 0) {
-      // If we're in reader mode, we must have fetched the article.
-      this._article.status = gChromeWin.Reader.STATUS_FETCHED_ARTICLE;
-      gChromeWin.Reader.addArticleToReadingList(this._article);
-
+      this._mm.sendAsyncMessage("Reader:AddToList", { article: this._article });
       UITelemetry.addEvent("save.1", "button", null, "reader");
     } else {
-      Messaging.sendRequest({
-        type: "Reader:RemoveFromList",
-        url: this._article.url
-      });
-
+      this._mm.sendAsyncMessage("Reader:RemoveFromList", { url: this._article.url });
       UITelemetry.addEvent("unsave.1", "button", null, "reader");
     }
   },
@@ -326,12 +275,10 @@ AboutReader.prototype = {
     if (!this._article)
       return;
 
-    Messaging.sendRequest({
-      type: "Reader:Share",
+    this._mm.sendAsyncMessage("Reader:Share", {
       url: this._article.url,
       title: this._article.title
     });
-
     UITelemetry.addEvent("share.1", "list", null);
   },
 
@@ -478,8 +425,7 @@ AboutReader.prototype = {
     if (!visible && !this._hasUsedToolbar) {
       this._hasUsedToolbar = Services.prefs.getBoolPref("reader.has_used_toolbar");
       if (!this._hasUsedToolbar) {
-        gChromeWin.NativeWindow.toast.show(gStrings.GetStringFromName("aboutReader.toolbarTip"), "short");
-
+        this._mm.sendAsyncMessage("Reader:ShowToast", { toast: gStrings.GetStringFromName("aboutReader.toolbarTip") });
         Services.prefs.setBoolPref("reader.has_used_toolbar", true);
         this._hasUsedToolbar = true;
       }
@@ -491,38 +437,43 @@ AboutReader.prototype = {
   },
 
   _setBrowserToolbarVisiblity: function Reader_setBrowserToolbarVisiblity(visible) {
-    Messaging.sendRequest({
-      type: "BrowserToolbar:Visibility",
-      visible: visible
-    });
+    this._mm.sendAsyncMessage("Reader:ToolbarVisibility", { visible: visible });
   },
 
   _setSystemUIVisibility: function Reader_setSystemUIVisibility(visible) {
-    Messaging.sendRequest({
-      type: "SystemUI:Visibility",
-      visible: visible
-    });
+    this._mm.sendAsyncMessage("Reader:SystemUIVisibility", { visible: visible });
   },
 
-  _loadArticle: Task.async(function* (url, tabId) {
+  _loadArticle: Task.async(function* (url) {
     this._showProgressDelayed();
 
-    let article = yield gChromeWin.Reader.getArticle(url, tabId).catch(e => {
-      Cu.reportError("Error loading article: " + e);
-      return null;
-    });
-    if (article) {
+    let article = yield this._getArticle(url);
+    if (article && article.url == url) {
       this._showContent(article);
     } else {
       this._win.location.href = url;
     }
   }),
 
-  _requestFavicon: function Reader_requestFavicon() {
-    Messaging.sendRequest({
-      type: "Reader:FaviconRequest",
-      url: this._article.url
+  _getArticle: function(url) {
+    return new Promise((resolve, reject) => {
+      let listener = (message) => {
+        this._mm.removeMessageListener("Reader:ArticleData", listener);
+        resolve(message.data.article);
+      };
+      this._mm.addMessageListener("Reader:ArticleData", listener);
+      this._mm.sendAsyncMessage("Reader:ArticleGet", { url: url });
     });
+  },
+
+  _requestFavicon: function Reader_requestFavicon() {
+    let handleFaviconReturn = (message) => {
+      this._mm.removeMessageListener("Reader:FaviconReturn", handleFaviconReturn);
+      this._loadFavicon(message.data.url, message.data.faviconUrl);
+    };
+
+    this._mm.addMessageListener("Reader:FaviconReturn", handleFaviconReturn);
+    this._mm.sendAsyncMessage("Reader:FaviconRequest", { url: this._article.url });
   },
 
   _loadFavicon: function Reader_loadFavicon(url, faviconUrl) {
