@@ -27,16 +27,49 @@ let ReaderMode = {
   // performance reasons)
   MAX_ELEMS_TO_PARSE: 3000,
 
+  get isEnabledForParseOnLoad() {
+    delete this.isEnabledForParseOnLoad;
+
+    // Listen for future pref changes.
+    Services.prefs.addObserver("reader.parse-on-load.", this, false);
+
+    return this.isEnabledForParseOnLoad = this._getStateForParseOnLoad();
+  },
+
+  get isOnLowMemoryPlatform() {
+    let memory = Cc["@mozilla.org/xpcom/memory-service;1"].getService(Ci.nsIMemory);
+    delete this.isOnLowMemoryPlatform;
+    return this.isOnLowMemoryPlatform = memory.isLowMemoryPlatform();
+  },
+
+  _getStateForParseOnLoad: function () {
+    let isEnabled = Services.prefs.getBoolPref("reader.parse-on-load.enabled");
+    let isForceEnabled = Services.prefs.getBoolPref("reader.parse-on-load.force-enabled");
+    // For low-memory devices, don't allow reader mode since it takes up a lot of memory.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=792603 for details.
+    return isForceEnabled || (isEnabled && !this.isOnLowMemoryPlatform);
+  },
+
+  observe: function(aMessage, aTopic, aData) {
+    switch(aTopic) {
+      case "nsPref:changed":
+        if (aData.startsWith("reader.parse-on-load.")) {
+          this.isEnabledForParseOnLoad = this._getStateForParseOnLoad();
+        }
+        break;
+    }
+  },
+
   /**
    * Gets an article from a loaded browser's document. This method will parse the document
    * if it does not find the article in the cache.
    *
-   * @param browser A browser with a loaded page.
+   * @param doc A document to parse.
    * @return {Promise}
    * @resolves JS object representing the article, or null if no article is found.
    */
-  parseDocumentFromBrowser: Task.async(function* (browser) {
-    let uri = browser.currentURI;
+  parseDocument: Task.async(function* (doc) {
+    let uri = Services.io.newURI(doc.documentURI, null, null);
     if (!this._shouldCheckUri(uri)) {
       this.log("Reader mode disabled for URI");
       return null;
@@ -49,7 +82,6 @@ let ReaderMode = {
       return article;
     }
 
-    let doc = browser.contentWindow.document;
     return yield this._readerParse(uri, doc);
   }),
 
