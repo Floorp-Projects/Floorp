@@ -24,6 +24,10 @@ public:
   // Parse an AVCC box and construct the Annex B sample header.
   static already_AddRefed<ByteBuffer> ConvertExtraDataToAnnexB(
     const ByteBuffer* aExtraData);
+  static already_AddRefed<ByteBuffer> ExtractExtraData(
+    const MP4Sample* aSample);
+  static bool HasSPS(const MP4Sample* aSample);
+  static bool HasSPS(const ByteBuffer* aExtraData);
 
 private:
   // AVCC box parser helper.
