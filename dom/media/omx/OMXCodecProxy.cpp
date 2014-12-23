@@ -55,11 +55,11 @@ OMXCodecProxy::OMXCodecProxy(
         const sp<ANativeWindow> &nativeWindow)
     : mOMX(omx),
       mSrcMeta(meta),
-      mComponentName(nullptr),
       mIsEncoder(createEncoder),
+      mSource(source),
+      mComponentName(nullptr),
       mFlags(flags),
       mNativeWindow(nativeWindow),
-      mSource(source),
       mState(MediaResourceManagerClient::CLIENT_STATE_WAIT_FOR_RESOURCE)
 {
 }

@@ -12,8 +12,9 @@
 #include <stagefright/MetaData.h>
 #include "stagefright/MediaErrors.h"
 
+#define LOG_TAG "MediaCodecProxy"
 #include <android/log.h>
-#define MCP_LOG(...) __android_log_print(ANDROID_LOG_DEBUG, "MediaCodecProxy", __VA_ARGS__)
+#define ALOG(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 #define TIMEOUT_DEQUEUE_INPUTBUFFER_MS 1000000ll
 
 namespace android {
@@ -182,7 +183,7 @@ MediaCodecProxy::releaseCodec()
 
     // Release MediaCodec
     if (mCodec != nullptr) {
-      mCodec->stop();
+      status_t err = mCodec->stop();
       mCodec->release();
       mCodec = nullptr;
     }
@@ -493,16 +494,17 @@ MediaCodecProxy::resourceCanceled()
 bool MediaCodecProxy::Prepare()
 {
 
+  status_t err;
   if (start() != OK) {
-    MCP_LOG("Couldn't start MediaCodec");
+    ALOG("Couldn't start MediaCodec");
     return false;
   }
   if (getInputBuffers(&mInputBuffers) != OK) {
-    MCP_LOG("Couldn't get input buffers from MediaCodec");
+    ALOG("Couldn't get input buffers from MediaCodec");
     return false;
   }
   if (getOutputBuffers(&mOutputBuffers) != OK) {
-    MCP_LOG("Couldn't get output buffers from MediaCodec");
+    ALOG("Couldn't get output buffers from MediaCodec");
     return false;
   }
 
@@ -512,13 +514,13 @@ bool MediaCodecProxy::Prepare()
 bool MediaCodecProxy::UpdateOutputBuffers()
 {
   if (mCodec == nullptr) {
-    MCP_LOG("MediaCodec has not been inited from input!");
+    ALOG("MediaCodec has not been inited from input!");
     return false;
   }
 
   status_t err = getOutputBuffers(&mOutputBuffers);
   if (err != OK){
-    MCP_LOG("Couldn't update output buffers from MediaCodec");
+    ALOG("Couldn't update output buffers from MediaCodec");
     return false;
   }
   return true;
@@ -528,14 +530,14 @@ status_t MediaCodecProxy::Input(const uint8_t* aData, uint32_t aDataSize,
                                 int64_t aTimestampUsecs, uint64_t aflags)
 {
   if (mCodec == nullptr) {
-    MCP_LOG("MediaCodec has not been inited from input!");
+    ALOG("MediaCodec has not been inited from input!");
     return NO_INIT;
   }
 
   size_t index;
   status_t err = dequeueInputBuffer(&index, TIMEOUT_DEQUEUE_INPUTBUFFER_MS);
   if (err != OK) {
-    MCP_LOG("dequeueInputBuffer returned %d", err);
+    ALOG("dequeueInputBuffer returned %d", err);
     return err;
   }
 
@@ -552,7 +554,7 @@ status_t MediaCodecProxy::Input(const uint8_t* aData, uint32_t aDataSize,
   }
 
   if (err != OK) {
-    MCP_LOG("queueInputBuffer returned %d", err);
+    ALOG("queueInputBuffer returned %d", err);
     return err;
   }
   return err;
@@ -561,7 +563,7 @@ status_t MediaCodecProxy::Input(const uint8_t* aData, uint32_t aDataSize,
 status_t MediaCodecProxy::Output(MediaBuffer** aBuffer, int64_t aTimeoutUs)
 {
   if (mCodec == nullptr) {
-    MCP_LOG("MediaCodec has not been inited from output!");
+    ALOG("MediaCodec has not been inited from output!");
     return NO_INIT;
   }
 
