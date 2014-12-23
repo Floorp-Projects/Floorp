@@ -1,10 +1,8 @@
 function ok(a, msg) {
-  dump("OK: " + !!a + "  =>  " + a + " " + msg + "\n");
   postMessage({type: 'status', status: !!a, msg: a + ": " + msg });
 }
 
 function is(a, b, msg) {
-  dump("IS: " + (a===b) + "  =>  " + a + " | " + b + " " + msg + "\n");
   postMessage({type: 'status', status: a === b, msg: a + " === " + b + ": " + msg });
 }
 
@@ -67,6 +65,16 @@ function testSimpleUrlParse() {
   // Just checks that the URL parser is actually being used.
   var req = new Request("/file.html");
   is(req.url, (new URL("/file.html", self.location.href)).href, "URL parser should be used to resolve Request URL");
+}
+
+// Bug 1109574 - Passing a Request with null body should keep bodyUsed unset.
+function testBug1109574() {
+  var r1 = new Request("");
+  is(r1.bodyUsed, false, "Initial value of bodyUsed should be false");
+  var r2 = new Request(r1);
+  is(r1.bodyUsed, false, "Request with null body should not have bodyUsed set");
+  // This should succeed.
+  var r3 = new Request(r1);
 }
 
 function testMethod() {
@@ -205,6 +213,7 @@ onmessage = function() {
   testSimpleUrlParse();
   testUrlFragment();
   testMethod();
+  testBug1109574();
 
   Promise.resolve()
     .then(testBodyCreation)
