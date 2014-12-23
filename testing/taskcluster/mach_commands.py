@@ -37,7 +37,9 @@ REGISTRY = open(os.path.join(DOCKER_ROOT, 'REGISTRY')).read().strip()
 DEFINE_TASK = 'queue:define-task:aws-provisioner/{}'
 
 DEFAULT_TRY = 'try: -b do -p all -u all'
-DEFAULT_JOB_PATH = os.path.join(ROOT, 'tasks', 'job_flags.yml')
+DEFAULT_JOB_PATH = os.path.join(
+    ROOT, 'tasks', 'branches', 'mozilla-central', 'job_flags.yml'
+)
 
 def get_hg_url():
     ''' Determine the url for the mercurial repository'''
