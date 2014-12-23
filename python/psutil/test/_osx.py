@@ -6,17 +6,17 @@
 
 """OSX specific tests.  These are implicitly run by test_psutil.py."""
 
-import unittest
-import subprocess
-import time
-import sys
 import os
 import re
+import subprocess
+import sys
+import time
 
 import psutil
 
 from psutil._compat import PY3
-from test_psutil import *
+from test_psutil import (TOLERANCE, sh, get_test_subprocess, reap_children,
+                         retry_before_failing, unittest)
 
 
 PAGESIZE = os.sysconf("SC_PAGE_SIZE")
@@ -35,6 +35,7 @@ def sysctl(cmdline):
     except ValueError:
         return result
 
+
 def vm_stat(field):
     """Wrapper around 'vm_stat' cmdline utility."""
     out = sh('vm_stat')
@@ -48,20 +49,22 @@ def vm_stat(field):
 
 class OSXSpecificTestCase(unittest.TestCase):
 
-    def setUp(self):
-        self.pid = get_test_subprocess().pid
+    @classmethod
+    def setUpClass(cls):
+        cls.pid = get_test_subprocess().pid
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(cls):
         reap_children()
 
     def test_process_create_time(self):
-        cmdline = "ps -o lstart -p %s" %self.pid
+        cmdline = "ps -o lstart -p %s" % self.pid
         p = subprocess.Popen(cmdline, shell=1, stdout=subprocess.PIPE)
         output = p.communicate()[0]
         if PY3:
             output = str(output, sys.stdout.encoding)
         start_ps = output.replace('STARTED', '').strip()
-        start_psutil = psutil.Process(self.pid).create_time
+        start_psutil = psutil.Process(self.pid).create_time()
         start_psutil = time.strftime("%a %b %e %H:%M:%S %Y",
                                      time.localtime(start_psutil))
         self.assertEqual(start_ps, start_psutil)
@@ -97,7 +100,7 @@ class OSXSpecificTestCase(unittest.TestCase):
 
     def test_vmem_total(self):
         sysctl_hwphymem = sysctl('sysctl hw.memsize')
-        self.assertEqual(sysctl_hwphymem, psutil.TOTAL_PHYMEM)
+        self.assertEqual(sysctl_hwphymem, psutil.virtual_memory().total)
 
     @retry_before_failing()
     def test_vmem_free(self):
