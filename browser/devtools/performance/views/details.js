@@ -32,6 +32,7 @@ let DetailsView = {
 
     yield CallTreeView.initialize();
     yield WaterfallView.initialize();
+
     this.selectView(DEFAULT_DETAILS_SUBVIEW);
   }),
 
