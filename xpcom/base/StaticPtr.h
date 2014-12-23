@@ -141,7 +141,7 @@ private:
     }
   }
 
-  T* mRawPtr;
+  T* MOZ_STRONG_REF mRawPtr;
 };
 
 namespace StaticPtr_internal {
