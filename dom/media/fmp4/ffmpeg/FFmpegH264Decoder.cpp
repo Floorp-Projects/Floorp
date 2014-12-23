@@ -32,7 +32,7 @@ FFmpegH264Decoder<LIBAV_VER>::FFmpegH264Decoder(
   , mImageContainer(aImageContainer)
 {
   MOZ_COUNT_CTOR(FFmpegH264Decoder);
-  mExtraData.append(aConfig.extra_data.begin(), aConfig.extra_data.length());
+  mExtraData = aConfig.extra_data;
 }
 
 nsresult

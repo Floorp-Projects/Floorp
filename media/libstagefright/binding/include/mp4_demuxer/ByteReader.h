@@ -28,6 +28,10 @@ public:
     : mPtr(&aData[0]), mRemaining(aData.Length())
   {
   }
+  explicit ByteReader(const nsTArray<uint8_t>& aData)
+    : mPtr(&aData[0]), mRemaining(aData.Length())
+  {
+  }
 
   void SetData(const nsTArray<uint8_t>& aData)
   {

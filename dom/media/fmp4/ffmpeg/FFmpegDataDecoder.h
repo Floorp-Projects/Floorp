@@ -9,8 +9,8 @@
 
 #include "PlatformDecoderModule.h"
 #include "FFmpegLibs.h"
-#include "mozilla/Vector.h"
 #include "mozilla/StaticMutex.h"
+#include "mp4_demuxer/mp4_demuxer.h"
 
 namespace mozilla
 {
@@ -41,7 +41,7 @@ protected:
   MediaTaskQueue* mTaskQueue;
   AVCodecContext* mCodecContext;
   AVFrame*        mFrame;
-  Vector<uint8_t> mExtraData;
+  nsRefPtr<mp4_demuxer::ByteBuffer> mExtraData;
 
 private:
   static bool sFFmpegInitDone;

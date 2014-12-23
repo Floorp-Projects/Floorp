@@ -23,7 +23,7 @@ AnnexB::ConvertSample(MP4Sample* aSample)
   }
   MOZ_ASSERT(aSample->data);
   MOZ_ASSERT(aSample->size >= ArrayLength(kAnnexBDelimiter));
-  MOZ_ASSERT(aSample->prefix_data);
+  MOZ_ASSERT(aSample->extra_data);
 
   uint8_t* d = aSample->data;
   while (d + 4 < aSample->data + aSample->size) {
@@ -38,13 +38,13 @@ AnnexB::ConvertSample(MP4Sample* aSample)
 
   // Prepend the Annex B header with SPS and PPS tables to keyframes.
   if (aSample->is_sync_point) {
-    aSample->Prepend(&(*aSample->prefix_data)[0],
-                     aSample->prefix_data->Length());
+    nsRefPtr<ByteBuffer> annexB = ConvertExtraDataToAnnexB(aSample->extra_data);
+    aSample->Prepend(annexB->Elements(), annexB->Length());
   }
 }
 
-already_AddRefed<nsRcTArray<uint8_t>>
-AnnexB::ConvertExtraDataToAnnexB(mozilla::Vector<uint8_t>& aExtraData)
+already_AddRefed<ByteBuffer>
+AnnexB::ConvertExtraDataToAnnexB(const ByteBuffer* aExtraData)
 {
   // AVCC 6 byte header looks like:
   //     +------+------+------+------+------+------+------+------+
@@ -61,9 +61,9 @@ AnnexB::ConvertExtraDataToAnnexB(mozilla::Vector<uint8_t>& aExtraData)
   // [5] | unused             | numSps                           |
   //     +------+------+------+------+------+------+------+------+
 
-  nsRefPtr<nsRcTArray<uint8_t>> annexB = new nsRcTArray<uint8_t>();
+  nsRefPtr<ByteBuffer> annexB = new ByteBuffer;
 
-  ByteReader reader(aExtraData);
+  ByteReader reader(*aExtraData);
   const uint8_t* ptr = reader.Read(5);
   if (ptr && ptr[0] == 1) {
     // Append SPS then PPS
@@ -79,7 +79,7 @@ AnnexB::ConvertExtraDataToAnnexB(mozilla::Vector<uint8_t>& aExtraData)
 
 void
 AnnexB::ConvertSPSOrPPS(ByteReader& aReader, uint8_t aCount,
-                        nsTArray<uint8_t>* aAnnexB)
+                        ByteBuffer* aAnnexB)
 {
   for (int i = 0; i < aCount; i++) {
     uint16_t length = aReader.ReadU16();
