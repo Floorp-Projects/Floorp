@@ -307,7 +307,7 @@ Result
 TestCheckPublicKey(Input subjectPublicKeyInfo)
 {
   InitNSSIfNeeded();
-  return CheckPublicKey(subjectPublicKeyInfo, MINIMUM_TEST_KEY_BITS);
+  return CheckPublicKeyNSS(subjectPublicKeyInfo, MINIMUM_TEST_KEY_BITS);
 }
 
 Result
@@ -315,15 +315,15 @@ TestVerifySignedData(const SignedDataWithSignature& signedData,
                      Input subjectPublicKeyInfo)
 {
   InitNSSIfNeeded();
-  return VerifySignedData(signedData, subjectPublicKeyInfo,
-                          MINIMUM_TEST_KEY_BITS, nullptr);
+  return VerifySignedDataNSS(signedData, subjectPublicKeyInfo,
+                             MINIMUM_TEST_KEY_BITS, nullptr);
 }
 
 Result
 TestDigestBuf(Input item, /*out*/ uint8_t* digestBuf, size_t digestBufLen)
 {
   InitNSSIfNeeded();
-  return DigestBuf(item, digestBuf, digestBufLen);
+  return DigestBufNSS(item, digestBuf, digestBufLen);
 }
 
 } } } // namespace mozilla::pkix::test
