@@ -115,6 +115,18 @@ PlatformDecoderModule::Create()
   // Note: This runs on the decode thread.
   MOZ_ASSERT(!NS_IsMainThread());
 
+  nsRefPtr<PlatformDecoderModule> m(CreatePDM());
+
+  if (m && NS_SUCCEEDED(m->Startup())) {
+    return m.forget();
+  }
+  return nullptr;
+}
+
+/* static */
+already_AddRefed<PlatformDecoderModule>
+PlatformDecoderModule::CreatePDM()
+{
 #ifdef MOZ_WIDGET_ANDROID
   if(sAndroidMCDecoderPreferred && sAndroidMCDecoderEnabled){
     nsRefPtr<PlatformDecoderModule> m(new AndroidDecoderModule());
@@ -125,10 +137,8 @@ PlatformDecoderModule::Create()
     return CreateBlankDecoderModule();
   }
 #ifdef XP_WIN
-  nsRefPtr<WMFDecoderModule> m(new WMFDecoderModule());
-  if (NS_SUCCEEDED(m->Startup())) {
-    return m.forget();
-  }
+  nsRefPtr<PlatformDecoderModule> m(new WMFDecoderModule());
+  return m.forget();
 #endif
 #ifdef MOZ_FFMPEG
   if (sFFmpegDecoderEnabled) {
@@ -139,10 +149,8 @@ PlatformDecoderModule::Create()
   }
 #endif
 #ifdef MOZ_APPLEMEDIA
-  nsRefPtr<AppleDecoderModule> m(new AppleDecoderModule());
-  if (NS_SUCCEEDED(m->Startup())) {
-    return m.forget();
-  }
+  nsRefPtr<PlatformDecoderModule> m(new AppleDecoderModule());
+  return m.forget();
 #endif
 #ifdef MOZ_GONK_MEDIACODEC
   if (sGonkDecoderEnabled) {

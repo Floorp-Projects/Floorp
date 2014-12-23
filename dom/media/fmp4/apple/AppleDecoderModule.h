@@ -16,9 +16,7 @@ public:
   AppleDecoderModule();
   virtual ~AppleDecoderModule();
 
-  // Perform any per-instance initialization.
-  // Main thread only.
-  nsresult Startup();
+  virtual nsresult Startup() MOZ_OVERRIDE;
 
   // Called when the decoders have shutdown. Main thread only.
   // Does this really need to be main thread only????
