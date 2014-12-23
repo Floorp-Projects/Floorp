@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1102502
+-->
+<head>
+  <title>Test for attached callback for element created in the document by the parser</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1102502">Bug 1102502</a>
+<div id="container"></div>
+
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+var attachedCallbackCount = 0;
+
+var p = Object.create(HTMLElement.prototype);
+
+p.createdCallback = function() {
+  ok(true, "createdCallback called.");
+};
+
+p.attachedCallback = function() {
+  ok(true, "attachedCallback should be called when the parser creates an element in the document.");
+  attachedCallbackCount++;
+  // attachedCallback should be called twice, once for the element created for innerHTML and
+  // once for the element created in this document.
+  if (attachedCallbackCount == 2) {
+    SimpleTest.finish();
+  }
+}
+
+document.registerElement("x-foo", { prototype: p });
+
+var container = document.getElementById("container");
+container.innerHTML = '<x-foo></x-foo>';
+
+</script>
+
+<x-foo></x-foo>
+
+</body>
+</html>
