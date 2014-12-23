@@ -75,8 +75,6 @@ public:
   bool IsSharing() const              { return mIsSharing; }
   bool IsFormatting() const           { return mIsFormatting; }
   bool IsUnmounting() const           { return mIsUnmounting; }
-  bool IsRemovable() const            { return mIsRemovable; }
-  bool IsHotSwappable() const         { return mIsHotSwappable; }
 
   void SetFakeVolume(const nsACString& aMountPoint);
 
@@ -109,15 +107,10 @@ private:
   void SetIsSharing(bool aIsSharing);
   void SetIsFormatting(bool aIsFormatting);
   void SetIsUnmounting(bool aIsUnmounting);
-  void SetIsRemovable(bool aIsRemovable);
-  void SetIsHotSwappable(bool aIsHotSwappable);
   void SetState(STATE aNewState);
   void SetMediaPresent(bool aMediaPresent);
   void SetMountPoint(const nsCSubstring& aMountPoint);
   void StartCommand(VolumeCommand* aCommand);
-
-  bool BoolConfigValue(const nsCString& aConfigValue, bool& aBoolValue);
-  void SetConfig(const nsCString& aConfigName, const nsCString& aConfigValue);
 
   void HandleVoldResponse(int aResponseCode, nsCWhitespaceTokenizer& aTokenizer);
 
@@ -139,8 +132,6 @@ private:
   bool              mIsSharing;
   bool              mIsFormatting;
   bool              mIsUnmounting;
-  bool              mIsRemovable;
-  bool              mIsHotSwappable;
   uint32_t          mId;                // Unique ID (used by MTP)
 
   static VolumeObserverList sEventObserverList;
