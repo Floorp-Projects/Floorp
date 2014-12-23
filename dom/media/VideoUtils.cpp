@@ -207,7 +207,8 @@ ExtractH264CodecDetails(const nsAString& aCodec,
                         int16_t& aProfile,
                         int16_t& aLevel)
 {
-  // H.264 codecs parameters have a type defined as avc1.PPCCLL, where
+  // H.264 codecs parameters have a type defined as avcN.PPCCLL, where
+  // N = avc type. avc3 is avcc with SPS & PPS implicit (within stream)
   // PP = profile_idc, CC = constraint_set flags, LL = level_idc.
   // We ignore the constraint_set flags, as it's not clear from any
   // documentation what constraints the platform decoders support.
@@ -217,9 +218,9 @@ ExtractH264CodecDetails(const nsAString& aCodec,
     return false;
   }
 
-  // Verify the codec starts with "avc1.".
+  // Verify the codec starts with "avc1." or "avc3.".
   const nsAString& sample = Substring(aCodec, 0, 5);
-  if (!sample.EqualsASCII("avc1.")) {
+  if (!sample.EqualsASCII("avc1.") && !sample.EqualsASCII("avc3.")) {
     return false;
   }
 

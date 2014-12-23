@@ -19,6 +19,8 @@ onmessage = function() {
 
 <script class="testbody" type="text/javascript">
 
+SpecialPowers.pushPrefEnv({"set": [["dom.workers.websocket.enabled", true]]},
+function() {
   var blob = new Blob([document.getElementById("js_script").textContent],
                       {type: "text/javascript"});
   var url = URL.createObjectURL(blob);
@@ -63,8 +65,10 @@ onmessage = function() {
     t();
   }
 
-  SimpleTest.waitForExplicitFinish();
   runTest();
+});
+
+SimpleTest.waitForExplicitFinish();
 
 </script>
 </pre>

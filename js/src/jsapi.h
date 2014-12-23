@@ -1376,9 +1376,6 @@ JS_BeginRequest(JSContext *cx);
 extern JS_PUBLIC_API(void)
 JS_EndRequest(JSContext *cx);
 
-extern JS_PUBLIC_API(bool)
-JS_IsInRequest(JSRuntime *rt);
-
 namespace js {
 
 void
@@ -1412,32 +1409,6 @@ class JSAutoRequest
     static void *operator new(size_t) CPP_THROW_NEW { return 0; }
     static void operator delete(void *, size_t) { }
 #endif
-};
-
-class JSAutoCheckRequest
-{
-  public:
-    explicit JSAutoCheckRequest(JSContext *cx
-                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    {
-#ifdef JS_DEBUG
-        mContext = cx;
-        MOZ_ASSERT(JS_IsInRequest(JS_GetRuntime(cx)));
-#endif
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    ~JSAutoCheckRequest() {
-#ifdef JS_DEBUG
-        MOZ_ASSERT(JS_IsInRequest(JS_GetRuntime(mContext)));
-#endif
-    }
-
-  private:
-#ifdef JS_DEBUG
-    JSContext *mContext;
-#endif
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 extern JS_PUBLIC_API(void)

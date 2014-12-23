@@ -2237,10 +2237,9 @@ public:
                                         Element* aCustomElement,
                                         mozilla::dom::LifecycleCallbackArgs* aArgs = nullptr,
                                         mozilla::dom::CustomElementDefinition* aDefinition = nullptr) = 0;
-  virtual void SwizzleCustomElement(Element* aElement,
-                                    const nsAString& aTypeExtension,
-                                    uint32_t aNamespaceID,
-                                    mozilla::ErrorResult& rv) = 0;
+  virtual void SetupCustomElement(Element* aElement,
+                                  uint32_t aNamespaceID,
+                                  const nsAString* aTypeExtension = nullptr) = 0;
   virtual void
     RegisterElement(JSContext* aCx, const nsAString& aName,
                     const mozilla::dom::ElementRegistrationOptions& aOptions,

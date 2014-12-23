@@ -491,11 +491,8 @@ bool
 RegExpShared::compile(JSContext *cx, HandleAtom pattern, HandleLinearString input,
                       CompilationMode mode, ForceByteCodeEnum force)
 {
-    if (!ignoreCase() && !StringHasRegExpMetaChars(pattern)) {
+    if (!ignoreCase() && !StringHasRegExpMetaChars(pattern))
         canStringMatch = true;
-        parenCount = 0;
-        return true;
-    }
 
     CompileOptions options(cx);
     TokenStream dummyTokenStream(cx, options, nullptr, 0, nullptr);
@@ -537,7 +534,7 @@ bool
 RegExpShared::compileIfNecessary(JSContext *cx, HandleLinearString input,
                                  CompilationMode mode, ForceByteCodeEnum force)
 {
-    if (isCompiled(mode, input->hasLatin1Chars(), force) || canStringMatch)
+    if (isCompiled(mode, input->hasLatin1Chars(), force))
         return true;
     return compile(cx, input, mode, force);
 }

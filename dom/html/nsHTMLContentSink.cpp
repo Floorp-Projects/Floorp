@@ -266,13 +266,7 @@ NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& 
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    // Element may be unresolved at this point.
-    doc->RegisterUnresolvedElement(*aResult);
-
-    // Try to enqueue a created callback. The custom element data will be set
-    // and created callback will be enqueued if the custom element type
-    // has already been registered.
-    doc->EnqueueLifecycleCallback(nsIDocument::eCreated, *aResult);
+    doc->SetupCustomElement(*aResult, kNameSpaceID_XHTML);
 
     return NS_OK;
   }

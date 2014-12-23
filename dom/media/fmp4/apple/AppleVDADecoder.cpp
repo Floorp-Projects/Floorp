@@ -404,8 +404,8 @@ AppleVDADecoder::InitializeSession()
 CFDictionaryRef
 AppleVDADecoder::CreateDecoderSpecification()
 {
-  const uint8_t* extradata = mConfig.extra_data.begin();
-  int extrasize = mConfig.extra_data.length();
+  const uint8_t* extradata = mConfig.extra_data->Elements();
+  int extrasize = mConfig.extra_data->Length();
 
   OSType format = 'avc1';
   AutoCFRelease<CFNumberRef> avc_width  =

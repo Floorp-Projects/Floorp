@@ -278,9 +278,8 @@ EMEAudioDecoder::GmpInit()
   mAudioChannels = mConfig.channel_count;
 
   nsTArray<uint8_t> extraData;
-  extraData.AppendElements(&mConfig.audio_specific_config[0],
-                           mConfig.audio_specific_config.length());
-
+  extraData.AppendElements(mConfig.audio_specific_config->Elements(),
+                           mConfig.audio_specific_config->Length());
   mGMP->InitDecode(kGMPAudioCodecAAC,
                    mAudioChannels,
                    mConfig.bits_per_sample,

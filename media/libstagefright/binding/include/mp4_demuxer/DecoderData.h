@@ -9,6 +9,7 @@
 #include "mozilla/Vector.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "nsRefPtr.h"
 
 namespace stagefright
 {
@@ -29,6 +30,8 @@ class nsRcTArray : public nsTArray<T> {
 private:
   ~nsRcTArray() {}
 };
+
+typedef nsRcTArray<uint8_t> ByteBuffer;
 
 struct PsshInfo
 {
@@ -99,6 +102,8 @@ public:
     , frequency_index(0)
     , aac_profile(0)
     , extended_profile(0)
+    , extra_data(new ByteBuffer)
+    , audio_specific_config(new ByteBuffer)
   {
   }
 
@@ -108,8 +113,8 @@ public:
   int8_t frequency_index;
   int8_t aac_profile;
   int8_t extended_profile;
-  mozilla::Vector<uint8_t> extra_data;
-  mozilla::Vector<uint8_t> audio_specific_config;
+  nsRefPtr<ByteBuffer> extra_data;
+  nsRefPtr<ByteBuffer> audio_specific_config;
 
   void Update(stagefright::sp<stagefright::MetaData>& aMetaData,
               const char* aMimeType);
@@ -122,7 +127,14 @@ private:
 class VideoDecoderConfig : public TrackConfig
 {
 public:
-  VideoDecoderConfig() : display_width(0), display_height(0) {}
+  VideoDecoderConfig()
+    : display_width(0)
+    , display_height(0)
+    , image_width(0)
+    , image_height(0)
+    , extra_data(new ByteBuffer)
+  {
+  }
 
   int32_t display_width;
   int32_t display_height;
@@ -130,8 +142,7 @@ public:
   int32_t image_width;
   int32_t image_height;
 
-  mozilla::Vector<uint8_t> extra_data;   // Unparsed AVCDecoderConfig payload.
-  nsRefPtr<nsRcTArray<uint8_t>> annex_b; // Parsed version for sample prepend.
+  nsRefPtr<ByteBuffer> extra_data;   // Unparsed AVCDecoderConfig payload.
 
   void Update(stagefright::sp<stagefright::MetaData>& aMetaData,
               const char* aMimeType);
@@ -145,7 +156,7 @@ class MP4Sample
 public:
   MP4Sample();
   MP4Sample(const MP4Sample& copy);
-  ~MP4Sample();
+  virtual ~MP4Sample();
   void Update(int64_t& aMediaTime);
   void Pad(size_t aPaddingBytes);
 
@@ -161,9 +172,10 @@ public:
   size_t size;
 
   CryptoSample crypto;
-  nsRefPtr<nsRcTArray<uint8_t>> prefix_data;
+  nsRefPtr<ByteBuffer> extra_data;
 
   void Prepend(const uint8_t* aData, size_t aSize);
+  void Replace(const uint8_t* aData, size_t aSize);
 
   nsAutoArrayPtr<uint8_t> extra_buffer;
 };

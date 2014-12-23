@@ -10,6 +10,7 @@
 #include "ImageContainer.h"
 
 #include "mp4_demuxer/mp4_demuxer.h"
+#include "mp4_demuxer/AnnexB.h"
 
 #include "FFmpegH264Decoder.h"
 
@@ -32,7 +33,6 @@ FFmpegH264Decoder<LIBAV_VER>::FFmpegH264Decoder(
   , mImageContainer(aImageContainer)
 {
   MOZ_COUNT_CTOR(FFmpegH264Decoder);
-  mExtraData.append(aConfig.extra_data.begin(), aConfig.extra_data.length());
 }
 
 nsresult
@@ -53,6 +53,7 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(mp4_demuxer::MP4Sample* aSample)
   AVPacket packet;
   av_init_packet(&packet);
 
+  mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample);
   aSample->Pad(FF_INPUT_BUFFER_PADDING_SIZE);
   packet.data = aSample->data;
   packet.size = aSample->size;

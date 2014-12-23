@@ -2,6 +2,45 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// ES6 draft rev29 (2014/12/06) 22.2.3.8 %TypedArray%.prototype.fill(value [, start [, end ]])
+function TypedArrayFill(value, start = 0, end = undefined) {
+    // This function is not generic.
+    if (!IsObject(this) || !IsTypedArray(this)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, this, value, start, end,
+                            "TypedArrayFill");
+    }
+
+    // Steps 1-2.
+    var O = this;
+
+    // Steps 3-5.
+    var len = TypedArrayLength(O);
+
+    // Steps 6-7.
+    var relativeStart = ToInteger(start);
+
+    // Step 8.
+    var k = relativeStart < 0
+            ? std_Math_max(len + relativeStart, 0)
+            : std_Math_min(relativeStart, len);
+
+    // Steps 9-10.
+    var relativeEnd = end === undefined ? len : ToInteger(end);
+
+    // Step 11.
+    var final = relativeEnd < 0
+                ? std_Math_max(len + relativeEnd, 0)
+                : std_Math_min(relativeEnd, len);
+
+    // Step 12.
+    for (; k < final; k++) {
+        O[k] = value;
+    }
+
+    // Step 13.
+    return O;
+}
+
 // ES6 draft rev28 (2014/10/14) 22.2.3.10 %TypedArray%.prototype.find(predicate[, thisArg]).
 function TypedArrayFind(predicate, thisArg = undefined) {
     // This function is not generic.

@@ -17,18 +17,27 @@ class MP4Sample;
 class AnnexB
 {
 public:
-  // Convert a sample from NAL unit syntax to Annex B.
-  // Assumes size of NAL length field is 4 bytes.
-  static void ConvertSample(MP4Sample* aSample);
+  // All conversions assume size of NAL length field is 4 bytes.
+  // Convert a sample from AVCC format to Annex B.
+  static void ConvertSampleToAnnexB(MP4Sample* aSample);
+  // Convert a sample from Annex B to AVCC.
+  // an AVCC extradata must not be set.
+  static void ConvertSampleToAVCC(MP4Sample* aSample);
+  static void ConvertSampleTo4BytesAVCC(MP4Sample* aSample);
 
-  // Parse an AVCC box and construct the Annex B sample header.
-  static already_AddRefed<nsRcTArray<uint8_t>> ConvertExtraDataToAnnexB(
-    mozilla::Vector<uint8_t>& aExtraData);
+  // Parse an AVCC extradata and construct the Annex B sample header.
+  static already_AddRefed<ByteBuffer> ConvertExtraDataToAnnexB(
+    const ByteBuffer* aExtraData);
+  static already_AddRefed<ByteBuffer> ExtractExtraData(
+    const MP4Sample* aSample);
+  static bool HasSPS(const MP4Sample* aSample);
+  static bool HasSPS(const ByteBuffer* aExtraData);
+  static bool IsAVCC(const MP4Sample* aSample);
 
 private:
   // AVCC box parser helper.
   static void ConvertSPSOrPPS(ByteReader& aReader, uint8_t aCount,
-                              nsTArray<uint8_t>* aAnnexB);
+                              ByteBuffer* aAnnexB);
 };
 
 } // namespace mp4_demuxer

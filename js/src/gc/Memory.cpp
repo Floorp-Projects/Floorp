@@ -271,6 +271,9 @@ MarkPagesUnused(void *p, size_t size)
 bool
 MarkPagesInUse(void *p, size_t size)
 {
+    if (!DecommitEnabled())
+        return true;
+
     MOZ_ASSERT(OffsetFromAligned(p, pageSize) == 0);
     return true;
 }
@@ -344,6 +347,9 @@ MarkPagesUnused(void *p, size_t size)
 bool
 MarkPagesInUse(void *p, size_t size)
 {
+    if (!DecommitEnabled())
+        return true;
+
     MOZ_ASSERT(OffsetFromAligned(p, pageSize) == 0);
     return true;
 }
@@ -661,6 +667,9 @@ MarkPagesUnused(void *p, size_t size)
 bool
 MarkPagesInUse(void *p, size_t size)
 {
+    if (!DecommitEnabled())
+        return true;
+
     MOZ_ASSERT(OffsetFromAligned(p, pageSize) == 0);
     return true;
 }
