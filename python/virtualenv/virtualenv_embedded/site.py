@@ -250,6 +250,9 @@ def addsitepackages(known_paths, sys_prefix=sys.prefix, exec_prefix=sys.exec_pre
                 except AttributeError:
                     pass
                 # Debian-specific dist-packages directories:
+                sitedirs.append(os.path.join(prefix, "local/lib",
+                                             "python" + sys.version[:3],
+                                             "dist-packages"))
                 if sys.version[0] == '2':
                     sitedirs.append(os.path.join(prefix, "lib",
                                                  "python" + sys.version[:3],
@@ -258,9 +261,6 @@ def addsitepackages(known_paths, sys_prefix=sys.prefix, exec_prefix=sys.exec_pre
                     sitedirs.append(os.path.join(prefix, "lib",
                                                  "python" + sys.version[0],
                                                  "dist-packages"))
-                sitedirs.append(os.path.join(prefix, "local/lib",
-                                             "python" + sys.version[:3],
-                                             "dist-packages"))
                 sitedirs.append(os.path.join(prefix, "lib", "dist-python"))
             else:
                 sitedirs = [prefix, os.path.join(prefix, "lib", "site-packages")]

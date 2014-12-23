@@ -1,35 +1,87 @@
 Metadata-Version: 1.1
 Name: virtualenv
-Version: 1.11.4
+Version: 12.0.2
 Summary: Virtual Python Environment builder
-Home-page: http://www.virtualenv.org
+Home-page: https://virtualenv.pypa.io/
 Author: Jannis Leidel, Carl Meyer and Brian Rosner
 Author-email: python-virtualenv@groups.google.com
 License: MIT
-Description: 
+Description: Virtualenv
+        ==========
         
+        `Mailing list <http://groups.google.com/group/python-virtualenv>`_ |
+        `Issues <https://github.com/pypa/virtualenv/issues>`_ |
+        `Github <https://github.com/pypa/virtualenv>`_ |
+        `PyPI <https://pypi.python.org/pypi/virtualenv/>`_ |
+        User IRC: #pypa
+        Dev IRC: #pypa-dev
         
-        .. toctree::
-           :maxdepth: 2
+        Introduction
+        ------------
         
-           virtualenv
+        ``virtualenv`` is a tool to create isolated Python environments.
         
-        Changes & News
-        --------------
+        The basic problem being addressed is one of dependencies and versions,
+        and indirectly permissions. Imagine you have an application that
+        needs version 1 of LibFoo, but another application requires version
+        2. How can you use both these applications?  If you install
+        everything into ``/usr/lib/python2.7/site-packages`` (or whatever your
+        platform's standard location is), it's easy to end up in a situation
+        where you unintentionally upgrade an application that shouldn't be
+        upgraded.
         
-        .. warning::
+        Or more generally, what if you want to install an application *and
+        leave it be*?  If an application works, any change in its libraries or
+        the versions of those libraries can break the application.
         
-           Python bugfix releases 2.6.8, 2.7.3, 3.1.5 and 3.2.3 include a change that
-           will cause "import random" to fail with "cannot import name urandom" on any
-           virtualenv created on a Unix host with an earlier release of Python
-           2.6/2.7/3.1/3.2, if the underlying system Python is upgraded. This is due to
-           the fact that a virtualenv uses the system Python's standard library but
-           contains its own copy of the Python interpreter, so an upgrade to the system
-           Python results in a mismatch between the version of the Python interpreter
-           and the version of the standard library. It can be fixed by removing
-           ``$ENV/bin/python`` and re-running virtualenv on the same target directory
-           with the upgraded Python.
+        Also, what if you can't install packages into the global
+        ``site-packages`` directory?  For instance, on a shared host.
         
+        In all these cases, ``virtualenv`` can help you. It creates an
+        environment that has its own installation directories, that doesn't
+        share libraries with other virtualenv environments (and optionally
+        doesn't access the globally installed libraries either).
+        
+        .. comment: 
+        
+        Release History
+        ===============
+        
+        12.0.2 (2014-12-23)
+        ~~~~~~~~~~~~~~~~~~~
+        
+        * Upgraded pip to 6.0.2
+        
+        12.0.1 (2014-12-22)
+        ~~~~~~~~~~~~~~~~~~~
+        
+        * Upgraded pip to 6.0.1
+        
+        12.0 (2014-12-22)
+        ~~~~~~~~~~~~~~~~~
+        
+        * **PROCESS** Version numbers are now simply ``X.Y`` where the leading ``1``
+          has been dropped.
+        * Split up documentation into structured pages
+        * Now using pytest framework
+        * Correct sys.path ordering for debian, issue #461
+        * Correctly throws error on older Pythons, issue #619
+        * Allow for empty $PATH, pull #601
+        * Don't set prompt if $env:VIRTUAL_ENV_DISABLE_PROMPT is set for Powershell
+        * Updated setuptools to 7.0
+        
+        1.11.6 (2014-05-16)
+        ~~~~~~~~~~~~~~~~~~~
+        
+        * Updated setuptools to 3.6
+        * Updated pip to 1.5.6
+        
+        1.11.5 (2014-05-03)
+        ~~~~~~~~~~~~~~~~~~~
+        
+        * Updated setuptools to 3.4.4
+        * Updated documentation to use https://virtualenv.pypa.io/
+        * Updated pip to 1.5.5
         
         1.11.4 (2014-02-21)
         ~~~~~~~~~~~~~~~~~~~
@@ -213,7 +265,7 @@ Description:
           Branden Rolston.
         
         * Fix a bug in the config option parser that prevented setting negative
-          options with environemnt variables. Thanks Ralf Schmitt.
+          options with environment variables. Thanks Ralf Schmitt.
         
         * Allow setting ``--no-site-packages`` from the config file.
         
@@ -349,7 +401,7 @@ Description:
         * Updated embedded pip release to 1.0.2.
         
         * Fixed #141 - Be smarter about finding pkg_resources when using the
-          non-default Python intepreter (by using the ``-p`` option).
+          non-default Python interpreter (by using the ``-p`` option).
         
         * Fixed #112 - Fixed path in docs.
         
@@ -756,7 +808,6 @@ Classifier: Development Status :: 5 - Production/Stable
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Programming Language :: Python :: 2
-Classifier: Programming Language :: Python :: 2.5
 Classifier: Programming Language :: Python :: 2.6
 Classifier: Programming Language :: Python :: 2.7
 Classifier: Programming Language :: Python :: 3
