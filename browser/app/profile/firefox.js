@@ -439,6 +439,12 @@ pref("browser.search.official", true);
 // How many times to show the new search highlight
 pref("browser.search.highlightCount", 5);
 
+// geoip end-point and timeout
+pref("browser.search.geoip.url", "https://location.services.mozilla.com/v1/country?key=%MOZILLA_API_KEY%");
+// NOTE: this timeout figure is also the "high" value for the telemetry probe
+// SEARCH_SERVICE_COUNTRY_FETCH_MS - if you change this also change that probe.
+pref("browser.search.geoip.timeout", 2000);
+
 pref("browser.sessionhistory.max_entries", 50);
 
 // handle links targeting new windows
