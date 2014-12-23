@@ -15,6 +15,7 @@ if (SpecialPowers.Services.appinfo.name == "B2G") {
   SimpleTest.requestLongerTimeout(3);
 }
 
+SimpleTest.requestCompleteLog();
 let manager = new MediaTestManager;
 
 function finish_test(element) {
@@ -79,6 +80,7 @@ var tests = [
   setup : function (element) {
     let onTimeUpdate = function() {
       if (element.currentTime > element.duration / 2) {
+        info(element.token + ": currentTime=" + element.currentTime + ", duration=" + element.duration);
         element.removeEventListener("timeupdate", onTimeUpdate, false);
         element.pause();
         var oldEndRange = element.played.end(0);
@@ -102,6 +104,7 @@ var tests = [
     let seekTarget = 0;
     let onTimeUpdate = function() {
       if (element.currentTime > element.duration / 2) {
+        info(element.token + ": currentTime=" + element.currentTime + ", duration=" + element.duration);
         element.removeEventListener("timeupdate", onTimeUpdate, false);
         element.pause();
         // Remember seek target for later comparison since duration may change
@@ -223,6 +226,19 @@ function startTest(test, token) {
   element.preload = "metadata";
   test.setup(element);
   manager.started(token);
+
+  // Log events for debugging.
+  var events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+                "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
+                "waiting", "pause"];
+  function logEvent(e) {
+    var v = e.target;
+    info(v.token + ": got " + e.type);
+  }
+  events.forEach(function(e) {
+    element.addEventListener(e, logEvent, false);
+  });
+
 }
 
 
