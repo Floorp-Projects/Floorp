@@ -7,12 +7,12 @@
 #ifndef __FFmpegRuntimeLinker_h__
 #define __FFmpegRuntimeLinker_h__
 
+#include "PlatformDecoderModule.h"
 #include <stdint.h>
 
 namespace mozilla
 {
 
-class PlatformDecoderModule;
 struct AvFormatLib;
 
 class FFmpegRuntimeLinker
@@ -20,7 +20,7 @@ class FFmpegRuntimeLinker
 public:
   static bool Link();
   static void Unlink();
-  static PlatformDecoderModule* CreateDecoderModule();
+  static already_AddRefed<PlatformDecoderModule> CreateDecoderModule();
 
 private:
   static void* sLinkedLib;

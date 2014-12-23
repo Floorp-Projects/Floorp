@@ -118,7 +118,7 @@ private:
   virtual bool IsWaitingOnCDMResource() MOZ_OVERRIDE;
 
   nsAutoPtr<mp4_demuxer::MP4Demuxer> mDemuxer;
-  nsAutoPtr<PlatformDecoderModule> mPlatform;
+  nsRefPtr<PlatformDecoderModule> mPlatform;
 
   class DecoderCallback : public MediaDataDecoderCallback {
   public:
