@@ -1,0 +1,24 @@
+apply plugin: 'com.android.library'
+
+apply from: "${topsrcdir}/mobile/android/gradle/android.gradle"
+
+android {
+    defaultConfig {
+        applicationId 'org.mozilla.gecko.preprocessed_resources'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFile getDefaultProguardFile('proguard-android.txt')
+        }
+    }
+}
+
+android.libraryVariants.all { variant ->
+    variant.checkManifest.dependsOn generateCodeAndResources
+}
+
+dependencies {
+    compile project(':branding')
+}

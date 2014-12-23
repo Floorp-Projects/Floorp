@@ -18,10 +18,10 @@ The debug APK will be at
 The ``$OBJDIR/mobile/android/gradle`` directory can be imported into IntelliJ as
 follows:
 
-- File > Import Project
+- File > Import Project...
 - [select ``$OBJDIR/mobile/android/gradle``]
 - Import project from external model > Gradle
-- [select Use default Gradle wrapper]
+- [select Use customizable Gradle wrapper]
 
 When prompted, do not add any files to git.  You may need to re-open the
 project, or restart IntelliJ, to pick up a compiler language-level change.
@@ -42,11 +42,11 @@ Caveats
 How the Gradle project is laid out
 ----------------------------------
 
-To the greatest extent possible, the Gradle configuration lives in the source
-directory.  The only Gradle configuration that lives in the object directory is
-installed when building the ``mobile/android/gradle`` directory.
+To the greatest extent possible, the Gradle configuration lives in the object
+directory.
 
-At the time of writing, their are three sub-modules: *app*, *base*, and *thirdparty*.
+At the time of writing, their are three main sub-modules: *app*, *base*, and
+*thirdparty*, and several smaller sub-modules.
 
 *app* is the Fennec wrapper; it generates the **org.mozilla.fennec.R** resource
 package.  *base* is the Gecko code; it generates the **org.mozilla.gecko.R**
