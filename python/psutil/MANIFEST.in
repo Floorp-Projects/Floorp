@@ -1,10 +1,17 @@
+include .travis.yml
 include CREDITS
-include HISTORY
+include HISTORY.rst
+include INSTALL.rst
 include LICENSE
+include make.bat
+include Makefile
 include MANIFEST.in
-include README
-include TODO
+include README.rst
 include setup.py
-recursive-include psutil *.py *.c *.h
-recursive-include test *.py
+include TODO
+include tox.ini
+recursive-include docs *
+recursive-exclude docs/_build *
 recursive-include examples *.py
+recursive-include psutil *.py *.c *.h
+recursive-include test *.py README

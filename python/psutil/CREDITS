@@ -1,14 +1,16 @@
 Intro
 =====
 
-We would like to recognize some of the people who have been instrumental in the
+I would like to recognize some of the people who have been instrumental in the
 development of psutil.
-I'm sure we are forgetting some people (feel free to email us), but here is a
+I'm sure I'm forgetting some people (feel free to email me), but here is a
 short list.
 It's modeled after the Linux CREDITS file where the fields are:
 name (N), e-mail (E), web-address (W), country (C), description (D), (I) issues
-(issue tracker is at http://code.google.com/p/psutil/issues/list).
+(issue tracker is at https://github.com/giampaolo/psutil/issues).
 Really thanks to all of you.
+
+- Giampaolo
 
 Author
 ======
@@ -16,7 +18,7 @@ Author
 N: Giampaolo Rodola'
 C: Italy
 E: g.rodola@gmail.com
-W: http://www.linkedin.com/in/grodola
+W: http://grodola.blogspot.com/
 
 Contributors
 ============
@@ -24,11 +26,12 @@ Contributors
 N: Jay Loden
 C: NJ, USA
 E: jloden@gmail.com
-D: original co-author, initial design/bootstrap and continuing bug fixes
+D: original co-author, initial design/bootstrap and occasional bug fixes
 W: http://www.jayloden.com
 
 N: Jeremy Whitlock
 E: jcscoobyrs@gmail.com
+D: great help with OSX C development.
 I: 125, 150, 174, 206
 
 N: wj32
@@ -39,7 +42,7 @@ I: 114, 115
 N: Yan Raber
 C: Bologna, Italy
 E: yanraber@gmail.com
-D: help on Windows development
+D: help on Windows development (initial version of Process.username())
 
 N: Justin Venus
 E: justin.venus@gmail.com
@@ -49,7 +52,9 @@ I: 18
 N: Dave Daeschler
 C: USA
 E: david.daeschler@gmail.com
-D: initial design/bootstrap and continuing bug fixes
+W: http://daviddaeschler.com
+D: some contributions to initial design/bootstrap plus occasional bug fixing
+I: 522, 536
 
 N: cjgohlke
 E: cjgohlke@gmail.com
@@ -180,3 +185,79 @@ I: 386
 
 N: Adrien Fallou
 I: 224
+
+N: Gisle Vanem
+E: gisle.vanem@gmail.com
+I: 411
+
+N: thepyr0
+E: thepyr0@gmail.com
+I: 414
+
+N: John Pankov
+E: john.pankov@gmail.com
+I: 435
+
+N: Matt Good
+W: http://matt-good.net/
+I: 438
+
+N: Ulrich Klank
+E: ulrich.klank@scitics.de
+I: 448
+
+N: Josiah Carlson
+E: josiah.carlson@gmail.com
+I: 451, 452
+
+N: Raymond Hettinger
+D: namedtuple and lru_cache backward compatible implementations.
+
+N: Jason Kirtland
+D: backward compatible implementation of collections.defaultdict.
+
+M: Ken Seeho
+D: @cached_property decorator
+
+N: crusaderky
+E: crusaderky@gmail.com
+I: 470, 477
+
+E: alex@mroja.net
+I: 471
+
+N: Gautam Singh
+E: gautam.singh@gmail.com
+I: 466
+
+E: lhn@hupfeldtit.dk
+I: 476, 479
+
+N: Francois Charron
+E: francois.charron.1@gmail.com
+I: 474
+
+N: Naveed Roudsari
+E: naveed.roudsari@gmail.com
+I: 421
+
+N: Alexander Grothe
+E: Alexander.Grothe@gmail.com
+I: 497
+
+N: Szigeti Gabor Niif
+E: szigeti.gabor.niif@gmail.com
+I: 446
+
+N: msabramo
+E: msabramo@gmail.com
+I: 492
+
+N: Jeff Tang
+W: https://github.com/mrjefftang
+I: 340, 529
+
+N: Yaolong Huang
+E: airekans@gmail.com
+W: http://airekans.github.io/
+I: 530

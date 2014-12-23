@@ -3,28 +3,27 @@ TODO
 
 A collection of ideas and notes about stuff to implement in future versions.
 "#NNN" occurrences refer to bug tracker issues at:
-https://code.google.com/p/psutil/issues/list
+https://github.com/giampaolo/psutil/issues
 
 
 HIGHER PRIORITY
 ===============
 
- * #387: system-wide connections (netstat).
+ * #250: net ifaces speed.
+
+ * #376: ifconfig functionalities aka psutil.net_ifaces (could be merged
+         with #250)
+
  * OpenBSD support.
 
  * #371: CPU temperature (apparently OSX and Linux only; on Linux it requires
    lm-sensors lib).
 
- * #250: net ifaces speed.
-
- * (Linux) resource limit get/set - see man prlimit.
-
- * Process.name on Windows is slow:
-   http://stackoverflow.com/questions/6587036/
-
- * Windows binary for Python 3.3 64-bit.
-
  * #269: expose network ifaces RX/TW queues.
+
+ * Process.threads(): thread names
+
+ * Asynchronous psutil.Popen (see http://bugs.python.org/issue1191964)
 
 
 LOWER PRIORITY
@@ -34,20 +33,20 @@ LOWER PRIORITY
 
  * #276: GNU/Hurd support.
 
- * NetBSD support?
+ * #429: NetBSD support.
 
- * DranflyBSD support?
+ * DragonFlyBSD support?
 
  * AIX support?
 
  * examples/pidof.py (same as 'pidof' cli tool)
 
  * examples/pstree.py (same as 'pstree' cli tool)
-    * get_threads() should also return thread names in order to implement it
+    * threads() should also return thread names in order to implement it
 
  * examples/taskmgr-gui.py (using tk).
 
- * system-wide # open file descriptors:
+ * system-wide number of open file descriptors:
     * https://jira.hyperic.com/browse/SIGAR-30
     * http://www.netadmintools.com/part295.html
 
@@ -59,25 +58,27 @@ LOWER PRIORITY
  * thread names:
     * https://code.google.com/p/plcrashreporter/issues/detail?id=65
 
+ * Doc / wiki which compares similarities between UNIX cli tools and psutil.
+   Example:
+   df -a  ->  psutil.disk_partitions
+   lsof   ->  psutil.Process.open_files() and psutil.Process.open_connections()
+   killall->  (actual script)
+   tty    ->  psutil.Process.terminal()
+   who    ->  psutil.users()
+
 
 DEBATABLE
 =========
+
+ * support wheels? http://pythonwheels.com/
+
+ * advanced cmdline interface exposing the whole API and providing different
+   kind of outputs (e.g. pprinted, colorized, json).
 
  * [Linux]: process cgroups (http://en.wikipedia.org/wiki/Cgroups). They look
    similar to prlimit() in terms of functionality but uglier (they should allow
    limiting per-process network IO resources though, which is great). Needs
    further reading.
-
- * cpu_percent(): current default interval is 0.1 so that by default it will
-   produce a meaningful value. It represents a trap in case the user iterates
-   over multiple processes though, as it introduces a big slowdown.
-   Should it default to 0.0?
-
- * Rename connection ntuple's fields 'local_address', 'remote_address' to
-   'laddr', 'raddr'  (note in accordance with http://bugs.python.org/issue17675)
-
- * Process per-cpus percent (XXX Windows only?), see:
-   https://groups.google.com/forum/?fromgroups#!topic/psutil/ErrKTxAbu50
 
  * Should we expose OS constants (psutil.WINDOWS, psutil.OSX etc.)?
 
@@ -91,5 +92,59 @@ DEBATABLE
    implemented as a busy-loop.
 
  * Certain systems (XXX figure out which ones exactly) provide CPU times about
-   process children. On those systems Process.get_cpu_times() might return
+   process children. On those systems Process.cpu_times() might return
    a (user, system, user_children, system_children) ntuple.
+   Also, os.times() provides 'elapsed' times as well.
+
+ * Enrich exception classes hierarchy on Python >= 3.3 / post PEP-3151 so that:
+   - NoSuchProcess inherits from ProcessLookupError
+   - AccessDenied inherits from PermissionError
+   - TimeoutExpired inherits from TimeoutError (debatable)
+   See: http://docs.python.org/3/library/exceptions.html#os-exceptions
+
+ * Process.threads() might grow an extra "id" parameter so that it can be
+   used as such:
+
+    >>> p = psutil.Process(os.getpid())
+    >>> p.threads(id=psutil.current_thread_id())
+    thread(id=2539, user_time=0.03, system_time=0.02)
+    >>>
+
+   Note: this leads to questions such as "should we have a custom NoSuchThread
+   exception? Also see issue #418.
+
+   Note #2: this would work with os.getpid() only.
+   psutil.current_thread_id() might be desirable as per issue #418 though.
+
+  * should psutil.TimeoutExpired exception have a 'msg' kwarg similar to
+    NoSuchProcess and AccessDenied? Not that we need it, but currently we
+    cannot raise a TimeoutExpired exception with a specific error string.
+
+  * process_iter() might grow an "attrs" parameter similar to Process.as_dict()
+    invoke the necessary methods and include the results into a "cache"
+    attribute attached to the returned Process instances so that one can avoid
+    catching NSP and AccessDenied:
+        for p in process_iter(attrs=['cpu_percent']):
+            print(p.cache['cpu_percent'])
+    This also leads questions as whether we should introduce a sorting order.
+
+  * round Process.memory_percent() result?
+
+
+COMPATIBILITY BREAKAGE
+======================
+
+Removals (will likely happen in 2.2):
+
+ * (S) psutil.Process.nice  (deprecated in 0.5.0)
+ * (S) get_process_list  (deprecated in 0.5.0)
+ * (S) psutil.*mem* functions  (deprecated in 0.3.0 and 0.6.0)
+ * (M) psutil.network_io_counters  (deprecated in 1.0.0)
+ * (M) local_address and remote_address Process.connection() namedtuple fields
+       (deprecated in 1.0.0)
+
+
+REJECTED IDEAS
+==============
+
+STUB
