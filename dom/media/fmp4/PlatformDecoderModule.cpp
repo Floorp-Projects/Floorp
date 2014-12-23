@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "PlatformDecoderModule.h"
+#include "AVCCDecoderModule.h"
+
 #ifdef XP_WIN
 #include "WMFDecoderModule.h"
 #endif
@@ -149,7 +151,7 @@ PlatformDecoderModule::CreatePDM()
   }
 #endif
 #ifdef MOZ_APPLEMEDIA
-  nsRefPtr<PlatformDecoderModule> m(new AppleDecoderModule());
+  nsRefPtr<PlatformDecoderModule> m(new AVCCDecoderModule(new AppleDecoderModule()));
   return m.forget();
 #endif
 #ifdef MOZ_GONK_MEDIACODEC
