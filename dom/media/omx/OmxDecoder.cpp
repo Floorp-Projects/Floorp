@@ -33,9 +33,8 @@
 #include "OMXCodecProxy.h"
 #include "OmxDecoder.h"
 
-#define LOG_TAG "OmxDecoder"
 #include <android/log.h>
-#define ALOG(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+#define OD_LOG(...) __android_log_print(ANDROID_LOG_DEBUG, "OmxDecoder", __VA_ARGS__)
 
 #ifdef PR_LOGGING
 PRLogModuleInfo *gOmxDecoderLog;
@@ -604,7 +603,7 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
         }
         continue;
       } else if (err != OK) {
-        ALOG("Unexpected error when seeking to %lld", aTimeUs);
+        OD_LOG("Unexpected error when seeking to %lld", aTimeUs);
         break;
       }
       // For some codecs, the length of first decoded frame after seek is 0.
