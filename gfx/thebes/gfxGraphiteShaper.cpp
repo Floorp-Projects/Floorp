@@ -145,7 +145,7 @@ gfxGraphiteShaper::ShapeText(gfxContext      *aContext,
         grLang = MakeGraphiteLangTag(style->languageOverride);
     } else if (entry->mLanguageOverride) {
         grLang = MakeGraphiteLangTag(entry->mLanguageOverride);
-    } else {
+    } else if (style->explicitLanguage) {
         nsAutoCString langString;
         style->language->ToUTF8String(langString);
         grLang = GetGraphiteTagForLang(langString);
