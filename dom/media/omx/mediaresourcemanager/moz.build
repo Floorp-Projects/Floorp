@@ -31,7 +31,6 @@ if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
     '-Wno-error=multichar'
   ]
 
-FINAL_LIBRARY = 'xul'
 CXXFLAGS += [
     '-I%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
         'frameworks/base/include',
