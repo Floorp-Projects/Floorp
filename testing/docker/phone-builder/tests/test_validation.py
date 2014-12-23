@@ -15,8 +15,12 @@ class TaskValidationTest(unittest.TestCase):
         task = load_task('valid.yml')
         self.assertEquals(check_task(task), 0)
 
-    def test_invalid_repo(self):
-        task = load_task('invalid_repo.yml')
+    def test_invalid_base_repo(self):
+        task = load_task('invalid_base_repo.yml')
+        self.assertEquals(check_task(task), -1)
+
+    def test_invalid_head_repo(self):
+        task = load_task('invalid_head_repo.yml')
         self.assertEquals(check_task(task), -1)
 
     def test_public_artifact(self):

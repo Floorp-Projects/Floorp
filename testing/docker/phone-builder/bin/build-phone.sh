@@ -2,6 +2,7 @@
 
 ### Check that require variables are defined
 test $GECKO_HEAD_REPOSITORY # Should be an hg repository url to pull from
+test $GECKO_BASE_REPOSITORY # Should be an hg repository url to clone from
 test $GECKO_HEAD_REV # Should be an hg revision to pull down
 test $TARGET
 
@@ -16,7 +17,7 @@ fi
 #   $ docker -v your_mozharness:/home/worker/mozharness ...
 #
 if [ ! -d mozharness ]; then
-  git clone https://github.com/walac/build-mozharness.git mozharness
+  tc-vcs clone https://hg.mozilla.org/build/mozharness mozharness
 fi
 
 OBJDIR="$HOME/object-folder"
@@ -26,7 +27,7 @@ if [ ! -d $OBJDIR ]; then
 fi
 
 if [ ! -d $OBJDIR/B2G ]; then
-  git clone https://git.mozilla.org/b2g/B2G.git $OBJDIR/B2G
+  tc-vcs clone https://git.mozilla.org/b2g/B2G.git $OBJDIR/B2G
 fi
 
 debug_flag=""
@@ -51,6 +52,7 @@ fi
   --target=$TARGET \
   --b2g-config-dir=$TARGET \
   --checkout-revision=$GECKO_HEAD_REV \
+  --base-repo=$GECKO_BASE_REPOSITORY \
   --repo=$GECKO_HEAD_REPOSITORY
 
 # Don't cache backups

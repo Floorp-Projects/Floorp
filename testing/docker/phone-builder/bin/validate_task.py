@@ -8,20 +8,31 @@ import urllib2
 import sys
 import re
 
+repo_matcher = re.compile(r'[a-z]+://(hg|git)\.mozilla\.org')
+
 def get_task(taskid):
     return json.load(urllib2.urlopen('https://queue.taskcluster.net/v1/task/' + taskid))
 
 def check_task(task):
     payload = task['payload']
 
-    if 'REPOSITORY' not in payload['env']:
-        print('Task has no gecko repository', file=sys.stderr)
+    if 'GECKO_HEAD_REPOSITORY' not in payload['env']:
+        print('Task has no head gecko repository', file=sys.stderr)
         return -1
 
-    repo = payload['env']['REPOSITORY']
+    repo = payload['env']['GECKO_HEAD_REPOSITORY']
     # if it is not a mozilla repository, fail
-    if not re.match(r'[a-z]+://hg\.mozilla\.org', repo):
-        print('Invalid repository', repo, file=sys.stderr)
+    if not repo_matcher.match(repo):
+        print('Invalid head repository', repo, file=sys.stderr)
+        return -1
+
+    if 'GECKO_BASE_REPOSITORY' not in payload['env']:
+        print('Task has no base gecko repository', file=sys.stderr)
+        return -1
+
+    repo = payload['env']['GECKO_BASE_REPOSITORY']
+    if not repo_matcher.match(repo):
+        print('Invalid base repository', repo, file=sys.stderr)
         return -1
 
     if 'artifacts' in payload:
