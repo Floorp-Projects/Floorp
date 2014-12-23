@@ -22,7 +22,8 @@ task:
       B2G_DEBUG: '1'
       # revision/project params defined originally here https://github.com/taskcluster/taskcluster-try/blob/master/try/instantiate.js
       REVISION: 'tip'
-      REPOSITORY: 'git@github.com:mozilla/gecko-dev.git'
+      GECKO_HEAD_REPOSITORY: 'http://hg.mozilla.org/mozilla-central'
+      GECKO_BASE_REPOSITORY: 'git@github.com:mozilla/gecko-dev.git'
 
     image: 'quay.io/mozilla/phone-builder:0.0.1'
     maxRunTime: 14400

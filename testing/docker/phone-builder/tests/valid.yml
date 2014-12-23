@@ -22,7 +22,8 @@ task:
       B2G_DEBUG: '1'
       # revision/project params defined originally here https://github.com/taskcluster/taskcluster-try/blob/master/try/instantiate.js
       REVISION: 'tip'
-      REPOSITORY: 'http://hg.mozilla.org/mozilla-central'
+      GECKO_HEAD_REPOSITORY: 'http://hg.mozilla.org/mozilla-central'
+      GECKO_BASE_REPOSITORY: 'http://hg.mozilla.org/mozilla-central'
 
     image: '{{#docker_image}}phone-builder{{/docker_image}}'
     maxRunTime: 14400
