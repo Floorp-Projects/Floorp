@@ -2854,7 +2854,8 @@ gfxFont::InitFakeSmallCapsRun(gfxContext     *aContext,
                 } else if (ch != ToLowerCase(ch)) {
                     // ch is upper case
                     chAction = (aSyntheticUpper ? kUppercaseReduce : kNoChange);
-                    if (mStyle.language == nsGkAtoms::el) {
+                    if (mStyle.explicitLanguage &&
+                        mStyle.language == nsGkAtoms::el) {
                         // In Greek, check for characters that will be modified by
                         // the GreekUpperCase mapping - this catches accented
                         // capitals where the accent is to be removed (bug 307039).
@@ -2906,7 +2907,8 @@ gfxFont::InitFakeSmallCapsRun(gfxContext     *aContext,
                     TransformString(origString,
                                     convertedString,
                                     true,
-                                    mStyle.language,
+                                    mStyle.explicitLanguage
+                                      ? mStyle.language : nullptr,
                                     charsToMergeArray,
                                     deletedCharsArray);
 
