@@ -528,7 +528,7 @@ public class TopSitesPanel extends HomeFragment {
             final Cursor cursor = BrowserDB.getTopSites(getContext().getContentResolver(), mMaxGridEntries, SEARCH_LIMIT);
             final long end = SystemClock.uptimeMillis();
             final long took = end - start;
-            Telemetry.HistogramAdd(TELEMETRY_HISTOGRAM_LOAD_CURSOR, (int) Math.min(took, Integer.MAX_VALUE));
+            Telemetry.addToHistogram(TELEMETRY_HISTOGRAM_LOAD_CURSOR, (int) Math.min(took, Integer.MAX_VALUE));
             return cursor;
         }
     }
