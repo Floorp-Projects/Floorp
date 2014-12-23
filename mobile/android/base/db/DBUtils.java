@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko.db;
 
+import android.database.sqlite.SQLiteDatabase;
 import org.mozilla.gecko.GeckoAppShell;
 
 import android.content.ContentValues;
@@ -11,6 +12,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.text.TextUtils;
 import android.util.Log;
+import org.mozilla.gecko.Telemetry;
 
 public class DBUtils {
     private static final String LOGTAG = "GeckoDBUtils";
@@ -64,23 +66,43 @@ public class DBUtils {
         }
     }
 
+    private static String HISTOGRAM_DATABASE_LOCKED = "DATABASE_LOCKED_EXCEPTION";
+    private static String HISTOGRAM_DATABASE_UNLOCKED = "DATABASE_SUCCESSFUL_UNLOCK";
     public static void ensureDatabaseIsNotLocked(SQLiteOpenHelper dbHelper, String databasePath) {
-        for (int retries = 0; retries < 5; retries++) {
+        final int maxAttempts = 5;
+        int attempt = 0;
+        SQLiteDatabase db = null;
+        for (; attempt < maxAttempts; attempt++) {
             try {
-                // Try a simple test and exit the loop
-                dbHelper.getWritableDatabase();
-                return;
+                // Try a simple test and exit the loop.
+                db = dbHelper.getWritableDatabase();
+                break;
             } catch (Exception e) {
-                // Things could get very bad if we don't find a way to unlock the DB
+                // We assume that this is a android.database.sqlite.SQLiteDatabaseLockedException.
+                // That class is only available on API 11+.
+                Telemetry.addToHistogram(HISTOGRAM_DATABASE_LOCKED, attempt);
+
+                // Things could get very bad if we don't find a way to unlock the DB.
                 Log.d(LOGTAG, "Database is locked, trying to kill any zombie processes: " + databasePath);
                 GeckoAppShell.killAnyZombies();
                 try {
-                    Thread.sleep(retries * 100);
-                } catch (InterruptedException ie) { }
+                    Thread.sleep(attempt * 100);
+                } catch (InterruptedException ie) {
+                }
             }
         }
-        Log.d(LOGTAG, "Failed to unlock database");
-        GeckoAppShell.listOfOpenFiles();
+
+        if (db == null) {
+            Log.w(LOGTAG, "Failed to unlock database.");
+            GeckoAppShell.listOfOpenFiles();
+            return;
+        }
+
+        // If we needed to retry, but we succeeded, report that in telemetry.
+        // Failures are indicated by a lower frequency of UNLOCKED than LOCKED.
+        if (attempt > 1) {
+            Telemetry.addToHistogram(HISTOGRAM_DATABASE_UNLOCKED, attempt - 1);
+        }
     }
 
     /**
