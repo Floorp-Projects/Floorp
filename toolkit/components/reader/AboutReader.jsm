@@ -16,14 +16,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode", "resource://gre/modules/Re
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry", "resource://gre/modules/UITelemetry.jsm");
 
-XPCOMUtils.defineLazyGetter(window, "gChromeWin", function ()
-  window.QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIWebNavigation)
-    .QueryInterface(Ci.nsIDocShellTreeItem)
-    .rootTreeItem
-    .QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIDOMWindow)
-    .QueryInterface(Ci.nsIDOMChromeWindow));
+XPCOMUtils.defineLazyGetter(this, "gChromeWin", () => Services.wm.getMostRecentWindow("navigator:browser"));
 
 function dump(s) {
   Services.console.logStringMessage("AboutReader: " + s);
