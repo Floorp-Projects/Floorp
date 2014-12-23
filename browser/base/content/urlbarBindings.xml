@@ -1000,6 +1000,32 @@
                   class="search-setting-button search-panel-header"
                   label="&changeSearchSettings.button;"/>
     </content>
+    <implementation>
+      <method name="updateHeader">
+        <body><![CDATA[
+          let currentEngine = Services.search.currentEngine;
+          let uri = currentEngine.iconURI;
+          if (uri) {
+            uri = uri.spec;
+            this.setAttribute("src", PlacesUtils.getImageURLForResolution(window, uri));
+          }
+          else {
+            // If the default has just been changed to a provider without icon,
+            // avoid showing the icon of the previous default provider.
+            this.removeAttribute("src");
+          }
+
+          const kBundleURI = "chrome://browser/locale/search.properties";
+          let bundle = Services.strings.createBundle(kBundleURI);
+          let headerText = bundle.formatStringFromName("searchHeader",
+                                                       [currentEngine.name], 1);
+          document.getAnonymousElementByAttribute(this, "anonid", "searchbar-engine-name")
+                  .setAttribute("value", headerText);
+          document.getAnonymousElementByAttribute(this, "anonid", "searchbar-engine")
+                  .engine = currentEngine;
+        ]]></body>
+      </method>
+    </implementation>
     <handlers>
       <handler event="popupshowing"><![CDATA[
         // First handle deciding if we are showing the reduced version of the
@@ -1022,26 +1048,7 @@
         }
 
         // Show the current default engine in the top header of the panel.
-        let currentEngine = Services.search.currentEngine;
-        let uri = currentEngine.iconURI;
-        if (uri) {
-          uri = uri.spec;
-          this.setAttribute("src", PlacesUtils.getImageURLForResolution(window, uri));
-        }
-        else {
-          // If the default has just been changed to a provider without icon,
-          // avoid showing the icon of the previous default provider.
-          this.removeAttribute("src");
-        }
-
-        const kBundleURI = "chrome://browser/locale/search.properties";
-        let bundle = Services.strings.createBundle(kBundleURI);
-        let headerText = bundle.formatStringFromName("searchHeader",
-                                                     [currentEngine.name], 1);
-        document.getAnonymousElementByAttribute(this, "anonid", "searchbar-engine-name")
-                .setAttribute("value", headerText);
-        document.getAnonymousElementByAttribute(this, "anonid", "searchbar-engine")
-                .engine = currentEngine;
+        this.updateHeader();
 
         // Update the 'Search for <keywords> with:" header.
         let headerSearchText =
@@ -1074,6 +1081,8 @@
 
         let addEngines = gBrowser.selectedBrowser.engines;
         if (addEngines && addEngines.length > 0) {
+          const kBundleURI = "chrome://browser/locale/search.properties";
+          let bundle = Services.strings.createBundle(kBundleURI);
           for (let engine of addEngines) {
             let button = document.createElementNS(kXULNS, "button");
             let label = bundle.formatStringFromName("cmd_addFoundEngine",
@@ -1109,8 +1118,9 @@
           hiddenList = [];
         }
 
+        let currentEngineName = Services.search.currentEngine.name;
         let engines = Services.search.getVisibleEngines()
-                              .filter(e => e.name != currentEngine.name &&
+                              .filter(e => e.name != currentEngineName &&
                                            hiddenList.indexOf(e.name) == -1);
 
         let header = document.getAnonymousElementByAttribute(this, "anonid",
