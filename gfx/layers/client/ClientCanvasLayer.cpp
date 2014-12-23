@@ -111,7 +111,7 @@ ClientCanvasLayer::Initialize(const Data& aData)
       case mozilla::layers::LayersBackend::LAYERS_D3D10:
       case mozilla::layers::LayersBackend::LAYERS_D3D11: {
 #ifdef XP_WIN
-        if (mGLContext->IsANGLE() && DoesD3D11DeviceWork(gfxWindowsPlatform::GetPlatform()->GetD3D11Device())) {
+        if (mGLContext->IsANGLE() && DoesD3D11TextureSharingWork(gfxWindowsPlatform::GetPlatform()->GetD3D11Device())) {
           factory = SurfaceFactory_ANGLEShareHandle::Create(mGLContext, caps);
         }
 #endif
