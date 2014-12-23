@@ -30,6 +30,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "gTextToSubURI",
                                    "@mozilla.org/intl/texttosuburi;1",
                                    "nsITextToSubURI");
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 // A text encoder to UTF8, used whenever we commit the
 // engine metadata to disk.
 XPCOMUtils.defineLazyGetter(this, "gEncoder",
@@ -423,7 +425,12 @@ function getIsUS() {
     Services.prefs.setBoolPref(cachePref, false);
     return false;
   }
+  let isNA = isUSTimezone();
+  Services.prefs.setBoolPref(cachePref, isNA);
+  return isNA;
+}
 
+function isUSTimezone() {
   // Timezone assumptions! We assume that if the system clock's timezone is
   // between Newfoundland and Hawaii, that the user is in North America.
 
@@ -437,11 +444,80 @@ function getIsUS() {
   // Hawaii-Aleutian Standard Time (http://www.timeanddate.com/time/zones/hast)
 
   let UTCOffset = (new Date()).getTimezoneOffset();
-  let isNA = UTCOffset >= 150 && UTCOffset <= 600;
+  return UTCOffset >= 150 && UTCOffset <= 600;
+}
 
-  Services.prefs.setBoolPref(cachePref, isNA);
+// A less hacky method that tries to determine our country-code via an XHR
+// geoip lookup.
+// If this succeeds and we are using an en-US locale, we set the pref used by
+// the hacky method above, so isUS() can avoid the hacky timezone method.
+// If it fails we don't touch that pref so isUS() does its normal thing.
+let ensureKnownCountryCode = Task.async(function* () {
+  // If we have a country-code already stored in our prefs we trust it.
+  try {
+    Services.prefs.getCharPref("browser.search.countryCode");
+    return; // pref exists, so we've done this before.
+  } catch(e) {}
+  // we don't have it cached, so fetch it.
+  let cc = yield fetchCountryCode();
+  if (cc) {
+    // we got one - stash it away
+    Services.prefs.setCharPref("browser.search.countryCode", cc);
+    // and update our "isUS" cache pref if it is US - that will prevent a
+    // fallback to the timezone check.
+    // However, only do this if the locale also matches.
+    if (getLocale() == "en-US") {
+      Services.prefs.setBoolPref("browser.search.isUS", (cc == "US"));
+    }
+    // and telemetry...
+    let isTimezoneUS = isUSTimezone();
+    if (cc == "US" && !isTimezoneUS) {
+      Services.telemetry.getHistogramById("SEARCH_SERVICE_US_COUNTRY_MISMATCHED_TIMEZONE").add(1);
+    }
+    if (cc != "US" && isTimezoneUS) {
+      Services.telemetry.getHistogramById("SEARCH_SERVICE_US_TIMEZONE_MISMATCHED_COUNTRY").add(1);
+    }
+  }
+});
 
-  return isNA;
+// Get the country we are in via a XHR geoip request.
+function fetchCountryCode() {
+  let endpoint = Services.urlFormatter.formatURLPref("browser.search.geoip.url");
+  // As an escape hatch, no endpoint means no geoip.
+  if (!endpoint) {
+    return Promise.resolve(null);
+  }
+  let startTime = Date.now();
+  return new Promise(resolve => {
+    let request = new XMLHttpRequest();
+    request.timeout = Services.prefs.getIntPref("browser.search.geoip.timeout");
+    request.onload = function(event) {
+      let took = Date.now() - startTime;
+      let cc = event.target.response && event.target.response.country_code;
+      LOG("_fetchCountryCode got success response in " + took + "ms: " + cc);
+      Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_FETCH_MS").add(took);
+      Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_SUCCESS").add(cc ? 1 : 0);
+      if (!cc) {
+        Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_SUCCESS_WITHOUT_DATA").add(1);
+      }
+      resolve(cc);
+    };
+    request.onerror = function(event) {
+      LOG("_fetchCountryCode: failed to retrieve country information");
+      Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_SUCCESS").add(0);
+      resolve(null);
+    };
+    request.ontimeout = function(event) {
+      LOG("_fetchCountryCode: timeout fetching country information");
+      Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_FETCH_TIMEOUT").add(1);
+      Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_SUCCESS").add(0);
+      resolve(null);
+    }
+    request.open("POST", endpoint, true);
+    request.setRequestHeader("Content-Type", "application/json");
+    request.responseType = "json";
+    request.send("{}");
+  });
 }
 
 /**
@@ -3010,6 +3086,11 @@ SearchService.prototype = {
   _asyncInit: function SRCH_SVC__asyncInit() {
     return Task.spawn(function() {
       LOG("_asyncInit start");
+      try {
+        yield checkForSyncCompletion(ensureKnownCountryCode());
+      } catch (ex if ex.result != Cr.NS_ERROR_ALREADY_INITIALIZED) {
+        LOG("_asyncInit: failure determining country code: " + ex);
+      }
       try {
         yield checkForSyncCompletion(this._asyncLoadEngines());
       } catch (ex if ex.result != Cr.NS_ERROR_ALREADY_INITIALIZED) {
