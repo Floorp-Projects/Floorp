@@ -125,6 +125,9 @@ function initResponsiveDesign() {
       return;
     }
 
+    // Disable transition as they mess up with screen size handler
+    responsive.transitionsEnabled = false;
+
     responsive.buildPhoneUI();
 
     responsive.rotatebutton.addEventListener('command', function (evt) {
