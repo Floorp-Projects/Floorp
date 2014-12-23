@@ -28,6 +28,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/URLSearchParams.h"
 
+#include "InternalRequest.h"
 #include "InternalResponse.h"
 
 #include "WorkerPrivate.h"
@@ -173,6 +174,11 @@ public:
     nsCOMPtr<nsIPrincipal> principal = mResolver->GetWorkerPrivate()->GetPrincipal();
     nsCOMPtr<nsILoadGroup> loadGroup = mResolver->GetWorkerPrivate()->GetLoadGroup();
     nsRefPtr<FetchDriver> fetch = new FetchDriver(mRequest, principal, loadGroup);
+    nsIDocument* doc = mResolver->GetWorkerPrivate()->GetDocument();
+    if (doc) {
+      fetch->SetReferrerPolicy(doc->GetReferrerPolicy());
+    }
+
     nsresult rv = fetch->Fetch(mResolver);
     // Right now we only support async fetch, which should never directly fail.
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -204,13 +210,10 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
   }
 
   nsRefPtr<InternalRequest> r = request->GetInternalRequest();
-  if (!r->ReferrerIsNone()) {
-    nsAutoCString ref;
-    aRv = GetRequestReferrer(aGlobal, r, ref);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
-    }
-    r->SetReferrer(ref);
+
+  aRv = UpdateRequestReferrer(aGlobal, r);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
   }
 
   if (NS_IsMainThread()) {
@@ -230,6 +233,7 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
     nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
     nsRefPtr<FetchDriver> fetch =
       new FetchDriver(r, doc->NodePrincipal(), loadGroup);
+    fetch->SetReferrerPolicy(doc->GetReferrerPolicy());
     aRv = fetch->Fetch(resolver);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
@@ -357,15 +361,19 @@ WorkerFetchResolver::OnResponseEnd()
   }
 }
 
-// Empty string for no-referrer. FIXME(nsm): Does returning empty string
-// actually lead to no-referrer in the base channel?
+// This method sets the request's referrerURL, as specified by the "determine
+// request's referrer" steps from Referrer Policy [1].
 // The actual referrer policy and stripping is dealt with by HttpBaseChannel,
-// this always returns the full API referrer URL of the relevant global.
+// this always sets the full API referrer URL of the relevant global if it is
+// not already a url or no-referrer.
+// [1]: https://w3c.github.io/webappsec/specs/referrer-policy/#determine-requests-referrer
 nsresult
-GetRequestReferrer(nsIGlobalObject* aGlobal, const InternalRequest* aRequest, nsCString& aReferrer)
+UpdateRequestReferrer(nsIGlobalObject* aGlobal, InternalRequest* aRequest)
 {
-  if (aRequest->ReferrerIsURL()) {
-    aReferrer = aRequest->ReferrerAsURL();
+  nsAutoString originalReferrer;
+  aRequest->GetReferrer(originalReferrer);
+  // If it is no-referrer ("") or a URL, don't modify.
+  if (!originalReferrer.EqualsLiteral(kFETCH_CLIENT_REFERRER_STR)) {
     return NS_OK;
   }
 
@@ -373,24 +381,16 @@ GetRequestReferrer(nsIGlobalObject* aGlobal, const InternalRequest* aRequest, ns
   if (window) {
     nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
     if (doc) {
-      nsCOMPtr<nsIURI> docURI = doc->GetDocumentURI();
-      nsAutoCString origin;
-      nsresult rv = nsContentUtils::GetASCIIOrigin(docURI, origin);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
       nsAutoString referrer;
       doc->GetReferrer(referrer);
-      aReferrer = NS_ConvertUTF16toUTF8(referrer);
+      aRequest->SetReferrer(referrer);
     }
   } else {
     WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(worker);
     worker->AssertIsOnWorkerThread();
-    aReferrer = worker->GetLocationInfo().mHref;
-    // XXX(nsm): Algorithm says "If source is not a URL..." but when is it
-    // not a URL?
+    WorkerPrivate::LocationInfo& info = worker->GetLocationInfo();
+    aRequest->SetReferrer(NS_ConvertUTF8toUTF16(info.mHref));
   }
 
   return NS_OK;

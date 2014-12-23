@@ -75,15 +75,9 @@ public:
   }
 
   void
-  GetReferrer(DOMString& aReferrer) const
+  GetReferrer(nsAString& aReferrer) const
   {
-    if (mRequest->ReferrerIsNone()) {
-      aReferrer.AsAString() = EmptyString();
-      return;
-    }
-
-    // FIXME(nsm): Spec doesn't say what to do if referrer is client.
-    aReferrer.AsAString() = NS_ConvertUTF8toUTF16(mRequest->mReferrerURL);
+    mRequest->GetReferrer(aReferrer);
   }
 
   InternalHeaders*

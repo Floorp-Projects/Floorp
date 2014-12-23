@@ -14,6 +14,7 @@
 #include "nsRefPtr.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/net/ReferrerPolicy.h"
 
 class nsIOutputStream;
 class nsILoadGroup;
@@ -56,6 +57,14 @@ public:
                        nsILoadGroup* aLoadGroup);
   NS_IMETHOD Fetch(FetchDriverObserver* aObserver);
 
+  void
+  SetReferrerPolicy(net::ReferrerPolicy aPolicy)
+  {
+    // Cannot set policy after Fetch() has been called.
+    MOZ_ASSERT(mFetchRecursionCount == 0);
+    mReferrerPolicy = aPolicy;
+  }
+
 private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
@@ -68,6 +77,7 @@ private:
   nsCOMPtr<nsIChannel> mOldRedirectChannel;
   nsCOMPtr<nsIChannel> mNewRedirectChannel;
   uint32_t mFetchRecursionCount;
+  net::ReferrerPolicy mReferrerPolicy;
 
   DebugOnly<bool> mResponseAvailableCalled;
 
