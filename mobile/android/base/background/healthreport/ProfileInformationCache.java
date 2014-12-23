@@ -70,9 +70,13 @@ public class ProfileInformationCache implements ProfileInformationProvider {
 
   private volatile JSONObject addons = null;
 
-  public ProfileInformationCache(String profilePath) {
-    file = new File(profilePath + File.separator + CACHE_FILE);
+  protected ProfileInformationCache(final File f) {
+    file = f;
     Logger.pii(LOG_TAG, "Using " + file.getAbsolutePath() + " for profile information cache.");
+  }
+
+  public ProfileInformationCache(final String profilePath) {
+    this(new File(profilePath + File.separator + CACHE_FILE));
   }
 
   public synchronized void beginInitialization() {
@@ -109,6 +113,11 @@ public class ProfileInformationCache implements ProfileInformationProvider {
    * @return false if there's a version mismatch or an error, true on success.
    */
   private boolean fromJSON(JSONObject object) throws JSONException {
+    if (object == null) {
+      Logger.debug(LOG_TAG, "Can't load restore PIC from null JSON object.");
+      return false;
+    }
+
     int version = object.optInt("version", 1);
     switch (version) {
     case FORMAT_VERSION:
@@ -130,9 +139,11 @@ public class ProfileInformationCache implements ProfileInformationProvider {
   protected JSONObject readFromFile() throws FileNotFoundException, JSONException {
     Scanner scanner = null;
     try {
-      scanner = new Scanner(file, "UTF-8");
-      final String contents = scanner.useDelimiter("\\A").next();
-      return new JSONObject(contents);
+      scanner = new Scanner(file, "UTF-8").useDelimiter("\\A");
+      if (!scanner.hasNext()) {
+        return null;
+      }
+      return new JSONObject(scanner.next());
     } finally {
       if (scanner != null) {
         scanner.close();
