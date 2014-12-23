@@ -23,6 +23,7 @@ public:
   // Convert a sample from Annex B to AVCC.
   // an AVCC extradata must not be set.
   static void ConvertSampleToAVCC(MP4Sample* aSample);
+  static void ConvertSampleTo4BytesAVCC(MP4Sample* aSample);
 
   // Parse an AVCC extradata and construct the Annex B sample header.
   static already_AddRefed<ByteBuffer> ConvertExtraDataToAnnexB(
@@ -31,6 +32,7 @@ public:
     const MP4Sample* aSample);
   static bool HasSPS(const MP4Sample* aSample);
   static bool HasSPS(const ByteBuffer* aExtraData);
+  static bool IsAVCC(const MP4Sample* aSample);
 
 private:
   // AVCC box parser helper.

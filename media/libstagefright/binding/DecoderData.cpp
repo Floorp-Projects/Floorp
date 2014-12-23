@@ -188,11 +188,7 @@ VideoDecoderConfig::Update(sp<MetaData>& aMetaData, const char* aMimeType)
   image_width = FindInt32(aMetaData, kKeyWidth);
   image_height = FindInt32(aMetaData, kKeyHeight);
 
-  if (FindData(aMetaData, kKeyAVCC, extra_data) && extra_data->Length() >= 7) {
-    // Set size of the NAL length to 4. The demuxer formats its output with
-    // this NAL length size.
-    (*extra_data)[4] |= 3;
-  }
+  FindData(aMetaData, kKeyAVCC, extra_data);
 }
 
 bool

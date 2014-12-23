@@ -21,16 +21,12 @@ AnnexB::ConvertSampleToAnnexB(MP4Sample* aSample)
 {
   MOZ_ASSERT(aSample);
 
-  if (aSample->size < 4) {
+  if (!IsAVCC(aSample)) {
     return;
   }
   MOZ_ASSERT(aSample->data);
 
-  if (!aSample->extra_data || aSample->extra_data->Length() < 7 ||
-      (*aSample->extra_data)[0] != 1) {
-    // Not AVCC sample, can't convert.
-    return;
-  }
+  ConvertSampleTo4BytesAVCC(aSample);
 
   uint8_t* d = aSample->data;
   while (d + 4 < aSample->data + aSample->size) {
@@ -195,10 +191,8 @@ ParseNALUnits(ByteWriter& aBw, ByteReader& aBr)
 void
 AnnexB::ConvertSampleToAVCC(MP4Sample* aSample)
 {
-  if ((aSample->size <= 6) ||
-      (aSample->extra_data && !aSample->extra_data->IsEmpty() &&
-       (*aSample->extra_data)[0] == 1)) {
-    // Invalid or already in AVCC format.
+  if (IsAVCC(aSample)) {
+    ConvertSampleTo4BytesAVCC(aSample);
     return;
   }
 
@@ -220,33 +214,49 @@ already_AddRefed<ByteBuffer>
 AnnexB::ExtractExtraData(const MP4Sample* aSample)
 {
   nsRefPtr<ByteBuffer> extradata = new ByteBuffer;
+  if (!IsAVCC(aSample)) {
+    return extradata.forget();
+  }
+  // SPS content
   mozilla::Vector<uint8_t> sps;
+  ByteWriter spsw(sps);
   int numSps = 0;
+  // PPS content
   mozilla::Vector<uint8_t> pps;
+  ByteWriter ppsw(pps);
   int numPps = 0;
+
+  int nalLenSize = ((*aSample->extra_data)[4] & 3) + 1;
+  ByteReader reader(aSample->data, aSample->size);
 
   // Find SPS and PPS NALUs in AVCC data
   uint8_t* d = aSample->data;
-  while (d + 4 < aSample->data + aSample->size) {
-    uint32_t nalLen = mozilla::BigEndian::readUint32(d);
-    uint8_t nalType = d[4] & 0x1f;
-    if (nalType == 7) { /* SPS */
-      numSps++;
-      uint8_t val[2];
-      mozilla::BigEndian::writeInt16(&val[0], nalLen);
-      sps.append(&val[0], 2); // 16 bits size
-      sps.append(d + 4, nalLen);
-    } else if (nalType == 8) { /* PPS */
-      numPps++;
-      uint8_t val[2];
-      mozilla::BigEndian::writeInt16(&val[0], nalLen);
-      pps.append(&val[0], 2); // 16 bits size
-      pps.append(d + 4, nalLen);
+  while (reader.Remaining() > nalLenSize) {
+    uint32_t nalLen;
+    switch (nalLenSize) {
+      case 1: nalLen = reader.ReadU8();  break;
+      case 2: nalLen = reader.ReadU16(); break;
+      case 3: nalLen = reader.ReadU24(); break;
+      case 4: nalLen = reader.ReadU32(); break;
     }
-    d += 4 + nalLen;
+    uint8_t nalType = reader.PeekU8();
+    const uint8_t* p = reader.Read(nalLen);
+    if (!p) {
+      return extradata.forget();
+    }
+
+    if (nalType == 0x67) { /* SPS */
+      numSps++;
+      spsw.WriteU16(nalLen);
+      spsw.Write(p, nalLen);
+    } else if (nalType == 0x68) { /* PPS */
+      numPps++;
+      ppsw.WriteU16(nalLen);
+      ppsw.Write(p, nalLen);
+    }
   }
 
-  if (numSps) {
+  if (numSps && sps.length() > 5) {
     extradata->AppendElement(1);        // version
     extradata->AppendElement(sps[3]);   // profile
     extradata->AppendElement(sps[4]);   // profile compat
@@ -286,5 +296,44 @@ AnnexB::HasSPS(const ByteBuffer* aExtraData)
 
   return numSps > 0;
 }
+
+void
+AnnexB::ConvertSampleTo4BytesAVCC(MP4Sample* aSample)
+{
+  MOZ_ASSERT(IsAVCC(aSample));
+
+  int nalLenSize = ((*aSample->extra_data)[4] & 3) + 1;
+
+  if (nalLenSize == 4) {
+    return;
+  }
+  mozilla::Vector<uint8_t> dest;
+  ByteWriter writer(dest);
+  ByteReader reader(aSample->data, aSample->size);
+  while (reader.Remaining() > nalLenSize) {
+    uint32_t nalLen;
+    switch (nalLenSize) {
+      case 1: nalLen = reader.ReadU8();  break;
+      case 2: nalLen = reader.ReadU16(); break;
+      case 3: nalLen = reader.ReadU24(); break;
+      case 4: nalLen = reader.ReadU32(); break;
+    }
+    const uint8_t* p = reader.Read(nalLen);
+    if (!p) {
+      return;
+    }
+    writer.WriteU32(nalLen);
+    writer.Write(p, nalLen);
+  }
+  aSample->Replace(dest.begin(), dest.length());
+}
+
+bool
+AnnexB::IsAVCC(const MP4Sample* aSample)
+{
+  return aSample->size >= 3 && aSample->extra_data &&
+    aSample->extra_data->Length() >= 7 && (*aSample->extra_data)[0] == 1;
+}
+
 
 } // namespace mp4_demuxer
