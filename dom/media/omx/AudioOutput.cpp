@@ -33,11 +33,11 @@ extern PRLogModuleInfo* gAudioOffloadPlayerLog;
 using namespace android;
 
 AudioOutput::AudioOutput(int aSessionId, int aUid) :
-  mCallback(nullptr),
   mCallbackCookie(nullptr),
+  mCallback(nullptr),
   mCallbackData(nullptr),
-  mSessionId(aSessionId),
-  mUid(aUid)
+  mUid(aUid),
+  mSessionId(aSessionId)
 {
 #ifdef PR_LOGGING
   if (!gAudioOffloadPlayerLog) {
