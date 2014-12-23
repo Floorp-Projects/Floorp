@@ -4360,7 +4360,7 @@ CheckArrayAccess(FunctionCompiler &f, ParseNode *viewName, ParseNode *indexExpr,
         if (byteOffset > INT32_MAX)
             return f.fail(indexExpr, "constant index out of range");
 
-        unsigned elementSize = 1 << TypedArrayShift(*viewType);
+        unsigned elementSize = TypedArrayElemSize(*viewType);
         if (!f.m().tryRequireHeapLengthToBeAtLeast(byteOffset + elementSize)) {
             return f.failf(indexExpr, "constant index outside heap size range declared by the "
                                       "change-heap function (0x%x - 0x%x)",
@@ -4375,7 +4375,7 @@ CheckArrayAccess(FunctionCompiler &f, ParseNode *viewName, ParseNode *indexExpr,
     // Mask off the low bits to account for the clearing effect of a right shift
     // followed by the left shift implicit in the array access. E.g., H32[i>>2]
     // loses the low two bits.
-    int32_t mask = ~((uint32_t(1) << TypedArrayShift(*viewType)) - 1);
+    int32_t mask = ~(TypedArrayElemSize(*viewType) - 1);
 
     MDefinition *pointerDef;
     if (indexExpr->isKind(PNK_RSH)) {
