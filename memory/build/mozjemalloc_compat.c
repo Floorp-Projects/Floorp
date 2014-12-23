@@ -10,7 +10,6 @@
 
 #include "mozmemory_wrap.h"
 #include "jemalloc_types.h"
-#include "jemalloc/internal/jemalloc_internal_defs.h" // for JEMALLOC_HAS_ALLOCA_H
 #include "mozilla/Types.h"
 
 #include <stdbool.h>
@@ -69,7 +68,7 @@ je_(nallocx)(size_t size, int flags);
 #    include <malloc.h>
 #    define alloca _alloca
 #  else
-#    ifdef JEMALLOC_HAS_ALLOCA_H
+#    ifdef HAVE_ALLOCA_H
 #      include <alloca.h>
 #    else
 #      include <stdlib.h>
