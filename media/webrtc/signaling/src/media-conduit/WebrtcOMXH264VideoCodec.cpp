@@ -37,12 +37,12 @@ using namespace android;
 #define START_DEQUEUE_BUFFER_TIMEOUT_US (10 * DEQUEUE_BUFFER_TIMEOUT_US) // 1s.
 #define DRAIN_THREAD_TIMEOUT_US  (1000 * 1000ll) // 1s.
 
-#define WOHVC_LOG_TAG "WebrtcOMXH264VideoCodec"
-#define CODEC_LOGV(...) CSFLogInfo(WOHVC_LOG_TAG, __VA_ARGS__)
-#define CODEC_LOGD(...) CSFLogDebug(WOHVC_LOG_TAG, __VA_ARGS__)
-#define CODEC_LOGI(...) CSFLogInfo(WOHVC_LOG_TAG, __VA_ARGS__)
-#define CODEC_LOGW(...) CSFLogWarn(WOHVC_LOG_TAG, __VA_ARGS__)
-#define CODEC_LOGE(...) CSFLogError(WOHVC_LOG_TAG, __VA_ARGS__)
+#define LOG_TAG "WebrtcOMXH264VideoCodec"
+#define CODEC_LOGV(...) CSFLogInfo(LOG_TAG, __VA_ARGS__)
+#define CODEC_LOGD(...) CSFLogDebug(LOG_TAG, __VA_ARGS__)
+#define CODEC_LOGI(...) CSFLogInfo(LOG_TAG, __VA_ARGS__)
+#define CODEC_LOGW(...) CSFLogWarn(LOG_TAG, __VA_ARGS__)
+#define CODEC_LOGE(...) CSFLogError(LOG_TAG, __VA_ARGS__)
 
 namespace mozilla {
 
