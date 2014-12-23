@@ -1128,6 +1128,29 @@ assertEqX4(f32l(SIZE - 1), BatNaN);
 assertEqX4(f32l(SIZE - 2), BatNaN);
 assertEqX4(f32l(SIZE - 3), BatNaN);
 
+var code = `
+    "use asm";
+    var f4 = glob.SIMD.float32x4;
+    var f4l = f4.load;
+    var u8 = new glob.Uint8Array(heap);
+
+    function g(x) {
+        x = x|0;
+        // set a constraint on the size of the heap
+        var ptr = 0;
+        ptr = u8[0xFFFF] | 0;
+        // give a precise range to x
+        x = (x>>0) > 5 ? 5 : x;
+        x = (x>>0) < 0 ? 0 : x;
+        // ptr value gets a precise range but the bounds check shouldn't get
+        // eliminated.
+        return f4(f4l(u8, 0xFFFA + x | 0));
+    }
+
+    return g;
+`;
+assertEqX4(asmLink(asmCompile('glob', 'ffi', 'heap', code), this, {}, new ArrayBuffer(0x10000))(0), BatNaN);
+
 // Float32x4.store
 function f32s(n, v) { return m.f32s((n|0) << 2 | 0, v); };
 
