@@ -37,6 +37,8 @@ public:
                      MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
 
   virtual bool SupportsAudioMimeType(const char* aMimeType) MOZ_OVERRIDE;
+  virtual bool
+  DecoderNeedsAVCC(const mp4_demuxer::VideoDecoderConfig& aConfig) MOZ_OVERRIDE;
 
   static void Init();
   static nsresult CanDecode();
