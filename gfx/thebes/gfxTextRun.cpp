@@ -1767,7 +1767,7 @@ gfxFontGroup::GetFontAt(int32_t i, uint32_t aCh)
         }
         font = fe->FindOrMakeFont(&mStyle, mFonts[i].NeedsBold(),
                                   unicodeRangeMap);
-        if (font && !font->Valid()) {
+        if (!font || !font->Valid()) {
             ff.SetInvalid();
             return nullptr;
         }
