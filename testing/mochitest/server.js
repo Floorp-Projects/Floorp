@@ -74,7 +74,7 @@ function makeTagFunc(tagName)
 
 function makeTags() {
   // map our global HTML generation functions
-  for each (var tag in tags) {
+  for (let tag of tags) {
       this[tag] = makeTagFunc(tag.toLowerCase());
   }
 }
@@ -392,11 +392,15 @@ function list(requestPath, directory, recurse)
 
   var dir = directory.QueryInterface(Ci.nsIFile);
   var links = {};
-  
+
   // The SimpleTest directory is hidden
-  var files = [file for (file in dirIter(dir))
-               if (file.exists() && file.path.indexOf("SimpleTest") == -1)];
-  
+  let files = [];
+  for (let file of dirIter(dir)) {
+    if (file.exists() && file.path.indexOf("SimpleTest") == -1) {
+      files.push(file);
+    }
+  }
+
   // Sort files by name, so that tests can be run in a pre-defined order inside
   // a given directory (see bug 384823)
   function leafNameComparator(first, second) {
@@ -407,9 +411,9 @@ function list(requestPath, directory, recurse)
     return 0;
   }
   files.sort(leafNameComparator);
-  
+
   count = files.length;
-  for each (var file in files) {
+  for (let file of files) {
     var key = path + file.leafName;
     var childCount = 0;
     if (file.isDirectory()) {
@@ -548,7 +552,8 @@ function jsonArrayOfTestFiles(links)
 {
   var testFiles = [];
   arrayOfTestFiles(links, testFiles);
-  testFiles = ['"' + file['url'] + '"' for each(file in testFiles)];
+  testFiles = testFiles.map(function(file) { return '"' + file['url'] + '"'; });
+
   return "[" + testFiles.join(",\n") + "]";
 }
 

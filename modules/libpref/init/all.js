@@ -134,8 +134,12 @@ pref("dom.workers.maxPerDomain", 20);
 // Whether or not Shared Web Workers are enabled.
 pref("dom.workers.sharedWorkers.enabled", true);
 
-// WebSocket in workers are enabled.
+// WebSocket in workers are disabled by default.
+#ifdef RELEASE_BUILD
+pref("dom.workers.websocket.enabled", false);
+#else
 pref("dom.workers.websocket.enabled", true);
+#endif
 
 // Service workers
 pref("dom.serviceWorkers.enabled", false);
@@ -3950,6 +3954,10 @@ pref("layers.tiled-drawtarget.enabled", true);
 // ANDROID covers android and b2g
 #ifdef ANDROID
 pref("layers.offmainthreadcomposition.enabled", true);
+#endif
+
+#ifdef MOZ_WIDGET_GONK
+pref("layers.tiled-drawtarget.enabled", true);
 #endif
 
 // same effect as layers.offmainthreadcomposition.enabled, but specifically for

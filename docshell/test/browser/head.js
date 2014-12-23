@@ -1,0 +1,53 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/* Helper function for timeline tests.  Returns an async task that is
+ * suitable for use as a particular timeline test.
+ * @param string frameScriptName
+ *        Base name of the frame script file.
+ * @param string url
+ *        URL to load.
+ */
+function makeTimelineTest(frameScriptName, url) {
+  info("in timelineTest");
+  return Task.async(function*() {
+    info("in in timelineTest");
+    waitForExplicitFinish();
+
+    yield timelineTestOpenUrl(url);
+
+    const here = "chrome://mochitests/content/browser/docshell/test/browser/";
+
+    let mm = gBrowser.selectedBrowser.messageManager;
+    mm.loadFrameScript(here + "frame-head.js", false);
+    mm.loadFrameScript(here + frameScriptName, false);
+
+    // Set up some listeners so that timeline tests running in the
+    // content process can forward their results to the main process.
+    mm.addMessageListener("browser:test:ok", function(message) {
+      ok(message.data.value, message.data.message);
+    });
+    mm.addMessageListener("browser:test:info", function(message) {
+      info(message.data.message);
+    });
+    mm.addMessageListener("browser:test:finish", function(ignore) {
+      finish();
+      gBrowser.removeCurrentTab();
+    });
+  });
+}
+
+/* Open a URL for a timeline test.  */
+function timelineTestOpenUrl(url) {
+  return new Promise(function(resolve, reject) {
+    window.focus();
+
+    let tab = window.gBrowser.selectedTab = window.gBrowser.addTab(url);
+    let linkedBrowser = tab.linkedBrowser;
+
+    linkedBrowser.addEventListener("load", function onload() {
+      linkedBrowser.removeEventListener("load", onload, true);
+      resolve(tab);
+    }, true);
+  });
+}

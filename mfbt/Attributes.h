@@ -495,6 +495,14 @@
  *   class uses this class, or if another class inherits from this class, then
  *   it is considered to be a non-heap class as well, although this attribute
  *   need not be provided in such cases.
+ * MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS: Applies to all classes that are
+ *   intended to prevent introducing static initializers.  This attribute
+ *   currently makes it a compile-time error to instantiate these classes
+ *   anywhere other than at the global scope, or as a static member of a class.
+ * MOZ_TRIVIAL_CTOR_DTOR: Applies to all classes that must have both a trivial
+ *   constructor and a trivial destructor.  Setting this attribute on a class
+ *   makes it a compile-time error for that class to get a non-trivial
+ *   constructor or destructor for any reason.
  * MOZ_HEAP_ALLOCATOR: Applies to any function. This indicates that the return
  *   value is allocated on the heap, and will as a result check such allocations
  *   during MOZ_STACK_CLASS and MOZ_NONHEAP_CLASS annotation checking.
@@ -504,13 +512,31 @@
  *   conversions.
  * MOZ_NO_ARITHMETIC_EXPR_IN_ARGUMENT: Applies to functions. Makes it a compile
  *   time error to pass arithmetic expressions on variables to the function.
+ * MOZ_STRONG_REF: Applies to declarations of pointer types.  This attribute
+ *   tells the compiler that the raw pointer is a strong reference, and that
+ *   property is somehow enforced by the code.  This can make the compiler
+ *   ignore these pointers when validating the usage of pointers otherwise.
+ * MOZ_WEAK_REF: Applies to declarations of pointer types.  This attribute
+ *   tells the compiler that the raw pointer is a weak reference, and that
+ *   property is somehow enforced by the code.  This can make the compiler
+ *   ignore these pointers when validating the usage of pointers otherwise.
  */
 #ifdef MOZ_CLANG_PLUGIN
 #  define MOZ_MUST_OVERRIDE __attribute__((annotate("moz_must_override")))
 #  define MOZ_STACK_CLASS __attribute__((annotate("moz_stack_class")))
 #  define MOZ_NONHEAP_CLASS __attribute__((annotate("moz_nonheap_class")))
+#  define MOZ_TRIVIAL_CTOR_DTOR __attribute__((annotate("moz_trivial_ctor_dtor")))
+#  ifdef DEBUG
+     /* in debug builds, these classes do have non-trivial constructors. */
+#    define MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS __attribute__((annotate("moz_global_class")))
+#  else
+#    define MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS __attribute__((annotate("moz_global_class"))) \
+            MOZ_TRIVIAL_CTOR_DTOR
+#  endif
 #  define MOZ_IMPLICIT __attribute__((annotate("moz_implicit")))
 #  define MOZ_NO_ARITHMETIC_EXPR_IN_ARGUMENT __attribute__((annotate("moz_no_arith_expr_in_arg")))
+#  define MOZ_STRONG_REF __attribute__((annotate("moz_strong_ref")))
+#  define MOZ_WEAK_REF __attribute__((annotate("moz_weak_ref")))
 /*
  * It turns out that clang doesn't like void func() __attribute__ {} without a
  * warning, so use pragmas to disable the warning. This code won't work on GCC
@@ -525,9 +551,13 @@
 #  define MOZ_MUST_OVERRIDE /* nothing */
 #  define MOZ_STACK_CLASS /* nothing */
 #  define MOZ_NONHEAP_CLASS /* nothing */
+#  define MOZ_TRIVIAL_CTOR_DTOR /* nothing */
+#  define MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS /* nothing */
 #  define MOZ_IMPLICIT /* nothing */
 #  define MOZ_NO_ARITHMETIC_EXPR_IN_ARGUMENT /* nothing */
 #  define MOZ_HEAP_ALLOCATOR /* nothing */
+#  define MOZ_STRONG_REF /* nothing */
+#  define MOZ_WEAK_REF /* nothing */
 #endif /* MOZ_CLANG_PLUGIN */
 
 /*
