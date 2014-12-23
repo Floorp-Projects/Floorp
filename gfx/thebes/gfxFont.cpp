@@ -3584,13 +3584,15 @@ gfxFontStyle::gfxFontStyle() :
     style(NS_FONT_STYLE_NORMAL),
     allowSyntheticWeight(true), allowSyntheticStyle(true),
     noFallbackVariantFeatures(true),
+    explicitLanguage(false),
     variantCaps(NS_FONT_VARIANT_CAPS_NORMAL),
     variantSubSuper(NS_FONT_VARIANT_POSITION_NORMAL)
 {
 }
 
 gfxFontStyle::gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
-                           gfxFloat aSize, nsIAtom *aLanguage,
+                           gfxFloat aSize,
+                           nsIAtom *aLanguage, bool aExplicitLanguage,
                            float aSizeAdjust, bool aSystemFont,
                            bool aPrinterFont,
                            bool aAllowWeightSynthesis,
@@ -3606,6 +3608,7 @@ gfxFontStyle::gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
     allowSyntheticWeight(aAllowWeightSynthesis),
     allowSyntheticStyle(aAllowStyleSynthesis),
     noFallbackVariantFeatures(true),
+    explicitLanguage(aExplicitLanguage),
     variantCaps(NS_FONT_VARIANT_CAPS_NORMAL),
     variantSubSuper(NS_FONT_VARIANT_POSITION_NORMAL)
 {
@@ -3644,6 +3647,7 @@ gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
     allowSyntheticWeight(aStyle.allowSyntheticWeight),
     allowSyntheticStyle(aStyle.allowSyntheticStyle),
     noFallbackVariantFeatures(aStyle.noFallbackVariantFeatures),
+    explicitLanguage(aStyle.explicitLanguage),
     variantCaps(aStyle.variantCaps),
     variantSubSuper(aStyle.variantSubSuper)
 {
