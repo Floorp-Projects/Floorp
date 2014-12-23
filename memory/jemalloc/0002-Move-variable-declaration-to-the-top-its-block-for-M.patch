@@ -1,0 +1,35 @@
+From 9c6a8d3b0cc14fd26b119ad08f190e537771464f Mon Sep 17 00:00:00 2001
+From: Guilherme Goncalves <guilherme.p.gonc@gmail.com>
+Date: Wed, 17 Dec 2014 14:46:35 -0200
+Subject: [PATCH] Move variable declaration to the top its block for MSVC
+ compatibility.
+
+---
+ src/arena.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/arena.c b/src/arena.c
+index bf78995..1eb4000 100644
+--- a/src/arena.c
++++ b/src/arena.c
+@@ -2022,6 +2022,7 @@ arena_ralloc_large_grow(arena_t *arena, arena_chunk_t *chunk, void *ptr,
+ 		 * following run, then merge the first part with the existing
+ 		 * allocation.
+ 		 */
++		arena_run_t *run;
+ 		size_t flag_dirty, splitsize, usize;
+ 
+ 		usize = s2u(size + extra);
+@@ -2030,8 +2031,7 @@ arena_ralloc_large_grow(arena_t *arena, arena_chunk_t *chunk, void *ptr,
+ 		assert(usize >= usize_min);
+ 		splitsize = usize - oldsize;
+ 
+-		arena_run_t *run = &arena_miscelm_get(chunk,
+-		    pageind+npages)->run;
++		run = &arena_miscelm_get(chunk, pageind+npages)->run;
+ 		arena_run_split_large(arena, run, splitsize, zero);
+ 
+ 		size = oldsize + splitsize;
+-- 
+2.1.3
+

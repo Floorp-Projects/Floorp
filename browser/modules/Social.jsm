@@ -400,7 +400,7 @@ SocialErrorListener.prototype = {
 };
 
 
-function sizeSocialPanelToContent(panel, iframe) {
+function sizeSocialPanelToContent(panel, iframe, requestedSize) {
   let doc = iframe.contentDocument;
   if (!doc || !doc.body) {
     return;
@@ -408,14 +408,15 @@ function sizeSocialPanelToContent(panel, iframe) {
   // We need an element to use for sizing our panel.  See if the body defines
   // an id for that element, otherwise use the body itself.
   let body = doc.body;
+  let docEl = doc.documentElement;
   let bodyId = body.getAttribute("contentid");
   if (bodyId) {
     body = doc.getElementById(bodyId) || doc.body;
   }
   // offsetHeight/Width don't include margins, so account for that.
   let cs = doc.defaultView.getComputedStyle(body);
-  let width = PANEL_MIN_WIDTH;
-  let height = PANEL_MIN_HEIGHT;
+  let width = Math.max(PANEL_MIN_WIDTH, docEl.offsetWidth);
+  let height = Math.max(PANEL_MIN_HEIGHT, docEl.offsetHeight);
   // if the panel is preloaded prior to being shown, cs will be null.  in that
   // case use the minimum size for the panel until it is shown.
   if (cs) {
@@ -425,19 +426,33 @@ function sizeSocialPanelToContent(panel, iframe) {
     width = Math.max(computedWidth, width);
   }
 
-  // only add the extra space if the iframe has been loaded
+  // if our scrollHeight is still larger than the iframe, the css calculations
+  // above did not work for this site, increase the height. This can happen if
+  // the site increases its height for additional UI.
+  if (docEl.scrollHeight > iframe.boxObject.height)
+    height = docEl.scrollHeight;
+
+  // if a size was defined in the manifest use it as a minimum
+  if (requestedSize) {
+    if (requestedSize.height)
+      height = Math.max(height, requestedSize.height);
+    if (requestedSize.width)
+      width = Math.max(width, requestedSize.width);
+  }
+
+  // add the extra space used by the panel (toolbar, borders, etc) if the iframe
+  // has been loaded
   if (iframe.boxObject.width && iframe.boxObject.height) {
     // add extra space the panel needs if any
     width += panel.boxObject.width - iframe.boxObject.width;
     height += panel.boxObject.height - iframe.boxObject.height;
   }
 
-  // when size is computed, we want to be sure changes are "significant" since
-  // some sites will resize when the iframe is resized by a small amount, making
-  // the panel slowly shrink to some minimum.
-  if (Math.abs(panel.boxObject.width - width) > 2 || Math.abs(panel.boxObject.height - height) > 2) {
-    panel.sizeTo(width, height);
-  }
+  // using panel.sizeTo will ignore css transitions, set size via style
+  if (Math.abs(panel.boxObject.width - width) >= 2)
+    panel.style.width = width + "px";
+  if (Math.abs(panel.boxObject.height - height) >= 2)
+    panel.style.height = height + "px";
 }
 
 function DynamicResizeWatcher() {
@@ -445,18 +460,18 @@ function DynamicResizeWatcher() {
 }
 
 DynamicResizeWatcher.prototype = {
-  start: function DynamicResizeWatcher_start(panel, iframe) {
+  start: function DynamicResizeWatcher_start(panel, iframe, requestedSize) {
     this.stop(); // just in case...
     let doc = iframe.contentDocument;
-    this._mutationObserver = new iframe.contentWindow.MutationObserver(function(mutations) {
-      sizeSocialPanelToContent(panel, iframe);
+    this._mutationObserver = new iframe.contentWindow.MutationObserver((mutations) => {
+      sizeSocialPanelToContent(panel, iframe, requestedSize);
     });
     // Observe anything that causes the size to change.
     let config = {attributes: true, characterData: true, childList: true, subtree: true};
     this._mutationObserver.observe(doc, config);
     // and since this may be setup after the load event has fired we do an
     // initial resize now.
-    sizeSocialPanelToContent(panel, iframe);
+    sizeSocialPanelToContent(panel, iframe, requestedSize);
   },
   stop: function DynamicResizeWatcher_stop() {
     if (this._mutationObserver) {
