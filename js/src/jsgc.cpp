@@ -2643,24 +2643,20 @@ GCRuntime::updatePointersToRelocatedCells()
         updateAllCellPointersSerial(&trc, source);
 
     // Mark roots to update them.
-    {
-        markRuntime(&trc, MarkRuntime);
+    markRuntime(&trc, MarkRuntime);
+    Debugger::markAll(&trc);
+    Debugger::markAllCrossCompartmentEdges(&trc);
 
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
-        Debugger::markAll(&trc);
-        Debugger::markAllCrossCompartmentEdges(&trc);
-
-        for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
-            WeakMapBase::markAll(c, &trc);
-            if (c->watchpointMap)
-                c->watchpointMap->markAll(&trc);
-        }
-
-        // Mark all gray roots, making sure we call the trace callback to get the
-        // current set.
-        if (JSTraceDataOp op = grayRootTracer.op)
-            (*op)(&trc, grayRootTracer.data);
+    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
+        WeakMapBase::markAll(c, &trc);
+        if (c->watchpointMap)
+            c->watchpointMap->markAll(&trc);
     }
+
+    // Mark all gray roots, making sure we call the trace callback to get the
+    // current set.
+    if (JSTraceDataOp op = grayRootTracer.op)
+        (*op)(&trc, grayRootTracer.data);
 
     // Sweep everything to fix up weak pointers
     WatchpointMap::sweepAll(rt);
@@ -4065,28 +4061,22 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason)
      * Mark phase.
      */
     gcstats::AutoPhase ap1(stats, gcstats::PHASE_MARK);
-
-    {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_UNMARK);
-
-        for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-            /* Unmark everything in the zones being collected. */
-            zone->allocator.arenas.unmarkAll();
-        }
-
-        for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
-            /* Unmark all weak maps in the compartments being collected. */
-            WeakMapBase::unmarkCompartment(c);
-        }
-
-        if (isFull)
-            UnmarkScriptData(rt);
-    }
-
-    markRuntime(gcmarker, MarkRuntime);
-
     gcstats::AutoPhase ap2(stats, gcstats::PHASE_MARK_ROOTS);
 
+    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+        /* Unmark everything in the zones being collected. */
+        zone->allocator.arenas.unmarkAll();
+    }
+
+    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
+        /* Unmark all weak maps in the compartments being collected. */
+        WeakMapBase::unmarkCompartment(c);
+    }
+
+    if (isFull)
+        UnmarkScriptData(rt);
+
+    markRuntime(gcmarker, MarkRuntime);
     if (isIncremental)
         bufferGrayRoots();
 
@@ -4114,31 +4104,27 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason)
      * allocation and read barriers during JS_TransplantObject and the like.
      */
 
-    {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_COMPARTMENTS);
-
-        /* Set the maybeAlive flag based on cross-compartment edges. */
-        for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
-            for (JSCompartment::WrapperEnum e(c); !e.empty(); e.popFront()) {
-                const CrossCompartmentKey &key = e.front().key();
-                JSCompartment *dest;
-                switch (key.kind) {
-                  case CrossCompartmentKey::ObjectWrapper:
-                  case CrossCompartmentKey::DebuggerObject:
-                  case CrossCompartmentKey::DebuggerSource:
-                  case CrossCompartmentKey::DebuggerEnvironment:
-                    dest = static_cast<JSObject *>(key.wrapped)->compartment();
-                    break;
-                  case CrossCompartmentKey::DebuggerScript:
-                    dest = static_cast<JSScript *>(key.wrapped)->compartment();
-                    break;
-                  default:
-                    dest = nullptr;
-                    break;
-                }
-                if (dest)
-                    dest->maybeAlive = true;
+    /* Set the maybeAlive flag based on cross-compartment edges. */
+    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
+        for (JSCompartment::WrapperEnum e(c); !e.empty(); e.popFront()) {
+            const CrossCompartmentKey &key = e.front().key();
+            JSCompartment *dest;
+            switch (key.kind) {
+              case CrossCompartmentKey::ObjectWrapper:
+              case CrossCompartmentKey::DebuggerObject:
+              case CrossCompartmentKey::DebuggerSource:
+              case CrossCompartmentKey::DebuggerEnvironment:
+                dest = static_cast<JSObject *>(key.wrapped)->compartment();
+                break;
+              case CrossCompartmentKey::DebuggerScript:
+                dest = static_cast<JSScript *>(key.wrapped)->compartment();
+                break;
+              default:
+                dest = nullptr;
+                break;
             }
+            if (dest)
+                dest->maybeAlive = true;
         }
     }
 
@@ -4308,28 +4294,27 @@ js::gc::MarkingValidator::nonIncrementalMark()
      */
     initialized = true;
 
+    for (GCCompartmentsIter c(runtime); !c.done(); c.next())
+        WeakMapBase::unmarkCompartment(c);
+
     /* Re-do all the marking, but non-incrementally. */
     js::gc::State state = gc->incrementalState;
     gc->incrementalState = MARK_ROOTS;
 
+    MOZ_ASSERT(gcmarker->isDrained());
+    gcmarker->reset();
+
+    for (auto chunk = gc->allNonEmptyChunks(); !chunk.done(); chunk.next())
+        chunk->bitmap.clear();
+
     {
-        gcstats::AutoPhase ap(gc->stats, gcstats::PHASE_MARK);
-
-        {
-            gcstats::AutoPhase ap(gc->stats, gcstats::PHASE_UNMARK);
-
-            for (GCCompartmentsIter c(runtime); !c.done(); c.next())
-                WeakMapBase::unmarkCompartment(c);
-
-            MOZ_ASSERT(gcmarker->isDrained());
-            gcmarker->reset();
-
-            for (auto chunk = gc->allNonEmptyChunks(); !chunk.done(); chunk.next())
-                chunk->bitmap.clear();
-        }
-
+        gcstats::AutoPhase ap1(gc->stats, gcstats::PHASE_MARK);
+        gcstats::AutoPhase ap2(gc->stats, gcstats::PHASE_MARK_ROOTS);
         gc->markRuntime(gcmarker, GCRuntime::MarkRuntime, GCRuntime::UseSavedRoots);
+    }
 
+    {
+        gcstats::AutoPhase ap1(gc->stats, gcstats::PHASE_MARK);
         SliceBudget budget;
         gc->incrementalState = MARK;
         gc->marker.drainMarkStack(budget);
@@ -6103,7 +6088,7 @@ MOZ_NEVER_INLINE bool
 GCRuntime::gcCycle(bool incremental, SliceBudget &budget, JSGCInvocationKind gckind,
                    JS::gcreason::Reason reason)
 {
-    evictNursery(reason);
+    minorGC(reason);
 
     /*
      * Marking can trigger many incidental post barriers, some of them for
@@ -6473,28 +6458,30 @@ GCRuntime::onOutOfMallocMemory(const AutoLockGC &lock)
 }
 
 void
-GCRuntime::minorGCImpl(JS::gcreason::Reason reason, Nursery::TypeObjectList *pretenureTypes)
+GCRuntime::minorGC(JS::gcreason::Reason reason)
 {
     minorGCRequested = false;
     TraceLogger *logger = TraceLoggerForMainThread(rt);
     AutoTraceLog logMinorGC(logger, TraceLogger::MinorGC);
-    nursery.collect(rt, reason, pretenureTypes);
+    nursery.collect(rt, reason, nullptr);
     MOZ_ASSERT_IF(!rt->mainThread.suppressGC, nursery.isEmpty());
 }
 
-// Alternate to the runtime-taking form that allows marking type objects as
-// needing pretenuring.
 void
 GCRuntime::minorGC(JSContext *cx, JS::gcreason::Reason reason)
 {
-    gcstats::AutoPhase ap(stats, gcstats::PHASE_MINOR_GC);
-
+    // Alternate to the runtime-taking form above which allows marking type
+    // objects as needing pretenuring.
+    minorGCRequested = false;
+    TraceLogger *logger = TraceLoggerForMainThread(rt);
+    AutoTraceLog logMinorGC(logger, TraceLogger::MinorGC);
     Nursery::TypeObjectList pretenureTypes;
-    minorGCImpl(reason, &pretenureTypes);
+    nursery.collect(rt, reason, &pretenureTypes);
     for (size_t i = 0; i < pretenureTypes.length(); i++) {
         if (pretenureTypes[i]->canPreTenure())
             pretenureTypes[i]->setShouldPreTenure(cx);
     }
+    MOZ_ASSERT_IF(!rt->mainThread.suppressGC, nursery.isEmpty());
 }
 
 void

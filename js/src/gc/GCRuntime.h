@@ -315,15 +315,9 @@ class GCRuntime
     bool triggerZoneGC(Zone *zone, JS::gcreason::Reason reason);
     bool maybeGC(Zone *zone);
     void maybePeriodicFullGC();
-    void minorGC(JS::gcreason::Reason reason) {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_MINOR_GC);
-        minorGCImpl(reason, nullptr);
-    }
+    void minorGC(JS::gcreason::Reason reason);
     void minorGC(JSContext *cx, JS::gcreason::Reason reason);
-    void evictNursery(JS::gcreason::Reason reason = JS::gcreason::EVICT_NURSERY) {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_EVICT_NURSERY);
-        minorGCImpl(reason, nullptr);
-    }
+    void evictNursery(JS::gcreason::Reason reason = JS::gcreason::EVICT_NURSERY) { minorGC(reason); }
     bool gcIfNeeded(JSContext *cx = nullptr);
     void gc(JSGCInvocationKind gckind, JS::gcreason::Reason reason);
     void gcSlice(JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64_t millis = 0);
@@ -537,8 +531,6 @@ class GCRuntime
     void releaseArena(ArenaHeader *aheader, const AutoLockGC &lock);
 
   private:
-    void minorGCImpl(JS::gcreason::Reason reason, Nursery::TypeObjectList *pretenureTypes);
-
     // For ArenaLists::allocateFromArena()
     friend class ArenaLists;
     Chunk *pickChunk(const AutoLockGC &lock,
