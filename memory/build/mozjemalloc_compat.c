@@ -177,5 +177,12 @@ jemalloc_purge_freed_pages_impl()
 MOZ_JEMALLOC_API void
 jemalloc_free_dirty_pages_impl()
 {
-  je_(mallctl)("arenas.purge", NULL, 0, NULL, 0);
+  unsigned narenas;
+  size_t mib[3];
+  size_t miblen = sizeof(mib) / sizeof(mib[0]);
+
+  CTL_GET("arenas.narenas", narenas);
+  je_(mallctlnametomib)("arena.0.purge", mib, &miblen);
+  mib[1] = narenas;
+  je_(mallctlbymib)(mib, miblen, NULL, NULL, NULL, 0);
 }
