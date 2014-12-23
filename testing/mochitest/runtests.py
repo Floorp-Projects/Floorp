@@ -786,6 +786,18 @@ class MochitestUtilsMixin(object):
       dir = "file:///" + dir.replace("\\", "/")
     return dir
 
+  def writeChromeManifest(self, options):
+    manifest = os.path.join(options.profilePath, "tests.manifest")
+    with open(manifest, "w") as manifestFile:
+      # Register chrome directory.
+      chrometestDir = self.getChromeTestDir(options)
+      manifestFile.write("content mochitests %s contentaccessible=yes\n" % chrometestDir)
+
+      if options.testingModulesDir is not None:
+        manifestFile.write("resource testing-common file:///%s\n" %
+          options.testingModulesDir)
+    return manifest
+
   def addChromeToProfile(self, options):
     "Adds MochiKit chrome tests to the profile."
 
@@ -807,15 +819,7 @@ toolbar#nav-bar {
     with open(os.path.join(options.profilePath, "userChrome.css"), "a") as chromeFile:
       chromeFile.write(chrome)
 
-    manifest = os.path.join(options.profilePath, "tests.manifest")
-    with open(manifest, "w") as manifestFile:
-      # Register chrome directory.
-      chrometestDir = self.getChromeTestDir(options)
-      manifestFile.write("content mochitests %s contentaccessible=yes\n" % chrometestDir)
-
-      if options.testingModulesDir is not None:
-        manifestFile.write("resource testing-common file:///%s\n" %
-          options.testingModulesDir)
+    manifest = self.writeChromeManifest(options)
 
     # Call installChromeJar().
     if not os.path.isdir(os.path.join(SCRIPT_DIR, self.jarDir)):
