@@ -223,7 +223,7 @@ TestFrameMetrics()
 {
   FrameMetrics fm;
 
-  fm.mDisplayPort = CSSRect(0, 0, 10, 10);
+  fm.SetDisplayPort(CSSRect(0, 0, 10, 10));
   fm.mCompositionBounds = ParentLayerRect(0, 0, 10, 10);
   fm.mCriticalDisplayPort = CSSRect(0, 0, 10, 10);
   fm.mScrollableRect = CSSRect(0, 0, 100, 100);
@@ -816,7 +816,7 @@ TEST_F(APZCBasicTester, ComplexTransform) {
 
   FrameMetrics metrics;
   metrics.mCompositionBounds = ParentLayerRect(0, 0, 24, 24);
-  metrics.mDisplayPort = CSSRect(-1, -1, 6, 6);
+  metrics.SetDisplayPort(CSSRect(-1, -1, 6, 6));
   metrics.SetScrollOffset(CSSPoint(10, 10));
   metrics.mScrollableRect = CSSRect(0, 0, 50, 50);
   metrics.SetCumulativeResolution(LayoutDeviceToLayerScale(2));
