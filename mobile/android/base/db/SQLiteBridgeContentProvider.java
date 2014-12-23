@@ -446,7 +446,7 @@ public abstract class SQLiteBridgeContentProvider extends ContentProvider {
             return;
         }
 
-        Telemetry.HistogramAdd(histogram, op.getBucket());
+        Telemetry.addToHistogram(histogram, op.getBucket());
     }
 
     protected abstract String getDBName();
