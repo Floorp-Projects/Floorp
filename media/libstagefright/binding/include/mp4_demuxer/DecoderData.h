@@ -156,7 +156,7 @@ class MP4Sample
 public:
   MP4Sample();
   MP4Sample(const MP4Sample& copy);
-  ~MP4Sample();
+  virtual ~MP4Sample();
   void Update(int64_t& aMediaTime);
   void Pad(size_t aPaddingBytes);
 
