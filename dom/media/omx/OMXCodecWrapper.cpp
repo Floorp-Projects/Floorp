@@ -592,8 +592,8 @@ public:
     , mInputFlags(aInputFlags)
     , mIndex(0)
     , mData(nullptr)
-    , mOffset(0)
     , mCapicity(0)
+    , mOffset(0)
   {}
 
   ~InputBufferHelper()
