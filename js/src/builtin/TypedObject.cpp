@@ -406,23 +406,16 @@ js::ReferenceTypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
 }
 
 /***************************************************************************
- * SIMD type objects
+ * X4 type objects
  *
  * Note: these are partially defined in SIMD.cpp
  */
 
 static const int32_t SimdSizes[] = {
-#define SIMD_SIZE(_kind, _type, _name, _lanes)                 \
-    sizeof(_type) * _lanes,
+#define SIMD_SIZE(_kind, _type, _name)                        \
+    sizeof(_type) * 4,
     JS_FOR_EACH_SIMD_TYPE_REPR(SIMD_SIZE) 0
 #undef SIMD_SIZE
-};
-
-static int32_t SimdLanes[] = {
-#define SIMD_LANE(_kind, _type, _name, _lanes)                 \
-    _lanes,
-    JS_FOR_EACH_SIMD_TYPE_REPR(SIMD_LANE) 0
-#undef SIMD_LANE
 };
 
 int32_t
@@ -435,12 +428,6 @@ int32_t
 SimdTypeDescr::alignment(Type t)
 {
     return SimdSizes[t];
-}
-
-int32_t
-SimdTypeDescr::lanes(Type t)
-{
-    return SimdLanes[t];
 }
 
 /***************************************************************************
@@ -2769,16 +2756,6 @@ js::GetFloat32x4TypeDescr(JSContext *cx, unsigned argc, Value *vp)
     Rooted<GlobalObject*> global(cx, cx->global());
     MOZ_ASSERT(global);
     args.rval().setObject(global->float32x4TypeDescr());
-    return true;
-}
-
-bool
-js::GetFloat64x2TypeDescr(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    Rooted<GlobalObject*> global(cx, cx->global());
-    MOZ_ASSERT(global);
-    args.rval().setObject(global->float64x2TypeDescr());
     return true;
 }
 
