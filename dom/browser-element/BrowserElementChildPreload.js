@@ -164,17 +164,17 @@ BrowserElementChild.prototype = {
 
     addEventListener('mozselectionstatechanged',
                      this._selectionStateChangedHandler.bind(this),
-                     /* useCapture = */ false,
+                     /* useCapture = */ true,
                      /* wantsUntrusted = */ false);
 
     addEventListener('scrollviewchange',
                      this._ScrollViewChangeHandler.bind(this),
-                     /* useCapture = */ false,
+                     /* useCapture = */ true,
                      /* wantsUntrusted = */ false);
 
     addEventListener('touchcarettap',
                      this._touchCaretTapHandler.bind(this),
-                     /* useCapture = */ false,
+                     /* useCapture = */ true,
                      /* wantsUntrusted = */ false);
 
 
@@ -659,13 +659,13 @@ BrowserElementChild.prototype = {
 
     // Get correct geometry information if we have nested iframe.
     let currentWindow = e.target.defaultView;
-    while (currentWindow.top != currentWindow) {
-      let currentRect = currentWindow.frameElement.getBoundingClientRect();
+    while (currentWindow.realFrameElement) {
+      let currentRect = currentWindow.realFrameElement.getBoundingClientRect();
       detail.rect.top += currentRect.top;
       detail.rect.bottom += currentRect.top;
       detail.rect.left += currentRect.left;
       detail.rect.right += currentRect.left;
-      currentWindow = currentWindow.parent;
+      currentWindow = currentWindow.realFrameElement.ownerDocument.defaultView;
     }
 
     sendAsyncMsg('selectionstatechanged', detail);
