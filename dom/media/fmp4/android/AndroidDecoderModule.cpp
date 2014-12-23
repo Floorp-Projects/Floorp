@@ -66,7 +66,7 @@ public:
   }
 
   virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE {
-    mp4_demuxer::AnnexB::ConvertSample(aSample);
+    mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample);
     return MediaCodecDataDecoder::Input(aSample);
   }
 
