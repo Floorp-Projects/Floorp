@@ -39,7 +39,7 @@ namespace mozilla { namespace pkix {
 
 typedef ScopedPtr<SECKEYPublicKey, SECKEY_DestroyPublicKey> ScopedSECKeyPublicKey;
 
-Result
+static Result
 CheckPublicKeySize(Input subjectPublicKeyInfo, unsigned int minimumNonECCBits,
                    /*out*/ ScopedSECKeyPublicKey& publicKey)
 {
@@ -79,16 +79,16 @@ CheckPublicKeySize(Input subjectPublicKeyInfo, unsigned int minimumNonECCBits,
 }
 
 Result
-CheckPublicKey(Input subjectPublicKeyInfo, unsigned int minimumNonECCBits)
+CheckPublicKeyNSS(Input subjectPublicKeyInfo, unsigned int minimumNonECCBits)
 {
   ScopedSECKeyPublicKey unused;
   return CheckPublicKeySize(subjectPublicKeyInfo, minimumNonECCBits, unused);
 }
 
 Result
-VerifySignedData(const SignedDataWithSignature& sd,
-                 Input subjectPublicKeyInfo, unsigned int minimumNonECCBits,
-                 void* pkcs11PinArg)
+VerifySignedDataNSS(const SignedDataWithSignature& sd,
+                    Input subjectPublicKeyInfo, unsigned int minimumNonECCBits,
+                    void* pkcs11PinArg)
 {
   SECOidTag pubKeyAlg;
   SECOidTag digestAlg;
@@ -159,7 +159,7 @@ VerifySignedData(const SignedDataWithSignature& sd,
 }
 
 Result
-DigestBuf(Input item, /*out*/ uint8_t* digestBuf, size_t digestBufLen)
+DigestBufNSS(Input item, /*out*/ uint8_t* digestBuf, size_t digestBufLen)
 {
   static_assert(TrustDomain::DIGEST_LENGTH == SHA1_LENGTH,
                 "TrustDomain::DIGEST_LENGTH must be 20 (SHA-1 digest length)");
