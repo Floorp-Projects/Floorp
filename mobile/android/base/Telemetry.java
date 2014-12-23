@@ -38,7 +38,7 @@ public class Telemetry {
 
     // Define new histograms in:
     // toolkit/components/telemetry/Histograms.json
-    public static void HistogramAdd(String name, int value) {
+    public static void addToHistogram(String name, int value) {
         GeckoEvent event = GeckoEvent.createTelemetryHistogramAddEvent(name, value);
         GeckoAppShell.sendEventToGecko(event);
     }
@@ -85,7 +85,7 @@ public class Telemetry {
                 return;
             }
 
-            HistogramAdd(mName, (int)(elapsed));
+            addToHistogram(mName, (int) (elapsed));
         }
     }
 
