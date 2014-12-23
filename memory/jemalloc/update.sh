@@ -15,6 +15,8 @@ git describe --long --abbrev=40 > VERSION
 rm -rf .git .gitignore .gitattributes autom4te.cache .autom4te.cfg
 
 patch -p1 < ../0001-Dont-overwrite-VERSION-on-a-git-repository.patch
+patch -p1 < ../0002-Move-variable-declaration-to-the-top-its-block-for-M.patch
+patch -p1 < ../0003-Add-a-isblank-definition-for-MSVC-2013.patch
 
 cd ..
 hg addremove -q src

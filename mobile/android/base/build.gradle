@@ -1,6 +1,6 @@
 project.buildDir = "${topobjdir}/mobile/android/gradle/base/build"
 
-apply plugin: 'android-library'
+apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -14,7 +14,7 @@ android {
 
     buildTypes {
         release {
-            runProguard false
+            minifyEnabled false
             proguardFile getDefaultProguardFile('proguard-android.txt')
         }
     }
@@ -52,7 +52,6 @@ android {
             }
 
             res {
-                srcDir "newtablet/res"
                 srcDir "../branding/unofficial/res"
                 srcDir "${topobjdir}/mobile/android/base/res"
                 // The main resources are symlinked in here.
