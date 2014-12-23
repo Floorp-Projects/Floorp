@@ -19,7 +19,6 @@
 #include "nsJSUtils.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/SettingChangeNotificationBinding.h"
-#include "mozilla/DebugOnly.h"
 
 #define TUNE_THREAD_TIMEOUT_MS  5000
 
@@ -780,7 +779,7 @@ FMRadioService::SetRDSGroupMask(uint32_t aRDSGroupMask)
 {
   mRDSGroupMask = aRDSGroupMask;
   if (IsFMRadioOn() && mRDSEnabled) {
-    DebugOnly<bool> enabled = hal::EnableRDS(mRDSGroupMask | DOM_PARSED_RDS_GROUPS);
+    bool enabled = hal::EnableRDS(mRDSGroupMask | DOM_PARSED_RDS_GROUPS);
     MOZ_ASSERT(enabled);
   }
 }
