@@ -141,7 +141,7 @@ BackCert::Init()
   }
 
   rv = der::OptionalExtensions(tbsCertificate, CSC | 3,
-                               bind(&BackCert::RememberExtension, this, _1,
+                               bind(&BackCert::RememberExtension, *this, _1,
                                     _2, _3, _4));
   if (rv != Success) {
     return rv;
