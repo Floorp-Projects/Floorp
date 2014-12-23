@@ -24,6 +24,13 @@ SOURCES += [
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+# Suppress some GCC/clang warnings being treated as errors:
+#  - about multi-character constants which are used in codec-related code
+if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
+  CXXFLAGS += [
+    '-Wno-error=multichar'
+  ]
+
 CXXFLAGS += [
     '-I%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
         'frameworks/base/include',
