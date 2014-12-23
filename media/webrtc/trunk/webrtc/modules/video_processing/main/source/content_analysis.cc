@@ -83,7 +83,7 @@ VideoContentMetrics* VPMContentAnalysis::ComputeContentMetrics(
 
 int32_t VPMContentAnalysis::Release() {
   content_metrics_.reset(NULL);
-  prev_frame_.reset(NULL);
+  prev_frame_.reset();
 
   width_ = 0;
   height_ = 0;
@@ -112,7 +112,7 @@ int32_t VPMContentAnalysis::Initialize(int width, int height) {
   }
 
   content_metrics_.reset(NULL);
-  prev_frame_.reset(NULL);
+  prev_frame_.reset();
 
   // Spatial Metrics don't work on a border of 8. Minimum processing
   // block size is 16 pixels.  So make sure the width and height support this.

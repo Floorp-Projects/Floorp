@@ -66,7 +66,7 @@ class VPMContentAnalysis {
 #endif
 
   const uint8_t* orig_frame_;
-  scoped_ptr<uint8_t> prev_frame_;
+  scoped_ptr<uint8_t[]> prev_frame_;
   int width_;
   int height_;
   int skip_num_;
