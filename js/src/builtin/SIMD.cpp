@@ -13,6 +13,7 @@
 
 #include "builtin/SIMD.h"
 
+#include "mozilla/IntegerTypeTraits.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
@@ -147,12 +148,17 @@ static bool SignMask(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    Elem *data = reinterpret_cast<Elem *>(typedObj.typedMem());
-    int32_t mx = data[0] < 0.0 ? 1 : 0;
-    int32_t my = data[1] < 0.0 ? 1 : 0;
-    int32_t mz = data[2] < 0.0 ? 1 : 0;
-    int32_t mw = data[3] < 0.0 ? 1 : 0;
-    int32_t result = mx | my << 1 | mz << 2 | mw << 3;
+    // Load the data as integer so that we treat the sign bit consistently,
+    // since -0.0 is not less than zero, but it still has the sign bit set.
+    typedef typename mozilla::SignedStdintTypeForSize<sizeof(Elem)>::Type Int;
+    static_assert(SimdType::lanes * sizeof(Int) <= jit::Simd128DataSize,
+                  "signMask access should respect the bounds of the type");
+    const Elem *elems = reinterpret_cast<const Elem *>(typedObj.typedMem());
+    int32_t result = 0;
+    for (unsigned i = 0; i < SimdType::lanes; ++i) {
+        Int x = mozilla::BitwiseCast<Int>(elems[i]);
+        result |= (x < 0) << i;
+    }
     args.rval().setInt32(result);
     return true;
 }
