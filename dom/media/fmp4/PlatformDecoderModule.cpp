@@ -102,10 +102,11 @@ PlatformDecoderModule::CreateCDMWrapper(CDMProxy* aProxy,
     }
   }
 
-  nsRefPtr<PlatformDecoderModule> emepdm(new EMEDecoderModule(aProxy,
-                                                              pdm,
-                                                              cdmDecodesAudio,
-                                                              cdmDecodesVideo));
+  nsRefPtr<PlatformDecoderModule> emepdm(
+    new AVCCDecoderModule(new EMEDecoderModule(aProxy,
+                                               pdm,
+                                               cdmDecodesAudio,
+                                               cdmDecodesVideo)));
   return emepdm.forget();
 }
 #endif
@@ -179,6 +180,12 @@ bool
 PlatformDecoderModule::SupportsVideoMimeType(const char* aMimeType)
 {
   return !strcmp(aMimeType, "video/mp4") || !strcmp(aMimeType, "video/avc");
+}
+
+bool
+PlatformDecoderModule::DecoderNeedsAVCC(const mp4_demuxer::VideoDecoderConfig& aConfig)
+{
+  return false;
 }
 
 } // namespace mozilla
