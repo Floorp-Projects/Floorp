@@ -11,7 +11,6 @@ const constructors = [
 ];
 
 for (var constructor of constructors) {
-
     assertDeepEq(constructor.prototype.reverse.length, 0);
 
     assertDeepEq(new constructor().reverse(), new constructor());
@@ -24,23 +23,23 @@ for (var constructor of constructors) {
     assertDeepEq(new constructor([1, 2, 3, 4, 5]).reverse(), new constructor([5, 4, 3, 2, 1]));
     assertDeepEq(new constructor([.1, .2, .3]).reverse(), new constructor([.3, .2, .1]));
 
-    // called from other globals
+    // Called from other globals.
     if (typeof newGlobal === "function") {
         var reverse = newGlobal()[constructor.name].prototype.reverse;
         assertDeepEq(reverse.call(new constructor([3, 2, 1])), new constructor([1, 2, 3]));
     }
 
-    // throws if `this` isn't a TypedArray
-    var nonTypedArrays = [undefined, null, 1, false, "", Symbol(), [], {}, /./,
-                         /* new Proxy(new constructor(), {}) // this probably should throw */
-                         ];
-    nonTypedArrays.forEach(nonTypedArray => {
-        assertThrowsInstanceOf(function() {
-            constructor.prototype.reverse.call(nonTypedArray);
+    // Throws if `this` isn't a TypedArray.
+    var invalidReceivers = [undefined, null, 1, false, "", Symbol(), [], {}, /./];
+    invalidReceivers.forEach(invalidReceiver => {
+        assertThrowsInstanceOf(() => {
+            constructor.prototype.reverse.call(invalidReceiver);
         }, TypeError, "Assert that reverse fails if this value is not a TypedArray");
     });
+    // FIXME: Should throw exception if `this` is a proxy, see bug 1115361.
+    constructor.prototype.reverse.call(new Proxy(new constructor(), {}));
 
-    // test that this.length is never called
+    // Test that the length getter is never called.
     Object.defineProperty(new constructor([1, 2, 3]), "length", {
         get() {
             throw new Error("length accessor called");
