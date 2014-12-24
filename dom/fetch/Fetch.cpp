@@ -947,18 +947,13 @@ FetchBody<Derived>::BeginConsumeBody()
     return NS_ERROR_FAILURE;
   }
 
-  if (NS_IsMainThread()) {
-    BeginConsumeBodyMainThread();
-    return NS_OK;
-  } else {
-    nsRefPtr<BeginConsumeBodyRunnable<Derived>> r = new BeginConsumeBodyRunnable<Derived>(this);
-    nsresult rv = NS_DispatchToMainThread(r);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      ReleaseObject();
-      return rv;
-    }
-    return NS_OK;
+  nsCOMPtr<nsIRunnable> r = new BeginConsumeBodyRunnable<Derived>(this);
+  nsresult rv = NS_DispatchToMainThread(r);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    ReleaseObject();
+    return rv;
   }
+  return NS_OK;
 }
 
 /*
