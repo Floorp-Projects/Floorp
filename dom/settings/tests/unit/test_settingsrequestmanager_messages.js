@@ -17,8 +17,7 @@ function startSettingsRequestManager() {
   Cu.import("resource://gre/modules/SettingsRequestManager.jsm");
 }
 
-// Helper function to add a listener, send message and treat the reply
-function addAndSend(msg, reply, callback, payload, runNext = true) {
+function handlerHelper(reply, callback, runNext = true) {
   let handler = {
     receiveMessage: function(message) {
       if (message.name === reply) {
@@ -31,7 +30,20 @@ function addAndSend(msg, reply, callback, payload, runNext = true) {
     }
   };
   cpmm.addMessageListener(reply, handler);
+}
+
+// Helper function to add a listener, send message and treat the reply
+function addAndSend(msg, reply, callback, payload, runNext = true) {
+  handlerHelper(reply, callback, runNext);
   cpmm.sendAsyncMessage(msg, payload, undefined, principal);
+}
+
+function errorHandler(reply, str) {
+  let errHandler = function(message) {
+    ok(true, str);
+  };
+
+  handlerHelper(reply, errHandler);
 }
 
 // We need to trigger a Settings:Run message to make the queue progress
@@ -69,6 +81,8 @@ add_test(function test_get_empty() {
     ok(Object.keys(message.data.settings).length >= 0);
   };
 
+  errorHandler("Settings:Get:KO", "Settings GET failed");
+
   addAndSend("Settings:Get", msgReply, msgHandler, {
     requestID: requestID,
     lockID: lockID,
@@ -86,6 +100,8 @@ add_test(function test_set_get_nonempty() {
     equal(requestIDSet, message.data.requestID);
     equal(lockID, message.data.lockID);
   };
+
+  errorHandler("Settings:Set:KO", "Settings SET failed");
 
   addAndSend("Settings:Set", msgReplySet, msgHandlerSet, {
     requestID: requestIDSet,
@@ -123,6 +139,8 @@ add_test(function test_wait_for_finalize() {
     equal(lockID, message.data.lockID);
   };
 
+  errorHandler("Settings:Set:KO", "Settings SET failed");
+
   addAndSend("Settings:Set", msgReplySet, msgHandlerSet, {
     requestID: requestIDSet,
     lockID: lockID,
@@ -138,6 +156,8 @@ add_test(function test_wait_for_finalize() {
       equal(settings[p], message.data.settings[p]);
     }
   };
+
+  errorHandler("Settings:Get:KO", "Settings GET failed");
 
   addAndSend("Settings:Get", msgReplyGet, msgHandlerGet, {
     requestID: requestIDGet,
