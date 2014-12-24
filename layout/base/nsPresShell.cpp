@@ -10442,19 +10442,16 @@ void ReflowCountMgr::PaintCount(const char*     aName,
         nsLayoutUtils::PointToGfxPoint(aOffset, appUnitsPerDevPixel);
       aRenderingContext->ThebesContext()->SetMatrix(
         aRenderingContext->ThebesContext()->CurrentMatrix().Translate(devPixelOffset));
+
+      // We don't care about the document language or user fonts here;
+      // just get a default Latin font.
       nsFont font(eFamily_serif, NS_FONT_STYLE_NORMAL,
                   NS_FONT_WEIGHT_NORMAL, NS_FONT_STRETCH_NORMAL, 0,
                   nsPresContext::CSSPixelsToAppUnits(11));
-
       nsRefPtr<nsFontMetrics> fm;
       aPresContext->DeviceContext()->GetMetricsFor(font,
-        // We have one frame, therefore we must have a root...
-        aPresContext->GetPresShell()->GetRootFrame()->
-          StyleFont()->mLanguage,
-        gfxFont::eHorizontal,
-        aPresContext->GetUserFontSet(),
-        aPresContext->GetTextPerfMetrics(),
-        *getter_AddRefs(fm));
+        nsGkAtoms::x_western, false, gfxFont::eHorizontal, nullptr,
+        aPresContext->GetTextPerfMetrics(), *getter_AddRefs(fm));
 
       char buf[16];
       int len = sprintf(buf, "%d", counter->mCount);
