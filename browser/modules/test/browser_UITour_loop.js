@@ -261,15 +261,11 @@ if (Services.prefs.getBoolPref("loop.enabled")) {
   loopButton = window.LoopUI.toolbarButton.node;
   // The targets to highlight only appear after getting started is launched.
   Services.prefs.setBoolPref("loop.gettingStarted.seen", true);
-  Services.prefs.setCharPref("loop.server", "http://localhost");
-  Services.prefs.setCharPref("services.push.serverURL", "ws://localhost/");
 
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("loop.gettingStarted.resumeOnFirstJoin");
     Services.prefs.clearUserPref("loop.gettingStarted.seen");
     Services.prefs.clearUserPref("loop.gettingStarted.url");
-    Services.prefs.clearUserPref("loop.server");
-    Services.prefs.clearUserPref("services.push.serverURL");
 
     // Copied from browser/components/loop/test/mochitest/head.js
     // Remove the iframe after each test. This also avoids mochitest complaining
