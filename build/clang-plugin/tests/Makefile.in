@@ -8,7 +8,7 @@ OS_CXXFLAGS := $(filter-out -W%,$(OS_CXXFLAGS)) -fsyntax-only -Xclang -verify
 
 include $(topsrcdir)/config/rules.mk
 
-target:: $(OBJS)
+export:: $(OBJS)
 
 # We don't actually build anything.
 .PHONY: $(OBJS)
