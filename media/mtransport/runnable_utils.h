@@ -96,6 +96,25 @@ RUN_ON_THREAD(nsIEventTarget *thread, detail::runnable_args_base<detail::Returns
 #define ASSERT_ON_THREAD(t)
 #endif
 
+template <class T>
+class DispatchedRelease : public detail::runnable_args_base<detail::NoResult> {
+public:
+  explicit DispatchedRelease(already_AddRefed<T>& ref) : ref_(ref) {}
+
+  NS_IMETHOD Run() {
+    ref_ = nullptr;
+    return NS_OK;
+  }
+private:
+  nsRefPtr<T> ref_;
+};
+
+template <typename T>
+DispatchedRelease<T>* WrapRelease(already_AddRefed<T>&& ref)
+{
+  return new DispatchedRelease<T>(ref);
+}
+
 } /* namespace mozilla */
 
 #endif
