@@ -338,10 +338,12 @@ function AbstractHealthReporter(branch, policy, sessionRecorder) {
   this._initHistogram = hasFirstRun ? TELEMETRY_INIT : TELEMETRY_INIT_FIRSTRUN;
   this._dbOpenHistogram = hasFirstRun ? TELEMETRY_DB_OPEN : TELEMETRY_DB_OPEN_FIRSTRUN;
 
-  // This is set to the name for the provider that we are currently initializing
-  // or shutting down, if any. This is used for AsyncShutdownTimeout diagnostics.
+  // This is set to the name for the provider that we are currently initializing,
+  // shutting down or collecting data from, if any.
+  // This is used for AsyncShutdownTimeout diagnostics.
   this._currentProviderInShutdown = null;
   this._currentProviderInInit = null;
+  this._currentProviderInCollect = null;
 }
 
 AbstractHealthReporter.prototype = Object.freeze({
@@ -793,7 +795,8 @@ AbstractHealthReporter.prototype = Object.freeze({
 
       try {
         TelemetryStopwatch.start(TELEMETRY_COLLECT_CONSTANT, this);
-        yield this._providerManager.collectConstantData();
+        yield this._providerManager.collectConstantData(name => this._currentProviderInCollect = name);
+        this._currentProviderInCollect = null;
         TelemetryStopwatch.finish(TELEMETRY_COLLECT_CONSTANT, this);
       } catch (ex) {
         TelemetryStopwatch.cancel(TELEMETRY_COLLECT_CONSTANT, this);
@@ -813,7 +816,8 @@ AbstractHealthReporter.prototype = Object.freeze({
         try {
           TelemetryStopwatch.start(TELEMETRY_COLLECT_DAILY, this);
           this._lastDailyDate = new Date();
-          yield this._providerManager.collectDailyData();
+          yield this._providerManager.collectDailyData(name => this._currentProviderInCollect = name);
+          this._currentProviderInCollect = null;
           TelemetryStopwatch.finish(TELEMETRY_COLLECT_DAILY, this);
         } catch (ex) {
           TelemetryStopwatch.cancel(TELEMETRY_COLLECT_DAILY, this);
