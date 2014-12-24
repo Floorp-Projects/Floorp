@@ -582,7 +582,7 @@ function ArrayFill(value, start = 0, end = undefined) {
 }
 
 // Proposed for ES7:
-// https://github.com/domenic/Array.prototype.includes/blob/master/spec.md
+// https://github.com/tc39/Array.prototype.includes/blob/7c023c19a0/spec.md
 function ArrayIncludes(searchElement, fromIndex = 0) {
     // Steps 1-2.
     var O = ToObject(this);
