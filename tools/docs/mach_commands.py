@@ -30,14 +30,16 @@ class Documentation(MachCommandBase):
         self._activate_virtualenv()
         self.virtualenv_manager.install_pip_package('sphinx_rtd_theme==0.1.6')
 
-        from moztreedocs import SphinxManager
+        import sphinx
 
         if outdir == '<DEFAULT>':
             outdir = os.path.join(self.topobjdir, 'docs')
 
-        manager = SphinxManager(self.topsrcdir, os.path.join(self.topsrcdir,
-            'tools', 'docs'), outdir)
+        args = [
+            'sphinx',
+            '-b', format,
+            os.path.join(self.topsrcdir, 'tools', 'docs'),
+            os.path.join(outdir, format),
+        ]
 
-        manager.read_build_config()
-
-        return manager.generate_docs(format)
+        return sphinx.main(args)

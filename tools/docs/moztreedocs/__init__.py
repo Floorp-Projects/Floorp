@@ -21,7 +21,7 @@ class SphinxManager(object):
     def __init__(self, topsrcdir, main_path, output_dir):
         self._topsrcdir = topsrcdir
         self._output_dir = output_dir
-        self._docs_dir = os.path.join(output_dir, 'staging')
+        self._docs_dir = os.path.join(output_dir, '_staging')
         self._conf_py_path = os.path.join(main_path, 'conf.py')
         self._index_path = os.path.join(main_path, 'index.rst')
         self._trees = {}
@@ -65,25 +65,14 @@ class SphinxManager(object):
         """
         self._python_package_dirs.add(source_dir)
 
-    def generate_docs(self, fmt):
-        """Generate documentation using Sphinx."""
+    def generate_docs(self, app):
+        """Generate/stage documentation."""
+        app.info('Reading Sphinx metadata from build configuration')
+        self.read_build_config()
+        app.info('Staging static documentation')
         self._synchronize_docs()
+        app.info('Generating Python API documentation')
         self._generate_python_api_docs()
-
-        old_env = os.environ.copy()
-        try:
-            os.environ['MOZILLA_DIR'] = self._topsrcdir
-            args = [
-                'sphinx',
-                '-b', fmt,
-                self._docs_dir,
-                os.path.join(self._output_dir, fmt),
-            ]
-
-            return sphinx.main(args)
-        finally:
-            os.environ.clear()
-            os.environ.update(old_env)
 
     def _generate_python_api_docs(self):
         """Generate Python API doc files."""
