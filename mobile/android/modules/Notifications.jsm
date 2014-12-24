@@ -1,12 +1,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict"
 
-let Cc = Components.classes;
-let Ci = Components.interfaces;
+"use strict";
 
-Components.utils.import("resource://gre/modules/Services.jsm");
+const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
+Cu.import("resource://gre/modules/Services.jsm");
 
 this.EXPORTED_SYMBOLS = ["Notifications"];
 
@@ -169,9 +169,13 @@ let Notifications = {
   },
 
   unregisterHandler: function(key, handler) {
-    let i = _handlersMap[key].indexOf(handler);
+    let h = _handlersMap[key];
+    if (!h) {
+      return;
+    }
+    let i = h.indexOf(handler);
     if (i > -1) {
-      _handlersMap.splice(i, 1);
+      h.splice(i, 1);
     }
   },
 
@@ -258,6 +262,6 @@ let Notifications = {
       throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;
   }
-}
+};
 
 Services.obs.addObserver(Notifications, "Notification:Event", false);
