@@ -520,7 +520,8 @@ let emulator = (function() {
       promises.push(promise);
     }
 
-    call.answer();
+    promise = call.answer();
+    promises.push(promise);
 
     return Promise.all(promises).then(() => call);
   }
@@ -535,12 +536,16 @@ let emulator = (function() {
   function hold(call) {
     log("Putting the call on hold.");
 
+    let promises = [];
+
     let promise = waitForNamedStateEvent(call, "holding")
       .then(() => waitForNamedStateEvent(call, "held"));
+    promises.push(promise);
 
-    call.hold();
+    promise = call.hold();
+    promises.push(promise);
 
-    return promise;
+    return Promise.all(promises).then(() => call);
   }
 
   /**
@@ -553,12 +558,16 @@ let emulator = (function() {
   function resume(call) {
     log("Resuming the held call.");
 
+    let promises = [];
+
     let promise = waitForNamedStateEvent(call, "resuming")
       .then(() => waitForNamedStateEvent(call, "connected"));
+    promises.push(promise);
 
-    call.resume();
+    promise = call.resume();
+    promises.push(promise);
 
-    return promise;
+    return Promise.all(promises).then(() => call);
   }
 
   /**
@@ -571,12 +580,16 @@ let emulator = (function() {
   function hangUp(call) {
     log("Local hanging up the call: " + call.id.number);
 
+    let promises = [];
+
     let promise = waitForNamedStateEvent(call, "disconnecting")
       .then(() => waitForNamedStateEvent(call, "disconnected"));
+    promises.push(promise);
 
-    call.hangUp();
+    promise = call.hangUp();
+    promises.push(promise);
 
-    return promise;
+    return Promise.all(promises).then(() => call);
   }
 
   /**
