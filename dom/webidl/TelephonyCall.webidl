@@ -33,14 +33,14 @@ interface TelephonyCall : EventTarget {
 
   readonly attribute TelephonyCallGroup? group;
 
-  [Throws]
-  void answer();
-  [Throws]
-  void hangUp();
-  [Throws]
-  void hold();
-  [Throws]
-  void resume();
+  [NewObject, Throws]
+  Promise<void> answer();
+  [NewObject, Throws]
+  Promise<void> hangUp();
+  [NewObject, Throws]
+  Promise<void> hold();
+  [NewObject, Throws]
+  Promise<void> resume();
 
   attribute EventHandler onstatechange;
   attribute EventHandler ondialing;
