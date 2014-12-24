@@ -432,6 +432,7 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
       } else {
         // XXX inter-character support in bug 1055672
         MOZ_ASSERT_UNREACHABLE("Unsupported ruby-position");
+        y = offsetRect.Y();
       }
     }
     FinishReflowChild(textContainer, aPresContext, textMetrics,
