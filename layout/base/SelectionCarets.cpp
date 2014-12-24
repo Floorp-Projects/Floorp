@@ -294,6 +294,10 @@ SelectionCarets::SetVisibility(bool aVisible)
     return;
   }
 
+  if (!aVisible) {
+    mSelectionVisibleInScrollFrames = false;
+  }
+
   mVisible = aVisible;
   SELECTIONCARETS_LOG("Set visibility %s", (mVisible ? "shown" : "hidden"));
 
