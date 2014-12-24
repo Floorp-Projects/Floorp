@@ -6,6 +6,7 @@ from __future__ import absolute_import
 
 import importlib
 import os
+import sys
 
 from sphinx.util.compat import Directive
 from sphinx.util.docstrings import prepare_docstring
@@ -168,4 +169,16 @@ def setup(app):
         app.outdir)
     manager.generate_docs(app)
 
-    app.srcdir = manager._docs_dir
+    app.srcdir = os.path.join(app.outdir, '_staging')
+
+    # We need to adjust sys.path in order for Python API docs to get generated
+    # properly. We leverage the in-tree virtualenv for this.
+    from mozbuild.virtualenv import VirtualenvManager
+
+    ve = VirtualenvManager(topsrcdir,
+        os.path.join(topsrcdir, 'dummy-objdir'),
+        os.path.join(app.outdir, '_venv'),
+        sys.stderr,
+        os.path.join(topsrcdir, 'build', 'virtualenv_packages.txt'))
+    ve.ensure()
+    ve.activate()
