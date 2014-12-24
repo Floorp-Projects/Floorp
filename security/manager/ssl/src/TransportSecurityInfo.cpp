@@ -242,11 +242,11 @@ TransportSecurityInfo::formatErrorMessage(MutexAutoLock const & proofOfLock,
   nsresult rv;
   NS_ConvertASCIItoUTF16 hostNameU(mHostName);
   NS_ASSERTION(errorMessageType != OverridableCertErrorMessage || 
-                (mSSLStatus && mSSLStatus->mServerCert &&
+                (mSSLStatus && mSSLStatus->HasServerCert() &&
                  mSSLStatus->mHaveCertErrorBits),
                 "GetErrorLogMessage called for cert error without cert");
   if (errorMessageType == OverridableCertErrorMessage && 
-      mSSLStatus && mSSLStatus->mServerCert) {
+      mSSLStatus && mSSLStatus->HasServerCert()) {
     rv = formatOverridableCertErrorMessage(*mSSLStatus, errorCode,
                                            mHostName, mPort,
                                            suppressPort443,
@@ -296,8 +296,8 @@ TransportSecurityInfo::GetInterface(const nsIID & uuid, void * *result)
 // of the previous value. This is so when older versions attempt to
 // read a newer serialized TransportSecurityInfo, they will actually
 // fail and return NS_ERROR_FAILURE instead of silently failing.
-#define TRANSPORTSECURITYINFOMAGIC { 0xa9863a23, 0x2429, 0x4866, \
-  { 0x92, 0x89, 0x45, 0x51, 0xc2, 0x01, 0xca, 0xf2 } }
+#define TRANSPORTSECURITYINFOMAGIC { 0xa9863a23, 0x328f, 0x45ab, \
+  { 0xa8, 0xa4, 0x35, 0x18, 0x80, 0x04, 0x77, 0x8d } }
 static NS_DEFINE_CID(kTransportSecurityInfoMagic, TRANSPORTSECURITYINFOMAGIC);
 
 NS_IMETHODIMP
@@ -1089,7 +1089,7 @@ TransportSecurityInfo::SetStatusErrorBits(nsIX509Cert & cert,
   if (!mSSLStatus)
     mSSLStatus = new nsSSLStatus();
 
-  mSSLStatus->mServerCert = &cert;
+  mSSLStatus->SetServerCert(&cert, nsNSSCertificate::ev_status_invalid);
 
   mSSLStatus->mHaveCertErrorBits = true;
   mSSLStatus->mIsDomainMismatch = 

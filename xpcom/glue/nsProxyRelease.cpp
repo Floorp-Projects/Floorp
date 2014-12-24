@@ -20,7 +20,7 @@ public:
   }
 
 private:
-  nsISupports* mDoomed;
+  nsISupports* MOZ_OWNING_REF mDoomed;
 };
 
 nsresult

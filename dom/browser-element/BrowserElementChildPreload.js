@@ -1343,7 +1343,6 @@ BrowserElementChild.prototype = {
         stateDesc = '???';
       }
 
-      // XXX Until bug 764496 is fixed, this will always return false.
       var isEV = !!(state & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL);
 
       sendAsyncMsg('securitychange', { state: stateDesc, extendedValidation: isEV });

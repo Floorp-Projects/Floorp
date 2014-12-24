@@ -40,6 +40,7 @@ class B2GMochitest(MochitestUtilsMixin):
         self.test_script = os.path.join(here, 'b2g_start_script.js')
         self.test_script_args = [self.out_of_process]
         self.product = 'b2g'
+        self.remote_chrome_test_dir = None
 
         if profile_data_dir:
             self.preferences = [os.path.join(profile_data_dir, f)
@@ -152,6 +153,10 @@ class B2GMochitest(MochitestUtilsMixin):
             if not self.app_ctx.dm.dirExists(posixpath.dirname(self.remote_log)):
                 self.app_ctx.dm.mkDirs(self.remote_log)
 
+            if options.chrome:
+                # Update chrome manifest file in profile with correct path.
+                self.writeChromeManifest(options)
+
             self.leak_report_file = posixpath.join(self.app_ctx.remote_test_root,
                                                    'log', 'runtests_leaks.log')
 
@@ -169,6 +174,7 @@ class B2GMochitest(MochitestUtilsMixin):
             self.buildURLOptions(options, {'MOZ_HIDE_RESULTS_TABLE': '1'})
             self.test_script_args.append(not options.emulator)
             self.test_script_args.append(options.wifi)
+            self.test_script_args.append(options.chrome)
 
 
             self.runner.start(outputTimeout=timeout)
@@ -185,6 +191,15 @@ class B2GMochitest(MochitestUtilsMixin):
                 Services.io.manageOfflineStatus = false;
                 Services.io.offline = false;
                 """)
+
+            if options.chrome:
+                self.app_ctx.dm.removeDir(self.remote_chrome_test_dir)
+                self.app_ctx.dm.mkDir(self.remote_chrome_test_dir)
+                local = super(B2GMochitest, self).getChromeTestDir(options)
+                local = os.path.join(local, "chrome")
+                remote = self.remote_chrome_test_dir
+                self.log.info("pushing %s to %s on device..." % (local, remote))
+                self.app_ctx.dm.pushDir(local, remote)
 
             if os.path.isfile(self.test_script):
                 with open(self.test_script, 'r') as script:
@@ -225,6 +240,18 @@ class B2GMochitest(MochitestUtilsMixin):
     def getGMPPluginPath(self, options):
         # TODO: bug 1043403
         return None
+
+    def getChromeTestDir(self, options):
+        # The chrome test directory returned here is the remote location
+        # of chrome test files. A reference to this directory is requested
+        # when building the profile locally, before self.app_ctx is defined.
+        # To get around this, return a dummy directory until self.app_ctx
+        # is defined; the correct directory will be returned later, over-
+        # writing the dummy.
+        if hasattr(self, 'app_ctx'):
+            self.remote_chrome_test_dir = posixpath.join(self.app_ctx.remote_test_root, 'chrome');
+            return self.remote_chrome_test_dir
+        return 'dummy-chrome-test-dir'
 
 
 class B2GDeviceMochitest(B2GMochitest, Mochitest):

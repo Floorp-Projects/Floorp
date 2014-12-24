@@ -533,10 +533,10 @@ IndexOf(MDefinition *ins, int32_t *res)
         indexDef = indexDef->toBoundsCheck()->index();
     if (indexDef->isToInt32())
         indexDef = indexDef->toToInt32()->getOperand(0);
-    if (!indexDef->isConstant())
+    if (!indexDef->isConstantValue())
         return false;
 
-    Value index = indexDef->toConstant()->value();
+    Value index = indexDef->constantValue();
     if (!index.isInt32())
         return false;
     *res = index.toInt32();
@@ -966,7 +966,7 @@ ArrayMemoryView::visitSetInitializedLength(MSetInitializedLength *ins)
     // To obtain the length, we need to add 1 to it, and thus we need to create
     // a new constant that we register in the ArrayState.
     state_ = BlockState::Copy(alloc_, state_);
-    int32_t initLengthValue = ins->index()->toConstant()->value().toInt32() + 1;
+    int32_t initLengthValue = ins->index()->constantValue().toInt32() + 1;
     MConstant *initLength = MConstant::New(alloc_, Int32Value(initLengthValue));
     ins->block()->insertBefore(ins, initLength);
     ins->block()->insertBefore(ins, state_);

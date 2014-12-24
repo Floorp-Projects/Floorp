@@ -83,6 +83,20 @@ InputEqualsByteString(Input input, const ByteString& bs)
   return InputsAreEqual(input, bsInput);
 }
 
+ByteString
+InputToByteString(Input input)
+{
+  ByteString result;
+  Reader reader(input);
+  for (;;) {
+    uint8_t b;
+    if (reader.Read(b) != Success) {
+      return result;
+    }
+    result.push_back(b);
+  }
+}
+
 Result
 TamperOnce(/*in/out*/ ByteString& item, const ByteString& from,
            const ByteString& to)

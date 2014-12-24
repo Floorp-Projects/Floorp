@@ -79,6 +79,11 @@ struct UnsignedStdintTypeForSize
   : detail::StdintTypeForSizeAndSignedness<Size, false>
 {};
 
+template<size_t Size>
+struct SignedStdintTypeForSize
+  : detail::StdintTypeForSizeAndSignedness<Size, true>
+{};
+
 template<typename IntegerType>
 struct PositionOfSignBit
 {

@@ -60,11 +60,11 @@ private:
     }
 
   private:
-    T* mPtr;
+    T* MOZ_NON_OWNING_REF mPtr;
   };
 
 private:
-  T* mRawPtr;
+  T* MOZ_OWNING_REF mRawPtr;
 
 public:
   typedef T element_type;
@@ -431,7 +431,7 @@ private:
   }
 
 private:
-  T* mRawPtr;
+  T* MOZ_OWNING_REF mRawPtr;
 
 public:
   typedef T element_type;
@@ -778,7 +778,7 @@ public:
     return status;
   }
 private:
-  T* mRawPtr;
+  T* MOZ_NON_OWNING_REF mRawPtr;
 };
 
 template<class T>
@@ -801,7 +801,7 @@ public:
     return status;
   }
 private:
-  T* mRawPtr;
+  T* MOZ_NON_OWNING_REF mRawPtr;
   nsresult* mErrorPtr;
 };
 
