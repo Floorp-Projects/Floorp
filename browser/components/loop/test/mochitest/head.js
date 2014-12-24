@@ -77,10 +77,6 @@ function promiseGetMozLoopAPI() {
  * This assumes that the tests are running in a generatorTest.
  */
 function loadLoopPanel(aOverrideOptions = {}) {
-  // Set prefs to ensure we don't access the network externally.
-  Services.prefs.setCharPref("services.push.serverURL", aOverrideOptions.pushURL || "ws://localhost/");
-  Services.prefs.setCharPref("loop.server", aOverrideOptions.loopURL || "http://localhost/");
-
   // Turn off the network for loop tests, so that we don't
   // try to access the remote servers. If we want to turn this
   // back on in future, be careful to check for intermittent
@@ -90,8 +86,6 @@ function loadLoopPanel(aOverrideOptions = {}) {
   }
 
   registerCleanupFunction(function() {
-    Services.prefs.clearUserPref("services.push.serverURL");
-    Services.prefs.clearUserPref("loop.server");
     Services.io.offline = WAS_OFFLINE;
   });
 
