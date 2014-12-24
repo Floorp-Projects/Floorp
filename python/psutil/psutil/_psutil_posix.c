@@ -17,8 +17,8 @@
 /*
  * Given a PID return process priority as a Python integer.
  */
-static PyObject *
-psutil_posix_getpriority(PyObject *self, PyObject *args)
+static PyObject*
+posix_getpriority(PyObject* self, PyObject* args)
 {
     long pid;
     int priority;
@@ -33,12 +33,11 @@ psutil_posix_getpriority(PyObject *self, PyObject *args)
     return Py_BuildValue("i", priority);
 }
 
-
 /*
  * Given a PID and a value change process priority.
  */
-static PyObject *
-psutil_posix_setpriority(PyObject *self, PyObject *args)
+static PyObject*
+posix_setpriority(PyObject* self, PyObject* args)
 {
     long pid;
     int priority;
@@ -61,11 +60,11 @@ psutil_posix_setpriority(PyObject *self, PyObject *args)
 static PyMethodDef
 PsutilMethods[] =
 {
-    {"getpriority", psutil_posix_getpriority, METH_VARARGS,
-     "Return process priority"},
-    {"setpriority", psutil_posix_setpriority, METH_VARARGS,
-     "Set process priority"},
-    {NULL, NULL, 0, NULL}
+     {"getpriority", posix_getpriority, METH_VARARGS,
+        "Return process priority"},
+     {"setpriority", posix_setpriority, METH_VARARGS,
+        "Set process priority"},
+     {NULL, NULL, 0, NULL}
 };
 
 struct module_state {
@@ -92,21 +91,23 @@ psutil_posix_clear(PyObject *m) {
     return 0;
 }
 
-static struct PyModuleDef moduledef = {
-    PyModuleDef_HEAD_INIT,
-    "psutil_posix",
-    NULL,
-    sizeof(struct module_state),
-    PsutilMethods,
-    NULL,
-    psutil_posix_traverse,
-    psutil_posix_clear,
-    NULL
+static struct PyModuleDef
+moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "psutil_posix",
+        NULL,
+        sizeof(struct module_state),
+        PsutilMethods,
+        NULL,
+        psutil_posix_traverse,
+        psutil_posix_clear,
+        NULL
 };
 
 #define INITERROR return NULL
 
-PyMODINIT_FUNC PyInit__psutil_posix(void)
+PyObject *
+PyInit__psutil_posix(void)
 
 #else
 #define INITERROR return

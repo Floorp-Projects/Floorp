@@ -4,27 +4,23 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# TODO: add test for comparing connections with 'sockstat' cmd
-
 """BSD specific tests.  These are implicitly run by test_psutil.py."""
 
+import unittest
 import subprocess
 import time
+import re
 import sys
 import os
 
 import psutil
 
 from psutil._compat import PY3
-from test_psutil import (TOLERANCE, sh, get_test_subprocess, which,
-                         retry_before_failing, reap_children, unittest)
+from test_psutil import *
 
 
 PAGESIZE = os.sysconf("SC_PAGE_SIZE")
-if os.getuid() == 0:  # muse requires root privileges
-    MUSE_AVAILABLE = which('muse')
-else:
-    MUSE_AVAILABLE = False
+MUSE_AVAILABLE = which('muse')
 
 
 def sysctl(cmdline):
@@ -38,10 +34,9 @@ def sysctl(cmdline):
     except ValueError:
         return result
 
-
 def muse(field):
     """Thin wrapper around 'muse' cmdline utility."""
-    out = sh('muse')
+    out = sh('muse', stderr=DEVNULL)
     for line in out.split('\n'):
         if line.startswith(field):
             break
@@ -52,29 +47,27 @@ def muse(field):
 
 class BSDSpecificTestCase(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        cls.pid = get_test_subprocess().pid
+    def setUp(self):
+        self.pid = get_test_subprocess().pid
 
-    @classmethod
-    def tearDownClass(cls):
+    def tearDown(self):
         reap_children()
 
-    def test_boot_time(self):
+    def test_BOOT_TIME(self):
         s = sysctl('sysctl kern.boottime')
         s = s[s.find(" sec = ") + 7:]
         s = s[:s.find(',')]
         btime = int(s)
-        self.assertEqual(btime, psutil.boot_time())
+        self.assertEqual(btime, psutil.BOOT_TIME)
 
     def test_process_create_time(self):
-        cmdline = "ps -o lstart -p %s" % self.pid
+        cmdline = "ps -o lstart -p %s" %self.pid
         p = subprocess.Popen(cmdline, shell=1, stdout=subprocess.PIPE)
         output = p.communicate()[0]
         if PY3:
             output = str(output, sys.stdout.encoding)
         start_ps = output.replace('STARTED', '').strip()
-        start_psutil = psutil.Process(self.pid).create_time()
+        start_psutil = psutil.Process(self.pid).create_time
         start_psutil = time.strftime("%a %b %e %H:%M:%S %Y",
                                      time.localtime(start_psutil))
         self.assertEqual(start_ps, start_psutil)
@@ -108,7 +101,7 @@ class BSDSpecificTestCase(unittest.TestCase):
 
     def test_memory_maps(self):
         out = sh('procstat -v %s' % self.pid)
-        maps = psutil.Process(self.pid).memory_maps(grouped=False)
+        maps = psutil.Process(self.pid).get_memory_maps(grouped=False)
         lines = out.split('\n')[1:]
         while lines:
             line = lines.pop()
