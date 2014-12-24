@@ -22,6 +22,8 @@ const kPrefDefaultServiceId = "dom.sms.defaultServiceId";
 const kPrefRilDebuggingEnabled = "ril.debugging.enabled";
 const kPrefRilNumRadioInterfaces = "ril.numRadioInterfaces";
 
+const kDiskSpaceWatcherObserverTopic = "disk-space-watcher";
+
 const kSmsReceivedObserverTopic          = "sms-received";
 const kSilentSmsReceivedObserverTopic    = "silent-sms-received";
 const kSmsSendingObserverTopic           = "sms-sending";
@@ -106,6 +108,7 @@ function SmsService() {
   Services.prefs.addObserver(kPrefRilDebuggingEnabled, this, false);
   Services.prefs.addObserver(kPrefDefaultServiceId, this, false);
   Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  Services.obs.addObserver(this, kDiskSpaceWatcherObserverTopic, false);
 }
 SmsService.prototype = {
   classID: GONK_SMSSERVICE_CID,
@@ -755,6 +758,26 @@ SmsService.prototype = {
 
   },
 
+  /**
+   * Report SMS storage status to modem.
+   *
+   * Note: GonkDiskSpaceWatcher repeats the notification every 5 seconds when
+   *       storage is full.
+   *       Report status to modem only when the availability is changed.
+   *       Set |_smsStorageAvailable| to |null| to ensure the first run after
+   *       bootup.
+   */
+  _smsStorageAvailable: null,
+  _reportSmsMemoryStatus: function(aIsAvailable) {
+    if (this._smsStorageAvailable !== aIsAvailable) {
+      this._smsStorageAvailable = aIsAvailable;
+      for (let serviceId = 0; serviceId < gRadioInterfaces.length; serviceId++) {
+        gRadioInterfaces[serviceId]
+          .sendWorkerMessage("reportSmsMemoryStatus", { isAvailable: aIsAvailable });
+      }
+    }
+  },
+
   // An array of slient numbers.
   _silentNumbers: null,
   _isSilentNumber: function(aNumber) {
@@ -1029,12 +1052,19 @@ SmsService.prototype = {
           this.smsDefaultServiceId = this._getDefaultServiceId();
         }
         break;
+      case kDiskSpaceWatcherObserverTopic:
+        if (DEBUG) {
+          debug("Observe " + kDiskSpaceWatcherObserverTopic + ": " + aData);
+        }
+        this._reportSmsMemoryStatus(aData != "full");
+        break;
       case NS_XPCOM_SHUTDOWN_OBSERVER_ID:
         // Release the CPU wake lock for handling the received SMS.
         this._releaseSmsHandledWakeLock();
         Services.prefs.removeObserver(kPrefRilDebuggingEnabled, this);
         Services.prefs.removeObserver(kPrefDefaultServiceId, this);
         Services.obs.removeObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+        Services.obs.removeObserver(this, kDiskSpaceWatcherObserverTopic);
         break;
     }
   }

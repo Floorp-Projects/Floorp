@@ -26,7 +26,7 @@ public class testInputConnection extends UITest {
 
         final String url = StringHelper.ROBOCOP_INPUT_URL + "#" + INITIAL_TEXT;
         NavigationHelper.enterAndLoadUrl(url);
-        mToolbar.assertTitle(StringHelper.ROBOCOP_INPUT_TITLE, url);
+        mToolbar.assertTitle(url);
 
         mGeckoView.mTextInput
             .waitForInputConnection()

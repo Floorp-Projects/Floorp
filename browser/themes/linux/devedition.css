@@ -8,9 +8,10 @@
   background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 80, 16, 64);
 }
 
-/* The menubar should match the dark theme */
+/* The menubar and tabs toolbar should match the devedition theme */
+#TabsToolbar,
 #toolbar-menubar {
-  -moz-appearance: none;
+  -moz-appearance: none !important;
 }
 #main-menubar {
   color: var(--chrome-color);

@@ -1662,6 +1662,10 @@ nsEventStatus AsyncPanZoomController::OnLongPress(const TapGestureInput& aEvent)
     int32_t modifiers = WidgetModifiersToDOMModifiers(aEvent.modifiers);
     CSSPoint geckoScreenPoint;
     if (ConvertToGecko(aEvent.mLocalPoint, &geckoScreenPoint)) {
+      if (CurrentTouchBlock()->IsDuringFastMotion()) {
+        APZC_LOG("%p dropping long-press because of fast motion\n", this);
+        return nsEventStatus_eIgnore;
+      }
       uint64_t blockId = GetInputQueue()->InjectNewTouchBlock(this);
       controller->HandleLongTap(geckoScreenPoint, modifiers, GetGuid(), blockId);
       return nsEventStatus_eConsumeNoDefault;

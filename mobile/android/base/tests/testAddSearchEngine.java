@@ -60,8 +60,7 @@ public class testAddSearchEngine extends AboutHomeTest {
 
         // Load the page for the search engine to add.
         inputAndLoadUrl(searchEngineURL);
-        waitForText(StringHelper.ROBOCOP_SEARCH_TITLE);
-        verifyPageTitle(StringHelper.ROBOCOP_SEARCH_TITLE, searchEngineURL);
+        verifyUrlBarTitle(searchEngineURL);
 
         // Used to long-tap on the search input box for the search engine to add.
         getInstrumentation().waitForIdleSync();

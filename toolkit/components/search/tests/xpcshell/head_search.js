@@ -112,6 +112,26 @@ function removeCache()
 }
 
 /**
+ * isUSTimezone taken from nsSearchService.js
+ */
+function isUSTimezone() {
+  // Timezone assumptions! We assume that if the system clock's timezone is
+  // between Newfoundland and Hawaii, that the user is in North America.
+
+  // This includes all of South America as well, but we have relatively few
+  // en-US users there, so that's OK.
+
+  // 150 minutes = 2.5 hours (UTC-2.5), which is
+  // Newfoundland Daylight Time (http://www.timeanddate.com/time/zones/ndt)
+
+  // 600 minutes = 10 hours (UTC-10), which is
+  // Hawaii-Aleutian Standard Time (http://www.timeanddate.com/time/zones/hast)
+
+  let UTCOffset = (new Date()).getTimezoneOffset();
+  return UTCOffset >= 150 && UTCOffset <= 600;
+}
+
+/**
  * Run some callback once metadata has been committed to disk.
  */
 function afterCommit(callback)
@@ -184,6 +204,9 @@ function isSubObjectOf(expectedObj, actualObj) {
 
 // Expand the amount of information available in error logs
 Services.prefs.setBoolPref("browser.search.log", true);
+
+// Disable geoip lookups
+Services.prefs.setCharPref("browser.search.geoip.url", "");
 
 /**
  * After useHttpServer() is called, this string contains the URL of the "data"
