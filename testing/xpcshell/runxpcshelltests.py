@@ -35,7 +35,7 @@ from threading import (
 try:
     import psutil
     HAVE_PSUTIL = True
-except ImportError:
+except Exception:
     HAVE_PSUTIL = False
 
 from automation import Automation
