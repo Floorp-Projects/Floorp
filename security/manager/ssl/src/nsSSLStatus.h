@@ -13,6 +13,7 @@
 #include "nsIX509Cert.h"
 #include "nsISerializable.h"
 #include "nsIClassInfo.h"
+#include "nsNSSCertificate.h" // For EVStatus
 
 class nsSSLStatus MOZ_FINAL
   : public nsISSLStatus
@@ -29,25 +30,34 @@ public:
 
   nsSSLStatus();
 
-  /* public for initilization in this file */
-  nsCOMPtr<nsIX509Cert> mServerCert;
+  void SetServerCert(nsIX509Cert* aServerCert, nsNSSCertificate::EVStatus aEVStatus);
 
+  bool HasServerCert() {
+    return mServerCert != nullptr;
+  }
+
+  /* public for initilization in this file */
   uint16_t mCipherSuite;
   uint16_t mProtocolVersion;
 
   bool mIsDomainMismatch;
   bool mIsNotValidAtThisTime;
   bool mIsUntrusted;
+  bool mIsEV;
 
+  bool mHasIsEVStatus;
   bool mHaveCipherSuiteAndProtocol;
 
   /* mHaveCertErrrorBits is relied on to determine whether or not a SPDY
      connection is eligible for joining in nsNSSSocketInfo::JoinConnection() */
   bool mHaveCertErrorBits;
+
+private:
+  nsCOMPtr<nsIX509Cert> mServerCert;
 };
 
 #define NS_SSLSTATUS_CID \
-{ 0x61f69c85, 0x0fed, 0x44fb, \
-  { 0x89, 0x8f, 0xa4, 0xb1, 0x3c, 0x33, 0x3c, 0x8d } }
+{ 0xe2f14826, 0x9e70, 0x4647, \
+  { 0xb2, 0x3f, 0x10, 0x10, 0xf5, 0x12, 0x46, 0x28 } }
 
 #endif
