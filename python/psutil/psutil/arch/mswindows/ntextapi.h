@@ -2,9 +2,11 @@
  * Copyright (c) 2009, Jay Loden, Giampaolo Rodola'. All rights reserved.
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
+ *
  */
 
-typedef enum _KTHREAD_STATE {
+typedef enum _KTHREAD_STATE
+{
     Initialized,
     Ready,
     Running,
@@ -17,7 +19,8 @@ typedef enum _KTHREAD_STATE {
     MaximumThreadState
 } KTHREAD_STATE, *PKTHREAD_STATE;
 
-typedef enum _KWAIT_REASON {
+typedef enum _KWAIT_REASON
+{
     Executive = 0,
     FreePage = 1,
     PageIn = 2,
@@ -58,7 +61,9 @@ typedef enum _KWAIT_REASON {
     MaximumWaitReason = 37
 } KWAIT_REASON, *PKWAIT_REASON;
 
-typedef struct _CLIENT_ID {
+
+typedef struct _CLIENT_ID
+{
     HANDLE UniqueProcess;
     HANDLE UniqueThread;
 } CLIENT_ID, *PCLIENT_ID;
@@ -70,7 +75,9 @@ typedef struct _UNICODE_STRING {
     PWSTR Buffer;
 } UNICODE_STRING, *PUNICODE_STRING;
 
-typedef struct _SYSTEM_TIMEOFDAY_INFORMATION {
+
+typedef struct _SYSTEM_TIMEOFDAY_INFORMATION
+{
     LARGE_INTEGER BootTime;
     LARGE_INTEGER CurrentTime;
     LARGE_INTEGER TimeZoneBias;
@@ -80,7 +87,8 @@ typedef struct _SYSTEM_TIMEOFDAY_INFORMATION {
     ULONGLONG SleepTimeBias;
 } SYSTEM_TIMEOFDAY_INFORMATION, *PSYSTEM_TIMEOFDAY_INFORMATION;
 
-typedef struct _SYSTEM_THREAD_INFORMATION {
+typedef struct _SYSTEM_THREAD_INFORMATION
+{
     LARGE_INTEGER KernelTime;
     LARGE_INTEGER UserTime;
     LARGE_INTEGER CreateTime;
@@ -97,7 +105,8 @@ typedef struct _SYSTEM_THREAD_INFORMATION {
 typedef struct _TEB *PTEB;
 
 // private
-typedef struct _SYSTEM_EXTENDED_THREAD_INFORMATION {
+typedef struct _SYSTEM_EXTENDED_THREAD_INFORMATION
+{
     SYSTEM_THREAD_INFORMATION ThreadInfo;
     PVOID StackBase;
     PVOID StackLimit;
@@ -108,7 +117,8 @@ typedef struct _SYSTEM_EXTENDED_THREAD_INFORMATION {
     ULONG_PTR Reserved4;
 } SYSTEM_EXTENDED_THREAD_INFORMATION, *PSYSTEM_EXTENDED_THREAD_INFORMATION;
 
-typedef struct _SYSTEM_PROCESS_INFORMATION {
+typedef struct _SYSTEM_PROCESS_INFORMATION
+{
     ULONG NextEntryOffset;
     ULONG NumberOfThreads;
     LARGE_INTEGER SpareLi1;
@@ -153,8 +163,7 @@ typedef struct _SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION {
     LARGE_INTEGER UserTime;
     LARGE_INTEGER Reserved1[2];
     ULONG Reserved2;
-} SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION,
-    *PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION;
+} SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION, *PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION;
 
 
 typedef enum _SYSTEM_INFORMATION_CLASS {
@@ -171,7 +180,7 @@ typedef enum _SYSTEM_INFORMATION_CLASS {
 
 
 // ================================================
-// psutil.users() support
+// get_system_users support ()
 // ================================================
 
 typedef struct _WINSTATION_INFO {
@@ -199,7 +208,7 @@ typedef struct _WINSTATIONINFORMATIONW {
     BYTE Reserved3[1140];
 } WINSTATIONINFORMATIONW, *PWINSTATIONINFORMATIONW;
 
-// mingw support:
+// start mingw support:
 // http://www.koders.com/c/fid7C02CAE627C526914CDEB427405B51DF393A5EFA.aspx
 #ifndef _INC_WTSAPI
 typedef struct _WTS_CLIENT_ADDRESS {
@@ -207,11 +216,19 @@ typedef struct _WTS_CLIENT_ADDRESS {
     BYTE  Address[20];    // client network address
 } WTS_CLIENT_ADDRESS, * PWTS_CLIENT_ADDRESS;
 
-HANDLE WINAPI WTSOpenServerA(IN LPSTR pServerName);
+HANDLE
+WINAPI
+WTSOpenServerA(
+    IN LPSTR pServerName
+    );
 
-VOID WINAPI WTSCloseServer(IN HANDLE hServer);
+VOID
+WINAPI
+WTSCloseServer(
+    IN HANDLE hServer
+    );
 #endif
-
+// end mingw support:
 
 /*
  * NtQueryInformationProcess code taken from
@@ -226,7 +243,7 @@ typedef NTSTATUS (NTAPI *_NtQueryInformationProcess)(
     PVOID ProcessInformation,
     DWORD ProcessInformationLength,
     PDWORD ReturnLength
-);
+    );
 
 typedef NTSTATUS (NTAPI *_NtSetInformationProcess)(
     HANDLE ProcessHandle,
@@ -235,13 +252,15 @@ typedef NTSTATUS (NTAPI *_NtSetInformationProcess)(
     DWORD ProcessInformationLength
 );
 
-typedef struct _PROCESS_BASIC_INFORMATION {
+typedef struct _PROCESS_BASIC_INFORMATION
+{
     PVOID Reserved1;
     PVOID PebBaseAddress;
     PVOID Reserved2[2];
     ULONG_PTR UniqueProcessId;
     PVOID Reserved3;
 } PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;
+
 
 typedef enum _PROCESSINFOCLASS {
     ProcessBasicInformation,
