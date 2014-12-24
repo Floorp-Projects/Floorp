@@ -762,8 +762,12 @@ public:
   GetLogicalNormalPosition(mozilla::WritingMode aWritingMode,
                            nscoord aContainerWidth) const
   {
+    // Subtract the width of this frame from the container width to get
+    // the correct position in rtl frames where the origin is on the
+    // right instead of the left
     return mozilla::LogicalPoint(aWritingMode,
-                                 GetNormalPosition(), aContainerWidth);
+                                 GetNormalPosition(),
+                                 aContainerWidth - mRect.width);
   }
 
   virtual nsPoint GetPositionOfChildIgnoringScrolling(nsIFrame* aChild)
