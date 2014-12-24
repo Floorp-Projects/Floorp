@@ -265,7 +265,7 @@ private:
   void AssertInvariants() const;
 #endif
 
-  SharedMemory* mSegment;
+  SharedMemory* MOZ_WEAK_REF mSegment;
   void* mData;
   size_t mSize;
   id_t mId;
