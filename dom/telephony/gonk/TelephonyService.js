@@ -497,7 +497,7 @@ TelephonyService.prototype = {
       } else if (aNumber === "1") {
         this._sendToRilWorker(aClientId, "hangUpForeground", null, mmiCallback);
       } else if (aNumber[0] === "1" && aNumber.length === 2) {
-        this._sendToRilWorker(aClientId, "hangUp",
+        this._sendToRilWorker(aClientId, "hangUpCall",
                               { callIndex: parseInt(aNumber[1]) }, mmiCallback);
       } else if (aNumber === "2") {
         this._sendToRilWorker(aClientId, "switchActiveCall", null, mmiCallback);
@@ -589,7 +589,9 @@ TelephonyService.prototype = {
       if (activeCall.isConference) {
         this.holdConference(aClientId);
       } else {
-        this.holdCall(aClientId, activeCall.callIndex);
+        this.holdCall(aClientId, activeCall.callIndex,
+                      { notifySuccess: function () {},
+                        notifyError: function (errorMsg) {} });
       }
     }
   },
@@ -879,14 +881,19 @@ TelephonyService.prototype = {
     }
   },
 
-  hangUp: function(aClientId, aCallIndex) {
-    let parentId = this._currentCalls[aClientId][aCallIndex].parentId;
-    if (parentId) {
-      // Should release both, child and parent, together. Since RIL holds only
-      // the parent call, we send 'parentId' to RIL.
-      this.hangUp(aClientId, parentId);
+  /**
+   * The default callback handler for call operations.
+   *
+   * @param aCallback
+   *        An callback object including notifySuccess() and notifyError(aMsg)
+   * @param aResponse
+   *        The response from ril_worker.
+   */
+  _defaultCallbackHandler: function(aCallback, aResponse) {
+    if (!aResponse.success) {
+      aCallback.notifyError(aResponse.errorMsg);
     } else {
-      this._sendToRilWorker(aClientId, "hangUp", { callIndex: aCallIndex });
+      aCallback.notifySuccess();
     }
   },
 
@@ -898,34 +905,48 @@ TelephonyService.prototype = {
     this._sendToRilWorker(aClientId, "stopTone");
   },
 
-  answerCall: function(aClientId, aCallIndex) {
-    this._sendToRilWorker(aClientId, "answerCall", { callIndex: aCallIndex });
+  answerCall: function(aClientId, aCallIndex, aCallback) {
+    this._sendToRilWorker(aClientId, "answerCall", { callIndex: aCallIndex },
+                          this._defaultCallbackHandler.bind(this, aCallback));
   },
 
-  rejectCall: function(aClientId, aCallIndex) {
-    this._sendToRilWorker(aClientId, "rejectCall", { callIndex: aCallIndex });
+  rejectCall: function(aClientId, aCallIndex, aCallback) {
+    this._sendToRilWorker(aClientId, "rejectCall", { callIndex: aCallIndex },
+                          this._defaultCallbackHandler.bind(this, aCallback));
   },
 
-  holdCall: function(aClientId, aCallIndex) {
+  hangUpCall: function(aClientId, aCallIndex, aCallback) {
+    let parentId = this._currentCalls[aClientId][aCallIndex].parentId;
+    if (parentId) {
+      // Should release both, child and parent, together. Since RIL holds only
+      // the parent call, we send 'parentId' to RIL.
+      this.hangUpCall(aClientId, parentId, aCallback);
+    } else {
+      this._sendToRilWorker(aClientId, "hangUpCall", { callIndex: aCallIndex },
+                            this._defaultCallbackHandler.bind(this, aCallback));
+    }
+  },
+
+  holdCall: function(aClientId, aCallIndex, aCallback) {
     let call = this._currentCalls[aClientId][aCallIndex];
     if (!call || !call.isSwitchable) {
-      // TODO: Bug 975949 - [B2G] Telephony should throw exceptions when some
-      // operations aren't allowed instead of simply ignoring them.
+      aCallback.notifyError(RIL.GECKO_ERROR_GENERIC_FAILURE);
       return;
     }
 
-    this._sendToRilWorker(aClientId, "holdCall", { callIndex: aCallIndex });
+    this._sendToRilWorker(aClientId, "holdCall", { callIndex: aCallIndex },
+                          this._defaultCallbackHandler.bind(this, aCallback));
   },
 
-  resumeCall: function(aClientId, aCallIndex) {
+  resumeCall: function(aClientId, aCallIndex, aCallback) {
     let call = this._currentCalls[aClientId][aCallIndex];
     if (!call || !call.isSwitchable) {
-      // TODO: Bug 975949 - [B2G] Telephony should throw exceptions when some
-      // operations aren't allowed instead of simply ignoring them.
+      aCallback.notifyError(RIL.GECKO_ERROR_GENERIC_FAILURE);
       return;
     }
 
-    this._sendToRilWorker(aClientId, "resumeCall", { callIndex: aCallIndex });
+    this._sendToRilWorker(aClientId, "resumeCall", { callIndex: aCallIndex },
+                          this._defaultCallbackHandler.bind(this, aCallback));
   },
 
   conferenceCall: function(aClientId) {
