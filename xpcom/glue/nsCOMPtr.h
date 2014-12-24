@@ -167,7 +167,7 @@ public:
   nsresult NS_FASTCALL operator()(const nsIID& aIID, void**) const;
 
 private:
-  nsISupports* MOZ_STRONG_REF mRawPtr;
+  nsISupports* MOZ_OWNING_REF mRawPtr;
 };
 
 class nsQueryInterfaceWithError
@@ -182,7 +182,7 @@ public:
   nsresult NS_FASTCALL operator()(const nsIID& aIID, void**) const;
 
 private:
-  nsISupports* MOZ_STRONG_REF mRawPtr;
+  nsISupports* MOZ_OWNING_REF mRawPtr;
   nsresult* mErrorPtr;
 };
 
@@ -319,7 +319,7 @@ public:
   begin_assignment();
 
 protected:
-  NS_MAY_ALIAS_PTR(nsISupports) MOZ_STRONG_REF mRawPtr;
+  NS_MAY_ALIAS_PTR(nsISupports) MOZ_OWNING_REF mRawPtr;
 
   void assign_assuming_AddRef(nsISupports* aNewPtr)
   {
@@ -378,7 +378,7 @@ private:
   }
 
 private:
-  T* MOZ_STRONG_REF mRawPtr;
+  T* MOZ_OWNING_REF mRawPtr;
 #endif
 
 public:

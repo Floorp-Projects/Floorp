@@ -385,7 +385,7 @@ public:
   enum { ALLOW_MEMMOVE = true };
 
 protected:
-  T* MOZ_WEAK_REF mKey;
+  T* MOZ_NON_OWNING_REF mKey;
 };
 
 /**

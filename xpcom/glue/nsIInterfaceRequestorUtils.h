@@ -34,7 +34,7 @@ public:
   virtual nsresult NS_FASTCALL operator()(const nsIID&, void**) const;
 
 private:
-  nsISupports* MOZ_WEAK_REF mSource;
+  nsISupports* MOZ_NON_OWNING_REF mSource;
   nsresult* mErrorPtr;
 };
 
