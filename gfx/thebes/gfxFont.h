@@ -61,7 +61,7 @@ class GlyphRenderingOptions;
 struct gfxFontStyle {
     gfxFontStyle();
     gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
-                 gfxFloat aSize, nsIAtom *aLanguage,
+                 gfxFloat aSize, nsIAtom *aLanguage, bool aExplicitLanguage,
                  float aSizeAdjust, bool aSystemFont,
                  bool aPrinterFont,
                  bool aWeightSynthesis, bool aStyleSynthesis,
@@ -143,6 +143,10 @@ struct gfxFontStyle {
     // code, so set up a bool to indicate when shaping with fallback is needed
     bool noFallbackVariantFeatures : 1;
 
+    // whether the |language| field comes from explicit lang tagging in the
+    // document, or was inferred from charset/system locale
+    bool explicitLanguage : 1;
+
     // caps variant (small-caps, petite-caps, etc.)
     uint8_t variantCaps;
 
@@ -181,6 +185,7 @@ struct gfxFontStyle {
             (systemFont == other.systemFont) &&
             (printerFont == other.printerFont) &&
             (useGrayscaleAntialiasing == other.useGrayscaleAntialiasing) &&
+            (explicitLanguage == other.explicitLanguage) &&
             (weight == other.weight) &&
             (stretch == other.stretch) &&
             (language == other.language) &&

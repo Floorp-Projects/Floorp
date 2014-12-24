@@ -40,10 +40,10 @@ public:
 
   FrameMetrics()
     : mCompositionBounds(0, 0, 0, 0)
-    , mDisplayPort(0, 0, 0, 0)
     , mCriticalDisplayPort(0, 0, 0, 0)
     , mScrollableRect(0, 0, 0, 0)
     , mPresShellResolution(1)
+    , mDisplayPort(0, 0, 0, 0)
     , mCumulativeResolution(1)
     , mDevPixelsPerCSSPixel(1)
     , mMayHaveTouchListeners(false)
@@ -256,19 +256,6 @@ public:
   // space, so each is explained separately.
   //
 
-  // The area of a frame's contents that has been painted, relative to
-  // mCompositionBounds.
-  //
-  // Note that this is structured in such a way that it doesn't depend on the
-  // method layout uses to scroll content.
-  //
-  // May be larger or smaller than |mScrollableRect|.
-  //
-  // To pre-render a margin of 100 CSS pixels around the window,
-  // { x = -100, y = - 100,
-  //   width = window.innerWidth + 200, height = window.innerHeight + 200 }
-  CSSRect mDisplayPort;
-
   // If non-empty, the area of a frame's contents that is considered critical
   // to paint. Area outside of this area (i.e. area inside mDisplayPort, but
   // outside of mCriticalDisplayPort) is considered low-priority, and may be
@@ -304,6 +291,16 @@ public:
   float mPresShellResolution;
 
 public:
+  void SetDisplayPort(const CSSRect& aDisplayPort)
+  {
+    mDisplayPort = aDisplayPort;
+  }
+
+  CSSRect GetDisplayPort() const
+  {
+    return mDisplayPort;
+  }
+
   void SetCumulativeResolution(const LayoutDeviceToLayerScale& aCumulativeResolution)
   {
     mCumulativeResolution = aCumulativeResolution;
@@ -532,6 +529,19 @@ public:
   }
 
 private:
+  // The area of a frame's contents that has been painted, relative to
+  // mCompositionBounds.
+  //
+  // Note that this is structured in such a way that it doesn't depend on the
+  // method layout uses to scroll content.
+  //
+  // May be larger or smaller than |mScrollableRect|.
+  //
+  // To pre-render a margin of 100 CSS pixels around the window,
+  // { x = -100, y = - 100,
+  //   width = window.innerWidth + 200, height = window.innerHeight + 200 }
+  CSSRect mDisplayPort;
+
   // The cumulative resolution that the current frame has been painted at.
   // This is the product of the pres-shell resolutions of the document
   // containing this scroll frame and its ancestors, and any css-driven

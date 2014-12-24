@@ -33,6 +33,7 @@
 #define COMPLETE_LENGTH 32
 
 class nsUrlClassifierDBServiceWorker;
+class nsICryptoHash;
 class nsIThread;
 class nsIURI;
 
@@ -117,6 +118,10 @@ private:
 
   // Thread that we do the updates on.
   static nsIThread* gDbBackgroundThread;
+
+  // nsICryptoHash for doing hash operations on the main thread. This is only
+  // used for nsIURIClassifier.ClassifyLocal
+  nsCOMPtr<nsICryptoHash> mCryptoHashMain;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsUrlClassifierDBService, NS_URLCLASSIFIERDBSERVICE_CID)

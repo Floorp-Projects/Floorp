@@ -4,3 +4,4 @@
 
 component {f9b9b5e2-73b4-11e4-83ff-a33e27428c86} SmsService.js
 contract @mozilla.org/sms/gonksmsservice;1 {f9b9b5e2-73b4-11e4-83ff-a33e27428c86}
+category profile-after-change SmsService @mozilla.org/sms/gonksmsservice;1

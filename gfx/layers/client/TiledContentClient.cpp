@@ -213,10 +213,10 @@ SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
   // an endless updating cycle.
   if (fabsf(contentMetrics.GetScrollOffset().x - compositorMetrics.GetScrollOffset().x) <= 2 &&
       fabsf(contentMetrics.GetScrollOffset().y - compositorMetrics.GetScrollOffset().y) <= 2 &&
-      fabsf(contentMetrics.mDisplayPort.x - compositorMetrics.mDisplayPort.x) <= 2 &&
-      fabsf(contentMetrics.mDisplayPort.y - compositorMetrics.mDisplayPort.y) <= 2 &&
-      fabsf(contentMetrics.mDisplayPort.width - compositorMetrics.mDisplayPort.width) <= 2 &&
-      fabsf(contentMetrics.mDisplayPort.height - compositorMetrics.mDisplayPort.height) <= 2) {
+      fabsf(contentMetrics.GetDisplayPort().x - compositorMetrics.GetDisplayPort().x) <= 2 &&
+      fabsf(contentMetrics.GetDisplayPort().y - compositorMetrics.GetDisplayPort().y) <= 2 &&
+      fabsf(contentMetrics.GetDisplayPort().width - compositorMetrics.GetDisplayPort().width) <= 2 &&
+      fabsf(contentMetrics.GetDisplayPort().height - compositorMetrics.GetDisplayPort().height) <= 2) {
     return false;
   }
 
@@ -258,7 +258,7 @@ SharedFrameMetricsHelper::AboutToCheckerboard(const FrameMetrics& aContentMetric
   // This process can introduce some rounding error, so we inflate the rect by one app unit
   // to account for that.
   CSSRect painted = (aContentMetrics.mCriticalDisplayPort.IsEmpty()
-                      ? aContentMetrics.mDisplayPort
+                      ? aContentMetrics.GetDisplayPort()
                       : aContentMetrics.mCriticalDisplayPort)
                     + aContentMetrics.GetScrollOffset();
   painted.Inflate(CSSMargin::FromAppUnits(nsMargin(1, 1, 1, 1)));
