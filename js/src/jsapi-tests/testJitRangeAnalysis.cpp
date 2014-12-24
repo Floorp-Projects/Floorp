@@ -127,6 +127,7 @@ BEGIN_TEST(testJitRangeAnalysis_MathSignBeta)
     MConstant *cm0 = MConstant::New(func.alloc, DoubleValue(-0.0));
     entry->add(cm0);
     MCompare *cmp = MCompare::New(func.alloc, p, c0, JSOP_LT);
+    cmp->setCompareType(MCompare::Compare_Double);
     entry->add(cmp);
     entry->end(MTest::New(func.alloc, cmp, thenBlock, elseBlock));
 
@@ -144,6 +145,7 @@ BEGIN_TEST(testJitRangeAnalysis_MathSignBeta)
     // {
     //   if (p >= 0)
     MCompare *elseCmp = MCompare::New(func.alloc, p, c0, JSOP_GE);
+    elseCmp->setCompareType(MCompare::Compare_Double);
     elseBlock->add(elseCmp);
     elseBlock->end(MTest::New(func.alloc, elseCmp, elseThenBlock, elseElseBlock));
 
