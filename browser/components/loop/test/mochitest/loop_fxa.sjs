@@ -46,6 +46,9 @@ function handleRequest(request, response) {
     case "/profile/profile":
       profile(request, response);
       return;
+    case "/push-server-config":
+      push_server(request, response);
+      return;
   }
   response.setStatusLine(request.httpVersion, 404, "Not Found");
 }
@@ -188,6 +191,18 @@ function profile(request, response) {
     uid: "1234abcd",
   };
   response.write(JSON.stringify(profile, null, 2));
+}
+
+/**
+ * GET /push-server-config
+ *
+ */
+function push_server(request, response) {
+  response.setHeader("Content-Type", "application/json; charset=utf-8", false);
+  let msg = {
+    pushServerURI: "ws://localhost/"
+  };
+  response.write(JSON.stringify(msg, null, 2));
 }
 
 /**
