@@ -11,8 +11,11 @@ let Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource:///modules/MigrationUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
+                                  "resource://gre/modules/Downloads.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PropertyListUtils",
                                   "resource://gre/modules/PropertyListUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
@@ -316,8 +319,8 @@ Preferences.prototype = {
   type: MigrationUtils.resourceTypes.SETTINGS,
 
   migrate: function MPR_migrate(aCallback) {
-    this._mainPreferencesPropertyList.read(
-      MigrationUtils.wrapMigrateFunction(function migratePrefs(aDict) {
+    this._mainPreferencesPropertyList.read(aDict => {
+      Task.spawn(function* () {
         if (!aDict)
           throw new Error("Could not read preferences file");
 
@@ -355,8 +358,13 @@ Preferences.prototype = {
 #endif
 
         this._migrateFontSettings();
-        this._migrateDownloadsFolder();
-    }.bind(this), aCallback));
+        yield this._migrateDownloadsFolder();
+
+      }.bind(this)).then(() => aCallback(true), ex => {
+        Cu.reportError(ex);
+        aCallback(false);
+      }).catch(Cu.reportError);
+    });
   },
 
   /**
@@ -479,7 +487,7 @@ Preferences.prototype = {
     return localeLangGroup;
   },
 
-  _migrateDownloadsFolder: function MPR__migrateDownloadsFolder() {
+  _migrateDownloadsFolder: Task.async(function* () {
     // Windows Safari uses DownloadPath while Mac uses DownloadsPath.
     // Check both for future compatibility.
     let key;
@@ -500,15 +508,15 @@ Preferences.prototype = {
       folderListVal = 0;
     }
     else {
-      let dnldMgr = Cc["@mozilla.org/download-manager;1"].
-                    getService(Ci.nsIDownloadManager);
-      if (downloadsFolder.equals(dnldMgr.defaultDownloadsDirectory))
+      let systemDownloadsPath = yield Downloads.getSystemDownloadsDirectory();
+      let systemDownloadsFolder = FileUtils.File(systemDownloadsPath);
+      if (downloadsFolder.equals(systemDownloadsFolder))
         folderListVal = 1;
     }
     Services.prefs.setIntPref("browser.download.folderList", folderListVal);
     Services.prefs.setComplexValue("browser.download.dir", Ci.nsILocalFile,
                                    downloadsFolder);
-  }
+  }),
 };
 
 function SearchStrings(aMainPreferencesPropertyListInstance) {
