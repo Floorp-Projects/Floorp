@@ -48,7 +48,7 @@ private:
   }
 
 private:
-  T* mRawPtr;
+  T* MOZ_OWNING_REF mRawPtr;
 
 public:
   typedef T element_type;

@@ -104,11 +104,6 @@ RemoteWebProgressManager.prototype = {
       deserialized.QueryInterface(Ci.nsISSLStatus);
     }
 
-    // We must check the Extended Validation (EV) state here, on the chrome
-    // process, because NSS is needed for that determination.
-    if (deserialized && deserialized.isExtendedValidation)
-      aState |= Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL;
-
     return [deserialized, aState];
   },
 

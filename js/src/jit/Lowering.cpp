@@ -623,7 +623,7 @@ ReorderComparison(JSOp op, MDefinition **lhsp, MDefinition **rhsp)
     MDefinition *lhs = *lhsp;
     MDefinition *rhs = *rhsp;
 
-    if (lhs->isConstant()) {
+    if (lhs->isConstantValue()) {
         *rhsp = lhs;
         *lhsp = rhs;
         return ReverseCompareOp(op);
@@ -643,8 +643,8 @@ LIRGenerator::visitTest(MTest *test)
     MOZ_ASSERT(opd->type() != MIRType_String);
 
     // Testing a constant.
-    if (opd->isConstant()) {
-        bool result = opd->toConstant()->valueToBoolean();
+    if (opd->isConstantValue() && !opd->constantValue().isMagic()) {
+        bool result = opd->constantToBoolean();
         add(new(alloc()) LGoto(result ? ifTrue : ifFalse));
         return;
     }
@@ -1491,7 +1491,7 @@ LIRGenerator::visitMul(MMul *ins)
 
         // If our RHS is a constant -1 and we don't have to worry about
         // overflow, we can optimize to an LNegI.
-        if (!ins->fallible() && rhs->isConstant() && rhs->toConstant()->value() == Int32Value(-1))
+        if (!ins->fallible() && rhs->isConstantValue() && rhs->constantValue() == Int32Value(-1))
             defineReuseInput(new(alloc()) LNegI(useRegisterAtStart(lhs)), ins, 0);
         else
             lowerMulI(ins, lhs, rhs);
@@ -1500,7 +1500,7 @@ LIRGenerator::visitMul(MMul *ins)
         ReorderCommutative(&lhs, &rhs, ins);
 
         // If our RHS is a constant -1.0, we can optimize to an LNegD.
-        if (rhs->isConstant() && rhs->toConstant()->value() == DoubleValue(-1.0))
+        if (rhs->isConstantValue() && rhs->constantValue() == DoubleValue(-1.0))
             defineReuseInput(new(alloc()) LNegD(useRegisterAtStart(lhs)), ins, 0);
         else
             lowerForFPU(new(alloc()) LMathD(JSOP_MUL), ins, lhs, rhs);
@@ -1509,7 +1509,7 @@ LIRGenerator::visitMul(MMul *ins)
         ReorderCommutative(&lhs, &rhs, ins);
 
         // We apply the same optimizations as for doubles
-        if (rhs->isConstant() && rhs->toConstant()->value() == Float32Value(-1.0f))
+        if (rhs->isConstantValue() && rhs->constantValue() == Float32Value(-1.0f))
             defineReuseInput(new(alloc()) LNegF(useRegisterAtStart(lhs)), ins, 0);
         else
             lowerForFPU(new(alloc()) LMathF(JSOP_MUL), ins, lhs, rhs);
@@ -4117,9 +4117,19 @@ LIRGenerator::visitInstruction(MInstruction *ins)
     ins->setInWorklistUnchecked();
 #endif
 
+    // If we added a Nop for this instruction, we'll also add a Mop, so that
+    // that live-ranges for fixed register defs, which with LSRA extend through
+    // the Nop so that they can extend through the OsiPoint don't, with their
+    // one-extra extension, extend into a position where they use the input
+    // move group for the following instruction.
+    bool needsMop = !current->instructions().empty() && current->rbegin()->isNop();
+
     // If no safepoint was created, there's no need for an OSI point.
     if (LOsiPoint *osiPoint = popOsiPoint())
         add(osiPoint);
+
+    if (needsMop)
+        add(new(alloc()) LMop);
 
     return !gen->errored();
 }

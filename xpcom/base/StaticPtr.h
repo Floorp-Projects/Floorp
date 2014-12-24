@@ -141,7 +141,7 @@ private:
     }
   }
 
-  T* mRawPtr;
+  T* MOZ_OWNING_REF mRawPtr;
 };
 
 namespace StaticPtr_internal {

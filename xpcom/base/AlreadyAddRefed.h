@@ -137,7 +137,7 @@ struct already_AddRefed
   }
 
 private:
-  T* mRawPtr;
+  T* MOZ_OWNING_REF mRawPtr;
 };
 
 #endif // AlreadyAddRefed_h

@@ -31,7 +31,7 @@ private:
   // Called (only) by an |nsWeakReference| from _its_ dtor.
   void NoticeProxyDestruction() { mProxy = 0; }
 
-  nsWeakReference* mProxy;
+  nsWeakReference* MOZ_NON_OWNING_REF mProxy;
 
 protected:
 

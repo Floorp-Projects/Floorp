@@ -13,6 +13,7 @@
 #include "nsStyleContext.h"
 #include "nsStyleStructInlines.h"
 #include "WritingModes.h"
+#include "RubyUtils.h"
 
 using namespace mozilla;
 
@@ -376,15 +377,17 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
     // Reflow spans
     nscoord spanISize = ReflowSpans(aPresContext, aReflowState,
                                     spanReflowStates);
-    if (isize < spanISize) {
-      nscoord delta = spanISize - isize;
-      if (allowLineBreak && ShouldBreakBefore(aReflowState, delta)) {
-        aStatus = NS_INLINE_LINE_BREAK_BEFORE();
-      } else {
-        aReflowState.mLineLayout->AdvanceICoord(delta);
-        isize = spanISize;
-      }
+    nscoord deltaISize = spanISize - isize;
+    if (deltaISize <= 0) {
+      RubyUtils::ClearReservedISize(this);
+    } else if (allowLineBreak && ShouldBreakBefore(aReflowState, deltaISize)) {
+      aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+    } else {
+      RubyUtils::SetReservedISize(this, deltaISize);
+      aReflowState.mLineLayout->AdvanceICoord(deltaISize);
+      isize = spanISize;
     }
+  }
     // When there are spans, ReflowPairs and ReflowOnePair won't
     // record any optional break position. We have to record one
     // at the end of this segment.
@@ -394,7 +397,6 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
           gfxBreakPriority::eNormalBreak)) {
       aStatus = NS_INLINE_LINE_BREAK_AFTER(aStatus);
     }
-  }
 
   DebugOnly<nscoord> lineSpanSize = aReflowState.mLineLayout->EndSpan(this);
   // When there are no frames inside the ruby base container, EndSpan
@@ -407,8 +409,24 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
     // when it is reflowed, it will just use this size.
     nsRubyTextContainerFrame* textContainer = i < rtcCount ?
       mTextContainers[i] : mSpanContainers[i - rtcCount];
-    textContainer->SetISize(isize);
-    lineLayouts[i]->EndLineReflow();
+    nsLineLayout* lineLayout = lineLayouts[i].get();
+
+    RubyUtils::ClearReservedISize(textContainer);
+    nscoord rtcISize = lineLayout->GetCurrentICoord();
+    // Only span containers and containers with collapsed annotations
+    // need reserving isize. For normal ruby text containers, their
+    // children will be expanded properly. We only need to expand their
+    // own size.
+    if (i < rtcCount) {
+      rtcISize = isize;
+    } else if (isize > rtcISize) {
+      RubyUtils::SetReservedISize(textContainer, isize - rtcISize);
+    }
+
+    lineLayout->VerticalAlignLine();
+    LogicalSize lineSize(lineWM, isize, lineLayout->GetFinalLineBSize());
+    textContainer->SetLineSize(lineSize);
+    lineLayout->EndLineReflow();
   }
 
   aDesiredSize.ISize(lineWM) = isize;
@@ -568,6 +586,7 @@ nsRubyBaseContainerFrame::ReflowOnePair(nsPresContext* aPresContext,
 
       nsReflowStatus reflowStatus;
       nsHTMLReflowMetrics metrics(*aReflowStates[i]);
+      RubyUtils::ClearReservedISize(textFrame);
 
       bool pushedFrame;
       aReflowStates[i]->mLineLayout->ReflowFrame(textFrame, reflowStatus,
@@ -590,6 +609,7 @@ nsRubyBaseContainerFrame::ReflowOnePair(nsPresContext* aPresContext,
     MOZ_ASSERT(aBaseFrame->GetType() == nsGkAtoms::rubyBaseFrame);
     nsReflowStatus reflowStatus;
     nsHTMLReflowMetrics metrics(aReflowState);
+    RubyUtils::ClearReservedISize(aBaseFrame);
 
     bool pushedFrame;
     aReflowState.mLineLayout->ReflowFrame(aBaseFrame, reflowStatus,
@@ -601,12 +621,24 @@ nsRubyBaseContainerFrame::ReflowOnePair(nsPresContext* aPresContext,
 
   // Align all the line layout to the new coordinate.
   nscoord icoord = istart + pairISize;
-  aReflowState.mLineLayout->AdvanceICoord(
-    icoord - aReflowState.mLineLayout->GetCurrentICoord());
+  nscoord deltaISize = icoord - aReflowState.mLineLayout->GetCurrentICoord();
+  if (deltaISize > 0) {
+    aReflowState.mLineLayout->AdvanceICoord(deltaISize);
+    if (aBaseFrame) {
+      RubyUtils::SetReservedISize(aBaseFrame, deltaISize);
+    }
+  }
   for (uint32_t i = 0; i < rtcCount; i++) {
     nsLineLayout* lineLayout = aReflowStates[i]->mLineLayout;
-    lineLayout->AdvanceICoord(icoord - lineLayout->GetCurrentICoord());
-    if (aBaseFrame && aTextFrames[i]) {
+    nsIFrame* textFrame = aTextFrames[i];
+    nscoord deltaISize = icoord - lineLayout->GetCurrentICoord();
+    if (deltaISize > 0) {
+      lineLayout->AdvanceICoord(deltaISize);
+      if (textFrame) {
+        RubyUtils::SetReservedISize(textFrame, deltaISize);
+      }
+    }
+    if (aBaseFrame && textFrame) {
       lineLayout->AttachLastFrameToBaseLineLayout();
     }
   }

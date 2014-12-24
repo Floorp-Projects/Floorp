@@ -1109,7 +1109,7 @@ AuthCertificate(CertVerifier& certVerifier,
   RefPtr<nsSSLStatus> status(infoObject->SSLStatus());
   RefPtr<nsNSSCertificate> nsc;
 
-  if (!status || !status->mServerCert) {
+  if (!status || !status->HasServerCert()) {
     if( rv == SECSuccess ){
       nsc = nsNSSCertificate::Create(cert, &evOidPolicy);
     }
@@ -1141,10 +1141,17 @@ AuthCertificate(CertVerifier& certVerifier,
         infoObject, status);
     }
 
-    if (status && !status->mServerCert) {
-      status->mServerCert = nsc;
+    if (status && !status->HasServerCert()) {
+      nsNSSCertificate::EVStatus evStatus;
+      if (evOidPolicy == SEC_OID_UNKNOWN || rv != SECSuccess) {
+        evStatus = nsNSSCertificate::ev_status_invalid;
+      } else {
+        evStatus = nsNSSCertificate::ev_status_valid;
+      }
+
+      status->SetServerCert(nsc, evStatus);
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
-             ("AuthCertificate setting NEW cert %p\n", status->mServerCert.get()));
+             ("AuthCertificate setting NEW cert %p\n", nsc.get()));
     }
   }
 

@@ -285,7 +285,7 @@ private:
     mPtr = aVal;
   }
 
-  T* mPtr;
+  T* MOZ_OWNING_REF mPtr;
 
   static MOZ_ALWAYS_INLINE T* ref(T* aVal)
   {
@@ -336,7 +336,7 @@ public:
 private:
   TemporaryRef(T* aVal, const DontRef&) : mPtr(aVal) {}
 
-  mutable T* mPtr;
+  mutable T* MOZ_OWNING_REF mPtr;
 
   TemporaryRef() MOZ_DELETE;
   void operator=(const TemporaryRef&) MOZ_DELETE;

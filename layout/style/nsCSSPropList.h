@@ -2976,6 +2976,17 @@ CSS_PROP_POSITION(
     nullptr,
     offsetof(nsStylePosition, mOffset),
     eStyleAnimType_Sides_Right)
+CSS_PROP_TEXT(
+    ruby-position,
+    ruby_position,
+    RubyPosition,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    "layout.css.ruby.enabled",
+    0,
+    kRubyPositionKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_DISPLAY(
     scroll-behavior,
     scroll_behavior,
