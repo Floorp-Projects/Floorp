@@ -229,6 +229,20 @@ static const char* const gOmxTypes[] = {
   "video/webm",
   "audio/webm",
 #endif
+  "audio/x-matroska",
+  "video/mp2t",
+  "video/avi",
+  "video/x-matroska",
+  nullptr
+};
+
+static const char* const gB2GOnlyTypes[] = {
+  "audio/3gpp",
+  "audio/amr",
+  "audio/x-matroska",
+  "video/mp2t",
+  "video/avi",
+  "video/x-matroska",
   nullptr
 };
 
@@ -240,6 +254,12 @@ IsOmxSupportedType(const nsACString& aType)
   }
 
   return CodecListContains(gOmxTypes, aType);
+}
+
+static bool
+IsB2GSupportOnlyType(const nsACString& aType)
+{
+  return CodecListContains(gB2GOnlyTypes, aType);
 }
 
 static char const *const gH264Codecs[9] = {
@@ -543,9 +563,9 @@ InstantiateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
 #endif
 #ifdef MOZ_OMX_DECODER
   if (IsOmxSupportedType(aType)) {
-    // AMR audio is enabled for MMS, but we are discouraging Web and App
-    // developers from using AMR, thus we only allow AMR to be played on WebApps.
-    if (aType.EqualsLiteral(AUDIO_AMR) || aType.EqualsLiteral(AUDIO_3GPP)) {
+    // we are discouraging Web and App developers from using those formats in
+    // gB2GOnlyTypes, thus we only allow them to be played on WebApps.
+    if (IsB2GSupportOnlyType(aType)) {
       dom::HTMLMediaElement* element = aOwner->GetMediaElement();
       if (!element) {
         return nullptr;
@@ -716,10 +736,11 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
   return
     IsOggType(aType) ||
 #ifdef MOZ_OMX_DECODER
-    // We support amr inside WebApps on firefoxOS but not in general web content.
-    // Ensure we dont create a VideoDocument when accessing amr URLs directly.
+    // We support the formats in gB2GOnlyTypes only inside WebApps on firefoxOS
+    // but not in general web content. Ensure we dont create a VideoDocument
+    // when accessing those format URLs directly.
     (IsOmxSupportedType(aType) &&
-     (!aType.EqualsLiteral(AUDIO_AMR) && !aType.EqualsLiteral(AUDIO_3GPP))) ||
+     !IsB2GSupportOnlyType(aType)) ||
 #endif
 #ifdef MOZ_WEBM
     IsWebMType(aType) ||

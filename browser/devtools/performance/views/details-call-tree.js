@@ -12,28 +12,32 @@ let CallTreeView = {
    */
   initialize: function () {
     this._callTree = $(".call-tree-cells-container");
+    this._onRecordingStopped = this._onRecordingStopped.bind(this);
     this._onRangeChange = this._onRangeChange.bind(this);
     this._onLink = this._onLink.bind(this);
-    this._stop = this._stop.bind(this);
 
+    PerformanceController.on(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
     OverviewView.on(EVENTS.OVERVIEW_RANGE_SELECTED, this._onRangeChange);
     OverviewView.on(EVENTS.OVERVIEW_RANGE_CLEARED, this._onRangeChange);
-    PerformanceController.on(EVENTS.RECORDING_STOPPED, this._stop);
   },
 
   /**
    * Unbinds events.
    */
   destroy: function () {
+    PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
     OverviewView.off(EVENTS.OVERVIEW_RANGE_SELECTED, this._onRangeChange);
     OverviewView.off(EVENTS.OVERVIEW_RANGE_CLEARED, this._onRangeChange);
-    PerformanceController.off(EVENTS.RECORDING_STOPPED, this._stop);
   },
 
   /**
    * Method for handling all the set up for rendering a new call tree.
    */
   render: function (profilerData, beginAt, endAt, options={}) {
+    // Empty recordings might yield no profiler data.
+    if (profilerData.profile == null) {
+      return;
+    }
     let threadNode = this._prepareCallTree(profilerData, beginAt, endAt, options);
     this._populateCallTree(threadNode, options);
     this.emit(EVENTS.CALL_TREE_RENDERED);
@@ -42,8 +46,8 @@ let CallTreeView = {
   /**
    * Called when recording is stopped.
    */
-  _stop: function (_, { profilerData }) {
-    this._profilerData = profilerData;
+  _onRecordingStopped: function () {
+    let profilerData = PerformanceController.getProfilerData();
     this.render(profilerData);
   },
 
@@ -53,8 +57,9 @@ let CallTreeView = {
   _onRangeChange: function (_, params) {
     // When a range is cleared, we'll have no beginAt/endAt data,
     // so the rebuild will just render all the data again.
+    let profilerData = PerformanceController.getProfilerData();
     let { beginAt, endAt } = params || {};
-    this.render(this._profilerData, beginAt, endAt);
+    this.render(profilerData, beginAt, endAt);
   },
 
   /**
@@ -122,18 +127,19 @@ let viewSourceInDebugger = Task.async(function *(url, line) {
   // source immediately. Otherwise, initialize it and wait for the sources
   // to be added first.
   let debuggerAlreadyOpen = gToolbox.getPanel("jsdebugger");
-
   let { panelWin: dbg } = yield gToolbox.selectTool("jsdebugger");
 
   if (!debuggerAlreadyOpen) {
-    yield new Promise((resolve) => dbg.once(dbg.EVENTS.SOURCES_ADDED, () => resolve(dbg)));
+    yield dbg.once(dbg.EVENTS.SOURCES_ADDED);
   }
 
   let { DebuggerView } = dbg;
-  let item = DebuggerView.Sources.getItemForAttachment(a => a.source.url === url);
+  let { Sources } = DebuggerView;
 
+  let item = Sources.getItemForAttachment(a => a.source.url === url);
   if (item) {
     return DebuggerView.setEditorLocation(item.attachment.source.actor, line, { noDebug: true });
   }
-  return Promise.reject();
+
+  return Promise.reject("Couldn't find the specified source in the debugger.");
 });

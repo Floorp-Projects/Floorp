@@ -128,7 +128,6 @@ class MachCommands(MachCommandBase):
         srcdir('base/src/main/java/org/mozilla/mozstumbler', 'mobile/android/stumbler/java/org/mozilla/mozstumbler')
         srcdir('base/src/main/java/org/mozilla/search', 'mobile/android/search/java/org/mozilla/search')
         srcdir('base/src/main/res', 'mobile/android/base/resources')
-        srcdir('base/src/newtablet/res', 'mobile/android/base/newtablet/res')
         srcdir('base/src/crashreporter/res', 'mobile/android/base/crashreporter/res')
 
         manifest_path = os.path.join(self.topobjdir, 'mobile', 'android', 'gradle.manifest')

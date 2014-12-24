@@ -165,7 +165,7 @@ SettingsServiceLock.prototype = {
   get: function get(aName, aCallback) {
     if (VERBOSE) debug("get (" + this._id + "): " + aName);
     if (!this._open) {
-      dump("Settings lock not open!\n");
+      if (DEBUG) debug("Settings lock not open!\n");
       throw Components.results.NS_ERROR_ABORT;
     }
     let reqID = uuidgen.generateUUID().toString();
@@ -195,33 +195,33 @@ SettingsServiceLock.prototype = {
 
   callHandle: function callHandle(aCallback, aName, aValue) {
     try {
-      aCallback ? aCallback.handle(aName, aValue) : null;
+        aCallback && aCallback.handle ? aCallback.handle(aName, aValue) : null;
     } catch (e) {
-      dump("settings 'handle' callback threw an exception, dropping: " + e + "\n");
+      if (DEBUG) debug("settings 'handle' callback threw an exception, dropping: " + e + "\n");
     }
   },
 
   callAbort: function callAbort(aCallback, aMessage) {
     try {
-      aCallback ? aCallback.handleAbort(aMessage) : null;
+      aCallback && aCallback.handleAbort ? aCallback.handleAbort(aMessage) : null;
     } catch (e) {
-      dump("settings 'abort' callback threw an exception, dropping: " + e + "\n");
+      if (DEBUG) debug("settings 'abort' callback threw an exception, dropping: " + e + "\n");
     }
   },
 
   callError: function callError(aCallback, aMessage) {
     try {
-      aCallback ? aCallback.handleError(aMessage) : null;
+      aCallback && aCallback.handleError ? aCallback.handleError(aMessage) : null;
     } catch (e) {
-      dump("settings 'error' callback threw an exception, dropping: " + e + "\n");
+      if (DEBUG) debug("settings 'error' callback threw an exception, dropping: " + e + "\n");
     }
   },
 
   callTransactionHandle: function callTransactionHandle() {
     try {
-      this._transactionCallback ? this._transactionCallback.handle() : null;
+      this._transactionCallback && this._transactionCallback.handle ? this._transactionCallback.handle() : null;
     } catch (e) {
-      dump("settings 'Transaction handle' callback threw an exception, dropping: " + e + "\n");
+      if (DEBUG) debug("settings 'Transaction handle' callback threw an exception, dropping: " + e + "\n");
     }
   },
 
