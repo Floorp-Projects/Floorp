@@ -33,6 +33,10 @@
   -  on a button that opens a dialog to import a saved profile data file. -->
 <!ENTITY profilerUI.importButton "Import…">
 
+<!-- LOCALIZATION NOTE (profilerUI.exportButton): This string is displayed
+  -  on a button that opens a dialog to export a saved profile data file. -->
+<!ENTITY profilerUI.exportButton "Save">
+
 <!-- LOCALIZATION NOTE (profilerUI.clearButton): This string is displayed
   -  on a button that remvoes all the recordings. -->
 <!ENTITY profilerUI.clearButton "Clear">

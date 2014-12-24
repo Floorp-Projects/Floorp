@@ -200,8 +200,7 @@ public abstract class GeckoApp
     private EventListener mWebappEventListener;
 
     abstract public int getLayout();
-    @Override
-    abstract public boolean hasTabsSideBar();
+
     abstract protected String getDefaultProfileName() throws NoMozillaDirectoryException;
 
     private static final String RESTARTER_ACTION = "org.mozilla.gecko.restart";

@@ -121,14 +121,19 @@ public:
   // update operations to prevent lookups from blocking for too long.
   nsresult HandlePendingLookups();
 
+  // Perform a blocking classifier lookup for a given url. Can be called on
+  // either the main thread or the worker thread.
+  nsresult DoLocalLookup(const nsACString& spec,
+                         const nsACString& tables,
+                         nsICryptoHash* cryptoHash,
+                         LookupResultArray* results);
+
 private:
   // No subclassing
   ~nsUrlClassifierDBServiceWorker();
 
   // Disallow copy constructor
   nsUrlClassifierDBServiceWorker(nsUrlClassifierDBServiceWorker&);
-
-  nsresult OpenDb();
 
   // Applies the current transaction and resets the update/working times.
   nsresult ApplyUpdate();
@@ -149,6 +154,7 @@ private:
                     uint32_t aCount,
                     LookupResultArray& results);
 
+  // Can only be used on the background thread
   nsCOMPtr<nsICryptoHash> mCryptoHash;
 
   nsAutoPtr<Classifier> mClassifier;
@@ -241,6 +247,76 @@ nsUrlClassifierDBServiceWorker::QueueLookup(const nsACString& spec,
   return NS_OK;
 }
 
+nsresult
+nsUrlClassifierDBServiceWorker::DoLocalLookup(const nsACString& spec,
+                                              const nsACString& tables,
+                                              nsICryptoHash* cryptoHash,
+                                              LookupResultArray* results)
+{
+  LOG(("nsUrlClassifierDBServiceWorker::DoLocalLookup %s (main=%s) %p",
+       spec.Data(), NS_IsMainThread() ? "true" : "false", this));
+  if (!results) {
+    return NS_ERROR_FAILURE;
+  }
+  // Bail if we haven't been initialized on the background thread.
+  if (!mClassifier) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // We ignore failures from Check because we'd rather return the
+  // results that were found than fail.
+  mClassifier->Check(spec, tables, gFreshnessGuarantee, cryptoHash, *results);
+
+  LOG(("Found %d results.", results->Length()));
+  return NS_OK;
+}
+
+static nsresult
+TablesToResponse(const nsACString& tables,
+                 bool checkMalware,
+                 bool checkPhishing,
+                 bool checkTracking)
+{
+  if (checkMalware &&
+      FindInReadable(NS_LITERAL_CSTRING("-malware-"), tables)) {
+    return NS_ERROR_MALWARE_URI;
+  }
+  if (checkPhishing &&
+    FindInReadable(NS_LITERAL_CSTRING("-phish-"), tables)) {
+    return NS_ERROR_PHISHING_URI;
+  }
+  if (checkTracking &&
+    FindInReadable(NS_LITERAL_CSTRING("-track-"), tables)) {
+    return NS_ERROR_TRACKING_URI;
+  }
+  return NS_OK;
+}
+
+static nsresult
+ProcessLookupResults(LookupResultArray* results,
+                     bool checkMalware,
+                     bool checkPhishing,
+                     bool checkTracking)
+{
+  // Build a stringified list of result tables.
+  nsTArray<nsCString> tables;
+  for (uint32_t i = 0; i < results->Length(); i++) {
+    LookupResult& result = results->ElementAt(i);
+    MOZ_ASSERT(!result.mNoise, "Lookup results should not have noise added");
+    LOG(("Found result from table %s", result.mTableName.get()));
+    if (tables.IndexOf(result.mTableName) == nsTArray<nsCString>::NoIndex) {
+      tables.AppendElement(result.mTableName);
+    }
+  }
+  nsAutoCString tableStr;
+  for (uint32_t i = 0; i < tables.Length(); i++) {
+    if (i != 0)
+      tableStr.Append(',');
+    tableStr.Append(tables[i]);
+  }
+  return TablesToResponse(tableStr, checkMalware, checkPhishing, checkTracking);
+}
+
 /**
  * Lookup up a key in the database is a two step process:
  *
@@ -262,13 +338,6 @@ nsUrlClassifierDBServiceWorker::DoLookup(const nsACString& spec,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsresult rv = OpenDb();
-  if (NS_FAILED(rv)) {
-    c->LookupComplete(nullptr);
-    NS_ERROR("Unable to open SafeBrowsing database.");
-    return NS_ERROR_FAILURE;
-  }
-
 #if defined(PR_LOGGING)
   PRIntervalTime clockStart = 0;
   if (LOG_ENABLED()) {
@@ -282,10 +351,11 @@ nsUrlClassifierDBServiceWorker::DoLookup(const nsACString& spec,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // we ignore failures from Check because we'd rather return the
-  // results that were found than fail.
-  mClassifier->SetFreshTime(gFreshnessGuarantee);
-  mClassifier->Check(spec, tables, *results);
+  nsresult rv = DoLocalLookup(spec, tables, nullptr, results);
+  if (NS_FAILED(rv)) {
+    c->LookupComplete(nullptr);
+    return rv;
+  }
 
   LOG(("Found %d results.", results->Length()));
 
@@ -457,6 +527,7 @@ NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::BeginStream(const nsACString &table)
 {
   LOG(("nsUrlClassifierDBServiceWorker::BeginStream"));
+  MOZ_ASSERT(!NS_IsMainThread(), "Streaming must be on the background thread");
 
   if (gShuttingDownThread)
     return NS_ERROR_NOT_INITIALIZED;
@@ -732,12 +803,11 @@ nsUrlClassifierDBServiceWorker::CacheMisses(PrefixArray *results)
 nsresult
 nsUrlClassifierDBServiceWorker::OpenDb()
 {
+  MOZ_ASSERT(!NS_IsMainThread(), "Must initialize DB on background thread");
   // Connection already open, don't do anything.
   if (mClassifier) {
     return NS_OK;
   }
-
-  LOG(("Opening db"));
 
   nsresult rv;
   mCryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
@@ -747,8 +817,6 @@ nsUrlClassifierDBServiceWorker::OpenDb()
   if (!classifier) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  classifier->SetFreshTime(gFreshnessGuarantee);
 
   rv = classifier->Open(*mCacheDir);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1025,25 +1093,9 @@ NS_IMPL_ISUPPORTS(nsUrlClassifierClassifyCallback,
 NS_IMETHODIMP
 nsUrlClassifierClassifyCallback::HandleEvent(const nsACString& tables)
 {
-  // XXX: we should probably have the wardens tell the service which table
-  // names match with which classification.  For now the table names give
-  // enough information.
-  nsresult response = NS_OK;
-
-  if (mCheckMalware &&
-      FindInReadable(NS_LITERAL_CSTRING("-malware-"), tables)) {
-    response = NS_ERROR_MALWARE_URI;
-  } else if (mCheckPhishing &&
-    FindInReadable(NS_LITERAL_CSTRING("-phish-"), tables)) {
-    response = NS_ERROR_PHISHING_URI;
-  } else if (mCheckTracking &&
-    FindInReadable(NS_LITERAL_CSTRING("-track-"), tables)) {
-    LOG(("Blocking tracking uri [this=%p]", this));
-    response = NS_ERROR_TRACKING_URI;
-  }
-
+  nsresult response = TablesToResponse(tables, mCheckMalware,
+                                       mCheckPhishing, mCheckTracking);
   mCallback->OnClassifyComplete(response);
-
   return NS_OK;
 }
 
@@ -1141,6 +1193,7 @@ nsUrlClassifierDBService::Init()
   if (!gUrlClassifierDbServiceLog)
     gUrlClassifierDbServiceLog = PR_NewLogModule("UrlClassifierDbService");
 #endif
+  MOZ_ASSERT(NS_IsMainThread(), "Must initialize DB service on main thread");
 
   // Retrieve all the preferences.
   mCheckMalware = Preferences::GetBool(CHECK_MALWARE_PREF,
@@ -1170,7 +1223,7 @@ nsUrlClassifierDBService::Init()
 
   // Force PSM loading on main thread
   nsresult rv;
-  nsCOMPtr<nsICryptoHash> acryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
+  mCryptoHashMain = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Directory providers must also be accessed on the main thread.
@@ -1199,6 +1252,10 @@ nsUrlClassifierDBService::Init()
 
   // Proxy for calling the worker on the background thread
   mWorkerProxy = new UrlClassifierDBServiceWorkerProxy(mWorker);
+  rv = mWorkerProxy->OpenDb();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   // Add an observer for shutdown
   nsCOMPtr<nsIObserverService> observerService =
@@ -1210,6 +1267,28 @@ nsUrlClassifierDBService::Init()
   observerService->AddObserver(this, "xpcom-shutdown-threads", false);
 
   return NS_OK;
+}
+
+static void BuildTables(bool aTrackingProtectionEnabled, nsCString &tables)
+{
+  nsAutoCString malware;
+  // LookupURI takes a comma-separated list already.
+  Preferences::GetCString(MALWARE_TABLE_PREF, &malware);
+  if (!malware.IsEmpty()) {
+    tables.Append(malware);
+  }
+  nsAutoCString phishing;
+  Preferences::GetCString(PHISH_TABLE_PREF, &phishing);
+  if (!phishing.IsEmpty()) {
+    tables.Append(',');
+    tables.Append(phishing);
+  }
+  nsAutoCString tracking;
+  Preferences::GetCString(TRACKING_TABLE_PREF, &tracking);
+  if (aTrackingProtectionEnabled && !tracking.IsEmpty()) {
+    tables.Append(',');
+    tables.Append(tracking);
+  }
 }
 
 // nsChannelClassifier is the only consumer of this interface.
@@ -1233,25 +1312,8 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
   if (!callback) return NS_ERROR_OUT_OF_MEMORY;
 
   nsAutoCString tables;
-  nsAutoCString malware;
-  // LookupURI takes a comma-separated list already.
-  Preferences::GetCString(MALWARE_TABLE_PREF, &malware);
-  if (!malware.IsEmpty()) {
-    tables.Append(malware);
-  }
-  nsAutoCString phishing;
-  Preferences::GetCString(PHISH_TABLE_PREF, &phishing);
-  if (!phishing.IsEmpty()) {
-    tables.Append(',');
-    tables.Append(phishing);
-  }
-  nsAutoCString tracking;
-  Preferences::GetCString(TRACKING_TABLE_PREF, &tracking);
-  if (aTrackingProtectionEnabled && !tracking.IsEmpty()) {
-    LOG(("Looking up third party in tracking table, [cb=%p]", callback.get()));
-    tables.Append(',');
-    tables.Append(tracking);
-  }
+  BuildTables(aTrackingProtectionEnabled, tables);
+
   nsresult rv = LookupURI(aPrincipal, tables, callback, false, result);
   if (rv == NS_ERROR_MALFORMED_URI) {
     *result = false;
@@ -1260,6 +1322,47 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrlClassifierDBService::ClassifyLocal(nsIPrincipal* aPrincipal,
+                                        bool aTrackingProtectionEnabled,
+                                        nsresult* aResponse)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "ClassifyLocal must be on main thread");
+  *aResponse = NS_OK;
+  nsAutoCString tables;
+  BuildTables(aTrackingProtectionEnabled, tables);
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+
+  uri = NS_GetInnermostURI(uri);
+  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+
+  nsAutoCString key;
+  // Canonicalize the url
+  nsCOMPtr<nsIUrlClassifierUtils> utilsService =
+    do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
+  rv = utilsService->GetKeyForURI(uri, key);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoPtr<LookupResultArray> results(new LookupResultArray());
+  if (!results) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // We don't use the proxy, since this is a blocking lookup. In unittests, we
+  // may not have been initalized, so don't crash.
+  rv = mWorker->DoLocalLookup(key, tables, mCryptoHashMain, results);
+  if (NS_SUCCEEDED(rv)) {
+    rv = ProcessLookupResults(results, mCheckMalware, mCheckPhishing,
+                              mCheckTracking);
+    *aResponse = rv;
+  }
   return NS_OK;
 }
 

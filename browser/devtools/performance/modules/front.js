@@ -4,8 +4,8 @@
 "use strict";
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
-const { extend } = require("sdk/util/object");
 const { Task } = require("resource://gre/modules/Task.jsm");
+const { extend } = require("sdk/util/object");
 
 loader.lazyRequireGetter(this, "Services");
 loader.lazyRequireGetter(this, "promise");
@@ -20,7 +20,8 @@ loader.lazyImporter(this, "gDevTools",
   "resource:///modules/devtools/gDevTools.jsm");
 
 /**
- * A cache of all PerformanceActorsConnection instances. The keys are Target objects.
+ * A cache of all PerformanceActorsConnection instances.
+ * The keys are Target objects.
  */
 let SharedPerformanceActors = new WeakMap();
 
@@ -42,7 +43,7 @@ SharedPerformanceActors.forTarget = function(target) {
 };
 
 /**
- * A connection to underlying actors (profiler, memory, framerate, etc)
+ * A connection to underlying actors (profiler, memory, framerate, etc.)
  * shared by all tools in a target.
  *
  * Use `SharedPerformanceActors.forTarget` to make sure you get the same
@@ -62,7 +63,6 @@ function PerformanceActorsConnection(target) {
 }
 
 PerformanceActorsConnection.prototype = {
-
   /**
    * Initializes a connection to the profiler and other miscellaneous actors.
    * If already open, nothing happens.
@@ -224,10 +224,9 @@ PerformanceFront.prototype = {
     // for all targets and interacts with the whole platform, so we don't want
     // to affect other clients by stopping (or restarting) it.
     if (!isActive) {
-      // Extend the options so that protocol.js doesn't modify
-      // the source object.
-      let options = extend({}, this._customPerformanceOptions);
-      yield this._request("profiler", "startProfiler", options);
+      // Extend the profiler options so that protocol.js doesn't modify the original.
+      let profilerOptions = extend({}, this._customProfilerOptions);
+      yield this._request("profiler", "startProfiler", profilerOptions);
       this._profilingStartTime = 0;
       this.emit("profiler-activated");
     } else {
@@ -237,9 +236,9 @@ PerformanceFront.prototype = {
 
     // The timeline actor is target-dependent, so just make sure
     // it's recording.
-
-    // Return start time from timeline actor
     let startTime = yield this._request("timeline", "start", options);
+
+    // Return only the start time from the timeline actor.
     return { startTime };
   }),
 
@@ -273,7 +272,7 @@ PerformanceFront.prototype = {
    *
    * Used in tests and for older backend implementations.
    */
-  _customPerformanceOptions: {
+  _customProfilerOptions: {
     entries: 1000000,
     interval: 1,
     features: ["js"]

@@ -151,8 +151,10 @@ ContentRestoreInternal.prototype = {
     let disallow = new Set(tabData.disallow && tabData.disallow.split(","));
     DocShellCapabilities.restore(this.docShell, disallow);
 
-    if (tabData.storage && this.docShell instanceof Ci.nsIDocShell)
+    if (tabData.storage && this.docShell instanceof Ci.nsIDocShell) {
       SessionStorage.restore(this.docShell, tabData.storage);
+      delete tabData.storage;
+    }
   },
 
   /**
