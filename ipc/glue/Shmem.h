@@ -77,7 +77,7 @@ public:
   struct IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead {};
 
   Shmem() :
-    mSegment(),
+    mSegment(nullptr),
     mData(nullptr),
     mSize(0),
     mId(0)
@@ -265,7 +265,7 @@ private:
   void AssertInvariants() const;
 #endif
 
-  nsRefPtr<SharedMemory> mSegment;
+  SharedMemory* mSegment;
   void* mData;
   size_t mSize;
   id_t mId;
