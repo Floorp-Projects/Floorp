@@ -37,16 +37,71 @@ TelephonyParent::RecvPTelephonyRequestConstructor(PTelephonyRequestParent* aActo
                                                   const IPCTelephonyRequest& aRequest)
 {
   TelephonyRequestParent* actor = static_cast<TelephonyRequestParent*>(aActor);
+  nsCOMPtr<nsITelephonyService> service = do_GetService(TELEPHONY_SERVICE_CONTRACTID);
+
+  if (!service) {
+    return NS_SUCCEEDED(actor->NotifyError(NS_LITERAL_STRING("InvalidStateError")));
+  }
 
   switch (aRequest.type()) {
-    case IPCTelephonyRequest::TEnumerateCallsRequest:
-      return actor->DoRequest(aRequest.get_EnumerateCallsRequest());
-    case IPCTelephonyRequest::TDialRequest:
-      return actor->DoRequest(aRequest.get_DialRequest());
-    case IPCTelephonyRequest::TUSSDRequest:
-      return actor->DoRequest(aRequest.get_USSDRequest());
-    case IPCTelephonyRequest::THangUpConferenceRequest:
-      return actor->DoRequest(aRequest.get_HangUpConferenceRequest());
+    case IPCTelephonyRequest::TEnumerateCallsRequest: {
+      nsresult rv = service->EnumerateCalls(actor);
+      if (NS_FAILED(rv)) {
+        return NS_SUCCEEDED(EnumerateCallStateComplete());
+      } else {
+        return true;
+      }
+    }
+
+    case IPCTelephonyRequest::TDialRequest: {
+      const DialRequest& request = aRequest.get_DialRequest();
+      service->Dial(request.clientId(), request.number(),
+                    request.isEmergency(), actor);
+      return true;
+    }
+
+    case IPCTelephonyRequest::TUSSDRequest: {
+      const USSDRequest& request = aRequest.get_USSDRequest();
+      service->SendUSSD(request.clientId(), request.ussd(), actor);
+      return true;
+    }
+
+    case IPCTelephonyRequest::THangUpConferenceRequest: {
+      const HangUpConferenceRequest& request = aRequest.get_HangUpConferenceRequest();
+      service->HangUpConference(request.clientId(), actor);
+      return true;
+    }
+
+    case IPCTelephonyRequest::TAnswerCallRequest: {
+      const AnswerCallRequest& request = aRequest.get_AnswerCallRequest();
+      service->AnswerCall(request.clientId(), request.callIndex(), actor);
+      return true;
+    }
+
+    case IPCTelephonyRequest::THangUpCallRequest: {
+      const HangUpCallRequest& request = aRequest.get_HangUpCallRequest();
+      service->HangUpCall(request.clientId(), request.callIndex(), actor);
+      return true;
+    }
+
+    case IPCTelephonyRequest::TRejectCallRequest: {
+      const RejectCallRequest& request = aRequest.get_RejectCallRequest();
+      service->RejectCall(request.clientId(), request.callIndex(), actor);
+      return true;
+    }
+
+    case IPCTelephonyRequest::THoldCallRequest: {
+      const HoldCallRequest& request = aRequest.get_HoldCallRequest();
+      service->HoldCall(request.clientId(), request.callIndex(), actor);
+      return true;
+    }
+
+    case IPCTelephonyRequest::TResumeCallRequest: {
+      const ResumeCallRequest& request = aRequest.get_ResumeCallRequest();
+      service->ResumeCall(request.clientId(), request.callIndex(), actor);
+      return true;
+    }
+
     default:
       MOZ_CRASH("Unknown type!");
   }
@@ -102,66 +157,6 @@ TelephonyParent::RecvUnregisterListener()
   NS_ENSURE_TRUE(service, true);
 
   mRegistered = !NS_SUCCEEDED(service->UnregisterListener(this));
-  return true;
-}
-
-bool
-TelephonyParent::RecvHangUpCall(const uint32_t& aClientId,
-                                const uint32_t& aCallIndex)
-{
-  nsCOMPtr<nsITelephonyService> service =
-    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(service, true);
-
-  service->HangUp(aClientId, aCallIndex);
-  return true;
-}
-
-bool
-TelephonyParent::RecvAnswerCall(const uint32_t& aClientId,
-                                const uint32_t& aCallIndex)
-{
-  nsCOMPtr<nsITelephonyService> service =
-    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(service, true);
-
-  service->AnswerCall(aClientId, aCallIndex);
-  return true;
-}
-
-bool
-TelephonyParent::RecvRejectCall(const uint32_t& aClientId,
-                                const uint32_t& aCallIndex)
-{
-  nsCOMPtr<nsITelephonyService> service =
-    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(service, true);
-
-  service->RejectCall(aClientId, aCallIndex);
-  return true;
-}
-
-bool
-TelephonyParent::RecvHoldCall(const uint32_t& aClientId,
-                              const uint32_t& aCallIndex)
-{
-  nsCOMPtr<nsITelephonyService> service =
-    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(service, true);
-
-  service->HoldCall(aClientId, aCallIndex);
-  return true;
-}
-
-bool
-TelephonyParent::RecvResumeCall(const uint32_t& aClientId,
-                                const uint32_t& aCallIndex)
-{
-  nsCOMPtr<nsITelephonyService> service =
-    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(service, true);
-
-  service->ResumeCall(aClientId, aCallIndex);
   return true;
 }
 
@@ -404,67 +399,6 @@ TelephonyRequestParent::ActorDestroy(ActorDestroyReason why)
   // case ActorDestroy() was called and mActorDestroyed is set to true. Return
   // an error here to avoid sending a message to the dead process.
   mActorDestroyed = true;
-}
-
-bool
-TelephonyRequestParent::DoRequest(const EnumerateCallsRequest& aRequest)
-{
-  nsresult rv = NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsITelephonyService> service =
-    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
-  if (service) {
-    rv = service->EnumerateCalls(this);
-  }
-
-  if (NS_FAILED(rv)) {
-    return NS_SUCCEEDED(EnumerateCallStateComplete());
-  }
-
-  return true;
-}
-
-bool
-TelephonyRequestParent::DoRequest(const DialRequest& aRequest)
-{
-  nsCOMPtr<nsITelephonyService> service =
-    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
-  if (service) {
-    service->Dial(aRequest.clientId(), aRequest.number(),
-                  aRequest.isEmergency(), this);
-  } else {
-    return NS_SUCCEEDED(NotifyError(NS_LITERAL_STRING("InvalidStateError")));
-  }
-
-  return true;
-}
-
-bool
-TelephonyRequestParent::DoRequest(const USSDRequest& aRequest)
-{
-  nsCOMPtr<nsITelephonyService> service =
-    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
-  if (service) {
-    service->SendUSSD(aRequest.clientId(), aRequest.ussd(), this);
-  } else {
-    return NS_SUCCEEDED(NotifyError(NS_LITERAL_STRING("InvalidStateError")));
-  }
-
-  return true;
-}
-
-bool
-TelephonyRequestParent::DoRequest(const HangUpConferenceRequest& aRequest)
-{
-  nsCOMPtr<nsITelephonyService> service =
-    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
-  if (service) {
-    service->HangUpConference(aRequest.clientId(), this);
-  } else {
-    return NS_SUCCEEDED(NotifyError(NS_LITERAL_STRING("InvalidStateError")));
-  }
-
-  return true;
 }
 
 nsresult
