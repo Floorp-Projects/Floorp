@@ -568,7 +568,14 @@ loop.panel = (function(_, mozL10n) {
 
     handleFormSubmit: function(event) {
       event.preventDefault();
-      this.props.onChange(this.state.text);
+      // While we already validate for a non-empty string in the store, we need
+      // to check it at the component level to avoid desynchronized rendering
+      // issues.
+      if (this.state.text.trim()) {
+        this.props.onChange(this.state.text);
+      } else {
+        this.setState({text: this.props.text});
+      }
       this.setState({edit: false});
     },
 

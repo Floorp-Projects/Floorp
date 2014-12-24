@@ -217,8 +217,6 @@ public abstract class AndroidBrowserRepositoryDataAccessor {
       // re-allocate in the (rare) error case and maintain a fast path for the
       // success case.
       size = index;
-      ContentValues[] temp = new ContentValues[size];
-      System.arraycopy(cvs, 0, temp, 0, size); // No java.util.Arrays.copyOf in older Android SDKs.
     }
 
     int inserted = context.getContentResolver().bulkInsert(getUri(), cvs);

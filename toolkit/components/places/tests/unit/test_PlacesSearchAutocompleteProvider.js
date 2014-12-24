@@ -5,6 +5,10 @@
 Cu.import("resource://gre/modules/PlacesSearchAutocompleteProvider.jsm");
 
 function run_test() {
+  // Tell the search service we are running in the US.  This also has the
+  // desired side-effect of preventing our geoip lookup.
+  Services.prefs.setBoolPref("browser.search.isUS", true);
+  Services.prefs.setCharPref("browser.search.countryCode", "US");
   run_next_test();
 }
 

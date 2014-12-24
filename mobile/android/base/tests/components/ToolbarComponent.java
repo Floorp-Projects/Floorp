@@ -46,24 +46,17 @@ public class ToolbarComponent extends BaseComponent {
         return this;
     }
 
-    public ToolbarComponent assertTitle(final String title, final String url) {
-        // We are asserting visible state - we shouldn't know if the title is null.
-        fAssertNotNull("The title argument is not null", title);
+    public ToolbarComponent assertTitle(final String url) {
         fAssertNotNull("The url argument is not null", url);
 
-        // TODO: We should also check the title bar preference.
         final String expected;
-        if (!NewTabletUI.isEnabled(mActivity)) {
-            expected = title;
+        final String absoluteURL = NavigationHelper.adjustUrl(url);
+        if (StringHelper.ABOUT_HOME_URL.equals(absoluteURL)) {
+            expected = StringHelper.ABOUT_HOME_TITLE;
+        } else if (absoluteURL.startsWith(URL_HTTP_PREFIX)) {
+            expected = absoluteURL.substring(URL_HTTP_PREFIX.length());
         } else {
-            final String absoluteURL = NavigationHelper.adjustUrl(url);
-            if (StringHelper.ABOUT_HOME_URL.equals(absoluteURL)) {
-                expected = StringHelper.ABOUT_HOME_TITLE;
-            } else if (absoluteURL.startsWith(URL_HTTP_PREFIX)) {
-                expected = absoluteURL.substring(URL_HTTP_PREFIX.length());
-            } else {
-                expected = absoluteURL;
-            }
+            expected = absoluteURL;
         }
 
         fAssertEquals("The Toolbar title is " + expected, expected, getTitle());

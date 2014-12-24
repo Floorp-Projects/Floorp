@@ -49,3 +49,8 @@
     // Disable the auto-hide feature of touch caret to avoid potential
     // intermittent issues.
     branch.setIntPref("touchcaret.expiration.time", 0);
+
+    // Tell the search service we are running in the US.  This also has the
+    // desired side-effect of preventing our geoip lookup.
+    branch.setBoolPref("browser.search.isUS", true);
+    branch.setCharPref("browser.search.countryCode", "US");

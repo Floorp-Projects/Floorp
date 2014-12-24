@@ -122,16 +122,12 @@ public class AndroidBrowserHistoryDataAccessor extends
 
     int size = records.size();
     ContentValues[] cvs = new ContentValues[size];
-    String[] guids = new String[size];
-    Map<String, Record> guidToRecord = new HashMap<String, Record>();
     int index = 0;
     for (Record record : records) {
       if (record.guid == null) {
         throw new IllegalArgumentException("Record with null GUID passed in to bulkInsert.");
       }
       cvs[index] = getContentValues(record);
-      guids[index] = record.guid;
-      guidToRecord.put(record.guid, record);
       index += 1;
     }
 
