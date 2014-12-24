@@ -3782,6 +3782,7 @@ nsLayoutUtils::GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
   if (aInflation == 1.0f) {
     return pc->DeviceContext()->GetMetricsFor(styleFont->mFont,
                                               styleFont->mLanguage,
+                                              styleFont->mExplicitLanguage,
                                               orientation, fs, tp,
                                               *aFontMetrics);
   }
@@ -3789,6 +3790,7 @@ nsLayoutUtils::GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
   nsFont font = styleFont->mFont;
   font.size = NSToCoordRound(font.size * aInflation);
   return pc->DeviceContext()->GetMetricsFor(font, styleFont->mLanguage,
+                                            styleFont->mExplicitLanguage,
                                             orientation, fs, tp,
                                             *aFontMetrics);
 }
