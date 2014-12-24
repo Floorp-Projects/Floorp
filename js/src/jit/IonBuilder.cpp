@@ -4446,7 +4446,18 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
     if (!returnBlock->initEntrySlots(alloc()))
         return false;
 
-    return setCurrentAndSpecializePhis(returnBlock);
+    if (!setCurrentAndSpecializePhis(returnBlock))
+        return false;
+
+    // Improve return types with observed typeset, except for Setters.
+    // Setters return their argument, not whatever value is returned.
+    if (!callInfo.isSetter()) {
+        types::TemporaryTypeSet *types = bytecodeTypes(pc);
+        if (!pushTypeBarrier(retvalDefn, types, BarrierKind::TypeSet))
+            return false;
+    }
+
+    return true;
 }
 
 MDefinition *
