@@ -123,7 +123,7 @@ private:
 
   void detach() { mPtr = nullptr; }
 
-  T* MOZ_WEAK_REF mPtr;
+  T* MOZ_NON_OWNING_REF mPtr;
 };
 
 } // namespace detail

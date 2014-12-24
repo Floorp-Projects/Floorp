@@ -45,7 +45,7 @@ private:
     mReferent = 0;
   }
 
-  nsSupportsWeakReference* MOZ_WEAK_REF mReferent;
+  nsSupportsWeakReference* MOZ_NON_OWNING_REF mReferent;
 };
 
 nsresult
