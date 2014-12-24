@@ -241,6 +241,11 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
   } else {
     WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(worker);
+
+    if (worker->IsServiceWorker()) {
+      r->SetSkipServiceWorker();
+    }
+
     nsRefPtr<MainThreadFetchRunnable> run = new MainThreadFetchRunnable(worker, p, r);
     if (NS_FAILED(NS_DispatchToMainThread(run))) {
       NS_WARNING("MainThreadFetchRunnable dispatch failed!");

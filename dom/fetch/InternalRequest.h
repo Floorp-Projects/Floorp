@@ -180,6 +180,18 @@ public:
   }
 
   bool
+  SkipServiceWorker() const
+  {
+    return mSkipServiceWorker;
+  }
+
+  void
+  SetSkipServiceWorker()
+  {
+    mSkipServiceWorker = true;
+  }
+
+  bool
   IsSynchronous() const
   {
     return mSynchronous;
