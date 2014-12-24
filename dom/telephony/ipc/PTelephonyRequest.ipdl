@@ -28,6 +28,7 @@ struct ErrorResponse
 
 struct DialResponseCallSuccess
 {
+  uint32_t clientId;
   uint32_t callIndex;
   nsString number;
 };

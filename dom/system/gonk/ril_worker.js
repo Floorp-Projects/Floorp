@@ -546,6 +546,12 @@ RilObject.prototype = {
      * { options: options of the corresponding dialing request }
      */
     this.pendingMO = null;
+
+    /**
+     * True when the request to report SMS Memory Status is pending.
+     */
+    this.pendingToReportSmsMemoryStatus = false;
+    this.smsStorageAvailable = true;
   },
 
   /**
@@ -2064,6 +2070,23 @@ RilObject.prototype = {
     }
   },
 
+  /**
+   * Report SMS storage status to modem.
+   */
+  _updateSmsMemoryStatus: function() {
+    let Buf = this.context.Buf;
+    Buf.newParcel(REQUEST_REPORT_SMS_MEMORY_STATUS);
+    Buf.writeInt32(1);
+    Buf.writeInt32(this.smsStorageAvailable ? 1 : 0);
+    Buf.sendParcel();
+  },
+
+  reportSmsMemoryStatus: function(options) {
+    this.pendingToReportSmsMemoryStatus = true;
+    this.smsStorageAvailable = options.isAvailable;
+    this._updateSmsMemoryStatus();
+  },
+
   setCellBroadcastDisabled: function(options) {
     this.cellBroadcastDisabled = options.disabled;
 
@@ -2127,8 +2150,9 @@ RilObject.prototype = {
     let numConfigs = config ? config.length / 2 : 0;
     Buf.writeInt32(numConfigs);
     for (let i = 0; i < config.length;) {
+      // convert [from, to) to [from, to - 1]
       Buf.writeInt32(config[i++]);
-      Buf.writeInt32(config[i++]);
+      Buf.writeInt32(config[i++] - 1);
       Buf.writeInt32(0x00);
       Buf.writeInt32(0xFF);
       Buf.writeInt32(1);
@@ -4786,7 +4810,7 @@ RilObject.prototype = {
     // MSG_TYPE          | 8
     // TOTAL_SEGMENTS    | 8
     // SEGMENT_NUMBER    | 8
-    // DATAGRAM          | (NUM_FIELDS – 3) * 8
+    // DATAGRAM          | (NUM_FIELDS - 3) * 8
     let index = 0;
     if (message.data[index++] !== 0) {
       if (DEBUG) this.context.debug("Ignore a WAP Message which is not WDP.");
@@ -6562,7 +6586,9 @@ RilObject.prototype[REQUEST_GET_SMSC_ADDRESS] = function REQUEST_GET_SMSC_ADDRES
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_SET_SMSC_ADDRESS] = null;
-RilObject.prototype[REQUEST_REPORT_SMS_MEMORY_STATUS] = null;
+RilObject.prototype[REQUEST_REPORT_SMS_MEMORY_STATUS] = function REQUEST_REPORT_SMS_MEMORY_STATUS(length, options) {
+  this.pendingToReportSmsMemoryStatus = options.rilRequestError != ERROR_SUCCESS;
+};
 RilObject.prototype[REQUEST_REPORT_STK_SERVICE_IS_RUNNING] = null;
 RilObject.prototype[REQUEST_CDMA_GET_SUBSCRIPTION_SOURCE] = null;
 RilObject.prototype[REQUEST_ISIM_AUTHENTICATION] = null;
@@ -6709,6 +6735,10 @@ RilObject.prototype[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLIC
          RILQUIRKS_SUBSCRIPTION_CONTROL) &&
         this._attachDataRegistration) {
       this.setDataRegistration({attach: true});
+    }
+
+    if (this.pendingToReportSmsMemoryStatus) {
+      this._updateSmsMemoryStatus();
     }
   }
 
