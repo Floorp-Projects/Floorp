@@ -12,12 +12,18 @@ let PerformanceView = {
    */
   initialize: function () {
     this._recordButton = $("#record-button");
+    this._importButton = $("#import-button");
+    this._exportButton = $("#export-button");
 
     this._onRecordButtonClick = this._onRecordButtonClick.bind(this);
+    this._onImportButtonClick = this._onImportButtonClick.bind(this);
+    this._onExportButtonClick = this._onExportButtonClick.bind(this);
     this._lockRecordButton = this._lockRecordButton.bind(this);
     this._unlockRecordButton = this._unlockRecordButton.bind(this);
 
     this._recordButton.addEventListener("click", this._onRecordButtonClick);
+    this._importButton.addEventListener("click", this._onImportButtonClick);
+    this._exportButton.addEventListener("click", this._onExportButtonClick);
 
     // Bind to controller events to unlock the record button
     PerformanceController.on(EVENTS.RECORDING_STARTED, this._unlockRecordButton);
@@ -34,6 +40,9 @@ let PerformanceView = {
    */
   destroy: function () {
     this._recordButton.removeEventListener("click", this._onRecordButtonClick);
+    this._importButton.removeEventListener("click", this._onImportButtonClick);
+    this._exportButton.removeEventListener("click", this._onExportButtonClick);
+
     PerformanceController.off(EVENTS.RECORDING_STARTED, this._unlockRecordButton);
     PerformanceController.off(EVENTS.RECORDING_STOPPED, this._unlockRecordButton);
 
@@ -71,6 +80,37 @@ let PerformanceView = {
       this._lockRecordButton();
       this.emit(EVENTS.UI_START_RECORDING);
     }
+  },
+
+  /**
+   * Handler for clicking the import button.
+   */
+  _onImportButtonClick: function(e) {
+    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    fp.init(window, L10N.getStr("recordingsList.saveDialogTitle"), Ci.nsIFilePicker.modeOpen);
+    fp.appendFilter(L10N.getStr("recordingsList.saveDialogJSONFilter"), "*.json");
+    fp.appendFilter(L10N.getStr("recordingsList.saveDialogAllFilter"), "*.*");
+
+    if (fp.show() == Ci.nsIFilePicker.returnOK) {
+      this.emit(EVENTS.UI_IMPORT_RECORDING, fp.file);
+    }
+  },
+
+  /**
+   * Handler for clicking the export button.
+   */
+  _onExportButtonClick: function(e) {
+    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    fp.init(window, L10N.getStr("recordingsList.saveDialogTitle"), Ci.nsIFilePicker.modeSave);
+    fp.appendFilter(L10N.getStr("recordingsList.saveDialogJSONFilter"), "*.json");
+    fp.appendFilter(L10N.getStr("recordingsList.saveDialogAllFilter"), "*.*");
+    fp.defaultString = "profile.json";
+
+    fp.open({ done: result => {
+      if (result != Ci.nsIFilePicker.returnCancel) {
+        this.emit(EVENTS.UI_EXPORT_RECORDING, fp.file);
+      }
+    }});
   }
 };
 

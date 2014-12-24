@@ -9,6 +9,7 @@
   --focus-cell-border-color: rgba(0,0,0,0.3);
   --row-alt-background-color: rgba(29,79,115,0.15);
   --row-hover-background-color: rgba(29,79,115,0.25);
+  --tab-hover-background-color: rgba(0,0,0,0.3);
 }
 
 .theme-light {
@@ -16,6 +17,7 @@
   --focus-cell-border-color: rgba(255,255,255,0.5);
   --row-alt-background-color: rgba(76,158,217,0.1);
   --row-hover-background-color: rgba(76,158,217,0.2);
+  --tab-hover-background-color: rgba(255,255,255,0.8);
 }
 
 /* Reload and waiting notices */
@@ -147,12 +149,8 @@
   -moz-border-end: 1px solid var(--theme-splitter-color);
 }
 
-.theme-dark #profile-content tab:hover {
-  background-color: rgba(0,0,0,0.3);
-}
-
-.theme-light #profile-content tab:hover {
-  background-color: rgba(255,255,255,0.8);
+#profile-content tab:hover {
+  background-color: var(--tab-hover-background-color);
 }
 
 #profile-content tab[selected] {

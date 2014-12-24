@@ -1810,6 +1810,8 @@ skip-if(Android) == 966510-2.html 966510-2-ref.html # same as above
 == 983084-2.html 983084-2-ref.html
 == 983084-3.html 983084-1-ref.html
 == 983691-1.html 983691-ref.html
+HTTP(..) == 983985-1.html 983985-1-ref.html
+HTTP(..) == 983985-2.html 983985-2-ref.html
 == 985303-1a.html 985303-1-ref.html
 == 985303-1b.html 985303-1-ref.html
 == 987680-1.html 987680-1-ref.html

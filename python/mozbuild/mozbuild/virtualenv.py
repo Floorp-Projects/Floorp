@@ -14,11 +14,11 @@ import subprocess
 import sys
 import warnings
 
-from distutils.version import StrictVersion
+from distutils.version import LooseVersion
 
 
 # Minimum version of Python required to build.
-MINIMUM_PYTHON_VERSION = StrictVersion('2.7.3')
+MINIMUM_PYTHON_VERSION = LooseVersion('2.7.3')
 MINIMUM_PYTHON_MAJOR = 2
 
 
@@ -434,7 +434,7 @@ def verify_python_version(log_handle):
     """Ensure the current version of Python is sufficient."""
     major, minor, micro = sys.version_info[:3]
 
-    our = StrictVersion('%d.%d.%d' % (major, minor, micro))
+    our = LooseVersion('%d.%d.%d' % (major, minor, micro))
 
     if major != MINIMUM_PYTHON_MAJOR or our < MINIMUM_PYTHON_VERSION:
         log_handle.write('Python %s or greater (but not Python 3) is '

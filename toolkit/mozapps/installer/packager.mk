@@ -199,12 +199,10 @@ source-package:
 	@echo 'Packaging source tarball...'
 	$(MKDIR) -p $(DIST)/$(PKG_SRCPACK_PATH)
 	(cd $(MOZ_PKG_SRCDIR) && $(CREATE_SOURCE_TAR) - $(DIR_TO_BE_PACKAGED)) | bzip2 -vf > $(SOURCE_TAR)
-	$(SIGN_SOURCE_TAR_CMD)
 
 hg-bundle:
 	$(MKDIR) -p $(DIST)/$(PKG_SRCPACK_PATH)
 	$(CREATE_HG_BUNDLE_CMD)
-	$(SIGN_HG_BUNDLE_CMD)
 
 source-upload:
 	$(MAKE) upload UPLOAD_FILES='$(SOURCE_UPLOAD_FILES)' CHECKSUM_FILE='$(SOURCE_CHECKSUM_FILE)'

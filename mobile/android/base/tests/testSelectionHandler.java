@@ -18,7 +18,7 @@ public class testSelectionHandler extends UITest {
         Actions.EventExpecter robocopTestExpecter = getActions().expectGeckoEvent("Robocop:testSelectionHandler");
         final String url = "chrome://roboextender/content/testSelectionHandler.html";
         NavigationHelper.enterAndLoadUrl(url);
-        mToolbar.assertTitle(StringHelper.ROBOCOP_SELECTION_HANDLER_TITLE, url);
+        mToolbar.assertTitle(url);
 
         while (!test(robocopTestExpecter)) {
             // do nothing

@@ -60,39 +60,28 @@ var DownloadNotifications = {
   _notificationKey: "downloads",
 
   init: function () {
-    if (!this._viewAdded) {
-      Downloads.getList(Downloads.ALL)
-               .then(list => list.addView(this))
-               .then(null, Cu.reportError);
+    Downloads.getList(Downloads.ALL)
+             .then(list => list.addView(this))
+             .then(() => this._viewAdded = true, Cu.reportError);
 
-      this._viewAdded = true;
-
-      // All click, cancel, and button presses will be handled by this handler as part of the Notifications callback API.
-      Notifications.registerHandler(this._notificationKey, this);
-    }
-  },
-
-  uninit: function () {
-    if (this._viewAdded) {
-      Downloads.getList(Downloads.ALL)
-               .then(list => list.removeView(this))
-               .then(null, Cu.reportError);
-
-      for (let notification of notifications.values()) {
-        notification.hide();
-      }
-
-      this._viewAdded = false;
-    }
+    // All click, cancel, and button presses will be handled by this handler as part of the Notifications callback API.
+    Notifications.registerHandler(this._notificationKey, this);
   },
 
   onDownloadAdded: function (download) {
+    // Don't create notifications for pre-existing succeeded downloads.
+    // We still add notifications for canceled downloads in case the
+    // user decides to retry the download.
+    if (download.succeeded && !this._viewAdded) {
+      return;
+    }
+
     let notification = new DownloadNotification(download);
     notifications.set(download, notification);
     notification.showOrUpdate();
 
-    // If this is the start of the download, show a toast as well
-    if (download.currentBytes == 0) {
+    // If this is a new download, show a toast as well.
+    if (this._viewAdded) {
       window.NativeWindow.toast.show(strings.GetStringFromName("alertDownloadsToast"), "long");
     }
   },

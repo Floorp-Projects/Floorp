@@ -423,10 +423,11 @@ loop.store = loop.store || {};
      * @param {sharedActions.RenameRoom} actionData
      */
     renameRoom: function(actionData) {
+      var oldRoomName = this.getStoreState("roomName");
       var newRoomName = actionData.newRoomName.trim();
 
       // Skip update if name is unchanged or empty.
-      if (!newRoomName || this.getStoreState("roomName") === newRoomName) {
+      if (!newRoomName || oldRoomName === newRoomName) {
         return;
       }
 
