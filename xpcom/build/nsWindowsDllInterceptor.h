@@ -397,6 +397,9 @@ protected:
         pJmp32 = nBytes;
         // jmp 32bit offset
         nBytes += 5;
+      } else if (origBytes[nBytes] == 0xff && origBytes[nBytes + 1] == 0x25) {
+        // jmp [disp32]
+        nBytes += 6;
       } else {
         //printf ("Unknown x86 instruction byte 0x%02x, aborting trampoline\n", origBytes[nBytes]);
         return;

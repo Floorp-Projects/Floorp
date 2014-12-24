@@ -157,6 +157,7 @@ int main()
       TestHook("kernel32.dll", "VirtualAlloc") &&
       TestHook("kernel32.dll", "MapViewOfFile") &&
       TestHook("gdi32.dll", "CreateDIBSection") &&
+      TestHook("kernel32.dll", "CreateFileW") &&
 #endif
       TestDetour("ntdll.dll", "LdrLoadDll")) {
     printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");
