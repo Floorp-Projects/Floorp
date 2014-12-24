@@ -1662,6 +1662,10 @@ nsEventStatus AsyncPanZoomController::OnLongPress(const TapGestureInput& aEvent)
     int32_t modifiers = WidgetModifiersToDOMModifiers(aEvent.modifiers);
     CSSPoint geckoScreenPoint;
     if (ConvertToGecko(aEvent.mLocalPoint, &geckoScreenPoint)) {
+      if (CurrentTouchBlock()->IsDuringFastMotion()) {
+        APZC_LOG("%p dropping long-press because of fast motion\n", this);
+        return nsEventStatus_eIgnore;
+      }
       uint64_t blockId = GetInputQueue()->InjectNewTouchBlock(this);
       controller->HandleLongTap(geckoScreenPoint, modifiers, GetGuid(), blockId);
       return nsEventStatus_eConsumeNoDefault;
@@ -2620,12 +2624,12 @@ ViewTransform AsyncPanZoomController::GetCurrentAsyncTransform() const {
   // If checkerboarding has been disallowed, clamp the scroll position to stay
   // within rendered content.
   if (!gfxPrefs::APZAllowCheckerboarding() &&
-      !mLastContentPaintMetrics.mDisplayPort.IsEmpty()) {
+      !mLastContentPaintMetrics.GetDisplayPort().IsEmpty()) {
     CSSSize compositedSize = mLastContentPaintMetrics.CalculateCompositedSizeInCssPixels();
     CSSPoint maxScrollOffset = lastPaintScrollOffset +
-      CSSPoint(mLastContentPaintMetrics.mDisplayPort.XMost() - compositedSize.width,
-               mLastContentPaintMetrics.mDisplayPort.YMost() - compositedSize.height);
-    CSSPoint minScrollOffset = lastPaintScrollOffset + mLastContentPaintMetrics.mDisplayPort.TopLeft();
+      CSSPoint(mLastContentPaintMetrics.GetDisplayPort().XMost() - compositedSize.width,
+               mLastContentPaintMetrics.GetDisplayPort().YMost() - compositedSize.height);
+    CSSPoint minScrollOffset = lastPaintScrollOffset + mLastContentPaintMetrics.GetDisplayPort().TopLeft();
 
     if (minScrollOffset.x < maxScrollOffset.x) {
       currentScrollOffset.x = clamped(currentScrollOffset.x, minScrollOffset.x, maxScrollOffset.x);
@@ -2681,7 +2685,7 @@ bool AsyncPanZoomController::IsCurrentlyCheckerboarding() const {
   }
 
   CSSPoint currentScrollOffset = mFrameMetrics.GetScrollOffset() + mTestAsyncScrollOffset;
-  CSSRect painted = mLastContentPaintMetrics.mDisplayPort + mLastContentPaintMetrics.GetScrollOffset();
+  CSSRect painted = mLastContentPaintMetrics.GetDisplayPort() + mLastContentPaintMetrics.GetScrollOffset();
   painted.Inflate(CSSMargin::FromAppUnits(nsMargin(1, 1, 1, 1)));   // fuzz for rounding error
   CSSRect visible = CSSRect(currentScrollOffset, mFrameMetrics.CalculateCompositedSizeInCssPixels());
   return !painted.Contains(visible);
@@ -2702,7 +2706,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
 
   LogRendertraceRect(GetGuid(), "page", "brown", aLayerMetrics.mScrollableRect);
   LogRendertraceRect(GetGuid(), "painted displayport", "lightgreen",
-    aLayerMetrics.mDisplayPort + aLayerMetrics.GetScrollOffset());
+    aLayerMetrics.GetDisplayPort() + aLayerMetrics.GetScrollOffset());
   if (!aLayerMetrics.mCriticalDisplayPort.IsEmpty()) {
     LogRendertraceRect(GetGuid(), "painted critical displayport", "darkgreen",
       aLayerMetrics.mCriticalDisplayPort + aLayerMetrics.GetScrollOffset());

@@ -239,6 +239,16 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
     if (mDragMode == START_FRAME || mDragMode == END_FRAME) {
       if (mActiveTouchId == nowTouchId) {
         ptInRoot.y += mCaretCenterToDownPointOffsetY;
+
+        if (mDragMode == START_FRAME) {
+          if (ptInRoot.y > mDragDownYBoundary) {
+            ptInRoot.y = mDragDownYBoundary;
+          }
+        } else if (mDragMode == END_FRAME) {
+          if (ptInRoot.y < mDragUpYBoundary) {
+            ptInRoot.y = mDragUpYBoundary;
+          }
+        }
         return DragSelection(ptInRoot);
       }
 
@@ -514,6 +524,17 @@ SelectionCarets::UpdateSelectionCarets()
   SetStartFramePos(firstRectInCanvasFrame.BottomLeft());
   SetEndFramePos(lastRectInCanvasFrame.BottomRight());
   SetVisibility(true);
+
+  nsRect firstRectInRootFrame = firstRectInStartFrame;
+  nsRect lastRectInRootFrame = lastRectInEndFrame;
+  nsLayoutUtils::TransformRect(startFrame, rootFrame, firstRectInRootFrame);
+  nsLayoutUtils::TransformRect(endFrame, rootFrame, lastRectInRootFrame);
+
+  // Use half of the first(last) rect as the dragup(dragdown) boundary
+  mDragUpYBoundary =
+    (firstRectInRootFrame.BottomLeft().y + firstRectInRootFrame.TopLeft().y) / 2;
+  mDragDownYBoundary =
+    (lastRectInRootFrame.BottomRight().y + lastRectInRootFrame.TopRight().y) / 2;
 
   nsRect rectStart = GetStartFrameRect();
   nsRect rectEnd = GetEndFrameRect();
