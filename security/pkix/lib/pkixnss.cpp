@@ -59,18 +59,18 @@ CheckPublicKeySize(Input subjectPublicKeyInfo, unsigned int minimumNonECCBits,
     case ecKey:
       // TODO(bug 1077790): We should check which curve.
       return Success;
-    case dsaKey: // fall through
     case rsaKey:
       if (SECKEY_PublicKeyStrengthInBits(publicKey.get()) < minimumNonECCBits) {
         return Result::ERROR_INADEQUATE_KEY_SIZE;
       }
       break;
-    case nullKey:
-    case fortezzaKey:
-    case dhKey:
-    case keaKey:
-    case rsaPssKey:
-    case rsaOaepKey:
+    case dsaKey: // fall through
+    case nullKey: // fall through
+    case fortezzaKey: // fall through
+    case dhKey: // fall through
+    case keaKey: // fall through
+    case rsaPssKey: // fall through
+    case rsaOaepKey: // fall through
     default:
       return Result::ERROR_UNSUPPORTED_KEYALG;
   }
