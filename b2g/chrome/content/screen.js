@@ -7,6 +7,7 @@
 
 let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
 let isMulet = "ResponsiveUI" in browserWindow;
+Cu.import("resource://gre/modules/GlobalSimulatorScreen.jsm");
 
 // We do this on ContentStart because querying the displayDPI fails otherwise.
 window.addEventListener('ContentStart', function() {
@@ -98,26 +99,18 @@ window.addEventListener('ContentStart', function() {
     return;
   } 
 
-  let rescale = false;
-
-  // If the value of --screen ends with !, we'll be scaling the output
-  if (screenarg[screenarg.length - 1] === '!') {
-    rescale = true;
-    screenarg = screenarg.substring(0, screenarg.length-1);
-  }
-
-  let width, height, dpi;
+  let width, height, ratio = 1.0;
 
   if (screenarg in screens) {
     // If this is a named screen, get its data
     let screen = screens[screenarg];
     width = screen.width;
     height = screen.height;
-    dpi = screen.dpi;
+    ratio = screen.ratio;
   } else {
     // Otherwise, parse the resolution and density from the --screen value.
     // The supported syntax is WIDTHxHEIGHT[@DPI]
-    let match = screenarg.match(/^(\d+)x(\d+)(@(\d+))?$/);
+    let match = screenarg.match(/^(\d+)x(\d+)(@(\d+(\.\d+)?))?$/);
     
     // Display usage information on syntax errors
     if (match == null)
@@ -127,17 +120,15 @@ window.addEventListener('ContentStart', function() {
     width = parseInt(match[1], 10);
     height = parseInt(match[2], 10);
     if (match[4])
-      dpi = parseInt(match[4], 10);
-    else    // If no DPI, use the actual dpi of the host screen
-      dpi = hostDPI;
+      ratio = parseFloat(match[4], 10);
 
     // If any of the values came out 0 or NaN or undefined, display usage
-    if (!width || !height || !dpi)
+    if (!width || !height || !ratio) {
       usage();
+    }
   }
 
-  Cu.import("resource://gre/modules/GlobalSimulatorScreen.jsm");
-  function resize(width, height, dpi, shouldFlip) {
+  function resize(width, height, ratio, shouldFlip) {
     GlobalSimulatorScreen.width = width;
     GlobalSimulatorScreen.height = height;
 
@@ -145,7 +136,7 @@ window.addEventListener('ContentStart', function() {
     // width and height, and then use a CSS transform to scale it so that
     // it appears at the correct size on the host display.  We also set
     // the size of the <window> element to that scaled target size.
-    let scale = rescale ? hostDPI / dpi : 1;
+    let scale = 1.0;
 
     // Set the window width and height to desired size plus chrome
     // Include the size of the toolbox displayed under the system app
@@ -158,7 +149,7 @@ window.addEventListener('ContentStart', function() {
     let chromeheight = window.outerHeight - window.innerHeight + controlsHeight;
     if (isMulet) {
       let responsive = browserWindow.gBrowser.selectedTab.__responsiveUI;
-      responsive.setSize((Math.round(width * scale) + 14*2),
+      responsive.setSize((Math.round(width * scale) + 16*2),
                         (Math.round(height * scale) + controlsHeight + 61));
     } else {
       window.resizeTo(Math.round(width * scale) + chromewidth,
@@ -173,20 +164,9 @@ window.addEventListener('ContentStart', function() {
 
     // Set the browser element to the full unscaled size of the screen
     let style = browser.style;
-    style.width = style.minWidth = style.maxWidth =
-      frameWidth + 'px';
-    style.height = style.minHeight = style.maxHeight =
-      frameHeight + 'px';
-    browser.setAttribute('flex', '0');  // Don't let it stretch
-
-    style.transformOrigin = '';
     style.transform = '';
-
-    // Now scale the browser element as needed
-    if (scale !== 1) {
-      style.transformOrigin = 'top left';
-      style.transform += ' scale(' + scale + ',' + scale + ')';
-    }
+    style.height = 'calc(100% - ' + controlsHeight + 'px)';
+    style.bottom = controlsHeight;
 
     if (shouldFlip) {
       // Display the system app with a 90° clockwise rotation
@@ -195,16 +175,26 @@ window.addEventListener('ContentStart', function() {
         ' rotate(0.25turn) translate(-' + shift + 'px, -' + shift + 'px)';
     }
 
-    // Set the pixel density that we want to simulate.
-    // This doesn't change the on-screen size, but makes
-    // CSS media queries and mozmm units work right.
-    Services.prefs.setIntPref('layout.css.dpi', dpi);
+    Services.prefs.setCharPref('layout.css.devPixelsPerPx', ratio);
   }
 
   // Resize on startup
-  resize(width, height, dpi, false);
+  resize(width, height, ratio, false);
 
   let defaultOrientation = width < height ? 'portrait' : 'landscape';
+  GlobalSimulatorScreen.mozOrientation = GlobalSimulatorScreen.screenOrientation = defaultOrientation;
+
+  // Catch manual resizes to update the internal device size.
+  window.onresize = function() {
+    width = browser.clientWidth;
+    height = browser.clientHeight;
+    if ((defaultOrientation == 'portrait' && width > height) ||
+        (defaultOrientation == 'landscape' && width < height)) {
+      let w = width;
+      width = height;
+      height = w;
+    }
+  };
 
   // Then resize on each rotation button click,
   // or when the system app lock/unlock the orientation
@@ -226,7 +216,7 @@ window.addEventListener('ContentStart', function() {
     // it is displayed rotated on the side
     let shouldFlip = mozOrientation != screenOrientation;
 
-    resize(newWidth, newHeight, dpi, shouldFlip);
+    resize(newWidth, newHeight, ratio, shouldFlip);
   }, 'simulator-adjust-window-size', false);
 
   // A utility function like console.log() for printing to the terminal window
@@ -256,12 +246,6 @@ window.addEventListener('ContentStart', function() {
       '\nYou can also specify certain device names:\n';
     for(let p in screens)
       msg += '\t--screen=' + p + '\t// ' + screens[p].name + '\n';
-    msg += 
-      '\nAdd a ! to the end of a screen specification to rescale the\n' +
-      'screen so that it is shown at actual size on your monitor:\n' +
-      '\t--screen=nexus_s!\n' +
-      '\t--screen=320x480@200!\n'
-    ;
 
     // Display the usage message
     print(msg);
