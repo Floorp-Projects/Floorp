@@ -279,6 +279,19 @@ function* stopRecording(panel) {
     "The record button should not be locked.");
 }
 
+function waitForWidgetsRendered(panel) {
+  let { EVENTS, OverviewView, CallTreeView, WaterfallView } = panel.panelWin;
+
+  return Promise.all([
+    once(OverviewView, EVENTS.FRAMERATE_GRAPH_RENDERED),
+    once(OverviewView, EVENTS.MARKERS_GRAPH_RENDERED),
+    once(OverviewView, EVENTS.MEMORY_GRAPH_RENDERED),
+    once(OverviewView, EVENTS.OVERVIEW_RENDERED),
+    once(CallTreeView, EVENTS.CALL_TREE_RENDERED),
+    once(WaterfallView, EVENTS.WATERFALL_RENDERED)
+  ]);
+}
+
 /**
  * Waits until a predicate returns true.
  *

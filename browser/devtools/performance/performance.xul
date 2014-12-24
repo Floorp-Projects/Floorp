@@ -36,6 +36,9 @@
         <toolbarbutton id="import-button"
                        class="devtools-toolbarbutton"
                        label="&profilerUI.importButton;"/>
+        <toolbarbutton id="export-button"
+                       class="devtools-toolbarbutton"
+                       label="&profilerUI.exportButton;"/>
       </hbox>
     </toolbar>
 

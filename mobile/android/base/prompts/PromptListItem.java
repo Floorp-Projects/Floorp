@@ -107,7 +107,7 @@ public class PromptListItem {
         }
 
         int length = items.length();
-        List<PromptListItem> list = new ArrayList<PromptListItem>(length);
+        List<PromptListItem> list = new ArrayList<>(length);
         for (int i = 0; i < length; i++) {
             try {
                 PromptListItem item = new PromptListItem(items.getJSONObject(i));
@@ -115,8 +115,6 @@ public class PromptListItem {
             } catch(Exception ex) { }
         }
 
-        PromptListItem[] arrays = new PromptListItem[length];
-        list.toArray(arrays);
-        return arrays;
+        return list.toArray(new PromptListItem[length]);
     }
 }

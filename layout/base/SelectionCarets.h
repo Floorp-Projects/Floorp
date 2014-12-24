@@ -241,6 +241,20 @@ private:
   int32_t mActiveTouchId;
 
   nscoord mCaretCenterToDownPointOffsetY;
+
+  // The horizontal boundary is defined by the first selected frame which
+  // determines the start-caret position. When users drag the end-caret up,
+  // the touch input(pos.y) will be changed to not cross this boundary.
+  // Otherwise, the selection range changes to one character only
+  // which causes the bad user experience.
+  nscoord mDragUpYBoundary;
+  // The horizontal boundary is defined by the last selected frame which
+  // determines the end-caret position. When users drag the start-caret down,
+  // the touch input(pos.y) will be changed to not cross this boundary.
+  // Otherwise, the selection range changes to one character only
+  // which causes the bad user experience.
+  nscoord mDragDownYBoundary;
+
   DragMode mDragMode;
 
   // True if AsyncPanZoom is enabled
