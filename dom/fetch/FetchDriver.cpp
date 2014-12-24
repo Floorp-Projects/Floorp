@@ -8,6 +8,7 @@
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIHttpChannel.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIThreadRetargetableRequest.h"
@@ -448,6 +449,14 @@ FetchDriver::HttpFetch(bool aCORSFlag, bool aCORSPreflightFlag, bool aAuthentica
         return FailWithNetworkError();
       }
     }
+  }
+
+  // Set skip serviceworker flag.
+  // While the spec also gates on the client being a ServiceWorker, we can't
+  // infer that here. Instead we rely on callers to set the flag correctly.
+  if (mRequest->SkipServiceWorker()) {
+    nsCOMPtr<nsIHttpChannelInternal> internalChan = do_QueryInterface(httpChan);
+    internalChan->ForceNoIntercept();
   }
 
   // Set up a CORS proxy that will handle the various requirements of the CORS
