@@ -5,6 +5,7 @@
 from __future__ import absolute_import
 
 import importlib
+import os
 
 from sphinx.util.compat import Directive
 from sphinx.util.docstrings import prepare_docstring
@@ -152,3 +153,19 @@ class MozbuildSymbols(Directive):
 
 def setup(app):
     app.add_directive('mozbuildsymbols', MozbuildSymbols)
+
+    # Unlike typical Sphinx installs, our documentation is assembled from
+    # many sources and staged in a common location. This arguably isn't a best
+    # practice, but it was the easiest to implement at the time.
+    #
+    # Here, we invoke our custom code for staging/generating all our
+    # documentation.
+    from moztreedocs import SphinxManager
+
+    topsrcdir = app.config._raw_config['topsrcdir']
+    manager = SphinxManager(topsrcdir,
+        os.path.join(topsrcdir, 'tools', 'docs'),
+        app.outdir)
+    manager.generate_docs(app)
+
+    app.srcdir = manager._docs_dir
