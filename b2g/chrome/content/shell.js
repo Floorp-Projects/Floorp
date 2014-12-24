@@ -1230,7 +1230,7 @@ Services.obs.addObserver(function resetProfile(subject, topic, data) {
 }, 'b2g-reset-profile', false);
 
 /**
-  * CID of our implementation of nsIDownloadManagerUI.
+  * CID of our implementation of nsITransfer.
   */
 const kTransferCid = Components.ID("{1b4c85df-cbdd-4bb6-b04e-613caece083c}");
 
