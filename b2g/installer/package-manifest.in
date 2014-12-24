@@ -393,8 +393,6 @@
 @BINPATH@/components/crypto-SDR.js
 @BINPATH@/components/jsconsole-clhandler.manifest
 @BINPATH@/components/jsconsole-clhandler.js
-@BINPATH@/components/nsDownloadManagerUI.manifest
-@BINPATH@/components/nsDownloadManagerUI.js
 @BINPATH@/components/Downloads.manifest
 @BINPATH@/components/DownloadLegacy.js
 @BINPATH@/components/nsSidebar.manifest
