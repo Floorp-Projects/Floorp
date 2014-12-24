@@ -1,3 +1,8 @@
+if (typeof SIMD === 'undefined' || !isSimdAvailable()) {
+    print("won't run tests as simd extensions aren't activated yet");
+    quit(0);
+}
+
 (function(global) {
     "use asm";
     var frd = global.Math.fround;
