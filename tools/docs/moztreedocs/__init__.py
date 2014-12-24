@@ -21,6 +21,7 @@ class SphinxManager(object):
     def __init__(self, topsrcdir, main_path, output_dir):
         self._topsrcdir = topsrcdir
         self._output_dir = output_dir
+        self._docs_dir = os.path.join(output_dir, 'staging')
         self._conf_py_path = os.path.join(main_path, 'conf.py')
         self._index_path = os.path.join(main_path, 'index.rst')
         self._trees = {}
@@ -75,7 +76,7 @@ class SphinxManager(object):
             args = [
                 'sphinx',
                 '-b', fmt,
-                os.path.join(self._output_dir, 'staging'),
+                self._docs_dir,
                 os.path.join(self._output_dir, fmt),
             ]
 
@@ -86,7 +87,7 @@ class SphinxManager(object):
 
     def _generate_python_api_docs(self):
         """Generate Python API doc files."""
-        out_dir = os.path.join(self._output_dir, 'staging', 'python')
+        out_dir = os.path.join(self._docs_dir, 'python')
         base_args = ['sphinx', '--no-toc', '-o', out_dir]
 
         for p in sorted(self._python_package_dirs):
@@ -117,10 +118,9 @@ class SphinxManager(object):
 
                     m.add_symlink(source_path, os.path.join(dest, rel_source))
 
-        stage_dir = os.path.join(self._output_dir, 'staging')
         copier = FileCopier()
         m.populate_registry(copier)
-        copier.copy(stage_dir)
+        copier.copy(self._docs_dir)
 
         with open(self._index_path, 'rb') as fh:
             data = fh.read()
@@ -133,5 +133,5 @@ class SphinxManager(object):
         packages = '\n   '.join(sorted(packages))
         data = data.format(indexes=indexes, python_packages=packages)
 
-        with open(os.path.join(stage_dir, 'index.rst'), 'wb') as fh:
+        with open(os.path.join(self._docs_dir, 'index.rst'), 'wb') as fh:
             fh.write(data)
