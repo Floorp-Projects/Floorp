@@ -52,7 +52,7 @@ const VARIABLES_VIEW_URL = "chrome://browser/content/devtools/widgets/VariablesV
 
 const CONSOLE_DIR_VIEW_HEIGHT = 0.6;
 
-const IGNORED_SOURCE_URLS = ["debugger eval code", "self-hosted"];
+const IGNORED_SOURCE_URLS = ["debugger eval code"];
 
 // The amount of time in milliseconds that we wait before performing a live
 // search.

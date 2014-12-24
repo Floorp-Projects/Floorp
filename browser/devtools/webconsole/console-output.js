@@ -97,7 +97,7 @@ const CONSOLE_API_LEVELS_TO_SEVERITIES = {
 };
 
 // Array of known message source URLs we need to hide from output.
-const IGNORED_SOURCE_URLS = ["debugger eval code", "self-hosted"];
+const IGNORED_SOURCE_URLS = ["debugger eval code"];
 
 // The maximum length of strings to be displayed by the Web Console.
 const MAX_LONG_STRING_LENGTH = 200000;
