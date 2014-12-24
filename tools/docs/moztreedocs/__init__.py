@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import os
 
+from mozbuild.frontend.reader import BuildReader
 from mozpack.copier import FileCopier
 from mozpack.files import FileFinder
 from mozpack.manifests import InstallManifest
@@ -24,6 +25,29 @@ class SphinxManager(object):
         self._index_path = os.path.join(main_path, 'index.rst')
         self._trees = {}
         self._python_package_dirs = set()
+
+    def read_build_config(self):
+        """Read the active build config and add docs to this instance."""
+
+        # Reading the Sphinx variables doesn't require a full build context.
+        # Only define the parts we need.
+        class fakeconfig(object):
+            def __init__(self, topsrcdir):
+                self.topsrcdir = topsrcdir
+
+        config = fakeconfig(self._topsrcdir)
+        reader = BuildReader(config)
+
+        for path, name, key, value in reader.find_sphinx_variables():
+            reldir = os.path.dirname(path)
+
+            if name == 'SPHINX_TREES':
+                assert key
+                self.add_tree(os.path.join(reldir, value),
+                    os.path.join(reldir, key))
+
+            if name == 'SPHINX_PYTHON_PACKAGE_DIRS':
+                self.add_python_package_dir(os.path.join(reldir, value))
 
     def add_tree(self, source_dir, dest_dir):
         """Add a directory from where docs should be sourced."""
