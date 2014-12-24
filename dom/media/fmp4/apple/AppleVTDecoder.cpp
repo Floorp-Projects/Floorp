@@ -11,6 +11,7 @@
 #include "AppleVTDecoder.h"
 #include "AppleVTLinker.h"
 #include "mp4_demuxer/DecoderData.h"
+#include "mp4_demuxer/H264.h"
 #include "MediaData.h"
 #include "MacIOSurfaceImage.h"
 #include "mozilla/ArrayUtils.h"
@@ -275,8 +276,8 @@ AppleVTDecoder::InitializeSession()
 
   rv = CMVideoFormatDescriptionCreate(kCFAllocatorDefault,
                                       kCMVideoCodecType_H264,
-                                      mConfig.image_width,
-                                      mConfig.image_height,
+                                      mPictureWidth,
+                                      mPictureHeight,
                                       extensions,
                                       &mFormat);
   if (rv != noErr) {
