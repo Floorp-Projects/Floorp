@@ -91,7 +91,7 @@ ClientTiledPaintedLayer::GetAncestorLayers(LayerMetricsWrapper* aOutScrollAncest
     if (!scrollAncestor && metrics.GetScrollId() != FrameMetrics::NULL_SCROLL_ID) {
       scrollAncestor = ancestor;
     }
-    if (!metrics.mDisplayPort.IsEmpty()) {
+    if (!metrics.GetDisplayPort().IsEmpty()) {
       displayPortAncestor = ancestor;
       // Any layer that has a displayport must be scrollable, so we can break
       // here.
@@ -191,7 +191,7 @@ ClientTiledPaintedLayer::UseFastPath()
                                  || gfxPrefs::UseLowPrecisionBuffer()
                                  || !parentMetrics.mCriticalDisplayPort.IsEmpty();
   bool isFixed = GetIsFixedPosition() || GetParent()->GetIsFixedPosition();
-  return !multipleTransactionsNeeded || isFixed || parentMetrics.mDisplayPort.IsEmpty();
+  return !multipleTransactionsNeeded || isFixed || parentMetrics.GetDisplayPort().IsEmpty();
 }
 
 bool

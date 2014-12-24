@@ -110,6 +110,7 @@ InputQueue::ReceiveTouchInput(const nsRefPtr<AsyncPanZoomController>& aTarget,
   // the target isn't confirmed and the real target turns out to be something
   // else. For now assume this is rare enough that it's not an issue.
   if (block->IsDuringFastMotion()) {
+    INPQ_LOG("dropping event due to block %p being in fast motion\n", block);
     result = nsEventStatus_eConsumeNoDefault;
   } else if (target && target->ArePointerEventsConsumable(block, aEvent.AsMultiTouchInput().mTouches.Length())) {
     result = nsEventStatus_eConsumeDoDefault;
@@ -224,8 +225,8 @@ InputQueue::InjectNewTouchBlock(AsyncPanZoomController* aTarget)
   TouchBlockState* block = StartNewTouchBlock(aTarget,
     /* aTargetConfirmed = */ true,
     /* aCopyAllowedTouchBehaviorFromCurrent = */ true);
-  INPQ_LOG("%p injecting new touch block with id %" PRIu64 " and target %p\n",
-    this, block->GetBlockId(), aTarget);
+  INPQ_LOG("injecting new touch block %p with id %" PRIu64 " and target %p\n",
+    block, block->GetBlockId(), aTarget);
   ScheduleMainThreadTimeout(aTarget, block->GetBlockId());
   return block->GetBlockId();
 }

@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="e0c735ec89df011ea7dd435087a9045ecff9ff9e">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="0db8a38f9fed18ae2abf5ef7e1b6e2a570b07e0e"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="cb1dad4881533bff9f06d47e34983c7b10c04a8c"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="8aee09c106f479f36c57b2a29af72d455e359211"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
@@ -139,7 +139,7 @@
   <project name="platform/system/core" path="system/core" revision="53d584d4a4b4316e4de9ee5f210d662f89b44e7e"/>
   <project name="u-boot" path="u-boot" revision="982c1fd67b89d5573317c1796cf5b0143de44e8a"/>
   <project name="vendor/sprd/gps" path="vendor/sprd/gps" revision="6974f8e771d4d8e910357a6739ab124768891e8f"/>
-  <project name="vendor/sprd/open-source" path="vendor/sprd/open-source" revision="8ecfad58dfca5def20c7f7a51d251a89023c8c7c"/>
+  <project name="vendor/sprd/open-source" path="vendor/sprd/open-source" revision="1f4dea73da4f71e9f160a51c1d8cdad03f0a0ba6"/>
   <project name="vendor/sprd/partner" path="vendor/sprd/partner" revision="8649c7145972251af11b0639997edfecabfc7c2e"/>
   <project name="vendor/sprd/proprietories" path="vendor/sprd/proprietories" revision="d2466593022f7078aaaf69026adf3367c2adb7bb"/>
 </manifest>

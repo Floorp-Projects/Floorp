@@ -750,6 +750,11 @@ public:
   }
 
   /**
+   * Return frame's rect without relative positioning
+   */
+  nsRect GetNormalRect() const;
+
+  /**
    * Return frame's position without relative positioning
    */
   nsPoint GetNormalPosition() const;
