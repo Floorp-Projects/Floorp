@@ -51,10 +51,6 @@ contract @mozilla.org/content-permission/prompt;1 {C6E8C44D-9F39-4AF7-BCC0-76E38
 component {c1242012-27d8-477e-a0f1-0b098ffc329b} XPIDialogService.js
 contract @mozilla.org/addons/web-install-prompt;1 {c1242012-27d8-477e-a0f1-0b098ffc329b}
 
-# DownloadManagerUI.js
-component {93db15b1-b408-453e-9a2b-6619e168324a} DownloadManagerUI.js
-contract @mozilla.org/download-manager-ui;1 {93db15b1-b408-453e-9a2b-6619e168324a}
-
 # HelperAppDialog.js
 component {e9d277a0-268a-4ec2-bb8c-10fdf3e44611} HelperAppDialog.js
 contract @mozilla.org/helperapplauncherdialog;1 {e9d277a0-268a-4ec2-bb8c-10fdf3e44611}
