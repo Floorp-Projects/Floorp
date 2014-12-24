@@ -224,7 +224,7 @@ Telephony::DialInternal(uint32_t aServiceId, const nsAString& aNumber,
   }
 
   nsCOMPtr<nsITelephonyDialCallback> callback =
-    new TelephonyDialCallback(GetOwner(), this, promise, aServiceId);
+    new TelephonyDialCallback(GetOwner(), this, promise);
 
   nsresult rv = mService->Dial(aServiceId, aNumber, aEmergency, callback);
   if (NS_FAILED(rv)) {
