@@ -297,7 +297,7 @@ struct nsRunnableMethodReceiver<ClassType, void, Owning>
 template<class ClassType>
 struct nsRunnableMethodReceiver<ClassType, void, false>
 {
-  ClassType* MOZ_WEAK_REF mObj;
+  ClassType* MOZ_NON_OWNING_REF mObj;
   explicit nsRunnableMethodReceiver(ClassType* aObj) : mObj(aObj) {}
   void Revoke() { mObj = nullptr; }
 };

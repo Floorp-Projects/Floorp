@@ -31,7 +31,7 @@ struct nsXREAppData
    * The directory of the application to be run. May be null if the
    * xulrunner and the app are installed into the same directory.
    */
-  nsIFile* MOZ_WEAK_REF directory;
+  nsIFile* MOZ_NON_OWNING_REF directory;
 
   /**
    * The name of the application vendor. This must be ASCII, and is normally
@@ -93,7 +93,7 @@ struct nsXREAppData
    * The location of the XRE. XRE_main may not be able to figure this out
    * programatically.
    */
-  nsIFile* MOZ_WEAK_REF xreDirectory;
+  nsIFile* MOZ_NON_OWNING_REF xreDirectory;
 
   /**
    * The minimum/maximum compatible XRE version.
