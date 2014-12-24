@@ -127,8 +127,8 @@ VerifySignedData(const SignedDataWithSignature& sd,
       break;
     case SignatureAlgorithm::unsupported_algorithm:
     default:
-      PR_NOT_REACHED("unknown signature algorithm");
-      return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
+      return NotReached("unknown signature algorithm",
+                        Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED);
   }
 
   Result rv;
@@ -164,8 +164,7 @@ DigestBuf(Input item, /*out*/ uint8_t* digestBuf, size_t digestBufLen)
   static_assert(TrustDomain::DIGEST_LENGTH == SHA1_LENGTH,
                 "TrustDomain::DIGEST_LENGTH must be 20 (SHA-1 digest length)");
   if (digestBufLen != TrustDomain::DIGEST_LENGTH) {
-    PR_NOT_REACHED("invalid hash length");
-    return Result::FATAL_ERROR_INVALID_ARGS;
+    return NotReached("invalid hash length", Result::FATAL_ERROR_INVALID_ARGS);
   }
   SECItem itemSECItem = UnsafeMapInputToSECItem(item);
   if (itemSECItem.len >
