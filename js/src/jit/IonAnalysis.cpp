@@ -260,7 +260,7 @@ MaybeFoldConditionBlock(MIRGraph &graph, MBasicBlock *initialBlock)
 
     MBasicBlock *trueTarget = trueBranch;
     if (BlockComputesConstant(trueBranch, trueResult)) {
-        trueTarget = trueResult->toConstant()->valueToBoolean()
+        trueTarget = trueResult->constantToBoolean()
                      ? finalTest->ifTrue()
                      : finalTest->ifFalse();
         testBlock->removePredecessor(trueBranch);
@@ -272,7 +272,7 @@ MaybeFoldConditionBlock(MIRGraph &graph, MBasicBlock *initialBlock)
 
     MBasicBlock *falseTarget = falseBranch;
     if (BlockComputesConstant(falseBranch, falseResult)) {
-        falseTarget = falseResult->toConstant()->valueToBoolean()
+        falseTarget = falseResult->constantToBoolean()
                       ? finalTest->ifTrue()
                       : finalTest->ifFalse();
         testBlock->removePredecessor(falseBranch);
@@ -2270,8 +2270,8 @@ jit::ExtractLinearSum(MDefinition *ins)
     if (ins->type() != MIRType_Int32)
         return SimpleLinearSum(ins, 0);
 
-    if (ins->isConstant()) {
-        const Value &v = ins->toConstant()->value();
+    if (ins->isConstantValue()) {
+        const Value &v = ins->constantValue();
         MOZ_ASSERT(v.isInt32());
         return SimpleLinearSum(nullptr, v.toInt32());
     } else if (ins->isAdd() || ins->isSub()) {
@@ -2672,8 +2672,8 @@ LinearSum::add(MDefinition *term, int32_t scale)
     if (scale == 0)
         return true;
 
-    if (term->isConstant()) {
-        int32_t constant = term->toConstant()->value().toInt32();
+    if (term->isConstantValue()) {
+        int32_t constant = term->constantValue().toInt32();
         if (!SafeMul(constant, scale, &constant))
             return false;
         return add(constant);
@@ -2751,7 +2751,7 @@ jit::ConvertLinearSum(TempAllocator &alloc, MBasicBlock *block, const LinearSum 
 
     for (size_t i = 0; i < sum.numTerms(); i++) {
         LinearTerm term = sum.term(i);
-        MOZ_ASSERT(!term.term->isConstant());
+        MOZ_ASSERT(!term.term->isConstantValue());
         if (term.scale == 1) {
             if (def) {
                 def = MAdd::New(alloc, def, term.term);
