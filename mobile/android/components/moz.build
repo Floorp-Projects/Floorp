@@ -17,7 +17,6 @@ EXTRA_COMPONENTS += [
     'ColorPicker.js',
     'ContentDispatchChooser.js',
     'ContentPermissionPrompt.js',
-    'DownloadManagerUI.js',
     'FilePicker.js',
     'LoginManagerPrompter.js',
     'NSSDialogService.js',
