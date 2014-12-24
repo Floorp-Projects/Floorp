@@ -53,14 +53,14 @@ for (var constructor of constructors) {
     }
 
     // Throws if `this` isn't a TypedArray.
-    var nonTypedArrays = [undefined, null, 1, false, "", Symbol(), [], {}, /./,
-                         /* new Proxy(new constructor(), {}) // This probably should throw */
-                         ];
-    nonTypedArrays.forEach(nonTypedArray => {
-        assertThrowsInstanceOf(function() {
-            constructor.prototype.fill.call(nonTypedArray, 1);
+    var invalidReceivers = [undefined, null, 1, false, "", Symbol(), [], {}, /./]
+    invalidReceivers.forEach(invalidReceiver => {
+        assertThrowsInstanceOf(() => {
+            constructor.prototype.fill.call(invalidReceiver, 1);
         }, TypeError);
     });
+    // FIXME: Should throw exception if `this` is a proxy, see bug 1115361.
+    constructor.prototype.fill.call(new Proxy(new constructor(), {}));
 
     // Test that the length getter is never called.
     Object.defineProperty(new constructor([1, 2, 3]), "length", {

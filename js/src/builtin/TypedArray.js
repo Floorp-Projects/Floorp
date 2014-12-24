@@ -235,3 +235,53 @@ function TypedArrayReverse() {
     // Step 9.
     return O;
 }
+
+// Proposed for ES7:
+// https://github.com/tc39/Array.prototype.includes/blob/7c023c19a0/spec.md
+function TypedArrayIncludes(searchElement, fromIndex = 0) {
+    // This function is not generic.
+    if (!IsObject(this) || !IsTypedArray(this)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, this, searchElement,
+                            fromIndex, "TypedArrayIncludes");
+    }
+
+    // Steps 1-2.
+    var O = this;
+
+    // Steps 3-4.
+    var len = TypedArrayLength(O);
+
+    // Step 5.
+    if (len === 0)
+        return false;
+
+    // Steps 6-7.
+    var n = ToInteger(fromIndex);
+
+    var k;
+    // Step 8.
+    if (n >= 0) {
+        k = n;
+    }
+    // Step 9.
+    else {
+        // Step a.
+        k = len + n;
+        // Step b.
+        if (k < 0)
+            k = 0;
+    }
+
+    // Step 10.
+    while (k < len) {
+        // Steps a-c.
+        if (SameValueZero(searchElement, O[k]))
+            return true;
+
+        // Step d.
+        k++;
+    }
+
+    // Step 11.
+    return false;
+}
