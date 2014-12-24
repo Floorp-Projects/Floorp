@@ -38,29 +38,6 @@ class Documentation(MachCommandBase):
         manager = SphinxManager(self.topsrcdir, os.path.join(self.topsrcdir,
             'tools', 'docs'), outdir)
 
-        # We don't care about GYP projects, so don't process them. This makes
-        # scanning faster and may even prevent an exception.
-        def remove_gyp_dirs(context):
-            context['GYP_DIRS'][:] = []
-
-        # Reading the Sphinx variables doesn't require a full build context.
-        # Only define the parts we need.
-        class fakeconfig(object):
-            def __init__(self, topsrcdir):
-                self.topsrcdir = topsrcdir
-
-        config = fakeconfig(self.topsrcdir)
-        reader = BuildReader(config)
-
-        for path, name, key, value in reader.find_sphinx_variables():
-            reldir = os.path.dirname(path)
-
-            if name == 'SPHINX_TREES':
-                assert key
-                manager.add_tree(os.path.join(reldir, value),
-                        os.path.join(reldir, key))
-
-            if name == 'SPHINX_PYTHON_PACKAGE_DIRS':
-                manager.add_python_package_dir(os.path.join(reldir, value))
+        manager.read_build_config()
 
         return manager.generate_docs(format)
