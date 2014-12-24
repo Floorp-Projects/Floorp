@@ -71,7 +71,8 @@ nsRubyTextContainerFrame::Reflow(nsPresContext* aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
   // All rt children have already been reflowed. All we need to do is
-  // to report complete and return the desired size.
+  // to report complete and return the desired size provided by the
+  // ruby base container.
 
   // Although a ruby text container may have continuations, returning
   // NS_FRAME_COMPLETE here is still safe, since its parent, ruby frame,
@@ -79,12 +80,5 @@ nsRubyTextContainerFrame::Reflow(nsPresContext* aPresContext,
   // will take care of our continuations.
   aStatus = NS_FRAME_COMPLETE;
   WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
-  WritingMode frameWM = aReflowState.GetWritingMode();
-  LogicalMargin borderPadding = aReflowState.ComputedLogicalBorderPadding();
-
-  // ISize is provided by the ruby base container
-  // during reflow of that container.
-  aDesiredSize.ISize(lineWM) = mISize;
-  nsLayoutUtils::SetBSizeFromFontMetrics(this, aDesiredSize, aReflowState,
-                                         borderPadding, lineWM, frameWM);
+  aDesiredSize.SetSize(lineWM, mLineSize);
 }

@@ -1288,17 +1288,17 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   if (equals_previous) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
             ("HandshakeCallback using PREV cert %p\n", prevcert.get()));
-    status->mServerCert = prevcert;
+    status->SetServerCert(prevcert, nsNSSCertificate::ev_status_unknown);
   }
   else {
-    if (status->mServerCert) {
+    if (status->HasServerCert()) {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
-              ("HandshakeCallback KEEPING cert %p\n", status->mServerCert.get()));
+              ("HandshakeCallback KEEPING existing cert\n"));
     }
     else {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
               ("HandshakeCallback using NEW cert %p\n", nssc.get()));
-      status->mServerCert = nssc;
+      status->SetServerCert(nssc, nsNSSCertificate::ev_status_unknown);
     }
   }
 

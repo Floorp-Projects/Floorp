@@ -642,8 +642,13 @@ NS_GetStreamForMediaStreamURI(nsIURI* aURI, mozilla::DOMMediaStream** aStream)
 {
   NS_ASSERTION(IsMediaStreamURI(aURI), "Only call this with mediastream URIs");
 
+  nsISupports* dataObject = GetDataObject(aURI);
+  if (!dataObject) {
+    return NS_ERROR_DOM_BAD_URI;
+  }
+
   *aStream = nullptr;
-  return CallQueryInterface(GetDataObject(aURI), aStream);
+  return CallQueryInterface(dataObject, aStream);
 }
 
 NS_IMETHODIMP

@@ -49,6 +49,12 @@ public:
                                   SECOidTag* evOidPolicy = nullptr);
   static nsNSSCertificate* ConstructFromDER(char* certDER, int derLen);
 
+  enum EVStatus {
+    ev_status_invalid = 0,
+    ev_status_valid = 1,
+    ev_status_unknown = 2
+  };
+
 private:
   virtual ~nsNSSCertificate();
 
@@ -65,9 +71,7 @@ private:
 
   nsresult GetCertificateHash(nsAString& aFingerprint, SECOidTag aHashAlg);
 
-  enum {
-    ev_status_invalid = 0, ev_status_valid = 1, ev_status_unknown = 2
-  } mCachedEVStatus;
+  EVStatus mCachedEVStatus;
   SECOidTag mCachedEVOidTag;
   nsresult hasValidEVOidTag(SECOidTag& resultOidTag, bool& validEV);
   nsresult getValidEVOidTag(SECOidTag& resultOidTag, bool& validEV);

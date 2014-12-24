@@ -9,6 +9,7 @@ config = {
                 "--symbols-path=%(symbols_path)s",
                 "--xre-path=%(abs_app_dir)s"
             ],
+            "mac_res_subdir": "MacOS",
             "run_filename": "runcppunittests.py",
             "testsdir": "cppunittests"
         },
@@ -20,6 +21,7 @@ config = {
                 "--tinderbox",
                 "--tbpl"
             ],
+            "mac_res_subdir": "MacOS",
             "run_filename": "jit_test.py",
             "testsdir": "jit-test/jit-test"
         },
@@ -36,6 +38,7 @@ config = {
                 "--quiet",
                 "--log-raw=%(raw_log_file)s"
             ],
+            "mac_res_subdir": "MacOS",
             "run_filename": "runtests.py",
             "testsdir": "mochitest"
         },
@@ -44,6 +47,7 @@ config = {
                 "-b",
                 "%(binary_path)s"
             ],
+            "mac_res_subdir": "MacOS",
             "run_filename": "test.py",
             "testsdir": "mozbase"
         },
@@ -54,6 +58,7 @@ config = {
                 "--extra-profile-file=tests/bin/plugins",
                 "--symbols-path=%(symbols_path)s"
             ],
+            "mac_res_subdir": "MacOS",
             "run_filename": "runreftest.py",
             "testsdir": "reftest"
         },
@@ -70,6 +75,7 @@ config = {
                 "--testing-modules-dir=tests/modules",
                 "--quiet"
             ],
+            "mac_res_subdir": "MacOS",
             "run_filename": "runtests.py",
             "testsdir": "mochitest"
         },
@@ -79,6 +85,7 @@ config = {
                 "--test-plugin-path=%(test_plugin_path)s",
                 "--log-raw=%(raw_log_file)s"
             ],
+            "mac_res_subdir": "MacOS",
             "run_filename": "runxpcshelltests.py",
             "testsdir": "xpcshell"
         }

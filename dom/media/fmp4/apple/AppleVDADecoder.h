@@ -90,6 +90,9 @@ public:
   MediaDataDecoderCallback* mCallback;
   nsRefPtr<layers::ImageContainer> mImageContainer;
   ReorderQueue mReorderQueue;
+  uint32_t mPictureWidth;
+  uint32_t mPictureHeight;
+  uint32_t mMaxRefFrames;
 
 private:
   VDADecoder mDecoder;

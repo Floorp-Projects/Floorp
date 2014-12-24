@@ -111,20 +111,18 @@ private:
   ~nsSingletonEnumerator();
 
 protected:
-  nsISupports* mValue;
+  nsCOMPtr<nsISupports> mValue;
   bool mConsumed;
 };
 
 nsSingletonEnumerator::nsSingletonEnumerator(nsISupports* aValue)
   : mValue(aValue)
 {
-  NS_IF_ADDREF(mValue);
   mConsumed = (mValue ? false : true);
 }
 
 nsSingletonEnumerator::~nsSingletonEnumerator()
 {
-  NS_IF_RELEASE(mValue);
 }
 
 NS_IMPL_ISUPPORTS(nsSingletonEnumerator, nsISimpleEnumerator)

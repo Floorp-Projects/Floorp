@@ -1792,6 +1792,11 @@ CodeGenerator::visitNop(LNop *lir)
 }
 
 void
+CodeGenerator::visitMop(LMop *lir)
+{
+}
+
+void
 CodeGenerator::visitOsiPoint(LOsiPoint *lir)
 {
     // Note: markOsiPoint ensures enough space exists between the last

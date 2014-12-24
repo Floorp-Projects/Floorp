@@ -121,28 +121,20 @@ nsSSLStatus::GetIsExtendedValidation(bool* aIsEV)
   NS_ENSURE_ARG_POINTER(aIsEV);
   *aIsEV = false;
 
-#ifdef MOZ_NO_EV_CERTS
-  return NS_OK;
-#else
-  nsCOMPtr<nsIX509Cert> cert = mServerCert;
-  // mServerCert should never be null when this method is called because
-  // nsSSLStatus objects always have mServerCert set right after they are
-  // constructed and before they are returned. GetIsExtendedValidation should
-  // only be called in the chrome process (in e10s), and mServerCert will always
-  // implement nsIIdentityInfo in the chrome process.
-  nsCOMPtr<nsIIdentityInfo> idinfo = do_QueryInterface(cert);
-  if (!idinfo) {
-    NS_ERROR("nsSSLStatus has null mServerCert or was called in the content "
-             "process");
-    return NS_ERROR_UNEXPECTED;
-  }
-
   // Never allow bad certs for EV, regardless of overrides.
   if (mHaveCertErrorBits) {
     return NS_OK;
   }
 
-  return idinfo->GetIsExtendedValidation(aIsEV);
+  if (mHasIsEVStatus) {
+    *aIsEV = mIsEV;
+    return NS_OK;
+  }
+
+#ifdef MOZ_NO_EV_CERTS
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_AVAILABLE;
 #endif
 }
 
@@ -169,7 +161,11 @@ nsSSLStatus::Read(nsIObjectInputStream* aStream)
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aStream->ReadBoolean(&mIsUntrusted);
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = aStream->ReadBoolean(&mIsEV);
+  NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = aStream->ReadBoolean(&mHasIsEVStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = aStream->ReadBoolean(&mHaveCipherSuiteAndProtocol);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aStream->ReadBoolean(&mHaveCertErrorBits);
@@ -197,7 +193,11 @@ nsSSLStatus::Write(nsIObjectOutputStream* aStream)
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aStream->WriteBoolean(mIsUntrusted);
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = aStream->WriteBoolean(mIsEV);
+  NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = aStream->WriteBoolean(mHasIsEVStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = aStream->WriteBoolean(mHaveCipherSuiteAndProtocol);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aStream->WriteBoolean(mHaveCertErrorBits);
@@ -274,6 +274,8 @@ nsSSLStatus::nsSSLStatus()
 , mIsDomainMismatch(false)
 , mIsNotValidAtThisTime(false)
 , mIsUntrusted(false)
+, mIsEV(false)
+, mHasIsEVStatus(false)
 , mHaveCipherSuiteAndProtocol(false)
 , mHaveCertErrorBits(false)
 {
@@ -283,4 +285,27 @@ NS_IMPL_ISUPPORTS(nsSSLStatus, nsISSLStatus, nsISerializable, nsIClassInfo)
 
 nsSSLStatus::~nsSSLStatus()
 {
+}
+
+void
+nsSSLStatus::SetServerCert(nsIX509Cert* aServerCert, nsNSSCertificate::EVStatus aEVStatus)
+{
+  mServerCert = aServerCert;
+
+  if (aEVStatus != nsNSSCertificate::ev_status_unknown) {
+    mIsEV = (aEVStatus == nsNSSCertificate::ev_status_valid);
+    mHasIsEVStatus = true;
+    return;
+  }
+
+#ifndef MOZ_NO_EV_CERTS
+  nsCOMPtr<nsIIdentityInfo> idinfo = do_QueryInterface(mServerCert);
+  if (idinfo) {
+    nsresult rv = idinfo->GetIsExtendedValidation(&mIsEV);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+    mHasIsEVStatus = true;
+  }
+#endif
 }
