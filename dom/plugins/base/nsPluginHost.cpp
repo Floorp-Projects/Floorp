@@ -1557,6 +1557,10 @@ nsPluginHost::ClearSiteData(nsIPluginTag* plugin, const nsACString& domain,
 
   nsPluginTag* tag = static_cast<nsPluginTag*>(plugin);
 
+  if (!tag->IsEnabled()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   // We only ensure support for clearing Flash site data for now.
   // We will also attempt to clear data for any plugin that happens
   // to be loaded already.
