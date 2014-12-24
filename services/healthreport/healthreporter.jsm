@@ -417,6 +417,7 @@ AbstractHealthReporter.prototype = Object.freeze({
             shutdownComplete: this._shutdownComplete,
             currentProviderInShutdown: this._currentProviderInShutdown,
             currentProviderInInit: this._currentProviderInInit,
+            currentProviderInCollect: this._currentProviderInCollect,
           }));
 
       try {
