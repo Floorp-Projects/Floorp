@@ -107,8 +107,7 @@ struct SPSData
     delta_pic_order_always_zero_flag equal to 1 specifies that
     delta_pic_order_cnt[ 0 ] and delta_pic_order_cnt[ 1 ] are
     not present in the slice headers of the sequence and shall
-    be inferred to be equal to
-    0. delta_pic_order_always_zero_flag
+    be inferred to be equal to 0.
    */
   bool delta_pic_order_always_zero_flag;
 
@@ -239,6 +238,105 @@ struct SPSData
   uint32_t time_scale;
   bool fixed_frame_rate_flag;
 
+  // Bitstream restriction parameters
+
+  /*
+    pic_struct_present_flag equal to 1 specifies that picture timing SEI
+    messages (clause D.2.2) are present that include the pic_struct syntax
+    element. pic_struct_present_flag equal to 0 specifies that the pic_struct
+    syntax element is not present in picture timing SEI messages.
+    When pic_struct_present_flag is not present, its value shall be inferred to
+    be equal to 0.
+   */
+  bool pic_struct_present_flag;
+
+  /*
+    bitstream_restriction_flag equal to 1, specifies that the following coded
+    video sequence bitstream restriction parameters are present.
+    bitstream_restriction_flag equal to 0, specifies that the following coded
+    video sequence bitstream restriction parameters are not present.
+   */
+  bool bitstream_restriction_flag;
+
+  /*
+    motion_vectors_over_pic_boundaries_flag equal to 0 indicates that no
+    sample outside the picture boundaries and no sample at a fractional
+    sample position for which the sample value is derived using one or more
+    samples outside the picture boundaries is used for inter prediction of any
+    sample. motion_vectors_over_pic_boundaries_flag equal to 1 indicates that
+    one or more samples outside picture boundaries may be used in inter
+    prediction. When the motion_vectors_over_pic_boundaries_flag syntax element
+    is not present, motion_vectors_over_pic_boundaries_flag value shall be
+    inferred to be equal to 1.
+   */
+  bool motion_vectors_over_pic_boundaries_flag;
+
+  /*
+    max_bytes_per_pic_denom indicates a number of bytes not exceeded by the
+    sum of the sizes of the VCL NAL units associated with any coded picture in
+    the coded video sequence.
+   */
+  uint32_t max_bytes_per_pic_denom;
+
+  /*
+    max_bits_per_mb_denom indicates an upper bound for the number of coded bits
+    of macroblock_layer( ) data for any macroblock in any picture of the coded
+    video sequence. The value of max_bits_per_mb_denom shall be in the range
+    of 0 to 16, inclusive.
+   */
+  uint32_t max_bits_per_mb_denom;
+
+  /*
+    log2_max_mv_length_horizontal and log2_max_mv_length_vertical indicate the
+    maximum absolute value of a decoded horizontal and vertical motion vector
+    component, respectively, in 1⁄4 luma sample units, for all pictures in the
+    coded video sequence. A value of n asserts that no value of a motion vector
+    component shall exceed the range from −2n to 2n − 1, inclusive, in units
+    of 1⁄4 luma sample displacement. The value of log2_max_mv_length_horizontal
+    shall be in the range of 0 to 16, inclusive. The value of
+    log2_max_mv_length_vertical shall be in the range of 0 to 16, inclusive.
+    When log2_max_mv_length_horizontal is not present, the values of
+    log2_max_mv_length_horizontal and log2_max_mv_length_vertical shall be
+    inferred to be equal to 16.
+   */
+   uint32_t log2_max_mv_length_horizontal;
+   uint32_t log2_max_mv_length_vertical;
+
+  /*
+    max_num_reorder_frames indicates an upper bound for the number of frames
+    buffers, in the decoded picture buffer (DPB), that are required for storing
+    frames, complementary field pairs, and non-paired fields before output.
+    It is a requirement of bitstream conformance that the maximum number of
+    frames, complementary field pairs, or non-paired fields that precede any
+    frame, complementary field pair, or non-paired field in the coded video
+    sequence in decoding order and follow it in output order shall be less than
+    or equal to max_num_reorder_frames. The value of max_num_reorder_frames
+    shall be in the range of 0 to max_dec_frame_buffering, inclusive.
+    When the max_num_reorder_frames syntax element is not present, the value
+    of max_num_reorder_frames value shall be inferred as follows:
+     – If profile_idc is equal to 44, 86, 100, 110, 122, or 244 and
+       constraint_set3_flag is equal to 1, the value of max_num_reorder_frames
+       shall be inferred to be equal to 0.
+     – Otherwise (profile_idc is not equal to 44, 86, 100, 110, 122, or 244 or
+       constraint_set3_flag is equal to 0), the value of max_num_reorder_frames
+       shall be inferred to be equal to MaxDpbFrames.
+   */
+   uint32_t max_num_reorder_frames;
+
+  /*
+    max_dec_frame_buffering specifies the required size of the HRD decoded
+    picture buffer (DPB) in units of frame buffers. It is a requirement of
+    bitstream conformance that the coded video sequence shall not require a
+    decoded picture buffer with size of more than
+    Max( 1, max_dec_frame_buffering ) frame buffers to enable the output of
+    decoded pictures at the output times specified by dpb_output_delay of the
+    picture timing SEI messages. The value of max_dec_frame_buffering shall be
+    greater than or equal to max_num_ref_frames. An upper bound for the value
+    of max_dec_frame_buffering is specified by the level limits in
+    clauses A.3.1, A.3.2, G.10.2.1, and H.10.2.
+   */
+   uint32_t max_dec_frame_buffering;
+
   SPSData();
 };
 
@@ -254,6 +352,8 @@ public:
 
 private:
   static void vui_parameters(BitReader& aBr, SPSData& aDest);
+  // Read HRD parameters, all data is ignored.
+  static void hrd_parameters(BitReader& aBr);
 };
 
 } // namespace mp4_demuxer
