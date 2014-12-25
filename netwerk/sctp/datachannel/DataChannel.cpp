@@ -2105,8 +2105,10 @@ DataChannelConnection::OpenFinish(already_AddRefed<DataChannel>&& aChannel)
     LOG(("Queuing channel %p (%u) to finish open", channel.get(), stream));
     // Also serves to mark we told the app
     channel->mFlags |= DATA_CHANNEL_FLAGS_FINISH_OPEN;
-    channel->AddRef(); // we need a ref for the nsDeQue and one to return
-    mPending.Push(channel);
+    // we need a ref for the nsDeQue and one to return
+    DataChannel* rawChannel = channel;
+    rawChannel->AddRef();
+    mPending.Push(rawChannel);
     return channel.forget();
   }
 

@@ -264,7 +264,7 @@ private:
   // channels available from the stack must be negotiated!
   bool mAllocateEven;
   nsAutoTArray<nsRefPtr<DataChannel>,16> mStreams;
-  nsDeque mPending; // Holds already_AddRefed<DataChannel>s -- careful!
+  nsDeque mPending; // Holds addref'ed DataChannel's -- careful!
   // holds data that's come in before a channel is open
   nsTArray<nsAutoPtr<QueuedDataMessage> > mQueuedData;
 

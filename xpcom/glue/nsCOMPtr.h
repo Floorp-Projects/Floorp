@@ -693,7 +693,7 @@ public:
   // necessary to resolve ambiguity.
   operator T*() const { return get(); }
 
-  T* operator->() const
+  T* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN
   {
     NS_ABORT_IF_FALSE(mRawPtr != 0,
                       "You can't dereference a NULL nsCOMPtr with operator->().");
@@ -972,7 +972,7 @@ public:
   // necessary to resolve ambiguity/
   operator nsISupports* () const { return get(); }
 
-  nsISupports* operator->() const
+  nsISupports* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN
   {
     NS_ABORT_IF_FALSE(mRawPtr != 0,
                       "You can't dereference a NULL nsCOMPtr with operator->().");
