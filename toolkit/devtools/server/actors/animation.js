@@ -178,6 +178,7 @@ let AnimationPlayerActor = ActorClass({
    */
   play: method(function() {
     this.player.play();
+    return this.player.ready;
   }, {
     request: {},
     response: {}
