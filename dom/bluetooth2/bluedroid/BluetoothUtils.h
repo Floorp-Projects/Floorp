@@ -76,6 +76,13 @@ DispatchStatusChangedEvent(const nsAString& aType,
                            const nsAString& aDeviceAddress,
                            bool aStatus);
 
+/**
+ * Test whether this function is running at b2g process.
+ *
+ * @return true if the function is running at b2g process, false otherwise.
+ */
+bool
+IsMainProcess();
 
 END_BLUETOOTH_NAMESPACE
 

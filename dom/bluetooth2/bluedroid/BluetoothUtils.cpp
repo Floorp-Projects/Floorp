@@ -20,6 +20,7 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsServiceManagerUtils.h"
+#include "nsXULAppAPI.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
@@ -195,6 +196,12 @@ DispatchStatusChangedEvent(const nsAString& aType,
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE_VOID(bs);
   bs->DistributeSignal(signal);
+}
+
+bool
+IsMainProcess()
+{
+  return XRE_GetProcessType() == GeckoProcessType_Default;
 }
 
 END_BLUETOOTH_NAMESPACE
