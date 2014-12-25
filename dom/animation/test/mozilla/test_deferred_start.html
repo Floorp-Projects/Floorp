@@ -6,6 +6,16 @@
 <div id="log"></div>
 <style>
 @keyframes empty { }
+@keyframes animTransform {
+  from { transform: translate(0px); }
+  to { transform: translate(100px); }
+}
+.target {
+  // Element needs geometry to be eligible for layerization
+  width: 100px;
+  height: 100px;
+  background-color: white;
+}
 </style>
 <script>
 'use strict';
@@ -57,5 +67,49 @@ async_test(function(t) {
     t.done();
   }));
 }, 'AnimationPlayer.ready is resolved for an empty animation');
+
+// Test that compositor animations with delays get synced correctly
+//
+// NOTE: It is important that we DON'T use
+// SpecialWindows.DOMWindowUtils.advanceTimeAndRefresh here since that takes
+// us through a different code path.
+async_test(function(t) {
+  // This test only applies to compositor animations
+  const OMTAPrefKey = 'layers.offmainthreadcomposition.async-animations';
+  var omtaEnabled = SpecialPowers.DOMWindowUtils.layerManagerRemote &&
+                    SpecialPowers.getBoolPref(OMTAPrefKey);
+  if (!omtaEnabled) {
+    t.done();
+    return;
+  }
+
+  // Setup animation
+  var div = addDiv(t);
+  div.classList.add('target');
+  div.style.animation = 'animTransform 100s -50s forwards';
+  var player = div.getAnimationPlayers()[0];
+
+  player.ready.then(t.step_func(function() {
+    var transformStr =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+
+    var matrixComponents =
+      transformStr.startsWith('matrix(')
+      ? transformStr.substring('matrix('.length, transformStr.length-1)
+                    .split(',')
+                    .map(component => Number(component))
+      : [];
+    assert_equals(matrixComponents.length, 6,
+                  'Got a valid transform matrix on the compositor'
+                  + ' (got: "' + transformStr + '")');
+
+    // If the delay has been applied correctly we should be at least
+    // half-way through the animation
+    assert_true(matrixComponents[4] >= 50,
+                'Animation is at least half-way through on the compositor'
+                + ' (got translation of ' + matrixComponents[4] + ')');
+    t.done();
+  }));
+}, 'Starting an animation with a delay starts from the correct point');
 
 </script>
