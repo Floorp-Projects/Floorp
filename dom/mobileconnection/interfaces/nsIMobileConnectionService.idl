@@ -12,7 +12,7 @@ interface nsIMobileNetworkInfo;
 interface nsINeighboringCellIdsCallback;
 interface nsIVariant;
 
-[scriptable, uuid(6e6468a4-84fb-11e4-9b66-17dbe13c059e)]
+[scriptable, uuid(d6827b51-61a7-4b7c-8454-42d0cffc1829)]
 interface nsIMobileConnectionListener : nsISupports
 {
   /**
@@ -74,11 +74,6 @@ interface nsIMobileConnectionListener : nsISupports
    *        'otapa_stopped', 'otapa_aborted'.
    */
   void notifyOtaStatusChanged(in DOMString status);
-
-  /**
-   * Notify when icc id is changed.
-   */
-  void notifyIccChanged();
 
   /**
    * Notify when radio state is changed.
@@ -168,7 +163,7 @@ already_AddRefed<nsIMobileConnectionService>
 NS_CreateMobileConnectionService();
 %}
 
-[scriptable, uuid(2b3d0122-8054-11e4-964e-c727f38fd7e6)]
+[scriptable, uuid(b9845f09-7cbb-46d0-b713-773d80844e0d)]
 interface nsIMobileConnection : nsISupports
 {
   /*
@@ -307,11 +302,6 @@ interface nsIMobileConnection : nsISupports
    * Connection information about the data.
    */
   readonly attribute nsIMobileConnectionInfo data;
-
-  /**
-   * The integrated circuit card identifier of the SIM.
-   */
-  readonly attribute DOMString iccId;
 
   /**
    * The selection mode of the voice and data networks. One of the

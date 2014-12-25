@@ -26,7 +26,7 @@ MobileConnectionChild::Init()
   nsIMobileConnectionInfo* rawVoice;
   nsIMobileConnectionInfo* rawData;
 
-  SendInit(&rawVoice, &rawData, &mLastNetwork, &mLastHomeNetwork, &mIccId,
+  SendInit(&rawVoice, &rawData, &mLastNetwork, &mLastHomeNetwork,
            &mNetworkSelectionMode, &mRadioState, &mSupportedNetworkTypes);
 
   // Use dont_AddRef here because this instances is already AddRef-ed in
@@ -95,13 +95,6 @@ MobileConnectionChild::GetData(nsIMobileConnectionInfo** aData)
 {
   nsRefPtr<nsIMobileConnectionInfo> data(mData);
   data.forget(aData);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-MobileConnectionChild::GetIccId(nsAString& aIccId)
-{
-  aIccId = mIccId;
   return NS_OK;
 }
 
@@ -442,18 +435,6 @@ MobileConnectionChild::RecvNotifyOtaStatusChanged(const nsString& aStatus)
 {
   for (int32_t i = 0; i < mListeners.Count(); i++) {
     mListeners[i]->NotifyOtaStatusChanged(aStatus);
-  }
-
-  return true;
-}
-
-bool
-MobileConnectionChild::RecvNotifyIccChanged(const nsString& aIccId)
-{
-  mIccId.Assign(aIccId);
-
-  for (int32_t i = 0; i < mListeners.Count(); i++) {
-    mListeners[i]->NotifyIccChanged();
   }
 
   return true;
