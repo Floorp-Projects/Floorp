@@ -12,7 +12,6 @@
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/plugins/PluginMessageUtils.h"
 #include "mozilla/Telemetry.h"
-#include "nsThreadUtils.h"
 
 using std::vector;
 using std::string;
@@ -31,9 +30,7 @@ struct RunnableMethodTraits<PluginProcessParent>
 
 PluginProcessParent::PluginProcessParent(const std::string& aPluginFilePath) :
     GeckoChildProcessHost(GeckoProcessType_Plugin),
-    mPluginFilePath(aPluginFilePath),
-    mMainMsgLoop(MessageLoop::current()),
-    mRunCompleteTaskImmediately(false)
+    mPluginFilePath(aPluginFilePath)
 {
 }
 
@@ -42,7 +39,7 @@ PluginProcessParent::~PluginProcessParent()
 }
 
 bool
-PluginProcessParent::Launch(UniquePtr<LaunchCompleteTask> aLaunchCompleteTask)
+PluginProcessParent::Launch(int32_t timeoutMs)
 {
     ProcessArchitecture currentArchitecture = base::GetCurrentProcessArchitecture();
     uint32_t containerArchitectures = GetSupportedArchitecturesForProcessType(GeckoProcessType_Plugin);
@@ -77,16 +74,10 @@ PluginProcessParent::Launch(UniquePtr<LaunchCompleteTask> aLaunchCompleteTask)
         }
     }
 
-    mLaunchCompleteTask = Move(aLaunchCompleteTask);
-
     vector<string> args;
     args.push_back(MungePluginDsoPath(mPluginFilePath));
-
-    bool result = AsyncLaunch(args, selectedArchitecture);
-    if (!result) {
-        mLaunchCompleteTask = nullptr;
-    }
-    return result;
+    Telemetry::AutoTimer<Telemetry::PLUGIN_STARTUP_MS> timer;
+    return SyncLaunch(args, timeoutMs, selectedArchitecture);
 }
 
 void
@@ -103,50 +94,3 @@ PluginProcessParent::Delete()
   ioLoop->PostTask(FROM_HERE,
                    NewRunnableMethod(this, &PluginProcessParent::Delete));
 }
-
-void
-PluginProcessParent::SetCallRunnableImmediately(bool aCallImmediately)
-{
-    mRunCompleteTaskImmediately = aCallImmediately;
-}
-
-bool
-PluginProcessParent::WaitUntilConnected(int32_t aTimeoutMs)
-{
-    bool result = GeckoChildProcessHost::WaitUntilConnected(aTimeoutMs);
-    if (mRunCompleteTaskImmediately && mLaunchCompleteTask) {
-        if (result) {
-            mLaunchCompleteTask->SetLaunchSucceeded();
-        }
-        mLaunchCompleteTask->Run();
-        mLaunchCompleteTask = nullptr;
-    }
-    return result;
-}
-
-void
-PluginProcessParent::OnChannelConnected(int32_t peer_pid)
-{
-    GeckoChildProcessHost::OnChannelConnected(peer_pid);
-    if (mLaunchCompleteTask && !mRunCompleteTaskImmediately) {
-        mLaunchCompleteTask->SetLaunchSucceeded();
-        mMainMsgLoop->PostTask(FROM_HERE, mLaunchCompleteTask.release());
-    }
-}
-
-void
-PluginProcessParent::OnChannelError()
-{
-    GeckoChildProcessHost::OnChannelError();
-    if (mLaunchCompleteTask && !mRunCompleteTaskImmediately) {
-        mMainMsgLoop->PostTask(FROM_HERE, mLaunchCompleteTask.release());
-    }
-}
-
-bool
-PluginProcessParent::IsConnected()
-{
-    mozilla::MonitorAutoLock lock(mMonitor);
-    return mProcessState == PROCESS_CONNECTED;
-}
-

@@ -16,7 +16,6 @@
 namespace mozilla {
 namespace plugins {
 
-class PluginAsyncSurrogate;
 class PluginInstanceParent;
 class PluginScriptableObjectParent;
 

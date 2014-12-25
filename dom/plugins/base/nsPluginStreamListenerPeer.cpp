@@ -266,7 +266,6 @@ nsPluginStreamListenerPeer::nsPluginStreamListenerPeer()
   mHaveFiredOnStartRequest = false;
   mDataForwardToRequest = nullptr;
 
-  mUseLocalCache = false;
   mSeekable = false;
   mModified = 0;
   mStreamOffset = 0;
@@ -534,9 +533,7 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
 
   // Set up the stream listener...
   rv = SetUpStreamListener(request, aURL);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  if (NS_FAILED(rv)) return rv;
 
   return rv;
 }
@@ -1049,6 +1046,8 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
 
   mPStreamListener->SetStreamListenerPeer(this);
 
+  bool useLocalCache = false;
+
   // get httpChannel to retrieve some info we need for nsIPluginStreamInfo setup
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
@@ -1104,7 +1103,7 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
     nsAutoCString contentEncoding;
     if (NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Encoding"),
                                                     contentEncoding))) {
-      mUseLocalCache = true;
+      useLocalCache = true;
     } else {
       // set seekability (seekable if the stream has a known length and if the
       // http server accepts byte ranges).
@@ -1133,9 +1132,6 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
     }
   }
 
-  MOZ_ASSERT(!mRequest);
-  mRequest = request;
-
   rv = mPStreamListener->OnStartBinding(this);
 
   mStartBinding = true;
@@ -1143,36 +1139,22 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
   if (NS_FAILED(rv))
     return rv;
 
-  int32_t streamType = NP_NORMAL;
-  mPStreamListener->GetStreamType(&streamType);
+  mPStreamListener->GetStreamType(&mStreamType);
 
-  if (streamType != STREAM_TYPE_UNKNOWN) {
-    OnStreamTypeSet(streamType);
+  if (!useLocalCache && mStreamType >= NP_ASFILE) {
+    // check it out if this is not a file channel.
+    nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(request);
+    if (!fileChannel) {
+        useLocalCache = true;
+    }
+  }
+
+  if (useLocalCache) {
+    SetupPluginCacheFile(channel);
   }
 
   return NS_OK;
 }
-
-void
-nsPluginStreamListenerPeer::OnStreamTypeSet(const int32_t aStreamType)
-{
-  MOZ_ASSERT(mRequest);
-  mStreamType = aStreamType;
-  if (!mUseLocalCache && mStreamType >= NP_ASFILE) {
-    // check it out if this is not a file channel.
-    nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(mRequest);
-    if (!fileChannel) {
-      mUseLocalCache = true;
-    }
-  }
-
-  if (mUseLocalCache) {
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(mRequest);
-    SetupPluginCacheFile(channel);
-  }
-}
-
-const int32_t nsPluginStreamListenerPeer::STREAM_TYPE_UNKNOWN = UINT16_MAX;
 
 nsresult
 nsPluginStreamListenerPeer::OnFileAvailable(nsIFile* aFile)

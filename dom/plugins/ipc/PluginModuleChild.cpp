@@ -95,13 +95,6 @@ static GetWindowInfoPtr sGetWindowInfoPtrStub = nullptr;
 static HWND sBrowserHwnd = nullptr;
 #endif
 
-template<>
-struct RunnableMethodTraits<PluginModuleChild>
-{
-    static void RetainCallee(PluginModuleChild* obj) { }
-    static void ReleaseCallee(PluginModuleChild* obj) { }
-};
-
 /* static */
 PluginModuleChild*
 PluginModuleChild::CreateForContentProcess(mozilla::ipc::Transport* aTransport,
@@ -1888,21 +1881,7 @@ PluginModuleChild::AnswerNP_GetEntryPoints(NPError* _retval)
 }
 
 bool
-PluginModuleChild::AnswerNP_Initialize(const PluginSettings& aSettings, NPError* rv)
-{
-    *rv = DoNP_Initialize(aSettings);
-    return true;
-}
-
-bool
-PluginModuleChild::RecvAsyncNP_Initialize(const PluginSettings& aSettings)
-{
-    NPError error = DoNP_Initialize(aSettings);
-    return SendNP_InitializeResult(error);
-}
-
-NPError
-PluginModuleChild::DoNP_Initialize(const PluginSettings& aSettings)
+PluginModuleChild::AnswerNP_Initialize(const PluginSettings& aSettings, NPError* _retval)
 {
     PLUGIN_LOG_DEBUG_METHOD;
     AssertPluginThread();
@@ -1921,11 +1900,12 @@ PluginModuleChild::DoNP_Initialize(const PluginSettings& aSettings)
     SendBackUpXResources(FileDescriptor(xSocketFd));
 #endif
 
-    NPError result;
 #if defined(OS_LINUX) || defined(OS_BSD)
-    result = mInitializeFunc(&sBrowserFuncs, &mFunctions);
+    *_retval = mInitializeFunc(&sBrowserFuncs, &mFunctions);
+    return true;
 #elif defined(OS_WIN) || defined(OS_MACOSX)
-    result = mInitializeFunc(&sBrowserFuncs);
+    *_retval = mInitializeFunc(&sBrowserFuncs);
+    return true;
 #else
 #  error Please implement me for your platform
 #endif
@@ -1933,8 +1913,6 @@ PluginModuleChild::DoNP_Initialize(const PluginSettings& aSettings)
 #ifdef XP_WIN
     CleanupProtectedModeHook();
 #endif
-
-    return result;
 }
 
 #if defined(XP_WIN)
@@ -2057,7 +2035,8 @@ PPluginInstanceChild*
 PluginModuleChild::AllocPPluginInstanceChild(const nsCString& aMimeType,
                                              const uint16_t& aMode,
                                              const InfallibleTArray<nsCString>& aNames,
-                                             const InfallibleTArray<nsCString>& aValues)
+                                             const InfallibleTArray<nsCString>& aValues,
+                                             NPError* rv)
 {
     PLUGIN_LOG_DEBUG_METHOD;
     AssertPluginThread();
@@ -2073,8 +2052,7 @@ PluginModuleChild::AllocPPluginInstanceChild(const nsCString& aMimeType,
     }
 #endif
 
-    return new PluginInstanceChild(&mFunctions, aMimeType, aMode, aNames,
-                                   aValues);
+    return new PluginInstanceChild(&mFunctions);
 }
 
 void
@@ -2127,39 +2105,68 @@ PluginModuleChild::InitQuirksModes(const nsCString& aMimeType)
 }
 
 bool
-PluginModuleChild::RecvPPluginInstanceConstructor(PPluginInstanceChild* aActor,
-                                                  const nsCString& aMimeType,
-                                                  const uint16_t& aMode,
-                                                  const InfallibleTArray<nsCString>& aNames,
-                                                  const InfallibleTArray<nsCString>& aValues)
+PluginModuleChild::AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor,
+                                                    const nsCString& aMimeType,
+                                                    const uint16_t& aMode,
+                                                    const InfallibleTArray<nsCString>& aNames,
+                                                    const InfallibleTArray<nsCString>& aValues,
+                                                    NPError* rv)
 {
     PLUGIN_LOG_DEBUG_METHOD;
     AssertPluginThread();
 
-    NS_ASSERTION(aActor, "Null actor!");
-    return true;
-}
-
-bool
-PluginModuleChild::AnswerSyncNPP_New(PPluginInstanceChild* aActor, NPError* rv)
-{
-    PLUGIN_LOG_DEBUG_METHOD;
     PluginInstanceChild* childInstance =
         reinterpret_cast<PluginInstanceChild*>(aActor);
-    AssertPluginThread();
-    *rv = childInstance->DoNPP_New();
-    return true;
-}
+    NS_ASSERTION(childInstance, "Null actor!");
 
-bool
-PluginModuleChild::RecvAsyncNPP_New(PPluginInstanceChild* aActor)
-{
-    PLUGIN_LOG_DEBUG_METHOD;
-    PluginInstanceChild* childInstance =
-        reinterpret_cast<PluginInstanceChild*>(aActor);
-    AssertPluginThread();
-    NPError rv = childInstance->DoNPP_New();
-    childInstance->SendAsyncNPP_NewResult(rv);
+    // unpack the arguments into a C format
+    int argc = aNames.Length();
+    NS_ASSERTION(argc == (int) aValues.Length(),
+                 "argn.length != argv.length");
+
+    nsAutoArrayPtr<char*> argn(new char*[1 + argc]);
+    nsAutoArrayPtr<char*> argv(new char*[1 + argc]);
+    argn[argc] = 0;
+    argv[argc] = 0;
+
+    for (int i = 0; i < argc; ++i) {
+        argn[i] = const_cast<char*>(NullableStringGet(aNames[i]));
+        argv[i] = const_cast<char*>(NullableStringGet(aValues[i]));
+    }
+
+    NPP npp = childInstance->GetNPP();
+
+    // FIXME/cjones: use SAFE_CALL stuff
+    *rv = mFunctions.newp((char*)NullableStringGet(aMimeType),
+                          npp,
+                          aMode,
+                          argc,
+                          argn,
+                          argv,
+                          0);
+    if (NPERR_NO_ERROR != *rv) {
+        return true;
+    }
+
+    childInstance->Initialize();
+
+#if defined(XP_MACOSX) && defined(__i386__)
+    // If an i386 Mac OS X plugin has selected the Carbon event model then
+    // we have to fail. We do not support putting Carbon event model plugins
+    // out of process. Note that Carbon is the default model so out of process
+    // plugins need to actively negotiate something else in order to work
+    // out of process.
+    if (childInstance->EventModel() == NPEventModelCarbon) {
+      // Send notification that a plugin tried to negotiate Carbon NPAPI so that
+      // users can be notified that restarting the browser in i386 mode may allow
+      // them to use the plugin.
+      childInstance->SendNegotiatedCarbon();
+
+      // Fail to instantiate.
+      *rv = NPERR_MODULE_LOAD_FAILED_ERROR;
+    }
+#endif
+
     return true;
 }
 
