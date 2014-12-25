@@ -74,11 +74,8 @@ public:
                               const uint32_t& length,
                               const uint32_t& lastmodified,
                               PStreamNotifyParent* notifyData,
-                              const nsCString& headers,
-                              const nsCString& mimeType,
-                              const bool& seekable,
-                              NPError* rv,
-                              uint16_t *stype) MOZ_OVERRIDE;
+                              const nsCString& headers)
+                              MOZ_OVERRIDE;
     virtual bool
     DeallocPBrowserStreamParent(PBrowserStreamParent* stream) MOZ_OVERRIDE;
 

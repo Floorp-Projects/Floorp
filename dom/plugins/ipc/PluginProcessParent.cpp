@@ -129,6 +129,7 @@ PluginProcessParent::OnChannelConnected(int32_t peer_pid)
 {
     GeckoChildProcessHost::OnChannelConnected(peer_pid);
     if (mLaunchCompleteTask && !mRunCompleteTaskImmediately) {
+        mLaunchCompleteTask->SetLaunchSucceeded();
         mMainMsgLoop->PostTask(FROM_HERE, mLaunchCompleteTask.release());
     }
 }
