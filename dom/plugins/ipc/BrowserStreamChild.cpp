@@ -17,7 +17,11 @@ BrowserStreamChild::BrowserStreamChild(PluginInstanceChild* instance,
                                        const uint32_t& length,
                                        const uint32_t& lastmodified,
                                        StreamNotifyChild* notifyData,
-                                       const nsCString& headers)
+                                       const nsCString& headers,
+                                       const nsCString& mimeType,
+                                       const bool& seekable,
+                                       NPError* rv,
+                                       uint16_t* stype)
   : mInstance(instance)
   , mStreamStatus(kStreamOpen)
   , mDestroyPending(NOT_DESTROYED)
@@ -30,9 +34,9 @@ BrowserStreamChild::BrowserStreamChild(PluginInstanceChild* instance,
   , mStreamNotify(notifyData)
   , mDeliveryTracker(MOZ_THIS_IN_INITIALIZER_LIST())
 {
-  PLUGIN_LOG_DEBUG(("%s (%s, %i, %i, %p, %s)", FULLFUNCTION,
+  PLUGIN_LOG_DEBUG(("%s (%s, %i, %i, %p, %s, %s)", FULLFUNCTION,
                     url.get(), length, lastmodified, (void*) notifyData,
-                    headers.get()));
+                    headers.get(), mimeType.get()));
 
   AssertPluginThread();
 
@@ -42,10 +46,8 @@ BrowserStreamChild::BrowserStreamChild(PluginInstanceChild* instance,
   mStream.end = length;
   mStream.lastmodified = lastmodified;
   mStream.headers = NullableStringGet(mHeaders);
-  if (notifyData) {
+  if (notifyData)
     mStream.notifyData = notifyData->mClosure;
-    notifyData->SetAssociatedStream(this);
-  }
 }
 
 NPError
@@ -66,6 +68,9 @@ BrowserStreamChild::StreamConstructed(
   }
   else {
     mState = ALIVE;
+
+    if (mStreamNotify)
+      mStreamNotify->SetAssociatedStream(this);
   }
 
   return rv;
