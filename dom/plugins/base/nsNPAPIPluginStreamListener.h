@@ -83,6 +83,7 @@ public:
   nsresult OnStopBinding(nsPluginStreamListenerPeer* streamPeer, 
                          nsresult status);
   nsresult GetStreamType(int32_t *result);
+  bool SetStreamType(uint16_t aType, bool aNeedsResume = true);
 
   bool IsStarted();
   nsresult CleanUpStream(NPReason reason);
