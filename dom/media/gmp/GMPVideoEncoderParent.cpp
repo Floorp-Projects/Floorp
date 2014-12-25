@@ -91,7 +91,7 @@ GMPVideoEncoderParent::Close()
 
   // In case this is the last reference
   nsRefPtr<GMPVideoEncoderParent> kungfudeathgrip(this);
-  NS_RELEASE(kungfudeathgrip);
+  Release();
   Shutdown();
 }
 
