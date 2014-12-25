@@ -114,7 +114,7 @@ function TypedArrayFindIndex(predicate, thisArg = undefined) {
 }
 
 // ES6 draft rev29 (2014/12/06) 22.2.3.13 %TypedArray%.prototype.indexOf(searchElement[, fromIndex]).
-function TypedArrayIndexOf(searchElement, fromIndex = undefined) {
+function TypedArrayIndexOf(searchElement, fromIndex = 0) {
     // This function is not generic.
     if (!IsObject(this) || !IsTypedArray(this)) {
         return callFunction(CallTypedArrayMethodIfWrapped, this, searchElement, fromIndex,

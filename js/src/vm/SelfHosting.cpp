@@ -775,21 +775,8 @@ intrinsic_GeneratorSetClosed(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-// Return the value of [[ArrayLength]] internal slot of the TypedArray
-static bool
-intrinsic_TypedArrayLength(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 1);
-
-    RootedObject obj(cx, &args[0].toObject());
-    MOZ_ASSERT(obj->is<TypedArrayObject>());
-    args.rval().setInt32(obj->as<TypedArrayObject>().length());
-    return true;
-}
-
-static bool
-intrinsic_IsTypedArray(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::intrinsic_IsTypedArray(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 1);
@@ -797,6 +784,19 @@ intrinsic_IsTypedArray(JSContext *cx, unsigned argc, Value *vp)
 
     RootedObject obj(cx, &args[0].toObject());
     args.rval().setBoolean(obj->is<TypedArrayObject>());
+    return true;
+}
+
+// Return the value of [[ArrayLength]] internal slot of the TypedArray
+bool
+js::intrinsic_TypedArrayLength(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+
+    RootedObject obj(cx, &args[0].toObject());
+    MOZ_ASSERT(obj->is<TypedArrayObject>());
+    args.rval().setInt32(obj->as<TypedArrayObject>().length());
     return true;
 }
 
@@ -1102,8 +1102,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("GeneratorIsRunning",      intrinsic_GeneratorIsRunning,      1,0),
     JS_FN("GeneratorSetClosed",      intrinsic_GeneratorSetClosed,      1,0),
 
-    JS_FN("TypedArrayLength",        intrinsic_TypedArrayLength,        1,0),
     JS_FN("IsTypedArray",            intrinsic_IsTypedArray,            1,0),
+    JS_FN("TypedArrayLength",        intrinsic_TypedArrayLength,        1,0),
 
     JS_FN("CallTypedArrayMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<TypedArrayObject>>, 2, 0),
