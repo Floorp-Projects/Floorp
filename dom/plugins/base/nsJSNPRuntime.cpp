@@ -28,7 +28,10 @@
 #include "js/HashTable.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/plugins/PluginAsyncSurrogate.h"
 
+using mozilla::plugins::AsyncNPObject;
+using mozilla::plugins::PluginAsyncSurrogate;
 
 #define NPRUNTIME_JSCLASS_NAME "NPObject JS wrapper class"
 
@@ -94,10 +97,24 @@ static nsTArray<NPObject*>* sDelayedReleases;
 
 namespace {
 
+inline void
+CastNPObject(NPObject *aObj, PluginScriptableObjectParent*& aActor,
+             PluginAsyncSurrogate*& aSurrogate)
+{
+  aActor = nullptr;
+  aSurrogate = nullptr;
+  if (aObj->_class == PluginScriptableObjectParent::GetClass()) {
+    aActor = static_cast<ParentNPObject*>(aObj)->parent;
+  } else if (aObj->_class == PluginAsyncSurrogate::GetClass()) {
+    aSurrogate = static_cast<AsyncNPObject*>(aObj)->mSurrogate;
+  }
+}
+
 inline bool
 NPObjectIsOutOfProcessProxy(NPObject *obj)
 {
-  return obj->_class == PluginScriptableObjectParent::GetClass();
+  return obj->_class == PluginScriptableObjectParent::GetClass() ||
+         obj->_class == PluginAsyncSurrogate::GetClass();
 }
 
 } // anonymous namespace
@@ -1389,15 +1406,23 @@ NPObjWrapper_GetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<js
   NPIdentifier identifier = JSIdToNPIdentifier(id);
 
   if (NPObjectIsOutOfProcessProxy(npobj)) {
-    PluginScriptableObjectParent* actor =
-      static_cast<ParentNPObject*>(npobj)->parent;
+    PluginScriptableObjectParent* actor = nullptr;
+    PluginAsyncSurrogate* surrogate = nullptr;
+    CastNPObject(npobj, actor, surrogate);
 
-    // actor may be null if the plugin crashed.
-    if (!actor)
+    // actor and surrogate may be null if the plugin crashed.
+    if (!actor && !surrogate)
       return false;
 
-    bool success = actor->GetPropertyHelper(identifier, &hasProperty,
-                                            &hasMethod, &npv);
+    bool success = false;
+    if (surrogate) {
+      success = surrogate->GetPropertyHelper(npobj, identifier, &hasProperty,
+                                             &hasMethod, &npv);
+    } else if (actor) {
+      success = actor->GetPropertyHelper(identifier, &hasProperty, &hasMethod,
+                                         &npv);
+    }
+
     if (!ReportExceptionIfPending(cx)) {
       if (success)
         _releasevariantvalue(&npv);
@@ -2252,4 +2277,36 @@ NPObjectMember_Trace(JSTracer *trc, JSObject *obj)
     JS_CallObjectTracer(trc, &memberPrivate->npobjWrapper,
                         "NPObject Member => npobjWrapper");
   }
+}
+
+// static
+bool
+nsJSObjWrapper::HasOwnProperty(NPObject *npobj, NPIdentifier npid)
+{
+  NPP npp = NPPStack::Peek();
+  dom::AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.InitWithLegacyErrorReporting(GetGlobalObject(npp)))) {
+    return false;
+  }
+  JSContext *cx = jsapi.cx();
+
+  if (!npobj) {
+    ThrowJSException(cx,
+                     "Null npobj in nsJSObjWrapper::NP_HasOwnProperty!");
+
+    return false;
+  }
+
+  nsJSObjWrapper *npjsobj = (nsJSObjWrapper *)npobj;
+  bool found, ok = false;
+
+  AutoJSExceptionReporter reporter(cx);
+  JS::Rooted<JSObject*> jsobj(cx, npjsobj->mJSObj);
+  JSAutoCompartment ac(cx, jsobj);
+
+  NS_ASSERTION(NPIdentifierIsInt(npid) || NPIdentifierIsString(npid),
+               "id must be either string or int!\n");
+  JS::Rooted<jsid> id(cx, NPIdentifierToJSId(npid));
+  ok = ::JS_AlreadyHasOwnPropertyById(cx, jsobj, id, &found);
+  return ok && found;
 }
