@@ -8,8 +8,6 @@
 
 #include "mozilla/plugins/PBrowserStreamParent.h"
 #include "mozilla/plugins/AStream.h"
-#include "nsNPAPIPluginStreamListener.h"
-#include "nsPluginStreamListenerPeer.h"
 
 namespace mozilla {
 namespace plugins {
@@ -30,10 +28,6 @@ public:
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
-  virtual bool RecvAsyncNPP_NewStreamResult(
-            const NPError& rv,
-            const uint16_t& stype) MOZ_OVERRIDE;
-
   virtual bool AnswerNPN_RequestRead(const IPCByteRanges& ranges,
                                      NPError* result) MOZ_OVERRIDE;
 
@@ -47,25 +41,14 @@ public:
 
   void NPP_DestroyStream(NPReason reason);
 
-  void SetAlive()
-  {
-    if (mState == INITIALIZING) {
-      mState = ALIVE;
-    }
-  }
-
 private:
   using PBrowserStreamParent::SendNPP_DestroyStream;
 
   PluginInstanceParent* mNPP;
   NPStream* mStream;
   nsCOMPtr<nsISupports> mStreamPeer;
-  nsRefPtr<nsNPAPIPluginStreamListener> mStreamListener;
-  NPReason mDeferredDestroyReason;
 
   enum {
-    INITIALIZING,
-    DEFERRING_DESTROY,
     ALIVE,
     DYING,
     DELETING

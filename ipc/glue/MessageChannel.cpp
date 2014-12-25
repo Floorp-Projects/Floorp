@@ -298,7 +298,6 @@ MessageChannel::MessageChannel(MessageListener *aListener)
     mRecvdErrors(0),
     mRemoteStackDepthGuess(false),
     mSawInterruptOutMsg(false),
-    mIsWaitingForIncoming(false),
     mAbortOnError(false),
     mBlockScripts(false),
     mFlags(REQUIRE_DEFAULT),
@@ -665,8 +664,7 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
     }
 
     bool shouldWakeUp = AwaitingInterruptReply() ||
-                        (AwaitingSyncReply() && !ShouldDeferMessage(aMsg)) ||
-                        AwaitingIncomingMessage();
+                        (AwaitingSyncReply() && !ShouldDeferMessage(aMsg));
 
     // There are three cases we're concerned about, relating to the state of the
     // main thread:
@@ -987,35 +985,6 @@ MessageChannel::Call(Message* aMsg, Message* aReply)
     }
 
     return true;
-}
-
-bool
-MessageChannel::WaitForIncomingMessage()
-{
-#ifdef OS_WIN
-    SyncStackFrame frame(this, true);
-#endif
-
-    { // Scope for lock
-        MonitorAutoLock lock(*mMonitor);
-        AutoEnterWaitForIncoming waitingForIncoming(*this);
-        if (mChannelState != ChannelConnected) {
-            return false;
-        }
-        if (!HasPendingEvents()) {
-            return WaitForInterruptNotify();
-        }
-    }
-
-    return OnMaybeDequeueOne();
-}
-
-bool
-MessageChannel::HasPendingEvents()
-{
-    AssertWorkerThread();
-    mMonitor->AssertCurrentThreadOwns();
-    return Connected() && !mPending.empty();
 }
 
 bool
@@ -1577,7 +1546,7 @@ MessageChannel::OnChannelErrorFromLink()
     if (InterruptStackDepth() > 0)
         NotifyWorkerThread();
 
-    if (AwaitingSyncReply() || AwaitingIncomingMessage())
+    if (AwaitingSyncReply())
         NotifyWorkerThread();
 
     if (ChannelClosing != mChannelState) {
