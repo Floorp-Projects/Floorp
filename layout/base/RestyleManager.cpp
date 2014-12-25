@@ -2615,7 +2615,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
 
   nsRestyleHint hintToRestore = nsRestyleHint(0);
   if (mContent && mContent->IsElement() &&
-      // If we're resolving from the root of the frame tree (which
+      // If we're we're resolving from the root of the frame tree (which
       // we do in DoRebuildAllStyleData), we need to avoid getting the
       // root's restyle data until we get to its primary frame, since
       // it's the primary frame that has the styles for the root element
@@ -2635,6 +2635,12 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
       descendants.SwapElements(restyleData->mDescendants);
     }
   }
+
+  // Some changes to animations don't affect the computed style and yet still
+  // require the layer to be updated. For example, pausing an animation via
+  // the Web Animations API won't affect an element's style but still
+  // requires us to pull the animation off the layer.
+  AddLayerChangesForAnimation();
 
   // If we are restyling this frame with eRestyle_Self or weaker hints,
   // we restyle children with nsRestyleHint(0).  But we pass the
@@ -2687,19 +2693,6 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
 
     f = GetNextContinuationWithSameStyle(f, oldContext, &haveMoreContinuations);
   }
-
-  // Some changes to animations don't affect the computed style and yet still
-  // require the layer to be updated. For example, pausing an animation via
-  // the Web Animations API won't affect an element's style but still
-  // requires us to pull the animation off the layer.
-  //
-  // Although we only expect this code path to be called when computed style
-  // is not changing, we can sometimes reach this at the end of a transition
-  // when the animated style is being removed. Since
-  // AddLayerChangesForAnimation checks if mFrame has a transform style or not,
-  // we need to call it *after* calling RestyleSelf to ensure the animated
-  // transform has been removed first.
-  AddLayerChangesForAnimation();
 
   if (haveMoreContinuations && hintToRestore) {
     // If we have more continuations with different style (e.g., because
