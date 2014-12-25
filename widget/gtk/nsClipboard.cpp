@@ -979,7 +979,7 @@ wait_for_contents(GtkClipboard *clipboard, GdkAtom target)
 {
     RefPtr<RetrievalContext> context = new RetrievalContext();
     // Balanced by Release in clipboard_contents_received
-    context->AddRef();
+    context.get()->AddRef();
     gtk_clipboard_request_contents(clipboard, target,
                                    clipboard_contents_received,
                                    context.get());
@@ -1001,7 +1001,7 @@ wait_for_text(GtkClipboard *clipboard)
 {
     RefPtr<RetrievalContext> context = new RetrievalContext();
     // Balanced by Release in clipboard_text_received
-    context->AddRef();
+    context.get()->AddRef();
     gtk_clipboard_request_text(clipboard, clipboard_text_received, context.get());
     return static_cast<gchar*>(context->Wait());
 }

@@ -282,8 +282,8 @@ ImageContainer::LockCurrentAsSourceSurface(gfx::IntSize *aSize, Image** aCurrent
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   if (aCurrentImage) {
-    NS_IF_ADDREF(mActiveImage);
-    *aCurrentImage = mActiveImage.get();
+    nsRefPtr<Image> activeImage(mActiveImage);
+    activeImage.forget(aCurrentImage);
   }
 
   if (!mActiveImage) {
