@@ -35,4 +35,36 @@ async_test(function(t) {
 }, 'A new ready promise is created each time play() is called'
    + ' the animation property');
 
+async_test(function(t) {
+  var div = addDiv(t);
+
+  // Set up pending transition
+  div.style.transform = 'translate(0px)';
+  window.getComputedStyle(div).transform;
+  div.style.transition = 'transform 100s';
+  div.style.transform = 'translate(10px)';
+  window.getComputedStyle(div).transform;
+
+  var player = div.getAnimationPlayers()[0];
+  assert_equals(player.playState, 'pending', 'Player is initially pending');
+
+  // Set up listeners on ready promise
+  player.ready.then(t.step_func(function() {
+    assert_unreached('ready promise was fulfilled');
+  })).catch(t.step_func(function(err) {
+    assert_equals(err.name, 'AbortError',
+                  'ready promise is rejected with AbortError');
+    assert_equals(player.playState, 'idle',
+                  'Player is idle after transition was cancelled');
+  })).then(t.step_func(function() {
+    t.done();
+  }));
+
+  // Now remove transform from transition-property and flush styles
+  div.style.transitionProperty = 'none';
+  window.getComputedStyle(div).transitionProperty;
+
+}, 'ready promise is rejected when a transition is cancelled by updating'
+   + ' transition-property');
+
 </script>
