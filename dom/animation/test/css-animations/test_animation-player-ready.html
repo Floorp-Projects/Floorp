@@ -75,4 +75,62 @@ async_test(function(t) {
   });
 }, 'The ready promise is fulfilled with its AnimationPlayer');
 
+async_test(function(t) {
+  var div = addDiv(t);
+
+  // Set up pending animation
+  div.style.animation = 'abc 100s';
+  var player = div.getAnimationPlayers()[0];
+  assert_equals(player.playState, 'pending', 'Player is initially pending');
+
+  // Set up listeners on ready promise
+  player.ready.then(t.step_func(function() {
+    assert_unreached('ready promise is fulfilled');
+  })).catch(t.step_func(function(err) {
+    assert_equals(err.name, 'AbortError',
+                  'ready promise is rejected with AbortError');
+    assert_equals(player.playState, 'idle',
+                  'Player is idle after animation was cancelled');
+  })).then(t.step_func(function() {
+    t.done();
+  }));
+
+  // Now cancel the animation and flush styles
+  div.style.animation = '';
+  window.getComputedStyle(div).animation;
+
+}, 'ready promise is rejected when an animation is cancelled by resetting'
+   + ' the animation property');
+
+async_test(function(t) {
+  var div = addDiv(t);
+
+  // As before, but this time instead of removing all animations, simply update
+  // the list of animations. At least for Firefox, updating is a different
+  // code path.
+
+  // Set up pending animation
+  div.style.animation = 'abc 100s';
+  var player = div.getAnimationPlayers()[0];
+  assert_equals(player.playState, 'pending', 'Player is initially pending');
+
+  // Set up listeners on ready promise
+  player.ready.then(t.step_func(function() {
+    assert_unreached('ready promise was fulfilled');
+  })).catch(t.step_func(function(err) {
+    assert_equals(err.name, 'AbortError',
+                  'ready promise is rejected with AbortError');
+    assert_equals(player.playState, 'idle',
+                  'Player is idle after animation was cancelled');
+  })).then(t.step_func(function() {
+    t.done();
+  }));
+
+  // Now update the animation and flush styles
+  div.style.animation = 'def 100s';
+  window.getComputedStyle(div).animation;
+
+}, 'ready promise is rejected when an animation is cancelled by updating'
+   + ' the animation property');
+
 </script>

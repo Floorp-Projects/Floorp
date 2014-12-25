@@ -16,8 +16,7 @@ async_test(function(t) {
   div.style.animation = 'anim 1000s';
 
   var player = div.getAnimationPlayers()[0];
-  assert_equals(player.playState, 'running');
-  // Bug 927349: Check for pending state here
+  assert_equals(player.playState, 'pending');
 
   player.ready.then(t.step_func(function() {
     assert_equals(player.playState, 'running');
@@ -52,8 +51,9 @@ test(function(t) {
   var player = div.getAnimationPlayers()[0];
   div.style.animationPlayState = 'running';
   // This test also checks that calling playState flushes style
-  // Bug 927349: Make this check for 'pending'
-  assert_equals(player.playState, 'running');
+  assert_equals(player.playState, 'pending',
+                'Player.playState reports pending after updating'
+                + ' animation-play-state (got: ' + player.playState + ')');
 }, 'Player.playState updates when resumed by setting style');
 
 </script>
