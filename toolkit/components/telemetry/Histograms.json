@@ -7029,6 +7029,15 @@
     "keyed": true,
     "description": "Time (ms) that the main thread has been blocked on NPP_NewStream in an IPC plugin"
   },
+  "BLOCKED_ON_PLUGINASYNCSURROGATE_WAITFORINIT_MS": {
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "keyed": true,
+    "description": "Time (ms) that the main thread has been blocked on PluginAsyncSurrogate::WaitForInit in an IPC plugin"
+  },
   "BLOCKED_ON_PLUGIN_INSTANCE_DESTROY_MS": {
     "expires_in_version": "40",
     "kind": "exponential",
