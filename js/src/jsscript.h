@@ -62,12 +62,12 @@ namespace frontend {
  * for exception unwinding, but storing their boundaries here is helpful for
  * heuristics that need to know whether a given op is inside a loop.
  */
-typedef enum JSTryNoteKind {
+enum JSTryNoteKind {
     JSTRY_CATCH,
     JSTRY_FINALLY,
     JSTRY_ITER,
     JSTRY_LOOP
-} JSTryNoteKind;
+};
 
 /*
  * Exception handling record.
@@ -1872,9 +1872,13 @@ class LazyScript : public gc::TenuredCell
     // Heap allocated table with any free variables or inner functions.
     void *table_;
 
+    // Add padding so LazyScript is gc::Cell aligned. Make padding protected
+    // instead of private to suppress -Wunused-private-field compiler warnings.
+  protected:
 #if JS_BITS_PER_WORD == 32
     uint32_t padding;
 #endif
+  private:
 
     struct PackedView {
         // Assorted bits that should really be in ScriptSourceObject.

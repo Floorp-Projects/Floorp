@@ -772,8 +772,10 @@ template <typename CharT>
 StaticStrings::isStatic(const CharT *chars, size_t length)
 {
     switch (length) {
-      case 1:
-        return chars[0] < UNIT_STATIC_LIMIT;
+      case 1: {
+        char16_t c = chars[0];
+        return c < UNIT_STATIC_LIMIT;
+      }
       case 2:
         return fitsInSmallChar(chars[0]) && fitsInSmallChar(chars[1]);
       case 3:
