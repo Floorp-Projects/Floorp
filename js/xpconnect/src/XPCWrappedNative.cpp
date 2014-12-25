@@ -505,7 +505,6 @@ FinishCreate(XPCWrappedNativeScope* Scope,
 
                 if (cache)
                     cache->ClearWrapper();
-                wrapper->Release();
                 return rv;
             }
         }
