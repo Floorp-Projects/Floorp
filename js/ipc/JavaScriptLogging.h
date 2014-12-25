@@ -119,9 +119,8 @@ class Logging
             ptr = nullptr;
         }
 
-        out = nsPrintfCString("<%s %s:%d:%p>", side, objDesc, id, ptr);
+        out = nsPrintfCString("<%s %s:%d:%p>", side, objDesc, id.serialNumber(), ptr);
     }
-
 
     void format(const ReceiverObj &obj, nsCString &out) {
         formatObject(true, true, obj.id, out);
