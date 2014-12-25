@@ -3956,10 +3956,6 @@ pref("layers.tiled-drawtarget.enabled", true);
 pref("layers.offmainthreadcomposition.enabled", true);
 #endif
 
-#ifdef MOZ_WIDGET_GONK
-pref("layers.tiled-drawtarget.enabled", true);
-#endif
-
 // same effect as layers.offmainthreadcomposition.enabled, but specifically for
 // use with tests.
 pref("layers.offmainthreadcomposition.testing.enabled", false);
