@@ -776,6 +776,10 @@ class IonBuilder
     // ForkJoin intrinsics
     InliningStatus inlineForkJoinGetSlice(CallInfo &callInfo);
 
+    // TypedArray intrinsics.
+    InliningStatus inlineIsTypedArray(CallInfo &callInfo);
+    InliningStatus inlineTypedArrayLength(CallInfo &callInfo);
+
     // TypedObject intrinsics and natives.
     InliningStatus inlineObjectIsTypeDescr(CallInfo &callInfo);
     InliningStatus inlineSetTypedObjectOffset(CallInfo &callInfo);
