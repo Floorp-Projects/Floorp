@@ -95,27 +95,8 @@ public:
   void SetSource(Animation* aSource);
   void Tick();
 
-  /**
-   * Sets the start time of a player that is waiting to play to the current
-   * time of its timeline.
-   *
-   * This will reset the pending flag if the call succeeded. The caller is
-   * responsible for removing the player from the PendingPlayerTracker though.
-   *
-   * Typically, when a player is played, it does not start immediately but is
-   * added to a table of pending players on the document of its source content.
-   * In the meantime it sets its hold time to the time from which should
-   * begin playback.
-   *
-   * When the document finishes painting, any pending players in its table
-   * are started by calling this method.
-   *
-   * This approach means that any setup time required for performing the
-   * initial paint of an animation such as layerization is not deducted from
-   * the running time of the animation. Without this we can easily drop the
-   * first few frames of an animation, or, on slower devices, the whole
-   * animation.
-   */
+  // Sets the start time of a player that is waiting to play to the current
+  // time of its timeline.
   void StartNow();
   void Cancel();
 
