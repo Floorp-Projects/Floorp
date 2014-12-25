@@ -124,7 +124,6 @@ MobileConnectionParent::RecvInit(nsMobileConnectionInfo* aVoice,
                                  nsMobileConnectionInfo* aData,
                                  nsString* aLastKnownNetwork,
                                  nsString* aLastKnownHomeNetwork,
-                                 nsString* aIccId,
                                  int32_t* aNetworkSelectionMode,
                                  int32_t* aRadioState,
                                  nsTArray<int32_t>* aSupportedNetworkTypes)
@@ -135,7 +134,6 @@ MobileConnectionParent::RecvInit(nsMobileConnectionInfo* aVoice,
   NS_ENSURE_SUCCESS(mMobileConnection->GetData(aData), false);
   NS_ENSURE_SUCCESS(mMobileConnection->GetLastKnownNetwork(*aLastKnownNetwork), false);
   NS_ENSURE_SUCCESS(mMobileConnection->GetLastKnownHomeNetwork(*aLastKnownHomeNetwork), false);
-  NS_ENSURE_SUCCESS(mMobileConnection->GetIccId(*aIccId), false);
   NS_ENSURE_SUCCESS(mMobileConnection->GetNetworkSelectionMode(aNetworkSelectionMode), false);
   NS_ENSURE_SUCCESS(mMobileConnection->GetRadioState(aRadioState), false);
 
@@ -226,17 +224,6 @@ MobileConnectionParent::NotifyOtaStatusChanged(const nsAString& aStatus)
 
   return SendNotifyOtaStatusChanged(nsAutoString(aStatus))
          ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-MobileConnectionParent::NotifyIccChanged()
-{
-  NS_ENSURE_TRUE(mLive, NS_ERROR_FAILURE);
-
-  nsAutoString iccId;
-  mMobileConnection->GetIccId(iccId);
-
-  return SendNotifyIccChanged(iccId) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

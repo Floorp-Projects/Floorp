@@ -13,8 +13,8 @@
 namespace mozilla {
 namespace dom {
 
-class IccListener;
 class Icc;
+class IccListener;
 
 class IccManager MOZ_FINAL : public DOMEventTargetHelper
 {
