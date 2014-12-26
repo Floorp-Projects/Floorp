@@ -16,17 +16,13 @@
 }
 
 #engineList treechildren::-moz-tree-image(engineShown, checked) {
-  /* Unfortunately check.svg can't be used in XUL trees. */
-  list-style-image: url("check.png");
-  -moz-margin-start: 5px;
-  width: 12px;
-  height: 12px;
+  list-style-image: url("chrome://global/skin/in-content/check.svg#check");
+  width: 21px;
+  height: 21px;
 }
 
-@media (min-resolution: 2dppx) {
-  #engineList treechildren::-moz-tree-image(engineShown, checked) {
-    list-style-image: url("check@2x.png");
-  }
+#engineList treechildren::-moz-tree-image(engineShown, checked, selected) {
+  list-style-image: url("chrome://global/skin/in-content/check.svg#check-inverted");
 }
 
 #engineList treechildren::-moz-tree-image(engineName) {
@@ -38,11 +34,6 @@
 
 #engineList treechildren::-moz-tree-row {
   min-height: 36px;
-}
-
-#engineList treechildren::-moz-tree-cell-text {
-  /* Override to avoid text in the selected row being white on light gray. */
-  color: -moz-FieldText;
 }
 
 #engineList treechildren::-moz-tree-drop-feedback {
