@@ -202,6 +202,12 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
     if (native == intrinsic_IsStringIterator)
         return inlineHasClass(callInfo, &StringIteratorObject::class_);
 
+    // TypedArray intrinsics.
+    if (native == intrinsic_IsTypedArray)
+        return inlineIsTypedArray(callInfo);
+    if (native == intrinsic_TypedArrayLength)
+        return inlineTypedArrayLength(callInfo);
+
     // TypedObject intrinsics.
     if (native == intrinsic_ObjectIsTypedObject)
         return inlineHasClass(callInfo,
@@ -1937,6 +1943,63 @@ IonBuilder::inlineHasClass(CallInfo &callInfo,
     callInfo.setImplicitlyUsedUnchecked();
     return InliningStatus_Inlined;
 }
+
+IonBuilder::InliningStatus
+IonBuilder::inlineIsTypedArray(CallInfo &callInfo)
+{
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 1);
+    if (callInfo.getArg(0)->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+    if (getInlineReturnType() != MIRType_Boolean)
+        return InliningStatus_NotInlined;
+
+    // The test is elaborate: in-line only if there is exact
+    // information.
+
+    types::TemporaryTypeSet *types = callInfo.getArg(0)->resultTypeSet();
+    if (!types)
+        return InliningStatus_NotInlined;
+
+    bool result = false;
+    switch (types->forAllClasses(IsTypedArrayClass)) {
+      case types::TemporaryTypeSet::ForAllResult::ALL_FALSE:
+      case types::TemporaryTypeSet::ForAllResult::EMPTY:
+        result = false;
+        break;
+      case types::TemporaryTypeSet::ForAllResult::ALL_TRUE:
+        result = true;
+        break;
+      case types::TemporaryTypeSet::ForAllResult::MIXED:
+        return InliningStatus_NotInlined;
+    }
+
+    pushConstant(BooleanValue(result));
+
+    callInfo.setImplicitlyUsedUnchecked();
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineTypedArrayLength(CallInfo &callInfo)
+{
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 1);
+    if (callInfo.getArg(0)->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+    if (getInlineReturnType() != MIRType_Int32)
+        return InliningStatus_NotInlined;
+
+    // We assume that when calling this function we always
+    // have a TypedArray. The native asserts that as well.
+
+    MInstruction *length = addTypedArrayLength(callInfo.getArg(0));
+    current->push(length);
+
+    callInfo.setImplicitlyUsedUnchecked();
+    return InliningStatus_Inlined;
+}
+
 
 IonBuilder::InliningStatus
 IonBuilder::inlineObjectIsTypeDescr(CallInfo &callInfo)

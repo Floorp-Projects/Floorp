@@ -181,7 +181,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   gPrototypeProperties['TypedArray'] =
     ["length", "buffer", "byteLength", "byteOffset", kIteratorSymbol, "subarray",
      "set", "copyWithin", "find", "findIndex", "indexOf", "lastIndexOf", "reverse"];
-
+  if (isNightlyBuild) {
+    gPrototypeProperties['TypedArray'].push('includes');
+  }
   for (var c of errorObjectClasses) {
       gPrototypeProperties[c] = ["constructor", "name",
                                  // We don't actually resolve these empty data properties

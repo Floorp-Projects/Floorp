@@ -20,10 +20,11 @@ class CompositableForwarder;
 ////////////////////////////////////////////////////////////////////////
 // EGLImageTextureClient
 
-EGLImageTextureClient::EGLImageTextureClient(TextureFlags aFlags,
+EGLImageTextureClient::EGLImageTextureClient(ISurfaceAllocator* aAllocator,
+                                             TextureFlags aFlags,
                                              EGLImageImage* aImage,
                                              gfx::IntSize aSize)
-  : TextureClient(aFlags)
+  : TextureClient(aAllocator, aFlags)
   , mImage(aImage)
   , mSize(aSize)
   , mIsLocked(false)
@@ -72,11 +73,12 @@ EGLImageTextureClient::Unlock()
 
 #ifdef MOZ_WIDGET_ANDROID
 
-SurfaceTextureClient::SurfaceTextureClient(TextureFlags aFlags,
+SurfaceTextureClient::SurfaceTextureClient(ISurfaceAllocator* aAllocator,
+                                           TextureFlags aFlags,
                                            AndroidSurfaceTexture* aSurfTex,
                                            gfx::IntSize aSize,
                                            bool aInverted)
-  : TextureClient(aFlags)
+  : TextureClient(aAllocator, aFlags)
   , mSurfTex(aSurfTex)
   , mSize(aSize)
   , mIsLocked(false)
