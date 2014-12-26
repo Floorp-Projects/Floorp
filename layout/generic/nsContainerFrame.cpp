@@ -885,7 +885,7 @@ nsContainerFrame::DoInlineIntrinsicISize(nsRenderingContext *aRenderingContext,
 
 /* virtual */
 LogicalSize
-nsContainerFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
+nsContainerFrame::ComputeAutoSize(nsRenderingContext* aRenderingContext,
                                   WritingMode aWM,
                                   const LogicalSize& aCBSize,
                                   nscoord aAvailableISize,
@@ -907,6 +907,33 @@ nsContainerFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
     }
   } else {
     result.ISize(aWM) = availBased;
+  }
+
+  if (IsTableCaption()) {
+    // If we're a container for font size inflation, then shrink
+    // wrapping inside of us should not apply font size inflation.
+    AutoMaybeDisableFontInflation an(this);
+
+    // XXX todo: make this aware of vertical writing modes
+    uint8_t captionSide = StyleTableBorder()->mCaptionSide;
+    if (captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
+        captionSide == NS_STYLE_CAPTION_SIDE_RIGHT) {
+      result.ISize(aWM) = GetMinISize(aRenderingContext);
+    } else if (captionSide == NS_STYLE_CAPTION_SIDE_TOP ||
+               captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM) {
+      // The outer frame constrains our available width to the width of
+      // the table.  Grow if our min-width is bigger than that, but not
+      // larger than the containing block width.  (It would really be nice
+      // to transmit that information another way, so we could grow up to
+      // the table's available width, but that's harder.)
+      nscoord min = GetMinISize(aRenderingContext);
+      if (min > aCBSize.ISize(aWM)) {
+        min = aCBSize.ISize(aWM);
+      }
+      if (min > result.ISize(aWM)) {
+        result.ISize(aWM) = min;
+      }
+    }
   }
   return result;
 }

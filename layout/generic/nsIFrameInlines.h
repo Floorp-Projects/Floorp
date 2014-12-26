@@ -9,6 +9,7 @@
 
 #include "nsContainerFrame.h"
 #include "nsStyleStructInlines.h"
+#include "nsCSSAnonBoxes.h"
 
 bool
 nsIFrame::IsFlexItem() const
@@ -28,6 +29,13 @@ nsIFrame::IsFlexOrGridItem() const
       !(GetStateBits() & NS_FRAME_OUT_OF_FLOW);
   }
   return false;
+}
+
+bool
+nsIFrame::IsTableCaption() const
+{
+  return StyleDisplay()->mDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION &&
+    GetParent()->StyleContext()->GetPseudo() == nsCSSAnonBoxes::tableOuter;
 }
 
 bool

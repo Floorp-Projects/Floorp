@@ -787,6 +787,9 @@ TypedArrayObject::protoFunctions[] = {
     JS_SELF_HOSTED_FN("indexOf", "TypedArrayIndexOf", 2, 0),
     JS_SELF_HOSTED_FN("lastIndexOf", "TypedArrayLastIndexOf", 2, 0),
     JS_SELF_HOSTED_FN("reverse", "TypedArrayReverse", 0, 0),
+#ifdef NIGHTLY_BUILD
+    JS_SELF_HOSTED_FN("includes", "TypedArrayIncludes", 2, 0),
+#endif
     JS_FS_END
 };
 

@@ -7080,6 +7080,9 @@ nsFrame::ChildIsDirty(nsIFrame* aChild)
 a11y::AccType
 nsFrame::AccessibleType()
 {
+  if (IsTableCaption() && !GetRect().IsEmpty()) {
+    return a11y::eHTMLCaptionType;
+  }
   return a11y::eNoType;
 }
 #endif
@@ -7748,9 +7751,18 @@ GetIBSplitSiblingForAnonymousBlock(const nsIFrame* aFrame)
 static nsIFrame*
 GetCorrectedParent(const nsIFrame* aFrame)
 {
-  nsIFrame *parent = aFrame->GetParent();
+  nsIFrame* parent = aFrame->GetParent();
   if (!parent) {
     return nullptr;
+  }
+
+  // For a table caption we want the _inner_ table frame (unless it's anonymous)
+  // as the style parent.
+  if (aFrame->IsTableCaption()) {
+    nsIFrame* innerTable = parent->GetFirstPrincipalChild();
+    if (!innerTable->StyleContext()->GetPseudo()) {
+      return innerTable;
+    }
   }
 
   // Outer tables are always anon boxes; if we're in here for an outer
@@ -9452,7 +9464,6 @@ void DR_State::InitFrameTypeTable()
   AddFrameTypeInfo(nsGkAtoms::canvasFrame,           "canvas",    "canvas");
   AddFrameTypeInfo(nsGkAtoms::rootFrame,             "root",      "root");
   AddFrameTypeInfo(nsGkAtoms::scrollFrame,           "scroll",    "scroll");
-  AddFrameTypeInfo(nsGkAtoms::tableCaptionFrame,     "caption",   "tableCaption");
   AddFrameTypeInfo(nsGkAtoms::tableCellFrame,        "cell",      "tableCell");
   AddFrameTypeInfo(nsGkAtoms::bcTableCellFrame,      "bcCell",    "bcTableCell");
   AddFrameTypeInfo(nsGkAtoms::tableColFrame,         "col",       "tableCol");

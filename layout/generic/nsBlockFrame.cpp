@@ -6442,6 +6442,10 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 a11y::AccType
 nsBlockFrame::AccessibleType()
 {
+  if (IsTableCaption()) {
+    return GetRect().IsEmpty() ? a11y::eNoType : a11y::eHTMLCaptionType;
+  }
+
   // block frame may be for <hr>
   if (mContent->Tag() == nsGkAtoms::hr) {
     return a11y::eHTMLHRType;

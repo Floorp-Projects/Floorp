@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      #rel {
+        position: relative;
+        margin: 2px;
+        padding: 0;
+      }
+      .abs {
+        position: absolute;
+        margin: 0;
+        padding: 0;
+        top: 25px;
+        left: 25px;
+        width: 50px;
+        height: 50px;
+        background-color: green;
+      }
+      #bad {
+        background-color: blue;
+      }
+    </style>
+  </head>
+  <body>
+    The green square should not completely cover the blue square.
+    <div class="abs" id="bad"></div>
+    <table>
+      <caption id="rel"><div class="abs"></div></caption>
+    </table>
+  </body>
+</html>

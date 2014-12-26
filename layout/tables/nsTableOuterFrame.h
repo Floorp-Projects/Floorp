@@ -9,44 +9,7 @@
 #include "nscore.h"
 #include "nsContainerFrame.h"
 #include "nsCellMap.h"
-#include "nsBlockFrame.h"
 #include "nsTableFrame.h"
-
-class nsTableCaptionFrame : public nsBlockFrame
-{
-public:
-  NS_DECL_FRAMEARENA_HELPERS
-
-  friend nsTableCaptionFrame* NS_NewTableCaptionFrame(nsIPresShell* aPresShell,
-                                                      nsStyleContext*  aContext);
-  // nsIFrame
-  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
-
-  virtual mozilla::LogicalSize
-  ComputeAutoSize(nsRenderingContext *aRenderingContext,
-                  mozilla::WritingMode aWritingMode,
-                  const mozilla::LogicalSize& aCBSize,
-                  nscoord aAvailableISize,
-                  const mozilla::LogicalSize& aMargin,
-                  const mozilla::LogicalSize& aBorder,
-                  const mozilla::LogicalSize& aPadding,
-                  bool aShrinkWrap) MOZ_OVERRIDE;
-
-  virtual nsStyleContext* GetParentStyleContext(nsIFrame** aProviderFrame) const MOZ_OVERRIDE;
-
-#ifdef ACCESSIBILITY
-  virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
-#endif
-
-#ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
-#endif
-
-protected:
-  explicit nsTableCaptionFrame(nsStyleContext*  aContext);
-  virtual ~nsTableCaptionFrame();
-};
-
 
 /**
  * Primary frame for a table element,
