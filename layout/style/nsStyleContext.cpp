@@ -529,9 +529,9 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
       uint8_t displayVal = disp->mDisplay;
       // Skip table parts.
       // NOTE: This list needs to be kept in sync with
-      // nsCSSFrameConstructor.cpp's "sDisplayData" array -- specifically,
-      // this should be the list of display-values that have
-      // FCDATA_DESIRED_PARENT_TYPE_TO_BITS specified in that array.
+      // nsCSSFrameConstructor::FindDisplayData() -- specifically,
+      // this should be the list of display-values that returns
+      // FCDATA_DESIRED_PARENT_TYPE_TO_BITS from that method.
       if (NS_STYLE_DISPLAY_TABLE_CAPTION      != displayVal &&
           NS_STYLE_DISPLAY_TABLE_ROW_GROUP    != displayVal &&
           NS_STYLE_DISPLAY_TABLE_HEADER_GROUP != displayVal &&
