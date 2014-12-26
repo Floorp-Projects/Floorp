@@ -32,8 +32,8 @@ using namespace mozilla::pkix;
 using namespace mozilla::pkix::test;
 
 static ByteString
-CreateCert(const char* issuerCN,
-           const char* subjectCN,
+CreateCert(const char* issuerCN, // null means "empty name"
+           const char* subjectCN, // null means "empty name"
            EndEntityOrCA endEntityOrCA,
            /*optional modified*/ std::map<ByteString, ByteString>*
              subjectDERToCertDER = nullptr)
@@ -43,8 +43,8 @@ CreateCert(const char* issuerCN,
   ByteString serialNumber(CreateEncodedSerialNumber(serialNumberValue));
   EXPECT_FALSE(ENCODING_FAILED(serialNumber));
 
-  ByteString issuerDER(CNToDERName(issuerCN));
-  ByteString subjectDER(CNToDERName(subjectCN));
+  ByteString issuerDER(issuerCN ? CNToDERName(issuerCN) : Name(ByteString()));
+  ByteString subjectDER(subjectCN ? CNToDERName(subjectCN) : Name(ByteString()));
 
   ByteString extensions[2];
   if (endEntityOrCA == EndEntityOrCA::MustBeCA) {
@@ -446,3 +446,123 @@ TEST_F(pkixbuild_DSS, DSSEndEntityKeyNotAccepted)
                            CertPolicyId::anyPolicy,
                            nullptr/*stapledOCSPResponse*/));
 }
+
+class IssuerNameCheckTrustDomain : public TrustDomain
+{
+public:
+  IssuerNameCheckTrustDomain(const ByteString& issuer, bool expectedKeepGoing)
+    : issuer(issuer)
+    , expectedKeepGoing(expectedKeepGoing)
+  {
+  }
+
+  virtual Result GetCertTrust(EndEntityOrCA endEntityOrCA,
+                              const CertPolicyId&, Input,
+                              /*out*/ TrustLevel& trustLevel)
+  {
+    trustLevel = endEntityOrCA == EndEntityOrCA::MustBeCA
+               ? TrustLevel::TrustAnchor
+               : TrustLevel::InheritsTrust;
+    return Success;
+  }
+
+  virtual Result FindIssuer(Input subjectCert, IssuerChecker& checker, Time)
+  {
+    Input issuerInput;
+    EXPECT_EQ(Success, issuerInput.Init(issuer.data(), issuer.length()));
+    bool keepGoing;
+    EXPECT_EQ(Success,
+              checker.Check(issuerInput, nullptr /*additionalNameConstraints*/,
+                            keepGoing));
+    EXPECT_EQ(expectedKeepGoing, keepGoing);
+    return Success;
+  }
+
+  virtual Result CheckRevocation(EndEntityOrCA, const CertID&, Time,
+                                 /*optional*/ const Input*,
+                                 /*optional*/ const Input*)
+  {
+    return Success;
+  }
+
+  virtual Result IsChainValid(const DERArray&, Time)
+  {
+    return Success;
+  }
+
+  virtual Result VerifySignedData(const SignedDataWithSignature& signedData,
+                                  Input subjectPublicKeyInfo)
+  {
+    return TestVerifySignedData(signedData, subjectPublicKeyInfo);
+  }
+
+  virtual Result DigestBuf(Input, /*out*/uint8_t*, size_t)
+  {
+    ADD_FAILURE();
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+
+  virtual Result CheckPublicKey(Input subjectPublicKeyInfo)
+  {
+    return TestCheckPublicKey(subjectPublicKeyInfo);
+  }
+
+private:
+  const ByteString issuer;
+  const bool expectedKeepGoing;
+};
+
+struct IssuerNameCheckParams
+{
+  const char* subjectIssuerCN; // null means "empty name"
+  const char* issuerSubjectCN; // null means "empty name"
+  bool matches;
+};
+
+static const IssuerNameCheckParams ISSUER_NAME_CHECK_PARAMS[] =
+{
+  { "foo", "foo", true },
+  { "foo", "bar", false },
+  { "f", "foo", false }, // prefix
+  { "foo", "f", false }, // prefix
+  { "foo", "Foo", false }, // case sensitive
+  { "", "", true },
+  { nullptr, nullptr, true }, // XXX(bug 1115718)
+};
+
+class pkixbuild_IssuerNameCheck
+  : public ::testing::Test
+  , public ::testing::WithParamInterface<IssuerNameCheckParams>
+{
+};
+
+TEST_P(pkixbuild_IssuerNameCheck, MatchingName)
+{
+  const IssuerNameCheckParams& params(GetParam());
+
+  ByteString issuerCertDER(CreateCert(params.issuerSubjectCN,
+                                      params.issuerSubjectCN,
+                                      EndEntityOrCA::MustBeCA, nullptr));
+  ASSERT_FALSE(ENCODING_FAILED(issuerCertDER));
+
+  ByteString subjectCertDER(CreateCert(params.subjectIssuerCN, "end-entity",
+                                       EndEntityOrCA::MustBeEndEntity,
+                                       nullptr));
+  ASSERT_FALSE(ENCODING_FAILED(subjectCertDER));
+
+  Input subjectCertDERInput;
+  ASSERT_EQ(Success, subjectCertDERInput.Init(subjectCertDER.data(),
+                                              subjectCertDER.length()));
+
+  IssuerNameCheckTrustDomain trustDomain(issuerCertDER, !params.matches);
+  ASSERT_EQ(params.matches ? Success : Result::ERROR_UNKNOWN_ISSUER,
+            BuildCertChain(trustDomain, subjectCertDERInput, Now(),
+                           EndEntityOrCA::MustBeEndEntity,
+                           KeyUsage::noParticularKeyUsageRequired,
+                           KeyPurposeId::id_kp_serverAuth,
+                           CertPolicyId::anyPolicy,
+                           nullptr/*stapledOCSPResponse*/));
+}
+
+INSTANTIATE_TEST_CASE_P(pkixbuild_IssuerNameCheck, pkixbuild_IssuerNameCheck,
+                        testing::ValuesIn(ISSUER_NAME_CHECK_PARAMS));
