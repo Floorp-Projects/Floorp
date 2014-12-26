@@ -185,9 +185,6 @@ NS_NewTableOuterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 class nsTableFrame;
 nsTableFrame*
 NS_NewTableFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-class nsTableCaptionFrame;
-nsTableCaptionFrame*
-NS_NewTableCaptionFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsTableColFrame*
 NS_NewTableColFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 class nsTableColGroupFrame;

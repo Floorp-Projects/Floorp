@@ -10,7 +10,24 @@
 #include "mozilla/Types.h"
 
 /* Override some jemalloc defaults */
-MFBT_DATA const char * je_(malloc_conf) = "narenas:1,lg_chunk:20,tcache:false";
+#ifdef MOZ_B2G
+/* we tolerate around 4MiB of dirty pages on most platforms, except for B2G,
+ * where our limit is 1MiB
+ */
+#define MOZ_MALLOC_PLATFORM_OPTIONS ",lg_dirty_mult:8"
+#else
+#define MOZ_MALLOC_PLATFORM_OPTIONS ",lg_dirty_mult:6"
+#endif
+
+#ifdef DEBUG
+#define MOZ_MALLOC_BUILD_OPTIONS ",junk:true"
+#else
+#define MOZ_MALLOC_BUILD_OPTIONS ",junk:free"
+#endif
+
+#define MOZ_MALLOC_OPTIONS "narenas:1,lg_chunk:20,tcache:false"
+MFBT_DATA const char * je_(malloc_conf) =
+  MOZ_MALLOC_OPTIONS MOZ_MALLOC_PLATFORM_OPTIONS MOZ_MALLOC_BUILD_OPTIONS;
 
 #ifdef ANDROID
 #include <android/log.h>

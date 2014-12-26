@@ -21,33 +21,13 @@
 #include "nsIDOMNode.h"
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
+#include "nsIFrameInlines.h"
 #include <algorithm>
 
 using namespace mozilla;
 using namespace mozilla::layout;
 
-/* ----------- nsTableCaptionFrame ---------- */
-
-#define NS_TABLE_FRAME_CAPTION_LIST_INDEX 1
 #define NO_SIDE 100
-
-// caption frame
-nsTableCaptionFrame::nsTableCaptionFrame(nsStyleContext* aContext):
-  nsBlockFrame(aContext)
-{
-  // shrink wrap 
-  SetFlags(NS_BLOCK_FLOAT_MGR);
-}
-
-nsTableCaptionFrame::~nsTableCaptionFrame()
-{
-}
-
-nsIAtom*
-nsTableCaptionFrame::GetType() const
-{
-  return nsGkAtoms::tableCaptionFrame;
-}
 
 /* virtual */ nscoord
 nsTableOuterFrame::GetLogicalBaseline(WritingMode aWritingMode) const
@@ -61,107 +41,6 @@ nsTableOuterFrame::GetLogicalBaseline(WritingMode aWritingMode) const
   return kid->GetLogicalBaseline(aWritingMode) +
          kid->BStart(aWritingMode, mRect.width);
 }
-
-/* virtual */
-LogicalSize
-nsTableCaptionFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
-                                     WritingMode aWM,
-                                     const LogicalSize& aCBSize,
-                                     nscoord aAvailableISize,
-                                     const LogicalSize& aMargin,
-                                     const LogicalSize& aBorder,
-                                     const LogicalSize& aPadding,
-                                     bool aShrinkWrap)
-{
-  LogicalSize result =
-    nsBlockFrame::ComputeAutoSize(aRenderingContext, aWM, aCBSize,
-                                  aAvailableISize, aMargin, aBorder,
-                                  aPadding, aShrinkWrap);
-
-  // If we're a container for font size inflation, then shrink
-  // wrapping inside of us should not apply font size inflation.
-  AutoMaybeDisableFontInflation an(this);
-
-  // XXX todo: make this aware of vertical writing modes
-  uint8_t captionSide = StyleTableBorder()->mCaptionSide;
-  if (captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
-      captionSide == NS_STYLE_CAPTION_SIDE_RIGHT) {
-    result.ISize(aWM) = GetMinISize(aRenderingContext);
-  } else if (captionSide == NS_STYLE_CAPTION_SIDE_TOP ||
-             captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM) {
-    // The outer frame constrains our available width to the width of
-    // the table.  Grow if our min-width is bigger than that, but not
-    // larger than the containing block width.  (It would really be nice
-    // to transmit that information another way, so we could grow up to
-    // the table's available width, but that's harder.)
-    nscoord min = GetMinISize(aRenderingContext);
-    if (min > aCBSize.ISize(aWM)) {
-      min = aCBSize.ISize(aWM);
-    }
-    if (min > result.ISize(aWM)) {
-      result.ISize(aWM) = min;
-    }
-  }
-  return result;
-}
-
-nsStyleContext*
-nsTableCaptionFrame::GetParentStyleContext(nsIFrame** aProviderFrame) const
-{
-  MOZ_ASSERT(GetContent()->GetParent(), "How could we not have a parent here?");
-    
-  nsStyleContext* sc =
-    PresContext()->FrameManager()->GetDisplayContentsStyleFor(GetContent()->GetParent());
-  if (sc) {
-    *aProviderFrame = nullptr;
-    return sc;
-  }
-
-  // The caption's style context parent is the inner frame, unless
-  // it's anonymous.
-  nsIFrame* outerFrame = GetParent();
-  if (outerFrame && outerFrame->GetType() == nsGkAtoms::tableOuterFrame) {
-    nsIFrame* innerFrame = outerFrame->GetFirstPrincipalChild();
-    if (innerFrame) {
-      *aProviderFrame = nsFrame::CorrectStyleParentFrame(innerFrame,
-                                   StyleContext()->GetPseudo());
-      return *aProviderFrame ? (*aProviderFrame)->StyleContext() : nullptr;
-    }
-  }
-
-  NS_NOTREACHED("Where is our inner table frame?");
-  return nsBlockFrame::GetParentStyleContext(aProviderFrame);
-}
-
-#ifdef ACCESSIBILITY
-a11y::AccType
-nsTableCaptionFrame::AccessibleType()
-{
-  if (!GetRect().IsEmpty()) {
-    return a11y::eHTMLCaptionType;
-  }
-
-  return a11y::eNoType;
-}
-#endif
-
-#ifdef DEBUG_FRAME_DUMP
-nsresult
-nsTableCaptionFrame::GetFrameName(nsAString& aResult) const
-{
-  return MakeFrameName(NS_LITERAL_STRING("Caption"), aResult);
-}
-#endif
-
-nsTableCaptionFrame* 
-NS_NewTableCaptionFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
-{
-  return new (aPresShell) nsTableCaptionFrame(aContext);
-}
-
-NS_IMPL_FRAMEARENA_HELPERS(nsTableCaptionFrame)
-
-/* ----------- nsTableOuterFrame ---------- */
 
 nsTableOuterFrame::nsTableOuterFrame(nsStyleContext* aContext):
   nsContainerFrame(aContext)
@@ -238,7 +117,7 @@ nsTableOuterFrame::AppendFrames(ChildListID     aListID,
   // The inner frame is provided when we're initialized, and it cannot change
   MOZ_ASSERT(kCaptionList == aListID, "unexpected child list");
   MOZ_ASSERT(aFrameList.IsEmpty() ||
-             aFrameList.FirstChild()->GetType() == nsGkAtoms::tableCaptionFrame,
+             aFrameList.FirstChild()->IsTableCaption(),
              "appending non-caption frame to captionList");
   mCaptionFrames.AppendFrames(this, aFrameList);
 
@@ -256,7 +135,7 @@ nsTableOuterFrame::InsertFrames(ChildListID     aListID,
 {
   MOZ_ASSERT(kCaptionList == aListID, "unexpected child list");
   MOZ_ASSERT(aFrameList.IsEmpty() ||
-             aFrameList.FirstChild()->GetType() == nsGkAtoms::tableCaptionFrame,
+             aFrameList.FirstChild()->IsTableCaption(),
              "inserting non-caption frame into captionList");
   MOZ_ASSERT(!aPrevFrame || aPrevFrame->GetParent() == this,
              "inserting after sibling frame with different parent");
@@ -956,9 +835,8 @@ nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
                           innerRSSpace, aOuterRS.ComputedSize(wm).ISize(wm));
   } else if (captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
              captionSide == NS_STYLE_CAPTION_SIDE_RIGHT) {
-    // nsTableCaptionFrame::ComputeAutoSize takes care of making side
-    // captions small.  Compute the caption's size first, and tell the
-    // table to fit in what's left.
+    // ComputeAutoSize takes care of making side captions small. Compute
+    // the caption's size first, and tell the table to fit in what's left.
     wm = mCaptionFrames.FirstChild()->GetWritingMode();
     OuterBeginReflowChild(aPresContext, mCaptionFrames.FirstChild(), aOuterRS,
                           captionRSSpace, aOuterRS.ComputedSize(wm).ISize(wm));

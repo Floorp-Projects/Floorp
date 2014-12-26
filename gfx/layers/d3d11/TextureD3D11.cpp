@@ -161,8 +161,10 @@ CreateTextureHostD3D11(const SurfaceDescriptor& aDesc,
   return result;
 }
 
-TextureClientD3D11::TextureClientD3D11(gfx::SurfaceFormat aFormat, TextureFlags aFlags)
-  : TextureClient(aFlags)
+TextureClientD3D11::TextureClientD3D11(ISurfaceAllocator* aAllocator,
+                                       gfx::SurfaceFormat aFormat,
+                                       TextureFlags aFlags)
+  : TextureClient(aAllocator, aFlags)
   , mFormat(aFormat)
   , mIsLocked(false)
   , mNeedsClear(false)
@@ -205,7 +207,8 @@ TemporaryRef<TextureClient>
 TextureClientD3D11::CreateSimilar(TextureFlags aFlags,
                                   TextureAllocationFlags aAllocFlags) const
 {
-  RefPtr<TextureClient> tex = new TextureClientD3D11(mFormat, mFlags | aFlags);
+  RefPtr<TextureClient> tex = new TextureClientD3D11(mAllocator, mFormat,
+                                                     mFlags | aFlags);
 
   if (!tex->AllocateForSurface(mSize, aAllocFlags)) {
     return nullptr;
