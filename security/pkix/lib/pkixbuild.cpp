@@ -139,8 +139,17 @@ PathBuildingStep::Check(Input potentialIssuerDER,
     return RecordResult(rv, keepGoing);
   }
 
-  // RFC5280 4.2.1.1. Authority Key Identifier
-  // RFC5280 4.2.1.2. Subject Key Identifier
+  // Simple TrustDomain::FindIssuers implementations may pass in all possible
+  // CA certificates without any filtering. Because of this, we don't consider
+  // a mismatched name to be an error. Instead, we just pretend that any
+  // certificate without a matching name was never passed to us. In particular,
+  // we treat the case where the TrustDomain only asks us to check CA
+  // certificates with mismatched names as equivalent to the case where the
+  // TrustDomain never called Check() at all.
+  if (!InputsAreEqual(potentialIssuer.GetSubject(), subject.GetIssuer())) {
+    keepGoing = true;
+    return Success;
+  }
 
   // Loop prevention, done as recommended by RFC4158 Section 5.2
   // TODO: this doesn't account for subjectAltNames!
