@@ -3337,6 +3337,7 @@ NS_IMPL_RELEASE_INHERITED(nsDOMDeviceStorage, DOMEventTargetHelper)
 nsDOMDeviceStorage::nsDOMDeviceStorage(nsPIDOMWindow* aWindow)
   : DOMEventTargetHelper(aWindow)
   , mIsShareable(false)
+  , mIsRemovable(false)
   , mIsWatchingFile(false)
   , mAllowedToWatchFile(false)
 {
@@ -3383,6 +3384,12 @@ nsDOMDeviceStorage::Init(nsPIDOMWindow* aWindow, const nsAString &aType,
         return rv;
       }
       mIsShareable = !isFake;
+      bool isRemovable;
+      rv = vol->GetIsHotSwappable(&isRemovable);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      mIsRemovable = isRemovable;
     }
 #endif
   }
@@ -4224,6 +4231,12 @@ bool
 nsDOMDeviceStorage::CanBeShared()
 {
   return mIsShareable;
+}
+
+bool
+nsDOMDeviceStorage::IsRemovable()
+{
+  return mIsRemovable;
 }
 
 already_AddRefed<Promise>

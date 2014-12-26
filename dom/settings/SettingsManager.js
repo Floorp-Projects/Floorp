@@ -69,7 +69,8 @@ function SettingsLock(aSettingsManager) {
   let createLockPayload = {
     lockID: this._id,
     isServiceLock: false,
-    windowID: this._settingsManager.innerWindowID
+    windowID: this._settingsManager.innerWindowID,
+    lockStack: (new Error).stack
   };
   this.sendMessage("Settings:CreateLock", createLockPayload);
   Services.tm.currentThread.dispatch(this._closeHelper.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
