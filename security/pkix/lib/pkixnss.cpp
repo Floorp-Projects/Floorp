@@ -125,7 +125,7 @@ VerifySignedDataNSS(const SignedDataWithSignature& sd,
       pubKeyAlg = SEC_OID_PKCS1_RSA_ENCRYPTION;
       digestAlg = SEC_OID_SHA1;
       break;
-    case SignatureAlgorithm::unsupported_algorithm:
+    case SignatureAlgorithm::unsupported_algorithm: // fall through
     default:
       return NotReached("unknown signature algorithm",
                         Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED);
