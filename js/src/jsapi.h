@@ -3214,6 +3214,10 @@ extern JS_PUBLIC_API(bool)
 JS_SetPropertyById(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue v);
 
 extern JS_PUBLIC_API(bool)
+JS_ForwardSetPropertyTo(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue onBehalfOf,
+                        bool strict, JS::HandleValue vp);
+
+extern JS_PUBLIC_API(bool)
 JS_DeleteProperty(JSContext *cx, JS::HandleObject obj, const char *name);
 
 extern JS_PUBLIC_API(bool)
