@@ -29,6 +29,7 @@
 #include "cryptohi.h"
 #include "keyhi.h"
 #include "nss.h"
+#include "pk11pqg.h"
 #include "pk11pub.h"
 #include "pkix/pkixnss.h"
 #include "pkixder.h"
@@ -239,6 +240,53 @@ CloneReusedKeyPair()
   }
   assert(reusedKeyPair);
   return reusedKeyPair->Clone();
+}
+
+TestKeyPair*
+GenerateDSSKeyPair()
+{
+  InitNSSIfNeeded();
+
+  ScopedPtr<PK11SlotInfo, PK11_FreeSlot> slot(PK11_GetInternalSlot());
+  if (!slot) {
+    return nullptr;
+  }
+
+  PQGParams* pqgParamsTemp = nullptr;
+  PQGVerify* pqgVerify = nullptr;
+  if (PK11_PQG_ParamGenV2(2048u, 256u, 256u / 8u, &pqgParamsTemp, &pqgVerify)
+        != SECSuccess) {
+    return nullptr;
+  }
+  PK11_PQG_DestroyVerify(pqgVerify);
+  ScopedPtr<PQGParams, PK11_PQG_DestroyParams> params(pqgParamsTemp);
+
+  SECKEYPublicKey* publicKeyTemp = nullptr;
+  ScopedSECKEYPrivateKey
+    privateKey(PK11_GenerateKeyPair(slot.get(), CKM_DSA_KEY_PAIR_GEN,
+                                    params.get(), &publicKeyTemp, false, true,
+                                    nullptr));
+  if (!privateKey) {
+    return nullptr;
+  }
+  ScopedSECKEYPublicKey publicKey(publicKeyTemp);
+
+  ScopedSECItem spkiDER(SECKEY_EncodeDERSubjectPublicKeyInfo(publicKey.get()));
+  if (!spkiDER) {
+    return nullptr;
+  }
+
+  ScopedPtr<CERTSubjectPublicKeyInfo, SECKEY_DestroySubjectPublicKeyInfo>
+    spki(SECKEY_CreateSubjectPublicKeyInfo(publicKey.get()));
+  if (!spki) {
+    return nullptr;
+  }
+
+  SECItem spkDER = spki->subjectPublicKey;
+  DER_ConvertBitString(&spkDER); // bits to bytes
+  return CreateTestKeyPair(ByteString(spkiDER->data, spkiDER->len),
+                           ByteString(spkDER.data, spkDER.len),
+                           privateKey.release());
 }
 
 ByteString
