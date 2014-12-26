@@ -220,15 +220,15 @@ public:
   //
   // * The implementation must be reentrant and must limit the amount of stack
   //   space it uses; see the note on reentrancy and stack usage below.
-  // * When checker.Check does not return SECSuccess then immediately return
-  //   SECFailure.
-  // * When checker.Check returns SECSuccess and sets keepGoing = false, then
-  //   immediately return SECSuccess.
-  // * When checker.Check returns SECSuccess and sets keepGoing = true, then
+  // * When checker.Check does not return Success then immediately return its
+  //   return value.
+  // * When checker.Check returns Success and sets keepGoing = false, then
+  //   immediately return Success.
+  // * When checker.Check returns Success and sets keepGoing = true, then
   //   call checker.Check again with a different potential issuer certificate,
   //   if any more are available.
   // * When no more potential issuer certificates are available, return
-  //   SECSuccess.
+  //   Success.
   // * Don't call checker.Check with the same potential issuer certificate more
   //   than once in a given call of FindIssuer.
   // * The given time parameter may be used to filter out certificates that are
@@ -270,24 +270,22 @@ public:
   // use.
   //
   // This function may be called multiple times, regardless of whether it
-  // returns SECSuccess or SECFailure. It is guaranteed that BuildCertChain
-  // will not return SECSuccess unless the last call to IsChainValid returns
-  // SECSuccess. Further, it is guaranteed that when BuildCertChain returns
-  // SECSuccess the last chain passed to IsChainValid is the valid chain that
-  // should be used for further operations that require the whole chain.
+  // returns success or failure. It is guaranteed that BuildCertChain will not
+  // return Success unless the last call to IsChainValid returns Success. Further,
+  // it is guaranteed that when BuildCertChain returns Success the last chain
+  // passed to IsChainValid is the valid chain that should be used for further
+  // operations that require the whole chain.
   //
   // Keep in mind, in particular, that if the application saves a copy of the
   // certificate chain the last invocation of IsChainValid during a validation,
-  // it is still possible for BuildCertChain to fail (return SECFailure), in
-  // which case the application must not assume anything about the validity of
-  // the last certificate chain passed to IsChainValid; especially, it would be
-  // very wrong to assume that the certificate chain is valid.
+  // it is still possible for BuildCertChain to fail, in which case the
+  // application must not assume anything about the validity of the last
+  // certificate chain passed to IsChainValid; especially, it would be very
+  // wrong to assume that the certificate chain is valid.
   //
   // certChain.GetDER(0) is the trust anchor.
   virtual Result IsChainValid(const DERArray& certChain, Time time) = 0;
 
-  // issuerCertToDup is only non-const so CERT_DupCertificate can be called on
-  // it.
   virtual Result CheckRevocation(EndEntityOrCA endEntityOrCA,
                                  const CertID& certID, Time time,
                     /*optional*/ const Input* stapledOCSPresponse,
