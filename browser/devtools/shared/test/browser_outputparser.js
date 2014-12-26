@@ -54,6 +54,22 @@ function testParseCssProperty() {
 
   target.innerHTML = "";
 
+  testParseCssVar();
+}
+
+function testParseCssVar() {
+  let frag = parser.parseCssProperty("color", "var(--some-kind-of-green)", {
+    colorSwatchClass: "test-colorswatch"
+  });
+
+  let target = doc.querySelector("div");
+  ok(target, "captain, we have the div");
+  target.appendChild(frag);
+
+  is(target.innerHTML, "var(--some-kind-of-green)", "CSS property correctly parsed");
+
+  target.innerHTML = "";
+
   testParseHTMLAttribute();
 }
 
