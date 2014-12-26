@@ -40,6 +40,11 @@ interface MozNFCTag {
   [Cached, Pure] readonly attribute sequence<NFCTechType>? techList;
 
   /**
+   * The identifier of this tag.
+   */
+  [Pure, Constant] readonly attribute Uint8Array? id;
+
+  /**
    * The type of this tag, null if unknown.
    */
   readonly attribute NFCTagType? type;
