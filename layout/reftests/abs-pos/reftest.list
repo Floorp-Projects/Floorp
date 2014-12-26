@@ -5,6 +5,11 @@ fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azur
 == table-1.html table-1-ref.html
 == table-2.html table-2-ref.html
 == table-3.html table-3-ref.html
+== table-caption-1.html table-internal-1-ref.html
+== table-caption-2.html table-internal-2-ref.html
+== table-caption-3.html table-internal-3-ref.html
+== table-caption-4.html table-internal-8-ref.html
+skip-if(B2G&&browserIsRemote) != table-caption-5.html table-print-1-ref.html # TODO: change to == when bug 967870 is fixed
 == table-cell-1.html table-internal-1-ref.html
 == table-cell-2.html table-internal-2-ref.html
 == table-cell-3.html table-internal-3-ref.html
@@ -12,6 +17,7 @@ fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azur
 == table-cell-5.html table-internal-5-ref.html
 == table-cell-6.html table-internal-6-ref.html
 == table-cell-7.html table-internal-7-ref.html
+skip-if(B2G&&browserIsRemote) != table-cell-8.html table-print-1-ref.html # TODO: change to == when bug 967870 is fixed
 == table-row-1.html table-internal-1-ref.html
 == table-row-2.html table-internal-2-ref.html
 == table-row-3.html table-internal-3-ref.html

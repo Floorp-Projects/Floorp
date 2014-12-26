@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+    <meta charset="utf-8">
+    <title>Testcase for table caption column layout</title>
+    <link rel="help" href="http://www.w3.org/TR/css3-multicol/">
+    <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1109571">
+    <style type="text/css">
+
+* {
+    color:black; background:none; font-size:16px; padding:0; margin:0; font-family:monospace;
+}
+
+.caption {
+  -moz-column-count:2;
+  -webkit-column-count:2;
+  -o-column-count:2;
+  -ms-column-count:2;
+  column-count:2;
+
+  -moz-column-rule:2px solid blue;
+  -webkit-column-rule:2px solid blue;
+  -o-column-rule:2px solid blue;
+  -ms-column-rule:2px solid blue;
+  column-rule:2px solid blue;
+
+  -moz-column-gap:10px;
+  -webkit-column-gap:10px;
+  -o-column-gap:10px;
+  -ms-column-gap:10px;
+  column-gap:10px;
+
+  height:2.2em;
+  line-height:1em;
+  border:2px dotted;
+}
+.col1 {
+  -moz-column-count:1;
+  -webkit-column-count:1;
+  -o-column-count:1;
+  -ms-column-count:1;
+  column-count:1;
+}
+.cw1 {
+  -moz-column-width:1px;
+  -webkit-column-width:1px;
+  -o-column-width:1px;
+  -ms-column-width:1px;
+  column-width:1px;
+}
+table {border:1px solid black}
+.wrap { float:left; clear:both; outline:1px dashed lime; margin-top:3px; }
+    </style>
+</head>
+<body>
+
+<div class="wrap"><table cellpadding="0" cellspacing="0"><caption><div class="caption">1<br>2<br>3</div></caption><tr><td>a table with a two column caption</td></table></div>
+
+<div class="wrap">
+  <div class="caption" style="height:1.1em; text-align:center">1<br>2<br>3</div>
+  <table cellpadding="0" cellspacing="0"><tr><td>a table with a two column caption</td></table>
+</div>
+
+<div class="wrap"><table cellpadding="0" cellspacing="0"><caption><div class="caption" style="border: 1px solid blue">1111<br>2<br>3</div></caption><tr><td>a table with a two column caption</td></table></div>
+
+<div class="wrap"><table cellpadding="0" cellspacing="0"><caption><div class="caption">1111<br>2<br>3<br>4</div></caption><tr><td>T</td></table></div>
+
+<div class="wrap"><table cellpadding="0" cellspacing="0"><caption><div class="caption col1">1111<br>2<br>3<br>4</div></caption><tr><td>T</td></table></div>
+
+<div class="wrap"><table cellpadding="0" cellspacing="0"><caption><div class="caption col1">1111<br>2<br>3<br>4</div></caption><tr><td>a table with a two column caption</td></table></div>
+
+<div class="wrap"><table cellpadding="0" cellspacing="0"><caption><div class="caption col1">1111<br>2<br>3<br>4</div></caption><tr><td>a table with a two column caption</td></table></div>
+
+</body>
+</html>
