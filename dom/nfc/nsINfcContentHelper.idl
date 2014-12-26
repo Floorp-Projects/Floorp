@@ -7,11 +7,18 @@
 interface nsIVariant;
 interface nsIDOMWindow;
 
-[scriptable, uuid(9b43bdda-52f4-4712-b28c-ad7cba736e14)]
-interface nsINfcTagEvent : nsISupports
+[scriptable, uuid(30d77baf-50ed-4a6b-ab75-25bade40977a)]
+interface nsITagInfo : nsISupports
 {
+  /**
+   * Array of technolgies supported. See NFCTechType in MozNFCTag.webidl
+   */
   readonly attribute nsIVariant techList;
+};
 
+[scriptable, uuid(74d70ebb-557f-4ac8-8296-7885961cd1dc)]
+interface nsITagNDEFInfo : nsISupports
+{
   // one of NFCTagType defined in MozNFCTag.webidl.
   readonly attribute DOMString tagType;
 
@@ -22,7 +29,7 @@ interface nsINfcTagEvent : nsISupports
   readonly attribute boolean isFormatable;
 };
 
-[scriptable, uuid(fcbd98d6-3d04-4657-bd64-1164e311b399)]
+[scriptable, uuid(be09c440-8385-4210-bb7b-7d3333ec3d43)]
 interface nsINfcEventListener : nsISupports
 {
   /**
@@ -30,13 +37,17 @@ interface nsINfcEventListener : nsISupports
    *
    * @param sessionToken
    *        SessionToken received from parent process
-   * @param event
-   *        nsINfcTagFoundEvent received from parent process.
+   * @param tagInfo
+   *        nsITagInfo received from parent process.
+   * @param ndefInfo
+   *        nsITagNDEFInfo received from parent process, could be null if the
+   *        tag is not formated as NDEF.
    * @param ndefRecords
    *        NDEF records pre-read during tag-discovered.
    */
   void notifyTagFound(in DOMString sessionToken,
-                      in nsINfcTagEvent event,
+                      in nsITagInfo tagInfo,
+                      in nsITagNDEFInfo ndefInfo,
                       in nsIVariant ndefRecords);
 
   /**
