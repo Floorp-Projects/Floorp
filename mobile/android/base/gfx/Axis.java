@@ -12,6 +12,7 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.util.FloatUtils;
 
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 
@@ -30,6 +31,9 @@ abstract class Axis {
     private static final String PREF_SCROLLING_OVERSCROLL_DECEL_RATE = "ui.scrolling.overscroll_decel_rate";
     private static final String PREF_SCROLLING_OVERSCROLL_SNAP_LIMIT = "ui.scrolling.overscroll_snap_limit";
     private static final String PREF_SCROLLING_MIN_SCROLLABLE_DISTANCE = "ui.scrolling.min_scrollable_distance";
+    private static final String PREF_FLING_ACCEL_INTERVAL = "ui.scrolling.fling_accel_interval";
+    private static final String PREF_FLING_ACCEL_BASE_MULTIPLIER = "ui.scrolling.fling_accel_base_multiplier";
+    private static final String PREF_FLING_ACCEL_SUPPLEMENTAL_MULTIPLIER = "ui.scrolling.fling_accel_supplemental_multiplier";
 
     // This fraction of velocity remains after every animation frame when the velocity is low.
     private static float FRICTION_SLOW;
@@ -51,6 +55,15 @@ abstract class Axis {
     // in pixels.
     private static float MIN_SCROLLABLE_DISTANCE;
 
+    // The interval within which if two flings are done then scrolling effect is accelerated.
+    private static long FLING_ACCEL_INTERVAL;
+
+    // The multiplication constant of the base velocity in case of accelerated scrolling.
+    private static float FLING_ACCEL_BASE_MULTIPLIER;
+
+    // The multiplication constant of the supplemental velocity in case of accelerated scrolling.
+    private static float FLING_ACCEL_SUPPLEMENTAL_MULTIPLIER;
+
     private static float getFloatPref(Map<String, Integer> prefs, String prefName, int defaultValue) {
         Integer value = (prefs == null ? null : prefs.get(prefName));
         return (value == null || value < 0 ? defaultValue : value) / 1000f;
@@ -67,7 +80,10 @@ abstract class Axis {
                                  PREF_SCROLLING_MAX_EVENT_ACCELERATION,
                                  PREF_SCROLLING_OVERSCROLL_DECEL_RATE,
                                  PREF_SCROLLING_OVERSCROLL_SNAP_LIMIT,
-                                 PREF_SCROLLING_MIN_SCROLLABLE_DISTANCE };
+                                 PREF_SCROLLING_MIN_SCROLLABLE_DISTANCE,
+                                 PREF_FLING_ACCEL_INTERVAL,
+                                 PREF_FLING_ACCEL_BASE_MULTIPLIER,
+                                 PREF_FLING_ACCEL_SUPPLEMENTAL_MULTIPLIER };
 
         PrefsHelper.getPrefs(prefs, new PrefsHelper.PrefHandlerBase() {
             Map<String, Integer> mPrefs = new HashMap<String, Integer>();
@@ -101,6 +117,9 @@ abstract class Axis {
         OVERSCROLL_DECEL_RATE = getFloatPref(prefs, PREF_SCROLLING_OVERSCROLL_DECEL_RATE, 40);
         SNAP_LIMIT = getFloatPref(prefs, PREF_SCROLLING_OVERSCROLL_SNAP_LIMIT, 300);
         MIN_SCROLLABLE_DISTANCE = getFloatPref(prefs, PREF_SCROLLING_MIN_SCROLLABLE_DISTANCE, 500);
+        FLING_ACCEL_INTERVAL = getIntPref(prefs, PREF_FLING_ACCEL_INTERVAL, 500);
+        FLING_ACCEL_BASE_MULTIPLIER = getFloatPref(prefs, PREF_FLING_ACCEL_BASE_MULTIPLIER, 1000);
+        FLING_ACCEL_SUPPLEMENTAL_MULTIPLIER = getFloatPref(prefs, PREF_FLING_ACCEL_SUPPLEMENTAL_MULTIPLIER, 1000);
         Log.i(LOGTAG, "Prefs: " + FRICTION_SLOW + "," + FRICTION_FAST + "," + VELOCITY_THRESHOLD + ","
                 + MAX_EVENT_ACCELERATION + "," + OVERSCROLL_DECEL_RATE + "," + SNAP_LIMIT + "," + MIN_SCROLLABLE_DISTANCE);
     }
@@ -135,6 +154,8 @@ abstract class Axis {
     private boolean mScrollingDisabled;     /* Whether movement on this axis is locked. */
     private boolean mDisableSnap;           /* Whether overscroll snapping is disabled. */
     private float mDisplacement;
+    private long mLastFlingTime;
+    private float mLastFlingVelocity;
 
     private FlingStates mFlingState = FlingStates.STOPPED; /* The fling state we're in on this axis. */
 
@@ -305,14 +326,25 @@ abstract class Axis {
         return average / usablePoints;
     }
 
+    float accelerate(float velocity, float lastFlingVelocity){
+        return (FLING_ACCEL_BASE_MULTIPLIER * velocity + FLING_ACCEL_SUPPLEMENTAL_MULTIPLIER * lastFlingVelocity);
+    }
+
     void startFling(boolean stopped) {
         mDisableSnap = mSubscroller.scrolling();
 
         if (stopped) {
             mFlingState = FlingStates.STOPPED;
         } else {
+            long now = SystemClock.uptimeMillis();
             mVelocity = calculateFlingVelocity();
+
+            if ((now - mLastFlingTime < FLING_ACCEL_INTERVAL) && Math.signum(mVelocity) == Math.signum(mLastFlingVelocity)) {
+                mVelocity = accelerate(mVelocity, mLastFlingVelocity);
+            }
             mFlingState = FlingStates.FLINGING;
+            mLastFlingVelocity = mVelocity;
+            mLastFlingTime = now;
         }
     }
 
