@@ -253,6 +253,7 @@ protected:
 
 TestKeyPair* CloneReusedKeyPair();
 TestKeyPair* GenerateKeyPair();
+TestKeyPair* GenerateDSSKeyPair();
 inline void DeleteTestKeyPair(TestKeyPair* keyPair) { delete keyPair; }
 typedef ScopedPtr<TestKeyPair, DeleteTestKeyPair> ScopedTestKeyPair;
 
