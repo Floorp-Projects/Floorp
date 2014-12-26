@@ -218,8 +218,6 @@ public:
   // call checker.Check with the DER encoding of the potential issuer
   // certificate. The implementation must follow these rules:
   //
-  // * The subject name of the certificate given to checker.Check must be equal
-  //   to encodedIssuerName.
   // * The implementation must be reentrant and must limit the amount of stack
   //   space it uses; see the note on reentrancy and stack usage below.
   // * When checker.Check does not return SECSuccess then immediately return
@@ -255,6 +253,13 @@ public:
   //
   // checker.Check is responsible for limiting the recursion to a reasonable
   // limit.
+  //
+  // checker.Check will verify that the subject's issuer field matches the
+  // potential issuer's subject field. It will also check that the potential
+  // issuer is valid at the given time. However, if the FindIssuer
+  // implementation has an efficient way of filtering potential issuers by name
+  // and/or validity period itself, then it is probably better for performance
+  // for it to do so.
   virtual Result FindIssuer(Input encodedIssuerName,
                             IssuerChecker& checker, Time time) = 0;
 
