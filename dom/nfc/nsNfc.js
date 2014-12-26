@@ -104,6 +104,7 @@ function MozNFCTagImpl(window, sessionToken, tagInfo, ndefInfo) {
   this._window = window;
   this.session = sessionToken;
   this.techList = tagInfo.techList;
+  this.id = Cu.cloneInto(tagInfo.tagId, window);
 
   if (ndefInfo) {
     this.type = ndefInfo.tagType;
@@ -119,6 +120,7 @@ MozNFCTagImpl.prototype = {
   _window: null,
   session: null,
   techList: null,
+  id: null,
   type: null,
   maxNDEFSize: null,
   isReadOnly: null,
