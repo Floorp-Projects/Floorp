@@ -9452,7 +9452,6 @@ void DR_State::InitFrameTypeTable()
   AddFrameTypeInfo(nsGkAtoms::canvasFrame,           "canvas",    "canvas");
   AddFrameTypeInfo(nsGkAtoms::rootFrame,             "root",      "root");
   AddFrameTypeInfo(nsGkAtoms::scrollFrame,           "scroll",    "scroll");
-  AddFrameTypeInfo(nsGkAtoms::tableCaptionFrame,     "caption",   "tableCaption");
   AddFrameTypeInfo(nsGkAtoms::tableCellFrame,        "cell",      "tableCell");
   AddFrameTypeInfo(nsGkAtoms::bcTableCellFrame,      "bcCell",    "bcTableCell");
   AddFrameTypeInfo(nsGkAtoms::tableColFrame,         "col",       "tableCol");

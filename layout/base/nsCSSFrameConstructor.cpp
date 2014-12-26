@@ -1928,7 +1928,7 @@ GetCaptionAdjustedParent(nsContainerFrame*  aParentFrame,
   *aAdjParentFrame = aParentFrame;
   bool haveCaption = false;
 
-  if (nsGkAtoms::tableCaptionFrame == aChildFrame->GetType()) {
+  if (aChildFrame->IsTableCaption()) {
     haveCaption = true;
     *aAdjParentFrame = ::AdjustCaptionParentFrame(aParentFrame);
   }
@@ -1955,10 +1955,10 @@ nsCSSFrameConstructor::AdjustParentFrame(nsContainerFrame**           aParentFra
 static void
 PullOutCaptionFrames(nsFrameItems& aItems, nsFrameItems& aCaptions)
 {
-  nsIFrame *child = aItems.FirstChild();
+  nsIFrame* child = aItems.FirstChild();
   while (child) {
-    nsIFrame *nextSibling = child->GetNextSibling();
-    if (nsGkAtoms::tableCaptionFrame == child->GetType()) {
+    nsIFrame* nextSibling = child->GetNextSibling();
+    if (child->IsTableCaption()) {
       aItems.RemoveFrame(child);
       aCaptions.AddChild(child);
     }
@@ -8608,6 +8608,8 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext*    aPresContext,
     newFrame = NS_NewInlineFrame(shell, styleContext);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (nsGkAtoms::blockFrame == frameType) {
+    MOZ_ASSERT(!aFrame->IsTableCaption(),
+               "no support for fragmenting table captions yet");
     newFrame = NS_NewBlockFrame(shell, styleContext);
     newFrame->Init(content, aParentFrame, aFrame);
 #ifdef MOZ_XUL
@@ -8616,6 +8618,8 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext*    aPresContext,
     newFrame->Init(content, aParentFrame, aFrame);
 #endif
   } else if (nsGkAtoms::columnSetFrame == frameType) {
+    MOZ_ASSERT(!aFrame->IsTableCaption(),
+               "no support for fragmenting table captions yet");
     newFrame = NS_NewColumnSetFrame(shell, styleContext, nsFrameState(0));
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (nsGkAtoms::pageFrame == frameType) {
@@ -9078,7 +9082,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
         (inFlowFrame->GetType() == nsGkAtoms::tableColGroupFrame &&
          parent->GetFirstChild(nsIFrame::kColGroupList) == inFlowFrame) ||
         // Similar if we're a table-caption.
-        (inFlowFrame->GetType() == nsGkAtoms::tableCaptionFrame &&
+        (inFlowFrame->IsTableCaption() &&
          parent->GetFirstChild(nsIFrame::kCaptionList) == inFlowFrame)) {
       // We're the first or last frame in the pseudo.  Need to reframe.
       // Good enough to recreate frames for |parent|'s content
