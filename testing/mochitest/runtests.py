@@ -116,6 +116,7 @@ class MessageLogger(object):
     def __init__(self, logger, buffering=True):
         self.logger = logger
         self.buffering = buffering
+        self.restore_buffering = False
         self.tests_started = False
 
         # Message buffering
@@ -175,42 +176,43 @@ class MessageLogger(object):
             unstructured = True
             message.pop('unstructured')
 
-        # Saving errors/failures to be shown at the end of the test run
-        is_error = 'expected' in message or (message['action'] == 'log' and message['message'].startswith('TEST-UNEXPECTED'))
-        if is_error:
+        # Error detection also supports "raw" errors (in log messages) because some tests
+        # manually dump 'TEST-UNEXPECTED-FAIL'.
+        if ('expected' in message or
+            (message['action'] == 'log' and message['message'].startswith('TEST-UNEXPECTED'))):
+            # Saving errors/failures to be shown at the end of the test run
             self.errors.append(message)
-
-        # If we don't do any buffering, or the tests haven't started, or the message was unstructured, it is directly logged
-        if not self.buffering or unstructured or not self.tests_started:
-            self.logger.log_raw(message)
-            return
-
-        # If a test ended, we clean the buffer
-        if message['action'] == 'test_end':
-            self.buffered_messages = []
-
-        # Buffering logic; Also supports "raw" errors (in log messages) because some tests manually dump 'TEST-UNEXPECTED-FAIL'
-        if not is_error and message['action'] not in self.BUFFERED_ACTIONS:
-            self.logger.log_raw(message)
-            return
-
-        # test_status messages buffering
-        if is_error:
+            self.restore_buffering = self.restore_buffering or self.buffering
+            self.buffering = False
             if self.buffered_messages:
                 snipped = len(self.buffered_messages) - self.BUFFERING_THRESHOLD
                 if snipped > 0:
-                  self.logger.info("<snipped {0} output lines - "
-                                   "if you need more context, please use "
-                                   "SimpleTest.requestCompleteLog() in your test>"
-                                   .format(snipped))
+                    self.logger.info("<snipped {0} output lines - "
+                                     "if you need more context, please use "
+                                     "SimpleTest.requestCompleteLog() in your test>"
+                                     .format(snipped))
                 # Dumping previously buffered messages
                 self.dump_buffered(limit=True)
 
             # Logging the error message
             self.logger.log_raw(message)
+        # If we don't do any buffering, or the tests haven't started, or the message was
+        # unstructured, it is directly logged.
+        elif any([not self.buffering,
+                  unstructured,
+                  not self.tests_started,
+                  message['action'] not in self.BUFFERED_ACTIONS]):
+            self.logger.log_raw(message)
         else:
             # Buffering the message
             self.buffered_messages.append(message)
+
+        # If a test ended, we clean the buffer
+        if message['action'] == 'test_end':
+            self.buffered_messages = []
+            if self.restore_buffering:
+                self.restore_buffering = False
+                self.buffering = True
 
     def write(self, line):
         messages = self.parse_line(line)
