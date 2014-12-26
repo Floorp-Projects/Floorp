@@ -361,3 +361,88 @@ TEST_F(pkixbuild, NoRevocationCheckingForExpiredCert)
                            CertPolicyId::anyPolicy,
                            nullptr));
 }
+
+class DSSTrustDomain : public TrustDomain
+{
+public:
+  virtual Result GetCertTrust(EndEntityOrCA, const CertPolicyId&,
+                              Input, /*out*/ TrustLevel& trustLevel)
+  {
+    trustLevel = TrustLevel::TrustAnchor;
+    return Success;
+  }
+
+  virtual Result FindIssuer(Input, IssuerChecker&, Time)
+  {
+    ADD_FAILURE();
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+
+  virtual Result CheckRevocation(EndEntityOrCA, const CertID&, Time,
+                                 /*optional*/ const Input*,
+                                 /*optional*/ const Input*)
+  {
+    ADD_FAILURE();
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+
+  virtual Result IsChainValid(const DERArray&, Time)
+  {
+    return Success;
+  }
+
+  virtual Result VerifySignedData(const SignedDataWithSignature& signedData,
+                                  Input subjectPublicKeyInfo)
+  {
+    ADD_FAILURE();
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+
+  virtual Result DigestBuf(Input, /*out*/uint8_t*, size_t)
+  {
+    ADD_FAILURE();
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+
+  virtual Result CheckPublicKey(Input subjectPublicKeyInfo)
+  {
+    return TestCheckPublicKey(subjectPublicKeyInfo);
+  }
+};
+
+class pkixbuild_DSS : public ::testing::Test { };
+
+TEST_F(pkixbuild_DSS, DSSEndEntityKeyNotAccepted)
+{
+  DSSTrustDomain trustDomain;
+
+  ByteString serialNumber(CreateEncodedSerialNumber(1));
+  ASSERT_FALSE(ENCODING_FAILED(serialNumber));
+
+  ByteString subjectDER(CNToDERName("DSS"));
+  ASSERT_FALSE(ENCODING_FAILED(subjectDER));
+  ScopedTestKeyPair subjectKey(GenerateDSSKeyPair());
+  ASSERT_TRUE(subjectKey);
+
+  ByteString issuerDER(CNToDERName("RSA"));
+  ASSERT_FALSE(ENCODING_FAILED(issuerDER));
+  ScopedTestKeyPair issuerKey(CloneReusedKeyPair());
+  ASSERT_TRUE(issuerKey);
+
+  ByteString cert(CreateEncodedCertificate(v3, sha256WithRSAEncryption,
+                                           serialNumber, issuerDER,
+                                           oneDayBeforeNow, oneDayAfterNow,
+                                           subjectDER, *subjectKey, nullptr,
+                                           *issuerKey, sha256WithRSAEncryption));
+  ASSERT_FALSE(ENCODING_FAILED(cert));
+  Input certDER;
+  ASSERT_EQ(Success, certDER.Init(cert.data(), cert.length()));
+
+  ASSERT_EQ(Result::ERROR_UNSUPPORTED_KEYALG,
+            BuildCertChain(trustDomain, certDER, Now(),
+                           EndEntityOrCA::MustBeEndEntity,
+                           KeyUsage::noParticularKeyUsageRequired,
+                           KeyPurposeId::id_kp_serverAuth,
+                           CertPolicyId::anyPolicy,
+                           nullptr/*stapledOCSPResponse*/));
+}
