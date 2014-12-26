@@ -193,7 +193,7 @@ MozNFCTagImpl.prototype = {
   },
 
   classID: Components.ID("{4e1e2e90-3137-11e3-aa6e-0800200c9a66}"),
-  contractID: "@mozilla.org/nfc/NFCTag;1",
+  contractID: "@mozilla.org/nfc/tag;1",
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
                                          Ci.nsIDOMGlobalPropertyInitializer]),
 };
@@ -245,7 +245,7 @@ MozNFCPeerImpl.prototype = {
   },
 
   classID: Components.ID("{c1b2bcf0-35eb-11e3-aa6e-0800200c9a66}"),
-  contractID: "@mozilla.org/nfc/NFCPeer;1",
+  contractID: "@mozilla.org/nfc/peer;1",
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
                                          Ci.nsIDOMGlobalPropertyInitializer]),
 };
@@ -539,7 +539,7 @@ MozNFCImpl.prototype = {
   },
 
   classID: Components.ID("{6ff2b290-2573-11e3-8224-0800200c9a66}"),
-  contractID: "@mozilla.org/navigatorNfc;1",
+  contractID: "@mozilla.org/nfc/manager;1",
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
                                          Ci.nsIDOMGlobalPropertyInitializer,
                                          Ci.nsINfcEventListener,
