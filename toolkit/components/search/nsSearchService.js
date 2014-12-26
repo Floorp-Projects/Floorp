@@ -756,11 +756,9 @@ function setLocalizedPref(aPrefName, aValue) {
  * @returns aDefault if the requested pref doesn't exist.
  */
 function getBoolPref(aName, aDefault) {
-  try {
-    return Services.prefs.getBoolPref(aName);
-  } catch (ex) {
+  if (Services.prefs.getPrefType(aName) != Ci.nsIPrefBranch.PREF_BOOL)
     return aDefault;
-  }
+  return Services.prefs.getBoolPref(aName);
 }
 
 /**

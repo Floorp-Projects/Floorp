@@ -336,7 +336,9 @@ public:
                                       const bool& aIsSharing,
                                       const bool& aIsFormatting,
                                       const bool& aIsFake,
-                                      const bool& aIsUnmounting) MOZ_OVERRIDE;
+                                      const bool& aIsUnmounting,
+                                      const bool& aIsRemovable,
+                                      const bool& aIsHotSwappable) MOZ_OVERRIDE;
 
     virtual bool RecvNuwaFork() MOZ_OVERRIDE;
 

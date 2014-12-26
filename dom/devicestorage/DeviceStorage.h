@@ -272,6 +272,7 @@ public:
   bool CanBeMounted();
   bool CanBeFormatted();
   bool CanBeShared();
+  bool IsRemovable();
   bool Default();
 
   // Uses XPCOM GetStorageName
@@ -322,6 +323,7 @@ private:
   nsCOMPtr<nsIFile> mRootDirectory;
   nsString mStorageName;
   bool mIsShareable;
+  bool mIsRemovable;
 
   already_AddRefed<nsDOMDeviceStorage> GetStorage(const nsAString& aFullPath,
                                                   nsAString& aOutStoragePath);
