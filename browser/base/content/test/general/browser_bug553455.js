@@ -670,7 +670,12 @@ function test_renotify_installed() {
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
 },
 
-/*function test_cancel_restart() {
+function test_cancel_restart() {
+  function complete_install(callback) {
+    let url = TESTROOT + "slowinstall.sjs?continue=true"
+    NetUtil.asyncFetch(url, callback || (() => {}));
+  }
+
   // Wait for the progress notification
   wait_for_notification(PROGRESS_NOTIFICATION, function(aPanel) {
     let notification = aPanel.childNodes[0];
@@ -687,55 +692,69 @@ function test_renotify_installed() {
     is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
     let button = document.getAnonymousElementByAttribute(notification, "anonid", "cancel");
 
-    // Cancel the download
-    EventUtils.synthesizeMouse(button, 2, 2, {});
+    // Wait for the install to fully cancel
+    let install = notification.notification.options.installs[0];
+    install.addListener({
+      onDownloadCancelled: function() {
+        install.removeListener(this);
 
-    // Notification should have changed to cancelled
-    notification = aPanel.childNodes[0];
-    is(notification.id, "addon-install-cancelled-notification", "Should have seen the cancelled notification");
+        executeSoon(function() {
+          ok(PopupNotifications.isPanelOpen, "Notification should still be open");
+          is(PopupNotifications.panel.childNodes.length, 1, "Should be only one notification");
+          isnot(notification, aPanel.childNodes[0], "Should have reconstructed the notification UI");
+          notification = aPanel.childNodes[0];
+          is(notification.id, "addon-install-cancelled-notification", "Should have seen the cancelled notification");
 
-    // Wait for the install confirmation dialog
-    wait_for_install_dialog(function(aWindow) {
-      // Wait for the complete notification
-      wait_for_notification("addon-install-complete-notification", function(aPanel) {
-        let notification = aPanel.childNodes[0];
-        is(notification.button.label, "Restart Now", "Should have seen the right button");
-        is(notification.getAttribute("label"),
-           "XPI Test will be installed after you restart " + gApp + ".",
-           "Should have seen the right message");
+          // Wait for the install confirmation dialog
+          wait_for_install_dialog(function(aWindow) {
+            // Wait for the complete notification
+            wait_for_notification("addon-install-complete-notification", function(aPanel) {
+              let notification = aPanel.childNodes[0];
+              is(notification.button.label, "Restart Now", "Should have seen the right button");
+              is(notification.getAttribute("label"),
+                 "XPI Test will be installed after you restart " + gApp + ".",
+                 "Should have seen the right message");
 
-        AddonManager.getAllInstalls(function(aInstalls) {
-          is(aInstalls.length, 1, "Should be one pending install");
-          aInstalls[0].cancel();
+              AddonManager.getAllInstalls(function(aInstalls) {
+                is(aInstalls.length, 1, "Should be one pending install");
+                aInstalls[0].cancel();
 
-          Services.perms.remove("example.com", "install");
-          wait_for_notification_close(runNextTest);
-          gBrowser.removeTab(gBrowser.selectedTab);
+                Services.perms.remove("example.com", "install");
+                wait_for_notification_close(runNextTest);
+                gBrowser.removeTab(gBrowser.selectedTab);
+              });
+            });
+
+            aWindow.document.documentElement.acceptDialog();
+          });
+
+          // Restart the download
+          EventUtils.synthesizeMouseAtCenter(notification.button, {});
+
+          // Should be back to a progress notification
+          ok(PopupNotifications.isPanelOpen, "Notification should still be open");
+          is(PopupNotifications.panel.childNodes.length, 1, "Should be only one notification");
+          notification = aPanel.childNodes[0];
+          is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
+
+          complete_install();
         });
-      });
-
-      aWindow.document.documentElement.acceptDialog();
+      }
     });
 
-    // Restart the download
-    EventUtils.synthesizeMouse(notification.button, 20, 10, {});
-
-    // Should be back to a progress notification
-    ok(PopupNotifications.isPanelOpen, "Notification should still be open");
-    is(PopupNotifications.panel.childNodes.length, 1, "Should be only one notification");
-    notification = aPanel.childNodes[0];
-    is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
+    // Cancel the download
+    EventUtils.synthesizeMouseAtCenter(button, {});
   });
 
   var pm = Services.perms;
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
   var triggers = encodeURIComponent(JSON.stringify({
-    "XPI": "unsigned.xpi"
+    "XPI": "slowinstall.sjs?file=unsigned.xpi"
   }));
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
-},*/
+},
 
 function test_failed_security() {
   Services.prefs.setBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, false);
