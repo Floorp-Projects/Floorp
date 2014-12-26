@@ -21,6 +21,7 @@
 #include "nsIDOMNode.h"
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
+#include "nsIFrameInlines.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -116,7 +117,7 @@ nsTableOuterFrame::AppendFrames(ChildListID     aListID,
   // The inner frame is provided when we're initialized, and it cannot change
   MOZ_ASSERT(kCaptionList == aListID, "unexpected child list");
   MOZ_ASSERT(aFrameList.IsEmpty() ||
-             aFrameList.FirstChild()->GetType() == nsGkAtoms::tableCaptionFrame,
+             aFrameList.FirstChild()->IsTableCaption(),
              "appending non-caption frame to captionList");
   mCaptionFrames.AppendFrames(this, aFrameList);
 
@@ -134,7 +135,7 @@ nsTableOuterFrame::InsertFrames(ChildListID     aListID,
 {
   MOZ_ASSERT(kCaptionList == aListID, "unexpected child list");
   MOZ_ASSERT(aFrameList.IsEmpty() ||
-             aFrameList.FirstChild()->GetType() == nsGkAtoms::tableCaptionFrame,
+             aFrameList.FirstChild()->IsTableCaption(),
              "inserting non-caption frame into captionList");
   MOZ_ASSERT(!aPrevFrame || aPrevFrame->GetParent() == this,
              "inserting after sibling frame with different parent");
