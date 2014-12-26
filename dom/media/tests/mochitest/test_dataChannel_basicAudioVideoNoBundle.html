@@ -3,6 +3,7 @@
 <head>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="dataChannel.js"></script>
   <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript" src="pc.js"></script>
   <script type="application/javascript" src="templates.js"></script>
@@ -11,8 +12,6 @@
 <body>
 <pre id="test">
 <script type="application/javascript">
-  SimpleTest.requestFlakyTimeout("untriaged");
-
   createHTML({
     bug: "1016476",
     title: "Basic data channel audio/video connection without bundle"
@@ -20,9 +19,8 @@
 
   var test;
   runNetworkTest(function () {
-    test = new DataChannelTest();
-    test.setMediaConstraints([{audio: true}, {video: true}],
-                             [{audio: true}, {video: true}]);
+    test = new PeerConnectionTest();
+    addInitialDataChannel(test.chain);
     test.chain.insertAfter("PC_LOCAL_CREATE_OFFER",
       [[
         'PC_LOCAL_REMOVE_BUNDLE_FROM_OFFER',
@@ -35,6 +33,8 @@
         }
       ]]
       );
+    test.setMediaConstraints([{audio: true}, {video: true}],
+                             [{audio: true}, {video: true}]);
     test.run();
   });
 
