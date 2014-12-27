@@ -226,7 +226,7 @@ TestFrameMetrics()
   fm.SetDisplayPort(CSSRect(0, 0, 10, 10));
   fm.mCompositionBounds = ParentLayerRect(0, 0, 10, 10);
   fm.mCriticalDisplayPort = CSSRect(0, 0, 10, 10);
-  fm.mScrollableRect = CSSRect(0, 0, 100, 100);
+  fm.SetScrollableRect(CSSRect(0, 0, 100, 100));
 
   return fm;
 }
@@ -607,7 +607,7 @@ protected:
   {
     FrameMetrics fm;
     fm.mCompositionBounds = ParentLayerRect(200, 200, 100, 200);
-    fm.mScrollableRect = CSSRect(0, 0, 980, 1000);
+    fm.SetScrollableRect(CSSRect(0, 0, 980, 1000));
     fm.SetScrollOffset(CSSPoint(300, 300));
     fm.SetZoom(CSSToParentLayerScale(2.0));
     // the visible area of the document in CSS pixels is x=300 y=300 w=50 h=100
@@ -749,7 +749,7 @@ TEST_F(APZCBasicTester, Overzoom) {
   // the visible area of the document in CSS pixels is x=10 y=0 w=100 h=100
   FrameMetrics fm;
   fm.mCompositionBounds = ParentLayerRect(0, 0, 100, 100);
-  fm.mScrollableRect = CSSRect(0, 0, 125, 150);
+  fm.SetScrollableRect(CSSRect(0, 0, 125, 150));
   fm.SetScrollOffset(CSSPoint(10, 0));
   fm.SetZoom(CSSToParentLayerScale(1.0));
   apzc->SetFrameMetrics(fm);
@@ -818,7 +818,7 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   metrics.mCompositionBounds = ParentLayerRect(0, 0, 24, 24);
   metrics.SetDisplayPort(CSSRect(-1, -1, 6, 6));
   metrics.SetScrollOffset(CSSPoint(10, 10));
-  metrics.mScrollableRect = CSSRect(0, 0, 50, 50);
+  metrics.SetScrollableRect(CSSRect(0, 0, 50, 50));
   metrics.SetCumulativeResolution(LayoutDeviceToLayerScale(2));
   metrics.mPresShellResolution = 2.0f;
   metrics.SetZoom(CSSToParentLayerScale(6));
@@ -1682,7 +1682,7 @@ protected:
     nsIntRect layerBound = aLayer->GetVisibleRegion().GetBounds();
     metrics.mCompositionBounds = ParentLayerRect(layerBound.x, layerBound.y,
                                                  layerBound.width, layerBound.height);
-    metrics.mScrollableRect = aScrollableRect;
+    metrics.SetScrollableRect(aScrollableRect);
     metrics.SetScrollOffset(CSSPoint(0, 0));
     aLayer->SetFrameMetrics(metrics);
     if (!aScrollableRect.IsEqualEdges(CSSRect(-1, -1, -1, -1))) {
