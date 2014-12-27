@@ -273,8 +273,8 @@ SharedFrameMetricsHelper::AboutToCheckerboard(const FrameMetrics& aContentMetric
   // Clamp both rects to the scrollable rect, because having either of those
   // exceed the scrollable rect doesn't make sense, and could lead to false
   // positives.
-  painted = painted.Intersect(aContentMetrics.mScrollableRect);
-  showing = showing.Intersect(aContentMetrics.mScrollableRect);
+  painted = painted.Intersect(aContentMetrics.GetScrollableRect());
+  showing = showing.Intersect(aContentMetrics.GetScrollableRect());
 
   if (!painted.Contains(showing)) {
     TILING_LOG("TILING: About to checkerboard; content %s\n", Stringify(aContentMetrics).c_str());

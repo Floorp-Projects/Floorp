@@ -2834,8 +2834,8 @@ CalculateFrameMetricsForDisplayPort(nsIScrollableFrame* aScrollFrame) {
   metrics.SetScrollOffset(CSSPoint::FromAppUnits(
       aScrollFrame->GetScrollPosition()));
 
-  metrics.mScrollableRect = CSSRect::FromAppUnits(
-      nsLayoutUtils::CalculateScrollableRectForFrame(aScrollFrame, nullptr));
+  metrics.SetScrollableRect(CSSRect::FromAppUnits(
+      nsLayoutUtils::CalculateScrollableRectForFrame(aScrollFrame, nullptr)));
 
   return metrics;
 }
