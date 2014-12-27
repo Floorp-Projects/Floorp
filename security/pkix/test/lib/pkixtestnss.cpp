@@ -213,13 +213,6 @@ GenerateKeyPairInner()
   }
 
   abort();
-#if defined(_MSC_VER) && (_MSC_VER < 1700)
-  // Older versions of MSVC don't know that abort() never returns, so silence
-  // its warning by adding a redundant and never-reached return. But, only do
-  // it for that ancient compiler, because some other compilers will rightly
-  // warn that the return statement is unreachable.
-  return nullptr;
-#endif
 }
 
 } // unnamed namespace
