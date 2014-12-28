@@ -2228,7 +2228,7 @@ CodeGeneratorX86Shared::visitSimdInsertElementF(LSimdInsertElementF *ins)
     MOZ_ASSERT(vector == output); // defineReuseInput(0)
 
     if (ins->lane() == SimdLane::LaneX) {
-        // As both operands are registers, movss doesn't modify the upper bits
+        // As both operands are registers, vmovss doesn't modify the upper bits
         // of the destination operand.
         if (value != output)
             masm.vmovss(value, vector, output);
@@ -2370,7 +2370,7 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle *ins)
     if (numLanesFromLHS == 3) {
         unsigned firstMask = -1, secondMask = -1;
 
-        // register-register movss preserves the high lanes.
+        // register-register vmovss preserves the high lanes.
         if (ins->lanesMatch(4, 1, 2, 3)) {
             masm.vmovss(rhs, lhs, out);
             return;
