@@ -3262,6 +3262,16 @@ public:
 
     void vmovaps_rr(XMMRegisterID src, XMMRegisterID dst)
     {
+#ifdef JS_CODEGEN_X64
+        // There are two opcodes that can encode this instruction. If we have
+        // one register in [xmm8,xmm15] and one in [xmm0,xmm7], use the
+        // opcode which swaps the operands, as that way we can get a two-byte
+        // VEX in that case.
+        if (src >= X86Registers::xmm8 && dst < X86Registers::xmm8) {
+            twoByteOpSimd("vmovaps", VEX_PS, OP2_MOVAPS_WsdVsd, dst, X86Registers::invalid_xmm, src);
+            return;
+        }
+#endif
         twoByteOpSimd("vmovaps", VEX_PS, OP2_MOVAPS_VsdWsd, src, X86Registers::invalid_xmm, dst);
     }
     void vmovaps_rm(XMMRegisterID src, int32_t offset, RegisterID base)
@@ -3308,6 +3318,16 @@ public:
 
     void vmovapd_rr(XMMRegisterID src, XMMRegisterID dst)
     {
+#ifdef JS_CODEGEN_X64
+        // There are two opcodes that can encode this instruction. If we have
+        // one register in [xmm8,xmm15] and one in [xmm0,xmm7], use the
+        // opcode which swaps the operands, as that way we can get a two-byte
+        // VEX in that case.
+        if (src >= X86Registers::xmm8 && dst < X86Registers::xmm8) {
+            twoByteOpSimd("vmovapd", VEX_PD, OP2_MOVAPS_WsdVsd, dst, X86Registers::invalid_xmm, src);
+            return;
+        }
+#endif
         twoByteOpSimd("vmovapd", VEX_PD, OP2_MOVAPD_VsdWsd, src, X86Registers::invalid_xmm, dst);
     }
 
@@ -3365,6 +3385,16 @@ public:
 
     void vmovdqa_rr(XMMRegisterID src, XMMRegisterID dst)
     {
+#ifdef JS_CODEGEN_X64
+        // There are two opcodes that can encode this instruction. If we have
+        // one register in [xmm8,xmm15] and one in [xmm0,xmm7], use the
+        // opcode which swaps the operands, as that way we can get a two-byte
+        // VEX in that case.
+        if (src >= X86Registers::xmm8 && dst < X86Registers::xmm8) {
+            twoByteOpSimd("vmovdqa", VEX_PD, OP2_MOVDQ_WdqVdq, dst, X86Registers::invalid_xmm, src);
+            return;
+        }
+#endif
         twoByteOpSimd("vmovdqa", VEX_PD, OP2_MOVDQ_VdqWdq, src, X86Registers::invalid_xmm, dst);
     }
 
