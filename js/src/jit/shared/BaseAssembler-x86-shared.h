@@ -289,6 +289,7 @@ private:
         OP_IMUL_GvEvIz                  = 0x69,
         OP_PUSH_Ib                      = 0x6a,
         OP_IMUL_GvEvIb                  = 0x6b,
+        OP_JCC_rel8                     = 0x70,
         OP_GROUP1_EbIb                  = 0x80,
         OP_GROUP1_EvIz                  = 0x81,
         OP_GROUP1_EvIb                  = 0x83,
@@ -324,6 +325,7 @@ private:
         OP_FPU6_F32                     = 0xD9,
         OP_CALL_rel32                   = 0xE8,
         OP_JMP_rel32                    = 0xE9,
+        OP_JMP_rel8                     = 0xEB,
         PRE_LOCK                        = 0xF0,
         PRE_SSE_F2                      = 0xF2,
         PRE_SSE_F3                      = 0xF3,
@@ -479,6 +481,10 @@ private:
         VEX_SD = 3
     };
 
+    OneByteOpcodeID jccRel8(Condition cond)
+    {
+        return (OneByteOpcodeID)(OP_JCC_rel8 + cond);
+    }
     TwoByteOpcodeID jccRel32(Condition cond)
     {
         return (TwoByteOpcodeID)(OP2_JCC_rel32 + cond);
@@ -2647,7 +2653,24 @@ public:
         return r;
     }
 
-    JmpSrc jmp()
+    void jmp_i(JmpDst dst)
+    {
+        int32_t diff = dst.offset() - m_formatter.size();
+        spew("jmp        .Llabel%d", dst.offset());
+
+        // The jump immediate is an offset from the end of the jump instruction.
+        // A jump instruction is either 1 byte opcode and 1 byte offset, or 1
+        // byte opcode and 4 bytes offset.
+        if (CAN_SIGN_EXTEND_8_32(diff - 2)) {
+            m_formatter.oneByteOp(OP_JMP_rel8);
+            m_formatter.immediate8s(diff - 2);
+        } else {
+            m_formatter.oneByteOp(OP_JMP_rel32);
+            m_formatter.immediate32(diff - 5);
+        }
+    }
+    MOZ_WARN_UNUSED_RESULT JmpSrc
+    jmp()
     {
         m_formatter.oneByteOp(OP_JMP_rel32);
         JmpSrc r = m_formatter.immediateRel32();
@@ -2690,82 +2713,25 @@ public:
     }
 #endif
 
-    JmpSrc jne()
+    void jCC_i(Condition cond, JmpDst dst)
     {
-        return jCC(ConditionNE);
+        int32_t diff = dst.offset() - m_formatter.size();
+        spew("j%s        .Llabel%d", nameCC(cond), dst.offset());
+
+        // The jump immediate is an offset from the end of the jump instruction.
+        // A conditional jump instruction is either 1 byte opcode and 1 byte
+        // offset, or 2 bytes opcode and 4 bytes offset.
+        if (CAN_SIGN_EXTEND_8_32(diff - 2)) {
+            m_formatter.oneByteOp(jccRel8(cond));
+            m_formatter.immediate8s(diff - 2);
+        } else {
+            m_formatter.twoByteOp(jccRel32(cond));
+            m_formatter.immediate32(diff - 6);
+        }
     }
 
-    JmpSrc jnz()
-    {
-        return jne();
-    }
-
-    JmpSrc je()
-    {
-        return jCC(ConditionE);
-    }
-
-    JmpSrc jz()
-    {
-        return je();
-    }
-
-    JmpSrc jl()
-    {
-        return jCC(ConditionL);
-    }
-
-    JmpSrc jb()
-    {
-        return jCC(ConditionB);
-    }
-
-    JmpSrc jle()
-    {
-        return jCC(ConditionLE);
-    }
-
-    JmpSrc jbe()
-    {
-        return jCC(ConditionBE);
-    }
-
-    JmpSrc jge()
-    {
-        return jCC(ConditionGE);
-    }
-
-    JmpSrc jg()
-    {
-        return jCC(ConditionG);
-    }
-
-    JmpSrc ja()
-    {
-        return jCC(ConditionA);
-    }
-
-    JmpSrc jae()
-    {
-        return jCC(ConditionAE);
-    }
-
-    JmpSrc jo()
-    {
-        return jCC(ConditionO);
-    }
-
-    JmpSrc jp()
-    {
-        return jCC(ConditionP);
-    }
-
-    JmpSrc js()
-    {
-        return jCC(ConditionS);
-    }
-
-    JmpSrc jCC(Condition cond)
+    MOZ_WARN_UNUSED_RESULT JmpSrc
+    jCC(Condition cond)
     {
         m_formatter.twoByteOp(jccRel32(cond));
         JmpSrc r = m_formatter.immediateRel32();
@@ -3792,7 +3758,7 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, imm
     JmpDst label()
     {
         JmpDst r = JmpDst(m_formatter.size());
-        spew("#label     ((%d))", r.m_offset);
+        spew(".set .Llabel%d, .", r.m_offset);
         return r;
     }
 
