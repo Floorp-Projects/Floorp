@@ -177,3 +177,7 @@ toolbarpaletteitem:-moz-any([place="palette"], [place="panel"]) > toolbaritem[sd
   width: 32px;
   height: 32px;
 }
+
+toolbarpaletteitem[place="palette"] > .toolbarbutton-1 > .toolbarbutton-menubutton-button {
+  padding: 3px 1px;
+}
