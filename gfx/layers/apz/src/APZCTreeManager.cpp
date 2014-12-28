@@ -235,7 +235,7 @@ APZCTreeManager::PrintAPZCInfo(const LayerMetricsWrapper& aLayer,
 {
   const FrameMetrics& metrics = aLayer.Metrics();
   mApzcTreeLog << "APZC " << apzc->GetGuid() << "\tcb=" << metrics.mCompositionBounds
-               << "\tsr=" << metrics.mScrollableRect
+               << "\tsr=" << metrics.GetScrollableRect()
                << (aLayer.IsScrollInfoLayer() ? "\tscrollinfo" : "")
                << (apzc->HasScrollgrab() ? "\tscrollgrab" : "") << "\t"
                << metrics.GetContentDescription().get();

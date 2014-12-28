@@ -693,7 +693,8 @@ void HTMLMediaElement::AbortExistingLoads()
 
 void HTMLMediaElement::NoSupportedMediaSourceError()
 {
-  NS_ASSERTION(mDelayingLoadEvent, "Load event not delayed during source selection?");
+  NS_ASSERTION(mNetworkState == NETWORK_LOADING,
+               "Not loading during source selection?");
 
   mError = new MediaError(this, nsIDOMMediaError::MEDIA_ERR_SRC_NOT_SUPPORTED);
   ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE);
@@ -3128,11 +3129,16 @@ void HTMLMediaElement::CheckProgress(bool aHaveNewProgress)
                    "timer dispatched when there was no timer");
       // Were stalled.  Restart timer.
       StartProgressTimer();
+      if (!mLoadedDataFired) {
+        ChangeDelayLoadStatus(true);
+      }
     }
   }
 
   if (now - mDataTime >= TimeDuration::FromMilliseconds(STALL_MS)) {
     DispatchAsyncEvent(NS_LITERAL_STRING("stalled"));
+    ChangeDelayLoadStatus(false);
+
     NS_ASSERTION(mProgressTimer, "detected stalled without timer");
     // Stop timer events, which prevents repeated stalled events until there
     // is more progress.
@@ -3752,15 +3758,14 @@ void HTMLMediaElement::ChangeDelayLoadStatus(bool aDelay)
 
   mDelayingLoadEvent = aDelay;
 
+  LOG(PR_LOG_DEBUG, ("%p ChangeDelayLoadStatus(%d) doc=0x%p", this, aDelay, mLoadBlockedDoc.get()));
+  if (mDecoder) {
+    mDecoder->SetLoadInBackground(!aDelay);
+  }
   if (aDelay) {
     mLoadBlockedDoc = OwnerDoc();
     mLoadBlockedDoc->BlockOnload();
-    LOG(PR_LOG_DEBUG, ("%p ChangeDelayLoadStatus(%d) doc=0x%p", this, aDelay, mLoadBlockedDoc.get()));
   } else {
-    if (mDecoder) {
-      mDecoder->MoveLoadsToBackground();
-    }
-    LOG(PR_LOG_DEBUG, ("%p ChangeDelayLoadStatus(%d) doc=0x%p", this, aDelay, mLoadBlockedDoc.get()));
     // mLoadBlockedDoc might be null due to GC unlinking
     if (mLoadBlockedDoc) {
       mLoadBlockedDoc->UnblockOnload(false);
