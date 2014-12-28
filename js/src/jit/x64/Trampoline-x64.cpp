@@ -67,19 +67,19 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     masm.push(rdi);
     masm.push(rsi);
 
-    // 16-byte aligment for movdqa
+    // 16-byte aligment for vmovdqa
     masm.subq(Imm32(16 * 10 + 8), rsp);
 
-    masm.movdqa(xmm6, Operand(rsp, 16 * 0));
-    masm.movdqa(xmm7, Operand(rsp, 16 * 1));
-    masm.movdqa(xmm8, Operand(rsp, 16 * 2));
-    masm.movdqa(xmm9, Operand(rsp, 16 * 3));
-    masm.movdqa(xmm10, Operand(rsp, 16 * 4));
-    masm.movdqa(xmm11, Operand(rsp, 16 * 5));
-    masm.movdqa(xmm12, Operand(rsp, 16 * 6));
-    masm.movdqa(xmm13, Operand(rsp, 16 * 7));
-    masm.movdqa(xmm14, Operand(rsp, 16 * 8));
-    masm.movdqa(xmm15, Operand(rsp, 16 * 9));
+    masm.vmovdqa(xmm6, Operand(rsp, 16 * 0));
+    masm.vmovdqa(xmm7, Operand(rsp, 16 * 1));
+    masm.vmovdqa(xmm8, Operand(rsp, 16 * 2));
+    masm.vmovdqa(xmm9, Operand(rsp, 16 * 3));
+    masm.vmovdqa(xmm10, Operand(rsp, 16 * 4));
+    masm.vmovdqa(xmm11, Operand(rsp, 16 * 5));
+    masm.vmovdqa(xmm12, Operand(rsp, 16 * 6));
+    masm.vmovdqa(xmm13, Operand(rsp, 16 * 7));
+    masm.vmovdqa(xmm14, Operand(rsp, 16 * 8));
+    masm.vmovdqa(xmm15, Operand(rsp, 16 * 9));
 #endif
 
     // Push the EnterJIT sps mark.
@@ -272,16 +272,16 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
 
     // Restore non-volatile registers.
 #if defined(_WIN64)
-    masm.movdqa(Operand(rsp, 16 * 0), xmm6);
-    masm.movdqa(Operand(rsp, 16 * 1), xmm7);
-    masm.movdqa(Operand(rsp, 16 * 2), xmm8);
-    masm.movdqa(Operand(rsp, 16 * 3), xmm9);
-    masm.movdqa(Operand(rsp, 16 * 4), xmm10);
-    masm.movdqa(Operand(rsp, 16 * 5), xmm11);
-    masm.movdqa(Operand(rsp, 16 * 6), xmm12);
-    masm.movdqa(Operand(rsp, 16 * 7), xmm13);
-    masm.movdqa(Operand(rsp, 16 * 8), xmm14);
-    masm.movdqa(Operand(rsp, 16 * 9), xmm15);
+    masm.vmovdqa(Operand(rsp, 16 * 0), xmm6);
+    masm.vmovdqa(Operand(rsp, 16 * 1), xmm7);
+    masm.vmovdqa(Operand(rsp, 16 * 2), xmm8);
+    masm.vmovdqa(Operand(rsp, 16 * 3), xmm9);
+    masm.vmovdqa(Operand(rsp, 16 * 4), xmm10);
+    masm.vmovdqa(Operand(rsp, 16 * 5), xmm11);
+    masm.vmovdqa(Operand(rsp, 16 * 6), xmm12);
+    masm.vmovdqa(Operand(rsp, 16 * 7), xmm13);
+    masm.vmovdqa(Operand(rsp, 16 * 8), xmm14);
+    masm.vmovdqa(Operand(rsp, 16 * 9), xmm15);
 
     masm.addq(Imm32(16 * 10 + 8), rsp);
 

@@ -759,10 +759,10 @@ class MacroAssemblerX86Shared : public Assembler
         }
     }
     void storeDouble(FloatRegister src, const Address &dest) {
-        movsd(src, dest);
+        vmovsd(src, dest);
     }
     void storeDouble(FloatRegister src, const BaseIndex &dest) {
-        movsd(src, dest);
+        vmovsd(src, dest);
     }
     void storeDouble(FloatRegister src, const Operand &dest) {
         switch (dest.kind()) {
@@ -777,7 +777,7 @@ class MacroAssemblerX86Shared : public Assembler
         }
     }
     void moveDouble(FloatRegister src, FloatRegister dest) {
-        // Use movapd instead of movsd to avoid dependencies.
+        // Use vmovapd instead of vmovsd to avoid dependencies.
         vmovapd(src, dest);
     }
     void zeroDouble(FloatRegister reg) {
@@ -863,7 +863,7 @@ class MacroAssemblerX86Shared : public Assembler
         vmovdqa(src, dest);
     }
     void storeAlignedInt32x4(FloatRegister src, const Address &dest) {
-        movdqa(src, Operand(dest));
+        vmovdqa(src, Operand(dest));
     }
     void moveInt32x4(FloatRegister src, FloatRegister dest) {
         vmovdqa(src, dest);
@@ -887,10 +887,10 @@ class MacroAssemblerX86Shared : public Assembler
         vmovdqu(src, dest);
     }
     void storeUnalignedInt32x4(FloatRegister src, const Address &dest) {
-        movdqu(src, Operand(dest));
+        vmovdqu(src, Operand(dest));
     }
     void storeUnalignedInt32x4(FloatRegister src, const Operand &dest) {
-        movdqu(src, dest);
+        vmovdqu(src, dest);
     }
     void packedEqualInt32x4(const Operand &src, FloatRegister dest) {
         vpcmpeqd(src, dest, dest);
@@ -944,7 +944,7 @@ class MacroAssemblerX86Shared : public Assembler
         vmovaps(src, dest);
     }
     void storeAlignedFloat32x4(FloatRegister src, const Address &dest) {
-        movaps(src, Operand(dest));
+        vmovaps(src, Operand(dest));
     }
     void moveFloat32x4(FloatRegister src, FloatRegister dest) {
         vmovaps(src, dest);
@@ -968,10 +968,10 @@ class MacroAssemblerX86Shared : public Assembler
         vmovups(src, dest);
     }
     void storeUnalignedFloat32x4(FloatRegister src, const Address &dest) {
-        movups(src, Operand(dest));
+        vmovups(src, Operand(dest));
     }
     void storeUnalignedFloat32x4(FloatRegister src, const Operand &dest) {
-        movups(src, dest);
+        vmovups(src, dest);
     }
     void packedAddFloat32(const Operand &src, FloatRegister dest) {
         vaddps(src, dest, dest);
@@ -1056,10 +1056,10 @@ class MacroAssemblerX86Shared : public Assembler
         }
     }
     void storeFloat32(FloatRegister src, const Address &dest) {
-        movss(src, dest);
+        vmovss(src, dest);
     }
     void storeFloat32(FloatRegister src, const BaseIndex &dest) {
-        movss(src, dest);
+        vmovss(src, dest);
     }
     void storeFloat32(FloatRegister src, const Operand &dest) {
         switch (dest.kind()) {
@@ -1074,7 +1074,7 @@ class MacroAssemblerX86Shared : public Assembler
         }
     }
     void moveFloat32(FloatRegister src, FloatRegister dest) {
-        // Use movaps instead of movss to avoid dependencies.
+        // Use vmovaps instead of vmovss to avoid dependencies.
         vmovaps(src, dest);
     }
 
