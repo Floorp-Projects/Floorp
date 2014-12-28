@@ -232,20 +232,25 @@ private:
         OP_ADD_EbGb                     = 0x00,
         OP_ADD_EvGv                     = 0x01,
         OP_ADD_GvEv                     = 0x03,
+        OP_ADD_EAXIv                    = 0x05,
         OP_OR_EbGb                      = 0x08,
         OP_OR_EvGv                      = 0x09,
         OP_OR_GvEv                      = 0x0B,
+        OP_OR_EAXIv                     = 0x0D,
         OP_2BYTE_ESCAPE                 = 0x0F,
         OP_AND_EbGb                     = 0x20,
         OP_AND_EvGv                     = 0x21,
         OP_AND_GvEv                     = 0x23,
+        OP_AND_EAXIv                    = 0x25,
         OP_SUB_EbGb                     = 0x28,
         OP_SUB_EvGv                     = 0x29,
         OP_SUB_GvEv                     = 0x2B,
+        OP_SUB_EAXIv                    = 0x2D,
         PRE_PREDICT_BRANCH_NOT_TAKEN    = 0x2E,
         OP_XOR_EbGb                     = 0x30,
         OP_XOR_EvGv                     = 0x31,
         OP_XOR_GvEv                     = 0x33,
+        OP_XOR_EAXIv                    = 0x35,
         OP_CMP_EvGv                     = 0x39,
         OP_CMP_GvEv                     = 0x3B,
         OP_CMP_EAXIv                    = 0x3D,
@@ -285,6 +290,8 @@ private:
         OP_CDQ                          = 0x99,
         OP_MOV_EAXOv                    = 0xA1,
         OP_MOV_OvEAX                    = 0xA3,
+        OP_TEST_EAXIb                   = 0xA8,
+        OP_TEST_EAXIv                   = 0xA9,
         OP_MOV_EAXIv                    = 0xB8,
         OP_GROUP2_EvIb                  = 0xC1,
         OP_RET_Iz                       = 0xC2,
@@ -653,7 +660,10 @@ public:
             m_formatter.oneByteOp(OP_GROUP1_EvIb, dst, GROUP1_OP_ADD);
             m_formatter.immediate8(imm);
         } else {
-            m_formatter.oneByteOp(OP_GROUP1_EvIz, dst, GROUP1_OP_ADD);
+            if (dst == X86Registers::eax)
+                m_formatter.oneByteOp(OP_ADD_EAXIv);
+            else
+                m_formatter.oneByteOp(OP_GROUP1_EvIz, dst, GROUP1_OP_ADD);
             m_formatter.immediate32(imm);
         }
     }
@@ -661,7 +671,10 @@ public:
     {
         // 32-bit immediate always, for patching.
         spew("addl       $0x%04x, %s", imm, nameIReg(4,dst));
-        m_formatter.oneByteOp(OP_GROUP1_EvIz, dst, GROUP1_OP_ADD);
+        if (dst == X86Registers::eax)
+            m_formatter.oneByteOp(OP_ADD_EAXIv);
+        else
+            m_formatter.oneByteOp(OP_GROUP1_EvIz, dst, GROUP1_OP_ADD);
         m_formatter.immediate32(imm);
     }
 
@@ -703,7 +716,10 @@ public:
             m_formatter.oneByteOp64(OP_GROUP1_EvIb, dst, GROUP1_OP_ADD);
             m_formatter.immediate8(imm);
         } else {
-            m_formatter.oneByteOp64(OP_GROUP1_EvIz, dst, GROUP1_OP_ADD);
+            if (dst == X86Registers::eax)
+                m_formatter.oneByteOp64(OP_ADD_EAXIv);
+            else
+                m_formatter.oneByteOp64(OP_GROUP1_EvIz, dst, GROUP1_OP_ADD);
             m_formatter.immediate32(imm);
         }
     }
@@ -927,7 +943,10 @@ public:
             m_formatter.oneByteOp(OP_GROUP1_EvIb, dst, GROUP1_OP_AND);
             m_formatter.immediate8(imm);
         } else {
-            m_formatter.oneByteOp(OP_GROUP1_EvIz, dst, GROUP1_OP_AND);
+            if (dst == X86Registers::eax)
+                m_formatter.oneByteOp(OP_AND_EAXIv);
+            else
+                m_formatter.oneByteOp(OP_GROUP1_EvIz, dst, GROUP1_OP_AND);
             m_formatter.immediate32(imm);
         }
     }
@@ -988,7 +1007,10 @@ public:
             m_formatter.oneByteOp64(OP_GROUP1_EvIb, dst, GROUP1_OP_AND);
             m_formatter.immediate8(imm);
         } else {
-            m_formatter.oneByteOp64(OP_GROUP1_EvIz, dst, GROUP1_OP_AND);
+            if (dst == X86Registers::eax)
+                m_formatter.oneByteOp64(OP_AND_EAXIv);
+            else
+                m_formatter.oneByteOp64(OP_GROUP1_EvIz, dst, GROUP1_OP_AND);
             m_formatter.immediate32(imm);
         }
     }
@@ -1081,7 +1103,10 @@ public:
             m_formatter.oneByteOp(OP_GROUP1_EvIb, dst, GROUP1_OP_OR);
             m_formatter.immediate8(imm);
         } else {
-            m_formatter.oneByteOp(OP_GROUP1_EvIz, dst, GROUP1_OP_OR);
+            if (dst == X86Registers::eax)
+                m_formatter.oneByteOp(OP_OR_EAXIv);
+            else
+                m_formatter.oneByteOp(OP_GROUP1_EvIz, dst, GROUP1_OP_OR);
             m_formatter.immediate32(imm);
         }
     }
@@ -1118,7 +1143,10 @@ public:
             m_formatter.oneByteOp64(OP_GROUP1_EvIb, dst, GROUP1_OP_OR);
             m_formatter.immediate8(imm);
         } else {
-            m_formatter.oneByteOp64(OP_GROUP1_EvIz, dst, GROUP1_OP_OR);
+            if (dst == X86Registers::eax)
+                m_formatter.oneByteOp64(OP_OR_EAXIv);
+            else
+                m_formatter.oneByteOp64(OP_GROUP1_EvIz, dst, GROUP1_OP_OR);
             m_formatter.immediate32(imm);
         }
     }
@@ -1167,7 +1195,10 @@ public:
             m_formatter.oneByteOp(OP_GROUP1_EvIb, dst, GROUP1_OP_SUB);
             m_formatter.immediate8(imm);
         } else {
-            m_formatter.oneByteOp(OP_GROUP1_EvIz, dst, GROUP1_OP_SUB);
+            if (dst == X86Registers::eax)
+                m_formatter.oneByteOp(OP_SUB_EAXIv);
+            else
+                m_formatter.oneByteOp(OP_GROUP1_EvIz, dst, GROUP1_OP_SUB);
             m_formatter.immediate32(imm);
         }
     }
@@ -1216,7 +1247,10 @@ public:
             m_formatter.oneByteOp64(OP_GROUP1_EvIb, dst, GROUP1_OP_SUB);
             m_formatter.immediate8(imm);
         } else {
-            m_formatter.oneByteOp64(OP_GROUP1_EvIz, dst, GROUP1_OP_SUB);
+            if (dst == X86Registers::eax)
+                m_formatter.oneByteOp64(OP_SUB_EAXIv);
+            else
+                m_formatter.oneByteOp64(OP_GROUP1_EvIz, dst, GROUP1_OP_SUB);
             m_formatter.immediate32(imm);
         }
     }
@@ -1271,7 +1305,10 @@ public:
             m_formatter.oneByteOp(OP_GROUP1_EvIb, dst, GROUP1_OP_XOR);
             m_formatter.immediate8(imm);
         } else {
-            m_formatter.oneByteOp(OP_GROUP1_EvIz, dst, GROUP1_OP_XOR);
+            if (dst == X86Registers::eax)
+                m_formatter.oneByteOp(OP_XOR_EAXIv);
+            else
+                m_formatter.oneByteOp(OP_GROUP1_EvIz, dst, GROUP1_OP_XOR);
             m_formatter.immediate32(imm);
         }
     }
@@ -1290,7 +1327,10 @@ public:
             m_formatter.oneByteOp64(OP_GROUP1_EvIb, dst, GROUP1_OP_XOR);
             m_formatter.immediate8(imm);
         } else {
-            m_formatter.oneByteOp64(OP_GROUP1_EvIz, dst, GROUP1_OP_XOR);
+            if (dst == X86Registers::eax)
+                m_formatter.oneByteOp64(OP_XOR_EAXIv);
+            else
+                m_formatter.oneByteOp64(OP_GROUP1_EvIz, dst, GROUP1_OP_XOR);
             m_formatter.immediate32(imm);
         }
     }
@@ -1536,7 +1576,10 @@ public:
             m_formatter.oneByteOp(OP_GROUP1_EvIb, lhs, GROUP1_OP_CMP);
             m_formatter.immediate8(rhs);
         } else {
-            m_formatter.oneByteOp(OP_GROUP1_EvIz, lhs, GROUP1_OP_CMP);
+            if (lhs == X86Registers::eax)
+                m_formatter.oneByteOp(OP_CMP_EAXIv);
+            else
+                m_formatter.oneByteOp(OP_GROUP1_EvIz, lhs, GROUP1_OP_CMP);
             m_formatter.immediate32(rhs);
         }
     }
@@ -1544,7 +1587,10 @@ public:
     void cmpl_i32r(int rhs, RegisterID lhs)
     {
         spew("cmpl       $0x%04x, %s", rhs, nameIReg(4, lhs));
-        m_formatter.oneByteOp(OP_GROUP1_EvIz, lhs, GROUP1_OP_CMP);
+        if (lhs == X86Registers::eax)
+            m_formatter.oneByteOp(OP_CMP_EAXIv);
+        else
+            m_formatter.oneByteOp(OP_GROUP1_EvIz, lhs, GROUP1_OP_CMP);
         m_formatter.immediate32(rhs);
     }
 
@@ -1665,7 +1711,10 @@ public:
             m_formatter.oneByteOp64(OP_GROUP1_EvIb, lhs, GROUP1_OP_CMP);
             m_formatter.immediate8(rhs);
         } else {
-            m_formatter.oneByteOp64(OP_GROUP1_EvIz, lhs, GROUP1_OP_CMP);
+            if (lhs == X86Registers::eax)
+                m_formatter.oneByteOp64(OP_CMP_EAXIv);
+            else
+                m_formatter.oneByteOp64(OP_GROUP1_EvIz, lhs, GROUP1_OP_CMP);
             m_formatter.immediate32(rhs);
         }
     }
@@ -1789,7 +1838,10 @@ public:
             return;
         }
         spew("testl      $0x%x, %s", rhs, nameIReg(4, lhs));
-        m_formatter.oneByteOp(OP_GROUP3_EvIz, lhs, GROUP3_OP_TEST);
+        if (lhs == X86Registers::eax)
+            m_formatter.oneByteOp(OP_TEST_EAXIv);
+        else
+            m_formatter.oneByteOp(OP_GROUP3_EvIz, lhs, GROUP3_OP_TEST);
         m_formatter.immediate32(rhs);
     }
 
@@ -1844,7 +1896,10 @@ public:
             return;
         }
         spew("testq      $0x%" PRIx64 ", %s", int64_t(rhs), nameIReg(8, lhs));
-        m_formatter.oneByteOp64(OP_GROUP3_EvIz, lhs, GROUP3_OP_TEST);
+        if (lhs == X86Registers::eax)
+            m_formatter.oneByteOp64(OP_TEST_EAXIv);
+        else
+            m_formatter.oneByteOp64(OP_GROUP3_EvIz, lhs, GROUP3_OP_TEST);
         m_formatter.immediate32(rhs);
     }
 
@@ -1873,7 +1928,10 @@ public:
     void testb_i8r(int rhs, RegisterID lhs)
     {
         spew("testb      $0x%x, %s", rhs, nameIReg(1, lhs));
-        m_formatter.oneByteOp8(OP_GROUP3_EbIb, lhs, GROUP3_OP_TEST);
+        if (lhs == X86Registers::eax)
+            m_formatter.oneByteOp8(OP_TEST_EAXIb);
+        else
+            m_formatter.oneByteOp8(OP_GROUP3_EbIb, lhs, GROUP3_OP_TEST);
         m_formatter.immediate8(rhs);
     }
 
@@ -4849,6 +4907,12 @@ private:
         // Address operands should still be checked using regRequiresRex(),
         // while ByteRegRequiresRex() is provided to check byte register
         // operands.
+
+        void oneByteOp8(OneByteOpcodeID opcode)
+        {
+            m_buffer.ensureSpace(maxInstructionSize);
+            m_buffer.putByteUnchecked(opcode);
+        }
 
         void oneByteOp8(OneByteOpcodeID opcode, RegisterID rm, GroupOpcodeID groupOp)
         {
