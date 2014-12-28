@@ -99,7 +99,8 @@ namespace X86Registers {
               "%xmm8", "%xmm9", "%xmm10", "%xmm11",
               "%xmm12", "%xmm13", "%xmm14", "%xmm15" };
         int off = (XMMRegisterID)fpreg - (XMMRegisterID)xmm0;
-        return (off < 0 || off > 15) ? "%xmm?" : xmmnames[off];
+        MOZ_ASSERT(off >= 0 && size_t(off) < mozilla::ArrayLength(xmmnames));
+        return xmmnames[off];
     }
 
     static const char* nameIReg(int szB, RegisterID reg)
@@ -114,16 +115,29 @@ namespace X86Registers {
           = { "%ax", "%cx", "%dx", "%bx", "%sp", "%bp", "%si", "%di",
               "%r8w", "%r9w", "%r10w", "%r11w", "%r12w", "%r13w", "%r14w", "%r15w" };
         static const char* const r8names[16]
-          = { "%al", "%cl", "%dl", "%bl", "%ah/spl", "%ch/bpl", "%dh/sil", "%bh/dil",
+          = { "%al", "%cl", "%dl", "%bl", "%spl", "%bpl", "%sil", "%dil",
               "%r8b", "%r9b", "%r10b", "%r11b", "%r12b", "%r13b", "%r14b", "%r15b" };
         int          off = (RegisterID)reg - (RegisterID)eax;
+        MOZ_ASSERT(off >= 0 && size_t(off) < mozilla::ArrayLength(r64names));
         const char* const* tab = r64names;
         switch (szB) {
             case 1: tab = r8names; break;
             case 2: tab = r16names; break;
             case 4: tab = r32names; break;
         }
-        return (off < 0 || off > 15) ? "%r???" : tab[off];
+        return tab[off];
+    }
+
+    static const char* nameI8Reg_norex(RegisterID reg)
+    {
+        // The same as r8names above, except that %spl through %dil are replaced
+        // by %ah through %bh since there is to be no REX prefix.
+        static const char* const r8names_norex[16]
+          = { "%al", "%cl", "%dl", "%bl", "%ah", "%ch", "%dh", "%bh",
+              "%r8b", "%r9b", "%r10b", "%r11b", "%r12b", "%r13b", "%r14b", "%r15b" };
+        int off = (RegisterID)reg - (RegisterID)eax;
+        MOZ_ASSERT(off >= 0 && size_t(off) < mozilla::ArrayLength(r8names_norex));
+        return r8names_norex[off];
     }
 
     static const char* nameIReg(RegisterID reg)
@@ -216,7 +230,8 @@ public:
           = { "o ", "no", "b ", "ae", "e ", "ne", "be", "a ",
               "s ", "ns", "p ", "np", "l ", "ge", "le", "g " };
         int ix = (int)cc;
-        return (ix < 0 || ix > 15) ? "??" : names[ix];
+        MOZ_ASSERT(ix >= 0 && size_t(ix) < mozilla::ArrayLength(names));
+        return names[ix];
     }
 
     // Rounding modes for ROUNDSD.
@@ -1939,7 +1954,7 @@ public:
     // reference ah..bh.
     void testb_i8r_norex(int rhs, RegisterID lhs)
     {
-        spew("testb      $0x%x, %s", rhs, nameIReg(1, lhs));
+        spew("testb      $0x%x, %s", rhs, nameI8Reg_norex(lhs));
         m_formatter.oneByteOp8_norex(OP_GROUP3_EbIb, lhs, GROUP3_OP_TEST);
         m_formatter.immediate8(rhs);
     }
