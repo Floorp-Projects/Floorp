@@ -912,10 +912,10 @@ LayerManagerComposite::ComputeRenderIntegrity()
 
     // Clip the screen rect to the document bounds
     Rect documentBounds =
-      transform.TransformBounds(Rect(metrics.mScrollableRect.x - metrics.GetScrollOffset().x,
-                                     metrics.mScrollableRect.y - metrics.GetScrollOffset().y,
-                                     metrics.mScrollableRect.width,
-                                     metrics.mScrollableRect.height));
+      transform.TransformBounds(Rect(metrics.GetScrollableRect().x - metrics.GetScrollOffset().x,
+                                     metrics.GetScrollableRect().y - metrics.GetScrollOffset().y,
+                                     metrics.GetScrollableRect().width,
+                                     metrics.GetScrollableRect().height));
     documentBounds.RoundOut();
     screenRect = screenRect.Intersect(nsIntRect(documentBounds.x, documentBounds.y,
                                                 documentBounds.width, documentBounds.height));

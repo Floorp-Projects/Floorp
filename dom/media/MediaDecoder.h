@@ -647,12 +647,12 @@ public:
   // playback.
   virtual void Resume(bool aForceBuffering);
 
-  // Moves any existing channel loads into the background, so that they don't
-  // block the load event. This is called when we stop delaying the load
-  // event. Any new loads initiated (for example to seek) will also be in the
-  // background. Implementations of this must call MoveLoadsToBackground() on
-  // their MediaResource.
-  virtual void MoveLoadsToBackground();
+  // Moves any existing channel loads into or out of background. Background
+  // loads don't block the load event. This is called when we stop or restart
+  // delaying the load event. This also determines whether any new loads
+  // initiated (for example to seek) will be in the background.  This calls
+  // SetLoadInBackground() on mResource.
+  void SetLoadInBackground(bool aLoadInBackground);
 
   // Returns a weak reference to the media decoder owner.
   MediaDecoderOwner* GetMediaOwner() const;

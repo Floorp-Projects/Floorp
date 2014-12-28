@@ -3040,89 +3040,55 @@ MCompare::tryFold(bool *result)
         return true;
 
     if (compareType_ == Compare_Null || compareType_ == Compare_Undefined) {
-        MOZ_ASSERT(op == JSOP_EQ || op == JSOP_STRICTEQ ||
-                   op == JSOP_NE || op == JSOP_STRICTNE);
-
         // The LHS is the value we want to test against null or undefined.
-        switch (lhs()->type()) {
-          case MIRType_Value:
-            return false;
-          case MIRType_Undefined:
-          case MIRType_Null:
+        if (op == JSOP_STRICTEQ || op == JSOP_STRICTNE) {
             if (lhs()->type() == inputType()) {
-                // Both sides have the same type, null or undefined.
-                *result = (op == JSOP_EQ || op == JSOP_STRICTEQ);
-            } else {
-                // One side is null, the other side is undefined. The result is only
-                // true for loose equality.
-                *result = (op == JSOP_EQ || op == JSOP_STRICTNE);
+                *result = (op == JSOP_STRICTEQ);
+                return true;
             }
-            return true;
-          case MIRType_Object:
-            if ((op == JSOP_EQ || op == JSOP_NE) && operandMightEmulateUndefined())
-                return false;
-            /* FALL THROUGH */
-          case MIRType_Int32:
-          case MIRType_Double:
-          case MIRType_Float32:
-          case MIRType_String:
-          case MIRType_Symbol:
-          case MIRType_Boolean:
-            *result = (op == JSOP_NE || op == JSOP_STRICTNE);
-            return true;
-          default:
-            MOZ_CRASH("Unexpected type");
+            if (!lhs()->mightBeType(inputType())) {
+                *result = (op == JSOP_STRICTNE);
+                return true;
+            }
+        } else {
+            MOZ_ASSERT(op == JSOP_EQ || op == JSOP_NE);
+            if (IsNullOrUndefined(lhs()->type())) {
+                *result = (op == JSOP_EQ);
+                return true;
+            }
+            if (!lhs()->mightBeType(MIRType_Null) &&
+                !lhs()->mightBeType(MIRType_Undefined) &&
+                !operandMightEmulateUndefined())
+            {
+                *result = (op == JSOP_NE);
+                return true;
+            }
         }
+        return false;
     }
 
     if (compareType_ == Compare_Boolean) {
         MOZ_ASSERT(op == JSOP_STRICTEQ || op == JSOP_STRICTNE);
         MOZ_ASSERT(rhs()->type() == MIRType_Boolean);
+        MOZ_ASSERT(lhs()->type() != MIRType_Boolean, "Should use Int32 comparison");
 
-        switch (lhs()->type()) {
-          case MIRType_Value:
-            return false;
-          case MIRType_Int32:
-          case MIRType_Double:
-          case MIRType_Float32:
-          case MIRType_String:
-          case MIRType_Symbol:
-          case MIRType_Object:
-          case MIRType_Null:
-          case MIRType_Undefined:
+        if (!lhs()->mightBeType(MIRType_Boolean)) {
             *result = (op == JSOP_STRICTNE);
             return true;
-          case MIRType_Boolean:
-            // Int32 specialization should handle this.
-            MOZ_CRASH("Wrong specialization");
-          default:
-            MOZ_CRASH("Unexpected type");
         }
+        return false;
     }
 
     if (compareType_ == Compare_StrictString) {
         MOZ_ASSERT(op == JSOP_STRICTEQ || op == JSOP_STRICTNE);
         MOZ_ASSERT(rhs()->type() == MIRType_String);
+        MOZ_ASSERT(lhs()->type() != MIRType_String, "Should use String comparison");
 
-        switch (lhs()->type()) {
-          case MIRType_Value:
-            return false;
-          case MIRType_Boolean:
-          case MIRType_Int32:
-          case MIRType_Double:
-          case MIRType_Float32:
-          case MIRType_Symbol:
-          case MIRType_Object:
-          case MIRType_Null:
-          case MIRType_Undefined:
+        if (!lhs()->mightBeType(MIRType_String)) {
             *result = (op == JSOP_STRICTNE);
             return true;
-          case MIRType_String:
-            // Compare_String specialization should handle this.
-            MOZ_CRASH("Wrong specialization");
-          default:
-            MOZ_CRASH("Unexpected type");
         }
+        return false;
     }
 
     return false;

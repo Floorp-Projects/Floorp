@@ -41,9 +41,9 @@ public:
   FrameMetrics()
     : mCompositionBounds(0, 0, 0, 0)
     , mCriticalDisplayPort(0, 0, 0, 0)
-    , mScrollableRect(0, 0, 0, 0)
     , mPresShellResolution(1)
     , mDisplayPort(0, 0, 0, 0)
+    , mScrollableRect(0, 0, 0, 0)
     , mCumulativeResolution(1)
     , mDevPixelsPerCSSPixel(1)
     , mMayHaveTouchListeners(false)
@@ -263,19 +263,6 @@ public:
   //
   // The same restrictions for mDisplayPort apply here.
   CSSRect mCriticalDisplayPort;
-
-  // The scrollable bounds of a frame. This is determined by reflow.
-  // Ordinarily the x and y will be 0 and the width and height will be the
-  // size of the element being scrolled. However for RTL pages or elements
-  // the x value may be negative.
-  //
-  // This is relative to the document. It is in the same coordinate space as
-  // |mScrollOffset|, but a different coordinate space than |mViewport| and
-  // |mDisplayPort|. Note also that this coordinate system is understood by
-  // window.scrollTo().
-  //
-  // This is valid on any layer unless it has no content.
-  CSSRect mScrollableRect;
 
   // ---------------------------------------------------------------------------
   // The following metrics are dimensionless.
@@ -528,6 +515,16 @@ public:
     mLineScrollAmount = size;
   }
 
+  const CSSRect& GetScrollableRect() const
+  {
+    return mScrollableRect;
+  }
+
+  void SetScrollableRect(const CSSRect& aScrollableRect)
+  {
+    mScrollableRect = aScrollableRect;
+  }
+
 private:
   // The area of a frame's contents that has been painted, relative to
   // mCompositionBounds.
@@ -541,6 +538,19 @@ private:
   // { x = -100, y = - 100,
   //   width = window.innerWidth + 200, height = window.innerHeight + 200 }
   CSSRect mDisplayPort;
+
+  // The scrollable bounds of a frame. This is determined by reflow.
+  // Ordinarily the x and y will be 0 and the width and height will be the
+  // size of the element being scrolled. However for RTL pages or elements
+  // the x value may be negative.
+  //
+  // This is relative to the document. It is in the same coordinate space as
+  // |mScrollOffset|, but a different coordinate space than |mViewport| and
+  // |mDisplayPort|. Note also that this coordinate system is understood by
+  // window.scrollTo().
+  //
+  // This is valid on any layer unless it has no content.
+  CSSRect mScrollableRect;
 
   // The cumulative resolution that the current frame has been painted at.
   // This is the product of the pres-shell resolutions of the document
