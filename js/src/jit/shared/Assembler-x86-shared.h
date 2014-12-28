@@ -785,29 +785,27 @@ class AssemblerX86Shared : public AssemblerShared
     }
 
   protected:
-    JmpSrc jSrc(Condition cond, Label *label) {
-        JmpSrc j = masm.jCC(static_cast<X86Assembler::Condition>(cond));
+    void jSrc(Condition cond, Label *label) {
         if (label->bound()) {
-            // The jump can be immediately patched to the correct destination.
-            masm.linkJump(j, JmpDst(label->offset()));
+            // The jump can be immediately encoded to the correct destination.
+            masm.jCC_i(static_cast<X86Assembler::Condition>(cond), JmpDst(label->offset()));
         } else {
             // Thread the jump list through the unpatched jump targets.
+            JmpSrc j = masm.jCC(static_cast<X86Assembler::Condition>(cond));
             JmpSrc prev = JmpSrc(label->use(j.offset()));
             masm.setNextJump(j, prev);
         }
-        return j;
     }
-    JmpSrc jmpSrc(Label *label) {
-        JmpSrc j = masm.jmp();
+    void jmpSrc(Label *label) {
         if (label->bound()) {
-            // The jump can be immediately patched to the correct destination.
-            masm.linkJump(j, JmpDst(label->offset()));
+            // The jump can be immediately encoded to the correct destination.
+            masm.jmp_i(JmpDst(label->offset()));
         } else {
             // Thread the jump list through the unpatched jump targets.
+            JmpSrc j = masm.jmp();
             JmpSrc prev = JmpSrc(label->use(j.offset()));
             masm.setNextJump(j, prev);
         }
-        return j;
     }
 
     // Comparison of EAX against the address given by a Label.
