@@ -231,7 +231,7 @@ MacroAssemblerX86Shared::branchNegativeZero(FloatRegister reg,
 
     bind(&nonZero);
 #elif defined(JS_CODEGEN_X64)
-    movq(reg, scratch);
+    vmovq(reg, scratch);
     cmpq(Imm32(1), scratch);
     j(Overflow, label);
 #endif

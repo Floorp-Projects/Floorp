@@ -303,7 +303,7 @@ class Assembler : public AssemblerX86Shared
     }
 
     void pop(FloatRegister src) {
-        movsd(Address(StackPointer, 0), src);
+        vmovsd(Address(StackPointer, 0), src);
         addq(Imm32(sizeof(double)), StackPointer);
     }
 
@@ -394,11 +394,11 @@ class Assembler : public AssemblerX86Shared
             MOZ_CRASH("unexpected operand kind");
         }
     }
-    void movq(Register src, FloatRegister dest) {
-        masm.movq_rr(src.code(), dest.code());
+    void vmovq(Register src, FloatRegister dest) {
+        masm.vmovq_rr(src.code(), dest.code());
     }
-    void movq(FloatRegister src, Register dest) {
-        masm.movq_rr(src.code(), dest.code());
+    void vmovq(FloatRegister src, Register dest) {
+        masm.vmovq_rr(src.code(), dest.code());
     }
     void movq(Register src, Register dest) {
         masm.movq_rr(src.code(), dest.code());
