@@ -680,7 +680,7 @@ class AssemblerX86Shared : public AssemblerShared
         }
     }
     void movb(Imm32 src, Register dest) {
-        masm.movb_i8r(src.value & 255, dest.code());
+        masm.movb_ir(src.value & 255, dest.code());
     }
     void movb(Register src, const Operand &dest) {
         switch (dest.kind()) {
@@ -697,10 +697,10 @@ class AssemblerX86Shared : public AssemblerShared
     void movb(Imm32 src, const Operand &dest) {
         switch (dest.kind()) {
           case Operand::MEM_REG_DISP:
-            masm.movb_i8m(src.value, dest.disp(), dest.base());
+            masm.movb_im(src.value, dest.disp(), dest.base());
             break;
           case Operand::MEM_SCALE:
-            masm.movb_i8m(src.value, dest.disp(), dest.base(), dest.index(), dest.scale());
+            masm.movb_im(src.value, dest.disp(), dest.base(), dest.index(), dest.scale());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -747,10 +747,10 @@ class AssemblerX86Shared : public AssemblerShared
     void movw(Imm32 src, const Operand &dest) {
         switch (dest.kind()) {
           case Operand::MEM_REG_DISP:
-            masm.movw_i16m(src.value, dest.disp(), dest.base());
+            masm.movw_im(src.value, dest.disp(), dest.base());
             break;
           case Operand::MEM_SCALE:
-            masm.movw_i16m(src.value, dest.disp(), dest.base(), dest.index(), dest.scale());
+            masm.movw_im(src.value, dest.disp(), dest.base(), dest.index(), dest.scale());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -942,7 +942,7 @@ class AssemblerX86Shared : public AssemblerShared
     }
     void retn(Imm32 n) {
         // Remove the size of the return address which is included in the frame.
-        masm.ret(n.value - sizeof(void *));
+        masm.ret_i(n.value - sizeof(void *));
     }
     void call(Label *label) {
         if (label->bound()) {
@@ -1308,13 +1308,13 @@ class AssemblerX86Shared : public AssemblerShared
         masm.notl_r(reg.code());
     }
     void shrl(const Imm32 imm, Register dest) {
-        masm.shrl_i8r(imm.value, dest.code());
+        masm.shrl_ir(imm.value, dest.code());
     }
     void shll(const Imm32 imm, Register dest) {
-        masm.shll_i8r(imm.value, dest.code());
+        masm.shll_ir(imm.value, dest.code());
     }
     void sarl(const Imm32 imm, Register dest) {
-        masm.sarl_i8r(imm.value, dest.code());
+        masm.sarl_ir(imm.value, dest.code());
     }
     void shrl_cl(Register dest) {
         masm.shrl_CLr(dest.code());
