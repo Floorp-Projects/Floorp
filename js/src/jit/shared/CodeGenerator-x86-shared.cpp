@@ -2146,7 +2146,7 @@ CodeGeneratorX86Shared::visitSimdSplatX4(LSimdSplatX4 *ins)
       case MIRType_Float32x4: {
         FloatRegister r = ToFloatRegister(ins->getOperand(0));
         if (r != output)
-            masm.movaps(r, output);
+            masm.moveFloat32x4(r, output);
         masm.shufps(0, output, output);
         break;
       }
@@ -2231,7 +2231,7 @@ CodeGeneratorX86Shared::visitSimdInsertElementF(LSimdInsertElementF *ins)
         // As both operands are registers, movss doesn't modify the upper bits
         // of the destination operand.
         if (value != output)
-            masm.movss(value, output);
+            masm.vmovss(value, vector, output);
         return;
     }
 
@@ -2372,7 +2372,7 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle *ins)
 
         // register-register movss preserves the high lanes.
         if (ins->lanesMatch(4, 1, 2, 3)) {
-            masm.movss(rhs, out);
+            masm.vmovss(rhs, lhs, out);
             return;
         }
 
@@ -2441,7 +2441,7 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle *ins)
 
         masm.shufps(firstMask, lhs, rhsCopy);
         masm.shufps(secondMask, lhs, rhsCopy);
-        masm.movaps(rhsCopy, out);
+        masm.moveFloat32x4(rhsCopy, out);
         return;
     }
 
@@ -2454,9 +2454,9 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle *ins)
         if (AssemblerX86Shared::HasAVX()) {
             masm.vmovhlps(lhs, rhs, out);
         } else {
-            masm.movaps(rhs, ScratchSimdReg);
+            masm.moveFloat32x4(rhs, ScratchSimdReg);
             masm.vmovhlps(lhs, ScratchSimdReg, ScratchSimdReg);
-            masm.movaps(ScratchSimdReg, out);
+            masm.moveFloat32x4(ScratchSimdReg, out);
         }
         return;
     }
@@ -2476,9 +2476,9 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle *ins)
         if (AssemblerX86Shared::HasAVX()) {
             masm.vunpcklps(lhs, rhs, out);
         } else {
-            masm.movaps(rhs, ScratchSimdReg);
+            masm.moveFloat32x4(rhs, ScratchSimdReg);
             masm.vunpcklps(lhs, ScratchSimdReg, ScratchSimdReg);
-            masm.movaps(ScratchSimdReg, out);
+            masm.moveFloat32x4(ScratchSimdReg, out);
         }
         return;
     }
@@ -2493,9 +2493,9 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle *ins)
         if (AssemblerX86Shared::HasAVX()) {
             masm.vunpckhps(lhs, rhs, out);
         } else {
-            masm.movaps(rhs, ScratchSimdReg);
+            masm.moveFloat32x4(rhs, ScratchSimdReg);
             masm.vunpckhps(lhs, ScratchSimdReg, ScratchSimdReg);
-            masm.movaps(ScratchSimdReg, out);
+            masm.moveFloat32x4(ScratchSimdReg, out);
         }
         return;
     }
@@ -2644,18 +2644,18 @@ CodeGeneratorX86Shared::visitSimdBinaryArithIx4(LSimdBinaryArithIx4 *ins)
         return;
       case MSimdBinaryArith::Mul: {
         if (AssemblerX86Shared::HasSSE41()) {
-            masm.pmulld(rhs, lhs);
+            masm.vpmulld(rhs, lhs, output);
             return;
         }
 
         masm.loadAlignedInt32x4(rhs, ScratchSimdReg);
-        masm.pmuludq(lhs, ScratchSimdReg);
+        masm.vpmuludq(lhs, ScratchSimdReg, ScratchSimdReg);
         // ScratchSimdReg contains (Rx, _, Rz, _) where R is the resulting vector.
 
         FloatRegister temp = ToFloatRegister(ins->temp());
         masm.pshufd(MacroAssembler::ComputeShuffleMask(LaneY, LaneY, LaneW, LaneW), lhs, lhs);
         masm.pshufd(MacroAssembler::ComputeShuffleMask(LaneY, LaneY, LaneW, LaneW), rhs, temp);
-        masm.pmuludq(temp, lhs);
+        masm.vpmuludq(temp, lhs, lhs);
         // lhs contains (Ry, _, Rw, _) where R is the resulting vector.
 
         masm.shufps(MacroAssembler::ComputeShuffleMask(LaneX, LaneZ, LaneX, LaneZ), ScratchSimdReg, lhs);
@@ -2745,7 +2745,7 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *ins)
             // With SSE.4.1 we could use blendvps, however it's awkward since
             // it requires the mask to be in xmm0.
             if (lhs != output)
-                masm.movaps(lhs, output);
+                masm.moveFloat32x4(lhs, output);
             masm.vandps(Operand(mask), output, output);
             masm.vandnps(Operand(tmp), mask, mask);
             masm.vorps(Operand(mask), output, output);
@@ -2779,7 +2779,7 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *ins)
             // With SSE.4.1 we could use blendvps, however it's awkward since
             // it requires the mask to be in xmm0.
             if (lhs != output)
-                masm.movaps(lhs, output);
+                masm.moveFloat32x4(lhs, output);
             masm.vandps(Operand(mask), output, output);
             masm.vandnps(Operand(tmp), mask, mask);
             masm.vorps(Operand(mask), output, output);
@@ -2947,9 +2947,9 @@ CodeGeneratorX86Shared::visitSimdSelect(LSimdSelect *ins)
     FloatRegister temp = ToFloatRegister(ins->temp());
 
     if (onTrue != output)
-        masm.movaps(onTrue, output);
+        masm.vmovaps(onTrue, output);
     if (mask != temp)
-        masm.movaps(mask, temp);
+        masm.vmovaps(mask, temp);
 
     masm.bitwiseAndX4(Operand(mask), output);
     masm.bitwiseAndNotX4(Operand(onFalse), temp);

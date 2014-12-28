@@ -829,30 +829,26 @@ public:
         twoByteOpSimd("vpsubd", VEX_PD, OP2_PSUBD_VdqWdq, address, src0, dst);
     }
 
-    void pmuludq_rr(XMMRegisterID src, XMMRegisterID dst)
+    void vpmuludq_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("pmuludq     %s, %s", nameFPReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_PMULUDQ_VdqWdq, (RegisterID)src, (RegisterID)dst);
+        twoByteOpSimd("vpmuludq", VEX_PD, OP2_PMULUDQ_VdqWdq, src1, src0, dst);
+    }
+    void vpmuludq_mr(int offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpmuludq", VEX_PD, OP2_PMULUDQ_VdqWdq, offset, base, src0, dst);
     }
 
-    void pmulld_rr(XMMRegisterID src, XMMRegisterID dst)
+    void vpmulld_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("pmulld      %s, %s", nameFPReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.threeByteOp(OP3_PMULLD_VdqWdq, ESCAPE_PMULLD, (RegisterID)src, (RegisterID)dst);
+        threeByteOpSimd("vpmulld", VEX_PD, OP3_PMULLD_VdqWdq, ESCAPE_PMULLD, src1, src0, dst);
     }
-    void pmulld_mr(int offset, RegisterID base, XMMRegisterID dst)
+    void vpmulld_mr(int offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("pmulld      " MEM_ob ", %s", ADDR_ob(offset, base), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.threeByteOp(OP3_PMULLD_VdqWdq, ESCAPE_PMULLD, offset, base, (RegisterID)dst);
+        threeByteOpSimd("vpmulld", VEX_PD, OP3_PMULLD_VdqWdq, ESCAPE_PMULLD, offset, base, src0, dst);
     }
-    void pmulld_mr(const void* address, XMMRegisterID dst)
+    void vpmulld_mr(const void* address, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("pmulld      %p, %s", address, nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.threeByteOp(OP3_PMULLD_VdqWdq, ESCAPE_PMULLD, address, (RegisterID)dst);
+        threeByteOpSimd("vpmulld", VEX_PD, OP3_PMULLD_VdqWdq, ESCAPE_PMULLD, address, src0, dst);
     }
 
     void vaddps_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
@@ -2911,11 +2907,6 @@ public:
         twoByteOpSimd("vunpckhps", VEX_PS, OP2_UNPCKHPS_VsdWsd, src1, src0, dst);
     }
 
-    void vmovd_rr(RegisterID src, XMMRegisterID dst)
-    {
-        movdOpSimd(src, dst);
-    }
-
     void vpand_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
         twoByteOpSimd("vpand", VEX_PD, OP2_PANDDQ_VdqWdq, src1, src0, dst);
@@ -3048,11 +3039,9 @@ public:
         m_formatter.immediate8(shift);
     }
 
-    void pslld_rr(XMMRegisterID src, XMMRegisterID dst)
+    void vpslld_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("pslld      %s, %s", nameFPReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_PSLLD_VdqWdq, (RegisterID)src, (RegisterID)dst);
+        twoByteOpSimd("vpslld", VEX_PD, OP2_PSLLD_VdqWdq, src1, src0, dst);
     }
 
     void pslld_ir(int32_t count, XMMRegisterID dst)
@@ -3063,11 +3052,9 @@ public:
         m_formatter.immediate8(int8_t(count));
     }
 
-    void psrad_rr(XMMRegisterID src, XMMRegisterID dst)
+    void vpsrad_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("psrad      %s, %s", nameFPReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_PSRAD_VdqWdq, (RegisterID)src, (RegisterID)dst);
+        twoByteOpSimd("vpsrad", VEX_PD, OP2_PSRAD_VdqWdq, src1, src0, dst);
     }
 
     void psrad_ir(int32_t count, XMMRegisterID dst)
@@ -3078,11 +3065,9 @@ public:
         m_formatter.immediate8(int8_t(count));
     }
 
-    void psrld_rr(XMMRegisterID src, XMMRegisterID dst)
+    void vpsrld_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("psrld      %s, %s", nameFPReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_PSRLD_VdqWdq, (RegisterID)src, (RegisterID)dst);
+        twoByteOpSimd("vpsrld", VEX_PD, OP2_PSRLD_VdqWdq, src1, src0, dst);
     }
 
     void psrld_ir(int32_t count, XMMRegisterID dst)
@@ -3109,22 +3094,23 @@ public:
 
     void vmovd_rr(XMMRegisterID src, RegisterID dst)
     {
-        movdOpSimd(src, dst);
+        twoByteOpSimdInt32("vmovd", VEX_PD, OP2_MOVD_EdVd, (XMMRegisterID)dst, (RegisterID)src);
+    }
+
+    void vmovd_rr(RegisterID src, XMMRegisterID dst)
+    {
+        twoByteOpInt32Simd("vmovd", VEX_PD, OP2_MOVD_VdEd, src, X86Registers::invalid_xmm, dst);
     }
 
 #ifdef JS_CODEGEN_X64
-    void movq_rr(XMMRegisterID src, RegisterID dst)
+    void vmovq_rr(XMMRegisterID src, RegisterID dst)
     {
-        spew("movq       %s, %s", nameFPReg(src), nameIReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp64(OP2_MOVD_EdVd, dst, (RegisterID)src);
+        twoByteOpSimdInt64("vmovq", VEX_PD, OP2_MOVD_EdVd, (XMMRegisterID)dst, (RegisterID)src);
     }
 
-    void movq_rr(RegisterID src, XMMRegisterID dst)
+    void vmovq_rr(RegisterID src, XMMRegisterID dst)
     {
-        spew("movq       %s, %s", nameIReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp64(OP2_MOVD_VdEd, src, (RegisterID)dst);
+        twoByteOpInt64Simd("vmovq", VEX_PD, OP2_MOVD_VdEd, src, X86Registers::invalid_xmm, dst);
     }
 #endif
 
@@ -3156,18 +3142,14 @@ public:
         m_formatter.twoByteOp_disp32(OP2_MOVSD_WsdVsd, offset, base, (RegisterID)src);
     }
 
-    void movss_mr(int offset, RegisterID base, XMMRegisterID dst)
+    void vmovss_mr(int offset, RegisterID base, XMMRegisterID dst)
     {
-        spew("movss      " MEM_ob ", %s", ADDR_ob(offset, base), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F3);
-        m_formatter.twoByteOp(OP2_MOVSD_VsdWsd, offset, base, (RegisterID)dst);
+        twoByteOpSimd("vmovss", VEX_SS, OP2_MOVSD_VsdWsd, offset, base, X86Registers::invalid_xmm, dst);
     }
 
-    void movss_mr_disp32(int offset, RegisterID base, XMMRegisterID dst)
+    void vmovss_mr_disp32(int offset, RegisterID base, XMMRegisterID dst)
     {
-        spew("movss      " MEM_o32b ", %s", ADDR_o32b(offset, base), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F3);
-        m_formatter.twoByteOp_disp32(OP2_MOVSD_VsdWsd, offset, base, (RegisterID)dst);
+        twoByteOpSimd_disp32("vmovss", VEX_SS, OP2_MOVSD_VsdWsd, offset, base, X86Registers::invalid_xmm, dst);
     }
 
     void movsd_rm(XMMRegisterID src, int offset, RegisterID base, RegisterID index, int scale)
@@ -3184,78 +3166,59 @@ public:
         m_formatter.twoByteOp(OP2_MOVSD_WsdVsd, offset, base, index, scale, (RegisterID)src);
     }
 
-    void movss_mr(int offset, RegisterID base, RegisterID index, int scale, XMMRegisterID dst)
+    void vmovss_mr(int offset, RegisterID base, RegisterID index, int scale, XMMRegisterID dst)
     {
-        spew("movss      " MEM_obs ", %s", ADDR_obs(offset, base, index, scale), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F3);
-        m_formatter.twoByteOp(OP2_MOVSD_VsdWsd, offset, base, index, scale, (RegisterID)dst);
+        twoByteOpSimd("vmovss", VEX_SS, OP2_MOVSD_VsdWsd, offset, base, index, scale, X86Registers::invalid_xmm, dst);
     }
 
-    void movsd_mr(int offset, RegisterID base, XMMRegisterID dst)
+    void vmovsd_mr(int offset, RegisterID base, XMMRegisterID dst)
     {
-        spew("movsd      " MEM_ob ", %s", ADDR_ob(offset, base), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F2);
-        m_formatter.twoByteOp(OP2_MOVSD_VsdWsd, offset, base, (RegisterID)dst);
+        twoByteOpSimd("vmovsd", VEX_SD, OP2_MOVSD_VsdWsd, offset, base, X86Registers::invalid_xmm, dst);
     }
 
-    void movsd_mr_disp32(int offset, RegisterID base, XMMRegisterID dst)
+    void vmovsd_mr_disp32(int offset, RegisterID base, XMMRegisterID dst)
     {
-        spew("movsd      " MEM_o32b ", %s", ADDR_o32b(offset, base), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F2);
-        m_formatter.twoByteOp_disp32(OP2_MOVSD_VsdWsd, offset, base, (RegisterID)dst);
+        twoByteOpSimd_disp32("vmovsd", VEX_SD, OP2_MOVSD_VsdWsd, offset, base, X86Registers::invalid_xmm, dst);
     }
 
-    void movsd_mr(int offset, RegisterID base, RegisterID index, int scale, XMMRegisterID dst)
+    void vmovsd_mr(int offset, RegisterID base, RegisterID index, int scale, XMMRegisterID dst)
     {
-        spew("movsd      " MEM_obs ", %s", ADDR_obs(offset, base, index, scale), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F2);
-        m_formatter.twoByteOp(OP2_MOVSD_VsdWsd, offset, base, index, scale, (RegisterID)dst);
+        twoByteOpSimd("vmovsd", VEX_SD, OP2_MOVSD_VsdWsd, offset, base, index, scale, X86Registers::invalid_xmm, dst);
     }
 
     // Note that the register-to-register form of movsd does not write to the
     // entire output register. For general-purpose register-to-register moves,
-    // use movaps instead.
-    void movsd_rr(XMMRegisterID src, XMMRegisterID dst)
+    // use movapd instead.
+    void vmovsd_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("movsd      %s, %s", nameFPReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F2);
-        m_formatter.twoByteOp(OP2_MOVSD_VsdWsd, (RegisterID)src, (RegisterID)dst);
+        twoByteOpSimd("vmovsd", VEX_SD, OP2_MOVSD_VsdWsd, src1, src0, dst);
     }
 
     // The register-to-register form of movss has the same problem as movsd
-    // above. Prefer movapd for register-to-register moves.
-    void movss_rr(XMMRegisterID src, XMMRegisterID dst)
+    // above. Prefer movaps for register-to-register moves.
+    void vmovss_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("movss      %s, %s", nameFPReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F3);
-        m_formatter.twoByteOp(OP2_MOVSD_VsdWsd, (RegisterID)src, (RegisterID)dst);
+        twoByteOpSimd("vmovss", VEX_SS, OP2_MOVSD_VsdWsd, src1, src0, dst);
     }
 
-    void movsd_mr(const void* address, XMMRegisterID dst)
+    void vmovsd_mr(const void* address, XMMRegisterID dst)
     {
-        spew("movsd      %p, %s", address, nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F2);
-        m_formatter.twoByteOp(OP2_MOVSD_VsdWsd, address, (RegisterID)dst);
+        twoByteOpSimd("vmovsd", VEX_SD, OP2_MOVSD_VsdWsd, address, X86Registers::invalid_xmm, dst);
     }
 
-    void movss_mr(const void* address, XMMRegisterID dst)
+    void vmovss_mr(const void* address, XMMRegisterID dst)
     {
-        spew("movss      %p, %s", address, nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F3);
-        m_formatter.twoByteOp(OP2_MOVSD_VsdWsd, address, (RegisterID)dst);
+        twoByteOpSimd("vmovss", VEX_SS, OP2_MOVSD_VsdWsd, address, X86Registers::invalid_xmm, dst);
     }
 
-    void movups_mr(const void* address, XMMRegisterID dst)
+    void vmovups_mr(const void* address, XMMRegisterID dst)
     {
-        spew("movups     %p, %s", address, nameFPReg(dst));
-        m_formatter.twoByteOp(OP2_MOVPS_VpsWps, address, (RegisterID)dst);
+        twoByteOpSimd("vmovups", VEX_PS, OP2_MOVPS_VpsWps, address, X86Registers::invalid_xmm, dst);
     }
 
-    void movdqu_mr(const void* address, XMMRegisterID dst)
+    void vmovdqu_mr(const void* address, XMMRegisterID dst)
     {
-        spew("movdqu     %p, %s", address, nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F3);
-        m_formatter.twoByteOp(OP2_MOVDQ_VdqWdq, address, (RegisterID)dst);
+        twoByteOpSimd("vmovdqu", VEX_SS, OP2_MOVDQ_VdqWdq, address, X86Registers::invalid_xmm, dst);
     }
 
     void movsd_rm(XMMRegisterID src, const void* address)
@@ -3341,10 +3304,9 @@ public:
     }
 #endif
 
-    void movaps_rr(XMMRegisterID src, XMMRegisterID dst)
+    void vmovaps_rr(XMMRegisterID src, XMMRegisterID dst)
     {
-        spew("movaps     %s, %s", nameFPReg(src), nameFPReg(dst));
-        m_formatter.twoByteOp(OP2_MOVAPS_VsdWsd, (RegisterID)src, (RegisterID)dst);
+        twoByteOpSimd("vmovaps", VEX_PS, OP2_MOVAPS_VsdWsd, src, X86Registers::invalid_xmm, dst);
     }
     void movaps_rm(XMMRegisterID src, int offset, RegisterID base)
     {
@@ -3356,17 +3318,14 @@ public:
         spew("movaps     %s, " MEM_obs, nameFPReg(src), ADDR_obs(offset, base, index, scale));
         m_formatter.twoByteOp(OP2_MOVAPS_WsdVsd, offset, base, index, scale, (RegisterID)src);
     }
-    void movaps_mr(int offset, RegisterID base, XMMRegisterID dst)
+    void vmovaps_mr(int offset, RegisterID base, XMMRegisterID dst)
     {
-        spew("movaps     " MEM_ob ", %s", ADDR_ob(offset, base), nameFPReg(dst));
-        m_formatter.twoByteOp(OP2_MOVAPS_VsdWsd, offset, base, (RegisterID)dst);
+        twoByteOpSimd("vmovaps", VEX_PS, OP2_MOVAPS_VsdWsd, offset, base, X86Registers::invalid_xmm, dst);
     }
-    void movaps_mr(int offset, RegisterID base, RegisterID index, int scale, XMMRegisterID dst)
+    void vmovaps_mr(int offset, RegisterID base, RegisterID index, int scale, XMMRegisterID dst)
     {
-        spew("movaps     " MEM_obs ", %s", ADDR_obs(offset, base, index, scale), nameFPReg(dst));
-        m_formatter.twoByteOp(OP2_MOVAPS_VsdWsd, offset, base, index, scale, (RegisterID)dst);
+        twoByteOpSimd("vmovaps", VEX_PS, OP2_MOVAPS_VsdWsd, offset, base, index, scale, X86Registers::invalid_xmm, dst);
     }
-
 
     void movups_rm(XMMRegisterID src, int offset, RegisterID base)
     {
@@ -3383,27 +3342,22 @@ public:
         spew("movups     %s, " MEM_obs, nameFPReg(src), ADDR_obs(offset, base, index, scale));
         m_formatter.twoByteOp(OP2_MOVPS_WpsVps, offset, base, index, scale, (RegisterID)src);
     }
-    void movups_mr(int offset, RegisterID base, XMMRegisterID dst)
+    void vmovups_mr(int offset, RegisterID base, XMMRegisterID dst)
     {
-        spew("movups     " MEM_ob ", %s", ADDR_ob(offset, base), nameFPReg(dst));
-        m_formatter.twoByteOp(OP2_MOVPS_VpsWps, offset, base, (RegisterID)dst);
+        twoByteOpSimd("vmovups", VEX_PS, OP2_MOVPS_VpsWps, offset, base, X86Registers::invalid_xmm, dst);
     }
-    void movups_mr_disp32(int offset, RegisterID base, XMMRegisterID dst)
+    void vmovups_mr_disp32(int offset, RegisterID base, XMMRegisterID dst)
     {
-        spew("movups     " MEM_o32b ", %s", ADDR_o32b(offset, base), nameFPReg(dst));
-        m_formatter.twoByteOp_disp32(OP2_MOVPS_VpsWps, offset, base, (RegisterID)dst);
+        twoByteOpSimd_disp32("vmovups", VEX_PS, OP2_MOVPS_VpsWps, offset, base, X86Registers::invalid_xmm, dst);
     }
-    void movups_mr(int offset, RegisterID base, RegisterID index, int scale, XMMRegisterID dst)
+    void vmovups_mr(int offset, RegisterID base, RegisterID index, int scale, XMMRegisterID dst)
     {
-        spew("movups     " MEM_obs ", %s", ADDR_obs(offset, base, index, scale), nameFPReg(dst));
-        m_formatter.twoByteOp(OP2_MOVPS_VpsWps, offset, base, index, scale, (RegisterID)dst);
+        twoByteOpSimd("vmovups", VEX_PS, OP2_MOVPS_VpsWps, offset, base, index, scale, X86Registers::invalid_xmm, dst);
     }
 
-    void movapd_rr(XMMRegisterID src, XMMRegisterID dst)
+    void vmovapd_rr(XMMRegisterID src, XMMRegisterID dst)
     {
-        spew("movapd     %s, %s", nameFPReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_MOVAPD_VsdWsd, (RegisterID)src, (RegisterID)dst);
+        twoByteOpSimd("vmovapd", VEX_PD, OP2_MOVAPD_VsdWsd, src, X86Registers::invalid_xmm, dst);
     }
 
 #ifdef JS_CODEGEN_X64
@@ -3422,17 +3376,14 @@ public:
         return JmpSrc(m_formatter.size());
     }
 #else
-    void movaps_mr(const void* address, XMMRegisterID dst)
+    void vmovaps_mr(const void* address, XMMRegisterID dst)
     {
-        spew("movaps     %p, %s", address, nameFPReg(dst));
-        m_formatter.twoByteOp(OP2_MOVAPS_VsdWsd, address, (RegisterID)dst);
+        twoByteOpSimd("vmovaps", VEX_PS, OP2_MOVAPS_VsdWsd, address, X86Registers::invalid_xmm, dst);
     }
 
-    void movdqa_mr(const void* address, XMMRegisterID dst)
+    void vmovdqa_mr(const void* address, XMMRegisterID dst)
     {
-        spew("movdqa     %p, %s", address, nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_MOVDQ_VdqWdq, address, (RegisterID)dst);
+        twoByteOpSimd("vmovdqa", VEX_PD, OP2_MOVDQ_VdqWdq, address, X86Registers::invalid_xmm, dst);
     }
 #endif // JS_CODEGEN_X64
 
@@ -3457,32 +3408,24 @@ public:
         m_formatter.twoByteOp(OP2_MOVDQ_WdqVdq, offset, base, index, scale, (RegisterID)src);
     }
 
-    void movdqu_mr(int offset, RegisterID base, XMMRegisterID dst)
+    void vmovdqu_mr(int offset, RegisterID base, XMMRegisterID dst)
     {
-        spew("movdqu     " MEM_ob ", %s", ADDR_ob(offset, base), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F3);
-        m_formatter.twoByteOp(OP2_MOVDQ_VdqWdq, offset, base, (RegisterID)dst);
+        twoByteOpSimd("vmovdqu", VEX_SS, OP2_MOVDQ_VdqWdq, offset, base, X86Registers::invalid_xmm, dst);
     }
 
-    void movdqu_mr_disp32(int offset, RegisterID base, XMMRegisterID dst)
+    void vmovdqu_mr_disp32(int offset, RegisterID base, XMMRegisterID dst)
     {
-        spew("movdqu     " MEM_o32b ", %s", ADDR_o32b(offset, base), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F3);
-        m_formatter.twoByteOp_disp32(OP2_MOVDQ_VdqWdq, offset, base, (RegisterID)dst);
+        twoByteOpSimd_disp32("vmovdqu", VEX_SS, OP2_MOVDQ_VdqWdq, offset, base, X86Registers::invalid_xmm, dst);
     }
 
-    void movdqu_mr(int offset, RegisterID base, RegisterID index, int scale, XMMRegisterID dst)
+    void vmovdqu_mr(int offset, RegisterID base, RegisterID index, int scale, XMMRegisterID dst)
     {
-        spew("movdqu     " MEM_obs ", %s", ADDR_obs(offset, base, index, scale), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_F3);
-        m_formatter.twoByteOp(OP2_MOVDQ_VdqWdq, offset, base, index, scale, (RegisterID)dst);
+        twoByteOpSimd("vmovdqu", VEX_SS, OP2_MOVDQ_VdqWdq, offset, base, index, scale, X86Registers::invalid_xmm, dst);
     }
 
-    void movdqa_rr(XMMRegisterID src, XMMRegisterID dst)
+    void vmovdqa_rr(XMMRegisterID src, XMMRegisterID dst)
     {
-        spew("movdqa     %s, %s", nameFPReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_MOVDQ_VdqWdq, (RegisterID)src, (RegisterID)dst);
+        twoByteOpSimd("vmovdqa", VEX_PD, OP2_MOVDQ_VdqWdq, src, X86Registers::invalid_xmm, dst);
     }
 
     void movdqa_rm(XMMRegisterID src, int offset, RegisterID base)
@@ -3499,18 +3442,15 @@ public:
         m_formatter.twoByteOp(OP2_MOVDQ_WdqVdq, offset, base, index, scale, (RegisterID)src);
     }
 
-    void movdqa_mr(int offset, RegisterID base, XMMRegisterID dst)
+    void vmovdqa_mr(int offset, RegisterID base, XMMRegisterID dst)
     {
-        spew("movdqa     " MEM_ob ", %s", ADDR_ob(offset, base), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_MOVDQ_VdqWdq, offset, base, (RegisterID)dst);
+
+        twoByteOpSimd("vmovdqa", VEX_PD, OP2_MOVDQ_VdqWdq, offset, base, X86Registers::invalid_xmm, dst);
     }
 
-    void movdqa_mr(int offset, RegisterID base, RegisterID index, int scale, XMMRegisterID dst)
+    void vmovdqa_mr(int offset, RegisterID base, RegisterID index, int scale, XMMRegisterID dst)
     {
-        spew("movdqa     " MEM_obs ", %s", ADDR_obs(offset, base, index, scale), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_MOVDQ_VdqWdq, offset, base, index, scale, (RegisterID)dst);
+        twoByteOpSimd("vmovdqa", VEX_PD, OP2_MOVDQ_VdqWdq, offset, base, index, scale, X86Registers::invalid_xmm, dst);
     }
 
     void vmulsd_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
@@ -4250,8 +4190,12 @@ private:
             return;
         }
 
-        spew("%-11s" MEM_ob ", %s, %s", name,
-             ADDR_ob(offset, base), nameFPReg(src0), nameFPReg(dst));
+        if (src0 == X86Registers::invalid_xmm) {
+            spew("%-11s" MEM_ob ", %s", name, ADDR_ob(offset, base), nameFPReg(dst));
+        } else {
+            spew("%-11s" MEM_ob ", %s, %s", name,
+                 ADDR_ob(offset, base), nameFPReg(src0), nameFPReg(dst));
+        }
         m_formatter.twoByteOpVex(ty, opcode, offset, base, src0, dst);
     }
 
@@ -4265,7 +4209,12 @@ private:
             return;
         }
 
-        spew("%-11s" MEM_o32b ", %s, %s", name, ADDR_o32b(offset, base), nameFPReg(src0), nameFPReg(dst));
+        if (src0 == X86Registers::invalid_xmm) {
+            spew("%-11s" MEM_o32b ", %s", name, ADDR_o32b(offset, base), nameFPReg(dst));
+        } else {
+            spew("%-11s" MEM_o32b ", %s, %s", name,
+                 ADDR_o32b(offset, base), nameFPReg(src0), nameFPReg(dst));
+        }
         m_formatter.twoByteOpVex_disp32(ty, opcode, offset, base, src0, dst);
     }
 
@@ -4281,8 +4230,13 @@ private:
             return;
         }
 
-        spew("%-11s" MEM_obs ", %s, %s", name, ADDR_obs(offset, base, index, scale),
-             nameFPReg(src0), nameFPReg(dst));
+        if (src0 == X86Registers::invalid_xmm) {
+            spew("%-11s" MEM_obs ", %s", name, ADDR_obs(offset, base, index, scale),
+                 nameFPReg(dst));
+        } else {
+            spew("%-11s" MEM_obs ", %s, %s", name, ADDR_obs(offset, base, index, scale),
+                 nameFPReg(src0), nameFPReg(dst));
+        }
         m_formatter.twoByteOpVex(ty, opcode, offset, base, index, scale, src0, dst);
     }
 
@@ -4296,7 +4250,10 @@ private:
             return;
         }
 
-        spew("%-11s%p, %s, %s", name, address, nameFPReg(src0), nameFPReg(dst));
+        if (src0 == X86Registers::invalid_xmm)
+            spew("%-11s%p, %s", name, address, nameFPReg(dst));
+        else
+            spew("%-11s%p, %s, %s", name, address, nameFPReg(src0), nameFPReg(dst));
         m_formatter.twoByteOpVex(ty, opcode, address, src0, dst);
     }
 
@@ -4334,13 +4291,19 @@ private:
                             XMMRegisterID rm, RegisterID dst)
     {
         if (useLegacySSEEncodingForOtherOutput()) {
-            spew("%-11s%s, %s", legacySSEOpName(name), nameFPReg(rm), nameIReg(4, dst));
+            if (opcode == OP2_MOVD_EdVd)
+                spew("%-11s%s, %s", legacySSEOpName(name), nameFPReg((XMMRegisterID)dst), nameIReg(4, (RegisterID)rm));
+            else
+                spew("%-11s%s, %s", legacySSEOpName(name), nameFPReg(rm), nameIReg(4, dst));
             m_formatter.legacySSEPrefix(ty);
             m_formatter.twoByteOp(opcode, (RegisterID)rm, dst);
             return;
         }
 
-        spew("%-11s%s, %s", name, nameFPReg(rm), nameIReg(4, dst));
+        if (opcode == OP2_MOVD_EdVd)
+            spew("%-11s%s, %s", name, nameFPReg((XMMRegisterID)dst), nameIReg(4, (RegisterID)rm));
+        else
+            spew("%-11s%s, %s", name, nameFPReg(rm), nameIReg(4, dst));
         m_formatter.twoByteOpVex(ty, opcode, (RegisterID)rm, X86Registers::invalid_xmm, dst);
     }
 
@@ -4349,13 +4312,19 @@ private:
                             XMMRegisterID rm, RegisterID dst)
     {
         if (useLegacySSEEncodingForOtherOutput()) {
-            spew("%-11s%s, %s", legacySSEOpName(name), nameFPReg(rm), nameIReg(dst));
+            if (opcode == OP2_MOVD_EdVd)
+                spew("%-11s%s, %s", legacySSEOpName(name), nameFPReg((XMMRegisterID)dst), nameIReg((RegisterID)rm));
+            else
+                spew("%-11s%s, %s", legacySSEOpName(name), nameFPReg(rm), nameIReg(dst));
             m_formatter.legacySSEPrefix(ty);
             m_formatter.twoByteOp64(opcode, (RegisterID)rm, dst);
             return;
         }
 
-        spew("%-11s%s, %s", name, nameFPReg(rm), nameIReg(dst));
+        if (opcode == OP2_MOVD_EdVd)
+            spew("%-11s%s, %s", name, nameFPReg((XMMRegisterID)dst), nameIReg((RegisterID)rm));
+        else
+            spew("%-11s%s, %s", name, nameFPReg(rm), nameIReg(dst));
         m_formatter.twoByteOpVex64(ty, opcode, (RegisterID)rm, X86Registers::invalid_xmm, (XMMRegisterID)dst);
     }
 #endif
@@ -4422,6 +4391,21 @@ private:
         m_formatter.threeByteOpVex(ty, opcode, escape, offset, base, src0, dst);
     }
 
+    void threeByteOpSimd(const char *name, VexOperandType ty, ThreeByteOpcodeID opcode,
+                         ThreeByteEscape escape,
+                         const void *address, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        if (useLegacySSEEncoding(src0, dst)) {
+            spew("%-11s%p, %s", legacySSEOpName(name), address, nameFPReg(dst));
+            m_formatter.legacySSEPrefix(ty);
+            m_formatter.threeByteOp(opcode, escape, address, dst);
+            return;
+        }
+
+        spew("%-11s%p, %s, %s", name, address, nameFPReg(src0), nameFPReg(dst));
+        m_formatter.threeByteOpVex(ty, opcode, escape, address, src0, dst);
+    }
+
     // Blendv is a three-byte op, but the VEX encoding has a different opcode
     // than the SSE encoding, so we handle it specially.
     void vblendvOpSimd(XMMRegisterID mask, XMMRegisterID rm, XMMRegisterID src0, XMMRegisterID dst)
@@ -4456,34 +4440,6 @@ private:
         // Even though a "ps" instruction, vblendv is encoded with the "pd" prefix.
         m_formatter.vblendvOpVex(VEX_PD, OP3_VBLENDVPS_VdqWdq, ESCAPE_VBLENDVPS,
                                  mask, offset, base, src0, dst);
-    }
-
-    // XMM-to-GPR movd is a two-byte op, but the operands are encoded in reverse
-    // order, so we handle it specially.
-    void movdOpSimd(XMMRegisterID src, RegisterID dst) {
-        if (useLegacySSEEncodingForOtherOutput()) {
-            spew("movd       %s, %s", nameFPReg(src), nameIReg(4, dst));
-            m_formatter.prefix(PRE_SSE_66);
-            m_formatter.twoByteOp(OP2_MOVD_EdVd, dst, (RegisterID)src);
-            return;
-        }
-
-        spew("vmovd      %s, %s", nameFPReg(src), nameIReg(4, dst));
-        m_formatter.twoByteOpVex(VEX_PD, OP2_MOVD_EdVd, dst, X86Registers::invalid_xmm, src);
-    }
-
-    // GPR-to-XMM movd is a two-byte op, but it doesn't have an extra XMM
-    // input, so we handle it specially.
-    void movdOpSimd(RegisterID src, XMMRegisterID dst) {
-        if (useLegacySSEEncodingForOtherOutput()) {
-            spew("movd       %s, %s", nameIReg(4, src), nameFPReg(dst));
-            m_formatter.prefix(PRE_SSE_66);
-            m_formatter.twoByteOp(OP2_MOVD_VdEd, src, dst);
-            return;
-        }
-
-        spew("vmovd      %s, %s", nameIReg(4, src), nameFPReg(dst));
-        m_formatter.twoByteOpVex(VEX_PD, OP2_MOVD_VdEd, src, X86Registers::invalid_xmm, dst);
     }
 
     static int32_t getInt32(void* where)
@@ -4798,6 +4754,20 @@ private:
             m_buffer.putByteUnchecked(OP_2BYTE_ESCAPE);
             m_buffer.putByteUnchecked(escape);
             m_buffer.putByteUnchecked(opcode);
+            memoryModRM(address, reg);
+        }
+
+        void threeByteOpVex(VexOperandType ty, ThreeByteOpcodeID opcode, ThreeByteEscape escape,
+                            const void *address, XMMRegisterID src0, int reg)
+        {
+            int r = (reg >> 3), x = 0, b = 0;
+            int m = 0, w = 0, v = src0, l = 0;
+            switch (escape) {
+              case 0x38: m = 2; break; // 0x0F 0x38
+              case 0x3A: m = 3; break; // 0x0F 0x3A
+              default: MOZ_CRASH("unexpected escape");
+            }
+            threeOpVex(ty, r, x, b, m, w, v, l, opcode);
             memoryModRM(address, reg);
         }
 
