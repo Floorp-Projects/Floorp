@@ -46,7 +46,7 @@ inline bool CAN_ZERO_EXTEND_8H_32(int32_t value) { return value == (value & 0xff
 inline bool CAN_ZERO_EXTEND_32_64(int32_t value) { return value >= 0; }
 
 namespace X86Registers {
-    typedef enum {
+    enum RegisterID {
         eax,
         ecx,
         edx,
@@ -67,9 +67,9 @@ namespace X86Registers {
         r15
 #endif
         ,invalid_reg
-    } RegisterID;
+    };
 
-    typedef enum {
+    enum XMMRegisterID {
         xmm0,
         xmm1,
         xmm2,
@@ -89,7 +89,7 @@ namespace X86Registers {
         xmm15
 #endif
        ,invalid_xmm
-    } XMMRegisterID;
+    };
 
     static const char* nameFPReg(XMMRegisterID fpreg)
     {
@@ -190,7 +190,7 @@ public:
     typedef X86Registers::XMMRegisterID XMMRegisterID;
     typedef XMMRegisterID FPRegisterID;
 
-    typedef enum {
+    enum Condition {
         ConditionO,
         ConditionNO,
         ConditionB,
@@ -210,10 +210,10 @@ public:
 
         ConditionC  = ConditionB,
         ConditionNC = ConditionAE
-    } Condition;
+    };
 
     // Conditions for CMP instructions (CMPSS, CMPSD, CMPPS, CMPPD, etc).
-    typedef enum {
+    enum ConditionCmp {
         ConditionCmp_EQ    = 0x0,
         ConditionCmp_LT    = 0x1,
         ConditionCmp_LE    = 0x2,
@@ -222,7 +222,7 @@ public:
         ConditionCmp_NLT   = 0x5,
         ConditionCmp_NLE   = 0x6,
         ConditionCmp_ORD   = 0x7,
-    } ConditionCmp;
+    };
 
     static const char* nameCC(Condition cc)
     {
@@ -235,15 +235,15 @@ public:
     }
 
     // Rounding modes for ROUNDSD.
-    typedef enum {
+    enum RoundingMode {
         RoundToNearest = 0x0,
         RoundDown      = 0x1,
         RoundUp        = 0x2,
         RoundToZero    = 0x3
-    } RoundingMode;
+    };
 
 private:
-    typedef enum {
+    enum OneByteOpcodeID {
         OP_ADD_EbGb                     = 0x00,
         OP_ADD_EvGv                     = 0x01,
         OP_ADD_GvEv                     = 0x03,
@@ -328,9 +328,9 @@ private:
         OP_GROUP3_Ev                    = 0xF7,
         OP_GROUP3_EvIz                  = 0xF7, // OP_GROUP3_Ev has an immediate, when instruction is a test.
         OP_GROUP5_Ev                    = 0xFF
-    } OneByteOpcodeID;
+    };
 
-    typedef enum {
+    enum TwoByteOpcodeID {
         OP2_UD2             = 0x0B,
         OP2_MOVSD_VsdWsd    = 0x10,
         OP2_MOVPS_VpsWps    = 0x10,
@@ -418,9 +418,9 @@ private:
         OP2_PMULUDQ_VdqWdq  = 0xF4,
         OP2_PSUBD_VdqWdq    = 0xFA,
         OP2_PADDD_VdqWdq    = 0xFE
-    } TwoByteOpcodeID;
+    };
 
-    typedef enum {
+    enum ThreeByteOpcodeID {
         OP3_ROUNDSS_VsdWsd  = 0x0A,
         OP3_ROUNDSD_VsdWsd  = 0x0B,
         OP3_BLENDVPS_VdqWdq = 0x14,
@@ -431,9 +431,9 @@ private:
         OP3_PINSRD_VdqEdIb  = 0x22,
         OP3_PMULLD_VdqWdq   = 0x40,
         OP3_VBLENDVPS_VdqWdq = 0x4A
-    } ThreeByteOpcodeID;
+    };
 
-    typedef enum {
+    enum ThreeByteEscape {
         ESCAPE_BLENDVPS     = 0x38,
         ESCAPE_PMULLD       = 0x38,
         ESCAPE_PTEST        = 0x38,
@@ -443,14 +443,14 @@ private:
         ESCAPE_INSERTPS     = 0x3A,
         ESCAPE_BLENDPS      = 0x3A,
         ESCAPE_VBLENDVPS    = 0x3A
-    } ThreeByteEscape;
+    };
 
-    typedef enum {
+    enum VexOperandType {
         VEX_PS = 0,
         VEX_PD = 1,
         VEX_SS = 2,
         VEX_SD = 3
-    } VexOperandType;
+    };
 
     TwoByteOpcodeID jccRel32(Condition cond)
     {
@@ -462,7 +462,7 @@ private:
         return (TwoByteOpcodeID)(OP_SETCC + cond);
     }
 
-    typedef enum {
+    enum GroupOpcodeID {
         GROUP1_OP_ADD = 0,
         GROUP1_OP_OR  = 1,
         GROUP1_OP_ADC = 2,
@@ -495,7 +495,7 @@ private:
         FPU6_OP_FSTP    = 3,
 
         GROUP11_MOV = 0
-    } GroupOpcodeID;
+    };
 
     class X86InstructionFormatter;
 public:
