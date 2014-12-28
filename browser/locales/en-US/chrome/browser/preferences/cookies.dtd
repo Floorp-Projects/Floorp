@@ -7,11 +7,9 @@
 <!ENTITY     cookiesonsystem.label          "The following cookies are stored on your computer:">
 <!ENTITY     cookiename.label               "Cookie Name">
 <!ENTITY     cookiedomain.label             "Site"> 
-<!ENTITY     button.removecookies.label     "Remove Cookies">
-<!ENTITY     button.removecookie.label      "Remove Cookie">
-<!ENTITY     button.removecookie.accesskey  "R">
-<!ENTITY     button.removeallcookies.label  "Remove All Cookies">
-<!ENTITY     button.removeallcookies.accesskey "A">
+<!ENTITY     button.removeSelectedCookies.accesskey "R">
+<!ENTITY     button.removeAllCookies.label "Remove All">
+<!ENTITY     button.removeAllCookies.accesskey "A">
 
 <!ENTITY     props.name.label               "Name:">
 <!ENTITY     props.value.label              "Content:">
