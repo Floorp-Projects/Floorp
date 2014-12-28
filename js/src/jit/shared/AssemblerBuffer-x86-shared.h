@@ -42,7 +42,28 @@
 #include "jit/JitSpewer.h"
 #include "js/RootingAPI.h"
 
-#define PRETTY_PRINT_OFFSET(os) (((os)<0)?"-":""), (((os)<0)?-(os):(os))
+// Spew formatting helpers.
+#define PRETTYHEX(x)                       (((x)<0)?"-":""),(((x)<0)?-(x):(x))
+
+#define MEM_o     "%s0x%x"
+#define MEM_os    MEM_o   "(,%s,%d)"
+#define MEM_ob    MEM_o   "(%s)"
+#define MEM_obs   MEM_o   "(%s,%s,%d)"
+
+#define MEM_o32   "%s0x%04x"
+#define MEM_o32s  MEM_o32 "(,%s,%d)"
+#define MEM_o32b  MEM_o32 "(%s)"
+#define MEM_o32bs MEM_o32 "(%s,%s,%d)"
+
+#define ADDR_o(offset)                       PRETTYHEX(offset)
+#define ADDR_os(offset, index, scale)        ADDR_o(offset), nameIReg((index)), (1<<(scale))
+#define ADDR_ob(offset, base)                ADDR_o(offset), nameIReg((base))
+#define ADDR_obs(offset, base, index, scale) ADDR_ob(offset, base), nameIReg((index)), (1<<(scale))
+
+#define ADDR_o32(offset)                       ADDR_o(offset)
+#define ADDR_o32s(offset, index, scale)        ADDR_os(offset, index, scale)
+#define ADDR_o32b(offset, base)                ADDR_ob(offset, base)
+#define ADDR_o32bs(offset, base, index, scale) ADDR_obs(offset, base, index, scale)
 
 #define FIXME_INSN_PRINTING                                 \
     do {                                                    \
