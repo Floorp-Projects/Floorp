@@ -1039,9 +1039,9 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
 
             if (excInfo && excInfo->propagatingIonExceptionForDebugMode() && resumeAfter) {
                 // When propagating an exception for debug mode, set the
-                // return address as the return-from-IC for the throwing op,
-                // so that Debugger hooks report the correct pc offset of the
-                // throwing op instead of its successor.
+                // return address as native code for the throwing op, so that
+                // Debugger hooks report the correct pc offset of the throwing
+                // op instead of its successor.
                 //
                 // This should not be done if we are at a resume-at point, as
                 // might be the case when propagating an exception thrown from
@@ -1051,10 +1051,8 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
                 //
                 // Note that we never resume into this address, it is set for
                 // the sake of frame iterators giving the correct answer.
-                ICEntry &icEntry = baselineScript->anyKindICEntryFromPCOffset(iter.pcOffset());
-                nativeCodeForPC = baselineScript->returnAddressForIC(icEntry);
-            } else {
-                MOZ_ASSERT(nativeCodeForPC);
+                jsbytecode *throwPC = script->offsetToPC(iter.pcOffset());
+                nativeCodeForPC = baselineScript->nativeCodeForPC(script, throwPC);
             }
 
             MOZ_ASSERT(nativeCodeForPC);
