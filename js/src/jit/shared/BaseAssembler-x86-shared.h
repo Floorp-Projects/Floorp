@@ -4604,7 +4604,7 @@ private:
             int m = 1; // 0x0F
             int w = 0, v = src0, l = 0;
             threeOpVex(ty, r, x, b, m, w, v, l, opcode);
-            memoryModRM_disp32(offset, base, reg);
+            memoryModRM(offset, base, reg);
         }
 
         void twoByteOp_disp32(TwoByteOpcodeID opcode, int offset, RegisterID base, int reg)
