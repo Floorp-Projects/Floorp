@@ -81,7 +81,7 @@ function runTest(win, searchTerm, cookies, matches) {
 
     // select first cookie and delete
     var tree = win.document.getElementById("cookiesList");
-    var deleteButton = win.document.getElementById("removeCookie");
+    var deleteButton = win.document.getElementById("removeSelectedCookies");
     var rect = tree.treeBoxObject.getCoordsForCellItem(0, tree.columns[0], "cell");
     EventUtils.synthesizeMouse(tree.body, rect.x + rect.width / 2, rect.y + rect.height / 2, {}, win);
     EventUtils.synthesizeMouseAtCenter(deleteButton, {}, win);
@@ -91,7 +91,6 @@ function runTest(win, searchTerm, cookies, matches) {
 
     // select two adjacent cells and delete
     EventUtils.synthesizeMouse(tree.body, rect.x + rect.width / 2, rect.y + rect.height / 2, {}, win);
-    deleteButton = win.document.getElementById("removeCookies"); 
     var eventObj = {};
     if (navigator.platform.indexOf("Mac") >= 0)
         eventObj.metaKey = true;
