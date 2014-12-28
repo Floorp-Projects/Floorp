@@ -2385,23 +2385,26 @@ public:
 
     JmpSrc movl_ripr(RegisterID dst)
     {
-        spew("movl       ?(%%rip), %s", nameIReg(4, dst));
         m_formatter.oneByteRipOp(OP_MOV_GvEv, 0, (RegisterID)dst);
-        return JmpSrc(m_formatter.size());
+        JmpSrc label(m_formatter.size());
+        spew("movl       .Lfrom%d(%%rip), %s", label.offset(), nameIReg(4, dst));
+        return label;
     }
 
     JmpSrc movl_rrip(RegisterID src)
     {
-        spew("movl       %s, ?(%%rip)", nameIReg(4, src));
         m_formatter.oneByteRipOp(OP_MOV_EvGv, 0, (RegisterID)src);
-        return JmpSrc(m_formatter.size());
+        JmpSrc label(m_formatter.size());
+        spew("movl       %s, .Lfrom%d(%%rip)", nameIReg(4, src), label.offset());
+        return label;
     }
 
     JmpSrc movq_ripr(RegisterID dst)
     {
-        spew("movq       ?(%%rip), %s", nameIReg(dst));
         m_formatter.oneByteRipOp64(OP_MOV_GvEv, 0, dst);
-        return JmpSrc(m_formatter.size());
+        JmpSrc label(m_formatter.size());
+        spew("movq       .Lfrom%d(%%rip), %s", label.offset(), nameIReg(dst));
+        return label;
     }
 #endif
     void movl_rm(RegisterID src, const void* addr)
@@ -2602,9 +2605,10 @@ public:
 
     JmpSrc leaq_rip(RegisterID dst)
     {
-        spew("leaq       ?(%%rip), %s", nameIReg(dst));
         m_formatter.oneByteRipOp64(OP_LEA, 0, dst);
-        return JmpSrc(m_formatter.size());
+        JmpSrc label(m_formatter.size());
+        spew("leaq       .Lfrom%d(%%rip), %s", label.offset(), nameIReg(dst));
+        return label;
     }
 #endif
 
@@ -2614,7 +2618,7 @@ public:
     {
         m_formatter.oneByteOp(OP_CALL_rel32);
         JmpSrc r = m_formatter.immediateRel32();
-        spew("call       ((%d))", r.m_offset);
+        spew("call       .Lfrom%d", r.m_offset);
         return r;
     }
 
@@ -2639,7 +2643,7 @@ public:
     {
         m_formatter.oneByteOp(OP_CMP_EAXIv);
         JmpSrc r = m_formatter.immediateRel32();
-        spew("cmpl       %%eax, ((%d))", r.m_offset);
+        spew("cmpl       %%eax, .Lfrom%d", r.m_offset);
         return r;
     }
 
@@ -2647,7 +2651,7 @@ public:
     {
         m_formatter.oneByteOp(OP_JMP_rel32);
         JmpSrc r = m_formatter.immediateRel32();
-        spew("jmp        ((%d))", r.m_offset);
+        spew("jmp        .Lfrom%d", r.m_offset);
         return r;
     }
 
@@ -2765,7 +2769,7 @@ public:
     {
         m_formatter.twoByteOp(jccRel32(cond));
         JmpSrc r = m_formatter.immediateRel32();
-        spew("j%s        ((%d))", nameCC(cond), r.m_offset);
+        spew("j%s        .Lfrom%d", nameCC(cond), r.m_offset);
         return r;
     }
 
@@ -3829,13 +3833,13 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, imm
 
     void int32x4Constant(const int32_t s[4])
     {
-        spew(".int32x4 (%d %d %d %d)", s[0], s[1], s[2], s[3]);
+        spew(".int %d,%d,%d,%d", s[0], s[1], s[2], s[3]);
         MOZ_ASSERT(m_formatter.isAligned(16));
         m_formatter.int32x4Constant(s);
     }
     void float32x4Constant(const float f[4])
     {
-        spew(".float32x4 (%f %f %f %f)", f[0], f[1], f[2], f[3]);
+        spew(".float %f,%f,%f,%f", f[0], f[1], f[2], f[3]);
         MOZ_ASSERT(m_formatter.isAligned(16));
         m_formatter.float32x4Constant(f);
     }
@@ -4134,27 +4138,27 @@ private:
                             int ripOffset, XMMRegisterID src0, XMMRegisterID dst)
     {
         if (useLegacySSEEncoding(src0, dst)) {
-            if (IsXMMReversedOperands(opcode)) {
-                spew("%-11s%s, ?%+d(%%rip)", legacySSEOpName(name), nameFPReg(dst), ripOffset);
-            } else {
-                spew("%-11s?%+d(%%rip), %s", legacySSEOpName(name), ripOffset, nameFPReg(dst));
-            }
             m_formatter.legacySSEPrefix(ty);
             m_formatter.twoByteRipOp(opcode, ripOffset, dst);
-            return JmpSrc(m_formatter.size());
+            JmpSrc label(m_formatter.size());
+            if (IsXMMReversedOperands(opcode))
+                spew("%-11s%s, .Lfrom%d%+d(%%rip)", legacySSEOpName(name), nameFPReg(dst), label.offset(), ripOffset);
+            else
+                spew("%-11s.Lfrom%d%+d(%%rip), %s", legacySSEOpName(name), label.offset(), ripOffset, nameFPReg(dst));
+            return label;
         }
 
-        if (src0 == X86Registers::invalid_xmm) {
-            if (IsXMMReversedOperands(opcode)) {
-                spew("%-11s%s, ?%+d(%%rip)", name, nameFPReg(dst), ripOffset);
-            } else {
-                spew("%-11s?%+d(%%rip), %s", name, ripOffset, nameFPReg(dst));
-            }
-        } else {
-            spew("%-11s?%+d(%%rip), %s, %s", name, ripOffset, nameFPReg(src0), nameFPReg(dst));
-        }
         m_formatter.twoByteRipOpVex(ty, opcode, ripOffset, src0, dst);
-        return JmpSrc(m_formatter.size());
+        JmpSrc label(m_formatter.size());
+        if (src0 == X86Registers::invalid_xmm) {
+            if (IsXMMReversedOperands(opcode))
+                spew("%-11s%s, .Lfrom%d%+d(%%rip)", name, nameFPReg(dst), label.offset(), ripOffset);
+            else
+                spew("%-11s.Lfrom%d%+d(%%rip), %s", name, label.offset(), ripOffset, nameFPReg(dst));
+        } else {
+            spew("%-11s.Lfrom%d%+d(%%rip), %s, %s", name, label.offset(), ripOffset, nameFPReg(src0), nameFPReg(dst));
+        }
+        return label;
     }
 #endif
 
@@ -4233,22 +4237,20 @@ private:
                               int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
     {
         if (useLegacySSEEncoding(src0, dst)) {
-            if (IsXMMReversedOperands(opcode)) {
+            if (IsXMMReversedOperands(opcode))
                 spew("%-11s%s, " MEM_o32b, legacySSEOpName(name), nameFPReg(dst), ADDR_o32b(offset, base));
-            } else {
+            else
                 spew("%-11s" MEM_o32b ", %s", legacySSEOpName(name), ADDR_o32b(offset, base), nameFPReg(dst));
-            }
             m_formatter.legacySSEPrefix(ty);
             m_formatter.twoByteOp_disp32(opcode, offset, base, dst);
             return;
         }
 
         if (src0 == X86Registers::invalid_xmm) {
-            if (IsXMMReversedOperands(opcode)) {
+            if (IsXMMReversedOperands(opcode))
                 spew("%-11s%s, " MEM_o32b, name, nameFPReg(dst), ADDR_o32b(offset, base));
-            } else {
+            else
                 spew("%-11s" MEM_o32b ", %s", name, ADDR_o32b(offset, base), nameFPReg(dst));
-            }
         } else {
             spew("%-11s" MEM_o32b ", %s, %s", name,
                  ADDR_o32b(offset, base), nameFPReg(src0), nameFPReg(dst));
