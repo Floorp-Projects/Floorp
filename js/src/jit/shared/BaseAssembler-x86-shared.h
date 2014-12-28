@@ -2090,7 +2090,18 @@ public:
 
     void movl_mEAX(const void* addr)
     {
+#ifdef JS_CODEGEN_X64
+        if (isAddressImmediate(addr)) {
+            movl_mr(addr, X86Registers::eax);
+            return;
+        }
+#endif
+
+#ifdef JS_CODEGEN_X64
+        spew("movabs     %p, %%eax", addr);
+#else
         spew("movl       %p, %%eax", addr);
+#endif
         m_formatter.oneByteOp(OP_MOV_EAXOv);
 #ifdef JS_CODEGEN_X64
         m_formatter.immediate64(reinterpret_cast<int64_t>(addr));
@@ -2127,7 +2138,12 @@ public:
 
     void movl_mr(const void* addr, RegisterID dst)
     {
-        if (dst == X86Registers::eax) {
+        if (dst == X86Registers::eax
+#ifdef JS_CODEGEN_X64
+            && !isAddressImmediate(addr)
+#endif
+            )
+        {
             movl_mEAX(addr);
             return;
         }
@@ -2211,6 +2227,13 @@ public:
 
     void movl_EAXm(const void* addr)
     {
+#ifdef JS_CODEGEN_X64
+        if (isAddressImmediate(addr)) {
+            movl_rm(X86Registers::eax, addr);
+            return;
+        }
+#endif
+
         spew("movl       %%eax, %p", addr);
         m_formatter.oneByteOp(OP_MOV_OvEAX);
 #ifdef JS_CODEGEN_X64
@@ -2247,7 +2270,7 @@ public:
 
     void movq_rm(RegisterID src, const void* addr)
     {
-        if (src == X86Registers::eax) {
+        if (src == X86Registers::eax && !isAddressImmediate(addr)) {
             movq_EAXm(addr);
             return;
         }
@@ -2258,6 +2281,11 @@ public:
 
     void movq_mEAX(const void* addr)
     {
+        if (isAddressImmediate(addr)) {
+            movq_mr(addr, X86Registers::eax);
+            return;
+        }
+
         spew("movq       %p, %%rax", addr);
         m_formatter.oneByteOp64(OP_MOV_EAXOv);
         m_formatter.immediate64(reinterpret_cast<int64_t>(addr));
@@ -2265,6 +2293,11 @@ public:
 
     void movq_EAXm(const void* addr)
     {
+        if (isAddressImmediate(addr)) {
+            movq_rm(X86Registers::eax, addr);
+            return;
+        }
+
         spew("movq       %%rax, %p", addr);
         m_formatter.oneByteOp64(OP_MOV_OvEAX);
         m_formatter.immediate64(reinterpret_cast<int64_t>(addr));
@@ -2290,7 +2323,7 @@ public:
 
     void movq_mr(const void* addr, RegisterID dst)
     {
-        if (dst == X86Registers::eax) {
+        if (dst == X86Registers::eax && !isAddressImmediate(addr)) {
             movq_mEAX(addr);
             return;
         }
@@ -2373,7 +2406,11 @@ public:
 #endif
     void movl_rm(RegisterID src, const void* addr)
     {
-        if (src == X86Registers::eax) {
+        if (src == X86Registers::eax
+#ifdef JS_CODEGEN_X64
+            && !isAddressImmediate(addr)
+#endif
+            ) {
             movl_EAXm(addr);
             return;
         }
