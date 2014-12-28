@@ -4089,11 +4089,10 @@ public:
     static void setRel32(void* from, void* to)
     {
         intptr_t offset = reinterpret_cast<intptr_t>(to) - reinterpret_cast<intptr_t>(from);
-        MOZ_ASSERT(offset == static_cast<int32_t>(offset));
-#define JS_CRASH(x) *(int *)x = 0
+        MOZ_ASSERT(offset == static_cast<int32_t>(offset),
+                   "offset is too great for a 32-bit relocation");
         if (offset != static_cast<int32_t>(offset))
-            JS_CRASH(0xC0DE);
-#undef JS_CRASH
+            MOZ_CRASH("offset is too great for a 32-bit relocation");
 
         staticSpew("##setRel32 ((from=%p)) ((to=%p))", from, to);
         setInt32(from, offset);
@@ -4154,7 +4153,9 @@ private:
     {
         // If we don't have AVX or it's disabled, use the legacy SSE encoding.
         if (!useVEX_) {
-            MOZ_ASSERT(src0 == X86Registers::invalid_xmm || src0 == dst);
+            MOZ_ASSERT(src0 == X86Registers::invalid_xmm || src0 == dst,
+                       "Legacy SSE (pre-AVX) encoding requires the output register to be "
+                       "the same as the src0 input register");
             return true;
         }
 
@@ -4170,8 +4171,12 @@ private:
         // encoding also requires the mask to be in xmm0.
 
         if (!useVEX_) {
-            MOZ_ASSERT(src0 == dst);
-            MOZ_ASSERT(mask == X86Registers::xmm0);
+            MOZ_ASSERT(src0 == dst,
+                       "Legacy SSE (pre-AVX) encoding requires the output register to be "
+                       "the same as the src0 input register");
+            MOZ_ASSERT(mask == X86Registers::xmm0,
+                       "Legacy SSE (pre-AVX) encoding for blendv requires the mask to be "
+                       "in xmm0");
             return true;
         }
 
