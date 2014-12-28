@@ -332,6 +332,15 @@ private:
         OP_GROUP5_Ev                    = 0xFF
     };
 
+    enum ShiftID {
+        Shift_vpsrld = 2,
+        Shift_vpsrlq = 2,
+        Shift_vpsrldq = 3,
+        Shift_vpsrad = 4,
+        Shift_vpslld = 6,
+        Shift_vpsllq = 6
+    };
+
     enum TwoByteOpcodeID {
         OP2_UD2             = 0x0B,
         OP2_MOVSD_VsdWsd    = 0x10,
@@ -428,6 +437,7 @@ private:
           case OP2_MOVSD_WsdVsd: // also OP2_MOVPS_WpsVps
           case OP2_MOVAPS_WsdVsd:
           case OP2_MOVDQ_WdqVdq:
+          case OP3_PEXTRD_EdVdqIb:
             return true;
           default:
             break;
@@ -2755,18 +2765,15 @@ public:
 
     void vcmpps_rr(uint8_t order, XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        twoByteOpSimd("vcmpps", VEX_PS, OP2_CMPPS_VpsWps, src1, src0, dst);
-        m_formatter.immediate8s(order);
+        twoByteOpImmSimd("vcmpps", VEX_PS, OP2_CMPPS_VpsWps, order, src1, src0, dst);
     }
     void vcmpps_mr(uint8_t order, int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
     {
-        twoByteOpSimd("vcmpps", VEX_PS, OP2_CMPPS_VpsWps, offset, base, src0, dst);
-        m_formatter.immediate8s(order);
+        twoByteOpImmSimd("vcmpps", VEX_PS, OP2_CMPPS_VpsWps, order, offset, base, src0, dst);
     }
     void vcmpps_mr(uint8_t order, const void* address, XMMRegisterID src0, XMMRegisterID dst)
     {
-        twoByteOpSimd("vcmpps", VEX_PS, OP2_CMPPS_VpsWps, address, src0, dst);
-        m_formatter.immediate8s(order);
+        twoByteOpImmSimd("vcmpps", VEX_PS, OP2_CMPPS_VpsWps, order, address, src0, dst);
     }
 
     void vrcpps_rr(XMMRegisterID src, XMMRegisterID dst) {
@@ -2977,50 +2984,30 @@ public:
         twoByteOpSimd("vpandn", VEX_PD, OP2_PANDNDQ_VdqWdq, address, src0, dst);
     }
 
-    void pshufd_irr(uint32_t mask, XMMRegisterID src, XMMRegisterID dst)
+    void vpshufd_irr(uint32_t mask, XMMRegisterID src, XMMRegisterID dst)
     {
-        spew("pshufd     $0x%x, %s, %s", mask, nameFPReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_PSHUFD_VdqWdqIb, (RegisterID)src, (RegisterID)dst);
-        m_formatter.immediate8u(mask);
+        twoByteOpImmSimd("vpshufd", VEX_PD, OP2_PSHUFD_VdqWdqIb, mask, src, X86Registers::invalid_xmm, dst);
+    }
+    void vpshufd_imr(uint32_t mask, int32_t offset, RegisterID base, XMMRegisterID dst)
+    {
+        twoByteOpImmSimd("vpshufd", VEX_PD, OP2_PSHUFD_VdqWdqIb, mask, offset, base, X86Registers::invalid_xmm, dst);
+    }
+    void vpshufd_imr(uint32_t mask, const void* address, XMMRegisterID dst)
+    {
+        twoByteOpImmSimd("vpshufd", VEX_PD, OP2_PSHUFD_VdqWdqIb, mask, address, X86Registers::invalid_xmm, dst);
     }
 
-    void pshufd_imr(uint32_t mask, int32_t offset, RegisterID base, XMMRegisterID dst)
+    void vshufps_irr(uint32_t mask, XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        MOZ_ASSERT(mask < 256);
-        spew("pshufd     $0x%x, " MEM_ob ", %s", mask, ADDR_ob(offset, base), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_PSHUFD_VdqWdqIb, offset, base, (RegisterID)dst);
-        m_formatter.immediate8u(mask);
+        twoByteOpImmSimd("vshufps", VEX_PS, OP2_SHUFPS_VpsWpsIb, mask, src1, src0, dst);
     }
-
-    void pshufd_imr(uint32_t mask, const void* address, XMMRegisterID dst)
+    void vshufps_imr(uint32_t mask, int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("pshufd     $0x%x, %p, %s", mask, address, nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_PSHUFD_VdqWdqIb, address, (RegisterID)dst);
-        m_formatter.immediate8u(mask);
+        twoByteOpImmSimd("vshufps", VEX_PS, OP2_SHUFPS_VpsWpsIb, mask, offset, base, src0, dst);
     }
-
-    void shufps_irr(uint32_t mask, XMMRegisterID src, XMMRegisterID dst)
+    void vshufps_imr(uint32_t mask, const void* address, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("shufps     $0x%x, %s, %s", mask, nameFPReg(src), nameFPReg(dst));
-        m_formatter.twoByteOp(OP2_SHUFPS_VpsWpsIb, (RegisterID)src, (RegisterID)dst);
-        m_formatter.immediate8u(mask);
-    }
-
-    void shufps_imr(uint32_t mask, int32_t offset, RegisterID base, XMMRegisterID dst)
-    {
-        spew("shufps     $0x%x, " MEM_ob ", %s", mask, ADDR_ob(offset, base), nameFPReg(dst));
-        m_formatter.twoByteOp(OP2_SHUFPS_VpsWpsIb, offset, base, (RegisterID)dst);
-        m_formatter.immediate8u(mask);
-    }
-
-    void shufps_imr(uint32_t mask, const void* address, XMMRegisterID dst)
-    {
-        spew("shufps     $0x%x, %p, %s", mask, address, nameFPReg(dst));
-        m_formatter.twoByteOp(OP2_SHUFPS_VpsWpsIb, address, (RegisterID)dst);
-        m_formatter.immediate8u(mask);
+        twoByteOpImmSimd("vshufps", VEX_PS, OP2_SHUFPS_VpsWpsIb, mask, address, src0, dst);
     }
 
     void vmovhlps_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
@@ -3033,28 +3020,22 @@ public:
         twoByteOpSimd("vmovlhps", VEX_PS, OP2_MOVLHPS_VqUq, src1, src0, dst);
     }
 
-    void psrldq_ir(int shift, XMMRegisterID dest)
+    void vpsrldq_ir(uint32_t count, XMMRegisterID src, XMMRegisterID dst)
     {
-        spew("psrldq     $%d, %s", shift, nameFPReg(dest));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_PSRLDQ_Vd, (RegisterID)dest, (RegisterID)3);
-        m_formatter.immediate8s(shift);
+        MOZ_ASSERT(count < 16);
+        shiftOpImmSimd("vpsrldq", OP2_PSRLDQ_Vd, Shift_vpsrldq, count, src, dst);
     }
 
-    void psllq_ir(int shift, XMMRegisterID dest)
+    void vpsllq_ir(uint32_t count, XMMRegisterID src, XMMRegisterID dst)
     {
-        spew("psllq      $%d, %s", shift, nameFPReg(dest));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_PSRLDQ_Vd, (RegisterID)dest, (RegisterID)6);
-        m_formatter.immediate8s(shift);
+        MOZ_ASSERT(count < 64);
+        shiftOpImmSimd("vpsllq", OP2_PSRLDQ_Vd, Shift_vpsllq, count, src, dst);
     }
 
-    void psrlq_ir(int shift, XMMRegisterID dest)
+    void vpsrlq_ir(uint32_t count, XMMRegisterID src, XMMRegisterID dst)
     {
-        spew("psrlq      $%d, %s", shift, nameFPReg(dest));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_PSRLDQ_Vd, (RegisterID)dest, (RegisterID)2);
-        m_formatter.immediate8s(shift);
+        MOZ_ASSERT(count < 64);
+        shiftOpImmSimd("vpsrlq", OP2_PSRLDQ_Vd, Shift_vpsrlq, count, src, dst);
     }
 
     void vpslld_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
@@ -3062,12 +3043,10 @@ public:
         twoByteOpSimd("vpslld", VEX_PD, OP2_PSLLD_VdqWdq, src1, src0, dst);
     }
 
-    void pslld_ir(int32_t count, XMMRegisterID dst)
+    void vpslld_ir(uint32_t count, XMMRegisterID src, XMMRegisterID dst)
     {
-        spew("pslld      $%d, %s", count, nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_PSLLD_UdqIb, (RegisterID)dst, (RegisterID)6);
-        m_formatter.immediate8s(int8_t(count));
+        MOZ_ASSERT(count < 32);
+        shiftOpImmSimd("vpslld", OP2_PSLLD_UdqIb, Shift_vpslld, count, src, dst);
     }
 
     void vpsrad_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
@@ -3075,12 +3054,10 @@ public:
         twoByteOpSimd("vpsrad", VEX_PD, OP2_PSRAD_VdqWdq, src1, src0, dst);
     }
 
-    void psrad_ir(int32_t count, XMMRegisterID dst)
+    void vpsrad_ir(int32_t count, XMMRegisterID src, XMMRegisterID dst)
     {
-        spew("psrad      $%d, %s", count, nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_PSRAD_UdqIb, (RegisterID)dst, (RegisterID)4);
-        m_formatter.immediate8s(int8_t(count));
+        MOZ_ASSERT(count < 32);
+        shiftOpImmSimd("vpsrad", OP2_PSRAD_UdqIb, Shift_vpsrad, count, src, dst);
     }
 
     void vpsrld_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
@@ -3088,12 +3065,10 @@ public:
         twoByteOpSimd("vpsrld", VEX_PD, OP2_PSRLD_VdqWdq, src1, src0, dst);
     }
 
-    void psrld_ir(int32_t count, XMMRegisterID dst)
+    void vpsrld_ir(uint32_t count, XMMRegisterID src, XMMRegisterID dst)
     {
-        spew("psrld      $%d, %s", count, nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_PSRLD_UdqIb, (RegisterID)dst, (RegisterID)2);
-        m_formatter.immediate8s(int8_t(count));
+        MOZ_ASSERT(count < 32);
+        shiftOpImmSimd("vpsrld", OP2_PSRLD_UdqIb, Shift_vpsrld, count, src, dst);
     }
 
     void vmovmskpd_rr(XMMRegisterID src, RegisterID dst)
@@ -3432,12 +3407,10 @@ public:
         twoByteOpSimd("vmulss", VEX_SS, OP2_MULSD_VsdWsd, offset, base, src0, dst);
     }
 
-    void pextrw_irr(int whichWord, XMMRegisterID src, RegisterID dst)
+    void vpextrw_irr(uint32_t whichWord, XMMRegisterID src, RegisterID dst)
     {
-        FIXME_INSN_PRINTING;
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_PEXTRW_GdUdIb, (RegisterID)src, (RegisterID)dst);
-        m_formatter.immediate8(whichWord);
+        MOZ_ASSERT(whichWord < 8);
+        twoByteOpImmSimdInt32("vpextrw", VEX_PD, OP2_PEXTRW_GdUdIb, whichWord, src, dst);
     }
 
     void vsubsd_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
@@ -3580,58 +3553,40 @@ public:
         twoByteOpSimd("vsqrtss", VEX_SS, OP2_SQRTSS_VssWss, src1, src0, dst);
     }
 
-    void roundsd_rr(RoundingMode mode, XMMRegisterID src, XMMRegisterID dst)
+    void vroundsd_irr(RoundingMode mode, XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("roundsd    $%d, %s, %s", (int)mode, nameFPReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.threeByteOp(OP3_ROUNDSD_VsdWsd, ESCAPE_ROUNDSD, (RegisterID)src, (RegisterID)dst);
-        m_formatter.immediate8u(mode);
+        threeByteOpImmSimd("vroundsd", VEX_PD, OP3_ROUNDSD_VsdWsd, ESCAPE_ROUNDSD, mode, src1, src0, dst);
     }
 
-    void roundss_rr(RoundingMode mode, XMMRegisterID src, XMMRegisterID dst)
+    void vroundss_irr(RoundingMode mode, XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("roundss    $%d, %s, %s", (int)mode, nameFPReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.threeByteOp(OP3_ROUNDSS_VsdWsd, ESCAPE_ROUNDSD, (RegisterID)src, (RegisterID)dst);
-        m_formatter.immediate8(mode); // modes are the same for roundsd and roundss
+        threeByteOpImmSimd("vroundss", VEX_PD, OP3_ROUNDSS_VsdWsd, ESCAPE_ROUNDSD, mode, src1, src0, dst);
     }
 
-    void insertps_irr(unsigned mask, XMMRegisterID src, XMMRegisterID dst)
+    void vinsertps_irr(uint32_t mask, XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        spew("insertps   $0x%x, %s, %s", mask, nameFPReg(src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.threeByteOp(OP3_INSERTPS_VpsUps, ESCAPE_INSERTPS, (RegisterID)src, (RegisterID)dst);
-        m_formatter.immediate8u(mask);
+        threeByteOpImmSimd("vinsertps", VEX_PD, OP3_INSERTPS_VpsUps, ESCAPE_INSERTPS, mask, src1, src0, dst);
     }
 
-    void pinsrd_irr(unsigned lane, RegisterID src, XMMRegisterID dst)
+    void vpinsrd_irr(unsigned lane, RegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
         MOZ_ASSERT(lane < 4);
-        spew("pinsrd     $0x%x, %s, %s", lane, nameIReg(4, src), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.threeByteOp(OP3_PINSRD_VdqEdIb, ESCAPE_PINSRD, (RegisterID)src, (RegisterID)dst);
-        m_formatter.immediate8u(lane);
+        threeByteOpImmInt32Simd("vpinsrd", VEX_PD, OP3_PINSRD_VdqEdIb, ESCAPE_PINSRD, lane, src1, src0, dst);
     }
 
-    void pinsrd_imr(unsigned lane, int32_t offset, RegisterID base, XMMRegisterID dst)
+    void vpinsrd_imr(unsigned lane, int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
     {
         MOZ_ASSERT(lane < 4);
-        spew("pinsrd     $0x%x, " MEM_ob ", %s", lane, ADDR_ob(offset, base), nameFPReg(dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.threeByteOp(OP3_PINSRD_VdqEdIb, ESCAPE_PINSRD, offset, base, (RegisterID)dst);
-        m_formatter.immediate8u(lane);
+        threeByteOpImmInt32Simd("vpinsrd", VEX_PD, OP3_PINSRD_VdqEdIb, ESCAPE_PINSRD, lane, offset, base, src0, dst);
     }
 
-    void pextrd_irr(unsigned lane, XMMRegisterID src, RegisterID dst)
+    void vpextrd_irr(unsigned lane, XMMRegisterID src, RegisterID dst)
     {
         MOZ_ASSERT(lane < 4);
-        spew("pextrd     $0x%x, %s, %s", lane, nameFPReg(src), nameIReg(4, dst));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.threeByteOp(OP3_PEXTRD_EdVdqIb, ESCAPE_PEXTRD, (RegisterID)dst, (RegisterID)src);
-        m_formatter.immediate8u(lane);
+        threeByteOpImmSimdInt32("vpextrd", VEX_PD, OP3_PEXTRD_EdVdqIb, ESCAPE_PEXTRD, lane, (XMMRegisterID)dst, (RegisterID)src);
     }
 
-    void pextrd_imr(unsigned lane, XMMRegisterID src, int32_t offset, RegisterID base)
+    void vpextrd_irm(unsigned lane, XMMRegisterID src, int32_t offset, RegisterID base)
     {
         MOZ_ASSERT(lane < 4);
         spew("pextrd     $0x%x, %s, " MEM_ob, lane, nameFPReg(src), ADDR_ob(offset, base));
@@ -3644,16 +3599,14 @@ public:
     {
         MOZ_ASSERT(imm < 16);
         // Despite being a "ps" instruction, vblendps is encoded with the "pd" prefix.
-        threeByteOpSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, src1, src0, dst);
-        m_formatter.immediate8u(imm);
+        threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, imm, src1, src0, dst);
     }
 
     void vblendps_imr(unsigned imm, int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
     {
         MOZ_ASSERT(imm < 16);
         // Despite being a "ps" instruction, vblendps is encoded with the "pd" prefix.
-        threeByteOpSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, offset, base, src0, dst);
-        m_formatter.immediate8u(imm);
+threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, imm, offset, base, src0, dst);
     }
 
     void vblendvps_rr(XMMRegisterID mask, XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst) {
@@ -4160,6 +4113,25 @@ private:
         m_formatter.twoByteOpVex(ty, opcode, (RegisterID)rm, src0, dst);
     }
 
+    void twoByteOpImmSimd(const char *name, VexOperandType ty, TwoByteOpcodeID opcode,
+                          uint32_t imm, XMMRegisterID rm, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        if (useLegacySSEEncoding(src0, dst)) {
+            spew("%-11s$0x%x, %s, %s", legacySSEOpName(name), imm, nameFPReg(rm), nameFPReg(dst));
+            m_formatter.legacySSEPrefix(ty);
+            m_formatter.twoByteOp(opcode, (RegisterID)rm, dst);
+            m_formatter.immediate8u(imm);
+            return;
+        }
+
+        if (src0 == X86Registers::invalid_xmm)
+            spew("%-11s$0x%x, %s, %s", name, imm, nameFPReg(rm), nameFPReg(dst));
+        else
+            spew("%-11s$0x%x, %s, %s, %s", name, imm, nameFPReg(rm), nameFPReg(src0), nameFPReg(dst));
+        m_formatter.twoByteOpVex(ty, opcode, (RegisterID)rm, src0, dst);
+        m_formatter.immediate8u(imm);
+    }
+
     void twoByteOpSimd(const char *name, VexOperandType ty, TwoByteOpcodeID opcode,
                        int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
     {
@@ -4213,6 +4185,24 @@ private:
                  ADDR_o32b(offset, base), nameFPReg(src0), nameFPReg(dst));
         }
         m_formatter.twoByteOpVex_disp32(ty, opcode, offset, base, src0, dst);
+    }
+
+    void twoByteOpImmSimd(const char *name, VexOperandType ty, TwoByteOpcodeID opcode,
+                          uint32_t imm, int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        if (useLegacySSEEncoding(src0, dst)) {
+            spew("%-11s$0x%x, " MEM_ob ", %s", legacySSEOpName(name), imm,
+                 ADDR_ob(offset, base), nameFPReg(dst));
+            m_formatter.legacySSEPrefix(ty);
+            m_formatter.twoByteOp(opcode, offset, base, dst);
+            m_formatter.immediate8u(imm);
+            return;
+        }
+
+        spew("%-11s$0x%x, " MEM_ob ", %s, %s", name, imm, ADDR_ob(offset, base),
+             nameFPReg(src0), nameFPReg(dst));
+        m_formatter.twoByteOpVex(ty, opcode, offset, base, src0, dst);
+        m_formatter.immediate8u(imm);
     }
 
     void twoByteOpSimd(const char *name, VexOperandType ty, TwoByteOpcodeID opcode,
@@ -4269,6 +4259,22 @@ private:
             spew("%-11s%p, %s, %s", name, address, nameFPReg(src0), nameFPReg(dst));
         }
         m_formatter.twoByteOpVex(ty, opcode, address, src0, dst);
+    }
+
+    void twoByteOpImmSimd(const char *name, VexOperandType ty, TwoByteOpcodeID opcode,
+                          uint32_t imm, const void *address, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        if (useLegacySSEEncoding(src0, dst)) {
+            spew("%-11s$0x%x, %p, %s", legacySSEOpName(name), imm, address, nameFPReg(dst));
+            m_formatter.legacySSEPrefix(ty);
+            m_formatter.twoByteOp(opcode, address, dst);
+            m_formatter.immediate8u(imm);
+            return;
+        }
+
+        spew("%-11s$0x%x, %p, %s, %s", name, imm, address, nameFPReg(src0), nameFPReg(dst));
+        m_formatter.twoByteOpVex(ty, opcode, address, src0, dst);
+        m_formatter.immediate8u(imm);
     }
 
     void twoByteOpInt32Simd(const char *name, VexOperandType ty, TwoByteOpcodeID opcode,
@@ -4345,6 +4351,22 @@ private:
         m_formatter.twoByteOpVex(ty, opcode, (RegisterID)rm, X86Registers::invalid_xmm, dst);
     }
 
+    void twoByteOpImmSimdInt32(const char *name, VexOperandType ty, TwoByteOpcodeID opcode,
+                               uint32_t imm, XMMRegisterID rm, RegisterID dst)
+    {
+        if (useLegacySSEEncodingForOtherOutput()) {
+            spew("%-11s$0x%x, %s, %s", legacySSEOpName(name), imm, nameFPReg(rm), nameIReg(4, dst));
+            m_formatter.legacySSEPrefix(ty);
+            m_formatter.twoByteOp(opcode, (RegisterID)rm, dst);
+            m_formatter.immediate8u(imm);
+            return;
+        }
+
+        spew("%-11s$0x%x, %s, %s", name, imm, nameFPReg(rm), nameIReg(4, dst));
+        m_formatter.twoByteOpVex(ty, opcode, (RegisterID)rm, X86Registers::invalid_xmm, dst);
+        m_formatter.immediate8u(imm);
+    }
+
 #ifdef JS_CODEGEN_X64
     void twoByteOpSimdInt64(const char *name, VexOperandType ty, TwoByteOpcodeID opcode,
                             XMMRegisterID rm, RegisterID dst)
@@ -4416,6 +4438,23 @@ private:
         m_formatter.threeByteOpVex(ty, opcode, escape, (RegisterID)rm, src0, dst);
     }
 
+    void threeByteOpImmSimd(const char *name, VexOperandType ty, ThreeByteOpcodeID opcode,
+                            ThreeByteEscape escape,
+                            uint32_t imm, XMMRegisterID rm, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        if (useLegacySSEEncoding(src0, dst)) {
+            spew("%-11s$0x%x, %s, %s", legacySSEOpName(name), imm, nameFPReg(rm), nameFPReg(dst));
+            m_formatter.legacySSEPrefix(ty);
+            m_formatter.threeByteOp(opcode, escape, (RegisterID)rm, dst);
+            m_formatter.immediate8u(imm);
+            return;
+        }
+
+        spew("%-11s$0x%x, %s, %s, %s", name, imm, nameFPReg(rm), nameFPReg(src0), nameFPReg(dst));
+        m_formatter.threeByteOpVex(ty, opcode, escape, (RegisterID)rm, src0, dst);
+        m_formatter.immediate8u(imm);
+    }
+
     void threeByteOpSimd(const char *name, VexOperandType ty, ThreeByteOpcodeID opcode,
                          ThreeByteEscape escape,
                          int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
@@ -4433,6 +4472,25 @@ private:
         m_formatter.threeByteOpVex(ty, opcode, escape, offset, base, src0, dst);
     }
 
+    void threeByteOpImmSimd(const char *name, VexOperandType ty, ThreeByteOpcodeID opcode,
+                            ThreeByteEscape escape,
+                            uint32_t imm, int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        if (useLegacySSEEncoding(src0, dst)) {
+            spew("%-11s$0x%x, " MEM_ob ", %s", legacySSEOpName(name), imm,
+                 ADDR_ob(offset, base), nameFPReg(dst));
+            m_formatter.legacySSEPrefix(ty);
+            m_formatter.threeByteOp(opcode, escape, offset, base, dst);
+            m_formatter.immediate8u(imm);
+            return;
+        }
+
+        spew("%-11s$0x%x, " MEM_ob ", %s, %s", name, imm, ADDR_ob(offset, base),
+             nameFPReg(src0), nameFPReg(dst));
+        m_formatter.threeByteOpVex(ty, opcode, escape, offset, base, src0, dst);
+        m_formatter.immediate8u(imm);
+    }
+
     void threeByteOpSimd(const char *name, VexOperandType ty, ThreeByteOpcodeID opcode,
                          ThreeByteEscape escape,
                          const void *address, XMMRegisterID src0, XMMRegisterID dst)
@@ -4446,6 +4504,77 @@ private:
 
         spew("%-11s%p, %s, %s", name, address, nameFPReg(src0), nameFPReg(dst));
         m_formatter.threeByteOpVex(ty, opcode, escape, address, src0, dst);
+    }
+
+    void threeByteOpImmInt32Simd(const char *name, VexOperandType ty, ThreeByteOpcodeID opcode,
+                                 ThreeByteEscape escape, uint32_t imm,
+                                 RegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        if (useLegacySSEEncoding(src0, dst)) {
+            spew("%-11s$0x%x, %s, %s", legacySSEOpName(name), imm, nameIReg(4, src1), nameFPReg(dst));
+            m_formatter.legacySSEPrefix(ty);
+            m_formatter.threeByteOp(opcode, escape, src1, dst);
+            m_formatter.immediate8u(imm);
+            return;
+        }
+
+        spew("%-11s$0x%x, %s, %s, %s", name, imm, nameIReg(4, src1), nameFPReg(src0), nameFPReg(dst));
+        m_formatter.threeByteOpVex(ty, opcode, escape, src1, src0, dst);
+        m_formatter.immediate8u(imm);
+    }
+
+    void threeByteOpImmInt32Simd(const char *name, VexOperandType ty, ThreeByteOpcodeID opcode,
+                                 ThreeByteEscape escape, uint32_t imm,
+                                 int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        if (useLegacySSEEncoding(src0, dst)) {
+            spew("%-11s$0x%x, " MEM_ob ", %s", legacySSEOpName(name), imm, ADDR_ob(offset, base), nameFPReg(dst));
+            m_formatter.legacySSEPrefix(ty);
+            m_formatter.threeByteOp(opcode, escape, offset, base, dst);
+            m_formatter.immediate8u(imm);
+            return;
+        }
+
+        spew("%-11s$0x%x, " MEM_ob ", %s, %s", name, imm, ADDR_ob(offset, base), nameFPReg(src0), nameFPReg(dst));
+        m_formatter.threeByteOpVex(ty, opcode, escape, offset, base, src0, dst);
+        m_formatter.immediate8u(imm);
+    }
+
+    void threeByteOpImmSimdInt32(const char *name, VexOperandType ty, ThreeByteOpcodeID opcode,
+                                 ThreeByteEscape escape, uint32_t imm,
+                                 XMMRegisterID src, RegisterID dst)
+    {
+        if (useLegacySSEEncodingForOtherOutput()) {
+            spew("%-11s$0x%x, %s, %s", legacySSEOpName(name), imm, nameFPReg(src), nameIReg(4, dst));
+            m_formatter.legacySSEPrefix(ty);
+            m_formatter.threeByteOp(opcode, escape, (RegisterID)src, dst);
+            m_formatter.immediate8u(imm);
+            return;
+        }
+
+        if (opcode == OP3_PEXTRD_EdVdqIb)
+            spew("%-11s$0x%x, %s, %s", name, imm, nameFPReg((XMMRegisterID)dst), nameIReg(4, (RegisterID)src));
+        else
+            spew("%-11s$0x%x, %s, %s", name, imm, nameFPReg(src), nameIReg(4, dst));
+        m_formatter.threeByteOpVex(ty, opcode, escape, (RegisterID)src, X86Registers::invalid_xmm, dst);
+        m_formatter.immediate8u(imm);
+    }
+
+    void threeByteOpImmSimdInt32(const char *name, VexOperandType ty, ThreeByteOpcodeID opcode,
+                                 ThreeByteEscape escape, uint32_t imm,
+                                 int32_t offset, RegisterID base, RegisterID dst)
+    {
+        if (useLegacySSEEncodingForOtherOutput()) {
+            spew("%-11s$0x%x, " MEM_ob ", %s", legacySSEOpName(name), imm, ADDR_ob(offset, base), nameIReg(4, dst));
+            m_formatter.legacySSEPrefix(ty);
+            m_formatter.threeByteOp(opcode, escape, offset, base, dst);
+            m_formatter.immediate8u(imm);
+            return;
+        }
+
+        spew("%-11s$0x%x, " MEM_ob ", %s", name, imm, ADDR_ob(offset, base), nameIReg(4, dst));
+        m_formatter.threeByteOpVex(ty, opcode, escape, offset, base, X86Registers::invalid_xmm, dst);
+        m_formatter.immediate8u(imm);
     }
 
     // Blendv is a three-byte op, but the VEX encoding has a different opcode
@@ -4482,6 +4611,22 @@ private:
         // Even though a "ps" instruction, vblendv is encoded with the "pd" prefix.
         m_formatter.vblendvOpVex(VEX_PD, OP3_VBLENDVPS_VdqWdq, ESCAPE_VBLENDVPS,
                                  mask, offset, base, src0, dst);
+    }
+
+    void shiftOpImmSimd(const char *name, TwoByteOpcodeID opcode, ShiftID shiftKind,
+                        uint32_t imm, XMMRegisterID src, XMMRegisterID dst)
+    {
+        if (useLegacySSEEncoding(src, dst)) {
+            spew("%-11s$%d, %s", legacySSEOpName(name), imm, nameFPReg(dst));
+            m_formatter.legacySSEPrefix(VEX_PD);
+            m_formatter.twoByteOp(opcode, (RegisterID)dst, (int)shiftKind);
+            m_formatter.immediate8u(imm);
+            return;
+        }
+
+        spew("%-11s$%d, %s, %s", name, imm, nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOpVex(VEX_PD, opcode, (RegisterID)dst, src, (int)shiftKind);
+        m_formatter.immediate8u(imm);
     }
 
     static int32_t getInt32(void* where)

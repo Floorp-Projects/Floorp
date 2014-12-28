@@ -868,10 +868,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void boxDouble(FloatRegister src, const ValueOperand &dest) {
         if (Assembler::HasSSE41()) {
             vmovd(src, dest.payloadReg());
-            pextrd(1, src, dest.typeReg());
+            vpextrd(1, src, dest.typeReg());
         } else {
             vmovd(src, dest.payloadReg());
-            psrldq(Imm32(4), src);
+            vpsrldq(Imm32(4), src, src);
             vmovd(src, dest.typeReg());
         }
     }
@@ -905,7 +905,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         MOZ_ASSERT(dest != ScratchDoubleReg);
         if (Assembler::HasSSE41()) {
             vmovd(src.payloadReg(), dest);
-            pinsrd(1, src.typeReg(), dest);
+            vpinsrd(1, src.typeReg(), dest, dest);
         } else {
             vmovd(src.payloadReg(), dest);
             vmovd(src.typeReg(), ScratchDoubleReg);
@@ -919,7 +919,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
             movl(payload, scratch);
             vmovd(scratch, dest);
             movl(type, scratch);
-            pinsrd(1, scratch, dest);
+            vpinsrd(1, scratch, dest, dest);
         } else {
             movl(payload, scratch);
             vmovd(scratch, dest);
