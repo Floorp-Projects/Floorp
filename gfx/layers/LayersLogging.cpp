@@ -170,7 +170,7 @@ AppendToString(std::stringstream& aStream, const FrameMetrics& m,
 {
   aStream << pfx;
   AppendToString(aStream, m.mCompositionBounds, "{ [cb=");
-  AppendToString(aStream, m.mScrollableRect, "] [sr=");
+  AppendToString(aStream, m.GetScrollableRect(), "] [sr=");
   AppendToString(aStream, m.GetScrollOffset(), "] [s=");
   if (m.GetDoSmoothScroll()) {
     AppendToString(aStream, m.GetSmoothScrollOffset(), "] [ss=");
