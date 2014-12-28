@@ -92,16 +92,11 @@
   </vbox>
   <hbox align="end">
     <hbox class="actionButtons" flex="1">
-      <deck oncommand="gCookiesWindow.deleteCookie();">
-        <button id="removeCookie" disabled="true" icon="remove"
-                label="&button.removecookie.label;"
-                accesskey="&button.removecookie.accesskey;"/>
-        <button id="removeCookies" disabled="true" icon="remove"
-                label="&button.removecookies.label;"
-                accesskey="&button.removecookie.accesskey;"/>
-      </deck>
+      <button id="removeSelectedCookies" disabled="true" icon="clear"
+              accesskey="&button.removeSelectedCookies.accesskey;"
+              oncommand="gCookiesWindow.deleteCookie();"/>
       <button id="removeAllCookies" disabled="true" icon="clear"
-              label="&button.removeallcookies.label;" accesskey="&button.removeallcookies.accesskey;"
+              label="&button.removeAllCookies.label;" accesskey="&button.removeAllCookies.accesskey;"
               oncommand="gCookiesWindow.deleteAllCookies();"/>
       <spacer flex="1"/>
 #ifndef XP_MACOSX
