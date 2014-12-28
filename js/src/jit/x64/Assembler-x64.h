@@ -504,13 +504,13 @@ class Assembler : public AssemblerX86Shared
         }
     }
     void shlq(Imm32 imm, Register dest) {
-        masm.shlq_i8r(imm.value, dest.code());
+        masm.shlq_ir(imm.value, dest.code());
     }
     void shrq(Imm32 imm, Register dest) {
-        masm.shrq_i8r(imm.value, dest.code());
+        masm.shrq_ir(imm.value, dest.code());
     }
     void sarq(Imm32 imm, Register dest) {
-        masm.sarq_i8r(imm.value, dest.code());
+        masm.sarq_ir(imm.value, dest.code());
     }
     void orq(Imm32 imm, Register dest) {
         masm.orq_ir(imm.value, dest.code());
