@@ -312,6 +312,8 @@ private:
         OP_MOV_EAXIv                    = 0xB8,
         OP_GROUP2_EvIb                  = 0xC1,
         OP_RET_Iz                       = 0xC2,
+        PRE_VEX_C4                      = 0xC4,
+        PRE_VEX_C5                      = 0xC5,
         OP_RET                          = 0xC3,
         OP_GROUP11_EvIb                 = 0xC6,
         OP_GROUP11_EvIz                 = 0xC7,
@@ -5525,11 +5527,11 @@ private:
 
             if (x == 0 && b == 0 && m == 1 && w == 0) {
                 // Two byte VEX.
-                m_buffer.putByteUnchecked(0xC5);
+                m_buffer.putByteUnchecked(PRE_VEX_C5);
                 m_buffer.putByteUnchecked(((r << 7) | (v << 3) | (l << 2) | p) ^ 0xf8);
             } else {
                 // Three byte VEX.
-                m_buffer.putByteUnchecked(0xC4);
+                m_buffer.putByteUnchecked(PRE_VEX_C4);
                 m_buffer.putByteUnchecked(((r << 7) | (x << 6) | (b << 5) | m) ^ 0xe0);
                 m_buffer.putByteUnchecked(((w << 7) | (v << 3) | (l << 2) | p) ^ 0x78);
             }
