@@ -1,10 +1,19 @@
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+Cu.import("resource://gre/modules/Services.jsm");
+
 function run_test() {
   var ios = Components.classes["@mozilla.org/network/io-service;1"].
             getService(Components.interfaces.nsIIOService);
                       
   var dataFile = do_get_file("data/bug121341.properties");
 
-  var channel = ios.newChannelFromURI(ios.newFileURI(dataFile, null, null));
+  var channel = ios.newChannelFromURI2(ios.newFileURI(dataFile, null, null),
+                                       null,      // aLoadingNode
+                                       Services.scriptSecurityManager.getSystemPrincipal(),
+                                       null,      // aTriggeringPrincipal
+                                       Ci.nsILoadInfo.SEC_NORMAL,
+                                       Ci.nsIContentPolicy.TYPE_OTHER);
   var inp = channel.open();
 
   var properties = Components.classes["@mozilla.org/persistent-properties;1"].
@@ -48,7 +57,12 @@ function run_test() {
 
   dataFile = do_get_file("data/bug121341-2.properties");
 
-  channel = ios.newChannelFromURI(ios.newFileURI(dataFile, null, null));
+  channel = ios.newChannelFromURI2(ios.newFileURI(dataFile, null, null),
+                                   null,      // aLoadingNode
+                                   Services.scriptSecurityManager.getSystemPrincipal(),
+                                   null,      // aTriggeringPrincipal
+                                   Ci.nsILoadInfo.SEC_NORMAL,
+                                   Ci.nsIContentPolicy.TYPE_OTHER);
   inp = channel.open();
 
   var properties2 = Components.classes["@mozilla.org/persistent-properties;1"].
