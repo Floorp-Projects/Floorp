@@ -66,7 +66,6 @@ public:
 #ifdef DEBUG
   void AssertTextContainersEmpty()
   {
-    MOZ_ASSERT(mSpanContainers.IsEmpty());
     MOZ_ASSERT(mTextContainers.IsEmpty());
   }
 #endif
@@ -79,8 +78,6 @@ protected:
     NS_NewRubyBaseContainerFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext);
   explicit nsRubyBaseContainerFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
-
-  nscoord CalculateMaxSpanISize(nsRenderingContext* aRenderingContext);
 
   struct ReflowState;
   nscoord ReflowColumns(const ReflowState& aReflowState,
@@ -100,15 +97,10 @@ protected:
                      bool& aIsComplete);
 
   /**
-   * The arrays of ruby text containers below are filled before the ruby
+   * The array of ruby text containers below is filled before the ruby
    * frame (parent) starts reflowing this ruby segment, and cleared when
    * the reflow finishes.
    */
-
-  // The text containers that contain a span, which spans all ruby
-  // columns in the ruby segment.
-  nsTArray<nsRubyTextContainerFrame*> mSpanContainers;
-  // Normal text containers that do not contain spans.
   nsTArray<nsRubyTextContainerFrame*> mTextContainers;
 
   nscoord mBaseline;
