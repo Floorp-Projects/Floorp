@@ -1,37 +1,49 @@
 package org.mozilla.gecko.tests;
 
+import org.mozilla.gecko.AppConstants;
+
 import android.widget.Spinner;
 import android.view.View;
+
 import com.jayway.android.robotium.solo.Condition;
+
 import android.hardware.Camera;
 import android.os.Build;
 
 public class testGetUserMedia extends BaseTest {
+    private static final String LOGTAG = testGetUserMedia.class.getSimpleName();
+
+    private static final String GUM_MESSAGE = "Would you like to share your camera and microphone with";
+    private static final String GUM_ALLOW = "^Share$";
+    private static final String GUM_DENY = "^Don't Share$";
+
+    private static final String GUM_BACK_CAMERA = "Back facing camera";
+    private static final String GUM_SELECT_TAB = "Choose a tab to stream";
+
+    private static final String GUM_PAGE_TITLE = "gUM Test Page";
+    private static final String GUM_PAGE_FAILED = "failed gumtest";
+    private static final String GUM_PAGE_AUDIO = "audio gumtest";
+    private static final String GUM_PAGE_VIDEO = "video gumtest";
+    private static final String GUM_PAGE_AUDIOVIDEO = "audiovideo gumtest";
+
     public void testGetUserMedia() {
-        String GUM_CAMERA_URL = getAbsoluteUrl("/robocop/robocop_getusermedia2.html");
-        String GUM_TAB_URL = getAbsoluteUrl("/robocop/robocop_getusermedia.html");
-        // Browser constraint needs HTTPS
-        String GUM_TAB_HTTPS_URL = GUM_TAB_URL.replace("http://mochi.test:8888", "https://example.com");
-
-        String GUM_MESSAGE = "Would you like to share your camera and microphone with";
-        String GUM_ALLOW = "^Share$";
-        String GUM_DENY = "^Don't Share$";
-
-        String GUM_BACK_CAMERA = "Back facing camera";
-        String GUM_SELECT_TAB = "Choose a tab to stream";
-
-        String GUM_PAGE_TITLE = "gUM Test Page";
-        String GUM_PAGE_FAILED = "failed gumtest";
-        String GUM_PAGE_AUDIO = "audio gumtest";
-        String GUM_PAGE_VIDEO = "video gumtest";
-        String GUM_PAGE_AUDIOVIDEO = "audiovideo gumtest";
-
-        blockForGeckoReady();
+        // TabShare.js is disabled on release builds.
+        if (AppConstants.RELEASE_BUILD) {
+            mAsserter.dumpLog(LOGTAG + " is disabled on release builds: returning");
+            return;
+        }
 
         // Only try GUM test if the device has a camera (emulation).
         if (Camera.getNumberOfCameras() <= 0) {
             return;
         }
+
+        blockForGeckoReady();
+
+        final String GUM_CAMERA_URL = getAbsoluteUrl("/robocop/robocop_getusermedia2.html");
+        final String GUM_TAB_URL = getAbsoluteUrl("/robocop/robocop_getusermedia.html");
+        // Browser constraint needs HTTPS
+        final String GUM_TAB_HTTPS_URL = GUM_TAB_URL.replace("http://mochi.test:8888", "https://example.com");
 
         // Tests on Camera page will test camera enumeration code, but
         // the actual cameras don't seem to work on the emulators, so
