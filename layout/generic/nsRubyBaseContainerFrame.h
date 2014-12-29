@@ -78,22 +78,19 @@ protected:
 
   nscoord CalculateMaxSpanISize(nsRenderingContext* aRenderingContext);
 
-  nscoord ReflowColumns(nsPresContext* aPresContext,
-                        bool aAllowLineBreak,
+  nscoord ReflowColumns(bool aAllowLineBreak,
                         const nsHTMLReflowState& aReflowState,
                         nsTArray<nsHTMLReflowState*>& aReflowStates,
                         nsReflowStatus& aStatus);
 
-  nscoord ReflowOneColumn(nsPresContext* aPresContext,
-                          bool aAllowLineBreak,
+  nscoord ReflowOneColumn(bool aAllowLineBreak,
                           const nsHTMLReflowState& aReflowState,
                           nsTArray<nsHTMLReflowState*>& aReflowStates,
                           nsIFrame* aBaseFrame,
                           const nsTArray<nsIFrame*>& aTextFrames,
                           nsReflowStatus& aStatus);
 
-  nscoord ReflowSpans(nsPresContext* aPresContext,
-                      const nsHTMLReflowState& aReflowState,
+  nscoord ReflowSpans(const nsHTMLReflowState& aReflowState,
                       nsTArray<nsHTMLReflowState*>& aReflowStates);
 
   struct PullFrameState;

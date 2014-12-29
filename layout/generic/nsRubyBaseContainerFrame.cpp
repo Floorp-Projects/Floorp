@@ -365,7 +365,7 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
   if (aStatus == NS_FRAME_COMPLETE) {
     // Reflow columns excluding any span
     bool allowInternalLineBreak = allowLineBreak && mSpanContainers.IsEmpty();
-    isize = ReflowColumns(aPresContext, allowInternalLineBreak,
+    isize = ReflowColumns(allowInternalLineBreak,
                           aReflowState, rtcReflowStates, aStatus);
   }
 
@@ -376,8 +376,7 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
   if (!NS_INLINE_IS_BREAK_BEFORE(aStatus) &&
       NS_FRAME_IS_COMPLETE(aStatus) && !mSpanContainers.IsEmpty()) {
     // Reflow spans
-    nscoord spanISize = ReflowSpans(aPresContext, aReflowState,
-                                    spanReflowStates);
+    nscoord spanISize = ReflowSpans(aReflowState, spanReflowStates);
     nscoord deltaISize = spanISize - isize;
     if (deltaISize <= 0) {
       RubyUtils::ClearReservedISize(this);
@@ -449,8 +448,7 @@ struct MOZ_STACK_CLASS nsRubyBaseContainerFrame::PullFrameState
 };
 
 nscoord
-nsRubyBaseContainerFrame::ReflowColumns(nsPresContext* aPresContext,
-                                        bool aAllowLineBreak,
+nsRubyBaseContainerFrame::ReflowColumns(bool aAllowLineBreak,
                                         const nsHTMLReflowState& aReflowState,
                                         nsTArray<nsHTMLReflowState*>& aReflowStates,
                                         nsReflowStatus& aStatus)
@@ -469,8 +467,7 @@ nsRubyBaseContainerFrame::ReflowColumns(nsPresContext* aPresContext,
   RubyColumnEnumerator e(this, mTextContainers);
   for (; !e.AtEnd(); e.Next()) {
     e.GetFrames(baseFrame, textFrames);
-    icoord += ReflowOneColumn(aPresContext, aAllowLineBreak,
-                              aReflowState, aReflowStates,
+    icoord += ReflowOneColumn(aAllowLineBreak, aReflowState, aReflowStates,
                               baseFrame, textFrames, reflowStatus);
     if (NS_INLINE_IS_BREAK(reflowStatus)) {
       break;
@@ -493,8 +490,7 @@ nsRubyBaseContainerFrame::ReflowColumns(nsPresContext* aPresContext,
       // No more frames can be pulled.
       break;
     }
-    icoord += ReflowOneColumn(aPresContext, aAllowLineBreak,
-                              aReflowState, aReflowStates,
+    icoord += ReflowOneColumn(aAllowLineBreak, aReflowState, aReflowStates,
                               baseFrame, textFrames, reflowStatus);
   }
 
@@ -542,8 +538,7 @@ nsRubyBaseContainerFrame::ReflowColumns(nsPresContext* aPresContext,
 }
 
 nscoord
-nsRubyBaseContainerFrame::ReflowOneColumn(nsPresContext* aPresContext,
-                                          bool aAllowLineBreak,
+nsRubyBaseContainerFrame::ReflowOneColumn(bool aAllowLineBreak,
                                           const nsHTMLReflowState& aReflowState,
                                           nsTArray<nsHTMLReflowState*>& aReflowStates,
                                           nsIFrame* aBaseFrame,
@@ -695,8 +690,7 @@ nsRubyBaseContainerFrame::PullOneColumn(nsLineLayout* aLineLayout,
 }
 
 nscoord
-nsRubyBaseContainerFrame::ReflowSpans(nsPresContext* aPresContext,
-                                      const nsHTMLReflowState& aReflowState,
+nsRubyBaseContainerFrame::ReflowSpans(const nsHTMLReflowState& aReflowState,
                                       nsTArray<nsHTMLReflowState*>& aReflowStates)
 {
   WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
