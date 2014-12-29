@@ -18,13 +18,12 @@ function checkUnexpected(msg, call, event1, event2, actionCallback) {
 
   call.addEventListener(event1, error1);
   call.addEventListener(event2, error2);
+  actionCallback();
 
-  return actionCallback().then(
-    () => ok(false, msg + "should be rejected."),
-    () => gDelay(2000).then(() => {
-      call.removeEventListener(event1, error1);
-      call.removeEventListener(event2, error2);
-    }));
+  return gDelay(2000).then(() => {
+    call.removeEventListener(event1, error1);
+    call.removeEventListener(event2, error2);
+  });
 }
 
 startTest(function() {
