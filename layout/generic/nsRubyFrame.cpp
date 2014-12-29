@@ -61,38 +61,6 @@ nsRubyFrame::GetFrameName(nsAString& aResult) const
 #endif
 
 /**
- * This class is responsible for appending and clearing
- * text container list of the base container.
- */
-class MOZ_STACK_CLASS AutoSetTextContainers
-{
-public:
-  explicit AutoSetTextContainers(nsRubyBaseContainerFrame* aBaseContainer);
-  ~AutoSetTextContainers();
-
-private:
-  nsRubyBaseContainerFrame* mBaseContainer;
-};
-
-AutoSetTextContainers::AutoSetTextContainers(
-    nsRubyBaseContainerFrame* aBaseContainer)
-  : mBaseContainer(aBaseContainer)
-{
-#ifdef DEBUG
-  aBaseContainer->AssertTextContainersEmpty();
-#endif
-  for (RubyTextContainerIterator iter(aBaseContainer);
-       !iter.AtEnd(); iter.Next()) {
-    aBaseContainer->AppendTextContainer(iter.GetTextContainer());
-  }
-}
-
-AutoSetTextContainers::~AutoSetTextContainers()
-{
-  mBaseContainer->ClearTextContainers();
-}
-
-/**
  * This enumerator enumerates each segment.
  */
 class MOZ_STACK_CLASS SegmentEnumerator
@@ -137,7 +105,6 @@ nsRubyFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
 {
   nscoord max = 0;
   for (SegmentEnumerator e(this); !e.AtEnd(); e.Next()) {
-    AutoSetTextContainers holder(e.GetBaseContainer());
     max = std::max(max, e.GetBaseContainer()->GetMinISize(aRenderingContext));
   }
   aData->currentLine += max;
@@ -149,7 +116,6 @@ nsRubyFrame::AddInlinePrefISize(nsRenderingContext *aRenderingContext,
 {
   nscoord sum = 0;
   for (SegmentEnumerator e(this); !e.AtEnd(); e.Next()) {
-    AutoSetTextContainers holder(e.GetBaseContainer());
     sum += e.GetBaseContainer()->GetPrefISize(aRenderingContext);
   }
   aData->currentLine += sum;
@@ -262,7 +228,6 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
                            nsRubyBaseContainerFrame* aBaseContainer,
                            nsReflowStatus& aStatus)
 {
-  AutoSetTextContainers holder(aBaseContainer);
   WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
   LogicalSize availSize(lineWM, aReflowState.AvailableISize(),
                         aReflowState.AvailableBSize());
