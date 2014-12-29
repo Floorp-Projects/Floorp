@@ -315,8 +315,6 @@ GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts, int aTime
 {
   PrepareLaunch();
 
-  PRIntervalTime timeoutTicks = (aTimeoutMs > 0) ? 
-    PR_MillisecondsToInterval(aTimeoutMs) : PR_INTERVAL_NO_TIMEOUT;
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
   NS_ASSERTION(MessageLoop::current() != ioLoop, "sync launch from the IO thread NYI");
 
@@ -324,8 +322,40 @@ GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts, int aTime
                    NewRunnableMethod(this,
                                      &GeckoChildProcessHost::RunPerformAsyncLaunch,
                                      aExtraOpts, arch));
+
+  return WaitUntilConnected(aTimeoutMs);
+}
+
+bool
+GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts,
+                                   base::ProcessArchitecture arch)
+{
+  PrepareLaunch();
+
+  MessageLoop* ioLoop = XRE_GetIOMessageLoop();
+  ioLoop->PostTask(FROM_HERE,
+                   NewRunnableMethod(this,
+                                     &GeckoChildProcessHost::RunPerformAsyncLaunch,
+                                     aExtraOpts, arch));
+
+  // This may look like the sync launch wait, but we only delay as
+  // long as it takes to create the channel.
+  MonitorAutoLock lock(mMonitor);
+  while (mProcessState < CHANNEL_INITIALIZED) {
+    lock.Wait();
+  }
+
+  return true;
+}
+
+bool
+GeckoChildProcessHost::WaitUntilConnected(int32_t aTimeoutMs)
+{
   // NB: this uses a different mechanism than the chromium parent
   // class.
+  PRIntervalTime timeoutTicks = (aTimeoutMs > 0) ? 
+    PR_MillisecondsToInterval(aTimeoutMs) : PR_INTERVAL_NO_TIMEOUT;
+
   MonitorAutoLock lock(mMonitor);
   PRIntervalTime waitStart = PR_IntervalNow();
   PRIntervalTime current;
@@ -352,27 +382,6 @@ GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts, int aTime
   }
 
   return mProcessState == PROCESS_CONNECTED;
-}
-
-bool
-GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts)
-{
-  PrepareLaunch();
-
-  MessageLoop* ioLoop = XRE_GetIOMessageLoop();
-  ioLoop->PostTask(FROM_HERE,
-                   NewRunnableMethod(this,
-                                     &GeckoChildProcessHost::RunPerformAsyncLaunch,
-                                     aExtraOpts, base::GetCurrentProcessArchitecture()));
-
-  // This may look like the sync launch wait, but we only delay as
-  // long as it takes to create the channel.
-  MonitorAutoLock lock(mMonitor);
-  while (mProcessState < CHANNEL_INITIALIZED) {
-    lock.Wait();
-  }
-
-  return true;
 }
 
 bool
