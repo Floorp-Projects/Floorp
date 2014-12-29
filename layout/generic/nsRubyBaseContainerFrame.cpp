@@ -60,6 +60,13 @@ nsRubyBaseContainerFrame::GetFrameName(nsAString& aResult) const
  * annotations paired with it.
  * See http://dev.w3.org/csswg/css-ruby/#ruby-pairing
  */
+struct MOZ_STACK_CLASS mozilla::RubyColumn
+{
+  nsIFrame* mBaseFrame;
+  nsAutoTArray<nsIFrame*, RTC_ARRAY_SIZE> mTextFrames;
+  RubyColumn() : mBaseFrame(nullptr) { }
+};
+
 class MOZ_STACK_CLASS RubyColumnEnumerator
 {
 public:
@@ -73,7 +80,7 @@ public:
   nsIFrame* GetFrame(uint32_t aIndex) const { return mFrames[aIndex]; }
   nsIFrame* GetBaseFrame() const { return GetFrame(0); }
   nsIFrame* GetTextFrame(uint32_t aIndex) const { return GetFrame(aIndex + 1); }
-  void GetFrames(nsIFrame*& aBaseFrame, nsTArray<nsIFrame*>& aTextFrames) const;
+  void GetColumn(RubyColumn& aColumn) const;
 
 private:
   nsAutoTArray<nsIFrame*, RTC_ARRAY_SIZE + 1> mFrames;
@@ -114,13 +121,12 @@ RubyColumnEnumerator::AtEnd() const
 }
 
 void
-RubyColumnEnumerator::GetFrames(nsIFrame*& aBaseFrame,
-                                nsTArray<nsIFrame*>& aTextFrames) const
+RubyColumnEnumerator::GetColumn(RubyColumn& aColumn) const
 {
-  aBaseFrame = mFrames[0];
-  aTextFrames.ClearAndRetainStorage();
+  aColumn.mBaseFrame = mFrames[0];
+  aColumn.mTextFrames.ClearAndRetainStorage();
   for (uint32_t i = 1, iend = mFrames.Length(); i < iend; i++) {
-    aTextFrames.AppendElement(mFrames[i]);
+    aColumn.mTextFrames.AppendElement(mFrames[i]);
   }
 }
 
@@ -471,14 +477,12 @@ nsRubyBaseContainerFrame::ReflowColumns(const ReflowState& aReflowState,
   aStatus = NS_FRAME_COMPLETE;
 
   mColumnCount = 0;
-  nsIFrame* baseFrame = nullptr;
-  nsAutoTArray<nsIFrame*, RTC_ARRAY_SIZE> textFrames;
-  textFrames.SetCapacity(rtcCount);
+  RubyColumn column;
+  column.mTextFrames.SetCapacity(rtcCount);
   RubyColumnEnumerator e(this, mTextContainers);
   for (; !e.AtEnd(); e.Next()) {
-    e.GetFrames(baseFrame, textFrames);
-    icoord += ReflowOneColumn(aReflowState, baseFrame,
-                              textFrames, reflowStatus);
+    e.GetColumn(column);
+    icoord += ReflowOneColumn(aReflowState, column, reflowStatus);
     if (NS_INLINE_IS_BREAK(reflowStatus)) {
       break;
     }
@@ -493,22 +497,20 @@ nsRubyBaseContainerFrame::ReflowColumns(const ReflowState& aReflowState,
     MOZ_ASSERT(reflowStatus == NS_FRAME_COMPLETE);
 
     // Try pull some frames from next continuations. This call replaces
-    // |baseFrame| and |textFrames| with the frame pulled in each level.
-    PullOneColumn(lineLayout, pullFrameState,
-                  baseFrame, textFrames, isComplete);
+    // frames in |column| with the frame pulled in each level.
+    PullOneColumn(lineLayout, pullFrameState, column, isComplete);
     if (isComplete) {
       // No more frames can be pulled.
       break;
     }
-    icoord += ReflowOneColumn(aReflowState, baseFrame,
-                              textFrames, reflowStatus);
+    icoord += ReflowOneColumn(aReflowState, column, reflowStatus);
   }
 
   if (!e.AtEnd() && NS_INLINE_IS_BREAK_AFTER(reflowStatus)) {
     // The current column has been successfully placed.
     // Skip to the next column and mark break before.
     e.Next();
-    e.GetFrames(baseFrame, textFrames);
+    e.GetColumn(column);
     reflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
   }
   if (!e.AtEnd() || (GetNextInFlow() && !isComplete)) {
@@ -525,11 +527,11 @@ nsRubyBaseContainerFrame::ReflowColumns(const ReflowState& aReflowState,
     aStatus = NS_INLINE_LINE_BREAK_AFTER(aStatus);
     MOZ_ASSERT(NS_FRAME_IS_COMPLETE(aStatus) || mSpanContainers.IsEmpty());
 
-    if (baseFrame) {
-      PushChildren(baseFrame, baseFrame->GetPrevSibling());
+    if (column.mBaseFrame) {
+      PushChildren(column.mBaseFrame, column.mBaseFrame->GetPrevSibling());
     }
     for (uint32_t i = 0; i < rtcCount; i++) {
-      nsIFrame* textFrame = textFrames[i];
+      nsIFrame* textFrame = column.mTextFrames[i];
       if (textFrame) {
         mTextContainers[i]->PushChildren(textFrame,
                                          textFrame->GetPrevSibling());
@@ -549,8 +551,7 @@ nsRubyBaseContainerFrame::ReflowColumns(const ReflowState& aReflowState,
 
 nscoord
 nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
-                                          nsIFrame* aBaseFrame,
-                                          const nsTArray<nsIFrame*>& aTextFrames,
+                                          const RubyColumn& aColumn,
                                           nsReflowStatus& aStatus)
 {
   const nsHTMLReflowState& baseReflowState = aReflowState.mBaseReflowState;
@@ -558,14 +559,14 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
 
   WritingMode lineWM = baseReflowState.mLineLayout->GetWritingMode();
   const uint32_t rtcCount = mTextContainers.Length();
-  MOZ_ASSERT(aTextFrames.Length() == rtcCount);
+  MOZ_ASSERT(aColumn.mTextFrames.Length() == rtcCount);
   MOZ_ASSERT(textReflowStates.Length() == rtcCount);
   nscoord istart = baseReflowState.mLineLayout->GetCurrentICoord();
   nscoord columnISize = 0;
 
   nsAutoString baseText;
-  if (aBaseFrame) {
-    if (!nsContentUtils::GetNodeTextContent(aBaseFrame->GetContent(),
+  if (aColumn.mBaseFrame) {
+    if (!nsContentUtils::GetNodeTextContent(aColumn.mBaseFrame->GetContent(),
                                             true, baseText)) {
       NS_RUNTIMEABORT("OOM");
     }
@@ -573,7 +574,7 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
 
   // Reflow text frames
   for (uint32_t i = 0; i < rtcCount; i++) {
-    nsIFrame* textFrame = aTextFrames[i];
+    nsIFrame* textFrame = aColumn.mTextFrames[i];
     if (textFrame) {
       MOZ_ASSERT(textFrame->GetType() == nsGkAtoms::rubyTextFrame);
       nsAutoString annotationText;
@@ -614,14 +615,14 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
   }
 
   // Reflow the base frame
-  if (aBaseFrame) {
-    MOZ_ASSERT(aBaseFrame->GetType() == nsGkAtoms::rubyBaseFrame);
+  if (aColumn.mBaseFrame) {
+    MOZ_ASSERT(aColumn.mBaseFrame->GetType() == nsGkAtoms::rubyBaseFrame);
     nsReflowStatus reflowStatus;
     nsHTMLReflowMetrics metrics(baseReflowState);
-    RubyUtils::ClearReservedISize(aBaseFrame);
+    RubyUtils::ClearReservedISize(aColumn.mBaseFrame);
 
     bool pushedFrame;
-    baseReflowState.mLineLayout->ReflowFrame(aBaseFrame, reflowStatus,
+    baseReflowState.mLineLayout->ReflowFrame(aColumn.mBaseFrame, reflowStatus,
                                              &metrics, pushedFrame);
     MOZ_ASSERT(!NS_INLINE_IS_BREAK(reflowStatus) && !pushedFrame,
                "Any line break inside ruby box should has been suppressed");
@@ -633,13 +634,13 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
   nscoord deltaISize = icoord - baseReflowState.mLineLayout->GetCurrentICoord();
   if (deltaISize > 0) {
     baseReflowState.mLineLayout->AdvanceICoord(deltaISize);
-    if (aBaseFrame) {
-      RubyUtils::SetReservedISize(aBaseFrame, deltaISize);
+    if (aColumn.mBaseFrame) {
+      RubyUtils::SetReservedISize(aColumn.mBaseFrame, deltaISize);
     }
   }
   for (uint32_t i = 0; i < rtcCount; i++) {
     nsLineLayout* lineLayout = textReflowStates[i]->mLineLayout;
-    nsIFrame* textFrame = aTextFrames[i];
+    nsIFrame* textFrame = aColumn.mTextFrames[i];
     nscoord deltaISize = icoord - lineLayout->GetCurrentICoord();
     if (deltaISize > 0) {
       lineLayout->AdvanceICoord(deltaISize);
@@ -647,7 +648,7 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
         RubyUtils::SetReservedISize(textFrame, deltaISize);
       }
     }
-    if (aBaseFrame && textFrame) {
+    if (aColumn.mBaseFrame && textFrame) {
       lineLayout->AttachLastFrameToBaseLineLayout();
     }
   }
@@ -676,20 +677,19 @@ nsRubyBaseContainerFrame::PullFrameState::PullFrameState(
 void
 nsRubyBaseContainerFrame::PullOneColumn(nsLineLayout* aLineLayout,
                                         PullFrameState& aPullFrameState,
-                                        nsIFrame*& aBaseFrame,
-                                        nsTArray<nsIFrame*>& aTextFrames,
+                                        RubyColumn& aColumn,
                                         bool& aIsComplete)
 {
   const uint32_t rtcCount = mTextContainers.Length();
 
-  aBaseFrame = PullNextInFlowChild(aPullFrameState.mBase);
-  aIsComplete = !aBaseFrame;
+  aColumn.mBaseFrame = PullNextInFlowChild(aPullFrameState.mBase);
+  aIsComplete = !aColumn.mBaseFrame;
 
-  aTextFrames.ClearAndRetainStorage();
+  aColumn.mTextFrames.ClearAndRetainStorage();
   for (uint32_t i = 0; i < rtcCount; i++) {
     nsIFrame* nextText =
       mTextContainers[i]->PullNextInFlowChild(aPullFrameState.mTexts[i]);
-    aTextFrames.AppendElement(nextText);
+    aColumn.mTextFrames.AppendElement(nextText);
     // If there exists any frame in continations, we haven't
     // completed the reflow process.
     aIsComplete = aIsComplete && !nextText;

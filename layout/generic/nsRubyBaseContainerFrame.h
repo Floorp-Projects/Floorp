@@ -23,6 +23,10 @@
 nsContainerFrame* NS_NewRubyBaseContainerFrame(nsIPresShell* aPresShell,
                                                nsStyleContext* aContext);
 
+namespace mozilla {
+struct RubyColumn;
+}
+
 class nsRubyBaseContainerFrame MOZ_FINAL : public nsContainerFrame
 {
 public:
@@ -82,8 +86,7 @@ protected:
   nscoord ReflowColumns(const ReflowState& aReflowState,
                         nsReflowStatus& aStatus);
   nscoord ReflowOneColumn(const ReflowState& aReflowState,
-                          nsIFrame* aBaseFrame,
-                          const nsTArray<nsIFrame*>& aTextFrames,
+                          const mozilla::RubyColumn& aColumn,
                           nsReflowStatus& aStatus);
   nscoord ReflowSpans(const ReflowState& aReflowState);
 
@@ -93,8 +96,7 @@ protected:
   // continuations after them.
   void PullOneColumn(nsLineLayout* aLineLayout,
                      PullFrameState& aPullFrameState,
-                     nsIFrame*& aBaseFrame,
-                     nsTArray<nsIFrame*>& aTextFrames,
+                     mozilla::RubyColumn& aColumn,
                      bool& aIsComplete);
 
   /**
