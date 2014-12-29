@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<title>Testcase, bug 1115999</title>
+<style>
+html { overflow: hidden }
+html, body { margin: 0; border: 0; }
+table, tr, td { border: none; margin: 0; padding: 0; border-spacing: 0 }
+</style>
+
+<table>
+  <tr>
+    <td>o</td>
+    <td style="position: relative">two</td>
+  </tr>
+</table>
+<script>
+
+document.body.offsetHeight;
+
+var row = document.getElementsByTagName("tr")[0];
+var cell = row.firstElementChild;
+cell.textContent = "one";
+
+document.body.offsetHeight;
+
+// Force a call to nsTableFrame::SetGeometryDirty.
+row.appendChild(document.createElement("td"));
+
+</script>
