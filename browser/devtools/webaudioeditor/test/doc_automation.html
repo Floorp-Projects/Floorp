@@ -1,0 +1,30 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Web Audio Editor test page</title>
+  </head>
+
+  <body>
+
+    <script type="text/javascript;version=1.8">
+      "use strict";
+
+      let ctx = new AudioContext();
+      let osc = ctx.createOscillator();
+      let gain = ctx.createGain();
+      gain.gain.value = 0;
+      osc.frequency.setValueAtTime(0.2, 0);
+      osc.frequency.linearRampToValueAtTime(1, 0.3);
+      osc.frequency.exponentialRampToValueAtTime(0.75, 0.6);
+      osc.frequency.setValueCurveAtTime(new Float32Array([-1, 0, 1]), 0.7, 0.3);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(0);
+    </script>
+  </body>
+
+</html>
