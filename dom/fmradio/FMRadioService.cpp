@@ -10,6 +10,7 @@
 #include "nsIAudioManager.h"
 #include "AudioManager.h"
 #include "nsDOMClassInfo.h"
+#include "nsContentUtils.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/FMRadioChild.h"
@@ -839,11 +840,8 @@ FMRadioService::Observe(nsISupports* aSubject,
 
   // The string that we're interested in will be a JSON string looks like:
   //  {"key":"airplaneMode.enabled","value":true}
-  AutoJSAPI jsapi;
-  jsapi.Init();
-  JSContext* cx = jsapi.cx();
-  RootedDictionary<dom::SettingChangeNotification> setting(cx);
-  if (!WrappedJSToDictionary(cx, aSubject, setting)) {
+  RootedDictionary<dom::SettingChangeNotification> setting(nsContentUtils::RootingCx());
+  if (!WrappedJSToDictionary(aSubject, setting)) {
     return NS_OK;
   }
   if (!setting.mKey.EqualsASCII(SETTING_KEY_AIRPLANEMODE_ENABLED)) {

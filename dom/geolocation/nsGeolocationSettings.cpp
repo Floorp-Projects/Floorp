@@ -149,11 +149,8 @@ nsGeolocationSettings::HandleMozsettingsChanged(nsISupports* aSubject)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  AutoJSAPI jsapi;
-  jsapi.Init();
-  JSContext* cx = jsapi.cx();
-  RootedDictionary<SettingChangeNotification> setting(cx);
-  if (!WrappedJSToDictionary(cx, aSubject, setting)) {
+  RootedDictionary<SettingChangeNotification> setting(nsContentUtils::RootingCx());
+  if (!WrappedJSToDictionary(aSubject, setting)) {
     return;
   }
 
