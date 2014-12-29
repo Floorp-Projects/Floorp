@@ -8,7 +8,8 @@
 #define mozilla_RubyUtils_h_
 
 #include "nsGkAtoms.h"
-#include "nsIFrame.h"
+#include "nsRubyBaseContainerFrame.h"
+#include "nsRubyTextContainerFrame.h"
 
 namespace mozilla {
 
@@ -56,6 +57,26 @@ public:
   static void SetReservedISize(nsIFrame* aFrame, nscoord aISize);
   static void ClearReservedISize(nsIFrame* aFrame);
   static nscoord GetReservedISize(nsIFrame* aFrame);
+};
+
+/**
+ * This class iterates all ruby text containers paired with
+ * the given ruby base container.
+ */
+class MOZ_STACK_CLASS RubyTextContainerIterator
+{
+public:
+  explicit RubyTextContainerIterator(nsRubyBaseContainerFrame* aBaseContainer);
+
+  void Next();
+  bool AtEnd() const { return !mFrame; }
+  nsRubyTextContainerFrame* GetTextContainer() const
+  {
+    return static_cast<nsRubyTextContainerFrame*>(mFrame);
+  }
+
+private:
+  nsIFrame* mFrame;
 };
 
 }
