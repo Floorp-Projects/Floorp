@@ -167,11 +167,7 @@ PluginInstanceParent::AllocPBrowserStreamParent(const nsCString& url,
                                                 const uint32_t& length,
                                                 const uint32_t& lastmodified,
                                                 PStreamNotifyParent* notifyData,
-                                                const nsCString& headers,
-                                                const nsCString& mimeType,
-                                                const bool& seekable,
-                                                NPError* rv,
-                                                uint16_t *stype)
+                                                const nsCString& headers)
 {
     NS_RUNTIMEABORT("Not reachable");
     return nullptr;
