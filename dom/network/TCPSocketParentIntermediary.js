@@ -36,7 +36,8 @@ TCPSocketParentIntermediary.prototype = {
     aParentSide.sendUpdateBufferedAmount(aBufferedAmount, aTrackingNumber);
   },
 
-  open: function(aParentSide, aHost, aPort, aUseSSL, aBinaryType, aAppId) {
+  open: function(aParentSide, aHost, aPort, aUseSSL, aBinaryType,
+                 aAppId, aInBrowser) {
     let baseSocket = Cc["@mozilla.org/tcp-socket;1"].createInstance(Ci.nsIDOMTCPSocket);
     let socket = baseSocket.open(aHost, aPort, {useSecureTransport: aUseSSL, binaryType: aBinaryType});
     if (!socket)
@@ -44,6 +45,7 @@ TCPSocketParentIntermediary.prototype = {
 
     let socketInternal = socket.QueryInterface(Ci.nsITCPSocketInternal);
     socketInternal.setAppId(aAppId);
+    socketInternal.setInBrowser(aInBrowser);
 
     // Handle parent's request to update buffered amount.
     socketInternal.setOnUpdateBufferedAmountHandler(
@@ -54,7 +56,8 @@ TCPSocketParentIntermediary.prototype = {
     return socket;
   },
 
-  listen: function(aTCPServerSocketParent, aLocalPort, aBacklog, aBinaryType, aAppId) {
+  listen: function(aTCPServerSocketParent, aLocalPort, aBacklog, aBinaryType,
+                   aAppId, aInBrowser) {
     let baseSocket = Cc["@mozilla.org/tcp-socket;1"].createInstance(Ci.nsIDOMTCPSocket);
     let serverSocket = baseSocket.listen(aLocalPort, { binaryType: aBinaryType }, aBacklog);
     if (!serverSocket)
@@ -69,6 +72,7 @@ TCPSocketParentIntermediary.prototype = {
 
       let socketInternal = socket.QueryInterface(Ci.nsITCPSocketInternal);
       socketInternal.setAppId(aAppId);
+      socketInternal.setInBrowser(aInBrowser);
       socketInternal.setOnUpdateBufferedAmountHandler(
         intermediary._onUpdateBufferedAmountHandler.bind(intermediary, socketParent));
 
