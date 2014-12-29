@@ -44,6 +44,7 @@ public:
 
   static NPObject *GetNewOrUsed(NPP npp, JSContext *cx,
                                 JS::Handle<JSObject*> obj);
+  static bool HasOwnProperty(NPObject* npobj, NPIdentifier npid);
 
 protected:
   explicit nsJSObjWrapper(NPP npp);
