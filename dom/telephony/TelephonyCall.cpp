@@ -226,140 +226,100 @@ TelephonyCall::GetGroup() const
   return group.forget();
 }
 
-already_AddRefed<Promise>
+void
 TelephonyCall::Answer(ErrorResult& aRv)
 {
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
-  if (!global) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
-  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
-
   if (mCallState != nsITelephonyService::CALL_STATE_INCOMING) {
-    NS_WARNING("Answer on non-incoming call is rejected!");
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return promise.forget();
+    NS_WARNING("Answer on non-incoming call ignored!");
+    return;
   }
 
-  nsCOMPtr<nsITelephonyCallback> callback = new TelephonyCallback(promise);
-  aRv = mTelephony->Service()->AnswerCall(mServiceId, mCallIndex, callback);
-  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+  nsresult rv = mTelephony->Service()->AnswerCall(mServiceId, mCallIndex);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return;
+  }
 
   ChangeStateInternal(nsITelephonyService::CALL_STATE_CONNECTING, true);
-  return promise.forget();
 }
 
-already_AddRefed<Promise>
+void
 TelephonyCall::HangUp(ErrorResult& aRv)
 {
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
-  if (!global) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
-  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
-
   if (mCallState == nsITelephonyService::CALL_STATE_DISCONNECTING ||
       mCallState == nsITelephonyService::CALL_STATE_DISCONNECTED) {
-    NS_WARNING("HangUp on previously disconnected call is rejected!");
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return promise.forget();
+    NS_WARNING("HangUp on previously disconnected call ignored!");
+    return;
   }
 
-  nsCOMPtr<nsITelephonyCallback> callback = new TelephonyCallback(promise);
-  aRv = mCallState == nsITelephonyService::CALL_STATE_INCOMING ?
-    mTelephony->Service()->RejectCall(mServiceId, mCallIndex, callback) :
-    mTelephony->Service()->HangUpCall(mServiceId, mCallIndex, callback);
-  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+  nsresult rv = mCallState == nsITelephonyService::CALL_STATE_INCOMING ?
+                mTelephony->Service()->RejectCall(mServiceId, mCallIndex) :
+                mTelephony->Service()->HangUp(mServiceId, mCallIndex);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return;
+  }
 
   ChangeStateInternal(nsITelephonyService::CALL_STATE_DISCONNECTING, true);
-  return promise.forget();
 }
 
-already_AddRefed<Promise>
+void
 TelephonyCall::Hold(ErrorResult& aRv)
 {
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
-  if (!global) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
-  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
-
   if (mCallState != nsITelephonyService::CALL_STATE_CONNECTED) {
-    NS_WARNING("Hold non-connected call is rejected!");
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return promise.forget();
+    NS_WARNING("Hold non-connected call ignored!");
+    return;
   }
 
   if (mGroup) {
-    NS_WARNING("Hold a call in conference is rejected!");
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return promise.forget();
+    NS_WARNING("Hold a call in conference ignored!");
+    return;
   }
 
   if (!mSwitchable) {
-    NS_WARNING("Hold a non-switchable call is rejected!");
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return promise.forget();
+    NS_WARNING("Hold a non-switchable call ignored!");
+    return;
   }
 
-  nsCOMPtr<nsITelephonyCallback> callback = new TelephonyCallback(promise);
-  aRv = mTelephony->Service()->HoldCall(mServiceId, mCallIndex, callback);
-  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+  nsresult rv = mTelephony->Service()->HoldCall(mServiceId, mCallIndex);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return;
+  }
 
   if (mSecondId) {
     // No state transition when we switch two numbers within one TelephonyCall
     // object. Otherwise, the state here will be inconsistent with the backend
     // RIL and will never be right.
-    return promise.forget();
+    return;
   }
 
   ChangeStateInternal(nsITelephonyService::CALL_STATE_HOLDING, true);
-  return promise.forget();
 }
 
-already_AddRefed<Promise>
+void
 TelephonyCall::Resume(ErrorResult& aRv)
 {
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
-  if (!global) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
-  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
-
   if (mCallState != nsITelephonyService::CALL_STATE_HELD) {
-    NS_WARNING("Resume non-held call is rejected!");
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return promise.forget();
+    NS_WARNING("Resume non-held call ignored!");
+    return;
   }
 
   if (mGroup) {
-    NS_WARNING("Resume a call in conference is rejected!");
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return promise.forget();
+    NS_WARNING("Resume a call in conference ignored!");
+    return;
   }
 
   if (!mSwitchable) {
-    NS_WARNING("Resume a non-switchable call is rejected!");
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return promise.forget();
+    NS_WARNING("Resume a non-switchable call ignored!");
+    return;
   }
 
-  nsCOMPtr<nsITelephonyCallback> callback = new TelephonyCallback(promise);
-  aRv = mTelephony->Service()->ResumeCall(mServiceId, mCallIndex, callback);
-  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+  nsresult rv = mTelephony->Service()->ResumeCall(mServiceId, mCallIndex);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return;
+  }
 
   ChangeStateInternal(nsITelephonyService::CALL_STATE_RESUMING, true);
-  return promise.forget();
 }
