@@ -1256,11 +1256,9 @@ GeckoMediaPluginService::ClearStorage()
   return;
 #endif
 
-  // Shutdown plugins that have touched storage, as they could have
-  // state that depends on storage. We don't want them to write data
-  // after we've cleared storage, as they could end up in an inconsistent
-  // state, so we must ensure they're shutdown before we actually clear
-  // storage. Note: we can't shut them down while holding the lock,
+  // Shutdown all plugins that have valid node IDs as those IDs will become
+  // invalid and shouldn't be used anymore after we clear storage data.
+  // Note: we can't shut them down while holding the lock,
   // as the lock is not re-entrant and shutdown requires taking the lock.
   // The plugin list is only edited on the GMP thread, so this should be OK.
   nsTArray<nsRefPtr<GMPParent>> pluginsToKill;
@@ -1268,7 +1266,7 @@ GeckoMediaPluginService::ClearStorage()
     MutexAutoLock lock(mMutex);
     for (size_t i = 0; i < mPlugins.Length(); i++) {
       nsRefPtr<GMPParent> parent(mPlugins[i]);
-      if (parent->HasAccessedStorage()) {
+      if (!parent->GetNodeId().IsEmpty()) {
         pluginsToKill.AppendElement(parent);
       }
     }
