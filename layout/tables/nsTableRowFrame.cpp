@@ -966,12 +966,14 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
       if (kidReflowState) {
         // We reflowed. Apply relative positioning in the normal way.
         kidReflowState->ApplyRelativePositioning(&kidPosition);
-      } else {
-        // We didn't reflow. To take relative positioning into account,
-        // translate the new position by the vector from the previous 'normal'
-        // position to the previous position.
-        // XXX(seth): This doesn't work for 'position: sticky'.
-        kidPosition += kidRect.TopLeft() - origKidNormalPosition;
+      } else if (kidFrame->IsRelativelyPositioned()) {
+        // We didn't reflow.  Do the positioning part of what
+        // MovePositionBy does internally.  (This codepath should really
+        // be merged into the else below if we can.)
+        const nsMargin* computedOffsets = static_cast<nsMargin*>
+          (kidFrame->Properties().Get(nsIFrame::ComputedOffsetProperty()));
+        nsHTMLReflowState::ApplyRelativePositioning(kidFrame, *computedOffsets,
+                                                    &kidPosition);
       }
       FinishReflowChild(kidFrame, aPresContext, desiredSize, nullptr,
                         kidPosition.x, kidPosition.y, 0);
