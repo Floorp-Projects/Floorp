@@ -1036,8 +1036,10 @@ public:
 
   virtual void AddDetails(mozilla::dom::ProfileTimelineMarker& aMarker)
   {
-    aMarker.mType.Construct(GetCause());
-    aMarker.mEventPhase.Construct(mPhase);
+    if (GetMetaData() == TRACING_INTERVAL_START) {
+      aMarker.mType.Construct(GetCause());
+      aMarker.mEventPhase.Construct(mPhase);
+    }
   }
 
 private:
