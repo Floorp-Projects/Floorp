@@ -1089,6 +1089,12 @@ SelectionCarets::NotifySelectionChanged(nsIDOMDocument* aDoc,
                                         int16_t aReason)
 {
   SELECTIONCARETS_LOG("aSel (%p), Reason=%d", aSel, aReason);
+
+  if (aSel != GetSelection()) {
+    SELECTIONCARETS_LOG("Return for selection mismatch!");
+    return NS_OK;
+  }
+
   if (!aReason || (aReason & (nsISelectionListener::DRAG_REASON |
                               nsISelectionListener::KEYPRESS_REASON |
                               nsISelectionListener::MOUSEDOWN_REASON))) {
