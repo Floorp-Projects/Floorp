@@ -72,7 +72,11 @@ let WaterfallView = {
    */
   _onMarkerSelected: function (event, marker) {
     if (event === "selected") {
-      this.markerDetails.render(marker);
+      this.markerDetails.render({
+        toolbox: gToolbox,
+        marker: marker,
+        frames: PerformanceController.getFrames()
+      });
     }
     if (event === "unselected") {
       this.markerDetails.empty();

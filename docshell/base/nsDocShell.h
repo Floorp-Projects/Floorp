@@ -23,6 +23,7 @@
 #include "mozilla/TimeStamp.h"
 #include "GeckoProfiler.h"
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
+#include "jsapi.h"
 
 // Helper Classes
 #include "nsCOMPtr.h"
@@ -30,6 +31,7 @@
 #include "nsString.h"
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
+#include "nsContentUtils.h"
 
 // Threshold value in ms for META refresh based redirects
 #define REFRESH_REDIRECT_TIMER 15000
@@ -272,6 +274,9 @@ public:
             MOZ_COUNT_CTOR(TimelineMarker);
             MOZ_ASSERT(aName);
             aDocShell->Now(&mTime);
+            if (aMetaData == TRACING_INTERVAL_START) {
+                CaptureStack();
+            }
         }
 
         TimelineMarker(nsDocShell* aDocShell, const char* aName,
@@ -284,6 +289,9 @@ public:
             MOZ_COUNT_CTOR(TimelineMarker);
             MOZ_ASSERT(aName);
             aDocShell->Now(&mTime);
+            if (aMetaData == TRACING_INTERVAL_START) {
+                CaptureStack();
+            }
         }
 
         virtual ~TimelineMarker()
@@ -300,7 +308,10 @@ public:
         }
 
         // Add details specific to this marker type to aMarker.  The
-        // standard elements have already been set.
+        // standard elements have already been set.  This method is
+        // called on both the starting and ending markers of a pair.
+        // Ordinarily the ending marker doesn't need to do anything
+        // here.
         virtual void AddDetails(mozilla::dom::ProfileTimelineMarker& aMarker)
         {
         }
@@ -330,11 +341,42 @@ public:
             return mCause;
         }
 
+        JSObject* GetStack()
+        {
+            if (mStackTrace) {
+                return mStackTrace->get();
+            }
+            return nullptr;
+        }
+
+    protected:
+
+        void CaptureStack()
+        {
+            JSContext* ctx = nsContentUtils::GetCurrentJSContext();
+            if (ctx) {
+                JS::RootedObject stack(ctx);
+                if (JS::CaptureCurrentStack(ctx, &stack)) {
+                    mStackTrace.emplace(ctx, stack.get());
+                } else {
+                    JS_ClearPendingException(ctx);
+                }
+            }
+        }
+
     private:
+
         const char* mName;
         TracingMetadata mMetaData;
         DOMHighResTimeStamp mTime;
         nsString mCause;
+
+        // While normally it is not a good idea to make a persistent
+        // root, in this case changing nsDocShell to participate in
+        // cycle collection was deemed too invasive, the stack trace
+        // can't actually cause a cycle, and the markers are only held
+        // here temporarily to boot.
+        mozilla::Maybe<JS::PersistentRooted<JSObject*>> mStackTrace;
     };
 
     // Add new profile timeline markers to this docShell. This will only add
