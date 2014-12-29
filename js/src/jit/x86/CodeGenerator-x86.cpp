@@ -265,10 +265,10 @@ CodeGeneratorX86::load(Scalar::Type vt, const T &srcAddr, const LDefinition *out
       case Scalar::Uint16:       masm.movzwlWithPatch(srcAddr, ToRegister(out)); break;
       case Scalar::Int32:
       case Scalar::Uint32:       masm.movlWithPatch(srcAddr, ToRegister(out)); break;
-      case Scalar::Float32:      masm.movssWithPatch(srcAddr, ToFloatRegister(out)); break;
-      case Scalar::Float64:      masm.movsdWithPatch(srcAddr, ToFloatRegister(out)); break;
-      case Scalar::Float32x4:    masm.movupsWithPatch(srcAddr, ToFloatRegister(out)); break;
-      case Scalar::Int32x4:      masm.movdquWithPatch(srcAddr, ToFloatRegister(out)); break;
+      case Scalar::Float32:      masm.vmovssWithPatch(srcAddr, ToFloatRegister(out)); break;
+      case Scalar::Float64:      masm.vmovsdWithPatch(srcAddr, ToFloatRegister(out)); break;
+      case Scalar::Float32x4:    masm.vmovupsWithPatch(srcAddr, ToFloatRegister(out)); break;
+      case Scalar::Int32x4:      masm.vmovdquWithPatch(srcAddr, ToFloatRegister(out)); break;
       case Scalar::MaxTypedArrayViewType: MOZ_CRASH("unexpected type");
     }
 }
@@ -408,10 +408,10 @@ CodeGeneratorX86::store(Scalar::Type vt, const LAllocation *value, const T &dstA
       case Scalar::Uint16:       masm.movwWithPatch(ToRegister(value), dstAddr); break;
       case Scalar::Int32:
       case Scalar::Uint32:       masm.movlWithPatch(ToRegister(value), dstAddr); break;
-      case Scalar::Float32:      masm.movssWithPatch(ToFloatRegister(value), dstAddr); break;
-      case Scalar::Float64:      masm.movsdWithPatch(ToFloatRegister(value), dstAddr); break;
-      case Scalar::Float32x4:    masm.movupsWithPatch(ToFloatRegister(value), dstAddr); break;
-      case Scalar::Int32x4:      masm.movdquWithPatch(ToFloatRegister(value), dstAddr); break;
+      case Scalar::Float32:      masm.vmovssWithPatch(ToFloatRegister(value), dstAddr); break;
+      case Scalar::Float64:      masm.vmovsdWithPatch(ToFloatRegister(value), dstAddr); break;
+      case Scalar::Float32x4:    masm.vmovupsWithPatch(ToFloatRegister(value), dstAddr); break;
+      case Scalar::Int32x4:      masm.vmovdquWithPatch(ToFloatRegister(value), dstAddr); break;
       case Scalar::MaxTypedArrayViewType: MOZ_CRASH("unexpected type");
     }
 }
@@ -607,18 +607,18 @@ CodeGeneratorX86::visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar *ins)
         label = masm.movlWithPatch(PatchedAbsoluteAddress(), ToRegister(ins->output()));
         break;
       case MIRType_Float32:
-        label = masm.movssWithPatch(PatchedAbsoluteAddress(), ToFloatRegister(ins->output()));
+        label = masm.vmovssWithPatch(PatchedAbsoluteAddress(), ToFloatRegister(ins->output()));
         break;
       case MIRType_Double:
-        label = masm.movsdWithPatch(PatchedAbsoluteAddress(), ToFloatRegister(ins->output()));
+        label = masm.vmovsdWithPatch(PatchedAbsoluteAddress(), ToFloatRegister(ins->output()));
         break;
       // Aligned access: code is aligned on PageSize + there is padding
       // before the global data section.
       case MIRType_Int32x4:
-        label = masm.movdqaWithPatch(PatchedAbsoluteAddress(), ToFloatRegister(ins->output()));
+        label = masm.vmovdqaWithPatch(PatchedAbsoluteAddress(), ToFloatRegister(ins->output()));
         break;
       case MIRType_Float32x4:
-        label = masm.movapsWithPatch(PatchedAbsoluteAddress(), ToFloatRegister(ins->output()));
+        label = masm.vmovapsWithPatch(PatchedAbsoluteAddress(), ToFloatRegister(ins->output()));
         break;
       default:
         MOZ_CRASH("unexpected type in visitAsmJSLoadGlobalVar");
@@ -640,18 +640,18 @@ CodeGeneratorX86::visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar *ins)
         label = masm.movlWithPatch(ToRegister(ins->value()), PatchedAbsoluteAddress());
         break;
       case MIRType_Float32:
-        label = masm.movssWithPatch(ToFloatRegister(ins->value()), PatchedAbsoluteAddress());
+        label = masm.vmovssWithPatch(ToFloatRegister(ins->value()), PatchedAbsoluteAddress());
         break;
       case MIRType_Double:
-        label = masm.movsdWithPatch(ToFloatRegister(ins->value()), PatchedAbsoluteAddress());
+        label = masm.vmovsdWithPatch(ToFloatRegister(ins->value()), PatchedAbsoluteAddress());
         break;
       // Aligned access: code is aligned on PageSize + there is padding
       // before the global data section.
       case MIRType_Int32x4:
-        label = masm.movdqaWithPatch(ToFloatRegister(ins->value()), PatchedAbsoluteAddress());
+        label = masm.vmovdqaWithPatch(ToFloatRegister(ins->value()), PatchedAbsoluteAddress());
         break;
       case MIRType_Float32x4:
-        label = masm.movapsWithPatch(ToFloatRegister(ins->value()), PatchedAbsoluteAddress());
+        label = masm.vmovapsWithPatch(ToFloatRegister(ins->value()), PatchedAbsoluteAddress());
         break;
       default:
         MOZ_CRASH("unexpected type in visitAsmJSStoreGlobalVar");
