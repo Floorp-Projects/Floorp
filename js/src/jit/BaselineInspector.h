@@ -119,6 +119,8 @@ class BaselineInspector
     JSObject *commonGetPropFunction(jsbytecode *pc, Shape **lastProperty, JSFunction **commonGetter,
                                     Shape **globalShape);
     JSObject *commonSetPropFunction(jsbytecode *pc, Shape **lastProperty, JSFunction **commonSetter);
+
+    bool instanceOfData(jsbytecode *pc, Shape **shape, uint32_t *slot, JSObject **prototypeObject);
 };
 
 } // namespace jit
