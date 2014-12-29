@@ -255,7 +255,10 @@ public:
   // Called from AndroidJNI when we removed the fullscreen view.
   static void ExitFullScreen(jobject view);
 #endif
-  
+
+  void NotifyHostAsyncInitFailed();
+  void NotifyHostCreateWidget();
+
 private:
   virtual ~nsPluginInstanceOwner();
 
