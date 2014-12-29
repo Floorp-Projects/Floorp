@@ -85,6 +85,12 @@ let Reader = {
         ReaderMode.removeArticleFromCache(uri).catch(e => Cu.reportError("Error removing article from cache: " + e));
         break;
       }
+
+      case "nsPref:changed":
+        if (aData.startsWith("reader.parse-on-load.")) {
+          this.isEnabledForParseOnLoad = this._getStateForParseOnLoad();
+        }
+        break;
     }
   },
 
