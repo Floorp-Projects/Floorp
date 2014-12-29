@@ -523,7 +523,7 @@ nsNPAPIPluginInstance::Start()
     return NS_ERROR_FAILURE;
   }
 
-  return NS_OK;
+  return newResult;
 }
 
 nsresult nsNPAPIPluginInstance::SetWindow(NPWindow* window)
