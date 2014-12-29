@@ -405,7 +405,6 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
       aReflowState.mLineLayout->AdvanceICoord(deltaISize);
       isize = spanISize;
     }
-  }
     // When there are spans, ReflowColumns and ReflowOneColumn won't
     // record any optional break position. We have to record one
     // at the end of this segment.
@@ -415,6 +414,7 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
           gfxBreakPriority::eNormalBreak)) {
       aStatus = NS_INLINE_LINE_BREAK_AFTER(aStatus);
     }
+  }
 
   DebugOnly<nscoord> lineSpanSize = aReflowState.mLineLayout->EndSpan(this);
   // When there are no frames inside the ruby base container, EndSpan
@@ -518,14 +518,14 @@ nsRubyBaseContainerFrame::ReflowColumns(const ReflowState& aReflowState,
   }
 
   if (NS_INLINE_IS_BREAK_BEFORE(reflowStatus)) {
-    if (!mColumnCount || !mSpanContainers.IsEmpty()) {
+    if (!mColumnCount || !aReflowState.mAllowLineBreak) {
       // If no column has been placed yet, or we have any span,
       // the whole container should be in the next line.
       aStatus = NS_INLINE_LINE_BREAK_BEFORE();
       return 0;
     }
     aStatus = NS_INLINE_LINE_BREAK_AFTER(aStatus);
-    MOZ_ASSERT(NS_FRAME_IS_COMPLETE(aStatus) || mSpanContainers.IsEmpty());
+    MOZ_ASSERT(NS_FRAME_IS_COMPLETE(aStatus) || aReflowState.mAllowLineBreak);
 
     if (column.mBaseFrame) {
       PushChildren(column.mBaseFrame, column.mBaseFrame->GetPrevSibling());
