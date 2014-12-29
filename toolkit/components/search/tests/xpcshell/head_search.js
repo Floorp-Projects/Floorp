@@ -205,7 +205,11 @@ function isSubObjectOf(expectedObj, actualObj) {
 // Expand the amount of information available in error logs
 Services.prefs.setBoolPref("browser.search.log", true);
 
-// Disable geoip lookups
+// The geo-specific search tests assume certain prefs are already setup, which
+// might not be true when run in comm-central etc.  So create them here.
+Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", true);
+Services.prefs.setIntPref("browser.search.geoip.timeout", 2000);
+// But still disable geoip lookups - tests that need it will re-configure this.
 Services.prefs.setCharPref("browser.search.geoip.url", "");
 
 /**
