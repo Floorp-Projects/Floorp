@@ -1,0 +1,18 @@
+$inherits:
+  from: 'tasks/builds/b2g_phone_base.yml'
+task:
+  scopes:
+    - 'docker-worker:cache:build-hamachi-eng'
+  metadata:
+    name: B2G Hamachi Eng
+  payload:
+    cache:
+      build-hamachi-eng: /home/worker/object-folder
+    env:
+      TARGET: 'hamachi'
+      DEBUG: 0
+      VARIANT: 'eng'
+  extra:
+    locations:
+      img: 'private/build/hamachi.zip'
+
