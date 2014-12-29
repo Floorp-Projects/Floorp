@@ -50,7 +50,7 @@ MacroAssemblerX86::loadConstantDouble(double d, FloatRegister dest)
     Double *dbl = getDouble(d);
     if (!dbl)
         return;
-    masm.movsd_mr(reinterpret_cast<const void *>(dbl->uses.prev()), dest.code());
+    masm.vmovsd_mr(reinterpret_cast<const void *>(dbl->uses.prev()), dest.code());
     dbl->uses.setPrev(masm.size());
 }
 
@@ -96,7 +96,7 @@ MacroAssemblerX86::loadConstantFloat32(float f, FloatRegister dest)
     Float *flt = getFloat(f);
     if (!flt)
         return;
-    masm.movss_mr(reinterpret_cast<const void *>(flt->uses.prev()), dest.code());
+    masm.vmovss_mr(reinterpret_cast<const void *>(flt->uses.prev()), dest.code());
     flt->uses.setPrev(masm.size());
 }
 
@@ -144,7 +144,7 @@ MacroAssemblerX86::loadConstantInt32x4(const SimdConstant &v, FloatRegister dest
     if (!i4)
         return;
     MOZ_ASSERT(i4->type() == SimdConstant::Int32x4);
-    masm.movdqa_mr(reinterpret_cast<const void *>(i4->uses.prev()), dest.code());
+    masm.vmovdqa_mr(reinterpret_cast<const void *>(i4->uses.prev()), dest.code());
     i4->uses.setPrev(masm.size());
 }
 
@@ -158,7 +158,7 @@ MacroAssemblerX86::loadConstantFloat32x4(const SimdConstant &v, FloatRegister de
     if (!f4)
         return;
     MOZ_ASSERT(f4->type() == SimdConstant::Float32x4);
-    masm.movaps_mr(reinterpret_cast<const void *>(f4->uses.prev()), dest.code());
+    masm.vmovaps_mr(reinterpret_cast<const void *>(f4->uses.prev()), dest.code());
     f4->uses.setPrev(masm.size());
 }
 
