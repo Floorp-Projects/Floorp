@@ -150,6 +150,7 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
   CTL_GET("stats.allocated", allocated);
   CTL_GET("stats.mapped", mapped);
   CTL_GET("opt.lg_chunk", lg_chunk);
+  CTL_GET("stats.bookkeeping", stats->bookkeeping);
 
   /* get the summation for all arenas, i == narenas */
   CTL_I_GET("stats.arenas.0.pdirty", pdirty, narenas);
@@ -159,11 +160,6 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
   stats->allocated = allocated;
   stats->waste = active - allocated;
   stats->page_cache = pdirty * page;
-
-  // We could get this value out of base.c::base_pages, but that really should
-  // be an upstream change, so don't worry about it for now.
-  stats->bookkeeping = 0;
-
   stats->bin_unused = compute_bin_unused(narenas);
   stats->waste -= stats->bin_unused;
 }
