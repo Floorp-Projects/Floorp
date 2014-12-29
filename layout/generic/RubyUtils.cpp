@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RubyUtils.h"
-#include "nsIFrame.h"
 
 using namespace mozilla;
 
@@ -41,4 +40,21 @@ RubyUtils::GetReservedISize(nsIFrame* aFrame)
   NSCoordValue value;
   value.mPointer = aFrame->Properties().Get(ReservedISize());
   return value.mCoord;
+}
+
+RubyTextContainerIterator::RubyTextContainerIterator(
+  nsRubyBaseContainerFrame* aBaseContainer)
+{
+  mFrame = aBaseContainer;
+  Next();
+}
+
+void
+RubyTextContainerIterator::Next()
+{
+  MOZ_ASSERT(mFrame, "Should have checked AtEnd()");
+  mFrame = mFrame->GetNextSibling();
+  if (mFrame && mFrame->GetType() != nsGkAtoms::rubyTextContainerFrame) {
+    mFrame = nullptr;
+  }
 }

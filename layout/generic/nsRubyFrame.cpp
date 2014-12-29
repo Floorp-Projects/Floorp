@@ -10,6 +10,7 @@
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "WritingModes.h"
+#include "RubyUtils.h"
 #include "nsRubyBaseContainerFrame.h"
 #include "nsRubyTextContainerFrame.h"
 
@@ -59,39 +60,6 @@ nsRubyFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-class MOZ_STACK_CLASS TextContainerIterator
-{
-public:
-  explicit TextContainerIterator(nsRubyBaseContainerFrame* aBaseContainer);
-  void Next();
-  bool AtEnd() const { return !mFrame; }
-  nsRubyTextContainerFrame* GetTextContainer() const
-  {
-    return static_cast<nsRubyTextContainerFrame*>(mFrame);
-  }
-
-private:
-  nsIFrame* mFrame;
-};
-
-TextContainerIterator::TextContainerIterator(
-    nsRubyBaseContainerFrame* aBaseContainer)
-{
-  mFrame = aBaseContainer;
-  Next();
-}
-
-void
-TextContainerIterator::Next()
-{
-  if (mFrame) {
-    mFrame = mFrame->GetNextSibling();
-    if (mFrame && mFrame->GetType() != nsGkAtoms::rubyTextContainerFrame) {
-      mFrame = nullptr;
-    }
-  }
-}
-
 /**
  * This class is responsible for appending and clearing
  * text container list of the base container.
@@ -113,7 +81,7 @@ AutoSetTextContainers::AutoSetTextContainers(
 #ifdef DEBUG
   aBaseContainer->AssertTextContainersEmpty();
 #endif
-  for (TextContainerIterator iter(aBaseContainer);
+  for (RubyTextContainerIterator iter(aBaseContainer);
        !iter.AtEnd(); iter.Next()) {
     aBaseContainer->AppendTextContainer(iter.GetTextContainer());
   }
@@ -300,7 +268,7 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
                         aReflowState.AvailableBSize());
 
   nsAutoTArray<nsRubyTextContainerFrame*, RTC_ARRAY_SIZE> textContainers;
-  for (TextContainerIterator iter(aBaseContainer); !iter.AtEnd(); iter.Next()) {
+  for (RubyTextContainerIterator iter(aBaseContainer); !iter.AtEnd(); iter.Next()) {
     textContainers.AppendElement(iter.GetTextContainer());
   }
   const uint32_t rtcCount = textContainers.Length();
