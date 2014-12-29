@@ -91,8 +91,10 @@ atomic_sub_uint32
 atomic_sub_uint64
 atomic_sub_z
 base_alloc
+base_allocated
 base_boot
 base_calloc
+base_mtx
 base_node_alloc
 base_node_dalloc
 base_postfork_child

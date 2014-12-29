@@ -1,0 +1,158 @@
+commit a8a2e2b34e21870733c75121f431530d42d4d3cd
+Author: Guilherme Goncalves <guilherme.p.gonc@gmail.com>
+Date:   Tue Dec 23 15:21:04 2014 -0200
+
+    Implement stats.bookkeeping.
+    
+    This measures the number of bytes used for arena and chunk headers and all base
+    allocations (note that arena headers are already allocated through the base
+    allocator). It does not account for internal allocations made through arenas.
+
+diff --git a/include/jemalloc/internal/base.h b/include/jemalloc/internal/base.h
+index 3fb80b9..9dc431c 100644
+--- a/include/jemalloc/internal/base.h
++++ b/include/jemalloc/internal/base.h
+@@ -9,6 +9,10 @@
+ /******************************************************************************/
+ #ifdef JEMALLOC_H_EXTERNS
+ 
++/* base_mtx synchronizes base allocations and protects base_allocated */
++extern malloc_mutex_t	base_mtx;
++extern size_t base_allocated;
++
+ void	*base_alloc(size_t size);
+ void	*base_calloc(size_t number, size_t size);
+ extent_node_t *base_node_alloc(void);
+diff --git a/include/jemalloc/internal/ctl.h b/include/jemalloc/internal/ctl.h
+index a3e899e..cbb0923 100644
+--- a/include/jemalloc/internal/ctl.h
++++ b/include/jemalloc/internal/ctl.h
+@@ -52,6 +52,7 @@ struct ctl_arena_stats_s {
+ struct ctl_stats_s {
+ 	size_t			allocated;
+ 	size_t			active;
++	size_t			bookkeeping;
+ 	size_t			mapped;
+ 	struct {
+ 		size_t		current;	/* stats_chunks.curchunks */
+diff --git a/include/jemalloc/internal/private_symbols.txt b/include/jemalloc/internal/private_symbols.txt
+index ee973c9..93271ce 100644
+--- a/include/jemalloc/internal/private_symbols.txt
++++ b/include/jemalloc/internal/private_symbols.txt
+@@ -91,8 +91,10 @@ atomic_sub_uint32
+ atomic_sub_uint64
+ atomic_sub_z
+ base_alloc
++base_allocated
+ base_boot
+ base_calloc
++base_mtx
+ base_node_alloc
+ base_node_dalloc
+ base_postfork_child
+diff --git a/src/base.c b/src/base.c
+index 409c7bb..3350ca3 100644
+--- a/src/base.c
++++ b/src/base.c
+@@ -4,7 +4,7 @@
+ /******************************************************************************/
+ /* Data. */
+ 
+-static malloc_mutex_t	base_mtx;
++malloc_mutex_t	base_mtx;
+ 
+ /*
+  * Current pages that are being used for internal memory allocations.  These
+@@ -16,6 +16,8 @@ static void		*base_next_addr;
+ static void		*base_past_addr; /* Addr immediately past base_pages. */
+ static extent_node_t	*base_nodes;
+ 
++size_t base_allocated;
++
+ /******************************************************************************/
+ 
+ static bool
+@@ -54,6 +56,8 @@ base_alloc(size_t size)
+ 	/* Allocate. */
+ 	ret = base_next_addr;
+ 	base_next_addr = (void *)((uintptr_t)base_next_addr + csize);
++	if (config_stats)
++		base_allocated += csize;
+ 	malloc_mutex_unlock(&base_mtx);
+ 	JEMALLOC_VALGRIND_MAKE_MEM_UNDEFINED(ret, csize);
+ 
+diff --git a/src/ctl.c b/src/ctl.c
+index b367c9f..1999145 100644
+--- a/src/ctl.c
++++ b/src/ctl.c
+@@ -187,6 +187,7 @@ INDEX_PROTO(stats_arenas_i)
+ CTL_PROTO(stats_cactive)
+ CTL_PROTO(stats_allocated)
+ CTL_PROTO(stats_active)
++CTL_PROTO(stats_bookkeeping)
+ CTL_PROTO(stats_mapped)
+ 
+ /******************************************************************************/
+@@ -448,12 +449,13 @@ static const ctl_indexed_node_t stats_arenas_node[] = {
+ };
+ 
+ static const ctl_named_node_t stats_node[] = {
+-	{NAME("cactive"),	CTL(stats_cactive)},
+-	{NAME("allocated"),	CTL(stats_allocated)},
+-	{NAME("active"),	CTL(stats_active)},
+-	{NAME("mapped"),	CTL(stats_mapped)},
+-	{NAME("chunks"),	CHILD(named, stats_chunks)},
+-	{NAME("arenas"),	CHILD(indexed, stats_arenas)}
++	{NAME("cactive"),		CTL(stats_cactive)},
++	{NAME("allocated"),		CTL(stats_allocated)},
++	{NAME("active"),		CTL(stats_active)},
++	{NAME("bookkeeping"),	CTL(stats_bookkeeping)},
++	{NAME("mapped"),		CTL(stats_mapped)},
++	{NAME("chunks"),		CHILD(named, stats_chunks)},
++	{NAME("arenas"),		CHILD(indexed, stats_arenas)}
+ };
+ 
+ static const ctl_named_node_t	root_node[] = {
+@@ -705,6 +707,12 @@ ctl_refresh(void)
+ 		ctl_stats.active =
+ 		    (ctl_stats.arenas[ctl_stats.narenas].pactive << LG_PAGE);
+ 		ctl_stats.mapped = (ctl_stats.chunks.current << opt_lg_chunk);
++
++		/* add chunk headers to bookkeeping */
++		ctl_stats.bookkeeping = ctl_stats.chunks.current * (map_bias << LG_PAGE);
++		malloc_mutex_lock(&base_mtx);
++		ctl_stats.bookkeeping += base_allocated;
++		malloc_mutex_unlock(&base_mtx);
+ 	}
+ 
+ 	ctl_epoch++;
+@@ -1806,6 +1814,7 @@ CTL_RO_NL_CGEN(config_prof, lg_prof_sample, lg_prof_sample, size_t)
+ CTL_RO_CGEN(config_stats, stats_cactive, &stats_cactive, size_t *)
+ CTL_RO_CGEN(config_stats, stats_allocated, ctl_stats.allocated, size_t)
+ CTL_RO_CGEN(config_stats, stats_active, ctl_stats.active, size_t)
++CTL_RO_CGEN(config_stats, stats_bookkeeping, ctl_stats.bookkeeping, size_t)
+ CTL_RO_CGEN(config_stats, stats_mapped, ctl_stats.mapped, size_t)
+ 
+ CTL_RO_CGEN(config_stats, stats_chunks_current, ctl_stats.chunks.current,
+diff --git a/test/unit/stats.c b/test/unit/stats.c
+index 946e737..e84cbf7 100644
+--- a/test/unit/stats.c
++++ b/test/unit/stats.c
+@@ -3,7 +3,7 @@
+ TEST_BEGIN(test_stats_summary)
+ {
+ 	size_t *cactive;
+-	size_t sz, allocated, active, mapped;
++	size_t sz, allocated, active, mapped, bookkeeping;
+ 	int expected = config_stats ? 0 : ENOENT;
+ 
+ 	sz = sizeof(cactive);
+@@ -17,6 +17,8 @@ TEST_BEGIN(test_stats_summary)
+ 	    "Unexpected mallctl() result");
+ 	assert_d_eq(mallctl("stats.mapped", &mapped, &sz, NULL, 0), expected,
+ 	    "Unexpected mallctl() result");
++	assert_d_eq(mallctl("stats.bookkeeping", &bookkeeping, &sz, NULL, 0),
++	    expected, "Unexpected mallctl() result");
+ 
+ 	if (config_stats) {
+ 		assert_zu_le(active, *cactive,
