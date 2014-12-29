@@ -460,6 +460,12 @@ ICStub::trace(JSTracer *trc)
         MarkObject(trc, &callStub->setter(), "baseline-setpropcallnative-stub-setter");
         break;
       }
+      case ICStub::InstanceOf_Function: {
+        ICInstanceOf_Function *instanceofStub = toInstanceOf_Function();
+        MarkShape(trc, &instanceofStub->shape(), "baseline-instanceof-fun-shape");
+        MarkObject(trc, &instanceofStub->prototypeObject(), "baseline-instanceof-fun-prototype");
+        break;
+      }
       case ICStub::NewArray_Fallback: {
         ICNewArray_Fallback *stub = toNewArray_Fallback();
         MarkObject(trc, &stub->templateObject(), "baseline-newarray-template");
@@ -3792,9 +3798,10 @@ ArgumentsGetElemStubExists(ICGetElem_Fallback *stub, ICGetElem_Arguments::Which 
 }
 
 
-static bool TryAttachNativeGetElemStub(JSContext *cx, HandleScript script, jsbytecode *pc,
-                                       ICGetElem_Fallback *stub, HandleObject obj,
-                                       HandleValue key)
+static bool
+TryAttachNativeGetElemStub(JSContext *cx, HandleScript script, jsbytecode *pc,
+                           ICGetElem_Fallback *stub, HandleObject obj,
+                           HandleValue key)
 {
     // Native-object GetElem stubs can't deal with non-string keys.
     if (!key.isString())
@@ -11086,9 +11093,39 @@ ICIteratorClose_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 //
 
 static bool
-DoInstanceOfFallback(JSContext *cx, ICInstanceOf_Fallback *stub,
-                     HandleValue lhs, HandleValue rhs,
-                     MutableHandleValue res)
+TryAttachInstanceOfStub(JSContext *cx, BaselineFrame *frame, ICInstanceOf_Fallback *stub,
+                        HandleFunction fun, bool *attached)
+{
+    MOZ_ASSERT(!*attached);
+    if (fun->isBoundFunction())
+        return true;
+
+    Shape *shape = fun->lookupPure(cx->names().prototype);
+    if (!shape || !shape->hasSlot() || !shape->hasDefaultGetter())
+        return true;
+
+    uint32_t slot = shape->slot();
+    MOZ_ASSERT(fun->numFixedSlots() == 0, "Stub code relies on this");
+
+    if (!fun->getSlot(slot).isObject())
+        return true;
+
+    JSObject *protoObject = &fun->getSlot(slot).toObject();
+
+    JitSpew(JitSpew_BaselineIC, "  Generating InstanceOf(Function) stub");
+    ICInstanceOf_Function::Compiler compiler(cx, fun->lastProperty(), protoObject, slot);
+    ICStub *newStub = compiler.getStub(compiler.getStubSpace(frame->script()));
+    if (!newStub)
+        return false;
+
+    stub->addNewStub(newStub);
+    *attached = true;
+    return true;
+}
+
+static bool
+DoInstanceOfFallback(JSContext *cx, BaselineFrame *frame, ICInstanceOf_Fallback *stub,
+                     HandleValue lhs, HandleValue rhs, MutableHandleValue res)
 {
     FallbackICSpew(cx, stub, "InstanceOf");
 
@@ -11098,22 +11135,35 @@ DoInstanceOfFallback(JSContext *cx, ICInstanceOf_Fallback *stub,
     }
 
     RootedObject obj(cx, &rhs.toObject());
-
-    // For functions, keep track of the |prototype| property in type information,
-    // for use during Ion compilation.
-    if (obj->is<JSFunction>() && IsIonEnabled(cx))
-        types::EnsureTrackPropertyTypes(cx, obj, NameToId(cx->names().prototype));
-
     bool cond = false;
     if (!HasInstance(cx, obj, lhs, &cond))
         return false;
 
     res.setBoolean(cond);
+
+    if (!obj->is<JSFunction>()) {
+        stub->noteUnoptimizableAccess();
+        return true;
+    }
+
+    // For functions, keep track of the |prototype| property in type information,
+    // for use during Ion compilation.
+    types::EnsureTrackPropertyTypes(cx, obj, NameToId(cx->names().prototype));
+
+    if (stub->numOptimizedStubs() >= ICInstanceOf_Fallback::MAX_OPTIMIZED_STUBS)
+        return true;
+
+    RootedFunction fun(cx, &obj->as<JSFunction>());
+    bool attached = false;
+    if (!TryAttachInstanceOfStub(cx, frame, stub, fun, &attached))
+        return false;
+    if (!attached)
+        stub->noteUnoptimizableAccess();
     return true;
 }
 
-typedef bool (*DoInstanceOfFallbackFn)(JSContext *, ICInstanceOf_Fallback *, HandleValue, HandleValue,
-                                       MutableHandleValue);
+typedef bool (*DoInstanceOfFallbackFn)(JSContext *, BaselineFrame *, ICInstanceOf_Fallback *,
+                                       HandleValue, HandleValue, MutableHandleValue);
 static const VMFunction DoInstanceOfFallbackInfo =
     FunctionInfo<DoInstanceOfFallbackFn>(DoInstanceOfFallback, TailCall, PopValues(2));
 
@@ -11129,8 +11179,83 @@ ICInstanceOf_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.pushValue(R1);
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
+    masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
     return tailCallVM(DoInstanceOfFallbackInfo, masm);
+}
+
+bool
+ICInstanceOf_Function::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+
+    // Ensure RHS is an object.
+    masm.branchTestObject(Assembler::NotEqual, R1, &failure);
+    Register rhsObj = masm.extractObject(R1, ExtractTemp0);
+
+    // Allow using R1's type register as scratch. We have to restore it when
+    // we want to jump to the next stub.
+    Label failureRestoreR1;
+    GeneralRegisterSet regs(availableGeneralRegs(1));
+    regs.takeUnchecked(rhsObj);
+
+    Register scratch1 = regs.takeAny();
+    Register scratch2 = regs.takeAny();
+
+    // Shape guard.
+    masm.loadPtr(Address(BaselineStubReg, ICInstanceOf_Function::offsetOfShape()), scratch1);
+    masm.branchTestObjShape(Assembler::NotEqual, rhsObj, scratch1, &failureRestoreR1);
+
+    // Guard on the .prototype object.
+    masm.loadPtr(Address(rhsObj, NativeObject::offsetOfSlots()), scratch1);
+    masm.load32(Address(BaselineStubReg, ICInstanceOf_Function::offsetOfSlot()), scratch2);
+    BaseValueIndex prototypeSlot(scratch1, scratch2);
+    masm.branchTestObject(Assembler::NotEqual, prototypeSlot, &failureRestoreR1);
+    masm.unboxObject(prototypeSlot, scratch1);
+    masm.branchPtr(Assembler::NotEqual,
+                   Address(BaselineStubReg, ICInstanceOf_Function::offsetOfPrototypeObject()),
+                   scratch1, &failureRestoreR1);
+
+    // If LHS is a primitive, return false.
+    Label returnFalse, returnTrue;
+    masm.branchTestObject(Assembler::NotEqual, R0, &returnFalse);
+
+    // LHS is an object. Load its proto.
+    masm.unboxObject(R0, scratch2);
+    masm.loadObjProto(scratch2, scratch2);
+
+    {
+        // Walk the proto chain until we either reach the target object,
+        // nullptr or LazyProto.
+        Label loop;
+        masm.bind(&loop);
+
+        masm.branchPtr(Assembler::Equal, scratch2, scratch1, &returnTrue);
+        masm.branchTestPtr(Assembler::Zero, scratch2, scratch2, &returnFalse);
+
+        MOZ_ASSERT(uintptr_t(TaggedProto::LazyProto) == 1);
+        masm.branchPtr(Assembler::Equal, scratch2, ImmWord(1), &failureRestoreR1);
+
+        masm.loadObjProto(scratch2, scratch2);
+        masm.jump(&loop);
+    }
+
+    EmitReturnFromIC(masm);
+
+    masm.bind(&returnFalse);
+    masm.moveValue(BooleanValue(false), R0);
+    EmitReturnFromIC(masm);
+
+    masm.bind(&returnTrue);
+    masm.moveValue(BooleanValue(true), R0);
+    EmitReturnFromIC(masm);
+
+    masm.bind(&failureRestoreR1);
+    masm.tagValue(JSVAL_TYPE_OBJECT, rhsObj, R1);
+
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
 }
 
 //
@@ -11625,6 +11750,14 @@ ICGetPropCallPrototypeGetter::ICGetPropCallPrototypeGetter(Kind kind, JitCode *s
 {
     MOZ_ASSERT(kind == ICStub::GetProp_CallScripted || kind == ICStub::GetProp_CallNativePrototype);
 }
+
+ICInstanceOf_Function::ICInstanceOf_Function(JitCode *stubCode, Shape *shape,
+                                             JSObject *prototypeObj, uint32_t slot)
+  : ICStub(InstanceOf_Function, stubCode),
+    shape_(shape),
+    prototypeObj_(prototypeObj),
+    slot_(slot)
+{ }
 
 /* static */ ICGetProp_CallScripted *
 ICGetProp_CallScripted::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,

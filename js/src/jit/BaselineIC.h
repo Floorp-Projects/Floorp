@@ -452,6 +452,7 @@ class ICEntry
     _(IteratorClose_Fallback)   \
                                 \
     _(InstanceOf_Fallback)      \
+    _(InstanceOf_Function)      \
                                 \
     _(TypeOf_Fallback)          \
     _(TypeOf_Typed)             \
@@ -6628,11 +6629,22 @@ class ICInstanceOf_Fallback : public ICFallbackStub
       : ICFallbackStub(ICStub::InstanceOf_Fallback, stubCode)
     { }
 
+    static const uint16_t UNOPTIMIZABLE_ACCESS_BIT = 0x1;
+
   public:
+    static const uint32_t MAX_OPTIMIZED_STUBS = 4;
+
     static inline ICInstanceOf_Fallback *New(ICStubSpace *space, JitCode *code) {
         if (!code)
             return nullptr;
         return space->allocate<ICInstanceOf_Fallback>(code);
+    }
+
+    void noteUnoptimizableAccess() {
+        extra_ |= UNOPTIMIZABLE_ACCESS_BIT;
+    }
+    bool hadUnoptimizableAccess() const {
+        return extra_ & UNOPTIMIZABLE_ACCESS_BIT;
     }
 
     class Compiler : public ICStubCompiler {
@@ -6646,6 +6658,66 @@ class ICInstanceOf_Fallback : public ICFallbackStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICInstanceOf_Fallback::New(space, getStubCode());
+        }
+    };
+};
+
+class ICInstanceOf_Function : public ICStub
+{
+    friend class ICStubSpace;
+
+    HeapPtrShape shape_;
+    HeapPtrObject prototypeObj_;
+    uint32_t slot_;
+
+    ICInstanceOf_Function(JitCode *stubCode, Shape *shape, JSObject *prototypeObj, uint32_t slot);
+
+  public:
+    static inline ICInstanceOf_Function *New(ICStubSpace *space, JitCode *code, Shape *shape,
+                                             JSObject *prototypeObj, uint32_t slot)
+    {
+        if (!code)
+            return nullptr;
+        return space->allocate<ICInstanceOf_Function>(code, shape, prototypeObj, slot);
+    }
+
+    HeapPtrShape &shape() {
+        return shape_;
+    }
+    HeapPtrObject &prototypeObject() {
+        return prototypeObj_;
+    }
+    uint32_t slot() const {
+        return slot_;
+    }
+    static size_t offsetOfShape() {
+        return offsetof(ICInstanceOf_Function, shape_);
+    }
+    static size_t offsetOfPrototypeObject() {
+        return offsetof(ICInstanceOf_Function, prototypeObj_);
+    }
+    static size_t offsetOfSlot() {
+        return offsetof(ICInstanceOf_Function, slot_);
+    }
+
+    class Compiler : public ICStubCompiler {
+        RootedShape shape_;
+        RootedObject prototypeObj_;
+        uint32_t slot_;
+
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, Shape *shape, JSObject *prototypeObj, uint32_t slot)
+          : ICStubCompiler(cx, ICStub::InstanceOf_Function),
+            shape_(cx, shape),
+            prototypeObj_(cx, prototypeObj),
+            slot_(slot)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICInstanceOf_Function::New(space, getStubCode(), shape_, prototypeObj_, slot_);
         }
     };
 };
