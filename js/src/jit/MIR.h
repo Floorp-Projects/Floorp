@@ -1706,7 +1706,7 @@ class MSimdShuffle : public MBinaryInstruction, public MSimdShuffleBase
     {
         // Swap operands so that new lanes come from LHS in majority.
         // In the balanced case, swap operands if needs be, in order to be able
-        // to do only one shufps on x86.
+        // to do only one vshufps on x86.
         unsigned lanesFromLHS = (laneX < 4) + (laneY < 4) + (laneZ < 4) + (laneW < 4);
         if (lanesFromLHS < 2 || (lanesFromLHS == 2 && laneX >= 4 && laneY >=4)) {
             laneX = (laneX + 4) % 8;

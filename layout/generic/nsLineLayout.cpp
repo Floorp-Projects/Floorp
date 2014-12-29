@@ -180,8 +180,13 @@ nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
   mIsTopOfPage = aIsTopOfPage;
   mImpactedByFloats = aImpactedByFloats;
   mTotalPlacedFrames = 0;
-  mLineIsEmpty = true;
-  mLineAtStart = true;
+  if (mBaseLineLayout == this) {
+    mLineIsEmpty = true;
+    mLineAtStart = true;
+  } else {
+    mLineIsEmpty = false;
+    mLineAtStart = false;
+  }
   mLineEndsInBR = false;
   mSpanDepth = 0;
   mMaxStartBoxBSize = mMaxEndBoxBSize = 0;
