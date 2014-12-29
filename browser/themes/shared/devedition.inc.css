@@ -175,12 +175,14 @@
 }
 
 #navigator-toolbox > toolbar:not(#TabsToolbar):not(#toolbar-menubar),
+.browserContainer > findbar,
 #browser-bottombox {
   background: var(--chrome-secondary-background-color) !important;
   color: var(--chrome-color);
 }
 
 #navigator-toolbox .toolbarbutton-1,
+.browserContainer > findbar .findbar-button,
 #PlacesToolbar toolbarbutton.bookmark-item {
   color: var(--chrome-color);
   text-shadow: var(--toolbarbutton-text-shadow);
@@ -198,8 +200,10 @@ toolbar[brighttext] #downloads-indicator-counter {
 }
 
 /* URL bar and search bar*/
+/* XXX :root[devtoolstheme="dark"] is a workaround for bug 1096413 on the findbar. */
 #urlbar,
-#navigator-toolbox .searchbar-textbox {
+#navigator-toolbox .searchbar-textbox,
+:root[devtoolstheme="dark"] .browserContainer > findbar .findbar-textbox {
   background-color: var(--url-and-searchbar-background-color) !important;
   background-image: none !important;
   color: var(--url-and-searchbar-color);
