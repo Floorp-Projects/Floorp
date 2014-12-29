@@ -115,6 +115,9 @@ FunctionEnd
     ; Win7 taskbar and start menu link maintenance
     Call FixShortcutAppModelIDs
 
+    ; Add the Firewall entries after an update
+    Call AddFirewallEntries
+
     ; Only update the Clients\StartMenuInternet registry key values in HKLM if
     ; they don't exist or this installation is the same as the one set in those
     ; keys.
@@ -1614,6 +1617,10 @@ Function FixShortcutAppModelIDs
   ${AndIf} "$AppUserModelID" != ""
     ${UpdateShortcutAppModelIDs} "$INSTDIR\${FileMainEXE}" "$AppUserModelID" $0
   ${EndIf}
+FunctionEnd
+
+Function AddFirewallEntries
+	liteFirewallW::AddRule "$INSTDIR\${FileMainEXE}" "${BrandShortName} ($INSTDIR)"
 FunctionEnd
 
 ; The !ifdef NO_LOG prevents warnings when compiling the installer.nsi due to
