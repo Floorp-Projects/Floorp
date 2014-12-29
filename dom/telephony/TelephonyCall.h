@@ -7,10 +7,11 @@
 #ifndef mozilla_dom_telephony_telephonycall_h__
 #define mozilla_dom_telephony_telephonycall_h__
 
-#include "mozilla/dom/DOMError.h"
-#include "mozilla/dom/Promise.h"
-#include "mozilla/dom/TelephonyCallId.h"
 #include "mozilla/dom/telephony/TelephonyCommon.h"
+
+#include "mozilla/dom/DOMError.h"
+
+#include "TelephonyCallId.h"
 
 class nsPIDOMWindow;
 
@@ -90,16 +91,16 @@ public:
   already_AddRefed<TelephonyCallGroup>
   GetGroup() const;
 
-  already_AddRefed<Promise>
+  void
   Answer(ErrorResult& aRv);
 
-  already_AddRefed<Promise>
+  void
   HangUp(ErrorResult& aRv);
 
-  already_AddRefed<Promise>
+  void
   Hold(ErrorResult& aRv);
 
-  already_AddRefed<Promise>
+  void
   Resume(ErrorResult& aRv);
 
   IMPL_EVENT_HANDLER(statechange)
