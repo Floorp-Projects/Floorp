@@ -119,8 +119,16 @@ CreateDrawTargetForSurface(gfxASurface *aSurface)
   return drawTarget;
 }
 
-PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
+PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
+                                         const nsCString& aMimeType,
+                                         const uint16_t& aMode,
+                                         const InfallibleTArray<nsCString>& aNames,
+                                         const InfallibleTArray<nsCString>& aValues)
     : mPluginIface(aPluginIface)
+    , mMimeType(aMimeType)
+    , mMode(aMode)
+    , mNames(aNames)
+    , mValues(aValues)
 #if defined(XP_MACOSX)
     , mContentsScaleFactor(1.0)
 #endif
@@ -208,6 +216,54 @@ PluginInstanceChild::~PluginInstanceChild()
         UnscheduleTimer(mCARefreshTimer);
     }
 #endif
+}
+
+NPError
+PluginInstanceChild::DoNPP_New()
+{
+    // unpack the arguments into a C format
+    int argc = mNames.Length();
+    NS_ASSERTION(argc == (int) mValues.Length(),
+                 "argn.length != argv.length");
+
+    nsAutoArrayPtr<char*> argn(new char*[1 + argc]);
+    nsAutoArrayPtr<char*> argv(new char*[1 + argc]);
+    argn[argc] = 0;
+    argv[argc] = 0;
+
+    for (int i = 0; i < argc; ++i) {
+        argn[i] = const_cast<char*>(NullableStringGet(mNames[i]));
+        argv[i] = const_cast<char*>(NullableStringGet(mValues[i]));
+    }
+
+    NPP npp = GetNPP();
+
+    NPError rv = mPluginIface->newp((char*)NullableStringGet(mMimeType), npp,
+                                    mMode, argc, argn, argv, 0);
+    if (NPERR_NO_ERROR != rv) {
+        return rv;
+    }
+
+    Initialize();
+
+#if defined(XP_MACOSX) && defined(__i386__)
+    // If an i386 Mac OS X plugin has selected the Carbon event model then
+    // we have to fail. We do not support putting Carbon event model plugins
+    // out of process. Note that Carbon is the default model so out of process
+    // plugins need to actively negotiate something else in order to work
+    // out of process.
+    if (EventModel() == NPEventModelCarbon) {
+      // Send notification that a plugin tried to negotiate Carbon NPAPI so that
+      // users can be notified that restarting the browser in i386 mode may allow
+      // them to use the plugin.
+      SendNegotiatedCarbon();
+
+      // Fail to instantiate.
+      rv = NPERR_MODULE_LOAD_FAILED_ERROR;
+    }
+#endif
+
+    return rv;
 }
 
 int
@@ -2234,21 +2290,86 @@ PluginInstanceChild::RecvPPluginScriptableObjectConstructor(
 }
 
 bool
-PluginInstanceChild::AnswerPBrowserStreamConstructor(
+PluginInstanceChild::RecvPBrowserStreamConstructor(
     PBrowserStreamChild* aActor,
     const nsCString& url,
     const uint32_t& length,
     const uint32_t& lastmodified,
     PStreamNotifyChild* notifyData,
-    const nsCString& headers,
-    const nsCString& mimeType,
-    const bool& seekable,
-    NPError* rv,
-    uint16_t* stype)
+    const nsCString& headers)
+{
+    return true;
+}
+
+NPError
+PluginInstanceChild::DoNPP_NewStream(BrowserStreamChild* actor,
+                                     const nsCString& mimeType,
+                                     const bool& seekable,
+                                     uint16_t* stype)
 {
     AssertPluginThread();
-    *rv = static_cast<BrowserStreamChild*>(aActor)
-          ->StreamConstructed(mimeType, seekable, stype);
+    NPError rv = actor->StreamConstructed(mimeType, seekable, stype);
+    return rv;
+}
+
+bool
+PluginInstanceChild::AnswerNPP_NewStream(PBrowserStreamChild* actor,
+                                         const nsCString& mimeType,
+                                         const bool& seekable,
+                                         NPError* rv,
+                                         uint16_t* stype)
+{
+    *rv = DoNPP_NewStream(static_cast<BrowserStreamChild*>(actor), mimeType,
+                          seekable, stype);
+    return true;
+}
+
+class NewStreamAsyncCall : public ChildAsyncCall
+{
+public:
+    NewStreamAsyncCall(PluginInstanceChild* aInstance,
+                       BrowserStreamChild* aBrowserStreamChild,
+                       const nsCString& aMimeType,
+                       const bool aSeekable)
+        : ChildAsyncCall(aInstance, nullptr, nullptr)
+        , mBrowserStreamChild(aBrowserStreamChild)
+        , mMimeType(aMimeType)
+        , mSeekable(aSeekable)
+    {
+    }
+
+    void Run() MOZ_OVERRIDE
+    {
+        RemoveFromAsyncList();
+
+        uint16_t stype = NP_NORMAL;
+        NPError rv = mInstance->DoNPP_NewStream(mBrowserStreamChild, mMimeType,
+                                                mSeekable, &stype);
+        DebugOnly<bool> sendOk =
+            mBrowserStreamChild->SendAsyncNPP_NewStreamResult(rv, stype);
+        MOZ_ASSERT(sendOk);
+    }
+
+private:
+    BrowserStreamChild* mBrowserStreamChild;
+    const nsCString     mMimeType;
+    const bool          mSeekable;
+};
+
+bool
+PluginInstanceChild::RecvAsyncNPP_NewStream(PBrowserStreamChild* actor,
+                                            const nsCString& mimeType,
+                                            const bool& seekable)
+{
+    // Reusing ChildAsyncCall so that the task is cancelled properly on Destroy
+    BrowserStreamChild* child = static_cast<BrowserStreamChild*>(actor);
+    NewStreamAsyncCall* task = new NewStreamAsyncCall(this, child, mimeType,
+                                                      seekable);
+    {
+        MutexAutoLock lock(mAsyncCallMutex);
+        mPendingAsyncCalls.AppendElement(task);
+    }
+    MessageLoop::current()->PostTask(FROM_HERE, task);
     return true;
 }
 
@@ -2257,16 +2378,12 @@ PluginInstanceChild::AllocPBrowserStreamChild(const nsCString& url,
                                               const uint32_t& length,
                                               const uint32_t& lastmodified,
                                               PStreamNotifyChild* notifyData,
-                                              const nsCString& headers,
-                                              const nsCString& mimeType,
-                                              const bool& seekable,
-                                              NPError* rv,
-                                              uint16_t *stype)
+                                              const nsCString& headers)
 {
     AssertPluginThread();
     return new BrowserStreamChild(this, url, length, lastmodified,
                                   static_cast<StreamNotifyChild*>(notifyData),
-                                  headers, mimeType, seekable, rv, stype);
+                                  headers);
 }
 
 bool
