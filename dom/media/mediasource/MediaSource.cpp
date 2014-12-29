@@ -312,9 +312,12 @@ MediaSource::Attach(MediaSourceDecoder* aDecoder)
   MOZ_ASSERT(NS_IsMainThread());
   MSE_DEBUG("MediaSource(%p)::Attach(aDecoder=%p) owner=%p", this, aDecoder, aDecoder->GetOwner());
   MOZ_ASSERT(aDecoder);
+  MOZ_ASSERT(aDecoder->GetOwner());
   if (mReadyState != MediaSourceReadyState::Closed) {
     return false;
   }
+  MOZ_ASSERT(!mMediaElement);
+  mMediaElement = aDecoder->GetOwner()->GetMediaElement();
   MOZ_ASSERT(!mDecoder);
   mDecoder = aDecoder;
   mDecoder->AttachMediaSource(this);
@@ -335,6 +338,7 @@ MediaSource::Detach()
   }
   mDecoder->DetachMediaSource();
   mDecoder = nullptr;
+  mMediaElement = nullptr;
   mFirstSourceBufferInitialized = false;
   SetReadyState(MediaSourceReadyState::Closed);
   if (mActiveSourceBuffers) {
@@ -487,6 +491,7 @@ MediaSource::WrapObject(JSContext* aCx)
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaSource, DOMEventTargetHelper,
+                                   mMediaElement,
                                    mSourceBuffers, mActiveSourceBuffers)
 
 NS_IMPL_ADDREF_INHERITED(MediaSource, DOMEventTargetHelper)
