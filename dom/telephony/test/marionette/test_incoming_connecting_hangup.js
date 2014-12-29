@@ -15,11 +15,9 @@ function incoming() {
 }
 
 function connecting() {
-  let promises = [
-    gWaitForNamedStateEvent(inCall, "connecting"),
-    inCall.answer()
-  ];
-  return Promise.all(promises).then(() => inCall);
+  let promise = gWaitForNamedStateEvent(inCall, "connecting");
+  inCall.answer();
+  return promise;
 }
 
 function hangUp() {
