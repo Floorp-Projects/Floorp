@@ -498,6 +498,9 @@ class LSimdSelect : public LInstructionHelper<1, 3, 1>
     const LDefinition *temp() {
         return getTemp(0);
     }
+    MSimdSelect *mir() const {
+        return mir_->toSimdSelect();
+    }
 };
 
 // Constant 32-bit integer.
