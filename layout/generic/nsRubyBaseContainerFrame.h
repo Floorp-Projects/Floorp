@@ -78,19 +78,19 @@ protected:
 
   nscoord CalculateMaxSpanISize(nsRenderingContext* aRenderingContext);
 
-  nscoord ReflowPairs(nsPresContext* aPresContext,
-                      bool aAllowLineBreak,
-                      const nsHTMLReflowState& aReflowState,
-                      nsTArray<nsHTMLReflowState*>& aReflowStates,
-                      nsReflowStatus& aStatus);
-
-  nscoord ReflowOnePair(nsPresContext* aPresContext,
+  nscoord ReflowColumns(nsPresContext* aPresContext,
                         bool aAllowLineBreak,
                         const nsHTMLReflowState& aReflowState,
                         nsTArray<nsHTMLReflowState*>& aReflowStates,
-                        nsIFrame* aBaseFrame,
-                        const nsTArray<nsIFrame*>& aTextFrames,
                         nsReflowStatus& aStatus);
+
+  nscoord ReflowOneColumn(nsPresContext* aPresContext,
+                          bool aAllowLineBreak,
+                          const nsHTMLReflowState& aReflowState,
+                          nsTArray<nsHTMLReflowState*>& aReflowStates,
+                          nsIFrame* aBaseFrame,
+                          const nsTArray<nsIFrame*>& aTextFrames,
+                          nsReflowStatus& aStatus);
 
   nscoord ReflowSpans(nsPresContext* aPresContext,
                       const nsHTMLReflowState& aReflowState,
@@ -100,11 +100,11 @@ protected:
 
   // Pull ruby base and corresponding ruby text frames from
   // continuations after them.
-  void PullOnePair(nsLineLayout* aLineLayout,
-                   PullFrameState& aPullFrameState,
-                   nsIFrame*& aBaseFrame,
-                   nsTArray<nsIFrame*>& aTextFrames,
-                   bool& aIsComplete);
+  void PullOneColumn(nsLineLayout* aLineLayout,
+                     PullFrameState& aPullFrameState,
+                     nsIFrame*& aBaseFrame,
+                     nsTArray<nsIFrame*>& aTextFrames,
+                     bool& aIsComplete);
 
   /**
    * The arrays of ruby text containers below are filled before the ruby
@@ -113,13 +113,13 @@ protected:
    */
 
   // The text containers that contain a span, which spans all ruby
-  // pairs in the ruby segment.
+  // columns in the ruby segment.
   nsTArray<nsRubyTextContainerFrame*> mSpanContainers;
   // Normal text containers that do not contain spans.
   nsTArray<nsRubyTextContainerFrame*> mTextContainers;
 
   nscoord mBaseline;
-  uint32_t mPairCount;
+  uint32_t mColumnCount;
 };
 
 #endif /* nsRubyBaseContainerFrame_h___ */
