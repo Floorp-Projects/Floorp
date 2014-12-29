@@ -2656,7 +2656,7 @@ class FunctionCompiler
         MOZ_ASSERT(mask->type() == MIRType_Int32x4);
         MOZ_ASSERT(IsSimdType(lhs->type()) && rhs->type() == lhs->type());
         MOZ_ASSERT(lhs->type() == type);
-        MSimdSelect *ins = MSimdSelect::NewAsmJS(alloc(), mask, lhs, rhs, type);
+        MSimdSelect *ins = MSimdSelect::NewAsmJS(alloc(), mask, lhs, rhs, type, /* isElementWise */ true);
         curBlock_->add(ins);
         return ins;
     }
