@@ -184,6 +184,7 @@ TCPSocket.prototype = {
   _txBytes: 0,
   _rxBytes: 0,
   _appId: Ci.nsIScriptSecurityManager.NO_APP_ID,
+  _inBrowser: false,
   _activeNetwork: null,
 #endif
 
@@ -478,6 +479,14 @@ TCPSocket.prototype = {
     this._appId = appId;
 #else
     // Do nothing because _appId only exists on Gonk-specific platform.
+#endif
+  },
+
+  setInBrowser: function ts_setInBrowser(inBrowser) {
+#ifdef MOZ_WIDGET_GONK
+    this._inBrowser = inBrowser;
+#else
+    // Do nothing.
 #endif
   },
 
