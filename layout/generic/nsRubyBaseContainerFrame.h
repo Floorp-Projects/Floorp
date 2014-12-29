@@ -77,6 +77,7 @@ protected:
   nscoord ReflowColumns(const ReflowState& aReflowState,
                         nsReflowStatus& aStatus);
   nscoord ReflowOneColumn(const ReflowState& aReflowState,
+                          uint32_t aColumnIndex,
                           const mozilla::RubyColumn& aColumn,
                           nsReflowStatus& aStatus);
   nscoord ReflowSpans(const ReflowState& aReflowState);
@@ -91,7 +92,6 @@ protected:
                      bool& aIsComplete);
 
   nscoord mBaseline;
-  uint32_t mColumnCount;
 };
 
 #endif /* nsRubyBaseContainerFrame_h___ */
