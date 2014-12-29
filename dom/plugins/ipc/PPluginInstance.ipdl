@@ -207,20 +207,28 @@ parent:
   // them to use the plugin.
   sync NegotiatedCarbon();
 
+  // Notifies the parent of its NPP_New result code.
+  async AsyncNPP_NewResult(NPError aResult);
+
 both:
   async PPluginScriptableObject();
 
 child:
   /* NPP_NewStream */
-  intr PBrowserStream(nsCString url,
-                     uint32_t length,
-                     uint32_t lastmodified,
-                     nullable PStreamNotify notifyData,
-                     nsCString headers,
-                     nsCString mimeType,
-                     bool seekable)
+  async PBrowserStream(nsCString url,
+                       uint32_t length,
+                       uint32_t lastmodified,
+                       nullable PStreamNotify notifyData,
+                       nsCString headers);
+
+  // Implements the legacy (synchronous) version of NPP_NewStream for when
+  // async plugin init is preffed off.
+  intr NPP_NewStream(PBrowserStream actor, nsCString mimeType, bool seekable)
     returns (NPError rv,
              uint16_t stype);
+
+  // Implements the async plugin init version of NPP_NewStream.
+  async AsyncNPP_NewStream(PBrowserStream actor, nsCString mimeType, bool seekable);
 
 parent:
   /* NPN_NewStream */
