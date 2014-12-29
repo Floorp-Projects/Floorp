@@ -464,13 +464,16 @@ nsRubyBaseContainerFrame::ReflowColumns(const ReflowState& aReflowState,
   nsReflowStatus reflowStatus = NS_FRAME_COMPLETE;
   aStatus = NS_FRAME_COMPLETE;
 
-  mColumnCount = 0;
+  uint32_t columnIndex = 0;
   RubyColumn column;
   column.mTextFrames.SetCapacity(rtcCount);
   RubyColumnEnumerator e(this, aReflowState.mTextContainers);
   for (; !e.AtEnd(); e.Next()) {
     e.GetColumn(column);
-    icoord += ReflowOneColumn(aReflowState, column, reflowStatus);
+    icoord += ReflowOneColumn(aReflowState, columnIndex, column, reflowStatus);
+    if (!NS_INLINE_IS_BREAK_BEFORE(reflowStatus)) {
+      columnIndex++;
+    }
     if (NS_INLINE_IS_BREAK(reflowStatus)) {
       break;
     }
@@ -491,7 +494,10 @@ nsRubyBaseContainerFrame::ReflowColumns(const ReflowState& aReflowState,
       // No more frames can be pulled.
       break;
     }
-    icoord += ReflowOneColumn(aReflowState, column, reflowStatus);
+    icoord += ReflowOneColumn(aReflowState, columnIndex, column, reflowStatus);
+    if (!NS_INLINE_IS_BREAK_BEFORE(reflowStatus)) {
+      columnIndex++;
+    }
   }
 
   if (!e.AtEnd() && NS_INLINE_IS_BREAK_AFTER(reflowStatus)) {
@@ -506,7 +512,7 @@ nsRubyBaseContainerFrame::ReflowColumns(const ReflowState& aReflowState,
   }
 
   if (NS_INLINE_IS_BREAK_BEFORE(reflowStatus)) {
-    if (!mColumnCount || !aReflowState.mAllowLineBreak) {
+    if (!columnIndex || !aReflowState.mAllowLineBreak) {
       // If no column has been placed yet, or we have any span,
       // the whole container should be in the next line.
       aStatus = NS_INLINE_LINE_BREAK_BEFORE();
@@ -539,6 +545,7 @@ nsRubyBaseContainerFrame::ReflowColumns(const ReflowState& aReflowState,
 
 nscoord
 nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
+                                          uint32_t aColumnIndex,
                                           const RubyColumn& aColumn,
                                           nsReflowStatus& aStatus)
 {
@@ -644,10 +651,9 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
     }
   }
 
-  mColumnCount++;
   if (aReflowState.mAllowLineBreak &&
       baseReflowState.mLineLayout->NotifyOptionalBreakPosition(
-        this, mColumnCount, icoord <= baseReflowState.AvailableISize(),
+        this, aColumnIndex + 1, icoord <= baseReflowState.AvailableISize(),
         gfxBreakPriority::eNormalBreak)) {
     aStatus = NS_INLINE_LINE_BREAK_AFTER(aStatus);
   }
