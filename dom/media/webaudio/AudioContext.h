@@ -20,6 +20,7 @@
 #include "nsTHashtable.h"
 #include "js/TypeDecls.h"
 #include "nsIMemoryReporter.h"
+#include "nsIObserver.h"
 
 // X11 has a #define for CurrentTime. Unbelievable :-(.
 // See dom/media/DOMMediaStream.h for more fun!
@@ -65,7 +66,8 @@ class PeriodicWave;
 class Promise;
 
 class AudioContext MOZ_FINAL : public DOMEventTargetHelper,
-                               public nsIMemoryReporter
+                               public nsIMemoryReporter,
+                               public nsIObserver
 {
   AudioContext(nsPIDOMWindow* aParentWindow,
                bool aIsOffline,
@@ -263,6 +265,8 @@ private:
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE;
+
+  NS_DECL_NSIOBSERVER
 
   friend struct ::mozilla::WebAudioDecodeJob;
 
