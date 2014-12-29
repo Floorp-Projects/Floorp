@@ -64,6 +64,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     Operand payloadOf(const Address &address) {
         return Operand(address.base, address.offset);
     }
+    Operand payloadOf(const BaseIndex &address) {
+        return Operand(address.base, address.index, address.scale, address.offset);
+    }
     Operand tagOf(const Address &address) {
         return Operand(address.base, address.offset + 4);
     }
@@ -888,6 +891,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void unboxNonDouble(const Address &src, Register dest) {
         movl(payloadOf(src), dest);
     }
+    void unboxNonDouble(const BaseIndex &src, Register dest) {
+        movl(payloadOf(src), dest);
+    }
     void unboxInt32(const ValueOperand &src, Register dest) { unboxNonDouble(src, dest); }
     void unboxInt32(const Address &src, Register dest) { unboxNonDouble(src, dest); }
     void unboxBoolean(const ValueOperand &src, Register dest) { unboxNonDouble(src, dest); }
@@ -898,6 +904,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void unboxSymbol(const Address &src, Register dest) { unboxNonDouble(src, dest); }
     void unboxObject(const ValueOperand &src, Register dest) { unboxNonDouble(src, dest); }
     void unboxObject(const Address &src, Register dest) { unboxNonDouble(src, dest); }
+    void unboxObject(const BaseIndex &src, Register dest) { unboxNonDouble(src, dest); }
     void unboxDouble(const Address &src, FloatRegister dest) {
         loadDouble(Operand(src), dest);
     }
