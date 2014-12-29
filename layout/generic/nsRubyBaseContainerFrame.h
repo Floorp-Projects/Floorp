@@ -63,21 +63,15 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
 #endif
 
-#ifdef DEBUG
-  void AssertTextContainersEmpty()
-  {
-    MOZ_ASSERT(mTextContainers.IsEmpty());
-  }
-#endif
-
-  void AppendTextContainer(nsIFrame* aFrame);
-  void ClearTextContainers();
-
 protected:
   friend nsContainerFrame*
     NS_NewRubyBaseContainerFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext);
   explicit nsRubyBaseContainerFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
+
+  typedef nsTArray<nsRubyTextContainerFrame*> TextContainerArray;
+  typedef nsAutoTArray<nsRubyTextContainerFrame*, RTC_ARRAY_SIZE> AutoTextContainerArray;
+  void GetTextContainers(TextContainerArray& aTextContainers);
 
   struct ReflowState;
   nscoord ReflowColumns(const ReflowState& aReflowState,
@@ -95,13 +89,6 @@ protected:
                      PullFrameState& aPullFrameState,
                      mozilla::RubyColumn& aColumn,
                      bool& aIsComplete);
-
-  /**
-   * The array of ruby text containers below is filled before the ruby
-   * frame (parent) starts reflowing this ruby segment, and cleared when
-   * the reflow finishes.
-   */
-  nsTArray<nsRubyTextContainerFrame*> mTextContainers;
 
   nscoord mBaseline;
   uint32_t mColumnCount;
