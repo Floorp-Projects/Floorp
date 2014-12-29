@@ -2023,9 +2023,11 @@ class MSimdShift : public MBinaryInstruction
 
 class MSimdSelect : public MTernaryInstruction
 {
-  private:
-    MSimdSelect(MDefinition *mask, MDefinition *lhs, MDefinition *rhs, MIRType type)
-      : MTernaryInstruction(mask, lhs, rhs)
+    bool isElementWise_;
+
+    MSimdSelect(MDefinition *mask, MDefinition *lhs, MDefinition *rhs, MIRType type,
+                bool isElementWise)
+      : MTernaryInstruction(mask, lhs, rhs), isElementWise_(isElementWise)
     {
         MOZ_ASSERT(IsSimdType(type));
         MOZ_ASSERT(mask->type() == MIRType_Int32x4);
@@ -2038,13 +2040,27 @@ class MSimdSelect : public MTernaryInstruction
   public:
     INSTRUCTION_HEADER(SimdSelect);
     static MSimdSelect *NewAsmJS(TempAllocator &alloc, MDefinition *mask, MDefinition *lhs,
-                                 MDefinition *rhs, MIRType t)
+                                 MDefinition *rhs, MIRType t, bool isElementWise)
     {
-        return new(alloc) MSimdSelect(mask, lhs, rhs, t);
+        return new(alloc) MSimdSelect(mask, lhs, rhs, t, isElementWise);
+    }
+
+    MDefinition *mask() const {
+        return getOperand(0);
     }
 
     AliasSet getAliasSet() const {
         return AliasSet::None();
+    }
+
+    bool isElementWise() const {
+        return isElementWise_;
+    }
+
+    bool congruentTo(const MDefinition *ins) const {
+        if (!congruentIfOperandsEqual(ins))
+            return false;
+        return isElementWise_ == ins->toSimdSelect()->isElementWise();
     }
 
     ALLOW_CLONE(MSimdSelect)
