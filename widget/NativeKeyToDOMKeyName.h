@@ -1015,9 +1015,6 @@ KEY_MAP_ANDROID (Guide, AKEYCODE_GUIDE)
 // Info
 KEY_MAP_ANDROID (Info, AKEYCODE_INFO)
 
-// Live
-KEY_MAP_ANDROID (Live, AKEYCODE_TV)
-
 // MediaFastForward
 KEY_MAP_QT      (MediaFastForward, Qt::Key_AudioForward)
 KEY_MAP_ANDROID (MediaFastForward, AKEYCODE_MEDIA_FAST_FORWARD)
