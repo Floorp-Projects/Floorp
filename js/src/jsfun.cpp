@@ -1408,11 +1408,6 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
         if (cx->zone()->needsIncrementalBarrier())
             LazyScript::writeBarrierPre(lazy);
 
-        // Suppress GC for now although we should be able to remove this by
-        // making 'lazy' a Rooted<LazyScript*> (which requires adding a
-        // THING_ROOT_LAZY_SCRIPT).
-        AutoSuppressGC suppressGC(cx);
-
         RootedScript script(cx, lazy->maybeScript());
 
         if (script) {
