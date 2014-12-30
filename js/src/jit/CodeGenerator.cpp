@@ -7349,10 +7349,8 @@ CodeGenerator::generate()
 
 #ifdef JS_TRACE_LOGGING
     if (!gen->compilingAsmJS() && gen->info().executionMode() == SequentialExecution) {
-        if (!emitTracelogScriptStart())
-            return false;
-        if (!emitTracelogStartEvent(TraceLogger_IonMonkey))
-            return false;
+        emitTracelogScriptStart();
+        emitTracelogStartEvent(TraceLogger_IonMonkey);
     }
 #endif
 
