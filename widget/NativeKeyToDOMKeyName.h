@@ -596,6 +596,11 @@ KEY_MAP_WIN_JPN (Hiragana, VK_OEM_COPY)
 KEY_MAP_GTK     (Hiragana, GDK_Hiragana)
 KEY_MAP_QT      (Hiragana, Qt::Key_Hiragana)
 
+// HiraganaKatakana
+KEY_MAP_GTK     (HiraganaKatakana, GDK_Hiragana_Katakana)
+KEY_MAP_QT      (HiraganaKatakana, Qt::Key_Hiragana_Katakana)
+KEY_MAP_ANDROID (HiraganaKatakana, AKEYCODE_KATAKANA_HIRAGANA)
+
 // KanaMode
 // VK_KANA is never used with modern Japanese keyboard, however, IE maps it to
 // KanaMode, therefore, we should use same map for it.
@@ -631,6 +636,11 @@ KEY_MAP_ANDROID (Romaji, AKEYCODE_EISU) // XXX Should be "Eisu"
 KEY_MAP_WIN_JPN (Zenkaku, VK_OEM_ENLW)
 KEY_MAP_GTK     (Zenkaku, GDK_Zenkaku)
 KEY_MAP_QT      (Zenkaku, Qt::Key_Zenkaku)
+
+// ZenkakuHankaku
+KEY_MAP_GTK     (ZenkakuHankaku, GDK_Zenkaku_Hankaku)
+KEY_MAP_QT      (ZenkakuHankaku, Qt::Key_Zenkaku_Hankaku)
+KEY_MAP_ANDROID (ZenkakuHankaku, AKEYCODE_ZENKAKU_HANKAKU)
 
 /******************************************************************************
  * General-Purpose Function Keys
