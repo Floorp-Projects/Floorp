@@ -10086,16 +10086,14 @@ IonBuilder::getPropTryInnerize(bool *emitted, MDefinition *obj, PropertyName *na
     // Note: the Baseline ICs don't know about this optimization, so it's
     // possible the global property's HeapTypeSet has not been initialized
     // yet. In this case we'll fall back to getPropTryCache for now.
-    //
-    // Also note that we don't call getPropTryCommonGetter below, because
-    // (a) it requires a Baseline getter stub, which we don't have for outer
-    // window proxies and (b) we have to be careful not to pass the inner
-    // object to scripted getters etc. See bug 1007631.
 
     if (!getPropTryConstant(emitted, inner, name, types) || *emitted)
         return *emitted;
 
     if (!getStaticName(&script()->global(), name, emitted) || *emitted)
+        return *emitted;
+
+    if (!getPropTryCommonGetter(emitted, inner, name, types) || *emitted)
         return *emitted;
 
     // Passing the inner object to GetProperty IC is safe, see the
@@ -11286,6 +11284,36 @@ IonBuilder::jsop_instanceof()
         current->add(ins);
         current->push(ins);
 
+        return resumeAfter(ins);
+    } while (false);
+
+    // Try to inline a fast path based on Baseline ICs.
+    do {
+        Shape *shape;
+        uint32_t slot;
+        JSObject *protoObject;
+        if (!inspector->instanceOfData(pc, &shape, &slot, &protoObject))
+            break;
+
+        // Shape guard.
+        rhs = addShapeGuard(rhs, shape, Bailout_ShapeGuard);
+
+        // Guard .prototype == protoObject.
+        MOZ_ASSERT(shape->numFixedSlots() == 0, "Must be a dynamic slot");
+        MSlots *slots = MSlots::New(alloc(), rhs);
+        current->add(slots);
+        MLoadSlot *prototype = MLoadSlot::New(alloc(), slots, slot);
+        current->add(prototype);
+        MGuardObjectIdentity *guard = MGuardObjectIdentity::New(alloc(), prototype, protoObject,
+                                                                /* bailOnEquality = */ false);
+        current->add(guard);
+
+        if (tryFoldInstanceOf(obj, protoObject))
+            return true;
+
+        MInstanceOf *ins = MInstanceOf::New(alloc(), obj, protoObject);
+        current->add(ins);
+        current->push(ins);
         return resumeAfter(ins);
     } while (false);
 

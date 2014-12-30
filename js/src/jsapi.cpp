@@ -4845,7 +4845,7 @@ JS_CopyStringChars(JSContext *cx, mozilla::Range<char16_t> dest, JSString *str)
 }
 
 JS_PUBLIC_API(const Latin1Char *)
-JS_Latin1InternedStringChars(const JS::AutoCheckCannotGC &nogc, JSString *str)
+JS_GetLatin1InternedStringChars(const JS::AutoCheckCannotGC &nogc, JSString *str)
 {
     MOZ_ASSERT(str->isAtom());
     JSFlatString *flat = str->ensureFlat(nullptr);

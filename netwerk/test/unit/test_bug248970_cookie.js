@@ -14,7 +14,14 @@ function inChildProcess() {
 }
 function makeChan(path) {
   var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  var chan = ios.newChannel("http://localhost:" + httpserver.identity.primaryPort + "/" + path, null, null)
+  var chan = ios.newChannel2("http://localhost:" + httpserver.identity.primaryPort + "/" + path,
+                             null,
+                             null,
+                             null,      // aLoadingNode
+                             Services.scriptSecurityManager.getSystemPrincipal(),
+                             null,      // aTriggeringPrincipal
+                             Ci.nsILoadInfo.SEC_NORMAL,
+                             Ci.nsIContentPolicy.TYPE_OTHER)
                 .QueryInterface(Ci.nsIHttpChannel);
   return chan;
 }
