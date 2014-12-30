@@ -1472,6 +1472,8 @@
             let index = tab._tPos;
             let filter = this.mTabFilters[index];
             aBrowser.webProgress.removeProgressListener(filter);
+            // Make sure the browser is destroyed so it unregisters from observer notifications
+            aBrowser.destroy();
 
             // Change the "remote" attribute.
             let parent = aBrowser.parentNode;
