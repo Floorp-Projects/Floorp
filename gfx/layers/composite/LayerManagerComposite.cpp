@@ -928,10 +928,10 @@ LayerManagerComposite::ComputeRenderIntegrity()
 
     // Work out how much of the critical display-port covers the screen
     bool hasLowPrecision = false;
-    if (!metrics.mCriticalDisplayPort.IsEmpty()) {
+    if (!metrics.GetCriticalDisplayPort().IsEmpty()) {
       hasLowPrecision = true;
       highPrecisionMultiplier =
-        GetDisplayportCoverage(metrics.mCriticalDisplayPort, transform, screenRect);
+        GetDisplayportCoverage(metrics.GetCriticalDisplayPort(), transform, screenRect);
     }
 
     // Work out how much of the display-port covers the screen

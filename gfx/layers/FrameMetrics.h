@@ -40,9 +40,9 @@ public:
 
   FrameMetrics()
     : mCompositionBounds(0, 0, 0, 0)
-    , mCriticalDisplayPort(0, 0, 0, 0)
     , mPresShellResolution(1)
     , mDisplayPort(0, 0, 0, 0)
+    , mCriticalDisplayPort(0, 0, 0, 0)
     , mScrollableRect(0, 0, 0, 0)
     , mCumulativeResolution(1)
     , mDevPixelsPerCSSPixel(1)
@@ -252,19 +252,6 @@ public:
   ParentLayerRect mCompositionBounds;
 
   // ---------------------------------------------------------------------------
-  // The following metrics are all in CSS pixels. They are not in any uniform
-  // space, so each is explained separately.
-  //
-
-  // If non-empty, the area of a frame's contents that is considered critical
-  // to paint. Area outside of this area (i.e. area inside mDisplayPort, but
-  // outside of mCriticalDisplayPort) is considered low-priority, and may be
-  // painted with lower precision, or not painted at all.
-  //
-  // The same restrictions for mDisplayPort apply here.
-  CSSRect mCriticalDisplayPort;
-
-  // ---------------------------------------------------------------------------
   // The following metrics are dimensionless.
   //
 
@@ -286,6 +273,16 @@ public:
   CSSRect GetDisplayPort() const
   {
     return mDisplayPort;
+  }
+
+  void SetCriticalDisplayPort(const CSSRect& aCriticalDisplayPort)
+  {
+    mCriticalDisplayPort = aCriticalDisplayPort;
+  }
+
+  CSSRect GetCriticalDisplayPort() const
+  {
+    return mCriticalDisplayPort;
   }
 
   void SetCumulativeResolution(const LayoutDeviceToLayerScale& aCumulativeResolution)
@@ -538,6 +535,14 @@ private:
   // { x = -100, y = - 100,
   //   width = window.innerWidth + 200, height = window.innerHeight + 200 }
   CSSRect mDisplayPort;
+
+  // If non-empty, the area of a frame's contents that is considered critical
+  // to paint. Area outside of this area (i.e. area inside mDisplayPort, but
+  // outside of mCriticalDisplayPort) is considered low-priority, and may be
+  // painted with lower precision, or not painted at all.
+  //
+  // The same restrictions for mDisplayPort apply here.
+  CSSRect mCriticalDisplayPort;
 
   // The scrollable bounds of a frame. This is determined by reflow.
   // Ordinarily the x and y will be 0 and the width and height will be the

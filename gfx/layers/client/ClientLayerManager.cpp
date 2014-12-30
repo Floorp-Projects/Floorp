@@ -752,8 +752,8 @@ ClientLayerManager::ProgressiveUpdateCallback(bool aHasPendingNewThebesContent,
   // gfx/layers/ipc/CompositorParent.cpp::TransformShadowTree.
   CSSToLayerScale paintScale = aMetrics.LayersPixelsPerCSSPixel();
   const CSSRect& metricsDisplayPort =
-    (aDrawingCritical && !aMetrics.mCriticalDisplayPort.IsEmpty()) ?
-      aMetrics.mCriticalDisplayPort : aMetrics.GetDisplayPort();
+    (aDrawingCritical && !aMetrics.GetCriticalDisplayPort().IsEmpty()) ?
+      aMetrics.GetCriticalDisplayPort() : aMetrics.GetDisplayPort();
   LayerRect displayPort = (metricsDisplayPort + aMetrics.GetScrollOffset()) * paintScale;
 
   ParentLayerPoint scrollOffset;
