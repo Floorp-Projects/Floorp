@@ -1423,9 +1423,6 @@ ConvertAndroidKeyCodeToKeyNameIndex(AndroidGeckoEvent& aAndroidGeckoEvent)
         case AKEYCODE_MANNER_MODE:
         case AKEYCODE_3D_MODE:
         case AKEYCODE_CONTACTS:
-        case AKEYCODE_CALENDAR:
-        case AKEYCODE_MUSIC:
-        case AKEYCODE_CALCULATOR:
             return KEY_NAME_INDEX_Unidentified;
 
         case AKEYCODE_UNKNOWN:
