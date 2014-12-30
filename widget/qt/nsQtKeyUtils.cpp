@@ -385,12 +385,9 @@ QtKeyCodeToDOMKeyNameIndex(int aKeysym)
         case Qt::Key_TrebleUp:
         case Qt::Key_TrebleDown:
         case Qt::Key_OpenUrl:
-        case Qt::Key_LaunchMedia:
         case Qt::Key_KeyboardLightOnOff:
         case Qt::Key_KeyboardBrightnessUp:
         case Qt::Key_KeyboardBrightnessDown:
-        case Qt::Key_ScreenSaver:
-        case Qt::Key_WWW:
         case Qt::Key_Memo:
         case Qt::Key_LightBulb:
         case Qt::Key_Shop:
@@ -403,16 +400,12 @@ QtKeyCodeToDOMKeyNameIndex(int aKeysym)
         case Qt::Key_ApplicationLeft:
         case Qt::Key_ApplicationRight:
         case Qt::Key_Book:
-        case Qt::Key_CD:
-        case Qt::Key_Calculator:
         case Qt::Key_ToDoList:
         case Qt::Key_ClearGrab:
         case Qt::Key_Close:
         case Qt::Key_Display:
         case Qt::Key_DOS:
         case Qt::Key_Documents:
-        case Qt::Key_Excel:
-        case Qt::Key_Explorer:
         case Qt::Key_Game:
         case Qt::Key_Go:
         case Qt::Key_iTouch:
@@ -425,7 +418,6 @@ QtKeyCodeToDOMKeyNameIndex(int aKeysym)
         case Qt::Key_OfficeHome:
         case Qt::Key_Option:
         case Qt::Key_Phone:
-        case Qt::Key_Calendar:
         case Qt::Key_Reply:
         case Qt::Key_RotateWindows:
         case Qt::Key_RotationPB:
@@ -439,15 +431,11 @@ QtKeyCodeToDOMKeyNameIndex(int aKeysym)
         case Qt::Key_Terminal:
         case Qt::Key_Tools:
         case Qt::Key_Travel:
-        case Qt::Key_Video:
-        case Qt::Key_Word:
         case Qt::Key_Xfer:
         case Qt::Key_Away:
         case Qt::Key_Messenger:
-        case Qt::Key_WebCam:
         case Qt::Key_MailForward:
         case Qt::Key_Pictures:
-        case Qt::Key_Music:
         case Qt::Key_Battery:
         case Qt::Key_Bluetooth:
         case Qt::Key_WLAN:

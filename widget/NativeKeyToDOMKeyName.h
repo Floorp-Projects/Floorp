@@ -868,6 +868,7 @@ KEY_MAP_ANDROID (MediaPlayPause, AKEYCODE_MEDIA_PLAY_PAUSE)
 
 // MediaSelect
 KEY_MAP_WIN     (MediaSelect, VK_LAUNCH_MEDIA_SELECT)
+KEY_MAP_GTK     (MediaSelect, GDK_AudioMedia)
 
 // MediaStop
 KEY_MAP_WIN     (MediaStop, VK_MEDIA_STOP)
@@ -911,17 +912,66 @@ KEY_MAP_ANDROID (VolumeMute, AKEYCODE_VOLUME_MUTE)
 /******************************************************************************
  * Application Keys
  ******************************************************************************/
+// LaunchCalculator
+KEY_MAP_GTK     (LaunchCalculator, GDK_Calculator)
+KEY_MAP_QT      (LaunchCalculator, Qt::Key_Calculator)
+KEY_MAP_ANDROID (LaunchCalculator, AKEYCODE_CALCULATOR)
+
+// LaunchCalendar
+KEY_MAP_GTK     (LaunchCalendar, GDK_Calendar)
+KEY_MAP_QT      (LaunchCalendar, Qt::Key_Calendar)
+KEY_MAP_ANDROID (LaunchCalendar, AKEYCODE_CALENDAR)
+
 // LaunchMail
 KEY_MAP_WIN     (LaunchMail, VK_LAUNCH_MAIL)
 KEY_MAP_GTK     (LaunchMail, GDK_Mail)
 KEY_MAP_QT      (LaunchMail, Qt::Key_LaunchMail)
 KEY_MAP_ANDROID (LaunchMail, AKEYCODE_ENVELOPE)
 
+// LaunchMediaPlayer
+// GDK_CD is defined as "Launch CD/DVD player" in XF86keysym.h.
+// Therefore, let's map it to media player rather than music player.
+KEY_MAP_GTK     (LaunchMediaPlayer, GDK_CD)
+KEY_MAP_GTK     (LaunchMediaPlayer, GDK_Video)
+KEY_MAP_QT      (LaunchMediaPlayer, Qt::Key_LaunchMedia)
+KEY_MAP_QT      (LaunchMediaPlayer, Qt::Key_CD)
+KEY_MAP_QT      (LaunchMediaPlayer, Qt::Key_Video)
+
+// LaunchMusicPlayer
+KEY_MAP_GTK     (LaunchMusicPlayer, GDK_Music)
+KEY_MAP_QT      (LaunchMusicPlayer, Qt::Key_Music)
+KEY_MAP_ANDROID (LaunchMusicPlayer, AKEYCODE_MUSIC)
+
+// LaunchMyComputer
+KEY_MAP_GTK     (LaunchMyComputer, GDK_MyComputer)
+KEY_MAP_GTK     (LaunchMyComputer, GDK_Explorer)
+KEY_MAP_QT      (LaunchMyComputer, Qt::Key_Explorer)
+
+// LaunchScreenSaver
+KEY_MAP_GTK     (LaunchScreenSaver, GDK_ScreenSaver)
+KEY_MAP_QT      (LaunchScreenSaver, Qt::Key_ScreenSaver)
+
+// LaunchSpreadsheet
+KEY_MAP_GTK     (LaunchSpreadsheet, GDK_Excel)
+KEY_MAP_QT      (LaunchSpreadsheet, Qt::Key_Excel)
+
+// LaunchWebBrowser
+KEY_MAP_GTK     (LaunchWebBrowser, GDK_WWW)
+KEY_MAP_QT      (LaunchWebBrowser, Qt::Key_WWW)
+KEY_MAP_ANDROID (LaunchWebBrowser, AKEYCODE_EXPLORER)
+
+// LaunchWebCam
+KEY_MAP_GTK     (LaunchWebCam, GDK_WebCam)
+KEY_MAP_QT      (LaunchWebCam, Qt::Key_WebCam)
+
+// LaunchWordProcessor
+KEY_MAP_GTK     (LaunchWordProcessor, GDK_Word)
+KEY_MAP_QT      (LaunchWordProcessor, Qt::Key_Word)
+
 // LaunchApplication1
 KEY_MAP_WIN     (LaunchApplication1, VK_LAUNCH_APP1)
 KEY_MAP_GTK     (LaunchApplication1, GDK_Launch0)
 KEY_MAP_QT      (LaunchApplication1, Qt::Key_Launch0)
-KEY_MAP_ANDROID (LaunchApplication1, AKEYCODE_EXPLORER)
 
 // LaunchApplication2
 KEY_MAP_WIN     (LaunchApplication2, VK_LAUNCH_APP2)
