@@ -134,7 +134,7 @@ DEFINE_KEYNAME_WITH_SAME_NAME(FinalMode)
 // DEFINE_KEYNAME_WITH_SAME_NAME(GroupPrevious)
 DEFINE_KEYNAME_WITH_SAME_NAME(ModeChange)
 // DEFINE_KEYNAME_WITH_SAME_NAME(NextCandidate)
-DEFINE_KEYNAME_WITH_SAME_NAME(Nonconvert) // Rename to NonConvert
+DEFINE_KEYNAME_WITH_SAME_NAME(NonConvert)
 DEFINE_KEYNAME_WITH_SAME_NAME(PreviousCandidate)
 // DEFINE_KEYNAME_WITH_SAME_NAME(Process)
 // DEFINE_KEYNAME_WITH_SAME_NAME(SingleCandidate)
@@ -150,14 +150,14 @@ DEFINE_KEYNAME_WITH_SAME_NAME(JunjaMode)
  * Keys specific to Japanese keyboards
  *****************************************************************************/
 // DEFINE_KEYNAME_WITH_SAME_NAME(Eisu)
-DEFINE_KEYNAME_WITH_SAME_NAME(HalfWidth) // Rename to Hankaku
+DEFINE_KEYNAME_WITH_SAME_NAME(Hankaku)
 DEFINE_KEYNAME_WITH_SAME_NAME(Hiragana)
 // DEFINE_KEYNAME_WITH_SAME_NAME(HiraganaKatakana)
 DEFINE_KEYNAME_WITH_SAME_NAME(KanaMode)
 DEFINE_KEYNAME_WITH_SAME_NAME(KanjiMode)
 DEFINE_KEYNAME_WITH_SAME_NAME(Katakana)
-DEFINE_KEYNAME_WITH_SAME_NAME(RomanCharacters) // Rename to Romaji
-DEFINE_KEYNAME_WITH_SAME_NAME(FullWidth) // Rename to Zenkaku
+DEFINE_KEYNAME_WITH_SAME_NAME(Romaji)
+DEFINE_KEYNAME_WITH_SAME_NAME(Zenkaku)
 // DEFINE_KEYNAME_WITH_SAME_NAME(ZenkakuHankaku)
 
 /******************************************************************************
