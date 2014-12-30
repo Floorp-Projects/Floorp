@@ -30,7 +30,8 @@
 #ifndef jit_shared_BaseAssembler_x86_shared_h
 #define jit_shared_BaseAssembler_x86_shared_h
 
-#include <inttypes.h>
+#include "mozilla/IntegerPrintfMacros.h"
+
 #include <stdarg.h>
 
 #include "jit/shared/AssemblerBuffer-x86-shared.h"
