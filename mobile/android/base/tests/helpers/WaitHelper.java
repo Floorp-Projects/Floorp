@@ -25,7 +25,9 @@ import com.jayway.android.robotium.solo.Solo;
 public final class WaitHelper {
     // TODO: Make public for when Solo.waitForCondition is used directly (i.e. do not want
     // assertion from waitFor)?
-    private static final int DEFAULT_MAX_WAIT_MS = 5000;
+    // DEFAULT_MAX_WAIT_MS of 5000 was intermittently insufficient during
+    // initialization on Android 2.3 emulator -- bug 1114655
+    private static final int DEFAULT_MAX_WAIT_MS = 15000;
     private static final int PAGE_LOAD_WAIT_MS = 10000;
     private static final int CHANGE_WAIT_MS = 15000;
 
