@@ -7245,7 +7245,7 @@ dnl ========================================================
 if test -z "$MOZ_MEMORY"; then
   if test -n "$MOZ_JEMALLOC3" -a -z "$MOZ_REPLACE_MALLOC"; then
     MOZ_NATIVE_JEMALLOC=1
-    AC_CHECK_FUNCS(mallctl nallocm,,
+    AC_CHECK_FUNCS(mallctl nallocx,,
       [MOZ_NATIVE_JEMALLOC=
        break])
     if test -n "$MOZ_NATIVE_JEMALLOC"; then
