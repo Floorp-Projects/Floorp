@@ -222,7 +222,15 @@ var SelectionHandler = {
         this._positionHandlesOnChange();
         break;
 
-      case "pagehide":
+      case "pagehide": {
+        // We only care about events on the selected tab.
+        let tab = BrowserApp.getTabForWindow(aEvent.originalTarget.defaultView);
+        if (tab == BrowserApp.selectedTab) {
+          this._closeSelection();
+        }
+        break;
+      }
+
       case "blur":
         this._closeSelection();
         break;
