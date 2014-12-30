@@ -1142,7 +1142,7 @@ GeckoMediaPluginService::GetNodeId(const nsAString& aOrigin,
 }
 
 static bool
-MatchOrigin(nsIFile* aPath, const nsACString& aMatch)
+MatchOrigin(nsIFile* aPath, const nsACString& aOrigin)
 {
   // http://en.wikipedia.org/wiki/Domain_Name_System#Domain_name_syntax
   static const uint32_t MaxDomainLength = 253;
@@ -1150,15 +1150,67 @@ MatchOrigin(nsIFile* aPath, const nsACString& aMatch)
   nsresult rv;
   nsCString str;
   rv = ReadFromFile(aPath, NS_LITERAL_CSTRING("origin"), str, MaxDomainLength);
-  if (NS_SUCCEEDED(rv) && aMatch.Equals(str)) {
+  if (NS_SUCCEEDED(rv) && aOrigin.Equals(str)) {
     return true;
   }
   rv = ReadFromFile(aPath, NS_LITERAL_CSTRING("topLevelOrigin"), str, MaxDomainLength);
-  if (NS_SUCCEEDED(rv) && aMatch.Equals(str)) {
+  if (NS_SUCCEEDED(rv) && aOrigin.Equals(str)) {
     return true;
   }
   return false;
 }
+
+template<typename T> static void
+KillPlugins(const nsTArray<nsRefPtr<GMPParent>>& aPlugins,
+            Mutex& aMutex, T&& aFilter)
+{
+  // Shutdown the plugins when |aFilter| evaluates to true.
+  // After we clear storage data, node IDs will become invalid and shouldn't be
+  // used anymore. We need to kill plugins with such nodeIDs.
+  // Note: we can't shut them down while holding the lock,
+  // as the lock is not re-entrant and shutdown requires taking the lock.
+  // The plugin list is only edited on the GMP thread, so this should be OK.
+  nsTArray<nsRefPtr<GMPParent>> pluginsToKill;
+  {
+    MutexAutoLock lock(aMutex);
+    for (size_t i = 0; i < aPlugins.Length(); i++) {
+      nsRefPtr<GMPParent> parent(aPlugins[i]);
+      if (aFilter(parent)) {
+        pluginsToKill.AppendElement(parent);
+      }
+    }
+  }
+
+  for (size_t i = 0; i < pluginsToKill.Length(); i++) {
+    pluginsToKill[i]->CloseActive(false);
+    // Abort async shutdown because we're going to wipe the plugin's storage,
+    // so we don't want it writing more data in its async shutdown path.
+    pluginsToKill[i]->AbortAsyncShutdown();
+  }
+}
+
+static nsresult
+DeleteDir(nsIFile* aPath)
+{
+  bool exists = false;
+  nsresult rv = aPath->Exists(&exists);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (exists) {
+    return aPath->Remove(true);
+  }
+  return NS_OK;
+}
+
+struct NodeFilter {
+  explicit NodeFilter(const nsTArray<nsCString>& nodeIDs) : mNodeIDs(nodeIDs) {}
+  bool operator()(GMPParent* aParent) {
+    return mNodeIDs.Contains(aParent->GetNodeId());
+  }
+private:
+  const nsTArray<nsCString>& mNodeIDs;
+};
 
 void
 GeckoMediaPluginService::ForgetThisSiteOnGMPThread(const nsACString& aOrigin)
@@ -1204,10 +1256,12 @@ GeckoMediaPluginService::ForgetThisSiteOnGMPThread(const nsACString& aOrigin)
       continue;
     }
 
-    // Keep node IDs to clear data/plugins associated with them later.
     nsAutoCString salt;
     if (NS_SUCCEEDED(ReadSalt(dirEntry, salt))) {
+      // Keep node IDs to clear data/plugins associated with them later.
       nodeIDsToClear.AppendElement(salt);
+      // Also remove node IDs from the table.
+      mPersistentStorageAllowed.Remove(salt);
     }
     // Now we can remove the directory for the origin pair.
     if (NS_FAILED(dirEntry->Remove(true))) {
@@ -1215,9 +1269,20 @@ GeckoMediaPluginService::ForgetThisSiteOnGMPThread(const nsACString& aOrigin)
     }
   }
 
-  // TODO: Clear plugins/data associated with the node IDs in nodeIDsToClear
-  // in next patch.
-  nodeIDsToClear.Clear();
+  // Kill plugins that have node IDs to be cleared.
+  KillPlugins(mPlugins, mMutex, NodeFilter(nodeIDsToClear));
+
+  // Clear all matching $profileDir/gmp/storage/$nodeId/
+  ERR_RET(GetStorageDir(getter_AddRefs(path)));
+  ERR_RET(path->AppendNative(NS_LITERAL_CSTRING("storage")));
+  for (size_t i = 0; i < nodeIDsToClear.Length(); i++) {
+    nsCOMPtr<nsIFile> dirEntry;
+    ERR_CONT(path->Clone(getter_AddRefs(dirEntry)));
+    ERR_CONT(dirEntry->AppendNative(nodeIDsToClear[i]));
+    if (NS_FAILED(DeleteDir(dirEntry))) {
+      NS_WARNING("Failed to delete GMP storage directory for the node");
+    }
+  }
 
 #undef ERR_RET
 #undef ERR_CONT
@@ -1245,6 +1310,10 @@ public:
   }
 };
 
+static bool IsNodeIdValid(GMPParent* aParent) {
+  return !aParent->GetNodeId().IsEmpty();
+}
+
 void
 GeckoMediaPluginService::ClearStorage()
 {
@@ -1256,28 +1325,8 @@ GeckoMediaPluginService::ClearStorage()
   return;
 #endif
 
-  // Shutdown all plugins that have valid node IDs as those IDs will become
-  // invalid and shouldn't be used anymore after we clear storage data.
-  // Note: we can't shut them down while holding the lock,
-  // as the lock is not re-entrant and shutdown requires taking the lock.
-  // The plugin list is only edited on the GMP thread, so this should be OK.
-  nsTArray<nsRefPtr<GMPParent>> pluginsToKill;
-  {
-    MutexAutoLock lock(mMutex);
-    for (size_t i = 0; i < mPlugins.Length(); i++) {
-      nsRefPtr<GMPParent> parent(mPlugins[i]);
-      if (!parent->GetNodeId().IsEmpty()) {
-        pluginsToKill.AppendElement(parent);
-      }
-    }
-  }
-
-  for (size_t i = 0; i < pluginsToKill.Length(); i++) {
-    pluginsToKill[i]->CloseActive(false);
-    // Abort async shutdown because we're going to wipe the plugin's storage,
-    // so we don't want it writing more data in its async shutdown path.
-    pluginsToKill[i]->AbortAsyncShutdown();
-  }
+  // Kill plugins with valid nodeIDs.
+  KillPlugins(mPlugins, mMutex, &IsNodeIdValid);
 
   nsCOMPtr<nsIFile> path; // $profileDir/gmp/
   nsresult rv = GetStorageDir(getter_AddRefs(path));
@@ -1285,10 +1334,7 @@ GeckoMediaPluginService::ClearStorage()
     return;
   }
 
-  bool exists = false;
-  if (NS_SUCCEEDED(path->Exists(&exists)) &&
-      exists &&
-      NS_FAILED(path->Remove(true))) {
+  if (NS_FAILED(DeleteDir(path))) {
     NS_WARNING("Failed to delete GMP storage directory");
   }
   NS_DispatchToMainThread(new StorageClearedTask(), NS_DISPATCH_NORMAL);
