@@ -956,6 +956,37 @@ protected:
   }
   uint32_t VideoPrerollFrames() const { return mScheduler->IsRealTime() ? 0 : mAmpleVideoFrames / 2; }
 
+  bool DonePrerollingAudio()
+  {
+    AssertCurrentThreadInMonitor();
+    return !IsAudioDecoding() || GetDecodedAudioDuration() >= AudioPrerollUsecs() * mPlaybackRate;
+  }
+
+  bool DonePrerollingVideo()
+  {
+    AssertCurrentThreadInMonitor();
+    return !IsVideoDecoding() ||
+           static_cast<uint32_t>(VideoQueue().GetSize()) >= VideoPrerollFrames() * mPlaybackRate;
+  }
+
+  void StopPrerollingAudio()
+  {
+    AssertCurrentThreadInMonitor();
+    if (mIsAudioPrerolling) {
+      mIsAudioPrerolling = false;
+      ScheduleStateMachine();
+    }
+  }
+
+  void StopPrerollingVideo()
+  {
+    AssertCurrentThreadInMonitor();
+    if (mIsVideoPrerolling) {
+      mIsVideoPrerolling = false;
+      ScheduleStateMachine();
+    }
+  }
+
   // This temporarily stores the first frame we decode after we seek.
   // This is so that if we hit end of stream while we're decoding to reach
   // the seek target, we will still have a frame that we can display as the
