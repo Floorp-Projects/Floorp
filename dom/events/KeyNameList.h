@@ -149,7 +149,7 @@ DEFINE_KEYNAME_WITH_SAME_NAME(JunjaMode)
 /******************************************************************************
  * Keys specific to Japanese keyboards
  *****************************************************************************/
-// DEFINE_KEYNAME_WITH_SAME_NAME(Eisu)
+DEFINE_KEYNAME_WITH_SAME_NAME(Eisu)
 DEFINE_KEYNAME_WITH_SAME_NAME(Hankaku)
 DEFINE_KEYNAME_WITH_SAME_NAME(Hiragana)
 DEFINE_KEYNAME_WITH_SAME_NAME(HiraganaKatakana)
