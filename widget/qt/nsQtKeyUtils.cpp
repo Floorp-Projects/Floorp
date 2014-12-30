@@ -385,9 +385,6 @@ QtKeyCodeToDOMKeyNameIndex(int aKeysym)
         case Qt::Key_Hangul_PreHanja:
         case Qt::Key_Hangul_PostHanja:
         case Qt::Key_Hangul_Special:
-        case Qt::Key_Dead_Belowdot:
-        case Qt::Key_Dead_Hook:
-        case Qt::Key_Dead_Horn:
         case Qt::Key_TrebleUp:
         case Qt::Key_TrebleDown:
         case Qt::Key_Standby:
