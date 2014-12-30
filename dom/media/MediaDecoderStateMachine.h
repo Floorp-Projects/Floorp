@@ -591,9 +591,10 @@ protected:
   // The decoder monitor must be held.
   void StopPlayback();
 
-  // Sets internal state which causes playback of media to begin or resume.
+  // If the conditions are right, sets internal state which causes playback
+  // of media to begin or resume.
   // Must be called with the decode monitor held.
-  void StartPlayback();
+  void MaybeStartPlayback();
 
   // Moves the decoder into decoding state. Called on the state machine
   // thread. The decoder monitor must be held.
