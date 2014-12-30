@@ -87,18 +87,20 @@ TEST_HARNESS_FILES.testing.mochitest.pywebsocket.mod_pywebsocket += [
     'pywebsocket/mod_pywebsocket/common.py',
     'pywebsocket/mod_pywebsocket/dispatch.py',
     'pywebsocket/mod_pywebsocket/extensions.py',
+    'pywebsocket/mod_pywebsocket/fast_masking.i',
     'pywebsocket/mod_pywebsocket/headerparserhandler.py',
     'pywebsocket/mod_pywebsocket/http_header_util.py',
     'pywebsocket/mod_pywebsocket/memorizingfile.py',
     'pywebsocket/mod_pywebsocket/msgutil.py',
+    'pywebsocket/mod_pywebsocket/mux.py',
     'pywebsocket/mod_pywebsocket/stream.py',
     'pywebsocket/mod_pywebsocket/util.py',
+    'pywebsocket/mod_pywebsocket/xhr_benchmark_handler.py',
 ]
 
 TEST_HARNESS_FILES.testing.mochitest.pywebsocket.mod_pywebsocket.handshake += [
     'pywebsocket/mod_pywebsocket/handshake/__init__.py',
     'pywebsocket/mod_pywebsocket/handshake/_base.py',
-    'pywebsocket/mod_pywebsocket/handshake/draft75.py',
     'pywebsocket/mod_pywebsocket/handshake/hybi.py',
     'pywebsocket/mod_pywebsocket/handshake/hybi00.py',
 ]
