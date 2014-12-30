@@ -993,12 +993,12 @@ KEY_MAP_GTK     (Subtitle, GDK_Subtitle)
 KEY_MAP_QT      (Subtitle, Qt::Key_Subtitle)
 KEY_MAP_ANDROID (Subtitle, AKEYCODE_CAPTIONS)
 
-// Zoom
-KEY_MAP_WIN     (Zoom, VK_ZOOM)
-KEY_MAP_QT      (Zoom, Qt::Key_Zoom)
+// ZoomToggle
+KEY_MAP_WIN     (ZoomToggle, VK_ZOOM)
+KEY_MAP_QT      (ZoomToggle, Qt::Key_Zoom)
 
 /******************************************************************************
- * Deplicated
+ * Deprecated
  ******************************************************************************/
 // DeadGrave
 KEY_MAP_GTK     (DeadGrave, GDK_dead_grave)
