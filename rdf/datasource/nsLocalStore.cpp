@@ -474,13 +474,6 @@ LocalStoreImpl::Observe(nsISupports *aSubject, const char *aTopic, const char16_
         // Create an in-memory datasource for use while we're
         // profile-less.
         mInner = do_CreateInstance(NS_RDF_DATASOURCE_CONTRACTID_PREFIX "in-memory-datasource");
-
-        if (!NS_strcmp(someData, MOZ_UTF16("shutdown-cleanse"))) {
-            nsCOMPtr<nsIFile> aFile;
-            rv = NS_GetSpecialDirectory(NS_APP_LOCALSTORE_50_FILE, getter_AddRefs(aFile));
-            if (NS_SUCCEEDED(rv))
-                rv = aFile->Remove(false);
-        }
     }
     else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
         rv = LoadData();
