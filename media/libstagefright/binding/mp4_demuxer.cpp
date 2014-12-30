@@ -92,6 +92,7 @@ MP4Demuxer::~MP4Demuxer()
 bool
 MP4Demuxer::Init()
 {
+  mMonitor->AssertCurrentThreadOwns();
   sp<MediaExtractor> e = mPrivate->mExtractor;
   for (size_t i = 0; i < e->countTracks(); i++) {
     sp<MetaData> metaData = e->getTrackMetaData(i);
@@ -138,30 +139,35 @@ MP4Demuxer::Init()
 bool
 MP4Demuxer::HasValidAudio()
 {
+  mMonitor->AssertCurrentThreadOwns();
   return mPrivate->mAudio.get() && mAudioConfig.IsValid();
 }
 
 bool
 MP4Demuxer::HasValidVideo()
 {
+  mMonitor->AssertCurrentThreadOwns();
   return mPrivate->mVideo.get() && mVideoConfig.IsValid();
 }
 
 Microseconds
 MP4Demuxer::Duration()
 {
+  mMonitor->AssertCurrentThreadOwns();
   return std::max(mVideoConfig.duration, mAudioConfig.duration);
 }
 
 bool
 MP4Demuxer::CanSeek()
 {
+  mMonitor->AssertCurrentThreadOwns();
   return mPrivate->mExtractor->flags() & MediaExtractor::CAN_SEEK;
 }
 
 void
 MP4Demuxer::SeekAudio(Microseconds aTime)
 {
+  mMonitor->AssertCurrentThreadOwns();
   if (mPrivate->mAudioIterator) {
     mPrivate->mAudioIterator->Seek(aTime);
   } else {
@@ -173,6 +179,7 @@ MP4Demuxer::SeekAudio(Microseconds aTime)
 void
 MP4Demuxer::SeekVideo(Microseconds aTime)
 {
+  mMonitor->AssertCurrentThreadOwns();
   if (mPrivate->mVideoIterator) {
     mPrivate->mVideoIterator->Seek(aTime);
   } else {
@@ -184,6 +191,7 @@ MP4Demuxer::SeekVideo(Microseconds aTime)
 MP4Sample*
 MP4Demuxer::DemuxAudioSample()
 {
+  mMonitor->AssertCurrentThreadOwns();
   if (mPrivate->mAudioIterator) {
     nsAutoPtr<MP4Sample> sample(mPrivate->mAudioIterator->GetNext());
     if (sample) {
@@ -213,6 +221,7 @@ MP4Demuxer::DemuxAudioSample()
 MP4Sample*
 MP4Demuxer::DemuxVideoSample()
 {
+  mMonitor->AssertCurrentThreadOwns();
   if (mPrivate->mVideoIterator) {
     nsAutoPtr<MP4Sample> sample(mPrivate->mVideoIterator->GetNext());
     if (sample) {
@@ -243,6 +252,7 @@ MP4Demuxer::DemuxVideoSample()
 void
 MP4Demuxer::UpdateIndex(const nsTArray<mozilla::MediaByteRange>& aByteRanges)
 {
+  mMonitor->AssertCurrentThreadOwns();
   for (int i = 0; i < mPrivate->mIndexes.Length(); i++) {
     mPrivate->mIndexes[i]->UpdateMoofIndex(aByteRanges);
   }
@@ -253,6 +263,7 @@ MP4Demuxer::ConvertByteRangesToTime(
   const nsTArray<mozilla::MediaByteRange>& aByteRanges,
   nsTArray<Interval<Microseconds>>* aIntervals)
 {
+  mMonitor->AssertCurrentThreadOwns();
   if (mPrivate->mIndexes.IsEmpty()) {
     return;
   }
@@ -292,6 +303,7 @@ MP4Demuxer::ConvertByteRangesToTime(
 int64_t
 MP4Demuxer::GetEvictionOffset(Microseconds aTime)
 {
+  mMonitor->AssertCurrentThreadOwns();
   if (mPrivate->mIndexes.IsEmpty()) {
     return 0;
   }
