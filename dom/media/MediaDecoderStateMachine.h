@@ -89,6 +89,7 @@ hardware (via AudioStream).
 #include "MediaDecoderReader.h"
 #include "MediaDecoderOwner.h"
 #include "MediaMetadataManager.h"
+#include "MediaDecoderStateMachineScheduler.h"
 
 class nsITimer;
 
@@ -943,8 +944,17 @@ protected:
   // unneccessarily if we start playing as soon as the first sample is
   // decoded. These two fields store how many video frames and audio
   // samples we must consume before are considered to be finished prerolling.
-  uint32_t mAudioPrerollUsecs;
-  uint32_t mVideoPrerollFrames;
+  uint32_t AudioPrerollUsecs() const
+  {
+    if (mScheduler->IsRealTime()) {
+      return 0;
+    }
+
+    uint32_t result = mLowAudioThresholdUsecs * 2;
+    MOZ_ASSERT(result <= mAmpleAudioThresholdUsecs, "Prerolling will never finish");
+    return result;
+  }
+  uint32_t VideoPrerollFrames() const { return mScheduler->IsRealTime() ? 0 : mAmpleVideoFrames / 2; }
 
   // This temporarily stores the first frame we decode after we seek.
   // This is so that if we hit end of stream while we're decoding to reach
