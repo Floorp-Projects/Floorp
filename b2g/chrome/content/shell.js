@@ -398,8 +398,8 @@ var shell = {
     }
 
     let mediaKeys = {
-      'MediaNextTrack': 'media-next-track-button',
-      'MediaPreviousTrack': 'media-previous-track-button',
+      'MediaTrackNext': 'media-next-track-button',
+      'MediaTrackPrevious': 'media-previous-track-button',
       'MediaPause': 'media-pause-button',
       'MediaPlay': 'media-play-button',
       'MediaPlayPause': 'media-play-pause-button',
