@@ -446,6 +446,72 @@ KEY_MAP_GTK     (Convert, GDK_Henkan)
 KEY_MAP_QT      (Convert, Qt::Key_Henkan)
 KEY_MAP_ANDROID (Convert, AKEYCODE_HENKAN)
 
+// Dead
+KEY_MAP_GTK     (Dead, GDK_dead_grave)
+KEY_MAP_GTK     (Dead, GDK_dead_acute)
+KEY_MAP_GTK     (Dead, GDK_dead_circumflex)
+KEY_MAP_GTK     (Dead, GDK_dead_tilde) // Same as GDK_dead_perispomeni
+KEY_MAP_GTK     (Dead, GDK_dead_macron)
+KEY_MAP_GTK     (Dead, GDK_dead_breve)
+KEY_MAP_GTK     (Dead, GDK_dead_abovedot)
+KEY_MAP_GTK     (Dead, GDK_dead_diaeresis)
+KEY_MAP_GTK     (Dead, GDK_dead_abovering)
+KEY_MAP_GTK     (Dead, GDK_dead_doubleacute)
+KEY_MAP_GTK     (Dead, GDK_dead_caron)
+KEY_MAP_GTK     (Dead, GDK_dead_cedilla)
+KEY_MAP_GTK     (Dead, GDK_dead_ogonek)
+KEY_MAP_GTK     (Dead, GDK_dead_iota)
+KEY_MAP_GTK     (Dead, GDK_dead_voiced_sound)
+KEY_MAP_GTK     (Dead, GDK_dead_semivoiced_sound)
+KEY_MAP_GTK     (Dead, GDK_dead_belowdot)
+KEY_MAP_GTK     (Dead, GDK_dead_hook)
+KEY_MAP_GTK     (Dead, GDK_dead_horn)
+KEY_MAP_GTK     (Dead, GDK_dead_stroke)
+KEY_MAP_GTK     (Dead, GDK_dead_abovecomma) // Same as GDK_dead_psili
+KEY_MAP_GTK     (Dead, GDK_dead_abovereversedcomma) // Same as GDK_dead_dasia
+KEY_MAP_GTK     (Dead, GDK_dead_doublegrave)
+KEY_MAP_GTK     (Dead, GDK_dead_belowring)
+KEY_MAP_GTK     (Dead, GDK_dead_belowmacron)
+KEY_MAP_GTK     (Dead, GDK_dead_belowcircumflex)
+KEY_MAP_GTK     (Dead, GDK_dead_belowtilde)
+KEY_MAP_GTK     (Dead, GDK_dead_belowbreve)
+KEY_MAP_GTK     (Dead, GDK_dead_belowdiaeresis)
+KEY_MAP_GTK     (Dead, GDK_dead_invertedbreve)
+KEY_MAP_GTK     (Dead, GDK_dead_belowcomma)
+KEY_MAP_GTK     (Dead, GDK_dead_currency)
+KEY_MAP_GTK     (Dead, GDK_dead_a)
+KEY_MAP_GTK     (Dead, GDK_dead_A)
+KEY_MAP_GTK     (Dead, GDK_dead_e)
+KEY_MAP_GTK     (Dead, GDK_dead_E)
+KEY_MAP_GTK     (Dead, GDK_dead_i)
+KEY_MAP_GTK     (Dead, GDK_dead_I)
+KEY_MAP_GTK     (Dead, GDK_dead_o)
+KEY_MAP_GTK     (Dead, GDK_dead_O)
+KEY_MAP_GTK     (Dead, GDK_dead_u)
+KEY_MAP_GTK     (Dead, GDK_dead_U)
+KEY_MAP_GTK     (Dead, GDK_dead_small_schwa)
+KEY_MAP_GTK     (Dead, GDK_dead_capital_schwa)
+KEY_MAP_GTK     (Dead, GDK_dead_greek)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Grave)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Acute)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Circumflex)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Tilde)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Macron)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Breve)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Abovedot)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Diaeresis)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Abovering)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Doubleacute)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Caron)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Cedilla)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Ogonek)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Iota)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Voiced_Sound)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Semivoiced_Sound)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Belowdot)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Hook)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Horn)
+
 // FinalMode
 KEY_MAP_WIN     (FinalMode, VK_FINAL)
 
@@ -997,73 +1063,6 @@ KEY_MAP_ANDROID (Subtitle, AKEYCODE_CAPTIONS)
 // ZoomToggle
 KEY_MAP_WIN     (ZoomToggle, VK_ZOOM)
 KEY_MAP_QT      (ZoomToggle, Qt::Key_Zoom)
-
-/******************************************************************************
- * Deprecated
- ******************************************************************************/
-// DeadGrave
-KEY_MAP_GTK     (DeadGrave, GDK_dead_grave)
-KEY_MAP_QT      (DeadGrave, Qt::Key_Dead_Grave)
-
-// DeadAcute
-KEY_MAP_GTK     (DeadAcute, GDK_dead_acute)
-KEY_MAP_QT      (DeadAcute, Qt::Key_Dead_Acute)
-
-// DeadCircumflex
-KEY_MAP_GTK     (DeadCircumflex, GDK_dead_circumflex)
-KEY_MAP_QT      (DeadCircumflex, Qt::Key_Dead_Circumflex)
-
-// DeadTilde
-KEY_MAP_GTK     (DeadTilde, GDK_dead_tilde)
-KEY_MAP_QT      (DeadTilde, Qt::Key_Dead_Tilde)
-
-// DeadMacron
-KEY_MAP_GTK     (DeadMacron, GDK_dead_macron)
-KEY_MAP_QT      (DeadMacron, Qt::Key_Dead_Macron)
-
-// DeadBreve
-KEY_MAP_GTK     (DeadBreve, GDK_dead_breve)
-KEY_MAP_QT      (DeadBreve, Qt::Key_Dead_Breve)
-
-// DeadAboveDot
-KEY_MAP_GTK     (DeadAboveDot, GDK_dead_abovedot)
-KEY_MAP_QT      (DeadAboveDot, Qt::Key_Dead_Abovedot)
-
-// DeadUmlaut
-KEY_MAP_GTK     (DeadUmlaut, GDK_dead_diaeresis)
-KEY_MAP_QT      (DeadUmlaut, Qt::Key_Dead_Diaeresis)
-
-// DeadAboveRing
-KEY_MAP_GTK     (DeadAboveRing, GDK_dead_abovering)
-KEY_MAP_QT      (DeadAboveRing, Qt::Key_Dead_Abovering)
-
-// DeadDoubleacute
-KEY_MAP_GTK     (DeadDoubleacute, GDK_dead_doubleacute)
-KEY_MAP_QT      (DeadDoubleacute, Qt::Key_Dead_Doubleacute)
-
-// DeadCaron
-KEY_MAP_GTK     (DeadCaron, GDK_dead_caron)
-KEY_MAP_QT      (DeadCaron, Qt::Key_Dead_Caron)
-
-// DeadCedilla
-KEY_MAP_GTK     (DeadCedilla, GDK_dead_cedilla)
-KEY_MAP_QT      (DeadCedilla, Qt::Key_Dead_Cedilla)
-
-// DeadOgonek
-KEY_MAP_GTK     (DeadOgonek, GDK_dead_ogonek)
-KEY_MAP_QT      (DeadOgonek, Qt::Key_Dead_Ogonek)
-
-// DeadIota
-KEY_MAP_GTK     (DeadIota, GDK_dead_iota)
-KEY_MAP_QT      (DeadIota, Qt::Key_Dead_Iota)
-
-// DeadVoicedSound
-KEY_MAP_GTK     (DeadVoicedSound, GDK_dead_voiced_sound)
-KEY_MAP_QT      (DeadVoicedSound, Qt::Key_Dead_Voiced_Sound)
-
-// DeadSemivoicedSound
-KEY_MAP_GTK     (DeadSemivoicedSound, GDK_dead_semivoiced_sound)
-KEY_MAP_QT      (DeadSemivoicedSound, Qt::Key_Dead_Semivoiced_Sound)
 
 #undef KEY_MAP_WIN
 #undef KEY_MAP_WIN_JPN

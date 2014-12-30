@@ -2063,8 +2063,7 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
         mVirtualKeys[virtualKeyIndex].GetNativeUniChars(shiftState);
       NS_ASSERTION(deadChars.mLength == 1,
                    "dead key must generate only one character");
-      aNativeKey.mKeyNameIndex =
-        WidgetUtils::GetDeadKeyNameIndex(deadChars.mChars[0]);
+      aNativeKey.mKeyNameIndex = KEY_NAME_INDEX_Dead;
       return;
     }
 
