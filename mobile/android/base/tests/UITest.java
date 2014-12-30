@@ -4,14 +4,10 @@
 
 package org.mozilla.gecko.tests;
 
-import java.util.Map;
-
 import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.Driver;
-import org.mozilla.gecko.FennecNativeActions;
-import org.mozilla.gecko.FennecNativeDriver;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.tests.components.AboutHomeComponent;
@@ -21,7 +17,6 @@ import org.mozilla.gecko.tests.components.GeckoViewComponent;
 import org.mozilla.gecko.tests.components.ToolbarComponent;
 import org.mozilla.gecko.tests.helpers.HelperInitializer;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.text.TextUtils;
 
@@ -42,10 +37,6 @@ abstract class UITest extends BaseRobocopTest
     private static final String JUNIT_FAILURE_MSG = "A JUnit method was called. Make sure " +
         "you are using AssertionHelper to make assertions. Try `fAssert*(...);`";
 
-    private Solo mSolo;
-    private Driver mDriver;
-    private Actions mActions;
-
     protected AboutHomeComponent mAboutHome;
     protected AppMenuComponent mAppMenu;
     protected GeckoViewComponent mGeckoView;
@@ -54,15 +45,6 @@ abstract class UITest extends BaseRobocopTest
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-
-        // Start the activity.
-        final Intent intent = createActivityIntent(mConfig);
-        setActivityIntent(intent);
-        final Activity activity = getActivity();
-
-        mSolo = new Solo(getInstrumentation(), activity);
-        mDriver = new FennecNativeDriver(activity, mSolo, mRootPath);
-        mActions = new FennecNativeActions(activity, mSolo, getInstrumentation(), mAsserter);
 
         // Helpers depend on components so initialize them first.
         initComponents();
@@ -191,16 +173,15 @@ abstract class UITest extends BaseRobocopTest
         return baseUrl + "/" + url.replaceAll("(^/)", "");
     }
 
-    private static Intent createActivityIntent(final Map<String, String> config) {
+    @Override
+    protected Intent createActivityIntent() {
         final Intent intent = new Intent(Intent.ACTION_MAIN);
 
         // Don't show the first run experience.
         intent.putExtra(BrowserApp.EXTRA_SKIP_STARTPANE, true);
+        intent.putExtra("args", "-no-remote -profile " + mProfile);
 
-        final String profile = config.get("profile");
-        intent.putExtra("args", "-no-remote -profile " + profile);
-
-        final String envString = config.get("envvars");
+        final String envString = mConfig.get("envvars");
         if (!TextUtils.isEmpty(envString)) {
             final String[] envStrings = envString.split(",");
 
