@@ -137,7 +137,7 @@ DEFINE_KEYNAME_WITH_SAME_NAME(ModeChange)
 DEFINE_KEYNAME_WITH_SAME_NAME(NonConvert)
 DEFINE_KEYNAME_WITH_SAME_NAME(PreviousCandidate)
 // DEFINE_KEYNAME_WITH_SAME_NAME(Process)
-// DEFINE_KEYNAME_WITH_SAME_NAME(SingleCandidate)
+DEFINE_KEYNAME_WITH_SAME_NAME(SingleCandidate)
 
 /******************************************************************************
  * Keys specific to Korean keyboards

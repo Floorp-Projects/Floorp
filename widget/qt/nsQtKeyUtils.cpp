@@ -369,7 +369,6 @@ QtKeyCodeToDOMKeyNameIndex(int aKeysym)
         case Qt::Key_Backtab:
         case Qt::Key_Direction_L:
         case Qt::Key_Direction_R:
-        case Qt::Key_SingleCandidate:
         case Qt::Key_Hiragana_Katakana:
         case Qt::Key_Zenkaku_Hankaku:
         case Qt::Key_Touroku:
