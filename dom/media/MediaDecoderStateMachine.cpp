@@ -630,18 +630,7 @@ MediaDecoderStateMachine::DecodeVideo()
       return;
     }
 
-    // We don't want to consider skipping to the next keyframe if we've
-    // only just started up the decode loop, so wait until we've decoded
-    // some frames before enabling the keyframe skip logic on video.
-    if (mIsVideoPrerolling &&
-        (static_cast<uint32_t>(VideoQueue().GetSize())
-          >= VideoPrerollFrames() * mPlaybackRate))
-    {
-      mIsVideoPrerolling = false;
-    }
-
     skipToNextKeyFrame = NeedToSkipToNextKeyframe();
-
     currentTime = mState == DECODER_STATE_SEEKING ? 0 : GetMediaTime();
 
     // Time the video decode, so that if it's slow, we can increase our low
@@ -689,14 +678,6 @@ MediaDecoderStateMachine::DecodeAudio()
       DispatchDecodeTasksIfNeeded();
       mon.NotifyAll();
       return;
-    }
-
-    // We don't want to consider skipping to the next keyframe if we've
-    // only just started up the decode loop, so wait until we've decoded
-    // some audio data before enabling the keyframe skip logic on audio.
-    if (mIsAudioPrerolling &&
-        GetDecodedAudioDuration() >= AudioPrerollUsecs() * mPlaybackRate) {
-      mIsAudioPrerolling = false;
     }
   }
 
@@ -755,12 +736,19 @@ MediaDecoderStateMachine::OnAudioDecoded(AudioData* aAudioSample)
       return;
     }
 
-    case DECODER_STATE_BUFFERING:
+    case DECODER_STATE_BUFFERING: {
       // If we're buffering, this may be the sample we need to stop buffering.
-      // Schedule the state machine and then fall through.
+      // Save it and schedule the state machine.
+      Push(audio);
       ScheduleStateMachine();
+      return;
+    }
+
     case DECODER_STATE_DECODING: {
       Push(audio);
+      if (mIsAudioPrerolling && DonePrerollingAudio()) {
+        StopPrerollingAudio();
+      }
       return;
     }
 
@@ -891,7 +879,13 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
     VideoQueue().Push(mFirstVideoFrameAfterSeek);
     mFirstVideoFrameAfterSeek = nullptr;
   }
-  isAudio ? AudioQueue().Finish() : VideoQueue().Finish();
+  if (isAudio) {
+    AudioQueue().Finish();
+    StopPrerollingAudio();
+  } else {
+    VideoQueue().Finish();
+    StopPrerollingVideo();
+  }
   switch (mState) {
     case DECODER_STATE_DECODING_FIRSTFRAME: {
       MaybeFinishDecodeFirstFrame();
@@ -970,12 +964,20 @@ MediaDecoderStateMachine::OnVideoDecoded(VideoData* aVideoSample)
       return;
     }
 
-    case DECODER_STATE_BUFFERING:
+    case DECODER_STATE_BUFFERING: {
       // If we're buffering, this may be the sample we need to stop buffering.
-      // Schedule the state machine and then fall through.
+      // Save it and schedule the state machine.
+      Push(video);
       ScheduleStateMachine();
+      return;
+    }
+
     case DECODER_STATE_DECODING: {
       Push(video);
+      if (mIsVideoPrerolling && DonePrerollingVideo()) {
+        StopPrerollingVideo();
+      }
+
       // If the requested video sample was slow to arrive, increase the
       // amount of audio we buffer to ensure that we don't run out of audio.
       // TODO: Detect when we're truly async, and don't do this if so, as
@@ -1204,9 +1206,10 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
 
   bool playStatePermits = mDecoder->GetState() == MediaDecoder::PLAY_STATE_PLAYING;
   bool decodeStatePermits = mState == DECODER_STATE_DECODING || mState == DECODER_STATE_COMPLETED;
-  if (!playStatePermits || !decodeStatePermits) {
-    DECODER_LOG("Not starting playback [playStatePermits: %d, decodeStatePermits: %d]",
-                (int) playStatePermits, (int) decodeStatePermits);
+  if (!playStatePermits || !decodeStatePermits || mIsAudioPrerolling || mIsVideoPrerolling) {
+    DECODER_LOG("Not starting playback [playStatePermits: %d, decodeStatePermits: %d, "
+                "mIsAudioPrerolling: %d, mIsVideoPrerolling: %d]", (int) playStatePermits,
+                (int) decodeStatePermits, (int) mIsAudioPrerolling, (int) mIsVideoPrerolling);
     return;
   }
 
@@ -1468,8 +1471,8 @@ void MediaDecoderStateMachine::StartDecoding()
   }
 
   // Reset other state to pristine values before starting decode.
-  mIsAudioPrerolling = true;
-  mIsVideoPrerolling = true;
+  mIsAudioPrerolling = !DonePrerollingAudio();
+  mIsVideoPrerolling = !DonePrerollingVideo();
 
   // Ensure that we've got tasks enqueued to decode data if we need to.
   DispatchDecodeTasksIfNeeded();
