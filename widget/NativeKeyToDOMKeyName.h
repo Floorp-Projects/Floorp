@@ -414,10 +414,18 @@ KEY_MAP_GTK     (Eject, GDK_Eject)
 KEY_MAP_QT      (Eject, Qt::Key_Eject)
 KEY_MAP_ANDROID (Eject, AKEYCODE_MEDIA_EJECT)
 
+// LogOff
+KEY_MAP_GTK     (LogOff, GDK_LogOff)
+KEY_MAP_QT      (LogOff, Qt::Key_LogOff)
+
 // Power
-KEY_MAP_GTK     (Power, GDK_PowerOff)
-KEY_MAP_QT      (Power, Qt::Key_PowerOff)
 KEY_MAP_ANDROID (Power, AKEYCODE_POWER)
+
+// PowerOff
+KEY_MAP_GTK     (PowerOff, GDK_PowerDown)
+KEY_MAP_GTK     (PowerOff, GDK_PowerOff)
+KEY_MAP_QT      (PowerOff, Qt::Key_PowerDown)
+KEY_MAP_QT      (PowerOff, Qt::Key_PowerOff)
 
 // PrintScreen
 KEY_MAP_WIN     (PrintScreen, VK_SNAPSHOT)
@@ -427,6 +435,23 @@ KEY_MAP_GTK     (PrintScreen, GDK_Sys_Req)
 KEY_MAP_QT      (PrintScreen, Qt::Key_Print)
 KEY_MAP_QT      (PrintScreen, Qt::Key_SysReq)
 KEY_MAP_ANDROID (PrintScreen, AKEYCODE_SYSRQ)
+
+// Hibernate
+KEY_MAP_GTK     (Hibernate, GDK_Hibernate)
+KEY_MAP_QT      (Hibernate, Qt::Key_Hibernate)
+
+// Standby
+KEY_MAP_WIN     (Standby, VK_SLEEP)
+KEY_MAP_GTK     (Standby, GDK_Standby)
+KEY_MAP_GTK     (Standby, GDK_Suspend)
+KEY_MAP_GTK     (Standby, GDK_Sleep)
+KEY_MAP_QT      (Standby, Qt::Key_Standby)
+KEY_MAP_QT      (Standby, Qt::Key_Suspend)
+KEY_MAP_QT      (Standby, Qt::Key_Sleep)
+
+// WakeUp
+KEY_MAP_GTK     (WakeUp, GDK_WakeUp)
+KEY_MAP_QT      (WakeUp, Qt::Key_WakeUp)
 
 /******************************************************************************
  * IME and Composition Keys
