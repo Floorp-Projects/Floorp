@@ -134,7 +134,7 @@ MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
   // So mState could be kReleased here.  We really don't care about the state,
   // though.
 
-  StreamTime delta = aDesiredTime - aLastEndTime;
+  StreamTime delta = aDesiredTime - aSource->GetEndOfAppendedData(aID);
   LOGFRAME(("NotifyPull, desired = %ld, delta = %ld %s", (int64_t) aDesiredTime,
             (int64_t) delta, mImage.get() ? "" : "<null>"));
 
