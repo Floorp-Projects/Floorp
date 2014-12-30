@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import os
 
+from mozbuild.frontend.reader import BuildReader
 from mozpack.copier import FileCopier
 from mozpack.files import FileFinder
 from mozpack.manifests import InstallManifest
@@ -20,10 +21,34 @@ class SphinxManager(object):
     def __init__(self, topsrcdir, main_path, output_dir):
         self._topsrcdir = topsrcdir
         self._output_dir = output_dir
+        self._docs_dir = os.path.join(output_dir, '_staging')
         self._conf_py_path = os.path.join(main_path, 'conf.py')
         self._index_path = os.path.join(main_path, 'index.rst')
         self._trees = {}
         self._python_package_dirs = set()
+
+    def read_build_config(self):
+        """Read the active build config and add docs to this instance."""
+
+        # Reading the Sphinx variables doesn't require a full build context.
+        # Only define the parts we need.
+        class fakeconfig(object):
+            def __init__(self, topsrcdir):
+                self.topsrcdir = topsrcdir
+
+        config = fakeconfig(self._topsrcdir)
+        reader = BuildReader(config)
+
+        for path, name, key, value in reader.find_sphinx_variables():
+            reldir = os.path.dirname(path)
+
+            if name == 'SPHINX_TREES':
+                assert key
+                self.add_tree(os.path.join(reldir, value),
+                    os.path.join(reldir, key))
+
+            if name == 'SPHINX_PYTHON_PACKAGE_DIRS':
+                self.add_python_package_dir(os.path.join(reldir, value))
 
     def add_tree(self, source_dir, dest_dir):
         """Add a directory from where docs should be sourced."""
@@ -40,29 +65,18 @@ class SphinxManager(object):
         """
         self._python_package_dirs.add(source_dir)
 
-    def generate_docs(self, fmt):
-        """Generate documentation using Sphinx."""
+    def generate_docs(self, app):
+        """Generate/stage documentation."""
+        app.info('Reading Sphinx metadata from build configuration')
+        self.read_build_config()
+        app.info('Staging static documentation')
         self._synchronize_docs()
+        app.info('Generating Python API documentation')
         self._generate_python_api_docs()
-
-        old_env = os.environ.copy()
-        try:
-            os.environ['MOZILLA_DIR'] = self._topsrcdir
-            args = [
-                'sphinx',
-                '-b', fmt,
-                os.path.join(self._output_dir, 'staging'),
-                os.path.join(self._output_dir, fmt),
-            ]
-
-            return sphinx.main(args)
-        finally:
-            os.environ.clear()
-            os.environ.update(old_env)
 
     def _generate_python_api_docs(self):
         """Generate Python API doc files."""
-        out_dir = os.path.join(self._output_dir, 'staging', 'python')
+        out_dir = os.path.join(self._docs_dir, 'python')
         base_args = ['sphinx', '--no-toc', '-o', out_dir]
 
         for p in sorted(self._python_package_dirs):
@@ -93,10 +107,9 @@ class SphinxManager(object):
 
                     m.add_symlink(source_path, os.path.join(dest, rel_source))
 
-        stage_dir = os.path.join(self._output_dir, 'staging')
         copier = FileCopier()
         m.populate_registry(copier)
-        copier.copy(stage_dir)
+        copier.copy(self._docs_dir)
 
         with open(self._index_path, 'rb') as fh:
             data = fh.read()
@@ -109,5 +122,5 @@ class SphinxManager(object):
         packages = '\n   '.join(sorted(packages))
         data = data.format(indexes=indexes, python_packages=packages)
 
-        with open(os.path.join(stage_dir, 'index.rst'), 'wb') as fh:
+        with open(os.path.join(self._docs_dir, 'index.rst'), 'wb') as fh:
             fh.write(data)

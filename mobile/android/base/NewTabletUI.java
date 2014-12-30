@@ -5,30 +5,13 @@
 package org.mozilla.gecko;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 
-import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.preferences.GeckoPreferences;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.util.HardwareUtils;
 
+@RobocopTarget
 public class NewTabletUI {
-    // This value should be in sync with preferences_display.xml. On non-release
-    // builds, the preference UI will be hidden and the (unused) default
-    // preference UI value will still be 'true'.
-    private static final boolean DEFAULT = !AppConstants.RELEASE_BUILD;
-
-    private static Boolean sNewTabletUI;
-
-    public static synchronized boolean isEnabled(Context context) {
-        if (!HardwareUtils.isTablet()) {
-            return false;
-        }
-
-        if (sNewTabletUI == null) {
-            final SharedPreferences prefs = GeckoSharedPrefs.forApp(context);
-            sNewTabletUI = prefs.getBoolean(GeckoPreferences.PREFS_NEW_TABLET_UI, DEFAULT);
-        }
-
-        return sNewTabletUI;
+    public static boolean isEnabled(final Context context) {
+        return HardwareUtils.isTablet();
     }
 }

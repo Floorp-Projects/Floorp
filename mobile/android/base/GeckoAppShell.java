@@ -793,6 +793,13 @@ public class GeckoAppShell
         systemExit();
     }
 
+    static void gracefulExit() {
+        Log.d(LOGTAG, "Initiating graceful exit...");
+        sendEventToGeckoSync(GeckoEvent.createBroadcastEvent("Browser:Quit", ""));
+        GeckoThread.setLaunchState(GeckoThread.LaunchState.GeckoExited);
+        System.exit(0);
+    }
+
     static void systemExit() {
         Log.d(LOGTAG, "Killing via System.exit()");
         GeckoThread.setLaunchState(GeckoThread.LaunchState.GeckoExited);
