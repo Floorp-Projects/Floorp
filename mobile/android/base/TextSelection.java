@@ -110,12 +110,16 @@ class TextSelection extends Layer implements GeckoEventListener {
     }
 
     private TextSelectionHandle getHandle(String name) {
-        if (name.equals("START")) {
-            return mStartHandle;
-        } else if (name.equals("MIDDLE")) {
-            return mMiddleHandle;
-        } else {
-            return mEndHandle;
+        switch (TextSelectionHandle.HandleType.valueOf(name)) {
+            case START:
+                return mStartHandle;
+            case MIDDLE:
+                return mMiddleHandle;
+            case END:
+                return mEndHandle;
+
+            default:
+                throw new IllegalArgumentException("TextSelectionHandle is invalid type.");
         }
     }
 

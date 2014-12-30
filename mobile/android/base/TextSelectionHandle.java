@@ -22,7 +22,7 @@ import android.widget.RelativeLayout;
 class TextSelectionHandle extends ImageView implements View.OnTouchListener {
     private static final String LOGTAG = "GeckoTextSelectionHandle";
 
-    private enum HandleType { START, MIDDLE, END }; 
+    public enum HandleType { START, MIDDLE, END };
 
     private final HandleType mHandleType;
     private final int mWidth;
