@@ -292,13 +292,13 @@ KEY_MAP_GTK     (CrSel, GDK_3270_CursorSelect) // legacy IBM keyboard layout
 KEY_MAP_GTK     (Cut, GDK_Cut)
 KEY_MAP_QT      (Cut, Qt::Key_Cut)
 
-// Del
-KEY_MAP_WIN     (Del, VK_DELETE)
-KEY_MAP_COCOA   (Del, kVK_PC_Delete)
-KEY_MAP_GTK     (Del, GDK_Delete)
-KEY_MAP_GTK     (Del, GDK_KP_Delete)
-KEY_MAP_QT      (Del, Qt::Key_Delete)
-KEY_MAP_ANDROID (Del, AKEYCODE_FORWARD_DEL)
+// Delete
+KEY_MAP_WIN     (Delete, VK_DELETE)
+KEY_MAP_COCOA   (Delete, kVK_PC_Delete)
+KEY_MAP_GTK     (Delete, GDK_Delete)
+KEY_MAP_GTK     (Delete, GDK_KP_Delete)
+KEY_MAP_QT      (Delete, Qt::Key_Delete)
+KEY_MAP_ANDROID (Delete, AKEYCODE_FORWARD_DEL)
 
 // EraseEof
 KEY_MAP_WIN     (EraseEof, VK_EREOF)
@@ -345,12 +345,12 @@ KEY_MAP_GTK     (ContextMenu, GDK_Menu)
 KEY_MAP_QT      (ContextMenu, Qt::Key_Menu)
 KEY_MAP_ANDROID (ContextMenu, AKEYCODE_MENU)
 
-// Esc
-KEY_MAP_WIN     (Esc, VK_ESCAPE)
-KEY_MAP_COCOA   (Esc, kVK_Escape)
-KEY_MAP_GTK     (Esc, GDK_Escape)
-KEY_MAP_QT      (Esc, Qt::Key_Escape)
-KEY_MAP_ANDROID (Esc, AKEYCODE_ESCAPE)
+// Escape
+KEY_MAP_WIN     (Escape, VK_ESCAPE)
+KEY_MAP_COCOA   (Escape, kVK_Escape)
+KEY_MAP_GTK     (Escape, GDK_Escape)
+KEY_MAP_QT      (Escape, Qt::Key_Escape)
+KEY_MAP_ANDROID (Escape, AKEYCODE_ESCAPE)
 
 // Execute
 KEY_MAP_WIN     (Execute, VK_EXECUTE)
