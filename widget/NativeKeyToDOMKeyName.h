@@ -586,6 +586,10 @@ KEY_MAP_WIN     (JunjaMode, VK_JUNJA)
 /******************************************************************************
  * Keys specific to Japanese keyboards
  ******************************************************************************/
+// Eisu
+KEY_MAP_COCOA   (Eisu, kVK_JIS_Eisu)
+KEY_MAP_ANDROID (Eisu, AKEYCODE_EISU)
+
 // Hankaku
 KEY_MAP_WIN_JPN (Hankaku, VK_OEM_AUTO)
 KEY_MAP_GTK     (Hankaku, GDK_Hankaku)
@@ -626,11 +630,8 @@ KEY_MAP_QT      (Katakana, Qt::Key_Katakana)
 
 // Romaji
 KEY_MAP_WIN_JPN (Romaji, VK_OEM_BACKTAB)
-KEY_MAP_COCOA   (Romaji, kVK_JIS_Eisu) // XXX Should be "Eisu"
 KEY_MAP_GTK     (Romaji, GDK_Romaji)
 KEY_MAP_QT      (Romaji, Qt::Key_Romaji)
-// Assuming that EISU key of Android is the Eisu key on Mac keyboard.
-KEY_MAP_ANDROID (Romaji, AKEYCODE_EISU) // XXX Should be "Eisu"
 
 // Zenkaku
 KEY_MAP_WIN_JPN (Zenkaku, VK_OEM_ENLW)
