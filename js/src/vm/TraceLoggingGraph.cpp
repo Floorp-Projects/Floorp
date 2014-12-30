@@ -29,7 +29,7 @@ class AutoTraceLoggerGraphStateLock
   TraceLoggerGraphState *graph;
 
   public:
-    AutoTraceLoggerGraphStateLock(TraceLoggerGraphState *graph MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    explicit AutoTraceLoggerGraphStateLock(TraceLoggerGraphState *graph MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : graph(graph)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
