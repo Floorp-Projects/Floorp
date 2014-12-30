@@ -884,8 +884,7 @@ nsXREDirProvider::DoShutdown()
       mozilla::services::GetObserverService();
     NS_ASSERTION(obsSvc, "No observer service?");
     if (obsSvc) {
-      static const char16_t kShutdownPersist[] =
-        {'s','h','u','t','d','o','w','n','-','p','e','r','s','i','s','t','\0'};
+      static const char16_t kShutdownPersist[] = MOZ_UTF16("shutdown-persist");
       obsSvc->NotifyObservers(nullptr, "profile-change-net-teardown", kShutdownPersist);
       obsSvc->NotifyObservers(nullptr, "profile-change-teardown", kShutdownPersist);
 
