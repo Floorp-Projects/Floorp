@@ -1,3 +1,5 @@
+Cu.import("resource://gre/modules/Services.jsm");
+
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 
@@ -45,7 +47,14 @@ function test1() {
 
   var ios = Components.classes["@mozilla.org/network/io-service;1"]
                       .getService(Components.interfaces.nsIIOService);
-  var chan = ios.newChannel("data:text/plain,", null, null);
+  var chan = ios.newChannel2("data:text/plain,",
+                             null,
+                             null,
+                             null,      // aLoadingNode
+                             Services.scriptSecurityManager.getSystemPrincipal(),
+                             null,      // aTriggeringPrincipal
+                             Ci.nsILoadInfo.SEC_NORMAL,
+                             Ci.nsIContentPolicy.TYPE_OTHER);
   chan.asyncOpen(f, null);
   do_test_pending();
 }
@@ -58,7 +67,14 @@ function test2() {
 
   var ios = Components.classes["@mozilla.org/network/io-service;1"]
                       .getService(Components.interfaces.nsIIOService);
-  var chan = ios.newChannel("http://localhost:0/", null, null);
+  var chan = ios.newChannel2("http://localhost:0/",
+                             null,
+                             null,
+                             null,      // aLoadingNode
+                             Services.scriptSecurityManager.getSystemPrincipal(),
+                             null,      // aTriggeringPrincipal
+                             Ci.nsILoadInfo.SEC_NORMAL,
+                             Ci.nsIContentPolicy.TYPE_OTHER);
   listener.expect_failure = true;
   chan.asyncOpen(f, null);
   do_test_pending();

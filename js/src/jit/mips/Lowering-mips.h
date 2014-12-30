@@ -108,7 +108,7 @@ class LIRGeneratorMIPS : public LIRGeneratorShared
     void visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins);
     void visitForkJoinGetSlice(MForkJoinGetSlice *ins);
     void visitSimdBinaryArith(MSimdBinaryArith *ins);
-    void visitSimdTernaryBitwise(MSimdTernaryBitwise *ins);
+    void visitSimdSelect(MSimdSelect *ins);
     void visitSimdSplatX4(MSimdSplatX4 *ins);
     void visitSimdValueX4(MSimdValueX4 *ins);
     void visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement *ins);

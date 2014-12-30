@@ -800,6 +800,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // Unboxing code.
     void unboxNonDouble(const ValueOperand &operand, Register dest);
     void unboxNonDouble(const Address &src, Register dest);
+    void unboxNonDouble(const BaseIndex &src, Register dest);
     void unboxInt32(const ValueOperand &src, Register dest) { unboxNonDouble(src, dest); }
     void unboxInt32(const Address &src, Register dest) { unboxNonDouble(src, dest); }
     void unboxBoolean(const ValueOperand &src, Register dest) { unboxNonDouble(src, dest); }
@@ -810,6 +811,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void unboxSymbol(const Address &src, Register dest) { unboxNonDouble(src, dest); }
     void unboxObject(const ValueOperand &src, Register dest) { unboxNonDouble(src, dest); }
     void unboxObject(const Address &src, Register dest) { unboxNonDouble(src, dest); }
+    void unboxObject(const BaseIndex &src, Register dest) { unboxNonDouble(src, dest); }
     void unboxDouble(const ValueOperand &src, FloatRegister dest);
     void unboxDouble(const Address &src, FloatRegister dest);
     void unboxValue(const ValueOperand &src, AnyRegister dest);

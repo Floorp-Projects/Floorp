@@ -61,8 +61,9 @@
   V(xor, (CoercedBinaryFunc<Float32x4, Int32x4, Xor, Float32x4>), 2, 0)
 
 #define FLOAT32X4_TERNARY_FUNCTION_LIST(V)                                          \
+  V(bitselect, BitSelect<Float32x4>, 3, 0)                                          \
   V(clamp, Float32x4Clamp, 3, 0)                                                    \
-  V(select, Float32x4Select, 3, 0)
+  V(select, Select<Float32x4>, 3, 0)
 
 #define FLOAT32X4_SHUFFLE_FUNCTION_LIST(V)                                          \
   V(swizzle, Swizzle<Float32x4>, 2, 0)                                              \
@@ -111,7 +112,8 @@
   V(xor, (BinaryFunc<Int32x4, Xor, Int32x4>), 2, 0)
 
 #define INT32X4_TERNARY_FUNCTION_LIST(V)                                            \
-  V(select, Int32x4Select, 3, 0)                                                    \
+  V(bitselect, BitSelect<Int32x4>, 3, 0)                                            \
+  V(select, Select<Int32x4>, 3, 0)
 
 #define INT32X4_QUARTERNARY_FUNCTION_LIST(V)                                        \
   V(bool, Int32x4Bool, 4, 0)
@@ -158,6 +160,7 @@
     _(and)                           \
     _(or)                            \
     _(xor)                           \
+    _(bitselect)                     \
     _(select)                        \
     _(swizzle)                       \
     _(shuffle)                       \

@@ -39,6 +39,7 @@ import re
 from mod_pywebsocket import common
 from mod_pywebsocket import handshake
 from mod_pywebsocket import msgutil
+from mod_pywebsocket import mux
 from mod_pywebsocket import stream
 from mod_pywebsocket import util
 
@@ -254,6 +255,9 @@ class Dispatcher(object):
         try:
             do_extra_handshake_(request)
         except handshake.AbortedByUserException, e:
+            # Re-raise to tell the caller of this function to finish this
+            # connection without sending any error.
+            self._logger.debug('%s', util.get_stack_trace())
             raise
         except Exception, e:
             util.prepend_message_to_exception(
@@ -277,22 +281,28 @@ class Dispatcher(object):
             AbortedByUserException: when user handler abort connection
         """
 
-        handler_suite = self.get_handler_suite(request.ws_resource)
-        if handler_suite is None:
-            raise DispatchException('No handler for: %r' % request.ws_resource)
-        transfer_data_ = handler_suite.transfer_data
         # TODO(tyoshino): Terminate underlying TCP connection if possible.
         try:
-            transfer_data_(request)
+            if mux.use_mux(request):
+                mux.start(request, self)
+            else:
+                handler_suite = self.get_handler_suite(request.ws_resource)
+                if handler_suite is None:
+                    raise DispatchException('No handler for: %r' %
+                                            request.ws_resource)
+                transfer_data_ = handler_suite.transfer_data
+                transfer_data_(request)
+
             if not request.server_terminated:
                 request.ws_stream.close_connection()
         # Catch non-critical exceptions the handler didn't handle.
         except handshake.AbortedByUserException, e:
-            self._logger.debug('%s', e)
+            self._logger.debug('%s', util.get_stack_trace())
             raise
         except msgutil.BadOperationException, e:
             self._logger.debug('%s', e)
-            request.ws_stream.close_connection(common.STATUS_ABNORMAL_CLOSURE)
+            request.ws_stream.close_connection(
+                common.STATUS_INTERNAL_ENDPOINT_ERROR)
         except msgutil.InvalidFrameException, e:
             # InvalidFrameException must be caught before
             # ConnectionTerminatedException that catches InvalidFrameException.
@@ -308,6 +318,8 @@ class Dispatcher(object):
         except msgutil.ConnectionTerminatedException, e:
             self._logger.debug('%s', e)
         except Exception, e:
+            # Any other exceptions are forwarded to the caller of this
+            # function.
             util.prepend_message_to_exception(
                 '%s raised exception for %s: ' % (
                     _TRANSFER_DATA_HANDLER_NAME, request.ws_resource),

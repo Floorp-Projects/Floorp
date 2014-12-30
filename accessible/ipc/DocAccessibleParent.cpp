@@ -146,12 +146,21 @@ DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
   return true;
 }
 
+PLDHashOperator
+DocAccessibleParent::ShutdownAccessibles(ProxyEntry* entry, void*)
+{
+  ProxyDestroyed(entry->mProxy);
+  return PL_DHASH_NEXT;
+}
+
 void
 DocAccessibleParent::ActorDestroy(ActorDestroyReason aWhy)
 {
-  ProxyDestroyed(this);
   MOZ_ASSERT(mChildDocs.IsEmpty(),
       "why wheren't the child docs destroyed already?");
+
+  mAccessibles.EnumerateEntries(ShutdownAccessibles, nullptr);
+  ProxyDestroyed(this);
   mParentDoc ? mParentDoc->RemoveChildDoc(this)
     : GetAccService()->RemoteDocShutdown(this);
 }
