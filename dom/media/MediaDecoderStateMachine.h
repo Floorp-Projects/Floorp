@@ -197,7 +197,18 @@ public:
   // Cause state transitions. These methods obtain the decoder monitor
   // to synchronise the change of state, and to notify other threads
   // that the state has changed.
-  void Play();
+  void Play()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    nsRefPtr<nsRunnable> r = NS_NewRunnableMethod(this, &MediaDecoderStateMachine::PlayInternal);
+    GetStateMachineThread()->Dispatch(r, NS_DISPATCH_NORMAL);
+  }
+
+private:
+  // The actual work for the above, which happens asynchronously on the state
+  // machine thread.
+  void PlayInternal();
+public:
 
   // Seeks to the decoder to aTarget asynchronously.
   // Must be called from the main thread.
