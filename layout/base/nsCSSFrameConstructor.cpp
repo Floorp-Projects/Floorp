@@ -4550,7 +4550,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
     }
 
     // Handle various non-scrollable blocks.
-    static const FrameConstructionData sNonScrollableBlockData[2][2] {
+    static const FrameConstructionData sNonScrollableBlockData[2][2] = {
       { FULL_CTOR_FCDATA(0,
                          &nsCSSFrameConstructor::ConstructNonScrollableBlock),
         FULL_CTOR_FCDATA(kCaptionCtorFlags,
