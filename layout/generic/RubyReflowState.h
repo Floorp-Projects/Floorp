@@ -23,22 +23,27 @@ class MOZ_STACK_CLASS RubyReflowState MOZ_FINAL
 {
 public:
   explicit RubyReflowState(
+    WritingMode aLineWM,
     const nsTArray<nsRubyTextContainerFrame*>& aTextContainers);
 
   struct TextContainerInfo
   {
     nsRubyTextContainerFrame* mFrame;
+    LogicalSize mLineSize;
 
-    TextContainerInfo(nsRubyTextContainerFrame* aFrame)
-      : mFrame(aFrame) { }
+    TextContainerInfo(WritingMode aLineWM, nsRubyTextContainerFrame* aFrame)
+      : mFrame(aFrame)
+      , mLineSize(aLineWM) { }
   };
 
   void AdvanceCurrentContainerIndex() { mCurrentContainerIndex++; }
 
   void SetTextContainerInfo(int32_t aIndex,
-                            nsRubyTextContainerFrame* aContainer)
+                            nsRubyTextContainerFrame* aContainer,
+                            const LogicalSize& aLineSize)
   {
     MOZ_ASSERT(mTextContainers[aIndex].mFrame == aContainer);
+    mTextContainers[aIndex].mLineSize = aLineSize;
   }
 
   const TextContainerInfo&

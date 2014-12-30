@@ -238,7 +238,7 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
     textContainers.AppendElement(iter.GetTextContainer());
   }
   const uint32_t rtcCount = textContainers.Length();
-  RubyReflowState rubyReflowState(textContainers);
+  RubyReflowState rubyReflowState(lineWM, textContainers);
 
   nsHTMLReflowMetrics baseMetrics(aReflowState);
   bool pushedFrame;

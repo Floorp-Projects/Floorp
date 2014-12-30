@@ -430,8 +430,7 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
 
     lineLayout->VerticalAlignLine();
     LogicalSize lineSize(lineWM, isize, lineLayout->GetFinalLineBSize());
-    textContainer->SetLineSize(lineSize);
-    aReflowState.mRubyReflowState->SetTextContainerInfo(i, textContainer);
+    aReflowState.mRubyReflowState->SetTextContainerInfo(i, textContainer, lineSize);
     lineLayout->EndLineReflow();
   }
 
