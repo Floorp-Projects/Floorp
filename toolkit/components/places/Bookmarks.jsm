@@ -654,13 +654,38 @@ let Bookmarks = Object.freeze({
    * @rejects if an error happens while reordering.
    * @throws if the arguments are invalid.
    */
-  // TODO must implement these methods yet:
-  // void setItemIndex(in long long aItemId, in long aNewIndex);
   reorder(parentGuid, orderedChildrenGuids) {
-    throw new Error("Not yet implemented");
+    let info = { guid: parentGuid };
+    info = validateBookmarkObject(info, { guid: { required: true } });
+
+    if (!Array.isArray(orderedChildrenGuids) || !orderedChildrenGuids.length)
+      throw new Error("Must provide a sorted array of children GUIDs.");
+    try {
+      orderedChildrenGuids.forEach(VALIDATORS.guid);
+    } catch (ex) {
+      throw new Error("Invalid GUID found in the sorted children array.");
+    }
+
+    return Task.spawn(function* () {
+      let parent = yield fetchBookmark(info);
+      if (!parent || parent.type != this.TYPE_FOLDER)
+        throw new Error("No folder found for the provided GUID.");
+
+      let sortedChildren = yield reorderChildren(parent, orderedChildrenGuids);
+
+      let observers = PlacesUtils.bookmarks.getObservers();
+      // Note that child.index is the old index.
+      for (let i = 0; i < sortedChildren.length; ++i) {
+        let child = sortedChildren[i];
+        notify(observers, "onItemMoved", [ child._id, child._parentId,
+                                           child.index, child._parentId,
+                                           i, child.type,
+                                           child.guid, child.parentGuid,
+                                           child.parentGuid ]);
+      }
+    }.bind(this));
   }
 });
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Globals.
@@ -949,6 +974,26 @@ function* fetchBookmarksByKeyword(info) {
   return rows.length ? rowsToItemsArray(rows) : null;
 }
 
+function* fetchBookmarksByParent(info) {
+  let db = yield DBConnPromised;
+
+  let rows = yield db.executeCached(
+    `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
+            b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
+            keyword, b.id AS _id, b.parent AS _parentId,
+            (SELECT count(*) FROM moz_bookmarks WHERE parent = b.id) AS _childCount,
+            p.parent AS _grandParentId
+     FROM moz_bookmarks b
+     LEFT JOIN moz_bookmarks p ON p.id = b.parent
+     LEFT JOIN moz_keywords k ON k.id = b.keyword_id
+     LEFT JOIN moz_places h ON h.id = b.fk
+     WHERE p.guid = :parentGuid
+     ORDER BY b.position ASC
+    `, { parentGuid: info.parentGuid });
+
+  return rowsToItemsArray(rows);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Remove implementation.
 
@@ -994,6 +1039,77 @@ function* removeBookmark(item) {
   }
 
   return item;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Reorder implementation.
+
+function* reorderChildren(parent, orderedChildrenGuids) {
+  let db = yield DBConnPromised;
+
+  return db.executeTransaction(function* () {
+    // Select all of the direct children for the given parent.
+    let children = yield fetchBookmarksByParent({ parentGuid: parent.guid });
+    if (!children.length)
+      return;
+
+    // Reorder the children array according to the specified order, provided
+    // GUIDs come first, others are appended in somehow random order.
+    children.sort((a, b) => {
+      let i = orderedChildrenGuids.indexOf(a.guid);
+      let j = orderedChildrenGuids.indexOf(b.guid);
+      // This works provided fetchBookmarksByParent returns sorted children.
+      return (i == -1 && j == -1) ? 0 :
+               (i != -1 && j != -1 && i < j) || (i != -1 && j == -1) ? -1 : 1;
+     });
+
+    // Update the bookmarks position now.  If any unknown guid have been
+    // inserted meanwhile, its position will be set to -position, and we'll
+    // handle it later.
+    // To do the update in a single step, we build a VALUES (guid, position)
+    // table.  We then use count() in the sorting table to avoid skipping values
+    // when no more existing GUIDs have been provided.
+    let valuesTable = children.map((child, i) => `("${child.guid}", ${i})`)
+                              .join();
+    yield db.execute(
+      `WITH sorting(g, p) AS (
+         VALUES ${valuesTable}
+       )
+       UPDATE moz_bookmarks SET position = (
+         SELECT CASE count(a.g) WHEN 0 THEN -position
+                                ELSE count(a.g) - 1
+                END
+         FROM sorting a
+         JOIN sorting b ON b.p <= a.p
+         WHERE a.g = guid
+           AND parent = :parentId
+      )`, { parentId: parent._id});
+
+    // Update position of items that could have been inserted in the meanwhile.
+    // Since this can happen rarely and it's only done for schema coherence
+    // resonds, we won't notify about these changes.
+    yield db.executeCached(
+      `CREATE TEMP TRIGGER moz_bookmarks_reorder_trigger
+         AFTER UPDATE OF position ON moz_bookmarks
+         WHEN NEW.position = -1
+       BEGIN
+         UPDATE moz_bookmarks
+         SET position = (SELECT MAX(position) FROM moz_bookmarks
+                         WHERE parent = NEW.parent) +
+                        (SELECT count(*) FROM moz_bookmarks
+                         WHERE parent = NEW.parent
+                           AND position BETWEEN OLD.position AND -1)
+         WHERE guid = NEW.guid;
+       END
+      `);
+
+    yield db.executeCached(
+      `UPDATE moz_bookmarks SET position = -1 WHERE position < 0`);
+
+    yield db.executeCached(`DROP TRIGGER moz_bookmarks_reorder_trigger`);
+
+    return children;
+  }.bind(this));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

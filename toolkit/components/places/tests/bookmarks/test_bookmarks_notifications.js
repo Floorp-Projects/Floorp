@@ -414,6 +414,58 @@ add_task(function* eraseEverything_notification() {
                  ]);
 });
 
+add_task(function* reorder_notification() {
+  let bookmarks = [
+    { type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      url: "http://example1.com/",
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid
+    },
+    { type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid
+    },
+    { type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid
+    },
+    { type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      url: "http://example2.com/",
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid
+    },
+    { type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      url: "http://example3.com/",
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid
+    },
+  ];
+  let sorted = [];
+  for (let bm of bookmarks){
+    sorted.push(yield PlacesUtils.bookmarks.insert(bm));
+  }
+
+  // Randomly reorder the array.
+  sorted.sort(() => 0.5 - Math.random());
+
+  let observer = expectNotifications();
+  yield PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.unfiledGuid,
+                                      sorted.map(bm => bm.guid));
+
+  let expectedNotifications = [];
+  for (let i = 0; i < sorted.length; ++i) {
+    let child = sorted[i];
+    let childId = yield PlacesUtils.promiseItemId(child.guid);
+    expectedNotifications.push({ name: "onItemMoved",
+                                 arguments: [ childId,
+                                              PlacesUtils.unfiledBookmarksFolderId,
+                                              child.index,
+                                              PlacesUtils.unfiledBookmarksFolderId,
+                                              i,
+                                              child.type,
+                                              child.guid,
+                                              child.parentGuid,
+                                              child.parentGuid
+                                            ] });
+  }
+  observer.check(expectedNotifications);
+});
+
 function expectNotifications() {
   let notifications = [];
   let observer = new Proxy(NavBookmarkObserver, {
