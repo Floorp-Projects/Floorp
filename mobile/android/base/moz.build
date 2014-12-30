@@ -540,6 +540,8 @@ if (CONFIG['MOZ_ANDROID_MAX_SDK_VERSION']):
 else:
     max_sdk_version = 999
 
+# Only bother to include new tablet code if we're building for tablet-capable
+# OS releases.
 if CONFIG['MOZ_ANDROID_NEW_TABLET_UI'] and max_sdk_version >= 11:
     gbjar.sources += [
         'tabs/TabStrip.java',
