@@ -1433,9 +1433,6 @@ ConvertAndroidKeyCodeToKeyNameIndex(AndroidGeckoEvent& aAndroidGeckoEvent)
         case AKEYCODE_CALENDAR:
         case AKEYCODE_MUSIC:
         case AKEYCODE_CALCULATOR:
-
-        case AKEYCODE_ZENKAKU_HANKAKU:
-        case AKEYCODE_KATAKANA_HIRAGANA:
             return KEY_NAME_INDEX_Unidentified;
 
         case AKEYCODE_UNKNOWN:
