@@ -170,6 +170,9 @@ KEY_MAP_QT      (Shift, Qt::Key_Shift)
 KEY_MAP_ANDROID (Shift, AKEYCODE_SHIFT_LEFT)
 KEY_MAP_ANDROID (Shift, AKEYCODE_SHIFT_RIGHT)
 
+// Symbol
+KEY_MAP_ANDROID (Symbol, AKEYCODE_SYM)
+
 /******************************************************************************
  * Whitespace Keys
  ******************************************************************************/
