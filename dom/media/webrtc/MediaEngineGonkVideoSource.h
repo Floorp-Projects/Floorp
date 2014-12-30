@@ -68,8 +68,7 @@ public:
   virtual void NotifyPull(MediaStreamGraph* aGraph,
                           SourceMediaStream* aSource,
                           TrackID aId,
-                          StreamTime aDesiredTime,
-                          StreamTime &aLastEndTime) MOZ_OVERRIDE;
+                          StreamTime aDesiredTime) MOZ_OVERRIDE;
   virtual bool SatisfiesConstraintSets(
       const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets)
   {
