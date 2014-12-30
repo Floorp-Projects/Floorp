@@ -1,4 +1,5 @@
 /* run some tests on the data: protocol handler */
+Cu.import("resource://gre/modules/Services.jsm");
 
 // The behaviour wrt spaces is:
 // - Textual content keeps all spaces
@@ -39,7 +40,14 @@ function run_test() {
   for (var i = 0; i < urls.length; ++i) {
     dump("*** opening channel " + i + "\n");
     do_test_pending();
-    var chan = ios.newChannel(urls[i][0], "", null);
+    var chan = ios.newChannel2(urls[i][0],
+                               "",
+                               null,
+                               null,      // aLoadingNode
+                               Services.scriptSecurityManager.getSystemPrincipal(),
+                               null,      // aTriggeringPrincipal
+                               Ci.nsILoadInfo.SEC_NORMAL,
+                               Ci.nsIContentPolicy.TYPE_OTHER);
     chan.contentType = "foo/bar"; // should be ignored
     chan.asyncOpen(new ChannelListener(on_read_complete, i), null);
   }

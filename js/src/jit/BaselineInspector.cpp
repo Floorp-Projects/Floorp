@@ -583,3 +583,33 @@ BaselineInspector::commonSetPropFunction(jsbytecode *pc, Shape **lastProperty, J
     *commonSetter = setter;
     return holder;
 }
+
+bool
+BaselineInspector::instanceOfData(jsbytecode *pc, Shape **shape, uint32_t *slot,
+                                  JSObject **prototypeObject)
+{
+    MOZ_ASSERT(*pc == JSOP_INSTANCEOF);
+
+    if (!hasBaselineScript())
+        return false;
+
+    const ICEntry &entry = icEntryFromPC(pc);
+
+    ICStub *stub = entry.firstStub();
+    if (!stub->isInstanceOf_Function() ||
+        !stub->next()->isInstanceOf_Fallback() ||
+        stub->next()->toInstanceOf_Fallback()->hadUnoptimizableAccess())
+    {
+        return false;
+    }
+
+    ICInstanceOf_Function *optStub = stub->toInstanceOf_Function();
+    *shape = optStub->shape();
+    *prototypeObject = optStub->prototypeObject();
+    *slot = optStub->slot();
+
+    if (IsInsideNursery(*prototypeObject))
+        return false;
+
+    return true;
+}
