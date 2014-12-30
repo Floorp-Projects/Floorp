@@ -4472,10 +4472,54 @@ IonBuilder::patchInlinedReturn(CallInfo &callInfo, MBasicBlock *exit, MBasicBloc
         rdef = callInfo.getArg(0);
     }
 
+    if (!callInfo.isSetter())
+        rdef = specializeInlinedReturn(rdef, exit);
+
     MGoto *replacement = MGoto::New(alloc(), bottom);
     exit->end(replacement);
     if (!bottom->addPredecessorWithoutPhis(exit))
         return nullptr;
+
+    return rdef;
+}
+
+MDefinition *
+IonBuilder::specializeInlinedReturn(MDefinition *rdef, MBasicBlock *exit)
+{
+    // Remove types from the return definition that weren't observed.
+    types::TemporaryTypeSet *types = bytecodeTypes(pc);
+
+    // The observed typeset doesn't contain extra information.
+    if (types->empty() || types->unknown())
+        return rdef;
+
+    // Decide if specializing is needed using the result typeset if available,
+    // else use the result type.
+
+    if (rdef->resultTypeSet()) {
+        // Don't specialize if return typeset is a subset of the
+        // observed typeset. The return typeset is already more specific.
+        if (rdef->resultTypeSet()->isSubset(types))
+            return rdef;
+    } else {
+        // Don't specialize if types are inaccordance, except for MIRType_Value
+        // and MIRType_Object (when not unknown object), since the typeset
+        // contains more specific information.
+        MIRType observedType = types->getKnownMIRType();
+        if (observedType == rdef->type() &&
+            observedType != MIRType_Value &&
+            (observedType != MIRType_Object || types->unknownObject()))
+        {
+            return rdef;
+        }
+    }
+
+    setCurrent(exit);
+
+    MTypeBarrier *barrier = nullptr;
+    rdef = addTypeBarrier(rdef, types, BarrierKind::TypeSet, &barrier);
+    if (barrier)
+        barrier->setNotMovable();
 
     return rdef;
 }
@@ -6818,55 +6862,60 @@ IonBuilder::testSingletonPropertyTypes(MDefinition *obj, JSObject *singleton, Pr
     return false;
 }
 
-// Given an observed type set, annotates the IR as much as possible:
-// (1) If no type information is provided, the value on the top of the stack is
-//     left in place.
-// (2) If a single type definitely exists, and no type barrier is needed,
-//     then an infallible unbox instruction replaces the value on the top of
-//     the stack.
-// (3) If a type barrier is needed, but has an unknown type set, leave the
-//     value at the top of the stack.
-// (4) If a type barrier is needed, and has a single type, an unbox
-//     instruction replaces the top of the stack.
-// (5) Lastly, a type barrier instruction replaces the top of the stack.
 bool
 IonBuilder::pushTypeBarrier(MDefinition *def, types::TemporaryTypeSet *observed, BarrierKind kind)
 {
+    MOZ_ASSERT(def == current->peek(-1));
+
+    MDefinition *replace = addTypeBarrier(current->pop(), observed, kind);
+    if (!replace)
+        return false;
+
+    current->push(replace);
+    return true;
+}
+
+// Given an observed type set, annotates the IR as much as possible:
+// (1) If no type information is provided, the given value is returned.
+// (2) If a single type definitely exists, and no type barrier is needed,
+//     then an infallible unbox instruction is returned.
+// (3) If a type barrier is needed, but has an unknown type set, the given
+//     value is returned.
+// (4) Lastly, a type barrier instruction is added and returned.
+MDefinition *
+IonBuilder::addTypeBarrier(MDefinition *def, types::TemporaryTypeSet *observed, BarrierKind kind,
+                           MTypeBarrier **pbarrier)
+{
     // Barriers are never needed for instructions whose result will not be used.
     if (BytecodeIsPopped(pc))
-        return true;
+        return def;
 
     // If the instruction has no side effects, we'll resume the entire operation.
     // The actual type barrier will occur in the interpreter. If the
     // instruction is effectful, even if it has a singleton type, there
     // must be a resume point capturing the original def, and resuming
     // to that point will explicitly monitor the new type.
-
     if (kind == BarrierKind::NoBarrier) {
         MDefinition *replace = ensureDefiniteType(def, observed->getKnownMIRType());
-        if (replace != def) {
-            current->pop();
-            current->push(replace);
-        }
         replace->setResultTypeSet(observed);
-        return true;
+        return replace;
     }
 
     if (observed->unknown())
-        return true;
+        return def;
 
-    current->pop();
-
-    MInstruction *barrier = MTypeBarrier::New(alloc(), def, observed, kind);
+    MTypeBarrier *barrier = MTypeBarrier::New(alloc(), def, observed, kind);
     current->add(barrier);
 
-    if (barrier->type() == MIRType_Undefined)
-        return pushConstant(UndefinedValue());
-    if (barrier->type() == MIRType_Null)
-        return pushConstant(NullValue());
+    if (pbarrier)
+        *pbarrier = barrier;
 
-    current->push(barrier);
-    return true;
+    if (barrier->type() == MIRType_Undefined)
+        return constant(UndefinedValue());
+    if (barrier->type() == MIRType_Null)
+        return constant(NullValue());
+
+    return barrier;
 }
 
 bool
