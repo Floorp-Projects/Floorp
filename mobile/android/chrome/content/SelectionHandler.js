@@ -8,9 +8,9 @@
 const PHONE_NUMBER_CONTAINERS = "td,div";
 
 var SelectionHandler = {
-  HANDLE_TYPE_START: "START",
-  HANDLE_TYPE_MIDDLE: "MIDDLE",
-  HANDLE_TYPE_END: "END",
+  HANDLE_TYPE_ANCHOR: "ANCHOR",
+  HANDLE_TYPE_CARET: "CARET",
+  HANDLE_TYPE_FOCUS: "FOCUS",
 
   TYPE_NONE: 0,
   TYPE_CURSOR: 1,
@@ -133,7 +133,7 @@ var SelectionHandler = {
         let data = JSON.parse(aData);
         if (this._activeType == this.TYPE_SELECTION) {
           this._startDraggingHandles();
-          this._moveSelection(data.handleType == this.HANDLE_TYPE_START, data.x, data.y);
+          this._moveSelection(data.handleType == this.HANDLE_TYPE_ANCHOR, data.x, data.y);
 
         } else if (this._activeType == this.TYPE_CURSOR) {
           this._startDraggingHandles();
@@ -152,7 +152,7 @@ var SelectionHandler = {
           this._startDraggingHandles();
 
           // Check to see if the handles should be reversed.
-          let isStartHandle = JSON.parse(aData).handleType == this.HANDLE_TYPE_START;
+          let isStartHandle = JSON.parse(aData).handleType == this.HANDLE_TYPE_ANCHOR;
           try {
             let selectionReversed = this._updateCacheForSelection(isStartHandle);
             if (selectionReversed) {
@@ -345,7 +345,7 @@ var SelectionHandler = {
     this._positionHandles(positions);
     Messaging.sendRequest({
       type: "TextSelection:ShowHandles",
-      handles: [this.HANDLE_TYPE_START, this.HANDLE_TYPE_END]
+      handles: [this.HANDLE_TYPE_ANCHOR, this.HANDLE_TYPE_FOCUS]
     });
     this._updateMenu();
     return true;
@@ -724,7 +724,7 @@ var SelectionHandler = {
     this._positionHandles();
     Messaging.sendRequest({
       type: "TextSelection:ShowHandles",
-      handles: [this.HANDLE_TYPE_MIDDLE]
+      handles: [this.HANDLE_TYPE_CARET]
     });
     this._updateMenu();
 
@@ -1097,7 +1097,7 @@ var SelectionHandler = {
       // divide by the pixel ratio
       let x = cursor.left / window.devicePixelRatio;
       let y = (cursor.top + cursor.height) / window.devicePixelRatio;
-      return [{ handle: this.HANDLE_TYPE_MIDDLE,
+      return [{ handle: this.HANDLE_TYPE_CARET,
                 left: x + scroll.X,
                 top: y + scroll.Y,
                 hidden: checkHidden(x, y) }];
@@ -1111,11 +1111,11 @@ var SelectionHandler = {
       // this because the top-level page may have scrolled since selection started.
       let offset = this._getViewOffset();
 
-      return  [{ handle: this.HANDLE_TYPE_START,
+      return  [{ handle: this.HANDLE_TYPE_ANCHOR,
                  left: sx + offset.x + scroll.X,
                  top: sy + offset.y + scroll.Y,
                  hidden: checkHidden(sx, sy) },
-               { handle: this.HANDLE_TYPE_END,
+               { handle: this.HANDLE_TYPE_FOCUS,
                  left: ex + offset.x + scroll.X,
                  top: ey + offset.y + scroll.Y,
                  hidden: checkHidden(ex, ey) }];
