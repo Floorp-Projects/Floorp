@@ -192,8 +192,7 @@ MediaEngineTabVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
 void
 MediaEngineTabVideoSource::NotifyPull(MediaStreamGraph*,
                                       SourceMediaStream* aSource,
-                                      TrackID aID, StreamTime aDesiredTime,
-                                      StreamTime& aLastEndTime)
+                                      TrackID aID, StreamTime aDesiredTime)
 {
   VideoSegment segment;
   MonitorAutoLock mon(mMonitor);
@@ -207,9 +206,7 @@ MediaEngineTabVideoSource::NotifyPull(MediaStreamGraph*,
     segment.AppendFrame(image.forget().downcast<layers::Image>(), delta, size);
     // This can fail if either a) we haven't added the track yet, or b)
     // we've removed or finished the track.
-    if (aSource->AppendToTrack(aID, &(segment))) {
-      aLastEndTime = aDesiredTime;
-    }
+    aSource->AppendToTrack(aID, &(segment));
   }
 }
 

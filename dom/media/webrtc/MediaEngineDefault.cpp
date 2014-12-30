@@ -228,8 +228,7 @@ void
 MediaEngineDefaultVideoSource::NotifyPull(MediaStreamGraph* aGraph,
                                           SourceMediaStream *aSource,
                                           TrackID aID,
-                                          StreamTime aDesiredTime,
-                                          StreamTime &aLastEndTime)
+                                          StreamTime aDesiredTime)
 {
   // AddTrack takes ownership of segment
   VideoSegment segment;
@@ -248,9 +247,7 @@ MediaEngineDefaultVideoSource::NotifyPull(MediaStreamGraph* aGraph,
     segment.AppendFrame(image.forget(), delta, size);
     // This can fail if either a) we haven't added the track yet, or b)
     // we've removed or finished the track.
-    if (aSource->AppendToTrack(aID, &segment)) {
-      aLastEndTime = aDesiredTime;
-    }
+    aSource->AppendToTrack(aID, &segment);
   }
 }
 
