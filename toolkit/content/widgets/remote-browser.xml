@@ -18,6 +18,11 @@
                 readonly="true">
         <getter><![CDATA[
           if (!this._securityUI) {
+            // Don't attempt to create the remote web progress if the
+            // messageManager has already gone away
+            if (!this.messageManager)
+              return null;
+
             let jsm = "resource://gre/modules/RemoteSecurityUI.jsm";
             let RemoteSecurityUI = Components.utils.import(jsm, {}).RemoteSecurityUI;
             this._securityUI = new RemoteSecurityUI();
@@ -39,6 +44,8 @@
         ]]></body>
       </method>
 
+      <field name="_controller">null</field>
+
       <field name="_remoteWebNavigation">null</field>
 
       <property name="webNavigation"
@@ -51,8 +58,13 @@
       	<getter>
       	  <![CDATA[
             if (!this._remoteWebProgress) {
+              // Don't attempt to create the remote web progress if the
+              // messageManager has already gone away
+              if (!this.messageManager)
+                return null;
+
               let jsm = "resource://gre/modules/RemoteWebProgress.jsm";
-              let RemoteWebProgressManager = Cu.import(jsm, {}).RemoteWebProgressManager;
+              let { RemoteWebProgressManager } = Cu.import(jsm, {});
               this._remoteWebProgressManager = new RemoteWebProgressManager(this);
               this._remoteWebProgress = this._remoteWebProgressManager.topLevelWebProgress;
             }
@@ -66,8 +78,13 @@
       <property name="finder" readonly="true">
         <getter><![CDATA[
           if (!this._remoteFinder) {
+            // Don't attempt to create the remote web progress if the
+            // messageManager has already gone away
+            if (!this.messageManager)
+              return null;
+
             let jsm = "resource://gre/modules/RemoteFinder.jsm";
-            let RemoteFinder = Cu.import(jsm, {}).RemoteFinder;
+            let { RemoteFinder } = Cu.import(jsm, {});
             this._remoteFinder = new RemoteFinder(this);
           }
           return this._remoteFinder;
@@ -205,6 +222,8 @@
         </setter>
       </property>
 
+      <field name="mDestroyed">false</field>
+
       <constructor>
         <![CDATA[
           /*
@@ -245,9 +264,23 @@
 
       <destructor>
         <![CDATA[
-          Services.obs.removeObserver(this, "ask-children-to-exit-fullscreen");
+          this.destroy();
         ]]>
       </destructor>
+
+      <!-- This is necessary because the destructor doesn't always get called when
+           we are removed from a tabbrowser. This will be explicitly called by tabbrowser -->
+      <method name="destroy">
+        <body><![CDATA[
+          if (this.mDestroyed)
+            return;
+          this.mDestroyed = true;
+
+          this.controllers.removeController(this._controller);
+
+          Services.obs.removeObserver(this, "ask-children-to-exit-fullscreen");
+        ]]></body>
+      </method>
 
       <method name="receiveMessage">
         <parameter name="aMessage"/>
