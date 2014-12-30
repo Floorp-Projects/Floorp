@@ -387,13 +387,11 @@ QtKeyCodeToDOMKeyNameIndex(int aKeysym)
         case Qt::Key_Hangul_Special:
         case Qt::Key_TrebleUp:
         case Qt::Key_TrebleDown:
-        case Qt::Key_Standby:
         case Qt::Key_OpenUrl:
         case Qt::Key_LaunchMedia:
         case Qt::Key_KeyboardLightOnOff:
         case Qt::Key_KeyboardBrightnessUp:
         case Qt::Key_KeyboardBrightnessDown:
-        case Qt::Key_WakeUp:
         case Qt::Key_ScreenSaver:
         case Qt::Key_WWW:
         case Qt::Key_Memo:
@@ -421,7 +419,6 @@ QtKeyCodeToDOMKeyNameIndex(int aKeysym)
         case Qt::Key_Game:
         case Qt::Key_Go:
         case Qt::Key_iTouch:
-        case Qt::Key_LogOff:
         case Qt::Key_Market:
         case Qt::Key_Meeting:
         case Qt::Key_MenuKB:
@@ -461,11 +458,8 @@ QtKeyCodeToDOMKeyNameIndex(int aKeysym)
         case Qt::Key_AudioRepeat:
         case Qt::Key_AudioCycleTrack:
         case Qt::Key_Time:
-        case Qt::Key_Hibernate:
         case Qt::Key_View:
         case Qt::Key_TopMenu:
-        case Qt::Key_PowerDown:
-        case Qt::Key_Suspend:
         case Qt::Key_ContrastAdjust:
         case Qt::Key_TouchpadToggle:
         case Qt::Key_TouchpadOn:
@@ -486,7 +480,6 @@ QtKeyCodeToDOMKeyNameIndex(int aKeysym)
         case Qt::Key_VoiceDial:
         case Qt::Key_LastNumberRedial:
         case Qt::Key_Printer:
-        case Qt::Key_Sleep:
         default:
             return KEY_NAME_INDEX_Unidentified;
     }
