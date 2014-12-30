@@ -402,7 +402,6 @@ QtKeyCodeToDOMKeyNameIndex(int aKeysym)
         case Qt::Key_Book:
         case Qt::Key_ToDoList:
         case Qt::Key_ClearGrab:
-        case Qt::Key_Close:
         case Qt::Key_Display:
         case Qt::Key_DOS:
         case Qt::Key_Documents:
@@ -418,13 +417,9 @@ QtKeyCodeToDOMKeyNameIndex(int aKeysym)
         case Qt::Key_OfficeHome:
         case Qt::Key_Option:
         case Qt::Key_Phone:
-        case Qt::Key_Reply:
         case Qt::Key_RotateWindows:
         case Qt::Key_RotationPB:
         case Qt::Key_RotationKB:
-        case Qt::Key_Save:
-        case Qt::Key_Send:
-        case Qt::Key_Spell:
         case Qt::Key_SplitScreen:
         case Qt::Key_Support:
         case Qt::Key_TaskPane:
@@ -434,7 +429,6 @@ QtKeyCodeToDOMKeyNameIndex(int aKeysym)
         case Qt::Key_Xfer:
         case Qt::Key_Away:
         case Qt::Key_Messenger:
-        case Qt::Key_MailForward:
         case Qt::Key_Pictures:
         case Qt::Key_Battery:
         case Qt::Key_Bluetooth:
@@ -464,7 +458,6 @@ QtKeyCodeToDOMKeyNameIndex(int aKeysym)
         case Qt::Key_ToggleCallHangup:
         case Qt::Key_VoiceDial:
         case Qt::Key_LastNumberRedial:
-        case Qt::Key_Printer:
         default:
             return KEY_NAME_INDEX_Unidentified;
     }
