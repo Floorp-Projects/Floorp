@@ -2191,7 +2191,12 @@ CodeGeneratorX86Shared::visitSimdExtractElementF(LSimdExtractElementF *ins)
         uint32_t mask = MacroAssembler::ComputeShuffleMask(lane);
         masm.shuffleFloat32(mask, input, output);
     }
-    masm.canonicalizeFloat(output);
+    // NaNs contained within SIMD values are not enforced to be canonical, so
+    // when we extract an element into a "regular" scalar JS value, we have to
+    // canonicalize. In asm.js code, we can skip this, as asm.js only has to
+    // canonicalize NaNs at FFI boundaries.
+    if (!gen->compilingAsmJS())
+        masm.canonicalizeFloat(output);
 }
 
 void
