@@ -232,9 +232,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mBufferingWait = mScheduler->IsRealTime() ? 0 : 30;
   mLowDataThresholdUsecs = mScheduler->IsRealTime() ? 0 : LOW_DATA_THRESHOLD_USECS;
 
-  mVideoPrerollFrames = mScheduler->IsRealTime() ? 0 : mAmpleVideoFrames / 2;
-  mAudioPrerollUsecs = mScheduler->IsRealTime() ? 0 : LOW_AUDIO_USECS * 2;
-
 #ifdef XP_WIN
   // Ensure high precision timers are enabled on Windows, otherwise the state
   // machine thread isn't woken up at reliable intervals to set the next frame,
@@ -638,7 +635,7 @@ MediaDecoderStateMachine::DecodeVideo()
     // some frames before enabling the keyframe skip logic on video.
     if (mIsVideoPrerolling &&
         (static_cast<uint32_t>(VideoQueue().GetSize())
-          >= mVideoPrerollFrames * mPlaybackRate))
+          >= VideoPrerollFrames() * mPlaybackRate))
     {
       mIsVideoPrerolling = false;
     }
@@ -698,7 +695,7 @@ MediaDecoderStateMachine::DecodeAudio()
     // only just started up the decode loop, so wait until we've decoded
     // some audio data before enabling the keyframe skip logic on audio.
     if (mIsAudioPrerolling &&
-        GetDecodedAudioDuration() >= mAudioPrerollUsecs * mPlaybackRate) {
+        GetDecodedAudioDuration() >= AudioPrerollUsecs() * mPlaybackRate) {
       mIsAudioPrerolling = false;
     }
   }
