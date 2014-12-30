@@ -42,7 +42,9 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(IMETextTxn, EditTxn,
 // mRangeList can't lead to cycles
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IMETextTxn)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsITransaction, IMETextTxn)
+  if (aIID.Equals(NS_GET_IID(IMETextTxn))) {
+    foundInterface = static_cast<nsITransaction*>(this);
+  } else
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 
 NS_IMPL_ADDREF_INHERITED(IMETextTxn, EditTxn)
