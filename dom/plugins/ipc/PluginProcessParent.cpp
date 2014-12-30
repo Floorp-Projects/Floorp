@@ -12,15 +12,14 @@
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/plugins/PluginMessageUtils.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/UniquePtr.h"
 #include "nsThreadUtils.h"
 
 using std::vector;
 using std::string;
 
-using namespace mozilla;
 using mozilla::ipc::BrowserProcessSubThread;
 using mozilla::ipc::GeckoChildProcessHost;
+using mozilla::plugins::LaunchCompleteTask;
 using mozilla::plugins::PluginProcessParent;
 using base::ProcessArchitecture;
 
@@ -44,7 +43,7 @@ PluginProcessParent::~PluginProcessParent()
 }
 
 bool
-PluginProcessParent::Launch(UniquePtr<LaunchCompleteTask> aLaunchCompleteTask)
+PluginProcessParent::Launch(mozilla::UniquePtr<LaunchCompleteTask> aLaunchCompleteTask)
 {
     ProcessArchitecture currentArchitecture = base::GetCurrentProcessArchitecture();
     uint32_t containerArchitectures = GetSupportedArchitecturesForProcessType(GeckoProcessType_Plugin);
@@ -79,7 +78,7 @@ PluginProcessParent::Launch(UniquePtr<LaunchCompleteTask> aLaunchCompleteTask)
         }
     }
 
-    mLaunchCompleteTask = Move(aLaunchCompleteTask);
+    mLaunchCompleteTask = mozilla::Move(aLaunchCompleteTask);
 
     vector<string> args;
     args.push_back(MungePluginDsoPath(mPluginFilePath));
