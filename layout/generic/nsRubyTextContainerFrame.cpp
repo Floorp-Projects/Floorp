@@ -139,5 +139,5 @@ nsRubyTextContainerFrame::Reflow(nsPresContext* aPresContext,
   WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
   const RubyReflowState::TextContainerInfo& info =
     aReflowState.mRubyReflowState->GetCurrentTextContainerInfo(this);
-  aDesiredSize.SetSize(lineWM, mLineSize);
+  aDesiredSize.SetSize(lineWM, info.mLineSize);
 }
