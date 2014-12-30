@@ -1281,5 +1281,7 @@ PluginScriptableObjectChild::CollectForInstance(NPObjectData* d, void* userArg)
 PluginScriptableObjectChild::NotifyOfInstanceShutdown(PluginInstanceChild* aInstance)
 {
   AssertPluginThread();
-  sObjectMap->EnumerateEntries(CollectForInstance, aInstance);
+  if (sObjectMap) {
+    sObjectMap->EnumerateEntries(CollectForInstance, aInstance);
+  }
 }

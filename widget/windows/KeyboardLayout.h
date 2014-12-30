@@ -234,7 +234,7 @@ public:
   };
 
   NativeKey(nsWindowBase* aWidget,
-            const MSG& aKeyOrCharMessage,
+            const MSG& aMessage,
             const ModifierKeyState& aModKeyState,
             nsTArray<FakeCharMsg>* aFakeCharMsgs = nullptr);
 
@@ -259,6 +259,12 @@ public:
    * Otherwise, false.
    */
   bool HandleKeyUpMessage(bool* aEventDispatched = nullptr) const;
+
+  /**
+   * Handles WM_APPCOMMAND message.  Returns true if the event is consumed.
+   * Otherwise, false.
+   */
+  bool HandleAppCommandMessage() const;
 
 private:
   nsRefPtr<nsWindowBase> mWidget;
@@ -294,10 +300,18 @@ private:
 
   nsTArray<FakeCharMsg>* mFakeCharMsgs;
 
+  // When a keydown event is dispatched at handling WM_APPCOMMAND, the computed
+  // virtual keycode is set to this.  Even if we consume WM_APPCOMMAND message,
+  // Windows may send WM_KEYDOWN and WM_KEYUP message for them.
+  // At that time, we should not dispatch key events for them.
+  static uint8_t sDispatchedKeyOfAppCommand;
+
   NativeKey()
   {
     MOZ_CRASH("The default constructor of NativeKey isn't available");
   }
+
+  void InitWithAppCommand();
 
   /**
    * Returns true if the key event is caused by auto repeat.
@@ -312,6 +326,21 @@ private:
       case WM_DEADCHAR:
       case WM_SYSDEADCHAR:
         return ((mMsg.lParam & (1 << 30)) != 0);
+      case WM_APPCOMMAND:
+        if (mVirtualKeyCode) {
+          // If we can map the WM_APPCOMMAND to a virtual keycode, we can trust
+          // the result of GetKeyboardState().
+          BYTE kbdState[256];
+          memset(kbdState, 0, sizeof(kbdState));
+          ::GetKeyboardState(kbdState);
+          return !!kbdState[mVirtualKeyCode];
+        }
+        // If there is no virtual keycode for the command, we dispatch both
+        // keydown and keyup events from WM_APPCOMMAND handler.  Therefore,
+        // even if WM_APPCOMMAND is caused by auto key repeat, web apps receive
+        // a pair of DOM keydown and keyup events.  I.e., KeyboardEvent.repeat
+        // should be never true of such keys.
+        return false;
       default:
         return false;
     }
@@ -413,6 +442,12 @@ private:
   void InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
                     const ModifierKeyState& aModKeyState) const;
   void InitKeyEvent(WidgetKeyboardEvent& aKeyEvent) const;
+
+  /**
+   * Dispatches a command event for aEventCommand.
+   * Returns true if the event is consumed.  Otherwise, false.
+   */
+  bool DispatchCommandEvent(uint32_t aEventCommand) const;
 
   /**
    * Dispatches the key event.  Returns true if the event is consumed.
