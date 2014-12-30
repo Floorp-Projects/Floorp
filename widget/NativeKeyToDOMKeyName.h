@@ -916,21 +916,25 @@ KEY_MAP_ANDROID (ChannelDown, AKEYCODE_CHANNEL_DOWN)
 // ChannelUp
 KEY_MAP_ANDROID (ChannelUp, AKEYCODE_CHANNEL_UP)
 
-// Red
-KEY_MAP_GTK     (Red, GDK_Red)
-KEY_MAP_ANDROID (Red, AKEYCODE_PROG_RED)
+// ColorF0Red
+KEY_MAP_GTK     (ColorF0Red, GDK_Red)
+KEY_MAP_QT      (ColorF0Red, Qt::Key_Red)
+KEY_MAP_ANDROID (ColorF0Red, AKEYCODE_PROG_RED)
 
-// Green
-KEY_MAP_GTK     (Green, GDK_Green)
-KEY_MAP_ANDROID (Green, AKEYCODE_PROG_GREEN)
+// ColorF1Green
+KEY_MAP_GTK     (ColorF1Green, GDK_Green)
+KEY_MAP_QT      (ColorF1Green, Qt::Key_Green)
+KEY_MAP_ANDROID (ColorF1Green, AKEYCODE_PROG_GREEN)
 
-// Yellow
-KEY_MAP_GTK     (Yellow, GDK_Yellow)
-KEY_MAP_ANDROID (Yellow, AKEYCODE_PROG_YELLOW)
+// ColorF2Yellow
+KEY_MAP_GTK     (ColorF2Yellow, GDK_Yellow)
+KEY_MAP_QT      (ColorF2Yellow, Qt::Key_Yellow)
+KEY_MAP_ANDROID (ColorF2Yellow, AKEYCODE_PROG_YELLOW)
 
-// Blue
-KEY_MAP_GTK     (Blue, GDK_Blue)
-KEY_MAP_ANDROID (Blue, AKEYCODE_PROG_BLUE)
+// ColorF3Blue
+KEY_MAP_GTK     (ColorF3Blue, GDK_Blue)
+KEY_MAP_QT      (ColorF3Blue, Qt::Key_Blue)
+KEY_MAP_ANDROID (ColorF3Blue, AKEYCODE_PROG_BLUE)
 
 // Dimmer
 KEY_MAP_GTK     (Dimmer, GDK_BrightnessAdjust)
