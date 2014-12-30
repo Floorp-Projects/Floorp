@@ -6,6 +6,7 @@
 #include "nsWindowBase.h"
 
 #include "mozilla/MiscEvents.h"
+#include "KeyboardLayout.h"
 #include "WinUtils.h"
 #include "npapi.h"
 
