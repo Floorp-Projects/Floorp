@@ -1402,12 +1402,6 @@ ConvertAndroidKeyCodeToKeyNameIndex(AndroidGeckoEvent& aAndroidGeckoEvent)
         case AKEYCODE_MEDIA_CLOSE:
 
         case AKEYCODE_DVR:
-        case AKEYCODE_TV_POWER:
-        case AKEYCODE_TV_INPUT:
-        case AKEYCODE_STB_POWER:
-        case AKEYCODE_STB_INPUT:
-        case AKEYCODE_AVR_POWER:
-        case AKEYCODE_AVR_INPUT:
 
         case AKEYCODE_BUTTON_1:
         case AKEYCODE_BUTTON_2:

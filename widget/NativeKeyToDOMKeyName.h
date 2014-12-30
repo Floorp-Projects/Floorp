@@ -1042,6 +1042,12 @@ KEY_MAP_QT      (AudioBassBoostDown, Qt::Key_BassDown)
 // AudioBassBoostUp
 KEY_MAP_QT      (AudioBassBoostUp, Qt::Key_BassUp)
 
+// AVRInput
+KEY_MAP_ANDROID (AVRInput, AKEYCODE_AVR_INPUT)
+
+// AVRPower
+KEY_MAP_ANDROID (AVRPower, AKEYCODE_AVR_POWER)
+
 // ChannelDown
 KEY_MAP_ANDROID (ChannelDown, AKEYCODE_CHANNEL_DOWN)
 
@@ -1118,10 +1124,25 @@ KEY_MAP_QT      (RandomToggle, Qt::Key_AudioRandomPlay)
 // Settings
 KEY_MAP_ANDROID (Settings, AKEYCODE_SETTINGS)
 
+// STBInput
+KEY_MAP_ANDROID (STBInput, AKEYCODE_STB_INPUT)
+
+// STBPower
+KEY_MAP_ANDROID (STBPower, AKEYCODE_STB_POWER)
+
 // Subtitle
 KEY_MAP_GTK     (Subtitle, GDK_Subtitle)
 KEY_MAP_QT      (Subtitle, Qt::Key_Subtitle)
 KEY_MAP_ANDROID (Subtitle, AKEYCODE_CAPTIONS)
+
+// TV
+KEY_MAP_ANDROID (TV, AKEYCODE_TV)
+
+// TVInput
+KEY_MAP_ANDROID (TVInput, AKEYCODE_TV_INPUT)
+
+// TVPower
+KEY_MAP_ANDROID (TVPower, AKEYCODE_TV_POWER)
 
 // ZoomToggle
 KEY_MAP_WIN     (ZoomToggle, VK_ZOOM)
