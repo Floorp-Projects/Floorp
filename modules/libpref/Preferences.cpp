@@ -587,14 +587,7 @@ Preferences::Observe(nsISupports *aSubject, const char *aTopic,
   nsresult rv = NS_OK;
 
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
-    if (!nsCRT::strcmp(someData, MOZ_UTF16("shutdown-cleanse"))) {
-      if (mCurrentFile) {
-        mCurrentFile->Remove(false);
-        mCurrentFile = nullptr;
-      }
-    } else {
-      rv = SavePrefFile(nullptr);
-    }
+    rv = SavePrefFile(nullptr);
   } else if (!strcmp(aTopic, "load-extension-defaults")) {
     pref_LoadPrefsInDirList(NS_EXT_PREFS_DEFAULTS_DIR_LIST);
   } else if (!nsCRT::strcmp(aTopic, "reload-default-prefs")) {
