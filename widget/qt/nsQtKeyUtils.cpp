@@ -448,8 +448,6 @@ QtKeyCodeToDOMKeyNameIndex(int aKeysym)
         case Qt::Key_Video:
         case Qt::Key_Word:
         case Qt::Key_Xfer:
-        case Qt::Key_ZoomIn:
-        case Qt::Key_ZoomOut:
         case Qt::Key_Away:
         case Qt::Key_Messenger:
         case Qt::Key_WebCam:
