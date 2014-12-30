@@ -1,0 +1,10 @@
+{
+  "webide": {
+    "prepackage": {
+      "command": "echo \"{\\\"name\\\":\\\"$NAME\\\"}\" > manifest.webapp",
+      "cwd": "./stage",
+      "env": ["NAME=world"]
+    },
+    "packageDir": "./stage"
+  }
+}
