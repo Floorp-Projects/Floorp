@@ -86,7 +86,7 @@ class AutoTraceLoggerThreadStateLock
   TraceLoggerThreadState *logging;
 
   public:
-    AutoTraceLoggerThreadStateLock(TraceLoggerThreadState *logging MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    explicit AutoTraceLoggerThreadStateLock(TraceLoggerThreadState *logging MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : logging(logging)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
