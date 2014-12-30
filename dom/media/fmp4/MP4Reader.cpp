@@ -632,6 +632,13 @@ MP4Sample*
 MP4Reader::PopSample(TrackType aTrack)
 {
   MonitorAutoLock mon(mDemuxerMonitor);
+  return PopSampleLocked(aTrack);
+}
+
+MP4Sample*
+MP4Reader::PopSampleLocked(TrackType aTrack)
+{
+  mDemuxerMonitor.AssertCurrentThreadOwns();
   switch (aTrack) {
     case kAudio:
       return mDemuxer->DemuxAudioSample();
@@ -821,6 +828,7 @@ MP4Reader::Seek(int64_t aTime,
 {
   LOG("MP4Reader::Seek(%lld)", aTime);
   MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());
+  MonitorAutoLock mon(mDemuxerMonitor);
   if (!mDecoder->GetResource()->IsTransportSeekable() || !mDemuxer->CanSeek()) {
     VLOG("Seek() END (Unseekable)");
     return SeekPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
@@ -829,7 +837,7 @@ MP4Reader::Seek(int64_t aTime,
   mQueuedVideoSample = nullptr;
   if (mDemuxer->HasValidVideo()) {
     mDemuxer->SeekVideo(aTime);
-    mQueuedVideoSample = PopSample(kVideo);
+    mQueuedVideoSample = PopSampleLocked(kVideo);
   }
   if (mDemuxer->HasValidAudio()) {
     mDemuxer->SeekAudio(
