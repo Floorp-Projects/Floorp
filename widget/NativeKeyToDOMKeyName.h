@@ -1166,9 +1166,6 @@ KEY_MAP_ANDROID (ColorF3Blue, AKEYCODE_PROG_BLUE)
 KEY_MAP_GTK     (Dimmer, GDK_BrightnessAdjust)
 KEY_MAP_QT      (Dimmer, Qt::Key_BrightnessAdjust)
 
-// Exit
-KEY_MAP_ANDROID (Exit, AKEYCODE_HOME)
-
 // Guide
 KEY_MAP_ANDROID (Guide, AKEYCODE_GUIDE)
 
