@@ -384,6 +384,16 @@ KEY_MAP_QT      (Play, Qt::Key_Play)
 KEY_MAP_WIN     (Select, VK_SELECT)
 KEY_MAP_GTK     (Select, GDK_Select)
 
+// ZoomIn
+KEY_MAP_GTK     (ZoomIn, GDK_ZoomIn)
+KEY_MAP_QT      (ZoomIn, Qt::Key_ZoomIn)
+KEY_MAP_ANDROID (ZoomIn, AKEYCODE_ZOOM_IN)
+
+// ZoomOut
+KEY_MAP_GTK     (ZoomOut, GDK_ZoomOut)
+KEY_MAP_QT      (ZoomOut, Qt::Key_ZoomOut)
+KEY_MAP_ANDROID (ZoomOut, AKEYCODE_ZOOM_OUT)
+
 /******************************************************************************
  * Device Keys
  ******************************************************************************/
