@@ -6,7 +6,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/LinkedList.h"
 
-#include "nsCrossSiteListenerProxy.h"
+#include "nsCORSListenerProxy.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsError.h"
