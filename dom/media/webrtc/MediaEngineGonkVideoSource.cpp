@@ -70,8 +70,7 @@ void
 MediaEngineGonkVideoSource::NotifyPull(MediaStreamGraph* aGraph,
                                        SourceMediaStream* aSource,
                                        TrackID aID,
-                                       StreamTime aDesiredTime,
-                                       StreamTime& aLastEndTime)
+                                       StreamTime aDesiredTime)
 {
   VideoSegment segment;
 
