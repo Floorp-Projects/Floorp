@@ -952,12 +952,9 @@ KEY_MAP_ANDROID (Info, AKEYCODE_INFO)
 // Live
 KEY_MAP_ANDROID (Live, AKEYCODE_TV)
 
-// Apps
-KEY_MAP_ANDROID (Apps, AKEYCODE_APP_SWITCH)
-
-// FastFwd
-KEY_MAP_QT      (FastFwd, Qt::Key_AudioForward)
-KEY_MAP_ANDROID (FastFwd, AKEYCODE_MEDIA_FAST_FORWARD)
+// MediaFastForward
+KEY_MAP_QT      (MediaFastForward, Qt::Key_AudioForward)
+KEY_MAP_ANDROID (MediaFastForward, AKEYCODE_MEDIA_FAST_FORWARD)
 
 // MediaLast
 KEY_MAP_QT      (MediaLast, Qt::Key_MediaLast)
