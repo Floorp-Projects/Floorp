@@ -289,10 +289,8 @@ AppleVDADecoder::OutputFrame(CVPixelBufferRef aImage,
   // Frames come out in DTS order but we need to output them
   // in composition order.
   mReorderQueue.Push(data);
-  // Assume a frame with a PTS <= current DTS is ready.
   while (mReorderQueue.Length() > mMaxRefFrames) {
-    nsRefPtr<VideoData> readyData = mReorderQueue.Pop();
-      mCallback->Output(readyData);
+    mCallback->Output(mReorderQueue.Pop());
   }
   LOG("%llu decoded frames queued",
       static_cast<unsigned long long>(mReorderQueue.Length()));
