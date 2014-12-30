@@ -331,20 +331,32 @@ nsNPAPIPluginStreamListener::OnStartBinding(nsPluginStreamListenerPeer* streamPe
   
   if (error != NPERR_NO_ERROR)
     return NS_ERROR_FAILURE;
-  
-  switch(streamType)
+
+  if (streamType == nsPluginStreamListenerPeer::STREAM_TYPE_UNKNOWN) {
+    SuspendRequest();
+  } else if (!SetStreamType(streamType, false)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+bool
+nsNPAPIPluginStreamListener::SetStreamType(uint16_t aType, bool aNeedsResume)
+{
+  switch(aType)
   {
     case NP_NORMAL:
-      mStreamType = NP_NORMAL; 
+      mStreamType = NP_NORMAL;
       break;
     case NP_ASFILEONLY:
-      mStreamType = NP_ASFILEONLY; 
+      mStreamType = NP_ASFILEONLY;
       break;
     case NP_ASFILE:
-      mStreamType = NP_ASFILE; 
+      mStreamType = NP_ASFILE;
       break;
     case NP_SEEK:
-      mStreamType = NP_SEEK; 
+      mStreamType = NP_SEEK;
       // Seekable streams should continue to exist even after OnStopRequest
       // is fired, so we AddRef ourself an extra time and Release when the
       // plugin calls NPN_DestroyStream (CleanUpStream). If the plugin never
@@ -353,11 +365,16 @@ nsNPAPIPluginStreamListener::OnStartBinding(nsPluginStreamListenerPeer* streamPe
       NS_ADDREF_THIS();
       break;
     default:
-      return NS_ERROR_FAILURE;
+      return false;
   }
-  
   mStreamStarted = true;
-  return NS_OK;
+  if (aNeedsResume) {
+    if (mStreamListenerPeer) {
+      mStreamListenerPeer->OnStreamTypeSet(mStreamType);
+    }
+    ResumeRequest();
+  }
+  return true;
 }
 
 void
@@ -369,18 +386,20 @@ nsNPAPIPluginStreamListener::SuspendRequest()
   nsresult rv = StartDataPump();
   if (NS_FAILED(rv))
     return;
-  
+
   mIsSuspended = true;
 
   if (mStreamListenerPeer) {
-   mStreamListenerPeer->SuspendRequests();
+    mStreamListenerPeer->SuspendRequests();
   }
 }
 
 void
 nsNPAPIPluginStreamListener::ResumeRequest()
 {
-  mStreamListenerPeer->ResumeRequests();
+  if (mStreamListenerPeer) {
+    mStreamListenerPeer->ResumeRequests();
+  }
   mIsSuspended = false;
 }
 
@@ -390,7 +409,7 @@ nsNPAPIPluginStreamListener::StartDataPump()
   nsresult rv;
   mDataPumpTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   // Start pumping data to the plugin every 100ms until it obeys and
   // eats the data.
   return mDataPumpTimer->InitWithCallback(this, 100,

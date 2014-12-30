@@ -2367,6 +2367,8 @@ pref("dom.ipc.plugins.reportCrashURL", true);
 // Defaults to 30 seconds.
 pref("dom.ipc.plugins.unloadTimeoutSecs", 30);
 
+pref("dom.ipc.plugins.asyncInit", false);
+
 pref("dom.ipc.processCount", 1);
 
 // Enable caching of Moz2D Path objects for SVG geometry elements

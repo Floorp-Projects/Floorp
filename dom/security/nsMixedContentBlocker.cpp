@@ -178,9 +178,9 @@ LogMixedContentMessage(MixedContentTypes aClassification,
     severityFlag = nsIScriptError::warningFlag;
     messageCategory.AssignLiteral("Mixed Content Message");
     if (aClassification == eMixedDisplay) {
-      messageLookupKey.AssignLiteral("LoadingMixedDisplayContent");
+      messageLookupKey.AssignLiteral("LoadingMixedDisplayContent2");
     } else {
-      messageLookupKey.AssignLiteral("LoadingMixedActiveContent");
+      messageLookupKey.AssignLiteral("LoadingMixedActiveContent2");
     }
   }
 
