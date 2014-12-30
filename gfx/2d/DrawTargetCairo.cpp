@@ -394,7 +394,7 @@ GetCairoSurfaceForSourceSurface(SourceSurface *aSurface,
 
   cairo_surface_set_user_data(surf,
                               &surfaceDataKey,
-                              data.forget().drop(),
+                              data.forget().take(),
                               ReleaseData);
   return surf;
 }
