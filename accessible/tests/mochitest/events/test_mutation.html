@@ -336,12 +336,38 @@
       }
     }
 
+    function insertReferredElm(aContainerID)
+    {
+      this.containerNode = getNode(aContainerID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, function(aNode) { return aNode.lastChild; }, this.containerNode),
+        new invokerChecker(EVENT_SHOW, function(aNode) { return aNode.firstChild; }, this.containerNode),
+        new invokerChecker(EVENT_REORDER, this.containerNode)
+      ];
+
+      this.invoke = function insertReferredElm_invoke()
+      {
+        this.containerNode.innerHTML =
+          "<span id='insertReferredElms_span'></span><input aria-labelledby='insertReferredElms_span'>";
+      }
+
+      this.getID = function insertReferredElm_getID()
+      {
+        return "insert inaccessible element and then insert referring element to make it accessible";
+      }
+    }
+
     /**
      * Target getters.
      */
     function getFirstChild(aNode)
     {
       return [aNode.firstChild];
+    }
+    function getLastChild(aNode)
+    {
+      return [aNode.lastChild];
     }
 
     function getNEnsureFirstChild(aNode)
@@ -457,6 +483,7 @@
       gQueue.push(new test2("testContainer", "testContainer2"));
       gQueue.push(new test2("testContainer", "testNestedContainer"));
       gQueue.push(new test3("testContainer"));
+      gQueue.push(new insertReferredElm("testContainer3"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -516,5 +543,6 @@
     <div id="testNestedContainer"></div>
   </div>
   <div id="testContainer2"></div>
+  <div id="testContainer3"></div>
 </body>
 </html>
