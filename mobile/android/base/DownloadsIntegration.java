@@ -12,16 +12,19 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 
 import java.io.File;
+import java.lang.IllegalArgumentException;
 import java.util.ArrayList;
 import java.util.List;
 
 import android.app.DownloadManager;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.net.Uri;
 import android.text.TextUtils;
+import android.util.Log;
 
 public class DownloadsIntegration implements NativeEventListener
 {
@@ -88,6 +91,23 @@ public class DownloadsIntegration implements NativeEventListener
         }
     }
 
+    private static boolean useSystemDownloadManager() {
+        if (!AppConstants.ANDROID_DOWNLOADS_INTEGRATION) {
+            return false;
+        }
+
+        int state = PackageManager.COMPONENT_ENABLED_STATE_DEFAULT;
+        try {
+            state = GeckoAppShell.getContext().getPackageManager().getApplicationEnabledSetting("com.android.providers.downloads");
+        } catch (IllegalArgumentException e) {
+            // Download Manager package does not exist
+            return false;
+        }
+
+        return (PackageManager.COMPONENT_ENABLED_STATE_ENABLED == state ||
+                PackageManager.COMPONENT_ENABLED_STATE_DEFAULT == state);
+    }
+
     @WrapElementForJNI
     public static void scanMedia(final String aFile, String aMimeType) {
         String mimeType = aMimeType;
@@ -115,7 +135,7 @@ public class DownloadsIntegration implements NativeEventListener
             }
         }
 
-        if (AppConstants.ANDROID_DOWNLOADS_INTEGRATION) {
+        if (useSystemDownloadManager()) {
             final File f = new File(aFile);
             final DownloadManager dm = (DownloadManager) GeckoAppShell.getContext().getSystemService(Context.DOWNLOAD_SERVICE);
             dm.addCompletedDownload(f.getName(),
@@ -133,7 +153,7 @@ public class DownloadsIntegration implements NativeEventListener
     }
 
     public static void removeDownload(final Download download) {
-        if (!AppConstants.ANDROID_DOWNLOADS_INTEGRATION) {
+        if (!useSystemDownloadManager()) {
             return;
         }
 
