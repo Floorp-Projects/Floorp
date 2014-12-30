@@ -1221,6 +1221,7 @@ KEY_MAP_ANDROID (Guide, AKEYCODE_GUIDE)
 KEY_MAP_ANDROID (Info, AKEYCODE_INFO)
 
 // MediaFastForward
+KEY_MAP_GTK     (MediaFastForward, GDK_AudioForward)
 KEY_MAP_QT      (MediaFastForward, Qt::Key_AudioForward)
 KEY_MAP_ANDROID (MediaFastForward, AKEYCODE_MEDIA_FAST_FORWARD)
 
