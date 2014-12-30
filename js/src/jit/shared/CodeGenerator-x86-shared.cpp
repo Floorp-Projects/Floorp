@@ -58,10 +58,8 @@ CodeGeneratorX86Shared::generateEpilogue()
 
 #ifdef JS_TRACE_LOGGING
     if (gen->info().executionMode() == SequentialExecution) {
-        if (!emitTracelogStopEvent(TraceLogger_IonMonkey))
-            return false;
-        if (!emitTracelogScriptStop())
-            return false;
+        emitTracelogStopEvent(TraceLogger_IonMonkey);
+        emitTracelogScriptStop();
     }
 #endif
 
