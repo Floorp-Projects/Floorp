@@ -102,6 +102,7 @@ private:
   // Blocks until the demuxer produces an sample of specified type.
   // Returns nullptr on error on EOS. Caller must delete sample.
   mp4_demuxer::MP4Sample* PopSample(mp4_demuxer::TrackType aTrack);
+  mp4_demuxer::MP4Sample* PopSampleLocked(mp4_demuxer::TrackType aTrack);
 
   bool SkipVideoDemuxToNextKeyFrame(int64_t aTimeThreshold, uint32_t& parsed);
 
