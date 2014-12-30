@@ -198,37 +198,37 @@ KEY_MAP_ANDROID (Tab, AKEYCODE_TAB)
 /******************************************************************************
  * Navigation Keys
  ******************************************************************************/
-// Down
-KEY_MAP_WIN     (Down, VK_DOWN)
-KEY_MAP_COCOA   (Down, kVK_DownArrow)
-KEY_MAP_GTK     (Down, GDK_Down)
-KEY_MAP_GTK     (Down, GDK_KP_Down)
-KEY_MAP_QT      (Down, Qt::Key_Down)
-KEY_MAP_ANDROID (Down, AKEYCODE_DPAD_DOWN)
+// ArrowDown
+KEY_MAP_WIN     (ArrowDown, VK_DOWN)
+KEY_MAP_COCOA   (ArrowDown, kVK_DownArrow)
+KEY_MAP_GTK     (ArrowDown, GDK_Down)
+KEY_MAP_GTK     (ArrowDown, GDK_KP_Down)
+KEY_MAP_QT      (ArrowDown, Qt::Key_Down)
+KEY_MAP_ANDROID (ArrowDown, AKEYCODE_DPAD_DOWN)
 
-// Left
-KEY_MAP_WIN     (Left, VK_LEFT)
-KEY_MAP_COCOA   (Left, kVK_LeftArrow)
-KEY_MAP_GTK     (Left, GDK_Left)
-KEY_MAP_GTK     (Left, GDK_KP_Left)
-KEY_MAP_QT      (Left, Qt::Key_Left)
-KEY_MAP_ANDROID (Left, AKEYCODE_DPAD_LEFT)
+// ArrowLeft
+KEY_MAP_WIN     (ArrowLeft, VK_LEFT)
+KEY_MAP_COCOA   (ArrowLeft, kVK_LeftArrow)
+KEY_MAP_GTK     (ArrowLeft, GDK_Left)
+KEY_MAP_GTK     (ArrowLeft, GDK_KP_Left)
+KEY_MAP_QT      (ArrowLeft, Qt::Key_Left)
+KEY_MAP_ANDROID (ArrowLeft, AKEYCODE_DPAD_LEFT)
 
-// Right
-KEY_MAP_WIN     (Right, VK_RIGHT)
-KEY_MAP_COCOA   (Right, kVK_RightArrow)
-KEY_MAP_GTK     (Right, GDK_Right)
-KEY_MAP_GTK     (Right, GDK_KP_Right)
-KEY_MAP_QT      (Right, Qt::Key_Right)
-KEY_MAP_ANDROID (Right, AKEYCODE_DPAD_RIGHT)
+// ArrowRight
+KEY_MAP_WIN     (ArrowRight, VK_RIGHT)
+KEY_MAP_COCOA   (ArrowRight, kVK_RightArrow)
+KEY_MAP_GTK     (ArrowRight, GDK_Right)
+KEY_MAP_GTK     (ArrowRight, GDK_KP_Right)
+KEY_MAP_QT      (ArrowRight, Qt::Key_Right)
+KEY_MAP_ANDROID (ArrowRight, AKEYCODE_DPAD_RIGHT)
 
-// Up
-KEY_MAP_WIN     (Up, VK_UP)
-KEY_MAP_COCOA   (Up, kVK_UpArrow)
-KEY_MAP_GTK     (Up, GDK_Up)
-KEY_MAP_GTK     (Up, GDK_KP_Up)
-KEY_MAP_QT      (Up, Qt::Key_Up)
-KEY_MAP_ANDROID (Up, AKEYCODE_DPAD_UP)
+// ArrowUp
+KEY_MAP_WIN     (ArrowUp, VK_UP)
+KEY_MAP_COCOA   (ArrowUp, kVK_UpArrow)
+KEY_MAP_GTK     (ArrowUp, GDK_Up)
+KEY_MAP_GTK     (ArrowUp, GDK_KP_Up)
+KEY_MAP_QT      (ArrowUp, Qt::Key_Up)
+KEY_MAP_ANDROID (ArrowUp, AKEYCODE_DPAD_UP)
 
 // End
 KEY_MAP_WIN     (End, VK_END)
