@@ -1,4 +1,4 @@
-# Copyright 2011, Google Inc.
+# Copyright 2012, Google Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -84,39 +84,29 @@ def get_default_port(is_secure):
         return common.DEFAULT_WEB_SOCKET_PORT
 
 
-def validate_subprotocol(subprotocol, hixie):
-    """Validate a value in subprotocol fields such as WebSocket-Protocol,
-    Sec-WebSocket-Protocol.
+def validate_subprotocol(subprotocol):
+    """Validate a value in the Sec-WebSocket-Protocol field.
 
-    See
-    - RFC 6455: Section 4.1., 4.2.2., and 4.3.
-    - HyBi 00: Section 4.1. Opening handshake
-    - Hixie 75: Section 4.1. Handshake
+    See the Section 4.1., 4.2.2., and 4.3. of RFC 6455.
     """
 
     if not subprotocol:
         raise HandshakeException('Invalid subprotocol name: empty')
-    if hixie:
-        # Parameter should be in the range U+0020 to U+007E.
-        for c in subprotocol:
-            if not 0x20 <= ord(c) <= 0x7e:
-                raise HandshakeException(
-                    'Illegal character in subprotocol name: %r' % c)
-    else:
-        # Parameter should be encoded HTTP token.
-        state = http_header_util.ParsingState(subprotocol)
-        token = http_header_util.consume_token(state)
-        rest = http_header_util.peek(state)
-        # If |rest| is not None, |subprotocol| is not one token or invalid. If
-        # |rest| is None, |token| must not be None because |subprotocol| is
-        # concatenation of |token| and |rest| and is not None.
-        if rest is not None:
-            raise HandshakeException('Invalid non-token string in subprotocol '
-                                     'name: %r' % rest)
+
+    # Parameter should be encoded HTTP token.
+    state = http_header_util.ParsingState(subprotocol)
+    token = http_header_util.consume_token(state)
+    rest = http_header_util.peek(state)
+    # If |rest| is not None, |subprotocol| is not one token or invalid. If
+    # |rest| is None, |token| must not be None because |subprotocol| is
+    # concatenation of |token| and |rest| and is not None.
+    if rest is not None:
+        raise HandshakeException('Invalid non-token string in subprotocol '
+                                 'name: %r' % rest)
 
 
 def parse_host_header(request):
-    fields = request.headers_in['Host'].split(':', 1)
+    fields = request.headers_in[common.HOST_HEADER].split(':', 1)
     if len(fields) == 1:
         return fields[0], get_default_port(request.is_https())
     try:
@@ -127,27 +117,6 @@ def parse_host_header(request):
 
 def format_header(name, value):
     return '%s: %s\r\n' % (name, value)
-
-
-def build_location(request):
-    """Build WebSocket location for request."""
-    location_parts = []
-    if request.is_https():
-        location_parts.append(common.WEB_SOCKET_SECURE_SCHEME)
-    else:
-        location_parts.append(common.WEB_SOCKET_SCHEME)
-    location_parts.append('://')
-    host, port = parse_host_header(request)
-    connection_port = request.connection.local_addr[1]
-    if port != connection_port:
-        raise HandshakeException('Header/connection port mismatch: %d/%d' %
-                                 (port, connection_port))
-    location_parts.append(host)
-    if (port != get_default_port(request.is_https())):
-        location_parts.append(':')
-        location_parts.append(str(port))
-    location_parts.append(request.uri)
-    return ''.join(location_parts)
 
 
 def get_mandatory_header(request, key):
@@ -170,17 +139,11 @@ def check_request_line(request):
     # 5.1 1. The three character UTF-8 string "GET".
     # 5.1 2. A UTF-8-encoded U+0020 SPACE character (0x20 byte).
     if request.method != 'GET':
-        raise HandshakeException('Method is not GET')
+        raise HandshakeException('Method is not GET: %r' % request.method)
 
-
-def check_header_lines(request, mandatory_headers):
-    check_request_line(request)
-
-    # The expected field names, and the meaning of their corresponding
-    # values, are as follows.
-    #  |Upgrade| and |Connection|
-    for key, expected_value in mandatory_headers:
-        validate_mandatory_header(request, key, expected_value)
+    if request.protocol != 'HTTP/1.1':
+        raise HandshakeException('Version is not HTTP/1.1: %r' %
+                                 request.protocol)
 
 
 def parse_token_list(data):
@@ -214,110 +177,6 @@ def parse_token_list(data):
         raise HandshakeException('No valid token found')
 
     return token_list
-
-
-def _parse_extension_param(state, definition, allow_quoted_string):
-    param_name = http_header_util.consume_token(state)
-
-    if param_name is None:
-        raise HandshakeException('No valid parameter name found')
-
-    http_header_util.consume_lwses(state)
-
-    if not http_header_util.consume_string(state, '='):
-        definition.add_parameter(param_name, None)
-        return
-
-    http_header_util.consume_lwses(state)
-
-    if allow_quoted_string:
-        # TODO(toyoshim): Add code to validate that parsed param_value is token
-        param_value = http_header_util.consume_token_or_quoted_string(state)
-    else:
-        param_value = http_header_util.consume_token(state)
-    if param_value is None:
-        raise HandshakeException(
-            'No valid parameter value found on the right-hand side of '
-            'parameter %r' % param_name)
-
-    definition.add_parameter(param_name, param_value)
-
-
-def _parse_extension(state, allow_quoted_string):
-    extension_token = http_header_util.consume_token(state)
-    if extension_token is None:
-        return None
-
-    extension = common.ExtensionParameter(extension_token)
-
-    while True:
-        http_header_util.consume_lwses(state)
-
-        if not http_header_util.consume_string(state, ';'):
-            break
-
-        http_header_util.consume_lwses(state)
-
-        try:
-            _parse_extension_param(state, extension, allow_quoted_string)
-        except HandshakeException, e:
-            raise HandshakeException(
-                'Failed to parse Sec-WebSocket-Extensions header: '
-                'Failed to parse parameter for %r (%r)' %
-                (extension_token, e))
-
-    return extension
-
-
-def parse_extensions(data, allow_quoted_string=False):
-    """Parses Sec-WebSocket-Extensions header value returns a list of
-    common.ExtensionParameter objects.
-
-    Leading LWSes must be trimmed.
-    """
-
-    state = http_header_util.ParsingState(data)
-
-    extension_list = []
-    while True:
-        extension = _parse_extension(state, allow_quoted_string)
-        if extension is not None:
-            extension_list.append(extension)
-
-        http_header_util.consume_lwses(state)
-
-        if http_header_util.peek(state) is None:
-            break
-
-        if not http_header_util.consume_string(state, ','):
-            raise HandshakeException(
-                'Failed to parse Sec-WebSocket-Extensions header: '
-                'Expected a comma but found %r' %
-                http_header_util.peek(state))
-
-        http_header_util.consume_lwses(state)
-
-    if len(extension_list) == 0:
-        raise HandshakeException(
-            'Sec-WebSocket-Extensions header contains no valid extension')
-
-    return extension_list
-
-
-def format_extensions(extension_list):
-    formatted_extension_list = []
-    for extension in extension_list:
-        formatted_params = [extension.name()]
-        for param_name, param_value in extension.get_parameters():
-            if param_value is None:
-                formatted_params.append(param_name)
-            else:
-                quoted_value = http_header_util.quote_if_necessary(param_value)
-                formatted_params.append('%s=%s' % (param_name, quoted_value))
-
-        formatted_extension_list.append('; '.join(formatted_params))
-
-    return ', '.join(formatted_extension_list)
 
 
 # vi:sts=4 sw=4 et

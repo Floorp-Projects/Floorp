@@ -153,6 +153,8 @@ struct Zone : public JS::shadow::Zone,
     bool isTooMuchMalloc() const { return gcMallocBytes <= 0; }
     void onTooMuchMalloc();
 
+    bool isCloseToAllocTrigger(bool highFrequencyGC) const;
+
     void *onOutOfMemory(void *p, size_t nbytes) {
         return runtimeFromMainThread()->onOutOfMemory(p, nbytes);
     }

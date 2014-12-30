@@ -553,7 +553,7 @@ LIRGeneratorMIPS::visitSimdBinaryArith(MSimdBinaryArith *ins)
 }
 
 void
-LIRGeneratorMIPS::visitSimdTernaryBitwise(MSimdTernaryBitwise *ins)
+LIRGeneratorMIPS::visitSimdSelect(MSimdSelect *ins)
 {
     MOZ_CRASH("NYI");
 }

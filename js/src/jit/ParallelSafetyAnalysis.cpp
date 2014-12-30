@@ -121,7 +121,7 @@ class ParallelSafetyVisitor : public MDefinitionVisitor
     SAFE_OP(SimdBinaryArith)
     SAFE_OP(SimdBinaryBitwise)
     SAFE_OP(SimdShift)
-    SAFE_OP(SimdTernaryBitwise)
+    SAFE_OP(SimdSelect)
     UNSAFE_OP(CloneLiteral)
     SAFE_OP(Parameter)
     SAFE_OP(Callee)

@@ -3217,6 +3217,13 @@ MacroAssemblerARMCompat::unboxNonDouble(const Address &src, Register dest)
 }
 
 void
+MacroAssemblerARMCompat::unboxNonDouble(const BaseIndex &src, Register dest)
+{
+    ma_alu(src.base, lsl(src.index, src.scale), ScratchRegister, OpAdd);
+    ma_ldr(Address(ScratchRegister, src.offset), dest);
+}
+
+void
 MacroAssemblerARMCompat::unboxDouble(const ValueOperand &operand, FloatRegister dest)
 {
     MOZ_ASSERT(dest.isDouble());

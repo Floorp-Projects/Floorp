@@ -1,8 +1,17 @@
+Cu.import("resource://gre/modules/Services.jsm");
+
 var ios = Cc["@mozilla.org/network/io-service;1"].
     getService(Ci.nsIIOService);
 
 function getTestReferrer(server_uri, referer_uri) {
-  var chan = ios.newChannel(server_uri, "", null);
+  var chan = ios.newChannel2(server_uri,
+                             "",
+                             null,
+                             null,      // aLoadingNode
+                             Services.scriptSecurityManager.getSystemPrincipal(),
+                             null,      // aTriggeringPrincipal
+                             Ci.nsILoadInfo.SEC_NORMAL,
+                             Ci.nsIContentPolicy.TYPE_OTHER);
   chan.QueryInterface(Components.interfaces.nsIHttpChannel);
   chan.referrer = ios.newURI(referer_uri, null, null);
   var header = null;

@@ -19,7 +19,14 @@ var httpServer = null;
 function make_channel(url, callback, ctx) {
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
-  return ios.newChannel(url, "", null);
+  return ios.newChannel2(url,
+                        "",
+                        null,
+                        null,      // aLoadingNode
+                        Services.scriptSecurityManager.getSystemPrincipal(),
+                        null,      // aTriggeringPrincipal
+                        Ci.nsILoadInfo.SEC_NORMAL,
+                        Ci.nsIContentPolicy.TYPE_OTHER);
 }
 
 // Have 2kb response (8 * 2 ^ 8)
