@@ -751,6 +751,13 @@ public:
    */
   bool HaveEnoughBuffered(TrackID aID);
   /**
+   * Get the stream time of the end of the data that has been appended so far.
+   * Can be called from any thread but won't be useful if it can race with
+   * an AppendToTrack call, so should probably just be called from the thread
+   * that also calls AppendToTrack.
+   */
+  StreamTime GetEndOfAppendedData(TrackID aID);
+  /**
    * Ensures that aSignalRunnable will be dispatched to aSignalThread
    * when we don't have enough buffered data in the track (which could be
    * immediately). Will dispatch the runnable immediately if the track
@@ -848,13 +855,15 @@ protected:
     int mResamplerChannelCount;
 #endif
     StreamTime mStart;
-    // Each time the track updates are flushed to the media graph thread,
-    // this is cleared.
-    uint32_t mCommands;
+    // End-time of data already flushed to the track (excluding mData)
+    StreamTime mEndOfFlushedData;
     // Each time the track updates are flushed to the media graph thread,
     // the segment buffer is emptied.
     nsAutoPtr<MediaSegment> mData;
     nsTArray<ThreadAndRunnable> mDispatchWhenNotEnough;
+    // Each time the track updates are flushed to the media graph thread,
+    // this is cleared.
+    uint32_t mCommands;
     bool mHaveEnough;
   };
 
