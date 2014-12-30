@@ -24,14 +24,14 @@ let test = asyncTest(function* () {
     messages: [
       {
         name: "Logged mixed active content",
-        text: "Loading mixed (insecure) active content on a secure page \"http://example.com/\"",
+        text: "Loading mixed (insecure) active content \"http://example.com/\" on a secure page",
         category: CATEGORY_SECURITY,
         severity: SEVERITY_WARNING,
         objects: true,
       },
       {
         name: "Logged mixed passive content - image",
-        text: "Loading mixed (insecure) display content on a secure page \"http://example.com/tests/image/test/mochitest/blue.png\"",
+        text: "Loading mixed (insecure) display content \"http://example.com/tests/image/test/mochitest/blue.png\" on a secure page",
         category: CATEGORY_SECURITY,
         severity: SEVERITY_WARNING,
         objects: true,
