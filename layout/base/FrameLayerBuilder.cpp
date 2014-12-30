@@ -254,6 +254,7 @@ class PaintedLayerData {
 public:
   PaintedLayerData() :
     mAnimatedGeometryRoot(nullptr),
+    mIsAsyncScrollable(false),
     mFixedPosFrameForLayerData(nullptr),
     mReferenceFrame(nullptr),
     mLayer(nullptr),
@@ -342,7 +343,16 @@ public:
 
   void CopyAboveRegion(PaintedLayerData* aOther)
   {
-    if (aOther->mAllDrawingAbove || mAllDrawingAbove) {
+    // If aOther has a draw region and is subject to async transforms then the
+    // layer can potentially be moved arbitrarily on the compositor. So we
+    // should avoid moving display items from on top of the layer to below the
+    // layer, which we do by calling SetAllDrawingAbove. Note that if the draw
+    // region is empty (such as when aOther has only event-regions items) then
+    // we don't need to do this.
+    bool aOtherCanDrawAnywhere = aOther->IsSubjectToAsyncTransforms()
+                              && !aOther->mDrawRegion.IsEmpty();
+
+    if (aOther->mAllDrawingAbove || mAllDrawingAbove || aOtherCanDrawAnywhere) {
       SetAllDrawingAbove();
     } else {
       mVisibleAboveRegion.Or(mVisibleAboveRegion, aOther->mVisibleAboveRegion);
@@ -386,7 +396,8 @@ public:
 
   bool IsSubjectToAsyncTransforms()
   {
-    return mFixedPosFrameForLayerData != nullptr;
+    return mFixedPosFrameForLayerData != nullptr
+        || mIsAsyncScrollable;
   }
 
   /**
@@ -425,6 +436,12 @@ public:
    * active scrolled root.
    */
   const nsIFrame* mAnimatedGeometryRoot;
+  /**
+   * Whether or not this layer is async scrollable. If it is, that means display
+   * items above this layer should not end up in a layer below this one, as they
+   * might be obscured when they shouldn't be.
+   */
+  bool mIsAsyncScrollable;
   /**
    * If non-null, the frame from which we'll extract "fixed positioning"
    * metadata for this layer. This can be a position:fixed frame or a viewport
@@ -815,6 +832,13 @@ protected:
    * flag, and pop it off the stack.
    */
   void PopPaintedLayerData();
+  /**
+   * Check if any of the animated geometry roots from aAnimatedGeometryRoot up
+   * to and including mContainerAnimatedGeometryRoot are async scrollable. If
+   * so, return true. This is used to flag a particular PaintedLayer as being
+   * subject to async transforms.
+   */
+  bool HasAsyncScrollableGeometryInContainer(const nsIFrame* aAnimatedGeometryRoot);
   /**
    * Find the PaintedLayer to which we should assign the next display item.
    * We scan the PaintedLayerData stack to find the topmost PaintedLayer
@@ -2482,6 +2506,28 @@ PaintedLayerData::Accumulate(ContainerState* aState,
   }
 }
 
+bool
+ContainerState::HasAsyncScrollableGeometryInContainer(const nsIFrame* aAnimatedGeometryRoot)
+{
+  const nsIFrame* f = aAnimatedGeometryRoot;
+  while (f) {
+    if (nsLayoutUtils::GetScrollableFrameFor(f) &&
+        nsLayoutUtils::GetDisplayPort(f->GetContent(), nullptr)) {
+      return true;
+    }
+    if (f == mContainerAnimatedGeometryRoot) {
+      break;
+    }
+    nsIFrame* fParent = nsLayoutUtils::GetCrossDocParentFrame(f);
+    if (!fParent) {
+      break;
+    }
+    f = nsLayoutUtils::GetAnimatedGeometryRootForFrame(
+          this->mBuilder, fParent, mContainerAnimatedGeometryRoot);
+  }
+  return false;
+}
+
 PaintedLayerData*
 ContainerState::FindPaintedLayerFor(nsDisplayItem* aItem,
                                    const nsIntRect& aVisibleRect,
@@ -2549,6 +2595,8 @@ ContainerState::FindPaintedLayerFor(nsDisplayItem* aItem,
     paintedLayerData->mAnimatedGeometryRoot = aAnimatedGeometryRoot;
     paintedLayerData->mFixedPosFrameForLayerData =
       FindFixedPosFrameForLayerData(aAnimatedGeometryRoot, aShouldFixToViewport);
+    paintedLayerData->mIsAsyncScrollable =
+      HasAsyncScrollableGeometryInContainer(aAnimatedGeometryRoot);
     paintedLayerData->mReferenceFrame = aItem->ReferenceFrame();
     paintedLayerData->mSingleItemFixedToViewport = aShouldFixToViewport;
 
