@@ -1375,7 +1375,6 @@ ConvertAndroidKeyCodeToKeyNameIndex(AndroidGeckoEvent& aAndroidGeckoEvent)
         case AKEYCODE_SOFT_RIGHT:
         case AKEYCODE_CALL:
         case AKEYCODE_ENDCALL:
-        case AKEYCODE_SYM:                // Symbol modifier
         case AKEYCODE_NUM:                // XXX Not sure
         case AKEYCODE_HEADSETHOOK:
         case AKEYCODE_FOCUS:
