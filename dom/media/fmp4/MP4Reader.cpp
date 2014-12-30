@@ -72,7 +72,7 @@ MP4Reader::MP4Reader(AbstractMediaDecoder* aDecoder)
   , mDemuxerInitialized(false)
   , mIsEncrypted(false)
   , mIndexReady(false)
-  , mIndexMonitor("MP4 index")
+  , mDemuxerMonitor("MP4 Demuxer")
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
   MOZ_COUNT_CTOR(MP4Reader);
@@ -157,7 +157,7 @@ MP4Reader::Init(MediaDecoderReader* aCloneDonor)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
   PlatformDecoderModule::Init();
-  mDemuxer = new MP4Demuxer(new MP4Stream(mDecoder->GetResource(), &mIndexMonitor), &mIndexMonitor);
+  mDemuxer = new MP4Demuxer(new MP4Stream(mDecoder->GetResource(), &mDemuxerMonitor), &mDemuxerMonitor);
 
   InitLayersBackendType();
 
@@ -295,7 +295,7 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
 {
   if (!mDemuxerInitialized) {
     {
-      MonitorAutoLock mon(mIndexMonitor);
+      MonitorAutoLock mon(mDemuxerMonitor);
       bool ok = mDemuxer->Init();
       NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
       mIndexReady = true;
@@ -420,7 +420,7 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
   *aInfo = mInfo;
   *aTags = nullptr;
 
-  MonitorAutoLock mon(mIndexMonitor);
+  MonitorAutoLock mon(mDemuxerMonitor);
   UpdateIndex();
 
   return NS_OK;
@@ -631,7 +631,7 @@ MP4Reader::ReturnOutput(MediaData* aData, TrackType aTrack)
 MP4Sample*
 MP4Reader::PopSample(TrackType aTrack)
 {
-  MonitorAutoLock mon(mIndexMonitor);
+  MonitorAutoLock mon(mDemuxerMonitor);
   switch (aTrack) {
     case kAudio:
       return mDemuxer->DemuxAudioSample();
@@ -673,12 +673,12 @@ MP4Reader::ResetDecode()
   MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());
   Flush(kVideo);
   {
-    MonitorAutoLock mon(mIndexMonitor);
+    MonitorAutoLock mon(mDemuxerMonitor);
     mDemuxer->SeekVideo(0);
   }
   Flush(kAudio);
   {
-    MonitorAutoLock mon(mIndexMonitor);
+    MonitorAutoLock mon(mDemuxerMonitor);
     mDemuxer->SeekAudio(0);
   }
   return MediaDecoderReader::ResetDecode();
@@ -856,7 +856,7 @@ MP4Reader::UpdateIndex()
 int64_t
 MP4Reader::GetEvictionOffset(double aTime)
 {
-  MonitorAutoLock mon(mIndexMonitor);
+  MonitorAutoLock mon(mDemuxerMonitor);
   if (!mIndexReady) {
     return 0;
   }
@@ -867,7 +867,7 @@ MP4Reader::GetEvictionOffset(double aTime)
 nsresult
 MP4Reader::GetBuffered(dom::TimeRanges* aBuffered)
 {
-  MonitorAutoLock mon(mIndexMonitor);
+  MonitorAutoLock mon(mDemuxerMonitor);
   if (!mIndexReady) {
     return NS_OK;
   }

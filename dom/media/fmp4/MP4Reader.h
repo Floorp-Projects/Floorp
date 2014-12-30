@@ -259,7 +259,7 @@ private:
   bool mIsEncrypted;
 
   bool mIndexReady;
-  Monitor mIndexMonitor;
+  Monitor mDemuxerMonitor;
   nsRefPtr<SharedDecoderManager> mSharedDecoderManager;
 };
 
