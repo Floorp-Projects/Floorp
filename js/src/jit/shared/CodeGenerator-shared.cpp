@@ -1398,11 +1398,11 @@ CodeGeneratorShared::computeDivisionConstants(int d) {
 
 #ifdef JS_TRACE_LOGGING
 
-bool
+void
 CodeGeneratorShared::emitTracelogScript(bool isStart)
 {
     if (!TraceLogTextIdEnabled(TraceLogger_Scripts))
-        return true;
+        return;
 
     Label done;
 
@@ -1413,8 +1413,7 @@ CodeGeneratorShared::emitTracelogScript(bool isStart)
     masm.Push(logger);
 
     CodeOffsetLabel patchLogger = masm.movWithPatch(ImmPtr(nullptr), logger);
-    if (!patchableTraceLoggers_.append(patchLogger))
-        return false;
+    masm.propagateOOM(patchableTraceLoggers_.append(patchLogger));
 
     Address enabledAddress(logger, TraceLoggerThread::offsetOfEnabled());
     masm.branch32(Assembler::Equal, enabledAddress, Imm32(0), &done);
@@ -1422,8 +1421,7 @@ CodeGeneratorShared::emitTracelogScript(bool isStart)
     masm.Push(script);
 
     CodeOffsetLabel patchScript = masm.movWithPatch(ImmWord(0), script);
-    if (!patchableTLScripts_.append(patchScript))
-        return false;
+    masm.propagateOOM(patchableTLScripts_.append(patchScript));
 
     if (isStart)
         masm.tracelogStartId(logger, script);
@@ -1435,14 +1433,13 @@ CodeGeneratorShared::emitTracelogScript(bool isStart)
     masm.bind(&done);
 
     masm.Pop(logger);
-    return true;
 }
 
-bool
+void
 CodeGeneratorShared::emitTracelogTree(bool isStart, uint32_t textId)
 {
     if (!TraceLogTextIdEnabled(textId))
-        return true;
+        return;
 
     Label done;
     RegisterSet regs = RegisterSet::Volatile();
@@ -1451,8 +1448,7 @@ CodeGeneratorShared::emitTracelogTree(bool isStart, uint32_t textId)
     masm.Push(logger);
 
     CodeOffsetLabel patchLocation = masm.movWithPatch(ImmPtr(nullptr), logger);
-    if (!patchableTraceLoggers_.append(patchLocation))
-        return false;
+    masm.propagateOOM(patchableTraceLoggers_.append(patchLocation));
 
     Address enabledAddress(logger, TraceLoggerThread::offsetOfEnabled());
     masm.branch32(Assembler::Equal, enabledAddress, Imm32(0), &done);
@@ -1465,7 +1461,6 @@ CodeGeneratorShared::emitTracelogTree(bool isStart, uint32_t textId)
     masm.bind(&done);
 
     masm.Pop(logger);
-    return true;
 }
 #endif
 
