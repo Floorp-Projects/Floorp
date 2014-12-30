@@ -1,0 +1,7 @@
+[{
+"size": 1316240,
+"digest":
+"3d94d249e390c687d9545c80b8ea7a6cff38538bc4104ad99103ee56b765fa1dedb30d95dcdfe9fad5665bdf9f0dfe246e1e544f37b03e952abee7ad38dc1caa", 
+"algorithm": "sha512",
+"filename": "macosx64-minidump_stackwalk"
+}]

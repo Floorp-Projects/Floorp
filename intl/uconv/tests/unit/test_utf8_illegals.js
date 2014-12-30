@@ -2,6 +2,9 @@
 
 const Cc = Components.Constructor;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
+
+Cu.import("resource://gre/modules/Services.jsm");
 
 const tests = [
 { inStrings: ["%80",                 // Illegal or incomplete sequences
@@ -103,7 +106,14 @@ function testCaseInputStream(inStr, expected)
 	 "init");
 
   var ios = new IOService();
-  var channel = ios.newChannel(dataURI, "", null);
+  var channel = ios.newChannel2(dataURI,
+                                "",
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
   var testInputStream = channel.open();
   var testConverter = new ConverterInputStream(testInputStream,
 					       "UTF-8",
