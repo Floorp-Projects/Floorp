@@ -567,6 +567,10 @@ KEY_MAP_ANDROID (NonConvert, AKEYCODE_MUHENKAN)
 KEY_MAP_GTK     (PreviousCandidate, GDK_PreviousCandidate) // OADG 109, Mae Koho
 KEY_MAP_QT      (PreviousCandidate, Qt::Key_PreviousCandidate)
 
+// SingleCandidate
+KEY_MAP_GTK     (SingleCandidate, GDK_SingleCandidate)
+KEY_MAP_QT      (SingleCandidate, Qt::Key_SingleCandidate)
+
 /******************************************************************************
  * Keys specific to Korean keyboards
  ******************************************************************************/
