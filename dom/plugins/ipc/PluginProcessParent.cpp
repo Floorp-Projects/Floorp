@@ -18,6 +18,7 @@
 using std::vector;
 using std::string;
 
+using namespace mozilla;
 using mozilla::ipc::BrowserProcessSubThread;
 using mozilla::ipc::GeckoChildProcessHost;
 using mozilla::plugins::PluginProcessParent;
