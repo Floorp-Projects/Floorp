@@ -59,10 +59,10 @@ DEFINE_KEYNAME_WITH_SAME_NAME(Tab)
 /******************************************************************************
  * Navigation Keys
  *****************************************************************************/
-DEFINE_KEYNAME_WITH_SAME_NAME(Down) // Rename to ArrowDown
-DEFINE_KEYNAME_WITH_SAME_NAME(Left) // Rename to ArrowLeft
-DEFINE_KEYNAME_WITH_SAME_NAME(Right) // Rename to ArrowRight
-DEFINE_KEYNAME_WITH_SAME_NAME(Up) // Rename to ArrowUp
+DEFINE_KEYNAME_WITH_SAME_NAME(ArrowDown)
+DEFINE_KEYNAME_WITH_SAME_NAME(ArrowLeft)
+DEFINE_KEYNAME_WITH_SAME_NAME(ArrowRight)
+DEFINE_KEYNAME_WITH_SAME_NAME(ArrowUp)
 DEFINE_KEYNAME_WITH_SAME_NAME(End)
 DEFINE_KEYNAME_WITH_SAME_NAME(Home)
 DEFINE_KEYNAME_WITH_SAME_NAME(PageDown)
