@@ -1232,6 +1232,9 @@ KEY_MAP_ANDROID (TVInput, AKEYCODE_TV_INPUT)
 // TVPower
 KEY_MAP_ANDROID (TVPower, AKEYCODE_TV_POWER)
 
+// VideoModeNext
+KEY_MAP_GTK     (VideoModeNext, GDK_Next_VMode)
+
 // ZoomToggle
 KEY_MAP_WIN     (ZoomToggle, VK_ZOOM)
 KEY_MAP_QT      (ZoomToggle, Qt::Key_Zoom)
