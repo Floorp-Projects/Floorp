@@ -69,7 +69,7 @@ var gMainPane = {
     let syncListener = gMainPane.onGetStarted.bind(gMainPane);
     getStartedLink.addEventListener("click", syncListener);
 
-    Cu.import("resource://gre/modules/osfile.jsm");
+    Components.utils.import("resource://gre/modules/osfile.jsm");
     let uAppData = OS.Constants.Path.userApplicationDataDir;
     let ignoreSeparateProfile = OS.Path.join(uAppData, "ignore-dev-edition-profile");
 
@@ -87,12 +87,13 @@ var gMainPane = {
   separateProfileModeChange: function ()
   {
     function quitApp() {
-      Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit |  Ci.nsIAppStartup.eRestartNotSameProfile);
+      Services.startup.quit(Components.interfaces.nsIAppStartup.eAttemptQuit |
+                            Components.interfaces.nsIAppStartup.eRestartNotSameProfile);
     }
     function revertCheckbox(error) {
       separateProfileModeCheckbox.checked = !separateProfileModeCheckbox.checked;
       if (error) {
-        Cu.reportError("Failed to toggle separate profile mode: " + error);
+        Components.utils.reportError("Failed to toggle separate profile mode: " + error);
       }
     }
 
@@ -106,13 +107,13 @@ var gMainPane = {
     let shouldProceed = Services.prompt.confirm(window, title, msg)
     if (shouldProceed) {
       let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
-                         .createInstance(Ci.nsISupportsPRBool);
+                         .createInstance(Components.interfaces.nsISupportsPRBool);
       Services.obs.notifyObservers(cancelQuit, "quit-application-requested",
                                    "restart");
       shouldProceed = !cancelQuit.data;
 
       if (shouldProceed) {
-        Cu.import("resource://gre/modules/osfile.jsm");
+        Components.utils.import("resource://gre/modules/osfile.jsm");
         let uAppData = OS.Constants.Path.userApplicationDataDir;
         let ignoreSeparateProfile = OS.Path.join(uAppData, "ignore-dev-edition-profile");
 
@@ -131,7 +132,7 @@ var gMainPane = {
   onGetStarted: function (aEvent) {
     const Cc = Components.classes, Ci = Components.interfaces;
     let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-               .getService(Ci.nsIWindowMediator);
+               .getService(Components.interfaces.nsIWindowMediator);
     let win = wm.getMostRecentWindow("navigator:browser");
 
     if (win) {
@@ -254,7 +255,7 @@ var gMainPane = {
       const Cc = Components.classes, Ci = Components.interfaces;
       // If we're in instant-apply mode, use the most recent browser window
       var wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-                 .getService(Ci.nsIWindowMediator);
+                 .getService(Components.interfaces.nsIWindowMediator);
       win = wm.getMostRecentWindow("navigator:browser");
     }
     else {
