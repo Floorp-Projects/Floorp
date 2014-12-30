@@ -46,7 +46,7 @@ DEFINE_KEYNAME_WITH_SAME_NAME(OS)
 DEFINE_KEYNAME_WITH_SAME_NAME(ScrollLock)
 DEFINE_KEYNAME_WITH_SAME_NAME(Shift)
 // DEFINE_KEYNAME_WITH_SAME_NAME(Super)
-// DEFINE_KEYNAME_WITH_SAME_NAME(Symbol)
+DEFINE_KEYNAME_WITH_SAME_NAME(Symbol)
 // DEFINE_KEYNAME_WITH_SAME_NAME(SymbolLock)
 
 /******************************************************************************
