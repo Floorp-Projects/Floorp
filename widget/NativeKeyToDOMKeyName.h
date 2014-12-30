@@ -284,9 +284,9 @@ KEY_MAP_ANDROID (Clear, AKEYCODE_CLEAR)
 KEY_MAP_GTK     (Copy, GDK_Copy)
 KEY_MAP_QT      (Copy, Qt::Key_Copy)
 
-// Crsel
-KEY_MAP_WIN     (Crsel, VK_CRSEL)
-KEY_MAP_GTK     (Crsel, GDK_3270_CursorSelect) // legacy IBM keyboard layout
+// CrSel
+KEY_MAP_WIN     (CrSel, VK_CRSEL)
+KEY_MAP_GTK     (CrSel, GDK_3270_CursorSelect) // legacy IBM keyboard layout
 
 // Cut
 KEY_MAP_GTK     (Cut, GDK_Cut)
@@ -304,9 +304,9 @@ KEY_MAP_ANDROID (Del, AKEYCODE_FORWARD_DEL)
 KEY_MAP_WIN     (EraseEof, VK_EREOF)
 KEY_MAP_GTK     (EraseEof, GDK_3270_EraseEOF) // legacy IBM keyboard layout
 
-// Exsel
-KEY_MAP_WIN     (Exsel, VK_EXSEL)
-KEY_MAP_GTK     (Exsel, GDK_3270_ExSelect) // legacy IBM keyboard layout
+// ExSel
+KEY_MAP_WIN     (ExSel, VK_EXSEL)
+KEY_MAP_GTK     (ExSel, GDK_3270_ExSelect) // legacy IBM keyboard layout
 
 // Insert
 KEY_MAP_WIN     (Insert, VK_INSERT)
