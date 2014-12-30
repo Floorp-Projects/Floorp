@@ -7192,10 +7192,10 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             // template object with copy on write elements that can be reused
             // every time the initializer executes.
             RootedValue value(cx);
-            if (bce->emitterMode != BytecodeEmitter::SelfHosting &&
-                pn->pn_count != 0 &&
-                pn->getConstantValue(cx, ParseNode::DontAllowNestedObjects, &value))
-            {
+            if (bce->emitterMode != BytecodeEmitter::SelfHosting && pn->pn_count != 0) {
+                if (!pn->getConstantValue(cx, ParseNode::DontAllowNestedObjects, &value))
+                    return false;
+
                 // Note: the type of the template object might not yet reflect
                 // that the object has copy on write elements. When the
                 // interpreter or JIT compiler fetches the template, it should
