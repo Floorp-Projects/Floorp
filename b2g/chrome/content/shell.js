@@ -405,7 +405,7 @@ var shell = {
       'MediaPlayPause': 'media-play-pause-button',
       'MediaStop': 'media-stop-button',
       'MediaRewind': 'media-rewind-button',
-      'FastFwd': 'media-fast-forward-button'
+      'MediaFastForward': 'media-fast-forward-button'
     };
 
     let isMediaKey = false;
