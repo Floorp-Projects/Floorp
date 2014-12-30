@@ -1,4 +1,5 @@
 Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/Services.jsm");
 
 var httpserver = new HttpServer();
 httpserver.start(-1);
@@ -40,7 +41,14 @@ PrivateBrowsingLoadContext = new LoadContext(true);
 function make_channel(url, flags, usePrivateBrowsing) {
   var ios = Cc["@mozilla.org/network/io-service;1"].
     getService(Ci.nsIIOService);
-  var req = ios.newChannel(url, null, null);
+  var req = ios.newChannel2(url,
+                            null,
+                            null,
+                            null,      // aLoadingNode
+                            Services.scriptSecurityManager.getSystemPrincipal(),
+                            null,      // aTriggeringPrincipal
+                            Ci.nsILoadInfo.SEC_NORMAL,
+                            Ci.nsIContentPolicy.TYPE_OTHER);
   req.loadFlags = flags;
   if (usePrivateBrowsing) {
     req.notificationCallbacks = PrivateBrowsingLoadContext;    

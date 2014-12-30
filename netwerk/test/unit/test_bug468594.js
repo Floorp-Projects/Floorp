@@ -14,6 +14,7 @@
 // definition of "explicit expiration time" being used here.
 
 Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/Services.jsm");
 
 var httpserver = new HttpServer();
 var index = 0;
@@ -57,7 +58,14 @@ function logit(i, data) {
 function setupChannel(suffix, value) {
     var ios = Components.classes["@mozilla.org/network/io-service;1"].
                          getService(Ci.nsIIOService);
-    var chan = ios.newChannel("http://localhost:" + httpserver.identity.primaryPort + suffix, "", null);
+    var chan = ios.newChannel2("http://localhost:" + httpserver.identity.primaryPort + suffix,
+                               "",
+                               null,
+                               null,      // aLoadingNode
+                               Services.scriptSecurityManager.getSystemPrincipal(),
+                               null,      // aTriggeringPrincipal
+                               Ci.nsILoadInfo.SEC_NORMAL,
+                               Ci.nsIContentPolicy.TYPE_OTHER);
     var httpChan = chan.QueryInterface(Components.interfaces.nsIHttpChannel);
     httpChan.requestMethod = "GET";
     httpChan.setRequestHeader("x-request", value, false);

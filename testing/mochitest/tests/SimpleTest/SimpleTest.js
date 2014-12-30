@@ -660,10 +660,17 @@ SimpleTest.requestFlakyTimeout = function (reason) {
     SimpleTest._flakyTimeoutReason = reason;
 }
 
-SimpleTest.waitForFocus_started = false;
-SimpleTest.waitForFocus_loaded = false;
-SimpleTest.waitForFocus_focused = false;
 SimpleTest._pendingWaitForFocusCount = 0;
+
+/**
+ * Version of waitForFocus that returns a promise.
+ */
+SimpleTest.promiseFocus = function *(targetWindow, expectBlankPage)
+{
+    return new Promise(function (resolve, reject) {
+        SimpleTest.waitForFocus(win => resolve(win), targetWindow, expectBlankPage);
+    });
+}
 
 /**
  * If the page is not yet loaded, waits for the load event. In addition, if
@@ -684,80 +691,175 @@ SimpleTest._pendingWaitForFocusCount = 0;
  *        true if targetWindow.location is 'about:blank'. Defaults to false
  */
 SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
-    SimpleTest._pendingWaitForFocusCount++;
-    if (!targetWindow)
-      targetWindow = window;
+    // A separate method is used that is serialized and passed to the child
+    // process via loadFrameScript. Once the child window is focused, the
+    // child will send the WaitForFocus:ChildFocused notification to the parent.
+    // If a child frame in a child process must be focused, a
+    // WaitForFocus:FocusChild message is then sent to the child to focus that
+    // child. This message is used so that the child frame can be passed to it.
+    function waitForFocusInner(targetWindow, isChildProcess, expectBlankPage)
+    {
+      /* Indicates whether the desired targetWindow has loaded or focused. The
+         finished flag is set when the callback has been called and is used to
+         reject extraneous events from invoking the callback again. */
+      var loaded = false, focused = false, finished = false;
 
-    SimpleTest.waitForFocus_started = false;
+      function info(msg) {
+          if (!isChildProcess) {
+              SimpleTest.info(msg);
+          }
+      }
+
+      function focusedWindow() {
+          if (isChildProcess) {
+              return Components.classes["@mozilla.org/focus-manager;1"].
+                      getService(Components.interfaces.nsIFocusManager).focusedWindow;
+          }
+          return SpecialPowers.focusedWindow();
+      }
+
+      function getHref(aWindow) {
+          return isChildProcess ? aWindow.location.href :
+                                  SpecialPowers.getPrivilegedProps(aWindow, 'location.href');
+      }
+
+      /* Event listener for the load or focus events. It will also be called with
+         event equal to null to check if the page is already focused and loaded. */
+      function focusedOrLoaded(event) {
+          try {
+              if (event) {
+                  if (event.type == "load") {
+                      if (expectBlankPage != (event.target.location == "about:blank")) {
+                          return;
+                      }
+
+                      loaded = true;
+                  } else if (event.type == "focus") {
+                      focused = true;
+                  }
+
+                  event.currentTarget.removeEventListener(event.type, focusedOrLoaded, true);
+              }
+
+              if (loaded && focused && !finished) {
+                  finished = true;
+                  if (isChildProcess) {
+                      sendAsyncMessage("WaitForFocus:ChildFocused", {}, null);
+                  } else {
+                      SimpleTest._pendingWaitForFocusCount--;
+                      SimpleTest.executeSoon(function() { callback(targetWindow) });
+                  }
+              }
+          } catch (e) {
+              if (!isChildProcess) {
+                  SimpleTest.ok(false, "Exception caught in focusedOrLoaded: " + e.message +
+                                ", at: " + e.fileName + " (" + e.lineNumber + ")");
+              }
+          }
+      }
+
+      function waitForLoadAndFocusOnWindow(desiredWindow) {
+          /* If the current document is about:blank and we are not expecting a blank
+             page (or vice versa), and the document has not yet loaded, wait for the
+             page to load. A common situation is to wait for a newly opened window
+             to load its content, and we want to skip over any intermediate blank
+             pages that load. This issue is described in bug 554873. */
+          loaded = expectBlankPage ?
+                     getHref(desiredWindow) == "about:blank" :
+                     getHref(desiredWindow) != "about:blank" &&
+                         desiredWindow.document.readyState == "complete";
+          if (!loaded) {
+              info("must wait for load");
+              desiredWindow.addEventListener("load", focusedOrLoaded, true);
+          }
+
+          var childDesiredWindow = { };
+          if (isChildProcess) {
+              var fm = Components.classes["@mozilla.org/focus-manager;1"].
+                         getService(Components.interfaces.nsIFocusManager);
+              fm.getFocusedElementForWindow(desiredWindow, true, childDesiredWindow);
+              childDesiredWindow = childDesiredWindow.value;
+          } else {
+              childDesiredWindow = SpecialPowers.getFocusedElementForWindow(desiredWindow, true);
+          }
+
+          /* If this is a child frame, ensure that the frame is focused. */
+          focused = (focusedWindow() == childDesiredWindow);
+          if (!focused) {
+              info("must wait for focus");
+              desiredWindow.addEventListener("focus", focusedOrLoaded, true);
+              if (isChildProcess) {
+                  childDesiredWindow.focus();
+              }
+              else {
+                  SpecialPowers.focus(childDesiredWindow);
+              }
+          }
+
+          focusedOrLoaded(null);
+      }
+
+      if (isChildProcess) {
+          /* This message is used when an inner child frame must be focused. */
+          addMessageListener("WaitForFocus:FocusChild", function focusChild(msg) {
+              removeMessageListener("WaitForFocus:ChildFocused", focusChild);
+              finished = false;
+              waitForLoadAndFocusOnWindow(msg.objects.child);
+          });
+      }
+
+      waitForLoadAndFocusOnWindow(targetWindow);
+    }
+
+    SimpleTest._pendingWaitForFocusCount++;
+    if (!targetWindow) {
+        targetWindow = window;
+    }
+
     expectBlankPage = !!expectBlankPage;
 
-    var childTargetWindow = SpecialPowers.getFocusedElementForWindow(targetWindow, true);
-
-    function info(msg) {
-        SimpleTest.info(msg);
-    }
-    function getHref(aWindow) {
-      return SpecialPowers.getPrivilegedProps(aWindow, 'location.href');
-    }
-
-    function maybeRunTests() {
-        if (SimpleTest.waitForFocus_loaded &&
-            SimpleTest.waitForFocus_focused &&
-            !SimpleTest.waitForFocus_started) {
-            SimpleTest._pendingWaitForFocusCount--;
-            SimpleTest.waitForFocus_started = true;
-            SimpleTest.executeSoon(function() { callback(targetWindow) });
+    // If this is a request to focus a remote child window, the request must
+    // be forwarded to the child process.
+    // XXXndeakin now sure what this issue with Components.utils is about, but
+    // browser tests require the former and plain tests require the latter.
+    var Cu = Components.utils || SpecialPowers.Cu;
+    if (Cu.isCrossProcessWrapper(targetWindow)) {
+        // Look for a tabbrowser and see if targetWindow corresponds to one
+        // within that tabbrowser. If not, just return.
+        var tabBrowser = document.getElementsByTagName("tabbrowser")[0] || null;
+        var remoteBrowser = tabBrowser ? tabBrowser.getBrowserForContentWindow(targetWindow.top) : null;
+        if (!remoteBrowser) {
+            SimpleTest.info("child process window cannot be focused");
+            return;
         }
+
+        // If a subframe in a child process needs to be focused, first focus the
+        // parent frame, then send a WaitForFocus:FocusChild message to the child
+        // containing the subframe to focus.
+        var mustFocusSubframe = (targetWindow != targetWindow.top);
+        remoteBrowser.messageManager.addMessageListener("WaitForFocus:ChildFocused", function waitTest(msg) {
+            if (mustFocusSubframe) {
+                mustFocusSubframe = false;
+                var mm = gBrowser.selectedBrowser.messageManager;
+                mm.sendAsyncMessage("WaitForFocus:FocusChild", {}, { child: targetWindow } );
+            }
+            else {
+                remoteBrowser.messageManager.removeMessageListener("WaitForFocus:ChildFocused", waitTest);
+                setTimeout(callback, 0, targetWindow);
+            }
+        });
+
+        // Serialize the waitForFocusInner function and run it in the child.
+        var frameScript = "data:,(" + waitForFocusInner.toString() +
+                          ")(content, true, " + expectBlankPage + ");";
+        remoteBrowser.messageManager.loadFrameScript(frameScript, true);
+        remoteBrowser.focus();
+        return;
     }
 
-    function waitForEvent(event) {
-        try {
-            // Check to make sure that this isn't a load event for a blank or
-            // non-blank page that wasn't desired.
-            if (event.type == "load" && (expectBlankPage != (event.target.location == "about:blank")))
-                return;
-
-            SimpleTest["waitForFocus_" + event.type + "ed"] = true;
-            var win = (event.type == "load") ? targetWindow : childTargetWindow;
-            win.removeEventListener(event.type, waitForEvent, true);
-            maybeRunTests();
-        } catch (e) {
-            SimpleTest.ok(false, "Exception caught in waitForEvent: " + e.message +
-                ", at: " + e.fileName + " (" + e.lineNumber + ")");
-        }
-    }
-
-    // If the current document is about:blank and we are not expecting a blank
-    // page (or vice versa), and the document has not yet loaded, wait for the
-    // page to load. A common situation is to wait for a newly opened window
-    // to load its content, and we want to skip over any intermediate blank
-    // pages that load. This issue is described in bug 554873.
-    SimpleTest.waitForFocus_loaded =
-        expectBlankPage ?
-            getHref(targetWindow) == "about:blank" :
-            getHref(targetWindow) != "about:blank" && targetWindow.document.readyState == "complete";
-    if (!SimpleTest.waitForFocus_loaded) {
-        info("must wait for load");
-        targetWindow.addEventListener("load", waitForEvent, true);
-    }
-
-    // Check if the desired window is already focused.
-    var focusedChildWindow = null;
-    if (SpecialPowers.activeWindow()) {
-        focusedChildWindow = SpecialPowers.getFocusedElementForWindow(SpecialPowers.activeWindow(), true);
-    }
-
-    // If this is a child frame, ensure that the frame is focused.
-    SimpleTest.waitForFocus_focused = (focusedChildWindow == childTargetWindow);
-    if (SimpleTest.waitForFocus_focused) {
-        // If the frame is already focused and loaded, call the callback directly.
-        maybeRunTests();
-    }
-    else {
-        info("must wait for focus");
-        childTargetWindow.addEventListener("focus", waitForEvent, true);
-        SpecialPowers.focus(childTargetWindow);
-    }
+    // Otherwise, this is an attempt to focus a parent process window, so pass
+    // false for isChildProcess.
+    waitForFocusInner(targetWindow, false, expectBlankPage);
 };
 
 SimpleTest.waitForClipboard_polls = 0;

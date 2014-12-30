@@ -23,10 +23,6 @@
                         android:title="@string/pref_media_autoplay_enabled"
                         android:summary="@string/pref_media_autoplay_enabled_summary" />
 
-    <CheckBoxPreference android:key="android.not_a_preference.new_tablet_ui"
-                        android:title="@string/new_tablet_pref"
-                        android:defaultValue="true" />
-
     <PreferenceCategory android:title="@string/pref_category_advanced">
 
         <CheckBoxPreference

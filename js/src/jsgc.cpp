@@ -1113,7 +1113,7 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     verifyPostData(nullptr),
     chunkAllocationSinceLastGC(false),
     nextFullGCTime(0),
-    lastGCTime(0),
+    lastGCTime(PRMJ_Now()),
     mode(JSGC_MODE_INCREMENTAL),
     decommitThreshold(32 * 1024 * 1024),
     cleanUpEverything(false),
@@ -3308,9 +3308,8 @@ GCRuntime::maybeGC(Zone *zone)
     if (gcIfNeeded())
         return true;
 
-    double factor = schedulingState.inHighFrequencyGCMode() ? 0.85 : 0.9;
     if (zone->usage.gcBytes() > 1024 * 1024 &&
-        zone->usage.gcBytes() >= factor * zone->threshold.gcTriggerBytes() &&
+        zone->isCloseToAllocTrigger(schedulingState.inHighFrequencyGCMode()) &&
         incrementalState == NO_INCREMENTAL &&
         !isBackgroundSweeping())
     {
@@ -5628,10 +5627,10 @@ GCRuntime::finishCollection()
     schedulingState.updateHighFrequencyMode(lastGCTime, currentTime, tunables);
 
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
-        zone->threshold.updateAfterGC(zone->usage.gcBytes(), invocationKind, tunables,
-                                      schedulingState);
         if (zone->isCollecting()) {
             MOZ_ASSERT(zone->isGCFinished() || zone->isGCCompacting());
+            zone->threshold.updateAfterGC(zone->usage.gcBytes(), invocationKind, tunables,
+                                          schedulingState);
             zone->setGCState(Zone::NoGC);
             zone->active = false;
         }
@@ -6217,6 +6216,10 @@ GCRuntime::scanZonesBeforeGC()
 
         /* This is a heuristic to avoid resets. */
         if (incrementalState != NO_INCREMENTAL && zone->needsIncrementalBarrier())
+            zone->scheduleGC();
+
+        /* This is a heuristic to reduce the total number of collections. */
+        if (zone->isCloseToAllocTrigger(schedulingState.inHighFrequencyGCMode()))
             zone->scheduleGC();
 
         zoneStats.zoneCount++;
