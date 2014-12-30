@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+
+<html>
+
+  <head>
+    <meta charset="utf8">
+    <title></title>
+
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
+    <script type="application/javascript;version=1.8" src="head.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  </head>
+
+  <body>
+
+    <script type="application/javascript;version=1.8">
+      window.onload = function() {
+        SimpleTest.waitForExplicitFinish();
+
+        let {TextDecoder, OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
+        let {ProjectBuilding} = require("devtools/webide/build");
+
+        Task.spawn(function* () {
+            let win = yield openWebIDE();
+            let AppManager = win.AppManager;
+
+            function isProjectMarkedAsValid() {
+              let details = win.UI.projecteditor.window.frames[0];
+              return !details.document.body.classList.contains("error");
+            }
+
+            // # Test first package.json like this: `{webide: {prepackage: "command line string"}}`
+            let platform = Services.appShell.hiddenDOMWindow.navigator.platform;
+            let testSuffix = "";
+            if (platform.indexOf("Win") != -1) {
+              testSuffix = "_windows";
+            }
+
+            let packagedAppLocation = getTestFilePath("build_app" + testSuffix + "1");
+
+            yield win.Cmds.importPackagedApp(packagedAppLocation);
+
+            let project = win.AppManager.selectedProject;
+
+            let deferred = promise.defer();
+            win.UI.projecteditor.once("onEditorCreated", deferred.resolve);
+            yield deferred.promise;
+
+            ok(!project.manifest, "manifest includes name");
+            is(project.name, "--", "Display name uses manifest name");
+
+            let packageDir = yield ProjectBuilding.build(project);
+            ok(!packageDir, "no custom packagedir");
+
+            // Trigger validation
+            yield AppManager.validateProject(AppManager.selectedProject);
+            yield nextTick();
+
+            ok("name" in project.manifest, "manifest includes name");
+            is(project.name, "hello", "Display name uses manifest name");
+            is(project.manifest.name, project.name, "Display name uses manifest name");
+
+            yield OS.File.remove(OS.Path.join(packagedAppLocation, "manifest.webapp"));
+
+            // # Now test a full featured package.json
+            packagedAppLocation = getTestFilePath("build_app" + testSuffix + "2");
+
+            yield win.Cmds.importPackagedApp(packagedAppLocation);
+
+            project = win.AppManager.selectedProject;
+
+            packageDir = yield ProjectBuilding.build(project);
+            is(OS.Path.normalize(packageDir),
+               OS.Path.join(packagedAppLocation, "stage"), "custom packagedir");
+
+            // Switch to the package dir in order to verify the generated webapp.manifest
+            yield win.Cmds.importPackagedApp(packageDir);
+
+            project = win.AppManager.selectedProject;
+
+            ok("name" in project.manifest, "manifest includes name");
+            is(project.name, "world", "Display name uses manifest name");
+            is(project.manifest.name, project.name, "Display name uses manifest name");
+
+            yield closeWebIDE(win);
+
+            yield removeAllProjects();
+
+            SimpleTest.finish();
+        });
+      }
+
+
+    </script>
+  </body>
+</html>
+
+
