@@ -349,7 +349,7 @@ DEFINE_KEYNAME_WITH_SAME_NAME(Subtitle)
 // DEFINE_KEYNAME_WITH_SAME_NAME(TVPower)
 // DEFINE_KEYNAME_WITH_SAME_NAME(VideoModeNext)
 // DEFINE_KEYNAME_WITH_SAME_NAME(Wink)
-DEFINE_KEYNAME_WITH_SAME_NAME(Zoom) // Rename to ZoomToggle
+DEFINE_KEYNAME_WITH_SAME_NAME(ZoomToggle)
 
 /******************************************************************************
  * Deprecated
