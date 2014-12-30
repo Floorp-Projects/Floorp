@@ -1,9 +1,17 @@
-Install this package by:
+INSTALL
+
+To install this package to the system, run this:
 $ python setup.py build
 $ sudo python setup.py install
 
-If you're going to use this package as a normal user, run this instead:
+To install this package as a normal user, run this instead:
+$ python setup.py build
 $ python setup.py install --user
 
-Then read document by:
+LAUNCH
+
+To use pywebsocket as Apache module, run this to read the document:
 $ pydoc mod_pywebsocket
+
+To use pywebsocket as standalone server, run this to read the document:
+$ pydoc mod_pywebsocket.standalone

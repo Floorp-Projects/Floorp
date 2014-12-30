@@ -12,14 +12,22 @@
 //
 
 Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/Services.jsm");
 
 var httpserv;
 
 function setupChannel(path) {
     var ios =
         Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-    return chan = ios.newChannel(path, "", null)
-                                .QueryInterface(Ci.nsIHttpChannel);
+    return chan = ios.newChannel2(path,
+                                  "",
+                                  null,
+                                  null,      // aLoadingNode
+                                  Services.scriptSecurityManager.getSystemPrincipal(),
+                                  null,      // aTriggeringPrincipal
+                                  Ci.nsILoadInfo.SEC_NORMAL,
+                                  Ci.nsIContentPolicy.TYPE_OTHER)
+                     .QueryInterface(Ci.nsIHttpChannel);
 }
 
 // Verify that Content-Location-URI has been loaded once, load post_target

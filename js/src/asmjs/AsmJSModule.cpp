@@ -782,7 +782,7 @@ AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared *> heap, JSContext *cx
             //      ptr + data-type-byte-size > heapLength
             // i.e. ptr >= heapLength + 1 - data-type-byte-size
             // (Note that we need >= as this is what codegen uses.)
-            size_t scalarByteSize = 1 << TypedArrayShift(access.type());
+            size_t scalarByteSize = TypedArrayElemSize(access.type());
             X86Assembler::setPointer(access.patchLengthAt(code_),
                                      (void*)(heap->byteLength() + 1 - scalarByteSize));
         }
@@ -804,7 +804,7 @@ AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared *> heap, JSContext *cx
         const jit::AsmJSHeapAccess &access = heapAccesses_[i];
         if (access.hasLengthCheck()) {
             // See comment above for x86 codegen.
-            size_t scalarByteSize = 1 << TypedArrayShift(access.type());
+            size_t scalarByteSize = TypedArrayElemSize(access.type());
             X86Assembler::setInt32(access.patchLengthAt(code_), heapLength + 1 - scalarByteSize);
         }
     }

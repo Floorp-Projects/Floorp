@@ -1802,7 +1802,6 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
       case Bailout_MonitorTypes:
       case Bailout_Hole:
       case Bailout_NegativeIndex:
-      case Bailout_ObjectIdentityOrTypeGuard:
       case Bailout_NonInt32Input:
       case Bailout_NonNumericInput:
       case Bailout_NonBooleanInput:
@@ -1819,6 +1818,7 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
       case Bailout_OverflowInvalidate:
       case Bailout_NonStringInputInvalidate:
       case Bailout_DoubleOutput:
+      case Bailout_ObjectIdentityOrTypeGuard:
         if (!HandleBaselineInfoBailout(cx, outerScript, innerScript))
             return false;
         break;

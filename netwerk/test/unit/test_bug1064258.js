@@ -11,6 +11,7 @@
  */
 
 Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpServer.identity.primaryPort;
@@ -21,7 +22,14 @@ var httpServer = null;
 function make_channel(url, callback, ctx) {
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
-  return ios.newChannel(url, "", null);
+  return ios.newChannel2(url,
+                         "",
+                         null,
+                         null,      // aLoadingNode
+                         Services.scriptSecurityManager.getSystemPrincipal(),
+                         null,      // aTriggeringPrincipal
+                         Ci.nsILoadInfo.SEC_NORMAL,
+                         Ci.nsIContentPolicy.TYPE_OTHER);
 }
 
 const responseBody1 = "response body 1";
