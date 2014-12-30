@@ -235,7 +235,7 @@ class RefPtr
 public:
   RefPtr() : mPtr(0) {}
   RefPtr(const RefPtr& aOther) : mPtr(ref(aOther.mPtr)) {}
-  MOZ_IMPLICIT RefPtr(const TemporaryRef<T>& aOther) : mPtr(aOther.drop()) {}
+  MOZ_IMPLICIT RefPtr(const TemporaryRef<T>& aOther) : mPtr(aOther.take()) {}
   MOZ_IMPLICIT RefPtr(T* aVal) : mPtr(ref(aVal)) {}
 
   template<typename U>
@@ -250,7 +250,7 @@ public:
   }
   RefPtr& operator=(const TemporaryRef<T>& aOther)
   {
-    assign(aOther.drop());
+    assign(aOther.take());
     return *this;
   }
   RefPtr& operator=(T* aVal)
@@ -321,14 +321,14 @@ class TemporaryRef
 
 public:
   MOZ_IMPLICIT TemporaryRef(T* aVal) : mPtr(RefPtr<T>::ref(aVal)) {}
-  TemporaryRef(const TemporaryRef& aOther) : mPtr(aOther.drop()) {}
+  TemporaryRef(const TemporaryRef& aOther) : mPtr(aOther.take()) {}
 
   template<typename U>
-  TemporaryRef(const TemporaryRef<U>& aOther) : mPtr(aOther.drop()) {}
+  TemporaryRef(const TemporaryRef<U>& aOther) : mPtr(aOther.take()) {}
 
   ~TemporaryRef() { RefPtr<T>::unref(mPtr); }
 
-  T* drop() const
+  MOZ_WARN_UNUSED_RESULT T* take() const
   {
     T* tmp = mPtr;
     mPtr = nullptr;
