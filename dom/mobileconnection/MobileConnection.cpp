@@ -123,6 +123,10 @@ MobileConnection::MobileConnection(nsPIDOMWindow* aWindow, uint32_t aClientId)
   nsCOMPtr<nsIMobileConnectionService> service =
     do_GetService(NS_MOBILE_CONNECTION_SERVICE_CONTRACTID);
 
+  // Per WebAPI design, mIccId should be null instead of an empty string when no
+  // SIM card is inserted. Set null as default value.
+  mIccId.SetIsVoid(true);
+
   // Not being able to acquire the service isn't fatal since we check
   // for it explicitly below.
   if (!service) {
