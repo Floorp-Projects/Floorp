@@ -12082,7 +12082,7 @@ class MMemoryBarrier
 
 class MCompareExchangeTypedArrayElement
   : public MAryInstruction<4>,
-    public MixPolicy< MixPolicy<ObjectPolicy<0>, IntPolicy<1> >, MixPolicy<IntPolicy<2>, IntPolicy<3> > >::Data
+    public Mix4Policy<ObjectPolicy<0>, IntPolicy<1>, IntPolicy<2>, IntPolicy<3>>::Data
 {
     Scalar::Type arrayType_;
 
