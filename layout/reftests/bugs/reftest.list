@@ -1850,3 +1850,4 @@ test-pref(layout.testing.overlay-scrollbars.always-visible,false) == 1081072-1.h
 fuzzy-if(winWidget&&!layersGPUAccelerated,1,31) == 1081185-1.html 1081185-1-ref.html
 == 1097437-1.html 1097437-1-ref.html
 == 1105137-1.html 1105137-1-ref.html
+fuzzy-if(d2d,36,304) HTTP(..) == 1116480-1-fakeitalic-overflow.html 1116480-1-fakeitalic-overflow-ref.html
