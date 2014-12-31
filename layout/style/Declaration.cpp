@@ -169,9 +169,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
            initialCount = 0, inheritCount = 0, unsetCount = 0,
            matchingTokenStreamCount = 0, nonMatchingTokenStreamCount = 0;
   CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty) {
-    if (*p == eCSSProperty__x_system_font ||
-         nsCSSProps::PropHasFlags(*p, CSS_PROPERTY_DIRECTIONAL_SOURCE)) {
-      // The system-font subproperty and the *-source properties don't count.
+    if (*p == eCSSProperty__x_system_font) {
+      // The system-font subproperty doesn't count.
       continue;
     }
     ++totalCount;
