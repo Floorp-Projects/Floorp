@@ -103,7 +103,8 @@
 
 // Flags for the kFlagsTable bitfield (flags_ in nsCSSPropList.h)
 
-// Flag (1<<0) is currently free.
+// This property is a logical property (such as padding-inline-start).
+#define CSS_PROPERTY_LOGICAL                      (1<<0)
 
 #define CSS_PROPERTY_VALUE_LIST_USES_COMMAS       (1<<1) /* otherwise spaces */
 
@@ -208,9 +209,6 @@ static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 
 // This property's unitless values are pixels.
 #define CSS_PROPERTY_NUMBERS_ARE_PIXELS           (1<<24)
-
-// This property is a logical property (such as padding-inline-start).
-#define CSS_PROPERTY_LOGICAL                      (1<<25)
 
 /**
  * Types of animatable values.
