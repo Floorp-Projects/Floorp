@@ -604,8 +604,8 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
 
     const FrameMetrics& metrics = aLayer->GetFrameMetrics(i);
     CSSToLayerScale paintScale = metrics.LayersPixelsPerCSSPixel();
-    CSSRect displayPort(metrics.mCriticalDisplayPort.IsEmpty() ?
-                        metrics.GetDisplayPort() : metrics.mCriticalDisplayPort);
+    CSSRect displayPort(metrics.GetCriticalDisplayPort().IsEmpty() ?
+                        metrics.GetDisplayPort() : metrics.GetCriticalDisplayPort());
     ScreenPoint offset(0, 0);
     // XXX this call to SyncFrameMetrics is not currently being used. It will be cleaned
     // up as part of bug 776030 or one of its dependencies.
@@ -859,9 +859,9 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   // notifications, so that Java can take these into account in its response.
   // Calculate the absolute display port to send to Java
   LayerIntRect displayPort = RoundedToInt(
-    (metrics.mCriticalDisplayPort.IsEmpty()
+    (metrics.GetCriticalDisplayPort().IsEmpty()
       ? metrics.GetDisplayPort()
-      : metrics.mCriticalDisplayPort
+      : metrics.GetCriticalDisplayPort()
     ) * geckoZoom);
   displayPort += scrollOffsetLayerPixels;
 

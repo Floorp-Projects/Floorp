@@ -202,7 +202,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
         const SurfaceTextureImage::Data* data = typedImage->GetData();
         texture = new SurfaceTextureClient(GetForwarder(), mTextureFlags,
                                            data->mSurfTex, size,
-                                           data->mInverted);
+                                           data->mOriginPos);
 #endif
       } else {
         MOZ_ASSERT(false, "Bad ImageFormat.");

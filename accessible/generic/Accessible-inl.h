@@ -67,14 +67,6 @@ Accessible::ScrollTo(uint32_t aHow) const
     nsCoreUtils::ScrollTo(mDoc->PresShell(), mContent, aHow);
 }
 
-inline bool
-Accessible::UpdateChildren()
-{
-  AutoTreeMutation mut(this);
-  InvalidateChildren();
-  return EnsureChildren();
-}
-
 } // namespace a11y
 } // namespace mozilla
 
