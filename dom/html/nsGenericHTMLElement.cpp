@@ -1444,10 +1444,10 @@ nsGenericHTMLElement::MapImageMarginAttributeInto(const nsMappedAttributes* aAtt
       hval.SetPercentValue(value->GetPercentValue());
 
     if (hval.GetUnit() != eCSSUnit_Null) {
-      nsCSSValue* left = aData->ValueForMarginLeftValue();
+      nsCSSValue* left = aData->ValueForMarginLeft();
       if (left->GetUnit() == eCSSUnit_Null)
         *left = hval;
-      nsCSSValue* right = aData->ValueForMarginRightValue();
+      nsCSSValue* right = aData->ValueForMarginRight();
       if (right->GetUnit() == eCSSUnit_Null)
         *right = hval;
     }

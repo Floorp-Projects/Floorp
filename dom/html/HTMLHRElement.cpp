@@ -88,8 +88,8 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
     if (value && value->Type() == nsAttrValue::eEnum) {
       // Map align attribute into auto side margins
-      nsCSSValue* marginLeft = aData->ValueForMarginLeftValue();
-      nsCSSValue* marginRight = aData->ValueForMarginRightValue();
+      nsCSSValue* marginLeft = aData->ValueForMarginLeft();
+      nsCSSValue* marginRight = aData->ValueForMarginRight();
       switch (value->GetEnumValue()) {
       case NS_STYLE_TEXT_ALIGN_LEFT:
         if (marginLeft->GetUnit() == eCSSUnit_Null)
