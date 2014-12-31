@@ -107,13 +107,6 @@ Zone::onTooMuchMalloc()
     }
 }
 
-bool
-Zone::isCloseToAllocTrigger(bool highFrequencyGC) const
-{
-    double factor = highFrequencyGC ? 0.85 : 0.9;
-    return usage.gcBytes() >= factor * threshold.gcTriggerBytes();
-}
-
 void
 Zone::beginSweepTypes(FreeOp *fop, bool releaseTypes)
 {
