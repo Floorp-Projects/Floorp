@@ -23,8 +23,8 @@ using namespace mozilla::gfx;
 CanvasLayerD3D10::CanvasLayerD3D10(LayerManagerD3D10 *aManager)
   : CanvasLayer(aManager, nullptr)
   , LayerD3D10(aManager)
-  , mDataIsPremultiplied(false)
-  , mNeedsYFlip(false)
+  , mDataIsPremultiplied(true)
+  , mOriginPos(gl::OriginPos::TopLeft)
   , mHasAlpha(true)
 {
     mImplData = static_cast<LayerD3D10*>(this);
@@ -43,7 +43,7 @@ CanvasLayerD3D10::Initialize(const Data& aData)
     mGLContext = aData.mGLContext;
     NS_ASSERTION(mGLContext->IsOffscreen(), "Canvas GLContext must be offscreen.");
     mDataIsPremultiplied = aData.mIsGLAlphaPremult;
-    mNeedsYFlip = true;
+    mOriginPos = gl::OriginPos::TopLeft;
 
     GLScreenBuffer* screen = mGLContext->Screen();
 
@@ -60,8 +60,6 @@ CanvasLayerD3D10::Initialize(const Data& aData)
     }
   } else if (aData.mDrawTarget) {
     mDrawTarget = aData.mDrawTarget;
-    mNeedsYFlip = false;
-    mDataIsPremultiplied = true;
     void *texture = mDrawTarget->GetNativeSurface(NativeSurfaceType::D3D10_TEXTURE);
 
     if (texture) {
@@ -79,7 +77,7 @@ CanvasLayerD3D10::Initialize(const Data& aData)
     // bypassing Thebes
     mSurface = mDrawTarget->Snapshot();
   } else {
-    NS_ERROR("CanvasLayer created without mSurface, mDrawTarget or mGLContext?");
+    MOZ_CRASH("CanvasLayer created without mSurface, mDrawTarget or mGLContext?");
   }
 
   mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
@@ -213,7 +211,9 @@ CanvasLayerD3D10::RenderLayer()
       (float)mBounds.height)
     );
 
-  if (mNeedsYFlip) {
+  const bool needsYFlip = (mOriginPos == gl::OriginPos::BottomLeft);
+
+  if (needsYFlip) {
     effect()->GetVariableByName("vTextureCoords")->AsVector()->SetFloatVector(
       ShaderConstantRectD3D10(
         0,
@@ -226,7 +226,7 @@ CanvasLayerD3D10::RenderLayer()
   technique->GetPassByIndex(0)->Apply(0);
   device()->Draw(4, 0);
 
-  if (mNeedsYFlip) {
+  if (needsYFlip) {
     effect()->GetVariableByName("vTextureCoords")->AsVector()->
       SetFloatVector(ShaderConstantRectD3D10(0, 0, 1.0f, 1.0f));
   }

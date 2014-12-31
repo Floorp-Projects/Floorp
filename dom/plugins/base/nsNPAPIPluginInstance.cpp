@@ -179,7 +179,7 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance()
   , mFullScreenOrientation(dom::eScreenOrientation_LandscapePrimary)
   , mWakeLocked(false)
   , mFullScreen(false)
-  , mInverted(false)
+  , mOriginPos(gl::OriginPos::TopLeft)
 #endif
   , mRunning(NOT_STARTED)
   , mWindowless(false)
@@ -1054,14 +1054,6 @@ void nsNPAPIPluginInstance::GetVideos(nsTArray<VideoInfo*>& aVideos)
   std::map<void*, VideoInfo*>::iterator it;
   for (it = mVideos.begin(); it != mVideos.end(); it++)
     aVideos.AppendElement(it->second);
-}
-
-void nsNPAPIPluginInstance::SetInverted(bool aInverted)
-{
-  if (aInverted == mInverted)
-    return;
-
-  mInverted = aInverted;
 }
 
 nsNPAPIPluginInstance* nsNPAPIPluginInstance::GetFromNPP(NPP npp)

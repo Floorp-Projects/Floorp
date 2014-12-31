@@ -10,6 +10,7 @@ import org.mozilla.gecko.widget.GeckoActionProvider;
 
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.text.TextUtils;
 import android.view.ActionProvider;
 import android.view.ContextMenu;
 import android.view.MenuItem;
@@ -244,36 +245,46 @@ public class GeckoMenuItem implements MenuItem {
 
     @Override
     public MenuItem setCheckable(boolean checkable) {
-        mCheckable = checkable;
-        mMenu.onItemChanged(this);
+        if (mCheckable != checkable) {
+            mCheckable = checkable;
+            mMenu.onItemChanged(this);
+        }
         return this;
     }
 
     @Override
     public MenuItem setChecked(boolean checked) {
-        mChecked = checked;
-        mMenu.onItemChanged(this);
+        if (mChecked != checked) {
+            mChecked = checked;
+            mMenu.onItemChanged(this);
+        }
         return this;
     }
 
     @Override
     public MenuItem setEnabled(boolean enabled) {
-        mEnabled = enabled;
-        mMenu.onItemChanged(this);
+        if (mEnabled != enabled) {
+            mEnabled = enabled;
+            mMenu.onItemChanged(this);
+        }
         return this;
     }
 
     @Override
     public MenuItem setIcon(Drawable icon) {
-        mIcon = icon;
-        mMenu.onItemChanged(this);
+        if (mIcon != icon) {
+            mIcon = icon;
+            mMenu.onItemChanged(this);
+        }
         return this;
     }
 
     @Override
     public MenuItem setIcon(int iconRes) {
-        mIconRes = iconRes;
-        mMenu.onItemChanged(this);
+        if (mIconRes != iconRes) {
+            mIconRes = iconRes;
+            mMenu.onItemChanged(this);
+        }
         return this;
     }
 
@@ -354,16 +365,17 @@ public class GeckoMenuItem implements MenuItem {
 
     @Override
     public MenuItem setTitle(CharSequence title) {
-        mTitle = title;
-        mMenu.onItemChanged(this);
+        if (!TextUtils.equals(mTitle, title)) {
+            mTitle = title;
+            mMenu.onItemChanged(this);
+        }
         return this;
     }
 
     @Override
     public MenuItem setTitle(int title) {
-        mTitle = mMenu.getResources().getString(title);
-        mMenu.onItemChanged(this);
-        return this;
+        CharSequence newTitle = mMenu.getResources().getString(title);
+        return setTitle(newTitle);
     }
 
     @Override
@@ -374,8 +386,10 @@ public class GeckoMenuItem implements MenuItem {
 
     @Override
     public MenuItem setVisible(boolean visible) {
-        mVisible = visible;
-        mMenu.onItemChanged(this);
+        if (mVisible != visible) {
+            mVisible = visible;
+            mMenu.onItemChanged(this);
+        }
         return this;
     }
 

@@ -21,6 +21,7 @@
     {
       this.selectNode = getNode(aID);
       this.select = getAccessible(this.selectNode);
+      this.selectList = this.select.firstChild;
 
       this.invoke = function addOptions_invoke()
       {
@@ -34,7 +35,7 @@
       }
 
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, this.select)
+        new invokerChecker(EVENT_REORDER, this.selectList)
       ];
 
       this.finalCheck = function addOptions_finalCheck()

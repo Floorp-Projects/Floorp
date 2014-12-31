@@ -597,9 +597,9 @@ gfx::IntRect TiledTextureImage::GetTileRect()
 gfx::IntRect TiledTextureImage::GetSrcTileRect()
 {
     gfx::IntRect rect = GetTileRect();
-    unsigned int srcY = mFlags & NeedsYFlip
-                        ? mSize.height - rect.height - rect.y
-                        : rect.y;
+    const bool needsYFlip = mFlags & OriginBottomLeft;
+    unsigned int srcY = needsYFlip ? mSize.height - rect.height - rect.y
+                                   : rect.y;
     return gfx::IntRect(rect.x, srcY, rect.width, rect.height);
 }
 

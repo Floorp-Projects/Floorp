@@ -517,24 +517,16 @@ public class GeckoMenu extends ListView
             }
 
             if (actionView != null) {
-                // The update could be coming from the background thread.
-                // Post a runnable on the UI thread of the view for it to update.
-                final GeckoMenuItem menuItem = item;
-                actionView.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (menuItem.isVisible()) {
-                            actionView.setVisibility(View.VISIBLE);
-                            if (actionView instanceof MenuItemActionBar) {
-                                ((MenuItemActionBar) actionView).initialize(menuItem);
-                            } else {
-                                ((MenuItemActionView) actionView).initialize(menuItem);
-                            }
-                        } else {
-                            actionView.setVisibility(View.GONE);
-                        }
+                if (item.isVisible()) {
+                    actionView.setVisibility(View.VISIBLE);
+                    if (actionView instanceof MenuItemActionBar) {
+                        ((MenuItemActionBar) actionView).initialize(item);
+                    } else {
+                        ((MenuItemActionView) actionView).initialize(item);
                     }
-                });
+                } else {
+                    actionView.setVisibility(View.GONE);
+                }
             }
         } else {
             mAdapter.notifyDataSetChanged();

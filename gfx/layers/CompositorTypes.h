@@ -29,8 +29,8 @@ MOZ_BEGIN_ENUM_CLASS(TextureFlags, uint32_t)
   NO_FLAGS           = 0,
   // Use nearest-neighbour texture filtering (as opposed to linear filtering).
   USE_NEAREST_FILTER = 1 << 0,
-  // The texture should be flipped along the y-axis when composited.
-  NEEDS_Y_FLIP       = 1 << 1,
+  // The compositor assumes everything is origin-top-left by default.
+  ORIGIN_BOTTOM_LEFT = 1 << 1,
   // Force the texture to be represented using a single tile (note that this means
   // tiled textures, not tiled layers).
   DISALLOW_BIGIMAGE  = 1 << 2,
