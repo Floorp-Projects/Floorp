@@ -2902,10 +2902,10 @@ ElementRestyler::ComputeRestyleResultFromNewContext(nsIFrame* aSelf,
     return eRestyleResult_Continue;
   }
 
-  if (oldContext->IsDirectlyInsideRuby() !=
-        aNewContext->IsDirectlyInsideRuby()) {
-    LOG_RESTYLE_CONTINUE("NS_STYLE_IS_DIRECTLY_INSIDE_RUBY differes between old"
-                         " and new style contexts");
+  if (oldContext->IsInlineDescendantOfRuby() !=
+        aNewContext->IsInlineDescendantOfRuby()) {
+    LOG_RESTYLE_CONTINUE("NS_STYLE_IS_INLINE_DESCENDANT_OF_RUBY differes"
+                         "between old and new style contexts");
     return eRestyleResult_Continue;
   }
 
