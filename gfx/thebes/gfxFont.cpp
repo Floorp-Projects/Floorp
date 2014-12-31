@@ -2271,6 +2271,18 @@ gfxFont::Measure(gfxTextRun *aTextRun,
         metrics.mBoundingBox -= gfxPoint(x, 0);
     }
 
+    // If the font may be rendered with a fake-italic effect, we need to allow
+    // for the top-right of the glyphs being skewed to the right, and the
+    // bottom-left being skewed further left.
+    if (mStyle.style != NS_FONT_STYLE_NORMAL && !mFontEntry->IsItalic()) {
+        gfxFloat extendLeftEdge =
+            ceil(OBLIQUE_SKEW_FACTOR * metrics.mBoundingBox.YMost());
+        gfxFloat extendRightEdge =
+            ceil(OBLIQUE_SKEW_FACTOR * -metrics.mBoundingBox.y);
+        metrics.mBoundingBox.width += extendLeftEdge + extendRightEdge;
+        metrics.mBoundingBox.x -= extendLeftEdge;
+    }
+
     if (baselineOffset != 0) {
         metrics.mAscent -= baselineOffset;
         metrics.mDescent += baselineOffset;
