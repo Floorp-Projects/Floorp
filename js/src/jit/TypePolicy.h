@@ -344,6 +344,23 @@ class Mix3Policy : public TypePolicy
     }
 };
 
+// Combine four policies.  (Missing variadic templates yet?)
+template <class Policy1, class Policy2, class Policy3, class Policy4>
+class Mix4Policy : public TypePolicy
+{
+  public:
+    EMPTY_DATA_;
+    static bool staticAdjustInputs(TempAllocator &alloc, MInstruction *ins) {
+        return Policy1::staticAdjustInputs(alloc, ins) &&
+               Policy2::staticAdjustInputs(alloc, ins) &&
+               Policy3::staticAdjustInputs(alloc, ins) &&
+               Policy4::staticAdjustInputs(alloc, ins);
+    }
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) {
+        return staticAdjustInputs(alloc, ins);
+    }
+};
+
 class CallSetElementPolicy : public SingleObjectPolicy
 {
   public:
