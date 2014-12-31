@@ -9907,18 +9907,6 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseOverflow();
   case eCSSProperty_padding:
     return ParsePadding();
-  case eCSSProperty_padding_end:
-    return ParseDirectionalBoxProperty(eCSSProperty_padding_end,
-                                       NS_BOXPROP_SOURCE_LOGICAL);
-  case eCSSProperty_padding_left:
-    return ParseDirectionalBoxProperty(eCSSProperty_padding_left,
-                                       NS_BOXPROP_SOURCE_PHYSICAL);
-  case eCSSProperty_padding_right:
-    return ParseDirectionalBoxProperty(eCSSProperty_padding_right,
-                                       NS_BOXPROP_SOURCE_PHYSICAL);
-  case eCSSProperty_padding_start:
-    return ParseDirectionalBoxProperty(eCSSProperty_padding_start,
-                                       NS_BOXPROP_SOURCE_LOGICAL);
   case eCSSProperty_quotes:
     return ParseQuotes();
   case eCSSProperty_size:
@@ -13085,20 +13073,11 @@ CSSParserImpl::ParsePadding()
 {
   static const nsCSSProperty kPaddingSideIDs[] = {
     eCSSProperty_padding_top,
-    eCSSProperty_padding_right_value,
+    eCSSProperty_padding_right,
     eCSSProperty_padding_bottom,
-    eCSSProperty_padding_left_value
-  };
-  static const nsCSSProperty kPaddingSources[] = {
-    eCSSProperty_padding_left_ltr_source,
-    eCSSProperty_padding_left_rtl_source,
-    eCSSProperty_padding_right_ltr_source,
-    eCSSProperty_padding_right_rtl_source,
-    eCSSProperty_UNKNOWN
+    eCSSProperty_padding_left
   };
 
-  // do this now, in case 4 values weren't specified
-  InitBoxPropsAsPhysical(kPaddingSources);
   return ParseBoxProperties(kPaddingSideIDs);
 }
 
