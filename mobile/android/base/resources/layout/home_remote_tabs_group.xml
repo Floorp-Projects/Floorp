@@ -29,7 +29,7 @@
         android:layout_weight="1"
         android:orientation="vertical">
 
-        <org.mozilla.gecko.widget.FadedTextView
+        <org.mozilla.gecko.widget.FadedSingleColorTextView
             android:id="@+id/client"
             style="@style/Widget.TwoLinePageRow.Title"
             android:layout_width="match_parent"
