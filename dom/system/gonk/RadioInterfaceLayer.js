@@ -1993,20 +1993,20 @@ RadioInterface.prototype = {
   matchMvno: function(target, message) {
     if (DEBUG) this.debug("matchMvno: " + JSON.stringify(message));
 
-    if (!message || !message.mvnoData) {
+    if (!message || !message.mvnoType || !message.mvnoData) {
       message.errorMsg = RIL.GECKO_ERROR_INVALID_PARAMETER;
     }
 
     if (!message.errorMsg) {
       switch (message.mvnoType) {
-        case RIL.GECKO_CARDMVNO_TYPE_IMSI:
+        case "imsi":
           if (!this.rilContext.imsi) {
             message.errorMsg = RIL.GECKO_ERROR_GENERIC_FAILURE;
             break;
           }
           message.result = this.isImsiMatches(message.mvnoData);
           break;
-        case RIL.GECKO_CARDMVNO_TYPE_SPN:
+        case "spn":
           let spn = this.rilContext.iccInfo && this.rilContext.iccInfo.spn;
           if (!spn) {
             message.errorMsg = RIL.GECKO_ERROR_GENERIC_FAILURE;
@@ -2014,7 +2014,7 @@ RadioInterface.prototype = {
           }
           message.result = spn == message.mvnoData;
           break;
-        case RIL.GECKO_CARDMVNO_TYPE_GID:
+        case "gid":
           this.workerMessenger.send("getGID1", null, (function(response) {
             let gid = response.gid1;
             let mvnoDataLength = message.mvnoData.length;
