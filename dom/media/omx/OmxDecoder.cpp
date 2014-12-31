@@ -118,7 +118,6 @@ bool OmxDecoder::Init(sp<MediaExtractor>& extractor) {
   }
 #endif
 
-  const char* extractorMime;
   sp<MetaData> meta = extractor->getMetaData();
 
   ssize_t audioTrackIndex = -1;
@@ -176,7 +175,6 @@ bool OmxDecoder::EnsureMetadata() {
   }
   if (mAudioTrack.get()) {
     durationUs = -1;
-    const char* audioMime;
     sp<MetaData> meta = mAudioTrack->getFormat();
 
     if ((durationUs == -1) && meta->findInt64(kKeyDuration, &durationUs)) {

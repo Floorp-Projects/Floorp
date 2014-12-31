@@ -182,7 +182,7 @@ MediaCodecProxy::releaseCodec()
 
     // Release MediaCodec
     if (mCodec != nullptr) {
-      status_t err = mCodec->stop();
+      mCodec->stop();
       mCodec->release();
       mCodec = nullptr;
     }
@@ -493,7 +493,6 @@ MediaCodecProxy::resourceCanceled()
 bool MediaCodecProxy::Prepare()
 {
 
-  status_t err;
   if (start() != OK) {
     MCP_LOG("Couldn't start MediaCodec");
     return false;

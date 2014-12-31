@@ -189,7 +189,6 @@ GenerateAVCDescriptorBlob(sp<AMessage>& aConfigData,
     return ERROR_MALFORMED;
   }
 
-  status_t result = OK;
   if (aFormat == OMXVideoEncoder::BlobFormat::AVC_NAL) {
     // SPS + PPS.
     aOutputBuf->AppendElements(sps->data(), sps->size());
