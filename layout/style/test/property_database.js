@@ -1566,7 +1566,8 @@ var gCSSProperties = {
   "-moz-padding-end": {
     domProp: "MozPaddingEnd",
     inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
     get_computed: logical_box_prop_get_computed,
     /* no subproperties */
     initial_values: [ "0", "0px", "0%", "0em", "0ex", "calc(0pt)", "calc(0% + 0px)", "calc(-3px)", "calc(-1%)" ],
@@ -1582,7 +1583,8 @@ var gCSSProperties = {
   "-moz-padding-start": {
     domProp: "MozPaddingStart",
     inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
     get_computed: logical_box_prop_get_computed,
     /* no subproperties */
     initial_values: [ "0", "0px", "0%", "0em", "0ex", "calc(0pt)", "calc(0% + 0px)", "calc(-3px)", "calc(-1%)" ],
@@ -3122,8 +3124,7 @@ var gCSSProperties = {
   "padding-left": {
     domProp: "paddingLeft",
     inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    /* no subproperties */
+    type: CSS_TYPE_LONGHAND,
     initial_values: [ "0", "0px", "0%", "calc(0pt)", "calc(0% + 0px)", "calc(-3px)", "calc(-1%)" ],
     other_values: [ "1px", "2em", "5%",
       "calc(2px)",
@@ -3138,8 +3139,7 @@ var gCSSProperties = {
   "padding-right": {
     domProp: "paddingRight",
     inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    /* no subproperties */
+    type: CSS_TYPE_LONGHAND,
     initial_values: [ "0", "0px", "0%", "calc(0pt)", "calc(0% + 0px)", "calc(-3px)", "calc(-1%)" ],
     other_values: [ "1px", "2em", "5%",
       "calc(2px)",
@@ -4520,13 +4520,27 @@ var gCSSProperties = {
 
 function logical_box_prop_get_computed(cs, property)
 {
-  if (! /^-moz-/.test(property))
+  var ltr = cs.getPropertyValue("direction") == "ltr";
+  if (/^-moz-/.test(property)) {
+    property = property.substring(5);
+    if (ltr) {
+      property = property.replace("-start", "-left")
+                         .replace("-end", "-right");
+    } else {
+      property = property.replace("-start", "-right")
+                         .replace("-end", "-left");
+    }
+  } else if (/-inline-(start|end)/.test(property)) {
+    if (ltr) {
+      property = property.replace("-inline-start", "-left")
+                         .replace("-inline-end", "-right");
+    } else {
+      property = property.replace("-inline-start", "-right")
+                         .replace("-inline-end", "-left");
+    }
+  } else {
     throw "Unexpected property";
-  property = property.substring(5);
-  if (cs.getPropertyValue("direction") == "ltr")
-    property = property.replace("-start", "-left").replace("-end", "-right");
-  else
-    property = property.replace("-start", "-right").replace("-end", "-left");
+  }
   return cs.getPropertyValue(property);
 }
 
@@ -4597,7 +4611,39 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
       invalid_values: [ "auto", "all 2", "none all", "digits -3", "digits 0",
                         "digits 12", "none 3", "digits 3.1415", "digits3", "digits 1",
                         "digits 3 all", "digits foo", "digits all", "digits 3.0" ]
-    }
+    },
+    "padding-inline-end": {
+      domProp: "paddingInlineEnd",
+      inherited: false,
+      type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+      alias_for: "-moz-padding-end",
+      get_computed: logical_box_prop_get_computed,
+      initial_values: [ "0", "0px", "0%", "calc(0pt)", "calc(0% + 0px)", "calc(-3px)", "calc(-1%)" ],
+      other_values: [ "1px", "2em", "5%",
+        "calc(2px)",
+        "calc(50%)",
+        "calc(3*25px)",
+        "calc(25px*3)",
+        "calc(3*25px + 50%)",
+      ],
+      invalid_values: [ ],
+    },
+    "padding-inline-start": {
+      domProp: "paddingInlineStart",
+      inherited: false,
+      type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+      alias_for: "-moz-padding-start",
+      get_computed: logical_box_prop_get_computed,
+      initial_values: [ "0", "0px", "0%", "calc(0pt)", "calc(0% + 0px)", "calc(-3px)", "calc(-1%)" ],
+      other_values: [ "1px", "2em", "5%",
+        "calc(2px)",
+        "calc(50%)",
+        "calc(3*25px)",
+        "calc(25px*3)",
+        "calc(3*25px + 50%)",
+      ],
+      invalid_values: [ ],
+    },
   };
   for (var prop in verticalTextProperties) {
     gCSSProperties[prop] = verticalTextProperties[prop];
