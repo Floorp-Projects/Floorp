@@ -2572,6 +2572,65 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
   return nullptr;
 }
 
+/*
+ * This function handles cascading of *-left or *-right box properties
+ * against *-start (which is L for LTR and R for RTL) or *-end (which is
+ * R for LTR and L for RTL).
+ *
+ * Cascading these properties correctly is hard because we need to
+ * cascade two properties as one, but which two properties depends on a
+ * third property ('direction').  We solve this by treating each of
+ * these properties (say, 'margin-start') as a shorthand that sets a
+ * property containing the value of the property specified
+ * ('margin-start-value') and sets a pair of properties
+ * ('margin-left-ltr-source' and 'margin-right-rtl-source') saying which
+ * of the properties we use.  Thus, when we want to compute the value of
+ * 'margin-left' when 'direction' is 'ltr', we look at the value of
+ * 'margin-left-ltr-source', which tells us whether to use the highest
+ * 'margin-left' in the cascade or the highest 'margin-start'.
+ *
+ * Finally, since we can compute the normal (*-left and *-right)
+ * properties in a loop, this function works by modifying the data we
+ * will use in that loop (which the caller must copy from the const
+ * input).
+ */
+void
+nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
+                                 const nsCSSValue& aLTRSource,
+                                 const nsCSSValue& aRTLSource,
+                                 const nsCSSValue& aLTRLogicalValue,
+                                 const nsCSSValue& aRTLLogicalValue,
+                                 mozilla::css::Side aSide,
+                                 nsCSSRect& aValueRect,
+                                 bool& aCanStoreInRuleTree)
+{
+  bool LTRlogical = aLTRSource.GetUnit() == eCSSUnit_Enumerated &&
+                      aLTRSource.GetIntValue() == NS_BOXPROP_SOURCE_LOGICAL;
+  bool RTLlogical = aRTLSource.GetUnit() == eCSSUnit_Enumerated &&
+                      aRTLSource.GetIntValue() == NS_BOXPROP_SOURCE_LOGICAL;
+  if (LTRlogical || RTLlogical) {
+    // We can't cache anything on the rule tree if we use any data from
+    // the style context, since data cached in the rule tree could be
+    // used with a style context with a different value.
+    aCanStoreInRuleTree = false;
+    uint8_t dir = aContext->StyleVisibility()->mDirection;
+
+    if (dir == NS_STYLE_DIRECTION_LTR) {
+      if (LTRlogical)
+        aValueRect.*(nsCSSRect::sides[aSide]) = aLTRLogicalValue;
+    } else {
+      if (RTLlogical)
+        aValueRect.*(nsCSSRect::sides[aSide]) = aRTLLogicalValue;
+    }
+  } else if (aLTRLogicalValue.GetUnit() == eCSSUnit_Inherit ||
+             aRTLLogicalValue.GetUnit() == eCSSUnit_Inherit) {
+    // It actually is valid to store this in the ruletree, since
+    // LTRlogical and RTLlogical are both false, but doing that will
+    // trigger asserts.  Silence those.
+    aCanStoreInRuleTree = false;
+  }
+}
+
 /**
  * Begin an nsRuleNode::Compute*Data function for an inherited struct.
  *
@@ -6443,13 +6502,28 @@ nsRuleNode::ComputeMarginData(void* aStartStruct,
 {
   COMPUTE_START_RESET(Margin, (), margin, parentMargin)
 
-  // margin: length, percent, calc, inherit
-  const nsCSSProperty* subprops =
-    nsCSSProps::SubpropertyEntryFor(eCSSProperty_margin);
-  nsStyleCoord coord;
+  // margin: length, percent, auto, inherit
+  nsStyleCoord  coord;
+  nsCSSRect ourMargin;
+  ourMargin.mTop = *aRuleData->ValueForMarginTop();
+  ourMargin.mRight = *aRuleData->ValueForMarginRightValue();
+  ourMargin.mBottom = *aRuleData->ValueForMarginBottom();
+  ourMargin.mLeft = *aRuleData->ValueForMarginLeftValue();
+  AdjustLogicalBoxProp(aContext,
+                       *aRuleData->ValueForMarginLeftLTRSource(),
+                       *aRuleData->ValueForMarginLeftRTLSource(),
+                       *aRuleData->ValueForMarginStartValue(),
+                       *aRuleData->ValueForMarginEndValue(),
+                       NS_SIDE_LEFT, ourMargin, canStoreInRuleTree);
+  AdjustLogicalBoxProp(aContext,
+                       *aRuleData->ValueForMarginRightLTRSource(),
+                       *aRuleData->ValueForMarginRightRTLSource(),
+                       *aRuleData->ValueForMarginEndValue(),
+                       *aRuleData->ValueForMarginStartValue(),
+                       NS_SIDE_RIGHT, ourMargin, canStoreInRuleTree);
   NS_FOR_CSS_SIDES(side) {
     nsStyleCoord parentCoord = parentMargin->mMargin.Get(side);
-    if (SetCoord(*aRuleData->ValueFor(subprops[side]),
+    if (SetCoord(ourMargin.*(nsCSSRect::sides[side]),
                  coord, parentCoord,
                  SETCOORD_LPAH | SETCOORD_INITIAL_ZERO | SETCOORD_STORE_CALC |
                    SETCOORD_UNSET_INITIAL,
@@ -6586,12 +6660,27 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
   }
 
   // border-width, border-*-width: length, enum, inherit
-  nsStyleCoord coord;
-  {
-    const nsCSSProperty* subprops =
-      nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_width);
+  nsStyleCoord  coord;
+  nsCSSRect ourBorderWidth;
+  ourBorderWidth.mTop = *aRuleData->ValueForBorderTopWidth();
+  ourBorderWidth.mRight = *aRuleData->ValueForBorderRightWidthValue();
+  ourBorderWidth.mBottom = *aRuleData->ValueForBorderBottomWidth();
+  ourBorderWidth.mLeft = *aRuleData->ValueForBorderLeftWidthValue();
+  AdjustLogicalBoxProp(aContext,
+                       *aRuleData->ValueForBorderLeftWidthLTRSource(),
+                       *aRuleData->ValueForBorderLeftWidthRTLSource(),
+                       *aRuleData->ValueForBorderStartWidthValue(),
+                       *aRuleData->ValueForBorderEndWidthValue(),
+                       NS_SIDE_LEFT, ourBorderWidth, canStoreInRuleTree);
+  AdjustLogicalBoxProp(aContext,
+                       *aRuleData->ValueForBorderRightWidthLTRSource(),
+                       *aRuleData->ValueForBorderRightWidthRTLSource(),
+                       *aRuleData->ValueForBorderEndWidthValue(),
+                       *aRuleData->ValueForBorderStartWidthValue(),
+                       NS_SIDE_RIGHT, ourBorderWidth, canStoreInRuleTree);
+  { // scope for compilers with broken |for| loop scoping
     NS_FOR_CSS_SIDES(side) {
-      const nsCSSValue& value = *aRuleData->ValueFor(subprops[side]);
+      const nsCSSValue &value = ourBorderWidth.*(nsCSSRect::sides[side]);
       NS_ASSERTION(eCSSUnit_Percent != value.GetUnit(),
                    "Percentage borders not implemented yet "
                    "If implementing, make sure to fix all consumers of "
@@ -6634,11 +6723,26 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
   }
 
   // border-style, border-*-style: enum, inherit
-  {
-    const nsCSSProperty* subprops =
-      nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_style);
+  nsCSSRect ourBorderStyle;
+  ourBorderStyle.mTop = *aRuleData->ValueForBorderTopStyle();
+  ourBorderStyle.mRight = *aRuleData->ValueForBorderRightStyleValue();
+  ourBorderStyle.mBottom = *aRuleData->ValueForBorderBottomStyle();
+  ourBorderStyle.mLeft = *aRuleData->ValueForBorderLeftStyleValue();
+  AdjustLogicalBoxProp(aContext,
+                       *aRuleData->ValueForBorderLeftStyleLTRSource(),
+                       *aRuleData->ValueForBorderLeftStyleRTLSource(),
+                       *aRuleData->ValueForBorderStartStyleValue(),
+                       *aRuleData->ValueForBorderEndStyleValue(),
+                       NS_SIDE_LEFT, ourBorderStyle, canStoreInRuleTree);
+  AdjustLogicalBoxProp(aContext,
+                       *aRuleData->ValueForBorderRightStyleLTRSource(),
+                       *aRuleData->ValueForBorderRightStyleRTLSource(),
+                       *aRuleData->ValueForBorderEndStyleValue(),
+                       *aRuleData->ValueForBorderStartStyleValue(),
+                       NS_SIDE_RIGHT, ourBorderStyle, canStoreInRuleTree);
+  { // scope for compilers with broken |for| loop scoping
     NS_FOR_CSS_SIDES(side) {
-      const nsCSSValue& value = *aRuleData->ValueFor(subprops[side]);
+      const nsCSSValue &value = ourBorderStyle.*(nsCSSRect::sides[side]);
       nsCSSUnit unit = value.GetUnit();
       NS_ABORT_IF_FALSE(eCSSUnit_None != unit,
                         "'none' should be handled as enumerated value");
@@ -6718,12 +6822,27 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
   }
 
   // border-color, border-*-color: color, string, enum, inherit
-  {
-    const nsCSSProperty* subprops =
-      nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_color);
-    bool foreground;
+  bool foreground;
+  nsCSSRect ourBorderColor;
+  ourBorderColor.mTop = *aRuleData->ValueForBorderTopColor();
+  ourBorderColor.mRight = *aRuleData->ValueForBorderRightColorValue();
+  ourBorderColor.mBottom = *aRuleData->ValueForBorderBottomColor();
+  ourBorderColor.mLeft = *aRuleData->ValueForBorderLeftColorValue();
+  AdjustLogicalBoxProp(aContext,
+                       *aRuleData->ValueForBorderLeftColorLTRSource(),
+                       *aRuleData->ValueForBorderLeftColorRTLSource(),
+                       *aRuleData->ValueForBorderStartColorValue(),
+                       *aRuleData->ValueForBorderEndColorValue(),
+                       NS_SIDE_LEFT, ourBorderColor, canStoreInRuleTree);
+  AdjustLogicalBoxProp(aContext,
+                       *aRuleData->ValueForBorderRightColorLTRSource(),
+                       *aRuleData->ValueForBorderRightColorRTLSource(),
+                       *aRuleData->ValueForBorderEndColorValue(),
+                       *aRuleData->ValueForBorderStartColorValue(),
+                       NS_SIDE_RIGHT, ourBorderColor, canStoreInRuleTree);
+  { // scope for compilers with broken |for| loop scoping
     NS_FOR_CSS_SIDES(side) {
-      const nsCSSValue& value = *aRuleData->ValueFor(subprops[side]);
+      const nsCSSValue &value = ourBorderColor.*(nsCSSRect::sides[side]);
       if (eCSSUnit_Inherit == value.GetUnit()) {
         canStoreInRuleTree = false;
         if (parentContext) {
@@ -6894,13 +7013,28 @@ nsRuleNode::ComputePaddingData(void* aStartStruct,
 {
   COMPUTE_START_RESET(Padding, (), padding, parentPadding)
 
-  // padding: length, percent, calc, inherit
-  const nsCSSProperty* subprops =
-    nsCSSProps::SubpropertyEntryFor(eCSSProperty_padding);
-  nsStyleCoord coord;
+  // padding: length, percent, inherit
+  nsStyleCoord  coord;
+  nsCSSRect ourPadding;
+  ourPadding.mTop = *aRuleData->ValueForPaddingTop();
+  ourPadding.mRight = *aRuleData->ValueForPaddingRightValue();
+  ourPadding.mBottom = *aRuleData->ValueForPaddingBottom();
+  ourPadding.mLeft = *aRuleData->ValueForPaddingLeftValue();
+  AdjustLogicalBoxProp(aContext,
+                       *aRuleData->ValueForPaddingLeftLTRSource(),
+                       *aRuleData->ValueForPaddingLeftRTLSource(),
+                       *aRuleData->ValueForPaddingStartValue(),
+                       *aRuleData->ValueForPaddingEndValue(),
+                       NS_SIDE_LEFT, ourPadding, canStoreInRuleTree);
+  AdjustLogicalBoxProp(aContext,
+                       *aRuleData->ValueForPaddingRightLTRSource(),
+                       *aRuleData->ValueForPaddingRightRTLSource(),
+                       *aRuleData->ValueForPaddingEndValue(),
+                       *aRuleData->ValueForPaddingStartValue(),
+                       NS_SIDE_RIGHT, ourPadding, canStoreInRuleTree);
   NS_FOR_CSS_SIDES(side) {
     nsStyleCoord parentCoord = parentPadding->mPadding.Get(side);
-    if (SetCoord(*aRuleData->ValueFor(subprops[side]),
+    if (SetCoord(ourPadding.*(nsCSSRect::sides[side]),
                  coord, parentCoord,
                  SETCOORD_LPH | SETCOORD_INITIAL_ZERO | SETCOORD_STORE_CALC |
                    SETCOORD_UNSET_INITIAL,
@@ -9355,15 +9489,21 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
     eCSSProperty_border_top_color,
     eCSSProperty_border_top_style,
     eCSSProperty_border_top_width,
-    eCSSProperty_border_right_color,
-    eCSSProperty_border_right_style,
-    eCSSProperty_border_right_width,
+    eCSSProperty_border_right_color_value,
+    eCSSProperty_border_right_style_value,
+    eCSSProperty_border_right_width_value,
     eCSSProperty_border_bottom_color,
     eCSSProperty_border_bottom_style,
     eCSSProperty_border_bottom_width,
-    eCSSProperty_border_left_color,
-    eCSSProperty_border_left_style,
-    eCSSProperty_border_left_width,
+    eCSSProperty_border_left_color_value,
+    eCSSProperty_border_left_style_value,
+    eCSSProperty_border_left_width_value,
+    eCSSProperty_border_start_color_value,
+    eCSSProperty_border_start_style_value,
+    eCSSProperty_border_start_width_value,
+    eCSSProperty_border_end_color_value,
+    eCSSProperty_border_end_style_value,
+    eCSSProperty_border_end_width_value,
     eCSSProperty_border_top_left_radius,
     eCSSProperty_border_top_right_radius,
     eCSSProperty_border_bottom_right_radius,
@@ -9372,9 +9512,11 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
 
   static const nsCSSProperty paddingValues[] = {
     eCSSProperty_padding_top,
-    eCSSProperty_padding_right,
+    eCSSProperty_padding_right_value,
     eCSSProperty_padding_bottom,
-    eCSSProperty_padding_left,
+    eCSSProperty_padding_left_value,
+    eCSSProperty_padding_start_value,
+    eCSSProperty_padding_end_value,
   };
 
   static const nsCSSProperty textShadowValues[] = {

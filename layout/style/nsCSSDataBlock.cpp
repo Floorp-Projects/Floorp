@@ -163,61 +163,6 @@ MapSinglePropertyInto(nsCSSProperty aProp,
     }
 }
 
-/**
- * If aProperty is a logical property, converts it to the equivalent physical
- * property based on writing mode information obtained from aRuleData's
- * style context.  Returns true if aProperty was changed.
- */
-static inline void
-EnsurePhysicalProperty(nsCSSProperty& aProperty, nsRuleData* aRuleData)
-{
-  uint8_t direction = aRuleData->mStyleContext->StyleVisibility()->mDirection;
-  bool ltr = direction == NS_STYLE_DIRECTION_LTR;
-
-  switch (aProperty) {
-    case eCSSProperty_margin_end:
-      aProperty = ltr ? eCSSProperty_margin_right : eCSSProperty_margin_left;
-      break;
-    case eCSSProperty_margin_start:
-      aProperty = ltr ? eCSSProperty_margin_left : eCSSProperty_margin_right;
-      break;
-    case eCSSProperty_padding_end:
-      aProperty = ltr ? eCSSProperty_padding_right : eCSSProperty_padding_left;
-      break;
-    case eCSSProperty_padding_start:
-      aProperty = ltr ? eCSSProperty_padding_left : eCSSProperty_padding_right;
-      break;
-    case eCSSProperty_border_end_color:
-      aProperty = ltr ? eCSSProperty_border_right_color :
-                        eCSSProperty_border_left_color;
-      break;
-    case eCSSProperty_border_end_style:
-      aProperty = ltr ? eCSSProperty_border_right_style :
-                        eCSSProperty_border_left_style;
-      break;
-    case eCSSProperty_border_end_width:
-      aProperty = ltr ? eCSSProperty_border_right_width :
-                        eCSSProperty_border_left_width;
-      break;
-    case eCSSProperty_border_start_color:
-      aProperty = ltr ? eCSSProperty_border_left_color :
-                        eCSSProperty_border_right_color;
-      break;
-    case eCSSProperty_border_start_style:
-      aProperty = ltr ? eCSSProperty_border_left_style :
-                        eCSSProperty_border_right_style;
-      break;
-    case eCSSProperty_border_start_width:
-      aProperty = ltr ? eCSSProperty_border_left_width :
-                        eCSSProperty_border_right_width;
-      break;
-    default:
-      NS_ABORT_IF_FALSE(nsCSSProps::PropHasFlags(aProperty,
-                                                 CSS_PROPERTY_LOGICAL),
-                        "unhandled logical property");
-  }
-}
-
 void
 nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
 {
@@ -228,20 +173,10 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
     if (!(aRuleData->mSIDs & mStyleBits))
         return;
 
-    // We process these in reverse order so that we end up mapping the
-    // right property when one can be expressed using both logical and
-    // physical property names.
-    for (uint32_t i = mNumProps; i-- > 0; ) {
+    for (uint32_t i = 0; i < mNumProps; i++) {
         nsCSSProperty iProp = PropertyAtIndex(i);
         if (nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[iProp]) &
             aRuleData->mSIDs) {
-            if (nsCSSProps::PropHasFlags(iProp, CSS_PROPERTY_LOGICAL)) {
-                EnsurePhysicalProperty(iProp, aRuleData);
-                // We can't cache anything on the rule tree if we use any data from
-                // the style context, since data cached in the rule tree could be
-                // used with a style context with a different value.
-                aRuleData->mCanStoreInRuleTree = false;
-            }
             nsCSSValue* target = aRuleData->ValueFor(iProp);
             if (target->GetUnit() == eCSSUnit_Null) {
                 const nsCSSValue *val = ValueAtIndex(i);
@@ -670,17 +605,11 @@ nsCSSExpandedDataBlock::MapRuleInfoInto(nsCSSProperty aPropID,
   const nsCSSValue* src = PropertyAt(aPropID);
   MOZ_ASSERT(src->GetUnit() != eCSSUnit_Null);
 
-  nsCSSProperty physicalProp = aPropID;
-  if (nsCSSProps::PropHasFlags(aPropID, CSS_PROPERTY_LOGICAL)) {
-    EnsurePhysicalProperty(physicalProp, aRuleData);
-    aRuleData->mCanStoreInRuleTree = false;
-  }
-
-  nsCSSValue* dest = aRuleData->ValueFor(physicalProp);
+  nsCSSValue* dest = aRuleData->ValueFor(aPropID);
   MOZ_ASSERT(dest->GetUnit() == eCSSUnit_TokenStream &&
              dest->GetTokenStreamValue()->mPropertyID == aPropID);
 
-  MapSinglePropertyInto(physicalProp, src, dest, aRuleData);
+  MapSinglePropertyInto(aPropID, src, dest, aRuleData);
 }
 
 #ifdef DEBUG

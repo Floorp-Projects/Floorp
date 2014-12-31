@@ -88,8 +88,8 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
     if (value && value->Type() == nsAttrValue::eEnum) {
       // Map align attribute into auto side margins
-      nsCSSValue* marginLeft = aData->ValueForMarginLeft();
-      nsCSSValue* marginRight = aData->ValueForMarginRight();
+      nsCSSValue* marginLeft = aData->ValueForMarginLeftValue();
+      nsCSSValue* marginRight = aData->ValueForMarginRightValue();
       switch (value->GetEnumValue()) {
       case NS_STYLE_TEXT_ALIGN_LEFT:
         if (marginLeft->GetUnit() == eCSSUnit_Null)
@@ -165,7 +165,7 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       borderTopWidth->SetFloatValue(sizePerSide, eCSSUnit_Pixel);
     }
     if (allSides) {
-      nsCSSValue* borderRightWidth = aData->ValueForBorderRightWidth();
+      nsCSSValue* borderRightWidth = aData->ValueForBorderRightWidthValue();
       if (borderRightWidth->GetUnit() == eCSSUnit_Null) {
         borderRightWidth->SetFloatValue(sizePerSide, eCSSUnit_Pixel);
       }
@@ -173,7 +173,7 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       if (borderBottomWidth->GetUnit() == eCSSUnit_Null) {
         borderBottomWidth->SetFloatValue(sizePerSide, eCSSUnit_Pixel);
       }
-      nsCSSValue* borderLeftWidth = aData->ValueForBorderLeftWidth();
+      nsCSSValue* borderLeftWidth = aData->ValueForBorderLeftWidthValue();
       if (borderLeftWidth->GetUnit() == eCSSUnit_Null) {
         borderLeftWidth->SetFloatValue(sizePerSide, eCSSUnit_Pixel);
       }
@@ -185,7 +185,7 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                   eCSSUnit_Enumerated);
     }
     if (allSides) {
-      nsCSSValue* borderRightStyle = aData->ValueForBorderRightStyle();
+      nsCSSValue* borderRightStyle = aData->ValueForBorderRightStyleValue();
       if (borderRightStyle->GetUnit() == eCSSUnit_Null) {
         borderRightStyle->SetIntValue(NS_STYLE_BORDER_STYLE_SOLID,
                                       eCSSUnit_Enumerated);
@@ -195,7 +195,7 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
         borderBottomStyle->SetIntValue(NS_STYLE_BORDER_STYLE_SOLID,
                                        eCSSUnit_Enumerated);
       }
-      nsCSSValue* borderLeftStyle = aData->ValueForBorderLeftStyle();
+      nsCSSValue* borderLeftStyle = aData->ValueForBorderLeftStyleValue();
       if (borderLeftStyle->GetUnit() == eCSSUnit_Null) {
         borderLeftStyle->SetIntValue(NS_STYLE_BORDER_STYLE_SOLID,
                                      eCSSUnit_Enumerated);
