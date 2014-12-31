@@ -21,9 +21,13 @@ struct unused_t;
 } // namespace mozilla
 
 /**
- * already_AddRefed cooperaters with nsCOMPtr/nsRefPtr to enable you to assign
- * in a pointer _without_ |AddRef|ing it.  You might want to use this as a
- * return type from a function that returns an already |AddRef|ed pointer.
+ * already_AddRefed cooperates with reference counting smart pointers to enable
+ * you to assign in a pointer _without_ |AddRef|ing it.  You might want to use
+ * this as a return type from a function that returns an already |AddRef|ed
+ * pointer.
+ *
+ * TODO Move already_AddRefed to namespace mozilla.  This has not yet been done
+ * because of the sheer number of usages of already_AddRefed.
  */
 template<class T>
 struct already_AddRefed
@@ -32,7 +36,7 @@ struct already_AddRefed
    * We want to allow returning nullptr from functions returning
    * already_AddRefed<T>, for simplicity.  But we also don't want to allow
    * returning raw T*, instead preferring creation of already_AddRefed<T> from
-   * an nsRefPtr, nsCOMPtr, or the like.
+   * a reference counting smart pointer.
    *
    * We address the latter requirement by making the (T*) constructor explicit.
    * But |return nullptr| won't consider an explicit constructor, so we need
@@ -73,6 +77,7 @@ struct already_AddRefed
   // Specialize the unused operator<< for already_AddRefed, to allow
   // nsCOMPtr<nsIFoo> foo;
   // unused << foo.forget();
+  // Note that nsCOMPtr is the XPCOM reference counting smart pointer class.
   friend void operator<<(const mozilla::unused_t& aUnused,
                          const already_AddRefed<T>& aRhs)
   {
@@ -101,6 +106,8 @@ struct already_AddRefed
    *
    *    nsRefPtr<BaseClass> y = x.forget();
    *    return y.forget();
+   *
+   * Note that nsRefPtr is the XPCOM reference counting smart pointer class.
    */
   template<class U>
   operator already_AddRefed<U>()
@@ -123,10 +130,6 @@ struct already_AddRefed
    *   {
    *     return F().downcast<Child>();
    *   }
-   *
-   * instead of
-   *
-   *     return dont_AddRef(static_cast<Child*>(F().get()));
    */
   template<class U>
   already_AddRefed<U> downcast()
