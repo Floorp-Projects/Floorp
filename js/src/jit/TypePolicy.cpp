@@ -1048,13 +1048,11 @@ namespace jit {
 
 namespace {
 
-// Default function visited by the C++ lookup rules, if the MIR Instruction does
-// not inherit from a TypePolicy::Data type.
-static TypePolicy *
-thisTypePolicy()
-{
-    return nullptr;
-}
+// For extra-good measure in case an unqualified use is ever introduced.  (The
+// main use in the macro below is explicitly qualified so as not to consult
+// this scope and find this function.)
+inline TypePolicy *
+thisTypePolicy() MOZ_DELETE;
 
 static MIRType
 thisTypeSpecialization()
@@ -1073,16 +1071,15 @@ MGetElementCache::thisTypePolicy()
 }
 
 // For each MIR Instruction, this macro define the |typePolicy| method which is
-// using the |thisTypePolicy| function.  We use the C++ lookup rules to select
-// the right |thisTypePolicy| member.  The |thisTypePolicy| function can either
-// be a member of the MIR Instruction, such as done for MGetElementCache, or a
-// member inherited from the TypePolicy::Data structure, or at last the global
-// with the same name if the instruction has no TypePolicy.
+// using the |thisTypePolicy| method.  The |thisTypePolicy| method is either a
+// member of the MIR Instruction, such as with MGetElementCache, a member
+// inherited from the TypePolicy::Data structure, or a member inherited from
+// NoTypePolicy if the MIR instruction has no type policy.
 #define DEFINE_MIR_TYPEPOLICY_MEMBERS_(op)      \
     TypePolicy *                                \
     js::jit::M##op::typePolicy()                \
     {                                           \
-        return thisTypePolicy();                \
+        return M##op::thisTypePolicy();         \
     }                                           \
                                                 \
     MIRType                                     \
