@@ -41,30 +41,16 @@ TabMirror.prototype = {
     this._pc.onicecandidate = this._onIceCandidate.bind(this);
 
     let windowId = this._window.BrowserApp.selectedBrowser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
-    let viewport = this._window.BrowserApp.selectedTab.getViewport();
-    let maxWidth =  Math.max(viewport.cssWidth, viewport.width);
-    let maxHeight = Math.max(viewport.cssHeight, viewport.height);
-
-    let videoWidth = 0;
-    let videoHeight = 0;
-    if (this._screenSize.width/this._screenSize.height < maxWidth / maxHeight) {
-      videoWidth = this._screenSize.width;
-      videoHeight = Math.ceil(videoWidth * maxHeight / maxWidth);
-    } else {
-      videoHeight = this._screenSize.height;
-      videoWidth = Math.ceil(videoHeight * maxWidth / maxHeight);
-    }
-
     let constraints = {
       video: {
         mediaSource: "browser",
         browserWindow: windowId,
         scrollWithPage: true,
         advanced: [
-          { width: { min: videoWidth, max: videoWidth },
-            height: { min: videoHeight, max: videoHeight }
+          { width: { min: 0, max: this._screenSize.width },
+            height: { min: 0, max: this._screenSize.height }
           },
-          { aspectRatio: maxWidth / maxHeight }
+          { aspectRatio: this._screenSize.width / this._screenSize.height }
         ]
       }
     };
