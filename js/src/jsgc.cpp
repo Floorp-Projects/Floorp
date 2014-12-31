@@ -1627,10 +1627,10 @@ GCRuntime::addRoot(T *rp, const char *name, JSGCRootType rootType)
      * or ModifyBusyCount in workers). We need a read barrier to cover these
      * cases.
      */
-    if (rt->gc.incrementalState != NO_INCREMENTAL)
+    if (isIncrementalGCInProgress())
         BarrierOwner<T>::result::writeBarrierPre(*rp);
 
-    return rt->gc.rootsHash.put((void *)rp, RootInfo(name, rootType));
+    return rootsHash.put((void *)rp, RootInfo(name, rootType));
 }
 
 void
@@ -3016,8 +3016,9 @@ template <AllowGC allowGC>
 /* static */ void *
 GCRuntime::refillFreeListFromMainThread(JSContext *cx, AllocKind thingKind)
 {
-    MOZ_ASSERT(!cx->runtime()->isHeapBusy(), "allocating while under GC");
-    MOZ_ASSERT_IF(allowGC, !cx->runtime()->currentThreadHasExclusiveAccess());
+    JSRuntime *rt = cx->runtime();
+    MOZ_ASSERT(!rt->isHeapBusy(), "allocating while under GC");
+    MOZ_ASSERT_IF(allowGC, !rt->currentThreadHasExclusiveAccess());
 
     Allocator *allocator = cx->allocator();
     Zone *zone = allocator->zone_;
@@ -3025,8 +3026,7 @@ GCRuntime::refillFreeListFromMainThread(JSContext *cx, AllocKind thingKind)
     // If we have grown past our GC heap threshold while in the middle of an
     // incremental GC, we're growing faster than we're GCing, so stop the world
     // and do a full, non-incremental GC right now, if possible.
-    const bool mustCollectNow = allowGC &&
-                                cx->runtime()->gc.incrementalState != NO_INCREMENTAL &&
+    const bool mustCollectNow = allowGC && rt->gc.isIncrementalGCInProgress() &&
                                 zone->usage.gcBytes() > zone->threshold.gcTriggerBytes();
 
     bool outOfMemory = false;  // Set true if we fail to allocate.
@@ -3054,7 +3054,7 @@ GCRuntime::refillFreeListFromMainThread(JSContext *cx, AllocKind thingKind)
         // finalization task may be running (freeing more memory); wait for it
         // to finish, then try to allocate again in case it freed up the memory
         // we need.
-        cx->runtime()->gc.waitBackgroundSweepEnd();
+        rt->gc.waitBackgroundSweepEnd();
 
         thing = allocator->arenas.allocateFromArena(zone, thingKind, maybeStartBGAlloc);
         if (MOZ_LIKELY(thing))
@@ -3317,7 +3317,7 @@ GCRuntime::maybeGC(Zone *zone)
 
     if (zone->usage.gcBytes() > 1024 * 1024 &&
         zone->threshold.isCloseToAllocTrigger(zone->usage, schedulingState.inHighFrequencyGCMode()) &&
-        incrementalState == NO_INCREMENTAL &&
+        !isIncrementalGCInProgress() &&
         !isBackgroundSweeping())
     {
         PrepareZoneForGC(zone);
@@ -3673,7 +3673,7 @@ GCHelperState::waitBackgroundSweepEnd()
     AutoLockGC lock(rt);
     while (state() == SWEEPING)
         waitForBackgroundThread();
-    if (rt->gc.incrementalState == NO_INCREMENTAL)
+    if (!rt->gc.isIncrementalGCInProgress())
         rt->gc.assertBackgroundSweepingFinished();
 }
 
@@ -5887,7 +5887,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget &budget, JS::gcreason::Reason rea
     }
 #endif
 
-    MOZ_ASSERT_IF(incrementalState != NO_INCREMENTAL, isIncremental);
+    MOZ_ASSERT_IF(isIncrementalGCInProgress(), isIncremental);
     isIncremental = !budget.isUnlimited();
 
     if (zeal == ZealIncrementalRootsThenFinish || zeal == ZealIncrementalMarkAllThenFinish) {
@@ -6045,11 +6045,8 @@ GCRuntime::budgetIncrementalGC(SliceBudget &budget)
             stats.nonincremental("allocation trigger");
         }
 
-        if (incrementalState != NO_INCREMENTAL &&
-            zone->isGCScheduled() != zone->wasGCStarted())
-        {
+        if (isIncrementalGCInProgress() && zone->isGCScheduled() != zone->wasGCStarted())
             reset = true;
-        }
 
         if (zone->isTooMuchMalloc()) {
             budget.makeUnlimited();
@@ -6108,7 +6105,7 @@ GCRuntime::gcCycle(bool incremental, SliceBudget &budget, JSGCInvocationKind gck
     interFrameGC = true;
 
     number++;
-    if (incrementalState == NO_INCREMENTAL)
+    if (!isIncrementalGCInProgress())
         majorGCNumber++;
 
     // It's ok if threads other than the main thread have suppressGC set, as
@@ -6123,7 +6120,7 @@ GCRuntime::gcCycle(bool incremental, SliceBudget &budget, JSGCInvocationKind gck
 
         // As we are about to clear the mark bits, wait for background
         // finalization to finish. We only need to wait on the first slice.
-        if (incrementalState == NO_INCREMENTAL)
+        if (!isIncrementalGCInProgress())
             waitBackgroundSweepEnd();
 
         // We must also wait for background allocation to finish so we can
@@ -6150,13 +6147,13 @@ GCRuntime::gcCycle(bool incremental, SliceBudget &budget, JSGCInvocationKind gck
     }
 
     /* The GC was reset, so we need a do-over. */
-    if (prevState != NO_INCREMENTAL && incrementalState == NO_INCREMENTAL)
+    if (prevState != NO_INCREMENTAL && !isIncrementalGCInProgress())
         return true;
 
     TraceMajorGCStart();
 
     /* Set the invocation kind in the first slice. */
-    if (incrementalState == NO_INCREMENTAL)
+    if (!isIncrementalGCInProgress())
         invocationKind = gckind;
 
     incrementalCollectSlice(budget, reason);
@@ -6222,7 +6219,7 @@ GCRuntime::scanZonesBeforeGC()
             zone->scheduleGC();
 
         /* This is a heuristic to avoid resets. */
-        if (incrementalState != NO_INCREMENTAL && zone->needsIncrementalBarrier())
+        if (isIncrementalGCInProgress() && zone->needsIncrementalBarrier())
             zone->scheduleGC();
 
         /* This is a heuristic to reduce the total number of collections. */
@@ -6281,7 +6278,7 @@ GCRuntime::collect(bool incremental, SliceBudget &budget, JSGCInvocationKind gck
          * Let the API user decide to defer a GC if it wants to (unless this
          * is the last context). Invoke the callback regardless.
          */
-        if (incrementalState == NO_INCREMENTAL) {
+        if (!isIncrementalGCInProgress()) {
             gcstats::AutoPhase ap(stats, gcstats::PHASE_GC_BEGIN);
             if (gcCallback.op)
                 gcCallback.op(rt, JSGC_BEGIN, gcCallback.data);
@@ -6290,7 +6287,7 @@ GCRuntime::collect(bool incremental, SliceBudget &budget, JSGCInvocationKind gck
         poked = false;
         bool wasReset = gcCycle(incremental, budget, gckind, reason);
 
-        if (incrementalState == NO_INCREMENTAL) {
+        if (!isIncrementalGCInProgress()) {
             gcstats::AutoPhase ap(stats, gcstats::PHASE_GC_END);
             if (gcCallback.op)
                 gcCallback.op(rt, JSGC_END, gcCallback.data);
@@ -6306,7 +6303,7 @@ GCRuntime::collect(bool incremental, SliceBudget &budget, JSGCInvocationKind gck
          * beginMarkPhase.
          */
         bool repeatForDeadZone = false;
-        if (incremental && incrementalState == NO_INCREMENTAL) {
+        if (incremental && !isIncrementalGCInProgress()) {
             for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
                 if (c->scheduledForDestruction) {
                     incremental = false;
@@ -6326,7 +6323,7 @@ GCRuntime::collect(bool incremental, SliceBudget &budget, JSGCInvocationKind gck
         repeat = (poked && cleanUpEverything) || wasReset || repeatForDeadZone;
     } while (repeat);
 
-    if (incrementalState == NO_INCREMENTAL)
+    if (!isIncrementalGCInProgress())
         EnqueuePendingParseTasksAfterGC(rt);
 }
 
@@ -6684,7 +6681,7 @@ GCRuntime::runDebugGC()
              * ensure that we get multiple slices, and collection runs to
              * completion.
              */
-            if (initialState == NO_INCREMENTAL)
+            if (!isIncrementalGCInProgress())
                 incrementalLimit = zealFrequency / 2;
             else
                 incrementalLimit *= 2;
