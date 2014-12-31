@@ -396,10 +396,6 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       }
       break;
     }
-    case eCSSProperty_margin_left:
-    case eCSSProperty_margin_right:
-    case eCSSProperty_margin_start:
-    case eCSSProperty_margin_end:
     case eCSSProperty_border_left_color:
     case eCSSProperty_border_left_style:
     case eCSSProperty_border_left_width:

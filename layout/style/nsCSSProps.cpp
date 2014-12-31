@@ -574,10 +574,6 @@ nsCSSProps::OtherNameFor(nsCSSProperty aProperty)
       return eCSSProperty_border_right_style;
     case eCSSProperty_border_right_width_value:
       return eCSSProperty_border_right_width;
-    case eCSSProperty_margin_left_value:
-      return eCSSProperty_margin_left;
-    case eCSSProperty_margin_right_value:
-      return eCSSProperty_margin_right;
     default:
       NS_ABORT_IF_FALSE(false, "bad caller");
   }
@@ -2573,46 +2569,9 @@ static const nsCSSProperty gListStyleSubpropTable[] = {
 static const nsCSSProperty gMarginSubpropTable[] = {
   // Code relies on these being in top-right-bottom-left order.
   eCSSProperty_margin_top,
-  eCSSProperty_margin_right_value,
+  eCSSProperty_margin_right,
   eCSSProperty_margin_bottom,
-  eCSSProperty_margin_left_value,
-  // extras:
-  eCSSProperty_margin_left_ltr_source,
-  eCSSProperty_margin_left_rtl_source,
-  eCSSProperty_margin_right_ltr_source,
-  eCSSProperty_margin_right_rtl_source,
-  eCSSProperty_UNKNOWN
-};
-
-static const nsCSSProperty gMarginLeftSubpropTable[] = {
-  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
-  eCSSProperty_margin_left_value,
-  eCSSProperty_margin_left_ltr_source,
-  eCSSProperty_margin_left_rtl_source,
-  eCSSProperty_UNKNOWN
-};
-
-static const nsCSSProperty gMarginRightSubpropTable[] = {
-  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
-  eCSSProperty_margin_right_value,
-  eCSSProperty_margin_right_ltr_source,
-  eCSSProperty_margin_right_rtl_source,
-  eCSSProperty_UNKNOWN
-};
-
-static const nsCSSProperty gMarginStartSubpropTable[] = {
-  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
-  eCSSProperty_margin_start_value,
-  eCSSProperty_margin_left_ltr_source,
-  eCSSProperty_margin_right_rtl_source,
-  eCSSProperty_UNKNOWN
-};
-
-static const nsCSSProperty gMarginEndSubpropTable[] = {
-  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
-  eCSSProperty_margin_end_value,
-  eCSSProperty_margin_right_ltr_source,
-  eCSSProperty_margin_left_rtl_source,
+  eCSSProperty_margin_left,
   eCSSProperty_UNKNOWN
 };
 
