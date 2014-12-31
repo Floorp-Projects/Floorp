@@ -216,6 +216,9 @@ static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 // This property's unitless values are pixels.
 #define CSS_PROPERTY_NUMBERS_ARE_PIXELS           (1<<24)
 
+// This property is a logical property (such as padding-inline-start).
+#define CSS_PROPERTY_LOGICAL                      (1<<25)
+
 /**
  * Types of animatable values.
  */
