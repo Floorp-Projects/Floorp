@@ -19,6 +19,7 @@ import org.mozilla.gecko.tests.helpers.DeviceHelper;
 import org.mozilla.gecko.tests.helpers.WaitHelper;
 import org.mozilla.gecko.util.HardwareUtils;
 
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.TextView;
 
@@ -163,14 +164,14 @@ public class AppMenuComponent extends BaseComponent {
 
         final List<MenuItemActionBar> menuItemActionBarList = RobotiumUtils.filterViews(MenuItemActionBar.class, views);
         for (MenuItemActionBar menuItem : menuItemActionBarList) {
-            if (menuItem.getContentDescription().equals(text)) {
+            if (TextUtils.equals(menuItem.getContentDescription(), text)) {
                 return menuItem;
             }
         }
 
         final List<MenuItemDefault> menuItemDefaultList = RobotiumUtils.filterViews(MenuItemDefault.class, views);
         for (MenuItemDefault menuItem : menuItemDefaultList) {
-            if (menuItem.getText().equals(text)) {
+            if (TextUtils.equals(menuItem.getText(), text)) {
                 return menuItem;
             }
         }
@@ -181,7 +182,7 @@ public class AppMenuComponent extends BaseComponent {
         // TextView with the appropriate text.
         final List<TextView> textViewList = RobotiumUtils.filterViews(TextView.class, views);
         for (TextView textView : textViewList) {
-            if (textView.getText().equals(text)) {
+            if (TextUtils.equals(textView.getText(), text)) {
                 View relativeLayout = (View) textView.getParent();
                 View listMenuItemView = (View)relativeLayout.getParent();
                 return listMenuItemView;
