@@ -222,6 +222,29 @@ add_no_popup_task(function* tab_doesnt_open_popup() {
   textbox.value = "";
 });
 
+// Clicks outside the search popup should close the popup but not consume the click.
+add_task(function* dont_consume_clicks() {
+  gURLBar.focus();
+  textbox.value = "foo";
+
+  let promise = promiseEvent(searchPopup, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(textbox, {});
+  yield promise;
+  isnot(searchPopup.getAttribute("showonlysettings"), "true", "Should show the full popup");
+
+  is(Services.focus.focusedElement, textbox.inputField, "Should have focused the search bar");
+  is(textbox.selectionStart, 0, "Should have selected all of the text");
+  is(textbox.selectionEnd, 3, "Should have selected all of the text");
+
+  promise = promiseEvent(searchPopup, "popuphidden");
+  EventUtils.synthesizeMouseAtCenter(gURLBar, {});
+  yield promise;
+
+  is(Services.focus.focusedElement, gURLBar.inputField, "Should have focused the URL bar");
+
+  textbox.value = "";
+});
+
 // Switching back to the window when the search box has focus from mouse should not open the popup.
 add_task(function* refocus_window_doesnt_open_popup_mouse() {
   gURLBar.focus();
