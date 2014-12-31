@@ -20,13 +20,13 @@
  *                      -- scc
  */
 
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Move.h"
 #include "mozilla/NullPtr.h"
 #include "mozilla/TypeTraits.h"
 
-#include "AlreadyAddRefed.h"
 #include "nsDebug.h" // for |NS_ABORT_IF_FALSE|, |NS_ASSERTION|
 #include "nsISupportsUtils.h" // for |nsresult|, |NS_ADDREF|, |NS_GET_TEMPLATE_IID| et al
 

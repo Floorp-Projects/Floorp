@@ -11,6 +11,7 @@ Library('mfbt')
 EXPORTS.mozilla = [
     'Alignment.h',
     'AllocPolicy.h',
+    'AlreadyAddRefed.h',
     'Array.h',
     'ArrayUtils.h',
     'Assertions.h',
