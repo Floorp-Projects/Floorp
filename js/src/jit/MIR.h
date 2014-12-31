@@ -3982,7 +3982,9 @@ class MUnbox MOZ_FINAL : public MUnaryInstruction, public BoxInputsPolicy::Data
     ALLOW_CLONE(MUnbox)
 };
 
-class MGuardObject : public MUnaryInstruction, public SingleObjectPolicy::Data
+class MGuardObject
+  : public MUnaryInstruction,
+    public SingleObjectPolicy::Data
 {
     explicit MGuardObject(MDefinition *ins)
       : MUnaryInstruction(ins)
@@ -11397,7 +11399,9 @@ class MTypeBarrier
 // Like MTypeBarrier, guard that the value is in the given type set. This is
 // used before property writes to ensure the value being written is represented
 // in the property types for the object.
-class MMonitorTypes : public MUnaryInstruction, public BoxInputsPolicy::Data
+class MMonitorTypes
+  : public MUnaryInstruction,
+    public BoxInputsPolicy::Data
 {
     const types::TemporaryTypeSet *typeSet_;
     BarrierKind barrierKind_;
