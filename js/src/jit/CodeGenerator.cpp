@@ -2022,8 +2022,8 @@ CodeGenerator::visitOsrEntry(LOsrEntry *lir)
 
 #ifdef JS_TRACE_LOGGING
     if (gen->info().executionMode() == SequentialExecution) {
-        emitTracelogStopEvent(TraceLogger::Baseline);
-        emitTracelogStartEvent(TraceLogger::IonMonkey);
+        emitTracelogStopEvent(TraceLogger_Baseline);
+        emitTracelogStartEvent(TraceLogger_IonMonkey);
     }
 #endif
 
@@ -7349,10 +7349,8 @@ CodeGenerator::generate()
 
 #ifdef JS_TRACE_LOGGING
     if (!gen->compilingAsmJS() && gen->info().executionMode() == SequentialExecution) {
-        if (!emitTracelogScriptStart())
-            return false;
-        if (!emitTracelogStartEvent(TraceLogger::IonMonkey))
-            return false;
+        emitTracelogScriptStart();
+        emitTracelogStartEvent(TraceLogger_IonMonkey);
     }
 #endif
 
@@ -7625,19 +7623,25 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
         ionScript->copyPatchableBackedges(cx, code, patchableBackedges_.begin(), masm);
 
 #ifdef JS_TRACE_LOGGING
-    TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
     for (uint32_t i = 0; i < patchableTraceLoggers_.length(); i++) {
         patchableTraceLoggers_[i].fixup(&masm);
         Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, patchableTraceLoggers_[i]),
                                            ImmPtr(logger),
                                            ImmPtr(nullptr));
     }
-    uint32_t scriptId = TraceLogCreateTextId(logger, script);
-    for (uint32_t i = 0; i < patchableTLScripts_.length(); i++) {
-        patchableTLScripts_[i].fixup(&masm);
-        Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, patchableTLScripts_[i]),
-                                           ImmPtr((void *) uintptr_t(scriptId)),
-                                           ImmPtr((void *)0));
+
+    if (patchableTLScripts_.length() > 0) {
+        MOZ_ASSERT(TraceLogTextIdEnabled(TraceLogger_Scripts));
+        TraceLoggerEvent event(logger, TraceLogger_Scripts, script);
+        ionScript->setTraceLoggerEvent(event);
+        uint32_t textId = event.payload()->textId();
+        for (uint32_t i = 0; i < patchableTLScripts_.length(); i++) {
+            patchableTLScripts_[i].fixup(&masm);
+            Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, patchableTLScripts_[i]),
+                                               ImmPtr((void *) uintptr_t(textId)),
+                                               ImmPtr((void *)0));
+        }
     }
 #endif
 

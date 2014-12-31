@@ -163,6 +163,53 @@ function TypedArrayIndexOf(searchElement, fromIndex = 0) {
     return -1;
 }
 
+// ES6 draft rev30 (2014/12/24) 22.2.3.14 %TypedArray%.prototype.join(separator).
+function TypedArrayJoin(separator) {
+    // This function is not generic.
+    if (!IsObject(this) || !IsTypedArray(this)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, this, separator, "TypedArrayJoin");
+    }
+
+    // Steps 1-2.
+    var O = this;
+
+    // Steps 3-5.
+    var len = TypedArrayLength(O);
+
+    // Steps 6-7.
+    var sep = separator === undefined ? "," : ToString(separator);
+
+    // Step 8.
+    if (len === 0)
+        return "";
+
+    // Step 9.
+    var element0 = O[0];
+
+    // Steps 10-11.
+    // Omit the 'if' clause in step 10, since typed arrays can not have undefined or null elements.
+    var R = ToString(element0);
+
+    // Steps 12-13.
+    for (var k = 1; k < len; k++) {
+        // Step 13.a.
+        var S = R + sep;
+
+        // Step 13.b.
+        var element = O[k];
+
+        // Steps 13.c-13.d.
+        // Omit the 'if' clause in step 13.c, since typed arrays can not have undefined or null elements.
+        var next = ToString(element);
+
+        // Step 13.e.
+        R = S + next;
+    }
+
+    // Step 14.
+    return R;
+}
+
 // ES6 draft rev29 (2014/12/06) 22.2.3.16 %TypedArray%.prototype.lastIndexOf(searchElement [,fromIndex]).
 function TypedArrayLastIndexOf(searchElement, fromIndex = undefined) {
     // This function is not generic.

@@ -30,6 +30,12 @@
 #include "nsCRT.h"
 #include "mozilla/plugins/PluginTypes.h"
 
+namespace mozilla {
+namespace plugins {
+class PluginAsyncSurrogate;
+} // namespace mozilla
+} // namespace plugins
+
 class nsNPAPIPlugin;
 class nsIComponentManager;
 class nsIFile;
@@ -203,6 +209,8 @@ public:
                                    nsNPAPIPluginInstance* aInstance,
                                    nsIStreamListener **aStreamListener);
 
+  void CreateWidget(nsPluginInstanceOwner* aOwner);
+
 private:
   friend class nsPluginUnloadRunnable;
 
@@ -333,11 +341,11 @@ private:
   static nsPluginHost* sInst;
 };
 
-class MOZ_STACK_CLASS PluginDestructionGuard : protected PRCList
+class PluginDestructionGuard : protected PRCList
 {
 public:
   explicit PluginDestructionGuard(nsNPAPIPluginInstance *aInstance);
-
+  explicit PluginDestructionGuard(mozilla::plugins::PluginAsyncSurrogate *aSurrogate);
   explicit PluginDestructionGuard(NPP npp);
 
   ~PluginDestructionGuard();
@@ -353,6 +361,18 @@ protected:
 
     PR_INIT_CLIST(this);
     PR_INSERT_BEFORE(this, &sListHead);
+  }
+
+  void InitAsync()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Should be on the main thread");
+
+    mDelayedDestroy = false;
+
+    PR_INIT_CLIST(this);
+    // Instances with active surrogates must be inserted *after* sListHead so
+    // that they appear to be at the bottom of the stack
+    PR_INSERT_AFTER(this, &sListHead);
   }
 
   nsRefPtr<nsNPAPIPluginInstance> mInstance;

@@ -301,13 +301,22 @@ NfcContentHelper.prototype = {
             this.eventListener.notifyPeerLost(result.sessionToken);
             break;
           case NFC.TAG_EVENT_FOUND:
-            let event = new NfcTagEvent(result.techList,
-                                        result.tagType,
-                                        result.maxNDEFSize,
-                                        result.isReadOnly,
-                                        result.isFormatable);
+            let ndefInfo = null;
+            if (result.tagType !== undefined &&
+                result.maxNDEFSize !== undefined &&
+                result.isReadOnly !== undefined &&
+                result.isFormatable !== undefined) {
+              ndefInfo = new TagNDEFInfo(result.tagType,
+                                         result.maxNDEFSize,
+                                         result.isReadOnly,
+                                         result.isFormatable);
+            }
 
-            this.eventListener.notifyTagFound(result.sessionToken, event, result.records);
+            let tagInfo = new TagInfo(result.techList);
+            this.eventListener.notifyTagFound(result.sessionToken,
+                                              tagInfo,
+                                              ndefInfo,
+                                              result.records);
             break;
           case NFC.TAG_EVENT_LOST:
             this.eventListener.notifyTagLost(result.sessionToken);
@@ -387,21 +396,28 @@ NfcContentHelper.prototype = {
   },
 };
 
-function NfcTagEvent(techList, tagType, maxNDEFSize, isReadOnly, isFormatable) {
-  this.techList = techList;
+function TagNDEFInfo(tagType, maxNDEFSize, isReadOnly, isFormatable) {
   this.tagType = tagType;
   this.maxNDEFSize = maxNDEFSize;
   this.isReadOnly = isReadOnly;
   this.isFormatable = isFormatable;
 }
-NfcTagEvent.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsINfcTagEvent]),
+TagNDEFInfo.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsITagNDEFInfo]),
 
-  techList: null,
   tagType: null,
   maxNDEFSize: 0,
   isReadOnly: false,
   isFormatable: false
+};
+
+function TagInfo(techList) {
+  this.techList = techList;
+}
+TagInfo.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsITagInfo]),
+
+  techList: null,
 };
 
 if (NFC_ENABLED) {

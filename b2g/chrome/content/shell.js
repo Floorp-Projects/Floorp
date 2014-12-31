@@ -398,14 +398,14 @@ var shell = {
     }
 
     let mediaKeys = {
-      'MediaNextTrack': 'media-next-track-button',
-      'MediaPreviousTrack': 'media-previous-track-button',
+      'MediaTrackNext': 'media-next-track-button',
+      'MediaTrackPrevious': 'media-previous-track-button',
       'MediaPause': 'media-pause-button',
       'MediaPlay': 'media-play-button',
       'MediaPlayPause': 'media-play-pause-button',
       'MediaStop': 'media-stop-button',
       'MediaRewind': 'media-rewind-button',
-      'FastFwd': 'media-fast-forward-button'
+      'MediaFastForward': 'media-fast-forward-button'
     };
 
     let isMediaKey = false;

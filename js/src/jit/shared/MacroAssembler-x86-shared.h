@@ -1011,12 +1011,11 @@ class MacroAssemblerX86Shared : public Assembler
         // clobber the output with the input and apply the instruction
         // afterwards.
         // Note: this is useAtStart-safe because src isn't read afterwards.
-        if (src != dest)
-            moveFloat32x4(src, dest);
-        vshufps(mask, dest, dest, dest);
+        FloatRegister srcCopy = reusedInputFloat32x4(src, dest);
+        vshufps(mask, srcCopy, srcCopy, dest);
     }
     void shuffleMix(uint32_t mask, const Operand &src, FloatRegister dest) {
-        // Note this uses vshufps, which is a cross-domain penaly on CPU where it
+        // Note this uses vshufps, which is a cross-domain penalty on CPU where it
         // applies, but that's the way clang and gcc do it.
         vshufps(mask, src, dest, dest);
     }
