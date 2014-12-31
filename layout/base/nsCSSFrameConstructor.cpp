@@ -6070,8 +6070,11 @@ AdjustAppendParentForAfterContent(nsFrameManager* aFrameManager,
       if (child && child->IsPseudoFrame(aContainer) &&
           !child->IsGeneratedContentFrame()) {
         // Drill down into non-generated pseudo frames of aContainer.
-        parent = nsLayoutUtils::LastContinuationWithChild(do_QueryFrame(child));
-        continue;
+        nsContainerFrame* childAsContainer = do_QueryFrame(child);
+        if (childAsContainer) {
+          parent = nsLayoutUtils::LastContinuationWithChild(childAsContainer);
+          continue;
+        }
       }
 
       for (; child; child = child->GetPrevSibling()) {
