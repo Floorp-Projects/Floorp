@@ -160,31 +160,30 @@ js::Nursery::allocateObject(JSContext *cx, size_t size, size_t numDynamic)
     /* Ensure there's enough space to replace the contents with a RelocationOverlay. */
     MOZ_ASSERT(size >= sizeof(RelocationOverlay));
 
-    /* Attempt to allocate slots contiguously after object, if possible. */
-    if (numDynamic && numDynamic <= MaxNurserySlots) {
-        size_t totalSize = size + sizeof(HeapSlot) * numDynamic;
-        JSObject *obj = static_cast<JSObject *>(allocate(totalSize));
-        if (obj) {
-            obj->setInitialSlotsMaybeNonNative(reinterpret_cast<HeapSlot *>(size_t(obj) + size));
-            TraceNurseryAlloc(obj, size);
-            return obj;
-        }
-        /* If we failed to allocate as a block, retry with out-of-line slots. */
-    }
+    /* Make the object allocation. */
+    JSObject *obj = static_cast<JSObject *>(allocate(size));
+    if (!obj)
+        return nullptr;
 
+    /* If we want external slots, add them. */
     HeapSlot *slots = nullptr;
     if (numDynamic) {
-        slots = allocateHugeSlots(cx->zone(), numDynamic);
-        if (MOZ_UNLIKELY(!slots))
+        /* Try to allocate in the nursery first. */
+        if (numDynamic <= MaxNurserySlots)
+            slots = static_cast<HeapSlot *>(allocate(numDynamic * sizeof(HeapSlot)));
+
+        /* If we are out of space or too large, use the malloc heap. */
+        if (!slots)
+            slots = allocateHugeSlots(cx->zone(), numDynamic);
+
+        /* It is safe to leave the allocated object uninitialized, since we do
+         * not visit unallocated things. */
+        if (!slots)
             return nullptr;
     }
 
-    JSObject *obj = static_cast<JSObject *>(allocate(size));
-
-    if (obj)
-        obj->setInitialSlotsMaybeNonNative(slots);
-    else
-        freeSlots(slots);
+    /* Always initialize the slots field to match the JIT behavior. */
+    obj->setInitialSlotsMaybeNonNative(slots);
 
     TraceNurseryAlloc(obj, size);
     return obj;
