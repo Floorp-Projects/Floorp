@@ -65,6 +65,17 @@ struct TypeSpecializationData
 
 #define SPECIALIZATION_DATA_ INHERIT_DATA_(TypeSpecializationData)
 
+class NoTypePolicy
+{
+  public:
+    struct Data
+    {
+        static TypePolicy *thisTypePolicy() {
+            return nullptr;
+        }
+    };
+};
+
 class BoxInputsPolicy MOZ_FINAL : public TypePolicy
 {
   public:
