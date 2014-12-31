@@ -339,6 +339,7 @@ var BrowserApp = {
         Services.tm.mainThread.dispatch(function() {
           // Init LoginManager
           Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+          CastingApps.init();
         }, Ci.nsIThread.DISPATCH_NORMAL);
 
 #ifdef MOZ_SAFE_BROWSING
@@ -440,7 +441,6 @@ var BrowserApp = {
     RemoteDebugger.init();
     UserAgentOverrides.init();
     DesktopUserAgent.init();
-    CastingApps.init();
     Distribution.init();
     Tabs.init();
 #ifdef ACCESSIBILITY
