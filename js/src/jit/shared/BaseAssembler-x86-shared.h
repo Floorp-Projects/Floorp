@@ -30,7 +30,8 @@
 #ifndef jit_shared_BaseAssembler_x86_shared_h
 #define jit_shared_BaseAssembler_x86_shared_h
 
-#include <inttypes.h>
+#include "mozilla/IntegerPrintfMacros.h"
+
 #include <stdarg.h>
 
 #include "jit/shared/AssemblerBuffer-x86-shared.h"
@@ -2938,10 +2939,26 @@ public:
     {
         twoByteOpSimd("vunpcklps", VEX_PS, OP2_UNPCKLPS_VsdWsd, src1, src0, dst);
     }
+    void vunpcklps_mr(int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vunpcklps", VEX_PS, OP2_UNPCKLPS_VsdWsd, offset, base, src0, dst);
+    }
+    void vunpcklps_mr(const void *addr, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vunpcklps", VEX_PS, OP2_UNPCKLPS_VsdWsd, addr, src0, dst);
+    }
 
     void vunpckhps_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
         twoByteOpSimd("vunpckhps", VEX_PS, OP2_UNPCKHPS_VsdWsd, src1, src0, dst);
+    }
+    void vunpckhps_mr(int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vunpckhps", VEX_PS, OP2_UNPCKHPS_VsdWsd, offset, base, src0, dst);
+    }
+    void vunpckhps_mr(const void *addr, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vunpckhps", VEX_PS, OP2_UNPCKHPS_VsdWsd, addr, src0, dst);
     }
 
     void vpand_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
@@ -3605,6 +3622,10 @@ public:
     void vinsertps_irr(uint32_t mask, XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
         threeByteOpImmSimd("vinsertps", VEX_PD, OP3_INSERTPS_VpsUps, ESCAPE_INSERTPS, mask, src1, src0, dst);
+    }
+    void vinsertps_imr(uint32_t mask, int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        threeByteOpImmSimd("vinsertps", VEX_PD, OP3_INSERTPS_VpsUps, ESCAPE_INSERTPS, mask, offset, base, src0, dst);
     }
 
     void vpinsrd_irr(unsigned lane, RegisterID src1, XMMRegisterID src0, XMMRegisterID dst)

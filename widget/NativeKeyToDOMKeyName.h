@@ -20,6 +20,7 @@
 #define KEY_MAP_WIN_JPN(aCPPKeyName, aNativeKey)
 #define KEY_MAP_WIN_KOR(aCPPKeyName, aNativeKey)
 #define KEY_MAP_WIN_OTH(aCPPKeyName, aNativeKey)
+#define KEY_MAP_WIN_CMD(aCPPKeyName, aAppCommand)
 // Mac OS X
 #define KEY_MAP_COCOA(aCPPKeyName, aNativeKey)
 // GTK
@@ -30,28 +31,41 @@
 #define KEY_MAP_ANDROID(aCPPKeyName, aNativeKey)
 
 #if defined(XP_WIN)
+#if defined(NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX)
 // KEY_MAP_WIN() defines the mapping not depending on keyboard layout.
 #undef KEY_MAP_WIN
 #define KEY_MAP_WIN(aCPPKeyName, aNativeKey) \
   NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, KEY_NAME_INDEX_##aCPPKeyName)
+#elif defined(NS_JAPANESE_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX)
 // KEY_MAP_WIN_JPN() defines the mapping which is valid only with Japanese
 // keyboard layout.
 #undef KEY_MAP_WIN_JPN
 #define KEY_MAP_WIN_JPN(aCPPKeyName, aNativeKey) \
   NS_JAPANESE_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, \
                                                KEY_NAME_INDEX_##aCPPKeyName)
+#elif defined(NS_KOREAN_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX)
 // KEY_MAP_WIN_KOR() defines the mapping which is valid only with Korean
 // keyboard layout.
 #undef KEY_MAP_WIN_KOR
 #define KEY_MAP_WIN_KOR(aCPPKeyName, aNativeKey) \
   NS_KOREAN_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, \
                                              KEY_NAME_INDEX_##aCPPKeyName)
+#elif defined(NS_OTHER_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX)
 // KEY_MAP_WIN_OTH() defines the mapping which is valid with neither
 // Japanese keyboard layout nor Korean keyboard layout.
 #undef KEY_MAP_WIN_OTH
 #define KEY_MAP_WIN_OTH(aCPPKeyName, aNativeKey) \
   NS_OTHER_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, \
                                             KEY_NAME_INDEX_##aCPPKeyName)
+#elif defined(NS_APPCOMMAND_TO_DOM_KEY_NAME_INDEX)
+// KEY_MAP_WIN_CMD() defines the mapping from APPCOMMAND_* of WM_APPCOMMAND.
+#undef KEY_MAP_WIN_CMD
+#define KEY_MAP_WIN_CMD(aCPPKeyName, aAppCommand) \
+  NS_APPCOMMAND_TO_DOM_KEY_NAME_INDEX(aAppCommand, \
+                                      KEY_NAME_INDEX_##aCPPKeyName)
+#else
+#error Any NS_*_TO_DOM_KEY_NAME_INDEX() is not defined.
+#endif // #if defined(NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX) ...
 #elif defined(XP_MACOSX)
 #undef KEY_MAP_COCOA
 #define KEY_MAP_COCOA(aCPPKeyName, aNativeKey) \
@@ -170,6 +184,9 @@ KEY_MAP_QT      (Shift, Qt::Key_Shift)
 KEY_MAP_ANDROID (Shift, AKEYCODE_SHIFT_LEFT)
 KEY_MAP_ANDROID (Shift, AKEYCODE_SHIFT_RIGHT)
 
+// Symbol
+KEY_MAP_ANDROID (Symbol, AKEYCODE_SYM)
+
 /******************************************************************************
  * Whitespace Keys
  ******************************************************************************/
@@ -198,37 +215,37 @@ KEY_MAP_ANDROID (Tab, AKEYCODE_TAB)
 /******************************************************************************
  * Navigation Keys
  ******************************************************************************/
-// Down
-KEY_MAP_WIN     (Down, VK_DOWN)
-KEY_MAP_COCOA   (Down, kVK_DownArrow)
-KEY_MAP_GTK     (Down, GDK_Down)
-KEY_MAP_GTK     (Down, GDK_KP_Down)
-KEY_MAP_QT      (Down, Qt::Key_Down)
-KEY_MAP_ANDROID (Down, AKEYCODE_DPAD_DOWN)
+// ArrowDown
+KEY_MAP_WIN     (ArrowDown, VK_DOWN)
+KEY_MAP_COCOA   (ArrowDown, kVK_DownArrow)
+KEY_MAP_GTK     (ArrowDown, GDK_Down)
+KEY_MAP_GTK     (ArrowDown, GDK_KP_Down)
+KEY_MAP_QT      (ArrowDown, Qt::Key_Down)
+KEY_MAP_ANDROID (ArrowDown, AKEYCODE_DPAD_DOWN)
 
-// Left
-KEY_MAP_WIN     (Left, VK_LEFT)
-KEY_MAP_COCOA   (Left, kVK_LeftArrow)
-KEY_MAP_GTK     (Left, GDK_Left)
-KEY_MAP_GTK     (Left, GDK_KP_Left)
-KEY_MAP_QT      (Left, Qt::Key_Left)
-KEY_MAP_ANDROID (Left, AKEYCODE_DPAD_LEFT)
+// ArrowLeft
+KEY_MAP_WIN     (ArrowLeft, VK_LEFT)
+KEY_MAP_COCOA   (ArrowLeft, kVK_LeftArrow)
+KEY_MAP_GTK     (ArrowLeft, GDK_Left)
+KEY_MAP_GTK     (ArrowLeft, GDK_KP_Left)
+KEY_MAP_QT      (ArrowLeft, Qt::Key_Left)
+KEY_MAP_ANDROID (ArrowLeft, AKEYCODE_DPAD_LEFT)
 
-// Right
-KEY_MAP_WIN     (Right, VK_RIGHT)
-KEY_MAP_COCOA   (Right, kVK_RightArrow)
-KEY_MAP_GTK     (Right, GDK_Right)
-KEY_MAP_GTK     (Right, GDK_KP_Right)
-KEY_MAP_QT      (Right, Qt::Key_Right)
-KEY_MAP_ANDROID (Right, AKEYCODE_DPAD_RIGHT)
+// ArrowRight
+KEY_MAP_WIN     (ArrowRight, VK_RIGHT)
+KEY_MAP_COCOA   (ArrowRight, kVK_RightArrow)
+KEY_MAP_GTK     (ArrowRight, GDK_Right)
+KEY_MAP_GTK     (ArrowRight, GDK_KP_Right)
+KEY_MAP_QT      (ArrowRight, Qt::Key_Right)
+KEY_MAP_ANDROID (ArrowRight, AKEYCODE_DPAD_RIGHT)
 
-// Up
-KEY_MAP_WIN     (Up, VK_UP)
-KEY_MAP_COCOA   (Up, kVK_UpArrow)
-KEY_MAP_GTK     (Up, GDK_Up)
-KEY_MAP_GTK     (Up, GDK_KP_Up)
-KEY_MAP_QT      (Up, Qt::Key_Up)
-KEY_MAP_ANDROID (Up, AKEYCODE_DPAD_UP)
+// ArrowUp
+KEY_MAP_WIN     (ArrowUp, VK_UP)
+KEY_MAP_COCOA   (ArrowUp, kVK_UpArrow)
+KEY_MAP_GTK     (ArrowUp, GDK_Up)
+KEY_MAP_GTK     (ArrowUp, GDK_KP_Up)
+KEY_MAP_QT      (ArrowUp, Qt::Key_Up)
+KEY_MAP_ANDROID (ArrowUp, AKEYCODE_DPAD_UP)
 
 // End
 KEY_MAP_WIN     (End, VK_END)
@@ -284,29 +301,29 @@ KEY_MAP_ANDROID (Clear, AKEYCODE_CLEAR)
 KEY_MAP_GTK     (Copy, GDK_Copy)
 KEY_MAP_QT      (Copy, Qt::Key_Copy)
 
-// Crsel
-KEY_MAP_WIN     (Crsel, VK_CRSEL)
-KEY_MAP_GTK     (Crsel, GDK_3270_CursorSelect) // legacy IBM keyboard layout
+// CrSel
+KEY_MAP_WIN     (CrSel, VK_CRSEL)
+KEY_MAP_GTK     (CrSel, GDK_3270_CursorSelect) // legacy IBM keyboard layout
 
 // Cut
 KEY_MAP_GTK     (Cut, GDK_Cut)
 KEY_MAP_QT      (Cut, Qt::Key_Cut)
 
-// Del
-KEY_MAP_WIN     (Del, VK_DELETE)
-KEY_MAP_COCOA   (Del, kVK_PC_Delete)
-KEY_MAP_GTK     (Del, GDK_Delete)
-KEY_MAP_GTK     (Del, GDK_KP_Delete)
-KEY_MAP_QT      (Del, Qt::Key_Delete)
-KEY_MAP_ANDROID (Del, AKEYCODE_FORWARD_DEL)
+// Delete
+KEY_MAP_WIN     (Delete, VK_DELETE)
+KEY_MAP_COCOA   (Delete, kVK_PC_Delete)
+KEY_MAP_GTK     (Delete, GDK_Delete)
+KEY_MAP_GTK     (Delete, GDK_KP_Delete)
+KEY_MAP_QT      (Delete, Qt::Key_Delete)
+KEY_MAP_ANDROID (Delete, AKEYCODE_FORWARD_DEL)
 
 // EraseEof
 KEY_MAP_WIN     (EraseEof, VK_EREOF)
 KEY_MAP_GTK     (EraseEof, GDK_3270_EraseEOF) // legacy IBM keyboard layout
 
-// Exsel
-KEY_MAP_WIN     (Exsel, VK_EXSEL)
-KEY_MAP_GTK     (Exsel, GDK_3270_ExSelect) // legacy IBM keyboard layout
+// ExSel
+KEY_MAP_WIN     (ExSel, VK_EXSEL)
+KEY_MAP_GTK     (ExSel, GDK_3270_ExSelect) // legacy IBM keyboard layout
 
 // Insert
 KEY_MAP_WIN     (Insert, VK_INSERT)
@@ -316,10 +333,16 @@ KEY_MAP_QT      (Insert, Qt::Key_Insert)
 KEY_MAP_ANDROID (Insert, AKEYCODE_INSERT)
 
 // Paste
+KEY_MAP_WIN_CMD (Paste, APPCOMMAND_PASTE)
 KEY_MAP_GTK     (Paste, GDK_Paste)
 KEY_MAP_QT      (Paste, Qt::Key_Paste)
 
+// Redo
+KEY_MAP_WIN_CMD (Redo, APPCOMMAND_REDO)
+KEY_MAP_GTK     (Redo, GDK_Redo)
+
 // Undo
+KEY_MAP_WIN_CMD (Undo, APPCOMMAND_UNDO)
 KEY_MAP_GTK     (Undo, GDK_Undo)
 
 /******************************************************************************
@@ -338,19 +361,19 @@ KEY_MAP_WIN     (Cancel, VK_CANCEL)
 KEY_MAP_GTK     (Cancel, GDK_Cancel)
 KEY_MAP_QT      (Cancel, Qt::Key_Cancel)
 
-// Menu
-KEY_MAP_WIN     (Menu, VK_APPS)
-KEY_MAP_COCOA   (Menu, kVK_PC_ContextMenu)
-KEY_MAP_GTK     (Menu, GDK_Menu)
-KEY_MAP_QT      (Menu, Qt::Key_Menu)
-KEY_MAP_ANDROID (Menu, AKEYCODE_MENU)
+// ContextMenu
+KEY_MAP_WIN     (ContextMenu, VK_APPS)
+KEY_MAP_COCOA   (ContextMenu, kVK_PC_ContextMenu)
+KEY_MAP_GTK     (ContextMenu, GDK_Menu)
+KEY_MAP_QT      (ContextMenu, Qt::Key_Menu)
+KEY_MAP_ANDROID (ContextMenu, AKEYCODE_MENU)
 
-// Esc
-KEY_MAP_WIN     (Esc, VK_ESCAPE)
-KEY_MAP_COCOA   (Esc, kVK_Escape)
-KEY_MAP_GTK     (Esc, GDK_Escape)
-KEY_MAP_QT      (Esc, Qt::Key_Escape)
-KEY_MAP_ANDROID (Esc, AKEYCODE_ESCAPE)
+// Escape
+KEY_MAP_WIN     (Escape, VK_ESCAPE)
+KEY_MAP_COCOA   (Escape, kVK_Escape)
+KEY_MAP_GTK     (Escape, GDK_Escape)
+KEY_MAP_QT      (Escape, Qt::Key_Escape)
+KEY_MAP_ANDROID (Escape, AKEYCODE_ESCAPE)
 
 // Execute
 KEY_MAP_WIN     (Execute, VK_EXECUTE)
@@ -358,10 +381,12 @@ KEY_MAP_GTK     (Execute, GDK_Execute)
 KEY_MAP_QT      (Execute, Qt::Key_Execute)
 
 // Find
+KEY_MAP_WIN_CMD (Find, APPCOMMAND_FIND)
 KEY_MAP_GTK     (Find, GDK_Find)
 
 // Help
 KEY_MAP_WIN     (Help, VK_HELP)
+KEY_MAP_WIN_CMD (Help, APPCOMMAND_HELP)
 KEY_MAP_COCOA   (Help, kVK_Help)
 KEY_MAP_GTK     (Help, GDK_Help)
 KEY_MAP_QT      (Help, Qt::Key_Help)
@@ -384,6 +409,16 @@ KEY_MAP_QT      (Play, Qt::Key_Play)
 KEY_MAP_WIN     (Select, VK_SELECT)
 KEY_MAP_GTK     (Select, GDK_Select)
 
+// ZoomIn
+KEY_MAP_GTK     (ZoomIn, GDK_ZoomIn)
+KEY_MAP_QT      (ZoomIn, Qt::Key_ZoomIn)
+KEY_MAP_ANDROID (ZoomIn, AKEYCODE_ZOOM_IN)
+
+// ZoomOut
+KEY_MAP_GTK     (ZoomOut, GDK_ZoomOut)
+KEY_MAP_QT      (ZoomOut, Qt::Key_ZoomOut)
+KEY_MAP_ANDROID (ZoomOut, AKEYCODE_ZOOM_OUT)
+
 /******************************************************************************
  * Device Keys
  ******************************************************************************/
@@ -404,10 +439,18 @@ KEY_MAP_GTK     (Eject, GDK_Eject)
 KEY_MAP_QT      (Eject, Qt::Key_Eject)
 KEY_MAP_ANDROID (Eject, AKEYCODE_MEDIA_EJECT)
 
+// LogOff
+KEY_MAP_GTK     (LogOff, GDK_LogOff)
+KEY_MAP_QT      (LogOff, Qt::Key_LogOff)
+
 // Power
-KEY_MAP_GTK     (Power, GDK_PowerOff)
-KEY_MAP_QT      (Power, Qt::Key_PowerOff)
 KEY_MAP_ANDROID (Power, AKEYCODE_POWER)
+
+// PowerOff
+KEY_MAP_GTK     (PowerOff, GDK_PowerDown)
+KEY_MAP_GTK     (PowerOff, GDK_PowerOff)
+KEY_MAP_QT      (PowerOff, Qt::Key_PowerDown)
+KEY_MAP_QT      (PowerOff, Qt::Key_PowerOff)
 
 // PrintScreen
 KEY_MAP_WIN     (PrintScreen, VK_SNAPSHOT)
@@ -417,6 +460,23 @@ KEY_MAP_GTK     (PrintScreen, GDK_Sys_Req)
 KEY_MAP_QT      (PrintScreen, Qt::Key_Print)
 KEY_MAP_QT      (PrintScreen, Qt::Key_SysReq)
 KEY_MAP_ANDROID (PrintScreen, AKEYCODE_SYSRQ)
+
+// Hibernate
+KEY_MAP_GTK     (Hibernate, GDK_Hibernate)
+KEY_MAP_QT      (Hibernate, Qt::Key_Hibernate)
+
+// Standby
+KEY_MAP_WIN     (Standby, VK_SLEEP)
+KEY_MAP_GTK     (Standby, GDK_Standby)
+KEY_MAP_GTK     (Standby, GDK_Suspend)
+KEY_MAP_GTK     (Standby, GDK_Sleep)
+KEY_MAP_QT      (Standby, Qt::Key_Standby)
+KEY_MAP_QT      (Standby, Qt::Key_Suspend)
+KEY_MAP_QT      (Standby, Qt::Key_Sleep)
+
+// WakeUp
+KEY_MAP_GTK     (WakeUp, GDK_WakeUp)
+KEY_MAP_QT      (WakeUp, Qt::Key_WakeUp)
 
 /******************************************************************************
  * IME and Composition Keys
@@ -446,22 +506,105 @@ KEY_MAP_GTK     (Convert, GDK_Henkan)
 KEY_MAP_QT      (Convert, Qt::Key_Henkan)
 KEY_MAP_ANDROID (Convert, AKEYCODE_HENKAN)
 
+// Dead
+KEY_MAP_GTK     (Dead, GDK_dead_grave)
+KEY_MAP_GTK     (Dead, GDK_dead_acute)
+KEY_MAP_GTK     (Dead, GDK_dead_circumflex)
+KEY_MAP_GTK     (Dead, GDK_dead_tilde) // Same as GDK_dead_perispomeni
+KEY_MAP_GTK     (Dead, GDK_dead_macron)
+KEY_MAP_GTK     (Dead, GDK_dead_breve)
+KEY_MAP_GTK     (Dead, GDK_dead_abovedot)
+KEY_MAP_GTK     (Dead, GDK_dead_diaeresis)
+KEY_MAP_GTK     (Dead, GDK_dead_abovering)
+KEY_MAP_GTK     (Dead, GDK_dead_doubleacute)
+KEY_MAP_GTK     (Dead, GDK_dead_caron)
+KEY_MAP_GTK     (Dead, GDK_dead_cedilla)
+KEY_MAP_GTK     (Dead, GDK_dead_ogonek)
+KEY_MAP_GTK     (Dead, GDK_dead_iota)
+KEY_MAP_GTK     (Dead, GDK_dead_voiced_sound)
+KEY_MAP_GTK     (Dead, GDK_dead_semivoiced_sound)
+KEY_MAP_GTK     (Dead, GDK_dead_belowdot)
+KEY_MAP_GTK     (Dead, GDK_dead_hook)
+KEY_MAP_GTK     (Dead, GDK_dead_horn)
+KEY_MAP_GTK     (Dead, GDK_dead_stroke)
+KEY_MAP_GTK     (Dead, GDK_dead_abovecomma) // Same as GDK_dead_psili
+KEY_MAP_GTK     (Dead, GDK_dead_abovereversedcomma) // Same as GDK_dead_dasia
+KEY_MAP_GTK     (Dead, GDK_dead_doublegrave)
+KEY_MAP_GTK     (Dead, GDK_dead_belowring)
+KEY_MAP_GTK     (Dead, GDK_dead_belowmacron)
+KEY_MAP_GTK     (Dead, GDK_dead_belowcircumflex)
+KEY_MAP_GTK     (Dead, GDK_dead_belowtilde)
+KEY_MAP_GTK     (Dead, GDK_dead_belowbreve)
+KEY_MAP_GTK     (Dead, GDK_dead_belowdiaeresis)
+KEY_MAP_GTK     (Dead, GDK_dead_invertedbreve)
+KEY_MAP_GTK     (Dead, GDK_dead_belowcomma)
+KEY_MAP_GTK     (Dead, GDK_dead_currency)
+KEY_MAP_GTK     (Dead, GDK_dead_a)
+KEY_MAP_GTK     (Dead, GDK_dead_A)
+KEY_MAP_GTK     (Dead, GDK_dead_e)
+KEY_MAP_GTK     (Dead, GDK_dead_E)
+KEY_MAP_GTK     (Dead, GDK_dead_i)
+KEY_MAP_GTK     (Dead, GDK_dead_I)
+KEY_MAP_GTK     (Dead, GDK_dead_o)
+KEY_MAP_GTK     (Dead, GDK_dead_O)
+KEY_MAP_GTK     (Dead, GDK_dead_u)
+KEY_MAP_GTK     (Dead, GDK_dead_U)
+KEY_MAP_GTK     (Dead, GDK_dead_small_schwa)
+KEY_MAP_GTK     (Dead, GDK_dead_capital_schwa)
+KEY_MAP_GTK     (Dead, GDK_dead_greek)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Grave)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Acute)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Circumflex)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Tilde)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Macron)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Breve)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Abovedot)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Diaeresis)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Abovering)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Doubleacute)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Caron)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Cedilla)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Ogonek)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Iota)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Voiced_Sound)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Semivoiced_Sound)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Belowdot)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Hook)
+KEY_MAP_QT      (Dead, Qt::Key_Dead_Horn)
+
 // FinalMode
 KEY_MAP_WIN     (FinalMode, VK_FINAL)
+
+// GroupFirst
+KEY_MAP_GTK     (GroupFirst, GDK_ISO_First_Group)
+
+// GroupLast
+KEY_MAP_GTK     (GroupLast, GDK_ISO_Last_Group)
+
+// GroupNext
+KEY_MAP_GTK     (GroupNext, GDK_ISO_Next_Group)
+KEY_MAP_ANDROID (GroupNext, AKEYCODE_LANGUAGE_SWITCH)
+
+// GroupPrevious
+KEY_MAP_GTK     (GroupPrevious, GDK_ISO_Prev_Group)
 
 // ModeChange
 KEY_MAP_WIN     (ModeChange, VK_MODECHANGE)
 KEY_MAP_ANDROID (ModeChange, AKEYCODE_SWITCH_CHARSET)
 
-// Nonconvert
-KEY_MAP_WIN     (Nonconvert, VK_NONCONVERT)
-KEY_MAP_GTK     (Nonconvert, GDK_Muhenkan)
-KEY_MAP_QT      (Nonconvert, Qt::Key_Muhenkan)
-KEY_MAP_ANDROID (Nonconvert, AKEYCODE_MUHENKAN)
+// NonConvert
+KEY_MAP_WIN     (NonConvert, VK_NONCONVERT)
+KEY_MAP_GTK     (NonConvert, GDK_Muhenkan)
+KEY_MAP_QT      (NonConvert, Qt::Key_Muhenkan)
+KEY_MAP_ANDROID (NonConvert, AKEYCODE_MUHENKAN)
 
 // PreviousCandidate
 KEY_MAP_GTK     (PreviousCandidate, GDK_PreviousCandidate) // OADG 109, Mae Koho
 KEY_MAP_QT      (PreviousCandidate, Qt::Key_PreviousCandidate)
+
+// SingleCandidate
+KEY_MAP_GTK     (SingleCandidate, GDK_SingleCandidate)
+KEY_MAP_QT      (SingleCandidate, Qt::Key_SingleCandidate)
 
 /******************************************************************************
  * Keys specific to Korean keyboards
@@ -478,15 +621,24 @@ KEY_MAP_WIN     (JunjaMode, VK_JUNJA)
 /******************************************************************************
  * Keys specific to Japanese keyboards
  ******************************************************************************/
-// HalfWidth
-KEY_MAP_WIN_JPN (HalfWidth, VK_OEM_AUTO)
-KEY_MAP_GTK     (HalfWidth, GDK_Hankaku)
-KEY_MAP_QT      (HalfWidth, Qt::Key_Hankaku)
+// Eisu
+KEY_MAP_COCOA   (Eisu, kVK_JIS_Eisu)
+KEY_MAP_ANDROID (Eisu, AKEYCODE_EISU)
+
+// Hankaku
+KEY_MAP_WIN_JPN (Hankaku, VK_OEM_AUTO)
+KEY_MAP_GTK     (Hankaku, GDK_Hankaku)
+KEY_MAP_QT      (Hankaku, Qt::Key_Hankaku)
 
 // Hiragana
 KEY_MAP_WIN_JPN (Hiragana, VK_OEM_COPY)
 KEY_MAP_GTK     (Hiragana, GDK_Hiragana)
 KEY_MAP_QT      (Hiragana, Qt::Key_Hiragana)
+
+// HiraganaKatakana
+KEY_MAP_GTK     (HiraganaKatakana, GDK_Hiragana_Katakana)
+KEY_MAP_QT      (HiraganaKatakana, Qt::Key_Hiragana_Katakana)
+KEY_MAP_ANDROID (HiraganaKatakana, AKEYCODE_KATAKANA_HIRAGANA)
 
 // KanaMode
 // VK_KANA is never used with modern Japanese keyboard, however, IE maps it to
@@ -511,18 +663,20 @@ KEY_MAP_WIN_JPN (Katakana, VK_OEM_FINISH)
 KEY_MAP_GTK     (Katakana, GDK_Katakana)
 KEY_MAP_QT      (Katakana, Qt::Key_Katakana)
 
-// RomanCharacters
-KEY_MAP_WIN_JPN (RomanCharacters, VK_OEM_BACKTAB)
-KEY_MAP_COCOA   (RomanCharacters, kVK_JIS_Eisu)
-KEY_MAP_GTK     (RomanCharacters, GDK_Romaji)
-KEY_MAP_QT      (RomanCharacters, Qt::Key_Romaji)
-// Assuming that EISU key of Android is the Eisu key on Mac keyboard.
-KEY_MAP_ANDROID (RomanCharacters, AKEYCODE_EISU)
+// Romaji
+KEY_MAP_WIN_JPN (Romaji, VK_OEM_BACKTAB)
+KEY_MAP_GTK     (Romaji, GDK_Romaji)
+KEY_MAP_QT      (Romaji, Qt::Key_Romaji)
 
-// FullWidth
-KEY_MAP_WIN_JPN (FullWidth, VK_OEM_ENLW)
-KEY_MAP_GTK     (FullWidth, GDK_Zenkaku)
-KEY_MAP_QT      (FullWidth, Qt::Key_Zenkaku)
+// Zenkaku
+KEY_MAP_WIN_JPN (Zenkaku, VK_OEM_ENLW)
+KEY_MAP_GTK     (Zenkaku, GDK_Zenkaku)
+KEY_MAP_QT      (Zenkaku, Qt::Key_Zenkaku)
+
+// ZenkakuHankaku
+KEY_MAP_GTK     (ZenkakuHankaku, GDK_Zenkaku_Hankaku)
+KEY_MAP_QT      (ZenkakuHankaku, Qt::Key_Zenkaku_Hankaku)
+KEY_MAP_ANDROID (ZenkakuHankaku, AKEYCODE_ZENKAKU_HANKAKU)
 
 /******************************************************************************
  * General-Purpose Function Keys
@@ -729,34 +883,85 @@ KEY_MAP_QT      (F35, Qt::Key_F35)
 /******************************************************************************
  * Multimedia Keys
  ******************************************************************************/
+// Close
+// NOTE: This is not a key to close disk tray, this is a key to close document
+//       or window.
+KEY_MAP_WIN_CMD (Close, APPCOMMAND_CLOSE)
+KEY_MAP_GTK     (Close, GDK_Close)
+KEY_MAP_QT      (Close, Qt::Key_Close)
+
+// MailForward
+KEY_MAP_WIN_CMD (MailForward, APPCOMMAND_FORWARD_MAIL)
+KEY_MAP_GTK     (MailForward, GDK_MailForward)
+KEY_MAP_QT      (MailForward, Qt::Key_MailForward)
+
+// MailReply
+KEY_MAP_WIN_CMD (MailReply, APPCOMMAND_REPLY_TO_MAIL)
+KEY_MAP_GTK     (MailReply, GDK_Reply)
+KEY_MAP_QT      (MailReply, Qt::Key_Reply)
+
+// MailSend
+KEY_MAP_WIN_CMD (MailSend, APPCOMMAND_SEND_MAIL)
+KEY_MAP_GTK     (MailSend, GDK_Send)
+KEY_MAP_QT      (MailSend, Qt::Key_Send)
+
 // MediaPlayPause
 KEY_MAP_WIN     (MediaPlayPause, VK_MEDIA_PLAY_PAUSE)
+KEY_MAP_WIN_CMD (MediaPlayPause, APPCOMMAND_MEDIA_PLAY_PAUSE)
 KEY_MAP_QT      (MediaPlayPause, Qt::Key_MediaTogglePlayPause)
 KEY_MAP_ANDROID (MediaPlayPause, AKEYCODE_MEDIA_PLAY_PAUSE)
 
-// SelectMedia
-KEY_MAP_WIN     (SelectMedia, VK_LAUNCH_MEDIA_SELECT)
+// MediaSelect
+KEY_MAP_WIN     (MediaSelect, VK_LAUNCH_MEDIA_SELECT)
+KEY_MAP_WIN_CMD (MediaSelect, APPCOMMAND_LAUNCH_MEDIA_SELECT)
+KEY_MAP_GTK     (MediaSelect, GDK_AudioMedia)
 
 // MediaStop
 KEY_MAP_WIN     (MediaStop, VK_MEDIA_STOP)
+KEY_MAP_WIN_CMD (MediaStop, APPCOMMAND_MEDIA_STOP)
 KEY_MAP_GTK     (MediaStop, GDK_AudioStop)
 KEY_MAP_QT      (MediaStop, Qt::Key_MediaStop)
 KEY_MAP_ANDROID (MediaStop, AKEYCODE_MEDIA_STOP)
 
-// MediaNextTrack
-KEY_MAP_WIN     (MediaNextTrack, VK_MEDIA_NEXT_TRACK)
-KEY_MAP_GTK     (MediaNextTrack, GDK_AudioNext)
-KEY_MAP_QT      (MediaNextTrack, Qt::Key_MediaNext)
-KEY_MAP_ANDROID (MediaNextTrack, AKEYCODE_MEDIA_NEXT)
+// MediaTrackNext
+KEY_MAP_WIN     (MediaTrackNext, VK_MEDIA_NEXT_TRACK)
+KEY_MAP_WIN_CMD (MediaTrackNext, APPCOMMAND_MEDIA_NEXTTRACK)
+KEY_MAP_GTK     (MediaTrackNext, GDK_AudioNext)
+KEY_MAP_QT      (MediaTrackNext, Qt::Key_MediaNext)
+KEY_MAP_ANDROID (MediaTrackNext, AKEYCODE_MEDIA_NEXT)
 
-// MediaPreviousTrack
-KEY_MAP_WIN     (MediaPreviousTrack, VK_MEDIA_PREV_TRACK)
-KEY_MAP_GTK     (MediaPreviousTrack, GDK_AudioPrev)
-KEY_MAP_QT      (MediaPreviousTrack, Qt::Key_MediaPrevious)
-KEY_MAP_ANDROID (MediaPreviousTrack, AKEYCODE_MEDIA_PREVIOUS)
+// MediaTrackPrevious
+KEY_MAP_WIN     (MediaTrackPrevious, VK_MEDIA_PREV_TRACK)
+KEY_MAP_WIN_CMD (MediaTrackPrevious, APPCOMMAND_MEDIA_PREVIOUSTRACK)
+KEY_MAP_GTK     (MediaTrackPrevious, GDK_AudioPrev)
+KEY_MAP_QT      (MediaTrackPrevious, Qt::Key_MediaPrevious)
+KEY_MAP_ANDROID (MediaTrackPrevious, AKEYCODE_MEDIA_PREVIOUS)
+
+// New
+KEY_MAP_WIN_CMD (New, APPCOMMAND_NEW)
+KEY_MAP_GTK     (New, GDK_New)
+
+// Open
+KEY_MAP_WIN_CMD (Open, APPCOMMAND_OPEN)
+KEY_MAP_GTK     (Open, GDK_Open)
+
+// Print
+KEY_MAP_WIN_CMD (Print, APPCOMMAND_PRINT)
+KEY_MAP_QT      (Print, Qt::Key_Printer)
+
+// Save
+KEY_MAP_WIN_CMD (Save, APPCOMMAND_SAVE)
+KEY_MAP_GTK     (Save, GDK_Save)
+KEY_MAP_QT      (Save, Qt::Key_Save)
+
+// SpellCheck
+KEY_MAP_WIN_CMD (SpellCheck, APPCOMMAND_SPELL_CHECK)
+KEY_MAP_GTK     (SpellCheck, GDK_Spell)
+KEY_MAP_QT      (SpellCheck, Qt::Key_Spell)
 
 // VolumeDown
 KEY_MAP_WIN     (VolumeDown, VK_VOLUME_DOWN)
+KEY_MAP_WIN_CMD (VolumeDown, APPCOMMAND_VOLUME_DOWN)
 KEY_MAP_COCOA   (VolumeDown, kVK_VolumeDown)
 KEY_MAP_GTK     (VolumeDown, GDK_AudioLowerVolume)
 KEY_MAP_QT      (VolumeDown, Qt::Key_VolumeDown)
@@ -764,6 +969,7 @@ KEY_MAP_ANDROID (VolumeDown, AKEYCODE_VOLUME_DOWN)
 
 // VolumeUp
 KEY_MAP_WIN     (VolumeUp, VK_VOLUME_UP)
+KEY_MAP_WIN_CMD (VolumeUp, APPCOMMAND_VOLUME_UP)
 KEY_MAP_COCOA   (VolumeUp, kVK_VolumeUp)
 KEY_MAP_GTK     (VolumeUp, GDK_AudioRaiseVolume)
 KEY_MAP_QT      (VolumeUp, Qt::Key_VolumeUp)
@@ -771,6 +977,7 @@ KEY_MAP_ANDROID (VolumeUp, AKEYCODE_VOLUME_UP)
 
 // VolumeMute
 KEY_MAP_WIN     (VolumeMute, VK_VOLUME_MUTE)
+KEY_MAP_WIN_CMD (VolumeMute, APPCOMMAND_VOLUME_MUTE)
 KEY_MAP_COCOA   (VolumeMute, kVK_Mute)
 KEY_MAP_GTK     (VolumeMute, GDK_AudioMute)
 KEY_MAP_QT      (VolumeMute, Qt::Key_VolumeMute)
@@ -779,20 +986,72 @@ KEY_MAP_ANDROID (VolumeMute, AKEYCODE_VOLUME_MUTE)
 /******************************************************************************
  * Application Keys
  ******************************************************************************/
+// LaunchCalculator
+KEY_MAP_GTK     (LaunchCalculator, GDK_Calculator)
+KEY_MAP_QT      (LaunchCalculator, Qt::Key_Calculator)
+KEY_MAP_ANDROID (LaunchCalculator, AKEYCODE_CALCULATOR)
+
+// LaunchCalendar
+KEY_MAP_GTK     (LaunchCalendar, GDK_Calendar)
+KEY_MAP_QT      (LaunchCalendar, Qt::Key_Calendar)
+KEY_MAP_ANDROID (LaunchCalendar, AKEYCODE_CALENDAR)
+
 // LaunchMail
 KEY_MAP_WIN     (LaunchMail, VK_LAUNCH_MAIL)
+KEY_MAP_WIN_CMD (LaunchMail, APPCOMMAND_LAUNCH_MAIL)
 KEY_MAP_GTK     (LaunchMail, GDK_Mail)
 KEY_MAP_QT      (LaunchMail, Qt::Key_LaunchMail)
 KEY_MAP_ANDROID (LaunchMail, AKEYCODE_ENVELOPE)
 
+// LaunchMediaPlayer
+// GDK_CD is defined as "Launch CD/DVD player" in XF86keysym.h.
+// Therefore, let's map it to media player rather than music player.
+KEY_MAP_GTK     (LaunchMediaPlayer, GDK_CD)
+KEY_MAP_GTK     (LaunchMediaPlayer, GDK_Video)
+KEY_MAP_QT      (LaunchMediaPlayer, Qt::Key_LaunchMedia)
+KEY_MAP_QT      (LaunchMediaPlayer, Qt::Key_CD)
+KEY_MAP_QT      (LaunchMediaPlayer, Qt::Key_Video)
+
+// LaunchMusicPlayer
+KEY_MAP_GTK     (LaunchMusicPlayer, GDK_Music)
+KEY_MAP_QT      (LaunchMusicPlayer, Qt::Key_Music)
+KEY_MAP_ANDROID (LaunchMusicPlayer, AKEYCODE_MUSIC)
+
+// LaunchMyComputer
+KEY_MAP_GTK     (LaunchMyComputer, GDK_MyComputer)
+KEY_MAP_GTK     (LaunchMyComputer, GDK_Explorer)
+KEY_MAP_QT      (LaunchMyComputer, Qt::Key_Explorer)
+
+// LaunchScreenSaver
+KEY_MAP_GTK     (LaunchScreenSaver, GDK_ScreenSaver)
+KEY_MAP_QT      (LaunchScreenSaver, Qt::Key_ScreenSaver)
+
+// LaunchSpreadsheet
+KEY_MAP_GTK     (LaunchSpreadsheet, GDK_Excel)
+KEY_MAP_QT      (LaunchSpreadsheet, Qt::Key_Excel)
+
+// LaunchWebBrowser
+KEY_MAP_GTK     (LaunchWebBrowser, GDK_WWW)
+KEY_MAP_QT      (LaunchWebBrowser, Qt::Key_WWW)
+KEY_MAP_ANDROID (LaunchWebBrowser, AKEYCODE_EXPLORER)
+
+// LaunchWebCam
+KEY_MAP_GTK     (LaunchWebCam, GDK_WebCam)
+KEY_MAP_QT      (LaunchWebCam, Qt::Key_WebCam)
+
+// LaunchWordProcessor
+KEY_MAP_GTK     (LaunchWordProcessor, GDK_Word)
+KEY_MAP_QT      (LaunchWordProcessor, Qt::Key_Word)
+
 // LaunchApplication1
 KEY_MAP_WIN     (LaunchApplication1, VK_LAUNCH_APP1)
+KEY_MAP_WIN_CMD (LaunchApplication1, APPCOMMAND_LAUNCH_APP1)
 KEY_MAP_GTK     (LaunchApplication1, GDK_Launch0)
 KEY_MAP_QT      (LaunchApplication1, Qt::Key_Launch0)
-KEY_MAP_ANDROID (LaunchApplication1, AKEYCODE_EXPLORER)
 
 // LaunchApplication2
 KEY_MAP_WIN     (LaunchApplication2, VK_LAUNCH_APP2)
+KEY_MAP_WIN_CMD (LaunchApplication2, APPCOMMAND_LAUNCH_APP2)
 KEY_MAP_GTK     (LaunchApplication2, GDK_Launch1)
 KEY_MAP_QT      (LaunchApplication2, Qt::Key_Launch1)
 
@@ -863,28 +1122,33 @@ KEY_MAP_QT      (LaunchApplication18, Qt::Key_LaunchH)
  ******************************************************************************/
 // BrowserBack
 KEY_MAP_WIN     (BrowserBack, VK_BROWSER_BACK)
+KEY_MAP_WIN_CMD (BrowserBack, APPCOMMAND_BROWSER_BACKWARD)
 KEY_MAP_GTK     (BrowserBack, GDK_Back)
 KEY_MAP_QT      (BrowserBack, Qt::Key_Back)
 KEY_MAP_ANDROID (BrowserBack, AKEYCODE_BACK)
 
 // BrowserFavorites
 KEY_MAP_WIN     (BrowserFavorites, VK_BROWSER_FAVORITES)
+KEY_MAP_WIN_CMD (BrowserFavorites, APPCOMMAND_BROWSER_FAVORITES)
 KEY_MAP_QT      (BrowserFavorites, Qt::Key_Favorites)
 KEY_MAP_ANDROID (BrowserFavorites, AKEYCODE_BOOKMARK)
 
 // BrowserForward
 KEY_MAP_WIN     (BrowserForward, VK_BROWSER_FORWARD)
+KEY_MAP_WIN_CMD (BrowserForward, APPCOMMAND_BROWSER_FORWARD)
 KEY_MAP_GTK     (BrowserForward, GDK_Forward)
 KEY_MAP_QT      (BrowserForward, Qt::Key_Forward)
 KEY_MAP_ANDROID (BrowserForward, AKEYCODE_FORWARD)
 
 // BrowserHome
 KEY_MAP_WIN     (BrowserHome, VK_BROWSER_HOME)
+KEY_MAP_WIN_CMD (BrowserHome, APPCOMMAND_BROWSER_HOME)
 KEY_MAP_GTK     (BrowserHome, GDK_HomePage)
 KEY_MAP_QT      (BrowserHome, Qt::Key_HomePage)
 
 // BrowserRefresh
 KEY_MAP_WIN     (BrowserRefresh, VK_BROWSER_REFRESH)
+KEY_MAP_WIN_CMD (BrowserRefresh, APPCOMMAND_BROWSER_REFRESH)
 KEY_MAP_GTK     (BrowserRefresh, GDK_Refresh)
 KEY_MAP_GTK     (BrowserRefresh, GDK_Reload)
 KEY_MAP_QT      (BrowserRefresh, Qt::Key_Refresh)
@@ -892,12 +1156,14 @@ KEY_MAP_QT      (BrowserRefresh, Qt::Key_Reload)
 
 // BrowserSearch
 KEY_MAP_WIN     (BrowserSearch, VK_BROWSER_SEARCH)
+KEY_MAP_WIN_CMD (BrowserSearch, APPCOMMAND_BROWSER_SEARCH)
 KEY_MAP_GTK     (BrowserSearch, GDK_Search)
 KEY_MAP_QT      (BrowserSearch, Qt::Key_Search)
 KEY_MAP_ANDROID (BrowserSearch, AKEYCODE_SEARCH)
 
 // BrowserStop
 KEY_MAP_WIN     (BrowserStop, VK_BROWSER_STOP)
+KEY_MAP_WIN_CMD (BrowserStop, APPCOMMAND_BROWSER_STOP)
 KEY_MAP_GTK     (BrowserStop, GDK_Stop)
 KEY_MAP_QT      (BrowserStop, Qt::Key_Stop)
 
@@ -905,10 +1171,18 @@ KEY_MAP_QT      (BrowserStop, Qt::Key_Stop)
  * Media Controller Keys
  ******************************************************************************/
 // AudioBassBoostDown
+KEY_MAP_WIN_CMD (AudioBassBoostDown, APPCOMMAND_BASS_DOWN)
 KEY_MAP_QT      (AudioBassBoostDown, Qt::Key_BassDown)
 
 // AudioBassBoostUp
+KEY_MAP_WIN_CMD (AudioBassBoostUp, APPCOMMAND_BASS_UP)
 KEY_MAP_QT      (AudioBassBoostUp, Qt::Key_BassUp)
+
+// AVRInput
+KEY_MAP_ANDROID (AVRInput, AKEYCODE_AVR_INPUT)
+
+// AVRPower
+KEY_MAP_ANDROID (AVRPower, AKEYCODE_AVR_POWER)
 
 // ChannelDown
 KEY_MAP_ANDROID (ChannelDown, AKEYCODE_CHANNEL_DOWN)
@@ -916,28 +1190,29 @@ KEY_MAP_ANDROID (ChannelDown, AKEYCODE_CHANNEL_DOWN)
 // ChannelUp
 KEY_MAP_ANDROID (ChannelUp, AKEYCODE_CHANNEL_UP)
 
-// Red
-KEY_MAP_GTK     (Red, GDK_Red)
-KEY_MAP_ANDROID (Red, AKEYCODE_PROG_RED)
+// ColorF0Red
+KEY_MAP_GTK     (ColorF0Red, GDK_Red)
+KEY_MAP_QT      (ColorF0Red, Qt::Key_Red)
+KEY_MAP_ANDROID (ColorF0Red, AKEYCODE_PROG_RED)
 
-// Green
-KEY_MAP_GTK     (Green, GDK_Green)
-KEY_MAP_ANDROID (Green, AKEYCODE_PROG_GREEN)
+// ColorF1Green
+KEY_MAP_GTK     (ColorF1Green, GDK_Green)
+KEY_MAP_QT      (ColorF1Green, Qt::Key_Green)
+KEY_MAP_ANDROID (ColorF1Green, AKEYCODE_PROG_GREEN)
 
-// Yellow
-KEY_MAP_GTK     (Yellow, GDK_Yellow)
-KEY_MAP_ANDROID (Yellow, AKEYCODE_PROG_YELLOW)
+// ColorF2Yellow
+KEY_MAP_GTK     (ColorF2Yellow, GDK_Yellow)
+KEY_MAP_QT      (ColorF2Yellow, Qt::Key_Yellow)
+KEY_MAP_ANDROID (ColorF2Yellow, AKEYCODE_PROG_YELLOW)
 
-// Blue
-KEY_MAP_GTK     (Blue, GDK_Blue)
-KEY_MAP_ANDROID (Blue, AKEYCODE_PROG_BLUE)
+// ColorF3Blue
+KEY_MAP_GTK     (ColorF3Blue, GDK_Blue)
+KEY_MAP_QT      (ColorF3Blue, Qt::Key_Blue)
+KEY_MAP_ANDROID (ColorF3Blue, AKEYCODE_PROG_BLUE)
 
 // Dimmer
 KEY_MAP_GTK     (Dimmer, GDK_BrightnessAdjust)
 KEY_MAP_QT      (Dimmer, Qt::Key_BrightnessAdjust)
-
-// Exit
-KEY_MAP_ANDROID (Exit, AKEYCODE_HOME)
 
 // Guide
 KEY_MAP_ANDROID (Guide, AKEYCODE_GUIDE)
@@ -945,35 +1220,34 @@ KEY_MAP_ANDROID (Guide, AKEYCODE_GUIDE)
 // Info
 KEY_MAP_ANDROID (Info, AKEYCODE_INFO)
 
-// Live
-KEY_MAP_ANDROID (Live, AKEYCODE_TV)
-
-// Apps
-KEY_MAP_ANDROID (Apps, AKEYCODE_APP_SWITCH)
-
-// FastFwd
-KEY_MAP_QT      (FastFwd, Qt::Key_AudioForward)
-KEY_MAP_ANDROID (FastFwd, AKEYCODE_MEDIA_FAST_FORWARD)
+// MediaFastForward
+KEY_MAP_GTK     (MediaFastForward, GDK_AudioForward)
+KEY_MAP_QT      (MediaFastForward, Qt::Key_AudioForward)
+KEY_MAP_ANDROID (MediaFastForward, AKEYCODE_MEDIA_FAST_FORWARD)
 
 // MediaLast
 KEY_MAP_QT      (MediaLast, Qt::Key_MediaLast)
 
 // MediaPause
+KEY_MAP_WIN_CMD (MediaPause, APPCOMMAND_MEDIA_PAUSE)
 KEY_MAP_GTK     (MediaPause, GDK_AudioPause)
 KEY_MAP_QT      (MediaPause, Qt::Key_MediaPause)
 KEY_MAP_ANDROID (MediaPause, AKEYCODE_MEDIA_PAUSE)
 
 // MediaPlay
+KEY_MAP_WIN_CMD (MediaPlay, APPCOMMAND_MEDIA_PLAY)
 KEY_MAP_GTK     (MediaPlay, GDK_AudioPlay)
 KEY_MAP_QT      (MediaPlay, Qt::Key_MediaPlay)
 KEY_MAP_ANDROID (MediaPlay, AKEYCODE_MEDIA_PLAY)
 
 // MediaRecord
+KEY_MAP_WIN_CMD (MediaRecord, APPCOMMAND_MEDIA_RECORD)
 KEY_MAP_GTK     (MediaRecord, GDK_AudioRecord)
 KEY_MAP_QT      (MediaRecord, Qt::Key_MediaRecord)
 KEY_MAP_ANDROID (MediaRecord, AKEYCODE_MEDIA_RECORD)
 
 // MediaRewind
+KEY_MAP_WIN_CMD (MediaRewind, APPCOMMAND_MEDIA_REWIND)
 KEY_MAP_GTK     (MediaRewind, GDK_AudioRewind)
 KEY_MAP_QT      (MediaRewind, Qt::Key_AudioRewind)
 KEY_MAP_ANDROID (MediaRewind, AKEYCODE_MEDIA_REWIND)
@@ -988,86 +1262,38 @@ KEY_MAP_QT      (RandomToggle, Qt::Key_AudioRandomPlay)
 // Settings
 KEY_MAP_ANDROID (Settings, AKEYCODE_SETTINGS)
 
+// STBInput
+KEY_MAP_ANDROID (STBInput, AKEYCODE_STB_INPUT)
+
+// STBPower
+KEY_MAP_ANDROID (STBPower, AKEYCODE_STB_POWER)
+
 // Subtitle
 KEY_MAP_GTK     (Subtitle, GDK_Subtitle)
 KEY_MAP_QT      (Subtitle, Qt::Key_Subtitle)
 KEY_MAP_ANDROID (Subtitle, AKEYCODE_CAPTIONS)
 
-// Zoom
-KEY_MAP_WIN     (Zoom, VK_ZOOM)
-KEY_MAP_QT      (Zoom, Qt::Key_Zoom)
+// TV
+KEY_MAP_ANDROID (TV, AKEYCODE_TV)
 
-/******************************************************************************
- * Deplicated
- ******************************************************************************/
-// DeadGrave
-KEY_MAP_GTK     (DeadGrave, GDK_dead_grave)
-KEY_MAP_QT      (DeadGrave, Qt::Key_Dead_Grave)
+// TVInput
+KEY_MAP_ANDROID (TVInput, AKEYCODE_TV_INPUT)
 
-// DeadAcute
-KEY_MAP_GTK     (DeadAcute, GDK_dead_acute)
-KEY_MAP_QT      (DeadAcute, Qt::Key_Dead_Acute)
+// TVPower
+KEY_MAP_ANDROID (TVPower, AKEYCODE_TV_POWER)
 
-// DeadCircumflex
-KEY_MAP_GTK     (DeadCircumflex, GDK_dead_circumflex)
-KEY_MAP_QT      (DeadCircumflex, Qt::Key_Dead_Circumflex)
+// VideoModeNext
+KEY_MAP_GTK     (VideoModeNext, GDK_Next_VMode)
 
-// DeadTilde
-KEY_MAP_GTK     (DeadTilde, GDK_dead_tilde)
-KEY_MAP_QT      (DeadTilde, Qt::Key_Dead_Tilde)
-
-// DeadMacron
-KEY_MAP_GTK     (DeadMacron, GDK_dead_macron)
-KEY_MAP_QT      (DeadMacron, Qt::Key_Dead_Macron)
-
-// DeadBreve
-KEY_MAP_GTK     (DeadBreve, GDK_dead_breve)
-KEY_MAP_QT      (DeadBreve, Qt::Key_Dead_Breve)
-
-// DeadAboveDot
-KEY_MAP_GTK     (DeadAboveDot, GDK_dead_abovedot)
-KEY_MAP_QT      (DeadAboveDot, Qt::Key_Dead_Abovedot)
-
-// DeadUmlaut
-KEY_MAP_GTK     (DeadUmlaut, GDK_dead_diaeresis)
-KEY_MAP_QT      (DeadUmlaut, Qt::Key_Dead_Diaeresis)
-
-// DeadAboveRing
-KEY_MAP_GTK     (DeadAboveRing, GDK_dead_abovering)
-KEY_MAP_QT      (DeadAboveRing, Qt::Key_Dead_Abovering)
-
-// DeadDoubleacute
-KEY_MAP_GTK     (DeadDoubleacute, GDK_dead_doubleacute)
-KEY_MAP_QT      (DeadDoubleacute, Qt::Key_Dead_Doubleacute)
-
-// DeadCaron
-KEY_MAP_GTK     (DeadCaron, GDK_dead_caron)
-KEY_MAP_QT      (DeadCaron, Qt::Key_Dead_Caron)
-
-// DeadCedilla
-KEY_MAP_GTK     (DeadCedilla, GDK_dead_cedilla)
-KEY_MAP_QT      (DeadCedilla, Qt::Key_Dead_Cedilla)
-
-// DeadOgonek
-KEY_MAP_GTK     (DeadOgonek, GDK_dead_ogonek)
-KEY_MAP_QT      (DeadOgonek, Qt::Key_Dead_Ogonek)
-
-// DeadIota
-KEY_MAP_GTK     (DeadIota, GDK_dead_iota)
-KEY_MAP_QT      (DeadIota, Qt::Key_Dead_Iota)
-
-// DeadVoicedSound
-KEY_MAP_GTK     (DeadVoicedSound, GDK_dead_voiced_sound)
-KEY_MAP_QT      (DeadVoicedSound, Qt::Key_Dead_Voiced_Sound)
-
-// DeadSemivoicedSound
-KEY_MAP_GTK     (DeadSemivoicedSound, GDK_dead_semivoiced_sound)
-KEY_MAP_QT      (DeadSemivoicedSound, Qt::Key_Dead_Semivoiced_Sound)
+// ZoomToggle
+KEY_MAP_WIN     (ZoomToggle, VK_ZOOM)
+KEY_MAP_QT      (ZoomToggle, Qt::Key_Zoom)
 
 #undef KEY_MAP_WIN
 #undef KEY_MAP_WIN_JPN
 #undef KEY_MAP_WIN_KOR
 #undef KEY_MAP_WIN_OTH
+#undef KEY_MAP_WIN_CMD
 #undef KEY_MAP_COCOA
 #undef KEY_MAP_GTK
 #undef KEY_MAP_QT
