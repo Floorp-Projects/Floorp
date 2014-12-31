@@ -443,6 +443,8 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc,
                                TraceOrMarkRuntime traceOrMark,
                                TraceRootsOrUsedSaved rootsSource)
 {
+    gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
+
     MOZ_ASSERT(trc->callback != GCMarker::GrayCallback);
     MOZ_ASSERT(traceOrMark == TraceRuntime || traceOrMark == MarkRuntime);
     MOZ_ASSERT(rootsSource == TraceRoots || rootsSource == UseSavedRoots);
@@ -450,6 +452,8 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc,
     MOZ_ASSERT(!rt->mainThread.suppressGC);
 
     if (traceOrMark == MarkRuntime) {
+        gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_CCWS);
+
         for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
             if (!c->zone()->isCollecting())
                 c->markCrossCompartmentWrappers(trc);
@@ -457,33 +461,37 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc,
         Debugger::markAllCrossCompartmentEdges(trc);
     }
 
-    AutoGCRooter::traceAll(trc);
+    {
+        gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTERS);
 
-    if (!rt->isBeingDestroyed()) {
-        MarkExactStackRoots(rt, trc);
-        rt->markSelfHostingGlobal(trc);
-    }
+        AutoGCRooter::traceAll(trc);
 
-    for (RootRange r = rootsHash.all(); !r.empty(); r.popFront()) {
-        const RootEntry &entry = r.front();
-        const char *name = entry.value().name ? entry.value().name : "root";
-        JSGCRootType type = entry.value().type;
-        void *key = entry.key();
-        if (type == JS_GC_ROOT_VALUE_PTR) {
-            MarkValueRoot(trc, reinterpret_cast<Value *>(key), name);
-        } else if (*reinterpret_cast<void **>(key)){
-            if (type == JS_GC_ROOT_STRING_PTR)
-                MarkStringRoot(trc, reinterpret_cast<JSString **>(key), name);
-            else if (type == JS_GC_ROOT_OBJECT_PTR)
-                MarkObjectRoot(trc, reinterpret_cast<JSObject **>(key), name);
-            else if (type == JS_GC_ROOT_SCRIPT_PTR)
-                MarkScriptRoot(trc, reinterpret_cast<JSScript **>(key), name);
-            else
-                MOZ_CRASH("unexpected js::RootInfo::type value");
+        if (!rt->isBeingDestroyed()) {
+            MarkExactStackRoots(rt, trc);
+            rt->markSelfHostingGlobal(trc);
         }
-    }
 
-    MarkPersistentRootedChains(trc);
+        for (RootRange r = rootsHash.all(); !r.empty(); r.popFront()) {
+            const RootEntry &entry = r.front();
+            const char *name = entry.value().name ? entry.value().name : "root";
+            JSGCRootType type = entry.value().type;
+            void *key = entry.key();
+            if (type == JS_GC_ROOT_VALUE_PTR) {
+                MarkValueRoot(trc, reinterpret_cast<Value *>(key), name);
+            } else if (*reinterpret_cast<void **>(key)){
+                if (type == JS_GC_ROOT_STRING_PTR)
+                    MarkStringRoot(trc, reinterpret_cast<JSString **>(key), name);
+                else if (type == JS_GC_ROOT_OBJECT_PTR)
+                    MarkObjectRoot(trc, reinterpret_cast<JSObject **>(key), name);
+                else if (type == JS_GC_ROOT_SCRIPT_PTR)
+                    MarkScriptRoot(trc, reinterpret_cast<JSScript **>(key), name);
+                else
+                    MOZ_CRASH("unexpected js::RootInfo::type value");
+            }
+        }
+
+        MarkPersistentRootedChains(trc);
+    }
 
     if (rt->scriptAndCountsVector) {
         ScriptAndCountsVector &vec = *rt->scriptAndCountsVector;
@@ -492,6 +500,8 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc,
     }
 
     if (!rt->isBeingDestroyed() && !trc->runtime()->isHeapMinorCollecting()) {
+        gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_RUNTIME_DATA);
+
         if (traceOrMark == TraceRuntime || rt->atomsCompartment()->zone()->isCollecting()) {
             MarkPermanentAtoms(trc);
             MarkAtoms(trc);
@@ -546,6 +556,8 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc,
     jit::MarkJitActivations(&rt->mainThread, trc);
 
     if (!isHeapMinorCollecting()) {
+        gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_EMBEDDING);
+
         /*
          * All JSCompartment::markRoots() does is mark the globals for
          * compartments which have been entered. Globals aren't nursery
