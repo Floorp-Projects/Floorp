@@ -951,7 +951,7 @@ mozilla::plugins::PPluginModuleParent*
 ContentChild::AllocPPluginModuleParent(mozilla::ipc::Transport* aTransport,
                                        base::ProcessId aOtherProcess)
 {
-    return plugins::PluginModuleContentParent::Create(aTransport, aOtherProcess);
+    return plugins::PluginModuleContentParent::Initialize(aTransport, aOtherProcess);
 }
 
 PContentBridgeChild*
@@ -2471,6 +2471,21 @@ ContentChild::RecvGetProfile(nsCString* aProfile)
     } else {
         *aProfile = EmptyCString();
     }
+    return true;
+}
+
+bool
+ContentChild::RecvLoadPluginResult(const uint32_t& aPluginId, const bool& aResult)
+{
+    plugins::PluginModuleContentParent::OnLoadPluginResult(aPluginId, aResult);
+    return true;
+}
+
+bool
+ContentChild::RecvAssociatePluginId(const uint32_t& aPluginId,
+                                    const base::ProcessId& aProcessId)
+{
+    plugins::PluginModuleContentParent::AssociatePluginId(aPluginId, aProcessId);
     return true;
 }
 

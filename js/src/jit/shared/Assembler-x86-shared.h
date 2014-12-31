@@ -2103,9 +2103,41 @@ class AssemblerX86Shared : public AssemblerShared
         MOZ_ASSERT(HasSSE2());
         masm.vunpcklps_rr(src1.code(), src0.code(), dest.code());
     }
+    void vunpcklps(const Operand &src1, FloatRegister src0, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        switch (src1.kind()) {
+          case Operand::FPREG:
+            masm.vunpcklps_rr(src1.fpu(), src0.code(), dest.code());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.vunpcklps_mr(src1.disp(), src1.base(), src0.code(), dest.code());
+            break;
+          case Operand::MEM_ADDRESS32:
+            masm.vunpcklps_mr(src1.address(), src0.code(), dest.code());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
     void vunpckhps(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
         masm.vunpckhps_rr(src1.code(), src0.code(), dest.code());
+    }
+    void vunpckhps(const Operand &src1, FloatRegister src0, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        switch (src1.kind()) {
+          case Operand::FPREG:
+            masm.vunpckhps_rr(src1.fpu(), src0.code(), dest.code());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.vunpckhps_mr(src1.disp(), src1.base(), src0.code(), dest.code());
+            break;
+          case Operand::MEM_ADDRESS32:
+            masm.vunpckhps_mr(src1.address(), src0.code(), dest.code());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
     }
     void vshufps(uint32_t mask, FloatRegister src1, FloatRegister src0, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
@@ -2323,6 +2355,19 @@ class AssemblerX86Shared : public AssemblerShared
     void vinsertps(uint32_t mask, FloatRegister src1, FloatRegister src0, FloatRegister dest) {
         MOZ_ASSERT(HasSSE41());
         masm.vinsertps_irr(mask, src1.code(), src0.code(), dest.code());
+    }
+    void vinsertps(uint32_t mask, const Operand &src1, FloatRegister src0, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE41());
+        switch (src1.kind()) {
+          case Operand::FPREG:
+            masm.vinsertps_irr(mask, src1.fpu(), src0.code(), dest.code());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.vinsertps_imr(mask, src1.disp(), src1.base(), src0.code(), dest.code());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
     }
     unsigned blendpsMask(bool x, bool y, bool z, bool w) {
         return x | (y << 1) | (z << 2) | (w << 3);
