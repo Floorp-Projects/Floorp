@@ -1444,10 +1444,10 @@ nsGenericHTMLElement::MapImageMarginAttributeInto(const nsMappedAttributes* aAtt
       hval.SetPercentValue(value->GetPercentValue());
 
     if (hval.GetUnit() != eCSSUnit_Null) {
-      nsCSSValue* left = aData->ValueForMarginLeft();
+      nsCSSValue* left = aData->ValueForMarginLeftValue();
       if (left->GetUnit() == eCSSUnit_Null)
         *left = hval;
-      nsCSSValue* right = aData->ValueForMarginRight();
+      nsCSSValue* right = aData->ValueForMarginRightValue();
       if (right->GetUnit() == eCSSUnit_Null)
         *right = hval;
     }
@@ -1517,39 +1517,39 @@ nsGenericHTMLElement::MapImageBorderAttributeInto(const nsMappedAttributes* aAtt
   if (value->Type() == nsAttrValue::eInteger)
     val = value->GetIntegerValue();
 
-  nsCSSValue* borderLeftWidth = aData->ValueForBorderLeftWidth();
+  nsCSSValue* borderLeftWidth = aData->ValueForBorderLeftWidthValue();
   if (borderLeftWidth->GetUnit() == eCSSUnit_Null)
     borderLeftWidth->SetFloatValue((float)val, eCSSUnit_Pixel);
   nsCSSValue* borderTopWidth = aData->ValueForBorderTopWidth();
   if (borderTopWidth->GetUnit() == eCSSUnit_Null)
     borderTopWidth->SetFloatValue((float)val, eCSSUnit_Pixel);
-  nsCSSValue* borderRightWidth = aData->ValueForBorderRightWidth();
+  nsCSSValue* borderRightWidth = aData->ValueForBorderRightWidthValue();
   if (borderRightWidth->GetUnit() == eCSSUnit_Null)
     borderRightWidth->SetFloatValue((float)val, eCSSUnit_Pixel);
   nsCSSValue* borderBottomWidth = aData->ValueForBorderBottomWidth();
   if (borderBottomWidth->GetUnit() == eCSSUnit_Null)
     borderBottomWidth->SetFloatValue((float)val, eCSSUnit_Pixel);
 
-  nsCSSValue* borderLeftStyle = aData->ValueForBorderLeftStyle();
+  nsCSSValue* borderLeftStyle = aData->ValueForBorderLeftStyleValue();
   if (borderLeftStyle->GetUnit() == eCSSUnit_Null)
     borderLeftStyle->SetIntValue(NS_STYLE_BORDER_STYLE_SOLID, eCSSUnit_Enumerated);
   nsCSSValue* borderTopStyle = aData->ValueForBorderTopStyle();
   if (borderTopStyle->GetUnit() == eCSSUnit_Null)
     borderTopStyle->SetIntValue(NS_STYLE_BORDER_STYLE_SOLID, eCSSUnit_Enumerated);
-  nsCSSValue* borderRightStyle = aData->ValueForBorderRightStyle();
+  nsCSSValue* borderRightStyle = aData->ValueForBorderRightStyleValue();
   if (borderRightStyle->GetUnit() == eCSSUnit_Null)
     borderRightStyle->SetIntValue(NS_STYLE_BORDER_STYLE_SOLID, eCSSUnit_Enumerated);
   nsCSSValue* borderBottomStyle = aData->ValueForBorderBottomStyle();
   if (borderBottomStyle->GetUnit() == eCSSUnit_Null)
     borderBottomStyle->SetIntValue(NS_STYLE_BORDER_STYLE_SOLID, eCSSUnit_Enumerated);
 
-  nsCSSValue* borderLeftColor = aData->ValueForBorderLeftColor();
+  nsCSSValue* borderLeftColor = aData->ValueForBorderLeftColorValue();
   if (borderLeftColor->GetUnit() == eCSSUnit_Null)
     borderLeftColor->SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
   nsCSSValue* borderTopColor = aData->ValueForBorderTopColor();
   if (borderTopColor->GetUnit() == eCSSUnit_Null)
     borderTopColor->SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
-  nsCSSValue* borderRightColor = aData->ValueForBorderRightColor();
+  nsCSSValue* borderRightColor = aData->ValueForBorderRightColorValue();
   if (borderRightColor->GetUnit() == eCSSUnit_Null)
     borderRightColor->SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
   nsCSSValue* borderBottomColor = aData->ValueForBorderBottomColor();

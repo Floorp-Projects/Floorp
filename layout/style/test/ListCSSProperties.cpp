@@ -21,11 +21,9 @@ const PropertyInfo gLonghandProperties[] = {
 #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
                  stylestruct_, stylestructoffset_, animtype_)                 \
     { #name_, #method_, pref_ },
-#define CSS_PROP_LIST_INCLUDE_LOGICAL
 
 #include "nsCSSPropList.h"
 
-#undef CSS_PROP_LIST_EXCLUDE_LOGICAL
 #undef CSS_PROP
 #undef CSS_PROP_PUBLIC_OR_PRIVATE
 
@@ -42,11 +40,9 @@ const char* gLonghandPropertiesWithDOMProp[] = {
 #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
                  stylestruct_, stylestructoffset_, animtype_)                 \
     #name_,
-#define CSS_PROP_LIST_INCLUDE_LOGICAL
 
 #include "nsCSSPropList.h"
 
-#undef CSS_PROP_LIST_INCLUDE_LOGICAL
 #undef CSS_PROP
 #undef CSS_PROP_LIST_EXCLUDE_INTERNAL
 
@@ -108,6 +104,46 @@ const char *gInaccessibleProperties[] = {
     "-x-span",
     "-x-system-font",
     "-x-text-zoom",
+    "border-end-color-value",
+    "border-end-style-value",
+    "border-end-width-value",
+    "border-left-color-value",
+    "border-left-color-ltr-source",
+    "border-left-color-rtl-source",
+    "border-left-style-value",
+    "border-left-style-ltr-source",
+    "border-left-style-rtl-source",
+    "border-left-width-value",
+    "border-left-width-ltr-source",
+    "border-left-width-rtl-source",
+    "border-right-color-value",
+    "border-right-color-ltr-source",
+    "border-right-color-rtl-source",
+    "border-right-style-value",
+    "border-right-style-ltr-source",
+    "border-right-style-rtl-source",
+    "border-right-width-value",
+    "border-right-width-ltr-source",
+    "border-right-width-rtl-source",
+    "border-start-color-value",
+    "border-start-style-value",
+    "border-start-width-value",
+    "margin-end-value",
+    "margin-left-value",
+    "margin-right-value",
+    "margin-start-value",
+    "margin-left-ltr-source",
+    "margin-left-rtl-source",
+    "margin-right-ltr-source",
+    "margin-right-rtl-source",
+    "padding-end-value",
+    "padding-left-value",
+    "padding-right-value",
+    "padding-start-value",
+    "padding-left-ltr-source",
+    "padding-left-rtl-source",
+    "padding-right-ltr-source",
+    "padding-right-rtl-source",
     "-moz-control-character-visibility",
     "-moz-script-level", // parsed by UA sheets only
     "-moz-script-size-multiplier",

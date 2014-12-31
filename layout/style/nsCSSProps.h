@@ -103,8 +103,9 @@
 
 // Flags for the kFlagsTable bitfield (flags_ in nsCSSPropList.h)
 
-// This property is a logical property (such as padding-inline-start).
-#define CSS_PROPERTY_LOGICAL                      (1<<0)
+// A property that is a *-ltr-source or *-rtl-source property for one of
+// the directional pseudo-shorthand properties.
+#define CSS_PROPERTY_DIRECTIONAL_SOURCE           (1<<0)
 
 #define CSS_PROPERTY_VALUE_LIST_USES_COMMAS       (1<<1) /* otherwise spaces */
 
@@ -130,7 +131,12 @@
 // list.
 #define CSS_PROPERTY_IMAGE_IS_IN_ARRAY_0          (1<<6)
 
-// Flag (1<<7) is currently free.
+// This is a property for which the computed value should generally be
+// reported as the computed value of a property of a different name.  In
+// particular, the directional box properties (margin-left-value, etc.)
+// should be reported as being margin-left, etc.  Call
+// nsCSSProps::OtherNameFor to get the other property.
+#define CSS_PROPERTY_REPORT_OTHER_NAME            (1<<7)
 
 // This property allows calc() between lengths and percentages and
 // stores such calc() expressions in its style structs (typically in an
@@ -319,6 +325,11 @@ public:
   static const nsAFlatCString& GetStringValue(nsCSSProperty aProperty);
   static const nsAFlatCString& GetStringValue(nsCSSFontDesc aFontDesc);
   static const nsAFlatCString& GetStringValue(nsCSSCounterDesc aCounterDesc);
+
+  // Get the property to report the computed value of aProperty as being
+  // the computed value of.  aProperty must have the
+  // CSS_PROPERTY_REPORT_OTHER_NAME bit set.
+  static nsCSSProperty OtherNameFor(nsCSSProperty aProperty);
 
   // Given a CSS Property and a Property Enum Value
   // Return back a const nsString& representation of the

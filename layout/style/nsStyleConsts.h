@@ -56,6 +56,10 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_SIDE_TO_HALF_CORNER(side_, second_, parallel_) \
   ((((side_) + !!(second_))*2 + ((side_) + !(parallel_))%2) % 8)
 
+// {margin,border-{width,style,color},padding}-{left,right}-{ltr,rtl}-source
+#define NS_BOXPROP_SOURCE_PHYSICAL 0
+#define NS_BOXPROP_SOURCE_LOGICAL  1
+
 // box-sizing
 #define NS_STYLE_BOX_SIZING_CONTENT       0
 #define NS_STYLE_BOX_SIZING_PADDING       1

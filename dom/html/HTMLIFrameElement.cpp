@@ -121,10 +121,10 @@ HTMLIFrameElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       if (NS_STYLE_FRAME_0 == frameborder ||
           NS_STYLE_FRAME_NO == frameborder ||
           NS_STYLE_FRAME_OFF == frameborder) {
-        nsCSSValue* borderLeftWidth = aData->ValueForBorderLeftWidth();
+        nsCSSValue* borderLeftWidth = aData->ValueForBorderLeftWidthValue();
         if (borderLeftWidth->GetUnit() == eCSSUnit_Null)
           borderLeftWidth->SetFloatValue(0.0f, eCSSUnit_Pixel);
-        nsCSSValue* borderRightWidth = aData->ValueForBorderRightWidth();
+        nsCSSValue* borderRightWidth = aData->ValueForBorderRightWidthValue();
         if (borderRightWidth->GetUnit() == eCSSUnit_Null)
           borderRightWidth->SetFloatValue(0.0f, eCSSUnit_Pixel);
         nsCSSValue* borderTopWidth = aData->ValueForBorderTopWidth();
