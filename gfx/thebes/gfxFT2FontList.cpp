@@ -196,13 +196,11 @@ FT2FontEntry::CreateScaledFont(const gfxFontStyle *aStyle)
             aStyle->allowSyntheticStyle;
 
     if (needsOblique) {
-        const double kSkewFactor = 0.25;
-
         cairo_matrix_t style;
         cairo_matrix_init(&style,
                           1,                //xx
                           0,                //yx
-                          -1 * kSkewFactor,  //xy
+                          -1 * OBLIQUE_SKEW_FACTOR, //xy
                           1,                //yy
                           0,                //x0
                           0);               //y0
