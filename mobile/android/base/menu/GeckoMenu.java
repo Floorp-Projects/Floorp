@@ -15,6 +15,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -90,6 +91,9 @@ public class GeckoMenu extends ListView
     // List of all menu items.
     private final List<GeckoMenuItem> mItems;
 
+    // Quick lookup array used to make a fast path in findItem.
+    private final SparseArray<MenuItem> mItemsById;
+
     // Map of "always" action-items in action-bar and their views.
     private final Map<GeckoMenuItem, View> mPrimaryActionItems;
 
@@ -134,6 +138,7 @@ public class GeckoMenu extends ListView
         setOnItemClickListener(this);
 
         mItems = new ArrayList<GeckoMenuItem>();
+        mItemsById = new SparseArray<MenuItem>();
         mPrimaryActionItems = new HashMap<GeckoMenuItem, View>();
         mSecondaryActionItems = new HashMap<GeckoMenuItem, View>();
 
@@ -362,15 +367,24 @@ public class GeckoMenu extends ListView
 
     @Override
     public MenuItem findItem(int id) {
+        assertOnUiThread();
+        MenuItem quickItem = mItemsById.get(id);
+        if (quickItem != null) {
+            return quickItem;
+        }
+
         for (GeckoMenuItem menuItem : mItems) {
             if (menuItem.getItemId() == id) {
+                mItemsById.put(id, menuItem);
                 return menuItem;
             } else if (menuItem.hasSubMenu()) {
                 if (!menuItem.hasActionProvider()) {
                     SubMenu subMenu = menuItem.getSubMenu();
                     MenuItem item = subMenu.findItem(id);
-                    if (item != null)
+                    if (item != null) {
+                        mItemsById.put(id, item);
                         return item;
+                    }
                 }
             }
         }
@@ -423,6 +437,9 @@ public class GeckoMenu extends ListView
         GeckoMenuItem item = (GeckoMenuItem) findItem(id);
         if (item == null)
             return;
+
+        // Remove it from the cache.
+        mItemsById.remove(id);
 
         // Remove it from any sub-menu.
         for (GeckoMenuItem menuItem : mItems) {
@@ -811,6 +828,7 @@ public class GeckoMenu extends ListView
         }
 
         public void clear() {
+            mItemsById.clear();
             mItems.clear();
             notifyDataSetChanged();
         }
