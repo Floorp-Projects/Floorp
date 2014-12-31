@@ -8,7 +8,6 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
 #include "nsGlobalWindow.h"
-#include "nsDOMWindowUtils.h"
 #include "nsIDOMClientRect.h"
 #include "nsIDocShell.h"
 #include "nsIPresShell.h"
@@ -223,22 +222,9 @@ MediaEngineTabVideoSource::Draw() {
     return;
   }
 
-  // take a screenshot, as wide as possible, proportional to the destination size
-  nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(win);
-  if (!utils) {
-    return;
-  }
-
-  nsCOMPtr<nsIDOMClientRect> rect;
-  rv = utils->GetRootBounds(getter_AddRefs(rect));
-  NS_ENSURE_SUCCESS_VOID(rv);
-  if (!rect) {
-    return;
-  }
-
-  float width, height;
-  rect->GetWidth(&width);
-  rect->GetHeight(&height);
+  int32_t width, height;
+  win->GetInnerWidth(&width);
+  win->GetInnerHeight(&height);
 
   if (width == 0 || height == 0) {
     return;
@@ -267,7 +253,7 @@ MediaEngineTabVideoSource::Draw() {
 
   nscolor bgColor = NS_RGB(255, 255, 255);
   nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
-  uint32_t renderDocFlags = nsIPresShell::RENDER_DOCUMENT_RELATIVE;
+  uint32_t renderDocFlags = 0;
   if (!mScrollWithPage) {
     renderDocFlags |= nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING;
   }
