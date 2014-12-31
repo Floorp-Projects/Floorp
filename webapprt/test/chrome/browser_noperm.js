@@ -18,12 +18,18 @@ function test() {
     let principal = document.getElementById("content").contentDocument.defaultView.document.nodePrincipal;
     is(DOMApplicationRegistry.getAppLocalIdByManifestURL(app.manifestURL), principal.appId, "Principal app ID correct");
 
+    let alwaysAllowed = ["indexedDB"]
+
     // Check if all the permissions of the app are unknown.
     for (let permName of AllPossiblePermissions) {
       // Get the value for the permission.
       let permValue = Services.perms.testExactPermissionFromPrincipal(principal, permName);
 
-      is(permValue, Ci.nsIPermissionManager.UNKNOWN_ACTION, "Permission " + permName + " unknown.");
+      if (alwaysAllowed.includes(permName)) {
+        is(permValue, Ci.nsIPermissionManager.ALLOW_ACTION, "Permission " + permName + " allowed.");
+      } else {
+        is(permValue, Ci.nsIPermissionManager.UNKNOWN_ACTION, "Permission " + permName + " unknown.");
+      }
     }
 
     finish();
