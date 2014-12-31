@@ -8,9 +8,9 @@
 const PHONE_NUMBER_CONTAINERS = "td,div";
 
 var SelectionHandler = {
-  HANDLE_TYPE_START: "START",
-  HANDLE_TYPE_MIDDLE: "MIDDLE",
-  HANDLE_TYPE_END: "END",
+  HANDLE_TYPE_ANCHOR: "ANCHOR",
+  HANDLE_TYPE_CARET: "CARET",
+  HANDLE_TYPE_FOCUS: "FOCUS",
 
   TYPE_NONE: 0,
   TYPE_CURSOR: 1,
@@ -133,7 +133,7 @@ var SelectionHandler = {
         let data = JSON.parse(aData);
         if (this._activeType == this.TYPE_SELECTION) {
           this._startDraggingHandles();
-          this._moveSelection(data.handleType == this.HANDLE_TYPE_START, data.x, data.y);
+          this._moveSelection(data.handleType == this.HANDLE_TYPE_ANCHOR, data.x, data.y);
 
         } else if (this._activeType == this.TYPE_CURSOR) {
           this._startDraggingHandles();
@@ -152,7 +152,7 @@ var SelectionHandler = {
           this._startDraggingHandles();
 
           // Check to see if the handles should be reversed.
-          let isStartHandle = JSON.parse(aData).handleType == this.HANDLE_TYPE_START;
+          let isStartHandle = JSON.parse(aData).handleType == this.HANDLE_TYPE_ANCHOR;
           try {
             let selectionReversed = this._updateCacheForSelection(isStartHandle);
             if (selectionReversed) {
@@ -222,7 +222,15 @@ var SelectionHandler = {
         this._positionHandlesOnChange();
         break;
 
-      case "pagehide":
+      case "pagehide": {
+        // We only care about events on the selected tab.
+        let tab = BrowserApp.getTabForWindow(aEvent.originalTarget.defaultView);
+        if (tab == BrowserApp.selectedTab) {
+          this._closeSelection();
+        }
+        break;
+      }
+
       case "blur":
         this._closeSelection();
         break;
@@ -319,7 +327,7 @@ var SelectionHandler = {
     this._activeType = this.TYPE_SELECTION;
 
     // Initialize the cache
-    this._cache = { start: {}, end: {}};
+    this._cache = { anchorPt: {}, focusPt: {}};
     this._updateCacheForSelection();
 
     let scroll = this._getScrollPos();
@@ -337,7 +345,7 @@ var SelectionHandler = {
     this._positionHandles(positions);
     Messaging.sendRequest({
       type: "TextSelection:ShowHandles",
-      handles: [this.HANDLE_TYPE_START, this.HANDLE_TYPE_END]
+      handles: [this.HANDLE_TYPE_ANCHOR, this.HANDLE_TYPE_FOCUS]
     });
     this._updateMenu();
     return true;
@@ -716,7 +724,7 @@ var SelectionHandler = {
     this._positionHandles();
     Messaging.sendRequest({
       type: "TextSelection:ShowHandles",
-      handles: [this.HANDLE_TYPE_MIDDLE]
+      handles: [this.HANDLE_TYPE_CARET]
     });
     this._updateMenu();
 
@@ -843,11 +851,11 @@ var SelectionHandler = {
 
     // Update the cache as the handle is dragged (keep the cache in client coordinates).
     if (aIsStartHandle) {
-      this._cache.start.x = aX;
-      this._cache.start.y = aY;
+      this._cache.anchorPt.x = aX;
+      this._cache.anchorPt.y = aY;
     } else {
-      this._cache.end.x = aX;
-      this._cache.end.y = aY;
+      this._cache.focusPt.x = aX;
+      this._cache.focusPt.y = aY;
     }
 
     let selection = this._getSelection();
@@ -856,7 +864,7 @@ var SelectionHandler = {
     // are reversed, so we need to reverse the logic to extend the selection.
     if ((aIsStartHandle && !this._isRTL) || (!aIsStartHandle && this._isRTL)) {
       if (targetIsEditable) {
-        let anchorX = this._isRTL ? this._cache.start.x : this._cache.end.x;
+        let anchorX = this._isRTL ? this._cache.anchorPt.x : this._cache.focusPt.x;
         this._moveSelectionInEditable(anchorX, aX, caretPos);
       } else {
         let focusNode = selection.focusNode;
@@ -866,7 +874,7 @@ var SelectionHandler = {
       }
     } else {
       if (targetIsEditable) {
-        let anchorX = this._isRTL ? this._cache.end.x : this._cache.start.x;
+        let anchorX = this._isRTL ? this._cache.focusPt.x : this._cache.anchorPt.x;
         this._moveSelectionInEditable(anchorX, aX, caretPos);
       } else {
         selection.extend(caretPos.offsetNode, caretPos.offset);
@@ -1052,14 +1060,14 @@ var SelectionHandler = {
     let end = { x: this._isRTL ? rects[rects.length - 1].left : rects[rects.length - 1].right, y: rects[rects.length - 1].bottom };
 
     let selectionReversed = false;
-    if (this._cache.start) {
+    if (this._cache.anchorPt) {
       // If the end moved past the old end, but we're dragging the start handle, then that handle should become the end handle (and vice versa)
-      selectionReversed = (aIsStartHandle && (end.y > this._cache.end.y || (end.y == this._cache.end.y && end.x > this._cache.end.x))) ||
-                          (!aIsStartHandle && (start.y < this._cache.start.y || (start.y == this._cache.start.y && start.x < this._cache.start.x)));
+      selectionReversed = (aIsStartHandle && (end.y > this._cache.focusPt.y || (end.y == this._cache.focusPt.y && end.x > this._cache.focusPt.x))) ||
+                          (!aIsStartHandle && (start.y < this._cache.anchorPt.y || (start.y == this._cache.anchorPt.y && start.x < this._cache.anchorPt.x)));
     }
 
-    this._cache.start = start;
-    this._cache.end = end;
+    this._cache.anchorPt = start;
+    this._cache.focusPt = end;
 
     return selectionReversed;
   },
@@ -1089,28 +1097,28 @@ var SelectionHandler = {
       // divide by the pixel ratio
       let x = cursor.left / window.devicePixelRatio;
       let y = (cursor.top + cursor.height) / window.devicePixelRatio;
-      return [{ handle: this.HANDLE_TYPE_MIDDLE,
+      return [{ handle: this.HANDLE_TYPE_CARET,
                 left: x + scroll.X,
                 top: y + scroll.Y,
                 hidden: checkHidden(x, y) }];
     } else {
-      let sx = this._cache.start.x;
-      let sy = this._cache.start.y;
-      let ex = this._cache.end.x;
-      let ey = this._cache.end.y;
+      let anchorX = this._cache.anchorPt.x;
+      let anchorY = this._cache.anchorPt.y;
+      let focusX = this._cache.focusPt.x;
+      let focusY = this._cache.focusPt.y;
 
       // Translate coordinates to account for selections in sub-frames. We can't cache
       // this because the top-level page may have scrolled since selection started.
       let offset = this._getViewOffset();
 
-      return  [{ handle: this.HANDLE_TYPE_START,
-                 left: sx + offset.x + scroll.X,
-                 top: sy + offset.y + scroll.Y,
-                 hidden: checkHidden(sx, sy) },
-               { handle: this.HANDLE_TYPE_END,
-                 left: ex + offset.x + scroll.X,
-                 top: ey + offset.y + scroll.Y,
-                 hidden: checkHidden(ex, ey) }];
+      return  [{ handle: this.HANDLE_TYPE_ANCHOR,
+                 left: anchorX + offset.x + scroll.X,
+                 top: anchorY + offset.y + scroll.Y,
+                 hidden: checkHidden(anchorX, anchorY) },
+               { handle: this.HANDLE_TYPE_FOCUS,
+                 left: focusX + offset.x + scroll.X,
+                 top: focusY + offset.y + scroll.Y,
+                 hidden: checkHidden(focusX, focusY) }];
     }
   },
 
