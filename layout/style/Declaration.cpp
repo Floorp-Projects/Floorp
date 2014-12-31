@@ -349,8 +349,6 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       for (const nsCSSProperty** subprops = subproptables,
                **subprops_end = ArrayEnd(subproptables);
            subprops < subprops_end; ++subprops) {
-        // Check only the first four subprops in each table, since the
-        // others are extras for dimensional box properties.
         const nsCSSValue *firstSide = data->ValueFor((*subprops)[0]);
         for (int32_t side = 1; side < 4; ++side) {
           const nsCSSValue *otherSide =
@@ -377,9 +375,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
       NS_ABORT_IF_FALSE(StringEndsWith(nsCSSProps::GetStringValue(subprops[2]),
-                                       NS_LITERAL_CSTRING("-color")) ||
-                        StringEndsWith(nsCSSProps::GetStringValue(subprops[2]),
-                                       NS_LITERAL_CSTRING("-color-value")),
+                                       NS_LITERAL_CSTRING("-color")),
                         "third subprop must be the color property");
       const nsCSSValue *colorValue = data->ValueFor(subprops[2]);
       bool isMozUseTextColor =
@@ -394,25 +390,6 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
              AppendValueToString(subprops[2], aValue, aSerialization)))) {
         aValue.Truncate();
       }
-      break;
-    }
-    case eCSSProperty_border_left_color:
-    case eCSSProperty_border_left_style:
-    case eCSSProperty_border_left_width:
-    case eCSSProperty_border_right_color:
-    case eCSSProperty_border_right_style:
-    case eCSSProperty_border_right_width:
-    case eCSSProperty_border_start_color:
-    case eCSSProperty_border_start_style:
-    case eCSSProperty_border_start_width:
-    case eCSSProperty_border_end_color:
-    case eCSSProperty_border_end_style:
-    case eCSSProperty_border_end_width: {
-      const nsCSSProperty* subprops =
-        nsCSSProps::SubpropertyEntryFor(aProperty);
-      NS_ABORT_IF_FALSE(subprops[3] == eCSSProperty_UNKNOWN,
-                        "not box property with physical vs. logical cascading");
-      AppendValueToString(subprops[0], aValue, aSerialization);
       break;
     }
     case eCSSProperty_background: {

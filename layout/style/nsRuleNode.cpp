@@ -6645,27 +6645,12 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
   }
 
   // border-width, border-*-width: length, enum, inherit
-  nsStyleCoord  coord;
-  nsCSSRect ourBorderWidth;
-  ourBorderWidth.mTop = *aRuleData->ValueForBorderTopWidth();
-  ourBorderWidth.mRight = *aRuleData->ValueForBorderRightWidthValue();
-  ourBorderWidth.mBottom = *aRuleData->ValueForBorderBottomWidth();
-  ourBorderWidth.mLeft = *aRuleData->ValueForBorderLeftWidthValue();
-  AdjustLogicalBoxProp(aContext,
-                       *aRuleData->ValueForBorderLeftWidthLTRSource(),
-                       *aRuleData->ValueForBorderLeftWidthRTLSource(),
-                       *aRuleData->ValueForBorderStartWidthValue(),
-                       *aRuleData->ValueForBorderEndWidthValue(),
-                       NS_SIDE_LEFT, ourBorderWidth, canStoreInRuleTree);
-  AdjustLogicalBoxProp(aContext,
-                       *aRuleData->ValueForBorderRightWidthLTRSource(),
-                       *aRuleData->ValueForBorderRightWidthRTLSource(),
-                       *aRuleData->ValueForBorderEndWidthValue(),
-                       *aRuleData->ValueForBorderStartWidthValue(),
-                       NS_SIDE_RIGHT, ourBorderWidth, canStoreInRuleTree);
-  { // scope for compilers with broken |for| loop scoping
+  nsStyleCoord coord;
+  {
+    const nsCSSProperty* subprops =
+      nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_width);
     NS_FOR_CSS_SIDES(side) {
-      const nsCSSValue &value = ourBorderWidth.*(nsCSSRect::sides[side]);
+      const nsCSSValue& value = *aRuleData->ValueFor(subprops[side]);
       NS_ASSERTION(eCSSUnit_Percent != value.GetUnit(),
                    "Percentage borders not implemented yet "
                    "If implementing, make sure to fix all consumers of "
@@ -6708,26 +6693,11 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
   }
 
   // border-style, border-*-style: enum, inherit
-  nsCSSRect ourBorderStyle;
-  ourBorderStyle.mTop = *aRuleData->ValueForBorderTopStyle();
-  ourBorderStyle.mRight = *aRuleData->ValueForBorderRightStyleValue();
-  ourBorderStyle.mBottom = *aRuleData->ValueForBorderBottomStyle();
-  ourBorderStyle.mLeft = *aRuleData->ValueForBorderLeftStyleValue();
-  AdjustLogicalBoxProp(aContext,
-                       *aRuleData->ValueForBorderLeftStyleLTRSource(),
-                       *aRuleData->ValueForBorderLeftStyleRTLSource(),
-                       *aRuleData->ValueForBorderStartStyleValue(),
-                       *aRuleData->ValueForBorderEndStyleValue(),
-                       NS_SIDE_LEFT, ourBorderStyle, canStoreInRuleTree);
-  AdjustLogicalBoxProp(aContext,
-                       *aRuleData->ValueForBorderRightStyleLTRSource(),
-                       *aRuleData->ValueForBorderRightStyleRTLSource(),
-                       *aRuleData->ValueForBorderEndStyleValue(),
-                       *aRuleData->ValueForBorderStartStyleValue(),
-                       NS_SIDE_RIGHT, ourBorderStyle, canStoreInRuleTree);
-  { // scope for compilers with broken |for| loop scoping
+  {
+    const nsCSSProperty* subprops =
+      nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_style);
     NS_FOR_CSS_SIDES(side) {
-      const nsCSSValue &value = ourBorderStyle.*(nsCSSRect::sides[side]);
+      const nsCSSValue& value = *aRuleData->ValueFor(subprops[side]);
       nsCSSUnit unit = value.GetUnit();
       NS_ABORT_IF_FALSE(eCSSUnit_None != unit,
                         "'none' should be handled as enumerated value");
@@ -6807,27 +6777,12 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
   }
 
   // border-color, border-*-color: color, string, enum, inherit
-  bool foreground;
-  nsCSSRect ourBorderColor;
-  ourBorderColor.mTop = *aRuleData->ValueForBorderTopColor();
-  ourBorderColor.mRight = *aRuleData->ValueForBorderRightColorValue();
-  ourBorderColor.mBottom = *aRuleData->ValueForBorderBottomColor();
-  ourBorderColor.mLeft = *aRuleData->ValueForBorderLeftColorValue();
-  AdjustLogicalBoxProp(aContext,
-                       *aRuleData->ValueForBorderLeftColorLTRSource(),
-                       *aRuleData->ValueForBorderLeftColorRTLSource(),
-                       *aRuleData->ValueForBorderStartColorValue(),
-                       *aRuleData->ValueForBorderEndColorValue(),
-                       NS_SIDE_LEFT, ourBorderColor, canStoreInRuleTree);
-  AdjustLogicalBoxProp(aContext,
-                       *aRuleData->ValueForBorderRightColorLTRSource(),
-                       *aRuleData->ValueForBorderRightColorRTLSource(),
-                       *aRuleData->ValueForBorderEndColorValue(),
-                       *aRuleData->ValueForBorderStartColorValue(),
-                       NS_SIDE_RIGHT, ourBorderColor, canStoreInRuleTree);
-  { // scope for compilers with broken |for| loop scoping
+  {
+    const nsCSSProperty* subprops =
+      nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_color);
+    bool foreground;
     NS_FOR_CSS_SIDES(side) {
-      const nsCSSValue &value = ourBorderColor.*(nsCSSRect::sides[side]);
+      const nsCSSValue& value = *aRuleData->ValueFor(subprops[side]);
       if (eCSSUnit_Inherit == value.GetUnit()) {
         canStoreInRuleTree = false;
         if (parentContext) {
@@ -9459,21 +9414,15 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
     eCSSProperty_border_top_color,
     eCSSProperty_border_top_style,
     eCSSProperty_border_top_width,
-    eCSSProperty_border_right_color_value,
-    eCSSProperty_border_right_style_value,
-    eCSSProperty_border_right_width_value,
+    eCSSProperty_border_right_color,
+    eCSSProperty_border_right_style,
+    eCSSProperty_border_right_width,
     eCSSProperty_border_bottom_color,
     eCSSProperty_border_bottom_style,
     eCSSProperty_border_bottom_width,
-    eCSSProperty_border_left_color_value,
-    eCSSProperty_border_left_style_value,
-    eCSSProperty_border_left_width_value,
-    eCSSProperty_border_start_color_value,
-    eCSSProperty_border_start_style_value,
-    eCSSProperty_border_start_width_value,
-    eCSSProperty_border_end_color_value,
-    eCSSProperty_border_end_style_value,
-    eCSSProperty_border_end_width_value,
+    eCSSProperty_border_left_color,
+    eCSSProperty_border_left_style,
+    eCSSProperty_border_left_width,
     eCSSProperty_border_top_left_radius,
     eCSSProperty_border_top_right_radius,
     eCSSProperty_border_bottom_right_radius,
