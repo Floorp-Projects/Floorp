@@ -731,7 +731,7 @@ public:
   static bool GetShowEventTargetFrameBorder();
 
 #endif
-#ifdef MOZ_DUMP_PAINTING
+
 public:
 
   static void PrintDisplayItem(nsDisplayListBuilder* aBuilder,
@@ -757,7 +757,6 @@ public:
                                   std::stringstream& aStream,
                                   bool aDumpHtml = false);
 
-#endif
 };
 
 // Start Display Reflow Debugging

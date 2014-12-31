@@ -455,7 +455,6 @@ DisplayItemClip::Shutdown()
   gNoClip = nullptr;
 }
 
-#ifdef MOZ_DUMP_PAINTING
 nsCString
 DisplayItemClip::ToString() const
 {
@@ -473,6 +472,5 @@ DisplayItemClip::ToString() const
   }
   return str;
 }
-#endif
 
 }
