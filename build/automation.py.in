@@ -18,6 +18,7 @@ import sys
 import threading
 import tempfile
 import sqlite3
+import zipfile
 from datetime import datetime, timedelta
 from string import Template
 
@@ -922,7 +923,7 @@ class Automation(object):
       os.makedirs(extensionsRootDir)
 
     if os.path.isfile(extensionSource):
-      reader = automationutils.ZipFileReader(extensionSource)
+      reader = zipfile.ZipFile(extensionSource, "r")
 
       for filename in reader.namelist():
         # Sanity check the zip file.

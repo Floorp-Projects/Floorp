@@ -89,6 +89,7 @@ hardware (via AudioStream).
 #include "MediaDecoderReader.h"
 #include "MediaDecoderOwner.h"
 #include "MediaMetadataManager.h"
+#include "MediaDecoderStateMachineScheduler.h"
 
 class nsITimer;
 
@@ -197,7 +198,18 @@ public:
   // Cause state transitions. These methods obtain the decoder monitor
   // to synchronise the change of state, and to notify other threads
   // that the state has changed.
-  void Play();
+  void Play()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    nsRefPtr<nsRunnable> r = NS_NewRunnableMethod(this, &MediaDecoderStateMachine::PlayInternal);
+    GetStateMachineThread()->Dispatch(r, NS_DISPATCH_NORMAL);
+  }
+
+private:
+  // The actual work for the above, which happens asynchronously on the state
+  // machine thread.
+  void PlayInternal();
+public:
 
   // Seeks to the decoder to aTarget asynchronously.
   // Must be called from the main thread.
@@ -580,9 +592,10 @@ protected:
   // The decoder monitor must be held.
   void StopPlayback();
 
-  // Sets internal state which causes playback of media to begin or resume.
+  // If the conditions are right, sets internal state which causes playback
+  // of media to begin or resume.
   // Must be called with the decode monitor held.
-  void StartPlayback();
+  void MaybeStartPlayback();
 
   // Moves the decoder into decoding state. Called on the state machine
   // thread. The decoder monitor must be held.
@@ -931,8 +944,48 @@ protected:
   // unneccessarily if we start playing as soon as the first sample is
   // decoded. These two fields store how many video frames and audio
   // samples we must consume before are considered to be finished prerolling.
-  uint32_t mAudioPrerollUsecs;
-  uint32_t mVideoPrerollFrames;
+  uint32_t AudioPrerollUsecs() const
+  {
+    if (mScheduler->IsRealTime()) {
+      return 0;
+    }
+
+    uint32_t result = mLowAudioThresholdUsecs * 2;
+    MOZ_ASSERT(result <= mAmpleAudioThresholdUsecs, "Prerolling will never finish");
+    return result;
+  }
+  uint32_t VideoPrerollFrames() const { return mScheduler->IsRealTime() ? 0 : mAmpleVideoFrames / 2; }
+
+  bool DonePrerollingAudio()
+  {
+    AssertCurrentThreadInMonitor();
+    return !IsAudioDecoding() || GetDecodedAudioDuration() >= AudioPrerollUsecs() * mPlaybackRate;
+  }
+
+  bool DonePrerollingVideo()
+  {
+    AssertCurrentThreadInMonitor();
+    return !IsVideoDecoding() ||
+           static_cast<uint32_t>(VideoQueue().GetSize()) >= VideoPrerollFrames() * mPlaybackRate;
+  }
+
+  void StopPrerollingAudio()
+  {
+    AssertCurrentThreadInMonitor();
+    if (mIsAudioPrerolling) {
+      mIsAudioPrerolling = false;
+      ScheduleStateMachine();
+    }
+  }
+
+  void StopPrerollingVideo()
+  {
+    AssertCurrentThreadInMonitor();
+    if (mIsVideoPrerolling) {
+      mIsVideoPrerolling = false;
+      ScheduleStateMachine();
+    }
+  }
 
   // This temporarily stores the first frame we decode after we seek.
   // This is so that if we hit end of stream while we're decoding to reach
