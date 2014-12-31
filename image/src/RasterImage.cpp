@@ -620,7 +620,9 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
 
       // See if we managed to entirely redecode the frame.
       frame = LookupFrameNoDecode(aFrameNum);
-      ref = frame->DrawableRef();
+      if (frame) {
+        ref = frame->DrawableRef();
+      }
     }
 
     if (!ref) {
