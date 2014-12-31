@@ -278,8 +278,10 @@ public:
   nsAutoCString mLog;
 
   #define FLB_LOG_PAINTED_LAYER_DECISION(pld, ...) \
-          pld->mLog.AppendPrintf("\t\t\t\t"); \
-          pld->mLog.AppendPrintf(__VA_ARGS__);
+          if (gfxPrefs::LayersDumpDecision()) { \
+            pld->mLog.AppendPrintf("\t\t\t\t"); \
+            pld->mLog.AppendPrintf(__VA_ARGS__); \
+          }
 #else
   #define FLB_LOG_PAINTED_LAYER_DECISION(...)
 #endif
