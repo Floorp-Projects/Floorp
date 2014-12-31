@@ -73,6 +73,11 @@ interface MozNFCTag {
   readonly attribute boolean? canBeMadeReadOnly;
 
   /**
+   * Indicate if this tag is already lost.
+   */
+  readonly attribute boolean isLost;
+
+  /**
    * Read current NDEF data on the tag.
    */
   [Throws]
@@ -102,8 +107,6 @@ partial interface MozNFCTag {
   [ChromeOnly]
   attribute DOMString session;
 
-  /**
-   * Indicate if this tag is already lost.
-   */
-  readonly attribute boolean isLost;
+  [ChromeOnly]
+  void notifyLost();
 };
