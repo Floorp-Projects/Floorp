@@ -134,6 +134,9 @@ class Graph(object):
     @CommandArgument('--base-repository',
         default=os.environ.get('GECKO_BASE_REPOSITORY'),
         help='URL for "base" repository to clone')
+    @CommandArgument('--mozharness-repository',
+        default='http://hg.mozilla.org/build/mozharness',
+        help='URL for custom mozharness repo')
     @CommandArgument('--head-repository',
         default=os.environ.get('GECKO_HEAD_REPOSITORY'),
         help='URL for "head" repository to fetch revision from')
@@ -143,6 +146,9 @@ class Graph(object):
     @CommandArgument('--head-rev',
         default=os.environ.get('GECKO_HEAD_REV'),
         help='Commit revision to use from head repository')
+    @CommandArgument('--mozharness-rev',
+        default='tip',
+        help='Commit revision to use from mozharness repository')
     @CommandArgument('--message',
         help='Commit message to be parsed. Example: "try: -b do -p all -u all"')
     @CommandArgument('--project',
@@ -182,7 +188,9 @@ class Graph(object):
             'head_rev': params['head_rev'],
             'owner': params['owner'],
             'from_now': json_time_from_now,
-            'now': datetime.datetime.now().isoformat()
+            'now': datetime.datetime.now().isoformat(),
+            'mozharness_repository': params['mozharness_repository'],
+            'mozharness_rev': params['mozharness_rev']
         }
 
         # Task graph we are generating for taskcluster...
@@ -267,6 +275,9 @@ class CIBuild(object):
         description="Create taskcluster try server build task")
     @CommandArgument('--base-repository',
         help='URL for "base" repository to clone')
+    @CommandArgument('--mozharness-repository',
+        default='http://hg.mozilla.org/build/mozharness',
+        help='URL for custom mozharness repo')
     @CommandArgument('--head-repository',
         required=True,
         help='URL for "head" repository to fetch revision from')
@@ -275,6 +286,9 @@ class CIBuild(object):
     @CommandArgument('--head-rev',
         required=True,
         help='Commit revision to use')
+    @CommandArgument('--mozharness-rev',
+        default='tip',
+        help='Commit revision to use from mozharness repository')
     @CommandArgument('--owner',
         required=True,
         help='email address of who owns this graph')
@@ -301,7 +315,9 @@ class CIBuild(object):
             'base_repository': params['base_repository'] or head_repository,
             'head_repository': head_repository,
             'head_rev': head_rev,
-            'head_ref': head_ref
+            'head_ref': head_ref,
+            'mozharness_repository': params['mozharness_repository'],
+            'mozharness_rev': params['mozharness_rev']
         }
 
         try:
