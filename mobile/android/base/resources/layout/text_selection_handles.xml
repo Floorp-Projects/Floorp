@@ -6,24 +6,24 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
        xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
-   <org.mozilla.gecko.TextSelectionHandle android:id="@+id/start_handle"
+   <org.mozilla.gecko.TextSelectionHandle android:id="@+id/anchor_handle"
                                           android:layout_width="@dimen/text_selection_handle_width"
                                           android:layout_height="@dimen/text_selection_handle_height"
-                                          android:src="@drawable/handle_start_level"
+                                          android:src="@drawable/handle_anchor_level"
                                           android:visibility="gone"
                                           gecko:handleType="start"/>
 
-   <org.mozilla.gecko.TextSelectionHandle android:id="@+id/middle_handle"
+   <org.mozilla.gecko.TextSelectionHandle android:id="@+id/caret_handle"
                                           android:layout_width="@dimen/text_selection_handle_width"
                                           android:layout_height="@dimen/text_selection_handle_height"
                                           android:src="@drawable/handle_middle"
                                           android:visibility="gone"
                                           gecko:handleType="middle"/>
 
-   <org.mozilla.gecko.TextSelectionHandle android:id="@+id/end_handle"
+   <org.mozilla.gecko.TextSelectionHandle android:id="@+id/focus_handle"
                                           android:layout_width="@dimen/text_selection_handle_width"
                                           android:layout_height="@dimen/text_selection_handle_height"
-                                          android:src="@drawable/handle_end_level"
+                                          android:src="@drawable/handle_focus_level"
                                           android:visibility="gone"
                                           gecko:handleType="end"/>
 </merge>

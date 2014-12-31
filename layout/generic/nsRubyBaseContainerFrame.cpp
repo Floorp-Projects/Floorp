@@ -344,7 +344,7 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
                                       startEdge, endEdge, &mBaseline);
 
   nsIFrame* parent = GetParent();
-  bool inNestedRuby = parent->StyleContext()->IsDirectlyInsideRuby();
+  bool inNestedRuby = parent->StyleContext()->IsInlineDescendantOfRuby();
   // Allow line break between ruby bases when white-space allows,
   // we are not inside a nested ruby, and there is no span.
   bool allowLineBreak = !inNestedRuby && StyleText()->WhiteSpaceCanWrap(this);

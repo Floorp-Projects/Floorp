@@ -225,7 +225,7 @@ TestFrameMetrics()
 
   fm.SetDisplayPort(CSSRect(0, 0, 10, 10));
   fm.mCompositionBounds = ParentLayerRect(0, 0, 10, 10);
-  fm.mCriticalDisplayPort = CSSRect(0, 0, 10, 10);
+  fm.SetCriticalDisplayPort(CSSRect(0, 0, 10, 10));
   fm.SetScrollableRect(CSSRect(0, 0, 100, 100));
 
   return fm;
