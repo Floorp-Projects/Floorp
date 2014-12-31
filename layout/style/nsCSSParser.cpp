@@ -59,9 +59,7 @@ nsCSSProps::kParserVariantTable[eCSSProperty_COUNT_no_shorthands] = {
 #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
                  stylestruct_, stylestructoffset_, animtype_)                 \
   parsevariant_,
-#define CSS_PROP_LIST_INCLUDE_LOGICAL
 #include "nsCSSPropList.h"
-#undef CSS_PROP_LIST_INCLUDE_LOGICAL
 #undef CSS_PROP
 };
 
@@ -630,6 +628,8 @@ protected:
   bool ParseTreePseudoElement(nsAtomList **aPseudoElementArgs);
 #endif
 
+  void InitBoxPropsAsPhysical(const nsCSSProperty *aSourceProperties);
+
   // Property specific parsing routines
   bool ParseBackground();
 
@@ -686,6 +686,8 @@ protected:
   bool ParseBorderSpacing();
   bool ParseBorderSide(const nsCSSProperty aPropIDs[],
                          bool aSetAllSides);
+  bool ParseDirectionalBorderSide(const nsCSSProperty aPropIDs[],
+                                    int32_t aSourceType);
   bool ParseBorderStyle();
   bool ParseBorderWidth();
 
@@ -885,6 +887,8 @@ protected:
   bool ParseBoxProperties(const nsCSSProperty aPropIDs[]);
   bool ParseGroupedBoxProperty(int32_t aVariantMask,
                                nsCSSValue& aValue);
+  bool ParseDirectionalBoxProperty(nsCSSProperty aProperty,
+                                     int32_t aSourceType);
   bool ParseBoxCornerRadius(const nsCSSProperty aPropID);
   bool ParseBoxCornerRadiiInternals(nsCSSValue array[]);
   bool ParseBoxCornerRadii(const nsCSSProperty aPropIDs[]);
@@ -6608,6 +6612,9 @@ static const nsCSSProperty kBorderTopIDs[] = {
   eCSSProperty_border_top_color
 };
 static const nsCSSProperty kBorderRightIDs[] = {
+  eCSSProperty_border_right_width_value,
+  eCSSProperty_border_right_style_value,
+  eCSSProperty_border_right_color_value,
   eCSSProperty_border_right_width,
   eCSSProperty_border_right_style,
   eCSSProperty_border_right_color
@@ -6618,16 +6625,25 @@ static const nsCSSProperty kBorderBottomIDs[] = {
   eCSSProperty_border_bottom_color
 };
 static const nsCSSProperty kBorderLeftIDs[] = {
+  eCSSProperty_border_left_width_value,
+  eCSSProperty_border_left_style_value,
+  eCSSProperty_border_left_color_value,
   eCSSProperty_border_left_width,
   eCSSProperty_border_left_style,
   eCSSProperty_border_left_color
 };
 static const nsCSSProperty kBorderStartIDs[] = {
+  eCSSProperty_border_start_width_value,
+  eCSSProperty_border_start_style_value,
+  eCSSProperty_border_start_color_value,
   eCSSProperty_border_start_width,
   eCSSProperty_border_start_style,
   eCSSProperty_border_start_color
 };
 static const nsCSSProperty kBorderEndIDs[] = {
+  eCSSProperty_border_end_width_value,
+  eCSSProperty_border_end_style_value,
+  eCSSProperty_border_end_color_value,
   eCSSProperty_border_end_width,
   eCSSProperty_border_end_style,
   eCSSProperty_border_end_color
@@ -9314,6 +9330,25 @@ CSSParserImpl::ParseGroupedBoxProperty(int32_t aVariantMask,
 }
 
 bool
+CSSParserImpl::ParseDirectionalBoxProperty(nsCSSProperty aProperty,
+                                           int32_t aSourceType)
+{
+  const nsCSSProperty* subprops = nsCSSProps::SubpropertyEntryFor(aProperty);
+  NS_ASSERTION(subprops[3] == eCSSProperty_UNKNOWN,
+               "not box property with physical vs. logical cascading");
+  nsCSSValue value;
+  if (!ParseSingleValueProperty(value, subprops[0])) {
+    return false;
+  }
+
+  AppendValue(subprops[0], value);
+  nsCSSValue typeVal(aSourceType, eCSSUnit_Enumerated);
+  AppendValue(subprops[1], typeVal);
+  AppendValue(subprops[2], typeVal);
+  return true;
+}
+
+bool
 CSSParserImpl::ParseBoxCornerRadius(nsCSSProperty aPropID)
 {
   nsCSSValue dimenX, dimenY;
@@ -9429,21 +9464,21 @@ CSSParserImpl::ParseBoxCornerRadii(const nsCSSProperty aPropIDs[])
 // These must be in CSS order (top,right,bottom,left) for indexing to work
 static const nsCSSProperty kBorderStyleIDs[] = {
   eCSSProperty_border_top_style,
-  eCSSProperty_border_right_style,
+  eCSSProperty_border_right_style_value,
   eCSSProperty_border_bottom_style,
-  eCSSProperty_border_left_style
+  eCSSProperty_border_left_style_value
 };
 static const nsCSSProperty kBorderWidthIDs[] = {
   eCSSProperty_border_top_width,
-  eCSSProperty_border_right_width,
+  eCSSProperty_border_right_width_value,
   eCSSProperty_border_bottom_width,
-  eCSSProperty_border_left_width
+  eCSSProperty_border_left_width_value
 };
 static const nsCSSProperty kBorderColorIDs[] = {
   eCSSProperty_border_top_color,
-  eCSSProperty_border_right_color,
+  eCSSProperty_border_right_color_value,
   eCSSProperty_border_bottom_color,
-  eCSSProperty_border_left_color
+  eCSSProperty_border_left_color_value
 };
 static const nsCSSProperty kBorderRadiusIDs[] = {
   eCSSProperty_border_top_left_radius,
@@ -9709,13 +9744,17 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
   case eCSSProperty_border_bottom:
     return ParseBorderSide(kBorderBottomIDs, false);
   case eCSSProperty_border_end:
-    return ParseBorderSide(kBorderEndIDs, false);
-  case eCSSProperty_border_start:
-    return ParseBorderSide(kBorderStartIDs, false);
+    return ParseDirectionalBorderSide(kBorderEndIDs,
+                                      NS_BOXPROP_SOURCE_LOGICAL);
   case eCSSProperty_border_left:
-    return ParseBorderSide(kBorderLeftIDs, false);
+    return ParseDirectionalBorderSide(kBorderLeftIDs,
+                                      NS_BOXPROP_SOURCE_PHYSICAL);
   case eCSSProperty_border_right:
-    return ParseBorderSide(kBorderRightIDs, false);
+    return ParseDirectionalBorderSide(kBorderRightIDs,
+                                      NS_BOXPROP_SOURCE_PHYSICAL);
+  case eCSSProperty_border_start:
+    return ParseDirectionalBorderSide(kBorderStartIDs,
+                                      NS_BOXPROP_SOURCE_LOGICAL);
   case eCSSProperty_border_top:
     return ParseBorderSide(kBorderTopIDs, false);
   case eCSSProperty_border_bottom_colors:
@@ -9735,6 +9774,42 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseBorderImage();
   case eCSSProperty_border_width:
     return ParseBorderWidth();
+  case eCSSProperty_border_end_color:
+    return ParseDirectionalBoxProperty(eCSSProperty_border_end_color,
+                                       NS_BOXPROP_SOURCE_LOGICAL);
+  case eCSSProperty_border_left_color:
+    return ParseDirectionalBoxProperty(eCSSProperty_border_left_color,
+                                       NS_BOXPROP_SOURCE_PHYSICAL);
+  case eCSSProperty_border_right_color:
+    return ParseDirectionalBoxProperty(eCSSProperty_border_right_color,
+                                       NS_BOXPROP_SOURCE_PHYSICAL);
+  case eCSSProperty_border_start_color:
+    return ParseDirectionalBoxProperty(eCSSProperty_border_start_color,
+                                       NS_BOXPROP_SOURCE_LOGICAL);
+  case eCSSProperty_border_end_width:
+    return ParseDirectionalBoxProperty(eCSSProperty_border_end_width,
+                                       NS_BOXPROP_SOURCE_LOGICAL);
+  case eCSSProperty_border_left_width:
+    return ParseDirectionalBoxProperty(eCSSProperty_border_left_width,
+                                       NS_BOXPROP_SOURCE_PHYSICAL);
+  case eCSSProperty_border_right_width:
+    return ParseDirectionalBoxProperty(eCSSProperty_border_right_width,
+                                       NS_BOXPROP_SOURCE_PHYSICAL);
+  case eCSSProperty_border_start_width:
+    return ParseDirectionalBoxProperty(eCSSProperty_border_start_width,
+                                       NS_BOXPROP_SOURCE_LOGICAL);
+  case eCSSProperty_border_end_style:
+    return ParseDirectionalBoxProperty(eCSSProperty_border_end_style,
+                                       NS_BOXPROP_SOURCE_LOGICAL);
+  case eCSSProperty_border_left_style:
+    return ParseDirectionalBoxProperty(eCSSProperty_border_left_style,
+                                       NS_BOXPROP_SOURCE_PHYSICAL);
+  case eCSSProperty_border_right_style:
+    return ParseDirectionalBoxProperty(eCSSProperty_border_right_style,
+                                       NS_BOXPROP_SOURCE_PHYSICAL);
+  case eCSSProperty_border_start_style:
+    return ParseDirectionalBoxProperty(eCSSProperty_border_start_style,
+                                       NS_BOXPROP_SOURCE_LOGICAL);
   case eCSSProperty_border_radius:
     return ParseBoxCornerRadii(kBorderRadiusIDs);
   case eCSSProperty__moz_outline_radius:
@@ -9810,6 +9885,18 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseListStyle();
   case eCSSProperty_margin:
     return ParseMargin();
+  case eCSSProperty_margin_end:
+    return ParseDirectionalBoxProperty(eCSSProperty_margin_end,
+                                       NS_BOXPROP_SOURCE_LOGICAL);
+  case eCSSProperty_margin_left:
+    return ParseDirectionalBoxProperty(eCSSProperty_margin_left,
+                                       NS_BOXPROP_SOURCE_PHYSICAL);
+  case eCSSProperty_margin_right:
+    return ParseDirectionalBoxProperty(eCSSProperty_margin_right,
+                                       NS_BOXPROP_SOURCE_PHYSICAL);
+  case eCSSProperty_margin_start:
+    return ParseDirectionalBoxProperty(eCSSProperty_margin_start,
+                                       NS_BOXPROP_SOURCE_LOGICAL);
   case eCSSProperty_object_position:
     return ParseObjectPosition();
   case eCSSProperty_outline:
@@ -9818,6 +9905,18 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseOverflow();
   case eCSSProperty_padding:
     return ParsePadding();
+  case eCSSProperty_padding_end:
+    return ParseDirectionalBoxProperty(eCSSProperty_padding_end,
+                                       NS_BOXPROP_SOURCE_LOGICAL);
+  case eCSSProperty_padding_left:
+    return ParseDirectionalBoxProperty(eCSSProperty_padding_left,
+                                       NS_BOXPROP_SOURCE_PHYSICAL);
+  case eCSSProperty_padding_right:
+    return ParseDirectionalBoxProperty(eCSSProperty_padding_right,
+                                       NS_BOXPROP_SOURCE_PHYSICAL);
+  case eCSSProperty_padding_start:
+    return ParseDirectionalBoxProperty(eCSSProperty_padding_start,
+                                       NS_BOXPROP_SOURCE_LOGICAL);
   case eCSSProperty_quotes:
     return ParseQuotes();
   case eCSSProperty_size:
@@ -10025,6 +10124,16 @@ CSSParserImpl::ParseFontDescriptorValue(nsCSSFontDesc aDescID,
   // explicitly do NOT have a default case to let the compiler
   // help find missing descriptors
   return false;
+}
+
+void
+CSSParserImpl::InitBoxPropsAsPhysical(const nsCSSProperty *aSourceProperties)
+{
+  nsCSSValue physical(NS_BOXPROP_SOURCE_PHYSICAL, eCSSUnit_Enumerated);
+  for (const nsCSSProperty *prop = aSourceProperties;
+       *prop != eCSSProperty_UNKNOWN; ++prop) {
+    AppendValue(*prop, physical);
+  }
 }
 
 static nsCSSValue
@@ -10769,6 +10878,16 @@ bool CSSParserImpl::ParseBackgroundSizeValues(nsCSSValuePair &aOut)
 bool
 CSSParserImpl::ParseBorderColor()
 {
+  static const nsCSSProperty kBorderColorSources[] = {
+    eCSSProperty_border_left_color_ltr_source,
+    eCSSProperty_border_left_color_rtl_source,
+    eCSSProperty_border_right_color_ltr_source,
+    eCSSProperty_border_right_color_rtl_source,
+    eCSSProperty_UNKNOWN
+  };
+
+  // do this now, in case 4 values weren't specified
+  InitBoxPropsAsPhysical(kBorderColorSources);
   return ParseBoxProperties(kBorderColorIDs);
 }
 
@@ -11075,6 +11194,24 @@ CSSParserImpl::ParseBorderSide(const nsCSSProperty aPropIDs[],
   }
 
   if (aSetAllSides) {
+    static const nsCSSProperty kBorderSources[] = {
+      eCSSProperty_border_left_color_ltr_source,
+      eCSSProperty_border_left_color_rtl_source,
+      eCSSProperty_border_right_color_ltr_source,
+      eCSSProperty_border_right_color_rtl_source,
+      eCSSProperty_border_left_style_ltr_source,
+      eCSSProperty_border_left_style_rtl_source,
+      eCSSProperty_border_right_style_ltr_source,
+      eCSSProperty_border_right_style_rtl_source,
+      eCSSProperty_border_left_width_ltr_source,
+      eCSSProperty_border_left_width_rtl_source,
+      eCSSProperty_border_right_width_ltr_source,
+      eCSSProperty_border_right_width_rtl_source,
+      eCSSProperty_UNKNOWN
+    };
+
+    InitBoxPropsAsPhysical(kBorderSources);
+
     // Parsing "border" shorthand; set all four sides to the same thing
     for (int32_t index = 0; index < 4; index++) {
       NS_ASSERTION(numProps == 3, "This code needs updating");
@@ -11124,14 +11261,68 @@ CSSParserImpl::ParseBorderSide(const nsCSSProperty aPropIDs[],
 }
 
 bool
+CSSParserImpl::ParseDirectionalBorderSide(const nsCSSProperty aPropIDs[],
+                                          int32_t aSourceType)
+{
+  const int32_t numProps = 3;
+  nsCSSValue  values[numProps];
+
+  int32_t found = ParseChoice(values, aPropIDs, numProps);
+  if (found < 1) {
+    return false;
+  }
+
+  if ((found & 1) == 0) { // Provide default border-width
+    values[0].SetIntValue(NS_STYLE_BORDER_WIDTH_MEDIUM, eCSSUnit_Enumerated);
+  }
+  if ((found & 2) == 0) { // Provide default border-style
+    values[1].SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
+  }
+  if ((found & 4) == 0) { // text color will be used
+    values[2].SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
+  }
+  for (int32_t index = 0; index < numProps; index++) {
+    const nsCSSProperty* subprops =
+      nsCSSProps::SubpropertyEntryFor(aPropIDs[index + numProps]);
+    NS_ASSERTION(subprops[3] == eCSSProperty_UNKNOWN,
+                 "not box property with physical vs. logical cascading");
+    AppendValue(subprops[0], values[index]);
+    nsCSSValue typeVal(aSourceType, eCSSUnit_Enumerated);
+    AppendValue(subprops[1], typeVal);
+    AppendValue(subprops[2], typeVal);
+  }
+  return true;
+}
+
+bool
 CSSParserImpl::ParseBorderStyle()
 {
+  static const nsCSSProperty kBorderStyleSources[] = {
+    eCSSProperty_border_left_style_ltr_source,
+    eCSSProperty_border_left_style_rtl_source,
+    eCSSProperty_border_right_style_ltr_source,
+    eCSSProperty_border_right_style_rtl_source,
+    eCSSProperty_UNKNOWN
+  };
+
+  // do this now, in case 4 values weren't specified
+  InitBoxPropsAsPhysical(kBorderStyleSources);
   return ParseBoxProperties(kBorderStyleIDs);
 }
 
 bool
 CSSParserImpl::ParseBorderWidth()
 {
+  static const nsCSSProperty kBorderWidthSources[] = {
+    eCSSProperty_border_left_width_ltr_source,
+    eCSSProperty_border_left_width_rtl_source,
+    eCSSProperty_border_right_width_ltr_source,
+    eCSSProperty_border_right_width_rtl_source,
+    eCSSProperty_UNKNOWN
+  };
+
+  // do this now, in case 4 values weren't specified
+  InitBoxPropsAsPhysical(kBorderWidthSources);
   return ParseBoxProperties(kBorderWidthIDs);
 }
 
@@ -12774,11 +12965,20 @@ CSSParserImpl::ParseMargin()
 {
   static const nsCSSProperty kMarginSideIDs[] = {
     eCSSProperty_margin_top,
-    eCSSProperty_margin_right,
+    eCSSProperty_margin_right_value,
     eCSSProperty_margin_bottom,
-    eCSSProperty_margin_left
+    eCSSProperty_margin_left_value
+  };
+  static const nsCSSProperty kMarginSources[] = {
+    eCSSProperty_margin_left_ltr_source,
+    eCSSProperty_margin_left_rtl_source,
+    eCSSProperty_margin_right_ltr_source,
+    eCSSProperty_margin_right_rtl_source,
+    eCSSProperty_UNKNOWN
   };
 
+  // do this now, in case 4 values weren't specified
+  InitBoxPropsAsPhysical(kMarginSources);
   return ParseBoxProperties(kMarginSideIDs);
 }
 
@@ -12883,11 +13083,20 @@ CSSParserImpl::ParsePadding()
 {
   static const nsCSSProperty kPaddingSideIDs[] = {
     eCSSProperty_padding_top,
-    eCSSProperty_padding_right,
+    eCSSProperty_padding_right_value,
     eCSSProperty_padding_bottom,
-    eCSSProperty_padding_left
+    eCSSProperty_padding_left_value
+  };
+  static const nsCSSProperty kPaddingSources[] = {
+    eCSSProperty_padding_left_ltr_source,
+    eCSSProperty_padding_left_rtl_source,
+    eCSSProperty_padding_right_ltr_source,
+    eCSSProperty_padding_right_rtl_source,
+    eCSSProperty_UNKNOWN
   };
 
+  // do this now, in case 4 values weren't specified
+  InitBoxPropsAsPhysical(kPaddingSources);
   return ParseBoxProperties(kPaddingSideIDs);
 }
 
