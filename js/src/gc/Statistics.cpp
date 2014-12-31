@@ -773,7 +773,7 @@ Statistics::endGC()
     runtime->addTelemetry(JS_TELEMETRY_GC_INCREMENTAL_DISABLED, !runtime->gc.isIncrementalGCAllowed());
     runtime->addTelemetry(JS_TELEMETRY_GC_SCC_SWEEP_TOTAL_MS, t(sccTotal));
     runtime->addTelemetry(JS_TELEMETRY_GC_SCC_SWEEP_MAX_PAUSE_MS, t(sccLongest));
- 
+
     double mmu50 = computeMMU(50 * PRMJ_USEC_PER_MSEC);
     runtime->addTelemetry(JS_TELEMETRY_GC_MMU_50, mmu50 * 100);
 
@@ -792,7 +792,7 @@ Statistics::beginSlice(const ZoneGCStats &zoneStats, JSGCInvocationKind gckind,
 {
     this->zoneStats = zoneStats;
 
-    bool first = runtime->gc.state() == gc::NO_INCREMENTAL;
+    bool first = !runtime->gc.isIncrementalGCInProgress();
     if (first)
         beginGC(gckind);
 
@@ -820,7 +820,7 @@ Statistics::endSlice()
     runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_MS, t(slices.back().end - slices.back().start));
     runtime->addTelemetry(JS_TELEMETRY_GC_RESET, !!slices.back().resetReason);
 
-    bool last = runtime->gc.state() == gc::NO_INCREMENTAL;
+    bool last = !runtime->gc.isIncrementalGCInProgress();
     if (last)
         endGC();
 
