@@ -165,7 +165,7 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       borderTopWidth->SetFloatValue(sizePerSide, eCSSUnit_Pixel);
     }
     if (allSides) {
-      nsCSSValue* borderRightWidth = aData->ValueForBorderRightWidthValue();
+      nsCSSValue* borderRightWidth = aData->ValueForBorderRightWidth();
       if (borderRightWidth->GetUnit() == eCSSUnit_Null) {
         borderRightWidth->SetFloatValue(sizePerSide, eCSSUnit_Pixel);
       }
@@ -173,7 +173,7 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       if (borderBottomWidth->GetUnit() == eCSSUnit_Null) {
         borderBottomWidth->SetFloatValue(sizePerSide, eCSSUnit_Pixel);
       }
-      nsCSSValue* borderLeftWidth = aData->ValueForBorderLeftWidthValue();
+      nsCSSValue* borderLeftWidth = aData->ValueForBorderLeftWidth();
       if (borderLeftWidth->GetUnit() == eCSSUnit_Null) {
         borderLeftWidth->SetFloatValue(sizePerSide, eCSSUnit_Pixel);
       }
@@ -185,7 +185,7 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                   eCSSUnit_Enumerated);
     }
     if (allSides) {
-      nsCSSValue* borderRightStyle = aData->ValueForBorderRightStyleValue();
+      nsCSSValue* borderRightStyle = aData->ValueForBorderRightStyle();
       if (borderRightStyle->GetUnit() == eCSSUnit_Null) {
         borderRightStyle->SetIntValue(NS_STYLE_BORDER_STYLE_SOLID,
                                       eCSSUnit_Enumerated);
@@ -195,7 +195,7 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
         borderBottomStyle->SetIntValue(NS_STYLE_BORDER_STYLE_SOLID,
                                        eCSSUnit_Enumerated);
       }
-      nsCSSValue* borderLeftStyle = aData->ValueForBorderLeftStyleValue();
+      nsCSSValue* borderLeftStyle = aData->ValueForBorderLeftStyle();
       if (borderLeftStyle->GetUnit() == eCSSUnit_Null) {
         borderLeftStyle->SetIntValue(NS_STYLE_BORDER_STYLE_SOLID,
                                      eCSSUnit_Enumerated);
