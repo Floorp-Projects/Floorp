@@ -206,6 +206,7 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
                                   aStream, data->mID, int64_t(data->mStart),
                                   int64_t(segment->GetDuration())));
 
+        data->mEndOfFlushedData += segment->GetDuration();
         aStream->mBuffer.AddTrack(data->mID, data->mStart, segment);
         // The track has taken ownership of data->mData, so let's replace
         // data->mData with an empty clone.
@@ -217,6 +218,7 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
                                     aStream, data->mID,
                                     int64_t(dest->GetDuration()),
                                     int64_t(dest->GetDuration() + data->mData->GetDuration())));
+        data->mEndOfFlushedData += data->mData->GetDuration();
         dest->AppendFrom(data->mData);
       }
       if (data->mCommands & SourceMediaStream::TRACK_END) {
@@ -2279,6 +2281,7 @@ SourceMediaStream::AddTrackInternal(TrackID aID, TrackRate aRate, StreamTime aSt
   data->mID = aID;
   data->mInputRate = aRate;
   data->mStart = aStart;
+  data->mEndOfFlushedData = aStart;
   data->mCommands = TRACK_CREATE;
   data->mData = aSegment;
   data->mHaveEnough = false;
@@ -2435,6 +2438,18 @@ SourceMediaStream::HaveEnoughBuffered(TrackID aID)
     return track->mHaveEnough;
   }
   return false;
+}
+
+StreamTime
+SourceMediaStream::GetEndOfAppendedData(TrackID aID)
+{
+  MutexAutoLock lock(mMutex);
+  TrackData *track = FindDataForTrack(aID);
+  if (track) {
+    return track->mEndOfFlushedData + track->mData->GetDuration();
+  }
+  NS_ERROR("Track not found");
+  return 0;
 }
 
 void

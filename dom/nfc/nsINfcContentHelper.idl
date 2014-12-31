@@ -7,13 +7,15 @@
 interface nsIVariant;
 interface nsIDOMWindow;
 
-[scriptable, uuid(30d77baf-50ed-4a6b-ab75-25bade40977a)]
+[scriptable, uuid(a694c7e8-10dd-416e-a3d9-433edf40647e)]
 interface nsITagInfo : nsISupports
 {
   /**
    * Array of technolgies supported. See NFCTechType in MozNFCTag.webidl
    */
   readonly attribute nsIVariant techList;
+
+  readonly attribute nsIVariant tagId; // Uint8Array
 };
 
 [scriptable, uuid(74d70ebb-557f-4ac8-8296-7885961cd1dc)]

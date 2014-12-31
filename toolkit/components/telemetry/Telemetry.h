@@ -238,7 +238,8 @@ void RecordChromeHang(uint32_t aDuration,
                       ProcessedStack &aStack,
                       int32_t aSystemUptime,
                       int32_t aFirefoxUptime,
-                      mozilla::HangMonitor::HangAnnotations* aAnnotations = nullptr);
+                      mozilla::UniquePtr<mozilla::HangMonitor::HangAnnotations>
+                              aAnnotations);
 #endif
 
 class ThreadHangStats;

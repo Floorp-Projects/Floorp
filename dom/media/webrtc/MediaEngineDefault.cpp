@@ -244,8 +244,7 @@ void
 MediaEngineDefaultVideoSource::NotifyPull(MediaStreamGraph* aGraph,
                                           SourceMediaStream *aSource,
                                           TrackID aID,
-                                          StreamTime aDesiredTime,
-                                          StreamTime &aLastEndTime)
+                                          StreamTime aDesiredTime)
 {
   // AddTrack takes ownership of segment
   VideoSegment segment;
@@ -256,7 +255,7 @@ MediaEngineDefaultVideoSource::NotifyPull(MediaStreamGraph* aGraph,
 
   // Note: we're not giving up mImage here
   nsRefPtr<layers::Image> image = mImage;
-  StreamTime delta = aDesiredTime - aLastEndTime;
+  StreamTime delta = aDesiredTime - aSource->GetEndOfAppendedData(aID);
 
   if (delta > 0) {
     // nullptr images are allowed
@@ -264,9 +263,7 @@ MediaEngineDefaultVideoSource::NotifyPull(MediaStreamGraph* aGraph,
     segment.AppendFrame(image.forget(), delta, size);
     // This can fail if either a) we haven't added the track yet, or b)
     // we've removed or finished the track.
-    if (aSource->AppendToTrack(aID, &segment)) {
-      aLastEndTime = aDesiredTime;
-    }
+    aSource->AppendToTrack(aID, &segment);
     // Generate null data for fake tracks.
     if (mHasFakeTracks) {
       for (int i = 0; i < kFakeVideoTrackCount; ++i) {

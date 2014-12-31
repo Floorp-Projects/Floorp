@@ -254,8 +254,8 @@ NfcMessageHandler::InitializeNotification(const Parcel& aParcel, EventOptions& a
 
   if (aOptions.mMajorVersion != NFCD_MAJOR_VERSION ||
       aOptions.mMinorVersion != NFCD_MINOR_VERSION) {
-     NMH_LOG("NFCD version mismatched. majorVersion: %d, minorVersion: %d",
-                  aOptions.mMajorVersion, aOptions.mMinorVersion);
+    NMH_LOG("NFCD version mismatched. majorVersion: %d, minorVersion: %d",
+            aOptions.mMajorVersion, aOptions.mMinorVersion);
   }
 
   return true;
@@ -267,9 +267,14 @@ NfcMessageHandler::TechDiscoveredNotification(const Parcel& aParcel, EventOption
   aOptions.mType = NS_ConvertUTF8toUTF16(kTechDiscoveredNotification);
   aOptions.mSessionId = aParcel.readInt32();
   aOptions.mIsP2P = aParcel.readInt32();
+
   int32_t techCount = aParcel.readInt32();
   aOptions.mTechList.AppendElements(
-      static_cast<const uint8_t*>(aParcel.readInplace(techCount)), techCount);
+    static_cast<const uint8_t*>(aParcel.readInplace(techCount)), techCount);
+
+  int32_t idCount = aParcel.readInt32();
+  aOptions.mTagId.AppendElements(
+    static_cast<const uint8_t*>(aParcel.readInplace(idCount)), idCount);
 
   int32_t ndefMsgCount = aParcel.readInt32();
   if (ndefMsgCount != 0) {
@@ -327,15 +332,15 @@ NfcMessageHandler::ReadNDEFMessage(const Parcel& aParcel, EventOptions& aOptions
 
     int32_t typeLength = aParcel.readInt32();
     record.mType.AppendElements(
-       static_cast<const uint8_t*>(aParcel.readInplace(typeLength)), typeLength);
+      static_cast<const uint8_t*>(aParcel.readInplace(typeLength)), typeLength);
 
     int32_t idLength = aParcel.readInt32();
     record.mId.AppendElements(
-       static_cast<const uint8_t*>(aParcel.readInplace(idLength)), idLength);
+      static_cast<const uint8_t*>(aParcel.readInplace(idLength)), idLength);
 
     int32_t payloadLength = aParcel.readInt32();
     record.mPayload.AppendElements(
-       static_cast<const uint8_t*>(aParcel.readInplace(payloadLength)), payloadLength);
+      static_cast<const uint8_t*>(aParcel.readInplace(payloadLength)), payloadLength);
 
     aOptions.mRecords.AppendElement(record);
   }

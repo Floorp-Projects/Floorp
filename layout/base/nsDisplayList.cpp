@@ -721,7 +721,7 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
           metrics.GetDisplayPort());
     }
     if (nsLayoutUtils::GetCriticalDisplayPort(content, &dp)) {
-      metrics.mCriticalDisplayPort = CSSRect::FromAppUnits(dp);
+      metrics.SetCriticalDisplayPort(CSSRect::FromAppUnits(dp));
     }
     DisplayPortMarginsPropertyData* marginsData =
         static_cast<DisplayPortMarginsPropertyData*>(content->GetProperty(nsGkAtoms::DisplayPortMargins));

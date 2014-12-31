@@ -79,7 +79,7 @@ public:
     layers::SurfaceTextureImage::Data data;
     data.mSurfTex = mSurfaceTexture.get();
     data.mSize = gfx::IntSize(mConfig.display_width, mConfig.display_height);
-    data.mInverted = true;
+    data.mOriginPos = gl::OriginPos::BottomLeft;
 
     layers::SurfaceTextureImage* stImg = static_cast<layers::SurfaceTextureImage*>(img.get());
     stImg->SetData(data);
@@ -138,7 +138,7 @@ public:
     data.mSync = eglSync;
     data.mOwns = true;
     data.mSize = gfx::IntSize(mConfig.display_width, mConfig.display_height);
-    data.mInverted = false;
+    data.mOriginPos = gl::OriginPos::TopLeft;
 
     layers::EGLImageImage* typedImg = static_cast<layers::EGLImageImage*>(img.get());
     typedImg->SetData(data);
