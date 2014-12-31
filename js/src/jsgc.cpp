@@ -1748,6 +1748,13 @@ GCRuntime::onTooMuchMalloc()
         mallocGCTriggered = triggerGC(JS::gcreason::TOO_MUCH_MALLOC);
 }
 
+bool
+ZoneHeapThreshold::isCloseToAllocTrigger(const js::gc::HeapUsage& usage, bool highFrequencyGC) const
+{
+    double factor = highFrequencyGC ? 0.85 : 0.9;
+    return usage.gcBytes() >= factor * gcTriggerBytes();
+}
+
 /* static */ double
 ZoneHeapThreshold::computeZoneHeapGrowthFactorForHeapSize(size_t lastBytes,
                                                           const GCSchedulingTunables &tunables,
@@ -3309,7 +3316,7 @@ GCRuntime::maybeGC(Zone *zone)
         return true;
 
     if (zone->usage.gcBytes() > 1024 * 1024 &&
-        zone->isCloseToAllocTrigger(schedulingState.inHighFrequencyGCMode()) &&
+        zone->threshold.isCloseToAllocTrigger(zone->usage, schedulingState.inHighFrequencyGCMode()) &&
         incrementalState == NO_INCREMENTAL &&
         !isBackgroundSweeping())
     {
@@ -6219,7 +6226,7 @@ GCRuntime::scanZonesBeforeGC()
             zone->scheduleGC();
 
         /* This is a heuristic to reduce the total number of collections. */
-        if (zone->isCloseToAllocTrigger(schedulingState.inHighFrequencyGCMode()))
+        if (zone->threshold.isCloseToAllocTrigger(zone->usage, schedulingState.inHighFrequencyGCMode()))
             zone->scheduleGC();
 
         zoneStats.zoneCount++;
