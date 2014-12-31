@@ -42,7 +42,7 @@ this.WebappManager = {
         WebappOSUtils.launch(data);
         break;
       case "webapps-uninstall":
-        WebappOSUtils.uninstall(data);
+        WebappOSUtils.uninstall(data).then(null, Cu.reportError);
         break;
     }
   },
