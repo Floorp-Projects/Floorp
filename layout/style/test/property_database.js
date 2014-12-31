@@ -1432,7 +1432,8 @@ var gCSSProperties = {
   "-moz-margin-end": {
     domProp: "MozMarginEnd",
     inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
     get_computed: logical_box_prop_get_computed,
     /* no subproperties */
     /* auto may or may not be initial */
@@ -1450,7 +1451,8 @@ var gCSSProperties = {
   "-moz-margin-start": {
     domProp: "MozMarginStart",
     inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
     get_computed: logical_box_prop_get_computed,
     /* no subproperties */
     /* auto may or may not be initial */
@@ -2851,8 +2853,7 @@ var gCSSProperties = {
   "margin-left": {
     domProp: "marginLeft",
     inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    /* no subproperties */
+    type: CSS_TYPE_LONGHAND,
     /* XXX testing auto has prerequisites */
     initial_values: [ "0", "0px", "0%", "calc(0pt)", "calc(0% + 0px)" ],
     other_values: [ "1px", "2em", "5%", ".5px", "+32px", "+.789px", "-.328px", "+0.56px", "-0.974px", "237px", "-289px", "-056px", "1987.45px", "-84.32px",
@@ -2869,8 +2870,7 @@ var gCSSProperties = {
   "margin-right": {
     domProp: "marginRight",
     inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    /* no subproperties */
+    type: CSS_TYPE_LONGHAND,
     /* XXX testing auto has prerequisites */
     initial_values: [ "0", "0px", "0%", "calc(0pt)", "calc(0% + 0px)" ],
     other_values: [ "1px", "2em", "5%",
@@ -4611,6 +4611,42 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
       invalid_values: [ "auto", "all 2", "none all", "digits -3", "digits 0",
                         "digits 12", "none 3", "digits 3.1415", "digits3", "digits 1",
                         "digits 3 all", "digits foo", "digits all", "digits 3.0" ]
+    },
+    "margin-inline-end": {
+      domProp: "marginInlineEnd",
+      inherited: false,
+      type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+      alias_for: "-moz-margin-end",
+      get_computed: logical_box_prop_get_computed,
+      /* XXX testing auto has prerequisites */
+      initial_values: [ "0", "0px", "0%", "calc(0pt)", "calc(0% + 0px)" ],
+      other_values: [ "1px", "2em", "5%",
+        "calc(2px)",
+        "calc(-2px)",
+        "calc(50%)",
+        "calc(3*25px)",
+        "calc(25px*3)",
+        "calc(3*25px + 50%)",
+      ],
+      invalid_values: [ "..25px", ".+5px", ".px", "-.px", "++5px", "-+4px", "+-3px", "--7px", "+-.6px", "-+.5px", "++.7px", "--.4px" ],
+    },
+    "margin-inline-start": {
+      domProp: "marginInlineStart",
+      inherited: false,
+      type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+      alias_for: "-moz-margin-start",
+      get_computed: logical_box_prop_get_computed,
+      /* XXX testing auto has prerequisites */
+      initial_values: [ "0", "0px", "0%", "calc(0pt)", "calc(0% + 0px)" ],
+      other_values: [ "1px", "2em", "5%",
+        "calc(2px)",
+        "calc(-2px)",
+        "calc(50%)",
+        "calc(3*25px)",
+        "calc(25px*3)",
+        "calc(3*25px + 50%)",
+      ],
+      invalid_values: [ "..25px", ".+5px", ".px", "-.px", "++5px", "-+4px", "+-3px", "--7px", "+-.6px", "-+.5px", "++.7px", "--.4px" ],
     },
     "padding-inline-end": {
       domProp: "paddingInlineEnd",
