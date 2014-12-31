@@ -59,14 +59,14 @@ public class GeckoMenuItem implements MenuItem {
         mMenu = menu;
         mId = id;
         mOrder = order;
-        setTitle(titleRes);
+        mTitle = mMenu.getResources().getString(titleRes);
     }
 
     public GeckoMenuItem(GeckoMenu menu, int id, int order, CharSequence title) {
         mMenu = menu;
         mId = id;
         mOrder = order;
-        setTitle(title);
+        mTitle = title;
     }
 
     /**
