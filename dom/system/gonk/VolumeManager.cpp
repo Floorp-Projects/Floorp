@@ -180,7 +180,6 @@ void VolumeManager::InitConfig()
     return;
   }
   while(fgets(line, sizeof(line), fp)) {
-    const char *delim = " \t\n";
     n++;
 
     if (line[0] == '#')
