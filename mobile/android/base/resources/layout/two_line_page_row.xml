@@ -20,7 +20,7 @@
                   android:orientation="vertical"
                   android:paddingRight="25dp">
 
-        <org.mozilla.gecko.widget.FadedTextView
+        <org.mozilla.gecko.widget.FadedSingleColorTextView
                 android:id="@+id/title"
                 style="@style/Widget.TwoLinePageRow.Title"
                 android:layout_width="match_parent"
