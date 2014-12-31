@@ -22,6 +22,8 @@ const CSS_TYPE_SHORTHAND_AND_LONGHAND = 2;
 //   alias_for: optional, indicates that the property is an alias for
 //     some other property that is the preferred serialization.  (Type
 //     must not be CSS_TYPE_LONGHAND.)
+//   logical: optional, indicates that the property is a logical directional
+//     property.  (Type must be CSS_TYPE_LONGHAND.)
 //   get_computed: if present, the property's computed value shows up on
 //     another property, and this is a function used to get it
 //   initial_values: Values whose computed value should be the same as the
