@@ -207,7 +207,10 @@ function testCloseSelection() {
 
   }).then(function() {
     sh.startSelection(inputNode);
-    sh.handleEvent({ type: "pagehide" });
+    sh.handleEvent({ type: "pagehide", originalTarget: {} });
+    return ok(sh.isSelectionActive(), "unrelated pagehide should not close active selection");
+  }).then(function() {
+    sh.handleEvent({ type: "pagehide", originalTarget: document });
     return ok(!sh.isSelectionActive(), "pagehide should close active selection");
 
   }).then(function() {
