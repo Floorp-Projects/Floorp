@@ -68,6 +68,9 @@ class BaselineCompilerShared
     mozilla::DebugOnly<bool> inCall_;
 
     CodeOffsetLabel spsPushToggleOffset_;
+    CodeOffsetLabel traceLoggerEnterToggleOffset_;
+    CodeOffsetLabel traceLoggerExitToggleOffset_;
+    CodeOffsetLabel traceLoggerScriptTextIdOffset_;
 
     BaselineCompilerShared(JSContext *cx, TempAllocator &alloc, JSScript *script);
 

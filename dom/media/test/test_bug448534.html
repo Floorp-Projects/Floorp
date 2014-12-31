@@ -19,6 +19,7 @@ var manager = new MediaTestManager;
 
 function loaded(event) {
   var v = event.target;
+  info(v.token + ": event=" + event.type);
   if (v._finished)
     return;
   v.play();
@@ -26,19 +27,21 @@ function loaded(event) {
 
 function started(event) {
   var v = event.target;
+  info(v.token + ": event=" + event.type);
   if (v._finished)
     return;
-  ok(!v.paused, "Video should not be paused while playing");
+  ok(!v.paused, v.token + ": Video should not be paused while playing");
   v.parentNode.removeChild(v);
   v._played = true;
 }
 
 function stopped(event) {
   var v = event.target;
+  info(v.token + ": event=" + event.type);
   if (v._finished)
     return;
   v._finished = true;
-  ok(v.paused, "Video should be paused after removing from the Document");
+  ok(v.paused, v.token + ": Video should be paused after removing from the Document");
   removeNodeAndSource(v);
   manager.finished(v.token);
 }
