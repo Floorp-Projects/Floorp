@@ -533,6 +533,7 @@
 @BINPATH@/components/nsNfc.js
 @BINPATH@/components/Nfc.manifest
 @BINPATH@/components/Nfc.js
+@BINPATH@/components/NfcContentHelper.manifest
 @BINPATH@/components/NfcContentHelper.js
 #endif
 #ifdef MOZ_ENABLE_DBUS

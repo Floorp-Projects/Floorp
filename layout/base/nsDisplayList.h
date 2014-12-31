@@ -795,6 +795,15 @@ public:
 
   bool IsInWillChangeBudget(nsIFrame* aFrame) const;
 
+  /**
+   * Look up the cached animated geometry root for aFrame subject to
+   * aStopAtAncestor. Store the nsIFrame* result into *aOutResult, and return
+   * true if the cache was hit. Return false if the cache was not hit.
+   */
+  bool GetCachedAnimatedGeometryRoot(const nsIFrame* aFrame,
+                                     const nsIFrame* aStopAtAncestor,
+                                     nsIFrame** aOutResult);
+
 private:
   void MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame,
                                     const nsRect& aDirtyRect);
@@ -840,6 +849,28 @@ private:
   nsPoint                        mCurrentOffsetToReferenceFrame;
   // The animated geometry root for mCurrentFrame.
   nsIFrame*                      mCurrentAnimatedGeometryRoot;
+
+  struct AnimatedGeometryRootLookup {
+    const nsIFrame* mFrame;
+    const nsIFrame* mStopAtFrame;
+
+    AnimatedGeometryRootLookup(const nsIFrame* aFrame, const nsIFrame* aStopAtFrame)
+      : mFrame(aFrame)
+      , mStopAtFrame(aStopAtFrame)
+    {
+    }
+
+    PLDHashNumber Hash() const {
+      return mozilla::HashBytes(this, sizeof(this));
+    }
+
+    bool operator==(const AnimatedGeometryRootLookup& aOther) const {
+      return mFrame == aOther.mFrame && mStopAtFrame == aOther.mStopAtFrame;
+    }
+  };
+  // Cache for storing animated geometry roots for arbitrary frames
+  nsDataHashtable<nsGenericHashKey<AnimatedGeometryRootLookup>, nsIFrame*>
+                                 mAnimatedGeometryRootCache;
   // will-change budget tracker
   nsDataHashtable<nsPtrHashKey<nsPresContext>, DocumentWillChangeBudget>
                                  mWillChangeBudget;
