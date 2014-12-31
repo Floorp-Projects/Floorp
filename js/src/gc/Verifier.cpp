@@ -198,6 +198,8 @@ gc::GCRuntime::startVerifyPreBarriers()
     if (!trc)
         return;
 
+    gcstats::AutoPhase ap(stats, gcstats::PHASE_TRACE_HEAP);
+
     /*
      * Passing a function pointer directly to js_new trips a compiler bug in
      * MSVC. Work around by filling the pointer after allocating with nullptr.
@@ -495,10 +497,7 @@ js::gc::GCRuntime::endVerifyPostBarriers()
     if (!edges.init())
         goto oom;
     trc->edges = &edges;
-    {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_MINOR_GC);
-        storeBuffer.markAll(trc);
-    }
+    storeBuffer.markAll(trc);
 
     /* Walk the heap to find any edges not the the |edges| set. */
     trc->setTraceCallback(PostVerifierVisitEdge);
