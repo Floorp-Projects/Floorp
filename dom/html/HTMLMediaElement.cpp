@@ -684,7 +684,7 @@ void HTMLMediaElement::AbortExistingLoads()
     DispatchAsyncEvent(NS_LITERAL_STRING("emptied"));
   }
 
-  // We may have changed mPaused, mAutoplaying, mNetworkState and other
+  // We may have changed mPaused, mAutoplaying, and other
   // things which can affect AddRemoveSelfReference
   AddRemoveSelfReference();
 
@@ -699,7 +699,6 @@ void HTMLMediaElement::NoSupportedMediaSourceError()
   mError = new MediaError(this, nsIDOMMediaError::MEDIA_ERR_SRC_NOT_SUPPORTED);
   ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE);
   DispatchAsyncEvent(NS_LITERAL_STRING("error"));
-  // This clears mDelayingLoadEvent, so AddRemoveSelfReference will be called
   ChangeDelayLoadStatus(false);
 }
 
@@ -814,7 +813,6 @@ void HTMLMediaElement::SelectResource()
     // The media element has neither a src attribute nor any source
     // element children, abort the load.
     ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY);
-    // This clears mDelayingLoadEvent, so AddRemoveSelfReference will be called
     ChangeDelayLoadStatus(false);
     return;
   }
@@ -822,8 +820,6 @@ void HTMLMediaElement::SelectResource()
   ChangeDelayLoadStatus(true);
 
   ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_LOADING);
-  // Load event was delayed, and still is, so no need to call
-  // AddRemoveSelfReference, since it must still be held
   DispatchAsyncEvent(NS_LITERAL_STRING("loadstart"));
 
   // Delay setting mIsRunningSeletResource until after UpdatePreloadAction
@@ -2133,7 +2129,6 @@ HTMLMediaElement::ResetConnectionState()
   FireTimeUpdate(false);
   DispatchAsyncEvent(NS_LITERAL_STRING("ended"));
   ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY);
-  AddRemoveSelfReference();
   ChangeDelayLoadStatus(false);
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING);
 }
@@ -2858,7 +2853,6 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
   DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
   DispatchAsyncEvent(NS_LITERAL_STRING("loadedmetadata"));
   ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
-  AddRemoveSelfReference();
   // FirstFrameLoaded() will be called when the stream has current data.
 }
 
@@ -3010,7 +3004,6 @@ void HTMLMediaElement::Error(uint16_t aErrorCode)
   } else {
     ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
   }
-  AddRemoveSelfReference();
   ChangeDelayLoadStatus(false);
 }
 
@@ -3084,7 +3077,6 @@ void HTMLMediaElement::DownloadSuspended()
   }
   if (mBegun) {
     ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
-    AddRemoveSelfReference();
   }
 }
 
@@ -3092,7 +3084,6 @@ void HTMLMediaElement::DownloadResumed(bool aForceNetworkLoading)
 {
   if (mBegun || aForceNetworkLoading) {
     ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_LOADING);
-    AddRemoveSelfReference();
   }
 }
 
@@ -3358,6 +3349,9 @@ void HTMLMediaElement::ChangeNetworkState(nsMediaNetworkState aState)
     // Fire 'suspend' event when entering NETWORK_IDLE and no error presented.
     DispatchAsyncEvent(NS_LITERAL_STRING("suspend"));
   }
+
+  // Changing mNetworkState affects AddRemoveSelfReference().
+  AddRemoveSelfReference();
 }
 
 bool HTMLMediaElement::CanActivateAutoplay()
