@@ -135,6 +135,8 @@ MediaEngineTabVideoSource::Allocate(const VideoTrackConstraintsN& aConstraints,
          cHeight.mMax >= advanced[i].mHeight.mMin && cHeight.mMin <= advanced[i].mHeight.mMax) {
         cWidth.mMin = std::max(cWidth.mMin, advanced[i].mWidth.mMin);
         cHeight.mMin = std::max(cHeight.mMin, advanced[i].mHeight.mMin);
+        cWidth.mMax = std::min(cWidth.mMax, advanced[i].mWidth.mMax);
+        cHeight.mMax = std::min(cHeight.mMax, advanced[i].mHeight.mMax);
       }
 
       if (mWindowId == -1 && advanced[i].mBrowserWindow.WasPassed()) {
