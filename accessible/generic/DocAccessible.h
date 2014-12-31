@@ -321,7 +321,7 @@ public:
   {
     // Update the whole tree of this document accessible when the container is
     // null (document element is removed).
-    UpdateTree((aContainer ? aContainer : this), aChildNode, false);
+    UpdateTreeOnRemoval((aContainer ? aContainer : this), aChildNode);
   }
   void ContentRemoved(nsIContent* aContainerNode, nsIContent* aChildNode)
   {
@@ -465,13 +465,17 @@ protected:
   void ProcessInvalidationList();
 
   /**
-   * Update the accessible tree for content insertion or removal.
+   * Update the tree on content insertion.
    */
-  void UpdateTree(Accessible* aContainer, nsIContent* aChildNode,
-                  bool aIsInsert);
+  void UpdateTreeOnInsertion(Accessible* aContainer);
 
   /**
-   * Helper for UpdateTree() method. Go down to DOM subtree and updates
+   * Update the accessible tree for content removal.
+   */
+  void UpdateTreeOnRemoval(Accessible* aContainer, nsIContent* aChildNode);
+
+  /**
+   * Helper for UpdateTreeOn methods. Go down to DOM subtree and updates
    * accessible tree. Return one of these flags.
    */
   enum EUpdateTreeFlags {

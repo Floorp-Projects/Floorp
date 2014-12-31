@@ -22,8 +22,8 @@ namespace layers {
 CanvasLayerD3D9::CanvasLayerD3D9(LayerManagerD3D9 *aManager)
   : CanvasLayer(aManager, nullptr)
   , LayerD3D9(aManager)
-  , mDataIsPremultiplied(false)
-  , mNeedsYFlip(false)
+  , mDataIsPremultiplied(true)
+  , mOriginPos(gl::OriginPos::TopLeft)
   , mHasAlpha(true)
 {
     mImplData = static_cast<LayerD3D9*>(this);
@@ -44,13 +44,11 @@ CanvasLayerD3D9::Initialize(const Data& aData)
 
   if (aData.mDrawTarget) {
     mDrawTarget = aData.mDrawTarget;
-    mNeedsYFlip = false;
-    mDataIsPremultiplied = true;
   } else if (aData.mGLContext) {
     mGLContext = aData.mGLContext;
     NS_ASSERTION(mGLContext->IsOffscreen(), "Canvas GLContext must be offscreen.");
     mDataIsPremultiplied = aData.mIsGLAlphaPremult;
-    mNeedsYFlip = true;
+    mOriginPos = gl::OriginPos::BottomLeft;
   } else {
     NS_ERROR("CanvasLayer created without mGLContext or mDrawTarget?");
   }
@@ -137,9 +135,10 @@ CanvasLayerD3D9::RenderLayer()
    * We flip the Y axis here, note we can only do this because we are in
    * CULL_NONE mode!
    */
-
   ShaderConstantRect quad(0, 0, mBounds.width, mBounds.height);
-  if (mNeedsYFlip) {
+
+  const bool needsYFlip = (mOriginPos == gl::OriginPos::BottomLeft);
+  if (needsYFlip) {
     quad.mHeight = (float)-mBounds.height;
     quad.mY = (float)mBounds.height;
   }

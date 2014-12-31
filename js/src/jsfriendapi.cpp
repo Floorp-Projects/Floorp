@@ -1114,7 +1114,7 @@ JS::IsIncrementalGCEnabled(JSRuntime *rt)
 JS_FRIEND_API(bool)
 JS::IsIncrementalGCInProgress(JSRuntime *rt)
 {
-    return rt->gc.isIncrementalGCInProgress();
+    return rt->gc.isIncrementalGCInProgress() && !rt->gc.isVerifyPreBarriersEnabled();
 }
 
 JS_FRIEND_API(void)

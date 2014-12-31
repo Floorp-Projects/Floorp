@@ -6,8 +6,8 @@
 #ifndef GFX_CANVASLAYERD3D10_H
 #define GFX_CANVASLAYERD3D10_H
 
+#include "GLContextTypes.h"
 #include "LayerManagerD3D10.h"
-
 #include "mozilla/Preferences.h"
 
 namespace mozilla {
@@ -45,7 +45,7 @@ private:
   nsRefPtr<ID3D10ShaderResourceView> mSRView;
 
   bool mDataIsPremultiplied;
-  bool mNeedsYFlip;
+  gl::OriginPos mOriginPos;
   bool mIsD2DTexture;
   bool mHasAlpha;
 

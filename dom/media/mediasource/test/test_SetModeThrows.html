@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: append initialization only</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// This test should be removed when we implement sequence mode in bug 1116353 
+runWithMSE(function (ms, v) {
+  ms.addEventListener("sourceopen", function () {
+    var sb = ms.addSourceBuffer("video/webm");
+
+    sb.mode = "segments";
+    ok("true", "Setting to segments does not throw");
+    try {
+      sb.mode = "sequence";
+      ok(false, "Should have thrown");
+    } catch (e) { ok(/supported/.test(e), "Correctly threw not supported: " + e); }
+
+    SimpleTest.finish();
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

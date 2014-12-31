@@ -125,10 +125,6 @@ function TelephonyService() {
 
   this._cdmaCallWaitingNumber = null;
 
-  // _isActiveCall[clientId][callIndex] shows the active status of the call.
-  this._isActiveCall = {};
-  this._numActiveCall = 0;
-
   this._updateDebugFlag();
   this.defaultServiceId = this._getDefaultServiceId();
 
@@ -139,7 +135,6 @@ function TelephonyService() {
 
   for (let i = 0; i < this._numClients; ++i) {
     this._enumerateCallsForClient(i);
-    this._isActiveCall[i] = {};
     this._audioStates[i] = RIL.AUDIO_STATE_NO_CALL;
   }
 }
@@ -213,37 +208,6 @@ TelephonyService.prototype = {
         debug("listener for " + aMethodName + " threw an exception: " + e);
       }
     }
-  },
-
-  /**
-   * Track the active call and update the audio system as its state changes.
-   */
-  _updateActiveCall: function(aCall) {
-    let active = false;
-    let incoming = false;
-
-    switch (aCall.state) {
-      case nsITelephonyService.CALL_STATE_DIALING: // Fall through...
-      case nsITelephonyService.CALL_STATE_ALERTING:
-      case nsITelephonyService.CALL_STATE_CONNECTED:
-        active = true;
-        break;
-      case nsITelephonyService.CALL_STATE_INCOMING:
-        incoming = true;
-        break;
-      case nsITelephonyService.CALL_STATE_HELD: // Fall through...
-      case nsITelephonyService.CALL_STATE_DISCONNECTED:
-        break;
-    }
-
-    // Update active count and info.
-    let oldActive = this._isActiveCall[aCall.clientId][aCall.callIndex];
-    if (!oldActive && active) {
-      this._numActiveCall++;
-    } else if (oldActive && !active) {
-      this._numActiveCall--;
-    }
-    this._isActiveCall[aCall.clientId][aCall.callIndex] = active;
   },
 
   _updateAudioState: function(aAudioState) {
@@ -1160,8 +1124,6 @@ TelephonyService.prototype = {
       }
     }
 
-    this._updateActiveCall(aCall);
-
     if (!aCall.failCause ||
         aCall.failCause === RIL.GECKO_CALL_ERROR_NORMAL_CALL_CLEARING) {
       this._notifyAllListeners("callStateChanged", [aClientId,
@@ -1217,7 +1179,6 @@ TelephonyService.prototype = {
     }
 
     aCall.clientId = aClientId;
-    this._updateActiveCall(aCall);
 
     function pick(arg, defaultValue) {
       return typeof arg !== 'undefined' ? arg : defaultValue;
