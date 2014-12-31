@@ -4,6 +4,8 @@
 test $GECKO_HEAD_REPOSITORY # Should be an hg repository url to pull from
 test $GECKO_BASE_REPOSITORY # Should be an hg repository url to clone from
 test $GECKO_HEAD_REV # Should be an hg revision to pull down
+test $MOZHARNESS_REPOSITORY # mozharness repository
+test $MOZHARNESS_REV # mozharness revision
 test $TARGET
 
 if ! validate_task.py; then
@@ -17,7 +19,7 @@ fi
 #   $ docker -v your_mozharness:/home/worker/mozharness ...
 #
 if [ ! -d mozharness ]; then
-  tc-vcs clone https://hg.mozilla.org/build/mozharness mozharness
+  tc-vcs clone $MOZHARNESS_REPOSITORY -u $MOZHARNESS_REV mozharness
 fi
 
 OBJDIR="$HOME/object-folder"
