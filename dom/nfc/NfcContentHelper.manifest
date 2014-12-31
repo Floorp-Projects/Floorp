@@ -1,0 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# NfcContentHelper.js
+component {4d72c120-da5f-11e1-9b23-0800200c9a66} NfcContentHelper.js
+contract @mozilla.org/nfc/content-helper;1 {4d72c120-da5f-11e1-9b23-0800200c9a66}
+category profile-after-change NfcContentHelper @mozilla.org/nfc/content-helper;1

@@ -57,10 +57,8 @@ CodeGeneratorMIPS::generateEpilogue()
 
 #ifdef JS_TRACE_LOGGING
     if (gen->info().executionMode() == SequentialExecution) {
-        if (!emitTracelogStopEvent(TraceLogger::IonMonkey))
-            return false;
-        if (!emitTracelogScriptStop())
-            return false;
+        emitTracelogStopEvent(TraceLogger::IonMonkey);
+        emitTracelogScriptStop();
     }
 #endif
 

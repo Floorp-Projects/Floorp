@@ -23,11 +23,7 @@ public:
                      const uint32_t& length,
                      const uint32_t& lastmodified,
                      StreamNotifyChild* notifyData,
-                     const nsCString& headers,
-                     const nsCString& mimeType,
-                     const bool& seekable,
-                     NPError* rv,
-                     uint16_t* stype);
+                     const nsCString& headers);
   virtual ~BrowserStreamChild();
 
   virtual bool IsBrowserStream() MOZ_OVERRIDE { return true; }

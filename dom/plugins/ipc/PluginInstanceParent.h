@@ -22,6 +22,7 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsRect.h"
+#include "PluginDataResolver.h"
 
 #ifdef MOZ_X11
 class gfxXlibSurface;
@@ -30,6 +31,7 @@ class gfxXlibSurface;
 
 class gfxASurface;
 class gfxContext;
+class nsPluginInstanceOwner;
 
 namespace mozilla {
 namespace layers {
@@ -42,6 +44,7 @@ class PBrowserStreamParent;
 class PluginModuleParent;
 
 class PluginInstanceParent : public PPluginInstanceParent
+                           , public PluginDataResolver
 {
     friend class PluginModuleParent;
     friend class BrowserStreamParent;
@@ -74,11 +77,7 @@ public:
                               const uint32_t& length,
                               const uint32_t& lastmodified,
                               PStreamNotifyParent* notifyData,
-                              const nsCString& headers,
-                              const nsCString& mimeType,
-                              const bool& seekable,
-                              NPError* rv,
-                              uint16_t *stype) MOZ_OVERRIDE;
+                              const nsCString& headers) MOZ_OVERRIDE;
     virtual bool
     DeallocPBrowserStreamParent(PBrowserStreamParent* stream) MOZ_OVERRIDE;
 
@@ -210,6 +209,9 @@ public:
     virtual bool
     RecvNegotiatedCarbon() MOZ_OVERRIDE;
 
+    virtual bool
+    RecvAsyncNPP_NewResult(const NPError& aResult) MOZ_OVERRIDE;
+
     NPError NPP_SetWindow(const NPWindow* aWindow);
 
     NPError NPP_GetValue(NPPVariable variable, void* retval);
@@ -254,6 +256,12 @@ public:
       return mNPP;
     }
 
+    bool
+    UseSurrogate() const
+    {
+        return mUseSurrogate;
+    }
+
     virtual bool
     AnswerPluginFocusChange(const bool& gotFocus) MOZ_OVERRIDE;
 
@@ -270,6 +278,13 @@ public:
     nsresult EndUpdateBackground(gfxContext* aCtx,
                                  const nsIntRect& aRect);
     void DidComposite() { unused << SendNPP_DidComposite(); }
+
+    virtual PluginAsyncSurrogate* GetAsyncSurrogate();
+
+    virtual PluginInstanceParent* GetInstance() { return this; }
+
+    static PluginInstanceParent* Cast(NPP instance,
+                                      PluginAsyncSurrogate** aSurrogate = nullptr);
 
 private:
     // Create an appropriate platform surface for a background of size
@@ -291,8 +306,12 @@ private:
                                      PPluginScriptableObjectParent** aValue,
                                      NPError* aResult);
 
+    nsPluginInstanceOwner* GetOwner();
+
 private:
     PluginModuleParent* mParent;
+    nsRefPtr<PluginAsyncSurrogate> mSurrogate;
+    bool mUseSurrogate;
     NPP mNPP;
     const NPNetscapeFuncs* mNPNIface;
     NPWindowType mWindowType;

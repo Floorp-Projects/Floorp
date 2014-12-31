@@ -37,6 +37,7 @@
 #include "ImageContainer.h"
 #include "SharedThreadPool.h"
 #include "VideoFrameContainer.h"
+#include "VideoUtils.h"
 
 using namespace android;
 
@@ -1275,14 +1276,12 @@ MediaCodecReader::CreateTaskQueues()
 {
   if (mAudioTrack.mSource != nullptr && mAudioTrack.mCodec != nullptr &&
       !mAudioTrack.mTaskQueue) {
-    mAudioTrack.mTaskQueue = new MediaTaskQueue(
-      SharedThreadPool::Get(NS_LITERAL_CSTRING("MediaCodecReader Audio"), 1));
+    mAudioTrack.mTaskQueue = CreateMediaDecodeTaskQueue();
     NS_ENSURE_TRUE(mAudioTrack.mTaskQueue, false);
   }
- if (mVideoTrack.mSource != nullptr && mVideoTrack.mCodec != nullptr &&
-     !mVideoTrack.mTaskQueue) {
-    mVideoTrack.mTaskQueue = new MediaTaskQueue(
-      SharedThreadPool::Get(NS_LITERAL_CSTRING("MediaCodecReader Video"), 1));
+  if (mVideoTrack.mSource != nullptr && mVideoTrack.mCodec != nullptr &&
+      !mVideoTrack.mTaskQueue) {
+    mVideoTrack.mTaskQueue = CreateMediaDecodeTaskQueue();
     NS_ENSURE_TRUE(mVideoTrack.mTaskQueue, false);
   }
 
