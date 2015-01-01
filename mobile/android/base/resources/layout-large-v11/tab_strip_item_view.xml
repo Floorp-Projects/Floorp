@@ -14,7 +14,7 @@
         android:scaleType="centerInside"
         android:duplicateParentState="true"/>
 
-    <org.mozilla.gecko.widget.FadedTextView
+    <org.mozilla.gecko.widget.FadedSingleColorTextView
         android:id="@+id/title"
         android:layout_width="0dip"
         android:layout_height="match_parent"
