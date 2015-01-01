@@ -145,10 +145,8 @@ NS_IMETHODIMP DummyChannel::EnsureChildFd()
 NS_IMETHODIMP DummyChannel::Run()
 {
   nsresult rv = mListener->OnStartRequest(this, mListenerContext);
-  NS_ENSURE_SUCCESS(rv, rv);
   mPending = false;
   rv = mListener->OnStopRequest(this, mListenerContext, NS_ERROR_FILE_NOT_FOUND);
-  NS_ENSURE_SUCCESS(rv, rv);
   if (mLoadGroup) {
     mLoadGroup->RemoveRequest(this, mListenerContext, NS_ERROR_FILE_NOT_FOUND);
   }

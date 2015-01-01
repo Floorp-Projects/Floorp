@@ -217,15 +217,15 @@ Result
 AppTrustDomain::VerifySignedData(const SignedDataWithSignature& signedData,
                                  Input subjectPublicKeyInfo)
 {
-  return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
-                                           mMinimumNonECCBits, mPinArg);
+  return ::mozilla::pkix::VerifySignedDataNSS(signedData, subjectPublicKeyInfo,
+                                              mMinimumNonECCBits, mPinArg);
 }
 
 Result
 AppTrustDomain::DigestBuf(Input item, /*out*/ uint8_t* digestBuf,
                           size_t digestBufLen)
 {
-  return ::mozilla::pkix::DigestBuf(item, digestBuf, digestBufLen);
+  return ::mozilla::pkix::DigestBufNSS(item, digestBuf, digestBufLen);
 }
 
 Result
@@ -252,8 +252,8 @@ AppTrustDomain::IsChainValid(const DERArray& certChain, Time time)
 Result
 AppTrustDomain::CheckPublicKey(Input subjectPublicKeyInfo)
 {
-  return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo,
-                                         mMinimumNonECCBits);
+  return ::mozilla::pkix::CheckPublicKeyNSS(subjectPublicKeyInfo,
+                                            mMinimumNonECCBits);
 }
 
 } } // namespace mozilla::psm

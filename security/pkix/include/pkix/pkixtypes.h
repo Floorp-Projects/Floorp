@@ -80,8 +80,7 @@ public:
   SignatureAlgorithm algorithm;
   Input signature;
 
-private:
-  void operator=(const SignedDataWithSignature&) /*= delete*/;
+  void operator=(const SignedDataWithSignature&) = delete;
 };
 
 MOZILLA_PKIX_ENUM_CLASS EndEntityOrCA { MustBeEndEntity = 0, MustBeCA = 1 };
@@ -148,8 +147,8 @@ public:
   const Input issuer;
   const Input issuerSubjectPublicKeyInfo;
   const Input serialNumber;
-private:
-  void operator=(const CertID&) /*= delete*/;
+
+  void operator=(const CertID&) = delete;
 };
 
 class DERArray
@@ -209,28 +208,26 @@ public:
   protected:
     IssuerChecker();
     virtual ~IssuerChecker();
-  private:
-    IssuerChecker(const IssuerChecker&) /*= delete*/;
-    void operator=(const IssuerChecker&) /*= delete*/;
+
+    IssuerChecker(const IssuerChecker&) = delete;
+    void operator=(const IssuerChecker&) = delete;
   };
 
   // Search for a CA certificate with the given name. The implementation must
   // call checker.Check with the DER encoding of the potential issuer
   // certificate. The implementation must follow these rules:
   //
-  // * The subject name of the certificate given to checker.Check must be equal
-  //   to encodedIssuerName.
   // * The implementation must be reentrant and must limit the amount of stack
   //   space it uses; see the note on reentrancy and stack usage below.
-  // * When checker.Check does not return SECSuccess then immediately return
-  //   SECFailure.
-  // * When checker.Check returns SECSuccess and sets keepGoing = false, then
-  //   immediately return SECSuccess.
-  // * When checker.Check returns SECSuccess and sets keepGoing = true, then
+  // * When checker.Check does not return Success then immediately return its
+  //   return value.
+  // * When checker.Check returns Success and sets keepGoing = false, then
+  //   immediately return Success.
+  // * When checker.Check returns Success and sets keepGoing = true, then
   //   call checker.Check again with a different potential issuer certificate,
   //   if any more are available.
   // * When no more potential issuer certificates are available, return
-  //   SECSuccess.
+  //   Success.
   // * Don't call checker.Check with the same potential issuer certificate more
   //   than once in a given call of FindIssuer.
   // * The given time parameter may be used to filter out certificates that are
@@ -255,6 +252,13 @@ public:
   //
   // checker.Check is responsible for limiting the recursion to a reasonable
   // limit.
+  //
+  // checker.Check will verify that the subject's issuer field matches the
+  // potential issuer's subject field. It will also check that the potential
+  // issuer is valid at the given time. However, if the FindIssuer
+  // implementation has an efficient way of filtering potential issuers by name
+  // and/or validity period itself, then it is probably better for performance
+  // for it to do so.
   virtual Result FindIssuer(Input encodedIssuerName,
                             IssuerChecker& checker, Time time) = 0;
 
@@ -265,24 +269,22 @@ public:
   // use.
   //
   // This function may be called multiple times, regardless of whether it
-  // returns SECSuccess or SECFailure. It is guaranteed that BuildCertChain
-  // will not return SECSuccess unless the last call to IsChainValid returns
-  // SECSuccess. Further, it is guaranteed that when BuildCertChain returns
-  // SECSuccess the last chain passed to IsChainValid is the valid chain that
-  // should be used for further operations that require the whole chain.
+  // returns success or failure. It is guaranteed that BuildCertChain will not
+  // return Success unless the last call to IsChainValid returns Success. Further,
+  // it is guaranteed that when BuildCertChain returns Success the last chain
+  // passed to IsChainValid is the valid chain that should be used for further
+  // operations that require the whole chain.
   //
   // Keep in mind, in particular, that if the application saves a copy of the
   // certificate chain the last invocation of IsChainValid during a validation,
-  // it is still possible for BuildCertChain to fail (return SECFailure), in
-  // which case the application must not assume anything about the validity of
-  // the last certificate chain passed to IsChainValid; especially, it would be
-  // very wrong to assume that the certificate chain is valid.
+  // it is still possible for BuildCertChain to fail, in which case the
+  // application must not assume anything about the validity of the last
+  // certificate chain passed to IsChainValid; especially, it would be very
+  // wrong to assume that the certificate chain is valid.
   //
   // certChain.GetDER(0) is the trust anchor.
   virtual Result IsChainValid(const DERArray& certChain, Time time) = 0;
 
-  // issuerCertToDup is only non-const so CERT_DupCertificate can be called on
-  // it.
   virtual Result CheckRevocation(EndEntityOrCA endEntityOrCA,
                                  const CertID& certID, Time time,
                     /*optional*/ const Input* stapledOCSPresponse,
@@ -322,9 +324,8 @@ public:
 protected:
   TrustDomain() { }
 
-private:
-  TrustDomain(const TrustDomain&) /* = delete */;
-  void operator=(const TrustDomain&) /* = delete */;
+  TrustDomain(const TrustDomain&) = delete;
+  void operator=(const TrustDomain&) = delete;
 };
 
 } } // namespace mozilla::pkix

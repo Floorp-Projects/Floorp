@@ -25,13 +25,7 @@
 #ifndef mozilla_pkix__enumclass_h
 #define mozilla_pkix__enumclass_h
 
-#if defined(_MSC_VER) && (_MSC_VER < 1700)
-// Microsoft added support for "enum class" in Visual C++ 2012. Before that,
-// Visual C++ has supported typed enums for longer than that, but using typed
-// enums results in C4480: nonstandard extension used: specifying underlying
-// type for enum.
-#define MOZILLA_PKIX_ENUM_CLASS  __pragma(warning(suppress: 4480)) enum
-#elif defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ < 407)
+#if defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ < 407)
 // GCC before version 4.7 may crash when compiling code that static_casts a
 // value of scoped typed enum type. See
 // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=48106.

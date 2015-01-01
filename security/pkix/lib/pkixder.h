@@ -166,9 +166,6 @@ template <typename Decoder>
 inline Result
 Nested(Reader& input, uint8_t outerTag, uint8_t innerTag, Decoder decoder)
 {
-  // XXX: This doesn't work (in VS2010):
-  // return Nested(input, outerTag, bind(Nested, _1, innerTag, decoder));
-
   Reader nestedInput;
   Result rv = ExpectTagAndGetValue(input, outerTag, nestedInput);
   if (rv != Success) {
