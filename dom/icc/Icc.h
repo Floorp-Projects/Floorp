@@ -98,7 +98,7 @@ public:
                 ErrorResult& aRv);
 
   already_AddRefed<DOMRequest>
-  MatchMvno(IccMvnoType aMvnoType, const nsAString& aMatchData,
+  MatchMvno(const nsAString& aMvnoType, const nsAString& aMatchData,
             ErrorResult& aRv);
 
   IMPL_EVENT_HANDLER(iccinfochange)
