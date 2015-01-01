@@ -291,13 +291,11 @@ public:
     static void CopyAsDataURI(SourceSurface* aSourceSurface);
     static void CopyAsDataURI(DrawTarget* aDT);
 
-#ifdef MOZ_DUMP_PAINTING
-    static bool DumpPaintList();
+    static bool DumpDisplayList();
 
     static bool sDumpPainting;
     static bool sDumpPaintingToFile;
     static FILE* sDumpPaintFile;
-#endif
 };
 
 namespace mozilla {

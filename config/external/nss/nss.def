@@ -680,3 +680,4 @@ VFY_VerifyData
 VFY_VerifyDataDirect
 VFY_VerifyDataWithAlgorithmID
 _SGN_VerifyPKCS1DigestInfo
+PK11_PQG_ParamGenV2

@@ -32,10 +32,10 @@
 namespace mozilla { namespace pkix {
 
 // Verify the given signed data using the given public key.
-Result VerifySignedData(const SignedDataWithSignature& sd,
-                        Input subjectPublicKeyInfo,
-                        unsigned int minimumNonECCBits,
-                        void* pkcs11PinArg);
+Result VerifySignedDataNSS(const SignedDataWithSignature& sd,
+                           Input subjectPublicKeyInfo,
+                           unsigned int minimumNonECCBits,
+                           void* pkcs11PinArg);
 
 // Computes the SHA-1 hash of the data in the current item.
 //
@@ -48,13 +48,13 @@ Result VerifySignedData(const SignedDataWithSignature& sd,
 // TODO: Taking the output buffer as (uint8_t*, size_t) is counter to our
 // other, extensive, memory safety efforts in mozilla::pkix, and we should find
 // a way to provide a more-obviously-safe interface.
-Result DigestBuf(Input item, /*out*/ uint8_t* digestBuf,
-                 size_t digestBufLen);
+Result DigestBufNSS(Input item, /*out*/ uint8_t* digestBuf,
+                    size_t digestBufLen);
 
 // Checks, for RSA keys and DSA keys, that the modulus is at least the given
 // number of bits.
-Result CheckPublicKey(Input subjectPublicKeyInfo,
-                      unsigned int minimumNonECCBits);
+Result CheckPublicKeyNSS(Input subjectPublicKeyInfo,
+                         unsigned int minimumNonECCBits);
 
 Result MapPRErrorCodeToResult(PRErrorCode errorCode);
 PRErrorCode MapResultToPRErrorCode(Result result);

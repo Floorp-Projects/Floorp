@@ -99,14 +99,9 @@ typedef mozilla::EnumSet<mozilla::gfx::CompositionOp> BlendModeSet;
  */
 
 // All types are defined in nsDisplayItemTypes.h
-#ifdef MOZ_DUMP_PAINTING
 #define NS_DISPLAY_DECL_NAME(n, e) \
   virtual const char* Name() { return n; } \
   virtual Type GetType() { return e; }
-#else
-#define NS_DISPLAY_DECL_NAME(n, e) \
-  virtual Type GetType() { return e; }
-#endif
 
 /**
  * This manages a display list and is passed as a parameter to
@@ -1378,15 +1373,13 @@ public:
                             const DisplayItemClip* aClip) {
     return false;
   }
-  
-#ifdef MOZ_DUMP_PAINTING
+
   /**
    * For debugging and stuff
    */
   virtual const char* Name() = 0;
 
   virtual void WriteDebugInfo(std::stringstream& aStream) {}
-#endif
 
   nsDisplayItem* GetAbove() { return mAbove; }
 
@@ -1949,9 +1942,7 @@ public:
   nsDisplayGeneric(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                    PaintCallback aPaint, const char* aName, Type aType)
     : nsDisplayItem(aBuilder, aFrame), mPaint(aPaint)
-#ifdef MOZ_DUMP_PAINTING
       , mName(aName)
-#endif
       , mType(aType)
   {
     MOZ_COUNT_CTOR(nsDisplayGeneric);
@@ -1978,9 +1969,7 @@ public:
 
 protected:
   PaintCallback mPaint;
-#ifdef MOZ_DUMP_PAINTING
   const char*   mName;
-#endif
   Type mType;
 };
 
@@ -2204,9 +2193,7 @@ public:
     ComputeInvalidationRegionDifference(aBuilder, geometry, aInvalidRegion);
   }
 
-#ifdef MOZ_DUMP_PAINTING
   virtual void WriteDebugInfo(std::stringstream& aStream) MOZ_OVERRIDE;
-#endif
 
   NS_DISPLAY_DECL_NAME("SolidColor", TYPE_SOLID_COLOR)
 
@@ -2365,9 +2352,7 @@ public:
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion* aInvalidRegion) MOZ_OVERRIDE;
 
-#ifdef MOZ_DUMP_PAINTING
   virtual void WriteDebugInfo(std::stringstream& aStream) MOZ_OVERRIDE;
-#endif
 protected:
   nsRect GetBoundsInternal();
 
@@ -2428,9 +2413,7 @@ public:
   }
 
   NS_DISPLAY_DECL_NAME("BackgroundColor", TYPE_BACKGROUND_COLOR)
-#ifdef MOZ_DUMP_PAINTING
   virtual void WriteDebugInfo(std::stringstream& aStream) MOZ_OVERRIDE;
-#endif
 
 protected:
   const nsStyleBackground* mBackgroundStyle;
@@ -2669,9 +2652,7 @@ public:
   const nsRegion& MaybeHitRegion() { return mMaybeHitRegion; }
   const nsRegion& DispatchToContentHitRegion() { return mDispatchToContentHitRegion; }
 
-#ifdef MOZ_DUMP_PAINTING
   virtual void WriteDebugInfo(std::stringstream& aStream) MOZ_OVERRIDE;
-#endif
 
 private:
   // Relative to aFrame's reference frame.
@@ -2879,9 +2860,7 @@ public:
   virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
   bool NeedsActiveLayer(nsDisplayListBuilder* aBuilder);
   NS_DISPLAY_DECL_NAME("Opacity", TYPE_OPACITY)
-#ifdef MOZ_DUMP_PAINTING
   virtual void WriteDebugInfo(std::stringstream& aStream) MOZ_OVERRIDE;
-#endif
 
   bool CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
 
@@ -3177,9 +3156,7 @@ public:
   virtual nsIFrame* GetScrollFrame() { return mScrollFrame; }
   virtual nsIFrame* GetScrolledFrame() { return mScrolledFrame; }
 
-#ifdef MOZ_DUMP_PAINTING
   virtual void WriteDebugInfo(std::stringstream& aStream) MOZ_OVERRIDE;
-#endif
 
   bool IsDisplayPortOpaque() { return mDisplayPortContentsOpaque; }
 
@@ -3588,9 +3565,7 @@ public:
    */
   bool ShouldPrerender(nsDisplayListBuilder* aBuilder);
 
-#ifdef MOZ_DUMP_PAINTING
   virtual void WriteDebugInfo(std::stringstream& aStream) MOZ_OVERRIDE;
-#endif
 
 private:
   void SetReferenceFrameToAncestor(nsDisplayListBuilder* aBuilder);

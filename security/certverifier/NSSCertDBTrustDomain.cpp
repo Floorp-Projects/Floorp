@@ -258,15 +258,15 @@ Result
 NSSCertDBTrustDomain::VerifySignedData(const SignedDataWithSignature& signedData,
                                        Input subjectPublicKeyInfo)
 {
-  return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
-                                           mMinimumNonECCBits, mPinArg);
+  return ::mozilla::pkix::VerifySignedDataNSS(signedData, subjectPublicKeyInfo,
+                                              mMinimumNonECCBits, mPinArg);
 }
 
 Result
 NSSCertDBTrustDomain::DigestBuf(Input item,
                                 /*out*/ uint8_t* digestBuf, size_t digestBufLen)
 {
-  return ::mozilla::pkix::DigestBuf(item, digestBuf, digestBufLen);
+  return ::mozilla::pkix::DigestBufNSS(item, digestBuf, digestBufLen);
 }
 
 
@@ -700,8 +700,8 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time)
 Result
 NSSCertDBTrustDomain::CheckPublicKey(Input subjectPublicKeyInfo)
 {
-  return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo,
-                                         mMinimumNonECCBits);
+  return ::mozilla::pkix::CheckPublicKeyNSS(subjectPublicKeyInfo,
+                                            mMinimumNonECCBits);
 }
 
 namespace {

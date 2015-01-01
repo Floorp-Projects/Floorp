@@ -54,10 +54,18 @@
                      'nosts': 'SECURE'}},
   };
 
+  function whenDelayedStartupFinished(aWindow, aCallback) {
+    SpecialPowers.Services.obs.addObserver(function observer(aSubject, aTopic) {
+      if (aWindow == aSubject) {
+        SpecialPowers.Services.obs.removeObserver(observer, aTopic);
+        SimpleTest.executeSoon(aCallback);
+      }
+    }, "browser-delayed-startup-finished", false);
+  }
+
   function testOnWindow(aIsPrivate, aCallback) {
     var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
-    win.addEventListener("load", function onLoad() {
-      win.removeEventListener("load", onLoad, false);
+    whenDelayedStartupFinished(win, function () {
       win.gBrowser.addEventListener("DOMContentLoaded", function onInnerLoad() {
         if (win.content.location.href != CONTENT_PAGE) {
           win.gBrowser.loadURI(CONTENT_PAGE);
@@ -67,7 +75,7 @@
         SimpleTest.executeSoon(function() { aCallback(win); });
       }, true);
       win.gBrowser.loadURI(CONTENT_PAGE);
-    }, true);
+    });
   }
 
   function startRound(win, isPrivate, round) {
