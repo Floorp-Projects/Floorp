@@ -872,6 +872,10 @@
             // ourselves.
             popup.hidden = false;
 
+            // showHistoryPopup sets consumeoutsideclicks to true so reset it
+            // here
+            popup.setAttribute("consumeoutsideclicks", "false");
+
             popup.mInput = this;
             popup.view = this.controller.QueryInterface(Components.interfaces.nsITreeView);
             popup.invalidate();
