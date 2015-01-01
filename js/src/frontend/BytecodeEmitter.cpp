@@ -4200,16 +4200,16 @@ ParseNode::getConstantValue(ExclusiveContext *cx, AllowConstantObjects allowObje
       case PNK_NULL:
         vp.setNull();
         return true;
-      case PNK_SPREAD:
-        return false;
       case PNK_CALLSITEOBJ:
       case PNK_ARRAY: {
         RootedValue value(cx);
         unsigned count;
         ParseNode *pn;
 
-        if (allowObjects == DontAllowObjects)
-            return false;
+        if (allowObjects == DontAllowObjects) {
+            vp.setMagic(JS_GENERIC_MAGIC);
+            return true;
+        }
         if (allowObjects == DontAllowNestedObjects)
             allowObjects = DontAllowObjects;
 
@@ -4231,6 +4231,10 @@ ParseNode::getConstantValue(ExclusiveContext *cx, AllowConstantObjects allowObje
         for (; pn; idx++, pn = pn->pn_next) {
             if (!pn->getConstantValue(cx, allowObjects, &value))
                 return false;
+            if (value.isMagic(JS_GENERIC_MAGIC)) {
+                vp.setMagic(JS_GENERIC_MAGIC);
+                return true;
+            }
             id = INT_TO_JSID(idx);
             if (!JSObject::defineGeneric(cx, obj, id, value, nullptr, nullptr, JSPROP_ENUMERATE))
                 return false;
@@ -4245,8 +4249,10 @@ ParseNode::getConstantValue(ExclusiveContext *cx, AllowConstantObjects allowObje
         MOZ_ASSERT(isOp(JSOP_NEWINIT));
         MOZ_ASSERT(!(pn_xflags & PNX_NONCONST));
 
-        if (allowObjects == DontAllowObjects)
-            return false;
+        if (allowObjects == DontAllowObjects) {
+            vp.setMagic(JS_GENERIC_MAGIC);
+            return true;
+        }
         if (allowObjects == DontAllowNestedObjects)
             allowObjects = DontAllowObjects;
 
@@ -4260,6 +4266,10 @@ ParseNode::getConstantValue(ExclusiveContext *cx, AllowConstantObjects allowObje
         for (ParseNode *pn = pn_head; pn; pn = pn->pn_next) {
             if (!pn->pn_right->getConstantValue(cx, allowObjects, &value))
                 return false;
+            if (value.isMagic(JS_GENERIC_MAGIC)) {
+                vp.setMagic(JS_GENERIC_MAGIC);
+                return true;
+            }
 
             ParseNode *pnid = pn->pn_left;
             if (pnid->isKind(PNK_NUMBER)) {
@@ -7191,28 +7201,29 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             // If the array consists entirely of primitive values, make a
             // template object with copy on write elements that can be reused
             // every time the initializer executes.
-            RootedValue value(cx);
-            if (bce->emitterMode != BytecodeEmitter::SelfHosting &&
-                pn->pn_count != 0 &&
-                pn->getConstantValue(cx, ParseNode::DontAllowNestedObjects, &value))
-            {
-                // Note: the type of the template object might not yet reflect
-                // that the object has copy on write elements. When the
-                // interpreter or JIT compiler fetches the template, it should
-                // use types::GetOrFixupCopyOnWriteObject to make sure the type
-                // for the template is accurate. We don't do this here as we
-                // want to use types::InitObject, which requires a finished
-                // script.
-                NativeObject *obj = &value.toObject().as<NativeObject>();
-                if (!ObjectElements::MakeElementsCopyOnWrite(cx, obj))
+            if (bce->emitterMode != BytecodeEmitter::SelfHosting && pn->pn_count != 0) {
+                RootedValue value(cx);
+                if (!pn->getConstantValue(cx, ParseNode::DontAllowNestedObjects, &value))
                     return false;
+                if (!value.isMagic(JS_GENERIC_MAGIC)) {
+                    // Note: the type of the template object might not yet reflect
+                    // that the object has copy on write elements. When the
+                    // interpreter or JIT compiler fetches the template, it should
+                    // use types::GetOrFixupCopyOnWriteObject to make sure the type
+                    // for the template is accurate. We don't do this here as we
+                    // want to use types::InitObject, which requires a finished
+                    // script.
+                    NativeObject *obj = &value.toObject().as<NativeObject>();
+                    if (!ObjectElements::MakeElementsCopyOnWrite(cx, obj))
+                        return false;
 
-                ObjectBox *objbox = bce->parser->newObjectBox(obj);
-                if (!objbox)
-                    return false;
+                    ObjectBox *objbox = bce->parser->newObjectBox(obj);
+                    if (!objbox)
+                        return false;
 
-                ok = EmitObjectOp(cx, objbox, JSOP_NEWARRAY_COPYONWRITE, bce);
-                break;
+                    ok = EmitObjectOp(cx, objbox, JSOP_NEWARRAY_COPYONWRITE, bce);
+                    break;
+                }
             }
         }
 
