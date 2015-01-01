@@ -27,6 +27,7 @@
       // it longer to crash.  If it crashes (but not at the apropriate time),
       // soft fail with a todo; if it doesn't crash then something went wrong,
       // so fail.
+      SimpleTest.requestFlakyTimeout("sometimes the plugin takes a little longer to crash");
       setTimeout(
         function() {
           try {
