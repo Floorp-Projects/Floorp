@@ -52,18 +52,52 @@ public class GeckoMenuItem implements MenuItem {
     final GeckoMenu mMenu;
     OnShowAsActionChangedListener mShowAsActionChangedListener;
 
+    private volatile boolean mShouldDispatchChanges = true;
+    private volatile boolean mDidChange;
+
     public GeckoMenuItem(GeckoMenu menu, int id, int order, int titleRes) {
         mMenu = menu;
         mId = id;
         mOrder = order;
-        setTitle(titleRes);
+        mTitle = mMenu.getResources().getString(titleRes);
     }
 
     public GeckoMenuItem(GeckoMenu menu, int id, int order, CharSequence title) {
         mMenu = menu;
         mId = id;
         mOrder = order;
-        setTitle(title);
+        mTitle = title;
+    }
+
+    /**
+     * Stop dispatching item changed events to presenters until
+     * [start|resume]DispatchingItemsChanged() is called. Useful when
+     * many menu operations are going to be performed as a batch.
+     */
+    public void stopDispatchingChanges() {
+        mDidChange = false;
+        mShouldDispatchChanges = false;
+    }
+
+    /**
+     * Resume dispatching item changed events to presenters. This method
+     * will NOT call onItemChanged if any menu operations were queued.
+     * Only future menu operations will call onItemChanged. Useful for
+     * sequelching presenter updates.
+     */
+    public void resumeDispatchingChanges() {
+        mShouldDispatchChanges = true;
+    }
+
+    /**
+     * Start dispatching item changed events to presenters. This method
+     * will call onItemChanged if any menu operations were queued.
+     */
+    public void startDispatchingChanges() {
+        if (mDidChange) {
+            mMenu.onItemChanged(this);
+        }
+        mShouldDispatchChanges = true;
     }
 
     @Override
@@ -247,7 +281,11 @@ public class GeckoMenuItem implements MenuItem {
     public MenuItem setCheckable(boolean checkable) {
         if (mCheckable != checkable) {
             mCheckable = checkable;
-            mMenu.onItemChanged(this);
+            if (mShouldDispatchChanges) {
+                mMenu.onItemChanged(this);
+            } else {
+                mDidChange = true;
+            }
         }
         return this;
     }
@@ -256,7 +294,11 @@ public class GeckoMenuItem implements MenuItem {
     public MenuItem setChecked(boolean checked) {
         if (mChecked != checked) {
             mChecked = checked;
-            mMenu.onItemChanged(this);
+            if (mShouldDispatchChanges) {
+                mMenu.onItemChanged(this);
+            } else {
+                mDidChange = true;
+            }
         }
         return this;
     }
@@ -265,7 +307,11 @@ public class GeckoMenuItem implements MenuItem {
     public MenuItem setEnabled(boolean enabled) {
         if (mEnabled != enabled) {
             mEnabled = enabled;
-            mMenu.onItemChanged(this);
+            if (mShouldDispatchChanges) {
+                mMenu.onItemChanged(this);
+            } else {
+                mDidChange = true;
+            }
         }
         return this;
     }
@@ -274,7 +320,11 @@ public class GeckoMenuItem implements MenuItem {
     public MenuItem setIcon(Drawable icon) {
         if (mIcon != icon) {
             mIcon = icon;
-            mMenu.onItemChanged(this);
+            if (mShouldDispatchChanges) {
+                mMenu.onItemChanged(this);
+            } else {
+                mDidChange = true;
+            }
         }
         return this;
     }
@@ -283,7 +333,11 @@ public class GeckoMenuItem implements MenuItem {
     public MenuItem setIcon(int iconRes) {
         if (mIconRes != iconRes) {
             mIconRes = iconRes;
-            mMenu.onItemChanged(this);
+            if (mShouldDispatchChanges) {
+                mMenu.onItemChanged(this);
+            } else {
+                mDidChange = true;
+            }
         }
         return this;
     }
@@ -367,7 +421,11 @@ public class GeckoMenuItem implements MenuItem {
     public MenuItem setTitle(CharSequence title) {
         if (!TextUtils.equals(mTitle, title)) {
             mTitle = title;
-            mMenu.onItemChanged(this);
+            if (mShouldDispatchChanges) {
+                mMenu.onItemChanged(this);
+            } else {
+                mDidChange = true;
+            }
         }
         return this;
     }
@@ -388,7 +446,11 @@ public class GeckoMenuItem implements MenuItem {
     public MenuItem setVisible(boolean visible) {
         if (mVisible != visible) {
             mVisible = visible;
-            mMenu.onItemChanged(this);
+            if (mShouldDispatchChanges) {
+                mMenu.onItemChanged(this);
+            } else {
+                mDidChange = true;
+            }
         }
         return this;
     }
