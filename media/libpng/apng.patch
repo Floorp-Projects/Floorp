@@ -278,7 +278,7 @@ Index: png.h
 ===================================================================
 --- png.h
 +++ png.h
-@@ -473,6 +473,10 @@
+@@ -476,6 +476,10 @@
  #   include "pnglibconf.h"
  #endif
  
@@ -289,7 +289,7 @@ Index: png.h
  #ifndef PNG_VERSION_INFO_ONLY
     /* Machine specific configuration. */
  #  include "pngconf.h"
-@@ -563,6 +567,17 @@
+@@ -566,6 +570,17 @@
   * See pngconf.h for base types that vary by machine/system
   */
  
@@ -307,7 +307,7 @@ Index: png.h
  /* This triggers a compiler error in png.c, if png.c and png.h
   * do not agree upon the version number.
   */
-@@ -883,6 +898,10 @@
+@@ -886,6 +901,10 @@
  #define PNG_INFO_sPLT 0x2000   /* ESR, 1.0.6 */
  #define PNG_INFO_sCAL 0x4000   /* ESR, 1.0.6 */
  #define PNG_INFO_IDAT 0x8000   /* ESR, 1.0.6 */
@@ -318,7 +318,7 @@ Index: png.h
  
  /* This is used for the transformation routines, as some of them
   * change these values for the row.  It also should enable using
-@@ -920,6 +939,10 @@
+@@ -923,6 +942,10 @@
  #ifdef PNG_PROGRESSIVE_READ_SUPPORTED
  typedef PNG_CALLBACK(void, *png_progressive_info_ptr, (png_structp, png_infop));
  typedef PNG_CALLBACK(void, *png_progressive_end_ptr, (png_structp, png_infop));
@@ -329,7 +329,7 @@ Index: png.h
  
  /* The following callback receives png_uint_32 row_number, int pass for the
   * png_bytep data of the row.  When transforming an interlaced image the
-@@ -3259,6 +3282,75 @@
+@@ -3262,6 +3285,75 @@
   *  END OF HARDWARE AND SOFTWARE OPTIONS
   ******************************************************************************/
  
@@ -405,7 +405,7 @@ Index: png.h
  /* Maintainer: Put new public prototypes here ^, in libpng.3, in project
   * defs, and in scripts/symbols.def.
   */
-@@ -3267,7 +3359,11 @@
+@@ -3270,7 +3362,11 @@
   * one to use is one more than this.)
   */
  #ifdef PNG_EXPORT_LAST_ORDINAL
@@ -1023,7 +1023,7 @@ Index: pngrutil.c
 ===================================================================
 --- pngrutil.c
 +++ pngrutil.c
-@@ -818,6 +818,11 @@
+@@ -819,6 +819,11 @@
     filter_type = buf[11];
     interlace_type = buf[12];
  

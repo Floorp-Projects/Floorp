@@ -1,6 +1,6 @@
 libpng-manual.txt - A description on how to use and modify libpng
 
- libpng version 1.6.15 - November 20, 2014
+ libpng version 1.6.16 - December 22, 2014
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
  Copyright (c) 1998-2014 Glenn Randers-Pehrson
@@ -11,7 +11,7 @@ libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng versions 0.97, January 1998, through 1.6.15 - November 20, 2014
+ libpng versions 0.97, January 1998, through 1.6.16 - December 22, 2014
  Updated and distributed by Glenn Randers-Pehrson
  Copyright (c) 1998-2014 Glenn Randers-Pehrson
 
@@ -648,15 +648,12 @@ User limits
 
 The PNG specification allows the width and height of an image to be as
 large as 2^31-1 (0x7fffffff), or about 2.147 billion rows and columns.
-Since very few applications really need to process such large images,
-we have imposed an arbitrary 1-million limit on rows and columns.
 Larger images will be rejected immediately with a png_error() call. If
-you wish to change this limit, you can use
+you wish to reduce these limits, you can use
 
    png_set_user_limits(png_ptr, width_max, height_max);
 
-to set your own limits, or use width_max = height_max = 0x7fffffffL
-to allow all valid dimensions (libpng may reject some very large images
+to set your own limits (libpng may reject some very wide images
 anyway because of potential buffer overflow conditions).
 
 You should put this statement after you create the PNG structure and
@@ -5037,8 +5034,8 @@ where "rp" indicates a "restricted pointer".
 Error detection in some chunks has improved; in particular the iCCP chunk
 reader now does pretty complete validation of the basic format.  Some bad
 profiles that were previously accepted are now accepted with a warning or
-rejected, depending upon the png_set_benign_errors() setting, in particular the
-very old broken Microsoft/HP 3144-byte sRGB profile.  Starting with
+rejected, depending upon the png_set_benign_errors() setting, in particular
+the very old broken Microsoft/HP 3144-byte sRGB profile.  Starting with
 libpng-1.6.11, recognizing and checking sRGB profiles can be avoided by
 means of
 
@@ -5048,8 +5045,8 @@ means of
            PNG_OPTION_ON);
     #endif
 
-It's not a good idea to do this if you are using the "simplified API",
-which needs to be able to recognize an sRGB profile conveyed via the iCCP
+It's not a good idea to do this if you are using the new "simplified API",
+which needs to be able to recognize sRGB profiles conveyed via the iCCP
 chunk.
 
 The PNG spec requirement that only grayscale profiles may appear in images
@@ -5277,13 +5274,13 @@ Other rules can be inferred by inspecting the libpng source.
 
 XVI. Y2K Compliance in libpng
 
-November 20, 2014
+December 22, 2014
 
 Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.6.15 are Y2K compliant.  It is my belief that earlier
+upward through 1.6.16 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has two year fields.  One is a 2-byte unsigned integer

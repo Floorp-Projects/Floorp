@@ -5097,6 +5097,33 @@ Version 1.6.15rc03 [November 16, 2014]
   Removed the obsolete $ARCH variable from scripts/makefile.darwin.
 
 Version 1.6.15 [November 20, 2014]
+  No changes.
+
+Version 1.6.16beta01 [December 14, 2014]
+  Added ".align 2" to arm/filter_neon.S to support old GAS assemblers that
+    don't do alignment correctly.
+  Revised Makefile.am and scripts/symbols.dfn to work with MinGW/MSYS
+    (Bob Friesenhahn).
+
+Version 1.6.16beta02 [December 15, 2014]
+  Revised Makefile.am and scripts/*.dfn again to work with MinGW/MSYS;
+    renamed scripts/*.dfn to scripts/*.c (John Bowler).
+
+Version 1.6.16beta03 [December 21, 2014]
+  Quiet a "comparison always true" warning in pngstest.c (John Bowler).
+
+Version 1.6.16rc01 [December 21, 2014]
+  Restored a test on width that was removed from png.c at libpng-1.6.9
+    (Bug report by Alex Eubanks).
+
+Version 1.6.16rc02 [December 21, 2014]
+  Undid the update to pngrutil.c in 1.6.16rc01.
+
+Version 1.6.16rc03 [December 21, 2014]
+  Fixed an overflow in png_combine_row with very wide interlaced images.
+
+Version 1.6.16 [December 22, 2014]
+  No changes.
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
 (subscription required; visit

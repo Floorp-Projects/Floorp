@@ -9677,6 +9677,10 @@
 > cysteine/M
 19536a25296
 > decertify/DSGNX
+19759c25519
+< deliverable/U
+---
+> deliverable/US
 19935a25696
 > dequeue/DSG
 19999a25761
@@ -10430,6 +10434,10 @@
 < member/EAS
 ---
 > member/EASM
+32386c38086
+< men
+---
+> men/M
 32708a38409
 > might've
 32717a38419
@@ -10461,6 +10469,10 @@
 < mister's
 ---
 > mister/M
+33083c38784
+< mitigation/M
+---
+> mitigation/MS
 33107,33108c38808
 < mob's
 < mob/CS
