@@ -148,23 +148,24 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
 
 #define NS_DECL_NSAHTTPCONNECTION(fwdObject)                    \
-    nsresult OnHeadersAvailable(nsAHttpTransaction *, nsHttpRequestHead *, nsHttpResponseHead *, bool *reset); \
-    void CloseTransaction(nsAHttpTransaction *, nsresult); \
+    nsresult OnHeadersAvailable(nsAHttpTransaction *, nsHttpRequestHead *, nsHttpResponseHead *, bool *reset) MOZ_OVERRIDE; \
+    void CloseTransaction(nsAHttpTransaction *, nsresult) MOZ_OVERRIDE; \
     nsresult TakeTransport(nsISocketTransport **,    \
                            nsIAsyncInputStream **,   \
-                           nsIAsyncOutputStream **); \
-    bool IsPersistent(); \
-    bool IsReused(); \
-    void DontReuse();  \
-    nsresult PushBack(const char *, uint32_t); \
-    nsHttpConnection *TakeHttpConnection(); \
-    uint32_t CancelPipeline(nsresult originalReason);   \
-    nsAHttpTransaction::Classifier Classification();      \
+                           nsIAsyncOutputStream **) MOZ_OVERRIDE; \
+    bool IsPersistent() MOZ_OVERRIDE; \
+    bool IsReused() MOZ_OVERRIDE; \
+    void DontReuse() MOZ_OVERRIDE;  \
+    nsresult PushBack(const char *, uint32_t) MOZ_OVERRIDE; \
+    nsHttpConnection *TakeHttpConnection() MOZ_OVERRIDE; \
+    uint32_t CancelPipeline(nsresult originalReason) MOZ_OVERRIDE;   \
+    nsAHttpTransaction::Classifier Classification() MOZ_OVERRIDE;      \
     /*                                                    \
        Thes methods below have automatic definitions that just forward the \
        function to a lower level connection object        \
     */                                                    \
     void GetConnectionInfo(nsHttpConnectionInfo **result) \
+      MOZ_OVERRIDE                                        \
     {                                                     \
       if (!(fwdObject)) {                                 \
           *result = nullptr;                               \
@@ -173,6 +174,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
         return (fwdObject)->GetConnectionInfo(result);    \
     }                                                     \
     void GetSecurityInfo(nsISupports **result)            \
+      MOZ_OVERRIDE                                        \
     {                                                     \
       if (!(fwdObject)) {                                 \
           *result = nullptr;                               \
@@ -180,62 +182,66 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
       }                                                   \
       return (fwdObject)->GetSecurityInfo(result);        \
     }                                                     \
-    nsresult ResumeSend()                  \
+    nsresult ResumeSend() MOZ_OVERRIDE     \
     {                                      \
         if (!(fwdObject))                  \
             return NS_ERROR_FAILURE;       \
         return (fwdObject)->ResumeSend();  \
     }                                      \
-    nsresult ResumeRecv()                  \
+    nsresult ResumeRecv() MOZ_OVERRIDE     \
     {                                      \
         if (!(fwdObject))                  \
             return NS_ERROR_FAILURE;       \
         return (fwdObject)->ResumeRecv();  \
     }                                      \
-    nsresult ForceSend()                   \
+    nsresult ForceSend() MOZ_OVERRIDE      \
     {                                      \
         if (!(fwdObject))                  \
             return NS_ERROR_FAILURE;       \
         return (fwdObject)->ForceSend();   \
     }                                      \
-    nsresult ForceRecv()                   \
+    nsresult ForceRecv() MOZ_OVERRIDE      \
     {                                      \
         if (!(fwdObject))                  \
             return NS_ERROR_FAILURE;       \
         return (fwdObject)->ForceRecv();   \
     }                                      \
     nsISocketTransport *Transport()        \
+      MOZ_OVERRIDE                         \
     {                                      \
         if (!(fwdObject))                  \
             return nullptr;                 \
         return (fwdObject)->Transport();   \
     }                                      \
-    uint32_t Version()                     \
+    uint32_t Version() MOZ_OVERRIDE        \
     {                                      \
         return (fwdObject) ?               \
             (fwdObject)->Version() :       \
             NS_HTTP_VERSION_UNKNOWN;       \
     }                                      \
-    bool IsProxyConnectInProgress()                         \
+    bool IsProxyConnectInProgress() MOZ_OVERRIDE            \
     {                                                       \
         return (fwdObject)->IsProxyConnectInProgress();     \
     }                                                       \
-    bool LastTransactionExpectedNoContent()                 \
+    bool LastTransactionExpectedNoContent() MOZ_OVERRIDE    \
     {                                                       \
         return (fwdObject)->LastTransactionExpectedNoContent(); \
     }                                                       \
     void SetLastTransactionExpectedNoContent(bool val)      \
+      MOZ_OVERRIDE                                          \
     {                                                       \
         return (fwdObject)->SetLastTransactionExpectedNoContent(val); \
     }                                                       \
     void Classify(nsAHttpTransaction::Classifier newclass)  \
+      MOZ_OVERRIDE                                          \
     {                                                       \
     if (fwdObject)                                          \
         return (fwdObject)->Classify(newclass);             \
     }                                                       \
-    int64_t BytesWritten()                                  \
+    int64_t BytesWritten() MOZ_OVERRIDE                     \
     {     return fwdObject ? (fwdObject)->BytesWritten() : 0; } \
     void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks) \
+      MOZ_OVERRIDE                                          \
     {                                                       \
         if (fwdObject)                                      \
             (fwdObject)->SetSecurityCallbacks(aCallbacks);  \

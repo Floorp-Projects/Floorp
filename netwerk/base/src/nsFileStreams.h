@@ -112,23 +112,23 @@ public:
     NS_DECL_NSILINEINPUTSTREAM
     NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
 
-    NS_IMETHOD Close();
-    NS_IMETHOD Tell(int64_t *aResult);
-    NS_IMETHOD Available(uint64_t* _retval);
-    NS_IMETHOD Read(char* aBuf, uint32_t aCount, uint32_t* _retval);
+    NS_IMETHOD Close() MOZ_OVERRIDE;
+    NS_IMETHOD Tell(int64_t *aResult) MOZ_OVERRIDE;
+    NS_IMETHOD Available(uint64_t* _retval) MOZ_OVERRIDE;
+    NS_IMETHOD Read(char* aBuf, uint32_t aCount, uint32_t* _retval) MOZ_OVERRIDE;
     NS_IMETHOD ReadSegments(nsWriteSegmentFun aWriter, void *aClosure,
-                            uint32_t aCount, uint32_t* _retval)
+                            uint32_t aCount, uint32_t* _retval) MOZ_OVERRIDE
     {
         return nsFileStreamBase::ReadSegments(aWriter, aClosure, aCount,
                                               _retval);
     }
-    NS_IMETHOD IsNonBlocking(bool* _retval)
+    NS_IMETHOD IsNonBlocking(bool* _retval) MOZ_OVERRIDE
     {
         return nsFileStreamBase::IsNonBlocking(_retval);
     }
 
     // Overrided from nsFileStreamBase
-    NS_IMETHOD Seek(int32_t aWhence, int64_t aOffset);
+    NS_IMETHOD Seek(int32_t aWhence, int64_t aOffset) MOZ_OVERRIDE;
 
     nsFileInputStream()
       : mLineBuffer(nullptr), mIOFlags(0), mPerm(0), mCachedPosition(0)
@@ -187,10 +187,10 @@ public:
       : mStart(0), mLength(0), mPosition(0)
     { }
 
-    NS_IMETHOD Tell(int64_t *aResult);
-    NS_IMETHOD Available(uint64_t *aResult);
-    NS_IMETHOD Read(char* aBuf, uint32_t aCount, uint32_t* aResult);
-    NS_IMETHOD Seek(int32_t aWhence, int64_t aOffset);
+    NS_IMETHOD Tell(int64_t *aResult) MOZ_OVERRIDE;
+    NS_IMETHOD Available(uint64_t *aResult) MOZ_OVERRIDE;
+    NS_IMETHOD Read(char* aBuf, uint32_t aCount, uint32_t* aResult) MOZ_OVERRIDE;
+    NS_IMETHOD Seek(int32_t aWhence, int64_t aOffset) MOZ_OVERRIDE;
 
     static nsresult
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
@@ -249,9 +249,9 @@ public:
 
     virtual nsresult DoOpen() MOZ_OVERRIDE;
 
-    NS_IMETHODIMP Close();
-    NS_IMETHODIMP Write(const char *buf, uint32_t count, uint32_t *result);
-    NS_IMETHODIMP Init(nsIFile* file, int32_t ioFlags, int32_t perm, int32_t behaviorFlags);
+    NS_IMETHODIMP Close() MOZ_OVERRIDE;
+    NS_IMETHODIMP Write(const char *buf, uint32_t count, uint32_t *result) MOZ_OVERRIDE;
+    NS_IMETHODIMP Init(nsIFile* file, int32_t ioFlags, int32_t perm, int32_t behaviorFlags) MOZ_OVERRIDE;
 
 protected:
     virtual ~nsAtomicFileOutputStream()
@@ -279,7 +279,7 @@ class nsSafeFileOutputStream : public nsAtomicFileOutputStream
 {
 public:
 
-    NS_IMETHOD Finish();
+    NS_IMETHOD Finish() MOZ_OVERRIDE;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -296,21 +296,21 @@ public:
 
     // Can't use NS_FORWARD_NSIOUTPUTSTREAM due to overlapping methods
     // Close() and IsNonBlocking() 
-    NS_IMETHOD Flush()
+    NS_IMETHOD Flush() MOZ_OVERRIDE
     {
         return nsFileStreamBase::Flush();
     }
-    NS_IMETHOD Write(const char* aBuf, uint32_t aCount, uint32_t* _retval)
+    NS_IMETHOD Write(const char* aBuf, uint32_t aCount, uint32_t* _retval) MOZ_OVERRIDE
     {
         return nsFileStreamBase::Write(aBuf, aCount, _retval);
     }
     NS_IMETHOD WriteFrom(nsIInputStream* aFromStream, uint32_t aCount,
-                         uint32_t* _retval)
+                         uint32_t* _retval) MOZ_OVERRIDE
     {
         return nsFileStreamBase::WriteFrom(aFromStream, aCount, _retval);
     }
     NS_IMETHOD WriteSegments(nsReadSegmentFun aReader, void* aClosure,
-                             uint32_t aCount, uint32_t* _retval)
+                             uint32_t aCount, uint32_t* _retval) MOZ_OVERRIDE
     {
         return nsFileStreamBase::WriteSegments(aReader, aClosure, aCount,
                                                _retval);

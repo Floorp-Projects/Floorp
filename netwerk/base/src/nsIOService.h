@@ -174,13 +174,13 @@ public:
     {
     }
 
-    NS_IMETHODIMP GetMode(int32_t *aMode)
+    NS_IMETHODIMP GetMode(int32_t *aMode) MOZ_OVERRIDE
     {
         *aMode = mMode;
         return NS_OK;
     }
 
-    NS_IMETHODIMP GetAppId(uint32_t *aAppId)
+    NS_IMETHODIMP GetAppId(uint32_t *aAppId) MOZ_OVERRIDE
     {
         *aAppId = mAppId;
         return NS_OK;

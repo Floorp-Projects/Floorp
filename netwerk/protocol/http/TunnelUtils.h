@@ -93,7 +93,7 @@ public:
   virtual void OnTunnelNudged(TLSFilterTransaction *) = 0;
 };
 
-#define NS_DECL_NUDGETUNNELCALLBACK void OnTunnelNudged(TLSFilterTransaction *);
+#define NS_DECL_NUDGETUNNELCALLBACK void OnTunnelNudged(TLSFilterTransaction *) MOZ_OVERRIDE;
 
 class TLSFilterTransaction MOZ_FINAL
   : public nsAHttpTransaction
@@ -115,8 +115,8 @@ public:
                        nsAHttpSegmentWriter *writer);
 
   const nsAHttpTransaction *Transaction() const { return mTransaction.get(); }
-  nsresult CommitToSegmentSize(uint32_t size, bool forceCommitment);
-  nsresult GetTransactionSecurityInfo(nsISupports **);
+  nsresult CommitToSegmentSize(uint32_t size, bool forceCommitment) MOZ_OVERRIDE;
+  nsresult GetTransactionSecurityInfo(nsISupports **) MOZ_OVERRIDE;
   nsresult NudgeTunnel(NudgeTunnelCallback *callback);
   nsresult SetProxiedTransaction(nsAHttpTransaction *aTrans);
   void     newIODriver(nsIAsyncInputStream *aSocketIn,
@@ -184,7 +184,7 @@ public:
                          nsAHttpConnection *session);
   ~SpdyConnectTransaction();
 
-  SpdyConnectTransaction *QuerySpdyConnectTransaction() { return this; }
+  SpdyConnectTransaction *QuerySpdyConnectTransaction() MOZ_OVERRIDE { return this; }
 
   // A transaction is forced into plaintext when it is intended to be used as a CONNECT
   // tunnel but the setup fails. The plaintext only carries the CONNECT error.
