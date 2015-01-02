@@ -30,7 +30,7 @@ public:
     return mGain;
   }
 
-  virtual const char* NodeType() const
+  virtual const char* NodeType() const MOZ_OVERRIDE
   {
     return "GainNode";
   }
