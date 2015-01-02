@@ -7,6 +7,7 @@ test $GECKO_HEAD_REV # Should be an hg revision to pull down
 test $MOZHARNESS_REPOSITORY # mozharness repository
 test $MOZHARNESS_REV # mozharness revision
 test $TARGET
+test $VARIANT
 
 if ! validate_task.py; then
     echo "Not a valid task" >&2
@@ -49,6 +50,7 @@ fi
   --config b2g/taskcluster-phone.py \
   "$debug_flag" \
   --disable-mock \
+  --variant=$VARIANT \
   --work-dir=$OBJDIR/B2G \
   --log-level=debug \
   --target=$TARGET \
