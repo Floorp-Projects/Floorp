@@ -3263,7 +3263,7 @@ GCRuntime::maybeAllocTriggerZoneGC(Zone *zone, const AutoLockGC &lock)
             // to try to avoid performing non-incremental GCs on zones
             // which allocate a lot of data, even when incremental slices
             // can't be triggered via scheduling in the event loop.
-            triggerZoneGC(zone, JS::gcreason::ALLOC_TRIGGER);
+            triggerZoneGC(zone, JS::gcreason::INCREMENTAL_ALLOC_TRIGGER);
 
             // Delay the next slice until a certain amount of allocation
             // has been performed.
@@ -3332,7 +3332,7 @@ GCRuntime::maybeGC(Zone *zone)
         !isBackgroundSweeping())
     {
         PrepareZoneForGC(zone);
-        gcSlice(GC_NORMAL, JS::gcreason::MAYBEGC);
+        gc(GC_NORMAL, JS::gcreason::MAYBEGC);
         return true;
     }
 
@@ -3358,7 +3358,7 @@ GCRuntime::maybePeriodicFullGC()
             numArenasFreeCommitted > decommitThreshold)
         {
             JS::PrepareForFullGC(rt);
-            gcSlice(GC_SHRINK, JS::gcreason::MAYBEGC);
+            gc(GC_SHRINK, JS::gcreason::MAYBEGC);
         } else {
             nextFullGCTime = now + GC_IDLE_FULL_SPAN;
         }
@@ -6395,7 +6395,7 @@ GCRuntime::notifyDidPaint()
 
     if (zealMode == ZealFrameGCValue) {
         JS::PrepareForFullGC(rt);
-        gcSlice(GC_NORMAL, JS::gcreason::REFRESH_FRAME);
+        gc(GC_NORMAL, JS::gcreason::REFRESH_FRAME);
         return;
     }
 #endif
@@ -6546,7 +6546,10 @@ GCRuntime::gcIfNeeded(JSContext *cx /* = nullptr */)
     }
 
     if (majorGCRequested) {
-        gcSlice(GC_NORMAL, rt->gc.majorGCTriggerReason);
+        if (rt->gc.majorGCTriggerReason == JS::gcreason::INCREMENTAL_ALLOC_TRIGGER)
+            gcSlice(GC_NORMAL, rt->gc.majorGCTriggerReason);
+        else
+            gc(GC_NORMAL, rt->gc.majorGCTriggerReason);
         return true;
     }
 
