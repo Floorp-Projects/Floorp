@@ -813,6 +813,10 @@ nsEditorEventListener::DragEnter(nsIDOMDragEvent* aDragEvent)
     mCaret = new nsCaret();
     mCaret->Init(presShell);
     mCaret->SetCaretReadOnly(true);
+    // This is to avoid the requirement that the Selection is Collapsed which
+    // it can't be when dragging a selection in the same shell.
+    // See nsCaret::IsVisible().
+    mCaret->SetVisibilityDuringSelection(true);
   }
 
   presShell->SetCaret(mCaret);
