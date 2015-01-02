@@ -13,6 +13,7 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "mozilla/gfx/Rect.h"           // for Rect, RectTyped
+#include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/LayerMetricsWrapper.h" // for LayerMetricsWrapper
 #include "mozilla/layers/LayersMessages.h"
 #include "mozilla/mozalloc.h"           // for operator delete, etc
@@ -22,7 +23,6 @@
 
 namespace mozilla {
 namespace layers {
-
 
 ClientTiledPaintedLayer::ClientTiledPaintedLayer(ClientLayerManager* const aManager,
                                                ClientLayerManager::PaintedLayerCreationHint aCreationHint)
@@ -178,6 +178,36 @@ ClientTiledPaintedLayer::BeginPaint()
 }
 
 bool
+ClientTiledPaintedLayer::IsScrollingOnCompositor(const FrameMetrics& aParentMetrics)
+{
+  CompositorChild* compositor = nullptr;
+  if (Manager() && Manager()->AsClientLayerManager()) {
+    compositor = Manager()->AsClientLayerManager()->GetCompositorChild();
+  }
+
+  if (!compositor) {
+    return false;
+  }
+
+  FrameMetrics compositorMetrics;
+  if (!compositor->LookupCompositorFrameMetrics(aParentMetrics.GetScrollId(),
+                                                compositorMetrics)) {
+    return false;
+  }
+
+  // 1 is a tad high for a fuzzy equals epsilon however if our scroll delta
+  // is so small then we have nothing to gain from using paint heuristics.
+  float COORDINATE_EPSILON = 1.f;
+
+  return !FuzzyEqualsAdditive(compositorMetrics.GetScrollOffset().x,
+                              aParentMetrics.GetScrollOffset().x,
+                              COORDINATE_EPSILON) ||
+         !FuzzyEqualsAdditive(compositorMetrics.GetScrollOffset().y,
+                              aParentMetrics.GetScrollOffset().y,
+                              COORDINATE_EPSILON);
+}
+
+bool
 ClientTiledPaintedLayer::UseFastPath()
 {
   LayerMetricsWrapper scrollAncestor;
@@ -191,7 +221,13 @@ ClientTiledPaintedLayer::UseFastPath()
                                  || gfxPrefs::UseLowPrecisionBuffer()
                                  || !parentMetrics.GetCriticalDisplayPort().IsEmpty();
   bool isFixed = GetIsFixedPosition() || GetParent()->GetIsFixedPosition();
-  return !multipleTransactionsNeeded || isFixed || parentMetrics.GetDisplayPort().IsEmpty();
+  bool isScrollable = parentMetrics.IsScrollable();
+
+  return !multipleTransactionsNeeded || isFixed || !isScrollable
+#if !defined(MOZ_WIDGET_ANDROID) || defined(MOZ_ANDROID_APZ)
+         || !IsScrollingOnCompositor(parentMetrics)
+#endif
+         ;
 }
 
 bool
