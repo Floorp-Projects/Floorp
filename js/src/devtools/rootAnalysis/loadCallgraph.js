@@ -160,7 +160,7 @@ function loadCallgraph(file)
         suppressedFunctions[name] = true;
     }
 
-    for (var gcName of [ 'void js::gc::GCRuntime::collect(uint8, js::SliceBudget*, uint32, uint32)',
+    for (var gcName of [ 'void js::gc::GCRuntime::collect(uint8, js::SliceBudget, uint32)',
                          'void js::gc::GCRuntime::minorGC(uint32)',
                          'void js::gc::GCRuntime::minorGC(uint32)' ])
     {
