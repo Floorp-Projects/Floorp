@@ -207,16 +207,27 @@ ShrinkingGC(JSRuntime *rt, gcreason::Reason reason);
  */
 
 /*
- * Begin an incremental collection and perform one slice worth of work or
- * perform a slice of an ongoing incremental collection. When this function
- * returns, the collection is not complete. This function must be called
- * repeatedly until !IsIncrementalGCInProgress(rt).
+ * Begin an incremental collection and perform one slice worth of work. When
+ * this function returns, the collection may not be complete.
+ * IncrementalGCSlice() must be called repeatedly until
+ * !IsIncrementalGCInProgress(rt).
  *
  * Note: SpiderMonkey's GC is not realtime. Slices in practice may be longer or
  *       shorter than the requested interval.
  */
 extern JS_FRIEND_API(void)
-IncrementalGC(JSRuntime *rt, gcreason::Reason reason, int64_t millis = 0);
+StartIncrementalGC(JSRuntime *rt, gcreason::Reason reason, int64_t millis = 0);
+
+/*
+ * Perform a slice of an ongoing incremental collection. When this function
+ * returns, the collection may not be complete. It must be called repeatedly
+ * until !IsIncrementalGCInProgress(rt).
+ *
+ * Note: SpiderMonkey's GC is not realtime. Slices in practice may be longer or
+ *       shorter than the requested interval.
+ */
+extern JS_FRIEND_API(void)
+IncrementalGCSlice(JSRuntime *rt, gcreason::Reason reason, int64_t millis = 0);
 
 /*
  * If IsIncrementalGCInProgress(rt), this call finishes the ongoing collection
