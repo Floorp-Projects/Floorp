@@ -8,8 +8,13 @@ package org.mozilla.gecko;
 import org.json.JSONObject;
 import org.mozilla.gecko.util.EventCallback;
 
-/* Wrapper for MediaRouter types supported by Android, such as Chromecast, Miracast, etc. */
+/**
+ * Wrapper for MediaRouter types supported by Android, such as Chromecast, Miracast, etc.
+ */
 interface GeckoMediaPlayer {
+    /**
+     * Can return null.
+     */
     JSONObject toJSON();
     void load(String title, String url, String type, EventCallback callback);
     void play(EventCallback callback);
