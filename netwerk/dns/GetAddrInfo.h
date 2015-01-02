@@ -10,7 +10,7 @@
 #include "nsError.h"
 #include "nscore.h"
 
-#if defined(XP_WIN) && !defined(RELEASE_BUILD)
+#if defined(XP_WIN)
 #define DNSQUERY_AVAILABLE 1
 #define TTL_AVAILABLE 1
 #else
