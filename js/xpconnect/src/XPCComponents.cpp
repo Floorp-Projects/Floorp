@@ -2750,7 +2750,7 @@ nsXPCComponents_Utils::ForceGC()
 {
     JSRuntime* rt = nsXPConnect::GetRuntimeInstance()->Runtime();
     PrepareForFullGC(rt);
-    GCForReason(rt, gcreason::COMPONENT_UTILS);
+    GCForReason(rt, GC_NORMAL, gcreason::COMPONENT_UTILS);
     return NS_OK;
 }
 
@@ -2800,7 +2800,7 @@ nsXPCComponents_Utils::ForceShrinkingGC()
 {
     JSRuntime* rt = nsXPConnect::GetRuntimeInstance()->Runtime();
     PrepareForFullGC(rt);
-    ShrinkingGC(rt, gcreason::COMPONENT_UTILS);
+    GCForReason(rt, GC_SHRINK, gcreason::COMPONENT_UTILS);
     return NS_OK;
 }
 
@@ -2823,10 +2823,8 @@ class PreciseGCRunnable : public nsRunnable
         }
 
         PrepareForFullGC(rt);
-        if (mShrinking)
-            ShrinkingGC(rt, gcreason::COMPONENT_UTILS);
-        else
-            GCForReason(rt, gcreason::COMPONENT_UTILS);
+        JSGCInvocationKind gckind = mShrinking ? GC_SHRINK : GC_NORMAL;
+        GCForReason(rt, gckind, gcreason::COMPONENT_UTILS);
 
         mCallback->Callback();
         return NS_OK;
