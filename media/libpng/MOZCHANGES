@@ -1,12 +1,19 @@
 
 Changes made to pristine libpng source by mozilla.org developers.
 
+2014/12/22  -- Synced with libpng-1.6.16 (bug #1114360).
+               Added arm.patch file.
+
 2014/11/20  -- Synced with libpng-1.6.15 (bug #1102523).
 
 2014/10/23  -- Synced with libpng-1.6.14 (bug #1087841).
 
 2014/08/21  -- Synced with libpng-1.6.13 (bug #1021713).
                Renamed mozpngconf.h to pnglibconf.h.
+               Revised system arm/filter_neon.S to include the lines
+               #define PNG_READ_SUPPORTED and  #define MOZ_PNG_HAVE_ARM_NEON
+               because the moz.build system doesn't yet pass -DDefined
+               macros to the assembler.
 
 2014/03/21  -- Synced with libpng-1.6.10 (bug #980488) and disabled
                PNG_WARNINGS and PNG_ERROR_TEXT in non-debug builds.
@@ -16,10 +23,12 @@ Changes made to pristine libpng source by mozilla.org developers.
 2014/03/04  -- Enabled PNG_WARNINGS and other stuff in mozpngconf.h
                as part of enabling Freetype2 with PNG (bug #969814).
 
-2014/03/03  -- Fixed hang with empty IDAT (bug #974825).
+2014/03/03  -- Fixed hang with empty IDAT (bug #974825). This will be
+               fixed in libpng-1.6.10.
 
 2014/02/18  -- Exposed png_error(), etc. redefinitions to applications
-               (moved them from pngpriv.h to png.h).
+               (moved them from pngpriv.h to png.h). This will be fixed
+               in libpng-1.6.10.
 
 2014/02/18  -- Disabled PNG_FIXED_POINT_SUPPORTED in mozpngconf.h (we
                don't need both FIXED and FLOATING_POINT support).
@@ -27,6 +36,7 @@ Changes made to pristine libpng source by mozilla.org developers.
 2014/02/15  -- Synced with libpng-1.6.9 (bug #952505).
 
 2014/02/11  -- Fixed crash with empty PLTE, CVE-2013-6954 (bug #945912).
+               This will be fixed in libpng-1.6.9.
 
 2013/12/11  -- Enable ARM support (bug #832390).
 

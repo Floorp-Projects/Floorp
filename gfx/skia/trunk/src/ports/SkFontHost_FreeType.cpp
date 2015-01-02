@@ -1337,7 +1337,7 @@ void SkScalerContext_FreeType::generatePath(const SkGlyph& glyph,
                                             SkPath* path) {
     SkAutoMutexAcquire  ac(gFTMutex);
 
-    SkASSERT(&glyph && path);
+    SkASSERT(path);
 
     if (this->setupSize()) {
         path->reset();
