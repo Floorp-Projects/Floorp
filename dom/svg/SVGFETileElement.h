@@ -28,7 +28,7 @@ protected:
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
 
 public:
-  virtual bool SubregionIsUnionOfRegions() { return false; }
+  virtual bool SubregionIsUnionOfRegions() MOZ_OVERRIDE { return false; }
 
   virtual FilterPrimitiveDescription
     GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
