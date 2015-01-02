@@ -26,7 +26,7 @@ body {
 /* Tabs and tab selection buttons */
 
 .tab-view-container {
-  background-image: url("../img/beta-ribbon.svg#beta-ribbon");
+  background-image: url("../shared/img/beta-ribbon.svg#beta-ribbon");
   background-size: 36px 36px;
   background-repeat: no-repeat;
 }
@@ -61,29 +61,29 @@ body {
 
 .tab-view > li[data-tab-name="call"],
 .tab-view > li[data-tab-name="rooms"] {
-  background-image: url("../img/icons-16x16.svg#precall");
+  background-image: url("../shared/img/icons-16x16.svg#precall");
 }
 
 .tab-view > li[data-tab-name="call"]:hover,
 .tab-view > li[data-tab-name="rooms"]:hover {
-  background-image: url("../img/icons-16x16.svg#precall-hover");
+  background-image: url("../shared/img/icons-16x16.svg#precall-hover");
 }
 
 .tab-view > li[data-tab-name="call"].selected,
 .tab-view > li[data-tab-name="rooms"].selected {
-  background-image: url("../img/icons-16x16.svg#precall-active");
+  background-image: url("../shared/img/icons-16x16.svg#precall-active");
 }
 
 .tab-view > li[data-tab-name="contacts"] {
-  background-image: url("../img/icons-16x16.svg#contacts");
+  background-image: url("../shared/img/icons-16x16.svg#contacts");
 }
 
 .tab-view > li[data-tab-name="contacts"]:hover {
-  background-image: url("../img/icons-16x16.svg#contacts-hover");
+  background-image: url("../shared/img/icons-16x16.svg#contacts-hover");
 }
 
 .tab-view > li[data-tab-name="contacts"].selected {
-  background-image: url("../img/icons-16x16.svg#contacts-active");
+  background-image: url("../shared/img/icons-16x16.svg#contacts-active");
 }
 
 .tab {
@@ -281,11 +281,11 @@ body {
 }
 
 .room-list > .room-entry:hover > h2 > .copy-link {
-  background-image: url(../img/icons-16x16.svg#copy);
+  background-image: url(../shared/img/icons-16x16.svg#copy);
 }
 
 .room-list > .room-entry:hover > h2 > .delete-link {
-  background-image: url(../img/icons-16x16.svg#trash);
+  background-image: url(../shared/img/icons-16x16.svg#trash);
 }
 
 /* scale this up to 1.1x and then back to the original size */
@@ -295,7 +295,7 @@ body {
 }
 
 .room-list > .room-entry > h2 > .copy-link.checked {
-  background: transparent url(../img/icons-16x16.svg#checkmark);
+  background: transparent url(../shared/img/icons-16x16.svg#checkmark);
   animation: pulse .150s;
   animation-timing-function: ease-in-out;
   top: 0px;
@@ -442,7 +442,7 @@ body[dir=rtl] .dropdown-menu-item {
 }
 
 .spinner.busy {
-  background-image: url(../img/spinner.png);
+  background-image: url(../shared/img/spinner.png);
   animation-name: spinnerRotate;
   animation-duration: 1s;
   animation-timing-function: linear;
@@ -451,7 +451,7 @@ body[dir=rtl] .dropdown-menu-item {
 
 @media (min-resolution: 2dppx) {
   .spinner.busy {
-    background-image: url(../img/spinner@2x.png);
+    background-image: url(../shared/img/spinner@2x.png);
   }
 }
 
@@ -518,7 +518,7 @@ body[dir=rtl] .generate-url-spinner {
   margin-left: 10px;
   margin-right: 10px;
   vertical-align: middle;
-  background-image: url("../img/telefonica.png");
+  background-image: url("../shared/img/telefonica.png");
   background-size: 72px 20px;
   width: 72px;
   height: 20px;
@@ -526,21 +526,21 @@ body[dir=rtl] .generate-url-spinner {
 
 #powered-by-logo.en-GB,
 #powered-by-logo.de {
-  background-image: url("../img/02.png");
+  background-image: url("../shared/img/02.png");
   background-size: 21px 20px;
   width: 21px;
   height: 20px;
 }
 
 #powered-by-logo.pt-BR {
-  background-image: url("../img/vivo.png");
+  background-image: url("../shared/img/vivo.png");
   background-size: 53px 26px;
   width: 53px;
   height: 26px;
 }
 
 #powered-by-logo[class^="es-"] {
-  background-image: url("../img/movistar.png");
+  background-image: url("../shared/img/movistar.png");
   background-size: 92px 20px;
   width: 92px;
   height: 20px;
@@ -548,20 +548,20 @@ body[dir=rtl] .generate-url-spinner {
 
 @media (min-resolution: 2dppx) {
   #powered-by-logo {
-    background-image: url("../img/telefonica@2x.png");
+    background-image: url("../shared/img/telefonica@2x.png");
   }
 
   #powered-by-logo.en-GB,
   #powered-by-logo.de {
-    background-image: url("../img/02@2x.png");
+    background-image: url("../shared/img/02@2x.png");
   }
 
   #powered-by-logo.pt-BR {
-    background-image: url("../img/vivo@2x.png");
+    background-image: url("../shared/img/vivo@2x.png");
   }
 
   #powered-by-logo[class^="es-"] {
-    background-image: url("../img/movistar@2x.png");
+    background-image: url("../shared/img/movistar@2x.png");
   }
 }
 
@@ -648,7 +648,7 @@ body[dir=rtl] .generate-url-spinner {
   white-space: nowrap;
   font-size: .9em;
   cursor: pointer;
-  background: transparent url(../img/svg/glyph-settings-16x16.svg) no-repeat center center;
+  background: transparent url(../shared/img/svg/glyph-settings-16x16.svg) no-repeat center center;
   background-size: contain;
   width: 12px;
   height: 12px;
@@ -677,27 +677,27 @@ body[dir=rtl] .generate-url-spinner {
 }
 
 .settings-menu .icon-settings {
-  background: transparent url(../img/svg/glyph-settings-16x16.svg) no-repeat center center;
+  background: transparent url(../shared/img/svg/glyph-settings-16x16.svg) no-repeat center center;
 }
 
 .settings-menu .icon-tour {
-  background: transparent url("../img/icons-16x16.svg#tour") no-repeat center center;
+  background: transparent url("../shared/img/icons-16x16.svg#tour") no-repeat center center;
 }
 
 .settings-menu .icon-account {
-  background: transparent url(../img/svg/glyph-account-16x16.svg) no-repeat center center;
+  background: transparent url(../shared/img/svg/glyph-account-16x16.svg) no-repeat center center;
 }
 
 .settings-menu .icon-signin {
-  background: transparent url(../img/svg/glyph-signin-16x16.svg) no-repeat center center;
+  background: transparent url(../shared/img/svg/glyph-signin-16x16.svg) no-repeat center center;
 }
 
 .settings-menu .icon-signout {
-  background: transparent url(../img/svg/glyph-signout-16x16.svg) no-repeat center center;
+  background: transparent url(../shared/img/svg/glyph-signout-16x16.svg) no-repeat center center;
 }
 
 .settings-menu .icon-help {
-  background: transparent url(../img/svg/glyph-help-16x16.svg) no-repeat center center;
+  background: transparent url(../shared/img/svg/glyph-help-16x16.svg) no-repeat center center;
 }
 
 /* Footer */
