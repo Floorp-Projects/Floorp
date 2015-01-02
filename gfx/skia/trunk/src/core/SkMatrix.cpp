@@ -1067,7 +1067,7 @@ void SkMatrix::mapVectors(SkPoint dst[], const SkPoint src[], int count) const {
 }
 
 bool SkMatrix::mapRect(SkRect* dst, const SkRect& src) const {
-    SkASSERT(dst && &src);
+    SkASSERT(dst);
 
     if (this->rectStaysRect()) {
         this->mapPoints((SkPoint*)dst, (const SkPoint*)&src, 2);
