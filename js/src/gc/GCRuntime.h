@@ -320,8 +320,9 @@ class GCRuntime
     void evictNursery(JS::gcreason::Reason reason = JS::gcreason::EVICT_NURSERY) { minorGC(reason); }
     bool gcIfNeeded(JSContext *cx = nullptr);
     void gc(JSGCInvocationKind gckind, JS::gcreason::Reason reason);
-    void gcSlice(JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64_t millis = 0);
-    void gcFinalSlice(JSGCInvocationKind gckind, JS::gcreason::Reason reason);
+    void startGC(JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64_t millis = 0);
+    void gcSlice(JS::gcreason::Reason reason, int64_t millis = 0);
+    void finishGC(JS::gcreason::Reason reason);
     void gcDebugSlice(SliceBudget &budget);
 
     void runDebugGC();
@@ -558,10 +559,9 @@ class GCRuntime
     void startBackgroundAllocTaskIfIdle();
 
     void requestMajorGC(JS::gcreason::Reason reason);
-    void collect(bool incremental, SliceBudget &budget, JSGCInvocationKind gckind,
-                 JS::gcreason::Reason reason);
-    bool gcCycle(bool incremental, SliceBudget &budget, JSGCInvocationKind gckind,
-                 JS::gcreason::Reason reason);
+    SliceBudget defaultBudget(JS::gcreason::Reason reason, int64_t millis);
+    void collect(bool incremental, SliceBudget budget, JS::gcreason::Reason reason);
+    bool gcCycle(bool incremental, SliceBudget &budget, JS::gcreason::Reason reason);
     gcstats::ZoneGCStats scanZonesBeforeGC();
     void budgetIncrementalGC(SliceBudget &budget);
     void resetIncrementalGC(const char *reason);
