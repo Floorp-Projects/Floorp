@@ -35,6 +35,16 @@ public:
     return !mOldDesc ? NS_ERROR_NULL_POINTER :
                        mOldDesc->SetExpirationTime(expirationTime);
   }
+  nsresult OpenInputStream(uint32_t offset, nsIInputStream * *_retval)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->OpenInputStream(offset, _retval);
+  }
+  nsresult OpenOutputStream(uint32_t offset, nsIOutputStream * *_retval)
+  {
+    return !mOldDesc ? NS_ERROR_NULL_POINTER :
+                       mOldDesc->OpenOutputStream(offset, _retval);
+  }
   NS_IMETHOD GetPredictedDataSize(int64_t *aPredictedDataSize) MOZ_OVERRIDE
   {
     return !mOldDesc ? NS_ERROR_NULL_POINTER :
