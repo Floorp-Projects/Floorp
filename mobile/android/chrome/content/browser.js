@@ -505,7 +505,8 @@ var BrowserApp = {
       // Tiles reporting is disabled.
     }
 
-    window.messageManager.loadFrameScript("chrome://browser/content/content.js", true);
+    let mm = window.getGroupMessageManager("browsers");
+    mm.loadFrameScript("chrome://browser/content/content.js", true);
 
     // Notify Java that Gecko has loaded.
     Messaging.sendRequest({ type: "Gecko:Ready" });
@@ -3287,6 +3288,7 @@ Tab.prototype = {
 
     this.browser = document.createElement("browser");
     this.browser.setAttribute("type", "content-targetable");
+    this.browser.setAttribute("messagemanagergroup", "browsers");
     this.setBrowserSize(kDefaultCSSViewportWidth, kDefaultCSSViewportHeight);
 
     // Make sure the previously selected panel remains selected. The selected panel of a deck is
