@@ -192,6 +192,14 @@ CompositorChild::ActorDestroy(ActorDestroyReason aWhy)
     NewRunnableMethod(this, &CompositorChild::Release));
 }
 
+void
+CompositorChild::ShutDown()
+{
+  if (sCompositor) {
+    sCompositor->ActorDestroy(NormalShutdown);
+  }
+}
+
 bool
 CompositorChild::RecvSharedCompositorFrameMetrics(
     const mozilla::ipc::SharedMemoryBasic::Handle& metrics,
