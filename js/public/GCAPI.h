@@ -31,17 +31,6 @@ typedef enum JSGCMode {
     JSGC_MODE_INCREMENTAL = 2
 } JSGCMode;
 
-/*
- * Kinds of js_GC invocation.
- */
-typedef enum JSGCInvocationKind {
-    /* Normal invocation. */
-    GC_NORMAL = 0,
-
-    /* Minimize GC triggers and release empty GC chunks right away. */
-    GC_SHRINK = 1
-} JSGCInvocationKind;
-
 namespace JS {
 
 #define GCREASONS(D)                            \
@@ -60,7 +49,6 @@ namespace JS {
     D(EVICT_NURSERY)                            \
     D(FULL_STORE_BUFFER)                        \
     D(SHARED_MEMORY_LIMIT)                      \
-    D(INCREMENTAL_ALLOC_TRIGGER)                \
                                                 \
     /* These are reserved for future use. */    \
     D(RESERVED0)                                \
@@ -81,6 +69,7 @@ namespace JS {
     D(RESERVED15)                               \
     D(RESERVED16)                               \
     D(RESERVED17)                               \
+    D(RESERVED18)                               \
                                                 \
     /* Reasons from Firefox */                  \
     D(DOM_WINDOW_UTILS)                         \
@@ -179,16 +168,20 @@ SkipZoneForGC(Zone *zone);
  */
 
 /*
- * Performs a non-incremental collection of all selected zones.
- *
- * If the gckind argument is GC_NORMAL, then some objects that are unreachable
- * from the program may still be alive afterwards because of internal
- * references; if GC_SHRINK is passed then caches and other temporary references
- * to objects will be cleared and all unreferenced objects will be removed from
- * the system.
+ * Performs a non-incremental collection of all selected zones. Some objects
+ * that are unreachable from the program may still be alive afterwards because
+ * of internal references.
  */
 extern JS_FRIEND_API(void)
-GCForReason(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason);
+GCForReason(JSRuntime *rt, gcreason::Reason reason);
+
+/*
+ * Perform a non-incremental collection after clearing caches and other
+ * temporary references to objects. This will remove all unreferenced objects
+ * in the system.
+ */
+extern JS_FRIEND_API(void)
+ShrinkingGC(JSRuntime *rt, gcreason::Reason reason);
 
 /*
  * Incremental GC:
@@ -214,28 +207,16 @@ GCForReason(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason);
  */
 
 /*
- * Begin an incremental collection and perform one slice worth of work. When
- * this function returns, the collection may not be complete.
- * IncrementalGCSlice() must be called repeatedly until
- * !IsIncrementalGCInProgress(rt).
+ * Begin an incremental collection and perform one slice worth of work or
+ * perform a slice of an ongoing incremental collection. When this function
+ * returns, the collection is not complete. This function must be called
+ * repeatedly until !IsIncrementalGCInProgress(rt).
  *
  * Note: SpiderMonkey's GC is not realtime. Slices in practice may be longer or
  *       shorter than the requested interval.
  */
 extern JS_FRIEND_API(void)
-StartIncrementalGC(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason,
-                   int64_t millis = 0);
-
-/*
- * Perform a slice of an ongoing incremental collection. When this function
- * returns, the collection may not be complete. It must be called repeatedly
- * until !IsIncrementalGCInProgress(rt).
- *
- * Note: SpiderMonkey's GC is not realtime. Slices in practice may be longer or
- *       shorter than the requested interval.
- */
-extern JS_FRIEND_API(void)
-IncrementalGCSlice(JSRuntime *rt, gcreason::Reason reason, int64_t millis = 0);
+IncrementalGC(JSRuntime *rt, gcreason::Reason reason, int64_t millis = 0);
 
 /*
  * If IsIncrementalGCInProgress(rt), this call finishes the ongoing collection
