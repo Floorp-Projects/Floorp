@@ -656,9 +656,10 @@ function ArrayIteratorNext() {
                             "ArrayIteratorNext");
     }
 
-    var a = UnsafeGetReservedSlot(this, ARRAY_ITERATOR_SLOT_ITERATED_OBJECT);
+    var a = UnsafeGetObjectFromReservedSlot(this, ARRAY_ITERATOR_SLOT_ITERATED_OBJECT);
+    // The index might not be an integer, so we have to do a generic get here.
     var index = UnsafeGetReservedSlot(this, ARRAY_ITERATOR_SLOT_NEXT_INDEX);
-    var itemKind = UnsafeGetReservedSlot(this, ARRAY_ITERATOR_SLOT_ITEM_KIND);
+    var itemKind = UnsafeGetInt32FromReservedSlot(this, ARRAY_ITERATOR_SLOT_ITEM_KIND);
     var result = { value: undefined, done: false };
 
     // FIXME: This should be ToLength, which clamps at 2**53.  Bug 924058.
