@@ -175,9 +175,9 @@ public:
   }
 
   NS_IMETHODIMP ReadSegments(nsWriteSegmentFun fun, void *closure,
-                             uint32_t count, uint32_t *result);
+                             uint32_t count, uint32_t *result) MOZ_OVERRIDE;
   NS_IMETHODIMP AsyncWait(nsIInputStreamCallback *callback, uint32_t flags,
-                          uint32_t count, nsIEventTarget *target);
+                          uint32_t count, nsIEventTarget *target) MOZ_OVERRIDE;
 
 private:
   virtual ~nsFileUploadContentStream() {}

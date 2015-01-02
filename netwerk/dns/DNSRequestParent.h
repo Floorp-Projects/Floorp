@@ -30,8 +30,8 @@ public:
   // needed if the request is to be canceled.
   bool RecvCancelDNSRequest(const nsCString& hostName,
                             const uint32_t& flags,
-                            const nsresult& reason);
-  bool Recv__delete__();
+                            const nsresult& reason) MOZ_OVERRIDE;
+  bool Recv__delete__() MOZ_OVERRIDE;
 
 protected:
   virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;

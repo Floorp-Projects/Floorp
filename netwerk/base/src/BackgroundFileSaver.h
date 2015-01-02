@@ -54,7 +54,7 @@ public:
   /**
    * Used by nsNSSShutDownList to manage nsNSSShutDownObjects.
    */
-  void virtualDestroyNSSReference();
+  void virtualDestroyNSSReference() MOZ_OVERRIDE;
 
   /**
    * Number of worker threads that are currently running.
@@ -400,7 +400,7 @@ public:
   DigestOutputStream(nsIOutputStream* outputStream, PK11Context* aContext);
 
   // We don't own any NSS objects here, so no need to clean up
-  void virtualDestroyNSSReference() { }
+  void virtualDestroyNSSReference() MOZ_OVERRIDE { }
 
 private:
   ~DigestOutputStream();

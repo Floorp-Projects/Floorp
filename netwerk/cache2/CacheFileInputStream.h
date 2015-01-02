@@ -29,11 +29,11 @@ class CacheFileInputStream : public nsIAsyncInputStream
 public:
   explicit CacheFileInputStream(CacheFile *aFile);
 
-  NS_IMETHOD OnChunkRead(nsresult aResult, CacheFileChunk *aChunk);
-  NS_IMETHOD OnChunkWritten(nsresult aResult, CacheFileChunk *aChunk);
+  NS_IMETHOD OnChunkRead(nsresult aResult, CacheFileChunk *aChunk) MOZ_OVERRIDE;
+  NS_IMETHOD OnChunkWritten(nsresult aResult, CacheFileChunk *aChunk) MOZ_OVERRIDE;
   NS_IMETHOD OnChunkAvailable(nsresult aResult, uint32_t aChunkIdx,
-                              CacheFileChunk *aChunk);
-  NS_IMETHOD OnChunkUpdated(CacheFileChunk *aChunk);
+                              CacheFileChunk *aChunk) MOZ_OVERRIDE;
+  NS_IMETHOD OnChunkUpdated(CacheFileChunk *aChunk) MOZ_OVERRIDE;
 
   // Memory reporting
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;

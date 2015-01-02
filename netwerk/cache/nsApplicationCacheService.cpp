@@ -213,7 +213,7 @@ public:
 
     // nsIObserver implementation.
     NS_IMETHODIMP
-    Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData)
+    Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData) MOZ_OVERRIDE
     {
         MOZ_ASSERT(!nsCRT::strcmp(aTopic, TOPIC_WEB_APP_CLEAR_DATA));
 

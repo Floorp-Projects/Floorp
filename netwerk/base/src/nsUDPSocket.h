@@ -22,12 +22,12 @@ public:
   NS_DECL_NSIUDPSOCKET
 
   // nsASocketHandler methods:
-  virtual void OnSocketReady(PRFileDesc* fd, int16_t outFlags);
-  virtual void OnSocketDetached(PRFileDesc* fd);
-  virtual void IsLocal(bool* aIsLocal);
+  virtual void OnSocketReady(PRFileDesc* fd, int16_t outFlags) MOZ_OVERRIDE;
+  virtual void OnSocketDetached(PRFileDesc* fd) MOZ_OVERRIDE;
+  virtual void IsLocal(bool* aIsLocal) MOZ_OVERRIDE;
 
-  uint64_t ByteCountSent() { return mByteWriteCount; }
-  uint64_t ByteCountReceived() { return mByteReadCount; }
+  uint64_t ByteCountSent() MOZ_OVERRIDE { return mByteWriteCount; }
+  uint64_t ByteCountReceived() MOZ_OVERRIDE { return mByteReadCount; }
 
   void AddOutputBytes(uint64_t aBytes);
 
