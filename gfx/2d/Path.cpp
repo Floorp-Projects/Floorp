@@ -459,6 +459,12 @@ FlattenBezier(const BezierControlPoints &aControlPoints,
 
   // Process ranges. [t1min, t1max] and [t2min, t2max] are approximated by line
   // segments.
+  if (count == 1 && t1min <= 0 && t1max >= 1.0) {
+    // The whole range can be approximated by a line segment.
+    aSink->LineTo(aControlPoints.mCP4);
+    return;
+  }
+
   if (t1min > 0) {
     // Flatten the Bezier up until the first inflection point's approximation
     // point.
