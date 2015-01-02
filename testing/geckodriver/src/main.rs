@@ -1,6 +1,9 @@
 #![feature(slicing_syntax)]
 #![feature(phase)]
+#![feature(macro_rules)]
+#![feature(unboxed_closures)]
 
+extern crate core;
 extern crate getopts;
 extern crate hyper;
 #[phase(plugin, link)] extern crate log;
@@ -12,6 +15,15 @@ use httpserver::start;
 use std::io::net::ip::SocketAddr;
 use std::io;
 use std::os;
+
+macro_rules! try_opt {
+    ($expr:expr, $err_type:expr, $err_msg:expr) => ({
+        match $expr {
+            Some(x) => x,
+            None => return Err(WebDriverError::new($err_type, $err_msg))
+        }
+    })
+}
 
 mod command;
 mod common;
