@@ -86,8 +86,9 @@ public:
     return TestCheckPublicKey(subjectPublicKeyInfo);
   }
 
-  OCSPTestTrustDomain(const OCSPTestTrustDomain&) = delete;
-  void operator=(const OCSPTestTrustDomain&) = delete;
+private:
+  OCSPTestTrustDomain(const OCSPTestTrustDomain&) /*delete*/;
+  void operator=(const OCSPTestTrustDomain&) /*delete*/;
 };
 
 namespace {
