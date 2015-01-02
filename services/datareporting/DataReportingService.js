@@ -391,6 +391,15 @@ DataReportingService.prototype = Object.freeze({
     return this._clientID;
   }),
 
+  /**
+   * Returns the SessionRecorder instance associated with the data reporting service.
+   * Returns an actual object only if FHR is enabled and after initialization,
+   * else returns undefined.
+   */
+  getSessionRecorder: function() {
+    return this.sessionRecorder;
+  },
+
   /*
    * Simulate a restart of the service. This is for testing only.
    */
