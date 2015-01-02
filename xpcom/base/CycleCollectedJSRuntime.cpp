@@ -1025,7 +1025,7 @@ CycleCollectedJSRuntime::GarbageCollect(uint32_t aReason) const
   JS::gcreason::Reason gcreason = static_cast<JS::gcreason::Reason>(aReason);
 
   JS::PrepareForFullGC(mJSRuntime);
-  JS::GCForReason(mJSRuntime, gcreason);
+  JS::GCForReason(mJSRuntime, GC_NORMAL, gcreason);
 }
 
 void
