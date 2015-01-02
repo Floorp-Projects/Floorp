@@ -169,8 +169,11 @@ class ChromeCast implements GeckoMediaPlayer {
         this.canMirror = route.supportsControlCategory(CastMediaControlIntent.categoryForCast(MIRROR_RECEIVER_APP_ID));
     }
 
-    // This dumps everything we can find about the device into JSON. This will hopefully make it
-    // easier to filter out duplicate devices from different sources in js.
+    /**
+     *  This dumps everything we can find about the device into JSON. This will hopefully make it
+     *  easier to filter out duplicate devices from different sources in JS.
+     *  Returns null if the device can't be found.
+     */
     @Override
     public JSONObject toJSON() {
         final JSONObject obj = new JSONObject();
@@ -188,7 +191,7 @@ class ChromeCast implements GeckoMediaPlayer {
             obj.put("mirror", canMirror);
             // For now we just assume all of these are Google devices
             obj.put("manufacturer", "Google Inc.");
-        } catch(JSONException ex) {
+        } catch (JSONException ex) {
             debug("Error building route", ex);
         }
 

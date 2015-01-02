@@ -28,6 +28,7 @@ const events = require("sdk/event/core");
 const {setTimeout, clearTimeout} = require("sdk/timers");
 const {MemoryActor} = require("devtools/server/actors/memory");
 const {FramerateActor} = require("devtools/server/actors/framerate");
+const {StackFrameCache} = require("devtools/server/actors/utils/stack");
 
 // How often do we pull markers from the docShells, and therefore, how often do
 // we send events to the front (knowing that when there are no markers in the
@@ -86,6 +87,12 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
       type: "ticks",
       delta: Arg(0, "number"),
       timestamps: Arg(1, "array-of-numbers-as-strings")
+    },
+
+    "frames" : {
+      type: "frames",
+      delta: Arg(0, "number"),
+      frames: Arg(1, "json")
     }
   },
 
@@ -95,6 +102,7 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
 
     this._isRecording = false;
     this._startTime = 0;
+    this._stackFrames = null;
 
     // Make sure to get markers from new windows as they become available
     this._onWindowReady = this._onWindowReady.bind(this);
@@ -170,6 +178,25 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
       markers = [...markers, ...docShell.popProfileTimelineMarkers()];
     }
 
+    // The docshell may return markers with stack traces attached.
+    // Here we transform the stack traces via the stack frame cache,
+    // which lets us preserve tail sharing when transferring the
+    // frames to the client.  We must waive xrays here because Firefox
+    // doesn't understand that the Debugger.Frame object is safe to
+    // use from chrome.  See Tutorial-Alloc-Log-Tree.md.
+    for (let marker of markers) {
+      if (marker.stack) {
+        marker.stack = this._stackFrames.addFrame(Cu.waiveXrays(marker.stack));
+      }
+      if (marker.endStack) {
+        marker.endStack = this._stackFrames.addFrame(Cu.waiveXrays(marker.endStack));
+      }
+    }
+
+    let frames = this._stackFrames.makeEvent();
+    if (frames) {
+      events.emit(this, "frames", endTime, frames);
+    }
     if (markers.length > 0) {
       events.emit(this, "markers", markers, endTime);
     }
@@ -206,13 +233,16 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
     }
     this._isRecording = true;
     this._startTime = this.docShells[0].now();
+    this._stackFrames = new StackFrameCache();
+    this._stackFrames.initFrames();
 
     for (let docShell of this.docShells) {
       docShell.recordProfileTimelineMarkers = true;
     }
 
     if (withMemory) {
-      this._memoryActor = new MemoryActor(this.conn, this.tabActor);
+      this._memoryActor = new MemoryActor(this.conn, this.tabActor,
+                                          this._stackFrames);
       events.emit(this, "memory", this._startTime, this._memoryActor.measure());
     }
     if (withTicks) {
@@ -240,6 +270,7 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
       return;
     }
     this._isRecording = false;
+    this._stackFrames = null;
 
     if (this._memoryActor) {
       this._memoryActor = null;

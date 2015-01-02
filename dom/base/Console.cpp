@@ -813,6 +813,9 @@ public:
                         const nsAString& aCause)
     : nsDocShell::TimelineMarker(aDocShell, "ConsoleTime", aMetaData, aCause)
   {
+    if (aMetaData == TRACING_INTERVAL_END) {
+      CaptureStack();
+    }
   }
 
   virtual bool Equals(const nsDocShell::TimelineMarker* aOther)
@@ -826,7 +829,11 @@ public:
 
   virtual void AddDetails(mozilla::dom::ProfileTimelineMarker& aMarker)
   {
-    aMarker.mCauseName.Construct(GetCause());
+    if (GetMetaData() == TRACING_INTERVAL_START) {
+      aMarker.mCauseName.Construct(GetCause());
+    } else {
+      aMarker.mEndStack = GetStack();
+    }
   }
 };
 

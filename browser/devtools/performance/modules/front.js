@@ -202,6 +202,7 @@ function PerformanceFront(connection) {
 
   // Pipe events from TimelineActor to the PerformanceFront
   connection._timeline.on("markers", markers => this.emit("markers", markers));
+  connection._timeline.on("frames", (delta, frames) => this.emit("frames", delta, frames));
   connection._timeline.on("memory", (delta, measurement) => this.emit("memory", delta, measurement));
   connection._timeline.on("ticks", (delta, timestamps) => this.emit("ticks", delta, timestamps));
 }

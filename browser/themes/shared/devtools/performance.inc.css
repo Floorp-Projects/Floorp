@@ -319,6 +319,15 @@
   border-color: initial !important;
 }
 
+.waterfall-marker-location {
+   color: -moz-nativehyperlinktext;
+}
+
+.waterfall-marker-location:hover,
+.waterfall-marker-location:focus {
+   text-decoration: underline;
+}
+
 #waterfall-details {
   -moz-padding-start: 8px;
   -moz-padding-end: 8px;
