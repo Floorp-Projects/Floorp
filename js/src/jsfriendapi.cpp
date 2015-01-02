@@ -196,21 +196,17 @@ JS::SkipZoneForGC(Zone *zone)
 }
 
 JS_FRIEND_API(void)
-JS::GCForReason(JSRuntime *rt, gcreason::Reason reason)
+JS::GCForReason(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason)
 {
-    rt->gc.gc(GC_NORMAL, reason);
+    MOZ_ASSERT(gckind == GC_NORMAL || gckind == GC_SHRINK);
+    rt->gc.gc(gckind, reason);
 }
 
 JS_FRIEND_API(void)
-JS::ShrinkingGC(JSRuntime *rt, gcreason::Reason reason)
+JS::StartIncrementalGC(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason, int64_t millis)
 {
-    rt->gc.gc(GC_SHRINK, reason);
-}
-
-JS_FRIEND_API(void)
-JS::StartIncrementalGC(JSRuntime *rt, gcreason::Reason reason, int64_t millis)
-{
-    rt->gc.startGC(GC_NORMAL, reason, millis);
+    MOZ_ASSERT(gckind == GC_NORMAL || gckind == GC_SHRINK);
+    rt->gc.startGC(gckind, reason, millis);
 }
 
 JS_FRIEND_API(void)
