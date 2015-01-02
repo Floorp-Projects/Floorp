@@ -29,7 +29,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Accessible
-  virtual TableCellAccessible* AsTableCell() { return this; }
+  virtual TableCellAccessible* AsTableCell() MOZ_OVERRIDE { return this; }
   virtual a11y::role NativeRole() MOZ_OVERRIDE;
   virtual uint64_t NativeState() MOZ_OVERRIDE;
   virtual uint64_t NativeInteractiveState() const MOZ_OVERRIDE;
@@ -119,38 +119,38 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // TableAccessible
-  virtual Accessible* Caption() const;
-  virtual void Summary(nsString& aSummary);
-  virtual uint32_t ColCount();
-  virtual uint32_t RowCount();
-  virtual Accessible* CellAt(uint32_t aRowIndex, uint32_t aColumnIndex);
-  virtual int32_t CellIndexAt(uint32_t aRowIdx, uint32_t aColIdx);
-  virtual int32_t ColIndexAt(uint32_t aCellIdx);
-  virtual int32_t RowIndexAt(uint32_t aCellIdx);
+  virtual Accessible* Caption() const MOZ_OVERRIDE;
+  virtual void Summary(nsString& aSummary) MOZ_OVERRIDE;
+  virtual uint32_t ColCount() MOZ_OVERRIDE;
+  virtual uint32_t RowCount() MOZ_OVERRIDE;
+  virtual Accessible* CellAt(uint32_t aRowIndex, uint32_t aColumnIndex) MOZ_OVERRIDE;
+  virtual int32_t CellIndexAt(uint32_t aRowIdx, uint32_t aColIdx) MOZ_OVERRIDE;
+  virtual int32_t ColIndexAt(uint32_t aCellIdx) MOZ_OVERRIDE;
+  virtual int32_t RowIndexAt(uint32_t aCellIdx) MOZ_OVERRIDE;
   virtual void RowAndColIndicesAt(uint32_t aCellIdx, int32_t* aRowIdx,
-                                  int32_t* aColIdx);
-  virtual uint32_t ColExtentAt(uint32_t aRowIdx, uint32_t aColIdx);
-  virtual uint32_t RowExtentAt(uint32_t aRowIdx, uint32_t aColIdx);
-  virtual bool IsColSelected(uint32_t aColIdx);
-  virtual bool IsRowSelected(uint32_t aRowIdx);
-  virtual bool IsCellSelected(uint32_t aRowIdx, uint32_t aColIdx);
-  virtual uint32_t SelectedCellCount();
-  virtual uint32_t SelectedColCount();
-  virtual uint32_t SelectedRowCount();
-  virtual void SelectedCells(nsTArray<Accessible*>* aCells);
-  virtual void SelectedCellIndices(nsTArray<uint32_t>* aCells);
-  virtual void SelectedColIndices(nsTArray<uint32_t>* aCols);
-  virtual void SelectedRowIndices(nsTArray<uint32_t>* aRows);
-  virtual void SelectCol(uint32_t aColIdx);
-  virtual void SelectRow(uint32_t aRowIdx);
-  virtual void UnselectCol(uint32_t aColIdx);
-  virtual void UnselectRow(uint32_t aRowIdx);
-  virtual bool IsProbablyLayoutTable();
-  virtual Accessible* AsAccessible() { return this; }
+                                  int32_t* aColIdx) MOZ_OVERRIDE;
+  virtual uint32_t ColExtentAt(uint32_t aRowIdx, uint32_t aColIdx) MOZ_OVERRIDE;
+  virtual uint32_t RowExtentAt(uint32_t aRowIdx, uint32_t aColIdx) MOZ_OVERRIDE;
+  virtual bool IsColSelected(uint32_t aColIdx) MOZ_OVERRIDE;
+  virtual bool IsRowSelected(uint32_t aRowIdx) MOZ_OVERRIDE;
+  virtual bool IsCellSelected(uint32_t aRowIdx, uint32_t aColIdx) MOZ_OVERRIDE;
+  virtual uint32_t SelectedCellCount() MOZ_OVERRIDE;
+  virtual uint32_t SelectedColCount() MOZ_OVERRIDE;
+  virtual uint32_t SelectedRowCount() MOZ_OVERRIDE;
+  virtual void SelectedCells(nsTArray<Accessible*>* aCells) MOZ_OVERRIDE;
+  virtual void SelectedCellIndices(nsTArray<uint32_t>* aCells) MOZ_OVERRIDE;
+  virtual void SelectedColIndices(nsTArray<uint32_t>* aCols) MOZ_OVERRIDE;
+  virtual void SelectedRowIndices(nsTArray<uint32_t>* aRows) MOZ_OVERRIDE;
+  virtual void SelectCol(uint32_t aColIdx) MOZ_OVERRIDE;
+  virtual void SelectRow(uint32_t aRowIdx) MOZ_OVERRIDE;
+  virtual void UnselectCol(uint32_t aColIdx) MOZ_OVERRIDE;
+  virtual void UnselectRow(uint32_t aRowIdx) MOZ_OVERRIDE;
+  virtual bool IsProbablyLayoutTable() MOZ_OVERRIDE;
+  virtual Accessible* AsAccessible() MOZ_OVERRIDE { return this; }
 
   // Accessible
-  virtual TableAccessible* AsTable() { return this; }
-  virtual void Description(nsString& aDescription);
+  virtual TableAccessible* AsTable() MOZ_OVERRIDE { return this; }
+  virtual void Description(nsString& aDescription) MOZ_OVERRIDE;
   virtual a11y::role NativeRole() MOZ_OVERRIDE;
   virtual uint64_t NativeState() MOZ_OVERRIDE;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() MOZ_OVERRIDE;
@@ -161,7 +161,7 @@ protected:
 
   // Accessible
   virtual ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
-  virtual void CacheChildren();
+  virtual void CacheChildren() MOZ_OVERRIDE;
 
   // HTMLTableAccessible
 

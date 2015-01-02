@@ -63,7 +63,7 @@ public:
 
   // nsIAccessibilityService
   virtual Accessible* GetRootDocumentAccessible(nsIPresShell* aPresShell,
-                                                bool aCanCreate);
+                                                bool aCanCreate) MOZ_OVERRIDE;
   already_AddRefed<Accessible>
     CreatePluginAccessible(nsPluginFrame* aFrame, nsIContent* aContent,
                            Accessible* aContext);
@@ -72,8 +72,8 @@ public:
    * Adds/remove ATK root accessible for gtk+ native window to/from children
    * of the application accessible.
    */
-  virtual Accessible* AddNativeRootAccessible(void* aAtkAccessible);
-  virtual void RemoveNativeRootAccessible(Accessible* aRootAccessible);
+  virtual Accessible* AddNativeRootAccessible(void* aAtkAccessible) MOZ_OVERRIDE;
+  virtual void RemoveNativeRootAccessible(Accessible* aRootAccessible) MOZ_OVERRIDE;
 
   virtual bool HasAccessible(nsIDOMNode* aDOMNode) MOZ_OVERRIDE;
 
@@ -144,7 +144,7 @@ public:
    */
   void RecreateAccessible(nsIPresShell* aPresShell, nsIContent* aContent);
 
-  virtual void FireAccessibleEvent(uint32_t aEvent, Accessible* aTarget);
+  virtual void FireAccessibleEvent(uint32_t aEvent, Accessible* aTarget) MOZ_OVERRIDE;
 
   // nsAccessibiltiyService
 

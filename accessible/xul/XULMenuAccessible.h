@@ -24,25 +24,25 @@ public:
   XULMenuitemAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual void Description(nsString& aDescription);
+  virtual void Description(nsString& aDescription) MOZ_OVERRIDE;
   virtual a11y::role NativeRole() MOZ_OVERRIDE;
   virtual uint64_t NativeState() MOZ_OVERRIDE;
   virtual uint64_t NativeInteractiveState() const MOZ_OVERRIDE;
-  virtual int32_t GetLevelInternal();
+  virtual int32_t GetLevelInternal() MOZ_OVERRIDE;
 
-  virtual bool CanHaveAnonChildren();
+  virtual bool CanHaveAnonChildren() MOZ_OVERRIDE;
 
   // ActionAccessible
   virtual uint8_t ActionCount() MOZ_OVERRIDE;
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) MOZ_OVERRIDE;
   virtual bool DoAction(uint8_t aIndex) MOZ_OVERRIDE;
-  virtual KeyBinding AccessKey() const;
-  virtual KeyBinding KeyboardShortcut() const;
+  virtual KeyBinding AccessKey() const MOZ_OVERRIDE;
+  virtual KeyBinding KeyboardShortcut() const MOZ_OVERRIDE;
 
   // Widgets
-  virtual bool IsActiveWidget() const;
-  virtual bool AreItemsOperable() const;
-  virtual Accessible* ContainerWidget() const;
+  virtual bool IsActiveWidget() const MOZ_OVERRIDE;
+  virtual bool AreItemsOperable() const MOZ_OVERRIDE;
+  virtual Accessible* ContainerWidget() const MOZ_OVERRIDE;
 
 protected:
   // Accessible
@@ -85,11 +85,11 @@ public:
   virtual uint64_t NativeState() MOZ_OVERRIDE;
 
   // Widgets
-  virtual bool IsWidget() const;
-  virtual bool IsActiveWidget() const;
-  virtual bool AreItemsOperable() const;
+  virtual bool IsWidget() const MOZ_OVERRIDE;
+  virtual bool IsActiveWidget() const MOZ_OVERRIDE;
+  virtual bool AreItemsOperable() const MOZ_OVERRIDE;
 
-  virtual Accessible* ContainerWidget() const;
+  virtual Accessible* ContainerWidget() const MOZ_OVERRIDE;
 
 protected:
   // Accessible
@@ -108,10 +108,10 @@ public:
   virtual a11y::role NativeRole() MOZ_OVERRIDE;
 
   // Widget
-  virtual bool IsActiveWidget() const;
-  virtual bool AreItemsOperable() const;
-  virtual Accessible* CurrentItem();
-  virtual void SetCurrentItem(Accessible* aItem);
+  virtual bool IsActiveWidget() const MOZ_OVERRIDE;
+  virtual bool AreItemsOperable() const MOZ_OVERRIDE;
+  virtual Accessible* CurrentItem() MOZ_OVERRIDE;
+  virtual void SetCurrentItem(Accessible* aItem) MOZ_OVERRIDE;
 
 protected:
   // Accessible
