@@ -13,8 +13,7 @@
 #include "nsRubyTextContainerFrame.h"
 #include "nsRubyBaseFrame.h"
 #include "nsRubyTextFrame.h"
-
-#define RTC_ARRAY_SIZE 1
+#include "RubyReflowState.h"
 
 /**
  * Factory function.
@@ -22,6 +21,10 @@
  */
 nsContainerFrame* NS_NewRubyBaseContainerFrame(nsIPresShell* aPresShell,
                                                nsStyleContext* aContext);
+
+namespace mozilla {
+struct RubyColumn;
+}
 
 class nsRubyBaseContainerFrame MOZ_FINAL : public nsContainerFrame
 {
@@ -59,67 +62,35 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
 #endif
 
-#ifdef DEBUG
-  void AssertTextContainersEmpty()
-  {
-    MOZ_ASSERT(mSpanContainers.IsEmpty());
-    MOZ_ASSERT(mTextContainers.IsEmpty());
-  }
-#endif
-
-  void AppendTextContainer(nsIFrame* aFrame);
-  void ClearTextContainers();
-
 protected:
   friend nsContainerFrame*
     NS_NewRubyBaseContainerFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext);
   explicit nsRubyBaseContainerFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
 
-  nscoord CalculateMaxSpanISize(nsRenderingContext* aRenderingContext);
+  typedef nsTArray<nsRubyTextContainerFrame*> TextContainerArray;
+  typedef nsAutoTArray<nsRubyTextContainerFrame*, RTC_ARRAY_SIZE> AutoTextContainerArray;
+  void GetTextContainers(TextContainerArray& aTextContainers);
 
-  nscoord ReflowPairs(nsPresContext* aPresContext,
-                      bool aAllowLineBreak,
-                      const nsHTMLReflowState& aReflowState,
-                      nsTArray<nsHTMLReflowState*>& aReflowStates,
-                      nsReflowStatus& aStatus);
-
-  nscoord ReflowOnePair(nsPresContext* aPresContext,
-                        bool aAllowLineBreak,
-                        const nsHTMLReflowState& aReflowState,
-                        nsTArray<nsHTMLReflowState*>& aReflowStates,
-                        nsIFrame* aBaseFrame,
-                        const nsTArray<nsIFrame*>& aTextFrames,
+  struct ReflowState;
+  nscoord ReflowColumns(const ReflowState& aReflowState,
                         nsReflowStatus& aStatus);
-
-  nscoord ReflowSpans(nsPresContext* aPresContext,
-                      const nsHTMLReflowState& aReflowState,
-                      nsTArray<nsHTMLReflowState*>& aReflowStates);
+  nscoord ReflowOneColumn(const ReflowState& aReflowState,
+                          uint32_t aColumnIndex,
+                          const mozilla::RubyColumn& aColumn,
+                          nsReflowStatus& aStatus);
+  nscoord ReflowSpans(const ReflowState& aReflowState);
 
   struct PullFrameState;
 
   // Pull ruby base and corresponding ruby text frames from
   // continuations after them.
-  void PullOnePair(nsLineLayout* aLineLayout,
-                   PullFrameState& aPullFrameState,
-                   nsIFrame*& aBaseFrame,
-                   nsTArray<nsIFrame*>& aTextFrames,
-                   bool& aIsComplete);
-
-  /**
-   * The arrays of ruby text containers below are filled before the ruby
-   * frame (parent) starts reflowing this ruby segment, and cleared when
-   * the reflow finishes.
-   */
-
-  // The text containers that contain a span, which spans all ruby
-  // pairs in the ruby segment.
-  nsTArray<nsRubyTextContainerFrame*> mSpanContainers;
-  // Normal text containers that do not contain spans.
-  nsTArray<nsRubyTextContainerFrame*> mTextContainers;
+  void PullOneColumn(nsLineLayout* aLineLayout,
+                     PullFrameState& aPullFrameState,
+                     mozilla::RubyColumn& aColumn,
+                     bool& aIsComplete);
 
   nscoord mBaseline;
-  uint32_t mPairCount;
 };
 
 #endif /* nsRubyBaseContainerFrame_h___ */

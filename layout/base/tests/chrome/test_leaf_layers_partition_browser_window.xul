@@ -96,10 +96,16 @@
         return;
       }
 
+      window.focus();
       // Run the test in a separate window so we get a clean browser window.
       win = window.open("data:text/html,<html style='overflow:scroll'>",
                 "", "scrollbars=yes,toolbar,menubar,width=500,height=500");
+      setTimeout(setupWindow, 0);
+    }
+
+    function setupWindow() {
       win.addEventListener("load", doTest, false);
+      win.focus();
     }
 
     nextTest();

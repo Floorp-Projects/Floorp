@@ -233,13 +233,14 @@ description > html|a {
 
 #dialogBox {
   background-color: #fbfbfb;
+  background-clip: content-box;
   color: #424e5a;
   font-size: 14px;
   /* `transparent` will use the dialogText color in high-contrast themes and
      when page colors are disabled */
   border: 1px solid transparent;
-  border-radius: 2.5px;
-  box-shadow: 0 2px 4px 0 rgba(0,0,0,0.5);
+  border-radius: 3.5px;
+  box-shadow: 0 2px 6px 0 rgba(0,0,0,0.3);
   display: -moz-box;
   margin: 0;
   padding: 0;

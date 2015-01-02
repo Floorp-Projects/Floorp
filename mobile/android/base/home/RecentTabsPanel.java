@@ -396,6 +396,7 @@ public class RecentTabsPanel extends HomeFragment
                 textView.setText(title);
             } else if (itemType == ROW_STANDARD) {
                 final TwoLinePageRow pageRow = (TwoLinePageRow) view;
+                pageRow.setShowIcons(false);
                 pageRow.updateFromCursor(c);
             }
          }
