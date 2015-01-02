@@ -36,6 +36,8 @@ class ErrorResult;
 
 namespace dom {
 
+class GlobalObject;
+
 #define MOZILLA_EXCEPTION_IID \
 { 0x55eda557, 0xeba0, 0x4fe3, \
   { 0xae, 0x2e, 0xf3, 0x94, 0x49, 0x23, 0x62, 0xd6 } }
@@ -135,6 +137,12 @@ public:
   // nsWrapperCache overrides
   virtual JSObject* WrapObject(JSContext* aCx)
     MOZ_OVERRIDE;
+
+  static already_AddRefed<DOMException>
+  Constructor(GlobalObject& /* unused */,
+              const nsAString& aMessage,
+              const Optional<nsAString>& aName,
+              ErrorResult& aError);
 
   uint16_t Code() const {
     return mCode;
