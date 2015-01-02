@@ -91,6 +91,13 @@ fi
 
 AC_SUBST(CLANG_CXX)
 AC_SUBST(CLANG_CL)
+
+if test -n "$GNU_CC" -a -z "$CLANG_CC" ; then
+    if test "$GCC_MAJOR_VERSION" -eq 4 -a "$GCC_MINOR_VERSION" -lt 4 ||
+       test "$GCC_MAJOR_VERSION" -lt 4; then
+        AC_MSG_ERROR([Only GCC 4.4 or newer supported])
+    fi
+fi
 ])
 
 AC_DEFUN([MOZ_CROSS_COMPILER],
