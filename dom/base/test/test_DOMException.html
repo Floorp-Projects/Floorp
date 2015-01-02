@@ -44,6 +44,23 @@ for (var i = 0; i < constants.length; ++i) {
   if (constant)
     is(DOMException[constant], i, constant)
 }
+
+var ex = new DOMException();
+ise(ex.name, "Error",
+    "Not passing a name should end up with 'Error' as the name");
+ise(ex.message, "",
+    "Not passing a message should end up with empty string as the message");
+
+ex = new DOMException("foo");
+ise(ex.name, "Error",
+    "Not passing a name should still end up with 'Error' as the name");
+ise(ex.message, "foo", "Should be using passed-in message");
+
+ex = new DOMException("bar", "NotSupportedError");
+ise(ex.name, "NotSupportedError", "Should be using the passed-in name");
+ise(ex.message, "bar", "Should still be using passed-in message");
+ise(ex.code, DOMException.NOT_SUPPORTED_ERR,
+    "Should have the right exception code");
 </script>
 </pre>
 </body>

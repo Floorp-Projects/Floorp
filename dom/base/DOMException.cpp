@@ -676,6 +676,34 @@ DOMException::GetMessageMoz(nsString& retval)
   CopyUTF8toUTF16(mMessage, retval);
 }
 
+already_AddRefed<DOMException>
+DOMException::Constructor(GlobalObject& /* unused */,
+                          const nsAString& aMessage,
+                          const Optional<nsAString>& aName,
+                          ErrorResult& aError)
+{
+  nsresult exceptionResult = NS_OK;
+  uint16_t exceptionCode = 0;
+  nsCString name(NS_LITERAL_CSTRING("Error"));
+
+  if (aName.WasPassed()) {
+    CopyUTF16toUTF8(aName.Value(), name);
+    for (uint32_t idx = 0; idx < ArrayLength(sDOMErrorMsgMap); idx++) {
+      if (name.EqualsASCII(sDOMErrorMsgMap[idx].mName)) {
+        exceptionResult = sDOMErrorMsgMap[idx].mNSResult;
+        exceptionCode = sDOMErrorMsgMap[idx].mCode;
+      }
+    }
+  }
+
+  nsRefPtr<DOMException> retval =
+    new DOMException(exceptionResult,
+                     NS_ConvertUTF16toUTF8(aMessage),
+                     name,
+                     exceptionCode);
+  return retval.forget();
+}
+
 JSObject*
 DOMException::WrapObject(JSContext* aCx)
 {
