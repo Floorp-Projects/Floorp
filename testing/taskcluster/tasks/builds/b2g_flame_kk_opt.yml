@@ -11,4 +11,7 @@ task:
     env:
       TARGET: 'flame-kk'
       DEBUG: 0
+  extra:
+    locations:
+      img: 'private/build/flame-kk.zip'
 
