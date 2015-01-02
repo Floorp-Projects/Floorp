@@ -18,7 +18,23 @@ pub enum MatchType {
     GetWindowHandle,
     GetWindowHandles,
     Close,
-    Timeouts
+    Timeouts,
+    SetWindowSize,
+    GetWindowSize,
+    MaximizeWindow,
+    SwitchToWindow,
+    SwitchToFrame,
+    SwitchToParentFrame,
+    IsDisplayed,
+    IsSelected,
+    GetElementAttribute,
+    GetCSSValue,
+    GetElementText,
+    GetElementTagName,
+    GetElementRect,
+    IsEnabled,
+    ExecuteScript,
+    ExecuteAsyncScript,
 }
 
 #[deriving(Clone)]
@@ -39,7 +55,6 @@ impl RequestMatcher {
     }
 
     pub fn get_match<'t>(&'t self, method: Method, path: &'t str) -> (bool, Option<Captures>) {
-        println!("{} {}", method, path);
         let captures = self.path_regexp.captures(path);
         (method == self.method, captures)
     }
@@ -78,10 +93,8 @@ impl MessageBuilder {
     }
 
     pub fn from_http(&self, method: Method, path: &str, body: &str) -> WebDriverResult<WebDriverMessage> {
-        println!("{} {}", method, path);
         let mut error = ErrorStatus::UnknownPath;
         for &(ref match_method, ref matcher) in self.http_matchers.iter() {
-            println!("{} {}", match_method, matcher.path_regexp);
             if method == *match_method {
                 let (method_match, captures) = matcher.get_match(method.clone(), path);
                 if captures.is_some() {
@@ -96,7 +109,7 @@ impl MessageBuilder {
             }
         }
         Err(WebDriverError::new(error,
-                                format!("{} did not match a known command", path)[]))
+                                format!("{} {} did not match a known command", method, path)[]))
     }
 
     pub fn add(&mut self, method: Method, path: &str, match_type: MatchType) {
@@ -118,10 +131,26 @@ pub fn get_builder() -> MessageBuilder {
                         (Get, "/session/{sessionId}/window_handle", MatchType::GetWindowHandle),
                         (Get, "/session/{sessionId}/window_handles", MatchType::GetWindowHandles),
                         (Delete, "/session/{sessionId}/window_handle", MatchType::Close),
-                        (Post, "/session/{sessionId}/timeouts", MatchType::Timeouts)
+                        (Post, "/session/{sessionId}/timeouts", MatchType::Timeouts),
+                        (Post, "/session/{sessionId}/window/size", MatchType::SetWindowSize),
+                        (Get, "/session/{sessionId}/window/size", MatchType::GetWindowSize),
+                        (Post, "/session/{sessionId}/window/maximize", MatchType::MaximizeWindow),
+                        (Post, "/session/{sessionId}/window", MatchType::SwitchToWindow),
+                        (Post, "/session/{sessionId}/frame", MatchType::SwitchToFrame),
+                        (Post, "/session/{sessionId}/frame/parent", MatchType::SwitchToParentFrame),
+                        (Get, "/session/{sessionId}/element/{element}/isDisplayed", MatchType::IsDisplayed),
+                        (Get, "/session/{sessionId}/element/{element}/isSelected", MatchType::IsSelected),
+                        (Get, "/session/{sessionId}/element/{element}/attribute/{name}", MatchType::GetElementAttribute),
+                        (Get, "/session/{sessionId}/element/{element}/css/{propertyName}", MatchType::GetCSSValue),
+                        (Get, "/session/{sessionId}/element/{element}/text", MatchType::GetElementText),
+                        (Get, "/session/{sessionId}/element/{element}/name", MatchType::GetElementTagName),
+                        (Get, "/session/{sessionId}/element/{element}/rect", MatchType::GetElementRect),
+                        (Get, "/session/{sessionId}/element/{element}/enabled", MatchType::IsEnabled),
+                        (Post, "/session/{sessionId}/execute", MatchType::ExecuteScript),
+                        (Post, "/session/{sessionId}/execute_async", MatchType::ExecuteAsyncScript),
                         ];
+    debug!("Creating routes");
     for &(ref method, ref url, ref match_type) in matchers.iter() {
-        println!("{} {}", method, url);
         builder.add(method.clone(), *url, *match_type);
     }
     builder

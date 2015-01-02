@@ -1,8 +1,9 @@
-use std::collections::TreeMap;
 use serialize::json;
-use serialize::json::ToJson;
+use serialize::json::{ToJson, ParserError};
+use std::collections::TreeMap;
+use std::error::{Error, FromError};
 
-#[deriving(PartialEq)]
+#[deriving(PartialEq, Show)]
 pub enum ErrorStatus {
     ElementNotSelectable,
     ElementNotVisible,
@@ -13,7 +14,7 @@ pub enum ErrorStatus {
     InvalidSelector,
     InvalidSessionId,
     JavascriptError,
-    MoveTagetOutOfBounds,
+    MoveTargetOutOfBounds,
     NoSuchAlert,
     NoSuchElement,
     NoSuchFrame,
@@ -32,6 +33,7 @@ pub enum ErrorStatus {
 
 pub type WebDriverResult<T> = Result<T, WebDriverError>;
 
+#[deriving(Show)]
 pub struct WebDriverError {
     pub status: ErrorStatus,
     pub message: String
@@ -45,7 +47,7 @@ impl WebDriverError {
         }
     }
 
-    pub fn status_code(&self) -> String {
+    pub fn status_code(&self) -> &str {
         match self.status {
             ErrorStatus::ElementNotSelectable => "element not selectable",
             ErrorStatus::ElementNotVisible => "element not visible",
@@ -56,7 +58,7 @@ impl WebDriverError {
             ErrorStatus::InvalidSelector => "invalid selector",
             ErrorStatus::InvalidSessionId => "invalid session id",
             ErrorStatus::JavascriptError => "javascript error",
-            ErrorStatus::MoveTagetOutOfBounds => "move target out of bounds",
+            ErrorStatus::MoveTargetOutOfBounds => "move target out of bounds",
             ErrorStatus::NoSuchAlert => "no such alert",
             ErrorStatus::NoSuchElement => "no such element",
             ErrorStatus::NoSuchFrame => "no such frame",
@@ -71,7 +73,7 @@ impl WebDriverError {
             ErrorStatus::UnknownPath => "unknown command",
             ErrorStatus::UnknownMethod => "unknown command",
             ErrorStatus::UnsupportedOperation => "unsupported operation",
-        }.to_string()
+        }
     }
 
     pub fn http_status(&self) -> int {
@@ -81,6 +83,10 @@ impl WebDriverError {
             _ => 500
         }
     }
+
+    pub fn to_json_string(&self) -> String {
+        self.to_json().to_string()
+    }
 }
 
 impl ToJson for WebDriverError {
@@ -89,5 +95,26 @@ impl ToJson for WebDriverError {
         data.insert("status".to_string(), self.status_code().to_json());
         data.insert("error".to_string(), self.message.to_json());
         json::Object(data)
+    }
+}
+
+impl Error for WebDriverError {
+    fn description(&self) -> &str {
+        self.status_code()
+    }
+
+    fn detail(&self) -> Option<String> {
+        Some(self.message.clone())
+    }
+
+    fn cause(&self) -> Option<&Error> {
+        None
+    }
+}
+
+impl FromError<ParserError> for WebDriverError {
+    fn from_error(err: ParserError) -> WebDriverError {
+        let msg = format!("{}", err);
+        WebDriverError::new(ErrorStatus::UnknownError, msg.as_slice())
     }
 }
