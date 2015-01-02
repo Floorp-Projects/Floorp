@@ -1689,3 +1689,7 @@ js::IsSelfHostedFunctionWithName(JSFunction *fun, JSAtom *name)
 {
     return fun->isSelfHostedBuiltin() && fun->getExtendedSlot(0).toString() == name;
 }
+
+static_assert(JSString::MAX_LENGTH <= INT32_MAX,
+              "StringIteratorNext in builtin/String.js assumes the stored index "
+              "into the string is an Int32Value");
