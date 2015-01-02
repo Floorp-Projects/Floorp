@@ -65,10 +65,10 @@ testPreserveJitCode(bool preserveJitCode, unsigned remainingIonScripts)
     CHECK_EQUAL(value.toInt32(), 45);
     CHECK_EQUAL(countIonScripts(global), 1u);
 
-    GCForReason(rt, GC_NORMAL, gcreason::API);
+    GCForReason(rt, gcreason::API);
     CHECK_EQUAL(countIonScripts(global), remainingIonScripts);
 
-    GCForReason(rt, GC_SHRINK, gcreason::API);
+    ShrinkingGC(rt, gcreason::API);
     CHECK_EQUAL(countIonScripts(global), 0u);
 
     return true;
