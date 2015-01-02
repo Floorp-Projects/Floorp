@@ -94,8 +94,8 @@ public:
   uint32_t GetSandboxFlags();
 
 private:
-  virtual LengthAttributesInfo GetLengthInfo();
-  virtual SVGAnimatedPreserveAspectRatio *GetPreserveAspectRatio();
+  virtual LengthAttributesInfo GetLengthInfo() MOZ_OVERRIDE;
+  virtual SVGAnimatedPreserveAspectRatio *GetPreserveAspectRatio() MOZ_OVERRIDE;
   virtual mozilla::dom::Element* ThisFrameElement() MOZ_OVERRIDE
   {
     return this;
