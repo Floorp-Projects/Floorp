@@ -27,7 +27,7 @@ protected:
 private:
   mozilla::Mutex mutex;
   nsCOMPtr<nsIX509CertList> mCertList;
-  virtual void virtualDestroyNSSReference();
+  virtual void virtualDestroyNSSReference() MOZ_OVERRIDE;
   void destructorSafeDestroyNSSReference();
 };
 
