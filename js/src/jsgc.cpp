@@ -3324,7 +3324,7 @@ GCRuntime::maybePeriodicFullGC()
      */
 #ifndef JS_MORE_DETERMINISTIC
     int64_t now = PRMJ_Now();
-    if (nextFullGCTime && nextFullGCTime <= now) {
+    if (nextFullGCTime && nextFullGCTime <= now && !isIncrementalGCInProgress()) {
         if (chunkAllocationSinceLastGC ||
             numArenasFreeCommitted > decommitThreshold)
         {
@@ -6362,7 +6362,7 @@ GCRuntime::notifyDidPaint()
 
     if (zealMode == ZealFrameGCValue) {
         JS::PrepareForFullGC(rt);
-        gcSlice(GC_NORMAL, JS::gcreason::REFRESH_FRAME);
+        gc(GC_NORMAL, JS::gcreason::REFRESH_FRAME);
         return;
     }
 #endif
