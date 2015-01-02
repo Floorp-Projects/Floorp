@@ -55,9 +55,9 @@ public:
   NS_DECL_NSISSLSTATUSPROVIDER
 
   NS_IMETHOD Notify(nsIDOMHTMLFormElement* formNode, nsIDOMWindow* window,
-                    nsIURI *actionURL, bool* cancelSubmit);
+                    nsIURI *actionURL, bool* cancelSubmit) MOZ_OVERRIDE;
   NS_IMETHOD NotifyInvalidSubmit(nsIDOMHTMLFormElement* formNode,
-                                 nsIArray* invalidElements) { return NS_OK; }
+                                 nsIArray* invalidElements) MOZ_OVERRIDE { return NS_OK; }
   
 protected:
   virtual ~nsSecureBrowserUIImpl();

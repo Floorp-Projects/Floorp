@@ -124,24 +124,24 @@ public:
 
   static nsresult GetNewPrompter(nsIPrompt** result);
   static nsresult ShowAlertWithConstructedString(const nsString& message);
-  NS_IMETHOD ShowAlertFromStringBundle(const char* messageID);
+  NS_IMETHOD ShowAlertFromStringBundle(const char* messageID) MOZ_OVERRIDE;
 
   NS_IMETHOD GetPIPNSSBundleString(const char* name,
-                                   nsAString& outString);
+                                   nsAString& outString) MOZ_OVERRIDE;
   NS_IMETHOD PIPBundleFormatStringFromName(const char* name,
                                            const char16_t** params,
                                            uint32_t numParams,
-                                           nsAString& outString);
-  NS_IMETHOD GetNSSBundleString(const char* name, nsAString& outString);
+                                           nsAString& outString) MOZ_OVERRIDE;
+  NS_IMETHOD GetNSSBundleString(const char* name, nsAString& outString) MOZ_OVERRIDE;
   NS_IMETHOD NSSBundleFormatStringFromName(const char* name,
                                            const char16_t** params,
                                            uint32_t numParams,
-                                           nsAString& outString);
-  NS_IMETHOD LogoutAuthenticatedPK11();
+                                           nsAString& outString) MOZ_OVERRIDE;
+  NS_IMETHOD LogoutAuthenticatedPK11() MOZ_OVERRIDE;
 
 #ifndef MOZ_NO_SMART_CARDS
-  NS_IMETHOD LaunchSmartCardThread(SECMODModule* module);
-  NS_IMETHOD ShutdownSmartCardThread(SECMODModule* module);
+  NS_IMETHOD LaunchSmartCardThread(SECMODModule* module) MOZ_OVERRIDE;
+  NS_IMETHOD ShutdownSmartCardThread(SECMODModule* module) MOZ_OVERRIDE;
   void LaunchSmartCardThreads();
   void ShutdownSmartCardThreads();
   nsresult DispatchEventToWindow(nsIDOMWindow* domWin,
@@ -149,7 +149,7 @@ public:
                                  const nsAString& token);
 #endif
 
-  NS_IMETHOD IsNSSInitialized(bool* initialized);
+  NS_IMETHOD IsNSSInitialized(bool* initialized) MOZ_OVERRIDE;
 
   ::mozilla::TemporaryRef<mozilla::psm::SharedCertVerifier>
     GetDefaultCertVerifier() MOZ_OVERRIDE;
