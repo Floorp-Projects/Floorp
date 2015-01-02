@@ -27,6 +27,7 @@ const { getLocalizedString } = require("projecteditor/helpers/l10n");
 require("projecteditor/plugins/dirty/dirty");
 require("projecteditor/plugins/delete/delete");
 require("projecteditor/plugins/new/new");
+require("projecteditor/plugins/rename/rename");
 require("projecteditor/plugins/save/save");
 require("projecteditor/plugins/image-view/plugin");
 require("projecteditor/plugins/app-manager/plugin");
