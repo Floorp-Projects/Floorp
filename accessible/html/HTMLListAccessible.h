@@ -48,7 +48,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Accessible
-  virtual void Shutdown();
+  virtual void Shutdown() MOZ_OVERRIDE;
   virtual nsIntRect Bounds() const MOZ_OVERRIDE;
   virtual a11y::role NativeRole() MOZ_OVERRIDE;
   virtual uint64_t NativeState() MOZ_OVERRIDE;
@@ -61,7 +61,7 @@ protected:
   virtual ~HTMLLIAccessible() { }
 
   // Accessible
-  virtual void CacheChildren();
+  virtual void CacheChildren() MOZ_OVERRIDE;
 
 private:
   nsRefPtr<HTMLListBulletAccessible> mBullet;
@@ -78,12 +78,12 @@ public:
   virtual ~HTMLListBulletAccessible() { }
 
   // Accessible
-  virtual nsIFrame* GetFrame() const;
-  virtual ENameValueFlag Name(nsString& aName);
+  virtual nsIFrame* GetFrame() const MOZ_OVERRIDE;
+  virtual ENameValueFlag Name(nsString& aName) MOZ_OVERRIDE;
   virtual a11y::role NativeRole() MOZ_OVERRIDE;
   virtual uint64_t NativeState() MOZ_OVERRIDE;
   virtual void AppendTextTo(nsAString& aText, uint32_t aStartOffset = 0,
-                            uint32_t aLength = UINT32_MAX);
+                            uint32_t aLength = UINT32_MAX) MOZ_OVERRIDE;
 
   // HTMLListBulletAccessible
 
