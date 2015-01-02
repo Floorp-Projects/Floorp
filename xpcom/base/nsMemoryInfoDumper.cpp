@@ -329,12 +329,12 @@ public:
   {
   }
 
-  NS_IMETHODIMP OnFinish()
+  NS_IMETHODIMP OnFinish() MOZ_OVERRIDE
   {
     return NS_ERROR_UNEXPECTED;
   }
 
-  NS_IMETHODIMP OnDump(nsIFile* aGCLog, nsIFile* aCCLog, bool aIsParent)
+  NS_IMETHODIMP OnDump(nsIFile* aGCLog, nsIFile* aCCLog, bool aIsParent) MOZ_OVERRIDE
   {
     return mCallback->OnDump(aGCLog, aCCLog, aIsParent);
   }
@@ -475,7 +475,7 @@ public:
   NS_IMETHOD Callback(const nsACString& aProcess, const nsACString& aPath,
                       int32_t aKind, int32_t aUnits, int64_t aAmount,
                       const nsACString& aDescription,
-                      nsISupports* aData)
+                      nsISupports* aData) MOZ_OVERRIDE
   {
     nsAutoCString process;
     if (aProcess.IsEmpty()) {
@@ -515,7 +515,7 @@ public:
   }
 
   // This is the callback for nsIFinishReportingCallback.
-  NS_IMETHOD Callback(nsISupports* aData)
+  NS_IMETHOD Callback(nsISupports* aData) MOZ_OVERRIDE
   {
     mWriter->EndArray();  // end of "reports" array
     mWriter->End();
@@ -558,7 +558,7 @@ public:
   {
   }
 
-  NS_IMETHOD Callback(nsISupports* aData)
+  NS_IMETHOD Callback(nsISupports* aData) MOZ_OVERRIDE
   {
     // Rename the memory reports file, now that we're done writing all the
     // files. Its final name is "memory-report<-identifier>-<pid>.json.gz".
