@@ -963,6 +963,10 @@ bool intrinsic_UnsafePutElements(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_DefineDataProperty(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_UnsafeSetReservedSlot(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_UnsafeGetReservedSlot(JSContext *cx, unsigned argc, Value *vp);
+bool intrinsic_UnsafeGetObjectFromReservedSlot(JSContext *cx, unsigned argc, Value *vp);
+bool intrinsic_UnsafeGetInt32FromReservedSlot(JSContext *cx, unsigned argc, Value *vp);
+bool intrinsic_UnsafeGetStringFromReservedSlot(JSContext *cx, unsigned argc, Value *vp);
+bool intrinsic_UnsafeGetBooleanFromReservedSlot(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_IsPackedArray(JSContext *cx, unsigned argc, Value *vp);
 
 bool intrinsic_ShouldForceSequential(JSContext *cx, unsigned argc, Value *vp);
