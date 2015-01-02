@@ -9,7 +9,6 @@
 const { Cc, Ci, Cu } = require("chrome");
 const { DebuggerServer, ActorPool } = require("devtools/server/main");
 const { EnvironmentActor, LongStringActor, ObjectActor, ThreadActor } = require("devtools/server/actors/script");
-const { update } = require("devtools/toolkit/DevToolsUtils");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -1536,7 +1535,7 @@ function AddonConsoleActor(aAddon, aConnection, aParentActor)
 
 AddonConsoleActor.prototype = Object.create(WebConsoleActor.prototype);
 
-update(AddonConsoleActor.prototype, {
+Object.assign(AddonConsoleActor.prototype, {
   constructor: AddonConsoleActor,
 
   actorPrefix: "addonConsole",
