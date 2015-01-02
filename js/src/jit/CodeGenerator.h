@@ -305,7 +305,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitCallInstanceOf(LCallInstanceOf *ins);
     void visitProfilerStackOp(LProfilerStackOp *lir);
     void visitGetDOMProperty(LGetDOMProperty *lir);
-    void visitGetDOMMember(LGetDOMMember *lir);
+    void visitGetDOMMemberV(LGetDOMMemberV *lir);
+    void visitGetDOMMemberT(LGetDOMMemberT *lir);
     void visitSetDOMProperty(LSetDOMProperty *lir);
     void visitCallDOMNative(LCallDOMNative *lir);
     void visitCallGetIntrinsicValue(LCallGetIntrinsicValue *lir);
