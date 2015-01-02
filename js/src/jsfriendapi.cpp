@@ -208,12 +208,15 @@ JS::ShrinkingGC(JSRuntime *rt, gcreason::Reason reason)
 }
 
 JS_FRIEND_API(void)
-JS::IncrementalGC(JSRuntime *rt, gcreason::Reason reason, int64_t millis)
+JS::StartIncrementalGC(JSRuntime *rt, gcreason::Reason reason, int64_t millis)
 {
-    if (!rt->gc.isIncrementalGCInProgress())
-        rt->gc.startGC(GC_NORMAL, reason, millis);
-    else
-        rt->gc.gcSlice(reason, millis);
+    rt->gc.startGC(GC_NORMAL, reason, millis);
+}
+
+JS_FRIEND_API(void)
+JS::IncrementalGCSlice(JSRuntime *rt, gcreason::Reason reason, int64_t millis)
+{
+    rt->gc.gcSlice(reason, millis);
 }
 
 JS_FRIEND_API(void)
