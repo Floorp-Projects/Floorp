@@ -1623,7 +1623,7 @@ HttpBaseChannel::TakeAllSecurityMessages(
  * More information can be found here:
  * https://bugzilla.mozilla.org/show_bug.cgi?id=846918
  */
-NS_IMETHODIMP
+nsresult
 HttpBaseChannel::AddSecurityMessage(const nsAString &aMessageTag,
     const nsAString &aMessageCategory)
 {
