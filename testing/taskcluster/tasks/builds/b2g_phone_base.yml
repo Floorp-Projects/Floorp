@@ -21,7 +21,7 @@ task:
     # files are located.
     locations:
       build: 'private/build/b2g-android-arm.tar.gz'
-      img: 'private/build/{{target}}.zip'
       tests: 'private/build/gaia.zip'
       symbols: 'private/build/b2g-crashreporter-symbols.zip'
       sources: 'private/build/sources.xml'
+

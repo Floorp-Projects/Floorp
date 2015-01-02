@@ -68,5 +68,5 @@ mkdir -p artifacts
 mv $OBJDIR/B2G/upload/sources.xml artifacts/sources.xml
 mv $OBJDIR/B2G/upload/b2g-*.crashreporter-symbols.zip artifacts/b2g-crashreporter-symbols.zip
 mv $OBJDIR/B2G/upload/b2g-*.android-arm.tar.gz artifacts/b2g-android-arm.tar.gz
-mv $OBJDIR/B2G/upload/flame-kk.zip artifacts/flame-kk.zip
+mv $OBJDIR/B2G/upload/${TARGET}.zip artifacts/${TARGET}.zip
 mv $OBJDIR/B2G/upload/gaia.zip artifacts/gaia.zip
