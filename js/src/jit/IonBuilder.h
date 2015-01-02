@@ -713,7 +713,10 @@ class IonBuilder
                                BoolVector &choiceSet, uint32_t *numInlineable);
 
     // Native inlining helpers.
+    // The typeset for the return value of our function.  These are
+    // the types it's been observed returning in the past.
     types::TemporaryTypeSet *getInlineReturnTypeSet();
+    // The known MIR type of getInlineReturnTypeSet.
     MIRType getInlineReturnType();
 
     // Array natives.
@@ -773,7 +776,8 @@ class IonBuilder
 
     // Slot intrinsics.
     InliningStatus inlineUnsafeSetReservedSlot(CallInfo &callInfo);
-    InliningStatus inlineUnsafeGetReservedSlot(CallInfo &callInfo);
+    InliningStatus inlineUnsafeGetReservedSlot(CallInfo &callInfo,
+                                               MIRType knownValueType);
 
     // ForkJoin intrinsics
     InliningStatus inlineForkJoinGetSlice(CallInfo &callInfo);
