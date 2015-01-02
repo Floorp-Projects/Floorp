@@ -2663,7 +2663,7 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLEditor::SetHTMLBackgroundColor(const nsAString& aColor)
 {
   NS_PRECONDITION(mDocWeak, "Missing Editor DOM Document");
@@ -4533,7 +4533,7 @@ nsHTMLEditor::SetIsCSSEnabled(bool aIsCSSPrefChecked)
 }
 
 // Set the block background color
-NS_IMETHODIMP
+nsresult
 nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
@@ -4768,7 +4768,7 @@ nsHTMLEditor::AreNodesSameType(nsIContent* aNode1, nsIContent* aNode2)
                                           aNode2->AsDOMNode());
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLEditor::CopyLastEditableChildStyles(nsIDOMNode * aPreviousBlock, nsIDOMNode * aNewBlock,
                                           nsIDOMNode **aOutBrNode)
 {
