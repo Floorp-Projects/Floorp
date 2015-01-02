@@ -59,7 +59,7 @@ public:
   void OfflineShutdown();
 
   // nsIDOMEventListener - by proxy
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) MOZ_OVERRIDE;
 
   AudioChannel MozAudioChannelType() const;
   void SetMozAudioChannelType(AudioChannel aValue, ErrorResult& aRv);
@@ -76,7 +76,7 @@ public:
 
   void CreateAudioChannelAgent();
 
-  virtual const char* NodeType() const
+  virtual const char* NodeType() const MOZ_OVERRIDE
   {
     return "AudioDestinationNode";
   }
