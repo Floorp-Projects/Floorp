@@ -2,11 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include $(topsrcdir)/config/rules.mk
-
 DICTIONARY_FILES = $(strip $(wildcard $(LOCALE_SRCDIR)/hunspell/*.dic) $(wildcard $(LOCALE_SRCDIR)/hunspell/*.aff))
-
-ifneq (,$(DICTIONARY_FILES))
-libs::
-	$(INSTALL)  $(DICTIONARY_FILES) $(FINAL_TARGET)/dictionaries
-endif
+DICTIONARY_DEST = $(FINAL_TARGET)/dictionaries
+INSTALL_TARGETS += DICTIONARY
