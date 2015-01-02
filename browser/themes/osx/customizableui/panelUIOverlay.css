@@ -34,6 +34,12 @@
     list-style-image: url(chrome://browser/skin/syncProgress-horizontalbar@2x.png);
   }
 
+  #PanelUI-fxa-status[fxastatus="migrate-signup"],
+  #PanelUI-fxa-status[fxastatus="migrate-verify"] {
+    list-style-image: url(chrome://browser/skin/warning16@2x.png);
+    -moz-image-region: rect(0, 64px, 32px, 32px);
+  }
+
   #PanelUI-customize {
     list-style-image: url(chrome://browser/skin/menuPanel-customize@2x.png);
   }
