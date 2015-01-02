@@ -580,6 +580,42 @@ js::intrinsic_UnsafeGetReservedSlot(JSContext *cx, unsigned argc, Value *vp)
 }
 
 bool
+js::intrinsic_UnsafeGetObjectFromReservedSlot(JSContext *cx, unsigned argc, Value *vp)
+{
+    if (!intrinsic_UnsafeGetReservedSlot(cx, argc, vp))
+        return false;
+    MOZ_ASSERT(vp->isObject());
+    return true;
+}
+
+bool
+js::intrinsic_UnsafeGetInt32FromReservedSlot(JSContext *cx, unsigned argc, Value *vp)
+{
+    if (!intrinsic_UnsafeGetReservedSlot(cx, argc, vp))
+        return false;
+    MOZ_ASSERT(vp->isInt32());
+    return true;
+}
+
+bool
+js::intrinsic_UnsafeGetStringFromReservedSlot(JSContext *cx, unsigned argc, Value *vp)
+{
+    if (!intrinsic_UnsafeGetReservedSlot(cx, argc, vp))
+        return false;
+    MOZ_ASSERT(vp->isString());
+    return true;
+}
+
+bool
+js::intrinsic_UnsafeGetBooleanFromReservedSlot(JSContext *cx, unsigned argc, Value *vp)
+{
+    if (!intrinsic_UnsafeGetReservedSlot(cx, argc, vp))
+        return false;
+    MOZ_ASSERT(vp->isBoolean());
+    return true;
+}
+
+bool
 js::intrinsic_IsPackedArray(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1075,6 +1111,14 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("_DefineDataProperty",     intrinsic_DefineDataProperty,      4,0),
     JS_FN("UnsafeSetReservedSlot",   intrinsic_UnsafeSetReservedSlot,   3,0),
     JS_FN("UnsafeGetReservedSlot",   intrinsic_UnsafeGetReservedSlot,   2,0),
+    JS_FN("UnsafeGetObjectFromReservedSlot",
+          intrinsic_UnsafeGetObjectFromReservedSlot, 2, 0),
+    JS_FN("UnsafeGetInt32FromReservedSlot",
+          intrinsic_UnsafeGetInt32FromReservedSlot, 2, 0),
+    JS_FN("UnsafeGetStringFromReservedSlot",
+          intrinsic_UnsafeGetStringFromReservedSlot, 2, 0),
+    JS_FN("UnsafeGetBooleanFromReservedSlot",
+          intrinsic_UnsafeGetBooleanFromReservedSlot, 2, 0),
     JS_FN("IsPackedArray",           intrinsic_IsPackedArray,           1,0),
 
     JS_FN("GetIteratorPrototype",    intrinsic_GetIteratorPrototype,    0,0),
