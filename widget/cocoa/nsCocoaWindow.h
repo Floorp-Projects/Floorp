@@ -249,75 +249,75 @@ public:
                                    nsNativeWidget aNativeParent,
                                    const nsIntRect &aRect,
                                    nsDeviceContext *aContext,
-                                   nsWidgetInitData *aInitData = nullptr);
+                                   nsWidgetInitData *aInitData = nullptr) MOZ_OVERRIDE;
 
-    NS_IMETHOD              Destroy();
+    NS_IMETHOD              Destroy() MOZ_OVERRIDE;
 
-    NS_IMETHOD              Show(bool aState);
-    virtual nsIWidget*      GetSheetWindowParent(void);
-    NS_IMETHOD              Enable(bool aState);
-    virtual bool            IsEnabled() const;
-    NS_IMETHOD              SetModal(bool aState);
-    virtual bool            IsVisible() const;
-    NS_IMETHOD              SetFocus(bool aState=false);
-    virtual nsIntPoint WidgetToScreenOffset();
-    virtual nsIntPoint GetClientOffset();
-    virtual nsIntSize ClientToWindowSize(const nsIntSize& aClientSize);
+    NS_IMETHOD              Show(bool aState) MOZ_OVERRIDE;
+    virtual nsIWidget*      GetSheetWindowParent(void) MOZ_OVERRIDE;
+    NS_IMETHOD              Enable(bool aState) MOZ_OVERRIDE;
+    virtual bool            IsEnabled() const MOZ_OVERRIDE;
+    NS_IMETHOD              SetModal(bool aState) MOZ_OVERRIDE;
+    virtual bool            IsVisible() const MOZ_OVERRIDE;
+    NS_IMETHOD              SetFocus(bool aState=false) MOZ_OVERRIDE;
+    virtual nsIntPoint WidgetToScreenOffset() MOZ_OVERRIDE;
+    virtual nsIntPoint GetClientOffset() MOZ_OVERRIDE;
+    virtual nsIntSize ClientToWindowSize(const nsIntSize& aClientSize) MOZ_OVERRIDE;
 
-    virtual void* GetNativeData(uint32_t aDataType) ;
+    virtual void* GetNativeData(uint32_t aDataType) MOZ_OVERRIDE;
 
     NS_IMETHOD              ConstrainPosition(bool aAllowSlop,
-                                              int32_t *aX, int32_t *aY);
-    virtual void            SetSizeConstraints(const SizeConstraints& aConstraints);
-    NS_IMETHOD              Move(double aX, double aY);
+                                              int32_t *aX, int32_t *aY) MOZ_OVERRIDE;
+    virtual void            SetSizeConstraints(const SizeConstraints& aConstraints) MOZ_OVERRIDE;
+    NS_IMETHOD              Move(double aX, double aY) MOZ_OVERRIDE;
     NS_IMETHOD              PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
-                                        nsIWidget *aWidget, bool aActivate);
-    NS_IMETHOD              SetSizeMode(int32_t aMode);
-    NS_IMETHOD              HideWindowChrome(bool aShouldHide);
+                                        nsIWidget *aWidget, bool aActivate) MOZ_OVERRIDE;
+    NS_IMETHOD              SetSizeMode(int32_t aMode) MOZ_OVERRIDE;
+    NS_IMETHOD              HideWindowChrome(bool aShouldHide) MOZ_OVERRIDE;
     void                    EnteredFullScreen(bool aFullScreen);
-    NS_IMETHOD              MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen = nullptr);
-    NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint);
-    NS_IMETHOD              Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint);
-    NS_IMETHOD              GetClientBounds(nsIntRect &aRect);
-    NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);
+    NS_IMETHOD              MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen = nullptr) MOZ_OVERRIDE;
+    NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint) MOZ_OVERRIDE;
+    NS_IMETHOD              Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint) MOZ_OVERRIDE;
+    NS_IMETHOD              GetClientBounds(nsIntRect &aRect) MOZ_OVERRIDE;
+    NS_IMETHOD              GetScreenBounds(nsIntRect &aRect) MOZ_OVERRIDE;
     void                    ReportMoveEvent();
     void                    ReportSizeEvent();
-    NS_IMETHOD              SetCursor(nsCursor aCursor);
-    NS_IMETHOD              SetCursor(imgIContainer* aCursor, uint32_t aHotspotX, uint32_t aHotspotY);
+    NS_IMETHOD              SetCursor(nsCursor aCursor) MOZ_OVERRIDE;
+    NS_IMETHOD              SetCursor(imgIContainer* aCursor, uint32_t aHotspotX, uint32_t aHotspotY) MOZ_OVERRIDE;
 
     CGFloat                 BackingScaleFactor();
     void                    BackingScaleFactorChanged();
-    virtual double          GetDefaultScaleInternal();
+    virtual double          GetDefaultScaleInternal() MOZ_OVERRIDE;
     virtual int32_t         RoundsWidgetCoordinatesTo() MOZ_OVERRIDE;
 
-    NS_IMETHOD              SetTitle(const nsAString& aTitle);
+    NS_IMETHOD              SetTitle(const nsAString& aTitle) MOZ_OVERRIDE;
 
-    NS_IMETHOD Invalidate(const nsIntRect &aRect);
-    virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
+    NS_IMETHOD Invalidate(const nsIntRect &aRect) MOZ_OVERRIDE;
+    virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations) MOZ_OVERRIDE;
     virtual LayerManager* GetLayerManager(PLayerTransactionChild* aShadowManager = nullptr,
                                           LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
                                           LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
-                                          bool* aAllowRetaining = nullptr);
+                                          bool* aAllowRetaining = nullptr) MOZ_OVERRIDE;
     NS_IMETHOD DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
-                             nsEventStatus& aStatus);
-    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, bool aDoCapture);
-    NS_IMETHOD GetAttention(int32_t aCycleCount);
-    virtual bool HasPendingInputEvent();
-    virtual nsTransparencyMode GetTransparencyMode();
-    virtual void SetTransparencyMode(nsTransparencyMode aMode);
-    NS_IMETHOD SetWindowShadowStyle(int32_t aStyle);
-    virtual void SetShowsToolbarButton(bool aShow);
-    virtual void SetShowsFullScreenButton(bool aShow);
-    virtual void SetWindowAnimationType(WindowAnimationType aType);
-    virtual void SetDrawsTitle(bool aDrawTitle);
+                             nsEventStatus& aStatus) MOZ_OVERRIDE;
+    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, bool aDoCapture) MOZ_OVERRIDE;
+    NS_IMETHOD GetAttention(int32_t aCycleCount) MOZ_OVERRIDE;
+    virtual bool HasPendingInputEvent() MOZ_OVERRIDE;
+    virtual nsTransparencyMode GetTransparencyMode() MOZ_OVERRIDE;
+    virtual void SetTransparencyMode(nsTransparencyMode aMode) MOZ_OVERRIDE;
+    NS_IMETHOD SetWindowShadowStyle(int32_t aStyle) MOZ_OVERRIDE;
+    virtual void SetShowsToolbarButton(bool aShow) MOZ_OVERRIDE;
+    virtual void SetShowsFullScreenButton(bool aShow) MOZ_OVERRIDE;
+    virtual void SetWindowAnimationType(WindowAnimationType aType) MOZ_OVERRIDE;
+    virtual void SetDrawsTitle(bool aDrawTitle) MOZ_OVERRIDE;
     virtual void SetUseBrightTitlebarForeground(bool aBrightForeground) MOZ_OVERRIDE;
-    NS_IMETHOD SetNonClientMargins(nsIntMargin &margins);
-    NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, bool aActive);
-    virtual void SetDrawsInTitlebar(bool aState);
-    virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries);
+    NS_IMETHOD SetNonClientMargins(nsIntMargin &margins) MOZ_OVERRIDE;
+    NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, bool aActive) MOZ_OVERRIDE;
+    virtual void SetDrawsInTitlebar(bool aState) MOZ_OVERRIDE;
+    virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) MOZ_OVERRIDE;
     virtual nsresult SynthesizeNativeMouseEvent(nsIntPoint aPoint,
                                                 uint32_t aNativeMessage,
-                                                uint32_t aModifierFlags);
+                                                uint32_t aModifierFlags) MOZ_OVERRIDE;
 
     void DispatchSizeModeEvent();
 
@@ -334,7 +334,7 @@ public:
     NS_IMETHOD_(void) SetInputContext(
                         const InputContext& aContext,
                         const InputContextAction& aAction) MOZ_OVERRIDE;
-    NS_IMETHOD_(InputContext) GetInputContext()
+    NS_IMETHOD_(InputContext) GetInputContext() MOZ_OVERRIDE
     {
       NSView* view = mWindow ? [mWindow contentView] : nil;
       if (view) {
@@ -356,7 +356,7 @@ public:
 
     void SetPopupWindowLevel();
 
-    NS_IMETHOD         ReparentNativeWidget(nsIWidget* aNewParent);
+    NS_IMETHOD         ReparentNativeWidget(nsIWidget* aNewParent) MOZ_OVERRIDE;
 protected:
   virtual ~nsCocoaWindow();
 
@@ -374,7 +374,7 @@ protected:
                                 bool aRepaint, bool aConstrainToCurrentScreen);
 
   virtual already_AddRefed<nsIWidget>
-  AllocateChildPopupWidget()
+  AllocateChildPopupWidget() MOZ_OVERRIDE
   {
     static NS_DEFINE_IID(kCPopUpCID, NS_POPUP_CID);
     nsCOMPtr<nsIWidget> widget = do_CreateInstance(kCPopUpCID);

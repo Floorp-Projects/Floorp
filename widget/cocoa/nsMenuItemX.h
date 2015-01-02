@@ -45,8 +45,8 @@ public:
   NS_DECL_CHANGEOBSERVER
 
   // nsMenuObjectX
-  void*             NativeData()     {return (void*)mNativeMenuItem;}
-  nsMenuObjectTypeX MenuObjectType() {return eMenuItemObjectType;}
+  void*             NativeData() MOZ_OVERRIDE {return (void*)mNativeMenuItem;}
+  nsMenuObjectTypeX MenuObjectType() MOZ_OVERRIDE {return eMenuItemObjectType;}
 
   // nsMenuItemX
   nsresult      Create(nsMenuX* aParent, const nsString& aLabel, EMenuItemType aItemType,
