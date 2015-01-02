@@ -53,7 +53,7 @@ private:
 
   IOPMAssertionID mAssertionID = kIOPMNullAssertionID;
 
-  NS_IMETHOD Callback(const nsAString& aTopic, const nsAString& aState) {
+  NS_IMETHOD Callback(const nsAString& aTopic, const nsAString& aState) MOZ_OVERRIDE {
     if (!aTopic.EqualsASCII("screen")) {
       return NS_OK;
     }
