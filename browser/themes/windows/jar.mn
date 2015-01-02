@@ -451,6 +451,8 @@ browser.jar:
 #ifdef E10S_TESTING_ONLY
         skin/classic/browser/e10s-64@2x.png (../shared/e10s-64@2x.png)
 #endif
+        skin/classic/browser/warning16.png                            (../shared/warning16.png)
+        skin/classic/browser/warning16@2x.png                         (../shared/warning16@2x.png)
 
 #ifdef XP_WIN
 browser.jar:
@@ -908,6 +910,8 @@ browser.jar:
 #ifdef E10S_TESTING_ONLY
         skin/classic/aero/browser/e10s-64@2x.png (../shared/e10s-64@2x.png)
 #endif
+        skin/classic/aero/browser/warning16.png                       (../shared/warning16.png)
+        skin/classic/aero/browser/warning16@2x.png                    (../shared/warning16@2x.png)
 
 % override chrome://browser/skin/Toolbar.png               chrome://browser/skin/Toolbar-aero.png                  os=WINNT osversion=6
 % override chrome://browser/skin/Toolbar.png               chrome://browser/skin/Toolbar-aero.png                  os=WINNT osversion=6.1

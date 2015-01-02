@@ -574,6 +574,12 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   list-style-image: url(chrome://browser/skin/syncProgress-horizontalbar.png);
 }
 
+#PanelUI-fxa-status[fxastatus="migrate-signup"],
+#PanelUI-fxa-status[fxastatus="migrate-verify"] {
+  list-style-image: url(chrome://browser/skin/warning16.png);
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
 #PanelUI-customize {
   list-style-image: url(chrome://browser/skin/menuPanel-customize.png);
 }
