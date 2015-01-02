@@ -52,6 +52,7 @@ fi
   --disable-mock \
   --variant=$VARIANT \
   --work-dir=$OBJDIR/B2G \
+  --gaia-languages-file locales/languages_all.json \
   --log-level=debug \
   --target=$TARGET \
   --b2g-config-dir=$TARGET \
