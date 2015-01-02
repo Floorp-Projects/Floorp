@@ -29,13 +29,13 @@ class WebSocketChannelChild : public BaseWebSocketChannel,
   // nsIWebSocketChannel methods BaseWebSocketChannel didn't implement for us
   //
   NS_IMETHOD AsyncOpen(nsIURI *aURI, const nsACString &aOrigin,
-                       nsIWebSocketListener *aListener, nsISupports *aContext);
-  NS_IMETHOD Close(uint16_t code, const nsACString & reason);
-  NS_IMETHOD SendMsg(const nsACString &aMsg);
-  NS_IMETHOD SendBinaryMsg(const nsACString &aMsg);
-  NS_IMETHOD SendBinaryStream(nsIInputStream *aStream, uint32_t aLength);
+                       nsIWebSocketListener *aListener, nsISupports *aContext) MOZ_OVERRIDE;
+  NS_IMETHOD Close(uint16_t code, const nsACString & reason) MOZ_OVERRIDE;
+  NS_IMETHOD SendMsg(const nsACString &aMsg) MOZ_OVERRIDE;
+  NS_IMETHOD SendBinaryMsg(const nsACString &aMsg) MOZ_OVERRIDE;
+  NS_IMETHOD SendBinaryStream(nsIInputStream *aStream, uint32_t aLength) MOZ_OVERRIDE;
   nsresult SendBinaryStream(OptionalInputStreamParams *aStream, uint32_t aLength);
-  NS_IMETHOD GetSecurityInfo(nsISupports **aSecurityInfo);
+  NS_IMETHOD GetSecurityInfo(nsISupports **aSecurityInfo) MOZ_OVERRIDE;
 
   void AddIPDLReference();
   void ReleaseIPDLReference();

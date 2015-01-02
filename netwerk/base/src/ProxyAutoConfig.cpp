@@ -272,7 +272,7 @@ public:
   // nsIDNSListener
   NS_IMETHODIMP OnLookupComplete(nsICancelable *request,
                                  nsIDNSRecord *record,
-                                 nsresult status)
+                                 nsresult status) MOZ_OVERRIDE
   {
     if (mTimer) {
       mTimer->Cancel();
@@ -286,7 +286,7 @@ public:
   }
 
   // nsITimerCallback
-  NS_IMETHODIMP Notify(nsITimer *timer) 
+  NS_IMETHODIMP Notify(nsITimer *timer) MOZ_OVERRIDE
   {
     if (mRequest)
       mRequest->Cancel(NS_ERROR_NET_TIMEOUT);

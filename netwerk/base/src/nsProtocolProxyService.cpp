@@ -136,14 +136,14 @@ public:
         mProxyInfo = pi;
     }
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() MOZ_OVERRIDE
     {
         if (mCallback)
             DoCallback();
         return NS_OK;
     }
 
-    NS_IMETHOD Cancel(nsresult reason)
+    NS_IMETHOD Cancel(nsresult reason) MOZ_OVERRIDE
     {
         NS_ENSURE_ARG(NS_FAILED(reason));
 
@@ -178,7 +178,7 @@ private:
     // before calling DoCallback.
     void OnQueryComplete(nsresult status,
                          const nsCString &pacString,
-                         const nsCString &newPACURL)
+                         const nsCString &newPACURL) MOZ_OVERRIDE
     {
         // If we've already called DoCallback then, nothing more to do.
         if (!mCallback)
@@ -1067,7 +1067,7 @@ class nsAsyncBridgeRequest MOZ_FINAL  : public nsPACManCallback
 
     void OnQueryComplete(nsresult status,
                          const nsCString &pacString,
-                         const nsCString &newPACURL)
+                         const nsCString &newPACURL) MOZ_OVERRIDE
     {
         MutexAutoLock lock(mMutex);
         mCompleted = true;

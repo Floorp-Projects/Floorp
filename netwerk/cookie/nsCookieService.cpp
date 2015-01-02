@@ -357,7 +357,7 @@ protected:
   virtual const char *GetOpType() = 0;
 
 public:
-  NS_IMETHOD HandleError(mozIStorageError* aError)
+  NS_IMETHOD HandleError(mozIStorageError* aError) MOZ_OVERRIDE
   {
     int32_t result = -1;
     aError->GetResult(&result);
@@ -385,7 +385,7 @@ public:
 class InsertCookieDBListener MOZ_FINAL : public DBListenerErrorHandler
 {
 private:
-  virtual const char *GetOpType() { return "INSERT"; }
+  virtual const char *GetOpType() MOZ_OVERRIDE { return "INSERT"; }
 
   ~InsertCookieDBListener() {}
 
@@ -393,12 +393,12 @@ public:
   NS_DECL_ISUPPORTS
 
   explicit InsertCookieDBListener(DBState* dbState) : DBListenerErrorHandler(dbState) { }
-  NS_IMETHOD HandleResult(mozIStorageResultSet*)
+  NS_IMETHOD HandleResult(mozIStorageResultSet*) MOZ_OVERRIDE
   {
     NS_NOTREACHED("Unexpected call to InsertCookieDBListener::HandleResult");
     return NS_OK;
   }
-  NS_IMETHOD HandleCompletion(uint16_t aReason)
+  NS_IMETHOD HandleCompletion(uint16_t aReason) MOZ_OVERRIDE
   {
     // If we were rebuilding the db and we succeeded, make our corruptFlag say
     // so.
@@ -421,7 +421,7 @@ NS_IMPL_ISUPPORTS(InsertCookieDBListener, mozIStorageStatementCallback)
 class UpdateCookieDBListener MOZ_FINAL : public DBListenerErrorHandler
 {
 private:
-  virtual const char *GetOpType() { return "UPDATE"; }
+  virtual const char *GetOpType() MOZ_OVERRIDE { return "UPDATE"; }
 
   ~UpdateCookieDBListener() {}
 
@@ -429,12 +429,12 @@ public:
   NS_DECL_ISUPPORTS
 
   explicit UpdateCookieDBListener(DBState* dbState) : DBListenerErrorHandler(dbState) { }
-  NS_IMETHOD HandleResult(mozIStorageResultSet*)
+  NS_IMETHOD HandleResult(mozIStorageResultSet*) MOZ_OVERRIDE
   {
     NS_NOTREACHED("Unexpected call to UpdateCookieDBListener::HandleResult");
     return NS_OK;
   }
-  NS_IMETHOD HandleCompletion(uint16_t aReason)
+  NS_IMETHOD HandleCompletion(uint16_t aReason) MOZ_OVERRIDE
   {
     return NS_OK;
   }
@@ -449,7 +449,7 @@ NS_IMPL_ISUPPORTS(UpdateCookieDBListener, mozIStorageStatementCallback)
 class RemoveCookieDBListener MOZ_FINAL : public DBListenerErrorHandler
 {
 private:
-  virtual const char *GetOpType() { return "REMOVE"; }
+  virtual const char *GetOpType() MOZ_OVERRIDE { return "REMOVE"; }
 
   ~RemoveCookieDBListener() {}
 
@@ -457,12 +457,12 @@ public:
   NS_DECL_ISUPPORTS
 
   explicit RemoveCookieDBListener(DBState* dbState) : DBListenerErrorHandler(dbState) { }
-  NS_IMETHOD HandleResult(mozIStorageResultSet*)
+  NS_IMETHOD HandleResult(mozIStorageResultSet*) MOZ_OVERRIDE
   {
     NS_NOTREACHED("Unexpected call to RemoveCookieDBListener::HandleResult");
     return NS_OK;
   }
-  NS_IMETHOD HandleCompletion(uint16_t aReason)
+  NS_IMETHOD HandleCompletion(uint16_t aReason) MOZ_OVERRIDE
   {
     return NS_OK;
   }
@@ -477,7 +477,7 @@ NS_IMPL_ISUPPORTS(RemoveCookieDBListener, mozIStorageStatementCallback)
 class ReadCookieDBListener MOZ_FINAL : public DBListenerErrorHandler
 {
 private:
-  virtual const char *GetOpType() { return "READ"; }
+  virtual const char *GetOpType() MOZ_OVERRIDE { return "READ"; }
   bool mCanceled;
 
   ~ReadCookieDBListener() {}
@@ -493,7 +493,7 @@ public:
 
   void Cancel() { mCanceled = true; }
 
-  NS_IMETHOD HandleResult(mozIStorageResultSet *aResult)
+  NS_IMETHOD HandleResult(mozIStorageResultSet *aResult) MOZ_OVERRIDE
   {
     nsCOMPtr<mozIStorageRow> row;
 
@@ -513,7 +513,7 @@ public:
 
     return NS_OK;
   }
-  NS_IMETHOD HandleCompletion(uint16_t aReason)
+  NS_IMETHOD HandleCompletion(uint16_t aReason) MOZ_OVERRIDE
   {
     // Process the completion of the read operation. If we have been canceled,
     // we cannot assume that the cookieservice still has an open connection
@@ -565,7 +565,7 @@ public:
   nsRefPtr<DBState> mDBState;
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Complete(nsresult, nsISupports*)
+  NS_IMETHOD Complete(nsresult, nsISupports*) MOZ_OVERRIDE
   {
     gCookieService->HandleDBClosed(mDBState);
     return NS_OK;
@@ -585,7 +585,7 @@ public:
 
   // nsIObserver implementation.
   NS_IMETHODIMP
-  Observe(nsISupports *aSubject, const char *aTopic, const char16_t *data)
+  Observe(nsISupports *aSubject, const char *aTopic, const char16_t *data) MOZ_OVERRIDE
   {
     MOZ_ASSERT(!nsCRT::strcmp(aTopic, TOPIC_WEB_APP_CLEAR_DATA));
 
