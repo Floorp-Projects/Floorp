@@ -45,10 +45,10 @@ public:
   virtual bool DoAction(uint8_t aIndex) MOZ_OVERRIDE;
 
   // Widgets
-  virtual bool IsWidget() const;
-  virtual bool IsActiveWidget() const;
-  virtual bool AreItemsOperable() const;
-  virtual Accessible* ContainerWidget() const;
+  virtual bool IsWidget() const MOZ_OVERRIDE;
+  virtual bool IsActiveWidget() const MOZ_OVERRIDE;
+  virtual bool AreItemsOperable() const MOZ_OVERRIDE;
+  virtual Accessible* ContainerWidget() const MOZ_OVERRIDE;
 
   virtual bool IsAcceptableChild(Accessible* aPossibleChild) const MOZ_OVERRIDE;
 
@@ -132,7 +132,7 @@ public:
   virtual uint64_t NativeInteractiveState() const MOZ_OVERRIDE;
 
   // Widgets
-  virtual Accessible* ContainerWidget() const;
+  virtual Accessible* ContainerWidget() const MOZ_OVERRIDE;
 };
 
 /**
@@ -148,9 +148,9 @@ public:
   virtual uint64_t NativeInteractiveState() const MOZ_OVERRIDE;
 
   // Widgets
-  virtual bool IsWidget() const;
-  virtual bool IsActiveWidget() const;
-  virtual bool AreItemsOperable() const;
+  virtual bool IsWidget() const MOZ_OVERRIDE;
+  virtual bool IsActiveWidget() const MOZ_OVERRIDE;
+  virtual bool AreItemsOperable() const MOZ_OVERRIDE;
 };
 
 /**

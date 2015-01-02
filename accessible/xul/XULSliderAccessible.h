@@ -22,11 +22,11 @@ public:
   XULSliderAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual void Value(nsString& aValue);
+  virtual void Value(nsString& aValue) MOZ_OVERRIDE;
   virtual a11y::role NativeRole() MOZ_OVERRIDE;
   virtual uint64_t NativeInteractiveState() const MOZ_OVERRIDE;
-  virtual bool NativelyUnavailable() const;
-  virtual bool CanHaveAnonChildren();
+  virtual bool NativelyUnavailable() const MOZ_OVERRIDE;
+  virtual bool CanHaveAnonChildren() MOZ_OVERRIDE;
 
   // Value
   virtual double MaxValue() const MOZ_OVERRIDE;

@@ -28,20 +28,20 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Accessible
-  virtual void Shutdown();
+  virtual void Shutdown() MOZ_OVERRIDE;
   virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
-                                   EWhichChildAtPoint aWhichChild);
+                                   EWhichChildAtPoint aWhichChild) MOZ_OVERRIDE;
 
-  virtual void InvalidateChildren();
+  virtual void InvalidateChildren() MOZ_OVERRIDE;
   virtual bool InsertChildAt(uint32_t aIdx, Accessible* aChild) MOZ_OVERRIDE;
-  virtual bool RemoveChild(Accessible* aAccessible);
+  virtual bool RemoveChild(Accessible* aAccessible) MOZ_OVERRIDE;
 
 protected:
-  virtual ~OuterDocAccessible();
+  virtual ~OuterDocAccessible() MOZ_OVERRIDE;
 
   // Accessible
-  virtual void CacheChildren();
+  virtual void CacheChildren() MOZ_OVERRIDE;
 };
 
 } // namespace a11y
