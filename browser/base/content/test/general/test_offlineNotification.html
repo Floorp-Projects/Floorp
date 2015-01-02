@@ -9,7 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=462856
   <script type="text/javascript" src="offlineByDefault.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="loaded()">
+<body>
 <p id="display">
 <!-- Load the test frame twice from the same domain,
      to make sure we get notifications for both -->
@@ -122,6 +122,8 @@ function loaded() {
   is(panel.childElementCount, 1, "1 notification now being displayed");
   panel.firstElementChild.button.click();
 }
+
+SimpleTest.waitForFocus(loaded);
 
 </script>
 </pre>
