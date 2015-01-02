@@ -49,6 +49,7 @@ namespace JS {
     D(EVICT_NURSERY)                            \
     D(FULL_STORE_BUFFER)                        \
     D(SHARED_MEMORY_LIMIT)                      \
+    D(INCREMENTAL_ALLOC_TRIGGER)                \
                                                 \
     /* These are reserved for future use. */    \
     D(RESERVED0)                                \
@@ -69,7 +70,6 @@ namespace JS {
     D(RESERVED15)                               \
     D(RESERVED16)                               \
     D(RESERVED17)                               \
-    D(RESERVED18)                               \
                                                 \
     /* Reasons from Firefox */                  \
     D(DOM_WINDOW_UTILS)                         \
