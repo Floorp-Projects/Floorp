@@ -1294,11 +1294,10 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
 
   if (aIncremental == IncrementalGC) {
     MOZ_ASSERT(aShrinking == NonShrinkingGC);
-    JS::StartIncrementalGC(sRuntime, aReason, aSliceMillis);
-  } else if (aShrinking == ShrinkingGC) {
-    JS::ShrinkingGC(sRuntime, aReason);
+    JS::StartIncrementalGC(sRuntime, GC_NORMAL, aReason, aSliceMillis);
   } else {
-    JS::GCForReason(sRuntime, aReason);
+    JSGCInvocationKind gckind = aShrinking == ShrinkingGC ? GC_SHRINK : GC_NORMAL;
+    JS::GCForReason(sRuntime, gckind, aReason);
   }
 }
 
