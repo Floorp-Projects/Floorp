@@ -727,6 +727,8 @@ HandleException(ResumeFromException *rfe)
     if (cx->runtime()->jitRuntime()->hasIonReturnOverride())
         cx->runtime()->jitRuntime()->takeIonReturnOverride();
 
+    JitActivation *activation = cx->mainThread().activation()->asJit();
+
     // The Debugger onExceptionUnwind hook (reachable via
     // HandleExceptionBaseline below) may cause on-stack recompilation of
     // baseline scripts, which may patch return addresses on the stack. Since
@@ -788,6 +790,7 @@ HandleException(ResumeFromException *rfe)
                 ++frames;
             }
 
+            activation->removeIonFrameRecovery(iter.jsFrame());
             if (invalidated)
                 ionScript->decrementInvalidationCount(cx->runtime()->defaultFreeOp());
 
