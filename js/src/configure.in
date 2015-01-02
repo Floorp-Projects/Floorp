@@ -1033,11 +1033,11 @@ MOZ_ANDROID_STLPORT
 dnl ========================================================
 dnl Suppress Clang Argument Warnings
 dnl ========================================================
-if test -n "$CLANG_CC"; then
+if test -n "${CLANG_CC}${CLANG_CL}"; then
     _WARNINGS_CFLAGS="-Qunused-arguments ${_WARNINGS_CFLAGS}"
     CPPFLAGS="-Qunused-arguments ${CPPFLAGS}"
 fi
-if test -n "$CLANG_CXX"; then
+if test -n "${CLANG_CXX}${CLANG_CL}"; then
     _WARNINGS_CXXFLAGS="-Qunused-arguments ${_WARNINGS_CXXFLAGS}"
 fi
 
