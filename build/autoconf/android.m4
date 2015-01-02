@@ -353,6 +353,13 @@ case "$target" in
     if test -z "$android_build_tools" ; then
         android_build_tools="$android_platform_tools" # SDK Tools < r22
     fi
+    all_android_build_tools=""
+    for suffix in `ls "$android_sdk_root/build-tools" | sed -e "s,android-,999.," | sort -t. -k 1,1nr -k 2,2nr -k 3,3nr -k 4,4nr -k 5,5nr`; do
+        tools_directory=`echo "$android_sdk_root/build-tools/$suffix" | sed -e "s,999.,android-,"`
+        if test -d "$tools_directory" -a -f "$tools_directory/aapt"; then
+            all_android_build_tools="$all_android_build_tools:$tools_directory"
+        fi
+    done
 
     if test -d "$android_build_tools" -a -f "$android_build_tools/aapt"; then
         AC_MSG_RESULT([$android_build_tools])
@@ -390,7 +397,7 @@ case "$target" in
 
     dnl Google has a history of moving the Android tools around.  We don't
     dnl care where they are, so let's try to find them anywhere we can.
-    ALL_ANDROID_TOOLS_PATHS="$ANDROID_TOOLS:$ANDROID_BUILD_TOOLS:$ANDROID_PLATFORM_TOOLS"
+    ALL_ANDROID_TOOLS_PATHS="$ANDROID_TOOLS$all_android_build_tools:$ANDROID_PLATFORM_TOOLS"
     MOZ_PATH_PROG(ZIPALIGN, zipalign, :, [$ALL_ANDROID_TOOLS_PATHS])
     MOZ_PATH_PROG(DX, dx, :, [$ALL_ANDROID_TOOLS_PATHS])
     MOZ_PATH_PROG(AAPT, aapt, :, [$ALL_ANDROID_TOOLS_PATHS])
