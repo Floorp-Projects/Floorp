@@ -1322,6 +1322,7 @@ class MSimdValueX4 : public MQuaternaryInstruction
       : MQuaternaryInstruction(x, y, z, w)
     {
         MOZ_ASSERT(IsSimdType(type));
+        MOZ_ASSERT(SimdTypeToLength(type) == 4);
         mozilla::DebugOnly<MIRType> scalarType = SimdTypeToScalarType(type);
         MOZ_ASSERT(scalarType == x->type());
         MOZ_ASSERT(scalarType == y->type());
@@ -1339,6 +1340,10 @@ class MSimdValueX4 : public MQuaternaryInstruction
                              MDefinition *y, MDefinition *z, MDefinition *w)
     {
         return new(alloc) MSimdValueX4(type, x, y, z, w);
+    }
+
+    bool canConsumeFloat32(MUse *use) const {
+        return SimdTypeToScalarType(type()) == MIRType_Float32;
     }
 
     AliasSet getAliasSet() const {
@@ -1375,6 +1380,10 @@ class MSimdSplatX4 : public MUnaryInstruction
     static MSimdSplatX4 *New(TempAllocator &alloc, MIRType type, MDefinition *v)
     {
         return new(alloc) MSimdSplatX4(type, v);
+    }
+
+    bool canConsumeFloat32(MUse *use) const {
+        return SimdTypeToScalarType(type()) == MIRType_Float32;
     }
 
     AliasSet getAliasSet() const {
@@ -1556,6 +1565,10 @@ class MSimdInsertElement : public MBinaryInstruction
     }
     SimdLane lane() const {
         return lane_;
+    }
+
+    bool canConsumeFloat32(MUse *use) const {
+        return use == getUseFor(1) && SimdTypeToScalarType(type()) == MIRType_Float32;
     }
 
     AliasSet getAliasSet() const {
