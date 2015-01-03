@@ -82,6 +82,5 @@ config = {
             "run_filename": "runxpcshelltests.py",
             "testsdir": "xpcshell"
         }
-    },
-    "mac_res_subdir": "MacOS"
+    }
 }
