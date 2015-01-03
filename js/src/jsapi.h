@@ -1116,6 +1116,13 @@ ToBooleanSlow(JS::HandleValue v);
  */
 extern JS_PUBLIC_API(JSString*)
 ToStringSlow(JSContext *cx, JS::HandleValue v);
+
+/*
+ * DO NOT CALL THIS. Use JS::ToObject.
+ */
+extern JS_PUBLIC_API(JSObject*)
+ToObjectSlow(JSContext *cx, JS::HandleValue vp, bool reportScanStack);
+
 } /* namespace js */
 
 namespace JS {
@@ -1159,6 +1166,15 @@ ToString(JSContext *cx, HandleValue v)
     if (v.isString())
         return v.toString();
     return js::ToStringSlow(cx, v);
+}
+
+/* ES5 9.9 ToObject. */
+MOZ_ALWAYS_INLINE JSObject*
+ToObject(JSContext *cx, HandleValue vp)
+{
+    if (vp.isObject())
+        return &vp.toObject();
+    return js::ToObjectSlow(cx, vp, false);
 }
 
 /*
