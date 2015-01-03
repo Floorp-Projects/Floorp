@@ -26,7 +26,7 @@ public:
 
   NS_IMETHOD
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
-                 bool aAnonymize)
+                 bool aAnonymize) MOZ_OVERRIDE
   {
     nsresult rv;
     rv = MOZ_COLLECT_REPORT(
