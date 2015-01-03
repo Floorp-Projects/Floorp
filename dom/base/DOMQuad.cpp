@@ -84,25 +84,25 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(QuadBounds, DOMRectReadOnly)
   NS_DECL_ISUPPORTS_INHERITED
 
-  virtual double X() const
+  virtual double X() const MOZ_OVERRIDE
   {
     double x1, x2;
     GetHorizontalMinMax(&x1, &x2);
     return x1;
   }
-  virtual double Y() const
+  virtual double Y() const MOZ_OVERRIDE
   {
     double y1, y2;
     GetVerticalMinMax(&y1, &y2);
     return y1;
   }
-  virtual double Width() const
+  virtual double Width() const MOZ_OVERRIDE
   {
     double x1, x2;
     GetHorizontalMinMax(&x1, &x2);
     return x2 - x1;
   }
-  virtual double Height() const
+  virtual double Height() const MOZ_OVERRIDE
   {
     double y1, y2;
     GetVerticalMinMax(&y1, &y2);

@@ -427,7 +427,7 @@ class nsScriptCacheCleaner MOZ_FINAL : public nsIObserver
 
   NS_IMETHODIMP Observe(nsISupports *aSubject,
                         const char *aTopic,
-                        const char16_t *aData)
+                        const char16_t *aData) MOZ_OVERRIDE
   {
     nsFrameScriptExecutor::Shutdown();
     return NS_OK;
