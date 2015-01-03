@@ -511,6 +511,27 @@ nsDOMWindowUtils::SetResolution(float aXResolution, float aYResolution)
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::SetResolutionAndScaleTo(float aXResolution, float aYResolution)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsIPresShell* presShell = GetPresShell();
+  if (!presShell) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
+  if (sf) {
+    sf->SetResolutionAndScaleTo(gfxSize(aXResolution, aYResolution));
+    presShell->SetResolutionAndScaleTo(aXResolution, aYResolution);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetResolution(float* aXResolution, float* aYResolution)
 {
   MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
