@@ -10644,7 +10644,6 @@ class MGetDOMMember : public MGetDOMProperty
     explicit MGetDOMMember(const JSJitInfo *jitinfo)
         : MGetDOMProperty(jitinfo)
     {
-        setResultType(MIRTypeFromValueType(jitinfo->returnType()));
     }
 
   public:
