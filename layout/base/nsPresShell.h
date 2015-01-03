@@ -197,7 +197,13 @@ public:
 
   virtual void SetIgnoreViewportScrolling(bool aIgnore) MOZ_OVERRIDE;
 
-  virtual nsresult SetResolution(float aXResolution, float aYResolution) MOZ_OVERRIDE;
+  virtual nsresult SetResolution(float aXResolution, float aYResolution) MOZ_OVERRIDE {
+    return SetResolutionImpl(aXResolution, aYResolution, /* aScaleToResolution = */ false);
+  }
+  virtual nsresult SetResolutionAndScaleTo(float aXResolution, float aYResolution) MOZ_OVERRIDE {
+    return SetResolutionImpl(aXResolution, aYResolution, /* aScaleToResolution = */ true);
+  }
+  virtual bool ScaleToResolution() const MOZ_OVERRIDE;
   virtual gfxSize GetCumulativeResolution() MOZ_OVERRIDE;
 
   //nsIViewObserver interface
@@ -753,6 +759,8 @@ protected:
   // A list of images that are visible or almost visible.
   nsTHashtable< nsRefPtrHashKey<nsIImageLoadingContent> > mVisibleImages;
 
+  nsresult SetResolutionImpl(float aXResolution, float aYResolution, bool aScaleToResolution);
+
 #ifdef DEBUG
   // The reflow root under which we're currently reflowing.  Null when
   // not in reflow.
@@ -854,6 +862,11 @@ protected:
   bool                      mNextPaintCompressed : 1;
 
   bool                      mHasCSSBackgroundColor : 1;
+
+  // Whether content should be scaled by the resolution amount. If this is
+  // not set, a transform that scales by the inverse of the resolution is
+  // applied to rendered layers.
+  bool                      mScaleToResolution : 1;
 
   static bool               sDisableNonTestMouseEvents;
 };

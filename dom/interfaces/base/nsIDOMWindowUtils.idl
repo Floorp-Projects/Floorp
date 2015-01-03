@@ -51,7 +51,7 @@ interface nsITranslationNodeList;
 interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 
-[scriptable, uuid(9621eb05-b498-4e87-a012-95d817987624)]
+[scriptable, uuid(4922a706-a17e-48e0-ab6f-9fe1bbe4e5f7)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -199,30 +199,35 @@ interface nsIDOMWindowUtils : nsISupports {
 
   /**
    * Get/set the resolution at which rescalable web content is drawn.
-   * Currently this is only (some) thebes content.
    *
    * Setting a new resolution does *not* trigger reflow.  This API is
    * entirely separate from textZoom and fullZoom; a resolution scale
    * can be applied together with both textZoom and fullZoom.
    *
-   * The effect of is API for gfx code to allocate more or fewer
+   * The effect of this API is for gfx code to allocate more or fewer
    * pixels for rescalable content by a factor of |resolution| in
-   * either or both dimensions.  setResolution() together with
-   * setDisplayport() can be used to implement a non-reflowing
-   * scale-zoom in concert with another entity that can draw with a
-   * scale.  For example, to scale a content |window| inside a
-   * <browser> by a factor of 2.0
-   *
-   *   window.setDisplayport(x, y, oldW / 2.0, oldH / 2.0);
-   *   window.setResolution(2.0, 2.0);
-   *   // elsewhere
-   *   browser.setViewportScale(2.0, 2.0);
+   * either or both dimensions.  The scale at which the content is
+   * displayed does not change; if that is desired, use
+   * setResolutionAndScaleTo() instead.
    *
    * The caller of this method must have chrome privileges.
    */
   void setResolution(in float aXResolution, in float aYResolution);
 
   void getResolution(out float aXResolution, out float aYResolution);
+
+  /**
+   * Similar to setResolution(), but also scales the content by the
+   * amount of the resolution, so that it is displayed at a
+   * correspondingly larger or smaller size, without the need for
+   * the caller to set an additional transform.
+   *
+   * This can be used to implement a non-reflowing scale-zoom, e.g.
+   * for pinch-zoom on mobile platforms.
+   *
+   * The caller of this method must have chrome privileges.
+   */
+  void setResolutionAndScaleTo(in float aXResolution, in float aYResolution);
 
   /**
    * Whether the resolution has been set by the user.
