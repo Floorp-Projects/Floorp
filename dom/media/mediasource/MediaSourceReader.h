@@ -88,7 +88,7 @@ public:
   // through.
   bool UseBufferingHeuristics() MOZ_OVERRIDE { return false; }
 
-  bool IsMediaSeekable() { return true; }
+  bool IsMediaSeekable() MOZ_OVERRIDE { return true; }
 
   nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags) MOZ_OVERRIDE;
   void ReadUpdatedMetadata(MediaInfo* aInfo) MOZ_OVERRIDE;
@@ -108,7 +108,7 @@ public:
 
   nsRefPtr<ShutdownPromise> Shutdown() MOZ_OVERRIDE;
 
-  virtual void BreakCycles();
+  virtual void BreakCycles() MOZ_OVERRIDE;
 
   bool IsShutdown()
   {
