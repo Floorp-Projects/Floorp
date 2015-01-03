@@ -1185,6 +1185,13 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
 
 #ifdef JS_GC_ZEAL
 
+void
+GCRuntime::getZeal(uint8_t *zeal, uint32_t *frequency)
+{
+    *zeal = zealMode;
+    *frequency = zealFrequency;
+}
+
 const char *gc::ZealModeHelpText =
     "  Specifies how zealous the garbage collector should be. Values for level:\n"
     "    0: Normal amount of collection\n"
