@@ -28,8 +28,8 @@ LOCAL_INCLUDES += [
     '../protocol/about',
     '../protocol/app',
     '../socket',
+    '../streamconv',
     '../streamconv/converters',
-    '../streamconv/src',
 ]
 
 protocols = CONFIG['NECKO_PROTOCOLS'].copy()
