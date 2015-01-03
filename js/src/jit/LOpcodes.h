@@ -316,8 +316,7 @@
     _(InterruptCheckImplicit)       \
     _(ProfilerStackOp)              \
     _(GetDOMProperty)               \
-    _(GetDOMMemberV)                \
-    _(GetDOMMemberT)                \
+    _(GetDOMMember)                 \
     _(SetDOMProperty)               \
     _(CallDOMNative)                \
     _(IsCallable)                   \

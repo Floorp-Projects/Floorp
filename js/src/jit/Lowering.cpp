@@ -3824,19 +3824,9 @@ LIRGenerator::visitGetDOMMember(MGetDOMMember *ins)
     // value can in fact change as a result of DOM setters and method calls.
     MOZ_ASSERT(ins->domAliasSet() != JSJitInfo::AliasEverything,
                "Member gets had better not alias the world");
-
-    MDefinition *obj = ins->object();
-    MOZ_ASSERT(obj->type() == MIRType_Object);
-
-    MIRType type = ins->type();
-
-    if (type == MIRType_Value) {
-        LGetDOMMemberV *lir = new(alloc()) LGetDOMMemberV(useRegisterAtStart(obj));
-        defineBox(lir, ins);
-    } else {
-        LGetDOMMemberT *lir = new(alloc()) LGetDOMMemberT(useRegisterForTypedLoad(obj, type));
-        define(lir, ins);
-    }
+    LGetDOMMember *lir =
+        new(alloc()) LGetDOMMember(useRegisterAtStart(ins->object()));
+    defineBox(lir, ins);
 }
 
 void
