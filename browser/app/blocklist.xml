@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1419359546000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1419896968000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -2754,7 +2754,7 @@
                   <match name="filename" exp="(NPSWF32.*\.dll)|(Flash\ Player\.plugin)" />                      <versionRange  minVersion="10.3.183.66" maxVersion="13.0.0.258" severity="0" vulnerabilitystatus="1"></versionRange>
                             <infoURL>https://get.adobe.com/flashplayer/</infoURL>
           </pluginItem>
-      <pluginItem  blockID="p796">
+      <pluginItem  os="Linux" blockID="p796">
                   <match name="filename" exp="libflashplayer\.so" />                      <versionRange  minVersion="0" maxVersion="11.2.202.424" severity="0" vulnerabilitystatus="1"></versionRange>
                             <infoURL>https://get.adobe.com/flashplayer/</infoURL>
           </pluginItem>
