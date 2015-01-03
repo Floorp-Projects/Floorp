@@ -209,7 +209,7 @@ public:
                       DataTextureSource* aDest,
                       const nsIntRect& aDestRect);
 
-  virtual TextureImageTextureSourceOGL* AsTextureImageTextureSource() { return this; }
+  virtual TextureImageTextureSourceOGL* AsTextureImageTextureSource() MOZ_OVERRIDE { return this; }
 
   // TextureSource
 
@@ -303,7 +303,7 @@ public:
 
   virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE { return mFormat; }
 
-  virtual GLenum GetTextureTarget() const { return mTextureTarget; }
+  virtual GLenum GetTextureTarget() const MOZ_OVERRIDE { return mTextureTarget; }
 
   virtual GLenum GetWrapMode() const MOZ_OVERRIDE { return LOCAL_GL_CLAMP_TO_EDGE; }
 
@@ -439,7 +439,7 @@ public:
                         GLenum aWrapMode,
                         gfx::IntSize aSize);
 
-  virtual TextureSourceOGL* AsSourceOGL() { return this; }
+  virtual TextureSourceOGL* AsSourceOGL() MOZ_OVERRIDE { return this; }
 
   virtual void BindTexture(GLenum activetex, gfx::Filter aFilter) MOZ_OVERRIDE;
 
@@ -451,7 +451,7 @@ public:
 
   virtual gfx::Matrix4x4 GetTextureTransform() MOZ_OVERRIDE;
 
-  virtual GLenum GetTextureTarget() const { return mTextureTarget; }
+  virtual GLenum GetTextureTarget() const MOZ_OVERRIDE { return mTextureTarget; }
 
   virtual GLenum GetWrapMode() const MOZ_OVERRIDE { return mWrapMode; }
 
@@ -506,7 +506,7 @@ public:
 
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE { return mSize; }
 
-  virtual const char* Name() { return "EGLImageTextureHost"; }
+  virtual const char* Name() MOZ_OVERRIDE { return "EGLImageTextureHost"; }
 
 protected:
   const EGLImage mImage;

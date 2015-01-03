@@ -75,7 +75,7 @@ public:
 
   virtual void Destroy() MOZ_OVERRIDE;
 
-  LayerComposite* GetFirstChildComposite();
+  LayerComposite* GetFirstChildComposite() MOZ_OVERRIDE;
 
   virtual void RenderLayer(const nsIntRect& aClipRect) MOZ_OVERRIDE;
   virtual void Prepare(const RenderTargetIntRect& aClipRect) MOZ_OVERRIDE;
@@ -141,7 +141,7 @@ public:
 
   void Destroy() MOZ_OVERRIDE;
 
-  LayerComposite* GetFirstChildComposite();
+  LayerComposite* GetFirstChildComposite() MOZ_OVERRIDE;
 
   virtual void RenderLayer(const nsIntRect& aClipRect) MOZ_OVERRIDE;
   virtual void Prepare(const RenderTargetIntRect& aClipRect) MOZ_OVERRIDE;
