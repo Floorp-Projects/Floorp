@@ -323,51 +323,51 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIMutationObserver, NS_IMUTATION_OBSERVER_IID)
 #define NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATAWILLCHANGE                  \
     virtual void CharacterDataWillChange(nsIDocument* aDocument,             \
                                          nsIContent* aContent,               \
-                                         CharacterDataChangeInfo* aInfo);
+                                         CharacterDataChangeInfo* aInfo) MOZ_OVERRIDE;
 
 #define NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED                     \
     virtual void CharacterDataChanged(nsIDocument* aDocument,                \
                                       nsIContent* aContent,                  \
-                                      CharacterDataChangeInfo* aInfo);
+                                      CharacterDataChangeInfo* aInfo) MOZ_OVERRIDE;
 
 #define NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTEWILLCHANGE                      \
     virtual void AttributeWillChange(nsIDocument* aDocument,                 \
                                      mozilla::dom::Element* aElement,        \
                                      int32_t aNameSpaceID,                   \
                                      nsIAtom* aAttribute,                    \
-                                     int32_t aModType);
+                                     int32_t aModType) MOZ_OVERRIDE;
 
 #define NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED                         \
     virtual void AttributeChanged(nsIDocument* aDocument,                    \
                                   mozilla::dom::Element* aElement,           \
                                   int32_t aNameSpaceID,                      \
                                   nsIAtom* aAttribute,                       \
-                                  int32_t aModType);
+                                  int32_t aModType) MOZ_OVERRIDE;
 
 #define NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED                          \
     virtual void ContentAppended(nsIDocument* aDocument,                     \
                                  nsIContent* aContainer,                     \
                                  nsIContent* aFirstNewContent,               \
-                                 int32_t aNewIndexInContainer);
+                                 int32_t aNewIndexInContainer) MOZ_OVERRIDE;
 
 #define NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED                          \
     virtual void ContentInserted(nsIDocument* aDocument,                     \
                                  nsIContent* aContainer,                     \
                                  nsIContent* aChild,                         \
-                                 int32_t aIndexInContainer);
+                                 int32_t aIndexInContainer) MOZ_OVERRIDE;
 
 #define NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED                           \
     virtual void ContentRemoved(nsIDocument* aDocument,                      \
                                 nsIContent* aContainer,                      \
                                 nsIContent* aChild,                          \
                                 int32_t aIndexInContainer,                   \
-                                nsIContent* aPreviousSibling);
+                                nsIContent* aPreviousSibling) MOZ_OVERRIDE;
 
 #define NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED                      \
-    virtual void NodeWillBeDestroyed(const nsINode* aNode);
+    virtual void NodeWillBeDestroyed(const nsINode* aNode) MOZ_OVERRIDE;
 
 #define NS_DECL_NSIMUTATIONOBSERVER_PARENTCHAINCHANGED                       \
-    virtual void ParentChainChanged(nsIContent *aContent);
+    virtual void ParentChainChanged(nsIContent *aContent) MOZ_OVERRIDE;
 
 #define NS_DECL_NSIMUTATIONOBSERVER                                          \
     NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATAWILLCHANGE                      \
