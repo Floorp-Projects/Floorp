@@ -10,6 +10,8 @@
 
 BEGIN_TEST(testGCHeapPostBarriers)
 {
+    AutoLeaveZeal nozeal(cx);
+
     /* Sanity check - objects start in the nursery and then become tenured. */
     JS_GC(cx->runtime());
     JS::RootedObject obj(cx, NurseryObject());
