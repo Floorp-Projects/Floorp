@@ -220,18 +220,18 @@ public:
   virtual bool UpdateThebes(const ThebesBufferData& aData,
                             const nsIntRegion& aUpdated,
                             const nsIntRegion& aOldValidRegionBack,
-                            nsIntRegion* aUpdatedRegionBack)
+                            nsIntRegion* aUpdatedRegionBack) MOZ_OVERRIDE
   {
     NS_ERROR("N/A for tiled layers");
     return false;
   }
 
-  const nsIntRegion& GetValidLowPrecisionRegion() const
+  const nsIntRegion& GetValidLowPrecisionRegion() const MOZ_OVERRIDE
   {
     return mLowPrecisionTiledBuffer.GetValidRegion();
   }
 
-  virtual void SetCompositor(Compositor* aCompositor)
+  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE
   {
     CompositableHost::SetCompositor(aCompositor);
     mTiledBuffer.SetCompositor(aCompositor);
@@ -248,9 +248,9 @@ public:
                  const gfx::Matrix4x4& aTransform,
                  const gfx::Filter& aFilter,
                  const gfx::Rect& aClipRect,
-                 const nsIntRegion* aVisibleRegion = nullptr);
+                 const nsIntRegion* aVisibleRegion = nullptr) MOZ_OVERRIDE;
 
-  virtual CompositableType GetType() { return CompositableType::CONTENT_TILED; }
+  virtual CompositableType GetType() MOZ_OVERRIDE { return CompositableType::CONTENT_TILED; }
 
   virtual TiledLayerComposer* AsTiledLayerComposer() MOZ_OVERRIDE { return this; }
 
@@ -265,7 +265,7 @@ public:
                     const char* aPrefix="",
                     bool aDumpHtml=false) MOZ_OVERRIDE;
 
-  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) MOZ_OVERRIDE;
 
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
   /**

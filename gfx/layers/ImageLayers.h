@@ -91,8 +91,8 @@ public:
 protected:
   ImageLayer(LayerManager* aManager, void* aImplData);
   ~ImageLayer();
-  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
-  virtual void DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent);
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) MOZ_OVERRIDE;
+  virtual void DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent) MOZ_OVERRIDE;
 
   nsRefPtr<ImageContainer> mContainer;
   GraphicsFilter mFilter;

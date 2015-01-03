@@ -54,7 +54,7 @@ public:
     }
   }
 
-  virtual void RenderLayer(const nsIntRect& aClipRect);
+  virtual void RenderLayer(const nsIntRect& aClipRect) MOZ_OVERRIDE;
 
   virtual void ComputeEffectiveTransforms(const mozilla::gfx::Matrix4x4& aTransformToSurface) MOZ_OVERRIDE;
 
@@ -66,7 +66,7 @@ public:
 
   virtual LayerComposite* AsLayerComposite() MOZ_OVERRIDE { return this; }
 
-  virtual const char* Name() const { return "ImageLayerComposite"; }
+  virtual const char* Name() const MOZ_OVERRIDE { return "ImageLayerComposite"; }
 
 protected:
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) MOZ_OVERRIDE;

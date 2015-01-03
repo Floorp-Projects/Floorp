@@ -67,7 +67,7 @@ public:
 
   virtual LayerComposite* AsLayerComposite() MOZ_OVERRIDE { return this; }
 
-  virtual void InvalidateRegion(const nsIntRegion& aRegion)
+  virtual void InvalidateRegion(const nsIntRegion& aRegion) MOZ_OVERRIDE
   {
     NS_RUNTIMEABORT("PaintedLayerComposites can't fill invalidated regions");
   }

@@ -27,7 +27,7 @@ public:
                         static_cast<BasicImplData*>(MOZ_THIS_IN_INITIALIZER_LIST()))
   { }
   
-  virtual void SetVisibleRegion(const nsIntRegion& aRegion)
+  virtual void SetVisibleRegion(const nsIntRegion& aRegion) MOZ_OVERRIDE
   {
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");

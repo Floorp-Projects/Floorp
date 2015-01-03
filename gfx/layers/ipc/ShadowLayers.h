@@ -142,7 +142,7 @@ public:
    * Setup the IPDL actor for aCompositable to be part of layers
    * transactions.
    */
-  void Connect(CompositableClient* aCompositable);
+  void Connect(CompositableClient* aCompositable) MOZ_OVERRIDE;
 
   virtual PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData,
                                        TextureFlags aFlags) MOZ_OVERRIDE;
@@ -269,7 +269,7 @@ public:
    * Communicate the picture rect of an image to the compositor
    */
   void UpdatePictureRect(CompositableClient* aCompositable,
-                         const nsIntRect& aRect);
+                         const nsIntRect& aRect) MOZ_OVERRIDE;
 
   /**
    * See CompositableForwarder::UpdatedTexture
@@ -319,7 +319,7 @@ public:
 
   void Composite();
 
-  virtual void SendPendingAsyncMessges();
+  virtual void SendPendingAsyncMessges() MOZ_OVERRIDE;
 
   /**
    * True if this is forwarding to a LayerManagerComposite.
