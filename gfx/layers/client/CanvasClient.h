@@ -76,7 +76,7 @@ public:
   {
   }
 
-  TextureInfo GetTextureInfo() const
+  TextureInfo GetTextureInfo() const MOZ_OVERRIDE
   {
     return TextureInfo(CompositableType::IMAGE, mTextureFlags);
   }

@@ -96,31 +96,31 @@ public:
   nsIWidget* GetRetainerWidget() { return mWidget; }
   void ClearRetainerWidget() { mWidget = nullptr; }
 
-  virtual bool IsWidgetLayerManager() { return mWidget != nullptr; }
-  virtual bool IsInactiveLayerManager() { return mType == BLM_INACTIVE; }
+  virtual bool IsWidgetLayerManager() MOZ_OVERRIDE { return mWidget != nullptr; }
+  virtual bool IsInactiveLayerManager() MOZ_OVERRIDE { return mType == BLM_INACTIVE; }
 
-  virtual void BeginTransaction();
-  virtual void BeginTransactionWithTarget(gfxContext* aTarget);
-  virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT);
+  virtual void BeginTransaction() MOZ_OVERRIDE;
+  virtual void BeginTransactionWithTarget(gfxContext* aTarget) MOZ_OVERRIDE;
+  virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) MOZ_OVERRIDE;
   virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
                               void* aCallbackData,
-                              EndTransactionFlags aFlags = END_DEFAULT);
-  virtual bool ShouldAvoidComponentAlphaLayers() { return IsWidgetLayerManager(); }
+                              EndTransactionFlags aFlags = END_DEFAULT) MOZ_OVERRIDE;
+  virtual bool ShouldAvoidComponentAlphaLayers() MOZ_OVERRIDE { return IsWidgetLayerManager(); }
 
   void AbortTransaction();
 
-  virtual void SetRoot(Layer* aLayer);
+  virtual void SetRoot(Layer* aLayer) MOZ_OVERRIDE;
 
-  virtual already_AddRefed<PaintedLayer> CreatePaintedLayer();
-  virtual already_AddRefed<ContainerLayer> CreateContainerLayer();
-  virtual already_AddRefed<ImageLayer> CreateImageLayer();
-  virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
-  virtual already_AddRefed<ColorLayer> CreateColorLayer();
-  virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer();
+  virtual already_AddRefed<PaintedLayer> CreatePaintedLayer() MOZ_OVERRIDE;
+  virtual already_AddRefed<ContainerLayer> CreateContainerLayer() MOZ_OVERRIDE;
+  virtual already_AddRefed<ImageLayer> CreateImageLayer() MOZ_OVERRIDE;
+  virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() MOZ_OVERRIDE;
+  virtual already_AddRefed<ColorLayer> CreateColorLayer() MOZ_OVERRIDE;
+  virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer() MOZ_OVERRIDE;
   virtual ImageFactory *GetImageFactory();
 
-  virtual LayersBackend GetBackendType() { return LayersBackend::LAYERS_BASIC; }
-  virtual void GetBackendName(nsAString& name) { name.AssignLiteral("Basic"); }
+  virtual LayersBackend GetBackendType() MOZ_OVERRIDE { return LayersBackend::LAYERS_BASIC; }
+  virtual void GetBackendName(nsAString& name) MOZ_OVERRIDE { name.AssignLiteral("Basic"); }
 
   bool InConstruction() { return mPhase == PHASE_CONSTRUCTION; }
 #ifdef DEBUG
@@ -133,7 +133,7 @@ public:
   void SetTarget(gfxContext* aTarget) { mUsingDefaultTarget = false; mTarget = aTarget; }
   bool IsRetained() { return mWidget != nullptr; }
 
-  virtual const char* Name() const { return "Basic"; }
+  virtual const char* Name() const MOZ_OVERRIDE { return "Basic"; }
 
   // Clear the cached contents of this layer tree.
   virtual void ClearCachedResources(Layer* aSubtree = nullptr) MOZ_OVERRIDE;
@@ -145,8 +145,8 @@ public:
                                                  const nsIntRegion& aRegion,
                                                  bool* aNeedsClipToVisibleRegion);
 
-  virtual bool IsCompositingCheap() { return false; }
-  virtual int32_t GetMaxTextureSize() const { return INT32_MAX; }
+  virtual bool IsCompositingCheap() MOZ_OVERRIDE { return false; }
+  virtual int32_t GetMaxTextureSize() const MOZ_OVERRIDE { return INT32_MAX; }
   bool CompositorMightResample() { return mCompositorMightResample; }
 
   virtual bool SupportsMixBlendModes(EnumSet<gfx::CompositionOp>& aMixBlendModes) MOZ_OVERRIDE { return true; }

@@ -47,29 +47,29 @@ protected:
     mImageClientTypeContainer = CompositableType::UNKNOWN;
   }
 
-  virtual void SetVisibleRegion(const nsIntRegion& aRegion)
+  virtual void SetVisibleRegion(const nsIntRegion& aRegion) MOZ_OVERRIDE
   {
     NS_ASSERTION(ClientManager()->InConstruction(),
                  "Can only set properties in construction phase");
     ImageLayer::SetVisibleRegion(aRegion);
   }
 
-  virtual void RenderLayer();
+  virtual void RenderLayer() MOZ_OVERRIDE;
   
   virtual void ClearCachedResources() MOZ_OVERRIDE
   {
     DestroyBackBuffer();
   }
 
-  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
+  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) MOZ_OVERRIDE
   {
     aAttrs = ImageLayerAttributes(mFilter, mScaleToSize, mScaleMode);
   }
 
-  virtual Layer* AsLayer() { return this; }
-  virtual ShadowableLayer* AsShadowableLayer() { return this; }
+  virtual Layer* AsLayer() MOZ_OVERRIDE { return this; }
+  virtual ShadowableLayer* AsShadowableLayer() MOZ_OVERRIDE { return this; }
 
-  virtual void Disconnect()
+  virtual void Disconnect() MOZ_OVERRIDE
   {
     DestroyBackBuffer();
     ClientLayer::Disconnect();

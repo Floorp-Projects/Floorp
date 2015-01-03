@@ -28,7 +28,7 @@ public:
                                MacIOSurface* aSurface);
   virtual ~MacIOSurfaceTextureSourceOGL();
 
-  virtual TextureSourceOGL* AsSourceOGL() { return this; }
+  virtual TextureSourceOGL* AsSourceOGL() MOZ_OVERRIDE { return this; }
 
   virtual void BindTexture(GLenum activetex, gfx::Filter aFilter) MOZ_OVERRIDE;
 
@@ -38,12 +38,12 @@ public:
 
   virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE;
 
-  virtual GLenum GetTextureTarget() const { return LOCAL_GL_TEXTURE_RECTANGLE_ARB; }
+  virtual GLenum GetTextureTarget() const MOZ_OVERRIDE { return LOCAL_GL_TEXTURE_RECTANGLE_ARB; }
 
   virtual GLenum GetWrapMode() const MOZ_OVERRIDE { return LOCAL_GL_CLAMP_TO_EDGE; }
 
   // MacIOSurfaceTextureSourceOGL doesn't own any gl texture
-  virtual void DeallocateDeviceData() {}
+  virtual void DeallocateDeviceData() MOZ_OVERRIDE {}
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
 
@@ -89,7 +89,7 @@ public:
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE;
 
 #ifdef MOZ_LAYERS_HAVE_LOG
-  virtual const char* Name() { return "MacIOSurfaceTextureHostOGL"; }
+  virtual const char* Name() MOZ_OVERRIDE { return "MacIOSurfaceTextureHostOGL"; }
 #endif
 
 protected:

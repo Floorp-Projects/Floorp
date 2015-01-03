@@ -578,7 +578,7 @@ public:
     /* nsIServerSocketListener */
 
     NS_IMETHODIMP OnSocketAccepted(nsIServerSocket *aServ,
-                                   nsISocketTransport *aTransport)
+                                   nsISocketTransport *aTransport) MOZ_OVERRIDE
     {
         if (!WebSocketHelper::GetSocketManager())
             return NS_OK;
@@ -589,7 +589,7 @@ public:
     }
 
     NS_IMETHODIMP OnStopListening(nsIServerSocket *aServ,
-                                  nsresult aStatus)
+                                  nsresult aStatus) MOZ_OVERRIDE
     {
         return NS_OK;
     }
@@ -625,7 +625,7 @@ public:
 
     /* nsIRunnable impl; send the data */
 
-    NS_IMETHODIMP Run() {
+    NS_IMETHODIMP Run() MOZ_OVERRIDE {
         DebugGLData *d;
         nsresult rv = NS_OK;
 

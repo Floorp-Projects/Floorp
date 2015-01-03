@@ -99,7 +99,7 @@ public:
                     TextureFlags aFlags,
                     CompositableType aType);
 
-  virtual bool UpdateImage(ImageContainer* aContainer, uint32_t aContentFlags);
+  virtual bool UpdateImage(ImageContainer* aContainer, uint32_t aContentFlags) MOZ_OVERRIDE;
 
   virtual void OnDetach() MOZ_OVERRIDE;
 
@@ -129,8 +129,8 @@ public:
   ImageClientBridge(CompositableForwarder* aFwd,
                     TextureFlags aFlags);
 
-  virtual bool UpdateImage(ImageContainer* aContainer, uint32_t aContentFlags);
-  virtual bool Connect() { return false; }
+  virtual bool UpdateImage(ImageContainer* aContainer, uint32_t aContentFlags) MOZ_OVERRIDE;
+  virtual bool Connect() MOZ_OVERRIDE { return false; }
   virtual void Updated() {}
   void SetLayer(ShadowableLayer* aLayer)
   {

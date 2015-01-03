@@ -77,7 +77,7 @@ public:
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE;
 
 #ifdef MOZ_LAYERS_HAVE_LOG
-  virtual const char* Name() { return "MacIOSurfaceTextureHostBasic"; }
+  virtual const char* Name() MOZ_OVERRIDE { return "MacIOSurfaceTextureHostBasic"; }
 #endif
 
 protected:

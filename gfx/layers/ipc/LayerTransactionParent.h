@@ -63,13 +63,13 @@ public:
   // ISurfaceAllocator
   virtual bool AllocShmem(size_t aSize,
                           ipc::SharedMemory::SharedMemoryType aType,
-                          ipc::Shmem* aShmem) {
+                          ipc::Shmem* aShmem) MOZ_OVERRIDE {
     return PLayerTransactionParent::AllocShmem(aSize, aType, aShmem);
   }
 
   virtual bool AllocUnsafeShmem(size_t aSize,
                                 ipc::SharedMemory::SharedMemoryType aType,
-                                ipc::Shmem* aShmem) {
+                                ipc::Shmem* aShmem) MOZ_OVERRIDE {
     return PLayerTransactionParent::AllocUnsafeShmem(aSize, aType, aShmem);
   }
 

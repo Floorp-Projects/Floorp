@@ -45,13 +45,13 @@ protected:
   }
 
 public:
-  virtual void SetVisibleRegion(const nsIntRegion& aRegion)
+  virtual void SetVisibleRegion(const nsIntRegion& aRegion) MOZ_OVERRIDE
   {
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");
     PaintedLayer::SetVisibleRegion(aRegion);
   }
-  virtual void InvalidateRegion(const nsIntRegion& aRegion)
+  virtual void InvalidateRegion(const nsIntRegion& aRegion) MOZ_OVERRIDE
   {
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");
@@ -63,13 +63,13 @@ public:
   virtual void PaintThebes(gfxContext* aContext,
                            Layer* aMaskLayer,
                            LayerManager::DrawPaintedLayerCallback aCallback,
-                           void* aCallbackData);
+                           void* aCallbackData) MOZ_OVERRIDE;
 
   virtual void Validate(LayerManager::DrawPaintedLayerCallback aCallback,
                         void* aCallbackData,
                         ReadbackProcessor* aReadback) MOZ_OVERRIDE;
 
-  virtual void ClearCachedResources()
+  virtual void ClearCachedResources() MOZ_OVERRIDE
   {
     if (mContentClient) {
       mContentClient->Clear();
@@ -77,7 +77,7 @@ public:
     mValidRegion.SetEmpty();
   }
 
-  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface)
+  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) MOZ_OVERRIDE
   {
     if (!BasicManager()->IsRetained()) {
       // Don't do any snapping of our transform, since we're just going to
