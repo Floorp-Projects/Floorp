@@ -11,7 +11,7 @@ const { Cc, Ci, Cu, components, ChromeWorker } = require("chrome");
 const { ActorPool, getOffsetColumn } = require("devtools/server/actors/common");
 const { DebuggerServer } = require("devtools/server/main");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-const { dbg_assert, dumpn, fetch } = DevToolsUtils;
+const { dbg_assert, dumpn, update, fetch } = DevToolsUtils;
 const { dirname, joinURI } = require("devtools/toolkit/path");
 const { SourceMapConsumer, SourceMapGenerator } = require("source-map");
 const promise = require("promise");
@@ -653,7 +653,7 @@ ThreadActor.prototype = {
 
     this._state = "attached";
 
-    Object.assign(this._options, aRequest.options || {});
+    update(this._options, aRequest.options || {});
 
     // Initialize an event loop stack. This can't be done in the constructor,
     // because this.conn is not yet initialized by the actor pool at that time.
@@ -707,7 +707,7 @@ ThreadActor.prototype = {
       return { error: "wrongState" };
     }
 
-    Object.assign(this._options, aRequest.options || {});
+    update(this._options, aRequest.options || {});
     // Clear existing sources, so they can be recreated on next access.
     this._sources = null;
 
@@ -4420,9 +4420,9 @@ function PauseScopedObjectActor()
 
 PauseScopedObjectActor.prototype = Object.create(PauseScopedActor.prototype);
 
-Object.assign(PauseScopedObjectActor.prototype, ObjectActor.prototype);
+update(PauseScopedObjectActor.prototype, ObjectActor.prototype);
 
-Object.assign(PauseScopedObjectActor.prototype, {
+update(PauseScopedObjectActor.prototype, {
   constructor: PauseScopedObjectActor,
   actorPrefix: "pausedobj",
 
@@ -4471,7 +4471,7 @@ Object.assign(PauseScopedObjectActor.prototype, {
   }),
 });
 
-Object.assign(PauseScopedObjectActor.prototype.requestTypes, {
+update(PauseScopedObjectActor.prototype.requestTypes, {
   "threadGrip": PauseScopedObjectActor.prototype.onThreadGrip,
 });
 
@@ -4765,9 +4765,7 @@ BreakpointActor.prototype = {
   onDelete: function (aRequest) {
     // Remove from the breakpoint store.
     this.threadActor.breakpointActorMap.deleteActor(
-      Object.assign({},
-                    this.location,
-                    { source: this.location.sourceActor.form() })
+      update({}, this.location, { source: this.location.sourceActor.form() })
     );
     this.threadActor.threadLifetimePool.removeActor(this);
     // Remove the actual breakpoint from the associated scripts.
@@ -5041,7 +5039,7 @@ function ChromeDebuggerActor(aConnection, aParent)
 
 ChromeDebuggerActor.prototype = Object.create(ThreadActor.prototype);
 
-Object.assign(ChromeDebuggerActor.prototype, {
+update(ChromeDebuggerActor.prototype, {
   constructor: ChromeDebuggerActor,
 
   // A constant prefix that will be used to form the actor ID by the server.
@@ -5069,7 +5067,7 @@ function AddonThreadActor(aConnect, aParent) {
 
 AddonThreadActor.prototype = Object.create(ThreadActor.prototype);
 
-Object.assign(AddonThreadActor.prototype, {
+update(AddonThreadActor.prototype, {
   constructor: AddonThreadActor,
 
   // A constant prefix that will be used to form the actor ID by the server.
