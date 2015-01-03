@@ -7,6 +7,15 @@
 
 interface nsIDOMMozNamedAttrMap;
 
+%{C++
+// Undo the windows.h damage
+#undef GetMessage
+#undef CreateEvent
+#undef GetClassName
+#undef GetBinaryType
+#undef RemoveDirectory
+%}
+
 /**
  * The nsIDOMElement interface represents an element in an HTML or 
  * XML document. 

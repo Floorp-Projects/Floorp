@@ -91,7 +91,7 @@ namespace mozilla {
 
 bool InitWidgetTracing()
 {
-  sEventHandle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+  sEventHandle = CreateEventW(nullptr, FALSE, FALSE, nullptr);
   return sEventHandle != nullptr;
 }
 
