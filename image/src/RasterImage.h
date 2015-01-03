@@ -153,12 +153,12 @@ public:
   NS_DECL_IMGICONTAINERDEBUG
 #endif
 
-  virtual nsresult StartAnimation();
-  virtual nsresult StopAnimation();
+  virtual nsresult StartAnimation() MOZ_OVERRIDE;
+  virtual nsresult StopAnimation() MOZ_OVERRIDE;
 
   // Methods inherited from Image
   nsresult Init(const char* aMimeType,
-                uint32_t aFlags);
+                uint32_t aFlags) MOZ_OVERRIDE;
   virtual nsIntRect FrameRect(uint32_t aWhichFrame) MOZ_OVERRIDE;
   virtual void OnSurfaceDiscarded() MOZ_OVERRIDE;
 
@@ -171,9 +171,9 @@ public:
   /* The total number of frames in this image. */
   uint32_t GetNumFrames() const;
 
-  virtual size_t SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const;
+  virtual size_t SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
   virtual size_t SizeOfDecoded(gfxMemoryLocation aLocation,
-                               MallocSizeOf aMallocSizeOf) const;
+                               MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
 
   /* Triggers discarding. */
   void Discard();
@@ -497,7 +497,7 @@ protected:
   explicit RasterImage(ProgressTracker* aProgressTracker = nullptr,
                        ImageURL* aURI = nullptr);
 
-  bool ShouldAnimate();
+  bool ShouldAnimate() MOZ_OVERRIDE;
 
   friend class ImageFactory;
 };

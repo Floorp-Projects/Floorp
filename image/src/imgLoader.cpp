@@ -59,7 +59,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                            nsISupports* aData, bool aAnonymize)
+                            nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
   {
     nsresult rv;
     nsTArray<ImageMemoryCounter> chrome;
