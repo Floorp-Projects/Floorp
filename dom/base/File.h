@@ -439,7 +439,7 @@ public:
     return mIsFile && mLastModificationDate == UINT64_MAX;
   }
 
-  virtual bool IsFile() const
+  virtual bool IsFile() const MOZ_OVERRIDE
   {
     return mIsFile;
   }
@@ -460,13 +460,13 @@ public:
     return false;
   }
 
-  virtual bool IsSizeUnknown() const
+  virtual bool IsSizeUnknown() const MOZ_OVERRIDE
   {
     return mLength == UINT64_MAX;
   }
 
-  virtual void Unlink() {}
-  virtual void Traverse(nsCycleCollectionTraversalCallback &aCb) {}
+  virtual void Unlink() MOZ_OVERRIDE {}
+  virtual void Traverse(nsCycleCollectionTraversalCallback &aCb) MOZ_OVERRIDE {}
 
 protected:
   virtual ~FileImplBase() {}
