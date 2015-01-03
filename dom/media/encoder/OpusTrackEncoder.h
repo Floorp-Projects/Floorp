@@ -37,7 +37,7 @@ public:
   nsresult GetEncodedTrack(EncodedFrameContainer& aData) MOZ_OVERRIDE;
 
 protected:
-  int GetPacketDuration();
+  int GetPacketDuration() MOZ_OVERRIDE;
 
   nsresult Init(int aChannels, int aSamplingRate) MOZ_OVERRIDE;
 

@@ -49,7 +49,7 @@ public:
     return false;
   }
 
-  virtual const MediaSourceType GetMediaSource() {
+  virtual const MediaSourceType GetMediaSource() MOZ_OVERRIDE {
       return MediaSourceType::Camera;
   }
 

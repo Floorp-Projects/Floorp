@@ -15,14 +15,14 @@ class MP4Decoder : public MediaDecoder
 {
 public:
 
-  virtual MediaDecoder* Clone() {
+  virtual MediaDecoder* Clone() MOZ_OVERRIDE {
     if (!IsEnabled()) {
       return nullptr;
     }
     return new MP4Decoder();
   }
 
-  virtual MediaDecoderStateMachine* CreateStateMachine();
+  virtual MediaDecoderStateMachine* CreateStateMachine() MOZ_OVERRIDE;
 
 #ifdef MOZ_EME
   virtual nsresult SetCDMProxy(CDMProxy* aProxy) MOZ_OVERRIDE;
