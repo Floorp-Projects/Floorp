@@ -160,7 +160,7 @@ public:
 
     NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
-    virtual nsresult Init();
+    virtual nsresult Init() MOZ_OVERRIDE;
 
     NS_DECL_ISUPPORTS_INHERITED
 
@@ -181,7 +181,7 @@ public:
     NS_DECL_NSIWEBSHELLSERVICES
     NS_FORWARD_SAFE_NSIDOMSTORAGEMANAGER(TopSessionStorageManager())
 
-    NS_IMETHOD Stop() {
+    NS_IMETHOD Stop() MOZ_OVERRIDE {
         // Need this here because otherwise nsIWebNavigation::Stop
         // overrides the docloader's Stop()
         return nsDocLoader::Stop();
@@ -198,7 +198,7 @@ public:
         const nsAString& aFileName,
         nsIInputStream* aPostDataStream,
         nsIInputStream* aHeadersDataStream,
-        bool aIsTrusted);
+        bool aIsTrusted) MOZ_OVERRIDE;
     NS_IMETHOD OnLinkClickSync(nsIContent* aContent,
         nsIURI* aURI,
         const char16_t* aTargetSpec,
@@ -206,28 +206,28 @@ public:
         nsIInputStream* aPostDataStream = 0,
         nsIInputStream* aHeadersDataStream = 0,
         nsIDocShell** aDocShell = 0,
-        nsIRequest** aRequest = 0);
+        nsIRequest** aRequest = 0) MOZ_OVERRIDE;
     NS_IMETHOD OnOverLink(nsIContent* aContent,
         nsIURI* aURI,
-        const char16_t* aTargetSpec);
-    NS_IMETHOD OnLeaveLink();
+        const char16_t* aTargetSpec) MOZ_OVERRIDE;
+    NS_IMETHOD OnLeaveLink() MOZ_OVERRIDE;
 
     nsDocShellInfoLoadType ConvertLoadTypeToDocShellLoadInfo(uint32_t aLoadType);
     uint32_t ConvertDocShellLoadInfoToLoadType(nsDocShellInfoLoadType aDocShellLoadType);
 
     // Don't use NS_DECL_NSILOADCONTEXT because some of nsILoadContext's methods
     // are shared with nsIDocShell (appID, etc.) and can't be declared twice.
-    NS_IMETHOD GetAssociatedWindow(nsIDOMWindow**);
-    NS_IMETHOD GetTopWindow(nsIDOMWindow**);
-    NS_IMETHOD GetTopFrameElement(nsIDOMElement**);
-    NS_IMETHOD GetNestedFrameId(uint64_t*);
-    NS_IMETHOD IsAppOfType(uint32_t, bool*);
-    NS_IMETHOD GetIsContent(bool*);
-    NS_IMETHOD GetUsePrivateBrowsing(bool*);
-    NS_IMETHOD SetUsePrivateBrowsing(bool);
-    NS_IMETHOD SetPrivateBrowsing(bool);
-    NS_IMETHOD GetUseRemoteTabs(bool*);
-    NS_IMETHOD SetRemoteTabs(bool);
+    NS_IMETHOD GetAssociatedWindow(nsIDOMWindow**) MOZ_OVERRIDE;
+    NS_IMETHOD GetTopWindow(nsIDOMWindow**) MOZ_OVERRIDE;
+    NS_IMETHOD GetTopFrameElement(nsIDOMElement**) MOZ_OVERRIDE;
+    NS_IMETHOD GetNestedFrameId(uint64_t*) MOZ_OVERRIDE;
+    NS_IMETHOD IsAppOfType(uint32_t, bool*) MOZ_OVERRIDE;
+    NS_IMETHOD GetIsContent(bool*) MOZ_OVERRIDE;
+    NS_IMETHOD GetUsePrivateBrowsing(bool*) MOZ_OVERRIDE;
+    NS_IMETHOD SetUsePrivateBrowsing(bool) MOZ_OVERRIDE;
+    NS_IMETHOD SetPrivateBrowsing(bool) MOZ_OVERRIDE;
+    NS_IMETHOD GetUseRemoteTabs(bool*) MOZ_OVERRIDE;
+    NS_IMETHOD SetRemoteTabs(bool) MOZ_OVERRIDE;
 
     // Restores a cached presentation from history (mLSHE).
     // This method swaps out the content viewer and simulates loads for
@@ -392,25 +392,25 @@ public:
 protected:
     // Object Management
     virtual ~nsDocShell();
-    virtual void DestroyChildren();
+    virtual void DestroyChildren() MOZ_OVERRIDE;
 
     // Content Viewer Management
-    NS_IMETHOD EnsureContentViewer();
+    nsresult EnsureContentViewer();
     // aPrincipal can be passed in if the caller wants.  If null is
     // passed in, the about:blank principal will end up being used.
     nsresult CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
                                            nsIURI* aBaseURI,
                                            bool aTryToSaveOldPresentation = true);
-    NS_IMETHOD CreateContentViewer(const char * aContentType, 
+    nsresult CreateContentViewer(const char * aContentType, 
         nsIRequest * request, nsIStreamListener ** aContentHandler);
-    NS_IMETHOD NewContentViewerObj(const char * aContentType, 
+    nsresult NewContentViewerObj(const char * aContentType, 
         nsIRequest * request, nsILoadGroup * aLoadGroup, 
         nsIStreamListener ** aContentHandler, nsIContentViewer ** aViewer);
-    NS_IMETHOD SetupNewViewer(nsIContentViewer * aNewViewer);
+    nsresult SetupNewViewer(nsIContentViewer * aNewViewer);
 
     void SetupReferrerFromChannel(nsIChannel * aChannel);
     
-    NS_IMETHOD GetEldestPresContext(nsPresContext** aPresContext);
+    nsresult GetEldestPresContext(nsPresContext** aPresContext);
 
     // Get the principal that we'll set on the channel if we're inheriting.  If
     // aConsiderCurrentDocument is true, we try to use the current document if
@@ -425,29 +425,29 @@ protected:
     // not have an owner on the channel should just pass null.
     // If aSrcdoc is not void, the load will be considered as a srcdoc load,
     // and the contents of aSrcdoc will be loaded instead of aURI.
-    virtual nsresult DoURILoad(nsIURI * aURI,
-                               nsIURI * aReferrer,
-                               bool aSendReferrer,
-                               uint32_t aReferrerPolicy,
-                               nsISupports * aOwner,
-                               const char * aTypeHint,
-                               const nsAString & aFileName,
-                               nsIInputStream * aPostData,
-                               nsIInputStream * aHeadersData,
-                               bool firstParty,
-                               nsIDocShell ** aDocShell,
-                               nsIRequest ** aRequest,
-                               bool aIsNewWindowTarget,
-                               bool aBypassClassifier,
-                               bool aForceAllowCookies,
-                               const nsAString &aSrcdoc,
-                               nsIURI * baseURI,
-                               nsContentPolicyType aContentPolicyType);
-    NS_IMETHOD AddHeadersToChannel(nsIInputStream * aHeadersData, 
-                                  nsIChannel * aChannel);
-    virtual nsresult DoChannelLoad(nsIChannel * aChannel,
-                                   nsIURILoader * aURILoader,
-                                   bool aBypassClassifier);
+    nsresult DoURILoad(nsIURI * aURI,
+                       nsIURI * aReferrer,
+                       bool aSendReferrer,
+                       uint32_t aReferrerPolicy,
+                       nsISupports * aOwner,
+                       const char * aTypeHint,
+                       const nsAString & aFileName,
+                       nsIInputStream * aPostData,
+                       nsIInputStream * aHeadersData,
+                       bool firstParty,
+                       nsIDocShell ** aDocShell,
+                       nsIRequest ** aRequest,
+                       bool aIsNewWindowTarget,
+                       bool aBypassClassifier,
+                       bool aForceAllowCookies,
+                       const nsAString &aSrcdoc,
+                       nsIURI * baseURI,
+                       nsContentPolicyType aContentPolicyType);
+    nsresult AddHeadersToChannel(nsIInputStream * aHeadersData, 
+                                 nsIChannel * aChannel);
+    nsresult DoChannelLoad(nsIChannel * aChannel,
+                           nsIURILoader * aURILoader,
+                           bool aBypassClassifier);
 
     nsresult ScrollToAnchor(nsACString & curHash, nsACString & newHash,
                             uint32_t aLoadType);
@@ -476,21 +476,21 @@ protected:
                     bool aAddToGlobalHistory,
                     bool aCloneSHChildren);
 
-    virtual void SetReferrerURI(nsIURI * aURI);
-    virtual void SetReferrerPolicy(uint32_t referrerPolicy);
+    void SetReferrerURI(nsIURI * aURI);
+    void SetReferrerPolicy(uint32_t referrerPolicy);
 
     // Session History
-    virtual bool ShouldAddToSessionHistory(nsIURI * aURI);
+    bool ShouldAddToSessionHistory(nsIURI * aURI);
     // Either aChannel or aOwner must be null.  If aChannel is
     // present, the owner should be gotten from it.
     // If aCloneChildren is true, then our current session history's
     // children will be cloned onto the new entry.  This should be
     // used when we aren't actually changing the document while adding
     // the new session history entry.
-    virtual nsresult AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
-                                         nsISupports* aOwner,
-                                         bool aCloneChildren,
-                                         nsISHEntry ** aNewEntry);
+    nsresult AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
+                                 nsISupports* aOwner,
+                                 bool aCloneChildren,
+                                 nsISHEntry ** aNewEntry);
     nsresult AddChildSHEntryToParent(nsISHEntry* aNewEntry, int32_t aChildOffset,
                                      bool aCloneChildren);
 
@@ -498,8 +498,8 @@ protected:
                                      int32_t aChildOffset, uint32_t loadType,
                                      bool aCloneChildren);
 
-    NS_IMETHOD LoadHistoryEntry(nsISHEntry * aEntry, uint32_t aLoadType);
-    NS_IMETHOD PersistLayoutHistoryState();
+    nsresult LoadHistoryEntry(nsISHEntry * aEntry, uint32_t aLoadType);
+    nsresult PersistLayoutHistoryState();
 
     // Clone a session history tree for subframe navigation.
     // The tree rooted at |aSrcEntry| will be cloned into |aDestEntry|, except
@@ -567,7 +567,7 @@ protected:
     virtual void OnRedirectStateChange(nsIChannel* aOldChannel,
                                        nsIChannel* aNewChannel,
                                        uint32_t aRedirectFlags,
-                                       uint32_t aStateFlags);
+                                       uint32_t aStateFlags) MOZ_OVERRIDE;
 
     /**
      * Helper function that determines if channel is an HTTP POST.
@@ -801,7 +801,7 @@ protected:
     nsresult SetCurScrollPosEx(int32_t curHorizontalPos, int32_t curVerticalPos);
 
     // Override the parent setter from nsDocLoader
-    virtual nsresult SetDocLoaderParent(nsDocLoader * aLoader);
+    virtual nsresult SetDocLoaderParent(nsDocLoader * aLoader) MOZ_OVERRIDE;
 
     void ClearFrameHistory(nsISHEntry* aEntry);
 
