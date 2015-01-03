@@ -111,7 +111,7 @@ private:
 
   virtual bool RecvDecrypt(const uint32_t& aId,
                            const nsTArray<uint8_t>& aBuffer,
-                           const GMPDecryptionData& aMetadata);
+                           const GMPDecryptionData& aMetadata) MOZ_OVERRIDE;
 
   // Resolve/reject promise on completion.
   virtual bool RecvSetServerCertificate(const uint32_t& aPromiseId,

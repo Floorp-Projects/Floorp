@@ -1199,60 +1199,60 @@ public:
   }
 
   // Main thread
-  virtual nsresult Open(nsIStreamListener** aStreamListener);
-  virtual nsresult Close();
-  virtual void     Suspend(bool aCloseImmediately) {}
-  virtual void     Resume() {}
-  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
-  virtual bool     CanClone();
-  virtual already_AddRefed<MediaResource> CloneData(MediaDecoder* aDecoder);
-  virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount);
+  virtual nsresult Open(nsIStreamListener** aStreamListener) MOZ_OVERRIDE;
+  virtual nsresult Close() MOZ_OVERRIDE;
+  virtual void     Suspend(bool aCloseImmediately) MOZ_OVERRIDE {}
+  virtual void     Resume() MOZ_OVERRIDE {}
+  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() MOZ_OVERRIDE;
+  virtual bool     CanClone() MOZ_OVERRIDE;
+  virtual already_AddRefed<MediaResource> CloneData(MediaDecoder* aDecoder) MOZ_OVERRIDE;
+  virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) MOZ_OVERRIDE;
 
   // These methods are called off the main thread.
 
   // Other thread
-  virtual void     SetReadMode(MediaCacheStream::ReadMode aMode) {}
-  virtual void     SetPlaybackRate(uint32_t aBytesPerSecond) {}
-  virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes);
+  virtual void     SetReadMode(MediaCacheStream::ReadMode aMode) MOZ_OVERRIDE {}
+  virtual void     SetPlaybackRate(uint32_t aBytesPerSecond) MOZ_OVERRIDE {}
+  virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes) MOZ_OVERRIDE;
   virtual nsresult ReadAt(int64_t aOffset, char* aBuffer,
-                          uint32_t aCount, uint32_t* aBytes);
-  virtual nsresult Seek(int32_t aWhence, int64_t aOffset);
-  virtual int64_t  Tell();
+                          uint32_t aCount, uint32_t* aBytes) MOZ_OVERRIDE;
+  virtual nsresult Seek(int32_t aWhence, int64_t aOffset) MOZ_OVERRIDE;
+  virtual int64_t  Tell() MOZ_OVERRIDE;
 
   // Any thread
-  virtual void    Pin() {}
-  virtual void    Unpin() {}
-  virtual double  GetDownloadRate(bool* aIsReliable)
+  virtual void    Pin() MOZ_OVERRIDE {}
+  virtual void    Unpin() MOZ_OVERRIDE {}
+  virtual double  GetDownloadRate(bool* aIsReliable) MOZ_OVERRIDE
   {
     // The data's all already here
     *aIsReliable = true;
     return 100*1024*1024; // arbitray, use 100MB/s
   }
-  virtual int64_t GetLength() {
+  virtual int64_t GetLength() MOZ_OVERRIDE {
     MutexAutoLock lock(mLock);
 
     EnsureSizeInitialized();
     return mSizeInitialized ? mSize : 0;
   }
-  virtual int64_t GetNextCachedData(int64_t aOffset)
+  virtual int64_t GetNextCachedData(int64_t aOffset) MOZ_OVERRIDE
   {
     MutexAutoLock lock(mLock);
 
     EnsureSizeInitialized();
     return (aOffset < mSize) ? aOffset : -1;
   }
-  virtual int64_t GetCachedDataEnd(int64_t aOffset) {
+  virtual int64_t GetCachedDataEnd(int64_t aOffset) MOZ_OVERRIDE {
     MutexAutoLock lock(mLock);
 
     EnsureSizeInitialized();
     return std::max(aOffset, mSize);
   }
-  virtual bool    IsDataCachedToEndOfResource(int64_t aOffset) { return true; }
-  virtual bool    IsSuspendedByCache() { return true; }
-  virtual bool    IsSuspended() { return true; }
+  virtual bool    IsDataCachedToEndOfResource(int64_t aOffset) MOZ_OVERRIDE { return true; }
+  virtual bool    IsSuspendedByCache() MOZ_OVERRIDE { return true; }
+  virtual bool    IsSuspended() MOZ_OVERRIDE { return true; }
   virtual bool    IsTransportSeekable() MOZ_OVERRIDE { return true; }
 
-  nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges);
+  nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) MOZ_OVERRIDE;
 
   virtual size_t SizeOfExcludingThis(
                         MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
