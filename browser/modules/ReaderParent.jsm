@@ -27,7 +27,7 @@ let ReaderParent = {
     "Reader:ShowToast",
     "Reader:ToolbarVisibility",
     "Reader:SystemUIVisibility",
-    "Reader:UpdateIsArticle",
+    "Reader:UpdateReaderButton",
   ],
 
   init: function() {
@@ -77,11 +77,55 @@ let ReaderParent = {
         // XXX: To implement.
         break;
 
-      case "Reader:UpdateIsArticle": {
-        // XXX: To implement.
+      case "Reader:UpdateReaderButton": {
+        let browser = message.target;
+        if (message.data && message.data.isArticle !== undefined) {
+          browser.isArticle = message.data.isArticle;
+        }
+        this.updateReaderButton(browser);
         break;
       }
     }
+  },
+
+  updateReaderButton: function(browser) {
+    let win = browser.ownerDocument.defaultView;
+    if (browser != win.gBrowser.selectedBrowser) {
+      return;
+    }
+
+    let button = win.document.getElementById("reader-mode-button");
+    if (browser.currentURI.spec.startsWith("about:reader")) {
+      button.setAttribute("readeractive", true);
+      button.hidden = false;
+    } else {
+      button.removeAttribute("readeractive");
+      button.hidden = !browser.isArticle;
+    }
+  },
+
+  toggleReaderMode: function(event) {
+    let win = event.target.ownerDocument.defaultView;
+    let url = win.gBrowser.selectedBrowser.currentURI.spec;
+    if (url.startsWith("about:reader")) {
+      win.openUILinkIn(this._getOriginalUrl(url), "current");
+    } else {
+      win.openUILinkIn("about:reader?url=" + encodeURIComponent(url), "current");
+    }
+  },
+
+  /**
+   * Returns original URL from an about:reader URL.
+   *
+   * @param url An about:reader URL.
+   */
+  _getOriginalUrl: function(url) {
+    let searchParams = new URLSearchParams(url.split("?")[1]);
+    if (!searchParams.has("url")) {
+      Cu.reportError("Error finding original URL for about:reader URL: " + url);
+      return url;
+    }
+    return decodeURIComponent(searchParams.get("url"));
   },
 
   /**

@@ -2522,6 +2522,32 @@ richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-
   }
 }
 
+/* Reader mode button */
+
+#reader-mode-button {
+  list-style-image: url("chrome://browser/skin/reader-mode-16.png");
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+#reader-mode-button:hover:active,
+#reader-mode-button[readeractive] {
+   -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+@media (min-resolution: 2dppx) {
+  #reader-mode-button{
+    list-style-image: url("chrome://browser/skin/reader-mode-16@2x.png");
+    -moz-image-region: rect(0, 32px, 32px, 0);
+    width: 22px;
+  }
+
+  #reader-mode-button:hover:active,
+  #reader-mode-button[readeractive] {
+    -moz-image-region: rect(0, 64px, 32px, 32px);
+  }
+}
+
+
 /* social share panel */
 .social-share-frame {
   border-top: 1px solid #f8f8f8;
