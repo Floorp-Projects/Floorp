@@ -114,7 +114,9 @@ public:
 
   virtual void PrepareViewport(const gfx::IntSize& aSize) MOZ_OVERRIDE { }
 
+#ifdef MOZ_DUMP_PAINTING
   virtual const char* Name() const MOZ_OVERRIDE { return "Basic"; }
+#endif // MOZ_DUMP_PAINTING
 
   virtual LayersBackend GetBackendType() const MOZ_OVERRIDE {
     return LayersBackend::LAYERS_BASIC;
