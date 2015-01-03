@@ -39,7 +39,7 @@ public:
 
   // Methods inherited from Image
   nsresult Init(const char* aMimeType,
-                uint32_t aFlags);
+                uint32_t aFlags) MOZ_OVERRIDE;
   virtual nsIntRect FrameRect(uint32_t aWhichFrame) MOZ_OVERRIDE;
 
   virtual size_t SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
@@ -79,9 +79,9 @@ protected:
                        ImageURL* aURI = nullptr);
   virtual ~VectorImage();
 
-  virtual nsresult StartAnimation();
-  virtual nsresult StopAnimation();
-  virtual bool     ShouldAnimate();
+  virtual nsresult StartAnimation() MOZ_OVERRIDE;
+  virtual nsresult StopAnimation() MOZ_OVERRIDE;
+  virtual bool     ShouldAnimate() MOZ_OVERRIDE;
 
   void CreateSurfaceAndShow(const SVGDrawingParameters& aParams);
   void Show(gfxDrawable* aDrawable, const SVGDrawingParameters& aParams);
