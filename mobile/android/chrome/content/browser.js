@@ -109,13 +109,14 @@ XPCOMUtils.defineLazyModuleGetter(this, "SharedPreferences",
 XPCOMUtils.defineLazyModuleGetter(this, "Notifications",
                                   "resource://gre/modules/Notifications.jsm");
 
-// XXX: Make this into a module?
-Services.scriptloader.loadSubScript("chrome://browser/content/Reader.js", this);
+XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
+                                  "resource://gre/modules/ReaderMode.jsm");
 
 // Lazily-loaded browser scripts:
 [
   ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
   ["InputWidgetHelper", "chrome://browser/content/InputWidgetHelper.js"],
+  ["AboutReader", "chrome://global/content/reader/aboutReader.js"],
   ["MasterPassword", "chrome://browser/content/MasterPassword.js"],
   ["PluginHelper", "chrome://browser/content/PluginHelper.js"],
   ["OfflineApps", "chrome://browser/content/OfflineApps.js"],
@@ -146,6 +147,7 @@ Services.scriptloader.loadSubScript("chrome://browser/content/Reader.js", this);
   ["Feedback", ["Feedback:Show"], "chrome://browser/content/Feedback.js"],
   ["SelectionHandler", ["TextSelection:Get"], "chrome://browser/content/SelectionHandler.js"],
   ["EmbedRT", ["GeckoView:ImportScript"], "chrome://browser/content/EmbedRT.js"],
+  ["Reader", ["Reader:Removed"], "chrome://browser/content/Reader.js"],
 ].forEach(function (aScript) {
   let [name, notifications, script] = aScript;
   XPCOMUtils.defineLazyGetter(window, name, function() {
@@ -447,7 +449,6 @@ var BrowserApp = {
 #ifdef NIGHTLY_BUILD
     ShumwayUtils.init();
 #endif
-    Reader.init();
 
     let url = null;
     let pinned = false;
@@ -498,8 +499,6 @@ var BrowserApp = {
     } catch (e) {
       // Tiles reporting is disabled.
     }
-
-    window.messageManager.loadFrameScript("chrome://browser/content/content.js", true);
 
     // Notify Java that Gecko has loaded.
     Messaging.sendRequest({ type: "Gecko:Ready" });
@@ -3225,7 +3224,7 @@ function Tab(aURL, aParams) {
   this.clickToPlayPluginsActivated = false;
   this.desktopMode = false;
   this.originalURI = null;
-  this.isArticle = false;
+  this.savedArticle = null;
   this.hasTouchListener = false;
   this.browserWidth = 0;
   this.browserHeight = 0;
@@ -3566,6 +3565,7 @@ Tab.prototype = {
     BrowserApp.deck.selectedPanel = selectedPanel;
 
     this.browser = null;
+    this.savedArticle = null;
   },
 
   // This should be called to update the browser when the tab gets selected/unselected
@@ -3961,6 +3961,14 @@ Tab.prototype = {
         }
 
         if (docURI.startsWith("about:reader")) {
+          // During browser restart / recovery, duplicate "DOMContentLoaded" messages are received here
+          // For the visible tab ... where more than one tab is being reloaded, the inital "DOMContentLoaded"
+          // Message can be received before the document body is available ... so we avoid instantiating an
+          // AboutReader object, expecting that an eventual valid message will follow.
+          let contentDocument = this.browser.contentDocument;
+          if (contentDocument.body) {
+            new AboutReader(contentDocument, this.browser.contentWindow);
+          }
           // Update the page action to show the "reader active" icon.
           Reader.updatePageAction(this);
         }
@@ -4265,6 +4273,31 @@ Tab.prototype = {
           xhr.send(this.tilesData);
           this.tilesData = null;
         }
+
+        // Don't try to parse the document if reader mode is disabled,
+        // or if the page is already in reader mode.
+        if (!Reader.isEnabledForParseOnLoad || this.readerActive) {
+          return;
+        }
+
+        // Reader mode is disabled until proven enabled.
+        this.savedArticle = null;
+        Reader.updatePageAction(this);
+
+        // Once document is fully loaded, parse it
+        ReaderMode.parseDocumentFromBrowser(this.browser).then(article => {
+          // The loaded page may have changed while we were parsing the document. 
+          // Make sure we've got the current one.
+          let currentURL = this.browser.currentURI.specIgnoringRef;
+
+          // Do nothing if there's no article or the page in this tab has changed.
+          if (article == null || (article.url != currentURL)) {
+            return;
+          }
+
+          this.savedArticle = article;
+          Reader.updatePageAction(this);
+        }).catch(e => Cu.reportError("Error parsing document from tab: " + e));
       }
     }
   },
