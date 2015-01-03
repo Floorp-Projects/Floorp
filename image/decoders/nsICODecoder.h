@@ -40,9 +40,9 @@ public:
 
   virtual void WriteInternal(const char* aBuffer, uint32_t aCount,
                              DecodeStrategy aStrategy) MOZ_OVERRIDE;
-  virtual void FinishInternal();
-  virtual bool NeedsNewFrame() const;
-  virtual nsresult AllocateFrame();
+  virtual void FinishInternal() MOZ_OVERRIDE;
+  virtual bool NeedsNewFrame() const MOZ_OVERRIDE;
+  virtual nsresult AllocateFrame() MOZ_OVERRIDE;
 
 private:
   // Writes to the contained decoder and sets the appropriate errors
