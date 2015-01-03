@@ -2,6 +2,47 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// ES6 draft rev30 (2014/12/24) 22.2.3.7 %TypedArray%.prototype.every(callbackfn[, thisArg]).
+function TypedArrayEvery(callbackfn, thisArg = undefined) {
+    // This function is not generic.
+    if (!IsObject(this) || !IsTypedArray(this)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, this, callbackfn, thisArg,
+                            "TypedArrayEvery");
+    }
+
+    // Steps 1-2.
+    var O = this;
+
+    // Steps 3-5.
+    var len = TypedArrayLength(O);
+
+    // Step 6.
+    if (arguments.length === 0)
+        ThrowError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.every");
+    if (!IsCallable(callbackfn))
+        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+
+    // Step 7.
+    var T = thisArg;
+
+    // Steps 8-9.
+    // Omit steps 9.a-9.c and the 'if' clause in step 9.d, since there are no holes in typed arrays.
+    for (var k = 0; k < len; k++) {
+        // Steps 9.d.i-9.d.ii.
+        var kValue = O[k];
+
+        // Steps 9.d.iii-9.d.iv.
+        var testResult = callFunction(callbackfn, T, kValue, k, O);
+
+        // Step 9.d.v.
+        if (!testResult)
+            return false;
+    }
+
+    // Step 10.
+    return true;
+}
+
 // ES6 draft rev29 (2014/12/06) 22.2.3.8 %TypedArray%.prototype.fill(value [, start [, end ]])
 function TypedArrayFill(value, start = 0, end = undefined) {
     // This function is not generic.
@@ -281,6 +322,47 @@ function TypedArrayReverse() {
 
     // Step 9.
     return O;
+}
+
+// ES6 draft rev30 (2014/12/24) 22.2.3.25 %TypedArray%.prototype.some(callbackfn[, thisArg]).
+function TypedArraySome(callbackfn, thisArg = undefined) {
+    // This function is not generic.
+    if (!IsObject(this) || !IsTypedArray(this)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, this, callbackfn, thisArg,
+                            "TypedArraySome");
+    }
+
+    // Steps 1-2.
+    var O = this;
+
+    // Steps 3-5.
+    var len = TypedArrayLength(O);
+
+    // Step 6.
+    if (arguments.length === 0)
+        ThrowError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.some");
+    if (!IsCallable(callbackfn))
+        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+
+    // Step 7.
+    var T = thisArg;
+
+    // Steps 8-9.
+    // Omit steps 9.a-9.c and the 'if' clause in step 9.d, since there are no holes in typed arrays.
+    for (var k = 0; k < len; k++) {
+        // Steps 9.d.i-9.d.ii.
+        var kValue = O[k];
+
+        // Steps 9.d.iii-9.d.iv.
+        var testResult = callFunction(callbackfn, T, kValue, k, O);
+
+        // Step 9.d.v.
+        if (testResult)
+            return true;
+    }
+
+    // Step 10.
+    return false;
 }
 
 // Proposed for ES7:
