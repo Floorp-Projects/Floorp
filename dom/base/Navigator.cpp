@@ -1848,6 +1848,33 @@ Navigator::MozHasPendingMessage(const nsAString& aType, ErrorResult& aRv)
 }
 
 void
+Navigator::MozSetMessageHandlerPromise(Promise& aPromise,
+                                       ErrorResult& aRv)
+{
+  // The WebIDL binding is responsible for the pref check here.
+  aRv = EnsureMessagesManager();
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  bool result = false;
+  aRv = mMessagesManager->MozIsHandlingMessage(&result);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  if (!result) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return;
+  }
+
+  aRv = mMessagesManager->MozSetMessageHandlerPromise(&aPromise);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+}
+
+void
 Navigator::MozSetMessageHandler(const nsAString& aType,
                                 systemMessageCallback* aCallback,
                                 ErrorResult& aRv)

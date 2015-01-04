@@ -84,6 +84,22 @@
     }, genericError);
   }
 
+  function test_unregister_oneShot() {
+    navigator.sync.unregister('oneShot').then(
+    function() {
+      ok(true, "navigator.sync.unregister() oneShot done");
+      runTests();
+    }, genericError);
+  }
+
+  function test_unregister_multiShots() {
+    navigator.sync.unregister('multiShots').then(
+    function() {
+      ok(true, "navigator.sync.unregister() multiShots done");
+      runTests();
+    }, genericError);
+  }
+
   function test_wait() {
     // nothing to do here.
   }
@@ -113,6 +129,9 @@
     test_register_multiShots,
 
     test_wait,
+
+    test_unregister_oneShot,
+    test_unregister_multiShots,
   ];
 
   function runTests() {
