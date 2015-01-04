@@ -1,4 +1,5 @@
 from marionette_test import MarionetteTestCase
+from errors import NoSuchElementException
 import threading
 import SimpleHTTPServer
 import SocketServer
@@ -85,7 +86,18 @@ class BaseTestFrontendUnits(MarionetteTestCase):
     def check_page(self, page):
 
         self.marionette.navigate(urlparse.urljoin(self.server_prefix, page))
-        self.marionette.find_element("id", 'complete')
+        try:
+            self.marionette.find_element("id", 'complete')
+        except NoSuchElementException:
+            fullPageUrl = urlparse.urljoin(self.relPath, page)
+
+            details = "%s: 1 failure encountered\n%s" % \
+                      (fullPageUrl,
+                       self.get_failure_summary(
+                           fullPageUrl, "Waiting for Completion",
+                           "Could not find the test complete indicator"))
+
+            raise AssertionError(details)
 
         fail_node = self.marionette.find_element("css selector",
                                                  '.failures > em')
@@ -104,6 +116,9 @@ class BaseTestFrontendUnits(MarionetteTestCase):
 
         raise AssertionError(self.get_failure_details(page))
 
+    def get_failure_summary(self, fullPageUrl, testName, testError):
+        return "TEST-UNEXPECTED-FAIL | %s | %s - %s" % (fullPageUrl, testName, testError)
+
     def get_failure_details(self, page):
         fail_nodes = self.marionette.find_elements("css selector",
                                                    '.test.fail')
@@ -120,8 +135,9 @@ class BaseTestFrontendUnits(MarionetteTestCase):
 
             # Format: TEST-UNEXPECTED-FAIL | <filename> | <test name> - <test error>
             details.append(
-                "TEST-UNEXPECTED-FAIL | %s | %s - %s" % \
-                (fullPageUrl, node.find_element("tag name", 'h2').text.split("\n")[0], errorText.split("\n")[0]))
+                self.get_failure_summary(page,
+                                         node.find_element("tag name", 'h2').text.split("\n")[0],
+                                         errorText.split("\n")[0]))
             details.append(
                 errorText)
         return "\n".join(details)
