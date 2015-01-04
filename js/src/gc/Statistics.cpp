@@ -297,7 +297,7 @@ struct ExtraPhaseInfo
 
     // Index into the set of parallel arrays of timing data, for parents with
     // at least one multi-parented child
-    int dagSlot;
+    size_t dagSlot;
 };
 
 static const Phase PHASE_NO_PARENT = PHASE_LIMIT;
@@ -382,7 +382,7 @@ static const PhaseInfo phases[] = {
     { PHASE_LIMIT, nullptr, PHASE_NO_PARENT }
 };
 
-ExtraPhaseInfo phaseExtra[PHASE_LIMIT] = { { 0, 0 } };
+static ExtraPhaseInfo phaseExtra[PHASE_LIMIT] = { { 0, 0 } };
 
 // Mapping from all nodes with a multi-parented child to a Vector of all
 // multi-parented children and their descendants. (Single-parented children will

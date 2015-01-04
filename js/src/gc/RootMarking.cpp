@@ -120,11 +120,13 @@ MarkExactStackRootsAcrossTypes(T context, JSTracer *trc)
     MarkExactStackRootList<PropDesc, MarkPropDescRoot>(trc, context, "PropDesc");
 }
 
+#ifdef JSGC_FJGENERATIONAL
 static void
 MarkExactStackRoots(ThreadSafeContext* cx, JSTracer *trc)
 {
     MarkExactStackRootsAcrossTypes<ThreadSafeContext*>(cx, trc);
 }
+#endif
 
 static void
 MarkExactStackRoots(JSRuntime* rt, JSTracer *trc)
