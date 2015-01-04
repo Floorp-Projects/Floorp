@@ -82,7 +82,7 @@ static const int kSurrogateRangeCount = ArrayLength(kSurrogateRanges);
 static const int kLineTerminatorRanges[] = { 0x000A, 0x000B, 0x000D, 0x000E,
     0x2028, 0x202A, 0x10000 };
 static const int kLineTerminatorRangeCount = ArrayLength(kLineTerminatorRanges);
-static const unsigned kMaxOneByteCharCode = 0xff;
+static const int kMaxOneByteCharCode = 0xff;
 static const int kMaxUtf16CodeUnit = 0xffff;
 
 static char16_t
@@ -3180,7 +3180,7 @@ SplitSearchSpace(RangeBoundaryVector &ranges,
     // range with a single not-taken branch, speeding up this important
     // character range (even non-ASCII charset-based text has spaces and
     // punctuation).
-    if (*border - 1 > (int) kMaxOneByteCharCode &&  // ASCII case.
+    if (*border - 1 > kMaxOneByteCharCode &&  // ASCII case.
         end_index - start_index > (*new_start_index - start_index) * 2 &&
         last - first > kSize * 2 &&
         binary_chop_index > *new_start_index &&
