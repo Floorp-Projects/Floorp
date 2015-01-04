@@ -545,6 +545,10 @@
 @RESPATH@/components/htmlMenuBuilder.js
 @RESPATH@/components/htmlMenuBuilder.manifest
 
+@RESPATH@/components/RequestSync.manifest
+@RESPATH@/components/RequestSyncManager.js
+@RESPATH@/components/RequestSyncScheduler.js
+
 @RESPATH@/components/PermissionSettings.js
 @RESPATH@/components/PermissionSettings.manifest
 @RESPATH@/components/ContactManager.js

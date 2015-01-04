@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for RequestSync minInterval pref</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script type="application/javascript;version=1.7">
+
+  function test_minInterval(expected) {
+    navigator.sync.register('foobar', { minInterval: 1, wakeUpPage: '/' }).then(
+    function() {
+      ok(expected, "MinInterval succeeded");
+    },
+    function(e) {
+      ok(!expected, "MinInterval failed");
+      is(e, "ParamsError", "Correct error received");
+    })
+
+    .then(runTests);
+  }
+
+  var tests = [
+    function() {
+      if (SpecialPowers.isMainProcess()) {
+        SpecialPowers.Cu.import("resource://gre/modules/RequestSyncService.jsm");
+      }
+      runTests();
+    },
+
+    function() {
+      SpecialPowers.pushPrefEnv({"set": [["dom.ignore_webidl_scope_checks", true],
+                                         ["dom.requestSync.enabled", true]]}, runTests);
+    },
+
+    function() { test_minInterval(false); },
+
+    function() {
+      SpecialPowers.pushPrefEnv({"set": [["dom.requestSync.minInterval", 1]]}, runTests);
+    },
+
+    function() { test_minInterval(true); },
+  ];
+
+  function runTests() {
+    if (!tests.length) {
+      finish();
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
+
+  function finish() {
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  runTests();
+  </script>
+</body>
+</html>
