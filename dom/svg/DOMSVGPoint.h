@@ -89,11 +89,11 @@ public:
 
 
   // WebIDL
-  virtual float X();
-  virtual void SetX(float aX, ErrorResult& rv);
-  virtual float Y();
-  virtual void SetY(float aY, ErrorResult& rv);
-  virtual already_AddRefed<nsISVGPoint> MatrixTransform(dom::SVGMatrix& matrix);
+  virtual float X() MOZ_OVERRIDE;
+  virtual void SetX(float aX, ErrorResult& rv) MOZ_OVERRIDE;
+  virtual float Y() MOZ_OVERRIDE;
+  virtual void SetY(float aY, ErrorResult& rv) MOZ_OVERRIDE;
+  virtual already_AddRefed<nsISVGPoint> MatrixTransform(dom::SVGMatrix& matrix) MOZ_OVERRIDE;
   nsISupports* GetParentObject() MOZ_OVERRIDE {
     return mList;
   }

@@ -29,7 +29,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIWebShellServices, NS_IWEB_SHELL_SERVICES_IID)
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIWEBSHELLSERVICES \
-  NS_IMETHOD ReloadDocument(const char *aCharset=nullptr, int32_t aSource=kCharsetUninitialized); \
-  NS_IMETHOD StopDocumentLoad(void); \
+  NS_IMETHOD ReloadDocument(const char *aCharset=nullptr, int32_t aSource=kCharsetUninitialized) MOZ_OVERRIDE; \
+  NS_IMETHOD StopDocumentLoad(void) MOZ_OVERRIDE; \
 
 #endif /* nsIWebShellServices_h___ */

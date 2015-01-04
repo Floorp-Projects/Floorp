@@ -72,12 +72,12 @@ public:
         mEntityID = entityID;
     }
 
-    NS_IMETHODIMP GetLastModifiedTime(PRTime* lastModifiedTime) {
+    NS_IMETHODIMP GetLastModifiedTime(PRTime* lastModifiedTime) MOZ_OVERRIDE {
         *lastModifiedTime = mLastModifiedTime;
         return NS_OK;
     }
 
-    NS_IMETHODIMP SetLastModifiedTime(PRTime lastModifiedTime) {
+    NS_IMETHODIMP SetLastModifiedTime(PRTime lastModifiedTime) MOZ_OVERRIDE {
         mLastModifiedTime = lastModifiedTime;
         return NS_OK;
     }
@@ -91,14 +91,14 @@ public:
     void GetFTPEventSink(nsCOMPtr<nsIFTPEventSink> &aResult);
 
 public:
-    NS_IMETHOD ForcePending(bool aForcePending);
+    NS_IMETHOD ForcePending(bool aForcePending) MOZ_OVERRIDE;
 
 protected:
     virtual ~nsFtpChannel() {}
     virtual nsresult OpenContentStream(bool async, nsIInputStream **result,
-                                       nsIChannel** channel);
-    virtual bool GetStatusArg(nsresult status, nsString &statusArg);
-    virtual void OnCallbacksChanged();
+                                       nsIChannel** channel) MOZ_OVERRIDE;
+    virtual bool GetStatusArg(nsresult status, nsString &statusArg) MOZ_OVERRIDE;
+    virtual void OnCallbacksChanged() MOZ_OVERRIDE;
 
 private:
     nsCOMPtr<nsIProxyInfo>    mProxyInfo; 

@@ -1837,7 +1837,7 @@ nsDocShell::ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
         originIsFile && targetIsFile;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDocShell::GetEldestPresContext(nsPresContext** aPresContext)
 {
     NS_ENSURE_ARG_POINTER(aPresContext);
@@ -7686,7 +7686,7 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
 // nsDocShell: Content Viewer Management
 //*****************************************************************************   
 
-NS_IMETHODIMP
+nsresult
 nsDocShell::EnsureContentViewer()
 {
     if (mContentViewer)
@@ -8692,7 +8692,7 @@ nsDocShell::RestoreFromHistory()
     return privWin->FireDelayedDOMEvents();
 }
 
-NS_IMETHODIMP
+nsresult
 nsDocShell::CreateContentViewer(const char *aContentType,
                                 nsIRequest * request,
                                 nsIStreamListener ** aContentHandler)
@@ -8919,7 +8919,7 @@ nsDocShell::NewContentViewerObj(const char *aContentType,
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
 {
     //
@@ -9190,7 +9190,7 @@ public:
 
     NS_IMETHODIMP
     OnComplete(nsIURI *aFaviconURI, uint32_t aDataLen,
-               const uint8_t *aData, const nsACString &aMimeType)
+               const uint8_t *aData, const nsACString &aMimeType) MOZ_OVERRIDE
     {
         // Continue only if there is an associated favicon.
         if (!aFaviconURI) {
@@ -10602,7 +10602,7 @@ AppendSegmentToString(nsIInputStream *in,
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDocShell::AddHeadersToChannel(nsIInputStream *aHeadersData,
                                 nsIChannel *aGenericChannel)
 {
@@ -11731,7 +11731,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, uint32_t aLoadType)
 {
     if (!IsNavigationAllowed()) {
@@ -11859,7 +11859,8 @@ NS_IMETHODIMP nsDocShell::GetShouldSaveLayoutState(bool* aShould)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::PersistLayoutHistoryState()
+nsresult
+nsDocShell::PersistLayoutHistoryState()
 {
     nsresult  rv = NS_OK;
     

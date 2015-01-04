@@ -29,7 +29,7 @@ protected:
 
 public:
   // nsIContent interface
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 };
 
 } // namespace mozilla

@@ -18,7 +18,7 @@ public:
   nsresult Init(nsIURI* uri);
   nsresult OpenContentStream(bool aAsync,
                              nsIInputStream **aStream,
-                             nsIChannel **aChannel);
+                             nsIChannel **aChannel) MOZ_OVERRIDE;
 
 protected:
   ~nsDeviceChannel();

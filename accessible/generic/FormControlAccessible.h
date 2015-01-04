@@ -28,7 +28,7 @@ public:
   }
 
   // Accessible
-  virtual void Value(nsString& aValue);
+  virtual void Value(nsString& aValue) MOZ_OVERRIDE;
   virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
   virtual uint64_t NativeState() MOZ_OVERRIDE;
 
@@ -40,7 +40,7 @@ public:
   virtual bool SetCurValue(double aValue) MOZ_OVERRIDE;
 
   // Widgets
-  virtual bool IsWidget() const;
+  virtual bool IsWidget() const MOZ_OVERRIDE;
 
 protected:
   virtual ~ProgressMeterAccessible() {}
@@ -56,7 +56,7 @@ public:
   RadioButtonAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
+  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
 
   // ActionAccessible
   virtual uint8_t ActionCount() MOZ_OVERRIDE;
@@ -66,7 +66,7 @@ public:
   enum { eAction_Click = 0 };
 
   // Widgets
-  virtual bool IsWidget() const;
+  virtual bool IsWidget() const MOZ_OVERRIDE;
 };
 
 } // namespace a11y

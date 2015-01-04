@@ -21,13 +21,13 @@ public:
                                DocAccessible* aDoc);
 
   // Accessible
-  virtual void Value(nsString& aValue);
+  virtual void Value(nsString& aValue) MOZ_OVERRIDE;
   virtual a11y::role NativeRole() MOZ_OVERRIDE;
   virtual uint64_t NativeState() MOZ_OVERRIDE;
   virtual uint64_t NativeInteractiveState() const MOZ_OVERRIDE;
 
   // Widgets
-  virtual Accessible* ContainerWidget() const;
+  virtual Accessible* ContainerWidget() const MOZ_OVERRIDE;
 };
 
 
@@ -44,9 +44,9 @@ public:
   virtual uint64_t NativeState() MOZ_OVERRIDE;
 
   // Widgets
-  virtual bool IsWidget() const;
-  virtual bool IsActiveWidget() const;
-  virtual bool AreItemsOperable() const;
+  virtual bool IsWidget() const MOZ_OVERRIDE;
+  virtual bool IsActiveWidget() const MOZ_OVERRIDE;
+  virtual bool AreItemsOperable() const MOZ_OVERRIDE;
 
   virtual bool IsAcceptableChild(Accessible* aPossibleChild) const MOZ_OVERRIDE;
 };

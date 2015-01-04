@@ -128,8 +128,8 @@ private:
           , mStreamEnded(false)
          {
          }
-         NS_IMETHOD Read(char* buf, uint32_t count, uint32_t * result);
-         NS_IMETHOD Close();
+         NS_IMETHOD Read(char* buf, uint32_t count, uint32_t * result) MOZ_OVERRIDE;
+         NS_IMETHOD Close() MOZ_OVERRIDE;
      private:
          virtual ~nsDecompressInputStreamWrapper()
          {
@@ -209,8 +209,8 @@ private:
           , mUncompressedCount(0)
          {
          }
-         NS_IMETHOD Write(const char* buf, uint32_t count, uint32_t * result);
-         NS_IMETHOD Close();
+         NS_IMETHOD Write(const char* buf, uint32_t count, uint32_t * result) MOZ_OVERRIDE;
+         NS_IMETHOD Close() MOZ_OVERRIDE;
      private:
          virtual ~nsCompressOutputStreamWrapper()
          { 

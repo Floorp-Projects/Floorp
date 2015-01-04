@@ -37,12 +37,10 @@ Atomic<int32_t> CompositableForwarder::sSerialCounter(0);
 CompositorChild::CompositorChild(ClientLayerManager *aLayerManager)
   : mLayerManager(aLayerManager)
 {
-  MOZ_COUNT_CTOR(CompositorChild);
 }
 
 CompositorChild::~CompositorChild()
 {
-  MOZ_COUNT_DTOR(CompositorChild);
 }
 
 void
@@ -98,7 +96,6 @@ CompositorChild::Create(Transport* aTransport, ProcessId aOtherProcess)
   sCompositor->SendGetTileSize(&width, &height);
   gfxPlatform::GetPlatform()->SetTileSize(width, height);
 
-  // We release this ref in ActorDestroy().
   return sCompositor;
 }
 
@@ -183,17 +180,24 @@ CompositorChild::ActorDestroy(ActorDestroyReason aWhy)
     NS_RUNTIMEABORT("ActorDestroy by IPC channel failure at CompositorChild");
   }
 #endif
-  if (sCompositor) {
-    sCompositor->Release();
-    sCompositor = nullptr;
-  }
+
   // We don't want to release the ref to sCompositor here, during
   // cleanup, because that will cause it to be deleted while it's
   // still being used.  So defer the deletion to after it's not in
   // use.
+  sCompositor = nullptr;
+
   MessageLoop::current()->PostTask(
     FROM_HERE,
     NewRunnableMethod(this, &CompositorChild::Release));
+}
+
+void
+CompositorChild::ShutDown()
+{
+  if (sCompositor) {
+    sCompositor->ActorDestroy(NormalShutdown);
+  }
 }
 
 bool

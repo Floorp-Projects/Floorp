@@ -40,13 +40,13 @@ public:
                                            SVGSwitchElementBase)
   // nsINode
   virtual nsresult InsertChildAt(nsIContent* aKid, uint32_t aIndex,
-                                 bool aNotify);
-  virtual void RemoveChildAt(uint32_t aIndex, bool aNotify);
+                                 bool aNotify) MOZ_OVERRIDE;
+  virtual void RemoveChildAt(uint32_t aIndex, bool aNotify) MOZ_OVERRIDE;
 
   // nsIContent
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 private:
   void UpdateActiveChild()
   { mActiveChild = FindActiveChild(); }

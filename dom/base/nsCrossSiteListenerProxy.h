@@ -75,6 +75,9 @@ private:
   bool mRequestApproved;
   bool mHasBeenCrossSite;
   bool mIsPreflight;
+#ifdef DEBUG
+  bool mInited;
+#endif
   nsCString mPreflightMethod;
   nsTArray<nsCString> mPreflightHeaders;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;

@@ -132,7 +132,7 @@ public:
     bool UsesPipelining() const { return mCaps & NS_HTTP_ALLOW_PIPELINING; }
 
     // overload of nsAHttpTransaction::LoadGroupConnectionInfo()
-    nsILoadGroupConnectionInfo *LoadGroupConnectionInfo() { return mLoadGroupCI.get(); }
+    nsILoadGroupConnectionInfo *LoadGroupConnectionInfo() MOZ_OVERRIDE { return mLoadGroupCI.get(); }
     void SetLoadGroupConnectionInfo(nsILoadGroupConnectionInfo *aLoadGroupCI) { mLoadGroupCI = aLoadGroupCI; }
     void DispatchedAsBlocking();
     void RemoveDispatchedAsBlocking();
@@ -372,7 +372,7 @@ public:
     // token bucket submission the transaction just posts an event that causes
     // the pending transaction queue to be rerun (and TryToRunPacedRequest() to
     // be run again.
-    void OnTokenBucketAdmitted(); // ATokenBucketEvent
+    void OnTokenBucketAdmitted() MOZ_OVERRIDE; // ATokenBucketEvent
 
     // CancelPacing() can be used to tell the token bucket to remove this
     // transaction from the list of pending transactions. This is used when a

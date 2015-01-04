@@ -427,6 +427,9 @@ nsCORSListenerProxy::nsCORSListenerProxy(nsIStreamListener* aOuter,
     mRequestApproved(false),
     mHasBeenCrossSite(false),
     mIsPreflight(true),
+#ifdef DEBUG
+    mInited(false),
+#endif
     mPreflightMethod(aPreflightMethod),
     mPreflightHeaders(aPreflightHeaders)
 {
@@ -453,6 +456,9 @@ nsCORSListenerProxy::Init(nsIChannel* aChannel, bool aAllowDataURI)
     mOriginHeaderPrincipal = nullptr;
     mOuterNotificationCallbacks = nullptr;
   }
+#ifdef DEBUG
+  mInited = true;
+#endif
   return rv;
 }
 
@@ -460,6 +466,7 @@ NS_IMETHODIMP
 nsCORSListenerProxy::OnStartRequest(nsIRequest* aRequest,
                                     nsISupports* aContext)
 {
+  MOZ_ASSERT(mInited, "nsCORSListenerProxy has not been initialized properly");
   nsresult rv = CheckRequestApproved(aRequest);
   mRequestApproved = NS_SUCCEEDED(rv);
   if (!mRequestApproved) {
@@ -599,6 +606,7 @@ nsCORSListenerProxy::OnStopRequest(nsIRequest* aRequest,
                                    nsISupports* aContext,
                                    nsresult aStatusCode)
 {
+  MOZ_ASSERT(mInited, "nsCORSListenerProxy has not been initialized properly");
   nsresult rv = mOuterListener->OnStopRequest(aRequest, aContext, aStatusCode);
   mOuterListener = nullptr;
   mOuterNotificationCallbacks = nullptr;
@@ -615,6 +623,7 @@ nsCORSListenerProxy::OnDataAvailable(nsIRequest* aRequest,
                                      uint64_t aOffset,
                                      uint32_t aCount)
 {
+  MOZ_ASSERT(mInited, "nsCORSListenerProxy has not been initialized properly");
   if (!mRequestApproved) {
     return NS_ERROR_DOM_BAD_URI;
   }

@@ -56,39 +56,39 @@ public:
                 nsIPresShell* aPresShell);
 
   // nsIScrollPositionListener
-  virtual void ScrollPositionWillChange(nscoord aX, nscoord aY) {}
-  virtual void ScrollPositionDidChange(nscoord aX, nscoord aY);
+  virtual void ScrollPositionWillChange(nscoord aX, nscoord aY) MOZ_OVERRIDE {}
+  virtual void ScrollPositionDidChange(nscoord aX, nscoord aY) MOZ_OVERRIDE;
 
   // nsIDocumentObserver
   NS_DECL_NSIDOCUMENTOBSERVER
 
   // Accessible
   virtual void Init();
-  virtual void Shutdown();
-  virtual nsIFrame* GetFrame() const;
-  virtual nsINode* GetNode() const { return mDocumentNode; }
+  virtual void Shutdown() MOZ_OVERRIDE;
+  virtual nsIFrame* GetFrame() const MOZ_OVERRIDE;
+  virtual nsINode* GetNode() const MOZ_OVERRIDE { return mDocumentNode; }
   nsIDocument* DocumentNode() const { return mDocumentNode; }
 
-  virtual mozilla::a11y::ENameValueFlag Name(nsString& aName);
-  virtual void Description(nsString& aDescription);
-  virtual Accessible* FocusedChild();
+  virtual mozilla::a11y::ENameValueFlag Name(nsString& aName) MOZ_OVERRIDE;
+  virtual void Description(nsString& aDescription) MOZ_OVERRIDE;
+  virtual Accessible* FocusedChild() MOZ_OVERRIDE;
   virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
   virtual uint64_t NativeState() MOZ_OVERRIDE;
   virtual uint64_t NativeInteractiveState() const MOZ_OVERRIDE;
-  virtual bool NativelyUnavailable() const;
-  virtual void ApplyARIAState(uint64_t* aState) const;
-  virtual already_AddRefed<nsIPersistentProperties> Attributes();
+  virtual bool NativelyUnavailable() const MOZ_OVERRIDE;
+  virtual void ApplyARIAState(uint64_t* aState) const MOZ_OVERRIDE;
+  virtual already_AddRefed<nsIPersistentProperties> Attributes() MOZ_OVERRIDE;
 
   virtual void TakeFocus() MOZ_OVERRIDE;
 
 #ifdef A11Y_LOG
-  virtual nsresult HandleAccEvent(AccEvent* aEvent);
+  virtual nsresult HandleAccEvent(AccEvent* aEvent) MOZ_OVERRIDE;
 #endif
 
   virtual nsRect RelativeBounds(nsIFrame** aRelativeFrame) const MOZ_OVERRIDE;
 
   // HyperTextAccessible
-  virtual already_AddRefed<nsIEditor> GetEditor() const;
+  virtual already_AddRefed<nsIEditor> GetEditor() const MOZ_OVERRIDE;
 
   // DocAccessible
 
@@ -344,7 +344,7 @@ protected:
   void LastRelease();
 
   // Accessible
-  virtual void CacheChildren();
+  virtual void CacheChildren() MOZ_OVERRIDE;
 
   // DocAccessible
   virtual nsresult AddEventListeners();

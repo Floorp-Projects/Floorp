@@ -734,7 +734,7 @@ public:
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE;
 
 #ifdef MOZ_LAYERS_HAVE_LOG
-  virtual const char* Name() { return "SharedSurfaceTextureHost"; }
+  virtual const char* Name() MOZ_OVERRIDE { return "SharedSurfaceTextureHost"; }
 #endif
 
 protected:

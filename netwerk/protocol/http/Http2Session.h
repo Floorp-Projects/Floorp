@@ -44,18 +44,18 @@ public:
  Http2Session(nsISocketTransport *, uint32_t version);
 
   bool AddStream(nsAHttpTransaction *, int32_t,
-                 bool, nsIInterfaceRequestor *);
-  bool CanReuse() { return !mShouldGoAway && !mClosed; }
-  bool RoomForMoreStreams();
+                 bool, nsIInterfaceRequestor *) MOZ_OVERRIDE;
+  bool CanReuse() MOZ_OVERRIDE { return !mShouldGoAway && !mClosed; }
+  bool RoomForMoreStreams() MOZ_OVERRIDE;
 
   // When the connection is active this is called up to once every 1 second
   // return the interval (in seconds) that the connection next wants to
   // have this invoked. It might happen sooner depending on the needs of
   // other connections.
-  uint32_t  ReadTimeoutTick(PRIntervalTime now);
+  uint32_t  ReadTimeoutTick(PRIntervalTime now) MOZ_OVERRIDE;
 
   // Idle time represents time since "goodput".. e.g. a data or header frame
-  PRIntervalTime IdleTime();
+  PRIntervalTime IdleTime() MOZ_OVERRIDE;
 
   // Registering with a newID of 0 means pick the next available odd ID
   uint32_t RegisterStreamID(Http2Stream *, uint32_t aNewID = 0);
@@ -192,13 +192,13 @@ public:
                     const char *, uint32_t);
 
   // an overload of nsAHttpConnection
-  void TransactionHasDataToWrite(nsAHttpTransaction *);
+  void TransactionHasDataToWrite(nsAHttpTransaction *) MOZ_OVERRIDE;
 
   // a similar version for Http2Stream
   void TransactionHasDataToWrite(Http2Stream *);
 
   // an overload of nsAHttpSegementReader
-  virtual nsresult CommitToSegmentSize(uint32_t size, bool forceCommitment);
+  virtual nsresult CommitToSegmentSize(uint32_t size, bool forceCommitment) MOZ_OVERRIDE;
   nsresult BufferOutput(const char *, uint32_t, uint32_t *);
   void     FlushOutputQueue();
   uint32_t AmountOfOutputBuffered() { return mOutputQueueUsed - mOutputQueueSent; }
@@ -213,7 +213,7 @@ public:
 
   uint64_t Serial() { return mSerial; }
 
-  void PrintDiagnostics (nsCString &log);
+  void PrintDiagnostics (nsCString &log) MOZ_OVERRIDE;
 
   // Streams need access to these
   uint32_t SendingChunkSize() { return mSendingChunkSize; }

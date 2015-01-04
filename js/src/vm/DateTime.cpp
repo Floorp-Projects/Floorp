@@ -15,7 +15,9 @@ using mozilla::UnspecifiedNaN;
 static bool
 ComputeLocalTime(time_t local, struct tm *ptm)
 {
-#ifdef HAVE_LOCALTIME_R
+#if defined(_WIN32)
+    return localtime_s(ptm, &local) == 0;
+#elif defined(HAVE_LOCALTIME_R)
     return localtime_r(&local, ptm);
 #else
     struct tm *otm = localtime(&local);

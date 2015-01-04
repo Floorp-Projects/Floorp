@@ -39,7 +39,7 @@ public:
 
   NS_DECL_EDITTXN
 
-  NS_IMETHOD RedoTransaction();
+  NS_IMETHOD RedoTransaction() MOZ_OVERRIDE;
 
   nsIContent* GetNewNode();
 

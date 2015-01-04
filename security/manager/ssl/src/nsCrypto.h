@@ -26,7 +26,7 @@ protected:
   virtual ~nsPkcs11();
 
 private:
-  virtual void virtualDestroyNSSReference() {}
+  virtual void virtualDestroyNSSReference() MOZ_OVERRIDE {}
 };
 
 #endif //_nsCrypto_h_

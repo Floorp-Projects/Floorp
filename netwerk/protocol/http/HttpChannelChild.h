@@ -68,31 +68,31 @@ public:
   // Methods HttpBaseChannel didn't implement for us or that we override.
   //
   // nsIRequest
-  NS_IMETHOD Cancel(nsresult status);
-  NS_IMETHOD Suspend();
-  NS_IMETHOD Resume();
+  NS_IMETHOD Cancel(nsresult status) MOZ_OVERRIDE;
+  NS_IMETHOD Suspend() MOZ_OVERRIDE;
+  NS_IMETHOD Resume() MOZ_OVERRIDE;
   // nsIChannel
-  NS_IMETHOD GetSecurityInfo(nsISupports **aSecurityInfo);
-  NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *aContext);
+  NS_IMETHOD GetSecurityInfo(nsISupports **aSecurityInfo) MOZ_OVERRIDE;
+  NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *aContext) MOZ_OVERRIDE;
   // HttpBaseChannel::nsIHttpChannel
   NS_IMETHOD SetRequestHeader(const nsACString& aHeader,
                               const nsACString& aValue,
-                              bool aMerge);
-  NS_IMETHOD RedirectTo(nsIURI *newURI);
+                              bool aMerge) MOZ_OVERRIDE;
+  NS_IMETHOD RedirectTo(nsIURI *newURI) MOZ_OVERRIDE;
   // nsIHttpChannelInternal
-  NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey);
-  NS_IMETHOD GetLocalAddress(nsACString& addr);
-  NS_IMETHOD GetLocalPort(int32_t* port);
-  NS_IMETHOD GetRemoteAddress(nsACString& addr);
-  NS_IMETHOD GetRemotePort(int32_t* port);
+  NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey) MOZ_OVERRIDE;
+  NS_IMETHOD GetLocalAddress(nsACString& addr) MOZ_OVERRIDE;
+  NS_IMETHOD GetLocalPort(int32_t* port) MOZ_OVERRIDE;
+  NS_IMETHOD GetRemoteAddress(nsACString& addr) MOZ_OVERRIDE;
+  NS_IMETHOD GetRemotePort(int32_t* port) MOZ_OVERRIDE;
   // nsISupportsPriority
-  NS_IMETHOD SetPriority(int32_t value);
+  NS_IMETHOD SetPriority(int32_t value) MOZ_OVERRIDE;
   // nsIClassOfService
-  NS_IMETHOD SetClassFlags(uint32_t inFlags);
-  NS_IMETHOD AddClassFlags(uint32_t inFlags);
-  NS_IMETHOD ClearClassFlags(uint32_t inFlags);
+  NS_IMETHOD SetClassFlags(uint32_t inFlags) MOZ_OVERRIDE;
+  NS_IMETHOD AddClassFlags(uint32_t inFlags) MOZ_OVERRIDE;
+  NS_IMETHOD ClearClassFlags(uint32_t inFlags) MOZ_OVERRIDE;
   // nsIResumableChannel
-  NS_IMETHOD ResumeAt(uint64_t startPos, const nsACString& entityID);
+  NS_IMETHOD ResumeAt(uint64_t startPos, const nsACString& entityID) MOZ_OVERRIDE;
 
   // IPDL holds a reference while the PHttpChannel protocol is live (starting at
   // AsyncOpen, and ending at either OnStopRequest or any IPDL error, either of
@@ -125,7 +125,7 @@ protected:
                               const nsCString& data,
                               const uint64_t& offset,
                               const uint32_t& count) MOZ_OVERRIDE;
-  bool RecvOnStopRequest(const nsresult& statusCode, const ResourceTimingStruct& timing);
+  bool RecvOnStopRequest(const nsresult& statusCode, const ResourceTimingStruct& timing) MOZ_OVERRIDE;
   bool RecvOnProgress(const uint64_t& progress, const uint64_t& progressMax) MOZ_OVERRIDE;
   bool RecvOnStatus(const nsresult& status) MOZ_OVERRIDE;
   bool RecvFailedAsyncOpen(const nsresult& status) MOZ_OVERRIDE;
@@ -141,7 +141,7 @@ protected:
   bool RecvDeleteSelf() MOZ_OVERRIDE;
 
   bool GetAssociatedContentSecurity(nsIAssociatedContentSecurity** res = nullptr);
-  virtual void DoNotifyListenerCleanup();
+  virtual void DoNotifyListenerCleanup() MOZ_OVERRIDE;
 
 private:
   nsresult ContinueAsyncOpen();

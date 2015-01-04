@@ -22,11 +22,11 @@ public:
   XULComboboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual void Description(nsString& aDescription);
-  virtual void Value(nsString& aValue);
+  virtual void Description(nsString& aDescription) MOZ_OVERRIDE;
+  virtual void Value(nsString& aValue) MOZ_OVERRIDE;
   virtual a11y::role NativeRole() MOZ_OVERRIDE;
-  virtual uint64_t NativeState();
-  virtual bool CanHaveAnonChildren();
+  virtual uint64_t NativeState() MOZ_OVERRIDE;
+  virtual bool CanHaveAnonChildren() MOZ_OVERRIDE;
 
   // ActionAccessible
   virtual uint8_t ActionCount() MOZ_OVERRIDE;
@@ -34,8 +34,8 @@ public:
   virtual bool DoAction(uint8_t aIndex) MOZ_OVERRIDE;
 
   // Widgets
-  virtual bool IsActiveWidget() const;
-  virtual bool AreItemsOperable() const;
+  virtual bool IsActiveWidget() const MOZ_OVERRIDE;
+  virtual bool AreItemsOperable() const MOZ_OVERRIDE;
 };
 
 } // namespace a11y
