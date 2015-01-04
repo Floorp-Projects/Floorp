@@ -624,14 +624,11 @@ BrowserElementChild.prototype = {
       }
     }
 
-    // For every touch on the screen, there are always two mouse events received,
-    // mousedown/mouseup, no matter touch or long tap on the screen. When there is
-    // is a non-collapsed selection change event which comes with mouseup reason,
-    // it implies some texts are selected. In order to hide the text dialog during next
-    // touch, here sets the forceDispatchSelectionStateChanged flag as true to dispatch the
-    // next SelecitonChange event(with the mousedown) so that the parent side can
+    // If we select something and selection range is visible, we set the
+    // forceDispatchSelectionStateChanged flag as true to dispatch the
+    // next SelectionStateChange event so that the parent side can
     // hide the text dialog.
-    if (isMouseUp && !isCollapsed) {
+    if (e.visible && !isCollapsed) {
       this._forceDispatchSelectionStateChanged = true;
     } else {
       this._forceDispatchSelectionStateChanged = false;

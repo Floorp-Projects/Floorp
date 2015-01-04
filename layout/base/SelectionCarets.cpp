@@ -218,7 +218,6 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
     } else {
       mDragMode = NONE;
       mActiveTouchId = -1;
-      SetVisibility(false);
       LaunchLongTapDetector();
     }
   } else if (aEvent->message == NS_TOUCH_END ||
@@ -293,6 +292,10 @@ SelectionCarets::SetVisibility(bool aVisible)
     SELECTIONCARETS_LOG("Set visibility %s, same as the old one",
                         (aVisible ? "shown" : "hidden"));
     return;
+  }
+
+  if (!aVisible) {
+    mSelectionVisibleInScrollFrames = false;
   }
 
   mVisible = aVisible;
@@ -1086,6 +1089,12 @@ SelectionCarets::NotifySelectionChanged(nsIDOMDocument* aDoc,
                                         int16_t aReason)
 {
   SELECTIONCARETS_LOG("aSel (%p), Reason=%d", aSel, aReason);
+
+  if (aSel != GetSelection()) {
+    SELECTIONCARETS_LOG("Return for selection mismatch!");
+    return NS_OK;
+  }
+
   if (!aReason || (aReason & (nsISelectionListener::DRAG_REASON |
                               nsISelectionListener::KEYPRESS_REASON |
                               nsISelectionListener::MOUSEDOWN_REASON))) {
@@ -1230,7 +1239,6 @@ SelectionCarets::FireScrollEnd(nsITimer* aTimer, void* aSelectionCarets)
                   "Unexpected timer");
 
   SELECTIONCARETS_LOG_STATIC("Update selection carets!");
-  self->SetVisibility(true);
   self->UpdateSelectionCarets();
   self->DispatchSelectionStateChangedEvent(self->GetSelection(),
                                            SelectionState::Updateposition);
@@ -1243,8 +1251,12 @@ SelectionCarets::Reflow(DOMHighResTimeStamp aStart, DOMHighResTimeStamp aEnd)
     SELECTIONCARETS_LOG("Update selection carets after reflow!");
     UpdateSelectionCarets();
 
-    DispatchSelectionStateChangedEvent(GetSelection(),
-                                       SelectionState::Updateposition);
+    // We don't care selection state when we're at drag mode. We always hide
+    // bubble in drag mode. So, don't dispatch event here.
+    if (mDragMode == NONE) {
+      DispatchSelectionStateChangedEvent(GetSelection(),
+                                         SelectionState::Updateposition);
+    }
   }
   return NS_OK;
 }
