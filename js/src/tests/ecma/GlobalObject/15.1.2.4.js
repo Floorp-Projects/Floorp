@@ -60,8 +60,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 new TestCase( SECTION, "escape.length",         1,          escape.length );
 new TestCase( SECTION, "escape.length = null; escape.length",   1,  eval("escape.length = null; escape.length") );
-new TestCase( SECTION, "delete escape.length",                  false,  delete escape.length );
-new TestCase( SECTION, "delete escape.length; escape.length",   1,      eval("delete escape.length; escape.length") );
 new TestCase( SECTION, "var MYPROPS=''; for ( var p in escape ) { MYPROPS+= p}; MYPROPS",    "",    eval("var MYPROPS=''; for ( var p in escape ) { MYPROPS+= p}; MYPROPS") );
 
 new TestCase( SECTION, "escape()",              "undefined",    escape() );

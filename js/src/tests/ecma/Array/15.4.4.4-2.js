@@ -64,8 +64,6 @@ writeHeaderToLog( SECTION + " Array.prototype.reverse()");
 var ARR_PROTOTYPE = Array.prototype;
 
 new TestCase( SECTION, "Array.prototype.reverse.length",           0,      Array.prototype.reverse.length );
-new TestCase( SECTION, "delete Array.prototype.reverse.length",    false,  delete Array.prototype.reverse.length );
-new TestCase( SECTION, "delete Array.prototype.reverse.length; Array.prototype.reverse.length",    0, eval("delete Array.prototype.reverse.length; Array.prototype.reverse.length") );
 
 // length of array is 0
 new TestCase(   SECTION,

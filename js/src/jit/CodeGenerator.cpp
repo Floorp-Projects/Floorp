@@ -9332,9 +9332,9 @@ CodeGenerator::visitGetDOMProperty(LGetDOMProperty *ins)
 }
 
 void
-CodeGenerator::visitGetDOMMember(LGetDOMMember *ins)
+CodeGenerator::visitGetDOMMemberV(LGetDOMMemberV *ins)
 {
-    // It's simple to duplicate visitLoadFixedSlotV here than it is to try to
+    // It's simpler to duplicate visitLoadFixedSlotV here than it is to try to
     // use an LLoadFixedSlotV or some subclass of it for this case: that would
     // require us to have MGetDOMMember inherit from MLoadFixedSlot, and then
     // we'd have to duplicate a bunch of stuff we now get for free from
@@ -9344,6 +9344,22 @@ CodeGenerator::visitGetDOMMember(LGetDOMMember *ins)
     ValueOperand result = GetValueOutput(ins);
 
     masm.loadValue(Address(object, NativeObject::getFixedSlotOffset(slot)), result);
+}
+
+void
+CodeGenerator::visitGetDOMMemberT(LGetDOMMemberT *ins)
+{
+    // It's simpler to duplicate visitLoadFixedSlotT here than it is to try to
+    // use an LLoadFixedSlotT or some subclass of it for this case: that would
+    // require us to have MGetDOMMember inherit from MLoadFixedSlot, and then
+    // we'd have to duplicate a bunch of stuff we now get for free from
+    // MGetDOMProperty.
+    Register object = ToRegister(ins->object());
+    size_t slot = ins->mir()->domMemberSlotIndex();
+    AnyRegister result = ToAnyRegister(ins->getDef(0));
+    MIRType type = ins->mir()->type();
+
+    masm.loadUnboxedValue(Address(object, NativeObject::getFixedSlotOffset(slot)), type, result);
 }
 
 void
