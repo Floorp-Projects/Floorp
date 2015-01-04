@@ -4,10 +4,6 @@
 
 'use strict'
 
-/* TODO:
- - wifi
-*/
-
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 function debug(s) {
@@ -58,6 +54,8 @@ this.RequestSyncService = {
 
   _registrations: {},
 
+  _wifi: false,
+
   // Initialization of the RequestSyncService.
   init: function() {
     debug("init");
@@ -68,6 +66,7 @@ this.RequestSyncService = {
 
     Services.obs.addObserver(this, 'xpcom-shutdown', false);
     Services.obs.addObserver(this, 'webapps-clear-data', false);
+    Services.obs.addObserver(this, 'wifi-state-changed', false);
 
     this.initDBHelper("requestSync", RSYNCDB_VERSION, [RSYNCDB_NAME]);
 
@@ -103,15 +102,16 @@ this.RequestSyncService = {
 
     Services.obs.removeObserver(this, 'xpcom-shutdown');
     Services.obs.removeObserver(this, 'webapps-clear-data');
+    Services.obs.removeObserver(this, 'wifi-state-changed');
 
     this.close();
 
     // Removing all the registrations will delete the pending timers.
-    for (let key  in this._registrations) {
-      for (let task in this._registrations[key]) {
-        this.removeRegistrationInternal(task, key);
-      }
-    }
+    let self = this;
+    this.forEachRegistration(function(aObj) {
+      let key = self.principalToKey(aObj.principal);
+      self.removeRegistrationInternal(aObj.data.task, key);
+    });
   },
 
   observe: function(aSubject, aTopic, aData) {
@@ -123,8 +123,12 @@ this.RequestSyncService = {
         break;
 
       case 'webapps-clear-data':
-       this.clearData(aSubject);
-       break;
+        this.clearData(aSubject);
+        break;
+
+      case 'wifi-state-changed':
+        this.wifiStateChanged(aSubject == 'enabled');
+        break;
 
       default:
         debug("Wrong observer topic: " + aTopic);
@@ -444,12 +448,10 @@ this.RequestSyncService = {
     debug("managerRegistrations");
 
     let results = [];
-    for (var key in this._registrations) {
-      for (var task in this._registrations[key]) {
-        results.push(
-          this.createFullTaskObject(this._registrations[key][task].data));
-      }
-    }
+    let self = this;
+    this.forEachRegistration(function(aObj) {
+      results.push(self.createFullTaskObject(aObj.data));
+    });
 
     aTarget.sendAsyncMessage("RequestSyncManager:Registrations:Return",
                              { requestID: aData.requestID,
@@ -488,14 +490,21 @@ this.RequestSyncService = {
     debug("scheduleTimer");
 
     // A  registration can be already inactive if it was 1 shot.
-    if (aObj.active) {
-      aObj.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-
-      let self = this;
-      aObj.timer.initWithCallback(function() { self.timeout(aObj); },
-                                  aObj.data.minInterval * 1000,
-                                  Ci.nsITimer.TYPE_ONE_SHOT);
+    if (!aObj.active) {
+      return;
     }
+
+    // WifiOnly check.
+    if (aObj.data.wifiOnly && !this._wifi) {
+      return;
+    }
+
+    aObj.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+
+    let self = this;
+    aObj.timer.initWithCallback(function() { self.timeout(aObj); },
+                                aObj.data.minInterval * 1000,
+                                Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
   timeout: function(aObj) {
@@ -616,6 +625,49 @@ this.RequestSyncService = {
     function() {
       self.pendingOperationDone();
       aErrorCb();
+    });
+  },
+
+  forEachRegistration: function(aCb) {
+    // This method is used also to remove registations from the map, so we have
+    // to make a new list and let _registations free to be used.
+    let list = [];
+    for (var key in this._registrations) {
+      for (var task in this._registrations[key]) {
+        list.push(this._registrations[key][task]);
+      }
+    }
+
+    for (var i = 0; i < list.length; ++i) {
+      aCb(list[i]);
+    }
+  },
+
+  wifiStateChanged: function(aEnabled) {
+    debug("onWifiStateChanged");
+    this._wifi = aEnabled;
+
+    if (!this._wifi) {
+      // Disable all the wifiOnly tasks.
+      this.forEachRegistration(function(aObj) {
+        if (aObj.data.wifiOnly && aObj.timer) {
+          aObj.timer.cancel();
+          aObj.timer = null;
+        }
+      });
+      return;
+    }
+
+    // Enable all the tasks.
+    let self = this;
+    this.forEachRegistration(function(aObj) {
+      if (aObj.active && !aObj.timer) {
+        if (!aObj.data.wifiOnly) {
+          dump("ERROR - Found a disabled task that is not wifiOnly.");
+        }
+
+        self.scheduleTimer(aObj);
+      }
     });
   }
 }
