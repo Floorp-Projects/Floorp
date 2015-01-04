@@ -20,12 +20,14 @@ browser.jar:
   content/browser/loop/js/conversationViews.js      (content/js/conversationViews.js)
   content/browser/loop/js/roomViews.js              (content/js/roomViews.js)
 
+  # Desktop styles
+  content/browser/loop/css/contacts.css             (content/css/contacts.css)
+  content/browser/loop/css/panel.css                (content/css/panel.css)
+
   # Shared styles
   content/browser/loop/shared/css/reset.css         (content/shared/css/reset.css)
   content/browser/loop/shared/css/common.css        (content/shared/css/common.css)
-  content/browser/loop/shared/css/panel.css         (content/shared/css/panel.css)
   content/browser/loop/shared/css/conversation.css  (content/shared/css/conversation.css)
-  content/browser/loop/shared/css/contacts.css      (content/shared/css/contacts.css)
 
   # Shared images
   content/browser/loop/shared/img/happy.png                     (content/shared/img/happy.png)
