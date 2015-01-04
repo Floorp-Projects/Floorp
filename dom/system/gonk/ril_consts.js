@@ -1316,6 +1316,7 @@ this.GECKO_ICC_SERVICES = {
   },
   // @see 3GPP2 C.S0023-D 3.4.18 (RUIM).
   ruim: {
+    FDN: 3,
     ENHANCED_PHONEBOOK: 6,
     SPN: 17,
     SDN: 18

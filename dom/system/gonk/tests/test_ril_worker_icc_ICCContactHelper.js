@@ -130,8 +130,12 @@ add_test(function test_read_icc_contacts() {
     ril.appType = aSimType;
     ril._isCdma = (aSimType === CARD_APPTYPE_RUIM);
     ril.iccInfoPrivate.cst = (aEnhancedPhoneBook) ?
-                                    [0x0, 0x0C, 0x0, 0x0, 0x0]:
-                                    [0x0, 0x00, 0x0, 0x0, 0x0];
+                                    [0x20, 0x0C, 0x0, 0x0, 0x0]:
+                                    [0x20, 0x00, 0x0, 0x0, 0x0];
+
+    ril.iccInfoPrivate.sst = (aSimType === CARD_APPTYPE_SIM)?
+                                    [0x20, 0x0, 0x0, 0x0, 0x0]:
+                                    [0x2, 0x0, 0x0, 0x0, 0x0];
 
     // Override some functions to test.
     contactHelper.getContactFieldRecordId = function(pbr, contact, field, onsuccess, onerror) {
@@ -242,8 +246,11 @@ add_test(function test_update_icc_contact() {
   function do_test(aSimType, aContactType, aContact, aPin2, aFileType, aHaveIapIndex, aEnhancedPhoneBook) {
     ril.appType = aSimType;
     ril._isCdma = (aSimType === CARD_APPTYPE_RUIM);
-    ril.iccInfoPrivate.cst = (aEnhancedPhoneBook) ? [0x0, 0x0C, 0x0, 0x0, 0x0]
-                                                  : [0x0, 0x00, 0x0, 0x0, 0x0];
+    ril.iccInfoPrivate.cst = (aEnhancedPhoneBook) ? [0x20, 0x0C, 0x0, 0x0, 0x0]
+                                                  : [0x20, 0x00, 0x0, 0x0, 0x0];
+    ril.iccInfoPrivate.sst = (aSimType === CARD_APPTYPE_SIM)?
+                                    [0x20, 0x0, 0x0, 0x0, 0x0]:
+                                    [0x2, 0x0, 0x0, 0x0, 0x0];
 
     recordHelper.readPBR = function(onsuccess, onerror) {
       if (aFileType === ICC_USIM_TYPE1_TAG) {
