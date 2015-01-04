@@ -50,12 +50,26 @@ public:
   // scenarios.
   const static uint32_t kInitialRwin = 256 * 1024 * 1024;
 
+  // soft errors are errors that terminate a stream without terminating the
+  // connection. In general non-network errors are stream errors as well
+  // as network specific items like cancels.
   bool SoftStreamError(nsresult code)
   {
     if (NS_SUCCEEDED(code)) {
       return false;
     }
 
+    // this could go either way, but because there are network instances of
+    // it being a hard error we should consider it hard.
+    if (code == NS_ERROR_FAILURE) {
+      return false;
+    }
+
+    if (NS_ERROR_GET_MODULE(code) != NS_ERROR_MODULE_NETWORK) {
+      return true;
+    }
+
+    // these are network specific soft errors
     return (code == NS_BASE_STREAM_CLOSED || code == NS_BINDING_FAILED ||
             code == NS_BINDING_ABORTED || code == NS_BINDING_REDIRECTED ||
             code == NS_ERROR_INVALID_CONTENT_ENCODING ||
