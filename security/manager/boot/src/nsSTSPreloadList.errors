@@ -20,6 +20,7 @@ bedeta.de: could not connect to host
 betnet.fr: could not connect to host
 bi.search.yahoo.com: did not receive HSTS header
 bigshinylock.minazo.net: could not connect to host
+bitfactory.ws: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-periodicupdate-00000/getHSTSPreloadList.js :: processStsHeader :: line 134"  data: no]
 bitfarm-archiv.com: did not receive HSTS header
 bitfarm-archiv.de: did not receive HSTS header
 bitgo.com: did not receive HSTS header
@@ -96,7 +97,6 @@ fi.search.yahoo.com: did not receive HSTS header
 filedir.com: did not receive HSTS header
 fixingdns.com: did not receive HSTS header
 fj.search.yahoo.com: did not receive HSTS header
-fm83.nl: did not receive HSTS header
 fr.search.yahoo.com: did not receive HSTS header
 gamesdepartment.co.uk: did not receive HSTS header
 get.zenpayroll.com: did not receive HSTS header
@@ -140,7 +140,6 @@ irccloud.com: did not receive HSTS header
 it.search.yahoo.com: did not receive HSTS header
 itriskltd.com: did not receive HSTS header
 jottit.com: could not connect to host
-keycdn.com: could not connect to host
 keymaster.lookout.com: did not receive HSTS header
 kitsta.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-periodicupdate-00000/getHSTSPreloadList.js :: processStsHeader :: line 134"  data: no]
 kiwiirc.com: max-age too low: 5256000
@@ -249,7 +248,7 @@ security.google.com: did not receive HSTS header (error ignored - included regar
 segu-info.com.ar: max-age too low: 60
 semenkovich.com: did not receive HSTS header
 seomobo.com: did not receive HSTS header
-seowarp.net: did not receive HSTS header
+seowarp.net: max-age too low: 1576800
 serverdensity.io: did not receive HSTS header
 sg.search.yahoo.com: did not receive HSTS header
 shops.neonisi.com: could not connect to host
@@ -291,11 +290,13 @@ tv.search.yahoo.com: could not connect to host
 tw.search.yahoo.com: did not receive HSTS header
 ua.search.yahoo.com: did not receive HSTS header
 uk.search.yahoo.com: did not receive HSTS header
+unterfrankenclan.de: could not connect to host
 upload.facebook.com: did not receive HSTS header
 uprotect.it: could not connect to host
 uy.search.yahoo.com: did not receive HSTS header
 uz.search.yahoo.com: did not receive HSTS header
 ve.search.yahoo.com: did not receive HSTS header
+viennan.net: did not receive HSTS header
 vn.search.yahoo.com: did not receive HSTS header
 wallet.google.com: did not receive HSTS header (error ignored - included regardless)
 webmail.mayfirst.org: did not receive HSTS header

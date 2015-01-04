@@ -69,7 +69,7 @@ add_task(function* test_remove_article() {
 
 add_task(function* test_parse_articles() {
   for (let testcase of TEST_PAGES) {
-    let article = yield Reader._downloadAndParseDocument(testcase.url);
+    let article = yield ReaderMode.downloadAndParseDocument(testcase.url);
     checkArticle(article, testcase);
   }
 });

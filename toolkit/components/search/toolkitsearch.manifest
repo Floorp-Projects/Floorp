@@ -1,5 +1,5 @@
-component {7319788a-fe93-4db3-9f39-818cf08f4256} nsSearchService.js
-contract @mozilla.org/browser/search-service;1 {7319788a-fe93-4db3-9f39-818cf08f4256}
+component {7319788a-fe93-4db3-9f39-818cf08f4256} nsSearchService.js process=main
+contract @mozilla.org/browser/search-service;1 {7319788a-fe93-4db3-9f39-818cf08f4256} process=main
 # 21600 == 6 hours
 category update-timer nsSearchService @mozilla.org/browser/search-service;1,getService,search-engine-update-timer,browser.search.update.interval,21600
 component {aa892eb4-ffbf-477d-9f9a-06c995ae9f27} nsSearchSuggestions.js
