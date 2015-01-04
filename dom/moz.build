@@ -43,6 +43,7 @@ DIRS += [
     'base',
     'activities',
     'archivereader',
+    'requestsync',
     'bindings',
     'battery',
     'browser-element',
