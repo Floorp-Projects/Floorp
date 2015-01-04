@@ -28,7 +28,7 @@ protected:
   // nsISMILType Methods
   // -------------------
   virtual void     Init(nsSMILValue& aValue) const MOZ_OVERRIDE;
-  virtual void     Destroy(nsSMILValue&) const;
+  virtual void     Destroy(nsSMILValue&) const MOZ_OVERRIDE;
   virtual nsresult Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const MOZ_OVERRIDE;
   virtual bool     IsEqual(const nsSMILValue& aLeft,
                            const nsSMILValue& aRight) const MOZ_OVERRIDE;

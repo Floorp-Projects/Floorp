@@ -69,17 +69,17 @@ public:
   nsHTMLEditRules();
 
   // nsIEditRules methods
-  NS_IMETHOD Init(nsPlaintextEditor *aEditor);
-  NS_IMETHOD DetachEditor();
+  NS_IMETHOD Init(nsPlaintextEditor *aEditor) MOZ_OVERRIDE;
+  NS_IMETHOD DetachEditor() MOZ_OVERRIDE;
   NS_IMETHOD BeforeEdit(EditAction action,
-                        nsIEditor::EDirection aDirection);
+                        nsIEditor::EDirection aDirection) MOZ_OVERRIDE;
   NS_IMETHOD AfterEdit(EditAction action,
-                       nsIEditor::EDirection aDirection);
+                       nsIEditor::EDirection aDirection) MOZ_OVERRIDE;
   NS_IMETHOD WillDoAction(mozilla::dom::Selection* aSelection, nsRulesInfo* aInfo,
-                          bool* aCancel, bool* aHandled);
+                          bool* aCancel, bool* aHandled) MOZ_OVERRIDE;
   NS_IMETHOD DidDoAction(mozilla::dom::Selection* aSelection,
-                         nsRulesInfo* aInfo, nsresult aResult);
-  NS_IMETHOD DocumentModified();
+                         nsRulesInfo* aInfo, nsresult aResult) MOZ_OVERRIDE;
+  NS_IMETHOD DocumentModified() MOZ_OVERRIDE;
 
   nsresult GetListState(bool *aMixed, bool *aOL, bool *aUL, bool *aDL);
   nsresult GetListItemState(bool *aMixed, bool *aLI, bool *aDT, bool *aDD);
@@ -90,22 +90,22 @@ public:
 
   // nsIEditActionListener methods
   
-  NS_IMETHOD WillCreateNode(const nsAString& aTag, nsIDOMNode *aParent, int32_t aPosition);
-  NS_IMETHOD DidCreateNode(const nsAString& aTag, nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t aPosition, nsresult aResult);
-  NS_IMETHOD WillInsertNode(nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t aPosition);
-  NS_IMETHOD DidInsertNode(nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t aPosition, nsresult aResult);
-  NS_IMETHOD WillDeleteNode(nsIDOMNode *aChild);
-  NS_IMETHOD DidDeleteNode(nsIDOMNode *aChild, nsresult aResult);
-  NS_IMETHOD WillSplitNode(nsIDOMNode *aExistingRightNode, int32_t aOffset);
-  NS_IMETHOD DidSplitNode(nsIDOMNode *aExistingRightNode, int32_t aOffset, nsIDOMNode *aNewLeftNode, nsresult aResult);
-  NS_IMETHOD WillJoinNodes(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, nsIDOMNode *aParent);
-  NS_IMETHOD DidJoinNodes(nsIDOMNode  *aLeftNode, nsIDOMNode *aRightNode, nsIDOMNode *aParent, nsresult aResult);
-  NS_IMETHOD WillInsertText(nsIDOMCharacterData *aTextNode, int32_t aOffset, const nsAString &aString);
-  NS_IMETHOD DidInsertText(nsIDOMCharacterData *aTextNode, int32_t aOffset, const nsAString &aString, nsresult aResult);
-  NS_IMETHOD WillDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength);
-  NS_IMETHOD DidDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength, nsresult aResult);
-  NS_IMETHOD WillDeleteSelection(nsISelection *aSelection);
-  NS_IMETHOD DidDeleteSelection(nsISelection *aSelection);
+  NS_IMETHOD WillCreateNode(const nsAString& aTag, nsIDOMNode *aParent, int32_t aPosition) MOZ_OVERRIDE;
+  NS_IMETHOD DidCreateNode(const nsAString& aTag, nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t aPosition, nsresult aResult) MOZ_OVERRIDE;
+  NS_IMETHOD WillInsertNode(nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t aPosition) MOZ_OVERRIDE;
+  NS_IMETHOD DidInsertNode(nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t aPosition, nsresult aResult) MOZ_OVERRIDE;
+  NS_IMETHOD WillDeleteNode(nsIDOMNode *aChild) MOZ_OVERRIDE;
+  NS_IMETHOD DidDeleteNode(nsIDOMNode *aChild, nsresult aResult) MOZ_OVERRIDE;
+  NS_IMETHOD WillSplitNode(nsIDOMNode *aExistingRightNode, int32_t aOffset) MOZ_OVERRIDE;
+  NS_IMETHOD DidSplitNode(nsIDOMNode *aExistingRightNode, int32_t aOffset, nsIDOMNode *aNewLeftNode, nsresult aResult) MOZ_OVERRIDE;
+  NS_IMETHOD WillJoinNodes(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, nsIDOMNode *aParent) MOZ_OVERRIDE;
+  NS_IMETHOD DidJoinNodes(nsIDOMNode  *aLeftNode, nsIDOMNode *aRightNode, nsIDOMNode *aParent, nsresult aResult) MOZ_OVERRIDE;
+  NS_IMETHOD WillInsertText(nsIDOMCharacterData *aTextNode, int32_t aOffset, const nsAString &aString) MOZ_OVERRIDE;
+  NS_IMETHOD DidInsertText(nsIDOMCharacterData *aTextNode, int32_t aOffset, const nsAString &aString, nsresult aResult) MOZ_OVERRIDE;
+  NS_IMETHOD WillDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength) MOZ_OVERRIDE;
+  NS_IMETHOD DidDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength, nsresult aResult) MOZ_OVERRIDE;
+  NS_IMETHOD WillDeleteSelection(nsISelection *aSelection) MOZ_OVERRIDE;
+  NS_IMETHOD DidDeleteSelection(nsISelection *aSelection) MOZ_OVERRIDE;
 
 protected:
   virtual ~nsHTMLEditRules();

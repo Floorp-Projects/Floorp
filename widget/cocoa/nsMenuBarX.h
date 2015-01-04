@@ -29,7 +29,7 @@ public:
 
   nsNativeMenuServiceX() {}
 
-  NS_IMETHOD CreateNativeMenuBar(nsIWidget* aParent, nsIContent* aMenuBarNode);
+  NS_IMETHOD CreateNativeMenuBar(nsIWidget* aParent, nsIContent* aMenuBarNode) MOZ_OVERRIDE;
 
 protected:
   virtual ~nsNativeMenuServiceX() {}
@@ -110,8 +110,8 @@ public:
   NS_DECL_CHANGEOBSERVER
 
   // nsMenuObjectX
-  void*             NativeData()     {return (void*)mNativeMenu;}
-  nsMenuObjectTypeX MenuObjectType() {return eMenuBarObjectType;}
+  void*             NativeData() MOZ_OVERRIDE {return (void*)mNativeMenu;}
+  nsMenuObjectTypeX MenuObjectType() MOZ_OVERRIDE {return eMenuBarObjectType;}
 
   // nsMenuBarX
   nsresult          Create(nsIWidget* aParent, nsIContent* aContent);

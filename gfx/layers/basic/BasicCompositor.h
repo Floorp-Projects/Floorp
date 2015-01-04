@@ -102,7 +102,7 @@ public:
   }
   virtual void AbortFrame() MOZ_OVERRIDE;
 
-  virtual bool SupportsPartialTextureUpdate() { return true; }
+  virtual bool SupportsPartialTextureUpdate() MOZ_OVERRIDE { return true; }
   virtual bool CanUseCanvasLayerForSize(const gfx::IntSize &aSize) MOZ_OVERRIDE { return true; }
   virtual int32_t GetMaxTextureSize() const MOZ_OVERRIDE { return INT32_MAX; }
   virtual void SetDestinationSurfaceSize(const gfx::IntSize& aSize) MOZ_OVERRIDE { }
@@ -110,11 +110,13 @@ public:
   virtual void SetScreenRenderOffset(const ScreenPoint& aOffset) MOZ_OVERRIDE {
   }
 
-  virtual void MakeCurrent(MakeCurrentFlags aFlags = 0) { }
+  virtual void MakeCurrent(MakeCurrentFlags aFlags = 0) MOZ_OVERRIDE { }
 
   virtual void PrepareViewport(const gfx::IntSize& aSize) MOZ_OVERRIDE { }
 
-  virtual const char* Name() const { return "Basic"; }
+#ifdef MOZ_DUMP_PAINTING
+  virtual const char* Name() const MOZ_OVERRIDE { return "Basic"; }
+#endif // MOZ_DUMP_PAINTING
 
   virtual LayersBackend GetBackendType() const MOZ_OVERRIDE {
     return LayersBackend::LAYERS_BASIC;

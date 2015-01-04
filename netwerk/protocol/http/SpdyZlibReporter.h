@@ -50,7 +50,7 @@ private:
 
   NS_IMETHODIMP
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
-                 bool aAnonymize);
+                 bool aAnonymize) MOZ_OVERRIDE;
 };
 
 } // namespace mozilla

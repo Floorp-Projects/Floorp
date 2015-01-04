@@ -36,7 +36,7 @@ public:
 
   // Accessible
   virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
-  virtual uint64_t NativeState();
+  virtual uint64_t NativeState() MOZ_OVERRIDE;
 
   // ActionAccessible
   virtual uint8_t ActionCount() MOZ_OVERRIDE;
@@ -44,7 +44,7 @@ public:
   virtual bool DoAction(uint8_t aIndex) MOZ_OVERRIDE;
 
   // Widgets
-  virtual bool IsWidget() const;
+  virtual bool IsWidget() const MOZ_OVERRIDE;
 };
 
 
@@ -66,7 +66,7 @@ public:
   // Accessible
   virtual uint64_t NativeState() MOZ_OVERRIDE;
   virtual void GetPositionAndSizeInternal(int32_t *aPosInSet,
-                                          int32_t *aSetSize);
+                                          int32_t *aSetSize) MOZ_OVERRIDE;
 };
 
 
@@ -93,7 +93,7 @@ public:
   virtual bool DoAction(uint8_t aIndex) MOZ_OVERRIDE;
 
   // Widgets
-  virtual bool IsWidget() const;
+  virtual bool IsWidget() const MOZ_OVERRIDE;
 
 protected:
   // Accessible
@@ -116,11 +116,11 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // HyperTextAccessible
-  virtual already_AddRefed<nsIEditor> GetEditor() const;
+  virtual already_AddRefed<nsIEditor> GetEditor() const MOZ_OVERRIDE;
 
   // Accessible
-  virtual void Value(nsString& aValue);
-  virtual void ApplyARIAState(uint64_t* aState) const;
+  virtual void Value(nsString& aValue) MOZ_OVERRIDE;
+  virtual void ApplyARIAState(uint64_t* aState) const MOZ_OVERRIDE;
   virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
   virtual uint64_t NativeState() MOZ_OVERRIDE;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() MOZ_OVERRIDE;
@@ -131,8 +131,8 @@ public:
   virtual bool DoAction(uint8_t aIndex) MOZ_OVERRIDE;
 
   // Widgets
-  virtual bool IsWidget() const;
-  virtual Accessible* ContainerWidget() const;
+  virtual bool IsWidget() const MOZ_OVERRIDE;
+  virtual Accessible* ContainerWidget() const MOZ_OVERRIDE;
 
 protected:
   virtual ~HTMLTextFieldAccessible() {}
@@ -157,7 +157,7 @@ public:
 
   // Accessible
   virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
-  virtual nsresult HandleAccEvent(AccEvent* aAccEvent);
+  virtual nsresult HandleAccEvent(AccEvent* aAccEvent) MOZ_OVERRIDE;
 };
 
 
@@ -198,7 +198,7 @@ public:
   }
 
   // Accessible
-  virtual void Value(nsString& aValue);
+  virtual void Value(nsString& aValue) MOZ_OVERRIDE;
   virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
 
   // Value
@@ -209,7 +209,7 @@ public:
   virtual bool SetCurValue(double aValue) MOZ_OVERRIDE;
 
   // Widgets
-  virtual bool IsWidget() const;
+  virtual bool IsWidget() const MOZ_OVERRIDE;
 };
 
 

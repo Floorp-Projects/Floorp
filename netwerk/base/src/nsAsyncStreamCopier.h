@@ -31,7 +31,7 @@ public:
                     nsIEventTarget *aTarget,
                     uint32_t aChunkSize,
                     bool aCloseSource,
-                    bool aCloseSink);
+                    bool aCloseSink) MOZ_OVERRIDE;
 
     nsAsyncStreamCopier();
 

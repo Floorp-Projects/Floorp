@@ -64,35 +64,35 @@ public:
   XULListboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // TableAccessible
-  virtual uint32_t ColCount();
-  virtual uint32_t RowCount();
-  virtual Accessible* CellAt(uint32_t aRowIndex, uint32_t aColumnIndex);
-  virtual bool IsColSelected(uint32_t aColIdx);
-  virtual bool IsRowSelected(uint32_t aRowIdx);
-  virtual bool IsCellSelected(uint32_t aRowIdx, uint32_t aColIdx);
-  virtual uint32_t SelectedCellCount();
-  virtual uint32_t SelectedColCount();
-  virtual uint32_t SelectedRowCount();
-  virtual void SelectedCells(nsTArray<Accessible*>* aCells);
-  virtual void SelectedCellIndices(nsTArray<uint32_t>* aCells);
-  virtual void SelectedColIndices(nsTArray<uint32_t>* aCols);
-  virtual void SelectedRowIndices(nsTArray<uint32_t>* aRows);
-  virtual void SelectRow(uint32_t aRowIdx);
-  virtual void UnselectRow(uint32_t aRowIdx);
-  virtual Accessible* AsAccessible() { return this; }
+  virtual uint32_t ColCount() MOZ_OVERRIDE;
+  virtual uint32_t RowCount() MOZ_OVERRIDE;
+  virtual Accessible* CellAt(uint32_t aRowIndex, uint32_t aColumnIndex) MOZ_OVERRIDE;
+  virtual bool IsColSelected(uint32_t aColIdx) MOZ_OVERRIDE;
+  virtual bool IsRowSelected(uint32_t aRowIdx) MOZ_OVERRIDE;
+  virtual bool IsCellSelected(uint32_t aRowIdx, uint32_t aColIdx) MOZ_OVERRIDE;
+  virtual uint32_t SelectedCellCount() MOZ_OVERRIDE;
+  virtual uint32_t SelectedColCount() MOZ_OVERRIDE;
+  virtual uint32_t SelectedRowCount() MOZ_OVERRIDE;
+  virtual void SelectedCells(nsTArray<Accessible*>* aCells) MOZ_OVERRIDE;
+  virtual void SelectedCellIndices(nsTArray<uint32_t>* aCells) MOZ_OVERRIDE;
+  virtual void SelectedColIndices(nsTArray<uint32_t>* aCols) MOZ_OVERRIDE;
+  virtual void SelectedRowIndices(nsTArray<uint32_t>* aRows) MOZ_OVERRIDE;
+  virtual void SelectRow(uint32_t aRowIdx) MOZ_OVERRIDE;
+  virtual void UnselectRow(uint32_t aRowIdx) MOZ_OVERRIDE;
+  virtual Accessible* AsAccessible() MOZ_OVERRIDE { return this; }
 
   // Accessible
-  virtual void Value(nsString& aValue);
-  virtual TableAccessible* AsTable() { return this; }
+  virtual void Value(nsString& aValue) MOZ_OVERRIDE;
+  virtual TableAccessible* AsTable() MOZ_OVERRIDE { return this; }
   virtual a11y::role NativeRole() MOZ_OVERRIDE;
   virtual uint64_t NativeState() MOZ_OVERRIDE;
 
   // Widgets
-  virtual bool IsWidget() const;
-  virtual bool IsActiveWidget() const;
-  virtual bool AreItemsOperable() const;
+  virtual bool IsWidget() const MOZ_OVERRIDE;
+  virtual bool IsActiveWidget() const MOZ_OVERRIDE;
+  virtual bool AreItemsOperable() const MOZ_OVERRIDE;
 
-  virtual Accessible* ContainerWidget() const;
+  virtual Accessible* ContainerWidget() const MOZ_OVERRIDE;
 
 protected:
   virtual ~XULListboxAccessible() {}
@@ -113,17 +113,17 @@ public:
   XULListitemAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual void Description(nsString& aDesc);
+  virtual void Description(nsString& aDesc) MOZ_OVERRIDE;
   virtual a11y::role NativeRole() MOZ_OVERRIDE;
   virtual uint64_t NativeState() MOZ_OVERRIDE;
   virtual uint64_t NativeInteractiveState() const MOZ_OVERRIDE;
-  virtual bool CanHaveAnonChildren();
+  virtual bool CanHaveAnonChildren() MOZ_OVERRIDE;
 
   // Actions
   virtual void ActionNameAt(uint8_t index, nsAString& aName) MOZ_OVERRIDE;
 
   // Widgets
-  virtual Accessible* ContainerWidget() const;
+  virtual Accessible* ContainerWidget() const MOZ_OVERRIDE;
 
 protected:
   virtual ~XULListitemAccessible();
@@ -155,7 +155,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Accessible
-  virtual TableCellAccessible* AsTableCell() { return this; }
+  virtual TableCellAccessible* AsTableCell() MOZ_OVERRIDE { return this; }
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() MOZ_OVERRIDE;
   virtual a11y::role NativeRole() MOZ_OVERRIDE;
 

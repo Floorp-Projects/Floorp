@@ -30,15 +30,15 @@ public:
   explicit nsFilteredContentIterator(nsITextServicesFilter* aFilter);
 
   /* nsIContentIterator */
-  virtual nsresult Init(nsINode* aRoot);
-  virtual nsresult Init(nsIDOMRange* aRange);
-  virtual void First();
-  virtual void Last();
-  virtual void Next();
-  virtual void Prev();
-  virtual nsINode *GetCurrentNode();
-  virtual bool IsDone();
-  virtual nsresult PositionAt(nsINode* aCurNode);
+  virtual nsresult Init(nsINode* aRoot) MOZ_OVERRIDE;
+  virtual nsresult Init(nsIDOMRange* aRange) MOZ_OVERRIDE;
+  virtual void First() MOZ_OVERRIDE;
+  virtual void Last() MOZ_OVERRIDE;
+  virtual void Next() MOZ_OVERRIDE;
+  virtual void Prev() MOZ_OVERRIDE;
+  virtual nsINode *GetCurrentNode() MOZ_OVERRIDE;
+  virtual bool IsDone() MOZ_OVERRIDE;
+  virtual nsresult PositionAt(nsINode* aCurNode) MOZ_OVERRIDE;
 
   /* Helpers */
   bool DidSkip()      { return mDidSkip; }

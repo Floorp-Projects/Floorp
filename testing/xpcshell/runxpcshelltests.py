@@ -804,13 +804,6 @@ class XPCShellTests(object):
         self.headJSPath = self.testharnessdir.replace("\\", "/") + "/head.js"
         self.xpcshell = os.path.abspath(self.xpcshell)
 
-        # we assume that httpd.js lives in components/ relative to xpcshell
-        self.httpdJSPath = os.path.join(os.path.dirname(self.xpcshell), 'components', 'httpd.js')
-        self.httpdJSPath = self.httpdJSPath.replace('\\', '/')
-
-        self.httpdManifest = os.path.join(os.path.dirname(self.xpcshell), 'components', 'httpd.manifest')
-        self.httpdManifest = self.httpdManifest.replace('\\', '/')
-
         if self.xrePath is None:
             self.xrePath = os.path.dirname(self.xpcshell)
             if mozinfo.isMac:
@@ -821,6 +814,13 @@ class XPCShellTests(object):
                     self.xrePath = appBundlePath
         else:
             self.xrePath = os.path.abspath(self.xrePath)
+
+        # httpd.js belongs in xrePath/components, which is Contents/Resources on mac
+        self.httpdJSPath = os.path.join(self.xrePath, 'components', 'httpd.js')
+        self.httpdJSPath = self.httpdJSPath.replace('\\', '/')
+
+        self.httpdManifest = os.path.join(self.xrePath, 'components', 'httpd.manifest')
+        self.httpdManifest = self.httpdManifest.replace('\\', '/')
 
         if self.mozInfo is None:
             self.mozInfo = os.path.join(self.testharnessdir, "mozinfo.json")

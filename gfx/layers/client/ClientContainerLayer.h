@@ -46,7 +46,7 @@ protected:
   }
 
 public:
-  virtual void RenderLayer()
+  virtual void RenderLayer() MOZ_OVERRIDE
   {
     if (GetMaskLayer()) {
       ToClientLayer(GetMaskLayer())->RenderLayer();
@@ -75,7 +75,7 @@ public:
     }
   }
 
-  virtual void SetVisibleRegion(const nsIntRegion& aRegion)
+  virtual void SetVisibleRegion(const nsIntRegion& aRegion) MOZ_OVERRIDE
   {
     NS_ASSERTION(ClientManager()->InConstruction(),
                  "Can only set properties in construction phase");
@@ -128,10 +128,10 @@ public:
     return true;
   }
 
-  virtual Layer* AsLayer() { return this; }
-  virtual ShadowableLayer* AsShadowableLayer() { return this; }
+  virtual Layer* AsLayer() MOZ_OVERRIDE { return this; }
+  virtual ShadowableLayer* AsShadowableLayer() MOZ_OVERRIDE { return this; }
 
-  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface)
+  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) MOZ_OVERRIDE
   {
     DefaultComputeEffectiveTransforms(aTransformToSurface);
   }

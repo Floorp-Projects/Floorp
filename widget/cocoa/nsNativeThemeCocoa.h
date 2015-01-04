@@ -37,35 +37,35 @@ public:
                                   nsIFrame* aFrame,
                                   uint8_t aWidgetType,
                                   const nsRect& aRect,
-                                  const nsRect& aDirtyRect);
+                                  const nsRect& aDirtyRect) MOZ_OVERRIDE;
   NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext, 
                              nsIFrame* aFrame,
                              uint8_t aWidgetType,
-                             nsIntMargin* aResult);
+                             nsIntMargin* aResult) MOZ_OVERRIDE;
 
   virtual bool GetWidgetPadding(nsDeviceContext* aContext,
                                   nsIFrame* aFrame,
                                   uint8_t aWidgetType,
-                                  nsIntMargin* aResult);
+                                  nsIntMargin* aResult) MOZ_OVERRIDE;
 
   virtual bool GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
-                                   uint8_t aWidgetType, nsRect* aOverflowRect);
+                                   uint8_t aWidgetType, nsRect* aOverflowRect) MOZ_OVERRIDE;
 
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
                                   uint8_t aWidgetType,
-                                  nsIntSize* aResult, bool* aIsOverridable);
+                                  nsIntSize* aResult, bool* aIsOverridable) MOZ_OVERRIDE;
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType, 
-                                nsIAtom* aAttribute, bool* aShouldRepaint);
-  NS_IMETHOD ThemeChanged();
-  bool ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFrame, uint8_t aWidgetType);
-  bool WidgetIsContainer(uint8_t aWidgetType);
+                                nsIAtom* aAttribute, bool* aShouldRepaint) MOZ_OVERRIDE;
+  NS_IMETHOD ThemeChanged() MOZ_OVERRIDE;
+  bool ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFrame, uint8_t aWidgetType) MOZ_OVERRIDE;
+  bool WidgetIsContainer(uint8_t aWidgetType) MOZ_OVERRIDE;
   bool ThemeDrawsFocusForWidget(uint8_t aWidgetType) MOZ_OVERRIDE;
-  bool ThemeNeedsComboboxDropmarker();
+  bool ThemeNeedsComboboxDropmarker() MOZ_OVERRIDE;
   virtual bool WidgetAppearanceDependsOnWindowFocus(uint8_t aWidgetType) MOZ_OVERRIDE;
   virtual bool NeedToClearBackgroundBehindWidget(uint8_t aWidgetType) MOZ_OVERRIDE;
   virtual bool WidgetProvidesFontSmoothingBackgroundColor(nsIFrame* aFrame, uint8_t aWidgetType,
-                                                          nscolor* aColor);
-  virtual Transparency GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType);
+                                                          nscolor* aColor) MOZ_OVERRIDE;
+  virtual Transparency GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType) MOZ_OVERRIDE;
 
   void DrawProgress(CGContextRef context, const HIRect& inBoxRect,
                     bool inIsIndeterminate, bool inIsHorizontal,

@@ -562,7 +562,7 @@ public:
       mData(aData),
       mLen(aLen) {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() MOZ_OVERRIDE
   {
     MOZ_ASSERT(mChannel->IsOnTargetThread());
 
@@ -596,7 +596,7 @@ public:
     : mChannel(aChannel),
       mReason(aReason) {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() MOZ_OVERRIDE
   {
     MOZ_ASSERT(mChannel->IsOnTargetThread());
 
@@ -634,7 +634,7 @@ public:
       mCode(aCode),
       mReason(aReason) {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() MOZ_OVERRIDE
   {
     MOZ_ASSERT(mChannel->IsOnTargetThread());
 
@@ -697,7 +697,7 @@ public:
       mSocketIn(aSocketIn),
       mSocketOut(aSocketOut) {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() MOZ_OVERRIDE
   {
     LOG(("WebSocketChannel::CallOnTransportAvailable %p\n", this));
     return mChannel->OnTransportAvailable(mTransport, mSocketIn, mSocketOut);
@@ -1061,7 +1061,7 @@ public:
   OutboundEnqueuer(WebSocketChannel *aChannel, OutboundMessage *aMsg)
     : mChannel(aChannel), mMessage(aMsg) {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() MOZ_OVERRIDE
   {
     mChannel->EnqueueOutgoingMessage(mChannel->mOutgoingMessages, mMessage);
     return NS_OK;

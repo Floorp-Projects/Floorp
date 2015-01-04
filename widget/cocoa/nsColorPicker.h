@@ -22,8 +22,8 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init(nsIDOMWindow* aParent, const nsAString& aTitle,
-                  const nsAString& aInitialColor);
-  NS_IMETHOD Open(nsIColorPickerShownCallback* aCallback);
+                  const nsAString& aInitialColor) MOZ_OVERRIDE;
+  NS_IMETHOD Open(nsIColorPickerShownCallback* aCallback) MOZ_OVERRIDE;
 
   // For NSColorPanelWrapper.
   void Update(NSColor* aColor);

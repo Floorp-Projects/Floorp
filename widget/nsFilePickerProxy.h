@@ -33,31 +33,31 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIFilePicker (less what's in nsBaseFilePicker)
-    NS_IMETHODIMP Init(nsIDOMWindow* aParent, const nsAString& aTitle, int16_t aMode);
-    NS_IMETHODIMP AppendFilter(const nsAString& aTitle, const nsAString& aFilter);
-    NS_IMETHODIMP GetDefaultString(nsAString& aDefaultString);
-    NS_IMETHODIMP SetDefaultString(const nsAString& aDefaultString);
-    NS_IMETHODIMP GetDefaultExtension(nsAString& aDefaultExtension);
-    NS_IMETHODIMP SetDefaultExtension(const nsAString& aDefaultExtension);
-    NS_IMETHODIMP GetFilterIndex(int32_t* aFilterIndex);
-    NS_IMETHODIMP SetFilterIndex(int32_t aFilterIndex);
-    NS_IMETHODIMP GetFile(nsIFile** aFile);
-    NS_IMETHODIMP GetFileURL(nsIURI** aFileURL);
-    NS_IMETHODIMP GetFiles(nsISimpleEnumerator** aFiles);
+    NS_IMETHODIMP Init(nsIDOMWindow* aParent, const nsAString& aTitle, int16_t aMode) MOZ_OVERRIDE;
+    NS_IMETHODIMP AppendFilter(const nsAString& aTitle, const nsAString& aFilter) MOZ_OVERRIDE;
+    NS_IMETHODIMP GetDefaultString(nsAString& aDefaultString) MOZ_OVERRIDE;
+    NS_IMETHODIMP SetDefaultString(const nsAString& aDefaultString) MOZ_OVERRIDE;
+    NS_IMETHODIMP GetDefaultExtension(nsAString& aDefaultExtension) MOZ_OVERRIDE;
+    NS_IMETHODIMP SetDefaultExtension(const nsAString& aDefaultExtension) MOZ_OVERRIDE;
+    NS_IMETHODIMP GetFilterIndex(int32_t* aFilterIndex) MOZ_OVERRIDE;
+    NS_IMETHODIMP SetFilterIndex(int32_t aFilterIndex) MOZ_OVERRIDE;
+    NS_IMETHODIMP GetFile(nsIFile** aFile) MOZ_OVERRIDE;
+    NS_IMETHODIMP GetFileURL(nsIURI** aFileURL) MOZ_OVERRIDE;
+    NS_IMETHODIMP GetFiles(nsISimpleEnumerator** aFiles) MOZ_OVERRIDE;
 
-    NS_IMETHODIMP GetDomfile(nsIDOMFile** aFile);
-    NS_IMETHODIMP GetDomfiles(nsISimpleEnumerator** aFiles);
+    NS_IMETHODIMP GetDomfile(nsIDOMFile** aFile) MOZ_OVERRIDE;
+    NS_IMETHODIMP GetDomfiles(nsISimpleEnumerator** aFiles) MOZ_OVERRIDE;
 
-    NS_IMETHODIMP Show(int16_t* aReturn);
-    NS_IMETHODIMP Open(nsIFilePickerShownCallback* aCallback);
+    NS_IMETHODIMP Show(int16_t* aReturn) MOZ_OVERRIDE;
+    NS_IMETHODIMP Open(nsIFilePickerShownCallback* aCallback) MOZ_OVERRIDE;
 
     // PFilePickerChild
     virtual bool
-    Recv__delete__(const MaybeInputFiles& aFiles, const int16_t& aResult);
+    Recv__delete__(const MaybeInputFiles& aFiles, const int16_t& aResult) MOZ_OVERRIDE;
 
 private:
     ~nsFilePickerProxy();
-    void InitNative(nsIWidget*, const nsAString&);
+    void InitNative(nsIWidget*, const nsAString&) MOZ_OVERRIDE;
 
     // This is an innerWindow.
     nsCOMPtr<nsPIDOMWindow> mParent;

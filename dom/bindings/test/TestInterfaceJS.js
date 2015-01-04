@@ -14,7 +14,10 @@ function TestInterfaceJS(anyArg, objectArg) {}
 TestInterfaceJS.prototype = {
   classID: Components.ID("{2ac4e026-cf25-47d5-b067-78d553c3cad8}"),
   contractID: "@mozilla.org/dom/test-interface-js;1",
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
+                                         Ci.nsIDOMGlobalPropertyInitializer]),
+
+  init: function(win) { this._win = win; },
 
   __init: function (anyArg, objectArg, dictionaryArg) {
     this._anyAttr = undefined;
@@ -59,6 +62,15 @@ TestInterfaceJS.prototype = {
 
   testSequenceOverload: function(arg) {},
   testSequenceUnion: function(arg) {},
+
+  testThrowDOMError: function() {
+    throw new this._win.DOMError("NotSupportedError", "We are a DOMError");
+  },
+
+  testThrowDOMException: function() {
+    throw new this._win.DOMException("We are a DOMException",
+                                     "NotSupportedError");
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TestInterfaceJS])
