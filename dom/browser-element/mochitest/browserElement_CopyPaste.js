@@ -69,6 +69,7 @@ function doCommand(cmd) {
 function dispatchTest(e) {
   iframe.addEventListener("mozbrowserloadend", function onloadend2(e) {
     iframe.removeEventListener("mozbrowserloadend", onloadend2);
+    iframe.focus();
     SimpleTest.executeSoon(function() { testSelectAll(e); });
   });
 
