@@ -15271,6 +15271,7 @@ ICCContactHelperObject.prototype = {
    */
   readICCContacts: function(appType, contactType, onsuccess, onerror) {
     let ICCRecordHelper = this.context.ICCRecordHelper;
+    let ICCUtilsHelper = this.context.ICCUtilsHelper;
 
     switch (contactType) {
       case GECKO_CARDCONTACT_TYPE_ADN:
@@ -15281,10 +15282,13 @@ ICCContactHelperObject.prototype = {
         }
         break;
       case GECKO_CARDCONTACT_TYPE_FDN:
+        if (!ICCUtilsHelper.isICCServiceAvailable("FDN")) {
+          onerror(CONTACT_ERR_CONTACT_TYPE_NOT_SUPPORTED);
+          break;
+        }
         ICCRecordHelper.readADNLike(ICC_EF_FDN, onsuccess, onerror);
         break;
       case GECKO_CARDCONTACT_TYPE_SDN:
-        let ICCUtilsHelper = this.context.ICCUtilsHelper;
         if (!ICCUtilsHelper.isICCServiceAvailable("SDN")) {
           onerror(CONTACT_ERR_CONTACT_TYPE_NOT_SUPPORTED);
           break;
@@ -15411,6 +15415,7 @@ ICCContactHelperObject.prototype = {
    */
   updateICCContact: function(appType, contactType, contact, pin2, onsuccess, onerror) {
     let ICCRecordHelper = this.context.ICCRecordHelper;
+    let ICCUtilsHelper = this.context.ICCUtilsHelper;
 
     switch (contactType) {
       case GECKO_CARDCONTACT_TYPE_ADN:
@@ -15424,6 +15429,10 @@ ICCContactHelperObject.prototype = {
         if (!pin2) {
           onerror(GECKO_ERROR_SIM_PIN2);
           return;
+        }
+        if (!ICCUtilsHelper.isICCServiceAvailable("FDN")) {
+          onerror(CONTACT_ERR_CONTACT_TYPE_NOT_SUPPORTED);
+          break;
         }
         ICCRecordHelper.updateADNLike(ICC_EF_FDN, contact, pin2, onsuccess, onerror);
         break;
