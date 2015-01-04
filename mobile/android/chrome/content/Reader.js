@@ -85,6 +85,12 @@ let Reader = {
         ReaderMode.removeArticleFromCache(uri).catch(e => Cu.reportError("Error removing article from cache: " + e));
         break;
       }
+
+      case "nsPref:changed":
+        if (aData.startsWith("reader.parse-on-load.")) {
+          this.isEnabledForParseOnLoad = this._getStateForParseOnLoad();
+        }
+        break;
     }
   },
 
@@ -170,62 +176,7 @@ let Reader = {
 
     // Article hasn't been found in the cache, we need to
     // download the page and parse the article out of it.
-    return yield this._downloadAndParseDocument(url);
-  }),
-
-  _downloadDocument: function (url) {
-    return new Promise((resolve, reject) => {
-      // We want to parse those arbitrary pages safely, outside the privileged
-      // context of chrome. We create a hidden browser element to fetch the
-      // loaded page's document object then discard the browser element.
-      let browser = document.createElement("browser");
-      browser.setAttribute("type", "content");
-      browser.setAttribute("collapsed", "true");
-      browser.setAttribute("disablehistory", "true");
-
-      document.documentElement.appendChild(browser);
-      browser.stop();
-
-      browser.webNavigation.allowAuth = false;
-      browser.webNavigation.allowImages = false;
-      browser.webNavigation.allowJavascript = false;
-      browser.webNavigation.allowMetaRedirects = true;
-      browser.webNavigation.allowPlugins = false;
-
-      browser.addEventListener("DOMContentLoaded", event => {
-        let doc = event.originalTarget;
-
-        // ignore on frames and other documents
-        if (doc != browser.contentDocument) {
-          return;
-        }
-
-        if (doc.location.href == "about:blank") {
-          reject("about:blank loaded; aborting");
-
-          // Request has finished with error, remove browser element
-          browser.parentNode.removeChild(browser);
-          return;
-        }
-
-        resolve({ browser, doc });
-      });
-
-      browser.loadURIWithFlags(url, Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-                               null, null, null);
-    });
-  },
-
-  _downloadAndParseDocument: Task.async(function* (url) {
-    let { browser, doc } = yield this._downloadDocument(url);
-
-    try {
-      let uri = Services.io.newURI(url, null, null);
-      let article = yield ReaderMode.readerParse(uri, doc);
-      return article;
-    } finally {
-      browser.parentNode.removeChild(browser);
-    }
+    return yield ReaderMode.downloadAndParseDocument(url);
   }),
 
   /**
