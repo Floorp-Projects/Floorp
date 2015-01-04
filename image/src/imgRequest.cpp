@@ -931,7 +931,7 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
         // We allow multipart images to fail to initialize without cancelling the
         // load because subsequent images might be fine; thus only single part
         // images end up here.
-        this->Cancel(NS_ERROR_FAILURE);
+        this->Cancel(NS_IMAGELIB_ERROR_FAILURE);
         return NS_BINDING_ABORTED;
       }
 
