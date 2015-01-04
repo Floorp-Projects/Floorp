@@ -1,0 +1,138 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for requestSync - promise</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="common_basic.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<div id="container"></div>
+  <script type="application/javascript;version=1.7">
+
+  var foobarCounter = 0;
+  var pendingCounter = 0;
+  function setMessageHandler() {
+    navigator.mozSetMessageHandler('request-sync', function(e) {
+
+      if (e.task == 'foobar') {
+        ok(true, "foobar message received:" + foobarCounter);
+
+        if (++foobarCounter == 1) {
+          // The first time we wait 2 seconds.
+          info("Setting a promise object.");
+          navigator.mozSetMessageHandlerPromise(new Promise(function(a, b) {
+            setTimeout(a, 2000);
+          }));
+        } else {
+          // The second time we don't reply at all.
+          navigator.mozSetMessageHandlerPromise(new Promise(function(a, b) {}));
+        }
+      }
+
+      else if (e.task  == 'pending') {
+        ok(true, "pending message received: " + pendingCounter);
+        if (++pendingCounter == 2) {
+          runTests();
+        }
+      }
+
+      else {
+      ok(false, "Unknown message");
+      }
+    });
+
+    runTests();
+  }
+
+  function test_register_foobar() {
+    navigator.sync.register('foobar', { minInterval: 5,
+                                        oneShot: false,
+                                        data: 42,
+                                        wifiOnly: false,
+                                        wakeUpPage: location.href }).then(
+    function() {
+      ok(true, "navigator.sync.register() foobar done");
+      runTests();
+    }, genericError);
+  }
+
+  function test_register_pending() {
+    navigator.sync.register('pending', { minInterval: 6,
+                                         oneShot: false,
+                                         data: 'hello world!',
+                                         wifiOnly: false,
+                                         wakeUpPage: location.href }).then(
+    function() {
+      ok(true, "navigator.sync.register() pending done");
+      runTests();
+    }, genericError);
+  }
+
+  function test_unregister_foobar() {
+    navigator.sync.unregister('foobar').then(
+    function() {
+      ok(true, "navigator.sync.unregister() foobar done");
+      runTests();
+    }, genericError);
+  }
+
+  function test_unregister_pending() {
+    navigator.sync.unregister('pending').then(
+    function() {
+      ok(true, "navigator.sync.unregister() pending done");
+      runTests();
+    }, genericError);
+  }
+
+  function test_wait() {
+    // nothing to do here.
+  }
+
+  var tests = [
+    function() {
+      SpecialPowers.pushPrefEnv({"set": [["dom.requestSync.enabled", true],
+                                         ["dom.requestSync.minInterval", 1],
+                                         ["dom.requestSync.maxTaskTimeout", 10000 /* 10 seconds */],
+                                         ["dom.ignore_webidl_scope_checks", true]]}, runTests);
+    },
+
+    function() {
+      SpecialPowers.pushPermissions(
+        [{ "type": "requestsync-manager", "allow": 1, "context": document } ], runTests);
+    },
+
+    function() {
+      if (SpecialPowers.isMainProcess()) {
+        SpecialPowers.Cu.import("resource://gre/modules/RequestSyncService.jsm");
+      }
+      runTests();
+    },
+
+    setMessageHandler,
+
+    test_register_foobar,
+    test_register_pending,
+
+    test_wait,
+
+    test_unregister_foobar,
+    test_unregister_pending,
+  ];
+
+  function runTests() {
+    if (!tests.length) {
+      SimpleTest.finish();
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  runTests();
+  </script>
+</body>
+</html>
