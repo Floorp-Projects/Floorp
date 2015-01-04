@@ -52,8 +52,6 @@ var TITLE   = "String.prototype.substring( start, end )";
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 new TestCase( SECTION,  "String.prototype.substring.length",        2,          String.prototype.substring.length );
-new TestCase( SECTION,  "delete String.prototype.substring.length", false,      delete String.prototype.substring.length );
-new TestCase( SECTION,  "delete String.prototype.substring.length; String.prototype.substring.length", 2,      eval("delete String.prototype.substring.length; String.prototype.substring.length") );
 
 // test cases for when substring is called with no arguments.
 
