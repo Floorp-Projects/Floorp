@@ -86,6 +86,20 @@ NetworkResponseListener.prototype = {
   },
 
   /**
+   * Forward notifications for interfaces this object implements, in case other
+   * objects also implemented them.
+   */
+  _forwardNotification(iid, method, args) {
+    if (!this._wrappedNotificationCallbacks) {
+      return;
+    }
+    try {
+      let impl = this._wrappedNotificationCallbacks.getInterface(iid);
+      impl[method].apply(impl, args);
+    } catch(e if e.result == Cr.NS_ERROR_NO_INTERFACE) {}
+  },
+
+  /**
    * This NetworkResponseListener tracks the NetworkMonitor.openResponses object
    * to find the associated uncached headers.
    * @private
@@ -216,9 +230,14 @@ NetworkResponseListener.prototype = {
    */
   onProgress: function(request, context, progress, progressMax) {
     this.transferredSize = progress;
+    // Need to forward as well to keep things like Download Manager's progress
+    // bar working properly.
+    this._forwardNotification(Ci.nsIProgressEventSink, 'onProgress', arguments);
   },
 
-  onStatus: function () {},
+  onStatus: function () {
+    this._forwardNotification(Ci.nsIProgressEventSink, 'onStatus', arguments);
+  },
 
   /**
    * Find the open response object associated to the current request. The
