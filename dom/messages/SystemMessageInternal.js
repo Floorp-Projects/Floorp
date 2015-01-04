@@ -179,7 +179,7 @@ SystemMessageInternal.prototype = {
   },
 
   sendMessage: function(aType, aMessage, aPageURI, aManifestURI, aExtra) {
-    return new Promise((resolve, reject) => {
+    return new Promise((aResolve, aReject) => {
       this.sendMessageInternal(aType, aMessage, aPageURI, aManifestURI, aExtra,
                                aResolve, aReject);
     });
