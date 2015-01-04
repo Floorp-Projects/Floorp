@@ -6,27 +6,27 @@
 // Type object slots
 
 #define DESCR_KIND(obj) \
-    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_KIND)
+    UnsafeGetInt32FromReservedSlot(obj, JS_DESCR_SLOT_KIND)
 #define DESCR_STRING_REPR(obj) \
-    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_STRING_REPR)
+    UnsafeGetStringFromReservedSlot(obj, JS_DESCR_SLOT_STRING_REPR)
 #define DESCR_ALIGNMENT(obj) \
-    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_ALIGNMENT)
+    UnsafeGetInt32FromReservedSlot(obj, JS_DESCR_SLOT_ALIGNMENT)
 #define DESCR_SIZE(obj) \
-    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_SIZE)
+    UnsafeGetInt32FromReservedSlot(obj, JS_DESCR_SLOT_SIZE)
 #define DESCR_OPAQUE(obj) \
-    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_OPAQUE)
+    UnsafeGetBooleanFromReservedSlot(obj, JS_DESCR_SLOT_OPAQUE)
 #define DESCR_TYPE(obj)   \
-    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_TYPE)
+    UnsafeGetInt32FromReservedSlot(obj, JS_DESCR_SLOT_TYPE)
 #define DESCR_ARRAY_ELEMENT_TYPE(obj) \
-    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_ARRAY_ELEM_TYPE)
+    UnsafeGetObjectFromReservedSlot(obj, JS_DESCR_SLOT_ARRAY_ELEM_TYPE)
 #define DESCR_ARRAY_LENGTH(obj) \
-    TO_INT32(UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_ARRAY_LENGTH))
+    TO_INT32(UnsafeGetInt32FromReservedSlot(obj, JS_DESCR_SLOT_ARRAY_LENGTH))
 #define DESCR_STRUCT_FIELD_NAMES(obj) \
-    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_STRUCT_FIELD_NAMES)
+    UnsafeGetObjectFromReservedSlot(obj, JS_DESCR_SLOT_STRUCT_FIELD_NAMES)
 #define DESCR_STRUCT_FIELD_TYPES(obj) \
-    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_STRUCT_FIELD_TYPES)
+    UnsafeGetObjectFromReservedSlot(obj, JS_DESCR_SLOT_STRUCT_FIELD_TYPES)
 #define DESCR_STRUCT_FIELD_OFFSETS(obj) \
-    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS)
+    UnsafeGetObjectFromReservedSlot(obj, JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS)
 
 // Other
 

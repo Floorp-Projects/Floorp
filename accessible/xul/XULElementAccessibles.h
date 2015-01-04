@@ -23,7 +23,7 @@ public:
   XULLabelAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual void Shutdown();
+  virtual void Shutdown() MOZ_OVERRIDE;
   virtual a11y::role NativeRole() MOZ_OVERRIDE;
   virtual uint64_t NativeState() MOZ_OVERRIDE;
   virtual Relation RelationByType(RelationType aType) MOZ_OVERRIDE;
@@ -86,7 +86,7 @@ public:
   XULLinkAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual void Value(nsString& aValue);
+  virtual void Value(nsString& aValue) MOZ_OVERRIDE;
   virtual a11y::role NativeRole() MOZ_OVERRIDE;
   virtual uint64_t NativeLinkState() const MOZ_OVERRIDE;
 
@@ -96,10 +96,10 @@ public:
   virtual bool DoAction(uint8_t aIndex) MOZ_OVERRIDE;
 
   // HyperLinkAccessible
-  virtual bool IsLink();
-  virtual uint32_t StartOffset();
-  virtual uint32_t EndOffset();
-  virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex);
+  virtual bool IsLink() MOZ_OVERRIDE;
+  virtual uint32_t StartOffset() MOZ_OVERRIDE;
+  virtual uint32_t EndOffset() MOZ_OVERRIDE;
+  virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex) MOZ_OVERRIDE;
 
 protected:
   virtual ~XULLinkAccessible();

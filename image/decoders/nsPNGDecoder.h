@@ -27,10 +27,10 @@ public:
   explicit nsPNGDecoder(RasterImage& aImage);
   virtual ~nsPNGDecoder();
 
-  virtual void InitInternal();
+  virtual void InitInternal() MOZ_OVERRIDE;
   virtual void WriteInternal(const char* aBuffer, uint32_t aCount,
                              DecodeStrategy aStrategy) MOZ_OVERRIDE;
-  virtual Telemetry::ID SpeedHistogram();
+  virtual Telemetry::ID SpeedHistogram() MOZ_OVERRIDE;
 
   void CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
                    int32_t width, int32_t height,

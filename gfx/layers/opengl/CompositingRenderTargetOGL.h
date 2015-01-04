@@ -146,7 +146,7 @@ public:
   }
 
 #ifdef MOZ_DUMP_PAINTING
-  virtual TemporaryRef<gfx::DataSourceSurface> Dump(Compositor* aCompositor);
+  virtual TemporaryRef<gfx::DataSourceSurface> Dump(Compositor* aCompositor) MOZ_OVERRIDE;
 #endif
 
   const gfx::IntSize& GetInitSize() const {

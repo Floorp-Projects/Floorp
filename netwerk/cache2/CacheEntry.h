@@ -123,8 +123,8 @@ private:
   virtual ~CacheEntry();
 
   // CacheFileListener
-  NS_IMETHOD OnFileReady(nsresult aResult, bool aIsNew);
-  NS_IMETHOD OnFileDoomed(nsresult aResult);
+  NS_IMETHOD OnFileReady(nsresult aResult, bool aIsNew) MOZ_OVERRIDE;
+  NS_IMETHOD OnFileDoomed(nsresult aResult) MOZ_OVERRIDE;
 
   // Keep the service alive during life-time of an entry
   nsRefPtr<CacheStorageService> mService;

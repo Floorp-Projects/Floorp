@@ -32,7 +32,7 @@ private:
   HASHContext* mHashContext;
   bool mInitialized;
 
-  virtual void virtualDestroyNSSReference();
+  virtual void virtualDestroyNSSReference() MOZ_OVERRIDE;
   void destructorSafeDestroyNSSReference();
 };
 
@@ -48,7 +48,7 @@ private:
   ~nsCryptoHMAC();
   PK11Context* mHMACContext;
 
-  virtual void virtualDestroyNSSReference();
+  virtual void virtualDestroyNSSReference() MOZ_OVERRIDE;
   void destructorSafeDestroyNSSReference();
 };
 

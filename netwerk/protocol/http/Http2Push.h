@@ -39,10 +39,10 @@ public:
   bool GetHashKey(nsCString &key);
 
   // override of Http2Stream
-  nsresult ReadSegments(nsAHttpSegmentReader *,  uint32_t, uint32_t *);
-  nsresult WriteSegments(nsAHttpSegmentWriter *, uint32_t, uint32_t *);
+  nsresult ReadSegments(nsAHttpSegmentReader *,  uint32_t, uint32_t *) MOZ_OVERRIDE;
+  nsresult WriteSegments(nsAHttpSegmentWriter *, uint32_t, uint32_t *) MOZ_OVERRIDE;
 
-  nsILoadGroupConnectionInfo *LoadGroupConnectionInfo() { return mLoadGroupCI; };
+  nsILoadGroupConnectionInfo *LoadGroupConnectionInfo() MOZ_OVERRIDE { return mLoadGroupCI; };
   void ConnectPushedStream(Http2Stream *consumer);
 
   bool TryOnPush();
@@ -56,7 +56,7 @@ public:
   nsresult GetBufferedData(char *buf, uint32_t count, uint32_t *countWritten);
 
   // overload of Http2Stream
-  virtual bool HasSink() { return !!mConsumerStream; }
+  virtual bool HasSink() MOZ_OVERRIDE { return !!mConsumerStream; }
 
   nsCString &GetRequestString() { return mRequestString; }
 

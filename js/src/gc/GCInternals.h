@@ -118,10 +118,22 @@ class AutoStopVerifyingBarriers
     }
 
     ~AutoStopVerifyingBarriers() {
+        // Nasty special case: verification runs a minor GC, which *may* nest
+        // inside of an outer minor GC. This is not allowed by the
+        // gc::Statistics phase tree. So we pause the "real" GC, if in fact one
+        // is in progress.
+        gcstats::Phase outer = gc->stats.currentPhase();
+        if (outer != gcstats::PHASE_NONE)
+            gc->stats.endPhase(outer);
+        MOZ_ASSERT(gc->stats.currentPhase() == gcstats::PHASE_NONE);
+
         if (restartPreVerifier)
             gc->startVerifyPreBarriers();
         if (restartPostVerifier)
             gc->startVerifyPostBarriers();
+
+        if (outer != gcstats::PHASE_NONE)
+            gc->stats.beginPhase(outer);
     }
 };
 #else

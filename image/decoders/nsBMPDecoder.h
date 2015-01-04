@@ -52,7 +52,7 @@ public:
 
     virtual void WriteInternal(const char* aBuffer, uint32_t aCount,
                                DecodeStrategy aStrategy) MOZ_OVERRIDE;
-    virtual void FinishInternal();
+    virtual void FinishInternal() MOZ_OVERRIDE;
 
 private:
 

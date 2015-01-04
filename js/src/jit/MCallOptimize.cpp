@@ -173,7 +173,15 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
     if (native == intrinsic_UnsafeSetReservedSlot)
         return inlineUnsafeSetReservedSlot(callInfo);
     if (native == intrinsic_UnsafeGetReservedSlot)
-        return inlineUnsafeGetReservedSlot(callInfo);
+        return inlineUnsafeGetReservedSlot(callInfo, MIRType_Value);
+    if (native == intrinsic_UnsafeGetObjectFromReservedSlot)
+        return inlineUnsafeGetReservedSlot(callInfo, MIRType_Object);
+    if (native == intrinsic_UnsafeGetInt32FromReservedSlot)
+        return inlineUnsafeGetReservedSlot(callInfo, MIRType_Int32);
+    if (native == intrinsic_UnsafeGetStringFromReservedSlot)
+        return inlineUnsafeGetReservedSlot(callInfo, MIRType_String);
+    if (native == intrinsic_UnsafeGetBooleanFromReservedSlot)
+        return inlineUnsafeGetReservedSlot(callInfo, MIRType_Boolean);
 
     // Parallel intrinsics.
     if (native == intrinsic_ShouldForceSequential ||
@@ -2111,7 +2119,7 @@ IonBuilder::inlineUnsafeSetReservedSlot(CallInfo &callInfo)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineUnsafeGetReservedSlot(CallInfo &callInfo)
+IonBuilder::inlineUnsafeGetReservedSlot(CallInfo &callInfo, MIRType knownValueType)
 {
     if (callInfo.argc() != 2 || callInfo.constructing())
         return InliningStatus_NotInlined;
@@ -2131,6 +2139,17 @@ IonBuilder::inlineUnsafeGetReservedSlot(CallInfo &callInfo)
     MLoadFixedSlot *load = MLoadFixedSlot::New(alloc(), callInfo.getArg(0), slot);
     current->add(load);
     current->push(load);
+    if (knownValueType != MIRType_Value) {
+        // We know what type we have in this slot.  Assert that this is in fact
+        // what we've seen coming from this slot in the past, then tell the
+        // MLoadFixedSlot about its result type.  That will make us do an
+        // infallible unbox as part of the slot load and then we'll barrier on
+        // the unbox result.  That way the type barrier code won't end up doing
+        // MIRType checks and conditional unboxing.
+        MOZ_ASSERT_IF(!getInlineReturnTypeSet()->empty(),
+                      getInlineReturnType() == knownValueType);
+        load->setResultType(knownValueType);
+    }
 
     // We don't track reserved slot types, so always emit a barrier.
     if (!pushTypeBarrier(load, getInlineReturnTypeSet(), BarrierKind::TypeSet))

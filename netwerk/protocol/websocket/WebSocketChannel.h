@@ -88,12 +88,12 @@ public:
   NS_IMETHOD AsyncOpen(nsIURI *aURI,
                        const nsACString &aOrigin,
                        nsIWebSocketListener *aListener,
-                       nsISupports *aContext);
-  NS_IMETHOD Close(uint16_t aCode, const nsACString & aReason);
-  NS_IMETHOD SendMsg(const nsACString &aMsg);
-  NS_IMETHOD SendBinaryMsg(const nsACString &aMsg);
-  NS_IMETHOD SendBinaryStream(nsIInputStream *aStream, uint32_t length);
-  NS_IMETHOD GetSecurityInfo(nsISupports **aSecurityInfo);
+                       nsISupports *aContext) MOZ_OVERRIDE;
+  NS_IMETHOD Close(uint16_t aCode, const nsACString & aReason) MOZ_OVERRIDE;
+  NS_IMETHOD SendMsg(const nsACString &aMsg) MOZ_OVERRIDE;
+  NS_IMETHOD SendBinaryMsg(const nsACString &aMsg) MOZ_OVERRIDE;
+  NS_IMETHOD SendBinaryStream(nsIInputStream *aStream, uint32_t length) MOZ_OVERRIDE;
+  NS_IMETHOD GetSecurityInfo(nsISupports **aSecurityInfo) MOZ_OVERRIDE;
 
   WebSocketChannel();
   static void Shutdown();

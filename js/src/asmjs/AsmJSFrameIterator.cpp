@@ -113,17 +113,17 @@ AsmJSFrameIterator::computeLine(uint32_t *column) const
 #if defined(JS_CODEGEN_X64)
 # if defined(DEBUG)
 static const unsigned PushedRetAddr = 0;
+static const unsigned PostStorePrePopFP = 0;
 # endif
 static const unsigned PushedFP = 10;
 static const unsigned StoredFP = 14;
-static const unsigned PostStorePrePopFP = 0;
 #elif defined(JS_CODEGEN_X86)
 # if defined(DEBUG)
 static const unsigned PushedRetAddr = 0;
+static const unsigned PostStorePrePopFP = 0;
 # endif
 static const unsigned PushedFP = 8;
 static const unsigned StoredFP = 11;
-static const unsigned PostStorePrePopFP = 0;
 #elif defined(JS_CODEGEN_ARM)
 static const unsigned PushedRetAddr = 4;
 static const unsigned PushedFP = 16;
@@ -137,10 +137,10 @@ static const unsigned PostStorePrePopFP = 4;
 #elif defined(JS_CODEGEN_NONE)
 # if defined(DEBUG)
 static const unsigned PushedRetAddr = 0;
+static const unsigned PostStorePrePopFP = 0;
 # endif
 static const unsigned PushedFP = 1;
 static const unsigned StoredFP = 1;
-static const unsigned PostStorePrePopFP = 0;
 #else
 # error "Unknown architecture!"
 #endif

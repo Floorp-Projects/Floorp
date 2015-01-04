@@ -85,8 +85,8 @@ public:
     // Report any exception and don't throw it to the caller code.
     eReportExceptions,
     // Throw an exception to the caller code if the thrown exception is a
-    // binding object for a DOMError from the caller's scope, otherwise report
-    // it.
+    // binding object for a DOMError or DOMException from the caller's scope,
+    // otherwise report it.
     eRethrowContentExceptions,
     // Throw any exception to the caller code.
     eRethrowExceptions

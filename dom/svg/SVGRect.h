@@ -66,7 +66,7 @@ public:
     mHeight = aHeight;
   }
 
-  virtual nsIContent* GetParentObject() const
+  virtual nsIContent* GetParentObject() const MOZ_OVERRIDE
   {
     return mParent;
   }

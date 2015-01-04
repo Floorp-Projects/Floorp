@@ -330,6 +330,8 @@ class ZoneCellIter : public ZoneCellIterImpl
       : lists(&zone->allocator.arenas),
         kind(kind)
     {
+        JSRuntime *rt = zone->runtimeFromMainThread();
+
         /*
          * We have a single-threaded runtime, so there's no need to protect
          * against other threads iterating or allocating. However, we do have
@@ -339,22 +341,21 @@ class ZoneCellIter : public ZoneCellIterImpl
         if (IsBackgroundFinalized(kind) &&
             zone->allocator.arenas.needBackgroundFinalizeWait(kind))
         {
-            zone->runtimeFromMainThread()->gc.waitBackgroundSweepEnd();
+            rt->gc.waitBackgroundSweepEnd();
         }
 
         /* Evict the nursery before iterating so we can see all things. */
-        JSRuntime *rt = zone->runtimeFromMainThread();
         rt->gc.evictNursery();
 
         if (lists->isSynchronizedFreeList(kind)) {
             lists = nullptr;
         } else {
-            MOZ_ASSERT(!zone->runtimeFromMainThread()->isHeapBusy());
+            MOZ_ASSERT(!rt->isHeapBusy());
             lists->copyFreeListToArena(kind);
         }
 
         /* Assert that no GCs can occur while a ZoneCellIter is live. */
-        noAlloc.disallowAlloc(zone->runtimeFromMainThread());
+        noAlloc.disallowAlloc(rt);
 
         init(zone, kind);
     }

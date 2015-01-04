@@ -100,17 +100,17 @@ public:
   bool GetReturnInParagraphCreatesNewParagraph();
 
   /* ------------ nsPlaintextEditor overrides -------------- */
-  NS_IMETHOD GetIsDocumentEditable(bool *aIsDocumentEditable);
-  NS_IMETHOD BeginningOfDocument();
-  virtual nsresult HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent);
-  virtual already_AddRefed<nsIContent> GetFocusedContent();
-  virtual already_AddRefed<nsIContent> GetFocusedContentForIME();
-  virtual bool IsActiveInDOMWindow();
-  virtual already_AddRefed<mozilla::dom::EventTarget> GetDOMEventTarget();
+  NS_IMETHOD GetIsDocumentEditable(bool *aIsDocumentEditable) MOZ_OVERRIDE;
+  NS_IMETHOD BeginningOfDocument() MOZ_OVERRIDE;
+  virtual nsresult HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent) MOZ_OVERRIDE;
+  virtual already_AddRefed<nsIContent> GetFocusedContent() MOZ_OVERRIDE;
+  virtual already_AddRefed<nsIContent> GetFocusedContentForIME() MOZ_OVERRIDE;
+  virtual bool IsActiveInDOMWindow() MOZ_OVERRIDE;
+  virtual already_AddRefed<mozilla::dom::EventTarget> GetDOMEventTarget() MOZ_OVERRIDE;
   virtual mozilla::dom::Element* GetEditorRoot() MOZ_OVERRIDE;
-  virtual already_AddRefed<nsIContent> FindSelectionRoot(nsINode *aNode);
-  virtual bool IsAcceptableInputEvent(nsIDOMEvent* aEvent);
-  virtual already_AddRefed<nsIContent> GetInputEventTargetContent();
+  virtual already_AddRefed<nsIContent> FindSelectionRoot(nsINode *aNode) MOZ_OVERRIDE;
+  virtual bool IsAcceptableInputEvent(nsIDOMEvent* aEvent) MOZ_OVERRIDE;
+  virtual already_AddRefed<nsIContent> GetInputEventTargetContent() MOZ_OVERRIDE;
   virtual bool IsEditable(nsINode* aNode) MOZ_OVERRIDE;
   using nsEditor::IsEditable;
 
@@ -120,7 +120,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
   /* ------------ nsIEditorIMESupport overrides ------------ */
-  NS_IMETHOD GetPreferredIMEState(mozilla::widget::IMEState *aState);
+  NS_IMETHOD GetPreferredIMEState(mozilla::widget::IMEState *aState) MOZ_OVERRIDE;
 
   /* ------------ nsIHTMLEditor methods -------------- */
 
@@ -139,10 +139,10 @@ public:
   NS_DECL_NSIHTMLINLINETABLEEDITOR
 
   /* ------------ nsIHTMLEditor methods -------------- */
-  NS_IMETHOD CopyLastEditableChildStyles(nsIDOMNode *aPreviousBlock, nsIDOMNode *aNewBlock,
+  nsresult CopyLastEditableChildStyles(nsIDOMNode *aPreviousBlock, nsIDOMNode *aNewBlock,
                                          nsIDOMNode **aOutBrNode);
 
-  NS_IMETHOD LoadHTML(const nsAString &aInputString);
+  nsresult LoadHTML(const nsAString &aInputString);
 
   nsresult GetCSSBackgroundColorState(bool *aMixed, nsAString &aOutColor,
                                       bool aBlockLevel);
@@ -150,15 +150,15 @@ public:
 
   /* ------------ nsIEditorStyleSheets methods -------------- */
 
-  NS_IMETHOD AddStyleSheet(const nsAString & aURL);
-  NS_IMETHOD ReplaceStyleSheet(const nsAString& aURL);
-  NS_IMETHOD RemoveStyleSheet(const nsAString &aURL);
+  NS_IMETHOD AddStyleSheet(const nsAString & aURL) MOZ_OVERRIDE;
+  NS_IMETHOD ReplaceStyleSheet(const nsAString& aURL) MOZ_OVERRIDE;
+  NS_IMETHOD RemoveStyleSheet(const nsAString &aURL) MOZ_OVERRIDE;
 
-  NS_IMETHOD AddOverrideStyleSheet(const nsAString & aURL);
-  NS_IMETHOD ReplaceOverrideStyleSheet(const nsAString& aURL);
-  NS_IMETHOD RemoveOverrideStyleSheet(const nsAString &aURL);
+  NS_IMETHOD AddOverrideStyleSheet(const nsAString & aURL) MOZ_OVERRIDE;
+  NS_IMETHOD ReplaceOverrideStyleSheet(const nsAString& aURL) MOZ_OVERRIDE;
+  NS_IMETHOD RemoveOverrideStyleSheet(const nsAString &aURL) MOZ_OVERRIDE;
 
-  NS_IMETHOD EnableStyleSheet(const nsAString& aURL, bool aEnable);
+  NS_IMETHOD EnableStyleSheet(const nsAString& aURL, bool aEnable) MOZ_OVERRIDE;
 
   /* ------------ nsIEditorMailSupport methods -------------- */
 
@@ -166,46 +166,46 @@ public:
 
   /* ------------ nsITableEditor methods -------------- */
 
-  NS_IMETHOD InsertTableCell(int32_t aNumber, bool aAfter);
-  NS_IMETHOD InsertTableColumn(int32_t aNumber, bool aAfter);
-  NS_IMETHOD InsertTableRow(int32_t aNumber, bool aAfter);
-  NS_IMETHOD DeleteTable();
-  NS_IMETHOD DeleteTableCell(int32_t aNumber);
-  NS_IMETHOD DeleteTableCellContents();
-  NS_IMETHOD DeleteTableColumn(int32_t aNumber);
-  NS_IMETHOD DeleteTableRow(int32_t aNumber);
-  NS_IMETHOD SelectTableCell();
-  NS_IMETHOD SelectBlockOfCells(nsIDOMElement *aStartCell, nsIDOMElement *aEndCell);
-  NS_IMETHOD SelectTableRow();
-  NS_IMETHOD SelectTableColumn();
-  NS_IMETHOD SelectTable();
-  NS_IMETHOD SelectAllTableCells();
-  NS_IMETHOD SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMElement **aNewCell);
-  NS_IMETHOD JoinTableCells(bool aMergeNonContiguousContents);
-  NS_IMETHOD SplitTableCell();
-  NS_IMETHOD NormalizeTable(nsIDOMElement *aTable);
+  NS_IMETHOD InsertTableCell(int32_t aNumber, bool aAfter) MOZ_OVERRIDE;
+  NS_IMETHOD InsertTableColumn(int32_t aNumber, bool aAfter) MOZ_OVERRIDE;
+  NS_IMETHOD InsertTableRow(int32_t aNumber, bool aAfter) MOZ_OVERRIDE;
+  NS_IMETHOD DeleteTable() MOZ_OVERRIDE;
+  NS_IMETHOD DeleteTableCell(int32_t aNumber) MOZ_OVERRIDE;
+  NS_IMETHOD DeleteTableCellContents() MOZ_OVERRIDE;
+  NS_IMETHOD DeleteTableColumn(int32_t aNumber) MOZ_OVERRIDE;
+  NS_IMETHOD DeleteTableRow(int32_t aNumber) MOZ_OVERRIDE;
+  NS_IMETHOD SelectTableCell() MOZ_OVERRIDE;
+  NS_IMETHOD SelectBlockOfCells(nsIDOMElement *aStartCell, nsIDOMElement *aEndCell) MOZ_OVERRIDE;
+  NS_IMETHOD SelectTableRow() MOZ_OVERRIDE;
+  NS_IMETHOD SelectTableColumn() MOZ_OVERRIDE;
+  NS_IMETHOD SelectTable() MOZ_OVERRIDE;
+  NS_IMETHOD SelectAllTableCells() MOZ_OVERRIDE;
+  NS_IMETHOD SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMElement **aNewCell) MOZ_OVERRIDE;
+  NS_IMETHOD JoinTableCells(bool aMergeNonContiguousContents) MOZ_OVERRIDE;
+  NS_IMETHOD SplitTableCell() MOZ_OVERRIDE;
+  NS_IMETHOD NormalizeTable(nsIDOMElement *aTable) MOZ_OVERRIDE;
   NS_IMETHOD GetCellIndexes(nsIDOMElement *aCell,
-                            int32_t* aRowIndex, int32_t* aColIndex);
+                            int32_t* aRowIndex, int32_t* aColIndex) MOZ_OVERRIDE;
   NS_IMETHOD GetTableSize(nsIDOMElement *aTable,
-                          int32_t* aRowCount, int32_t* aColCount);
-  NS_IMETHOD GetCellAt(nsIDOMElement* aTable, int32_t aRowIndex, int32_t aColIndex, nsIDOMElement **aCell);
+                          int32_t* aRowCount, int32_t* aColCount) MOZ_OVERRIDE;
+  NS_IMETHOD GetCellAt(nsIDOMElement* aTable, int32_t aRowIndex, int32_t aColIndex, nsIDOMElement **aCell) MOZ_OVERRIDE;
   NS_IMETHOD GetCellDataAt(nsIDOMElement* aTable,
                            int32_t aRowIndex, int32_t aColIndex,
                            nsIDOMElement **aCell,
                            int32_t* aStartRowIndex, int32_t* aStartColIndex,
                            int32_t* aRowSpan, int32_t* aColSpan, 
                            int32_t* aActualRowSpan, int32_t* aActualColSpan, 
-                           bool* aIsSelected);
-  NS_IMETHOD GetFirstRow(nsIDOMElement* aTableElement, nsIDOMNode** aRowNode);
-  NS_IMETHOD GetNextRow(nsIDOMNode* aCurrentRowNode, nsIDOMNode** aRowNode);
-  NS_IMETHOD GetLastCellInRow(nsIDOMNode* aRowNode, nsIDOMNode** aCellNode);
+                           bool* aIsSelected) MOZ_OVERRIDE;
+  NS_IMETHOD GetFirstRow(nsIDOMElement* aTableElement, nsIDOMNode** aRowNode) MOZ_OVERRIDE;
+  NS_IMETHOD GetNextRow(nsIDOMNode* aCurrentRowNode, nsIDOMNode** aRowNode) MOZ_OVERRIDE;
+  nsresult GetLastCellInRow(nsIDOMNode* aRowNode, nsIDOMNode** aCellNode);
 
   NS_IMETHOD SetSelectionAfterTableEdit(nsIDOMElement* aTable, int32_t aRow, int32_t aCol, 
-                                        int32_t aDirection, bool aSelected);
+                                        int32_t aDirection, bool aSelected) MOZ_OVERRIDE;
   NS_IMETHOD GetSelectedOrParentTableElement(nsAString& aTagName,
                                              int32_t *aSelectedCount,
-                                             nsIDOMElement** aTableElement);
-  NS_IMETHOD GetSelectedCellsType(nsIDOMElement *aElement, uint32_t *aSelectionType);
+                                             nsIDOMElement** aTableElement) MOZ_OVERRIDE;
+  NS_IMETHOD GetSelectedCellsType(nsIDOMElement *aElement, uint32_t *aSelectionType) MOZ_OVERRIDE;
 
   nsresult GetCellFromRange(nsRange* aRange, nsIDOMElement** aCell);
 
@@ -214,19 +214,19 @@ public:
   // (i.e., each cell added to selection is added in another range 
   //  in the selection's rangelist, independent of location in table)
   // aRange is optional: returns the range around the cell
-  NS_IMETHOD GetFirstSelectedCell(nsIDOMRange **aRange, nsIDOMElement **aCell);
+  NS_IMETHOD GetFirstSelectedCell(nsIDOMRange **aRange, nsIDOMElement **aCell) MOZ_OVERRIDE;
   // Get next cell until no more are found. Always use GetFirstSelected cell first
   // aRange is optional: returns the range around the cell
-  NS_IMETHOD GetNextSelectedCell(nsIDOMRange **aRange, nsIDOMElement **aCell);
+  NS_IMETHOD GetNextSelectedCell(nsIDOMRange **aRange, nsIDOMElement **aCell) MOZ_OVERRIDE;
 
   // Upper-left-most selected cell in table
-  NS_IMETHOD GetFirstSelectedCellInTable(int32_t *aRowIndex, int32_t *aColIndex, nsIDOMElement **aCell);
+  NS_IMETHOD GetFirstSelectedCellInTable(int32_t *aRowIndex, int32_t *aColIndex, nsIDOMElement **aCell) MOZ_OVERRIDE;
     
   /* miscellaneous */
   // This sets background on the appropriate container element (table, cell,)
   //   or calls into nsTextEditor to set the page background
-  NS_IMETHOD SetCSSBackgroundColor(const nsAString& aColor);
-  NS_IMETHOD SetHTMLBackgroundColor(const nsAString& aColor);
+  nsresult SetCSSBackgroundColor(const nsAString& aColor);
+  nsresult SetHTMLBackgroundColor(const nsAString& aColor);
 
   /* ------------ Block methods moved from nsEditor -------------- */
   static already_AddRefed<mozilla::dom::Element> GetBlockNodeParent(nsINode* aNode);
@@ -247,13 +247,13 @@ public:
 
   /* ------------ Overrides of nsEditor interface methods -------------- */
 
-  nsresult EndUpdateViewBatch();
+  nsresult EndUpdateViewBatch() MOZ_OVERRIDE;
 
   /** prepare the editor for use */
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIContent *aRoot,
                   nsISelectionController *aSelCon, uint32_t aFlags,
-                  const nsAString& aValue);
-  NS_IMETHOD PreDestroy(bool aDestroyingFrames);
+                  const nsAString& aValue) MOZ_OVERRIDE;
+  NS_IMETHOD PreDestroy(bool aDestroyingFrames) MOZ_OVERRIDE;
 
   /** Internal, static version */
   // aElement must not be null.
@@ -263,27 +263,27 @@ protected:
   virtual ~nsHTMLEditor();
 
   using nsEditor::IsBlockNode;
-  virtual bool IsBlockNode(nsINode *aNode);
+  virtual bool IsBlockNode(nsINode *aNode) MOZ_OVERRIDE;
 
 public:
-  NS_IMETHOD SetFlags(uint32_t aFlags);
+  NS_IMETHOD SetFlags(uint32_t aFlags) MOZ_OVERRIDE;
 
-  NS_IMETHOD Paste(int32_t aSelectionType);
-  NS_IMETHOD CanPaste(int32_t aSelectionType, bool *aCanPaste);
+  NS_IMETHOD Paste(int32_t aSelectionType) MOZ_OVERRIDE;
+  NS_IMETHOD CanPaste(int32_t aSelectionType, bool *aCanPaste) MOZ_OVERRIDE;
 
-  NS_IMETHOD PasteTransferable(nsITransferable *aTransferable);
-  NS_IMETHOD CanPasteTransferable(nsITransferable *aTransferable, bool *aCanPaste);
+  NS_IMETHOD PasteTransferable(nsITransferable *aTransferable) MOZ_OVERRIDE;
+  NS_IMETHOD CanPasteTransferable(nsITransferable *aTransferable, bool *aCanPaste) MOZ_OVERRIDE;
 
-  NS_IMETHOD DebugUnitTests(int32_t *outNumTests, int32_t *outNumTestsFailed);
+  NS_IMETHOD DebugUnitTests(int32_t *outNumTests, int32_t *outNumTestsFailed) MOZ_OVERRIDE;
 
   /** All editor operations which alter the doc should be prefaced
    *  with a call to StartOperation, naming the action and direction */
   NS_IMETHOD StartOperation(EditAction opID,
-                            nsIEditor::EDirection aDirection);
+                            nsIEditor::EDirection aDirection) MOZ_OVERRIDE;
 
   /** All editor operations which alter the doc should be followed
    *  with a call to EndOperation */
-  NS_IMETHOD EndOperation();
+  NS_IMETHOD EndOperation() MOZ_OVERRIDE;
 
   /** returns true if aParentTag can contain a child of type aChildTag */
   virtual bool TagCanContainTag(nsIAtom& aParentTag, nsIAtom& aChildTag)
@@ -294,15 +294,15 @@ public:
   virtual bool IsContainer(nsIDOMNode* aNode) MOZ_OVERRIDE;
 
   /** make the given selection span the entire document */
-  virtual nsresult SelectEntireDocument(mozilla::dom::Selection* aSelection);
+  virtual nsresult SelectEntireDocument(mozilla::dom::Selection* aSelection) MOZ_OVERRIDE;
 
   NS_IMETHOD SetAttributeOrEquivalent(nsIDOMElement * aElement,
                                       const nsAString & aAttribute,
                                       const nsAString & aValue,
-                                      bool aSuppressTransaction);
+                                      bool aSuppressTransaction) MOZ_OVERRIDE;
   NS_IMETHOD RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
                                          const nsAString & aAttribute,
-                                         bool aSuppressTransaction);
+                                         bool aSuppressTransaction) MOZ_OVERRIDE;
 
   /** join together any adjacent editable text nodes in the range */
   nsresult CollapseAdjacentTextNodes(nsRange* aRange);
@@ -311,30 +311,30 @@ public:
     MOZ_OVERRIDE;
 
   NS_IMETHOD DeleteSelectionImpl(EDirection aAction,
-                                 EStripWrappers aStripWrappers);
+                                 EStripWrappers aStripWrappers) MOZ_OVERRIDE;
   nsresult DeleteNode(nsINode* aNode);
-  NS_IMETHODIMP DeleteNode(nsIDOMNode * aNode);
+  NS_IMETHOD DeleteNode(nsIDOMNode * aNode) MOZ_OVERRIDE;
   nsresult DeleteText(nsGenericDOMDataNode& aTextNode, uint32_t aOffset,
                       uint32_t aLength);
   virtual nsresult InsertTextImpl(const nsAString& aStringToInsert,
                                   nsCOMPtr<nsINode>* aInOutNode,
                                   int32_t* aInOutOffset,
                                   nsIDocument* aDoc) MOZ_OVERRIDE;
-  NS_IMETHOD_(bool) IsModifiableNode(nsIDOMNode *aNode);
-  virtual bool IsModifiableNode(nsINode *aNode);
+  NS_IMETHOD_(bool) IsModifiableNode(nsIDOMNode *aNode) MOZ_OVERRIDE;
+  virtual bool IsModifiableNode(nsINode *aNode) MOZ_OVERRIDE;
 
-  NS_IMETHOD GetIsSelectionEditable(bool* aIsSelectionEditable);
+  NS_IMETHOD GetIsSelectionEditable(bool* aIsSelectionEditable) MOZ_OVERRIDE;
 
-  NS_IMETHOD SelectAll();
+  NS_IMETHOD SelectAll() MOZ_OVERRIDE;
 
-  NS_IMETHOD GetRootElement(nsIDOMElement **aRootElement);
+  NS_IMETHOD GetRootElement(nsIDOMElement **aRootElement) MOZ_OVERRIDE;
 
   /* ------------ nsICSSLoaderObserver -------------- */
   NS_IMETHOD StyleSheetLoaded(mozilla::CSSStyleSheet* aSheet,
-                              bool aWasAlternate, nsresult aStatus);
+                              bool aWasAlternate, nsresult aStatus) MOZ_OVERRIDE;
 
   /* ------------ Utility Routines, not part of public API -------------- */
-  NS_IMETHOD TypedText(const nsAString& aString, ETypingAction aAction);
+  NS_IMETHOD TypedText(const nsAString& aString, ETypingAction aAction) MOZ_OVERRIDE;
   nsresult InsertNodeAtPoint( nsIDOMNode *aNode, 
                               nsCOMPtr<nsIDOMNode> *ioParent, 
                               int32_t *ioOffset, 
@@ -376,9 +376,9 @@ public:
 
   // Dealing with the internal style sheet lists:
   NS_IMETHOD GetStyleSheetForURL(const nsAString &aURL,
-                                 mozilla::CSSStyleSheet** _retval);
+                                 mozilla::CSSStyleSheet** _retval) MOZ_OVERRIDE;
   NS_IMETHOD GetURLForStyleSheet(mozilla::CSSStyleSheet* aStyleSheet,
-                                 nsAString& aURL);
+                                 nsAString& aURL) MOZ_OVERRIDE;
 
   // Add a url + known style sheet to the internal lists:
   nsresult AddNewStyleSheetToList(const nsAString &aURL,
@@ -402,13 +402,13 @@ public:
 
 protected:
 
-  NS_IMETHOD  InitRules();
+  NS_IMETHOD  InitRules() MOZ_OVERRIDE;
 
   // Create the event listeners for the editor to install
-  virtual void CreateEventListeners();
+  virtual void CreateEventListeners() MOZ_OVERRIDE;
 
-  virtual nsresult InstallEventListeners();
-  virtual void RemoveEventListeners();
+  virtual nsresult InstallEventListeners() MOZ_OVERRIDE;
+  virtual void RemoveEventListeners() MOZ_OVERRIDE;
 
   bool ShouldReplaceRootElement();
   void ResetRootElementAndEventTarget();
@@ -426,7 +426,7 @@ protected:
   already_AddRefed<mozilla::dom::Element> CreateBR(nsINode* aNode,
       int32_t aOffset, EDirection aSelect = eNone);
   NS_IMETHOD CreateBR(nsIDOMNode *aNode, int32_t aOffset, 
-                      nsCOMPtr<nsIDOMNode> *outBRNode, nsIEditor::EDirection aSelect = nsIEditor::eNone);
+                      nsCOMPtr<nsIDOMNode> *outBRNode, nsIEditor::EDirection aSelect = nsIEditor::eNone) MOZ_OVERRIDE;
 
 // Table Editing (implemented in nsTableEditor.cpp)
 
@@ -549,9 +549,9 @@ protected:
                         bool aDoDeleteSelection);
 
   // factored methods for handling insertion of data from transferables (drag&drop or clipboard)
-  NS_IMETHOD PrepareTransferable(nsITransferable **transferable);
-  NS_IMETHOD PrepareHTMLTransferable(nsITransferable **transferable, bool havePrivFlavor);
-  NS_IMETHOD InsertFromTransferable(nsITransferable *transferable, 
+  NS_IMETHOD PrepareTransferable(nsITransferable **transferable) MOZ_OVERRIDE;
+  nsresult PrepareHTMLTransferable(nsITransferable **transferable, bool havePrivFlavor);
+  nsresult InsertFromTransferable(nsITransferable *transferable, 
                                     nsIDOMDocument *aSourceDoc,
                                     const nsAString & aContextStr,
                                     const nsAString & aInfoStr,
@@ -563,7 +563,7 @@ protected:
                                   nsIDOMDocument *aSourceDoc,
                                   nsIDOMNode *aDestinationNode,
                                   int32_t aDestOffset,
-                                  bool aDoDeleteSelection);
+                                  bool aDoDeleteSelection) MOZ_OVERRIDE;
   bool HavePrivateHTMLFlavor( nsIClipboard *clipboard );
   nsresult   ParseCFHTML(nsCString & aCfhtml, char16_t **aStuffToPaste, char16_t **aCfcontext);
   nsresult   DoContentFilterCallback(const nsAString &aFlavor,

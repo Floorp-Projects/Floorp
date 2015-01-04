@@ -743,3 +743,10 @@ interface TestCImplementedInterface : TestJSImplInterface {
 
 interface TestCImplementedInterface2 {
 };
+
+[NoInterfaceObject,
+ JSImplementation="@mozilla.org/test-js-impl-interface;2"]
+interface TestJSImplNoInterfaceObject {
+  [Cached, Pure]
+  readonly attribute byte cachedByte;
+};

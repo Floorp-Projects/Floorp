@@ -25,17 +25,17 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIFilePicker (less what's in nsBaseFilePicker)
-  NS_IMETHOD GetDefaultString(nsAString& aDefaultString);
-  NS_IMETHOD SetDefaultString(const nsAString& aDefaultString);
-  NS_IMETHOD GetDefaultExtension(nsAString& aDefaultExtension);
-  NS_IMETHOD GetFilterIndex(int32_t *aFilterIndex);
-  NS_IMETHOD SetFilterIndex(int32_t aFilterIndex);
-  NS_IMETHOD SetDefaultExtension(const nsAString& aDefaultExtension);
-  NS_IMETHOD GetFile(nsIFile * *aFile);
-  NS_IMETHOD GetFileURL(nsIURI * *aFileURL);
-  NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
-  NS_IMETHOD Show(int16_t *_retval); 
-  NS_IMETHOD AppendFilter(const nsAString& aTitle, const nsAString& aFilter);
+  NS_IMETHOD GetDefaultString(nsAString& aDefaultString) MOZ_OVERRIDE;
+  NS_IMETHOD SetDefaultString(const nsAString& aDefaultString) MOZ_OVERRIDE;
+  NS_IMETHOD GetDefaultExtension(nsAString& aDefaultExtension) MOZ_OVERRIDE;
+  NS_IMETHOD GetFilterIndex(int32_t *aFilterIndex) MOZ_OVERRIDE;
+  NS_IMETHOD SetFilterIndex(int32_t aFilterIndex) MOZ_OVERRIDE;
+  NS_IMETHOD SetDefaultExtension(const nsAString& aDefaultExtension) MOZ_OVERRIDE;
+  NS_IMETHOD GetFile(nsIFile * *aFile) MOZ_OVERRIDE;
+  NS_IMETHOD GetFileURL(nsIURI * *aFileURL) MOZ_OVERRIDE;
+  NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles) MOZ_OVERRIDE;
+  NS_IMETHOD Show(int16_t *_retval) MOZ_OVERRIDE; 
+  NS_IMETHOD AppendFilter(const nsAString& aTitle, const nsAString& aFilter) MOZ_OVERRIDE;
 
   /**
    * Returns the current filter list in the format used by Cocoa's NSSavePanel
@@ -47,7 +47,7 @@ public:
 protected:
   virtual ~nsFilePicker();
 
-  virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle);
+  virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle) MOZ_OVERRIDE;
 
   // actual implementations of get/put dialogs using NSOpenPanel & NSSavePanel
   // aFile is an existing but unspecified file. These functions must specify it.

@@ -37,8 +37,8 @@ protected:
   nsPrintSettingsX(const nsPrintSettingsX& src);
   nsPrintSettingsX& operator=(const nsPrintSettingsX& rhs);
 
-  nsresult _Clone(nsIPrintSettings **_retval);
-  nsresult _Assign(nsIPrintSettings *aPS);
+  nsresult _Clone(nsIPrintSettings **_retval) MOZ_OVERRIDE;
+  nsresult _Assign(nsIPrintSettings *aPS) MOZ_OVERRIDE;
 
   // Re-initialize mUnwriteableMargin with values from mPageFormat.
   // Should be called whenever mPageFormat is initialized or overwritten.

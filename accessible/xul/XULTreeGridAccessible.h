@@ -30,26 +30,26 @@ public:
     { mGenericTypes |= eTable; }
 
   // TableAccessible
-  virtual uint32_t ColCount();
-  virtual uint32_t RowCount();
-  virtual Accessible* CellAt(uint32_t aRowIndex, uint32_t aColumnIndex);
-  virtual void ColDescription(uint32_t aColIdx, nsString& aDescription);
-  virtual bool IsColSelected(uint32_t aColIdx);
-  virtual bool IsRowSelected(uint32_t aRowIdx);
-  virtual bool IsCellSelected(uint32_t aRowIdx, uint32_t aColIdx);
-  virtual uint32_t SelectedCellCount();
-  virtual uint32_t SelectedColCount();
-  virtual uint32_t SelectedRowCount();
-  virtual void SelectedCells(nsTArray<Accessible*>* aCells);
-  virtual void SelectedCellIndices(nsTArray<uint32_t>* aCells);
-  virtual void SelectedColIndices(nsTArray<uint32_t>* aCols);
-  virtual void SelectedRowIndices(nsTArray<uint32_t>* aRows);
-  virtual void SelectRow(uint32_t aRowIdx);
-  virtual void UnselectRow(uint32_t aRowIdx);
-  virtual Accessible* AsAccessible() { return this; }
+  virtual uint32_t ColCount() MOZ_OVERRIDE;
+  virtual uint32_t RowCount() MOZ_OVERRIDE;
+  virtual Accessible* CellAt(uint32_t aRowIndex, uint32_t aColumnIndex) MOZ_OVERRIDE;
+  virtual void ColDescription(uint32_t aColIdx, nsString& aDescription) MOZ_OVERRIDE;
+  virtual bool IsColSelected(uint32_t aColIdx) MOZ_OVERRIDE;
+  virtual bool IsRowSelected(uint32_t aRowIdx) MOZ_OVERRIDE;
+  virtual bool IsCellSelected(uint32_t aRowIdx, uint32_t aColIdx) MOZ_OVERRIDE;
+  virtual uint32_t SelectedCellCount() MOZ_OVERRIDE;
+  virtual uint32_t SelectedColCount() MOZ_OVERRIDE;
+  virtual uint32_t SelectedRowCount() MOZ_OVERRIDE;
+  virtual void SelectedCells(nsTArray<Accessible*>* aCells) MOZ_OVERRIDE;
+  virtual void SelectedCellIndices(nsTArray<uint32_t>* aCells) MOZ_OVERRIDE;
+  virtual void SelectedColIndices(nsTArray<uint32_t>* aCols) MOZ_OVERRIDE;
+  virtual void SelectedRowIndices(nsTArray<uint32_t>* aRows) MOZ_OVERRIDE;
+  virtual void SelectRow(uint32_t aRowIdx) MOZ_OVERRIDE;
+  virtual void UnselectRow(uint32_t aRowIdx) MOZ_OVERRIDE;
+  virtual Accessible* AsAccessible() MOZ_OVERRIDE { return this; }
 
   // Accessible
-  virtual TableAccessible* AsTable() { return this; }
+  virtual TableAccessible* AsTable() MOZ_OVERRIDE { return this; }
   virtual a11y::role NativeRole() MOZ_OVERRIDE;
 
 protected:
@@ -80,11 +80,11 @@ public:
                                            XULTreeItemAccessibleBase)
 
   // Accessible
-  virtual void Shutdown();
+  virtual void Shutdown() MOZ_OVERRIDE;
   virtual a11y::role NativeRole() MOZ_OVERRIDE;
-  virtual ENameValueFlag Name(nsString& aName);
+  virtual ENameValueFlag Name(nsString& aName) MOZ_OVERRIDE;
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
-                                   EWhichChildAtPoint aWhichChild);
+                                   EWhichChildAtPoint aWhichChild) MOZ_OVERRIDE;
 
   virtual Accessible* GetChildAt(uint32_t aIndex) const MOZ_OVERRIDE;
   virtual uint32_t ChildCount() const MOZ_OVERRIDE;
@@ -92,13 +92,13 @@ public:
   // XULTreeItemAccessibleBase
   virtual XULTreeGridCellAccessible* GetCellAccessible(nsITreeColumn* aColumn)
     const MOZ_OVERRIDE MOZ_FINAL;
-  virtual void RowInvalidated(int32_t aStartColIdx, int32_t aEndColIdx);
+  virtual void RowInvalidated(int32_t aStartColIdx, int32_t aEndColIdx) MOZ_OVERRIDE;
 
 protected:
   virtual ~XULTreeGridRowAccessible();
 
   // Accessible
-  virtual void CacheChildren();
+  virtual void CacheChildren() MOZ_OVERRIDE;
 
   // XULTreeItemAccessibleBase
   mutable nsRefPtrHashtable<nsPtrHashKey<const void>, XULTreeGridCellAccessible>
@@ -127,12 +127,12 @@ public:
                                            LeafAccessible)
 
   // Accessible
-  virtual TableCellAccessible* AsTableCell() { return this; }
+  virtual TableCellAccessible* AsTableCell() MOZ_OVERRIDE { return this; }
   virtual nsIntRect Bounds() const MOZ_OVERRIDE;
-  virtual ENameValueFlag Name(nsString& aName);
-  virtual Accessible* FocusedChild();
+  virtual ENameValueFlag Name(nsString& aName) MOZ_OVERRIDE;
+  virtual Accessible* FocusedChild() MOZ_OVERRIDE;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() MOZ_OVERRIDE;
-  virtual int32_t IndexInParent() const;
+  virtual int32_t IndexInParent() const MOZ_OVERRIDE;
   virtual Relation RelationByType(RelationType aType) MOZ_OVERRIDE;
   virtual a11y::role NativeRole() MOZ_OVERRIDE;
   virtual uint64_t NativeState() MOZ_OVERRIDE;
@@ -163,8 +163,8 @@ protected:
 
   // Accessible
   virtual Accessible* GetSiblingAtOffset(int32_t aOffset,
-                                         nsresult* aError = nullptr) const;
-  virtual void DispatchClickEvent(nsIContent* aContent, uint32_t aActionIndex);
+                                         nsresult* aError = nullptr) const MOZ_OVERRIDE;
+  virtual void DispatchClickEvent(nsIContent* aContent, uint32_t aActionIndex) MOZ_OVERRIDE;
 
   // XULTreeGridCellAccessible
 

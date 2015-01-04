@@ -55,12 +55,12 @@ public:
   nsJPEGDecoder(RasterImage& aImage, Decoder::DecodeStyle aDecodeStyle);
   virtual ~nsJPEGDecoder();
 
-  virtual void InitInternal();
+  virtual void InitInternal() MOZ_OVERRIDE;
   virtual void WriteInternal(const char* aBuffer, uint32_t aCount,
                              DecodeStrategy aStrategy) MOZ_OVERRIDE;
-  virtual void FinishInternal();
+  virtual void FinishInternal() MOZ_OVERRIDE;
 
-  virtual Telemetry::ID SpeedHistogram();
+  virtual Telemetry::ID SpeedHistogram() MOZ_OVERRIDE;
   void NotifyDone();
 
 protected:

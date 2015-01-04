@@ -143,16 +143,16 @@ public:
     nsresult InitWithFilename(const char *filename);
 
     // nsASocketHandler methods:
-    void OnSocketReady(PRFileDesc *, int16_t outFlags);
-    void OnSocketDetached(PRFileDesc *);
-    void IsLocal(bool *aIsLocal);
+    void OnSocketReady(PRFileDesc *, int16_t outFlags) MOZ_OVERRIDE;
+    void OnSocketDetached(PRFileDesc *) MOZ_OVERRIDE;
+    void IsLocal(bool *aIsLocal) MOZ_OVERRIDE;
     void OnKeepaliveEnabledPrefChange(bool aEnabled) MOZ_OVERRIDE MOZ_FINAL;
 
     // called when a socket event is handled
     void OnSocketEvent(uint32_t type, nsresult status, nsISupports *param);
 
-    uint64_t ByteCountReceived() { return mInput.ByteCount(); }
-    uint64_t ByteCountSent() { return mOutput.ByteCount(); }
+    uint64_t ByteCountReceived() MOZ_OVERRIDE { return mInput.ByteCount(); }
+    uint64_t ByteCountSent() MOZ_OVERRIDE { return mOutput.ByteCount(); }
 protected:
 
     virtual ~nsSocketTransport();
