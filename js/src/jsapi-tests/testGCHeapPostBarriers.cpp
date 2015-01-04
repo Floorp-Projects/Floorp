@@ -10,7 +10,9 @@
 
 BEGIN_TEST(testGCHeapPostBarriers)
 {
+#ifdef JS_GC_ZEAL
     AutoLeaveZeal nozeal(cx);
+#endif /* JS_GC_ZEAL */
 
     /* Sanity check - objects start in the nursery and then become tenured. */
     JS_GC(cx->runtime());
