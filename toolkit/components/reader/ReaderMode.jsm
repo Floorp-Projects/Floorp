@@ -27,17 +27,6 @@ let ReaderMode = {
   // performance reasons)
   MAX_ELEMS_TO_PARSE: 3000,
 
-  observe: function(aMessage, aTopic, aData) {
-    switch(aTopic) {
-      case "nsPref:changed": {
-        if (aData.startsWith("reader.parse-on-load.")) {
-          this.isEnabledForParseOnLoad = this._getStateForParseOnLoad();
-        }
-        break;
-      }
-    }
-  },
-
   /**
    * Gets an article from a loaded browser's document. This method will parse the document
    * if it does not find the article in the cache.
@@ -61,8 +50,55 @@ let ReaderMode = {
     }
 
     let doc = browser.contentWindow.document;
-    return yield this.readerParse(uri, doc);
+    return yield this._readerParse(uri, doc);
   }),
+
+  /**
+   * Downloads and parses a document from a URL.
+   *
+   * @param url URL to download and parse.
+   * @return {Promise}
+   * @resolves JS object representing the article, or null if no article is found.
+   */
+  downloadAndParseDocument: Task.async(function* (url) {
+    let uri = Services.io.newURI(url, null, null);
+    let doc = yield this._downloadDocument(url);
+    return yield this._readerParse(uri, doc);
+  }),
+
+  _downloadDocument: function (url) {
+    return new Promise((resolve, reject) => {
+      let xhr = new XMLHttpRequest();
+      xhr.open("GET", url, true);
+      xhr.onerror = evt => reject(evt.error);
+      xhr.responseType = "document";
+      xhr.onload = evt => {
+        if (xhr.status !== 200) {
+          reject("Reader mode XHR failed with status: " + xhr.status);
+          return;
+        }
+
+        let doc = xhr.responseXML;
+
+        // Manually follow a meta refresh tag if one exists.
+        let meta = doc.querySelector("meta[http-equiv=refresh]");
+        if (meta) {
+          let content = meta.getAttribute("content");
+          if (content) {
+            let urlIndex = content.indexOf("URL=");
+            if (urlIndex > -1) {
+              let url = content.substring(urlIndex + 4);
+              this._downloadDocument(url).then((doc) => resolve(doc));
+              return;
+            }
+          }
+        }
+        resolve(doc);
+      }
+      xhr.send();
+    });
+  },
+
 
   /**
    * Retrieves an article from the cache given an article URI.
@@ -138,7 +174,7 @@ let ReaderMode = {
    * @return {Promise}
    * @resolves JS object representing the article, or null if no article is found.
    */
-  readerParse: function (uri, doc) {
+  _readerParse: function (uri, doc) {
     return new Promise((resolve, reject) => {
       let numTags = doc.getElementsByTagName("*").length;
       if (numTags > this.MAX_ELEMS_TO_PARSE) {
