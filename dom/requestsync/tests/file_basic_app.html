@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="common_app.js"></script>
+  <script type="application/javascript" src="common_basic.js"></script>
+  <meta charset="utf-8">
+</head>
+<body>
+<div id="container"></div>
+  <script type="application/javascript;version=1.7">
+
+  function test_sync_interface() {
+    ok("sync" in navigator, "navigator.sync should exist with permissions");
+    ok(!("syncManager" in navigator), "navigator.syncManager should not exist without permissions");
+
+    ok("register" in navigator.sync, "navigator.sync.register exists");
+    ok("unregister" in navigator.sync, "navigator.sync.unregister exists");
+    ok("registrations" in navigator.sync, "navigator.sync.registrations exists");
+    ok("registration" in navigator.sync, "navigator.sync.registration exists");
+
+    runTests();
+  }
+
+  var tests = [
+    test_sync_interface,
+
+    test_registrationsEmpty,
+
+    test_registerFailure,
+    test_register,
+    // overwrite the same registration.
+    test_register,
+
+    test_registrations,
+
+    test_registrationEmpty,
+    test_registration,
+
+    test_unregister,
+    test_unregisterDuplicate,
+
+    test_registrationsEmpty,
+
+    // Let's keep a registration active when the app is uninstall...
+    test_register,
+    test_registrations
+  ];
+
+  function runTests() {
+    if (!tests.length) {
+      finish();
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
+
+  runTests();
+  </script>
+</body>
+</html>
