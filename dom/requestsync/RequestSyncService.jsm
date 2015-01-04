@@ -16,6 +16,10 @@ const RSYNC_MIN_INTERVAL = 100;
 
 const RSYNC_OPERATION_TIMEOUT = 120000 // 2 minutes
 
+const RSYNC_STATE_ENABLED = "enabled";
+const RSYNC_STATE_DISABLED = "disabled";
+const RSYNC_STATE_WIFIONLY = "wifiOnly";
+
 Cu.import('resource://gre/modules/IndexedDBHelper.jsm');
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -47,9 +51,12 @@ this.RequestSyncService = {
 
   children: [],
 
-  _messages: [ "RequestSync:Register", "RequestSync:Unregister",
-               "RequestSync:Registrations", "RequestSync:Registration",
-               "RequestSyncManager:Registrations" ],
+  _messages: [ "RequestSync:Register",
+               "RequestSync:Unregister",
+               "RequestSync:Registrations",
+               "RequestSync:Registration",
+               "RequestSyncManager:Registrations",
+               "RequestSyncManager:SetPolicy" ],
 
   _pendingOperation: false,
   _pendingMessages: [],
@@ -316,6 +323,10 @@ this.RequestSyncService = {
         this.managerRegistrations(aMessage.target, aMessage.data, principal);
         break;
 
+      case "RequestSyncManager:SetPolicy":
+        this.managerSetPolicy(aMessage.target, aMessage.data, principal);
+        break;
+
       default:
         debug("Wrong message: " + aMessage.name);
         break;
@@ -369,6 +380,13 @@ this.RequestSyncService = {
     aData.params.task = aData.task;
     aData.params.lastSync = 0;
     aData.params.principal = aPrincipal;
+
+    aData.params.state = RSYNC_STATE_ENABLED;
+    if (aData.params.wifiOnly) {
+      aData.params.state = RSYNC_STATE_WIFIONLY;
+    }
+
+    aData.params.overwrittenMinInterval = 0;
 
     let dbKey = aData.task + "|" +
                 aPrincipal.appId + '|' +
@@ -478,6 +496,51 @@ this.RequestSyncService = {
                                results: results });
   },
 
+  // Set a policy to a task.
+  managerSetPolicy: function(aTarget, aData, aPrincipal) {
+    debug("managerSetPolicy");
+
+    let toSave = null;
+    let self = this;
+    this.forEachRegistration(function(aObj) {
+      if (aObj.principal.isInBrowserElement != aData.isInBrowserElement ||
+          aObj.principal.origin != aData.origin) {
+        return;
+      }
+
+      let app = appsService.getAppByLocalId(aObj.principal.appId);
+      if (app && app.manifestURL != aData.manifestURL ||
+          (!app && aData.manifestURL != "")) {
+        return;
+      }
+
+      if ("overwrittenMinInterval" in aData) {
+        aObj.data.overwrittenMinInterval = aData.overwrittenMinInterval;
+      }
+
+      aObj.data.state = aData.state;
+
+      if (toSave) {
+        dump("ERROR!! RequestSyncService - SetPolicy matches more than 1 task.\n");
+        return;
+      }
+
+      toSave = aObj;
+    });
+
+    if (!toSave) {
+      aTarget.sendAsyncMessage("RequestSyncManager:SetPolicy:Return",
+                               { requestID: aData.requestID, error: "UnknownTaskError" });
+      return;
+    }
+
+    this.updateObjectInDB(toSave, function() {
+      self.scheduleTimer(toSave);
+      aTarget.sendAsyncMessage("RequestSyncManager:SetPolicy:Return",
+                               { requestID: aData.requestID });
+    });
+  },
+
   // We cannot expose the full internal object to content but just a subset.
   // This method creates this subset.
   createPartialTaskObject: function(aObj) {
@@ -502,6 +565,8 @@ this.RequestSyncService = {
       obj.app.manifestURL = app.manifestURL;
     }
 
+    obj.state = aObj.state;
+    obj.overwrittenMinInterval = aObj.overwrittenMinInterval;
     return obj;
   },
 
@@ -509,21 +574,35 @@ this.RequestSyncService = {
   scheduleTimer: function(aObj) {
     debug("scheduleTimer");
 
+    if (aObj.timer) {
+      aObj.timer.cancel();
+      aObj.timer = null;
+    }
+
     // A  registration can be already inactive if it was 1 shot.
     if (!aObj.active) {
       return;
     }
 
+    if (aObj.data.state == RSYNC_STATE_DISABLED) {
+      return;
+    }
+
     // WifiOnly check.
-    if (aObj.data.wifiOnly && !this._wifi) {
+    if (aObj.data.state == RSYNC_STATE_WIFIONLY && !this._wifi) {
       return;
     }
 
     aObj.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
+    let interval = aObj.data.minInterval;
+    if (aObj.data.overwrittenMinInterval > 0) {
+      interval = aObj.data.overwrittenMinInterval;
+    }
+
     let self = this;
     aObj.timer.initWithCallback(function() { self.timeout(aObj); },
-                                aObj.data.minInterval * 1000,
+                                interval * 1000,
                                 Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
@@ -739,7 +818,7 @@ this.RequestSyncService = {
       // Disable all the wifiOnly tasks.
       let self = this;
       this.forEachRegistration(function(aObj) {
-        if (aObj.data.wifiOnly && aObj.timer) {
+        if (aObj.data.state == RSYNC_STATE_WIFIONLY && aObj.timer) {
           aObj.timer.cancel();
           aObj.timer = null;
 
