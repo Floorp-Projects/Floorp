@@ -3,16 +3,16 @@ package org.mozilla.gecko.tests;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.SuggestClient;
 import org.mozilla.gecko.home.BrowserSearch;
 
-import android.app.Activity;
-import android.support.v4.app.Fragment;
+import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import com.jayway.android.robotium.solo.Condition;
 
 /**
  * Test for search suggestions.
@@ -21,11 +21,17 @@ import android.widget.TextView;
  */
 public class testSearchSuggestions extends BaseTest {
     private static final int SUGGESTION_MAX = 3;
-    private static final int SUGGESTION_TIMEOUT = 5000;
+    private static final int SUGGESTION_TIMEOUT = 15000;
+
     private static final String TEST_QUERY = "foo barz";
     private static final String SUGGESTION_TEMPLATE = "/robocop/robocop_suggestions.sjs?query=__searchTerms__";
 
     public void testSearchSuggestions() {
+        // Mock the search system.
+        // The BrowserSearch UI only shows up once a non-empty
+        // search term is entered, but we swizzle in a new factory beforehand.
+        mockSuggestClientFactory();
+
         blockForGeckoReady();
 
         // Map of expected values. See robocop_suggestions.sjs.
@@ -34,43 +40,44 @@ public class testSearchSuggestions extends BaseTest {
 
         focusUrlBar();
 
+        // At this point we rely on our swizzling having worked -- which relies
+        // on us not having previously run a search.
+        // The test will fail later if there's already a BrowserSearch object with a
+        // suggest client set, so fail here.
+        BrowserSearch browserSearch = (BrowserSearch) getBrowserSearch();
+        mAsserter.ok(browserSearch == null ||
+                     browserSearch.mSuggestClient == null,
+                     "There is no existing search client.", "");
+
+        // Now test the incremental suggestions.
         for (int i = 0; i < TEST_QUERY.length(); i++) {
-            Actions.EventExpecter enginesEventExpecter = null;
-
-            if (i == 0) {
-                enginesEventExpecter = mActions.expectGeckoEvent("SearchEngines:Data");
-            }
-
             mActions.sendKeys(TEST_QUERY.substring(i, i+1));
-
-            // The BrowserSearch UI only shows up once a non-empty
-            // search term is entered
-            if (enginesEventExpecter != null) {
-                connectSuggestClient(getActivity());
-                enginesEventExpecter.blockForEvent();
-                enginesEventExpecter.unregisterListener();
-                enginesEventExpecter = null;
-            }
 
             final String query = TEST_QUERY.substring(0, i+1);
             mSolo.waitForView(R.id.suggestion_text);
-            boolean success = waitForTest(new BooleanTest() {
+            boolean success = waitForCondition(new Condition() {
                 @Override
-                public boolean test() {
-                    // get the first suggestion row
+                public boolean isSatisfied() {
+                    // Get the first suggestion row.
                     ViewGroup suggestionGroup = (ViewGroup) getActivity().findViewById(R.id.suggestion_layout);
-                    if (suggestionGroup == null)
+                    if (suggestionGroup == null) {
+                        mAsserter.dumpLog("Fail: suggestionGroup is null.");
                         return false;
+                    }
 
-                    ArrayList<String> expected = suggestMap.get(query);
+                    final ArrayList<String> expected = suggestMap.get(query);
                     for (int i = 0; i < expected.size(); i++) {
                         View queryChild = suggestionGroup.getChildAt(i);
-                        if (queryChild == null || queryChild.getVisibility() == View.GONE)
+                        if (queryChild == null || queryChild.getVisibility() == View.GONE) {
+                            mAsserter.dumpLog("Fail: queryChild is null or GONE.");
                             return false;
+                        }
 
                         String suggestion = ((TextView) queryChild.findViewById(R.id.suggestion_text)).getText().toString();
-                        if (!suggestion.equals(expected.get(i)))
+                        if (!suggestion.equals(expected.get(i))) {
+                            mAsserter.dumpLog("Suggestion '" + suggestion + "' not equal to expected '" + expected.get(i) + "'.");
                             return false;
+                        }
                     }
 
                     return true;
@@ -93,21 +100,16 @@ public class testSearchSuggestions extends BaseTest {
         suggestMap.put("foo barz", new ArrayList<String>() {{ add("foo barz"); }});
     }
 
-    private void connectSuggestClient(final Activity activity) {
-        waitForTest(new BooleanTest() {
+    private void mockSuggestClientFactory() {
+        BrowserSearch.sSuggestClientFactory = new BrowserSearch.SuggestClientFactory() {
             @Override
-            public boolean test() {
-                final Fragment browserSearch = getBrowserSearch();
-                return (browserSearch != null);
+            public SuggestClient getSuggestClient(Context context, String template, int timeout, int max) {
+                final String suggestTemplate = getAbsoluteRawUrl(SUGGESTION_TEMPLATE);
+
+                // This one uses our template, and also doesn't check for network accessibility.
+                return new SuggestClient(context, suggestTemplate, SUGGESTION_TIMEOUT, Integer.MAX_VALUE, false);
             }
-        }, SUGGESTION_TIMEOUT);
-
-        final BrowserSearch browserSearch = (BrowserSearch) getBrowserSearch();
-
-        final String suggestTemplate = getAbsoluteRawUrl(SUGGESTION_TEMPLATE);
-        final SuggestClient client = new SuggestClient(activity, suggestTemplate,
-                SUGGESTION_TIMEOUT);
-        browserSearch.setSuggestClient(client);
+        };
     }
 }
 
