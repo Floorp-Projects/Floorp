@@ -316,6 +316,13 @@ nsHostObjectProtocolHandler::AddDataEntry(const nsACString& aScheme,
   mozilla::BlobURLsReporter::GetJSStackForBlob(info);
 
   gDataTable->Put(aUri, info);
+
+  nsCOMPtr<PIFileImpl> pFileImpl = do_QueryInterface(aObject);
+  if (pFileImpl) {
+    auto* fileImpl = static_cast<FileImpl*>(pFileImpl.get());
+    fileImpl->AddOwner();
+  }
+
   return NS_OK;
 }
 
@@ -331,7 +338,17 @@ nsHostObjectProtocolHandler::RemoveDataEntry(const nsACString& aUri)
     else {
       uriIgnoringRef = StringHead(aUri, hashPos);
     }
-    gDataTable->Remove(uriIgnoringRef);
+    nsAutoPtr<DataInfo> dataInfo;
+    gDataTable->RemoveAndForget(uriIgnoringRef, dataInfo);
+
+    if (dataInfo) {
+      nsCOMPtr<PIFileImpl> pFileImpl = do_QueryInterface(dataInfo->mObject);
+      if (pFileImpl) {
+        auto* fileImpl = static_cast<FileImpl*>(pFileImpl.get());
+        fileImpl->ReleaseOwner();
+      }
+    }
+
     if (gDataTable->Count() == 0) {
       delete gDataTable;
       gDataTable = nullptr;
@@ -392,7 +409,7 @@ GetDataInfo(const nsACString& aUri)
     uriIgnoringRef = StringHead(aUri, hashPos);
   }
   gDataTable->Get(uriIgnoringRef, &res);
-  
+
   return res;
 }
 
