@@ -410,9 +410,6 @@ FetchDriver::HttpFetch(bool aCORSFlag, bool aCORSPreflightFlag, bool aAuthentica
     // Auth may require prompting, we don't support it yet.
     // The next patch in this same bug prevents this from aborting the request.
     // Credentials checks for CORS are handled by nsCORSListenerProxy,
-    if (useCredentials) {
-      return FailWithNetworkError();
-    }
   }
 
   // Step 5. Proxy authentication will be handled by Necko.
