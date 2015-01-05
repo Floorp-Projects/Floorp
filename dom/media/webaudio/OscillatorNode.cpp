@@ -143,9 +143,9 @@ public:
   {
     mPhase += mPhaseIncrement;
     if (mPhase > 2 * M_PI) {
-      mPhase -= 2 * M_PI;
+      mPhase -= float(2 * M_PI);
     } else if (mPhase < -2 * M_PI) {
-      mPhase += 2 * M_PI;
+      mPhase += float(2 * M_PI);
     }
   }
 
@@ -177,7 +177,7 @@ public:
     mFinalFrequency = frequency * pow(2., detune / 1200.);
     mRecomputeParameters = false;
 
-    mPhaseWrap = 2 * M_PI;
+    mPhaseWrap = float(2 * M_PI);
     mPhaseIncrement = 2 * M_PI / signalPeriod;
   }
 
