@@ -366,6 +366,10 @@ nsresult TestPaths() {
       "connect-src http://www.example.com/foo;sessionid=12,34" },
     { "connect-src http://test.com/pathIncludingAz19-._~!$&'()*+=:@",
       "connect-src http://test.com/pathincludingaz19-._~!$&'()*+=:@" },
+    { "script-src http://www.example.com:88/.js",
+      "script-src http://www.example.com:88/.js" },
+    { "script-src https://foo.com/_abc/abc_/_/_a_b_c_",
+      "script-src https://foo.com/_abc/abc_/_/_a_b_c_" }
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
@@ -489,8 +493,6 @@ nsresult TestPoliciesWithInvalidSrc() {
     { "script-src http://www.example.com:88//path-1",
       "script-src 'none'" },
     { "script-src http://www.example.com:88//path-1",
-      "script-src 'none'" },
-    { "script-src http://www.example.com:88/.js",
       "script-src 'none'" },
     { "script-src http://www.example.com:88.js",
       "script-src 'none'" },
