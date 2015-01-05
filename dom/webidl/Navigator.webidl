@@ -260,7 +260,7 @@ partial interface Navigator {
 
 #ifdef MOZ_WEBSMS_BACKEND
 partial interface Navigator {
-  [CheckPermissions="sms", Pref="dom.sms.enabled"]
+  [CheckPermissions="sms", Pref="dom.sms.enabled", AvailableIn="CertifiedApps"]
   readonly attribute MozMobileMessageManager? mozMobileMessage;
 };
 #endif
