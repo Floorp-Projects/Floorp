@@ -38,7 +38,6 @@
 #include "nsNetUtil.h"
 #include "AudioStream.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/Services.h"
 
 namespace mozilla {
 namespace dom {
@@ -67,8 +66,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_ADDREF_INHERITED(AudioContext, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(AudioContext, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(AudioContext)
-  NS_INTERFACE_MAP_ENTRY(nsIMemoryReporter)
-  NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 static float GetSampleRateForAudioContext(bool aIsOffline, float aSampleRate)
@@ -106,12 +103,6 @@ AudioContext::AudioContext(nsPIDOMWindow* aWindow,
   // call them after mDestination has been set up.
   mDestination->CreateAudioChannelAgent();
   mDestination->SetIsOnlyNodeForContext(true);
-
-  nsCOMPtr<nsIObserverService> observerService =
-    mozilla::services::GetObserverService();
-  if (observerService) {
-    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
-  }
 }
 
 AudioContext::~AudioContext()
@@ -730,25 +721,6 @@ double
 AudioContext::ExtraCurrentTime() const
 {
   return mDestination->ExtraCurrentTime();
-}
-
-NS_IMETHODIMP
-AudioContext::Observe(nsISupports* aSubject, const char* aTopic,
-                      const char16_t* aData)
-{
-  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-    if (mDestination) {
-      // Free up the destination node stream now, in order to avoid having to
-      // wait for the final CC to do it for us.
-      mDestination->DestroyMediaStream();
-    }
-    nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
-    if (observerService) {
-      observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    }
-  }
-  return NS_OK;
 }
 
 }
