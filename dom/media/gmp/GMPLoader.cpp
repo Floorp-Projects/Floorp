@@ -156,7 +156,13 @@ GMPLoaderImpl::Load(const char* aLibPath,
       return false;
     }
     assert(top >= bottom);
-    SecureZeroMemory(bottom, (top - bottom));
+    // Inline instructions equivalent to RtlSecureZeroMemory().
+    // We can't just use RtlSecureZeroMemory here directly, as in debug
+    // builds, RtlSecureZeroMemory() can't be inlined, and the stack
+    // memory it uses would get wiped by itself running, causing crashes.
+    for (volatile uint8_t* p = (volatile uint8_t*)bottom; p < top; p++) {
+      *p = 0;
+    }
   } else
 #endif
   {
