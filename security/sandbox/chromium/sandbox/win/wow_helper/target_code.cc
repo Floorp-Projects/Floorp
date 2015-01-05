@@ -7,6 +7,7 @@
 namespace sandbox {
 
 // Hooks NtMapViewOfSection to detect the load of dlls.
+#pragma code_seg(push, code, ".TargetCode$A")
 NTSTATUS WINAPI TargetNtMapViewOfSection(
     PatchInfo *patch_info, HANDLE process, PVOID *base, ULONG_PTR zero_bits,
     SIZE_T commit_size, PLARGE_INTEGER offset, PSIZE_T view_size,
@@ -25,10 +26,13 @@ NTSTATUS WINAPI TargetNtMapViewOfSection(
 
   return ret;
 }
+#pragma code_seg(pop, code)
 
 // Marks the end of the code to copy to the target process.
+#pragma code_seg(push, code, ".TargetCode$B")
 NTSTATUS WINAPI TargetEnd() {
   return STATUS_SUCCESS;
 }
+#pragma code_seg(pop, code)
 
 }  // namespace sandbox
