@@ -46,6 +46,7 @@ public class TabsLayoutAdapter extends BaseAdapter {
 
     final void clear() {
         mTabs = null;
+
         notifyDataSetChanged(); // Be sure to call this whenever mTabs changes.
     }
 
@@ -69,6 +70,11 @@ public class TabsLayoutAdapter extends BaseAdapter {
             return -1;
 
         return mTabs.indexOf(tab);
+    }
+
+    @Override
+    public boolean isEnabled(int position) {
+        return true;
     }
 
     @Override
