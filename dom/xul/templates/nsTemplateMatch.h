@@ -6,6 +6,7 @@
 #ifndef nsTemplateMatch_h__
 #define nsTemplateMatch_h__
 
+#include "mozilla/Attributes.h"
 #include "nsIContent.h"
 #include "nsIXULTemplateQueryProcessor.h"
 #include "nsIXULTemplateResult.h"
@@ -130,8 +131,8 @@ public:
 
 private:
 
-    nsTemplateMatch(const nsTemplateMatch& aMatch); // not to be implemented
-    void operator=(const nsTemplateMatch& aMatch); // not to be implemented
+    nsTemplateMatch(const nsTemplateMatch& aMatch) MOZ_DELETE;
+    void operator=(const nsTemplateMatch& aMatch) MOZ_DELETE;
 };
 
 #endif // nsTemplateMatch_h__

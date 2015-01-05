@@ -3291,20 +3291,6 @@ if test "$ac_cv_cpp_dynamic_cast_void_ptr" = yes ; then
    AC_DEFINE(HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR)
 fi
 
-dnl note that this one is reversed - if the test fails, then
-dnl we require implementations of unused virtual methods. Which
-dnl really blows because it means we'll have useless vtable
-dnl bloat.
-AC_CACHE_CHECK(whether C++ requires implementation of unused virtual methods,
-               ac_cv_cpp_unused_required,
-               [AC_TRY_LINK(class X {private: virtual void never_called();};,
-                               X x;,
-                               ac_cv_cpp_unused_required=no,
-                               ac_cv_cpp_unused_required=yes)])
-if test "$ac_cv_cpp_unused_required" = yes ; then
-   AC_DEFINE(NEED_CPP_UNUSED_IMPLEMENTATIONS)
-fi
-
 
 # try harder, when checking for __thread support, see bug 521750 comment #33 and below
 # We pass MOZ_OPTIMIZE_LDFLAGS to the linker because if dead_strip is
@@ -9024,7 +9010,6 @@ CPP_THROW_NEW
 HAVE_CPP_AMBIGUITY_RESOLVING_USING
 HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
 HAVE_CPP_PARTIAL_SPECIALIZATION
-NEED_CPP_UNUSED_IMPLEMENTATIONS
 HAVE_GETPAGESIZE
 HAVE_ICONV
 HAVE_ICONV_WITH_CONST_INPUT
