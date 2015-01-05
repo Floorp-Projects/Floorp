@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for requestSync - promise</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="common_basic.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<div id="container"></div>
+  <script type="application/javascript;version=1.7">
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["dom.sysmsg.enabled", true]]}, function() {
+
+  ok("mozSetMessageHandlerPromise" in navigator, "mozSetMessageHandlerPromise exists");
+
+  var status = false;
+  try {
+    navigator.mozSetMessageHandlerPromise();
+  } catch(e) {
+    status = true;
+  }
+  ok(status, "mozSetMessageHandlerPromise wants a promise 1");
+
+  status = false;
+  try {
+    navigator.mozSetMessageHandlerPromise(42);
+  } catch(e) {
+    status = true;
+  }
+  ok(status, "mozSetMessageHandlerPromise wants a promise 2");
+
+  status = false;
+  try {
+    navigator.mozSetMessageHandlerPromise("hello world");
+  } catch(e) {
+    status = true;
+  }
+  ok(status, "mozSetMessageHandlerPromise wants a promise 3");
+
+  status = false;
+  try {
+    navigator.mozSetMessageHandlerPromise(new Promise(function(a, b) {}));
+  } catch(e) {
+    info(e);
+    status = true;
+  }
+  ok(status, "mozSetMessageHandlerPromise cannot be called outside a messageHandler");
+  SimpleTest.finish();
+});
+
+  </script>
+</body>
+</html>

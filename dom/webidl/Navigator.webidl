@@ -285,6 +285,12 @@ partial interface Navigator {
   void    mozSetMessageHandler (DOMString type, systemMessageCallback? callback);
   [Throws, Pref="dom.sysmsg.enabled"]
   boolean mozHasPendingMessage (DOMString type);
+
+  // This method can be called only from the systeMessageCallback function and
+  // it allows the page to set a promise to keep alive the app until the
+  // current operation is not fully completed.
+  [Throws, Pref="dom.sysmsg.enabled"]
+  void mozSetMessageHandlerPromise (Promise<any> promise);
 };
 
 #ifdef MOZ_B2G_RIL
