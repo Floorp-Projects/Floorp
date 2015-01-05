@@ -4489,13 +4489,19 @@ nsGlobalWindow::GetOpenerWindow(ErrorResult& aError)
     return nullptr;
   }
 
+  nsGlobalWindow* win = static_cast<nsGlobalWindow*>(opener.get());
+
   // First, check if we were called from a privileged chrome script
   if (nsContentUtils::IsCallerChrome()) {
+    // Catch the case where we're chrome but the opener is not...
+    if (GetPrincipal() == nsContentUtils::GetSystemPrincipal() &&
+        win->GetPrincipal() != nsContentUtils::GetSystemPrincipal()) {
+      return nullptr;
+    }
     return opener;
   }
 
-  // First, ensure that we're not handing back a chrome window.
-  nsGlobalWindow *win = static_cast<nsGlobalWindow *>(opener.get());
+  // First, ensure that we're not handing back a chrome window to content:
   if (win->IsChromeWindow()) {
     return nullptr;
   }

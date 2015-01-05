@@ -67,12 +67,31 @@ function handleDialog(doc, testNum) {
         is(username, "xmluser2", "Checking provided username");
         is(password, "xmlpass2", "Checking provided password");
 
-        // Check that the dialog has the correct parent
-        ok(doc.defaultView.opener, "dialog has opener");
-        // Not using is() because its "expected" text doesn't deal
-        // with window objects very well 
-        // Disabled due to Bug 718543.
-        // ok(doc.defaultView.opener == window, "dialog's opener is correct");
+        // Check that the dialog is modal, chrome and dependent;
+        // We can't just check window.opener because that'll be
+        // a content window, which therefore isn't exposed (it'll lie and
+        // be null).
+        var win = doc.defaultView;
+        var Ci = SpecialPowers.Ci;
+        var treeOwner = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation).
+                            QueryInterface(Ci.nsIDocShellTreeItem).treeOwner;
+        treeOwner.QueryInterface(Ci.nsIInterfaceRequestor);
+        var flags = treeOwner.getInterface(Ci.nsIXULWindow).chromeFlags;
+        var wbc = treeOwner.getInterface(Ci.nsIWebBrowserChrome);
+        info("Flags: " + flags);
+        ok((flags & Ci.nsIWebBrowserChrome.CHROME_OPENAS_CHROME) != 0,
+           "Dialog should be opened as chrome");
+        ok((flags & Ci.nsIWebBrowserChrome.CHROME_OPENAS_DIALOG) != 0,
+           "Dialog should be opened as a dialog");
+        ok((flags & Ci.nsIWebBrowserChrome.CHROME_DEPENDENT) != 0,
+           "Dialog should be opened as dependent.");
+        ok(wbc.isWindowModal(), "Dialog should be modal");
+
+        // Check that the right tab is focused:
+        var browserWin = SpecialPowers.Services.wm.getMostRecentWindow("navigator:browser");
+        var spec = browserWin.gBrowser.selectedBrowser.currentURI.spec;
+        ok(spec.startsWith("http://mochi.test:8888"),
+           "Tab with remote URI (rather than about:blank) should be focused (" + spec + ")");
 
         break;
 
@@ -136,8 +155,8 @@ function doTest() {
         break;
 
     case 2:
-        // Test correct parenting, by opening another window and
-        // making sure the prompt's opener is correct
+        // Test correct parenting, by opening another tab in the foreground,
+        // and making sure the prompt re-focuses the original tab when shown:
         newWin = window.open();
         newWin.focus();
         startCallbackTimer();
