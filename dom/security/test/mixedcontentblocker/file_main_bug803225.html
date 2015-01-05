@@ -112,7 +112,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
   var webHandler = SpecialPowers.Cc["@mozilla.org/uriloader/web-handler-app;1"].
                    createInstance(SpecialPowers.Ci.nsIWebHandlerApp);
   webHandler.name = "Web Handler";
-  webHandler.uriTemplate = "http://example.com/tests/dom/base/test/mixedcontentblocker/bug803225_test_mailto.html?s=%";
+  webHandler.uriTemplate = "http://example.com/tests/dom/security/test/mixedcontentblocker/file_bug803225_test_mailto.html?s=%";
 
   var uri = ioService.newURI("mailto:foo@bar.com", null, null);
   webHandler.launchWithURI(uri);
@@ -144,7 +144,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
 
   // Test 8: wss protocol
   var wss;
-  wss = new WebSocket("wss://example.com/tests/dom/base/test/mixedcontentblocker/file_mixed_content_main_bug803225_websocket");
+  wss = new WebSocket("wss://example.com/tests/dom/security/test/mixedcontentblocker/file_main_bug803225_websocket");
 
   var status_wss = "started";
   wss.onopen = function(e) {
