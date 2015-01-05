@@ -133,7 +133,7 @@ public class SuggestionsFragment extends Fragment {
 
     public void setEngine(SearchEngine engine) {
         suggestClient = new SuggestClient(getActivity(), engine.getSuggestionTemplate(GECKO_SEARCH_TERMS_URL_PARAM),
-                SUGGESTION_TIMEOUT, SUGGESTION_MAX);
+                                          SUGGESTION_TIMEOUT, SUGGESTION_MAX, true);
     }
 
     public void loadSuggestions(String query) {
