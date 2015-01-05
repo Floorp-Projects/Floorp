@@ -654,7 +654,7 @@ nsJSContext::DestroyJSContext()
                                   js_options_dot_str, this);
 
   if (mGCOnDestruction) {
-    PokeGC(JS::gcreason::NSJSCONTEXT_DESTROY, mWindowProxy);
+    PokeGC(JS::gcreason::NSJSCONTEXT_DESTROY);
   }
 
   JS_DestroyContextNoGC(mContext);
@@ -1463,11 +1463,8 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
     return;
   }
 
-  if (aIncremental == NonIncrementalGC || aReason == JS::gcreason::FULL_GC_TIMER) {
-    sNeedsFullGC = true;
-  }
-
-  if (sNeedsFullGC) {
+  if (sNeedsFullGC || aReason != JS::gcreason::CC_WAITING) {
+    sNeedsFullGC = false;
     JS::PrepareForFullGC(sRuntime);
   } else {
     CycleCollectedJSRuntime::Get()->PrepareWaitingZonesForGC();
@@ -1828,7 +1825,7 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
   uint32_t ccNowDuration = TimeBetween(gCCStats.mBeginTime, endCCTimeStamp);
 
   if (NeedsGCAfterCC()) {
-    PokeGC(JS::gcreason::CC_WAITING, nullptr,
+    PokeGC(JS::gcreason::CC_WAITING,
            NS_GC_DELAY - std::min(ccNowDuration, kMaxICCDuration));
   }
 
@@ -2092,7 +2089,9 @@ nsJSContext::LoadEnd()
     return;
   }
 
+  // Its probably a good idea to GC soon since we have finished loading.
   sLoadingInProgress = false;
+  PokeGC(JS::gcreason::LOAD_END);
 }
 
 // Only trigger expensive timers when they have been checked a number of times.
@@ -2155,20 +2154,11 @@ nsJSContext::RunNextCollectorTimer()
 
 // static
 void
-nsJSContext::PokeGC(JS::gcreason::Reason aReason, JSObject* aObj, int aDelay)
+nsJSContext::PokeGC(JS::gcreason::Reason aReason, int aDelay)
 {
-  if (sShuttingDown) {
-    return;
-  }
+  sNeedsFullGC = sNeedsFullGC || aReason != JS::gcreason::CC_WAITING;
 
-  if (aObj) {
-    JS::Zone* zone = JS::GetTenuredGCThingZone(aObj);
-    CycleCollectedJSRuntime::Get()->AddZoneWaitingForGC(zone);
-  } else if (aReason != JS::gcreason::CC_WAITING) {
-    sNeedsFullGC = true;
-  }
-
-  if (sGCTimer || sInterSliceGCTimer) {
+  if (sGCTimer || sInterSliceGCTimer || sShuttingDown) {
     // There's already a timer for GC'ing, just return
     return;
   }
@@ -2350,10 +2340,6 @@ DOMGCSliceCallback(JSRuntime *aRt, JS::GCProgress aProgress, const JS::GCDescrip
       sCCLockedOut = true;
 
       nsJSContext::KillShrinkGCBuffersTimer();
-
-      if (!aDesc.isCompartment_) {
-        sNeedsFullGC = false;
-      }
 
       break;
     }
