@@ -235,7 +235,7 @@ class FileImpl : public PIFileImpl
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  FileImpl() {}
+  FileImpl() : mOwnersCount(0) {}
 
   virtual void GetName(nsAString& aName) = 0;
 
@@ -302,8 +302,18 @@ public:
     return false;
   }
 
+  void AddOwner();
+  void ReleaseOwner();
+
+  bool HasOwners() const
+  {
+    return !!mOwnersCount;
+  }
+
 protected:
   virtual ~FileImpl() {}
+
+  uint32_t mOwnersCount;
 };
 
 class FileImplBase : public FileImpl
