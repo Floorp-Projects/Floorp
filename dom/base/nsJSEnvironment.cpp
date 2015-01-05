@@ -1459,7 +1459,7 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
   if (sCCLockedOut && aIncremental == IncrementalGC) {
     // We're in the middle of incremental GC. Do another slice.
     JS::PrepareForIncrementalGC(sRuntime);
-    JS::IncrementalGCSlice(sRuntime, aReason, aSliceMillis);
+    JS::IncrementalGC(sRuntime, aReason, aSliceMillis);
     return;
   }
 
@@ -1472,10 +1472,11 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
 
   if (aIncremental == IncrementalGC) {
     MOZ_ASSERT(aShrinking == NonShrinkingGC);
-    JS::StartIncrementalGC(sRuntime, GC_NORMAL, aReason, aSliceMillis);
+    JS::IncrementalGC(sRuntime, aReason, aSliceMillis);
+  } else if (aShrinking == ShrinkingGC) {
+    JS::ShrinkingGC(sRuntime, aReason);
   } else {
-    JSGCInvocationKind gckind = aShrinking == ShrinkingGC ? GC_SHRINK : GC_NORMAL;
-    JS::GCForReason(sRuntime, gckind, aReason);
+    JS::GCForReason(sRuntime, aReason);
   }
 }
 
