@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     x="0px" y="0px"
+     width="16" height="16"
+     viewBox="0 0 16 16"
+     enable-background="new 0 0 16 16"
+     xml:space="preserve">
+<style>
+use:not(:target) {
+  display: none;
+}
+
+use {
+  fill: #EDF0F1;
+}
+
+use[id$="-disabled"] {
+  fill-opacity: 0.5;
+}
+
+use[id$="-open"] {
+  fill: #3BACE5;
+}
+
+</style>
+<defs style="display:none">
+  <path id="filter-shape"
+         d="M 2,2 v 3 l 5,4 v 6 h 2 v -6 l 5,-4 v -3 L 14,2 z"/>
+</defs>
+<use id="filter"              xlink:href="#filter-shape"/>
+<use id="filter-disabled"     xlink:href="#filter-shape"/>
+<use id="filter-open"         xlink:href="#filter-shape"/>
+</svg>
