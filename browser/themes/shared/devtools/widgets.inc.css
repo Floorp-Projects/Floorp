@@ -993,10 +993,6 @@
 
 /* Bar graph widget */
 
-.bar-graph-widget-canvas {
-  background: #f7f7f7;
-}
-
 .bar-graph-widget-legend {
   position: absolute;
   top: 4px;
@@ -1027,11 +1023,20 @@
   cursor: pointer;
 }
 
-.bar-graph-widget-legend-item > [view="label"] {
+.theme-light .bar-graph-widget-legend-item > [view="label"] {
+  color: var(--theme-body-color);
   text-shadow: 1px  0px rgba(255,255,255,0.8),
               -1px  0px rgba(255,255,255,0.8),
                0px -1px rgba(255,255,255,0.8),
                0px  1px rgba(255,255,255,0.8);
+}
+
+.theme-dark .bar-graph-widget-legend-item > [view="label"] {
+  color: var(--theme-selection-color);
+  text-shadow: 1px  0px rgba(0,0,0,0.8),
+              -1px  0px rgba(0,0,0,0.8),
+               0px -1px rgba(0,0,0,0.8),
+               0px  1px rgba(0,0,0,0.8);
 }
 
 /* Charts */
