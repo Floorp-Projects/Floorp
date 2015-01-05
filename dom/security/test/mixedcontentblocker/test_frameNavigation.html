@@ -42,7 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840388
     // If we are here, all the insecure tests have run.
     // If we haven't changed the iframe to run the secure tests, change it now.
     if (!secureTestsStarted) {
-      document.getElementById('testing_frame').src = "https://example.com/tests/dom/base/test/mixedcontentblocker/file_mixed_content_frameNavigation_secure.html";
+      document.getElementById('testing_frame').src = "https://example.com/tests/dom/security/test/mixedcontentblocker/file_frameNavigation_secure.html";
       secureTestsStarted = true;
     }
     for (var prop in testsToRunSecure) {
@@ -64,7 +64,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840388
       blockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
       log("blockActive set to "+blockActive+".");
       secureTestsStarted = false;
-      document.getElementById('framediv').innerHTML = '<iframe src="http://example.com/tests/dom/base/test/mixedcontentblocker/file_mixed_content_frameNavigation.html" id="testing_frame"></iframe>';
+      document.getElementById('framediv').innerHTML = '<iframe src="http://example.com/tests/dom/security/test/mixedcontentblocker/file_frameNavigation.html" id="testing_frame"></iframe>';
     }
     else {
       //set the prefs back to what they were set to originally
@@ -119,7 +119,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840388
 
 <body>
   <div id="framediv">
-    <iframe src="http://example.com/tests/dom/base/test/mixedcontentblocker/file_mixed_content_frameNavigation.html" id="testing_frame"></iframe>
+    <iframe src="http://example.com/tests/dom/security/test/mixedcontentblocker/file_frameNavigation.html" id="testing_frame"></iframe>
   </div>
 
   <pre id="log"></pre>
