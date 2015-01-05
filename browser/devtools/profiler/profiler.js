@@ -8,6 +8,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/devtools/Loader.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+Cu.import("resource:///modules/devtools/gDevTools.jsm");
 
 devtools.lazyRequireGetter(this, "Services");
 devtools.lazyRequireGetter(this, "promise");
