@@ -165,8 +165,6 @@ enum SurfaceInitMode
  *    construct an EffectChain for the quad,
  *    call DrawQuad,
  *  call EndFrame.
- * If the user has to stop compositing at any point before EndFrame, call
- * AbortFrame.
  * If the compositor is usually used for compositing but compositing is
  * temporarily done without the compositor, call EndFrameForExternalComposition
  * after compositing each frame so the compositor can remain internally
@@ -354,11 +352,6 @@ public:
    * aTransform is the transform from user space to window space.
    */
   virtual void EndFrameForExternalComposition(const gfx::Matrix& aTransform) = 0;
-
-  /**
-   * Tidy up if BeginFrame has been called, but EndFrame won't be.
-   */
-  virtual void AbortFrame() = 0;
 
   /**
    * Setup the viewport and projection matrix for rendering to a target of the
