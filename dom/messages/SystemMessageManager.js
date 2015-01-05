@@ -57,7 +57,7 @@ function SystemMessageManager() {
 SystemMessageManager.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
 
-  _dispatchMessage: function(aType, aDispatcher, aMessage) {
+  _dispatchMessage: function(aType, aDispatcher, aMessage, aMessageID) {
     if (aDispatcher.isHandling) {
       // Queue up the incomming message if we're currently dispatching a
       // message; we'll send the message once we finish with the current one.
@@ -66,7 +66,7 @@ SystemMessageManager.prototype = {
       // event loop from within a system message handler (e.g. via alert()),
       // and we can then try to send the page another message while it's
       // inside this nested event loop.
-      aDispatcher.messages.push(aMessage);
+      aDispatcher.messages.push({ message: aMessage, messageID: aMessageID });
       return;
     }
 
@@ -96,16 +96,17 @@ SystemMessageManager.prototype = {
 
     // We need to notify the parent one of the system messages has been handled,
     // so the parent can release the CPU wake lock it took on our behalf.
-    cpmm.sendAsyncMessage("SystemMessageManager:HandleMessagesDone",
+    cpmm.sendAsyncMessage("SystemMessageManager:HandleMessageDone",
                           { type: aType,
                             manifestURL: this._manifestURL,
                             pageURL: this._pageURL,
-                            handledCount: 1 });
+                            msgID: aMessageID });
 
     aDispatcher.isHandling = false;
 
     if (aDispatcher.messages.length > 0) {
-      this._dispatchMessage(aType, aDispatcher, aDispatcher.messages.shift());
+      let msg = aDispatcher.messages.shift();
+      this._dispatchMessage(aType, aDispatcher, msg.message, msg.messageID);
     } else {
       // No more messages that need to be handled, we can notify the
       // ContentChild to release the CPU wake lock grabbed by the ContentParent
@@ -236,8 +237,9 @@ SystemMessageManager.prototype = {
       }
 
       messages.forEach(function(aMsg) {
-        this._dispatchMessage(msg.type, dispatcher, aMsg);
+        this._dispatchMessage(msg.type, dispatcher, aMsg, msg.msgID);
       }, this);
+
     } else {
       // Since no handlers are registered, we need to notify the parent as if
       // all the queued system messages have been handled (notice |handledCount:
