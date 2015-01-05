@@ -122,6 +122,9 @@ interface MozFrameLoaderOwner {
   [ChromeOnly]
   readonly attribute MozFrameLoader? frameLoader;
 
+  [ChromeOnly]
+  void setIsPrerendered();
+
   [ChromeOnly, Throws]
   void swapFrameLoaders(XULElement aOtherOwner);
 };
