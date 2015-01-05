@@ -13,7 +13,7 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-object-element
-[NeedResolve]
+[NeedResolve, UnsafeInPrerendering]
 interface HTMLObjectElement : HTMLElement {
   [Pure, SetterThrows]
            attribute DOMString data;

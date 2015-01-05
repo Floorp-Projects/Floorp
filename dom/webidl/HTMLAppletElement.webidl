@@ -12,7 +12,7 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-applet-element
-[NeedResolve]
+[NeedResolve, UnsafeInPrerendering]
 interface HTMLAppletElement : HTMLElement {
   [Pure, SetterThrows]
            attribute DOMString align;
