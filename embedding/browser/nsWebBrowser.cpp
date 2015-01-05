@@ -578,21 +578,23 @@ NS_IMETHODIMP nsWebBrowser::GoForward()
   return mDocShellAsNav->GoForward();
 }
 
-NS_IMETHODIMP nsWebBrowser::LoadURIWithBase(const char16_t* aURI,
-                                            uint32_t aLoadFlags,
-                                            nsIURI* aReferringURI,
-                                            nsIInputStream* aPostDataStream,
-                                            nsIInputStream* aExtraHeaderStream,
-                                            nsIURI* aBaseURI)
+NS_IMETHODIMP nsWebBrowser::LoadURIWithOptions(const char16_t* aURI,
+                                               uint32_t aLoadFlags,
+                                               nsIURI* aReferringURI,
+                                               uint32_t aReferrerPolicy,
+                                               nsIInputStream* aPostDataStream,
+                                               nsIInputStream* aExtraHeaderStream,
+                                               nsIURI* aBaseURI)
 {
   NS_ENSURE_STATE(mDocShell);
 
-  return mDocShellAsNav->LoadURIWithBase(aURI,
-                                         aLoadFlags,
-                                         aReferringURI,
-                                         aPostDataStream,
-                                         aExtraHeaderStream,
-                                         aBaseURI);
+  return mDocShellAsNav->LoadURIWithOptions(aURI,
+                                            aLoadFlags,
+                                            aReferringURI,
+                                            aReferrerPolicy,
+                                            aPostDataStream,
+                                            aExtraHeaderStream,
+                                            aBaseURI);
 }
 
 NS_IMETHODIMP nsWebBrowser::LoadURI(const char16_t* aURI,
