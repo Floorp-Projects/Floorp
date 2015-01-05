@@ -30,7 +30,7 @@ function runTest() {
   var loaderWindow = loader.contentWindow;
   loader.onload = function () { gen.next() };
 
-  loader.src = "http://example.org/tests/dom/base/test/file_CrossSiteXHR_inner.html";
+  loader.src = "http://example.org/tests/dom/security/test/cors/file_CrossSiteXHR_inner.html";
   origin = "http://example.org";
   yield undefined;
 
@@ -428,7 +428,7 @@ function runTest() {
                });
   }
 
-  baseURL = "http://mochi.test:8888/tests/dom/base/test/" +
+  baseURL = "http://mochi.test:8888/tests/dom/security/test/cors/" +
              "file_CrossSiteXHR_cache_server.sjs?";
   setStateURL = baseURL + "setState=";
 
