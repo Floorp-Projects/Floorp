@@ -5077,9 +5077,6 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
       "row dense",
       "dense column",
       "dense row",
-      "stack column",
-      "stack row",
-      "stack",
     ],
     invalid_values: [
       "",
@@ -5087,9 +5084,6 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
       "none",
       "10px",
       "dense",
-      "stack dense",
-      "stack stack",
-      "stack row stack",
       "column row",
       "dense row dense",
     ]
@@ -5320,7 +5314,7 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
       "none / none",
     ],
     other_values: [
-      "stack 40px",
+      "column 40px",
       "column dense auto",
       "dense row minmax(min-content, 2fr)",
       "row 40px / 100px",
