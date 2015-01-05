@@ -1,0 +1,20 @@
+/*
+ * Moved this CSS from an inline stylesheet to an external file when we added
+ * inline-style blocking in bug 763879.
+ * This test may hang if the load for this .css file is blocked due to a
+ * malfunction of CSP, but should pass if the style_good test passes.
+ */
+
+/* CSS font embedding tests */
+@font-face {
+  font-family: "arbitrary_good";
+  src: url('file_CSP.sjs?testid=font_good&type=application/octet-stream');
+}
+@font-face {
+  font-family: "arbitrary_bad";
+  src: url('http://example.org/tests/dom/security/test/csp/file_CSP.sjs?testid=font_bad&type=application/octet-stream');
+}
+
+.div_arbitrary_good { font-family: "arbitrary_good"; }
+.div_arbitrary_bad { font-family: "arbitrary_bad"; }
+
