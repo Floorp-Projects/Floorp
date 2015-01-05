@@ -16,7 +16,7 @@
 #include "nsCOMPtr.h"
 
 #include "nsContentUtils.h"
-#include "nsCrossSiteListenerProxy.h"
+#include "nsCORSListenerProxy.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
 #include "nsStreamUtils.h"
