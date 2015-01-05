@@ -142,10 +142,8 @@ public:
   void IncrementPhase()
   {
     mPhase += mPhaseIncrement;
-    if (mPhase > 2 * M_PI) {
-      mPhase -= 2 * M_PI;
-    } else if (mPhase < -2 * M_PI) {
-      mPhase += 2 * M_PI;
+    if (mPhase > mPhaseWrap) {
+      mPhase -= mPhaseWrap;
     }
   }
 
