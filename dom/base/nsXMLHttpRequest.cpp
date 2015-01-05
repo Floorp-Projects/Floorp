@@ -46,7 +46,7 @@
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
 #include "nsError.h"
-#include "nsCrossSiteListenerProxy.h"
+#include "nsCORSListenerProxy.h"
 #include "nsIHTMLDocument.h"
 #include "nsIStorageStream.h"
 #include "nsIPromptFactory.h"
