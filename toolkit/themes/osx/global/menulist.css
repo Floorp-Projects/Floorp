@@ -8,9 +8,12 @@
 menulist {
   -moz-appearance: menulist;
   margin: 5px 2px 3px;
-  min-height: 20px !important;
   color: -moz-DialogText;
   text-shadow: none;
+}
+
+menulist:not([popuponly="true"]) {
+  min-height: 20px !important;
 }
 
 .menulist-label-box {

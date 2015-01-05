@@ -1012,8 +1012,8 @@ chatbox:-moz-full-screen-ancestor > .chat-titlebar {
 }
 
 /* Combobox dropdown renderer */
-#ContentSelectDropdown {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#popup-scrollbars");
+#ContentSelectDropdown > menupopup {
+  max-height: 350px;
 }
 
 .contentSelectDropdown-optgroup {

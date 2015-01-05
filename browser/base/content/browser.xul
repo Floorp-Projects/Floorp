@@ -146,8 +146,13 @@
     <!-- for url bar autocomplete -->
     <panel type="autocomplete-richlistbox" id="PopupAutoCompleteRichResult" noautofocus="true" hidden="true"/>
 
-    <!-- for select dropdowns -->
-    <menupopup id="ContentSelectDropdown" rolluponmousewheel="true" hidden="true"/>
+    <!-- for select dropdowns. The menupopup is what shows the list of options,
+         and the popuponly menulist makes things like the menuactive attributes
+         work correctly on the menupopup. ContentSelectDropdown expects the
+         popuponly menulist to be its immediate parent. -->
+    <menulist popuponly="true" id="ContentSelectDropdown" hidden="true">
+      <menupopup rolluponmousewheel="true"/>
+    </menulist>
 
     <!-- for invalid form error message -->
     <panel id="invalid-form-popup" type="arrow" orient="vertical" noautofocus="true" hidden="true" level="parent">
@@ -1169,7 +1174,7 @@
                     tabcontainer="tabbrowser-tabs"
                     contentcontextmenu="contentAreaContextMenu"
                     autocompletepopup="PopupAutoComplete"
-                    selectpopup="ContentSelectDropdown"/>
+                    selectmenulist="ContentSelectDropdown"/>
         <chatbar id="pinnedchats" layer="true" mousethrough="always" hidden="true"/>
       </vbox>
       <splitter id="social-sidebar-splitter"
