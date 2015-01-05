@@ -39,10 +39,10 @@ var origins =
      origin: 'http://xn--hxajbheg2az3al.xn--jxalpdlp'
    },
    { origin: 'http://example.org',
-     file: 'jar:http://example.org/tests/dom/base/test/file_CrossSiteXHR_inner.jar!/file_CrossSiteXHR_inner.html'
+     file: 'jar:http://example.org/tests/dom/security/test/cors/file_CrossSiteXHR_inner.jar!/file_CrossSiteXHR_inner.html'
    },
    { origin: 'null',
-     file: 'http://example.org/tests/dom/base/test/file_CrossSiteXHR_inner_data.sjs'
+     file: 'http://example.org/tests/dom/security/test/cors/file_CrossSiteXHR_inner_data.sjs'
    },
    ];
 
@@ -61,14 +61,14 @@ function runTest() {
   loader.onload = function () { gen.next() };
 
   // Test preflight-less requests
-  basePath = "/tests/dom/base/test/file_CrossSiteXHR_server.sjs?"
+  basePath = "/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?"
   baseURL = "http://mochi.test:8888" + basePath;
 
   for (originEntry of origins) {
     origin = originEntry.origin || originEntry.server;
 
     loader.src = originEntry.file ||
-                 (originEntry.server + "/tests/dom/base/test/file_CrossSiteXHR_inner.html");
+                 (originEntry.server + "/tests/dom/security/test/cors/file_CrossSiteXHR_inner.html");
     yield undefined;
 
     var isNullOrigin = origin == "null";
