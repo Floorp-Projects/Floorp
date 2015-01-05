@@ -44,11 +44,11 @@ function runTest() {
   loader.onload = function () { gen.next() };
 
   // Test preflight-less requests
-  basePath = "/tests/dom/base/test/file_CrossSiteXHR_server.sjs?"
+  basePath = "/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?"
   baseURL = "http://mochi.test:8888" + basePath;
 
   // Test preflighted requests
-  loader.src = "http://example.org/tests/dom/base/test/file_CrossSiteXHR_inner.html";
+  loader.src = "http://example.org/tests/dom/security/test/cors/file_CrossSiteXHR_inner.html";
   origin = "http://example.org";
   yield undefined;
 
@@ -874,7 +874,7 @@ function runTest() {
 
 
   // Test redirects
-  is(loader.src, "http://example.org/tests/dom/base/test/file_CrossSiteXHR_inner.html");
+  is(loader.src, "http://example.org/tests/dom/security/test/cors/file_CrossSiteXHR_inner.html");
   is(origin, "http://example.org");
 
   tests = [{ pass: 1,
