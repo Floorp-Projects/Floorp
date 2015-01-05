@@ -124,11 +124,13 @@ interface Element : Node {
    * Requests that this element be made the full-screen element, as per the DOM
    * full-screen api.
    *
-   * The fsOptions parameter is non-standard.
+   * The options parameter is non-standard. In Gecko, it can be:
+   *  a RequestFullscreenOptions object
    *
    * @see <https://wiki.mozilla.org/index.php?title=Gecko:FullScreenAPI>
    */
-  void mozRequestFullScreen(optional RequestFullscreenOptions fsOptions);
+  [Throws]
+  void mozRequestFullScreen(optional any options);
 
   /**
    * Requests that this element be made the pointer-locked element, as per the DOM

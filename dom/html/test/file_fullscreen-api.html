@@ -163,14 +163,56 @@ function enter4(event) {
   } while (n && n.matches);
     
   // Remove full-screen ancestor element from document, verify it stops being reported as current FSE.
-  addFullscreenChangeContinuation("exit", exit4);
+  addFullscreenChangeContinuation("exit", exit_to_arg_test_1);
   container.parentNode.removeChild(container);
   ok(!document.mozFullScreen, "36. Should exit full-screen mode after removing full-screen element ancestor from document");
   is(document.mozFullScreenElement, null, "37. Should not have a full-screen element again.");
 }
 
+function exit_to_arg_test_1(event) {
+  ok(!document.mozFullScreen, "Should have left full-screen mode (third time).");
+  addFullscreenChangeContinuation("enter", enter_from_arg_test_1);
+  var threw = false;
+  try {
+    fullScreenElement().mozRequestFullScreen(123);
+  } catch (e) {
+    threw = true;
+    // trigger normal fullscreen so that we continue
+    fullScreenElement().mozRequestFullScreen();
+  }
+  ok(!threw, "mozRequestFullScreen with bogus arg (123) shouldn't throw exception");
+}
+
+function enter_from_arg_test_1(event) {
+  ok(document.mozFullScreen, "Should have entered full-screen after calling with bogus (ignored) argument (fourth time)");
+  addFullscreenChangeContinuation("exit", exit_to_arg_test_2);
+  document.mozCancelFullScreen();
+  ok(!document.mozFullScreen, "Should have left full-screen mode.");
+}
+
+function exit_to_arg_test_2(event) {
+  ok(!document.mozFullScreen, "Should have left full-screen mode (fourth time).");
+  addFullscreenChangeContinuation("enter", enter_from_arg_test_2);
+  var threw = false;
+  try {
+    fullScreenElement().mozRequestFullScreen({ vrDisplay: null });
+  } catch (e) {
+    threw = true;
+    // trigger normal fullscreen so that we continue
+    fullScreenElement().mozRequestFullScreen();
+  }
+  ok(!threw, "mozRequestFullScreen with { vrDisplay: null } shouldn't throw exception");
+}
+
+function enter_from_arg_test_2(event) {
+  ok(document.mozFullScreen, "Should have entered full-screen after calling with vrDisplay null argument (fifth time)");
+  addFullscreenChangeContinuation("exit", exit4);
+  document.mozCancelFullScreen();
+  ok(!document.mozFullScreen, "Should have left full-screen mode.");
+}
+
 function exit4(event) {
-  ok(!document.mozFullScreen, "38. Should be back in non-full-screen mode (third time)");
+  ok(!document.mozFullScreen, "38. Should be back in non-full-screen mode (fifth time)");
   setRequireTrustedContext(true);
 
   addFullscreenErrorContinuation(error2);
