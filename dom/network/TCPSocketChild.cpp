@@ -102,6 +102,23 @@ TCPSocketChild::SendOpen(TCPSocket* aSocket, bool aUseSSL, bool aUseArrayBuffers
   PTCPSocketChild::SendOpen(mHost, mPort, aUseSSL, aUseArrayBuffers);
 }
 
+NS_IMETHODIMP
+TCPSocketChild::SendWindowlessOpenBind(nsITCPSocketInternal* aSocket,
+                                       const nsACString& aRemoteHost, uint16_t aRemotePort,
+                                       const nsACString& aLocalHost, uint16_t aLocalPort,
+                                       bool aUseSSL)
+{
+  mSocket = aSocket;
+  AddIPDLReference();
+  gNeckoChild->SendPTCPSocketConstructor(this,
+                                         NS_ConvertUTF8toUTF16(aRemoteHost),
+                                         aRemotePort);
+  PTCPSocketChild::SendOpenBind(nsCString(aRemoteHost), aRemotePort,
+                                nsCString(aLocalHost), aLocalPort,
+                                aUseSSL, NS_LITERAL_CSTRING("arraybuffer"));
+  return NS_OK;
+}
+
 void
 TCPSocketChildBase::ReleaseIPDLReference()
 {
@@ -147,6 +164,16 @@ TCPSocketChild::RecvCallback(const nsString& aType,
   } else if (aData.type() == CallbackData::TSendableData) {
     const SendableData& data = aData.get_SendableData();
 
+    if (data.type() == SendableData::TArrayOfuint8_t) {
+      // See if we can pass array directly.
+      nsCOMPtr<nsITCPSocketInternalNative> nativeSocket = do_QueryInterface(mSocket);
+      if (nativeSocket) {
+        const InfallibleTArray<uint8_t>& buffer = data.get_ArrayOfuint8_t();
+        nativeSocket->CallListenerNativeArray(const_cast<uint8_t*>(buffer.Elements()),
+                                              buffer.Length());
+        return true;
+      }
+    }
     AutoJSAPI api;
     if (NS_WARN_IF(!api.Init(mSocket->GetOwner()))) {
       return true;
@@ -196,6 +223,13 @@ TCPSocketChild::SendSend(const ArrayBuffer& aData,
   InfallibleTArray<uint8_t> arr;
   arr.SwapElements(fallibleArr);
   SendData(arr, aTrackingNumber);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TCPSocketChild::SendSendArray(nsTArray<uint8_t> *aArr, uint32_t aTrackingNumber)
+{
+  SendData(*aArr, aTrackingNumber);
   return NS_OK;
 }
 
