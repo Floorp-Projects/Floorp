@@ -32,7 +32,9 @@ class Element;
 class nsJSUtils
 {
 public:
-  static bool GetCallingLocation(JSContext* aContext, const char* *aFilename,
+  static bool GetCallingLocation(JSContext* aContext, nsACString& aFilename,
+                                 uint32_t* aLineno);
+  static bool GetCallingLocation(JSContext* aContext, nsAString& aFilename,
                                  uint32_t* aLineno);
 
   static nsIScriptGlobalObject *GetStaticScriptGlobal(JSObject* aObj);
