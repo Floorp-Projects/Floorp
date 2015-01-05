@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for RequestSync interfaces</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script type="application/javascript;version=1.7">
+
+  function test_no_interface() {
+    ok(!("sync" in navigator), "navigator.sync should not exist without permissions");
+    ok(!("syncManager" in navigator), "navigator.syncManager should not exist without permissions");
+    runTests();
+  }
+
+  function test_sync() {
+    ok("register" in navigator.sync, "navigator.sync.register exists");
+    ok("unregister" in navigator.sync, "navigator.sync.unregister exists");
+    ok("registrations" in navigator.sync, "navigator.sync.registrations exists");
+    ok("registration" in navigator.sync, "navigator.sync.registration exists");
+  }
+
+  function test_sync_interface() {
+    ok("sync" in navigator, "navigator.sync should exist with permissions");
+    ok(!("syncManager" in navigator), "navigator.syncManager should not exist without permissions");
+
+    test_sync();
+    runTests();
+  }
+
+  function test_sync_manager_interface() {
+    ok("sync" in navigator, "navigator.sync should exist with permissions");
+    ok("syncManager" in navigator, "navigator.syncManager should exist with permissions");
+
+    test_sync();
+
+    ok("registrations" in navigator.syncManager, "navigator.syncManager.registrations exists");
+    runTests();
+  }
+
+  var tests = [
+    test_no_interface,
+
+    function() {
+      SpecialPowers.pushPrefEnv({"set": [["dom.ignore_webidl_scope_checks", true]]}, runTests);
+    },
+
+    test_no_interface,
+
+    function() {
+      SpecialPowers.pushPrefEnv({"set": [["dom.requestSync.enabled", true],
+                                         ["dom.requestSync.minInterval", 1]]}, runTests);
+    },
+
+    test_sync_interface,
+
+    // Permissions
+    function() {
+      SpecialPowers.pushPermissions(
+        [{ "type": "requestsync-manager", "allow": 1, "context": document } ], runTests);
+    },
+
+    test_sync_manager_interface,
+  ];
+
+  function runTests() {
+    if (!tests.length) {
+      finish();
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
+
+  function finish() {
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  runTests();
+  </script>
+</body>
+</html>
