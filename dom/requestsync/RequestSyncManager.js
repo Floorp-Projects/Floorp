@@ -12,6 +12,8 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+Cu.import('resource://gre/modules/RequestSyncApp.jsm');
+Cu.import('resource://gre/modules/RequestSyncTask.jsm');
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
@@ -31,7 +33,8 @@ RequestSyncManager.prototype = {
                                          Ci.nsIObserver,
                                          Ci.nsIDOMGlobalPropertyInitializer]),
 
-  _messages: [ "RequestSyncManager:Registrations:Return" ],
+  _messages: [ "RequestSyncManager:Registrations:Return",
+               "RequestSyncManager:SetPolicy:Return" ],
 
   init: function(aWindow) {
     debug("init");
@@ -55,6 +58,42 @@ RequestSyncManager.prototype = {
     return this.sendMessage("RequestSyncManager:Registrations", {});
   },
 
+  setPolicy: function(aTask, aOrigin, aManifestURL, aIsInBrowserElement,
+                      aState, aOverwrittenMinInterval) {
+    debug('setPolicy');
+
+    return this.sendMessage("RequestSyncManager:SetPolicy",
+      { task: aTask,
+        origin: aOrigin,
+        manifestURL: aManifestURL,
+        isInBrowserElement: aIsInBrowserElement,
+        state: aState,
+        overwrittenMinInterval: aOverwrittenMinInterval });
+  },
+
+  registrationsResult: function(aData) {
+    debug("registrationsResult");
+
+    let results = new this._window.Array();
+    for (let i = 0; i < aData.length; ++i) {
+      if (!("app" in aData[i])) {
+        dump("ERROR - Serialization error in RequestSyncManager.\n");
+        continue;
+      }
+
+      let app = new RequestSyncApp(aData[i].app);
+      let exposedApp =
+        this._window.RequestSyncApp._create(this._window, app);
+
+      let task = new RequestSyncTask(this, this._window, exposedApp, aData[i]);
+      let exposedTask =
+        this._window.RequestSyncTask._create(this._window, task);
+
+      results.push(exposedTask);
+    }
+    return results;
+  },
+
   receiveMessage: function(aMessage) {
     debug('receiveMessage');
 
@@ -65,6 +104,11 @@ RequestSyncManager.prototype = {
 
     if ('error' in aMessage.data) {
       req.reject(Cu.cloneInto(aMessage.data.error, this._window));
+      return;
+    }
+
+    if (aMessage.name == 'RequestSyncManager:Registrations:Return') {
+      req.resolve(this.registrationsResult(aMessage.data.results));
       return;
     }
 
