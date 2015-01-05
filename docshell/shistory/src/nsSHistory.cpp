@@ -1513,12 +1513,13 @@ nsSHistory::GetSessionHistory(nsISHistory** aSessionHistory)
 }
 
 NS_IMETHODIMP
-nsSHistory::LoadURIWithBase(const char16_t* aURI,
-                            uint32_t aLoadFlags,
-                            nsIURI* aReferringURI,
-                            nsIInputStream* aPostStream,
-                            nsIInputStream* aExtraHeaderStream,
-                            nsIURI* aBaseURI)
+nsSHistory::LoadURIWithOptions(const char16_t* aURI,
+                               uint32_t aLoadFlags,
+                               nsIURI* aReferringURI,
+                               uint32_t aReferrerPolicy,
+                               nsIInputStream* aPostStream,
+                               nsIInputStream* aExtraHeaderStream,
+                               nsIURI* aBaseURI)
 {
   return NS_OK;
 }
