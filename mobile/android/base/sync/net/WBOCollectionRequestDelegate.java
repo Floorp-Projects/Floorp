@@ -17,7 +17,9 @@ public abstract class WBOCollectionRequestDelegate
 extends SyncStorageCollectionRequestDelegate
 implements KeyBundleProvider {
 
-    public abstract void handleWBO(CryptoRecord record);
+  @Override
+  public abstract KeyBundle keyBundle();
+  public abstract void handleWBO(CryptoRecord record);
 
   @Override
   public void handleRequestProgress(String progress) {
