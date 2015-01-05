@@ -6422,7 +6422,7 @@ js::PrepareForDebugGC(JSRuntime *rt)
         JS::PrepareForFullGC(rt);
 }
 
-JS_FRIEND_API(void)
+JS_PUBLIC_API(void)
 JS::ShrinkGCBuffers(JSRuntime *rt)
 {
     rt->gc.shrinkBuffers();
@@ -6940,7 +6940,7 @@ js::gc::AssertGCThingHasType(js::gc::Cell *cell, JSGCTraceKind kind)
         MOZ_ASSERT(MapAllocToTraceKind(cell->asTenured().getAllocKind()) == kind);
 }
 
-JS_FRIEND_API(size_t)
+JS_PUBLIC_API(size_t)
 JS::GetGCNumber()
 {
     JSRuntime *rt = js::TlsPerThreadData.get()->runtimeFromMainThread();
@@ -7078,3 +7078,225 @@ js::gc::CheckHashTablesAfterMovingGC(JSRuntime *rt)
     }
 }
 #endif
+
+JS_PUBLIC_API(void)
+JS::PrepareZoneForGC(Zone *zone)
+{
+    zone->scheduleGC();
+}
+
+JS_PUBLIC_API(void)
+JS::PrepareForFullGC(JSRuntime *rt)
+{
+    for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
+        zone->scheduleGC();
+}
+
+JS_PUBLIC_API(void)
+JS::PrepareForIncrementalGC(JSRuntime *rt)
+{
+    if (!JS::IsIncrementalGCInProgress(rt))
+        return;
+
+    for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
+        if (zone->wasGCStarted())
+            PrepareZoneForGC(zone);
+    }
+}
+
+JS_PUBLIC_API(bool)
+JS::IsGCScheduled(JSRuntime *rt)
+{
+    for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
+        if (zone->isGCScheduled())
+            return true;
+    }
+
+    return false;
+}
+
+JS_PUBLIC_API(void)
+JS::SkipZoneForGC(Zone *zone)
+{
+    zone->unscheduleGC();
+}
+
+JS_PUBLIC_API(void)
+JS::GCForReason(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason)
+{
+    MOZ_ASSERT(gckind == GC_NORMAL || gckind == GC_SHRINK);
+    rt->gc.gc(gckind, reason);
+}
+
+JS_PUBLIC_API(void)
+JS::StartIncrementalGC(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason, int64_t millis)
+{
+    MOZ_ASSERT(gckind == GC_NORMAL || gckind == GC_SHRINK);
+    rt->gc.startGC(gckind, reason, millis);
+}
+
+JS_PUBLIC_API(void)
+JS::IncrementalGCSlice(JSRuntime *rt, gcreason::Reason reason, int64_t millis)
+{
+    rt->gc.gcSlice(reason, millis);
+}
+
+JS_PUBLIC_API(void)
+JS::FinishIncrementalGC(JSRuntime *rt, gcreason::Reason reason)
+{
+    rt->gc.finishGC(reason);
+}
+
+char16_t *
+JS::GCDescription::formatMessage(JSRuntime *rt) const
+{
+    return rt->gc.stats.formatMessage();
+}
+
+char16_t *
+JS::GCDescription::formatJSON(JSRuntime *rt, uint64_t timestamp) const
+{
+    return rt->gc.stats.formatJSON(timestamp);
+}
+
+JS_PUBLIC_API(JS::GCSliceCallback)
+JS::SetGCSliceCallback(JSRuntime *rt, GCSliceCallback callback)
+{
+    return rt->gc.setSliceCallback(callback);
+}
+
+JS_PUBLIC_API(void)
+JS::DisableIncrementalGC(JSRuntime *rt)
+{
+    rt->gc.disallowIncrementalGC();
+}
+
+JS_PUBLIC_API(bool)
+JS::IsIncrementalGCEnabled(JSRuntime *rt)
+{
+    return rt->gc.isIncrementalGCEnabled();
+}
+
+JS_PUBLIC_API(void)
+JS::DisableCompactingGC(JSRuntime *rt)
+{
+#ifdef JSGC_COMPACTING
+    rt->gc.disableCompactingGC();
+#endif
+}
+
+JS_PUBLIC_API(bool)
+JS::IsCompactingGCEnabled(JSRuntime *rt)
+{
+#ifdef JSGC_COMPACTING
+    return rt->gc.isCompactingGCEnabled();
+#else
+    return false;
+#endif
+}
+
+JS_PUBLIC_API(bool)
+JS::IsIncrementalGCInProgress(JSRuntime *rt)
+{
+    return rt->gc.isIncrementalGCInProgress() && !rt->gc.isVerifyPreBarriersEnabled();
+}
+
+JS_PUBLIC_API(bool)
+JS::IsIncrementalBarrierNeeded(JSRuntime *rt)
+{
+    return rt->gc.state() == gc::MARK && !rt->isHeapBusy();
+}
+
+JS_PUBLIC_API(bool)
+JS::IsIncrementalBarrierNeeded(JSContext *cx)
+{
+    return IsIncrementalBarrierNeeded(cx->runtime());
+}
+
+JS_PUBLIC_API(void)
+JS::IncrementalReferenceBarrier(GCCellPtr thing)
+{
+    if (!thing)
+        return;
+
+    if (thing.isString() && StringIsPermanentAtom(thing.toString()))
+        return;
+
+#ifdef DEBUG
+    Zone *zone = thing.isObject()
+                 ? thing.toObject()->zone()
+                 : thing.asCell()->asTenured().zone();
+    MOZ_ASSERT(!zone->runtimeFromMainThread()->isHeapMajorCollecting());
+#endif
+
+    switch(thing.kind()) {
+      case JSTRACE_OBJECT: return JSObject::writeBarrierPre(thing.toObject());
+      case JSTRACE_STRING: return JSString::writeBarrierPre(thing.toString());
+      case JSTRACE_SCRIPT: return JSScript::writeBarrierPre(thing.toScript());
+      case JSTRACE_SYMBOL: return JS::Symbol::writeBarrierPre(thing.toSymbol());
+      case JSTRACE_LAZY_SCRIPT:
+        return LazyScript::writeBarrierPre(static_cast<LazyScript*>(thing.asCell()));
+      case JSTRACE_JITCODE:
+        return jit::JitCode::writeBarrierPre(static_cast<jit::JitCode*>(thing.asCell()));
+      case JSTRACE_SHAPE:
+        return Shape::writeBarrierPre(static_cast<Shape*>(thing.asCell()));
+      case JSTRACE_BASE_SHAPE:
+        return BaseShape::writeBarrierPre(static_cast<BaseShape*>(thing.asCell()));
+      case JSTRACE_TYPE_OBJECT:
+        return types::TypeObject::writeBarrierPre(static_cast<types::TypeObject *>(thing.asCell()));
+      default:
+        MOZ_CRASH("Invalid trace kind in IncrementalReferenceBarrier.");
+    }
+}
+
+JS_PUBLIC_API(void)
+JS::IncrementalValueBarrier(const Value &v)
+{
+    js::HeapValue::writeBarrierPre(v);
+}
+
+JS_PUBLIC_API(void)
+JS::IncrementalObjectBarrier(JSObject *obj)
+{
+    if (!obj)
+        return;
+
+    MOZ_ASSERT(!obj->zone()->runtimeFromMainThread()->isHeapMajorCollecting());
+
+    JSObject::writeBarrierPre(obj);
+}
+
+JS_PUBLIC_API(bool)
+JS::WasIncrementalGC(JSRuntime *rt)
+{
+    return rt->gc.isIncrementalGc();
+}
+
+JS::AutoDisableGenerationalGC::AutoDisableGenerationalGC(JSRuntime *rt)
+  : gc(&rt->gc)
+#ifdef JS_GC_ZEAL
+  , restartVerifier(false)
+#endif
+{
+#ifdef JS_GC_ZEAL
+    restartVerifier = gc->endVerifyPostBarriers();
+#endif
+    gc->disableGenerationalGC();
+}
+
+JS::AutoDisableGenerationalGC::~AutoDisableGenerationalGC()
+{
+    gc->enableGenerationalGC();
+#ifdef JS_GC_ZEAL
+    if (restartVerifier) {
+        MOZ_ASSERT(gc->isGenerationalGCEnabled());
+        gc->startVerifyPostBarriers();
+    }
+#endif
+}
+
+JS_PUBLIC_API(bool)
+JS::IsGenerationalGCEnabled(JSRuntime *rt)
+{
+    return rt->gc.isGenerationalGCEnabled();
+}
