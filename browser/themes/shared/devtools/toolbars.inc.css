@@ -161,25 +161,25 @@
 }
 
 /* Button States */
-.theme-dark .devtools-toolbarbutton:hover,
-.theme-dark #toolbox-buttons .devtools-toolbarbutton[text-as-image]:hover,
-.theme-dark .devtools-toolbarbutton[label]:not([text-as-image]):not([type=menu-button]):hover {
+.theme-dark .devtools-toolbarbutton:not([disabled]):hover,
+.theme-dark #toolbox-buttons .devtools-toolbarbutton:not([disabled])[text-as-image]:hover,
+.theme-dark .devtools-toolbarbutton:not([disabled])[label]:not([text-as-image]):not([type=menu-button]):hover {
   background: rgba(0, 0, 0, .3); /* Splitters */
 }
-.theme-light .devtools-toolbarbutton:hover,
-.theme-light #toolbox-buttons .devtools-toolbarbutton[text-as-image]:hover,
-.theme-light .devtools-toolbarbutton[label]:not([text-as-image]):not([type=menu-button]):hover {
+.theme-light .devtools-toolbarbutton:not([disabled]):hover,
+.theme-light #toolbox-buttons .devtools-toolbarbutton:not([disabled])[text-as-image]:hover,
+.theme-light .devtools-toolbarbutton:not([disabled])[label]:not([text-as-image]):not([type=menu-button]):hover {
   background: rgba(170, 170, 170, .3); /* Splitters */
 }
 
-.theme-dark .devtools-toolbarbutton:hover:active,
-.theme-dark #toolbox-buttons .devtools-toolbarbutton[text-as-image]:hover:active,
-.theme-dark .devtools-toolbarbutton[label]:not([text-as-image]):not([type=menu-button]):hover:active {
+.theme-dark .devtools-toolbarbutton:not([disabled]):hover:active,
+.theme-dark #toolbox-buttons .devtools-toolbarbutton:not([disabled])[text-as-image]:hover:active,
+.theme-dark .devtools-toolbarbutton:not([disabled])[label]:not([text-as-image]):not([type=menu-button]):hover:active {
   background: rgba(0, 0, 0, .4); /* Splitters */
 }
-.theme-light .devtools-toolbarbutton:hover:active,
-.theme-light #toolbox-buttons .devtools-toolbarbutton[text-as-image]:hover:active,
-.theme-light .devtools-toolbarbutton[label]:not([text-as-image]):not([type=menu-button]):hover:active {
+.theme-light .devtools-toolbarbutton:not([disabled]):hover:active,
+.theme-light #toolbox-buttons .devtools-toolbarbutton:not([disabled])[text-as-image]:hover:active,
+.theme-light .devtools-toolbarbutton:not([disabled])[label]:not([text-as-image]):not([type=menu-button]):hover:active {
   background: rgba(170, 170, 170, .4); /* Splitters */
 }
 

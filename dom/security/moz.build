@@ -11,7 +11,12 @@ EXPORTS.mozilla.dom += [
     'nsMixedContentBlocker.h',
 ]
 
+EXPORTS += [
+    'nsCORSListenerProxy.h'
+]
+
 UNIFIED_SOURCES += [
+    'nsCORSListenerProxy.cpp',
     'nsCSPContext.cpp',
     'nsCSPParser.cpp',
     'nsCSPService.cpp',

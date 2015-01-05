@@ -10,7 +10,7 @@
 #include "HTMLLinkElement.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
-#include "nsCrossSiteListenerProxy.h"
+#include "nsCORSListenerProxy.h"
 #include "nsIChannel.h"
 #include "nsIContentPolicy.h"
 #include "nsIContentSecurityPolicy.h"
