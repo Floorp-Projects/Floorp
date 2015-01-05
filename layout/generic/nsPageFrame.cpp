@@ -470,17 +470,44 @@ GetNextPage(nsIFrame* aPageContentFrame)
   return f;
 }
 
-static void PaintHeaderFooter(nsIFrame* aFrame, nsRenderingContext* aCtx,
-                              const nsRect& aDirtyRect, nsPoint aPt)
-{
-  static_cast<nsPageFrame*>(aFrame)->PaintHeaderFooter(*aCtx, aPt);
-}
-
 static gfx::Matrix4x4 ComputePageTransform(nsIFrame* aFrame, float aAppUnitsPerPixel)
 {
   float scale = aFrame->PresContext()->GetPageScale();
   return gfx::Matrix4x4::Scaling(scale, scale, 1);
 }
+
+class nsDisplayHeaderFooter : public nsDisplayItem {
+public:
+  nsDisplayHeaderFooter(nsDisplayListBuilder* aBuilder, nsPageFrame *aFrame)
+    : nsDisplayItem(aBuilder, aFrame), mFrame(aFrame)
+    , mDisableSubpixelAA(false)
+  {
+    MOZ_COUNT_CTOR(nsDisplayHeaderFooter);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayHeaderFooter() {
+    MOZ_COUNT_DTOR(nsDisplayHeaderFooter);
+  }
+#endif
+
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsRenderingContext* aCtx) MOZ_OVERRIDE {
+    mFrame->PaintHeaderFooter(*aCtx, ToReferenceFrame(), mDisableSubpixelAA);
+  }
+  NS_DISPLAY_DECL_NAME("HeaderFooter", nsDisplayItem::TYPE_HEADER_FOOTER)
+
+  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE {
+    bool snap;
+    return GetBounds(aBuilder, &snap);
+  }
+
+  virtual void DisableComponentAlpha() MOZ_OVERRIDE {
+    mDisableSubpixelAA = true;
+  }
+protected:
+  nsPageFrame* mFrame;
+  bool mDisableSubpixelAA;
+};
 
 //------------------------------------------------------------------------------
 void
@@ -563,9 +590,7 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   if (PresContext()->IsRootPaginatedDocument()) {
     set.Content()->AppendNewToTop(new (aBuilder)
-        nsDisplayGeneric(aBuilder, this, ::PaintHeaderFooter,
-                         "HeaderFooter",
-                         nsDisplayItem::TYPE_HEADER_FOOTER));
+        nsDisplayHeaderFooter(aBuilder, this));
   }
 
   set.MoveTo(aLists);
@@ -582,7 +607,7 @@ nsPageFrame::SetPageNumInfo(int32_t aPageNumber, int32_t aTotalPages)
 
 void
 nsPageFrame::PaintHeaderFooter(nsRenderingContext& aRenderingContext,
-                               nsPoint aPt)
+                               nsPoint aPt, bool aDisableSubpixelAA)
 {
   nsPresContext* pc = PresContext();
 
@@ -595,6 +620,8 @@ nsPageFrame::PaintHeaderFooter(nsRenderingContext& aRenderingContext,
 
   nsRect rect(aPt, mRect.Size());
   aRenderingContext.ThebesContext()->SetColor(NS_RGB(0,0,0));
+
+  gfxContextAutoDisableSubpixelAntialiasing disable(aRenderingContext.ThebesContext(), aDisableSubpixelAA);
 
   // Get the FontMetrics to determine width.height of strings
   nsRefPtr<nsFontMetrics> fontMet;
