@@ -64,7 +64,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
       changePrefs(counter);
       counter++;
       log("\nblockDisplay set to "+blockDisplay+", blockActive set to "+blockActive+".");
-      document.getElementById('framediv').innerHTML = '<iframe id="testHarness" src="https://example.com/tests/dom/base/test/mixedcontentblocker/file_mixed_content_main_bug803225.html"></iframe>';
+      document.getElementById('framediv').innerHTML = '<iframe id="testHarness" src="https://example.com/tests/dom/security/test/mixedcontentblocker/file_main_bug803225.html"></iframe>';
     }
     else {
       //set the prefs back to what they were set to originally
@@ -141,7 +141,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
 
 <body>
   <div id="framediv">
-    <iframe id="testHarness" src="https://example.com/tests/dom/base/test/mixedcontentblocker/file_mixed_content_main_bug803225.html"></iframe>
+    <iframe id="testHarness" src="https://example.com/tests/dom/security/test/mixedcontentblocker/file_main_bug803225.html"></iframe>
   </div>
   <pre id="log"></pre>
 </body>
