@@ -4438,6 +4438,3 @@ pref("dom.mozSettings.SettingsService.verbose.enabled", false);
 // IndexedDB transactions to be opened as readonly or keep everything as
 // readwrite.
 pref("dom.mozSettings.allowForceReadOnly", false);
-
-// RequestSync API is disabled by default.
-pref("dom.requestSync.enabled", false);
