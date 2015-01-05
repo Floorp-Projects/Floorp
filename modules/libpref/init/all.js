@@ -4438,3 +4438,20 @@ pref("dom.mozSettings.SettingsService.verbose.enabled", false);
 // IndexedDB transactions to be opened as readonly or keep everything as
 // readwrite.
 pref("dom.mozSettings.allowForceReadOnly", false);
+
+// Search service settings
+pref("browser.search.log", false);
+pref("browser.search.update", true);
+pref("browser.search.update.log", false);
+pref("browser.search.update.interval", 21600);
+pref("browser.search.suggest.enabled", true);
+pref("browser.search.geoSpecificDefaults", false);
+pref("browser.search.geoip.url", "https://location.services.mozilla.com/v1/country?key=%MOZILLA_API_KEY%");
+// NOTE: this timeout figure is also the "high" value for the telemetry probe
+// SEARCH_SERVICE_COUNTRY_FETCH_MS - if you change this also change that probe.
+pref("browser.search.geoip.timeout", 2000);
+
+#ifdef MOZ_OFFICIAL_BRANDING
+// {moz:official} expands to "official"
+pref("browser.search.official", true);
+#endif
