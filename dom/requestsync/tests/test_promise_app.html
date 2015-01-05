@@ -17,23 +17,35 @@
     navigator.mozSetMessageHandler('request-sync', function(e) {
 
       if (e.task == 'foobar') {
-        ok(true, "foobar message received:" + foobarCounter);
+        ok(true, "foobar message received:" + ++foobarCounter);
 
-        if (++foobarCounter == 1) {
+        if (foobarCounter == 1) {
           // The first time we wait 2 seconds.
           info("Setting a promise object.");
           navigator.mozSetMessageHandlerPromise(new Promise(function(a, b) {
+            SimpleTest.requestFlakyTimeout("Just testing to make sure things work.");
             setTimeout(a, 2000);
           }));
-        } else {
+        } else if (foobarCounter == 2) {
           // The second time we don't reply at all.
+          info("Setting a promise object without resolving it.");
           navigator.mozSetMessageHandlerPromise(new Promise(function(a, b) {}));
+        } else if (foobarCounter == 3) {
+          info("Throwing an exception.");
+          // Now we throw an exception
+          SimpleTest.expectUncaughtException();
+          throw "Booom!";
+        } else {
+          info("Setting a promise object and reject it.");
+          navigator.mozSetMessageHandlerPromise(new Promise(function(a, b) {
+            setTimeout(b, 0);
+          }));
         }
       }
 
       else if (e.task  == 'pending') {
-        ok(true, "pending message received: " + pendingCounter);
-        if (++pendingCounter == 2) {
+        ok(true, "pending message received: " + ++pendingCounter);
+        if (pendingCounter == 5) {
           runTests();
         }
       }
@@ -47,7 +59,7 @@
   }
 
   function test_register_foobar() {
-    navigator.sync.register('foobar', { minInterval: 5,
+    navigator.sync.register('foobar', { minInterval: 2,
                                         oneShot: false,
                                         data: 42,
                                         wifiOnly: false,
@@ -59,7 +71,7 @@
   }
 
   function test_register_pending() {
-    navigator.sync.register('pending', { minInterval: 6,
+    navigator.sync.register('pending', { minInterval: 2,
                                          oneShot: false,
                                          data: 'hello world!',
                                          wifiOnly: false,
@@ -94,7 +106,7 @@
     function() {
       SpecialPowers.pushPrefEnv({"set": [["dom.requestSync.enabled", true],
                                          ["dom.requestSync.minInterval", 1],
-                                         ["dom.requestSync.maxTaskTimeout", 10000 /* 10 seconds */],
+                                         ["dom.requestSync.maxTaskTimeout", 5000 /* 5 seconds */],
                                          ["dom.ignore_webidl_scope_checks", true]]}, runTests);
     },
 

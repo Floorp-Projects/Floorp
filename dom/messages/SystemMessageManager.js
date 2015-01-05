@@ -95,9 +95,14 @@ SystemMessageManager.prototype = {
       }
     }
 
-    aDispatcher.handler
-      .handleMessage(wrapped ? aMessage
-                             : Cu.cloneInto(aMessage, this._window));
+    let message = wrapped ? aMessage : Cu.cloneInto(aMessage, this._window);
+
+    let rejectPromise = false;
+    try {
+      aDispatcher.handler.handleMessage(message);
+    } catch(e) {
+      rejectPromise = true;
+    }
 
     aDispatcher.isHandling = false;
     this._isHandling = false;
@@ -111,7 +116,8 @@ SystemMessageManager.prototype = {
                             { type: aType,
                               manifestURL: self._manifestURL,
                               pageURL: self._pageURL,
-                              msgID: aMessageID });
+                              msgID: aMessageID,
+                              rejected: rejectPromise });
     }
 
     if (!this._promise) {
@@ -119,7 +125,10 @@ SystemMessageManager.prototype = {
       sendResponse();
     } else {
       debug("Using the promise to postpone the response.");
-      this._promise.then(sendResponse, sendResponse);
+      this._promise.then(sendResponse, function() {
+        rejectPromise = true;
+        sendResponse();
+      });
       this._promise = null;
     }
 
