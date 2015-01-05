@@ -37,7 +37,7 @@ class AutoEventEnqueuerBase;
 
 class ChannelEventQueue MOZ_FINAL
 {
-  NS_INLINE_DECL_REFCOUNTING(ChannelEventQueue)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ChannelEventQueue)
 
  public:
   explicit ChannelEventQueue(nsISupports *owner)
