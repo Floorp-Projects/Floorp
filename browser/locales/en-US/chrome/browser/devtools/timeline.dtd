@@ -19,14 +19,18 @@
   -  as a label to signal that a recording is in progress. -->
 <!ENTITY timelineUI.recordLabel "Recording…">
 
-<!-- LOCALIZATION NOTE (timelineUI.timelineUI.memoryCheckbox.label): This string
+<!-- LOCALIZATION NOTE (timelineUI.memoryCheckbox.label): This string
   -  is displayed next to a checkbox determining whether or not memory
   -  measurements are enabled. -->
 <!ENTITY timelineUI.memoryCheckbox.label "Memory">
 
-<!-- LOCALIZATION NOTE (timelineUI.timelineUI.memoryCheckbox.tooltip): This string
+<!-- LOCALIZATION NOTE (timelineUI.memoryCheckbox.tooltip): This string
   -  is displayed next to the memory checkbox -->
 <!ENTITY timelineUI.memoryCheckbox.tooltip "Enable memory measurements">
+
+<!-- LOCALIZATION NOTE (timelineUI.filterButton.tooltip): This string
+  -  is displayed next to the filter button-->
+<!ENTITY timelineUI.filterButton.tooltip "Select what data to display">
 
 <!-- LOCALIZATION NOTE (timelineUI.emptyNotice1/2): This is the label shown
   -  in the timeline view when empty. -->

@@ -16,13 +16,11 @@ Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 
 loader.lazyRequireGetter(this, "L10N",
   "devtools/timeline/global", true);
-loader.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
-  "devtools/timeline/global", true);
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 const OVERVIEW_HEADER_HEIGHT = 14; // px
-const OVERVIEW_BODY_HEIGHT = 55; // 11px * 5 groups
+const OVERVIEW_ROW_HEIGHT = 11; // row height
 
 const OVERVIEW_BACKGROUND_COLOR = "#fff";
 const OVERVIEW_CLIPHEAD_LINE_COLOR = "#666";
@@ -50,13 +48,16 @@ const OVERVIEW_GROUP_ALTERNATING_BACKGROUND = "rgba(0,0,0,0.05)";
  *
  * @param nsIDOMNode parent
  *        The parent node holding the overview.
+ * @param Object blueprint
+ *        List of names and colors defining markers.
  */
-function MarkersOverview(parent, ...args) {
+function MarkersOverview(parent, blueprint, ...args) {
   AbstractCanvasGraph.apply(this, [parent, "markers-overview", ...args]);
-  this.once("ready", () => {
-    // Set the list of names, properties and colors used to paint this overview.
-    this.setBlueprint(TIMELINE_BLUEPRINT);
 
+  // Set the list of names, properties and colors used to paint this overview.
+  this.setBlueprint(blueprint);
+
+  this.once("ready", () => {
     // Populate this overview with some dummy initial data.
     this.setData({ interval: { startTime: 0, endTime: 1000 }, markers: [] });
   });
@@ -68,14 +69,14 @@ MarkersOverview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   selectionBackgroundColor: OVERVIEW_SELECTION_BACKGROUND_COLOR,
   selectionStripesColor: OVERVIEW_SELECTION_STRIPES_COLOR,
   headerHeight: OVERVIEW_HEADER_HEIGHT,
-  bodyHeight: OVERVIEW_BODY_HEIGHT,
+  rowHeight: OVERVIEW_ROW_HEIGHT,
   groupPadding: OVERVIEW_GROUP_VERTICAL_PADDING,
 
   /**
    * Compute the height of the overview.
    */
   get fixedHeight() {
-    return this.headerHeight + this.bodyHeight;
+    return this.headerHeight + this.rowHeight * (this._lastGroup + 1);
   },
 
   /**
@@ -119,14 +120,17 @@ MarkersOverview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     // draw all markers sharing the same style at once.
 
     for (let marker of markers) {
-      this._paintBatches.get(marker.name).batch.push(marker);
+      let markerType = this._paintBatches.get(marker.name);
+      if (markerType) {
+        markerType.batch.push(marker);
+      }
     }
 
     // Calculate each group's height, and the time-based scaling.
 
     let totalGroups = this._lastGroup + 1;
     let headerHeight = this.headerHeight * this._pixelRatio;
-    let groupHeight = this.bodyHeight * this._pixelRatio / totalGroups;
+    let groupHeight = this.rowHeight * this._pixelRatio;
     let groupPadding = this.groupPadding * this._pixelRatio;
 
     let totalTime = (endTime - startTime) || 0;
