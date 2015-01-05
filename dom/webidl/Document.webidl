@@ -204,6 +204,13 @@ partial interface Document {
   [ChromeOnly]
   readonly attribute URI? documentURIObject;
 
+  /**
+   * Current referrer policy - one of the REFERRER_POLICY_* constants
+   * from nsIHttpChannel.
+   */
+  [ChromeOnly]
+  readonly attribute unsigned long referrerPolicy;
+
 };
 
 // http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html#api
