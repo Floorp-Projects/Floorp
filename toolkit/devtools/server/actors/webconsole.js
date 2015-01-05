@@ -83,7 +83,8 @@ function WebConsoleActor(aConnection, aParentActor)
 
   this.traits = {
     customNetworkRequest: !this._parentIsContentActor,
-    transferredResponseSize: true
+    transferredResponseSize: true,
+    evaluateJSAsync: true
   };
 }
 
