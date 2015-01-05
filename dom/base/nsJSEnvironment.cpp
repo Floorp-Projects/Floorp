@@ -2334,86 +2334,104 @@ DOMGCSliceCallback(JSRuntime *aRt, JS::GCProgress aProgress, const JS::GCDescrip
 {
   NS_ASSERTION(NS_IsMainThread(), "GCs must run on the main thread");
 
-  if (aProgress == JS::GC_CYCLE_END) {
-    PRTime delta = GetCollectionTimeDelta();
+  switch (aProgress) {
+    case JS::GC_CYCLE_BEGIN: {
+      // Prevent cycle collections and shrinking during incremental GC.
+      sCCLockedOut = true;
 
-    if (sPostGCEventsToConsole) {
-      NS_NAMED_LITERAL_STRING(kFmt, "GC(T+%.1f) ");
-      nsString prefix, gcstats;
-      gcstats.Adopt(aDesc.formatMessage(aRt));
-      prefix.Adopt(nsTextFormatter::smprintf(kFmt.get(),
+      nsJSContext::KillShrinkGCBuffersTimer();
+
+      break;
+    }
+
+    case JS::GC_CYCLE_END: {
+      PRTime delta = GetCollectionTimeDelta();
+
+      if (sPostGCEventsToConsole) {
+        NS_NAMED_LITERAL_STRING(kFmt, "GC(T+%.1f) ");
+        nsString prefix, gcstats;
+        gcstats.Adopt(aDesc.formatMessage(aRt));
+        prefix.Adopt(nsTextFormatter::smprintf(kFmt.get(),
                                              double(delta) / PR_USEC_PER_SEC));
-      nsString msg = prefix + gcstats;
-      nsCOMPtr<nsIConsoleService> cs = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-      if (cs) {
-        cs->LogStringMessage(msg.get());
+        nsString msg = prefix + gcstats;
+        nsCOMPtr<nsIConsoleService> cs = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+        if (cs) {
+          cs->LogStringMessage(msg.get());
+        }
       }
-    }
 
-    if (sPostGCEventsToObserver) {
-      nsString json;
-      json.Adopt(aDesc.formatJSON(aRt, PR_Now()));
-      nsRefPtr<NotifyGCEndRunnable> notify = new NotifyGCEndRunnable(json);
-      NS_DispatchToMainThread(notify);
-    }
-  }
-
-  // Prevent cycle collections and shrinking during incremental GC.
-  if (aProgress == JS::GC_CYCLE_BEGIN) {
-    sCCLockedOut = true;
-    nsJSContext::KillShrinkGCBuffersTimer();
-  } else if (aProgress == JS::GC_CYCLE_END) {
-    sCCLockedOut = false;
-  }
-
-  // The GC has more work to do, so schedule another GC slice.
-  if (aProgress == JS::GC_SLICE_END) {
-    nsJSContext::KillInterSliceGCTimer();
-    if (!sShuttingDown) {
-      CallCreateInstance("@mozilla.org/timer;1", &sInterSliceGCTimer);
-      sInterSliceGCTimer->InitWithFuncCallback(InterSliceGCTimerFired,
-                                               nullptr,
-                                               NS_INTERSLICE_GC_DELAY,
-                                               nsITimer::TYPE_ONE_SHOT);
-    }
-  }
-
-  if (aProgress == JS::GC_CYCLE_END) {
-    // May need to kill the inter-slice GC timer
-    nsJSContext::KillInterSliceGCTimer();
-
-    sCCollectedWaitingForGC = 0;
-    sCCollectedZonesWaitingForGC = 0;
-    sLikelyShortLivingObjectsNeedingGC = 0;
-    sCleanupsSinceLastGC = 0;
-    sNeedsFullCC = true;
-    sHasRunGC = true;
-    nsJSContext::MaybePokeCC();
-
-    if (aDesc.isCompartment_) {
-      if (!sFullGCTimer && !sShuttingDown) {
-        CallCreateInstance("@mozilla.org/timer;1", &sFullGCTimer);
-        sFullGCTimer->InitWithFuncCallback(FullGCTimerFired,
-                                           nullptr,
-                                           NS_FULL_GC_DELAY,
-                                           nsITimer::TYPE_ONE_SHOT);
+      if (sPostGCEventsToObserver) {
+        nsString json;
+        json.Adopt(aDesc.formatJSON(aRt, PR_Now()));
+        nsRefPtr<NotifyGCEndRunnable> notify = new NotifyGCEndRunnable(json);
+        NS_DispatchToMainThread(notify);
       }
-    } else {
-      nsJSContext::KillFullGCTimer();
 
-      // Avoid shrinking during heavy activity, which is suggested by
-      // compartment GC.
-      nsJSContext::PokeShrinkGCBuffers();
+      sCCLockedOut = false;
+
+      // May need to kill the inter-slice GC timer
+      nsJSContext::KillInterSliceGCTimer();
+
+      sCCollectedWaitingForGC = 0;
+      sCCollectedZonesWaitingForGC = 0;
+      sLikelyShortLivingObjectsNeedingGC = 0;
+      sCleanupsSinceLastGC = 0;
+      sNeedsFullCC = true;
+      sHasRunGC = true;
+      nsJSContext::MaybePokeCC();
+
+      if (aDesc.isCompartment_) {
+        if (!sFullGCTimer && !sShuttingDown) {
+          CallCreateInstance("@mozilla.org/timer;1", &sFullGCTimer);
+          sFullGCTimer->InitWithFuncCallback(FullGCTimerFired,
+                                             nullptr,
+                                             NS_FULL_GC_DELAY,
+                                             nsITimer::TYPE_ONE_SHOT);
+        }
+      } else {
+        nsJSContext::KillFullGCTimer();
+
+        // Avoid shrinking during heavy activity, which is suggested by
+        // compartment GC.
+        nsJSContext::PokeShrinkGCBuffers();
+      }
+
+      if (ShouldTriggerCC(nsCycleCollector_suspectedCount())) {
+        nsCycleCollector_dispatchDeferredDeletion();
+      }
+
+      break;
     }
+
+    case JS::GC_SLICE_BEGIN:
+      break;
+
+    case JS::GC_SLICE_END:
+
+      // The GC has more work to do, so schedule another GC slice.
+      nsJSContext::KillInterSliceGCTimer();
+      if (!sShuttingDown) {
+        CallCreateInstance("@mozilla.org/timer;1", &sInterSliceGCTimer);
+        sInterSliceGCTimer->InitWithFuncCallback(InterSliceGCTimerFired,
+                                                 nullptr,
+                                                 NS_INTERSLICE_GC_DELAY,
+                                                 nsITimer::TYPE_ONE_SHOT);
+      }
+
+      if (ShouldTriggerCC(nsCycleCollector_suspectedCount())) {
+        nsCycleCollector_dispatchDeferredDeletion();
+      }
+
+      break;
+
+    default:
+      MOZ_CRASH("Unexpected GCProgress value");
   }
 
-  if ((aProgress == JS::GC_SLICE_END || aProgress == JS::GC_CYCLE_END) &&
-      ShouldTriggerCC(nsCycleCollector_suspectedCount())) {
-    nsCycleCollector_dispatchDeferredDeletion();
-  }
-
-  if (sPrevGCSliceCallback)
+  if (sPrevGCSliceCallback) {
     (*sPrevGCSliceCallback)(aRt, aProgress, aDesc);
+  }
+
 }
 
 void
