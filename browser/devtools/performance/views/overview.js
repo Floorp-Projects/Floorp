@@ -69,7 +69,9 @@ let OverviewView = {
    * Sets up the framerate graph.
    */
   _showFramerateGraph: Task.async(function *() {
-    this.framerateGraph = new LineGraphWidget($("#time-framerate"), L10N.getStr("graphs.fps"));
+    this.framerateGraph = new LineGraphWidget($("#time-framerate"), {
+      metric: L10N.getStr("graphs.fps")
+    });
     this.framerateGraph.fixedHeight = FRAMERATE_GRAPH_HEIGHT;
     yield this.framerateGraph.ready();
   }),
