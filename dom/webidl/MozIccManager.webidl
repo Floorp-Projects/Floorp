@@ -150,6 +150,20 @@ interface MozIccManager : EventTarget
   const unsigned short STK_RESULT_BIP_ERROR                         = 0x3a;
 
   /**
+   * Additional information on result:
+   *
+   * TS 11.14, 12.12.1-11 and TS 31.111,8.12.1-13 defines additional infomation
+   * for different categories such as SEND SS, ME problem, network problem, etc.
+   *
+   * Note: We define these information here by category when needed.
+   */
+
+  /**
+   * 12.12.2 Additional information for ME problem:
+   */
+  const unsigned short STK_ADDITIONAL_INFO_ME_PROBLEM_SCREEN_IS_BUSY = 0x01;
+
+  /**
    * STK event list.
    */
   const unsigned short STK_EVENT_TYPE_MT_CALL                          = 0x00;

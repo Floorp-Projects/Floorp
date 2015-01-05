@@ -90,7 +90,7 @@ dictionary MozStkTextMessage : MozStkIconContainer
    * or a low battery warning. In that situation, the resolution is left to
    * the terminal. If the command is rejected in spite of the high priority,
    * the terminal shall inform the ICC with resultCode is
-   * TERMINAL_CRNTLY_UNABLE_TO_PROCESS in MozStkResponse.
+   * MozIccManager.STK_RESULT_TERMINAL_CRNTLY_UNABLE_TO_PROCESS in MozStkResponse.
    *
    * true: high priority
    * false: normal priority
@@ -104,7 +104,7 @@ dictionary MozStkTextMessage : MozStkIconContainer
    *
    * If this attribute is true, but user doesn't give any input within a period
    * of time(said 30 secs), the terminal shall inform the ICC with resultCode
-   * is NO_RESPONSE_FROM_USER in MozStkResponse.
+   * is MozIccManager.STK_RESULT_NO_RESPONSE_FROM_USER in MozStkResponse.
    *
    * true: Wait for user to clear message.
    * false: clear message after a delay.
@@ -151,7 +151,7 @@ dictionary MozStkMenu : MozStkIconContainer
   sequence<MozStkItem> items;
 
   /**
-   * Presentation type, one of TYPE_*.
+   * Presentation type, one of MozIccManager.STK_MENU_TYPE_*.
    */
   unsigned short presentationType;
 
@@ -177,10 +177,10 @@ dictionary MozStkMenu : MozStkIconContainer
 
   /**
    * List of Next Action Indicators.
-   * Each element should be one of nsIDOMMozIccManager.STK_CMD_*
-   *                            or nsIDOMMozIccManager.STK_NEXT_ACTION_*
-   * If it's STK_NEXT_ACTION_NULL, the terminal should ignore this action
-   * in corresponding item.
+   * Each element should be one of MozIccManager.STK_CMD_*
+   *                            or MozIccManager.STK_NEXT_ACTION_*
+   * If it's MozIccManager.STK_NEXT_ACTION_NULL, the terminal should ignore this
+   * action in corresponding item.
    *
    * @see TS 11.14, clause 12.24, Items Next Action Indicator.
    */
@@ -293,9 +293,7 @@ dictionary MozStkBrowserSetting
   DOMString url;
 
   /**
-   * One of STK_BROWSER_MODE_*.
-   *
-   * @see nsIDOMMozIccManager.STK_BROWSER_MODE_*
+   * One of MozIccManager.STK_BROWSER_MODE_*.
    */
   unsigned short mode;
 };
@@ -332,7 +330,7 @@ dictionary MozStkSetUpEventList
    * When this valus is null, means an indication to remove the existing list
    * of events in ME.
    *
-   * @see nsIDOMMozIccManager.STK_EVENT_TYPE_*
+   * @see MozIccManager.STK_EVENT_TYPE_*
    */
    sequence<unsigned short> eventList;
 };
@@ -363,7 +361,7 @@ dictionary MozStkLocationInfo
 dictionary MozStkDuration
 {
   /**
-   * Time unit used, should be one of STK_TIME_UNIT_*.
+   * Time unit used, should be one of MozIccManager.STK_TIME_UNIT_*.
    */
   unsigned short timeUnit;
 
@@ -381,7 +379,7 @@ dictionary MozStkPlayTone : MozStkIconContainer
   DOMString text;
 
   /**
-   * One of STK_TONE_TYPE_*.
+   * One of MozIccManager.STK_TONE_TYPE_*.
    */
   unsigned short tone;
 
@@ -403,10 +401,10 @@ dictionary MozStkProvideLocalInfo
   /**
    * Indicate which local information is required.
    * It shall be one of following:
-   *  - nsIDOMMozIccManager.STK_LOCAL_INFO_LOCATION_INFO
-   *  - nsIDOMMozIccManager.STK_LOCAL_INFO_IMEI
-   *  - nsIDOMMozIccManager.STK_LOCAL_INFO_DATE_TIME_ZONE
-   *  - nsIDOMMozIccManager.STK_LOCAL_INFO_LANGUAGE
+   *  - MozIccManager.STK_LOCAL_INFO_LOCATION_INFO
+   *  - MozIccManager.STK_LOCAL_INFO_IMEI
+   *  - MozIccManager.STK_LOCAL_INFO_DATE_TIME_ZONE
+   *  - MozIccManager.STK_LOCAL_INFO_LANGUAGE
    */
   unsigned short localInfoType;
 };
@@ -415,23 +413,23 @@ dictionary MozStkLocationEvent
 {
   /**
    * The type of this event.
-   * It shall be nsIDOMMozIccManager.STK_EVENT_TYPE_LOCATION_STATUS;
+   * It shall be MozIccManager.STK_EVENT_TYPE_LOCATION_STATUS;
    */
   unsigned short eventType;
 
   /**
    * Indicate current service state of the MS with one of the values listed
    * below:
-   *  - nsIDOMMozIccManager.STK_SERVICE_STATE_NORMAL
-   *  - nsIDOMMozIccManager.STK_SERVICE_STATE_LIMITED
-   *  - nsIDOMMozIccManager.STK_SERVICE_STATE_UNAVAILABLE
+   *  - MozIccManager.STK_SERVICE_STATE_NORMAL
+   *  - MozIccManager.STK_SERVICE_STATE_LIMITED
+   *  - MozIccManager.STK_SERVICE_STATE_UNAVAILABLE
    */
   unsigned short locationStatus;
 
   /**
    * See MozStkLocationInfo.
    * This value shall only be provided if the locationStatus indicates
-   * 'STK_SERVICE_STATE_NORMAL'.
+   * MozIccManager.STK_SERVICE_STATE_NORMAL.
    */
   MozStkLocationInfo locationInfo;
 };
@@ -452,9 +450,9 @@ dictionary MozStkTimer
   /**
    * The action requested from UICC.
    * It shall be one of below:
-   * - nsIDOMMozIccManager.STK_TIMER_START
-   * - nsIDOMMozIccManager.STK_TIMER_DEACTIVATE
-   * - nsIDOMMozIccManager.STK_TIMER_GET_CURRENT_VALUE
+   * - MozIccManager.STK_TIMER_START
+   * - MozIccManager.STK_TIMER_DEACTIVATE
+   * - MozIccManager.STK_TIMER_GET_CURRENT_VALUE
    */
   unsigned short timerAction;
 };
@@ -478,7 +476,7 @@ dictionary MozStkCommand
   unsigned short commandNumber;
 
   /**
-   * One of STK_CMD_*
+   * One of MozIccManager.STK_CMD_*
    */
   unsigned short typeOfCommand;
 
@@ -491,62 +489,62 @@ dictionary MozStkCommand
    * options varies accrording to the typeOfCommand in MozStkCommand.
    *
    * When typeOfCommand is
-   * - STK_CMD_DISPLAY_TEXT
-   * - STK_CMD_SET_UP_IDLE_MODE_TEXT
-   * - STK_CMD_SEND_{SS|USSD|SMS|DTMF},
+   * - MozIccManager.STK_CMD_DISPLAY_TEXT
+   * - MozIccManager.STK_CMD_SET_UP_IDLE_MODE_TEXT
+   * - MozIccManager.STK_CMD_SEND_{SS|USSD|SMS|DTMF},
    * options is MozStkTextMessage.
    *
    * When typeOfCommand is
-   * - STK_CMD_SELECT_ITEM
-   * - STK_CMD_SET_UP_MENU
+   * - MozIccManager.STK_CMD_SELECT_ITEM
+   * - MozIccManager.STK_CMD_SET_UP_MENU
    * options is MozStkMenu.
    *
    * When typeOfCommand is
-   * - STK_CMD_GET_INKEY
-   * - STK_CMD_GET_INPUT,
+   * - MozIccManager.STK_CMD_GET_INKEY
+   * - MozIccManager.STK_CMD_GET_INPUT,
    * options is MozStkInput.
    *
    * When typeOfCommand is
-   * - STK_CMD_LAUNCH_BROWSER
+   * - MozIccManager.STK_CMD_LAUNCH_BROWSER
    * options is MozStkBrowserSetting.
    *
    * When typeOfCommand is
-   * - STK_CMD_SET_UP_CALL
+   * - MozIccManager.STK_CMD_SET_UP_CALL
    * options is MozStkSetUpCall.
    *
    * When typeOfCommand is
-   * - STK_CMD_SET_UP_EVENT_LIST
+   * - MozIccManager.STK_CMD_SET_UP_EVENT_LIST
    * options is MozStkSetUpEventList.
    *
    * When typeOfCommand is
-   * - STK_CMD_PLAY_TONE
+   * - MozIccManager.STK_CMD_PLAY_TONE
    * options is MozStkPlayTone.
    *
    * When typeOfCommand is
-   * - STK_CMD_POLL_INTERVAL
+   * - MozIccManager.STK_CMD_POLL_INTERVAL
    * options is MozStkDuration.
    *
    * When typeOfCommand is
-   * - STK_CMD_PROVIDE_LOCAL_INFO
+   * - MozIccManager.STK_CMD_PROVIDE_LOCAL_INFO
    * options is MozStkProvideLocalInfo.
    *
    * When typeOfCommand is
-   * - STK_CMD_TIMER_MANAGEMENT
+   * - MozIccManager.STK_CMD_TIMER_MANAGEMENT
    * option is MozStkTimer
    *
    * When typeOfCommand is
-   * - STK_CMD_OPEN_CHANNEL
-   * - STK_CMD_CLOSE_CHANNEL
-   * - STK_CMD_SEND_DATA
-   * - STK_CMD_RECEIVE_DATA
+   * - MozIccManager.STK_CMD_OPEN_CHANNEL
+   * - MozIccManager.STK_CMD_CLOSE_CHANNEL
+   * - MozIccManager.STK_CMD_SEND_DATA
+   * - MozIccManager.STK_CMD_RECEIVE_DATA
    * options is MozStkBipMessage
    *
    * When typeOfCommand is
-   * - STK_CMD_POLL_OFF
+   * - MozIccManager.STK_CMD_POLL_OFF
    * options is null.
    *
    * When typeOfCommand is
-   * - STK_CMD_REFRESH
+   * - MozIccManager.STK_CMD_REFRESH
    * options is null.
    */
   any options;
@@ -555,9 +553,14 @@ dictionary MozStkCommand
 dictionary MozStkResponse
 {
   /**
-   * One of RESULT_*
+   * One of MozIccManager.STK_RESULT_*
    */
   unsigned short resultCode;
+
+  /**
+   * One of MozIccManager.STK_ADDITIONAL_INFO_*
+   */
+  unsigned short additionalInformation;
 
   /**
    * The identifier of the item selected by user.
@@ -579,7 +582,8 @@ dictionary MozStkResponse
   boolean isYesNo;
 
   /**
-   * User has confirmed or rejected the call during STK_CMD_CALL_SET_UP.
+   * User has confirmed or rejected the call during
+   * MozIccManager.STK_CMD_CALL_SET_UP.
    *
    * @see RIL_REQUEST_STK_HANDLE_CALL_SETUP_REQUESTED_FROM_SIM
    *
@@ -589,15 +593,16 @@ dictionary MozStkResponse
   boolean hasConfirmed;
 
   /**
-   * The response for STK_CMD_PROVIDE_LOCAL_INFO
+   * The response for MozIccManager.STK_CMD_PROVIDE_LOCAL_INFO
    */
   MozStkLocalInfo localInfo;
 
   /**
-   * The response for STK_CMD_TIMER_MANAGEMENT.
-   * The 'timerValue' is needed if the action of STK_CMD_TIMER_MANAGEMENT is
-   * 'STK_TIMER_DEACTIVATE' or 'STK_TIMER_GET_CURRENT_VALUE'. It shall state
-   * the current value of a timer. And the resolution is 1 second.
+   * The response for MozIccManager.STK_CMD_TIMER_MANAGEMENT.
+   * The 'timerValue' is needed if the action of
+   * MozIccManager.STK_CMD_TIMER_MANAGEMENT is MozIccManager.STK_TIMER_DEACTIVATE
+   * or MozIccManager.STK_TIMER_GET_CURRENT_VALUE.
+   * It shall state the current value of a timer. And the resolution is 1 second.
    */
   MozStkTimer timer;
 };
@@ -607,9 +612,9 @@ dictionary MozStkCallEvent
   /**
    * The type of this event.
    * It shall be one of following:
-   *     - nsIDOMMozIccManager.STK_EVENT_TYPE_MT_CALL,
-   *     - nsIDOMMozIccManager.STK_EVENT_TYPE_CALL_CONNECTED,
-   *     - nsIDOMMozIccManager.STK_EVENT_TYPE_CALL_DISCONNECTED.
+   *     - MozIccManager.STK_EVENT_TYPE_MT_CALL,
+   *     - MozIccManager.STK_EVENT_TYPE_CALL_CONNECTED,
+   *     - MozIccManager.STK_EVENT_TYPE_CALL_DISCONNECTED.
    */
   unsigned short eventType;
 
@@ -619,19 +624,20 @@ dictionary MozStkCallEvent
   DOMString number;
 
   /**
-   * This field is available in 'STK_EVENT_TYPE_CALL_CONNECTED' and
-   * 'STK_EVENT_TYPE_CALL_DISCONNECTED' events.
-   * For the STK_EVENT_TYPE_CALL_CONNECTED event, setting this to true means the
-   * connection is answered by remote end, that is, this is an outgoing call.
-   * For the STK_EVENT_TYPE_CALL_DISCONNECTED event, setting this to true
-   * indicates the connection is hung up by remote.
+   * This field is available in MozIccManager.STK_EVENT_TYPE_CALL_CONNECTED and
+   * MozIccManager.STK_EVENT_TYPE_CALL_DISCONNECTED events.
+   * For the MozIccManager.STK_EVENT_TYPE_CALL_CONNECTED event, setting this to
+   * true means the connection is answered by remote end, that is, this is an
+   * outgoing call.
+   * For the MozIccManager.STK_EVENT_TYPE_CALL_DISCONNECTED event, setting this
+   * to true indicates the connection is hung up by remote.
    */
   boolean isIssuedByRemote;
 
   /**
    * This field is available in Call Disconnected event to indicate the cause
    * of disconnection. The cause string is passed to gaia through the error
-   * listener of nsIDOMCallEvent. Null if there's no error.
+   * listener of CallEvent. Null if there's no error.
    */
   DOMString error;
 };
@@ -665,7 +671,7 @@ dictionary MozStkLanguageSelectionEvent
 {
   /**
    * The type of this event.
-   * It shall be nsIDOMMozIccManager.STK_EVENT_TYPE_LANGUAGE_SELECTION.
+   * It shall be MozIccManager.STK_EVENT_TYPE_LANGUAGE_SELECTION.
    */
   unsigned short eventType;
 
@@ -682,15 +688,15 @@ dictionary MozStkBrowserTerminationEvent
 {
   /**
    * The type of this event.
-   * It shall be nsIDOMMozIccManager.STK_EVENT_TYPE_BROWSER_TERMINATION
+   * It shall be MozIccManager.STK_EVENT_TYPE_BROWSER_TERMINATION
    */
   unsigned short eventType;
 
   /**
    * This object shall contain the browser termination cause.
    * See TZ 102 223 8.51. It shall be one of following:
-   * - nsIDOMMozIccManager.STK_BROWSER_TERMINATION_CAUSE_USER
-   * - nsIDOMMozIccManager.STK_BROWSER_TERMINATION_CAUSE_ERROR
+   * - MozIccManager.STK_BROWSER_TERMINATION_CAUSE_USER
+   * - MozIccManager.STK_BROWSER_TERMINATION_CAUSE_ERROR
    */
   unsigned short terminationCause;
 };
@@ -700,8 +706,8 @@ dictionary MozStkGeneralEvent
   /**
    * The type of this event, MozStkGeneralEvent can be used for all Stk Event
    * requires no more parameter than event type, including
-   * nsIDOMMozIccManager.STK_EVENT_TYPE_USER_ACTIVITY.
-   * nsIDOMMozIccManager.STK_EVENT_TYPE_IDLE_SCREEN_AVAILABLE.
+   * MozIccManager.STK_EVENT_TYPE_USER_ACTIVITY.
+   * MozIccManager.STK_EVENT_TYPE_IDLE_SCREEN_AVAILABLE.
    * HCI Connectivity Event(Not defined in interface yet).
    */
   unsigned short eventType;
