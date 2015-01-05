@@ -103,10 +103,9 @@ private:
   DOMHighResTimeStamp mTime;
   nsString mCause;
 
-  // While normally it is not a good idea to make a persistent
-  // root, in this case changing nsDocShell to participate in
-  // cycle collection was deemed too invasive, the stack trace
-  // can't actually cause a cycle, and the markers are only held
+  // While normally it is not a good idea to make a persistent root,
+  // in this case changing nsDocShell to participate in cycle
+  // collection was deemed too invasive, and the markers are only held
   // here temporarily to boot.
   mozilla::Maybe<JS::PersistentRooted<JSObject*>> mStackTrace;
 };
