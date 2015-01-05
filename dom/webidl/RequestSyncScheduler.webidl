@@ -15,7 +15,7 @@ dictionary RequestTaskParams {
 
 
 // This is the dictionary you can have back from registration{s}().
-dictionary RequestTask : RequestTaskParams {
+dictionary RequestTaskFull : RequestTaskParams {
   USVString task = "";
 
   // Last synchonization date.. maybe it's useful to know.
@@ -33,6 +33,6 @@ interface RequestSyncScheduler {
   Promise<void> unregister(USVString task);
 
   // Useful methods to get registrations
-  Promise<sequence<RequestTask>> registrations();
-  Promise<RequestTask> registration(USVString task);
+  Promise<sequence<RequestTaskFull>> registrations();
+  Promise<RequestTaskFull> registration(USVString task);
 };
