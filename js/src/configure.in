@@ -585,7 +585,6 @@ fi
 AC_MSG_RESULT([$TAR])
 AC_SUBST(TAR)
 
-if test -z "$TINDERBOX_SKIP_PERL_VERSION_CHECK"; then
 AC_MSG_CHECKING([for minimum required perl version >= $PERL_VERSION])
 _perl_version=`PERL_VERSION=$PERL_VERSION $PERL -e 'print "$]"; if ($] >= $ENV{PERL_VERSION}) { exit(0); } else { exit(1); }' 2>&5`
 _perl_res=$?
@@ -593,7 +592,6 @@ AC_MSG_RESULT([$_perl_version])
 
 if test "$_perl_res" != 0; then
     AC_MSG_ERROR([Perl $PERL_VERSION or higher is required.])
-fi
 fi
 
 AC_MSG_CHECKING([for full perl installation])
