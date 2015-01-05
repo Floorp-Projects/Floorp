@@ -5077,13 +5077,13 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
       "row dense",
       "dense column",
       "dense row",
+      "dense",
     ],
     invalid_values: [
       "",
       "auto",
       "none",
       "10px",
-      "dense",
       "column row",
       "dense row dense",
     ]
