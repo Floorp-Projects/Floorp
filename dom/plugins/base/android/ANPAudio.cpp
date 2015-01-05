@@ -260,7 +260,7 @@ anp_audio_newTrack(uint32_t sampleRate,    // sampling rate in Hz
 
   if (autoFrame.CheckForException() || obj == nullptr) {
     jenv->DeleteGlobalRef(s->at_class);
-    free(s);
+    delete s;
     return nullptr;
   }
 
@@ -268,7 +268,7 @@ anp_audio_newTrack(uint32_t sampleRate,    // sampling rate in Hz
 
   if (autoFrame.CheckForException() || state == STATE_UNINITIALIZED) {
     jenv->DeleteGlobalRef(s->at_class);
-    free(s);
+    delete s;
     return nullptr;
   }
 
@@ -310,7 +310,7 @@ anp_audio_start(ANPAudioTrack* s)
 
   if (autoFrame.CheckForException()) {
     jenv->DeleteGlobalRef(s->at_class);
-    free(s);
+    delete s;
     return;
   }
 
