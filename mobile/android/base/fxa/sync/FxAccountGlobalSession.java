@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.json.simple.parser.ParseException;
@@ -39,6 +38,7 @@ public class FxAccountGlobalSession extends GlobalSession {
     Map<Stage, GlobalSyncStage> stages = new EnumMap<>(Stage.class);
     stages.putAll(this.stages);
     stages.put(Stage.ensureClusterURL, new CheckPreconditionsStage());
+    stages.put(Stage.attemptMigrationStage, new CheckPreconditionsStage());
     this.stages = Collections.unmodifiableMap(stages);
   }
 }
