@@ -7,7 +7,7 @@ function handleRequest(request, response)
   });
 
   if ("setState" in query) {
-    setState("test/dom/base/test_CrossSiteXHR_cache:secData",
+    setState("test/dom/security/test/cors/test_CrossSiteXHR_cache:secData",
              query.setState);
 
     response.setHeader("Cache-Control", "no-cache", false);
@@ -22,7 +22,7 @@ function handleRequest(request, response)
   // Send response
 
   secData =
-    eval(getState("test/dom/base/test_CrossSiteXHR_cache:secData"));
+    eval(getState("test/dom/security/test/cors/test_CrossSiteXHR_cache:secData"));
 
   if (secData.allowOrigin)
     response.setHeader("Access-Control-Allow-Origin", secData.allowOrigin);
