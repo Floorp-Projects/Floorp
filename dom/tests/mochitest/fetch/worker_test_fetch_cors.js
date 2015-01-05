@@ -723,6 +723,156 @@ function testModeCors() {
   return Promise.all(fetches);
 }
 
+function testCredentials() {
+  var tests = [
+           { pass: 1,
+             method: "GET",
+             withCred: 1,
+             allowCred: 1,
+           },
+           { pass: 0,
+             method: "GET",
+             withCred: 1,
+             allowCred: 0,
+           },
+           { pass: 0,
+             method: "GET",
+             withCred: 1,
+             allowCred: 1,
+             origin: "*",
+           },
+           { pass: 1,
+             method: "GET",
+             withCred: 0,
+             allowCred: 1,
+             origin: "*",
+           },
+           { pass: 1,
+             method: "GET",
+             setCookie: "a=1",
+             withCred: 1,
+             allowCred: 1,
+           },
+           { pass: 1,
+             method: "GET",
+             cookie: "a=1",
+             withCred: 1,
+             allowCred: 1,
+           },
+           { pass: 1,
+             method: "GET",
+             noCookie: 1,
+             withCred: 0,
+             allowCred: 1,
+           },
+           { pass: 0,
+             method: "GET",
+             noCookie: 1,
+             withCred: 1,
+             allowCred: 1,
+           },
+           { pass: 1,
+             method: "GET",
+             setCookie: "a=2",
+             withCred: 0,
+             allowCred: 1,
+           },
+           { pass: 1,
+             method: "GET",
+             cookie: "a=1",
+             withCred: 1,
+             allowCred: 1,
+           },
+           { pass: 1,
+             method: "GET",
+             setCookie: "a=2",
+             withCred: 1,
+             allowCred: 1,
+           },
+           { pass: 1,
+             method: "GET",
+             cookie: "a=2",
+             withCred: 1,
+             allowCred: 1,
+           },
+           ];
+           // FIXME(nsm): Add "same-origin" credentials test
+
+  var baseURL = "http://example.org" + corsServerPath;
+  var origin = "http://mochi.test:8888";
+
+  var finalPromiseResolve, finalPromiseReject;
+  var finalPromise = new Promise(function(res, rej) {
+    finalPromiseResolve = res;
+    finalPromiseReject = rej;
+  });
+
+  function makeRequest(test) {
+    req = {
+      url: baseURL + "allowOrigin=" + escape(test.origin || origin),
+      method: test.method,
+      headers: test.headers,
+      withCred: test.withCred,
+    };
+
+    if (test.allowCred)
+      req.url += "&allowCred";
+
+    if (test.setCookie)
+      req.url += "&setCookie=" + escape(test.setCookie);
+    if (test.cookie)
+      req.url += "&cookie=" + escape(test.cookie);
+    if (test.noCookie)
+      req.url += "&noCookie";
+
+    if ("allowHeaders" in test)
+      req.url += "&allowHeaders=" + escape(test.allowHeaders);
+    if ("allowMethods" in test)
+      req.url += "&allowMethods=" + escape(test.allowMethods);
+
+    return new Request(req.url, { method: req.method,
+                                  headers: req.headers,
+                                  credentials: req.withCred ? "include" : "omit" });
+  }
+
+  function testResponse(res, test) {
+    if (test.pass) {
+      is(isNetworkError(res), false,
+        "shouldn't have failed in test for " + test.toSource());
+      is(res.status, 200, "wrong status in test for " + test.toSource());
+      is(res.statusText, "OK", "wrong status text for " + test.toSource());
+      return res.text().then(function(v) {
+        is(v, "<res>hello pass</res>\n",
+         "wrong text in test for " + test.toSource());
+      });
+    }
+    else {
+      is(isNetworkError(res), true,
+        "should have failed in test for " + test.toSource());
+      return res.text().then(function(v) {
+        is(v, "",
+         "wrong text in test for " + test.toSource());
+      });
+    }
+  }
+
+  function runATest(i) {
+    var test = tests[i];
+    var request = makeRequest(test);
+    fetch(request).then(function(res) {
+      testResponse(res, test);
+      if (i < tests.length-1) {
+        runATest(i+1);
+      } else {
+        finalPromiseResolve();
+      }
+    }, finalPromiseReject);
+  }
+
+  runATest(0);
+  return finalPromise;
+}
+
 function runTest() {
   var done = function() {
     if (typeof SimpleTest === "object") {
@@ -738,6 +888,7 @@ function runTest() {
     .then(testModeSameOrigin)
     .then(testModeNoCors)
     .then(testModeCors)
+    .then(testCredentials)
     // Put more promise based tests here.
     .then(done)
     .catch(function(e) {
