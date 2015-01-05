@@ -151,7 +151,7 @@ function test_managerRegistrationsEmpty() {
   genericError);
 }
 
-function test_managerRegistrations() {
+function test_managerRegistrations(state, overwrittenMinInterval) {
   navigator.syncManager.registrations().then(
   function(results) {
     is(results.length, 1, "navigator.sync.registrations() should not return an empty array.");
@@ -166,7 +166,22 @@ function test_managerRegistrations() {
     ok("manifestURL" in results[0].app, "navigator.sync.registrations()[0].app.manifestURL is correct");
     is(results[0].app.origin, 'http://mochi.test:8888', "navigator.sync.registrations()[0].app.origin is correct");
     is(results[0].app.isInBrowserElement, false, "navigator.sync.registrations()[0].app.isInBrowserElement is correct");
+    is(results[0].state, state, "navigator.sync.registrations()[0].state is correct");
+    is(results[0].overwrittenMinInterval, overwrittenMinInterval, "navigator.sync.registrations()[0].overwrittenMinInterval is correct");
+    ok("setPolicy" in results[0], "navigator.sync.registrations()[0].setPolicy is correct");
     runTests();
   },
   genericError);
+}
+
+function test_managerSetPolicy(state, overwrittenMinInterval) {
+  navigator.syncManager.registrations().then(
+  function(results) {
+    results[0].setPolicy(state, overwrittenMinInterval).then(
+    function() {
+      ok(state, results[0].state, "State matches");
+      ok(overwrittenMinInterval, results[0].overwrittenMinInterval, "OverwrittenMinInterval matches");
+      runTests();
+    }, genericError);
+  }).catch(genericError);
 }

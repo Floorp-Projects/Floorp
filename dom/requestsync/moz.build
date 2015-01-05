@@ -17,7 +17,9 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
+    'RequestSyncApp.jsm',
     'RequestSyncService.jsm',
+    'RequestSyncTask.jsm',
 ]
 
 SOURCES += [
