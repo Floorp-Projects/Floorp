@@ -439,7 +439,7 @@ let gTests = [
     info("Waiting for popup to open");
     EventUtils.synthesizeMouseAtCenter(searchIcon, {}, gBrowser.selectedBrowser.contentWindow);
     yield promiseWaitForEvent(panel, "popupshown");
-    ok("Saw popup open");
+    info("Saw popup open");
 
     let promise = promisePrefsOpen();
     let item = window.document.getElementById("abouthome-search-panel-manage");
@@ -632,12 +632,33 @@ function promiseWaitForEvent(node, type, capturing) {
 }
 
 let promisePrefsOpen = Task.async(function*() {
-  info("Waiting for the preferences tab to open...");
-  let event = yield promiseWaitForEvent(gBrowser.tabContainer, "TabOpen", true);
-  let tab = event.target;
-  yield promiseTabLoadEvent(tab);
-  is(tab.linkedBrowser.currentURI.spec, "about:preferences#search", "Should have seen the prefs tab");
-  gBrowser.removeTab(tab);
+  if (Services.prefs.getBoolPref("browser.preferences.inContent")) {
+    info("Waiting for the preferences tab to open...");
+    let event = yield promiseWaitForEvent(gBrowser.tabContainer, "TabOpen", true);
+    let tab = event.target;
+    yield promiseTabLoadEvent(tab);
+    is(tab.linkedBrowser.currentURI.spec, "about:preferences#search", "Should have seen the prefs tab");
+    gBrowser.removeTab(tab);
+  } else {
+    info("Waiting for the preferences window to open...");
+    yield new Promise(resolve => {
+      let winWatcher = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+                       getService(Ci.nsIWindowWatcher);
+      winWatcher.registerNotification(function onWin(subj, topic, data) {
+        if (topic == "domwindowopened" && subj instanceof Ci.nsIDOMWindow) {
+          subj.addEventListener("load", function onLoad() {
+            subj.removeEventListener("load", onLoad);
+            is(subj.document.documentURI, "chrome://browser/content/preferences/preferences.xul", "Should have seen the prefs window");
+            winWatcher.unregisterNotification(onWin);
+            executeSoon(() => {
+              subj.close();
+              resolve();
+            });
+          });
+        }
+      });
+    });
+  }
 });
 
 function promiseNewEngine(basename) {
