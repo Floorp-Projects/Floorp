@@ -440,6 +440,7 @@ public:
     virtual mozilla::EventStates IntrinsicState() const MOZ_OVERRIDE;
 
     nsresult GetFrameLoader(nsIFrameLoader** aFrameLoader);
+    nsresult SetIsPrerendered();
     nsresult SwapFrameLoaders(nsIFrameLoaderOwner* aOtherOwner);
 
     virtual void RecompileScriptEventListeners() MOZ_OVERRIDE;
