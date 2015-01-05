@@ -18,7 +18,7 @@ let test = Task.async(function*() {
 
 function* performTest() {
   let [host, win, doc] = yield createHost();
-  let graph = new LineGraphWidget(doc.body, "fps");
+  let graph = new LineGraphWidget(doc.body, { metric: "fps" });
 
   yield testGraph(graph);
 
