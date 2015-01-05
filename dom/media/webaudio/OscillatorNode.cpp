@@ -141,11 +141,12 @@ public:
 
   void IncrementPhase()
   {
+    const float twoPiFloat = float(2 * M_PI);
     mPhase += mPhaseIncrement;
-    if (mPhase > 2 * M_PI) {
-      mPhase -= 2 * M_PI;
-    } else if (mPhase < -2 * M_PI) {
-      mPhase += 2 * M_PI;
+    if (mPhase > twoPiFloat) {
+      mPhase -= twoPiFloat;
+    } else if (mPhase < -twoPiFloat) {
+      mPhase += twoPiFloat;
     }
   }
 
