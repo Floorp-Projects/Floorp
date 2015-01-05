@@ -130,21 +130,14 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(File)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(File)
   MOZ_ASSERT(tmp->mImpl);
-  if (tmp->mImpl->IsCCed()) {
-    tmp->mImpl->ReleaseOwner();
-    if (!tmp->mImpl->HasOwners()) {
-      tmp->mImpl->Unlink();
-    }
-  }
+  tmp->mImpl->Unlink();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(File)
   MOZ_ASSERT(tmp->mImpl);
-  if (tmp->mImpl->IsCCed()) {
-    tmp->mImpl->Traverse(cb);
-  }
+  tmp->mImpl->Traverse(cb);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -297,10 +290,6 @@ File::File(nsISupports* aParent, FileImpl* aImpl)
     }
   }
 #endif
-
-  if (mImpl->IsCCed()) {
-    mImpl->AddOwner();
-  }
 }
 
 const nsTArray<nsRefPtr<FileImpl>>*
@@ -724,20 +713,6 @@ FileImpl::Slice(const Optional<int64_t>& aStart,
 
   return CreateSlice((uint64_t)start, (uint64_t)(end - start),
                      aContentType, aRv);
-}
-
-void
-FileImpl::AddOwner()
-{
-  ++mOwnersCount;
-}
-
-
-void
-FileImpl::ReleaseOwner()
-{
-  MOZ_ASSERT(mOwnersCount);
-  --mOwnersCount;
 }
 
 ////////////////////////////////////////////////////////////////////////////

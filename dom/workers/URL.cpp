@@ -889,13 +889,6 @@ URL::CreateObjectURL(const GlobalObject& aGlobal, File& aBlob,
                      const mozilla::dom::objectURLOptions& aOptions,
                      nsString& aResult, mozilla::ErrorResult& aRv)
 {
-  if (aBlob.Impl()->IsCCed()) {
-    // The creation of a blob URL happens on the main-thread and we cannot
-    // transfer a FileImpl if CCed.
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
   JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
 
