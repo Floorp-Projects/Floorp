@@ -930,6 +930,14 @@ menulist {
   -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist");
 }
 
+menulist[popuponly="true"] {
+  -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist-popuponly");
+  -moz-appearance: none !important;
+  margin: 0 !important;
+  height: 0 !important;
+  border: 0 !important;
+}
+
 menulist[editable="true"] {
   -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist-editable");
 }
