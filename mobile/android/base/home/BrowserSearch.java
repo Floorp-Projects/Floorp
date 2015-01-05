@@ -66,6 +66,26 @@ import android.widget.TextView;
  */
 public class BrowserSearch extends HomeFragment
                            implements GeckoEventListener {
+
+    @RobocopTarget
+    public interface SuggestClientFactory {
+        public SuggestClient getSuggestClient(Context context, String template, int timeout, int max);
+    }
+
+    @RobocopTarget
+    public static class DefaultSuggestClientFactory implements SuggestClientFactory {
+        @Override
+        public SuggestClient getSuggestClient(Context context, String template, int timeout, int max) {
+            return new SuggestClient(context, template, timeout, max, true);
+        }
+    }
+
+    /**
+     * Set this to mock the suggestion mechanism. Public for access from tests.
+     */
+    @RobocopTarget
+    public static volatile SuggestClientFactory sSuggestClientFactory = new DefaultSuggestClientFactory();
+
     // Logging tag name
     private static final String LOGTAG = "GeckoBrowserSearch";
 
@@ -104,8 +124,10 @@ public class BrowserSearch extends HomeFragment
     // The list showing search results
     private HomeListView mList;
 
-    // Client that performs search suggestion queries
-    private volatile SuggestClient mSuggestClient;
+    // Client that performs search suggestion queries.
+    // Public for testing.
+    @RobocopTarget
+    public volatile SuggestClient mSuggestClient;
 
     // List of search engines from Gecko.
     // Do not mutate this list.
@@ -549,12 +571,8 @@ public class BrowserSearch extends HomeFragment
                     final boolean isPrivate = (tab != null && tab.isPrivate());
 
                     // Only create a new instance of SuggestClient if it hasn't been
-                    // set yet. e.g. Robocop tests might set it directly before search
-                    // engines are loaded.
-                    if (mSuggestClient == null && !isPrivate) {
-                        setSuggestClient(new SuggestClient(getActivity(), suggestTemplate,
-                                    SUGGESTION_TIMEOUT, SUGGESTION_MAX));
-                    }
+                    // set yet.
+                    maybeSetSuggestClient(suggestTemplate, isPrivate);
                 } else {
                     searchEngines.add(engine);
                 }
@@ -579,18 +597,12 @@ public class BrowserSearch extends HomeFragment
         filterSuggestions();
     }
 
-    /**
-     * Sets the private SuggestClient instance. Should only be called if the suggestClient is
-     * null (i.e. has not yet been initialized or has been nulled). Non-private access is
-     * for testing purposes only.
-     */
-    @RobocopTarget
-    public void setSuggestClient(final SuggestClient client) {
-        if (mSuggestClient != null) {
-            throw new IllegalStateException("Can only set the SuggestClient if it has not " +
-                    "yet been initialized!");
+    private void maybeSetSuggestClient(final String suggestTemplate, final boolean isPrivate) {
+        if (mSuggestClient != null || isPrivate) {
+            return;
         }
-        mSuggestClient = client;
+
+        mSuggestClient = sSuggestClientFactory.getSuggestClient(getActivity(), suggestTemplate, SUGGESTION_TIMEOUT, SUGGESTION_MAX);
     }
 
     private void showSuggestionsOptIn() {
