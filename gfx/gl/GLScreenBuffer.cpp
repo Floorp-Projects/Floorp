@@ -525,11 +525,18 @@ GLScreenBuffer::Readback(SharedSurface* src, gfx::DataSourceSurface* dest)
   }
 
   {
+      // Even though we're reading. We're doing it on
+      // the producer side. So we call ProducerAcquire
+      // instead of ConsumerAcquire.
+      src->ProducerAcquire();
+
       UniquePtr<ReadBuffer> buffer = CreateRead(src);
       MOZ_ASSERT(buffer);
 
       ScopedBindFramebuffer autoFB(mGL, buffer->mFB);
       ReadPixelsIntoDataSurface(mGL, dest);
+
+      src->ProducerRelease();
   }
 
   if (needsSwap) {
