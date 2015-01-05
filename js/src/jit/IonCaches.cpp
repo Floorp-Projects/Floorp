@@ -4389,6 +4389,15 @@ NameIC::update(JSContext *cx, size_t cacheIndex, HandleObject scopeChain,
     if (!LookupName(cx, name, scopeChain, &obj, &holder, &shape))
         return false;
 
+    // Look first. Don't generate cache entries if the lookup fails.
+    if (cache.isTypeOf()) {
+        if (!FetchName<true>(cx, obj, holder, name, shape, vp))
+            return false;
+    } else {
+        if (!FetchName<false>(cx, obj, holder, name, shape, vp))
+            return false;
+    }
+
     if (cache.canAttachStub()) {
         if (IsCacheableNameReadSlot(scopeChain, obj, holder, shape, pc, cache.outputReg())) {
             if (!cache.attachReadSlot(cx, outerScript, ion, scopeChain, obj,
@@ -4400,14 +4409,6 @@ NameIC::update(JSContext *cx, size_t cacheIndex, HandleObject scopeChain,
             if (!cache.attachCallGetter(cx, outerScript, ion, scopeChain, obj, holder, shape, returnAddr))
                 return false;
         }
-    }
-
-    if (cache.isTypeOf()) {
-        if (!FetchName<true>(cx, obj, holder, name, shape, vp))
-            return false;
-    } else {
-        if (!FetchName<false>(cx, obj, holder, name, shape, vp))
-            return false;
     }
 
     // Monitor changes to cache entry.
