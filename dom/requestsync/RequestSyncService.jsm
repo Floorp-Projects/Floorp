@@ -587,10 +587,16 @@ this.RequestSyncService = {
       timer = null;
     }
 
+    let timeout = RSYNC_OPERATION_TIMEOUT;
+    try {
+      let tmp = Services.prefs.getIntPref("dom.requestSync.maxTaskTimeout");
+      timeout = tmp;
+    } catch(e) {}
+
     timer.initWithCallback(function() {
       debug("Task is taking too much, let's ignore the promise.");
       taskCompleted();
-    }, RSYNC_OPERATION_TIMEOUT, Ci.nsITimer.TYPE_ONE_SHOT);
+    }, timeout, Ci.nsITimer.TYPE_ONE_SHOT);
 
     // Sending the message.
     let promise =
