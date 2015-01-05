@@ -809,13 +809,16 @@ void NetworkUtils::startTethering(CommandChain* aChain,
   if (aResult.mResultReason.Find("started") != kNotFound) {
     snprintf(command, MAX_COMMAND_SIZE - 1, "%s", DUMMY_COMMAND);
   } else {
-    snprintf(command, MAX_COMMAND_SIZE - 1, "tether start %s %s", GET_CHAR(mWifiStartIp), GET_CHAR(mWifiEndIp));
-
     // If usbStartIp/usbEndIp is not valid, don't append them since
     // the trailing white spaces will be parsed to extra empty args
     // See: http://androidxref.com/4.3_r2.1/xref/system/core/libsysutils/src/FrameworkListener.cpp#78
     if (!GET_FIELD(mUsbStartIp).IsEmpty() && !GET_FIELD(mUsbEndIp).IsEmpty()) {
-      snprintf(command, MAX_COMMAND_SIZE - 1, "%s %s %s", command, GET_CHAR(mUsbStartIp), GET_CHAR(mUsbEndIp));
+      snprintf(command, MAX_COMMAND_SIZE - 1, "tether start %s %s %s %s",
+               GET_CHAR(mWifiStartIp), GET_CHAR(mWifiEndIp),
+               GET_CHAR(mUsbStartIp),  GET_CHAR(mUsbEndIp));
+    } else {
+      snprintf(command, MAX_COMMAND_SIZE - 1, "tether start %s %s",
+               GET_CHAR(mWifiStartIp), GET_CHAR(mWifiEndIp));
     }
   }
 
