@@ -1928,14 +1928,6 @@ public:
   }
   NS_DISPLAY_DECL_NAME(mName, mType)
 
-  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE {
-    if (mType == nsDisplayItem::TYPE_HEADER_FOOTER) {
-      bool snap;
-      return GetBounds(aBuilder, &snap);
-    }
-    return nsRect();
-  }
-
 protected:
   PaintCallback mPaint;
 #ifdef MOZ_DUMP_PAINTING

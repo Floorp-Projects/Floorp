@@ -55,7 +55,7 @@ public:
   virtual bool HonorPrintBackgroundSettings() MOZ_OVERRIDE { return false; }
 
   void PaintHeaderFooter(nsRenderingContext& aRenderingContext,
-                         nsPoint aPt);
+                         nsPoint aPt, bool aSubpixelAA);
 
 protected:
   explicit nsPageFrame(nsStyleContext* aContext);
