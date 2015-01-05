@@ -725,7 +725,10 @@ public:
       nsIPresShell::SetCapturingContent(nullptr, 0);
     }
   }
-  void MozRequestFullScreen(const RequestFullscreenOptions& aOptions);
+
+  // aCx == nullptr is allowed only if aOptions.isNullOrUndefined()
+  void MozRequestFullScreen(JSContext* aCx, JS::Handle<JS::Value> aOptions,
+                            ErrorResult& aError);
   void MozRequestPointerLock();
   Attr* GetAttributeNode(const nsAString& aName);
   already_AddRefed<Attr> SetAttributeNode(Attr& aNewAttr,
@@ -1781,8 +1784,9 @@ NS_IMETHOD ReleaseCapture(void) MOZ_FINAL MOZ_OVERRIDE                        \
 }                                                                             \
 NS_IMETHOD MozRequestFullScreen(void) MOZ_FINAL MOZ_OVERRIDE                  \
 {                                                                             \
-  Element::MozRequestFullScreen(mozilla::dom::RequestFullscreenOptions());    \
-  return NS_OK;                                                               \
+  mozilla::ErrorResult rv;                                                    \
+  Element::MozRequestFullScreen(nullptr, JS::UndefinedHandleValue, rv);       \
+  return rv.ErrorCode();                                                      \
 }                                                                             \
 NS_IMETHOD MozRequestPointerLock(void) MOZ_FINAL MOZ_OVERRIDE                 \
 {                                                                             \
