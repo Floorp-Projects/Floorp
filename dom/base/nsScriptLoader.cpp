@@ -43,7 +43,7 @@
 #include "prlog.h"
 #include "nsCRT.h"
 #include "nsContentCreatorFunctions.h"
-#include "nsCrossSiteListenerProxy.h"
+#include "nsCORSListenerProxy.h"
 #include "nsSandboxFlags.h"
 #include "nsContentTypeParser.h"
 #include "nsINetworkPredictor.h"
