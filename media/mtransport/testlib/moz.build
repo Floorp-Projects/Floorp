@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 include('../common.build')
+include("/ipc/chromium/chromium-config.mozbuild")
 
 # These files cannot be built in unified mode because of the redefinition of
 # getLogModule, UNIMPLEMENTED, nr_socket_long_term_violation_time,
