@@ -622,12 +622,6 @@ PeerConnectionConfiguration::AddIceServer(const RTCIceServer &aServer)
       NS_ConvertUTF16toUTF8 credential(aServer.mCredential);
       NS_ConvertUTF16toUTF8 username(aServer.mUsername);
 
-      // Bug 1039655 - TURN TCP is not e10s ready
-      if ((transport == kNrIceTransportTcp) &&
-          (!XRE_IsParentProcess())) {
-        continue;
-      }
-
       if (!addTurnServer(host.get(), port,
                          username.get(),
                          credential.get(),
