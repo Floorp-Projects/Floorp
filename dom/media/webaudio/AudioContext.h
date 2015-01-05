@@ -192,7 +192,8 @@ public:
   already_AddRefed<Promise>
   DecodeAudioData(const ArrayBuffer& aBuffer,
                   const Optional<OwningNonNull<DecodeSuccessCallback> >& aSuccessCallback,
-                  const Optional<OwningNonNull<DecodeErrorCallback> >& aFailureCallback);
+                  const Optional<OwningNonNull<DecodeErrorCallback> >& aFailureCallback,
+                  ErrorResult& aRv);
 
   // OfflineAudioContext methods
   already_AddRefed<Promise> StartRendering(ErrorResult& aRv);
