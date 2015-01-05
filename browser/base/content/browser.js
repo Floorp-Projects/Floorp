@@ -2082,7 +2082,7 @@ function getShortcutOrURIAndPostData(aURL, aCallback) {
 
   let engine = Services.search.getEngineByAlias(keyword);
   if (engine) {
-    let submission = engine.getSubmission(param);
+    let submission = engine.getSubmission(param, null, "keyword");
     postData = submission.postData;
     aCallback({ postData: submission.postData, url: submission.uri.spec,
                 mayInheritPrincipal: mayInheritPrincipal });
