@@ -103,11 +103,6 @@
   border: 0;
 }
 
-.pdfViewer .page .annotationHighlight {
-  position: absolute;
-  border: 2px #FFFF99 solid;
-}
-
 .pdfViewer .page .annotText > img {
   position: absolute;
   cursor: pointer;
@@ -811,7 +806,6 @@ html[dir='rtl'] .dropdownToolbarButton {
 }
 
 .dropdownToolbarButton > select {
-  -moz-appearance: none; /* in the future this might matter, see bugzilla bug #649849 */
   min-width: 140px;
   font-size: 12px;
   color: hsl(0,0%,95%);
@@ -1753,6 +1747,10 @@ html[dir='rtl'] #documentPropertiesOverlay .row > * {
     top: 0;
     left: 0;
     display: block;
+  }
+  #printContainer div {
+    page-break-after: always;
+    page-break-inside: avoid;
   }
 }
 

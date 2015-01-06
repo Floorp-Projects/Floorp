@@ -389,6 +389,11 @@ var DebuggerServer = {
       constructor: "DeviceActor",
       type: { global: true }
     });
+    this.registerModule("devtools/server/actors/director-registry", {
+      prefix: "directorRegistry",
+      constructor: "DirectorRegistryActor",
+      type: { global: true }
+    });
   },
 
   /**
@@ -503,6 +508,11 @@ var DebuggerServer = {
       prefix: "timeline",
       constructor: "TimelineActor",
       type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/director-manager", {
+      prefix: "directorManager",
+      constructor: "DirectorManagerActor",
+      type: { global: false, tab: true }
     });
     if ("nsIProfiler" in Ci) {
       this.registerModule("devtools/server/actors/profiler", {

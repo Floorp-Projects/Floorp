@@ -444,7 +444,9 @@ public class GeckoMenuItem implements MenuItem {
 
     @Override
     public MenuItem setVisible(boolean visible) {
-        if (mVisible != visible) {
+        // Action views are not normal menu items and visibility can get out
+        // of sync unless we dispatch whenever required.
+        if (isActionItem() || mVisible != visible) {
             mVisible = visible;
             if (mShouldDispatchChanges) {
                 mMenu.onItemChanged(this);

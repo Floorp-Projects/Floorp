@@ -85,7 +85,7 @@ FontInspector.prototype = {
  /**
   * Retrieve all the font info for the selected node and display it.
   */
-  update: Task.async(function*() {
+  update: Task.async(function*(showAllFonts) {
     let node = this.inspector.selection.nodeFront;
 
     if (!node ||
@@ -104,10 +104,16 @@ FontInspector.prototype = {
       includePreviews: true,
       previewFillStyle: fillStyle
     }
-
-    let fonts = yield this.pageStyle.getUsedFontFaces(node, options)
+    let fonts = [];
+    if (showAllFonts){
+      fonts = yield this.pageStyle.getAllUsedFontFaces(options)
                       .then(null, console.error);
-    if (!fonts) {
+    }
+    else{
+      fonts = yield this.pageStyle.getUsedFontFaces(node, options)
+                      .then(null, console.error);
+    }
+    if (!fonts || !fonts.length) {
       return;
     }
 
@@ -169,21 +175,10 @@ FontInspector.prototype = {
   },
 
   /**
-   * Select the <body> to show all the fonts included in the document.
+   * Show all fonts for the document (including iframes)
    */
   showAll: function FI_showAll() {
-    if (!this.isActive() ||
-        !this.inspector.selection.isConnected() ||
-        !this.inspector.selection.isElementNode()) {
-      return;
-    }
-
-    // Select the body node to show all fonts
-    let walker = this.inspector.walker;
-
-    walker.getRootNode().then(root => walker.querySelector(root, "body")).then(body => {
-      this.inspector.selection.setNodeFront(body, "fontinspector");
-    });
+    this.update(true);
   },
 }
 
