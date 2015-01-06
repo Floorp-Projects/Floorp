@@ -530,7 +530,7 @@ public:
     NS_DECL_NSIRDFNODE
 
     // nsIRDFDate
-    NS_IMETHOD GetValue(PRTime *value);
+    NS_IMETHOD GetValue(PRTime *value) MOZ_OVERRIDE;
 
 private:
     virtual ~DateImpl();
@@ -637,7 +637,7 @@ public:
     NS_DECL_NSIRDFNODE
 
     // nsIRDFInt
-    NS_IMETHOD GetValue(int32_t *value);
+    NS_IMETHOD GetValue(int32_t *value) MOZ_OVERRIDE;
 
 private:
     virtual ~IntImpl();
