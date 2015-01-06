@@ -4,16 +4,19 @@ use std::collections::TreeMap;
 use std::io::{IoResult, TcpStream, IoError};
 
 use command::{WebDriverMessage};
-use command::WebDriverCommand::{GetMarionetteId, NewSession, DeleteSession, Get, GetCurrentUrl,
+use command::WebDriverCommand::{NewSession, DeleteSession, Get, GetCurrentUrl,
                                 GoBack, GoForward, Refresh, GetTitle, GetWindowHandle,
-                                GetWindowHandles, Close, Timeouts, SetWindowSize,
+                                GetWindowHandles, Close, SetWindowSize,
                                 GetWindowSize, MaximizeWindow, SwitchToWindow, SwitchToFrame,
-                                SwitchToParentFrame, IsDisplayed, IsSelected,
-                                GetElementAttribute, GetCSSValue, GetElementText,
+                                SwitchToParentFrame, FindElement, FindElements, IsDisplayed,
+                                IsSelected, GetElementAttribute, GetCSSValue, GetElementText,
                                 GetElementTagName, GetElementRect, IsEnabled, ExecuteScript,
-                                ExecuteAsyncScript};
-use response::{WebDriverResponse, NewSessionResponse, ValueResponse, WindowSizeResponse, ElementRectResponse};
-use common::{WebDriverResult, WebDriverError, ErrorStatus};
+                                ExecuteAsyncScript, GetCookie, AddCookie, SetTimeouts,
+                                DismissAlert, AcceptAlert, GetAlertText, SendAlertText,
+                                TakeScreenshot};
+use response::{WebDriverResponse, NewSessionResponse, ValueResponse, WindowSizeResponse,
+               ElementRectResponse, CookieResponse, Date, Cookie};
+use common::{WebDriverResult, WebDriverError, ErrorStatus, Nullable};
 
 pub struct MarionetteSession {
     pub session_id: String,
@@ -37,16 +40,6 @@ impl MarionetteSession {
 
     pub fn update(&mut self, msg: &WebDriverMessage, resp: &TreeMap<String, json::Json>) -> WebDriverResult<()> {
         match msg.command {
-            GetMarionetteId => {
-                let to = try_opt!(
-                    try_opt!(resp.get("to"),
-                             ErrorStatus::UnknownError,
-                             "Unable to get to value").as_string(),
-                    ErrorStatus::UnknownError,
-                    "Unable to convert 'to' to a string");
-
-                self.to = to.to_string();
-            },
             NewSession => {
                 let session_id = try_opt!(
                     try_opt!(resp.get("sessionId"),
@@ -61,49 +54,63 @@ impl MarionetteSession {
         Ok(())
     }
 
-    fn command_name(msg:&WebDriverMessage) -> String {
+    fn command_name(msg:&WebDriverMessage) -> Option<String> {
         match msg.command {
-            GetMarionetteId => "getMarionetteID",
-            NewSession => "newSession",
-            DeleteSession => "deleteSession",
-            Get(_) => "get",
-            GetCurrentUrl => "getCurrentUrl",
-            GoBack => "goBack",
-            GoForward => "goForward",
-            Refresh => "refresh",
-            GetTitle => "getTitle",
-            GetWindowHandle => "getWindowHandle",
-            GetWindowHandles => "getWindowHandles",
-            Close => "close",
-            Timeouts(_) => "timeouts",
-            SetWindowSize(_) => "setWindowSize",
-            GetWindowSize => "getWindowSize",
-            MaximizeWindow => "maximizeWindow",
-            SwitchToWindow(_) => "switchToWindow",
-            SwitchToFrame(_) => "switchToFrame",
-            SwitchToParentFrame => "switchToParentFrame",
-            IsDisplayed(_) => "isElementDisplayed",
-            IsSelected(_) => "isElementSelected",
-            GetElementAttribute(_, _) => "getElementAttribute",
-            GetCSSValue(_, _) => "getElementValueOfCssProperty",
-            GetElementText(_) => "getElementText",
-            GetElementTagName(_) => "getElementTagName",
-            GetElementRect(_) => "getElementRect",
-            IsEnabled(_) => "isElementEnabled",
-            ExecuteScript(_) => "executeScript",
-            ExecuteAsyncScript(_) => "executeAsyncScript"
-        }.to_string()
+            NewSession => Some("newSession"),
+            DeleteSession => Some("deleteSession"),
+            Get(_) => Some("get"),
+            GetCurrentUrl => Some("getCurrentUrl"),
+            GoBack => Some("goBack"),
+            GoForward => Some("goForward"),
+            Refresh => Some("refresh"),
+            GetTitle => Some("getTitle"),
+            GetWindowHandle => Some("getWindowHandle"),
+            GetWindowHandles => Some("getWindowHandles"),
+            Close => Some("close"),
+            SetTimeouts(_) => Some("timeouts"),
+            SetWindowSize(_) => Some("setWindowSize"),
+            GetWindowSize => Some("getWindowSize"),
+            MaximizeWindow => Some("maximizeWindow"),
+            SwitchToWindow(_) => Some("switchToWindow"),
+            SwitchToFrame(_) => Some("switchToFrame"),
+            SwitchToParentFrame => Some("switchToParentFrame"),
+            FindElement(_) => Some("findElement"),
+            FindElements(_) => Some("findElements"),
+            IsDisplayed(_) => Some("isElementDisplayed"),
+            IsSelected(_) => Some("isElementSelected"),
+            GetElementAttribute(_, _) => Some("getElementAttribute"),
+            GetCSSValue(_, _) => Some("getElementValueOfCssProperty"),
+            GetElementText(_) => Some("getElementText"),
+            GetElementTagName(_) => Some("getElementTagName"),
+            GetElementRect(_) => Some("getElementRect"),
+            IsEnabled(_) => Some("isElementEnabled"),
+            ExecuteScript(_) => Some("executeScript"),
+            ExecuteAsyncScript(_) => Some("executeAsyncScript"),
+            GetCookie(_) => Some("getCookies"),
+            AddCookie(_) => Some("addCookie"),
+            DismissAlert => None, //Unsupported
+            AcceptAlert => None, //Unsupported
+            GetAlertText => None, //Unsupported
+            SendAlertText(_) => None, //Unsupported
+            TakeScreenshot(_) => Some("takeScreenshot")
+        }.map(|x| x.into_string())
     }
 
-    pub fn msg_to_marionette(&self, msg: &WebDriverMessage) -> json::Json {
-        let mut data = msg.to_json().as_object().unwrap().clone();
+    pub fn msg_to_marionette(&self, msg: &WebDriverMessage) -> WebDriverResult<json::Json> {
+        let command_name = try_opt!(MarionetteSession::command_name(msg),
+                                    ErrorStatus::UnsupportedOperation,
+                                    "Operation not supported");
+        let mut data = try_opt!(msg.to_json().as_object(),
+                                ErrorStatus::UnknownError,
+                                "Failed to convert message to Object"
+                                ).clone();
         match msg.session_id {
             Some(ref x) => data.insert("sessionId".to_string(), x.to_json()),
             None => None
         };
         data.insert("to".to_string(), self.to.to_json());
-        data.insert("name".to_string(), MarionetteSession::command_name(msg).to_json());
-        json::Object(data)
+        data.insert("name".to_string(), command_name.to_json());
+        Ok(json::Object(data))
     }
 
     pub fn response_from_json(&mut self, message: &WebDriverMessage,
@@ -129,23 +136,26 @@ impl MarionetteSession {
             return Err(WebDriverError::new(status, err_msg));
         }
 
-        self.update(message, &json_data);
+        try!(self.update(message, &json_data));
 
         match message.command {
             //Everything that doesn't have a response value
-            GetMarionetteId => Ok(None),
-            Get(_) | GoBack | GoForward | Refresh | Close | Timeouts(_) |
+            Get(_) | GoBack | GoForward | Refresh | Close | SetTimeouts(_) |
             SetWindowSize(_) | MaximizeWindow | SwitchToWindow(_) | SwitchToFrame(_) |
-            SwitchToParentFrame => {
+            SwitchToParentFrame | AddCookie(_) | DismissAlert | AcceptAlert |
+            SendAlertText(_) => {
                 Ok(Some(WebDriverResponse::Void))
             },
             //Things that simply return the contents of the marionette "value" property
-            GetCurrentUrl | GetTitle | GetWindowHandle | GetWindowHandles | IsDisplayed(_) |
-            IsSelected(_) | GetElementAttribute(_, _) | GetCSSValue(_, _) | GetElementText(_) |
-            GetElementTagName(_) | IsEnabled(_) | ExecuteScript(_) | ExecuteAsyncScript(_) => {
+            GetCurrentUrl | GetTitle | GetWindowHandle | GetWindowHandles |
+            FindElement(_) | FindElements(_) | IsDisplayed(_) | IsSelected(_) |
+            GetElementAttribute(_, _) | GetCSSValue(_, _) | GetElementText(_) |
+            GetElementTagName(_) | IsEnabled(_) | ExecuteScript(_) | ExecuteAsyncScript(_) |
+            GetAlertText | TakeScreenshot(_) => {
                 let value = try_opt!(json_data.get("value"),
                                      ErrorStatus::UnknownError,
                                      "Failed to find value field");
+                //TODO: Convert webelement keys
                 Ok(Some(WebDriverResponse::Generic(ValueResponse::new(value.clone()))))
             },
             GetWindowSize => {
@@ -209,14 +219,84 @@ impl MarionetteSession {
                         "Failed to interpret width as integer");
 
                 Ok(Some(WebDriverResponse::ElementRect(ElementRectResponse::new(x, y, width, height))))
-            }
+            },
+            GetCookie(_) => {
+                let value = try_opt!(
+                    try_opt!(json_data.get("value"),
+                                           ErrorStatus::UnknownError,
+                                           "Failed to find value field").as_array(),
+                        ErrorStatus::UnknownError,
+                        "Failed to interpret value as array");
+                let cookies = try!(value.iter().map(|x| {
+                    let name = try_opt!(
+                        try_opt!(x.find("name"),
+                                 ErrorStatus::UnknownError,
+                                 "Failed to find name field").as_string(),
+                        ErrorStatus::UnknownError,
+                        "Failed to interpret name as string").into_string();
+                    let value = try_opt!(
+                        try_opt!(x.find("value"),
+                                 ErrorStatus::UnknownError,
+                                 "Failed to find value field").as_string(),
+                        ErrorStatus::UnknownError,
+                        "Failed to interpret value as string").into_string();
+                    let path = try!(
+                        Nullable::from_json(try_opt!(x.find("path"),
+                                                     ErrorStatus::UnknownError,
+                                                     "Failed to find path field"),
+                                            |x| {
+                                                Ok((try_opt!(x.as_string(),
+                                                             ErrorStatus::UnknownError,
+                                                             "Failed to interpret path as String")).into_string())
+                                            }));
+                    let domain = try!(
+                        Nullable::from_json(try_opt!(x.find("domain"),
+                                                     ErrorStatus::UnknownError,
+                                                     "Failed to find domain field"),
+                                            |x| {
+                                                Ok((try_opt!(x.as_string(),
+                                                             ErrorStatus::UnknownError,
+                                                             "Failed to interpret domain as String")).into_string())
+                                            }));
+                    let expiry = try!(
+                        Nullable::from_json(try_opt!(x.find("expiry"),
+                                                     ErrorStatus::UnknownError,
+                                                     "Failed to find expiry field"),
+                                            |x| {
+                                                Ok(Date::new((try_opt!(
+                                                    x.as_u64(),
+                                                    ErrorStatus::UnknownError,
+                                                    "Failed to interpret domain as String"))))
+                                            }));
+                    let max_age = Date::new(try_opt!(
+                        try_opt!(x.find("maxAge"),
+                                 ErrorStatus::UnknownError,
+                                 "Failed to find maxAge field").as_u64(),
+                        ErrorStatus::UnknownError,
+                        "Failed to interpret maxAge as u64"));
+                    let secure = match x.find("secure") {
+                        Some(x) => try_opt!(x.as_boolean(),
+                                            ErrorStatus::UnknownError,
+                                            "Failed to interpret secure as boolean"),
+                        None => false
+                    };
+                    let http_only = match x.find("httpOnly") {
+                        Some(x) => try_opt!(x.as_boolean(),
+                                            ErrorStatus::UnknownError,
+                                            "Failed to interpret http_only as boolean"),
+                        None => false
+                    };
+                    Ok(Cookie::new(name, value, path, domain, expiry, max_age, secure, http_only))
+                }).collect::<Result<Vec<_>, _>>());
+                Ok(Some(WebDriverResponse::Cookie(CookieResponse::new(cookies))))
+            },
             NewSession => {
                 let session_id = try_opt!(
                     try_opt!(json_data.get("sessionId"),
                              ErrorStatus::InvalidSessionId,
                              "Failed to find sessionId field").as_string(),
                     ErrorStatus::InvalidSessionId,
-                    "sessionId was not a string");
+                    "sessionId was not a string").into_string();
 
                 let value = try_opt!(
                     try_opt!(json_data.get("value"),
@@ -226,7 +306,7 @@ impl MarionetteSession {
                     "value field was not an Object");
 
                 Ok(Some(WebDriverResponse::NewSession(NewSessionResponse::new(
-                    session_id.to_string(), json::Object(value.clone())))))
+                    session_id, json::Object(value.clone())))))
             }
             DeleteSession => {
                 Ok(Some(WebDriverResponse::DeleteSession))
@@ -310,9 +390,7 @@ impl MarionetteConnection {
     }
 
     pub fn send_message(&mut self, msg: &WebDriverMessage) -> WebDriverResult<Option<WebDriverResponse>>  {
-        let resp = {
-            self.session.msg_to_marionette(msg)
-        };
+        let resp = try!(self.session.msg_to_marionette(msg));
         let resp = match self.send(&resp) {
             Ok(resp_data) => self.session.response_from_json(msg, resp_data[]),
             Err(x) => Err(x)
