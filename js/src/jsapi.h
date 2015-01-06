@@ -801,15 +801,10 @@ typedef bool
 /*
  * Callback used to ask the embedding for the cross compartment wrapper handler
  * that implements the desired prolicy for this kind of object in the
- * destination compartment. |obj| is the object to be wrapped. If |existing| is
- * non-nullptr, it will point to an existing wrapper object that should be
- * re-used if possible. |existing| is guaranteed to be a cross-compartment
- * wrapper with a lazily-defined prototype and the correct global. It is
- * guaranteed not to wrap a function.
+ * destination compartment. |obj| is the object to be wrapped.
  */
 typedef JSObject *
-(* JSWrapObjectCallback)(JSContext *cx, JS::HandleObject existing, JS::HandleObject obj,
-                         JS::HandleObject parent);
+(* JSWrapObjectCallback)(JSContext *cx, JS::HandleObject obj, JS::HandleObject parent);
 
 /*
  * Callback used by the wrap hook to ask the embedding to prepare an object

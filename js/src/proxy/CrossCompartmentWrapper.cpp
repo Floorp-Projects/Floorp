@@ -526,25 +526,17 @@ js::RemapWrapper(JSContext *cx, JSObject *wobjArg, JSObject *newTargetArg)
     // immediately cease to be a cross-compartment wrapper. Neuter it.
     NukeCrossCompartmentWrapper(cx, wobj);
 
-    // First, we wrap it in the new compartment. We try to use the existing
-    // wrapper, |wobj|, since it's been nuked anyway. The wrap() function has
-    // the choice to reuse |wobj| or not.
+    // First, we wrap it in the new compartment.
     RootedObject tobj(cx, newTarget);
     AutoCompartment ac(cx, wobj);
-    if (!wcompartment->wrap(cx, &tobj, wobj))
+    if (!wcompartment->wrap(cx, &tobj))
         MOZ_CRASH();
 
-    // If wrap() reused |wobj|, it will have overwritten it and returned with
-    // |tobj == wobj|. Otherwise, |tobj| will point to a new wrapper and |wobj|
-    // will still be nuked. In the latter case, we replace |wobj| with the
-    // contents of the new wrapper in |tobj|.
-    if (tobj != wobj) {
-        // Now, because we need to maintain object identity, we do a brain
-        // transplant on the old object so that it contains the contents of the
-        // new one.
-        if (!JSObject::swap(cx, wobj, tobj))
-            MOZ_CRASH();
-    }
+    // Now, because we need to maintain object identity, we do a brain
+    // transplant on the old object so that it contains the contents of the
+    // new one.
+    if (!JSObject::swap(cx, wobj, tobj))
+        MOZ_CRASH();
 
     // Before swapping, this wrapper came out of wrap(), which enforces the
     // invariant that the wrapper in the map points directly to the key.

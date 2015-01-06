@@ -355,12 +355,10 @@ struct JSCompartment
     /* Mark cross-compartment wrappers. */
     void markCrossCompartmentWrappers(JSTracer *trc);
 
-    inline bool wrap(JSContext *cx, JS::MutableHandleValue vp,
-                     JS::HandleObject existing = js::NullPtr());
+    inline bool wrap(JSContext *cx, JS::MutableHandleValue vp);
 
     bool wrap(JSContext *cx, js::MutableHandleString strp);
-    bool wrap(JSContext *cx, JS::MutableHandleObject obj,
-              JS::HandleObject existingArg = js::NullPtr());
+    bool wrap(JSContext *cx, JS::MutableHandleObject obj);
     bool wrap(JSContext *cx, JS::MutableHandle<js::PropertyDescriptor> desc);
     bool wrap(JSContext *cx, JS::MutableHandle<js::PropDesc> desc);
 

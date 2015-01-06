@@ -343,12 +343,10 @@ JSCompartment::wrap(JSContext *cx, MutableHandleString strp)
 }
 
 bool
-JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existingArg)
+JSCompartment::wrap(JSContext *cx, MutableHandleObject obj)
 {
     MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(this));
     MOZ_ASSERT(cx->compartment() == this);
-    MOZ_ASSERT_IF(existingArg, existingArg->compartment() == cx->compartment());
-    MOZ_ASSERT_IF(existingArg, IsDeadProxyObject(existingArg));
 
     if (!obj)
         return true;
@@ -421,20 +419,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existin
         return true;
     }
 
-    RootedObject existing(cx, existingArg);
-    if (existing) {
-        // Is it possible to reuse |existing|?
-        if (!existing->getTaggedProto().isLazy() ||
-            // Note: Class asserted above, so all that's left to check is callability
-            existing->isCallable() ||
-            existing->getParent() != global ||
-            obj->isCallable())
-        {
-            existing = nullptr;
-        }
-    }
-
-    obj.set(cb->wrap(cx, existing, obj, global));
+    obj.set(cb->wrap(cx, obj, global));
     if (!obj)
         return false;
 
