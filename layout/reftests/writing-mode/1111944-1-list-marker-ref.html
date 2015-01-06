@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body {
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+}
+.outer {
+  display: inline-block;
+  vertical-align: top;
+  width: 380px;
+  height: 180px;
+  border: 1px solid blue;
+  margin: 5px;
+}
+.ol {
+  margin: 0 12px;
+}
+.m1 {
+  display: inline-block;
+  height: 40px;
+  text-align: right;
+}
+.m2 {
+  display: inline-block;
+  height: 5em;
+  text-align: right;
+}
+</style>
+</head>
+<body>
+ Test for list item markers in vertical mode:
+ <br>
+ <div class="outer" style="writing-mode:vertical-lr;text-orientation:sideways-right">
+  Mode vertical-lr, style lower-roman:
+  <div class="ol">
+   <span class="m1">i.&nbsp;</span>one<br>
+   <span class="m1">ii.&nbsp;</span>two<br>
+   <span class="m1">iii.&nbsp;</span>three<br>
+   <span class="m1">iv.&nbsp;</span>four<br>
+   <span class="m1">v.&nbsp;</span>five<br>
+   <span class="m1">vi.&nbsp;</span>six<br>
+   <span class="m1">vii.&nbsp;</span>seven<br>
+   <span class="m1">viii.&nbsp;</span>eight<br>
+   <span class="m1">ix.&nbsp;</span>nine<br>
+   <span class="m1">x.&nbsp;</span>ten<br>
+   <span class="m1">xi.&nbsp;</span>eleven<br>
+   <span class="m1">xii.&nbsp;</span>twelve<br>
+  </div>
+ </div>
+ <div class="outer" style="writing-mode:vertical-rl;text-orientation:sideways-right">
+  Mode vertical-rl, style hebrew:
+  <div class="ol">
+   <span class="m1">א.&nbsp;</span>one<br>
+   <span class="m1">ב.&nbsp;</span>two<br>
+   <span class="m1">ג.&nbsp;</span>three<br>
+   <span class="m1">ד.&nbsp;</span>four<br>
+   <span class="m1">ה.&nbsp;</span>five<br>
+   <span class="m1">ו.&nbsp;</span>six<br>
+   <span class="m1">ז.&nbsp;</span>seven<br>
+   <span class="m1">ח.&nbsp;</span>eight<br>
+   <span class="m1">ט.&nbsp;</span>nine<br>
+   <span class="m1">י.&nbsp;</span>ten<br>
+   <span class="m1">יא.&nbsp;</span>eleven<br>
+   <span class="m1">יב.&nbsp;</span>twelve<br>
+  </div>
+ </div>
+ <br>
+ <div class="outer" style="writing-mode:vertical-lr">
+  Mode vertical-lr, style trad-chinese-formal:
+  <div class="ol">
+   <span class="m2">壹、</span>one<br>
+   <span class="m2">貳、</span>two<br>
+   <span class="m2">參、</span>three<br>
+   <span class="m2">肆、</span>four<br>
+   <span class="m2">伍、</span>five<br>
+   <span class="m2">陸、</span>six<br>
+   <span class="m2">柒、</span>seven<br>
+   <span class="m2">捌、</span>eight<br>
+   <span class="m2">玖、</span>nine<br>
+   <span class="m2">壹拾、</span>ten<br>
+   <span class="m2">壹拾壹、</span>eleven<br>
+   <span class="m2">壹拾貳、</span>twelve<br>
+  </div>
+ </div>
+ <div class="outer" style="writing-mode:vertical-rl">
+  Mode vertical-rl, style japanese-informal:
+  <div class="ol">
+   <span class="m2">一、</span>one<br>
+   <span class="m2">二、</span>two<br>
+   <span class="m2">三、</span>three<br>
+   <span class="m2">四、</span>four<br>
+   <span class="m2">五、</span>five<br>
+   <span class="m2">六、</span>six<br>
+   <span class="m2">七、</span>seven<br>
+   <span class="m2">八、</span>eight<br>
+   <span class="m2">九、</span>nine<br>
+   <span class="m2">十、</span>ten<br>
+   <span class="m2">十一、</span>eleven<br>
+   <span class="m2">十二、</span>twelve<br>
+  </div>
+ </div>
+</body>
+</html>
