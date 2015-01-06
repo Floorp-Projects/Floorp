@@ -923,6 +923,12 @@
           var controller = this.view.QueryInterface(Components.interfaces.nsIAutoCompleteController);
 
           // Check for unmodified left-click, and use default behavior
+          var searchBar = BrowserSearch.searchBar;
+          searchBar.telemetrySearchDetails = {
+            index: controller.selection.currentIndex,
+            kind: "mouse"
+          };
+
           if (aEvent.button == 0 && !aEvent.shiftKey && !aEvent.ctrlKey &&
               !aEvent.altKey && !aEvent.metaKey) {
             controller.handleEnter(true);
@@ -930,7 +936,6 @@
           }
 
           // Check for middle-click or modified clicks on the search bar
-          var searchBar = BrowserSearch.searchBar;
           if (searchBar && searchBar.textbox == this.mInput) {
             // Handle search bar popup clicks
             var search = controller.getValueAt(this.selectedIndex);
@@ -996,7 +1001,7 @@
       <xul:vbox anonid="add-engines"/>
       <xul:button anonid="search-settings"
                   xbl:inherits="showonlysettings"
-                  oncommand="openPreferences('paneSearch')"
+                  oncommand="BrowserUITelemetry.countSearchSettingsEvent('searchbar');openPreferences('paneSearch')"
                   class="search-setting-button search-panel-header"
                   label="&changeSearchSettings.button;"/>
     </content>
