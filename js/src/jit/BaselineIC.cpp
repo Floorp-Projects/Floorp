@@ -2780,28 +2780,17 @@ ICBinaryArith_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 }
 
 static bool
-DoConcatStrings(JSContext *cx, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
+DoConcatStrings(JSContext *cx, HandleString lhs, HandleString rhs, MutableHandleValue res)
 {
-    MOZ_ASSERT(lhs.isString());
-    MOZ_ASSERT(rhs.isString());
-    JSString *lstr = lhs.toString();
-    JSString *rstr = rhs.toString();
-    JSString *result = ConcatStrings<NoGC>(cx, lstr, rstr);
-    if (result) {
-        res.set(StringValue(result));
-        return true;
-    }
-
-    RootedString rootedl(cx, lstr), rootedr(cx, rstr);
-    result = ConcatStrings<CanGC>(cx, rootedl, rootedr);
+    JSString *result = ConcatStrings<CanGC>(cx, lhs, rhs);
     if (!result)
         return false;
 
-    res.set(StringValue(result));
+    res.setString(result);
     return true;
 }
 
-typedef bool (*DoConcatStringsFn)(JSContext *, HandleValue, HandleValue, MutableHandleValue);
+typedef bool (*DoConcatStringsFn)(JSContext *, HandleString, HandleString, MutableHandleValue);
 static const VMFunction DoConcatStringsInfo = FunctionInfo<DoConcatStringsFn>(DoConcatStrings, TailCall);
 
 bool
@@ -2814,8 +2803,11 @@ ICBinaryArith_StringConcat::Compiler::generateStubCode(MacroAssembler &masm)
     // Restore the tail call register.
     EmitRestoreTailCallReg(masm);
 
-    masm.pushValue(R1);
-    masm.pushValue(R0);
+    masm.unboxString(R0, R0.scratchReg());
+    masm.unboxString(R1, R1.scratchReg());
+
+    masm.push(R1.scratchReg());
+    masm.push(R0.scratchReg());
     if (!tailCallVM(DoConcatStringsInfo, masm))
         return false;
 
