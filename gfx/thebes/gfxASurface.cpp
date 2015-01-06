@@ -588,7 +588,7 @@ public:
     NS_DECL_ISUPPORTS
 
     NS_IMETHOD CollectReports(nsIMemoryReporterCallback *aCb,
-                              nsISupports *aClosure, bool aAnonymize)
+                              nsISupports *aClosure, bool aAnonymize) MOZ_OVERRIDE
     {
         const size_t len = ArrayLength(sSurfaceMemoryReporterAttrs);
         for (size_t i = 0; i < len; i++) {

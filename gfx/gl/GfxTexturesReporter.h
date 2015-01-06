@@ -49,7 +49,7 @@ public:
     }
 
     NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                              nsISupports* aData, bool aAnonymize)
+                              nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
     {
         MOZ_COLLECT_REPORT("gfx-tiles-waste", KIND_OTHER, UNITS_BYTES,
             sTileWasteAmount,

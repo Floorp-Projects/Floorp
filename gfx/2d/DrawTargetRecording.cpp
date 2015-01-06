@@ -80,7 +80,7 @@ GetGradientStops(GradientStops *aStops)
 class FilterNodeRecording : public FilterNode
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeRecording)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeRecording, MOZ_OVERRIDE)
   using FilterNode::SetAttribute;
 
   FilterNodeRecording(FilterNode *aFinalFilterNode, DrawEventRecorderPrivate *aRecorder)
@@ -93,12 +93,12 @@ public:
     mRecorder->RecordEvent(RecordedFilterNodeDestruction(this));
   }
 
-  virtual void SetInput(uint32_t aIndex, SourceSurface *aSurface)
+  virtual void SetInput(uint32_t aIndex, SourceSurface *aSurface) MOZ_OVERRIDE
   {
     mRecorder->RecordEvent(RecordedFilterNodeSetInput(this, aIndex, aSurface));
     mFinalFilterNode->SetInput(aIndex, GetSourceSurface(aSurface));
   }
-  virtual void SetInput(uint32_t aIndex, FilterNode *aFilter)
+  virtual void SetInput(uint32_t aIndex, FilterNode *aFilter) MOZ_OVERRIDE
   {
     FilterNode *finalNode = aFilter;
     if (aFilter->GetBackendType() != FILTER_BACKEND_RECORDING) {
@@ -113,7 +113,7 @@ public:
 
 
 #define FORWARD_SET_ATTRIBUTE(type, argtype) \
-  virtual void SetAttribute(uint32_t aIndex, type aValue) { \
+  virtual void SetAttribute(uint32_t aIndex, type aValue) MOZ_OVERRIDE { \
     mRecorder->RecordEvent(RecordedFilterNodeSetAttribute(this, aIndex, aValue, RecordedFilterNodeSetAttribute::ARGTYPE_##argtype)); \
     mFinalFilterNode->SetAttribute(aIndex, aValue); \
   }
@@ -133,7 +133,7 @@ public:
 
 #undef FORWARD_SET_ATTRIBUTE
 
-  virtual void SetAttribute(uint32_t aIndex, const Float* aFloat, uint32_t aSize) {
+  virtual void SetAttribute(uint32_t aIndex, const Float* aFloat, uint32_t aSize) MOZ_OVERRIDE {
     mRecorder->RecordEvent(RecordedFilterNodeSetAttribute(this, aIndex, aFloat, aSize));
     mFinalFilterNode->SetAttribute(aIndex, aFloat, aSize);
   }
