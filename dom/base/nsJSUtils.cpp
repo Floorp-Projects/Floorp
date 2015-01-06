@@ -34,28 +34,19 @@
 using namespace mozilla::dom;
 
 bool
-nsJSUtils::GetCallingLocation(JSContext* aContext, nsACString& aFilename,
+nsJSUtils::GetCallingLocation(JSContext* aContext, const char* *aFilename,
                               uint32_t* aLineno)
 {
   JS::AutoFilename filename;
-  if (!JS::DescribeScriptedCaller(aContext, &filename, aLineno)) {
+  unsigned lineno = 0;
+
+  if (!JS::DescribeScriptedCaller(aContext, &filename, &lineno)) {
     return false;
   }
 
-  aFilename.Assign(filename.get());
-  return true;
-}
+  *aFilename = filename.get();
+  *aLineno = lineno;
 
-bool
-nsJSUtils::GetCallingLocation(JSContext* aContext, nsAString& aFilename,
-                              uint32_t* aLineno)
-{
-  JS::AutoFilename filename;
-  if (!JS::DescribeScriptedCaller(aContext, &filename, aLineno)) {
-    return false;
-  }
-
-  aFilename.Assign(NS_ConvertUTF8toUTF16(filename.get()));
   return true;
 }
 

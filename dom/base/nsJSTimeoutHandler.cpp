@@ -173,8 +173,11 @@ CheckCSPForEval(JSContext* aCx, nsGlobalWindow* aWindow, ErrorResult& aError)
 
     // Get the calling location.
     uint32_t lineNum = 0;
+    const char *fileName;
     nsAutoString fileNameString;
-    if (!nsJSUtils::GetCallingLocation(aCx, fileNameString, &lineNum)) {
+    if (nsJSUtils::GetCallingLocation(aCx, &fileName, &lineNum)) {
+      AppendUTF8toUTF16(fileName, fileNameString);
+    } else {
       fileNameString.AssignLiteral("unknown");
     }
 
@@ -230,7 +233,10 @@ nsJSScriptTimeoutHandler::nsJSScriptTimeoutHandler(JSContext* aCx,
   }
 
   // Get the calling location.
-  nsJSUtils::GetCallingLocation(aCx, mFileName, &mLineNo);
+  const char *filename;
+  if (nsJSUtils::GetCallingLocation(aCx, &filename, &mLineNo)) {
+    mFileName.Assign(filename);
+  }
 }
 
 nsJSScriptTimeoutHandler::~nsJSScriptTimeoutHandler()
@@ -347,7 +353,10 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
     AssignJSFlatString(mExpr, expr);
 
     // Get the calling location.
-    nsJSUtils::GetCallingLocation(cx, mFileName, &mLineNo);
+    const char *filename;
+    if (nsJSUtils::GetCallingLocation(cx, &filename, &mLineNo)) {
+      mFileName.Assign(filename);
+    }
   } else if (funobj) {
     *aAllowEval = true;
 
