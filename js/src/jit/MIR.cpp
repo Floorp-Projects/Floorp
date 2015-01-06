@@ -3061,7 +3061,7 @@ MCompare::tryFold(bool *result)
             }
             if (!lhs()->mightBeType(MIRType_Null) &&
                 !lhs()->mightBeType(MIRType_Undefined) &&
-                !operandMightEmulateUndefined())
+                !(lhs()->mightBeType(MIRType_Object) && operandMightEmulateUndefined()))
             {
                 *result = (op == JSOP_NE);
                 return true;
