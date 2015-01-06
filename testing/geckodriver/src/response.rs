@@ -1,4 +1,7 @@
 use serialize::json;
+use serialize::json::ToJson;
+
+use common::Nullable;
 
 #[deriving(Show)]
 pub enum WebDriverResponse {
@@ -6,6 +9,7 @@ pub enum WebDriverResponse {
     DeleteSession,
     WindowSize(WindowSizeResponse),
     ElementRect(ElementRectResponse),
+    Cookie(CookieResponse),
     Generic(ValueResponse),
     Void
 }
@@ -17,6 +21,7 @@ impl WebDriverResponse {
             WebDriverResponse::DeleteSession => "".into_string(),
             WebDriverResponse::WindowSize(x) => json::encode(&x),
             WebDriverResponse::ElementRect(x) => json::encode(&x),
+            WebDriverResponse::Cookie(x) => json::encode(&x),
             WebDriverResponse::Generic(x) => json::encode(&x),
             WebDriverResponse::Void => "".into_string()
         }
@@ -81,6 +86,64 @@ impl ElementRectResponse {
             y: y,
             width: width,
             height: height
+        }
+    }
+}
+
+#[deriving(Encodable, PartialEq, Show)]
+pub struct Date(u64);
+
+impl Date {
+    pub fn new(timestamp: u64) -> Date {
+        Date(timestamp)
+    }
+}
+
+impl ToJson for Date {
+    fn to_json(&self) -> json::Json {
+        let &Date(x) = self;
+        x.to_json()
+    }
+}
+
+//TODO: some of these fields are probably supposed to be optional
+#[deriving(Encodable, PartialEq, Show)]
+pub struct Cookie {
+    name: String,
+    value: String,
+    path: Nullable<String>,
+    domain: Nullable<String>,
+    expiry: Nullable<Date>,
+    maxAge: Date,
+    secure: bool,
+    httpOnly: bool
+}
+
+impl Cookie {
+    pub fn new(name: String, value: String, path: Nullable<String>, domain: Nullable<String>,
+               expiry: Nullable<Date>, max_age: Date, secure: bool, http_only: bool) -> Cookie {
+        Cookie {
+            name: name,
+            value: value,
+            path: path,
+            domain: domain,
+            expiry: expiry,
+            maxAge: max_age,
+            secure: secure,
+            httpOnly: http_only
+        }
+    }
+}
+
+#[deriving(Encodable, Show)]
+pub struct CookieResponse {
+    value: Vec<Cookie>
+}
+
+impl CookieResponse {
+    pub fn new(value: Vec<Cookie>) -> CookieResponse {
+        CookieResponse {
+            value: value
         }
     }
 }

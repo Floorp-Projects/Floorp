@@ -18,13 +18,14 @@ pub enum MatchType {
     GetWindowHandle,
     GetWindowHandles,
     Close,
-    Timeouts,
     SetWindowSize,
     GetWindowSize,
     MaximizeWindow,
     SwitchToWindow,
     SwitchToFrame,
     SwitchToParentFrame,
+    FindElement,
+    FindElements,
     IsDisplayed,
     IsSelected,
     GetElementAttribute,
@@ -35,6 +36,15 @@ pub enum MatchType {
     IsEnabled,
     ExecuteScript,
     ExecuteAsyncScript,
+    GetCookie,
+    AddCookie,
+    SetTimeouts,
+    //Actions XXX - once I understand the spec, perhaps
+    DismissAlert,
+    AcceptAlert,
+    GetAlertText,
+    SendAlertText,
+    TakeScreenshot
 }
 
 #[deriving(Clone)]
@@ -131,13 +141,14 @@ pub fn get_builder() -> MessageBuilder {
                         (Get, "/session/{sessionId}/window_handle", MatchType::GetWindowHandle),
                         (Get, "/session/{sessionId}/window_handles", MatchType::GetWindowHandles),
                         (Delete, "/session/{sessionId}/window_handle", MatchType::Close),
-                        (Post, "/session/{sessionId}/timeouts", MatchType::Timeouts),
                         (Post, "/session/{sessionId}/window/size", MatchType::SetWindowSize),
                         (Get, "/session/{sessionId}/window/size", MatchType::GetWindowSize),
                         (Post, "/session/{sessionId}/window/maximize", MatchType::MaximizeWindow),
                         (Post, "/session/{sessionId}/window", MatchType::SwitchToWindow),
                         (Post, "/session/{sessionId}/frame", MatchType::SwitchToFrame),
                         (Post, "/session/{sessionId}/frame/parent", MatchType::SwitchToParentFrame),
+                        (Post, "/session/{sessionId}/element", MatchType::FindElement),
+                        (Post, "/session/{sessionId}/elements", MatchType::FindElements),
                         (Get, "/session/{sessionId}/element/{element}/isDisplayed", MatchType::IsDisplayed),
                         (Get, "/session/{sessionId}/element/{element}/isSelected", MatchType::IsSelected),
                         (Get, "/session/{sessionId}/element/{element}/attribute/{name}", MatchType::GetElementAttribute),
@@ -148,6 +159,15 @@ pub fn get_builder() -> MessageBuilder {
                         (Get, "/session/{sessionId}/element/{element}/enabled", MatchType::IsEnabled),
                         (Post, "/session/{sessionId}/execute", MatchType::ExecuteScript),
                         (Post, "/session/{sessionId}/execute_async", MatchType::ExecuteAsyncScript),
+                        (Get, "/session/{sessionId}/cookie", MatchType::GetCookie),
+                        (Post, "/session/{sessionId}/cookie", MatchType::AddCookie),
+                        (Post, "/session/{sessionId}/timeouts", MatchType::SetTimeouts),
+                        //(Post, "/session/{sessionId}/actions", MatchType::Actions),
+                        (Post, "/session/{sessionId}/dismiss_alert", MatchType::DismissAlert),
+                        (Post, "/session/{sessionId}/accept_alert", MatchType::AcceptAlert),
+                        (Get, "/session/{sessionId}/alert_text", MatchType::GetAlertText),
+                        (Post, "/session/{sessionId}/alert_text", MatchType::SendAlertText),
+                        (Get, "/session/{sessionId}/screenshot", MatchType::TakeScreenshot)
                         ];
     debug!("Creating routes");
     for &(ref method, ref url, ref match_type) in matchers.iter() {

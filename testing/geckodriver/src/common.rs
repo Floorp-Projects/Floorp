@@ -1,4 +1,5 @@
-use serialize::json;
+use core::u16;
+use serialize::{json, Encodable, Encoder};
 use serialize::json::{ToJson, ParserError};
 use std::collections::TreeMap;
 use std::error::{Error, FromError};
@@ -116,5 +117,151 @@ impl FromError<ParserError> for WebDriverError {
     fn from_error(err: ParserError) -> WebDriverError {
         let msg = format!("{}", err);
         WebDriverError::new(ErrorStatus::UnknownError, msg.as_slice())
+    }
+}
+
+#[deriving(PartialEq, Clone, Show)]
+pub enum Nullable<T: ToJson> {
+    Value(T),
+    Null
+}
+
+impl<T: ToJson> Nullable<T> {
+    //This is not very pretty
+    pub fn from_json<F: FnOnce(&json::Json) -> WebDriverResult<T>>(value: &json::Json, f: F) -> WebDriverResult<Nullable<T>> {
+        if value.is_null() {
+            Ok(Nullable::Null)
+        } else {
+            Ok(Nullable::Value(try!(f(value))))
+        }
+    }
+}
+
+impl<T: ToJson> ToJson for Nullable<T> {
+    fn to_json(&self) -> json::Json {
+        match *self {
+            Nullable::Value(ref x) => x.to_json(),
+            Nullable::Null => json::Json::Null
+        }
+    }
+}
+
+impl<S: Encoder<E>, E, T: ToJson> Encodable<S, E> for Nullable<T> {
+    fn encode(&self, s: &mut S) -> Result<(), E> {
+        match *self {
+            Nullable::Value(ref x) => x.to_json().encode(s),
+            Nullable::Null => s.emit_nil()
+        }
+    }
+}
+
+#[deriving(PartialEq)]
+pub struct WebElement {
+    id: String
+}
+
+impl WebElement {
+    pub fn new(id: String) -> WebElement {
+        WebElement {
+            id: id
+        }
+    }
+
+    pub fn from_json(data: &json::Json) -> WebDriverResult<WebElement> {
+        Ok(WebElement::new(
+            try_opt!(
+                try_opt!(
+                    try_opt!(data.as_object(),
+                             ErrorStatus::InvalidArgument,
+                             "Could not convert webelement to object").get(
+                        "element-6066-11e4-a52e-4f735466cecf"),
+                    ErrorStatus::InvalidArgument,
+                    "Could not find webelement key").as_string(),
+                ErrorStatus::InvalidArgument,
+                "Could not convert web element to string").into_string()))
+    }
+}
+
+impl ToJson for WebElement {
+    fn to_json(&self) -> json::Json {
+        let mut data = TreeMap::new();
+        data.insert("element-6066-11e4-a52e-4f735466cecf".to_string(), self.id.to_json());
+        json::Object(data)
+    }
+}
+
+#[deriving(PartialEq)]
+pub enum FrameId {
+    Short(u16),
+    Element(WebElement),
+    Null
+}
+
+impl FrameId {
+    pub fn from_json(data: &json::Json) -> WebDriverResult<FrameId> {
+      match data {
+            &json::Json::U64(x) => {
+                if x <= u16::MAX as u64 {
+                    Ok(FrameId::Short(x as u16))
+                } else {
+                    Err(WebDriverError::new(ErrorStatus::NoSuchFrame,
+                                            "frame id out of range"))
+                }
+            },
+          &json::Json::Null => Ok(FrameId::Null),
+          &json::Json::String(ref x) => Ok(FrameId::Element(WebElement::new(x.clone()))),
+          _ => Err(WebDriverError::new(ErrorStatus::NoSuchFrame,
+                                       "frame id has unexpected type"))
+        }
+    }
+}
+
+impl ToJson for FrameId {
+    fn to_json(&self) -> json::Json {
+        match *self {
+            FrameId::Short(x) => {
+                json::Json::U64(x as u64)
+            },
+            FrameId::Element(ref x) => {
+                json::Json::String(x.id.clone())
+            },
+            FrameId::Null => {
+                json::Json::Null
+            }
+        }
+    }
+}
+
+#[deriving(PartialEq)]
+pub enum LocatorStrategy {
+    CSSSelector,
+    LinkText,
+    PartialLinkText,
+    XPath
+}
+
+impl LocatorStrategy {
+    pub fn from_json(body: &json::Json) -> WebDriverResult<LocatorStrategy> {
+        match try_opt!(body.as_string(),
+                       ErrorStatus::InvalidArgument,
+                       "Cound not convert strategy to string") {
+            "css selector" => Ok(LocatorStrategy::CSSSelector),
+            "link text" => Ok(LocatorStrategy::LinkText),
+            "partial link text" => Ok(LocatorStrategy::PartialLinkText),
+            "xpath" => Ok(LocatorStrategy::XPath),
+            _ => Err(WebDriverError::new(ErrorStatus::InvalidArgument,
+                                         "Unknown locator strategy"))
+        }
+    }
+}
+
+impl ToJson for LocatorStrategy {
+    fn to_json(&self) -> json::Json {
+        json::Json::String(match *self {
+            LocatorStrategy::CSSSelector => "css selector",
+            LocatorStrategy::LinkText => "link text",
+            LocatorStrategy::PartialLinkText => "partial link text",
+            LocatorStrategy::XPath => "xpath"
+        }.into_string())
     }
 }
