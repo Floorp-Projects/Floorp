@@ -13,12 +13,7 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/debug.js", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
-#ifndef MOZ_WIDGET_GONK
-Cu.import("resource://gre/modules/LightweightThemeManager.jsm", this);
-#endif
-Cu.import("resource://gre/modules/ThirdPartyCookieProbe.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
-Cu.import("resource://gre/modules/AsyncShutdown.jsm", this);
 Cu.import("resource://gre/modules/DeferredTask.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
 
@@ -64,16 +59,25 @@ XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
 XPCOMUtils.defineLazyServiceGetter(this, "idleService",
                                    "@mozilla.org/widget/idleservice;1",
                                    "nsIIdleService");
-XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
-                                  "resource://gre/modules/UpdateChannel.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
                                   "resource://gre/modules/AddonManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
+                                  "resource://gre/modules/AsyncShutdown.jsm");
+#ifndef MOZ_WIDGET_GONK
+XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
+                                  "resource://gre/modules/LightweightThemeManager.jsm");
+#endif
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryFile",
                                   "resource://gre/modules/TelemetryFile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry",
-                                  "resource://gre/modules/UITelemetry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryLog",
                                   "resource://gre/modules/TelemetryLog.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ThirdPartyCookieProbe",
+                                  "resource://gre/modules/ThirdPartyCookieProbe.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry",
+                                  "resource://gre/modules/UITelemetry.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
+                                  "resource://gre/modules/UpdateChannel.jsm");
 
 function generateUUID() {
   let str = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID().toString();
@@ -201,7 +205,7 @@ this.TelemetryPing = Object.freeze({
    * Used only for testing purposes.
    */
   setup: function() {
-    return Impl.setup(true);
+    return Impl.setupChromeProcess(true);
   },
   /**
    * Used only for testing purposes.
@@ -904,9 +908,36 @@ let Impl = {
   },
 
   /**
+   * Perform telemetry initialization for either chrome or content process.
+   */
+  enableTelemetryRecording: function enableTelemetryRecording(testing) {
+
+#ifdef MOZILLA_OFFICIAL
+    if (!Telemetry.canSend && !testing) {
+      // We can't send data; no point in initializing observers etc.
+      // Only do this for official builds so that e.g. developer builds
+      // still enable Telemetry based on prefs.
+      Telemetry.canRecord = false;
+      return false;
+    }
+#endif
+
+    let enabled = Preferences.get(PREF_ENABLED, false);
+    this._server = Preferences.get(PREF_SERVER, undefined);
+    if (!enabled) {
+      // Turn off local telemetry if telemetry is disabled.
+      // This may change once about:telemetry is added.
+      Telemetry.canRecord = false;
+      return false;
+    }
+
+    return true;
+  },
+
+  /**
    * Initializes telemetry within a timer. If there is no PREF_SERVER set, don't turn on telemetry.
    */
-  setup: function setup(aTesting) {
+  setupChromeProcess: function setupChromeProcess(testing) {
     // Initialize some probes that are kept in their own modules
     this._thirdPartyCookies = new ThirdPartyCookieProbe();
     this._thirdPartyCookies.init();
@@ -922,22 +953,7 @@ let Impl = {
       Preferences.set(PREF_PREVIOUS_BUILDID, thisBuildID);
     }
 
-#ifdef MOZILLA_OFFICIAL
-    if (!Telemetry.canSend && !aTesting) {
-      // We can't send data; no point in initializing observers etc.
-      // Only do this for official builds so that e.g. developer builds
-      // still enable Telemetry based on prefs.
-      Telemetry.canRecord = false;
-      return;
-    }
-#endif
-
-    let enabled = Preferences.get(PREF_ENABLED, false);
-    this._server = Preferences.get(PREF_SERVER, undefined);
-    if (!enabled) {
-      // Turn off local telemetry if telemetry is disabled.
-      // This may change once about:telemetry is added.
-      Telemetry.canRecord = false;
+    if (!this.enableTelemetryRecording(testing)) {
       return;
     }
 
@@ -957,7 +973,6 @@ let Impl = {
       }.bind(this));
 
     Services.obs.addObserver(this, "sessionstore-windows-restored", false);
-    Services.obs.addObserver(this, "quit-application-granted", false);
 #ifdef MOZ_WIDGET_ANDROID
     Services.obs.addObserver(this, "application-background", false);
 #endif
@@ -1000,10 +1015,32 @@ let Impl = {
       Telemetry.asyncFetchTelemetryData(function () {});
       deferred.resolve();
 
-    }.bind(this), aTesting ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
+    }.bind(this), testing ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
 
     delayedTask.arm();
     return deferred.promise;
+  },
+
+  /**
+   * Initializes telemetry for a content process.
+   */
+  setupContentProcess: function setupContentProcess() {
+    if (!this.enableTelemetryRecording()) {
+      return;
+    }
+
+    Services.obs.addObserver(this, "content-child-shutdown", false);
+
+    this.gatherStartupHistograms();
+
+    let delayedTask = new DeferredTask(function* () {
+      this._initialized = true;
+
+      this.attachObservers();
+      this.gatherMemory();
+    }.bind(this), TELEMETRY_DELAY);
+
+    delayedTask.arm();
   },
 
   testLoadHistograms: function testLoadHistograms(file) {
@@ -1045,7 +1082,6 @@ let Impl = {
       Services.obs.removeObserver(this, "xul-window-visible");
       this._hasXulWindowVisibleObserver = false;
     }
-    Services.obs.removeObserver(this, "quit-application-granted");
 #ifdef MOZ_WIDGET_ANDROID
     Services.obs.removeObserver(this, "application-background", false);
 #endif
@@ -1099,7 +1135,11 @@ let Impl = {
   observe: function (aSubject, aTopic, aData) {
     switch (aTopic) {
     case "profile-after-change":
-      return this.setup();
+      // profile-after-change is only registered for chrome processes.
+      return this.setupChromeProcess();
+    case "app-startup":
+      // app-startup is only registered for content processes.
+      return this.setupContentProcess();
     case "cycle-collector-begin":
       let now = new Date();
       if (!gLastMemoryPoll
