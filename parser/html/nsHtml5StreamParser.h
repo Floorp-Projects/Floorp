@@ -137,7 +137,7 @@ class nsHtml5StreamParser : public nsICharsetDetectionObserver {
     /**
      * Chardet calls this to report the detection result
      */
-    NS_IMETHOD Notify(const char* aCharset, nsDetectionConfident aConf);
+    NS_IMETHOD Notify(const char* aCharset, nsDetectionConfident aConf) MOZ_OVERRIDE;
 
     // EncodingDeclarationHandler
     // http://hg.mozilla.org/projects/htmlparser/file/tip/src/nu/validator/htmlparser/common/EncodingDeclarationHandler.java

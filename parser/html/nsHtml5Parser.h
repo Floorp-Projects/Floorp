@@ -42,27 +42,27 @@ class nsHtml5Parser MOZ_FINAL : public nsIParser,
     /**
      * No-op for backwards compat.
      */
-    NS_IMETHOD_(void) SetContentSink(nsIContentSink* aSink);
+    NS_IMETHOD_(void) SetContentSink(nsIContentSink* aSink) MOZ_OVERRIDE;
 
     /**
      * Returns the tree op executor for backwards compat.
      */
-    NS_IMETHOD_(nsIContentSink*) GetContentSink();
+    NS_IMETHOD_(nsIContentSink*) GetContentSink() MOZ_OVERRIDE;
 
     /**
      * Always returns "view" for backwards compat.
      */
-    NS_IMETHOD_(void) GetCommand(nsCString& aCommand);
+    NS_IMETHOD_(void) GetCommand(nsCString& aCommand) MOZ_OVERRIDE;
 
     /**
      * No-op for backwards compat.
      */
-    NS_IMETHOD_(void) SetCommand(const char* aCommand);
+    NS_IMETHOD_(void) SetCommand(const char* aCommand) MOZ_OVERRIDE;
 
     /**
      * No-op for backwards compat.
      */
-    NS_IMETHOD_(void) SetCommand(eParserCommands aParserCommand);
+    NS_IMETHOD_(void) SetCommand(eParserCommands aParserCommand) MOZ_OVERRIDE;
 
     /**
      *  Call this method once you've created a parser, and want to instruct it
@@ -71,12 +71,12 @@ class nsHtml5Parser MOZ_FINAL : public nsIParser,
      *  @param   aCharset the charset of a document
      *  @param   aCharsetSource the source of the charset
      */
-    NS_IMETHOD_(void) SetDocumentCharset(const nsACString& aCharset, int32_t aSource);
+    NS_IMETHOD_(void) SetDocumentCharset(const nsACString& aCharset, int32_t aSource) MOZ_OVERRIDE;
 
     /**
      * Don't call. For interface compat only.
      */
-    NS_IMETHOD_(void) GetDocumentCharset(nsACString& aCharset, int32_t& aSource)
+    NS_IMETHOD_(void) GetDocumentCharset(nsACString& aCharset, int32_t& aSource) MOZ_OVERRIDE
     {
       NS_NOTREACHED("No one should call this.");
     }
@@ -86,47 +86,47 @@ class nsHtml5Parser MOZ_FINAL : public nsIParser,
      * @param aChannel out param that will contain the result
      * @return NS_OK if successful or NS_NOT_AVAILABLE if not
      */
-    NS_IMETHOD GetChannel(nsIChannel** aChannel);
+    NS_IMETHOD GetChannel(nsIChannel** aChannel) MOZ_OVERRIDE;
 
     /**
      * Return |this| for backwards compat.
      */
-    NS_IMETHOD GetDTD(nsIDTD** aDTD);
+    NS_IMETHOD GetDTD(nsIDTD** aDTD) MOZ_OVERRIDE;
 
     /**
      * Get the stream parser for this parser
      */
-    virtual nsIStreamListener* GetStreamListener();
+    virtual nsIStreamListener* GetStreamListener() MOZ_OVERRIDE;
 
     /**
      * Don't call. For interface compat only.
      */
-    NS_IMETHOD ContinueInterruptedParsing();
+    NS_IMETHOD ContinueInterruptedParsing() MOZ_OVERRIDE;
 
     /**
      * Blocks the parser.
      */
-    NS_IMETHOD_(void) BlockParser();
+    NS_IMETHOD_(void) BlockParser() MOZ_OVERRIDE;
 
     /**
      * Unblocks the parser.
      */
-    NS_IMETHOD_(void) UnblockParser();
+    NS_IMETHOD_(void) UnblockParser() MOZ_OVERRIDE;
 
     /**
      * Asynchronously continues parsing.
      */
-    NS_IMETHOD_(void) ContinueInterruptedParsingAsync();
+    NS_IMETHOD_(void) ContinueInterruptedParsingAsync() MOZ_OVERRIDE;
 
     /**
      * Query whether the parser is enabled (i.e. not blocked) or not.
      */
-    NS_IMETHOD_(bool) IsParserEnabled();
+    NS_IMETHOD_(bool) IsParserEnabled() MOZ_OVERRIDE;
 
     /**
      * Query whether the parser thinks it's done with parsing.
      */
-    NS_IMETHOD_(bool) IsComplete();
+    NS_IMETHOD_(bool) IsComplete() MOZ_OVERRIDE;
 
     /**
      * Set up request observer.
@@ -139,7 +139,7 @@ class nsHtml5Parser MOZ_FINAL : public nsIParser,
     NS_IMETHOD Parse(nsIURI* aURL,
                      nsIRequestObserver* aListener = nullptr,
                      void* aKey = 0,
-                     nsDTDMode aMode = eDTDMode_autodetect);
+                     nsDTDMode aMode = eDTDMode_autodetect) MOZ_OVERRIDE;
 
     /**
      * document.write and document.close
@@ -150,57 +150,52 @@ class nsHtml5Parser MOZ_FINAL : public nsIParser,
      * @param   aLastCall true if .close() false if .write()
      * @param   aMode ignored (for interface compat only)
      */
-    NS_IMETHOD Parse(const nsAString& aSourceBuffer,
-                     void* aKey,
-                     const nsACString& aContentType,
-                     bool aLastCall,
-                     nsDTDMode aMode = eDTDMode_autodetect);
+    nsresult Parse(const nsAString& aSourceBuffer,
+                   void* aKey,
+                   const nsACString& aContentType,
+                   bool aLastCall,
+                   nsDTDMode aMode = eDTDMode_autodetect);
 
     /**
      * Stops the parser prematurely
      */
-    NS_IMETHOD Terminate();
+    NS_IMETHOD Terminate() MOZ_OVERRIDE;
 
     /**
      * Don't call. For interface backwards compat only.
      */
     NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
-                             nsTArray<nsString>& aTagStack);
+                             nsTArray<nsString>& aTagStack) MOZ_OVERRIDE;
 
     /**
      * Don't call. For interface compat only.
      */
-    NS_IMETHOD BuildModel();
+    NS_IMETHOD BuildModel() MOZ_OVERRIDE;
 
     /**
      * Don't call. For interface compat only.
      */
-    NS_IMETHODIMP CancelParsingEvents();
+    NS_IMETHODIMP CancelParsingEvents() MOZ_OVERRIDE;
 
     /**
      * Don't call. For interface compat only.
      */
-    virtual void Reset();
-    
-    /**
-     * True in fragment mode and during synchronous document.write
-     */
-    virtual bool CanInterrupt();
+    virtual void Reset() MOZ_OVERRIDE;
 
     /**
      * True if the insertion point (per HTML5) is defined.
      */
-    virtual bool IsInsertionPointDefined();
+    virtual bool IsInsertionPointDefined() MOZ_OVERRIDE;
 
     /**
      * Call immediately before starting to evaluate a parser-inserted script.
      */
-    virtual void BeginEvaluatingParserInsertedScript();
+    virtual void BeginEvaluatingParserInsertedScript() MOZ_OVERRIDE;
 
     /**
      * Call immediately after having evaluated a parser-inserted script.
      */
-    virtual void EndEvaluatingParserInsertedScript();
+    virtual void EndEvaluatingParserInsertedScript() MOZ_OVERRIDE;
 
     /**
      * Marks the HTML5 parser as not a script-created parser: Prepares the 
@@ -209,12 +204,12 @@ class nsHtml5Parser MOZ_FINAL : public nsIParser,
      * @param aCommand the parser command (Yeah, this is bad API design. Let's
      * make this better when retiring nsIParser)
      */
-    virtual void MarkAsNotScriptCreated(const char* aCommand);
+    virtual void MarkAsNotScriptCreated(const char* aCommand) MOZ_OVERRIDE;
 
     /**
      * True if this is a script-created HTML5 parser.
      */
-    virtual bool IsScriptCreated();
+    virtual bool IsScriptCreated() MOZ_OVERRIDE;
 
     /* End nsIParser  */
 
