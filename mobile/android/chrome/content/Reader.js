@@ -15,40 +15,19 @@ let Reader = {
   STATUS_FETCH_FAILED_UNSUPPORTED_FORMAT: 3,
   STATUS_FETCHED_ARTICLE: 4,
 
-  MESSAGES: [
-    "Reader:AddToList",
-    "Reader:ArticleGet",
-    "Reader:FaviconRequest",
-    "Reader:ListStatusRequest",
-    "Reader:RemoveFromList",
-    "Reader:Share",
-    "Reader:ShowToast",
-    "Reader:ToolbarVisibility",
-    "Reader:SystemUIVisibility",
-    "Reader:UpdateIsArticle",
-  ],
-
-  init: function() {
-    for (let msg of this.MESSAGES) {
-      window.messageManager.addMessageListener(msg, this);
-    }
-
-    Services.obs.addObserver(this, "Reader:Added", false);
-    Services.obs.addObserver(this, "Reader:Removed", false);
-    Services.obs.addObserver(this, "Gesture:DoubleTap", false);
-  },
-
   observe: function Reader_observe(aMessage, aTopic, aData) {
     switch (aTopic) {
       case "Reader:Added": {
-        window.messageManager.broadcastAsyncMessage("Reader:Added", { url: aData });
+        let mm = window.getGroupMessageManager("browsers");
+        mm.broadcastAsyncMessage("Reader:Added", { url: aData });
         break;
       }
       case "Reader:Removed": {
         let uri = Services.io.newURI(aData, null, null);
         ReaderMode.removeArticleFromCache(uri).catch(e => Cu.reportError("Error removing article from cache: " + e));
 
-        window.messageManager.broadcastAsyncMessage("Reader:Removed", { url: aData });
+        let mm = window.getGroupMessageManager("browsers");
+        mm.broadcastAsyncMessage("Reader:Removed", { url: aData });
         break;
       }
       case "Gesture:DoubleTap": {
