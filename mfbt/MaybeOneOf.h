@@ -119,8 +119,8 @@ public:
   }
 
 private:
-  MaybeOneOf(const MaybeOneOf& aOther) MOZ_DELETE;
-  const MaybeOneOf& operator=(const MaybeOneOf& aOther) MOZ_DELETE;
+  MaybeOneOf(const MaybeOneOf& aOther) = delete;
+  const MaybeOneOf& operator=(const MaybeOneOf& aOther) = delete;
 };
 
 template <class T1, class T2>

@@ -753,9 +753,9 @@ class JSObject : public js::gc::Cell
     js::HeapPtrTypeObject *addressOfType() { return &type_; }
 
   private:
-    JSObject() MOZ_DELETE;
-    JSObject(const JSObject &other) MOZ_DELETE;
-    void operator=(const JSObject &other) MOZ_DELETE;
+    JSObject() = delete;
+    JSObject(const JSObject &other) = delete;
+    void operator=(const JSObject &other) = delete;
 };
 
 template <class U>

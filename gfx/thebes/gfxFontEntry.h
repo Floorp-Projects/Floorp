@@ -307,8 +307,8 @@ public:
     private:
         hb_blob_t* mBlob;
         // not implemented:
-        AutoTable(const AutoTable&) MOZ_DELETE;
-        AutoTable& operator=(const AutoTable&) MOZ_DELETE;
+        AutoTable(const AutoTable&) = delete;
+        AutoTable& operator=(const AutoTable&) = delete;
     };
 
     already_AddRefed<gfxFont>

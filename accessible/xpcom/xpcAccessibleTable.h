@@ -69,8 +69,8 @@ protected:
 private:
   TableAccessible* Intl() { return mIntl->AsTable(); }
 
-  xpcAccessibleTable(const xpcAccessibleTable&) MOZ_DELETE;
-  xpcAccessibleTable& operator =(const xpcAccessibleTable&) MOZ_DELETE;
+  xpcAccessibleTable(const xpcAccessibleTable&) = delete;
+  xpcAccessibleTable& operator =(const xpcAccessibleTable&) = delete;
 };
 
 } // namespace a11y

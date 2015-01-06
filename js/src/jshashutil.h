@@ -48,9 +48,9 @@ struct DependentAddPtr
     AddPtr addPtr ;
     const uint64_t originalGcNumber;
 
-    DependentAddPtr() MOZ_DELETE;
-    DependentAddPtr(const DependentAddPtr&) MOZ_DELETE;
-    DependentAddPtr& operator=(const DependentAddPtr&) MOZ_DELETE;
+    DependentAddPtr() = delete;
+    DependentAddPtr(const DependentAddPtr&) = delete;
+    DependentAddPtr& operator=(const DependentAddPtr&) = delete;
 };
 
 } // namespace js

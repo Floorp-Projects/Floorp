@@ -79,7 +79,7 @@ private:
   void HoldData();
   void DropData();
 
-  ImageData() MOZ_DELETE;
+  ImageData() = delete;
 
   uint32_t mWidth, mHeight;
   JS::Heap<JSObject*> mData;

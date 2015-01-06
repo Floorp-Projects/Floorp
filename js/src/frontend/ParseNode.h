@@ -466,8 +466,8 @@ class ParseNode
                         pn_used   : 1,  /* name node is on a use-chain */
                         pn_defn   : 1;  /* this node is a Definition */
 
-    ParseNode(const ParseNode &other) MOZ_DELETE;
-    void operator=(const ParseNode &other) MOZ_DELETE;
+    ParseNode(const ParseNode &other) = delete;
+    void operator=(const ParseNode &other) = delete;
 
   public:
     ParseNode(ParseNodeKind kind, JSOp op, ParseNodeArity arity)

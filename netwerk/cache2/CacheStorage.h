@@ -41,7 +41,7 @@ public:
   }
 private:
   EType const mType;
-  CacheEntryTable() MOZ_DELETE;
+  CacheEntryTable() = delete;
 };
 
 class CacheStorage : public nsICacheStorage

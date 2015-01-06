@@ -962,7 +962,7 @@ public:
 
 private:
   template<MemoryOrdering AnyOrder>
-  AtomicBase(const AtomicBase<T, AnyOrder>& aCopy) MOZ_DELETE;
+  AtomicBase(const AtomicBase<T, AnyOrder>& aCopy) = delete;
 };
 
 template<typename T, MemoryOrdering Order>
@@ -984,7 +984,7 @@ public:
 
 private:
   template<MemoryOrdering AnyOrder>
-  AtomicBaseIncDec(const AtomicBaseIncDec<T, AnyOrder>& aCopy) MOZ_DELETE;
+  AtomicBaseIncDec(const AtomicBaseIncDec<T, AnyOrder>& aCopy) = delete;
 };
 
 } // namespace detail
@@ -1058,7 +1058,7 @@ public:
   }
 
 private:
-  Atomic(Atomic<T, Order>& aOther) MOZ_DELETE;
+  Atomic(Atomic<T, Order>& aOther) = delete;
 };
 
 /**
@@ -1091,7 +1091,7 @@ public:
   }
 
 private:
-  Atomic(Atomic<T*, Order>& aOther) MOZ_DELETE;
+  Atomic(Atomic<T*, Order>& aOther) = delete;
 };
 
 /**
@@ -1114,7 +1114,7 @@ public:
   using Base::operator=;
 
 private:
-  Atomic(Atomic<T, Order>& aOther) MOZ_DELETE;
+  Atomic(Atomic<T, Order>& aOther) = delete;
 };
 
 /**
@@ -1165,7 +1165,7 @@ public:
   }
 
 private:
-  Atomic(Atomic<bool, Order>& aOther) MOZ_DELETE;
+  Atomic(Atomic<bool, Order>& aOther) = delete;
 };
 
 } // namespace mozilla

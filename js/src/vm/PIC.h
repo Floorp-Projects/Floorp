@@ -73,7 +73,7 @@ class PICChain
 
     PICChain() : stubs_(nullptr) {}
     // PICs should never be copy constructed.
-    PICChain(const PICChain<Category> &other) MOZ_DELETE;
+    PICChain(const PICChain<Category> &other) = delete;
 
   public:
     CatStub *stubs() const {
@@ -122,8 +122,8 @@ struct ForOfPIC
     class Stub;
     class Chain;
 
-    ForOfPIC() MOZ_DELETE;
-    ForOfPIC(const ForOfPIC &other) MOZ_DELETE;
+    ForOfPIC() = delete;
+    ForOfPIC(const ForOfPIC &other) = delete;
 
     typedef PICStub<ForOfPIC> BaseStub;
     typedef PICChain<ForOfPIC> BaseChain;

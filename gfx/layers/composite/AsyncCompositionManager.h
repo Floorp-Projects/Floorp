@@ -8,7 +8,7 @@
 
 #include "Units.h"                      // for ScreenPoint, etc
 #include "mozilla/layers/LayerManagerComposite.h"  // for LayerManagerComposite
-#include "mozilla/Attributes.h"         // for MOZ_DELETE, MOZ_FINAL, etc
+#include "mozilla/Attributes.h"         // for MOZ_FINAL, etc
 #include "mozilla/RefPtr.h"             // for RefCounted
 #include "mozilla/TimeStamp.h"          // for TimeStamp
 #include "mozilla/dom/ScreenOrientation.h"  // for ScreenOrientation
@@ -227,8 +227,8 @@ public:
 private:
   AsyncCompositionManager* mManager;
 
-  AutoResolveRefLayers(const AutoResolveRefLayers&) MOZ_DELETE;
-  AutoResolveRefLayers& operator=(const AutoResolveRefLayers&) MOZ_DELETE;
+  AutoResolveRefLayers(const AutoResolveRefLayers&) = delete;
+  AutoResolveRefLayers& operator=(const AutoResolveRefLayers&) = delete;
 };
 
 } // layers

@@ -1540,8 +1540,8 @@ class MOZ_STACK_CLASS AutoLockGC
     mozilla::DebugOnly<bool> wasUnlocked_;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
-    AutoLockGC(const AutoLockGC&) MOZ_DELETE;
-    AutoLockGC& operator=(const AutoLockGC&) MOZ_DELETE;
+    AutoLockGC(const AutoLockGC&) = delete;
+    AutoLockGC& operator=(const AutoLockGC&) = delete;
 };
 
 class MOZ_STACK_CLASS AutoUnlockGC
@@ -1563,8 +1563,8 @@ class MOZ_STACK_CLASS AutoUnlockGC
     AutoLockGC& lock;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
-    AutoUnlockGC(const AutoUnlockGC&) MOZ_DELETE;
-    AutoUnlockGC& operator=(const AutoUnlockGC&) MOZ_DELETE;
+    AutoUnlockGC(const AutoUnlockGC&) = delete;
+    AutoUnlockGC& operator=(const AutoUnlockGC&) = delete;
 };
 
 class MOZ_STACK_CLASS AutoKeepAtoms

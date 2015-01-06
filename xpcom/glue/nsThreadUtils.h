@@ -537,8 +537,8 @@ public:
 private:
   volatile uint32_t mCounter;
 
-  nsThreadPoolNaming(const nsThreadPoolNaming&) MOZ_DELETE;
-  void operator=(const nsThreadPoolNaming&) MOZ_DELETE;
+  nsThreadPoolNaming(const nsThreadPoolNaming&) = delete;
+  void operator=(const nsThreadPoolNaming&) = delete;
 };
 
 /**
