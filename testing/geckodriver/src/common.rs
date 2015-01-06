@@ -127,6 +127,22 @@ pub enum Nullable<T: ToJson> {
 }
 
 impl<T: ToJson> Nullable<T> {
+     pub fn is_null(&self) -> bool {
+        match *self {
+            Nullable::Value(_) => false,
+            Nullable::Null => true
+        }
+    }
+
+     pub fn is_value(&self) -> bool {
+        match *self {
+            Nullable::Value(_) => true,
+            Nullable::Null => false
+        }
+    }
+}
+
+impl<T: ToJson> Nullable<T> {
     //This is not very pretty
     pub fn from_json<F: FnOnce(&json::Json) -> WebDriverResult<T>>(value: &json::Json, f: F) -> WebDriverResult<Nullable<T>> {
         if value.is_null() {
@@ -157,7 +173,7 @@ impl<S: Encoder<E>, E, T: ToJson> Encodable<S, E> for Nullable<T> {
 
 #[deriving(PartialEq)]
 pub struct WebElement {
-    id: String
+    pub id: String
 }
 
 impl WebElement {

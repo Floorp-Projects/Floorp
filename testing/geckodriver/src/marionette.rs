@@ -14,16 +14,20 @@ use command::WebDriverCommand::{NewSession, DeleteSession, Get, GetCurrentUrl,
                                 ExecuteAsyncScript, GetCookie, AddCookie, SetTimeouts,
                                 DismissAlert, AcceptAlert, GetAlertText, SendAlertText,
                                 TakeScreenshot};
+use command::{GetParameters, WindowSizeParameters, SwitchToWindowParameters,
+              SwitchToFrameParameters, LocatorParameters, JavascriptCommandParameters,
+              GetCookieParameters, AddCookieParameters, TimeoutsParameters,
+              TakeScreenshotParameters};
 use response::{WebDriverResponse, NewSessionResponse, ValueResponse, WindowSizeResponse,
                ElementRectResponse, CookieResponse, Date, Cookie};
-use common::{WebDriverResult, WebDriverError, ErrorStatus, Nullable};
+use common::{WebDriverResult, WebDriverError, ErrorStatus, Nullable, WebElement, FrameId};
 
 pub struct MarionetteSession {
     pub session_id: String,
     pub to: String
 }
 
-fn object_from_json(data: &str) -> WebDriverResult<TreeMap<String, json::Json>> {
+fn object_from_json(data: &str) -> WebDriverResult<TreeMap<String, Json>> {
     Ok(try_opt!(try!(json::from_str(data)).as_object(),
                 ErrorStatus::UnknownError,
                 "Expected a json object").clone())
@@ -38,7 +42,16 @@ impl MarionetteSession {
         }
     }
 
-    pub fn update(&mut self, msg: &WebDriverMessage, resp: &TreeMap<String, json::Json>) -> WebDriverResult<()> {
+    pub fn msg_to_marionette(&self, msg: &WebDriverMessage) -> WebDriverResult<Json> {
+        let x = try!(msg.to_marionette());
+        let mut data = try_opt!(x.as_object(),
+                                ErrorStatus::UnknownError,
+                                "Message was not a JSON Object").clone();
+        data.insert("to".to_string(), self.to.to_json());
+        Ok(Json::Object(data))
+    }
+
+    pub fn update(&mut self, msg: &WebDriverMessage, resp: &TreeMap<String, Json>) -> WebDriverResult<()> {
         match msg.command {
             NewSession => {
                 let session_id = try_opt!(
@@ -52,65 +65,6 @@ impl MarionetteSession {
             _ => {}
         }
         Ok(())
-    }
-
-    fn command_name(msg:&WebDriverMessage) -> Option<String> {
-        match msg.command {
-            NewSession => Some("newSession"),
-            DeleteSession => Some("deleteSession"),
-            Get(_) => Some("get"),
-            GetCurrentUrl => Some("getCurrentUrl"),
-            GoBack => Some("goBack"),
-            GoForward => Some("goForward"),
-            Refresh => Some("refresh"),
-            GetTitle => Some("getTitle"),
-            GetWindowHandle => Some("getWindowHandle"),
-            GetWindowHandles => Some("getWindowHandles"),
-            Close => Some("close"),
-            SetTimeouts(_) => Some("timeouts"),
-            SetWindowSize(_) => Some("setWindowSize"),
-            GetWindowSize => Some("getWindowSize"),
-            MaximizeWindow => Some("maximizeWindow"),
-            SwitchToWindow(_) => Some("switchToWindow"),
-            SwitchToFrame(_) => Some("switchToFrame"),
-            SwitchToParentFrame => Some("switchToParentFrame"),
-            FindElement(_) => Some("findElement"),
-            FindElements(_) => Some("findElements"),
-            IsDisplayed(_) => Some("isElementDisplayed"),
-            IsSelected(_) => Some("isElementSelected"),
-            GetElementAttribute(_, _) => Some("getElementAttribute"),
-            GetCSSValue(_, _) => Some("getElementValueOfCssProperty"),
-            GetElementText(_) => Some("getElementText"),
-            GetElementTagName(_) => Some("getElementTagName"),
-            GetElementRect(_) => Some("getElementRect"),
-            IsEnabled(_) => Some("isElementEnabled"),
-            ExecuteScript(_) => Some("executeScript"),
-            ExecuteAsyncScript(_) => Some("executeAsyncScript"),
-            GetCookie(_) => Some("getCookies"),
-            AddCookie(_) => Some("addCookie"),
-            DismissAlert => None, //Unsupported
-            AcceptAlert => None, //Unsupported
-            GetAlertText => None, //Unsupported
-            SendAlertText(_) => None, //Unsupported
-            TakeScreenshot(_) => Some("takeScreenshot")
-        }.map(|x| x.into_string())
-    }
-
-    pub fn msg_to_marionette(&self, msg: &WebDriverMessage) -> WebDriverResult<json::Json> {
-        let command_name = try_opt!(MarionetteSession::command_name(msg),
-                                    ErrorStatus::UnsupportedOperation,
-                                    "Operation not supported");
-        let mut data = try_opt!(msg.to_json().as_object(),
-                                ErrorStatus::UnknownError,
-                                "Failed to convert message to Object"
-                                ).clone();
-        match msg.session_id {
-            Some(ref x) => data.insert("sessionId".to_string(), x.to_json()),
-            None => None
-        };
-        data.insert("to".to_string(), self.to.to_json());
-        data.insert("name".to_string(), command_name.to_json());
-        Ok(json::Object(data))
     }
 
     pub fn response_from_json(&mut self, message: &WebDriverMessage,
@@ -380,7 +334,7 @@ impl MarionetteConnection {
         }
     }
 
-    fn encode_msg(&self, msg:&json::Json) -> String {
+    fn encode_msg(&self, msg:&Json) -> String {
         let data = json::encode(msg);
         let len = data.len().to_string();
         let mut message = len;
@@ -398,7 +352,7 @@ impl MarionetteConnection {
         resp
     }
 
-    fn send(&mut self, msg: &json::Json) -> WebDriverResult<String> {
+    fn send(&mut self, msg: &Json) -> WebDriverResult<String> {
         let data = self.encode_msg(msg);
         debug!("Sending {}", data);
         match self.stream.write_str(data.as_slice()) {
@@ -436,5 +390,192 @@ impl MarionetteConnection {
         let data = try!(self.stream.read_exact(bytes));
         //Need to handle the error here
         Ok(String::from_utf8(data).unwrap())
+    }
+}
+
+trait ToMarionette {
+    fn to_marionette(&self) -> WebDriverResult<Json>;
+}
+
+impl ToMarionette for WebDriverMessage {
+    fn to_marionette(&self) -> WebDriverResult<Json> {
+        let (opt_name, opt_parameters) = match self.command {
+            NewSession => (Some("newSession"), None),
+            DeleteSession => (Some("deleteSession"), None),
+            Get(ref x) => (Some("get"), Some(x.to_marionette())),
+            GetCurrentUrl => (Some("getCurrentUrl"), None),
+            GoBack => (Some("goBack"), None),
+            GoForward => (Some("goForward"), None),
+            Refresh => (Some("refresh"), None),
+            GetTitle => (Some("getTitle"), None),
+            GetWindowHandle => (Some("getWindowHandle"), None),
+            GetWindowHandles => (Some("getWindowHandles"), None),
+            Close => (Some("close"), None),
+            SetTimeouts(ref x) => (Some("timeouts"), Some(x.to_marionette())),
+            SetWindowSize(ref x) => (Some("setWindowSize"), Some(x.to_marionette())),
+            GetWindowSize => (Some("getWindowSize"), None),
+            MaximizeWindow => (Some("maximizeWindow"), None),
+            SwitchToWindow(ref x) => (Some("switchToWindow"), Some(x.to_marionette())),
+            SwitchToFrame(ref x) => (Some("switchToFrame"), Some(x.to_marionette())),
+            SwitchToParentFrame => (Some("switchToParentFrame"), None),
+            FindElement(ref x) => (Some("findElement"), Some(x.to_marionette())),
+            FindElements(ref x) => (Some("findElements"), Some(x.to_marionette())),
+            IsDisplayed(ref x) => (Some("isElementDisplayed"), Some(x.to_marionette())),
+            IsSelected(ref x) => (Some("isElementSelected"), Some(x.to_marionette())),
+            GetElementAttribute(ref e, ref x) => {
+                let mut data = TreeMap::new();
+                data.insert("id".to_string(), e.id.to_json());
+                data.insert("name".to_string(), x.to_json());
+                (Some("getElementAttribute"), Some(Ok(Json::Object(data))))
+            },
+            GetCSSValue(ref e, ref x) => {
+                let mut data = TreeMap::new();
+                data.insert("id".to_string(), e.id.to_json());
+                data.insert("name".to_string(), x.to_json());
+                (Some("getElementValueOfCSSProperty"), Some(Ok(Json::Object(data))))
+            },
+            GetElementText(ref x) => (Some("getElementText"), Some(x.to_marionette())),
+            GetElementTagName(ref x) => (Some("getElementTagName"), Some(x.to_marionette())),
+            GetElementRect(ref x) => (Some("getElementRect"), Some(x.to_marionette())),
+            IsEnabled(ref x) => (Some("isElementEnabled"), Some(x.to_marionette())),
+            ExecuteScript(ref x) => (Some("executeScript"), Some(x.to_marionette())),
+            ExecuteAsyncScript(ref x) => (Some("executeAsyncScript"), Some(x.to_marionette())),
+            GetCookie(ref x) => (Some("getCookies"), Some(x.to_marionette())),
+            AddCookie(ref x) => (Some("addCookie"), Some(x.to_marionette())),
+            DismissAlert => (None, None), //Unsupported
+            AcceptAlert => (None, None), //Unsupported
+            GetAlertText => (None, None), //Unsupported
+            SendAlertText(ref x) => (None, None), //Unsupported
+            TakeScreenshot(ref x) => (Some("takeScreenshot"), Some(x.to_marionette())),
+        };
+
+        let name = try_opt!(opt_name,
+                            ErrorStatus::UnsupportedOperation,
+                            "Operation not supported");
+
+        let parameters = try!(opt_parameters.unwrap_or(Ok(Json::Object(TreeMap::new()))));
+
+        let mut data = TreeMap::new();
+        data.insert("name".to_string(), name.to_json());
+        data.insert("parameters".to_string(), parameters.to_json());
+        match self.session_id {
+            Some(ref x) => data.insert("sessionId".to_string(), x.to_json()),
+            None => None
+        };
+        Ok(json::Object(data))
+    }
+}
+
+impl ToMarionette for GetParameters {
+    fn to_marionette(&self) -> WebDriverResult<Json> {
+        Ok(self.to_json())
+    }
+}
+
+impl ToMarionette for TimeoutsParameters {
+    fn to_marionette(&self) -> WebDriverResult<Json> {
+        Ok(self.to_json())
+    }
+}
+
+impl ToMarionette for WindowSizeParameters {
+    fn to_marionette(&self) -> WebDriverResult<Json> {
+        Ok(self.to_json())
+    }
+}
+
+impl ToMarionette for SwitchToWindowParameters {
+    fn to_marionette(&self) -> WebDriverResult<Json> {
+        Ok(self.to_json())
+    }
+}
+
+impl ToMarionette for LocatorParameters {
+    fn to_marionette(&self) -> WebDriverResult<Json> {
+        Ok(self.to_json())
+    }
+}
+
+impl ToMarionette for SwitchToFrameParameters {
+    fn to_marionette(&self) -> WebDriverResult<Json> {
+        let mut data = TreeMap::new();
+        data.insert("id".to_string(), try!(self.id.to_marionette()));
+        Ok(json::Object(data))
+    }
+}
+
+impl ToMarionette for JavascriptCommandParameters {
+    fn to_marionette(&self) -> WebDriverResult<Json> {
+        Ok(self.to_json())
+    }
+}
+
+impl ToMarionette for GetCookieParameters {
+    fn to_marionette(&self) -> WebDriverResult<Json> {
+        Ok(self.to_json())
+    }
+}
+
+impl ToMarionette for AddCookieParameters {
+    fn to_marionette(&self) -> WebDriverResult<Json> {
+        let mut cookie = TreeMap::new();
+        cookie.insert("name".to_string(), self.name.to_json());
+        cookie.insert("value".to_string(), self.value.to_json());
+        if self.path.is_value() {
+            cookie.insert("path".to_string(), self.path.to_json());
+        }
+        if self.domain.is_value() {
+            cookie.insert("domain".to_string(), self.domain.to_json());
+        }
+        if self.expiry.is_value() {
+            cookie.insert("expiry".to_string(), self.expiry.to_json());
+        }
+        if self.maxAge.is_value() {
+            cookie.insert("maxAge".to_string(), self.maxAge.to_json());
+        }
+        cookie.insert("secure".to_string(), self.secure.to_json());
+        cookie.insert("httpOnly".to_string(), self.httpOnly.to_json());
+        let mut data = TreeMap::new();
+        data.insert("cookie".into_string(), Json::Object(cookie));
+        Ok(json::Object(data))
+    }
+}
+
+impl ToMarionette for TakeScreenshotParameters {
+    fn to_marionette(&self) -> WebDriverResult<Json> {
+        let mut data = TreeMap::new();
+        let element = match self.element {
+            Nullable::Null => Json::Null,
+            Nullable::Value(ref x) => try!(x.to_marionette())
+        };
+        data.insert("element".into_string(), element);
+        Ok(Json::Object(data))
+    }
+}
+
+impl ToMarionette for WebElement {
+    fn to_marionette(&self) -> WebDriverResult<Json> {
+        let mut data = TreeMap::new();
+        data.insert("id".to_string(), self.id.to_json());
+        Ok(json::Object(data))
+    }
+}
+
+impl<T: ToJson> ToMarionette for Nullable<T> {
+    fn to_marionette(&self) -> WebDriverResult<Json> {
+        //Note this is a terrible hack. We don't want Nullable<T: ToJson+ToMarionette>
+        //so in cases where ToJson != ToMarionette you have to deal with the Nullable
+        //explicitly. This kind of suggests that the whole design is wrong.
+        Ok(self.to_json())
+    }
+}
+
+impl ToMarionette for FrameId {
+    fn to_marionette(&self) -> WebDriverResult<Json> {
+        match *self {
+            FrameId::Short(x) => Ok(x.to_json()),
+            FrameId::Element(ref x) => Ok(try!(x.to_marionette())),
+            FrameId::Null => Ok(Json::Null)
+        }
     }
 }

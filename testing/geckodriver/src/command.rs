@@ -242,7 +242,7 @@ trait Parameters {
 }
 
 #[deriving(PartialEq)]
-struct GetParameters {
+pub struct GetParameters {
     url: String
 }
 
@@ -271,7 +271,7 @@ impl ToJson for GetParameters {
 }
 
 #[deriving(PartialEq)]
-struct TimeoutsParameters {
+pub struct TimeoutsParameters {
     type_: String,
     ms: u64
 }
@@ -310,7 +310,7 @@ impl ToJson for TimeoutsParameters {
 }
 
 #[deriving(PartialEq)]
-struct WindowSizeParameters {
+pub struct WindowSizeParameters {
     width: u64,
     height: u64
 }
@@ -348,7 +348,7 @@ impl ToJson for WindowSizeParameters {
 }
 
 #[deriving(PartialEq)]
-struct SwitchToWindowParameters {
+pub struct SwitchToWindowParameters {
     handle: String
 }
 
@@ -377,7 +377,7 @@ impl ToJson for SwitchToWindowParameters {
 }
 
 #[deriving(PartialEq)]
-struct LocatorParameters {
+pub struct LocatorParameters {
     using: LocatorStrategy,
     value: String
 }
@@ -416,8 +416,8 @@ impl ToJson for LocatorParameters {
 }
 
 #[deriving(PartialEq)]
-struct SwitchToFrameParameters {
-    id: FrameId
+pub struct SwitchToFrameParameters {
+    pub id: FrameId
 }
 
 impl Parameters for SwitchToFrameParameters {
@@ -444,7 +444,7 @@ impl ToJson for SwitchToFrameParameters {
 }
 
 #[deriving(PartialEq)]
-struct JavascriptCommandParameters {
+pub struct JavascriptCommandParameters {
     script: String,
     args: Nullable<Vec<json::Json>>
 }
@@ -495,7 +495,7 @@ impl ToJson for JavascriptCommandParameters {
 }
 
 #[deriving(PartialEq)]
-struct GetCookieParameters {
+pub struct GetCookieParameters {
     name: Nullable<String>
 }
 
@@ -528,15 +528,15 @@ impl ToJson for GetCookieParameters {
 }
 
 #[deriving(PartialEq)]
-struct AddCookieParameters {
-    name: String,
-    value: String,
-    path: Nullable<String>,
-    domain: Nullable<String>,
-    expiry: Nullable<Date>,
-    maxAge: Date,
-    secure: bool,
-    httpOnly: bool
+pub struct AddCookieParameters {
+    pub name: String,
+    pub value: String,
+    pub path: Nullable<String>,
+    pub domain: Nullable<String>,
+    pub expiry: Nullable<Date>,
+    pub maxAge: Nullable<Date>,
+    pub secure: bool,
+    pub httpOnly: bool
 }
 
 impl Parameters for AddCookieParameters {
@@ -598,12 +598,18 @@ impl Parameters for AddCookieParameters {
             None => Nullable::Null
         };
 
-        let max_age = Date::new(try_opt!(
-            try_opt!(data.get("maxAge"),
-                     ErrorStatus::InvalidArgument,
-                     "Missing 'maxAge' parameter").as_u64(),
-            ErrorStatus::InvalidArgument,
-            "'value' is not a string"));
+        let max_age = match data.get("maxAge") {
+            Some(max_age_json) => {
+                try!(Nullable::from_json(
+                    max_age_json,
+                    |x| {
+                        Ok(Date::new(try_opt!(x.as_u64(),
+                                              ErrorStatus::UnknownError,
+                                              "Failed to convert expiry to Date")))
+                    }))
+            },
+            None => Nullable::Null
+        };
 
         let secure = match data.get("secure") {
             Some(x) => try_opt!(x.as_boolean(),
@@ -648,7 +654,7 @@ impl ToJson for AddCookieParameters {
 }
 
 #[deriving(PartialEq)]
-struct SendAlertTextParameters {
+pub struct SendAlertTextParameters {
     keysToSend: String
 }
 
@@ -677,8 +683,8 @@ impl ToJson for SendAlertTextParameters {
 }
 
 #[deriving(PartialEq)]
-struct TakeScreenshotParameters {
-    element: Nullable<WebElement>
+pub struct TakeScreenshotParameters {
+    pub element: Nullable<WebElement>
 }
 
 impl Parameters for TakeScreenshotParameters {
