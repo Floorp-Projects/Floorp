@@ -19,6 +19,7 @@
 #include "nsStringGlue.h"               // for nsCString
 #include "xpcom-config.h"               // for CPP_THROW_NEW
 #include "mozilla/TypedEnum.h"          // for the VisitEdges typed enum
+#include "mozilla/Move.h"               // for mozilla::Move
 
 class nsIntRegion;
 class gfx3DMatrix;
@@ -61,6 +62,13 @@ public:
                                                                           aRect.width,
                                                                           aRect.height); }
   nsRegion (const nsRegion& aRegion) { pixman_region32_init(&mImpl); pixman_region32_copy(&mImpl,aRegion.Impl()); }
+  nsRegion (nsRegion&& aRegion) { mImpl = aRegion.mImpl; pixman_region32_init(&aRegion.mImpl); }
+  nsRegion& operator = (nsRegion&& aRegion) {
+      pixman_region32_fini(&mImpl);
+      mImpl = aRegion.mImpl;
+      pixman_region32_init(&aRegion.mImpl);
+      return *this;
+  }
  ~nsRegion () { pixman_region32_fini(&mImpl); }
   nsRegion& operator = (const nsRect& aRect) { Copy (aRect); return *this; }
   nsRegion& operator = (const nsRegion& aRegion) { Copy (aRegion); return *this; }
@@ -461,8 +469,10 @@ public:
   nsIntRegion () {}
   MOZ_IMPLICIT nsIntRegion (const nsIntRect& aRect) : mImpl (ToRect(aRect)) {}
   nsIntRegion (const nsIntRegion& aRegion) : mImpl (aRegion.mImpl) {}
+  nsIntRegion (nsIntRegion&& aRegion) : mImpl (mozilla::Move(aRegion.mImpl)) {}
   nsIntRegion& operator = (const nsIntRect& aRect) { mImpl = ToRect (aRect); return *this; }
   nsIntRegion& operator = (const nsIntRegion& aRegion) { mImpl = aRegion.mImpl; return *this; }
+  nsIntRegion& operator = (nsIntRegion&& aRegion) { mImpl = mozilla::Move(aRegion.mImpl); return *this; }
 
   bool operator==(const nsIntRegion& aRgn) const
   {

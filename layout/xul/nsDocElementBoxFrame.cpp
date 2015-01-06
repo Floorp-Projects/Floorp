@@ -35,8 +35,8 @@ public:
   friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
                                   nsStyleContext* aContext);
 
-  nsDocElementBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext)
-    :nsBoxFrame(aShell, aContext, true) {}
+  explicit nsDocElementBoxFrame(nsStyleContext* aContext)
+    :nsBoxFrame(aContext, true) {}
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
@@ -67,7 +67,7 @@ private:
 nsContainerFrame*
 NS_NewDocElementBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsDocElementBoxFrame (aPresShell, aContext);
+  return new (aPresShell) nsDocElementBoxFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsDocElementBoxFrame)

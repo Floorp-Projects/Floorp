@@ -37,7 +37,7 @@ using namespace mozilla;
 nsIFrame*
 NS_NewMenuBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMenuBarFrame (aPresShell, aContext);
+  return new (aPresShell) nsMenuBarFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMenuBarFrame)
@@ -49,8 +49,8 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 //
 // nsMenuBarFrame cntr
 //
-nsMenuBarFrame::nsMenuBarFrame(nsIPresShell* aShell, nsStyleContext* aContext):
-  nsBoxFrame(aShell, aContext),
+nsMenuBarFrame::nsMenuBarFrame(nsStyleContext* aContext):
+  nsBoxFrame(aContext),
     mMenuBarListener(nullptr),
     mStayActive(false),
     mIsActive(false),

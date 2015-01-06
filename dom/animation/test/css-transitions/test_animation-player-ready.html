@@ -67,4 +67,36 @@ async_test(function(t) {
 }, 'ready promise is rejected when a transition is cancelled by updating'
    + ' transition-property');
 
+async_test(function(t) {
+  var div = addDiv(t);
+
+  // Set up pending transition
+  div.style.marginLeft = '0px';
+  window.getComputedStyle(div).marginLeft;
+  div.style.transition = 'margin-left 100s';
+  div.style.marginLeft = '100px';
+  window.getComputedStyle(div).marginLeft;
+
+  var player = div.getAnimationPlayers()[0];
+  assert_equals(player.playState, 'pending', 'Player is initially pending');
+
+  // Set up listeners on ready promise
+  player.ready.then(t.step_func(function() {
+    assert_unreached('ready promise was fulfilled');
+  })).catch(t.step_func(function(err) {
+    assert_equals(err.name, 'AbortError',
+                  'ready promise is rejected with AbortError');
+    assert_equals(player.playState, 'idle',
+                  'Player is idle after transition was cancelled');
+  })).then(t.step_func(function() {
+    t.done();
+  }));
+
+  // Now update the transition to animate to something not-interpolable
+  div.style.marginLeft = 'auto';
+  window.getComputedStyle(div).marginLeft;
+
+}, 'ready promise is rejected when a transition is cancelled by changing'
+   + ' the transition property to something not interpolable');
+
 </script>

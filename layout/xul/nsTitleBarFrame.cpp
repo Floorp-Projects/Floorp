@@ -28,13 +28,13 @@ using namespace mozilla;
 nsIFrame*
 NS_NewTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsTitleBarFrame(aPresShell, aContext);
+  return new (aPresShell) nsTitleBarFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsTitleBarFrame)
 
-nsTitleBarFrame::nsTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
-:nsBoxFrame(aPresShell, aContext, false)
+nsTitleBarFrame::nsTitleBarFrame(nsStyleContext* aContext)
+:nsBoxFrame(aContext, false)
 {
   mTrackingMouseMove = false;
   UpdateMouseThrough();

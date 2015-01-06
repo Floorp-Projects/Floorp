@@ -148,6 +148,8 @@ private:
   // Register MediaRecorder into Document to listen the activity changes.
   void RegisterActivityObserver();
   void UnRegisterActivityObserver();
+
+  bool Check3gppPermission();
 };
 
 }

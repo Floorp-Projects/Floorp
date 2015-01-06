@@ -292,6 +292,11 @@ ContainerPrepare(ContainerT* aContainer,
    * Setup our temporary surface for rendering the contents of this container.
    */
 
+  gfx::IntRect surfaceRect = ContainerVisibleRect(aContainer);
+  if (surfaceRect.IsEmpty()) {
+    return;
+  }
+
   bool surfaceCopyNeeded;
   // DefaultComputeSupportsComponentAlphaChildren can mutate aContainer so call it unconditionally
   aContainer->DefaultComputeSupportsComponentAlphaChildren(&surfaceCopyNeeded);
@@ -300,7 +305,6 @@ ContainerPrepare(ContainerT* aContainer,
       RefPtr<CompositingRenderTarget> surface = nullptr;
 
       RefPtr<CompositingRenderTarget>& lastSurf = aContainer->mLastIntermediateSurface;
-      gfx::IntRect surfaceRect = ContainerVisibleRect(aContainer);
       if (lastSurf && !aContainer->mChildrenChanged && lastSurf->GetRect().IsEqualEdges(surfaceRect)) {
         surface = lastSurf;
       }

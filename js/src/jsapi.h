@@ -1116,6 +1116,13 @@ ToBooleanSlow(JS::HandleValue v);
  */
 extern JS_PUBLIC_API(JSString*)
 ToStringSlow(JSContext *cx, JS::HandleValue v);
+
+/*
+ * DO NOT CALL THIS. Use JS::ToObject.
+ */
+extern JS_PUBLIC_API(JSObject*)
+ToObjectSlow(JSContext *cx, JS::HandleValue vp, bool reportScanStack);
+
 } /* namespace js */
 
 namespace JS {
@@ -1159,6 +1166,15 @@ ToString(JSContext *cx, HandleValue v)
     if (v.isString())
         return v.toString();
     return js::ToStringSlow(cx, v);
+}
+
+/* ES5 9.9 ToObject. */
+MOZ_ALWAYS_INLINE JSObject*
+ToObject(JSContext *cx, HandleValue vp)
+{
+    if (vp.isObject())
+        return &vp.toObject();
+    return js::ToObjectSlow(cx, vp, false);
 }
 
 /*
@@ -3212,6 +3228,10 @@ JS_SetProperty(JSContext *cx, JS::HandleObject obj, const char *name, JS::Handle
 
 extern JS_PUBLIC_API(bool)
 JS_SetPropertyById(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue v);
+
+extern JS_PUBLIC_API(bool)
+JS_ForwardSetPropertyTo(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue onBehalfOf,
+                        bool strict, JS::HandleValue vp);
 
 extern JS_PUBLIC_API(bool)
 JS_DeleteProperty(JSContext *cx, JS::HandleObject obj, const char *name);

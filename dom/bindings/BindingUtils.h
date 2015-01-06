@@ -1810,16 +1810,15 @@ ThrowingConstructor(JSContext* cx, unsigned argc, JS::Value* vp);
 bool
 ThrowConstructorWithoutNew(JSContext* cx, const char* name);
 
-// vp is allowed to be null; in that case no get will be attempted,
-// and *found will simply indicate whether the property exists.
 bool
 GetPropertyOnPrototype(JSContext* cx, JS::Handle<JSObject*> proxy,
                        JS::Handle<jsid> id, bool* found,
-                       JS::Value* vp);
+                       JS::MutableHandle<JS::Value> vp);
 
+//
 bool
 HasPropertyOnPrototype(JSContext* cx, JS::Handle<JSObject*> proxy,
-                       JS::Handle<jsid> id);
+                       JS::Handle<jsid> id, bool* has);
 
 
 // Append the property names in "names" to "props". If
