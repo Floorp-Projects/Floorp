@@ -37,7 +37,7 @@ public:
   void ReadLock() MOZ_OVERRIDE;
   void ReadUnlock() MOZ_OVERRIDE;
 
-  Type GetType()
+  Type GetType() MOZ_OVERRIDE
   {
     return TYPE_SHARED_IMAGE;
   }
