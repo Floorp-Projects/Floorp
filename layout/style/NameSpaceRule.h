@@ -47,15 +47,15 @@ public:
 #endif
 
   // Rule methods
-  virtual int32_t GetType() const;
-  virtual already_AddRefed<Rule> Clone() const;
+  virtual int32_t GetType() const MOZ_OVERRIDE;
+  virtual already_AddRefed<Rule> Clone() const MOZ_OVERRIDE;
 
   nsIAtom* GetPrefix() const { return mPrefix; }
 
   void GetURLSpec(nsString& aURLSpec) const { aURLSpec = mURLSpec; }
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-    MOZ_MUST_OVERRIDE;
+    MOZ_OVERRIDE MOZ_MUST_OVERRIDE;
 
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
