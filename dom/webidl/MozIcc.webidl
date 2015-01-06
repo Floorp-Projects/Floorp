@@ -57,19 +57,23 @@ enum IccLockType
   "puk",
   "puk2",
   "nck",      // Network depersonalization -- network control key (NCK).
+  "nsck",     // Network subset depersonalization -- network subset control key (NSCK).
   "nck1",     // Network type 1 depersonalization -- network type 1 control key (NCK1).
   "nck2",     // Network type 2 depersonalization -- network type 2 control key (NCK2).
   "hnck",     // HRPD network depersonalization -- HRPD network control key (HNCK).
   "cck",      // Corporate depersonalization -- corporate control key (CCK).
   "spck",     // Service provider depersonalization -- service provider control key (SPCK).
+  "pck",      // SIM depersonalization -- personalization control key (PCK).
   "rcck",     // RUIM corporate depersonalization -- RUIM corporate control key (RCCK).
   "rspck",    // RUIM service provider depersonalization -- RUIM service provider control key (RSPCK).
   "nckPuk",   // Network PUK depersonalization -- network control key (NCK).
+  "nsckPuk",  // Network subset PUK depersonalization -- network subset control key (NSCK).
   "nck1Puk",  // Network type 1 PUK depersonalization -- network type 1 control key (NCK1).
   "nck2Puk",  // Network type 2 PUK depersonalization -- Network type 2 control key (NCK2).
   "hnckPuk",  // HRPD network PUK depersonalization -- HRPD network control key (HNCK).
   "cckPuk",   // Corporate PUK depersonalization -- corporate control key (CCK).
   "spckPuk",  // Service provider PUK depersonalization -- service provider control key (SPCK).
+  "pckPuk",   // SIM PUK depersonalization -- personalization control key (PCK).
   "rcckPuk",  // RUIM corporate PUK depersonalization -- RUIM corporate control key (RCCK).
   "rspckPuk", // RUIM service provider PUK depersonalization -- service provider control key (SPCK).
   "fdn"
@@ -99,12 +103,12 @@ dictionary IccUnlockCardLockOptions
   required IccLockType lockType;
 
   DOMString? pin = null; // Necessary for lock types: "pin", "pin2", "nck",
-                         // "nck1", "nck2", "hnck", "cck", "spck", "rcck",
-                         // "rspck".
+                         // "nsck", "nck1", "nck2", "hnck", "cck", "spck",
+                         // "pck", "rcck", "rspck".
 
   DOMString? puk = null; // Necessary for lock types: "puk", "puk2", "nckPuk",
-                         // "nck1Puk", "nck2Puk", "hnckPuk", "cckPuk",
-                         // "spckPuk", "rcckPuk", "rspckPuk".
+                         // "nsckPuk", "nck1Puk", "nck2Puk", "hnckPuk", "cckPuk",
+                         // "spckPuk", "pckPuk", "rcckPuk", "rspckPuk".
 
   DOMString? newPin = null; // Necessary for lock types: "puk", "puk2".
 };
