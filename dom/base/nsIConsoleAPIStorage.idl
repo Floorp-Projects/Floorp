@@ -5,7 +5,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(6701600a-17ca-417e-98f9-4ceb175dd15d)]
+[scriptable, uuid(cce39123-585e-411b-9edd-2513f7cf7e47)]
 interface nsIConsoleAPIStorage : nsISupports
 {
   /**
@@ -27,10 +27,29 @@ interface nsIConsoleAPIStorage : nsISupports
    * @param string aId
    *        The ID of the inner window for which the event occurred or "jsm" for
    *        messages logged from JavaScript modules..
+   * @param string aOuterId
+   *        This ID is used as 3rd parameters for the console-api-log-event
+   *        notification.
    * @param object aEvent
    *        A JavaScript object you want to store.
    */
-  void recordEvent(in DOMString aId, in jsval aEvent);
+  void recordEvent(in DOMString aId, in DOMString aOuterId, in jsval aEvent);
+
+  /**
+   * Similar to recordEvent() but these events will be collected
+   * and dispatched with a timer in order to avoid flooding the devtools
+   * webconsole.
+   *
+   * @param string aId
+   *        The ID of the inner window for which the event occurred or "jsm" for
+   *        messages logged from JavaScript modules..
+   * @param string aOuterId
+   *        This ID is used as 3rd parameters for the console-api-log-event
+   *        notification.
+   * @param object aEvent
+   *        A JavaScript object you want to store.
+   */
+  void recordPendingEvent(in DOMString aId, in DOMString aOuterId, in jsval aEvent);
 
   /**
    * Clear storage data for the given window.
