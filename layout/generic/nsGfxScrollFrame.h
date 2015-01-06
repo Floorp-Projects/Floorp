@@ -797,7 +797,7 @@ public:
                           nscoord aNewPos) MOZ_OVERRIDE {
     mHelper.ThumbMoved(aScrollbar, aOldPos, aNewPos);
   }
-  virtual void VisibilityChanged(bool aVisible) {}
+  virtual void VisibilityChanged(bool aVisible) MOZ_OVERRIDE {}
   virtual nsIFrame* GetScrollbarBox(bool aVertical) MOZ_OVERRIDE {
     return mHelper.GetScrollbarBox(aVertical);
   }
@@ -1162,7 +1162,7 @@ public:
                           nscoord aNewPos) MOZ_OVERRIDE {
     mHelper.ThumbMoved(aScrollbar, aOldPos, aNewPos);
   }
-  virtual void VisibilityChanged(bool aVisible) {}
+  virtual void VisibilityChanged(bool aVisible) MOZ_OVERRIDE {}
   virtual nsIFrame* GetScrollbarBox(bool aVertical) MOZ_OVERRIDE {
     return mHelper.GetScrollbarBox(aVertical);
   }
