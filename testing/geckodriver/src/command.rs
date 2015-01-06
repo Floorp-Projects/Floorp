@@ -1,16 +1,15 @@
-use core::u16;
 use std::collections::TreeMap;
 use serialize::json;
 use serialize::json::{ToJson, Json};
 use regex::Captures;
 
-use common::{WebDriverResult, WebDriverError, ErrorStatus};
+use common::{WebDriverResult, WebDriverError, ErrorStatus, Nullable, WebElement, FrameId, LocatorStrategy};
+use response::Date; //TODO: Put all these types in a specific file
 use messagebuilder::MatchType;
 
 
 #[deriving(PartialEq)]
 pub enum WebDriverCommand {
-    GetMarionetteId, //TODO: move this
     NewSession,
     DeleteSession,
     Get(GetParameters),
@@ -22,7 +21,6 @@ pub enum WebDriverCommand {
     GetWindowHandle,
     GetWindowHandles,
     Close,
-    Timeouts(TimeoutsParameters),
     SetWindowSize(WindowSizeParameters),
     GetWindowSize,
     MaximizeWindow,
@@ -30,6 +28,8 @@ pub enum WebDriverCommand {
     SwitchToWindow(SwitchToWindowParameters),
     SwitchToFrame(SwitchToFrameParameters),
     SwitchToParentFrame,
+    FindElement(LocatorParameters),
+    FindElements(LocatorParameters),
     IsDisplayed(WebElement),
     IsSelected(WebElement),
     GetElementAttribute(WebElement, String),
@@ -39,7 +39,16 @@ pub enum WebDriverCommand {
     GetElementRect(WebElement),
     IsEnabled(WebElement),
     ExecuteScript(JavascriptCommandParameters),
-    ExecuteAsyncScript(JavascriptCommandParameters)
+    ExecuteAsyncScript(JavascriptCommandParameters),
+    GetCookie(GetCookieParameters),
+    AddCookie(AddCookieParameters),
+    SetTimeouts(TimeoutsParameters),
+    //Actions(ActionsParameters)
+    DismissAlert,
+    AcceptAlert,
+    GetAlertText,
+    SendAlertText(SendAlertTextParameters),
+    TakeScreenshot(TakeScreenshotParameters)
 }
 
 #[deriving(PartialEq)]
@@ -83,9 +92,9 @@ impl WebDriverMessage {
             MatchType::GetWindowHandle => WebDriverCommand::GetWindowHandle,
             MatchType::GetWindowHandles => WebDriverCommand::GetWindowHandles,
             MatchType::Close => WebDriverCommand::Close,
-            MatchType::Timeouts => {
+            MatchType::SetTimeouts => {
                 let parameters: TimeoutsParameters = try!(Parameters::from_json(&body_data));
-                WebDriverCommand::Timeouts(parameters)
+                WebDriverCommand::SetTimeouts(parameters)
             },
             MatchType::SetWindowSize => {
                 let parameters: WindowSizeParameters = try!(Parameters::from_json(&body_data));
@@ -102,6 +111,14 @@ impl WebDriverMessage {
                 WebDriverCommand::SwitchToFrame(parameters)
             },
             MatchType::SwitchToParentFrame => WebDriverCommand::SwitchToParentFrame,
+            MatchType::FindElement => {
+                let parameters: LocatorParameters = try!(Parameters::from_json(&body_data));
+                WebDriverCommand::FindElement(parameters)
+            },
+            MatchType::FindElements => {
+                let parameters: LocatorParameters = try!(Parameters::from_json(&body_data));
+                WebDriverCommand::FindElements(parameters)
+            },
             MatchType::IsDisplayed => {
                 let element = WebElement::new(params.name("elementId").to_string());
                 WebDriverCommand::IsDisplayed(element)
@@ -130,7 +147,7 @@ impl WebDriverMessage {
             },
             MatchType::GetElementRect => {
                 let element = WebElement::new(params.name("elementId").to_string());
-                WebDriverCommand::GetElementText(element)
+                WebDriverCommand::GetElementRect(element)
             },
             MatchType::IsEnabled => {
                 let element = WebElement::new(params.name("elementId").to_string());
@@ -139,10 +156,35 @@ impl WebDriverMessage {
             MatchType::ExecuteScript => {
                 let parameters: JavascriptCommandParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::ExecuteScript(parameters)
-            }
+            },
             MatchType::ExecuteAsyncScript => {
                 let parameters: JavascriptCommandParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::ExecuteAsyncScript(parameters)
+            },
+            MatchType::GetCookie => {
+                let parameters: GetCookieParameters = try!(Parameters::from_json(&body_data));
+                WebDriverCommand::GetCookie(parameters)
+            },
+            MatchType::AddCookie => {
+                let parameters: AddCookieParameters = try!(Parameters::from_json(&body_data));
+                WebDriverCommand::AddCookie(parameters)
+            },
+            MatchType::DismissAlert => {
+                WebDriverCommand::DismissAlert
+            },
+            MatchType::AcceptAlert => {
+                WebDriverCommand::AcceptAlert
+            },
+            MatchType::GetAlertText => {
+                WebDriverCommand::GetAlertText
+            },
+            MatchType::SendAlertText => {
+                let parameters: SendAlertTextParameters = try!(Parameters::from_json(&body_data));
+                WebDriverCommand::SendAlertText(parameters)
+            }
+            MatchType::TakeScreenshot => {
+                let parameters: TakeScreenshotParameters = try!(Parameters::from_json(&body_data));
+                WebDriverCommand::TakeScreenshot(parameters)
             }
         };
         Ok(WebDriverMessage::new(session_id, command))
@@ -160,7 +202,7 @@ impl ToJson for WebDriverMessage {
     fn to_json(&self) -> json::Json {
         let mut data = TreeMap::new();
         let parameters = match self.command {
-            WebDriverCommand::GetMarionetteId | WebDriverCommand::NewSession |
+            WebDriverCommand::NewSession |
             WebDriverCommand::DeleteSession | WebDriverCommand::GetCurrentUrl |
             WebDriverCommand::GoBack | WebDriverCommand::GoForward | WebDriverCommand::Refresh |
             WebDriverCommand::GetTitle | WebDriverCommand::GetWindowHandle |
@@ -170,91 +212,28 @@ impl ToJson for WebDriverMessage {
             WebDriverCommand::IsSelected(_) | WebDriverCommand::GetElementAttribute(_, _) |
             WebDriverCommand::GetCSSValue(_, _) | WebDriverCommand::GetElementText(_) |
             WebDriverCommand::GetElementTagName(_) | WebDriverCommand::GetElementRect(_) |
-            WebDriverCommand::IsEnabled(_) => {
+            WebDriverCommand::IsEnabled(_) | WebDriverCommand::AddCookie(_) |
+            WebDriverCommand::DismissAlert | WebDriverCommand::AcceptAlert |
+            WebDriverCommand::GetAlertText => {
                 None
             },
             WebDriverCommand::Get(ref x) => Some(x.to_json()),
-            WebDriverCommand::Timeouts(ref x) => Some(x.to_json()),
+            WebDriverCommand::SetTimeouts(ref x) => Some(x.to_json()),
             WebDriverCommand::SetWindowSize(ref x) => Some(x.to_json()),
             WebDriverCommand::SwitchToWindow(ref x) => Some(x.to_json()),
             WebDriverCommand::SwitchToFrame(ref x) => Some(x.to_json()),
+            WebDriverCommand::FindElement(ref x) => Some(x.to_json()),
+            WebDriverCommand::FindElements(ref x) => Some(x.to_json()),
             WebDriverCommand::ExecuteScript(ref x) |
-            WebDriverCommand::ExecuteAsyncScript(ref x) => Some(x.to_json())
+            WebDriverCommand::ExecuteAsyncScript(ref x) => Some(x.to_json()),
+            WebDriverCommand::GetCookie(ref x) => Some(x.to_json()),
+            WebDriverCommand::SendAlertText(ref x) => Some(x.to_json()),
+            WebDriverCommand::TakeScreenshot(ref x) => Some(x.to_json())
         };
         if parameters.is_some() {
             data.insert("parameters".to_string(), parameters.unwrap());
         }
         json::Object(data)
-    }
-}
-
-#[deriving(PartialEq)]
-struct WebElement {
-    id: String
-}
-
-impl WebElement {
-    fn new(id: String) -> WebElement {
-        WebElement {
-            id: id
-        }
-    }
-}
-
-impl ToJson for WebElement {
-    fn to_json(&self) -> json::Json {
-        let mut data = TreeMap::new();
-        data.insert("element-6066-11e4-a52e-4f735466cecf".to_string(), self.id.to_json());
-        json::Object(data)
-    }
-}
-
-#[deriving(PartialEq)]
-enum FrameId {
-    Short(u16),
-    Element(WebElement),
-    Null
-}
-
-impl ToJson for FrameId {
-    fn to_json(&self) -> json::Json {
-        match *self {
-            FrameId::Short(x) => {
-                json::Json::U64(x as u64)
-            },
-            FrameId::Element(ref x) => {
-                json::Json::String(x.id.clone())
-            },
-            FrameId::Null => {
-                json::Json::Null
-            }
-        }
-    }
-}
-
-#[deriving(PartialEq, Clone)]
-enum Nullable<T: ToJson> {
-    Value(T),
-    Null
-}
-
-impl<T: ToJson> Nullable<T> {
-    //This is not very pretty
-    fn from_json<F: FnOnce(&json::Json) -> WebDriverResult<T>>(value: &json::Json, f: F) -> WebDriverResult<Nullable<T>> {
-        if value.is_null() {
-            Ok(Nullable::Null)
-        } else {
-            Ok(Nullable::Value(try!(f(value))))
-        }
-    }
-}
-
-impl<T:ToJson> ToJson for Nullable<T> {
-    fn to_json(&self) -> json::Json {
-        match *self {
-            Nullable::Value(ref x) => x.to_json(),
-            Nullable::Null => json::Json::Null
-        }
     }
 }
 
@@ -398,34 +377,58 @@ impl ToJson for SwitchToWindowParameters {
 }
 
 #[deriving(PartialEq)]
+struct LocatorParameters {
+    using: LocatorStrategy,
+    value: String
+}
+
+impl Parameters for LocatorParameters {
+    fn from_json(body: &json::Json) -> WebDriverResult<LocatorParameters> {
+        let data = try_opt!(body.as_object(), ErrorStatus::UnknownError,
+                            "Message body was not an object");
+
+        let using = try!(LocatorStrategy::from_json(
+            try_opt!(data.get("using"),
+                     ErrorStatus::InvalidArgument,
+                     "Missing 'using' parameter")));
+
+        let value = try_opt!(
+            try_opt!(data.get("value"),
+                     ErrorStatus::InvalidArgument,
+                     "Missing 'using' parameter").as_string(),
+            ErrorStatus::InvalidArgument,
+            "Could not convert using to string").into_string();
+
+        return Ok(LocatorParameters {
+            using: using,
+            value: value
+        })
+    }
+}
+
+impl ToJson for LocatorParameters {
+    fn to_json(&self) -> json::Json {
+        let mut data = TreeMap::new();
+        data.insert("using".to_string(), self.using.to_json());
+        data.insert("value".to_string(), self.value.to_json());
+        json::Object(data)
+    }
+}
+
+#[deriving(PartialEq)]
 struct SwitchToFrameParameters {
     id: FrameId
 }
 
 impl Parameters for SwitchToFrameParameters {
     fn from_json(body: &json::Json) -> WebDriverResult<SwitchToFrameParameters> {
-        let data = try_opt!(body.as_object(), ErrorStatus::UnknownError,
+        let data = try_opt!(body.as_object(),
+                            ErrorStatus::UnknownError,
                             "Message body was not an object");
-        let id_json = try_opt!(data.get("id"),
-                               ErrorStatus::UnknownError,
-                               "Missing 'id' parameter");
-        let id = if id_json.is_u64() {
-            let value = id_json.as_u64().unwrap();
-            if value <= u16::MAX as u64 {
-                FrameId::Short(value as u16)
-            } else {
-                return Err(WebDriverError::new(ErrorStatus::NoSuchFrame,
-                                               "frame id out of range"))
-            }
-        } else if id_json.is_null() {
-            FrameId::Null
-        } else if id_json.is_string() {
-            let value = id_json.as_string().unwrap();
-            FrameId::Element(WebElement::new(value.to_string()))
-        } else {
-            return Err(WebDriverError::new(ErrorStatus::NoSuchFrame,
-                                           "frame id has unexpected type"))
-        };
+        let id = try!(FrameId::from_json(try_opt!(data.get("id"),
+                                                  ErrorStatus::UnknownError,
+                                                  "Missing 'id' parameter")));
+
         Ok(SwitchToFrameParameters {
             id: id
         })
@@ -487,6 +490,220 @@ impl ToJson for JavascriptCommandParameters {
         data.insert("newSandbox".to_string(), false.to_json());
         data.insert("specialPowers".to_string(), false.to_json());
         data.insert("scriptTimeout".to_string(), json::Json::Null);
+        json::Object(data)
+    }
+}
+
+#[deriving(PartialEq)]
+struct GetCookieParameters {
+    name: Nullable<String>
+}
+
+impl Parameters for GetCookieParameters {
+    fn from_json(body: &json::Json) -> WebDriverResult<GetCookieParameters> {
+        let data = try_opt!(body.as_object(), ErrorStatus::UnknownError,
+                            "Message body was not an object");
+        let name_json = try_opt!(data.get("name"),
+                                 ErrorStatus::InvalidArgument,
+                                 "Missing 'name' parameter");
+        let name = try!(Nullable::from_json(
+            name_json,
+            |x| {
+                Ok(try_opt!(x.as_string(),
+                            ErrorStatus::UnknownError,
+                            "Failed to convert name to String").into_string())
+            }));
+        return Ok(GetCookieParameters {
+            name: name
+        })
+    }
+}
+
+impl ToJson for GetCookieParameters {
+    fn to_json(&self) -> json::Json {
+        let mut data = TreeMap::new();
+        data.insert("name".to_string(), self.name.to_json());
+        json::Object(data)
+    }
+}
+
+#[deriving(PartialEq)]
+struct AddCookieParameters {
+    name: String,
+    value: String,
+    path: Nullable<String>,
+    domain: Nullable<String>,
+    expiry: Nullable<Date>,
+    maxAge: Date,
+    secure: bool,
+    httpOnly: bool
+}
+
+impl Parameters for AddCookieParameters {
+    fn from_json(body: &json::Json) -> WebDriverResult<AddCookieParameters> {
+        let data = try_opt!(body.as_object(),
+                            ErrorStatus::UnknownError,
+                            "Message body was not an object");
+        let name = try_opt!(
+            try_opt!(data.get("name"),
+                     ErrorStatus::InvalidArgument,
+                     "Missing 'name' parameter").as_string(),
+            ErrorStatus::InvalidArgument,
+            "'name' is not a string").into_string();
+
+        let value = try_opt!(
+            try_opt!(data.get("value"),
+                     ErrorStatus::InvalidArgument,
+                     "Missing 'value' parameter").as_string(),
+            ErrorStatus::InvalidArgument,
+            "'value' is not a string").into_string();
+
+        let path = match data.get("path") {
+            Some(path_json) => {
+                try!(Nullable::from_json(
+                    path_json,
+                    |x| {
+                        Ok(try_opt!(x.as_string(),
+                                    ErrorStatus::UnknownError,
+                                    "Failed to convert path to String").into_string())
+                    }))
+            },
+            None => Nullable::Null
+        };
+
+        let domain = match data.get("domain") {
+            Some(domain_json) => {
+                try!(Nullable::from_json(
+                    domain_json,
+                    |x| {
+                        Ok(try_opt!(x.as_string(),
+                                    ErrorStatus::UnknownError,
+                                    "Failed to convert domain to String").into_string())
+                    }))
+            },
+            None => Nullable::Null
+        };
+
+        //TODO: This is supposed to support some text format
+        let expiry = match data.get("expiry") {
+            Some(expiry_json) => {
+                try!(Nullable::from_json(
+                    expiry_json,
+                    |x| {
+                        Ok(Date::new(try_opt!(x.as_u64(),
+                                              ErrorStatus::UnknownError,
+                                              "Failed to convert expiry to Date")))
+                    }))
+            },
+            None => Nullable::Null
+        };
+
+        let max_age = Date::new(try_opt!(
+            try_opt!(data.get("maxAge"),
+                     ErrorStatus::InvalidArgument,
+                     "Missing 'maxAge' parameter").as_u64(),
+            ErrorStatus::InvalidArgument,
+            "'value' is not a string"));
+
+        let secure = match data.get("secure") {
+            Some(x) => try_opt!(x.as_boolean(),
+                                ErrorStatus::UnknownError,
+                                "Failed to convert secure to boolean"),
+            None => false
+        };
+
+        let http_only = match data.get("httpOnly") {
+            Some(x) => try_opt!(x.as_boolean(),
+                                ErrorStatus::UnknownError,
+                                "Failed to convert httpOnly to boolean"),
+            None => false
+        };
+
+        return Ok(AddCookieParameters {
+            name: name,
+            value: value,
+            path: path,
+            domain: domain,
+            expiry: expiry,
+            maxAge: max_age,
+            secure: secure,
+            httpOnly: http_only
+        })
+    }
+}
+
+impl ToJson for AddCookieParameters {
+    fn to_json(&self) -> json::Json {
+        let mut data = TreeMap::new();
+        data.insert("name".to_string(), self.name.to_json());
+        data.insert("value".to_string(), self.value.to_json());
+        data.insert("path".to_string(), self.path.to_json());
+        data.insert("domain".to_string(), self.domain.to_json());
+        data.insert("expiry".to_string(), self.expiry.to_json());
+        data.insert("maxAge".to_string(), self.maxAge.to_json());
+        data.insert("secure".to_string(), self.secure.to_json());
+        data.insert("httpOnly".to_string(), self.httpOnly.to_json());
+        json::Object(data)
+    }
+}
+
+#[deriving(PartialEq)]
+struct SendAlertTextParameters {
+    keysToSend: String
+}
+
+impl Parameters for SendAlertTextParameters {
+    fn from_json(body: &json::Json) -> WebDriverResult<SendAlertTextParameters> {
+        let data = try_opt!(body.as_object(), ErrorStatus::UnknownError,
+                            "Message body was not an object");
+        let keys = try_opt!(
+            try_opt!(data.get("keysToSend"),
+                     ErrorStatus::InvalidArgument,
+                     "Missing 'handle' parameter").as_string(),
+            ErrorStatus::InvalidArgument,
+            "'keysToSend' not a string").into_string();
+        return Ok(SendAlertTextParameters {
+            keysToSend: keys
+        })
+    }
+}
+
+impl ToJson for SendAlertTextParameters {
+    fn to_json(&self) -> json::Json {
+        let mut data = TreeMap::new();
+        data.insert("keysToSend".to_string(), self.keysToSend.to_json());
+        json::Object(data)
+    }
+}
+
+#[deriving(PartialEq)]
+struct TakeScreenshotParameters {
+    element: Nullable<WebElement>
+}
+
+impl Parameters for TakeScreenshotParameters {
+    fn from_json(body: &json::Json) -> WebDriverResult<TakeScreenshotParameters> {
+        let data = try_opt!(body.as_object(), ErrorStatus::UnknownError,
+                            "Message body was not an object");
+        let element = match data.get("element") {
+            Some(element_json) => try!(Nullable::from_json(
+                element_json,
+                |x| {
+                    Ok(try!(WebElement::from_json(x)))
+                })),
+            None => Nullable::Null
+        };
+
+        return Ok(TakeScreenshotParameters {
+            element: element
+        })
+    }
+}
+
+impl ToJson for TakeScreenshotParameters {
+    fn to_json(&self) -> json::Json {
+        let mut data = TreeMap::new();
+        data.insert("element".to_string(), self.element.to_json());
         json::Object(data)
     }
 }
