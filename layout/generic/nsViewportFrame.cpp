@@ -252,18 +252,16 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
     }
 
     nsRect rect = AdjustReflowStateAsContainingBlock(&reflowState);
-
-    // Just reflow all the fixed-pos frames.
-    GetAbsoluteContainingBlock()->Reflow(this, aPresContext, reflowState, aStatus,
-                                         rect,
-                                         false, true, true, // XXX could be optimized
-                                         &aDesiredSize.mOverflowAreas);
-
+    nsOverflowAreas* overflowAreas = &aDesiredSize.mOverflowAreas;
     nsIScrollableFrame* rootScrollFrame =
                     aPresContext->PresShell()->GetRootScrollFrameAsScrollable();
     if (rootScrollFrame && !rootScrollFrame->IsIgnoringViewportClipping()) {
-      aDesiredSize.SetOverflowAreasToDesiredBounds();
+      overflowAreas = nullptr;
     }
+    GetAbsoluteContainingBlock()->Reflow(this, aPresContext, reflowState, aStatus,
+                                         rect,
+                                         false, true, true, // XXX could be optimized
+                                         overflowAreas);
   }
 
   if (mFrames.NotEmpty()) {
