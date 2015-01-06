@@ -1492,8 +1492,9 @@ class AsmJSActivation : public Activation
     static unsigned offsetOfFP() { return offsetof(AsmJSActivation, fp_); }
     static unsigned offsetOfExitReason() { return offsetof(AsmJSActivation, exitReason_); }
 
-    // Set from SIGSEGV handler:
+    // Read/written from SIGSEGV handler:
     void setResumePC(void *pc) { resumePC_ = pc; }
+    void *resumePC() const { return resumePC_; }
 };
 
 // A FrameIter walks over the runtime's stack of JS script activations,
