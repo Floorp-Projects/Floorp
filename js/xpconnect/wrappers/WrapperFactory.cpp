@@ -382,8 +382,7 @@ SelectAddonWrapper(JSContext *cx, HandleObject obj, const Wrapper *wrapper)
 }
 
 JSObject *
-WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
-                       HandleObject parent)
+WrapperFactory::Rewrap(JSContext *cx, HandleObject obj, HandleObject parent)
 {
     MOZ_ASSERT(!IsWrapper(obj) ||
                GetProxyHandler(obj) == &XrayWaiver ||
@@ -495,9 +494,6 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
     }
 
     DEBUG_CheckUnwrapSafety(obj, wrapper, origin, target);
-
-    if (existing)
-        return Wrapper::Renew(cx, existing, obj, wrapper);
 
     return Wrapper::New(cx, obj, parent, wrapper);
 }
