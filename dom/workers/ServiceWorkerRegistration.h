@@ -34,7 +34,7 @@ public:
                             const nsAString& aScope);
 
   JSObject*
-  WrapObject(JSContext* aCx);
+  WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   already_AddRefed<workers::ServiceWorker>
   GetInstalling();
