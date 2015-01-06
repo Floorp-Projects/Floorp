@@ -48,6 +48,10 @@ UNIFIED_SOURCES += [
     'SVGViewFrame.cpp',
 ]
 
+if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
+    SOURCES += ['nsSVGMaskFrameNEON.cpp']
+    SOURCES['nsSVGMaskFrameNEON.cpp'].flags += ['-mfpu=neon']
+
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'xul'
