@@ -197,6 +197,10 @@ DebuggerMemory::drainAllocationsLog(JSContext *cx, unsigned argc, Value *vp)
         if (!obj)
             return false;
 
+        // Don't pop the AllocationSite yet. The queue's links are followed by
+        // the GC to find the AllocationSite, but are not barried, so we must
+        // edit them with great care. Use the queue entry in place, and then
+        // pop and delete together.
         Debugger::AllocationSite *allocSite = dbg->allocationsLog.getFirst();
         RootedValue frame(cx, ObjectOrNullValue(allocSite->frame));
         if (!JSObject::defineProperty(cx, obj, cx->names().frame, frame))
@@ -208,6 +212,9 @@ DebuggerMemory::drainAllocationsLog(JSContext *cx, unsigned argc, Value *vp)
 
         result->setDenseElement(i, ObjectValue(*obj));
 
+        // Pop the front queue entry, and delete it immediately, so that
+        // the GC sees the AllocationSite's RelocatablePtr barriers run
+        // atomically with the change to the graph (the queue link).
         MOZ_ALWAYS_TRUE(dbg->allocationsLog.popFirst() == allocSite);
         js_delete(allocSite);
     }
