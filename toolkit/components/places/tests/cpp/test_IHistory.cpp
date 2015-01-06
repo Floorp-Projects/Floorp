@@ -75,7 +75,7 @@ public:
 
   NS_IMETHOD Observe(nsISupports* aSubject,
                      const char* aTopic,
-                     const char16_t* aData)
+                     const char16_t* aData) MOZ_OVERRIDE
   {
     mVisits++;
 
@@ -329,7 +329,7 @@ namespace test_observer_topic_dispatched_helpers {
 
     NS_IMETHOD Observe(nsISupports* aSubject,
                        const char* aTopic,
-                       const char16_t* aData)
+                       const char16_t* aData) MOZ_OVERRIDE
     {
       // Make sure we got notified of the right topic.
       do_check_false(strcmp(aTopic, URI_VISITED_RESOLUTION_TOPIC));

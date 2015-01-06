@@ -34,7 +34,7 @@ public:
     mDeathGrip = this;
   }
 
-  virtual void SetLinkState(nsLinkState aState)
+  virtual void SetLinkState(nsLinkState aState) MOZ_OVERRIDE
   {
     // Notify our callback function.
     mHandler(aState);
@@ -43,7 +43,7 @@ public:
     mDeathGrip = 0;
   }
 
-  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
   {
     return 0;   // the value shouldn't matter
   }
