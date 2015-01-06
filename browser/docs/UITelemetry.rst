@@ -38,6 +38,9 @@ This tracks the state of the user's UI customizations. It has the following prop
      objects, where each object has a ``duration`` property indicating the time in milliseconds,
      and a ``bucket`` property indicating a bucket in which the duration info falls.
 
+
+.. _UITelemetry_countableEvents:
+
 ``countableEvents``
 -------------------
 
@@ -45,8 +48,13 @@ Countable events are stored under the ``toolbars`` section. They count the numbe
 events happen. No timing or other correlating information is stored - purely the number of times
 things happen.
 
-``countableEvents`` is an object with properties representing buckets. In each bucket, there is an
-object with the following properties:
+``countableEvents`` contains a list of buckets as its properties. A bucket represents the state the browser was in when these events occurred, such as currently running an interactive tour. There are 3 types of buckets:
+
+- ``__DEFAULT__`` - No bucket, for times when the browser is not in any special state.
+- ``bucket_<NAME>`` - Normal buckets, for when the browser is in a special state. The ``<NAME>`` in the bucket ID is the name associated with the bucket and may be further broken down into parts by the ``|`` character.
+- ``bucket_<NAME>|<INTERVAL>`` - Expiring buckets, which are similar to a countdown timer. The ``<INTERVAL>`` in the bucket ID describes the time interval the recorded event happened in. The intervals are ``1m`` (one minute), ``3m`` (three minutes), ``10m`` (ten minutes), and ``1h`` (one hour). After one hour, the ``__DEFAULT__`` bucket is automatically used again.
+
+Each bucket is an object with the following properties:
 
 - ``click-builtin-item`` is an object tracking clicks on builtin customizable toolbar items, keyed
   off the item IDs, with an object for each item with keys ``left``, ``middle`` and ``right`` each
@@ -86,8 +94,17 @@ object with the following properties:
 
 ``UITour``
 ----------
-The UI Tour has its own section in the UI Telemetry output, outside of the ``toolbars`` section.
-It has a single property ``seenPageIDs`` which tracks which UI Tour pages have been run.
+The UITour API provides ways for pages on trusted domains to safely interact with the browser UI and request it to perform actions such as opening menus and showing highlights over the browser chrome - for the purposes of interactive tours. We track some usage of this API via the ``UITour`` object in the UI Telemetry output.
+
+Each page is able to register itself with an identifier, a ``Page ID``. A list of Page IDs that have been seen over the last 8 weeks is available via ``seenPageIDs``.
+
+Page IDs are also used to identify buckets for :ref:`UITelemetry_countableEvents`, in the following circumstances:
+
+- The current tab is a tour page. This will be a normal bucket with the name ``UITour|<PAGEID>``, where ``<PAGEID>`` is the page's registered ID. This will result in bucket IDs such as ``bucket_UITour|australis-tour``.
+- A tour tab is open but another tab is active. This will be an expiring bucket with the name ``UITour|<PAGEID>|inactive``. This will result in bucket IDs such as ``bucket_UITour|australis-tour|inactive|1m``.
+- A tour tab has recently been open but has been closed. This will be an expiring bucket with the name ``UITour|<PAGEID>|closed``. This will result in bucket IDs such as ``bucket_UITour|australis-tour|closed|10m``.
+
+
 
 ``contextmenu``
 ---------------
@@ -115,4 +132,3 @@ there are four special items which get counts:
 - ``custom-page-item`` is incremented when the user clicks an item that was created by the page;
 - ``unknown`` is incremented when an item without an ID was clicked;
 - ``other-item`` is incremented when an add-on-provided menuitem is clicked.
-
