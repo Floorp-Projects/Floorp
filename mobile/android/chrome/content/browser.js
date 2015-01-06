@@ -109,9 +109,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "SharedPreferences",
 XPCOMUtils.defineLazyModuleGetter(this, "Notifications",
                                   "resource://gre/modules/Notifications.jsm");
 
-// XXX: Make this into a module?
-Services.scriptloader.loadSubScript("chrome://browser/content/Reader.js", this);
-
 XPCOMUtils.defineLazyModuleGetter(this, "GMPInstallManager",
                                   "resource://gre/modules/GMPInstallManager.jsm");
 
@@ -149,6 +146,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "GMPInstallManager",
   ["Feedback", ["Feedback:Show"], "chrome://browser/content/Feedback.js"],
   ["SelectionHandler", ["TextSelection:Get"], "chrome://browser/content/SelectionHandler.js"],
   ["EmbedRT", ["GeckoView:ImportScript"], "chrome://browser/content/EmbedRT.js"],
+  ["Reader", ["Reader:Added", "Reader:Removed", "Gesture:DoubleTap"], "chrome://browser/content/Reader.js"],
 ].forEach(function (aScript) {
   let [name, notifications, script] = aScript;
   XPCOMUtils.defineLazyGetter(window, name, function() {
@@ -163,6 +161,39 @@ XPCOMUtils.defineLazyModuleGetter(this, "GMPInstallManager",
   };
   notifications.forEach((notification) => {
     Services.obs.addObserver(observer, notification, false);
+  });
+});
+
+// Lazily-loaded browser scripts that use message listeners.
+[
+  ["Reader", [
+    "Reader:AddToList",
+    "Reader:ArticleGet",
+    "Reader:FaviconRequest",
+    "Reader:ListStatusRequest",
+    "Reader:RemoveFromList",
+    "Reader:Share",
+    "Reader:ShowToast",
+    "Reader:ToolbarVisibility",
+    "Reader:SystemUIVisibility",
+    "Reader:UpdateIsArticle",
+  ], "chrome://browser/content/Reader.js"],
+].forEach(aScript => {
+  let [name, messages, script] = aScript;
+  XPCOMUtils.defineLazyGetter(window, name, function() {
+    let sandbox = {};
+    Services.scriptloader.loadSubScript(script, sandbox);
+    return sandbox[name];
+  });
+
+  let mm = window.getGroupMessageManager("browsers");
+  let listener = (message) => {
+    mm.removeMessageListener(message.name, listener);
+    mm.addMessageListener(message.name, window[name]);
+    window[name].receiveMessage(message);
+  };
+  messages.forEach((message) => {
+    mm.addMessageListener(message, listener);
   });
 });
 
@@ -453,7 +484,6 @@ var BrowserApp = {
 #ifdef NIGHTLY_BUILD
     ShumwayUtils.init();
 #endif
-    Reader.init();
 
     let url = null;
     let pinned = false;
