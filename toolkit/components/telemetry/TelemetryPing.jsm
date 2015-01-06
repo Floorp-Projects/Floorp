@@ -18,8 +18,8 @@ Cu.import("resource://gre/modules/LightweightThemeManager.jsm", this);
 #endif
 Cu.import("resource://gre/modules/ThirdPartyCookieProbe.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
-Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/AsyncShutdown.jsm", this);
+Cu.import("resource://gre/modules/DeferredTask.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
 
 // When modifying the payload in incompatible ways, please bump this version number
@@ -968,47 +968,41 @@ let Impl = {
     // Delay full telemetry initialization to give the browser time to
     // run various late initializers. Otherwise our gathered memory
     // footprint and other numbers would be too optimistic.
-    this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     let deferred = Promise.defer();
+    let delayedTask = new DeferredTask(function* () {
+      this._initialized = true;
 
-    function timerCallback() {
-      Task.spawn(function*(){
-        this._initialized = true;
+      yield TelemetryFile.loadSavedPings();
+      // If we have any TelemetryPings lying around, we'll be aggressive
+      // and try to send them all off ASAP.
+      if (TelemetryFile.pingsOverdue > 0) {
+        // It doesn't really matter what we pass to this.send as a reason,
+        // since it's never sent to the server. All that this.send does with
+        // the reason is check to make sure it's not a test-ping.
+        yield this.send("overdue-flush", this._server);
+      }
 
-        yield TelemetryFile.loadSavedPings();
-        // If we have any TelemetryPings lying around, we'll be aggressive
-        // and try to send them all off ASAP.
-        if (TelemetryFile.pingsOverdue > 0) {
-          // It doesn't really matter what we pass to this.send as a reason,
-          // since it's never sent to the server. All that this.send does with
-          // the reason is check to make sure it's not a test-ping.
-          yield this.send("overdue-flush", this._server);
-        }
+      if ("@mozilla.org/datareporting/service;1" in Cc) {
+        let drs = Cc["@mozilla.org/datareporting/service;1"]
+                    .getService(Ci.nsISupports)
+                    .wrappedJSObject;
+        this._clientID = yield drs.getClientID();
+        // Update cached client id.
+        Preferences.set(PREF_CACHED_CLIENTID, this._clientID);
+      } else {
+        // Nuke potentially cached client id.
+        Preferences.reset(PREF_CACHED_CLIENTID);
+      }
 
-        if ("@mozilla.org/datareporting/service;1" in Cc) {
-          let drs = Cc["@mozilla.org/datareporting/service;1"]
-                      .getService(Ci.nsISupports)
-                      .wrappedJSObject;
-          this._clientID = yield drs.getClientID();
-          // Update cached client id.
-          Preferences.set(PREF_CACHED_CLIENTID, this._clientID);
-        } else {
-          // Nuke potentially cached client id.
-          Preferences.reset(PREF_CACHED_CLIENTID);
-        }
+      this.attachObservers();
+      this.gatherMemory();
 
-        this.attachObservers();
-        this.gatherMemory();
+      Telemetry.asyncFetchTelemetryData(function () {});
+      deferred.resolve();
 
-        Telemetry.asyncFetchTelemetryData(function () {});
-        delete this._timer;
-        deferred.resolve();
-      }.bind(this));
-    }
+    }.bind(this), aTesting ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
 
-    this._timer.initWithCallback(timerCallback.bind(this),
-                                 aTesting ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY,
-                                 Ci.nsITimer.TYPE_ONE_SHOT);
+    delayedTask.arm();
     return deferred.promise;
   },
 
