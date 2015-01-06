@@ -132,8 +132,12 @@
         // In non-instant apply mode, we must try and use the last saved state
         // from any previous opens of a child dialog instead of the value from
         // preferences, to pick up any edits a user may have made. 
+
+        var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                    .getService(Components.interfaces.nsIScriptSecurityManager);
         if (this.preferences.type == "child" && 
-            !this.instantApply && window.opener) {
+            !this.instantApply && window.opener &&
+            secMan.isSystemPrincipal(window.opener.document.nodePrincipal)) {
           var pdoc = window.opener.document;
 
           // Try to find a preference element for the same preference.
@@ -1053,7 +1057,10 @@
           return false;
         }
 
-        if (this.type == "child" && window.opener) {
+        var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                    .getService(Components.interfaces.nsIScriptSecurityManager);
+        if (this.type == "child" && window.opener &&
+            secMan.isSystemPrincipal(window.opener.document.nodePrincipal)) {
           var psvc = Components.classes["@mozilla.org/preferences-service;1"]
                                .getService(Components.interfaces.nsIPrefBranch);
           var instantApply = psvc.getBoolPref("browser.preferences.instantApply");

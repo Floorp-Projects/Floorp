@@ -32,6 +32,7 @@
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
+#include "TimelineMarker.h"
 
 // Threshold value in ms for META refresh based redirects
 #define REFRESH_REDIRECT_TIMER 15000
@@ -259,125 +260,6 @@ public:
     // Notify Scroll observers when an async panning/zooming transform
     // is no longer applied
     void NotifyAsyncPanZoomStopped(const mozilla::CSSIntPoint aScrollPos);
-
-    // Objects of this type can be added to the timeline.  The class
-    // can also be subclassed to let a given marker creator provide
-    // custom details.
-    class TimelineMarker
-    {
-    public:
-        TimelineMarker(nsDocShell* aDocShell, const char* aName,
-                       TracingMetadata aMetaData)
-            : mName(aName)
-            , mMetaData(aMetaData)
-        {
-            MOZ_COUNT_CTOR(TimelineMarker);
-            MOZ_ASSERT(aName);
-            aDocShell->Now(&mTime);
-            if (aMetaData == TRACING_INTERVAL_START) {
-                CaptureStack();
-            }
-        }
-
-        TimelineMarker(nsDocShell* aDocShell, const char* aName,
-                       TracingMetadata aMetaData,
-                       const nsAString& aCause)
-            : mName(aName)
-            , mMetaData(aMetaData)
-            , mCause(aCause)
-        {
-            MOZ_COUNT_CTOR(TimelineMarker);
-            MOZ_ASSERT(aName);
-            aDocShell->Now(&mTime);
-            if (aMetaData == TRACING_INTERVAL_START) {
-                CaptureStack();
-            }
-        }
-
-        virtual ~TimelineMarker()
-        {
-            MOZ_COUNT_DTOR(TimelineMarker);
-        }
-
-        // Check whether two markers should be considered the same,
-        // for the purpose of pairing start and end markers.  Normally
-        // this definition suffices.
-        virtual bool Equals(const TimelineMarker* other)
-        {
-            return strcmp(mName, other->mName) == 0;
-        }
-
-        // Add details specific to this marker type to aMarker.  The
-        // standard elements have already been set.  This method is
-        // called on both the starting and ending markers of a pair.
-        // Ordinarily the ending marker doesn't need to do anything
-        // here.
-        virtual void AddDetails(mozilla::dom::ProfileTimelineMarker& aMarker)
-        {
-        }
-
-        virtual void AddLayerRectangles(mozilla::dom::Sequence<mozilla::dom::ProfileTimelineLayerRect>&)
-        {
-            MOZ_ASSERT_UNREACHABLE("can only be called on layer markers");
-        }
-
-        const char* GetName() const
-        {
-            return mName;
-        }
-
-        TracingMetadata GetMetaData() const
-        {
-            return mMetaData;
-        }
-
-        DOMHighResTimeStamp GetTime() const
-        {
-            return mTime;
-        }
-
-        const nsString& GetCause() const
-        {
-            return mCause;
-        }
-
-        JSObject* GetStack()
-        {
-            if (mStackTrace) {
-                return mStackTrace->get();
-            }
-            return nullptr;
-        }
-
-    protected:
-
-        void CaptureStack()
-        {
-            JSContext* ctx = nsContentUtils::GetCurrentJSContext();
-            if (ctx) {
-                JS::RootedObject stack(ctx);
-                if (JS::CaptureCurrentStack(ctx, &stack)) {
-                    mStackTrace.emplace(ctx, stack.get());
-                } else {
-                    JS_ClearPendingException(ctx);
-                }
-            }
-        }
-
-    private:
-
-        const char* mName;
-        TracingMetadata mMetaData;
-        DOMHighResTimeStamp mTime;
-        nsString mCause;
-
-        // While normally it is not a good idea to make a persistent
-        // root, in this case changing nsDocShell to participate in
-        // cycle collection was deemed too invasive, the stack trace
-        // can't actually cause a cycle, and the markers are only held
-        // here temporarily to boot.
-        mozilla::Maybe<JS::PersistentRooted<JSObject*>> mStackTrace;
-    };
 
     // Add new profile timeline markers to this docShell. This will only add
     // markers if the docShell is currently recording profile timeline markers.

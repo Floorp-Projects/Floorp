@@ -42,6 +42,8 @@ EXTRA_JS_MODULES.devtools.server.actors += [
     'actors/common.js',
     'actors/csscoverage.js',
     'actors/device.js',
+    'actors/director-manager.js',
+    'actors/director-registry.js',
     'actors/eventlooplag.js',
     'actors/framerate.js',
     'actors/gcli.js',
