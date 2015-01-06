@@ -165,6 +165,8 @@ public:
   void ShutdownReader();
   void FinishShutdown();
 
+  bool IsRealTime() const;
+
   // Called from the main thread to get the duration. The decoder monitor
   // must be obtained before calling this. It is in units of microseconds.
   int64_t GetDuration();
