@@ -367,6 +367,23 @@ WebConsoleClient.prototype = {
   },
 
   /**
+   * Retrieve the security information for the given NetworkEventActor.
+   *
+   * @param string aActor
+   *        The NetworkEventActor ID.
+   * @param function aOnResponse
+   *        The function invoked when the response is received.
+   */
+  getSecurityInfo: function WCC_getSecurityInfo(aActor, aOnResponse)
+  {
+    let packet = {
+      to: aActor,
+      type: "getSecurityInfo",
+    };
+    this._client.request(packet, aOnResponse);
+  },
+
+  /**
    * Send a HTTP request with the given data.
    *
    * @param string aData

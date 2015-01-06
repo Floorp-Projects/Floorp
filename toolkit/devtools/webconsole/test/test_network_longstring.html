@@ -114,6 +114,11 @@ function onNetworkEventUpdate(aState, aType, aPacket)
         },
       };
       break;
+    case "securityInfo":
+      expectedPacket = {
+        state: "insecure",
+      };
+      break;
     case "responseCookies":
       expectedPacket = {
         cookies: 0,
