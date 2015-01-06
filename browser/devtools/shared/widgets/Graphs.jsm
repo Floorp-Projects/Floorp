@@ -5,13 +5,10 @@
 
 const Cu = Components.utils;
 
-const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js", {});
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
-
-const {getColor} = require("devtools/shared/theme");
 
 this.EXPORTED_SYMBOLS = [
   "AbstractCanvasGraph",
@@ -79,7 +76,7 @@ const BAR_GRAPH_MIN_BARS_WIDTH = 5; // px
 const BAR_GRAPH_MIN_BLOCKS_HEIGHT = 1; // px
 
 const BAR_GRAPH_BACKGROUND_GRADIENT_START = "rgba(0,136,204,0.0)";
-const BAR_GRAPH_BACKGROUND_GRADIENT_END = "rgba(255,255,255,0.1)";
+const BAR_GRAPH_BACKGROUND_GRADIENT_END = "rgba(255,255,255,0.25)";
 
 const BAR_GRAPH_CLIPHEAD_LINE_COLOR = "#666";
 const BAR_GRAPH_SELECTION_LINE_COLOR = "#555";
@@ -1558,7 +1555,6 @@ this.BarGraphWidget = function(parent, ...args) {
   // when this graph is being destroyed.
   this.outstandingEventListeners = [];
 
-  this.setTheme();
   this.once("ready", () => {
     this._onLegendMouseOver = this._onLegendMouseOver.bind(this);
     this._onLegendMouseOut = this._onLegendMouseOut.bind(this);
@@ -1576,8 +1572,6 @@ this.BarGraphWidget = function(parent, ...args) {
 };
 
 BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
-  backgroundGradientStart: BAR_GRAPH_BACKGROUND_GRADIENT_START,
-  backgroundGradientEnd: BAR_GRAPH_BACKGROUND_GRADIENT_END,
   clipheadLineColor: BAR_GRAPH_CLIPHEAD_LINE_COLOR,
   selectionLineColor: BAR_GRAPH_SELECTION_LINE_COLOR,
   selectionBackgroundColor: BAR_GRAPH_SELECTION_BACKGROUND_COLOR,
@@ -1623,13 +1617,9 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     let width = this._width;
     let height = this._height;
 
-    // Draw the background.
-    ctx.fillStyle = this.backgroundColor;
-    ctx.fillRect(0, 0, width, height);
-
     let gradient = ctx.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, this.backgroundGradientStart);
-    gradient.addColorStop(1, this.backgroundGradientEnd);
+    gradient.addColorStop(0, BAR_GRAPH_BACKGROUND_GRADIENT_START);
+    gradient.addColorStop(1, BAR_GRAPH_BACKGROUND_GRADIENT_END);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
 
@@ -1946,16 +1936,6 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   _onLegendMouseUp: function(e) {
     e.preventDefault();
     e.stopPropagation();
-  },
-
-  /**
-   * Sets the theme via `theme` to either "light" or "dark",
-   * and updates the internal styling to match. Requires a redraw
-   * to see the effects.
-   */
-  setTheme: function (theme) {
-    theme = theme || "light";
-    this.backgroundColor = getColor("body-background", theme);
   }
 });
 
