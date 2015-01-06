@@ -255,6 +255,7 @@ class FunctionBox : public ObjectBox, public SharedContext
     // Fields for use in heuristics.
     bool            usesArguments:1;  /* contains a free use of 'arguments' */
     bool            usesApply:1;      /* contains an f.apply() call */
+    bool            usesThis:1;       /* contains 'this' */
 
     FunctionContextFlags funCxFlags;
 

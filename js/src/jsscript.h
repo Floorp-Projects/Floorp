@@ -969,8 +969,8 @@ class JSScript : public js::gc::TenuredCell
     // Set for functions defined at the top level within an 'eval' script.
     bool directlyInsideEval_:1;
 
-    // Both 'arguments' and f.apply() are used. This is likely to be a wrapper.
-    bool usesArgumentsAndApply_:1;
+    // 'this', 'arguments' and f.apply() are used. This is likely to be a wrapper.
+    bool usesArgumentsApplyAndThis_:1;
 
     /* script is attempted to be cloned anew at each callsite. This is
        temporarily needed for ParallelArray selfhosted code until type
@@ -1197,10 +1197,10 @@ class JSScript : public js::gc::TenuredCell
     void setActiveEval() { isActiveEval_ = true; }
     void setDirectlyInsideEval() { directlyInsideEval_ = true; }
 
-    bool usesArgumentsAndApply() const {
-        return usesArgumentsAndApply_;
+    bool usesArgumentsApplyAndThis() const {
+        return usesArgumentsApplyAndThis_;
     }
-    void setUsesArgumentsAndApply() { usesArgumentsAndApply_ = true; }
+    void setUsesArgumentsApplyAndThis() { usesArgumentsApplyAndThis_ = true; }
 
     bool shouldCloneAtCallsite() const {
         return shouldCloneAtCallsite_;
@@ -1894,7 +1894,7 @@ class LazyScript : public gc::TenuredCell
         uint32_t bindingsAccessedDynamically : 1;
         uint32_t hasDebuggerStatement : 1;
         uint32_t directlyInsideEval : 1;
-        uint32_t usesArgumentsAndApply : 1;
+        uint32_t usesArgumentsApplyAndThis : 1;
         uint32_t hasBeenCloned : 1;
         uint32_t treatAsRunOnce : 1;
     };
@@ -2025,11 +2025,11 @@ class LazyScript : public gc::TenuredCell
         p_.directlyInsideEval = true;
     }
 
-    bool usesArgumentsAndApply() const {
-        return p_.usesArgumentsAndApply;
+    bool usesArgumentsApplyAndThis() const {
+        return p_.usesArgumentsApplyAndThis;
     }
-    void setUsesArgumentsAndApply() {
-        p_.usesArgumentsAndApply = true;
+    void setUsesArgumentsApplyAndThis() {
+        p_.usesArgumentsApplyAndThis = true;
     }
 
     bool hasBeenCloned() const {
