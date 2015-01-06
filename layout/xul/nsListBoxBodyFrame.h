@@ -24,7 +24,7 @@ class nsListBoxBodyFrame MOZ_FINAL : public nsBoxFrame,
                                      public nsIScrollbarMediator,
                                      public nsIReflowCallback
 {
-  nsListBoxBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
+  nsListBoxBodyFrame(nsStyleContext* aContext,
                      nsBoxLayout* aLayoutManager);
   virtual ~nsListBoxBodyFrame();
 
