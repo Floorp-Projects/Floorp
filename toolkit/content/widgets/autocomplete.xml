@@ -1591,6 +1591,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           this._titleBox.flex = 1;
 
           this.removeAttribute("actiontype");
+          this.classList.remove("overridable-action");
 
           // The ellipses are hidden via their visibility so that they always
           // take up space and don't pop in on top of text when shown.  For
@@ -1607,6 +1608,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             this.setAttribute("actiontype", action.type);
 
             if (action.type == "switchtab") {
+              this.classList.add("overridable-action");
               displayUrl = action.params.url;
               let desc = this._stringBundle.GetStringFromName("switchToTab");
               this._setUpDescription(this._action, desc, true);
@@ -1719,7 +1721,8 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               this._setUpDescription(this._extra, params);
 
               // Don't emphasize keyword searches in the title or url
-              this.setAttribute("text", "");
+              emphasiseUrl = false;
+              emphasiseTitle = false;
             } else {
               // Don't show any description for non keyword types.
               this._setUpDescription(this._extra, "", true);

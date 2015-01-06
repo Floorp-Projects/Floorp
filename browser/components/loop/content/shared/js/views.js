@@ -23,7 +23,7 @@ loop.shared.views = (function(_, OT, l10n) {
    * - {Function} action  Function to be executed on click.
    * - {Enabled}  enabled Stream activation status (default: true).
    */
-  var MediaControlButton = React.createClass({displayName: 'MediaControlButton',
+  var MediaControlButton = React.createClass({displayName: "MediaControlButton",
     propTypes: {
       scope: React.PropTypes.string.isRequired,
       type: React.PropTypes.string.isRequired,
@@ -64,7 +64,7 @@ loop.shared.views = (function(_, OT, l10n) {
     render: function() {
       return (
         /* jshint ignore:start */
-        React.DOM.button({className: this._getClasses(), 
+        React.createElement("button", {className: this._getClasses(), 
                 title: this._getTitle(), 
                 onClick: this.handleClick})
         /* jshint ignore:end */
@@ -75,7 +75,7 @@ loop.shared.views = (function(_, OT, l10n) {
   /**
    * Conversation controls.
    */
-  var ConversationToolbar = React.createClass({displayName: 'ConversationToolbar',
+  var ConversationToolbar = React.createClass({displayName: "ConversationToolbar",
     getDefaultProps: function() {
       return {
         video: {enabled: true, visible: true},
@@ -112,22 +112,22 @@ loop.shared.views = (function(_, OT, l10n) {
     render: function() {
       var cx = React.addons.classSet;
       return (
-        React.DOM.ul({className: "conversation-toolbar"}, 
-          React.DOM.li({className: "conversation-toolbar-btn-box btn-hangup-entry"}, 
-            React.DOM.button({className: "btn btn-hangup", onClick: this.handleClickHangup, 
+        React.createElement("ul", {className: "conversation-toolbar"}, 
+          React.createElement("li", {className: "conversation-toolbar-btn-box btn-hangup-entry"}, 
+            React.createElement("button", {className: "btn btn-hangup", onClick: this.handleClickHangup, 
                     title: l10n.get("hangup_button_title"), 
                     disabled: !this.props.enableHangup}, 
               this._getHangupButtonLabel()
             )
           ), 
-          React.DOM.li({className: "conversation-toolbar-btn-box"}, 
-            MediaControlButton({action: this.handleToggleVideo, 
+          React.createElement("li", {className: "conversation-toolbar-btn-box"}, 
+            React.createElement(MediaControlButton, {action: this.handleToggleVideo, 
                                 enabled: this.props.video.enabled, 
                                 visible: this.props.video.visible, 
                                 scope: "local", type: "video"})
           ), 
-          React.DOM.li({className: "conversation-toolbar-btn-box"}, 
-            MediaControlButton({action: this.handleToggleAudio, 
+          React.createElement("li", {className: "conversation-toolbar-btn-box"}, 
+            React.createElement(MediaControlButton, {action: this.handleToggleAudio, 
                                 enabled: this.props.audio.enabled, 
                                 visible: this.props.audio.visible, 
                                 scope: "local", type: "audio"})
@@ -140,7 +140,7 @@ loop.shared.views = (function(_, OT, l10n) {
   /**
    * Conversation view.
    */
-  var ConversationView = React.createClass({displayName: 'ConversationView',
+  var ConversationView = React.createClass({displayName: "ConversationView",
     mixins: [Backbone.Events, sharedMixins.AudioMixin],
 
     propTypes: {
@@ -324,15 +324,15 @@ loop.shared.views = (function(_, OT, l10n) {
       });
       /* jshint ignore:start */
       return (
-        React.DOM.div({className: "video-layout-wrapper"}, 
-          React.DOM.div({className: "conversation"}, 
-            React.DOM.div({className: "media nested"}, 
-              React.DOM.div({className: "video_wrapper remote_wrapper"}, 
-                React.DOM.div({className: "video_inner remote"})
+        React.createElement("div", {className: "video-layout-wrapper"}, 
+          React.createElement("div", {className: "conversation"}, 
+            React.createElement("div", {className: "media nested"}, 
+              React.createElement("div", {className: "video_wrapper remote_wrapper"}, 
+                React.createElement("div", {className: "video_inner remote"})
               ), 
-              React.DOM.div({className: localStreamClasses})
+              React.createElement("div", {className: localStreamClasses})
             ), 
-            ConversationToolbar({video: this.state.video, 
+            React.createElement(ConversationToolbar, {video: this.state.video, 
                                  audio: this.state.audio, 
                                  publishStream: this.publishStream, 
                                  hangup: this.hangup})
@@ -346,7 +346,7 @@ loop.shared.views = (function(_, OT, l10n) {
   /**
    * Notification view.
    */
-  var NotificationView = React.createClass({displayName: 'NotificationView',
+  var NotificationView = React.createClass({displayName: "NotificationView",
     mixins: [Backbone.Events],
 
     propTypes: {
@@ -357,19 +357,19 @@ loop.shared.views = (function(_, OT, l10n) {
     render: function() {
       var notification = this.props.notification;
       return (
-        React.DOM.div({className: "notificationContainer"}, 
-          React.DOM.div({key: this.props.key, 
+        React.createElement("div", {className: "notificationContainer"}, 
+          React.createElement("div", {key: this.props.key, 
                className: "alert alert-" + notification.get("level")}, 
-            React.DOM.span({className: "message"}, notification.get("message"))
+            React.createElement("span", {className: "message"}, notification.get("message"))
           ), 
-          React.DOM.div({className: "detailsBar details-" + notification.get("level"), 
+          React.createElement("div", {className: "detailsBar details-" + notification.get("level"), 
                hidden: !notification.get("details")}, 
-            React.DOM.button({className: "detailsButton btn-info", 
+            React.createElement("button", {className: "detailsButton btn-info", 
                     onClick: notification.get("detailsButtonCallback"), 
                     hidden: !notification.get("detailsButtonLabel") || !notification.get("detailsButtonCallback")}, 
               notification.get("detailsButtonLabel")
             ), 
-            React.DOM.span({className: "details"}, notification.get("details"))
+            React.createElement("span", {className: "details"}, notification.get("details"))
           )
         )
       );
@@ -379,7 +379,7 @@ loop.shared.views = (function(_, OT, l10n) {
   /**
    * Notification list view.
    */
-  var NotificationListView = React.createClass({displayName: 'NotificationListView',
+  var NotificationListView = React.createClass({displayName: "NotificationListView",
     mixins: [Backbone.Events, sharedMixins.DocumentVisibilityMixin],
 
     propTypes: {
@@ -419,9 +419,9 @@ loop.shared.views = (function(_, OT, l10n) {
 
     render: function() {
       return (
-        React.DOM.div({className: "messages"}, 
+        React.createElement("div", {className: "messages"}, 
           this.props.notifications.map(function(notification, key) {
-            return NotificationView({key: key, notification: notification});
+            return React.createElement(NotificationView, {key: key, notification: notification});
           })
         
         )
@@ -429,7 +429,7 @@ loop.shared.views = (function(_, OT, l10n) {
     }
   });
 
-  var Button = React.createClass({displayName: 'Button',
+  var Button = React.createClass({displayName: "Button",
     propTypes: {
       caption: React.PropTypes.string.isRequired,
       onClick: React.PropTypes.func.isRequired,
@@ -453,18 +453,18 @@ loop.shared.views = (function(_, OT, l10n) {
         classObject[this.props.additionalClass] = true;
       }
       return (
-        React.DOM.button({onClick: this.props.onClick, 
+        React.createElement("button", {onClick: this.props.onClick, 
                 disabled: this.props.disabled, 
                 id: this.props.htmlId, 
                 className: cx(classObject)}, 
-          React.DOM.span({className: "button-caption"}, this.props.caption), 
+          React.createElement("span", {className: "button-caption"}, this.props.caption), 
           this.props.children
         )
       );
     }
   });
 
-  var ButtonGroup = React.createClass({displayName: 'ButtonGroup',
+  var ButtonGroup = React.createClass({displayName: "ButtonGroup",
     PropTypes: {
       additionalClass: React.PropTypes.string
     },
@@ -482,7 +482,7 @@ loop.shared.views = (function(_, OT, l10n) {
         classObject[this.props.additionalClass] = true;
       }
       return (
-        React.DOM.div({className: cx(classObject)}, 
+        React.createElement("div", {className: cx(classObject)}, 
           this.props.children
         )
       );

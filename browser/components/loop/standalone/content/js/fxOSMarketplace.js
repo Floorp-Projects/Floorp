@@ -12,9 +12,9 @@ loop.fxOSMarketplaceViews = (function() {
    * iframe in case that we need to request the installation of the FxOS Loop
    * client.
    */
-  var FxOSHiddenMarketplaceView = React.createClass({displayName: 'FxOSHiddenMarketplaceView',
+  var FxOSHiddenMarketplaceView = React.createClass({displayName: "FxOSHiddenMarketplaceView",
     render: function() {
-      return React.DOM.iframe({id: "marketplace", src: this.props.marketplaceSrc, hidden: true});
+      return React.createElement("iframe", {id: "marketplace", src: this.props.marketplaceSrc, hidden: true});
     },
 
     componentDidUpdate: function() {
