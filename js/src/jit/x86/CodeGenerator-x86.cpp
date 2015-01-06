@@ -6,6 +6,7 @@
 
 #include "jit/x86/CodeGenerator-x86.h"
 
+#include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
 
 #include "jsnum.h"
@@ -13,6 +14,7 @@
 #include "jit/IonCaches.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
+#include "js/Conversions.h"
 #include "vm/Shape.h"
 
 #include "jsscriptinlines.h"
@@ -23,6 +25,7 @@
 using namespace js;
 using namespace js::jit;
 
+using mozilla::BitwiseCast;
 using mozilla::DebugOnly;
 using mozilla::FloatingPoint;
 using JS::GenericNaN;
@@ -880,7 +883,7 @@ CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate *ool)
         if (gen->compilingAsmJS())
             masm.callWithABI(AsmJSImm_ToInt32);
         else
-            masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js::ToInt32));
+            masm.callWithABI(BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32));
         masm.storeCallResult(output);
 
         restoreVolatile(output);
@@ -972,7 +975,7 @@ CodeGeneratorX86::visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32 *ool)
         if (gen->compilingAsmJS())
             masm.callWithABI(AsmJSImm_ToInt32);
         else
-            masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js::ToInt32));
+            masm.callWithABI(BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32));
 
         masm.storeCallResult(output);
         masm.pop(input);
