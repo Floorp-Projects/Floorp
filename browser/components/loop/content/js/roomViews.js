@@ -57,7 +57,7 @@ loop.roomViews = (function(mozL10n) {
   /**
    * Desktop room invitation view (overlay).
    */
-  var DesktopRoomInvitationView = React.createClass({displayName: 'DesktopRoomInvitationView',
+  var DesktopRoomInvitationView = React.createClass({displayName: "DesktopRoomInvitationView",
     mixins: [ActiveRoomStoreMixin, React.addons.LinkedStateMixin],
 
     propTypes: {
@@ -128,25 +128,25 @@ loop.roomViews = (function(mozL10n) {
     render: function() {
       var cx = React.addons.classSet;
       return (
-        React.DOM.div({className: "room-invitation-overlay"}, 
-          React.DOM.p({className: cx({"error": !!this.state.error,
+        React.createElement("div", {className: "room-invitation-overlay"}, 
+          React.createElement("p", {className: cx({"error": !!this.state.error,
                             "error-display-area": true})}, 
             mozL10n.get("rooms_name_change_failed_label")
           ), 
-          React.DOM.form({onSubmit: this.handleFormSubmit}, 
-            React.DOM.textarea({rows: "2", type: "text", className: "input-room-name", 
+          React.createElement("form", {onSubmit: this.handleFormSubmit}, 
+            React.createElement("textarea", {rows: "2", type: "text", className: "input-room-name", 
               valueLink: this.linkState("newRoomName"), 
               onBlur: this.handleFormSubmit, 
               onKeyDown: this.handleTextareaKeyDown, 
               placeholder: mozL10n.get("rooms_name_this_room_label")})
           ), 
-          React.DOM.p(null, mozL10n.get("invite_header_text")), 
-          React.DOM.div({className: "btn-group call-action-group"}, 
-            React.DOM.button({className: "btn btn-info btn-email", 
+          React.createElement("p", null, mozL10n.get("invite_header_text")), 
+          React.createElement("div", {className: "btn-group call-action-group"}, 
+            React.createElement("button", {className: "btn btn-info btn-email", 
                     onClick: this.handleEmailButtonClick}, 
               mozL10n.get("share_button2")
             ), 
-            React.DOM.button({className: "btn btn-info btn-copy", 
+            React.createElement("button", {className: "btn btn-info btn-copy", 
                     onClick: this.handleCopyButtonClick}, 
               this.state.copiedUrl ? mozL10n.get("copied_url_button") :
                                       mozL10n.get("copy_url_button2")
@@ -160,7 +160,7 @@ loop.roomViews = (function(mozL10n) {
   /**
    * Desktop room conversation view.
    */
-  var DesktopRoomConversationView = React.createClass({displayName: 'DesktopRoomConversationView',
+  var DesktopRoomConversationView = React.createClass({displayName: "DesktopRoomConversationView",
     mixins: [
       ActiveRoomStoreMixin,
       sharedMixins.DocumentTitleMixin,
@@ -175,7 +175,7 @@ loop.roomViews = (function(mozL10n) {
 
     _renderInvitationOverlay: function() {
       if (this.state.roomState !== ROOM_STATES.HAS_PARTICIPANTS) {
-        return DesktopRoomInvitationView({
+        return React.createElement(DesktopRoomInvitationView, {
           roomStore: this.props.roomStore, 
           dispatcher: this.props.dispatcher}
         );
@@ -295,13 +295,13 @@ loop.roomViews = (function(mozL10n) {
         case ROOM_STATES.FULL: {
           // Note: While rooms are set to hold a maximum of 2 participants, the
           //       FULL case should never happen on desktop.
-          return loop.conversationViews.GenericFailureView({
+          return React.createElement(loop.conversationViews.GenericFailureView, {
             cancelCall: this.closeWindow}
           );
         }
         case ROOM_STATES.ENDED: {
           if (this.state.used)
-            return sharedViews.FeedbackView({
+            return React.createElement(sharedViews.FeedbackView, {
               feedbackStore: this.props.feedbackStore, 
               onAfterFeedbackReceived: this.closeWindow}
             );
@@ -313,17 +313,17 @@ loop.roomViews = (function(mozL10n) {
         }
         default: {
           return (
-            React.DOM.div({className: "room-conversation-wrapper"}, 
+            React.createElement("div", {className: "room-conversation-wrapper"}, 
               this._renderInvitationOverlay(), 
-              React.DOM.div({className: "video-layout-wrapper"}, 
-                React.DOM.div({className: "conversation room-conversation"}, 
-                  React.DOM.div({className: "media nested"}, 
-                    React.DOM.div({className: "video_wrapper remote_wrapper"}, 
-                      React.DOM.div({className: "video_inner remote"})
+              React.createElement("div", {className: "video-layout-wrapper"}, 
+                React.createElement("div", {className: "conversation room-conversation"}, 
+                  React.createElement("div", {className: "media nested"}, 
+                    React.createElement("div", {className: "video_wrapper remote_wrapper"}, 
+                      React.createElement("div", {className: "video_inner remote"})
                     ), 
-                    React.DOM.div({className: localStreamClasses})
+                    React.createElement("div", {className: localStreamClasses})
                   ), 
-                  sharedViews.ConversationToolbar({
+                  React.createElement(sharedViews.ConversationToolbar, {
                     video: {enabled: !this.state.videoMuted, visible: true}, 
                     audio: {enabled: !this.state.audioMuted, visible: true}, 
                     publishStream: this.publishStream, 
