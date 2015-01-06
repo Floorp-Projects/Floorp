@@ -32,8 +32,8 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIDOMHTMLCOLLECTION
 
-  virtual Element* GetElementAt(uint32_t aIndex);
-  virtual nsINode* GetParentObject()
+  virtual Element* GetElementAt(uint32_t aIndex) MOZ_OVERRIDE;
+  virtual nsINode* GetParentObject() MOZ_OVERRIDE
   {
     return mParent;
   }
