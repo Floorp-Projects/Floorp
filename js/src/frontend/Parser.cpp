@@ -611,6 +611,7 @@ FunctionBox::FunctionBox(ExclusiveContext *cx, ObjectBox* traceListHead, JSFunct
     insideUseAsm(outerpc && outerpc->useAsmOrInsideUseAsm()),
     usesArguments(false),
     usesApply(false),
+    usesThis(false),
     funCxFlags()
 {
     // Functions created at parse time may be set singleton after parsing and
@@ -2283,8 +2284,8 @@ Parser<SyntaxParseHandler>::finishFunctionDefinition(Node pn, FunctionBox *funbo
     if (pc->sc->strict)
         lazy->setStrict();
     lazy->setGeneratorKind(funbox->generatorKind());
-    if (funbox->usesArguments && funbox->usesApply)
-        lazy->setUsesArgumentsAndApply();
+    if (funbox->usesArguments && funbox->usesApply && funbox->usesThis)
+        lazy->setUsesArgumentsApplyAndThis();
     PropagateTransitiveParseFlags(funbox, lazy);
 
     fun->initLazyScript(lazy);
@@ -8194,6 +8195,8 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
       case TOK_FALSE:
         return handler.newBooleanLiteral(false, pos());
       case TOK_THIS:
+        if (pc->sc->isFunctionBox())
+            pc->sc->asFunctionBox()->usesThis = true;
         return handler.newThisLiteral(pos());
       case TOK_NULL:
         return handler.newNullLiteral(pos());
