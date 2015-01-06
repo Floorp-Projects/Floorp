@@ -13,25 +13,14 @@
 #include "mozilla/RefPtr.h"
 #include "nsSVGEffects.h"
 #include "mozilla/dom/SVGMaskElement.h"
+#ifdef BUILD_ARM_NEON
+#include "mozilla/arm.h"
+#include "nsSVGMaskFrameNEON.h"
+#endif
 
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
-
-/**
- * Byte offsets of channels in a native packed gfxColor or cairo image surface.
- */
-#ifdef IS_BIG_ENDIAN
-#define GFX_ARGB32_OFFSET_A 0
-#define GFX_ARGB32_OFFSET_R 1
-#define GFX_ARGB32_OFFSET_G 2
-#define GFX_ARGB32_OFFSET_B 3
-#else
-#define GFX_ARGB32_OFFSET_A 3
-#define GFX_ARGB32_OFFSET_R 2
-#define GFX_ARGB32_OFFSET_G 1
-#define GFX_ARGB32_OFFSET_B 0
-#endif
 
 // c = n / 255
 // c <= 0.04045 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4)) * 255 + 0.5
@@ -76,26 +65,35 @@ ComputesRGBLuminanceMask(uint8_t *aData,
                          const IntSize &aSize,
                          float aOpacity)
 {
+#ifdef BUILD_ARM_NEON
+  if (mozilla::supports_neon()) {
+    ComputesRGBLuminanceMask_NEON(aData, aStride, aSize, aOpacity);
+    return;
+  }
+#endif
+
+  int32_t redFactor = 55 * aOpacity; // 255 * 0.2125 * opacity
+  int32_t greenFactor = 183 * aOpacity; // 255 * 0.7154 * opacity
+  int32_t blueFactor = 18 * aOpacity; // 255 * 0.0721
+  int32_t offset = aStride - 4 * aSize.width;
+  uint8_t *pixel = aData;
+
   for (int32_t y = 0; y < aSize.height; y++) {
     for (int32_t x = 0; x < aSize.width; x++) {
-      uint8_t *pixel = aData + aStride * y + 4 * x;
       uint8_t a = pixel[GFX_ARGB32_OFFSET_A];
 
       uint8_t luminance;
       if (a) {
-        /* sRGB -> intensity (unpremultiply cancels out the
-         * (a/255.0) multiplication with aOpacity */
-        luminance =
-          static_cast<uint8_t>
-                     ((pixel[GFX_ARGB32_OFFSET_R] * 0.2125 +
-                       pixel[GFX_ARGB32_OFFSET_G] * 0.7154 +
-                       pixel[GFX_ARGB32_OFFSET_B] * 0.0721) *
-                      aOpacity);
+        luminance = (redFactor * pixel[GFX_ARGB32_OFFSET_R] +
+                     greenFactor * pixel[GFX_ARGB32_OFFSET_G] +
+                     blueFactor * pixel[GFX_ARGB32_OFFSET_B]) >> 8;
       } else {
         luminance = 0;
       }
       memset(pixel, luminance, 4);
+      pixel += 4;
     }
+    pixel += offset;
   }
 }
 
@@ -105,9 +103,14 @@ ComputeLinearRGBLuminanceMask(uint8_t *aData,
                               const IntSize &aSize,
                               float aOpacity)
 {
+  int32_t redFactor = 55 * aOpacity; // 255 * 0.2125 * opacity
+  int32_t greenFactor = 183 * aOpacity; // 255 * 0.7154 * opacity
+  int32_t blueFactor = 18 * aOpacity; // 255 * 0.0721
+  int32_t offset = aStride - 4 * aSize.width;
+  uint8_t *pixel = aData;
+
   for (int32_t y = 0; y < aSize.height; y++) {
     for (int32_t x = 0; x < aSize.width; x++) {
-      uint8_t *pixel = aData + aStride * y + 4 * x;
       uint8_t a = pixel[GFX_ARGB32_OFFSET_A];
 
       uint8_t luminance;
@@ -125,17 +128,19 @@ ComputeLinearRGBLuminanceMask(uint8_t *aData,
         /* sRGB -> linearRGB -> intensity */
         luminance =
           static_cast<uint8_t>
-                     ((gsRGBToLinearRGBMap[pixel[GFX_ARGB32_OFFSET_R]] *
-                       0.2125 +
-                       gsRGBToLinearRGBMap[pixel[GFX_ARGB32_OFFSET_G]] *
-                       0.7154 +
-                       gsRGBToLinearRGBMap[pixel[GFX_ARGB32_OFFSET_B]] *
-                       0.0721) * (a / 255.0) * aOpacity);
+                     (((gsRGBToLinearRGBMap[pixel[GFX_ARGB32_OFFSET_R]] *
+                        redFactor +
+                        gsRGBToLinearRGBMap[pixel[GFX_ARGB32_OFFSET_G]] *
+                        greenFactor +
+                        gsRGBToLinearRGBMap[pixel[GFX_ARGB32_OFFSET_B]] *
+                        blueFactor) >> 8) * (a / 255.0f));
       } else {
         luminance = 0;
       }
       memset(pixel, luminance, 4);
+      pixel += 4;
     }
+    pixel += offset;
   }
 }
 
@@ -145,12 +150,16 @@ ComputeAlphaMask(uint8_t *aData,
                  const IntSize &aSize,
                  float aOpacity)
 {
+  int32_t offset = aStride - 4 * aSize.width;
+  uint8_t *pixel = aData;
+
   for (int32_t y = 0; y < aSize.height; y++) {
     for (int32_t x = 0; x < aSize.width; x++) {
-      uint8_t *pixel = aData + aStride * y + 4 * x;
       uint8_t luminance = pixel[GFX_ARGB32_OFFSET_A] * aOpacity;
       memset(pixel, luminance, 4);
+      pixel += 4;
     }
+    pixel += offset;
   }
 }
 
