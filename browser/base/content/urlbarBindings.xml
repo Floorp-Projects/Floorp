@@ -1001,6 +1001,12 @@
                   label="&changeSearchSettings.button;"/>
     </content>
     <implementation>
+      <!-- Popup rollup is triggered by native events before the mousedown event
+           reaches the DOM. The will be set to true by the popuphiding event and
+           false after the mousedown event has been triggered to detect what
+           caused rollup. -->
+      <field name="_isHiding">false</field>
+
       <method name="updateHeader">
         <body><![CDATA[
           let currentEngine = Services.search.currentEngine;
@@ -1245,6 +1251,13 @@
                                     target.getAttribute("src"), false,
                                     installCallback);
         }
+      ]]></handler>
+
+      <handler event="popuphiding"><![CDATA[
+        this._isHiding = true;
+        setTimeout(() => {
+          this._isHiding = false;
+        }, 0);
       ]]></handler>
     </handlers>
   </binding>
