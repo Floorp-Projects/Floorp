@@ -336,7 +336,6 @@ function RequestsMenuView() {
   this._byFile = this._byFile.bind(this);
   this._byDomain = this._byDomain.bind(this);
   this._byType = this._byType.bind(this);
-  this._onSecurityIconClick = this._onSecurityIconClick.bind(this);
 }
 
 RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
@@ -1074,17 +1073,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
-   * Attaches security icon click listener for the given request menu item.
-   *
-   * @param object item
-   *        The network request item to attach the listener to.
-   */
-  attachSecurityIconClickListener: function ({ target }) {
-    let icon = $(".requests-security-state-icon", target);
-    icon.addEventListener("click", this._onSecurityIconClick);
-  },
-
-  /**
    * Schedules adding additional information to a network request.
    *
    * @param string aId
@@ -1161,13 +1149,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
 
             requestItem.attachment.requestPostData = value;
             requestItem.attachment.requestHeadersFromUploadStream = currentStore;
-            break;
-          case "securityState":
-            requestItem.attachment.securityState = value;
-            this.updateMenuView(requestItem, key, value);
-            break;
-          case "securityInfo":
-            requestItem.attachment.securityInfo = value;
             break;
           case "responseHeaders":
             requestItem.attachment.responseHeaders = value;
@@ -1324,15 +1305,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         let domain = $(".requests-menu-domain", target);
         domain.setAttribute("value", hostPort);
         domain.setAttribute("tooltiptext", hostPort);
-        break;
-      }
-      case "securityState": {
-        let tooltip = L10N.getStr("netmonitor.security.state." + aValue);
-        let icon = $(".requests-security-state-icon", target);
-        icon.classList.add("security-state-" + aValue);
-        icon.setAttribute("tooltiptext", tooltip);
-
-        this.attachSecurityIconClickListener(aItem);
         break;
       }
       case "status": {
@@ -1638,11 +1610,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     // in this container, so it's necessary to refresh the Tooltip instances.
     this.refreshTooltip(firstItem);
     this.refreshTooltip(secondItem);
-
-    // Reattach click listener to the security icons
-    this.attachSecurityIconClickListener(firstItem);
-    this.attachSecurityIconClickListener(secondItem);
-
   },
 
   /**
@@ -1674,18 +1641,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         aTooltip.setImageContent(src, { maxDim: REQUESTS_TOOLTIP_IMAGE_MAX_DIM });
         return anchor;
       });
-    }
-  },
-
-  /**
-   * A handler that opens the security tab in the details view if secure or
-   * broken security indicator is clicked.
-   */
-  _onSecurityIconClick: function(e) {
-    let state = this.selectedItem.attachment.securityState;
-    if (state === "broken" || state === "secure") {
-      // Choose the security tab.
-      NetMonitorView.NetworkDetails.widget.selectedIndex = 5;
     }
   },
 
@@ -2128,20 +2083,9 @@ NetworkDetailsView.prototype = {
     $("#preview-tab").hidden = !isHtml;
     $("#preview-tabpanel").hidden = !isHtml;
 
-    // Show the "Security" tab only for requests that
-    //   1) are https (state != insecure)
-    //   2) come from a target that provides security information.
-    let hasSecurityInfo = aData.securityState &&
-                          aData.securityState !== "insecure";
-
-    $("#security-tab").hidden = !hasSecurityInfo;
-
     // Switch to the "Headers" tabpanel if the "Preview" previously selected
-    // and this is not an HTML response or "Security" was selected but this
-    // request has no security information.
-
-    if (!isHtml && this.widget.selectedPanel === $("#preview-tabpanel") ||
-        !hasSecurityInfo && this.widget.selectedPanel === $("#security-tabpanel")) {
+    // and this is not an HTML response.
+    if (!isHtml && this.widget.selectedIndex == 5) {
       this.widget.selectedIndex = 0;
     }
 
@@ -2208,10 +2152,7 @@ NetworkDetailsView.prototype = {
         case 4: // "Timings"
           yield view._setTimingsInformation(src.eventTimings);
           break;
-        case 5: // "Security"
-          yield view._setSecurityInfo(src.securityInfo, src.url);
-          break;
-        case 6: // "Preview"
+        case 5: // "Preview"
           yield view._setHtmlPreview(src.responseContent);
           break;
       }
@@ -2714,98 +2655,6 @@ NetworkDetailsView.prototype = {
     iframe.contentDocument.documentElement.innerHTML = responseBody;
 
     window.emit(EVENTS.RESPONSE_HTML_PREVIEW_DISPLAYED);
-  }),
-
-  /**
-   * Sets the security information shown in this view.
-   *
-   * @param object securityInfo
-   *        The data received from server
-   * @param string url
-   *        The URL of this request
-   * @return object
-   *        A promise that is resolved when the security info is rendered.
-   */
-  _setSecurityInfo: Task.async(function* (securityInfo, url) {
-    if (!securityInfo) {
-      // We don't have security info. This could mean one of two things:
-      // 1) This connection is not secure and this tab is not visible and thus
-      //    we shouldn't be here.
-      // 2) We have already received securityState and the tab is visible BUT
-      //    the rest of the information is still on its way. Once it arrives
-      //    this method is called again.
-      return;
-    }
-
-    /**
-     * A helper that sets label text to specified value.
-     *
-     * @param string selector
-     *        A selector for the label.
-     * @param string value
-     *        The value label should have. If this evaluates to false a
-     *        placeholder string <Not Available> is used instead.
-     */
-    function setLabel(selector, value) {
-      let label = $(selector);
-      if (!value) {
-        label.value = L10N.getStr("netmonitor.security.notAvailable");
-        label.setAttribute("tooltiptext", label.value);
-      } else {
-        label.value = value;
-        label.setAttribute("tooltiptext", value);
-      }
-    }
-
-    let errorbox = $("#security-error");
-    let infobox = $("#security-information");
-
-    if (securityInfo.state === "secure") {
-      infobox.hidden = false;
-      errorbox.hidden = true;
-
-      let enabledLabel = L10N.getStr("netmonitor.security.enabled");
-      let disabledLabel = L10N.getStr("netmonitor.security.disabled");
-
-      // Connection parameters
-      setLabel("#security-protocol-version-value", securityInfo.protocolVersion);
-      setLabel("#security-ciphersuite-value", securityInfo.cipherSuite);
-
-      // Host header
-      let domain = NetMonitorView.RequestsMenu._getUriHostPort(url);
-      let hostHeader = L10N.getFormatStr("netmonitor.security.hostHeader", domain);
-      setLabel("#security-info-host-header", hostHeader);
-
-      // Parameters related to the domain
-      setLabel("#security-http-strict-transport-security-value",
-                securityInfo.hsts ? enabledLabel : disabledLabel);
-
-      setLabel("#security-public-key-pinning-value",
-                securityInfo.hpkp ? enabledLabel : disabledLabel);
-
-      // Certificate parameters
-      let cert = securityInfo.cert;
-      setLabel("#security-cert-subject-cn", cert.subject.commonName);
-      setLabel("#security-cert-subject-o", cert.subject.organization);
-      setLabel("#security-cert-subject-ou", cert.subject.organizationalUnit);
-
-      setLabel("#security-cert-issuer-cn", cert.issuer.commonName);
-      setLabel("#security-cert-issuer-o", cert.issuer.organization);
-      setLabel("#security-cert-issuer-ou", cert.issuer.organizationalUnit);
-
-      setLabel("#security-cert-validity-begins", cert.validity.start);
-      setLabel("#security-cert-validity-expires", cert.validity.end);
-
-      setLabel("#security-cert-sha1-fingerprint", cert.fingerprint.sha1);
-      setLabel("#security-cert-sha256-fingerprint", cert.fingerprint.sha256);
-    } else {
-      infobox.hidden = true;
-      errorbox.hidden = false;
-
-      // Strip any HTML from the message.
-      let plain = DOMParser.parseFromString(securityInfo.errorMessage, "text/html");
-      $("#security-error-message").textContent = plain.body.textContent;
-    }
   }),
 
   _dataSrc: null,
