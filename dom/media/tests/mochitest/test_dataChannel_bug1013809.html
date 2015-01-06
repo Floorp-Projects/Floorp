@@ -3,6 +3,7 @@
 <head>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="dataChannel.js"></script>
   <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript" src="pc.js"></script>
   <script type="application/javascript" src="templates.js"></script>
@@ -17,8 +18,9 @@
   });
 
   var test;
-  runNetworkTest(function () {
-    test = new DataChannelTest();
+  runNetworkTest(function (options) {
+    test = new PeerConnectionTest(options);
+    addInitialDataChannel(test.chain);
     var sld = test.chain.remove("PC_REMOTE_SET_LOCAL_DESCRIPTION");
     test.chain.insertAfter("PC_LOCAL_SET_REMOTE_DESCRIPTION", sld);
     test.setMediaConstraints([{audio: true}], [{audio: true}]);

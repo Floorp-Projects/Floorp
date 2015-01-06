@@ -183,7 +183,7 @@ loop.conversation = (function(mozL10n) {
       dispatcher.dispatch(new sharedActions.WindowUnload());
     });
 
-    React.renderComponent(<AppControllerView
+    React.render(<AppControllerView
       conversationAppStore={conversationAppStore}
       roomStore={roomStore}
       feedbackStore={feedbackStore}

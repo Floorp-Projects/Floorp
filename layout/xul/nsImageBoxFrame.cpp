@@ -119,7 +119,7 @@ FireImageDOMEvent(nsIContent* aContent, uint32_t aMessage)
 nsIFrame*
 NS_NewImageBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsImageBoxFrame (aPresShell, aContext);
+  return new (aPresShell) nsImageBoxFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsImageBoxFrame)
@@ -143,8 +143,8 @@ nsImageBoxFrame::AttributeChanged(int32_t aNameSpaceID,
   return rv;
 }
 
-nsImageBoxFrame::nsImageBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext):
-  nsLeafBoxFrame(aShell, aContext),
+nsImageBoxFrame::nsImageBoxFrame(nsStyleContext* aContext):
+  nsLeafBoxFrame(aContext),
   mIntrinsicSize(0,0),
   mRequestRegistered(false),
   mLoadFlags(nsIRequest::LOAD_NORMAL),

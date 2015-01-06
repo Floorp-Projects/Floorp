@@ -239,7 +239,6 @@ public:
   virtual void SetFBAcquireFence(Layer* aLayer) MOZ_OVERRIDE;
   virtual FenceHandle GetReleaseFence() MOZ_OVERRIDE;
   virtual void EndFrameForExternalComposition(const gfx::Matrix& aTransform) MOZ_OVERRIDE;
-  virtual void AbortFrame() MOZ_OVERRIDE;
 
   virtual bool SupportsPartialTextureUpdate() MOZ_OVERRIDE;
 

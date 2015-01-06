@@ -304,6 +304,8 @@ ImageLayerD3D10::RenderLayer()
         (float)yuvImage->GetData()->mPicSize.width / yuvImage->GetData()->mYSize.width,
         (float)yuvImage->GetData()->mPicSize.height / yuvImage->GetData()->mYSize.height)
        );
+  } else {
+    MOZ_CRASH("unexpected image format");
   }
 
   bool resetTexCoords = image->GetFormat() == ImageFormat::PLANAR_YCBCR;

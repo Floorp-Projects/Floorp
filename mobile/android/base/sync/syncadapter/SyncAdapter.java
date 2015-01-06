@@ -11,9 +11,11 @@ import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.json.simple.parser.ParseException;
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.sync.AlreadySyncingException;
 import org.mozilla.gecko.sync.BackoffHandler;
 import org.mozilla.gecko.sync.CredentialException;
@@ -37,6 +39,7 @@ import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
 import org.mozilla.gecko.sync.net.ConnectionMonitorThread;
+import org.mozilla.gecko.sync.receivers.SyncAccountDeletedService;
 import org.mozilla.gecko.sync.setup.Constants;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.sync.setup.SyncAccounts.SyncAccountParameters;
@@ -292,9 +295,17 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements BaseGlob
     this.syncResult   = syncResult;
     this.localAccount = account;
 
-    SyncAccountParameters params;
+    final AccountManager manager = AccountManager.get(mContext);
+    final SyncAccountParameters params;
     try {
-      params = SyncAccounts.blockingFromAndroidAccountV0(mContext, AccountManager.get(mContext), this.localAccount);
+      if ("1".equals(manager.getUserData(account, Constants.DATA_SHOULD_BE_REMOVED))) {
+        Logger.warn(LOG_TAG, "Account named like " + Utils.obfuscateEmail(account.name) + " should be removed. " +
+          "Removing and aborting sync.");
+        manager.removeAccount(account, null, null);
+        return;
+      }
+
+      params = SyncAccounts.blockingFromAndroidAccountV0(mContext, manager, this.localAccount);
     } catch (Exception e) {
       // Updates syncResult and (harmlessly) calls notifyMonitor().
       processException(null, e);
@@ -565,5 +576,53 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements BaseGlob
         SyncAccounts.setSyncAutomatically(toDisable, false);
       }
     });
+  }
+
+  @Override
+  public void informMigrated(GlobalSession session) {
+    final AccountManager manager = AccountManager.get(mContext);
+    final Account account = localAccount;
+    if (account == null || manager == null) {
+      Logger.warn(LOG_TAG, "Attempting to mark account migrated, but no Account or AccountManager found.");
+      return;
+    }
+
+    // Mark the account as slated for deletion. We're going to try to wipe the
+    // account right now anyway, but if we fail, or a sync is triggered before
+    // we succeed, the next sync will see this flag, try to delete the account,
+    // and abort the sync.
+    manager.setUserData(account, Constants.DATA_SHOULD_BE_REMOVED, "1");
+
+    // We delete any existing pickle as soon as possible -- no sense unpickling
+    // an account scheduled for deletion.
+    SyncAccountDeletedService.deletePickle(mContext);
+
+    // We write an escape hatch pickle of the Old Sync Account parameters,
+    // just in case.
+    try {
+      final SyncAccountParameters params =
+          SyncAccounts.blockingFromAndroidAccountV0(mContext, manager, account);
+      AccountPickler.pickle(mContext, FxAccountConstants.OLD_SYNC_ACCOUNT_PICKLE_FILENAME, params, false);
+    } catch (Exception e) {
+      Logger.error(LOG_TAG, "Failed to pickle old Account; removing old Account without emergency pickle.", e);
+    }
+
+    // Try to remove this account entirely. We can't *guarantee* the account
+    // will be removed, but it's a good deal of effort to retry over time. An
+    // option would be to have the new Account we've migrated to try to clean up
+    // the old Account as well; we'll do that if we see problems in the wild.
+    try {
+      manager.removeAccount(account, null, null);
+    } catch (Exception e) {
+      // We should always be able to remove the Account, but it's Android --
+      // is one ever confident? We log, but crash for non-release builds.
+      // We want to know if we see problems in the wild.
+      if (AppConstants.RELEASE_BUILD) {
+        Logger.error(LOG_TAG, "Failed to remove account; ignoring and leaving old Account.", e);
+      } else {
+        Logger.error(LOG_TAG, "Failed to remove account; crashing.", e);
+        throw e;
+      }
+    }
   }
 }

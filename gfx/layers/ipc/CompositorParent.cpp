@@ -199,6 +199,7 @@ static void SetThreadPriority()
 CompositorVsyncObserver::CompositorVsyncObserver(CompositorParent* aCompositorParent, nsIWidget* aWidget)
   : mNeedsComposite(false)
   , mIsObservingVsync(false)
+  , mVsyncNotificationsSkipped(0)
   , mCompositorParent(aCompositorParent)
   , mCurrentCompositeTaskMonitor("CurrentCompositeTaskMonitor")
   , mCurrentCompositeTask(nullptr)
@@ -285,6 +286,9 @@ CompositorVsyncObserver::Composite(TimeStamp aVsyncTimestamp)
   if (mNeedsComposite && mCompositorParent) {
     mNeedsComposite = false;
     mCompositorParent->CompositeCallback(aVsyncTimestamp);
+    mVsyncNotificationsSkipped = 0;
+  } else if (mVsyncNotificationsSkipped++ > gfxPrefs::CompositorUnobserveCount()) {
+    UnobserveVsync();
   }
 
   DispatchTouchEvents(aVsyncTimestamp);

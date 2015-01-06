@@ -15,6 +15,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
                                   "resource://gre/modules/BrowserUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Prefetcher",
+                                  "resource://gre/modules/Prefetcher.jsm");
 
 // Similar to Python. Returns dict[key] if it exists. Otherwise,
 // sets dict[key] to default_ and returns default_.
@@ -143,13 +145,15 @@ let ContentPolicyParent = {
         let contentLocation = BrowserUtils.makeURI(aData.contentLocation);
         let requestOrigin = aData.requestOrigin ? BrowserUtils.makeURI(aData.requestOrigin) : null;
 
-        let result = policy.shouldLoad(aData.contentType,
-                                       contentLocation,
-                                       requestOrigin,
-                                       aObjects.node,
-                                       aData.mimeTypeGuess,
-                                       null,
-                                       aData.requestPrincipal);
+        let result = Prefetcher.withPrefetching(aData.prefetched, aObjects, () => {
+          return policy.shouldLoad(aData.contentType,
+                                   contentLocation,
+                                   requestOrigin,
+                                   aObjects.node,
+                                   aData.mimeTypeGuess,
+                                   null,
+                                   aData.requestPrincipal);
+        });
         if (result != Ci.nsIContentPolicy.ACCEPT && result != 0)
           return result;
       } catch (e) {
@@ -461,12 +465,14 @@ let EventTargetParent = {
     switch (msg.name) {
       case "Addons:Event:Run":
         this.dispatch(msg.target, msg.data.type, msg.data.capturing,
-                      msg.data.isTrusted, msg.objects.event);
+                      msg.data.isTrusted, msg.data.prefetched, msg.objects);
         break;
     }
   },
 
-  dispatch: function(browser, type, capturing, isTrusted, event) {
+  dispatch: function(browser, type, capturing, isTrusted, prefetched, cpows) {
+    let event = cpows.event;
+    let eventTarget = cpows.eventTarget;
     let targets = this.getTargets(browser);
     for (let target of targets) {
       let listeners = this._listeners.get(target);
@@ -485,11 +491,13 @@ let EventTargetParent = {
 
       for (let handler of handlers) {
         try {
-          if ("handleEvent" in handler) {
-            handler.handleEvent(event);
-          } else {
-            handler.call(event.target, event);
-          }
+          Prefetcher.withPrefetching(prefetched, cpows, () => {
+            if ("handleEvent" in handler) {
+              handler.handleEvent(event);
+            } else {
+              handler.call(event.target, event);
+            }
+          });
         } catch (e) {
           Cu.reportError(e);
         }
@@ -742,14 +750,25 @@ let DummyContentDocument = {
   location: { href: "about:blank" }
 };
 
-RemoteBrowserElementInterposition.getters.contentDocument = function(addon, target) {
-  // If we don't have a CPOW yet, just return something we can use to
-  // examine readyState. This is useful for tests that create a new
-  // tab and then immediately start polling readyState.
-  if (!target.contentDocumentAsCPOW) {
+function getContentDocument(addon, browser)
+{
+  let doc = Prefetcher.lookupInCache(addon, browser.contentWindowAsCPOW, "document");
+  if (doc) {
+    return doc;
+  }
+
+  doc = browser.contentDocumentAsCPOW;
+  if (!doc) {
+    // If we don't have a CPOW yet, just return something we can use to
+    // examine readyState. This is useful for tests that create a new
+    // tab and then immediately start polling readyState.
     return DummyContentDocument;
   }
-  return target.contentDocumentAsCPOW;
+  return doc;
+}
+
+RemoteBrowserElementInterposition.getters.contentDocument = function(addon, target) {
+  return getContentDocument(addon, target);
 };
 
 let TabBrowserElementInterposition = new Interposition("TabBrowserElementInterposition",
@@ -764,10 +783,7 @@ TabBrowserElementInterposition.getters.contentWindow = function(addon, target) {
 
 TabBrowserElementInterposition.getters.contentDocument = function(addon, target) {
   let browser = target.selectedBrowser;
-  if (!browser.contentDocumentAsCPOW) {
-    return DummyContentDocument;
-  }
-  return browser.contentDocumentAsCPOW;
+  return getContentDocument(addon, browser);
 };
 
 let ChromeWindowInterposition = new Interposition("ChromeWindowInterposition",

@@ -181,7 +181,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   gPrototypeProperties['TypedArray'] =
     ["length", "buffer", "byteLength", "byteOffset", kIteratorSymbol, "subarray",
      "set", "copyWithin", "find", "findIndex", "indexOf", "lastIndexOf", "reverse",
-     "join"];
+     "join", "every", "some"];
   if (isNightlyBuild) {
     gPrototypeProperties['TypedArray'].push('includes');
   }
