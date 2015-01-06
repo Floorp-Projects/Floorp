@@ -17,6 +17,13 @@ Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/DeferredTask.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
 
+const IS_CONTENT_PROCESS = (function() {
+  // We cannot use Services.appinfo here because in telemetry xpcshell tests,
+  // appinfo is initially unavailable, and becomes available only later on.
+  let runtime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
+  return runtime.processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT;
+})();
+
 // When modifying the payload in incompatible ways, please bump this version number
 const PAYLOAD_VERSION = 1;
 
@@ -30,6 +37,8 @@ const PREF_ENABLED = PREF_BRANCH + "enabled";
 const PREF_PREVIOUS_BUILDID = PREF_BRANCH + "previousBuildID";
 const PREF_CACHED_CLIENTID = PREF_BRANCH + "cachedClientID"
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
+
+const MESSAGE_TELEMETRY_PAYLOAD = "Telemetry:Payload";
 
 // Do not gather data more than once a minute
 const TELEMETRY_INTERVAL = 60000;
@@ -59,6 +68,12 @@ XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
 XPCOMUtils.defineLazyServiceGetter(this, "idleService",
                                    "@mozilla.org/widget/idleservice;1",
                                    "nsIIdleService");
+XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
+                                   "@mozilla.org/childprocessmessagemanager;1",
+                                   "nsIMessageSender");
+XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
+                                   "@mozilla.org/parentprocessmessagemanager;1",
+                                   "nsIMessageListenerManager");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
                                   "resource://gre/modules/AddonManager.jsm");
@@ -264,6 +279,11 @@ let Impl = {
   // Undefined if this is not the first run, or the previous build ID is unknown.
   _previousBuildID: undefined,
   _clientID: null,
+  // Telemetry payloads sent by child processes.
+  // Each element is in the format {source: <weak-ref>, payload: <object>},
+  // where source is a weak reference to the child process,
+  // and payload is the telemetry payload from that child process.
+  _childTelemetry: [],
 
   /**
    * Gets a series of simple measurements (counters). At the moment, this
@@ -274,6 +294,7 @@ let Impl = {
   getSimpleMeasurements: function getSimpleMeasurements(forSavedSession) {
     let si = Services.startup.getStartupInfo();
 
+    // Measurements common to chrome and content processes.
     var ret = {
       // uptime in minutes
       uptime: Math.round((new Date() - si.process) / 60000)
@@ -287,10 +308,14 @@ let Impl = {
       appTimestamps = o.TelemetryTimestamps.get();
     } catch (ex) {}
     try {
-      ret.addonManager = AddonManagerPrivate.getSimpleMeasures();
+      if (!IS_CONTENT_PROCESS) {
+        ret.addonManager = AddonManagerPrivate.getSimpleMeasures();
+      }
     } catch (ex) {}
     try {
-      ret.UITelemetry = UITelemetry.getSimpleMeasures();
+      if (!IS_CONTENT_PROCESS) {
+        ret.UITelemetry = UITelemetry.getSimpleMeasures();
+      }
     } catch (ex) {}
 
     if (si.process) {
@@ -308,13 +333,24 @@ let Impl = {
 
     ret.startupInterrupted = Number(Services.startup.interrupted);
 
+    ret.js = Cu.getJSEngineTelemetryValue();
+
+    let maximalNumberOfConcurrentThreads = Telemetry.maximalNumberOfConcurrentThreads;
+    if (maximalNumberOfConcurrentThreads) {
+      ret.maximalNumberOfConcurrentThreads = maximalNumberOfConcurrentThreads;
+    }
+
+    if (IS_CONTENT_PROCESS) {
+      return ret;
+    }
+
+    // Measurements specific to chrome process
+
     // Update debuggerAttached flag
     let debugService = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
     let isDebuggerAttached = debugService.isDebuggerAttached;
     gWasDebuggerAttached = gWasDebuggerAttached || isDebuggerAttached;
     ret.debuggerAttached = Number(gWasDebuggerAttached);
-
-    ret.js = Cu.getJSEngineTelemetryValue();
 
     let shutdownDuration = Telemetry.lastShutdownDuration;
     if (shutdownDuration)
@@ -323,10 +359,6 @@ let Impl = {
     let failedProfileLockCount = Telemetry.failedProfileLockCount;
     if (failedProfileLockCount)
       ret.failedProfileLockCount = failedProfileLockCount;
-
-    let maximalNumberOfConcurrentThreads = Telemetry.maximalNumberOfConcurrentThreads;
-    if (maximalNumberOfConcurrentThreads)
-      ret.maximalNumberOfConcurrentThreads = maximalNumberOfConcurrentThreads;
 
     for (let ioCounter in this._startupIO)
       ret[ioCounter] = this._startupIO[ioCounter];
@@ -555,8 +587,9 @@ let Impl = {
 
 #ifndef MOZ_WIDGET_GONK
     let theme = LightweightThemeManager.currentTheme;
-    if (theme)
+    if (theme) {
       ret.persona = theme.id;
+    }
 #endif
 
     if (this._addons)
@@ -700,6 +733,10 @@ let Impl = {
     return this._startupHistogramRegex.test(name);
   },
 
+  getChildPayloads: function getChildPayloads() {
+    return [for (child of this._childTelemetry) child.payload];
+  },
+
   /**
    * Make a copy of interesting histograms at startup.
    */
@@ -721,22 +758,29 @@ let Impl = {
    * respectively.
    */
   assemblePayloadWithMeasurements: function assemblePayloadWithMeasurements(simpleMeasurements, info) {
+    // Payload common to chrome and content processes.
     let payloadObj = {
       ver: PAYLOAD_VERSION,
       simpleMeasurements: simpleMeasurements,
       histograms: this.getHistograms(Telemetry.histogramSnapshots),
       keyedHistograms: this.getKeyedHistograms(),
-      slowSQL: Telemetry.slowSQL,
-      fileIOReports: Telemetry.fileIOReports,
       chromeHangs: Telemetry.chromeHangs,
       threadHangStats: this.getThreadHangStats(Telemetry.threadHangStats),
-      lateWrites: Telemetry.lateWrites,
-      addonHistograms: this.getAddonHistograms(),
-      addonDetails: AddonManagerPrivate.getTelemetryDetails(),
-      UIMeasurements: UITelemetry.getUIMeasurements(),
       log: TelemetryLog.entries(),
-      info: info,
     };
+
+    if (IS_CONTENT_PROCESS) {
+      return payloadObj;
+    }
+
+    // Additional payload for chrome process.
+    payloadObj.info = info;
+    payloadObj.slowSQL = Telemetry.slowSQL;
+    payloadObj.fileIOReports = Telemetry.fileIOReports;
+    payloadObj.lateWrites = Telemetry.lateWrites;
+    payloadObj.addonHistograms = this.getAddonHistograms();
+    payloadObj.addonDetails = AddonManagerPrivate.getTelemetryDetails();
+    payloadObj.UIMeasurements = UITelemetry.getUIMeasurements();
 
     if (Object.keys(this._slowSQLStartup).length != 0 &&
         (Object.keys(this._slowSQLStartup.mainThread).length ||
@@ -748,12 +792,15 @@ let Impl = {
       payloadObj.clientID = this._clientID;
     }
 
+    if (this._childTelemetry.length) {
+      payloadObj.childPayloads = this.getChildPayloads();
+    }
     return payloadObj;
   },
 
   getSessionPayload: function getSessionPayload(reason) {
     let measurements = this.getSimpleMeasurements(reason == "saved-session");
-    let info = this.getMetadata(reason);
+    let info = !IS_CONTENT_PROCESS ? this.getMetadata(reason) : null;
     return this.assemblePayloadWithMeasurements(measurements, info);
   },
 
@@ -980,6 +1027,8 @@ let Impl = {
     this._hasWindowRestoredObserver = true;
     this._hasXulWindowVisibleObserver = true;
 
+    ppmm.addMessageListener(MESSAGE_TELEMETRY_PAYLOAD, this);
+
     // Delay full telemetry initialization to give the browser time to
     // run various late initializers. Otherwise our gathered memory
     // footprint and other numbers would be too optimistic.
@@ -1057,6 +1106,35 @@ let Impl = {
     }
 
     return null;
+  },
+
+  receiveMessage: function receiveMessage(message) {
+    switch (message.name) {
+    case MESSAGE_TELEMETRY_PAYLOAD:
+    {
+      let target = message.target;
+      for (let child of this._childTelemetry) {
+        if (child.source.get() === target) {
+          // Update existing telemetry data.
+          child.payload = message.data;
+          return;
+        }
+      }
+      // Did not find existing child in this._childTelemetry.
+      this._childTelemetry.push({
+        source: Cu.getWeakReference(target),
+        payload: message.data,
+      });
+      break;
+    }
+    default:
+      throw new Error("Telemetry.receiveMessage: bad message name");
+    }
+  },
+
+  sendContentProcessPing: function sendContentProcessPing(reason) {
+    let payload = this.getSessionPayload(reason);
+    cpmm.sendAsyncMessage(MESSAGE_TELEMETRY_PAYLOAD, payload);
   },
 
   savePendingPings: function savePendingPings() {
@@ -1140,6 +1218,15 @@ let Impl = {
     case "app-startup":
       // app-startup is only registered for content processes.
       return this.setupContentProcess();
+    case "content-child-shutdown":
+      // content-child-shutdown is only registered for content processes.
+      Services.obs.removeObserver(this, "content-child-shutdown");
+      this.uninstall();
+
+      if (Telemetry.canSend) {
+        this.sendContentProcessPing("saved-session");
+      }
+      break;
     case "cycle-collector-begin":
       let now = new Date();
       if (!gLastMemoryPoll
