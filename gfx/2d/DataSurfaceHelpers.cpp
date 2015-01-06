@@ -239,9 +239,12 @@ CopyRect(DataSourceSurface* aSrc, DataSourceSurface* aDest,
     MOZ_CRASH("we should never be getting invalid rects at this point");
   }
 
-  MOZ_ASSERT(aSrc->GetFormat() == aDest->GetFormat(), "different surface formats");
-  MOZ_ASSERT(IntRect(IntPoint(), aSrc->GetSize()).Contains(aSrcRect), "source rect too big for source surface");
-  MOZ_ASSERT(IntRect(IntPoint(), aDest->GetSize()).Contains(aSrcRect - aSrcRect.TopLeft() + aDestPoint), "dest surface too small");
+  MOZ_RELEASE_ASSERT(aSrc->GetFormat() == aDest->GetFormat(),
+                     "different surface formats");
+  MOZ_RELEASE_ASSERT(IntRect(IntPoint(), aSrc->GetSize()).Contains(aSrcRect),
+                     "source rect too big for source surface");
+  MOZ_RELEASE_ASSERT(IntRect(IntPoint(), aDest->GetSize()).Contains(IntRect(aDestPoint, aSrcRect.Size())),
+                     "dest surface too small");
 
   if (aSrcRect.IsEmpty()) {
     return;
