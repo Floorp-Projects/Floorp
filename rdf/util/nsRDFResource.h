@@ -25,16 +25,16 @@ public:
     NS_DECL_THREADSAFE_ISUPPORTS
 
     // nsIRDFNode methods:
-    NS_IMETHOD EqualsNode(nsIRDFNode* aNode, bool* aResult);
+    NS_IMETHOD EqualsNode(nsIRDFNode* aNode, bool* aResult) MOZ_OVERRIDE;
 
     // nsIRDFResource methods:
-    NS_IMETHOD Init(const char* aURI);
-    NS_IMETHOD GetValue(char* *aURI);
-    NS_IMETHOD GetValueUTF8(nsACString& aResult);
-    NS_IMETHOD GetValueConst(const char** aURI);
-    NS_IMETHOD EqualsString(const char* aURI, bool* aResult);
-    NS_IMETHOD GetDelegate(const char* aKey, REFNSIID aIID, void** aResult);
-    NS_IMETHOD ReleaseDelegate(const char* aKey);
+    NS_IMETHOD Init(const char* aURI) MOZ_OVERRIDE;
+    NS_IMETHOD GetValue(char* *aURI) MOZ_OVERRIDE;
+    NS_IMETHOD GetValueUTF8(nsACString& aResult) MOZ_OVERRIDE;
+    NS_IMETHOD GetValueConst(const char** aURI) MOZ_OVERRIDE;
+    NS_IMETHOD EqualsString(const char* aURI, bool* aResult) MOZ_OVERRIDE;
+    NS_IMETHOD GetDelegate(const char* aKey, REFNSIID aIID, void** aResult) MOZ_OVERRIDE;
+    NS_IMETHOD ReleaseDelegate(const char* aKey) MOZ_OVERRIDE;
 
     // nsRDFResource methods:
     nsRDFResource(void);
