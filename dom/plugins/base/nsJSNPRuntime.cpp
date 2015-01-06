@@ -1750,7 +1750,7 @@ NPObjWrapper_Finalize(js::FreeOp *fop, JSObject *obj)
   NPObject *npobj = (NPObject *)::JS_GetPrivate(obj);
   if (npobj) {
     if (sNPObjWrappers.ops) {
-      PL_DHashTableOperate(&sNPObjWrappers, npobj, PL_DHASH_REMOVE);
+      PL_DHashTableRemove(&sNPObjWrappers, npobj);
     }
   }
 
@@ -1779,7 +1779,7 @@ NPObjWrapper_ObjectMoved(JSObject *obj, const JSObject *old)
   JS::AutoSuppressGCAnalysis nogc;
 
   NPObjWrapperHashEntry *entry = static_cast<NPObjWrapperHashEntry *>
-    (PL_DHashTableOperate(&sNPObjWrappers, npobj, PL_DHASH_LOOKUP));
+    (PL_DHashTableLookup(&sNPObjWrappers, npobj));
   MOZ_ASSERT(PL_DHASH_ENTRY_IS_BUSY(entry) && entry->mJSObj);
   MOZ_ASSERT(entry->mJSObj == old);
   entry->mJSObj = obj;
@@ -1832,7 +1832,7 @@ nsNPObjWrapper::OnDestroy(NPObject *npobj)
   }
 
   NPObjWrapperHashEntry *entry = static_cast<NPObjWrapperHashEntry *>
-    (PL_DHashTableOperate(&sNPObjWrappers, npobj, PL_DHASH_LOOKUP));
+    (PL_DHashTableLookup(&sNPObjWrappers, npobj));
 
   if (PL_DHASH_ENTRY_IS_BUSY(entry) && entry->mJSObj) {
     // Found a live NPObject wrapper, null out its JSObjects' private
@@ -1883,7 +1883,7 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
   }
 
   NPObjWrapperHashEntry *entry = static_cast<NPObjWrapperHashEntry *>
-    (PL_DHashTableOperate(&sNPObjWrappers, npobj, PL_DHASH_ADD));
+    (PL_DHashTableAdd(&sNPObjWrappers, npobj));
 
   if (!entry) {
     // Out of memory
@@ -1917,7 +1917,7 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
       // the table (see bug 445229). This is guaranteed to succeed.
 
       entry = static_cast<NPObjWrapperHashEntry *>
-        (PL_DHashTableOperate(&sNPObjWrappers, npobj, PL_DHASH_LOOKUP));
+        (PL_DHashTableLookup(&sNPObjWrappers, npobj));
       NS_ASSERTION(entry && PL_DHASH_ENTRY_IS_BUSY(entry),
                    "Hashtable didn't find what we just added?");
   }
@@ -2049,7 +2049,7 @@ LookupNPP(NPObject *npobj)
   }
 
   NPObjWrapperHashEntry *entry = static_cast<NPObjWrapperHashEntry *>
-    (PL_DHashTableOperate(&sNPObjWrappers, npobj, PL_DHASH_ADD));
+    (PL_DHashTableAdd(&sNPObjWrappers, npobj));
 
   if (PL_DHASH_ENTRY_IS_FREE(entry)) {
     return nullptr;
