@@ -451,6 +451,15 @@ var PrintUtils = {
 
     let onEntered = (message) => {
       mm.removeMessageListener("Printing:PrintPreview:Entered", onEntered);
+
+      if (message.data.failed) {
+        // Something went wrong while putting the document into print preview
+        // mode. Bail out.
+        this._listener.onEnter();
+        this._listener.onExit();
+        return;
+      }
+
       // Stash the focused element so that we can return to it after exiting
       // print preview.
       gFocusedElement = document.commandDispatcher.focusedElement;
@@ -521,7 +530,7 @@ var PrintUtils = {
     if (gFocusedElement)
       fm.setFocus(gFocusedElement, fm.FLAG_NOSCROLL);
     else
-      window.content.focus();
+      this._sourceBrowser.focus();
     gFocusedElement = null;
 
     this._listener.onExit();
