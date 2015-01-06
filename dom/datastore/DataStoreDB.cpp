@@ -43,7 +43,7 @@ public:
   {}
 
   // nsIDOMEventListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent)
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) MOZ_OVERRIDE
   {
     nsString type;
     nsresult rv = aEvent->GetType(type);

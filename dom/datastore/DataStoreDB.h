@@ -43,7 +43,7 @@ public:
   indexedDB::IDBTransaction* Transaction() const;
 
   // nsIDOMEventListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) MOZ_OVERRIDE;
 
 private:
   ~DataStoreDB();
