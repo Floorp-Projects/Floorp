@@ -239,9 +239,41 @@ var PageStyleActor = protocol.ActorClass({
   }),
 
   /**
+   * Get all the fonts from a page.
+   *
+   * @param object options
+   *   `includePreviews`: Whether to also return image previews of the fonts.
+   *   `previewText`: The text to display in the previews.
+   *   `previewFontSize`: The font size of the text in the previews.
+   *
+   * @returns object
+   *   object with 'fontFaces', a list of fonts that apply to this node.
+   */
+  getAllUsedFontFaces: method(function(options) {
+    let windows = this.inspector.tabActor.windows;
+    let fontsList = [];
+    for(let win of windows){
+      fontsList = [...fontsList,
+                   ...this.getUsedFontFaces(win.document.body, options)];
+    }
+    return fontsList;
+  },
+  {
+    request: {
+      includePreviews: Option(0, "boolean"),
+      previewText: Option(0, "string"),
+      previewFontSize: Option(0, "string"),
+      previewFillStyle: Option(0, "string")
+    },
+    response: {
+      fontFaces: RetVal("array:fontface")
+    }
+  }),
+
+  /**
    * Get the font faces used in an element.
    *
-   * @param NodeActor node
+   * @param NodeActor node / actual DOM node
    *    The node to get fonts from.
    * @param object options
    *   `includePreviews`: Whether to also return image previews of the fonts.
@@ -252,11 +284,12 @@ var PageStyleActor = protocol.ActorClass({
    *   object with 'fontFaces', a list of fonts that apply to this node.
    */
   getUsedFontFaces: method(function(node, options) {
-    let contentDocument = node.rawNode.ownerDocument;
-
+    // node.rawNode is defined for NodeActor objects
+    let actualNode = node.rawNode || node;
+    let contentDocument = actualNode.ownerDocument;
     // We don't get fonts for a node, but for a range
     let rng = contentDocument.createRange();
-    rng.selectNodeContents(node.rawNode);
+    rng.selectNodeContents(actualNode);
     let fonts = DOMUtils.getUsedFontFaces(rng);
     let fontsArray = [];
 

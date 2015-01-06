@@ -1,0 +1,479 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug </title>
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+  <script type="application/javascript;version=1.8" src="./director-helpers.js"></script>
+  <script type="application/javascript;version=1.8">
+window.onload = function() {
+  Task.spawn(function* () {
+    SimpleTest.waitForExplicitFinish();
+
+    var tests = [
+      runDirectorScriptModuleExports,
+      runDirectorScriptErrorOnNoAttachExports,
+      runDirectorScriptErrorOnLoadTest,
+      runDirectorScriptErrorOnRequire,
+      runDirectorScriptErrorOnUnloadTest,
+      runDirectorScriptSetupAndReceiveMessagePortTest,
+      runDirectorEnableDirectorScriptsTest,
+      runDirectorScriptDetachEventTest,
+      runDirectorScriptWindowEval
+    ].map((testCase) => {
+      return function* () {
+        setup();
+        yield testCase().then(null, (e) => {
+          console.error("Exception during testCase run", e);
+          ok(false, "Exception during testCase run: " + [e, e.fileName, e.lineNumber].join("\n\t"));
+        });
+
+        teardown();
+      };
+    });
+
+    for (var test of tests) {
+      yield test();
+    }
+  }).then(
+    function success() {
+      SimpleTest.finish()
+    },
+    function error(e) {
+      console.error("Exception during testCase run", e);
+      ok(false, "Exception during testCase run: " + [e, e.fileName, e.lineNumber].join("\n\t"));
+
+      SimpleTest.finish();
+    }
+  );
+};
+
+var targetWin = null;
+
+function setup() {
+  if (!DebuggerServer.initialized) {
+    DebuggerServer.init(() => true);
+    DebuggerServer.addBrowserActors();
+
+    SimpleTest.registerCleanupFunction(teardown);
+  }
+}
+
+function teardown() {
+  purgeInstalledDirectorScripts();
+
+  DebuggerServer.destroy();
+  if (targetWin) {
+    targetWin.close();
+  }
+}
+
+/***********************************
+ *  test cases
+ **********************************/
+
+function runDirectorScriptModuleExports() {
+  targetWin = window.open("about:blank");
+
+  var testDirectorScriptModuleExports = {
+    scriptCode: "(" + (function() {
+       module.exports = function() {};
+    }).toString() + ")();",
+    scriptOptions: {}
+  }
+
+  var testDirectorScriptAttachMethodOption = {
+    scriptCode: "(" + (function() {
+       exports.attach = function() {};
+    }).toString() + ")();",
+    scriptOptions: {
+       attachMethod: "attach"
+    }
+  }
+
+  return Task.spawn(function* () {
+    var { client, root } = yield newConnectedDebuggerClient();
+
+    var selectedTab = root.tabs[root.selected];
+    var manager = new DirectorManagerFront(client, selectedTab);
+
+    var receivedEvent1 = yield installDirectorScriptAndWaitAttachOrError({
+      client: client, root: root, manager: manager,
+      scriptId: "testDirectorscriptModuleExports",
+      scriptDefinition: testDirectorScriptModuleExports
+    });
+    ok(!!receivedEvent1.port, "received attach from testDirectorScriptModuleExports");
+
+    var receivedEvent2 = yield installDirectorScriptAndWaitAttachOrError({
+      client: client, root: root, manager: manager,
+      scriptId: "testDirectorscriptAttachMethodOption",
+      scriptDefinition: testDirectorScriptModuleExports
+    });
+    ok(!!receivedEvent2.port, "received attach event from testDirectorScriptAttachMethodOption");
+
+    client.close();
+   })
+}
+
+function runDirectorScriptErrorOnNoAttachExports() {
+  targetWin = window.open("about:blank");
+
+  var testDirectorScriptRaiseErrorOnNoAttachExports = {
+    scriptCode: "(" + (function() {
+      // this director script should raise an error
+      // because it doesn't export any attach method
+    }).toString() + ")();",
+    scriptOptions: {}
+  }
+
+  return Task.spawn(function* () {
+    var { client, root } = yield newConnectedDebuggerClient();
+
+    var selectedTab = root.tabs[root.selected];
+    var manager = new DirectorManagerFront(client, selectedTab);
+
+    var error = yield installDirectorScriptAndWaitAttachOrError({
+      client: client, root: root, manager: manager,
+      scriptId: "testDirectorscriptRaiseErrorOnNoAttachExports",
+      scriptDefinition: testDirectorScriptRaiseErrorOnNoAttachExports
+    });
+
+    assertIsDirectorScriptError(error);
+
+    client.close();
+  });
+}
+
+function runDirectorScriptErrorOnRequire() {
+  targetWin = window.open("about:blank");
+
+  var testDirectorScriptRaiseErrorOnRequire = {
+    scriptCode: "(" + (function() {
+      // this director script should raise an error
+      // because require raise a "not implemented" exception
+      console.log("PROVA", this)
+      require("fake_module");
+    }).toString() + ")();",
+    scriptOptions: {}
+  }
+
+  return Task.spawn(function* () {
+    var { client, root } = yield newConnectedDebuggerClient();
+
+    var selectedTab = root.tabs[root.selected];
+    var manager = new DirectorManagerFront(client, selectedTab);
+
+    var error = yield installDirectorScriptAndWaitAttachOrError({
+      client: client, root: root, manager: manager,
+      scriptId: "testDirectorscriptRaiseErrorOnRequire",
+      scriptDefinition: testDirectorScriptRaiseErrorOnRequire
+    });
+
+    assertIsDirectorScriptError(error);
+    is(error.message, "Error: NOT IMPLEMENTED", "error message should contains the expected error message");
+    client.close();
+  });
+}
+
+function runDirectorScriptErrorOnLoadTest() {
+  targetWin = window.open("about:blank");
+
+  var testDirectorScriptRaiseErrorOnLoad = {
+    scriptCode: "(" + (function() {
+       // this will raise an exception on evaluating
+       // the director script
+       raise.an_error.during.content_script.load();
+    }).toString() + ")();",
+    scriptOptions: {}
+  }
+
+  return Task.spawn(function* () {
+    var { client, root } = yield newConnectedDebuggerClient();
+
+    yield installTestDirectorScript(client, root, "testDirectorScript",
+                                  testDirectorScriptRaiseErrorOnLoad);
+
+    var selectedTab = root.tabs[root.selected];
+    var manager = new DirectorManagerFront(client, selectedTab);
+    var testDirectorScriptClient = yield getTestDirectorScript(manager, selectedTab, "testDirectorScript");
+
+    var waitForDirectorScriptError = waitForEvent(testDirectorScriptClient, "error");
+
+    // activate the director script without window reloading
+    testDirectorScriptClient.setup({reload: false});
+
+    var [error] = yield waitForDirectorScriptError;
+
+    assertIsDirectorScriptError(error);
+
+    client.close();
+  });
+}
+
+function runDirectorScriptErrorOnUnloadTest() {
+  targetWin = window.open("about:blank");
+
+  var testDirectorScriptRaiseErrorOnUnload = {
+    scriptCode: "(" + (function() {
+       module.exports = function({onUnload}) {
+         // this will raise an exception on unload the director script
+         onUnload(function() {
+           raise_an_error_onunload();
+         });
+       };
+    }).toString() + ")();",
+    scriptOptions: {}
+  }
+
+  return Task.spawn(function* () {
+    var { client, root } = yield newConnectedDebuggerClient();
+
+    yield installTestDirectorScript(client, root, "testDirectorScript",
+                                  testDirectorScriptRaiseErrorOnUnload);
+
+    var selectedTab = root.tabs[root.selected];
+    var manager = new DirectorManagerFront(client, selectedTab);
+    var testDirectorScriptClient = yield getTestDirectorScript(manager, selectedTab, "testDirectorScript");
+    var waitForDirectorScriptAttach = waitForEvent(testDirectorScriptClient, "attach");
+
+    // activate the director script without window reloading
+    testDirectorScriptClient.setup({reload: false});
+
+    yield waitForDirectorScriptAttach;
+
+    var waitForDirectorScriptError = waitForEvent(testDirectorScriptClient, "error");
+
+    testDirectorScriptClient.finalize();
+
+    var [error] = yield waitForDirectorScriptError;
+
+    assertIsDirectorScriptError(error);
+
+    client.close();
+  });
+}
+
+
+function runDirectorScriptSetupAndReceiveMessagePortTest() {
+  targetWin = window.open("about:blank");
+
+  var testDirectorScriptOptions = {
+    scriptCode: "(" + (function() {
+        module.exports = function({port}) {
+          port.onmessage = function(evt) {
+            // echo messages
+            evt.source.postMessage(evt.data);
+          };
+        };
+    }).toString() + ")();",
+    scriptOptions: {}
+  }
+
+  return Task.spawn(function* () {
+    var { client, root } = yield newConnectedDebuggerClient();
+
+    yield installTestDirectorScript(client, root, "testDirectorScript",
+                                  testDirectorScriptOptions);
+
+    var selectedTab = root.tabs[root.selected];
+
+    // get a testDirectorScriptClient
+    var manager = new DirectorManagerFront(client, selectedTab);
+    var testDirectorScriptClient = yield getTestDirectorScript(manager, selectedTab, "testDirectorScript");
+
+    var waitForDirectorScriptAttach = waitForEvent(testDirectorScriptClient, "attach");
+
+    // activate the director script without window reloading
+    // (and wait for attach)
+    testDirectorScriptClient.setup({reload: false});
+
+    var [attachEvent] = yield waitForDirectorScriptAttach;
+
+    // call the connectPort method to get a MessagePortClient
+    var port = attachEvent.port;
+
+    ok(!!port && !!port.postMessage, "messageport actor client received");
+
+    // exchange messages over the MessagePort
+    var waitForMessagePortMessage = waitForEvent(port, "message");
+    // needs to explicit start the port
+    port.start();
+
+    var msg = { k1: "v1", k2: [1, 2, 3] };
+    port.postMessage(msg);
+
+    var reply = yield waitForMessagePortMessage;
+
+    ok(JSON.stringify(reply[0].data) === JSON.stringify(msg),
+       "echo reply received on the MessagePortClient");
+
+    yield client.close();
+  });
+}
+
+function runDirectorEnableDirectorScriptsTest() {
+  targetWin = window.open("about:blank");
+
+  var testDirectorScriptOptions = {
+    scriptCode: "(" + (function() {
+      module.exports = function({port}) {
+        port.onmessage = function(evt) {
+          // echo messages
+          evt.source.postMessage(evt.data);
+        };
+      };
+    }).toString() + ")();",
+    scriptOptions: {}
+  }
+
+  return Task.spawn(function* () {
+    var { client, root } = yield newConnectedDebuggerClient();
+
+    yield installTestDirectorScript(client, root, "testDirectorScript",
+                                 testDirectorScriptOptions);
+
+    var selectedTab = root.tabs[root.selected];
+
+    var tabDirectorClient = new DirectorManagerFront(client, selectedTab);
+
+    var waitForDirectorScriptAttach = waitForEvent(tabDirectorClient, "director-script-attach");
+
+    tabDirectorClient.enableByScriptIds(["*"], { reload: false });
+
+    var [attachEvent] = yield waitForDirectorScriptAttach;
+
+    is(attachEvent.directorScriptId, "testDirectorScript", "attach event should contains directorScriptId");
+
+    yield client.close();
+  });
+}
+
+function runDirectorScriptDetachEventTest() {
+  targetWin = window.open("director-script-target.html");
+
+  var testDirectorScriptOptions = {
+    scriptCode: "(" + (function() {
+        exports.attach = function({port, onUnload}) {
+            onUnload(function() {
+              port.postMessage("ONUNLOAD");
+            });
+        };
+    }).toString() + ")();",
+    scriptOptions: {
+      attachMethod: "attach"
+    }
+  }
+
+  return Task.spawn(function* () {
+    var { client, root } = yield newConnectedDebuggerClient();
+
+    yield installTestDirectorScript(client, root, "testDirectorScript",
+                                 testDirectorScriptOptions);
+
+    var selectedTab = root.tabs[root.selected];
+
+    // NOTE: tab needs to be attached to receive director-script-detach events
+    yield promiseInvoke(client, client.attachTab, selectedTab.actor);
+
+    var tabDirectorClient = new DirectorManagerFront(client, selectedTab);
+
+    var waitForDirectorScriptAttach = waitForEvent(tabDirectorClient, "director-script-attach");
+    var waitForDirectorScriptDetach = waitForEvent(tabDirectorClient, "director-script-detach");
+
+    tabDirectorClient.enableByScriptIds(["*"], {reload: true});
+
+    var [attachEvent] = yield waitForDirectorScriptAttach;
+
+    // exchange messages over the MessagePort
+    var waitForMessagePortEvent = waitForEvent(attachEvent.port, "message");
+    // needs to explicit start the port
+    attachEvent.port.start();
+
+    tabDirectorClient.disableByScriptIds(["*"], {reload: false});
+
+    // changing the window location should generate a director-script-detach event
+    var [detachEvent] = yield waitForDirectorScriptDetach;
+
+    is(detachEvent.directorScriptId, "testDirectorScript", "detach event should contains directorScriptId");
+
+    var [portEvent] = yield waitForMessagePortEvent;
+
+    is(portEvent.data, "ONUNLOAD", "director-script's exports.onUnload called on detach");
+
+    yield client.close();
+  });
+}
+
+function runDirectorScriptWindowEval() {
+  targetWin = window.open("http://mochi.test:8888/chrome/toolkit/devtools/server/tests/mochitest/director-script-target.html");
+
+  var testDirectorScriptOptions = {
+    scriptCode: "(" + (function() {
+      exports.attach = function({window, port}) {
+        var onpageloaded = function() {
+          var globalVarValue = window.eval("window.globalAccessibleVar;");
+          port.postMessage(globalVarValue);
+        };
+
+        if (window.document.readyState === "complete") {
+          onpageloaded();
+        } else {
+          window.onload = onpageloaded;
+        }
+      };
+    }).toString() + ")();",
+    scriptOptions: {
+      attachMethod: "attach"
+    }
+  }
+
+  return Task.spawn(function* () {
+    var { client, root } = yield newConnectedDebuggerClient();
+
+    yield installTestDirectorScript(client, root, "testDirectorScript",
+                                 testDirectorScriptOptions);
+
+    var selectedTab = root.tabs[root.selected];
+
+    // NOTE: tab needs to be attached to receive director-script-detach events
+    yield promiseInvoke(client, client.attachTab, selectedTab.actor);
+
+    var tabDirectorClient = new DirectorManagerFront(client, selectedTab);
+
+    var waitForDirectorScriptAttach = waitForEvent(tabDirectorClient, "director-script-attach");
+    var waitForDirectorScriptError = waitForEvent(tabDirectorClient, "director-script-error");
+
+    tabDirectorClient.enableByScriptIds(["*"], {reload: false});
+
+    var [receivedEvent] = yield Promise.race([waitForDirectorScriptAttach,
+                                              waitForDirectorScriptError]);
+
+    ok(!!receivedEvent.port, "received director-script-attach");
+
+    // exchange messages over the MessagePort
+    var waitForMessagePortEvent = waitForEvent(receivedEvent.port, "message");
+    // needs to explicit start the port
+    receivedEvent.port.start();
+
+    var [portEvent] = yield waitForMessagePortEvent;
+
+    ok(portEvent.data !== "unsecure-eval", "window.eval should be wrapped and safe");
+
+    is(portEvent.data, "global-value", "window.globalAccessibleVar should be accessible through window.eval");
+
+    yield client.close();
+  });
+}
+
+  </script>
+</pre>
+</body>
+</html>
