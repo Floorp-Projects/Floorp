@@ -540,8 +540,12 @@ nsTransitionManager::ConsiderStartingTransition(
   segment.mTimingFunction.Init(tf);
 
   nsRefPtr<CSSTransitionPlayer> player = new CSSTransitionPlayer(timeline);
-  player->PlayFromStyle();
+  // The order of the following two calls is important since PlayFromStyle
+  // will add the player to the PendingPlayerTracker of its source content's
+  // document. When we come to make source writeable (bug 1049975) we should
+  // remove this dependency.
   player->SetSource(pt);
+  player->PlayFromStyle();
 
   if (!aElementTransitions) {
     aElementTransitions =

@@ -262,7 +262,13 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
   } else if (aEvent->message == NS_MOUSE_MOZLONGTAP) {
     if (!mVisible) {
       SELECTIONCARETS_LOG("SelectWord from APZ");
-      SelectWord();
+      nsresult wordSelected = SelectWord();
+
+      if (NS_FAILED(wordSelected)) {
+        SELECTIONCARETS_LOG("SelectWord from APZ failed!")
+        return nsEventStatus_eIgnore;
+      }
+
       return nsEventStatus_eConsumeNoDefault;
     }
   }
@@ -553,25 +559,25 @@ nsresult
 SelectionCarets::SelectWord()
 {
   if (!mPresShell) {
-    return NS_OK;
+    return NS_ERROR_UNEXPECTED;
   }
 
   nsIFrame* rootFrame = mPresShell->GetRootFrame();
   if (!rootFrame) {
-    return NS_OK;
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   // Find content offsets for mouse down point
   nsIFrame *ptFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, mDownPoint,
     nsLayoutUtils::IGNORE_PAINT_SUPPRESSION | nsLayoutUtils::IGNORE_CROSS_DOC);
   if (!ptFrame) {
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
   bool selectable;
   ptFrame->IsSelectable(&selectable, nullptr);
   if (!selectable) {
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
   nsPoint ptInFrame = mDownPoint;
@@ -1212,7 +1218,11 @@ SelectionCarets::FireLongTap(nsITimer* aTimer, void* aSelectionCarets)
                   "Unexpected timer");
 
   SELECTIONCARETS_LOG_STATIC("SelectWord from non-APZ");
-  self->SelectWord();
+  nsresult wordSelected = self->SelectWord();
+
+  if (NS_FAILED(wordSelected)) {
+    SELECTIONCARETS_LOG_STATIC("SelectWord from non-APZ failed!");
+  }
 }
 
 void

@@ -217,7 +217,7 @@ public:
   virtual void ProcessBlock(AudioNodeStream* aStream,
                             const AudioChunk& aInput,
                             AudioChunk* aOutput,
-                            bool* aFinished)
+                            bool* aFinished) MOZ_OVERRIDE
   {
     uint32_t channelCount = aInput.mChannelData.Length();
     if (!mCurve.Length() || !channelCount) {

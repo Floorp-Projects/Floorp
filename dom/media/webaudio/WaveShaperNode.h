@@ -48,7 +48,7 @@ public:
     return AudioNode::SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  virtual const char* NodeType() const
+  virtual const char* NodeType() const MOZ_OVERRIDE
   {
     return "WaveShaperNode";
   }

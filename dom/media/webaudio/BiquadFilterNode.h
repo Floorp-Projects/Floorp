@@ -56,7 +56,7 @@ public:
                             const Float32Array& aMagResponse,
                             const Float32Array& aPhaseResponse);
 
-  virtual const char* NodeType() const
+  virtual const char* NodeType() const MOZ_OVERRIDE
   {
     return "BiquadFilterNode";
   }

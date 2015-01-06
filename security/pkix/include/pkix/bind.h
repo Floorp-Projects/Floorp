@@ -80,7 +80,7 @@ public:
 private:
   F f;
   B1& b1;
-  void operator=(const Bind1&) = delete;
+  void operator=(const Bind1&) /*= delete*/;
 };
 
 template <typename R, typename P1, typename B1, typename B2>
@@ -94,7 +94,7 @@ private:
   F f;
   B1& b1;
   B2& b2;
-  void operator=(const Bind2&) = delete;
+  void operator=(const Bind2&) /*= delete*/;
 };
 
 template <typename R, typename P1, typename B1, typename B2, typename B3>
@@ -110,7 +110,7 @@ private:
   B1& b1;
   B2& b2;
   B3& b3;
-  void operator=(const Bind3&) = delete;
+  void operator=(const Bind3&) /*= delete*/;
 };
 
 template <typename R, typename P1, typename B1, typename B2, typename B3,
@@ -128,7 +128,7 @@ private:
   B2& b2;
   B3& b3;
   B4& b4;
-  void operator=(const Bind4&) = delete;
+  void operator=(const Bind4&) /*= delete*/;
 };
 
 template <typename R, typename C1, typename P1, typename P2, typename P3,
@@ -148,7 +148,7 @@ public:
 private:
   const F f;
   C1& that;
-  void operator=(const BindToMemberFunction4&) = delete;
+  void operator=(const BindToMemberFunction4&) /*= delete*/;
 };
 
 template <typename R, typename P1, typename B1, typename B2, typename B3,
@@ -167,7 +167,7 @@ private:
   B3 b3;
   B4 b4;
   B5 b5;
-  void operator=(const Bind5&) = delete;
+  void operator=(const Bind5&) /*= delete*/;
 };
 
 } // namespace internal

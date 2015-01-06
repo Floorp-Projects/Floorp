@@ -44,10 +44,7 @@ var omtaEnabled = SpecialPowers.DOMWindowUtils.layerManagerRemote &&
 div.style.animation = 'anim 100s';
 var player = div.getAnimationPlayers()[0];
 
-// Wait so that animation can be set up.
-// FIXME: When we implement the AnimationPlayer.ready promise we should wait
-// on that here.
-window.requestAnimationFrame(function() {
+player.ready.then(function() {
   is(player.isRunningOnCompositor, omtaEnabled,
      'AnimationPlayer reports that it is running on the compositor'
      + ' during playback');
@@ -55,7 +52,8 @@ window.requestAnimationFrame(function() {
   div.style.animationPlayState = 'paused';
   window.getComputedStyle(div).animationPlayState;
 
-  // FIXME: Likewise, we should wait on AnimationPlayer.ready here too.
+  // FIXME: When we implement deferred pausing (bug 1109390), we should wait
+  // on player.ready here.
   window.requestAnimationFrame(function() {
     is(player.isRunningOnCompositor, false,
        'AnimationPlayer reports that it is NOT running on the compositor'

@@ -381,7 +381,7 @@ public:
 private:
   NS_IMETHODIMP
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
-                 bool aAnonymize)
+                 bool aAnonymize) MOZ_OVERRIDE
   {
     return MOZ_COLLECT_REPORT(
       "explicit/icu", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
@@ -406,7 +406,7 @@ public:
 private:
   NS_IMETHODIMP
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
-                 bool aAnonymize)
+                 bool aAnonymize) MOZ_OVERRIDE
   {
     return MOZ_COLLECT_REPORT(
       "explicit/media/libogg", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
@@ -432,7 +432,7 @@ public:
 private:
   NS_IMETHODIMP
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
-                 bool aAnonymize)
+                 bool aAnonymize) MOZ_OVERRIDE
   {
     return MOZ_COLLECT_REPORT(
       "explicit/media/libvpx", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
@@ -459,7 +459,7 @@ public:
 private:
   NS_IMETHODIMP
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
-                 bool aAnonymize)
+                 bool aAnonymize) MOZ_OVERRIDE
   {
     return MOZ_COLLECT_REPORT(
       "explicit/media/libnestegg", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
