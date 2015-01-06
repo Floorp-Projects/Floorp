@@ -31,7 +31,7 @@ describe("loop.shared.mixins", function() {
           return React.DOM.div();
         }
       });
-      return new TestComp();
+      return new React.createElement(TestComp);
     }
 
     it("should watch for hashchange event", function() {
@@ -83,7 +83,7 @@ describe("loop.shared.mixins", function() {
     });
 
     it("should call window.location.reload", function() {
-      var comp = TestUtils.renderIntoDocument(TestComp());
+      var comp = TestUtils.renderIntoDocument(React.createElement(TestComp));
 
       comp.locationReload();
 
@@ -109,7 +109,7 @@ describe("loop.shared.mixins", function() {
     });
 
     it("should set window.document.title", function() {
-      var comp = TestUtils.renderIntoDocument(TestComp());
+      var comp = TestUtils.renderIntoDocument(React.createElement(TestComp));
 
       comp.setTitle("It's a Fake!");
 
@@ -136,7 +136,7 @@ describe("loop.shared.mixins", function() {
     });
 
     it("should call window.close", function() {
-      var comp = TestUtils.renderIntoDocument(TestComp());
+      var comp = TestUtils.renderIntoDocument(React.createElement(TestComp));
 
       comp.closeWindow();
 
@@ -181,7 +181,7 @@ describe("loop.shared.mixins", function() {
       function() {
         setupFakeVisibilityEventDispatcher({target: {hidden: false}});
 
-        comp = TestUtils.renderIntoDocument(TestComp());
+        comp = TestUtils.renderIntoDocument(React.createElement(TestComp));
 
         sinon.assert.calledOnce(onDocumentVisibleStub);
       });
@@ -190,7 +190,7 @@ describe("loop.shared.mixins", function() {
       function() {
         setupFakeVisibilityEventDispatcher({target: {hidden: true}});
 
-        comp = TestUtils.renderIntoDocument(TestComp());
+        comp = TestUtils.renderIntoDocument(React.createElement(TestComp));
 
         sinon.assert.calledOnce(onDocumentHiddenStub);
       });
@@ -227,14 +227,14 @@ describe("loop.shared.mixins", function() {
     });
 
     it("should not play a failure sound when doNotDisturb true", function() {
-      view = TestUtils.renderIntoDocument(TestComp());
+      view = TestUtils.renderIntoDocument(React.createElement(TestComp));
       sinon.assert.notCalled(navigator.mozLoop.getAudioBlob);
       sinon.assert.notCalled(fakeAudio.play);
     });
 
     it("should play a failure sound, once", function() {
       navigator.mozLoop.doNotDisturb = false;
-      view = TestUtils.renderIntoDocument(TestComp());
+      view = TestUtils.renderIntoDocument(React.createElement(TestComp));
       sinon.assert.calledOnce(navigator.mozLoop.getAudioBlob);
       sinon.assert.calledWithExactly(navigator.mozLoop.getAudioBlob,
                                      "failure", sinon.match.func);
@@ -258,7 +258,8 @@ describe("loop.shared.mixins", function() {
         }
       });
 
-      var renderedComp = TestUtils.renderIntoDocument(TestComp());
+      var renderedComp = TestUtils.renderIntoDocument(
+        React.createElement(TestComp));
       sandbox.stub(renderedComp, "play");
       return renderedComp;
     }
