@@ -28,7 +28,9 @@ function loaded(event) {
 function started(event) {
   var v = event.target;
   info(v.token + ": event=" + event.type);
-  if (v._finished)
+  // For a short file, it could reach the end before 'play' received. We will
+  // skip the test for 'paused' would be true when ended.
+  if (v._finished || v.ended)
     return;
   ok(!v.paused, v.token + ": Video should not be paused while playing");
   v.parentNode.removeChild(v);
