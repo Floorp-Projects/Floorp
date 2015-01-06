@@ -87,7 +87,7 @@ public:
 
   virtual nsresult SetPreferenceStyleRules(bool aForceReflow) MOZ_OVERRIDE;
 
-  NS_IMETHOD GetSelection(SelectionType aType, nsISelection** aSelection);
+  NS_IMETHOD GetSelection(SelectionType aType, nsISelection** aSelection) MOZ_OVERRIDE;
   virtual mozilla::dom::Selection* GetCurrentSelection(SelectionType aType) MOZ_OVERRIDE;
 
   NS_IMETHOD SetDisplaySelection(int16_t aToggle) MOZ_OVERRIDE;
@@ -129,7 +129,7 @@ public:
   virtual void CancelReflowCallback(nsIReflowCallback* aCallback) MOZ_OVERRIDE;
 
   virtual void ClearFrameRefs(nsIFrame* aFrame) MOZ_OVERRIDE;
-  virtual already_AddRefed<gfxContext> CreateReferenceRenderingContext();
+  virtual already_AddRefed<gfxContext> CreateReferenceRenderingContext() MOZ_OVERRIDE;
   virtual nsresult GoToAnchor(const nsAString& aAnchorName, bool aScroll,
                               uint32_t aAdditionalScrollFlags = 0) MOZ_OVERRIDE;
   virtual nsresult ScrollToAnchor() MOZ_OVERRIDE;
@@ -169,7 +169,7 @@ public:
   virtual already_AddRefed<nsIContent> GetEventTargetContent(
                                                      mozilla::WidgetEvent* aEvent) MOZ_OVERRIDE;
 
-  virtual void NotifyCounterStylesAreDirty();
+  virtual void NotifyCounterStylesAreDirty() MOZ_OVERRIDE;
 
   virtual nsresult ReconstructFrames(void) MOZ_OVERRIDE;
   virtual void Freeze() MOZ_OVERRIDE;
@@ -376,7 +376,7 @@ public:
 
   virtual bool AssumeAllImagesVisible() MOZ_OVERRIDE;
 
-  virtual void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot);
+  virtual void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot) MOZ_OVERRIDE;
 
   virtual void DispatchAfterKeyboardEvent(nsINode* aTarget,
                                           const mozilla::WidgetKeyboardEvent& aEvent,
@@ -622,7 +622,7 @@ protected:
     }
 
   public:
-    NS_INLINE_DECL_REFCOUNTING(nsSynthMouseMoveEvent)
+    NS_INLINE_DECL_REFCOUNTING(nsSynthMouseMoveEvent, MOZ_OVERRIDE)
 
     void Revoke() {
       if (mPresShell) {
