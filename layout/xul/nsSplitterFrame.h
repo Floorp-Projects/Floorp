@@ -23,7 +23,7 @@ class nsSplitterFrame : public nsBoxFrame
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  nsSplitterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  explicit nsSplitterFrame(nsStyleContext* aContext);
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
 #ifdef DEBUG_FRAME_DUMP
