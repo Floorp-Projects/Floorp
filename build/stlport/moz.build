@@ -9,9 +9,6 @@ Library('stlport')
 # name for the Library for convenience in moz.build.
 STATIC_LIBRARY_NAME = 'stlport_static'
 
-if not CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    OS_LIBS += ['-static-libstdc++']
-
 FORCE_STATIC_LIB = True
 
 SOURCES += [
