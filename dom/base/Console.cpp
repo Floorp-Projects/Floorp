@@ -243,7 +243,7 @@ private:
 class ConsoleRunnable : public nsRunnable
 {
 public:
-  ConsoleRunnable(Console* aConsole)
+  explicit ConsoleRunnable(Console* aConsole)
     : mWorkerPrivate(GetCurrentThreadWorkerPrivate())
     , mConsole(aConsole)
   {
