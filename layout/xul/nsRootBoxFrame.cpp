@@ -46,7 +46,7 @@ public:
 
   friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  nsRootBoxFrame(nsStyleContext *aContext);
+  explicit nsRootBoxFrame(nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
