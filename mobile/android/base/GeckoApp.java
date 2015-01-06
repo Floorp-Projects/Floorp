@@ -130,6 +130,8 @@ public abstract class GeckoApp
     private static final String LOGTAG = "GeckoApp";
     private static final int ONE_DAY_MS = 1000*60*60*24;
 
+    private static final boolean ZOOMED_VIEW_ENABLED = AppConstants.NIGHTLY_BUILD;
+
     private static enum StartupAction {
         NORMAL,     /* normal application start */
         URL,        /* launched with a passed URL */
@@ -173,6 +175,7 @@ public abstract class GeckoApp
     private ContactService mContactService;
     private PromptService mPromptService;
     private TextSelection mTextSelection;
+    private ZoomedView mZoomedView;
 
     protected DoorHangerPopup mDoorHangerPopup;
     protected FormAssistPopup mFormAssistPopup;
@@ -1578,6 +1581,11 @@ public abstract class GeckoApp
                                            (TextSelectionHandle) findViewById(R.id.caret_handle),
                                            (TextSelectionHandle) findViewById(R.id.focus_handle));
 
+        if (ZOOMED_VIEW_ENABLED) {
+            ViewStub stub = (ViewStub) findViewById(R.id.zoomed_view_stub);
+            mZoomedView = (ZoomedView) stub.inflate();
+        }
+
         PrefsHelper.getPref("app.update.autodownload", new PrefsHelper.PrefHandlerBase() {
             @Override public void prefValue(String pref, String value) {
                 UpdateServiceHelper.registerForUpdates(GeckoApp.this, value);
@@ -2048,6 +2056,9 @@ public abstract class GeckoApp
             mPromptService.destroy();
         if (mTextSelection != null)
             mTextSelection.destroy();
+        if (mZoomedView != null) {
+            mZoomedView.destroy();
+        }
         NotificationHelper.destroy();
         IntentHelper.destroy();
         GeckoNetworkManager.destroy();
