@@ -24,7 +24,6 @@
 #include "nsISSLStatusProvider.h"
 #endif
 #include "mozilla/Attributes.h"
-#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace net {
@@ -33,8 +32,6 @@ static const char kAllowProxies[] = "network.automatic-ntlm-auth.allow-proxies";
 static const char kAllowNonFqdn[] = "network.automatic-ntlm-auth.allow-non-fqdn";
 static const char kTrustedURIs[]  = "network.automatic-ntlm-auth.trusted-uris";
 static const char kForceGeneric[] = "network.auth.force-generic-ntlm";
-static const char kAllowGenericHTTP[] = "network.negotiate-auth.allow-insecure-ntlm-v1";
-static const char kAllowGenericHTTPS[] = "network.negotiate-auth.allow-insecure-ntlm-v1-https";
 
 // XXX MatchesBaseURI and TestPref are duplicated in nsHttpNegotiateAuth.cpp,
 // but since that file lives in a separate library we cannot directly share it.
@@ -180,47 +177,6 @@ ForceGenericNTLM()
     return flag;
 }
 
-// Check to see if we should use our generic (internal) NTLM auth module.
-static bool
-AllowGenericNTLM()
-{
-    MOZ_ASSERT(NS_IsMainThread());
-
-    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (!prefs)
-        return false;
-
-    bool flag = false;
-    if (NS_FAILED(prefs->GetBoolPref(kAllowGenericHTTP, &flag)))
-        flag = false;
-
-    LOG(("Allow use of generic ntlm auth module: %d\n", flag));
-    return flag;
-}
-
-// Check to see if we should use our generic (internal) NTLM auth module.
-static bool
-AllowGenericNTLMforHTTPS(nsIHttpAuthenticableChannel *channel)
-{
-    bool isSSL = false;
-    channel->GetIsSSL(&isSSL);
-    if (!isSSL)
-        return false;
-
-    MOZ_ASSERT(NS_IsMainThread());
-
-    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (!prefs)
-        return false;
-
-    bool flag = false;
-    if (NS_FAILED(prefs->GetBoolPref(kAllowGenericHTTPS, &flag)))
-        flag = false;
-
-    LOG(("Allow use of generic ntlm auth module for only https: %d\n", flag));
-    return flag;
-}
-
 // Check to see if we should use default credentials for this host or proxy.
 static bool
 CanUseDefaultCredentials(nsIHttpAuthenticableChannel *channel,
@@ -343,14 +299,8 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel *channel,
 
             // Use our internal NTLM implementation. Note, this is less secure,
             // see bug 520607 for details.
-
-            // For now with default preference settings (i.e. allow-insecure-ntlm-v1-https = true
-            // and allow-insecure-ntlm-v1 = false) we don't allow authentication to any proxy,
-            // either http or https.  This will be fixed in a followup bug.
-            if (AllowGenericNTLM() || (!isProxyAuth && AllowGenericNTLMforHTTPS(channel))) {
-                LOG(("Trying to fall back on internal ntlm auth.\n"));
-                module = do_CreateInstance(NS_AUTH_MODULE_CONTRACTID_PREFIX "ntlm");
-            }
+            LOG(("Trying to fall back on internal ntlm auth.\n"));
+            module = do_CreateInstance(NS_AUTH_MODULE_CONTRACTID_PREFIX "ntlm");
 	
             mUseNative = false;
 

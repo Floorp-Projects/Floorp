@@ -1142,30 +1142,13 @@ PrimitiveToObject(JSContext *cx, const Value &v);
 
 namespace js {
 
-/*
- * Invokes the ES5 ToObject algorithm on vp, returning the result. If vp might
- * already be an object, use ToObject. reportCantConvert controls how null and
- * undefined errors are reported.
- */
-extern JSObject *
-ToObjectSlow(JSContext *cx, HandleValue vp, bool reportScanStack);
-
-/* For object conversion in e.g. native functions. */
-MOZ_ALWAYS_INLINE JSObject *
-ToObject(JSContext *cx, HandleValue vp)
-{
-    if (vp.isObject())
-        return &vp.toObject();
-    return ToObjectSlow(cx, vp, false);
-}
-
 /* For converting stack values to objects. */
 MOZ_ALWAYS_INLINE JSObject *
 ToObjectFromStack(JSContext *cx, HandleValue vp)
 {
     if (vp.isObject())
         return &vp.toObject();
-    return ToObjectSlow(cx, vp, true);
+    return js::ToObjectSlow(cx, vp, true);
 }
 
 template<XDRMode mode>
