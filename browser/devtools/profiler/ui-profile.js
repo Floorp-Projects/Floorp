@@ -36,13 +36,10 @@ let ProfileView = {
     this._onCallViewFocus = this._onCallViewFocus.bind(this);
     this._onCallViewLink = this._onCallViewLink.bind(this);
     this._onCallViewZoom = this._onCallViewZoom.bind(this);
-    this._onThemeChange = this._onThemeChange.bind(this);
 
     this._panels.addEventListener("select", this._onTabSelect, false);
     this._newtabButton.addEventListener("click", this._onNewTabClick, false);
     this._invertTree.addEventListener("command", this._onInvertTree, false);
-
-    gDevTools.on("pref-changed", this._onThemeChange);
   },
 
   /**
@@ -54,7 +51,6 @@ let ProfileView = {
     this._panels.removeEventListener("select", this._onTabSelect, false);
     this._newtabButton.removeEventListener("click", this._onNewTabClick, false);
     this._invertTree.removeEventListener("command", this._onInvertTree, false);
-    gDevTools.off("pref-changed", this._onThemeChange);
   },
 
   /**
@@ -433,8 +429,6 @@ let ProfileView = {
     }
 
     let graph = new BarGraphWidget($(".categories", panel));
-    let theme = Services.prefs.getCharPref("devtools.theme");
-    graph.setTheme(theme);
     graph.fixedHeight = CATEGORIES_GRAPH_HEIGHT;
     graph.minBarsWidth = CATEGORIES_GRAPH_MIN_BARS_WIDTH;
     graph.format = CATEGORIES.sort((a, b) => a.ordinal > b.ordinal);
@@ -615,18 +609,6 @@ let ProfileView = {
    */
   _onCallViewZoom: function(event, treeItem) {
     this._spawnTabFromFrameNode(treeItem.frame);
-  },
-
-  /**
-   * Called when the developer tools theme changes. Redraws
-   * the graphs with the new theme setting.
-   */
-  _onThemeChange: function (_, { newValue: theme }) {
-    let graph = this._getCategoriesGraph();
-    if (graph) {
-      graph.setTheme(theme);
-      graph.refresh({ force: true });
-    }
   }
 };
 
