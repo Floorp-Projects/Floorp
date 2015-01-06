@@ -84,12 +84,9 @@ namespace mozilla {
  */
 class RefreshDriverTimer {
 public:
-  /*
-   * aRate -- the delay, in milliseconds, requested between timer firings
-   */
-  explicit RefreshDriverTimer(double aRate)
+  RefreshDriverTimer()
+    : mLastFireEpoch(0)
   {
-    SetRate(aRate);
   }
 
   virtual ~RefreshDriverTimer()
@@ -119,18 +116,6 @@ public:
     if (mRefreshDrivers.Length() == 0) {
       StopTimer();
     }
-  }
-
-  double GetRate() const
-  {
-    return mRateMilliseconds;
-  }
-
-  // will take effect at next timer tick
-  virtual void SetRate(double aNewRate)
-  {
-    mRateMilliseconds = aNewRate;
-    mRateDuration = TimeDuration::FromMilliseconds(mRateMilliseconds);
   }
 
   TimeStamp MostRecentRefresh() const { return mLastFireTime; }
@@ -177,9 +162,6 @@ protected:
     driver->Tick(jsnow, now);
   }
 
-  double mRateMilliseconds;
-  TimeDuration mRateDuration;
-
   int64_t mLastFireEpoch;
   TimeStamp mLastFireTime;
   TimeStamp mTargetTime;
@@ -206,15 +188,30 @@ class SimpleTimerBasedRefreshDriverTimer :
     public RefreshDriverTimer
 {
 public:
+  /*
+   * aRate -- the delay, in milliseconds, requested between timer firings
+   */
   explicit SimpleTimerBasedRefreshDriverTimer(double aRate)
-    : RefreshDriverTimer(aRate)
   {
+    SetRate(aRate);
     mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
   }
 
   virtual ~SimpleTimerBasedRefreshDriverTimer()
   {
     StopTimer();
+  }
+
+  // will take effect at next timer tick
+  virtual void SetRate(double aNewRate)
+  {
+    mRateMilliseconds = aNewRate;
+    mRateDuration = TimeDuration::FromMilliseconds(mRateMilliseconds);
+  }
+
+  double GetRate() const
+  {
+    return mRateMilliseconds;
   }
 
 protected:
@@ -236,6 +233,8 @@ protected:
     mTimer->Cancel();
   }
 
+  double mRateMilliseconds;
+  TimeDuration mRateDuration;
   nsRefPtr<nsITimer> mTimer;
 };
 
@@ -440,25 +439,23 @@ protected:
  * at some point, but we don't care too much about how often.
  */
 class InactiveRefreshDriverTimer MOZ_FINAL :
-    public RefreshDriverTimer
+    public SimpleTimerBasedRefreshDriverTimer
 {
 public:
   explicit InactiveRefreshDriverTimer(double aRate)
-    : RefreshDriverTimer(aRate),
+    : SimpleTimerBasedRefreshDriverTimer(aRate),
       mNextTickDuration(aRate),
       mDisableAfterMilliseconds(-1.0),
       mNextDriverIndex(0)
   {
-    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
   }
 
   InactiveRefreshDriverTimer(double aRate, double aDisableAfterMilliseconds)
-    : RefreshDriverTimer(aRate),
+    : SimpleTimerBasedRefreshDriverTimer(aRate),
       mNextTickDuration(aRate),
       mDisableAfterMilliseconds(aDisableAfterMilliseconds),
       mNextDriverIndex(0)
   {
-    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
   }
 
   virtual void AddRefreshDriver(nsRefreshDriver* aDriver)
@@ -548,7 +545,6 @@ protected:
     timer->TickOne();
   }
 
-  nsRefPtr<nsITimer> mTimer;
   double mNextTickDuration;
   double mDisableAfterMilliseconds;
   uint32_t mNextDriverIndex;
