@@ -1,0 +1,130 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Storing &lt;input type=&quot;file&quot;&gt; in IndexedDB</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript;version=1.7">
+
+    let dbName = window.location.pathname;
+    let dbVersion = 1;
+    let objectStoreName = "foo";
+
+    let fileName = "temp_input_type_file_indexedDB_data.txt";
+    let fileData = "abcdefghijklmnopqrstuvwxyz";
+    let fileType = "text/plain";
+
+    function testSteps()
+    {
+      info("Creating temporary file");
+
+      let inputElement = document.getElementById("inputElement");
+
+      {
+        let { Cc: Cc, Ci: Ci } = SpecialPowers;
+
+        let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
+                      getService(Ci.nsIProperties);
+
+        let tempFile = dirSvc.get("ProfD", Ci.nsIFile);
+        tempFile.append(fileName);
+
+        {
+          let stream = Cc["@mozilla.org/network/file-output-stream;1"].
+                        createInstance(Ci.nsIFileOutputStream);
+
+          let flags = /* PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE */
+                      0x2 | 0x8 | 0x20;
+          stream.init(tempFile, flags, 0666, 0);
+
+          stream.write(fileData, fileData.length);
+          stream.close();
+        }
+
+        SpecialPowers.wrap(inputElement).value = tempFile.path;
+
+        info("Temporary file created: " + tempFile.path);
+      }
+
+      let file = inputElement.files[0];
+      ok(file instanceof File, "Got a File object for the temporary file");
+      is(file.size, fileData.length, "File has correct length");
+      is(file.type, fileType, "File has correct type");
+      is(file.name, fileName, "File has correct name");
+
+      info("Opening database");
+
+      let request = indexedDB.open(window.location.pathname, 1);
+      request.onerror = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+
+      let event = yield undefined;
+
+      is(event.type, "upgradeneeded", "Got upgradeneeded event");
+
+      let db = event.target.result;
+      db.onerror = errorHandler;
+
+      db.createObjectStore("foo", { autoIncrement: true });
+
+      event = yield undefined;
+
+      is(event.type, "success", "Got success event for open()");
+
+      info("Storing file");
+
+      let transaction = db.transaction("foo", "readwrite");
+      transaction.oncomplete = grabEventAndContinueHandler;
+
+      let objectStore = transaction.objectStore("foo");
+      objectStore.put(file).onsuccess = grabEventAndContinueHandler;
+
+      event = yield undefined;
+
+      is(event.type, "success", "Got success event for put()");
+
+      let key = event.target.result;
+      objectStore.get(key).onsuccess = grabEventAndContinueHandler;
+
+      event = yield;
+
+      is(event.type, "success", "Got success event for get()");
+
+      file = event.target.result;
+      ok(file instanceof File, "Got a File object from the database");
+      is(file.size, fileData.length, "File has correct length");
+      is(file.type, fileType, "File has correct type");
+      is(file.name, fileName, "File has correct name");
+
+      let reader = new FileReader();
+      reader.onerror = errorHandler;
+      reader.onload = grabEventAndContinueHandler;
+      reader.readAsText(file);
+
+      event = yield undefined;
+
+      is(event.type, "load", "Got load event for readAsText()");
+
+      is(reader.result, fileData, "Got correct file data");
+
+      event = yield undefined;
+
+      is(event.type, "complete", "Got complete event for transaction");
+
+      db.close();
+
+      finishTest();
+      yield undefined;
+    }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+</head>
+<body onload="runTest();">
+  <input id="inputElement" type="file"></input>
+</body>
+<iframe id="iframe1"></iframe>
+</html>
