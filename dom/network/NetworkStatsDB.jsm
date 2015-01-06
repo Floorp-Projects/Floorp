@@ -48,18 +48,33 @@ NetworkStatsDB.prototype = {
     return this.newTxn(txn_type, store_name, callback, successCb, errorCb);
   },
 
+  /**
+   * The onupgradeneeded handler of the IDBOpenDBRequest.
+   * This function is called in IndexedDBHelper open() method.
+   *
+   * @param {IDBTransaction} aTransaction
+   *        {IDBDatabase} aDb
+   *        {64-bit integer} aOldVersion The version number on local storage.
+   *        {64-bit integer} aNewVersion The version number to be upgraded to.
+   *
+   * @note  Be careful with the database upgrade pattern.
+   *        Because IndexedDB operations are performed asynchronously, we must
+   *        apply a recursive approach instead of an iterative approach while
+   *        upgrading versions.
+   */
   upgradeSchema: function upgradeSchema(aTransaction, aDb, aOldVersion, aNewVersion) {
     if (DEBUG) {
       debug("upgrade schema from: " + aOldVersion + " to " + aNewVersion + " called!");
     }
     let db = aDb;
     let objectStore;
-    for (let currVersion = aOldVersion; currVersion < aNewVersion; currVersion++) {
-      if (currVersion == 0) {
-        /**
-         * Create the initial database schema.
-         */
 
+    // An array of upgrade functions for each version.
+    let upgradeSteps = [
+      function upgrade0to1() {
+        if (DEBUG) debug("Upgrade 0 to 1: Create object stores and indexes.");
+
+        // Create the initial database schema.
         objectStore = db.createObjectStore(DEPRECATED_STORE_NAME, { keyPath: ["connectionType", "timestamp"] });
         objectStore.createIndex("connectionType", "connectionType", { unique: false });
         objectStore.createIndex("timestamp", "timestamp", { unique: false });
@@ -67,10 +82,18 @@ NetworkStatsDB.prototype = {
         objectStore.createIndex("txBytes", "txBytes", { unique: false });
         objectStore.createIndex("rxTotalBytes", "rxTotalBytes", { unique: false });
         objectStore.createIndex("txTotalBytes", "txTotalBytes", { unique: false });
-        if (DEBUG) {
-          debug("Created object stores and indexes");
-        }
-      } else if (currVersion == 2) {
+
+        upgradeNextVersion();
+      },
+
+      function upgrade1to2() {
+        if (DEBUG) debug("Upgrade 1 to 2: Do nothing.");
+        upgradeNextVersion();
+      },
+
+      function upgrade2to3() {
+        if (DEBUG) debug("Upgrade 2 to 3: Add keyPath appId to object store.");
+
         // In order to support per-app traffic data storage, the original
         // objectStore needs to be replaced by a new objectStore with new
         // key path ("appId") and new index ("appId").
@@ -99,11 +122,13 @@ NetworkStatsDB.prototype = {
         objectStore.createIndex("rxTotalBytes", "rxTotalBytes", { unique: false });
         objectStore.createIndex("txTotalBytes", "txTotalBytes", { unique: false });
 
-        if (DEBUG) {
-          debug("Created object stores and indexes for version 3");
-        }
-      } else if (currVersion == 3) {
-        // Delete redundent indexes (leave "network" only).
+        upgradeNextVersion();
+      },
+
+      function upgrade3to4() {
+        if (DEBUG) debug("Upgrade 3 to 4: Delete redundant indexes.");
+
+        // Delete redundant indexes (leave "network" only).
         objectStore = aTransaction.objectStore(DEPRECATED_STORE_NAME);
         if (objectStore.indexNames.contains("appId")) {
           objectStore.deleteIndex("appId");
@@ -127,10 +152,12 @@ NetworkStatsDB.prototype = {
           objectStore.deleteIndex("txTotalBytes");
         }
 
-        if (DEBUG) {
-          debug("Deleted redundent indexes for version 4");
-        }
-      } else if (currVersion == 4) {
+        upgradeNextVersion();
+      },
+
+      function upgrade4to5() {
+        if (DEBUG) debug("Upgrade 4 to 5: Create object store for alarms.");
+
         // In order to manage alarms, it is necessary to use a global counter
         // (totalBytes) that will increase regardless of the system reboot.
         objectStore = aTransaction.objectStore(DEPRECATED_STORE_NAME);
@@ -143,6 +170,8 @@ NetworkStatsDB.prototype = {
         objectStore.openCursor().onsuccess = function(event) {
           let cursor = event.target.result;
           if (!cursor){
+            // upgrade4to5 completed now.
+            upgradeNextVersion();
             return;
           }
 
@@ -188,11 +217,11 @@ NetworkStatsDB.prototype = {
         objectStore = db.createObjectStore(ALARMS_STORE_NAME, { keyPath: "id", autoIncrement: true });
         objectStore.createIndex("alarm", ['networkId','threshold'], { unique: false });
         objectStore.createIndex("manifestURL", "manifestURL", { unique: false });
+      },
 
-        if (DEBUG) {
-          debug("Created alarms store for version 5");
-        }
-      } else if (currVersion == 5) {
+      function upgrade5to6() {
+        if (DEBUG) debug("Upgrade 5 to 6: Add keyPath serviceType to object store.");
+
         // In contrast to "per-app" traffic data, "system-only" traffic data
         // refers to data which can not be identified by any applications.
         // To further support "system-only" data storage, the data can be
@@ -209,6 +238,8 @@ NetworkStatsDB.prototype = {
           let cursor = event.target.result;
           if (!cursor) {
             db.deleteObjectStore(DEPRECATED_STORE_NAME);
+            // upgrade5to6 completed now.
+            upgradeNextVersion();
             return;
           }
 
@@ -217,11 +248,11 @@ NetworkStatsDB.prototype = {
           newObjectStore.put(newStats);
           cursor.continue();
         };
+      },
 
-        if (DEBUG) {
-          debug("Added new key 'serviceType' for version 6");
-        }
-      } else if (currVersion == 6) {
+      function upgrade6to7() {
+        if (DEBUG) debug("Upgrade 6 to 7: Replace alarm threshold by relativeThreshold.");
+
         // Replace threshold attribute of alarm index by relativeThreshold in alarms DB.
         // Now alarms are indexed by relativeThreshold, which is the threshold relative
         // to current system stats.
@@ -239,6 +270,7 @@ NetworkStatsDB.prototype = {
         alarmsStore.openCursor().onsuccess = function(event) {
           let cursor = event.target.result;
           if (!cursor) {
+            upgrade6to7_updateTotalBytes();
             return;
           }
 
@@ -250,75 +282,132 @@ NetworkStatsDB.prototype = {
           cursor.continue();
         }
 
-        // Previous versions save accumulative totalBytes, increasing althought the system
-        // reboots or resets stats. But is necessary to reset the total counters when reset
-        // through 'clearInterfaceStats'.
-        let statsStore = aTransaction.objectStore(STATS_STORE_NAME);
-        let networks = [];
-        // Find networks stored in the database.
-        statsStore.index("network").openKeyCursor(null, "nextunique").onsuccess = function(event) {
-          let cursor = event.target.result;
-          if (cursor) {
-            networks.push(cursor.key);
-            cursor.continue();
-            return;
-          }
+        function upgrade6to7_updateTotalBytes() {
+          if (DEBUG) debug("Upgrade 6 to 7: Update TotalBytes.");
+          // Previous versions save accumulative totalBytes, increasing although the system
+          // reboots or resets stats. But is necessary to reset the total counters when reset
+          // through 'clearInterfaceStats'.
+          let statsStore = aTransaction.objectStore(STATS_STORE_NAME);
+          let networks = [];
 
-          networks.forEach(function(network) {
-            let lowerFilter = [0, "", network, 0];
-            let upperFilter = [0, "", network, ""];
-            let range = IDBKeyRange.bound(lowerFilter, upperFilter, false, false);
+          // Find networks stored in the database.
+          statsStore.index("network").openKeyCursor(null, "nextunique").onsuccess = function(event) {
+            let cursor = event.target.result;
 
-            // Find number of samples for a given network.
-            statsStore.count(range).onsuccess = function(event) {
-              // If there are more samples than the max allowed, there is no way to know
-              // when does reset take place.
-              if (event.target.result >= VALUES_MAX_LENGTH) {
-                return;
-              }
+            // Store each network into an array.
+            if (cursor) {
+              networks.push(cursor.key);
+              cursor.continue();
+              return;
+            }
 
-              let last = null;
-              // Reset detected if the first sample totalCounters are different than bytes
-              // counters. If so, the total counters should be recalculated.
-              statsStore.openCursor(range).onsuccess = function(event) {
-                let cursor = event.target.result;
-                if (!cursor) {
+            // Start to deal with each network.
+            let pending = networks.length;
+
+            if (pending === 0) {
+              // Found no records of network. upgrade6to7 completed now.
+              upgradeNextVersion();
+              return;
+            }
+
+            networks.forEach(function(network) {
+              let lowerFilter = [0, "", network, 0];
+              let upperFilter = [0, "", network, ""];
+              let range = IDBKeyRange.bound(lowerFilter, upperFilter, false, false);
+
+              // Find number of samples for a given network.
+              statsStore.count(range).onsuccess = function(event) {
+                let recordCount = event.target.result;
+
+                // If there are more samples than the max allowed, there is no way to know
+                // when does reset take place.
+                if (recordCount === 0 || recordCount >= VALUES_MAX_LENGTH) {
+                  pending--;
+                  if (pending === 0) {
+                    upgradeNextVersion();
+                  }
                   return;
                 }
-                if (!last) {
-                  if (cursor.value.rxTotalBytes == cursor.value.rxBytes &&
-                      cursor.value.txTotalBytes == cursor.value.txBytes) {
+
+                let last = null;
+                // Reset detected if the first sample totalCounters are different than bytes
+                // counters. If so, the total counters should be recalculated.
+                statsStore.openCursor(range).onsuccess = function(event) {
+                  let cursor = event.target.result;
+                  if (!cursor) {
+                    pending--;
+                    if (pending === 0) {
+                      upgradeNextVersion();
+                    }
+                    return;
+                  }
+                  if (!last) {
+                    if (cursor.value.rxTotalBytes == cursor.value.rxBytes &&
+                        cursor.value.txTotalBytes == cursor.value.txBytes) {
+                      pending--;
+                      if (pending === 0) {
+                        upgradeNextVersion();
+                      }
+                      return;
+                    }
+
+                    cursor.value.rxTotalBytes = cursor.value.rxBytes;
+                    cursor.value.txTotalBytes = cursor.value.txBytes;
+                    cursor.update(cursor.value);
+                    last = cursor.value;
+                    cursor.continue();
                     return;
                   }
 
-                  cursor.value.rxTotalBytes = cursor.value.rxBytes;
-                  cursor.value.txTotalBytes = cursor.value.txBytes;
+                  // Recalculate the total counter for last / current sample
+                  cursor.value.rxTotalBytes = last.rxTotalBytes + cursor.value.rxBytes;
+                  cursor.value.txTotalBytes = last.txTotalBytes + cursor.value.txBytes;
                   cursor.update(cursor.value);
                   last = cursor.value;
                   cursor.continue();
-                  return;
                 }
-
-                // Recalculate the total counter for last / current sample
-                cursor.value.rxTotalBytes = last.rxTotalBytes + cursor.value.rxBytes;
-                cursor.value.txTotalBytes = last.txTotalBytes + cursor.value.txBytes;
-                cursor.update(cursor.value);
-                last = cursor.value;
-                cursor.continue();
               }
-            }
-          }, this);
-        };
-      } else if (currVersion == 7) {
+            }, this); // end of networks.forEach()
+          }; // end of statsStore.index("network").openKeyCursor().onsuccess callback
+        } // end of function upgrade6to7_updateTotalBytes
+      },
+
+      function upgrade7to8() {
+        if (DEBUG) debug("Upgrade 7 to 8: Create index serviceType.");
+
         // Create index for 'ServiceType' in order to make it retrievable.
         let statsStore = aTransaction.objectStore(STATS_STORE_NAME);
         statsStore.createIndex("serviceType", "serviceType", { unique: false });
+      },
+    ];
 
-        if (DEBUG) {
-          debug("Create index of 'serviceType' for version 8");
-        }
+    let index = aOldVersion;
+    let outer = this;
+
+    function upgradeNextVersion() {
+      if (index == aNewVersion) {
+        debug("Upgrade finished.");
+        return;
+      }
+
+      try {
+        var i = index++;
+        if (DEBUG) debug("Upgrade step: " + i + "\n");
+        upgradeSteps[i].call(outer);
+      } catch (ex) {
+        dump("Caught exception " + ex);
+        throw ex;
+        return;
       }
     }
+
+    if (aNewVersion > upgradeSteps.length) {
+      debug("No migration steps for the new version!");
+      aTransaction.abort();
+      return;
+    }
+
+    upgradeNextVersion();
   },
 
   importData: function importData(aStats) {
