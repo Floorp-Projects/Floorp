@@ -29,7 +29,7 @@ NS_INTERFACE_MAP_BEGIN(WorkerDataStore)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 WorkerDataStore::WorkerDataStore(WorkerGlobalScope* aScope)
-  : DOMEventTargetHelper(aScope)
+  : DOMEventTargetHelper(static_cast<DOMEventTargetHelper*>(aScope))
 {}
 
 already_AddRefed<WorkerDataStore>

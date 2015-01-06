@@ -80,7 +80,8 @@ public:
   SignatureAlgorithm algorithm;
   Input signature;
 
-  void operator=(const SignedDataWithSignature&) = delete;
+private:
+  void operator=(const SignedDataWithSignature&) /*= delete*/;
 };
 
 MOZILLA_PKIX_ENUM_CLASS EndEntityOrCA { MustBeEndEntity = 0, MustBeCA = 1 };
@@ -147,8 +148,8 @@ public:
   const Input issuer;
   const Input issuerSubjectPublicKeyInfo;
   const Input serialNumber;
-
-  void operator=(const CertID&) = delete;
+private:
+  void operator=(const CertID&) /*= delete*/;
 };
 
 class DERArray
@@ -208,9 +209,9 @@ public:
   protected:
     IssuerChecker();
     virtual ~IssuerChecker();
-
-    IssuerChecker(const IssuerChecker&) = delete;
-    void operator=(const IssuerChecker&) = delete;
+  private:
+    IssuerChecker(const IssuerChecker&) /*= delete*/;
+    void operator=(const IssuerChecker&) /*= delete*/;
   };
 
   // Search for a CA certificate with the given name. The implementation must
@@ -324,8 +325,9 @@ public:
 protected:
   TrustDomain() { }
 
-  TrustDomain(const TrustDomain&) = delete;
-  void operator=(const TrustDomain&) = delete;
+private:
+  TrustDomain(const TrustDomain&) /* = delete */;
+  void operator=(const TrustDomain&) /* = delete */;
 };
 
 } } // namespace mozilla::pkix

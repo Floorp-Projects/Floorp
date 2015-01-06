@@ -220,7 +220,7 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
     //// nsIDirectoryServiceProvider
 
     NS_IMETHODIMP GetFile(const char *aProperty, bool *_persistent,
-                          nsIFile **_result)
+                          nsIFile **_result) MOZ_OVERRIDE
     {
       // If we were supplied a directory service provider, ask it first.
       if (mDirSvcProvider &&
@@ -265,7 +265,7 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
     ////////////////////////////////////////////////////////////////////////////
     //// nsIDirectoryServiceProvider2
 
-    NS_IMETHODIMP GetFiles(const char *aProperty, nsISimpleEnumerator **_enum)
+    NS_IMETHODIMP GetFiles(const char *aProperty, nsISimpleEnumerator **_enum) MOZ_OVERRIDE
     {
       // If we were supplied a directory service provider, ask it first.
       nsCOMPtr<nsIDirectoryServiceProvider2> provider =
