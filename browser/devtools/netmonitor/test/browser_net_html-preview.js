@@ -26,10 +26,10 @@ function test() {
         "The preview tabpanel should be hidden for non html responses.");
 
       RequestsMenu.selectedIndex = 4;
-      NetMonitorView.toggleDetailsPane({ visible: true, animated: false }, 5);
+      NetMonitorView.toggleDetailsPane({ visible: true, animated: false }, 6);
 
-      is($("#event-details-pane").selectedIndex, 5,
-        "The fifth tab in the details pane should be selected.");
+      is($("#event-details-pane").selectedIndex, 6,
+        "The sixth tab in the details pane should be selected.");
       is($("#preview-tab").hidden, false,
         "The preview tab should be visible now.");
       is($("#preview-tabpanel").hidden, false,
