@@ -63,7 +63,7 @@ public:
     return nullptr;
   }
 
-  virtual std::vector<uint8_t> GetUniquePayloadTypes() const
+  virtual std::vector<uint8_t> GetUniquePayloadTypes() const MOZ_OVERRIDE
   {
     return mUniquePayloadTypes;
   }
