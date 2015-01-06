@@ -134,18 +134,7 @@ nsCertOverrideService::Observe(nsISupports     *,
     // The profile is about to change,
     // or is going away because the application is shutting down.
 
-    ReentrantMonitorAutoEnter lock(monitor);
-
-    if (!nsCRT::strcmp(aData, MOZ_UTF16("shutdown-cleanse"))) {
-      RemoveAllFromMemory();
-      // delete the storage file
-      if (mSettingsFile) {
-        mSettingsFile->Remove(false);
-      }
-    } else {
-      RemoveAllFromMemory();
-    }
-
+    RemoveAllFromMemory();
   } else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
     // The profile has already changed.
     // Now read from the new profile location.

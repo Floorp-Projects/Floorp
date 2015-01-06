@@ -75,7 +75,7 @@ private:
 class nsMenuFrame MOZ_FINAL : public nsBoxFrame
 {
 public:
-  nsMenuFrame(nsIPresShell* aShell, nsStyleContext* aContext);
+  explicit nsMenuFrame(nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME_TARGET(nsMenuFrame)
   NS_DECL_QUERYFRAME

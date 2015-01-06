@@ -15,8 +15,8 @@ public:
 
   friend nsIFrame* NS_NewButtonBoxFrame(nsIPresShell* aPresShell);
 
-  nsButtonBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
-    :nsBoxFrame(aPresShell, aContext, false) {
+  explicit nsButtonBoxFrame(nsStyleContext* aContext)
+    :nsBoxFrame(aContext, false) {
     UpdateMouseThrough();
   }
 

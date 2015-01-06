@@ -35,12 +35,12 @@ using namespace mozilla;
 nsIFrame*
 NS_NewLeafBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsLeafBoxFrame(aPresShell, aContext);
+  return new (aPresShell) nsLeafBoxFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsLeafBoxFrame)
 
-nsLeafBoxFrame::nsLeafBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext)
+nsLeafBoxFrame::nsLeafBoxFrame(nsStyleContext* aContext)
     : nsLeafFrame(aContext)
 {
 }

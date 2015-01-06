@@ -212,12 +212,12 @@ loop.panel = (function(_, mozL10n) {
         var privacy_notice_url = navigator.mozLoop.getLoopPref('legal.privacy_url');
         var tosHTML = mozL10n.get("legal_text_and_links3", {
           "clientShortname": mozL10n.get("clientShortname2"),
-          "terms_of_use": React.renderComponentToStaticMarkup(
+          "terms_of_use": React.renderToStaticMarkup(
             <a href={terms_of_use_url} target="_blank">
               {mozL10n.get("legal_text_tos")}
             </a>
           ),
-          "privacy_notice": React.renderComponentToStaticMarkup(
+          "privacy_notice": React.renderToStaticMarkup(
             <a href={privacy_notice_url} target="_blank">
               {mozL10n.get("legal_text_privacy")}
             </a>
@@ -1021,7 +1021,7 @@ loop.panel = (function(_, mozL10n) {
       notifications: notifications
     });
 
-    React.renderComponent(<PanelView
+    React.render(<PanelView
       client={client}
       notifications={notifications}
       roomStore={roomStore}

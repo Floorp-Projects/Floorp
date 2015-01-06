@@ -16,7 +16,7 @@ interface nsIDOMElement;
 interface nsITabParent;
 interface nsILoadContext;
 
-[scriptable, builtinclass, uuid(7600aa92-88dc-491c-896d-0564159b6a66)]
+[scriptable, builtinclass, uuid(28b6b043-46ec-412f-9be9-db22938b0d6d)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -48,6 +48,11 @@ interface nsIFrameLoader : nsISupports
    * except that this method allows specifying the URI to load.
    */
   void loadURI(in nsIURI aURI);
+
+  /**
+   * Puts the frameloader in prerendering mode.
+   */
+  void setIsPrerendered();
 
   /**
    * Destroy the frame loader and everything inside it. This will
@@ -192,7 +197,7 @@ class nsFrameLoader;
 
 native alreadyAddRefed_nsFrameLoader(already_AddRefed<nsFrameLoader>);
 
-[scriptable, uuid(5879040e-83e9-40e3-b2bb-5ddf43b76e47)]
+[scriptable, uuid(c4abebcf-55f3-47d4-af15-151311971255)]
 interface nsIFrameLoaderOwner : nsISupports
 {
   /**
@@ -200,6 +205,11 @@ interface nsIFrameLoaderOwner : nsISupports
    */
   readonly attribute nsIFrameLoader frameLoader;
   [noscript, notxpcom] alreadyAddRefed_nsFrameLoader GetFrameLoader();
+
+  /**
+   * Puts the FrameLoaderOwner in prerendering mode.
+   */
+  void setIsPrerendered();
 
   /**
    * Swap frame loaders with the given nsIFrameLoaderOwner.  This may

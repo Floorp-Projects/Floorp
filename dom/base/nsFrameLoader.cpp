@@ -154,6 +154,7 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, bool aNetworkCreated)
   : mOwnerContent(aOwner)
   , mAppIdSentToPermissionManager(nsIScriptSecurityManager::NO_APP_ID)
   , mDetachedSubdocViews(nullptr)
+  , mIsPrerendered(false)
   , mDepthTooGreat(false)
   , mIsTopLevelContent(false)
   , mDestroyCalled(false)
@@ -293,6 +294,15 @@ nsFrameLoader::LoadURI(nsIURI* aURI)
     mURIToLoad = nullptr;
   }
   return rv;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::SetIsPrerendered()
+{
+  MOZ_ASSERT(!mDocShell, "Please call SetIsPrerendered before docShell is created");
+  mIsPrerendered = true;
+
+  return NS_OK;
 }
 
 nsresult
@@ -1612,6 +1622,11 @@ nsFrameLoader::MaybeCreateDocShell()
   // Create the docshell...
   mDocShell = do_CreateInstance("@mozilla.org/docshell;1");
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
+
+  if (mIsPrerendered) {
+    nsresult rv = mDocShell->SetIsPrerendered(true);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
 
   // Apply sandbox flags even if our owner is not an iframe, as this copies
   // flags from our owning content's owning document.

@@ -25,7 +25,7 @@ public:
 
   friend nsIFrame* NS_NewResizerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);  
 
-  nsResizerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  explicit nsResizerFrame(nsStyleContext* aContext);
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
                                mozilla::WidgetGUIEvent* aEvent,

@@ -16,6 +16,9 @@ namespace jit {
 class MInstruction;
 class MDefinition;
 
+extern MDefinition *
+AlwaysBoxAt(TempAllocator &alloc, MInstruction *at, MDefinition *operand);
+
 // A type policy directs the type analysis phases, which insert conversion,
 // boxing, unboxing, and type changes as necessary.
 class TypePolicy
@@ -62,136 +65,146 @@ struct TypeSpecializationData
 
 #define SPECIALIZATION_DATA_ INHERIT_DATA_(TypeSpecializationData)
 
-class BoxInputsPolicy : public TypePolicy
+class NoTypePolicy
 {
-  protected:
-    static MDefinition *boxAt(TempAllocator &alloc, MInstruction *at, MDefinition *operand);
-
   public:
-    EMPTY_DATA_;
-    static MDefinition *alwaysBoxAt(TempAllocator &alloc, MInstruction *at, MDefinition *operand);
-    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def);
+    struct Data
+    {
+        static TypePolicy *thisTypePolicy() {
+            return nullptr;
+        }
+    };
 };
 
-class ArithPolicy : public BoxInputsPolicy
+class BoxInputsPolicy MOZ_FINAL : public TypePolicy
 {
   public:
     SPECIALIZATION_DATA_;
-    bool adjustInputs(TempAllocator &alloc, MInstruction *def);
+    static bool staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def) MOZ_OVERRIDE {
+        return staticAdjustInputs(alloc, def);
+    }
 };
 
-class BitwisePolicy : public BoxInputsPolicy
+class ArithPolicy MOZ_FINAL : public TypePolicy
 {
   public:
     SPECIALIZATION_DATA_;
-    bool adjustInputs(TempAllocator &alloc, MInstruction *def);
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def) MOZ_OVERRIDE;
 };
 
-class ComparePolicy : public BoxInputsPolicy
+class BitwisePolicy MOZ_FINAL : public TypePolicy
+{
+  public:
+    SPECIALIZATION_DATA_;
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def) MOZ_OVERRIDE;
+};
+
+class ComparePolicy MOZ_FINAL : public TypePolicy
 {
   public:
     EMPTY_DATA_;
-    bool adjustInputs(TempAllocator &alloc, MInstruction *def);
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def) MOZ_OVERRIDE;
 };
 
 // Policy for MTest instructions.
-class TestPolicy : public BoxInputsPolicy
+class TestPolicy MOZ_FINAL : public TypePolicy
 {
   public:
     EMPTY_DATA_;
-    bool adjustInputs(TempAllocator &alloc, MInstruction *ins);
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) MOZ_OVERRIDE;
 };
 
-class TypeBarrierPolicy : public BoxInputsPolicy
+class TypeBarrierPolicy MOZ_FINAL : public TypePolicy
 {
   public:
     EMPTY_DATA_;
-    bool adjustInputs(TempAllocator &alloc, MInstruction *ins);
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) MOZ_OVERRIDE;
 };
 
-class CallPolicy : public BoxInputsPolicy
+class CallPolicy MOZ_FINAL : public TypePolicy
 {
   public:
     EMPTY_DATA_;
-    bool adjustInputs(TempAllocator &alloc, MInstruction *def);
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def) MOZ_OVERRIDE;
 };
 
 // Policy for MPow. First operand Double; second Double or Int32.
-class PowPolicy : public BoxInputsPolicy
+class PowPolicy MOZ_FINAL : public TypePolicy
 {
   public:
     SPECIALIZATION_DATA_;
-    bool adjustInputs(TempAllocator &alloc, MInstruction *ins);
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) MOZ_OVERRIDE;
 };
 
 // Expect a string for operand Op. If the input is a Value, it is unboxed.
 template <unsigned Op>
-class StringPolicy : public BoxInputsPolicy
+class StringPolicy MOZ_FINAL : public TypePolicy
 {
   public:
     EMPTY_DATA_;
     static bool staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
-    bool adjustInputs(TempAllocator &alloc, MInstruction *def) {
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def) MOZ_OVERRIDE {
         return staticAdjustInputs(alloc, def);
     }
 };
 
 // Expect a string for operand Op. Else a ToString instruction is inserted.
 template <unsigned Op>
-class ConvertToStringPolicy : public TypePolicy
+class ConvertToStringPolicy MOZ_FINAL : public TypePolicy
 {
   public:
     EMPTY_DATA_;
     static bool staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
-    bool adjustInputs(TempAllocator &alloc, MInstruction *def) {
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def) MOZ_OVERRIDE {
         return staticAdjustInputs(alloc, def);
     }
 };
 
 // Expect an Int for operand Op. If the input is a Value, it is unboxed.
 template <unsigned Op>
-class IntPolicy : public BoxInputsPolicy
+class IntPolicy MOZ_FINAL : private TypePolicy
 {
   public:
     EMPTY_DATA_;
     static bool staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
-    bool adjustInputs(TempAllocator &alloc, MInstruction *def) {
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def) MOZ_OVERRIDE {
         return staticAdjustInputs(alloc, def);
     }
 };
 
 // Expect an Int for operand Op. Else a ToInt32 instruction is inserted.
 template <unsigned Op>
-class ConvertToInt32Policy : public BoxInputsPolicy
+class ConvertToInt32Policy MOZ_FINAL : public TypePolicy
 {
   public:
     EMPTY_DATA_;
     static bool staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
-    bool adjustInputs(TempAllocator &alloc, MInstruction *def) {
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def) MOZ_OVERRIDE {
         return staticAdjustInputs(alloc, def);
     }
 };
 
 // Expect a double for operand Op. If the input is a Value, it is unboxed.
 template <unsigned Op>
-class DoublePolicy : public BoxInputsPolicy
+class DoublePolicy MOZ_FINAL : public TypePolicy
 {
   public:
     EMPTY_DATA_;
     static bool staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
-    bool adjustInputs(TempAllocator &alloc, MInstruction *def) {
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def) MOZ_OVERRIDE {
         return staticAdjustInputs(alloc, def);
     }
 };
 
 // Expect a float32 for operand Op. If the input is a Value, it is unboxed.
 template <unsigned Op>
-class Float32Policy : public BoxInputsPolicy
+class Float32Policy MOZ_FINAL : public TypePolicy
 {
   public:
     EMPTY_DATA_;
     static bool staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
-    bool adjustInputs(TempAllocator &alloc, MInstruction *def) {
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def) MOZ_OVERRIDE {
         return staticAdjustInputs(alloc, def);
     }
 };
@@ -199,7 +212,7 @@ class Float32Policy : public BoxInputsPolicy
 // Expect a float32 OR a double for operand Op, but will prioritize Float32
 // if the result type is set as such. If the input is a Value, it is unboxed.
 template <unsigned Op>
-class FloatingPointPolicy : public TypePolicy
+class FloatingPointPolicy MOZ_FINAL : public TypePolicy
 {
 
   public:
@@ -219,16 +232,16 @@ class FloatingPointPolicy : public TypePolicy
 
     INHERIT_DATA_(PolicyTypeData);
 
-    bool adjustInputs(TempAllocator &alloc, MInstruction *def);
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def) MOZ_OVERRIDE;
 };
 
 template <unsigned Op>
-class NoFloatPolicy : public TypePolicy
+class NoFloatPolicy MOZ_FINAL : public TypePolicy
 {
   public:
     EMPTY_DATA_;
     static bool staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
-    bool adjustInputs(TempAllocator &alloc, MInstruction *def) {
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def) MOZ_OVERRIDE {
         return staticAdjustInputs(alloc, def);
     }
 };
@@ -236,53 +249,53 @@ class NoFloatPolicy : public TypePolicy
 // Policy for guarding variadic instructions such as object / array state
 // instructions.
 template <unsigned FirstOp>
-class NoFloatPolicyAfter : public TypePolicy
+class NoFloatPolicyAfter MOZ_FINAL : public TypePolicy
 {
   public:
     EMPTY_DATA_;
-    bool adjustInputs(TempAllocator &alloc, MInstruction *ins);
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) MOZ_OVERRIDE;
 };
 
 // Box objects or strings as an input to a ToDouble instruction.
-class ToDoublePolicy : public BoxInputsPolicy
+class ToDoublePolicy MOZ_FINAL : public TypePolicy
 {
   public:
     EMPTY_DATA_;
     static bool staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
-    bool adjustInputs(TempAllocator &alloc, MInstruction *def) {
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def) MOZ_OVERRIDE {
         return staticAdjustInputs(alloc, def);
     }
 };
 
 // Box objects, strings and undefined as input to a ToInt32 instruction.
-class ToInt32Policy : public BoxInputsPolicy
+class ToInt32Policy MOZ_FINAL : public TypePolicy
 {
   public:
     EMPTY_DATA_;
     static bool staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
-    bool adjustInputs(TempAllocator &alloc, MInstruction *def) {
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def) MOZ_OVERRIDE {
         return staticAdjustInputs(alloc, def);
     }
 };
 
 // Box objects as input to a ToString instruction.
-class ToStringPolicy : public BoxInputsPolicy
+class ToStringPolicy MOZ_FINAL : public TypePolicy
 {
   public:
     EMPTY_DATA_;
     static bool staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
-    bool adjustInputs(TempAllocator &alloc, MInstruction *def) {
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def) MOZ_OVERRIDE {
         return staticAdjustInputs(alloc, def);
     }
 };
 
 template <unsigned Op>
-class ObjectPolicy : public BoxInputsPolicy
+class ObjectPolicy MOZ_FINAL : public TypePolicy
 {
   public:
     EMPTY_DATA_;
     static bool staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
-    bool adjustInputs(TempAllocator &alloc, MInstruction *ins) {
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) MOZ_OVERRIDE {
         return staticAdjustInputs(alloc, ins);
     }
 };
@@ -292,19 +305,19 @@ class ObjectPolicy : public BoxInputsPolicy
 typedef ObjectPolicy<0> SingleObjectPolicy;
 
 template <unsigned Op>
-class BoxPolicy : public BoxInputsPolicy
+class BoxPolicy MOZ_FINAL : public TypePolicy
 {
   public:
     EMPTY_DATA_;
     static bool staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
-    bool adjustInputs(TempAllocator &alloc, MInstruction *ins) {
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) MOZ_OVERRIDE {
         return staticAdjustInputs(alloc, ins);
     }
 };
 
 // Boxes everything except inputs of type Type.
 template <unsigned Op, MIRType Type>
-class BoxExceptPolicy : public TypePolicy
+class BoxExceptPolicy MOZ_FINAL : public TypePolicy
 {
   public:
     EMPTY_DATA_;
@@ -316,21 +329,21 @@ class BoxExceptPolicy : public TypePolicy
 
 // Combine multiple policies.
 template <class Lhs, class Rhs>
-class MixPolicy : public TypePolicy
+class MixPolicy MOZ_FINAL : public TypePolicy
 {
   public:
     EMPTY_DATA_;
     static bool staticAdjustInputs(TempAllocator &alloc, MInstruction *ins) {
         return Lhs::staticAdjustInputs(alloc, ins) && Rhs::staticAdjustInputs(alloc, ins);
     }
-    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) {
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) MOZ_OVERRIDE {
         return staticAdjustInputs(alloc, ins);
     }
 };
 
 // Combine three policies.
 template <class Policy1, class Policy2, class Policy3>
-class Mix3Policy : public TypePolicy
+class Mix3Policy MOZ_FINAL : public TypePolicy
 {
   public:
     EMPTY_DATA_;
@@ -339,71 +352,94 @@ class Mix3Policy : public TypePolicy
                Policy2::staticAdjustInputs(alloc, ins) &&
                Policy3::staticAdjustInputs(alloc, ins);
     }
-    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) {
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) MOZ_OVERRIDE {
         return staticAdjustInputs(alloc, ins);
     }
 };
 
-class CallSetElementPolicy : public SingleObjectPolicy
+// Combine four policies.  (Missing variadic templates yet?)
+template <class Policy1, class Policy2, class Policy3, class Policy4>
+class Mix4Policy : public TypePolicy
 {
   public:
     EMPTY_DATA_;
-    bool adjustInputs(TempAllocator &alloc, MInstruction *def);
+    static bool staticAdjustInputs(TempAllocator &alloc, MInstruction *ins) {
+        return Policy1::staticAdjustInputs(alloc, ins) &&
+               Policy2::staticAdjustInputs(alloc, ins) &&
+               Policy3::staticAdjustInputs(alloc, ins) &&
+               Policy4::staticAdjustInputs(alloc, ins);
+    }
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) MOZ_OVERRIDE {
+        return staticAdjustInputs(alloc, ins);
+    }
+};
+
+class CallSetElementPolicy MOZ_FINAL : public TypePolicy
+{
+  public:
+    EMPTY_DATA_;
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def) MOZ_OVERRIDE;
 };
 
 // First operand will be boxed to a Value (except for an object)
 // Second operand (if specified) will forcefully be unboxed to an object
-class InstanceOfPolicy : public TypePolicy
+class InstanceOfPolicy MOZ_FINAL : public TypePolicy
 {
   public:
     EMPTY_DATA_;
-    bool adjustInputs(TempAllocator &alloc, MInstruction *def);
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def) MOZ_OVERRIDE;
 };
 
-class StoreTypedArrayPolicy : public BoxInputsPolicy
+class StoreTypedArrayHolePolicy;
+class StoreTypedArrayElementStaticPolicy;
+
+class StoreTypedArrayPolicy : public TypePolicy
 {
-  protected:
-    bool adjustValueInput(TempAllocator &alloc, MInstruction *ins, int arrayType, MDefinition *value, int valueOperand);
+  private:
+    static bool adjustValueInput(TempAllocator &alloc, MInstruction *ins, int arrayType, MDefinition *value, int valueOperand);
+
+    friend class StoreTypedArrayHolePolicy;
+    friend class StoreTypedArrayElementStaticPolicy;
 
   public:
     EMPTY_DATA_;
-    bool adjustInputs(TempAllocator &alloc, MInstruction *ins);
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) MOZ_OVERRIDE;
 };
 
-class StoreTypedArrayHolePolicy : public StoreTypedArrayPolicy
+class StoreTypedArrayHolePolicy MOZ_FINAL : public StoreTypedArrayPolicy
 {
   public:
     EMPTY_DATA_;
-    bool adjustInputs(TempAllocator &alloc, MInstruction *ins);
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) MOZ_OVERRIDE;
 };
 
-class StoreTypedArrayElementStaticPolicy : public StoreTypedArrayPolicy
+class StoreTypedArrayElementStaticPolicy MOZ_FINAL : public StoreTypedArrayPolicy
 {
   public:
     EMPTY_DATA_;
-    bool adjustInputs(TempAllocator &alloc, MInstruction *ins);
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) MOZ_OVERRIDE;
 };
 
-class StoreUnboxedObjectOrNullPolicy : public TypePolicy
+class StoreUnboxedObjectOrNullPolicy MOZ_FINAL : public TypePolicy
 {
   public:
     EMPTY_DATA_;
-    bool adjustInputs(TempAllocator &alloc, MInstruction *def);
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def) MOZ_OVERRIDE;
 };
 
 // Accepts integers and doubles. Everything else is boxed.
-class ClampPolicy : public BoxInputsPolicy
+class ClampPolicy MOZ_FINAL : public TypePolicy
 {
   public:
     EMPTY_DATA_;
-    bool adjustInputs(TempAllocator &alloc, MInstruction *ins);
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) MOZ_OVERRIDE;
 };
 
-class FilterTypeSetPolicy : public BoxInputsPolicy
+class FilterTypeSetPolicy MOZ_FINAL : public TypePolicy
 {
   public:
     EMPTY_DATA_;
-    bool adjustInputs(TempAllocator &alloc, MInstruction *ins);
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) MOZ_OVERRIDE;
 };
 
 static inline bool
