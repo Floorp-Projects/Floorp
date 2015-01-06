@@ -124,7 +124,7 @@ private:
   const uint8_t* data;
   size_t len;
 
-  void operator=(const Input&) = delete; // Use Init instead.
+  void operator=(const Input&) /* = delete */; // Use Init instead.
 };
 
 inline bool
@@ -291,7 +291,7 @@ public:
     Mark(const Reader& input, const uint8_t* mark) : input(input), mark(mark) { }
     const Reader& input;
     const uint8_t* const mark;
-    void operator=(const Mark&) = delete;
+    void operator=(const Mark&) /* = delete */;
   };
 
   Mark GetMark() const { return Mark(*this, input); }
@@ -320,8 +320,8 @@ private:
   const uint8_t* input;
   const uint8_t* end;
 
-  Reader(const Reader&) = delete;
-  void operator=(const Reader&) = delete;
+  Reader(const Reader&) /* = delete */;
+  void operator=(const Reader&) /* = delete */;
 };
 
 inline bool

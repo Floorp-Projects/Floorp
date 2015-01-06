@@ -55,7 +55,7 @@ public:
 
   // have to declare nsIStringEnumerator manually, because of
   // overlapping method names
-  NS_IMETHOD GetNext(nsAString& aResult);
+  NS_IMETHOD GetNext(nsAString& aResult) MOZ_OVERRIDE;
   NS_DECL_NSISIMPLEENUMERATOR
 
 private:

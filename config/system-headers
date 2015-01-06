@@ -189,6 +189,7 @@ asm/signal.h
 ASRegistry.h
 assert.h
 atk/atk.h
+atk-bridge.h
 atlcom.h
 atlconv.h
 atlctl.cpp

@@ -4,6 +4,7 @@
 #include "TestUrgentHangs.h"
 
 #include "IPDLUnitTests.h"      // fail etc.
+#include "prthread.h"
 #if defined(OS_POSIX)
 #include <unistd.h>
 #else
@@ -108,7 +109,7 @@ TestUrgentHangsChild::RecvTest1_1()
 bool
 TestUrgentHangsChild::RecvTest1_3()
 {
-    sleep(2);
+    PR_Sleep(PR_SecondsToInterval(2));
 
     return true;
 }
@@ -116,7 +117,7 @@ TestUrgentHangsChild::RecvTest1_3()
 bool
 TestUrgentHangsChild::RecvTest2()
 {
-    sleep(2);
+    PR_Sleep(PR_SecondsToInterval(2));
 
     // Should fail because of the timeout.
     if (SendTestInner())
@@ -135,7 +136,7 @@ TestUrgentHangsChild::RecvTest3()
 bool
 TestUrgentHangsChild::RecvTest4()
 {
-    sleep(2);
+    PR_Sleep(PR_SecondsToInterval(2));
 
     // This should fail because Test4_1 timed out and hasn't gotten a response
     // yet.

@@ -53,7 +53,7 @@ public:
   }
   void SetSmoothingTimeConstant(double aValue, ErrorResult& aRv);
 
-  virtual const char* NodeType() const
+  virtual const char* NodeType() const MOZ_OVERRIDE
   {
     return "AnalyserNode";
   }

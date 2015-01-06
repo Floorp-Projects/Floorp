@@ -69,11 +69,11 @@ interface nsIStatusReporterManager : nsISupports
       ~StatusReporter_##_classname() {}                                       \
     public:                                                                   \
       NS_DECL_ISUPPORTS                                                       \
-      NS_IMETHOD GetName(nsACString &name)                                    \
+      NS_IMETHOD GetName(nsACString &name) MOZ_OVERRIDE                       \
         { name.AssignLiteral(_name); return NS_OK; }                          \
-      NS_IMETHOD GetProcess(nsACString &process)                              \
+      NS_IMETHOD GetProcess(nsACString &process) MOZ_OVERRIDE                 \
         { process.Truncate(); return NS_OK; }                                 \
-      NS_IMETHOD GetDescription(nsACString &desc)                             \
+      NS_IMETHOD GetDescription(nsACString &desc) MOZ_OVERRIDE                \
         { _desc_Function(desc); return NS_OK; }                               \
     };                                                                        \
     NS_IMPL_ISUPPORTS(StatusReporter_##_classname, nsIStatusReporter)

@@ -71,8 +71,9 @@ public:
   Time* validThrough;
   bool expired;
 
-  Context(const Context&) = delete;
-  void operator=(const Context&) = delete;
+private:
+  Context(const Context&); // delete
+  void operator=(const Context&); // delete
 };
 
 // Verify that potentialSigner is a valid delegated OCSP response signing cert
