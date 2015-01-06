@@ -169,17 +169,17 @@ public:
      * Returns the font associated with these metrics. The return value
      * is only defined after Init() has been called.
      */
-    const nsFont &Font() { return mFont; }
+    const nsFont &Font() const { return mFont; }
 
     /**
      * Returns the language associated with these metrics
      */
-    nsIAtom* Language() { return mLanguage; }
+    nsIAtom* Language() const { return mLanguage; }
 
     /**
      * Returns the orientation (horizontal/vertical) of these metrics.
      */
-    gfxFont::Orientation Orientation() { return mOrientation; }
+    gfxFont::Orientation Orientation() const { return mOrientation; }
 
     int32_t GetMaxStringLength();
 
@@ -211,26 +211,53 @@ public:
                                                     nsRenderingContext *aContext);
 
     void SetTextRunRTL(bool aIsRTL) { mTextRunRTL = aIsRTL; }
-    bool GetTextRunRTL() { return mTextRunRTL; }
+    bool GetTextRunRTL() const { return mTextRunRTL; }
 
-    gfxFontGroup* GetThebesFontGroup() { return mFontGroup; }
-    gfxUserFontSet* GetUserFontSet() { return mFontGroup->GetUserFontSet(); }
+    void SetVertical(bool aVertical) { mVertical = aVertical; }
+    bool GetVertical() const { return mVertical; }
 
-    int32_t AppUnitsPerDevPixel() { return mP2A; }
+    void SetTextOrientation(uint8_t aTextOrientation)
+    {
+      mTextOrientation = aTextOrientation;
+    }
+    uint8_t GetTextOrientation() const { return mTextOrientation; }
+
+    gfxFontGroup* GetThebesFontGroup() const { return mFontGroup; }
+    gfxUserFontSet* GetUserFontSet() const
+    {
+      return mFontGroup->GetUserFontSet();
+    }
+
+    int32_t AppUnitsPerDevPixel() const { return mP2A; }
 
 private:
     // Private destructor, to discourage deletion outside of Release():
     ~nsFontMetrics();
 
-    const gfxFont::Metrics& GetMetrics() const;
+    const gfxFont::Metrics& GetMetrics() const {
+      return GetMetrics(mOrientation);
+    }
+
+    const gfxFont::Metrics&
+    GetMetrics(const gfxFont::Orientation aFontOrientation) const;
 
     nsFont mFont;
     nsRefPtr<gfxFontGroup> mFontGroup;
     nsCOMPtr<nsIAtom> mLanguage;
     nsDeviceContext *mDeviceContext;
     int32_t mP2A;
-    bool mTextRunRTL;
+
+    // The font orientation (horizontal or vertical) for which these metrics
+    // have been initialized. This determines which line metrics (ascent and
+    // descent) they will return.
     gfxFont::Orientation mOrientation;
+
+    // These fields may be set by clients to control the behavior of methods
+    // like GetWidth and DrawString according to the writing mode, direction
+    // and text-orientation desired.
+    bool mTextRunRTL;
+    bool mVertical;
+    uint8_t mTextOrientation;
 };
 
 #endif /* NSFONTMETRICS__H__ */
