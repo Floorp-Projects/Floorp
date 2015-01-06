@@ -1344,7 +1344,7 @@ nsDocLoader::RefreshAttempted(nsIWebProgress* aWebProgress,
 
 nsresult nsDocLoader::AddRequestInfo(nsIRequest *aRequest)
 {
-  if (!PL_DHashTableOperate(&mRequestInfoHash, aRequest, PL_DHASH_ADD)) {
+  if (!PL_DHashTableAdd(&mRequestInfoHash, aRequest)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -1353,15 +1353,14 @@ nsresult nsDocLoader::AddRequestInfo(nsIRequest *aRequest)
 
 void nsDocLoader::RemoveRequestInfo(nsIRequest *aRequest)
 {
-  PL_DHashTableOperate(&mRequestInfoHash, aRequest, PL_DHASH_REMOVE);
+  PL_DHashTableRemove(&mRequestInfoHash, aRequest);
 }
 
 nsDocLoader::nsRequestInfo* nsDocLoader::GetRequestInfo(nsIRequest* aRequest)
 {
   nsRequestInfo* info =
     static_cast<nsRequestInfo*>
-               (PL_DHashTableOperate(&mRequestInfoHash, aRequest,
-                                        PL_DHASH_LOOKUP));
+               (PL_DHashTableLookup(&mRequestInfoHash, aRequest));
 
   if (PL_DHASH_ENTRY_IS_FREE(info)) {
     // Nothing found in the hash, return null.
