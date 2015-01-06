@@ -56,7 +56,7 @@ public:
     return mRelease;
   }
 
-  virtual const char* NodeType() const
+  virtual const char* NodeType() const MOZ_OVERRIDE
   {
     return "DynamicsCompressorNode";
   }

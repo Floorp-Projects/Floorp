@@ -121,8 +121,8 @@ private:
   void UpdateSelectionCarets();
 
   /**
-   * Select word base on current position, only active when element
-   * is focused. Triggered by long tap event.
+   * Select a word base on current position, which activates only if element is
+   * selectable. Triggered by long tap event.
    */
   nsresult SelectWord();
 

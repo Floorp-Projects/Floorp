@@ -420,7 +420,7 @@ public:
   {
   }
 
-  NS_IMETHOD HasMoreElements(bool* aResult)
+  NS_IMETHOD HasMoreElements(bool* aResult) MOZ_OVERRIDE
   {
     while (!mNext && *mCurrentKey) {
       bool dontCare;
@@ -436,7 +436,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD GetNext(nsISupports** aResult)
+  NS_IMETHOD GetNext(nsISupports** aResult) MOZ_OVERRIDE
   {
     if (NS_WARN_IF(!aResult)) {
       return NS_ERROR_INVALID_ARG;

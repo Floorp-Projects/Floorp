@@ -31,3 +31,4 @@ cp $1/os.h ./lib/os.h
 cp $1/COPYING ./COPYING
 cp $1/README ./README
 patch -p3 < ./bug719612.patch
+patch -p3 < ./bug1117571-r19420.patch

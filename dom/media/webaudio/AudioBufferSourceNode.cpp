@@ -92,7 +92,7 @@ public:
       NS_ERROR("Bad AudioBufferSourceNodeEngine TimelineParameter");
     }
   }
-  virtual void SetStreamTimeParameter(uint32_t aIndex, StreamTime aParam)
+  virtual void SetStreamTimeParameter(uint32_t aIndex, StreamTime aParam) MOZ_OVERRIDE
   {
     switch (aIndex) {
     case AudioBufferSourceNode::STOP: mStop = aParam; break;
@@ -100,7 +100,7 @@ public:
       NS_ERROR("Bad AudioBufferSourceNodeEngine StreamTimeParameter");
     }
   }
-  virtual void SetDoubleParameter(uint32_t aIndex, double aParam)
+  virtual void SetDoubleParameter(uint32_t aIndex, double aParam) MOZ_OVERRIDE
   {
     switch (aIndex) {
     case AudioBufferSourceNode::START:
@@ -117,7 +117,7 @@ public:
       NS_ERROR("Bad AudioBufferSourceNodeEngine double parameter.");
     };
   }
-  virtual void SetInt32Parameter(uint32_t aIndex, int32_t aParam)
+  virtual void SetInt32Parameter(uint32_t aIndex, int32_t aParam) MOZ_OVERRIDE
   {
     switch (aIndex) {
     case AudioBufferSourceNode::SAMPLE_RATE: mBufferSampleRate = aParam; break;
@@ -134,7 +134,7 @@ public:
       NS_ERROR("Bad AudioBufferSourceNodeEngine Int32Parameter");
     }
   }
-  virtual void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer)
+  virtual void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer) MOZ_OVERRIDE
   {
     mBuffer = aBuffer;
   }
@@ -427,7 +427,7 @@ public:
   virtual void ProcessBlock(AudioNodeStream* aStream,
                             const AudioChunk& aInput,
                             AudioChunk* aOutput,
-                            bool* aFinished)
+                            bool* aFinished) MOZ_OVERRIDE
   {
     if (!mBuffer || !mBufferEnd) {
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);

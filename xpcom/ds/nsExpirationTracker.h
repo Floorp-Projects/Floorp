@@ -6,8 +6,6 @@
 #ifndef NSEXPIRATIONTRACKER_H_
 #define NSEXPIRATIONTRACKER_H_
 
-#include "mozilla/Attributes.h"
-
 #include "prlog.h"
 #include "nsTArray.h"
 #include "nsITimer.h"
@@ -16,8 +14,8 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "mozilla/Services.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Services.h"
 
 /**
  * Data used to track the expiration state of an object. We promise that this

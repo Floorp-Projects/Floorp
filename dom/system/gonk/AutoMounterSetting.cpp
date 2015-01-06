@@ -9,6 +9,7 @@
 #include "jsapi.h"
 #include "mozilla/Services.h"
 #include "nsCOMPtr.h"
+#include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsIObserverService.h"
 #include "nsISettingsService.h"
@@ -124,8 +125,7 @@ AutoMounterSetting::AutoMounterSetting()
   nsCOMPtr<nsISettingsServiceLock> lock;
   settingsService->CreateLock(nullptr, getter_AddRefs(lock));
   nsCOMPtr<nsISettingsServiceCallback> callback = new SettingsServiceCallback();
-  mozilla::AutoSafeJSContext cx;
-  JS::Rooted<JS::Value> value(cx);
+  JS::Rooted<JS::Value> value(nsContentUtils::RootingCx());
   value.setInt32(AUTOMOUNTER_DISABLE);
   lock->Set(UMS_MODE, value, callback, nullptr);
   value.setInt32(mStatus);
@@ -240,11 +240,8 @@ AutoMounterSetting::Observe(nsISupports* aSubject,
   // The string that we're interested in will be a JSON string that looks like:
   //  {"key":"ums.autoMount","value":true}
 
-  AutoJSAPI jsapi;
-  jsapi.Init();
-  JSContext* cx = jsapi.cx();
-  RootedDictionary<SettingChangeNotification> setting(cx);
-  if (!WrappedJSToDictionary(cx, aSubject, setting)) {
+  RootedDictionary<SettingChangeNotification> setting(nsContentUtils::RootingCxForThread());
+  if (!WrappedJSToDictionary(aSubject, setting)) {
     return NS_OK;
   }
 

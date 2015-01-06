@@ -6,11 +6,6 @@
 #include "nsTemplateMatch.h"
 #include "nsTemplateRule.h"
 
-#ifdef NEED_CPP_UNUSED_IMPLEMENTATIONS
-nsTemplateMatch::nsTemplateMatch(const nsTemplateMatch& aMatch) {}
-void nsTemplateMatch::operator=(const nsTemplateMatch& aMatch) {}
-#endif
-
 // static
 void
 nsTemplateMatch::Destroy(nsTemplateMatch*& aMatch, bool aRemoveResult)

@@ -1325,6 +1325,7 @@ Experiments.Experiments.prototype = {
     if ("@mozilla.org/toolkit/crash-reporter;1" in Cc && activeExperiment) {
       try {
         gCrashReporter.annotateCrashReport("ActiveExperiment", activeExperiment.id);
+        gCrashReporter.annotateCrashReport("ActiveExperimentBranch", activeExperiment.branch);
       } catch (e) {
         // It's ok if crash reporting is disabled.
       }
