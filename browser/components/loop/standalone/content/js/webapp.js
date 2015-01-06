@@ -25,11 +25,11 @@ loop.webapp = (function($, _, OT, mozL10n) {
   /**
    * Homepage view.
    */
-  var HomeView = React.createClass({displayName: 'HomeView',
+  var HomeView = React.createClass({displayName: "HomeView",
     render: function() {
       multiplexGum.reset();
       return (
-        React.DOM.p(null, mozL10n.get("welcome", {clientShortname: mozL10n.get("clientShortname2")}))
+        React.createElement("p", null, mozL10n.get("welcome", {clientShortname: mozL10n.get("clientShortname2")}))
       );
     }
   });
@@ -37,16 +37,16 @@ loop.webapp = (function($, _, OT, mozL10n) {
   /**
    * Unsupported Browsers view.
    */
-  var UnsupportedBrowserView = React.createClass({displayName: 'UnsupportedBrowserView',
+  var UnsupportedBrowserView = React.createClass({displayName: "UnsupportedBrowserView",
     render: function() {
       return (
-        React.DOM.div({className: "expired-url-info"}, 
-          React.DOM.div({className: "info-panel"}, 
-            React.DOM.div({className: "firefox-logo"}), 
-            React.DOM.h1(null, mozL10n.get("incompatible_browser_heading")), 
-            React.DOM.h4(null, mozL10n.get("incompatible_browser_message"))
+        React.createElement("div", {className: "expired-url-info"}, 
+          React.createElement("div", {className: "info-panel"}, 
+            React.createElement("div", {className: "firefox-logo"}), 
+            React.createElement("h1", null, mozL10n.get("incompatible_browser_heading")), 
+            React.createElement("h4", null, mozL10n.get("incompatible_browser_message"))
           ), 
-          PromoteFirefoxView({helper: this.props.helper})
+          React.createElement(PromoteFirefoxView, {helper: this.props.helper})
         )
       );
     }
@@ -55,13 +55,13 @@ loop.webapp = (function($, _, OT, mozL10n) {
   /**
    * Unsupported Device view.
    */
-  var UnsupportedDeviceView = React.createClass({displayName: 'UnsupportedDeviceView',
+  var UnsupportedDeviceView = React.createClass({displayName: "UnsupportedDeviceView",
     render: function() {
       return (
-        React.DOM.div(null, 
-          React.DOM.h2(null, mozL10n.get("incompatible_device")), 
-          React.DOM.p(null, mozL10n.get("sorry_device_unsupported", {clientShortname: mozL10n.get("clientShortname2")})), 
-          React.DOM.p(null, mozL10n.get("use_firefox_windows_mac_linux", {brandShortname: mozL10n.get("brandShortname")}))
+        React.createElement("div", null, 
+          React.createElement("h2", null, mozL10n.get("incompatible_device")), 
+          React.createElement("p", null, mozL10n.get("sorry_device_unsupported", {clientShortname: mozL10n.get("clientShortname2")})), 
+          React.createElement("p", null, mozL10n.get("use_firefox_windows_mac_linux", {brandShortname: mozL10n.get("brandShortname")}))
         )
       );
     }
@@ -70,20 +70,20 @@ loop.webapp = (function($, _, OT, mozL10n) {
   /**
    * Firefox promotion interstitial. Will display only to non-Firefox users.
    */
-  var PromoteFirefoxView = React.createClass({displayName: 'PromoteFirefoxView',
+  var PromoteFirefoxView = React.createClass({displayName: "PromoteFirefoxView",
     propTypes: {
       helper: React.PropTypes.object.isRequired
     },
 
     render: function() {
       if (this.props.helper.isFirefox(navigator.userAgent)) {
-        return React.DOM.div(null);
+        return React.createElement("div", null);
       }
       return (
-        React.DOM.div({className: "promote-firefox"}, 
-          React.DOM.h3(null, mozL10n.get("promote_firefox_hello_heading", {brandShortname: mozL10n.get("brandShortname")})), 
-          React.DOM.p(null, 
-            React.DOM.a({className: "btn btn-large btn-accept", 
+        React.createElement("div", {className: "promote-firefox"}, 
+          React.createElement("h3", null, mozL10n.get("promote_firefox_hello_heading", {brandShortname: mozL10n.get("brandShortname")})), 
+          React.createElement("p", null, 
+            React.createElement("a", {className: "btn btn-large btn-accept", 
                href: loop.config.brandWebsiteUrl}, 
               mozL10n.get("get_firefox_button", {
                 brandShortname: mozL10n.get("brandShortname")
@@ -98,30 +98,30 @@ loop.webapp = (function($, _, OT, mozL10n) {
   /**
    * Expired call URL view.
    */
-  var CallUrlExpiredView = React.createClass({displayName: 'CallUrlExpiredView',
+  var CallUrlExpiredView = React.createClass({displayName: "CallUrlExpiredView",
     propTypes: {
       helper: React.PropTypes.object.isRequired
     },
 
     render: function() {
       return (
-        React.DOM.div({className: "expired-url-info"}, 
-          React.DOM.div({className: "info-panel"}, 
-            React.DOM.div({className: "firefox-logo"}), 
-            React.DOM.h1(null, mozL10n.get("call_url_unavailable_notification_heading")), 
-            React.DOM.h4(null, mozL10n.get("call_url_unavailable_notification_message2"))
+        React.createElement("div", {className: "expired-url-info"}, 
+          React.createElement("div", {className: "info-panel"}, 
+            React.createElement("div", {className: "firefox-logo"}), 
+            React.createElement("h1", null, mozL10n.get("call_url_unavailable_notification_heading")), 
+            React.createElement("h4", null, mozL10n.get("call_url_unavailable_notification_message2"))
           ), 
-          PromoteFirefoxView({helper: this.props.helper})
+          React.createElement(PromoteFirefoxView, {helper: this.props.helper})
         )
       );
     }
   });
 
-  var ConversationBranding = React.createClass({displayName: 'ConversationBranding',
+  var ConversationBranding = React.createClass({displayName: "ConversationBranding",
     render: function() {
       return (
-        React.DOM.h1({className: "standalone-header-title"}, 
-          React.DOM.strong(null, mozL10n.get("clientShortname2"))
+        React.createElement("h1", {className: "standalone-header-title"}, 
+          React.createElement("strong", null, mozL10n.get("clientShortname2"))
         )
       );
     }
@@ -195,7 +195,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
     }
   });
 
-  var ConversationHeader = React.createClass({displayName: 'ConversationHeader',
+  var ConversationHeader = React.createClass({displayName: "ConversationHeader",
     render: function() {
       var cx = React.addons.classSet;
       var conversationUrl = location.href;
@@ -212,15 +212,15 @@ loop.webapp = (function($, _, OT, mozL10n) {
       });
 
       return (
-        React.DOM.header({className: "standalone-header header-box container-box"}, 
-          ConversationBranding(null), 
-          React.DOM.div({className: "loop-logo", 
+        React.createElement("header", {className: "standalone-header header-box container-box"}, 
+          React.createElement(ConversationBranding, null), 
+          React.createElement("div", {className: "loop-logo", 
                title: mozL10n.get("client_alttext",
                                   {clientShortname: mozL10n.get("clientShortname2")})}), 
-          React.DOM.h3({className: "call-url"}, 
+          React.createElement("h3", {className: "call-url"}, 
             conversationUrl
           ), 
-          React.DOM.h4({className: urlCreationDateClasses}, 
+          React.createElement("h4", {className: urlCreationDateClasses}, 
             callUrlCreationDateString
           )
         )
@@ -228,15 +228,15 @@ loop.webapp = (function($, _, OT, mozL10n) {
     }
   });
 
-  var ConversationFooter = React.createClass({displayName: 'ConversationFooter',
+  var ConversationFooter = React.createClass({displayName: "ConversationFooter",
     render: function() {
       return (
-        React.DOM.div({className: "standalone-footer container-box"}, 
-          React.DOM.div({title: mozL10n.get("vendor_alttext",
+        React.createElement("div", {className: "standalone-footer container-box"}, 
+          React.createElement("div", {title: mozL10n.get("vendor_alttext",
                                   {vendorShortname: mozL10n.get("vendorShortname")}), 
                className: "footer-logo"}), 
-          React.DOM.div({className: "footer-external-links"}, 
-            React.DOM.a({target: "_blank", href: loop.config.generalSupportUrl}, 
+          React.createElement("div", {className: "footer-external-links"}, 
+            React.createElement("a", {target: "_blank", href: loop.config.generalSupportUrl}, 
               mozL10n.get("support_link")
             )
           )
@@ -249,7 +249,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
    * A view for when conversations are pending, displays any messages
    * and an option cancel button.
    */
-  var PendingConversationView = React.createClass({displayName: 'PendingConversationView',
+  var PendingConversationView = React.createClass({displayName: "PendingConversationView",
     propTypes: {
       callState: React.PropTypes.string.isRequired,
       // If not supplied, the cancel button is not displayed.
@@ -265,32 +265,32 @@ loop.webapp = (function($, _, OT, mozL10n) {
       });
 
       return (
-        React.DOM.div({className: "container"}, 
-          React.DOM.div({className: "container-box"}, 
-            React.DOM.header({className: "pending-header header-box"}, 
-              ConversationBranding(null)
+        React.createElement("div", {className: "container"}, 
+          React.createElement("div", {className: "container-box"}, 
+            React.createElement("header", {className: "pending-header header-box"}, 
+              React.createElement(ConversationBranding, null)
             ), 
 
-            React.DOM.div({id: "cameraPreview"}), 
+            React.createElement("div", {id: "cameraPreview"}), 
 
-            React.DOM.div({id: "messages"}), 
+            React.createElement("div", {id: "messages"}), 
 
-            React.DOM.p({className: "standalone-btn-label"}, 
+            React.createElement("p", {className: "standalone-btn-label"}, 
               this.props.callState
             ), 
 
-            React.DOM.div({className: "btn-pending-cancel-group btn-group"}, 
-              React.DOM.div({className: "flex-padding-1"}), 
-              React.DOM.button({className: cancelButtonClasses, 
+            React.createElement("div", {className: "btn-pending-cancel-group btn-group"}, 
+              React.createElement("div", {className: "flex-padding-1"}), 
+              React.createElement("button", {className: cancelButtonClasses, 
                       onClick: this.props.cancelCallback}, 
-                React.DOM.span({className: "standalone-call-btn-text"}, 
+                React.createElement("span", {className: "standalone-call-btn-text"}, 
                   mozL10n.get("initiate_call_cancel_button")
                 )
               ), 
-              React.DOM.div({className: "flex-padding-1"})
+              React.createElement("div", {className: "flex-padding-1"})
             )
           ), 
-          ConversationFooter(null)
+          React.createElement(ConversationFooter, null)
         )
       );
     }
@@ -300,7 +300,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
    * View displayed whilst the get user media prompt is being displayed. Indicates
    * to the user to accept the prompt.
    */
-  var GumPromptConversationView = React.createClass({displayName: 'GumPromptConversationView',
+  var GumPromptConversationView = React.createClass({displayName: "GumPromptConversationView",
     render: function() {
       var callState = mozL10n.get("call_progress_getting_media_description", {
         clientShortname: mozL10n.get("clientShortname2")
@@ -310,7 +310,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
         currentStatus: mozL10n.get("call_progress_getting_media_title")
       });
 
-      return PendingConversationView({callState: callState});
+      return React.createElement(PendingConversationView, {callState: callState});
     }
   });
 
@@ -318,7 +318,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
    * View displayed waiting for a call to be connected. Updates the display
    * once the websocket shows that the callee is being alerted.
    */
-  var WaitingConversationView = React.createClass({displayName: 'WaitingConversationView',
+  var WaitingConversationView = React.createClass({displayName: "WaitingConversationView",
     mixins: [sharedMixins.AudioMixin],
 
     getInitialState: function() {
@@ -356,7 +356,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
                                     currentStatus: mozL10n.get(callStateStringEntityName)});
 
       return (
-        PendingConversationView({
+        React.createElement(PendingConversationView, {
           callState: callState, 
           cancelCallback: this._cancelOutgoingCall}
         )
@@ -364,7 +364,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
     }
   });
 
-  var InitiateCallButton = React.createClass({displayName: 'InitiateCallButton',
+  var InitiateCallButton = React.createClass({displayName: "InitiateCallButton",
     mixins: [sharedMixins.DropdownMenuMixin],
 
     propTypes: {
@@ -388,25 +388,25 @@ loop.webapp = (function($, _, OT, mozL10n) {
         "disabled": this.props.disabled
       });
       return (
-        React.DOM.div({className: "standalone-btn-chevron-menu-group"}, 
-          React.DOM.div({className: "btn-group-chevron"}, 
-            React.DOM.div({className: "btn-group"}, 
-              React.DOM.button({className: "btn btn-constrained btn-large btn-accept", 
+        React.createElement("div", {className: "standalone-btn-chevron-menu-group"}, 
+          React.createElement("div", {className: "btn-group-chevron"}, 
+            React.createElement("div", {className: "btn-group"}, 
+              React.createElement("button", {className: "btn btn-constrained btn-large btn-accept", 
                       onClick: this.props.startCall("audio-video"), 
                       disabled: this.props.disabled, 
                       title: mozL10n.get("initiate_audio_video_call_tooltip2")}, 
-                React.DOM.span({className: "standalone-call-btn-text"}, 
+                React.createElement("span", {className: "standalone-call-btn-text"}, 
                   this.props.caption
                 ), 
-                React.DOM.span({className: "standalone-call-btn-video-icon"})
+                React.createElement("span", {className: "standalone-call-btn-video-icon"})
               ), 
-              React.DOM.div({className: chevronClasses, 
+              React.createElement("div", {className: chevronClasses, 
                    onClick: this.toggleDropdownMenu}
               )
             ), 
-            React.DOM.ul({className: dropdownMenuClasses}, 
-              React.DOM.li(null, 
-                React.DOM.button({className: "start-audio-only-call", 
+            React.createElement("ul", {className: dropdownMenuClasses}, 
+              React.createElement("li", null, 
+                React.createElement("button", {className: "start-audio-only-call", 
                         onClick: this.props.startCall("audio"), 
                         disabled: this.props.disabled}, 
                   mozL10n.get("initiate_audio_call_button2")
@@ -422,7 +422,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
   /**
    * Initiate conversation view.
    */
-  var InitiateConversationView = React.createClass({displayName: 'InitiateConversationView',
+  var InitiateConversationView = React.createClass({displayName: "InitiateConversationView",
     mixins: [Backbone.Events],
 
     propTypes: {
@@ -518,37 +518,37 @@ loop.webapp = (function($, _, OT, mozL10n) {
       });
 
       return (
-        React.DOM.div({className: "container"}, 
-          React.DOM.div({className: "container-box"}, 
+        React.createElement("div", {className: "container"}, 
+          React.createElement("div", {className: "container-box"}, 
 
-            ConversationHeader({
+            React.createElement(ConversationHeader, {
               urlCreationDateString: this.state.urlCreationDateString}), 
 
-            React.DOM.p({className: "standalone-btn-label"}, 
+            React.createElement("p", {className: "standalone-btn-label"}, 
               this.props.title
             ), 
 
-            React.DOM.div({id: "messages"}), 
+            React.createElement("div", {id: "messages"}), 
 
-            React.DOM.div({className: "btn-group"}, 
-              React.DOM.div({className: "flex-padding-1"}), 
-              InitiateCallButton({
+            React.createElement("div", {className: "btn-group"}, 
+              React.createElement("div", {className: "flex-padding-1"}), 
+              React.createElement(InitiateCallButton, {
                 caption: this.props.callButtonLabel, 
                 disabled: this.state.disableCallButton, 
                 startCall: this.startCall}
               ), 
-              React.DOM.div({className: "flex-padding-1"})
+              React.createElement("div", {className: "flex-padding-1"})
             ), 
 
-            React.DOM.p({className: tosClasses, 
+            React.createElement("p", {className: tosClasses, 
                dangerouslySetInnerHTML: {__html: tosHTML}})
           ), 
 
-          loop.fxOSMarketplaceViews.FxOSHiddenMarketplaceView({
+          React.createElement(loop.fxOSMarketplaceViews.FxOSHiddenMarketplaceView, {
             marketplaceSrc: this.state.marketplaceSrc, 
             onMarketplaceMessage: this.state.onMarketplaceMessage}), 
 
-          ConversationFooter(null)
+          React.createElement(ConversationFooter, null)
         )
       );
     }
@@ -557,7 +557,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
   /**
    * Ended conversation view.
    */
-  var EndedConversationView = React.createClass({displayName: 'EndedConversationView',
+  var EndedConversationView = React.createClass({displayName: "EndedConversationView",
     propTypes: {
       conversation: React.PropTypes.instanceOf(sharedModels.ConversationModel)
                          .isRequired,
@@ -571,12 +571,12 @@ loop.webapp = (function($, _, OT, mozL10n) {
                                    {clientShortname: mozL10n.get("clientShortname2"),
                                     currentStatus: mozL10n.get("status_conversation_ended")});
       return (
-        React.DOM.div({className: "ended-conversation"}, 
-          sharedViews.FeedbackView({
+        React.createElement("div", {className: "ended-conversation"}, 
+          React.createElement(sharedViews.FeedbackView, {
             feedbackStore: this.props.feedbackStore, 
             onAfterFeedbackReceived: this.props.onAfterFeedbackReceived}
           ), 
-          sharedViews.ConversationView({
+          React.createElement(sharedViews.ConversationView, {
             initiate: false, 
             sdk: this.props.sdk, 
             model: this.props.conversation, 
@@ -588,18 +588,18 @@ loop.webapp = (function($, _, OT, mozL10n) {
     }
   });
 
-  var StartConversationView = React.createClass({displayName: 'StartConversationView',
+  var StartConversationView = React.createClass({displayName: "StartConversationView",
     render: function() {
       document.title = mozL10n.get("clientShortname2");
-      return this.transferPropsTo(
-        InitiateConversationView({
-          title: mozL10n.get("initiate_call_button_label2"), 
-          callButtonLabel: mozL10n.get("initiate_audio_video_call_button2")})
+      return React.createElement(InitiateConversationView, React.__spread({}, 
+        this.props, 
+        {title: mozL10n.get("initiate_call_button_label2"), 
+        callButtonLabel: mozL10n.get("initiate_audio_video_call_button2")})
       );
     }
   });
 
-  var FailedConversationView = React.createClass({displayName: 'FailedConversationView',
+  var FailedConversationView = React.createClass({displayName: "FailedConversationView",
     mixins: [sharedMixins.AudioMixin],
 
     componentDidMount: function() {
@@ -610,11 +610,10 @@ loop.webapp = (function($, _, OT, mozL10n) {
       document.title = mozL10n.get("standalone_title_with_status",
                                    {clientShortname: mozL10n.get("clientShortname2"),
                                     currentStatus: mozL10n.get("status_error")});
-      return this.transferPropsTo(
-        InitiateConversationView({
-          title: mozL10n.get("call_failed_title"), 
-          callButtonLabel: mozL10n.get("retry_call_button")})
-      );
+      return React.createElement(InitiateConversationView, React.__spread({}, 
+        this.props, 
+        {title: mozL10n.get("call_failed_title"), 
+        callButtonLabel: mozL10n.get("retry_call_button")}));
     }
   });
 
@@ -624,7 +623,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
    *
    * At the moment, it does more than that, these parts need refactoring out.
    */
-  var OutgoingConversationView = React.createClass({displayName: 'OutgoingConversationView',
+  var OutgoingConversationView = React.createClass({displayName: "OutgoingConversationView",
     propTypes: {
       client: React.PropTypes.instanceOf(loop.StandaloneClient).isRequired,
       conversation: React.PropTypes.oneOfType([
@@ -679,7 +678,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
       switch (this.state.callStatus) {
         case "start": {
           return (
-            StartConversationView({
+            React.createElement(StartConversationView, {
               conversation: this.props.conversation, 
               notifications: this.props.notifications, 
               client: this.props.client}
@@ -688,7 +687,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
         }
         case "failure": {
           return (
-            FailedConversationView({
+            React.createElement(FailedConversationView, {
               conversation: this.props.conversation, 
               notifications: this.props.notifications, 
               client: this.props.client}
@@ -696,17 +695,17 @@ loop.webapp = (function($, _, OT, mozL10n) {
           );
         }
         case "gumPrompt": {
-          return GumPromptConversationView(null);
+          return React.createElement(GumPromptConversationView, null);
         }
         case "pending": {
-          return WaitingConversationView({websocket: this._websocket});
+          return React.createElement(WaitingConversationView, {websocket: this._websocket});
         }
         case "connected": {
           document.title = mozL10n.get("standalone_title_with_status",
                                        {clientShortname: mozL10n.get("clientShortname2"),
                                         currentStatus: mozL10n.get("status_in_conversation")});
           return (
-            sharedViews.ConversationView({
+            React.createElement(sharedViews.ConversationView, {
               initiate: true, 
               sdk: this.props.sdk, 
               model: this.props.conversation, 
@@ -716,7 +715,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
         }
         case "end": {
           return (
-            EndedConversationView({
+            React.createElement(EndedConversationView, {
               sdk: this.props.sdk, 
               conversation: this.props.conversation, 
               feedbackStore: this.props.feedbackStore, 
@@ -726,11 +725,11 @@ loop.webapp = (function($, _, OT, mozL10n) {
         }
         case "expired": {
           return (
-            CallUrlExpiredView({helper: this.props.helper})
+            React.createElement(CallUrlExpiredView, {helper: this.props.helper})
           );
         }
         default: {
-          return HomeView(null);
+          return React.createElement(HomeView, null);
         }
       }
     },
@@ -918,7 +917,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
    * Webapp Root View. This is the main, single, view that controls the display
    * of the webapp page.
    */
-  var WebappRootView = React.createClass({displayName: 'WebappRootView',
+  var WebappRootView = React.createClass({displayName: "WebappRootView",
 
     mixins: [sharedMixins.UrlHashChangeMixin,
              sharedMixins.DocumentLocationMixin,
@@ -967,14 +966,14 @@ loop.webapp = (function($, _, OT, mozL10n) {
     render: function() {
       switch (this.state.windowType) {
         case "unsupportedDevice": {
-          return UnsupportedDeviceView(null);
+          return React.createElement(UnsupportedDeviceView, null);
         }
         case "unsupportedBrowser": {
-          return UnsupportedBrowserView({helper: this.props.helper});
+          return React.createElement(UnsupportedBrowserView, {helper: this.props.helper});
         }
         case "outgoing": {
           return (
-            OutgoingConversationView({
+            React.createElement(OutgoingConversationView, {
                client: this.props.client, 
                conversation: this.props.conversation, 
                helper: this.props.helper, 
@@ -986,7 +985,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
         }
         case "room": {
           return (
-            loop.standaloneRoomViews.StandaloneRoomView({
+            React.createElement(loop.standaloneRoomViews.StandaloneRoomView, {
               activeRoomStore: this.props.activeRoomStore, 
               feedbackStore: this.props.feedbackStore, 
               dispatcher: this.props.dispatcher, 
@@ -995,7 +994,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
           );
         }
         case "home": {
-          return HomeView(null);
+          return React.createElement(HomeView, null);
         }
         default: {
           // The state hasn't been initialised yet, so don't display
@@ -1079,7 +1078,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
       dispatcher.dispatch(new sharedActions.WindowUnload());
     });
 
-    React.renderComponent(WebappRootView({
+    React.render(React.createElement(WebappRootView, {
       client: client, 
       conversation: conversation, 
       helper: helper, 
