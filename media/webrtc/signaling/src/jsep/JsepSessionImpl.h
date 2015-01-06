@@ -140,7 +140,7 @@ public:
   virtual const std::string GetLastError() const MOZ_OVERRIDE;
 
   virtual bool
-  IsIceControlling() const
+  IsIceControlling() const MOZ_OVERRIDE
   {
     return mIceControlling;
   }
@@ -178,7 +178,7 @@ public:
   }
 
   virtual nsresult
-  GetNegotiatedTrackPair(size_t index, const JsepTrackPair** pair) const
+  GetNegotiatedTrackPair(size_t index, const JsepTrackPair** pair) const MOZ_OVERRIDE
   {
     if (index >= mNegotiatedTrackPairs.size())
       return NS_ERROR_INVALID_ARG;
