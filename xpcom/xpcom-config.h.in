@@ -18,11 +18,6 @@
 /* Define if a dyanmic_cast to void* gives the most derived object */
 #undef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
 
-/* Define if the c++ compiler requires implementations of 
- * unused virtual methods
- */
-#undef NEED_CPP_UNUSED_IMPLEMENTATIONS
-
 /* Define to either __attribute__((malloc)) or nothing */
 #undef NS_ATTR_MALLOC
 

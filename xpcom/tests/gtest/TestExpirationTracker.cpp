@@ -39,7 +39,7 @@ static uint32_t ops = 1000;
 static uint32_t iterations = 2;
 static bool logging = 0;
 static uint32_t sleepPeriodMS = 50;
-static uint32_t slackMS = 20; // allow this much error
+static uint32_t slackMS = 30; // allow this much error
 
 template <uint32_t K> class Tracker : public nsExpirationTracker<Object,K> {
 public:

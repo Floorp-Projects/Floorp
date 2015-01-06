@@ -116,6 +116,7 @@ let GMPPrefs = {
    * List of keys which can be used in get and set
    */
   KEY_LOG_ENABLED: "media.gmp-manager.log",
+  KEY_ADDON_ENABLED: "media.{0}.enabled",
   KEY_ADDON_LAST_UPDATE: "media.{0}.lastUpdate",
   KEY_ADDON_VERSION: "media.{0}.version",
   KEY_ADDON_AUTOUPDATE: "media.{0}.autoupdate",
@@ -434,8 +435,10 @@ GMPInstallManager.prototype = {
   simpleCheckAndInstall: function() {
     let log = getScopedLogger("simpleCheckAndInstall");
 
-    let autoUpdate = GMPPrefs.get(GMPPrefs.KEY_ADDON_AUTOUPDATE,
-                                  OPEN_H264_ID, true);
+    let autoUpdate = GMPPrefs.get(GMPPrefs.KEY_ADDON_ENABLED, OPEN_H264_ID,
+                                  true) &&
+                     GMPPrefs.get(GMPPrefs.KEY_ADDON_AUTOUPDATE, OPEN_H264_ID,
+                                  true);
     if (!autoUpdate) {
         log.info("Auto-update is off for openh264, aborting check.");
         return Promise.resolve({status: "check-disabled"});
