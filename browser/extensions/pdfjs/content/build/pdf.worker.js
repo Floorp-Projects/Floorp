@@ -22,8 +22,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.0.978';
-PDFJS.build = '20bf84a';
+PDFJS.version = '1.0.1040';
+PDFJS.build = '997096f';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -2298,6 +2298,10 @@ var Page = (function PageClosure() {
  * `PDFDocument` objects on the main thread created.
  */
 var PDFDocument = (function PDFDocumentClosure() {
+  var FINGERPRINT_FIRST_BYTES = 1024;
+  var EMPTY_FINGERPRINT = '\x00\x00\x00\x00\x00\x00\x00' +
+    '\x00\x00\x00\x00\x00\x00\x00\x00\x00';
+
   function PDFDocument(pdfManager, arg, password) {
     if (isStream(arg)) {
       init.call(this, pdfManager, arg, password);
@@ -2509,16 +2513,25 @@ var PDFDocument = (function PDFDocumentClosure() {
       return shadow(this, 'documentInfo', docInfo);
     },
     get fingerprint() {
-      var xref = this.xref, hash, fileID = '';
+      var xref = this.xref, idArray, hash, fileID = '';
 
       if (xref.trailer.has('ID')) {
-        hash = stringToBytes(xref.trailer.get('ID')[0]);
+        idArray = xref.trailer.get('ID');
+      }
+      if (idArray && isArray(idArray) && idArray[0] !== EMPTY_FINGERPRINT) {
+        hash = stringToBytes(idArray[0]);
       } else {
-        hash = calculateMD5(this.stream.bytes.subarray(0, 100), 0, 100);
+        if (this.stream.ensureRange) {
+          this.stream.ensureRange(0,
+            Math.min(FINGERPRINT_FIRST_BYTES, this.stream.end));
+        }
+        hash = calculateMD5(this.stream.bytes.subarray(0,
+          FINGERPRINT_FIRST_BYTES), 0, FINGERPRINT_FIRST_BYTES);
       }
 
       for (var i = 0, n = hash.length; i < n; i++) {
-        fileID += hash[i].toString(16);
+        var hex = hash[i].toString(16);
+        fileID += hex.length === 1 ? '0' + hex : hex;
       }
 
       return shadow(this, 'fingerprint', fileID);
@@ -4374,12 +4387,26 @@ var Annotation = (function AnnotationClosure() {
     data.annotationFlags = dict.get('F');
 
     var color = dict.get('C');
-    if (isArray(color) && color.length === 3) {
-      // TODO(mack): currently only supporting rgb; need support different
-      // colorspaces
-      data.color = color;
-    } else {
+    if (!color) {
+      // The PDF spec does not mention how a missing color array is interpreted.
+      // Adobe Reader seems to default to black in this case.
       data.color = [0, 0, 0];
+    } else if (isArray(color)) {
+      switch (color.length) {
+        case 0:
+          // Empty array denotes transparent border.
+          data.color = null;
+          break;
+        case 1:
+          // TODO: implement DeviceGray
+          break;
+        case 3:
+          data.color = color;
+          break;
+        case 4:
+          // TODO: implement DeviceCMYK
+          break;
+      }
     }
 
     // Some types of annotations have border style dict which has more
@@ -4396,7 +4423,7 @@ var Annotation = (function AnnotationClosure() {
       if (data.borderWidth > 0 && dashArray) {
         if (!isArray(dashArray)) {
           // Ignore the border if dashArray is not actually an array,
-          // this is consistent with the behaviour in Adobe Reader. 
+          // this is consistent with the behaviour in Adobe Reader.
           data.borderWidth = 0;
         } else {
           var dashArrayLength = dashArray.length;
@@ -4819,11 +4846,7 @@ var LinkAnnotation = (function LinkAnnotationClosure() {
     return url;
   }
 
-  Util.inherit(LinkAnnotation, InteractiveAnnotation, {
-    hasOperatorList: function LinkAnnotation_hasOperatorList() {
-      return false;
-    }
-  });
+  Util.inherit(LinkAnnotation, InteractiveAnnotation, { });
 
   return LinkAnnotation;
 })();
@@ -10120,7 +10143,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
     buildPaintImageXObject:
         function PartialEvaluator_buildPaintImageXObject(resources, image,
                                                          inline, operatorList,
-                                                         cacheKey, cache) {
+                                                         cacheKey, imageCache) {
       var self = this;
       var dict = image.dict;
       var w = dict.get('Width', 'W');
@@ -10158,9 +10181,10 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         args = [imgData];
         operatorList.addOp(OPS.paintImageMaskXObject, args);
         if (cacheKey) {
-          cache.key = cacheKey;
-          cache.fn = OPS.paintImageMaskXObject;
-          cache.args = args;
+          imageCache[cacheKey] = {
+            fn: OPS.paintImageMaskXObject,
+            args: args
+          };
         }
         return;
       }
@@ -10209,9 +10233,10 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
       operatorList.addOp(OPS.paintImageXObject, args);
       if (cacheKey) {
-        cache.key = cacheKey;
-        cache.fn = OPS.paintImageXObject;
-        cache.args = args;
+        imageCache[cacheKey] = {
+          fn: OPS.paintImageXObject,
+          args: args
+        };
       }
     },
 
@@ -10605,8 +10630,8 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
               }
               // eagerly compile XForm objects
               var name = args[0].name;
-              if (imageCache.key === name) {
-                operatorList.addOp(imageCache.fn, imageCache.args);
+              if (imageCache[name] !== undefined) {
+                operatorList.addOp(imageCache[name].fn, imageCache[name].args);
                 args = null;
                 continue;
               }
@@ -10655,10 +10680,13 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                 }, reject);
             case OPS.endInlineImage:
               var cacheKey = args[0].cacheKey;
-              if (cacheKey && imageCache.key === cacheKey) {
-                operatorList.addOp(imageCache.fn, imageCache.args);
-                args = null;
-                continue;
+              if (cacheKey) {
+                var cacheEntry = imageCache[cacheKey];
+                if (cacheEntry !== undefined) {
+                  operatorList.addOp(cacheEntry.fn, cacheEntry.args);
+                  args = null;
+                  continue;
+                }
               }
               self.buildPaintImageXObject(resources, args[0], true,
                 operatorList, cacheKey, imageCache);
@@ -13825,9 +13853,12 @@ var stdFontMap = {
   'CourierNewPS-BoldMT': 'Courier-Bold',
   'CourierNewPS-ItalicMT': 'Courier-Oblique',
   'CourierNewPSMT': 'Courier',
+  'Helvetica': 'Helvetica',
   'Helvetica-Bold': 'Helvetica-Bold',
   'Helvetica-BoldItalic': 'Helvetica-BoldOblique',
+  'Helvetica-BoldOblique': 'Helvetica-BoldOblique',
   'Helvetica-Italic': 'Helvetica-Oblique',
+  'Helvetica-Oblique':'Helvetica-Oblique',
   'Symbol-Bold': 'Symbol',
   'Symbol-BoldItalic': 'Symbol',
   'Symbol-Italic': 'Symbol',
@@ -13853,6 +13884,10 @@ var stdFontMap = {
  * fonts without glyph data.
  */
 var nonStdFontMap = {
+  'CenturyGothic': 'Helvetica',
+  'CenturyGothic-Bold': 'Helvetica-Bold',
+  'CenturyGothic-BoldItalic': 'Helvetica-BoldOblique',
+  'CenturyGothic-Italic': 'Helvetica-Oblique',
   'ComicSansMS': 'Comic Sans MS',
   'ComicSansMS-Bold': 'Comic Sans MS-Bold',
   'ComicSansMS-BoldItalic': 'Comic Sans MS-BoldItalic',
@@ -13876,7 +13911,8 @@ var nonStdFontMap = {
   'MS-PMincho': 'MS PMincho',
   'MS-PMincho-Bold': 'MS PMincho-Bold',
   'MS-PMincho-BoldItalic': 'MS PMincho-BoldItalic',
-  'MS-PMincho-Italic': 'MS PMincho-Italic'
+  'MS-PMincho-Italic': 'MS PMincho-Italic',
+  'Wingdings': 'ZapfDingbats'
 };
 
 var serifFonts = {
@@ -15959,7 +15995,8 @@ var Font = (function FontClosure() {
       // The file data is not specified. Trying to fix the font name
       // to be used with the canvas.font.
       var fontName = name.replace(/[,_]/g, '-');
-      var isStandardFont = fontName in stdFontMap;
+      var isStandardFont = !!stdFontMap[fontName] ||
+        (nonStdFontMap[fontName] && !!stdFontMap[nonStdFontMap[fontName]]);
       fontName = stdFontMap[fontName] || nonStdFontMap[fontName] || fontName;
 
       this.bold = (fontName.search(/bold/gi) !== -1);
@@ -16005,6 +16042,10 @@ var Font = (function FontClosure() {
           this.toFontChar[charCode] = fontChar;
         }
       } else if (/Dingbats/i.test(fontName)) {
+        if (/Wingdings/i.test(name)) {
+          warn('Wingdings font without embedded font file, ' +
+               'falling back to the ZapfDingbats encoding.');
+        }
         var dingbats = Encodings.ZapfDingbatsEncoding;
         for (charCode in dingbats) {
           fontChar = DingbatsGlyphsUnicode[dingbats[charCode]];
@@ -16190,6 +16231,7 @@ var Font = (function FontClosure() {
            fontCharCode <= 0x1f || // Control chars
            fontCharCode === 0x7F || // Control char
            fontCharCode === 0xAD || // Soft hyphen
+           fontCharCode === 0xA0 || // Non breaking space
            (fontCharCode >= 0x80 && fontCharCode <= 0x9F) || // Control chars
            // Prevent drawing characters in the specials unicode block.
            (fontCharCode >= 0xFFF0 && fontCharCode <= 0xFFFF) ||
@@ -18208,6 +18250,8 @@ function type1FontGlyphMapping(properties, builtInEncoding, glyphNames) {
       glyphId = glyphNames.indexOf(baseEncoding[charCode]);
       if (glyphId >= 0) {
         charCodeToGlyphId[charCode] = glyphId;
+      } else {
+        charCodeToGlyphId[charCode] = 0; // notdef
       }
     }
   } else if (!!(properties.flags & FontFlags.Symbolic)) {
@@ -18224,6 +18268,8 @@ function type1FontGlyphMapping(properties, builtInEncoding, glyphNames) {
       glyphId = glyphNames.indexOf(baseEncoding[charCode]);
       if (glyphId >= 0) {
         charCodeToGlyphId[charCode] = glyphId;
+      } else {
+        charCodeToGlyphId[charCode] = 0; // notdef
       }
     }
   }
@@ -18236,6 +18282,8 @@ function type1FontGlyphMapping(properties, builtInEncoding, glyphNames) {
       glyphId = glyphNames.indexOf(glyphName);
       if (glyphId >= 0) {
         charCodeToGlyphId[charCode] = glyphId;
+      } else {
+        charCodeToGlyphId[charCode] = 0; // notdef
       }
     }
   }
@@ -29411,16 +29459,14 @@ function isEOF(v) {
   return (v === EOF);
 }
 
+var MAX_LENGTH_TO_CACHE = 1000;
+
 var Parser = (function ParserClosure() {
   function Parser(lexer, allowStreams, xref) {
     this.lexer = lexer;
     this.allowStreams = allowStreams;
     this.xref = xref;
-    this.imageCache = {
-      length: 0,
-      adler32: 0,
-      stream: null
-    };
+    this.imageCache = {};
     this.refill();
   }
 
@@ -29511,17 +29557,117 @@ var Parser = (function ParserClosure() {
       // simple object
       return buf1;
     },
+    /**
+     * Find the end of the stream by searching for the /EI\s/.
+     * @returns {number} The inline stream length.
+     */
+    findDefaultInlineStreamEnd:
+        function Parser_findDefaultInlineStreamEnd(stream) {
+      var E = 0x45, I = 0x49, SPACE = 0x20, LF = 0xA, CR = 0xD;
+      var startPos = stream.pos, state = 0, ch, i, n, followingBytes;
+      while ((ch = stream.getByte()) !== -1) {
+        if (state === 0) {
+          state = (ch === E) ? 1 : 0;
+        } else if (state === 1) {
+          state = (ch === I) ? 2 : 0;
+        } else {
+          assert(state === 2);
+          if (ch === SPACE || ch === LF || ch === CR) {
+            // Let's check the next five bytes are ASCII... just be sure.
+            n = 5;
+            followingBytes = stream.peekBytes(n);
+            for (i = 0; i < n; i++) {
+              ch = followingBytes[i];
+              if (ch !== LF && ch !== CR && (ch < SPACE || ch > 0x7F)) {
+                // Not a LF, CR, SPACE or any visible ASCII character, i.e.
+                // it's binary stuff. Resetting the state.
+                state = 0;
+                break;
+              }
+            }
+            if (state === 2) {
+              break;  // Finished!
+            }
+          } else {
+            state = 0;
+          }
+        }
+      }
+      return ((stream.pos - 4) - startPos);
+    },
+    /**
+     * Find the EOD (end-of-data) marker '~>' (i.e. TILDE + GT) of the stream.
+     * @returns {number} The inline stream length.
+     */
+    findASCII85DecodeInlineStreamEnd:
+        function Parser_findASCII85DecodeInlineStreamEnd(stream) {
+      var TILDE = 0x7E, GT = 0x3E;
+      var startPos = stream.pos, ch, length;
+      while ((ch = stream.getByte()) !== -1) {
+        if (ch === TILDE && stream.peekByte() === GT) {
+          stream.skip();
+          break;
+        }
+      }
+      length = stream.pos - startPos;
+      if (ch === -1) {
+        warn('Inline ASCII85Decode image stream: ' +
+             'EOD marker not found, searching for /EI/ instead.');
+        stream.skip(-length); // Reset the stream position.
+        return this.findDefaultInlineStreamEnd(stream);
+      }
+      this.inlineStreamSkipEI(stream);
+      return length;
+    },
+    /**
+     * Find the EOD (end-of-data) marker '>' (i.e. GT) of the stream.
+     * @returns {number} The inline stream length.
+     */
+    findASCIIHexDecodeInlineStreamEnd:
+        function Parser_findASCIIHexDecodeInlineStreamEnd(stream) {
+      var GT = 0x3E;
+      var startPos = stream.pos, ch, length;
+      while ((ch = stream.getByte()) !== -1) {
+        if (ch === GT) {
+          break;
+        }
+      }
+      length = stream.pos - startPos;
+      if (ch === -1) {
+        warn('Inline ASCIIHexDecode image stream: ' +
+             'EOD marker not found, searching for /EI/ instead.');
+        stream.skip(-length); // Reset the stream position.
+        return this.findDefaultInlineStreamEnd(stream);
+      }
+      this.inlineStreamSkipEI(stream);
+      return length;
+    },
+    /**
+     * Skip over the /EI/ for streams where we search for an EOD marker.
+     */
+    inlineStreamSkipEI: function Parser_inlineStreamSkipEI(stream) {
+      var E = 0x45, I = 0x49;
+      var state = 0, ch;
+      while ((ch = stream.getByte()) !== -1) {
+        if (state === 0) {
+          state = (ch === E) ? 1 : 0;
+        } else if (state === 1) {
+          state = (ch === I) ? 2 : 0;
+        } else if (state === 2) {
+          break;
+        }
+      }
+    },
     makeInlineImage: function Parser_makeInlineImage(cipherTransform) {
       var lexer = this.lexer;
       var stream = lexer.stream;
 
-      // parse dictionary
+      // Parse dictionary.
       var dict = new Dict(null);
       while (!isCmd(this.buf1, 'ID') && !isEOF(this.buf1)) {
         if (!isName(this.buf1)) {
           error('Dictionary key must be a name object');
         }
-
         var key = this.buf1.name;
         this.shift();
         if (isEOF(this.buf1)) {
@@ -29530,72 +29676,48 @@ var Parser = (function ParserClosure() {
         dict.set(key, this.getObj(cipherTransform));
       }
 
-      // parse image stream
-      var startPos = stream.pos;
-
-      // searching for the /EI\s/
-      var state = 0, ch, i, ii;
-      var E = 0x45, I = 0x49, SPACE = 0x20, NL = 0xA, CR = 0xD;
-      while ((ch = stream.getByte()) !== -1) {
-        if (state === 0) {
-          state = (ch === E) ? 1 : 0;
-        } else if (state === 1) {
-          state = (ch === I) ? 2 : 0;
-        } else {
-          assert(state === 2);
-          if (ch === SPACE || ch === NL || ch === CR) {
-            // Let's check the next five bytes are ASCII... just be sure.
-            var n = 5;
-            var followingBytes = stream.peekBytes(n);
-            for (i = 0; i < n; i++) {
-              ch = followingBytes[i];
-              if (ch !== NL && ch !== CR && (ch < SPACE || ch > 0x7F)) {
-                // Not a LF, CR, SPACE or any visible ASCII character, i.e.
-                // it's binary stuff. Resetting the state.
-                state = 0;
-                break;
-              }
-            }
-            if (state === 2) {
-              break;  // finished!
-            }
-          } else {
-            state = 0;
-          }
-        }
+      // Extract the name of the first (i.e. the current) image filter.
+      var filter = this.fetchIfRef(dict.get('Filter', 'F')), filterName;
+      if (isName(filter)) {
+        filterName = filter.name;
+      } else if (isArray(filter) && isName(filter[0])) {
+        filterName = filter[0].name;
       }
 
-      var length = (stream.pos - 4) - startPos;
+      // Parse image stream.
+      var startPos = stream.pos, length, i, ii;
+      if (filterName === 'ASCII85Decide' || filterName === 'A85') {
+        length = this.findASCII85DecodeInlineStreamEnd(stream);
+      } else if (filterName === 'ASCIIHexDecode' || filterName === 'AHx') {
+        length = this.findASCIIHexDecodeInlineStreamEnd(stream);
+      } else {
+        length = this.findDefaultInlineStreamEnd(stream);
+      }
       var imageStream = stream.makeSubStream(startPos, length, dict);
 
-      // trying to cache repeat images, first we are trying to "warm up" caching
-      // using length, then comparing adler32
-      var MAX_LENGTH_TO_CACHE = 1000;
-      var cacheImage = false, adler32;
-      if (length < MAX_LENGTH_TO_CACHE && this.imageCache.length === length) {
+      // Cache all images below the MAX_LENGTH_TO_CACHE threshold by their
+      // adler32 checksum.
+      var adler32;
+      if (length < MAX_LENGTH_TO_CACHE) {
         var imageBytes = imageStream.getBytes();
         imageStream.reset();
 
         var a = 1;
         var b = 0;
         for (i = 0, ii = imageBytes.length; i < ii; ++i) {
-          a = (a + (imageBytes[i] & 0xff)) % 65521;
-          b = (b + a) % 65521;
+          // No modulo required in the loop if imageBytes.length < 5552.
+          a += imageBytes[i] & 0xff;
+          b += a;
         }
-        adler32 = (b << 16) | a;
+        adler32 = ((b % 65521) << 16) | (a % 65521);
 
-        if (this.imageCache.stream && this.imageCache.adler32 === adler32) {
+        if (this.imageCache.adler32 === adler32) {
           this.buf2 = Cmd.get('EI');
           this.shift();
 
-          this.imageCache.stream.reset();
-          return this.imageCache.stream;
+          this.imageCache[adler32].reset();
+          return this.imageCache[adler32];
         }
-        cacheImage = true;
-      }
-      if (!cacheImage && !this.imageCache.stream) {
-        this.imageCache.length = length;
-        this.imageCache.stream = null;
       }
 
       if (cipherTransform) {
@@ -29604,10 +29726,9 @@ var Parser = (function ParserClosure() {
 
       imageStream = this.filter(imageStream, dict, length);
       imageStream.dict = dict;
-      if (cacheImage) {
+      if (adler32 !== undefined) {
         imageStream.cacheKey = 'inline_' + length + '_' + adler32;
-        this.imageCache.adler32 = adler32;
-        this.imageCache.stream = imageStream;
+        this.imageCache[adler32] = imageStream;
       }
 
       this.buf2 = Cmd.get('EI');
@@ -29755,22 +29876,6 @@ var Parser = (function ParserClosure() {
           return new LZWStream(stream, maybeLength, earlyChange);
         }
         if (name === 'DCTDecode' || name === 'DCT') {
-          // According to the specification: for inline images, the ID operator
-          // shall be followed by a single whitespace character (unless it uses
-          // ASCII85Decode or ASCIIHexDecode filters).
-          // In practice this only seems to be followed for inline JPEG images,
-          // and generally ignoring the first byte of the stream if it is a
-          // whitespace char can even *cause* issues (e.g. in the CCITTFaxDecode
-          // filters used in issue2984.pdf).
-          // Hence when the first byte of the stream of an inline JPEG image is
-          // a whitespace character, we thus simply skip over it.
-          if (isCmd(this.buf1, 'ID')) {
-            var firstByte = stream.peekByte();
-            if (firstByte === 0x0A /* LF */ || firstByte === 0x0D /* CR */ ||
-                firstByte === 0x20 /* SPACE */) {
-              stream.skip();
-            }
-          }
           xrefStreamStats[StreamType.DCT] = true;
           return new JpegStream(stream, maybeLength, stream.dict, this.xref);
         }
@@ -31318,8 +31423,15 @@ var PredictorStream = (function PredictorStreamClosure() {
  */
 var JpegStream = (function JpegStreamClosure() {
   function JpegStream(stream, maybeLength, dict, xref) {
-    // TODO: per poppler, some images may have 'junk' before that
-    // need to be removed
+    // Some images may contain 'junk' before the SOI (start-of-image) marker.
+    // Note: this seems to mainly affect inline images.
+    var ch;
+    while ((ch = stream.getByte()) !== -1) {
+      if (ch === 0xFF) { // Find the first byte of the SOI marker (0xFFD8).
+        stream.skip(-1); // Reset the stream position to the SOI.
+        break;
+      }
+    }
     this.stream = stream;
     this.maybeLength = maybeLength;
     this.dict = dict;
@@ -32494,7 +32606,7 @@ var CCITTFaxStream = (function CCITTFaxStreamClosure() {
 
       if (!this.eoblock && this.row === this.rows - 1) {
         this.eof = true;
-      } else if (this.eoline || !this.byteAlign) {
+      } else {
         code1 = this.lookBits(12);
         if (this.eoline) {
           while (code1 !== EOF && code1 !== 1) {
@@ -34864,12 +34976,6 @@ var JpxImage = (function JpxImageClosure() {
                 cod.precinctsSizes = precinctsSizes;
               }
               var unsupported = [];
-              if (cod.sopMarkerUsed) {
-                unsupported.push('sopMarkerUsed');
-              }
-              if (cod.ephMarkerUsed) {
-                unsupported.push('ephMarkerUsed');
-              }
               if (cod.selectiveArithmeticCodingBypass) {
                 unsupported.push('selectiveArithmeticCodingBypass');
               }
@@ -35237,6 +35343,230 @@ var JpxImage = (function JpxImageClosure() {
       throw new Error('JPX Error: Out of packets');
     };
   }
+  function ResolutionPositionComponentLayerIterator(context) {
+    var siz = context.SIZ;
+    var tileIndex = context.currentTile.index;
+    var tile = context.tiles[tileIndex];
+    var layersCount = tile.codingStyleDefaultParameters.layersCount;
+    var componentsCount = siz.Csiz;
+    var l, r, c, p;
+    var maxDecompositionLevelsCount = 0;
+    for (c = 0; c < componentsCount; c++) {
+      var component = tile.components[c];
+      maxDecompositionLevelsCount = Math.max(maxDecompositionLevelsCount,
+        component.codingStyleParameters.decompositionLevelsCount);
+    }
+    var maxNumPrecinctsInLevel = new Int32Array(
+      maxDecompositionLevelsCount + 1);
+    for (r = 0; r <= maxDecompositionLevelsCount; ++r) {
+      var maxNumPrecincts = 0;
+      for (c = 0; c < componentsCount; ++c) {
+        var resolutions = tile.components[c].resolutions;
+        if (r < resolutions.length) {
+          maxNumPrecincts = Math.max(maxNumPrecincts,
+            resolutions[r].precinctParameters.numprecincts);
+        }
+      }
+      maxNumPrecinctsInLevel[r] = maxNumPrecincts;
+    }
+    l = 0;
+    r = 0;
+    c = 0;
+    p = 0;
+    
+    this.nextPacket = function JpxImage_nextPacket() {
+      // Section B.12.1.3 Resolution-position-component-layer
+      for (; r <= maxDecompositionLevelsCount; r++) {
+        for (; p < maxNumPrecinctsInLevel[r]; p++) {
+          for (; c < componentsCount; c++) {
+            var component = tile.components[c];
+            if (r > component.codingStyleParameters.decompositionLevelsCount) {
+              continue;
+            }
+            var resolution = component.resolutions[r];
+            var numprecincts = resolution.precinctParameters.numprecincts;
+            if (p >= numprecincts) {
+              continue;
+            }
+            for (; l < layersCount;) {
+              var packet = createPacket(resolution, p, l);
+              l++;
+              return packet;
+            }
+            l = 0;
+          }
+          c = 0;
+        }
+        p = 0;
+      }
+      throw new Error('JPX Error: Out of packets');
+    };
+  }
+  function PositionComponentResolutionLayerIterator(context) {
+    var siz = context.SIZ;
+    var tileIndex = context.currentTile.index;
+    var tile = context.tiles[tileIndex];
+    var layersCount = tile.codingStyleDefaultParameters.layersCount;
+    var componentsCount = siz.Csiz;
+    var precinctsSizes = getPrecinctSizesInImageScale(tile);
+    var precinctsIterationSizes = precinctsSizes;
+    var l = 0, r = 0, c = 0, px = 0, py = 0;
+
+    this.nextPacket = function JpxImage_nextPacket() {
+      // Section B.12.1.4 Position-component-resolution-layer
+      for (; py < precinctsIterationSizes.maxNumHigh; py++) {
+        for (; px < precinctsIterationSizes.maxNumWide; px++) {
+          for (; c < componentsCount; c++) {
+            var component = tile.components[c];
+            var decompositionLevelsCount =
+              component.codingStyleParameters.decompositionLevelsCount;
+            for (; r <= decompositionLevelsCount; r++) {
+              var resolution = component.resolutions[r];
+              var sizeInImageScale =
+                precinctsSizes.components[c].resolutions[r];
+              var k = getPrecinctIndexIfExist(
+                px,
+                py,
+                sizeInImageScale,
+                precinctsIterationSizes,
+                resolution);
+              if (k === null) {
+                continue;
+              }
+              for (; l < layersCount;) {
+                var packet = createPacket(resolution, k, l);
+                l++;
+                return packet;
+              }
+              l = 0;
+            }
+            r = 0;
+          }
+          c = 0;
+        }
+        px = 0;
+      }
+      throw new Error('JPX Error: Out of packets');
+    };
+  }
+  function ComponentPositionResolutionLayerIterator(context) {
+    var siz = context.SIZ;
+    var tileIndex = context.currentTile.index;
+    var tile = context.tiles[tileIndex];
+    var layersCount = tile.codingStyleDefaultParameters.layersCount;
+    var componentsCount = siz.Csiz;
+    var precinctsSizes = getPrecinctSizesInImageScale(tile);
+    var l = 0, r = 0, c = 0, px = 0, py = 0;
+    
+    this.nextPacket = function JpxImage_nextPacket() {
+      // Section B.12.1.5 Component-position-resolution-layer
+      for (; c < componentsCount; ++c) {
+        var component = tile.components[c];
+        var precinctsIterationSizes = precinctsSizes.components[c];
+        var decompositionLevelsCount =
+          component.codingStyleParameters.decompositionLevelsCount;
+        for (; py < precinctsIterationSizes.maxNumHigh; py++) {
+          for (; px < precinctsIterationSizes.maxNumWide; px++) {
+            for (; r <= decompositionLevelsCount; r++) {
+              var resolution = component.resolutions[r];
+              var sizeInImageScale = precinctsIterationSizes.resolutions[r];
+              var k = getPrecinctIndexIfExist(
+                px,
+                py,
+                sizeInImageScale,
+                precinctsIterationSizes,
+                resolution);
+              if (k === null) {
+                continue;
+              }
+              for (; l < layersCount;) {
+                var packet = createPacket(resolution, k, l);
+                l++;
+                return packet;
+              }
+              l = 0;
+            }
+            r = 0;
+          }
+          px = 0;
+        }
+        py = 0;
+      }
+      throw new Error('JPX Error: Out of packets');
+    };
+  }
+  function getPrecinctIndexIfExist(
+    pxIndex, pyIndex, sizeInImageScale, precinctIterationSizes, resolution) {
+    var posX = pxIndex * precinctIterationSizes.minWidth;
+    var posY = pyIndex * precinctIterationSizes.minHeight;
+    if (posX % sizeInImageScale.width !== 0 ||
+        posY % sizeInImageScale.height !== 0) {
+      return null;
+    }
+    var startPrecinctRowIndex =
+      (posY / sizeInImageScale.width) *
+      resolution.precinctParameters.numprecinctswide;
+    return (posX / sizeInImageScale.height) + startPrecinctRowIndex;
+  }
+  function getPrecinctSizesInImageScale(tile) {
+    var componentsCount = tile.components.length;
+    var minWidth = Number.MAX_VALUE;
+    var minHeight = Number.MAX_VALUE;
+    var maxNumWide = 0;
+    var maxNumHigh = 0;
+    var sizePerComponent = new Array(componentsCount);
+    for (var c = 0; c < componentsCount; c++) {
+      var component = tile.components[c];
+      var decompositionLevelsCount =
+        component.codingStyleParameters.decompositionLevelsCount;
+      var sizePerResolution = new Array(decompositionLevelsCount + 1);
+      var minWidthCurrentComponent = Number.MAX_VALUE;
+      var minHeightCurrentComponent = Number.MAX_VALUE;
+      var maxNumWideCurrentComponent = 0;
+      var maxNumHighCurrentComponent = 0;
+      var scale = 1;
+      for (var r = decompositionLevelsCount; r >= 0; --r) {
+        var resolution = component.resolutions[r];
+        var widthCurrentResolution =
+          scale * resolution.precinctParameters.precinctWidth;
+        var heightCurrentResolution =
+          scale * resolution.precinctParameters.precinctHeight;
+        minWidthCurrentComponent = Math.min(
+          minWidthCurrentComponent,
+          widthCurrentResolution);
+        minHeightCurrentComponent = Math.min(
+          minHeightCurrentComponent,
+          heightCurrentResolution);
+        maxNumWideCurrentComponent = Math.max(maxNumWideCurrentComponent,
+          resolution.precinctParameters.numprecinctswide);
+        maxNumHighCurrentComponent = Math.max(maxNumHighCurrentComponent,
+          resolution.precinctParameters.numprecinctshigh);
+        sizePerResolution[r] = {
+          width: widthCurrentResolution,
+          height: heightCurrentResolution
+        };
+        scale <<= 1;
+      }
+      minWidth = Math.min(minWidth, minWidthCurrentComponent);
+      minHeight = Math.min(minHeight, minHeightCurrentComponent);
+      maxNumWide = Math.max(maxNumWide, maxNumWideCurrentComponent);
+      maxNumHigh = Math.max(maxNumHigh, maxNumHighCurrentComponent);
+      sizePerComponent[c] = {
+        resolutions: sizePerResolution,
+        minWidth: minWidthCurrentComponent,
+        minHeight: minHeightCurrentComponent,
+        maxNumWide: maxNumWideCurrentComponent,
+        maxNumHigh: maxNumHighCurrentComponent
+      };
+    }
+    return {
+      components: sizePerComponent,
+      minWidth: minWidth,
+      minHeight: minHeight,
+      maxNumWide: maxNumWide,
+      maxNumHigh: maxNumHigh
+    };
+  }
   function buildPackets(context) {
     var siz = context.SIZ;
     var tileIndex = context.currentTile.index;
@@ -35329,6 +35659,18 @@ var JpxImage = (function JpxImageClosure() {
         tile.packetsIterator =
           new ResolutionLayerComponentPositionIterator(context);
         break;
+      case 2:
+        tile.packetsIterator =
+          new ResolutionPositionComponentLayerIterator(context);
+        break;
+      case 3:
+        tile.packetsIterator =
+          new PositionComponentResolutionLayerIterator(context);
+        break;
+      case 4:
+        tile.packetsIterator =
+          new ComponentPositionResolutionLayerIterator(context);
+        break;
       default:
         throw new Error('JPX Error: Unsupported progression order ' +
                         progressionOrder);
@@ -35355,6 +35697,21 @@ var JpxImage = (function JpxImageClosure() {
       }
       bufferSize -= count;
       return (buffer >>> bufferSize) & ((1 << count) - 1);
+    }
+    function skipMarkerIfEqual(value) {
+      if (data[offset + position - 1] === 0xFF &&
+          data[offset + position] === value) {
+        skipBytes(1);
+        return true;
+      } else if (data[offset + position] === 0xFF &&
+                 data[offset + position + 1] === value) {
+        skipBytes(2);
+        return true;
+      }
+      return false;
+    }
+    function skipBytes(count) {
+      position += count;
     }
     function alignToByte() {
       bufferSize = 0;
@@ -35383,13 +35740,19 @@ var JpxImage = (function JpxImageClosure() {
     }
     var tileIndex = context.currentTile.index;
     var tile = context.tiles[tileIndex];
+    var sopMarkerUsed = context.COD.sopMarkerUsed;
+    var ephMarkerUsed = context.COD.ephMarkerUsed;
     var packetsIterator = tile.packetsIterator;
     while (position < dataLength) {
       alignToByte();
+      if (sopMarkerUsed && skipMarkerIfEqual(0x91)) {
+        // Skip also marker segment length and packet sequence ID
+        skipBytes(4);
+      }
+      var packet = packetsIterator.nextPacket();
       if (!readBits(1)) {
         continue;
       }
-      var packet = packetsIterator.nextPacket();
       var layerNumber = packet.layerNumber;
       var queue = [], codeblock;
       for (var i = 0, ii = packet.codeblocks.length; i < ii; i++) {
@@ -35468,6 +35831,9 @@ var JpxImage = (function JpxImageClosure() {
         });
       }
       alignToByte();
+      if (ephMarkerUsed) {
+        skipMarkerIfEqual(0x92);
+      }
       while (queue.length > 0) {
         var packetItem = queue.shift();
         codeblock = packetItem.codeblock;

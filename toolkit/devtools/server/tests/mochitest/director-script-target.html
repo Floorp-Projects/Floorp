@@ -1,0 +1,15 @@
+<html>
+  <head>
+    <script>
+      // change the eval function to ensure the window object in the debug-script is correctly wrapped
+      window.eval = function () {
+        return "unsecure-eval-called";
+      };
+
+      var globalAccessibleVar = "global-value";
+    </script>
+  </head>
+  <body>
+    <h1>debug script target</h1>
+  </body>
+</html>

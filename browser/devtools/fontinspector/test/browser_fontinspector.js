@@ -107,7 +107,8 @@ function* testShowAllFonts(inspector) {
   viewDoc.querySelector("#showall").click();
   yield updated;
 
-  is(inspector.selection.nodeFront.nodeName, "BODY", "Show all fonts selected the body node");
+  // shouldn't change the node selection
+  is(inspector.selection.nodeFront.nodeName, "DIV", "Show all fonts selected");
   let sections = viewDoc.querySelectorAll("#all-fonts > section");
-  is(sections.length, 5, "And font-inspector still shows 5 fonts for body");
+  is(sections.length, 6, "Font inspector shows 6 fonts (1 from iframe)");
 }
