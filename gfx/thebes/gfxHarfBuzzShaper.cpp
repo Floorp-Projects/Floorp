@@ -253,10 +253,10 @@ gfxHarfBuzzShaper::HBGetGlyphVAdvance(hb_font_t *font, void *font_data,
 {
     const gfxHarfBuzzShaper::FontCallbackData *fcd =
         static_cast<const gfxHarfBuzzShaper::FontCallbackData*>(font_data);
-    gfxFont *gfxfont = fcd->mShaper->GetFont();
-    if (gfxfont->ProvidesGlyphWidths()) {
-        return gfxfont->GetGlyphWidth(*fcd->mContext->GetDrawTarget(), glyph);
-    }
+    // Currently, we don't offer gfxFont subclasses a method to override this
+    // and provide hinted platform-specific vertical advances (analogous to the
+    // GetGlyphWidth method for horizontal advances). If that proves necessary,
+    // we'll add a new gfxFont method and call it from here.
     return fcd->mShaper->GetGlyphVAdvance(glyph);
 }
 
