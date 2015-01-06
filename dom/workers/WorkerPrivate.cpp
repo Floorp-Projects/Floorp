@@ -2025,7 +2025,7 @@ public:
 
   NS_IMETHOD
   CollectReports(nsIMemoryReporterCallback* aCallback,
-                 nsISupports* aClosure, bool aAnonymize)
+                 nsISupports* aClosure, bool aAnonymize) MOZ_OVERRIDE
   {
     AssertIsOnMainThread();
 
