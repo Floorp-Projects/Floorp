@@ -97,13 +97,13 @@ nsIFrame* nsBoxFrame::mDebugChild = nullptr;
 nsIFrame*
 NS_NewBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, bool aIsRoot, nsBoxLayout* aLayoutManager)
 {
-  return new (aPresShell) nsBoxFrame(aPresShell, aContext, aIsRoot, aLayoutManager);
+  return new (aPresShell) nsBoxFrame(aContext, aIsRoot, aLayoutManager);
 }
 
 nsIFrame*
 NS_NewBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsBoxFrame(aPresShell, aContext);
+  return new (aPresShell) nsBoxFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsBoxFrame)
@@ -114,8 +114,7 @@ NS_QUERYFRAME_HEAD(nsBoxFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 #endif
 
-nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell,
-                       nsStyleContext* aContext,
+nsBoxFrame::nsBoxFrame(nsStyleContext* aContext,
                        bool aIsRoot,
                        nsBoxLayout* aLayoutManager) :
   nsContainerFrame(aContext)
@@ -133,7 +132,7 @@ nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell,
   nsCOMPtr<nsBoxLayout> layout = aLayoutManager;
 
   if (layout == nullptr) {
-    NS_NewSprocketLayout(aPresShell, layout);
+    NS_NewSprocketLayout(PresContext()->PresShell(), layout);
   }
 
   SetLayoutManager(layout);

@@ -24,16 +24,16 @@
 nsIFrame*
 NS_NewStackFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsStackFrame(aPresShell, aContext);
+  return new (aPresShell) nsStackFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsStackFrame)
 
-nsStackFrame::nsStackFrame(nsIPresShell* aPresShell, nsStyleContext* aContext):
-  nsBoxFrame(aPresShell, aContext)
+nsStackFrame::nsStackFrame(nsStyleContext* aContext):
+  nsBoxFrame(aContext)
 {
   nsCOMPtr<nsBoxLayout> layout;
-  NS_NewStackLayout(aPresShell, layout);
+  NS_NewStackLayout(PresContext()->PresShell(), layout);
   SetLayoutManager(layout);
 }
 

@@ -92,7 +92,10 @@ public:
 protected:
   JS::Rooted<JSObject*> mGlobalJSObject;
   JSContext* mCx;
-  mutable nsISupports* mGlobalObject;
+  mutable nsISupports* MOZ_UNSAFE_REF("Valid because GlobalObject is a stack "
+                                      "class, and mGlobalObject points to the "
+                                      "global, so it won't be destroyed as long "
+                                      "as GlobalObject lives on the stack") mGlobalObject;
 };
 
 // Class for representing optional arguments.

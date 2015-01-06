@@ -5,6 +5,9 @@
  * type = eventName (QuitApplication)
  * data = json object {"filename":filename} <- for LoggerInit
  */
+
+"use strict";
+
 function getElement(id) {
     return ((typeof(id) == "string") ?
         document.getElementById(id) : id);
@@ -264,6 +267,7 @@ function StructuredLogger(name) {
         } else {
             str = LOG_DELIMITER + JSON.stringify(message) + LOG_DELIMITER;
         }
+
         // BUGFIX: browser-chrome tests doesn't use LogController
         if (Object.keys(LogController.listeners).length !== 0) {
             LogController.log(str);
@@ -272,7 +276,7 @@ function StructuredLogger(name) {
         }
 
         // Checking for error messages
-        if (message.expected || message.level === "ERROR") {
+        if (message.expected || (message.level && message.level === "ERROR")) {
             TestRunner.failureHandler();
         }
     };
@@ -281,7 +285,6 @@ function StructuredLogger(name) {
     this.validMessage = function(message) {
         return message.action !== undefined && VALID_ACTIONS.indexOf(message.action) >= 0;
     };
-
 }
 
 /**
