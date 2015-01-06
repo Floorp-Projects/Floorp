@@ -805,22 +805,22 @@ ReifyStack(nsIStackFrame* aStack, nsTArray<ConsoleStackEntry>& aRefiedStack)
   return NS_OK;
 }
 
-class ConsoleTimelineMarker : public nsDocShell::TimelineMarker
+class ConsoleTimelineMarker : public TimelineMarker
 {
 public:
   ConsoleTimelineMarker(nsDocShell* aDocShell,
                         TracingMetadata aMetaData,
                         const nsAString& aCause)
-    : nsDocShell::TimelineMarker(aDocShell, "ConsoleTime", aMetaData, aCause)
+    : TimelineMarker(aDocShell, "ConsoleTime", aMetaData, aCause)
   {
     if (aMetaData == TRACING_INTERVAL_END) {
       CaptureStack();
     }
   }
 
-  virtual bool Equals(const nsDocShell::TimelineMarker* aOther)
+  virtual bool Equals(const TimelineMarker* aOther)
   {
-    if (!nsDocShell::TimelineMarker::Equals(aOther)) {
+    if (!TimelineMarker::Equals(aOther)) {
       return false;
     }
     // Console markers must have matching causes as well.
@@ -969,7 +969,7 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
         if (jsString) {
           nsAutoJSString key;
           if (key.init(aCx, jsString)) {
-            mozilla::UniquePtr<nsDocShell::TimelineMarker> marker =
+            mozilla::UniquePtr<TimelineMarker> marker =
               MakeUnique<ConsoleTimelineMarker>(docShell,
                                                 aMethodName == MethodTime ? TRACING_INTERVAL_START : TRACING_INTERVAL_END,
                                                 key);

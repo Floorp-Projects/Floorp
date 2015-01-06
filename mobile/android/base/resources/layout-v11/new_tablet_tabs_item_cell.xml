@@ -6,7 +6,6 @@
 <org.mozilla.gecko.tabs.TabsLayoutItemView xmlns:android="http://schemas.android.com/apk/res/android"
                                            xmlns:gecko="http://schemas.android.com/apk/res-auto"
                                            style="@style/TabsItem"
-                                           android:focusable="true"
                                            android:id="@+id/info"
                                            android:layout_width="wrap_content"
                                            android:layout_height="wrap_content"
@@ -37,7 +36,7 @@
 
         <!-- Use of baselineAlignBottom only supported from API 11+ - if this needs to work on lower API versions
              we'll need to override getBaseLine() and return image height, but we assume this won't happen -->
-        <ImageButton android:id="@+id/close"
+        <ImageView android:id="@+id/close"
                      style="@style/TabsItemClose"
                      android:layout_width="wrap_content"
                      android:layout_height="wrap_content"

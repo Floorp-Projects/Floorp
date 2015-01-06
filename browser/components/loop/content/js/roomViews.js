@@ -295,7 +295,7 @@ loop.roomViews = (function(mozL10n) {
         case ROOM_STATES.FULL: {
           // Note: While rooms are set to hold a maximum of 2 participants, the
           //       FULL case should never happen on desktop.
-          return loop.conversation.GenericFailureView({
+          return loop.conversationViews.GenericFailureView({
             cancelCall: this.closeWindow}
           );
         }

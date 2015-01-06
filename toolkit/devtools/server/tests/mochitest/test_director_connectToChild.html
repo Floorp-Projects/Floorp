@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug </title>
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+  <script type="application/javascript;version=1.8" src="./director-helpers.js"></script>
+  <script type="application/javascript;version=1.8">
+window.onload = function() {
+  Task.spawn(function* () {
+    SimpleTest.waitForExplicitFinish();
+
+    var tests = [
+      runPropagateDirectorScriptsToChildTest,
+    ].map((testCase) => {
+      return function* () {
+        setup();
+        yield testCase().then(null, (e) => {
+          ok(false, "Exception during testCase run: " + [e, e.fileName, e.lineNumber].join("\n\t"));
+        });
+
+        teardown();
+      };
+    });
+
+    for (var test of tests) {
+      yield test();
+    }
+
+    SimpleTest.finish();
+  });
+};
+
+function setup() {
+  if (!DebuggerServer.initialized) {
+    DebuggerServer.init(() => true);
+    DebuggerServer.addBrowserActors();
+    SimpleTest.registerCleanupFunction(function() {
+      DebuggerServer.destroy();
+    });
+  }
+}
+
+function teardown() {
+  purgeInstalledDirectorScripts();
+  DebuggerServer.destroy();
+}
+
+/***********************************
+ *  test cases
+ **********************************/
+
+function runPropagateDirectorScriptsToChildTest() {
+  let iframe = document.createElement("iframe");
+  iframe.mozbrowser = true;
+
+  document.body.appendChild(iframe);
+
+  return Task.spawn(function* () {
+    var { client, root, transport } = yield newConnectedDebuggerClient();
+
+    var directorRegistryClient = new DirectorRegistryFront(client, root);
+
+    // install a director script
+    yield directorRegistryClient.install("testPropagatedDirectorScript", {
+      scriptCode: "console.log('director script test');",
+      scriptOptions: {}
+    });
+
+    var conn = transport._serverConnection;
+    var childActor = yield DebuggerServer.connectToChild(conn, iframe);
+
+    ok(typeof childActor.directorManagerActor !== "undefined",
+       "childActor.directorActor should be defined");
+
+    var childDirectorManagerClient = new DirectorManagerFront(client, childActor);
+
+    var directorScriptList = yield childDirectorManagerClient.list();
+
+    ok(directorScriptList.installed.length === 1 &&
+       directorScriptList.installed[0] === "testPropagatedDirectorScript",
+       "director scripts propagated correctly")
+
+    yield client.close();
+  });
+}
+  </script>
+</pre>
+</body>
+</html>

@@ -22,8 +22,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.0.978';
-PDFJS.build = '20bf84a';
+PDFJS.version = '1.0.1040';
+PDFJS.build = '997096f';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -2803,7 +2803,13 @@ var MIN_FONT_SIZE = 16;
 var MAX_FONT_SIZE = 100;
 var MAX_GROUP_SIZE = 4096;
 
+// Heuristic value used when enforcing minimum line widths.
+var MIN_WIDTH_FACTOR = 0.65;
+
 var COMPILE_TYPE3_GLYPHS = true;
+var MAX_SIZE_TO_COMPILE = 1000;
+
+var FULL_CHUNK_HEIGHT = 16;
 
 function createScratchCanvas(width, height) {
   var canvas = document.createElement('canvas');
@@ -2937,7 +2943,7 @@ var CachedCanvases = (function CachedCanvasesClosure() {
     getCanvas: function CachedCanvases_getCanvas(id, width, height,
                                                  trackTransform) {
       var canvasEntry;
-      if (id in cache) {
+      if (cache[id] !== undefined) {
         canvasEntry = cache[id];
         canvasEntry.canvas.width = width;
         canvasEntry.canvas.height = height;
@@ -3151,6 +3157,7 @@ var CanvasExtraState = (function CanvasExtraStateClosure() {
     // Default fore and background colors
     this.fillColor = '#000000';
     this.strokeColor = '#000000';
+    this.patternFill = false;
     // Note: fill alpha applies to all non-stroking operations
     this.fillAlpha = 1;
     this.strokeAlpha = 1;
@@ -3203,6 +3210,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     if (canvasCtx) {
       addContextCurrentTransform(canvasCtx);
     }
+    this.cachedGetSinglePixelWidth = null;
   }
 
   function putBinaryImageData(ctx, imgData) {
@@ -3223,13 +3231,11 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     // that's ok; any such pixels are ignored.
 
     var height = imgData.height, width = imgData.width;
-    var fullChunkHeight = 16;
-    var fracChunks = height / fullChunkHeight;
-    var fullChunks = Math.floor(fracChunks);
-    var totalChunks = Math.ceil(fracChunks);
-    var partialChunkHeight = height - fullChunks * fullChunkHeight;
+    var partialChunkHeight = height % FULL_CHUNK_HEIGHT;
+    var fullChunks = (height - partialChunkHeight) / FULL_CHUNK_HEIGHT;
+    var totalChunks = partialChunkHeight === 0 ? fullChunks : fullChunks + 1;
 
-    var chunkImgData = ctx.createImageData(width, fullChunkHeight);
+    var chunkImgData = ctx.createImageData(width, FULL_CHUNK_HEIGHT);
     var srcPos = 0, destPos;
     var src = imgData.data;
     var dest = chunkImgData.data;
@@ -3249,7 +3255,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         0xFF000000 : 0x000000FF;
       for (i = 0; i < totalChunks; i++) {
         thisChunkHeight =
-          (i < fullChunks) ? fullChunkHeight : partialChunkHeight;
+          (i < fullChunks) ? FULL_CHUNK_HEIGHT : partialChunkHeight;
         destPos = 0;
         for (j = 0; j < thisChunkHeight; j++) {
           var srcDiff = srcLength - srcPos;
@@ -3284,19 +3290,19 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
           dest32[destPos++] = 0;
         }
 
-        ctx.putImageData(chunkImgData, 0, i * fullChunkHeight);
+        ctx.putImageData(chunkImgData, 0, i * FULL_CHUNK_HEIGHT);
       }
     } else if (imgData.kind === ImageKind.RGBA_32BPP) {
       // RGBA, 32-bits per pixel.
 
       j = 0;
-      elemsInThisChunk = width * fullChunkHeight * 4;
+      elemsInThisChunk = width * FULL_CHUNK_HEIGHT * 4;
       for (i = 0; i < fullChunks; i++) {
         dest.set(src.subarray(srcPos, srcPos + elemsInThisChunk));
         srcPos += elemsInThisChunk;
 
         ctx.putImageData(chunkImgData, 0, j);
-        j += fullChunkHeight;
+        j += FULL_CHUNK_HEIGHT;
       }
       if (i < totalChunks) {
         elemsInThisChunk = width * partialChunkHeight * 4;
@@ -3306,11 +3312,11 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
     } else if (imgData.kind === ImageKind.RGB_24BPP) {
       // RGB, 24-bits per pixel.
-      thisChunkHeight = fullChunkHeight;
+      thisChunkHeight = FULL_CHUNK_HEIGHT;
       elemsInThisChunk = width * thisChunkHeight;
       for (i = 0; i < totalChunks; i++) {
         if (i >= fullChunks) {
-          thisChunkHeight =partialChunkHeight;
+          thisChunkHeight = partialChunkHeight;
           elemsInThisChunk = width * thisChunkHeight;
         }
 
@@ -3321,7 +3327,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
           dest[destPos++] = src[srcPos++];
           dest[destPos++] = 255;
         }
-        ctx.putImageData(chunkImgData, 0, i * fullChunkHeight);
+        ctx.putImageData(chunkImgData, 0, i * FULL_CHUNK_HEIGHT);
       }
     } else {
       error('bad image kind: ' + imgData.kind);
@@ -3330,20 +3336,18 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
   function putBinaryImageMask(ctx, imgData) {
     var height = imgData.height, width = imgData.width;
-    var fullChunkHeight = 16;
-    var fracChunks = height / fullChunkHeight;
-    var fullChunks = Math.floor(fracChunks);
-    var totalChunks = Math.ceil(fracChunks);
-    var partialChunkHeight = height - fullChunks * fullChunkHeight;
+    var partialChunkHeight = height % FULL_CHUNK_HEIGHT;
+    var fullChunks = (height - partialChunkHeight) / FULL_CHUNK_HEIGHT;
+    var totalChunks = partialChunkHeight === 0 ? fullChunks : fullChunks + 1;
 
-    var chunkImgData = ctx.createImageData(width, fullChunkHeight);
+    var chunkImgData = ctx.createImageData(width, FULL_CHUNK_HEIGHT);
     var srcPos = 0;
     var src = imgData.data;
     var dest = chunkImgData.data;
 
     for (var i = 0; i < totalChunks; i++) {
       var thisChunkHeight =
-        (i < fullChunks) ? fullChunkHeight : partialChunkHeight;
+        (i < fullChunks) ? FULL_CHUNK_HEIGHT : partialChunkHeight;
 
       // Expand the mask so it can be used by the canvas.  Any required
       // inversion has already been handled.
@@ -3360,7 +3364,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
           mask >>= 1;
         }
       }
-      ctx.putImageData(chunkImgData, 0, i * fullChunkHeight);
+      ctx.putImageData(chunkImgData, 0, i * FULL_CHUNK_HEIGHT);
     }
   }
 
@@ -3370,14 +3374,14 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
                       'globalCompositeOperation', 'font'];
     for (var i = 0, ii = properties.length; i < ii; i++) {
       var property = properties[i];
-      if (property in sourceCtx) {
+      if (sourceCtx[property] !== undefined) {
         destCtx[property] = sourceCtx[property];
       }
     }
-    if ('setLineDash' in sourceCtx) {
+    if (sourceCtx.setLineDash !== undefined) {
       destCtx.setLineDash(sourceCtx.getLineDash());
       destCtx.lineDashOffset =  sourceCtx.lineDashOffset;
-    } else if ('mozDash' in sourceCtx) {
+    } else if (sourceCtx.mozDashOffset !== undefined) {
       destCtx.mozDash = sourceCtx.mozDash;
       destCtx.mozDashOffset = sourceCtx.mozDashOffset;
     }
@@ -3604,7 +3608,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     },
     setDash: function CanvasGraphics_setDash(dashArray, dashPhase) {
       var ctx = this.ctx;
-      if ('setLineDash' in ctx) {
+      if (ctx.setLineDash !== undefined) {
         ctx.setLineDash(dashArray);
         ctx.lineDashOffset = dashPhase;
       } else {
@@ -3739,10 +3743,14 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
         this.current = this.stateStack.pop();
         this.ctx.restore();
+
+        this.cachedGetSinglePixelWidth = null;
       }
     },
     transform: function CanvasGraphics_transform(a, b, c, d, e, f) {
       this.ctx.transform(a, b, c, d, e, f);
+
+      this.cachedGetSinglePixelWidth = null;
     },
 
     // Path
@@ -3816,9 +3824,9 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       consumePath = typeof consumePath !== 'undefined' ? consumePath : true;
       var ctx = this.ctx;
       var strokeColor = this.current.strokeColor;
-      if (this.current.lineWidth === 0) {
-        ctx.lineWidth = this.getSinglePixelWidth();
-      }
+      // Prevent drawing too thin lines by enforcing a minimum line width.
+      ctx.lineWidth = Math.max(this.getSinglePixelWidth() * MIN_WIDTH_FACTOR,
+                               this.current.lineWidth);
       // For stroke we want to temporarily change the global alpha to the
       // stroking alpha.
       ctx.globalAlpha = this.current.strokeAlpha;
@@ -3847,10 +3855,10 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       consumePath = typeof consumePath !== 'undefined' ? consumePath : true;
       var ctx = this.ctx;
       var fillColor = this.current.fillColor;
+      var isPatternFill = this.current.patternFill;
       var needRestore = false;
 
-      if (fillColor && fillColor.hasOwnProperty('type') &&
-          fillColor.type === 'Pattern') {
+      if (isPatternFill) {
         ctx.save();
         ctx.fillStyle = fillColor.getPattern(ctx, this);
         needRestore = true;
@@ -4143,7 +4151,13 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var lineWidth = current.lineWidth;
       var scale = current.textMatrixScale;
       if (scale === 0 || lineWidth === 0) {
-        lineWidth = this.getSinglePixelWidth();
+        var fillStrokeMode = current.textRenderingMode &
+          TextRenderingMode.FILL_STROKE_MASK;
+        if (fillStrokeMode === TextRenderingMode.STROKE ||
+            fillStrokeMode === TextRenderingMode.FILL_STROKE) {
+          this.cachedGetSinglePixelWidth = null;
+          lineWidth = this.getSinglePixelWidth() * MIN_WIDTH_FACTOR;
+        }
       } else {
         lineWidth /= scale;
       }
@@ -4324,6 +4338,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     },
     setFillColorN: function CanvasGraphics_setFillColorN(/*...*/) {
       this.current.fillColor = this.getColorN_Pattern(arguments);
+      this.current.patternFill = true;
     },
     setStrokeRGBColor: function CanvasGraphics_setStrokeRGBColor(r, g, b) {
       var color = Util.makeCssRgb(r, g, b);
@@ -4334,6 +4349,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var color = Util.makeCssRgb(r, g, b);
       this.ctx.fillStyle = color;
       this.current.fillColor = color;
+      this.current.patternFill = false;
     },
 
     shadingFill: function CanvasGraphics_shadingFill(patternIR) {
@@ -4592,11 +4608,12 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     paintImageMaskXObject: function CanvasGraphics_paintImageMaskXObject(img) {
       var ctx = this.ctx;
       var width = img.width, height = img.height;
+      var fillColor = this.current.fillColor;
+      var isPatternFill = this.current.patternFill;
 
       var glyph = this.processingType3;
 
-      if (COMPILE_TYPE3_GLYPHS && glyph && !('compiled' in glyph)) {
-        var MAX_SIZE_TO_COMPILE = 1000;
+      if (COMPILE_TYPE3_GLYPHS && glyph && glyph.compiled === undefined) {
         if (width <= MAX_SIZE_TO_COMPILE && height <= MAX_SIZE_TO_COMPILE) {
           glyph.compiled =
             compileType3Glyph({data: img.data, width: width, height: height});
@@ -4618,9 +4635,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
       maskCtx.globalCompositeOperation = 'source-in';
 
-      var fillColor = this.current.fillColor;
-      maskCtx.fillStyle = (fillColor && fillColor.hasOwnProperty('type') &&
-                          fillColor.type === 'Pattern') ?
+      maskCtx.fillStyle = isPatternFill ?
                           fillColor.getPattern(maskCtx, this) : fillColor;
       maskCtx.fillRect(0, 0, width, height);
 
@@ -4634,7 +4649,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
                                                           scaleY, positions) {
       var width = imgData.width;
       var height = imgData.height;
-      var ctx = this.ctx;
+      var fillColor = this.current.fillColor;
+      var isPatternFill = this.current.patternFill;
 
       var maskCanvas = CachedCanvases.getCanvas('maskCanvas', width, height);
       var maskCtx = maskCanvas.context;
@@ -4644,14 +4660,13 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
       maskCtx.globalCompositeOperation = 'source-in';
 
-      var fillColor = this.current.fillColor;
-      maskCtx.fillStyle = (fillColor && fillColor.hasOwnProperty('type') &&
-        fillColor.type === 'Pattern') ?
-        fillColor.getPattern(maskCtx, this) : fillColor;
+      maskCtx.fillStyle = isPatternFill ?
+                          fillColor.getPattern(maskCtx, this) : fillColor;
       maskCtx.fillRect(0, 0, width, height);
 
       maskCtx.restore();
 
+      var ctx = this.ctx;
       for (var i = 0, ii = positions.length; i < ii; i += 2) {
         ctx.save();
         ctx.transform(scaleX, 0, 0, scaleY, positions[i], positions[i + 1]);
@@ -4666,6 +4681,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       function CanvasGraphics_paintImageMaskXObjectGroup(images) {
       var ctx = this.ctx;
 
+      var fillColor = this.current.fillColor;
+      var isPatternFill = this.current.patternFill;
       for (var i = 0, ii = images.length; i < ii; i++) {
         var image = images[i];
         var width = image.width, height = image.height;
@@ -4678,9 +4695,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
         maskCtx.globalCompositeOperation = 'source-in';
 
-        var fillColor = this.current.fillColor;
-        maskCtx.fillStyle = (fillColor && fillColor.hasOwnProperty('type') &&
-                            fillColor.type === 'Pattern') ?
+        maskCtx.fillStyle = isPatternFill ?
                             fillColor.getPattern(maskCtx, this) : fillColor;
         maskCtx.fillRect(0, 0, width, height);
 
@@ -4883,11 +4898,14 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       ctx.beginPath();
     },
     getSinglePixelWidth: function CanvasGraphics_getSinglePixelWidth(scale) {
-      var inverse = this.ctx.mozCurrentTransformInverse;
-      // max of the current horizontal and vertical scale
-      return Math.sqrt(Math.max(
-        (inverse[0] * inverse[0] + inverse[1] * inverse[1]),
-        (inverse[2] * inverse[2] + inverse[3] * inverse[3])));
+      if (this.cachedGetSinglePixelWidth === null) {
+        var inverse = this.ctx.mozCurrentTransformInverse;
+        // max of the current horizontal and vertical scale
+        this.cachedGetSinglePixelWidth = Math.sqrt(Math.max(
+          (inverse[0] * inverse[0] + inverse[1] * inverse[1]),
+          (inverse[2] * inverse[2] + inverse[3] * inverse[3])));
+      }
+      return this.cachedGetSinglePixelWidth;
     },
     getCanvasPosition: function CanvasGraphics_getCanvasPosition(x, y) {
         var transform = this.ctx.mozCurrentTransform;
@@ -5824,7 +5842,6 @@ var FontFaceObject = (function FontFaceObjectClosure() {
 })();
 
 
-var HIGHLIGHT_OFFSET = 4; // px
 var ANNOT_MIN_SIZE = 10; // px
 
 var AnnotationUtils = (function AnnotationUtilsClosure() {
@@ -5851,41 +5868,36 @@ var AnnotationUtils = (function AnnotationUtilsClosure() {
     style.fontFamily = fontFamily + fallbackName;
   }
 
-  // TODO(mack): Remove this, it's not really that helpful.
-  function getEmptyContainer(tagName, rect, borderWidth) {
-    var bWidth = borderWidth || 0;
-    var element = document.createElement(tagName);
-    element.style.borderWidth = bWidth + 'px';
-    var width = rect[2] - rect[0] - 2 * bWidth;
-    var height = rect[3] - rect[1] - 2 * bWidth;
-    element.style.width = width + 'px';
-    element.style.height = height + 'px';
-    return element;
-  }
+  function initContainer(item, drawBorder) {
+    var container = document.createElement('section');
+    var cstyle = container.style;
+    var width = item.rect[2] - item.rect[0];
+    var height = item.rect[3] - item.rect[1];
 
-  function initContainer(item) {
-    var container = getEmptyContainer('section', item.rect, item.borderWidth);
-    container.style.backgroundColor = item.color;
-
-    var color = item.color;
-    item.colorCssRgb = Util.makeCssRgb(Math.round(color[0] * 255),
-                                       Math.round(color[1] * 255),
-                                       Math.round(color[2] * 255));
-
-    var highlight = document.createElement('div');
-    highlight.className = 'annotationHighlight';
-    highlight.style.left = highlight.style.top = -HIGHLIGHT_OFFSET + 'px';
-    highlight.style.right = highlight.style.bottom = -HIGHLIGHT_OFFSET + 'px';
-    highlight.setAttribute('hidden', true);
-
-    item.highlightElement = highlight;
-    container.appendChild(item.highlightElement);
-
+    var bWidth = item.borderWidth || 0;
+    if (bWidth) {
+      width = width - 2 * bWidth;
+      height = height - 2 * bWidth;
+      cstyle.borderWidth = bWidth + 'px';
+      var color = item.color;
+      if (drawBorder && color) {
+        cstyle.borderStyle = 'solid';
+        cstyle.borderColor = Util.makeCssRgb(Math.round(color[0] * 255),
+                                             Math.round(color[1] * 255),
+                                             Math.round(color[2] * 255));
+      }
+    }
+    cstyle.width = width + 'px';
+    cstyle.height = height + 'px';
     return container;
   }
 
   function getHtmlElementForTextWidgetAnnotation(item, commonObjs) {
-    var element = getEmptyContainer('div', item.rect, 0);
+    var element = document.createElement('div');
+    var width = item.rect[2] - item.rect[0];
+    var height = item.rect[3] - item.rect[1];
+    element.style.width = width + 'px';
+    element.style.height = height + 'px';
     element.style.display = 'table';
 
     var content = document.createElement('div');
@@ -5915,7 +5927,7 @@ var AnnotationUtils = (function AnnotationUtilsClosure() {
       rect[2] = rect[0] + (rect[3] - rect[1]); // make it square
     }
 
-    var container = initContainer(item);
+    var container = initContainer(item, false);
     container.className = 'annotText';
 
     var image  = document.createElement('img');
@@ -6024,11 +6036,8 @@ var AnnotationUtils = (function AnnotationUtilsClosure() {
   }
 
   function getHtmlElementForLinkAnnotation(item) {
-    var container = initContainer(item);
+    var container = initContainer(item, true);
     container.className = 'annotLink';
-
-    container.style.borderColor = item.colorCssRgb;
-    container.style.borderStyle = 'solid';
 
     var link = document.createElement('a');
     link.href = link.title = item.url || '';
