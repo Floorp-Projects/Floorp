@@ -485,7 +485,11 @@ js::ConcatStrings(ThreadSafeContext *cx,
                            ? JSFatInlineString::latin1LengthFits(wholeLength)
                            : JSFatInlineString::twoByteLengthFits(wholeLength);
     if (canUseFatInline && cx->isJSContext()) {
-        JSFatInlineString *str = NewGCFatInlineString<allowGC>(cx);
+        Latin1Char *latin1Buf;
+        char16_t *twoByteBuf;
+        JSInlineString *str = isLatin1
+            ? AllocateFatInlineString<allowGC>(cx, wholeLength, &latin1Buf)
+            : AllocateFatInlineString<allowGC>(cx, wholeLength, &twoByteBuf);
         if (!str)
             return nullptr;
 
@@ -496,21 +500,19 @@ js::ConcatStrings(ThreadSafeContext *cx,
             return nullptr;
 
         if (isLatin1) {
-            Latin1Char *buf = str->initLatin1(wholeLength);
-            PodCopy(buf, leftInspector.latin1Chars(), leftLen);
-            PodCopy(buf + leftLen, rightInspector.latin1Chars(), rightLen);
-            buf[wholeLength] = 0;
+            PodCopy(latin1Buf, leftInspector.latin1Chars(), leftLen);
+            PodCopy(latin1Buf + leftLen, rightInspector.latin1Chars(), rightLen);
+            latin1Buf[wholeLength] = 0;
         } else {
-            char16_t *buf = str->initTwoByte(wholeLength);
             if (leftInspector.hasTwoByteChars())
-                PodCopy(buf, leftInspector.twoByteChars(), leftLen);
+                PodCopy(twoByteBuf, leftInspector.twoByteChars(), leftLen);
             else
-                CopyAndInflateChars(buf, leftInspector.latin1Chars(), leftLen);
+                CopyAndInflateChars(twoByteBuf, leftInspector.latin1Chars(), leftLen);
             if (rightInspector.hasTwoByteChars())
-                PodCopy(buf + leftLen, rightInspector.twoByteChars(), rightLen);
+                PodCopy(twoByteBuf + leftLen, rightInspector.twoByteChars(), rightLen);
             else
-                CopyAndInflateChars(buf + leftLen, rightInspector.latin1Chars(), rightLen);
-            buf[wholeLength] = 0;
+                CopyAndInflateChars(twoByteBuf + leftLen, rightInspector.latin1Chars(), rightLen);
+            twoByteBuf[wholeLength] = 0;
         }
 
         return str;
