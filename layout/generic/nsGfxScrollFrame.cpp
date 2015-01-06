@@ -1428,7 +1428,7 @@ public:
   {
   }
 
-  NS_INLINE_DECL_REFCOUNTING(AsyncSmoothMSDScroll)
+  NS_INLINE_DECL_REFCOUNTING(AsyncSmoothMSDScroll, MOZ_OVERRIDE)
 
   nsSize GetVelocity() {
     // In nscoords per second
@@ -1620,7 +1620,7 @@ protected:
 // The next section is observer/callback management
 // Bodies of WillRefresh and RefreshDriver contain ScrollFrameHelper specific code.
 public:
-  NS_INLINE_DECL_REFCOUNTING(AsyncScroll)
+  NS_INLINE_DECL_REFCOUNTING(AsyncScroll, MOZ_OVERRIDE)
 
   /*
    * Set a refresh observer for smooth scroll iterations (and start observing).
