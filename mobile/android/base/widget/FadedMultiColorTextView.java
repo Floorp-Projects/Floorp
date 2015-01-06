@@ -55,8 +55,10 @@ public class FadedMultiColorTextView extends FadedTextView {
             updateGradientShader(needsEllipsis, right);
 
             final float center = getHeight() / 2;
-            final float top = center - getTextSize();
-            final float bottom = center + getTextSize();
+
+            // Shrink height of gradient to prevent it overlaying parent view border.
+            final float top = center - getTextSize() + 1;
+            final float bottom = center + getTextSize() - 1;
 
             canvas.drawRect(left, top, right, bottom, fadePaint);
         }
