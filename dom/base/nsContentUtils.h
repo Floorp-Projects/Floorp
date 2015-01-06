@@ -1576,6 +1576,8 @@ public:
   static JSContext *GetSafeJSContext();
   static JSContext *GetCurrentJSContextForThread();
   static JSContext *GetDefaultJSContextForThread();
+  inline static JSContext *RootingCx() { return GetSafeJSContext(); }
+  inline static JSContext *RootingCxForThread() { return GetDefaultJSContextForThread(); }
 
   /**
    * Case insensitive comparison between two strings. However it only ignores

@@ -47,7 +47,7 @@ public:
   {
   }
 
-  virtual DelayNodeEngine* AsDelayNodeEngine()
+  virtual DelayNodeEngine* AsDelayNodeEngine() MOZ_OVERRIDE
   {
     return this;
   }

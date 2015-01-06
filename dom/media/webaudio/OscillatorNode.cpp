@@ -116,7 +116,7 @@ public:
     }
   }
 
-  virtual void SetStreamTimeParameter(uint32_t aIndex, StreamTime aParam)
+  virtual void SetStreamTimeParameter(uint32_t aIndex, StreamTime aParam) MOZ_OVERRIDE
   {
     switch (aIndex) {
     case START: mStart = aParam; break;
@@ -126,7 +126,7 @@ public:
     }
   }
 
-  virtual void SetInt32Parameter(uint32_t aIndex, int32_t aParam)
+  virtual void SetInt32Parameter(uint32_t aIndex, int32_t aParam) MOZ_OVERRIDE
   {
     switch (aIndex) {
       case TYPE:
@@ -183,7 +183,7 @@ public:
     // End index switch.
   }
 
-  virtual void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer)
+  virtual void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer) MOZ_OVERRIDE
   {
     MOZ_ASSERT(mCustomLength, "Custom buffer sent before length");
     mCustom = aBuffer;

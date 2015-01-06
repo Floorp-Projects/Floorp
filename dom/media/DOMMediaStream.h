@@ -13,6 +13,7 @@
 #include "nsIPrincipal.h"
 #include "mozilla/PeerIdentity.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/CORSMode.h"
 
 class nsXPCClassInfo;
 
@@ -125,6 +126,8 @@ public:
    * can only be accessed by principals subsuming this principal.
    */
   nsIPrincipal* GetPrincipal() { return mPrincipal; }
+  mozilla::CORSMode GetCORSMode();
+  void SetCORSMode(mozilla::CORSMode aCORSMode);
 
   /**
    * These are used in WebRTC.  A peerIdentity constrained MediaStream cannot be sent
@@ -313,6 +316,7 @@ private:
   // this is used in gUM and WebRTC to identify peers that this stream
   // is allowed to be sent to
   nsAutoPtr<PeerIdentity> mPeerIdentity;
+  CORSMode mCORSMode;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DOMMediaStream,

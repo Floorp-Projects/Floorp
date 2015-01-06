@@ -124,7 +124,7 @@ long vorbis_packet_blocksize(vorbis_info *vi,ogg_packet *op){
     /* read our mode and pre/post windowsize */
     mode=oggpack_read(&opb,modebits);
   }
-  if(mode==-1)return(OV_EBADPACKET);
+  if(mode==-1 || !ci->mode_param[mode])return(OV_EBADPACKET);
   return(ci->blocksizes[ci->mode_param[mode]->blockflag]);
 }
 

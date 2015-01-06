@@ -144,7 +144,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMMediaStream)
 DOMMediaStream::DOMMediaStream()
   : mLogicalStreamStartTime(0),
     mStream(nullptr), mHintContents(0), mTrackTypesAvailable(0),
-    mNotifiedOfMediaStreamGraphShutdown(false)
+    mNotifiedOfMediaStreamGraphShutdown(false), mCORSMode(CORS_NONE)
 {
 }
 
@@ -298,6 +298,20 @@ DOMMediaStream::SetPrincipal(nsIPrincipal* aPrincipal)
 {
   mPrincipal = aPrincipal;
   NotifyPrincipalChanged();
+}
+
+void
+DOMMediaStream::SetCORSMode(CORSMode aCORSMode)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mCORSMode = aCORSMode;
+}
+
+CORSMode
+DOMMediaStream::GetCORSMode()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return mCORSMode;
 }
 
 void

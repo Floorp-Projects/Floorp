@@ -26,7 +26,7 @@ public:
 
   virtual uint16_t NumberOfOutputs() const MOZ_OVERRIDE { return mOutputCount; }
 
-  virtual const char* NodeType() const
+  virtual const char* NodeType() const MOZ_OVERRIDE
   {
     return "ChannelSplitterNode";
   }

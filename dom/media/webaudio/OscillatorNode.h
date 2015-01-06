@@ -80,7 +80,7 @@ public:
 
   virtual void NotifyMainThreadStateChanged() MOZ_OVERRIDE;
 
-  virtual const char* NodeType() const
+  virtual const char* NodeType() const MOZ_OVERRIDE
   {
     return "OscillatorNode";
   }
