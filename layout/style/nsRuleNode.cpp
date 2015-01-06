@@ -1537,7 +1537,7 @@ nsRuleNode::Transition(nsIStyleRule* aRule, uint8_t aLevel,
 
   if (ChildrenAreHashed()) {
     ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>
-                                          (PL_DHashTableOperate(ChildrenHash(), &key, PL_DHASH_ADD));
+                                          (PL_DHashTableAdd(ChildrenHash(), &key));
     if (!entry) {
       NS_WARNING("out of memory");
       return this;
@@ -1615,7 +1615,7 @@ nsRuleNode::ConvertChildrenToHash(int32_t aNumKids)
   for (nsRuleNode* curr = ChildrenList(); curr; curr = curr->mNextSibling) {
     // This will never fail because of the initial size we gave the table.
     ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>(
-      PL_DHashTableOperate(hash, curr->mRule, PL_DHASH_ADD));
+      PL_DHashTableAdd(hash, curr->mRule));
     NS_ASSERTION(!entry->mRuleNode, "duplicate entries in list");
     entry->mRuleNode = curr;
   }

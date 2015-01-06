@@ -144,7 +144,7 @@ nsScriptNameSpaceManager::AddToHash(PLDHashTable *aTable, const nsAString *aKey,
 {
   GlobalNameMapEntry *entry =
     static_cast<GlobalNameMapEntry *>
-               (PL_DHashTableOperate(aTable, aKey, PL_DHASH_ADD));
+               (PL_DHashTableAdd(aTable, aKey));
 
   if (!entry) {
     return nullptr;
@@ -161,7 +161,7 @@ void
 nsScriptNameSpaceManager::RemoveFromHash(PLDHashTable *aTable,
                                          const nsAString *aKey)
 {
-  PL_DHashTableOperate(aTable, aKey, PL_DHASH_REMOVE);
+  PL_DHashTableRemove(aTable, aKey);
 }
 
 nsGlobalNameStruct*
@@ -172,9 +172,8 @@ nsScriptNameSpaceManager::GetConstructorProto(const nsGlobalNameStruct* aStruct)
   if (!aStruct->mAlias->mProto) {
     GlobalNameMapEntry *proto =
       static_cast<GlobalNameMapEntry *>
-                 (PL_DHashTableOperate(&mGlobalNames,
-                                          &aStruct->mAlias->mProtoName,
-                                          PL_DHASH_LOOKUP));
+                 (PL_DHashTableLookup(&mGlobalNames,
+                                      &aStruct->mAlias->mProtoName));
 
     if (PL_DHASH_ENTRY_IS_BUSY(proto)) {
       aStruct->mAlias->mProto = &proto->mGlobalName;
@@ -389,8 +388,7 @@ nsScriptNameSpaceManager::LookupNameInternal(const nsAString& aName,
 {
   GlobalNameMapEntry *entry =
     static_cast<GlobalNameMapEntry *>
-               (PL_DHashTableOperate(&mGlobalNames, &aName,
-                                        PL_DHASH_LOOKUP));
+               (PL_DHashTableLookup(&mGlobalNames, &aName));
 
   if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
     if (aClassName) {
@@ -410,8 +408,7 @@ nsScriptNameSpaceManager::LookupNavigatorName(const nsAString& aName)
 {
   GlobalNameMapEntry *entry =
     static_cast<GlobalNameMapEntry *>
-               (PL_DHashTableOperate(&mNavigatorNames, &aName,
-                                     PL_DHASH_LOOKUP));
+               (PL_DHashTableLookup(&mNavigatorNames, &aName));
 
   if (!PL_DHASH_ENTRY_IS_BUSY(entry)) {
     return nullptr;
