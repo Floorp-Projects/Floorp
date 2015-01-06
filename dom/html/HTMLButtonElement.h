@@ -40,14 +40,14 @@ public:
   NS_DECL_NSIDOMHTMLBUTTONELEMENT
 
   // overriden nsIFormControl methods
-  NS_IMETHOD_(uint32_t) GetType() const { return mType; }
+  NS_IMETHOD_(uint32_t) GetType() const MOZ_OVERRIDE { return mType; }
   NS_IMETHOD Reset() MOZ_OVERRIDE;
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission) MOZ_OVERRIDE;
   NS_IMETHOD SaveState() MOZ_OVERRIDE;
   bool RestoreState(nsPresState* aState) MOZ_OVERRIDE;
   virtual bool IsDisabledForEvents(uint32_t aMessage) MOZ_OVERRIDE;
 
-  virtual void FieldSetDisabledChanged(bool aNotify) MOZ_OVERRIDE; 
+  virtual void FieldSetDisabledChanged(bool aNotify) MOZ_OVERRIDE;
 
   // nsIDOMEventTarget
   virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;

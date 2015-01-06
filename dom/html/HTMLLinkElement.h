@@ -158,7 +158,7 @@ protected:
                                  nsAString& aMedia,
                                  bool* aIsScoped,
                                  bool* aIsAlternate) MOZ_OVERRIDE;
-  virtual CORSMode GetCORSMode() const;
+  virtual CORSMode GetCORSMode() const MOZ_OVERRIDE;
 protected:
   // nsGenericHTMLElement
   virtual void GetItemValueText(nsAString& text) MOZ_OVERRIDE;
