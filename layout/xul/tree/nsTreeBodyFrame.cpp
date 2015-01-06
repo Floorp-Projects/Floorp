@@ -101,7 +101,7 @@ CancelImageRequest(const nsAString& aKey,
 nsIFrame*
 NS_NewTreeBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsTreeBodyFrame(aPresShell, aContext);
+  return new (aPresShell) nsTreeBodyFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsTreeBodyFrame)
@@ -112,8 +112,8 @@ NS_QUERYFRAME_HEAD(nsTreeBodyFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsLeafBoxFrame)
 
 // Constructor
-nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
-:nsLeafBoxFrame(aPresShell, aContext),
+nsTreeBodyFrame::nsTreeBodyFrame(nsStyleContext* aContext)
+:nsLeafBoxFrame(aContext),
  mSlots(nullptr),
  mImageCache(),
  mTopRowIndex(0),

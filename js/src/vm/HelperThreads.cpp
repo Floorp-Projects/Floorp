@@ -926,6 +926,8 @@ GlobalHelperThreadState::finishParseTask(JSContext *maybecx, JSRuntime *rt, void
         parseTask->errors[i]->throwError(cx);
     if (parseTask->overRecursed)
         js_ReportOverRecursed(cx);
+    if (cx->isExceptionPending())
+        return nullptr;
 
     if (script) {
         // The Debugger only needs to be told about the topmost script that was compiled.

@@ -1111,7 +1111,16 @@ bool
 ScriptedDirectProxyHandler::isCallable(JSObject *obj) const
 {
     MOZ_ASSERT(obj->as<ProxyObject>().handler() == &ScriptedDirectProxyHandler::singleton);
-    return obj->as<ProxyObject>().extra(IS_CALLABLE_EXTRA).toBoolean();
+    uint32_t callConstruct = obj->as<ProxyObject>().extra(IS_CALLCONSTRUCT_EXTRA).toPrivateUint32();
+    return !!(callConstruct & IS_CALLABLE);
+}
+
+bool
+ScriptedDirectProxyHandler::isConstructor(JSObject *obj) const
+{
+    MOZ_ASSERT(obj->as<ProxyObject>().handler() == &ScriptedDirectProxyHandler::singleton);
+    uint32_t callConstruct = obj->as<ProxyObject>().extra(IS_CALLCONSTRUCT_EXTRA).toPrivateUint32();
+    return !!(callConstruct & IS_CONSTRUCTOR);
 }
 
 const char ScriptedDirectProxyHandler::family = 0;
@@ -1139,9 +1148,13 @@ js::proxy(JSContext *cx, unsigned argc, jsval *vp)
     if (!proxy_)
         return false;
     Rooted<ProxyObject*> proxy(cx, &proxy_->as<ProxyObject>());
-    bool targetIsCallable = target->isCallable(); // Can GC - don't compute it inline.
     proxy->setExtra(ScriptedDirectProxyHandler::HANDLER_EXTRA, ObjectValue(*handler));
-    proxy->setExtra(ScriptedDirectProxyHandler::IS_CALLABLE_EXTRA, BooleanValue(targetIsCallable));
+
+    // Assign [[Call]] and [[Construct]]
+    uint32_t callable = target->isCallable() ? ScriptedDirectProxyHandler::IS_CALLABLE : 0;
+    uint32_t constructor = target->isConstructor() ? ScriptedDirectProxyHandler::IS_CONSTRUCTOR : 0;
+    proxy->as<ProxyObject>().setExtra(ScriptedDirectProxyHandler::IS_CALLCONSTRUCT_EXTRA,
+                                      PrivateUint32Value(callable | constructor));
     args.rval().setObject(*proxy);
     return true;
 }

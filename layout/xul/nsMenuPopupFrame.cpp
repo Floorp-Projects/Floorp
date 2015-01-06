@@ -67,7 +67,7 @@ int8_t nsMenuPopupFrame::sDefaultLevelIsTop = -1;
 nsIFrame*
 NS_NewMenuPopupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMenuPopupFrame (aPresShell, aContext);
+  return new (aPresShell) nsMenuPopupFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMenuPopupFrame)
@@ -79,8 +79,8 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 //
 // nsMenuPopupFrame ctor
 //
-nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell, nsStyleContext* aContext)
-  :nsBoxFrame(aShell, aContext),
+nsMenuPopupFrame::nsMenuPopupFrame(nsStyleContext* aContext)
+  :nsBoxFrame(aContext),
   mCurrentMenu(nullptr),
   mPrefSize(-1, -1),
   mLastClientOffset(0, 0),

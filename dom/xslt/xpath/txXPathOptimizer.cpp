@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Assertions.h"
 #include "txXPathOptimizer.h"
 #include "txExprResult.h"
 #include "nsIAtom.h"
@@ -23,18 +24,15 @@ public:
     nsresult getVariable(int32_t aNamespace, nsIAtom* aLName,
                          txAExprResult*& aResult)
     {
-        NS_NOTREACHED("shouldn't depend on this context");
-        return NS_ERROR_FAILURE;
+        MOZ_CRASH("shouldn't depend on this context");
     }
     bool isStripSpaceAllowed(const txXPathNode& aNode)
     {
-        NS_NOTREACHED("shouldn't depend on this context");
-        return false;
+        MOZ_CRASH("shouldn't depend on this context");
     }
     void* getPrivateContext()
     {
-        NS_NOTREACHED("shouldn't depend on this context");
-        return nullptr;
+        MOZ_CRASH("shouldn't depend on this context");
     }
     txResultRecycler* recycler()
     {
@@ -45,22 +43,15 @@ public:
     }
     const txXPathNode& getContextNode()
     {
-        NS_NOTREACHED("shouldn't depend on this context");
-
-        // This will return an invalid node, but we should never
-        // get here so that's fine.
-
-        return *static_cast<txXPathNode*>(nullptr);
+        MOZ_CRASH("shouldn't depend on this context");
     }
     uint32_t size()
     {
-        NS_NOTREACHED("shouldn't depend on this context");
-        return 1;
+        MOZ_CRASH("shouldn't depend on this context");
     }
     uint32_t position()
     {
-        NS_NOTREACHED("shouldn't depend on this context");
-        return 1;
+        MOZ_CRASH("shouldn't depend on this context");
     }
 
 private:

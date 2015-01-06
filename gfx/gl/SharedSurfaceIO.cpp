@@ -102,31 +102,11 @@ SharedSurface_IOSurface::SharedSurface_IOSurface(const RefPtr<MacIOSurface>& ioS
                   size,
                   hasAlpha)
   , mIOSurf(ioSurf)
-  , mCurConsGL(nullptr)
-  , mConsTex(0)
 {
     gl->MakeCurrent();
     mProdTex = 0;
     gl->fGenTextures(1, &mProdTex);
     BackTextureWithIOSurf(gl, mProdTex, mIOSurf);
-}
-
-GLuint
-SharedSurface_IOSurface::ConsTexture(GLContext* consGL)
-{
-    if (!mCurConsGL) {
-        mCurConsGL = consGL;
-    }
-    MOZ_ASSERT(consGL == mCurConsGL);
-
-    if (!mConsTex) {
-        consGL->MakeCurrent();
-        mConsTex = 0;
-        consGL->fGenTextures(1, &mConsTex);
-        BackTextureWithIOSurf(consGL, mConsTex, mIOSurf);
-    }
-
-    return mConsTex;
 }
 
 SharedSurface_IOSurface::~SharedSurface_IOSurface()
@@ -135,7 +115,6 @@ SharedSurface_IOSurface::~SharedSurface_IOSurface()
         DebugOnly<bool> success = mGL->MakeCurrent();
         MOZ_ASSERT(success);
         mGL->fDeleteTextures(1, &mProdTex);
-        mGL->fDeleteTextures(1, &mConsTex); // This will work if we're shared.
     }
 }
 
