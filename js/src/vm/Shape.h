@@ -139,9 +139,9 @@ class ShapeTable {
 
         Shape *shape_;
 
-        Entry() MOZ_DELETE;
-        Entry(const Entry&) MOZ_DELETE;
-        Entry& operator=(const Entry&) MOZ_DELETE;
+        Entry() = delete;
+        Entry(const Entry&) = delete;
+        Entry& operator=(const Entry&) = delete;
 
       public:
         bool isFree() const { return shape_ == nullptr; }
