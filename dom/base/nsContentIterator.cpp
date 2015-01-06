@@ -86,23 +86,23 @@ public:
 
   // nsIContentIterator interface methods ------------------------------
 
-  virtual nsresult Init(nsINode* aRoot) MOZ_OVERRIDE;
+  virtual nsresult Init(nsINode* aRoot);
 
-  virtual nsresult Init(nsIDOMRange* aRange) MOZ_OVERRIDE;
+  virtual nsresult Init(nsIDOMRange* aRange);
 
-  virtual void First() MOZ_OVERRIDE;
+  virtual void First();
 
-  virtual void Last() MOZ_OVERRIDE;
+  virtual void Last();
 
-  virtual void Next() MOZ_OVERRIDE;
+  virtual void Next();
 
-  virtual void Prev() MOZ_OVERRIDE;
+  virtual void Prev();
 
-  virtual nsINode* GetCurrentNode() MOZ_OVERRIDE;
+  virtual nsINode* GetCurrentNode();
 
-  virtual bool IsDone() MOZ_OVERRIDE;
+  virtual bool IsDone();
 
-  virtual nsresult PositionAt(nsINode* aCurNode) MOZ_OVERRIDE;
+  virtual nsresult PositionAt(nsINode* aCurNode);
 
 protected:
   virtual ~nsContentIterator();
@@ -1113,21 +1113,21 @@ public:
 
   // nsContentIterator overrides ------------------------------
 
-  virtual nsresult Init(nsINode* aRoot) MOZ_OVERRIDE;
+  virtual nsresult Init(nsINode* aRoot);
 
-  virtual nsresult Init(nsIDOMRange* aRange) MOZ_OVERRIDE;
+  virtual nsresult Init(nsIDOMRange* aRange);
 
-  virtual void Next() MOZ_OVERRIDE;
+  virtual void Next();
 
-  virtual void Prev() MOZ_OVERRIDE;
+  virtual void Prev();
 
-  virtual nsresult PositionAt(nsINode* aCurNode) MOZ_OVERRIDE;
-
-  // Must override these because we don't do PositionAt
-  virtual void First() MOZ_OVERRIDE;
+  virtual nsresult PositionAt(nsINode* aCurNode);
 
   // Must override these because we don't do PositionAt
-  virtual void Last() MOZ_OVERRIDE;
+  virtual void First();
+
+  // Must override these because we don't do PositionAt
+  virtual void Last();
 
 protected:
   virtual ~nsContentSubtreeIterator() {}

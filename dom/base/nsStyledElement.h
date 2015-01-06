@@ -36,7 +36,7 @@ protected:
 
 public:
   // nsIContent interface methods
-  virtual mozilla::css::StyleRule* GetInlineStyleRule() MOZ_OVERRIDE;
+  virtual mozilla::css::StyleRule* GetInlineStyleRule();
   virtual nsresult SetInlineStyleRule(mozilla::css::StyleRule* aStyleRule,
                                       const nsAString* aSerialized,
                                       bool aNotify) MOZ_OVERRIDE;

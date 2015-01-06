@@ -285,7 +285,7 @@ public:
 
   NS_IMETHOD HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, JS::Handle<JS::Value> val, bool *bp,
-                         bool *_retval) MOZ_OVERRIDE;
+                         bool *_retval);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {

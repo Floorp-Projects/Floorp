@@ -228,7 +228,7 @@ public:
 protected:
   virtual ~nsGenericDOMDataNode();
 
-  virtual mozilla::dom::Element* GetNameSpaceElement() MOZ_OVERRIDE
+  virtual mozilla::dom::Element* GetNameSpaceElement()
   {
     nsINode *parent = GetParentNode();
 

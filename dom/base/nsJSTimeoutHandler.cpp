@@ -42,18 +42,18 @@ public:
                            const nsAString& aExpression, bool* aAllowEval,
                            ErrorResult& aError);
 
-  virtual const char16_t* GetHandlerText() MOZ_OVERRIDE;
-  virtual Function* GetCallback() MOZ_OVERRIDE
+  virtual const char16_t *GetHandlerText();
+  virtual Function* GetCallback()
   {
     return mFunction;
   }
-  virtual void GetLocation(const char** aFileName, uint32_t* aLineNo) MOZ_OVERRIDE
+  virtual void GetLocation(const char **aFileName, uint32_t *aLineNo)
   {
     *aFileName = mFileName.get();
     *aLineNo = mLineNo;
   }
 
-  virtual const nsTArray<JS::Value>& GetArgs() MOZ_OVERRIDE
+  virtual const nsTArray<JS::Value>& GetArgs()
   {
     return mArgs;
   }
