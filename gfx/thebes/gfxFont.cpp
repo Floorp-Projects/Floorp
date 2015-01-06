@@ -3445,8 +3445,12 @@ gfxFont::CreateVerticalMetrics()
                 (hb_blob_get_data(vheaTable, &len));
         if (len >= sizeof(MetricsHeader)) {
             SET_UNSIGNED(maxAdvance, vhea->advanceWidthMax);
-            SET_SIGNED(maxAscent, vhea->ascender);
-            SET_SIGNED(maxDescent, -int16_t(vhea->descender));
+            // Redistribute space between ascent/descent because we want a
+            // centered vertical baseline by default.
+            gfxFloat halfExtent = 0.5 * gfxFloat(mFUnitsConvFactor) *
+                (int16_t(vhea->ascender) - int16_t(vhea->descender));
+            metrics->maxAscent = halfExtent;
+            metrics->maxDescent = halfExtent;
             SET_SIGNED(externalLeading, vhea->lineGap);
         }
     }
