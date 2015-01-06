@@ -181,8 +181,8 @@ struct CompileError {
   private:
     // CompileError owns raw allocated memory, so disable assignment and copying
     // for safety.
-    void operator=(const CompileError &) MOZ_DELETE;
-    CompileError(const CompileError &) MOZ_DELETE;
+    void operator=(const CompileError &) = delete;
+    CompileError(const CompileError &) = delete;
 };
 
 // Ideally, tokenizing would be entirely independent of context.  But the
@@ -515,7 +515,7 @@ class MOZ_STACK_CLASS TokenStream
         // more pointers to GC things here!
         explicit Position(AutoKeepAtoms&) { }
       private:
-        Position(const Position&) MOZ_DELETE;
+        Position(const Position&) = delete;
         friend class TokenStream;
         const char16_t *buf;
         Flags flags;

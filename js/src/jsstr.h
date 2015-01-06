@@ -184,7 +184,7 @@ EqualStrings(JSContext *cx, JSString *str1, JSString *str2, bool *result);
 
 /* Use the infallible method instead! */
 extern bool
-EqualStrings(JSContext *cx, JSLinearString *str1, JSLinearString *str2, bool *result) MOZ_DELETE;
+EqualStrings(JSContext *cx, JSLinearString *str1, JSLinearString *str2, bool *result) = delete;
 
 /* EqualStrings is infallible on linear strings. */
 extern bool

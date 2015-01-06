@@ -433,8 +433,8 @@ class VirtualRegister
     // Whether def_ is a temp or an output.
     bool isTemp_ : 1;
 
-    void operator=(const VirtualRegister &) MOZ_DELETE;
-    VirtualRegister(const VirtualRegister &) MOZ_DELETE;
+    void operator=(const VirtualRegister &) = delete;
+    VirtualRegister(const VirtualRegister &) = delete;
 
   protected:
     explicit VirtualRegister(TempAllocator &alloc)
@@ -530,8 +530,8 @@ class VirtualRegisterMap
   private:
     FixedList<VREG> vregs_;
 
-    void operator=(const VirtualRegisterMap &) MOZ_DELETE;
-    VirtualRegisterMap(const VirtualRegisterMap &) MOZ_DELETE;
+    void operator=(const VirtualRegisterMap &) = delete;
+    VirtualRegisterMap(const VirtualRegisterMap &) = delete;
 
   public:
     VirtualRegisterMap()

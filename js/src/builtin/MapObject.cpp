@@ -359,7 +359,7 @@ class OrderedHashTable
 
       private:
         // Prohibit copy assignment.
-        Range &operator=(const Range &other) MOZ_DELETE;
+        Range &operator=(const Range &other) = delete;
 
         void seek() {
             while (i < ht.dataLength && Ops::isEmpty(Ops::getKey(ht.data[i].element)))
@@ -667,8 +667,8 @@ class OrderedHashTable
     }
 
     // Not copyable.
-    OrderedHashTable &operator=(const OrderedHashTable &) MOZ_DELETE;
-    OrderedHashTable(const OrderedHashTable &) MOZ_DELETE;
+    OrderedHashTable &operator=(const OrderedHashTable &) = delete;
+    OrderedHashTable(const OrderedHashTable &) = delete;
 };
 
 }  // namespace detail

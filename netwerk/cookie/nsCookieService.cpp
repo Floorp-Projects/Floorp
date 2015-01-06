@@ -3995,7 +3995,7 @@ struct GetCookiesForAppStruct {
   bool                  onlyBrowserElement;
   nsCOMArray<nsICookie> cookies;
 
-  GetCookiesForAppStruct() MOZ_DELETE;
+  GetCookiesForAppStruct() = delete;
   GetCookiesForAppStruct(uint32_t aAppId, bool aOnlyBrowserElement)
     : appId(aAppId)
     , onlyBrowserElement(aOnlyBrowserElement)

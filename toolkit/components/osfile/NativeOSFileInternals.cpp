@@ -123,8 +123,8 @@ struct ScopedArrayBufferContents: public Scoped<ScopedArrayBufferContentsTraits>
     return false;
   }
 private:
-  explicit ScopedArrayBufferContents(ScopedArrayBufferContents& source) MOZ_DELETE;
-  ScopedArrayBufferContents& operator=(ScopedArrayBufferContents& source) MOZ_DELETE;
+  explicit ScopedArrayBufferContents(ScopedArrayBufferContents& source) = delete;
+  ScopedArrayBufferContents& operator=(ScopedArrayBufferContents& source) = delete;
 };
 
 ///////// Cross-platform issues

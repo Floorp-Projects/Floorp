@@ -27,7 +27,7 @@ class gfxFontMissingGlyphs MOZ_FINAL
     typedef mozilla::gfx::Pattern Pattern;
     typedef mozilla::gfx::Rect Rect;
 
-    gfxFontMissingGlyphs() MOZ_DELETE; // prevent instantiation
+    gfxFontMissingGlyphs() = delete; // prevent instantiation
 
 public:
     /**

@@ -131,8 +131,8 @@ protected:
   nsresult                              mHardwareStateChangeReason;
 
 private:
-  CameraControlImpl(const CameraControlImpl&) MOZ_DELETE;
-  CameraControlImpl& operator=(const CameraControlImpl&) MOZ_DELETE;
+  CameraControlImpl(const CameraControlImpl&) = delete;
+  CameraControlImpl& operator=(const CameraControlImpl&) = delete;
 };
 
 } // namespace mozilla

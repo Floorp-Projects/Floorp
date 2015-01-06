@@ -77,9 +77,9 @@ public:
     Calc() {}
 
   private:
-    Calc(const Calc&) MOZ_DELETE;
+    Calc(const Calc&) = delete;
     ~Calc() {}
-    Calc& operator=(const Calc&) MOZ_DELETE;
+    Calc& operator=(const Calc&) = delete;
   };
 
   explicit nsStyleCoord(nsStyleUnit aUnit = eStyleUnit_Null);

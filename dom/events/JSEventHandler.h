@@ -143,7 +143,7 @@ public:
   }
 
 private:
-  void operator=(const TypedEventHandler&) MOZ_DELETE;
+  void operator=(const TypedEventHandler&) = delete;
 
   void ReleaseHandler()
   {
