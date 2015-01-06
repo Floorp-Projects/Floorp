@@ -251,7 +251,7 @@ interface nsITelephonyDialCallback : nsITelephonyCallback
  * XPCOM component (in the content process) that provides the telephony
  * information.
  */
-[scriptable, uuid(6fa2d94b-80ee-4085-b6a0-535811ba9bb6)]
+[scriptable, uuid(fd797bcc-54e2-4e4a-9ec7-3b72862d0d78)]
 interface nsITelephonyService : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -295,15 +295,25 @@ interface nsITelephonyService : nsISupports
    */
   void dial(in unsigned long clientId, in DOMString number,
             in boolean isEmergency, in nsITelephonyDialCallback callback);
-  void hangUp(in unsigned long clientId, in unsigned long callIndex);
 
   void startTone(in unsigned long clientId, in DOMString dtmfChar);
   void stopTone(in unsigned long clientId);
 
-  void answerCall(in unsigned long clientId, in unsigned long callIndex);
-  void rejectCall(in unsigned long clientId, in unsigned long callIndex);
-  void holdCall(in unsigned long clientId, in unsigned long callIndex);
-  void resumeCall(in unsigned long clientId, in unsigned long callIndex);
+  void answerCall(in unsigned long clientId,
+                  in unsigned long callIndex,
+                  in nsITelephonyCallback callback);
+  void rejectCall(in unsigned long clientId,
+                  in unsigned long callIndex,
+                  in nsITelephonyCallback callback);
+  void hangUpCall(in unsigned long clientId,
+                  in unsigned long callIndex,
+                  in nsITelephonyCallback callback);
+  void holdCall(in unsigned long clientId,
+                in unsigned long callIndex,
+                in nsITelephonyCallback callback);
+  void resumeCall(in unsigned long clientId,
+                  in unsigned long callIndex,
+                  in nsITelephonyCallback callback);
 
   void conferenceCall(in unsigned long clientId);
   void separateCall(in unsigned long clientId, in unsigned long callIndex);

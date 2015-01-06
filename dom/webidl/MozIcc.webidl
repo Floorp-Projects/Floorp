@@ -82,6 +82,13 @@ enum IccContactType
   "sdn"  // Service Dialling Number.
 };
 
+enum IccMvnoType
+{
+  "imsi",
+  "spn",
+  "gid"
+};
+
 dictionary IccUnlockCardLockOptions
 {
   required IccLockType lockType;
@@ -315,17 +322,13 @@ interface MozIcc : EventTarget
    *
    * @param mvnoType
    *        Mvno type to use to compare the match data.
-   *        Currently, we only support 'imsi'.
    * @param matchData
    *        Data to be compared with ICC's field.
    *
    * @return a DOMRequest.
    *         The request's result will be a boolean indicating the matching
    *         result.
-   *
-   * TODO: change param mvnoType to WebIDL enum after Bug 864489 -
-   *       B2G RIL: use ipdl as IPC in MozIccManager
    */
   [Throws]
-  DOMRequest matchMvno(DOMString mvnoType, DOMString matchData);
+  DOMRequest matchMvno(IccMvnoType mvnoType, DOMString matchData);
 };

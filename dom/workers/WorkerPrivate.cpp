@@ -5702,13 +5702,7 @@ WorkerPrivate::SetTimeout(JSContext* aCx,
   newInfo->mTargetTime = TimeStamp::Now() + newInfo->mInterval;
 
   if (!newInfo->mTimeoutString.IsEmpty()) {
-    const char* filenameChars;
-    uint32_t lineNumber;
-    if (nsJSUtils::GetCallingLocation(aCx, &filenameChars, &lineNumber)) {
-      newInfo->mFilename = filenameChars;
-      newInfo->mLineNumber = lineNumber;
-    }
-    else {
+    if (!nsJSUtils::GetCallingLocation(aCx, newInfo->mFilename, &newInfo->mLineNumber)) {
       NS_WARNING("Failed to get calling location!");
     }
   }

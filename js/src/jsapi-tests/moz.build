@@ -30,6 +30,7 @@ UNIFIED_SOURCES += [
     'testExternalStrings.cpp',
     'testFindSCCs.cpp',
     'testForOfIterator.cpp',
+    'testForwardSetProperty.cpp',
     'testFreshGlobalEvalRedefinition.cpp',
     'testFunctionProperties.cpp',
     'testGCAllocator.cpp',

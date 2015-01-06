@@ -520,6 +520,10 @@
  *   tells the compiler that the raw pointer is a weak reference, and that
  *   property is somehow enforced by the code.  This can make the compiler
  *   ignore these pointers when validating the usage of pointers otherwise.
+ * MOZ_UNSAFE_REF: Applies to declarations of pointer types.  This attribute
+ *   should be used for non-owning references that can be unsafe, and their
+ *   safety needs to be validated through code inspection.  The string argument
+ *   passed to this macro documents the safety conditions.
  */
 #ifdef MOZ_CLANG_PLUGIN
 #  define MOZ_MUST_OVERRIDE __attribute__((annotate("moz_must_override")))
@@ -537,6 +541,7 @@
 #  define MOZ_NO_ARITHMETIC_EXPR_IN_ARGUMENT __attribute__((annotate("moz_no_arith_expr_in_arg")))
 #  define MOZ_OWNING_REF __attribute__((annotate("moz_strong_ref")))
 #  define MOZ_NON_OWNING_REF __attribute__((annotate("moz_weak_ref")))
+#  define MOZ_UNSAFE_REF(reason) __attribute__((annotate("moz_strong_ref")))
 /*
  * It turns out that clang doesn't like void func() __attribute__ {} without a
  * warning, so use pragmas to disable the warning. This code won't work on GCC
@@ -558,6 +563,7 @@
 #  define MOZ_HEAP_ALLOCATOR /* nothing */
 #  define MOZ_OWNING_REF /* nothing */
 #  define MOZ_NON_OWNING_REF /* nothing */
+#  define MOZ_UNSAFE_REF(reason) /* nothing */
 #endif /* MOZ_CLANG_PLUGIN */
 
 /*

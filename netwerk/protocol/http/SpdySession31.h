@@ -178,6 +178,7 @@ public:
 
   uint32_t GetServerInitialStreamWindow() { return mServerInitialStreamWindow; }
 
+  bool TryToActivate(SpdyStream31 *stream);
   void ConnectPushedStream(SpdyStream31 *stream);
   void DecrementConcurrent(SpdyStream31 *stream);
 
@@ -223,8 +224,6 @@ private:
   void        SetWriteCallbacks();
   void        RealignOutputQueue();
 
-  bool        RoomForMoreConcurrent();
-  void        ActivateStream(SpdyStream31 *);
   void        ProcessPending();
   nsresult    SetInputFrameDataStream(uint32_t);
   bool        VerifyStream(SpdyStream31 *, uint32_t);
@@ -233,6 +232,10 @@ private:
   void        UpdateLocalRwin(SpdyStream31 *stream, uint32_t bytes);
   void        UpdateLocalStreamWindow(SpdyStream31 *stream, uint32_t bytes);
   void        UpdateLocalSessionWindow(uint32_t bytes);
+
+  bool        RoomForMoreConcurrent();
+  void        IncrementConcurrent(SpdyStream31 *stream);
+  void        QueueStream(SpdyStream31 *stream);
 
   // a wrapper for all calls to the nshttpconnection level segment writer. Used
   // to track network I/O for timeout purposes

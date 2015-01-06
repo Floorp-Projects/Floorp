@@ -35,12 +35,47 @@ struct HangUpConferenceRequest
   uint32_t clientId;
 };
 
+struct AnswerCallRequest
+{
+  uint32_t clientId;
+  uint32_t callIndex;
+};
+
+struct HangUpCallRequest
+{
+  uint32_t clientId;
+  uint32_t callIndex;
+};
+
+struct RejectCallRequest
+{
+  uint32_t clientId;
+  uint32_t callIndex;
+};
+
+struct HoldCallRequest
+{
+  uint32_t clientId;
+  uint32_t callIndex;
+};
+
+struct ResumeCallRequest
+{
+  uint32_t clientId;
+  uint32_t callIndex;
+};
+
 union IPCTelephonyRequest
 {
   EnumerateCallsRequest;
   DialRequest;
   USSDRequest;
   HangUpConferenceRequest;
+  AnswerCallRequest;
+  HangUpCallRequest;
+  RejectCallRequest;
+  HoldCallRequest;
+  ResumeCallRequest;
 };
 
 sync protocol PTelephony {
@@ -75,16 +110,6 @@ parent:
   RegisterListener();
 
   UnregisterListener();
-
-  HangUpCall(uint32_t aClientId, uint32_t aCallIndex);
-
-  AnswerCall(uint32_t aClientId, uint32_t aCallIndex);
-
-  RejectCall(uint32_t aClientId, uint32_t aCallIndex);
-
-  HoldCall(uint32_t aClientId, uint32_t aCallIndex);
-
-  ResumeCall(uint32_t aClientId, uint32_t aCallIndex);
 
   ConferenceCall(uint32_t aClientId);
 

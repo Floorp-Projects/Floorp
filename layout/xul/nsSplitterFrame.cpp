@@ -198,13 +198,13 @@ nsSplitterFrameInner::GetState()
 nsIFrame*
 NS_NewSplitterFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsSplitterFrame(aPresShell, aContext);
+  return new (aPresShell) nsSplitterFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSplitterFrame)
 
-nsSplitterFrame::nsSplitterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
-: nsBoxFrame(aPresShell, aContext),
+nsSplitterFrame::nsSplitterFrame(nsStyleContext* aContext)
+: nsBoxFrame(aContext),
   mInner(0)
 {
 }

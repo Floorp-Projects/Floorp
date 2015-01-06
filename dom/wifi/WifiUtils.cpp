@@ -13,7 +13,6 @@ using namespace mozilla::dom;
 
 #define BUFFER_SIZE        4096
 #define COMMAND_SIZE       256
-#define PROPERTY_VALUE_MAX 80
 
 // Intentionally not trying to dlclose() this handle. That's playing
 // Russian roulette with security bugs.
@@ -43,7 +42,7 @@ GetWifiP2pSupported()
   return (0 == strcmp(propP2pSupported, "1"));
 }
 
-int
+static int
 hex2num(char c)
 {
   if (c >= '0' && c <= '9')
@@ -55,7 +54,7 @@ hex2num(char c)
   return -1;
 }
 
-int
+static int
 hex2byte(const char* hex)
 {
   int a, b;
@@ -71,7 +70,7 @@ hex2byte(const char* hex)
 // This function is equivalent to printf_decode() at src/utils/common.c in
 // the supplicant.
 
-uint32_t
+static uint32_t
 convertToBytes(char* buf, uint32_t maxlen, const char* str)
 {
   const char *pos = str;
@@ -156,7 +155,8 @@ convertToBytes(char* buf, uint32_t maxlen, const char* str)
 
 static const uint32_t REPLACE_UTF8 = 0xFFFD;
 
-void LossyConvertUTF8toUTF16(const char* aInput, uint32_t aLength, nsAString& aOut)
+static void
+LossyConvertUTF8toUTF16(const char* aInput, uint32_t aLength, nsAString& aOut)
 {
   JS::UTF8Chars src(aInput, aLength);
 
