@@ -30,39 +30,39 @@ public:
                              gfxContentType contentType) MOZ_OVERRIDE;
 
     mozilla::TemporaryRef<mozilla::gfx::ScaledFont>
-      GetScaledFontForFont(mozilla::gfx::DrawTarget* aTarget, gfxFont *aFont);
+      GetScaledFontForFont(mozilla::gfx::DrawTarget* aTarget, gfxFont *aFont) MOZ_OVERRIDE;
 
-    nsresult GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
+    nsresult GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName) MOZ_OVERRIDE;
 
     gfxFontGroup*
     CreateFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
                     const gfxFontStyle *aStyle,
-                    gfxUserFontSet *aUserFontSet);
+                    gfxUserFontSet *aUserFontSet) MOZ_OVERRIDE;
 
     virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
                                           uint16_t aWeight,
                                           int16_t aStretch,
-                                          bool aItalic);
+                                          bool aItalic) MOZ_OVERRIDE;
 
-    virtual gfxPlatformFontList* CreatePlatformFontList();
+    virtual gfxPlatformFontList* CreatePlatformFontList() MOZ_OVERRIDE;
 
     virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
                                            uint16_t aWeight,
                                            int16_t aStretch,
                                            bool aItalic,
                                            const uint8_t* aFontData,
-                                           uint32_t aLength);
+                                           uint32_t aLength) MOZ_OVERRIDE;
 
-    bool IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlags);
+    bool IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlags) MOZ_OVERRIDE;
 
     nsresult GetFontList(nsIAtom *aLangGroup,
                          const nsACString& aGenericFamily,
-                         nsTArray<nsString>& aListOfFonts);
-    nsresult UpdateFontList();
+                         nsTArray<nsString>& aListOfFonts) MOZ_OVERRIDE;
+    nsresult UpdateFontList() MOZ_OVERRIDE;
 
     virtual void GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
                                         int32_t aRunScript,
-                                        nsTArray<const char*>& aFontList);
+                                        nsTArray<const char*>& aFontList) MOZ_OVERRIDE;
 
     virtual bool CanRenderContentToDataSurface() const MOZ_OVERRIDE {
       return true;
@@ -77,7 +77,7 @@ public:
     uint32_t GetAntiAliasingThreshold() { return mFontAntiAliasingThreshold; }
 
 private:
-    virtual void GetPlatformCMSOutputProfile(void* &mem, size_t &size);
+    virtual void GetPlatformCMSOutputProfile(void* &mem, size_t &size) MOZ_OVERRIDE;
 
     // read in the pref value for the lower threshold on font anti-aliasing
     static uint32_t ReadAntiAliasingThreshold();
