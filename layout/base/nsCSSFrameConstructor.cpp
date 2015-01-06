@@ -9293,9 +9293,9 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent*  aContent,
       // nsIAnonymousContentCreator that created this content knows how to make
       // that happen.
       nsIAnonymousContentCreator* acc = nullptr;
-      nsIFrame* ancestor = nsLayoutUtils::GetParentOrPlaceholderFor(frame);
+      nsIFrame* ancestor = frame->GetParent();
       while (!(acc = do_QueryFrame(ancestor))) {
-        ancestor = nsLayoutUtils::GetParentOrPlaceholderFor(ancestor);
+        ancestor = ancestor->GetParent();
       }
       NS_ASSERTION(acc, "Where is the nsIAnonymousContentCreator? We may fail "
                         "to recreate its content correctly");
