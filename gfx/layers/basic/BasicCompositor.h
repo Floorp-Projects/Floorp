@@ -100,7 +100,6 @@ public:
   {
     NS_RUNTIMEABORT("We shouldn't ever hit this");
   }
-  virtual void AbortFrame() MOZ_OVERRIDE;
 
   virtual bool SupportsPartialTextureUpdate() MOZ_OVERRIDE { return true; }
   virtual bool CanUseCanvasLayerForSize(const gfx::IntSize &aSize) MOZ_OVERRIDE { return true; }

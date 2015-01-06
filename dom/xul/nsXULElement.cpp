@@ -1603,6 +1603,12 @@ nsXULElement::LoadSrc()
         // Usually xul elements are used in chrome, which doesn't have
         // session history at all.
         slots->mFrameLoader = nsFrameLoader::Create(this, false);
+        if (AttrValueIs(kNameSpaceID_None, nsGkAtoms::prerendered,
+                        NS_LITERAL_STRING("true"), eIgnoreCase)) {
+            nsresult rv = slots->mFrameLoader->SetIsPrerendered();
+            NS_ENSURE_SUCCESS(rv,rv);
+        }
+
         NS_ENSURE_TRUE(slots->mFrameLoader, NS_OK);
     }
 
@@ -1625,6 +1631,13 @@ nsXULElement::GetFrameLoader()
 
     nsRefPtr<nsFrameLoader> loader = slots->mFrameLoader;
     return loader.forget();
+}
+
+nsresult
+nsXULElement::SetIsPrerendered()
+{
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::prerendered, nullptr,
+                 NS_LITERAL_STRING("true"), true);
 }
 
 nsresult

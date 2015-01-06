@@ -35,10 +35,9 @@ public:
   }
 #endif
 
-  nsGridRowGroupFrame(nsIPresShell* aPresShell,
-                      nsStyleContext* aContext,
+  nsGridRowGroupFrame(nsStyleContext* aContext,
                       nsBoxLayout* aLayoutManager):
-    nsBoxFrame(aPresShell, aContext, false, aLayoutManager) {}
+    nsBoxFrame(aContext, false, aLayoutManager) {}
 
   virtual nscoord GetFlex(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
 

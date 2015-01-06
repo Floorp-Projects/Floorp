@@ -16,7 +16,7 @@ public:
 
   friend nsIFrame* NS_NewTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);  
 
-  nsTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  explicit nsTitleBarFrame(nsStyleContext* aContext);
 
   virtual void BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                            const nsRect&           aDirtyRect,

@@ -315,7 +315,7 @@ protected:
    */
   virtual void ResetList(bool aAllowScrolling);
 
-  nsListControlFrame(nsIPresShell* aShell, nsIDocument* aDocument, nsStyleContext* aContext);
+  explicit nsListControlFrame(nsStyleContext* aContext);
   virtual ~nsListControlFrame();
 
   /**

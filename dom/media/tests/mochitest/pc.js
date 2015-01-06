@@ -584,7 +584,7 @@ function PeerConnectionTest(options) {
  * @param {Function} onSuccess
  *        Callback to execute when the peer connection has been closed successfully
  */
-PeerConnectionTest.prototype.close = function PCT_close(onSuccess) {
+PeerConnectionTest.prototype.closePC = function PCT_closePC(onSuccess) {
   info("Closing peer connections");
 
   var self = this;
@@ -653,6 +653,316 @@ PeerConnectionTest.prototype.close = function PCT_close(onSuccess) {
   }, 60000);
 
   closeEverything();
+};
+
+/**
+ * Close the open data channels, followed by the underlying peer connection
+ *
+ * @param {Function} onSuccess
+ *        Callback to execute when all connections have been closed
+ */
+PeerConnectionTest.prototype.close = function PCT_close(onSuccess) {
+  var self = this;
+  var pendingDcClose = []
+  var closeTimeout = null;
+
+  info("PeerConnectionTest.close() called");
+
+  function _closePeerConnection() {
+    info("Now closing PeerConnection");
+    self.closePC.call(self, onSuccess);
+  }
+
+  function _closePeerConnectionCallback(index) {
+    info("_closePeerConnection called with index " + index);
+    var pos = pendingDcClose.indexOf(index);
+    if (pos != -1) {
+      pendingDcClose.splice(pos, 1);
+    }
+    else {
+      info("_closePeerConnection index " + index + " is missing from pendingDcClose: " + pendingDcClose);
+    }
+    if (pendingDcClose.length === 0) {
+      clearTimeout(closeTimeout);
+      _closePeerConnection();
+    }
+  }
+
+  var myDataChannels = null;
+  if (self.pcLocal) {
+    myDataChannels = self.pcLocal.dataChannels;
+  }
+  else if (self.pcRemote) {
+    myDataChannels = self.pcRemote.dataChannels;
+  }
+  var length = myDataChannels.length;
+  for (var i = 0; i < length; i++) {
+    var dataChannel = myDataChannels[i];
+    if (dataChannel.readyState !== "closed") {
+      pendingDcClose.push(i);
+      self.closeDataChannels(i, _closePeerConnectionCallback);
+    }
+  }
+  if (pendingDcClose.length === 0) {
+    _closePeerConnection();
+  }
+  else {
+    closeTimeout = setTimeout(function() {
+      ok(false, "Failed to properly close data channels: " +
+        pendingDcClose);
+      _closePeerConnection();
+    }, 60000);
+  }
+};
+
+/**
+ * Close the specified data channels
+ *
+ * @param {Number} index
+ *        Index of the data channels to close on both sides
+ * @param {Function} onSuccess
+ *        Callback to execute when the data channels has been closed
+ */
+PeerConnectionTest.prototype.closeDataChannels = function PCT_closeDataChannels(index, onSuccess) {
+  info("closeDataChannels called with index: " + index);
+  var localChannel = null;
+  if (this.pcLocal) {
+    localChannel = this.pcLocal.dataChannels[index];
+  }
+  var remoteChannel = null;
+  if (this.pcRemote) {
+    remoteChannel = this.pcRemote.dataChannels[index];
+  }
+
+  var self = this;
+  var wait = false;
+  var pollingMode = false;
+  var everythingClosed = false;
+  var verifyInterval = null;
+  var remoteCloseTimer = null;
+
+  function _allChannelsAreClosed() {
+    var ret = null;
+    if (localChannel) {
+      ret = (localChannel.readyState === "closed");
+    }
+    if (remoteChannel) {
+      if (ret !== null) {
+        ret = (ret && (remoteChannel.readyState === "closed"));
+      }
+      else {
+        ret = (remoteChannel.readyState === "closed");
+      }
+    }
+    return ret;
+  }
+
+  function verifyClosedChannels() {
+    if (everythingClosed) {
+      // safety protection against events firing late
+      return;
+    }
+    if (_allChannelsAreClosed()) {
+      ok(true, "DataChannel(s) have reached 'closed' state for data channel " + index);
+      if (remoteCloseTimer !== null) {
+        clearTimeout(remoteCloseTimer);
+      }
+      if (verifyInterval !== null) {
+        clearInterval(verifyInterval);
+      }
+      everythingClosed = true;
+      onSuccess(index);
+    }
+    else {
+      info("Still waiting for DataChannel closure");
+    }
+  }
+
+  if ((localChannel) && (localChannel.readyState !== "closed")) {
+    // in case of steeplechase there is no far end, so we can only poll
+    if (remoteChannel) {
+      remoteChannel.onclose = function () {
+        is(remoteChannel.readyState, "closed", "remoteChannel is in state 'closed'");
+        verifyClosedChannels();
+      };
+    }
+    else {
+      pollingMode = true;
+      verifyInterval = setInterval(verifyClosedChannels, 1000);
+    }
+
+    localChannel.close();
+    wait = true;
+  }
+  if ((remoteChannel) && (remoteChannel.readyState !== "closed")) {
+    if (localChannel) {
+      localChannel.onclose = function () {
+        is(localChannel.readyState, "closed", "localChannel is in state 'closed'");
+        verifyClosedChannels();
+      };
+
+      // Apparently we are running a local test which has both ends of the
+      // data channel locally available, so by default lets wait for the
+      // remoteChannel.onclose handler from above to confirm closure on both
+      // ends.
+      remoteCloseTimer = setTimeout(function() {
+        todo(false, "localChannel.close() did not resulted in close signal on remote side");
+        remoteChannel.close();
+        verifyClosedChannels();
+      }, 30000);
+    }
+    else {
+      pollingMode = true;
+      verifyTimer = setInterval(verifyClosedChannels, 1000);
+
+      remoteChannel.close();
+    }
+
+    wait = true;
+  }
+
+  if (!wait) {
+    onSuccess(index);
+  }
+};
+
+
+/**
+ * Wait for the initial data channel to get into the open state
+ *
+ * @param {PeerConnectionWrapper} peer
+ *        The peer connection wrapper to run the command on
+ * @param {Function} onSuccess
+ *        Callback when the creation was successful
+ */
+PeerConnectionTest.prototype.waitForInitialDataChannel =
+        function PCT_waitForInitialDataChannel(peer, onSuccess, onFailure) {
+  var dcConnectionTimeout = null;
+  var dcOpened = false;
+
+  function dataChannelConnected(channel) {
+    // in case the switch statement below had called onSuccess already we
+    // don't want to call it again
+    if (!dcOpened) {
+      clearTimeout(dcConnectionTimeout);
+      is(channel.readyState, "open", peer + " dataChannels[0] switched to state: 'open'");
+      dcOpened = true;
+      onSuccess();
+    } else {
+      info("dataChannelConnected() called, but data channel was open already");
+    }
+  }
+
+  // TODO: drno: convert dataChannels into an object and make
+  //             registerDataChannelOpenEvent a generic function
+  if (peer == this.pcLocal) {
+    peer.dataChannels[0].onopen = dataChannelConnected;
+  } else {
+    peer.registerDataChannelOpenEvents(dataChannelConnected);
+  }
+
+  if (peer.dataChannels.length >= 1) {
+    // snapshot of the live value as it might change during test execution
+    const readyState = peer.dataChannels[0].readyState;
+    switch (readyState) {
+      case "open": {
+        is(readyState, "open", peer + " dataChannels[0] is already in state: 'open'");
+        dcOpened = true;
+        onSuccess();
+        break;
+      }
+      case "connecting": {
+        is(readyState, "connecting", peer + " dataChannels[0] is in state: 'connecting'");
+        if (onFailure) {
+          dcConnectionTimeout = setTimeout(function () {
+            is(peer.dataChannels[0].readyState, "open", peer + " timed out while waiting for dataChannels[0] to open");
+            onFailure();
+          }, 60000);
+        }
+        break;
+      }
+      default: {
+        ok(false, "dataChannels[0] is in unexpected state " + readyState);
+        if (onFailure) {
+          onFailure()
+        }
+      }
+    }
+  }
+};
+
+/**
+ * Send data (message or blob) to the other peer
+ *
+ * @param {String|Blob} data
+ *        Data to send to the other peer. For Blobs the MIME type will be lost.
+ * @param {Function} onSuccess
+ *        Callback to execute when data has been sent
+ * @param {Object} [options={ }]
+ *        Options to specify the data channels to be used
+ * @param {DataChannelWrapper} [options.sourceChannel=pcLocal.dataChannels[length - 1]]
+ *        Data channel to use for sending the message
+ * @param {DataChannelWrapper} [options.targetChannel=pcRemote.dataChannels[length - 1]]
+ *        Data channel to use for receiving the message
+ */
+PeerConnectionTest.prototype.send = function PCT_send(data, onSuccess, options) {
+  options = options || { };
+  var source = options.sourceChannel ||
+           this.pcLocal.dataChannels[this.pcLocal.dataChannels.length - 1];
+  var target = options.targetChannel ||
+           this.pcRemote.dataChannels[this.pcRemote.dataChannels.length - 1];
+
+  // Register event handler for the target channel
+  target.onmessage = function (recv_data) {
+    onSuccess(target, recv_data);
+  };
+
+  source.send(data);
+};
+
+/**
+ * Create a data channel
+ *
+ * @param {Dict} options
+ *        Options for the data channel (see nsIPeerConnection)
+ * @param {Function} onSuccess
+ *        Callback when the creation was successful
+ */
+PeerConnectionTest.prototype.createDataChannel = function DCT_createDataChannel(options, onSuccess) {
+  var localChannel = null;
+  var remoteChannel = null;
+  var self = this;
+
+  // Method to synchronize all asynchronous events.
+  function check_next_test() {
+    if (localChannel && remoteChannel) {
+      onSuccess(localChannel, remoteChannel);
+    }
+  }
+
+  if (!options.negotiated) {
+    // Register handlers for the remote peer
+    this.pcRemote.registerDataChannelOpenEvents(function (channel) {
+      remoteChannel = channel;
+      check_next_test();
+    });
+  }
+
+  // Create the datachannel and handle the local 'onopen' event
+  this.pcLocal.createDataChannel(options, function (channel) {
+    localChannel = channel;
+
+    if (options.negotiated) {
+      // externally negotiated - we need to open from both ends
+      options.id = options.id || channel.id;  // allow for no id to let the impl choose
+      self.pcRemote.createDataChannel(options, function (channel) {
+        remoteChannel = channel;
+        check_next_test();
+      });
+    } else {
+      check_next_test();
+    }
+  });
 };
 
 /**
@@ -995,372 +1305,6 @@ PCT_getSignalingMessage(messageType, onMessage) {
   this.registerSignalingCallback(messageType, onMessage);
 }
 
-/**
- * This class handles tests for data channels.
- *
- * @constructor
- * @param {object} [options={}]
- *        Optional options for the peer connection test
- * @param {object} [options.commands=commandsDataChannel]
- *        Commands to run for the test
- * @param {object} [options.config_local=undefined]
- *        Configuration for the local peer connection instance
- * @param {object} [options.config_remote=undefined]
- *        Configuration for the remote peer connection instance. If not defined
- *        the configuration from the local instance will be used
- */
-function DataChannelTest(options) {
-  options = options || { };
-  options.commands = options.commands || commandsDataChannel;
-
-  PeerConnectionTest.call(this, options);
-}
-
-DataChannelTest.prototype = Object.create(PeerConnectionTest.prototype, {
-  close : {
-    /**
-     * Close the open data channels, followed by the underlying peer connection
-     *
-     * @param {Function} onSuccess
-     *        Callback to execute when all connections have been closed
-     */
-    value : function DCT_close(onSuccess) {
-      var self = this;
-      var pendingDcClose = []
-      var closeTimeout = null;
-
-      info("DataChannelTest.close() called");
-
-      function _closePeerConnection() {
-        info("DataChannelTest closing PeerConnection");
-        PeerConnectionTest.prototype.close.call(self, onSuccess);
-      }
-
-      function _closePeerConnectionCallback(index) {
-        info("_closePeerConnection called with index " + index);
-        var pos = pendingDcClose.indexOf(index);
-        if (pos != -1) {
-          pendingDcClose.splice(pos, 1);
-        }
-        else {
-          info("_closePeerConnection index " + index + " is missing from pendingDcClose: " + pendingDcClose);
-        }
-        if (pendingDcClose.length === 0) {
-          clearTimeout(closeTimeout);
-          _closePeerConnection();
-        }
-      }
-
-      var myDataChannels = null;
-      if (self.pcLocal) {
-        myDataChannels = self.pcLocal.dataChannels;
-      }
-      else if (self.pcRemote) {
-        myDataChannels = self.pcRemote.dataChannels;
-      }
-      var length = myDataChannels.length;
-      for (var i = 0; i < length; i++) {
-        var dataChannel = myDataChannels[i];
-        if (dataChannel.readyState !== "closed") {
-          pendingDcClose.push(i);
-          self.closeDataChannels(i, _closePeerConnectionCallback);
-        }
-      }
-      if (pendingDcClose.length === 0) {
-        _closePeerConnection();
-      }
-      else {
-        closeTimeout = setTimeout(function() {
-          ok(false, "Failed to properly close data channels: " +
-            pendingDcClose);
-          _closePeerConnection();
-        }, 60000);
-      }
-    }
-  },
-
-  closeDataChannels : {
-    /**
-     * Close the specified data channels
-     *
-     * @param {Number} index
-     *        Index of the data channels to close on both sides
-     * @param {Function} onSuccess
-     *        Callback to execute when the data channels has been closed
-     */
-    value : function DCT_closeDataChannels(index, onSuccess) {
-      info("_closeDataChannels called with index: " + index);
-      var localChannel = null;
-      if (this.pcLocal) {
-        localChannel = this.pcLocal.dataChannels[index];
-      }
-      var remoteChannel = null;
-      if (this.pcRemote) {
-        remoteChannel = this.pcRemote.dataChannels[index];
-      }
-
-      var self = this;
-      var wait = false;
-      var pollingMode = false;
-      var everythingClosed = false;
-      var verifyInterval = null;
-      var remoteCloseTimer = null;
-
-      function _allChannelsAreClosed() {
-        var ret = null;
-        if (localChannel) {
-          ret = (localChannel.readyState === "closed");
-        }
-        if (remoteChannel) {
-          if (ret !== null) {
-            ret = (ret && (remoteChannel.readyState === "closed"));
-          }
-          else {
-            ret = (remoteChannel.readyState === "closed");
-          }
-        }
-        return ret;
-      }
-
-      function verifyClosedChannels() {
-        if (everythingClosed) {
-          // safety protection against events firing late
-          return;
-        }
-        if (_allChannelsAreClosed) {
-          ok(true, "DataChannel(s) have reached 'closed' state for data channel " + index);
-          if (remoteCloseTimer !== null) {
-            clearTimeout(remoteCloseTimer);
-          }
-          if (verifyInterval !== null) {
-            clearInterval(verifyInterval);
-          }
-          everythingClosed = true;
-          onSuccess(index);
-        }
-        else {
-          info("Still waiting for DataChannel closure");
-        }
-      }
-
-      if ((localChannel) && (localChannel.readyState !== "closed")) {
-        // in case of steeplechase there is no far end, so we can only poll
-        if (remoteChannel) {
-          remoteChannel.onclose = function () {
-            is(remoteChannel.readyState, "closed", "remoteChannel is in state 'closed'");
-            verifyClosedChannels();
-          };
-        }
-        else {
-          pollingMode = true;
-          verifyInterval = setInterval(verifyClosedChannels, 1000);
-        }
-
-        localChannel.close();
-        wait = true;
-      }
-      if ((remoteChannel) && (remoteChannel.readyState !== "closed")) {
-        if (localChannel) {
-          localChannel.onclose = function () {
-            is(localChannel.readyState, "closed", "localChannel is in state 'closed'");
-            verifyClosedChannels();
-          };
-
-          // Apparently we are running a local test which has both ends of the
-          // data channel locally available, so by default lets wait for the
-          // remoteChannel.onclose handler from above to confirm closure on both
-          // ends.
-          remoteCloseTimer = setTimeout(function() {
-            todo(false, "localChannel.close() did not resulted in close signal on remote side");
-            remoteChannel.close();
-            verifyClosedChannels();
-          }, 30000);
-        }
-        else {
-          pollingMode = true;
-          verifyTimer = setInterval(verifyClosedChannels, 1000);
-
-          remoteChannel.close();
-        }
-
-        wait = true;
-      }
-
-      if (!wait) {
-        onSuccess(index);
-      }
-    }
-  },
-
-  createDataChannel : {
-    /**
-     * Create a data channel
-     *
-     * @param {Dict} options
-     *        Options for the data channel (see nsIPeerConnection)
-     * @param {Function} onSuccess
-     *        Callback when the creation was successful
-     */
-    value : function DCT_createDataChannel(options, onSuccess) {
-      var localChannel = null;
-      var remoteChannel = null;
-      var self = this;
-
-      // Method to synchronize all asynchronous events.
-      function check_next_test() {
-        if (localChannel && remoteChannel) {
-          onSuccess(localChannel, remoteChannel);
-        }
-      }
-
-      if (!options.negotiated) {
-        // Register handlers for the remote peer
-        this.pcRemote.registerDataChannelOpenEvents(function (channel) {
-          remoteChannel = channel;
-          check_next_test();
-        });
-      }
-
-      // Create the datachannel and handle the local 'onopen' event
-      this.pcLocal.createDataChannel(options, function (channel) {
-        localChannel = channel;
-
-        if (options.negotiated) {
-          // externally negotiated - we need to open from both ends
-          options.id = options.id || channel.id;  // allow for no id to let the impl choose
-          self.pcRemote.createDataChannel(options, function (channel) {
-            remoteChannel = channel;
-            check_next_test();
-          });
-        } else {
-          check_next_test();
-        }
-      });
-    }
-  },
-
-  send : {
-    /**
-     * Send data (message or blob) to the other peer
-     *
-     * @param {String|Blob} data
-     *        Data to send to the other peer. For Blobs the MIME type will be lost.
-     * @param {Function} onSuccess
-     *        Callback to execute when data has been sent
-     * @param {Object} [options={ }]
-     *        Options to specify the data channels to be used
-     * @param {DataChannelWrapper} [options.sourceChannel=pcLocal.dataChannels[length - 1]]
-     *        Data channel to use for sending the message
-     * @param {DataChannelWrapper} [options.targetChannel=pcRemote.dataChannels[length - 1]]
-     *        Data channel to use for receiving the message
-     */
-    value : function DCT_send(data, onSuccess, options) {
-      options = options || { };
-      var source = options.sourceChannel ||
-               this.pcLocal.dataChannels[this.pcLocal.dataChannels.length - 1];
-      var target = options.targetChannel ||
-               this.pcRemote.dataChannels[this.pcRemote.dataChannels.length - 1];
-
-      // Register event handler for the target channel
-      target.onmessage = function (recv_data) {
-        onSuccess(target, recv_data);
-      };
-
-      source.send(data);
-    }
-  },
-
-  createOffer : {
-    value : function DCT_createOffer(peer, onSuccess) {
-      PeerConnectionTest.prototype.createOffer.call(this, peer, onSuccess);
-    }
-  },
-
-  setLocalDescription : {
-    /**
-     * Sets the local description for the specified peer connection instance
-     * and automatically handles the failure case.
-     *
-     * @param {PeerConnectionWrapper} peer
-              The peer connection wrapper to run the command on
-     * @param {mozRTCSessionDescription} desc
-     *        Session description for the local description request
-     * @param {function} onSuccess
-     *        Callback to execute if the local description was set successfully
-     */
-    value : function DCT_setLocalDescription(peer, desc, state, onSuccess) {
-      PeerConnectionTest.prototype.setLocalDescription.call(this, peer,
-                                                              desc, state, onSuccess);
-
-    }
-  },
-
-  waitForInitialDataChannel : {
-    /**
-     * Wait for the initial data channel to get into the open state
-     *
-     * @param {PeerConnectionWrapper} peer
-     *        The peer connection wrapper to run the command on
-     * @param {Function} onSuccess
-     *        Callback when the creation was successful
-     */
-    value : function DCT_waitForInitialDataChannel(peer, onSuccess, onFailure) {
-      var dcConnectionTimeout = null;
-      var dcOpened = false;
-
-      function dataChannelConnected(channel) {
-        // in case the switch statement below had called onSuccess already we
-        // don't want to call it again
-        if (!dcOpened) {
-          clearTimeout(dcConnectionTimeout);
-          is(channel.readyState, "open", peer + " dataChannels[0] switched to state: 'open'");
-          dcOpened = true;
-          onSuccess();
-        } else {
-          info("dataChannelConnected() called, but data channel was open already");
-        }
-      }
-
-      // TODO: drno: convert dataChannels into an object and make
-      //             registerDataChannelOpenEvent a generic function
-      if (peer == this.pcLocal) {
-        peer.dataChannels[0].onopen = dataChannelConnected;
-      } else {
-        peer.registerDataChannelOpenEvents(dataChannelConnected);
-      }
-
-      if (peer.dataChannels.length >= 1) {
-        // snapshot of the live value as it might change during test execution
-        const readyState = peer.dataChannels[0].readyState;
-        switch (readyState) {
-          case "open": {
-            is(readyState, "open", peer + " dataChannels[0] is already in state: 'open'");
-            dcOpened = true;
-            onSuccess();
-            break;
-          }
-          case "connecting": {
-            is(readyState, "connecting", peer + " dataChannels[0] is in state: 'connecting'");
-            if (onFailure) {
-              dcConnectionTimeout = setTimeout(function () {
-                is(peer.dataChannels[0].readyState, "open", peer + " timed out while waiting for dataChannels[0] to open");
-                onFailure();
-              }, 60000);
-            }
-            break;
-          }
-          default: {
-            ok(false, "dataChannels[0] is in unexpected state " + readyState);
-            if (onFailure) {
-              onFailure()
-            }
-          }
-        }
-      }
-    }
-  }
-
-});
 
 /**
  * This class acts as a wrapper around a DataChannel instance.
@@ -2574,6 +2518,7 @@ PeerConnectionWrapper.prototype = {
        "Spec and MapClass variant of RTCStatsReport enumeration agree");
     var nin = numTracks(this._pc.getRemoteStreams());
     var nout = numTracks(this._pc.getLocalStreams());
+    var ndata = this.dataChannels.length;
 
     // TODO(Bug 957145): Restore stronger inboundrtp test once Bug 948249 is fixed
     //is(toNum(counters["inboundrtp"]), nin, "Have " + nin + " inboundrtp stat(s)");
@@ -2584,7 +2529,7 @@ PeerConnectionWrapper.prototype = {
     var numLocalCandidates  = toNum(counters.localcandidate);
     var numRemoteCandidates = toNum(counters.remotecandidate);
     // If there are no tracks, there will be no stats either.
-    if (nin + nout > 0) {
+    if (nin + nout + ndata > 0) {
       ok(numLocalCandidates, "Have localcandidate stat(s)");
       ok(numRemoteCandidates, "Have remotecandidate stat(s)");
     } else {
@@ -2648,7 +2593,7 @@ PeerConnectionWrapper.prototype = {
    *        The SDP answer to check for SDP bundle support
    */
   checkStatsIceConnections : function PCW_checkStatsIceConnections(stats,
-      offerConstraintsList, offerOptions, numDataTracks, answer) {
+      offerConstraintsList, offerOptions, answer) {
     var numIceConnections = 0;
     Object.keys(stats).forEach(function(key) {
       if ((stats[key].type === "candidatepair") && stats[key].selected) {
@@ -2668,6 +2613,8 @@ PeerConnectionWrapper.prototype = {
       var numVideoTracks =
         this.countVideoTracksInMediaConstraint(offerConstraintsList) ||
         this.videoInOfferOptions(offerOptions);
+
+      var numDataTracks = this.dataChannels.length;
 
       var numAudioVideoDataTracks = numAudioTracks + numVideoTracks + numDataTracks;
       info("expected audio + video + data tracks: " + numAudioVideoDataTracks);

@@ -96,7 +96,7 @@ public:
 
   already_AddRefed<mozilla::layers::ImageContainer> GetContainer(LayerManager* aManager);
 protected:
-  nsImageBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext);
+  explicit nsImageBoxFrame(nsStyleContext* aContext);
 
   virtual void GetImageSize();
 

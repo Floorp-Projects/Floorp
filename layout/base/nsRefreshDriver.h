@@ -159,7 +159,7 @@ public:
       mStyleCause = profiler_get_backtrace();
     }
     bool appended = mStyleFlushObservers.AppendElement(aShell) != nullptr;
-    EnsureTimerStarted(false);
+    EnsureTimerStarted();
 
     return appended;
   }
@@ -177,7 +177,7 @@ public:
       mReflowCause = profiler_get_backtrace();
     }
     bool appended = mLayoutFlushObservers.AppendElement(aShell) != nullptr;
-    EnsureTimerStarted(false);
+    EnsureTimerStarted();
     return appended;
   }
   void RemoveLayoutFlushObserver(nsIPresShell* aShell) {
@@ -190,7 +190,7 @@ public:
     NS_ASSERTION(!mPresShellsToInvalidateIfHidden.Contains(aShell),
 		 "Double-adding style flush observer");
     bool appended = mPresShellsToInvalidateIfHidden.AppendElement(aShell) != nullptr;
-    EnsureTimerStarted(false);
+    EnsureTimerStarted();
     return appended;
   }
   void RemovePresShellToInvalidateIfHidden(nsIPresShell* aShell) {
@@ -298,7 +298,12 @@ private:
 
   void Tick(int64_t aNowEpoch, mozilla::TimeStamp aNowTime);
 
-  void EnsureTimerStarted(bool aAdjustingTimer);
+  enum EnsureTimerStartedFlags {
+    eNone = 0,
+    eAdjustingTimer = 1 << 0,
+    eAllowTimeToGoBackwards = 1 << 1
+  };
+  void EnsureTimerStarted(EnsureTimerStartedFlags aFlags = eNone);
   void StopTimer();
 
   uint32_t ObserverCount() const;

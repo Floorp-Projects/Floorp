@@ -179,13 +179,17 @@ grid_test_cases = grid_template_test_cases.concat([
         gridAutoFlow: "row",
     },
     {
-        specified: "stack 40px",
-        gridAutoFlow: "stack row",
+        specified: "dense",
+        gridAutoFlow: "row dense",
+    },
+    {
+        specified: "row 40px",
+        gridAutoFlow: "row",
         gridAutoColumns: "40px",
     },
     {
-        specified: "stack column 40px",
-        gridAutoFlow: "stack column",
+        specified: "column 40px",
+        gridAutoFlow: "column",
         gridAutoColumns: "40px",
     },
     {

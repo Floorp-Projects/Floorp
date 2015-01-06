@@ -37,7 +37,7 @@ public:
                                            const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
 protected:
-  nsStackFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  explicit nsStackFrame(nsStyleContext* aContext);
 }; // class nsStackFrame
 
 

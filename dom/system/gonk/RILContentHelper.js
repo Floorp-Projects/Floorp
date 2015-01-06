@@ -62,6 +62,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsISyncMessageSender");
 
+XPCOMUtils.defineLazyServiceGetter(this, "UUIDGenerator",
+                  "@mozilla.org/uuid-generator;1",
+                  "nsIUUIDGenerator");
+
 XPCOMUtils.defineLazyGetter(this, "gNumRadioInterfaces", function() {
   let appInfo = Cc["@mozilla.org/xre/app-info;1"];
   let isParentProcess = !appInfo || appInfo.getService(Ci.nsIXULRuntime)
@@ -410,14 +414,9 @@ RILContentHelper.prototype = {
     });
   },
 
-  iccOpenChannel: function(clientId, window, aid) {
-    if (window == null) {
-      throw Components.Exception("Can't get window object",
-                                  Cr.NS_ERROR_UNEXPECTED);
-    }
-
-    let request = Services.DOMRequest.createRequest(window);
-    let requestId = this.getRequestId(request);
+  iccOpenChannel: function(clientId, aid, callback) {
+    let requestId = UUIDGenerator.generateUUID().toString();
+    this._addIccChannelCallback(requestId, callback);
 
     cpmm.sendAsyncMessage("RIL:IccOpenChannel", {
       clientId: clientId,
@@ -426,17 +425,24 @@ RILContentHelper.prototype = {
         aid: aid
       }
     });
-    return request;
   },
 
-  iccExchangeAPDU: function(clientId, window, channel, apdu) {
-    if (window == null) {
-      throw Components.Exception("Can't get window object",
-                                  Cr.NS_ERROR_UNEXPECTED);
+  iccExchangeAPDU: function(clientId, channel, cla, ins, p1, p2, p3, data, callback) {
+    let requestId = UUIDGenerator.generateUUID().toString();
+    this._addIccChannelCallback(requestId, callback);
+
+    if (!data) {
+      if (DEBUG) debug('data is not set , p3 : ' + p3);
     }
 
-    let request = Services.DOMRequest.createRequest(window);
-    let requestId = this.getRequestId(request);
+    let apdu = {
+      cla: cla,
+      command: ins,
+      p1: p1,
+      p2: p2,
+      p3: p3,
+      data: data
+    };
 
     //Potentially you need serialization here and can't pass the jsval through
     cpmm.sendAsyncMessage("RIL:IccExchangeAPDU", {
@@ -447,17 +453,11 @@ RILContentHelper.prototype = {
         apdu: apdu
       }
     });
-    return request;
   },
 
-  iccCloseChannel: function(clientId, window, channel) {
-    if (window == null) {
-      throw Components.Exception("Can't get window object",
-                                  Cr.NS_ERROR_UNEXPECTED);
-    }
-
-    let request = Services.DOMRequest.createRequest(window);
-    let requestId = this.getRequestId(request);
+  iccCloseChannel: function(clientId, channel, callback) {
+    let requestId = UUIDGenerator.generateUUID().toString();
+    this._addIccChannelCallback(requestId, callback);
 
     cpmm.sendAsyncMessage("RIL:IccCloseChannel", {
       clientId: clientId,
@@ -466,7 +466,6 @@ RILContentHelper.prototype = {
         channel: channel
       }
     });
-    return request;
   },
 
   readContacts: function(clientId, window, contactType) {
@@ -570,6 +569,22 @@ RILContentHelper.prototype = {
       listeners.splice(index, 1);
       if (DEBUG) debug("Unregistered listener: " + listener);
     }
+  },
+
+  _addIccChannelCallback: function(requestId, channelCb) {
+    let cbInterfaces = this._iccChannelCallback;
+    if (!cbInterfaces[requestId] && channelCb) {
+      cbInterfaces[requestId] = channelCb;
+      return;
+    }
+
+    if (DEBUG) debug("Unable to add channelCbInterface for requestId : " + requestId);
+  },
+
+  _getIccChannelCallback: function(requestId) {
+    let cb = this._iccChannelCallback[requestId];
+    delete this._iccChannelCallback[requestId];
+    return cb;
   },
 
   registerIccMsg: function(clientId, listener) {
@@ -740,11 +755,10 @@ RILContentHelper.prototype = {
         this._deliverEvent(clientId, "_iccListeners", "notifyStkSessionEnd", null);
         break;
       case "RIL:IccOpenChannel":
-        this.handleSimpleRequest(data.requestId, data.errorMsg,
-                                 data.channel);
+        this.handleIccOpenChannel(data);
         break;
       case "RIL:IccCloseChannel":
-        this.handleSimpleRequest(data.requestId, data.errorMsg, null);
+        this.handleIccCloseChannel(data);
         break;
       case "RIL:IccExchangeAPDU":
         this.handleIccExchangeAPDU(data);
@@ -769,13 +783,38 @@ RILContentHelper.prototype = {
     }
   },
 
-  handleIccExchangeAPDU: function(message) {
-    if (message.errorMsg) {
-      this.fireRequestError(message.requestId, message.errorMsg);
-    } else {
-      var result = [message.sw1, message.sw2, message.simResponse];
-      this.fireRequestSuccess(message.requestId, result);
+  handleIccOpenChannel: function(message) {
+    let requestId = message.requestId;
+    let callback = this._getIccChannelCallback(requestId);
+    if (!callback) {
+      return;
     }
+
+    return !message.errorMsg ? callback.notifyOpenChannelSuccess(message.channel) :
+                               callback.notifyError(message.errorMsg);
+  },
+
+  handleIccCloseChannel: function(message) {
+    let requestId = message.requestId;
+    let callback = this._getIccChannelCallback(requestId);
+    if (!callback) {
+      return;
+    }
+
+    return !message.errorMsg ? callback.notifyCloseChannelSuccess() :
+                               callback.notifyError(message.errorMsg);
+  },
+
+  handleIccExchangeAPDU: function(message) {
+    let requestId = message.requestId;
+    let callback = this._getIccChannelCallback(requestId);
+    if (!callback) {
+      return;
+    }
+
+    return !message.errorMsg ?
+           callback.notifyExchangeAPDUResponse(message.sw1, message.sw2, message.simResponse) :
+           callback.notifyError(message.errorMsg);
   },
 
   handleReadIccContacts: function(message) {

@@ -23,7 +23,7 @@ NS_NewGridRowGroupFrame(nsIPresShell* aPresShell,
                         nsStyleContext* aContext)
 {
   nsCOMPtr<nsBoxLayout> layout = NS_NewGridRowGroupLayout();
-  return new (aPresShell) nsGridRowGroupFrame(aPresShell, aContext, layout);
+  return new (aPresShell) nsGridRowGroupFrame(aContext, layout);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsGridRowGroupFrame)

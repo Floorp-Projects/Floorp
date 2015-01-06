@@ -1118,6 +1118,8 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mCanSkipCCGeneration(0),
     mVRDevicesInitialized(false)
 {
+  AssertIsOnMainThread();
+
   nsLayoutStatics::AddRef();
 
   // Initialize the PRCList (this).
@@ -1218,10 +1220,23 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
   }
 }
 
+#ifdef DEBUG
+
+/* static */
+void
+nsGlobalWindow::AssertIsOnMainThread()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+}
+
+#endif // DEBUG
+
 /* static */
 void
 nsGlobalWindow::Init()
 {
+  AssertIsOnMainThread();
+
   CallGetService(NS_ENTROPYCOLLECTOR_CONTRACTID, &gEntropyCollector);
   NS_ASSERTION(gEntropyCollector,
                "gEntropyCollector should have been initialized!");
@@ -1245,6 +1260,8 @@ DisconnectEventTargetObjects(nsPtrHashKey<DOMEventTargetHelper>* aKey,
 
 nsGlobalWindow::~nsGlobalWindow()
 {
+  AssertIsOnMainThread();
+
   mEventTargetObjects.EnumerateEntries(DisconnectEventTargetObjects, nullptr);
   mEventTargetObjects.Clear();
 
@@ -1363,6 +1380,8 @@ nsGlobalWindow::RemoveEventTargetObject(DOMEventTargetHelper* aObject)
 void
 nsGlobalWindow::ShutDown()
 {
+  AssertIsOnMainThread();
+
   if (gDumpFile && gDumpFile != stdout) {
     fclose(gDumpFile);
   }

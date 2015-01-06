@@ -94,7 +94,7 @@ SandboxBroker::SetSecurityLevelForContentProcess(bool aMoreStrict)
     ret = ret && (sandbox::SBOX_ALL_OK == result);
   } else {
     result = mPolicy->SetJobLevel(sandbox::JOB_NONE, 0);
-    bool ret = (sandbox::SBOX_ALL_OK == result);
+    ret = (sandbox::SBOX_ALL_OK == result);
 
     result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
                                     sandbox::USER_NON_ADMIN);

@@ -38,8 +38,8 @@ public:
 #endif
 
 protected:
-  nsProgressMeterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext) :
-    nsBoxFrame(aPresShell, aContext), mNeedsReflowCallback(true) {}
+  explicit nsProgressMeterFrame(nsStyleContext* aContext) :
+    nsBoxFrame(aContext), mNeedsReflowCallback(true) {}
   virtual ~nsProgressMeterFrame();
 
   bool mNeedsReflowCallback;
