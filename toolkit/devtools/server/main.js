@@ -146,7 +146,6 @@ function ModuleAPI() {
 var DebuggerServer = {
   _listeners: [],
   _initialized: false,
-  _transportInitialized: false,
   // Map of global actor names to actor constructors provided by extensions.
   globalActorFactories: {},
   // Map of tab actor names to actor constructors provided by extensions.
@@ -171,26 +170,13 @@ var DebuggerServer = {
       return;
     }
 
-    this.initTransport();
+    this._connections = {};
+    this._nextConnID = 0;
 
     this._initialized = true;
   },
 
   get protocol() require("devtools/server/protocol"),
-
-  /**
-   * Initialize the debugger server's transport variables.  This can be
-   * in place of init() for cases where the jsdebugger isn't needed.
-   */
-  initTransport: function DS_initTransport() {
-    if (this._transportInitialized) {
-      return;
-    }
-
-    this._connections = {};
-    this._nextConnID = 0;
-    this._transportInitialized = true;
-  },
 
   get initialized() this._initialized,
 
@@ -218,7 +204,6 @@ var DebuggerServer = {
     this.closeAllListeners();
     this.globalActorFactories = {};
     this.tabActorFactories = {};
-    this._transportInitialized = false;
     this._initialized = false;
 
     dumpn("Debugger server is shut down.");
@@ -228,7 +213,7 @@ var DebuggerServer = {
    * Raises an exception if the server has not been properly initialized.
    */
   _checkInit: function DS_checkInit() {
-    if (!this._transportInitialized) {
+    if (!this._initialized) {
       throw "DebuggerServer has not been initialized.";
     }
 
