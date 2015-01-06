@@ -149,10 +149,10 @@ class RunState
     bool maybeCreateThisForConstructor(JSContext *cx);
 
   private:
-    RunState(const RunState &other) MOZ_DELETE;
-    RunState(const ExecuteState &other) MOZ_DELETE;
-    RunState(const InvokeState &other) MOZ_DELETE;
-    void operator=(const RunState &other) MOZ_DELETE;
+    RunState(const RunState &other) = delete;
+    RunState(const ExecuteState &other) = delete;
+    RunState(const InvokeState &other) = delete;
+    void operator=(const RunState &other) = delete;
 };
 
 // Eval or global script.

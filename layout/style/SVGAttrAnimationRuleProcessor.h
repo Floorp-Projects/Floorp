@@ -59,8 +59,8 @@ public:
                             nsRuleWalker* aRuleWalker);
 
 private:
-  SVGAttrAnimationRuleProcessor(const SVGAttrAnimationRuleProcessor& aCopy) MOZ_DELETE;
-  SVGAttrAnimationRuleProcessor& operator=(const SVGAttrAnimationRuleProcessor& aCopy) MOZ_DELETE;
+  SVGAttrAnimationRuleProcessor(const SVGAttrAnimationRuleProcessor& aCopy) = delete;
+  SVGAttrAnimationRuleProcessor& operator=(const SVGAttrAnimationRuleProcessor& aCopy) = delete;
 };
 
 } // namespace mozilla

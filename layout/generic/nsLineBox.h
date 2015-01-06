@@ -209,7 +209,7 @@ private:
   // Overloaded new operator. Uses an arena (which comes from the presShell)
   // to perform the allocation.
   void* operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW;
-  void operator delete(void* aPtr, size_t sz) MOZ_DELETE;
+  void operator delete(void* aPtr, size_t sz) = delete;
 
 public:
   // Use these functions to allocate and destroy line boxes

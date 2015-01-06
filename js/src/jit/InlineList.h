@@ -23,7 +23,7 @@ class InlineForwardListNode
     explicit InlineForwardListNode(InlineForwardListNode<T> *n) : next(n)
     { }
 
-    InlineForwardListNode(const InlineForwardListNode<T> &) MOZ_DELETE;
+    InlineForwardListNode(const InlineForwardListNode<T> &) = delete;
 
   protected:
     friend class InlineForwardList<T>;
@@ -229,8 +229,8 @@ class InlineListNode : public InlineForwardListNode<T>
         newPrev->next = this;
     }
 
-    InlineListNode(const InlineListNode<T> &) MOZ_DELETE;
-    void operator=(const InlineListNode<T> &) MOZ_DELETE;
+    InlineListNode(const InlineListNode<T> &) = delete;
+    void operator=(const InlineListNode<T> &) = delete;
 
   protected:
     friend class InlineList<T>;
@@ -561,7 +561,7 @@ class InlineSpaghettiStackNode : public InlineForwardListNode<T>
       : Parent(n)
     { }
 
-    InlineSpaghettiStackNode(const InlineSpaghettiStackNode<T> &) MOZ_DELETE;
+    InlineSpaghettiStackNode(const InlineSpaghettiStackNode<T> &) = delete;
 
   protected:
     friend class InlineSpaghettiStack<T>;

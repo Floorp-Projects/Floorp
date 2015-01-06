@@ -508,9 +508,9 @@ class JSString : public js::gc::TenuredCell
     }
 
   private:
-    JSString() MOZ_DELETE;
-    JSString(const JSString &other) MOZ_DELETE;
-    void operator=(const JSString &other) MOZ_DELETE;
+    JSString() = delete;
+    JSString(const JSString &other) = delete;
+    void operator=(const JSString &other) = delete;
 };
 
 class JSRope : public JSString
@@ -579,9 +579,9 @@ class JSLinearString : public JSString
     friend class js::AutoStableStringChars;
 
     /* Vacuous and therefore unimplemented. */
-    JSLinearString *ensureLinear(JSContext *cx) MOZ_DELETE;
-    bool isLinear() const MOZ_DELETE;
-    JSLinearString &asLinear() const MOZ_DELETE;
+    JSLinearString *ensureLinear(JSContext *cx) = delete;
+    bool isLinear() const = delete;
+    JSLinearString &asLinear() const = delete;
 
   protected:
     /* Returns void pointer to latin1/twoByte chars, for finalizers. */
@@ -664,8 +664,8 @@ class JSDependentString : public JSLinearString
               size_t length);
 
     /* Vacuous and therefore unimplemented. */
-    bool isDependent() const MOZ_DELETE;
-    JSDependentString &asDependent() const MOZ_DELETE;
+    bool isDependent() const = delete;
+    JSDependentString &asDependent() const = delete;
 
     /* The offset of this string's chars in base->chars(). */
     size_t baseOffset() const {
@@ -695,9 +695,9 @@ static_assert(sizeof(JSDependentString) == sizeof(JSString),
 class JSFlatString : public JSLinearString
 {
     /* Vacuous and therefore unimplemented. */
-    JSFlatString *ensureFlat(JSContext *cx) MOZ_DELETE;
-    bool isFlat() const MOZ_DELETE;
-    JSFlatString &asFlat() const MOZ_DELETE;
+    JSFlatString *ensureFlat(JSContext *cx) = delete;
+    bool isFlat() const = delete;
+    JSFlatString &asFlat() const = delete;
 
     template <typename CharT>
     static bool isIndexSlow(const CharT *s, size_t length, uint32_t *indexp);
@@ -756,8 +756,8 @@ static_assert(sizeof(JSFlatString) == sizeof(JSString),
 class JSExtensibleString : public JSFlatString
 {
     /* Vacuous and therefore unimplemented. */
-    bool isExtensible() const MOZ_DELETE;
-    JSExtensibleString &asExtensible() const MOZ_DELETE;
+    bool isExtensible() const = delete;
+    JSExtensibleString &asExtensible() const = delete;
 
   public:
     MOZ_ALWAYS_INLINE
@@ -907,8 +907,8 @@ class JSExternalString : public JSFlatString
     void init(const char16_t *chars, size_t length, const JSStringFinalizer *fin);
 
     /* Vacuous and therefore unimplemented. */
-    bool isExternal() const MOZ_DELETE;
-    JSExternalString &asExternal() const MOZ_DELETE;
+    bool isExternal() const = delete;
+    JSExternalString &asExternal() const = delete;
 
   public:
     static inline JSExternalString *new_(JSContext *cx, const char16_t *chars, size_t length,
@@ -950,8 +950,8 @@ static_assert(sizeof(JSUndependedString) == sizeof(JSString),
 class JSAtom : public JSFlatString
 {
     /* Vacuous and therefore unimplemented. */
-    bool isAtom() const MOZ_DELETE;
-    JSAtom &asAtom() const MOZ_DELETE;
+    bool isAtom() const = delete;
+    JSAtom &asAtom() const = delete;
 
   public:
     /* Returns the PropertyName for this.  isIndex() must be false. */

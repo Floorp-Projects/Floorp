@@ -1333,8 +1333,8 @@ class MOZ_STACK_CLASS AutoStableStringChars
     }
 
   private:
-    AutoStableStringChars(const AutoStableStringChars &other) MOZ_DELETE;
-    void operator=(const AutoStableStringChars &other) MOZ_DELETE;
+    AutoStableStringChars(const AutoStableStringChars &other) = delete;
+    void operator=(const AutoStableStringChars &other) = delete;
 };
 
 // Creates a string of the form |ErrorType: ErrorMessage| for a JSErrorReport,

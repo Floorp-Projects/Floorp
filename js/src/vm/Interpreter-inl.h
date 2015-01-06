@@ -885,8 +885,8 @@ class FastInvokeGuard
     }
 
   private:
-    FastInvokeGuard(const FastInvokeGuard& other) MOZ_DELETE;
-    const FastInvokeGuard& operator=(const FastInvokeGuard& other) MOZ_DELETE;
+    FastInvokeGuard(const FastInvokeGuard& other) = delete;
+    const FastInvokeGuard& operator=(const FastInvokeGuard& other) = delete;
 };
 
 }  /* namespace js */

@@ -41,7 +41,7 @@ public:
   static already_AddRefed<CellBroadcast>
   Create(nsPIDOMWindow* aOwner, ErrorResult& aRv);
 
-  CellBroadcast() MOZ_DELETE;
+  CellBroadcast() = delete;
   CellBroadcast(nsPIDOMWindow *aWindow,
                 nsICellBroadcastService* aService);
 

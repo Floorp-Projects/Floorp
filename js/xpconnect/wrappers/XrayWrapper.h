@@ -104,8 +104,8 @@ private:
                                   nsIPrincipal *origin,
                                   JS::HandleObject exclusiveGlobal);
 
-    XrayTraits(XrayTraits &) MOZ_DELETE;
-    const XrayTraits& operator=(XrayTraits &) MOZ_DELETE;
+    XrayTraits(XrayTraits &) = delete;
+    const XrayTraits& operator=(XrayTraits &) = delete;
 };
 
 class XPCWrappedNativeXrayTraits : public XrayTraits

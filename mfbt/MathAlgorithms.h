@@ -281,12 +281,12 @@ CountTrailingZeroes64(uint64_t aValue)
 
 #else
 #  error "Implement these!"
-inline uint_fast8_t CountLeadingZeroes32(uint32_t aValue) MOZ_DELETE;
-inline uint_fast8_t CountTrailingZeroes32(uint32_t aValue) MOZ_DELETE;
-inline uint_fast8_t CountPopulation32(uint32_t aValue) MOZ_DELETE;
-inline uint_fast8_t CountPopulation64(uint64_t aValue) MOZ_DELETE;
-inline uint_fast8_t CountLeadingZeroes64(uint64_t aValue) MOZ_DELETE;
-inline uint_fast8_t CountTrailingZeroes64(uint64_t aValue) MOZ_DELETE;
+inline uint_fast8_t CountLeadingZeroes32(uint32_t aValue) = delete;
+inline uint_fast8_t CountTrailingZeroes32(uint32_t aValue) = delete;
+inline uint_fast8_t CountPopulation32(uint32_t aValue) = delete;
+inline uint_fast8_t CountPopulation64(uint64_t aValue) = delete;
+inline uint_fast8_t CountLeadingZeroes64(uint64_t aValue) = delete;
+inline uint_fast8_t CountTrailingZeroes64(uint64_t aValue) = delete;
 #endif
 
 } // namespace detail

@@ -131,8 +131,8 @@ private:
     mozilla::HoldJSObjects(this);
   }
 
-  CallbackObject(const CallbackObject&) MOZ_DELETE;
-  CallbackObject& operator =(const CallbackObject&) MOZ_DELETE;
+  CallbackObject(const CallbackObject&) = delete;
+  CallbackObject& operator =(const CallbackObject&) = delete;
 
 protected:
   void DropJSObjects()
@@ -181,7 +181,7 @@ protected:
 
   private:
     // We better not get copy-constructed
-    CallSetup(const CallSetup&) MOZ_DELETE;
+    CallSetup(const CallSetup&) = delete;
 
     bool ShouldRethrowException(JS::Handle<JS::Value> aException);
 

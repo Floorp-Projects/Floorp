@@ -89,7 +89,7 @@ public:
   }
 
 private:
-  MozNDEFRecord() MOZ_DELETE;
+  MozNDEFRecord() = delete;
   nsRefPtr<nsPIDOMWindow> mWindow;
   void HoldData();
   void DropData();

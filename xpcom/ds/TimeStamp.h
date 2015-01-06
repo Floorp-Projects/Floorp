@@ -179,7 +179,7 @@ public:
 private:
   // Block double multiplier (slower, imprecise if long duration) - Bug 853398.
   // If required, use MultDouble explicitly and with care.
-  BaseTimeDuration operator*(const double aMultiplier) const MOZ_DELETE;
+  BaseTimeDuration operator*(const double aMultiplier) const = delete;
 
 public:
   BaseTimeDuration MultDouble(double aMultiplier) const

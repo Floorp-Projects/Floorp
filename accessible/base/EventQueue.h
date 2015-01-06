@@ -32,8 +32,8 @@ protected:
   void ProcessEventQueue();
 
 private:
-  EventQueue(const EventQueue&) MOZ_DELETE;
-  EventQueue& operator = (const EventQueue&) MOZ_DELETE;
+  EventQueue(const EventQueue&) = delete;
+  EventQueue& operator = (const EventQueue&) = delete;
 
   // Event queue processing
   /**

@@ -69,8 +69,8 @@ private:
   friend class DocManager;
   friend class DocAccessible;
 
-  xpcAccessibleDocument(const xpcAccessibleDocument&) MOZ_DELETE;
-  xpcAccessibleDocument& operator =(const xpcAccessibleDocument&) MOZ_DELETE;
+  xpcAccessibleDocument(const xpcAccessibleDocument&) = delete;
+  xpcAccessibleDocument& operator =(const xpcAccessibleDocument&) = delete;
 
   nsRefPtrHashtable<nsPtrHashKey<const Accessible>, xpcAccessibleGeneric> mCache;
 };

@@ -701,9 +701,9 @@ class ScopeIter
     void settle();
 
     /* ScopeIter does not have value semantics. */
-    ScopeIter(const ScopeIter &si) MOZ_DELETE;
+    ScopeIter(const ScopeIter &si) = delete;
 
-    ScopeIter(JSContext *cx) MOZ_DELETE;
+    ScopeIter(JSContext *cx) = delete;
 
   public:
 
