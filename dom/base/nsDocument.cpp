@@ -5250,6 +5250,7 @@ nsIDocument::InsertAnonymousContent(Element& aElement, ErrorResult& aRv)
     return nullptr;
   }
 
+  nsAutoScriptBlocker scriptBlocker;
   nsCOMPtr<Element> container = shell->GetCanvasFrame()
                                      ->GetCustomContentContainer();
   if (!container) {
@@ -5274,6 +5275,8 @@ nsIDocument::InsertAnonymousContent(Element& aElement, ErrorResult& aRv)
     new AnonymousContent(clonedElement->AsElement());
   mAnonymousContents.AppendElement(anonymousContent);
 
+  shell->GetCanvasFrame()->ShowCustomContentContainer();
+
   return anonymousContent.forget();
 }
 
@@ -5287,6 +5290,7 @@ nsIDocument::RemoveAnonymousContent(AnonymousContent& aContent,
     return;
   }
 
+  nsAutoScriptBlocker scriptBlocker;
   nsCOMPtr<Element> container = shell->GetCanvasFrame()
                                      ->GetCustomContentContainer();
   if (!container) {
@@ -5311,6 +5315,9 @@ nsIDocument::RemoveAnonymousContent(AnonymousContent& aContent,
 
       break;
     }
+  }
+  if (mAnonymousContents.IsEmpty()) {
+    shell->GetCanvasFrame()->HideCustomContentContainer();
   }
 }
 
