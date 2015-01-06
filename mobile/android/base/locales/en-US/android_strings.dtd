@@ -118,7 +118,7 @@
 <!ENTITY pref_category_search3 "Search">
 <!ENTITY pref_category_search_summary "Customize your search providers">
 <!ENTITY pref_category_display "Display">
-<!ENTITY pref_category_display_summary "Text, title bar, full-screen browsing">
+<!ENTITY pref_category_display_summary2 "Text, full-screen browsing">
 <!ENTITY pref_category_privacy_short "Privacy">
 <!ENTITY pref_category_privacy_summary "Control passwords, cookies, tracking, data">
 <!ENTITY pref_category_vendor "&vendorShortName;">
