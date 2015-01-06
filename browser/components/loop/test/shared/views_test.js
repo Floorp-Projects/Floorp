@@ -44,45 +44,49 @@ describe("loop.shared.views", function() {
 
   describe("MediaControlButton", function() {
     it("should render an enabled local audio button", function() {
-      var comp = TestUtils.renderIntoDocument(sharedViews.MediaControlButton({
-        scope: "local",
-        type: "audio",
-        action: function(){},
-        enabled: true
-      }));
+      var comp = TestUtils.renderIntoDocument(
+        React.createElement(sharedViews.MediaControlButton, {
+          scope: "local",
+          type: "audio",
+          action: function(){},
+          enabled: true
+        }));
 
       expect(comp.getDOMNode().classList.contains("muted")).eql(false);
     });
 
     it("should render a muted local audio button", function() {
-      var comp = TestUtils.renderIntoDocument(sharedViews.MediaControlButton({
-        scope: "local",
-        type: "audio",
-        action: function(){},
-        enabled: false
-      }));
+      var comp = TestUtils.renderIntoDocument(
+          React.createElement(sharedViews.MediaControlButton, {
+          scope: "local",
+          type: "audio",
+          action: function(){},
+          enabled: false
+        }));
 
       expect(comp.getDOMNode().classList.contains("muted")).eql(true);
     });
 
     it("should render an enabled local video button", function() {
-      var comp = TestUtils.renderIntoDocument(sharedViews.MediaControlButton({
-        scope: "local",
-        type: "video",
-        action: function(){},
-        enabled: true
-      }));
+      var comp = TestUtils.renderIntoDocument(
+          React.createElement(sharedViews.MediaControlButton, {
+          scope: "local",
+          type: "video",
+          action: function(){},
+          enabled: true
+        }));
 
       expect(comp.getDOMNode().classList.contains("muted")).eql(false);
     });
 
     it("should render a muted local video button", function() {
-      var comp = TestUtils.renderIntoDocument(sharedViews.MediaControlButton({
-        scope: "local",
-        type: "video",
-        action: function(){},
-        enabled: false
-      }));
+      var comp = TestUtils.renderIntoDocument(
+        React.createElement(sharedViews.MediaControlButton, {
+          scope: "local",
+          type: "video",
+          action: function(){},
+          enabled: false
+        }));
 
       expect(comp.getDOMNode().classList.contains("muted")).eql(true);
     });
@@ -93,7 +97,7 @@ describe("loop.shared.views", function() {
 
     function mountTestComponent(props) {
       return TestUtils.renderIntoDocument(
-        sharedViews.ConversationToolbar(props));
+        React.createElement(sharedViews.ConversationToolbar, props));
     }
 
     beforeEach(function() {
@@ -198,7 +202,8 @@ describe("loop.shared.views", function() {
     var fakeSDK, fakeSessionData, fakeSession, fakePublisher, model, fakeAudio;
 
     function mountTestComponent(props) {
-      return TestUtils.renderIntoDocument(sharedViews.ConversationView(props));
+      return TestUtils.renderIntoDocument(
+        React.createElement(sharedViews.ConversationView, props));
     }
 
     beforeEach(function() {
@@ -530,7 +535,8 @@ describe("loop.shared.views", function() {
     var coll, view, testNotif;
 
     function mountTestComponent(props) {
-      return TestUtils.renderIntoDocument(sharedViews.NotificationListView(props));
+      return TestUtils.renderIntoDocument(
+        React.createElement(sharedViews.NotificationListView, props));
     }
 
     beforeEach(function() {

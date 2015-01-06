@@ -11,6 +11,8 @@
 
 #include "xpcprivate.h"
 #include "jsprf.h"
+#include "MainThreadUtils.h"
+#include "mozilla/Assertions.h"
 #include "nsGlobalWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsILoadContext.h"
@@ -29,11 +31,42 @@ nsScriptError::nsScriptError()
        mOuterWindowID(0),
        mInnerWindowID(0),
        mTimeStamp(0),
+       mInitializedOnMainThread(false),
        mIsFromPrivateWindow(false)
 {
 }
 
 nsScriptError::~nsScriptError() {}
+
+void
+nsScriptError::InitializeOnMainThread()
+{
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(!mInitializedOnMainThread);
+
+    if (mInnerWindowID) {
+        nsGlobalWindow* window =
+          nsGlobalWindow::GetInnerWindowWithId(mInnerWindowID);
+        if (window) {
+            nsPIDOMWindow* outer = window->GetOuterWindow();
+            if (outer)
+                mOuterWindowID = outer->WindowID();
+
+            nsIDocShell* docShell = window->GetDocShell();
+            nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
+
+            if (loadContext) {
+                // Never mark exceptions from chrome windows as having come from
+                // private windows, since we always want them to be reported.
+                nsIPrincipal* winPrincipal = window->GetPrincipal();
+                mIsFromPrivateWindow = loadContext->UsePrivateBrowsing() &&
+                                       !nsContentUtils::IsSystemPrincipal(winPrincipal);
+            }
+        }
+    }
+
+    mInitializedOnMainThread = true;
+}
 
 // nsIConsoleMessage methods
 NS_IMETHODIMP
@@ -140,26 +173,8 @@ nsScriptError::InitWithWindowID(const nsAString& message,
     mTimeStamp = JS_Now() / 1000;
     mInnerWindowID = aInnerWindowID;
 
-    if (aInnerWindowID) {
-        nsGlobalWindow* window =
-          nsGlobalWindow::GetInnerWindowWithId(aInnerWindowID);
-        if (window) {
-            nsPIDOMWindow* outer = window->GetOuterWindow();
-            if (outer)
-                mOuterWindowID = outer->WindowID();
-
-            nsIDocShell* docShell = window->GetDocShell();
-            nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
-
-            if (loadContext) {
-                // Never mark exceptions from chrome windows as having come from
-                // private windows, since we always want them to be reported.
-                nsIPrincipal* winPrincipal = window->GetPrincipal();
-                mIsFromPrivateWindow = loadContext->UsePrivateBrowsing() &&
-                                       !nsContentUtils::IsSystemPrincipal(winPrincipal);
-            }
-
-        }
+    if (aInnerWindowID && NS_IsMainThread()) {
+        InitializeOnMainThread();
     }
 
     return NS_OK;
@@ -229,6 +244,14 @@ nsScriptError::ToString(nsACString& /*UTF8*/ aResult)
 NS_IMETHODIMP
 nsScriptError::GetOuterWindowID(uint64_t *aOuterWindowID)
 {
+    NS_WARN_IF_FALSE(NS_IsMainThread() || mInitializedOnMainThread,
+                     "This can't be safely determined off the main thread, "
+                     "returning an inaccurate value!");
+
+    if (!mInitializedOnMainThread && NS_IsMainThread()) {
+        InitializeOnMainThread();
+    }
+
     *aOuterWindowID = mOuterWindowID;
     return NS_OK;
 }
@@ -250,6 +273,14 @@ nsScriptError::GetTimeStamp(int64_t *aTimeStamp)
 NS_IMETHODIMP
 nsScriptError::GetIsFromPrivateWindow(bool *aIsFromPrivateWindow)
 {
+    NS_WARN_IF_FALSE(NS_IsMainThread() || mInitializedOnMainThread,
+                     "This can't be safely determined off the main thread, "
+                     "returning an inaccurate value!");
+
+    if (!mInitializedOnMainThread && NS_IsMainThread()) {
+        InitializeOnMainThread();
+    }
+
     *aIsFromPrivateWindow = mIsFromPrivateWindow;
     return NS_OK;
 }

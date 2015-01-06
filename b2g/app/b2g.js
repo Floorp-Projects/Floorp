@@ -161,16 +161,8 @@ pref("accessibility.typeaheadfind.casesensitive", 0);
 pref("browser.ssl_override_behavior", 2);
 pref("browser.xul.error_pages.expert_bad_cert", false);
 
-// disable logging for the search service by default
-pref("browser.search.log", false);
-
 // disable updating
 pref("browser.search.update", false);
-pref("browser.search.update.log", false);
-pref("browser.search.updateinterval", 6);
-
-// enable search suggestions by default
-pref("browser.search.suggest.enabled", true);
 
 // tell the search service that we don't really expose the "current engine"
 pref("browser.search.noCurrentEngine", true);

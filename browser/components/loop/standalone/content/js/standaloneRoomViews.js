@@ -17,7 +17,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
   var sharedMixins = loop.shared.mixins;
   var sharedViews = loop.shared.views;
 
-  var StandaloneRoomInfoArea = React.createClass({displayName: 'StandaloneRoomInfoArea',
+  var StandaloneRoomInfoArea = React.createClass({displayName: "StandaloneRoomInfoArea",
     propTypes: {
       helper: React.PropTypes.instanceOf(loop.shared.utils.Helper).isRequired,
       activeRoomStore: React.PropTypes.oneOfType([
@@ -38,7 +38,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
     _renderCallToActionLink: function() {
       if (this.props.helper.isFirefox(navigator.userAgent)) {
         return (
-          React.DOM.a({href: loop.config.learnMoreUrl, className: "btn btn-info"}, 
+          React.createElement("a", {href: loop.config.learnMoreUrl, className: "btn btn-info"}, 
             mozL10n.get("rooms_room_full_call_to_action_label", {
               clientShortname: mozL10n.get("clientShortname2")
             })
@@ -46,7 +46,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
         );
       }
       return (
-        React.DOM.a({href: loop.config.brandWebsiteUrl, className: "btn btn-info"}, 
+        React.createElement("a", {href: loop.config.brandWebsiteUrl, className: "btn btn-info"}, 
           mozL10n.get("rooms_room_full_call_to_action_nonFx_label", {
             brandShortname: mozL10n.get("brandShortname")
           })
@@ -74,8 +74,8 @@ loop.standaloneRoomViews = (function(mozL10n) {
         case ROOM_STATES.READY: {
           // XXX: In ENDED state, we should rather display the feedback form.
           return (
-            React.DOM.div({className: "room-inner-info-area"}, 
-              React.DOM.button({className: "btn btn-join btn-info", 
+            React.createElement("div", {className: "room-inner-info-area"}, 
+              React.createElement("button", {className: "btn btn-join btn-info", 
                       onClick: this.props.joinRoom}, 
                 mozL10n.get("rooms_room_join_label")
               )
@@ -87,8 +87,8 @@ loop.standaloneRoomViews = (function(mozL10n) {
                                 {clientShortname: mozL10n.get("clientShortname2")});
           // XXX Bug 1047040 will add images to help prompt the user.
           return (
-            React.DOM.div({className: "room-inner-info-area"}, 
-              React.DOM.p({className: "prompt-media-message"}, 
+            React.createElement("div", {className: "room-inner-info-area"}, 
+              React.createElement("p", {className: "prompt-media-message"}, 
                 msg
               )
             )
@@ -97,8 +97,8 @@ loop.standaloneRoomViews = (function(mozL10n) {
         case ROOM_STATES.JOINED:
         case ROOM_STATES.SESSION_CONNECTED: {
           return (
-            React.DOM.div({className: "room-inner-info-area"}, 
-              React.DOM.p({className: "empty-room-message"}, 
+            React.createElement("div", {className: "room-inner-info-area"}, 
+              React.createElement("p", {className: "empty-room-message"}, 
                 mozL10n.get("rooms_only_occupant_label")
               )
             )
@@ -106,19 +106,19 @@ loop.standaloneRoomViews = (function(mozL10n) {
         }
         case ROOM_STATES.FULL: {
           return (
-            React.DOM.div({className: "room-inner-info-area"}, 
-              React.DOM.p({className: "full-room-message"}, 
+            React.createElement("div", {className: "room-inner-info-area"}, 
+              React.createElement("p", {className: "full-room-message"}, 
                 mozL10n.get("rooms_room_full_label")
               ), 
-              React.DOM.p(null, this._renderCallToActionLink())
+              React.createElement("p", null, this._renderCallToActionLink())
             )
           );
         }
         case ROOM_STATES.ENDED: {
           if (this.props.roomUsed)
             return (
-              React.DOM.div({className: "ended-conversation"}, 
-                sharedViews.FeedbackView({
+              React.createElement("div", {className: "ended-conversation"}, 
+                React.createElement(sharedViews.FeedbackView, {
                   feedbackStore: this.props.feedbackStore, 
                   onAfterFeedbackReceived: this.onFeedbackSent}
                 )
@@ -132,11 +132,11 @@ loop.standaloneRoomViews = (function(mozL10n) {
         }
         case ROOM_STATES.FAILED: {
           return (
-            React.DOM.div({className: "room-inner-info-area"}, 
-              React.DOM.p({className: "failed-room-message"}, 
+            React.createElement("div", {className: "room-inner-info-area"}, 
+              React.createElement("p", {className: "failed-room-message"}, 
                 this._getFailureString()
               ), 
-              React.DOM.button({className: "btn btn-join btn-info", 
+              React.createElement("button", {className: "btn btn-join btn-info", 
                       onClick: this.props.joinRoom}, 
                 mozL10n.get("retry_call_button")
               )
@@ -150,30 +150,30 @@ loop.standaloneRoomViews = (function(mozL10n) {
     }
   });
 
-  var StandaloneRoomHeader = React.createClass({displayName: 'StandaloneRoomHeader',
+  var StandaloneRoomHeader = React.createClass({displayName: "StandaloneRoomHeader",
     render: function() {
       return (
-        React.DOM.header(null, 
-          React.DOM.h1(null, mozL10n.get("clientShortname2")), 
-          React.DOM.a({target: "_blank", href: loop.config.generalSupportUrl}, 
-            React.DOM.i({className: "icon icon-help"})
+        React.createElement("header", null, 
+          React.createElement("h1", null, mozL10n.get("clientShortname2")), 
+          React.createElement("a", {target: "_blank", href: loop.config.generalSupportUrl}, 
+            React.createElement("i", {className: "icon icon-help"})
           )
         )
       );
     }
   });
 
-  var StandaloneRoomFooter = React.createClass({displayName: 'StandaloneRoomFooter',
+  var StandaloneRoomFooter = React.createClass({displayName: "StandaloneRoomFooter",
     _getContent: function() {
       return mozL10n.get("legal_text_and_links", {
         "clientShortname": mozL10n.get("clientShortname2"),
-        "terms_of_use_url": React.renderComponentToStaticMarkup(
-          React.DOM.a({href: loop.config.legalWebsiteUrl, target: "_blank"}, 
+        "terms_of_use_url": React.renderToStaticMarkup(
+          React.createElement("a", {href: loop.config.legalWebsiteUrl, target: "_blank"}, 
             mozL10n.get("terms_of_use_link_text")
           )
         ),
-        "privacy_notice_url": React.renderComponentToStaticMarkup(
-          React.DOM.a({href: loop.config.privacyWebsiteUrl, target: "_blank"}, 
+        "privacy_notice_url": React.renderToStaticMarkup(
+          React.createElement("a", {href: loop.config.privacyWebsiteUrl, target: "_blank"}, 
             mozL10n.get("privacy_notice_link_text")
           )
         ),
@@ -182,15 +182,15 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
     render: function() {
       return (
-        React.DOM.footer(null, 
-          React.DOM.p({dangerouslySetInnerHTML: {__html: this._getContent()}}), 
-          React.DOM.div({className: "footer-logo"})
+        React.createElement("footer", null, 
+          React.createElement("p", {dangerouslySetInnerHTML: {__html: this._getContent()}}), 
+          React.createElement("div", {className: "footer-logo"})
         )
       );
     }
   });
 
-  var StandaloneRoomView = React.createClass({displayName: 'StandaloneRoomView',
+  var StandaloneRoomView = React.createClass({displayName: "StandaloneRoomView",
     mixins: [
       Backbone.Events,
       sharedMixins.RoomsAudioMixin
@@ -360,29 +360,29 @@ loop.standaloneRoomViews = (function(mozL10n) {
       });
 
       return (
-        React.DOM.div({className: "room-conversation-wrapper"}, 
-          React.DOM.div({className: "beta-logo"}), 
-          StandaloneRoomHeader(null), 
-          StandaloneRoomInfoArea({roomState: this.state.roomState, 
+        React.createElement("div", {className: "room-conversation-wrapper"}, 
+          React.createElement("div", {className: "beta-logo"}), 
+          React.createElement(StandaloneRoomHeader, null), 
+          React.createElement(StandaloneRoomInfoArea, {roomState: this.state.roomState, 
                                   failureReason: this.state.failureReason, 
                                   joinRoom: this.joinRoom, 
                                   helper: this.props.helper, 
                                   activeRoomStore: this.props.activeRoomStore, 
                                   feedbackStore: this.props.feedbackStore, 
                                   roomUsed: this.state.used}), 
-          React.DOM.div({className: "video-layout-wrapper"}, 
-            React.DOM.div({className: "conversation room-conversation"}, 
-              React.DOM.h2({className: "room-name"}, this.state.roomName), 
-              React.DOM.div({className: "media nested"}, 
-                React.DOM.span({className: "self-view-hidden-message"}, 
+          React.createElement("div", {className: "video-layout-wrapper"}, 
+            React.createElement("div", {className: "conversation room-conversation"}, 
+              React.createElement("h2", {className: "room-name"}, this.state.roomName), 
+              React.createElement("div", {className: "media nested"}, 
+                React.createElement("span", {className: "self-view-hidden-message"}, 
                   mozL10n.get("self_view_hidden_message")
                 ), 
-                React.DOM.div({className: "video_wrapper remote_wrapper"}, 
-                  React.DOM.div({className: "video_inner remote"})
+                React.createElement("div", {className: "video_wrapper remote_wrapper"}, 
+                  React.createElement("div", {className: "video_inner remote"})
                 ), 
-                React.DOM.div({className: localStreamClasses})
+                React.createElement("div", {className: localStreamClasses})
               ), 
-              sharedViews.ConversationToolbar({
+              React.createElement(sharedViews.ConversationToolbar, {
                 video: {enabled: !this.state.videoMuted,
                         visible: this._roomIsActive()}, 
                 audio: {enabled: !this.state.audioMuted,
@@ -393,10 +393,10 @@ loop.standaloneRoomViews = (function(mozL10n) {
                 enableHangup: this._roomIsActive()})
             )
           ), 
-          loop.fxOSMarketplaceViews.FxOSHiddenMarketplaceView({
+          React.createElement(loop.fxOSMarketplaceViews.FxOSHiddenMarketplaceView, {
             marketplaceSrc: this.state.marketplaceSrc, 
             onMarketplaceMessage: this.state.onMarketplaceMessage}), 
-          StandaloneRoomFooter(null)
+          React.createElement(StandaloneRoomFooter, null)
         )
       );
     }

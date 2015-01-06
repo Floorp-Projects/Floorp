@@ -1595,10 +1595,8 @@ pref("network.predictor.preserve", 80); // percentage of predictor data to keep 
 //   [scheme "://"] [host [":" port]]
 // For example, "foo.com" would match "http://www.foo.com/bar", etc.
 
-// Allow insecure NTLMv1 when needed.
-pref("network.negotiate-auth.allow-insecure-ntlm-v1", false);
-// Allow insecure NTLMv1 for HTTPS protected sites by default.
-pref("network.negotiate-auth.allow-insecure-ntlm-v1-https", true);
+// Force less-secure NTLMv1 when needed (NTLMv2 is the default).
+pref("network.auth.force-generic-ntlm-v1", false);
 
 // This list controls which URIs can use the negotiate-auth protocol.  This
 // list should be limited to the servers you know you'll need to login to.
@@ -1641,14 +1639,6 @@ pref("network.auth.force-generic-ntlm", false);
 pref("network.automatic-ntlm-auth.allow-proxies", true);
 pref("network.automatic-ntlm-auth.allow-non-fqdn", false);
 pref("network.automatic-ntlm-auth.trusted-uris", "");
-
-// This preference controls whether or not the LM hash will be included in
-// response to a NTLM challenge.  By default, this is disabled since servers
-// should almost never need the LM hash, and the LM hash is what makes NTLM
-// authentication less secure.  See bug 250691 for further details.
-// NOTE: automatic-ntlm-auth which leverages the OS-provided NTLM
-//       implementation will not be affected by this preference.
-pref("network.ntlm.send-lm-response", false);
 
 pref("permissions.default.image",           1); // 1-Accept, 2-Deny, 3-dontAcceptForeign
 
@@ -2164,11 +2154,7 @@ pref("layout.css.grid.enabled", false);
 pref("layout.css.ruby.enabled", false);
 
 // Is support for CSS display:contents enabled?
-#ifdef RELEASE_BUILD
-pref("layout.css.display-contents.enabled", false);
-#else
 pref("layout.css.display-contents.enabled", true);
-#endif
 
 // Is support for CSS box-decoration-break enabled?
 pref("layout.css.box-decoration-break.enabled", true);
@@ -4439,6 +4425,23 @@ pref("dom.mozSettings.SettingsService.verbose.enabled", false);
 // readwrite.
 pref("dom.mozSettings.allowForceReadOnly", false);
 
+// Search service settings
+pref("browser.search.log", false);
+pref("browser.search.update", true);
+pref("browser.search.update.log", false);
+pref("browser.search.update.interval", 21600);
+pref("browser.search.suggest.enabled", true);
+pref("browser.search.geoSpecificDefaults", false);
+pref("browser.search.geoip.url", "https://location.services.mozilla.com/v1/country?key=%MOZILLA_API_KEY%");
+// NOTE: this timeout figure is also the "high" value for the telemetry probe
+// SEARCH_SERVICE_COUNTRY_FETCH_MS - if you change this also change that probe.
+pref("browser.search.geoip.timeout", 2000);
+
+#ifdef MOZ_OFFICIAL_BRANDING
+// {moz:official} expands to "official"
+pref("browser.search.official", true);
+#endif
+
 #ifndef MOZ_WIDGET_GONK
 // GMPInstallManager prefs
 
@@ -4479,3 +4482,4 @@ pref("media.gmp-manager.certs.1.commonName", "aus4.mozilla.org");
 pref("media.gmp-manager.certs.2.issuerName", "CN=Thawte SSL CA,O=\"Thawte, Inc.\",C=US");
 pref("media.gmp-manager.certs.2.commonName", "aus4.mozilla.org");
 #endif
+

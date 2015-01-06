@@ -1069,7 +1069,7 @@ TypeAnalyzer::adjustPhiInputs(MPhi *phi)
             // the original box.
             phi->replaceOperand(i, in->toUnbox()->input());
         } else {
-            MDefinition *box = BoxInputsPolicy::alwaysBoxAt(alloc(), in->block()->lastIns(), in);
+            MDefinition *box = AlwaysBoxAt(alloc(), in->block()->lastIns(), in);
             phi->replaceOperand(i, box);
         }
     }

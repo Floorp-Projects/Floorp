@@ -167,12 +167,12 @@ loop.standaloneRoomViews = (function(mozL10n) {
     _getContent: function() {
       return mozL10n.get("legal_text_and_links", {
         "clientShortname": mozL10n.get("clientShortname2"),
-        "terms_of_use_url": React.renderComponentToStaticMarkup(
+        "terms_of_use_url": React.renderToStaticMarkup(
           <a href={loop.config.legalWebsiteUrl} target="_blank">
             {mozL10n.get("terms_of_use_link_text")}
           </a>
         ),
-        "privacy_notice_url": React.renderComponentToStaticMarkup(
+        "privacy_notice_url": React.renderToStaticMarkup(
           <a href={loop.config.privacyWebsiteUrl} target="_blank">
             {mozL10n.get("privacy_notice_link_text")}
           </a>

@@ -46,7 +46,7 @@ public:
 
   friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  nsRootBoxFrame(nsIPresShell* aShell, nsStyleContext *aContext);
+  explicit nsRootBoxFrame(nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
@@ -108,18 +108,18 @@ protected:
 nsContainerFrame*
 NS_NewRootBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsRootBoxFrame (aPresShell, aContext);
+  return new (aPresShell) nsRootBoxFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsRootBoxFrame)
 
-nsRootBoxFrame::nsRootBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext):
-  nsBoxFrame(aShell, aContext, true)
+nsRootBoxFrame::nsRootBoxFrame(nsStyleContext* aContext):
+  nsBoxFrame(aContext, true)
 {
   mPopupSetFrame = nullptr;
 
   nsCOMPtr<nsBoxLayout> layout;
-  NS_NewStackLayout(aShell, layout);
+  NS_NewStackLayout(PresContext()->PresShell(), layout);
   SetLayoutManager(layout);
 }
 

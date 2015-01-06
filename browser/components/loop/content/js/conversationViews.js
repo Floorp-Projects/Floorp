@@ -39,7 +39,7 @@ loop.conversationViews = (function(mozL10n) {
    * Displays information about the call
    * Caller avatar, name & conversation creation date
    */
-  var CallIdentifierView = React.createClass({displayName: 'CallIdentifierView',
+  var CallIdentifierView = React.createClass({displayName: "CallIdentifierView",
     propTypes: {
       peerIdentifier: React.PropTypes.string,
       showIcons: React.PropTypes.bool.isRequired,
@@ -83,16 +83,16 @@ loop.conversationViews = (function(mozL10n) {
       });
 
       return (
-        React.DOM.div({className: "fx-embedded-call-identifier"}, 
-          React.DOM.div({className: "fx-embedded-call-identifier-avatar fx-embedded-call-identifier-item"}), 
-          React.DOM.div({className: "fx-embedded-call-identifier-info fx-embedded-call-identifier-item"}, 
-            React.DOM.div({className: "fx-embedded-call-identifier-text overflow-text-ellipsis"}, 
+        React.createElement("div", {className: "fx-embedded-call-identifier"}, 
+          React.createElement("div", {className: "fx-embedded-call-identifier-avatar fx-embedded-call-identifier-item"}), 
+          React.createElement("div", {className: "fx-embedded-call-identifier-info fx-embedded-call-identifier-item"}, 
+            React.createElement("div", {className: "fx-embedded-call-identifier-text overflow-text-ellipsis"}, 
               this.props.peerIdentifier
             ), 
-            React.DOM.div({className: callDetailClasses}, 
-              React.DOM.span({className: "fx-embedded-tiny-audio-icon"}), 
-              React.DOM.span({className: iconVideoClasses}), 
-              React.DOM.span({className: "fx-embedded-conversation-timestamp"}, 
+            React.createElement("div", {className: callDetailClasses}, 
+              React.createElement("span", {className: "fx-embedded-tiny-audio-icon"}), 
+              React.createElement("span", {className: iconVideoClasses}), 
+              React.createElement("span", {className: "fx-embedded-conversation-timestamp"}, 
                 this.formatCreationDate()
               )
             )
@@ -109,7 +109,7 @@ loop.conversationViews = (function(mozL10n) {
    * Allows the view to be extended with different buttons and progress
    * via children properties.
    */
-  var ConversationDetailView = React.createClass({displayName: 'ConversationDetailView',
+  var ConversationDetailView = React.createClass({displayName: "ConversationDetailView",
     propTypes: {
       contact: React.PropTypes.object
     },
@@ -120,11 +120,11 @@ loop.conversationViews = (function(mozL10n) {
       document.title = contactName;
 
       return (
-        React.DOM.div({className: "call-window"}, 
-          CallIdentifierView({
+        React.createElement("div", {className: "call-window"}, 
+          React.createElement(CallIdentifierView, {
             peerIdentifier: contactName, 
             showIcons: false}), 
-          React.DOM.div(null, this.props.children)
+          React.createElement("div", null, this.props.children)
         )
       );
     }
@@ -133,7 +133,7 @@ loop.conversationViews = (function(mozL10n) {
   // Matches strings of the form "<nonspaces>@<nonspaces>" or "+<digits>"
   var EMAIL_OR_PHONE_RE = /^(:?\S+@\S+|\+\d+)$/;
 
-  var IncomingCallView = React.createClass({displayName: 'IncomingCallView',
+  var IncomingCallView = React.createClass({displayName: "IncomingCallView",
     mixins: [sharedMixins.DropdownMenuMixin, sharedMixins.AudioMixin],
 
     propTypes: {
@@ -213,29 +213,29 @@ loop.conversationViews = (function(mozL10n) {
       });
 
       return (
-        React.DOM.div({className: "call-window"}, 
-          CallIdentifierView({video: this.props.video, 
+        React.createElement("div", {className: "call-window"}, 
+          React.createElement(CallIdentifierView, {video: this.props.video, 
             peerIdentifier: this.props.model.getCallIdentifier(), 
             urlCreationDate: this.props.model.get("urlCreationDate"), 
             showIcons: true}), 
 
-          React.DOM.div({className: "btn-group call-action-group"}, 
+          React.createElement("div", {className: "btn-group call-action-group"}, 
 
-            React.DOM.div({className: "fx-embedded-call-button-spacer"}), 
+            React.createElement("div", {className: "fx-embedded-call-button-spacer"}), 
 
-            React.DOM.div({className: "btn-chevron-menu-group"}, 
-              React.DOM.div({className: "btn-group-chevron"}, 
-                React.DOM.div({className: "btn-group"}, 
+            React.createElement("div", {className: "btn-chevron-menu-group"}, 
+              React.createElement("div", {className: "btn-group-chevron"}, 
+                React.createElement("div", {className: "btn-group"}, 
 
-                  React.DOM.button({className: "btn btn-decline", 
+                  React.createElement("button", {className: "btn btn-decline", 
                           onClick: this._handleDecline}, 
                     mozL10n.get("incoming_call_cancel_button")
                   ), 
-                  React.DOM.div({className: "btn-chevron", onClick: this.toggleDropdownMenu})
+                  React.createElement("div", {className: "btn-chevron", onClick: this.toggleDropdownMenu})
                 ), 
 
-                React.DOM.ul({className: dropdownMenuClassesDecline}, 
-                  React.DOM.li({className: "btn-block", onClick: this._handleDeclineBlock}, 
+                React.createElement("ul", {className: dropdownMenuClassesDecline}, 
+                  React.createElement("li", {className: "btn-block", onClick: this._handleDeclineBlock}, 
                     mozL10n.get("incoming_call_cancel_and_block_button")
                   )
                 )
@@ -243,11 +243,11 @@ loop.conversationViews = (function(mozL10n) {
               )
             ), 
 
-            React.DOM.div({className: "fx-embedded-call-button-spacer"}), 
+            React.createElement("div", {className: "fx-embedded-call-button-spacer"}), 
 
-            AcceptCallButton({mode: this._answerModeProps()}), 
+            React.createElement(AcceptCallButton, {mode: this._answerModeProps()}), 
 
-            React.DOM.div({className: "fx-embedded-call-button-spacer"})
+            React.createElement("div", {className: "fx-embedded-call-button-spacer"})
 
           )
         )
@@ -260,7 +260,7 @@ loop.conversationViews = (function(mozL10n) {
    * Incoming call view accept button, renders different primary actions
    * (answer with video / with audio only) based on the props received
    **/
-  var AcceptCallButton = React.createClass({displayName: 'AcceptCallButton',
+  var AcceptCallButton = React.createClass({displayName: "AcceptCallButton",
 
     propTypes: {
       mode: React.PropTypes.object.isRequired,
@@ -270,17 +270,17 @@ loop.conversationViews = (function(mozL10n) {
       var mode = this.props.mode;
       return (
         /* jshint ignore:start */
-        React.DOM.div({className: "btn-chevron-menu-group"}, 
-          React.DOM.div({className: "btn-group"}, 
-            React.DOM.button({className: "btn btn-accept", 
+        React.createElement("div", {className: "btn-chevron-menu-group"}, 
+          React.createElement("div", {className: "btn-group"}, 
+            React.createElement("button", {className: "btn btn-accept", 
                     onClick: mode.primary.handler, 
                     title: mozL10n.get(mode.primary.tooltip)}, 
-              React.DOM.span({className: "fx-embedded-answer-btn-text"}, 
+              React.createElement("span", {className: "fx-embedded-answer-btn-text"}, 
                 mozL10n.get("incoming_call_accept_button")
               ), 
-              React.DOM.span({className: mode.primary.className})
+              React.createElement("span", {className: mode.primary.className})
             ), 
-            React.DOM.div({className: mode.secondary.className, 
+            React.createElement("div", {className: mode.secondary.className, 
                  onClick: mode.secondary.handler, 
                  title: mozL10n.get(mode.secondary.tooltip)}
             )
@@ -297,7 +297,7 @@ loop.conversationViews = (function(mozL10n) {
    * XXX Based on CallFailedView, but built specially until we flux-ify the
    * incoming call views (bug 1088672).
    */
-  var GenericFailureView = React.createClass({displayName: 'GenericFailureView',
+  var GenericFailureView = React.createClass({displayName: "GenericFailureView",
     mixins: [sharedMixins.AudioMixin],
 
     propTypes: {
@@ -312,11 +312,11 @@ loop.conversationViews = (function(mozL10n) {
       document.title = mozL10n.get("generic_failure_title");
 
       return (
-        React.DOM.div({className: "call-window"}, 
-          React.DOM.h2(null, mozL10n.get("generic_failure_title")), 
+        React.createElement("div", {className: "call-window"}, 
+          React.createElement("h2", null, mozL10n.get("generic_failure_title")), 
 
-          React.DOM.div({className: "btn-group call-action-group"}, 
-            React.DOM.button({className: "btn btn-cancel", 
+          React.createElement("div", {className: "btn-group call-action-group"}, 
+            React.createElement("button", {className: "btn btn-cancel", 
                     onClick: this.props.cancelCall}, 
               mozL10n.get("cancel_button")
             )
@@ -332,7 +332,7 @@ loop.conversationViews = (function(mozL10n) {
    *
    * At the moment, it does more than that, these parts need refactoring out.
    */
-  var IncomingConversationView = React.createClass({displayName: 'IncomingConversationView',
+  var IncomingConversationView = React.createClass({displayName: "IncomingConversationView",
     mixins: [sharedMixins.AudioMixin, sharedMixins.WindowCloseMixin],
 
     propTypes: {
@@ -385,7 +385,7 @@ loop.conversationViews = (function(mozL10n) {
           document.title = mozL10n.get("incoming_call_title2");
 
           return (
-            IncomingCallView({
+            React.createElement(IncomingCallView, {
               model: this.props.conversation, 
               video: this.props.conversation.hasVideoStream("incoming")}
             )
@@ -397,7 +397,7 @@ loop.conversationViews = (function(mozL10n) {
           var callType = this.props.conversation.get("selectedCallType");
 
           return (
-            sharedViews.ConversationView({
+            React.createElement(sharedViews.ConversationView, {
               initiate: true, 
               sdk: this.props.sdk, 
               model: this.props.conversation, 
@@ -408,7 +408,7 @@ loop.conversationViews = (function(mozL10n) {
         case "end": {
           // XXX To be handled with the "failed" view state when bug 1047410 lands
           if (this.state.callFailed) {
-            return GenericFailureView({
+            return React.createElement(GenericFailureView, {
               cancelCall: this.closeWindow.bind(this)}
             );
           }
@@ -418,7 +418,7 @@ loop.conversationViews = (function(mozL10n) {
           this.play("terminated");
 
           return (
-            sharedViews.FeedbackView({
+            React.createElement(sharedViews.FeedbackView, {
               feedbackStore: this.props.feedbackStore, 
               onAfterFeedbackReceived: this.closeWindow.bind(this)}
             )
@@ -426,7 +426,7 @@ loop.conversationViews = (function(mozL10n) {
         }
         case "close": {
           this.closeWindow();
-          return (React.DOM.div(null));
+          return (React.createElement("div", null));
         }
       }
     },
@@ -646,7 +646,7 @@ loop.conversationViews = (function(mozL10n) {
    * View for pending conversations. Displays a cancel button and appropriate
    * pending/ringing strings.
    */
-  var PendingConversationView = React.createClass({displayName: 'PendingConversationView',
+  var PendingConversationView = React.createClass({displayName: "PendingConversationView",
     mixins: [sharedMixins.AudioMixin],
 
     propTypes: {
@@ -686,12 +686,12 @@ loop.conversationViews = (function(mozL10n) {
       });
 
       return (
-        ConversationDetailView({contact: this.props.contact}, 
+        React.createElement(ConversationDetailView, {contact: this.props.contact}, 
 
-          React.DOM.p({className: "btn-label"}, pendingStateString), 
+          React.createElement("p", {className: "btn-label"}, pendingStateString), 
 
-          React.DOM.div({className: "btn-group call-action-group"}, 
-            React.DOM.button({className: btnCancelStyles, 
+          React.createElement("div", {className: "btn-group call-action-group"}, 
+            React.createElement("button", {className: btnCancelStyles, 
                     onClick: this.cancelCall}, 
               mozL10n.get("initiate_call_cancel_button")
             )
@@ -705,7 +705,7 @@ loop.conversationViews = (function(mozL10n) {
   /**
    * Call failed view. Displayed when a call fails.
    */
-  var CallFailedView = React.createClass({displayName: 'CallFailedView',
+  var CallFailedView = React.createClass({displayName: "CallFailedView",
     mixins: [
       Backbone.Events,
       sharedMixins.AudioMixin,
@@ -758,7 +758,7 @@ loop.conversationViews = (function(mozL10n) {
       if (!this.state.emailLinkError) {
         return;
       }
-      return React.DOM.p({className: "error"}, mozL10n.get("unable_retrieve_url"));
+      return React.createElement("p", {className: "error"}, mozL10n.get("unable_retrieve_url"));
     },
 
     retryCall: function() {
@@ -783,23 +783,23 @@ loop.conversationViews = (function(mozL10n) {
 
     render: function() {
       return (
-        React.DOM.div({className: "call-window"}, 
-          React.DOM.h2(null, mozL10n.get("generic_failure_title")), 
+        React.createElement("div", {className: "call-window"}, 
+          React.createElement("h2", null, mozL10n.get("generic_failure_title")), 
 
-          React.DOM.p({className: "btn-label"}, mozL10n.get("generic_failure_with_reason2")), 
+          React.createElement("p", {className: "btn-label"}, mozL10n.get("generic_failure_with_reason2")), 
 
           this._renderError(), 
 
-          React.DOM.div({className: "btn-group call-action-group"}, 
-            React.DOM.button({className: "btn btn-cancel", 
+          React.createElement("div", {className: "btn-group call-action-group"}, 
+            React.createElement("button", {className: "btn btn-cancel", 
                     onClick: this.cancelCall}, 
               mozL10n.get("cancel_button")
             ), 
-            React.DOM.button({className: "btn btn-info btn-retry", 
+            React.createElement("button", {className: "btn btn-info btn-retry", 
                     onClick: this.retryCall}, 
               mozL10n.get("retry_call_button")
             ), 
-            React.DOM.button({className: "btn btn-info btn-email", 
+            React.createElement("button", {className: "btn btn-info btn-email", 
                     onClick: this.emailLink, 
                     disabled: this.state.emailLinkButtonDisabled}, 
               mozL10n.get("share_button2")
@@ -810,7 +810,7 @@ loop.conversationViews = (function(mozL10n) {
     }
   });
 
-  var OngoingConversationView = React.createClass({displayName: 'OngoingConversationView',
+  var OngoingConversationView = React.createClass({displayName: "OngoingConversationView",
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       video: React.PropTypes.object,
@@ -924,15 +924,15 @@ loop.conversationViews = (function(mozL10n) {
       });
 
       return (
-        React.DOM.div({className: "video-layout-wrapper"}, 
-          React.DOM.div({className: "conversation"}, 
-            React.DOM.div({className: "media nested"}, 
-              React.DOM.div({className: "video_wrapper remote_wrapper"}, 
-                React.DOM.div({className: "video_inner remote"})
+        React.createElement("div", {className: "video-layout-wrapper"}, 
+          React.createElement("div", {className: "conversation"}, 
+            React.createElement("div", {className: "media nested"}, 
+              React.createElement("div", {className: "video_wrapper remote_wrapper"}, 
+                React.createElement("div", {className: "video_inner remote"})
               ), 
-              React.DOM.div({className: localStreamClasses})
+              React.createElement("div", {className: localStreamClasses})
             ), 
-            loop.shared.views.ConversationToolbar({
+            React.createElement(loop.shared.views.ConversationToolbar, {
               video: this.props.video, 
               audio: this.props.audio, 
               publishStream: this.publishStream, 
@@ -947,7 +947,7 @@ loop.conversationViews = (function(mozL10n) {
    * Master View Controller for outgoing calls. This manages
    * the different views that need displaying.
    */
-  var OutgoingConversationView = React.createClass({displayName: 'OutgoingConversationView',
+  var OutgoingConversationView = React.createClass({displayName: "OutgoingConversationView",
     mixins: [
       sharedMixins.AudioMixin,
       Backbone.Events
@@ -995,7 +995,7 @@ loop.conversationViews = (function(mozL10n) {
       document.title = mozL10n.get("conversation_has_ended");
 
       return (
-        sharedViews.FeedbackView({
+        React.createElement(sharedViews.FeedbackView, {
           feedbackStore: this.props.feedbackStore, 
           onAfterFeedbackReceived: this._closeWindow.bind(this)}
         )
@@ -1009,14 +1009,14 @@ loop.conversationViews = (function(mozL10n) {
           return null;
         }
         case CALL_STATES.TERMINATED: {
-          return (CallFailedView({
+          return (React.createElement(CallFailedView, {
             dispatcher: this.props.dispatcher, 
             store: this.props.store, 
             contact: this.state.contact}
           ));
         }
         case CALL_STATES.ONGOING: {
-          return (OngoingConversationView({
+          return (React.createElement(OngoingConversationView, {
             dispatcher: this.props.dispatcher, 
             video: {enabled: !this.state.videoMuted}, 
             audio: {enabled: !this.state.audioMuted}}
@@ -1032,7 +1032,7 @@ loop.conversationViews = (function(mozL10n) {
           return null;
         }
         default: {
-          return (PendingConversationView({
+          return (React.createElement(PendingConversationView, {
             dispatcher: this.props.dispatcher, 
             callState: this.state.callState, 
             contact: this.state.contact, 

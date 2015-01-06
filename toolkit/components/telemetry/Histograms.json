@@ -4556,7 +4556,7 @@
     "description": "Record the default search engine."
   },
   "SEARCH_SERVICE_INIT_MS": {
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": "1000",
     "n_buckets": 15,
@@ -4564,8 +4564,8 @@
     "description": "Time (ms) it takes to initialize the search service"
   },
   "SEARCH_SERVICE_INIT_SYNC": {
-    "alert_emails": ["rvitillo@mozilla.com"],
-    "expires_in_version": "35",
+    "alert_emails": ["rvitillo@mozilla.com", "gavin@mozilla.com"],
+    "expires_in_version": "never",
     "kind": "boolean",
     "description": "search service has been initialized synchronously"
   },

@@ -3364,12 +3364,7 @@ nsContentUtils::ReportToConsoleNonLocalized(const nsAString& aErrorText,
   if (!aLineNumber) {
     JSContext *cx = GetCurrentJSContext();
     if (cx) {
-      const char* filename;
-      uint32_t lineno;
-      if (nsJSUtils::GetCallingLocation(cx, &filename, &lineno)) {
-        spec = filename;
-        aLineNumber = lineno;
-      }
+      nsJSUtils::GetCallingLocation(cx, spec, &aLineNumber);
     }
   }
   if (spec.IsEmpty() && aURI)
