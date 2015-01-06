@@ -1587,9 +1587,7 @@ public abstract class GeckoApp
 
         mTextSelection = new TextSelection((TextSelectionHandle) findViewById(R.id.anchor_handle),
                                            (TextSelectionHandle) findViewById(R.id.caret_handle),
-                                           (TextSelectionHandle) findViewById(R.id.focus_handle),
-                                           EventDispatcher.getInstance(),
-                                           this);
+                                           (TextSelectionHandle) findViewById(R.id.focus_handle));
 
         PrefsHelper.getPref("app.update.autodownload", new PrefsHelper.PrefHandlerBase() {
             @Override public void prefValue(String pref, String value) {
