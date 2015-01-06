@@ -26,7 +26,7 @@ loop.conversation = (function(mozL10n) {
    * Master controller view for handling if incoming or outgoing calls are
    * in progress, and hence, which view to display.
    */
-  var AppControllerView = React.createClass({displayName: 'AppControllerView',
+  var AppControllerView = React.createClass({displayName: "AppControllerView",
     mixins: [Backbone.Events, sharedMixins.WindowCloseMixin],
 
     propTypes: {
@@ -64,7 +64,7 @@ loop.conversation = (function(mozL10n) {
     render: function() {
       switch(this.state.windowType) {
         case "incoming": {
-          return (IncomingConversationView({
+          return (React.createElement(IncomingConversationView, {
             client: this.props.client, 
             conversation: this.props.conversation, 
             sdk: this.props.sdk, 
@@ -73,21 +73,21 @@ loop.conversation = (function(mozL10n) {
           ));
         }
         case "outgoing": {
-          return (OutgoingConversationView({
+          return (React.createElement(OutgoingConversationView, {
             store: this.props.conversationStore, 
             dispatcher: this.props.dispatcher, 
             feedbackStore: this.props.feedbackStore}
           ));
         }
         case "room": {
-          return (DesktopRoomConversationView({
+          return (React.createElement(DesktopRoomConversationView, {
             dispatcher: this.props.dispatcher, 
             roomStore: this.props.roomStore, 
             feedbackStore: this.props.feedbackStore}
           ));
         }
         case "failed": {
-          return GenericFailureView({cancelCall: this.closeWindow});
+          return React.createElement(GenericFailureView, {cancelCall: this.closeWindow});
         }
         default: {
           // If we don't have a windowType, we don't know what we are yet,
@@ -183,7 +183,7 @@ loop.conversation = (function(mozL10n) {
       dispatcher.dispatch(new sharedActions.WindowUnload());
     });
 
-    React.renderComponent(AppControllerView({
+    React.render(React.createElement(AppControllerView, {
       conversationAppStore: conversationAppStore, 
       roomStore: roomStore, 
       feedbackStore: feedbackStore, 
