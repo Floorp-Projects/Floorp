@@ -127,6 +127,10 @@ function debug(s) {
   dump("-*- RadioInterfaceLayer: " + s + "\n");
 }
 
+XPCOMUtils.defineLazyServiceGetter(this, "gIccService",
+                                   "@mozilla.org/icc/gonkiccservice;1",
+                                   "nsIGonkIccService");
+
 XPCOMUtils.defineLazyServiceGetter(this, "gMobileMessageService",
                                    "@mozilla.org/mobilemessage/mobilemessageservice;1",
                                    "nsIMobileMessageService");
@@ -886,8 +890,8 @@ IccInfo.prototype = {
   mcc: null,
   mnc: null,
   spn: null,
-  isDisplayNetworkNameRequired: null,
-  isDisplaySpnRequired: null
+  isDisplayNetworkNameRequired: false,
+  isDisplaySpnRequired: false
 };
 
 function GsmIccInfo() {}
@@ -1916,6 +1920,8 @@ RadioInterface.prototype = {
       case "cardstatechange":
         this.rilContext.cardState = message.cardState;
         gRadioEnabledController.receiveCardState(this.clientId);
+        gIccService.notifyCardStateChanged(this.clientId,
+                                           this.rilContext.cardState);
         gMessageManager.sendIccMessage("RIL:CardStateChanged",
                                        this.clientId, message);
         break;
@@ -1933,6 +1939,7 @@ RadioInterface.prototype = {
         break;
       case "iccimsi":
         this.rilContext.imsi = message.imsi;
+        gIccService.notifyImsiChanged(this.clientId, this.rilContext.imsi);
         break;
       case "iccmbdn":
         this.handleIccMbdn(message);
@@ -2245,14 +2252,7 @@ RadioInterface.prototype = {
     gMessageManager.sendIccMessage("RIL:IccInfoChanged",
                                    this.clientId,
                                    message.iccid ? message : null);
-
-    // Update lastKnownSimMcc.
-    if (message.mcc) {
-      try {
-        Services.prefs.setCharPref("ril.lastKnownSimMcc",
-                                   message.mcc.toString());
-      } catch (e) {}
-    }
+    gIccService.notifyIccInfoChanged(this.clientId, this.rilContext.iccInfo);
 
     // Update lastKnownHomeNetwork.
     if (message.mcc && message.mnc) {
