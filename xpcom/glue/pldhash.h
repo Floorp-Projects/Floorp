@@ -527,6 +527,18 @@ PLDHashEntryHdr* PL_DHASH_FASTCALL
 PL_DHashTableOperate(PLDHashTable* aTable, const void* aKey,
                      PLDHashOperator aOp);
 
+/* Look up a key in table. */
+PLDHashEntryHdr* PL_DHASH_FASTCALL
+PL_DHashTableLookup(PLDHashTable* aTable, const void* aKey);
+
+/* Add an entry identified by key to table. */
+PLDHashEntryHdr* PL_DHASH_FASTCALL
+PL_DHashTableAdd(PLDHashTable* aTable, const void* aKey);
+
+/* Remove an entry identified by key from table. */
+void PL_DHASH_FASTCALL
+PL_DHashTableRemove(PLDHashTable* aTable, const void* aKey);
+
 /*
  * Remove an entry already accessed via LOOKUP or ADD.
  *
