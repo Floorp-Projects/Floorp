@@ -9697,7 +9697,7 @@ class StubCSSLoaderObserver MOZ_FINAL : public nsICSSLoaderObserver {
   ~StubCSSLoaderObserver() {}
 public:
   NS_IMETHOD
-  StyleSheetLoaded(CSSStyleSheet*, bool, nsresult) MOZ_OVERRIDE
+  StyleSheetLoaded(CSSStyleSheet*, bool, nsresult)
   {
     return NS_OK;
   }
@@ -11837,7 +11837,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSICONTENTPERMISSIONREQUEST
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run()
   {
     nsCOMPtr<Element> e = do_QueryReferent(mElement);
     nsCOMPtr<nsIDocument> d = do_QueryReferent(mDocument);

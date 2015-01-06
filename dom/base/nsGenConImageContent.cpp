@@ -41,11 +41,11 @@ public:
   // nsIContent overrides
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) MOZ_OVERRIDE;
-  virtual void UnbindFromTree(bool aDeep, bool aNullParent) MOZ_OVERRIDE;
-  virtual EventStates IntrinsicState() const MOZ_OVERRIDE;
+                              bool aCompileEventHandlers);
+  virtual void UnbindFromTree(bool aDeep, bool aNullParent);
+  virtual EventStates IntrinsicState() const;
 
-  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE
+  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor)
   {
     MOZ_ASSERT(IsInNativeAnonymousSubtree());
     if (aVisitor.mEvent->message == NS_LOAD ||

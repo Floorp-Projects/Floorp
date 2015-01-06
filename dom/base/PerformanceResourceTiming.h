@@ -33,9 +33,9 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
 
-  virtual DOMHighResTimeStamp StartTime() const MOZ_OVERRIDE;
+  virtual DOMHighResTimeStamp StartTime() const;
 
-  virtual DOMHighResTimeStamp Duration() const MOZ_OVERRIDE
+  virtual DOMHighResTimeStamp Duration() const
   {
     return ResponseEnd() - StartTime();
   }

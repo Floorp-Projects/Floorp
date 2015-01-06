@@ -2942,7 +2942,7 @@ public:
   NS_DECL_NSIARRAY
 
   // nsIJSArgArray
-  nsresult GetArgs(uint32_t* argc, void** argv) MOZ_OVERRIDE;
+  nsresult GetArgs(uint32_t *argc, void **argv);
 
   void ReleaseJSObjects();
 
