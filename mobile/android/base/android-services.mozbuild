@@ -954,6 +954,7 @@ sync_java_files = [
     'sync/middleware/Crypto5MiddlewareRepositorySession.java',
     'sync/middleware/MiddlewareRepository.java',
     'sync/middleware/MiddlewareRepositorySession.java',
+    'sync/MigrationSentinelSyncStage.java',
     'sync/net/AuthHeaderProvider.java',
     'sync/net/BaseResource.java',
     'sync/net/BaseResourceDelegate.java',

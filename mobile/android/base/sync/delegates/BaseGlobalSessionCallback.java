@@ -27,6 +27,13 @@ public interface BaseGlobalSessionCallback {
    */
   void informUpgradeRequiredResponse(GlobalSession session);
 
+  /**
+   * Called when a migration sentinel has been found and processed successfully.
+   * <p>
+   * This account should stop syncing immediately, and arrange to delete itself.
+   */
+  void informMigrated(GlobalSession session);
+
   void handleAborted(GlobalSession globalSession, String reason);
   void handleError(GlobalSession globalSession, Exception ex);
   void handleSuccess(GlobalSession globalSession);

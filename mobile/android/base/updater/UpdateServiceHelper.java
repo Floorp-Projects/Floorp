@@ -6,16 +6,14 @@
 package org.mozilla.gecko.updater;
 
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.util.GeckoJarReader;
 
 import android.content.Context;
 import android.content.Intent;
-
 import android.content.pm.PackageManager;
 import android.content.pm.ApplicationInfo;
-
 import android.os.Build;
-
 import android.util.Log;
 
 import java.net.URL;
@@ -54,6 +52,9 @@ public class UpdateServiceHelper {
 
     private static final String UPDATE_URL;
 
+    // So that updates can be disabled by tests.
+    private static volatile boolean isEnabled = true;
+
     static {
         final String pkgSpecial;
         if (AppConstants.MOZ_PKG_SPECIAL != null) {
@@ -75,6 +76,11 @@ public class UpdateServiceHelper {
         AVAILABLE,
         DOWNLOADING,
         DOWNLOADED
+    }
+
+    @RobocopTarget
+    public static void setEnabled(final boolean enabled) {
+        isEnabled = enabled;
     }
 
     public static URL getUpdateUrl(Context context, boolean force) {
@@ -110,7 +116,7 @@ public class UpdateServiceHelper {
     }
 
     public static boolean isUpdaterEnabled() {
-        return AppConstants.MOZ_UPDATER;
+        return AppConstants.MOZ_UPDATER && isEnabled;
     }
 
     public static void registerForUpdates(Context context, String policy) {
