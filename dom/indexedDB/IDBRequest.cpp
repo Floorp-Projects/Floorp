@@ -168,7 +168,16 @@ IDBRequest::CaptureCaller(nsAString& aFilename, uint32_t* aLineNo)
   MOZ_ASSERT(aLineNo);
 
   ThreadsafeAutoJSContext cx;
-  nsJSUtils::GetCallingLocation(cx, aFilename, aLineNo);
+
+  const char* filename = nullptr;
+  uint32_t lineNo = 0;
+  if (!nsJSUtils::GetCallingLocation(cx, &filename, &lineNo)) {
+    *aLineNo = 0;
+    return;
+  }
+
+  aFilename.Assign(NS_ConvertUTF8toUTF16(filename));
+  *aLineNo = lineNo;
 }
 
 void
