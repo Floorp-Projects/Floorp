@@ -559,10 +559,11 @@ function sendConsoleAPIMessage(aConsole, aLevel, aFrame, aArgs, aOptions = {})
       break;
   }
 
-  Services.obs.notifyObservers(consoleEvent, "console-api-log-event", null);
   let ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
                             .getService(Ci.nsIConsoleAPIStorage);
-  ConsoleAPIStorage.recordEvent("jsm", consoleEvent);
+  if (ConsoleAPIStorage) {
+    ConsoleAPIStorage.recordEvent("jsm", null, consoleEvent);
+  }
 }
 
 /**
