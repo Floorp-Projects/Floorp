@@ -1153,7 +1153,7 @@ function DebuggerServerConnection(aPrefix, aTransport)
   this._nextID = 1;
 
   this._actorPool = new ActorPool(this);
-  this._extraPools = [];
+  this._extraPools = [this._actorPool];
 
   // Responses to a given actor must be returned the the client
   // in the same order as the requests that they're replying to, but
@@ -1296,10 +1296,6 @@ DebuggerServerConnection.prototype = {
   },
 
   poolFor: function DSC_actorPool(aActorID) {
-    if (this._actorPool && this._actorPool.has(aActorID)) {
-      return this._actorPool;
-    }
-
     for (let pool of this._extraPools) {
       if (pool.has(aActorID)) {
         return pool;
@@ -1536,7 +1532,6 @@ DebuggerServerConnection.prototype = {
     }
     events.emit(this, "closed", aStatus);
 
-    this._actorPool.cleanup();
     this._actorPool = null;
     this._extraPools.map(function(p) { p.cleanup(); });
     this._extraPools = null;
@@ -1553,9 +1548,12 @@ DebuggerServerConnection.prototype = {
       dumpn("--------------------- actorPool actors: " +
             uneval(Object.keys(this._actorPool._actors)));
     }
-    for each (let pool in this._extraPools)
-      dumpn("--------------------- extraPool actors: " +
-            uneval(Object.keys(pool._actors)));
+    for each (let pool in this._extraPools) {
+      if (pool !== this._actorPool) {
+        dumpn("--------------------- extraPool actors: " +
+              uneval(Object.keys(pool._actors)));
+      }
+    }
   },
 
   /*
