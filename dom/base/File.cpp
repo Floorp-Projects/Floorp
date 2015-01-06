@@ -1083,7 +1083,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIMemoryReporterCallback *aCallback,
-                            nsISupports *aClosure, bool aAnonymize) MOZ_OVERRIDE
+                            nsISupports *aClosure, bool aAnonymize)
   {
     typedef FileImplMemory::DataOwner DataOwner;
 

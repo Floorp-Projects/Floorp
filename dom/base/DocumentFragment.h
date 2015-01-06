@@ -112,7 +112,7 @@ public:
     return;
   }
 
-  virtual Element* GetNameSpaceElement() MOZ_OVERRIDE
+  virtual Element* GetNameSpaceElement()
   {
     return nullptr;
   }

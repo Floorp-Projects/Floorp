@@ -991,23 +991,23 @@ public:
                               int32_t aNamespaceID,
                               nsIContent **aResult) MOZ_OVERRIDE;
 
-  virtual void Sanitize() MOZ_OVERRIDE;
+  virtual void Sanitize();
 
   virtual void EnumerateSubDocuments(nsSubDocEnumFunc aCallback,
-                                                 void *aData) MOZ_OVERRIDE;
+                                                 void *aData);
 
-  virtual bool CanSavePresentation(nsIRequest *aNewRequest) MOZ_OVERRIDE;
-  virtual void Destroy() MOZ_OVERRIDE;
-  virtual void RemovedFromDocShell() MOZ_OVERRIDE;
-  virtual already_AddRefed<nsILayoutHistoryState> GetLayoutHistoryState() const MOZ_OVERRIDE;
+  virtual bool CanSavePresentation(nsIRequest *aNewRequest);
+  virtual void Destroy();
+  virtual void RemovedFromDocShell();
+  virtual already_AddRefed<nsILayoutHistoryState> GetLayoutHistoryState() const;
 
-  virtual void BlockOnload() MOZ_OVERRIDE;
-  virtual void UnblockOnload(bool aFireSync) MOZ_OVERRIDE;
+  virtual void BlockOnload();
+  virtual void UnblockOnload(bool aFireSync);
 
-  virtual void AddStyleRelevantLink(mozilla::dom::Link* aLink) MOZ_OVERRIDE;
-  virtual void ForgetLink(mozilla::dom::Link* aLink) MOZ_OVERRIDE;
+  virtual void AddStyleRelevantLink(mozilla::dom::Link* aLink);
+  virtual void ForgetLink(mozilla::dom::Link* aLink);
 
-  virtual void ClearBoxObjectFor(nsIContent* aContent) MOZ_OVERRIDE;
+  void ClearBoxObjectFor(nsIContent* aContent);
 
   virtual already_AddRefed<mozilla::dom::BoxObject>
   GetBoxObjectFor(mozilla::dom::Element* aElement,
@@ -1016,31 +1016,31 @@ public:
   virtual Element*
     GetAnonymousElementByAttribute(nsIContent* aElement,
                                    nsIAtom* aAttrName,
-                                   const nsAString& aAttrValue) const MOZ_OVERRIDE;
+                                   const nsAString& aAttrValue) const;
 
   virtual Element* ElementFromPointHelper(float aX, float aY,
                                                       bool aIgnoreRootScrollFrame,
-                                                      bool aFlushLayout) MOZ_OVERRIDE;
+                                                      bool aFlushLayout);
 
   virtual nsresult NodesFromRectHelper(float aX, float aY,
                                                    float aTopSize, float aRightSize,
                                                    float aBottomSize, float aLeftSize,
                                                    bool aIgnoreRootScrollFrame,
                                                    bool aFlushLayout,
-                                                   nsIDOMNodeList** aReturn) MOZ_OVERRIDE;
+                                                   nsIDOMNodeList** aReturn);
 
-  virtual void FlushSkinBindings() MOZ_OVERRIDE;
+  virtual void FlushSkinBindings();
 
-  virtual nsresult InitializeFrameLoader(nsFrameLoader* aLoader) MOZ_OVERRIDE;
-  virtual nsresult FinalizeFrameLoader(nsFrameLoader* aLoader) MOZ_OVERRIDE;
-  virtual void TryCancelFrameLoaderInitialization(nsIDocShell* aShell) MOZ_OVERRIDE;
-  virtual bool FrameLoaderScheduledToBeFinalized(nsIDocShell* aShell) MOZ_OVERRIDE;
+  virtual nsresult InitializeFrameLoader(nsFrameLoader* aLoader);
+  virtual nsresult FinalizeFrameLoader(nsFrameLoader* aLoader);
+  virtual void TryCancelFrameLoaderInitialization(nsIDocShell* aShell);
+  virtual bool FrameLoaderScheduledToBeFinalized(nsIDocShell* aShell);
   virtual nsIDocument*
     RequestExternalResource(nsIURI* aURI,
                             nsINode* aRequestingNode,
-                            ExternalResourceLoad** aPendingLoad) MOZ_OVERRIDE;
+                            ExternalResourceLoad** aPendingLoad);
   virtual void
-    EnumerateExternalResources(nsSubDocEnumFunc aCallback, void* aData) MOZ_OVERRIDE;
+    EnumerateExternalResources(nsSubDocEnumFunc aCallback, void* aData);
 
   nsTArray<nsCString> mHostObjectURIs;
 
@@ -1049,7 +1049,7 @@ public:
   nsSMILAnimationController* GetAnimationController() MOZ_OVERRIDE;
 
   virtual mozilla::PendingPlayerTracker*
-  GetPendingPlayerTracker() MOZ_FINAL MOZ_OVERRIDE
+  GetPendingPlayerTracker() MOZ_FINAL
   {
     return mPendingPlayerTracker;
   }
@@ -1135,9 +1135,9 @@ public:
   virtual void MozSetImageElement(const nsAString& aImageElementId,
                                   Element* aElement) MOZ_OVERRIDE;
 
-  virtual nsresult AddImage(imgIRequest* aImage) MOZ_OVERRIDE;
-  virtual nsresult RemoveImage(imgIRequest* aImage, uint32_t aFlags) MOZ_OVERRIDE;
-  virtual nsresult SetImageLockingState(bool aLocked) MOZ_OVERRIDE;
+  virtual nsresult AddImage(imgIRequest* aImage);
+  virtual nsresult RemoveImage(imgIRequest* aImage, uint32_t aFlags);
+  virtual nsresult SetImageLockingState(bool aLocked);
 
   // AddPlugin adds a plugin-related element to mPlugins when the element is
   // added to the tree.
@@ -1312,25 +1312,25 @@ public:
                                                     mozilla::ErrorResult& rv) MOZ_OVERRIDE;
   virtual void UseRegistryFromDocument(nsIDocument* aDocument) MOZ_OVERRIDE;
 
-  virtual nsIDocument* MasterDocument() MOZ_OVERRIDE
+  virtual nsIDocument* MasterDocument()
   {
     return mMasterDocument ? mMasterDocument.get()
                            : this;
   }
 
-  virtual void SetMasterDocument(nsIDocument* master) MOZ_OVERRIDE
+  virtual void SetMasterDocument(nsIDocument* master)
   {
     MOZ_ASSERT(master);
     mMasterDocument = master;
     UseRegistryFromDocument(mMasterDocument);
   }
 
-  virtual bool IsMasterDocument() MOZ_OVERRIDE
+  virtual bool IsMasterDocument()
   {
     return !mMasterDocument;
   }
 
-  virtual mozilla::dom::ImportManager* ImportManager() MOZ_OVERRIDE
+  virtual mozilla::dom::ImportManager* ImportManager()
   {
     if (mImportManager) {
       MOZ_ASSERT(!mMasterDocument, "Only the master document has ImportManager set");
@@ -1349,22 +1349,22 @@ public:
     return mImportManager.get();
   }
 
-  virtual bool HasSubImportLink(nsINode* aLink) MOZ_OVERRIDE
+  virtual bool HasSubImportLink(nsINode* aLink)
   {
     return mSubImportLinks.Contains(aLink);
   }
 
-  virtual uint32_t IndexOfSubImportLink(nsINode* aLink) MOZ_OVERRIDE
+  virtual uint32_t IndexOfSubImportLink(nsINode* aLink)
   {
     return mSubImportLinks.IndexOf(aLink);
   }
 
-  virtual void AddSubImportLink(nsINode* aLink) MOZ_OVERRIDE
+  virtual void AddSubImportLink(nsINode* aLink)
   {
     mSubImportLinks.AppendElement(aLink);
   }
 
-  virtual nsINode* GetSubImportLink(uint32_t aIdx) MOZ_OVERRIDE
+  virtual nsINode* GetSubImportLink(uint32_t aIdx)
   {
     return aIdx < mSubImportLinks.Length() ? mSubImportLinks[aIdx].get()
                                            : nullptr;
@@ -1562,7 +1562,7 @@ public:
   // ex. <x-button>, <button is="x-button> (type extension)
   virtual void SetupCustomElement(Element* aElement,
                                   uint32_t aNamespaceID,
-                                  const nsAString* aTypeExtension) MOZ_OVERRIDE;
+                                  const nsAString* aTypeExtension);
 
   static bool IsWebComponentsEnabled(JSContext* aCx, JSObject* aObject);
 

@@ -141,8 +141,8 @@ private:
       }
       return NS_OK;
     }
-    virtual void SetTo(Element* aTo) MOZ_OVERRIDE { mTo = aTo; }
-    virtual void Clear() MOZ_OVERRIDE
+    virtual void SetTo(Element* aTo) { mTo = aTo; }
+    virtual void Clear()
     {
       Notification::Clear(); mFrom = nullptr; mTo = nullptr;
     }
@@ -172,7 +172,7 @@ private:
   private:
     virtual ~DocumentLoadNotification() {}
 
-    virtual void SetTo(Element* aTo) MOZ_OVERRIDE { }
+    virtual void SetTo(Element* aTo) { }
 
     nsString mRef;
   };
