@@ -45,7 +45,6 @@ let gNumberOfThreadsLaunched = 0;
 const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_ENABLED = PREF_BRANCH + "enabled";
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
-const PREF_FHR_SERVICE_ENABLED = "datareporting.healthreport.service.enabled";
 
 const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
 
@@ -220,7 +219,6 @@ function checkPayload(request, reason, successfulPings) {
   do_check_eq(payload.simpleMeasurements.savedPings, 1);
   do_check_true("maximalNumberOfConcurrentThreads" in payload.simpleMeasurements);
   do_check_true(payload.simpleMeasurements.maximalNumberOfConcurrentThreads >= gNumberOfThreadsLaunched);
-  do_check_true(payload.simpleMeasurements.activeTicks >= 0);
 
   do_check_eq(payload.simpleMeasurements.failedProfileLockCount,
               FAILED_PROFILE_LOCK_ATTEMPTS);
@@ -434,20 +432,12 @@ function run_test() {
     // If we can't test gfxInfo, that's fine, we'll note it later.
   }
 
-  // make sure getSessionRecorder() can be called before the DRS init.
-  // It's not a requirement that it returns undefined, but that's how it behaves
-  // now - so just let this test fail if this behavior changes.
-  do_check_true(gDatareportingService.getSessionRecorder() === undefined);
-
   // Addon manager needs a profile directory
   do_get_profile();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   Services.prefs.setBoolPref(PREF_ENABLED, true);
   Services.prefs.setBoolPref(PREF_FHR_UPLOAD_ENABLED, true);
-
-  // Initially disable FHR to verify that activeTicks ends up as -1
-  Services.prefs.setBoolPref(PREF_FHR_SERVICE_ENABLED, false);
 
   // Send the needed startup notifications to the datareporting service
   // to ensure that it has been initialized.
@@ -504,19 +494,6 @@ function actualTest() {
 
 add_task(function* asyncSetup() {
   yield TelemetryPing.setup();
-
-  // When FHR is disabled, the payload's activeTicks should be -1.
-  do_check_true(TelemetryPing.getPayload().simpleMeasurements.activeTicks == -1);
-
-  // re-enable FHR and re-init the DRS.
-  // Note: this relies on the fact that the data reporting service reinitializes
-  // itself when calling its 'observe' method, without checking if it's already
-  // initialized. If this DRS behavior changes, this test would need to be adapted.
-  Services.prefs.setBoolPref(PREF_FHR_SERVICE_ENABLED, true);
-  if ("@mozilla.org/datareporting/service;1" in Cc) {
-    gDatareportingService.observe(null, "app-startup", null);
-    gDatareportingService.observe(null, "profile-after-change", null);
-  }
 
   if ("@mozilla.org/datareporting/service;1" in Cc) {
     gDataReportingClientID = yield gDatareportingService.getClientID();
