@@ -39,7 +39,7 @@ public:
   // Append data to the current decoder.  Also responsible for calling
   // NotifyDataArrived on the decoder to keep buffered range computation up
   // to date.  Returns false if the append failed.
-  bool AppendData(const uint8_t* aData, uint32_t aLength);
+  bool AppendData(const uint8_t* aData, uint32_t aLength, int64_t aTimestampOffset /* microseconds */);
   bool EvictData(uint32_t aThreshold);
   void EvictBefore(double aTime);
 
@@ -92,7 +92,7 @@ private:
   // for initialization.
   // The decoder is not considered initialized until it is added to
   // mInitializedDecoders.
-  already_AddRefed<SourceBufferDecoder> NewDecoder();
+  already_AddRefed<SourceBufferDecoder> NewDecoder(int64_t aTimestampOffset /* microseconds */);
 
   // Helper for AppendData, ensures NotifyDataArrived is called whenever
   // data is appended to the current decoder's SourceBufferResource.
@@ -155,6 +155,9 @@ private:
   // AppendData.  Accessed on the main thread only.
   int64_t mLastStartTimestamp;
   Maybe<int64_t> mLastEndTimestamp;
+
+  // The timestamp offset used by our current decoder, in microseconds.
+  int64_t mLastTimestampOffset;
 
   // Set when the first decoder used by this TrackBuffer is initialized.
   // Protected by mParentDecoder's monitor.
