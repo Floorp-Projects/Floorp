@@ -351,9 +351,6 @@ private: // data
   //! All the frames of the image.
   Maybe<FrameBlender>       mFrameBlender;
 
-  //! The last frame we decoded for multipart images.
-  DrawableFrameRef          mMultipartDecodedFrame;
-
   nsCOMPtr<nsIProperties>   mProperties;
 
   // IMPORTANT: if you use mAnim in a method, call EnsureImageIsDecoded() first to ensure
@@ -408,7 +405,7 @@ private: // data
   // Boolean flags (clustered together to conserve space):
   bool                       mHasSize:1;       // Has SetSize() been called?
   bool                       mDecodeOnDraw:1;  // Decoding on draw?
-  bool                       mMultipart:1;     // Multipart?
+  bool                       mTransient:1;     // Is the image short-lived?
   bool                       mDiscardable:1;   // Is container discardable?
   bool                       mHasSourceData:1; // Do we have source data?
 
