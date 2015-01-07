@@ -17,52 +17,43 @@ using namespace gfx;
 
 namespace image {
 
-FrameBlender::FrameBlender()
- : mAnim(nullptr)
- , mLoopCount(-1)
+DrawableFrameRef
+FrameBlender::GetCompositedFrame(uint32_t aFrameNum)
 {
-}
+  MOZ_ASSERT(aFrameNum != 0, "First frame is never composited");
 
-FrameBlender::~FrameBlender()
-{
-  delete mAnim;
-}
-
-already_AddRefed<imgFrame>
-FrameBlender::GetFrame(uint32_t aFrameNum)
-{
-  if (mAnim && mAnim->lastCompositedFrameIndex == int32_t(aFrameNum)) {
-    nsRefPtr<imgFrame> frame = mAnim->compositingFrame.get();
-    return frame.forget();
+  // If we have a composited version of this frame, return that.
+  if (mLastCompositedFrameIndex == int32_t(aFrameNum)) {
+    return mCompositingFrame->DrawableRef();
   }
-  return RawGetFrame(aFrameNum);
+
+  // Otherwise return the raw frame. DoBlend is required to ensure that we only
+  // hit this case if the frame is not paletted and doesn't require compositing.
+  DrawableFrameRef ref =
+    SurfaceCache::Lookup(mImageKey,
+                         RasterSurfaceKey(mSize,
+                                          0,  // Default decode flags.
+                                          aFrameNum));
+  MOZ_ASSERT(!ref || !ref->GetIsPaletted(), "About to return a paletted frame");
+  return ref;
 }
 
-already_AddRefed<imgFrame>
-FrameBlender::RawGetFrame(uint32_t aFrameNum)
+RawAccessFrameRef
+FrameBlender::GetRawFrame(uint32_t aFrameNum)
 {
-  if (!mAnim) {
-    NS_ASSERTION(aFrameNum == 0,
-                 "Don't ask for a frame > 0 if we're not animated!");
-    aFrameNum = 0;
-  }
-  if (aFrameNum >= mFrames.Length()) {
-    return nullptr;
-  }
-  nsRefPtr<imgFrame> frame = mFrames[aFrameNum].get();
-  return frame.forget();
-}
-
-uint32_t
-FrameBlender::GetNumFrames() const
-{
-  return mFrames.Length();
+  DrawableFrameRef ref =
+    SurfaceCache::Lookup(mImageKey,
+                         RasterSurfaceKey(mSize,
+                                          0,  // Default decode flags.
+                                          aFrameNum));
+  return ref ? ref->RawAccessRef()
+             : RawAccessFrameRef();
 }
 
 int32_t
 FrameBlender::GetTimeoutForFrame(uint32_t aFrameNum)
 {
-  nsRefPtr<imgFrame> frame = RawGetFrame(aFrameNum);
+  RawAccessFrameRef frame = GetRawFrame(aFrameNum);
   const int32_t timeout = frame->GetRawTimeout();
 
   // Ensure a minimal time between updates so we don't throttle the UI thread.
@@ -85,48 +76,6 @@ FrameBlender::GetTimeoutForFrame(uint32_t aFrameNum)
   return timeout;
 }
 
-void
-FrameBlender::SetLoopCount(int32_t aLoopCount)
-{
-  mLoopCount = aLoopCount;
-}
-
-int32_t
-FrameBlender::GetLoopCount() const
-{
-  return mLoopCount;
-}
-
-void
-FrameBlender::RemoveFrame(uint32_t aFrameNum)
-{
-  MOZ_ASSERT(aFrameNum < GetNumFrames(), "Deleting invalid frame!");
-  mFrames.RemoveElementAt(aFrameNum);
-}
-
-void
-FrameBlender::ClearFrames()
-{
-  mFrames.Clear();
-  mFrames.Compact();
-}
-
-void
-FrameBlender::InsertFrame(uint32_t aFrameNum, RawAccessFrameRef&& aRef)
-{
-  MOZ_ASSERT(aRef, "Need a reference to a frame");
-  MOZ_ASSERT(aFrameNum <= GetNumFrames(), "Inserting invalid frame");
-
-  mFrames.InsertElementAt(aFrameNum, Move(aRef));
-  if (GetNumFrames() == 2) {
-    MOZ_ASSERT(!mAnim, "Shouldn't have an animation context yet");
-    mAnim = new Anim();
-  }
-
-  MOZ_ASSERT(GetNumFrames() < 2 || mAnim,
-             "If we're animated we should have an animation context now");
-}
-
 //******************************************************************************
 // DoBlend gets called when the timer for animation get fired and we have to
 // update the composited frame of the animation.
@@ -135,14 +84,14 @@ FrameBlender::DoBlend(nsIntRect* aDirtyRect,
                       uint32_t aPrevFrameIndex,
                       uint32_t aNextFrameIndex)
 {
-  nsRefPtr<imgFrame> prevFrame = RawGetFrame(aPrevFrameIndex);
-  nsRefPtr<imgFrame> nextFrame = RawGetFrame(aNextFrameIndex);
+  RawAccessFrameRef prevFrame = GetRawFrame(aPrevFrameIndex);
+  RawAccessFrameRef nextFrame = GetRawFrame(aNextFrameIndex);
 
   MOZ_ASSERT(prevFrame && nextFrame, "Should have frames here");
 
   int32_t prevFrameDisposalMethod = prevFrame->GetFrameDisposalMethod();
   if (prevFrameDisposalMethod == FrameBlender::kDisposeRestorePrevious &&
-      !mAnim->compositingPrevFrame) {
+      !mCompositingPrevFrame) {
     prevFrameDisposalMethod = FrameBlender::kDisposeClear;
   }
 
@@ -217,23 +166,24 @@ FrameBlender::DoBlend(nsIntRect* aDirtyRect,
   //    Only Frame 3 of a 10 frame image required us to build a composite frame
   //    On the second loop, we do not need to rebuild the frame
   //    since it's still sitting in compositingFrame)
-  if (mAnim->lastCompositedFrameIndex == int32_t(aNextFrameIndex)) {
+  if (mLastCompositedFrameIndex == int32_t(aNextFrameIndex)) {
     return true;
   }
 
   bool needToBlankComposite = false;
 
   // Create the Compositing Frame
-  if (!mAnim->compositingFrame) {
+  if (!mCompositingFrame) {
     nsRefPtr<imgFrame> newFrame = new imgFrame;
-    nsresult rv = newFrame->InitForDecoder(mSize, SurfaceFormat::B8G8R8A8);
+    nsresult rv = newFrame->InitForDecoder(ThebesIntSize(mSize),
+                                           SurfaceFormat::B8G8R8A8);
     if (NS_FAILED(rv)) {
-      mAnim->compositingFrame.reset();
+      mCompositingFrame.reset();
       return false;
     }
-    mAnim->compositingFrame = newFrame->RawAccessRef();
+    mCompositingFrame = newFrame->RawAccessRef();
     needToBlankComposite = true;
-  } else if (int32_t(aNextFrameIndex) != mAnim->lastCompositedFrameIndex+1) {
+  } else if (int32_t(aNextFrameIndex) != mLastCompositedFrameIndex+1) {
 
     // If we are not drawing on top of last composited frame,
     // then we are building a new composite frame, so let's clear it first.
@@ -276,38 +226,38 @@ FrameBlender::DoBlend(nsIntRect* aDirtyRect,
         if (needToBlankComposite) {
           // If we just created the composite, it could have anything in its
           // buffer. Clear whole frame
-          ClearFrame(mAnim->compositingFrame->GetRawData(),
-                     mAnim->compositingFrame->GetRect());
+          ClearFrame(mCompositingFrame->GetRawData(),
+                     mCompositingFrame->GetRect());
         } else {
           // Only blank out previous frame area (both color & Mask/Alpha)
-          ClearFrame(mAnim->compositingFrame->GetRawData(),
-                     mAnim->compositingFrame->GetRect(),
+          ClearFrame(mCompositingFrame->GetRawData(),
+                     mCompositingFrame->GetRect(),
                      prevFrameRect);
         }
         break;
 
       case FrameBlender::kDisposeClearAll:
-        ClearFrame(mAnim->compositingFrame->GetRawData(),
-                   mAnim->compositingFrame->GetRect());
+        ClearFrame(mCompositingFrame->GetRawData(),
+                   mCompositingFrame->GetRect());
         break;
 
       case FrameBlender::kDisposeRestorePrevious:
         // It would be better to copy only the area changed back to
         // compositingFrame.
-        if (mAnim->compositingPrevFrame) {
-          CopyFrameImage(mAnim->compositingPrevFrame->GetRawData(),
-                         mAnim->compositingPrevFrame->GetRect(),
-                         mAnim->compositingFrame->GetRawData(),
-                         mAnim->compositingFrame->GetRect());
+        if (mCompositingPrevFrame) {
+          CopyFrameImage(mCompositingPrevFrame->GetRawData(),
+                         mCompositingPrevFrame->GetRect(),
+                         mCompositingFrame->GetRawData(),
+                         mCompositingFrame->GetRect());
 
           // destroy only if we don't need it for this frame's disposal
           if (nextFrameDisposalMethod !=
               FrameBlender::kDisposeRestorePrevious) {
-            mAnim->compositingPrevFrame.reset();
+            mCompositingPrevFrame.reset();
           }
         } else {
-          ClearFrame(mAnim->compositingFrame->GetRawData(),
-                     mAnim->compositingFrame->GetRect());
+          ClearFrame(mCompositingFrame->GetRawData(),
+                     mCompositingFrame->GetRect());
         }
         break;
 
@@ -319,26 +269,26 @@ FrameBlender::DoBlend(nsIntRect* aDirtyRect,
         // erased itself)
         // Note: Frame 1 never gets into DoBlend(), so (aNextFrameIndex - 1)
         // will always be a valid frame number.
-        if (mAnim->lastCompositedFrameIndex != int32_t(aNextFrameIndex - 1)) {
+        if (mLastCompositedFrameIndex != int32_t(aNextFrameIndex - 1)) {
           if (isFullPrevFrame && !prevFrame->GetIsPaletted()) {
             // Just copy the bits
             CopyFrameImage(prevFrame->GetRawData(),
                            prevFrame->GetRect(),
-                           mAnim->compositingFrame->GetRawData(),
-                           mAnim->compositingFrame->GetRect());
+                           mCompositingFrame->GetRawData(),
+                           mCompositingFrame->GetRect());
           } else {
             if (needToBlankComposite) {
               // Only blank composite when prev is transparent or not full.
               if (prevFrame->GetHasAlpha() || !isFullPrevFrame) {
-                ClearFrame(mAnim->compositingFrame->GetRawData(),
-                           mAnim->compositingFrame->GetRect());
+                ClearFrame(mCompositingFrame->GetRawData(),
+                           mCompositingFrame->GetRect());
               }
             }
             DrawFrameTo(prevFrame->GetRawData(), prevFrameRect,
                         prevFrame->PaletteDataLength(),
                         prevFrame->GetHasAlpha(),
-                        mAnim->compositingFrame->GetRawData(),
-                        mAnim->compositingFrame->GetRect(),
+                        mCompositingFrame->GetRawData(),
+                        mCompositingFrame->GetRect(),
                         FrameBlendMethod(prevFrame->GetBlendMethod()));
           }
         }
@@ -346,8 +296,8 @@ FrameBlender::DoBlend(nsIntRect* aDirtyRect,
   } else if (needToBlankComposite) {
     // If we just created the composite, it could have anything in its
     // buffers. Clear them
-    ClearFrame(mAnim->compositingFrame->GetRawData(),
-               mAnim->compositingFrame->GetRect());
+    ClearFrame(mCompositingFrame->GetRawData(),
+               mCompositingFrame->GetRect());
   }
 
   // Check if the frame we are composing wants the previous image restored after
@@ -358,44 +308,45 @@ FrameBlender::DoBlend(nsIntRect* aDirtyRect,
     // We are storing the whole image.
     // It would be better if we just stored the area that nextFrame is going to
     // overwrite.
-    if (!mAnim->compositingPrevFrame) {
+    if (!mCompositingPrevFrame) {
       nsRefPtr<imgFrame> newFrame = new imgFrame;
-      nsresult rv = newFrame->InitForDecoder(mSize, SurfaceFormat::B8G8R8A8);
+      nsresult rv = newFrame->InitForDecoder(ThebesIntSize(mSize),
+                                             SurfaceFormat::B8G8R8A8);
       if (NS_FAILED(rv)) {
-        mAnim->compositingPrevFrame.reset();
+        mCompositingPrevFrame.reset();
         return false;
       }
 
-      mAnim->compositingPrevFrame = newFrame->RawAccessRef();
+      mCompositingPrevFrame = newFrame->RawAccessRef();
     }
 
-    CopyFrameImage(mAnim->compositingFrame->GetRawData(),
-                   mAnim->compositingFrame->GetRect(),
-                   mAnim->compositingPrevFrame->GetRawData(),
-                   mAnim->compositingPrevFrame->GetRect());
+    CopyFrameImage(mCompositingFrame->GetRawData(),
+                   mCompositingFrame->GetRect(),
+                   mCompositingPrevFrame->GetRawData(),
+                   mCompositingPrevFrame->GetRect());
   }
 
   // blit next frame into it's correct spot
   DrawFrameTo(nextFrame->GetRawData(), nextFrameRect,
               nextFrame->PaletteDataLength(),
               nextFrame->GetHasAlpha(),
-              mAnim->compositingFrame->GetRawData(),
-              mAnim->compositingFrame->GetRect(),
+              mCompositingFrame->GetRawData(),
+              mCompositingFrame->GetRect(),
               FrameBlendMethod(nextFrame->GetBlendMethod()));
 
   // Set timeout of CompositeFrame to timeout of frame we just composed
   // Bug 177948
   int32_t timeout = nextFrame->GetRawTimeout();
-  mAnim->compositingFrame->SetRawTimeout(timeout);
+  mCompositingFrame->SetRawTimeout(timeout);
 
   // Tell the image that it is fully 'downloaded'.
   nsresult rv =
-    mAnim->compositingFrame->ImageUpdated(mAnim->compositingFrame->GetRect());
+    mCompositingFrame->ImageUpdated(mCompositingFrame->GetRect());
   if (NS_FAILED(rv)) {
     return false;
   }
 
-  mAnim->lastCompositedFrameIndex = int32_t(aNextFrameIndex);
+  mLastCompositedFrameIndex = int32_t(aNextFrameIndex);
 
   return true;
 }
@@ -548,38 +499,17 @@ FrameBlender::DrawFrameTo(const uint8_t* aSrcData, const nsIntRect& aSrcRect,
   return NS_OK;
 }
 
-void
-FrameBlender::Discard()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // As soon as an image becomes animated, it becomes non-discardable and any
-  // timers are cancelled.
-  NS_ABORT_IF_FALSE(!mAnim, "Asked to discard for animated image!");
-
-  // Delete all the decoded frames, then clear the array.
-  ClearFrames();
-}
-
 size_t
 FrameBlender::SizeOfDecoded(gfxMemoryLocation aLocation,
                             MallocSizeOf aMallocSizeOf) const
 {
   size_t n = 0;
 
-  for (uint32_t i = 0; i < mFrames.Length(); ++i) {
-    n += mFrames[i]->SizeOfExcludingThis(aLocation, aMallocSizeOf);
+  if (mCompositingFrame) {
+    n += mCompositingFrame->SizeOfExcludingThis(aLocation, aMallocSizeOf);
   }
-
-  if (mAnim) {
-    if (mAnim->compositingFrame) {
-      n += mAnim->compositingFrame
-                ->SizeOfExcludingThis(aLocation, aMallocSizeOf);
-    }
-    if (mAnim->compositingPrevFrame) {
-      n += mAnim->compositingPrevFrame
-                ->SizeOfExcludingThis(aLocation, aMallocSizeOf);
-    }
+  if (mCompositingPrevFrame) {
+    n += mCompositingPrevFrame->SizeOfExcludingThis(aLocation, aMallocSizeOf);
   }
 
   return n;
@@ -588,9 +518,7 @@ FrameBlender::SizeOfDecoded(gfxMemoryLocation aLocation,
 void
 FrameBlender::ResetAnimation()
 {
-  if (mAnim) {
-    mAnim->lastCompositedFrameIndex = -1;
-  }
+  mLastCompositedFrameIndex = -1;
 }
 
 } // namespace image

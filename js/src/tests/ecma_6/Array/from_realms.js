@@ -25,11 +25,12 @@ if (typeof newGlobal === 'function') {
     h.mainGlobal = this;
     h.eval("function f() { mainGlobal.result = this; }");
     g.Array.from.call(Array, [5, 6, 7], h.f);
-    // (Give each global in the test a name, for better error messages.)
-    this.name = "main";
-    g.name = "g";
-    h.name = "h";
-    assertEq(result.name, "h");
+    // (Give each global in the test a name, for better error messages.  But use
+    // globalName, because window.name is complicated.)
+    this.globalName = "main";
+    g.globalName = "g";
+    h.globalName = "h";
+    assertEq(result.globalName, "h");
 }
 
 if (typeof reportCompare === 'function')

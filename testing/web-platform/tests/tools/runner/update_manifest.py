@@ -2,10 +2,10 @@ import json
 import os
 import sys
 
-here = os.path.abspath(os.path.split(__file__)[0])
-root = os.path.abspath(os.path.join(here, "..", ".."))
-
-sys.path.insert(0, os.path.abspath(os.path.join(here, "..", "scripts")))
+here = os.path.split(__file__)[0]
+sys.path.insert(0, os.path.join(here, os.pardir, "scripts"))
+import _env
+root = _env.repo_root
 
 import manifest
 

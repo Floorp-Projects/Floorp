@@ -1,27 +1,15 @@
 <!DOCTYPE html>
-<html>
-<head>
 <title> WorkerLocation object </title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-</head>
-<body>
 <div id=log></div>
 <script>
-    
-    var FileName = './support/WorkerLocation.js';
+async_test(function(t) {
+  var worker = new Worker('./support/WorkerLocation.js');
+  worker.onmessage = t.step_func_done(function(e) {
     var href = window.location.href;
-    var ExpectedResult = href.substring(0, href.lastIndexOf('/')) + FileName.substring(1);
-    
-    var t = async_test("Test Description: A WorkerLocation object represents an absolute URL set at its creation.");
-                  
-    var worker = new Worker(FileName);
-
-    worker.onmessage = t.step_func(function(evt)
-    {
-        assert_equals(evt.data.location, ExpectedResult);
-        t.done();
-    });
+    var ExpectedResult = href.substring(0, href.lastIndexOf('/')) + '/support/WorkerLocation.js';
+    assert_equals(e.data.location, ExpectedResult);
+  });
+});
 </script>
-</body>
-</html>

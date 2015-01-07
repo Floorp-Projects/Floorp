@@ -6,23 +6,11 @@
 <script>
 async_test(function() {
    var obj = {};
-   obj.__defineGetter__( "field", this.step_func(function(){ assert_unreached(); }) );
+   obj.__defineGetter__( "field", function(){ throw new Error("getter_should_propagate_exceptions"); });
 
-   assert_throws('DATA_CLONE_ERR', function() {
-      postMessage(obj, '*');
-   });
-
-   /* Check that getters don't linger after deletion wrt cloning. */
-   var obj1 = {};
-   obj1.__defineGetter__( "a", function(){ return 2; } );
-   obj1.__defineSetter__( "a", function(v){ return; } );
-   delete obj1.a;
-   obj1.a = 2;
-
-   postMessage(obj1, '*');
-   onmessage = this.step_func(function(e) {
-     assert_equals(e.data.a, 2);
-     this.done();
+   assert_throws(new Error("getter_should_propagate_exceptions"), function() {
+     postMessage(obj, '*');
   });
+  this.done();
 });
 </script>

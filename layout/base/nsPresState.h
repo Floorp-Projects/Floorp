@@ -22,6 +22,7 @@ public:
     : mContentData(nullptr)
     , mScrollState(0, 0)
     , mResolution(1.0, 1.0)
+    , mScaleToResolution(false)
     , mDisabledSet(false)
     , mDisabled(false)
   {}
@@ -44,6 +45,16 @@ public:
   gfxSize GetResolution() const
   {
     return mResolution;
+  }
+
+  void SetScaleToResolution(bool aScaleToResolution)
+  {
+    mScaleToResolution = aScaleToResolution;
+  }
+
+  bool GetScaleToResolution() const
+  {
+    return mScaleToResolution;
   }
 
   void ClearNonScrollState()
@@ -83,6 +94,7 @@ protected:
   nsCOMPtr<nsISupports> mContentData;
   nsPoint mScrollState;
   gfxSize mResolution;
+  bool mScaleToResolution;
   bool mDisabledSet;
   bool mDisabled;
 };

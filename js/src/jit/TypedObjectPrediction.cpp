@@ -136,7 +136,7 @@ TypedObjectPrediction::hasKnownSize(int32_t *out) const
     switch (predictionKind()) {
       case TypedObjectPrediction::Empty:
       case TypedObjectPrediction::Inconsistent:
-        break;
+        return false;
 
       case TypedObjectPrediction::Descr:
         *out = descr().size();
@@ -146,9 +146,10 @@ TypedObjectPrediction::hasKnownSize(int32_t *out) const
         // We only know a prefix of the struct fields, hence we do not
         // know its complete size.
         return false;
-    }
 
-    MOZ_CRASH("Bad prediction kind");
+      default:
+        MOZ_CRASH("Bad prediction kind");
+    }
 }
 
 const TypedProto *
@@ -168,9 +169,10 @@ TypedObjectPrediction::getKnownPrototype() const
         // We only know a prefix of the struct fields, hence we cannot
         // say for certain what its prototype will be.
         return nullptr;
-    }
 
-    MOZ_CRASH("Bad prediction kind");
+      default:
+        MOZ_CRASH("Bad prediction kind");
+    }
 }
 
 template<typename T>
@@ -214,11 +216,10 @@ TypedObjectPrediction::simdType() const
 bool
 TypedObjectPrediction::hasKnownArrayLength(int32_t *length) const
 {
-    MOZ_ASSERT(ofArrayKind());
     switch (predictionKind()) {
       case TypedObjectPrediction::Empty:
       case TypedObjectPrediction::Inconsistent:
-        break;
+        return false;
 
       case TypedObjectPrediction::Descr:
         // In later patches, this condition will always be true
@@ -230,9 +231,12 @@ TypedObjectPrediction::hasKnownArrayLength(int32_t *length) const
         return false;
 
       case TypedObjectPrediction::Prefix:
-        break; // Prefixes are always structs, never arrays
+        // Prefixes are always structs, never arrays
+        return false;
+
+      default:
+        MOZ_CRASH("Bad prediction kind");
     }
-    MOZ_CRASH("Bad prediction kind");
 }
 
 TypedObjectPrediction
@@ -286,7 +290,7 @@ TypedObjectPrediction::hasFieldNamed(jsid id,
     switch (predictionKind()) {
       case TypedObjectPrediction::Empty:
       case TypedObjectPrediction::Inconsistent:
-        break;
+        return false;
 
       case TypedObjectPrediction::Descr:
         return hasFieldNamedPrefix(
@@ -297,6 +301,8 @@ TypedObjectPrediction::hasFieldNamed(jsid id,
         return hasFieldNamedPrefix(
             *prefix().descr, prefix().fields,
             id, fieldOffset, fieldType, fieldIndex);
+
+      default:
+        MOZ_CRASH("Bad prediction kind");
     }
-    MOZ_CRASH("Bad prediction kind");
 }

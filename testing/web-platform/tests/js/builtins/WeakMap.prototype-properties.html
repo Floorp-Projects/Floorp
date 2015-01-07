@@ -1,7 +1,8 @@
 <!doctype html>
 <title>WeakMap.prototype</title>
 <link rel=author href=mailto:Ms2ger@gmail.com title=Ms2ger>
-<link rel=help href=http://people.mozilla.org/~jorendorff/es6-draft.html#sec-15.15.5>
+<link rel=help href=https://people.mozilla.org/~jorendorff/es6-draft.html#sec-properties-of-the-weakmap-prototype-object>
+<link rel=help href=https://people.mozilla.org/~jorendorff/es6-draft.html#sec-functioninitialize>
 <script src=/resources/testharness.js></script>
 <script src=/resources/testharnessreport.js></script>
 <div id=log></div>
@@ -16,7 +17,7 @@ function assert_propdesc(obj, prop, Writable, Enumerable, Configurable) {
 
 function test_length(fun, expected) {
   test(function() {
-    assert_propdesc(WeakMap.prototype[fun], "length", false, false, false);
+    assert_propdesc(WeakMap.prototype[fun], "length", false, false, true);
     assert_equals(WeakMap.prototype[fun].length, expected);
   }, "WeakMap.prototype." + fun + ".length")
 }

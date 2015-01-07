@@ -138,7 +138,7 @@ public:
     data.mSync = eglSync;
     data.mOwns = true;
     data.mSize = gfx::IntSize(mConfig.display_width, mConfig.display_height);
-    data.mOriginPos = gl::OriginPos::TopLeft;
+    data.mOriginPos = gl::OriginPos::BottomLeft;
 
     layers::EGLImageImage* typedImg = static_cast<layers::EGLImageImage*>(img.get());
     typedImg->SetData(data);

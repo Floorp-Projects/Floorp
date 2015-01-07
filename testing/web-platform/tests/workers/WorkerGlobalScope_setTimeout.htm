@@ -1,40 +1,20 @@
 <!DOCTYPE html>
-<html>
-<head>
 <title> WorkerGlobalScope API: setTimeout() </title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-</head>
-<body>
 <div id=log></div>
 <script>
-    
-    var FileName = './support/Timer.js';
-    var DATA = "TimeoutHandler";
-    var ExpectedResult = ["hello", "worker", "worker"];
-    var ActualResult = [];
-    
-    var t = async_test("Test Description: WorkerGlobalScope API: setTimeout().");
-                  
-    var worker = new Worker(FileName);
-
-    worker.onmessage = t.step_func(function(evt)
-    {
-        ActualResult.push(evt.data);
-        
-        if (ActualResult.length == 3)
-        {
-            setTimeout(t.step_func(VerifyResult), 100);
-        }
-    });
-    
-    worker.postMessage(DATA);
-    
-    function VerifyResult()
-    {
-        assert_array_equals(ActualResult, ExpectedResult)
-        t.done();
+async_test(function(t) {
+  var result = [];
+  var worker = new Worker('./support/Timer.js');
+  worker.onmessage = t.step_func(function(e) {
+    result.push(e.data);
+    if (result.length == 3) {
+      assert_array_equals(result, ["hello", "worker", "worker"]);
+      worker.onmessage = t.unreached_func('Unexpected message event');
+      setTimeout(t.step_func_done(), 100);
     }
+  });
+  worker.postMessage("TimeoutHandler");
+});
 </script>
-</body>
-</html>

@@ -76,7 +76,7 @@ public:
     // ImageSurface methods
     gfxImageFormat Format() const { return mFormat; }
 
-    virtual const gfxIntSize GetSize() const { return mSize; }
+    virtual const gfxIntSize GetSize() const MOZ_OVERRIDE { return mSize; }
     int32_t Width() const { return mSize.width; }
     int32_t Height() const { return mSize.height; }
 
@@ -121,7 +121,7 @@ public:
      */
     already_AddRefed<gfxSubimageSurface> GetSubimage(const gfxRect& aRect);
 
-    virtual already_AddRefed<gfxImageSurface> GetAsImageSurface();
+    virtual already_AddRefed<gfxImageSurface> GetAsImageSurface() MOZ_OVERRIDE;
 
     /** See gfxASurface.h. */
     static long ComputeStride(const gfxIntSize&, gfxImageFormat);

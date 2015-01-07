@@ -382,6 +382,8 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
           specific.get_ContainerLayerAttributes();
         containerLayer->SetPreScale(attrs.preXScale(), attrs.preYScale());
         containerLayer->SetInheritedScale(attrs.inheritedXScale(), attrs.inheritedYScale());
+        containerLayer->SetScaleToResolution(attrs.scaleToResolution(),
+                                             attrs.presShellResolution());
 
         if (attrs.hmdInfo()) {
           if (!IsSameProcess()) {

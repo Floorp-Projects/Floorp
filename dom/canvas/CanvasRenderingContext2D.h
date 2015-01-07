@@ -584,15 +584,15 @@ public:
 
   friend class CanvasRenderingContext2DUserData;
 
-  virtual void GetImageBuffer(uint8_t** aImageBuffer, int32_t* aFormat);
+  virtual void GetImageBuffer(uint8_t** aImageBuffer, int32_t* aFormat) MOZ_OVERRIDE;
 
 
   // Given a point, return hit region ID if it exists
-  nsString GetHitRegion(const mozilla::gfx::Point& aPoint);
+  nsString GetHitRegion(const mozilla::gfx::Point& aPoint) MOZ_OVERRIDE;
 
 
   // return true and fills in the bound rect if element has a hit region.
-  bool GetHitRegionRect(Element* aElement, nsRect& aRect);
+  bool GetHitRegionRect(Element* aElement, nsRect& aRect) MOZ_OVERRIDE;
 
 protected:
   nsresult GetImageDataArray(JSContext* aCx, int32_t aX, int32_t aY,

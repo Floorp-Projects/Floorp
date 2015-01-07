@@ -165,16 +165,6 @@ ClippedImage::ShouldClip()
 
 NS_IMPL_ISUPPORTS_INHERITED0(ClippedImage, ImageWrapper)
 
-nsIntRect
-ClippedImage::FrameRect(uint32_t aWhichFrame)
-{
-  if (!ShouldClip()) {
-    return InnerImage()->FrameRect(aWhichFrame);
-  }
-
-  return nsIntRect(0, 0, mClip.width, mClip.height);
-}
-
 NS_IMETHODIMP
 ClippedImage::GetWidth(int32_t* aWidth)
 {

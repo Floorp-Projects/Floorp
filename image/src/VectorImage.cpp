@@ -359,12 +359,6 @@ VectorImage::Init(const char* aMimeType,
   return NS_OK;
 }
 
-nsIntRect
-VectorImage::FrameRect(uint32_t aWhichFrame)
-{
-  return nsIntRect::GetMaxSizedIntRect();
-}
-
 size_t
 VectorImage::SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const
 {
@@ -426,12 +420,6 @@ VectorImage::OnImageDataAvailable(nsIRequest* aRequest,
                                   uint32_t aCount)
 {
   return OnDataAvailable(aRequest, aContext, aInStr, aSourceOffset, aCount);
-}
-
-nsresult
-VectorImage::OnNewSourceData()
-{
-  return NS_OK;
 }
 
 nsresult

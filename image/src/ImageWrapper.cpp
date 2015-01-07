@@ -33,12 +33,6 @@ ImageWrapper::GetProgressTracker()
   return mInnerImage->GetProgressTracker();
 }
 
-nsIntRect
-ImageWrapper::FrameRect(uint32_t aWhichFrame)
-{
-  return mInnerImage->FrameRect(aWhichFrame);
-}
-
 size_t
 ImageWrapper::SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const
 {
@@ -95,12 +89,6 @@ ImageWrapper::OnImageDataComplete(nsIRequest* aRequest,
 {
   return mInnerImage->OnImageDataComplete(aRequest, aContext, aStatus,
                                           aLastPart);
-}
-
-nsresult
-ImageWrapper::OnNewSourceData()
-{
-  return mInnerImage->OnNewSourceData();
 }
 
 void

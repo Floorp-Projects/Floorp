@@ -1,46 +1,31 @@
 <!DOCTYPE html>
-<html>
-<head>
 <title> Web Workers Basic Tests </title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-</head>
-<body>
 <div id=log></div>
 <script>
-    
-    var EVENT = "message";
-    var FileName = './support/WorkerBasic.js';
-    var ExpectedResult = "Pass";
-                  
-    var worker = new Worker(FileName);
-    
-    test(function()
-    {
-        assert_equals(worker.toString(), "[object Worker]") 
-    }, "Test Description: Web Workers Basic Test 1: Worker constructor.");
+function create_worker() {
+  return new Worker('./support/WorkerBasic.js');
+}
 
-    var t = async_test("Test Description: Web Workers Basic Test 2: MessageEvent.data.");
+test(function() {
+  var worker = create_worker();
+  assert_class_string(worker, "Worker");
+}, "Worker constructor");
 
-    worker.onmessage = t.step_func(function(evt)
-    {
-        assert_equals(evt.data, ExpectedResult);
-        t.done();
-    });
+async_test(function(t) {
+  var worker = create_worker();
+  worker.onmessage = t.step_func_done(function(e) {
+    assert_equals(e.data, "Pass");
+  });
+  worker.postMessage("start");
+}, "MessageEvent.data");
 
-    worker.postMessage("start");
-
-    var t2 = async_test("Test Description: Web Workers Basic Test 3: MessageEvent.type.");
-                  
-    var worker2 = new Worker(FileName);
-
-    worker2.addEventListener(EVENT, t2.step_func(function(evt)
-    {
-        assert_equals(evt.type, EVENT);
-        t2.done();
-    }), true);
-
-    worker2.postMessage("start");
+async_test(function(t) {
+  var worker = create_worker();
+  worker.addEventListener("message", t.step_func_done(function(e) {
+    assert_equals(e.type, "message");
+  }), true);
+  worker.postMessage("start");
+}, "MessageEvent.type");
 </script>
-</body>
-</html>
