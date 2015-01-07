@@ -72,8 +72,6 @@ public:
     virtual bool IsFontFormatSupported(nsIURI *aFontURI,
                                        uint32_t aFormatFlags) MOZ_OVERRIDE;
 
-    virtual void ClearPrefFonts() { mPrefFonts.Clear(); }
-
     static int32_t GetDPI();
 
     virtual gfxImageFormat GetOffscreenFormat() MOZ_OVERRIDE;
@@ -89,9 +87,6 @@ protected:
 
 private:
     virtual void GetPlatformCMSOutputProfile(void *&mem, size_t &size) MOZ_OVERRIDE;
-
-    // TODO: unify this with mPrefFonts (NB: holds families, not fonts) in gfxPlatformFontList
-    nsDataHashtable<nsCStringHashKey, nsTArray<nsRefPtr<gfxFontEntry> > > mPrefFonts;
 
     int mScreenDepth;
 };
