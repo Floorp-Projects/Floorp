@@ -21,7 +21,7 @@
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="8aee09c106f479f36c57b2a29af72d455e359211"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="fe893bb760a3bb64375f62fdf4762a58c59df9ef"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="e130bc85d34747bb4efd3072fde9f007dbdc8a00"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="add5134fdd04ab2cc987923205f2150b3b6d8ae2"/>
   <!-- Stock Android things -->
   <project name="platform/abi/cpp" path="abi/cpp" revision="6426040f1be4a844082c9769171ce7f5341a5528"/>
   <project name="platform/bionic" path="bionic" revision="d2eb6c7b6e1bc7643c17df2d9d9bcb1704d0b9ab"/>
