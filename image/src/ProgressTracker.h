@@ -36,9 +36,8 @@ enum {
   FLAG_ONLOAD_UNBLOCKED   = 1u << 6,
   FLAG_IS_ANIMATED        = 1u << 7,  // STATUS_IS_ANIMATED
   FLAG_HAS_TRANSPARENCY   = 1u << 8,  // STATUS_HAS_TRANSPARENCY
-  FLAG_IS_MULTIPART       = 1u << 9,
-  FLAG_LAST_PART_COMPLETE = 1u << 10,
-  FLAG_HAS_ERROR          = 1u << 11  // STATUS_ERROR
+  FLAG_LAST_PART_COMPLETE = 1u << 9,
+  FLAG_HAS_ERROR          = 1u << 10  // STATUS_ERROR
 };
 
 typedef uint32_t Progress;
@@ -88,9 +87,6 @@ public:
     nsRefPtr<Image> image = mImage;
     return image.forget();
   }
-
-  // Informs this ProgressTracker that it's associated with a multipart image.
-  void SetIsMultipart();
 
   // Returns whether we are in the process of loading; that is, whether we have
   // not received OnStopRequest from Necko.
@@ -166,12 +162,6 @@ public:
   // some obscure network priority logic in imgRequest. That stuff could
   // probably be improved, but it's too scary to mess with at the moment.
   bool FirstObserverIs(IProgressObserver* aObserver);
-
-  void AdoptObservers(ProgressTracker* aTracker) {
-    MOZ_ASSERT(NS_IsMainThread(), "Use mObservers on main thread only");
-    MOZ_ASSERT(aTracker);
-    mObservers = aTracker->mObservers;
-  }
 
 private:
   typedef nsTObserverArray<mozilla::WeakPtr<IProgressObserver>> ObserverArray;
