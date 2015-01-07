@@ -5,9 +5,7 @@
 
 "use strict";
 
-const { utils: Cu } = Components;
-
-Cu.import("resource://gre/modules/ReaderMode.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode", "resource://gre/modules/ReaderMode.jsm");
 
 let Reader = {
   // These values should match those defined in BrowserContract.java.
@@ -17,13 +15,119 @@ let Reader = {
   STATUS_FETCH_FAILED_UNSUPPORTED_FORMAT: 3,
   STATUS_FETCHED_ARTICLE: 4,
 
-  get isEnabledForParseOnLoad() {
-    delete this.isEnabledForParseOnLoad;
+  observe: function Reader_observe(aMessage, aTopic, aData) {
+    switch (aTopic) {
+      case "Reader:Added": {
+        let mm = window.getGroupMessageManager("browsers");
+        mm.broadcastAsyncMessage("Reader:Added", { url: aData });
+        break;
+      }
+      case "Reader:Removed": {
+        let uri = Services.io.newURI(aData, null, null);
+        ReaderMode.removeArticleFromCache(uri).catch(e => Cu.reportError("Error removing article from cache: " + e));
 
-    // Listen for future pref changes.
-    Services.prefs.addObserver("reader.parse-on-load.", this, false);
+        let mm = window.getGroupMessageManager("browsers");
+        mm.broadcastAsyncMessage("Reader:Removed", { url: aData });
+        break;
+      }
+      case "Gesture:DoubleTap": {
+        // Ideally, we would just do this all with web APIs in AboutReader.jsm (bug 1118487)
+        if (!BrowserApp.selectedBrowser.currentURI.spec.startsWith("about:reader")) {
+          return;
+        }
 
-    return this.isEnabledForParseOnLoad = this._getStateForParseOnLoad();
+        let win = BrowserApp.selectedBrowser.contentWindow;
+        let scrollBy;
+        // Arbitrary choice of innerHeight (50) to give some context after scroll.
+        if (JSON.parse(aData).y < (win.innerHeight / 2)) {
+          scrollBy = - win.innerHeight + 50;
+        } else {
+          scrollBy = win.innerHeight - 50;
+        }
+
+        let viewport = BrowserApp.selectedTab.getViewport();
+        let newY = Math.min(Math.max(viewport.cssY + scrollBy, viewport.cssPageTop), viewport.cssPageBottom);
+        let newRect = new Rect(viewport.cssX, newY, viewport.cssWidth, viewport.cssHeight);
+        ZoomHelper.zoomToRect(newRect, -1);
+        break;
+      }
+    }
+  },
+
+  receiveMessage: function(message) {
+    switch (message.name) {
+      case "Reader:AddToList":
+        this.addArticleToReadingList(message.data.article);
+        break;
+
+      case "Reader:ArticleGet":
+        this._getArticle(message.data.url, message.target).then((article) => {
+          message.target.messageManager.sendAsyncMessage("Reader:ArticleData", { article: article });
+        });
+        break;
+
+      case "Reader:FaviconRequest": {
+        let observer = (s, t, d) => {
+          Services.obs.removeObserver(observer, "Reader:FaviconReturn", false);
+          message.target.messageManager.sendAsyncMessage("Reader:FaviconReturn", JSON.parse(d));
+        };
+        Services.obs.addObserver(observer, "Reader:FaviconReturn", false);
+        Messaging.sendRequest({
+          type: "Reader:FaviconRequest",
+          url: message.data.url
+        });
+        break;
+      }
+
+      case "Reader:ListStatusRequest":
+        Messaging.sendRequestForResult({
+          type: "Reader:ListStatusRequest",
+          url: message.data.url
+        }).then((data) => {
+          message.target.messageManager.sendAsyncMessage("Reader:ListStatusData", JSON.parse(data));
+        });
+        break;
+
+      case "Reader:RemoveFromList":
+        Messaging.sendRequest({
+          type: "Reader:RemoveFromList",
+          url: message.data.url
+        });
+        break;
+
+      case "Reader:Share":
+        Messaging.sendRequest({
+          type: "Reader:Share",
+          url: message.data.url,
+          title: message.data.title
+        });
+        break;
+
+      case "Reader:ShowToast":
+        NativeWindow.toast.show(message.data.toast, "short");
+        break;
+
+      case "Reader:SystemUIVisibility":
+        Messaging.sendRequest({
+          type: "SystemUI:Visibility",
+          visible: message.data.visible
+        });
+        break;
+
+      case "Reader:ToolbarVisibility":
+        Messaging.sendRequest({
+          type: "BrowserToolbar:Visibility",
+          visible: message.data.visible
+        });
+        break;
+
+      case "Reader:UpdateIsArticle": {
+        let tab = BrowserApp.getTabForBrowser(message.target);
+        tab.isArticle = message.data.isArticle;
+        this.updatePageAction(tab);
+        break;
+      }
+    }
   },
 
   pageAction: {
@@ -67,7 +171,7 @@ let Reader = {
     // Only stop a reader session if the foreground viewer is not visible.
     UITelemetry.stopSession("reader.1", "", null);
 
-    if (tab.savedArticle) {
+    if (tab.isArticle) {
       this.pageAction.id = PageActions.add({
         title: Strings.browser.GetStringFromName("readerMode.enter"),
         icon: "drawable://reader",
@@ -78,32 +182,14 @@ let Reader = {
     }
   },
 
-  observe: function(aMessage, aTopic, aData) {
-    switch(aTopic) {
-      case "Reader:Removed": {
-        let uri = Services.io.newURI(aData, null, null);
-        ReaderMode.removeArticleFromCache(uri).catch(e => Cu.reportError("Error removing article from cache: " + e));
-        break;
-      }
-
-      case "nsPref:changed":
-        if (aData.startsWith("reader.parse-on-load.")) {
-          this.isEnabledForParseOnLoad = this._getStateForParseOnLoad();
-        }
-        break;
-    }
-  },
-
   _addTabToReadingList: Task.async(function* (tabID) {
     let tab = BrowserApp.getTabForId(tabID);
     if (!tab) {
       throw new Error("Can't add tab to reading list because no tab found for ID: " + tabID);
     }
 
-    let uri = tab.browser.currentURI;
-    let urlWithoutRef = uri.specIgnoringRef;
-
-    let article = yield this.getArticle(urlWithoutRef, tabID).catch(e => {
+    let urlWithoutRef = tab.browser.currentURI.specIgnoringRef;
+    let article = yield this._getArticle(urlWithoutRef, tab.browser).catch(e => {
       Cu.reportError("Error getting article for tab: " + e);
       return null;
     });
@@ -140,36 +226,25 @@ let Reader = {
     ReaderMode.storeArticleInCache(article).catch(e => Cu.reportError("Error storing article in cache: " + e));
   },
 
-  _getStateForParseOnLoad: function () {
-    let isEnabled = Services.prefs.getBoolPref("reader.parse-on-load.enabled");
-    let isForceEnabled = Services.prefs.getBoolPref("reader.parse-on-load.force-enabled");
-    // For low-memory devices, don't allow reader mode since it takes up a lot of memory.
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=792603 for details.
-    return isForceEnabled || (isEnabled && !BrowserApp.isOnLowMemoryPlatform);
-  },
-
   /**
    * Gets an article for a given URL. This method will download and parse a document
    * if it does not find the article in the tab data or the cache.
    *
    * @param url The article URL.
-   * @param tabId (optional) The id of the tab where we can look for a saved article.
+   * @param browser The browser where the article is currently loaded.
    * @return {Promise}
    * @resolves JS object representing the article, or null if no article is found.
    */
-  getArticle: Task.async(function* (url, tabId) {
-    // First, look for an article object stored on the tab.
-    let tab = BrowserApp.getTabForId(tabId);
-    if (tab) {
-      let article = tab.savedArticle;
-      if (article && article.url == url) {
-        return article;
-      }
+  _getArticle: Task.async(function* (url, browser) {
+    // First, look for a saved article.
+    let article = yield this._getSavedArticle(browser);
+    if (article && article.url == url) {
+      return article;
     }
 
     // Next, try to find a parsed article in the cache.
     let uri = Services.io.newURI(url, null, null);
-    let article = yield ReaderMode.getArticleFromCache(uri);
+    article = yield ReaderMode.getArticleFromCache(uri);
     if (article) {
       return article;
     }
@@ -178,6 +253,18 @@ let Reader = {
     // download the page and parse the article out of it.
     return yield ReaderMode.downloadAndParseDocument(url);
   }),
+
+  _getSavedArticle: function(browser) {
+    return new Promise((resolve, reject) => {
+      let mm = browser.messageManager;
+      let listener = (message) => {
+        mm.removeMessageListener("Reader:SavedArticleData", listener);
+        resolve(message.data.article);
+      };
+      mm.addMessageListener("Reader:SavedArticleData", listener);
+      mm.sendAsyncMessage("Reader:SavedArticleGet");
+    });
+  },
 
   /**
    * Migrates old indexedDB reader mode cache to new JSON cache.

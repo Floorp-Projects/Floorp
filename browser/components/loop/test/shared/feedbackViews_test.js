@@ -133,16 +133,6 @@ describe("loop.shared.views.FeedbackView", function() {
         expect(comp.getDOMNode().querySelector("form button").disabled).eql(false);
       });
 
-    it("should empty the description field when a predefined category is " +
-       "chosen",
-      function() {
-        clickSadFace(comp);
-
-        fillSadFeedbackForm(comp, "confusing");
-
-        expect(comp.getDOMNode().querySelector(".feedback-description").value).eql("");
-      });
-
     it("should enable the form submit button once a predefined category is " +
        "chosen",
       function() {

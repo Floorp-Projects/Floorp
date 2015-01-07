@@ -21,7 +21,7 @@
 
     var DATA = "foo";
     var TARGET = document.querySelector("iframe");
-    var SORIGIN = "http://" + location.host;
+    var SORIGIN = location.protocol + "//" + location.host;
     var ExpectedResult = [SORIGIN, "AccessCookieAllowed"];
     var ActualResult = [];
 

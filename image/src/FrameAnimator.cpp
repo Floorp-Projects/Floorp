@@ -5,20 +5,12 @@
 
 #include "FrameAnimator.h"
 #include "FrameBlender.h"
+#include "RasterImage.h"
 
 #include "imgIContainer.h"
 
 namespace mozilla {
 namespace image {
-
-FrameAnimator::FrameAnimator(FrameBlender& aFrameBlender,
-                             uint16_t aAnimationMode)
-  : mCurrentAnimationFrameIndex(0)
-  , mLoopCounter(-1)
-  , mFrameBlender(aFrameBlender)
-  , mAnimationMode(aAnimationMode)
-  , mDoneDecoding(false)
-{ }
 
 int32_t
 FrameAnimator::GetSingleLoopTime() const
@@ -34,7 +26,7 @@ FrameAnimator::GetSingleLoopTime() const
   }
 
   uint32_t looptime = 0;
-  for (uint32_t i = 0; i < mFrameBlender.GetNumFrames(); ++i) {
+  for (uint32_t i = 0; i < mImage->GetNumFrames(); ++i) {
     int32_t timeout = mFrameBlender.GetTimeoutForFrame(i);
     if (timeout >= 0) {
       looptime += static_cast<uint32_t>(timeout);
@@ -85,7 +77,7 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
   int32_t timeout = 0;
 
   RefreshResult ret;
-  nsRefPtr<imgFrame> nextFrame = mFrameBlender.RawGetFrame(nextFrameIndex);
+  RawAccessFrameRef nextFrame = mFrameBlender.GetRawFrame(nextFrameIndex);
 
   // If we're done decoding, we know we've got everything we're going to get.
   // If we aren't, we only display fully-downloaded frames; everything else
@@ -100,12 +92,12 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
 
   // If we're done decoding the next frame, go ahead and display it now and
   // reinit with the next frame's delay time.
-  if (mFrameBlender.GetNumFrames() == nextFrameIndex) {
+  if (mImage->GetNumFrames() == nextFrameIndex) {
     // End of an animation loop...
 
     // If we are not looping forever, initialize the loop counter
-    if (mLoopCounter < 0 && mFrameBlender.GetLoopCount() >= 0) {
-      mLoopCounter = mFrameBlender.GetLoopCount();
+    if (mLoopCounter < 0 && mFrameBlender.LoopCount() >= 0) {
+      mLoopCounter = mFrameBlender.LoopCount();
     }
 
     // If animation mode is "loop once", or we're at end of loop counter,
@@ -140,7 +132,7 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
   } else {
     // Change frame
     if (nextFrameIndex != currentFrameIndex + 1) {
-      nextFrame = mFrameBlender.RawGetFrame(nextFrameIndex);
+      nextFrame = mFrameBlender.GetRawFrame(nextFrameIndex);
     }
 
     if (!mFrameBlender.DoBlend(&ret.dirtyRect, currentFrameIndex,

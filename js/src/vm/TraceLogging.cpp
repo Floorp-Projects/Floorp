@@ -887,32 +887,44 @@ js::TraceLogDisableTextId(JSContext *cx, uint32_t textId)
 
 TraceLoggerEvent::TraceLoggerEvent(TraceLoggerThread *logger, TraceLoggerTextId textId)
 {
-    payload_ = logger->getOrCreateEventPayload(textId);
-    if (payload_)
-        payload_->use();
+    payload_ = nullptr;
+    if (logger) {
+        payload_ = logger->getOrCreateEventPayload(textId);
+        if (payload_)
+            payload_->use();
+    }
 }
 
 TraceLoggerEvent::TraceLoggerEvent(TraceLoggerThread *logger, TraceLoggerTextId type,
                                    JSScript *script)
 {
-    payload_ = logger->getOrCreateEventPayload(type, script);
-    if (payload_)
-        payload_->use();
+    payload_ = nullptr;
+    if (logger) {
+        payload_ = logger->getOrCreateEventPayload(type, script);
+        if (payload_)
+            payload_->use();
+    }
 }
 
 TraceLoggerEvent::TraceLoggerEvent(TraceLoggerThread *logger, TraceLoggerTextId type,
                                    const JS::ReadOnlyCompileOptions &compileOptions)
 {
-    payload_ = logger->getOrCreateEventPayload(type, compileOptions);
-    if (payload_)
-        payload_->use();
+    payload_ = nullptr;
+    if (logger) {
+        payload_ = logger->getOrCreateEventPayload(type, compileOptions);
+        if (payload_)
+            payload_->use();
+    }
 }
 
 TraceLoggerEvent::TraceLoggerEvent(TraceLoggerThread *logger, const char *text)
 {
-    payload_ = logger->getOrCreateEventPayload(text);
-    if (payload_)
-        payload_->use();
+    payload_ = nullptr;
+    if (logger) {
+        payload_ = logger->getOrCreateEventPayload(text);
+        if (payload_)
+            payload_->use();
+    }
 }
 
 TraceLoggerEvent::~TraceLoggerEvent()

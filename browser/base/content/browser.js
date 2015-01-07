@@ -2643,11 +2643,6 @@ let BrowserOnClick = {
     let transportSecurityInfo = serhelper.deserializeObject(securityInfo);
     transportSecurityInfo.QueryInterface(Ci.nsITransportSecurityInfo)
 
-    if (transportSecurityInfo.failedCertChain == null) {
-      Cu.reportError("transportSecurityInfo didn't have a failedCertChain for a failedChannel");
-      return;
-    }
-
     showReportStatus("activity");
 
     /*
@@ -2677,11 +2672,14 @@ let BrowserOnClick = {
     // Convert the nsIX509CertList into a format that can be parsed into
     // JSON
     let asciiCertChain = [];
-    let certs = transportSecurityInfo.failedCertChain.getEnumerator();
-    while (certs.hasMoreElements()) {
-      let cert = certs.getNext();
-      cert.QueryInterface(Ci.nsIX509Cert);
-      asciiCertChain.push(btoa(getDERString(cert)));
+
+    if (transportSecurityInfo.failedCertChain) {
+      let certs = transportSecurityInfo.failedCertChain.getEnumerator();
+      while (certs.hasMoreElements()) {
+        let cert = certs.getNext();
+        cert.QueryInterface(Ci.nsIX509Cert);
+        asciiCertChain.push(btoa(getDERString(cert)));
+      }
     }
 
     let report = {

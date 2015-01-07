@@ -106,6 +106,29 @@ browser.startup.homepage = http://github.com/
             # cleanup
             os.remove(name)
 
+    def test_ini_keep_case(self):
+        """
+        Read a preferences config file with a preference in camel-case style.
+        Check that the read preference name has not been lower-cased
+        """
+        # write the .ini file
+        _ini = """[DEFAULT]
+general.warnOnAboutConfig = False
+"""
+        try:
+            fd, name = tempfile.mkstemp(suffix='.ini')
+            os.write(fd, _ini)
+            os.close(fd)
+            commandline = ["--preferences", name]
+
+             # test the [DEFAULT] section
+            _prefs = {'general.warnOnAboutConfig': 'False'}
+            self.compare_generated(_prefs, commandline)
+
+        finally:
+            # cleanup
+            os.remove(name)
+
     def test_reset_should_remove_added_prefs(self):
         """Check that when we call reset the items we expect are updated"""
         profile = Profile()

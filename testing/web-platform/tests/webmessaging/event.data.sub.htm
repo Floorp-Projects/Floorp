@@ -9,7 +9,7 @@
 <div id=log></div>
 
 <div style="display:none">
-    <iframe width="70%" onload="PostMessageTest()" src="http://{{domains[www]}}:{{ports[http][0]}}/webmessaging/support/ChildWindowPostMessage.htm"></iframe>
+    <iframe width="70%" onload="PostMessageTest()" src="{{location[scheme]}}://{{domains[www]}}:{{location[port]}}/webmessaging/support/ChildWindowPostMessage.htm"></iframe>
     <iframe width="70%" onload="PostMessageTest()" src="./support/ChildWindowPostMessage.htm"></iframe>
 </div>
 
@@ -20,12 +20,13 @@
 
     var t = async_test(description);
 
+    var PORT = location.port !== "" ? ":" + location.port : "";
     var DATA = "STRING";
     var TYPE = "string";
     var TARGET1 = document.querySelectorAll("iframe")[0];
     var TARGET2 = document.querySelectorAll("iframe")[1];
-    var XORIGIN = "http://{{domains[www]}}:{{ports[http][0]}}";
-    var SORIGIN = "http://" + location.host;
+    var XORIGIN = "{{location[scheme]}}://{{domains[www]}}" + PORT;
+    var SORIGIN = "{{location[scheme]}}://{{host}}" + PORT;
     var ExpectedResult = [DATA, TYPE, DATA, TYPE];
     var ActualResult = [];
     var loaded = 0;

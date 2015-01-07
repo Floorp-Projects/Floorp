@@ -12,6 +12,7 @@
 #include "ProgressTracker.h"
 #include "ImageFactory.h"
 #include "Image.h"
+#include "MultipartImage.h"
 #include "RasterImage.h"
 
 #include "nsIChannel.h"
@@ -62,7 +63,7 @@ NS_IMPL_ISUPPORTS(imgRequest,
 
 imgRequest::imgRequest(imgLoader* aLoader)
  : mLoader(aLoader)
- , mProgressTracker(new ProgressTracker(nullptr))
+ , mProgressTracker(new ProgressTracker())
  , mValidator(nullptr)
  , mInnerWindowId(0)
  , mCORSMode(imgIRequest::CORS_NONE)
@@ -72,7 +73,7 @@ imgRequest::imgRequest(imgLoader* aLoader)
  , mIsMultiPartChannel(false)
  , mGotData(false)
  , mIsInCache(false)
- , mResniffMimeType(false)
+ , mNewPartPending(false)
 { }
 
 imgRequest::~imgRequest()
@@ -142,7 +143,7 @@ void imgRequest::ClearLoader() {
 already_AddRefed<ProgressTracker>
 imgRequest::GetProgressTracker()
 {
-  if (mImage && mGotData) {
+  if (mImage) {
     NS_ABORT_IF_FALSE(!mProgressTracker,
                       "Should have given mProgressTracker to mImage");
     return mImage->GetProgressTracker();
@@ -180,14 +181,14 @@ void imgRequest::AddProxy(imgRequestProxy *proxy)
   // If we're empty before adding, we have to tell the loader we now have
   // proxies.
   nsRefPtr<ProgressTracker> progressTracker = GetProgressTracker();
-  if (progressTracker->ConsumerCount() == 0) {
+  if (progressTracker->ObserverCount() == 0) {
     NS_ABORT_IF_FALSE(mURI, "Trying to SetHasProxies without key uri.");
     if (mLoader) {
       mLoader->SetHasProxies(this);
     }
   }
 
-  progressTracker->AddConsumer(proxy);
+  progressTracker->AddObserver(proxy);
 }
 
 nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
@@ -204,10 +205,10 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
   // before Cancel() returns, leaving the image in a different state then the
   // one it was in at this point.
   nsRefPtr<ProgressTracker> progressTracker = GetProgressTracker();
-  if (!progressTracker->RemoveConsumer(proxy, aStatus))
+  if (!progressTracker->RemoveObserver(proxy))
     return NS_OK;
 
-  if (progressTracker->ConsumerCount() == 0) {
+  if (progressTracker->ObserverCount() == 0) {
     // If we have no observers, there's nothing holding us alive. If we haven't
     // been cancelled and thus removed from the cache, tell the image loader so
     // we can be evicted from the cache.
@@ -417,7 +418,7 @@ void imgRequest::RemoveFromCache()
 bool imgRequest::HasConsumers()
 {
   nsRefPtr<ProgressTracker> progressTracker = GetProgressTracker();
-  return progressTracker && progressTracker->ConsumerCount() > 0;
+  return progressTracker && progressTracker->ObserverCount() > 0;
 }
 
 int32_t imgRequest::Priority() const
@@ -439,7 +440,7 @@ void imgRequest::AdjustPriority(imgRequestProxy *proxy, int32_t delta)
   // of content such as link clicks, CSS, and JS.
   //
   nsRefPtr<ProgressTracker> progressTracker = GetProgressTracker();
-  if (!progressTracker->FirstConsumerIs(proxy))
+  if (!progressTracker->FirstObserverIs(proxy))
     return;
 
   nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mChannel);
@@ -633,12 +634,13 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
 {
   LOG_SCOPE(GetImgLog(), "imgRequest::OnStartRequest");
 
-  // Figure out if we're multipart
+  mNewPartPending = true;
+
+  // Figure out if we're multipart.
   nsCOMPtr<nsIMultiPartChannel> mpchan(do_QueryInterface(aRequest));
   nsRefPtr<ProgressTracker> progressTracker = GetProgressTracker();
   if (mpchan) {
     mIsMultiPartChannel = true;
-    progressTracker->SetIsMultipart();
   } else {
     NS_ABORT_IF_FALSE(!mIsMultiPartChannel, "Something went wrong");
   }
@@ -646,19 +648,6 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   // If we're not multipart, we shouldn't have an image yet
   NS_ABORT_IF_FALSE(mIsMultiPartChannel || !mImage,
                     "Already have an image for non-multipart request");
-
-  // If we're multipart and about to load another image, signal so we can
-  // detect the mime type in OnDataAvailable.
-  if (mIsMultiPartChannel && mImage) {
-    mResniffMimeType = true;
-
-    // Tell the image to reinitialize itself. We have to do this in
-    // OnStartRequest so that its state machine is always in a consistent
-    // state.
-    // Note that if our MIME type changes, mImage will be replaced with a
-    // new object.
-    mImage->OnNewSourceData();
-  }
 
   /*
    * If mRequest is null here, then we need to set it so that we'll be able to
@@ -674,10 +663,6 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
     mpchan->GetBaseChannel(getter_AddRefs(chan));
     mRequest = chan;
   }
-
-  // Note: refreshing progressTracker in case OnNewSourceData changed it.
-  progressTracker = GetProgressTracker();
-  progressTracker->ResetForNewRequest();
 
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
   if (channel)
@@ -701,7 +686,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   mApplicationCache = GetApplicationCache(aRequest);
 
   // Shouldn't we be dead already if this gets hit?  Probably multipart/x-mixed-replace...
-  if (progressTracker->ConsumerCount() == 0) {
+  if (progressTracker->ObserverCount() == 0) {
     this->Cancel(NS_IMAGELIB_ERROR_FAILURE);
   }
 
@@ -838,16 +823,12 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
   NS_ASSERTION(aRequest, "imgRequest::OnDataAvailable -- no request!");
 
   nsresult rv;
+  mGotData = true;
 
-  if (!mGotData || mResniffMimeType) {
-    LOG_SCOPE(GetImgLog(), "imgRequest::OnDataAvailable |First time through... finding mimetype|");
+  if (mNewPartPending) {
+    LOG_SCOPE(GetImgLog(), "imgRequest::OnDataAvailable |New part; finding MIME type|");
 
-    mGotData = true;
-
-    // Store and reset this for the invariant that it's always false after
-    // calls to OnDataAvailable (see bug 907575)
-    bool resniffMimeType = mResniffMimeType;
-    mResniffMimeType = false;
+    mNewPartPending = false;
 
     mimetype_closure closure;
     nsAutoCString newType;
@@ -881,65 +862,66 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
       LOG_MSG(GetImgLog(), "imgRequest::OnDataAvailable", "Got content type from the channel");
     }
 
-    // If we're a regular image and this is the first call to OnDataAvailable,
-    // this will always be true. If we've resniffed our MIME type (i.e. we're a
-    // multipart/x-mixed-replace image), we have to be able to switch our image
-    // type and decoder.
-    // We always reinitialize for SVGs, because they have no way of
-    // reinitializing themselves.
-    if (mContentType != newType || newType.EqualsLiteral(IMAGE_SVG_XML)) {
-      mContentType = newType;
+    mContentType = newType;
+    SetProperties(chan);
+    bool firstPart = !mImage;
 
-      // If we've resniffed our MIME type and it changed, we need to create a
-      // new status tracker to give to the image, because we don't have one of
-      // our own any more.
-      if (resniffMimeType) {
-        MOZ_ASSERT(mIsMultiPartChannel, "Resniffing a non-multipart image");
+    LOG_MSG_WITH_PARAM(GetImgLog(), "imgRequest::OnDataAvailable", "content type", mContentType.get());
 
-        // Initialize a new status tracker.
-        nsRefPtr<ProgressTracker> freshTracker = new ProgressTracker(nullptr);
-        freshTracker->SetIsMultipart();
+    // XXX If server lied about mimetype and it's SVG, we may need to copy
+    // the data and dispatch back to the main thread, AND tell the channel to
+    // dispatch there in the future.
 
-        // Replace the old status tracker with it.
-        nsRefPtr<ProgressTracker> oldProgressTracker = GetProgressTracker();
-        freshTracker->AdoptConsumers(oldProgressTracker);
-        mProgressTracker = freshTracker.forget();
+    // Create the new image and give it ownership of our ProgressTracker.
+    if (mIsMultiPartChannel) {
+      // Create the ProgressTracker and image for this part.
+      nsRefPtr<ProgressTracker> progressTracker = new ProgressTracker();
+      nsRefPtr<Image> image =
+        ImageFactory::CreateImage(aRequest, progressTracker, mContentType,
+                                  mURI, /* aIsMultipart = */ true,
+                                  static_cast<uint32_t>(mInnerWindowId));
+
+      if (!mImage) {
+        // First part for a multipart channel. Create the MultipartImage wrapper.
+        MOZ_ASSERT(mProgressTracker, "Shouldn't have given away tracker yet");
+        mImage = new MultipartImage(image, mProgressTracker);
+        mProgressTracker = nullptr;
+      } else {
+        // Transition to the new part.
+        static_cast<MultipartImage*>(mImage.get())->BeginTransitionToPart(image);
       }
+    } else {
+      MOZ_ASSERT(!mImage, "New part for non-multipart channel?");
+      MOZ_ASSERT(mProgressTracker, "Shouldn't have given away tracker yet");
 
-      SetProperties(chan);
-
-      LOG_MSG_WITH_PARAM(GetImgLog(), "imgRequest::OnDataAvailable", "content type", mContentType.get());
-
-      // XXX If server lied about mimetype and it's SVG, we may need to copy
-      // the data and dispatch back to the main thread, AND tell the channel to
-      // dispatch there in the future.
-
-      // Now we can create a new image to hold the data. If we don't have a decoder
-      // for this mimetype we'll find out about it here.
-      mImage = ImageFactory::CreateImage(aRequest, mProgressTracker, mContentType,
-                                         mURI, mIsMultiPartChannel,
-                                         static_cast<uint32_t>(mInnerWindowId));
-
-      // Release our copy of the status tracker since the image owns it now.
+      // Create an image using our progress tracker.
+      mImage =
+        ImageFactory::CreateImage(aRequest, mProgressTracker, mContentType,
+                                  mURI, /* aIsMultipart = */ false,
+                                  static_cast<uint32_t>(mInnerWindowId));
       mProgressTracker = nullptr;
+    }
 
+    if (firstPart) {
       // Notify listeners that we have an image.
       nsRefPtr<ProgressTracker> progressTracker = GetProgressTracker();
       progressTracker->OnImageAvailable();
+      MOZ_ASSERT(progressTracker->HasImage());
+    }
 
-      if (mImage->HasError() && !mIsMultiPartChannel) { // Probably bad mimetype
-        // We allow multipart images to fail to initialize without cancelling the
-        // load because subsequent images might be fine; thus only single part
-        // images end up here.
-        this->Cancel(NS_IMAGELIB_ERROR_FAILURE);
-        return NS_BINDING_ABORTED;
-      }
+    if (mImage->HasError() && !mIsMultiPartChannel) { // Probably bad mimetype
+      // We allow multipart images to fail to initialize without cancelling the
+      // load because subsequent images might be fine; thus only single part
+      // images end up here.
+      this->Cancel(NS_IMAGELIB_ERROR_FAILURE);
+      return NS_BINDING_ABORTED;
+    }
 
-      NS_ABORT_IF_FALSE(progressTracker->HasImage(), "Status tracker should have an image!");
-      NS_ABORT_IF_FALSE(mImage, "imgRequest should have an image!");
+    MOZ_ASSERT(!mProgressTracker, "Should've given tracker to image");
+    MOZ_ASSERT(mImage, "Should have image");
 
-      if (mDecodeRequested)
-        mImage->StartDecoding();
+    if (mDecodeRequested) {
+      mImage->StartDecoding();
     }
   }
 
