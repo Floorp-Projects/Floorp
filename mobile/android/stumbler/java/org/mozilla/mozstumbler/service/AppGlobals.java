@@ -67,5 +67,16 @@ public class AppGlobals {
 
     public static final String ACTION_TEST_SETTING_ENABLED = "stumbler-test-setting-enabled";
     public static final String ACTION_TEST_SETTING_DISABLED = "stumbler-test-setting-disabled";
+
+    // Histogram values
+    public static final String TELEMETRY_TIME_BETWEEN_UPLOADS_SEC = "STUMBLER_TIME_BETWEEN_UPLOADS_SEC";
+    public static final String TELEMETRY_BYTES_UPLOADED_PER_SEC = "STUMBLER_VOLUME_BYTES_UPLOADED_PER_SEC";
+    public static final String TELEMETRY_TIME_BETWEEN_STARTS_SEC = "STUMBLER_TIME_BETWEEN_START_SEC";
+    public static final String TELEMETRY_BYTES_PER_UPLOAD = "STUMBLER_UPLOAD_BYTES";
+    public static final String TELEMETRY_OBSERVATIONS_PER_UPLOAD = "STUMBLER_UPLOAD_OBSERVATION_COUNT";
+    public static final String TELEMETRY_CELLS_PER_UPLOAD = "STUMBLER_UPLOAD_CELL_COUNT";
+    public static final String TELEMETRY_WIFIS_PER_UPLOAD = "STUMBLER_UPLOAD_WIFI_AP_COUNT";
+    public static final String TELEMETRY_OBSERVATIONS_PER_DAY = "STUMBLER_OBSERVATIONS_PER_DAY";
+    public static final String TELEMETRY_TIME_BETWEEN_RECEIVED_LOCATIONS_SEC = "STUMBLER_TIME_BETWEEN_RECEIVED_LOCATIONS_SEC";
 }
 
