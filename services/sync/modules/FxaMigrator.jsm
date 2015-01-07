@@ -201,6 +201,9 @@ Migrator.prototype = {
     // Write the migration sentinel if necessary.
     yield this._setMigrationSentinelIfNecessary();
 
+    // Get the list of enabled engines to we can restore that state.
+    let enginePrefs = this._getEngineEnabledPrefs();
+
     // Must be ready to perform the actual migration.
     this.log.info("Performing final sync migration steps");
     // Do the actual migration.
@@ -209,6 +212,21 @@ Migrator.prototype = {
       Services.obs.addObserver(observe = () => {
         this.log.info("observed that startOver is complete");
         Services.obs.removeObserver(observe, "weave:service:start-over:finish");
+        // We've now reset all sync prefs - set the engine related prefs back to
+        // what they were.
+        for (let [prefName, prefType, prefVal] of enginePrefs) {
+          switch (prefType) {
+            case Services.prefs.PREF_BOOL:
+              Services.prefs.setBoolPref(prefName, prefVal);
+              break;
+            case Services.prefs.PREF_STRING:
+              Services.prefs.setCharPref(prefName, prefVal);
+              break;
+            default:
+              // _getEngineEnabledPrefs doesn't return any other type...
+              Cu.reportError("unknown engine pref type for " + prefName + ": " + prefType);
+          }
+        }
         resolve();
       }, "weave:service:start-over:finish", false);
     });
@@ -311,6 +329,33 @@ Migrator.prototype = {
     Weave.Service.scheduler.unblockSync();
   },
 
+  /* Return a list of [prefName, prefType, prefVal] for all engine related
+     preferences.
+  */
+  _getEngineEnabledPrefs() {
+    let result = [];
+    for (let engine of Weave.Service.engineManager.getAll()) {
+      let prefName = "services.sync.engine." + engine.prefName;
+      let prefVal;
+      try {
+        prefVal = Services.prefs.getBoolPref(prefName);
+        result.push([prefName, Services.prefs.PREF_BOOL, prefVal]);
+      } catch (ex) {} /* just skip this pref */
+    }
+    // and the declined list.
+    try {
+      let prefName = "services.sync.declinedEngines";
+      let prefVal = Services.prefs.getCharPref(prefName);
+      result.push([prefName, Services.prefs.PREF_STRING, prefVal]);
+    } catch (ex) {}
+    return result;
+  },
+
+  /* return true if all engines are enabled, false otherwise. */
+  _allEnginesEnabled() {
+    return Weave.Service.engineManager.getAll().every(e => e.enabled);
+  },
+
   /*
    * Some helpers for the UI to try and move to the next state.
    */
@@ -338,6 +383,11 @@ Migrator.prototype = {
     // See if we can find a default account name to use.
     let email = yield this._getDefaultAccountName(sentinel);
     let tail = email ? "&email=" + encodeURIComponent(email) : "";
+    // We want to ask FxA to offer a "Customize Sync" checkbox iff any engines
+    // are disabled.
+    let customize = !this._allEnginesEnabled();
+    tail += "&customizeSync=" + customize;
+
     win.switchToTabHavingURI("about:accounts?" + action + tail, true,
                              {ignoreFragment: true, replaceQueryString: true});
     // An FxA observer will fire when the user completes this, which will
