@@ -166,8 +166,11 @@ class LIRGeneratorShared : public MDefinitionVisitor
 
     uint32_t getVirtualRegister() {
         uint32_t vreg = lirGraph_.getVirtualRegister();
-        if (vreg >= MAX_VIRTUAL_REGISTERS) {
-            // Mark code generation as having failed, and return a dummy vreg.
+
+        // If we run out of virtual registers, mark code generation as having
+        // failed and return a dummy vreg. Include a + 1 here for NUNBOX32
+        // platforms that expect Value vregs to be adjacent.
+        if (vreg + 1 >= MAX_VIRTUAL_REGISTERS) {
             gen->abort("max virtual registers");
             return 1;
         }

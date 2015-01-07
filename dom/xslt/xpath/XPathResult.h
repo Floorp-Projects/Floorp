@@ -77,7 +77,7 @@ public:
         return static_cast<XPathResult*>(static_cast<nsIXPathResult*>(aSupports));
     }
 
-    virtual JSObject* WrapObject(JSContext* aCx);
+    virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
     nsINode* GetParentObject() const
     {
         return mParent;

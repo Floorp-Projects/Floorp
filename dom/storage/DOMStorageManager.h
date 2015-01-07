@@ -46,7 +46,7 @@ protected:
 
 private:
   // DOMStorageObserverSink, handler to various chrome clearing notification
-  virtual nsresult Observe(const char* aTopic, const nsACString& aScopePrefix);
+  virtual nsresult Observe(const char* aTopic, const nsACString& aScopePrefix) MOZ_OVERRIDE;
 
   // Since nsTHashtable doesn't like multiple inheritance, we have to aggregate
   // DOMStorageCache into the entry.

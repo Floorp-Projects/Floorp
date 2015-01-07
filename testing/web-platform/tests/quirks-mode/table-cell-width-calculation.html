@@ -13,25 +13,25 @@
   <iframe id=standards></iframe>
   <script>
     setup({explicit_done:true});
-    var html = "<style id=style></style><table><tr><td id=test></table><table><tr><td id=ref></table><table><tr><td id=s_ref></table>";
-    var png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==";
-    var preload = new Image();
-    preload.src = png;
-    var a_doctype = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">';
-    var s_doctype = '<!DOCTYPE HTML>';
-    var q = document.getElementById('quirks').contentWindow;
-    var a = document.getElementById('almost').contentWindow;
-    var s = document.getElementById('standards').contentWindow;
-    q.document.open();
-    q.document.write(html);
-    q.document.close();
-    a.document.open();
-    a.document.write(a_doctype + html);
-    a.document.close();
-    s.document.open();
-    s.document.write(s_doctype + html);
-    s.document.close();
     onload = function() {
+        var html = "<style id=style></style><table><tr><td id=test></table><table><tr><td id=ref></table><table><tr><td id=s_ref></table>";
+        var png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==";
+        var preload = new Image();
+        preload.src = png;
+        var a_doctype = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">';
+        var s_doctype = '<!DOCTYPE HTML>';
+        var q = document.getElementById('quirks').contentWindow;
+        var a = document.getElementById('almost').contentWindow;
+        var s = document.getElementById('standards').contentWindow;
+        q.document.open();
+        q.document.write(html);
+        q.document.close();
+        a.document.open();
+        a.document.write(a_doctype + html);
+        a.document.close();
+        s.document.open();
+        s.document.write(s_doctype + html);
+        s.document.close();
         [q, a, s].forEach(function(win) {
             ['style', 'test', 'ref', 's_ref'].forEach(function(id) {
                 win.__proto__.__defineGetter__(id, function() { return win.document.getElementById(id); });

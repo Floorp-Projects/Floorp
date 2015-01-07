@@ -1,5 +1,5 @@
 <!doctype html>
-<title>document.characterSet normalization tests</title>
+<title>document.characterSet and inputEncoding normalization tests</title>
 <link rel=author title="Aryeh Gregor" href=ayg@aryeh.name>
 <meta name=timeout content=long>
 <div id=log></div>
@@ -19,7 +19,6 @@ var encodingMap = {
     // https://html.spec.whatwg.org/multipage/#documentEncoding
     "utf-16",
     "utf-16le",
-    "utf-16be",
     "utf-16be",
   ],
   "ibm866": [
@@ -342,11 +341,23 @@ Object.keys(encodingMap).forEach(function(name) {
   }
 });
 
+function expected_case(encoding_label) {
+  if (encoding_label === 'big5') {
+    return 'Big5';
+  }
+  if (encoding_label === 'shift_jis') {
+    return 'Shift_JIS';
+  }
+  return encoding_label.toUpperCase();
+}
+
 Object.keys(encodingMap).forEach(function(name) {
   encodingMap[name].forEach(function(label) {
     var iframe = document.createElement("iframe");
     var t = async_test("Name " + format_value(name) +
-                       " has label " + format_value(label));
+                       " has label " + format_value(label) + " (characterSet)");
+    var t2 = async_test("Name " + format_value(name) +
+                       " has label " + format_value(label) + " (inputEncoding)");
     /*
     iframe.src = "data:text/html,<!doctype html>" +
                  '<meta charset="' + label + '">';
@@ -354,10 +365,14 @@ Object.keys(encodingMap).forEach(function(name) {
     iframe.src = "encoding.py?label=" + label;
     iframe.onload = function() {
       t.step(function() {
-        assert_equals(iframe.contentDocument.characterSet.toLowerCase(), name);
+        assert_equals(iframe.contentDocument.characterSet, expected_case(name));
+      });
+      t2.step(function() {
+        assert_equals(iframe.contentDocument.inputEncoding, expected_case(name));
       });
       document.body.removeChild(iframe);
       t.done();
+      t2.done();
     };
     document.body.appendChild(iframe);
   });

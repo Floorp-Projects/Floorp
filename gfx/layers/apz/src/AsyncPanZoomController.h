@@ -218,13 +218,6 @@ public:
   ViewTransform GetCurrentAsyncTransform() const;
 
   /**
-   * Returns the part of the async transform that will remain once Gecko does a
-   * repaint at the desired metrics. That is, in the steady state:
-   * Matrix4x4(GetCurrentAsyncTransform()) === GetNontransientAsyncTransform()
-   */
-  Matrix4x4 GetNontransientAsyncTransform() const;
-
-  /**
    * Returns the transform to take something from the coordinate space of the
    * last thing we know gecko painted, to the coordinate space of the last thing
    * we asked gecko to paint. In cases where that last request has not yet been

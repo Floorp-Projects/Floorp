@@ -92,6 +92,24 @@ public:
   // container layers don't use a compositable
   CompositableHost* GetCompositableHost() MOZ_OVERRIDE { return nullptr; }
 
+  // If the layer is marked as scale-to-resolution, add a post-scale
+  // to the layer's transform equal to the pres shell resolution we're
+  // scaling to. This cancels out the post scale of '1 / resolution'
+  // added by Layout. TODO: It would be nice to get rid of both of these
+  // post-scales.
+  virtual float GetPostXScale() const MOZ_OVERRIDE {
+    if (mScaleToResolution) {
+      return mPostXScale * mPresShellResolution;
+    }
+    return mPostXScale;
+  }
+  virtual float GetPostYScale() const MOZ_OVERRIDE {
+    if (mScaleToResolution) {
+      return mPostYScale * mPresShellResolution;
+    }
+    return mPostYScale;
+  }
+
   virtual const char* Name() const MOZ_OVERRIDE { return "ContainerLayerComposite"; }
   UniquePtr<PreparedData> mPrepared;
 
