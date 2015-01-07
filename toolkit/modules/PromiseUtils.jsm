@@ -13,7 +13,8 @@ this.PromiseUtils = {
    * A simple timeout mechanism.
    *
    * Example:
-   * resolveOrTimeout(myModule.shutdown(), 1000, new Error("The module took too long to shutdown"));
+   * resolveOrTimeout(myModule.shutdown(), 1000,
+   *                  () => new Error("The module took too long to shutdown"));
    *
    * @param {Promise} promise The Promise that should resolve/reject quickly.
    * @param {number} delay A delay after which to stop waiting for `promise`, in milliseconds.
