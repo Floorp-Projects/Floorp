@@ -430,6 +430,25 @@ Factory::CreateTiledDrawTarget(const TileSet& aTileSet)
   return dt.forget();
 }
 
+bool
+Factory::DoesBackendSupportDataDrawtarget(BackendType aType)
+{
+  switch (aType) {
+  case BackendType::DIRECT2D:
+  case BackendType::DIRECT2D1_1:
+  case BackendType::RECORDING:
+  case BackendType::NONE:
+  case BackendType::COREGRAPHICS_ACCELERATED:
+    return false;
+  case BackendType::CAIRO:
+  case BackendType::COREGRAPHICS:
+  case BackendType::SKIA:
+    return true;
+  }
+
+  return false;
+}
+
 TemporaryRef<ScaledFont>
 Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSize)
 {
