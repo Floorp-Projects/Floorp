@@ -120,7 +120,6 @@ UNIFIED_SOURCES += [
     'frontend/ParseNode.cpp',
     'frontend/TokenStream.cpp',
     'gc/Barrier.cpp',
-    'gc/ForkJoinNursery.cpp',
     'gc/GCTrace.cpp',
     'gc/Iteration.cpp',
     'gc/Marking.cpp',
@@ -472,11 +471,8 @@ if CONFIG['MOZ_ETW']:
     RESFILE = 'ETWProvider.res'
 
 if CONFIG['NIGHTLY_BUILD']:
-    DEFINES['ENABLE_PARALLEL_JS'] = True
     DEFINES['ENABLE_BINARYDATA'] = True
     DEFINES['ENABLE_SHARED_ARRAY_BUFFER'] = True
-    if CONFIG['ENABLE_ION']:
-        DEFINES['JSGC_FJGENERATIONAL'] = True
 
 DEFINES['EXPORT_JS_API'] = True
 
@@ -519,3 +515,6 @@ if CONFIG['OS_ARCH'] == 'SunOS':
         'nsl',
         'socket',
     ]
+
+if CONFIG['GNU_CXX']:
+    FAIL_ON_WARNINGS = True

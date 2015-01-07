@@ -58,7 +58,7 @@ public:
   NS_DECL_NSIWEBPROGRESSLISTENER
 
   // nsIForm
-  NS_IMETHOD_(nsIFormControl*) GetElementAt(int32_t aIndex) const;
+  NS_IMETHOD_(nsIFormControl*) GetElementAt(int32_t aIndex) const MOZ_OVERRIDE;
   NS_IMETHOD_(uint32_t) GetElementCount() const MOZ_OVERRIDE;
   NS_IMETHOD_(int32_t) IndexOfControl(nsIFormControl* aControl) MOZ_OVERRIDE;
   NS_IMETHOD_(nsIFormControl*) GetDefaultSubmitElement() const MOZ_OVERRIDE;

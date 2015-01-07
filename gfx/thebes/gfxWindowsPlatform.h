@@ -215,11 +215,6 @@ public:
     gfxFontFamily *FindFontFamily(const nsAString& aName);
     gfxFontEntry *FindFontEntry(const nsAString& aName, const gfxFontStyle& aFontStyle);
 
-    bool GetPrefFontEntries(const nsCString& aLangGroup, nsTArray<nsRefPtr<gfxFontEntry> > *array);
-    void SetPrefFontEntries(const nsCString& aLangGroup, nsTArray<nsRefPtr<gfxFontEntry> >& array);
-
-    void ClearPrefFonts() { mPrefFonts.Clear(); }
-
     // ClearType is not always enabled even when available (e.g. Windows XP)
     // if either of these prefs are enabled and apply, use ClearType rendering
     bool UseClearTypeForDownloadableFonts();
@@ -290,9 +285,6 @@ private:
     mozilla::RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
 
     virtual void GetPlatformCMSOutputProfile(void* &mem, size_t &size);
-
-    // TODO: unify this with mPrefFonts (NB: holds families, not fonts) in gfxPlatformFontList
-    nsDataHashtable<nsCStringHashKey, nsTArray<nsRefPtr<gfxFontEntry> > > mPrefFonts;
 };
 
 bool DoesD3D11TextureSharingWork(ID3D11Device *device);

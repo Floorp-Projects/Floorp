@@ -367,7 +367,7 @@ public:
   }
 
   NS_IMETHOD
-  GetNext(nsISupports** aResult)
+  GetNext(nsISupports** aResult) MOZ_OVERRIDE
   {
     MOZ_ASSERT(!NS_IsMainThread(),
                "Walking the directory tree involves I/O, so using this "
@@ -401,7 +401,7 @@ public:
   }
 
   NS_IMETHOD
-  HasMoreElements(bool* aResult)
+  HasMoreElements(bool* aResult) MOZ_OVERRIDE
   {
     *aResult = !!mNextFile;
     return NS_OK;

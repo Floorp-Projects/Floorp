@@ -279,7 +279,6 @@ void MarkIonCompilerRoots(JSTracer *trc);
 JSCompartment *
 TopmostIonActivationCompartment(JSRuntime *rt);
 
-template<typename T>
 void UpdateJitActivationsForMinorGC(PerThreadData *ptd, JSTracer *trc);
 
 static inline uint32_t
