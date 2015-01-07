@@ -1229,7 +1229,7 @@ public:
   TrackRate GraphRate() const { return mSampleRate; }
 
 protected:
-  MediaStreamGraph(TrackRate aSampleRate)
+  explicit MediaStreamGraph(TrackRate aSampleRate)
     : mNextGraphUpdateIndex(1)
     , mSampleRate(aSampleRate)
   {
