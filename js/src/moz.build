@@ -120,7 +120,6 @@ UNIFIED_SOURCES += [
     'frontend/ParseNode.cpp',
     'frontend/TokenStream.cpp',
     'gc/Barrier.cpp',
-    'gc/ForkJoinNursery.cpp',
     'gc/GCTrace.cpp',
     'gc/Iteration.cpp',
     'gc/Marking.cpp',

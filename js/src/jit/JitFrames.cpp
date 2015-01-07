@@ -11,7 +11,6 @@
 #include "jsobj.h"
 #include "jsscript.h"
 
-#include "gc/ForkJoinNursery.h"
 #include "gc/Marking.h"
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineFrame.h"
@@ -1158,12 +1157,6 @@ UpdateIonJSFrameForMinorGC(JSTracer *trc, const JitFrameIterator &frame)
 
     while (safepoint.getSlotsOrElementsSlot(&slot)) {
         HeapSlot **slots = reinterpret_cast<HeapSlot **>(layout->slotRef(slot));
-#ifdef JSGC_FJGENERATIONAL
-        if (trc->callback == gc::ForkJoinNursery::MinorGCCallback) {
-            gc::ForkJoinNursery::forwardBufferPointer(trc, slots);
-            continue;
-        }
-#endif
         trc->runtime()->gc.nursery.forwardBufferPointer(slots);
     }
 }
@@ -1489,11 +1482,7 @@ TopmostIonActivationCompartment(JSRuntime *rt)
 template <typename T>
 void UpdateJitActivationsForMinorGC(PerThreadData *ptd, JSTracer *trc)
 {
-#ifdef JSGC_FJGENERATIONAL
-    MOZ_ASSERT(trc->runtime()->isHeapMinorCollecting() || trc->runtime()->isFJMinorCollecting());
-#else
     MOZ_ASSERT(trc->runtime()->isHeapMinorCollecting());
-#endif
     for (JitActivationIterator activations(ptd); !activations.done(); ++activations) {
         for (JitFrameIterator frames(activations); !frames.done(); ++frames) {
             if (frames.type() == JitFrame_IonJS)
@@ -1504,11 +1493,6 @@ void UpdateJitActivationsForMinorGC(PerThreadData *ptd, JSTracer *trc)
 
 template
 void UpdateJitActivationsForMinorGC<Nursery>(PerThreadData *ptd, JSTracer *trc);
-
-#ifdef JSGC_FJGENERATIONAL
-template
-void UpdateJitActivationsForMinorGC<gc::ForkJoinNursery>(PerThreadData *ptd, JSTracer *trc);
-#endif
 
 void
 GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)

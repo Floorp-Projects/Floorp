@@ -36,7 +36,6 @@ namespace gc {
 struct Cell;
 class Collector;
 class MinorCollectionTracer;
-class ForkJoinNursery;
 } /* namespace gc */
 
 namespace types {
