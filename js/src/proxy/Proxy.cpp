@@ -833,6 +833,21 @@ js::NewProxyObject(JSContext *cx, const BaseProxyHandler *handler, HandleValue p
                             options);
 }
 
+void
+ProxyObject::renew(JSContext *cx, const BaseProxyHandler *handler, Value priv)
+{
+    MOZ_ASSERT_IF(IsCrossCompartmentWrapper(this), IsDeadProxyObject(this));
+    MOZ_ASSERT(getParent() == cx->global());
+    MOZ_ASSERT(getClass() == &ProxyObject::class_);
+    MOZ_ASSERT(!getClass()->ext.innerObject);
+    MOZ_ASSERT(hasLazyPrototype());
+
+    setHandler(handler);
+    setCrossCompartmentPrivate(priv);
+    setExtra(0, UndefinedValue());
+    setExtra(1, UndefinedValue());
+}
+
 JS_FRIEND_API(JSObject *)
 js_InitProxyClass(JSContext *cx, HandleObject obj)
 {

@@ -99,6 +99,8 @@ class ProxyObject : public JSObject
   public:
     static unsigned grayLinkExtraSlot(JSObject *obj);
 
+    void renew(JSContext *cx, const BaseProxyHandler *handler, Value priv);
+
     static void trace(JSTracer *trc, JSObject *obj);
 
     void nuke(const BaseProxyHandler *handler);
