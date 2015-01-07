@@ -996,6 +996,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     } else {
       if (nsGkAtoms::letterFrame==frameType) {
         pfd->mIsLetterFrame = true;
+      } else if (nsGkAtoms::rubyFrame == frameType) {
+        SyncAnnotationContainersBounds(pfd);
       }
       if (pfd->mSpan) {
         isEmpty = !pfd->mSpan->mHasNonemptyContent && pfd->mFrame->IsSelfEmpty();
@@ -1203,6 +1205,30 @@ nsLineLayout::GetCurrentFrameInlineDistanceFromBlock()
     x += psd->mICoord;
   }
   return x;
+}
+
+/**
+ * This method syncs all ruby annotation containers' bounds in their
+ * PerFrameData from their rect. It is necessary to do so because the
+ * containers are not part of line in their levels, which means their
+ * bounds are not set properly before.
+ */
+void
+nsLineLayout::SyncAnnotationContainersBounds(PerFrameData* aRubyFrame)
+{
+  MOZ_ASSERT(aRubyFrame->mFrame->GetType() == nsGkAtoms::rubyFrame);
+  MOZ_ASSERT(aRubyFrame->mSpan);
+
+  PerSpanData* span = aRubyFrame->mSpan;
+  WritingMode lineWM = mRootSpan->mWritingMode;
+  nscoord containerWidth = ContainerWidthForSpan(span);
+  for (PerFrameData* pfd = span->mFirstFrame; pfd; pfd = pfd->mNext) {
+    for (PerFrameData* annotation = pfd->mNextAnnotation;
+         annotation; annotation = annotation->mNextAnnotation) {
+      LogicalRect bounds(lineWM, annotation->mFrame->GetRect(), containerWidth);
+      annotation->mBounds = bounds;
+    }
+  }
 }
 
 /**
@@ -2639,8 +2665,7 @@ nsLineLayout::AdvanceAnnotationInlineBounds(PerFrameData* aPFD,
 
   PerSpanData* psd = aPFD->mSpan;
   WritingMode lineWM = mRootSpan->mWritingMode;
-  LogicalRect bounds(lineWM, frame->GetRect(), aContainerWidth);
-  bounds.IStart(lineWM) += aDeltaICoord;
+  aPFD->mBounds.IStart(lineWM) += aDeltaICoord;
 
   // Check whether this expansion should be counted into the reserved
   // isize or not. When it is a ruby text container, and it has some
@@ -2659,10 +2684,9 @@ nsLineLayout::AdvanceAnnotationInlineBounds(PerFrameData* aPFD,
   } else {
     // It is a normal ruby text container. Its children will expand
     // themselves properly. We only need to expand its own size here.
-    bounds.ISize(lineWM) += aDeltaISize;
+    aPFD->mBounds.ISize(lineWM) += aDeltaISize;
   }
-  aPFD->mBounds = bounds;
-  aPFD->mFrame->SetRect(lineWM, bounds, aContainerWidth);
+  aPFD->mFrame->SetRect(lineWM, aPFD->mBounds, aContainerWidth);
 }
 
 /**
