@@ -33,7 +33,7 @@
 namespace mozilla { namespace pkix {
 
 // These values correspond to the tag values in the ASN.1 CertStatus
-MOZILLA_PKIX_ENUM_CLASS CertStatus : uint8_t {
+enum class CertStatus : uint8_t {
   Good = der::CONTEXT_SPECIFIC | 0,
   Revoked = der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 1,
   Unknown = der::CONTEXT_SPECIFIC | 2
@@ -140,7 +140,7 @@ CheckOCSPResponseSignerCert(TrustDomain& trustDomain,
   return rv;
 }
 
-MOZILLA_PKIX_ENUM_CLASS ResponderIDType : uint8_t
+enum class ResponderIDType : uint8_t
 {
   byName = der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 1,
   byKey = der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 2
