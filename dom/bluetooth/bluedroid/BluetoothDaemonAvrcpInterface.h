@@ -287,6 +287,66 @@ protected:
   static BluetoothAvrcpNotificationHandler* sNotificationHandler;
 };
 
+class BluetoothDaemonAvrcpInterface MOZ_FINAL
+  : public BluetoothAvrcpInterface
+{
+  class CleanupResultHandler;
+  class InitResultHandler;
+
+public:
+  BluetoothDaemonAvrcpInterface(BluetoothDaemonAvrcpModule* aModule);
+  ~BluetoothDaemonAvrcpInterface();
+
+  void Init(BluetoothAvrcpNotificationHandler* aNotificationHandler,
+            BluetoothAvrcpResultHandler* aRes) MOZ_OVERRIDE;
+
+  void Cleanup(BluetoothAvrcpResultHandler* aRes) MOZ_OVERRIDE;
+
+  void GetPlayStatusRsp(ControlPlayStatus aPlayStatus,
+                        uint32_t aSongLen, uint32_t aSongPos,
+                        BluetoothAvrcpResultHandler* aRes) MOZ_OVERRIDE;
+
+  void ListPlayerAppAttrRsp(int aNumAttr,
+                            const BluetoothAvrcpPlayerAttribute* aPAttrs,
+                            BluetoothAvrcpResultHandler* aRes) MOZ_OVERRIDE;
+
+  void ListPlayerAppValueRsp(int aNumVal, uint8_t* aPVals,
+                             BluetoothAvrcpResultHandler* aRes) MOZ_OVERRIDE;
+
+  void GetPlayerAppValueRsp(uint8_t aNumAttrs, const uint8_t* aIds,
+                            const uint8_t* aValues,
+                            BluetoothAvrcpResultHandler* aRes) MOZ_OVERRIDE;
+
+  void GetPlayerAppAttrTextRsp(int aNumAttr, const uint8_t* aIds,
+                               const char** aTexts,
+                               BluetoothAvrcpResultHandler* aRes) MOZ_OVERRIDE;
+
+  void GetPlayerAppValueTextRsp(int aNumVal, const uint8_t* aIds,
+                                const char** aTexts,
+                                BluetoothAvrcpResultHandler* aRes) MOZ_OVERRIDE;
+
+  void GetElementAttrRsp(uint8_t aNumAttr,
+                         const BluetoothAvrcpElementAttribute* aAttr,
+                         BluetoothAvrcpResultHandler* aRes) MOZ_OVERRIDE;
+
+  void SetPlayerAppValueRsp(BluetoothAvrcpStatus aRspStatus,
+                            BluetoothAvrcpResultHandler* aRes) MOZ_OVERRIDE;
+
+  void RegisterNotificationRsp(BluetoothAvrcpEvent aEvent,
+                               BluetoothAvrcpNotification aType,
+                               const BluetoothAvrcpNotificationParam& aParam,
+                               BluetoothAvrcpResultHandler* aRes) MOZ_OVERRIDE;
+
+  void SetVolume(uint8_t aVolume,
+                 BluetoothAvrcpResultHandler* aRes) MOZ_OVERRIDE;
+
+private:
+  void DispatchError(BluetoothAvrcpResultHandler* aRes,
+                     BluetoothStatus aStatus);
+
+  BluetoothDaemonAvrcpModule* mModule;
+};
+
 END_BLUETOOTH_NAMESPACE
 
 #endif
