@@ -229,8 +229,8 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mAmpleVideoFrames =
     std::max<uint32_t>(Preferences::GetUint("media.video-queue.default-size", 10), 3);
 
-  mBufferingWait = mScheduler->IsRealTime() ? 0 : 30;
-  mLowDataThresholdUsecs = mScheduler->IsRealTime() ? 0 : LOW_DATA_THRESHOLD_USECS;
+  mBufferingWait = IsRealTime() ? 0 : 30;
+  mLowDataThresholdUsecs = IsRealTime() ? 0 : LOW_DATA_THRESHOLD_USECS;
 
 #ifdef XP_WIN
   // Ensure high precision timers are enabled on Windows, otherwise the state
@@ -1351,6 +1351,10 @@ double MediaDecoderStateMachine::GetCurrentTime() const
   return static_cast<double>(mCurrentFrameTime) / static_cast<double>(USECS_PER_S);
 }
 
+bool MediaDecoderStateMachine::IsRealTime() const {
+  return mScheduler->IsRealTime();
+}
+
 int64_t MediaDecoderStateMachine::GetDuration()
 {
   AssertCurrentThreadInMonitor();
@@ -1988,6 +1992,12 @@ int64_t MediaDecoderStateMachine::AudioDecodedUsecs()
   // already decoded and pushed to the hardware, plus the amount of audio
   // data waiting to be pushed to the hardware.
   int64_t pushed = (mAudioEndTime != -1) ? (mAudioEndTime - GetMediaTime()) : 0;
+
+  // Currently for real time streams, AudioQueue().Duration() produce
+  // wrong values (Bug 1114434), so we use frame counts to calculate duration.
+  if (IsRealTime()) {
+    return pushed + FramesToUsecs(AudioQueue().FrameCount(), mInfo.mAudio.mRate).value();
+  }
   return pushed + AudioQueue().Duration();
 }
 
@@ -2187,7 +2197,7 @@ MediaDecoderStateMachine::DecodeFirstFrame()
     VideoQueue().AddPopListener(decodeTask, DecodeTaskQueue());
   }
 
-  if (mScheduler->IsRealTime()) {
+  if (IsRealTime()) {
     SetStartTime(0);
     nsresult res = FinishDecodeFirstFrame();
     NS_ENSURE_SUCCESS(res, res);
@@ -2226,7 +2236,7 @@ MediaDecoderStateMachine::FinishDecodeFirstFrame()
     return NS_ERROR_FAILURE;
   }
 
-  if (!mScheduler->IsRealTime() && !mDecodingFrozenAtStateMetadata) {
+  if (!IsRealTime() && !mDecodingFrozenAtStateMetadata) {
     const VideoData* v = VideoQueue().PeekFront();
     const AudioData* a = AudioQueue().PeekFront();
     SetStartTime(mReader->ComputeStartTime(v, a));
@@ -2839,7 +2849,7 @@ void MediaDecoderStateMachine::RenderVideoFrame(VideoData* aData,
   if (container) {
     container->SetCurrentFrame(ThebesIntSize(aData->mDisplay), aData->mImage,
                                aTarget);
-    MOZ_ASSERT(container->GetFrameDelay() >= 0 || mScheduler->IsRealTime());
+    MOZ_ASSERT(container->GetFrameDelay() >= 0 || IsRealTime());
   }
 }
 
@@ -2937,7 +2947,7 @@ void MediaDecoderStateMachine::AdvanceFrame()
 #ifdef PR_LOGGING
     int32_t droppedFrames = 0;
 #endif
-    while (mScheduler->IsRealTime() || clock_time >= frame->mTime) {
+    while (IsRealTime() || clock_time >= frame->mTime) {
       mVideoFrameEndTime = frame->GetEndTime();
 #ifdef PR_LOGGING
       if (currentFrame) {
@@ -3006,7 +3016,7 @@ void MediaDecoderStateMachine::AdvanceFrame()
     // zero if it's a initial frame.
     int64_t frameTime = currentFrame->mTime - mStartTime;
     if (frameTime > 0  || (frameTime == 0 && mPlayDuration == 0) ||
-        mScheduler->IsRealTime()) {
+        IsRealTime()) {
       ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
       // If we have video, we want to increment the clock in steps of the frame
       // duration.

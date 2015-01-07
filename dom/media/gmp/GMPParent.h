@@ -113,6 +113,7 @@ public:
 
   // Specifies that a GMP can only work with the specified NodeIds.
   void SetNodeId(const nsACString& aNodeId);
+  const nsACString& GetNodeId() const { return mNodeId; }
 
   // Returns true if a plugin can be or is being used across multiple NodeIds.
   bool CanBeSharedCrossNodeIds() const;
@@ -130,8 +131,6 @@ public:
   virtual void CheckThread() MOZ_OVERRIDE;
 
   void AbortAsyncShutdown();
-
-  bool HasAccessedStorage() const;
 
 private:
   ~GMPParent();
@@ -197,7 +196,6 @@ private:
 
   bool mAsyncShutdownRequired;
   bool mAsyncShutdownInProgress;
-  bool mHasAccessedStorage;
 };
 
 } // namespace gmp

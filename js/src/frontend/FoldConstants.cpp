@@ -13,7 +13,7 @@
 
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
-#include "vm/NumericConversions.h"
+#include "js/Conversions.h"
 
 #include "jscntxtinlines.h"
 #include "jsinferinlines.h"
@@ -27,6 +27,8 @@ using mozilla::IsNegative;
 using mozilla::NegativeInfinity;
 using mozilla::PositiveInfinity;
 using JS::GenericNaN;
+using JS::ToInt32;
+using JS::ToUint32;
 
 static bool
 ContainsVarOrConst(ExclusiveContext *cx, ParseNode *pn, ParseNode **resultp)

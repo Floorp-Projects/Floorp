@@ -28,8 +28,8 @@
 #include "jsstr.h"
 #include "jstypes.h"
 
+#include "js/Conversions.h"
 #include "vm/GlobalObject.h"
-#include "vm/NumericConversions.h"
 #include "vm/StringBuffer.h"
 
 #include "jsatominlines.h"
@@ -51,6 +51,10 @@ using mozilla::RangedPtr;
 
 using JS::AutoCheckCannotGC;
 using JS::GenericNaN;
+using JS::ToInt32;
+using JS::ToInt64;
+using JS::ToUint32;
+using JS::ToUint64;
 
 /*
  * If we're accumulating a decimal number and the number is >= 2^53, then the
@@ -1022,7 +1026,7 @@ Number_isInteger(JSContext *cx, unsigned argc, Value *vp)
     Value val = args[0];
     args.rval().setBoolean(val.isInt32() ||
                            (mozilla::IsFinite(val.toDouble()) &&
-                            ToInteger(val.toDouble()) == val.toDouble()));
+                            JS::ToInteger(val.toDouble()) == val.toDouble()));
     return true;
 }
 
@@ -1720,7 +1724,7 @@ js::ToLengthClamped(T *cx, HandleValue v, uint32_t *out, bool *overflow)
             return false;
         }
     }
-    d = ToInteger(d);
+    d = JS::ToInteger(d);
     if (d <= 0.0) {
         *out = 0;
         return true;

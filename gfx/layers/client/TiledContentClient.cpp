@@ -791,7 +791,7 @@ TileClient::GetTileDescriptor()
     // AddRef here and Release when receiving on the host side to make sure the
     // reference count doesn't go to zero before the host receives the message.
     // see TiledLayerBufferComposite::TiledLayerBufferComposite
-    mFrontLock->AddRef();
+    mFrontLock.get()->AddRef();
   }
 
   if (mFrontLock->GetType() == gfxSharedReadLock::TYPE_MEMORY) {

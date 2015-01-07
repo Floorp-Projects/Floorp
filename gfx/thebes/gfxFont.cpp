@@ -3403,14 +3403,19 @@ gfxFont::CreateVerticalMetrics()
         // These fields should always be present in any valid OS/2 table
         if (len >= offsetof(OS2Table, sTypoLineGap) + sizeof(int16_t)) {
             SET_SIGNED(strikeoutSize, os2->yStrikeoutSize);
-            SET_SIGNED(aveCharWidth, int16_t(os2->sTypoAscender) -
-                                     int16_t(os2->sTypoDescender));
-            metrics->maxAscent =
-                std::max(metrics->maxAscent, int16_t(os2->xAvgCharWidth) *
-                                             gfxFloat(mFUnitsConvFactor));
-            metrics->maxDescent =
-                std::max(metrics->maxDescent, int16_t(os2->xAvgCharWidth) *
-                                              gfxFloat(mFUnitsConvFactor));
+            // Use ascent+descent from the horizontal metrics as the default
+            // advance (aveCharWidth) in vertical mode
+            gfxFloat ascentDescent = gfxFloat(mFUnitsConvFactor) *
+                (int16_t(os2->sTypoAscender) - int16_t(os2->sTypoDescender));
+            metrics->aveCharWidth =
+                std::max(metrics->emHeight, ascentDescent);
+            // Use xAvgCharWidth from horizontal metrics as minimum font extent
+            // for vertical layout, applying half of it to ascent and half to
+            // descent (to work with a default centered baseline).
+            gfxFloat halfCharWidth =
+                int16_t(os2->xAvgCharWidth) * gfxFloat(mFUnitsConvFactor) / 2;
+            metrics->maxAscent = std::max(metrics->maxAscent, halfCharWidth);
+            metrics->maxDescent = std::max(metrics->maxDescent, halfCharWidth);
         }
     }
 
@@ -3440,8 +3445,12 @@ gfxFont::CreateVerticalMetrics()
                 (hb_blob_get_data(vheaTable, &len));
         if (len >= sizeof(MetricsHeader)) {
             SET_UNSIGNED(maxAdvance, vhea->advanceWidthMax);
-            SET_SIGNED(maxAscent, vhea->ascender);
-            SET_SIGNED(maxDescent, -int16_t(vhea->descender));
+            // Redistribute space between ascent/descent because we want a
+            // centered vertical baseline by default.
+            gfxFloat halfExtent = 0.5 * gfxFloat(mFUnitsConvFactor) *
+                (int16_t(vhea->ascender) - int16_t(vhea->descender));
+            metrics->maxAscent = halfExtent;
+            metrics->maxDescent = halfExtent;
             SET_SIGNED(externalLeading, vhea->lineGap);
         }
     }

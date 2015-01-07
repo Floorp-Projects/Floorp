@@ -91,7 +91,7 @@ TiledLayerBufferComposite::TiledLayerBufferComposite(ISurfaceAllocator* aAllocat
           sharedLock = reinterpret_cast<gfxMemorySharedReadLock*>(ipcLock.get_uintptr_t());
           if (sharedLock) {
             // The corresponding AddRef is in TiledClient::GetTileDescriptor
-            sharedLock->Release();
+            sharedLock.get()->Release();
           }
         }
 
