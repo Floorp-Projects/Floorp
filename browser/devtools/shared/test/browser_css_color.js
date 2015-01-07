@@ -53,6 +53,7 @@ function testColorUtils() {
     testColorMatch(name, hex, hsl, rgb, color.rgba);
   }
   testProcessCSSString();
+  testSetAlpha();
   finishUp();
 }
 
@@ -136,6 +137,29 @@ function testProcessCSSString() {
   let after = colorUtils.processCSSString(before);
 
   is(after, expected, "CSS string processed correctly");
+}
+
+function testSetAlpha() {
+  let values = [
+    ["longhex", "#ff0000", 0.5, "rgba(255, 0, 0, 0.5)"],
+    ["hex", "#f0f", 0.2, "rgba(255, 0, 255, 0.2)"],
+    ["rgba", "rgba(120, 34, 23, 1)", 0.25, "rgba(120, 34, 23, 0.25)"],
+    ["rgb", "rgb(120, 34, 23)", 0.25, "rgba(120, 34, 23, 0.25)"],
+    ["hsl", "hsl(208, 100%, 97%)", 0.75, "rgba(239, 247, 255, 0.75)"],
+    ["hsla", "hsla(208, 100%, 97%, 1)", 0.75, "rgba(239, 247, 255, 0.75)"]
+  ];
+  values.forEach(([type, value, alpha, expected]) => {
+    is(colorUtils.setAlpha(value, alpha), expected, "correctly sets alpha value for " + type);
+  });
+
+  try {
+    colorUtils.setAlpha("rgb(24, 25, 45, 1)", 1);
+    ok(false, "Should fail when passing in an invalid color.");
+  } catch (e) {
+    ok(true, "Fails when setAlpha receives an invalid color.");
+  }
+
+  is(colorUtils.setAlpha("#fff"), "rgba(255, 255, 255, 1)", "sets alpha to 1 if invalid.");
 }
 
 function finishUp() {

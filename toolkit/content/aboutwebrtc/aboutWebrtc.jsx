@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* jshint newcap:false */
+/* global React, WebrtcGlobalInformation, document */
+
 "use strict";
 
 var Tabs = React.createClass({
@@ -26,7 +29,7 @@ var Tabs = React.createClass({
     // https://github.com/facebook/react/issues/1644#issuecomment-45138113
     return React.Children.map(this.props.children, function(tab, i) {
       return i === this.state.selectedIndex ? tab : null;
-    }.bind(this))
+    }.bind(this));
   },
 
   render: function() {
@@ -64,7 +67,7 @@ var AboutWebRTC = React.createClass({
   displayLogs: function() {
     WebrtcGlobalInformation.getLogging('', function(logs) {
       this.setState({logs: logs, reports: this.state.reports});
-    }.bind(this))
+    }.bind(this));
   },
 
   render: function() {
@@ -144,7 +147,7 @@ var PeerConnection = React.createClass({
       paired.add(pair.localCandidate.id);
       paired.add(pair.remoteCandidate.id);
 
-      return paired
+      return paired;
     }, new Set());
 
     var unifiedPairs =
@@ -418,7 +421,7 @@ var RTPStats = React.createClass({
             this.dumpCoderStats(stats),
             this.dumpRtpStats(stats, "local"),
             remoteRtpStats ? this.dumpRtpStats(remoteRtpStats, "remote") : null
-          ]
+          ];
         }.bind(this))
       }</div>
     );
@@ -517,13 +520,13 @@ function candidateToString(c) {
     type = `${c.candidateType}-${c.mozLocalTransport}`;
   }
 
-  return `${c.ipAddress}:${c.portNumber}/${c.transport}(${type})`
+  return `${c.ipAddress}:${c.portNumber}/${c.transport}(${type})`;
 }
 
 function onLoad() {
   WebrtcGlobalInformation.getAllStats(function(globalReport) {
     var reports = globalReport.reports;
-    React.renderComponent(<AboutWebRTC reports={reports}/>,
-                          document.querySelector("#body"));
+    React.render(<AboutWebRTC reports={reports}/>,
+                 document.querySelector("#body"));
   });
 }

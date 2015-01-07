@@ -16,6 +16,7 @@ function test() {
 
   let previouslySelectedEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
+  engine.alias = "y";
 
   let base = "https://search.yahoo.com/yhs/search?p=foo&ei=UTF-8&hspart=mozilla&hsimp=yhs-001";
   let url;
@@ -42,6 +43,15 @@ function test() {
       searchURL: base,
       run: function () {
         gURLBar.value = "? foo";
+        gURLBar.focus();
+        EventUtils.synthesizeKey("VK_RETURN", {});
+      }
+    },
+    {
+      name: "keyword search",
+      searchURL: base,
+      run: function () {
+        gURLBar.value = "y foo";
         gURLBar.focus();
         EventUtils.synthesizeKey("VK_RETURN", {});
       }
@@ -139,6 +149,7 @@ function test() {
   }
 
   registerCleanupFunction(function () {
+    engine.alias = undefined;
     gBrowser.removeProgressListener(listener);
     gBrowser.removeTab(tab);
     Services.search.currentEngine = previouslySelectedEngine;

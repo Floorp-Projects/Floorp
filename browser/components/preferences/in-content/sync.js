@@ -114,12 +114,6 @@ let gSyncPane = {
       Weave.Svc.Obs.remove(migrateTopic, gSyncPane.updateMigrationState, gSyncPane);
     }, false);
 
-    // ask the migration module to broadcast its current state (and nothing will
-    // happen if it's not loaded - which is good, as that means no migration
-    // is pending/necessary) - we don't want to suck that module in just to
-    // find there's nothing to do.
-    Services.obs.notifyObservers(null, "fxa-migration:state-request", null);
-
     XPCOMUtils.defineLazyGetter(this, '_stringBundle', () => {
       return Services.strings.createBundle("chrome://browser/locale/preferences/preferences.properties");
     }),
@@ -218,6 +212,9 @@ let gSyncPane = {
       let win = Services.wm.getMostRecentWindow("navigator:browser");
       fxaMigrator.createFxAccount(win);
     });
+    setEventListener("sync-migrate-unlink", "click", function () {
+      gSyncPane.startOverMigration();
+    });
     setEventListener("sync-migrate-forget", "click", function () {
       fxaMigrator.forgetFxAccount();
     });
@@ -228,6 +225,12 @@ let gSyncPane = {
   },
 
   updateWeavePrefs: function () {
+    // ask the migration module to broadcast its current state (and nothing will
+    // happen if it's not loaded - which is good, as that means no migration
+    // is pending/necessary) - we don't want to suck that module in just to
+    // find there's nothing to do.
+    Services.obs.notifyObservers(null, "fxa-migration:state-request", null);
+
     let service = Components.classes["@mozilla.org/weave/service;1"]
                   .getService(Components.interfaces.nsISupports)
                   .wrappedJSObject;
@@ -299,9 +302,35 @@ let gSyncPane = {
     switch (state) {
       case fxaMigrator.STATE_USER_FXA: {
         let sb = this._accountsStringBundle;
+        // There are 2 cases here - no email address means it is an offer on
+        // the first device (so the user is prompted to create an account).
+        // If there is an email address it is the "join the party" flow, so the
+        // user is prompted to sign in with the address they previously used.
+        let email = subject ? subject.QueryInterface(Components.interfaces.nsISupportsString).data : null;
+        let elt = document.getElementById("sync-migrate-upgrade-description");
+        elt.textContent = email ?
+                          sb.formatStringFromName("signInAfterUpgradeOnOtherDevice.description",
+                                                  [email], 1) :
+                          sb.GetStringFromName("needUserLong");
+
+        // The "upgrade" button.
         let button = document.getElementById("sync-migrate-upgrade");
-        button.setAttribute("label", sb.GetStringFromName("upgradeToFxA.label"));
-        button.setAttribute("accesskey", sb.GetStringFromName("upgradeToFxA.accessKey"));
+        button.setAttribute("label",
+                            sb.GetStringFromName(email
+                                                 ? "signInAfterUpgradeOnOtherDevice.label"
+                                                 : "upgradeToFxA.label"));
+        button.setAttribute("accesskey",
+                            sb.GetStringFromName(email
+                                                 ? "signInAfterUpgradeOnOtherDevice.accessKey"
+                                                 : "upgradeToFxA.accessKey"));
+        // The "unlink" button - this is only shown for first migration
+        button = document.getElementById("sync-migrate-unlink");
+        if (email) {
+          button.hidden = true;
+        } else {
+          button.setAttribute("label", sb.GetStringFromName("unlinkMigration.label"));
+          button.setAttribute("accesskey", sb.GetStringFromName("unlinkMigration.accessKey"));
+        }
         selIndex = 0;
         break;
       }
@@ -350,6 +379,29 @@ let gSyncPane = {
       if (buttonChoice == 1)
         return;
     }
+
+    Weave.Service.startOver();
+    this.updateWeavePrefs();
+  },
+
+  // When the "Unlink" button in the migration header is selected we display
+  // a slightly different message.
+  startOverMigration: function () {
+    let flags = Services.prompt.BUTTON_POS_0 * Services.prompt.BUTTON_TITLE_IS_STRING +
+                Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_CANCEL +
+                Services.prompt.BUTTON_POS_1_DEFAULT;
+    let sb = this._accountsStringBundle;
+    let buttonChoice =
+      Services.prompt.confirmEx(window,
+                                sb.GetStringFromName("unlinkVerificationTitle"),
+                                sb.GetStringFromName("unlinkVerificationDescription"),
+                                flags,
+                                sb.GetStringFromName("unlinkVerificationConfirm"),
+                                null, null, null, {});
+
+    // If the user selects cancel, just bail
+    if (buttonChoice == 1)
+      return;
 
     Weave.Service.startOver();
     this.updateWeavePrefs();
