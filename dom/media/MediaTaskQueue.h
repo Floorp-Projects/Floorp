@@ -92,7 +92,8 @@ private:
     RefPtr<nsIRunnable> mRunnable;
     bool mForceDispatch;
 
-    TaskQueueEntry(TemporaryRef<nsIRunnable> aRunnable, bool aForceDispatch = false)
+    explicit TaskQueueEntry(TemporaryRef<nsIRunnable> aRunnable,
+                            bool aForceDispatch = false)
       : mRunnable(aRunnable), mForceDispatch(aForceDispatch) {}
   };
 
