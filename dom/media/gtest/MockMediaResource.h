@@ -38,7 +38,7 @@ public:
     return NS_OK;
   }
   virtual nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
-                          uint32_t* aBytes);
+                          uint32_t* aBytes) MOZ_OVERRIDE;
   virtual nsresult Seek(int32_t aWhence, int64_t aOffset) MOZ_OVERRIDE
   {
     return NS_OK;
@@ -57,7 +57,7 @@ public:
   virtual bool IsSuspendedByCache() MOZ_OVERRIDE { return false; }
   virtual bool IsSuspended() MOZ_OVERRIDE { return false; }
   virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset,
-                                 uint32_t aCount)
+                                 uint32_t aCount) MOZ_OVERRIDE
   {
     return NS_OK;
   }
