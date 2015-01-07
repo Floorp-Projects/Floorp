@@ -9,6 +9,7 @@
 #include "jsiter.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 
@@ -45,6 +46,7 @@ using namespace js::gc;
 using JS::ForOfIterator;
 
 using mozilla::ArrayLength;
+using mozilla::Maybe;
 #ifdef JS_MORE_DETERMINISTIC
 using mozilla::PodCopy;
 #endif
@@ -96,7 +98,7 @@ NewKeyValuePair(JSContext *cx, jsid id, const Value &val, MutableHandleValue rva
 
 static inline bool
 Enumerate(JSContext *cx, HandleObject pobj, jsid id,
-          bool enumerable, unsigned flags, IdSet& ht, AutoIdVector *props)
+          bool enumerable, unsigned flags, Maybe<IdSet>& ht, AutoIdVector *props)
 {
     // We implement __proto__ using a property on |Object.prototype|, but
     // because __proto__ is highly deserving of removal, we don't want it to
@@ -108,15 +110,22 @@ Enumerate(JSContext *cx, HandleObject pobj, jsid id,
         return true;
 
     if (!(flags & JSITER_OWNONLY) || pobj->is<ProxyObject>() || pobj->getOps()->enumerate) {
+        if (!ht) {
+            ht.emplace(cx);
+            // Most of the time there are only a handful of entries.
+            if (!ht->init(5))
+                return false;
+        }
+
         // If we've already seen this, we definitely won't add it.
-        IdSet::AddPtr p = ht.lookupForAdd(id);
+        IdSet::AddPtr p = ht->lookupForAdd(id);
         if (MOZ_UNLIKELY(!!p))
             return true;
 
         // It's not necessary to add properties to the hash table at the end of
         // the prototype chain, but custom enumeration behaviors might return
         // duplicated properties, so always add in such cases.
-        if ((pobj->is<ProxyObject>() || pobj->getProto() || pobj->getOps()->enumerate) && !ht.add(p, id))
+        if ((pobj->is<ProxyObject>() || pobj->getProto() || pobj->getOps()->enumerate) && !ht->add(p, id))
             return false;
     }
 
@@ -132,7 +141,7 @@ Enumerate(JSContext *cx, HandleObject pobj, jsid id,
 }
 
 static bool
-EnumerateNativeProperties(JSContext *cx, HandleNativeObject pobj, unsigned flags, IdSet &ht,
+EnumerateNativeProperties(JSContext *cx, HandleNativeObject pobj, unsigned flags, Maybe<IdSet> &ht,
                           AutoIdVector *props)
 {
     bool enumerateSymbols;
@@ -273,11 +282,9 @@ struct SortComparatorIds
 static bool
 Snapshot(JSContext *cx, HandleObject pobj_, unsigned flags, AutoIdVector *props)
 {
-    // ~90% of the time this table ends up with 3 or fewer elements.
-    IdSet ht(cx);
-    if (!ht.init(3))
-        return false;
-
+    // We initialize |ht| lazily (in Enumerate()) because it ends up unused
+    // anywhere from 67--99.9% of the time.
+    Maybe<IdSet> ht;
     RootedObject pobj(cx, pobj_);
 
     do {
