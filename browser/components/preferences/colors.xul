@@ -80,14 +80,21 @@
         </hbox>
       </groupbox>
     </hbox>
+#ifdef XP_WIN
     <vbox align="start">
-      <label accesskey="&allowPagesToUseColors.accesskey;"
-             control="useDocumentColors">&allowPagesToUseColors.label;</label>
+#else
+    <vbox>
+#endif
+      <label accesskey="&overridePageColors.accesskey;"
+             control="useDocumentColors">&overridePageColors.label;</label>
       <menulist id="useDocumentColors" preference="browser.display.document_color_use">
         <menupopup>
-          <menuitem label="&allowPagesToUseColors.automatic.label;" value="0" id="documentColorAutomatic"/>
-          <menuitem label="&allowPagesToUseColors.always.label;"    value="1" id="documentColorAlways"/>
-          <menuitem label="&allowPagesToUseColors.never.label;"     value="2" id="documentColorNever"/>
+          <menuitem label="&overridePageColors.always.label;"
+                    value="2" id="documentColorAlways"/>
+          <menuitem label="&overridePageColors.auto.label;"
+                    value="0" id="documentColorAutomatic"/>
+          <menuitem label="&overridePageColors.never.label;"
+                    value="1" id="documentColorNever"/>
         </menupopup>
       </menulist>
     </vbox>
