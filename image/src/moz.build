@@ -30,6 +30,7 @@ UNIFIED_SOURCES += [
     'ImageWrapper.cpp',
     'imgFrame.cpp',
     'imgTools.cpp',
+    'MultipartImage.cpp',
     'OrientedImage.cpp',
     'ScriptedNotificationObserver.cpp',
     'ShutdownTracker.cpp',

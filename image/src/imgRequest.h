@@ -272,7 +272,7 @@ private:
   bool mGotData : 1;
   bool mIsInCache : 1;
   bool mBlockingOnload : 1;
-  bool mResniffMimeType : 1;
+  bool mNewPartPending : 1;
 };
 
 #endif
