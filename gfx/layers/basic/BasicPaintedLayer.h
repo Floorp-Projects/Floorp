@@ -31,8 +31,7 @@ public:
   typedef RotatedContentBuffer::ContentType ContentType;
 
   explicit BasicPaintedLayer(BasicLayerManager* aLayerManager) :
-    PaintedLayer(aLayerManager,
-                static_cast<BasicImplData*>(MOZ_THIS_IN_INITIALIZER_LIST())),
+    PaintedLayer(aLayerManager, static_cast<BasicImplData*>(this)),
     mContentClient(nullptr)
   {
     MOZ_COUNT_CTOR(BasicPaintedLayer);

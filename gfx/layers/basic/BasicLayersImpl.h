@@ -50,8 +50,7 @@ class BasicReadbackLayer : public ReadbackLayer,
 {
 public:
   explicit BasicReadbackLayer(BasicLayerManager* aLayerManager) :
-    ReadbackLayer(aLayerManager,
-                  static_cast<BasicImplData*>(MOZ_THIS_IN_INITIALIZER_LIST()))
+    ReadbackLayer(aLayerManager, static_cast<BasicImplData*>(this))
   {
     MOZ_COUNT_CTOR(BasicReadbackLayer);
   }

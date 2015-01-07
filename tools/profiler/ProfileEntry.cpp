@@ -157,7 +157,7 @@ ThreadProfile::ThreadProfile(ThreadInfo* aInfo, int aEntrySize)
   , mGeneration(0)
   , mPendingGenerationFlush(0)
   , mStackTop(aInfo->StackTop())
-  , mRespInfo(MOZ_THIS_IN_INITIALIZER_LIST())
+  , mRespInfo(this)
 #ifdef XP_LINUX
   , mRssMemory(0)
   , mUssMemory(0)

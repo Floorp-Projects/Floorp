@@ -36,7 +36,7 @@ DOMCameraDetectedFace::DOMCameraDetectedFace(nsISupports* aParent,
   : mParent(aParent)
   , mId(aFace.id)
   , mScore(aFace.score)
-  , mBounds(new DOMRect(MOZ_THIS_IN_INITIALIZER_LIST()))
+  , mBounds(new DOMRect(this))
 {
   mBounds->SetRect(aFace.bound.left,
                    aFace.bound.top,
