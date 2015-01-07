@@ -104,6 +104,3 @@ class TestExecuteChrome(TestExecuteContent):
         actual = self.marionette.execute_script(
             "return document.querySelectorAll('textbox')")
         self.assertEqual(expected, actual)
-
-    def test_sandbox_reuse(self):
-        pass
