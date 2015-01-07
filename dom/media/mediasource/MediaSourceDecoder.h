@@ -46,7 +46,8 @@ public:
   void AttachMediaSource(dom::MediaSource* aMediaSource);
   void DetachMediaSource();
 
-  already_AddRefed<SourceBufferDecoder> CreateSubDecoder(const nsACString& aType);
+  already_AddRefed<SourceBufferDecoder> CreateSubDecoder(const nsACString& aType,
+                                                         int64_t aTimestampOffset /* microseconds */);
   void AddTrackBuffer(TrackBuffer* aTrackBuffer);
   void RemoveTrackBuffer(TrackBuffer* aTrackBuffer);
   void OnTrackBufferConfigured(TrackBuffer* aTrackBuffer, const MediaInfo& aInfo);

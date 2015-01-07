@@ -129,10 +129,10 @@ MediaSourceDecoder::DetachMediaSource()
 }
 
 already_AddRefed<SourceBufferDecoder>
-MediaSourceDecoder::CreateSubDecoder(const nsACString& aType)
+MediaSourceDecoder::CreateSubDecoder(const nsACString& aType, int64_t aTimestampOffset)
 {
   MOZ_ASSERT(mReader);
-  return mReader->CreateSubDecoder(aType);
+  return mReader->CreateSubDecoder(aType, aTimestampOffset);
 }
 
 void
