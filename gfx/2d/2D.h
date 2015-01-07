@@ -1196,14 +1196,12 @@ public:
 
   static void SetDirect3D10Device(ID3D10Device1 *aDevice);
   static ID3D10Device1 *GetDirect3D10Device();
-#ifdef USE_D2D1_1
   static TemporaryRef<DrawTarget> CreateDrawTargetForD3D11Texture(ID3D11Texture2D *aTexture, SurfaceFormat aFormat);
 
   static void SetDirect3D11Device(ID3D11Device *aDevice);
   static ID3D11Device *GetDirect3D11Device();
   static ID2D1Device *GetD2D1Device();
   static bool SupportsD2D1();
-#endif
 
   static TemporaryRef<GlyphRenderingOptions>
     CreateDWriteGlyphRenderingOptions(IDWriteRenderingParams *aParams);
@@ -1213,11 +1211,9 @@ public:
   static void D2DCleanup();
 
 private:
-  static ID3D10Device1 *mD3D10Device;
-#ifdef USE_D2D1_1
-  static ID3D11Device *mD3D11Device;
   static ID2D1Device *mD2D1Device;
-#endif
+  static ID3D10Device1 *mD3D10Device;
+  static ID3D11Device *mD3D11Device;
 #endif
 
   static DrawEventRecorder *mRecorder;
