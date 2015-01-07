@@ -122,6 +122,9 @@ interface nsIIOService : nsISupports
      * Please note, if you provide both a loadingNode and a loadingPrincipal,
      * then loadingPrincipal must be equal to loadingNode->NodePrincipal().
      * But less error prone is to just supply a loadingNode.
+     *
+     * Keep in mind that URIs coming from a webpage should *never* use the
+     * systemPrincipal as the loadingPrincipal.
      */
     nsIChannel newChannelFromURI2(in nsIURI aURI,
                                   in nsIDOMNode aLoadingNode,
