@@ -1099,12 +1099,6 @@ JS_ValueToSource(JSContext *cx, JS::Handle<JS::Value> v);
 extern JS_PUBLIC_API(bool)
 JS_DoubleIsInt32(double d, int32_t *ip);
 
-extern JS_PUBLIC_API(int32_t)
-JS_DoubleToInt32(double d);
-
-extern JS_PUBLIC_API(uint32_t)
-JS_DoubleToUint32(double d);
-
 extern JS_PUBLIC_API(JSType)
 JS_TypeOfValue(JSContext *cx, JS::Handle<JS::Value> v);
 
