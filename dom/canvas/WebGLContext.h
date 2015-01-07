@@ -192,7 +192,7 @@ public:
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(WebGLContext,
                                                            nsIDOMWebGLRenderingContext)
 
-    virtual JSObject* WrapObject(JSContext* cx) = 0;
+    virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE = 0;
 
     NS_DECL_NSIDOMWEBGLRENDERINGCONTEXT
 
