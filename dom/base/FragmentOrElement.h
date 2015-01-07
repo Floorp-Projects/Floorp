@@ -99,7 +99,7 @@ public:
 
   // nsIWeakReference
   NS_DECL_NSIWEAKREFERENCE
-  virtual size_t SizeOfOnlyThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  virtual size_t SizeOfOnlyThis(mozilla::MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
 
   void NoticeNodeDestruction()
   {

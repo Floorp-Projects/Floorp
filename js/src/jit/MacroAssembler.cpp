@@ -19,6 +19,7 @@
 #include "jit/Lowering.h"
 #include "jit/MIR.h"
 #include "jit/ParallelFunctions.h"
+#include "js/Conversions.h"
 #include "vm/ForkJoin.h"
 #include "vm/TraceLogging.h"
 
@@ -31,6 +32,7 @@ using namespace js;
 using namespace js::jit;
 
 using JS::GenericNaN;
+using JS::ToInt32;
 
 namespace {
 
@@ -2099,7 +2101,7 @@ MacroAssembler::convertValueToInt(JSContext *cx, const Value &v, Register output
             break;
           }
           case IntConversion_Truncate:
-            move32(Imm32(js::ToInt32(d)), output);
+            move32(Imm32(ToInt32(d)), output);
             break;
           case IntConversion_ClampToUint8:
             move32(Imm32(ClampDoubleToUint8(d)), output);

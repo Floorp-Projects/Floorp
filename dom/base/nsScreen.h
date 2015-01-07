@@ -124,7 +124,7 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
-  void Notify(const mozilla::hal::ScreenConfiguration& aConfiguration);
+  void Notify(const mozilla::hal::ScreenConfiguration& aConfiguration) MOZ_OVERRIDE;
 
 protected:
   nsDeviceContext* GetDeviceContext();

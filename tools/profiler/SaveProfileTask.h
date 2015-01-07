@@ -43,7 +43,7 @@ public:
     , mClosure(aClosure)
   {}
 
-  NS_IMETHOD AddSubProfile(const char* aProfile);
+  NS_IMETHOD AddSubProfile(const char* aProfile) MOZ_OVERRIDE;
 private:
   ~ProfileSaveEvent() {}
 
