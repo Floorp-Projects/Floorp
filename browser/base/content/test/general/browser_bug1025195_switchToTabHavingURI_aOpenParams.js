@@ -13,8 +13,13 @@ add_task(function test_ignoreFragment() {
 
   switchTab("about:home#1", true);
   switchTab("about:mozilla", true);
+
+  let hashChangePromise = new Promise(resolve => {
+    tabRefAboutHome.linkedBrowser.contentWindow.addEventListener("hashchange", resolve, false);
+  });
   switchTab("about:home#2", true, { ignoreFragment: true });
   is(tabRefAboutHome, gBrowser.selectedTab, "The same about:home tab should be switched to");
+  yield hashChangePromise;
   is(gBrowser.currentURI.ref, "2", "The ref should be updated to the new ref");
   switchTab("about:mozilla", true);
   switchTab("about:home#1", false);
