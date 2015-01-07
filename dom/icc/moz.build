@@ -22,6 +22,12 @@ UNIFIED_SOURCES += [
     'IccManager.cpp',
 ]
 
+IPDL_SOURCES += [
+    'ipc/PIcc.ipdl',
+    'ipc/PIccRequest.ipdl',
+    'ipc/PIccTypes.ipdlh',
+]
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
     EXTRA_JS_MODULES += [
         'gonk/StkProactiveCmdFactory.jsm',
