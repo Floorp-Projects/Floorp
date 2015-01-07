@@ -552,6 +552,16 @@ function closeDialog()
   }
 }
 
+function newGlobal() {
+  var iframe = document.createElement("iframe");
+  document.documentElement.appendChild(iframe);
+  var win = iframe.contentWindow;
+  iframe.remove();
+  // Shim in "evaluate"
+  win.evaluate = win.eval;
+  return win;
+}
+
 registerDialogCloser();
 window.addEventListener('unload', unregisterDialogCloser, true);
 
