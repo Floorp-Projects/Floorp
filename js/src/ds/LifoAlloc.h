@@ -54,7 +54,7 @@ class BumpChunk
     char *bumpBase() const { return limit - bumpSpaceSize; }
 
     explicit BumpChunk(size_t bumpSpaceSize)
-      : bump(reinterpret_cast<char *>(MOZ_THIS_IN_INITIALIZER_LIST()) + sizeof(BumpChunk)),
+      : bump(reinterpret_cast<char *>(this) + sizeof(BumpChunk)),
         limit(bump + bumpSpaceSize),
         next_(nullptr), bumpSpaceSize(bumpSpaceSize)
     {

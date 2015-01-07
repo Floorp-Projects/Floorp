@@ -619,7 +619,7 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
       MediaPipelineReceive(pc, main_thread, sts_thread,
                            stream, track_id, level, conduit, rtp_transport,
                            rtcp_transport, filter),
-      renderer_(new PipelineRenderer(MOZ_THIS_IN_INITIALIZER_LIST())),
+      renderer_(new PipelineRenderer(this)),
       listener_(new PipelineListener(stream->AsSourceStream(), track_id)) {
   }
 

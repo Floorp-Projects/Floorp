@@ -64,7 +64,7 @@ NS_IMPL_RELEASE_INHERITED(SVGAElement, SVGAElementBase)
 
 SVGAElement::SVGAElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : SVGAElementBase(aNodeInfo)
-  , Link(MOZ_THIS_IN_INITIALIZER_LIST())
+  , Link(this)
 {
 }
 
