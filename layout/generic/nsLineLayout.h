@@ -496,11 +496,7 @@ protected:
       return mJustificationInfo.mIsEndJustifiable;
     }
 
-    bool ParticipatesInJustification() const
-    {
-      // Skip bullets and empty frames
-      return !mIsBullet && !mIsEmpty;
-    }
+    bool ParticipatesInJustification() const;
   };
   PerFrameData* mFrameFreeList;
 
@@ -649,6 +645,8 @@ protected:
 
   void AllowForStartMargin(PerFrameData* pfd,
                            nsHTMLReflowState& aReflowState);
+
+  void SyncAnnotationContainersBounds(PerFrameData* aRubyFrame);
 
   bool CanPlaceFrame(PerFrameData* pfd,
                        bool aNotSafeToBreak,

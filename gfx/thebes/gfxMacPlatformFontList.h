@@ -93,8 +93,6 @@ public:
                                            const uint8_t* aFontData,
                                            uint32_t aLength);
 
-    void ClearPrefFonts() { mPrefFonts.Clear(); }
-
 private:
     friend class gfxPlatformMac;
 
