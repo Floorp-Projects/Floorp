@@ -201,14 +201,14 @@ public:
       JSErrorResult rv;
       mObserver->OnAddTrack(*tracks[i], rv);
       if (rv.Failed()) {
-        CSFLogError(logTag, ": OnAddTrack(%d) failed! Error: %d", i,
-                    rv.ErrorCode());
+        CSFLogError(logTag, ": OnAddTrack(%d) failed! Error: %u", i,
+                    static_cast<uint32_t>(rv.ErrorCode()));
       }
     }
     JSErrorResult rv;
     mObserver->OnAddStream(*aStream, rv);
     if (rv.Failed()) {
-      CSFLogError(logTag, ": OnAddStream() failed! Error: %d", rv.ErrorCode());
+      CSFLogError(logTag, ": OnAddStream() failed! Error: %u", static_cast<uint32_t>(rv.ErrorCode()));
     }
   }
 private:
