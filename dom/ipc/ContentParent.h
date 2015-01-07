@@ -334,6 +334,8 @@ public:
 
     virtual bool RecvSetOfflinePermission(const IPC::Principal& principal) MOZ_OVERRIDE;
 
+    virtual bool RecvFinishShutdown() MOZ_OVERRIDE;
+
 protected:
     void OnChannelConnected(int32_t pid) MOZ_OVERRIDE;
     virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
@@ -434,17 +436,29 @@ private:
     void MarkAsDead();
 
     /**
+     * How we will shut down this ContentParent and its subprocess.
+     */
+    enum ShutDownMethod {
+        // Send a shutdown message and wait for FinishShutdown call back.
+        SEND_SHUTDOWN_MESSAGE,
+        // Close the channel ourselves and let the subprocess clean up itself.
+        CLOSE_CHANNEL,
+        // Close the channel with error and let the subprocess clean up itself.
+        CLOSE_CHANNEL_WITH_ERROR,
+    };
+
+    /**
      * Exit the subprocess and vamoose.  After this call IsAlive()
      * will return false and this ContentParent will not be returned
      * by the Get*() funtions.  However, the shutdown sequence itself
      * may be asynchronous.
      *
-     * If aCloseWithError is true and this is the first call to
-     * ShutDownProcess, then we'll close our channel using CloseWithError()
+     * If aMethod is CLOSE_CHANNEL_WITH_ERROR and this is the first call
+     * to ShutDownProcess, then we'll close our channel using CloseWithError()
      * rather than vanilla Close().  CloseWithError() indicates to IPC that this
      * is an abnormal shutdown (e.g. a crash).
      */
-    void ShutDownProcess(bool aCloseWithError);
+    void ShutDownProcess(ShutDownMethod aMethod);
 
     // Perform any steps necesssary to gracefully shtudown the message
     // manager and null out mMessageManager.
@@ -798,6 +812,8 @@ private:
     bool mCalledCloseWithError;
     bool mCalledKillHard;
     bool mCreatedPairedMinidumps;
+    bool mShutdownPending;
+    bool mIPCOpen;
 
     friend class CrashReporterParent;
 

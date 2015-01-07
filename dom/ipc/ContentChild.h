@@ -377,6 +377,7 @@ public:
                                    const nsTArray<nsCString>& aThreadNameFilters) MOZ_OVERRIDE;
     virtual bool RecvStopProfiler() MOZ_OVERRIDE;
     virtual bool RecvGetProfile(nsCString* aProfile) MOZ_OVERRIDE;
+    virtual bool RecvShutdown() MOZ_OVERRIDE;
 
 #ifdef ANDROID
     gfxIntSize GetScreenSize() { return mScreenSize; }
