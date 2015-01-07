@@ -1066,6 +1066,16 @@ TelephonyService.prototype = {
     });
   },
 
+  cancelUSSD: function(aClientId, aCallback) {
+    this._sendToRilWorker(aClientId, "cancelUSSD", {}, response => {
+      if (!response.success) {
+        aCallback.notifyError(response.errorMsg);
+      } else {
+        aCallback.notifySuccess();
+      }
+    });
+  },
+
   get microphoneMuted() {
     return gAudioService.microphoneMuted;
   },
