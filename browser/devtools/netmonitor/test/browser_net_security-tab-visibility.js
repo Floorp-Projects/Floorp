@@ -11,13 +11,13 @@ add_task(function* () {
   const TEST_DATA = [
     {
       desc: "http request",
-      uri: "http://example.com",
+      uri: "http://example.com" + CORS_SJS_PATH,
       visibleOnNewEvent: false,
       visibleOnSecurityInfo: false,
       visibleOnceComplete: false,
     }, {
       desc: "working https request",
-      uri: "https://example.com",
+      uri: "https://example.com" + CORS_SJS_PATH,
       visibleOnNewEvent: false,
       visibleOnSecurityInfo: true,
       visibleOnceComplete: true,

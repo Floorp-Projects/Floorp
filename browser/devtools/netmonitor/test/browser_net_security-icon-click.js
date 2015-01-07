@@ -14,10 +14,10 @@ add_task(function* () {
   RequestsMenu.lazyUpdate = false;
 
   info("Requesting a resource over HTTPS.");
-  debuggee.performRequests(1, "https://example.com/request_2");
+  debuggee.performRequests(1, "https://example.com" + CORS_SJS_PATH + "?request_2");
   yield waitForNetworkEvents(monitor, 1);
 
-  debuggee.performRequests(1, "https://example.com/request_1");
+  debuggee.performRequests(1, "https://example.com" + CORS_SJS_PATH + "?request_1");
   yield waitForNetworkEvents(monitor, 1);
 
   is(RequestsMenu.itemCount, 2, "Two events event logged.");
