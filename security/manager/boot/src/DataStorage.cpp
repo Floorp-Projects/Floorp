@@ -8,6 +8,7 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/unused.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
@@ -110,6 +111,12 @@ private:
 
 DataStorage::Reader::~Reader()
 {
+  {
+    MutexAutoLock lock(mDataStorage->mMutex);
+    Telemetry::Accumulate(Telemetry::DATA_STORAGE_ENTRIES,
+                          mDataStorage->mPersistentDataTable.Count());
+  }
+
   // Notify that calls to Get can proceed.
   {
     MonitorAutoLock readyLock(mDataStorage->mReadyMonitor);
