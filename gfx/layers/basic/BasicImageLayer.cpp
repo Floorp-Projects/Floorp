@@ -26,8 +26,7 @@ namespace layers {
 class BasicImageLayer : public ImageLayer, public BasicImplData {
 public:
   explicit BasicImageLayer(BasicLayerManager* aLayerManager) :
-    ImageLayer(aLayerManager,
-               static_cast<BasicImplData*>(MOZ_THIS_IN_INITIALIZER_LIST())),
+    ImageLayer(aLayerManager, static_cast<BasicImplData*>(this)),
     mSize(-1, -1)
   {
     MOZ_COUNT_CTOR(BasicImageLayer);

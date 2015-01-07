@@ -104,7 +104,7 @@ SafeOptionListMutation::~SafeOptionListMutation()
 HTMLSelectElement::HTMLSelectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                                      FromParser aFromParser)
   : nsGenericHTMLFormElementWithState(aNodeInfo),
-    mOptions(new HTMLOptionsCollection(MOZ_THIS_IN_INITIALIZER_LIST())),
+    mOptions(new HTMLOptionsCollection(this)),
     mAutocompleteAttrState(nsContentUtils::eAutocompleteAttrState_Unknown),
     mIsDoneAddingChildren(!aFromParser),
     mDisabledChanged(false),

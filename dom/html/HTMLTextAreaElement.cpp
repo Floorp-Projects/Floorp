@@ -61,7 +61,7 @@ HTMLTextAreaElement::HTMLTextAreaElement(already_AddRefed<mozilla::dom::NodeInfo
     mDisabledChanged(false),
     mCanShowInvalidUI(true),
     mCanShowValidUI(true),
-    mState(MOZ_THIS_IN_INITIALIZER_LIST())
+    mState(this)
 {
   AddMutationObserver(this);
 

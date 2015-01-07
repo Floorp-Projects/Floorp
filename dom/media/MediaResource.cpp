@@ -80,7 +80,7 @@ ChannelMediaResource::ChannelMediaResource(MediaDecoder* aDecoder,
   : BaseMediaResource(aDecoder, aChannel, aURI, aContentType),
     mOffset(0), mSuspendCount(0),
     mReopenOnError(false), mIgnoreClose(false),
-    mCacheStream(MOZ_THIS_IN_INITIALIZER_LIST()),
+    mCacheStream(this),
     mLock("ChannelMediaResource.mLock"),
     mIgnoreResume(false),
     mIsTransportSeekable(true)

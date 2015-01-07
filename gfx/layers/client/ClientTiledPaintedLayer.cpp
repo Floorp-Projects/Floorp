@@ -26,9 +26,7 @@ namespace layers {
 
 ClientTiledPaintedLayer::ClientTiledPaintedLayer(ClientLayerManager* const aManager,
                                                ClientLayerManager::PaintedLayerCreationHint aCreationHint)
-  : PaintedLayer(aManager,
-                static_cast<ClientLayer*>(MOZ_THIS_IN_INITIALIZER_LIST()),
-                aCreationHint)
+  : PaintedLayer(aManager, static_cast<ClientLayer*>(this), aCreationHint)
   , mContentClient()
 {
   MOZ_COUNT_CTOR(ClientTiledPaintedLayer);

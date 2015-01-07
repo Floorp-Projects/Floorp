@@ -181,8 +181,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDecoder(aDecoder),
   mScheduler(new MediaDecoderStateMachineScheduler(
       aDecoder->GetReentrantMonitor(),
-      &MediaDecoderStateMachine::TimeoutExpired,
-      MOZ_THIS_IN_INITIALIZER_LIST(), aRealTime)),
+      &MediaDecoderStateMachine::TimeoutExpired, this, aRealTime)),
   mState(DECODER_STATE_DECODING_NONE),
   mSyncPointInMediaStream(-1),
   mSyncPointInDecodedStream(-1),
@@ -1830,7 +1829,6 @@ MediaDecoderStateMachine::DispatchDecodeTasksIfNeeded()
   if (needToDecodeVideo) {
     EnsureVideoDecodeTaskQueued();
   }
-
 
   if (needIdle) {
     RefPtr<nsIRunnable> event = NS_NewRunnableMethod(

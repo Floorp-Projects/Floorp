@@ -1013,7 +1013,7 @@ JSContext::JSContext(JSRuntime *rt)
     resolvingList(nullptr),
     generatingError(false),
     savedFrameChains_(),
-    cycleDetectorSet(MOZ_THIS_IN_INITIALIZER_LIST()),
+    cycleDetectorSet(this),
     data(nullptr),
     data2(nullptr),
     outstandingRequests(0),

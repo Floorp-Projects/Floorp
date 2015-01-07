@@ -72,7 +72,7 @@ NS_INTERFACE_TABLE_TAIL_INHERITING(SVGUseElementBase)
 // Implementation
 
 SVGUseElement::SVGUseElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : SVGUseElementBase(aNodeInfo), mSource(MOZ_THIS_IN_INITIALIZER_LIST())
+  : SVGUseElementBase(aNodeInfo), mSource(this)
 {
 }
 
