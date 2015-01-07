@@ -237,8 +237,8 @@ public:
       return false;
     }
 
-    return aData[4] == 'm' && aData[5] == 'o' && aData[6] == 'o' &&
-           aData[7] == 'f';
+    return (aData[4] == 'm' && aData[5] == 'o' && aData[6] == 'o' && aData[7] == 'f') ||
+           (aData[4] == 's' && aData[5] == 't' && aData[6] == 'y' && aData[7] == 'p');
   }
 
   bool ParseStartAndEndTimestamps(const uint8_t* aData, uint32_t aLength,
