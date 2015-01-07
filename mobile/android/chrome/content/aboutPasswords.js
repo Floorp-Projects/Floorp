@@ -32,16 +32,51 @@ function copyStringAndToast(string, notifyString) {
 }
 
 let Passwords = {
+  _logins: [],
+
+  _getLogins: function() {
+    let logins;
+    try {
+      logins = Services.logins.getAllLogins();
+    } catch(e) {
+      // Master password was not entered
+      debug("Master password permissions error: " + e);
+      logins = [];
+    }
+
+    logins.sort((a, b) => a.hostname.localeCompare(b.hostname));
+    return this._logins = logins;
+  },
+
   init: function () {
     window.addEventListener("popstate", this , false);
 
     Services.obs.addObserver(this, "passwordmgr-storage-changed", false);
 
-    this._loadList();
+    this._loadList(this._getLogins());
 
     document.getElementById("copyusername-btn").addEventListener("click", this._copyUsername.bind(this), false);
     document.getElementById("copypassword-btn").addEventListener("click", this._copyPassword.bind(this), false);
     document.getElementById("details-header").addEventListener("click", this._openLink.bind(this), false);
+
+    let filterInput = document.getElementById("filter-input");
+    let filterContainer = document.getElementById("filter-input-container");
+
+    filterInput.addEventListener("input", this._filter.bind(this), false);
+    filterInput.addEventListener("blur", (event) => {
+      filterContainer.setAttribute("hidden", true);
+    });
+
+    document.getElementById("filter-button").addEventListener("click", (event) => {
+      filterContainer.removeAttribute("hidden");
+      filterInput.focus();
+    }, false);
+
+    document.getElementById("filter-clear").addEventListener("click", (event) => {
+      filterInput.blur();
+      filterInput.value = "";
+      this._loadList(this._logins);
+    }, false);
 
     this._showList();
   },
@@ -51,27 +86,16 @@ let Passwords = {
     window.removeEventListener("popstate", this, false);
   },
 
-  _loadList: function () {
-    let logins;
-    try {
-      logins = Services.logins.getAllLogins();
-    } catch(e) {
-      // Master password was not entered
-      debug("Master password permissions error: " + e);
-      return;
-    }
-
-    logins.forEach(login => login.QueryInterface(Ci.nsILoginMetaInfo));
-
-    logins.sort((a, b) => a.hostname.localeCompare(b.hostname));
-
-    // Clear all content before filling the logins
+  _loadList: function (logins) {
     let list = document.getElementById("logins-list");
-    list.innerHTML = "";
+    let newList = list.cloneNode(false);
+
     logins.forEach(login => {
       let item = this._createItemForLogin(login);
-      list.appendChild(item);
+      newList.appendChild(item);
     });
+
+    list.parentNode.replaceChild(newList, list);
   },
 
   _showList: function () {
@@ -158,7 +182,7 @@ let Passwords = {
     switch(topic) {
       case "passwordmgr-storage-changed": {
         // Reload passwords content.
-        this._loadList();
+        this._loadList(this._getLogins());
         break;
       }
     }
@@ -217,6 +241,26 @@ let Passwords = {
     let url = clickEvent.currentTarget.getAttribute("link");
     let BrowserApp = gChromeWin.BrowserApp;
     BrowserApp.addTab(url, { selected: true, parentId: BrowserApp.selectedTab.id });
+  },
+
+  _filter: function(event) {
+    let value = event.target.value;
+    let logins = this._logins.filter((login) => {
+      if (login.hostname.toLowerCase().indexOf(value) != -1) {
+        return true;
+      }
+      if (login.username &&
+          login.username.toLowerCase().indexOf(value) != -1) {
+        return true;
+      }
+      if (login.httpRealm &&
+          login.httpRealm.toLowerCase().indexOf(value) != -1) {
+        return true;
+      }
+      return false;
+    });
+
+    this._loadList(logins);
   }
 };
 

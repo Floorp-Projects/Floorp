@@ -36,7 +36,7 @@ chrome.jar:
 % override chrome://global/skin/netError.css chrome://browser/skin/netError.css
 
 #ifdef NIGHTLY_BUILD
-  skin/aboutPasswords.css                   (aboutPasswords.css)
+* skin/aboutPasswords.css                   (aboutPasswords.css)
 #endif
 
   skin/images/search.png                    (images/search.png)
