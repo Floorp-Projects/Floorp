@@ -1,4 +1,5 @@
 <!doctype html>
+<meta name=timeout content=long>
 <script src=/resources/testharness.js></script>
 <script src=/resources/testharnessreport.js></script>
 <div id=log></div>
@@ -6,52 +7,68 @@
  // https://encoding.spec.whatwg.org/encodings.json
  var singleByteEncodings = [{
    "labels": [ "866", "cp866", "csibm866", "ibm866" ],
-   "name": "ibm866"
+   "name": "ibm866",
+   "cName": "IBM866"
  },{
    "labels": [ "csisolatin2", "iso-8859-2", "iso-ir-101", "iso8859-2", "iso88592", "iso_8859-2", "iso_8859-2:1987", "l2", "latin2" ],
-   "name": "iso-8859-2"
+   "name": "iso-8859-2",
+   "cName": "ISO-8859-2"
  },{
    "labels": [ "csisolatin3", "iso-8859-3", "iso-ir-109", "iso8859-3", "iso88593", "iso_8859-3", "iso_8859-3:1988", "l3", "latin3" ],
-   "name": "iso-8859-3"
+   "name": "iso-8859-3",
+   "cName": "ISO-8859-3"
  },{
    "labels": [ "csisolatin4", "iso-8859-4", "iso-ir-110", "iso8859-4", "iso88594", "iso_8859-4", "iso_8859-4:1988", "l4", "latin4" ],
-   "name": "iso-8859-4"
+   "name": "iso-8859-4",
+   "cName": "ISO-8859-4"
  },{
    "labels": [ "csisolatincyrillic", "cyrillic", "iso-8859-5", "iso-ir-144", "iso8859-5", "iso88595", "iso_8859-5", "iso_8859-5:1988" ],
-   "name": "iso-8859-5"
+   "name": "iso-8859-5",
+   "cName": "ISO-8859-5"
  },{
    "labels": [ "arabic", "asmo-708", "csiso88596e", "csiso88596i", "csisolatinarabic", "ecma-114", "iso-8859-6", "iso-8859-6-e", "iso-8859-6-i", "iso-ir-127", "iso8859-6", "iso88596", "iso_8859-6", "iso_8859-6:1987" ],
-   "name": "iso-8859-6"
+   "name": "iso-8859-6",
+   "cName": "ISO-8859-6"
  },{
    "labels": [ "csisolatingreek", "ecma-118", "elot_928", "greek", "greek8", "iso-8859-7", "iso-ir-126", "iso8859-7", "iso88597", "iso_8859-7", "iso_8859-7:1987", "sun_eu_greek" ],
-   "name": "iso-8859-7"
+   "name": "iso-8859-7",
+   "cName": "ISO-8859-7"
  },{
    "labels": [ "csiso88598e", "csisolatinhebrew", "hebrew", "iso-8859-8", "iso-8859-8-e", "iso-ir-138", "iso8859-8", "iso88598", "iso_8859-8", "iso_8859-8:1988", "visual" ],
-   "name": "iso-8859-8"
+   "name": "iso-8859-8",
+   "cName": "ISO-8859-8"
  },{
    "labels": [ "csiso88598i", "iso-8859-8-i", "logical" ],
-   "name": "iso-8859-8-i"
+   "name": "iso-8859-8-i",
+   "cName": "ISO-8859-8-I"
  },{
    "labels": [ "csisolatin6", "iso-8859-10", "iso-ir-157", "iso8859-10", "iso885910", "l6", "latin6" ],
-   "name": "iso-8859-10"
+   "name": "iso-8859-10",
+   "cName": "ISO-8859-10"
  },{
    "labels": [ "iso-8859-13", "iso8859-13", "iso885913" ],
-   "name": "iso-8859-13"
+   "name": "iso-8859-13",
+   "cName": "ISO-8859-13"
  },{
    "labels": [ "iso-8859-14", "iso8859-14", "iso885914" ],
-   "name": "iso-8859-14"
+   "name": "iso-8859-14",
+   "cName": "ISO-8859-14"
  },{
    "labels": [ "csisolatin9", "iso-8859-15", "iso8859-15", "iso885915", "iso_8859-15", "l9" ],
-   "name": "iso-8859-15"
+   "name": "iso-8859-15",
+   "cName": "ISO-8859-15"
  },{
    "labels": [ "iso-8859-16" ],
-   "name": "iso-8859-16"
+   "name": "iso-8859-16",
+   "cName": "ISO-8859-16"
  },{
    "labels": [ "cskoi8r", "koi", "koi8", "koi8-r", "koi8_r" ],
-   "name": "koi8-r"
+   "name": "koi8-r",
+   "cName": "KOI8-R"
  },{
    "labels": [ "koi8-u" ],
-   "name": "koi8-u"
+   "name": "koi8-u",
+   "cName": "KOI8-U"
  },{
    "labels": [ "csmacintosh", "mac", "macintosh", "x-mac-roman" ],
    "name": "macintosh"
@@ -121,8 +138,8 @@
  }
 
  // For TextDecoder tests
- var buffer = ArrayBuffer(255),
-     view = Uint8Array(buffer)
+ var buffer = new ArrayBuffer(255),
+     view = new Uint8Array(buffer)
  for(var i = 0, l = view.byteLength; i < l; i++) {
    view[i] = i
  }
@@ -165,12 +182,15 @@
 
      async_test(function(t) {
        var frame = document.createElement("iframe"),
-           name = encoding.name
+           name = encoding.cName || encoding.name
        frame.src = "resources/single-byte-raw.py?label=" + label
-       frame.onload = t.step_func_done(function() { assert_equals(frame.contentDocument.characterSet, name) })
+       frame.onload = t.step_func_done(function() {
+         assert_equals(frame.contentDocument.characterSet, name)
+         assert_equals(frame.contentDocument.inputEncoding, name)
+       })
        t.add_cleanup(function() { document.body.removeChild(frame) })
        document.body.appendChild(frame)
-     }, encoding.name + ": " + label + " (document.characterSet)")
+     }, encoding.name + ": " + label + " (document.characterSet and document.inputEncoding)")
    }
  }
 </script>

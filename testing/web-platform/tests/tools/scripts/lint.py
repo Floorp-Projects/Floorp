@@ -10,13 +10,12 @@ try:
 except ImportError:
     from xml.etree import ElementTree
 
+import _env
+import manifest
 import html5lib
 
-import manifest
-
-here = os.path.split(__file__)[0]
-
-repo_root = os.path.abspath(os.path.join(here, "..", ".."))
+here = os.path.abspath(os.path.split(__file__)[0])
+repo_root = _env.repo_root
 
 def git(command, *args):
     args = list(args)
@@ -85,19 +84,59 @@ def whitelist_errors(path, errors):
         _whitelist_fn = parse_whitelist_file(os.path.join(here, "lint.whitelist"))
     return _whitelist_fn(path, errors)
 
-trailing_whitespace_regexp = re.compile("[ \t\f\v]$")
-tabs_regexp = re.compile("^\t")
-cr_regexp = re.compile("\r$")
-w3ctestorg_regexp = re.compile("w3c\-test\.org")
+class Regexp(object):
+    pattern = None
+    file_extensions = None
+    error = None
+    _re = None
+
+    def __init__(self):
+        self._re = re.compile(self.pattern)
+
+    def applies(self, path):
+        return (self.file_extensions is None or
+                os.path.splitext(path)[1] in self.file_extensions)
+
+    def search(self, line):
+        return self._re.search(line)
+
+class TrailingWhitespaceRegexp(Regexp):
+    pattern = "[ \t\f\v]$"
+    error = "TRAILING WHITESPACE"
+
+class TabsRegexp(Regexp):
+    pattern = "^\t"
+    error = "INDENT TABS"
+
+class CRRegexp(Regexp):
+    pattern = "\r$"
+    error = "CR AT EOL"
+
+class W3CTestOrgRegexp(Regexp):
+    pattern = "w3c\-test\.org"
+    error = "W3C-TEST.ORG"
+
+class PrintRegexp(Regexp):
+    pattern = "print(?:\s|\s*\()"
+    error = "PRINT STATEMENT"
+    file_extensions = [".py"]
+
+regexps = [item() for item in
+           [TrailingWhitespaceRegexp,
+            TabsRegexp,
+            CRRegexp,
+            W3CTestOrgRegexp,
+            PrintRegexp]]
+
 def check_regexp_line(path, f):
     errors = []
+
+    applicable_regexps = [regexp for regexp in regexps if regexp.applies(path)]
+
     for i, line in enumerate(f):
-        for regexp, error in [(trailing_whitespace_regexp, "TRAILING WHITESPACE"),
-                              (tabs_regexp, "INDENT TABS"),
-                              (cr_regexp, "CR AT EOL"),
-                              (w3ctestorg_regexp, "W3C-TEST.ORG")]:
+        for regexp in applicable_regexps:
             if regexp.search(line):
-                errors.append((error, "%s line %i" % (path, i+1), i+1))
+                errors.append((regexp.error, "%s line %i" % (path, i+1), i+1))
 
     return errors
 

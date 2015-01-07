@@ -18,8 +18,8 @@
 setup({explicit_done:true});
 onload = function() {
   [].forEach.call(document.images, function(img) {
-    var expected = parseFloat(img.dataset.expect);
     test(function() {
+      var expected = parseFloat(img.dataset.expect);
       assert_equals(img.width, expected, 'width');
       assert_equals(img.height, expected, 'height');
       assert_equals(img.clientWidth, expected, 'clientWidth');
