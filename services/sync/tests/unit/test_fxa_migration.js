@@ -90,8 +90,14 @@ add_task(function *testMigration() {
   // when we do a .startOver we want the new provider.
   let oldValue = Services.prefs.getBoolPref("services.sync-testing.startOverKeepIdentity");
   Services.prefs.setBoolPref("services.sync-testing.startOverKeepIdentity", false);
+
+  // disable the addons engine - this engine choice is arbitrary, but we
+  // want to check it remains disabled after migration.
+  Services.prefs.setBoolPref("services.sync.engine.addons", false);
+
   do_register_cleanup(() => {
     Services.prefs.setBoolPref("services.sync-testing.startOverKeepIdentity", oldValue)
+    Services.prefs.setBoolPref("services.sync.engine.addons", true);
   });
 
   // No sync user - that should report no user-action necessary.
@@ -100,6 +106,11 @@ add_task(function *testMigration() {
 
   // Arrange for a legacy sync user and manually bump the migrator
   let [engine, server] = configureLegacySync();
+
+  // Check our disabling of the "addons" engine worked, and for good measure,
+  // that the "passwords" engine is enabled.
+  Assert.ok(!Service.engineManager.get("addons").enabled, "addons is disabled");
+  Assert.ok(Service.engineManager.get("passwords").enabled, "passwords is enabled");
 
   // monkey-patch the migration sentinel code so we know it was called.
   let haveStartedSentinel = false;
@@ -249,6 +260,9 @@ add_task(function *testMigration() {
   Assert.deepEqual((yield fxaMigrator._queueCurrentUserState()),
                    null,
                    "still no user action necessary");
+  // and our engines should be in the same enabled/disabled state as before.
+  Assert.ok(!Service.engineManager.get("addons").enabled, "addons is still disabled");
+  Assert.ok(Service.engineManager.get("passwords").enabled, "passwords is still enabled");
 
   // aaaand, we are done - clean up.
   yield promiseStopServer(server);

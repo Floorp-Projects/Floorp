@@ -29,8 +29,6 @@ GonkDecoderModule::Init()
 nsresult
 GonkDecoderModule::Shutdown()
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
-
   return NS_OK;
 }
 

@@ -16,7 +16,7 @@ public:
    /**
     * Give a Unichar, return a nsUGenCategory
     */
-   virtual nsUGenCategory Get(uint32_t aChar);
+   virtual nsUGenCategory Get(uint32_t aChar) MOZ_OVERRIDE;
 };
 
 #endif  /* nsCategoryImp_h__ */

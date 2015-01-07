@@ -13,6 +13,7 @@ function test() {
 
   let previouslySelectedEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
+  engine.alias = "g";
 
   let base = "https://www.google.com/search?q=foo&ie=utf-8&oe=utf-8";
 
@@ -40,6 +41,15 @@ function test() {
       searchURL: base,
       run: function () {
         gURLBar.value = "? foo";
+        gURLBar.focus();
+        EventUtils.synthesizeKey("VK_RETURN", {});
+      }
+    },
+    {
+      name: "keyword search",
+      searchURL: base,
+      run: function () {
+        gURLBar.value = "g foo";
         gURLBar.focus();
         EventUtils.synthesizeKey("VK_RETURN", {});
       }
@@ -137,6 +147,7 @@ function test() {
   }
 
   registerCleanupFunction(function () {
+    engine.alias = undefined;
     gBrowser.removeProgressListener(listener);
     gBrowser.removeTab(tab);
     Services.search.currentEngine = previouslySelectedEngine;

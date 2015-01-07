@@ -291,6 +291,11 @@ description > html|a {
 /**
  * Sync migration
  */
+#sync-migrate-upgrade-description {
+  /* description elts need a min-width to wrap correctly - bug 630864? */
+  min-width: 100px
+}
+
 #sync-migration {
   border: 1px solid rgba(0, 0, 0, 0.32);
   background-color: InfoBackground;

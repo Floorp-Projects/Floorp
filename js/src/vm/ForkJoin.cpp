@@ -30,7 +30,6 @@
 #endif
 #include "vm/Monitor.h"
 
-#include "gc/ForkJoinNursery-inl.h"
 #include "vm/Interpreter-inl.h"
 
 using namespace js;
@@ -215,10 +214,6 @@ class ForkJoinOperation
 
 class ForkJoinShared : public ParallelJob, public Monitor
 {
-#ifdef JSGC_FJGENERATIONAL
-    friend class gc::ForkJoinGCShared;
-#endif
-
     /////////////////////////////////////////////////////////////////////////
     // Constant fields
 
@@ -1605,36 +1600,8 @@ ForkJoinShared::executePortion(PerThreadData *perThread, ThreadPoolWorker *worke
 
         bool ok = fii.invoke(&cx);
         MOZ_ASSERT(ok == !cx.bailoutRecord->bailedOut());
-        if (!ok) {
+        if (!ok)
             setAbortFlagAndRequestInterrupt(false);
-#ifdef JSGC_FJGENERATIONAL
-            // TODO: See bugs 1010169, 993347.
-            //
-            // It is not desirable to promote here, but if we don't do
-            // this then we can't unconditionally transfer arenas to
-            // the compartment, since the arenas can contain objects
-            // that point into the nurseries.  If those objects are
-            // touched at all by the GC, eg as part of a prebarrier,
-            // then chaos ensues.
-            //
-            // The proper fix might appear to be to note the abort and
-            // not transfer, but instead clear, the arenas.  However,
-            // the result array will remain live and unless it is
-            // cleared immediately and without running barriers then
-            // it will have pointers into the now-cleared areas, which
-            // is also wrong.
-            //
-            // For the moment, until we figure out how to clear the
-            // result array properly and implement that, it may be
-            // that the best thing we can do here is to evacuate and
-            // then let the GC run its course.
-            cx.evacuateLiveData();
-#endif
-        } else {
-#ifdef JSGC_FJGENERATIONAL
-            cx.evacuateLiveData();
-#endif
-        }
     }
 
     Spew(SpewOps, "Down");
@@ -1695,49 +1662,6 @@ ForkJoinShared::requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason)
     }
 }
 
-#ifdef JSGC_FJGENERATIONAL
-
-JSRuntime*
-js::gc::ForkJoinGCShared::runtime()
-{
-    return shared_->runtime();
-}
-
-JS::Zone*
-js::gc::ForkJoinGCShared::zone()
-{
-    return shared_->zone();
-}
-
-JSObject*
-js::gc::ForkJoinGCShared::updatable()
-{
-    return shared_->updatable();
-}
-
-js::gc::ForkJoinNurseryChunk *
-js::gc::ForkJoinGCShared::allocateNurseryChunk()
-{
-    return shared_->threadPool_->getChunk();
-}
-
-void
-js::gc::ForkJoinGCShared::freeNurseryChunk(js::gc::ForkJoinNurseryChunk *p)
-{
-    shared_->threadPool_->putFreeChunk(p);
-}
-
-void
-js::gc::ForkJoinGCShared::spewGC(const char *fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    SpewVA(SpewGC, fmt, ap);
-    va_end(ap);
-}
-
-#endif // JSGC_FJGENERATIONAL
-
 /////////////////////////////////////////////////////////////////////////////
 // ForkJoinContext
 //
@@ -1750,10 +1674,6 @@ ForkJoinContext::ForkJoinContext(PerThreadData *perThreadData, ThreadPoolWorker 
     targetRegionStart(nullptr),
     targetRegionEnd(nullptr),
     shared_(shared),
-#ifdef JSGC_FJGENERATIONAL
-    gcShared_(shared),
-    nursery_(const_cast<ForkJoinContext*>(this), &this->gcShared_, allocator),
-#endif
     worker_(worker),
     acquiredJSContext_(false),
     nogc_()
@@ -1775,10 +1695,6 @@ ForkJoinContext::ForkJoinContext(PerThreadData *perThreadData, ThreadPoolWorker 
 
 bool ForkJoinContext::initialize()
 {
-#ifdef JSGC_FJGENERATIONAL
-    if (!nursery_.initialize())
-        return false;
-#endif
     return true;
 }
 

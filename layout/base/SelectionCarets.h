@@ -77,7 +77,7 @@ public:
   NS_DECL_NSISELECTIONLISTENER
 
   // Notify selection carets about the blur event to hidden itself
-  void NotifyBlur();
+  void NotifyBlur(bool aIsLeavingDocument);
 
   // nsIScrollObserver
   virtual void ScrollPositionChanged() MOZ_OVERRIDE;
@@ -207,6 +207,7 @@ private:
                                           dom::SelectionState aState);
   void DispatchSelectionStateChangedEvent(dom::Selection* aSelection,
                                           const dom::Sequence<dom::SelectionState>& aStates);
+  void DispatchCustomEvent(const nsAString& aEvent);
   nsRect GetSelectionBoundingRect(dom::Selection* aSel);
 
   /**

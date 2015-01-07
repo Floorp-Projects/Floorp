@@ -131,7 +131,7 @@ public:
   uint8_t GetSystem() const { return mSystem; }
   const nsTArray<nsString>& GetSymbols() const { return mSymbols; }
 
-  NS_INLINE_DECL_REFCOUNTING(AnonymousCounterStyle)
+  NS_INLINE_DECL_REFCOUNTING(AnonymousCounterStyle, MOZ_OVERRIDE)
 
 private:
   ~AnonymousCounterStyle() {}
