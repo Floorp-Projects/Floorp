@@ -429,12 +429,6 @@ VectorImage::OnImageDataAvailable(nsIRequest* aRequest,
 }
 
 nsresult
-VectorImage::OnNewSourceData()
-{
-  return NS_OK;
-}
-
-nsresult
 VectorImage::StartAnimation()
 {
   if (mError)
