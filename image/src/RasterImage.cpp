@@ -1510,14 +1510,6 @@ RasterImage::OnImageDataAvailable(nsIRequest*,
   return rv;
 }
 
-nsresult
-RasterImage::OnNewSourceData()
-{
-  // XXX(seth): This will be removed in a subsequent patch.
-  MOZ_ASSERT_UNREACHABLE();
-  return NS_ERROR_ILLEGAL_VALUE;
-}
-
 /* static */ already_AddRefed<nsIEventTarget>
 RasterImage::GetEventTarget()
 {
