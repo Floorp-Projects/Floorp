@@ -1,6 +1,7 @@
 # This directory contains tests for vertical text and logical layout coordinates
 # It should not be included in layout/reftests/reftest.list until vertical layout
 # is turned on
+== 1079154-1-vertical-rl-columns.html 1079154-1-vertical-rl-columns-ref.html
 == 1082844.html 1082844-ref.html
 == 1083748.html 1083748-ref.html
 == 1083848-1-inline-border.html 1083848-1-inline-border-ref.html
@@ -24,6 +25,8 @@ random-if(gtk2Widget) == 1094434-2.html 1094434-2-ref.html # bug 1094845
 == 1094914-1b.html 1094914-1-ref.html
 == 1096224-1a.html 1096224-1-ref.html
 == 1096224-1b.html 1096224-1-ref.html
+fails == 1102175-1a.html 1102175-1-ref.html
+== 1102175-1b.html 1102175-1-ref.html
 == 1103613-1.html 1103613-1-ref.html
 == 1105268-1-min-max-dimensions.html 1105268-1-min-max-dimensions-ref.html
 == 1105268-2-min-max-dimensions.html 1105268-2-min-max-dimensions-ref.html

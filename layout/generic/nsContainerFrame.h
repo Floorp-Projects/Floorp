@@ -245,8 +245,9 @@ public:
                    nsPresContext*                 aPresContext,
                    nsHTMLReflowMetrics&           aDesiredSize,
                    const nsHTMLReflowState&       aReflowState,
-                   nscoord                        aX,
-                   nscoord                        aY,
+                   const mozilla::WritingMode&    aWM,
+                   const mozilla::LogicalPoint&   aPos,
+                   nscoord                        aContainerWidth,
                    uint32_t                       aFlags,
                    nsReflowStatus&                aStatus,
                    nsOverflowContinuationTracker* aTracker = nullptr);
@@ -268,6 +269,28 @@ public:
    *    don't want to automatically sync the frame and view
    * NS_FRAME_NO_SIZE_VIEW - don't size the frame's view
    */
+  static void FinishReflowChild(nsIFrame*                    aKidFrame,
+                                nsPresContext*               aPresContext,
+                                const nsHTMLReflowMetrics&   aDesiredSize,
+                                const nsHTMLReflowState*     aReflowState,
+                                const mozilla::WritingMode&  aWM,
+                                const mozilla::LogicalPoint& aPos,
+                                nscoord                      aContainerWidth,
+                                uint32_t                     aFlags);
+
+  //XXX temporary: hold on to a copy of the old physical versions of
+  //    ReflowChild and FinishReflowChild so that we can convert callers
+  //    incrementally.
+  void ReflowChild(nsIFrame*                      aKidFrame,
+                   nsPresContext*                 aPresContext,
+                   nsHTMLReflowMetrics&           aDesiredSize,
+                   const nsHTMLReflowState&       aReflowState,
+                   nscoord                        aX,
+                   nscoord                        aY,
+                   uint32_t                       aFlags,
+                   nsReflowStatus&                aStatus,
+                   nsOverflowContinuationTracker* aTracker = nullptr);
+
   static void FinishReflowChild(nsIFrame*                  aKidFrame,
                                 nsPresContext*             aPresContext,
                                 const nsHTMLReflowMetrics& aDesiredSize,
@@ -276,7 +299,6 @@ public:
                                 nscoord                    aY,
                                 uint32_t                   aFlags);
 
-  
   static void PositionChildViews(nsIFrame* aFrame);
 
   // ==========================================================================

@@ -502,8 +502,8 @@ private:
     virtual bool RecvGetRandomValues(const uint32_t& length,
                                      InfallibleTArray<uint8_t>* randomValues) MOZ_OVERRIDE;
 
-    virtual bool RecvIsSecureURI(const uint32_t& type, const URIParams& uri,
-                                 const uint32_t& flags, bool* isSecureURI);
+    virtual bool RecvIsSecureURI(const uint32_t& aType, const URIParams& aURI,
+                                 const uint32_t& aFlags, bool* aIsSecureURI) MOZ_OVERRIDE;
 
     virtual bool DeallocPHalParent(PHalParent*) MOZ_OVERRIDE;
 

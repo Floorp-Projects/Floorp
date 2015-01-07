@@ -386,7 +386,7 @@ public:
 #endif
 
   // Called on the main thread.
-  virtual void DetachMediaStream() {
+  virtual void DetachMediaStream() MOZ_OVERRIDE {
     ASSERT_ON_THREAD(main_thread_);
     domstream_->RemoveDirectListener(listener_);
     domstream_ = nullptr;
@@ -396,7 +396,7 @@ public:
   }
 
   // Override MediaPipeline::TransportReady.
-  virtual nsresult TransportReady_s(TransportInfo &info);
+  virtual nsresult TransportReady_s(TransportInfo &info) MOZ_OVERRIDE;
 
   // Replace a track with a different one
   // In non-compliance with the likely final spec, allow the new
@@ -560,7 +560,7 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
                                      track_id, conduit)) {
   }
 
-  virtual void DetachMediaStream() {
+  virtual void DetachMediaStream() MOZ_OVERRIDE {
     ASSERT_ON_THREAD(main_thread_);
     listener_->EndTrack();
     stream_->RemoveListener(listener_);
@@ -624,7 +624,7 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
   }
 
   // Called on the main thread.
-  virtual void DetachMediaStream() {
+  virtual void DetachMediaStream() MOZ_OVERRIDE {
     ASSERT_ON_THREAD(main_thread_);
 
     listener_->EndTrack();

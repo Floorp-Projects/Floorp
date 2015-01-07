@@ -349,16 +349,10 @@ DistributedContentList::Item(uint32_t aIndex, nsIDOMNode** aReturn)
   return CallQueryInterface(item, aReturn);
 }
 
-uint32_t
-DistributedContentList::Length() const
-{
-  return mDistributedNodes.Length();
-}
-
 NS_IMETHODIMP
 DistributedContentList::GetLength(uint32_t* aLength)
 {
-  *aLength = Length();
+  *aLength = mDistributedNodes.Length();
   return NS_OK;
 }
 

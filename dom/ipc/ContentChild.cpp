@@ -216,7 +216,7 @@ public:
 
     MemoryReportRequestChild(uint32_t aGeneration, bool aAnonymize,
                              const MaybeFileDesc& aDMDFile);
-    NS_IMETHOD Run();
+    NS_IMETHOD Run() MOZ_OVERRIDE;
 private:
     virtual ~MemoryReportRequestChild();
 
@@ -806,10 +806,10 @@ public:
     {
     }
 
-    NS_IMETHOD Callback(const nsACString &aProcess, const nsACString &aPath,
+    NS_IMETHOD Callback(const nsACString& aProcess, const nsACString &aPath,
                         int32_t aKind, int32_t aUnits, int64_t aAmount,
-                        const nsACString &aDescription,
-                        nsISupports *aiWrappedReports)
+                        const nsACString& aDescription,
+                        nsISupports* aiWrappedReports) MOZ_OVERRIDE
     {
         MemoryReportsWrapper *wrappedReports =
             static_cast<MemoryReportsWrapper *>(aiWrappedReports);

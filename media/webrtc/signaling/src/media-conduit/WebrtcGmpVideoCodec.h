@@ -112,10 +112,10 @@ public:
     return mGMP ? mGMP->ParentID() : mCachedPluginId;
   }
 
-  virtual void Terminated();
+  virtual void Terminated() MOZ_OVERRIDE;
 
   virtual int32_t InitDecode(const webrtc::VideoCodec* aCodecSettings,
-                             int32_t aNumberOfCores);
+                             int32_t aNumberOfCores) MOZ_OVERRIDE;
   virtual int32_t Decode(const webrtc::EncodedImage& aInputImage,
                          bool aMissingFrames,
                          const webrtc::RTPFragmentationHeader* aFragmentation,
@@ -123,7 +123,7 @@ public:
                          int64_t aRenderTimeMs = -1) MOZ_OVERRIDE;
   virtual int32_t RegisterDecodeCompleteCallback(webrtc::DecodedImageCallback* aCallback) MOZ_OVERRIDE;
 
-  virtual int32_t Release();
+  virtual int32_t Release() MOZ_OVERRIDE;
 
   virtual int32_t Reset() MOZ_OVERRIDE;
 

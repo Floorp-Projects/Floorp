@@ -422,6 +422,7 @@
 
       <!-- ::::::::::::: key handling ::::::::::::: -->
 
+      <field name="_selectionDetails">null</field>
       <method name="onKeyPress">
         <parameter name="aEvent"/>
         <body><![CDATA[
@@ -485,6 +486,12 @@
                 aEvent.preventDefault();
 #endif
               this.mEnterEvent = aEvent;
+              if (this.mController.selection) {
+                this._selectionDetails = {
+                  index: this.mController.selection.currentIndex,
+                  kind: "key"
+                };
+              }
               cancel = this.mController.handleEnter(false);
               break;
             case KeyEvent.DOM_VK_DELETE:
