@@ -631,18 +631,6 @@ FinalizeArenas(FreeOp *fop,
     }
 }
 
-static inline Chunk *
-AllocChunk(JSRuntime *rt)
-{
-    return static_cast<Chunk *>(MapAlignedPages(ChunkSize, ChunkSize));
-}
-
-static inline void
-FreeChunk(JSRuntime *rt, Chunk *p)
-{
-    UnmapPages(static_cast<void *>(p), ChunkSize);
-}
-
 Chunk *
 ChunkPool::pop()
 {
@@ -767,7 +755,7 @@ FreeChunkPool(JSRuntime *rt, ChunkPool &pool)
         iter.next();
         pool.remove(chunk);
         MOZ_ASSERT(!chunk->info.numArenasFreeCommitted);
-        FreeChunk(rt, chunk);
+        UnmapPages(static_cast<void *>(chunk), ChunkSize);
     }
     MOZ_ASSERT(pool.count() == 0);
 }
@@ -781,21 +769,12 @@ GCRuntime::freeEmptyChunks(JSRuntime *rt, const AutoLockGC &lock)
 /* static */ Chunk *
 Chunk::allocate(JSRuntime *rt)
 {
-    Chunk *chunk = AllocChunk(rt);
+    Chunk *chunk = static_cast<Chunk *>(MapAlignedPages(ChunkSize, ChunkSize));
     if (!chunk)
         return nullptr;
     chunk->init(rt);
     rt->gc.stats.count(gcstats::STAT_NEW_CHUNK);
     return chunk;
-}
-
-/* Must be called with the GC lock taken. */
-void
-GCRuntime::releaseChunk(Chunk *chunk)
-{
-    MOZ_ASSERT(chunk);
-    prepareToFreeChunk(chunk->info);
-    FreeChunk(rt, chunk);
 }
 
 inline void

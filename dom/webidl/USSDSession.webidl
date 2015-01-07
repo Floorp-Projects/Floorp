@@ -9,6 +9,9 @@
  AvailableIn="CertifiedApps",
  Constructor(unsigned long serviceId)]
 interface USSDSession {
-  [Throws]
+  [NewObject, Throws]
   Promise<void> send(DOMString ussd);
+
+  [NewObject, Throws]
+  Promise<void> cancel();
 };

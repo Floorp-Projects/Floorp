@@ -195,35 +195,35 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetRect(int32_t *l, int32_t *t, int32_t *w, int32_t *h) {
+  NS_IMETHOD GetRect(int32_t *l, int32_t *t, int32_t *w, int32_t *h) MOZ_OVERRIDE {
     *l = mScreenRect.x;
     *t = mScreenRect.y;
     *w = mScreenRect.width;
     *h = mScreenRect.height;
     return NS_OK;
   }
-  NS_IMETHOD GetAvailRect(int32_t *l, int32_t *t, int32_t *w, int32_t *h) {
+  NS_IMETHOD GetAvailRect(int32_t *l, int32_t *t, int32_t *w, int32_t *h) MOZ_OVERRIDE {
     return GetRect(l, t, w, h);
   }
-  NS_IMETHOD GetRectDisplayPix(int32_t *l, int32_t *t, int32_t *w, int32_t *h) {
+  NS_IMETHOD GetRectDisplayPix(int32_t *l, int32_t *t, int32_t *w, int32_t *h) MOZ_OVERRIDE {
     return GetRect(l, t, w, h);
   }
-  NS_IMETHOD GetAvailRectDisplayPix(int32_t *l, int32_t *t, int32_t *w, int32_t *h) {
+  NS_IMETHOD GetAvailRectDisplayPix(int32_t *l, int32_t *t, int32_t *w, int32_t *h) MOZ_OVERRIDE {
     return GetAvailRect(l, t, w, h);
   }
 
-  NS_IMETHOD GetId(uint32_t* aId) { *aId = (uint32_t)-1; return NS_OK; }
-  NS_IMETHOD GetPixelDepth(int32_t* aPixelDepth) { *aPixelDepth = 24; return NS_OK; }
-  NS_IMETHOD GetColorDepth(int32_t* aColorDepth) { *aColorDepth = 24; return NS_OK; }
+  NS_IMETHOD GetId(uint32_t* aId) MOZ_OVERRIDE { *aId = (uint32_t)-1; return NS_OK; }
+  NS_IMETHOD GetPixelDepth(int32_t* aPixelDepth) MOZ_OVERRIDE { *aPixelDepth = 24; return NS_OK; }
+  NS_IMETHOD GetColorDepth(int32_t* aColorDepth) MOZ_OVERRIDE { *aColorDepth = 24; return NS_OK; }
 
-  NS_IMETHOD LockMinimumBrightness(uint32_t aBrightness) { return NS_ERROR_NOT_AVAILABLE; }
-  NS_IMETHOD UnlockMinimumBrightness(uint32_t aBrightness) { return NS_ERROR_NOT_AVAILABLE; }
-  NS_IMETHOD GetRotation(uint32_t* aRotation) {
+  NS_IMETHOD LockMinimumBrightness(uint32_t aBrightness) MOZ_OVERRIDE { return NS_ERROR_NOT_AVAILABLE; }
+  NS_IMETHOD UnlockMinimumBrightness(uint32_t aBrightness) MOZ_OVERRIDE { return NS_ERROR_NOT_AVAILABLE; }
+  NS_IMETHOD GetRotation(uint32_t* aRotation) MOZ_OVERRIDE {
     *aRotation = nsIScreen::ROTATION_0_DEG;
     return NS_OK;
   }
-  NS_IMETHOD SetRotation(uint32_t aRotation) { return NS_ERROR_NOT_AVAILABLE; }
-  NS_IMETHOD GetContentsScaleFactor(double* aContentsScaleFactor) {
+  NS_IMETHOD SetRotation(uint32_t aRotation) MOZ_OVERRIDE { return NS_ERROR_NOT_AVAILABLE; }
+  NS_IMETHOD GetContentsScaleFactor(double* aContentsScaleFactor) MOZ_OVERRIDE {
     *aContentsScaleFactor = 1.0;
     return NS_OK;
   }

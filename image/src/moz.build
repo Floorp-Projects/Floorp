@@ -10,8 +10,9 @@ EXPORTS += [
     'imgLoader.h',
     'imgRequest.h',
     'imgRequestProxy.h',
+    'IProgressObserver.h',
     'Orientation.h',
-    'SurfaceCache.h'
+    'SurfaceCache.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -29,6 +30,7 @@ UNIFIED_SOURCES += [
     'ImageWrapper.cpp',
     'imgFrame.cpp',
     'imgTools.cpp',
+    'MultipartImage.cpp',
     'OrientedImage.cpp',
     'ScriptedNotificationObserver.cpp',
     'ShutdownTracker.cpp',

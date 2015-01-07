@@ -286,6 +286,15 @@ TelephonyIPCService::ResumeConference(uint32_t aClientId)
 }
 
 NS_IMETHODIMP
+TelephonyIPCService::SendTones(uint32_t aClientId, const nsAString& aDtmfChars,
+                               uint32_t aPauseDuration, uint32_t aToneDuration,
+                               nsITelephonyCallback *aCallback)
+{
+  return SendRequest(nullptr, aCallback, SendTonesRequest(aClientId,
+                     nsString(aDtmfChars), aPauseDuration, aToneDuration));
+}
+
+NS_IMETHODIMP
 TelephonyIPCService::StartTone(uint32_t aClientId, const nsAString& aDtmfChar)
 {
   if (!mPTelephonyChild) {
@@ -314,7 +323,14 @@ TelephonyIPCService::SendUSSD(uint32_t aClientId, const nsAString& aUssd,
                               nsITelephonyCallback *aCallback)
 {
   return SendRequest(nullptr, aCallback,
-                     USSDRequest(aClientId, nsString(aUssd)));
+                     SendUSSDRequest(aClientId, nsString(aUssd)));
+}
+
+NS_IMETHODIMP
+TelephonyIPCService::CancelUSSD(uint32_t aClientId,
+                                nsITelephonyCallback *aCallback)
+{
+  return SendRequest(nullptr, aCallback, CancelUSSDRequest(aClientId));
 }
 
 NS_IMETHODIMP

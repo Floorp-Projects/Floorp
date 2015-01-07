@@ -9,25 +9,25 @@
 <div id=log></div>
 
 <div style="display:none">
-    <iframe width="70%" onload="PostMessageTest()" src="http://{{domains[www]}}:{{ports[http][0]}}/webmessaging/support/ChildWindowPostMessage.htm"></iframe>
+    <iframe width="70%" onload="PostMessageTest()" src="{{location[scheme]}}://{{domains[www]}}:{{location[port]}}/webmessaging/support/ChildWindowPostMessage.htm"></iframe>
 </div>
 
 <script>
 
-    
+
     var description = "Test Description: Messages can be structured objects, e.g., nested objects.";
-    
+
     var t = async_test(description);
-    
+
     var DATA = {foo: {bar: "wow"}};
     var TYPE = "object";
     var TARGET = document.querySelector("iframe");
-                
+
     function PostMessageTest()
     {
         TARGET.contentWindow.postMessage(DATA, "*");
     }
-    
+
     window.onmessage = t.step_func(function(e)
     {
         assert_equals(typeof(e.data), TYPE);

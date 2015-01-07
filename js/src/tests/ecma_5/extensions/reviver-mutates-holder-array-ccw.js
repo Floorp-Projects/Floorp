@@ -15,14 +15,6 @@ print(BUGNUMBER + ": " + summary);
  * BEGIN TEST *
  **************/
 
-if (typeof newGlobal !== "function")
-{
-  var newGlobal = function()
-  {
-    return { evaluate: eval };
-  };
-}
-
 var proxyObj = null;
 
 var arr = JSON.parse('[0, 1]', function(prop, v) {

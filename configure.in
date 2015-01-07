@@ -415,30 +415,27 @@ MOZ_ARG_ENABLE_BOOL(metro,
     MOZ_METRO=)
 if test -n "$MOZ_METRO"; then
     AC_DEFINE(MOZ_METRO)
-    # Target the Windows 8 Kit
-    WINSDK_TARGETVER=602
-    WINVER=502
     # toolkit/library/makefile.in needs these, see nsDllMain.
     CRTDLLVERSION=110
     CRTEXPDLLVERSION=1-1-0
-else
-    # Target the Windows 7 SDK by default
-    WINSDK_TARGETVER=601
-    WINVER=502
 fi
 
 AC_SUBST(CRTDLLVERSION)
 AC_SUBST(CRTEXPDLLVERSION)
 
+# Target the Windows 8.1 SDK by default
+WINSDK_TARGETVER=603
+WINVER=502
+
 MOZ_ARG_WITH_STRING(windows-version,
 [  --with-windows-version=WINSDK_TARGETVER
-                          Windows SDK version to target. Lowest version
-                          currently allowed is 601 (Win7), highest is 602 (Win8)],
+                          Windows SDK version to target. Win8.1 (603) is
+                          currently the minimum supported version.],
   WINSDK_TARGETVER=$withval)
 
-# Currently only two sdk versions allowed, 601 and 602
+# Currently only version 603 is allowed
 case "$WINSDK_TARGETVER" in
-601|602)
+603)
     MOZ_WINSDK_TARGETVER=0${WINSDK_TARGETVER}0000
     ;;
 
@@ -685,7 +682,7 @@ case "$target" in
         # causing problems with local implementations with the same name.
         AC_DEFINE(STRSAFE_NO_DEPRECATE)
 
-        MOZ_WINSDK_MAXVER=0x06020000
+        MOZ_WINSDK_MAXVER=0x06030000
     fi # !GNU_CC
 
     AC_DEFINE_UNQUOTED(WINVER,0x$WINVER)
@@ -5880,10 +5877,6 @@ if test -n "$MOZ_ANGLE_RENDERER"; then
     MOZ_D3DCOMPILER_VISTA_DLL=d3dcompiler_47.dll
     AC_MSG_RESULT([Found D3D compiler in Windows SDK 8.1.])
   ;;
-  0x0602*)
-    MOZ_D3DCOMPILER_VISTA_DLL=d3dcompiler_46.dll
-    AC_MSG_RESULT([Found D3D compiler in Windows SDK 8.0.])
-  ;;
   esac
 
   if test -n "$MOZ_D3DCOMPILER_VISTA_DLL"; then
@@ -6032,15 +6025,6 @@ if test "$MOZ_GAMEPAD"; then
         MOZ_GAMEPAD_BACKEND=cocoa
         ;;
     WINNT)
-        case "$MOZ_WINSDK_MAXVER" in
-        # We support building with the Windows 7 SDK otherwise, but
-        # Gamepad support requires the Windows 8 SDK for some HID headers.
-        0x0601*)
-          AC_MSG_ERROR([The Windows 8 SDK or newer is required to build Gamepad support. Please install a newer Windows SDK or reconfigure with --disable-gamepad to disable gamepad support.])
-          ;;
-        *)
-          ;;
-        esac
         MOZ_GAMEPAD_BACKEND=windows
         ;;
     Linux)
@@ -7977,13 +7961,6 @@ dnl ========================================================
 dnl Graphics checks.
 dnl ========================================================
 
-if test "${OS_TARGET}" = "WINNT"; then
-  if $PERL -e "exit($MOZ_WINSDK_MAXVER < 0x06020000)"; then
-    MOZ_ENABLE_DIRECT2D1_1=1
-    AC_SUBST(MOZ_ENABLE_DIRECT2D1_1)
-  fi
-fi
-
 if test "${OS_TARGET}" = "WINNT" -o \
         "${OS_ARCH}" = "Darwin" -o \
         "${MOZ_WIDGET_TOOLKIT}" = "android" -o \
@@ -8158,17 +8135,12 @@ if test "$MOZ_TREE_CAIRO"; then
         QUARTZ_FONT_FEATURE="#define CAIRO_HAS_QUARTZ_FONT 1"
         ;;
       windows)
-        WIN32_SURFACE_FEATURE="#define CAIRO_HAS_WIN32_SURFACE 1"
+        WIN32_D2D_SURFACE_FEATURE="#define CAIRO_HAS_D2D_SURFACE 1"
+        WIN32_DWRITE_FONT_FEATURE="#define CAIRO_HAS_DWRITE_FONT 1"
         WIN32_FONT_FEATURE="#define CAIRO_HAS_WIN32_FONT 1"
-        if test "$MOZ_WINSDK_TARGETVER" -ge "06010000"; then
-            WIN32_DWRITE_FONT_FEATURE="#define CAIRO_HAS_DWRITE_FONT 1"
-            WIN32_D2D_SURFACE_FEATURE="#define CAIRO_HAS_D2D_SURFACE 1"
-            MOZ_ENABLE_D2D_SURFACE=1
-            MOZ_ENABLE_DWRITE_FONT=1
-        else
-            WIN32_DWRITE_FONT_FEATURE=
-            WIN32_D2D_SURFACE_FEATURE=
-        fi
+        WIN32_SURFACE_FEATURE="#define CAIRO_HAS_WIN32_SURFACE 1"
+        MOZ_ENABLE_D2D_SURFACE=1
+        MOZ_ENABLE_DWRITE_FONT=1
 
         MOZ_CHECK_HEADER(d3d9.h, MOZ_ENABLE_D3D9_LAYER=1)
 
@@ -9024,7 +8996,8 @@ dnl ========================================================
 #   B2G:      bug 866301
 
 if test "$MOZ_WIDGET_TOOLKIT" = "android" ||
-   test "$MOZ_BUILD_APP" = "b2g"; then
+   test "$MOZ_BUILD_APP" = "b2g" ||
+   test "$MOZ_BUILD_APP" = "b2g/dev"; then
     _INTL_API=no
 else
     _INTL_API=yes

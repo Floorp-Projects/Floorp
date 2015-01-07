@@ -45,51 +45,51 @@ public:
                                                      nsXMLContentSink)
 
   // nsIExpatSink
-  NS_IMETHOD HandleDoctypeDecl(const nsAString & aSubset, 
-                               const nsAString & aName, 
-                               const nsAString & aSystemId, 
-                               const nsAString & aPublicId,
-                               nsISupports* aCatalogData);
-  NS_IMETHOD HandleProcessingInstruction(const char16_t *aTarget, 
-                                         const char16_t *aData);
-  NS_IMETHOD HandleXMLDeclaration(const char16_t *aVersion,
-                                  const char16_t *aEncoding,
-                                  int32_t aStandalone);
-  NS_IMETHOD ReportError(const char16_t* aErrorText, 
+  NS_IMETHOD HandleDoctypeDecl(const nsAString& aSubset,
+                               const nsAString& aName,
+                               const nsAString& aSystemId,
+                               const nsAString& aPublicId,
+                               nsISupports* aCatalogData) MOZ_OVERRIDE;
+  NS_IMETHOD HandleProcessingInstruction(const char16_t* aTarget,
+                                         const char16_t* aData) MOZ_OVERRIDE;
+  NS_IMETHOD HandleXMLDeclaration(const char16_t* aVersion,
+                                  const char16_t* aEncoding,
+                                  int32_t aStandalone) MOZ_OVERRIDE;
+  NS_IMETHOD ReportError(const char16_t* aErrorText,
                          const char16_t* aSourceText,
-                         nsIScriptError *aError,
-                         bool *_retval);
+                         nsIScriptError* aError,
+                         bool* aRetval) MOZ_OVERRIDE;
 
   // nsIContentSink
-  NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode);
-  NS_IMETHOD DidBuildModel(bool aTerminated);
-  NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
-  virtual nsISupports *GetTarget();
+  NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) MOZ_OVERRIDE;
+  NS_IMETHOD DidBuildModel(bool aTerminated) MOZ_OVERRIDE;
+  NS_IMETHOD SetDocumentCharset(nsACString& aCharset) MOZ_OVERRIDE;
+  virtual nsISupports* GetTarget() MOZ_OVERRIDE;
   NS_IMETHOD DidProcessATokenImpl();
 
   // nsIXMLContentSink
 
   // nsIFragmentContentSink
-  NS_IMETHOD FinishFragmentParsing(nsIDOMDocumentFragment** aFragment);
-  NS_IMETHOD SetTargetDocument(nsIDocument* aDocument);
-  NS_IMETHOD WillBuildContent();
-  NS_IMETHOD DidBuildContent();
-  NS_IMETHOD IgnoreFirstContainer();
-  NS_IMETHOD SetPreventScriptExecution(bool aPreventScriptExecution);
+  NS_IMETHOD FinishFragmentParsing(nsIDOMDocumentFragment** aFragment) MOZ_OVERRIDE;
+  NS_IMETHOD SetTargetDocument(nsIDocument* aDocument) MOZ_OVERRIDE;
+  NS_IMETHOD WillBuildContent() MOZ_OVERRIDE;
+  NS_IMETHOD DidBuildContent() MOZ_OVERRIDE;
+  NS_IMETHOD IgnoreFirstContainer() MOZ_OVERRIDE;
+  NS_IMETHOD SetPreventScriptExecution(bool aPreventScriptExecution) MOZ_OVERRIDE;
 
 protected:
   virtual ~nsXMLFragmentContentSink();
 
-  virtual bool SetDocElement(int32_t aNameSpaceID, 
-                               nsIAtom *aTagName,
-                               nsIContent *aContent);
+  virtual bool SetDocElement(int32_t aNameSpaceID,
+                               nsIAtom* aTagName,
+                               nsIContent* aContent) MOZ_OVERRIDE;
   virtual nsresult CreateElement(const char16_t** aAtts, uint32_t aAttsCount,
                                  mozilla::dom::NodeInfo* aNodeInfo, uint32_t aLineNumber,
                                  nsIContent** aResult, bool* aAppendContent,
-                                 mozilla::dom::FromParser aFromParser);
-  virtual nsresult CloseElement(nsIContent* aContent);
+                                 mozilla::dom::FromParser aFromParser) MOZ_OVERRIDE;
+  virtual nsresult CloseElement(nsIContent* aContent) MOZ_OVERRIDE;
 
-  virtual void MaybeStartLayout(bool aIgnorePendingSheets);
+  virtual void MaybeStartLayout(bool aIgnorePendingSheets) MOZ_OVERRIDE;
 
   // nsContentSink overrides
   virtual nsresult ProcessStyleLink(nsIContent* aElement,
@@ -97,7 +97,7 @@ protected:
                                     bool aAlternate,
                                     const nsSubstring& aTitle,
                                     const nsSubstring& aType,
-                                    const nsSubstring& aMedia);
+                                    const nsSubstring& aMedia) MOZ_OVERRIDE;
   nsresult LoadXSLStyleSheet(nsIURI* aUrl);
   void StartLayout();
 

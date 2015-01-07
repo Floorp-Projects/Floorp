@@ -46,7 +46,7 @@ private:
   NSAutoreleasePool *mLocalPool;
 };
 
-@interface MacApplicationDelegate : NSObject<NSApplicationDelegate>
+@interface MacApplicationDelegate : NSObject
 {
 }
 
@@ -89,7 +89,7 @@ SetupMacApplicationDelegate()
                                             forKey:@"NSTreatUnknownArgumentsAsOpen"];
 
   // Create the delegate. This should be around for the lifetime of the app.
-  id<NSApplicationDelegate> delegate = [[MacApplicationDelegate alloc] init];
+  MacApplicationDelegate *delegate = [[MacApplicationDelegate alloc] init];
   [NSApp setDelegate:delegate];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;

@@ -159,7 +159,7 @@ public:
   // Methods inherited from Image
   nsresult Init(const char* aMimeType,
                 uint32_t aFlags) MOZ_OVERRIDE;
-  virtual nsIntRect FrameRect(uint32_t aWhichFrame) MOZ_OVERRIDE;
+
   virtual void OnSurfaceDiscarded() MOZ_OVERRIDE;
 
   // Raster-specific methods
@@ -169,7 +169,7 @@ public:
                                       uint32_t* aWriteCount);
 
   /* The total number of frames in this image. */
-  uint32_t GetNumFrames() const;
+  uint32_t GetNumFrames() const { return mFrameCount; }
 
   virtual size_t SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
   virtual size_t SizeOfDecoded(gfxMemoryLocation aLocation,
@@ -179,6 +179,7 @@ public:
   void Discard();
 
   /* Callbacks for decoders */
+
   /** Sets the size and inherent orientation of the container. This should only
    * be called by the decoder. This function may be called multiple times, but
    * will throw an error if subsequent calls do not match the first.
@@ -228,7 +229,6 @@ public:
                                        nsISupports* aContext,
                                        nsresult aStatus,
                                        bool aLastPart) MOZ_OVERRIDE;
-  virtual nsresult OnNewSourceData() MOZ_OVERRIDE;
 
   static already_AddRefed<nsIEventTarget> GetEventTarget();
 
@@ -351,9 +351,6 @@ private: // data
   //! All the frames of the image.
   Maybe<FrameBlender>       mFrameBlender;
 
-  //! The last frame we decoded for multipart images.
-  DrawableFrameRef          mMultipartDecodedFrame;
-
   nsCOMPtr<nsIProperties>   mProperties;
 
   // IMPORTANT: if you use mAnim in a method, call EnsureImageIsDecoded() first to ensure
@@ -400,6 +397,9 @@ private: // data
   DecodeStatus               mDecodeStatus;
   // END LOCKED MEMBER VARIABLES
 
+  // The number of frames this image has.
+  uint32_t                   mFrameCount;
+
   // Notification state. Used to avoid recursive notifications.
   Progress                   mNotifyProgress;
   nsIntRect                  mNotifyInvalidRect;
@@ -408,13 +408,12 @@ private: // data
   // Boolean flags (clustered together to conserve space):
   bool                       mHasSize:1;       // Has SetSize() been called?
   bool                       mDecodeOnDraw:1;  // Decoding on draw?
-  bool                       mMultipart:1;     // Multipart?
+  bool                       mTransient:1;     // Is the image short-lived?
   bool                       mDiscardable:1;   // Is container discardable?
   bool                       mHasSourceData:1; // Do we have source data?
 
   // Do we have the frames in decoded form?
   bool                       mDecoded:1;
-  bool                       mHasFirstFrame:1;
   bool                       mHasBeenDecoded:1;
 
   // Whether we're waiting to start animation. If we get a StartAnimation() call

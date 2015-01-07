@@ -88,19 +88,19 @@ public:
 };
 
 #define TX_DECL_PATTERN_BASE \
-    bool matches(const txXPathNode& aNode, txIMatchContext* aContext); \
-    double getDefaultPriority(); \
-    virtual Expr* getSubExprAt(uint32_t aPos); \
-    virtual void setSubExprAt(uint32_t aPos, Expr* aExpr); \
-    virtual txPattern* getSubPatternAt(uint32_t aPos); \
-    virtual void setSubPatternAt(uint32_t aPos, txPattern* aPattern)
+    bool matches(const txXPathNode& aNode, txIMatchContext* aContext) MOZ_OVERRIDE; \
+    double getDefaultPriority() MOZ_OVERRIDE; \
+    virtual Expr* getSubExprAt(uint32_t aPos) MOZ_OVERRIDE; \
+    virtual void setSubExprAt(uint32_t aPos, Expr* aExpr) MOZ_OVERRIDE; \
+    virtual txPattern* getSubPatternAt(uint32_t aPos) MOZ_OVERRIDE; \
+    virtual void setSubPatternAt(uint32_t aPos, txPattern* aPattern) MOZ_OVERRIDE
 
 #ifndef TX_TO_STRING
 #define TX_DECL_PATTERN TX_DECL_PATTERN_BASE
 #else
 #define TX_DECL_PATTERN \
     TX_DECL_PATTERN_BASE; \
-    void toString(nsAString& aDest)
+    void toString(nsAString& aDest) MOZ_OVERRIDE
 #endif
 
 #define TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(_class)             \

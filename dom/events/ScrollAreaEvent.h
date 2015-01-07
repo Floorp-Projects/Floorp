@@ -31,7 +31,7 @@ public:
   NS_FORWARD_NSIDOMUIEVENT(UIEvent::)
 
   NS_FORWARD_TO_EVENT_NO_SERIALIZATION_NO_DUPLICATION
-  NS_IMETHOD DuplicatePrivateData()
+  NS_IMETHOD DuplicatePrivateData() MOZ_OVERRIDE
   {
     return Event::DuplicatePrivateData();
   }

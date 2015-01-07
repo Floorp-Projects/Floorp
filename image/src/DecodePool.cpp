@@ -12,6 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsIObserverService.h"
 #include "nsIThreadPool.h"
+#include "nsProxyRelease.h"
 #include "nsXPCOMCIDInternal.h"
 #include "prsystem.h"
 

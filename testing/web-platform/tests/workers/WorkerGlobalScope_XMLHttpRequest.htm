@@ -1,29 +1,14 @@
 <!DOCTYPE html>
-<html>
-<head>
 <title> WorkerGlobalScope XMLHttpRequest() support </title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-</head>
-<body>
 <div id=log></div>
 <script>
-    
-    var FileName = './support/XMLHttpRequest.js';
-    var RequstUrl = 'XMLHttpRequest.txt';
-    var ExpectedResult = "Request Succeeded!";
-
-    var t = async_test("Test Description: WorkerGlobalScope XMLHttpRequest() support.");
-                  
-    var worker = new Worker(FileName);
-
-    worker.onmessage = t.step_func(function(evt)
-    {
-        assert_equals(evt.data, ExpectedResult);
-        t.done();
-    });
-
-    worker.postMessage(RequstUrl);
+async_test(function(t) {
+  var worker = new Worker('./support/XMLHttpRequest.js');
+  worker.onmessage = t.step_func_done(function(e) {
+    assert_equals(e.data, "Request Succeeded!");
+  });
+  worker.postMessage('XMLHttpRequest.txt');
+});
 </script>
-</body>
-</html>

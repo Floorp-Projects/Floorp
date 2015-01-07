@@ -1,29 +1,14 @@
 <!DOCTYPE html>
-<html>
-<head>
 <title> Nested Worker </title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-</head>
-<body>
 <div id=log></div>
 <script>
-    
-    var FileName = "./support/WorkerNested.js";
-    var ExpectedResult = "Pass";
-    var description = "Worker invoking a worker constructor i.e. creating a nested worker";
-    
-    var t = async_test("Test Description: " + description);
-                  
-    var worker = new Worker(FileName);
-
-    worker.onmessage = t.step_func(function(evt)
-    {
-        assert_equals(evt.data, ExpectedResult);
-        t.done();
-    });
-    
-    worker.postMessage("ping");
+async_test(function(t) {
+  var worker = new Worker("./support/WorkerNested.js");
+  worker.onmessage = t.step_func_done(function(e) {
+    assert_equals(e.data, "Pass");
+  });
+  worker.postMessage("ping");
+});
 </script>
-</body>
-</html>

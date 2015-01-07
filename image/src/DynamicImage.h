@@ -34,7 +34,6 @@ public:
   virtual nsresult Init(const char* aMimeType, uint32_t aFlags) MOZ_OVERRIDE;
 
   virtual already_AddRefed<ProgressTracker> GetProgressTracker() MOZ_OVERRIDE;
-  virtual nsIntRect FrameRect(uint32_t aWhichFrame) MOZ_OVERRIDE;
   virtual size_t SizeOfSourceWithComputedFallback(
                                  MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
   virtual size_t SizeOfDecoded(gfxMemoryLocation aLocation,
@@ -55,7 +54,6 @@ public:
                                        nsISupports* aContext,
                                        nsresult aStatus,
                                        bool aLastPart) MOZ_OVERRIDE;
-  virtual nsresult OnNewSourceData() MOZ_OVERRIDE;
 
   virtual void OnSurfaceDiscarded() MOZ_OVERRIDE;
 
