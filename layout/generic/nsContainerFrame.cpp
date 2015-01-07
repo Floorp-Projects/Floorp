@@ -1243,11 +1243,12 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
                    "overflow container frame must have a prev-in-flow");
       NS_ASSERTION(frame->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER,
                    "overflow container frame must have overflow container bit set");
-      nsRect prevRect = prevInFlow->GetRect();
+      WritingMode wm = frame->GetWritingMode();
+      nscoord containerWidth = aReflowState.AvailableSize(wm).Width(wm);
+      LogicalRect prevRect = prevInFlow->GetLogicalRect(wm, containerWidth);
 
       // Initialize reflow params
-      WritingMode wm = frame->GetWritingMode();
-      LogicalSize availSpace(wm, LogicalSize(wm, prevRect.Size()).ISize(wm),
+      LogicalSize availSpace(wm, prevRect.ISize(wm),
                              aReflowState.AvailableSize(wm).BSize(wm));
       nsHTMLReflowMetrics desiredSize(aReflowState);
       nsHTMLReflowState frameState(aPresContext, aReflowState,
@@ -1255,12 +1256,13 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
       nsReflowStatus frameStatus;
 
       // Reflow
+      LogicalPoint pos(wm, prevRect.IStart(wm), 0);
       ReflowChild(frame, aPresContext, desiredSize, frameState,
-                  prevRect.x, 0, aFlags, frameStatus, &tracker);
+                  wm, pos, containerWidth, aFlags, frameStatus, &tracker);
       //XXXfr Do we need to override any shrinkwrap effects here?
       // e.g. desiredSize.Width() = prevRect.width;
       FinishReflowChild(frame, aPresContext, desiredSize, &frameState,
-                        prevRect.x, 0, aFlags);
+                        wm, pos, containerWidth, aFlags);
 
       // Handle continuations
       if (!NS_FRAME_IS_FULLY_COMPLETE(frameStatus)) {
