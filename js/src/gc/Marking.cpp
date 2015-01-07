@@ -1449,6 +1449,9 @@ ScanTypeObject(GCMarker *gcmarker, types::TypeObject *type)
     if (type->newScript())
         type->newScript()->trace(gcmarker);
 
+    if (TypeDescr *descr = type->maybeTypeDescr())
+        PushMarkStack(gcmarker, descr);
+
     if (type->interpretedFunction)
         PushMarkStack(gcmarker, type->interpretedFunction);
 }
@@ -1471,6 +1474,11 @@ gc::MarkChildren(JSTracer *trc, types::TypeObject *type)
 
     if (type->newScript())
         type->newScript()->trace(trc);
+
+    if (JSObject *descr = type->maybeTypeDescr()) {
+        MarkObjectUnbarriered(trc, &descr, "type_descr");
+        type->setTypeDescr(&descr->as<TypeDescr>());
+    }
 
     if (type->interpretedFunction)
         MarkObject(trc, &type->interpretedFunction, "type_function");
