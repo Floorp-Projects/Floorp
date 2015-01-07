@@ -3161,7 +3161,7 @@ gfxFont::InitMetricsFromSfntTables(Metrics& aMetrics)
         if (unitsPerEm == gfxFontEntry::kInvalidUPEM) {
             return false;
         }
-        mFUnitsConvFactor = mAdjustedSize / unitsPerEm;
+        mFUnitsConvFactor = GetAdjustedSize() / unitsPerEm;
     }
 
     // 'hhea' table is required to get vertical extents
