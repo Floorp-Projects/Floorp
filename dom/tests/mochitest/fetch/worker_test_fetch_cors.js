@@ -873,6 +873,314 @@ function testCredentials() {
   return finalPromise;
 }
 
+function testRedirects() {
+  var origin = "http://mochi.test:8888";
+
+  var tests = [
+           { pass: 1,
+             method: "GET",
+             hops: [{ server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    ],
+           },
+           { pass: 0,
+             method: "GET",
+             hops: [{ server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    { server: "http://mochi.test:8888",
+                      allowOrigin: origin
+                    },
+                    ],
+           },
+           { pass: 1,
+             method: "GET",
+             hops: [{ server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    { server: "http://mochi.test:8888",
+                      allowOrigin: "*"
+                    },
+                    ],
+           },
+           { pass: 0,
+             method: "GET",
+             hops: [{ server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    { server: "http://mochi.test:8888",
+                    },
+                    ],
+           },
+           { pass: 1,
+             method: "GET",
+             hops: [{ server: "http://mochi.test:8888",
+                    },
+                    { server: "http://mochi.test:8888",
+                    },
+                    { server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    ],
+           },
+           { pass: 0,
+             method: "GET",
+             hops: [{ server: "http://mochi.test:8888",
+                    },
+                    { server: "http://mochi.test:8888",
+                    },
+                    { server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    { server: "http://mochi.test:8888",
+                    },
+                    ],
+           },
+           { pass: 0,
+             method: "GET",
+             hops: [{ server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    { server: "http://test2.mochi.test:8000",
+                      allowOrigin: origin
+                    },
+                    { server: "http://sub2.xn--lt-uia.mochi.test:8888",
+                      allowOrigin: origin
+                    },
+                    { server: "http://sub1.test1.mochi.test:8888",
+                      allowOrigin: origin
+                    },
+                    ],
+           },
+           { pass: 0,
+             method: "GET",
+             hops: [{ server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    { server: "http://test2.mochi.test:8000",
+                      allowOrigin: origin
+                    },
+                    { server: "http://sub2.xn--lt-uia.mochi.test:8888",
+                      allowOrigin: "*"
+                    },
+                    { server: "http://sub1.test1.mochi.test:8888",
+                      allowOrigin: "*"
+                    },
+                    ],
+           },
+           { pass: 1,
+             method: "GET",
+             hops: [{ server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    { server: "http://test2.mochi.test:8888",
+                      allowOrigin: "*"
+                    },
+                    { server: "http://sub2.xn--lt-uia.mochi.test:8888",
+                      allowOrigin: "*"
+                    },
+                    { server: "http://sub1.test1.mochi.test:8888",
+                      allowOrigin: "*"
+                    },
+                    ],
+           },
+           { pass: 0,
+             method: "GET",
+             hops: [{ server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    { server: "http://test2.mochi.test:8000",
+                      allowOrigin: origin
+                    },
+                    { server: "http://sub2.xn--lt-uia.mochi.test:8888",
+                      allowOrigin: "x"
+                    },
+                    { server: "http://sub1.test1.mochi.test:8888",
+                      allowOrigin: origin
+                    },
+                    ],
+           },
+           { pass: 0,
+             method: "GET",
+             hops: [{ server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    { server: "http://test2.mochi.test:8000",
+                      allowOrigin: origin
+                    },
+                    { server: "http://sub2.xn--lt-uia.mochi.test:8888",
+                      allowOrigin: "*"
+                    },
+                    { server: "http://sub1.test1.mochi.test:8888",
+                      allowOrigin: origin
+                    },
+                    ],
+           },
+           { pass: 0,
+             method: "GET",
+             hops: [{ server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    { server: "http://test2.mochi.test:8000",
+                      allowOrigin: origin
+                    },
+                    { server: "http://sub2.xn--lt-uia.mochi.test:8888",
+                      allowOrigin: "*"
+                    },
+                    { server: "http://sub1.test1.mochi.test:8888",
+                    },
+                    ],
+           },
+           { pass: 1,
+             method: "POST",
+             body: "hi there",
+             headers: { "Content-Type": "text/plain" },
+             hops: [{ server: "http://mochi.test:8888",
+                    },
+                    { server: "http://example.com",
+                      allowOrigin: origin,
+                    },
+                    ],
+           },
+           { pass: 0,
+             method: "POST",
+             body: "hi there",
+             headers: { "Content-Type": "text/plain",
+                        "my-header": "myValue",
+                      },
+             hops: [{ server: "http://mochi.test:8888",
+                    },
+                    { server: "http://example.com",
+                      allowOrigin: origin,
+                      allowHeaders: "my-header",
+                    },
+                    ],
+           },
+           { pass: 0,
+             method: "DELETE",
+             hops: [{ server: "http://mochi.test:8888",
+                    },
+                    { server: "http://example.com",
+                      allowOrigin: origin,
+                    },
+                    ],
+           },
+           { pass: 0,
+             method: "POST",
+             body: "hi there",
+             headers: { "Content-Type": "text/plain",
+                        "my-header": "myValue",
+                      },
+             hops: [{ server: "http://example.com",
+                      allowOrigin: origin,
+                    },
+                    { server: "http://sub1.test1.mochi.test:8888",
+                      allowOrigin: origin,
+                    },
+                    ],
+           },
+           { pass: 0,
+             method: "DELETE",
+             hops: [{ server: "http://example.com",
+                      allowOrigin: origin,
+                    },
+                    { server: "http://sub1.test1.mochi.test:8888",
+                      allowOrigin: origin,
+                    },
+                    ],
+           },
+           { pass: 0,
+             method: "POST",
+             body: "hi there",
+             headers: { "Content-Type": "text/plain",
+                        "my-header": "myValue",
+                      },
+             hops: [{ server: "http://example.com",
+                    },
+                    { server: "http://sub1.test1.mochi.test:8888",
+                      allowOrigin: origin,
+                      allowHeaders: "my-header",
+                    },
+                    ],
+           },
+           { pass: 1,
+             method: "POST",
+             body: "hi there",
+             headers: { "Content-Type": "text/plain" },
+             hops: [{ server: "http://mochi.test:8888",
+                    },
+                    { server: "http://example.com",
+                      allowOrigin: origin,
+                    },
+                    ],
+           },
+           { pass: 0,
+             method: "POST",
+             body: "hi there",
+             headers: { "Content-Type": "text/plain",
+                        "my-header": "myValue",
+                      },
+             hops: [{ server: "http://example.com",
+                      allowOrigin: origin,
+                      allowHeaders: "my-header",
+                    },
+                    { server: "http://mochi.test:8888",
+                      allowOrigin: origin,
+                      allowHeaders: "my-header",
+                    },
+                    ],
+           },
+           ];
+
+  var fetches = [];
+  for (test of tests) {
+    req = {
+      url: test.hops[0].server + corsServerPath + "hop=1&hops=" +
+           escape(test.hops.toSource()),
+      method: test.method,
+      headers: test.headers,
+      body: test.body,
+    };
+
+    if (test.pass) {
+      if (test.body)
+        req.url += "&body=" + escape(test.body);
+    }
+
+    var request = new Request(req.url, { method: req.method,
+                                         headers: req.headers,
+                                         body: req.body });
+    fetches.push((function(request, test) {
+      return fetch(request).then(function(res) {
+        if (test.pass) {
+          is(isNetworkError(res), false,
+            "shouldn't have failed in test for " + test.toSource());
+          is(res.status, 200, "wrong status in test for " + test.toSource());
+          is(res.statusText, "OK", "wrong status text for " + test.toSource());
+          is((new URL(res.url)).host, (new URL(test.hops[test.hops.length-1].server)).host, "Response URL should be redirected URL");
+          return res.text().then(function(v) {
+            is(v, "<res>hello pass</res>\n",
+               "wrong responseText in test for " + test.toSource());
+          });
+        }
+        else {
+          is(isNetworkError(res), true,
+            "should have failed in test for " + test.toSource());
+          is(res.status, 0, "wrong status in test for " + test.toSource());
+          is(res.statusText, "", "wrong status text for " + test.toSource());
+          return res.text().then(function(v) {
+            is(v, "",
+               "wrong responseText in test for " + test.toSource());
+          });
+        }
+      });
+    })(request, test));
+  }
+
+  return Promise.all(fetches);
+}
+
 function runTest() {
   var done = function() {
     if (typeof SimpleTest === "object") {
@@ -889,6 +1197,7 @@ function runTest() {
     .then(testModeNoCors)
     .then(testModeCors)
     .then(testCredentials)
+    .then(testRedirects)
     // Put more promise based tests here.
     .then(done)
     .catch(function(e) {
