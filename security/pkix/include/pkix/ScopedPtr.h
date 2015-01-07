@@ -25,7 +25,7 @@
 #ifndef mozilla_pkix__ScopedPtr_h
 #define mozilla_pkix__ScopedPtr_h
 
-#include "pkix/nullptr.h"
+#include "pkix/stdkeywords.h"
 
 namespace mozilla { namespace pkix {
 
