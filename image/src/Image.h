@@ -47,14 +47,16 @@ public:
    * INIT_FLAG_DECODE_ON_DRAW: The container should decode on draw rather than
    * decoding on load.
    *
-   * INIT_FLAG_MULTIPART: The container will be used to display a stream of
-   * images in a multipart channel. If this flag is set, INIT_FLAG_DISCARDABLE
-   * and INIT_FLAG_DECODE_ON_DRAW must not be set.
+   * INIT_FLAG_TRANSIENT: The container is likely to exist for only a short time
+   * before being destroyed. (For example, containers for
+   * multipart/x-mixed-replace image parts fall into this category.) If this
+   * flag is set, INIT_FLAG_DISCARDABLE and INIT_FLAG_DECODE_ON_DRAW must not be
+   * set.
    */
   static const uint32_t INIT_FLAG_NONE           = 0x0;
   static const uint32_t INIT_FLAG_DISCARDABLE    = 0x1;
   static const uint32_t INIT_FLAG_DECODE_ON_DRAW = 0x2;
-  static const uint32_t INIT_FLAG_MULTIPART      = 0x4;
+  static const uint32_t INIT_FLAG_TRANSIENT      = 0x4;
 
   /**
    * Creates a new image container.
