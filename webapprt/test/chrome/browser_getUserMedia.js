@@ -27,7 +27,7 @@ function test() {
   loadWebapp("getUserMedia.webapp", undefined, function onLoad() {
     let msg = gAppBrowser.contentDocument.getElementById("msg");
     mutObserver = new MutationObserver(function(mutations) {
-      is(msg.textContent, "PermissionDeniedError",
+      is(msg.textContent, "PermissionDeniedError: The user did not grant permission for the operation.",
          "getUserMedia permission denied.");
       ok(getUserMediaDialogOpened, "Prompt shown.");
       finish();

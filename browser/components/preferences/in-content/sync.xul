@@ -46,8 +46,9 @@
     <deck id="sync-migration-deck">
       <!-- When we are in the "need FxA user" state -->
       <hbox align="center">
-        <label>&migrate.upgradeNeeded;</label>
+        <description id="sync-migrate-upgrade-description" flex="1"/>
         <spacer flex="1"/>
+        <button id="sync-migrate-unlink"/>
         <button id="sync-migrate-upgrade"/>
       </hbox>
 

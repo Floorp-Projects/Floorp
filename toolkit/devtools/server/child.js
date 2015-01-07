@@ -14,7 +14,9 @@ let chromeGlobal = this;
   let Cu = Components.utils;
   let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
   const DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils.js");
-  const {DebuggerServer, ActorPool} = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
+  const { dumpn } = DevToolsUtils;
+  const { DebuggerServer, ActorPool } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
+
   if (!DebuggerServer.childID) {
     DebuggerServer.childID = 1;
   }
@@ -56,6 +58,36 @@ let chromeGlobal = this;
   });
 
   addMessageListener("debug:connect", onConnect);
+
+  // Allows executing module setup helper from the parent process.
+  // See also: DebuggerServer.setupInChild()
+  let onSetupInChild = DevToolsUtils.makeInfallible(msg => {
+    let { module, setupChild, args } = msg.data;
+    let m, fn;
+
+    try {
+      m = devtools.require(module);
+
+      if (!setupChild in m) {
+        dumpn("ERROR: module '" + module + "' does not export '" +
+              setupChild + "'");
+        return false;
+      }
+
+      m[setupChild].apply(m, args);
+
+      return true;
+    } catch(e) {
+      let error_msg = "exception during actor module setup running in the child process: ";
+      DevToolsUtils.reportException(error_msg + e);
+      dumpn("ERROR: " + error_msg + " \n\t module: '" + module +
+            "' \n\t setupChild: '" + setupChild + "'\n" +
+            DevToolsUtils.safeErrorString(e));
+      return false;
+    }
+  });
+
+  addMessageListener("debug:setup-in-child", onSetupInChild);
 
   let onDisconnect = DevToolsUtils.makeInfallible(function (msg) {
     removeMessageListener("debug:disconnect", onDisconnect);

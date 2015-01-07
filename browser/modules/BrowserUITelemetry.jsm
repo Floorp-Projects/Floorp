@@ -285,9 +285,11 @@ this.BrowserUITelemetry = {
       allowPopups: false,
     });
 
-    // If there are no such windows, we're out of luck. :(
-    this._firstWindowMeasurements = win ? this._getWindowMeasurements(win)
-                                        : {};
+    Services.search.init(rv => {
+      // If there are no such windows, we're out of luck. :(
+      this._firstWindowMeasurements = win ? this._getWindowMeasurements(win, rv)
+                                          : {};
+    });
   },
 
   _registerWindow: function(aWindow) {
@@ -464,7 +466,7 @@ this.BrowserUITelemetry = {
     }
   },
 
-  _getWindowMeasurements: function(aWindow) {
+  _getWindowMeasurements: function(aWindow, searchResult) {
     let document = aWindow.document;
     let result = {};
 
@@ -553,6 +555,10 @@ this.BrowserUITelemetry = {
     result.visibleTabs = visibleTabs;
     result.hiddenTabs = hiddenTabs;
 
+    if (Components.isSuccessCode(searchResult)) {
+      result.currentSearchEngine = Services.search.currentEngine;
+    }
+
     return result;
   },
 
@@ -575,6 +581,14 @@ this.BrowserUITelemetry = {
     if (selection) {
       this._countEvent(["search", "selection", source, selection.index, selection.kind]);
     }
+  },
+
+  countOneoffSearchEvent: function(id, type, where) {
+    this._countEvent(["search-oneoff", id, type, where]);
+  },
+
+  countSearchSettingsEvent: function(source) {
+    this._countEvent(["click-builtin-item", source, "search-settings"]);
   },
 
   _logAwesomeBarSearchResult: function (url) {

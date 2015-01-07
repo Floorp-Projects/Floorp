@@ -79,7 +79,8 @@ function CssColor(colorValue) {
 module.exports.colorUtils = {
   CssColor: CssColor,
   processCSSString: processCSSString,
-  rgbToHsl: rgbToHsl
+  rgbToHsl: rgbToHsl,
+  setAlpha: setAlpha
 };
 
 /**
@@ -401,6 +402,35 @@ function rgbToHsl([r,g,b]) {
   }
 
   return [Math.round(h), Math.round(s * 100), Math.round(l * 100)];
+}
+
+/**
+ * Takes a color value of any type (hex, hsl, hsla, rgb, rgba)
+ * and an alpha value to generate an rgba string with the correct
+ * alpha value.
+ *
+ * @param  {String} colorValue
+ *         Color in the form of hex, hsl, hsla, rgb, rgba.
+ * @param  {Number} alpha
+ *         Alpha value for the color, between 0 and 1.
+ * @return {String}
+ *         Converted color with `alpha` value in rgba form.
+ */
+function setAlpha(colorValue, alpha) {
+  let color = new CssColor(colorValue);
+
+  // Throw if the color supplied is not valid.
+  if (!color.valid) {
+    throw new Error("Invalid color.");
+  }
+
+  // If an invalid alpha valid, just set to 1.
+  if (!(alpha >= 0 && alpha <= 1)) {
+    alpha = 1;
+  }
+
+  let { r, g, b } = color._getRGBATuple();
+  return "rgba(" + r + ", " + g + ", " + b + ", " + alpha + ")";
 }
 
 loader.lazyGetter(this, "DOMUtils", function () {

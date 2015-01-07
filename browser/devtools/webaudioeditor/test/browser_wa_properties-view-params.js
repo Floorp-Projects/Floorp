@@ -17,8 +17,8 @@ add_task(function*() {
   reload(target);
 
   let [actors] = yield Promise.all([
-    getN(gFront, "create-node", 14),
-    waitForGraphRendered(panelWin, 14, 0)
+    getN(gFront, "create-node", 15),
+    waitForGraphRendered(panelWin, 15, 0)
   ]);
   let nodeIds = actors.map(actor => actor.actorID);
   let types = [
