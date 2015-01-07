@@ -650,40 +650,6 @@ RasterImage::IsOpaque()
   return !(progress & FLAG_HAS_TRANSPARENCY);
 }
 
-nsIntRect
-RasterImage::FrameRect(uint32_t aWhichFrame)
-{
-  if (aWhichFrame > FRAME_MAX_VALUE) {
-    NS_WARNING("aWhichFrame outside valid range!");
-    return nsIntRect();
-  }
-
-  if (!mHasFirstFrame) {
-    return nsIntRect();
-  }
-
-  if (GetNumFrames() == 1) {
-    return nsIntRect(0, 0, mSize.width, mSize.height);
-  }
-
-  // We must be animated, so get the requested frame from our FrameBlender.
-  MOZ_ASSERT(mFrameBlender, "We should be animated here");
-  nsRefPtr<imgFrame> frame =
-    mFrameBlender->RawGetFrame(GetRequestedFrameIndex(aWhichFrame));
-
-  // If we have the frame, use that rectangle.
-  if (frame) {
-    return frame->GetRect();
-  }
-
-  // If the frame doesn't exist, we return the empty rectangle. It's not clear
-  // whether this is appropriate in general, but at the moment the only
-  // consumer of this method is ProgressTracker (when it wants to figure out
-  // dirty rectangles to send out batched observer updates). This should
-  // probably be revisited when we fix bug 503973.
-  return nsIntRect();
-}
-
 void
 RasterImage::OnSurfaceDiscarded()
 {

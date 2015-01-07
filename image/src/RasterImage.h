@@ -159,7 +159,7 @@ public:
   // Methods inherited from Image
   nsresult Init(const char* aMimeType,
                 uint32_t aFlags) MOZ_OVERRIDE;
-  virtual nsIntRect FrameRect(uint32_t aWhichFrame) MOZ_OVERRIDE;
+
   virtual void OnSurfaceDiscarded() MOZ_OVERRIDE;
 
   // Raster-specific methods
