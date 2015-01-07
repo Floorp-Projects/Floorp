@@ -1496,8 +1496,21 @@ ContentParent::TransformPreallocatedIntoBrowser(ContentParent* aOpener)
 }
 
 void
-ContentParent::ShutDownProcess(bool aCloseWithError)
+ContentParent::ShutDownProcess(ShutDownMethod aMethod)
 {
+    // Shutting down by sending a shutdown message works differently than the
+    // other methods. We first call Shutdown() in the child. After the child is
+    // ready, it calls FinishShutdown() on us. Then we close the channel.
+    if (aMethod == SEND_SHUTDOWN_MESSAGE) {
+        if (mIPCOpen && SendShutdown()) {
+            mShutdownPending = true;
+        }
+
+        // If call was not successful, the channel must have been broken
+        // somehow, and we will clean up the error in ActorDestroy.
+        return;
+    }
+
     using mozilla::dom::quota::QuotaManager;
 
     if (QuotaManager* quotaManager = QuotaManager::Get()) {
@@ -1505,10 +1518,10 @@ ContentParent::ShutDownProcess(bool aCloseWithError)
     }
 
     // If Close() fails with an error, we'll end up back in this function, but
-    // with aCloseWithError = true.  It's important that we call
+    // with aMethod = CLOSE_CHANNEL_WITH_ERROR.  It's important that we call
     // CloseWithError() in this case; see bug 895204.
 
-    if (!aCloseWithError && !mCalledClose) {
+    if (aMethod == CLOSE_CHANNEL && !mCalledClose) {
         // Close() can only be called once: It kicks off the destruction
         // sequence.
         mCalledClose = true;
@@ -1522,7 +1535,7 @@ ContentParent::ShutDownProcess(bool aCloseWithError)
 #endif
     }
 
-    if (aCloseWithError && !mCalledCloseWithError) {
+    if (aMethod == CLOSE_CHANNEL_WITH_ERROR && !mCalledCloseWithError) {
         MessageChannel* channel = GetIPCChannel();
         if (channel) {
             mCalledCloseWithError = true;
@@ -1547,6 +1560,17 @@ ContentParent::ShutDownProcess(bool aCloseWithError)
     // CC'ed objects, so we need to null them out here, while we still can.  See
     // bug 899761.
     ShutDownMessageManager();
+}
+
+bool
+ContentParent::RecvFinishShutdown()
+{
+    // At this point, we already called ShutDownProcess once with
+    // SEND_SHUTDOWN_MESSAGE. To actually close the channel, we call
+    // ShutDownProcess again with CLOSE_CHANNEL.
+    MOZ_ASSERT(mShutdownPending);
+    ShutDownProcess(CLOSE_CHANNEL);
+    return true;
 }
 
 void
@@ -1749,7 +1773,20 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         mForceKillTask = nullptr;
     }
 
-    ShutDownMessageManager();
+    // Signal shutdown completion regardless of error state,
+    // so we can finish waiting in the xpcom-shutdown observer.
+    mIPCOpen = false;
+
+    if (why == NormalShutdown && !mCalledClose) {
+        // If we shut down normally but haven't called Close, assume somebody
+        // else called Close on us. In that case, we still need to call
+        // ShutDownProcess below to perform other necessary clean up.
+        mCalledClose = true;
+    }
+
+    // Make sure we always clean up.
+    ShutDownProcess(why == NormalShutdown ? CLOSE_CHANNEL
+                                          : CLOSE_CHANNEL_WITH_ERROR);
 
     nsRefPtr<ContentParent> kungFuDeathGrip(this);
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
@@ -1787,8 +1824,6 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
     RecvRemoveGeolocationListener();
 
     mConsoleService = nullptr;
-
-    MarkAsDead();
 
     if (obs) {
         nsRefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
@@ -1841,11 +1876,6 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
 
     mIdleListeners.Clear();
 
-    // If the child process was terminated due to a SIGKIL, ShutDownProcess
-    // might not have been called yet.  We must call it to ensure that our
-    // channel is closed, etc.
-    ShutDownProcess(/* closeWithError */ true);
-
     MessageLoop::current()->
         PostTask(FROM_HERE,
                  NewRunnableFunction(DelayedDeleteSubprocess, mSubprocess));
@@ -1869,7 +1899,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         MessageLoop::current()->PostTask(
             FROM_HERE,
             NewRunnableMethod(cp, &ContentParent::ShutDownProcess,
-                              /* closeWithError */ false));
+                              CLOSE_CHANNEL));
     }
     cpm->RemoveContentProcess(this->ChildID());
 }
@@ -1915,10 +1945,12 @@ ContentParent::NotifyTabDestroyed(PBrowserParent* aTab,
     // because of popup windows.  When the last one closes, shut
     // us down.
     if (ManagedPBrowserParent().Length() == 1) {
+        // In the case of normal shutdown, send a shutdown message to child to
+        // allow it to perform shutdown tasks.
         MessageLoop::current()->PostTask(
             FROM_HERE,
             NewRunnableMethod(this, &ContentParent::ShutDownProcess,
-                              /* force */ false));
+                              SEND_SHUTDOWN_MESSAGE));
     }
 }
 
@@ -1966,6 +1998,8 @@ ContentParent::InitializeMembers()
     mCalledCloseWithError = false;
     mCalledKillHard = false;
     mCreatedPairedMinidumps = false;
+    mShutdownPending = false;
+    mIPCOpen = true;
 }
 
 ContentParent::ContentParent(mozIApplication* aApp,
@@ -2710,7 +2744,16 @@ ContentParent::Observe(nsISupports* aSubject,
                        const char16_t* aData)
 {
     if (!strcmp(aTopic, "xpcom-shutdown") && mSubprocess) {
-        ShutDownProcess(/* closeWithError */ false);
+        if (!mShutdownPending && mIPCOpen) {
+            ShutDownProcess(SEND_SHUTDOWN_MESSAGE);
+        }
+
+        // Wait for shutdown to complete, so that we receive any shutdown
+        // data (e.g. telemetry) from the child before we quit.
+        // This loop terminate prematurely based on mForceKillTimer.
+        while (mIPCOpen) {
+            NS_ProcessNextEvent(nullptr, true);
+        }
         NS_ASSERTION(!mSubprocess, "Close should have nulled mSubprocess");
     }
 
