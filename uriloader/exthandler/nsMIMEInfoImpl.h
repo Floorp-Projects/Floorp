@@ -37,29 +37,29 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     NS_DECL_THREADSAFE_ISUPPORTS
 
     // I'd use NS_DECL_NSIMIMEINFO, but I don't want GetHasDefaultHandler
-    NS_IMETHOD GetFileExtensions(nsIUTF8StringEnumerator **_retval);
-    NS_IMETHOD SetFileExtensions(const nsACString & aExtensions);
-    NS_IMETHOD ExtensionExists(const nsACString & aExtension, bool *_retval);
-    NS_IMETHOD AppendExtension(const nsACString & aExtension);
-    NS_IMETHOD GetPrimaryExtension(nsACString & aPrimaryExtension);
-    NS_IMETHOD SetPrimaryExtension(const nsACString & aPrimaryExtension);
-    NS_IMETHOD GetType(nsACString & aType);
-    NS_IMETHOD GetMIMEType(nsACString & aMIMEType);
-    NS_IMETHOD GetDescription(nsAString & aDescription);
-    NS_IMETHOD SetDescription(const nsAString & aDescription);
-    NS_IMETHOD Equals(nsIMIMEInfo *aMIMEInfo, bool *_retval);
-    NS_IMETHOD GetPreferredApplicationHandler(nsIHandlerApp * *aPreferredAppHandler);
-    NS_IMETHOD SetPreferredApplicationHandler(nsIHandlerApp * aPreferredAppHandler);
-    NS_IMETHOD GetPossibleApplicationHandlers(nsIMutableArray * *aPossibleAppHandlers);
-    NS_IMETHOD GetDefaultDescription(nsAString & aDefaultDescription);
-    NS_IMETHOD LaunchWithFile(nsIFile *aFile);
+    NS_IMETHOD GetFileExtensions(nsIUTF8StringEnumerator **_retval) MOZ_OVERRIDE;
+    NS_IMETHOD SetFileExtensions(const nsACString & aExtensions) MOZ_OVERRIDE;
+    NS_IMETHOD ExtensionExists(const nsACString & aExtension, bool *_retval) MOZ_OVERRIDE;
+    NS_IMETHOD AppendExtension(const nsACString & aExtension) MOZ_OVERRIDE;
+    NS_IMETHOD GetPrimaryExtension(nsACString & aPrimaryExtension) MOZ_OVERRIDE;
+    NS_IMETHOD SetPrimaryExtension(const nsACString & aPrimaryExtension) MOZ_OVERRIDE;
+    NS_IMETHOD GetType(nsACString & aType) MOZ_OVERRIDE;
+    NS_IMETHOD GetMIMEType(nsACString & aMIMEType) MOZ_OVERRIDE;
+    NS_IMETHOD GetDescription(nsAString & aDescription) MOZ_OVERRIDE;
+    NS_IMETHOD SetDescription(const nsAString & aDescription) MOZ_OVERRIDE;
+    NS_IMETHOD Equals(nsIMIMEInfo *aMIMEInfo, bool *_retval) MOZ_OVERRIDE;
+    NS_IMETHOD GetPreferredApplicationHandler(nsIHandlerApp * *aPreferredAppHandler) MOZ_OVERRIDE;
+    NS_IMETHOD SetPreferredApplicationHandler(nsIHandlerApp * aPreferredAppHandler) MOZ_OVERRIDE;
+    NS_IMETHOD GetPossibleApplicationHandlers(nsIMutableArray * *aPossibleAppHandlers) MOZ_OVERRIDE;
+    NS_IMETHOD GetDefaultDescription(nsAString & aDefaultDescription) MOZ_OVERRIDE;
+    NS_IMETHOD LaunchWithFile(nsIFile *aFile) MOZ_OVERRIDE;
     NS_IMETHOD LaunchWithURI(nsIURI *aURI,
-                             nsIInterfaceRequestor *aWindowContext);
-    NS_IMETHOD GetPreferredAction(nsHandlerInfoAction *aPreferredAction);
-    NS_IMETHOD SetPreferredAction(nsHandlerInfoAction aPreferredAction);
-    NS_IMETHOD GetAlwaysAskBeforeHandling(bool *aAlwaysAskBeforeHandling);
-    NS_IMETHOD SetAlwaysAskBeforeHandling(bool aAlwaysAskBeforeHandling); 
-    NS_IMETHOD GetPossibleLocalHandlers(nsIArray **_retval); 
+                             nsIInterfaceRequestor *aWindowContext) MOZ_OVERRIDE;
+    NS_IMETHOD GetPreferredAction(nsHandlerInfoAction *aPreferredAction) MOZ_OVERRIDE;
+    NS_IMETHOD SetPreferredAction(nsHandlerInfoAction aPreferredAction) MOZ_OVERRIDE;
+    NS_IMETHOD GetAlwaysAskBeforeHandling(bool *aAlwaysAskBeforeHandling) MOZ_OVERRIDE;
+    NS_IMETHOD SetAlwaysAskBeforeHandling(bool aAlwaysAskBeforeHandling) MOZ_OVERRIDE; 
+    NS_IMETHOD GetPossibleLocalHandlers(nsIArray **_retval) MOZ_OVERRIDE; 
 
     enum HandlerClass {
       eMIMEInfo,
