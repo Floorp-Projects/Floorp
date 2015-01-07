@@ -29,10 +29,10 @@ ProgressTrackerInit::ProgressTrackerInit(Image* aImage,
 
   if (aTracker) {
     mTracker = aTracker;
-    mTracker->SetImage(aImage);
   } else {
-    mTracker = new ProgressTracker(aImage);
+    mTracker = new ProgressTracker();
   }
+  mTracker->SetImage(aImage);
   aImage->SetProgressTracker(mTracker);
   MOZ_ASSERT(mTracker);
 }
@@ -425,8 +425,7 @@ ProgressTracker::SyncNotify(IProgressObserver* aObserver)
 }
 
 void
-ProgressTracker::EmulateRequestFinished(IProgressObserver* aObserver,
-                                        nsresult aStatus)
+ProgressTracker::EmulateRequestFinished(IProgressObserver* aObserver)
 {
   MOZ_ASSERT(NS_IsMainThread(),
              "SyncNotifyState and mObservers are not threadsafe");
@@ -448,9 +447,8 @@ ProgressTracker::AddObserver(IProgressObserver* aObserver)
   mObservers.AppendElementUnlessExists(aObserver);
 }
 
-// XXX - The last argument should go away.
 bool
-ProgressTracker::RemoveObserver(IProgressObserver* aObserver, nsresult aStatus)
+ProgressTracker::RemoveObserver(IProgressObserver* aObserver)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -460,7 +458,7 @@ ProgressTracker::RemoveObserver(IProgressObserver* aObserver, nsresult aStatus)
   // Observers can get confused if they don't get all the proper teardown
   // notifications. Part ways on good terms.
   if (removed && !aObserver->NotificationsDeferred()) {
-    EmulateRequestFinished(aObserver, aStatus);
+    EmulateRequestFinished(aObserver);
   }
 
   // Make sure we don't give callbacks to an observer that isn't interested in

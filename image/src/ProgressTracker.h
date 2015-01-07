@@ -77,11 +77,8 @@ public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(ProgressTracker)
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ProgressTracker)
 
-  // aImage is the image that will be passed to the observers in SyncNotify()
-  // and EmulateRequestFinished(), and must be alive as long as this instance
-  // is, because we hold a weak reference to it.
-  explicit ProgressTracker(Image* aImage)
-    : mImage(aImage)
+  ProgressTracker()
+    : mImage(nullptr)
     , mProgress(NoProgress)
   { }
 
@@ -159,7 +156,7 @@ public:
   // We manage a set of observers that are using an image and thus concerned
   // with its loading progress. Weak pointers.
   void AddObserver(IProgressObserver* aObserver);
-  bool RemoveObserver(IProgressObserver* aObserver, nsresult aStatus);
+  bool RemoveObserver(IProgressObserver* aObserver);
   size_t ObserverCount() const {
     MOZ_ASSERT(NS_IsMainThread(), "Use mObservers on main thread only");
     return mObservers.Length();
@@ -195,7 +192,7 @@ private:
   // Send some notifications that would be necessary to make |aObserver| believe
   // the request is finished downloading and decoding.  We only send
   // FLAG_LOAD_COMPLETE and FLAG_ONLOAD_UNBLOCKED, and only if necessary.
-  void EmulateRequestFinished(IProgressObserver* aObserver, nsresult aStatus);
+  void EmulateRequestFinished(IProgressObserver* aObserver);
 
   // Main thread only because it deals with the observer service.
   void FireFailureNotification();
