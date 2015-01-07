@@ -13,6 +13,11 @@ EXPORTS.mozilla.dom += [
     'IccManager.h',
 ]
 
+EXPORTS.mozilla.dom.icc += [
+    'ipc/IccChild.h',
+    'ipc/IccParent.h',
+]
+
 UNIFIED_SOURCES += [
     'Assertions.cpp',
     'Icc.cpp',
@@ -20,6 +25,9 @@ UNIFIED_SOURCES += [
     "IccInfo.cpp",
     'IccListener.cpp',
     'IccManager.cpp',
+    'ipc/IccChild.cpp',
+    'ipc/IccIPCService.cpp',
+    'ipc/IccParent.cpp',
 ]
 
 IPDL_SOURCES += [
