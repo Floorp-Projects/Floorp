@@ -251,7 +251,7 @@ interface nsITelephonyDialCallback : nsITelephonyCallback
  * XPCOM component (in the content process) that provides the telephony
  * information.
  */
-[scriptable, uuid(0ab80865-7221-4c81-802f-8f7d7fc73674)]
+[scriptable, uuid(a91fa6be-0acc-4d36-99f1-3e3a88e83ae9)]
 interface nsITelephonyService : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -295,6 +295,10 @@ interface nsITelephonyService : nsISupports
    */
   void dial(in unsigned long clientId, in DOMString number,
             in boolean isEmergency, in nsITelephonyDialCallback callback);
+
+  void sendTones(in unsigned long clientId, in DOMString dtmfChars,
+                 in unsigned long pauseDuration, in unsigned long toneDuration,
+                 in nsITelephonyCallback callback);
 
   void startTone(in unsigned long clientId, in DOMString dtmfChar);
   void stopTone(in unsigned long clientId);

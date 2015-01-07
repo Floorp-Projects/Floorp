@@ -108,6 +108,16 @@ TelephonyParent::RecvPTelephonyRequestConstructor(PTelephonyRequestParent* aActo
       return true;
     }
 
+    case IPCTelephonyRequest::TSendTonesRequest: {
+      const SendTonesRequest& request = aRequest.get_SendTonesRequest();
+      service->SendTones(request.clientId(),
+                         request.dtmfChars(),
+                         request.pauseDuration(),
+                         request.toneDuration(),
+                         actor);
+      return true;
+    }
+
     default:
       MOZ_CRASH("Unknown type!");
   }
