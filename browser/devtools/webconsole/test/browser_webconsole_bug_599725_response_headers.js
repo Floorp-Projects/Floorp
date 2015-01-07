@@ -16,12 +16,6 @@ function performTest(aRequest, aConsole)
 {
   let deferred = promise.defer();
 
-  loads++;
-  ok(aRequest, "page load was logged");
-  if (loads != 2) {
-    return;
-  }
-
   let headers = null;
 
   function readHeader(aName)
@@ -64,6 +58,11 @@ function performTest(aRequest, aConsole)
 function waitForRequest() {
   let deferred = promise.defer();
   HUDService.lastFinishedRequest.callback = (req, console) => {
+    loads++;
+    ok(req, "page load was logged");
+    if (loads != 2) {
+      return;
+    }
     performTest(req, console).then(deferred.resolve);
   };
   return deferred.promise;

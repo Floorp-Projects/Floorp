@@ -7,5 +7,6 @@
 JAR_MANIFESTS += ['jar.mn']
 
 EXTRA_JS_MODULES += [
+  'AboutReader.jsm',
   'ReaderMode.jsm'
 ]
