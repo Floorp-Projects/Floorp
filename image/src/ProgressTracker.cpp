@@ -8,7 +8,8 @@
 #include "ProgressTracker.h"
 
 #include "imgIContainer.h"
-#include "imgRequestProxy.h"
+#include "imgINotificationObserver.h"
+#include "imgIRequest.h"
 #include "Image.h"
 #include "nsNetUtil.h"
 #include "nsIObserverService.h"
@@ -171,49 +172,50 @@ class AsyncNotifyRunnable : public nsRunnable
 {
   public:
     AsyncNotifyRunnable(ProgressTracker* aTracker,
-                        imgRequestProxy* aRequestProxy)
+                        IProgressObserver* aObserver)
       : mTracker(aTracker)
     {
       MOZ_ASSERT(NS_IsMainThread(), "Should be created on the main thread");
       MOZ_ASSERT(aTracker, "aTracker should not be null");
-      MOZ_ASSERT(aRequestProxy, "aRequestProxy should not be null");
-      mProxies.AppendElement(aRequestProxy);
+      MOZ_ASSERT(aObserver, "aObserver should not be null");
+      mObservers.AppendElement(aObserver);
     }
 
     NS_IMETHOD Run()
     {
       MOZ_ASSERT(NS_IsMainThread(), "Should be running on the main thread");
       MOZ_ASSERT(mTracker, "mTracker should not be null");
-      for (uint32_t i = 0; i < mProxies.Length(); ++i) {
-        mProxies[i]->SetNotificationsDeferred(false);
-        mTracker->SyncNotify(mProxies[i]);
+      for (uint32_t i = 0; i < mObservers.Length(); ++i) {
+        mObservers[i]->SetNotificationsDeferred(false);
+        mTracker->SyncNotify(mObservers[i]);
       }
 
       mTracker->mRunnable = nullptr;
       return NS_OK;
     }
 
-    void AddProxy(imgRequestProxy* aRequestProxy)
+    void AddObserver(IProgressObserver* aObserver)
     {
-      mProxies.AppendElement(aRequestProxy);
+      mObservers.AppendElement(aObserver);
     }
 
-    void RemoveProxy(imgRequestProxy* aRequestProxy)
+    void RemoveObserver(IProgressObserver* aObserver)
     {
-      mProxies.RemoveElement(aRequestProxy);
+      mObservers.RemoveElement(aObserver);
     }
 
   private:
     friend class ProgressTracker;
 
     nsRefPtr<ProgressTracker> mTracker;
-    nsTArray<nsRefPtr<imgRequestProxy>> mProxies;
+    nsTArray<nsRefPtr<IProgressObserver>> mObservers;
 };
 
 void
-ProgressTracker::Notify(imgRequestProxy* proxy)
+ProgressTracker::Notify(IProgressObserver* aObserver)
 {
-  MOZ_ASSERT(NS_IsMainThread(), "imgRequestProxy is not threadsafe");
+  MOZ_ASSERT(NS_IsMainThread());
+
 #ifdef PR_LOGGING
   if (mImage && mImage->GetURI()) {
     nsRefPtr<ImageURL> uri(mImage->GetURI());
@@ -227,18 +229,18 @@ ProgressTracker::Notify(imgRequestProxy* proxy)
   }
 #endif
 
-  proxy->SetNotificationsDeferred(true);
+  aObserver->SetNotificationsDeferred(true);
 
-  // If we have an existing runnable that we can use, we just append this proxy
-  // to its list of proxies to be notified. This ensures we don't unnecessarily
-  // delay onload.
+  // If we have an existing runnable that we can use, we just append this
+  // observer to its list of observers to be notified. This ensures we don't
+  // unnecessarily delay onload.
   AsyncNotifyRunnable* runnable =
     static_cast<AsyncNotifyRunnable*>(mRunnable.get());
 
   if (runnable) {
-    runnable->AddProxy(proxy);
+    runnable->AddObserver(aObserver);
   } else {
-    mRunnable = new AsyncNotifyRunnable(this, proxy);
+    mRunnable = new AsyncNotifyRunnable(this, aObserver);
     NS_DispatchToCurrentThread(mRunnable);
   }
 }
@@ -249,28 +251,28 @@ class AsyncNotifyCurrentStateRunnable : public nsRunnable
 {
   public:
     AsyncNotifyCurrentStateRunnable(ProgressTracker* aProgressTracker,
-                                    imgRequestProxy* aProxy)
+                                    IProgressObserver* aObserver)
       : mProgressTracker(aProgressTracker)
-      , mProxy(aProxy)
+      , mObserver(aObserver)
     {
       MOZ_ASSERT(NS_IsMainThread(), "Should be created on the main thread");
       MOZ_ASSERT(mProgressTracker, "mProgressTracker should not be null");
-      MOZ_ASSERT(mProxy, "mProxy should not be null");
+      MOZ_ASSERT(mObserver, "mObserver should not be null");
       mImage = mProgressTracker->GetImage();
     }
 
     NS_IMETHOD Run()
     {
       MOZ_ASSERT(NS_IsMainThread(), "Should be running on the main thread");
-      mProxy->SetNotificationsDeferred(false);
+      mObserver->SetNotificationsDeferred(false);
 
-      mProgressTracker->SyncNotify(mProxy);
+      mProgressTracker->SyncNotify(mObserver);
       return NS_OK;
     }
 
   private:
     nsRefPtr<ProgressTracker> mProgressTracker;
-    nsRefPtr<imgRequestProxy> mProxy;
+    nsRefPtr<IProgressObserver> mObserver;
 
     // We have to hold on to a reference to the tracker's image, just in case
     // it goes away while we're in the event queue.
@@ -278,53 +280,56 @@ class AsyncNotifyCurrentStateRunnable : public nsRunnable
 };
 
 void
-ProgressTracker::NotifyCurrentState(imgRequestProxy* proxy)
+ProgressTracker::NotifyCurrentState(IProgressObserver* aObserver)
 {
-  MOZ_ASSERT(NS_IsMainThread(), "imgRequestProxy is not threadsafe");
+  MOZ_ASSERT(NS_IsMainThread());
+
 #ifdef PR_LOGGING
-  nsRefPtr<ImageURL> uri;
-  proxy->GetURI(getter_AddRefs(uri));
   nsAutoCString spec;
-  uri->GetSpec(spec);
+  if (mImage && mImage->GetURI()) {
+    mImage->GetURI()->GetSpec(spec);
+  }
   LOG_FUNC_WITH_PARAM(GetImgLog(),
                       "ProgressTracker::NotifyCurrentState", "uri", spec.get());
 #endif
 
-  proxy->SetNotificationsDeferred(true);
+  aObserver->SetNotificationsDeferred(true);
 
-  nsCOMPtr<nsIRunnable> ev = new AsyncNotifyCurrentStateRunnable(this, proxy);
+  nsCOMPtr<nsIRunnable> ev = new AsyncNotifyCurrentStateRunnable(this, aObserver);
   NS_DispatchToCurrentThread(ev);
 }
 
-#define NOTIFY_IMAGE_OBSERVERS(PROXIES, FUNC) \
+#define NOTIFY_IMAGE_OBSERVERS(OBSERVERS, FUNC) \
   do { \
-    ProxyArray::ForwardIterator iter(PROXIES); \
+    ObserverArray::ForwardIterator iter(OBSERVERS); \
     while (iter.HasMore()) { \
-      nsRefPtr<imgRequestProxy> proxy = iter.GetNext().get(); \
-      if (proxy && !proxy->NotificationsDeferred()) { \
-        proxy->FUNC; \
+      nsRefPtr<IProgressObserver> observer = iter.GetNext().get(); \
+      if (observer && !observer->NotificationsDeferred()) { \
+        observer->FUNC; \
       } \
     } \
   } while (false);
 
 /* static */ void
-ProgressTracker::SyncNotifyInternal(ProxyArray& aProxies,
+ProgressTracker::SyncNotifyInternal(ObserverArray& aObservers,
                                     bool aHasImage,
                                     Progress aProgress,
                                     const nsIntRect& aDirtyRect)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  typedef imgINotificationObserver I;
+
   if (aProgress & FLAG_SIZE_AVAILABLE) {
-    NOTIFY_IMAGE_OBSERVERS(aProxies, OnSizeAvailable());
+    NOTIFY_IMAGE_OBSERVERS(aObservers, Notify(I::SIZE_AVAILABLE));
   }
 
   if (aProgress & FLAG_DECODE_STARTED) {
-    NOTIFY_IMAGE_OBSERVERS(aProxies, OnStartDecode());
+    NOTIFY_IMAGE_OBSERVERS(aObservers, OnStartDecode());
   }
 
   if (aProgress & FLAG_ONLOAD_BLOCKED) {
-    NOTIFY_IMAGE_OBSERVERS(aProxies, BlockOnload());
+    NOTIFY_IMAGE_OBSERVERS(aObservers, BlockOnload());
   }
 
   if (aHasImage) {
@@ -333,19 +338,19 @@ ProgressTracker::SyncNotifyInternal(ProxyArray& aProxies,
     // vector images, true for raster images that have decoded at
     // least one frame) then send OnFrameUpdate.
     if (!aDirtyRect.IsEmpty()) {
-      NOTIFY_IMAGE_OBSERVERS(aProxies, OnFrameUpdate(&aDirtyRect));
+      NOTIFY_IMAGE_OBSERVERS(aObservers, Notify(I::FRAME_UPDATE, &aDirtyRect));
     }
 
     if (aProgress & FLAG_FRAME_COMPLETE) {
-      NOTIFY_IMAGE_OBSERVERS(aProxies, OnFrameComplete());
+      NOTIFY_IMAGE_OBSERVERS(aObservers, Notify(I::FRAME_COMPLETE));
     }
 
     if (aProgress & FLAG_HAS_TRANSPARENCY) {
-      NOTIFY_IMAGE_OBSERVERS(aProxies, OnImageHasTransparency());
+      NOTIFY_IMAGE_OBSERVERS(aObservers, Notify(I::HAS_TRANSPARENCY));
     }
 
     if (aProgress & FLAG_IS_ANIMATED) {
-      NOTIFY_IMAGE_OBSERVERS(aProxies, OnImageIsAnimated());
+      NOTIFY_IMAGE_OBSERVERS(aObservers, Notify(I::IS_ANIMATED));
     }
   }
 
@@ -353,16 +358,16 @@ ProgressTracker::SyncNotifyInternal(ProxyArray& aProxies,
   // observers that can fire events when they receive those notifications to do
   // so then, instead of being forced to wait for UnblockOnload.
   if (aProgress & FLAG_ONLOAD_UNBLOCKED) {
-    NOTIFY_IMAGE_OBSERVERS(aProxies, UnblockOnload());
+    NOTIFY_IMAGE_OBSERVERS(aObservers, UnblockOnload());
   }
 
   if (aProgress & FLAG_DECODE_COMPLETE) {
     MOZ_ASSERT(aHasImage, "Stopped decoding without ever having an image?");
-    NOTIFY_IMAGE_OBSERVERS(aProxies, OnDecodeComplete());
+    NOTIFY_IMAGE_OBSERVERS(aObservers, Notify(I::DECODE_COMPLETE));
   }
 
   if (aProgress & FLAG_LOAD_COMPLETE) {
-    NOTIFY_IMAGE_OBSERVERS(aProxies,
+    NOTIFY_IMAGE_OBSERVERS(aObservers,
                            OnLoadComplete(aProgress & FLAG_LAST_PART_COMPLETE));
   }
 }
@@ -372,7 +377,7 @@ ProgressTracker::SyncNotifyProgress(Progress aProgress,
                                     const nsIntRect& aInvalidRect
                                                   /* = nsIntRect() */)
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Use mConsumers on main thread only");
+  MOZ_ASSERT(NS_IsMainThread(), "Use mObservers on main thread only");
 
   // Don't unblock onload if we're not blocked.
   Progress progress = Difference(aProgress);
@@ -386,7 +391,7 @@ ProgressTracker::SyncNotifyProgress(Progress aProgress,
   CheckProgressConsistency(mProgress);
 
   // Send notifications.
-  SyncNotifyInternal(mConsumers, !!mImage, progress, aInvalidRect);
+  SyncNotifyInternal(mObservers, !!mImage, progress, aInvalidRect);
 
   if (progress & FLAG_HAS_ERROR) {
     FireFailureNotification();
@@ -394,14 +399,15 @@ ProgressTracker::SyncNotifyProgress(Progress aProgress,
 }
 
 void
-ProgressTracker::SyncNotify(imgRequestProxy* proxy)
+ProgressTracker::SyncNotify(IProgressObserver* aObserver)
 {
-  MOZ_ASSERT(NS_IsMainThread(), "imgRequestProxy is not threadsafe");
+  MOZ_ASSERT(NS_IsMainThread());
+
 #ifdef PR_LOGGING
-  nsRefPtr<ImageURL> uri;
-  proxy->GetURI(getter_AddRefs(uri));
   nsAutoCString spec;
-  uri->GetSpec(spec);
+  if (mImage && mImage->GetURI()) {
+    mImage->GetURI()->GetSpec(spec);
+  }
   LOG_SCOPE_WITH_PARAM(GetImgLog(),
                        "ProgressTracker::SyncNotify", "uri", spec.get());
 #endif
@@ -413,71 +419,72 @@ ProgressTracker::SyncNotify(imgRequestProxy* proxy)
     r = mImage->FrameRect(imgIContainer::FRAME_CURRENT);
   }
 
-  ProxyArray array;
-  array.AppendElement(proxy);
+  ObserverArray array;
+  array.AppendElement(aObserver);
   SyncNotifyInternal(array, !!mImage, mProgress, r);
 }
 
 void
-ProgressTracker::EmulateRequestFinished(imgRequestProxy* aProxy,
+ProgressTracker::EmulateRequestFinished(IProgressObserver* aObserver,
                                         nsresult aStatus)
 {
   MOZ_ASSERT(NS_IsMainThread(),
-             "SyncNotifyState and mConsumers are not threadsafe");
-  nsCOMPtr<imgIRequest> kungFuDeathGrip(aProxy);
+             "SyncNotifyState and mObservers are not threadsafe");
+  nsRefPtr<IProgressObserver> kungFuDeathGrip(aObserver);
 
   if (mProgress & FLAG_ONLOAD_BLOCKED && !(mProgress & FLAG_ONLOAD_UNBLOCKED)) {
-    aProxy->UnblockOnload();
+    aObserver->UnblockOnload();
   }
 
   if (!(mProgress & FLAG_LOAD_COMPLETE)) {
-    aProxy->OnLoadComplete(true);
+    aObserver->OnLoadComplete(true);
   }
 }
 
 void
-ProgressTracker::AddConsumer(imgRequestProxy* aConsumer)
+ProgressTracker::AddObserver(IProgressObserver* aObserver)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mConsumers.AppendElementUnlessExists(aConsumer);
+  mObservers.AppendElementUnlessExists(aObserver);
 }
 
 // XXX - The last argument should go away.
 bool
-ProgressTracker::RemoveConsumer(imgRequestProxy* aConsumer, nsresult aStatus)
+ProgressTracker::RemoveObserver(IProgressObserver* aObserver, nsresult aStatus)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  // Remove the proxy from the list.
-  bool removed = mConsumers.RemoveElement(aConsumer);
 
-  // Consumers can get confused if they don't get all the proper teardown
+  // Remove the observer from the list.
+  bool removed = mObservers.RemoveElement(aObserver);
+
+  // Observers can get confused if they don't get all the proper teardown
   // notifications. Part ways on good terms.
-  if (removed && !aConsumer->NotificationsDeferred()) {
-    EmulateRequestFinished(aConsumer, aStatus);
+  if (removed && !aObserver->NotificationsDeferred()) {
+    EmulateRequestFinished(aObserver, aStatus);
   }
 
-  // Make sure we don't give callbacks to a consumer that isn't interested in
+  // Make sure we don't give callbacks to an observer that isn't interested in
   // them any more.
   AsyncNotifyRunnable* runnable =
     static_cast<AsyncNotifyRunnable*>(mRunnable.get());
 
-  if (aConsumer->NotificationsDeferred() && runnable) {
-    runnable->RemoveProxy(aConsumer);
-    aConsumer->SetNotificationsDeferred(false);
+  if (aObserver->NotificationsDeferred() && runnable) {
+    runnable->RemoveObserver(aObserver);
+    aObserver->SetNotificationsDeferred(false);
   }
 
   return removed;
 }
 
 bool
-ProgressTracker::FirstConsumerIs(imgRequestProxy* aConsumer)
+ProgressTracker::FirstObserverIs(IProgressObserver* aObserver)
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Use mConsumers on main thread only");
-  ProxyArray::ForwardIterator iter(mConsumers);
+  MOZ_ASSERT(NS_IsMainThread(), "Use mObservers on main thread only");
+  ObserverArray::ForwardIterator iter(mObservers);
   while (iter.HasMore()) {
-    nsRefPtr<imgRequestProxy> proxy = iter.GetNext().get();
-    if (proxy) {
-      return proxy.get() == aConsumer;
+    nsRefPtr<IProgressObserver> observer = iter.GetNext().get();
+    if (observer) {
+      return observer.get() == aObserver;
     }
   }
   return false;
@@ -487,7 +494,8 @@ void
 ProgressTracker::OnUnlockedDraw()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  NOTIFY_IMAGE_OBSERVERS(mConsumers, OnUnlockedDraw());
+  NOTIFY_IMAGE_OBSERVERS(mObservers,
+                         Notify(imgINotificationObserver::UNLOCKED_DRAW));
 }
 
 void
@@ -507,7 +515,8 @@ void
 ProgressTracker::OnDiscard()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  NOTIFY_IMAGE_OBSERVERS(mConsumers, OnDiscard());
+  NOTIFY_IMAGE_OBSERVERS(mObservers,
+                         Notify(imgINotificationObserver::DISCARD));
 }
 
 void
@@ -522,7 +531,7 @@ ProgressTracker::OnImageAvailable()
     return;
   }
 
-  NOTIFY_IMAGE_OBSERVERS(mConsumers, SetHasImage());
+  NOTIFY_IMAGE_OBSERVERS(mObservers, SetHasImage());
 }
 
 void
