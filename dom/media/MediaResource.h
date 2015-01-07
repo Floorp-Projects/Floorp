@@ -744,7 +744,7 @@ class MOZ_STACK_CLASS AutoPinned {
   }
 
   operator T*() const { return mResource; }
-  T* operator->() const { return mResource; }
+  T* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN { return mResource; }
 
 private:
   T* mResource;

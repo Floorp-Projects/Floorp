@@ -378,9 +378,8 @@ ArchiveZipFileImpl::GetInternalStream(nsIInputStream** aStream)
                                                                mStart,
                                                                mLength,
                                                                mCentral);
-  NS_ADDREF(stream);
 
-  *aStream = stream;
+  stream.forget(aStream);
   return NS_OK;
 }
 

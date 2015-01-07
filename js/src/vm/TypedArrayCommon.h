@@ -13,6 +13,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
 
+#include "js/Conversions.h"
 #include "js/Value.h"
 
 #include "vm/SharedTypedArrayObject.h"
@@ -444,8 +445,8 @@ class ElementSpecific
         if (MOZ_UNLIKELY(mozilla::IsNaN(d)))
             return T(0);
         if (TypeIsUnsigned<T>())
-            return T(ToUint32(d));
-        return T(ToInt32(d));
+            return T(JS::ToUint32(d));
+        return T(JS::ToInt32(d));
     }
 };
 

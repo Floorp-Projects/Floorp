@@ -159,7 +159,7 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ELEMENT_IID)
 
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) MOZ_OVERRIDE;
 
   /**
    * Method to get the full state of this element.  See mozilla/EventStates.h
@@ -725,7 +725,10 @@ public:
       nsIPresShell::SetCapturingContent(nullptr, 0);
     }
   }
-  void MozRequestFullScreen(const RequestFullscreenOptions& aOptions);
+
+  // aCx == nullptr is allowed only if aOptions.isNullOrUndefined()
+  void MozRequestFullScreen(JSContext* aCx, JS::Handle<JS::Value> aOptions,
+                            ErrorResult& aError);
   void MozRequestPointerLock();
   Attr* GetAttributeNode(const nsAString& aName);
   already_AddRefed<Attr> SetAttributeNode(Attr& aNewAttr,
@@ -1211,7 +1214,7 @@ protected:
 
   nsIFrame* GetStyledFrame();
 
-  virtual Element* GetNameSpaceElement()
+  virtual Element* GetNameSpaceElement() MOZ_OVERRIDE
   {
     return this;
   }
@@ -1311,9 +1314,9 @@ public:
   NS_DECL_NSIDOMNODELIST
 
   // nsINodeList
-  virtual nsIContent* Item(uint32_t aIndex);
-  virtual int32_t IndexOf(nsIContent* aContent);
-  virtual nsINode* GetParentObject() { return mParent; }
+  virtual nsIContent* Item(uint32_t aIndex) MOZ_OVERRIDE;
+  virtual int32_t IndexOf(nsIContent* aContent) MOZ_OVERRIDE;
+  virtual nsINode* GetParentObject() MOZ_OVERRIDE { return mParent; }
   virtual uint32_t Length() const;
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 protected:
@@ -1467,43 +1470,45 @@ _elementName::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const 
 
 #define NS_FORWARD_NSIDOMELEMENT_TO_GENERIC                                   \
 typedef mozilla::dom::Element Element;                                        \
-NS_IMETHOD GetTagName(nsAString& aTagName) MOZ_FINAL                          \
+NS_IMETHOD GetTagName(nsAString& aTagName) MOZ_FINAL MOZ_OVERRIDE             \
 {                                                                             \
   Element::GetTagName(aTagName);                                              \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD GetId(nsAString& aId) MOZ_FINAL                                    \
+NS_IMETHOD GetId(nsAString& aId) MOZ_FINAL MOZ_OVERRIDE                       \
 {                                                                             \
   Element::GetId(aId);                                                        \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD SetId(const nsAString& aId) MOZ_FINAL                              \
+NS_IMETHOD SetId(const nsAString& aId) MOZ_FINAL MOZ_OVERRIDE                 \
 {                                                                             \
   Element::SetId(aId);                                                        \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD GetClassName(nsAString& aClassName) MOZ_FINAL                      \
+NS_IMETHOD GetClassName(nsAString& aClassName) MOZ_FINAL MOZ_OVERRIDE         \
 {                                                                             \
   Element::GetClassName(aClassName);                                          \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD SetClassName(const nsAString& aClassName) MOZ_FINAL                \
+NS_IMETHOD SetClassName(const nsAString& aClassName) MOZ_FINAL MOZ_OVERRIDE   \
 {                                                                             \
   Element::SetClassName(aClassName);                                          \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD GetClassList(nsISupports** aClassList) MOZ_FINAL                   \
+NS_IMETHOD GetClassList(nsISupports** aClassList) MOZ_FINAL MOZ_OVERRIDE      \
 {                                                                             \
   Element::GetClassList(aClassList);                                          \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD GetAttributes(nsIDOMMozNamedAttrMap** aAttributes) MOZ_FINAL       \
+  MOZ_OVERRIDE                                                                \
 {                                                                             \
   NS_ADDREF(*aAttributes = Attributes());                                     \
   return NS_OK;                                                               \
 }                                                                             \
 using Element::GetAttribute;                                                  \
 NS_IMETHOD GetAttribute(const nsAString& name, nsAString& _retval) MOZ_FINAL  \
+  MOZ_OVERRIDE                                                                \
 {                                                                             \
   nsString attr;                                                              \
   GetAttribute(name, attr);                                                   \
@@ -1512,13 +1517,13 @@ NS_IMETHOD GetAttribute(const nsAString& name, nsAString& _retval) MOZ_FINAL  \
 }                                                                             \
 NS_IMETHOD GetAttributeNS(const nsAString& namespaceURI,                      \
                           const nsAString& localName,                         \
-                          nsAString& _retval) MOZ_FINAL                       \
+                          nsAString& _retval) MOZ_FINAL MOZ_OVERRIDE          \
 {                                                                             \
   Element::GetAttributeNS(namespaceURI, localName, _retval);                  \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD SetAttribute(const nsAString& name,                                \
-                        const nsAString& value)                               \
+                        const nsAString& value) MOZ_OVERRIDE                  \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
   Element::SetAttribute(name, value, rv);                                     \
@@ -1526,14 +1531,14 @@ NS_IMETHOD SetAttribute(const nsAString& name,                                \
 }                                                                             \
 NS_IMETHOD SetAttributeNS(const nsAString& namespaceURI,                      \
                           const nsAString& qualifiedName,                     \
-                          const nsAString& value) MOZ_FINAL                   \
+                          const nsAString& value) MOZ_FINAL MOZ_OVERRIDE      \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
   Element::SetAttributeNS(namespaceURI, qualifiedName, value, rv);            \
   return rv.ErrorCode();                                                      \
 }                                                                             \
 using Element::RemoveAttribute;                                               \
-NS_IMETHOD RemoveAttribute(const nsAString& name) MOZ_FINAL                   \
+NS_IMETHOD RemoveAttribute(const nsAString& name) MOZ_FINAL MOZ_OVERRIDE      \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
   RemoveAttribute(name, rv);                                                  \
@@ -1541,6 +1546,7 @@ NS_IMETHOD RemoveAttribute(const nsAString& name) MOZ_FINAL                   \
 }                                                                             \
 NS_IMETHOD RemoveAttributeNS(const nsAString& namespaceURI,                   \
                              const nsAString& localName) MOZ_FINAL            \
+  MOZ_OVERRIDE                                                                \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
   Element::RemoveAttributeNS(namespaceURI, localName, rv);                    \
@@ -1548,31 +1554,31 @@ NS_IMETHOD RemoveAttributeNS(const nsAString& namespaceURI,                   \
 }                                                                             \
 using Element::HasAttribute;                                                  \
 NS_IMETHOD HasAttribute(const nsAString& name,                                \
-                           bool* _retval) MOZ_FINAL                           \
+                           bool* _retval) MOZ_FINAL MOZ_OVERRIDE              \
 {                                                                             \
   *_retval = HasAttribute(name);                                              \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD HasAttributeNS(const nsAString& namespaceURI,                      \
                           const nsAString& localName,                         \
-                          bool* _retval) MOZ_FINAL                            \
+                          bool* _retval) MOZ_FINAL MOZ_OVERRIDE               \
 {                                                                             \
   *_retval = Element::HasAttributeNS(namespaceURI, localName);                \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD HasAttributes(bool* _retval) MOZ_FINAL                             \
+NS_IMETHOD HasAttributes(bool* _retval) MOZ_FINAL MOZ_OVERRIDE                \
 {                                                                             \
   *_retval = Element::HasAttributes();                                        \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD GetAttributeNode(const nsAString& name,                            \
-                            nsIDOMAttr** _retval) MOZ_FINAL                   \
+                            nsIDOMAttr** _retval) MOZ_FINAL MOZ_OVERRIDE      \
 {                                                                             \
   NS_IF_ADDREF(*_retval = Element::GetAttributeNode(name));                   \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD SetAttributeNode(nsIDOMAttr* newAttr,                              \
-                            nsIDOMAttr** _retval) MOZ_FINAL                   \
+                            nsIDOMAttr** _retval) MOZ_FINAL MOZ_OVERRIDE      \
 {                                                                             \
   if (!newAttr) {                                                             \
     return NS_ERROR_INVALID_POINTER;                                          \
@@ -1583,7 +1589,7 @@ NS_IMETHOD SetAttributeNode(nsIDOMAttr* newAttr,                              \
   return rv.ErrorCode();                                                      \
 }                                                                             \
 NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* oldAttr,                           \
-                               nsIDOMAttr** _retval) MOZ_FINAL                \
+                               nsIDOMAttr** _retval) MOZ_FINAL MOZ_OVERRIDE   \
 {                                                                             \
   if (!oldAttr) {                                                             \
     return NS_ERROR_INVALID_POINTER;                                          \
@@ -1595,14 +1601,14 @@ NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* oldAttr,                           \
 }                                                                             \
 NS_IMETHOD GetAttributeNodeNS(const nsAString& namespaceURI,                  \
                               const nsAString& localName,                     \
-                              nsIDOMAttr** _retval) MOZ_FINAL                 \
+                              nsIDOMAttr** _retval) MOZ_FINAL MOZ_OVERRIDE    \
 {                                                                             \
   NS_IF_ADDREF(*_retval = Element::GetAttributeNodeNS(namespaceURI,           \
                                                       localName));            \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr* newAttr,                            \
-                              nsIDOMAttr** _retval) MOZ_FINAL                 \
+                              nsIDOMAttr** _retval) MOZ_FINAL MOZ_OVERRIDE    \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
   mozilla::dom::Attr* attr = static_cast<mozilla::dom::Attr*>(newAttr);       \
@@ -1611,6 +1617,7 @@ NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr* newAttr,                            \
 }                                                                             \
 NS_IMETHOD GetElementsByTagName(const nsAString& name,                        \
                                 nsIDOMHTMLCollection** _retval) MOZ_FINAL     \
+                                                                MOZ_OVERRIDE  \
 {                                                                             \
   Element::GetElementsByTagName(name, _retval);                               \
   return NS_OK;                                                               \
@@ -1618,21 +1625,25 @@ NS_IMETHOD GetElementsByTagName(const nsAString& name,                        \
 NS_IMETHOD GetElementsByTagNameNS(const nsAString& namespaceURI,              \
                                   const nsAString& localName,                 \
                                   nsIDOMHTMLCollection** _retval) MOZ_FINAL   \
+                                                                  MOZ_OVERRIDE\
 {                                                                             \
   return Element::GetElementsByTagNameNS(namespaceURI, localName,             \
                                          _retval);                            \
 }                                                                             \
 NS_IMETHOD GetElementsByClassName(const nsAString& classes,                   \
                                   nsIDOMHTMLCollection** _retval) MOZ_FINAL   \
+                                                                  MOZ_OVERRIDE\
 {                                                                             \
   return Element::GetElementsByClassName(classes, _retval);                   \
 }                                                                             \
 NS_IMETHOD GetChildElements(nsIDOMNodeList** aChildElements) MOZ_FINAL        \
+  MOZ_OVERRIDE                                                                \
 {                                                                             \
   nsIHTMLCollection* list = FragmentOrElement::Children();                    \
   return CallQueryInterface(list, aChildElements);                            \
 }                                                                             \
 NS_IMETHOD GetFirstElementChild(nsIDOMElement** aFirstElementChild) MOZ_FINAL \
+  MOZ_OVERRIDE                                                                \
 {                                                                             \
   Element* element = Element::GetFirstElementChild();                         \
   if (!element) {                                                             \
@@ -1642,6 +1653,7 @@ NS_IMETHOD GetFirstElementChild(nsIDOMElement** aFirstElementChild) MOZ_FINAL \
   return CallQueryInterface(element, aFirstElementChild);                     \
 }                                                                             \
 NS_IMETHOD GetLastElementChild(nsIDOMElement** aLastElementChild) MOZ_FINAL   \
+  MOZ_OVERRIDE                                                                \
 {                                                                             \
   Element* element = Element::GetLastElementChild();                          \
   if (!element) {                                                             \
@@ -1651,7 +1663,7 @@ NS_IMETHOD GetLastElementChild(nsIDOMElement** aLastElementChild) MOZ_FINAL   \
   return CallQueryInterface(element, aLastElementChild);                      \
 }                                                                             \
 NS_IMETHOD GetPreviousElementSibling(nsIDOMElement** aPreviousElementSibling) \
-  MOZ_FINAL                                                                   \
+  MOZ_FINAL MOZ_OVERRIDE                                                      \
 {                                                                             \
   Element* element = Element::GetPreviousElementSibling();                    \
   if (!element) {                                                             \
@@ -1661,7 +1673,7 @@ NS_IMETHOD GetPreviousElementSibling(nsIDOMElement** aPreviousElementSibling) \
   return CallQueryInterface(element, aPreviousElementSibling);                \
 }                                                                             \
 NS_IMETHOD GetNextElementSibling(nsIDOMElement** aNextElementSibling)         \
-  MOZ_FINAL                                                                   \
+  MOZ_FINAL MOZ_OVERRIDE                                                      \
 {                                                                             \
   Element* element = Element::GetNextElementSibling();                        \
   if (!element) {                                                             \
@@ -1671,121 +1683,125 @@ NS_IMETHOD GetNextElementSibling(nsIDOMElement** aNextElementSibling)         \
   return CallQueryInterface(element, aNextElementSibling);                    \
 }                                                                             \
 NS_IMETHOD GetChildElementCount(uint32_t* aChildElementCount) MOZ_FINAL       \
+  MOZ_OVERRIDE                                                                \
 {                                                                             \
   *aChildElementCount = Element::ChildElementCount();                         \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD MozRemove() MOZ_FINAL                                              \
+NS_IMETHOD MozRemove() MOZ_FINAL MOZ_OVERRIDE                                 \
 {                                                                             \
   nsINode::Remove();                                                          \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD GetClientRects(nsIDOMClientRectList** _retval) MOZ_FINAL           \
+  MOZ_OVERRIDE                                                                \
 {                                                                             \
   *_retval = Element::GetClientRects().take();                                \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD GetBoundingClientRect(nsIDOMClientRect** _retval) MOZ_FINAL        \
+  MOZ_OVERRIDE                                                                \
 {                                                                             \
   *_retval = Element::GetBoundingClientRect().take();                         \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD GetScrollTop(int32_t* aScrollTop) MOZ_FINAL                        \
+NS_IMETHOD GetScrollTop(int32_t* aScrollTop) MOZ_FINAL MOZ_OVERRIDE           \
 {                                                                             \
   *aScrollTop = Element::ScrollTop();                                         \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD SetScrollTop(int32_t aScrollTop) MOZ_FINAL                         \
+NS_IMETHOD SetScrollTop(int32_t aScrollTop) MOZ_FINAL MOZ_OVERRIDE            \
 {                                                                             \
   Element::SetScrollTop(aScrollTop);                                          \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD GetScrollLeft(int32_t* aScrollLeft) MOZ_FINAL                      \
+NS_IMETHOD GetScrollLeft(int32_t* aScrollLeft) MOZ_FINAL MOZ_OVERRIDE         \
 {                                                                             \
   *aScrollLeft = Element::ScrollLeft();                                       \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD SetScrollLeft(int32_t aScrollLeft) MOZ_FINAL                       \
+NS_IMETHOD SetScrollLeft(int32_t aScrollLeft) MOZ_FINAL MOZ_OVERRIDE          \
 {                                                                             \
   Element::SetScrollLeft(aScrollLeft);                                        \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD GetScrollWidth(int32_t* aScrollWidth) MOZ_FINAL                    \
+NS_IMETHOD GetScrollWidth(int32_t* aScrollWidth) MOZ_FINAL MOZ_OVERRIDE       \
 {                                                                             \
   *aScrollWidth = Element::ScrollWidth();                                     \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD GetScrollHeight(int32_t* aScrollHeight) MOZ_FINAL                  \
+NS_IMETHOD GetScrollHeight(int32_t* aScrollHeight) MOZ_FINAL MOZ_OVERRIDE     \
 {                                                                             \
   *aScrollHeight = Element::ScrollHeight();                                   \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD GetClientTop(int32_t* aClientTop) MOZ_FINAL                        \
+NS_IMETHOD GetClientTop(int32_t* aClientTop) MOZ_FINAL MOZ_OVERRIDE           \
 {                                                                             \
   *aClientTop = Element::ClientTop();                                         \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD GetClientLeft(int32_t* aClientLeft) MOZ_FINAL                      \
+NS_IMETHOD GetClientLeft(int32_t* aClientLeft) MOZ_FINAL MOZ_OVERRIDE         \
 {                                                                             \
   *aClientLeft = Element::ClientLeft();                                       \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD GetClientWidth(int32_t* aClientWidth) MOZ_FINAL                    \
+NS_IMETHOD GetClientWidth(int32_t* aClientWidth) MOZ_FINAL MOZ_OVERRIDE       \
 {                                                                             \
   *aClientWidth = Element::ClientWidth();                                     \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD GetClientHeight(int32_t* aClientHeight) MOZ_FINAL                  \
+NS_IMETHOD GetClientHeight(int32_t* aClientHeight) MOZ_FINAL MOZ_OVERRIDE     \
 {                                                                             \
   *aClientHeight = Element::ClientHeight();                                   \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD GetScrollLeftMax(int32_t* aScrollLeftMax) MOZ_FINAL                \
+NS_IMETHOD GetScrollLeftMax(int32_t* aScrollLeftMax) MOZ_FINAL MOZ_OVERRIDE   \
 {                                                                             \
   *aScrollLeftMax = Element::ScrollLeftMax();                                 \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD GetScrollTopMax(int32_t* aScrollTopMax) MOZ_FINAL                  \
+NS_IMETHOD GetScrollTopMax(int32_t* aScrollTopMax) MOZ_FINAL MOZ_OVERRIDE     \
 {                                                                             \
   *aScrollTopMax = Element::ScrollTopMax();                                   \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD MozMatchesSelector(const nsAString& selector,                      \
-                              bool* _retval) MOZ_FINAL                        \
+                              bool* _retval) MOZ_FINAL MOZ_OVERRIDE           \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
   *_retval = Element::MozMatchesSelector(selector, rv);                       \
   return rv.ErrorCode();                                                      \
 }                                                                             \
-NS_IMETHOD SetCapture(bool retargetToElement) MOZ_FINAL                       \
+NS_IMETHOD SetCapture(bool retargetToElement) MOZ_FINAL MOZ_OVERRIDE          \
 {                                                                             \
   Element::SetCapture(retargetToElement);                                     \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD ReleaseCapture(void) MOZ_FINAL                                     \
+NS_IMETHOD ReleaseCapture(void) MOZ_FINAL MOZ_OVERRIDE                        \
 {                                                                             \
   Element::ReleaseCapture();                                                  \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD MozRequestFullScreen(void) MOZ_FINAL                               \
+NS_IMETHOD MozRequestFullScreen(void) MOZ_FINAL MOZ_OVERRIDE                  \
 {                                                                             \
-  Element::MozRequestFullScreen(mozilla::dom::RequestFullscreenOptions());    \
-  return NS_OK;                                                               \
+  mozilla::ErrorResult rv;                                                    \
+  Element::MozRequestFullScreen(nullptr, JS::UndefinedHandleValue, rv);       \
+  return rv.ErrorCode();                                                      \
 }                                                                             \
-NS_IMETHOD MozRequestPointerLock(void) MOZ_FINAL                              \
+NS_IMETHOD MozRequestPointerLock(void) MOZ_FINAL MOZ_OVERRIDE                 \
 {                                                                             \
   Element::MozRequestPointerLock();                                           \
   return NS_OK;                                                               \
 }                                                                             \
 using nsINode::QuerySelector;                                                 \
 NS_IMETHOD QuerySelector(const nsAString& aSelector,                          \
-                         nsIDOMElement **aReturn) MOZ_FINAL                   \
+                         nsIDOMElement **aReturn) MOZ_FINAL MOZ_OVERRIDE      \
 {                                                                             \
   return nsINode::QuerySelector(aSelector, aReturn);                          \
 }                                                                             \
 using nsINode::QuerySelectorAll;                                              \
 NS_IMETHOD QuerySelectorAll(const nsAString& aSelector,                       \
-                            nsIDOMNodeList **aReturn) MOZ_FINAL               \
+                            nsIDOMNodeList **aReturn) MOZ_FINAL MOZ_OVERRIDE  \
 {                                                                             \
   return nsINode::QuerySelectorAll(aSelector, aReturn);                       \
 }
