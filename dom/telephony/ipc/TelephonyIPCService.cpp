@@ -314,7 +314,14 @@ TelephonyIPCService::SendUSSD(uint32_t aClientId, const nsAString& aUssd,
                               nsITelephonyCallback *aCallback)
 {
   return SendRequest(nullptr, aCallback,
-                     USSDRequest(aClientId, nsString(aUssd)));
+                     SendUSSDRequest(aClientId, nsString(aUssd)));
+}
+
+NS_IMETHODIMP
+TelephonyIPCService::CancelUSSD(uint32_t aClientId,
+                                nsITelephonyCallback *aCallback)
+{
+  return SendRequest(nullptr, aCallback, CancelUSSDRequest(aClientId));
 }
 
 NS_IMETHODIMP

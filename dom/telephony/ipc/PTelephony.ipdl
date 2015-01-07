@@ -24,10 +24,15 @@ struct DialRequest
   bool isEmergency;
 };
 
-struct USSDRequest
+struct SendUSSDRequest
 {
   uint32_t clientId;
   nsString ussd;
+};
+
+struct CancelUSSDRequest
+{
+  uint32_t clientId;
 };
 
 struct HangUpConferenceRequest
@@ -69,7 +74,8 @@ union IPCTelephonyRequest
 {
   EnumerateCallsRequest;
   DialRequest;
-  USSDRequest;
+  SendUSSDRequest;
+  CancelUSSDRequest;
   HangUpConferenceRequest;
   AnswerCallRequest;
   HangUpCallRequest;
