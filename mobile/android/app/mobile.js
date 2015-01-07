@@ -663,6 +663,10 @@ pref("ui.scrolling.negate_wheel_scrollY", true);
 // auto-detect based on reported hardware values
 pref("ui.scrolling.gamepad_dead_zone", 115);
 
+// Prefs for fling acceleration
+pref("ui.scrolling.fling_accel_interval", 500);
+pref("ui.scrolling.fling_accel_base_multiplier", "1.0");
+pref("ui.scrolling.fling_accel_supplemental_multiplier", "1.0");
 
 // Enable accessibility mode if platform accessibility is enabled.
 pref("accessibility.accessfu.activate", 2);

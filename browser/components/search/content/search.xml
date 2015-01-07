@@ -501,7 +501,31 @@
               where = "tab-background";
           }
 
+          let selection = this.telemetrySearchDetails;
           this.doSearch(textValue, where, aEngine);
+
+          if (!selection || (selection.index == -1)) {
+            let target = aEvent.originalTarget;
+            let source = "unknown";
+            let type = "unknown";
+            if (aEvent instanceof KeyboardEvent) {
+              type = "key";
+              if (this._textbox.getSelectedOneOff()) {
+                source = "oneoff";
+              }
+            } else if (aEvent instanceof MouseEvent) {
+              type = "mouse";
+              if (target.classList.contains("searchbar-engine-one-off-item")) {
+                source = "oneoff";
+              } else if (target.classList.contains("search-panel-header") ||
+                         target.parentNode.classList.contains("search-panel-header")) {
+                source = "header";
+              }
+            }
+
+            BrowserSearch.recordOneoffSearchInTelemetry(aEngine, source, type, where);
+          }
+
           if (where == "tab-background")
             this.focus();
         ]]></body>
@@ -513,7 +537,7 @@
         <parameter name="aEngine"/>
         <body><![CDATA[
           var textBox = this._textbox;
-        
+
           // Save the current value in the form history
           if (aData && !PrivateBrowsingUtils.isWindowPrivate(window)) {
             this.FormHistory.update(
@@ -527,7 +551,12 @@
 
           let engine = aEngine || this.currentEngine;
           var submission = engine.getSubmission(aData, null, "searchbar");
-          BrowserSearch.recordSearchInHealthReport(engine, "searchbar");
+          let telemetrySearchDetails = this.telemetrySearchDetails;
+          this.telemetrySearchDetails = null;
+          if (telemetrySearchDetails && telemetrySearchDetails.index == -1) {
+            telemetrySearchDetails = null;
+          }
+          BrowserSearch.recordSearchInHealthReport(engine, "searchbar", telemetrySearchDetails);
           // null parameter below specifies HTML response for search
           let params = {
             postData: submission.postData,
@@ -942,6 +971,11 @@
           let oneOff = this.getSelectedOneOff();
           if (oneOff)
             engine = oneOff.engine;
+          if (this.mEnterEvent && this._selectionDetails &&
+              this._selectionDetails.currentIndex != -1) {
+            BrowserSearch.searchBar.telemetrySearchDetails = this._selectionDetails;
+            this._selectionDetails = null;
+          }
           document.getBindingParent(this).handleSearchCommand(evt, engine);
 
           this.mEnterEvent = null;

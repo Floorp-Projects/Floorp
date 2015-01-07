@@ -126,7 +126,7 @@
   <string name="pref_category_search">&pref_category_search3;</string>
   <string name="pref_category_search_summary">&pref_category_search_summary;</string>
   <string name="pref_category_display">&pref_category_display;</string>
-  <string name="pref_category_display_summary">&pref_category_display_summary;</string>
+  <string name="pref_category_display_summary">&pref_category_display_summary2;</string>
   <string name="pref_category_privacy_short">&pref_category_privacy_short;</string>
   <string name="pref_category_privacy_summary">&pref_category_privacy_summary;</string>
   <string name="pref_category_vendor">&pref_category_vendor;</string>
