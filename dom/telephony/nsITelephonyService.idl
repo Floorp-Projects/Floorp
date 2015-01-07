@@ -251,7 +251,7 @@ interface nsITelephonyDialCallback : nsITelephonyCallback
  * XPCOM component (in the content process) that provides the telephony
  * information.
  */
-[scriptable, uuid(fd797bcc-54e2-4e4a-9ec7-3b72862d0d78)]
+[scriptable, uuid(0ab80865-7221-4c81-802f-8f7d7fc73674)]
 interface nsITelephonyService : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -331,6 +331,14 @@ interface nsITelephonyService : nsISupports
    */
   void sendUSSD(in unsigned long clientId, in DOMString ussd,
                 in nsITelephonyCallback callback);
+
+  /**
+   * Cancel an existing USSD session.
+   *
+   * If successful, callback.notifySuccess() will be called.
+   * Otherwise, callback.notifyError() will be called.
+   */
+  void cancelUSSD(in unsigned long cliendId, in nsITelephonyCallback callback);
 
   attribute bool microphoneMuted;
   attribute bool speakerEnabled;
