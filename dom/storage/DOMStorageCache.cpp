@@ -247,7 +247,7 @@ class DOMStorageCacheHolder : public nsITimerCallback
   NS_DECL_ISUPPORTS
 
   NS_IMETHODIMP
-  Notify(nsITimer* aTimer)
+  Notify(nsITimer* aTimer) MOZ_OVERRIDE
   {
     mCache = nullptr;
     return NS_OK;
