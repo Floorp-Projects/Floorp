@@ -30,7 +30,7 @@ const NODE_CREATION_METHODS = [
   "createMediaStreamDestination", "createScriptProcessor", "createAnalyser",
   "createGain", "createDelay", "createBiquadFilter", "createWaveShaper",
   "createPanner", "createConvolver", "createChannelSplitter", "createChannelMerger",
-  "createDynamicsCompressor", "createOscillator"
+  "createDynamicsCompressor", "createOscillator", "createStereoPanner"
 ];
 
 const AUTOMATION_METHODS = [
@@ -111,6 +111,9 @@ const NODE_PROPERTIES = {
   "MediaStreamAudioSourceNode": {},
   "MediaStreamAudioDestinationNode": {
     "stream": { "MediaStream": true }
+  },
+  "StereoPannerNode": {
+    "pan": {}
   }
 };
 

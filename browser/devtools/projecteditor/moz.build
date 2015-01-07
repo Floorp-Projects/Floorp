@@ -52,6 +52,10 @@ EXTRA_JS_MODULES.devtools.projecteditor.plugins.new += [
     'lib/plugins/new/new.js',
 ]
 
+EXTRA_JS_MODULES.devtools.projecteditor.plugins.rename += [
+    'lib/plugins/rename/rename.js',
+]
+
 EXTRA_JS_MODULES.devtools.projecteditor.plugins.save += [
     'lib/plugins/save/save.js',
 ]

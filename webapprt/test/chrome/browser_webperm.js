@@ -2,7 +2,7 @@ Cu.import("resource://webapprt/modules/WebappRT.jsm");
 let { AppsUtils } = Cu.import("resource://gre/modules/AppsUtils.jsm", {});
 let { DOMApplicationRegistry } =
   Cu.import("resource://gre/modules/Webapps.jsm", {});
-let { PermissionsTable, PermissionsReverseTable } =
+let { PermissionsTable } =
   Cu.import("resource://gre/modules/PermissionsTable.jsm", {});
 
 function test() {
@@ -18,17 +18,47 @@ function test() {
     let principal = document.getElementById("content").contentDocument.defaultView.document.nodePrincipal;
     is(DOMApplicationRegistry.getAppLocalIdByManifestURL(app.manifestURL), principal.appId, "Principal app ID correct");
 
-    let perms = [ "indexedDB-unlimited", "geolocation",
-                  "camera", "alarms", "tcp-socket", "network-events",
-                  "webapps-manage", "desktop-notification" ];
+    let perms = [
+    {
+      manifestName: "storage",
+      permName: "indexedDB",
+    },
+    {
+      manifestName: "geolocation",
+      permName: "geolocation",
+    },
+    {
+      manifestName: "camera",
+      permName: "camera",
+    },
+    {
+      manifestName: "alarms",
+      permName: "alarms",
+    },
+    {
+      manifestName: "tcp-socket",
+      permName: "tcp-socket",
+    },
+    {
+      manifestName: "network-events",
+      permName: "network-events",
+    },
+    {
+      manifestName: "webapps-manage",
+      permName: "webapps-manage",
+    },
+    {
+      manifestName: "desktop-notification",
+      permName: "desktop-notification",
+    },
+    ];
 
-    for (let permName of perms) {
+    for (let perm of perms) {
       // Get the values for all the permission.
-      let permValue = Services.perms.testExactPermissionFromPrincipal(principal, permName);
+      let permValue = Services.perms.testExactPermissionFromPrincipal(principal, perm.permName);
 
       // Check if the app has the permission as specified in the PermissionsTable.jsm file.
-      let realPerm = PermissionsReverseTable[permName];
-      is(permValue, PermissionsTable[realPerm]["app"], "Permission " + permName + " correctly set.");
+      is(permValue, PermissionsTable[perm.manifestName]["app"], "Permission " + perm.permName + " correctly set.");
     }
 
     finish();
