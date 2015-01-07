@@ -500,12 +500,7 @@ void
 ProgressTracker::ResetForNewRequest()
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  // We're starting a new load (and if this is called more than once, this is a
-  // multipart request) so keep only the bits that carry over between loads.
-  mProgress &= FLAG_IS_MULTIPART | FLAG_HAS_ERROR |
-               FLAG_ONLOAD_BLOCKED | FLAG_ONLOAD_UNBLOCKED;
-
+  mProgress = NoProgress;
   CheckProgressConsistency(mProgress);
 }
 
