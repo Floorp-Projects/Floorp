@@ -217,10 +217,10 @@ let gTests = [
     yield OS.File.writeAtomic(fxAccountsStorage, JSON.stringify(signedInUser));
     info("Wrote file " + fxAccountsStorage);
 
-    // this is a little subtle - we load about:blank so we get a tab, then
-    // we send a message which does both (a) load the URL we want and (b) mocks
-    // the default profile path used by about:accounts.
-    let tab = yield promiseNewTabLoadEvent("about:blank?");
+    // this is a little subtle - we load about:robots so we get a non-remote
+    // tab, then we send a message which does both (a) load the URL we want and
+    // (b) mocks the default profile path used by about:accounts.
+    let tab = yield promiseNewTabLoadEvent("about:robots");
     let readyPromise = promiseOneMessage(tab, "test:load-with-mocked-profile-path-response");
 
     let mm = tab.linkedBrowser.messageManager;
@@ -261,7 +261,7 @@ let gTests = [
     mockDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
     // but leave it empty, so we don't think a user is logged in.
 
-    let tab = yield promiseNewTabLoadEvent("about:blank?");
+    let tab = yield promiseNewTabLoadEvent("about:robots");
     let readyPromise = promiseOneMessage(tab, "test:load-with-mocked-profile-path-response");
 
     let mm = tab.linkedBrowser.messageManager;

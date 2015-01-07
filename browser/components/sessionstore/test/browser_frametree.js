@@ -3,8 +3,8 @@
 
 "use strict";
 
-const URL = ROOT + "browser_frametree_sample.html";
-const URL_FRAMESET = ROOT + "browser_frametree_sample_frameset.html";
+const URL = HTTPROOT + "browser_frametree_sample.html";
+const URL_FRAMESET = HTTPROOT + "browser_frametree_sample_frameset.html";
 
 /**
  * This ensures that loading a page normally, aborting a page load, reloading
