@@ -292,7 +292,12 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
         mFrames.InsertFrame(nullptr, newLastChild, newTextContainer);
         newLastChild = newTextContainer;
       }
-      PushChildren(newBaseContainer, lastChild);
+    }
+    if (lastChild != mFrames.LastChild()) {
+      // Always push the next frame after the last child in this segment.
+      // It is possible that we pulled it back before our next-in-flow
+      // drain our overflow.
+      PushChildren(lastChild->GetNextSibling(), lastChild);
       aReflowState.mLineLayout->SetDirtyNextLine();
     }
   } else {
