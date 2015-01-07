@@ -562,10 +562,16 @@ public:
                            aContainerWidth);
   }
 
-  bool operator==(LogicalPoint aOther) const
+  bool operator==(const LogicalPoint& aOther) const
   {
     CHECK_WRITING_MODE(aOther.GetWritingMode());
     return mPoint == aOther.mPoint;
+  }
+
+  bool operator!=(const LogicalPoint& aOther) const
+  {
+    CHECK_WRITING_MODE(aOther.GetWritingMode());
+    return mPoint != aOther.mPoint;
   }
 
   LogicalPoint operator+(const LogicalPoint& aOther) const
@@ -1119,7 +1125,7 @@ public:
             mMargin.right == 0 && mMargin.bottom == 0);
   }
 
-  LogicalMargin operator+(const LogicalMargin& aMargin) {
+  LogicalMargin operator+(const LogicalMargin& aMargin) const {
     CHECK_WRITING_MODE(aMargin.GetWritingMode());
     return LogicalMargin(GetWritingMode(),
                          BStart() + aMargin.BStart(),
@@ -1128,7 +1134,7 @@ public:
                          IStart() + aMargin.IStart());
   }
 
-  LogicalMargin operator-(const LogicalMargin& aMargin) {
+  LogicalMargin operator-(const LogicalMargin& aMargin) const {
     CHECK_WRITING_MODE(aMargin.GetWritingMode());
     return LogicalMargin(GetWritingMode(),
                          BStart() - aMargin.BStart(),
