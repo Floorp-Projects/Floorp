@@ -1685,12 +1685,12 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
   // invisible.
   if (aIsLeavingDocument || !mActiveWindow) {
     SetCaretVisible(presShell, false, nullptr);
-    nsRefPtr<SelectionCarets> selectionCarets = presShell->GetSelectionCarets();
-    if (selectionCarets) {
-      selectionCarets->NotifyBlur();
-    }
   }
 
+  nsRefPtr<SelectionCarets> selectionCarets = presShell->GetSelectionCarets();
+  if (selectionCarets) {
+    selectionCarets->NotifyBlur(aIsLeavingDocument || !mActiveWindow);
+  }
 
   // at this point, it is expected that this window will be still be
   // focused, but the focused content will be null, as it was cleared before

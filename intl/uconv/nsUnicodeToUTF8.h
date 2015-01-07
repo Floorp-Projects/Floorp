@@ -44,17 +44,17 @@ public:
   NS_IMETHOD Convert(const char16_t * aSrc, 
                      int32_t * aSrcLength, 
                      char * aDest, 
-                     int32_t * aDestLength);
+                     int32_t * aDestLength) MOZ_OVERRIDE;
 
-  NS_IMETHOD Finish(char * aDest, int32_t * aDestLength);
+  NS_IMETHOD Finish(char * aDest, int32_t * aDestLength) MOZ_OVERRIDE;
 
   NS_IMETHOD GetMaxLength(const char16_t * aSrc, int32_t aSrcLength, 
-      int32_t * aDestLength);
+      int32_t * aDestLength) MOZ_OVERRIDE;
 
-  NS_IMETHOD Reset() {mHighSurrogate = 0; return NS_OK;}
+  NS_IMETHOD Reset() MOZ_OVERRIDE {mHighSurrogate = 0; return NS_OK;}
 
   NS_IMETHOD SetOutputErrorBehavior(int32_t aBehavior, 
-    nsIUnicharEncoder * aEncoder, char16_t aChar) {return NS_OK;}
+    nsIUnicharEncoder * aEncoder, char16_t aChar) MOZ_OVERRIDE {return NS_OK;}
 
 protected:
   char16_t mHighSurrogate;

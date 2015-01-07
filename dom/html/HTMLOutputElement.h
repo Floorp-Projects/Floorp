@@ -28,7 +28,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIFormControl
-  NS_IMETHOD_(uint32_t) GetType() const { return NS_FORM_OUTPUT; }
+  NS_IMETHOD_(uint32_t) GetType() const MOZ_OVERRIDE { return NS_FORM_OUTPUT; }
   NS_IMETHOD Reset() MOZ_OVERRIDE;
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission) MOZ_OVERRIDE;
 

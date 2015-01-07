@@ -301,15 +301,6 @@ class GCRuntime
     bool isHeapCompacting() { return false; }
 #endif
 
-    // Performance note: if isFJMinorCollecting turns out to be slow because
-    // reading the counter is slow then we may be able to augment the counter
-    // with a volatile flag that is set iff the counter is greater than
-    // zero. (It will require some care to make sure the two variables stay in
-    // sync.)
-    bool isFJMinorCollecting() { return fjCollectionCounter > 0; }
-    void incFJMinorCollecting() { fjCollectionCounter++; }
-    void decFJMinorCollecting() { fjCollectionCounter--; }
-
     bool triggerGC(JS::gcreason::Reason reason);
     void maybeAllocTriggerZoneGC(Zone *zone, const AutoLockGC &lock);
     bool triggerZoneGC(Zone *zone, JS::gcreason::Reason reason);
@@ -846,16 +837,6 @@ class GCRuntime
     bool poked;
 
     mozilla::Atomic<js::HeapState> heapState;
-
-    /*
-     * ForkJoin workers enter and leave GC independently; this counter
-     * tracks the number that are currently in GC.
-     *
-     * Technically this should be #ifdef JSGC_FJGENERATIONAL but that
-     * affects the observed size of JSRuntime in problematic ways, see
-     * note in vm/ThreadPool.h.
-     */
-    mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> fjCollectionCounter;
 
     /*
      * These options control the zealousness of the GC. The fundamental values
