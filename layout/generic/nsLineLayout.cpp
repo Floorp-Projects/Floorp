@@ -2504,6 +2504,21 @@ nsLineLayout::TrimTrailingWhiteSpace()
   return 0 != deltaISize;
 }
 
+bool
+nsLineLayout::PerFrameData::ParticipatesInJustification() const
+{
+  if (mIsBullet || mIsEmpty || mSkipWhenTrimmingWhitespace) {
+    // Skip bullets, empty frames, and placeholders
+    return false;
+  }
+  if (mIsTextFrame && !mIsNonWhitespaceTextFrame &&
+      static_cast<nsTextFrame*>(mFrame)->IsAtEndOfLine()) {
+    // Skip trimmed whitespaces
+    return false;
+  }
+  return true;
+}
+
 struct nsLineLayout::JustificationComputationState
 {
   PerFrameData* mFirstParticipant;
@@ -2578,6 +2593,7 @@ nsLineLayout::ComputeFrameJustification(PerSpanData* aPSD,
             // and ruby align could be strange.
             prevAssign.mGapsAtEnd = 1;
             assign.mGapsAtStart = 1;
+            aState.mCrossingRubyBaseBoundary = false;
           } else if (!info.mIsStartJustifiable) {
             prevAssign.mGapsAtEnd = 2;
             assign.mGapsAtStart = 0;
@@ -2592,7 +2608,10 @@ nsLineLayout::ComputeFrameJustification(PerSpanData* aPSD,
       }
 
       aState.mLastParticipant = pfd;
-      aState.mCrossingRubyBaseBoundary = isRubyBase;
+    }
+
+    if (isRubyBase) {
+      aState.mCrossingRubyBaseBoundary = true;
     }
 
     if (firstChild) {
