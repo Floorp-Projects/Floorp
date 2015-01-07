@@ -2836,40 +2836,6 @@ class MNewObject
     }
 };
 
-// Could be allocating either a new array or a new object.
-class MNewPar
-  : public MUnaryInstruction,
-    public NoTypePolicy::Data
-{
-    AlwaysTenuredNativeObject templateObject_;
-
-    MNewPar(MDefinition *cx, NativeObject *templateObject)
-      : MUnaryInstruction(cx),
-        templateObject_(templateObject)
-    {
-        setResultType(MIRType_Object);
-    }
-
-  public:
-    INSTRUCTION_HEADER(NewPar);
-
-    static MNewPar *New(TempAllocator &alloc, MDefinition *cx, NativeObject *templateObject) {
-        return new(alloc) MNewPar(cx, templateObject);
-    }
-
-    MDefinition *forkJoinContext() const {
-        return getOperand(0);
-    }
-
-    NativeObject *templateObject() const {
-        return templateObject_;
-    }
-
-    AliasSet getAliasSet() const {
-        return AliasSet::None();
-    }
-};
-
 class MNewTypedObject : public MNullaryInstruction
 {
     AlwaysTenured<InlineTypedObject *> templateObject_;
@@ -6075,46 +6041,6 @@ class MConcat
     ALLOW_CLONE(MConcat)
 };
 
-class MConcatPar
-  : public MTernaryInstruction,
-    public NoTypePolicy::Data
-{
-    MConcatPar(MDefinition *cx, MDefinition *left, MDefinition *right)
-      : MTernaryInstruction(cx, left, right)
-    {
-        // Type analysis has already run, before replacing with the parallel
-        // variant.
-        MOZ_ASSERT(left->type() == MIRType_String && right->type() == MIRType_String);
-
-        setMovable();
-        setResultType(MIRType_String);
-    }
-
-  public:
-    INSTRUCTION_HEADER(ConcatPar)
-
-    static MConcatPar *New(TempAllocator &alloc, MDefinition *cx, MConcat *concat) {
-        return new(alloc) MConcatPar(cx, concat->lhs(), concat->rhs());
-    }
-
-    MDefinition *forkJoinContext() const {
-        return getOperand(0);
-    }
-    MDefinition *lhs() const {
-        return getOperand(1);
-    }
-    MDefinition *rhs() const {
-        return getOperand(2);
-    }
-
-    bool congruentTo(const MDefinition *ins) const {
-        return congruentIfOperandsEqual(ins);
-    }
-    AliasSet getAliasSet() const {
-        return AliasSet::None();
-    }
-};
-
 class MCharCodeAt
   : public MBinaryInstruction,
     public MixPolicy<StringPolicy<0>, IntPolicy<1> >::Data
@@ -6628,59 +6554,6 @@ class MCheckOverRecursed
     }
 };
 
-// Check the current frame for over-recursion past the global stack limit.
-// Uses the per-thread recursion limit.
-class MCheckOverRecursedPar
-  : public MUnaryInstruction,
-    public NoTypePolicy::Data
-{
-    explicit MCheckOverRecursedPar(MDefinition *cx)
-      : MUnaryInstruction(cx)
-    {
-        setResultType(MIRType_None);
-        setGuard();
-        setMovable();
-    }
-
-  public:
-    INSTRUCTION_HEADER(CheckOverRecursedPar);
-
-    static MCheckOverRecursedPar *New(TempAllocator &alloc, MDefinition *cx) {
-        return new(alloc) MCheckOverRecursedPar(cx);
-    }
-
-    MDefinition *forkJoinContext() const {
-        return getOperand(0);
-    }
-};
-
-// Check for an interrupt (or rendezvous) in parallel mode.
-class MInterruptCheckPar
-  : public MUnaryInstruction,
-    public NoTypePolicy::Data
-{
-    explicit MInterruptCheckPar(MDefinition *cx)
-      : MUnaryInstruction(cx)
-    {
-        setResultType(MIRType_None);
-        setGuard();
-    }
-
-  public:
-    INSTRUCTION_HEADER(InterruptCheckPar);
-
-    static MInterruptCheckPar *New(TempAllocator &alloc, MDefinition *cx) {
-        return new(alloc) MInterruptCheckPar(cx);
-    }
-
-    MDefinition *forkJoinContext() const {
-        return getOperand(0);
-    }
-    AliasSet getAliasSet() const {
-        return AliasSet::None();
-    }
-};
-
 // Check whether we need to fire the interrupt handler.
 class MInterruptCheck : public MNullaryInstruction
 {
@@ -7191,43 +7064,6 @@ class MLambdaArrow
     MDefinition *thisDef() const {
         return getOperand(1);
     }
-    const LambdaFunctionInfo &info() const {
-        return info_;
-    }
-};
-
-class MLambdaPar
-  : public MBinaryInstruction,
-    public SingleObjectPolicy::Data
-{
-    LambdaFunctionInfo info_;
-
-    MLambdaPar(MDefinition *cx, MDefinition *scopeChain, JSFunction *fun,
-               types::TemporaryTypeSet *resultTypes, const LambdaFunctionInfo &info)
-      : MBinaryInstruction(cx, scopeChain), info_(info)
-    {
-        MOZ_ASSERT(!info_.singletonType);
-        MOZ_ASSERT(!info_.useNewTypeForClone);
-        setResultType(MIRType_Object);
-        setResultTypeSet(resultTypes);
-    }
-
-  public:
-    INSTRUCTION_HEADER(LambdaPar);
-
-    static MLambdaPar *New(TempAllocator &alloc, MDefinition *cx, MLambda *lambda) {
-        return new(alloc) MLambdaPar(cx, lambda->scopeChain(), lambda->info().fun,
-                                     lambda->resultTypeSet(), lambda->info());
-    }
-
-    MDefinition *forkJoinContext() const {
-        return getOperand(0);
-    }
-
-    MDefinition *scopeChain() const {
-        return getOperand(1);
-    }
-
     const LambdaFunctionInfo &info() const {
         return info_;
     }
@@ -10002,63 +9838,6 @@ class MFunctionEnvironment
     }
 };
 
-// Loads the current js::ForkJoinContext*.
-// Only applicable in ParallelExecution.
-class MForkJoinContext
-  : public MNullaryInstruction
-{
-    MForkJoinContext()
-        : MNullaryInstruction()
-    {
-        setResultType(MIRType_ForkJoinContext);
-    }
-
-  public:
-    INSTRUCTION_HEADER(ForkJoinContext);
-
-    static MForkJoinContext *New(TempAllocator &alloc) {
-        return new(alloc) MForkJoinContext();
-    }
-
-    AliasSet getAliasSet() const {
-        // Indicate that this instruction reads nothing, stores nothing.
-        // (For all intents and purposes)
-        return AliasSet::None();
-    }
-
-    bool possiblyCalls() const {
-        return true;
-    }
-};
-
-// Calls the ForkJoinGetSlice stub, used for inlining the eponymous intrinsic.
-// Only applicable in ParallelExecution.
-class MForkJoinGetSlice
-  : public MUnaryInstruction,
-    public NoTypePolicy::Data
-{
-    explicit MForkJoinGetSlice(MDefinition *cx)
-      : MUnaryInstruction(cx)
-    {
-        setResultType(MIRType_Int32);
-    }
-
-  public:
-    INSTRUCTION_HEADER(ForkJoinGetSlice);
-
-    static MForkJoinGetSlice *New(TempAllocator &alloc, MDefinition *cx) {
-        return new(alloc) MForkJoinGetSlice(cx);
-    }
-
-    MDefinition *forkJoinContext() {
-        return getOperand(0);
-    }
-
-    bool possiblyCalls() const {
-        return true;
-    }
-};
-
 // Store to vp[slot] (slots that are not inline in an object).
 class MStoreSlot
   : public MBinaryInstruction,
@@ -11323,82 +11102,6 @@ class MRest
     }
 };
 
-class MRestPar
-  : public MBinaryInstruction,
-    public MRestCommon,
-    public IntPolicy<1>::Data
-{
-    MRestPar(MDefinition *cx, MDefinition *numActuals, unsigned numFormals,
-             ArrayObject *templateObject, types::TemporaryTypeSet *resultTypes)
-      : MBinaryInstruction(cx, numActuals),
-        MRestCommon(numFormals, templateObject)
-    {
-        setResultType(MIRType_Object);
-        setResultTypeSet(resultTypes);
-    }
-
-  public:
-    INSTRUCTION_HEADER(RestPar);
-
-    static MRestPar *New(TempAllocator &alloc, MDefinition *cx, MRest *rest) {
-        return new(alloc) MRestPar(cx, rest->numActuals(), rest->numFormals(),
-                                   rest->templateObject(), rest->resultTypeSet());
-    }
-
-    MDefinition *forkJoinContext() const {
-        return getOperand(0);
-    }
-    MDefinition *numActuals() const {
-        return getOperand(1);
-    }
-
-    AliasSet getAliasSet() const {
-        return AliasSet::None();
-    }
-    bool possiblyCalls() const {
-        return true;
-    }
-};
-
-// Guard on an object being safe for writes by current parallel cx.
-// Must be either thread-local or else a handle into the destination array.
-class MGuardThreadExclusive
-  : public MBinaryInstruction,
-    public ObjectPolicy<1>::Data
-{
-    MGuardThreadExclusive(MDefinition *cx, MDefinition *obj)
-      : MBinaryInstruction(cx, obj)
-    {
-        setResultType(MIRType_None);
-        setGuard();
-    }
-
-  public:
-    INSTRUCTION_HEADER(GuardThreadExclusive);
-
-    static MGuardThreadExclusive *New(TempAllocator &alloc, MDefinition *cx, MDefinition *obj) {
-        return new(alloc) MGuardThreadExclusive(cx, obj);
-    }
-    MDefinition *forkJoinContext() const {
-        return getOperand(0);
-    }
-    MDefinition *object() const {
-        return getOperand(1);
-    }
-    BailoutKind bailoutKind() const {
-        return Bailout_GuardThreadExclusive;
-    }
-    bool congruentTo(const MDefinition *ins) const {
-        return congruentIfOperandsEqual(ins);
-    }
-    AliasSet getAliasSet() const {
-        return AliasSet::None();
-    }
-    bool possiblyCalls() const {
-        return true;
-    }
-};
-
 class MFilterTypeSet
   : public MUnaryInstruction,
     public FilterTypeSetPolicy::Data
@@ -11646,39 +11349,6 @@ class MNewRunOnceCallObject : public MNewCallObjectBase
     }
 };
 
-class MNewCallObjectPar
-  : public MUnaryInstruction,
-    public NoTypePolicy::Data
-{
-    AlwaysTenured<CallObject*> templateObj_;
-
-    MNewCallObjectPar(MDefinition *cx, CallObject *templateObj)
-        : MUnaryInstruction(cx),
-          templateObj_(templateObj)
-    {
-        setResultType(MIRType_Object);
-    }
-
-  public:
-    INSTRUCTION_HEADER(NewCallObjectPar);
-
-    static MNewCallObjectPar *New(TempAllocator &alloc, MDefinition *cx, MNewCallObjectBase *callObj) {
-        return new(alloc) MNewCallObjectPar(cx, callObj->templateObject());
-    }
-
-    MDefinition *forkJoinContext() const {
-        return getOperand(0);
-    }
-
-    CallObject *templateObj() const {
-        return templateObj_;
-    }
-
-    AliasSet getAliasSet() const {
-        return AliasSet::None();
-    }
-};
-
 class MNewStringObject :
   public MUnaryInstruction,
   public ConvertToStringPolicy<0>::Data
@@ -11760,53 +11430,6 @@ class MEnclosingScope : public MLoadFixedSlot
 
     AliasSet getAliasSet() const {
         // ScopeObject reserved slots are immutable.
-        return AliasSet::None();
-    }
-};
-
-// Creates a dense array of the given length.
-//
-// Note: the template object should be an *empty* dense array!
-class MNewDenseArrayPar
-  : public MBinaryInstruction,
-    public NoTypePolicy::Data
-{
-    AlwaysTenured<ArrayObject*> templateObject_;
-
-    MNewDenseArrayPar(MDefinition *cx, MDefinition *length, ArrayObject *templateObject)
-      : MBinaryInstruction(cx, length),
-        templateObject_(templateObject)
-    {
-        MOZ_ASSERT(length->type() == MIRType_Int32);
-        setResultType(MIRType_Object);
-    }
-
-  public:
-    INSTRUCTION_HEADER(NewDenseArrayPar);
-
-    static MNewDenseArrayPar *New(TempAllocator &alloc, MDefinition *cx, MDefinition *length,
-                                  ArrayObject *templateObject)
-    {
-        return new(alloc) MNewDenseArrayPar(cx, length, templateObject);
-    }
-
-    MDefinition *forkJoinContext() const {
-        return getOperand(0);
-    }
-
-    MDefinition *length() const {
-        return getOperand(1);
-    }
-
-    ArrayObject *templateObject() const {
-        return templateObject_;
-    }
-
-    bool possiblyCalls() const {
-        return true;
-    }
-
-    AliasSet getAliasSet() const {
         return AliasSet::None();
     }
 };
