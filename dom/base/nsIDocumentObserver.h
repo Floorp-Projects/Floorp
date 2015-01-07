@@ -195,56 +195,56 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE                              \
     virtual void BeginUpdate(nsIDocument* aDocument,                         \
-                             nsUpdateType aUpdateType);
+                             nsUpdateType aUpdateType) MOZ_OVERRIDE;
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_ENDUPDATE                                \
-    virtual void EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);
+    virtual void EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType) MOZ_OVERRIDE;
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_BEGINLOAD                                \
-    virtual void BeginLoad(nsIDocument* aDocument);
+    virtual void BeginLoad(nsIDocument* aDocument) MOZ_OVERRIDE;
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_ENDLOAD                                  \
-    virtual void EndLoad(nsIDocument* aDocument);
+    virtual void EndLoad(nsIDocument* aDocument) MOZ_OVERRIDE;
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_CONTENTSTATECHANGED                      \
     virtual void ContentStateChanged(nsIDocument* aDocument,                 \
                                      nsIContent* aContent,                   \
-                                     mozilla::EventStates aStateMask);
+                                     mozilla::EventStates aStateMask) MOZ_OVERRIDE;
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_DOCUMENTSTATESCHANGED                    \
     virtual void DocumentStatesChanged(nsIDocument* aDocument,               \
-                                       mozilla::EventStates aStateMask);
+                                       mozilla::EventStates aStateMask) MOZ_OVERRIDE;
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETADDED                          \
     virtual void StyleSheetAdded(nsIDocument* aDocument,                     \
                                  nsIStyleSheet* aStyleSheet,                 \
-                                 bool aDocumentSheet);
+                                 bool aDocumentSheet) MOZ_OVERRIDE;
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETREMOVED                        \
     virtual void StyleSheetRemoved(nsIDocument* aDocument,                   \
                                    nsIStyleSheet* aStyleSheet,               \
-                                   bool aDocumentSheet);
+                                   bool aDocumentSheet) MOZ_OVERRIDE;
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETAPPLICABLESTATECHANGED         \
     virtual void StyleSheetApplicableStateChanged(nsIDocument* aDocument,    \
                                                   nsIStyleSheet* aStyleSheet,\
-                                                  bool aApplicable);
+                                                  bool aApplicable) MOZ_OVERRIDE;
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_STYLERULECHANGED                         \
     virtual void StyleRuleChanged(nsIDocument* aDocument,                    \
                                   nsIStyleSheet* aStyleSheet,                \
                                   nsIStyleRule* aOldStyleRule,               \
-                                  nsIStyleRule* aNewStyleRule);
+                                  nsIStyleRule* aNewStyleRule) MOZ_OVERRIDE;
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_STYLERULEADDED                           \
     virtual void StyleRuleAdded(nsIDocument* aDocument,                      \
                                 nsIStyleSheet* aStyleSheet,                  \
-                                nsIStyleRule* aStyleRule);
+                                nsIStyleRule* aStyleRule) MOZ_OVERRIDE;
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_STYLERULEREMOVED                         \
     virtual void StyleRuleRemoved(nsIDocument* aDocument,                    \
                                   nsIStyleSheet* aStyleSheet,                \
-                                  nsIStyleRule* aStyleRule);
+                                  nsIStyleRule* aStyleRule) MOZ_OVERRIDE;
 
 #define NS_DECL_NSIDOCUMENTOBSERVER                                          \
     NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE                                  \

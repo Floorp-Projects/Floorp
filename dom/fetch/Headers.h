@@ -110,7 +110,7 @@ public:
     mInternalHeaders->SetGuard(aGuard, aRv);
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx);
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
   nsISupports* GetParentObject() const { return mOwner; }
 
 private:

@@ -306,7 +306,6 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
   DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
   int32_t appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
 
-  nsAutoString text;
   switch (listStyleType->GetStyle()) {
   case NS_STYLE_LIST_STYLE_NONE:
     break;
@@ -404,22 +403,33 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
     break;
 
   default:
-    aRenderingContext.ThebesContext()->SetColor(
-                        nsLayoutUtils::GetColor(this, eCSSProperty_color));
+    {
+      aRenderingContext.ThebesContext()->SetColor(
+                          nsLayoutUtils::GetColor(this, eCSSProperty_color));
 
-    nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
-                                          GetFontSizeInflation());
-    GetListItemText(text);
-    nscoord ascent = fm->MaxAscent();
-    aPt.MoveBy(padding.left, padding.top);
-    aPt.y = NSToCoordRound(nsLayoutUtils::GetSnappedBaselineY(
-            this, aRenderingContext.ThebesContext(), aPt.y, ascent));
-    nsPresContext* presContext = PresContext();
-    if (!presContext->BidiEnabled() && HasRTLChars(text)) {
-      presContext->SetBidiEnabled();
+      nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
+                                            GetFontSizeInflation());
+      nsAutoString text;
+      GetListItemText(text);
+      WritingMode wm = GetWritingMode();
+      nscoord ascent = wm.IsLineInverted()
+                         ? fm->MaxDescent() : fm->MaxAscent();
+      aPt.MoveBy(padding.left, padding.top);
+      if (wm.IsVertical()) {
+        // XXX what about baseline snapping?
+        aPt.x += (wm.IsVerticalLR() ? ascent
+                                    : mRect.width - ascent);
+      } else {
+        aPt.y = NSToCoordRound(nsLayoutUtils::GetSnappedBaselineY(
+                this, aRenderingContext.ThebesContext(), aPt.y, ascent));
+      }
+      nsPresContext* presContext = PresContext();
+      if (!presContext->BidiEnabled() && HasRTLChars(text)) {
+        presContext->SetBidiEnabled();
+      }
+      nsLayoutUtils::DrawString(this, *fm, &aRenderingContext,
+                                text.get(), text.Length(), aPt);
     }
-    nsLayoutUtils::DrawString(this, *fm, &aRenderingContext,
-                              text.get(), text.Length(), aPt);
     break;
   }
 }
@@ -585,7 +595,8 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
       finalSize.ISize(wm) =
         nsLayoutUtils::AppUnitWidthOfStringBidi(text, this, *fm,
                                                 *aRenderingContext);
-      aMetrics.SetBlockStartAscent(fm->MaxAscent());
+      aMetrics.SetBlockStartAscent(wm.IsLineInverted()
+                                     ? fm->MaxDescent() : fm->MaxAscent());
       break;
   }
   aMetrics.SetSize(wm, finalSize);

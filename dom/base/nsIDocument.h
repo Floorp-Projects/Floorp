@@ -2508,7 +2508,7 @@ protected:
   virtual void MutationEventDispatched(nsINode* aTarget) = 0;
   friend class mozAutoSubtreeModified;
 
-  virtual Element* GetNameSpaceElement()
+  virtual Element* GetNameSpaceElement() MOZ_OVERRIDE
   {
     return GetRootElement();
   }

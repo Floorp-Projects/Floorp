@@ -509,8 +509,8 @@ frontend::CompileLazyFunction(JSContext *cx, Handle<LazyScript*> lazy, const cha
 
     if (lazy->directlyInsideEval())
         script->setDirectlyInsideEval();
-    if (lazy->usesArgumentsAndApply())
-        script->setUsesArgumentsAndApply();
+    if (lazy->usesArgumentsApplyAndThis())
+        script->setUsesArgumentsApplyAndThis();
     if (lazy->hasBeenCloned())
         script->setHasBeenCloned();
 

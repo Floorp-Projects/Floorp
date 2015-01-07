@@ -79,7 +79,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Attr,
                                                                    nsIAttribute)
 
-  virtual nsIDOMNode* AsDOMNode() { return this; }
+  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
   // WebIDL
   virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
@@ -98,7 +98,7 @@ public:
   Element* GetOwnerElement(ErrorResult& aRv);
 
 protected:
-  virtual Element* GetNameSpaceElement()
+  virtual Element* GetNameSpaceElement() MOZ_OVERRIDE
   {
     return GetElement();
   }

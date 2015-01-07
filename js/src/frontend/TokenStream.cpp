@@ -314,13 +314,6 @@ TokenStream::TokenStream(ExclusiveContext *cx, const ReadOnlyCompileOptions &opt
     // much easier.  Don't worry, the time to initialize them for each
     // TokenStream is trivial.  See bug 639420.
 
-    // See getChar() for an explanation of maybeEOL[].
-    memset(maybeEOL, 0, sizeof(maybeEOL));
-    maybeEOL[unsigned('\n')] = true;
-    maybeEOL[unsigned('\r')] = true;
-    maybeEOL[unsigned(LINE_SEPARATOR & 0xff)] = true;
-    maybeEOL[unsigned(PARA_SEPARATOR & 0xff)] = true;
-
     // See getTokenInternal() for an explanation of maybeStrSpecial[].
     memset(maybeStrSpecial, 0, sizeof(maybeStrSpecial));
     maybeStrSpecial[unsigned('"')] = true;
@@ -397,31 +390,18 @@ TokenStream::getChar()
     if (MOZ_LIKELY(userbuf.hasRawChars())) {
         c = userbuf.getRawChar();
 
-        // Normalize the char16_t if it was a newline.  We need to detect any of
-        // these four characters:  '\n' (0x000a), '\r' (0x000d),
-        // LINE_SEPARATOR (0x2028), PARA_SEPARATOR (0x2029).  Testing for each
-        // one in turn is slow, so we use a single probabilistic check, and if
-        // that succeeds, test for them individually.
-        //
-        // We use the bottom 8 bits to index into a lookup table, succeeding
-        // when d&0xff is 0xa, 0xd, 0x28 or 0x29.  Among ASCII chars (which
-        // are by the far the most common) this gives false positives for '('
-        // (0x0028) and ')' (0x0029).  We could avoid those by incorporating
-        // the 13th bit of d into the lookup, but that requires extra shifting
-        // and masking and isn't worthwhile.  See TokenStream::TokenStream()
-        // for the initialization of the relevant entries in the table.
-        if (MOZ_UNLIKELY(maybeEOL[c & 0xff])) {
-            if (c == '\n')
-                goto eol;
-            if (c == '\r') {
-                // If it's a \r\n sequence: treat as a single EOL, skip over the \n.
-                if (userbuf.hasRawChars())
-                    userbuf.matchRawChar('\n');
-                goto eol;
-            }
-            if (c == LINE_SEPARATOR || c == PARA_SEPARATOR)
-                goto eol;
+        // Normalize the char16_t if it was a newline.
+        if (MOZ_UNLIKELY(c == '\n'))
+            goto eol;
+        if (MOZ_UNLIKELY(c == '\r')) {
+            // If it's a \r\n sequence: treat as a single EOL, skip over the \n.
+            if (MOZ_LIKELY(userbuf.hasRawChars()))
+                userbuf.matchRawChar('\n');
+            goto eol;
         }
+        if (MOZ_UNLIKELY(c == LINE_SEPARATOR || c == PARA_SEPARATOR))
+            goto eol;
+
         return c;
     }
 
@@ -1685,10 +1665,8 @@ bool TokenStream::getStringOrTemplateToken(int qc, Token **tp)
     tokenbuf.clear();
     while (true) {
         // We need to detect any of these chars:  " or ', \n (or its
-        // equivalents), \\, EOF.  We use maybeStrSpecial[] in a manner
-        // similar to maybeEOL[], see above.  Because we detect EOL
-        // sequences here and put them back immediately, we can use
-        // getCharIgnoreEOL().
+        // equivalents), \\, EOF.  Because we detect EOL sequences here and
+        // put them back immediately, we can use getCharIgnoreEOL().
         c = getCharIgnoreEOL();
         if (maybeStrSpecial[c & 0xff]) {
             if (c == qc)

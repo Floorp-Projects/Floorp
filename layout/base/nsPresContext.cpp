@@ -64,6 +64,7 @@
 #include "nsContentUtils.h"
 #include "nsPIWindowRoot.h"
 #include "mozilla/Preferences.h"
+#include "gfxTextRun.h"
 
 // Needed for Start/Stop of Image Animation
 #include "imgIContainer.h"
@@ -249,6 +250,10 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   if (log && log->level >= PR_LOG_WARNING) {
     mTextPerf = new gfxTextPerfMetrics();
   }
+
+  if (Preferences::GetBool(GFX_MISSING_FONTS_NOTIFY_PREF)) {
+    mMissingFonts = new gfxMissingFontRecorder();
+  }
 }
 
 void
@@ -340,6 +345,9 @@ nsPresContext::LastRelease()
 {
   if (IsRoot()) {
     static_cast<nsRootPresContext*>(this)->CancelDidPaintTimer();
+  }
+  if (mMissingFonts) {
+    mMissingFonts->Clear();
   }
 }
 
@@ -872,6 +880,20 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
       AppUnitsPerDevPixelChanged();
     }
     return;
+  }
+  if (prefName.EqualsLiteral(GFX_MISSING_FONTS_NOTIFY_PREF)) {
+    if (Preferences::GetBool(GFX_MISSING_FONTS_NOTIFY_PREF)) {
+      if (!mMissingFonts) {
+        mMissingFonts = new gfxMissingFontRecorder();
+        // trigger reflow to detect missing fonts on the current page
+        mPrefChangePendingNeedsReflow = true;
+      }
+    } else {
+      if (mMissingFonts) {
+        mMissingFonts->Clear();
+      }
+      mMissingFonts = nullptr;
+    }
   }
   if (StringBeginsWith(prefName, NS_LITERAL_CSTRING("font."))) {
     // Changes to font family preferences don't change anything in the
@@ -2191,6 +2213,14 @@ nsPresContext::RebuildCounterStyles()
     if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
       mPostedFlushCounterStyles = true;
     }
+  }
+}
+
+void
+nsPresContext::NotifyMissingFonts()
+{
+  if (mMissingFonts) {
+    mMissingFonts->Flush();
   }
 }
 
