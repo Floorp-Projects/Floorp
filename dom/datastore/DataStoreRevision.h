@@ -38,7 +38,7 @@ public:
                        DataStoreRevisionCallback* aCallback);
 
   // nsIDOMEventListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) MOZ_OVERRIDE;
 
 private:
   ~DataStoreRevision() {}

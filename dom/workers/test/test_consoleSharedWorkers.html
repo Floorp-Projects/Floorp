@@ -1,0 +1,58 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test for console API in SharedWorker</title>
+    <script src="/tests/SimpleTest/SimpleTest.js">
+    </script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+  </head>
+  <body>
+    <script type="text/javascript">
+
+  function consoleListener() {
+    SpecialPowers.addObserver(this, "console-api-log-event", false);
+    SpecialPowers.addObserver(this, "console-api-profiler", false);
+  }
+
+  var order = 0;
+  consoleListener.prototype  = {
+    observe: function(aSubject, aTopic, aData) {
+      ok(true, "Something has been received");
+
+      if (aTopic == "console-api-profiler") {
+        var obj = aSubject.wrappedJSObject;
+        is (obj.arguments[0], "Hello profiling from a SharedWorker!", "A message from a SharedWorker \\o/");
+        is (order++, 0, "First a profiler message.");
+
+        SpecialPowers.removeObserver(this, "console-api-profiler");
+        return;
+      }
+
+      if (aTopic == "console-api-log-event") {
+        var obj = aSubject.wrappedJSObject;
+        is (obj.arguments[0], "Hello world from a SharedWorker!", "A message from a SharedWorker \\o/");
+        is (aData, "SharedWorker", "The ID is SharedWorker");
+        is (order++, 1, "Then a log message.");
+
+        SpecialPowers.removeObserver(this, "console-api-log-event");
+        SimpleTest.finish();
+        return;
+      }
+    }
+  }
+
+  var cl = new consoleListener();
+
+  SpecialPowers.pushPrefEnv({ set: [["dom.workers.sharedWorkers.enabled", true]] }, function() {
+    new SharedWorker('sharedWorker_console.js');
+  });
+
+  SimpleTest.waitForExplicitFinish();
+
+    </script>
+  </body>
+</html>

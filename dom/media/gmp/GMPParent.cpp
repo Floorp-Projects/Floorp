@@ -62,7 +62,6 @@ GMPParent::GMPParent()
   , mAbnormalShutdownInProgress(false)
   , mAsyncShutdownRequired(false)
   , mAsyncShutdownInProgress(false)
-  , mHasAccessedStorage(false)
 {
 }
 
@@ -697,12 +696,6 @@ GMPParent::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-bool
-GMPParent::HasAccessedStorage() const
-{
-  return mHasAccessedStorage;
-}
-
 mozilla::dom::PCrashReporterParent*
 GMPParent::AllocPCrashReporterParent(const NativeThreadId& aThread)
 {
@@ -809,7 +802,6 @@ GMPParent::RecvPGMPStorageConstructor(PGMPStorageParent* aActor)
   if (NS_WARN_IF(NS_FAILED(p->Init()))) {
     return false;
   }
-  mHasAccessedStorage = true;
   return true;
 }
 

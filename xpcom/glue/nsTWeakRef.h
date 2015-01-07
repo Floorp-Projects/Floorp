@@ -157,7 +157,7 @@ public:
    * Allow |*this| to be treated as a |Type*| for convenience.  Use with
    * caution since this method will crash if the referenced object is null.
    */
-  Type* operator->() const
+  Type* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN
   {
     NS_ASSERTION(mRef && mRef->mObj,
                  "You can't dereference a null weak reference with operator->().");

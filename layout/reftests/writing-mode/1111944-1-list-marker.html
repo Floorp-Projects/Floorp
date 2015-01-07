@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body {
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+}
+div {
+  display: inline-block;
+  vertical-align: top;
+  width: 380px;
+  height: 180px;
+  border: 1px solid blue;
+  margin: 5px;
+}
+ol {
+  margin: 0 12px;
+  padding: 40px 0 0 0;
+}
+li { margin:0; padding:0 }
+</style>
+</head>
+<body>
+ Test for list item markers in vertical mode:
+ <br>
+ <div style="writing-mode:vertical-lr;text-orientation:sideways-right">
+  Mode vertical-lr, style lower-roman:
+  <ol style="list-style-type:lower-roman">
+   <li>one<li>two<li>three<li>four<li>five<li>six<li>seven<li>eight<li>nine<li>ten<li>eleven<li>twelve
+  </ol>
+ </div>
+ <div style="writing-mode:vertical-rl;text-orientation:sideways-right">
+  Mode vertical-rl, style hebrew:
+  <ol style="list-style-type:hebrew">
+   <li>one<li>two<li>three<li>four<li>five<li>six<li>seven<li>eight<li>nine<li>ten<li>eleven<li>twelve
+  </ol>
+ </div>
+ <br>
+ <div style="writing-mode:vertical-lr">
+  Mode vertical-lr, style trad-chinese-formal:
+  <ol style="list-style-type:trad-chinese-formal;padding-top:5em">
+   <li>one<li>two<li>three<li>four<li>five<li>six<li>seven<li>eight<li>nine<li>ten<li>eleven<li>twelve
+  </ol>
+ </div>
+ <div style="writing-mode:vertical-rl">
+  Mode vertical-rl, style japanese-informal:
+  <ol style="list-style-type:japanese-informal;padding-top:5em">
+   <li>one<li>two<li>three<li>four<li>five<li>six<li>seven<li>eight<li>nine<li>ten<li>eleven<li>twelve
+  </ol>
+ </div>
+</body>
+</html>
