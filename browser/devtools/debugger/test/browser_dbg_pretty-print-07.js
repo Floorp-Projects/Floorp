@@ -35,8 +35,9 @@ function prettyPrintSource() {
 }
 
 function testPrettyPrinted({ error, source }) {
-  ok(!error);
-  ok(source.contains("\n    "));
+  ok(!error, "Should not get an error while pretty-printing");
+  ok(source.contains("\n    "),
+    "Source should be pretty-printed");
   disablePrettyPrint();
 }
 
@@ -45,8 +46,9 @@ function disablePrettyPrint() {
 }
 
 function testUgly({ error, source }) {
-  ok(!error);
-  ok(!source.contains("\n    "));
+  ok(!error, "Should not get an error while disabling pretty-printing");
+  ok(!source.contains("\n    "),
+     "Source should not be pretty after disabling pretty-printing");
   closeDebuggerAndFinish(gPanel);
 }
 

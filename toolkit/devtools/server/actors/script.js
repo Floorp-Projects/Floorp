@@ -1197,7 +1197,7 @@ ThreadActor.prototype = {
    */
   _breakOnEnter: function(script) {
     let offsets = script.getAllOffsets();
-    let sourceActor = this.sources.source({ source: script.source });
+    let sourceActor = this.sources.createNonSourceMappedActor(script.source);
 
     for (let line = 0, n = offsets.length; line < n; line++) {
       if (offsets[line]) {
@@ -1348,7 +1348,7 @@ ThreadActor.prototype = {
       }
     }
 
-    return all([this.sources.sourcesForScript(script)
+    return all([this.sources.createSourceActors(script.source)
                 for (script of sourcesToScripts.values())]);
   },
 
@@ -1963,8 +1963,6 @@ ThreadActor.prototype = {
    *        A Debugger.Object instance whose referent is the global object.
    */
   onNewScript: function (aScript, aGlobal) {
-    this.sources.sourcesForScript(aScript);
-
     // XXX: The scripts must be added to the ScriptStore before restoring
     // breakpoints in _addScript. If we try to add them to the ScriptStore
     // inside _addScript, we can accidentally set a breakpoint in a top level
@@ -2029,9 +2027,8 @@ ThreadActor.prototype = {
     }
 
     // Set any stored breakpoints.
-
     let endLine = aScript.startLine + aScript.lineCount - 1;
-    let source = this.sources.source({ source: aScript.source });
+    let source = this.sources.createNonSourceMappedActor(aScript.source);
     for (let bpActor of this.breakpointActorMap.findActors({ source: source.form() })) {
       // Limit the search to the line numbers contained in the new script.
       if (bpActor.location.line >= aScript.startLine
@@ -2039,6 +2036,11 @@ ThreadActor.prototype = {
         source.setBreakpoint(bpActor.location, aScript);
       }
     }
+
+    // Go ahead and establish the source actors for this script, which
+    // fetches sourcemaps if available and sends onNewSource
+    // notifications
+    this.sources.createSourceActors(aScript.source);
 
     return true;
   },
@@ -5123,7 +5125,10 @@ function ThreadSources(aThreadActor, aOptions, aAllowPredicate,
   this._useSourceMaps = aOptions.useSourceMaps;
   this._autoBlackBox = aOptions.autoBlackBox;
   this._allow = aAllowPredicate;
-  this._onNewSource = aOnNewSource;
+  this._onNewSource = DevToolsUtils.makeInfallible(
+    aOnNewSource,
+    "ThreadSources.prototype._onNewSource"
+  );
   this._anonSourceMapId = 1;
 
   // generated Debugger.Source -> promise of SourceMapConsumer
@@ -5238,21 +5243,35 @@ ThreadSources.prototype = {
       this._sourceMappedSourceActors[originalUrl] = actor;
     }
 
-    // Don't notify a new source if it's a generated one, as it has
-    // sourcemapped sources. The generated one is created to set
-    // breakpoints.
-    if (!source || !this._sourceMaps.has(source)) {
-      try {
-        this._onNewSource(actor);
-      } catch (e) {
-        reportError(e);
-      }
-    }
-
+    this._emitNewSource(actor);
     return actor;
   },
 
-  getSource: function(source) {
+  _emitNewSource: function(actor) {
+    if(!actor.source) {
+      // Always notify if we don't have a source because that means
+      // it's something that has been sourcemapped, or it represents
+      // the HTML file that contains inline sources.
+      this._onNewSource(actor);
+    }
+    else {
+      // If sourcemapping is enabled and a source has sourcemaps, we
+      // create `SourceActor` instances for both the original and
+      // generated sources. The source actors for the generated
+      // sources are only for internal use, however; breakpoints are
+      // managed by these internal actors. We only want to notify the
+      // user of the original sources though, so if the actor has a
+      // `Debugger.Source` instance and a valid source map (meaning
+      // it's a generated source), don't send the notification.
+      this.fetchSourceMap(actor.source).then(map => {
+        if(!map) {
+          this._onNewSource(actor);
+        }
+      });
+    }
+  },
+
+  getSourceActor: function(source) {
     if (source.url in this._sourceMappedSourceActors) {
       return this._sourceMappedSourceActors[source.url];
     }
@@ -5265,7 +5284,7 @@ ThreadSources.prototype = {
                     (source.url || 'source'));
   },
 
-  getSourceByURL: function(url) {
+  getSourceActorByURL: function(url) {
     if (url) {
       for (let [source, actor] of this._sourceActors) {
         if (source.url === url) {
@@ -5302,15 +5321,23 @@ ThreadSources.prototype = {
   },
 
   /**
-   * Only to be used when we aren't source mapping.
+   * Create a source actor representing this source. This ignores
+   * source mapping and always returns an actor representing this real
+   * source. Use `createSourceActors` if you want to respect source maps.
+   *
+   * @param Debugger.Source aSource
+   *        The source instance to create an actor for.
+   * @returns SourceActor
    */
-  _sourceForScript: function (aScript) {
+  createNonSourceMappedActor: function (aSource) {
     // Don't use getSourceURL because we don't want to consider the
-    // displayURL property if it's an eval source
-    let url = isEvalSource(aScript.source) ? null : aScript.source.url;
-    let spec = {
-      source: aScript.source
-    };
+    // displayURL property if it's an eval source. We only want to
+    // consider real URLs, otherwise if there is a URL but it's
+    // invalid the code below will not set the content type, and we
+    // will later try to fetch the contents of the URL to figure out
+    // the content type, but it's a made up URL for eval sources.
+    let url = isEvalSource(aSource) ? null : aSource.url;
+    let spec = { source: aSource };
 
     // XXX bug 915433: We can't rely on Debugger.Source.prototype.text
     // if the source is an HTML-embedded <script> tag. Since we don't
@@ -5340,31 +5367,48 @@ ThreadSources.prototype = {
   },
 
   /**
-   * Return a promise of an array of source actors representing all the
-   * sources of |aScript|.
+   * This is an internal function that returns a promise of an array
+   * of source actors representing all the source mapped sources of
+   * `aSource`, or `null` if the source is not sourcemapped or
+   * sourcemapping is disabled. Users should call `createSourceActors`
+   * instead of this.
    *
-   * If source map handling is enabled and |aScript| has a source map, then
-   * use it to find all of |aScript|'s *original* sources; return a promise
-   * of an array of source actors for those.
+   * @param Debugger.Source aSource
+   *        The source instance to create actors for.
+   * @return Promise of an array of source actors
    */
-  sourcesForScript: function (aScript) {
-    if (!this._useSourceMaps || !aScript.source.sourceMapURL) {
-      return resolve([this._sourceForScript(aScript)].filter(isNotNull));
+  _createSourceMappedActors: function (aSource) {
+    if (!this._useSourceMaps || !aSource.sourceMapURL) {
+      return resolve(null);
     }
 
-    return this.fetchSourceMap(aScript.source)
+    return this.fetchSourceMap(aSource)
       .then(map => {
         if (map) {
           return [
-            this.source({ originalUrl: s,
-                          generatedSource: aScript.source })
+            this.source({ originalUrl: s, generatedSource: aSource })
             for (s of map.sources)
-          ];
+          ].filter(isNotNull);
         }
+        return null;
+      });
+  },
 
-        return [this._sourceForScript(aScript)];
-      })
-      .then(ss => ss.filter(isNotNull));
+  /**
+   * Creates the source actors representing the appropriate sources
+   * of `aSource`. If sourcemapped, returns actors for all of the original
+   * sources, otherwise returns a 1-element array with the actor for
+   * `aSource`.
+   *
+   * @param Debugger.Source aSource
+   *        The source instance to create actors for.
+   * @param Promise of an array of source actors
+   */
+  createSourceActors: function(aSource) {
+    return this._createSourceMappedActors(aSource).then(actors => {
+      let actor = this.createNonSourceMappedActor(aSource);
+      return (actors || [actor]).filter(isNotNull);
+    });
   },
 
   /**
@@ -5372,6 +5416,10 @@ ThreadSources.prototype = {
    * `aSource`; if we already have such a promise extant, return that.
    * This will fetch the source map if we don't have a cached object
    * and source maps are enabled (see `_fetchSourceMap`).
+   *
+   * @param Debugger.Source aSource
+   *        The source instance to get sourcemaps for.
+   * @return Promise of a SourceMapConsumer
    */
   fetchSourceMap: function (aSource) {
     if (this._sourceMaps.has(aSource)) {
@@ -5385,13 +5433,12 @@ ThreadSources.prototype = {
     if (aSource.url) {
       sourceMapURL = this._normalize(sourceMapURL, aSource.url);
     }
+    let result = this._fetchSourceMap(sourceMapURL, aSource.url);
 
-    let map = this._fetchSourceMap(sourceMapURL, aSource.url);
-    if (map) {
-      this._sourceMaps.set(aSource, map);
-      return map;
-    }
-    return resolve(null);
+    // The promises in `_sourceMaps` must be the exact same instances
+    // as returned by `_fetchSourceMap` for `clearSourceMapCache` to work.
+    this._sourceMaps.set(aSource, result);
+    return result;
   },
 
   /**
@@ -5429,7 +5476,7 @@ ThreadSources.prototype = {
       return this._sourceMapCache[aAbsSourceMapURL];
     }
     else if (!this._useSourceMaps) {
-      return null;
+      return resolve(null);
     }
 
     let fetching = fetch(aAbsSourceMapURL, { loadFromCache: false })
@@ -5440,7 +5487,7 @@ ThreadSources.prototype = {
       })
       .then(null, error => {
         if (!DevToolsUtils.reportingDisabled) {
-          DevToolsUtils.reportException("ThreadSources.prototype.getOriginalLocation", error);
+          DevToolsUtils.reportException("ThreadSources.prototype._fetchSourceMap", error);
         }
         return null;
       });
@@ -5533,7 +5580,10 @@ ThreadSources.prototype = {
 
   /**
    * Returns a promise of the location in the original source if the source is
-   * source mapped, otherwise a promise of the same location.
+   * source mapped, otherwise a promise of the same location. This can
+   * be called with a source from *any* Debugger instance and we make
+   * sure to that it works properly, reusing source maps if already
+   * fetched. Use this from any actor that needs sourcemapping.
    */
   getOriginalLocation: function ({ source, line, column }) {
     // In certain scenarios the source map may have not been fetched
@@ -5554,7 +5604,17 @@ ThreadSources.prototype = {
         });
 
         return {
-          sourceActor: sourceUrl && this.source({ originalUrl: sourceUrl }),
+          // Since the `Debugger.Source` instance may come from a
+          // different `Debugger` instance (any actor can call this
+          // method), we can't rely on any of the source discovery
+          // setup (`_discoverSources`, etc) to have been run yet. So
+          // we have to assume that the actor may not already exist,
+          // and we might need to create it, so use `source` and give
+          // it the required parameters for a sourcemapped source.
+          sourceActor: (!sourceUrl) ? null : this.source({
+            originalUrl: sourceUrl,
+            generatedSource: source
+          }),
           url: sourceUrl,
           line: sourceLine,
           column: sourceCol,
@@ -5564,9 +5624,7 @@ ThreadSources.prototype = {
 
       // No source map
       return resolve({
-        // Don't use `getSource` because sources may have not been
-        // created yet
-        sourceActor: this.source({ source }),
+        sourceActor: this.createNonSourceMappedActor(source),
         url: source.url,
         line: line,
         column: column
@@ -5600,9 +5658,7 @@ ThreadSources.prototype = {
         });
 
         return {
-          // Don't use `getSource` because this could intentionally
-          // create a generated source
-          sourceActor: this.source({ source: source }),
+          sourceActor: this.createNonSourceMappedActor(source),
           line: genLine,
           column: genColumn
         };
