@@ -27,47 +27,402 @@ policies and contribution forms [3].
 
     var xhtml_ns = "http://www.w3.org/1999/xhtml";
 
-    // script_prefix is used by Output.prototype.show_results() to figure out
-    // where to get testharness.css from.  It's enclosed in an extra closure to
-    // not pollute the library's namespace with variables like "src".
-    var script_prefix = null;
-    (function ()
-    {
-        var scripts = document.getElementsByTagName("script");
-        for (var i = 0; i < scripts.length; i++) {
-            var src;
-            if (scripts[i].src) {
-                src = scripts[i].src;
-            } else if (scripts[i].href) {
-                //SVG case
-                src = scripts[i].href.baseVal;
-            }
+    /*
+     * TestEnvironment is an abstraction for the environment in which the test
+     * harness is used. Each implementation of a test environment has to provide
+     * the following interface:
+     *
+     * interface TestEnvironment {
+     *   // Invoked after the global 'tests' object has been created and it's
+     *   // safe to call add_*_callback() to register event handlers.
+     *   void on_tests_ready();
+     *
+     *   // Invoked after setup() has been called to notify the test environment
+     *   // of changes to the test harness properties.
+     *   void on_new_harness_properties(object properties);
+     *
+     *   // Should return a new unique default test name.
+     *   DOMString next_default_test_name();
+     *
+     *   // Should return the test harness timeout duration in milliseconds.
+     *   float test_timeout();
+     *
+     *   // Should return the global scope object.
+     *   object global_scope();
+     * };
+     */
 
-            if (src && src.slice(src.length - "testharness.js".length) === "testharness.js") {
-                script_prefix = src.slice(0, src.length - "testharness.js".length);
+    /*
+     * A test environment with a DOM. The global object is 'window'. By default
+     * test results are displayed in a table. Any parent windows receive
+     * callbacks or messages via postMessage() when test events occur. See
+     * apisample11.html and apisample12.html.
+     */
+    function WindowTestEnvironment() {
+        this.name_counter = 0;
+        this.window_cache = null;
+        this.output_handler = null;
+        this.all_loaded = false;
+        var this_obj = this;
+        on_event(window, 'load', function() {
+            this_obj.all_loaded = true;
+        });
+    }
+
+    WindowTestEnvironment.prototype._dispatch = function(selector, callback_args, message_arg) {
+        this._forEach_windows(
+                function(w, is_same_origin) {
+                    if (is_same_origin && selector in w) {
+                        try {
+                            w[selector].apply(undefined, callback_args);
+                        } catch (e) {
+                            if (debug) {
+                                throw e;
+                            }
+                        }
+                    }
+                    if (supports_post_message(w) && w !== self) {
+                        w.postMessage(message_arg, "*");
+                    }
+                });
+    };
+
+    WindowTestEnvironment.prototype._forEach_windows = function(callback) {
+        // Iterate of the the windows [self ... top, opener]. The callback is passed
+        // two objects, the first one is the windows object itself, the second one
+        // is a boolean indicating whether or not its on the same origin as the
+        // current window.
+        var cache = this.window_cache;
+        if (!cache) {
+            cache = [[self, true]];
+            var w = self;
+            var i = 0;
+            var so;
+            var origins = location.ancestorOrigins;
+            while (w != w.parent) {
+                w = w.parent;
+                // In WebKit, calls to parent windows' properties that aren't on the same
+                // origin cause an error message to be displayed in the error console but
+                // don't throw an exception. This is a deviation from the current HTML5
+                // spec. See: https://bugs.webkit.org/show_bug.cgi?id=43504
+                // The problem with WebKit's behavior is that it pollutes the error console
+                // with error messages that can't be caught.
+                //
+                // This issue can be mitigated by relying on the (for now) proprietary
+                // `location.ancestorOrigins` property which returns an ordered list of
+                // the origins of enclosing windows. See:
+                // http://trac.webkit.org/changeset/113945.
+                if (origins) {
+                    so = (location.origin == origins[i]);
+                } else {
+                    so = is_same_origin(w);
+                }
+                cache.push([w, so]);
+                i++;
+            }
+            w = window.opener;
+            if (w) {
+                // window.opener isn't included in the `location.ancestorOrigins` prop.
+                // We'll just have to deal with a simple check and an error msg on WebKit
+                // browsers in this case.
+                cache.push([w, is_same_origin(w)]);
+            }
+            this.window_cache = cache;
+        }
+
+        forEach(cache,
+                function(a) {
+                    callback.apply(null, a);
+                });
+    };
+
+    WindowTestEnvironment.prototype.on_tests_ready = function() {
+        var output = new Output();
+        this.output_handler = output;
+
+        var this_obj = this;
+        add_start_callback(function (properties) {
+            this_obj.output_handler.init(properties);
+            this_obj._dispatch("start_callback", [properties],
+                           { type: "start", properties: properties });
+        });
+        add_test_state_callback(function(test) {
+            this_obj.output_handler.show_status();
+            this_obj._dispatch("test_state_callback", [test],
+                               { type: "test_state", test: test.structured_clone() });
+        });
+        add_result_callback(function (test) {
+            this_obj.output_handler.show_status();
+            this_obj._dispatch("result_callback", [test],
+                               { type: "result", test: test.structured_clone() });
+        });
+        add_completion_callback(function (tests, harness_status) {
+            this_obj.output_handler.show_results(tests, harness_status);
+            var cloned_tests = map(tests, function(test) { return test.structured_clone(); });
+            this_obj._dispatch("completion_callback", [tests, harness_status],
+                               { type: "complete", tests: cloned_tests,
+                                 status: harness_status.structured_clone() });
+        });
+    };
+
+    WindowTestEnvironment.prototype.next_default_test_name = function() {
+        //Don't use document.title to work around an Opera bug in XHTML documents
+        var title = document.getElementsByTagName("title")[0];
+        var prefix = (title && title.firstChild && title.firstChild.data) || "Untitled";
+        var suffix = this.name_counter > 0 ? " " + this.name_counter : "";
+        this.name_counter++;
+        return prefix + suffix;
+    };
+
+    WindowTestEnvironment.prototype.on_new_harness_properties = function(properties) {
+        this.output_handler.setup(properties);
+    };
+
+    WindowTestEnvironment.prototype.add_on_loaded_callback = function(callback) {
+        on_event(window, 'load', callback);
+    };
+
+    WindowTestEnvironment.prototype.test_timeout = function() {
+        var metas = document.getElementsByTagName("meta");
+        for (var i = 0; i < metas.length; i++) {
+            if (metas[i].name == "timeout") {
+                if (metas[i].content == "long") {
+                    return settings.harness_timeout.long;
+                }
                 break;
             }
         }
-    })();
+        return settings.harness_timeout.normal;
+    };
+
+    WindowTestEnvironment.prototype.global_scope = function() {
+        return window;
+    };
+
+    /*
+     * Base TestEnvironment implementation for a generic web worker.
+     *
+     * Workers accumulate test results. One or more clients can connect and
+     * retrieve results from a worker at any time.
+     *
+     * WorkerTestEnvironment supports communicating with a client via a
+     * MessagePort.  The mechanism for determining the appropriate MessagePort
+     * for communicating with a client depends on the type of worker and is
+     * implemented by the various specializations of WorkerTestEnvironment
+     * below.
+     *
+     * A client document using testharness can use fetch_tests_from_worker() to
+     * retrieve results from a worker. See apisample16.html.
+     */
+    function WorkerTestEnvironment() {
+        this.name_counter = 0;
+        this.all_loaded = true;
+        this.message_list = [];
+        this.message_ports = [];
+    }
+
+    WorkerTestEnvironment.prototype._dispatch = function(message) {
+        this.message_list.push(message);
+        for (var i = 0; i < this.message_ports.length; ++i)
+        {
+            this.message_ports[i].postMessage(message);
+        }
+    };
+
+    // The only requirement is that port has a postMessage() method. It doesn't
+    // have to be an instance of a MessagePort, and often isn't.
+    WorkerTestEnvironment.prototype._add_message_port = function(port) {
+        this.message_ports.push(port);
+        for (var i = 0; i < this.message_list.length; ++i)
+        {
+            port.postMessage(this.message_list[i]);
+        }
+    };
+
+    WorkerTestEnvironment.prototype.next_default_test_name = function() {
+        var suffix = this.name_counter > 0 ? " " + this.name_counter : "";
+        this.name_counter++;
+        return "Untitled" + suffix;
+    };
+
+    WorkerTestEnvironment.prototype.on_new_harness_properties = function() {};
+
+    WorkerTestEnvironment.prototype.on_tests_ready = function() {
+        var this_obj = this;
+        add_start_callback(
+                function(properties) {
+                    this_obj._dispatch({
+                        type: "start",
+                        properties: properties,
+                    });
+                });
+        add_test_state_callback(
+                function(test) {
+                    this_obj._dispatch({
+                        type: "test_state",
+                        test: test.structured_clone()
+                    });
+                });
+        add_result_callback(
+                function(test) {
+                    this_obj._dispatch({
+                        type: "result",
+                        test: test.structured_clone()
+                    });
+                });
+        add_completion_callback(
+                function(tests, harness_status) {
+                    this_obj._dispatch({
+                        type: "complete",
+                        tests: map(tests,
+                            function(test) {
+                                return test.structured_clone();
+                            }),
+                        status: harness_status.structured_clone()
+                    });
+                });
+    };
+
+    WorkerTestEnvironment.prototype.add_on_loaded_callback = function() {};
+
+    WorkerTestEnvironment.prototype.test_timeout = function() {
+        // Tests running in a worker don't have a default timeout. I.e. all
+        // worker tests behave as if settings.explicit_timeout is true.
+        return null;
+    };
+
+    WorkerTestEnvironment.prototype.global_scope = function() {
+        return self;
+    };
+
+    /*
+     * Dedicated web workers.
+     * https://html.spec.whatwg.org/multipage/workers.html#dedicatedworkerglobalscope
+     *
+     * This class is used as the test_environment when testharness is running
+     * inside a dedicated worker.
+     */
+    function DedicatedWorkerTestEnvironment() {
+        WorkerTestEnvironment.call(this);
+        // self is an instance of DedicatedWorkerGlobalScope which exposes
+        // a postMessage() method for communicating via the message channel
+        // established when the worker is created.
+        this._add_message_port(self);
+    }
+    DedicatedWorkerTestEnvironment.prototype = Object.create(WorkerTestEnvironment.prototype);
+
+    DedicatedWorkerTestEnvironment.prototype.on_tests_ready = function() {
+        WorkerTestEnvironment.prototype.on_tests_ready.call(this);
+        // In the absence of an onload notification, we a require dedicated
+        // workers to explicitly signal when the tests are done.
+        tests.wait_for_finish = true;
+    };
+
+    /*
+     * Shared web workers.
+     * https://html.spec.whatwg.org/multipage/workers.html#sharedworkerglobalscope
+     *
+     * This class is used as the test_environment when testharness is running
+     * inside a shared web worker.
+     */
+    function SharedWorkerTestEnvironment() {
+        WorkerTestEnvironment.call(this);
+        var this_obj = this;
+        // Shared workers receive message ports via the 'onconnect' event for
+        // each connection.
+        self.addEventListener("connect",
+                function(message_event) {
+                    this_obj._add_message_port(message_event.source);
+                });
+    }
+    SharedWorkerTestEnvironment.prototype = Object.create(WorkerTestEnvironment.prototype);
+
+    SharedWorkerTestEnvironment.prototype.on_tests_ready = function() {
+        WorkerTestEnvironment.prototype.on_tests_ready.call(this);
+        // In the absence of an onload notification, we a require shared
+        // workers to explicitly signal when the tests are done.
+        tests.wait_for_finish = true;
+    };
+
+    /*
+     * Service workers.
+     * http://www.w3.org/TR/service-workers/
+     *
+     * This class is used as the test_environment when testharness is running
+     * inside a service worker.
+     */
+    function ServiceWorkerTestEnvironment() {
+        WorkerTestEnvironment.call(this);
+        this.all_loaded = false;
+        this.on_loaded_callback = null;
+        var this_obj = this;
+        self.addEventListener("message",
+                function(event) {
+                    if (event.data.type && event.data.type === "connect") {
+                        this_obj._add_message_port(event.ports[0]);
+                        event.ports[0].start();
+                    }
+                });
+
+        // The oninstall event is received after the service worker script and
+        // all imported scripts have been fetched and executed. It's the
+        // equivalent of an onload event for a document. All tests should have
+        // been added by the time this event is received, thus it's not
+        // necessary to wait until the onactivate event.
+        on_event(self, "install",
+                function(event) {
+                    this_obj.all_loaded = true;
+                    if (this_obj.on_loaded_callback) {
+                        this_obj.on_loaded_callback();
+                    }
+                });
+    }
+    ServiceWorkerTestEnvironment.prototype = Object.create(WorkerTestEnvironment.prototype);
+
+    ServiceWorkerTestEnvironment.prototype.add_on_loaded_callback = function(callback) {
+        if (this.all_loaded) {
+            callback();
+        } else {
+            this.on_loaded_callback = callback;
+        }
+    };
+
+    function create_test_environment() {
+        if ('document' in self) {
+            return new WindowTestEnvironment();
+        }
+        if ('DedicatedWorkerGlobalScope' in self &&
+            self instanceof DedicatedWorkerGlobalScope) {
+            return new DedicatedWorkerTestEnvironment();
+        }
+        if ('SharedWorkerGlobalScope' in self &&
+            self instanceof SharedWorkerGlobalScope) {
+            return new SharedWorkerTestEnvironment();
+        }
+        if ('ServiceWorkerGlobalScope' in self &&
+            self instanceof ServiceWorkerGlobalScope) {
+            return new ServiceWorkerTestEnvironment();
+        }
+        throw new Error("Unsupported test environment");
+    }
+
+    var test_environment = create_test_environment();
+
+    function is_shared_worker(worker) {
+        return 'SharedWorker' in self && worker instanceof SharedWorker;
+    }
+
+    function is_service_worker(worker) {
+        return 'ServiceWorker' in self && worker instanceof ServiceWorker;
+    }
 
     /*
      * API functions
      */
 
-    var name_counter = 0;
-    function next_default_name()
-    {
-        //Don't use document.title to work around an Opera bug in XHTML documents
-        var title = document.getElementsByTagName("title")[0];
-        var prefix = (title && title.firstChild && title.firstChild.data) || "Untitled";
-        var suffix = name_counter > 0 ? " " + name_counter : "";
-        name_counter++;
-        return prefix + suffix;
-    }
-
     function test(func, name, properties)
     {
-        var test_name = name ? name : next_default_name();
+        var test_name = name ? name : test_environment.next_default_test_name();
         properties = properties ? properties : {};
         var test_obj = new Test(test_name, properties);
         test_obj.step(func, test_obj, test_obj);
@@ -83,13 +438,30 @@ policies and contribution forms [3].
             name = func;
             func = null;
         }
-        var test_name = name ? name : next_default_name();
+        var test_name = name ? name : test_environment.next_default_test_name();
         properties = properties ? properties : {};
         var test_obj = new Test(test_name, properties);
         if (func) {
             test_obj.step(func, test_obj, test_obj);
         }
         return test_obj;
+    }
+
+    function promise_test(func, name, properties) {
+        var test = async_test(name, properties);
+        Promise.resolve(test.step(func, test, test))
+            .then(
+                function() {
+                    test.done();
+                })
+            .catch(test.step_func(
+                function(value) {
+                    if (value instanceof AssertionError) {
+                        throw value;
+                    }
+                    assert(false, "promise_test", null,
+                           "Unhandled rejection with value: ${value}", {value:value});
+                }));
     }
 
     function setup(func_or_properties, maybe_properties)
@@ -105,7 +477,7 @@ policies and contribution forms [3].
             properties = func_or_properties;
         }
         tests.setup(func, properties);
-        output.setup(properties);
+        test_environment.on_new_harness_properties(properties);
     }
 
     function done() {
@@ -138,6 +510,7 @@ policies and contribution forms [3].
 
     expose(test, 'test');
     expose(async_test, 'async_test');
+    expose(promise_test, 'promise_test');
     expose(generate_tests, 'generate_tests');
     expose(setup, 'setup');
     expose(done, 'done');
@@ -401,7 +774,7 @@ policies and contribution forms [3].
         for (var i = 0; i < actual.length; i++) {
             assert(actual.hasOwnProperty(i) === expected.hasOwnProperty(i),
                    "assert_array_equals", description,
-                   "property ${i}, property expected to be $expected but was $actual",
+                   "property ${i}, property expected to be ${expected} but was ${actual}",
                    {i:i, expected:expected.hasOwnProperty(i) ? "present" : "missing",
                    actual:actual.hasOwnProperty(i) ? "present" : "missing"});
             assert(same_value(expected[i], actual[i]),
@@ -722,20 +1095,15 @@ policies and contribution forms [3].
         }
         this.name = name;
 
-        this.phases = {
-            INITIAL:0,
-            STARTED:1,
-            HAS_RESULT:2,
-            COMPLETE:3
-        };
         this.phase = this.phases.INITIAL;
 
         this.status = this.NOTRUN;
         this.timeout_id = null;
+        this.index = null;
 
         this.properties = properties;
         var timeout = properties.timeout ? properties.timeout : settings.test_timeout;
-        if (timeout != null) {
+        if (timeout !== null) {
             this.timeout_length = timeout * tests.timeout_multiplier;
         } else {
             this.timeout_length = null;
@@ -759,6 +1127,13 @@ policies and contribution forms [3].
 
     Test.prototype = merge({}, Test.statuses);
 
+    Test.prototype.phases = {
+        INITIAL:0,
+        STARTED:1,
+        HAS_RESULT:2,
+        COMPLETE:3
+    };
+
     Test.prototype.structured_clone = function()
     {
         if (!this._structured_clone) {
@@ -766,10 +1141,12 @@ policies and contribution forms [3].
             msg = msg ? String(msg) : msg;
             this._structured_clone = merge({
                 name:String(this.name),
-                status:this.status,
-                message:msg
+                properties:merge({}, this.properties),
             }, Test.statuses);
         }
+        this._structured_clone.status = this.status;
+        this._structured_clone.message = this.message;
+        this._structured_clone.index = this.index;
         return this._structured_clone;
     };
 
@@ -783,6 +1160,7 @@ policies and contribution forms [3].
         this.set_status(this.TIMEOUT, "Test timed out");
 
         tests.started = true;
+        tests.notify_test_state(this);
 
         if (this.timeout_id === null) {
             this.set_timeout();
@@ -861,7 +1239,7 @@ policies and contribution forms [3].
     Test.prototype.force_timeout = function() {
         this.set_status(this.TIMEOUT);
         this.phase = this.phases.HAS_RESULT;
-    }
+    };
 
     Test.prototype.set_timeout = function()
     {
@@ -898,10 +1276,6 @@ policies and contribution forms [3].
             this.set_status(this.PASS, null);
         }
 
-        if (this.status == this.NOTRUN) {
-            alert(this.phase);
-        }
-
         this.phase = this.phases.COMPLETE;
 
         clearTimeout(this.timeout_id);
@@ -914,6 +1288,145 @@ policies and contribution forms [3].
                 function(cleanup_callback) {
                     cleanup_callback();
                 });
+    };
+
+    /*
+     * A RemoteTest object mirrors a Test object on a remote worker. The
+     * associated RemoteWorker updates the RemoteTest object in response to
+     * received events. In turn, the RemoteTest object replicates these events
+     * on the local document. This allows listeners (test result reporting
+     * etc..) to transparently handle local and remote events.
+     */
+    function RemoteTest(clone) {
+        var this_obj = this;
+        Object.keys(clone).forEach(
+                function(key) {
+                    this_obj[key] = clone[key];
+                });
+        this.index = null;
+        this.phase = this.phases.INITIAL;
+        this.update_state_from(clone);
+        tests.push(this);
+    }
+
+    RemoteTest.prototype.structured_clone = function() {
+        var clone = {};
+        Object.keys(this).forEach(
+                function(key) {
+                    if (typeof(this[key]) === "object") {
+                        clone[key] = merge({}, this[key]);
+                    } else {
+                        clone[key] = this[key];
+                    }
+                });
+        clone.phases = merge({}, this.phases);
+        return clone;
+    };
+
+    RemoteTest.prototype.cleanup = function() {};
+    RemoteTest.prototype.phases = Test.prototype.phases;
+    RemoteTest.prototype.update_state_from = function(clone) {
+        this.status = clone.status;
+        this.message = clone.message;
+        if (this.phase === this.phases.INITIAL) {
+            this.phase = this.phases.STARTED;
+        }
+    };
+    RemoteTest.prototype.done = function() {
+        this.phase = this.phases.COMPLETE;
+    }
+
+    /*
+     * A RemoteWorker listens for test events from a worker. These events are
+     * then used to construct and maintain RemoteTest objects that mirror the
+     * tests running on the remote worker.
+     */
+    function RemoteWorker(worker) {
+        this.running = true;
+        this.tests = new Array();
+
+        var this_obj = this;
+        worker.onerror = function(error) { this_obj.worker_error(error); };
+
+        var message_port;
+
+        if (is_service_worker(worker)) {
+            // The ServiceWorker's implicit MessagePort is currently not
+            // reliably accessible from the ServiceWorkerGlobalScope due to
+            // Blink setting MessageEvent.source to null for messages sent via
+            // ServiceWorker.postMessage(). Until that's resolved, create an
+            // explicit MessageChannel and pass one end to the worker.
+            var message_channel = new MessageChannel();
+            message_port = message_channel.port1;
+            message_port.start();
+            worker.postMessage({type: "connect"}, [message_channel.port2]);
+        } else if (is_shared_worker(worker)) {
+            message_port = worker.port;
+        } else {
+            message_port = worker;
+        }
+
+        // Keeping a reference to the worker until worker_done() is seen
+        // prevents the Worker object and its MessageChannel from going away
+        // before all the messages are dispatched.
+        this.worker = worker;
+
+        message_port.onmessage =
+            function(message) {
+                if (this_obj.running && (message.data.type in this_obj.message_handlers)) {
+                    this_obj.message_handlers[message.data.type].call(this_obj, message.data);
+                }
+            };
+    }
+
+    RemoteWorker.prototype.worker_error = function(error) {
+        var message = error.message || String(error);
+        var filename = (error.filename ? " " + error.filename: "");
+        // FIXME: Display worker error states separately from main document
+        // error state.
+        this.worker_done({
+            status: {
+                status: tests.status.ERROR,
+                message: "Error in worker" + filename + ": " + message
+            }
+        });
+        error.preventDefault();
+    };
+
+    RemoteWorker.prototype.test_state = function(data) {
+        var remote_test = this.tests[data.test.index];
+        if (!remote_test) {
+            remote_test = new RemoteTest(data.test);
+            this.tests[data.test.index] = remote_test;
+        }
+        remote_test.update_state_from(data.test);
+        tests.notify_test_state(remote_test);
+    };
+
+    RemoteWorker.prototype.test_done = function(data) {
+        var remote_test = this.tests[data.test.index];
+        remote_test.update_state_from(data.test);
+        remote_test.done();
+        tests.result(remote_test);
+    };
+
+    RemoteWorker.prototype.worker_done = function(data) {
+        if (tests.status.status === null &&
+            data.status.status !== data.status.OK) {
+            tests.status.status = data.status.status;
+            tests.status.message = data.status.message;
+        }
+        this.running = false;
+        this.worker = null;
+        if (tests.all_done()) {
+            tests.complete();
+        }
+    };
+
+    RemoteWorker.prototype.message_handlers = {
+        test_state: RemoteWorker.prototype.test_state,
+        result: RemoteWorker.prototype.test_done,
+        complete: RemoteWorker.prototype.worker_done
     };
 
     /*
@@ -963,8 +1476,6 @@ policies and contribution forms [3].
 
         this.properties = {};
 
-        //All tests can't be done until the load event fires
-        this.all_loaded = false;
         this.wait_for_finish = false;
         this.processing_callbacks = false;
 
@@ -973,26 +1484,25 @@ policies and contribution forms [3].
         this.file_is_test = false;
 
         this.timeout_multiplier = 1;
-        this.timeout_length = this.get_timeout();
+        this.timeout_length = test_environment.test_timeout();
         this.timeout_id = null;
 
         this.start_callbacks = [];
+        this.test_state_callbacks = [];
         this.test_done_callbacks = [];
         this.all_done_callbacks = [];
+
+        this.pending_workers = [];
 
         this.status = new TestsStatus();
 
         var this_obj = this;
 
-        on_event(window, "load",
-                 function()
-                 {
-                     this_obj.all_loaded = true;
-                     if (this_obj.all_done())
-                     {
-                         this_obj.complete();
-                     }
-                 });
+        test_environment.add_on_loaded_callback(function() {
+            if (this_obj.all_done()) {
+                this_obj.complete();
+            }
+        });
 
         this.set_timeout();
     }
@@ -1049,19 +1559,6 @@ policies and contribution forms [3].
         async_test();
     };
 
-    Tests.prototype.get_timeout = function() {
-        var metas = document.getElementsByTagName("meta");
-        for (var i = 0; i < metas.length; i++) {
-            if (metas[i].name == "timeout") {
-                if (metas[i].content == "long") {
-                    return settings.harness_timeout.long;
-                }
-                break;
-            }
-        }
-        return settings.harness_timeout.normal;
-    };
-
     Tests.prototype.set_timeout = function() {
         var this_obj = this;
         clearTimeout(this.timeout_id);
@@ -1093,12 +1590,23 @@ policies and contribution forms [3].
             this.start();
         }
         this.num_pending++;
-        this.tests.push(test);
+        test.index = this.tests.push(test);
+        this.notify_test_state(test);
+    };
+
+    Tests.prototype.notify_test_state = function(test) {
+        var this_obj = this;
+        forEach(this.test_state_callbacks,
+                function(callback) {
+                    callback(test, this_obj);
+                });
     };
 
     Tests.prototype.all_done = function() {
-        return (this.tests.length > 0 && this.all_loaded && this.num_pending === 0 &&
-                !this.wait_for_finish && !this.processing_callbacks);
+        return (this.tests.length > 0 && test_environment.all_loaded &&
+                this.num_pending === 0 && !this.wait_for_finish &&
+                !this.processing_callbacks &&
+                !this.pending_workers.some(function(w) { return w.running; }));
     };
 
     Tests.prototype.start = function() {
@@ -1113,25 +1621,6 @@ policies and contribution forms [3].
                  {
                      callback(this_obj.properties);
                  });
-        forEach_windows(
-                function(w, is_same_origin)
-                {
-                    if (is_same_origin && w.start_callback) {
-                        try {
-                            w.start_callback(this_obj.properties);
-                        } catch (e) {
-                            if (debug) {
-                                throw e;
-                            }
-                        }
-                    }
-                    if (supports_post_message(w) && w !== self) {
-                        w.postMessage({
-                            type: "start",
-                            properties: this_obj.properties
-                        }, "*");
-                    }
-                });
     };
 
     Tests.prototype.result = function(test)
@@ -1152,26 +1641,6 @@ policies and contribution forms [3].
                 {
                     callback(test, this_obj);
                 });
-
-        forEach_windows(
-                function(w, is_same_origin)
-                {
-                    if (is_same_origin && w.result_callback) {
-                        try {
-                            w.result_callback(test);
-                        } catch (e) {
-                            if (debug) {
-                                throw e;
-                            }
-                        }
-                    }
-                    if (supports_post_message(w) && w !== self) {
-                        w.postMessage({
-                            type: "result",
-                            test: test.structured_clone()
-                        }, "*");
-                    }
-                });
         this.processing_callbacks = false;
         if (this_obj.all_done()) {
             this_obj.complete();
@@ -1187,24 +1656,18 @@ policies and contribution forms [3].
         this.tests.forEach(
             function(x)
             {
-                if (x.status === x.NOTRUN) {
+                if (x.phase < x.phases.COMPLETE) {
                     this_obj.notify_result(x);
                     x.cleanup();
+                    x.phase = x.phases.COMPLETE;
                 }
             }
         );
         this.notify_complete();
     };
 
-    Tests.prototype.notify_complete = function()
-    {
-        clearTimeout(this.timeout_id);
+    Tests.prototype.notify_complete = function() {
         var this_obj = this;
-        var tests = map(this_obj.tests,
-                        function(test)
-                        {
-                            return test.structured_clone();
-                        });
         if (this.status.status === null) {
             this.status.status = this.status.OK;
         }
@@ -1214,47 +1677,20 @@ policies and contribution forms [3].
                  {
                      callback(this_obj.tests, this_obj.status);
                  });
-
-        forEach_windows(
-                function(w, is_same_origin)
-                {
-                    if (is_same_origin && w.completion_callback) {
-                        try {
-                            w.completion_callback(this_obj.tests, this_obj.status);
-                        } catch (e) {
-                            if (debug) {
-                                throw e;
-                            }
-                        }
-                    }
-                    if (supports_post_message(w) && w !== self) {
-                        w.postMessage({
-                            type: "complete",
-                            tests: tests,
-                            status: this_obj.status.structured_clone()
-                        }, "*");
-                    }
-                });
     };
 
-    var tests = new Tests();
-
-    addEventListener("error", function(e) {
-        if (tests.file_is_test) {
-            var test = tests.tests[0];
-            if (test.phase >= test.phases.HAS_RESULT) {
-                return;
-            }
-            var message = e.message;
-            test.set_status(test.FAIL, message);
-            test.phase = test.phases.HAS_RESULT;
-            test.done();
-            done();
-        } else if (!tests.allow_uncaught_exception) {
-            tests.status.status = tests.status.ERROR;
-            tests.status.message = e.message;
+    Tests.prototype.fetch_tests_from_worker = function(worker) {
+        if (this.phase >= this.phases.COMPLETE) {
+            return;
         }
-    });
+
+        this.pending_workers.push(new RemoteWorker(worker));
+    };
+
+    function fetch_tests_from_worker(port) {
+        tests.fetch_tests_from_worker(port);
+    }
+    expose(fetch_tests_from_worker, 'fetch_tests_from_worker');
 
     function timeout() {
         if (tests.timeout_length === null) {
@@ -1265,6 +1701,10 @@ policies and contribution forms [3].
 
     function add_start_callback(callback) {
         tests.start_callbacks.push(callback);
+    }
+
+    function add_test_state_callback(callback) {
+        tests.test_state_callbacks.push(callback);
     }
 
     function add_result_callback(callback)
@@ -1278,6 +1718,7 @@ policies and contribution forms [3].
     }
 
     expose(add_start_callback, 'add_start_callback');
+    expose(add_test_state_callback, 'add_test_state_callback');
     expose(add_result_callback, 'add_result_callback');
     expose(add_completion_callback, 'add_completion_callback');
 
@@ -1288,7 +1729,6 @@ policies and contribution forms [3].
     function Output() {
         this.output_document = document;
         this.output_node = null;
-        this.done_count = 0;
         this.enabled = settings.output;
         this.phase = this.INITIAL;
     }
@@ -1355,13 +1795,13 @@ policies and contribution forms [3].
             this.resolve_log();
             this.phase = this.HAVE_RESULTS;
         }
-        this.done_count++;
+        var done_count = tests.tests.length - tests.num_pending;
         if (this.output_node) {
-            if (this.done_count < 100 ||
-                (this.done_count < 1000 && this.done_count % 100 === 0) ||
-                this.done_count % 1000 === 0) {
+            if (done_count < 100 ||
+                (done_count < 1000 && done_count % 100 === 0) ||
+                done_count % 1000 === 0) {
                 this.output_node.textContent = "Running, " +
-                    this.done_count + " complete, " +
+                    done_count + " complete, " +
                     tests.num_pending + " remain";
             }
         }
@@ -1389,7 +1829,25 @@ policies and contribution forms [3].
             log.removeChild(log.lastChild);
         }
 
-        if (script_prefix != null) {
+        var script_prefix = null;
+        var scripts = document.getElementsByTagName("script");
+        for (var i = 0; i < scripts.length; i++) {
+            var src;
+            if (scripts[i].src) {
+                src = scripts[i].src;
+            } else if (scripts[i].href) {
+                //SVG case
+                src = scripts[i].href.baseVal;
+            }
+
+            var matches = src && src.match(/^(.*\/|)testharness\.js$/);
+            if (matches) {
+                script_prefix = matches[1];
+                break;
+            }
+        }
+
+        if (script_prefix !== null) {
             var stylesheet = output_document.createElementNS(xhtml_ns, "link");
             stylesheet.setAttribute("rel", "stylesheet");
             stylesheet.setAttribute("href", script_prefix + "testharness.css");
@@ -1553,11 +2011,6 @@ policies and contribution forms [3].
         }
     };
 
-    var output = new Output();
-    add_start_callback(function (properties) {output.init(properties);});
-    add_result_callback(function () {output.show_status();});
-    add_completion_callback(function (tests, harness_status) {output.show_results(tests, harness_status);});
-
     /*
      * Template code
      *
@@ -1706,8 +2159,6 @@ policies and contribution forms [3].
         return element;
     }
 
-
-
     function make_dom(template, substitutions, output_document)
     {
         if (is_single_node(template)) {
@@ -1817,7 +2268,7 @@ policies and contribution forms [3].
     function expose(object, name)
     {
         var components = name.split(".");
-        var target = window;
+        var target = test_environment.global_scope();
         for (var i = 0; i < components.length - 1; i++) {
             if (!(components[i] in target)) {
                 target[components[i]] = {};
@@ -1825,56 +2276,6 @@ policies and contribution forms [3].
             target = target[components[i]];
         }
         target[components[components.length - 1]] = object;
-    }
-
-    function forEach_windows(callback) {
-        // Iterate of the the windows [self ... top, opener]. The callback is passed
-        // two objects, the first one is the windows object itself, the second one
-        // is a boolean indicating whether or not its on the same origin as the
-        // current window.
-        var cache = forEach_windows.result_cache;
-        if (!cache) {
-            cache = [[self, true]];
-            var w = self;
-            var i = 0;
-            var so;
-            var origins = location.ancestorOrigins;
-            while (w != w.parent) {
-                w = w.parent;
-                // In WebKit, calls to parent windows' properties that aren't on the same
-                // origin cause an error message to be displayed in the error console but
-                // don't throw an exception. This is a deviation from the current HTML5
-                // spec. See: https://bugs.webkit.org/show_bug.cgi?id=43504
-                // The problem with WebKit's behavior is that it pollutes the error console
-                // with error messages that can't be caught.
-                //
-                // This issue can be mitigated by relying on the (for now) proprietary
-                // `location.ancestorOrigins` property which returns an ordered list of
-                // the origins of enclosing windows. See:
-                // http://trac.webkit.org/changeset/113945.
-                if (origins) {
-                    so = (location.origin == origins[i]);
-                } else {
-                    so = is_same_origin(w);
-                }
-                cache.push([w, so]);
-                i++;
-            }
-            w = window.opener;
-            if (w) {
-                // window.opener isn't included in the `location.ancestorOrigins` prop.
-                // We'll just have to deal with a simple check and an error msg on WebKit
-                // browsers in this case.
-                cache.push([w, is_same_origin(w)]);
-            }
-            forEach_windows.result_cache = cache;
-        }
-
-        forEach(cache,
-                function(a)
-                {
-                    callback.apply(null, a);
-                });
     }
 
     function is_same_origin(w) {
@@ -1922,5 +2323,31 @@ policies and contribution forms [3].
         }
         return supports;
     }
+
+    /**
+     * Setup globals
+     */
+
+    var tests = new Tests();
+
+    addEventListener("error", function(e) {
+        if (tests.file_is_test) {
+            var test = tests.tests[0];
+            if (test.phase >= test.phases.HAS_RESULT) {
+                return;
+            }
+            var message = e.message;
+            test.set_status(test.FAIL, message);
+            test.phase = test.phases.HAS_RESULT;
+            test.done();
+            done();
+        } else if (!tests.allow_uncaught_exception) {
+            tests.status.status = tests.status.ERROR;
+            tests.status.message = e.message;
+        }
+    });
+
+    test_environment.on_tests_ready();
+
 })();
 // vim: set expandtab shiftwidth=4 tabstop=4:

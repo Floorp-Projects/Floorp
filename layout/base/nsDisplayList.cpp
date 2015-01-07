@@ -1579,6 +1579,8 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
   // Root is being scaled up by the X/Y resolution. Scale it back down.
   root->SetPostScale(1.0f/containerParameters.mXScale,
                      1.0f/containerParameters.mYScale);
+  root->SetScaleToResolution(presShell->ScaleToResolution(),
+      containerParameters.mXScale);
 
   if (gfxPrefs::LayoutUseContainersForRootFrames()) {
     bool isRoot = presContext->IsRootContentDocument();
@@ -4153,6 +4155,8 @@ nsDisplayResolution::BuildLayer(nsDisplayListBuilder* aBuilder,
     aBuilder, aManager, containerParameters);
   layer->SetPostScale(1.0f / presShell->GetXResolution(),
                       1.0f / presShell->GetYResolution());
+  layer->AsContainerLayer()->SetScaleToResolution(
+      presShell->ScaleToResolution(), presShell->GetXResolution());
   return layer.forget();
 }
 

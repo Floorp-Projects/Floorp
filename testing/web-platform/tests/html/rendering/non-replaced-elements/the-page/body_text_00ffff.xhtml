@@ -1,13 +1,12 @@
 <html xmlns='http://www.w3.org/1999/xhtml'>
 <head>
 <title>body - TEXT=00ffff</title>
+<link rel="match" href="body_text_00ffff-ref.html"/>
+<meta name="assert" content="Test checks that User Agent requirement as per HTML5 spec NOT the author requirement."/>
 </head>
 <body text="0000ff">
 <p>This document should have text color 'Blue' using the RGB Hexadecimal color value of "0000ff". </p>
 <p>This test passes if the color of text above matches the image below.</p>
-<p><img src="../../../../../images/blue.png" /></p>
+<p><img src="/images/blue.png" /></p>
 </body>
-<p>
-<i>Note - This test checks for User Agent requirement as per HTML5 spec NOT the author requirement. (This text is not inside body, so text color is default - black)</i>
-</p>
 </html>

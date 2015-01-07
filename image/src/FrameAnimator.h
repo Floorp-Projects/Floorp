@@ -14,11 +14,21 @@ namespace mozilla {
 namespace image {
 
 class FrameBlender;
+class RasterImage;
 
 class FrameAnimator
 {
 public:
-  FrameAnimator(FrameBlender& aBlender, uint16_t aAnimationMode);
+  FrameAnimator(RasterImage* aImage,
+                FrameBlender& aFrameBlender,
+                uint16_t aAnimationMode)
+    : mCurrentAnimationFrameIndex(0)
+    , mLoopCounter(-1)
+    , mImage(aImage)
+    , mFrameBlender(aFrameBlender)
+    , mAnimationMode(aAnimationMode)
+    , mDoneDecoding(false)
+  { }
 
   /**
    * Return value from RequestRefresh. Tells callers what happened in that call
@@ -157,6 +167,9 @@ private: // data
 
   //! number of loops remaining before animation stops (-1 no stop)
   int32_t mLoopCounter;
+
+  //! A weak pointer to our owner.
+  RasterImage* mImage;
 
   //! All the frames of the image, shared with our owner
   FrameBlender& mFrameBlender;

@@ -96,14 +96,8 @@ GetDirectWriteFontName(IDWriteFont *aFont, nsAString& aFontName)
     return S_OK;
 }
 
-// These strings are only defined in Win SDK 8+, so use #ifdef for now
-#if MOZ_WINSDK_TARGETVER > 0x08000000
 #define FULLNAME_ID   DWRITE_INFORMATIONAL_STRING_FULL_NAME
 #define PSNAME_ID     DWRITE_INFORMATIONAL_STRING_POSTSCRIPT_NAME
-#else
-#define FULLNAME_ID   DWRITE_INFORMATIONAL_STRING_ID(DWRITE_INFORMATIONAL_STRING_SAMPLE_TEXT + 1)
-#define PSNAME_ID     DWRITE_INFORMATIONAL_STRING_ID(DWRITE_INFORMATIONAL_STRING_SAMPLE_TEXT + 2)
-#endif
 
 // for use in reading postscript or fullname
 static HRESULT

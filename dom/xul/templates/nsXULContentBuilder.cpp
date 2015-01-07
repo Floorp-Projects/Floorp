@@ -72,14 +72,14 @@ class nsXULContentBuilder : public nsXULTemplateBuilder
 {
 public:
     // nsIXULTemplateBuilder interface
-    NS_IMETHOD CreateContents(nsIContent* aElement, bool aForceCreation);
+    NS_IMETHOD CreateContents(nsIContent* aElement, bool aForceCreation) MOZ_OVERRIDE;
 
     NS_IMETHOD HasGeneratedContent(nsIRDFResource* aResource,
                                    nsIAtom* aTag,
-                                   bool* aGenerated);
+                                   bool* aGenerated) MOZ_OVERRIDE;
 
     NS_IMETHOD GetResultForContent(nsIDOMElement* aContent,
-                                   nsIXULTemplateResult** aResult);
+                                   nsIXULTemplateResult** aResult) MOZ_OVERRIDE;
 
     // nsIMutationObserver interface
     NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
@@ -91,12 +91,12 @@ protected:
 
     nsXULContentBuilder();
 
-    void Traverse(nsCycleCollectionTraversalCallback &cb) const
+    void Traverse(nsCycleCollectionTraversalCallback& aCb) const MOZ_OVERRIDE
     {
-        mSortState.Traverse(cb);
+        mSortState.Traverse(aCb);
     }
 
-    virtual void Uninit(bool aIsFinal);
+    virtual void Uninit(bool aIsFinal) MOZ_OVERRIDE;
 
     // Implementation methods
     nsresult
@@ -269,7 +269,7 @@ protected:
                       bool aNotify);
 
     virtual nsresult
-    RebuildAll();
+    RebuildAll() MOZ_OVERRIDE;
 
     // GetInsertionLocations, ReplaceMatch and SynchronizeResult are inherited
     // from nsXULTemplateBuilder
@@ -281,7 +281,7 @@ protected:
      */
     virtual bool
     GetInsertionLocations(nsIXULTemplateResult* aOldResult,
-                          nsCOMArray<nsIContent>** aLocations);
+                          nsCOMArray<nsIContent>** aLocations) MOZ_OVERRIDE;
 
     /**
      * Remove the content associated with aOldResult which no longer matches,
@@ -291,7 +291,7 @@ protected:
     ReplaceMatch(nsIXULTemplateResult* aOldResult,
                  nsTemplateMatch* aNewMatch,
                  nsTemplateRule* aNewMatchRule,
-                 void *aContext);
+                 void *aContext) MOZ_OVERRIDE;
 
     /**
      * Synchronize a result bindings with the generated content for that
@@ -299,7 +299,7 @@ protected:
      * ResultBindingChanged method.
      */
     virtual nsresult
-    SynchronizeResult(nsIXULTemplateResult* aResult);
+    SynchronizeResult(nsIXULTemplateResult* aResult) MOZ_OVERRIDE;
 
     /**
      * Compare a result to a content node. If the generated content for the

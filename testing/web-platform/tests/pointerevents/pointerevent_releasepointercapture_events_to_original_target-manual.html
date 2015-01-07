@@ -24,6 +24,7 @@
             var f_lostPointerCapture = false;
 
             function listenerEventHandler(event) {
+                detected_pointertypes[event.pointerType] = true;
                 if (event.type == "gotpointercapture") {
                     f_gotPointerCapture = true;
                     check_PointerEvent(event);
@@ -90,18 +91,6 @@
                     on_event(target0, All_Pointer_Events[i], targetEventHandler);
                     on_event(listener, All_Pointer_Events[i], listenerEventHandler);
                 }
-            }
-
-            function showPointerTypes() {
-                var complete_notice = document.getElementById("complete-notice");
-                var pointertype_log = document.getElementById("pointertype-log");
-                var pointertypes = Object.keys(detected_pointertypes); pointertype_log.innerHTML = pointertypes.length ? pointertypes.join(",") : "(none)";
-                if (test_pointerEvent.status == test_pointerEvent.NOTRUN
-                    || test_pointerEvent.status == test_pointerEvent.TIMEOUT) {
-                    complete_notice.innerHTML = "Test FAIL due to time out.  This is due to the browser not supporting pointer, or the manual steps were not run to completion.";
-                    complete_notice.style.background = "red";
-                }
-                complete_notice.style.display = "block";
             }
         </script>
     </head>

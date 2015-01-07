@@ -3,39 +3,67 @@ const EXPECTED_CHAIN = [
   "MIIC2jCCAcKgAwIBAgIBATANBgkqhkiG9w0BAQsFADAmMSQwIgYDVQQDExtBbHRlcm5hdGUgVHJ1c3RlZCBBdXRob3JpdHkwHhcNMTQwOTI1MjEyMTU0WhcNMjQwOTI1MjEyMTU0WjAmMSQwIgYDVQQDExtBbHRlcm5hdGUgVHJ1c3RlZCBBdXRob3JpdHkwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDBT+BwAhO52IWgSIdZZifU9LHOs3IR/+8DCC0WP5d/OuyKlZ6Rqd0tsd3i7durhQyjHSbLf2lJStcnFjcVEbEnNI76RuvlN8xLLn5eV+2Ayr4cZYKztudwRmw+DV/iYAiMSy0hs7m3ssfX7qpoi1aNRjUanwU0VTCPQhF1bEKAC2du+C5Z8e92zN5t87w7bYr7lt+m8197XliXEu+0s9RgnGwGaZ296BIRz6NOoJYTa43n06LU1I1+Z4d6lPdzUFrSR0GBaMhUSurUBtOin3yWiMhg1VHX/KwqGc4als5GyCVXy8HGrA/0zQPOhetxrlhEVAdK/xBt7CZvByj1Rcc7AgMBAAGjEzARMA8GA1UdEwQIMAYBAf8CAQAwDQYJKoZIhvcNAQELBQADggEBAJq/hogSRqzPWTwX4wTn/DVSNdWwFLv53qep9YrSMJ8ZsfbfK9Es4VP4dBLRQAVMJ0Z5mW1I6d/n0KayTanuUBvemYdxPi/qQNSs8UJcllqdhqWzmzAg6a0LxrMnEeKzPBPD6q8PwQ7tYP+B4sBN9tnnsnyPgti9ZiNZn5FwXZliHXseQ7FE9/SqHlLw5LXW3YtKjuti6RmuV6fq3j+D4oeC5vb1mKgIyoTqGN6ze57v8RHi+pQ8Q+kmoUn/L3Z2YmFe4SKN/4WoyXr8TdejpThGOCGCAd3565s5gOx5QfSQX11P8NZKO8hcN0tme3VzmGpHK0Z/6MTmdpNaTwQ6odk="
   ];
 
-function handleRequest(request, response)
-{
-  if (request.queryString === "succeed") {
-    // read the report from the client
-    let inputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
-    inputStream.init(request.bodyInputStream, 0x01, 0004, 0);
+function parseReport(request) {
+  // read the report from the request
+  let inputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
+  inputStream.init(request.bodyInputStream, 0x01, 0004, 0);
 
-    let body = "";
-    if (inputStream) {
-      while (inputStream.available()) {
-        body = body + inputStream.read(inputStream.available());
-      }
+  let body = "";
+  if (inputStream) {
+    while (inputStream.available()) {
+      body = body + inputStream.read(inputStream.available());
     }
-    // parse the report
-    let report = JSON.parse(body);
-    let certChain = report.failedCertChain;
+  }
+  // parse the report
+  return JSON.parse(body);
+}
 
-    // ensure the cert chain is what we expect
-    for (idx in certChain) {
-      if (certChain[idx] !== EXPECTED_CHAIN[idx]) {
-        // if the chain differs, send an error response to cause test
-        // failure
+function handleRequest(request, response) {
+  let report = {};
+  let certChain = [];
+
+  switch (request.queryString) {
+    case "succeed":
+      report = parseReport(request);
+      certChain = report.failedCertChain;
+
+      // ensure the cert chain is what we expect
+      for (idx in certChain) {
+        if (certChain[idx] !== EXPECTED_CHAIN[idx]) {
+          // if the chain differs, send an error response to cause test
+          // failure
+          response.setStatusLine("1.1", 500, "Server error");
+          response.write("<html>The report contained an unexpected chain</html>");
+          return;
+        }
+      }
+
+      // if all is as expected, send the 201 the client expects
+      response.setStatusLine("1.1", 201, "Created");
+      response.write("<html>OK</html>");
+      break;
+    case "nocert":
+      report = parseReport(request);
+      certChain = report.failedCertChain;
+
+      if (certChain && certChain.length > 0) {
+        // We're not expecting a chain; if there is one, send an error
         response.setStatusLine("1.1", 500, "Server error");
         response.write("<html>The report contained an unexpected chain</html>");
         return;
       }
-    }
 
-    // if all is as expected, send the 201 the client expects
-    response.setStatusLine("1.1", 201, "Created");
-    response.write("<html>OK</html>");
-  } else if (request.queryString === "error") {
-    response.setStatusLine("1.1", 500, "Server error");
-    response.write("<html>server error</html>");
+      // if all is as expected, send the 201 the client expects
+      response.setStatusLine("1.1", 201, "Created");
+      response.write("<html>OK</html>");
+      break;
+    case "error":
+      response.setStatusLine("1.1", 500, "Server error");
+      response.write("<html>server error</html>");
+      break;
+    default:
+      response.setStatusLine("1.1", 500, "Server error");
+      response.write("<html>succeed, nocert or error expected</html>");
+      break;
   }
 }

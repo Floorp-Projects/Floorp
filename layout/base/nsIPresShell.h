@@ -139,10 +139,10 @@ typedef struct CapturingContentInfo {
   nsIContent* mContent;
 } CapturingContentInfo;
 
-// 79c0f49f-77f1-4cc5-80d1-6552e85ccb0c
+// 9d010f90-2d90-471c-b640-038cc350c187
 #define NS_IPRESSHELL_IID \
-  { 0xa0a4b515, 0x0b91, 0x4f13, \
-    { 0xa0, 0x60, 0x4b, 0xfb, 0x35, 0x00, 0xdc, 0x00 } }
+  { 0x9d010f90, 0x2d90, 0x471c, \
+    { 0xb6, 0x40, 0x03, 0x8c, 0xc3, 0x50, 0xc1, 0x87 } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -1401,6 +1401,19 @@ public:
   float GetXResolution() { return mXResolution; }
   float GetYResolution() { return mYResolution; }
   virtual gfxSize GetCumulativeResolution() = 0;
+
+  /**
+   * Similar to SetResolution() but also increases the scale of the content
+   * by the same amount.
+   */
+  virtual nsresult SetResolutionAndScaleTo(float aXResolution, float aYResolution) = 0;
+
+  /**
+   * Return whether we are scaling to the set resolution.
+   * This is initially false; it's set to true by a call to
+   * SetResolutionAndScaleTo(), and set to false by a call to SetResolution().
+   */
+  virtual bool ScaleToResolution() const = 0;
 
   /**
    * Returns whether we are in a DrawWindow() call that used the

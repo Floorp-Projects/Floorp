@@ -1,55 +1,37 @@
 <!DOCTYPE html>
-<html>
-<head>
 <title> ErrorEvent and Worker.dispatchEvent() </title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-</head>
-<body>
 <div id=log></div>
 <script>
+async_test(function(t) {
+  var event = "error";
+  var filename = './support/ErrorEvent.js';
+  var message = 'Hello Worker';
+  var lineno = 5;
+  var colno = 6;
+  var error = new Error("test");
+  var worker = new Worker(filename);
+  worker.addEventListener(event, t.step_func_done(function(e) {
+    assert_equals(e.type, event, 'type');
+    assert_equals(e.message, message, 'message');
+    assert_equals(e.filename, filename, 'filename');
+    assert_equals(e.lineno, lineno, 'lineno');
+    assert_equals(e.colno, colno, 'colno');
+    assert_equals(e.error, error, 'error');
+  }), true);
+  var e = new ErrorEvent(event, {bubbles:true, cancelable:true, message:message, filename:filename, lineno:lineno, colno:colno, error:error});
+  worker.dispatchEvent(e);
+});
 
-    var EVENT = "error";
-    var FILENAME = './support/ErrorEvent.js';
-    var MESSAGE = 'Hello Worker';
-    var LINENO = 5;
-    var COLNO = 6;
-    var ERROR = new Error("test");
-    var description = "ErrorEvent and Worker.dispatchEvent()";
+test(function() {
+  assert_throws("NotSupportedError", function() {
+    document.createEvent("ErrorEvent");
+  }, "should not be supported");
+}, "document.createEvent('ErrorEvent')");
 
-    var t = async_test("Test Description: " + description);
-
-    t.step(function() {
-        var worker = new Worker(FILENAME);
-
-        worker.addEventListener(EVENT, t.step_func(TestErrorEvent), true);
-
-        var evt = new ErrorEvent(EVENT, {bubbles:true, cancelable:true, message:MESSAGE, filename:FILENAME, lineno:LINENO, colno:COLNO, error:ERROR});
-
-        worker.dispatchEvent(evt);
-
-        function TestErrorEvent(evt)
-        {
-            assert_equals(evt.type, EVENT, 'type');
-            assert_equals(evt.message, MESSAGE, 'message');
-            assert_equals(evt.filename, FILENAME, 'filename');
-            assert_equals(evt.lineno, LINENO, 'lineno');
-            assert_equals(evt.colno, COLNO, 'colno');
-            assert_equals(evt.error, ERROR, 'error');
-            t.done();
-        }
-    });
-
-    test(function() {
-        assert_throws("NotSupportedError", function() {
-            document.createEvent("ErrorEvent");
-        }, "should not be supported");
-    }, "document.createEvent('ErrorEvent')");
-
-    test(function() {
-        var evt = new ErrorEvent("error");
-        assert_false("initErrorEvent" in evt, "should not be supported");
-    }, "initErrorEvent");
+test(function() {
+  var e = new ErrorEvent("error");
+  assert_false("initErrorEvent" in e, "should not be supported");
+}, "initErrorEvent");
 </script>
-</body>
-</html>
