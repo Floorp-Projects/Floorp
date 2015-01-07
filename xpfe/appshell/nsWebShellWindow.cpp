@@ -450,7 +450,7 @@ public:
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  NS_IMETHOD Notify(nsITimer* aTimer)
+  NS_IMETHOD Notify(nsITimer* aTimer) MOZ_OVERRIDE
   {
     // Although this object participates in a refcount cycle (this -> mWindow
     // -> mSPTimer -> this), mSPTimer is a one-shot timer and releases this
