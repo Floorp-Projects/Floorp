@@ -14,14 +14,20 @@ class nsPIDOMWindow;
 namespace mozilla {
 namespace dom {
 
-class IccInfo : public nsISupports
+namespace icc {
+class IccInfoData;
+} // namespace icc
+
+class IccInfo : public nsIIccInfo
               , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IccInfo)
+  NS_DECL_NSIICCINFO
 
   explicit IccInfo(nsPIDOMWindow* aWindow);
+  explicit IccInfo(const icc::IccInfoData& aData);
 
   void
   Update(nsIIccInfo* aInfo);
@@ -61,18 +67,30 @@ public:
 protected:
   virtual ~IccInfo() {}
 
-protected:
   nsCOMPtr<nsPIDOMWindow> mWindow;
-  nsCOMPtr<nsIIccInfo> mIccInfo;
+  // To prevent compiling error in OS_WIN in auto-generated UnifiedBindingsXX.cpp,
+  // we have all data fields expended here instead of having a data member of
+  // |IccInfoData| defined in PIccTypes.h which indirectly includes "windows.h"
+  // See 925382 for the restriction of including "windows.h" in UnifiedBindings.cpp.
+  nsString mIccType;
+  nsString mIccid;
+  nsString mMcc;
+  nsString mMnc;
+  nsString mSpn;
+  bool mIsDisplayNetworkNameRequired;
+  bool mIsDisplaySpnRequired;
 };
 
 class GsmIccInfo final : public IccInfo
+                       , public nsIGsmIccInfo
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(GsmIccInfo, IccInfo)
+  NS_FORWARD_NSIICCINFO(IccInfo::)
+  NS_DECL_NSIGSMICCINFO
 
   explicit GsmIccInfo(nsPIDOMWindow* aWindow);
+  explicit GsmIccInfo(const icc::IccInfoData& aData);
 
   void
   Update(nsIGsmIccInfo* aInfo);
@@ -88,17 +106,19 @@ public:
 private:
   ~GsmIccInfo() {}
 
-private:
-  nsCOMPtr<nsIGsmIccInfo> mGsmIccInfo;
+  nsString mPhoneNumber;
 };
 
 class CdmaIccInfo final : public IccInfo
+                        , public nsICdmaIccInfo
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CdmaIccInfo, IccInfo)
+  NS_FORWARD_NSIICCINFO(IccInfo::)
+  NS_DECL_NSICDMAICCINFO
 
   explicit CdmaIccInfo(nsPIDOMWindow* aWindow);
+  explicit CdmaIccInfo(const icc::IccInfoData& aData);
 
   void
   Update(nsICdmaIccInfo* aInfo);
@@ -117,8 +137,8 @@ public:
 private:
   ~CdmaIccInfo() {}
 
-private:
-  nsCOMPtr<nsICdmaIccInfo> mCdmaIccInfo;
+  nsString mPhoneNumber;
+  int32_t mPrlVersion;
 };
 
 } // namespace dom
