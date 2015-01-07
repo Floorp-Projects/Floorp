@@ -12,7 +12,7 @@ namespace mozilla {
 class SharedDecoderCallback : public MediaDataDecoderCallback
 {
 public:
-  SharedDecoderCallback(SharedDecoderManager* aManager) : mManager(aManager) {}
+  explicit SharedDecoderCallback(SharedDecoderManager* aManager) : mManager(aManager) {}
 
   virtual void Output(MediaData* aData) MOZ_OVERRIDE
   {

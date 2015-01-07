@@ -24,7 +24,8 @@ struct MediaStreamConstraints;
 class MediaDevices MOZ_FINAL : public DOMEventTargetHelper
 {
 public:
-  MediaDevices(nsPIDOMWindow* aWindow) : DOMEventTargetHelper(aWindow) {}
+  explicit MediaDevices(nsPIDOMWindow* aWindow) :
+    DOMEventTargetHelper(aWindow) {}
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOM_MEDIADEVICES_IMPLEMENTATION_IID)
