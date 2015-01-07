@@ -7069,5 +7069,68 @@
     "kind": "count",
     "keyed": true,
     "description": "Counts of plugin and content process crashes which are reported with a crash dump."
+  },
+  "STUMBLER_TIME_BETWEEN_UPLOADS_SEC": {
+    "expires_in_version": "45",
+    "kind": "exponential",
+    "n_buckets": 50,
+    "high": 259200,
+    "description": "Stumbler: The time in seconds between uploads."
+  },
+  "STUMBLER_VOLUME_BYTES_UPLOADED_PER_SEC": {
+    "expires_in_version": "45",
+    "kind": "exponential",
+    "n_buckets": 50,
+    "high": 1000000,
+    "description": "Stumbler: Volume measurement of bytes uploaded, normalized to per-second."
+  },
+  "STUMBLER_TIME_BETWEEN_START_SEC": {
+    "expires_in_version": "45",
+    "kind": "exponential",
+    "n_buckets": 50,
+    "high": 259200,
+    "description": "Stumbler: The time between the service starts."
+  },
+  "STUMBLER_UPLOAD_BYTES": {
+    "expires_in_version": "45",
+    "kind": "exponential",
+    "n_buckets": 50,
+    "high": 1000000,
+    "description": "Stumbler: The bytes per upload."
+  },
+  "STUMBLER_UPLOAD_OBSERVATION_COUNT": {
+    "expires_in_version": "45",
+    "kind": "exponential",
+    "n_buckets": 50,
+    "high": 10000,
+    "description": "Stumbler: The observations per upload."
+  },
+  "STUMBLER_UPLOAD_CELL_COUNT": {
+    "expires_in_version": "45",
+    "kind": "exponential",
+    "n_buckets": 50,
+    "high": 10000,
+    "description": "Stumbler: The cells per upload."
+  },
+  "STUMBLER_UPLOAD_WIFI_AP_COUNT": {
+    "expires_in_version": "45",
+    "kind": "exponential",
+    "n_buckets": 50,
+    "high": 10000,
+    "description": "Stumbler: The Wi-Fi APs per upload."
+  },
+  "STUMBLER_OBSERVATIONS_PER_DAY": {
+    "expires_in_version": "45",
+    "kind": "exponential",
+    "n_buckets": 50,
+    "high": 10000,
+    "description": "Stumbler: The number of observations between upload events, normalized to per day."
+  },
+  "STUMBLER_TIME_BETWEEN_RECEIVED_LOCATIONS_SEC": {
+    "expires_in_version": "45",
+    "kind": "exponential",
+    "n_buckets": 50,
+    "high": 86400,
+    "description": "Stumbler: The time between receiving passive locations."
   }
 }
