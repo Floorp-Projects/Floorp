@@ -14,7 +14,7 @@ add_task(function* () {
   RequestsMenu.lazyUpdate = false;
 
   info("Performing a secure request.");
-  debuggee.performRequests(1, "https://example.com");
+  debuggee.performRequests(1, "https://example.com" + CORS_SJS_PATH);
 
   yield waitForNetworkEvents(monitor, 1);
 
