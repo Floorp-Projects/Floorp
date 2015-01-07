@@ -138,11 +138,14 @@ Migrator.prototype = {
 
   _promiseCurrentUserState: Task.async(function* (forceObserver) {
     this.log.trace("starting _promiseCurrentUserState");
-    let update = (newState, subject=null) => {
+    let update = (newState, email=null) => {
       this.log.info("Migration state: '${state}' => '${newState}'",
                     {state: this._state, newState: newState});
       if (forceObserver || newState !== this._state) {
         this._state = newState;
+        let subject = Cc["@mozilla.org/supports-string;1"]
+                      .createInstance(Ci.nsISupportsString);
+        subject.data = email || "";
         Services.obs.notifyObservers(subject, OBSERVER_STATE_CHANGE_TOPIC, newState);
       }
       return newState;
@@ -173,13 +176,14 @@ Migrator.prototype = {
     // So we are in EOL mode - have we a user?
     let fxauser = yield fxAccounts.getSignedInUser();
     if (!fxauser) {
-      return update(this.STATE_USER_FXA);
+      // See if there is a migration sentinel so we can send the email
+      // address that was used on a different device for this account (ie, if
+      // this is a "join the party" migration rather than the first)
+      let sentinel = yield this._getSyncMigrationSentinel();
+      return update(this.STATE_USER_FXA, sentinel && sentinel.email);
     }
     if (!fxauser.verified) {
-      let email = Cc["@mozilla.org/supports-string;1"].
-                  createInstance(Ci.nsISupportsString);
-      email.data = fxauser.email || "";
-      return update(this.STATE_USER_FXA_VERIFIED, email);
+      return update(this.STATE_USER_FXA_VERIFIED, fxauser.email);
     }
 
     // So we just have housekeeping to do - we aren't blocked on a user, so
@@ -388,7 +392,7 @@ Migrator.prototype = {
     let customize = !this._allEnginesEnabled();
     tail += "&customizeSync=" + customize;
 
-    win.switchToTabHavingURI("about:accounts?" + action + tail, true,
+    win.switchToTabHavingURI("about:accounts?action=" + action + tail, true,
                              {ignoreFragment: true, replaceQueryString: true});
     // An FxA observer will fire when the user completes this, which will
     // cause us to move to the next "user blocked" state and notify via our
