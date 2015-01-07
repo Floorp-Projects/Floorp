@@ -80,16 +80,12 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitNewRunOnceCallObject(MNewRunOnceCallObject *ins);
     void visitNewStringObject(MNewStringObject *ins);
     void visitNewDerivedTypedObject(MNewDerivedTypedObject *ins);
-    void visitNewPar(MNewPar *ins);
-    void visitNewCallObjectPar(MNewCallObjectPar *ins);
-    void visitNewDenseArrayPar(MNewDenseArrayPar *ins);
     void visitInitElem(MInitElem *ins);
     void visitInitElemGetterSetter(MInitElemGetterSetter *ins);
     void visitMutateProto(MMutateProto *ins);
     void visitInitProp(MInitProp *ins);
     void visitInitPropGetterSetter(MInitPropGetterSetter *ins);
     void visitCheckOverRecursed(MCheckOverRecursed *ins);
-    void visitCheckOverRecursedPar(MCheckOverRecursedPar *ins);
     void visitDefVar(MDefVar *ins);
     void visitDefFun(MDefFun *ins);
     void visitCreateThisWithTemplate(MCreateThisWithTemplate *ins);
@@ -142,7 +138,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitDiv(MDiv *ins);
     void visitMod(MMod *ins);
     void visitConcat(MConcat *ins);
-    void visitConcatPar(MConcatPar *ins);
     void visitCharCodeAt(MCharCodeAt *ins);
     void visitFromCharCode(MFromCharCode *ins);
     void visitStringSplit(MStringSplit *ins);
@@ -167,7 +162,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitStringReplace(MStringReplace *ins);
     void visitLambda(MLambda *ins);
     void visitLambdaArrow(MLambdaArrow *ins);
-    void visitLambdaPar(MLambdaPar *ins);
     void visitSlots(MSlots *ins);
     void visitElements(MElements *ins);
     void visitConstantElements(MConstantElements *ins);
@@ -176,11 +170,8 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitMaybeCopyElementsForWrite(MMaybeCopyElementsForWrite *ins);
     void visitLoadSlot(MLoadSlot *ins);
     void visitFunctionEnvironment(MFunctionEnvironment *ins);
-    void visitForkJoinContext(MForkJoinContext *ins);
-    void visitGuardThreadExclusive(MGuardThreadExclusive *ins);
     void visitInterruptCheck(MInterruptCheck *ins);
     void visitAsmJSInterruptCheck(MAsmJSInterruptCheck *ins);
-    void visitInterruptCheckPar(MInterruptCheckPar *ins);
     void visitStoreSlot(MStoreSlot *ins);
     void visitFilterTypeSet(MFilterTypeSet *ins);
     void visitTypeBarrier(MTypeBarrier *ins);
@@ -252,7 +243,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitSetFrameArgument(MSetFrameArgument *ins);
     void visitRunOncePrologue(MRunOncePrologue *ins);
     void visitRest(MRest *ins);
-    void visitRestPar(MRestPar *ins);
     void visitThrow(MThrow *ins);
     void visitIn(MIn *ins);
     void visitInArray(MInArray *ins);

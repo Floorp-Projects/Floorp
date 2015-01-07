@@ -15,7 +15,6 @@
 #include "jit/MacroAssembler.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
-#include "jit/ParallelFunctions.h"
 #include "js/Conversions.h"
 #include "vm/TraceLogging.h"
 
@@ -494,13 +493,6 @@ CodeGeneratorShared::assignBailoutId(LSnapshot *snapshot)
     if (!deoptTable_)
         return false;
 
-    // We do not generate a bailout table for parallel code.
-    switch (gen->info().executionMode()) {
-      case SequentialExecution: break;
-      case ParallelExecution: return false;
-      default: MOZ_CRASH("No such execution mode");
-    }
-
     MOZ_ASSERT(frameClass_ != FrameSizeClass::None());
 
     if (snapshot->bailoutId() != INVALID_BAILOUT_ID)
@@ -974,9 +966,6 @@ CodeGeneratorShared::shouldVerifyOsiPointRegs(LSafepoint *safepoint)
     if (!checkOsiPointRegisters)
         return false;
 
-    if (gen->info().executionMode() != SequentialExecution)
-        return false;
-
     if (safepoint->liveRegs().empty(true) && safepoint->liveRegs().empty(false))
         return false; // No registers to check.
 
@@ -1259,7 +1248,7 @@ CodeGeneratorShared::labelForBackedgeWithImplicitCheck(MBasicBlock *mir)
             } else {
                 // The interrupt check should be the first instruction in the
                 // loop header other than the initial label and move groups.
-                MOZ_ASSERT(iter->isInterruptCheck() || iter->isInterruptCheckPar());
+                MOZ_ASSERT(iter->isInterruptCheck());
                 return nullptr;
             }
         }

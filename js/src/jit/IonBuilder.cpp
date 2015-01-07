@@ -6262,11 +6262,6 @@ IonBuilder::jsop_initprop(PropertyName *name)
         needsBarrier = false;
     }
 
-    // In parallel execution, we never require write barriers.  See
-    // forkjoin.cpp for more information.
-    if (info().executionMode() == ParallelExecution)
-        needsBarrier = false;
-
     if (templateObject->isFixedSlot(shape->slot())) {
         MStoreFixedSlot *store = MStoreFixedSlot::New(alloc(), obj, shape->slot(), value);
         if (needsBarrier)
@@ -7148,7 +7143,7 @@ jit::NeedsPostBarrier(CompileInfo &info, MDefinition *value)
 {
     if (!GetJitContext()->runtime->gcNursery().exists())
         return false;
-    return info.executionMode() != ParallelExecution && value->mightBeType(MIRType_Object);
+    return value->mightBeType(MIRType_Object);
 }
 
 bool
@@ -7957,10 +7952,6 @@ IonBuilder::getElemTryCache(bool *emitted, MDefinition *obj, MDefinition *index)
     if (index->mightBeType(MIRType_String) || index->mightBeType(MIRType_Symbol))
         barrier = BarrierKind::TypeSet;
 
-    // See note about always needing a barrier in jsop_getprop.
-    if (needsToMonitorMissingProperties(types))
-        barrier = BarrierKind::TypeSet;
-
     MInstruction *ins = MGetElementCache::New(alloc(), obj, index, barrier == BarrierKind::TypeSet);
 
     current->add(ins);
@@ -8030,14 +8021,8 @@ IonBuilder::jsop_getelem_dense(MDefinition *obj, MDefinition *index)
 
     // If we can load the element as a definite double, make sure to check that
     // the array has been converted to homogenous doubles first.
-    //
-    // NB: We disable this optimization in parallel execution mode
-    // because it is inherently not threadsafe (how do you convert the
-    // array atomically when there might be concurrent readers)?
     types::TemporaryTypeSet *objTypes = obj->resultTypeSet();
-    ExecutionMode executionMode = info().executionMode();
     bool loadDouble =
-        executionMode == SequentialExecution &&
         barrier == BarrierKind::NoBarrier &&
         loopDepth_ &&
         !readOutOfBounds &&
@@ -8070,37 +8055,6 @@ IonBuilder::jsop_getelem_dense(MDefinition *obj, MDefinition *index)
         // then either additional types or a barrier. This means we should
         // never have a typed version of LoadElementHole.
         MOZ_ASSERT(knownType == MIRType_Value);
-    }
-
-    // If the array is being converted to doubles, but we've observed
-    // just int, substitute a type set of int+double into the observed
-    // type set. The reason for this is that, in the
-    // interpreter+baseline, such arrays may consist of mixed
-    // ints/doubles, but when we enter ion code, we will be coercing
-    // all inputs to doubles. Therefore, the type barrier checking for
-    // just int is highly likely (*almost* guaranteed) to fail sooner
-    // or later. Essentially, by eagerly coercing to double, ion is
-    // making the observed types outdated. To compensate for this, we
-    // substitute a broader observed type set consisting of both ints
-    // and doubles. There is perhaps a tradeoff here, so we limit this
-    // optimization to parallel code, where it is needed to prevent
-    // perpetual bailouts in some extreme cases. (Bug 977853)
-    //
-    // NB: we have not added a MConvertElementsToDoubles MIR, so we
-    // cannot *assume* the result is a double.
-    if (executionMode == ParallelExecution &&
-        barrier != BarrierKind::NoBarrier &&
-        types->getKnownMIRType() == MIRType_Int32 &&
-        objTypes &&
-        objTypes->convertDoubleElements(constraints()) == types::TemporaryTypeSet::AlwaysConvertToDoubles)
-    {
-        // Note: double implies int32 as well for typesets
-        LifoAlloc *lifoAlloc = alloc().lifoAlloc();
-        types = lifoAlloc->new_<types::TemporaryTypeSet>(lifoAlloc, types::Type::DoubleType());
-        if (!types)
-            return false;
-
-        barrier = BarrierKind::NoBarrier; // Don't need a barrier anymore
     }
 
     if (knownType != MIRType_Value)
@@ -10025,9 +9979,6 @@ IonBuilder::getPropTryCache(bool *emitted, MDefinition *obj, PropertyName *name,
     if (inspector->hasSeenAccessedGetter(pc))
         barrier = BarrierKind::TypeSet;
 
-    if (needsToMonitorMissingProperties(types))
-        barrier = BarrierKind::TypeSet;
-
     // Caches can read values from prototypes, so update the barrier to
     // reflect such possible values.
     if (barrier != BarrierKind::TypeSet) {
@@ -10043,14 +9994,7 @@ IonBuilder::getPropTryCache(bool *emitted, MDefinition *obj, PropertyName *name,
                                                      barrier == BarrierKind::TypeSet);
 
     // Try to mark the cache as idempotent.
-    //
-    // In parallel execution, idempotency of caches is ignored, since we
-    // repeat the entire ForkJoin workload if we bail out. Note that it's
-    // overly restrictive to mark everything as idempotent, because we can
-    // treat non-idempotent caches in parallel as repeatable.
-    if (obj->type() == MIRType_Object && !invalidatedIdempotentCache() &&
-        info().executionMode() != ParallelExecution)
-    {
+    if (obj->type() == MIRType_Object && !invalidatedIdempotentCache()) {
         if (PropertyReadIsIdempotent(constraints(), obj, name))
             load->setIdempotent();
     }
@@ -10160,17 +10104,6 @@ IonBuilder::getPropTryInnerize(bool *emitted, MDefinition *obj, PropertyName *na
 
     MOZ_ASSERT(*emitted == false);
     return true;
-}
-
-bool
-IonBuilder::needsToMonitorMissingProperties(types::TemporaryTypeSet *types)
-{
-    // GetPropertyParIC and GetElementParIC cannot safely call
-    // TypeScript::Monitor to ensure that the observed type set contains
-    // undefined. To account for possible missing properties, which property
-    // types do not track, we must always insert a type barrier.
-    return info().executionMode() == ParallelExecution &&
-           !types->hasType(types::Type::UndefinedType());
 }
 
 bool
