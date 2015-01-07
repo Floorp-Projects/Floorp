@@ -14,6 +14,7 @@ namespace mozilla {
 namespace image {
 
 class FrameBlender;
+class RasterImage;
 
 class FrameAnimator
 {

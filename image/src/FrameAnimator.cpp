@@ -5,6 +5,7 @@
 
 #include "FrameAnimator.h"
 #include "FrameBlender.h"
+#include "RasterImage.h"
 
 #include "imgIContainer.h"
 
