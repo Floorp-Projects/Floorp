@@ -54,8 +54,10 @@ js::AutoCompartment::~AutoCompartment()
 }
 
 inline bool
-JSCompartment::wrap(JSContext *cx, JS::MutableHandleValue vp)
+JSCompartment::wrap(JSContext *cx, JS::MutableHandleValue vp, JS::HandleObject existing)
 {
+    MOZ_ASSERT_IF(existing, vp.isObject());
+
     /* Only GC things have to be wrapped or copied. */
     if (!vp.isMarkable())
         return true;
@@ -112,7 +114,7 @@ JSCompartment::wrap(JSContext *cx, JS::MutableHandleValue vp)
     }
 
     JS::RootedObject obj(cx, &vp.toObject());
-    if (!wrap(cx, &obj))
+    if (!wrap(cx, &obj, existing))
         return false;
     vp.setObject(*obj);
     MOZ_ASSERT_IF(cacheResult, obj == cacheResult);
