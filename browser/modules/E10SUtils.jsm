@@ -10,38 +10,67 @@ const {interfaces: Ci, utils: Cu, classes: Cc} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
+function getAboutModule(aURL) {
+  // Needs to match NS_GetAboutModuleName
+  let moduleName = aURL.path.replace(/[#?].*/, "").toLowerCase();
+  let contract = "@mozilla.org/network/protocol/about;1?what=" + moduleName;
+  try {
+    return Cc[contract].getService(Ci.nsIAboutModule);
+  }
+  catch (e) {
+    // Either the about module isn't defined or it is broken. In either case
+    // ignore it.
+    return null;
+  }
+}
+
 this.E10SUtils = {
-  shouldBrowserBeRemote: function(aURL) {
+  canLoadURIInProcess: function(aURL, aProcess) {
     // loadURI in browser.xml treats null as about:blank
     if (!aURL)
       aURL = "about:blank";
 
-    if (aURL.startsWith("about:") &&
-        aURL.toLowerCase() != "about:home" &&
-        aURL.toLowerCase() != "about:blank" &&
-        !aURL.toLowerCase().startsWith("about:neterror") &&
-        !aURL.toLowerCase().startsWith("about:certerror")) {
-      return false;
+    let processIsRemote = aProcess == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT;
+
+    let canLoadRemote = true;
+    let mustLoadRemote = true;
+
+    if (aURL.startsWith("about:")) {
+      let url = Services.io.newURI(aURL, null, null);
+      let module = getAboutModule(url);
+      // If the module doesn't exist then an error page will be loading, that
+      // should be ok to load in either process
+      if (module) {
+        let flags = module.getURIFlags(url);
+        canLoadRemote = !!(flags & Ci.nsIAboutModule.URI_CAN_LOAD_IN_CHILD);
+        mustLoadRemote = !!(flags & Ci.nsIAboutModule.URI_MUST_LOAD_IN_CHILD);
+      }
     }
+
+    if (aURL.startsWith("chrome:")) {
+      let url = Services.io.newURI(aURL, null, null);
+      let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
+                      getService(Ci.nsIXULChromeRegistry);
+      canLoadRemote = chromeReg.canLoadURLRemotely(url);
+      mustLoadRemote = chromeReg.mustLoadURLRemotely(url);
+    }
+
+    if (mustLoadRemote)
+      return processIsRemote;
+
+    if (!canLoadRemote && processIsRemote)
+      return false;
 
     return true;
   },
 
   shouldLoadURI: function(aDocShell, aURI, aReferrer) {
-    // about:blank is the initial document and can load anywhere
-    if (aURI.spec == "about:blank")
-      return true;
-
     // Inner frames should always load in the current process
     if (aDocShell.QueryInterface(Ci.nsIDocShellTreeItem).sameTypeParent)
       return true;
 
     // If the URI can be loaded in the current process then continue
-    let isRemote = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
-    if (this.shouldBrowserBeRemote(aURI.spec) == isRemote)
-      return true;
-
-    return false;
+    return this.canLoadURIInProcess(aURI.spec, Services.appinfo.processType);
   },
 
   redirectLoad: function(aDocShell, aURI, aReferrer) {

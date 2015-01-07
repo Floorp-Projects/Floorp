@@ -592,6 +592,70 @@ nsChromeRegistry::AllowContentToAccess(nsIURI *aURI, bool *aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsChromeRegistry::CanLoadURLRemotely(nsIURI *aURI, bool *aResult)
+{
+  nsresult rv;
+
+  *aResult = false;
+
+#ifdef DEBUG
+  bool isChrome;
+  aURI->SchemeIs("chrome", &isChrome);
+  NS_ASSERTION(isChrome, "Non-chrome URI passed to CanLoadURLRemotely!");
+#endif
+
+  nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
+  if (!url) {
+    NS_ERROR("Chrome URL doesn't implement nsIURL.");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsAutoCString package;
+  rv = url->GetHostPort(package);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  uint32_t flags;
+  rv = GetFlagsFromPackage(package, &flags);
+
+  if (NS_SUCCEEDED(rv)) {
+    *aResult = !!(flags & REMOTE_ALLOWED);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsChromeRegistry::MustLoadURLRemotely(nsIURI *aURI, bool *aResult)
+{
+  nsresult rv;
+
+  *aResult = false;
+
+#ifdef DEBUG
+  bool isChrome;
+  aURI->SchemeIs("chrome", &isChrome);
+  NS_ASSERTION(isChrome, "Non-chrome URI passed to MustLoadURLRemotely!");
+#endif
+
+  nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
+  if (!url) {
+    NS_ERROR("Chrome URL doesn't implement nsIURL.");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsAutoCString package;
+  rv = url->GetHostPort(package);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  uint32_t flags;
+  rv = GetFlagsFromPackage(package, &flags);
+
+  if (NS_SUCCEEDED(rv)) {
+    *aResult = !!(flags & REMOTE_REQUIRED);
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP_(bool)
 nsChromeRegistry::WrappersEnabled(nsIURI *aURI)
 {
