@@ -33,6 +33,7 @@ class nsICycleCollectorLogSink;
 class nsIDOMBlob;
 class nsIDumpGCAndCCLogsCallback;
 class nsIMemoryReporter;
+class nsITimer;
 class ParentIdleListener;
 
 namespace mozilla {
@@ -464,6 +465,8 @@ private:
     // manager and null out mMessageManager.
     void ShutDownMessageManager();
 
+    static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);
+
     PCompositorParent*
     AllocPCompositorParent(mozilla::ipc::Transport* aTransport,
                            base::ProcessId aOtherProcess) MOZ_OVERRIDE;
@@ -790,7 +793,7 @@ private:
     // that even content processes that are 100% blocked (say from
     // SIGSTOP), are still killed eventually.  This task enforces that
     // timer.
-    CancelableTask* mForceKillTask;
+    nsCOMPtr<nsITimer> mForceKillTimer;
     // How many tabs we're waiting to finish their destruction
     // sequence.  Precisely, how many TabParents have called
     // NotifyTabDestroying() but not called NotifyTabDestroyed().

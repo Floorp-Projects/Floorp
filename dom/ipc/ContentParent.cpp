@@ -116,6 +116,7 @@
 #include "nsISpellChecker.h"
 #include "nsIStyleSheet.h"
 #include "nsISupportsPrimitives.h"
+#include "nsITimer.h"
 #include "nsIURIFixup.h"
 #include "nsIWindowWatcher.h"
 #include "nsIXULRuntime.h"
@@ -1768,9 +1769,9 @@ struct DelayedDeleteContentParentTask : public nsRunnable
 void
 ContentParent::ActorDestroy(ActorDestroyReason why)
 {
-    if (mForceKillTask) {
-        mForceKillTask->Cancel();
-        mForceKillTask = nullptr;
+    if (mForceKillTimer) {
+        mForceKillTimer->Cancel();
+        mForceKillTimer = nullptr;
     }
 
     // Signal shutdown completion regardless of error state,
@@ -1922,14 +1923,16 @@ ContentParent::NotifyTabDestroying(PBrowserParent* aTab)
     // recycled during its shutdown procedure.
     MarkAsDead();
 
-    MOZ_ASSERT(!mForceKillTask);
+    MOZ_ASSERT(!mForceKillTimer);
     int32_t timeoutSecs =
         Preferences::GetInt("dom.ipc.tabs.shutdownTimeoutSecs", 5);
     if (timeoutSecs > 0) {
-        MessageLoop::current()->PostDelayedTask(
-            FROM_HERE,
-            mForceKillTask = NewRunnableMethod(this, &ContentParent::KillHard),
-            timeoutSecs * 1000);
+        mForceKillTimer = do_CreateInstance("@mozilla.org/timer;1");
+        MOZ_ASSERT(mForceKillTimer);
+        mForceKillTimer->InitWithFuncCallback(ContentParent::ForceKillTimerCallback,
+                                              this,
+                                              timeoutSecs * 1000,
+                                              nsITimer::TYPE_ONE_SHOT);
     }
 }
 
@@ -1989,7 +1992,6 @@ ContentParent::InitializeMembers()
     mSubprocess = nullptr;
     mChildID = gContentChildID++;
     mGeolocationWatchID = -1;
-    mForceKillTask = nullptr;
     mNumDestroyingTabs = 0;
     mIsAlive = true;
     mSendPermissionUpdates = false;
@@ -2167,8 +2169,8 @@ ContentParent::ContentParent(ContentParent* aTemplate,
 
 ContentParent::~ContentParent()
 {
-    if (mForceKillTask) {
-        mForceKillTask->Cancel();
+    if (mForceKillTimer) {
+        mForceKillTimer->Cancel();
     }
 
     if (OtherProcess())
@@ -3159,6 +3161,13 @@ ContentParent::DeallocPRemoteSpellcheckEngineParent(PRemoteSpellcheckEngineParen
     return true;
 }
 
+/* static */ void
+ContentParent::ForceKillTimerCallback(nsITimer* aTimer, void* aClosure)
+{
+    auto self = static_cast<ContentParent*>(aClosure);
+    self->KillHard();
+}
+
 void
 ContentParent::KillHard()
 {
@@ -3169,7 +3178,7 @@ ContentParent::KillHard()
         return;
     }
     mCalledKillHard = true;
-    mForceKillTask = nullptr;
+    mForceKillTimer = nullptr;
 
 #if defined(MOZ_CRASHREPORTER) && !defined(MOZ_B2G)
     if (ManagedPCrashReporterParent().Length() > 0) {
