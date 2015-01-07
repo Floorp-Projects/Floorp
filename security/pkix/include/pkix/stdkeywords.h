@@ -22,14 +22,22 @@
  * limitations under the License.
  */
 
-#ifndef mozilla_pkix__nullptr_h
-#define mozilla_pkix__nullptr_h
+#ifndef mozilla_pkix__stdkeywords_h
+#define mozilla_pkix__stdkeywords_h
+
+#if defined(__GNUC__) && !defined(__clang__)
 
 // GCC does not understand nullptr until 4.6
-#if defined(__GNUC__) && !defined(__clang__)
 #if __GNUC__ * 100 + __GNUC_MINOR__ < 406
 #define nullptr __null
 #endif
+
+// GCC does not understand final/override until 4.7
+#if __GNUC__ * 100 + __GNUC_MINOR__ < 407
+#define final
+#define override
 #endif
 
-#endif // mozilla_pkix__nullptr_h
+#endif // defined(__GNUC__) && !defined(__clang__)
+
+#endif // mozilla_pkix__stdkeywords_h

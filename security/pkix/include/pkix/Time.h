@@ -30,6 +30,7 @@
 #include <stdint.h>
 
 #include "pkix/Result.h"
+#include "pkix/stdkeywords.h"
 
 namespace mozilla { namespace pkix {
 
