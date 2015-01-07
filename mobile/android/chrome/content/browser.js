@@ -1380,6 +1380,7 @@ var BrowserApp = {
       // preferences to the correct type.
       switch (prefName) {
         // (string) index for determining which multiple choice value to display.
+        case "browser.chrome.titlebarMode":
         case "network.cookie.cookieBehavior":
         case "font.size.inflation.minTwips":
         case "home.sync.updateMode":
@@ -1430,6 +1431,7 @@ var BrowserApp = {
       // When sending to Java, we normalized special preferences that use
       // integers and strings to represent booleans. Here, we convert them back
       // to their actual types so we can store them.
+      case "browser.chrome.titlebarMode":
       case "network.cookie.cookieBehavior":
       case "font.size.inflation.minTwips":
       case "home.sync.updateMode":
