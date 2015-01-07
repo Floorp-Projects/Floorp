@@ -9,11 +9,14 @@
 #include "ExtendedValidation.h"
 #include "NSSCertDBTrustDomain.h"
 #include "mozilla/Telemetry.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsCertVerificationThread.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsICertOverrideService.h"
+#include "NSSCertDBTrustDomain.h"
+#include "nsThreadUtils.h"
 #include "mozilla/Preferences.h"
 #include "nsThreadUtils.h"
 #include "mozilla/PublicSSL.h"
@@ -1075,6 +1078,12 @@ nsNSSComponent::InitializeNSS()
 
   if (NS_FAILED(InitializeCipherSuite())) {
     PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to initialize cipher suite settings\n"));
+    return NS_ERROR_FAILURE;
+  }
+
+  // ensure the CertBlocklist is initialised
+  nsCOMPtr<nsICertBlocklist> certList = do_GetService(NS_CERTBLOCKLIST_CONTRACTID);
+  if (!certList) {
     return NS_ERROR_FAILURE;
   }
 
