@@ -42,7 +42,7 @@ public:
   {
     return mWindow;
   }
-  JSObject* WrapObject(JSContext* aCx);
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   void Set(Date& aDate);
   void Set(double aTime);
