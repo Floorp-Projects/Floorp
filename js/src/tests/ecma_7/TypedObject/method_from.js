@@ -175,9 +175,16 @@ function fromOneDimArrayOfStructsToArrayOfStructs() {
   assertTypedEqual(Box, r1, r3);
 }
 
+function Array_build(n, f) {
+  var a = new Array(n);
+  for ( var i=0 ; i < n ; i++ )
+    a[i] = f(i);
+  return a;
+}
+
 function fromUntypedArrayToUint32s() {
   var type = uint32.array(4);
-  var i1 = Array.build(4, i => i);
+  var i1 = Array_build(4, i => i);
   var r1 = type.from(i1, j => j*2);
   var r2 = type.from(i1, 1, j => j*2);
   assertTypedEqual(type, r1, new type([0, 2, 4, 6]));
@@ -186,7 +193,7 @@ function fromUntypedArrayToUint32s() {
 
 function fromUntypedArrayToUint8s() {
   var type = uint8.array(4);
-  var i1 = Array.build(4, i => i);
+  var i1 = Array_build(4, i => i);
   var r1 = type.from(i1, j => j*200);
   var r2 = type.from(i1, 1, j => j*200);
   assertTypedEqual(type, r1, new type([0, 200, 400 % 256, 600 % 256]));

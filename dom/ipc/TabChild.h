@@ -80,7 +80,7 @@ public:
                              nsIPrincipal* aPrincipal,
                              JSContext* aCx,
                              uint8_t aArgc,
-                             JS::MutableHandle<JS::Value> aRetval)
+                             JS::MutableHandle<JS::Value> aRetval) MOZ_OVERRIDE
   {
     return mMessageManager
       ? mMessageManager->SendSyncMessage(aMessageName, aObject, aRemote,
@@ -93,7 +93,7 @@ public:
                             nsIPrincipal* aPrincipal,
                             JSContext* aCx,
                             uint8_t aArgc,
-                            JS::MutableHandle<JS::Value> aRetval)
+                            JS::MutableHandle<JS::Value> aRetval) MOZ_OVERRIDE
   {
     return mMessageManager
       ? mMessageManager->SendRpcMessage(aMessageName, aObject, aRemote,
@@ -112,9 +112,9 @@ public:
   NS_IMETHOD Atob(const nsAString& aAsciiString,
                   nsAString& aBinaryData) MOZ_OVERRIDE;
 
-  NS_IMETHOD AddEventListener(const nsAString& aType,
-                              nsIDOMEventListener* aListener,
-                              bool aUseCapture)
+  nsresult AddEventListener(const nsAString& aType,
+                            nsIDOMEventListener* aListener,
+                            bool aUseCapture)
   {
     // By default add listeners only for trusted events!
     return DOMEventTargetHelper::AddEventListener(aType, aListener,
@@ -133,7 +133,7 @@ public:
   }
 
   nsresult
-  PreHandleEvent(EventChainPreVisitor& aVisitor)
+  PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE
   {
     aVisitor.mForceContentDispatch = true;
     return NS_OK;
@@ -508,7 +508,7 @@ protected:
     virtual bool RecvSetUpdateHitRegion(const bool& aEnabled) MOZ_OVERRIDE;
     virtual bool RecvSetIsDocShellActive(const bool& aIsActive) MOZ_OVERRIDE;
 
-    virtual bool RecvRequestNotifyAfterRemotePaint();
+    virtual bool RecvRequestNotifyAfterRemotePaint() MOZ_OVERRIDE;
 
     virtual bool RecvParentActivated(const bool& aActivated) MOZ_OVERRIDE;
 

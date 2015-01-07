@@ -4517,7 +4517,6 @@ CodeGenerator::visitNewPar(LNewPar *lir)
     emitAllocateGCThingPar(lir, objReg, cxReg, tempReg1, tempReg2, templateObject);
 }
 
-#ifndef JSGC_FJGENERATIONAL
 class OutOfLineNewGCThingPar : public OutOfLineCodeBase<CodeGenerator>
 {
 public:
@@ -4535,7 +4534,6 @@ public:
         codegen->visitOutOfLineNewGCThingPar(this);
     }
 };
-#endif // JSGC_FJGENERATIONAL
 
 typedef JSObject *(*NewGCThingParFn)(ForkJoinContext *, js::gc::AllocKind allocKind);
 static const VMFunction NewGCThingParInfo =
@@ -4549,20 +4547,14 @@ CodeGenerator::emitAllocateGCThingPar(LInstruction *lir, Register objReg, Regist
     MOZ_ASSERT(lir->mirRaw()->isInstruction());
 
     gc::AllocKind allocKind = templateObj->asTenured().getAllocKind();
-#ifdef JSGC_FJGENERATIONAL
-    OutOfLineCode *ool = oolCallVM(NewGCThingParInfo, lir,
-                                   (ArgList(), Imm32(allocKind)), StoreRegisterTo(objReg));
-#else
     OutOfLineNewGCThingPar *ool = new(alloc()) OutOfLineNewGCThingPar(lir, allocKind, objReg, cxReg);
     addOutOfLineCode(ool, lir->mirRaw()->toInstruction());
-#endif
 
     masm.newGCThingPar(objReg, cxReg, tempReg1, tempReg2, templateObj, ool->entry());
     masm.bind(ool->rejoin());
     masm.initGCThing(objReg, tempReg1, templateObj);
 }
 
-#ifndef JSGC_FJGENERATIONAL
 void
 CodeGenerator::visitOutOfLineNewGCThingPar(OutOfLineNewGCThingPar *ool)
 {
@@ -4583,7 +4575,6 @@ CodeGenerator::visitOutOfLineNewGCThingPar(OutOfLineNewGCThingPar *ool)
 
     bailoutTestPtr(Assembler::Zero, out, out, ool->lir->snapshot());
 }
-#endif // JSGC_FJGENERATIONAL
 
 typedef bool(*InitElemFn)(JSContext *cx, HandleObject obj,
                           HandleValue id, HandleValue value);

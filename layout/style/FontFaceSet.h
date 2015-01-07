@@ -165,7 +165,7 @@ public:
   // nsICSSLoaderObserver
   NS_IMETHOD StyleSheetLoaded(mozilla::CSSStyleSheet* aSheet,
                               bool aWasAlternate,
-                              nsresult aStatus);
+                              nsresult aStatus) MOZ_OVERRIDE;
 
   // -- Web IDL --------------------------------------------------------------
 

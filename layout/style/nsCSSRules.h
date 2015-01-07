@@ -62,14 +62,14 @@ public:
 #endif
 
   // Rule methods
-  virtual void SetStyleSheet(mozilla::CSSStyleSheet* aSheet); //override GroupRule
-  virtual int32_t GetType() const;
-  virtual already_AddRefed<Rule> Clone() const;
-  virtual nsIDOMCSSRule* GetDOMRule()
+  virtual void SetStyleSheet(mozilla::CSSStyleSheet* aSheet) MOZ_OVERRIDE; //override GroupRule
+  virtual int32_t GetType() const MOZ_OVERRIDE;
+  virtual already_AddRefed<Rule> Clone() const MOZ_OVERRIDE;
+  virtual nsIDOMCSSRule* GetDOMRule() MOZ_OVERRIDE
   {
     return this;
   }
-  virtual nsIDOMCSSRule* GetExistingDOMRule()
+  virtual nsIDOMCSSRule* GetExistingDOMRule() MOZ_OVERRIDE
   {
     return this;
   }
@@ -88,13 +88,13 @@ public:
 
   // rest of GroupRule
   virtual bool UseForPresentation(nsPresContext* aPresContext,
-                                    nsMediaQueryResultCacheKey& aKey);
+                                    nsMediaQueryResultCacheKey& aKey) MOZ_OVERRIDE;
 
   // @media rule methods
   nsresult SetMedia(nsMediaList* aMedia);
   
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
-    const MOZ_MUST_OVERRIDE;
+    const MOZ_OVERRIDE MOZ_MUST_OVERRIDE;
 
 protected:
   void AppendConditionText(nsAString& aOutput);
@@ -120,13 +120,13 @@ public:
 #endif
 
   // Rule methods
-  virtual int32_t GetType() const;
-  virtual already_AddRefed<Rule> Clone() const;
-  virtual nsIDOMCSSRule* GetDOMRule()
+  virtual int32_t GetType() const MOZ_OVERRIDE;
+  virtual already_AddRefed<Rule> Clone() const MOZ_OVERRIDE;
+  virtual nsIDOMCSSRule* GetDOMRule() MOZ_OVERRIDE
   {
     return this;
   }
-  virtual nsIDOMCSSRule* GetExistingDOMRule()
+  virtual nsIDOMCSSRule* GetExistingDOMRule() MOZ_OVERRIDE
   {
     return this;
   }
@@ -145,7 +145,7 @@ public:
 
   // rest of GroupRule
   virtual bool UseForPresentation(nsPresContext* aPresContext,
-                                    nsMediaQueryResultCacheKey& aKey);
+                                    nsMediaQueryResultCacheKey& aKey) MOZ_OVERRIDE;
 
   enum Function {
     eURL,
@@ -172,7 +172,7 @@ public:
   void SetURLs(URL *aURLs) { mURLs = aURLs; }
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
-    const MOZ_MUST_OVERRIDE;
+    const MOZ_OVERRIDE MOZ_MUST_OVERRIDE;
 
 protected:
   void AppendConditionText(nsAString& aOutput);
@@ -259,7 +259,7 @@ public:
   DECL_STYLE_RULE_INHERIT
 
   virtual int32_t GetType() const MOZ_OVERRIDE;
-  virtual already_AddRefed<mozilla::css::Rule> Clone() const;
+  virtual already_AddRefed<mozilla::css::Rule> Clone() const MOZ_OVERRIDE;
 
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
@@ -381,8 +381,8 @@ public:
 #endif
 
   // Rule methods
-  virtual int32_t GetType() const;
-  virtual already_AddRefed<Rule> Clone() const;
+  virtual int32_t GetType() const MOZ_OVERRIDE;
+  virtual already_AddRefed<Rule> Clone() const MOZ_OVERRIDE;
 
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
@@ -391,7 +391,7 @@ public:
   NS_IMETHOD GetEncoding(nsAString& aEncoding) MOZ_OVERRIDE;
   NS_IMETHOD SetEncoding(const nsAString& aEncoding) MOZ_OVERRIDE;
 
-  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
 
 private:
   nsString  mEncoding;
@@ -456,7 +456,7 @@ public:
   // Rule methods
   DECL_STYLE_RULE_INHERIT
   virtual int32_t GetType() const MOZ_OVERRIDE;
-  virtual already_AddRefed<mozilla::css::Rule> Clone() const;
+  virtual already_AddRefed<mozilla::css::Rule> Clone() const MOZ_OVERRIDE;
 
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
@@ -502,13 +502,13 @@ public:
 #endif
 
   // Rule methods
-  virtual int32_t GetType() const;
-  virtual already_AddRefed<mozilla::css::Rule> Clone() const;
-  virtual nsIDOMCSSRule* GetDOMRule()
+  virtual int32_t GetType() const MOZ_OVERRIDE;
+  virtual already_AddRefed<mozilla::css::Rule> Clone() const MOZ_OVERRIDE;
+  virtual nsIDOMCSSRule* GetDOMRule() MOZ_OVERRIDE
   {
     return this;
   }
-  virtual nsIDOMCSSRule* GetExistingDOMRule()
+  virtual nsIDOMCSSRule* GetExistingDOMRule() MOZ_OVERRIDE
   {
     return this;
   }
@@ -588,7 +588,7 @@ public:
   // Rule methods
   DECL_STYLE_RULE_INHERIT
   virtual int32_t GetType() const MOZ_OVERRIDE;
-  virtual already_AddRefed<mozilla::css::Rule> Clone() const;
+  virtual already_AddRefed<mozilla::css::Rule> Clone() const MOZ_OVERRIDE;
 
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
@@ -626,15 +626,15 @@ public:
 #endif
 
   // Rule methods
-  virtual int32_t GetType() const;
-  virtual already_AddRefed<mozilla::css::Rule> Clone() const;
+  virtual int32_t GetType() const MOZ_OVERRIDE;
+  virtual already_AddRefed<mozilla::css::Rule> Clone() const MOZ_OVERRIDE;
   virtual bool UseForPresentation(nsPresContext* aPresContext,
-                                  nsMediaQueryResultCacheKey& aKey);
-  virtual nsIDOMCSSRule* GetDOMRule()
+                                  nsMediaQueryResultCacheKey& aKey) MOZ_OVERRIDE;
+  virtual nsIDOMCSSRule* GetDOMRule() MOZ_OVERRIDE
   {
     return this;
   }
-  virtual nsIDOMCSSRule* GetExistingDOMRule()
+  virtual nsIDOMCSSRule* GetExistingDOMRule() MOZ_OVERRIDE
   {
     return this;
   }
@@ -653,7 +653,7 @@ public:
   // nsIDOMCSSSupportsRule interface
   NS_DECL_NSIDOMCSSSUPPORTSRULE
 
-  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
 
 protected:
   virtual ~CSSSupportsRule();
@@ -691,7 +691,7 @@ public:
   // Rule methods
   DECL_STYLE_RULE_INHERIT
   virtual int32_t GetType() const MOZ_OVERRIDE;
-  virtual already_AddRefed<mozilla::css::Rule> Clone() const;
+  virtual already_AddRefed<mozilla::css::Rule> Clone() const MOZ_OVERRIDE;
 
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
