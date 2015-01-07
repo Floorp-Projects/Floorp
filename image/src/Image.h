@@ -71,11 +71,6 @@ public:
   virtual void SetProgressTracker(ProgressTracker* aProgressTracker) {}
 
   /**
-   * The rectangle defining the location and size of the given frame.
-   */
-  virtual nsIntRect FrameRect(uint32_t aWhichFrame) = 0;
-
-  /**
    * The size, in bytes, occupied by the compressed source data of the image.
    * If MallocSizeOf does not work on this platform, uses a fallback approach to
    * ensure that something reasonable is always returned.
