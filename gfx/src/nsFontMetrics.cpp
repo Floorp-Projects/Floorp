@@ -33,7 +33,8 @@ public:
             reinterpret_cast<const uint8_t*>(aString), aLength,
             aRC->ThebesContext(),
             aMetrics->AppUnitsPerDevPixel(),
-            ComputeFlags(aMetrics));
+            ComputeFlags(aMetrics),
+            nullptr);
     }
 
     AutoTextRun(nsFontMetrics* aMetrics, nsRenderingContext* aRC,
@@ -43,7 +44,8 @@ public:
             aString, aLength,
             aRC->ThebesContext(),
             aMetrics->AppUnitsPerDevPixel(),
-            ComputeFlags(aMetrics));
+            ComputeFlags(aMetrics),
+            nullptr);
     }
 
     gfxTextRun *get() { return mTextRun; }
@@ -54,6 +56,19 @@ private:
         uint32_t flags = 0;
         if (aMetrics->GetTextRunRTL()) {
             flags |= gfxTextRunFactory::TEXT_IS_RTL;
+        }
+        if (aMetrics->GetVertical()) {
+            switch (aMetrics->GetTextOrientation()) {
+            case NS_STYLE_TEXT_ORIENTATION_MIXED:
+                flags |= gfxTextRunFactory::TEXT_ORIENT_VERTICAL_MIXED;
+                break;
+            case NS_STYLE_TEXT_ORIENTATION_UPRIGHT:
+                flags |= gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT;
+                break;
+            case NS_STYLE_TEXT_ORIENTATION_SIDEWAYS_RIGHT:
+                flags |= gfxTextRunFactory::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
+                break;
+            }
         }
         return flags;
     }
@@ -93,6 +108,7 @@ public:
 
 nsFontMetrics::nsFontMetrics()
     : mDeviceContext(nullptr), mP2A(0), mTextRunRTL(false)
+    , mVertical(false), mTextOrientation(0)
 {
 }
 
@@ -149,9 +165,10 @@ nsFontMetrics::Destroy()
 #define ROUND_TO_TWIPS(x) (nscoord)floor(((x) * mP2A) + 0.5)
 #define CEIL_TO_TWIPS(x) (nscoord)ceil((x) * mP2A)
 
-const gfxFont::Metrics& nsFontMetrics::GetMetrics() const
+const gfxFont::Metrics&
+nsFontMetrics::GetMetrics(gfxFont::Orientation aOrientation) const
 {
-    return mFontGroup->GetFirstValidFont()->GetMetrics(mOrientation);
+    return mFontGroup->GetFirstValidFont()->GetMetrics(aOrientation);
 }
 
 nscoord
@@ -272,7 +289,14 @@ nsFontMetrics::AveCharWidth()
 nscoord
 nsFontMetrics::SpaceWidth()
 {
-    return CEIL_TO_TWIPS(GetMetrics().spaceWidth);
+    // For vertical text with mixed or sideways orientation, we want the
+    // width of a horizontal space (even if we're using vertical line-spacing
+    // metrics, as with "writing-mode:vertical-*;text-orientation:mixed").
+    return CEIL_TO_TWIPS(
+        GetMetrics(mVertical &&
+                   mTextOrientation == NS_STYLE_TEXT_ORIENTATION_UPRIGHT
+                       ? gfxFont::eVertical
+                       : gfxFont::eHorizontal).spaceWidth);
 }
 
 int32_t
@@ -332,7 +356,11 @@ nsFontMetrics::DrawString(const char *aString, uint32_t aLength,
     }
     gfxPoint pt(aX, aY);
     if (mTextRunRTL) {
-        pt.x += textRun->GetAdvanceWidth(0, aLength, &provider);
+        if (mVertical) {
+            pt.y += textRun->GetAdvanceWidth(0, aLength, &provider);
+        } else {
+            pt.x += textRun->GetAdvanceWidth(0, aLength, &provider);
+        }
     }
     textRun->Draw(aContext->ThebesContext(), pt, DrawMode::GLYPH_FILL, 0, aLength,
                   &provider, nullptr, nullptr);
@@ -354,7 +382,11 @@ nsFontMetrics::DrawString(const char16_t* aString, uint32_t aLength,
     }
     gfxPoint pt(aX, aY);
     if (mTextRunRTL) {
-        pt.x += textRun->GetAdvanceWidth(0, aLength, &provider);
+        if (mVertical) {
+            pt.y += textRun->GetAdvanceWidth(0, aLength, &provider);
+        } else {
+            pt.x += textRun->GetAdvanceWidth(0, aLength, &provider);
+        }
     }
     textRun->Draw(aContext->ThebesContext(), pt, DrawMode::GLYPH_FILL, 0, aLength,
                   &provider, nullptr, nullptr);

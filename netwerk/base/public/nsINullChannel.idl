@@ -1,0 +1,16 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * This interface is only used in order to mark the fact that
+ * an object isn't a complete implementation of its interfaces.
+ * For example, a consumer can QI NullHttpChannel to nsINullChannel,
+ * to determine if the object is just a dummy implementation of nsIHttpChannel.
+ */
+[scriptable, builtinclass, uuid(4610b901-df41-4bb4-bd3f-fd4d6b6d8d68)]
+interface nsINullChannel : nsISupports
+{
+};

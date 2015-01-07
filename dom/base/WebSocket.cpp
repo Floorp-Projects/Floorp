@@ -1981,7 +1981,7 @@ public:
     return true;
   }
 
-  bool Suspend(JSContext* aCx)
+  bool Suspend(JSContext* aCx) MOZ_OVERRIDE
   {
     mWebSocketImpl->mWorkerShuttingDown = true;
     mWebSocketImpl->CloseConnection(nsIWebSocketChannel::CLOSE_GOING_AWAY);

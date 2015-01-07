@@ -195,7 +195,7 @@ public:
   operator T*() const { return mRef->get(); }
   T& operator*() const { return *mRef->get(); }
 
-  T* operator->() const { return mRef->get(); }
+  T* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN { return mRef->get(); }
 
   T* get() const { return mRef->get(); }
 

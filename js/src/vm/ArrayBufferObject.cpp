@@ -38,10 +38,10 @@
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 #include "gc/Memory.h"
+#include "js/Conversions.h"
 #include "js/MemoryMetrics.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
-#include "vm/NumericConversions.h"
 #include "vm/WrapperObject.h"
 
 #include "jsatominlines.h"
@@ -50,6 +50,8 @@
 
 #include "vm/NativeObject-inl.h"
 #include "vm/Shape-inl.h"
+
+using JS::ToInt32;
 
 using mozilla::DebugOnly;
 using mozilla::UniquePtr;

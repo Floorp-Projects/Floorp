@@ -204,7 +204,7 @@ class nsHtml5RefPtr
         }
 
       T*
-      operator->() const
+      operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN
         {
           NS_PRECONDITION(mRawPtr != 0, "You can't dereference a NULL nsHtml5RefPtr with operator->().");
           return get();

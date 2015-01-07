@@ -1561,7 +1561,10 @@ void MediaDecoder::UnpinForSeek()
 bool MediaDecoder::CanPlayThrough()
 {
   Statistics stats = GetStatistics();
-  if ((stats.mTotalBytes < 0 && stats.mDownloadRateReliable) ||
+
+  NS_ASSERTION(mDecoderStateMachine, "CanPlayThrough should have state machine!");
+  if (mDecoderStateMachine->IsRealTime() ||
+      (stats.mTotalBytes < 0 && stats.mDownloadRateReliable) ||
       (stats.mTotalBytes >= 0 && stats.mTotalBytes == stats.mDownloadPosition)) {
     return true;
   }

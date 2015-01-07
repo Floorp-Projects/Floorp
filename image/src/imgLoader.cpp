@@ -2431,6 +2431,16 @@ NS_IMETHODIMP ProxyListener::OnStartRequest(nsIRequest *aRequest, nsISupports *c
 
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
   if (channel) {
+    // We need to set the initiator type for the image load
+    nsCOMPtr<nsITimedChannel> timedChannel = do_QueryInterface(channel);
+    if (timedChannel) {
+      nsAutoString type;
+      timedChannel->GetInitiatorType(type);
+      if (type.IsEmpty()) {
+        timedChannel->SetInitiatorType(NS_LITERAL_STRING("img"));
+      }
+    }
+
     nsAutoCString contentType;
     nsresult rv = channel->GetContentType(contentType);
 
