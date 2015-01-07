@@ -31,7 +31,9 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ISUPPORTS(FetchDriver, nsIStreamListener)
+NS_IMPL_ISUPPORTS(FetchDriver,
+                  nsIStreamListener, nsIChannelEventSink, nsIInterfaceRequestor,
+                  nsIAsyncVerifyRedirectCallback)
 
 FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
                          nsILoadGroup* aLoadGroup)
@@ -89,7 +91,6 @@ FetchDriver::ContinueFetch(bool aCORSFlag)
   nsAutoCString url;
   mRequest->GetURL(url);
   nsCOMPtr<nsIURI> requestURI;
-  // FIXME(nsm): Deal with relative URLs.
   nsresult rv = NS_NewURI(getter_AddRefs(requestURI), url,
                           nullptr, nullptr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -331,6 +332,11 @@ FetchDriver::HttpFetch(bool aCORSFlag, bool aCORSPreflightFlag, bool aAuthentica
     FailWithNetworkError();
     return rv;
   }
+
+  // Insert ourselves into the notification callbacks chain so we can handle
+  // cross-origin redirects.
+  chan->GetNotificationCallbacks(getter_AddRefs(mNotificationCallbacks));
+  chan->SetNotificationCallbacks(this);
 
   // Step 3.1 "If the CORS preflight flag is set and one of these conditions is
   // true..." is handled by the CORS proxy.
@@ -688,5 +694,157 @@ FetchDriver::OnStopRequest(nsIRequest* aRequest,
   return NS_OK;
 }
 
+// This is called when the channel is redirected.
+NS_IMETHODIMP
+FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
+                                    nsIChannel* aNewChannel,
+                                    uint32_t aFlags,
+                                    nsIAsyncVerifyRedirectCallback *aCallback)
+{
+  NS_PRECONDITION(aNewChannel, "Redirect without a channel?");
+
+  nsresult rv;
+
+  // Section 4.2, Step 4.6-4.7, enforcing a redirect count is done by Necko.
+  // The pref used is "network.http.redirection-limit" which is set to 20 by
+  // default.
+  //
+  // Step 4.8. We only unset this for spec compatibility. Any actions we take
+  // on mRequest here do not affect what the channel does.
+  mRequest->UnsetSameOriginDataURL();
+
+  //
+  // Requests that require preflight are not permitted to redirect.
+  // Fetch spec section 4.2 "HTTP Fetch", step 4.9 just uses the manual
+  // redirect flag to decide whether to execute step 4.10 or not. We do not
+  // represent it in our implementation.
+  // The only thing we do is to check if the request requires a preflight (part
+  // of step 4.9), in which case we abort. This part cannot be done by
+  // nsCORSListenerProxy since it does not have access to mRequest.
+  // which case. Step 4.10.3 is handled by OnRedirectVerifyCallback(), and all
+  // the other steps are handled by nsCORSListenerProxy.
+  if (!NS_IsInternalSameURIRedirect(aOldChannel, aNewChannel, aFlags)) {
+    rv = DoesNotRequirePreflight(aNewChannel);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("nsXMLHttpRequest::OnChannelRedirect: "
+                 "DoesNotRequirePreflight returned failure");
+      return rv;
+    }
+  }
+
+  mRedirectCallback = aCallback;
+  mOldRedirectChannel = aOldChannel;
+  mNewRedirectChannel = aNewChannel;
+
+  nsCOMPtr<nsIChannelEventSink> outer =
+    do_GetInterface(mNotificationCallbacks);
+  if (outer) {
+    // The callee is supposed to call OnRedirectVerifyCallback() on success,
+    // and nobody has to call it on failure, so we can just return after this
+    // block.
+    rv = outer->AsyncOnChannelRedirect(aOldChannel, aNewChannel, aFlags, this);
+    if (NS_FAILED(rv)) {
+      aOldChannel->Cancel(rv);
+      mRedirectCallback = nullptr;
+      mOldRedirectChannel = nullptr;
+      mNewRedirectChannel = nullptr;
+    }
+    return rv;
+  }
+
+  (void) OnRedirectVerifyCallback(NS_OK);
+  return NS_OK;
+}
+
+// Returns NS_OK if no preflight is required, error otherwise.
+nsresult
+FetchDriver::DoesNotRequirePreflight(nsIChannel* aChannel)
+{
+  // If this is a same-origin request or the channel's URI inherits
+  // its principal, it's allowed.
+  if (nsContentUtils::CheckMayLoad(mPrincipal, aChannel, true)) {
+    return NS_OK;
+  }
+
+  // Check if we need to do a preflight request.
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  NS_ENSURE_TRUE(httpChannel, NS_ERROR_DOM_BAD_URI);
+
+  nsAutoCString method;
+  httpChannel->GetRequestMethod(method);
+  if (mRequest->Mode() == RequestMode::Cors_with_forced_preflight ||
+      !mRequest->Headers()->HasOnlySimpleHeaders() ||
+      (!method.LowerCaseEqualsLiteral("get") &&
+       !method.LowerCaseEqualsLiteral("post") &&
+       !method.LowerCaseEqualsLiteral("head"))) {
+    return NS_ERROR_DOM_BAD_URI;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FetchDriver::GetInterface(const nsIID& aIID, void **aResult)
+{
+  if (aIID.Equals(NS_GET_IID(nsIChannelEventSink))) {
+    *aResult = static_cast<nsIChannelEventSink*>(this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  nsresult rv;
+
+  if (mNotificationCallbacks) {
+    rv = mNotificationCallbacks->GetInterface(aIID, aResult);
+    if (NS_SUCCEEDED(rv)) {
+      NS_ASSERTION(*aResult, "Lying nsIInterfaceRequestor implementation!");
+      return rv;
+    }
+  }
+  else if (aIID.Equals(NS_GET_IID(nsIStreamListener))) {
+    *aResult = static_cast<nsIStreamListener*>(this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  else if (aIID.Equals(NS_GET_IID(nsIRequestObserver))) {
+    *aResult = static_cast<nsIRequestObserver*>(this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  return QueryInterface(aIID, aResult);
+}
+
+NS_IMETHODIMP
+FetchDriver::OnRedirectVerifyCallback(nsresult aResult)
+{
+  // On a successful redirect we perform the following substeps of Section 4.2,
+  // step 4.10.
+  if (NS_SUCCEEDED(aResult)) {
+    // Step 4.10.3 "Set request's url to locationURL." so that when we set the
+    // Response's URL from the Request's URL in Section 4, step 6, we get the
+    // final value.
+    nsCOMPtr<nsIURI> newURI;
+    nsresult rv = NS_GetFinalChannelURI(mNewRedirectChannel, getter_AddRefs(newURI));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aResult = rv;
+    } else {
+      // We need to update our request's URL.
+      nsAutoCString newUrl;
+      newURI->GetSpec(newUrl);
+      mRequest->SetURL(newUrl);
+    }
+  }
+
+  if (NS_FAILED(aResult)) {
+    mOldRedirectChannel->Cancel(aResult);
+  }
+
+  mOldRedirectChannel = nullptr;
+  mNewRedirectChannel = nullptr;
+  mRedirectCallback->OnRedirectVerifyCallback(aResult);
+  mRedirectCallback = nullptr;
+  return NS_OK;
+}
 } // namespace dom
 } // namespace mozilla

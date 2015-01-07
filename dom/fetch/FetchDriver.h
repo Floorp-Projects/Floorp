@@ -7,6 +7,9 @@
 #define mozilla_dom_FetchDriver_h
 
 #include "nsAutoPtr.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
+#include "nsIChannelEventSink.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIStreamListener.h"
 #include "nsRefPtr.h"
 
@@ -35,12 +38,18 @@ protected:
   { };
 };
 
-class FetchDriver MOZ_FINAL : public nsIStreamListener
+class FetchDriver MOZ_FINAL : public nsIStreamListener,
+                              public nsIChannelEventSink,
+                              public nsIInterfaceRequestor,
+                              public nsIAsyncVerifyRedirectCallback
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSICHANNELEVENTSINK
+  NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
 
   explicit FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
                        nsILoadGroup* aLoadGroup);
@@ -53,6 +62,10 @@ private:
   nsRefPtr<InternalResponse> mResponse;
   nsCOMPtr<nsIOutputStream> mPipeOutputStream;
   nsRefPtr<FetchDriverObserver> mObserver;
+  nsCOMPtr<nsIInterfaceRequestor> mNotificationCallbacks;
+  nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
+  nsCOMPtr<nsIChannel> mOldRedirectChannel;
+  nsCOMPtr<nsIChannel> mNewRedirectChannel;
   uint32_t mFetchRecursionCount;
 
   DebugOnly<bool> mResponseAvailableCalled;
@@ -75,6 +88,7 @@ private:
   void BeginResponse(InternalResponse* aResponse);
   nsresult FailWithNetworkError();
   nsresult SucceedWithResponse();
+  nsresult DoesNotRequirePreflight(nsIChannel* aChannel);
 };
 
 } // namespace dom
