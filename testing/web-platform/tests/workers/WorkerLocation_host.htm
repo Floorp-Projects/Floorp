@@ -1,29 +1,13 @@
 <!DOCTYPE html>
-<html>
-<head>
 <title> WorkerLocation URL decomposition IDL attribute: host </title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-</head>
-<body>
 <div id=log></div>
 <script>
-    
-    var FileName = './support/WorkerLocation.js';
-    var ExpectedResult = window.location.host;
-    var description = "WorkerLocation host attribute returns the current host and port (if it's not the default port) "
-                    + "in the underlying URL. The port part, if omitted, will be assumed to be the current "
-                    + "scheme's default port.";
-                    
-    var t = async_test("Test Description: " + description);
-                  
-    var worker = new Worker(FileName);
-
-    worker.onmessage = t.step_func(function(evt)
-    {
-        assert_equals(evt.data.host, ExpectedResult);
-        t.done();
-    });
+async_test(function(t) {
+  var worker = new Worker('./support/WorkerLocation.js');
+  worker.onmessage = t.step_func_done(function(e) {
+    assert_equals(e.data.host, location.host);
+  });
+});
 </script>
-</body>
-</html>
