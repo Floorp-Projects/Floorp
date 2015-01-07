@@ -134,8 +134,6 @@ class Nursery
     /* Forward a slots/elements pointer stored in an Ion frame. */
     void forwardBufferPointer(HeapSlot **pSlotsElems);
 
-    static void forwardBufferPointer(JSTracer* trc, HeapSlot **pSlotsElems);
-
     void maybeSetForwardingPointer(JSTracer *trc, void *oldData, void *newData, bool direct) {
         if (IsMinorCollectionTracer(trc) && isInside(oldData))
             setForwardingPointer(oldData, newData, direct);

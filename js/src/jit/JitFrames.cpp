@@ -1117,7 +1117,6 @@ MarkBailoutFrame(JSTracer *trc, const JitFrameIterator &frame)
 
 }
 
-template <typename T>
 void
 UpdateIonJSFrameForMinorGC(JSTracer *trc, const JitFrameIterator &frame)
 {
@@ -1135,6 +1134,8 @@ UpdateIonJSFrameForMinorGC(JSTracer *trc, const JitFrameIterator &frame)
         ionScript = frame.ionScriptFromCalleeToken();
     }
 
+    Nursery &nursery = trc->runtime()->gc.nursery;
+
     const SafepointIndex *si = ionScript->getSafepointIndex(frame.returnAddressToFp());
     SafepointReader safepoint(ionScript, si);
 
@@ -1143,7 +1144,7 @@ UpdateIonJSFrameForMinorGC(JSTracer *trc, const JitFrameIterator &frame)
     for (GeneralRegisterBackwardIterator iter(safepoint.allGprSpills()); iter.more(); iter++) {
         --spill;
         if (slotsRegs.has(*iter))
-            T::forwardBufferPointer(trc, reinterpret_cast<HeapSlot **>(spill));
+            nursery.forwardBufferPointer(reinterpret_cast<HeapSlot **>(spill));
     }
 
     // Skip to the right place in the safepoint
@@ -1157,7 +1158,7 @@ UpdateIonJSFrameForMinorGC(JSTracer *trc, const JitFrameIterator &frame)
 
     while (safepoint.getSlotsOrElementsSlot(&slot)) {
         HeapSlot **slots = reinterpret_cast<HeapSlot **>(layout->slotRef(slot));
-        trc->runtime()->gc.nursery.forwardBufferPointer(slots);
+        nursery.forwardBufferPointer(slots);
     }
 }
 
@@ -1479,20 +1480,16 @@ TopmostIonActivationCompartment(JSRuntime *rt)
     return nullptr;
 }
 
-template <typename T>
 void UpdateJitActivationsForMinorGC(PerThreadData *ptd, JSTracer *trc)
 {
     MOZ_ASSERT(trc->runtime()->isHeapMinorCollecting());
     for (JitActivationIterator activations(ptd); !activations.done(); ++activations) {
         for (JitFrameIterator frames(activations); !frames.done(); ++frames) {
             if (frames.type() == JitFrame_IonJS)
-                UpdateIonJSFrameForMinorGC<T>(trc, frames);
+                UpdateIonJSFrameForMinorGC(trc, frames);
         }
     }
 }
-
-template
-void UpdateJitActivationsForMinorGC<Nursery>(PerThreadData *ptd, JSTracer *trc);
 
 void
 GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
