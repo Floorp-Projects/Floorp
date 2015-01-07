@@ -439,6 +439,11 @@ private:
         threadLocalInfo->mActor->Close();
         threadLocalInfo->mActor->AssertActorDestroyed();
 
+        ProcessHandle otherProcess = threadLocalInfo->mActor->OtherProcess();
+        if (otherProcess != kInvalidProcessHandle) {
+          base::CloseProcessHandle(otherProcess);
+        }
+
         // Since the actor is created on the main thread it must only
         // be released on the main thread as well.
         if (!NS_IsMainThread()) {
