@@ -79,6 +79,13 @@ public:
   DialEmergency(const nsAString& aNumber, const Optional<uint32_t>& aServiceId,
                 ErrorResult& aRv);
 
+  already_AddRefed<Promise>
+  SendTones(const nsAString& aDTMFChars,
+            uint32_t aPauseDuration,
+            uint32_t aToneDuration,
+            const Optional<uint32_t>& aServiceId,
+            ErrorResult& aRv);
+
   void
   StartTone(const nsAString& aDTMFChar, const Optional<uint32_t>& aServiceId,
             ErrorResult& aRv);

@@ -60,9 +60,15 @@ TelephonyParent::RecvPTelephonyRequestConstructor(PTelephonyRequestParent* aActo
       return true;
     }
 
-    case IPCTelephonyRequest::TUSSDRequest: {
-      const USSDRequest& request = aRequest.get_USSDRequest();
+    case IPCTelephonyRequest::TSendUSSDRequest: {
+      const SendUSSDRequest& request = aRequest.get_SendUSSDRequest();
       service->SendUSSD(request.clientId(), request.ussd(), actor);
+      return true;
+    }
+
+    case IPCTelephonyRequest::TCancelUSSDRequest: {
+      const CancelUSSDRequest& request = aRequest.get_CancelUSSDRequest();
+      service->CancelUSSD(request.clientId(), actor);
       return true;
     }
 
@@ -99,6 +105,16 @@ TelephonyParent::RecvPTelephonyRequestConstructor(PTelephonyRequestParent* aActo
     case IPCTelephonyRequest::TResumeCallRequest: {
       const ResumeCallRequest& request = aRequest.get_ResumeCallRequest();
       service->ResumeCall(request.clientId(), request.callIndex(), actor);
+      return true;
+    }
+
+    case IPCTelephonyRequest::TSendTonesRequest: {
+      const SendTonesRequest& request = aRequest.get_SendTonesRequest();
+      service->SendTones(request.clientId(),
+                         request.dtmfChars(),
+                         request.pauseDuration(),
+                         request.toneDuration(),
+                         actor);
       return true;
     }
 

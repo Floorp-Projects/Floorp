@@ -360,6 +360,45 @@ Telephony::DialEmergency(const nsAString& aNumber,
   return promise.forget();
 }
 
+already_AddRefed<Promise>
+Telephony::SendTones(const nsAString& aDTMFChars,
+                     uint32_t aPauseDuration,
+                     uint32_t aToneDuration,
+                     const Optional<uint32_t>& aServiceId,
+                     ErrorResult& aRv)
+{
+  uint32_t serviceId = ProvidedOrDefaultServiceId(aServiceId);
+
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
+  if (!global) {
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  if (aDTMFChars.IsEmpty()) {
+    NS_WARNING("Empty tone string will be ignored");
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return promise.forget();
+  }
+
+  if (!IsValidServiceId(serviceId)) {
+    aRv.Throw(NS_ERROR_INVALID_ARG);
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return promise.forget();
+  }
+
+  nsCOMPtr<nsITelephonyCallback> callback =
+    new TelephonyCallback(promise);
+
+  aRv = mService->SendTones(serviceId, aDTMFChars, aPauseDuration,
+                            aToneDuration, callback);
+  return promise.forget();
+}
+
 void
 Telephony::StartTone(const nsAString& aDTMFChar,
                      const Optional<uint32_t>& aServiceId,

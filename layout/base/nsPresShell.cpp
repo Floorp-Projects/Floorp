@@ -5545,7 +5545,7 @@ void PresShell::SetIgnoreViewportScrolling(bool aIgnore)
   SetRenderingState(state);
 }
 
-nsresult PresShell::SetResolution(float aXResolution, float aYResolution)
+nsresult PresShell::SetResolutionImpl(float aXResolution, float aYResolution, bool aScaleToResolution)
 {
   if (!(aXResolution > 0.0 && aYResolution > 0.0)) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -5557,7 +5557,14 @@ nsresult PresShell::SetResolution(float aXResolution, float aYResolution)
   state.mXResolution = aXResolution;
   state.mYResolution = aYResolution;
   SetRenderingState(state);
+  mScaleToResolution = aScaleToResolution;
+
   return NS_OK;
+}
+
+bool PresShell::ScaleToResolution() const
+{
+  return mScaleToResolution;
 }
 
 gfxSize PresShell::GetCumulativeResolution()

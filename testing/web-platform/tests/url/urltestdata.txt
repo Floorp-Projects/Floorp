@@ -91,7 +91,7 @@ mailto:example.com/  s:mailto p:example.com/
 /a/\s/c  s:http h:example.org p:/a/%20/c
 /a%2fc  s:http h:example.org p:/a%2fc
 /a/%2f/c  s:http h:example.org p:/a/%2f/c
-\#\u03B2  s:http h:example.org p:/foo/bar f:#%CE%B2
+\#\u03B2  s:http h:example.org p:/foo/bar f:#\u03B2
 data:text/html,test#test  s:data p:text/html,test f:#test
 
 # Based on http://trac.webkit.org/browser/trunk/LayoutTests/fast/url/file.html
@@ -163,7 +163,8 @@ http://example.com/\u202E/foo/\u202D/bar  s:http h:example.com p:/%E2%80%AE/foo/
 
 # Based on http://trac.webkit.org/browser/trunk/LayoutTests/fast/url/script-tests/relative.js
 http://www.google.com/foo?bar=baz# about:blank s:http h:www.google.com p:/foo q:?bar=baz f:#
-http://www.google.com/foo?bar=baz#\s\u00BB  s:http h:www.google.com p:/foo q:?bar=baz f:#\s%C2%BB
+http://www.google.com/foo?bar=baz#\s\u00BB  s:http h:www.google.com p:/foo q:?bar=baz f:#\s\u00BB
+data:test#\s\u00BB  s:data p:test f:#\s\u00BB
 http://[www.google.com]/
 http://www.google.com  s:http h:www.google.com p:/
 http://192.0x00A80001  s:http h:192.168.0.1 p:/

@@ -29,6 +29,7 @@
 #include <limits>
 #include <new>
 #include <sstream>
+#include <stdlib.h>
 
 #include "pkixder.h"
 #include "pkixutil.h"

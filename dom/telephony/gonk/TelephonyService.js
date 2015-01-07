@@ -47,6 +47,8 @@ const DIAL_ERROR_BAD_NUMBER = RIL.GECKO_CALL_ERROR_BAD_NUMBER;
 
 const DEFAULT_EMERGENCY_NUMBERS = ["112", "911"];
 
+const TONES_GAP_DURATION = 70;
+
 // MMI match groups
 const MMI_MATCH_GROUP_FULL_MMI = 1;
 const MMI_MATCH_GROUP_PROCEDURE = 2;
@@ -897,6 +899,36 @@ TelephonyService.prototype = {
     }
   },
 
+  sendTones: function(aClientId, aDtmfChars, aPauseDuration, aToneDuration,
+                      aCallback) {
+    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    let tones = aDtmfChars;
+    let playTone = (tone) => {
+      this._sendToRilWorker(aClientId, "startTone", { dtmfChar: tone }, response => {
+        if (!response.success) {
+          aCallback.notifyError(response.errorMsg);
+          return;
+        }
+
+        timer.initWithCallback(() => {
+          this.stopTone();
+          timer.initWithCallback(() => {
+            if (tones.length === 1) {
+              aCallback.notifySuccess();
+            } else {
+              tones = tones.substr(1);
+              playTone(tones[0]);
+            }
+          }, TONES_GAP_DURATION, Ci.nsITimer.TYPE_ONE_SHOT);
+        }, aToneDuration, Ci.nsITimer.TYPE_ONE_SHOT);
+      });
+    };
+
+    timer.initWithCallback(() => {
+      playTone(tones[0]);
+    }, aPauseDuration, Ci.nsITimer.TYPE_ONE_SHOT);
+  },
+
   startTone: function(aClientId, aDtmfChar) {
     this._sendToRilWorker(aClientId, "startTone", { dtmfChar: aDtmfChar });
   },
@@ -1058,6 +1090,16 @@ TelephonyService.prototype = {
     this._sendToRilWorker(aClientId, "sendUSSD",
                           { ussd: aUssd, checkSession: true },
                           response => {
+      if (!response.success) {
+        aCallback.notifyError(response.errorMsg);
+      } else {
+        aCallback.notifySuccess();
+      }
+    });
+  },
+
+  cancelUSSD: function(aClientId, aCallback) {
+    this._sendToRilWorker(aClientId, "cancelUSSD", {}, response => {
       if (!response.success) {
         aCallback.notifyError(response.errorMsg);
       } else {

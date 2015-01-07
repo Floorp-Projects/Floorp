@@ -28,6 +28,21 @@ interface Telephony : EventTarget {
   [Throws]
   Promise<TelephonyCall> dialEmergency(DOMString number, optional unsigned long serviceId);
 
+/**
+  * Send a series of DTMF tones.
+  *
+  * @param tones
+  *    DTMF chars.
+  * @param pauseDuraton (ms) [optional]
+  *    Time to wait before sending tones. Default value is 3000 ms.
+  * @param toneDuration (ms) [optional]
+  *    Duration of each tone. Default value is 70 ms.
+  * @param serviceId [optional]
+  *    Default value is as user setting dom.telephony.defaultServiceId.
+  */
+  [Throws]
+  Promise<void> sendTones(DOMString tones, optional unsigned long pauseDuration = 3000, optional unsigned long toneDuration = 70, optional unsigned long serviceId);
+
   [Throws]
   void startTone(DOMString tone, optional unsigned long serviceId);
 

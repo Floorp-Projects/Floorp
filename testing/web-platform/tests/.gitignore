@@ -1,9 +1,10 @@
-node_modules
-scratch
+*#
 *.py[co]
 *.sw[po]
 *~
-*#
+MANIFEST.json
 \#*
 config.json
-MANIFEST.json
+node_modules
+scratch
+testharness_runner.html

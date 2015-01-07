@@ -151,11 +151,9 @@ ComputeViewTransform(const FrameMetrics& aContentMetrics, const FrameMetrics& aC
   // but with aContentMetrics used in place of mLastContentPaintMetrics, because they
   // should be equivalent, modulo race conditions while transactions are inflight.
 
-  LayerToParentLayerScale scale(aCompositorMetrics.mPresShellResolution
-                                * aCompositorMetrics.GetAsyncZoom().scale);
   ParentLayerPoint translation = (aCompositorMetrics.GetScrollOffset() - aContentMetrics.GetScrollOffset())
                                * aCompositorMetrics.GetZoom();
-  return ViewTransform(scale, -translation);
+  return ViewTransform(aCompositorMetrics.GetAsyncZoom(), -translation);
 }
 
 bool
@@ -1318,8 +1316,7 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
  * (which was generated in GetTransformToAncestorsParentLayer), and
  * modifies it with the ViewTransform from the compositor side so that
  * it reflects what the compositor is actually rendering. This operation
- * basically replaces the nontransient async transform that was injected
- * in GetTransformToAncestorsParentLayer with the complete async transform.
+ * basically adds in the layer's async transform.
  * This function then returns the scroll ancestor's composition bounds,
  * transformed into the painted layer's LayerPixel coordinates, accounting
  * for the compositor state.
@@ -1329,22 +1326,8 @@ GetCompositorSideCompositionBounds(const LayerMetricsWrapper& aScrollAncestor,
                                    const Matrix4x4& aTransformToCompBounds,
                                    const ViewTransform& aAPZTransform)
 {
-  Matrix4x4 nonTransientAPZUntransform = Matrix4x4::Scaling(
-    aScrollAncestor.Metrics().mPresShellResolution,
-    aScrollAncestor.Metrics().mPresShellResolution,
-    1.f);
-  nonTransientAPZUntransform.Invert();
-
-  // Take off the last "term" of aTransformToCompBounds, which
-  // is the APZ's nontransient async transform. Replace it with
-  // the APZ's async transform (this includes the nontransient
-  // component as well).
-  Matrix4x4 transform = aTransformToCompBounds
-                      * nonTransientAPZUntransform
-                      * Matrix4x4(aAPZTransform);
-  transform.Invert();
-
-  return TransformTo<LayerPixel>(transform,
+  Matrix4x4 transform = aTransformToCompBounds * Matrix4x4(aAPZTransform);
+  return TransformTo<LayerPixel>(transform.Inverse(),
             aScrollAncestor.Metrics().mCompositionBounds);
 }
 

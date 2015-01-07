@@ -47,8 +47,14 @@ public:
   already_AddRefed<Promise>
   Send(const nsAString& aUssd, ErrorResult& aRv);
 
+  already_AddRefed<Promise>
+  Cancel(ErrorResult& aRv);
+
 private:
   ~USSDSession();
+
+  already_AddRefed<Promise>
+  CreatePromise(ErrorResult& aRv);
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
   nsCOMPtr<nsITelephonyService> mService;

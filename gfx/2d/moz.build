@@ -52,22 +52,17 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     SOURCES += [
         'DrawTargetD2D.cpp',
+        'DrawTargetD2D1.cpp',
+        'FilterNodeD2D1.cpp',
         'PathD2D.cpp',
+        'RadialGradientEffectD2D1.cpp',
         'ScaledFontDWrite.cpp',
         'ScaledFontWin.cpp',
         'SourceSurfaceD2D.cpp',
+        'SourceSurfaceD2D1.cpp',
         'SourceSurfaceD2DTarget.cpp',
     ]
     DEFINES['WIN32'] = True
-    # For Direct2D 1.1 we require WINSDK_MAXVER 0x06020000 or higher.
-    if CONFIG['MOZ_ENABLE_DIRECT2D1_1']:
-        SOURCES += [
-            'DrawTargetD2D1.cpp',
-            'FilterNodeD2D1.cpp',
-            'RadialGradientEffectD2D1.cpp',
-            'SourceSurfaceD2D1.cpp'
-        ]
-        DEFINES['USE_D2D1_1'] = True
 
 if CONFIG['MOZ_ENABLE_SKIA']:
     UNIFIED_SOURCES += [

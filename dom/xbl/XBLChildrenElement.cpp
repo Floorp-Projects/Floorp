@@ -26,18 +26,6 @@ NS_INTERFACE_MAP_END_INHERITING(Element)
 
 NS_IMPL_ELEMENT_CLONE(XBLChildrenElement)
 
-nsIAtom*
-XBLChildrenElement::GetIDAttributeName() const
-{
-  return nullptr;
-}
-
-nsIAtom*
-XBLChildrenElement::DoGetID() const
-{
-  return nullptr;
-}
-
 nsresult
 XBLChildrenElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                               bool aNotify)

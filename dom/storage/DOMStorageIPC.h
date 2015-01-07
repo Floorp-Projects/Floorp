@@ -174,27 +174,27 @@ public:
 private:
   // IPC
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
-  bool RecvAsyncPreload(const nsCString& aScope, const bool& aPriority);
+  bool RecvAsyncPreload(const nsCString& aScope, const bool& aPriority) MOZ_OVERRIDE;
   bool RecvPreload(const nsCString& aScope, const uint32_t& aAlreadyLoadedCount,
                    InfallibleTArray<nsString>* aKeys, InfallibleTArray<nsString>* aValues,
-                   nsresult* aRv);
-  bool RecvAsyncGetUsage(const nsCString& aScope);
-  bool RecvAsyncAddItem(const nsCString& aScope, const nsString& aKey, const nsString& aValue);
-  bool RecvAsyncUpdateItem(const nsCString& aScope, const nsString& aKey, const nsString& aValue);
-  bool RecvAsyncRemoveItem(const nsCString& aScope, const nsString& aKey);
-  bool RecvAsyncClear(const nsCString& aScope);
-  bool RecvAsyncFlush();
+                   nsresult* aRv) MOZ_OVERRIDE;
+  bool RecvAsyncGetUsage(const nsCString& aScope) MOZ_OVERRIDE;
+  bool RecvAsyncAddItem(const nsCString& aScope, const nsString& aKey, const nsString& aValue) MOZ_OVERRIDE;
+  bool RecvAsyncUpdateItem(const nsCString& aScope, const nsString& aKey, const nsString& aValue) MOZ_OVERRIDE;
+  bool RecvAsyncRemoveItem(const nsCString& aScope, const nsString& aKey) MOZ_OVERRIDE;
+  bool RecvAsyncClear(const nsCString& aScope) MOZ_OVERRIDE;
+  bool RecvAsyncFlush() MOZ_OVERRIDE;
 
   // DOMStorageObserverSink
-  virtual nsresult Observe(const char* aTopic, const nsACString& aScopePrefix);
+  virtual nsresult Observe(const char* aTopic, const nsACString& aScopePrefix) MOZ_OVERRIDE;
 
 private:
   CacheParentBridge* NewCache(const nsACString& aScope);
 
   ThreadSafeAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
-	
-	// True when IPC channel is open and Send*() methods are OK to use.
+
+  // True when IPC channel is open and Send*() methods are OK to use.
   bool mIPCOpen;
 };
 

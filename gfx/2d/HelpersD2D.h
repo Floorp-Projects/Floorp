@@ -6,11 +6,7 @@
 #ifndef MOZILLA_GFX_HELPERSD2D_H_
 #define MOZILLA_GFX_HELPERSD2D_H_
 
-#ifndef USE_D2D1_1
-#include "moz-d2d1-1.h"
-#else
 #include <d2d1_1.h>
-#endif
 
 #include <vector>
 
@@ -30,9 +26,7 @@ namespace gfx {
 
 ID2D1Factory* D2DFactory();
 
-#ifdef USE_D2D1_1
 ID2D1Factory1* D2DFactory1();
-#endif
 
 static inline D2D1_POINT_2F D2DPoint(const Point &aPoint)
 {
@@ -77,7 +71,6 @@ static inline D2D1_BITMAP_INTERPOLATION_MODE D2DFilter(const Filter &aFilter)
   }
 }
 
-#ifdef USE_D2D1_1
 static inline D2D1_INTERPOLATION_MODE D2DInterpolationMode(const Filter &aFilter)
 {
   switch (aFilter) {
@@ -101,8 +94,6 @@ static inline D2D1_VECTOR_3F D2DVector3D(const Point3D &aPoint)
 {
   return D2D1::Vector3F(aPoint.x, aPoint.y, aPoint.z);
 }
-
-#endif
 
 static inline D2D1_ANTIALIAS_MODE D2DAAMode(AntialiasMode aMode)
 {
@@ -193,7 +184,6 @@ static inline D2D1_PIXEL_FORMAT D2DPixelFormat(SurfaceFormat aFormat)
   return D2D1::PixelFormat(DXGIFormat(aFormat), D2DAlphaModeForFormat(aFormat));
 }
 
-#ifdef USE_D2D1_1
 static inline bool D2DSupportsCompositeMode(CompositionOp aOp)
 {
   switch(aOp) {
@@ -281,7 +271,6 @@ static inline D2D1_BLEND_MODE D2DBlendMode(CompositionOp aOp)
     return D2D1_BLEND_MODE_MULTIPLY;
   }
 }
-#endif
 
 static inline bool IsPatternSupportedByD2D(const Pattern &aPattern)
 {
