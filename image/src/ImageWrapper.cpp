@@ -97,12 +97,6 @@ ImageWrapper::OnImageDataComplete(nsIRequest* aRequest,
                                           aLastPart);
 }
 
-nsresult
-ImageWrapper::OnNewSourceData()
-{
-  return mInnerImage->OnNewSourceData();
-}
-
 void
 ImageWrapper::OnSurfaceDiscarded()
 {

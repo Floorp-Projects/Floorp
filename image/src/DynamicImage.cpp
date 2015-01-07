@@ -92,12 +92,6 @@ DynamicImage::OnImageDataComplete(nsIRequest* aRequest,
   return NS_OK;
 }
 
-nsresult
-DynamicImage::OnNewSourceData()
-{
-  return NS_OK;
-}
-
 void
 DynamicImage::OnSurfaceDiscarded()
 { }

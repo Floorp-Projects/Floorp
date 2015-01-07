@@ -49,7 +49,6 @@ public:
                                        nsISupports* aContext,
                                        nsresult aStatus,
                                        bool aLastPart) MOZ_OVERRIDE;
-  virtual nsresult OnNewSourceData() MOZ_OVERRIDE;
 
   virtual void OnSurfaceDiscarded() MOZ_OVERRIDE;
 
