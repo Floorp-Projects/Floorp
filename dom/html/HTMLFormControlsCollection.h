@@ -36,7 +36,7 @@ public:
   // nsIDOMHTMLCollection interface
   NS_DECL_NSIDOMHTMLCOLLECTION
 
-  virtual Element* GetElementAt(uint32_t index);
+  virtual Element* GetElementAt(uint32_t index) MOZ_OVERRIDE;
   virtual nsINode* GetParentObject() MOZ_OVERRIDE;
 
   virtual Element*

@@ -72,7 +72,7 @@ public:
   {
     GetHTMLAttr(nsGkAtoms::title, aTitle);
   }
-  NS_IMETHODIMP SetTitle(const nsAString& aTitle)
+  NS_IMETHODIMP SetTitle(const nsAString& aTitle) MOZ_OVERRIDE
   {
     SetHTMLAttr(nsGkAtoms::title, aTitle);
     return NS_OK;
@@ -81,7 +81,7 @@ public:
   {
     GetHTMLAttr(nsGkAtoms::lang, aLang);
   }
-  NS_IMETHODIMP SetLang(const nsAString& aLang)
+  NS_IMETHODIMP SetLang(const nsAString& aLang) MOZ_OVERRIDE
   {
     SetHTMLAttr(nsGkAtoms::lang, aLang);
     return NS_OK;
@@ -299,7 +299,7 @@ protected:
   virtual void GetItemValueText(nsAString& text);
   virtual void SetItemValueText(const nsAString& text);
 public:
-  virtual already_AddRefed<mozilla::dom::UndoManager> GetUndoManager();
+  virtual already_AddRefed<mozilla::dom::UndoManager> GetUndoManager() MOZ_OVERRIDE;
   virtual bool UndoScope() MOZ_OVERRIDE;
   virtual void SetUndoScope(bool aUndoScope, mozilla::ErrorResult& aError) MOZ_OVERRIDE;
   // Callback for destructor of of dataset to ensure to null out weak pointer.
@@ -1251,7 +1251,7 @@ public:
   virtual void SaveSubtreeState() MOZ_OVERRIDE;
 
   // nsIFormControl
-  virtual mozilla::dom::HTMLFieldSetElement* GetFieldSet();
+  virtual mozilla::dom::HTMLFieldSetElement* GetFieldSet() MOZ_OVERRIDE;
   virtual mozilla::dom::Element* GetFormElement() MOZ_OVERRIDE;
   mozilla::dom::HTMLFormElement* GetForm() const
   {

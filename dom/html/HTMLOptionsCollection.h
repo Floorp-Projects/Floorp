@@ -58,7 +58,7 @@ public:
   // nsIDOMHTMLCollection interface, all its methods are defined in
   // nsIDOMHTMLOptionsCollection
 
-  virtual Element* GetElementAt(uint32_t aIndex);
+  virtual Element* GetElementAt(uint32_t aIndex) MOZ_OVERRIDE;
   virtual nsINode* GetParentObject() MOZ_OVERRIDE;
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(HTMLOptionsCollection,

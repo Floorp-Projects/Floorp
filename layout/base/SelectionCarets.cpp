@@ -577,6 +577,7 @@ SelectionCarets::SelectWord()
   bool selectable;
   ptFrame->IsSelectable(&selectable, nullptr);
   if (!selectable) {
+    SELECTIONCARETS_LOG(" frame %p is not selectable", ptFrame);
     return NS_ERROR_FAILURE;
   }
 
@@ -592,6 +593,17 @@ SelectionCarets::SelectWord()
     nsCOMPtr<nsIDOMElement> elt = do_QueryInterface(editingHost->GetParent());
     if (elt) {
       fm->SetFocus(elt, 0);
+    }
+
+    if (!nsContentUtils::HasNonEmptyTextContent(
+          editingHost, nsContentUtils::eRecurseIntoChildren)) {
+      SELECTIONCARETS_LOG("Select a editable content %p with empty text",
+                          editingHost);
+      // Long tap on the content with empty text, no action for
+      // selectioncarets but need to dispatch the touchcarettap event
+      // to support the short cut mode
+      DispatchCustomEvent(NS_LITERAL_STRING("touchcarettap"));
+      return NS_OK;
     }
   } else {
     nsIContent* focusedContent = GetFocusedContent();
@@ -1039,6 +1051,21 @@ SelectionCarets::GetSelectionBoundingRect(Selection* aSel)
 }
 
 void
+SelectionCarets::DispatchCustomEvent(const nsAString& aEvent)
+{
+  SELECTIONCARETS_LOG("dispatch %s event", NS_ConvertUTF16toUTF8(aEvent).get());
+  bool defaultActionEnabled = true;
+  nsIDocument* doc = mPresShell->GetDocument();
+  MOZ_ASSERT(doc);
+  nsContentUtils::DispatchTrustedEvent(doc,
+                                       ToSupports(doc),
+                                       aEvent,
+                                       true,
+                                       false,
+                                       &defaultActionEnabled);
+}
+
+void
 SelectionCarets::DispatchSelectionStateChangedEvent(Selection* aSelection,
                                                     SelectionState aState)
 {
@@ -1082,10 +1109,12 @@ SelectionCarets::DispatchSelectionStateChangedEvent(Selection* aSelection,
 }
 
 void
-SelectionCarets::NotifyBlur()
+SelectionCarets::NotifyBlur(bool aIsLeavingDocument)
 {
   SetVisibility(false);
-  CancelLongTapDetector();
+  if (aIsLeavingDocument) {
+    CancelLongTapDetector();
+  }
   DispatchSelectionStateChangedEvent(nullptr, SelectionState::Blur);
 }
 
