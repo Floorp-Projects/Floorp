@@ -36,13 +36,6 @@ DynamicImage::GetProgressTracker()
   return nullptr;
 }
 
-nsIntRect
-DynamicImage::FrameRect(uint32_t aWhichFrame)
-{
-  gfxIntSize size(mDrawable->Size());
-  return nsIntRect(0, 0, size.width, size.height);
-}
-
 size_t
 DynamicImage::SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const
 {
