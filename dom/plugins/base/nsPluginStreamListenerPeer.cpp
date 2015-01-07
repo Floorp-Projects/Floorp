@@ -1260,14 +1260,14 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHODIMP OnRedirectVerifyCallback(nsresult result)
+  NS_IMETHODIMP OnRedirectVerifyCallback(nsresult aResult) MOZ_OVERRIDE
   {
-    if (NS_SUCCEEDED(result)) {
+    if (NS_SUCCEEDED(aResult)) {
       nsCOMPtr<nsIStreamListener> listener = do_QueryReferent(mWeakListener);
       if (listener)
         static_cast<nsPluginStreamListenerPeer*>(listener.get())->ReplaceRequest(mOldChannel, mNewChannel);
     }
-    return mParent->OnRedirectVerifyCallback(result);
+    return mParent->OnRedirectVerifyCallback(aResult);
   }
 
 private:

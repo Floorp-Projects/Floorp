@@ -62,7 +62,7 @@ class PromiseWorkerProxy : public PromiseNativeHandler,
   friend class PromiseWorkerProxyRunnable;
 
   // This overrides the non-threadsafe refcounting in PromiseNativeHandler.
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PromiseWorkerProxy)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PromiseWorkerProxy, MOZ_OVERRIDE)
 
 public:
   static already_AddRefed<PromiseWorkerProxy>

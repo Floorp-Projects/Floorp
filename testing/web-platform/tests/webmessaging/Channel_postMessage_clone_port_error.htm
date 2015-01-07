@@ -10,12 +10,12 @@
 <script>
 
     var description = "Test Description: Throw a DataCloneError if transfer array in postMessage contains source port.";
-   
+
     test(function()
     {
         var channel = new MessageChannel();
         channel.port1.start();
-        
+
         assert_throws("DATA_CLONE_ERR", function()
         {
             channel.port1.postMessage("ports", [channel.port1]);

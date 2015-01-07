@@ -55,9 +55,9 @@ public:
       GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams = nullptr) MOZ_OVERRIDE;
 
     virtual void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                        FontCacheSizes* aSizes) const;
+                                        FontCacheSizes* aSizes) const MOZ_OVERRIDE;
     virtual void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                        FontCacheSizes* aSizes) const;
+                                        FontCacheSizes* aSizes) const MOZ_OVERRIDE;
 
     virtual FontType GetType() const MOZ_OVERRIDE { return FONT_TYPE_MAC; }
 

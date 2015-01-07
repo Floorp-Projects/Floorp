@@ -13,22 +13,22 @@
   <iframe id=standards></iframe>
   <script>
     setup({explicit_done:true});
-    var html = "<style id=style></style><div id=test></div><div id=ref></div>";
-    var a_doctype = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">';
-    var s_doctype = '<!DOCTYPE HTML>';
-    var q = document.getElementById('quirks').contentWindow;
-    var a = document.getElementById('almost').contentWindow;
-    var s = document.getElementById('standards').contentWindow;
-    q.document.open();
-    q.document.write(html);
-    q.document.close();
-    a.document.open();
-    a.document.write(a_doctype + html);
-    a.document.close();
-    s.document.open();
-    s.document.write(s_doctype + html);
-    s.document.close();
     onload = function() {
+        var html = "<style id=style></style><div id=test></div><div id=ref></div>";
+        var a_doctype = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">';
+        var s_doctype = '<!DOCTYPE HTML>';
+        var q = document.getElementById('quirks').contentWindow;
+        var a = document.getElementById('almost').contentWindow;
+        var s = document.getElementById('standards').contentWindow;
+        q.document.open();
+        q.document.write(html);
+        q.document.close();
+        a.document.open();
+        a.document.write(a_doctype + html);
+        a.document.close();
+        s.document.open();
+        s.document.write(s_doctype + html);
+        s.document.close();
         [q, a, s].forEach(function(win) {
             ['style', 'test', 'ref'].forEach(function(id) {
                 win[id] = win.document.getElementById(id);
@@ -92,6 +92,8 @@
         ];
 
         var props = [
+        {prop:'background-position', check:'background-position', check_also:[]},
+        {prop:'border-spacing', check:'border-spacing', check_also:[]},
         {prop:'border-top-width', check:'border-top-width'},
         {prop:'border-right-width', check:'border-right-width'},
         {prop:'border-bottom-width', check:'border-bottom-width'},
@@ -108,13 +110,19 @@
         {prop:'margin-top', check:'margin-top'},
         {prop:'margin-bottom', check:'margin-bottom'},
         {prop:'margin', check:'margin-top', check_also:['margin-right', 'margin-bottom', 'margin-left']},
+        {prop:'max-height', check:'max-height'},
+        {prop:'max-width', check:'max-width'},
+        {prop:'min-height', check:'min-height'},
+        {prop:'min-width', check:'min-width'},
         {prop:'padding-top', check:'padding-top'},
         {prop:'padding-right', check:'padding-right'},
         {prop:'padding-bottom', check:'padding-bottom'},
         {prop:'padding-left', check:'padding-left'},
         {prop:'padding', check:'padding-top', check_also:['padding-right', 'padding-bottom', 'padding-left']},
         {prop:'right', check:'right'},
+        {prop:'text-indent', check:'text-indent'},
         {prop:'top', check:'top'},
+        {prop:'vertical-align', check:'vertical-align'},
         {prop:'width', check:'width'},
         {prop:'word-spacing', check:'word-spacing'},
         ];
@@ -188,25 +196,18 @@
         });
 
         var other_tests = [
-        {input:'background-position:1 1', prop:'background-position'},
         {input:'background:1 1', prop:'background-position'},
-        {input:'border-spacing:1', prop:'border-spacing'},
         {input:'border-top:red solid 1', prop:'border-top-width'},
         {input:'border-right:red solid 1', prop:'border-right-width'},
         {input:'border-bottom:red solid 1', prop:'border-bottom-width'},
         {input:'border-left:red solid 1', prop:'border-left-width'},
         {input:'border:red solid 1', prop:'border-top-width'},
         {input:'font:normal normal normal 40 sans-serif', prop:'font-size'},
-        {input:'max-height:1', prop:'max-height'},
-        {input:'max-width:1', prop:'max-width'},
-        {input:'min-height:1', prop:'min-height'},
-        {input:'min-width:1', prop:'min-width'},
-        {input:'text-indent:1', prop:'text-indent'},
-        {input:'vertical-align:1', prop:'vertical-align'},
-        {input:'outline:red solid 1', prop:'outline-width'}
+        {input:'outline:red solid 1', prop:'outline-width'},
+        {input:'outline-width:1', prop:'outline-width'},
         ];
 
-        var other_template = "#test{position:relative;{test}}";
+        var other_template = "#test{position:relative;outline-style:solid;{test}}";
 
         other_tests.forEach(function(t) {
             test(function() {

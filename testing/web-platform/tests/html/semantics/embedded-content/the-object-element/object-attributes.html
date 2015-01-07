@@ -14,7 +14,6 @@
   var obj1;
   var obj2;
   var t1 = async_test("object.contentWindow");
-  var t2 = async_test("object.form");
   var t3 = async_test("object.width");
   var t4 = async_test("object.height");
 
@@ -35,11 +34,6 @@
       assert_equals(obj1.contentWindow.name, "", "The contentWindow's name of the object element should be empty string.");
     });
     t1.done()
-
-    t2.step(function() {
-      assert_equals(obj1.form, document.forms[0], "Missing form attribute returns the nearest ancestor form element.");
-    });
-    t2.done();
 
     t3.step(function() {
       assert_equals(getComputedStyle(obj1, null)["width"], "100px", "The width should be 100px.");

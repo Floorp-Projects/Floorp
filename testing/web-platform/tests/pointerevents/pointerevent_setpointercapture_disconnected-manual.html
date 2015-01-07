@@ -8,13 +8,11 @@
         <script src="/resources/testharnessreport.js"></script>
         <script src="pointerevent_support.js"></script>
         <script type="text/javascript">
+            var detected_pointertypes = {};
+            add_completion_callback(showPointerTypes);
             var test_setPointerCapture = async_test("setPointerCapture: DOMException InvalidStateError");
 
             function run() {
-
-                var detected_pointertypes = {};
-                add_completion_callback(showPointerTypes);
-
                 var target0 = document.getElementById("target0");
                 var target1 = document.getElementById("target1");
 

@@ -11,7 +11,7 @@
 
 #include "prlog.h"
 #include <android/log.h>
-#define GMDD_LOG(...) __android_log_print(ANDROID_LOG_DEBUG, "GonkMediaDataDecoder(blake)", __VA_ARGS__)
+#define GMDD_LOG(...) __android_log_print(ANDROID_LOG_DEBUG, "GonkMediaDataDecoder", __VA_ARGS__)
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* GetDemuxerLog();
@@ -89,8 +89,9 @@ void
 GonkMediaDataDecoder::ProcessOutput()
 {
   nsRefPtr<MediaData> output;
-  nsresult rv;
-  while (true && !mDrainComplete) {
+  nsresult rv = NS_ERROR_ABORT;
+
+  while (!mDrainComplete) {
     rv = mManager->Output(mLastStreamOffset, output);
     if (rv == NS_OK) {
       mCallback->Output(output);
@@ -121,6 +122,7 @@ GonkMediaDataDecoder::ProcessOutput()
       mDrainComplete = true;
       return;
     }
+    GMDD_LOG("Callback error!");
     mCallback->Error();
   }
 }

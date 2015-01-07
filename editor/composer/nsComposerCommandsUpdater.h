@@ -47,21 +47,21 @@ public:
 
   /** nsITransactionListener interfaces
     */  
-  NS_IMETHOD WillDo(nsITransactionManager *aManager, nsITransaction *aTransaction, bool *aInterrupt);
-  NS_IMETHOD DidDo(nsITransactionManager *aManager, nsITransaction *aTransaction, nsresult aDoResult);
-  NS_IMETHOD WillUndo(nsITransactionManager *aManager, nsITransaction *aTransaction, bool *aInterrupt);
-  NS_IMETHOD DidUndo(nsITransactionManager *aManager, nsITransaction *aTransaction, nsresult aUndoResult);
-  NS_IMETHOD WillRedo(nsITransactionManager *aManager, nsITransaction *aTransaction, bool *aInterrupt);
-  NS_IMETHOD DidRedo(nsITransactionManager *aManager, nsITransaction *aTransaction, nsresult aRedoResult);
-  NS_IMETHOD WillBeginBatch(nsITransactionManager *aManager, bool *aInterrupt);
-  NS_IMETHOD DidBeginBatch(nsITransactionManager *aManager, nsresult aResult);
-  NS_IMETHOD WillEndBatch(nsITransactionManager *aManager, bool *aInterrupt);
-  NS_IMETHOD DidEndBatch(nsITransactionManager *aManager, nsresult aResult);
+  NS_IMETHOD WillDo(nsITransactionManager *aManager, nsITransaction *aTransaction, bool *aInterrupt) MOZ_OVERRIDE;
+  NS_IMETHOD DidDo(nsITransactionManager *aManager, nsITransaction *aTransaction, nsresult aDoResult) MOZ_OVERRIDE;
+  NS_IMETHOD WillUndo(nsITransactionManager *aManager, nsITransaction *aTransaction, bool *aInterrupt) MOZ_OVERRIDE;
+  NS_IMETHOD DidUndo(nsITransactionManager *aManager, nsITransaction *aTransaction, nsresult aUndoResult) MOZ_OVERRIDE;
+  NS_IMETHOD WillRedo(nsITransactionManager *aManager, nsITransaction *aTransaction, bool *aInterrupt) MOZ_OVERRIDE;
+  NS_IMETHOD DidRedo(nsITransactionManager *aManager, nsITransaction *aTransaction, nsresult aRedoResult) MOZ_OVERRIDE;
+  NS_IMETHOD WillBeginBatch(nsITransactionManager *aManager, bool *aInterrupt) MOZ_OVERRIDE;
+  NS_IMETHOD DidBeginBatch(nsITransactionManager *aManager, nsresult aResult) MOZ_OVERRIDE;
+  NS_IMETHOD WillEndBatch(nsITransactionManager *aManager, bool *aInterrupt) MOZ_OVERRIDE;
+  NS_IMETHOD DidEndBatch(nsITransactionManager *aManager, nsresult aResult) MOZ_OVERRIDE;
   NS_IMETHOD WillMerge(nsITransactionManager *aManager, nsITransaction *aTopTransaction,
-                       nsITransaction *aTransactionToMerge, bool *aInterrupt);
+                       nsITransaction *aTransactionToMerge, bool *aInterrupt) MOZ_OVERRIDE;
   NS_IMETHOD DidMerge(nsITransactionManager *aManager, nsITransaction *aTopTransaction,
                       nsITransaction *aTransactionToMerge,
-                      bool aDidMerge, nsresult aMergeResult);
+                      bool aDidMerge, nsresult aMergeResult) MOZ_OVERRIDE;
 
 
   nsresult   Init(nsIDOMWindow* aDOMWindow);
