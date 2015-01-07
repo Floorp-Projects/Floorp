@@ -299,7 +299,7 @@ RasterImage::RasterImage(ProgressTracker* aProgressTracker,
   mNotifying(false),
   mHasSize(false),
   mDecodeOnDraw(false),
-  mMultipart(false),
+  mTransient(false),
   mDiscardable(false),
   mHasSourceData(false),
   mDecoded(false),
@@ -378,17 +378,17 @@ RasterImage::Init(const char* aMimeType,
   NS_ENSURE_ARG_POINTER(aMimeType);
 
   // We must be non-discardable and non-decode-on-draw for
-  // multipart channels
-  NS_ABORT_IF_FALSE(!(aFlags & INIT_FLAG_MULTIPART) ||
-                    (!(aFlags & INIT_FLAG_DISCARDABLE) &&
-                     !(aFlags & INIT_FLAG_DECODE_ON_DRAW)),
-                    "Can't be discardable or decode-on-draw for multipart");
+  // transient images.
+  MOZ_ASSERT(!(aFlags & INIT_FLAG_TRANSIENT) ||
+               (!(aFlags & INIT_FLAG_DISCARDABLE) &&
+                !(aFlags & INIT_FLAG_DECODE_ON_DRAW)),
+             "Transient images can't be discardable or decode-on-draw");
 
   // Store initialization data
   mSourceDataMimeType.Assign(aMimeType);
   mDiscardable = !!(aFlags & INIT_FLAG_DISCARDABLE);
   mDecodeOnDraw = !!(aFlags & INIT_FLAG_DECODE_ON_DRAW);
-  mMultipart = !!(aFlags & INIT_FLAG_MULTIPART);
+  mTransient = !!(aFlags & INIT_FLAG_TRANSIENT);
 
   // Statistics
   if (mDiscardable) {
@@ -566,15 +566,6 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
                          bool aShouldSyncNotify /* = true */)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  if (mMultipart &&
-      aFrameNum == GetCurrentFrameIndex() &&
-      mMultipartDecodedFrame) {
-    // In the multipart case we prefer to use mMultipartDecodedFrame, which is
-    // the most recent one we completely decoded, rather than display the real
-    // current frame and risk severe tearing.
-    return mMultipartDecodedFrame->DrawableRef();
-  }
 
   DrawableFrameRef ref = LookupFrameInternal(aFrameNum, aSize, aFlags);
 
@@ -1103,7 +1094,7 @@ RasterImage::SetSize(int32_t aWidth, int32_t aHeight, Orientation aOrientation)
     return NS_ERROR_INVALID_ARG;
 
   // if we already have a size, check the new size against the old one
-  if (!mMultipart && mHasSize &&
+  if (mHasSize &&
       ((aWidth != mSize.width) ||
        (aHeight != mSize.height) ||
        (aOrientation != mOrientation))) {
@@ -1194,30 +1185,10 @@ RasterImage::DecodingComplete(imgFrame* aFinalFrame)
   mDecoded = true;
   mHasBeenDecoded = true;
 
-  bool singleFrame = GetNumFrames() == 1;
-
   // If there's only 1 frame, mark it as optimizable. Optimizing animated images
-  // is not supported.
-  //
-  // We don't optimize the frame for multipart images because we reuse
-  // the frame.
-  if (singleFrame && !mMultipart && aFinalFrame) {
+  // is not supported. Optimizing transient images isn't worth it.
+  if (GetNumFrames() == 1 && !mTransient && aFinalFrame) {
     aFinalFrame->SetOptimizable();
-  }
-
-  // Double-buffer our frame in the multipart case, since we'll start decoding
-  // into the first frame again immediately and this produces severe tearing.
-  if (mMultipart) {
-    if (singleFrame && aFinalFrame) {
-      // aFinalFrame must be the first frame since we only have one.
-      mMultipartDecodedFrame = aFinalFrame->DrawableRef();
-    } else {
-      // Don't double buffer for animated multipart images. It entails more
-      // complexity and it's not really needed since we already are smart about
-      // not displaying the still-decoding frame of an animated image. We may
-      // have already stored an extra frame, though, so we'll release it here.
-      mMultipartDecodedFrame.reset();
-    }
   }
 
   if (mAnim) {
@@ -1392,32 +1363,6 @@ RasterImage::AddSourceData(const char *aBuffer, uint32_t aCount)
     return NS_OK;
   }
 
-  // Starting a new part's frames, let's clean up before we add any
-  // This needs to happen just before we start getting EnsureFrame() call(s),
-  // so that there's no gap for anything to miss us.
-  if (mMultipart && (!mDecoder || mDecoder->BytesDecoded() == 0)) {
-    // Our previous state may have been animated, so let's clean up.
-    if (mAnimating) {
-      StopAnimation();
-    }
-    mAnimationFinished = false;
-    mPendingAnimation = false;
-    if (mAnim) {
-      mAnim = nullptr;
-    }
-
-    // If we had a FrameBlender, clean it up. We'll hold on to the first frame
-    // so we have something to draw until the next frame is decoded.
-    if (mFrameBlender) {
-      nsRefPtr<imgFrame> firstFrame = mFrameBlender->RawGetFrame(0);
-      mMultipartDecodedFrame = firstFrame->DrawableRef();
-      mFrameBlender.reset();
-    }
-
-    // Remove everything stored in the surface cache for this image.
-    SurfaceCache::RemoveImage(ImageKey(this));
-  }
-
   // If we're not storing source data and we've previously gotten the size,
   // write the data directly to the decoder. (If we haven't gotten the size,
   // we'll queue up the data and write it out when we do.)
@@ -1568,54 +1513,9 @@ RasterImage::OnImageDataAvailable(nsIRequest*,
 nsresult
 RasterImage::OnNewSourceData()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsresult rv;
-
-  if (mError)
-    return NS_ERROR_FAILURE;
-
-  // The source data should be complete before calling this
-  NS_ABORT_IF_FALSE(mHasSourceData,
-                    "Calling NewSourceData before SourceDataComplete!");
-  if (!mHasSourceData)
-    return NS_ERROR_ILLEGAL_VALUE;
-
-  // Only supported for multipart channels. It wouldn't be too hard to change this,
-  // but it would involve making sure that things worked for decode-on-draw and
-  // discarding. Presently there's no need for this, so we don't.
-  NS_ABORT_IF_FALSE(mMultipart, "NewSourceData only supported for multipart");
-  if (!mMultipart)
-    return NS_ERROR_ILLEGAL_VALUE;
-
-  // We're multipart, so we shouldn't be storing source data
-  NS_ABORT_IF_FALSE(!StoringSourceData(),
-                    "Shouldn't be storing source data for multipart");
-
-  // We're not storing the source data and we got SourceDataComplete. We should
-  // have shut down the previous decoder
-  NS_ABORT_IF_FALSE(!mDecoder, "Shouldn't have a decoder in NewSourceData");
-
-  // The decoder was shut down and we didn't flag an error, so we should be decoded
-  NS_ABORT_IF_FALSE(mDecoded, "Should be decoded in NewSourceData");
-
-  // Reset some flags
-  mDecoded = false;
-  mHasSourceData = false;
-  mHasSize = false;
-  mHasFirstFrame = false;
-  mWantFullDecode = true;
-  mDecodeStatus = DecodeStatus::INACTIVE;
-
-  if (mAnim) {
-    mAnim->SetDoneDecoding(false);
-  }
-
-  // We always need the size first.
-  rv = InitDecoder(/* aDoSizeDecode = */ true);
-  CONTAINER_ENSURE_SUCCESS(rv);
-
-  return NS_OK;
+  // XXX(seth): This will be removed in a subsequent patch.
+  MOZ_ASSERT_UNREACHABLE();
+  return NS_ERROR_ILLEGAL_VALUE;
 }
 
 /* static */ already_AddRefed<nsIEventTarget>
@@ -1702,9 +1602,6 @@ RasterImage::Discard()
   mFrameBlender.reset();
   SurfaceCache::RemoveImage(ImageKey(this));
 
-  // Clear the last decoded multipart frame.
-  mMultipartDecodedFrame.reset();
-
   // Flag that we no longer have decoded frames for this image
   mDecoded = false;
   mHasFirstFrame = false;
@@ -1743,7 +1640,7 @@ RasterImage::CanDiscard() {
 // or just writing it directly to the decoder
 bool
 RasterImage::StoringSourceData() const {
-  return !mMultipart;
+  return !mTransient;
 }
 
 
@@ -2187,9 +2084,9 @@ RasterImage::CanScale(GraphicsFilter aFilter,
     return false;
   }
 
-  // We don't use the scaler for animated or multipart images to avoid doing a
+  // We don't use the scaler for animated or transient images to avoid doing a
   // bunch of work on an image that just gets thrown away.
-  if (mAnim || mMultipart) {
+  if (mAnim || mTransient) {
     return false;
   }
 
